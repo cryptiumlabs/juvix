@@ -1,40 +1,55 @@
 version: 2.1
 
 jobs:
-  setup-dependencies:
+  setup_dependencies:
     docker:
-      - image: fpco/stack-build:lts
+      - image: fpco/stack-build:lts-12.25
     steps:
       - checkout
       - restore_cache:
           name: Restore cached dependencies
           keys:
-            - juvix-cache-{{ checksum "package.yaml" }}
+            - juvix-cache-v2-{{ checksum "package.yaml" }}
       - run:
-          name: Build software
-          command: make
+          name: Setup secp256k1
+          command: git clone https://github.com/libbitcoin/secp256k1.git && cd secp256k1 && git checkout 2bdb30782ba14e481983f664495370aee7048762 && ./autogen.sh && ./configure --enable-module-recovery && make && make install
+      - run:
+          name: Build dependencies
+          command: stack build -j1 --only-dependencies --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib
+          no_output_timeout: 1200
+      - run:
+          name: Build Idris library
+          command: make lib-tezos
+      - run:
+          name: Build Juvix
+          command: stack build --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib --copy-bins --fast
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: /root
           paths:
-            - .stack-work
+            - .
       - save_cache:
           name: Cache dependencies
-          key: juvix-cache-{{ checksum "package.yaml" }}
+          key: juvix-cache-v2-{{ checksum "package.yaml" }}
           paths:
+            - "~/.stack"
             - ".stack-work"
  
-  test-suite:
-     steps:
-        - attach_workspace:
-            - at: /tmp/workspace
-        - run:
-            name: Run tests
-            command: make test
-
-  test-tezos:
+  test_suite:
+    docker:
+      - image: fpco/stack-build:lts-12.25
     steps:
       - attach_workspace:
-          - at: /tmp/workspace
+          at: /root
+      - run:
+          name: Run tests
+          command: stack test --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib
+
+  test_tezos:
+    docker:
+      - image: fpco/stack-build:lts-12.25
+    steps:
+      - attach_workspace:
+          at: /root
       - run:
           name: Run Tezos tests
           command: make test-tezos
@@ -44,9 +59,9 @@ workflows:
   test-suite:
     jobs:
       - setup_dependencies
-      - test-suite:
+      - test_suite:
           requires:
             - setup_dependencies
-      - test-tezos:
+      - test_tezos:
           requires:
             - setup_dependencies

@@ -10,6 +10,11 @@ data Config = Config {
   configTezosNode :: Text
 } deriving (Generic)
 
+defaultConfig :: Config
+defaultConfig = Config {
+  configTezosNode = "127.0.0.1"
+}
+
 loadConfig :: FilePath -> IO (Maybe Config)
 loadConfig = Y.decodeFile
 

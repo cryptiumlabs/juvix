@@ -64,21 +64,17 @@ interactiveDoc = mconcat [
 
 run ∷ Context → Options → IO ()
 run ctx (Options cmd configPath) = do
-  maybeConf ← loadConfig configPath
-  case maybeConf of
-    Nothing   → do
-      putStrLn ("Error parsing configuration file " <> configPath)
+  maybeConfig ← loadConfig configPath
+  let conf = fromMaybe defaultConfig maybeConfig
+  case cmd of
+    Interactive → do
+      putDoc interactiveDoc
+      putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
+      interactive ctx conf
+      exitSuccess
+    Version → do
+      putDoc versionDoc
+      exitSuccess
+    _ -> do
+      putText "Not yet implemented!"
       exitFailure
-    Just conf → do
-      case cmd of
-        Interactive → do
-          putDoc interactiveDoc
-          putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
-          interactive ctx conf
-          exitSuccess
-        Version → do
-          putDoc versionDoc
-          exitSuccess
-        _ -> do
-          putText "Not yet implemented!"
-          exitFailure

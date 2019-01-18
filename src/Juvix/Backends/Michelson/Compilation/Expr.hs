@@ -111,6 +111,10 @@ exprToExpr expr = do
             expr <- exprToExpr expr
             unpackDrop <- unpackDrop (map (Just . prettyPrintValue) binds)
             return $ foldSeq [scrutinee, unpack, expr, unpackDrop]
+          [I.LDefaultCase expr] -> do
+            expr <- exprToExpr expr
+            unpackDrop <- unpackDrop [Just ""]
+            return $ foldSeq [scrutinee, expr, unpackDrop]
           _ -> throw (NotYetImplemented ("case switch: expr " <> prettyPrintValue expr <> " alts " <> T.intercalate ", " (fmap prettyPrintValue alts)))
 
       invariant
