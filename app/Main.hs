@@ -34,9 +34,9 @@ disclaimerDoc = mconcat [
 
 aboutDoc ∷ Doc
 aboutDoc = mconcat [
-  text "Juvix smart contract compiler & toolkit",
+  text "Juvix compiler & toolkit",
   line,
-  text "(c) Christopher Goes 2018-2019 • https://juvix.org",
+  text "(c) Cryptium Labs 2018-2019 • https://juvix.org",
   line,
   disclaimerDoc
   ]
@@ -59,7 +59,7 @@ interactiveDoc = mconcat [
  | |_| | \ V /   /  \| |
   \___/   \_/   /_/\_\_|
 |],
-  mconcat [line, "Juvix interactive alpha. Currently supported backends: Michelson.", line, "Enter :? for help. Enter :tutorial for an interactive tutorial.", line]
+  mconcat [line, "Juvix interactive alpha. Currently supported backends: in-process.", line, "Enter :? for help. Enter :tutorial for an interactive tutorial.", line]
   ]
 
 run ∷ Context → Options → IO ()

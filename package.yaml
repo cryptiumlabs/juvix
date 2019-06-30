@@ -1,20 +1,20 @@
 name:                juvix
-version:             0.3.0.0
-github:              "cwgoes/juvix"
-license:             BSD3
-homepage:            https://github.com/cwgoes/juvix#readme
+version:             0.0.0.0
+github:              "cryptiumlabs/juvix"
+license:             GPL3
+homepage:            https://github.com/cryptiumlabs/juvix#readme
 synopsis:            Juvix smart contract compiler & toolkit
 category:            Web3
 description:         Please see the README on GitHub at <https://github.com/cwgoes/juvix#readme>
-author:              Christopher Goes
-maintainer:          cwgoes@pluranimity.org
-copyright:           2018-2019 Christopher Goes
+author:              Cryptium Labs
+maintainer:          cwgoes@cryptium.ch
+copyright:           2018-2019 Cryptium Labs
 
 extra-source-files:
 - README.md
 
 dependencies:
-  - base >= 4.7 && < 5
+  - base >= 4.11 && < 5
   - protolude
   - text
   - mtl
@@ -52,18 +52,8 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
-    - idris
-    - dhall
-    - wasm
-    - hevm
-    - web3
-    - llvm-hs-pure
   exposed-modules:
     - Juvix
-    - Juvix.CodeGen
-    - Juvix.Interpreter
-    - Juvix.Backends
-    - Juvix.Lang
     - Juvix.Utility
 
 executables:
@@ -84,15 +74,6 @@ executables:
       - aeson
       - haskeline
       - gitrev
-  idris-codegen-juvix:
-    source-dirs:      codegen
-    main:             Main.hs
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - juvix
 
 tests:
   juvix-test:
