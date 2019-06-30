@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   setup_dependencies:
     docker:
-      - image: fpco/stack-build:lts-12.25
+      - image: fpco/stack-build:lts-13.25
     steps:
       - checkout
       - restore_cache:
@@ -11,18 +11,12 @@ jobs:
           keys:
             - juvix-cache-v2-{{ checksum "package.yaml" }}
       - run:
-          name: Setup secp256k1
-          command: git clone https://github.com/libbitcoin/secp256k1.git && cd secp256k1 && git checkout 2bdb30782ba14e481983f664495370aee7048762 && ./autogen.sh && ./configure --enable-module-recovery && make && make install
-      - run:
           name: Build dependencies
-          command: stack build -j1 --only-dependencies --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib
+          command: stack build -j4 --only-dependencies
           no_output_timeout: 1200
       - run:
-          name: Build Idris library
-          command: make lib-tezos
-      - run:
           name: Build Juvix
-          command: stack build --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib --copy-bins --fast
+          command: stack build --copy-bins --fast
       - persist_to_workspace:
           root: /root
           paths:
@@ -36,29 +30,13 @@ jobs:
  
   test_suite:
     docker:
-      - image: fpco/stack-build:lts-12.25
+      - image: fpco/stack-build:lts-13.25
     steps:
       - attach_workspace:
           at: /root
-      - run:
-          name: Setup secp256k1
-          command: cd secp256k1 && ./autogen.sh && ./configure --enable-module-recovery && make && make install
       - run:
           name: Run tests
-          command: LD_LIBRARY_PATH=/usr/local/lib stack clean && stack test --extra-include-dirs=/usr/local/include --extra-lib-dirs=/usr/local/lib --ghc-options="-DOPTIMIZE"
-
-  test_tezos:
-    docker:
-      - image: fpco/stack-build:lts-12.25
-    steps:
-      - attach_workspace:
-          at: /root
-      - run:
-          name: Setup secp256k1
-          command: cd secp256k1 && ./autogen.sh && ./configure --enable-module-recovery && make && make install
-      - run:
-          name: Run Tezos tests
-          command: LD_LIBRARY_PATH=/usr/local/lib make test-tezos
+          command: stack test
 
 workflows:
   version: 2.1
@@ -66,8 +44,5 @@ workflows:
     jobs:
       - setup_dependencies
       - test_suite:
-          requires:
-            - setup_dependencies
-      - test_tezos:
           requires:
             - setup_dependencies

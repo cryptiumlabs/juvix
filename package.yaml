@@ -51,7 +51,6 @@ ghc-options:
 
 library:
   source-dirs: src
-  dependencies:
   exposed-modules:
     - Juvix
     - Juvix.Utility

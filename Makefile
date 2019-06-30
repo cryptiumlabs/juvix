@@ -1,4 +1,4 @@
-all: setup lib-tezos build
+all: setup build
 
 setup:
 	stack build --only-dependencies

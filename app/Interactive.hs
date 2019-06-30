@@ -9,11 +9,9 @@ import           Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import           Config
 import           Options
 
-import qualified Juvix.Interpreter            as J
-
 interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
-  func ← J.loadAndRun
+  func ← undefined
   H.runInputT (settings ctx) (mainLoop func)
 
 settings ∷ Context → H.Settings IO
@@ -23,7 +21,7 @@ settings ctx = H.Settings {
   H.autoAddHistory  = True
   }
 
-mainLoop ∷ (J.Command → IO J.Response) → H.InputT IO ()
+mainLoop ∷ (() → IO ()) → H.InputT IO ()
 mainLoop func = do
   input ← H.getInputLine "jvxi >> "
   case input of
