@@ -3,6 +3,7 @@ title: Juvix
 mainfont: DejaVuSans
 fontsize: 7pt
 author: Christopher Goes
+        Cryptium Labs
 date: \textit{\today}
 urlcolor: cyan
 abstract: Juvix encapsulates a high-level frontend syntax, dependently-typed core language, and parallelizable
@@ -149,6 +150,29 @@ Addition of two precontexts $Γ_1+Γ_2$ is defined when $0Γ_1=0Γ_2$:
 ⋄+⋄=⋄\\
 (Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
 \end{align}
+
+- context defs from QTT
+- term judgements from QTT
+- var, conv from QTT
+- pi formation from QTT
+- lam from QTT
+- app from QTT
+- dependent tensor product type from QTT: formation, introduction, elimination (multiplicative conjunction)
+- new: product type for multiplicative disjunction
+- new: product type for additive conjunction
+- new: product type for additive disjunction
+- set type from QTT
+
+can we encode everything we want in lambda calculus in this type system?
+
+subusaging? seems cool
+
+more things
+
+- figure out what R-linear combinatory algebras are
+- figure out how best to add primitive types
+- figure out how this translates into an implementation, see McBride's paper
+- ensure we can derive induction, see Cedille
 
 ## Low-level execution model
 
