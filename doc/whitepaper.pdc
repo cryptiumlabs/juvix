@@ -17,6 +17,7 @@ header-includes:
     - \usepackage{graphicx}
     - \usepackage{hyperref}
     - \usepackage{bussproofs}
+    - \usepackage{amsmath}
     - \pagestyle{fancy}
     - \fancyhead[RE,LO]{Juvix}
     - \fancyhead[LE,RO]{}
@@ -101,21 +102,46 @@ Syntax options:
 1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] favored
 1. Lisp-like [@common-lisp]
 
-## Core language
+## Core language & type theory
 
-Dependently-typed lambda calculus. Inspirations: Cedille, Blodwen Core, Formality Core.
+Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
 
-See Cedille [@the-calculus-of-dependent-lambda-eliminations]
+A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
+$(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distributed over addition, and multiplication by $0$ annihilates $R$.
 
-See Formality [@formality]
+The type theory of Juvix Core must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice Juvix is instantiated over the semiring of natural numbers, which is the most expressive option.
 
-See Quantitative Type Theory [@quantitative-type-theory]
-
-Typing judgements have the following form:
+Typing judgements in Juvix Type Theory (JTT) have the following form:
 
 $$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
 
 where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring.
+
+JTT is defined over the syntactic categories of usages $ρ, π$, precontexts $Γ$, pretypes $S,T,R$, and preterms $M,N,O$:
+
+\begin{align*}
+ρ,π ∈ R (1) \\
+\\
+Γ := ⋄\ |\ Γ,x \overset{ρ}{:} S \\
+\\
+S, T, U := (x \overset{π}{:} S) → T\ |\ (x \overset{π}{:} S) ⊗ T\ |\ I\ |\ Set \\
+\\
+M, N, O := x\ |\ λx \overset{π}{:} S.M^T\ |\ App_{(x \overset{π}{:} S)T} (M,N) \\
+            \ |\ (M,N)_{x \overset{π}{:} S . T}\ |\ ∗\ |\ let_I ∗ = M\ in\ N\ |\ (x \overset{π}{:} M) → N
+\end{align*}
+
+The symbol ⋄ denotes the empty precontext.
+
+Precontexts contain usage annotations $ρ$ on constituent variables. Scaling as context, $πΓ$, is defined as follows:
+
+\begin{align}
+π(⋄)=⋄ \\
+π(Γ,x \overset{ρ}{:} S) = πΓ,x \overset{πρ}{:} S
+\end{align}
+
+Usage annotations in pretypes are not affected.
+
+$0Γ$ sets all annotations to $0$.
 
 ## Low-level execution model
 
