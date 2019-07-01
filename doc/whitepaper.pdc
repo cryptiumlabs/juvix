@@ -1,7 +1,6 @@
 ---
 title: Juvix
-lang: zh-ZH
-mainfont: Noto Sans CJK HK Light
+mainfont: DejaVuSans
 fontsize: 7pt
 author: Christopher Goes
 date: \textit{\today}
@@ -17,6 +16,7 @@ header-includes:
     - \usepackage{fancyhdr}
     - \usepackage{graphicx}
     - \usepackage{hyperref}
+    - \usepackage{bussproofs}
     - \pagestyle{fancy}
     - \fancyhead[RE,LO]{Juvix}
     - \fancyhead[LE,RO]{}
@@ -70,7 +70,7 @@ Why will Juvix fix these problems?
 
 1. Interaction nets, custom rewrite rules, optimal lambda reduction
 
-## Time-efficient formal proof cconstructions
+## Time-efficient formal proof constructions
 
 1. Assistance for proof generation, ecosystem for composable proofs
     1. Libraries of proofs for common functionality
@@ -108,6 +108,14 @@ Dependently-typed lambda calculus. Inspirations: Cedille, Blodwen Core, Formalit
 See Cedille [@the-calculus-of-dependent-lambda-eliminations]
 
 See Formality [@formality]
+
+See Quantitative Type Theory [@quantitative-type-theory]
+
+Typing judgements have the following form:
+
+$$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
+
+where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring.
 
 ## Low-level execution model
 
