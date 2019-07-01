@@ -132,7 +132,7 @@ M, N, O := x\ |\ λx \overset{π}{:} S.M^T\ |\ App_{(x \overset{π}{:} S)T} (M,N
 
 The symbol ⋄ denotes the empty precontext.
 
-Precontexts contain usage annotations $ρ$ on constituent variables. Scaling as context, $πΓ$, is defined as follows:
+Precontexts contain usage annotations $ρ$ on constituent variables. Scaling a context, $πΓ$, is defined as follows:
 
 \begin{align}
 π(⋄)=⋄ \\
@@ -142,6 +142,13 @@ Precontexts contain usage annotations $ρ$ on constituent variables. Scaling as 
 Usage annotations in pretypes are not affected.
 
 $0Γ$ sets all annotations to $0$.
+
+Addition of two precontexts $Γ_1+Γ_2$ is defined when $0Γ_1=0Γ_2$:
+
+\begin{align}
+⋄+⋄=⋄\\
+(Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
+\end{align}
 
 ## Low-level execution model
 
