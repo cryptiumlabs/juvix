@@ -115,6 +115,12 @@ Syntax options:
 
 ## Type theory
 
+Combines linear & dependent types.
+
+Key problem: linear function splits up resources for production of argument & function. What if function type depends on argument? Doesn't make sense.
+
+Assigning evaluative costs, dealing with if-conditionals, etc.
+
 ### Basics
 
 Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
@@ -304,6 +310,8 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 
 "Both separately in parallel"
 
+Cannot be dependent?
+
 Introduction rule:
 
 \begin{prooftree}
@@ -317,6 +325,8 @@ is this right?
 ### Additive conjunction
 
 "Choose either"
+
+Can be dependent
 
 Introduction rule:
 
@@ -332,6 +342,8 @@ Can we have $σ$ and $σ'$?
 ### Additive disjunction
 
 "Might be either"
+
+Cannot be dependent?
 
 Introduction rules:
 
