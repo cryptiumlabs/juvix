@@ -21,6 +21,8 @@ header-includes:
     - \usepackage{hyperref}
     - \usepackage{bussproofs}
     - \usepackage{amsmath}
+    - \usepackage{spaghettinet}
+    - \usepackage{cmll}
     - \pagestyle{fancy}
     - \fancyhead[RE,LO]{Juvix — Language Reference}
     - \fancyhead[LE,RO]{}
@@ -300,15 +302,50 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 
 ### Multiplicative disjunction
 
-(from linear type theory)
+"Both separately in parallel"
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (A \overset{σ}{:} S), (B \overset{σ'}{:} S')$}
+\RightLabel{$\parr$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ}{:} S) \parr (B \overset{σ'}{:} S')$}
+\end{prooftree}
+
+is this right?
 
 ### Additive conjunction
 
-(from linear type theory)
+"Choose either"
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
+\AxiomC{$Γ ⊢ B \overset{σ}{:} S$}
+\RightLabel{$\&$}
+\BinaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) \& (B \overset{σ}{:} S)$}
+\end{prooftree}
+
+Can we have $σ$ and $σ'$?
 
 ### Additive disjunction
 
-(from linear type theory)
+"Might be either"
+
+Introduction rules:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
+\RightLabel{$⊕_L$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) ⊕ (B \overset{σ'}{:} S)$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ B \overset{σ}{∶} S$}
+\RightLabel{$⊕_R$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ'}{∶} S) ⊕ (B \overset{σ}{:} S)$}
+\end{prooftree}
 
 ### Universe (set type)
 
@@ -347,9 +384,19 @@ of node types and fixed rewrite rules, Juvix adds an additional degree of freedo
 the node types and rewrite rules of the interaction system can be generated at compile time and even
 dynamically altered at runtime according to usage patterns and desired time-space complexity tradeoffs.
 
-How to encode other linear logic types? Embed non-determinism in net? https://core.ac.uk/download/pdf/82329248.pdf
+\begin{tikzpicture}
+\inetbigcell[angle=130]{a}{$\lambda$}[5]
+\inetbigcell[angle=130, right=100pt]{b}{$@$}[5]
 
-https://hal.inria.fr/file/index/docid/76988/filename/RR-1748.pdf
+\inwire{a/1}{}
+\inwire{a/4}{}
+\inwire{b/1}{}
+\inwire{b/4}{}
+
+\cutWire{a.out}{b.out}{}{}
+\end{tikzpicture}
+
+How to encode other linear logic types?
 
 ## Optimization
 
@@ -365,6 +412,8 @@ Ensure correspondence between graphical locality and spacial locality in memory.
 # Extensions
 
 ## Platform targets
+
+In each case, two options: interaction net interpreter & direct compilation.
 
 ### WASM
 

@@ -1,0 +1,190 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{spaghettinet}[2018/03/15 Spaghettinet v1]
+
+% ====================================================
+% PACKAGES
+% ====================================================
+\usepackage{xargs}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{matrix}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
+\usetikzlibrary{fit}
+\usetikzlibrary{shapes.geometric}
+
+\input{shapes/nrect}
+\input{shapes/cell}
+\input{symbols}
+
+% ====================================================
+% OPTIONS AND STYLES
+% ====================================================
+
+\DeclareOption{show-anchors}{
+ \tikzset{
+   anchorstyle/.style={draw,shape=circle,fill=black,inner sep=1.5pt, label={\scriptsize\j}}
+ }
+}
+
+\DeclareOption{directed}{
+ \tikzset{
+   wire/.style={mid arrow}
+ }
+}
+
+\DeclareOption{default}{
+  \input{styles/default}
+  % \input{styles/custom_style}
+  % add other styles here
+}
+\ExecuteOptions{default}
+\ProcessOptions\relax
+
+% ====================================================
+% ABSTRACT NETS
+% ====================================================
+% display a named general net
+
+\newcommandx{\inet}[4][1=, 4=16]{
+	% 1 = style (option)
+	% 2 = name
+	% 3 = label
+	% 4 = number of ports (default=16)
+	\node[net] [#1] (#2) {#3};
+	\pgfmathparse{#4-1}\let\upperbound\pgfmathresult
+	\foreach \i in {0,1,...,\upperbound}
+        \coordinate (#2/u\i) at ($(#2.north west)!\i/\upperbound!(#2.north east)$);
+    \foreach \i in {0,1,...,\upperbound}
+        \coordinate[anchorstyle] (#2/d\i) at ($(#2.south west)!\i/\upperbound!(#2.south east)$);
+}
+
+\newcommandx{\abstractwiring}[4][1=, 4=16]{
+	% 1 = style (option)
+	% 2 = name
+	% 3 = label
+	% 4 = number of ports (default=16)
+	\node[wiring] [#1] (#2) {#3};
+}
+
+% ====================================================
+% CELLS
+% ====================================================
+
+% general cell with custom symbol
+\newcommandx{\inetcell}[4][1=, 4=3]{
+	% 1 = style (option)
+	% 2 = node name
+	% 3 = node symbol
+	% 4 = number of ports (default=3)
+	\node[cell] [#1] (#2) {#3};
+	\foreach \i in {0, 1,...,#4}
+	   \pgfmathparse{int(abs(\i-#4))}\let\j\pgfmathresult
+	   \coordinate[anchorstyle] (#2/\j) at ($(#2.corner 2)!\i/#4!(#2.corner 3)$);
+}
+
+\newcommandx{\inetbigcell}[4][1=, 4=3]{
+	% 1 = style (option)
+	% 2 = node name
+	% 3 = node symbol
+	% 4 = number of ports (default=3)
+	\node[irregular] [#1] (#2) {#3};
+	\foreach \i in {0, ..., #4}
+	   \pgfmathparse{int(abs(\i-#4))}\let\j\pgfmathresult
+	   \coordinate[anchorstyle] (#2/\j) at ($(#2.left corner)!\i/#4!(#2.right corner)$);
+}
+
+% circle node
+\newcommand{\inode}[3][]{
+	% 1 = style
+	% 2 = node name
+	% 3 = node symbol
+	\node[circle,draw] [#1] (#2) {#3};
+    \coordinate (#2/out) at (#2.south);
+}
+
+% ====================================================
+% WIRES
+% ====================================================
+
+% regular wire
+\newcommandx{\wire}[4][1=, 4=]{
+	% 1 = style (option)
+	% 2 = from
+	% 3 = to
+	% 4 = modulation (option)
+	\begin{pgfonlayer}{bg}
+		\draw[wire] [#1] (#2) to[#4] node {} (#3);
+	\end{pgfonlayer}
+}
+
+% input wire
+\newcommand{\inwire}[3][]{
+	% 1 = style (of the wire)
+	% 2 = target
+	% 3 = label
+	\node[above=5mm of #2] (dummy) {#3};
+	\wire[#1]{dummy}{#2}
+}
+
+% input wire
+\newcommand{\outwire}[3][]{
+	% 1 = style (of the wire)
+	% 2 = target
+	% 3 = label
+	\node[below=5mm of #2] (dummy) {#3};
+	\wire[#1]{#2}{dummy}
+}
+
+% straight vertical wire (from source to intersection with target)
+\newcommand{\vwire}[2]{
+	% 1 = from
+	% 2 = to
+	\wire{#1}{#1.south |- #2.north}
+}
+
+% labelled wire
+\newcommandx{\wirelabel}[6][1=, 6=]{
+	% 1 = style (option)
+	% 2 = from
+	% 3 = to
+	% 4 = label
+	% 5 = position (left, right, above, below)
+	% 6 = modulation (option)
+	\begin{pgfonlayer}{bg}
+		\draw[wire] [#1] (#2) to[#6] node[midway, outer xsep=7pt, outer ysep=2pt, #5] {#4} (#3);
+	\end{pgfonlayer}
+}
+
+% custom path (for advanced TikZ users)
+\newcommand{\wirepath}[2][]{
+	% 1 = style
+	% 2 = path
+	\begin{pgfonlayer}{bg}
+		\draw[wire] [#1] #2;
+	\end{pgfonlayer}
+}
+
+% ====================================================
+% IDENTITY WIRES
+% ====================================================
+\newcommandx{\cutWire}[5][1=1]{
+    % 1 = amplitude (option)
+	% 2 = from
+	% 3 = to
+	% 4 = label
+	% 5 = position
+	\wirelabel[out=-90, in=-90, looseness=#1]{#2}{#3}{#4}{#5}{}
+}
+
+\newcommandx{\axWire}[5][1=1]{
+	% 1 = amplitude (option)
+	% 2 = from
+	% 3 = to
+	% 4 = label
+	% 5 = position
+	\wirelabel[out=90, in=90, looseness=#1]{#2}{#3}{#4}{#5}{}
+}

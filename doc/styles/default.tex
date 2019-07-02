@@ -1,0 +1,132 @@
+% ====================================================
+% LAYERS
+% ====================================================
+
+\pgfdeclarelayer{bg}
+\pgfsetlayers{bg,main}
+
+% ====================================================
+% COLORS
+% ====================================================
+
+% -------------- Definitions --------------
+\definecolor{isabelline}{rgb}{0.96, 0.94, 0.93}
+
+% -------------- Assignment --------------
+\newcommand{\netbgcolor}{isabelline}
+\newcommand{\wiringbgcolor}{white}
+
+% ====================================================
+% PADDING
+% ====================================================
+
+% padding of abstract general nets
+\newcommand{\netypadding}{7pt}
+\newcommand{\netxpadding}{35pt}
+
+% padding of boxes
+\newcommand{\boxxpadding}{20pt}
+\newcommand{\boxypadding}{30pt}
+
+% padding of abstract wirings
+\newcommand{\wiringypadding}{7pt}
+\newcommand{\wiringxpadding}{35pt}
+
+% ====================================================
+% FONT SIZE
+% ====================================================
+% font size of nodes and abstract general nets
+
+\newcommand{\largenodefontsize}{\scriptsize}
+\newcommand{\netfontsize}{\small}
+\newcommand{\wiringfontsize}{\small}
+\newcommand{\nodefontsize}{\normalsize}
+\newcommand{\bignodefontsize}{\normalsize}
+
+% ====================================================
+% SHAPES
+% ====================================================
+% custom style for advanced TikZ users
+
+\tikzset{
+%
+% -------------- NODE STYLES --------------
+  largenode/.style={font=\largenodefontsize},
+  downhead/.style={shape border rotate=-180},
+  righthead/.style={shape border rotate=-90},
+  lefthead/.style={shape border rotate=90},
+  uphead/.style={shape border rotate=360},
+  cell/.style={
+    minimum size=30pt,
+    font=\nodefontsize,
+    line width=0.7pt,
+    anchor=center,
+    inner sep=0.5pt,
+    regular polygon,
+    regular polygon sides=3,
+    draw,
+    fill=white,
+    downhead,
+  },
+  angle/.style={isosceles triangle apex angle=#1},
+  irregular/.style={
+    angle=90,
+    minimum size=20pt,
+    font=\bignodefontsize,
+    line width=0.7pt,
+    anchor=center,
+    inner sep=0.5pt,
+    isosceles triangle,
+    draw,
+    fill=white,
+    shape border rotate=-90,
+  },
+  proofnode/.style={draw, circle, fill=whiteanchor=center, inner sep=0.5pt},
+  nospace/.style={inner sep=0pt, outer sep=0pt},
+%
+% -------------- EDGE STYLES --------------
+  % on each segment style
+  on each segment/.style={
+    decorate,
+    decoration={
+      show path construction,
+      moveto code={},
+      lineto code={
+        \path [#1]
+        (\tikzinputsegmentfirst) -- (\tikzinputsegmentlast);
+      },
+      curveto code={
+        \path [#1] (\tikzinputsegmentfirst)
+        .. controls
+        (\tikzinputsegmentsupporta) and (\tikzinputsegmentsupportb)
+        ..
+        (\tikzinputsegmentlast);
+      },
+      closepath code={
+        \path [#1]
+        (\tikzinputsegmentfirst) -- (\tikzinputsegmentlast);
+      },
+    },
+  },
+  % mid arrow
+  mid arrow/.style={postaction={decorate,decoration={
+    markings,
+    mark=at position .5 with {\arrow[scale=1.5,>=stealth]{>}}
+    }}
+  },
+  % edge styles
+  wire/.style={-, shorten <=0.5pt, shorten >=0.5pt, draw=black, line width=0.1ex},
+  directed/.style={postaction={on each segment={mid arrow=black}}},
+  doublelink/.style={-, double, draw=black, line width=0.15ex, double distance=0.5mm},
+  anchorstyle/.style={},
+%
+% -------------- BOX LINE STYLES --------------
+  boxline/.style={draw=black, line width=0.1ex, overlay},
+%
+% -------------- NETS --------------
+  net/.style={draw=black, fill=\netbgcolor, inner ysep=\netypadding, inner xsep=\netxpadding, rect16, anchor=center, font=\netfontsize},
+  wiring/.style={draw=black, fill=\wiringbgcolor, inner ysep=\wiringypadding, inner xsep=\wiringxpadding, rect16, anchor=center, font=\wiringfontsize},
+%
+% -------------- UNIVERSALS --------------
+  every label/.style={label distance=1pt, font=\nodefontsize, inner sep=1pt},
+}

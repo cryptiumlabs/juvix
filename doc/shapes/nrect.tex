@@ -1,0 +1,49 @@
+% ====================================================
+% DEFINITIONS
+% ====================================================
+% definition of shape for abstract general nets (rectangle by default)
+
+\makeatletter
+\newcommand*{\rectx@anchor@bottom}[2]{%
+  \anchor{p#1}{%
+    \pgf@process{\northeast}%
+    \pgf@xa=\pgf@x
+    \pgf@process{\southwest}%
+    \pgf@x=\dimexpr\pgf@x + (\pgf@xa-\pgf@x)*#1/#2\relax
+  }%
+}
+\newcommand*{\declareshaperectx}[1]{%
+  \pgfdeclareshape{rect#1}{%
+    \inheritsavedanchors[from=rectangle]
+    \inheritanchorborder[from=rectangle]
+    \inheritanchor[from=rectangle]{north}
+    \inheritanchor[from=rectangle]{north west}
+    \inheritanchor[from=rectangle]{center}
+    \inheritanchor[from=rectangle]{west}
+    \inheritanchor[from=rectangle]{east}
+    \inheritanchor[from=rectangle]{mid}
+    \inheritanchor[from=rectangle]{mid west}
+    \inheritanchor[from=rectangle]{mid east}
+    \inheritanchor[from=rectangle]{base}
+    \inheritanchor[from=rectangle]{base west}
+    \inheritanchor[from=rectangle]{base east}
+    \inheritanchor[from=rectangle]{south}
+    \inheritanchor[from=rectangle]{south east}
+    \inheritbackgroundpath[from=rectangle]
+    \count@=\m@ne
+    \@whilenum\count@<#1 \do{%
+      \advance\count@\@ne
+      \expandafter\rectx@anchor@bottom\expandafter{\the\count@}{#1}%
+    }%
+  }%
+}
+\makeatother
+
+% ====================================================
+% DECLARATION
+% ====================================================
+
+\declareshaperectx{8}
+\declareshaperectx{16}
+\declareshaperectx{32}
+\declareshaperectx{64}
