@@ -22,7 +22,7 @@ header-includes:
     - \usepackage{bussproofs}
     - \usepackage{amsmath}
     - \pagestyle{fancy}
-    - \fancyhead[RE,LO]{Juvix}
+    - \fancyhead[RE,LO]{Juvix — Language Reference}
     - \fancyhead[LE,RO]{}
     - \fancyhead[CO,CE]{}
     - \fancyfoot[CO,CE]{}
@@ -96,22 +96,24 @@ Why will Juvix fix these problems?
 
 # Components
 
-## Frontend language
+# Frontend language
 
 High-level dependently-typed language.
 
-### Syntax
+## Syntax
 
 Syntax options:
 
 1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] favored
 1. Lisp-like [@common-lisp]
 
-### Semantics
+## Semantics
 
-## Core
+# Core language
 
-### Type Theory
+## Type theory
+
+### Basics
 
 Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
 
@@ -184,6 +186,8 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
+### Variable & conversion rules
+
 where $σ ∈ {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed.
 
 The variable rule selects an individual variable, type, and usage annotation from the context:
@@ -205,15 +209,110 @@ The conversion rule:
 
 Note that type equality is judged in a context with no resources.
 
-to be added:
-- pi formation from QTT
-- lam from QTT
-- app from QTT
-- dependent tensor product type from QTT: formation, introduction, elimination (multiplicative conjunction)
-- new: product type for multiplicative disjunction
-- new: product type for additive conjunction
-- new: product type for additive disjunction
-- set type from QTT
+### Dependent function types
+
+Function types $(x \overset{π}{:} S) → T$ record usage of the argument. The formation rule is:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ S$}
+\AxiomC{$0Γ,x \overset{0}{:} S ⊢ T$}
+\RightLabel{Pi}
+\BinaryInfC{$0Γ ⊢ (x \overset{π}{:} S) → T$}
+\end{prooftree}
+
+The usage annotation $π$ is not used in judgement of whether $T$ is a well-formed type. It is used
+in the introduction and elimination rules to track how $x$ is used, and how to multiply the resources
+required for the argument, respectively:
+
+\begin{prooftree}
+\AxiomC{$Γ,x \overset{σπ}{:} S ⊢ M \overset{σ}{:} T$}
+\RightLabel{Lam}
+\UnaryInfC{$Γ ⊢ λx \overset{π}{:} S.M^T \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ′}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
+\RightLabel{App}
+\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ App_{(x \overset{π}{:} S) T}(M,N) \overset{σ}{:} T[N/x]$}
+\end{prooftree}
+
+- $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
+- In the introduction rule, the abstracted variable $x$ has usage $σπ$ so that non-computational production requires no computational input
+- In the elimination rule, the resources required by the function and its argument, scaled to the amount required by the function, are summed
+- The function argument $N$ may be judged in the 0-use fragment of the system if and only if we are already in the 0-use fragment ($σ=0$) or the function will not use the argument ($π=0$).
+
+### Dependent multiplicative conjunction (tensor product)
+
+Dependent tensor production formation rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ A$}
+\AxiomC{$0Γ,x \overset{0}{:} S ⊢ T$}
+\RightLabel{⊗}
+\BinaryInfC{$0Γ ⊢ (x \overset{π}{:} S) ⊗ T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\RightLabel{I}
+\UnaryInfC{$0Γ ⊢ I$}
+\end{prooftree}
+
+Type formation does not require any resources.
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ′}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[M/x]$}
+\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
+\QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N)_{x \overset{π}{:} S.T} \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\UnaryInfC{$0Γ ⊢ ∗ \overset{σ}{:} I$}
+\end{prooftree}
+
+This is similar to the introduction rule for dependent function types above.
+
+Elimination rule:
+
+Under the erased ($σ=0$) part of the theory, projection operators can be used as normal:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
+\UnaryInfC{$Γ ⊢ fst_{x \overset{π}{:} S.T} (M) \overset{0}{:} A$}
+\end{prooftree}
+
+(should the last be $S$ ?)
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
+\UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[fst(M)/x]$}
+\end{prooftree}
+
+(todo: elimination rules)
+
+### Multiplicative disjunction
+
+(from linear type theory)
+
+### Additive conjunction
+
+(from linear type theory)
+
+### Additive disjunction
+
+(from linear type theory)
+
+### Universe (set type)
+
+(from QTT)
 
 can we encode everything we want in lambda calculus in this type system?
 
@@ -226,24 +325,24 @@ more things
 - figure out how this translates into an implementation, see McBride's paper
 - ensure we can derive induction, see Cedille
 
-### Syntax
+## Syntax
 
-### Semantics
+## Semantics
 
-## Low-level execution model
+# Low-level execution model
 
-### Optimal reduction
+## Optimal reduction
 
 See Optimal Lambda Calculus Reduction [@an-algorithm-for-optimal-lambda-calculus-reduction]
 
-### Interaction nets
+## Interaction nets
 
 Interaction nets as target computational model.
 Interaction net interpreters / compilers in Michelson, EVM, WASM.
 
-### Core language encoding
+## Core language encoding
 
-### Optimization
+## Optimization
 
 # Extensions
 
