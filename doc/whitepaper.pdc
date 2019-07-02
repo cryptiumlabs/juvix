@@ -1,10 +1,9 @@
 ---
-title: Juvix
-mainfont: DejaVuSans
+title: Juvix — Language Reference
+mainfont: DejaVuSerifCondensed
 fontsize: 7pt
 author: Christopher Goes
-        Cryptium Labs
-date: \textit{\today}
+date: \textit{Prerelease}
 urlcolor: cyan
 abstract: Juvix encapsulates a high-level frontend syntax, dependently-typed core language, and parallelizable
           low-level execution model for writing efficient, formally verifiable smart contracts which can be
@@ -151,9 +150,53 @@ Addition of two precontexts $Γ_1+Γ_2$ is defined when $0Γ_1=0Γ_2$:
 (Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
 \end{align}
 
-- context defs from QTT
-- term judgements from QTT
-- var, conv from QTT
+Contexts are identified by the judgement $Γ\vdash$, defined by the following rules:
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{Emp}
+\UnaryInfC{⋄\vdash}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ \vdash$}
+\AxiomC{$0Γ⊢S$}
+\RightLabel{Ext}
+\BinaryInfC{$Γ,x \overset{ρ}{:} S \vdash$}
+\end{prooftree}
+
+$0Γ⊢S$ indicates that $S$ is well-formed as a type in the context of $0Γ$.
+$Emp$, for "empty", builds the empty context, and $Ext$, for "extend", extends a context $Γ$ with a new variable $x$ of type $S$ and usage annotation $ρ$.
+All type formation rules yield judgements where all usage annotations in $Γ$ are $0$ (type formation requires no computational resources).
+
+Term judgements have the form:
+
+\begin{align}
+Γ ⊢ M \overset{σ}{:} S
+\end{align}
+
+where $σ ∈ {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed.
+
+The variable rule selects an individual variable, type, and usage annotation from the context:
+
+\begin{prooftree}
+\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
+\RightLabel{Var}
+\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S$}
+\end{prooftree}
+
+The conversion rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ ⊢ S≡T$}
+\RightLabel{Conv}
+\BinaryInfC{$Γ ⊢ M \overset{σ}{:} T$}
+\end{prooftree}
+
+Note that type equality is judged in a context with no resources.
+
+to be added:
 - pi formation from QTT
 - lam from QTT
 - app from QTT
