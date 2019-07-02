@@ -4,7 +4,7 @@
 
 Juvix is an experimental research language for writing efficient, safe, and composable smart contracts.
 
-For details, see [the whitepaper](./doc/whitepaper.pdf).
+For details, see [the language reference](./doc/language-reference.pdf).
 
 ## Caveats
 
@@ -13,6 +13,10 @@ Do not expect API stability. Expect bugs. Expect divergence from canonical proto
 No warranty is provided or implied.
 
 Backends for the EVM, WASM, Michelson, and LLVM are planned but not yet implemented.
+
+## Contributing
+
+See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 
 ## Installation
 
