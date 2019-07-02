@@ -342,7 +342,25 @@ Interaction net interpreters / compilers in Michelson, EVM, WASM.
 
 ## Core language encoding
 
+Compared with previous interaction net interpreters for the lambda calculus utilizing a static set
+of node types and fixed rewrite rules, Juvix adds an additional degree of freedom:
+the node types and rewrite rules of the interaction system can be generated at compile time and even
+dynamically altered at runtime according to usage patterns and desired time-space complexity tradeoffs.
+
+How to encode other linear logic types? Embed non-determinism in net? https://core.ac.uk/download/pdf/82329248.pdf
+
+https://hal.inria.fr/file/index/docid/76988/filename/RR-1748.pdf
+
 ## Optimization
+
+### Spacial memory contiguity
+
+Ensure correspondence between graphical locality and spacial locality in memory.
+
+### Speculative execution
+
+- "Strict" optimal reduction strategies
+- Evaluate based on predicting future input (feasible?)
 
 # Extensions
 
