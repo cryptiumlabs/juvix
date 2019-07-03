@@ -304,7 +304,30 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 \UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[fst(M)/x]$}
 \end{prooftree}
 
-(todo: elimination rules)
+Under the resourceful part:
+
+\begin{prooftree}
+\AxiomC{$0Γ_1, z \overset{0}{:} (x \overset{π}{:} S) ⊗ T ⊢ U$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$Γ_2, x \overset{σπ}{:} S, y \overset{σ}{:} T ⊢ N \overset{σ}{:} U[(x,y)/z]$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\RightLabel{$⊗$ Elim}
+\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let_{x \overset{π}{:} S.T} (x,y) = M\ in\ N \overset{σ}{:} U[M/z]$}
+\end{prooftree}
+
+- Must pattern match out to ensure both parts of the product are used.
+
+\begin{prooftree}
+\AxiomC{$0Γ_1, x \overset{0}{:} I ⊢ U$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} I$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} U[∗/x]$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\RightLabel{$⊗$ Elim I}
+\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let_I ∗ = M\ in\ N \overset{σ}{:} U[M/x]$}
+\end{prooftree}
+
+- Must explicitly eliminate elements of the unit type in the resourceful fragment.
+- Simplifies to fst, snd in $σ=0$ fragment (should we combine the rules?)
 
 ### Multiplicative disjunction
 
@@ -361,7 +384,30 @@ Introduction rules:
 
 ### Universe (set type)
 
-(from QTT)
+Formation rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\RightLabel{Set}
+\UnaryInfC{$0Γ ⊢ Set$}
+\end{prooftree}
+
+Introduction rule ($σ = 0$ fragment only):
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
+\AxiomC{$0Γ, x \overset{0}{:} El(M) ⊢ N \overset{0}{:} Set$}
+\RightLabel{Set-Pi}
+\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} Set$}
+\end{prooftree}
+
+Elimination rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
+\RightLabel{Set-El}
+\UnaryInfC{$0Γ ⊢ El(M)$}
+\end{prooftree}
 
 can we encode everything we want in lambda calculus in this type system?
 
