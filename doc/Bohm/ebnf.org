@@ -1,0 +1,55 @@
+* EBNF
+- white-space can always be added!
+#+BEGIN_EXAMPLE
+  Grammar ::= Infix0
+
+  Infix0 ::= Infix0 'or' Infix1
+           | Infix0 'mod' Infix1
+
+  Infix1 ::= Infix1 'and' Infix2
+           | Infix2
+
+  Infix2 ::= Infix2 '==' Infix3
+           | Infix2 '<'  Infix3
+           | Infix2 '<=' Infix3
+           | Infix2 '>=' Infix3
+           | Infix2 '<>' Infix3
+
+  Infix3 ::= Infix3 '+' Infix4
+           | Infix3 '-' Infix4
+           | Infix4
+
+  Infix4 ::= Infix4 '*' Expression
+           | Infix4 'div' Expression
+
+  Expression ::= '(' Infix0 ')'
+               | 'lambda' Symbol '.' Expression
+               | Number
+               | 'true'
+               | 'false'
+               | 'letrec' Symbol '=' Expression
+               | 'let' Symbol '=' Expression 'in' Expression
+               | 'if' Expression 'then' Expression 'else' Expression
+               | 'not' Expression
+               | '(' Applist ')'
+               | List
+               | 'cons' '(' Expression ',' Expression ')'
+               | 'head' '(' Expression ')'
+               | 'tail' '(' Expression ')'
+               | 'isnil' '(' Expression ')'
+
+  list ::= 'nil'
+         | '[' Exprlist ']'
+
+  Exprlist ::= Expression
+             | Expression ',' Exprlist
+
+  Applist ::= Expr
+            | Applist Expr
+
+  WhiteSpace ::= ' '
+
+  Symbol ::= [a-zA-Z\-_]+
+
+  Number ::= [0-9]+
+#+END_EXAMPLE

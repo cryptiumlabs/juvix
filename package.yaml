@@ -20,6 +20,8 @@ dependencies:
   - mtl
   - containers
   - fgl
+  - lens
+  - parsec
 
 default-extensions:
   - NoImplicitPrelude
