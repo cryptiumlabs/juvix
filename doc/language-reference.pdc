@@ -546,7 +546,9 @@ In each case, two options: interaction net interpreter & direct compilation.
 
 ## Visual representation
 
-1. Inspiration: Luna [@luna-lang]
+1. Some (closest?) inspiration: Luna [@luna-lang]
+1. Could map depths of elementary linear logic terms to spacial depth in an execution visualization
+1. Goal: isomorphism between textual (AST) and graphical (dataflow graph) representations. Getting the isomorphism right so that they can be switched between for real projects seems like the hard part.
 
 # Appendices
 
