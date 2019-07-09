@@ -9,7 +9,7 @@ titlepage-rule-height: 1
 toc-own-page: true
 mainfont: DejaVuSerifCondensed
 fontsize: 7pt
-author: Christopher Goes
+author: Christopher Goes, Marty Stumpf, Jeremy Ornelas
 date: \today \ - \textit{Prerelease}
 urlcolor: cyan
 abstract: Juvix encapsulates a high-level frontend syntax, dependent-linearly-typed core language, and parallelizable
