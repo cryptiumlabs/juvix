@@ -119,6 +119,8 @@ Why will Juvix fix these problems?
 
 ## Optimal reduction
 
+\pagebreak
+
 # Architectural overview
 
 \begin{center}
@@ -128,7 +130,7 @@ Why will Juvix fix these problems?
 
   \node[state] (frontend)                               {Juvix / Frontend};
   \node[state] (core)     [below of = frontend]         {Juvix / Core};
-  \node[state] (eal)      [below left of = core]        {Juvix / ELL};
+  \node[state] (eal)      [below left of = core]        {Juvix / EAL};
   \node[state] (inet)     [below of = eal]              {Juvix / INet};
   \node[state] (machine)  [below right of = inet]       {Underlying Machine};
 
@@ -136,7 +138,7 @@ Why will Juvix fix these problems?
   \path (core)      edge node {\textit{INFER}}      (eal);
   \path (eal)       edge node {\textit{TRANSFORM}}  (inet);
   \path (inet)      edge node {\textit{ABSALG}}     (machine);
-  \path (core)      edge node {\textit{DIRECT}}     (machine);
+  \path (core)      edge node {\textit{DIRECT RR}}  (machine);
 \end{tikzpicture}
 \end{center}
 
