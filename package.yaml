@@ -23,6 +23,7 @@ dependencies:
   - lens
   - parsec
   - capability >= 0.2.0.0
+  - fgl-visualize
 default-extensions:
   - NoImplicitPrelude
   - OverloadedStrings

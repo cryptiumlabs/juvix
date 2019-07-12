@@ -1,4 +1,5 @@
-{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ApplicativeDo #-}
 
 module Juvix.Interaction (module Juvix.Interaction
                          , Node
@@ -64,12 +65,12 @@ newtype EnvNetInfo b a = EnvI (State (InfoNet b) a)
   deriving (HasState "net" (Net b)) via
     Rename "net" (Field "net" () (MonadState (State (InfoNet b))))
 
-runInfoNet :: EnvNetInfo b a → InfoNet b → (a, InfoNet b)
-runInfoNet (EnvI m) = runState m
+runInfoNet :: EnvNetInfo b a → InfoNet b → (InfoNet b)
+runInfoNet (EnvI m) = execState m
 
 -- sequentalStep ∷ MonadState StateInfo m ⇒ m ()
 sequentalStep :: HasState "info" Info m ⇒ m ()
-sequentalStep = modify'  @"info" (\c → c {sequentalSteps = sequentalSteps c + 1})
+sequentalStep = modify' @"info" (\c → c {sequentalSteps = sequentalSteps c + 1})
 
 -- incGraphSizeStep :: MonadState StateInfo m ⇒ Integer → m ()
 incGraphSizeStep :: HasState "info" Info m ⇒ Integer → m ()
@@ -80,34 +81,37 @@ incGraphSizeStep n = do
       currentGraphSize = n + currGraph
       biggestGraphSize = max currentGraphSize largestGraph
       sequentalSteps = succ seqStep
-  put @"info" Info {memoryAllocated, currentGraphSize, biggestGraphSize, sequentalSteps, parallelSteps}
+  put @"info" Info { memoryAllocated, currentGraphSize
+                   , biggestGraphSize, sequentalSteps, parallelSteps }
 
 -- Graph to more typed construction---------------------------------------------
-aux0FromGraph :: (Prim b, Graph gr) ⇒ (Primary → b) → gr a EdgeInfo → Node → Maybe b
-aux1FromGraph :: (Aux1 b, Graph gr) ⇒ (Primary → Auxiliary → b) → gr a EdgeInfo → Node → Maybe b
-aux2FromGraph :: (Aux2 b, Graph gr)
+aux0FromGraph :: (Prim b, Graph gr, HasState "net" (gr a EdgeInfo) m)
+              ⇒ (Primary → b)
+              → Node
+              → m (Maybe b)
+aux1FromGraph :: (Aux1 b, Graph gr, HasState "net" (gr a EdgeInfo) m)
+              ⇒ (Primary → Auxiliary → b)
+              → Node
+              → m (Maybe b)
+aux2FromGraph :: (Aux2 b, Graph gr, HasState "net" (gr a EdgeInfo) m)
               ⇒ (Primary → Auxiliary → Auxiliary → b)
-              → gr a EdgeInfo
               → Node
-              → Maybe b
+              → m (Maybe b)
 
-aux3FromGraph :: (Aux3 b, Graph gr)
+aux3FromGraph :: (Aux3 b, Graph gr, HasState "net" (gr a EdgeInfo) m)
               ⇒ (Primary → Auxiliary → Auxiliary → Auxiliary → b)
-              → gr a EdgeInfo
               → Node
-              → Maybe b
+              → m (Maybe b)
 
-aux4FromGraph :: (Aux4 b, Graph gr)
+aux4FromGraph :: (Aux4 b, Graph gr, HasState "net" (gr a EdgeInfo) m)
               ⇒ (Primary → Auxiliary → Auxiliary → Auxiliary → Auxiliary → b)
-              → gr a EdgeInfo
               → Node
-              → Maybe b
+              → m (Maybe b)
 
-aux5FromGraph :: (Aux5 b, Graph gr)
+aux5FromGraph :: (Aux5 b, Graph gr, HasState "net" (gr a EdgeInfo) m)
               ⇒ (Primary → Auxiliary → Auxiliary → Auxiliary → Auxiliary → Auxiliary → b)
-              → gr a EdgeInfo
               → Node
-              → Maybe b
+              → m (Maybe b)
 
 aux0FromGraph con = auxFromGraph convPrim (con Free)
 aux1FromGraph con = auxFromGraph convAux1 (con Free FreeNode)
@@ -141,9 +145,13 @@ convAux5 :: Aux5 p ⇒ (Node, PortType) → p → p
 convAux5 (n,Aux2) con = set aux5 (Auxiliary n) con
 convAux5 a con        = convAux4 a con
 
-auxFromGraph :: Graph gr ⇒ ((Node, PortType) → b → b) → b → gr a EdgeInfo → Node → Maybe b
-auxFromGraph conv constructor graph num =
-  foldr f constructor . lneighbors' <$> fst (match num graph)
+auxFromGraph :: (Graph gr, HasState "net" (gr a EdgeInfo) m)
+             ⇒ ((Node, PortType) → b → b)
+             → b
+             → Node
+             → m (Maybe b)
+auxFromGraph conv constructor num =
+  (fmap (foldr f constructor . lneighbors') . fst . match num) <$> get @"net"
   where
     f (Edge (n1, n1port) (n2, n2port), _) con
       | n1 == num = conv (n2, n1port) con
@@ -158,81 +166,79 @@ isBothPrimary net node =
   $ fmap fst
   $ lneighbors net node
 
-langToPort :: Net a → Node → (a → Maybe b) → Maybe b
-langToPort graph n f = do
-  context ← fst (match n graph)
-  f (snd (labNode' context))
+langToPort :: HasState "net" (Net a) m ⇒ Node → (a → m (Maybe b)) → m (Maybe b)
+langToPort n f = do
+  graph ← get @"net"
+  case fst (match n graph) of
+    Just context → f $ snd $ labNode' context
+    Nothing      → pure Nothing
 
 emptyNet :: Net a
 emptyNet = empty
 -- Graph manipulation ----------------------------------------------------------
--- runNet ∷ (Net a → State StateInfo (Net a)) → Net a → (Net a, StateInfo)
-runNet :: Graph gr => (gr a1 b -> State Info a2) -> gr a1 b -> (a2, Info)
-runNet f net = runState (f net) (Info netSize 0 0 netSize netSize)
+runNet :: EnvNetInfo b a → Net b → InfoNet b
+runNet f net = runInfoNet f (InfoNet net (Info netSize 0 0 netSize netSize))
   where
     netSize = toInteger (length (nodes net))
-
-delMaybeNodes :: Graph gr ⇒ [Maybe Node] → gr a b → gr a b
-delMaybeNodes = delNodes . catMaybes
 -- Manipulation functions ------------------------------------------------------
 
-linkHelper :: Net a → REL NumPort → PortType → Node → Net a
-linkHelper net rel nodeType node =
+linkHelper :: HasState "net" (Net a) m ⇒ REL NumPort → PortType → Node → m ()
+linkHelper rel nodeType node =
   case rel of
-    Link (Port portType node1) -> link net (node, nodeType) (node1, portType)
-    Link FreePort              -> net
-    ReLink oldNode oldPort     -> relink net (oldNode, oldPort) (node, nodeType)
+    Link (Port portType node1) → link (node, nodeType) (node1, portType)
+    Link FreePort              → pure ()
+    ReLink oldNode oldPort     → relink (oldNode, oldPort) (node, nodeType)
 
-linkAll ∷ Net a → Relink → Net a
-linkAll net (RELAuxiliary0 {primary, node}) =
-  linkHelper net primary Prim node
-linkAll net (RELAuxiliary1 {primary, node, auxiliary1}) =
-  linkHelper (linkHelper net primary Prim node) auxiliary1 Aux1 node
-linkAll net (RELAuxiliary2 {primary, node, auxiliary1, auxiliary2}) =
-  foldr (\ (typ,nodeType) net -> linkHelper net typ nodeType node)
-        net
-        [(primary, Prim), (auxiliary1, Aux1), (auxiliary2, Aux2)]
+linkAll ∷ HasState "net" (Net a) m ⇒ Relink → m ()
+linkAll (RELAuxiliary0 {primary, node}) =
+  linkHelper primary Prim node
+linkAll (RELAuxiliary1 {primary, node, auxiliary1}) =
+  traverse_ (\ (t, nt) → linkHelper t nt node)
+            [(primary, Prim), (auxiliary1, Aux1)]
+linkAll (RELAuxiliary2 {primary, node, auxiliary1, auxiliary2}) =
+  traverse_ (\ (t, nt) → linkHelper t nt node)
+            [(primary, Prim), (auxiliary1, Aux1), (auxiliary2, Aux2)]
 
-
-link ∷ Net a → (Node, PortType) → (Node, PortType) → Net a
-link net (node1, port1) (node2, port2) =
-  insEdge (node1, node2, Edge (node1, port1) (node2, port2)) net
+link :: HasState "net" (Net a) m ⇒ (Node, PortType) → (Node, PortType) → m ()
+link (node1, port1) (node2, port2) =
+  modify @"net" (insEdge (node1, node2, Edge (node1, port1) (node2, port2)))
 
 -- post condition, must delete the old node passed after the set of transitions are done!
-relink ∷ Net a → (Node, PortType) → (Node, PortType) → Net a
-relink net (oldNode, port) new@(newNode, _newPort) =
+relink :: HasState "net" (Net a) m ⇒ (Node, PortType) → (Node, PortType) → m ()
+relink (oldNode, port) new@(newNode, _newPort) = do
+  net <- get @"net"
   case findEdge net oldNode port of
-    Just relink@(nodeToRelink, _) → insEdge (nodeToRelink, newNode, Edge relink new) net
-    Nothing                       → net -- The port was really free to begin with!
-
--- | like relink, but handles an Aux in the first argument
-relinkAux :: Net a → (Auxiliary, PortType) → (Node, PortType) → Net a
-relinkAux net (Auxiliary a, pb) newNode = relink net (a, pb) newNode
-relinkAux net _                 _       = net
+    Just re@(nodeToRelink, _) → put @"net" (insEdge (nodeToRelink, newNode, Edge re new) net)
+    Nothing                   → pure () -- The port was really free to begin with!
 
 -- | rewire is used to wire two auxiliary nodes together
 -- when the main nodes annihilate each other
-rewire ∷ Net a → (PortType, Auxiliary) → (PortType, Auxiliary) → Net a
-rewire net (pa, (Auxiliary a)) (pb, (Auxiliary b)) =
-  case findEdge net b pb of
-    Just x  → relink net (a, pa) x
-    Nothing → net
-rewire net _ _ = net
+rewire ∷ HasState "net" (Net a) m ⇒ (PortType, Node) → (PortType, Node) → m ()
+rewire (pa, a) (pb, b) = do
+  net ← get @"net"
+  traverse_ (relink (a, pa)) (findEdge net b pb)
 
-newNode ∷ DynGraph gr ⇒ gr a b → a → (Node, gr a b)
-newNode graph lang = (succ maxNum, insNode (succ maxNum, lang) graph)
-  where
-    (_,maxNum)
-      | isEmpty graph = (0, 0)
-      | otherwise     = nodeRange graph
+newNode ∷ (DynGraph gr, HasState "net" (gr a b) m) ⇒ a → m Node
+newNode lang = do
+  net <- get @"net"
+  let (_,maxNum)
+        | isEmpty net = (0, 0)
+        | otherwise   = nodeRange net
+  put @"net" (insNode (succ maxNum, lang) net)
+  pure (succ maxNum)
 
-deleteRewire ∷ [Node] → [Node] → Net a → Net a
-deleteRewire oldNodesToDelete newNodes net = delNodes oldNodesToDelete dealWithConflict
-  where
-    newNodeSet           = Set.fromList newNodes
-    neighbors            = fst <$> (oldNodesToDelete >>= lneighbors net)
-    conflictingNeighbors = findConflict newNodeSet neighbors
-    dealWithConflict     = foldr (\ (t1, t2) net -> link net t1 t2) net conflictingNeighbors
+
+delNodesM :: (Graph gr, HasState "net" (gr a b) f) ⇒ [Node] → f ()
+delNodesM xs = modify @"net" (delNodes xs)
+
+deleteRewire ∷ HasState "net" (Net a) m ⇒ [Node] → [Node] → m ()
+deleteRewire oldNodesToDelete newNodes = do
+  net ← get @"net"
+  let newNodeSet           = Set.fromList newNodes
+      neighbors            = fst <$> (oldNodesToDelete >>= lneighbors net)
+      conflictingNeighbors = findConflict newNodeSet neighbors
+  traverse_ (uncurry link) conflictingNeighbors
+  modify @"net" (delNodes oldNodesToDelete)
 
 auxToPrimary :: Auxiliary → Primary
 auxToPrimary (Auxiliary node) = Primary node
@@ -243,7 +249,7 @@ auxToNode (Auxiliary node) = Just node
 auxToNode FreeNode         = Nothing
 
 findConflict ∷ Set.Set Node → [EdgeInfo] → [((Node, PortType), (Node, PortType))]
-findConflict nodes neighbors  = Set.toList (foldr f mempty neighbors)
+findConflict nodes neighbors = Set.toList (foldr f mempty neighbors)
   where
     f (Edge t1 t2@(_,_)) xs
       | Map.member t1 makeMap && Map.member t2 makeMap =
@@ -269,22 +275,24 @@ findEdge net node port = fmap other $ headMay $ filter f $ lneighbors net node
       | t2 == (node, port) = t1
       | otherwise          = error "doesn't happen"
 
-deleteEdge :: Net a → (Node, PortType) → (Node, PortType) → Net a
-deleteEdge net t1@(n1,_) t2@(n2,_)
-  = delAllLEdge (n1, n2, (Edge t1 t2))
-  $ delAllLEdge (n2, n1, (Edge t2 t1)) net
+deleteEdge :: HasState "net" (Net a) f ⇒ (Node, PortType) → (Node, PortType) → f ()
+deleteEdge t1@(n1,_) t2@(n2,_)
+  = modify @"net" (delAllLEdge (n1, n2, (Edge t1 t2))
+                  . delAllLEdge (n2, n1, (Edge t2 t1)))
 
 -- Utility functions -----------------------------------------------------------
-untilNothingNTimesM ∷ Monad m ⇒ (t → m (Maybe t)) → t → Int → m t
-untilNothingNTimesM f a n
-  | n <= 0  = pure a
+untilNothingNTimesM :: Monad f => f Bool -> Int -> f ()
+untilNothingNTimesM f n
+  | n <= 0  = pure ()
   | otherwise = do
-      v <- f a
-      case v of
-        Nothing -> pure a
-        Just a  -> untilNothingNTimesM f a (pred n)
+      f >>= \case
+        True → untilNothingNTimesM f (pred n)
+        False → pure ()
+
+
+
 
 untilNothing ∷ (t → Maybe t) → t → t
 untilNothing f a = case f a of
-  Nothing -> a
-  Just a  -> untilNothing f a
+  Nothing → a
+  Just a  → untilNothing f a

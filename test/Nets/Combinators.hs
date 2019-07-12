@@ -54,5 +54,5 @@ nonTerminating = buildGr
 -- Tests------------------------------------------------------------------------
 
 -- TODO: Write real tests
-test1 :: (NetLang, StateInfo)
+test1 :: InfoNet Lang
 test1 = runNet (reduceAll 100) nonTerminating

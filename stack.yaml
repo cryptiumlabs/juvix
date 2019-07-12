@@ -5,5 +5,6 @@ packages:
 
 extra-deps:
 - capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62
+- fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e
 
 allow-newer: true
