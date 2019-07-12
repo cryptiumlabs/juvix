@@ -545,6 +545,37 @@ Define:
 
 ### Constraint solution
 
+
+# Dependently-typed elementary affine logic
+
+\begin{figure}[h]
+\caption{Typing rules for DTEAL (TODO)}
+
+\begin{prooftree}
+\AxiomC{$Γ,x:A ⊢ t:B$}
+\RightLabel{abst}
+\UnaryInfC{$Γ ⊢ λx.t: \prod A. B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ,x:A ⊢ B: *$}
+\RightLabel{pi}
+\UnaryInfC{$Γ ⊢ \prod x: A. B : *$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ t_1:\prod A. B$}
+\AxiomC{$Γ_2 ⊢ t_2:A$}
+\RightLabel{app}
+\BinaryInfC{$Γ_1,Γ_2 ⊢ (t_1 t_2):B[t_2/A]$}
+\end{prooftree}
+
+\end{figure}
+
+Q: Can we just split up the context in the (app) rule without problems? Equivalent to zero-usage in QTT?
+
+think about how to correctly translate r = \case 1 -> 2Y; 2 -> 3Z, h = (r & x) -> a, constraints should reflect dependently-typed usage calculations (though maybe we don't care for >= 2 usages).
+
 # Low-level execution model
 
 ## Optimal reduction
