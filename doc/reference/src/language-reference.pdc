@@ -45,107 +45,53 @@ header-includes:
 
 # Motivation
 
+!include src/motivation.pdc
+
 # Prior work
 
-## Dependently-typed languages
-
-Why have dependently-typed languages not yet succeeded?
-
-1. Inefficient compilation
-1. Too hard / too much effort to write proofs
-1. Economics didn't favor safety (compile time, speed of development matters more)
-1. Not enough engineering effort dedicated
-
-## Dependently-typed smart contracts
-
-One prior work [@safer-smart-contracts-through-type-driven-development] wrote an Idris [@idris-systems-programming-meets-full-dependent-types] backend targeting Ethereum's LLL language [@lisp-like-language]. Juvix shares many of the goals outlined in that paper, but the approach described failed to take advantage of well-known optimizations such as tail-call optimization and handicapped itself by compiling to LLL instead of directly to EVM opcodes. The effects system described therein may be a sensible model for smart contract programs written in Juvix but is out of scope of this paper.
-
-Formality [@formality] was a substantial inspiration for this work, particularly the low-level interaction net execution model. Juvix differs in its willingness to implement a larger core language and low-level execution model and trade some simplicity for performance where the performance gains are substantial.
+!include src/prior-work.pdc
 
 # Reasoning
 
-Why will Juvix fix these problems?
-
-## Efficient compilation
-
-### Compiler-level optimizations
-
-1. Efficient TCO
-1. More efficient datatype representation (Cedille?)
-1. Large reductions (Cedille?)
-1. Closures, investigate
-1. Linear types
-1. Supercompilation
-
-### Developer-level optimizations
-        
-1. Expose underlying VM primitives, expose interpreter
-1. Allow safe rewrites to more efficient implementations
-
-### Execution model
-
-1. Interaction nets, custom rewrite rules, optimal lambda reduction
-
-## Time-efficient formal proof constructions
-
-1. Assistance for proof generation, ecosystem for composable proofs
-    1. Libraries of proofs for common functionality
-    1. Graph search for asserted properties
-    1. "Prototype first, proofs later"
-
-## Not just safe - possible
-
-1. Make safety cheaper, smart contracts need it, enable more complex systems
-    1. Correctness necessary
-    1. Compile time doesn't matter, small programs, can supercompile/search
-    1. Code reuse (even on-chain)
-1. Leverage power of dependent types for safe, complex interchain logic
-    1. "Abstraction limits" hit by interacting Ethereum contracts
-        1. Typecheck across contracts
-        1. Contracts require types of callers / callees
-    1. Safe cross-contract optimization using known types
-    1. Safe upgrades (prove semantical equivalence, anyone can upgrade contract)
+!include src/reasoning.pdc
 
 # Theoretical background
 
 ## Lambda calculus
 
+!include src/background/lambda-calculus.pdc
+
+## Sequent calculus
+
+!include src/background/sequent-calculus.pdc
+
 ## Simply-typed lambda calculus
+
+!include src/background/simply-typed-lambda-calculus.pdc
 
 ## Intuitionistic dependent types
 
 ## Linear logic
 
+!include src/background/linear-logic.pdc
+
 ## Elementary affine logic
+
+!include src/background/elementary-affine-logic.pdc
 
 ## Interaction nets
 
+!include src/background/interaction-nets.pdc
+
 ## Optimal reduction
+
+!include src/background/optimal-reduction.pdc
 
 \pagebreak
 
 # Architectural overview
 
-\begin{center}
-\begin{tikzpicture}[->, >=stealth, shorten >=1pt, auto, node distance = 5cm, semithick]
-  \definecolor{blue}{RGB}{6,56,110}
-  \tikzstyle{every state}=[fill=blue, draw=none, text=white]
-
-  \node[state] (frontend)                               {Juvix / Frontend};
-  \node[state] (core)     [below of = frontend]         {Juvix / Core};
-  \node[state] (eal)      [below left of = core]        {Juvix / EAL};
-  \node[state] (inet)     [below of = eal]              {Juvix / INet};
-  \node[state] (machine)  [below right of = inet]       {Underlying Machine};
-
-  \path (frontend)  edge node {\textit{DESUGAR}}    (core);
-  \path (core)      edge node {\textit{INFER}}      (eal);
-  \path (eal)       edge node {\textit{TRANSFORM}}  (inet);
-  \path (inet)      edge node {\textit{ABSALG}}     (machine);
-  \path (core)      edge node {\textit{DIRECT RR}}  (machine);
-\end{tikzpicture}
-\end{center}
-
-\pagebreak
+!include src/architecture.pdc
 
 # Frontend language
 
@@ -574,7 +520,7 @@ Define:
 
 Q: Can we just split up the context in the (app) rule without problems? Equivalent to zero-usage in QTT?
 
-think about how to correctly translate r = \case 1 -> 2Y; 2 -> 3Z, h = (r & x) -> a, constraints should reflect dependently-typed usage calculations (though maybe we don't care for >= 2 usages).
+think about how to correctly translate r = lam-case 1 -> 2Y; 2 -> 3Z, h = (r & x) -> a, constraints should reflect dependently-typed usage calculations (though maybe we don't care for >= 2 usages).
 
 # Low-level execution model
 
@@ -680,5 +626,7 @@ In each case, two options: interaction net interpreter & direct compilation.
 # Appendices
 
 ## Examples
+
+!include src/appendices/examples.pdc
 
 # References

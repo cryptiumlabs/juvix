@@ -1,0 +1,43 @@
+Why will Juvix fix these problems?
+
+## Efficient compilation
+
+### Compiler-level optimizations
+
+1. Efficient TCO
+1. More efficient datatype representation (Cedille?)
+1. Large reductions (Cedille?)
+1. Closures, investigate
+1. Linear types
+1. Supercompilation
+
+### Developer-level optimizations
+        
+1. Expose underlying VM primitives, expose interpreter
+1. Allow safe rewrites to more efficient implementations
+
+### Execution model
+
+1. Interaction nets, custom rewrite rules, optimal lambda reduction
+
+## Time-efficient formal proof constructions
+
+1. Assistance for proof generation, ecosystem for composable proofs
+    1. Libraries of proofs for common functionality
+    1. Graph search for asserted properties
+    1. "Prototype first, proofs later"
+
+## Not just safe - possible
+
+1. Make safety cheaper, smart contracts need it, enable more complex systems
+    1. Correctness necessary
+    1. Compile time doesn't matter, small programs, can supercompile/search
+    1. Code reuse (even on-chain)
+1. Leverage power of dependent types for safe, complex interchain logic
+    1. "Abstraction limits" hit by interacting Ethereum contracts
+        1. Typecheck across contracts
+        1. Contracts require types of callers / callees
+    1. Safe cross-contract optimization using known types
+    1. Safe upgrades (prove semantical equivalence, anyone can upgrade contract)
+
+

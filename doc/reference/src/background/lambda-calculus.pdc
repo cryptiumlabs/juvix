@@ -1,0 +1,15 @@
+### Basics
+
+Terms, free variables, alpha-equivalence, eta-equivalence, beta reduction, de Brujin indices.
+
+### Universality
+
+Non-termination, Turing-completeness.
+
+### Efficiency
+
+Beta-reduction is nontrivial. Reduction strategies: call-by-name, call-by-value, call-by-need, optimality.
+
+### Encoding data structures
+
+Church encoding, Scott encoding.
