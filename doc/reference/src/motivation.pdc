@@ -1,1 +1,7 @@
 Why does this matter?
+
+- Ethereum contract losses ($xxx million). Many unexploited issues (cite 0x bug).
+- Failing air traffic control systems.
+- Complexity threshold in composable systems.
+- Reduce cost of bringing code to production.
+- Prove summaries of complex behaviours with simple predicates, reduce information asymmetry.

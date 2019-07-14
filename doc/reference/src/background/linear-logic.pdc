@@ -1,1 +1,67 @@
-Linear logic is cool!
+Key idea: hypotheses are now linear, can only be used once.
+
+- Define $A ::= P | A ⊗ A | A ⊕ A | A \& A | A \parr A | A ⊸ A | 1 | 0 | ⊤ | ⊥ | !A | ?A$.
+
+\begin{figure}
+\caption{Typing rules for linear logic}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A$}
+\AxiomC{$Δ ⊢ B$}
+\RightLabel{⊗}
+\BinaryInfC{$Γ, Δ ⊢ A ⊗ B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A, B$}
+\RightLabel{$\parr$}
+\UnaryInfC{$Γ ⊢ A \parr B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A$}
+\AxiomC{$Γ ⊢ B$}
+\RightLabel{⊕}
+\BinaryInfC{$Γ ⊢ A \& B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A$}
+\RightLabel{\&-L}
+\UnaryInfC{$Γ ⊢ A ⊕ B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ B$}
+\RightLabel{\&-R}
+\UnaryInfC{$Γ ⊢ A ⊕ B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ, A ⊢ B$}
+\RightLabel{lam}
+\UnaryInfC{$Γ ⊢ A ⊸ B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A ⊸ B$}
+\AxiomC{$Δ ⊢ A$}
+\RightLabel{app}
+\BinaryInfC{$Γ, Δ ⊢ B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ, A ⊢ Δ$}
+\RightLabel{weak}
+\UnaryInfC{$Γ, !A ⊢ Δ$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ,!A, !A ⊢ Δ$}
+\RightLabel{contr}
+\UnaryInfC{$Γ, !A ⊢ Δ$}
+\end{prooftree}
+
+\end{figure}
+
+- Explain with chef analogy.
