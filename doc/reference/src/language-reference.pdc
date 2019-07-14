@@ -47,6 +47,10 @@ header-includes:
 
 !include src/motivation.pdc
 
+# Typographical conventions
+
+!include src/typographical-conventions.pdc
+
 # Prior work
 
 !include src/prior-work.pdc
@@ -54,10 +58,6 @@ header-includes:
 # Reasoning
 
 !include src/reasoning.pdc
-
-# Typographical conventions
-
-!include src/typographical-conventions.pdc
 
 # Theoretical background
 
