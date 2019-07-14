@@ -1,0 +1,42 @@
+## Optimal reduction
+
+See Optimal Lambda Calculus Reduction [@an-algorithm-for-optimal-lambda-calculus-reduction]
+
+## Interaction nets
+
+Interaction nets as target computational model.
+Interaction net interpreters / compilers in Michelson, EVM, WASM.
+
+## Core language encoding
+
+Compared with previous interaction net interpreters for the lambda calculus utilizing a static set
+of node types and fixed rewrite rules, Juvix adds an additional degree of freedom:
+the node types and rewrite rules of the interaction system can be generated at compile time and even
+dynamically altered at runtime according to usage patterns and desired time-space complexity tradeoffs.
+
+\begin{tikzpicture}
+\inetbigcell[angle=130]{a}{$\lambda$}[5]
+\inetbigcell[angle=130, right=100pt]{b}{$@$}[5]
+
+\inwire{a/1}{}
+\inwire{a/4}{}
+\inwire{b/1}{}
+\inwire{b/4}{}
+
+\cutWire{a.out}{b.out}{}{}
+\end{tikzpicture}
+
+How to encode other linear logic types?
+
+## Optimization
+
+### Spacial memory contiguity
+
+Ensure correspondence between graphical locality and spacial locality in memory.
+
+### Speculative execution
+
+- "Strict" optimal reduction strategies
+- Evaluate based on predicting future input (feasible?)
+
+

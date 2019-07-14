@@ -1,0 +1,23 @@
+## Zero-knowledge execution compression
+
+1. Run interaction nets in ZK
+
+## State machine integration
+
+1. Defined equalence semantics but implementation can change later
+1. Contracts themselves can call the compiler (needs more R&D)
+1. Bounties for proofs, sub-contract-upgrades, etc.
+
+## Interchain abstraction
+
+1. Can run cross-chain over IBC
+1. Targets multiple backends (Ethereum, Tezos, Cosmos) initially
+1. Avoid lock-in, separate choice of application and choice of consensus
+
+## Visual representation
+
+1. Some (closest?) inspiration: Luna [@luna-lang]
+1. Could map depths of elementary linear logic terms to spacial depth in an execution visualization
+1. Goal: isomorphism between textual (AST) and graphical (dataflow graph) representations. Getting the isomorphism right so that they can be switched between for real projects seems like the hard part.
+
+

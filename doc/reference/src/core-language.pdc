@@ -1,0 +1,312 @@
+## Type theory
+
+Combines linear & dependent types.
+
+Key problem: linear function splits up resources for production of argument & function. What if function type depends on argument? Doesn't make sense.
+
+Assigning evaluative costs, dealing with if-conditionals, etc.
+
+### Basics
+
+Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
+
+A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
+$(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distributed over addition, and multiplication by $0$ annihilates $R$.
+
+The type theory of Juvix Core must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice Juvix is instantiated over the semiring of natural numbers, which is the most expressive option.
+
+Typing judgements in Juvix Type Theory (JTT) have the following form:
+
+$$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
+
+where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring.
+
+JTT is defined over the syntactic categories of usages $ρ, π$, precontexts $Γ$, pretypes $S,T,R$, and preterms $M,N,O$:
+
+\begin{align*}
+ρ,π ∈ R (1) \\
+\\
+Γ := ⋄\ |\ Γ,x \overset{ρ}{:} S \\
+\\
+S, T, U := (x \overset{π}{:} S) → T\ |\ (x \overset{π}{:} S) ⊗ T\ |\ I\ |\ Set \\
+\\
+M, N, O := x\ |\ λx \overset{π}{:} S.M^T\ |\ App_{(x \overset{π}{:} S)T} (M,N) \\
+            \ |\ (M,N)_{x \overset{π}{:} S . T}\ |\ ∗\ |\ let_I ∗ = M\ in\ N\ |\ (x \overset{π}{:} M) → N
+\end{align*}
+
+The symbol ⋄ denotes the empty precontext.
+
+Precontexts contain usage annotations $ρ$ on constituent variables. Scaling a context, $πΓ$, is defined as follows:
+
+\begin{align}
+π(⋄)=⋄ \\
+π(Γ,x \overset{ρ}{:} S) = πΓ,x \overset{πρ}{:} S
+\end{align}
+
+Usage annotations in pretypes are not affected.
+
+$0Γ$ sets all annotations to $0$.
+
+Addition of two precontexts $Γ_1+Γ_2$ is defined when $0Γ_1=0Γ_2$:
+
+\begin{align}
+⋄+⋄=⋄\\
+(Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
+\end{align}
+
+Contexts are identified by the judgement $Γ\vdash$, defined by the following rules:
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{Emp}
+\UnaryInfC{⋄\vdash}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ \vdash$}
+\AxiomC{$0Γ⊢S$}
+\RightLabel{Ext}
+\BinaryInfC{$Γ,x \overset{ρ}{:} S \vdash$}
+\end{prooftree}
+
+$0Γ⊢S$ indicates that $S$ is well-formed as a type in the context of $0Γ$.
+$Emp$, for "empty", builds the empty context, and $Ext$, for "extend", extends a context $Γ$ with a new variable $x$ of type $S$ and usage annotation $ρ$.
+All type formation rules yield judgements where all usage annotations in $Γ$ are $0$ (type formation requires no computational resources).
+
+Term judgements have the form:
+
+\begin{align}
+Γ ⊢ M \overset{σ}{:} S
+\end{align}
+
+### Variable & conversion rules
+
+where $σ ∈ {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed.
+
+The variable rule selects an individual variable, type, and usage annotation from the context:
+
+\begin{prooftree}
+\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
+\RightLabel{Var}
+\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S$}
+\end{prooftree}
+
+The conversion rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ ⊢ S≡T$}
+\RightLabel{Conv}
+\BinaryInfC{$Γ ⊢ M \overset{σ}{:} T$}
+\end{prooftree}
+
+Note that type equality is judged in a context with no resources.
+
+### Dependent function types
+
+Function types $(x \overset{π}{:} S) → T$ record usage of the argument. The formation rule is:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ S$}
+\AxiomC{$0Γ,x \overset{0}{:} S ⊢ T$}
+\RightLabel{Pi}
+\BinaryInfC{$0Γ ⊢ (x \overset{π}{:} S) → T$}
+\end{prooftree}
+
+The usage annotation $π$ is not used in judgement of whether $T$ is a well-formed type. It is used
+in the introduction and elimination rules to track how $x$ is used, and how to multiply the resources
+required for the argument, respectively:
+
+\begin{prooftree}
+\AxiomC{$Γ,x \overset{σπ}{:} S ⊢ M \overset{σ}{:} T$}
+\RightLabel{Lam}
+\UnaryInfC{$Γ ⊢ λx \overset{π}{:} S.M^T \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ′}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
+\RightLabel{App}
+\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ App_{(x \overset{π}{:} S) T}(M,N) \overset{σ}{:} T[N/x]$}
+\end{prooftree}
+
+- $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
+- In the introduction rule, the abstracted variable $x$ has usage $σπ$ so that non-computational production requires no computational input
+- In the elimination rule, the resources required by the function and its argument, scaled to the amount required by the function, are summed
+- The function argument $N$ may be judged in the 0-use fragment of the system if and only if we are already in the 0-use fragment ($σ=0$) or the function will not use the argument ($π=0$).
+
+### Dependent multiplicative conjunction (tensor product)
+
+Dependent tensor production formation rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ A$}
+\AxiomC{$0Γ,x \overset{0}{:} S ⊢ T$}
+\RightLabel{⊗}
+\BinaryInfC{$0Γ ⊢ (x \overset{π}{:} S) ⊗ T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\RightLabel{I}
+\UnaryInfC{$0Γ ⊢ I$}
+\end{prooftree}
+
+Type formation does not require any resources.
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ′}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[M/x]$}
+\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
+\QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N)_{x \overset{π}{:} S.T} \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\UnaryInfC{$0Γ ⊢ ∗ \overset{σ}{:} I$}
+\end{prooftree}
+
+This is similar to the introduction rule for dependent function types above.
+
+Elimination rule:
+
+Under the erased ($σ=0$) part of the theory, projection operators can be used as normal:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
+\UnaryInfC{$Γ ⊢ fst_{x \overset{π}{:} S.T} (M) \overset{0}{:} A$}
+\end{prooftree}
+
+(should the last be $S$ ?)
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
+\UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[fst(M)/x]$}
+\end{prooftree}
+
+Under the resourceful part:
+
+\begin{prooftree}
+\AxiomC{$0Γ_1, z \overset{0}{:} (x \overset{π}{:} S) ⊗ T ⊢ U$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$Γ_2, x \overset{σπ}{:} S, y \overset{σ}{:} T ⊢ N \overset{σ}{:} U[(x,y)/z]$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\RightLabel{$⊗$ Elim}
+\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let_{x \overset{π}{:} S.T} (x,y) = M\ in\ N \overset{σ}{:} U[M/z]$}
+\end{prooftree}
+
+- Must pattern match out to ensure both parts of the product are used.
+
+\begin{prooftree}
+\AxiomC{$0Γ_1, x \overset{0}{:} I ⊢ U$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} I$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} U[∗/x]$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\RightLabel{$⊗$ Elim I}
+\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let_I ∗ = M\ in\ N \overset{σ}{:} U[M/x]$}
+\end{prooftree}
+
+- Must explicitly eliminate elements of the unit type in the resourceful fragment.
+- Simplifies to fst, snd in $σ=0$ fragment (should we combine the rules?)
+
+### Multiplicative disjunction
+
+"Both separately in parallel"
+
+Cannot be dependent?
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (A \overset{σ}{:} S), (B \overset{σ'}{:} S')$}
+\RightLabel{$\parr$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ}{:} S) \parr (B \overset{σ'}{:} S')$}
+\end{prooftree}
+
+is this right?
+
+### Additive conjunction
+
+"Choose either"
+
+Can be dependent
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
+\AxiomC{$Γ ⊢ B \overset{σ}{:} S$}
+\RightLabel{$\&$}
+\BinaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) \& (B \overset{σ}{:} S)$}
+\end{prooftree}
+
+Can we have $σ$ and $σ'$?
+
+### Additive disjunction
+
+"Might be either"
+
+Cannot be dependent?
+
+Introduction rules:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
+\RightLabel{$⊕_L$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) ⊕ (B \overset{σ'}{:} S)$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ B \overset{σ}{∶} S$}
+\RightLabel{$⊕_R$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ'}{∶} S) ⊕ (B \overset{σ}{:} S)$}
+\end{prooftree}
+
+### Universe (set type)
+
+Formation rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢$}
+\RightLabel{Set}
+\UnaryInfC{$0Γ ⊢ Set$}
+\end{prooftree}
+
+Introduction rule ($σ = 0$ fragment only):
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
+\AxiomC{$0Γ, x \overset{0}{:} El(M) ⊢ N \overset{0}{:} Set$}
+\RightLabel{Set-Pi}
+\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} Set$}
+\end{prooftree}
+
+Elimination rule:
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
+\RightLabel{Set-El}
+\UnaryInfC{$0Γ ⊢ El(M)$}
+\end{prooftree}
+
+can we encode everything we want in lambda calculus in this type system?
+
+subusaging? seems cool
+
+more things
+
+- figure out what R-linear combinatory algebras are
+- figure out how best to add primitive types
+- figure out how this translates into an implementation, see McBride's paper
+- ensure we can derive induction, see Cedille
+
+## Syntax
+
+## Semantics
+
+

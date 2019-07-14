@@ -1,0 +1,12 @@
+High-level dependently-typed language.
+
+## Syntax
+
+Syntax options:
+
+1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] favored
+1. Lisp-like [@common-lisp]
+
+## Semantics
+
+TBD. Desugars to Core.
