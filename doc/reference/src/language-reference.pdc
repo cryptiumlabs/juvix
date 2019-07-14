@@ -12,21 +12,21 @@ fontsize: 7pt
 author: Christopher Goes, Marty Stumpf, Jeremy Ornelas
 date: \today \ - \textit{Prerelease}
 urlcolor: cyan
-abstract: Juvix encapsulates a high-level frontend syntax, dependent-linearly-typed core language, and parallelizable
-          low-level execution model into a single unified stack for writing formally verifiable, efficiently executable smart contracts which can be
+abstract: Juvix synthesizes a high-level frontend syntax, dependent-linearly-typed core language, and low-level parallelizable
+          optimally-reducing execution model into a single unified stack for writing formally verifiable, efficiently executable smart contracts which can be
           deployed to a variety of distributed ledgers.
           \par
           Juvix's compiler architecture has been purpose-built from the ground up for the particular requirements and economic tradeoffs
           of the smart contract use case — it prioritizes verifiability, precision, and output code efficiency over compilation speed,
           syntactical & semantic familiarity, and compatibility with existing blockchain virtual machines.
-          Machine-assisted proof search, streamlined tooling, and alternative spatiotemporal dataflow representations faciliate
+          Machine-assisted proof search, declarative deployment tooling, cogent type inference, and alternative spatiotemporal dataflow representations faciliate
           integration of low-developer-overhead property verification into the development process.
           An interchain abstraction layer representing ledgers as first-class objects facilitates stateful
           contract deployment, seamless cross-chain programming, and typesafe runtime reconfiguration.
           \par
-          This document is designed to be a first-principles explanation of Juvix which assumes minimal familiarity with the theoretical background.
-          Readers previously acquainted with the lambda calculus, intuitionistic type theory, linear logic, interaction nets, elementary affine logic
-          and Lamping's optimal reduction algorithm may skip the associated subsections in chapter four.
+          This document is designed to be a first-principles explanation of Juvix. No familiarity with the theoretical background is assumed.
+          Readers previously acquainted with the lambda calculus, sequent calculus, simply-typed lambda calculus, the calculus of constructions,
+          linear logic, interaction nets, elementary affine logic, and Lamping's optimal reduction algorithm may skip the associated subsections in chapter five.
 header-includes:
     - \usepackage{graphicx}
     - \usepackage{hyperref}
