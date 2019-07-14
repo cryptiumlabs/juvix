@@ -1,1 +1,5 @@
-test123 include
+- Eliminate "bad" uses of lambda calculus
+- No recursion
+- Always terminates
+- No polymorphism
+- No guarantees on termination bounds (complexity) or copying

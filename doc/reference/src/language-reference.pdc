@@ -55,6 +55,10 @@ header-includes:
 
 !include src/reasoning.pdc
 
+# Typographical conventions
+
+!include src/typographical-conventions.pdc
+
 # Theoretical background
 
 ## Lambda calculus
@@ -69,7 +73,9 @@ header-includes:
 
 !include src/background/simply-typed-lambda-calculus.pdc
 
-## Intuitionistic dependent types
+## Calculus of constructions
+
+!include src/background/calculus-of-constructions.pdc
 
 ## Linear logic
 
