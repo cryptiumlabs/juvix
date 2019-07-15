@@ -2,6 +2,12 @@
 
 1. Run interaction nets in ZK
 
+## Deployment tooling layer
+
+1. Ledgers as first-class objects in declarative deployment scripts.
+1. Declarative-stateful deployment system Terraform-style.
+1. Blockchains accessible in REPL.
+
 ## State machine integration
 
 1. Defined equalence semantics but implementation can change later
@@ -19,5 +25,3 @@
 1. Some (closest?) inspiration: Luna [@luna-lang]
 1. Could map depths of elementary linear logic terms to spacial depth in an execution visualization
 1. Goal: isomorphism between textual (AST) and graphical (dataflow graph) representations. Getting the isomorphism right so that they can be switched between for real projects seems like the hard part.
-
-

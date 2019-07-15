@@ -28,6 +28,18 @@ dynamically altered at runtime according to usage patterns and desired time-spac
 
 How to encode other linear logic types?
 
+### Evaluator cost model
+
+Currently tracked:
+
+- Memory allocations
+- Sequential rewrite steps
+- Parallel rewrite steps
+- Maximum graph size
+- Final graph size
+
+In the future we may want to track more granular memory operations (reads/writes in addition to allocations) and computations associated with rewrite rules (all negligible-cost with interaction combinators, but not with e.g. integer arithmetic).
+
 ## Optimization
 
 ### Spacial memory contiguity
@@ -39,4 +51,17 @@ Ensure correspondence between graphical locality and spacial locality in memory.
 - "Strict" optimal reduction strategies
 - Evaluate based on predicting future input (feasible?)
 
+### Stochastic superoptimization
 
+- Utilize sparse sampling (probably Markov-chain Monte Carlo) to search the configuration space of semantically equivalent programs & select the fastest.
+- Probably useful at the level of choosing machine implementations of particular rewrite rules.
+- See Stochastic Superoptimization [@stochastic-superoptimization]
+- Will need a lot of clever tricks to avoid getting stuck in local minima (that paper details several).
+- See also STOKE [@stoke]
+
+### "Superoptimal" reduction strategies
+
+- Specifically those with the possibility of asymptotically-better performance than Levy's optimal reduction.
+- As far as I can tell, the only candidates here are forms of memoization which attempt to detect syntactically identical structures during the reduction process which can then be linked and evaluated only once.
+- [Hash consing](https://en.wikipedia.org/wiki/Hash_consing) may have the most prior research.
+- Concerns about space-time tradeoffs (may already be concerns).
