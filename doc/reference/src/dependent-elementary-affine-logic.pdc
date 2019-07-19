@@ -2,15 +2,6 @@
 
 Define:
 
-1. Formulae $A,B ::=\ α\ |\ A ⊸ B\ |\ !A\ |\ ∀α.A$.
-1. Pseudoterms $t,u ::= x\ |\ λx.t\ |\ (t)u\ |\ !t\ |\ \bar{!}t$.
-1. Restricted pseudoterms
-    1. $a ::= x\ |\ λx.t\ |\ (t)t$
-    1. $t ::= !^m a$ where
-        1. $m \in \mathbb{Z}$
-        1. $!^ma =\ !...!\ (m\ times)\ a\ if m ≥ 0$
-        1. $!^ma = \bar{!}...\bar{!}\ (m\ times)\ a\ if\ m < 0$
-
 ## Semantics
 
 - Define evaluation semantics, undefined behaviour.
@@ -73,7 +64,30 @@ Why / notes
 - Most terms one would want to compute (especially in smart contracts) are in the elementary complexity class
 - Allows better box placement than programmer might choose, compiler can pick from set of typeable EAL terms & instantiate with fewest number / optimally positioned boxes
 
+Define:
+
+1. Formulae $A,B ::=\ α\ |\ A ⊸ B\ |\ !A\ |\ ∀α.A$.
+1. Pseudoterms $t,u ::= x\ |\ λx.t\ |\ (t)u\ |\ !t\ |\ \bar{!}t$.
+1. Restricted pseudoterms
+    1. $a ::= x\ |\ λx.t\ |\ (t)t$
+    1. $t ::= !^m a$ where
+        1. $m \in \mathbb{Z}$
+        1. $!^ma =\ !...!\ (m\ times)\ a\ if m ≥ 0$
+        1. $!^ma = \bar{!}...\bar{!}\ (m\ times)\ a\ if\ m < 0$
+
+All typable terms can be converted into restricted pseudo-terms (for proof see the paper).
+
 ### Box paths
+
+Where $t$ is a pseudo-term and $x$ is an occurrence of a free or bound variable in $t$, define the **path** as an ordered list of the occurrences of $!$ and $\bar{!}$ enclosing $x$, more formally:
+
+\begin{align}
+path(x, x)        = nil
+path(t_1 t_2, x)  = path(t_i, x) where t_i contains x
+path(λy.t, x)     = path(t, x)
+path(!t, x)       = ! :: path(t, x)
+path(\bar{!}t, x) = \bar{!}t :: path(t, x)
+\end{align}
 
 ### Parameterization
 
