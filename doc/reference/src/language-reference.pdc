@@ -33,6 +33,7 @@ header-includes:
     - \usepackage{amsmath}
     - \usepackage{spaghettinet}
     - \usepackage{cmll}
+    - \usepackage{microtype}
     - \usepackage{float}
     - \floatstyle{boxed}
     - \restylefloat{figure}
@@ -132,5 +133,7 @@ header-includes:
 ## Examples
 
 !include src/appendices/examples.pdc
+
+\pagebreak
 
 # References

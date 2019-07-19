@@ -2,45 +2,53 @@ Why will Juvix fix these problems?
 
 ## Machine-time-efficient execution
 
-### Compiler-level optimizations
+### Optimal, parallelizable reduction
 
-1. Efficient TCO
-1. More efficient datatype representation (Cedille?)
-1. Large reductions (Cedille?)
-1. Closures, investigate
-1. Linear types
-1. Supercompilation
+First and foremost: radically different reduction model, based on recent theoretical advances in efficient lambda calculus reduction, with pragmatic compiler branching. Handles closures efficiently. High-level-language datatypes translated into lambda calculus terms to take advantage.
 
-### Developer-level optimizations
-        
-1. Expose underlying VM primitives, expose interpreter
-1. Allow safe rewrites to more efficient implementations
+### Linear types obviate garbage collection
 
-### Execution model
+Second: maximally expressive linear types render garbage collection unnecessary, in both the optimal reduction and alternative compiler paths, and faciliate aggressive optimizations.
 
-1. Interaction nets, custom rewrite rules, optimal lambda reduction
+### Discrete-cost optimization
 
-## Developer-time-efficient formal proof constructions
+Third: discrete optimization against a known cost model machine backend (e.g. blockchain VM with gas). Can search space.
 
-1. Assistance for proof generation, ecosystem for composable proofs
-    1. Libraries of proofs for common functionality
-    1. Graph search for asserted properties
-    1. "Prototype first, proofs later"
+### Proofs become optimizations
+
+Prove equivalent reduction paths, compiler can choose which to use.
+
+### Hint & bypass compiler when necessary
+
+Expose underlying VM primitives, expose interpreter, allow safe rewrites to more efficient implementations.
+
+## Developer-time-efficient formal proof construction
+
+### Proof-generation bureaucracy automation
+
+Graph search for asserted properties, step-through tactics, assert or prototype now & prove later.
+
+### Composable proof ecosystem
+
+Libraries of proofs for common functionality, "proof interfaces" for common data structures.
 
 ## Expanding the frontier of possible complexity
+
+### Reduce the costs of verification
+
+
 
 1. Make safety cheaper, smart contracts need it, enable more complex systems
     1. Correctness necessary
     1. Compile time doesn't matter, small programs, can supercompile/search
     1. Code reuse (even on-chain)
-1. Leverage power of dependent types for safe, complex interchain logic
-    1. "Abstraction limits" hit by interacting Ethereum contracts
-        1. Typecheck across contracts
-        1. Contracts require types of callers / callees
-    1. Safe cross-contract optimization using known types
-    1. Safe upgrades (prove semantical equivalence, anyone can upgrade contract)
+
+### Raise the threshold of possible complexity
+
+"Abstraction limits" hit by interacting Ethereum contracts - typecheck across contracts, contracts can require types of callers / callees.
+
+With integration of the compiler into the state machine - safe cross-contract optimizations using known types, safe upgrades (prove semantical equivalence, anyone can upgrade contract)
 
 ## Cross-ledger targeting
 
-1. Juvix frontend & core languages are pretty independent of machine-level VM or hardware.
-1. Can target anything from EVM to FPGA.
+Juvix frontend & core languages are pretty independent of machine-level VM or hardware, can target anything from EVM to FPGA. Reduce "lock-in" of particular distributed ledgers with proprietary toolchains.

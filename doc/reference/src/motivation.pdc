@@ -2,7 +2,11 @@ Darwinian dynamism of secure computer systems is brutal. Selected out by the tri
 
 Payment is made, but instead made later and unevenly, often by individuals who end up rendered vulnerable instead of empowered by poorly engineered technology. Worse, this information asymmetry has begun to be explicitly understood and exploited by the surveillance capitalist sect of Silicon Valley, who now engineer misleading patterns into product UX and continuously work to evade the best efforts of browser & extension manufacturers to provide privacy to their users, a tactic that should be regarded with the same disgust with which the CIA's (ultimately ineffective) research into mind control in the late 60s was.
 
+(cite sources)
+
 Although the underlying cryptographic primitives provide a great deal of individual protection, the resulting large-scale systems tend to devolve into the base power dynamics, with individuals having little chance against a terrorist group or nation state.
+
+This result is overdetermined & difficult to precisely allocate causal responsibility for, but certainly a substantial contributor is the sheer difficulty and cost of formally verifying complex software systems.
 
 The approach to security must be construtive & compositional, and it must result in standards of succinct proofs which can be embedded by the manufacturers of user-facing software which tightly constrain the opaque behaviour of complex code. With the distributed ledger infrastructure there exists a window to rearchitect.
 
