@@ -38,6 +38,7 @@ header-includes:
     - \restylefloat{figure}
     - \usepackage{tikz}
     - \usetikzlibrary{arrows,automata}
+    - \newtheorem{theorem}{Theorem}
 ---
 
 \pagebreak

@@ -75,19 +75,86 @@ Define:
         1. $!^ma =\ !...!\ (m\ times)\ a\ if m ≥ 0$
         1. $!^ma = \bar{!}...\bar{!}\ (m\ times)\ a\ if\ m < 0$
 
-All typable terms can be converted into restricted pseudo-terms (for proof see the paper).
+\begin{theorem}
+All EAL-typable terms can be converted into restricted pseudo-terms (for proof see the paper).
+\end{theorem}
 
 ### Box paths
 
-Where $t$ is a pseudo-term and $x$ is an occurrence of a free or bound variable in $t$, define the **path** as an ordered list of the occurrences of $!$ and $\bar{!}$ enclosing $x$, more formally:
+Let $t$ be a pseudo-term and $x$ an occurrence of a free or bound variable in $t$.
+
+Define the **path** as an ordered list of the occurrences of $!$ and $\bar{!}$ enclosing $x$, more formally:
 
 \begin{align}
-path(x, x)        = nil
-path(t_1 t_2, x)  = path(t_i, x) where t_i contains x
-path(λy.t, x)     = path(t, x)
-path(!t, x)       = ! :: path(t, x)
-path(\bar{!}t, x) = \bar{!}t :: path(t, x)
+path(x, x)        = nil \\
+path(t_1 t_2, x)  = path(t_i, x)\ \text{where}\ t_i\ \text{contain}s\ x\ \\
+path(λy.t, x)     = path(t, x) \\
+path(!t, x)       = \ ! :: path(t, x) \\
+path(\bar{!}t, x) = \ \bar{!}t :: path(t, x)
 \end{align}
+
+Define the **sum** of a path $s(p)$ as:
+
+\begin{align}
+s(nil) = 0 \\
+s(! :: l) = 1 + s(l) \\
+s(\bar{!} :: l) = -1 + s(l)
+\end{align}
+
+Define the **well-bracketed** condition, mapping pseudo-terms to booleans, where $\le$ is the prefix relation on lists, for a pseudo-term $t$ as:
+
+\begin{align}
+∀l \le path(t, x), s(l) \ge 0\ \text{for any occurrence of a variable}\ x\ \text{in}\ t \\
+∀x \in FV(t), s(path(t, x)) = 0\ \text{(zero sum paths for free variables)}
+\end{align}
+
+Define the **well-scoped** condition, mapping pseudo-terms to booleans, for a pseudo-term $t$ as:
+
+\begin{align}
+∀t_i \in subterms(t), well-bracketed(t_i)
+\end{align}
+
+\begin{theorem}
+If $t$ is a EAL-typed term, $t$ is well-bracketed and well-scoped.
+\end{theorem}
+
+Let an EAL **type assignment** for a pseudo-term $t$ be a map $Γ'$ from free & bound variables of $t$ to EAL formulae.
+
+Extend that map to a partial map $Γ$ from subterms of $t$ to EAL formulae as:
+
+\begin{align}
+Γ(!u) =\ !A\text{ if }Γ'(u) = A \\
+Γ(\bar{!} u) = A\text{ if }Γ'(u) =\ !A\text{, undefined otherwise} \\
+Γ(λx.u) = A ⊸ B\text{ if } Γ'(x) = A, Γ'(u) = B \\
+Γ(t_1 t_2) = B\text{ if }Γ'(t_2) = A\text{ and }Γ'(t_1) = A⊸B\text{, undefined otherwise}
+\end{align}
+
+Let $(t, Γ)$ be a pair of a pseudo-term $t$ and an assignment $Γ$. $t$ satisfies the **typing condition** if:
+
+\begin{align}
+Γ(t_i)\text{ is defined for all subterms }t_i\text{ of }t \\
+\text{ for any variable }x\text{ of at least 2 occurrences, }Γ(x) =\ !B\text{ for some }B
+\end{align}
+
+\begin{theorem}
+If $t$ is an EAL-typed term and $Γ$ is an associated assignment then $(t, Γ)$ satisfies the typing condition.
+\end{theorem}
+
+\begin{theorem}
+If $(t, Γ)$ satisfies the typing condition and $u$ is a subterm of $t$, then $(u, Γ)$ also satisfies the typing condition.
+\end{theorem}
+
+\begin{theorem}
+If $t$ is a pseudo-term and Γ an assignment such that $t$ is well-bracketed and well-scoped, and $(t, Γ)$ satisfies the typing condition, then $t$ is typable in EAL with a judgement $∆ ⊢ t : A$ such that $Γ(t) = A$ and $∆$ is the restriction of $Γ$ to the free variables of $t$.
+\end{theorem}
+
+(todo: proof)
+
+### Decoration
+
+Consider the **declaration problem**:
+
+Let $x_1 : A_1, ..., x_n : A_n ⊢ M : B$ be a simply-typed term. Do there exist EAL decorations $A'_i$ of the $A_i$ for $1 \le i \le n$ and $B'$ of $B$ such that $x_1 : A'_1, ..., x_n : A'_n ⊢ M : B'$ is a valid EAL judgement for M?
 
 ### Parameterization
 
