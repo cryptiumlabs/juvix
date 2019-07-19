@@ -1,16 +1,14 @@
 ## Dependently-typed languages
 
-Why have dependently-typed languages not yet succeeded?
+Prior dependently-typed languages: Idris, Agda, Coq. Have seen some work in verification of other code but not in programs written directly in the language.
 
-1. Only one real example: Idris.
-1. Inefficient compilation
-1. Too hard / too much effort to write proofs
-1. Economics didn't favor safety (compile time, speed of development matters more)
-1. Not enough engineering effort dedicated (e.g. Idris has no? full-time engineers)
+Only one real example targeting this use-case: Idris. Impressive but falls short of the requirements needed for wide deployment: inefficient compilation output, too much effort required to write proofs, not enough engineering effort dedicated to compiler minutae.
+
+Economics of e.g. web development do not favor dependently-typed languages since speed is more important than safety. Smart contracts are different.
 
 ## Linearly-typed languages
 
-Rust, partial. Haskell, working on it.
+Rust, partial but already useful. Haskell, working on it. Not yet available for smart contracts.
 
 ## Dependently-typed smart contracts
 
