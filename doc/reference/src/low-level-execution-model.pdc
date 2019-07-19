@@ -21,6 +21,12 @@ also
 
 ### Oracle-free optimal reduction
 
+(todo)
+
+- Define encoding $\phi (t)$ of term $t$ mapping to net $n$
+- Define read-back function $\phi ^{-1}(n)$ mapping net $n$ to a term $t$, where $\phi^{-1}(\phi(t)) = t$ holds
+- Define interaction system reduction function $\psi(n)$ mapping nets to nets, where $\phi^{-1}(\psi(\phi(t))) = reduce\ t$ where $reduce$ is as defined in the semantics of Juvix Core
+
 \begin{tikzpicture}
 \inetbigcell[angle=130]{a}{$\lambda$}[5]
 \inetbigcell[angle=130, right=100pt]{b}{$@$}[5]
