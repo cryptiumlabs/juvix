@@ -1,5 +1,5 @@
 \begin{figure}[h]
-\caption{Typing rules for EAL}
+\caption{Typing rules for elementary affine logic}
 
 \begin{prooftree}
 \AxiomC{}
