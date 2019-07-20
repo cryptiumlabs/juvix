@@ -10,47 +10,36 @@ Juvix utilizes a fundamentally different evaluation model (as compared to presen
 
 ### Linear dependent types obviate garbage collection and ensure type erasure
 
-Second: maximally expressive linear types render garbage collection unnecessary, in both the optimal reduction and alternative compiler paths, and faciliate aggressive optimizations.
+The core type theory of Juvix combines linear & dependent types, extending prior research into the combination of the two paradigms with additional linear connectives & pragmatic essentials and instantiating usage quantization over the natural numbers to provide maximally precise accounting. Dependent types enable the language to verify properties of its own terms in succinct proofs and open up a wide arena of compiler optimizations. Linear types obviate the need for garbage collection in both the optimal reduction & alternative direct subterm compilation paths, faciliate aggressive imperative optization transformations, and ensure that dependent types used to enforce properties but not needed at runtime are always erased by the compiler.
 
 ### Discrete-cost optimization
 
-Third: discrete optimization against a known cost model machine backend (e.g. blockchain VM with gas). Can search space.
+Purpose-built for the smart contract use case, Juvix's optimizer requires a discrete instruction cost model of the underlying machine (likely a distributed ledger) which it can utilize to search through semantically equivalent instruction sequences and select the lowest by cost.
 
 ### Proofs become optimizations
 
-Prove equivalent reduction paths, compiler can choose which to use.
+The dependent type system of Juvix Core enables it to express arbitrary properties of its own terms, including equality of functions — proofs of which can be utilized by the optimizer to select between reducible expressions known to be semantically equivalent at compile time.
 
 ### Hint & bypass compiler when necessary
 
-Expose underlying VM primitives, expose interpreter, allow safe rewrites to more efficient implementations.
+Primitives are provided to allow developers to bypass the usual compilation pipeline and construct hand-optimized rewrite rules specialized to the underlying machine, optionally proving equivalence of their hand-optimized rewrite rules to the compiler-generates ones using a formalized interpreter for the machine model.
 
 ## Developer-time-efficient formal proof construction
 
 ### Proof-generation bureaucracy automation
 
-Graph search for asserted properties, step-through tactics, assert or prototype now & prove later.
+Juvix's high-level syntax, compiler, and REPL utilize multiple tactics to minimize the bureaucracy of writing formal proofs of properties of terms. Generalized assisted graph search automates construction of proofs locatable in constrained search spaces, holes enable the developer to type, assert, and prototype now, then prove later when the model is finalized. Step-through tactics illuminate the inner desugaring & typechecking steps of the compiler to provide introspection & understandability.
 
 ### Composable proof ecosystem
 
-Libraries of proofs for common functionality, "proof interfaces" for common data structures.
+As proofs of properties of Juvix terms are simply terms themselves, proofs can be exported & imported from libraries along with the code which will actually be executed. Proof interfaces for common data structures allow swapping out backend components of a higher-level module while retaining verified properties.
 
 ## Expanding the frontier of possible complexity
 
-### Reduce the costs of verification
-
-
-
-1. Make safety cheaper, smart contracts need it, enable more complex systems
-    1. Correctness necessary
-    1. Compile time doesn't matter, small programs, can supercompile/search
-    1. Code reuse (even on-chain)
-
 ### Raise the threshold of possible complexity
 
-"Abstraction limits" hit by interacting Ethereum contracts - typecheck across contracts, contracts can require types of callers / callees.
-
-With integration of the compiler into the state machine - safe cross-contract optimizations using known types, safe upgrades (prove semantical equivalence, anyone can upgrade contract)
+Compound smart contract applications constructed using less precise languages invariably hit abstraction limits, where the complexity of writing safe code and verifying safe interoperation scales with the size of the codebase for any individual line, so quadratically in total. The rigor of Juvix's type system, where simple properties of arbitrarily complex terms can be succinctly expressed, enables more complex multi-contract interacting systems to be safely constructed & operated. Juvix can typecheck across contracts and verify compound properties of multi-contract systems. Further integration of the language & compiler into the state machine allows contracts to enforce types & properties of their callers or callees, lets contracts be safely upgraded with new versions which can prove that they satisfy the same properties, and empowers the state machine to safely optimize across contracts in many-contract systems.
 
 ## Cross-ledger targeting
 
-Juvix frontend & core languages are pretty independent of machine-level VM or hardware, can target anything from EVM to FPGA. Reduce "lock-in" of particular distributed ledgers with proprietary toolchains.
+The Juvix frontend & core languages are independent of any particular machine-level architecture and can target a variety of models from the Ethereum Virtual Machine to FPGAs. Sharing all or most of the logic of a smart contract system across ledgers provides flexibility to developers, reduces platform lock-in to particular ledger toolchain stacks, and reduces development costs of multi-ledger solutions.
