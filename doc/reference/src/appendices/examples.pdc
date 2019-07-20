@@ -1,6 +1,7 @@
-Some cool examples!
+Examples of Juvix high level language, core translation, interaction net evaluation (full pipeline).
 
 Possible ideas (all with proofs):
+
 - Fungible & nonfungible token contracts
 - Social recovery - complex predicate account
 - Prediction market with pluggable oracle
