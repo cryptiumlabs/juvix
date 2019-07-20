@@ -1,12 +1,14 @@
-Why will Juvix fix these problems?
+What changes does Juvix make from these prior systems, and why will the solutions proposed fix the problems previously encountered & realise the criteria outlined previously?
+
+Juvix is efficiently executable in machine time through a novel execution model & an expressive typesystem permitting aggressive optimization and efficiently verifiable in developer time through proof bureaucracy automation & composable verification. The rigor of the type system enables composition of contracts to a degree of complexity not possible with less precise languages, and the ability to deploy to multiple ledgers provides flexibility to and reduces development costs for language users. 
 
 ## Machine-time-efficient execution
 
-### Optimal, parallelizable reduction
+### Optimal, parallelizable, higher-order-friendly evaluation
 
-First and foremost: radically different reduction model, based on recent theoretical advances in efficient lambda calculus reduction, with pragmatic compiler branching. Handles closures efficiently. High-level-language datatypes translated into lambda calculus terms to take advantage.
+Juvix utilizes a fundamentally different evaluation model (as compared to present functional programming languages), based on recent theoretical advances in optimal lambda calculus reduction using interaction nets, which avoids any unnecessary duplication of reducible subexpressions, parallelizes by default, dynamically fuses composable terms at runtime, and handles higher-order functions & lexical closures efficiently without garbage collection. To take maximal advantage of this evaluation model, Juvix translates high-level algebraic datatypes into pure lambda calculus representations. In cases where optimal reduction requires too much bookkeeping or imposes undesired overhead, Juvix compiles subterms directly into rewrite rules which still enjoy the native parallelism and strong confluence properties of the interaction net model.
 
-### Linear types obviate garbage collection
+### Linear dependent types obviate garbage collection and ensure type erasure
 
 Second: maximally expressive linear types render garbage collection unnecessary, in both the optimal reduction and alternative compiler paths, and faciliate aggressive optimizations.
 

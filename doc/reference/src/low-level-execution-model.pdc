@@ -19,13 +19,13 @@ also
 
 ## Interaction system encoding
 
-### Oracle-free optimal reduction
-
-(todo)
-
 - Define encoding $\phi (t)$ of term $t$ mapping to net $n$
 - Define read-back function $\phi ^{-1}(n)$ mapping net $n$ to a term $t$, where $\phi^{-1}(\phi(t)) = t$ holds
 - Define interaction system reduction function $\psi(n)$ mapping nets to nets, where $\phi^{-1}(\psi(\phi(t))) = reduce\ t$ where $reduce$ is as defined in the semantics of Juvix Core
+
+## Oracle-free optimal reduction
+
+(todo)
 
 \begin{tikzpicture}
 \inetbigcell[angle=130]{a}{$\lambda$}[5]
@@ -41,7 +41,7 @@ also
 
 How to encode other linear logic types?
 
-### Bespoke term encoding
+## Bespoke term encoding
 
 - Over set of underlying opcodes & von-Neumann-ish VM (e.g. x86, LLVM, EVM).
 - Use linear types (e.g. rewrite memory locations in place)
@@ -49,7 +49,7 @@ How to encode other linear logic types?
 - Must preserve any-order reduction (exists some maximium `n` rewrite steps after which graph read-back must have final form regardless of order)
 - Can relax diamond property (strong confluence)? unclear if necessary
 
-### Evaluator cost model
+## Evaluator cost model
 
 Currently tracked:
 

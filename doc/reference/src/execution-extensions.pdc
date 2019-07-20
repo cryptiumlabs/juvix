@@ -2,20 +2,26 @@
 
 "Gas"
 
-Methods:
+### Cost per VM instruction
 
-1. Gas = cost per instruction on VM - e.g. EVM, Michelson.
+Gas = cost per instruction on VM - e.g. EVM, Michelson.
     1. Advantages
         1. Works, simple
     1. Disadvantages
         1. Adds ovearhead - have to increment coutner, check each instruction
         1. UX is pretty terrible - must estimate gas before sending tx, state could change
         1. (~) Cross-contract calls are dumb and hard to optimize (more a problem with using a low-level VM)
-1. Calculute gas cost prior to execution.
+
+### Prior cost calculation
+
+Calculute gas cost prior to execution.
     1. Need: `cost :: (call, params) => Natural`
         1. Must be (far) cheaper to evaluate than just computing the function
         1. Must be verifiable (once) by the state machine for a particular contract, so need e.g. verified interpreter (for a VM)
         1. Might be worst-case cost, not tight bound (but should be able to make dependent on param values, so should be tight)
+
+### Execute off-chain, verify on-chain in constant time
+
 1. Constant gas cost + size of storage diffs
     1. User must do all execution (e.g. in ZK), verification is O(1) or user pays circuit size (easy enough) + proportional cost for state changes
     1. Bottleneck: prover time. TinyRAM runs at ~1Hz for the prover at the moment (old paper though). Maybe inets could be a bit more efficient.
