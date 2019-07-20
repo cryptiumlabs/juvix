@@ -84,13 +84,13 @@ header-includes:
 
 !include src/background/linear-logic.pdc
 
-## Elementary affine logic
-
-!include src/background/elementary-affine-logic.pdc
-
 ## Interaction nets
 
 !include src/background/interaction-nets.pdc
+
+## Elementary affine logic
+
+!include src/background/elementary-affine-logic.pdc
 
 ## Optimal reduction
 
