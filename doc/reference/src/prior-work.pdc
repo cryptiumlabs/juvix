@@ -1,17 +1,15 @@
 ## Dependently-typed languages
 
-Prior dependently-typed languages: Idris, Agda, Coq. Have seen some work in verification of other code but not in programs written directly in the language.
+Three dependently-typed languages have seen substantial contemporary usage: Agda, Coq, and Idris [@idris-systems-programming-meets-full-dependent-types]. The first two are focused on theorem proving rather than executable code output, and have been primarily used to verify mathematical formulae or proofs of algorithmic correctness, where the algorithms are then implemented in another language.
 
-Only one real example targeting this use-case: Idris. Impressive but falls short of the requirements needed for wide deployment: inefficient compilation output, too much effort required to write proofs, not enough engineering effort dedicated to compiler minutae.
-
-Economics of e.g. web development do not favor dependently-typed languages since speed is more important than safety. Smart contracts are different.
+Idris does intend to simultaneously support dependently-typed program verification and produce executable code output, but falls short of the requirements of wide deployment: the compilation output is not efficient enough, too much effort is required to write proofs of properties of terms, and insufficient engineering effort has been dedicated to including optimizing transformations which take advantage of the expressive typesystem and targeting advanced low-level exeuction models as used by Juvix (understandably so, since Idris is primarily & impressively developed by a lecturer in his free time!). Furthermore, the economics of most standard programs running on the desktop or web favor development & execution speed over perfect safety and correctness, while smart contracts require the opposite.
 
 ## Linearly-typed languages
 
-Rust, partial but already useful. Haskell, working on it. Not yet available for smart contracts.
+Linear types are included, in limited form but to substantial effect, in the Rust systems programming language, which utilizes them to provide memory safety without garbage collection. No mainstream dependently-typed functional language supports linear types, although the upcoming Idris 2 will (with the same antecedent type theory as Juvix). A proposal to add them to Haskell is in the discussion stage.
 
 ## Dependently-typed smart contracts
 
-One prior work [@safer-smart-contracts-through-type-driven-development] wrote an Idris [@idris-systems-programming-meets-full-dependent-types] backend targeting Ethereum's LLL language [@lisp-like-language]. Juvix shares many of the goals outlined in that paper, but the approach described failed to take advantage of well-known optimizations such as tail-call optimization and handicapped itself by compiling to LLL instead of directly to EVM opcodes. The effects system described therein may be a sensible model for smart contract programs written in Juvix but is out of scope of this paper.
+One prior work [@safer-smart-contracts-through-type-driven-development] wrote an Idris [@idris-systems-programming-meets-full-dependent-types] backend targeting Ethereum's LLL language [@lisp-like-language]. Juvix shares many of the goals outlined in that paper, but the approach described therein failed to take advantage of well-known optimizations such as tail-call optimization and handicapped itself by compiling to LLL instead of directly to EVM opcodes. The effects system described therein may be a sensible model for smart contract programs written in Juvix but is out of scope of this paper, which focuses on language & compiler design only.
 
 Formality [@formality] was a substantial inspiration for this work, particularly the low-level interaction net execution model. Juvix differs in its decisions to include a frontend language in which programmers will write directly, implement a larger core language and more complex low-level execution model, trade some simplicity in compiler architecture for output performance where the performance gains are substantial, and automate the tedious bureaucracy of elementary affine logic box placement. In the future Juvix may support Formality Core as a compile target.

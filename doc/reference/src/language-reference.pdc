@@ -62,6 +62,8 @@ header-includes:
 
 # Theoretical background
 
+!include src/theoretical-background.pdc
+
 ## Lambda calculus
 
 !include src/background/lambda-calculus.pdc
