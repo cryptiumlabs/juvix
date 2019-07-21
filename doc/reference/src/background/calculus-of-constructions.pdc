@@ -5,7 +5,7 @@
 
 Define terms $t ::= T\ |\ P\ |\ x\ |\ t\ t\ |\ λx:e.e\ |\ ∀x:e.e$. Let $K = T\ |\ P$. Let $M, N$ be terms.
 
-\begin{figure}
+\begin{figure}[H]
 \caption{Typing rules for the calculus of constructions}
 
 \begin{prooftree}

@@ -8,7 +8,7 @@ Define:
 
 ## Typing rules
 
-\begin{figure}[h]
+\begin{figure}[H]
 \caption{Typing rules for EAL}
 
 \begin{prooftree}
@@ -52,6 +52,8 @@ Define:
 \end{figure}
 
 ## Erasure to untyped lambda calculus
+
+Define erasure map $(-)$, just delete the $!$s.
 
 ## Type inference
 
@@ -156,6 +158,8 @@ Consider the **declaration problem**:
 
 Let $x_1 : A_1, ..., x_n : A_n ⊢ M : B$ be a simply-typed term. Do there exist EAL decorations $A'_i$ of the $A_i$ for $1 \le i \le n$ and $B'$ of $B$ such that $x_1 : A'_1, ..., x_n : A'_n ⊢ M : B'$ is a valid EAL judgement for M?
 
+### Parameterization
+
 Define **parameterized restricted pseudo-terms** as restricted pseudo-terms but with unique integer indices for each free parameter: $a ::= x\ |\ λx.t\ |\ t\ t$, $t ::= !^n a$ where $n$ is a fresh index chosen monotonically over $Z$. Given a parameterized pseudo-term $t$ denote by $par(t)$ the set of its parameter indices. An instantiation $φ$ maps $t$ to a restricted pseudo-term by instantiating each indexed parameter $n$ with the integer demarcation $φ(n)$.
 
 Define **parameterized types** $A ::= !^n A\ |\ !^n (A ⊸ A)$ with $n$ a fresh index chosen monotonically over $Z$. Denote by $par(A)$ the set of parameters of $A$. If $φ$ instantiates each index $n$ with an integer demarcation $φ(n)$, $φ(A)$ is defined only when a nonnegative integer is substituted for each parameter (per the type formulae of EAL). Define the size $|A|$ as the structural size of the underlying simple type.
@@ -170,11 +174,48 @@ Given a parameterized pseudo-term $t$ and a parameterized type assignment $Σ$ f
 
 To answer this question we will translate the bracketing, scope, and typing conditions into a system of linear constraints.
 
-### Parameterization
-
 ### Constraint generation
 
+#### Bracketing & scope
+
+Let $t$ be a parameterized pseudo-term. Define the **boxing constraints** for $t$ as the set of linear equations $C^b(t)$ obtained in the following way:
+
+- Bracketing: for any occurrence of a variable $x$ in $t$, and any prefix $l$ of $path(t, x)$, add the inequation $s(l) \ge 0$. If $x \in FV(t)$, add the equation $s(l) = 0$.
+- Scope: for any subterm $λx.v$ of $t$, for any occurrence $x_i$ of $x$ in $v$, add similarly the inequations expressing that $path(v, x_i)$ is well-bracketed.
+
+#### Typing constraints
+
+Define parameterized type unification as:
+
+\begin{align}
+U(!^m α, !^n α) = { m = n } \\
+U(!^m (A_1 ⊸ A_2), !^n (B_1 ⊸ B_2)) = { m = n } ∪ U(A_1, B_1) ∪ U(A_2, B_2) \\
+U(\_, \_) = { false }
+\end{align}
+
+Let $Σ$ be a parameterized type assignment for a parameterized pseudo-term $t$. Extend $Σ$ to a partial map from subterms of $t$ to parameterized types as:
+
+\begin{align}
+Σ(!^n a) = !^m A \text{ if }Σ (a) = !^k A\\
+Σ(λx.u) = !^m (A ⊸ B) \text{ if } Σ(x) = A, Σ(u) = B\\
+Σ(u_1 u_2) = B \text{ if } Σ(u_1) = A ⊸ B \text{ and } Σ(u_2) = A
+\end{align}
+
+Define the **typing constraints** for $(t,Σ)$ as the set of linear inequations $C^{typ}(t,Σ)$:
+
+- for any subterm of $t$ with the form $λx.u$ with $Σ(λx.u) = !^m (A ⊸ B)$, add the constraint $m = 0$
+- for any subterm of $t$ with the form $u_1 u_2$ with $Σ(u_1) = !^m (A_1 ⊸ B_1)$ and $Σ(u_2) = A_2$ add the constraints $U(A_1, A_2) ∪ { m = 0 }$
+- for any subterm of $t$ with the form $!^n u$ with $Σ(!^n u)$ = $!^m A$ and $Σ(u) = !^k A$, add the constraints $m = k + n$ and $m \ge 0$
+- for any subterm of $t$ with the form $x$ where $x$ has at least two occurrences and $Σ(x) = !^m A$, add the constraint $m \ge 1$
+- for any parameter $m$ in $par(Σ)$, add the constraint $m \ge 0$
+
+\begin{theorem}
+Let $t$ be a parameterized pseudo-term and $Σ$ be a parameterized type-assignment for $t$ such that $Σ(t)$ is defined. Given an instantiation $φ$ for $(t, Σ)$, $φΣ$ is defined and $(φ(t), φΣ)$ satisfies the typing condition if and only if $φ$ is a solution of $C^{typ}(t, Σ)$.
+\end{theorem}
+
 ### Constraint solution
+
+They're integer linear constraints, this shouldn't be complicated.
 
 \begin{figure}[h]
 \caption{Typing rules for DTEAL (TODO)}

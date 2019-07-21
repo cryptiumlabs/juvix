@@ -8,7 +8,7 @@
 - $τ ::= T\ |\ τ\ →\ τ$ with $T \in B$.
 - $e ::= x\ |\ λx:τ.e\ |\ e\ e\ |\ c$ with $c \in C$.
 
-\begin{figure}
+\begin{figure}[H]
 \caption{Typing rules for simply-typed lambda calculus}
 
 \begin{prooftree}

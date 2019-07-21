@@ -2,7 +2,7 @@ Key idea: hypotheses are now linear, can only be used once.
 
 Define $A ::= P\ |\ A\ ⊗\ A\ |\ A\ ⊕\ A\ |\ A\ \&\ A\ |\ A\ \parr\ A\ |\ A\ ⊸\ A\ |\ 1\ |\ 0\ |\ ⊤\ |\ ⊥\ |\ !A\ |\ ?A$.
 
-\begin{figure}
+\begin{figure}[H]
 \caption{Typing rules for linear logic}
 
 \begin{prooftree}
