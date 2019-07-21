@@ -156,6 +156,20 @@ Consider the **declaration problem**:
 
 Let $x_1 : A_1, ..., x_n : A_n ⊢ M : B$ be a simply-typed term. Do there exist EAL decorations $A'_i$ of the $A_i$ for $1 \le i \le n$ and $B'$ of $B$ such that $x_1 : A'_1, ..., x_n : A'_n ⊢ M : B'$ is a valid EAL judgement for M?
 
+Define **parameterized restricted pseudo-terms** as restricted pseudo-terms but with unique integer indices for each free parameter: $a ::= x\ |\ λx.t\ |\ t\ t$, $t ::= !^n a$ where $n$ is a fresh index chosen monotonically over $Z$. Given a parameterized pseudo-term $t$ denote by $par(t)$ the set of its parameter indices. An instantiation $φ$ maps $t$ to a restricted pseudo-term by instantiating each indexed parameter $n$ with the integer demarcation $φ(n)$.
+
+Define **parameterized types** $A ::= !^n A\ |\ !^n (A ⊸ A)$ with $n$ a fresh index chosen monotonically over $Z$. Denote by $par(A)$ the set of parameters of $A$. If $φ$ instantiates each index $n$ with an integer demarcation $φ(n)$, $φ(A)$ is defined only when a nonnegative integer is substituted for each parameter (per the type formulae of EAL). Define the size $|A|$ as the structural size of the underlying simple type.
+
+Analogously to EAL type assignments for pseudo-terms consider parameterized type assignments for parameterized pseudo-terms with values parameterized types, and simple type assignments for lambda terms with values simple types. Let $Σ$ be a parameterized type assignment for a parameterized pseudo-term $t$. Denote by $par(Σ)$ the parameter set occurring in parameterized types $Σ(x)$, for all variables $x$ of $t$. Let $φ$ be an instantiation for $par(Σ)$ which associates a nonnegative integer with each indexed parameter. Then define the map $φΣ$ by $φΣ(x) = φ(Σ(x))$. When defined, this map is an EAL type assignment for $φ(t)$. Define the size $|Σ|$ as the maximum of $|Σ(x)|$ for all variables $x$.
+
+Define the erasure map $(.)^-$ for parameterized pseudo-terms and parameterized types analogously to those for pseudo-terms and EAL types. Given a lambda term $M$ there exists a unique parameterized pseudo-term $t$, up to renaming of the indices, such that $t^- = M$. Denote $t$ by $\bar{M}$ and call it the **parameter decoration** of $M$. Note that $|\bar{M}|$ is linear in $|M|$. Given a simple type $T$, its **parameter decoration** $\bar{T}$ is defined analogously. Finally, given a simple type assignment $Θ$ for a lambda term $t$, with values simple types, define its parameter decoration $\bar{Θ}$ pointwise by taking $\bar{Θ}(x) = \bar{Θ(x)}$, where all decorations are taken with disjoint parameters.
+
+Thus the decoration problem is reduced to the following instantiation problem:
+
+Given a parameterized pseudo-term $t$ and a parameterized type assignment $Σ$ for it, does there exist an instantiation $φ$ such that $φ(t)$ has an EAL type deriviation associated to $φΣ$?
+
+To answer this question we will translate the bracketing, scope, and typing conditions into a system of linear constraints.
+
 ### Parameterization
 
 ### Constraint generation
