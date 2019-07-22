@@ -1,0 +1,27 @@
+Much inspired by GRIN [@graph-reduction-intermediate-notation].
+
+(todo: determine which of these are rendered unnecessary by interaction net evaluation; keep it as simple as possible)
+
+Optimizing transformations:
+
+- vectorisation
+- case simplification
+- split fetch operation
+- right hoist fetch operation
+- register introduction
+- evaluated case elimination
+- trivial case elimination
+- sparse case optimisation
+- update elimination
+- copy propagation
+- late inlining
+- generalised unboxing
+- arity raising
+- case copy propagation
+- case hoisting
+- whnf update elimination
+- common sub-expression elimination
+- constant propagation
+- dead function elimination
+- dead variable elimination
+- dead parameter elimination

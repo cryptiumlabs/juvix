@@ -110,6 +110,10 @@ header-includes:
 
 !include src/core-language.pdc
 
+# Whole-program optimization
+
+!include src/whole-program-optimization.pdc
+
 # Dependent elementary affine logic
 
 !include src/dependent-elementary-affine-logic.pdc
