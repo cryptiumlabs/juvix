@@ -179,11 +179,39 @@ reduce = do
                   _           → pure isChanged
               FanIn (Primary node) _ _ level →
                 langToProperPort node >>= \case
-                  Just App     {} → True <$ fanInAux2 n (node, App')    level
-                  Just Lambda  {} → True <$ fanInAux2 n (node, Lambda') level
-                  Just f@FanIn {} → True <$ fanIns (n, port) (node, f)
-                  -- fan in should interact with all!, update later
-                  _              → pure isChanged
+                  Just App      {}          → True <$ fanInAux2 n (node, App')    level
+                  Just Lambda   {}          → True <$ fanInAux2 n (node, Lambda') level
+                  Just And      {}          → True <$ fanInAux2 n (node, And') level
+                  Just Or       {}          → True <$ fanInAux2 n (node, Or') level
+                  Just Cons     {}          → True <$ fanInAux2 n (node, Cons') level
+                  Just Car      {}          → True <$ fanInAux1 n (node, Car') level
+                  Just Cdr      {}          → True <$ fanInAux1 n (node, Cdr') level
+                  Just Not      {}          → True <$ fanInAux1 n (node, Not') level
+                  Just TestNil  {}          → True <$ fanInAux1 n (node, TestNil') level
+                  Just f@FanIn  {}          → True <$ fanIns (n, port) (node, f)
+                  Just Mu       {}          → True <$ fanInAux2 n (node, (Infix Mu')) level
+                  Just Less     {}          → True <$ fanInAux2 n (node, (InfixB Less')) level
+                  Just More     {}          → True <$ fanInAux2 n (node, (InfixB More')) level
+                  Just Leq      {}          → True <$ fanInAux2 n (node, (InfixB Leq')) level
+                  Just Meq      {}          → True <$ fanInAux2 n (node, (InfixB Meq')) level
+                  Just Eq       {}          → True <$ fanInAux2 n (node, (InfixB Eq')) level
+                  Just Neq      {}          → True <$ fanInAux2 n (node, (InfixB Neq')) level
+                  Just Div      {}          → True <$ fanInAux2 n (node, (Infix Div')) level
+                  Just Prod     {}          → True <$ fanInAux2 n (node, (Infix Prod')) level
+                  Just Mod      {}          → True <$ fanInAux2 n (node, (Infix Mod')) level
+                  Just Add      {}          → True <$ fanInAux2 n (node, (Infix Add')) level
+                  Just Sub      {}          → True <$ fanInAux2 n (node, (Infix Sub')) level
+                  Just Tru      {}          → True <$ fanInAux0 n (node, Tru')
+                  Just Fals     {}          → True <$ fanInAux0 n (node, Fals')
+                  Just Erase    {}          → True <$ fanInAux0 n (node, Erase')
+                  Just Nil      {}          → True <$ fanInAux0 n (node, Nil')
+                  Just Symbol   {_symb}     → True <$ fanInAux0 n (node, (Symbol' _symb))
+                  Just IntLit   {_int}      → True <$ fanInAux0 n (node, (IntLit' _int))
+                  Just CurriedB {_curriedB} → True <$ fanInAux1 n (node, (CurriedB' _curriedB)) level
+                  Just Curried  {_curried}  → True <$ fanInAux1 n (node, (Curried' _curried))   level
+                  -- Update later to be fanInAux3
+                  Just IfElse  {}           → pure isChanged
+                  Nothing      {}           → pure isChanged
               Erase (Primary node) →
                 langToProperPort node >>= \case
                   Just x  → True <$ eraseAll (x, node) n
@@ -319,6 +347,44 @@ fanInAux2 numFan (numOther, otherLang) level = do
                                  }
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
+
+fanInAux0 :: (InfoNetwork net Lang m)
+          ⇒ Node → (Node, Lang) → m ()
+fanInAux0 numFan (numOther, otherLang) = do
+  sequentalStep
+  other1 ← newNode otherLang
+  other2 ← newNode otherLang
+  let nodeOther1 = RELAuxiliary0 { node       = other1
+                                 , primary    = ReLink numFan Aux1
+                                 }
+      nodeOther2 = RELAuxiliary0 { node       = other2
+                                 , primary    = ReLink numFan Aux2
+                                 }
+  traverse_ linkAll [nodeOther1, nodeOther2]
+  deleteRewire [numFan, numOther] [other1, other2]
+
+fanInAux1 :: (InfoNetwork net Lang m)
+          ⇒ Node → (Node, Lang) → Int → m ()
+fanInAux1 numFan (numOther, otherLang) level = do
+  incGraphSizeStep 1
+  other1 ← newNode otherLang
+  other2 ← newNode otherLang
+  fanIn1 ← newNode (FanIn' level)
+  let nodeOther1 = RELAuxiliary1 { node       = other1
+                                 , primary    = ReLink numFan Aux1
+                                 , auxiliary1 = Link (Port Aux1 fanIn1)
+                                 }
+      nodeOther2 = RELAuxiliary1 { node       = other2
+                                 , primary    = ReLink numFan Aux2
+                                 , auxiliary1 = Link (Port Aux2 fanIn1)
+                                 }
+      nodeFan1   = RELAuxiliary2 { node       = fanIn1
+                                 , primary    = ReLink numOther Aux1
+                                 , auxiliary1 = Link (Port Aux1 other1)
+                                 , auxiliary2 = Link (Port Aux1 other2)
+                                 }
+  traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1]
+  deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
 -- TODO :: delete node coming in!
 notExpand :: (Aux2 s, InfoNetwork net Lang m)

@@ -4,14 +4,18 @@ import           Juvix.Nets.Bohm
 import           Juvix.Visualize.Graph
 import           Juvix.Backends.Graph
 import           Juvix.Backends.Maps
+import           Juvix.Backends.Env
+import           Juvix.Utility.Helper
 
 import Protolude
 
 --test0 = astToNet <$> parseBohm "(lambda x. (x x) y)"
 test1 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(lambda x. (x x) y)"
 
--- This is the only test that breaks
--- runMapnet (reduceAll 10) . astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
+
+parsed = astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
+
+test2' = runMapNet (reduceAll 10) . astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 test2 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
 test3 = runFlipNet (reduceAll 1) . astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
@@ -20,11 +24,12 @@ test4 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(lambda y. (lambda x
 
 test5 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(2 + 2)"
 
---printTestn n = showNet "test.dot" net
---  where
---    Right (InfoNet {net = net}) = n
+printTestn :: Show b ⇒ Either a2 (InfoNet (FlipNet b)) → IO ()
+printTestn n = showNet "test.dot" (runFlip net)
+  where
+    Right (InfoNet {net = net}) = n
 
---printTest3 :: IO ()
--- printTest3 = showNet "test3.dot" net
---  where
---    Right (InfoNet {net = net}) = test3
+printTest3 :: IO ()
+printTest3 = showNet "test3.dot" (runFlip net)
+  where
+    Right (InfoNet {net = net}) = test3

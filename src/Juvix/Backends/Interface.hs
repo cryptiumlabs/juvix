@@ -122,8 +122,8 @@ rewire (a, pa) (b, pb) = do
 
 -- post condition, must delete the old node passed after the set of transitions are done!
 relink :: (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
-relink (oldNode, port) new = do
-  findEdge (oldNode, port) >>= \case
+relink old new = do
+  findEdge old >>= \case
     Just portToRelinkTo → link new portToRelinkTo
     Nothing             → pure () -- The port was really free to begin with!
 

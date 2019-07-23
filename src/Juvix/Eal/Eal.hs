@@ -27,17 +27,17 @@ data BracketErrors = TooManyOpen
                    | TooManyClosing
                    deriving Show
 
-type Info = Map SomeSymbol Types
+data Info = I {ctxt :: Map SomeSymbol Types} deriving (Show, Generic)
 
 newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
   deriving (Functor, Applicative, Monad)
   deriving (HasState "ctxt" (Map SomeSymbol Types)) via
-       MonadState (ExceptT TypeErrors (State Info))
+       Field "ctxt" () (MonadState (ExceptT TypeErrors (State Info)))
   deriving (HasThrow "typ" TypeErrors) via
     MonadError (ExceptT TypeErrors (State Info))
 
-runEnvError :: EnvError a -> (Either TypeErrors a, Info)
-runEnvError (EnvError a) = runState (runExceptT a) Map.empty
+runEnvError :: EnvError a → (Either TypeErrors a, Info)
+runEnvError (EnvError a) = runState (runExceptT a) (I Map.empty)
 
 newtype EitherBracket a =
   EitherBracket { runEither :: (Either BracketErrors a) }
@@ -113,3 +113,82 @@ bracketCheckerTerm :: HasThrow "typ" BracketErrors f ⇒ Term → Integer → f 
 bracketCheckerTerm (Bang changeBy eal) n
   | changeBy + n < 0 = throw @"typ" TooManyClosing
   | otherwise        = bracketChecker eal (n + changeBy)
+
+
+-- Constraint for terms --------------------------------------------------------
+
+data Constraint = Constraint {
+  spots :: Path,
+  op    :: Op
+} deriving Show
+
+type Spot = Int
+
+data Op = Gte Int
+        | Eq  Int
+        deriving Show
+
+type Path = [Spot]
+
+-- we use the start at location to limit the list where we start at for the expression
+type PathTerm = Map SomeSymbol Spot
+
+data ConstraintTermEnv = Con {
+  path        :: Path,
+  termsPath   :: PathTerm,
+  count       :: Spot,
+  constraints :: [Constraint]
+} deriving (Show, Generic)
+
+addPath :: (HasState "count" Spot m, HasState "path" Path m) ⇒ m Spot
+addPath = do
+  i ← get @"count"
+  modify' @"path" (<> [i])
+  put     @"count" (succ i)
+  pure i
+
+addCon :: HasState "constraints" [Constraint] m ⇒ Constraint → m ()
+addCon con = modify' @"constraints" (con :)
+
+
+boxConstraint :: ( HasState "constraints" [Constraint] m
+                , HasState "count" Spot m
+                , HasState "path" Path m
+                , HasState "termsPath" PathTerm m)
+              ⇒ Term → m Term
+boxConstraint (Bang _ t) = do
+  termPaths ← get @"termsPath"
+  count     ← addPath
+  path      ← get @"path"
+  addCon Constraint {spots = path, op = Gte 0}
+  case t of
+    Term s → do
+      case termPaths Map.!? s of
+        Just spot → addCon Constraint {spots = dropWhile (< spot) path, op = Eq 0}
+        Nothing   → addCon Constraint {spots = [count], op = Eq 0}
+      pure (Bang (toInteger count) (Term s))
+    Lambda s typ body → do
+      put @"termsPath" (Map.insert s (succ count) termPaths)
+      b ← boxConstraint body
+      pure (Bang (toInteger count) (Lambda s typ b))
+    App t1 t2 → do
+      l ← boxConstraint t1
+      put @"path"      path
+      put @"termsPath" termPaths
+      r ← boxConstraint t2
+      pure (Bang (toInteger count) (App l r))
+
+newtype EnvConstraint a = EnvCon (State ConstraintTermEnv a)
+  deriving (Functor, Applicative, Monad)
+  deriving (HasState "path" Path) via
+     Field "path" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "termsPath" PathTerm) via
+     Field "termsPath" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "count" Spot) via
+     Field "count" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "constraints" [Constraint]) via
+     Field "constraints" () (MonadState (State ConstraintTermEnv))
+
+
+--execBracketState :: EnvConstraint a → ConstraintTermEnv
+execBracketState (EnvCon e) = runState e (Con mempty mempty 1 mempty)

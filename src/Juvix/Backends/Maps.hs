@@ -64,10 +64,17 @@ instance Network Net where
      Map.lookup nodePort (n^.edges)
 
   -- Note this does not remove all edges to the deleted node
-  deleteEdge (n1, p1) (n2, p2) =
+  deleteEdge node1@(n1, p1) node2@(n2, p2) = do
+    let isSame pt edge node =
+          case Map.lookup pt edge of
+            Just x | x == node → True
+            _                  → False
+        deleteIfDiff pt edge node
+          | isSame pt edge node = over edges (Map.delete pt)
+          | otherwise           = identity
     modify @"net" (Net
-                  . Map.adjust (over edges (Map.delete p1)) n1
-                  . Map.adjust (over edges (Map.delete p2)) n2
+                  . Map.adjust (\x → deleteIfDiff p1 (x^.edges) node1 x) n1
+                  . Map.adjust (\x → deleteIfDiff p2 (x^.edges) node2 x) n2
                   . ofNet)
 
   -- This deletes nodes improperly lies here

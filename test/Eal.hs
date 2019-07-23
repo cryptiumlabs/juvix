@@ -9,6 +9,7 @@ parseTest2 = parseEal "!!((λ x : Forall. x) (λx : a -o b. (x y)))"
 
 parseTest3 = parseEal "!!(λ x : Forall. !-!-x λx : a -o b -o c. !-!-(x y))"
 
+testConstraint = execBracketState . boxConstraint <$> parseEal "λy : Forall. λ z : Forall. (y (y z))"
 
 exampleBracket :: Eal
 exampleBracket =
