@@ -1,3 +1,16 @@
+## Core-level optimizations
+
+- User can prove extensional equality of functions.
+- Compiler can pick which function is cheaper to reduce (& pick differently in different cases)
+
+## Machine-level optimizations
+
+- Requires formalized VM semantics of particular machine model (in Juvix)
+- User can prove semantic equivalence of machine instruction sequences
+- Compiler can pick which instruction sequence is cheaper and compile to it (& pick differently in different cases)
+
+## Graph transformations
+
 Much inspired by the GRIN [@graph-reduction-intermediate-notation] paper & implementation.
 
 (todo: determine which of these are rendered unnecessary by interaction net evaluation; keep it as simple as possible)
