@@ -24,68 +24,78 @@ also
 ## Interaction system encoding
 
 EAL term language $t ::= x\ |\ λx.t\ |\ (t u)\ |\ !t$.
+
 EAL type $A ::= α\ |\ A\ ⊸\ A\ |\ !A$.
 
-Weakening (after lambda term with unused argument)
+EAL-typed terms can be translated into interaction nets, in accordance with the sequent calculus typing rules, as the function $\phi$ as follows.
+
+The EAL term is first erased to a simply-typed term, with EAL types and levels of subterms retained in a lookup table for reference during the translation.
+
+**Abstraction** is applied to terms of the form $λx.t$ and type $A ⊸ B$.
 
 \begin{tikzpicture}
-\inetbigcell[]{g}{$G$}[3]
-\inode[right = 30pt]{e}{$⊗$}
-
-\inwire[]{g/1}{$A_1$}
-\inwire[]{g/2}{$A_n$}
-\outwire[]{g.out}{$B$}
-
-\inwire{e}{$A$}
-\end{tikzpicture}
-
-Abstraction (lambda abstraction)
-
-\begin{tikzpicture}
-\inetbigcell[right = 30pt]{g}{$G$}[4]
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
 \inetbigcell[below = 30pt]{l}{$λ$}[3]
 
-\inwire[]{g/2}{$A_2$}
-\inwire[]{g/3}{$A_n$}
-
-\axWire{g/1}{l/1}{$A_1$}{}
-\cutWire{g.out}{l/2}{$B$}{}
+\axWire{g/1}{l/1}{$(arg)$}{}
+\cutWire{g.out}{l/2}{}{}
 \outwire[]{l.out}{$A ⊸ B$}
 \end{tikzpicture}
 
-Application
+Wiring of the argument $x$ varies depending on variable usage linearity:
+
+**Weakening**: If $x$ does not appear in the body $t$, the $λ$ argument port is connected to an eraser.
+
+\begin{tikzpicture}
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
+\inode[]{e}{$⊗$}
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\cutWire{e}{l/1}{$$}{}
+\cutWire{g.out}{l/2}{$$}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+**Linear**: If *x* appears exactly once in the body $t$, the $λ$ argument port is connected directly to the occurrence. 
+
+\begin{tikzpicture}
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\axWire{g/1}{l/1}{}{}
+\cutWire{g.out}{l/2}{}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+**Contraction**: If *x* appears more than once in the body $t$, the $λ$ argument port is connected through a tree of fan-in nodes, each with a (globally) unique label, to all occurrences of $x$ in $t$ (only one fan-in node is shown in the diagram).
+
+\begin{tikzpicture}
+\inetbigcell[]{f}{$i$}[3]
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\axWire{g/1}{f/1}{}{}
+\axWire{g/2}{f/2}{}{}
+\axWire{f.out}{l/1}{}{}
+\cutWire{g.out}{l/2}{}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+**Application** is applied to terms of the form $(t_1 t_2)$ and type $C$.
 
 \begin{tikzpicture}
 
-\inetbigcell[]{g}{$G$}[3]
-\inetbigcell[right = 20 pt, below = 40 pt]{a}{$@$}[3]
-\inetbigcell[right = 40 pt]{h}{$H$}[3]
+\inetbigcell[right = -25 pt]{g}{$\phi(t_1)$}[3]
+\inetbigcell[right = 25 pt]{h}{$\phi(t_2)$}[3]
+\inetbigcell[below = 40 pt]{a}{$@$}[3]
 
-\inwire[]{g/1}{$A_1$}
-\inwire[]{g/2}{$A_n$}
-\inwire[]{h/1}{$C_1$}
-\inwire[]{h/2}{$C_n$}
-
-\axWire{g.out}{a/1}{}{}
+\cutWire{g.out}{a/1}{}{}
 \cutWire{h.out}{a/2}{}{}
-\outwire[]{a.out}{$B ⊸ C_1$}
+\outwire[]{a.out}{$C$}
 
 \end{tikzpicture}
 
-Contraction
-
-\begin{tikzpicture}
-\inetbigcell[]{f}{$F$}[3]
-\inetbigcell[right = 40 pt]{g}{$G$}[5]
-
-\axWire{f/1}{g/1}{$A_1$}{}
-\cutWire{f/2}{g/2}{$A_2$}{}
-\inwire[]{g/3}{$A_3$}
-\inwire[]{g/4}{$A_n$}
-
-\outwire[]{f.out}{$!A$}
-\outwire[]{g.out}{$B$}
-\end{tikzpicture}
+That ends the encoding rules.
 
 Example from chat & paper (of derivation).
 
