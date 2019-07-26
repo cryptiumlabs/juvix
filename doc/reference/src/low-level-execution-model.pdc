@@ -17,29 +17,79 @@ also
 - refl (equality) proofs in core language can be used by compiler, e.g. with total supply of a token = constant, for queries on the total supply the constant can be returned; more generally if two expressions are equal the compiler can choose which one to evaluate
 - will be more effective if graph representation is persistent, instead of written / read-back each contract call. can be used for both code & data
 
-## Interaction system encoding
-
 - Define encoding $\phi (t)$ of term $t$ mapping to net $n$
 - Define read-back function $\phi ^{-1}(n)$ mapping net $n$ to a term $t$, where $\phi^{-1}(\phi(t)) = t$ holds
 - Define interaction system reduction function $\psi(n)$ mapping nets to nets, where $\phi^{-1}(\psi(\phi(t))) = reduce\ t$ where $reduce$ is as defined in the semantics of Juvix Core
 
-## Oracle-free optimal reduction
+## Interaction system encoding
 
-(todo)
+EAL term language $t ::= x\ |\ λx.t\ |\ (t u)\ |\ !t$.
+EAL type $A ::= α\ |\ A\ ⊸\ A\ |\ !A$.
+
+Weakening (after lambda term with unused argument)
 
 \begin{tikzpicture}
-\inetbigcell[angle=130]{a}{$\lambda$}[5]
-\inetbigcell[angle=130, right=100pt]{b}{$@$}[5]
+\inetbigcell[]{g}{$G$}[3]
+\inode[right = 30pt]{e}{$⊗$}
 
-\inwire{a/1}{}
-\inwire{a/4}{}
-\inwire{b/1}{}
-\inwire{b/4}{}
+\inwire[]{g/1}{$A_1$}
+\inwire[]{g/2}{$A_n$}
+\outwire[]{g.out}{$B$}
 
-\cutWire{a.out}{b.out}{}{}
+\inwire{e}{$A$}
 \end{tikzpicture}
 
-How to encode other linear logic types?
+Abstraction (lambda abstraction)
+
+\begin{tikzpicture}
+\inetbigcell[right = 30pt]{g}{$G$}[4]
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\inwire[]{g/2}{$A_2$}
+\inwire[]{g/3}{$A_n$}
+
+\axWire{g/1}{l/1}{$A_1$}{}
+\cutWire{g.out}{l/2}{$B$}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+Application
+
+\begin{tikzpicture}
+
+\inetbigcell[]{g}{$G$}[3]
+\inetbigcell[right = 20 pt, below = 40 pt]{a}{$@$}[3]
+\inetbigcell[right = 40 pt]{h}{$H$}[3]
+
+\inwire[]{g/1}{$A_1$}
+\inwire[]{g/2}{$A_n$}
+\inwire[]{h/1}{$C_1$}
+\inwire[]{h/2}{$C_n$}
+
+\axWire{g.out}{a/1}{}{}
+\cutWire{h.out}{a/2}{}{}
+\outwire[]{a.out}{$B ⊸ C_1$}
+
+\end{tikzpicture}
+
+Contraction
+
+\begin{tikzpicture}
+\inetbigcell[]{f}{$F$}[3]
+\inetbigcell[right = 40 pt]{g}{$G$}[5]
+
+\axWire{f/1}{g/1}{$A_1$}{}
+\cutWire{f/2}{g/2}{$A_2$}{}
+\inwire[]{g/3}{$A_3$}
+\inwire[]{g/4}{$A_n$}
+
+\outwire[]{f.out}{$!A$}
+\outwire[]{g.out}{$B$}
+\end{tikzpicture}
+
+Example from chat & paper (of derivation).
+
+## Oracle-free optimal reduction
 
 ## Bespoke term encoding
 
