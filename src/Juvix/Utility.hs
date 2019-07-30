@@ -1,7 +1,5 @@
 module Juvix.Utility (
-  module Juvix.Utility.PrettyPrint,
-  module Juvix.Utility.Sugar
+  module Juvix.Utility.PrettyPrint
 ) where
 
 import           Juvix.Utility.PrettyPrint
-import           Juvix.Utility.Sugar

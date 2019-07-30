@@ -6,7 +6,6 @@ import qualified Data.EnumMap.Strict as Map
 import           Control.Lens
 import qualified Data.Set            as Set
 
-import           Juvix.Utility.Sugar
 import           Juvix.Library            hiding (empty, link)
 import           Juvix.Backends.Interface
 import           Juvix.Backends.Env

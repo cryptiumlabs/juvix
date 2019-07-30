@@ -73,7 +73,6 @@ parseBohmFile fname = do
   input ← readFile fname
   pure $ parseEal' fname (show input)
 
-
 -- Grammar ---------------------------------------------------------------------
 expression ∷ Parser Term
 expression = do
@@ -108,14 +107,12 @@ lambda = do
   body ← expression
   pure (Lambda s sType body)
 
-
 application ∷ Parser Eal
 application =
   parens (App <$> expression <*> expression)
 
 term ∷ Parser Eal
 term = Term <$> symbol
-
 
 --  isLolly ← optional (reservedOp "-o")
 
