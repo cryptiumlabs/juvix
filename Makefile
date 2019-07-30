@@ -22,7 +22,7 @@ repl-lib:
 	stack ghci juvix:lib
 
 repl-exe:
-	stack ghci juvix:exe
+	stack ghci juvix:exe:juvix
 
 clean:
 	stack clean

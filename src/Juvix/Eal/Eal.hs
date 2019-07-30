@@ -12,6 +12,10 @@ data Eal = Term SomeSymbol
 data Term = Bang Integer Eal
           deriving Show
 
+data SimpleType = ArrowT SimpleType SimpleType
+                | SpecificT SomeSymbol
+                deriving (Show, Eq)
+
 data Types = Lolly Types Types
            | BangT Integer Types
            | Forall
@@ -149,7 +153,6 @@ addPath = do
 
 addCon :: HasState "constraints" [Constraint] m ⇒ Constraint → m ()
 addCon con = modify' @"constraints" (con :)
-
 
 boxConstraint ∷ ( HasState "constraints" [Constraint]  m
                 , HasState "count"       Spot          m

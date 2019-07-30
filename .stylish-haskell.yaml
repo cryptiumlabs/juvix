@@ -42,3 +42,5 @@ language_extensions:
   - MultiWayIf
   - DefaultSignatures
   - DerivingStrategies
+  - DataKinds
+  - DerivingVia

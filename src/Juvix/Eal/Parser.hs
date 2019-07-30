@@ -2,17 +2,19 @@
 module Juvix.Eal.Parser where
 
 
-import           Prelude (String)
+import           Prelude                                (String)
 import           Text.Parsec
-import           Text.ParserCombinators.Parsec.Language
+import           Text.Parsec.Expr                       as E
 import           Text.Parsec.String
-import qualified Text.ParserCombinators.Parsec.Token as T
-import           Text.Parsec.Expr                    as E
+import           Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token    as T
 
-import           Juvix.Library hiding (link, reduce, (<|>), many, try, optional)
 import           Juvix.Eal.Eal
+import           Juvix.Library                          hiding (link, many,
+                                                         optional, reduce, try,
+                                                         (<|>))
 
-langaugeDef :: Stream s m Char => GenLanguageDef s u m
+langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
               { T.reservedNames   = ["lambda", "forall", "Forall"]
               , T.reservedOpNames = [",", ":", "(", ")", "[", "]", "{", "}"
@@ -30,21 +32,21 @@ langaugeDef = LanguageDef
               , commentLine       = ""
               }
 
-lexer :: Stream s m Char => T.GenTokenParser s u m
+lexer ∷ Stream s m Char ⇒ T.GenTokenParser s u m
 lexer = T.makeTokenParser langaugeDef
 
-identifier :: Stream s m Char ⇒ ParsecT s u m String
-natural    :: Stream s m Char ⇒ ParsecT s u m Integer
-reserved   :: Stream s m Char ⇒ String → ParsecT s u m ()
-reservedOp :: Stream s m Char ⇒ String → ParsecT s u m ()
-semi       :: Stream s m Char ⇒ ParsecT s u m String
-integer    :: Stream s m Char ⇒ ParsecT s u m Integer
-whiteSpace :: Stream s m Char ⇒ ParsecT s u m ()
-comma      :: Stream s m Char ⇒ ParsecT s u m String
-brackets   :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-parens     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-semiSep    :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
-braces     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
+identifier ∷ Stream s m Char ⇒ ParsecT s u m String
+natural    ∷ Stream s m Char ⇒ ParsecT s u m Integer
+reserved   ∷ Stream s m Char ⇒ String → ParsecT s u m ()
+reservedOp ∷ Stream s m Char ⇒ String → ParsecT s u m ()
+semi       ∷ Stream s m Char ⇒ ParsecT s u m String
+integer    ∷ Stream s m Char ⇒ ParsecT s u m Integer
+whiteSpace ∷ Stream s m Char ⇒ ParsecT s u m ()
+comma      ∷ Stream s m Char ⇒ ParsecT s u m String
+brackets   ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
+parens     ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
+semiSep    ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
+braces     ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 
 identifier = T.identifier lexer
 reserved   = T.reserved   lexer
@@ -60,20 +62,20 @@ brackets   = T.brackets   lexer
 natural    = T.natural    lexer
 
 -- Full Parsers ----------------------------------------------------------------
-parseEal :: String → Either ParseError Term
+parseEal ∷ String → Either ParseError Term
 parseEal = parseEal' ""
 
-parseEal' :: SourceName → String → Either ParseError Term
+parseEal' ∷ SourceName → String → Either ParseError Term
 parseEal' = runParser (whiteSpace *> expression <* eof) ()
 
-parseBohmFile :: FilePath → IO (Either ParseError Term)
+parseBohmFile ∷ FilePath → IO (Either ParseError Term)
 parseBohmFile fname = do
   input ← readFile fname
   pure $ parseEal' fname (show input)
 
 
 -- Grammar ---------------------------------------------------------------------
-expression :: Parser Term
+expression ∷ Parser Term
 expression = do
   bangs ← many (try (string "!-") <|> string "!" <|> string " ")
   term ← try eal <|> parens eal
@@ -82,21 +84,21 @@ expression = do
       num = sum (fmap f (filter (/= " ") bangs))
   pure (Bang num term)
 
-eal :: Parser Eal
+eal ∷ Parser Eal
 eal = (lambda <?> "Lambda")
    <|> (term <?> "Term")
    <|> (application <?> "Application")
 
-types :: Parser Types
+types ∷ Parser Types
 types = buildExpressionParser optable types'
 
-types' :: Parser Types
+types' ∷ Parser Types
 types' = bangs <|> forall <|> specific
 
-symbol :: Stream s m Char ⇒ ParsecT s u m SomeSymbol
+symbol ∷ Stream s m Char ⇒ ParsecT s u m SomeSymbol
 symbol = someSymbolVal <$> identifier
 
-lambda :: Parser Eal
+lambda ∷ Parser Eal
 lambda = do
   reserved "lambda" <|> reservedOp "\\" <|> reservedOp "λ"
   s ← symbol
@@ -107,17 +109,17 @@ lambda = do
   pure (Lambda s sType body)
 
 
-application :: Parser Eal
+application ∷ Parser Eal
 application =
   parens (App <$> expression <*> expression)
 
-term :: Parser Eal
+term ∷ Parser Eal
 term = Term <$> symbol
 
 
 --  isLolly ← optional (reservedOp "-o")
 
-bangs :: Parser Types
+bangs ∷ Parser Types
 bangs = do
   bangs ← many1 (try (string "!-") <|> string "!" <|> string " ")
   typ   ← parens types <|> types
@@ -129,18 +131,17 @@ bangs = do
        | num >  0  → BangT num typ
        | otherwise → UBang num typ
 
-forall :: Parser Types
+forall ∷ Parser Types
 forall = Forall <$ (reserved "forall" <|> reserved "Forall")
 
-specific :: Parser Types
+specific ∷ Parser Types
 specific = Specific <$> symbol
 
-
-createOpTable :: ParsecT s u m (a → a → a) → Operator s u m a
+createOpTable ∷ ParsecT s u m (a → a → a) → Operator s u m a
 createOpTable term = E.Infix term AssocRight
 
-lolly :: Stream s m Char => ParsecT s u m (Types -> Types -> Types)
+lolly ∷ Stream s m Char ⇒ ParsecT s u m (Types → Types → Types)
 lolly = Lolly <$ reservedOp "-o"
 
-optable :: [[Operator String () Identity Types]]
+optable ∷ [[Operator String () Identity Types]]
 optable = [[createOpTable lolly]]
