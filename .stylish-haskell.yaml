@@ -29,18 +29,25 @@ columns: 80
 newline: native
 
 language_extensions:
-  - TemplateHaskell
-  - QuasiQuotes
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
   - LambdaCase
-  - ScopedTypeVariables
-  - FunctionalDependencies
-  - MultiParamTypeClasses
-  - FlexibleContexts
   - UnicodeSyntax
-  - InstanceSigs
-  - ExistentialQuantification
-  - MultiWayIf
-  - DefaultSignatures
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveGeneric
   - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
   - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
   - DerivingVia
+  - TypeApplications

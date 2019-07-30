@@ -1,13 +1,13 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds        #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving     #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
 module Juvix.NodeInterface where
 
 import           Control.Lens
-import           Juvix.Library
 import           Data.Graph.Inductive
+import           Juvix.Library
 
 -- there is a probably better way of doing this, instead of writing the concrete terms
 data ShellNode a
@@ -46,11 +46,10 @@ type Aux3 a = (Aux2 a, HasAux3 a Auxiliary)
 type Aux4 a = (Aux3 a, HasAux4 a Auxiliary)
 type Aux5 a = (Aux4 a, HasAux5 a Auxiliary)
 
-
-auxToPrimary :: Auxiliary → Primary
+auxToPrimary ∷ Auxiliary → Primary
 auxToPrimary (Auxiliary node) = Primary node
 auxToPrimary FreeNode         = Free
 
-auxToNode :: Auxiliary → Maybe Node
+auxToNode ∷ Auxiliary → Maybe Node
 auxToNode (Auxiliary node) = Just node
 auxToNode FreeNode         = Nothing

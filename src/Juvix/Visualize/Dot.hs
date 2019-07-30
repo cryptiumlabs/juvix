@@ -1,25 +1,26 @@
 module Juvix.Visualize.Dot where
 
-import           Turtle hiding (FilePath, reduce)
-import System.IO.Error
-import Control.Exception hiding ()
+import           Control.Exception        hiding ()
+import           System.IO.Error
+import           Turtle                   hiding (FilePath, reduce)
 
 
-import           Juvix.Library            hiding (writeFile, reduce, throwIO, catch)
-import           Juvix.Visualize.Graph
-import           Juvix.Backends.Graph
+import qualified Data.Text                as T
 import           Juvix.Backends.Env
-import           Juvix.Utility.Helper as H
-import           Juvix.Nets.Bohm
+import           Juvix.Backends.Graph
 import           Juvix.Backends.Interface
+import           Juvix.Library            hiding (catch, reduce, throwIO,
+                                           writeFile)
+import           Juvix.Nets.Bohm
+import           Juvix.Utility.Helper     as H
+import           Juvix.Visualize.Graph
 import           System.Directory
-import qualified Data.Text          as T
 
 printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b)) → IO ()
-printTestn _   (Left _) = pure ()
+printTestn _   (Left _)                      = pure ()
 printTestn txt (Right (InfoNet {net = net})) = showNet txt (runFlip net)
 
-netToGif :: FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+netToGif ∷ FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
 netToGif dir name num net = do
   createDirectoryIfMissing True dir
 
@@ -52,8 +53,7 @@ reducePrint name num = flip H.untilNothingNTimesM num $ do
   liftIO (showNet (name <> show (parallelSteps info)) (runFlip ctxt))
   reduce
 
-
-removeIfExists :: FilePath -> IO ()
+removeIfExists ∷ FilePath → IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists
   where handleExists e
           | isDoesNotExistError e = return ()

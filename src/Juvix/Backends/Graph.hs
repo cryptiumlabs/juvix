@@ -1,28 +1,29 @@
+{-# LANGUAGE ApplicativeDo  #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ApplicativeDo #-}
 
 module Juvix.Backends.Graph where
 
-import qualified Data.Graph.Inductive       as Graph
-import           Data.Graph.Inductive       hiding (Node, Network, nodes, delNodes)
-import qualified Data.Set                   as Set
-import           Prelude                    (error)
+import           Data.Graph.Inductive     hiding (Network, Node, delNodes,
+                                           nodes)
+import qualified Data.Graph.Inductive     as Graph
+import qualified Data.Set                 as Set
+import           Prelude                  (error)
 
-import           Juvix.Library              hiding (link, reduce, empty)
-import           Juvix.NodeInterface
-import           Juvix.Backends.Interface
 import           Juvix.Backends.Env
+import           Juvix.Backends.Interface
+import           Juvix.Library            hiding (empty, link, reduce)
+import           Juvix.NodeInterface
 import           Juvix.Utility.Helper
 
 type Net a   = Gr a EdgeInfo
 type FlipNet = Flip Gr EdgeInfo
 
 -- Run Function ----------------------------------------------------------------
-runFlipNet :: EnvNetInfo (FlipNet b) a → FlipNet b → InfoNet (FlipNet b)
+runFlipNet ∷ EnvNetInfo (FlipNet b) a → FlipNet b → InfoNet (FlipNet b)
 runFlipNet f net = runNet f net
                           (toInteger (length (Graph.nodes (runFlip net))))
 
-runFlipNetIO :: EnvNetInfoIO (FlipNet b) a → FlipNet b → IO (InfoNet (FlipNet b))
+runFlipNetIO ∷ EnvNetInfoIO (FlipNet b) a → FlipNet b → IO (InfoNet (FlipNet b))
 runFlipNetIO f net = runNetIO f net
                              (toInteger (length (Graph.nodes (runFlip net))))
 -- Network Instances  ----------------------------------------------------------
@@ -96,7 +97,7 @@ instance DifferentRep FlipNet where
 
 -- Graph to more typed construction Helper --------------------------------------
 
-auxFromGraph :: (HasState "net" (FlipNet a)  m)
+auxFromGraph ∷ (HasState "net" (FlipNet a)  m)
              ⇒ ((Node, PortType) → b → b)
              → b
              → Node

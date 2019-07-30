@@ -1,18 +1,18 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving     #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
 module Juvix.Nets.Combinators where
 
-import           Prelude              (error)
-import           Data.Foldable        (foldrM)
 import           Control.Lens
+import           Data.Foldable            (foldrM)
+import           Prelude                  (error)
 
-import           Juvix.Library        hiding (reduce)
-import           Juvix.Backends.Interface
 import           Juvix.Backends.Env
+import           Juvix.Backends.Interface
+import           Juvix.Library            hiding (reduce)
 import           Juvix.NodeInterface
-import qualified Juvix.Utility.Helper as H
+import qualified Juvix.Utility.Helper     as H
 
 -- Specific Port Type-----------------------------------------------------------
 

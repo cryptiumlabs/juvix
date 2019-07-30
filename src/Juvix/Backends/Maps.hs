@@ -2,26 +2,26 @@
 
 module Juvix.Backends.Maps where
 
-import qualified Data.EnumMap.Strict as Map
 import           Control.Lens
-import qualified Data.Set            as Set
+import qualified Data.EnumMap.Strict      as Map
+import qualified Data.Set                 as Set
 
-import           Juvix.Library            hiding (empty, link)
-import           Juvix.Backends.Interface
 import           Juvix.Backends.Env
+import           Juvix.Backends.Interface
+import           Juvix.Library            hiding (empty, link)
 import           Juvix.NodeInterface
 
 newtype Net a = Net {ofNet :: Map.EnumMap Node (NodeInfo a)}
               deriving Show
 
-data NodeInfo a = NInfo { _typ     :: a
-                        , _edges   :: Map.EnumMap PortType (Node, PortType)
+data NodeInfo a = NInfo { _typ   :: a
+                        , _edges :: Map.EnumMap PortType (Node, PortType)
                         } deriving (Show)
 
 makeLenses ''NodeInfo
 
 -- Run Function ----------------------------------------------------------------
-runMapNet :: EnvNetInfo (Net b) a → Net b → InfoNet (Net b)
+runMapNet ∷ EnvNetInfo (Net b) a → Net b → InfoNet (Net b)
 runMapNet f net = runNet f net (toInteger (length (ofNet net)))
 -- Network Instances  ----------------------------------------------------------
 
@@ -94,7 +94,7 @@ instance Network Net where
     traverse_ (uncurry link) conflictingNeighbors
     delNodes oldNodesToDelete
 
-deleteAllPoints :: (Foldable t, Enum k)
+deleteAllPoints ∷ (Foldable t, Enum k)
                 ⇒ Node
                 → Map.EnumMap k (NodeInfo a)
                 → t (k, PortType)
@@ -109,7 +109,7 @@ deleteAllPoints n = foldr f
                        Just x | fst x == n → True
                        _                   → False
 
-neighbors :: [Node] → Map.EnumMap Node (NodeInfo a) → [EdgeInfo]
+neighbors ∷ [Node] → Map.EnumMap Node (NodeInfo a) → [EdgeInfo]
 neighbors oldNodes net = do
   node ← oldNodes
   case Map.lookup node net of
@@ -134,8 +134,8 @@ instance DifferentRep Net where
 
 -- Graph to more typed construction Helper --------------------------------------
 
-auxFromGraph :: HasState "net" (Net a) m
-             ⇒ ((Node, PortType) -> b -> b)
+auxFromGraph ∷ HasState "net" (Net a) m
+             ⇒ ((Node, PortType) → b → b)
              → b
              → Node
              → m (Maybe b)
@@ -143,8 +143,8 @@ auxFromGraph conv constructor num = do
   Net net ← get @"net"
   let edges = neighbors [num] net
   case edges of
-    []     → pure Nothing
-    (_:_)  → pure $ Just $ foldr f constructor edges
+    []    → pure Nothing
+    (_:_) → pure $ Just $ foldr f constructor edges
   where
     f (Edge (n1, n1port) (n2, n2port)) con
       | n1 == num = conv (n2, n1port) con

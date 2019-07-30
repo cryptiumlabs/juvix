@@ -1,6 +1,6 @@
 module Juvix.Bohm.Type where
 
-import Juvix.Library
+import           Juvix.Library
 
 -- TODO:: Investigate if it would be advantageous to promote this to a well typed gadt
 data Bohm
@@ -21,7 +21,6 @@ data Bohm
   | IsNil Bohm
   | Symbol' SomeSymbol
   deriving Show
-
 
 data Op = Mult | Plus | Sub | Division
         | Mod | Or | And | Eq | Neq | Lt | Gt | Ge | Le deriving Show
