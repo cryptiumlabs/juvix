@@ -9,7 +9,7 @@ import           Text.Parsec.String
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as T
 
-import           Juvix.Eal.Eal
+import           Juvix.Eal.Types
 import           Juvix.Library                          hiding (link, many,
                                                          optional, reduce, try,
                                                          (<|>))
