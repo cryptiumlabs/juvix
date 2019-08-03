@@ -27,13 +27,22 @@ parameterizeTypeAssignment = do
   assignment <- get @"typeAssignment"
   mapM parameterizeType assignment
 
+-- Reparameterize.
+reparameterize :: (HasState "nextParam" Param m)
+ => PType -> m PType
+reparameterize pty = do
+  param <- freshParam
+  case pty of
+    PSymT _ sym -> pure (PSymT param sym)
+    PArrT _ a b -> pure (PArrT param a b)
+
 -- Generate boxing & typing constraints.
 -- In one pass to avoid keeping extra maps.
 boxAndTypeConstraint :: (HasState "path" Path m,
                          HasState "varPaths" VarPaths m,
                          HasState "nextParam" Param m,
                          HasState "constraints" [Constraint] m)
- => ParamTypeAssignment -> Term -> m RPT
+ => ParamTypeAssignment -> Term -> m (RPT, PType)
 boxAndTypeConstraint parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterizedAssignment
   varPaths ← get @"varPaths"
@@ -42,20 +51,37 @@ boxAndTypeConstraint parameterizedAssignment term = do
   addConstraint (Constraint (map (ConstraintVar 1) path) (Gte 0))
   case term of
     Var sym -> do
+      -- Boxing constraint.
       case varPaths Map.!? sym of
         Just loc  → addConstraint (Constraint (map (ConstraintVar 1) (dropWhile (< loc) path)) (Eq 0))
         Nothing   → addConstraint (Constraint (map (ConstraintVar 1) path) (Eq 0))
-      pure (RBang param (RVar sym))
+      -- Calculate parameterized type for subterm.
+      let paramTy = parameterizedAssignment Map.! sym
+      paramTy <- reparameterize paramTy
+      -- Typing constraint.
+      -- TODO.
+      pure (RBang param (RVar sym), paramTy)
     Lam sym body -> do
       modify' @"varPaths" (Map.insert sym (succ param))
-      body ← rec body
-      pure (RBang param (RLam sym body))
+      (body, bodyTy) ← rec body
+      -- Calculate parameterized type for subterm.
+      param <- freshParam
+      let argTy = parameterizedAssignment Map.! sym
+          lamTy = PArrT param argTy bodyTy
+      -- Typing constraint.
+      -- TODO.
+      pure (RBang param (RLam sym body), lamTy)
     App a b -> do
-      a <- rec a
+      (a, aTy) <- rec a
       put @"path" path
       put @"varPaths" varPaths
-      b <- rec b
-      pure (RBang param (RApp a b))
+      (b, bTy) <- rec b
+      -- Calculate parameterized type for subterm.
+      let PArrT _ _ resTy = aTy
+          appTy = resTy
+      -- Typing constraint.
+      -- TODO.
+      pure (RBang param (RApp a b), appTy)
 
 -- Generate constraints.
 generateConstraints :: (HasState "path" Path m,
@@ -66,7 +92,7 @@ generateConstraints :: (HasState "path" Path m,
  => Term -> m RPT
 generateConstraints term = do
   parameterizedAssignment <- parameterizeTypeAssignment
-  boxAndTypeConstraint parameterizedAssignment term
+  fst |<< boxAndTypeConstraint parameterizedAssignment term
 
 {- Utility. -}
 
