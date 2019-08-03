@@ -61,9 +61,11 @@ library:
   source-dirs: src
   dependencies:
     - directory
+    - z3
   exposed-modules:
     - Juvix
     - Juvix.Utility
+    - Juvix.Eal.Solve
 
 executables:
   juvix:

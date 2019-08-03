@@ -1,7 +1,9 @@
 module Juvix.Eal.Types2 where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Text       as T
 import           Juvix.Library   hiding (Type)
+import           Juvix.Utility
 
 -- Untyped term.
 data Term
@@ -105,3 +107,13 @@ newtype EnvConstraint a = EnvCon (State Env a)
     Field "constraints" () (MonadState (State Env))
   deriving (HasState "occurrenceMap" OccurrenceMap) via
     Field "occurrenceMap" () (MonadState (State Env))
+
+instance PrettyPrint ConstraintVar where
+  prettyPrintValue (ConstraintVar coeff var) = T.concat ["(", prettyPrintValue coeff, " * m_", prettyPrintValue var, ")"]
+
+instance PrettyPrint Op where
+  prettyPrintValue (Gte n) = T.concat [">= ", prettyPrintValue n]
+  prettyPrintValue (Eq n)  = T.concat ["= ", prettyPrintValue n]
+
+instance PrettyPrint Constraint where
+  prettyPrintValue (Constraint vars op) = T.concat [T.intercalate " + " (map prettyPrintValue vars), " ", prettyPrintValue op]
