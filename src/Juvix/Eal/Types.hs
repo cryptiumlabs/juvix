@@ -14,15 +14,19 @@ data Term = Bang Integer Eal
 
 data NumberedEal
   = NTerm Int SomeSymbol
-  | NLambda Int SomeSymbol Types NumberedEal
+  | NLambda Int SomeSymbol NumberedEal
   | NApp Int NumberedEal NumberedEal
   | NBang Int NumberedEal
   deriving (Show, Eq)
 
+data SimpleType
+  = SArrowT SimpleType SimpleType
+  | SSpecificT SomeSymbol
+  deriving (Show, Eq)
+
 data ParamSimpleType
-  = PArrowT ParamSimpleType ParamSimpleType
-  | PSpecificT SomeSymbol
-  | PBangT Integer ParamSimpleType
+  = PSArrowT Int ParamSimpleType ParamSimpleType
+  | PSSpecificT Int SomeSymbol
   deriving (Show, Eq)
 
 data Types = Lolly Types Types
@@ -73,12 +77,15 @@ type Path = [Spot]
 -- we use the start at location to limit the list where we start at for the expression
 type PathTerm = Map SomeSymbol Spot
 
-type ParamTypeTerm = Map SomeSymbol (Spot, ParamSimpleType)
+type ParamTypeSubterm = Map Int ParamSimpleType
+
+type ParamTypeAssignment = Map SomeSymbol ParamSimpleType
 
 data ConstraintTermEnv = Con {
   path        :: Path,
   termsPath   :: PathTerm,
-  paramTypeTerm :: ParamTypeTerm,
+  paramTypeSubterm :: ParamTypeSubterm,
+  paramTypeAssignment :: ParamTypeAssignment,
   count       :: Spot,
   constraints :: [Constraint]
 } deriving (Show, Generic)
@@ -93,5 +100,7 @@ newtype EnvConstraint a = EnvCon (State ConstraintTermEnv a)
      Field "count" () (MonadState (State ConstraintTermEnv))
   deriving (HasState "constraints" [Constraint]) via
      Field "constraints" () (MonadState (State ConstraintTermEnv))
-  deriving (HasState "paramTypeTerm" ParamTypeTerm) via
-     Field "paramTypeTerm" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "paramTypeSubterm" ParamTypeSubterm) via
+     Field "paramTypeSubterm" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "paramTypeAssignment" ParamTypeAssignment) via
+     Field "paramTypeAssignment" () (MonadState (State ConstraintTermEnv))

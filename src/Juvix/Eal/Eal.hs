@@ -5,26 +5,6 @@ import Juvix.Eal.Types
 import qualified Juvix.Bohm.Type as BT
 import           Data.Map.Strict as Map
 
-number :: (HasState "count" Spot m) => Term -> m NumberedEal
-number (Bang _ term) = do
-  count <- newParam
-  term <- numberEal term
-  pure $ NBang count term
-  where numberEal term = do
-          count <- newParam
-          case term of
-            Term s -> pure $ NTerm count s
-            Lambda s ty term -> do
-              term <- number term
-              pure $ NLambda count s ty term
-            App t1 t2 -> do
-              t1 <- number t1
-              t2 <- number t2
-              pure $ NApp count t1 t2
-
-runNumber :: Term -> NumberedEal
-runNumber t = fst $ execBracketState $ number t
-
 runEnvError :: EnvError a → (Either TypeErrors a, Info)
 runEnvError (EnvError a) = runState (runExceptT a) (I Map.empty)
 
@@ -141,7 +121,7 @@ boxConstraint (Bang _ t) = do
       pure (Bang (toInteger count) (App l r))
 
 execBracketState :: EnvConstraint a → (a, ConstraintTermEnv)
-execBracketState (EnvCon e) = runState e (Con mempty mempty mempty 1 mempty)
+execBracketState (EnvCon e) = runState e (Con mempty mempty mempty mempty 1 mempty)
 
 -- Convert to Bohm--------------------------------------------------------------
 
