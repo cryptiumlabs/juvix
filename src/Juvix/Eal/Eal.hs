@@ -1,12 +1,55 @@
 module Juvix.Eal.Eal where
 
 import           Juvix.Library hiding (link, reduce)
-import Juvix.Eal.Types
 import qualified Juvix.Bohm.Type as BT
 import           Data.Map.Strict as Map
 
+data Eal = Term SomeSymbol
+         | Lambda SomeSymbol Types Term
+         | App Term Term
+         deriving Show
+
+data Term = Bang Integer Eal
+          deriving Show
+
+data SimpleType = ArrowT SimpleType SimpleType
+                | SpecificT SomeSymbol
+                deriving (Show, Eq)
+
+data Types = Lolly Types Types
+           | BangT Integer Types
+           | Forall
+           | Specific SomeSymbol
+           | UBang Integer Types
+           deriving (Show, Eq)
+
+data TypeErrors = MisMatchArguments
+                | MissingOverUse
+                | ExpectedFunction
+                deriving Show
+
+data BracketErrors = TooManyOpen
+                   | TooManyClosing
+                   deriving Show
+
+data Info = I {ctxt :: Map SomeSymbol Types} deriving (Show, Generic)
+
+newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
+  deriving (Functor, Applicative, Monad)
+  deriving (HasState "ctxt" (Map SomeSymbol Types)) via
+    Field "ctxt" () (MonadState (ExceptT TypeErrors (State Info)))
+  deriving (HasThrow "typ" TypeErrors) via
+    MonadError (ExceptT TypeErrors (State Info))
+
 runEnvError :: EnvError a → (Either TypeErrors a, Info)
 runEnvError (EnvError a) = runState (runExceptT a) (I Map.empty)
+
+newtype EitherBracket a =
+  EitherBracket { runEither :: (Either BracketErrors a) }
+  deriving (Functor, Applicative, Monad) via
+    Except BracketErrors
+  deriving (HasThrow "typ" BracketErrors) via
+    MonadError (Except BracketErrors)
 
 runBracketChecker :: Eal → Either BracketErrors ()
 runBracketChecker t = runEither (bracketChecker t 0)
@@ -78,16 +121,34 @@ bracketCheckerTerm (Bang changeBy eal) n
 
 -- Constraint for terms --------------------------------------------------------
 
-newParam :: (HasState "count" Spot m) => m Spot
-newParam = do
-  i <- get @"count"
-  put  @"count" (succ i)
-  pure i
+data Constraint = Constraint {
+  spots :: Path,
+  op    :: Op
+} deriving Show
+
+type Spot = Int
+
+data Op = Gte Int
+        | Eq  Int
+        deriving Show
+
+type Path = [Spot]
+
+-- we use the start at location to limit the list where we start at for the expression
+type PathTerm = Map SomeSymbol Spot
+
+data ConstraintTermEnv = Con {
+  path        :: Path,
+  termsPath   :: PathTerm,
+  count       :: Spot,
+  constraints :: [Constraint]
+} deriving (Show, Generic)
 
 addPath :: (HasState "count" Spot m, HasState "path" Path m) ⇒ m Spot
 addPath = do
-  i ← newParam
+  i ← get @"count"
   modify' @"path" (<> [i])
+  put     @"count" (succ i)
   pure i
 
 addCon :: HasState "constraints" [Constraint] m ⇒ Constraint → m ()
@@ -120,8 +181,19 @@ boxConstraint (Bang _ t) = do
       r ← boxConstraint t2
       pure (Bang (toInteger count) (App l r))
 
+newtype EnvConstraint a = EnvCon (State ConstraintTermEnv a)
+  deriving (Functor, Applicative, Monad)
+  deriving (HasState "path" Path) via
+     Field "path" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "termsPath" PathTerm) via
+     Field "termsPath" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "count" Spot) via
+     Field "count" () (MonadState (State ConstraintTermEnv))
+  deriving (HasState "constraints" [Constraint]) via
+     Field "constraints" () (MonadState (State ConstraintTermEnv))
+
 execBracketState :: EnvConstraint a → (a, ConstraintTermEnv)
-execBracketState (EnvCon e) = runState e (Con mempty mempty mempty mempty 1 mempty)
+execBracketState (EnvCon e) = runState e (Con mempty mempty 1 mempty)
 
 -- Convert to Bohm--------------------------------------------------------------
 
