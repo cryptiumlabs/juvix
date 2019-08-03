@@ -6,6 +6,7 @@ packages:
 extra-deps:
 - capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62
 - fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e
-- z3-408.0@sha256:89bbc2d828dc1fe1f19666e8e501c69ce5d0ed8026e4a02f7eae1e69f4a352af
+- github: cwgoes/haskell-z3
+  commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 
 allow-newer: true
