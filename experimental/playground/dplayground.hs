@@ -126,7 +126,7 @@ iEval (NatElim m mz ms k)  d
             VSucc l    -> msVal `vapp` l `vapp` rec l
             VNeutral n -> VNeutral
                           (NNatElim (cEval m d) mzVal msVal n)
-            _          -> error "internal: eval natElim"
+            term       -> error ("internal: eval natElim. \n" ++ showVal term ++ "\n cannot be evaluated.")
     in rec (cEval k d)
 --evaluation of Vec
 iEval (Nil a)                   d  =  VNil (cEval a d)
@@ -143,7 +143,8 @@ iEval (VecElim a m mn mc k xs)  d  =
             VNeutral n       ->  VNeutral
                                  (NVecElim  (cEval a d) (cEval m d)
                                             mnVal mcVal kVal n)
-            _                ->  error "internal: eval vecElim"
+            term             ->  
+              error ("internal: eval vecElim. \n" ++ showVal term ++ " \n cannot be evaluated.")
     in rec (cEval k d) (cEval xs d)
 --evaluation of Eq
 iEval (Refl x y)                d  =  VRefl (cEval x d) (cEval y d)
@@ -152,17 +153,18 @@ iEval (EqElim a m mr x y eq)    d  =
   let mrVal  =  cEval mr d
       recu eqVal =
         case eqVal of
-          VRefl _ z -> mrVal `vapp` z
+          VRefl _ z  -> mrVal `vapp` z
           VNeutral n ->
             VNeutral (NEqElim  (cEval a d) (cEval m d) mrVal
                                 (cEval x d) (cEval y d) n)
-          _ -> error "internal: eval eqElim"
+          term       -> 
+            error ("internal: eval eqElim. \n " ++ showVal term ++ "\n cannot be evaluated.")
   in recu (cEval eq d)
 
 vapp :: Value -> Value -> Value
 vapp (VLam f)      v =  f v
 vapp (VNeutral n)  v =  VNeutral (NApp n v)
-vapp x             y =  error ("Cannot apply " ++ showVal y ++ " to " ++ showVal x ++ ".")
+vapp x             y =  error ("Cannot apply \n" ++ showVal y ++ "\n to \n" ++ showVal x)
 
 cEval :: CTerm -> Env -> Value
 cEval (Inf  ii)   d =  iEval ii d
@@ -271,16 +273,21 @@ iType ii g (Pi rho rho')
         cType (ii + 1) ((Local ii, ty): g)
               (cSubst 0 (Free (Local ii))rho') VStar
         return VStar
-iType _ii g (Free x)
+iType ii g (Free x)
   =  case lookup x g of
         Just ty ->  return ty
-        Nothing ->  throwError "unknown identifier"
+        Nothing ->  
+          throwError ("Cannot find the type of \n" ++ show x ++ 
+          "\n (binder number " ++show ii++ ") in the environment.")
 iType ii g (e1 :@: e2)
   = do si <- iType ii g e1
        case si of
          VPi ty ty'  ->  do  cType ii g e2 ty
                              return (ty' (cEval e2 []))
-         _           ->  throwError "illegal application"
+         _           ->  
+          throwError (show e1 ++ "\n (binder number " ++show ii++ 
+          ") is not a function type and thus \n" 
+          ++ show e1 ++ "\n cannot be applied to it.")
 --type checker for Nat
 iType _ii _g Nat                =  return VStar
 iType _ii _g Zero               =  return VNat
@@ -360,24 +367,29 @@ iType ii g (EqElim a m mr x y eq) =
       let yVal = cEval y []
       cType ii g eq (VEq aVal xVal yVal)
       return (foldl vapp mVal [xVal, yVal])
-iType _ii _g _                     =  throwError "Not an inferable term"
+iType ii _g iterm                     =  
+  throwError (show iterm ++ "\n (binder number " ++ show ii ++ ") is not an inferable term.")
 
 --error message for inferring/checking types
-errorMsg :: ITerm -> Value -> Value -> String
-errorMsg iterm expectedT gotT = 
-  "Type mismatched. " ++ show iterm ++ " is of type " ++ show (showVal gotT) ++ 
-  " but the expected type is " ++ show (showVal expectedT) ++ "." 
+errorMsg :: Int -> ITerm -> Value -> Value -> String
+errorMsg binder iterm expectedT gotT = 
+  "Type mismatched. \n" ++ show iterm ++ " \n (binder number " ++show binder++ ") is of type \n" ++ show (showVal gotT) ++ 
+  "\n but the expected type is " ++ show (showVal expectedT) ++ "." 
 
 --checkable terms takes a type as input and returns ().
 cType :: Int -> Context -> CTerm -> Type -> Result ()
 cType ii g (Inf e) v
   =  do v' <- iType ii g e
-        unless (quote0 v == quote0 v') (throwError (errorMsg e v v')) --throwError only when ty ==ty' is false.
+        unless (quote0 v == quote0 v') (throwError (errorMsg ii e v v')) 
 cType ii g (Lam e) (VPi ty ty')
   =  cType (ii + 1) ((Local ii, ty) : g)
            (cSubst 0 (Free (Local ii)) e) (ty' (vfree (Local ii)))
-cType _ii _g cterm _
-  =  throwError ("Type mismatch, " ++ show cterm ++ " is not a checkable term")
+cType ii _g cterm theType 
+  =  throwError 
+       ("Type mismatch: \n" ++ show cterm ++ 
+       "\n (binder number " ++ show ii ++ 
+       ") is not a checkable term. Cannot check that it is of type " 
+       ++ showVal theType)
 
 --motive for plusK
 motivePlus :: CTerm
