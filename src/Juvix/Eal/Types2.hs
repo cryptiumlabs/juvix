@@ -78,13 +78,17 @@ type Path = [Param]
 -- Variable paths.
 type VarPaths = Map SomeSymbol Param
 
+-- Occurrence map.
+type OccurrenceMap = Map SomeSymbol Int
+
 -- Environment for inference.
 data Env = Env {
   path           :: Path,
   varPaths :: VarPaths,
   typeAssignment :: TypeAssignment,
   nextParam     :: Param,
-  constraints    :: [Constraint]
+  constraints    :: [Constraint],
+  occurrenceMap :: OccurrenceMap
 } deriving (Show, Eq, Generic)
 
 newtype EnvConstraint a = EnvCon (State Env a)
@@ -99,3 +103,5 @@ newtype EnvConstraint a = EnvCon (State Env a)
     Field "nextParam" () (MonadState (State Env))
   deriving (HasState "constraints" [Constraint]) via
     Field "constraints" () (MonadState (State Env))
+  deriving (HasState "occurrenceMap" OccurrenceMap) via
+    Field "occurrenceMap" () (MonadState (State Env))
