@@ -55,6 +55,14 @@ reparameterize pty = do
     PSymT _ sym -> pure (PSymT param sym)
     PArrT _ a b -> pure (PArrT param a b)
 
+unificationConstraints :: (HasState "constraints" [Constraint] m)
+ => PType -> PType -> m ()
+unificationConstraints (PSymT a _) (PSymT b _) = addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (-1) b] (Eq 0))
+unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
+  addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (-1) b] (Eq 0))
+  unificationConstraints aArg bArg
+  unificationConstraints aRes bRes
+
 -- Generate boxing & typing constraints.
 -- In one pass to avoid keeping extra maps.
 boxAndTypeConstraint :: (HasState "path" Path m,
@@ -80,13 +88,14 @@ boxAndTypeConstraint parameterizedAssignment term = do
       occurrenceMap <- get @"occurrenceMap"
       let occurrences = occurrenceMap Map.! sym
           origBangParam = bangParam paramTy
-      if occurrences >= 1 then do
+      if occurrences >= 2 then do
         addConstraint (Constraint [ConstraintVar 1 origBangParam] (Gte 1))
       else pure ()
       -- Calculate parameterized type for subterm.
       paramTy <- reparameterize paramTy
       -- Typing constraint: m = k + n, m >= 0; n = param, m = bangParam paramTy, k = origBangParam
       addConstraint (Constraint [ConstraintVar (-1) (bangParam paramTy), ConstraintVar 1 origBangParam, ConstraintVar 1 param] (Eq 0))
+      -- Return parameterized term.
       pure (RBang param (RVar sym), paramTy)
     Lam sym body -> do
       modify' @"varPaths" (Map.insert sym (succ param))
@@ -97,26 +106,28 @@ boxAndTypeConstraint parameterizedAssignment term = do
       addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Gte 0))
       let argTy = parameterizedAssignment Map.! sym
           lamTy = PArrT lamTyParam argTy bodyTy
-      -- Typing constraint.
-      -- TODO.
+      -- Calculate final type.
+      resTy <- reparameterize lamTy
       -- Typing contraint: m = 0
-      -- TODO
-      -- Typing constraint: m = k + n, m >= 0, n = param, m = bangParam lamTy, k = bangParam bodyTy
-      addConstraint (Constraint [ConstraintVar (-1) (bangParam lamTy), ConstraintVar 1 (bangParam bodyTy), ConstraintVar 1 param] (Eq 0))
-      -- TODO
-      pure (RBang param (RLam sym body), lamTy)
+      addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Eq 0))
+      -- Typing constraint: m = k + n, m >= 0, n = param, m = bangParam resTy, k = bangParam lamTy
+      addConstraint (Constraint [ConstraintVar (-1) (bangParam resTy), ConstraintVar 1 (bangParam lamTy), ConstraintVar 1 param] (Eq 0))
+      -- Return parameterized term.
+      pure (RBang param (RLam sym body), resTy)
     App a b -> do
       (a, aTy) <- rec a
+      let PArrT _ argTy resTy = aTy
       put @"path" path
       put @"varPaths" varPaths
       (b, bTy) <- rec b
       -- Calculate parameterized type for subterm.
-      let PArrT _ _ resTy = aTy
       appTy <- reparameterize resTy
       -- Typing constraint: U(A_1, A_2), m = 0
-      -- TODO
+      unificationConstraints argTy bTy
+      addConstraint (Constraint [ConstraintVar 1 (bangParam aTy)] (Eq 0))
       -- Typing constraint: m = k + n, m >= 0, n = param, m = bangParam appTy, k = bangParam resTy
       addConstraint (Constraint [ConstraintVar (-1) (bangParam appTy), ConstraintVar 1 (bangParam resTy), ConstraintVar 1 param] (Eq 0))
+      -- Return parameterized term.
       pure (RBang param (RApp a b), appTy)
 
 -- Generate constraints.
