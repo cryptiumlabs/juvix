@@ -84,11 +84,11 @@ type OccurrenceMap = Map SomeSymbol Int
 -- Environment for inference.
 data Env = Env {
   path           :: Path,
-  varPaths :: VarPaths,
+  varPaths       :: VarPaths,
   typeAssignment :: TypeAssignment,
-  nextParam     :: Param,
+  nextParam      :: Param,
   constraints    :: [Constraint],
-  occurrenceMap :: OccurrenceMap
+  occurrenceMap  :: OccurrenceMap
 } deriving (Show, Eq, Generic)
 
 newtype EnvConstraint a = EnvCon (State Env a)

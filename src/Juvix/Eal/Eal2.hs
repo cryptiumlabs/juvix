@@ -1,62 +1,62 @@
 module Juvix.Eal.Eal2 where
 
-import qualified          Data.Map.Strict  as Map
+import qualified Data.Map.Strict  as Map
 import           Juvix.Eal.Types2
-import           Juvix.Library    hiding (link, reduce, Type)
+import           Juvix.Library    hiding (Type, link, reduce)
 
 {- Main functionality. -}
 
 -- Construct occurrence map.
-setOccurrenceMap :: (HasState "occurrenceMap" OccurrenceMap m) => Term -> m ()
+setOccurrenceMap ∷ (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term → m ()
 setOccurrenceMap term = do
   case term of
-    Var sym ->
+    Var sym →
       modify' @"occurrenceMap" (Map.insertWith ((+)) sym 1)
-    Lam _ b -> do
+    Lam _ b → do
       setOccurrenceMap b
-    App a b -> do
+    App a b → do
       setOccurrenceMap a
       setOccurrenceMap b
 
 -- Parameterize type.
-parameterizeType :: (HasState "nextParam" Param m,
+parameterizeType ∷ (HasState "nextParam" Param m,
                      HasState "constraints" [Constraint] m)
-  => Type -> m PType
+  ⇒ Type → m PType
 parameterizeType ty = do
   param <- freshParam
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case ty of
-    SymT sym ->
+    SymT sym →
       pure (PSymT param sym)
-    ArrT arg body -> do
+    ArrT arg body → do
       arg <- parameterizeType arg
       body <- parameterizeType body
       pure (PArrT param arg body)
 
 -- Parameterize type assignment.
-parameterizeTypeAssignment :: (HasState "nextParam" Param m,
+parameterizeTypeAssignment ∷ (HasState "nextParam" Param m,
                                HasState "constraints" [Constraint] m,
                                HasState "typeAssignment" TypeAssignment m)
- => m ParamTypeAssignment
+ ⇒ m ParamTypeAssignment
 parameterizeTypeAssignment = do
   assignment <- get @"typeAssignment"
   mapM parameterizeType assignment
 
 -- Reparameterize.
-reparameterize :: (HasState "nextParam" Param m,
+reparameterize ∷ (HasState "nextParam" Param m,
                    HasState "constraints" [Constraint] m)
- => PType -> m PType
+ ⇒ PType → m PType
 reparameterize pty = do
   param <- freshParam
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case pty of
-    PSymT _ sym -> pure (PSymT param sym)
-    PArrT _ a b -> pure (PArrT param a b)
+    PSymT _ sym → pure (PSymT param sym)
+    PArrT _ a b → pure (PArrT param a b)
 
-unificationConstraints :: (HasState "constraints" [Constraint] m)
- => PType -> PType -> m ()
+unificationConstraints ∷ (HasState "constraints" [Constraint] m)
+ ⇒ PType → PType → m ()
 unificationConstraints (PSymT a _) (PSymT b _) = addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (-1) b] (Eq 0))
 unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (-1) b] (Eq 0))
@@ -65,12 +65,12 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
 
 -- Generate boxing & typing constraints.
 -- In one pass to avoid keeping extra maps.
-boxAndTypeConstraint :: (HasState "path" Path m,
+boxAndTypeConstraint ∷ (HasState "path" Path m,
                          HasState "varPaths" VarPaths m,
                          HasState "nextParam" Param m,
                          HasState "constraints" [Constraint] m,
                          HasState "occurrenceMap" OccurrenceMap m)
- => ParamTypeAssignment -> Term -> m (RPT, PType)
+ ⇒ ParamTypeAssignment → Term → m (RPT, PType)
 boxAndTypeConstraint parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterizedAssignment
   varPaths ← get @"varPaths"
@@ -78,7 +78,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
   path  <- get @"path"
   addConstraint (Constraint (map (ConstraintVar 1) path) (Gte 0))
   case term of
-    Var sym -> do
+    Var sym → do
       -- Boxing constraint.
       case varPaths Map.!? sym of
         Just loc  → addConstraint (Constraint (map (ConstraintVar 1) (dropWhile (< loc) path)) (Eq 0))
@@ -97,7 +97,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
       addConstraint (Constraint [ConstraintVar (-1) (bangParam paramTy), ConstraintVar 1 origBangParam, ConstraintVar 1 param] (Eq 0))
       -- Return parameterized term.
       pure (RBang param (RVar sym), paramTy)
-    Lam sym body -> do
+    Lam sym body → do
       modify' @"varPaths" (Map.insert sym (succ param))
       (body, bodyTy) ← rec body
       -- Calculate parameterized type for subterm.
@@ -114,7 +114,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
       addConstraint (Constraint [ConstraintVar (-1) (bangParam resTy), ConstraintVar 1 (bangParam lamTy), ConstraintVar 1 param] (Eq 0))
       -- Return parameterized term.
       pure (RBang param (RLam sym body), resTy)
-    App a b -> do
+    App a b → do
       (a, aTy) <- rec a
       let PArrT _ argTy resTy = aTy
       put @"path" path
@@ -131,13 +131,13 @@ boxAndTypeConstraint parameterizedAssignment term = do
       pure (RBang param (RApp a b), appTy)
 
 -- Generate constraints.
-generateConstraints :: (HasState "path" Path m,
+generateConstraints ∷ (HasState "path" Path m,
                         HasState "varPaths" VarPaths m,
                         HasState "nextParam" Param m,
                         HasState "typeAssignment" TypeAssignment m,
                         HasState "constraints" [Constraint] m,
                         HasState "occurrenceMap" OccurrenceMap m)
- => Term -> m RPT
+ ⇒ Term → m RPT
 generateConstraints term = do
   parameterizedAssignment <- parameterizeTypeAssignment
   setOccurrenceMap term
@@ -146,38 +146,38 @@ generateConstraints term = do
 {- Utility. -}
 
 -- The outer bang parameter.
-bangParam :: PType -> Param
+bangParam ∷ PType → Param
 bangParam (PSymT param _)   = param
 bangParam (PArrT param _ _) = param
 
 -- Generate fresh parameter.
-freshParam :: (HasState "nextParam" Param m) => m Param
+freshParam ∷ (HasState "nextParam" Param m) ⇒ m Param
 freshParam = do
   param <- get @"nextParam"
   put  @"nextParam" (succ param)
   pure param
 
 -- Append to path.
-addPath :: (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
+addPath ∷ (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
 addPath = do
   param ← freshParam
   modify' @"path" (<> [param])
   pure param
 
 -- Add constraint.
-addConstraint :: HasState "constraints" [Constraint] m ⇒ Constraint → m ()
+addConstraint ∷ HasState "constraints" [Constraint] m ⇒ Constraint → m ()
 addConstraint con = modify' @"constraints" (con :)
 
 -- Execute with prior assignment.
-execWithAssignment :: TypeAssignment -> EnvConstraint a -> (a, Env)
+execWithAssignment ∷ TypeAssignment → EnvConstraint a → (a, Env)
 execWithAssignment assignment (EnvCon env) = runState env (Env [] mempty assignment 0 [] mempty)
 
 -- Test term: \s . \z . s s z.
-testTerm :: Term
+testTerm ∷ Term
 testTerm = Lam (someSymbolVal "s") (Lam (someSymbolVal "z") (App (Var (someSymbolVal "s")) (App (Var (someSymbolVal "s")) (Var (someSymbolVal "z")))))
 
--- Test assignment - s : a -> a, z : a.
-testAssignment :: TypeAssignment
+-- Test assignment - s : a → a, z : a.
+testAssignment ∷ TypeAssignment
 testAssignment = Map.fromList [
   (someSymbolVal "s", ArrT (SymT (someSymbolVal "a")) (SymT (someSymbolVal "a"))),
   (someSymbolVal "z", SymT (someSymbolVal "a"))
