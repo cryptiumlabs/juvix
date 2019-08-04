@@ -1,7 +1,12 @@
+Juvix combines compiler-directed & user-directed optimizing transformations into a single optimization function $ψ$, defined in this chapter, which maps core terms to core terms, preserving the evaluation semantics defined in the previous chapter.
+
+> Note that whole program optimization is one of the less theoretically risky parts of the compiler design and thus is omitted in the initial release. At present the optimization function $ψ$ is simply the identity. Future releases are expected to incorporate optimizing transformations discussed herein.
+
 ## Core-level optimizations
 
 - User can prove extensional equality of functions.
 - Compiler can pick which function is cheaper to reduce (& pick differently in different cases)
+- Can be specialized to properties on arguments, e.g. if $f x | x < 0 = g$, if the compiler can inhabit $x < 0 = True$, it can replace $f$ with $g$.
 
 ## Machine-level optimizations
 
