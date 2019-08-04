@@ -1,4 +1,6 @@
-High-level dependently-typed language.
+This chapter defines the high-level dependently-typed frontend syntax in which developers are expected to write, referred to as the "Juvix frontend language" or merely "Juvix" where unambiguous. 
+
+> Note that the frontend language is one of the less theoretically risky parts of the compiler design and thus is omitted in the initial release, except for algebraic datatypes. At present developers code directly in Juvix Core (which will always be possible).
 
 ## Syntax
 
@@ -7,8 +9,32 @@ Syntax options:
 1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] favored
 1. Lisp-like [@common-lisp]
 
+## Features
+
+- Nested, dependent pattern matching
+- Typeclasses a la Idris
+- Implicit arguments a la Idris (mostly)
+- Linear variable usage annotations over the integer semiring, syntax a bit like [Granule](https://granule-project.github.io/granule.html) perhaps
+- Case expressions
+- Algebraic datatypes
+- Elaboration, tactics a la Idris
+- Holes
+- Type inference (when possible)
+
 ## Semantics
 
-TBD. Desugars to Core.
+Most features simply desugar to Core.
+
+### Lambda-encoding of algebraic datatypes
+
+#### Mendler
+
+(todo: list asymptotic complexities, concrete complexities, encoding algorithm)
+
+#### Scott
+
+(todo: list asymptotic complexities, concrete complexities, encoding algorithm)
 
 ## Desugaring
+
+(todo)
