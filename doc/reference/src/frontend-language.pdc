@@ -21,17 +21,15 @@ Syntax options:
 - Holes
 - Type inference (when possible)
 
-## Semantics
-
 Most features simply desugar to Core.
 
-### Lambda-encoding of algebraic datatypes
+## Lambda-encoding of algebraic datatypes
 
-#### Mendler
+### Mendler
 
 (todo: list asymptotic complexities, concrete complexities, encoding algorithm)
 
-#### Scott
+### Scott
 
 (todo: list asymptotic complexities, concrete complexities, encoding algorithm)
 
