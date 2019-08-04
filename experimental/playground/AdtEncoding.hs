@@ -5,6 +5,9 @@ import qualified Data.Map.Strict as Map
 import           Prelude         (error)
 import           Juvix.Library   hiding (Sum, Product)
 
+-- TODO ∷ Split into multiple files AdtEncoding/Encoding, AdtEncoding/Scott
+-- AdtEncoding/Mendler to better share and organize code
+
 -- Adt Types -------------------------------------------------------------------
 
 data Product = Product Product
@@ -86,28 +89,37 @@ runEnvsS :: EnvS a → Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env mempty mempty mempty))
 
 -- Application code ------------------------------------------------------------
+adtToScott  ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
+              , HasState "adtMap"       (Map SomeSymbol Branches) m
+              , HasThrow "err"          Errors                    m )
+            ⇒ Name → m ()
+adtToScott (Adt name s) = sumRec s 0 (adtLength s)
+  where
+    adtLength Single {}      = 1
+    adtLength (Branch _ _ s) = succ (adtLength s)
+
+    sumRec (Branch s p next) posAdt lenAdt = adtConstructor s (sumProd p posAdt lenAdt) name
+                                           *> sumRec next (succ posAdt) lenAdt
+    sumRec (Single s p)      posAdt lenAdt = adtConstructor s (sumProd p posAdt lenAdt) name
+
+    sumProd None posAdt lengthAdt = undefined
+
+    -- TODO ∷ return a continuation on the posAdt after generating lengthAdt number of lambdas
+    generateLam posAdt lengthAdt = undefined
+
 adtToMendler ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
                , HasState "adtMap"       (Map SomeSymbol Branches) m
                , HasThrow "err"          Errors                    m )
              ⇒ Name → m ()
 adtToMendler (Adt name s) = sumRec s 0
   where
-    sumGen s p posAdt = do
-      modify' @"adtMap" (Map.alter (\case
-                                       Nothing → Just [s]
-                                       Just x  → Just $ x <> [s]) name)
-      let prod = sumProd p posAdt
-      cons     ← get @"constructors"
-      case cons Map.!? s of
-        Just _  → throw   @"err" AlreadyDefined
-        Nothing → modify' @"constructors" (Map.insert s (Bound prod name))
-
-    sumRec (Single s p) posAdt    = sumGen s p posAdt
-    sumRec (Branch s p nextSum) 0 = sumGen s p 0 *> sumRec nextSum 1
+    sumRec (Single s p) posAdt    = adtConstructor s (sumProd p posAdt) name
+    sumRec (Branch s p nextSum) 0 = adtConstructor s (sumProd p 0)      name
+                                 *> sumRec nextSum 1
     -- So due to how the algorithm works for inr inl placement
     -- we need to incrase posAdt by 1 to reflect that it is a branch
     -- Note 0 is a special case as it is only inl never an inr
-    sumRec (Branch s p nextSum) posAdt = sumGen s p (succ posAdt)
+    sumRec (Branch s p nextSum) posAdt = adtConstructor s (sumProd p posAdt) name
                                        *> sumRec nextSum (posAdt + 2)
 
     sumProd None posAdt = numToIn posAdt (Lambda (someSymbolVal "x")
@@ -135,6 +147,25 @@ adtToMendler (Adt name s) = sumRec s 0
                           termToBuild
                           (Lambda (someSymbolVal "x")
                                   (Value $ someSymbolVal "x"))))
+
+
+-- Helper for Mendler and Scott encodings --------------------------------------
+
+adtConstructor ∷ ( HasState "adtMap" (Map SomeSymbol [k]) m
+         , HasState "constructors" (Map k Bound)  m
+         , HasThrow "err" Errors                  m
+         , Ord k
+         ) ⇒ k → Lambda → SomeSymbol → m ()
+adtConstructor s prod name = do
+  modify' @"adtMap" (Map.alter (\case
+                                   Nothing → Just [s]
+                                   Just x  → Just $ x <> [s]) name)
+  cons ← get @"constructors"
+  case cons Map.!? s of
+    Just _  → throw   @"err" AlreadyDefined
+    Nothing → modify' @"constructors" (Map.insert s (Bound prod name))
+
+-- Helper for Mendler ----------------------------------------------------------
 
 numToInGen :: Int → Lambda → Lambda
 numToInGen 0 arg = app in' arg
@@ -221,6 +252,7 @@ caseExpansion (Case on cases@(C c _ _:_)) = do
         Nothing → throw @"err" (AdtNotDefined adtName)
 
 -- TODO ∷ replace recursive calls in the body with rec
+-- TODO ∷ check if any value being matched on isn't called and throw an error
 
 -- Lambda Abstraction for mendler encoding -------------------------------------
 
@@ -340,6 +372,7 @@ test2D = runEnvsS $ do
 
 
 -- let rec f x i =
+--   case x of
 --   | Z       -> i
 --   | S n     -> 1 + (f n i)
 --   | D n1 n2 -> f n2 0 + f n1 i

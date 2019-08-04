@@ -49,6 +49,19 @@
 (defun succ (n x)
   (in (fn:curry succ-c n) x))
 
+(let ((reduced
+        (reduce (lambda (x acc)
+                  (declare (ignore x))
+                  (fn:curry succ acc))
+                (list:range 0 98)
+                :initial-value #'zero
+                :from-end t)))
+  (defun hundred (x)
+    (succ reduced x)))
+
+(defun one (x)
+  (succ #'zero x))
+
 ;; (succ (fn:curry succ #'zero) #'is-even)
 
 ;; Attempt 2--------------------------------------------------------------------
@@ -80,15 +93,6 @@
 (defun two% (x)
   (succ% #'one% x))
 
-(defun hundred% (x)
-  (succ%
-   (reduce (lambda (x acc)
-             (declare (ignore x))
-             (fn:curry succ% acc))
-           (list:range 0 98)
-           :initial-value #'zero%
-           :from-end t)
-   x))
 (let ((reduced
         (reduce (lambda (x acc)
                   (declare (ignore x))
@@ -136,7 +140,6 @@
 
 (defun pred-alg (rec n)
   (declare (ignore rec))
-  (print "time")
   (if (equalp +Z+ n)
       #'zero%
       (s-param n)))
