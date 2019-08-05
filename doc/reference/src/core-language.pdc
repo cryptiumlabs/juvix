@@ -307,12 +307,24 @@ more things
 
 ## Syntax
 
-As simple as possible.
+Inspired by the bidirectional syntax of Conor McBride [@plenty-o-nuttin], as simple as possible.
+
+Let types & terms be $R, S, T, s, t ::= ∗_i\ |\ (π x : S) → T\ |\ λx.t\ |\ e$, eliminations be $e, f ::= x\ |\ f s\ |\ s : S$.
+
+Sorts $∗_i$ are explicitly leveled, and function types are annotated with an argument consumption annotation $π$.
 
 ## Semantics
 
-- Define evaluation semantics.
+Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
+
+The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
 
 ## Typechecking
 
-- Lay out syntax-directed typechecker.
+Lay out syntax-directed typechecker.
+
+## Erasure
+
+Define erasure to untyped lambda calculus.
+
+Define erasure to dependent elementary affine logic.
