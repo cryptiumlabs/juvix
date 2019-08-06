@@ -1,5 +1,7 @@
 ## Type theory
 
+Discuss more the motivations here; the linearity isn't actually for optimal reduction (yet) but rather for the other path & programmer certainty.
+
 Combines linear & dependent types.
 
 Key problem: linear function splits up resources for production of argument & function. What if function type depends on argument? Doesn't make sense.
@@ -296,13 +298,18 @@ Elimination rule:
 
 can we encode everything we want in lambda calculus in this type system?
 
+todo
+- compare to calculus of constructions
+- rope off interesting but non-MVP linear typing rules
+- unify treatment of replacement syntax
+- deal with kinds
+
 subusaging? seems cool
 
 more things
 
 - figure out what R-linear combinatory algebras are
 - figure out how best to add primitive types
-- figure out how this translates into an implementation, see McBride's paper
 - ensure we can derive induction, see Cedille
 
 ## Syntax
@@ -319,12 +326,14 @@ Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
 
 The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
 
+evaluation semantics in parallel reduction a la McBride
+
 ## Typechecking
 
-Lay out syntax-directed typechecker.
+Lay out syntax-directed typechecker following McBride's paper.
 
 ## Erasure
 
-Define erasure to untyped lambda calculus.
+Define erasure to untyped lambda calculus following McBride's paper.
 
-Define erasure to dependent elementary affine logic.
+Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
