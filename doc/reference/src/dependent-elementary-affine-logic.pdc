@@ -215,7 +215,15 @@ Let $t$ be a parameterized pseudo-term and $Σ$ be a parameterized type-assignme
 
 ### Constraint solution
 
-They're integer linear constraints, this shouldn't be complicated.
+Generated constraints are simple integer (in)equalities and can be solved in polynomial time. At present Juvix exports them to Z3.
+
+Multiple solutions may exist, in which case the solution with the least number of box-annotations is selected.
+
+### Argument for correctness
+
+Re-run correctness argument from paper, adapt as necessary.
+
+### Extensions
 
 \begin{figure}[h]
 \caption{Typing rules for DTEAL (TODO)}

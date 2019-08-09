@@ -326,7 +326,13 @@ Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
 
 The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
 
-evaluation semantics in parallel reduction a la McBride
+### Parallel-step
+
+Parallel-step evaluation semantics a la McBride.
+
+### Small-step
+
+Small-step evaluation semantics (so that one-step beta equality can be used in the theorem prover).
 
 ## Typechecking
 

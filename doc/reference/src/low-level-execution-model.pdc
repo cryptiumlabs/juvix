@@ -367,6 +367,8 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
 \floatstyle{boxed}
 \restylefloat{figure}
 
+### Argument for correctness
+
 ## Bespoke term encoding
 
 - Primitive types (integer, string, bytes) ~> node types w/data
