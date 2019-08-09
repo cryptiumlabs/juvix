@@ -1,6 +1,12 @@
 # vim swapfiles
 *.swp
 
+# Lisp compile
+*.fasl
+
+# Emacs Temporary
+*.*~
+
 # Haskell temporary
 .ghci
 .stack-work/

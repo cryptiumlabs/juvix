@@ -24,7 +24,7 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 
 ## Installation
 
-Install with ([Stack](https://haskellstack.org) required):
+Install with ([Stack](https://haskellstack.org) and [z3](https://github.com/Z3Prover/z3) required):
 
 ```bash
 make

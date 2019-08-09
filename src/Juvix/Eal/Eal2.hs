@@ -1,10 +1,10 @@
 module Juvix.Eal.Eal2 where
 
+import           Control.Arrow    (left)
 import qualified Data.Map.Strict  as Map
 import           Juvix.Eal.Types2
 import           Juvix.Library    hiding (Type, link, reduce)
-import           Prelude                 (error)
-
+import           Prelude          (error)
 {- Main functionality. -}
 
 -- Construct occurrence map.
@@ -20,7 +20,7 @@ setOccurrenceMap term = do
       setOccurrenceMap b
 
 -- Parameterize type.
-parameterizeType :: ( HasState  "nextParam" Param          m
+parameterizeType ∷ ( HasState  "nextParam" Param          m
                    , HasWriter "constraints" [Constraint] m )
                  ⇒ Type → m PType
 parameterizeType ty = do
@@ -36,7 +36,7 @@ parameterizeType ty = do
       pure (PArrT param arg body)
 
 -- Parameterize type assignment.
-parameterizeTypeAssignment :: ( HasState "nextParam" Param               m
+parameterizeTypeAssignment ∷ ( HasState "nextParam" Param               m
                              , HasWriter "constraints" [Constraint]     m
                              , HasState "typeAssignment" TypeAssignment m )
                            ⇒ m ParamTypeAssignment
@@ -64,13 +64,12 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (-1) b] (Eq 0))
   unificationConstraints aArg bArg
   unificationConstraints aRes bRes
-
-unificationConstraints PSymT {} PArrT {} = error "doesn't happen"
-unificationConstraints PArrT {} PSymT {} = error "doesn't happen"
+unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
 
 -- Generate boxing & typing constraints.
 -- In one pass to avoid keeping extra maps.
-boxAndTypeConstraint :: ( HasState  "path" Path                    m
+-- TODO ∷ Change occurrenceMap to a reader at this point in the code
+boxAndTypeConstraint ∷ ( HasState  "path" Path                    m
                        , HasState  "varPaths" VarPaths            m
                        , HasState  "nextParam" Param              m
                        , HasWriter "constraints" [Constraint]     m
@@ -90,22 +89,23 @@ boxAndTypeConstraint parameterizedAssignment term = do
       case varPaths Map.!? sym of
         Just loc  → addConstraint (Constraint (ConstraintVar 1 <$> dropWhile (< loc) path) (Eq 0))
         Nothing   → addConstraint (Constraint (ConstraintVar 1 <$> path)                   (Eq 0))
-      let paramTy = parameterizedAssignment Map.! sym
+      let origParamTy = parameterizedAssignment Map.! sym
       -- Typing constraint: variable occurrences.
       occurrenceMap ← get @"occurrenceMap"
 
       let occurrences   = occurrenceMap Map.! sym
-          origBangParam = bangParam paramTy
+          origBangParam = bangParam origParamTy
 
       when (occurrences >= 2) $
         addConstraint (Constraint [ConstraintVar 1 origBangParam] (Gte 1))
       -- Calculate parameterized type for subterm.
-      paramTy ← reparameterize paramTy
+      paramTy ← reparameterize origParamTy
       -- Typing constraint: m = k + n, m >= 0; n = param, m = bangParam paramTy, k = origBangParam
       addConstraint (Constraint [ ConstraintVar (-1) (bangParam paramTy)
                                 , ConstraintVar 1 origBangParam
                                 , ConstraintVar 1 param
                                 ] (Eq 0))
+      addConstraint (Constraint [ConstraintVar 1 (bangParam paramTy)] (Gte 0))
       -- Return parameterized term.
       pure (RBang param (RVar sym), paramTy)
     Lam sym body → do
@@ -118,6 +118,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
 
       let argTy = parameterizedAssignment Map.! sym
           lamTy = PArrT lamTyParam argTy bodyTy
+
       -- Calculate final type.
       resTy ← reparameterize lamTy
       -- Typing contraint: m = 0
@@ -127,6 +128,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
                                 , ConstraintVar 1 (bangParam lamTy)
                                 , ConstraintVar 1 param
                                 ] (Eq 0))
+      addConstraint (Constraint [ConstraintVar 1 (bangParam resTy)] (Gte 0))
       -- Return parameterized term.
       pure (RBang param (RLam sym body), resTy)
     App a b → do
@@ -145,21 +147,88 @@ boxAndTypeConstraint parameterizedAssignment term = do
                                 , ConstraintVar 1 (bangParam resTy)
                                 , ConstraintVar 1 param
                                 ] (Eq 0))
+      addConstraint (Constraint [ConstraintVar 1 (bangParam appTy)] (Gte 0))
       -- Return parameterized term.
       pure (RBang param (RApp a b), appTy)
 
 -- Generate constraints.
-generateConstraints :: ( HasState  "path"           Path            m
+generateTypeAndConstraitns ∷ ( HasState  "path"           Path            m
+                             , HasState  "varPaths"       VarPaths        m
+                             , HasState  "nextParam"      Param           m
+                             , HasState  "typeAssignment" TypeAssignment  m
+                             , HasWriter "constraints"    [Constraint]    m
+                             , HasState  "occurrenceMap"  OccurrenceMap   m )
+                           ⇒ Term → m (RPT, ParamTypeAssignment)
+generateTypeAndConstraitns term = do
+  parameterizedAssignment ← parameterizeTypeAssignment
+  setOccurrenceMap term
+  boxAndTypeConstraint parameterizedAssignment term
+    >>| second (const parameterizedAssignment)
+
+generateConstraints ∷ ( HasState  "path"           Path            m
                       , HasState  "varPaths"       VarPaths        m
                       , HasState  "nextParam"      Param           m
                       , HasState  "typeAssignment" TypeAssignment  m
                       , HasWriter "constraints"    [Constraint]    m
                       , HasState  "occurrenceMap"  OccurrenceMap   m )
                     ⇒ Term → m RPT
-generateConstraints term = do
-  parameterizedAssignment ← parameterizeTypeAssignment
-  setOccurrenceMap term
-  fst |<< boxAndTypeConstraint parameterizedAssignment term
+generateConstraints term = generateTypeAndConstraitns term
+                           >>| fst
+
+{- Bracket Checker. -}
+bracketChecker ∷ RPTO → Either BracketErrors ()
+bracketChecker t = runEither (rec' t 0 mempty)
+  where
+    rec' (RBang changeBy (RVar sym)) n map =
+      let f x
+            | changeBy + n + x == 0 = pure ()
+            | changeBy + n + x >  0 = throw @"typ" TooManyOpenV
+            | otherwise             = throw @"typ" TooManyClosingV
+      in case Map.lookup sym map of
+        Just x  → f x
+        Nothing → f 0
+    rec' (RBang changeBy t) n map
+      | changeBy + n < 0 = throw @"typ" TooManyClosing
+      | otherwise =
+        let n' = changeBy + n
+        in case t of
+          RLam s t   → rec' t n' (Map.insert s (negate n') map)
+          RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
+          RVar _     → error "already is matched"
+
+bracketCheckerErr ∷ RPTO → Either Errors ()
+bracketCheckerErr t = left Brack (bracketChecker t)
+
+{- Type Checker. -}
+-- Precondition ∷ all terms inside of RPTO must be unique
+typChecker ∷ RPTO → ParamTypeAssignment → Either TypeErrors ()
+typChecker t typAssign = runEither (() <$ rec' t typAssign)
+  where
+    rec' (RBang _ (RVar s)) assign =
+      case assign Map.!? s of
+        Nothing → throw @"typ" MissingOverUse
+        Just t@(PSymT x _)
+          | x > 0     → pure (assign, t)
+          | otherwise → pure (Map.delete s assign, t)
+        Just t@(PArrT x _ _)
+          | x > 0     → pure (assign, t)
+          | otherwise → pure (Map.delete s assign, t)
+    rec' (RBang _ term@(RApp t1 t2)) assign = do
+      (newAssign , type1) ← rec' t1 assign
+      (newAssign', type2) ← rec' t2 newAssign
+      case type1 of
+        PArrT _ arg result
+          | arg == type2 → pure (newAssign', result)
+          | otherwise    → throw @"typ" (MisMatchArguments arg type2 term)
+        t@PSymT {}       → throw @"typ" (TypeIsNotFunction t)
+    rec' (RBang x (RLam s t)) assign = do
+      (newAssign, bodyType) ← rec' t assign
+      case assign Map.!? s of
+        Just arg → pure (newAssign, PArrT x arg bodyType)
+        Nothing  → throw @"typ" MissingOverUse
+
+typCheckerErr ∷ RPTO → ParamTypeAssignment → Either Errors ()
+typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
 
 {- Utility. -}
 
@@ -190,18 +259,3 @@ addConstraint con = tell @"constraints" [con]
 execWithAssignment ∷ TypeAssignment → EnvConstraint a → (a, Env)
 execWithAssignment assignment (EnvCon env) =
   runState env (Env [] mempty assignment 0 [] mempty)
-
--- Test term: \s . \z . s s z.
-testTerm ∷ Term
-testTerm = Lam (someSymbolVal "s")
-             (Lam (someSymbolVal "z")
-               (App (Var (someSymbolVal "s"))
-                    (App (Var (someSymbolVal "s"))
-                         (Var (someSymbolVal "z")))))
-
--- Test assignment - s : a → a, z : a.
-testAssignment ∷ TypeAssignment
-testAssignment = Map.fromList [
-  (someSymbolVal "s", ArrT (SymT (someSymbolVal "a")) (SymT (someSymbolVal "a"))),
-  (someSymbolVal "z", SymT (someSymbolVal "a"))
-  ]

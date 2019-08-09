@@ -4,7 +4,7 @@ module Juvix.Library ( module Protolude
                      , module Capability.Error
                      , module Capability.Writer
                      , module Capability.Stream
-                     , (∨), (∧), (|<<), (>>|)
+                     , (∨), (∧), (|<<), (>>|), (|>)
                      ) where
 
 import           Capability.Error
@@ -28,8 +28,12 @@ infixr 3 ∧
 
 (|<<) ∷ ∀ a b f . (Functor f) ⇒ (a → b) → f a → f b
 (|<<) = fmap
-infixl 4 |<<
+infixr 1 |<<
 
 (>>|) ∷ ∀ a b f . (Functor f) ⇒ f a → (a → b) → f b
 (>>|) = flip fmap
-infixl 4 >>|
+infixl 1 >>|
+
+(|>) :: a → (a → b) → b
+(|>) = (&)
+infixl 1 |>

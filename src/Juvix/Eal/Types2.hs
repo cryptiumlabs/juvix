@@ -78,6 +78,36 @@ type VarPaths = Map SomeSymbol Param
 -- Occurrence map.
 type OccurrenceMap = Map SomeSymbol Int
 
+-- | Bracket Error Types
+data BracketErrors = TooManyOpen
+                   | TooManyOpenV
+                   | TooManyClosing
+                   | TooManyClosingV
+                   | InvalidAssignment
+                   deriving Show
+
+-- | Runner Type for Bracket and TypeError
+newtype EitherTyp b a =
+  EitherBracket { runEither :: (Either b a) }
+  deriving (Functor, Applicative, Monad) via
+    Except b
+  deriving (HasThrow "typ" b) via
+    MonadError (Except b)
+
+
+-- | Error type when running the type Chekcer
+data TypeErrors = MisMatchArguments PType PType RPTI
+                | TypeIsNotFunction PType
+                | MissingOverUse
+                | ExpectedFunction
+                deriving Show
+
+-- | Total errors among Type and Bracket Errors
+data Errors = Typ TypeErrors
+           | Brack BracketErrors
+           deriving Show
+
+
 -- Environment for inference.
 data Env = Env {
   path           :: Path,
@@ -110,7 +140,7 @@ instance PrettyPrint ConstraintVar where
 
 instance PrettyPrint Op where
   prettyPrintValue (Gte n) = T.concat [">= ", prettyPrintValue n]
-  prettyPrintValue (Eq n)  = T.concat ["= ", prettyPrintValue n]
+  prettyPrintValue (Eq n)  = T.concat ["= " , prettyPrintValue n]
 
 instance PrettyPrint Constraint where
   prettyPrintValue (Constraint vars op) =
