@@ -392,3 +392,11 @@ Lay out syntax-directed typechecker following McBride's paper.
 Define erasure to untyped lambda calculus following McBride's paper.
 
 Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
+
+## Examples
+
+- Church-encoded numerals (usage annotations on $s$)
+- Deriving induction for Church-encoded numerals using self-types
+- Simple function from values to types
+- Universe hierarchy
+- Linear logic disjunctions & conjunctions
