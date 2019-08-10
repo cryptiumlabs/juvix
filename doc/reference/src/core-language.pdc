@@ -8,32 +8,39 @@ Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type
 
 ## Syntax
 
+Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin].
+
 A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
 $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distributed over addition, and multiplication by $0$ annihilates $R$.
 
-The type theory of Juvix Core must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice Juvix is instantiated over the semiring of natural numbers, which is the most expressive option.
+The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
 
-Inspired by the bidirectional syntax of Conor McBride [@plenty-o-nuttin], as simple as possible.
-
-Let $R, S, T, s, t$ be types & terms and $e, f$ be eliminations.
+Let $R, S, T, s, t$ be types & terms, $e, f$ be eliminations, $K$ be the set of primitive types and $C$ be the set of primitive constants.
 
 \begin{figure}[h]
 \caption{Core syntax}
-\begin{subfigure}[c]{0.4\textwidth}
+\begin{subfigure}[t]{0.4\textwidth}
 \begin{align*}
-R, S, T, s, t &::= ∗_i\ \\
-&\ |\ (x \overset{π}{:} S) → T\ \\
-&\ |\ (x \overset{π}{:} S) ⊗ T\ \\
-&\ |\ λx.t\ \\
-&\ |\ e
+R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
+&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S)\ \&\ T\ & \text{dependent additive conjunction type} \\
+&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} \\
+&\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} \\
+&\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} \\
+&\ \ \ \ \ \ |\ e\ & \text{elimination}\\
 \end{align*}
 \end{subfigure}
-\begin{subfigure}[c]{0.4\textwidth}
+\begin{subfigure}[t]{0.4\textwidth}
 \begin{align*}
-e, f &::= x\ \\
-&\ |\ f s\ \\
-&\ |\ (s, t)\ \\
-&\ |\ s : S
+e, f &::= x\ & \text{variable} \\
+&\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
+&\ \ \ \ \ \ |\ f s\ & \text{application} \\
+&\ \ \ \ \ \ |\ (s, t)\ & \text{pair} \\
+&\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} \\
+&\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} \\
+&\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} \\
 \end{align*}
 \end{subfigure}
 \end{figure}
