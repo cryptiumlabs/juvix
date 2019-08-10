@@ -131,7 +131,7 @@ required for the argument, respectively:
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
 \RightLabel{App}
-\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ App_{(x \overset{π}{:} S) T}(M,N) \overset{σ}{:} T[N/x]$}
+\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ App_{(x \overset{π}{:} S) T}(M,N) \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
@@ -163,7 +163,7 @@ Introduction rule:
 \begin{prooftree}
 \AxiomC{$Γ_1 ⊢ M \overset{σ′}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[M/x]$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
 \AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
 \QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N)_{x \overset{π}{:} S.T} \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \end{prooftree}
@@ -188,7 +188,7 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
-\UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[fst(M)/x]$}
+\UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[x := fst(M)]$}
 \end{prooftree}
 
 Under the resourceful part:
@@ -196,10 +196,10 @@ Under the resourceful part:
 \begin{prooftree}
 \AxiomC{$0Γ_1, z \overset{0}{:} (x \overset{π}{:} S) ⊗ T ⊢ U$}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
-\AxiomC{$Γ_2, x \overset{σπ}{:} S, y \overset{σ}{:} T ⊢ N \overset{σ}{:} U[(x,y)/z]$}
+\AxiomC{$Γ_2, x \overset{σπ}{:} S, y \overset{σ}{:} T ⊢ N \overset{σ}{:} U[z := (x,y)]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \RightLabel{$⊗$ Elim}
-\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let_{x \overset{π}{:} S.T} (x,y) = M\ in\ N \overset{σ}{:} U[M/z]$}
+\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let_{x \overset{π}{:} S.T} (x,y) = M\ in\ N \overset{σ}{:} U[z := M]$}
 \end{prooftree}
 
 - Must pattern match out to ensure both parts of the product are used.
@@ -207,10 +207,10 @@ Under the resourceful part:
 \begin{prooftree}
 \AxiomC{$0Γ_1, x \overset{0}{:} I ⊢ U$}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} I$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} U[∗/x]$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} U[x := *]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \RightLabel{$⊗$ Elim I}
-\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let_I ∗ = M\ in\ N \overset{σ}{:} U[M/x]$}
+\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let_I ∗ = M\ in\ N \overset{σ}{:} U[x := M]$}
 \end{prooftree}
 
 - Must explicitly eliminate elements of the unit type in the resourceful fragment.
@@ -296,21 +296,43 @@ Elimination rule:
 \UnaryInfC{$0Γ ⊢ El(M)$}
 \end{prooftree}
 
-can we encode everything we want in lambda calculus in this type system?
+### Self types
 
-todo
-- compare to calculus of constructions
-- rope off interesting but non-MVP linear typing rules
-- unify treatment of replacement syntax
-- deal with kinds
+\begin{prooftree}
+\AxiomC{$Γ, x: ιx.T ⊢ T : Set$}
+\RightLabel{Self}
+\UnaryInfC{$Γ ⊢ ιx.T$}
+\end{prooftree}
 
-subusaging? seems cool
+\begin{prooftree}
+\AxiomC{$Γ ⊢ t : [x := t]T$}
+\AxiomC{$Γ ⊢ ιx.T : Set$}
+\RightLabel{Self-Gen}
+\BinaryInfC{$Γ ⊢ t : ιx.T$}
+\end{prooftree}
 
-more things
+\begin{prooftree}
+\AxiomC{$Γ ⊢ t : ιx.T$}
+\RightLabel{Self-Inst}
+\UnaryInfC{$Γ ⊢ t : [x := t]T$}
+\end{prooftree}
 
-- figure out what R-linear combinatory algebras are
-- figure out how best to add primitive types
-- ensure we can derive induction, see Cedille
+To-do for self types
+
+- Syntax for self types?
+- Check induction example
+
+Things to be added:
+
+- Type & term equality judgements under beta reduction
+- Universe (set) hierarchy
+- Check if we can safely allow sub-usaging if the ring is the natural numbers
+
+Differences from calculus of constructions:
+
+- Usage annotations
+- Addition of dependent pair
+- Linear logic types
 
 ## Syntax
 
