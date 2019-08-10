@@ -15,7 +15,9 @@ $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distribu
 
 The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
 
-Let $R, S, T, s, t$ be types & terms, $e, f$ be eliminations, $K$ be the set of primitive types and $C$ be the set of primitive constants.
+Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
+
+Let $R, S, T, s, t$ be types & terms, $e, f$ be eliminations.
 
 \begin{figure}[h]
 \caption{Core syntax}
@@ -45,9 +47,9 @@ e, f &::= x\ & \text{variable} \\
 \end{subfigure}
 \end{figure}
 
-Sorts $∗_i$ are explicitly leveled, and function types are annotated with an argument consumption annotation $π$.
+Sorts $∗_i$ are explicitly leveled. Function types and type annotations include a usage annotation $π$.
 
-Typing judgements in Juvix Type Theory (JTT) have the following form:
+Typing judgements have the following form:
 
 $$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
 
