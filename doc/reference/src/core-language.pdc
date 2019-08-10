@@ -11,9 +11,9 @@ Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type
 Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin].
 
 A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
-$(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distributed over addition, and multiplication by $0$ annihilates $R$.
+$(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distribute over addition, and multiplication by $0$ annihilates $R$.
 
-The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
+The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In Juvix the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
 
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
@@ -47,48 +47,42 @@ e, f &::= x\ & \text{variable} \\
 \end{subfigure}
 \end{figure}
 
-Sorts $∗_i$ are explicitly leveled. Function types and type annotations include a usage annotation $π$.
+Sorts $∗_i$ are explicitly leveled. Dependent function types, dependent conjunction types, and type annotations include a usage annotation $π$.
 
 Typing judgements have the following form:
 
 $$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
 
-where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring.
+where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring (todo: must it be?).
 
-JTT is defined over the syntactic categories of usages $ρ, π$, precontexts $Γ$, pretypes $S,T,R$, and preterms $M,N,O$:
+Further define the syntactic categories of usages $ρ, π$ and precontexts $Γ$:
 
 \begin{align*}
-ρ,π ∈ R (1) \\
-\\
-Γ := ⋄\ |\ Γ,x \overset{ρ}{:} S \\
-\\
-S, T, U := (x \overset{π}{:} S) → T\ |\ (x \overset{π}{:} S) ⊗ T\ |\ I\ |\ Set \\
-\\
-M, N, O := x\ |\ λx \overset{π}{:} S.M^T\ |\ App_{(x \overset{π}{:} S)T} (M,N) \\
-            \ |\ (M,N)_{x \overset{π}{:} S . T}\ |\ ∗\ |\ let_I ∗ = M\ in\ N\ |\ (x \overset{π}{:} M) → N
+ρ,π ∈ R \\
+Γ := ⋄\ |\ Γ,x \overset{ρ}{:} S
 \end{align*}
 
 The symbol ⋄ denotes the empty precontext.
 
-Precontexts contain usage annotations $ρ$ on constituent variables. Scaling a context, $πΓ$, is defined as follows:
+Precontexts contain usage annotations $ρ$ on constituent variables. Scaling a precontext, $πΓ$, is defined as follows:
 
 \begin{align}
 π(⋄)=⋄ \\
 π(Γ,x \overset{ρ}{:} S) = πΓ,x \overset{πρ}{:} S
 \end{align}
 
-Usage annotations in pretypes are not affected.
+Usage annotations in types are not affected.
 
-$0Γ$ sets all annotations to $0$.
+By the definition of a semiring, $0Γ$ sets all annotations to $0$.
 
-Addition of two precontexts $Γ_1+Γ_2$ is defined when $0Γ_1=0Γ_2$:
+Addition of two precontexts $Γ_1 + Γ_2$ is defined only when $0Γ_1 = 0Γ_2$:
 
-\begin{align}
+\begin{align*}
 ⋄+⋄=⋄\\
 (Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
-\end{align}
+\end{align*}
 
-Contexts are identified by the judgement $Γ\vdash$, defined by the following rules:
+Contexts are identified within precontexts by the judgement $Γ\vdash$, defined by the following rules:
 
 \begin{prooftree}
 \AxiomC{}
@@ -98,14 +92,14 @@ Contexts are identified by the judgement $Γ\vdash$, defined by the following ru
 
 \begin{prooftree}
 \AxiomC{$Γ \vdash$}
-\AxiomC{$0Γ⊢S$}
+\AxiomC{$0Γ ⊢ S$}
 \RightLabel{Ext}
 \BinaryInfC{$Γ,x \overset{ρ}{:} S \vdash$}
 \end{prooftree}
 
 $0Γ⊢S$ indicates that $S$ is well-formed as a type in the context of $0Γ$.
 $Emp$, for "empty", builds the empty context, and $Ext$, for "extend", extends a context $Γ$ with a new variable $x$ of type $S$ and usage annotation $ρ$.
-All type formation rules yield judgements where all usage annotations in $Γ$ are $0$ (type formation requires no computational resources).
+All type formation rules yield judgements where all usage annotations in $Γ$ are $0$ — that is to say, type formation requires no computational resources).
 
 Term judgements have the form:
 
