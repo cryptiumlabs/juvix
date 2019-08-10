@@ -1,14 +1,10 @@
 ## Basics
 
-Discuss more the motivations here; the linearity isn't actually for optimal reduction (yet) but rather for the other path & programmer certainty.
+Juvix Core is the core language in the Juvix compiler stack, defining the canonical syntax & semantics on which all compilers & interpreters must agree. Frontend language syntax, frontend language syntactical sugar, and lower-level evaluation choices may safely differ as long as they respect the core semantics.
 
-Combines linear & dependent types.
+Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type-theory], Formality [@formality], and Cedille [@the-calculus-of-dependent-lambda-eliminations]. It fuses full-spectrum dependent types (types & terms can depend on types & terms) with linear logic using the contemplation / computation distinction introduced by QTT, adds the self-types of Cedille & Formality to enable derivation of induction for pure lambda terms, introduces the full connective set of linear logic, dependent where appropriate, and defines an extension system for opaque user-defined datatypes & primitives (such as integers, bytestrings, or cryptographic keys).
 
-Key problem: linear function splits up resources for production of argument & function. What if function type depends on argument? Doesn't make sense.
-
-Assigning evaluative costs, dealing with if-conditionals, etc.
-
-Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
+> Note: at present, the substructural typing in the core language is not required for optimal reduction — separate elementary affine logic assignments are inferred at that stage. Substructural typing is used in Juvix Core to provide additional precision to the programmer and enable optimizations in the bespoke compilation path to custom rewrite rules (such as avoiding garbage collection).
 
 ## Syntax
 
