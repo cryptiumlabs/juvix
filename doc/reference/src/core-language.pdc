@@ -1,4 +1,4 @@
-## Type theory
+## Basics
 
 Discuss more the motivations here; the linearity isn't actually for optimal reduction (yet) but rather for the other path & programmer certainty.
 
@@ -8,14 +8,41 @@ Key problem: linear function splits up resources for production of argument & fu
 
 Assigning evaluative costs, dealing with if-conditionals, etc.
 
-### Basics
-
 Inspired by Cedille [@the-calculus-of-dependent-lambda-eliminations], Quantitative Type Theory [@quantitative-type-theory], and Formality [@formality].
+
+## Syntax
 
 A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
 $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distributed over addition, and multiplication by $0$ annihilates $R$.
 
 The type theory of Juvix Core must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In practice Juvix is instantiated over the semiring of natural numbers, which is the most expressive option.
+
+Inspired by the bidirectional syntax of Conor McBride [@plenty-o-nuttin], as simple as possible.
+
+Let $R, S, T, s, t$ be types & terms and $e, f$ be eliminations.
+
+\begin{figure}[h]
+\caption{Core syntax}
+\begin{subfigure}[c]{0.4\textwidth}
+\begin{align*}
+R, S, T, s, t &::= ∗_i\ \\
+&\ |\ (x \overset{π}{:} S) → T\ \\
+&\ |\ (x \overset{π}{:} S) ⊗ T\ \\
+&\ |\ λx.t\ \\
+&\ |\ e
+\end{align*}
+\end{subfigure}
+\begin{subfigure}[c]{0.4\textwidth}
+\begin{align*}
+e, f &::= x\ \\
+&\ |\ f s\ \\
+&\ |\ (s, t)\ \\
+&\ |\ s : S
+\end{align*}
+\end{subfigure}
+\end{figure}
+
+Sorts $∗_i$ are explicitly leveled, and function types are annotated with an argument consumption annotation $π$.
 
 Typing judgements in Juvix Type Theory (JTT) have the following form:
 
@@ -80,6 +107,8 @@ Term judgements have the form:
 \begin{align}
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
+
+## Typing rules
 
 ### Variable & conversion rules
 
@@ -216,13 +245,15 @@ Under the resourceful part:
 - Must explicitly eliminate elements of the unit type in the resourceful fragment.
 - Simplifies to fst, snd in $σ=0$ fragment (should we combine the rules?)
 
+- If we lambda-encoded pairs, is that isomorphic?
+
 ### Multiplicative disjunction
 
 "Both separately in parallel"
 
-Cannot be dependent?
+Presumably cannot be dependent.
 
-Introduction rule:
+Formation rule:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ (A \overset{σ}{:} S), (B \overset{σ'}{:} S')$}
@@ -236,13 +267,13 @@ is this right?
 
 "Choose either"
 
-Can be dependent
+Can be dependent.
 
-Introduction rule:
+Formation rule:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
-\AxiomC{$Γ ⊢ B \overset{σ}{:} S$}
+\AxiomC{$Γ ⊢ B \overset{σ'}{:} S$}
 \RightLabel{$\&$}
 \BinaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) \& (B \overset{σ}{:} S)$}
 \end{prooftree}
@@ -253,9 +284,9 @@ Can we have $σ$ and $σ'$?
 
 "Might be either"
 
-Cannot be dependent?
+Presumably cannot be dependent.
 
-Introduction rules:
+Formation rules:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
@@ -269,7 +300,11 @@ Introduction rules:
 \UnaryInfC{$Γ ⊢ (A \overset{σ'}{∶} S) ⊕ (B \overset{σ}{:} S)$}
 \end{prooftree}
 
+Do we get this for free with lambda-encoded datatypes?
+
 ### Universe (set type)
+
+Let $S$ be a set of sorts ${i, j, k}$ with a total order.
 
 Formation rule:
 
@@ -334,25 +369,17 @@ Differences from calculus of constructions:
 - Addition of dependent pair
 - Linear logic types
 
-## Syntax
-
-Inspired by the bidirectional syntax of Conor McBride [@plenty-o-nuttin], as simple as possible.
-
-Let types & terms be $R, S, T, s, t ::= ∗_i\ |\ (π x : S) → T\ |\ λx.t\ |\ e$, eliminations be $e, f ::= x\ |\ f s\ |\ s : S$.
-
-Sorts $∗_i$ are explicitly leveled, and function types are annotated with an argument consumption annotation $π$.
-
 ## Semantics
 
 Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
 
 The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
 
-### Parallel-step
+### Parallel-step reduction
 
 Parallel-step evaluation semantics a la McBride.
 
-### Small-step
+### Small-step reduction
 
 Small-step evaluation semantics (so that one-step beta equality can be used in the theorem prover).
 
