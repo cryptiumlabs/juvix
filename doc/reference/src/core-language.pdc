@@ -274,6 +274,8 @@ Introduction rule:
 \TrinaryInfC{$Γ_1 + Γ_2 ⊢ M\ \gamma\ N \overset{σ}{:} S \parr T$}
 \end{prooftree}
 
+To-do: elimination rule
+
 ### Additive conjunction
 
 "Choose either"
@@ -311,6 +313,8 @@ Elimination rules:
 \AxiomC{$Γ ⊢ M\ \epsilon\ N \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T$}
 \UnaryInfC{$Γ ⊢ N \overset{σ}{:} T[x := M]$}
 \end{prooftree}
+
+To-do: terms for elimination rules.
 
 ### Additive disjunction
 
