@@ -15,6 +15,8 @@ $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distribu
 
 The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In Juvix the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
 
+To-do: consider the natural numbers plus ω for flexibility?
+
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
 Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
@@ -381,27 +383,41 @@ To-do for self types
 
 ### Equality judgements
 
-- Type & term equality judgements under beta reduction
-
 Types are judgementally equal under beta reduction:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ S$}
 \AxiomC{$Γ ⊢ T$}
 \AxiomC{$S →_{β} T$}
-\RightLabel{≡}
+\RightLabel{≡-Type}
 \TrinaryInfC{$Γ ⊢ S ≡ T$}
 \end{prooftree}
 
-Things to be added:
+Terms with the same type are judgementally equal under beta reduction:
 
-- Check if we can safely allow sub-usaging if the ring is the natural numbers
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
+\AxiomC{$Γ ⊢ N \overset{σ}{:} S$}
+\AxiomC{$M →_{β} N$}
+\RightLabel{≡-Term}
+\TrinaryInfC{$Γ ⊢ M ≡ N \overset{σ}{:} S$}
+\end{prooftree}
+
+To-do: do we have / need a rule for term equality?
+
+### Sub-usaging
+
+To-do: check if we can safely allow sub-usaging if the ring is the natural numbers, discuss here.
 
 ## Semantics
 
 Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
 
 The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
+
+### Confluence
+
+A binary relation $R$ has the diamond property iff. $∀ s p q . s R p ∧ s R q \implies ∃r . p R r ∧ q R r$.
 
 ### Parallel-step reduction
 
@@ -417,14 +433,81 @@ Lay out syntax-directed typechecker following McBride's paper.
 
 ## Erasure
 
-Define erasure to untyped lambda calculus following McBride's paper.
+- Define erasure to untyped lambda calculus following McBride's paper.
+- Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
 
-Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
+Let programs of the untyped lambda calculus be $p ::= x\ |\ λx.p\ |\ p\ p$.
+
+Define the erasure operator $→_{e}$, such that erasure judgements take the form $Γ ⊢ t \overset{σ}{:} S →_{e} p$.
+
+\begin{prooftree}
+\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
+\RightLabel{Var-Erase-+}
+\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S →_{e} x$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t \overset{σ}{:} T →_{e} p$}
+\AxiomC{$σπ = 0$}
+\RightLabel{Lam-Erase-0}
+\BinaryInfC{$λx.t : (x \overset{π}{:} S) → T →_{e} p$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t \overset{σ}{:} T →_{e} p$}
+\AxiomC{$σπ /= 0$}
+\RightLabel{Lam-Erase-+}
+\BinaryInfC{$λx.t : (x \overset{π}{:} S) → T →_{e} λx.p$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T →_{e} p$}
+\AxiomC{$Γ_2 ⊢ N \overset{0}{:} S$}
+\AxiomC{$σπ = 0$}
+\RightLabel{App-Erase-0}
+\TrinaryInfC{$Γ_1 ⊢ M N \overset{σ}{:} T[x := N] →_{e} p$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T →_{e} p$}
+\AxiomC{$Γ_2 ⊢ N \overset{σπ}{:} S →_{e} p'$}
+\AxiomC{$σπ /= 0$}
+\RightLabel{App-Erase-+}
+\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N] →_{e} p\ p'$}
+\end{prooftree}
+
+In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $p$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it, only contemplate it.
+
+Other terms erase as you would expect.
+
+Computationally relevant terms are preserved, while terms which are only contemplated are erased.
 
 ## Examples
 
-- Church-encoded numerals (usage annotations on $s$)
+### Church-encoded natural numbers
+
+- Representation
 - Deriving induction for Church-encoded numerals using self-types
-- Simple function from values to types
-- Universe hierarchy
+
+The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{n}{:} (s \overset{π}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
+
+### Linear lists
+
+Example from McBride's paper:
+
+$0List: (0X:∗)→∗$
+
+$ωnil: (0X:∗)→ListX$
+
+$ωcons: (0X:∗,1x:X,1xs:ListX)→ListX$
+
+$ωlit: (0X:∗,0P: (0x:ListX)→∗)→(1n:P(nilX))→(ωc: (1x:X,0xs:ListX,1p:Pxs)→P(consX xxs))→(1xs:ListX)→P xs$
+
+$ωappend:  (0X:∗,1xs:ListX,1ys:ListX)→ListX$
+
+$append=λX.λxs.λys.litX(λ.ListX)ys(λx.λ.λxs′.consX xxs′)xs$
+
+### Linear logic connectives
+
 - Linear logic disjunctions & conjunctions
+- Linear induction?
