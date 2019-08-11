@@ -17,7 +17,7 @@ The core type theory must be instantiated over a particular semiring. Choices in
 
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
-Let $R, S, T, s, t$ be types & terms, $e, f$ be eliminations.
+Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
 
 \begin{figure}[h]
 \caption{Core syntax}
@@ -31,17 +31,20 @@ R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
 &\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} \\
 &\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} \\
 &\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} \\
+&\ \ \ \ \ \ |\ fst M\ & \text{first projection} \\
+&\ \ \ \ \ \ |\ snd M\ & \text{second projection} \\
 &\ \ \ \ \ \ |\ e\ & \text{elimination}\\
 \end{align*}
 \end{subfigure}
 \begin{subfigure}[t]{0.4\textwidth}
 \begin{align*}
-e, f &::= x\ & \text{variable} \\
+d, e, f &::= x\ & \text{variable} \\
 &\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
 &\ \ \ \ \ \ |\ f s\ & \text{application} \\
 &\ \ \ \ \ \ |\ (s, t)\ & \text{pair} \\
 &\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} \\
 &\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} \\
+&\ \ \ \ \ \ |\ let\ (x, y) = d in e\ & \text{dependent pair pattern match} \\
 &\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} \\
 \end{align*}
 \end{subfigure}
@@ -97,7 +100,7 @@ Contexts are identified within precontexts by the judgement $Γ\vdash$, defined 
 \BinaryInfC{$Γ,x \overset{ρ}{:} S \vdash$}
 \end{prooftree}
 
-$0Γ⊢S$ indicates that $S$ is well-formed as a type in the context of $0Γ$.
+$0Γ ⊢ S$ indicates that $S$ is well-formed as a type in the context of $0Γ$.
 $Emp$, for "empty", builds the empty context, and $Ext$, for "extend", extends a context $Γ$ with a new variable $x$ of type $S$ and usage annotation $ρ$.
 All type formation rules yield judgements where all usage annotations in $Γ$ are $0$ — that is to say, type formation requires no computational resources).
 
@@ -107,11 +110,11 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
+where $σ \in {0,1}$ (todo: must it be?). A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with.
+
 ## Typing rules
 
 ### Variable & conversion rules
-
-where $σ ∈ {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed.
 
 The variable rule selects an individual variable, type, and usage annotation from the context:
 
@@ -121,7 +124,7 @@ The variable rule selects an individual variable, type, and usage annotation fro
 \UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S$}
 \end{prooftree}
 
-The conversion rule:
+The conversion rule allows conversion between judgementally equal types:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
@@ -150,7 +153,7 @@ required for the argument, respectively:
 \begin{prooftree}
 \AxiomC{$Γ,x \overset{σπ}{:} S ⊢ M \overset{σ}{:} T$}
 \RightLabel{Lam}
-\UnaryInfC{$Γ ⊢ λx \overset{π}{:} S.M^T \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\UnaryInfC{$Γ ⊢ λx.M \overset{σ}{:} (x \overset{π}{:} S) → T$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -159,13 +162,13 @@ required for the argument, respectively:
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
 \RightLabel{App}
-\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ App_{(x \overset{π}{:} S) T}(M,N) \overset{σ}{:} T[x := N]$}
+\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
 - In the introduction rule, the abstracted variable $x$ has usage $σπ$ so that non-computational production requires no computational input
 - In the elimination rule, the resources required by the function and its argument, scaled to the amount required by the function, are summed
-- The function argument $N$ may be judged in the 0-use fragment of the system if and only if we are already in the 0-use fragment ($σ=0$) or the function will not use the argument ($π=0$).
+- The function argument $N$ may be judged in the 0-use fragment of the system if and only if we are already in the 0-use fragment ($σ = 0$) or the function will not use the argument ($π = 0$).
 
 ### Dependent multiplicative conjunction (tensor product)
 
@@ -193,7 +196,7 @@ Introduction rule:
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
 \AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
-\QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N)_{x \overset{π}{:} S.T} \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -209,14 +212,14 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
-\UnaryInfC{$Γ ⊢ fst_{x \overset{π}{:} S.T} (M) \overset{0}{:} A$}
+\UnaryInfC{$Γ ⊢ fst\ M \overset{0}{:} A$}
 \end{prooftree}
 
 (should the last be $S$ ?)
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
-\UnaryInfC{$Γ ⊢ snd_{x \overset{π}{:} S.T} (M) \overset{0}{:} T[x := fst(M)]$}
+\UnaryInfC{$Γ ⊢ snd\ M \overset{0}{:} T[x := fst(M)]$}
 \end{prooftree}
 
 Under the resourceful part:
@@ -227,7 +230,7 @@ Under the resourceful part:
 \AxiomC{$Γ_2, x \overset{σπ}{:} S, y \overset{σ}{:} T ⊢ N \overset{σ}{:} U[z := (x,y)]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \RightLabel{$⊗$ Elim}
-\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let_{x \overset{π}{:} S.T} (x,y) = M\ in\ N \overset{σ}{:} U[z := M]$}
+\QuaternaryInfC{$Γ_1+Γ_2 ⊢ let\ (x,y) = M\ in\ N \overset{σ}{:} U[z := M]$}
 \end{prooftree}
 
 - Must pattern match out to ensure both parts of the product are used.
@@ -238,7 +241,7 @@ Under the resourceful part:
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} U[x := *]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \RightLabel{$⊗$ Elim I}
-\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let_I ∗ = M\ in\ N \overset{σ}{:} U[x := M]$}
+\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let\ ∗ = M\ in\ N \overset{σ}{:} U[x := M]$}
 \end{prooftree}
 
 - Must explicitly eliminate elements of the unit type in the resourceful fragment.
@@ -260,7 +263,14 @@ Formation rule:
 \UnaryInfC{$Γ ⊢ (A \overset{σ}{:} S) \parr (B \overset{σ'}{:} S')$}
 \end{prooftree}
 
-is this right?
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T$}
+\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M\ \gamma\ N \overset{σ}{:} S \parr T$}
+\end{prooftree}
 
 ### Additive conjunction
 
@@ -272,12 +282,33 @@ Formation rule:
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
-\AxiomC{$Γ ⊢ B \overset{σ'}{:} S$}
+\AxiomC{$Γ ⊢ B \overset{σ}{:} T$}
 \RightLabel{$\&$}
-\BinaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) \& (B \overset{σ}{:} S)$}
+\BinaryInfC{$Γ ⊢ (A \overset{σ}{∶} S)\ \&\ (B \overset{σ'}{:} T)$}
 \end{prooftree}
 
-Can we have $σ$ and $σ'$?
+- Can we construct with $σ' /= σ$?
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
+\TrinaryInfC{$πΓ_1 + Γ_2 ⊢ M\ \epsilon\ N \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T$}
+\end{prooftree}
+
+Elimination rules:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M\ \epsilon\ N \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T$}
+\UnaryInfC{$Γ ⊢ M \overset{πσ}{:} S$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M\ \epsilon\ N \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T$}
+\UnaryInfC{$Γ ⊢ N \overset{σ}{:} T[x := M]$}
+\end{prooftree}
 
 ### Additive disjunction
 
@@ -354,7 +385,6 @@ Elimination rule:
 To-do for self types
 
 - Syntax for self types?
-- Check induction example
 
 Things to be added:
 
