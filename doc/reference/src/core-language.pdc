@@ -340,38 +340,31 @@ Formation rule:
 
 \begin{prooftree}
 \AxiomC{$0Γ ⊢$}
-\RightLabel{Set}
-\UnaryInfC{$0Γ ⊢ Set$}
+\AxiomC{$i < j$}
+\RightLabel{∗}
+\BinaryInfC{$0Γ ⊢ ∗_i \overset{0}{:} ∗_j$}
 \end{prooftree}
 
 Introduction rule ($σ = 0$ fragment only):
 
 \begin{prooftree}
-\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
-\AxiomC{$0Γ, x \overset{0}{:} El(M) ⊢ N \overset{0}{:} Set$}
-\RightLabel{Set-Pi}
-\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} Set$}
-\end{prooftree}
-
-Elimination rule:
-
-\begin{prooftree}
-\AxiomC{$0Γ ⊢ M \overset{0}{:} Set$}
-\RightLabel{Set-El}
-\UnaryInfC{$0Γ ⊢ El(M)$}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} ∗_i$}
+\AxiomC{$0Γ, x \overset{0}{:} M ⊢ N \overset{0}{:} ∗_i$}
+\RightLabel{∗-Pi}
+\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} ∗_i$}
 \end{prooftree}
 
 ### Self types
 
 \begin{prooftree}
-\AxiomC{$Γ, x: ιx.T ⊢ T : Set$}
+\AxiomC{$Γ, x: ιx.T ⊢ T : ∗_i$}
 \RightLabel{Self}
 \UnaryInfC{$Γ ⊢ ιx.T$}
 \end{prooftree}
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ t : [x := t]T$}
-\AxiomC{$Γ ⊢ ιx.T : Set$}
+\AxiomC{$Γ ⊢ ιx.T : ∗_i$}
 \RightLabel{Self-Gen}
 \BinaryInfC{$Γ ⊢ t : ιx.T$}
 \end{prooftree}
@@ -386,17 +379,23 @@ To-do for self types
 
 - Syntax for self types?
 
-Things to be added:
+### Equality judgements
 
 - Type & term equality judgements under beta reduction
-- Universe (set) hierarchy
+
+Types are judgementally equal under beta reduction:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ S$}
+\AxiomC{$Γ ⊢ T$}
+\AxiomC{$S →_{β} T$}
+\RightLabel{≡}
+\TrinaryInfC{$Γ ⊢ S ≡ T$}
+\end{prooftree}
+
+Things to be added:
+
 - Check if we can safely allow sub-usaging if the ring is the natural numbers
-
-Differences from calculus of constructions:
-
-- Usage annotations
-- Addition of dependent pair
-- Linear logic types
 
 ## Semantics
 
