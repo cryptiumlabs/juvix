@@ -23,7 +23,7 @@ Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
 
 \begin{figure}[h]
 \caption{Core syntax}
-\begin{subfigure}[t]{0.4\textwidth}
+\begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
 R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
 &\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} \\
@@ -38,7 +38,8 @@ R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
 &\ \ \ \ \ \ |\ e\ & \text{elimination}\\
 \end{align*}
 \end{subfigure}
-\begin{subfigure}[t]{0.4\textwidth}
+
+\begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
 d, e, f &::= x\ & \text{variable} \\
 &\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
@@ -46,7 +47,7 @@ d, e, f &::= x\ & \text{variable} \\
 &\ \ \ \ \ \ |\ (s, t)\ & \text{pair} \\
 &\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} \\
 &\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} \\
-&\ \ \ \ \ \ |\ let\ (x, y) = d in e\ & \text{dependent pair pattern match} \\
+&\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent pair pattern match} \\
 &\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} \\
 \end{align*}
 \end{subfigure}
