@@ -25,32 +25,32 @@ Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
 \caption{Core syntax}
 \begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
-R, S, T, s, t &::= ∗_i\ & \text{sort $i$} &\\ \text{Star} \\
-&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} &\\ \text{k} \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} &\\ \text{Pi} \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} &\\ (x) \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S)\ \&\ T\ & \text{dependent additive conjunction type} &\\ \/\\ \\
-&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} &\\ \/\\ \\
-&\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} &\\ \\
-&\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} &\\ \\
-&\ \ \ \ \ \ |\ e\ & \text{elimination} &\\ \\
+R, S, T, s, t &::= ∗_i\ & \text{sort $i$} &\ \text{Star} \\
+&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} &\ \text{k} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} &\ \text{Pi} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} &\ (x) \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S)\ \&\ T\ & \text{dependent additive conjunction type} &\ / \textbackslash \\
+&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} &\ \textbackslash /  \\
+&\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} &\ \\
+&\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} &\ \\
+&\ \ \ \ \ \ |\ e\ & \text{elimination} &\ \\
 \end{align*}
 \end{subfigure}
 
 \begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
-d, e, f &::= x\ & \text{variable} \\
-&\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
-&\ \ \ \ \ \ |\ f s\ & \text{application} \\
-&\ \ \ \ \ \ |\ (s, t)\ & \text{pair} \\
-&\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} \\
-&\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} \\
-&\ \ \ \ \ \ |\ fst_⊗\ M\ & \text{first projection for multiplicative conjunction} \\
-&\ \ \ \ \ \ |\ snd_⊗\ M\ & \text{second projection for multiplicative conjunction} \\
-&\ \ \ \ \ \ |\ fst_{\&}\ M\ & \text{first projection for additive conjunction} \\
-&\ \ \ \ \ \ |\ snd_{\&}\ M\ & \text{second projection for additive conjunction} \\
-&\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent pair pattern match} \\
-&\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} \\
+d, e, f &::= x\ & \text{variable} &\ \\
+&\ \ \ \ \ \ |\ c \in C & \text{primitive constant} &\ \\
+&\ \ \ \ \ \ |\ f s\ & \text{application} &\ \\
+&\ \ \ \ \ \ |\ (s, t)\ & \text{pair} &\ \\
+&\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} &\ \\
+&\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} &\ \\
+&\ \ \ \ \ \ |\ fst_⊗\ M\ & \text{first projection for multiplicative conjunction} &\ \\
+&\ \ \ \ \ \ |\ snd_⊗\ M\ & \text{second projection for multiplicative conjunction} &\ \\
+&\ \ \ \ \ \ |\ fst_{\&}\ M\ & \text{first projection for additive conjunction} &\ \\
+&\ \ \ \ \ \ |\ snd_{\&}\ M\ & \text{second projection for additive conjunction} &\ \\
+&\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent pair pattern match} &\ \\
+&\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} &\ \\
 \end{align*}
 \end{subfigure}
 \end{figure}
