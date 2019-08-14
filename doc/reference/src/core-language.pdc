@@ -147,17 +147,39 @@ The conversion rule allows conversion between judgementally equal types:
 
 Note that type equality is judged in a context with no resources.
 
-### Primitive constants & types
+### Primitive constants, functions & types
 
 \begin{prooftree}
 \AxiomC{$c \in C$}
 \AxiomC{$\kappa \in K$}
 \AxiomC{$c ⋮ \kappa$}
-\RightLabel{Prim}
+\RightLabel{Prim-Const}
 \TrinaryInfC{$⊢ c \overset{σ}{:} \kappa$}
 \end{prooftree}
 
 Primitive constants are typed according to the primitive typing relation, and they can be produced in any computational quantity.
+
+\begin{prooftree}
+\AxiomC{$f \in F$}
+\AxiomC{$f ⋮ (x \overset{π}{:} S) → T$}
+\RightLabel{Prim-Fn}
+\BinaryInfC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\end{prooftree}
+
+Primitive functions are typed according to the primitive typing relation, and they can be produced in any computational quanitity.
+
+Primitive functions can be dependently-typed.
+
+\begin{prooftree}
+\AxiomC{$f \in F$}
+\AxiomC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\AxiomC{$Γ ⊢ M \overset{σ'}{:} S$}
+\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
+\RightLabel{Prim-App}
+\QuaternaryInfC{$πΓ ⊢ f M \overset{σ}{:} T[x := M]$}
+\end{prooftree}
+
+Applications of primitive functions impose the same usage constraints as regular abstractions.
 
 ### Dependent function types
 
@@ -279,6 +301,8 @@ Under the resourceful part:
 
 Presumably cannot be dependent.
 
+Should be able to provide guarantee of parallelism in low-level execution, both in bespoke & interaction net paths.
+
 Formation rule:
 
 \begin{prooftree}
@@ -293,10 +317,22 @@ Introduction rule:
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T$}
+\RightLabel{$\parr$-Intro}
 \TrinaryInfC{$Γ_1 + Γ_2 ⊢ M\ \gamma\ N \overset{σ}{:} S \parr T$}
 \end{prooftree}
 
-To-do: elimination rule
+do we need equality of 0-fragment?
+
+Elimination rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1, M \overset{σ}{:} S ⊢ M' \overset{σ'}{:} S'$}
+\AxiomC{$Γ_2, N \overset{σ}{:} T ⊢ N' \overset{σ'}{:} T'$}
+\RightLabel{$\parr$-Elim}
+\BinaryInfC{$Γ_1 + Γ_2 + M \gamma\ N \overset{σ}{:} S \parr T ⊢ (M', N') \overset{σ'}{:} (S ⊗ T)$}
+\end{prooftree}
+
+reformulate to be syntax-directed, we need some sort of "join"
 
 ### Additive conjunction
 
@@ -511,6 +547,12 @@ Define the erasure operator $▶$, such that erasure judgements take the form $�
 In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $p$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it, only contemplate it.
 
 Other terms erase as you would expect.
+
+To-do:
+
+- Constants $c \in C$ erase to themselves
+- Functions $f \in F$ erase to themselves
+- Function applications $f x$ of primitive $f \in F$ erase to $f (▶ x)$.
 
 Computationally relevant terms are preserved, while terms which are only contemplated are erased.
 
