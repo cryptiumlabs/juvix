@@ -1,31 +1,37 @@
 ## Basics
 
-Juvix Core is the core language in the Juvix compiler stack, defining the canonical syntax & semantics on which all compilers & interpreters must agree. Frontend language syntax, frontend language syntactical sugar, and lower-level evaluation choices may safely differ as long as they respect the core semantics.
+Juvix Core is the core language in the Juvix compiler stack, defining the canonical syntax & semantics on which all compilers & interpreters must agree. Lower-level evaluation choices may safely differ between implementations as long as they respect the core semantics.
 
-Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type-theory], Formality [@formality], and Cedille [@the-calculus-of-dependent-lambda-eliminations]. It fuses full-spectrum dependent types (types & terms can depend on types & terms) with linear logic using the contemplation / computation distinction introduced by QTT, adds the self-types of Cedille & Formality to enable derivation of induction for pure lambda terms, introduces the full connective set of linear logic, dependent where appropriate, and defines an extension system for opaque user-defined datatypes & primitives (such as integers, bytestrings, or cryptographic keys).
+Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type-theory], Formality [@formality], and Cedille [@the-calculus-of-dependent-lambda-eliminations]. It fuses full-spectrum dependent types (types & terms can depend on types & terms) with linear logic using the contemplation — computation distinction introduced by QTT, adds the self-types of Cedille & Formality to enable derivation of induction for pure lambda terms, introduces the full connective set of linear logic, dependent where appropriate, to express different varieties of conjunction & disjunction, and defines an extension system for opaque user-defined datatypes & primitives (such as integers with addition & multiplication, bytestrings with concatenation & indexing, or cryptographic keys with construction & signature checking).
 
-> Note: at present, the substructural typing in the core language is not required for optimal reduction — separate elementary affine logic assignments are inferred at that stage. Substructural typing is used in Juvix Core to provide additional precision to the programmer and enable optimizations in the bespoke compilation path to custom rewrite rules (such as avoiding garbage collection).
+> Note: at present, the substructural typing in the core language is not required for optimal reduction — separate elementary affine logic assignments are inferred in the lower-level stage. Substructural typing is used in Juvix Core to provide additional precision to the programmer and enable optimizations in the bespoke compilation path to custom rewrite rules (such as avoiding garbage collection). In the future a closer fusion allowing the more precise usage information to inform interaction net construction is expected; this is an open research question.
 
-## Syntax
-
-Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin].
+## Preliminaries
 
 A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
 $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distribute over addition, and multiplication by $0$ annihilates $R$.
 
-The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication. In Juvix the type theory is instantiated over the semiring of natural numbers, which is the most expressive option.
+The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication.
 
-To-do: consider the natural numbers plus ω for flexibility?
+In canonical Juvix Core the type theory is instantiated over the semiring of natural numbers plus ω, which is the most expressive option — terms can be $0$-usage ("contemplated"), $n$-usage ("computed $n$ times"), or $ω$-usage ("computed any number of times").
+
+Let $S$ be a set of sorts $(i, j, k)$ with a total order.
 
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
-Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
+Let $F$ be the set of primitive functions, where each $f_i$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f_i}$, which provided an argument of the function input type computes an argument of the function output type.
 
-\begin{figure}[h]
+Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Juvix Core is erased, so they must be directly supported by the low-level execution model.
+
+## Syntax
+
+Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin], let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations, where types can be synthesized for eliminations but must be specified in advance for terms.
+
+\begin{figure}[H]
 \caption{Core syntax}
 \begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
-R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
+R, S, T, s, t &::= ∗_{i \in S}\ & \text{sort $i \in S$} \\
 &\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} \\
 &\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} \\
 &\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} \\
@@ -41,14 +47,15 @@ R, S, T, s, t &::= ∗_i\ & \text{sort $i$} \\
 \begin{align*}
 d, e, f &::= x\ & \text{variable} \\
 &\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
+&\ \ \ \ \ \ |\ f \in F & \text{primitive function} \\
 &\ \ \ \ \ \ |\ f s\ & \text{application} \\
-&\ \ \ \ \ \ |\ (s, t)\ & \text{pair} \\
-&\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} \\
-&\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} \\
-&\ \ \ \ \ \ |\ fst_⊗\ M\ & \text{first projection for multiplicative conjunction} \\
-&\ \ \ \ \ \ |\ snd_⊗\ M\ & \text{second projection for multiplicative conjunction} \\
-&\ \ \ \ \ \ |\ fst_{\&}\ M\ & \text{first projection for additive conjunction} \\
-&\ \ \ \ \ \ |\ snd_{\&}\ M\ & \text{second projection for additive conjunction} \\
+&\ \ \ \ \ \ |\ (d, e)\ & \text{pair} \\
+&\ \ \ \ \ \ |\ d\ \epsilon\ e\ & \text{additive conjunction} \\
+&\ \ \ \ \ \ |\ d\ \gamma\ e\ & \text{multiplicative disjunction} \\
+&\ \ \ \ \ \ |\ fst_⊗\ D\ & \text{first projection for multiplicative conjunction} \\
+&\ \ \ \ \ \ |\ snd_⊗\ D\ & \text{second projection for multiplicative conjunction} \\
+&\ \ \ \ \ \ |\ fst_{\&}\ D\ & \text{first projection for additive conjunction} \\
+&\ \ \ \ \ \ |\ snd_{\&}\ D\ & \text{second projection for additive conjunction} \\
 &\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent pair pattern match} \\
 &\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} \\
 \end{align*}
