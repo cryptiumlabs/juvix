@@ -25,15 +25,15 @@ Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations.
 \caption{Core syntax}
 \begin{subfigure}[t]{0.7\textwidth}
 \begin{align*}
-R, S, T, s, t &::= ∗_i\ & \text{sort $i$} & Star \\
-&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} & k \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} & Pi \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} & (x) \\
-&\ \ \ \ \ \ |\ (x \overset{π}{:} S)\ \&\ T\ & \text{dependent additive conjunction type} & /\ \\
-&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} & \/ \\
-&\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} & \\
-&\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} & \\
-&\ \ \ \ \ \ |\ e\ & \text{elimination} & \\
+R, S, T, s, t &::= ∗_i\ & \text{sort $i$} &\\ \text{Star} \\
+&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} &\\ \text{k} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) → T\ & \text{function type} &\\ \text{Pi} \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S) ⊗ T\ & \text{dependent multiplicative conjunction type} &\\ (x) \\
+&\ \ \ \ \ \ |\ (x \overset{π}{:} S)\ \&\ T\ & \text{dependent additive conjunction type} &\\ \/\\ \\
+&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} &\\ \/\\ \\
+&\ \ \ \ \ \ |\ ιx.T\ & \text{self-type} &\\ \\
+&\ \ \ \ \ \ |\ λx.t\ & \text{abstraction} &\\ \\
+&\ \ \ \ \ \ |\ e\ & \text{elimination} &\\ \\
 \end{align*}
 \end{subfigure}
 
