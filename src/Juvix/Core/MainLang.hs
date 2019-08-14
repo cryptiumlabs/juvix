@@ -31,3 +31,36 @@ module Juvix.Core.MainLang where
     |  Local   Natural    -- to convert a bound variable into a free one
     |  Quote   Natural
     deriving (Show, Eq)
+
+  --Values/types
+  data Value
+    = VLam (Value -> Value)
+    | VStar Natural
+    | VPi Natural Value (Value -> Value)
+    | VPm Natural Value (Value -> Value)
+    | VPa Natural Value (Value -> Value)
+    | VNPm Value Value
+    | VNeutral Neutral
+
+  --A neutral term is either a variable or an application of a neutral term to a value
+  data Neutral
+    = NFree Name
+    | NApp Neutral Value
+  
+  showVal :: Value -> String
+  showVal (VLam _)         = "lambda"
+  showVal (VStar i)        = "* " ++ show i
+  showVal (VPi n v _f)     = "Pi " ++ show n ++ showVal v ++ " -> lambda"
+  showVal (VNeutral _n)    = "neutral "
+  
+  --vfree creates the value corresponding to a free variable
+  vfree :: Name -> Value
+  vfree n = VNeutral (NFree n)
+
+  --Contexts map variables to their types.
+  type Type    = Value
+  type Context = [(Name, Type)]
+
+  --Evaluation
+  type Env = [Value]
+ -- iEval :: ITerm -> Env -> Value
