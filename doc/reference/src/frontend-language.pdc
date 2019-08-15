@@ -27,6 +27,39 @@ Most features simply desugar to Core.
 
 ### Mendler
 
+Mendler style F-agebras have the unqiue advantage of being strongly normalizing for positive and negative inductive datatypes while not sacrificng constant time destructors or a linear representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the abscense of external deconstructors (todo :: find source)
+
+Let us first explore the core of the encoding by first assuming we have access to a non inductive algebraic data type, then strip these assumptions until just base lambda calculus is left.
+
+The first example we will explore is the natural numbers. Recall that the natural numbers can be defined as such
+
+```
+-- Normal Haskell way of defining Nat
+data Nat = Z
+         | S Nat
+
+```
+
+Now, let us strip the recursive nature of this data type using pusdo haskell syntax
+```
+data N r = Z
+         | S r
+
+let in = \r. \f. f (\d. d f) r
+
+type AlgebraM (f :: * → *) (x :: *) = forall (r :: *). (r → x) → (f r) → x
+
+type FixM f = forall x. AlgebraM f x → x
+
+type Nat = FixM N
+
+let zero = in Z : Nat
+let succ = \n. in (S n) : Nat → Nat
+```
+
+The interesting definitions above to pay attention to are `AlgebraM` and `in`.
+
+
 (todo: list asymptotic complexities, concrete complexities, encoding algorithm)
 
 ### Scott
