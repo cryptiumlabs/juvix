@@ -1,4 +1,4 @@
-This chapter defines the high-level dependently-typed frontend syntax in which developers are expected to write, referred to as the "Juvix frontend language" or merely "Juvix" where unambiguous. 
+This chapter defines the high-level dependently-typed frontend syntax in which developers are expected to write, referred to as the "Juvix frontend language" or merely "Juvix" where unambiguous.
 
 > Note that the frontend language is one of the less theoretically risky parts of the compiler design and thus is omitted in the initial release, except for algebraic datatypes. At present developers code directly in Juvix Core (which will always be possible).
 
@@ -42,25 +42,89 @@ data Nat = Z
 
 Now, let us strip the recursive nature of this data type using pusdo haskell syntax
 ```
-data N r = Z
+data ℕ r = Z
          | S r
 
-let in = \r. \f. f (\d. d f) r
+let in = λr. λf. f (λd. d f) r
 
 type AlgebraM (f :: * → *) (x :: *) = forall (r :: *). (r → x) → (f r) → x
 
 type FixM f = forall x. AlgebraM f x → x
 
-type Nat = FixM N
+type Nat = FixM ℕ
 
 let zero = in Z : Nat
-let succ = \n. in (S n) : Nat → Nat
+let succ = λn. in (S n) : Nat → Nat
 ```
 
-The interesting definitions above to pay attention to are `AlgebraM` and `in`.
+The definitions above that are in need of serious attention are `AlgebraM` and `in`.
 
+`AlgebraM` states that for any F-algebra `f` and result `x`, if we have a function, say `g`, from any `r` to `x` and the F-algebra is over `r`, then we can recieve a `x` back through `g`.
 
-(todo: list asymptotic complexities, concrete complexities, encoding algorithm)
+The interesting aspect here is that `g` does not work over the outer algebraic strucutre, but instead the nested data inside of it. In our above example this would be the `r` in the definition of ℕ. This inner recursion on `r` without any other external deconstructors is what allows this encoding to be strongly normalizing.
+
+The form that allows us to inhabit `AlgebraM` is the `in` abstraction. To better understand how `in` works, An example of Nat's useage and expansion to `in` would be the most informative.
+
+```
+let isEven = \rec. \n.
+  case n of
+  | Z   → True
+  | S n → not (rec n)
+
+let two = succ (succ zero)
+
+two isEven — ===> True
+
+two isEven
+= (succ (succ zero))   isEven             — (1) by defintiion
+= (in S (in S (in Z))) isEven             — (2) by definition of succ and zero
+= isEven (\d. d isEven) (S (in S (in Z))) — (3) by definition of in
+= case (S (in S (in Z))) of               — (4) by definition of isEven
+  | Z   → True
+  | S n → not ((\d. d isEven) n)
+= not ((in S (in Z)) isEven)              — (5) by case expansion
+```
+
+In the above example, we can see that `two` inhibits the type FixM ℕ, meaning that the F-Algebra we are working over is `ℕ r` for some `r`. So the algebra must take a function `r → x` and the `f r` itself. this corresponds to the `rec` and `n` in `isEven` respectively. We can see that `rec` only works with the `r` parameter which in the case of `two` is the Mendler encoded `succ zero`. By step `5` of the epxansion the definition of `in` finally becomes clear in that $(λd. d f)$ shows itself to satisfy the inner recursive form.
+
+This example also illustrates that the recursive call to `rec` is optional and not necessarily forced unlike other catamorphisms, like church/boehm berducci encodings.
+
+However there is one small problem, in untyped lambda calculus we could define pred as follows:
+
+```
+let pred_alg = \rec. \n.
+  case n of
+  | Z   → zero
+  | S n → n
+```
+
+We can see that this definition of `pred_alg` is O(1), however if we were to type this using the normal Hindly Milner type system, this does not work out. Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard conststraint that type systems without dependent intersection types and O(1) heterogenous equality must have [@cedile]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
+
+Another property of this algebra is that this encoding is able to achieve only taking linear space unlike previous encodings that took quadratic if not exponential space to achieve proof of termination and O(1) predecessor [@cedile].
+
+Now that we have some understanding of the inductive nature of the Mendler encoding, we must also strip the ADT tags of `Z` and `S` into base lambda. We will first only consider sum types with at most one data then investigate how we can modify our representation to include product types.
+
+```
+
+-- D is added to be illustrative of the effect of adding another case
+data Nat n = Z | S n | D n
+
+let inl = \x. \k. \l. k x
+
+let inr = \y. \k. \l. l y
+
+let zero-c = inl ()
+
+let succ-c c = inr (inl c)
+
+let dup-c c  = inr (inr c)
+
+let zero = in zero-c : Nat
+let succ = in succ-c : Nat
+let dup  = in dup-c  : Nat
+```
+
+(todo: encoding algorithm, compare F-Algebras and normal Algebras, add cedile source)
 
 ### Scott
 
