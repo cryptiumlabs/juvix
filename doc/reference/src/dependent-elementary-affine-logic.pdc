@@ -6,6 +6,12 @@ Define:
 
 - Define evaluation semantics, undefined behaviour.
 
+To-do
+
+- Alter to simple dependently-typed version
+- Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
+- Add & reason through arguments for correctness
+
 ## Typing rules
 
 \begin{figure}[H]
