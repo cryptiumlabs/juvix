@@ -5,7 +5,7 @@ module Juvix.Core.MainLang where
   import           Prelude
   import           Control.Monad.Except
   import           Numeric.Natural
-
+  
   -- Inferable terms
   data ITerm
     =  Star Natural             -- (sort i) i th ordering of (closed) universe.
@@ -15,9 +15,9 @@ module Juvix.Core.MainLang where
     |  Pm Natural CTerm CTerm   -- dependent multiplicative conjunction (tensor product)
     |  Pa Natural CTerm CTerm   -- dependent additive conjunction type
     |  NPm CTerm CTerm      -- non-dependent multiplicative disjunction type
-    |  Bound  Natural       -- Bound variables of type Natural because it's represented by de Bruijn indices
-    |  Free   Name          -- Free variables of type name (see below)
-    |  ITerm :@: CTerm      -- the infix constructor :@: denotes application
+    |  Bound Natural        -- Bound variables of type Int, represented by de Bruijn indices
+    |  Free Name            -- Free variables of type name (see below)
+    |  App ITerm CTerm      -- application, f s
     deriving (Show, Eq)
 
   --Checkable terms
@@ -61,6 +61,39 @@ module Juvix.Core.MainLang where
   type Type    = Value
   type Context = [(Name, Type)]
 
+  toInt :: Natural -> Int
+  toInt = (fromInteger . toInteger)
+
   --Evaluation
   type Env = [Value]
- -- iEval :: ITerm -> Env -> Value
+  iEval :: ITerm -> Env -> Value
+  iEval (Star i)     _d  =  VStar i
+  iEval (Pi n ty ty') d  =  VPi (n-1) (cEval ty d)(\ x -> cEval ty' (x : d))
+  iEval (Pm n ty ty') d  =  VPm (n-1) (cEval ty d)(\ x -> cEval ty' (x : d))
+  iEval (Pa n ty ty') d  =  VPa (n-1) (cEval ty d)(\ x -> cEval ty' (x : d))
+  --iEval (NPm  ty ty') d  =  VNPm 
+  iEval (Free  x)    _d  =  vfree x
+  iEval (Bound  ii)   d  =  d !! (toInt ii) --(!!) :: [a] -> Int -> a, the list lookup operator.
+  iEval (App iterm cterm)   d  =  vapp (iEval iterm d) (cEval cterm d)
+
+  vapp :: Value -> Value -> Value
+  vapp (VLam f)      v =  f v
+  vapp (VNeutral n)  v =  VNeutral (NApp n v)
+  vapp x             y =  error ("Application (vapp) error. Cannot apply \n" ++ showVal y ++ "\n to \n" ++ showVal x)
+
+  cEval :: CTerm -> Env -> Value
+  cEval (Inf  ii)   d =  iEval ii d
+  cEval (Lam  e)    d =  VLam (\ x -> cEval e (x : d))
+
+  --substitution function for inferable terms
+  iSubst :: Natural -> ITerm -> ITerm -> ITerm
+  iSubst ii r (Bound j)         =  if ii == j then r else Bound j
+  iSubst _ii _r (Free y)        =  Free y
+  --iSubst ii r (App iterm cterm) =  
+  iSubst _ii _r (Star i)        =  Star i
+  --iSubst ii r (Pi n ty ty')     =  Pi  
+  
+  --substitution function for checkable terms
+  cSubst :: Natural -> ITerm -> CTerm -> CTerm
+  cSubst ii r (Inf e) =  Inf (iSubst ii r e)
+  cSubst ii r (Lam e) =  Lam (cSubst (ii + 1) r e)
