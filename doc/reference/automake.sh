@@ -2,5 +2,5 @@
 
 while true; do
 inotifywait --quiet -e modify -r ./src && \
-  make && echo "Updated!"
+  make language-reference && echo "Updated!"
 done

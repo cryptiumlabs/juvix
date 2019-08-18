@@ -9,13 +9,13 @@ Gas = cost per instruction on VM - e.g. EVM, Michelson.
 1. Advantages
     1. Works, simple
 1. Disadvantages
-    1. Adds ovearhead - have to increment coutner, check each instruction
+    1. Adds overhead - have to increment counter, check each instruction
     1. UX is pretty terrible - must estimate gas before sending tx, state could change
-    1. (~) Cross-contract calls are dumb and hard to optimize (more a problem with using a low-level VM)
+    1. (~) Cross-contract calls are dumb and hard to optimise (more a problem with using a low-level VM)
 
 ### Prior cost calculation
 
-Calculute gas cost prior to execution.
+Calculate gas cost prior to execution.
 
 1. Need: `cost :: (call, params) => Natural`
     1. Must be (far) cheaper to evaluate than just computing the function

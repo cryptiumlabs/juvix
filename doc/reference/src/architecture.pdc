@@ -11,7 +11,7 @@
   \node[state] (machine)  [below of = inet]             {Underlying Machine};
 
   \path (frontend)  edge node {\textit{DESUGAR}}          (core);
-  \path (core)      edge node {\textit{OPTIMIZE}}         (optcore);
+  \path (core)      edge node {\textit{OPTIMISE}}         (optcore);
   \path (optcore)   edge node {\textit{INFER}}            (deal);
   \path (deal)      edge node {\textit{ENCODE}}           (inet);
   \path (optcore)   edge node {\textit{BESPOKE ENCODING}} (inet);

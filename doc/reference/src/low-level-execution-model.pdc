@@ -5,10 +5,10 @@ rules, write-forward and read-back algorithms (for translating terms to and from
 where elementary-affine-typed terms are in the general case reduced using the oracle-free variant
 of Lamping's optimal reduction algorithm.
 
-Compared with previous interaction net interpreters for the lambda calculus utilizing a static set
+Compared with previous interaction net interpreters for the lambda calculus utilising a static set
 of node types and fixed rewrite rules, Juvix adds an additional degree of freedom:
 the node types and rewrite rules of the interaction system can be generated at compile time and even
-dynamically altered at runtime according to patterns of rewrite combinations and desired time-space complexity tradeoffs.
+dynamically altered at runtime according to patterns of rewrite combinations and desired time-space complexity trade-offs.
 Additional type data from the core language, such as exact variable usage counts provided by
 the instantiation of quantitative type theory with the natural ring, are available to the interaction
 system construction algorithm.
@@ -378,7 +378,7 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
 - Over set of underlying opcodes & von-Neumann-ish VM (e.g. x86, LLVM, EVM).
 - Use linear types (e.g. rewrite memory locations in place)
 - Must be semantically equivalent to interaction system encoding after read-back
-- Must preserve any-order reduction (exists some maximium `n` rewrite steps after which graph read-back must have final form regardless of order)
+- Must preserve any-order reduction (exists some maximum `n` rewrite steps after which graph read-back must have final form regardless of order)
 - Can relax diamond property (strong confluence)? unclear if necessary
 
 ## Evaluator cost model
@@ -393,9 +393,9 @@ Currently tracked:
 
 In the future we may want to track more granular memory operations (reads/writes in addition to allocations) and computations associated with rewrite rules (all negligible-cost with interaction combinators, but not with e.g. integer arithmetic).
 
-Machine backends are expected to provide a discrete cost model which can be utilized by the optimizer.
+Machine backends are expected to provide a discrete cost model which can be utilised by the optimiser.
 
-## Future optimization strategies
+## Future optimisation strategies
 
 Juvix does not yet implement these, but the compiler architecture has kept their possibility in mind.
 
@@ -408,17 +408,17 @@ Random access O(1) model is imperfect; sequential reads are faster. Ensure corre
 - "Strict" optimal reduction strategies
 - Evaluate based on predicting future input (feasible?)
 
-### Stochastic superoptimization
+### Stochastic superoptimisation
 
-- Utilize sparse sampling (probably Markov-chain Monte Carlo) to search the configuration space of semantically equivalent programs & select the fastest.
+- Utilise sparse sampling (probably Markov-chain Monte Carlo) to search the configuration space of semantically equivalent programs & select the fastest.
 - Probably useful at the level of choosing machine implementations of particular rewrite rules.
-- See Stochastic Superoptimization [@stochastic-superoptimization]
+- See Stochastic Superoptimisation [@stochastic-superoptimization]
 - Will need a lot of clever tricks to avoid getting stuck in local minima (that paper details several).
 - See also STOKE [@stoke]
 
 ### "Superoptimal" reduction strategies
 
 - Specifically those with the possibility of asymptotically-better performance than Levy's optimal reduction.
-- As far as I can tell, the only candidates here are forms of memoization which attempt to detect syntactically identical structures during the reduction process which can then be linked and evaluated only once.
+- As far as I can tell, the only candidates here are forms of memoisation which attempt to detect syntactically identical structures during the reduction process which can then be linked and evaluated only once.
 - [Hash consing](https://en.wikipedia.org/wiki/Hash_consing) may have the most prior research.
-- Concerns about space-time tradeoffs (may already be concerns).
+- Concerns about space-time trade-offs (may already be concerns).

@@ -6,7 +6,7 @@ This chapter defines the high-level dependently-typed frontend syntax in which d
 
 Syntax options:
 
-1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] favored
+1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] flavoured
 1. Lisp-like [@common-lisp]
 
 ## Features
