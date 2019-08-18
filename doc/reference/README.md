@@ -19,11 +19,17 @@ Additional requirements:
 To update, edit source files, e.g. [src/language-reference.pdc](src/language-reference.pdc), then rebuild the document:
 
 ```bash
-make
+make language-reference
 ```
 
 To automatically rebuild on file changes (`inotifywait` required):
 
 ```bash
 ./automake.sh
+```
+
+To spellcheck the source files (`aspell` required):
+
+```bash
+make spellcheck
 ```
