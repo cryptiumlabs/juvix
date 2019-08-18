@@ -2,13 +2,19 @@
 
 ## Overview
 
-Juvix synthesizes a high-level frontend syntax, dependent-linearly-typed core language, and low-level parallelizable optimally-reducing execution model into a single unified stack for writing formally verifiable, efficiently executable smart contracts which can be deployed to a variety of distributed ledgers.
+Juvix synthesizes a high-level frontend syntax, dependent-linearly-typed core language, and low-level parallelisable
+optimally-reducing execution model into a single unified stack for writing formally verifiable, efficiently executable
+smart contracts which can be deployed to a variety of distributed ledgers.
+
+Juvix's compiler architecture is purpose-built from the ground up for the particular requirements and economic trade-offs
+of the smart contract use case — it prioritises behavioural verifiability, semantic precision, and output code efficiency over compilation speed,
+syntactical familiarity, and backwards compatibility with existing blockchain virtual machines.
 
 For details, see [the language reference](./doc/reference/language-reference.pdf).
 
 ## Caveats
 
-This is pre-alpha software released for experimentation only.
+This is pre-alpha software released for experimentation & research purposes only.
 
 Do not expect API stability. Expect bugs. Expect divergence from canonical protocol implementations.
 
