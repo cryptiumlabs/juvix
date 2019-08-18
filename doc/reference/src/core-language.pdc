@@ -25,7 +25,9 @@ Primitive types, primitive constants, and primitive functions are threaded-throu
 
 ## Syntax
 
-Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin], let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations, where types can be synthesised for eliminations but must be specified in advance for terms.
+Inspired by the bidirectional syntax of Conor McBride in I Got Plenty o’ Nuttin’ [@plenty-o-nuttin].
+
+Let $R, S, T, s, t$ be types & terms and $d, e, f$ be eliminations, where types can be synthesised for eliminations but must be specified in advance for terms.
 
 The three columns, in order, are: syntax utilised in this paper, text description, and syntax utilised in the ASCII parser.
 

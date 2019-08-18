@@ -1,16 +1,17 @@
+- Alter to simple dependently-typed version
+- Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
+- Add & reason through arguments for correctness
+
 ## Syntax
 
 Define:
 
+1. Formulae $A, B ::= \ α\ |\ A ⊸ B\ |\ !A$.
+1. Terms $t, u ::= $x\ |\ λx.t\ |\ t\ u\ |\ !t\ |\ \bar{!}t$.
+
 ## Semantics
 
-- Define evaluation semantics, undefined behaviour.
-
-To-do
-
-- Alter to simple dependently-typed version
-- Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
-- Add & reason through arguments for correctness
+For well-typed terms, as the untyped lambda calculus (simply erase the bangs).
 
 ## Typing rules
 
