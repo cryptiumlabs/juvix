@@ -102,7 +102,7 @@ We can see that this definition of `pred_alg` is O(1), however if we were to typ
 
 Another property of this algebra is that this encoding is able to achieve only taking linear space unlike previous encodings that took quadratic if not exponential space to achieve proof of termination and O(1) predecessor [@cedile].
 
-Now that we have some understanding of the inductive nature of the Mendler encoding, we must also strip the ADT tags of `Z` and `S` into base lambda. We will first only consider sum types with at most one data then investigate how we can modify our representation to include product types.
+Now that we have some understanding of the inductive nature of the Mendler encoding, we must also strip the ADT tags of `Z` and `S` into base lambda. We will first only consider sum types which contains at most one field, and then investigate how we can modify our representation to include product types with more fields.
 
 ```
 
@@ -114,17 +114,38 @@ let inl = \x. \k. \l. k x
 let inr = \y. \k. \l. l y
 
 let zero-c = inl ()
-
-let succ-c c = inr (inl c)
-
-let dup-c c  = inr (inr c)
+let succ-c = \c. inr (inl c)
+let dup-c  = \c. inr (inr c)
 
 let zero = in zero-c : Nat
 let succ = in succ-c : Nat
 let dup  = in dup-c  : Nat
 ```
 
-(todo: encoding algorithm, compare F-Algebras and normal Algebras, add cedile source)
+There are many valid ways to encode sum types, however for simplicitly we have chosen to create a list of cases with our use of `inl` and `inr`. So, we can view inl as `head` and `inr` as tail, thus our encoding is simply the dotted list `(zero succ . dup)` [@dotted-pair-notation]. On the term level, `inl` just applies the first abstraction `k` over the value, and inr simply applies the second abstraction `l` over the inputted value.
+
+One obvious optimization one can make, is simply turning this dotted list encoding into a balanced tree.
+
+Another issue, is that this encoding can not support fields with multiple arguments, `l` or `k` are simply applied on the first argument given and no more. This however can be remedied with swapping the application order of `inl` and `inr`, allowing the first argument to feed `l` or `k` the proper arguments.
+
+```
+data Nat n = Z | S n | D n N
+
+let inl-op = \x. \k. \l. x k
+
+let inr-op = \y. \k. \l. y l
+
+let zero-c = inl ()
+let succ-c = \c. inr (inl c)
+let dup-c  = \a1. \ a2. inr (inr-op (\fun. fun a1 a2))
+
+let zero = in zero-c : Nat
+let succ = in succ-c : Nat
+let dup  = in dup-c  : Nat
+
+```
+
+As we can also see, this enhancement only affects the last inr/inl in which the representation takes multiple arguments.
 
 ### Scott
 
