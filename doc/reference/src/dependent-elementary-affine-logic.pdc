@@ -157,7 +157,27 @@ If $(t, Γ)$ satisfies the typing condition and $u$ is a subterm of $t$, then $(
 If $t$ is a pseudo-term and Γ an assignment such that $t$ is well-bracketed and well-scoped, and $(t, Γ)$ satisfies the typing condition, then $t$ is typable in EAL with a judgement $∆ ⊢ t : A$ such that $Γ(t) = A$ and $∆$ is the restriction of $Γ$ to the free variables of $t$.
 \end{theorem}
 
-(todo: proof)
+*Proof*
+
+Enumerate the bracketing, scope, and typing conditions as (i), (ii), and (iii) respectively. Proceed by induction on the pseudo-term $t$:
+
+1. $t = x$ is trivial
+1. $t = λx.u$
+    1. $u$ satisfies the first part of the bracketing condition since $t$ does
+    1. $u$ satisfies the second part of the bracketing condition since $t$ satisfies the scope condition for $x$
+    1. $u$ then trivially satisfies (ii), (iii), so by induction we have in EAL* $∆ , x : A ⊢ u : B$ where $Γ(x) = A, Γ(u) = B$
+    1. Apply the abstraction rule to get the judgement for $t$
+1. $t = t_1 t_2$
+    1. Subterm $t_1$ satisfies conditions (i), (ii), (iii), hence by induction $∆_1 ⊢ t_1 : A_1$, where $Γ(t_1) = A_1$ and $∆_1$ is the restriction of $Γ$ to the free variables of $t$
+    1. Subterm $t_2$ satisfies conditions (i), (ii), (iii), hence by induction $∆_2 ⊢ t_2 : A_2$, where $Γ(t_2) = A_2$ and $∆_2$ is the restriction of $Γ$ to the free variables of $t$
+    1. As $t$ satisfies the typing condition $(iv)$ $A_1$ is of the form $A_1 = A_2 ⊸ B_1$
+    1. If $t_1$ and $t_2$ share a free variable $y$, as $t$ satisfies the typing condition we have $Γ(y) = !B$
+    1. Rename in $t_1$ and $t_2$ the free variables that they have in common, accordingly
+    1. Apply an application rule followed by a contraction rule to get the judgement for $t$
+1. $t = \bar{!} u$
+    1. $t$ does not satisfy the bracketing condition (i) in the first prefix, so this case is invalid
+1. $t = !u$
+    1. (this is the tricky case, to-do)
 
 ### Decoration
 
