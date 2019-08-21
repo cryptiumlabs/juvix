@@ -47,3 +47,9 @@ To open a REPL with the library scoped:
 ```bash
 make repl-lib
 ```
+
+To open a REPL with the executable scoped:
+
+```bash
+make repl-exe
+```
