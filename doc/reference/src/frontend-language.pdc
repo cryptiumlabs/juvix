@@ -149,8 +149,33 @@ As we can also see, this enhancement only affects the last inr/inl in which the 
 
 ### Scott
 
-(todo: list asymptotic complexities, concrete complexities, encoding algorithm)
+Scott encoding, unlike the Mendler F-Algebra, does not contain a catamorphism within. Instead Scott encodings are laid out as a simple "switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ consturctors.
+
+$((λx₁…xₙ.\, λC₁…Cᵢ…Cₘ.\, Cᵢ \, x₁…xₙ))$
+
+
+Since the constructor simply chooses which lambda to apply to the next term, we get O(1) Pred. However since the form is not a catamorphism there is no proof of termination.
+
+A concrete form of the Natruals with duplication is listed below to get a concrete understanding of the encoding.
+
+```
+data Nat n = Z | S n | D n n
+
+let rec pred Z     = Z
+let rec pred S n   = n
+let rec pred D x y = D (pred x) (pred y)
+
+let zero =         \zero. \succ. \dup. zero
+let succ = \x.     \zero. \succ. \dup. succ x
+let dup  = \x. \y. \zero. \succ. \dup. dup x y
+
+let rec pred =
+  \nat. nat zero
+            (\n. n)
+            (\x. \y. D (pred x) (pred y))
+```
+
 
 ## Desugaring
 
-(todo)
+Since the core of our language allows for recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function is no small feat. As such, the Scott encoding is currently the default encoding at the Eal* level.
