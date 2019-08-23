@@ -1,34 +1,33 @@
 module Example where
 
-open import AlgebraExtras
 open import Function
 open import Data.Nat
-open import Data.Fin
+open import Data.Nat.Properties
+open import Data.Fin hiding (_≤_)
 open import Relation.Binary.PropositionalEquality
 
-open import Three
-open import DL (DecPOSR′.posr′ decPosr)
+open import Usage
+open import NatUsage
+open import QTT NoSub.any
 
 variable
   n : ℕ
   e : Elim n
+  x : Var n
 
-`f = Elim 2 ∋ ` zero
-`x = Elim 2 ∋ ` suc zero
+A : ∀ {n} → Tm n
+A = sort 0
 
-postulate
-  A : ∀ {n} → Tm n
-  A-ground : A {n} ≡ substₜ A e
+`f = Elim 2 ∋ ` suc zero
+`x = Elim 2 ∋ ` zero
 
--- the problem judgment from the bottom of p14 of the QTT paper (almost)
--- the example wouldn't mean much as-is because f is free so its usage wouldn't
--- be checked, so it's put in a λ here
--- ⊢ 1 (1 f: (1 x: A) → A) (ω x: A) → A ∋ λf x. f x
-_ : ε ⊢ 1# - Π 1# (Π 1# A A) (Π ω# A A) ∋ Λ (Λ [ `f ∙ [ `x ] ]) ▷ ε
-_ =
-  lam refl
-      (lam (1# ⊑ω#) -- ← hey look, subusaging‼
-           (elim refl
-                 (app 1# A refl refl A-ground
-                      (var refl (ε ⨟0# ⨟ 1#))
-                      (elim refl (var refl (ε ⨟ 1# ⨟0#))))))
+-- 2 f: (2 x: A) (3 y: A) → A, 10 x: A ⊢ 2 f x x: A
+-- though note that the usages in the context are *outputs*
+-- i.e. they're not checked against anything
+example : ε ⨟ Π 2 A (Π 3 A A) ⨟ A ⊢ 2 - `f ∙ [ `x ] ∙ [ `x ] ∈ A ▷ ε ⨟ 2 ⨟ 10
+example =
+  app refl refl
+    (app refl refl
+      (var refl (ε ⨟ refl ⨟0))
+      (elim refl (var refl (ε ⨟0 ⨟ refl))))
+    (elim refl (var refl (ε ⨟0 ⨟ refl)))
