@@ -158,7 +158,8 @@ data _⊢_-_∋_▷_ where
          Γ ⊢ σ - T ∋ [ e ] ▷ Σ
 
 data _⊢_-_∈_▷_ where
-  post : Γ ⊢ σ - e ∈ S ▷ Σ → S ⟿ᵗ R →
+  post : S ⟿ᵗ R →
+         Γ ⊢ σ - e ∈ S ▷ Σ →
          Γ ⊢ σ - e ∈ R ▷ Σ
   var : lookup Γ x ≡ S → Only σ x Σ →
         Γ ⊢ σ - ` x ∈ S ▷ Σ
