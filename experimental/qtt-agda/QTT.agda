@@ -100,37 +100,21 @@ data _⟿ᵉ_ where
   ⦂ʳ : S ⟿ᵗ S′ → s ⦂ S ⟿ᵉ s ⦂ S′
 
 
-data Ctx′ {a} (F : ℕ → Set a) : ℕ → Set a where
-  ε   : Ctx′ F 0
-  _⨟_ : Ctx′ F n → F n → Ctx′ F (suc n)
+data Ctx : ℕ → Set ℓᵗ where
+  ε : Ctx 0
+  _⨟_ : (Γ : Ctx n) (S : Typ n) → Ctx (suc n)
 infixl 5 _⨟_
+private variable Γ : Ctx n
 
-module _ where
-  private variable F G H : ℕ → Set _
+lookup : Ctx n → Fin n → Typ n
+lookup (Γ ⨟ S) zero    = weakᵗ S
+lookup (Γ ⨟ S) (suc x) = weakᵗ $ lookup Γ x
 
-  czipWith : (∀ {n} → F n → G n → H n) → Ctx′ F n → Ctx′ G n → Ctx′ H n
-  czipWith f ε ε = ε
-  czipWith f (xs ⨟ x) (ys ⨟ y) = czipWith f xs ys ⨟ f x y
 
-  clookup′ : (∀ {n} → F n → F (suc n)) → Ctx′ F n → Var n → F n
-  clookup′ f (xs ⨟ x) zero = f x
-  clookup′ f (xs ⨟ x) (suc i) = f $ clookup′ f xs i
-
-  cmap : (∀ {n} → F n → G n) → Ctx′ F n → Ctx′ G n
-  cmap f ε = ε
-  cmap f (xs ⨟ x) = cmap f xs ⨟ f x
-
-Ctx = Ctx′ Typ
-private variable Γ Γ₁ Γ₂ : Ctx n
-
-clookup : Ctx n → Var n → Typ n
-clookup = clookup′ weakᵗ
-
-Skel = Ctx′ λ _ → Usageᵗ
+data Skel : ℕ → Set ℓᵗ where
+  ε : Skel 0
+  _⨟_ : (Σ : Skel n) (ρ : Usageᵗ) → Skel (suc n)
 private variable Σ Σ₁ Σ₂ : Skel n
-
-slookup : Skel n → Var n → Usageᵗ
-slookup = clookup′ id
 
 data Zero : Skel n → Set where
   ε   : Zero ε
@@ -142,11 +126,13 @@ data Only : Usageʲ → Fin n → Skel n → Set ℓᵗ where
   _⨟0 : Only σ x Σ → Only σ (suc x) (Σ ⨟ 0#ᵗ)
 
 _⊕_ : Skel n → Skel n → Skel n
-_⊕_ = czipWith _+_
+ε ⊕ ε = ε
+(Σ₁ ⨟ ρ) ⊕ (Σ₂ ⨟ π) = Σ₁ ⊕ Σ₂ ⨟ ρ + π
 infixl 6 _⊕_
 
 _⨵_ : Usageᵗ → Skel n → Skel n
-π ⨵ Σ = cmap (π *_) Σ
+π ⨵ ε = ε
+π ⨵ (Σ ⨟ ρ) = π ⨵ Σ ⨟ π * ρ
 infixl 7 _⨵_ 
 
 
@@ -174,7 +160,7 @@ data _⊢_-_∋_▷_ where
 data _⊢_-_∈_▷_ where
   post : Γ ⊢ σ - e ∈ S ▷ Σ → S ⟿ᵗ R →
          Γ ⊢ σ - e ∈ R ▷ Σ
-  var : clookup Γ x ≡ S → Only σ x Σ →
+  var : lookup Γ x ≡ S → Only σ x Σ →
         Γ ⊢ σ - ` x ∈ S ▷ Σ
     -- var just uses whatever σ it's told. lam will check that it's ok later.
   app : Σ ≡ Σ₁ ⊕ π ⨵ Σ₂ →
