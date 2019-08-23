@@ -27,7 +27,7 @@ Most features simply desugar to Core.
 
 ### Mendler
 
-Mendler style F-agebras have the unqiue advantage of being strongly normalizing for positive and negative inductive datatypes while not sacrificng constant time destructors or a linear representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the abscense of external deconstructors (todo :: find source)
+Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of external deconstructors (todo :: find source)
 
 Let us first explore the core of the encoding by first assuming we have access to a non inductive algebraic data type, then strip these assumptions until just base lambda calculus is left.
 
