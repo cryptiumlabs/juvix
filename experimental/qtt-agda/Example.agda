@@ -13,21 +13,22 @@ open import QTT NoSub.any
 variable
   n : ℕ
   e : Elim n
-  x : Var n
 
 A : ∀ {n} → Tm n
 A = sort 0
 
-`f = Elim 2 ∋ ` suc zero
-`x = Elim 2 ∋ ` zero
+f = Fin 2 ∋ # 1
+x = Fin 2 ∋ # 0
 
 -- 2 f: (2 x: A) (3 y: A) → A, 10 x: A ⊢ 2 f x x: A
 -- though note that the usages in the context are *outputs*
 -- i.e. they're not checked against anything
-example : ε ⨟ Π 2 A (Π 3 A A) ⨟ A ⊢ 2 - `f ∙ [ `x ] ∙ [ `x ] ∈ A ▷ ε ⨟ 2 ⨟ 10
+example : ε ⨟ Π 2 A (Π 3 A A) ⨟ A ⊢ 2 - ` f ∙ [ ` x ] ∙ [ ` x ] ∈ A ▷ ε ⨟ 2 ⨟ 10
 example =
   app refl refl
     (app refl refl
-      (var refl (ε ⨟ refl ⨟0))
-      (elim refl (var refl (ε ⨟0 ⨟ refl))))
-    (elim refl (var refl (ε ⨟0 ⨟ refl)))
+      (var refl (ε ⨟[ refl ] ⨟ refl))
+      (elim refl
+        (var refl (ε ⨟ refl ⨟[ refl ]))))
+    (elim refl
+      (var refl (ε ⨟ refl ⨟[ refl ])))

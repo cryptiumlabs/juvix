@@ -15,7 +15,8 @@ open import Relation.Nullary
 private variable m n : ℕ
 
 open Usages usages hiding (zero)
-private variable π π′ ρ ρ′ : Usageᵗ ; σ σ′ : Usageʲ
+private variable π π′ ρ ρ′ ζ : Usageᵗ ; σ σ′ : Usageʲ
+-- ζ for usages which should be zero (up to _≈ᵗ_)
 
 Var = Fin
 private variable x y : Var n
@@ -116,14 +117,14 @@ data Skel : ℕ → Set ℓᵗ where
   _⨟_ : (Σ : Skel n) (ρ : Usageᵗ) → Skel (suc n)
 private variable Σ Σ₁ Σ₂ : Skel n
 
-data Zero : Skel n → Set where
+data Zero : Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
   ε   : Zero ε
-  _⨟0 : Zero Σ → Zero (Σ ⨟ 0#ᵗ)
-infixl 5 _⨟0
+  _⨟_ : Zero Σ → ζ ≈ᵗ 0#ᵗ → Zero (Σ ⨟ ζ)
 
-data Only : Usageʲ → Fin n → Skel n → Set ℓᵗ where
-  _⨟_ : Zero Σ → ρ ≡ ⟦ σ ⟧ → Only σ zero (Σ ⨟ ρ)
-  _⨟0 : Only σ x Σ → Only σ (suc x) (Σ ⨟ 0#ᵗ)
+data Only : Usageʲ → Fin n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
+  _⨟[_] : Zero Σ     → ρ ≈ᵗ ⟦ σ ⟧ → Only σ zero (Σ ⨟ ρ)
+  _⨟_   : Only σ x Σ → ζ ≈ᵗ 0#ᵗ   → Only σ (suc x) (Σ ⨟ ζ)
+infixl 5 _⨟[_]
 
 _⊕_ : Skel n → Skel n → Skel n
 ε ⊕ ε = ε
@@ -136,8 +137,8 @@ _⨵_ : Usageᵗ → Skel n → Skel n
 infixl 7 _⨵_ 
 
 
-data _⊢_-_∋_▷_ : Ctx n → Usageʲ → Typ n → Tm n → Skel n → Set (ℓᵗ ⊔ ℓᵗ″)
-data _⊢_-_∈_▷_ : Ctx n → Usageʲ → Elim n → Typ n → Skel n → Set (ℓᵗ ⊔ ℓᵗ″)
+data _⊢_-_∋_▷_ : Ctx n → Usageʲ → Typ n → Tm n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″)
+data _⊢_-_∈_▷_ : Ctx n → Usageʲ → Elim n → Typ n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″)
 infix 0 _⊢_-_∋_▷_ _⊢_-_∈_▷_
 
 data _⊢_-_∋_▷_ where
@@ -146,9 +147,9 @@ data _⊢_-_∋_▷_ where
         Γ ⊢ σ - T ∋ t ▷ Σ
   sort : u ℕ.< v → Zero Σ →
          Γ ⊢ 0# - sort v ∋ sort u ▷ Σ
-  fun : Zero Σ →
+  fun : Zero (Σ ⨟ ζ) →
         Γ ⊢ 0# - sort u ∋ S ▷ Σ →
-        Γ ⨟ S ⊢ 0# - sort u ∋ T ▷ Σ ⨟ 0#ᵗ →
+        Γ ⨟ S ⊢ 0# - sort u ∋ T ▷ Σ ⨟ ζ →
         Γ ⊢ 0# - sort u ∋ Π π S T ▷ Σ
   lam : ρ′ ≾ᵗ ρ * π →
         Γ ⨟ S ⊢ σ - T ∋ t ▷ Σ ⨟ ρ′ →
