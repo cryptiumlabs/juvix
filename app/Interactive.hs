@@ -11,7 +11,7 @@ import           Options
 
 interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
-  func ← undefined
+  func ← return (const (return ()))
   H.runInputT (settings ctx) (mainLoop func)
 
 settings ∷ Context → H.Settings IO

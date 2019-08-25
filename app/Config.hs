@@ -16,7 +16,11 @@ defaultConfig = Config {
 }
 
 loadConfig :: FilePath -> IO (Maybe Config)
-loadConfig = Y.decodeFile
+loadConfig path = do
+  config <- Y.decodeFileEither path
+  return $ case config of
+    Right parsed -> pure parsed
+    Left _       -> Nothing
 
 instance Y.FromJSON Config where
   parseJSON = customParseJSON
