@@ -27,7 +27,7 @@ Most features simply desugar to Core.
 
 ### Mendler
 
-Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of external deconstructors (todo :: find source)
+Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the intenral catamorphsim, which shall be refered to as external deconstructors (todo :: find source).
 
 Let us first explore the core of the encoding by first assuming we have access to a non inductive algebraic data type, then strip these assumptions until just base lambda calculus is left.
 
@@ -87,8 +87,6 @@ two isEven
 
 In the above example, we can see that `two` inhibits the type FixM ℕ, meaning that the F-Algebra we are working over is `ℕ r` for some `r`. So the algebra must take a function `r → x` and the `f r` itself. this corresponds to the `rec` and `n` in `isEven` respectively. We can see that `rec` only works with the `r` parameter which in the case of `two` is the Mendler encoded `succ zero`. By step `5` of the expansion the definition of `in` finally becomes clear in that $(λd. d f)$ shows itself to satisfy the inner recursive form.
 
-This example also illustrates that the recursive call to `rec` is optional and not necessarily forced unlike other catamorphisms, like church/boehm berducci encodings.
-
 However there is one small problem. In untyped lambda calculus we could define pred as follows:
 
 ```
@@ -98,7 +96,10 @@ let pred_alg = \rec. \n.
   | S n → n
 ```
 
-We can see that this definition of `pred_alg` is O(1), however if we were to type this using the normal Hindley-Milner type system, this does not work out. Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard constraint that type systems without dependent intersection types and O(1) heterogenous equality must have [@cedille]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
+We can see that this definition of `pred_alg` is O(1), as the call to `rec` is optional and not forced unlike other encodings. However if we were to type this using the normal Hindley-Milner type system, this does not work out. [The Cedile Cast](https://youtu.be/HqvBBf_cjDo?t=1020) talks about this fact and deals with this issue by having a O(1) cast arising from dependent intersections.
+
+Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard constraint that type systems without dependent intersection types and O(1) heterogenous equality must have [@cedille]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
+
 
 Another property of this algebra is that this encoding is able to achieve linear space unlike previous encodings that took quadratic if not exponential space to achieve proof of termination and O(1) predecessor [@cedille].
 
@@ -149,12 +150,12 @@ As we can also see, this enhancement only affects the last inr/inl in which the 
 
 ### Scott
 
-Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ consturctors.
+Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ consturctors. Due to this simple "case switch" layout, the encoding takes linear space.
 
 $((λx₁…xₙ.\, λC₁…Cᵢ…Cₘ.\, Cᵢ \, x₁…xₙ))$
 
 
-Since the constructor simply chooses which lambda to apply to the next term, we get O(1) predecessor (or case analysis generally). However since the form is not a catamorphism there is no proof of termination.
+Since the constructor simply chooses which lambda to apply to the next term, we get O(1) predecessor (or case analysis generally). However since the form is not a catamorphism there is no proof of termination in an unrestricted setting.
 
 A concrete form of the naturals with duplication is listed below to get a concrete understanding of the encoding.
 
@@ -174,8 +175,25 @@ let rec pred =
             (\n. n)
             (\x. \y. D (pred x) (pred y))
 ```
-
+Another important aspect to Scott encodings is that they can not be typed in `System-F` alone, but instead `System-F` extended wtih covariant recursive types[@Scott]. Due to this, Scott encodings can be typed safely in Juvix Core.
 
 ## Desugaring
 
-Since the core of our language allows for recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function is no small feat. As such, the Scott encoding is currently the default encoding at the Eal* level.
+Since the core of our language allows for recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function is no small feat. In particular, the encodings demands that the first argument be the recursive function taking the encoding and the second the ADT itself.
+
+```
+let rec arbitrary c d1 d2 =
+  case d1 of
+  | Z → c
+  | S n →
+    arbitrary
+      (case d2 of
+       | Z   → c
+       | S n → S (arbitrary c n Z))
+      n
+      d2
+```
+
+Here, we have two values we case on, `d1` and `d2`. The encoding must then transform these two arguments into four, to use the internal catamorphism. The function call must also be changed, as instead of `d1` and `d2` being passed to arbitrary, `d1` and `d2` must be applied on arbitrary, further complicating matters.
+
+As such, the Scott encoding is currently the default encoding at the Eal* level.
