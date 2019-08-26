@@ -114,26 +114,26 @@ lookup (Γ ⨟ S) (suc x) = weakᵗ $ lookup Γ x
 
 data Skel : ℕ → Set ℓᵗ where
   ε : Skel 0
-  _⨟_ : (Σ : Skel n) (ρ : Usageᵗ) → Skel (suc n)
-private variable Σ Σ₁ Σ₂ : Skel n
+  _⨟_ : (Φ : Skel n) (ρ : Usageᵗ) → Skel (suc n)
+private variable Φ Φ₁ Φ₂ : Skel n
 
 data Zero : Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
   ε   : Zero ε
-  _⨟_ : Zero Σ → ζ ≈ᵗ 0#ᵗ → Zero (Σ ⨟ ζ)
+  _⨟_ : Zero Φ → ζ ≈ᵗ 0#ᵗ → Zero (Φ ⨟ ζ)
 
 data Only : Usageʲ → Fin n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
-  _⨟[_] : Zero Σ     → ρ ≈ᵗ ⟦ σ ⟧ → Only σ zero (Σ ⨟ ρ)
-  _⨟_   : Only σ x Σ → ζ ≈ᵗ 0#ᵗ   → Only σ (suc x) (Σ ⨟ ζ)
+  _⨟[_] : Zero Φ     → ρ ≈ᵗ ⟦ σ ⟧ → Only σ zero (Φ ⨟ ρ)
+  _⨟_   : Only σ x Φ → ζ ≈ᵗ 0#ᵗ   → Only σ (suc x) (Φ ⨟ ζ)
 infixl 5 _⨟[_]
 
 _⊕_ : Skel n → Skel n → Skel n
 ε ⊕ ε = ε
-(Σ₁ ⨟ ρ) ⊕ (Σ₂ ⨟ π) = Σ₁ ⊕ Σ₂ ⨟ ρ + π
+(Φ₁ ⨟ ρ) ⊕ (Φ₂ ⨟ π) = Φ₁ ⊕ Φ₂ ⨟ ρ + π
 infixl 6 _⊕_
 
 _⨵_ : Usageᵗ → Skel n → Skel n
 π ⨵ ε = ε
-π ⨵ (Σ ⨟ ρ) = π ⨵ Σ ⨟ π * ρ
+π ⨵ (Φ ⨟ ρ) = π ⨵ Φ ⨟ π * ρ
 infixl 7 _⨵_ 
 
 
@@ -143,34 +143,34 @@ infix 0 _⊢_-_∋_▷_ _⊢_-_∈_▷_
 
 data _⊢_-_∋_▷_ where
   pre : T ⟿ᵗ R →
-        Γ ⊢ σ - R ∋ t ▷ Σ →
-        Γ ⊢ σ - T ∋ t ▷ Σ
-  sort : u ℕ.< v → Zero Σ →
-         Γ ⊢ 0# - sort v ∋ sort u ▷ Σ
-  fun : Zero (Σ ⨟ ζ) →
-        Γ ⊢ 0# - sort u ∋ S ▷ Σ →
-        Γ ⨟ S ⊢ 0# - sort u ∋ T ▷ Σ ⨟ ζ →
-        Γ ⊢ 0# - sort u ∋ Π π S T ▷ Σ
+        Γ ⊢ σ - R ∋ t ▷ Φ →
+        Γ ⊢ σ - T ∋ t ▷ Φ
+  sort : u ℕ.< v → Zero Φ →
+         Γ ⊢ 0# - sort v ∋ sort u ▷ Φ
+  fun : Zero (Φ ⨟ ζ) →
+        Γ ⊢ 0# - sort u ∋ S ▷ Φ →
+        Γ ⨟ S ⊢ 0# - sort u ∋ T ▷ Φ ⨟ ζ →
+        Γ ⊢ 0# - sort u ∋ Π π S T ▷ Φ
   lam : ρ′ ≾ᵗ ρ * π →
-        Γ ⨟ S ⊢ σ - T ∋ t ▷ Σ ⨟ ρ′ →
-        Γ ⊢ σ - Π π S T ∋ Λ t ▷ Σ
+        Γ ⨟ S ⊢ σ - T ∋ t ▷ Φ ⨟ ρ′ →
+        Γ ⊢ σ - Π π S T ∋ Λ t ▷ Φ
   elim : S ≼ T →
-         Γ ⊢ σ - e ∈ S ▷ Σ →
-         Γ ⊢ σ - T ∋ [ e ] ▷ Σ
+         Γ ⊢ σ - e ∈ S ▷ Φ →
+         Γ ⊢ σ - T ∋ [ e ] ▷ Φ
 
 data _⊢_-_∈_▷_ where
   post : S ⟿ᵗ R →
-         Γ ⊢ σ - e ∈ S ▷ Σ →
-         Γ ⊢ σ - e ∈ R ▷ Σ
-  var : lookup Γ x ≡ S → Only σ x Σ →
-        Γ ⊢ σ - ` x ∈ S ▷ Σ
+         Γ ⊢ σ - e ∈ S ▷ Φ →
+         Γ ⊢ σ - e ∈ R ▷ Φ
+  var : lookup Γ x ≡ S → Only σ x Φ →
+        Γ ⊢ σ - ` x ∈ S ▷ Φ
     -- var just uses whatever σ it's told. lam will check that it's ok later.
-  app : Σ ≡ Σ₁ ⊕ π ⨵ Σ₂ →
+  app : Φ ≡ Φ₁ ⊕ π ⨵ Φ₂ →
         T′ ≡ substᵗ T (s ⦂ S) → 
-        Γ ⊢ σ - f ∈ Π π S T ▷ Σ₁ →
-        Γ ⊢ σ - S ∋ s ▷ Σ₂ →
-        Γ ⊢ σ - f ∙ s ∈ T′ ▷ Σ
-  cut : Zero Σ₁ →
-        Γ ⊢ 0# - sort u ∋ S ▷ Σ₁ →
-        Γ ⊢ σ - S ∋ s ▷ Σ₂ →
-        Γ ⊢ σ - s ⦂ S ∈ S ▷ Σ₂
+        Γ ⊢ σ - f ∈ Π π S T ▷ Φ₁ →
+        Γ ⊢ σ - S ∋ s ▷ Φ₂ →
+        Γ ⊢ σ - f ∙ s ∈ T′ ▷ Φ
+  cut : Zero Φ₁ →
+        Γ ⊢ 0# - sort u ∋ S ▷ Φ₁ →
+        Γ ⊢ σ - S ∋ s ▷ Φ₂ →
+        Γ ⊢ σ - s ⦂ S ∈ S ▷ Φ₂
