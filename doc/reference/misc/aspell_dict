@@ -1,4 +1,5 @@
-personal_ws-1.1 en 223 
+personal_ws-1.1 en 241 
+succ
 textwidth
 AST
 EAL
@@ -31,9 +32,11 @@ toc
 mainfont
 cybercoin
 Juvix
+AlgebraM
 frontend
 boolean
 params
+encodings
 locatable
 Emp
 spaghettinet
@@ -41,6 +44,7 @@ inlining
 FFFFFF
 overdetermined
 compositional
+dup
 backend
 tikzpicture
 WASM
@@ -57,12 +61,14 @@ typeable
 blockchain
 typecheck
 bussproofs
+forall
 EVM
 von
 typ
 textbackslash
 vwire
 usetikzlibrary
+Hindley
 Prerelease
 affine
 quadratically
@@ -76,6 +82,7 @@ optcore
 codebase
 interoperation
 fontsize
+FixM
 inetbigcell
 semiring
 TinyRAM
@@ -92,11 +99,13 @@ prooftree
 backends
 Ethereum's
 Ethereum
+inl
 LLVM
 rotatebox
 spatiotemporal
 datatypes
 ListX
+inr
 UnaryInfC
 Lamping's
 Brujin
@@ -111,6 +120,7 @@ eWASM
 optimality
 Conor
 Stumpf
+destructors
 precontext
 typechecker
 bytestrings
@@ -124,6 +134,7 @@ disjunction
 xxs
 ax
 AxiomC
+catamorphism
 const
 interchain
 contr
@@ -139,6 +150,7 @@ newtheorem
 RightLabel
 LLL
 desugar
+nat
 FV
 lang
 amsmath
@@ -150,9 +162,11 @@ Blockchains
 pluggable
 Neumann
 vdash
+Milner
 unintuitive
 tikz
 refl
+deconstructor
 tikzstyle
 inode
 OpenCL
@@ -178,6 +192,7 @@ vectorisation
 automata
 UX
 textit
+ADT
 inetcell
 TrinaryInfC
 xs
@@ -192,10 +207,13 @@ CUDA
 composable
 stateful
 pred
+alg
 Typeclasses
+isEven
 RGB
 combinators
 concat
+deconstructors
 floatstyle
 Cedille
 ruleset

@@ -1,43 +1,26 @@
+module Eal where
+
+import           Juvix.EAL
 import           Juvix.Library
-import           Juvix.Eal.Eal
-import           Juvix.Eal.Parser
 
 import           Text.Parsec
 
-parseTest1 :: Either ParseError Term
+parseTest1 ∷ Either ParseError RPTO
 parseTest1 = parseEal "!! (λ x : a -o b. !-!- x)"
 
-parseTest2 :: Either ParseError Term
+parseTest2 ∷ Either ParseError RPTO
 parseTest2 = parseEal "!!((λ x : Forall. x) (λx : a -o b. (x y)))"
 
-parseTest3 :: Either ParseError Term
+parseTest3 ∷ Either ParseError RPTO
 parseTest3 = parseEal "!!(λ x : Forall. !-!-x λx : a -o b -o c. !-!-(x y))"
 
-testConstraint :: Either ParseError (Term, ConstraintTermEnv)
-testConstraint = execBracketState . boxConstraint <$> parseEal "λy : Forall. λ z : Forall. (y (y z))"
-
-exampleBracket :: Eal
+exampleBracket ∷ RPTO
 exampleBracket =
-  Lambda (someSymbolVal "y") Forall
-    (Bang 0 (Lambda (someSymbolVal "z") Forall
-               (Bang 1 (App (Bang 0 (App (Bang (-1) (Term (someSymbolVal "y")))
-                                         (Bang (-1) (Term (someSymbolVal "y")))))
-                            (Bang (-1) (Term (someSymbolVal "z")))))))
+  RBang 0 (RLam (someSymbolVal "y")
+    (RBang 0 (RLam (someSymbolVal "z")
+               (RBang 1 (RApp (RBang 0 (RApp (RBang (-1) (RVar (someSymbolVal "y")))
+                                         (RBang (-1) (RVar (someSymbolVal "y")))))
+                            (RBang (-1) (RVar (someSymbolVal "z"))))))))
 
-exampleTypeOf :: Eal
-exampleTypeOf =
-  App
-    (Bang 1
-      (Lambda (someSymbolVal "y") (BangT 1 Forall)
-        (Bang (-1) (Term (someSymbolVal "y")))))
-    (Bang 1
-      (Lambda (someSymbolVal "y") Forall
-        (Bang (-1) (Term (someSymbolVal "y")))))
-
-
-
-exampleBracketRun :: Either BracketErrors ()
-exampleBracketRun = runBracketChecker exampleBracket
-
-exampleRun :: (Either TypeErrors Types, Info)
-exampleRun = runTypeOf exampleTypeOf
+exampleBracketRun ∷ Either BracketErrors ()
+exampleBracketRun = bracketChecker exampleBracket

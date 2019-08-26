@@ -1,11 +1,13 @@
+module Nets.Combinators where
+
 import           Data.Graph.Inductive
 
-import           Juvix.Nets.Combinators
+import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
 import           Juvix.Backends.Interface
-import           Juvix.Backends.Env
 import           Juvix.Library
-import           Juvix.Utility.Helper
+import           Juvix.Nets.Combinators
+import           Juvix.Utility
 
 -- Example Graphs --------------------------------------------------------------
 commute1 ∷ Net Lang
@@ -58,5 +60,5 @@ nonTerminating = Flip $ buildGr
 -- Tests------------------------------------------------------------------------
 
 -- TODO: Write real tests
-test1 :: InfoNet (FlipNet Lang)
+test1 ∷ InfoNet (FlipNet Lang)
 test1 = runFlipNet (reduceAll 100) nonTerminating

@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor      #-}
 {-# LANGUAGE ImpredicativeTypes #-}
+
 import           Juvix.Library hiding (Nat, foldM)
 
 -- Attempt 4 is a success!!!
@@ -23,15 +24,16 @@ in' r f = f (foldM f) r
 out' ∷ forall f x . Functor f ⇒ (FixM f) → f (AlgebraM f x → x)
 out' fr = fr (\rec fr' -> fmap (\r -> in' (rec r)) fr')
 
-zero' ∷ AlgebraM N x → x
+zero' ∷ Nat
 zero' = in' Z
 
+succ' ∷ Nat → Nat
 succ' n = in' (S n)
 
-two' ∷ FixM N
+two' ∷ Nat
 two' = succ' (succ' zero')
 
-three ∷ FixM N
+three ∷ Nat
 three = succ' two'
 
 --predAlg :: (t -> N (FixM N)) -> N t -> AlgebraM N x -> x
@@ -41,6 +43,21 @@ predAlg n =
   case out' n of
     Z   → zero'
     S n → n
+
+out'' ∷ forall f . Functor f ⇒ (FixM f) → f (FixM f)
+out'' = undefined
+
+switchCase ∷ Nat → Nat → Nat → Nat
+switchCase c d1 d2 =
+  case out'' d1 of
+    Z -> c
+    S n ->
+      switchCase
+      (case out'' d2 of
+        Z   -> c
+        S n -> succ' (switchCase c n zero'))
+      n
+      d2
 
 isEvenAlgN ∷ AlgebraM N Bool
 isEvenAlgN rec' n =
@@ -76,6 +93,7 @@ recallNum = foldM recallNumAlg
 
 zero4 ∷ NatBB a
 zero4 = (\ z _s → z ())
+
 
 zero3 ∷ NatBoehm a
 zero3 = Boehm (\ z _s → z ())

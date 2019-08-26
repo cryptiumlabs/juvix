@@ -1,14 +1,14 @@
 module Juvix.Core.Parser where
 
-import           Juvix.Core.MainLang     
 import           Data.Functor.Identity
+import           Juvix.Core.MainLang
 import           Prelude
 import           Text.Parsec
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as Token
 
-languageDef :: GenLanguageDef String u Data.Functor.Identity.Identity
+languageDef ∷ GenLanguageDef String u Data.Functor.Identity.Identity
 languageDef =
   emptyDef
     { Token.commentStart = "/*"
@@ -33,79 +33,79 @@ languageDef =
     , Token.reservedOpNames = ["Conv", "\\", ":"]
     }
 
-lexer :: Token.GenTokenParser String u Data.Functor.Identity.Identity
+lexer ∷ Token.GenTokenParser String u Data.Functor.Identity.Identity
 lexer = Token.makeTokenParser languageDef
      -- These are parsers for what their names signify
 
-identifier :: Parser String
+identifier ∷ Parser String
 identifier = Token.identifier lexer
 
-reserved :: String -> Parser ()
+reserved ∷ String → Parser ()
 reserved = Token.reserved lexer
 
-reservedOp :: String -> Parser ()
+reservedOp ∷ String → Parser ()
 reservedOp = Token.reservedOp lexer
 
-parens :: Parser a -> Parser a
+parens ∷ Parser a → Parser a
 parens = Token.parens lexer -- parses surrounding parenthesis, and what is inside them
 
-natural :: Parser Integer
+natural ∷ Parser Integer
 natural = Token.natural lexer
 
-whiteSpace :: Parser ()
+whiteSpace ∷ Parser ()
 whiteSpace = Token.whiteSpace lexer
-     
+
 natw ∷ Parser NatAndw
 natw =   do reserved "w"
             return Omega
      <|> do n <- natural
-            return $ Natural (fromInteger n) 
-            
-sortTerm :: Parser CTerm
+            return $ Natural (fromInteger n)
+
+sortTerm ∷ Parser CTerm
 sortTerm =
   do reserved "*"
      n <- natural
      return $ Star (fromInteger n)
 
 piTerm ∷ Parser CTerm
-piTerm = 
+piTerm =
   do reserved "[Π]"
      pi <- natw
      input <- cterm
      func <- cterm
      return $ Pi pi input func
-        
+
 pmTerm ∷ Parser CTerm
-pmTerm = 
+pmTerm =
   do reserved "[π]"
      pm <- natw
      input <- cterm
      func <- cterm
      return $ Pm pm input func
-     
+
 paTerm ∷ Parser CTerm
-paTerm = 
+paTerm =
   do reserved "/\\"
      pa <- natw
      input <- cterm
      func <- cterm
      return $ Pa pa input func
-     
-npmTerm :: Parser CTerm
+
+npmTerm ∷ Parser CTerm
 npmTerm =
   do reserved "\\/"
      fst <- cterm
      snd <- cterm
      return $ NPm fst snd
 
-lamTerm :: Parser CTerm
-lamTerm = 
+lamTerm ∷ Parser CTerm
+lamTerm =
   do reservedOp "\\"
      pi <- natw
      func <- cterm
      return $ Lam pi func
 
-convTerm :: Parser CTerm
+convTerm ∷ Parser CTerm
 convTerm =
   do reservedOp "Conv"
      termToConvert <- iterm
@@ -158,7 +158,7 @@ annTerm =
      eof
      return $ Ann pi term ann
 
-parseWhole ∷ Parser a -> Parser a
+parseWhole ∷ Parser a → Parser a
 parseWhole p =
   do whiteSpace
      t <- p
@@ -183,8 +183,8 @@ iterm =  parens iterm
      <|> appTerm
      <|> annTerm
 
-parseString ∷ Parser a → String → a
+parseString ∷ Parser a → String → Maybe a
 parseString p str =
      case parse p "" str of
-     Left e -> error $ show e
-     Right r -> r
+     Left e  -> Nothing
+     Right r -> Just r

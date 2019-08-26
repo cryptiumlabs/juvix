@@ -1,10 +1,12 @@
-module Juvix.Eal.Eal2 where
+module Juvix.EAL.EAL where
 
-import           Control.Arrow    (left)
-import qualified Data.Map.Strict  as Map
-import           Juvix.Eal.Types2
-import           Juvix.Library    hiding (Type, link, reduce)
-import           Prelude          (error)
+import           Control.Arrow   (left)
+import qualified Data.Map.Strict as Map
+import qualified Juvix.Bohm.Type as BT
+import           Juvix.EAL.Types
+import           Juvix.Library   hiding (Type, link, reduce)
+import           Prelude         (error)
+
 {- Main functionality. -}
 
 -- Construct occurrence map.
@@ -280,3 +282,8 @@ addConstraint con = tell @"constraints" [con]
 execWithAssignment ∷ TypeAssignment → EnvConstraint a → (a, Env)
 execWithAssignment assignment (EnvCon env) =
   runState env (Env [] mempty assignment 0 [] mempty)
+
+ealToBohm ∷ RPTO → BT.Bohm
+ealToBohm (RBang _ (RVar s))      = BT.Symbol' s
+ealToBohm (RBang _ (RLam s t))    = BT.Lambda s (ealToBohm t)
+ealToBohm (RBang _ (RApp t1 t2))  = BT.Application (ealToBohm t1) (ealToBohm t2)

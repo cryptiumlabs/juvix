@@ -2,6 +2,7 @@ module Interactive where
 
 import           Control.Monad.IO.Class
 import qualified Data.Text                    as T
+import           Prelude                      (String)
 import           Protolude
 import qualified System.Console.Haskeline     as H
 import           Text.PrettyPrint.ANSI.Leijen hiding ((<>))
@@ -9,9 +10,13 @@ import           Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import           Config
 import           Options
 
+import qualified Juvix.Core                   as Core
+import qualified Juvix.EAL                    as EAL
+
 interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
-  func ← undefined
+  func ← return $ \str -> do
+    return str
   H.runInputT (settings ctx) (mainLoop func)
 
 settings ∷ Context → H.Settings IO
@@ -21,7 +26,7 @@ settings ctx = H.Settings {
   H.autoAddHistory  = True
   }
 
-mainLoop ∷ (() → IO ()) → H.InputT IO ()
+mainLoop ∷ (String → IO String) → H.InputT IO ()
 mainLoop func = do
   input ← H.getInputLine "jvxi >> "
   case input of
@@ -29,16 +34,27 @@ mainLoop func = do
     Just i  → do
       case i of
         (':' : special) →
-          handleSpecial (T.pack special) (mainLoop func)
+          handleSpecial special (mainLoop func)
         inp → do
-          H.outputStrLn inp
+          H.outputStrLn =<< liftIO (func inp)
           mainLoop func
 
-handleSpecial ∷ Text → H.InputT IO () → H.InputT IO ()
+handleSpecial ∷ String → H.InputT IO () → H.InputT IO ()
 handleSpecial str cont = do
   case str of
     "?"    → liftIO (putDoc specialsDoc) >> cont
     "exit" → return ()
+    "tutorial" → do
+      H.outputStrLn "Interactive tutorial coming soon!"
+      cont
+    'c' : ' ' : rest -> do
+      let parsed = Core.parseString Core.cterm rest
+      H.outputStrLn $ show parsed
+      cont
+    'e' : ' ' : rest -> do
+      let parsed = EAL.parseEal rest
+      H.outputStrLn $ show parsed
+      cont
     _      → H.outputStrLn "Unknown special command" >> cont
 
 specialsDoc ∷ Doc
@@ -53,10 +69,11 @@ specialDoc (Special command helpDesc) = text $ T.unpack $ mconcat [":", command,
 
 specials ∷ [Special]
 specials = [
-  Special "?" "Show this help message",
-  Special "save" "Dump the interactive state to a file",
-  Special "load" "Load interactive state from a file",
-  Special "exit" "Quit interactive mode"
+  Special "c [term]"  "Parse a Juvix Core term",
+  Special "e [term]"  "Parse an EAL term",
+  Special "tutorial"  "Embark upon an interactive tutorial",
+  Special "?"         "Show this help message",
+  Special "exit"      "Quit interactive mode"
   ]
 
 data Special = Special {

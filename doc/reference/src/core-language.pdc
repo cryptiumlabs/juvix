@@ -13,9 +13,9 @@ $(R, ⋅)$ is a monoid with identity $1$, multiplication left and right distribu
 
 The core type theory must be instantiated over a particular semiring. Choices include the boolean semiring $(0, 1)$, the zero-one-many semiring $(0, 1, ω)$, and the natural numbers with addition and multiplication.
 
-In canonical Juvix Core the type theory is instantiated over the semiring of natural numbers plus ω, which is the most expressive option — terms can be $0$-usage ("contemplated"), $n$-usage ("computed $n$ times"), or $ω$-usage ("computed any number of times").
+In canonical Juvix Core the type theory is instantiated over the semiring of natural numbers plus ω, which is the most expressive option — terms can be $0$-usage ("contemplated"), $n$-usage ("computed $n$ times"), or $ω$-usage ("computed any number of times"). 
 
-Let $S$ be a set of sorts $(i, j, k)$ with a total order.
+Let $S$ be a set of sorts $(i, j, k)$ with a total order. 
 
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
@@ -67,11 +67,11 @@ d, e, f &::= x\ & \text{variable} &\ &\ &\ x\\
 
 Sorts $∗_i$ are explicitly levelled. Dependent function types, dependent conjunction types, and type annotations include a usage annotation $π$.
 
-Typing judgements have the following form:
+Judgements have the following form:
 
 $$ x_1 \overset{ρ_1}{:} S_1, ..., x_n \overset{ρ_n}{:} S_n \vdash\ M \overset{σ}{:} T $$
 
-where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring (todo: must it be?).
+where $ρ_1 ... ρ_n$ are elements of the semiring and $σ$ is either the $0$ or $1$ of the semiring. When $σ = 0$, it is the typing judgement. When $σ = 1$, the judgement expresses the computational resources required.
 
 Further define the syntactic categories of usages $ρ, π$ and precontexts $Γ$:
 
@@ -91,13 +91,13 @@ Precontexts contain usage annotations $ρ$ on constituent variables. Scaling a p
 
 Usage annotations in types are not affected.
 
-By the definition of a semiring, $0Γ$ sets all annotations to $0$.
+By the definition of a semiring, $0Γ$ sets all usage annotations to $0$.
 
 Addition of two precontexts $Γ_1 + Γ_2$ is defined only when $0Γ_1 = 0Γ_2$:
 
 \begin{align*}
 ⋄+⋄=⋄\\
-(Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{p_1 + p_2}{:} S
+(Γ_1,x \overset{ρ_1}{:} S) + (Γ_2,x \overset{ρ_2}{:} S) = (Γ_1+Γ_2), x \overset{ρ_1 + ρ_2}{:} S
 \end{align*}
 
 Contexts are identified within precontexts by the judgement $Γ\vdash$, defined by the following rules:
@@ -125,7 +125,28 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
-where $σ \in {0,1}$ (todo: must it be?). A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with.
+where $σ \in {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with. 
+
+E.g., for the following judgement:
+
+\begin{align*}
+    n \overset{0}{:} Nat, x \overset{1}{:} Fin(n) ⊢ x \overset{\sigma}{:} Fin(n)
+\end{align*}
+
+When $σ = 0$, the judgement expresses that the term can be typed:
+\begin{align*}
+    n \overset{0}{:} Nat, x \overset{1}{:} Fin(n) ⊢ x \overset{0}{:} Fin(n)
+\end{align*}
+
+Because the final colon is annotated to zero, this represents contemplation, not computation. When type checking, $n$ and $x$ can appear arbitrary times.
+
+Computational judgement:
+\begin{align*}
+    n \overset{0}{:} Nat, x \overset{1}{:} Fin(n) ⊢ x \overset{1}{:} Fin(n)
+\end{align*}
+
+Because the final colon is annotated to one, during computation, $n$ is used exactly $0$ times, $x$ is used exactly one time.
+In our language, $x$ can also be annotated as $ω$, indicating that it is used an arbitrary number of times.
 
 ## Typing rules
 

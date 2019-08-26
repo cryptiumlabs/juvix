@@ -1,3 +1,4 @@
 *.pdf filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
+doc/reference/language-reference.pdf filter=lfs diff=lfs merge=lfs -text

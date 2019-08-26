@@ -14,7 +14,7 @@ Additional requirements:
 - [pandoc-citeproc filter](https://github.com/jgm/pandoc-citeproc)
 - [xelatex](https://www.overleaf.com/learn/latex/XeLaTeX)
 - [cmll.sty](https://ctan.org/pkg/cmll?lang=en), in texlive-fonts-extra for some Linux distros
-- [git LFS](https://git-lfs.github.com/)
+- [Git LFS](https://git-lfs.github.com/) (to commit the PDF)
 
 To update, edit source files, e.g. [src/language-reference.pdc](src/language-reference.pdc), then rebuild the document:
 

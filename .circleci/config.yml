@@ -7,8 +7,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: ln -s /usr/bin/g++-7 /usr/bin/g++
+      - run:
           name: Install z3
-          command: sudo apt-get -y update && sudo apt-get -y install z3 libz3-dev 
+          command: git clone https://github.com/Z3Prover/z3.git && cd z3 && python scripts/mk_make.py && cd build && make && sudo make install
       - restore_cache:
           name: Restore cached dependencies
           keys:
@@ -37,6 +40,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /root
+      - run:
+          name: Install dependencies
+          command: ln -s /usr/bin/g++-7 /usr/bin/g++
+      - run:
+          name: Install z3
+          command: cd z3 && python scripts/mk_make.py && cd build && make && sudo make install
       - run:
           name: Run tests
           command: stack test

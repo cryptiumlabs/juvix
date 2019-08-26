@@ -18,6 +18,8 @@ This is pre-alpha software released for experimentation & research purposes only
 
 Do not expect API stability. Expect bugs. Expect divergence from canonical protocol implementations.
 
+Formal verification of various properties of the Juvix language & compiler in Agda is [in progress](experimental/qtt-agda) but not yet complete.
+
 No warranty is provided or implied.
 
 Juvix is presently executed by a resource-tracing interpreter.
@@ -42,8 +44,24 @@ For full optimizations (but slower compile times):
 make build-opt
 ```
 
+## Usage
+
+Juvix is not yet production-ready; however, you can play around with some functionality in an interactive REPL:
+
+```bash
+juvix interactive
+```
+
+## Development
+
 To open a REPL with the library scoped:
 
 ```bash
 make repl-lib
+```
+
+To open a REPL with the executable scoped:
+
+```bash
+make repl-exe
 ```

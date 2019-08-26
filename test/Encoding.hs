@@ -1,12 +1,12 @@
-import           Juvix.Library   hiding (Sum, Product)
-import           Juvix.Encoding.Types
+module Encoding where
+
 import           Juvix.Encoding.Encoding
-import           Juvix.Encoding.Scott
 import           Juvix.Encoding.Mendler
+import           Juvix.Encoding.Scott
+import           Juvix.Encoding.Types
+import           Juvix.Library           hiding (Product, Sum)
 
-
-
-userNat :: Name
+userNat ∷ Name
 userNat = Adt (someSymbolVal "Nat")
               (Branch (someSymbolVal "Z") None
                       (Single (someSymbolVal "S") Term))
@@ -19,15 +19,15 @@ dUserNat = Adt (someSymbolVal "Nat")
 
 
 -- Test cases for Nat ----------------------------------------------------------
-zero' :: Lambda
+zero' ∷ Lambda
 zero' = app in' (app inl (Lambda (someSymbolVal "x")
                            (Value (someSymbolVal "x"))))
 
-succ' :: Lambda
+succ' ∷ Lambda
 succ' = Lambda (someSymbolVal "c%gen1")
                (app in' (app inr (app inl (Value (someSymbolVal "c%gen1")))))
 
-dup' :: Lambda
+dup' ∷ Lambda
 dup' = Lambda (someSymbolVal "c%gen1")
        (Lambda (someSymbolVal "c%gen2")
          (app in' (app inr
@@ -37,7 +37,7 @@ dup' = Lambda (someSymbolVal "c%gen1")
                                                 (Value $ someSymbolVal "c%gen1"))
                                    (Value $ someSymbolVal "c%gen2")))))))
 
-test2D :: Either Errors (Lambda, Env)
+test2D ∷ Either Errors (Lambda, Env)
 test2D = runEnvsS $ do
   adtToMendler dUserNat
   mendlerCase (Case (Value $ someSymbolVal "val")
@@ -60,7 +60,7 @@ test2D = runEnvsS $ do
 --   | S n     -> 1 + (f n i)
 --   | D n1 n2 -> f n2 0 + f n1 i
 
-test3D :: Either Errors (Lambda, Env)
+test3D ∷ Either Errors (Lambda, Env)
 test3D = runEnvsS $ do
   adtToMendler dUserNat
   mendlerCase (Case (Value $ someSymbolVal "val")
@@ -83,7 +83,7 @@ test3D = runEnvsS $ do
                                                 (Value $ someSymbolVal "i")))
                   ])
 
-test3D' :: Either Errors (Lambda, Env)
+test3D' ∷ Either Errors (Lambda, Env)
 test3D' = runEnvsS $ do
   adtToScott dUserNat
   scottCase (Case (Value $ someSymbolVal "val")
@@ -106,7 +106,7 @@ test3D' = runEnvsS $ do
                                                 (Value $ someSymbolVal "i")))
                   ])
 
-test1 :: Either Errors (Lambda, Env)
+test1 ∷ Either Errors (Lambda, Env)
 test1 = runEnvsS $ do
   adtToMendler userNat
   mendlerCase (Case (Value $ someSymbolVal "val")
@@ -118,7 +118,7 @@ test1 = runEnvsS $ do
                                                 (Value $ someSymbolVal "n")))])
 
 
-test1' :: Either Errors (Lambda, Env)
+test1' ∷ Either Errors (Lambda, Env)
 test1' = runEnvsS $ do
   adtToScott userNat
   scottCase (Case (Value $ someSymbolVal "val")
