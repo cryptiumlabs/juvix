@@ -13,9 +13,6 @@ import           Juvix.Library            hiding (link, reduce)
 import           Juvix.NodeInterface
 import qualified Juvix.Utility.Helper     as H
 
-instance Show ((->) a b) where
-  show _ = "fun"
-
 data InfixB = Eq | Neq | More | Less | Meq | Leq deriving Show
 
 data Infix = Div | Sub | Add | Prod | Mod deriving Show
