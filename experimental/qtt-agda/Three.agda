@@ -1,19 +1,13 @@
 module _ where
 
-open import Algebra
-open import Algebra.Structures
-open import Algebra.FunctionProperties
-open import Data.Product
-open import Function
-open import Level
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality as ≡ using (_≡_ ; refl)
-open import Relation.Nullary
+open import Prelude
+open Relation ; open Algebra
 open import Usage
-
 
 data Three : Set where 0# 1# ω# : Three
 private variable π π′ ρ ρ′ φ φ′ : Three
+
+open Algebra.WithEq (≡-At Three)
 
 _+_ : Op₂ Three
 0# + ρ  = ρ
@@ -31,7 +25,7 @@ _*_ : Op₂ Three
 ω# * ω# = ω#
 infixl 11 _*_
 
-data _≼_ : Rel Three zero where
+data _≼_ : Rel Three lzero where
   refl : π ≼ π
   _≼ω# : ∀ π → π ≼ ω#
 infix 4 _≼_ _≼ω#
@@ -146,7 +140,7 @@ distribʳ 0# ω# ω# = refl
 distribʳ 1# ω# _  = refl
 distribʳ ω# ω# _  = refl
  
-isSemiring : IsSemiring _≡_ _+_ _*_ 0# 1#
+isSemiring : IsSemiring _+_ _*_ 0# 1#
 isSemiring =
   record {
     isSemiringWithoutAnnihilatingZero = record {

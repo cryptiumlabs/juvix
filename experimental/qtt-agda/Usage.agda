@@ -1,13 +1,8 @@
 module Usage where
 
-open import Algebra
-open import Algebra.FunctionProperties
-open import Algebra.Structures
-open import Function
-open import Level
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality as ≡ using (_≡_ ; refl)
-open import Relation.Nullary
+open import Prelude
+open Algebra ; open Algebra.Generic
+open Relation
 
 record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
                 (_≈ʲ_ : Rel J j′) (_≈ᵗ_ : Rel T t′) (_≾ᵗ_ : Rel T t″)
@@ -56,7 +51,7 @@ record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
   semiringᵗ : Semiring _ _
   semiringᵗ = record { isSemiring = isSemiringᵗ }
 
-record Usages j j′ t t′ t″ : Set (suc (j ⊔ t ⊔ j′ ⊔ t′ ⊔ t″)) where
+record Usages j j′ t t′ t″ : Set (lsuc (j ⊔ t ⊔ j′ ⊔ t′ ⊔ t″)) where
   infix  4 _≈ʲ_ _≈ᵗ_ _≾ᵗ_
   infixl 6 _+_
   infixl 7 _*_

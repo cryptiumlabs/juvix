@@ -1,14 +1,11 @@
 module Example where
 
-open import Function
-open import Data.Nat
-open import Data.Nat.Properties
-open import Data.Fin hiding (_≤_)
-open import Relation.Binary.PropositionalEquality
+open import Prelude
 
 open import Usage
 open import NatUsage
 open import QTT NoSub.any
+open import Type NoSub.any
 
 variable
   n : ℕ

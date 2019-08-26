@@ -2,21 +2,16 @@ open import Usage as U
 
 module QTT {ℓʲ ℓʲ′ ℓᵗ ℓᵗ′ ℓᵗ″} (usages : Usages ℓʲ ℓʲ′ ℓᵗ ℓᵗ′ ℓᵗ″) where
 
-open import Algebra.Structures
-open import Level using (0ℓ ; _⊔_)
-open import Function
-open import Data.Nat as ℕ using (ℕ ; zero ; suc)
-open import Data.Fin as Fin using (Fin ; zero ; suc)
-open import Data.Product hiding (Σ)
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality
-open import Relation.Nullary
+open import Prelude
 
 private variable m n : ℕ
 
-open Usages usages hiding (zero)
+open module Usage = Usages usages public
+  using (Usageʲ ; Usageᵗ ; ⟦_⟧ ;
+         _+_ ; _*_ ; 0# ; 0#ᵗ ; 1# ; 1#ᵗ ;
+         _≈ʲ_ ; _≟ʲ_ ; _≈ᵗ_ ; _≟ᵗ_ ; _≾ᵗ_ ; _≾ᵗ?_)
 private variable π π′ ρ ρ′ ζ : Usageᵗ ; σ σ′ : Usageʲ
--- ζ for usages which should be zero (up to _≈ᵗ_)
+-- ζ stands for usages which should be zero
 
 Var = Fin
 private variable x y : Var n
@@ -43,7 +38,7 @@ infix 1000 `_ ; infixl 200 _∙_ ; infix 100 _⦂_
 private variable e e′ f f′ : Elim n
 
 
-data _≼_ : Rel (Typ n) 0ℓ where
+data _≼_ : Rel (Typ n) lzero where
   sort : u ℕ.≤ v → sort u ≼ sort {n} v
   Π    : S′ ≼ S → T ≼ T′ → Π π S T ≼ Π π S′ T′
   refl : S ≼ S
@@ -81,8 +76,8 @@ substᵗ = substᵗ′ zero
 substᵉ : Elim (suc n) → Elim n → Elim n
 substᵉ = substᵉ′ zero
 
-data _⟿ᵗ_ : Rel (Tm n) 0ℓ
-data _⟿ᵉ_ : Rel (Elim n) 0ℓ
+data _⟿ᵗ_ : Rel (Tm n) lzero
+data _⟿ᵉ_ : Rel (Elim n) lzero
 infix 1 _⟿ᵗ_ _⟿ᵉ_
 
 data _⟿ᵗ_ where
