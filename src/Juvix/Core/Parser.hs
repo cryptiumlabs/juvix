@@ -1,41 +1,44 @@
 module Juvix.Core.Parser where
 
-import           Data.Functor.Identity
 import           Juvix.Core.MainLang
-import           Prelude
+
+import           Juvix.Library hiding ((<|>))
+
+import           Prelude(String)
 import           Text.Parsec
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as Token
 
-languageDef ∷ GenLanguageDef String u Data.Functor.Identity.Identity
+languageDef ∷ GenLanguageDef String u Identity
 languageDef =
   emptyDef
-    { Token.commentStart = "/*"
-    , Token.commentEnd = "*/"
-    , Token.commentLine = "//"
-    , Token.identStart = letter
-    , Token.identLetter = alphaNum
-    , Token.reservedNames =
-        [ "*" --sort
-        , "[Π]" --function type
-        , "[π]" --dependent multiplicative conjunction type
-        , "/\\" --dependent additive conjunction type
-        , "\\/" --non-dependent multiplicative disjunction type
-        , "Bound" --Bound var
+    { commentStart    = "/*"
+    , commentEnd      = "*/"
+    , commentLine     = "//"
+    , identStart      = letter
+    , identLetter     = alphaNum
+    , reservedOpNames = ["Conv", "\\", ":"]
+    , reservedNames =
+        [ "*"      -- sort
+        , "[Π]"    -- function type
+        , "[π]"    -- dependent multiplicative conjunction type
+        , "/\\"    -- dependent additive conjunction type
+        , "\\/"    -- non-dependent multiplicative disjunction type
+        , "Bound"  -- Bound var
         , "Free"
         , "Local"
         , "Quote"
-        , "Global" --Free var
-        , "w" --Omega
+        , "Global" -- Free var
+        , "w"      -- Omega
         , "App"
         ]
-    , Token.reservedOpNames = ["Conv", "\\", ":"]
     }
 
-lexer ∷ Token.GenTokenParser String u Data.Functor.Identity.Identity
+lexer ∷ Token.GenTokenParser String u Identity
 lexer = Token.makeTokenParser languageDef
-     -- These are parsers for what their names signify
+
+-- These are parsers for what their names signify
 
 identifier ∷ Parser String
 identifier = Token.identifier lexer

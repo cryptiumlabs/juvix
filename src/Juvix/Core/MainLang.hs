@@ -4,20 +4,22 @@ module Juvix.Core.MainLang where
 
 import           Control.Monad.Except
 import           Numeric.Natural
-import           Prelude
+import           Prelude (String, Show (..), (!!), error)
 
-data NatAndw -- semiring of (Nat,w) for usage annotation
+import           Juvix.Library hiding (Type, show)
+
+data NatAndw        -- semiring of (Nat,w) for usage annotation
   = Natural Natural -- 0, 1, or n usage
-  | Omega -- unspecified usage
+  | Omega           -- unspecified usage
 
 instance Show NatAndw where
   show (Natural n) = show n
-  show Omega       = "w"
+  show Omega       = "ω"
 
 instance Eq NatAndw where
   Natural x == Natural y = x == y
-  Natural _ == Omega = True
-  Omega == _ = True
+  Natural _ == Omega     = True
+  Omega     == _         = True
 
 instance Num NatAndw where
   Natural x + Natural y = Natural (x + y)
@@ -32,14 +34,14 @@ data CTerm
   = Star Natural -- (sort i) i th ordering of (closed) universe.
   | Nats -- (Prim) primitive type (naturals)
   | Pi NatAndw CTerm CTerm -- formation rule of the dependent function type (PI).
-                              -- the NatAndw(π) tracks how many times x is used.
+                           -- the NatAndw(π) tracks how many times x is used.
   | Pm NatAndw CTerm CTerm -- dependent multiplicative conjunction (tensor product)
   | Pa NatAndw CTerm CTerm -- dependent additive conjunction type
-  | NPm CTerm CTerm -- non-dependent multiplicative disjunction type
-  | Lam NatAndw CTerm --(LAM) Introduction rule of PI.
-                        -- The abstracted variable's usage is tracked with the NatAndw(π).
-  | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
-              -- Conv is the constructor that embeds ITerm to CTerm
+  | NPm CTerm CTerm        -- non-dependent multiplicative disjunction type
+  | Lam NatAndw CTerm      -- (LAM) Introduction rule of PI.
+                           -- The abstracted variable's usage is tracked with the NatAndw(π).
+  | Conv ITerm             -- (CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
+                           -- Conv is the constructor that embeds ITerm to CTerm
   deriving (Show, Eq)
 
 -- inferable terms
@@ -48,8 +50,8 @@ data ITerm
   | Free Name -- Free variables of type name (see below)
   | Nat Natural -- primitive constant (naturals)
   | App NatAndw ITerm CTerm -- elimination rule of PI (APP).
-                              -- the NatAndw(π) tracks how x is use.
-  | Ann NatAndw CTerm CTerm --Annotation with usage.
+                            -- the NatAndw(π) tracks how x is use.
+  | Ann NatAndw CTerm CTerm -- Annotation with usage.
   deriving (Show, Eq)
 
 data Name
@@ -58,7 +60,7 @@ data Name
   | Quote Natural
   deriving (Show, Eq)
 
---Values/types
+-- Values/types
 data Value
   = VStar Natural
   | VNats
@@ -70,7 +72,7 @@ data Value
   | VNeutral Neutral
   | VNat Natural
 
---A neutral term is either a variable or an application of a neutral term to a value
+-- A neutral term is either a variable or an application of a neutral term to a value
 data Neutral
   = NFree Name
   | NApp Neutral Value
@@ -163,7 +165,7 @@ cSubst ii r (Conv e) = Conv (iSubst ii r e)
 --substitution function for inferable terms
 iSubst ∷ Natural → ITerm → ITerm → ITerm
 iSubst ii r (Bound j)
-  | ii == j = r
+  | ii == j   = r
   | otherwise = Bound j
 iSubst _ii _r (Free y) = Free y
 iSubst _ii _r (Nat n) = Nat n
