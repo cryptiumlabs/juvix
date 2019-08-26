@@ -81,6 +81,7 @@ library:
     - Juvix.Bohm.Parser
     - Juvix.Bohm.Translation
     - Juvix.Bohm.Type
+    - Juvix.Bohm
     - Juvix.Library
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph

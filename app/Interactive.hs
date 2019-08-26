@@ -10,8 +10,12 @@ import           Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import           Config
 import           Options
 
+import qualified Juvix.Backends.Env           as Env
+import qualified Juvix.Backends.Maps          as Maps
+import qualified Juvix.Bohm                   as Bohm
 import qualified Juvix.Core                   as Core
 import qualified Juvix.EAL                    as EAL
+import qualified Juvix.Nets.Bohm              as Bohm
 
 interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
@@ -54,8 +58,25 @@ handleSpecial str cont = do
     'e' : ' ' : rest -> do
       let parsed = EAL.parseEal rest
       H.outputStrLn $ show parsed
+      case parsed of
+        Right r -> transformAndEvaluateEal r
+        _       -> return ()
       cont
     _      → H.outputStrLn "Unknown special command" >> cont
+
+transformAndEvaluateEal ∷ EAL.RPTO → H.InputT IO ()
+transformAndEvaluateEal term = do
+  let bohm = EAL.ealToBohm term
+  H.outputStrLn ("Converted to BOHM: " <> show bohm)
+  let net ∷ Maps.Net Bohm.Lang
+      net = Bohm.astToNet bohm
+  H.outputStrLn ("Translated to net: " <> show net)
+  let reduced = Maps.runMapNet (Bohm.reduceAll 1000000) net
+      info = Env.info reduced
+      res = Env.net reduced
+      readback = Bohm.netToAst res
+  H.outputStrLn ("Reduction info: " <> show info)
+  H.outputStrLn ("Read-back term: " <> show readback)
 
 specialsDoc ∷ Doc
 specialsDoc = mconcat [

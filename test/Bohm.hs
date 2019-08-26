@@ -19,7 +19,6 @@ import           Text.Parsec
 test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test1 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(lambda x. (x x) y)"
 
-
 parsed ∷ Network net ⇒ Either ParseError (net Lang)
 parsed = astToNet <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
@@ -37,7 +36,6 @@ test4 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(lambda y. (lambda x
 
 test5 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test5 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(2 + 2)"
-
 
 test6 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test6 = runFlipNet (reduceAll 0) . astToNet <$> parseBohm "( (lambda x. (x + 3 + 5)) 2)"
