@@ -13,7 +13,7 @@ import           Config
 import           Interactive
 import           Options
 
-import qualified Juvix.Eal.Solve              as Solve
+import qualified Juvix.EAL                    as Solve
 
 context ∷ IO Context
 context = do

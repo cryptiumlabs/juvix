@@ -1,13 +1,11 @@
-module Juvix.Eal.Check where
+module Juvix.EAL.Check where
 
 import qualified Data.Map.Strict  as Map
 
-import           Juvix.Eal.Eal2
-import           Juvix.Eal.Solve
-import           Juvix.Eal.Types2
+import           Juvix.EAL.EAL2
+import           Juvix.EAL.Solve
+import           Juvix.EAL.Types2
 import           Juvix.Library    hiding (link, reduce)
-
-
 
 validEal ∷ Term → TypeAssignment → IO (Either Errors (RPT, ParamTypeAssignment))
 validEal term typMap = do

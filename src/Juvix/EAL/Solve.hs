@@ -1,11 +1,11 @@
-module Juvix.Eal.Solve where
+module Juvix.EAL.Solve where
 
 import qualified Data.Map         as Map
 import qualified Data.Set         as Set
 import           GHC.Base         (String)
 import qualified Z3.Monad         as Z3
 
-import           Juvix.Eal.Types2
+import           Juvix.EAL.Types2
 import           Juvix.Library    hiding (link, reduce)
 
 

@@ -64,8 +64,9 @@ library:
     - z3
   exposed-modules:
     - Juvix
+    - Juvix.Core
+    - Juvix.EAL
     - Juvix.Utility
-    - Juvix.Eal.Solve
 
 executables:
   juvix:

@@ -1,8 +1,8 @@
-module Juvix.Eal.Eal2 where
+module Juvix.EAL.EAL2 where
 
 import           Control.Arrow    (left)
 import qualified Data.Map.Strict  as Map
-import           Juvix.Eal.Types2
+import           Juvix.EAL.Types2
 import           Juvix.Library    hiding (Type, link, reduce)
 import           Prelude          (error)
 {- Main functionality. -}
