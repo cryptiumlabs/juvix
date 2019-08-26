@@ -13,8 +13,6 @@ import           Config
 import           Interactive
 import           Options
 
-import qualified Juvix.EAL                    as Solve
-
 context ∷ IO Context
 context = do
   pwd   ← getCurrentDirectory
