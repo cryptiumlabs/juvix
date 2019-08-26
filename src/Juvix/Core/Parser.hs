@@ -1,41 +1,44 @@
 module Juvix.Core.Parser where
 
-import           Data.Functor.Identity
 import           Juvix.Core.MainLang
-import           Prelude
+
+import           Juvix.Library hiding ((<|>))
+
+import           Prelude(String)
 import           Text.Parsec
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as Token
 
-languageDef ∷ GenLanguageDef String u Data.Functor.Identity.Identity
+languageDef ∷ GenLanguageDef String u Identity
 languageDef =
   emptyDef
-    { Token.commentStart = "/*"
-    , Token.commentEnd = "*/"
-    , Token.commentLine = "//"
-    , Token.identStart = letter
-    , Token.identLetter = alphaNum
-    , Token.reservedNames =
-        [ "*" --sort
-        , "[Π]" --function type
-        , "[π]" --dependent multiplicative conjunction type
-        , "/\\" --dependent additive conjunction type
-        , "\\/" --non-dependent multiplicative disjunction type
-        , "Bound" --Bound var
+    { commentStart    = "/*"
+    , commentEnd      = "*/"
+    , commentLine     = "//"
+    , identStart      = letter
+    , identLetter     = alphaNum
+    , reservedOpNames = ["Conv", "\\", ":"]
+    , reservedNames =
+        [ "*"      -- sort
+        , "[Π]"    -- function type
+        , "[π]"    -- dependent multiplicative conjunction type
+        , "/\\"    -- dependent additive conjunction type
+        , "\\/"    -- non-dependent multiplicative disjunction type
+        , "Bound"  -- Bound var
         , "Free"
         , "Local"
         , "Quote"
-        , "Global" --Free var
-        , "w" --Omega
+        , "Global" -- Free var
+        , "w"      -- Omega
         , "App"
         ]
-    , Token.reservedOpNames = ["Conv", "\\", ":"]
     }
 
-lexer ∷ Token.GenTokenParser String u Data.Functor.Identity.Identity
+lexer ∷ Token.GenTokenParser String u Identity
 lexer = Token.makeTokenParser languageDef
-     -- These are parsers for what their names signify
+
+-- These are parsers for what their names signify
 
 identifier ∷ Parser String
 identifier = Token.identifier lexer
@@ -56,66 +59,64 @@ whiteSpace ∷ Parser ()
 whiteSpace = Token.whiteSpace lexer
 
 natw ∷ Parser NatAndw
-natw =   do reserved "w"
-            return Omega
-     <|> do n <- natural
-            return $ Natural (fromInteger n)
+natw =   (Omega <$ reserved "w")
+     <|> (Natural . fromInteger <$>  natural)
 
 sortTerm ∷ Parser CTerm
-sortTerm =
-  do reserved "*"
-     n <- natural
-     return $ Star (fromInteger n)
+sortTerm = do
+  reserved "*"
+  n ← natural
+  return $ Star (fromInteger n)
 
 piTerm ∷ Parser CTerm
-piTerm =
-  do reserved "[Π]"
-     pi <- natw
-     input <- cterm
-     func <- cterm
-     return $ Pi pi input func
+piTerm = do
+  reserved "[Π]"
+  pi     ← natw
+  input ← cterm
+  func  ← cterm
+  return $ Pi pi input func
 
 pmTerm ∷ Parser CTerm
-pmTerm =
-  do reserved "[π]"
-     pm <- natw
-     input <- cterm
-     func <- cterm
-     return $ Pm pm input func
+pmTerm = do
+  reserved "[π]"
+  pm    ← natw
+  input ← cterm
+  func  ← cterm
+  return $ Pm pm input func
 
 paTerm ∷ Parser CTerm
-paTerm =
-  do reserved "/\\"
-     pa <- natw
-     input <- cterm
-     func <- cterm
-     return $ Pa pa input func
+paTerm = do
+  reserved "/\\"
+  pa    ← natw
+  input ← cterm
+  func  ← cterm
+  return $ Pa pa input func
 
 npmTerm ∷ Parser CTerm
-npmTerm =
-  do reserved "\\/"
-     fst <- cterm
-     snd <- cterm
-     return $ NPm fst snd
+npmTerm = do
+  reserved "\\/"
+  fst ← cterm
+  snd ← cterm
+  return $ NPm fst snd
 
 lamTerm ∷ Parser CTerm
-lamTerm =
-  do reservedOp "\\"
-     pi <- natw
-     func <- cterm
-     return $ Lam pi func
+lamTerm = do
+  reservedOp "\\"
+  pi    ← natw
+  func ← cterm
+  return $ Lam pi func
 
 convTerm ∷ Parser CTerm
-convTerm =
-  do reservedOp "Conv"
-     termToConvert <- iterm
-     return $ Conv termToConvert
+convTerm = do
+  reservedOp "Conv"
+  termToConvert ← iterm
+  return $ Conv termToConvert
 
 boundTerm ∷ Parser ITerm
-boundTerm =
-  do reserved "Bound"
-     index <- natural
-     return $ Bound (fromInteger index)
+boundTerm = do
+  reserved "Bound"
+  index ← natural
+  return $ Bound (fromInteger index)
 
 --Parser for the global free variable name
 gName ∷ Parser String
@@ -125,46 +126,46 @@ gName =  parens gName
 --Parser for Name data type
 name ∷ Parser Name
 name = do reserved "Local"
-          index <- natural
+          index ← natural
           return $ Local (fromInteger index)
    <|> do reserved "Quote"
-          index <- natural
+          index ← natural
           return $ Quote (fromInteger index)
    <|> do reserved "Global"
-          gname <- gName
+          gname ← gName
           return $ Global gname
 
 freeTerm ∷ Parser ITerm
-freeTerm =
-  do reserved "Free"
-     fname <- name
-     return $ Free fname
+freeTerm = do
+  reserved "Free"
+  fname ← name
+  return $ Free fname
 
 appTerm ∷ Parser ITerm
-appTerm =
-  do reserved "App"
-     pi <- natw
-     func <- iterm
-     var <- cterm
-     eof
-     return $ App pi func var
+appTerm = do
+  reserved "App"
+  pi   ← natw
+  func ← iterm
+  var  ← cterm
+  eof
+  return $ App pi func var
 
 annTerm ∷ Parser ITerm
-annTerm =
-  do pi <- natw
-     term <- cterm
-     reservedOp ":"
-     ann <- cterm
-     eof
-     return $ Ann pi term ann
+annTerm = do
+  pi   ← natw
+  term ← cterm
+  reservedOp ":"
+  ann  ← cterm
+  eof
+  return $ Ann pi term ann
 
 parseWhole ∷ Parser a → Parser a
-parseWhole p =
-  do whiteSpace
-     t <- p
-     whiteSpace
-     eof
-     return t
+parseWhole p = do
+  whiteSpace
+  t ← p
+  whiteSpace
+  eof
+  return t
 
 cterm ∷ Parser CTerm
 cterm = parens cterm
@@ -178,13 +179,13 @@ cterm = parens cterm
 
 iterm ∷ Parser ITerm
 iterm =  parens iterm
-     <|> boundTerm --Bound var
-     <|> freeTerm --Free var<|> appTerm
+     <|> boundTerm -- Bound var
+     <|> freeTerm  -- Free var<|> appTerm
      <|> appTerm
      <|> annTerm
 
 parseString ∷ Parser a → String → Maybe a
 parseString p str =
-     case parse p "" str of
-     Left e  -> Nothing
-     Right r -> Just r
+  case parse p "" str of
+    Left _e  → Nothing
+    Right r  → Just r

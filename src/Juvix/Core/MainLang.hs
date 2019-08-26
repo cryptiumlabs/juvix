@@ -3,43 +3,45 @@
 module Juvix.Core.MainLang where
 
 import           Numeric.Natural
-import           Prelude
+import           Prelude (String, Show (..), (!!), error)
 
-data NatAndw -- semiring of (Nat,w) for usage annotation
+import           Juvix.Library hiding (Type, show)
+
+data NatAndw        -- semiring of (Nat,w) for usage annotation
   = Natural Natural -- 0, 1, or n usage
-  | Omega -- unspecified usage
+  | Omega           -- unspecified usage
 
 instance Show NatAndw where
   show (Natural n) = show n
-  show Omega       = "w"
+  show Omega       = "ω"
 
 instance Eq NatAndw where
   Natural x == Natural y = x == y
-  Natural _ == Omega = True
-  Omega == _ = True
+  Natural _ == Omega     = True
+  Omega     == _         = True
 
 -- checkable terms
 data CTerm
-  = Star Natural -- (sort i) i th ordering of (closed) universe.
-  | Nat Natural -- (Prim) primitive type
+  = Star Natural           -- (sort i) i th ordering of (closed) universe.
+  | Nat Natural            -- (Prim) primitive type
   | Pi NatAndw CTerm CTerm -- formation rule of the dependent function type (PI).
-                              -- the NatAndw(π) tracks how many times x is used.
+                           -- the NatAndw(π) tracks how many times x is used.
   | Pm NatAndw CTerm CTerm -- dependent multiplicative conjunction (tensor product)
   | Pa NatAndw CTerm CTerm -- dependent additive conjunction type
-  | NPm CTerm CTerm -- non-dependent multiplicative disjunction type
-  | Lam NatAndw CTerm --(LAM) Introduction rule of PI.
-                        -- The abstracted variable's usage is tracked with the NatAndw(π).
-  | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
-              -- Conv is the constructor that embeds ITerm to CTerm
+  | NPm CTerm CTerm        -- non-dependent multiplicative disjunction type
+  | Lam NatAndw CTerm      -- (LAM) Introduction rule of PI.
+                           -- The abstracted variable's usage is tracked with the NatAndw(π).
+  | Conv ITerm             -- (CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
+                           -- Conv is the constructor that embeds ITerm to CTerm
   deriving (Show, Eq)
 
 -- inferable terms
 data ITerm
-  = Bound Natural -- Bound variables, in de Bruijn indices
-  | Free Name -- Free variables of type name (see below)
+  = Bound Natural           -- Bound variables, in de Bruijn indices
+  | Free Name               -- Free variables of type name (see below)
   | App NatAndw ITerm CTerm -- elimination rule of PI (APP).
-                              -- the NatAndw(π) tracks how x is use.
-  | Ann NatAndw CTerm CTerm --Annotation with usage.
+                            -- the NatAndw(π) tracks how x is use.
+  | Ann NatAndw CTerm CTerm -- Annotation with usage.
   deriving (Show, Eq)
 
 data Name
@@ -48,7 +50,7 @@ data Name
   | Quote Natural
   deriving (Show, Eq)
 
---Values/types
+-- Values/types
 data Value
   = VLam Value (Value -> Value)
   | VStar Natural
@@ -59,27 +61,26 @@ data Value
   | VNPm Value Value
   | VNeutral Neutral
 
---A neutral term is either a variable or an application of a neutral term to a value
+-- A neutral term is either a variable or an application of a neutral term to a value
 data Neutral
   = NFree Name
   | NApp Neutral Value
 
-showVal :: Value -> String
-showVal (VLam _ f) = showFun f
-showVal (VStar i) = "*" ++ show i
-showVal (VNat i) = show i
-showVal (VPi n v f) = "[" ++ show n ++ "]" ++ showVal v ++ " -> " ++ showFun f
-showVal (VPm n v f) =
-  "([" ++ show n ++ "]" ++ showVal v ++ ", " ++ showFun f ++ ")"
-showVal (VPa _ _ _) = "/\\"
-showVal (VNPm _ _) = "\\/"
+showVal :: Value → String
+showVal (VLam _ f)    = showFun f
+showVal (VStar i)     = "*" <> show i
+showVal (VNat i)      = show i
+showVal (VPi n v f)   = "[" <> show n <> "]" <> showVal v <> " -> " <> showFun f
+showVal (VPm n v f)   = "([" <> show n <> "]" <> showVal v <> ", " <> showFun f <> ")"
+showVal (VPa _ _ _)   = "/\\"
+showVal (VNPm _ _)    = "\\/"
 showVal (VNeutral _n) = "neutral "
 
-showFun :: (Value -> Value) -> String
+showFun :: (Value → Value) → String
 showFun _f = "\\x.t"
 
 --vfree creates the value corresponding to a free variable
-vfree :: Name -> Value
+vfree :: Name → Value
 vfree n = VNeutral (NFree n)
 
 --Contexts map variables to their types.
@@ -87,13 +88,14 @@ type Type = Value
 
 type Context = [(Name, Type)]
 
-toInt :: Natural -> Int
+toInt :: Natural → Int
 toInt = fromInteger . toInteger
+
 {-
---Evaluation
+-- Evaluation
 type Env = [Value]
 
-iEval :: ITerm -> Env -> Value
+iEval :: ITerm → Env → Value
 iEval (Star i) _d = VStar i
 iEval (Pi Omega ty ty') d = VPi Omega (cEval ty d) (\x -> cEval ty' (x : d))
 iEval (Pi (Natural n) ty ty') d =
@@ -108,7 +110,7 @@ iEval (App n iterm cterm) d = vapp (iEval iterm d) (cEval cterm d)
 iEval (Nat i) _ = VNat i
 iEval (NPm ty ty') d = undefined VNPm ty ty' d
 
-vapp :: Value -> Value -> Value
+vapp ∷ Value → Value → Value
 vapp (VLam n f) v = f v
 vapp (VNeutral n) v = VNeutral (NApp n v)
 vapp x y =
@@ -123,7 +125,7 @@ cEval (Conv ii) d = iEval ii d
 --substitution function for inferable terms
 iSubst :: Natural -> ITerm -> ITerm -> ITerm
 iSubst ii r (Bound j)
-  | ii == j = r
+  | ii == j   = r
   | otherwise = Bound j
 iSubst _ii _r (Free y) = Free y
 --iSubst ii r (App iterm cterm) =
@@ -131,7 +133,8 @@ iSubst _ii _r (Star i) = Star i
 
 --iSubst ii r (Pi n ty ty')     =  Pi
 --substitution function for checkable terms
-cSubst :: Natural -> ITerm -> CTerm -> CTerm
+cSubst :: Natural → ITerm → CTerm → CTerm
 cSubst ii r (Conv e) = Conv (iSubst ii r e)
 --cSubst ii r (Lam e) =  Lam (cSubst (ii + 1) r e)
+
 -}
