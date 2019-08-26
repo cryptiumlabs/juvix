@@ -17,10 +17,10 @@
 
 ## Persistent interaction system state
 
-1. Defined equalence semantics but implementation can change later
+1. Defined equivalence semantics but implementation can change later
 1. Contracts themselves can call the compiler (needs more R&D)
 1. Bounties for proofs, sub-contract-upgrades, etc.
-1. More efficient than read-back after execution, just persist the graph of the state machine, many more optimizations automagically happen.
+1. More efficient than read-back after execution, just persist the graph of the state machine, many more optimisations automatically happen.
 1. Will be helpful for Juvix to be self-hosting or packaged as a runtime which can typecheck untrusted input.
 
 ## Interchain abstraction
@@ -32,5 +32,5 @@
 ## Visual spatiotemporal dataflow representation
 
 1. Some (closest?) inspiration: Luna [@luna-lang]
-1. Could map depths of elementary linear logic terms to spacial depth in an execution visualization
+1. Could map depths of elementary linear logic terms to spacial depth in an execution visualisation
 1. Goal: isomorphism between textual (AST) and graphical (dataflow graph) representations. Getting the isomorphism right so that they can be switched between for real projects seems like the hard part.

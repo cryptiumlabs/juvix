@@ -1,8 +1,8 @@
-module Juvix.Eal.Eal where
+module Juvix.EAL.EAL where
 
-import           Juvix.Library hiding (link, reduce)
-import qualified Juvix.Bohm.Type as BT
 import           Data.Map.Strict as Map
+import qualified Juvix.Bohm.Type as BT
+import           Juvix.Library   hiding (link, reduce)
 
 data Eal = Term SomeSymbol
          | Lambda SomeSymbol Types Term
@@ -41,7 +41,7 @@ newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
   deriving (HasThrow "typ" TypeErrors) via
     MonadError (ExceptT TypeErrors (State Info))
 
-runEnvError :: EnvError a → (Either TypeErrors a, Info)
+runEnvError ∷ EnvError a → (Either TypeErrors a, Info)
 runEnvError (EnvError a) = runState (runExceptT a) (I Map.empty)
 
 newtype EitherBracket a =
@@ -51,14 +51,14 @@ newtype EitherBracket a =
   deriving (HasThrow "typ" BracketErrors) via
     MonadError (Except BracketErrors)
 
-runBracketChecker :: Eal → Either BracketErrors ()
+runBracketChecker ∷ Eal → Either BracketErrors ()
 runBracketChecker t = runEither (bracketChecker t 0)
 
-runTypeOf :: Eal → (Either TypeErrors Types, Info)
+runTypeOf ∷ Eal → (Either TypeErrors Types, Info)
 runTypeOf e = (reverseBangs <$> t, state)
   where (t, state) = runEnvError (typeOf e)
 
-typeOf :: (HasState "ctxt" (Map SomeSymbol Types) m, HasThrow "typ" TypeErrors m)
+typeOf ∷ (HasState "ctxt" (Map SomeSymbol Types) m, HasThrow "typ" TypeErrors m)
        ⇒ Eal → m Types
 typeOf (Term s) = do
   ctxt ← get @"ctxt"
@@ -83,19 +83,19 @@ typeOf (App t1 t2) = do
       | otherwise                       → throw @"typ" MisMatchArguments
     _                                   → throw @"typ" ExpectedFunction
 
-typeOfTerm :: (HasState "ctxt" (Map SomeSymbol Types) f, HasThrow "typ" TypeErrors f)
+typeOfTerm ∷ (HasState "ctxt" (Map SomeSymbol Types) f, HasThrow "typ" TypeErrors f)
            ⇒ Term → f Types
 typeOfTerm (Bang n e)
   | n > 0 = BangT n <$> typeOf e
   | n < 0 = UBang n <$> typeOf e
   | otherwise = typeOf e
 
-getTypeInsideBang :: Types → Types
+getTypeInsideBang ∷ Types → Types
 getTypeInsideBang (BangT _ t) = getTypeInsideBang t
 getTypeInsideBang (UBang _ t) = getTypeInsideBang t
 getTypeInsideBang t           = t
 
-reverseBangs :: Types → Types
+reverseBangs ∷ Types → Types
 reverseBangs t = recursive t identity
   where
     -- Note this doesn't flatten all consecutive bangs and ubangs
@@ -108,13 +108,13 @@ reverseBangs t = recursive t identity
     recursive t                     cps = cps t
 -- Start of correct bracketing formula -----------------------------------------
 
-bracketChecker :: HasThrow "typ" BracketErrors f ⇒ Eal → Integer → f ()
+bracketChecker ∷ HasThrow "typ" BracketErrors f ⇒ Eal → Integer → f ()
 bracketChecker (Term _)       0 = pure ()
 bracketChecker (Term _)       _ = throw @"typ" TooManyOpen
 bracketChecker (Lambda _ _ t) n = bracketCheckerTerm t n
 bracketChecker (App t1 t2)    n = bracketCheckerTerm t2 n >> bracketCheckerTerm t1 n
 
-bracketCheckerTerm :: HasThrow "typ" BracketErrors f ⇒ Term → Integer → f ()
+bracketCheckerTerm ∷ HasThrow "typ" BracketErrors f ⇒ Term → Integer → f ()
 bracketCheckerTerm (Bang changeBy eal) n
   | changeBy + n < 0 = throw @"typ" TooManyClosing
   | otherwise        = bracketChecker eal (n + changeBy)
@@ -144,14 +144,14 @@ data ConstraintTermEnv = Con {
   constraints :: [Constraint]
 } deriving (Show, Generic)
 
-addPath :: (HasState "count" Spot m, HasState "path" Path m) ⇒ m Spot
+addPath ∷ (HasState "count" Spot m, HasState "path" Path m) ⇒ m Spot
 addPath = do
   i ← get @"count"
   modify' @"path" (<> [i])
   put     @"count" (succ i)
   pure i
 
-addCon :: HasState "constraints" [Constraint] m ⇒ Constraint → m ()
+addCon ∷ HasState "constraints" [Constraint] m ⇒ Constraint → m ()
 addCon con = modify' @"constraints" (con :)
 
 boxConstraint ∷ ( HasState "constraints" [Constraint]  m
@@ -192,12 +192,12 @@ newtype EnvConstraint a = EnvCon (State ConstraintTermEnv a)
   deriving (HasState "constraints" [Constraint]) via
      Field "constraints" () (MonadState (State ConstraintTermEnv))
 
-execBracketState :: EnvConstraint a → (a, ConstraintTermEnv)
+execBracketState ∷ EnvConstraint a → (a, ConstraintTermEnv)
 execBracketState (EnvCon e) = runState e (Con mempty mempty 1 mempty)
 
 -- Convert to Bohm--------------------------------------------------------------
 
-ealToBohm :: Term → BT.Bohm
+ealToBohm ∷ Term → BT.Bohm
 ealToBohm (Bang _ (Term s))       = BT.Symbol' s
 ealToBohm (Bang _ (Lambda s _ t)) = BT.Lambda s (ealToBohm t)
 ealToBohm (Bang _ (App t1 t2))    = BT.Application (ealToBohm t1) (ealToBohm t2)

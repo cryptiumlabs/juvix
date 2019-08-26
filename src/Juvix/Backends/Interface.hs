@@ -87,7 +87,7 @@ class Network net where
   newNode       ∷ NetState (net a) m ⇒ a → m Node
   delNodes      ∷ NetState (net a) m ⇒ [Node] → m ()
   -- TODO :: remove deleteRewire, add neighbors, and move auxFromGraph to here!
-  -- TODO :: make a helper function that doe smost of deleteRewire, just send in neighbors
+  -- TODO :: make a helper function that does most of deleteRewire, just send in neighbors
   deleteRewire  ∷ NetState (net a) m ⇒ [Node] → [Node] → m ()
   deleteEdge    ∷ NetState (net a) m ⇒ (Node, PortType) → (Node, PortType) → m ()
   nodes         ∷ NetState (net a) m ⇒ m [Node]

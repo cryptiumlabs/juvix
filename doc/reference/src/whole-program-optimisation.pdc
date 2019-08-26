@@ -1,29 +1,30 @@
-Juvix combines compiler-directed & user-directed optimizing transformations into a single optimization function $ψ$, defined in this chapter, which maps core terms to core terms, preserving the evaluation semantics defined in the previous chapter.
+Juvix combines compiler-directed & user-directed optimising transformations into a single optimisation function $ψ$, defined in this chapter, which maps core terms to core terms, preserving the evaluation semantics defined in the previous chapter.
 
-> Note that whole program optimization is one of the less theoretically risky parts of the compiler design and thus is omitted in the initial release. At present the optimization function $ψ$ is simply the identity. Future releases are expected to incorporate optimizing transformations discussed herein.
+> Note that whole program optimisation is one of the less theoretically risky parts of the compiler design and thus is omitted in the initial release. At present the optimisation function $ψ$ is simply the identity. Future releases are expected to incorporate optimising transformations discussed herein.
 
-## Core-level optimizations
+## Core-level optimisations
 
 - User can prove extensional equality of functions.
 - Compiler can pick which function is cheaper to reduce (& pick differently in different cases)
-- Can be specialized to properties on arguments, e.g. if $f x | x < 0 = g$, if the compiler can inhabit $x < 0 = True$, it can replace $f$ with $g$.
+- Can be specialised to properties on arguments, e.g. if $f x | x < 0 = g$, if the compiler can inhabit $x < 0 = True$, it can replace $f$ with $g$.
 
-## Machine-level optimizations
+## Machine-level optimisations
 
-- Requires formalized VM semantics of particular machine model (in Juvix)
+- Requires formalised VM semantics of particular machine model (in Juvix)
 - User can prove semantic equivalence of machine instruction sequences
 - Compiler can pick which instruction sequence is cheaper and compile to it (& pick differently in different cases)
 
 ## Graph transformations
 
-Much inspired by the GRIN [@graph-reduction-intermediate-notation] paper & implementation.
+Primarily inspired by the GRIN [@graph-reduction-intermediate-notation] paper & implementation.
 
 (todo: determine which of these are rendered unnecessary by interaction net evaluation; keep it as simple as possible)
+
 (todo: some of these need to be applied at a lower layer and only when terms are compiled to custom rewrite rules via the bespoke path)
 
 See [this example](https://nbviewer.jupyter.org/github/grin-compiler/grin/blob/master/papers/boquist.pdf#page=317).
 
-Optimizing transformations:
+Possible transformations:
 
 - vectorisation
 - case simplification

@@ -13,7 +13,7 @@ import           Config
 import           Interactive
 import           Options
 
-import qualified Juvix.Eal.Solve              as Solve
+import qualified Juvix.EAL                    as Solve
 
 context ∷ IO Context
 context = do
@@ -38,7 +38,7 @@ aboutDoc ∷ Doc
 aboutDoc = mconcat [
   text "Juvix compiler & toolkit",
   line,
-  text "(c) Cryptium Labs 2018-2019 • https://juvix.org",
+  text "(c) Christopher Goes 2018-2019, (c) Cryptium Labs 2019 • https://juvix.org",
   line,
   disclaimerDoc
   ]
@@ -61,7 +61,7 @@ interactiveDoc = mconcat [
  | |_| | \ V /   /  \| |
   \___/   \_/   /_/\_\_|
 |],
-  mconcat [line, "Juvix interactive alpha. Currently supported backends: in-process.", line, "Enter :? for help. Enter :tutorial for an interactive tutorial.", line]
+  mconcat [line, "Juvix interactive alpha. Currently supported backends: in-process interpreter.", line, "Enter :? for help. Enter :tutorial for an interactive tutorial.", line]
   ]
 
 run ∷ Context → Options → IO ()
@@ -71,7 +71,10 @@ run ctx (Options cmd configPath) = do
   case cmd of
     Interactive → do
       putDoc interactiveDoc
-      putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
+      if isJust maybeConfig then
+        putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
+      else
+        putStrLn ("Loaded default runtime configuration.\n" :: Text)
       interactive ctx conf
       exitSuccess
     Version → do

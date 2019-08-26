@@ -20,6 +20,11 @@ data Bohm
   | Cdr Bohm
   | IsNil Bohm
   | Symbol' SomeSymbol
+  -- Not valid syntax but for read back of a graph
+  | Erase
+  -- Not valid syntax but for read back of a graph
+  | Curried (Int → Int) Bohm
+  | CurriedB (Int → Bool) Bohm
   deriving Show
 
 data Op = Mult | Plus | Sub | Division

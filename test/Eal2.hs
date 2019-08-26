@@ -1,7 +1,9 @@
-import           Juvix.Eal.Check
-import           Juvix.Eal.Eal2
-import           Juvix.Eal.Solve
-import           Juvix.Eal.Types2
+module Eal2 where
+
+import           Juvix.EAL.Check
+import           Juvix.EAL.EAL2
+import           Juvix.EAL.Solve
+import           Juvix.EAL.Types2
 import           Juvix.Library    hiding (Type, link, reduce)
 
 import qualified Data.Map.Strict  as Map

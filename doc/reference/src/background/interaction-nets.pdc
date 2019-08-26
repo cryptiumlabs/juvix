@@ -23,4 +23,4 @@ An example net looks like:
 
 \end{tikzpicture}
 
-Example: interaction combinators.
+To-do. For now see Damiano Mazza's paper [@denotational-semantics-symmetric-interaction-combinators].

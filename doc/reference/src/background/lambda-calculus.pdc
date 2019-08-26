@@ -10,7 +10,7 @@
 
 ### Universality
 
-- Lambda calculus can express nonterminating computations, e.g. $(λx. x x) (λx. x x)$.
+- Lambda calculus can express non-terminating computations, e.g. $(λx. x x) (λx. x x)$.
 - Lambda calculus is Turing-complete.
 
 ### Efficiency
@@ -21,7 +21,7 @@ Choice of reduction strategy: given $(λx. t_1) t_2$, which of $t_1$ or $t_2$ to
 
 - Call-by-name: reduce $t_1$ first, substitute in $t_2$ for $x$ without reduction.
 - Call-by-value: reduce $t_2$ first, substitute in for $x$ after reduction.
-- Call-by-need: create thunk for evaluation of $t_2$, pass into $t_1$, if reduced value will be shared. Doesn't parallelize well.
+- Call-by-need: create thunk for evaluation of $t_2$, pass into $t_1$, if reduced value will be shared. Doesn't parallelise well.
 
 Find example of term with duplication from either strategy; see Asperti book.
 
