@@ -179,21 +179,4 @@ Another important aspect to Scott encodings is that they can not be typed in `Sy
 
 ## Desugaring
 
-Since the core of our language allows for recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function is no small feat. In particular, the encodings demands that the first argument be the recursive function taking the encoding and the second the ADT itself.
-
-```
-let rec arbitrary c d1 d2 =
-  case d1 of
-  | Z → c
-  | S n →
-    arbitrary
-      (case d2 of
-       | Z   → c
-       | S n → S (arbitrary c n Z))
-      n
-      d2
-```
-
-Here, we have two values we case on, `d1` and `d2`. The encoding must then transform these two arguments into four, to use the internal catamorphism. The function call must also be changed, as instead of `d1` and `d2` being passed to arbitrary, `d1` and `d2` must be applied on arbitrary, further complicating matters.
-
-As such, the Scott encoding is currently the default encoding at the Eal* level.
+or recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the Eal* level. However, at a future date Mendler encodings will be added.
