@@ -1,4 +1,4 @@
-module Juvix.EAL.Types2 where
+module Juvix.EAL.Types where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text       as T
@@ -107,6 +107,15 @@ data Errors = Typ TypeErrors
            | Brack BracketErrors
            deriving Show
 
+-- Environment for errors.
+newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
+  deriving (Functor, Applicative, Monad)
+  deriving (HasState "ctxt" (Map SomeSymbol Type)) via
+    Field "ctxt" () (MonadState (ExceptT TypeErrors (State Info)))
+  deriving (HasThrow "typ" TypeErrors) via
+    MonadError (ExceptT TypeErrors (State Info))
+
+data Info = I {ctxt :: Map SomeSymbol Type} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env = Env {

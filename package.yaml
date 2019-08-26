@@ -68,9 +68,8 @@ library:
     - Juvix.EAL
     - Juvix.EAL.Check
     - Juvix.EAL.EAL
-    - Juvix.EAL.EAL2
     - Juvix.EAL.Solve
-    - Juvix.EAL.Types2
+    - Juvix.EAL.Types
     - Juvix.EAL.Parser
     - Juvix.Utility
     - Juvix.Nets.Bohm
@@ -81,6 +80,7 @@ library:
     - Juvix.Backends.Maps
     - Juvix.Bohm.Parser
     - Juvix.Bohm.Translation
+    - Juvix.Bohm.Type
     - Juvix.Library
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph

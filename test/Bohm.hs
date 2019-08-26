@@ -6,6 +6,7 @@ import           Juvix.Backends.Interface
 import           Juvix.Backends.Maps
 import           Juvix.Bohm.Parser
 import           Juvix.Bohm.Translation
+import           Juvix.Bohm.Type
 import           Juvix.Library
 import           Juvix.Nets.Bohm
 import           Juvix.Utility
@@ -47,8 +48,7 @@ test6Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet) (parseBohm "( (lambd
 test67Gen ∷ IO (Either ParseError (InfoNet (FlipNet Lang)))
 test67Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet) (parseBohm "( (lambda x. (x + y + y)) 2)")
 
-
-
+test78Back ∷ Maybe Juvix.Bohm.Type.Bohm
 test78Back = netToAst n
   where
     Right (InfoNet {net = n}) = runFlipNet (reduceAll 100) . astToNet <$> (parseBohm "(lambda x. lambda y. ((lambda z. (z (z y))) (lambda w. (x w))))")
