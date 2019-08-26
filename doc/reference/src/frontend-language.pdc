@@ -27,7 +27,7 @@ Most features simply desugar to Core.
 
 ### Mendler
 
-Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recursive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the internal catamorphsim, which shall be refered to as external deconstructors (todo :: find source).
+Mendler style F-algebras have the unique advantage of being strongly normalising for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recursive deconstructor. The strongly normalising property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the internal catamorphism, which shall be referred to as external deconstructors (todo :: find source).
 
 Let us first explore the core of the encoding by first assuming we have access to a non inductive algebraic data type, then strip these assumptions until just base lambda calculus is left.
 
@@ -59,11 +59,11 @@ let succ = λn. in (S n) : Nat → Nat
 
 The definitions above that are in need of serious attention are `AlgebraM` and `in`.
 
-`AlgebraM` states that for any F-algebra `f` and result `x`, if we have a function, say `g`, from any `r` to `x` and the F-algebra is over `r`, then we can recieve a `x` back through `g`.
+`AlgebraM` states that for any F-algebra `f` and result `x`, if we have a function, say `g`, from any `r` to `x` and the F-algebra is over `r`, then we can receive a `x` back through `g`.
 
-The interesting aspect here is that `g` does not work over the outer algebraic structure, but instead the nested data inside of it. In our above example this would be the `r` in the definition of ℕ. This inner recursion on `r` without any other external deconstructors is what allows this encoding to be strongly normalizing.
+The interesting aspect here is that `g` does not work over the outer algebraic structure, but instead the nested data inside of it. In our above example this would be the `r` in the definition of ℕ. This inner recursion on `r` without any other external deconstructors is what allows this encoding to be strongly normalising.
 
-The form that allows us to inhabit `AlgebraM` is the `in` abstraction. To better understand how `in` works, an example of Nat's useage and expansion to `in` would be the most informative.
+The form that allows us to inhabit `AlgebraM` is the `in` abstraction. To better understand how `in` works, an example of Nat's usage and expansion to `in` would be the most informative.
 
 ```
 let isEven = \rec. \n.
@@ -76,7 +76,7 @@ let two = succ (succ zero)
 two isEven — ===> True
 
 two isEven
-= (succ (succ zero))   isEven             — (1) by defintiion
+= (succ (succ zero))   isEven             — (1) by definition
 = (in S (in S (in Z))) isEven             — (2) by definition of succ and zero
 = isEven (\d. d isEven) (S (in S (in Z))) — (3) by definition of in
 = case (S (in S (in Z))) of               — (4) by definition of isEven
@@ -96,9 +96,9 @@ let pred_alg = \rec. \n.
   | S n → n
 ```
 
-We can see that this definition of `pred_alg` is O(1), as the call to `rec` is optional and not forced unlike other encodings. However if we were to type this using the normal Hindley-Milner type system, this does not work out. [The Cedile Cast](https://youtu.be/HqvBBf_cjDo?t=1020) talks about this fact and deals with this issue by having a O(1) cast arising from dependent intersections.
+We can see that this definition of `pred_alg` is O(1), as the call to `rec` is optional and not forced unlike other encodings. However if we were to type this using the normal Hindley-Milner type system, this does not work out. [The Cedille Cast](https://youtu.be/HqvBBf_cjDo?t=1020) talks about this fact and deals with this issue by having a O(1) cast arising from dependent intersections.
 
-Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard constraint that type systems without dependent intersection types and O(1) heterogenous equality must have [@cedille]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
+Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard constraint that type systems without dependent intersection types and O(1) heterogeneous equality must have [@cedille]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
 
 
 Another property of this algebra is that this encoding is able to achieve linear space unlike previous encodings that took quadratic if not exponential space to achieve proof of termination and O(1) predecessor [@cedille].
@@ -123,9 +123,9 @@ let succ = in succ-c : Nat
 let dup  = in dup-c  : Nat
 ```
 
-There are many valid ways to encode sum types, however for simplicitly we have chosen to create a list of cases with our use of `inl` and `inr`. So, we can view inl as `head` and `inr` as tail, thus our encoding is simply the dotted list `(zero succ . dup)` [@dotted-pair-notation]. On the term level, `inl` just applies the first abstraction `k` over the value, and inr simply applies the second abstraction `l` over the inputted value.
+There are many valid ways to encode sum types, however for simplicity we have chosen to create a list of cases with our use of `inl` and `inr`. So, we can view inl as `head` and `inr` as tail, thus our encoding is simply the dotted list `(zero succ . dup)` [@dotted-pair-notation]. On the term level, `inl` just applies the first abstraction `k` over the value, and inr simply applies the second abstraction `l` over the inputted value.
 
-One obvious optimization one can make, is simply turning this dotted list encoding into a balanced tree.
+One obvious optimisation one can make, is simply turning this dotted list encoding into a balanced tree.
 
 Another issue, is that this encoding can not support fields with multiple arguments, `l` or `k` are simply applied on the first argument given and no more. This can be remedied by swapping the application order of `inl` and `inr`, allowing the first argument to feed `l` or `k` the proper arguments.
 
@@ -150,7 +150,7 @@ As we can also see, this enhancement only affects the last inr/inl in which the 
 
 ### Scott
 
-Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ consturctors. Due to this simple "case switch" layout, the encoding takes linear space.
+Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ constructors. Due to this simple "case switch" layout, the encoding takes linear space.
 
 $((λx₁…xₙ.\, λC₁…Cᵢ…Cₘ.\, Cᵢ \, x₁…xₙ))$
 
@@ -175,8 +175,8 @@ let rec pred =
             (\n. n)
             (\x. \y. D (pred x) (pred y))
 ```
-Another important aspect to Scott encodings is that they can not be typed in `System-F` alone, but instead `System-F` extended wtih covariant recursive types[@Scott]. Due to this, Scott encodings can be typed safely in Juvix Core.
+Another important aspect to Scott encodings is that they can not be typed in `System-F` alone, but instead `System-F` extended with covariant recursive types[@Scott]. Due to this, Scott encodings can be typed safely in Juvix Core.
 
 ## Desugaring
 
-or recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the Eal* level. However, at a future date Mendler encodings will be added.
+or recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the EAL* level. However, at a future date Mendler encodings will be added.
