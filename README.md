@@ -1,5 +1,9 @@
 # Juvix
 
+![GitHub](https://img.shields.io/github/license/cryptiumlabs/juvix)
+![Build status](https://img.shields.io/circleci/build/github/cryptiumlabs/juvix?token=abc123def456)
+![GitHub issues](https://img.shields.io/github/issues/cryptiumlabs/juvix)
+
 ## Overview
 
 Juvix synthesizes a high-level frontend syntax, dependent-linearly-typed core language, and low-level parallelisable
