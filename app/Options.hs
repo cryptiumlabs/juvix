@@ -17,7 +17,9 @@ data Command
   = Version
   | Config
   | Interactive
-  | Solve
+  | Init
+  | Plan
+  | Apply
 
 options ∷ Context → Parser Options
 options ctx = Options <$> commandOptions <*> configOptions ctx
@@ -30,7 +32,9 @@ commandOptions = subparser (
       command "version" (info versionOptions (progDesc "Display version information"))
   <>  command "config" (info configurationOptions (progDesc "Adjust runtime configuration or generate an example config file"))
   <>  command "interactive" (info interactiveOptions (progDesc "Launch interactive mode"))
-  <>  command "solve" (info solveOptions (progDesc "Solve some equations"))
+  <>  command "init" (info initOptions (progDesc "Initialise deployment configuration"))
+  <>  command "plan" (info planOptions (progDesc "Plan deployment"))
+  <>  command "apply" (info applyOptions (progDesc "Execute deployment"))
   )
 
 versionOptions ∷ Parser Command
@@ -42,5 +46,11 @@ configurationOptions = pure Config
 interactiveOptions ∷ Parser Command
 interactiveOptions = pure Interactive
 
-solveOptions ∷ Parser Command
-solveOptions = pure Solve
+initOptions ∷ Parser Command
+initOptions = pure Init
+
+planOptions ∷ Parser Command
+planOptions = pure Plan
+
+applyOptions ∷ Parser Command
+applyOptions = pure Apply

@@ -80,8 +80,6 @@ run ctx (Options cmd configPath) = do
     Version → do
       putDoc versionDoc
       exitSuccess
-    Solve -> do
-      print =<< Solve.computeTwo
     _ -> do
       putText "Not yet implemented!"
       exitFailure
