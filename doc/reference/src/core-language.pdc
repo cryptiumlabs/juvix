@@ -150,26 +150,27 @@ In our language, $x$ can also be annotated as $ω$, indicating that it is used a
 
 ## Typing rules
 
-### Variable & conversion rules
+### Universe (set type)
 
-The variable rule selects an individual variable, type, and usage annotation from the context:
+Let $S$ be a set of sorts ${i, j, k}$ with a total order.
 
-\begin{prooftree}
-\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
-\RightLabel{Var}
-\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S$}
-\end{prooftree}
-
-The conversion rule allows conversion between judgementally equal types:
+Formation rule:
 
 \begin{prooftree}
-\AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
-\AxiomC{$0Γ ⊢ S≡T$}
-\RightLabel{Conv}
-\BinaryInfC{$Γ ⊢ M \overset{σ}{:} T$}
+\AxiomC{$0Γ ⊢$}
+\AxiomC{$i < j$}
+\RightLabel{∗}
+\BinaryInfC{$0Γ ⊢ ∗_i \overset{0}{:} ∗_j$}
 \end{prooftree}
 
-Note that type equality is judged in a context with no resources.
+Introduction rule ($σ = 0$ fragment only):
+
+\begin{prooftree}
+\AxiomC{$0Γ ⊢ M \overset{0}{:} ∗_i$}
+\AxiomC{$0Γ, x \overset{0}{:} M ⊢ N \overset{0}{:} ∗_i$}
+\RightLabel{∗-Pi}
+\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} ∗_i$}
+\end{prooftree}
 
 ### Primitive constants, functions & types
 
@@ -319,45 +320,6 @@ Under the resourceful part:
 
 - If we lambda-encoded pairs, is that isomorphic?
 
-### Multiplicative disjunction
-
-"Both separately in parallel"
-
-Presumably cannot be dependent.
-
-Should be able to provide guarantee of parallelism in low-level execution, both in bespoke & interaction net paths.
-
-Formation rule:
-
-\begin{prooftree}
-\AxiomC{$Γ ⊢ (A \overset{σ}{:} S), (B \overset{σ'}{:} S')$}
-\RightLabel{$\parr$}
-\UnaryInfC{$Γ ⊢ (A \overset{σ}{:} S) \parr (B \overset{σ'}{:} S')$}
-\end{prooftree}
-
-Introduction rule:
-
-\begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
-\AxiomC{$0Γ_1 = 0Γ_2$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T$}
-\RightLabel{$\parr$-Intro}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M\ \gamma\ N \overset{σ}{:} S \parr T$}
-\end{prooftree}
-
-do we need equality of 0-fragment?
-
-Elimination rule:
-
-\begin{prooftree}
-\AxiomC{$Γ_1, M \overset{σ}{:} S ⊢ M' \overset{σ'}{:} S'$}
-\AxiomC{$Γ_2, N \overset{σ}{:} T ⊢ N' \overset{σ'}{:} T'$}
-\RightLabel{$\parr$-Elim}
-\BinaryInfC{$Γ_1 + Γ_2 + M \gamma\ N \overset{σ}{:} S \parr T ⊢ (M', N') \overset{σ'}{:} (S ⊗ T)$}
-\end{prooftree}
-
-reformulate to be syntax-directed, we need some sort of "join"
-
 ### Additive conjunction
 
 "Choose either"
@@ -398,6 +360,45 @@ Elimination rules:
 
 To-do: terms for elimination rules.
 
+### Multiplicative disjunction
+
+"Both separately in parallel"
+
+Presumably cannot be dependent.
+
+Should be able to provide guarantee of parallelism in low-level execution, both in bespoke & interaction net paths.
+
+Formation rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (A \overset{σ}{:} S), (B \overset{σ'}{:} S')$}
+\RightLabel{$\parr$}
+\UnaryInfC{$Γ ⊢ (A \overset{σ}{:} S) \parr (B \overset{σ'}{:} S')$}
+\end{prooftree}
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T$}
+\RightLabel{$\parr$-Intro}
+\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M\ \gamma\ N \overset{σ}{:} S \parr T$}
+\end{prooftree}
+
+do we need equality of 0-fragment?
+
+Elimination rule:
+
+\begin{prooftree}
+\AxiomC{$Γ_1, M \overset{σ}{:} S ⊢ M' \overset{σ'}{:} S'$}
+\AxiomC{$Γ_2, N \overset{σ}{:} T ⊢ N' \overset{σ'}{:} T'$}
+\RightLabel{$\parr$-Elim}
+\BinaryInfC{$Γ_1 + Γ_2 + M \gamma\ N \overset{σ}{:} S \parr T ⊢ (M', N') \overset{σ'}{:} (S ⊗ T)$}
+\end{prooftree}
+
+reformulate to be syntax-directed, we need some sort of "join"
+
 ### Additive disjunction
 
 "Might be either"
@@ -419,28 +420,6 @@ Formation rules:
 \end{prooftree}
 
 Do we get this for free with lambda-encoded datatypes?
-
-### Universe (set type)
-
-Let $S$ be a set of sorts ${i, j, k}$ with a total order.
-
-Formation rule:
-
-\begin{prooftree}
-\AxiomC{$0Γ ⊢$}
-\AxiomC{$i < j$}
-\RightLabel{∗}
-\BinaryInfC{$0Γ ⊢ ∗_i \overset{0}{:} ∗_j$}
-\end{prooftree}
-
-Introduction rule ($σ = 0$ fragment only):
-
-\begin{prooftree}
-\AxiomC{$0Γ ⊢ M \overset{0}{:} ∗_i$}
-\AxiomC{$0Γ, x \overset{0}{:} M ⊢ N \overset{0}{:} ∗_i$}
-\RightLabel{∗-Pi}
-\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} ∗_i$}
-\end{prooftree}
 
 ### Self types
 
@@ -466,6 +445,27 @@ Introduction rule ($σ = 0$ fragment only):
 To-do for self types
 
 - Syntax for self types?
+
+### Variable & conversion rules
+
+The variable rule selects an individual variable, type, and usage annotation from the context:
+
+\begin{prooftree}
+\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
+\RightLabel{Var}
+\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S$}
+\end{prooftree}
+
+The conversion rule allows conversion between judgementally equal types:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ M \overset{σ}{:} S$}
+\AxiomC{$0Γ ⊢ S≡T$}
+\RightLabel{Conv}
+\BinaryInfC{$Γ ⊢ M \overset{σ}{:} T$}
+\end{prooftree}
+
+Note that type equality is judged in a context with no resources.
 
 ### Equality judgements
 
