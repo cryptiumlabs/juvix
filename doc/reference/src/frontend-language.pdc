@@ -27,7 +27,7 @@ Most features simply desugar to Core.
 
 ### Mendler
 
-Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recrusive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the intenral catamorphsim, which shall be refered to as external deconstructors (todo :: find source).
+Mendler style F-algebras have the unique advantage of being strongly normalizing for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recursive deconstructor. The strongly normalizing property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the internal catamorphsim, which shall be refered to as external deconstructors (todo :: find source).
 
 Let us first explore the core of the encoding by first assuming we have access to a non inductive algebraic data type, then strip these assumptions until just base lambda calculus is left.
 
@@ -61,7 +61,7 @@ The definitions above that are in need of serious attention are `AlgebraM` and `
 
 `AlgebraM` states that for any F-algebra `f` and result `x`, if we have a function, say `g`, from any `r` to `x` and the F-algebra is over `r`, then we can recieve a `x` back through `g`.
 
-The interesting aspect here is that `g` does not work over the outer algebraic strucutre, but instead the nested data inside of it. In our above example this would be the `r` in the definition of ℕ. This inner recursion on `r` without any other external deconstructors is what allows this encoding to be strongly normalizing.
+The interesting aspect here is that `g` does not work over the outer algebraic structure, but instead the nested data inside of it. In our above example this would be the `r` in the definition of ℕ. This inner recursion on `r` without any other external deconstructors is what allows this encoding to be strongly normalizing.
 
 The form that allows us to inhabit `AlgebraM` is the `in` abstraction. To better understand how `in` works, an example of Nat's useage and expansion to `in` would be the most informative.
 
