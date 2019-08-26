@@ -50,12 +50,12 @@ data Name
 
 --Values/types
 data Value
-  = VLam Value (Value -> Value)
+  = VLam Value (Value → Value)
   | VStar Natural
   | VNat Natural
-  | VPi NatAndw Value (Value -> Value)
-  | VPm NatAndw Value (Value -> Value)
-  | VPa NatAndw Value (Value -> Value)
+  | VPi NatAndw Value (Value → Value)
+  | VPm NatAndw Value (Value → Value)
+  | VPa NatAndw Value (Value → Value)
   | VNPm Value Value
   | VNeutral Neutral
 
@@ -64,7 +64,7 @@ data Neutral
   = NFree Name
   | NApp Neutral Value
 
-showVal :: Value -> String
+showVal ∷ Value → String
 showVal (VLam _ f) = showFun f
 showVal (VStar i) = "*" ++ show i
 showVal (VNat i) = show i
@@ -75,11 +75,11 @@ showVal (VPa _ _ _) = "/\\"
 showVal (VNPm _ _) = "\\/"
 showVal (VNeutral _n) = "neutral "
 
-showFun :: (Value -> Value) -> String
+showFun ∷ (Value → Value) → String
 showFun _f = "\\x.t"
 
 --vfree creates the value corresponding to a free variable
-vfree :: Name -> Value
+vfree ∷ Name → Value
 vfree n = VNeutral (NFree n)
 
 --Contexts map variables to their types.
@@ -87,7 +87,7 @@ type Type = Value
 
 type Context = [(Name, Type)]
 
-toInt :: Natural -> Int
+toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 {-
 --Evaluation

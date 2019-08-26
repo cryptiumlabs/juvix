@@ -1,6 +1,6 @@
 module Juvix.Encoding.Types where
 
-import           Juvix.Library   hiding (Sum, Product)
+import           Juvix.Library hiding (Product, Sum)
 
 -- Adt Types -------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ data Bound = Bound { lam     :: Lambda
 
 data Env = Env { constructors :: Map SomeSymbol Bound
                -- | adtMap is a mapping between the adt name and the ordered cases thereof
-               , adtMap :: Map SomeSymbol Branches
+               , adtMap       :: Map SomeSymbol Branches
                -- | missingCases represent the missing cases of a match
                , missingCases :: [SomeSymbol]
                } deriving (Show, Generic)
@@ -79,5 +79,5 @@ newtype EnvS a = EnvS (StateT Env (Except Errors) a)
            , HasWriter "missingCases" [SomeSymbol] ) via
     WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
 
-runEnvsS :: EnvS a → Either Errors (a, Env)
+runEnvsS ∷ EnvS a → Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env mempty mempty mempty))

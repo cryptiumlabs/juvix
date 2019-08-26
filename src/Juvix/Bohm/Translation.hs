@@ -2,15 +2,15 @@
 
 module Juvix.Bohm.Translation(astToNet, netToAst) where
 
-import qualified Data.Map.Strict      as Map
-import           Data.List                  ((!!))
-import           Prelude                    (error)
+import           Data.List                ((!!))
+import qualified Data.Map.Strict          as Map
+import           Prelude                  (error)
 
-import           Juvix.Library        hiding (link, empty)
 import           Juvix.Backends.Interface
+import qualified Juvix.Bohm.Type          as BT
+import           Juvix.Library            hiding (empty, link)
+import qualified Juvix.Nets.Bohm          as B
 import           Juvix.NodeInterface
-import qualified Juvix.Nets.Bohm      as B
-import qualified Juvix.Bohm.Type      as BT
 
 data Env net = Env {level :: Int
                    , net' :: net B.Lang
@@ -26,13 +26,13 @@ newtype EnvState net a = EnvS (State (Env net) a)
   deriving (HasState "net" (net B.Lang)) via
     Rename "net'" (Field "net'" () (MonadState (State (Env net))))
 
-execEnvState :: Network net ⇒ EnvState net a → Env net → Env net
+execEnvState ∷ Network net ⇒ EnvState net a → Env net → Env net
 execEnvState (EnvS m) = execState m
 
-evalEnvState :: Network net ⇒ EnvState net a → Env net → a
+evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet :: Network net ⇒ BT.Bohm → net B.Lang
+astToNet ∷ Network net ⇒ BT.Bohm → net B.Lang
 astToNet bohm = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
@@ -114,11 +114,11 @@ astToNet bohm = net'
 
 data FanPorts = Circle | Star deriving Show
 
-fanPortsToAux :: FanPorts → PortType
+fanPortsToAux ∷ FanPorts → PortType
 fanPortsToAux Circle = Aux1
 fanPortsToAux Star   = Aux2
 
-auxToFanPorts :: PortType → FanPorts
+auxToFanPorts ∷ PortType → FanPorts
 auxToFanPorts Aux1 = Circle
 auxToFanPorts Aux2 = Star
 auxToFanPorts _    = error " only send an Aux1 or Aux2 to auxToFanPorts"
@@ -127,7 +127,7 @@ data FanStatus = In FanPorts
                | Completed FanPorts
                deriving Show
 
-netToAst :: DifferentRep net ⇒ net B.Lang → Maybe BT.Bohm
+netToAst ∷ DifferentRep net ⇒ net B.Lang → Maybe BT.Bohm
 netToAst net = evalEnvState run (Env 0 net mempty)
   where
     run = do
@@ -229,7 +229,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                               Just (_, Aux2) → fromCircleOrStar Star   -- from ★, mark it; go through prim!
                               Just (_, Aux1) → fromCircleOrStar Circle -- from ●, mark it; go through prim!
                               -- This case should never happen
-                              _ → pure Nothing
+                              _              → pure Nothing
                           -- We have been in a FanIn Before, figure out what state of the world we are in!
                           Just status →
                             case status of
@@ -306,9 +306,9 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                       nodes
       case frees of
         -- This case should only happen when the code is in a irreducible state
-        [] → pure Nothing
+        []    → pure Nothing
         -- This case should happen when the graph is properly typed
-        [n] → rec' n Nothing Map.empty Map.empty
+        [n]   → rec' n Nothing Map.empty Map.empty
         -- This case should only happen if the graph is incomplete or has multiple
         -- dijoint sets of nodes in the graph
         _ : _ → pure Nothing
@@ -316,7 +316,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
 -- Helper Functions-------------------------------------------------------------
 
 -- | Creates a fan if the port is taken, and prepares to be connected
-chaseAndCreateFan :: (Network net, HasState "level" Int m, HasState "net" (net B.Lang) m)
+chaseAndCreateFan ∷ (Network net, HasState "level" Int m, HasState "net" (net B.Lang) m)
                   ⇒ (Node, PortType)
                   → m (Node, PortType)
 chaseAndCreateFan (num,port) = do
@@ -352,7 +352,7 @@ inFixMapB B.Meq  = BT.Ge
 inFixMapB B.Leq  = BT.Le
 
 -- | numToSymbol generates a symbol from a number
-numToSymbol :: Int → SomeSymbol
+numToSymbol ∷ Int → SomeSymbol
 numToSymbol x
   | x < 26    = someSymbolVal (return ((['x'..'z'] <> ['a'..'w']) !! x))
   | otherwise = someSymbolVal ("%gen" <> show x)
@@ -360,5 +360,5 @@ numToSymbol x
 
 -- | generate a new number based on the map size
 -- Only gives an unique if the key has an isomorphism with the size, and no data is deleted.
-newMapNum :: Map k a → Int
+newMapNum ∷ Map k a → Int
 newMapNum = Map.size

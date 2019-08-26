@@ -2,11 +2,11 @@
 
 module Juvix.Encoding.Scott where
 
-import           Prelude         (error)
+import           Prelude                 (error)
 
-import           Juvix.Library   hiding (Sum, Product)
-import           Juvix.Encoding.Types
 import           Juvix.Encoding.Encoding
+import           Juvix.Encoding.Types
+import           Juvix.Library           hiding (Product, Sum)
 
 
 adtToScott  ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m

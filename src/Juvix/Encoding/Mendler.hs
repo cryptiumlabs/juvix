@@ -3,11 +3,11 @@
 
 module Juvix.Encoding.Mendler where
 
-import           Prelude         (error)
+import           Prelude                 (error)
 
-import           Juvix.Library   hiding (Sum, Product)
-import           Juvix.Encoding.Types
 import           Juvix.Encoding.Encoding
+import           Juvix.Encoding.Types
+import           Juvix.Library           hiding (Product, Sum)
 
 -- TODO ∷ Properly setup a function transfrom to make it self terminate
 
@@ -78,7 +78,7 @@ mendlerCase c = do
 
 -- Helpers for Mendler encoding ------------------------------------------------
 
-numToInGen :: Int → Lambda → Lambda
+numToInGen ∷ Int → Lambda → Lambda
 numToInGen 0 arg = app in' arg
 numToInGen n arg = app in' (rec' n arg)
   where
@@ -99,7 +99,7 @@ numToIn n arg
   | even n     = numToInGen n (app inl arg)
   | otherwise  = numToInGen n (app inr arg)
 
-numToInOp :: Int → Lambda → Lambda
+numToInOp ∷ Int → Lambda → Lambda
 numToInOp n arg
   | even n     = numToInGen n (app inlOp arg)
   | otherwise  = numToInGen n (app inrOp arg)
@@ -107,7 +107,7 @@ numToInOp n arg
 
 -- Lambda Abstraction for mendler encoding -------------------------------------
 
-inl :: Lambda
+inl ∷ Lambda
 inl = Lambda x
            $ Lambda k
                   $ Lambda l
