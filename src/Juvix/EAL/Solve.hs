@@ -8,7 +8,6 @@ import qualified Z3.Monad        as Z3
 import           Juvix.EAL.Types
 import           Juvix.Library   hiding (link, reduce)
 
-
 runMultipleConstraints ∷ Int → [Constraint] → RPT → IO ()
 runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
@@ -129,14 +128,3 @@ constraintSystemAnd c z3Constraint = constraintSystemGen c (constraintsToZ3Extra
 
 constraintSystem ∷ [Constraint] → Z3.Z3 (Z3.Result, GHC.Base.String, Maybe [Integer])
 constraintSystem constraints = constraintSystemGen constraints constraintsToZ3
-
--- wtf, this doesn't work
--- it does now!
-computeTwo ∷ IO (Maybe Integer)
-computeTwo = Z3.evalZ3 $ do
-  x  ← Z3.mkIntVar =<< (Z3.mkStringSymbol "x")
-  _2 ← Z3.mkInteger 2
-  Z3.assert =<< Z3.mkEq x _2
-  fmap snd
-    $ Z3.withModel
-    $ \m -> (\(Just x) -> x) <$> Z3.evalInt m x

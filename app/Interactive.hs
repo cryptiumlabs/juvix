@@ -54,6 +54,14 @@ handleSpecial str cont = do
     'c' : ' ' : rest -> do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
+      case parsed of
+        Just cterm -> do
+          eal <- eraseAndSolveCore cterm
+          case eal of
+            Right (term, _) -> do
+              transformAndEvaluateEal term
+            _ -> return ()
+        Nothing -> return ()
       cont
     'e' : ' ' : rest -> do
       let parsed = EAL.parseEal rest
@@ -63,6 +71,13 @@ handleSpecial str cont = do
         _       -> return ()
       cont
     _      → H.outputStrLn "Unknown special command" >> cont
+
+eraseAndSolveCore ∷ Core.CTerm → H.InputT IO (Either EAL.Errors (EAL.RPT, EAL.ParamTypeAssignment))
+eraseAndSolveCore cterm = do
+  let (term, typeAssignment) = Core.erase' cterm
+  res <- liftIO (EAL.validEal term typeAssignment)
+  H.outputStrLn ("Inferred EAL term & type: " <> show res)
+  pure res
 
 transformAndEvaluateEal ∷ EAL.RPTO → H.InputT IO ()
 transformAndEvaluateEal term = do

@@ -30,7 +30,6 @@ validEal term typMap = do
       Nothing →
         Left (Brack InvalidAssignment)
 
-
 assignType ∷ [Integer] → ParamTypeAssignment → ParamTypeAssignment
 assignType assignment typ = typ >>| placeVals
   where
