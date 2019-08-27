@@ -11,6 +11,7 @@ import           Config
 import           Options
 
 import qualified Juvix.Backends.Env           as Env
+import qualified Juvix.Backends.Graph         as Graph
 import qualified Juvix.Backends.Maps          as Maps
 import qualified Juvix.Bohm                   as Bohm
 import qualified Juvix.Core                   as Core
@@ -83,10 +84,10 @@ transformAndEvaluateEal ∷ EAL.RPTO → H.InputT IO ()
 transformAndEvaluateEal term = do
   let bohm = EAL.ealToBohm term
   H.outputStrLn ("Converted to BOHM: " <> show bohm)
-  let net ∷ Maps.Net Bohm.Lang
+  let net ∷ Graph.FlipNet Bohm.Lang
       net = Bohm.astToNet bohm
   H.outputStrLn ("Translated to net: " <> show net)
-  let reduced = Maps.runMapNet (Bohm.reduceAll 1000000) net
+  let reduced = Graph.runFlipNet (Bohm.reduceAll 1000000) net
       info = Env.info reduced
       res = Env.net reduced
       readback = Bohm.netToAst res
