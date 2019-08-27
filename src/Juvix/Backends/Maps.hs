@@ -157,9 +157,7 @@ auxFromGraph ∷ HasState "net" (Net a) m
 auxFromGraph conv constructor num = do
   Net net ← get @"net"
   let edges = neighbors [num] net
-  case edges of
-    []    → pure Nothing
-    (_:_) → pure $ Just $ foldr f constructor edges
+  pure $ Just $ foldr f constructor edges
   where
     f (Edge (n1, n1port) (n2, n2port)) con
       | n1 == num = conv (n2, n1port) con
