@@ -100,6 +100,7 @@ data TypeErrors = MisMatchArguments PType PType RPTI
                 | TypeIsNotFunction PType
                 | MissingOverUse
                 | ExpectedFunction
+                | TooManyHats
                 deriving Show
 
 -- | Total errors among Type and Bracket Errors

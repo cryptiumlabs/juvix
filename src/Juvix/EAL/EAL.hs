@@ -223,21 +223,21 @@ bracketCheckerErr t = left Brack (bracketChecker t)
 typChecker ∷ RPTO → ParamTypeAssignment → Either TypeErrors ()
 typChecker t typAssign = runEither (() <$ rec' t typAssign)
   where
-    rec' (RBang _ (RVar s)) assign =
+    rec' (RBang bangVar (RVar s)) assign =
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse
-        Just t@(PSymT x _)
-          | x > 0     → pure (assign, t)
-          | otherwise → pure (Map.delete s assign, t)
-        Just t@(PArrT x _ _)
-          | x > 0     → pure (assign, t)
-          | otherwise → pure (Map.delete s assign, t)
-    rec' (RBang _ term@(RApp t1 t2)) assign = do
+        Just t → do
+          newTyp ← addParamPos bangVar t
+          if | bangParam t > 0 → pure (assign, newTyp)
+             | otherwise       → pure (Map.delete s assign, t)
+    rec' (RBang bangApp term@(RApp t1 t2)) assign = do
       (newAssign , type1) ← rec' t1 assign
       (newAssign', type2) ← rec' t2 newAssign
       case type1 of
         PArrT _ arg result
-          | arg == type2 → pure (newAssign', result)
+          | arg == type2 → do
+              newTyp ← addParamPos bangApp result
+              pure (newAssign', newTyp)
           | otherwise    → throw @"typ" (MisMatchArguments arg type2 term)
         t@PSymT {}       → throw @"typ" (TypeIsNotFunction t)
     rec' (RBang x (RLam s t)) assign = do
@@ -255,6 +255,19 @@ typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
 bangParam ∷ PType → Param
 bangParam (PSymT param _)   = param
 bangParam (PArrT param _ _) = param
+
+putParam ∷ Param → PType → PType
+putParam p (PSymT _ s)     = PSymT p s
+putParam p (PArrT _ t1 t2) = PArrT p t1 t2
+
+-- putParamPos ∷ Param → PType → PType
+addParamPos :: HasThrow "typ" TypeErrors m ⇒ Param → PType → m PType
+addParamPos toAdd (PSymT p s)
+  | toAdd + p < 0 = throw @"typ" TooManyHats
+  | otherwise     = pure (PSymT (toAdd + p) s)
+addParamPos toAdd (PArrT p t1 t2)
+  | toAdd + p < 0 = throw @"typ" TooManyHats
+  | otherwise     = pure (PArrT (toAdd + p) t1 t2)
 
 -- | Get the next fresh parameter
 getNextParam ∷ (HasState "nextParam" b f, Enum b) ⇒ f b

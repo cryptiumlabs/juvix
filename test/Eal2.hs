@@ -54,6 +54,12 @@ resAnswerTwo = do
   let ((rtp, typ),env) = execWithAssignment churchMultTyp
                        $ generateTypeAndConstraitns churchMultTwo
   assignments    ← getConstraints (constraints env)
+  traceShowM "rtp-----------------------------"
+  traceShowM rtp
+  traceShowM "----------------------------------"
+  traceShowM "typ-----------------------------"
+  traceShowM typ
+  traceShowM "----------------------------------"
   case assignments of
     Just x  → pure $ Just (assignTerm x rtp, assignType x typ)
     Nothing → pure Nothing
