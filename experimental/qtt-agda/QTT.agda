@@ -38,12 +38,12 @@ infix 1000 `_ ; infixl 200 _∙_ ; infix 100 _⦂_
 private variable e e′ f f′ : Elim n
 
 
-data _≼_ : Rel (Typ n) lzero where
-  sort : u ℕ.≤ v → sort u ≼ sort {n} v
-  Π    : S′ ≼ S → T ≼ T′ → Π π S T ≼ Π π S′ T′
-  refl : S ≼ S
+data _⩿_ : Rel (Typ n) lzero where
+  sort : u ℕ.≤ v → sort u ⩿ sort {n} v
+  Π    : S′ ⩿ S → T ⩿ T′ → Π π S T ⩿ Π π S′ T′
+  refl : S ⩿ S
   -- (maybe recurse into other structures?)
-infix 4 _≼_
+infix 4 _⩿_
 
 weakᵗ′ : Var (suc n) → Tm n → Tm (suc n)
 weakᵉ′ : Var (suc n) → Elim n → Elim (suc n)
