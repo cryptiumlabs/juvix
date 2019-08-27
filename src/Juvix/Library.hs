@@ -40,13 +40,11 @@ infixl 1 >>|
 (|>) = (&)
 infixl 1 |>
 
-
 traverseM ∷ (Monad m, Traversable m, Applicative f)
           ⇒ (a1 → f (m a2))
           → m a1
           → f (m a2)
 traverseM f = fmap join . traverse f
-
 
 instance Show ((->) a b) where
   show _ = "fun"
