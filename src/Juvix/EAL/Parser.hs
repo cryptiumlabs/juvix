@@ -74,19 +74,37 @@ parseBohmFile fname = do
   pure $ parseEal' fname (show input)
 
 -- Grammar ---------------------------------------------------------------------
-expression ∷ Parser RPTO
-expression = do
+expressionGen :: Stream s m Char ⇒ ParsecT s u m RPTI → ParsecT s u m RPTO
+expressionGen ealGen = do
   bangs ← many (try (string "!-") <|> string "!" <|> string " ")
-  term ← try eal <|> parens eal
+  term ← try ealGen
   let f "!" = 1
       f _   = (-1)
       num = sum (fmap f (filter (/= " ") bangs))
   pure (RBang num term)
 
+expression ∷ Parser RPTO
+expression = expressionGen eal
+
+expression' ∷ Parser RPTO
+expression' = expressionGen eal'
+
+
 eal ∷ Parser RPTI
-eal = (lambda <?> "RLam")
+eal =  (lambda <?> "RLam")
+   <|> try (parens (lambda <?> "RLam"))
+   <|> try (application <?> "Application")
+   <|> try (parens (application <?> "Application"))
    <|> (term <?> "RPTO")
-   <|> (application <?> "Application")
+   <|> parens eal
+
+eal' ∷ Parser RPTI
+eal' =  (lambda <?> "RLam")
+    <|> try (parens (lambda <?> "RLam"))
+    <|> (term <?> "RPTO")
+    -- Eal here is safe when it's in a ()'s
+    <|> parens eal
+
 
 types ∷ Parser PType
 types = buildExpressionParser optable types'
@@ -107,7 +125,7 @@ lambda = do
 
 application ∷ Parser RPTI
 application =
-  parens (RApp <$> expression <*> expression)
+  (RApp <$> expression' <*> expression)
 
 term ∷ Parser RPTI
 term = RVar <$> symbol
