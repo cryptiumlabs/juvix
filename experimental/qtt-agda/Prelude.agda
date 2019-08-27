@@ -1,7 +1,12 @@
 module Prelude where
 
 open import Agda.Primitive public using (Level ; lzero ; lsuc ; _⊔_)
-open import Agda.Builtin.FromNat public using (Number)
+open import Agda.Builtin.FromNat public
+
+-- like the one from stdlib but with more instance
+record Lift {a} ℓ (A : Set a) : Set (a ⊔ ℓ) where
+  instance constructor lift
+  field ⦃ lower ⦄ : A
 
 open import Function public
 

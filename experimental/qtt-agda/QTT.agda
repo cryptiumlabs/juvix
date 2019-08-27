@@ -76,3 +76,16 @@ substᵗ = substᵗ′ zero
 substᵉ : Elim (suc n) → Elim n → Elim n
 substᵉ = substᵉ′ zero
 
+
+
+-- allows using de Bruijn indices as terms/elims
+module _ where
+  open Number
+
+  instance number-Elim : ∀ {n} → Number (Elim n)
+  number-Elim {n} .Constraint x = Lift _ $ Fin.number {n} .Constraint x
+  number-Elim .fromNat n = ` Fin.number .fromNat n
+
+  instance number-Term : ∀ {n} → Number (Tm n)
+  number-Term {n} .Constraint = number-Elim {n} .Constraint
+  number-Term .fromNat n ⦃ x ⦄  = [ number-Elim .fromNat n ⦃ x ⦄ ]
