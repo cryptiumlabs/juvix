@@ -73,6 +73,15 @@ record Usages j j′ t t′ t″ : Set (lsuc (j ⊔ t ⊔ j′ ⊔ t′ ⊔ t″
 
 data Bit : Set where `0 `1 : Bit
 
+instance number-Bit : Number Bit
+number-Bit = λ where
+  .Constraint 0 → ⊤
+  .Constraint 1 → ⊤
+  .Constraint (suc (suc _)) → ⊥
+  .fromNat 0 → `0
+  .fromNat 1 → `1
+ where open Number
+
 _≟ᵇ_ : Decidable (_≡_ {A = Bit})
 `0 ≟ᵇ `0 = yes refl
 `0 ≟ᵇ `1 = no (λ ())
