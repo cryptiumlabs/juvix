@@ -3,7 +3,7 @@ module Example where
 open import Prelude
 
 open import Usage
-open import NatUsage
+open import ExtNat hiding (_*_ ; _+_)
 open import QTT NoSub.any
 open import Type NoSub.any
 
