@@ -25,6 +25,8 @@ erase term =
   case term of
     Core.Lam _ body -> do
       name <- newName
+      let ty = EAL.SymT name
+      modify @"typeAssignment" (insert name ty)
       body <- erase body
       pure (EAL.Lam name body)
     Core.Conv iterm -> do
