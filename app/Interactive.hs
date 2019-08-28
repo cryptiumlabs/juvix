@@ -56,6 +56,15 @@ handleSpecial str cont = do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
       cont
+    'c' : 't' : ' ' : rest -> do
+      let parsed = Core.parseString Core.cterm rest
+      H.outputStrLn $ show parsed
+      case parsed of
+        Just cterm -> do
+          let eval = Core.cEval cterm []
+          H.outputStrLn $ Core.showVal eval
+        Nothing -> return ()
+      cont
     'c' : 'e' : ' ' : rest -> do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
@@ -115,6 +124,7 @@ specialDoc (Special command helpDesc) = text $ T.unpack $ mconcat [":", command,
 specials ∷ [Special]
 specials = [
   Special "cp [term]"   "Parse a Juvix Core term",
+  Special "ct [term}"   "Parse, typecheck, & evaluate a Juvix Core term",
   Special "ce [term"    "Parse a Juvix Core term, translate to EAL, solve constraints, evaluate & read-back",
   Special "ep [term]"   "Parse an EAL term",
   Special "ee [term]"   "Parse an EAL term, evaluate & read-back",
