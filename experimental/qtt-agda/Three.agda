@@ -37,7 +37,7 @@ data _≼_ : Rel Three lzero where
   _≼ω : ∀ π → π ≼ ω
 infix 4 _≼_ _≼ω
 
-_≟_ : Decidable (_≡_ {A = Three})
+_≟_ : Decidable $ ≡-At Three
 `0 ≟ `0 = yes refl
 `0 ≟ `1 = no (λ ())
 `0 ≟ ω  = no (λ ())
