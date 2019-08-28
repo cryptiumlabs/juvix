@@ -207,7 +207,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                           Nothing → do
                             mPort ← traverseM findEdge comeFrom
                             let freeChoice =
-                                  let newFanMap = Map.insert i (In Circle) fanMap
+                                  let newFanMap = Map.insert i [In Circle] fanMap
                                       cameFrom  = (Just (n, fanPortsToAux Circle))
                                   in case aux1 of
                                     Auxiliary aux1 →
@@ -215,8 +215,8 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                     -- Never happens by precondition!
                                     FreeNode → pure Nothing
                                 fromCircleOrStar con =
-                                  let newFanMap = Map.insert i (In con) fanMap
-                                      cameFrom = (Just (n, fanPortsToAux Circle))
+                                  let newFanMap = Map.insert i [In con] fanMap
+                                      cameFrom = Just (n, Prim)
                                   in case prim of
                                     Primary prim →
                                       rec' prim cameFrom newFanMap nodeVarMap
@@ -231,41 +231,50 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                               -- This case should never happen
                               _              → pure Nothing
                           -- We have been in a FanIn Before, figure out what state of the world we are in!
-                          Just status →
-                            case status of
-                              -- TODO ∷ Note that I don't do analysis of coming through
-                              -- the same exact node, So there may be a bug?
-
-                              -- We came in through a port, we must leave through it!
-                              In port →
-                                let newFanMap = Map.insert i (Completed port) fanMap
-                                    cameFrom  = (Just (n, fanPortsToAux port))
-                                    aux Circle = aux1
-                                    aux Star   = aux2
-                                in case aux port of
-                                  Auxiliary aux → rec' aux cameFrom newFanMap nodeVarMap
-                                  FreeNode      → pure Nothing -- doesn't happen
-                              -- We have already completed a port, but we don't have
-                              -- enough informationb to determine where to go next!
-                              -- so case on which port we have entered through
-                              -- TODO ∷ port is unused, as we don't branch on it in Prim
-                              -- do we actually have to consider that case and use port?
-                              Completed _port → do
-                                mPort ← traverseM findEdge comeFrom
-                                let through con =
-                                      let newFanMap = Map.insert i (In con) fanMap
-                                          cameFrom  = (Just (n, fanPortsToAux con))
-                                      in case prim of
-                                        Primary prim →
-                                          rec' prim cameFrom newFanMap nodeVarMap
-                                        Free → pure Nothing -- never happens
-                                case mPort of
-                                  -- Shouldn't happen, as the previous node *must* exist
-                                  Nothing → pure Nothing
-                                  Just (_, Aux1) → through (auxToFanPorts Aux1)
-                                  Just (_, Aux2) → through (auxToFanPorts Aux2)
-                                  Just (_, Prim) → pure Nothing -- TODO ∷ This case probably doesn't happen ∃
-                                  Just (_,_)     → pure Nothing -- Shouldn't happen!
+                          Just status → do
+                            mPort ← traverseM findEdge comeFrom
+                            let through con =
+                                  let newFanMap = Map.insert i (In con : status) fanMap
+                                      cameFrom  = Just (n, Prim)
+                                  in case prim of
+                                    Primary prim →
+                                      rec' prim cameFrom newFanMap nodeVarMap
+                                    Free → pure Nothing -- never happens
+                            case mPort of
+                              -- Shouldn't happen, as the previous node *must* exist
+                              Nothing        → pure Nothing
+                              Just (_, Aux1) → through (auxToFanPorts Aux1)
+                              Just (_, Aux2) → through (auxToFanPorts Aux2)
+                              Just (_, Aux3) → pure Nothing -- Shouldn't happen!
+                              Just (_, Aux4) → pure Nothing -- Shouldn't happen!
+                              Just (_, Aux5) → pure Nothing -- Shouldn't happen!
+                              Just (_, Prim) → do
+                                case status of
+                                  In port : xs →
+                                    -- adding the completed at the end keeps the precondition that In's are in front
+                                    let newFanMap = Map.insert i (xs <> [Completed port]) fanMap
+                                        cameFrom  = (Just (n, fanPortsToAux port))
+                                        aux Circle = aux1
+                                        aux Star   = aux2
+                                    in case aux port of
+                                      Auxiliary aux → rec' aux cameFrom newFanMap nodeVarMap
+                                      FreeNode      → pure Nothing -- doesn't happen
+                                  -- We have already completed a port, but have not yet gone through another
+                                  -- so go through the other port
+                                  [Completed port] → do
+                                    let newFanMap Star   = Map.insert i ([In Circle, Completed port]) fanMap
+                                        newFanMap Circle = Map.insert i ([In Star, Completed port]) fanMap
+                                        cameFrom       = (Just (n, fanPortsToAux port))
+                                        auxFlip Circle = aux2
+                                        auxFlip Star   = aux1
+                                    case auxFlip port of
+                                      Auxiliary aux → rec' aux cameFrom (newFanMap port) nodeVarMap
+                                      FreeNode      → pure Nothing -- doesn't happen
+                                  [Completed Star, Completed Circle] → pure Nothing -- going back through both ports, odd!
+                                  [Completed Circle, Completed Star] → pure Nothing -- going back through both ports, odd!
+                                  [Completed _, Completed _]         → error "going through the same node twice!?!?"
+                                  []                                 → error "doesn't happen"
+                                  _ : _                              → error "doesn't happen"
                   B.IsAux1 {B._tag1 = tag, B._prim = prim} →
                     let parentAux con =
                           case prim of
