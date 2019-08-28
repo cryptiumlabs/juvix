@@ -5,8 +5,8 @@ module Example where
 open import Prelude
 
 open import Usage
-open import ExtNat hiding (_*_ ; _+_)
-open import QTT NoSub.any
+open import ExtNat
+open import QTT NoSub.any hiding (_+_ ; _*_)
 open import Type NoSub.any
 
 variable
@@ -78,7 +78,7 @@ S =
                        (Only 1 0 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1) ∋
                         ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
 
--- A, B : sort 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
+-- 0 A, B : sort 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
 K : ε ⨟ sort 0 ⨟ sort 0 ⊢ 1 - Π 1 1 (Π 0 1 3) ∋ Λ (Λ 1) ▷ ε ⨟ 0 ⨟ 0
 K =
   let Γ = ε ⨟ sort 0 ⨟ sort 0 ⨟ 1 ⨟ 1 in
@@ -92,3 +92,55 @@ K =
 -- A : sort 0 ⊢ 1 (1 A → A) ∋ λ x . x
 I : ε ⨟ sort 0 ⊢ 1 - Π 1 0 1 ∋ Λ 0 ▷ ε ⨟ 0
 I = lam refl (elim refl (var refl (Only 1 0 (ε ⨟ 0 ⨟ 1) ∋ ε ⨟ refl ⨟[ refl ])))
+
+
+ChurchZero = K
+
+-- for useful non-∞ usages we'd need usage polymorphism.
+-- which might be a nice thing to have imo.
+-- (is polynomial equality decidable? it seems like it should be)
+--
+-- 0 A, B, C : sort 0
+--   ⊢ 1 (∞ (∞ (∞ A → B) → ∞ C → A) → ∞ (∞ A → B) → ∞ C → B
+--   ∋ λ n f x. f (n f x)
+ChurchSuc :
+  ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0
+    ⊢ 1 - Π ∞ (Π ∞ (Π ∞ 2 2) (Π ∞ 1 4)) (Π ∞ (Π ∞ 3 3) (Π ∞ 2 4))
+    ∋ Λ (Λ (Λ [ 1 ∙ [ 2 ∙ 1 ∙ 0 ] ]))
+    ▷ ε ⨟ 0 ⨟ 0 ⨟ 0
+ChurchSuc =
+  lam refl (lam refl (lam refl
+    (elim refl
+      (app refl refl
+        (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
+        (elim refl
+          (app refl refl
+            (app refl refl
+              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
+              (elim refl
+                (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+            (elim refl
+              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
+
+{-
+0 | A : Type ⊢
+suc :
+  ∀ π0 ... π6.
+  (π0 | (π1 | (π2 | A) → A) → (π3 | A) → A) →
+  (π4 | (π5 | A) → A) →
+  (π6 | A) →
+  A
+where
+  π5 = π2
+  π2 * π3 = π6
+  1 + π2 * π1 = π4
+  π2 = π0
+i.e.
+suc :
+  ∀ πⁿ πᶠ πˣ π′.
+  (0 A : Type) →
+  (πⁿ | n : (πᶠ | f : (πⁿ | x : A) → A) → (πˣ | x : A) → A) →
+  (πᶠ * π′ + 1 | f : (πⁿ | A) → A) →
+  (πˣ * π′ | x : A) →
+  A
+-}
