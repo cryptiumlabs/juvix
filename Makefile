@@ -15,6 +15,9 @@ build-opt: clean
 lint:
 	stack exec -- hlint app src test
 
+format:
+	find . -type f -name "*.hs" -exec stylish-haskell -i {} \;
+
 test:
 	stack test --fast
 
@@ -30,4 +33,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-watch build-opt lint test repl-lib repl-exe clean clean-full
+.PHONY: all setup build build-watch build-opt lint format test repl-lib repl-exe clean clean-full

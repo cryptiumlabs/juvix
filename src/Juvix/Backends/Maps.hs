@@ -23,6 +23,11 @@ makeLenses ''NodeInfo
 -- Run Function ----------------------------------------------------------------
 runMapNet ∷ EnvNetInfo (Net b) a → Net b → InfoNet (Net b)
 runMapNet f net = runNet f net (toInteger (length (ofNet net)))
+
+
+-- used for debugging, i.e. getting information back from the net
+runMapNet' :: EnvNetInfo (Net a1) a2 → Net a1 → (a2, InfoNet (Net a1))
+runMapNet' f net = runNet' f net (toInteger (length (ofNet net)))
 -- Network Instances  ----------------------------------------------------------
 
 instance Network Net where
@@ -58,7 +63,17 @@ instance Network Net where
     Net net ← get @"net"
     pure $ do
      n ← Map.lookup node net
+     -- If this fails it could be due
+     -- to a node referring to itself
+     -- this could mean the edge we are searching for
+     -- is not in the keys but the answers to the map
+     -- so find that and give back the key with the number
+     let findSelf ((port, (n, port')) : xs)
+           | port' == nodePort ∧ n == node = Just (n, port)
+           | otherwise = findSelf xs
+         findSelf [] = Nothing
      Map.lookup nodePort (n^.edges)
+       <|> findSelf (Map.toList (n^.edges))
 
   -- Note this does not remove all edges to the deleted node
   deleteEdge node1@(n1, p1) node2@(n2, p2) = do
@@ -142,9 +157,7 @@ auxFromGraph ∷ HasState "net" (Net a) m
 auxFromGraph conv constructor num = do
   Net net ← get @"net"
   let edges = neighbors [num] net
-  case edges of
-    []    → pure Nothing
-    (_:_) → pure $ Just $ foldr f constructor edges
+  pure $ Just $ foldr f constructor edges
   where
     f (Edge (n1, n1port) (n2, n2port)) con
       | n1 == num = conv (n2, n1port) con

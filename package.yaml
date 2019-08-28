@@ -3,12 +3,12 @@ version:             0.0.0.0
 github:              "cryptiumlabs/juvix"
 license:             GPL-3
 homepage:            https://github.com/cryptiumlabs/juvix#readme
-synopsis:            Juvix smart contract compiler & toolkit
+synopsis:            Juvix smart contract language compiler, debugging toolkit, & stateful deployment system
 category:            Web3
-description:         Please see the README on GitHub at <https://github.com/cwgoes/juvix#readme>
+description:         Please see the README on GitHub at <https://github.com/cryptiumlabs/juvix#readme>
 author:              Cryptium Labs
-maintainer:          cwgoes@cryptium.ch, jeremy@cryptium.ch
-copyright:           2018-2019 Cryptium Labs
+maintainer:          cwgoes@cryptium.ch, jeremy@cryptium.ch, marty@cryptium.ch, andy@cryptium.ch
+copyright:           2018 Christopher Goes, 2018-2019 Cryptium Labs
 
 extra-source-files:
 - README.md
@@ -26,6 +26,8 @@ dependencies:
   - fgl-visualize
   - enummapset
   - turtle
+  - directory
+
 default-extensions:
   - NoImplicitPrelude
   - OverloadedStrings
@@ -55,12 +57,11 @@ ghc-options:
   - -Wall
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
-  - -j4
+  - -j6
 
 library:
   source-dirs: src
   dependencies:
-    - directory
     - z3
   exposed-modules:
     - Juvix
@@ -68,9 +69,8 @@ library:
     - Juvix.EAL
     - Juvix.EAL.Check
     - Juvix.EAL.EAL
-    - Juvix.EAL.EAL2
     - Juvix.EAL.Solve
-    - Juvix.EAL.Types2
+    - Juvix.EAL.Types
     - Juvix.EAL.Parser
     - Juvix.Utility
     - Juvix.Nets.Bohm
@@ -81,6 +81,8 @@ library:
     - Juvix.Backends.Maps
     - Juvix.Bohm.Parser
     - Juvix.Bohm.Translation
+    - Juvix.Bohm.Type
+    - Juvix.Bohm
     - Juvix.Library
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph
@@ -99,7 +101,6 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - juvix
-      - directory
       - optparse-applicative
       - ansi-wl-pprint
       - raw-strings-qq

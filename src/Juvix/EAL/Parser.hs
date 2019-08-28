@@ -9,14 +9,14 @@ import           Text.Parsec.String
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as T
 
-import           Juvix.EAL.EAL
-import           Juvix.Library                          hiding (link, many,
-                                                         optional, reduce, try,
-                                                         (<|>))
+import           Juvix.EAL.Types
+import           Juvix.Library                          hiding (Type, link,
+                                                         many, optional, reduce,
+                                                         try, (<|>))
 
 langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
-              { T.reservedNames   = ["lambda", "forall", "Forall"]
+              { T.reservedNames   = ["lambda"]
               , T.reservedOpNames = [",", ":", "(", ")", "[", "]", "{", "}"
                                     , "λ", ".", "!", "!-", "-o"]
               , T.identStart      = letter   <|> char '_' <|> char '_'
@@ -62,83 +62,95 @@ brackets   = T.brackets   lexer
 natural    = T.natural    lexer
 
 -- Full Parsers ----------------------------------------------------------------
-parseEal ∷ String → Either ParseError Term
+parseEal ∷ String → Either ParseError RPTO
 parseEal = parseEal' ""
 
-parseEal' ∷ SourceName → String → Either ParseError Term
+parseEal' ∷ SourceName → String → Either ParseError RPTO
 parseEal' = runParser (whiteSpace *> expression <* eof) ()
 
-parseBohmFile ∷ FilePath → IO (Either ParseError Term)
+parseBohmFile ∷ FilePath → IO (Either ParseError RPTO)
 parseBohmFile fname = do
   input ← readFile fname
   pure $ parseEal' fname (show input)
 
 -- Grammar ---------------------------------------------------------------------
-expression ∷ Parser Term
-expression = do
+expressionGen :: Stream s m Char ⇒ ParsecT s u m RPTI → ParsecT s u m RPTO
+expressionGen ealGen = do
   bangs ← many (try (string "!-") <|> string "!" <|> string " ")
-  term ← try eal <|> parens eal
+  term ← try ealGen
   let f "!" = 1
       f _   = (-1)
       num = sum (fmap f (filter (/= " ") bangs))
-  pure (Bang num term)
+  pure (RBang num term)
 
-eal ∷ Parser Eal
-eal = (lambda <?> "Lambda")
-   <|> (term <?> "Term")
-   <|> (application <?> "Application")
+expression ∷ Parser RPTO
+expression = expressionGen eal
 
-types ∷ Parser Types
+expression' ∷ Parser RPTO
+expression' = expressionGen eal'
+
+
+eal ∷ Parser RPTI
+eal =  (lambda <?> "RLam")
+   <|> try (parens (lambda <?> "RLam"))
+   <|> try (application <?> "Application")
+   <|> try (parens (application <?> "Application"))
+   <|> (term <?> "RPTO")
+   <|> parens eal
+
+eal' ∷ Parser RPTI
+eal' =  (lambda <?> "RLam")
+    <|> try (parens (lambda <?> "RLam"))
+    <|> (term <?> "RPTO")
+    -- Eal here is safe when it's in a ()'s
+    <|> parens eal
+
+
+types ∷ Parser PType
 types = buildExpressionParser optable types'
 
-types' ∷ Parser Types
-types' = bangs <|> forall <|> specific
+types' ∷ Parser PType
+types' = bangs <|> specific
 
 symbol ∷ Stream s m Char ⇒ ParsecT s u m SomeSymbol
 symbol = someSymbolVal <$> identifier
 
-lambda ∷ Parser Eal
+lambda ∷ Parser RPTI
 lambda = do
   reserved "lambda" <|> reservedOp "\\" <|> reservedOp "λ"
   s ← symbol
-  reservedOp ":"
-  sType ← types
   reservedOp "."
   body ← expression
-  pure (Lambda s sType body)
+  pure (RLam s body)
 
-application ∷ Parser Eal
+application ∷ Parser RPTI
 application =
-  parens (App <$> expression <*> expression)
+  (RApp <$> expression' <*> expression)
 
-term ∷ Parser Eal
-term = Term <$> symbol
+term ∷ Parser RPTI
+term = RVar <$> symbol
 
---  isLolly ← optional (reservedOp "-o")
-
-bangs ∷ Parser Types
+bangs ∷ Parser PType
 bangs = do
   bangs ← many1 (try (string "!-") <|> string "!" <|> string " ")
   typ   ← parens types <|> types
   let f "!" = 1
       f _   = (-1)
       num = sum (fmap f (filter (/= " ") bangs))
-  pure $
-    if | num == 0  → typ
-       | num >  0  → BangT num typ
-       | otherwise → UBang num typ
+  pure $ addSymT num typ
 
-forall ∷ Parser Types
-forall = Forall <$ (reserved "forall" <|> reserved "Forall")
+addSymT ∷ Param → PType → PType
+addSymT n (PSymT a b)   = PSymT (n + a) b
+addSymT n (PArrT a b c) = PArrT (n + a) b c
 
-specific ∷ Parser Types
-specific = Specific <$> symbol
+specific ∷ Parser PType
+specific = PSymT 0 <$> symbol
 
 createOpTable ∷ ParsecT s u m (a → a → a) → Operator s u m a
 createOpTable term = E.Infix term AssocRight
 
-lolly ∷ Stream s m Char ⇒ ParsecT s u m (Types → Types → Types)
-lolly = Lolly <$ reservedOp "-o"
+lolly ∷ Stream s m Char ⇒ ParsecT s u m (PType → PType → PType)
+lolly = PArrT 0 <$ reservedOp "-o"
 
-optable ∷ [[Operator String () Identity Types]]
+optable ∷ [[Operator String () Identity PType]]
 optable = [[createOpTable lolly]]

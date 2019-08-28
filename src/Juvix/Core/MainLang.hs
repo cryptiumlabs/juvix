@@ -21,7 +21,7 @@ instance Eq NatAndw where
 -- checkable terms
 data CTerm
   = Star Natural -- (sort i) i th ordering of (closed) universe.
-  | Nat Natural -- (Prim) primitive type
+  | Nats -- (Prim) primitive type (naturals)
   | Pi NatAndw CTerm CTerm -- formation rule of the dependent function type (PI).
                               -- the NatAndw(π) tracks how many times x is used.
   | Pm NatAndw CTerm CTerm -- dependent multiplicative conjunction (tensor product)
@@ -37,6 +37,7 @@ data CTerm
 data ITerm
   = Bound Natural -- Bound variables, in de Bruijn indices
   | Free Name -- Free variables of type name (see below)
+  | Nat Natural -- primitive constant (naturals)
   | App NatAndw ITerm CTerm -- elimination rule of PI (APP).
                               -- the NatAndw(π) tracks how x is use.
   | Ann NatAndw CTerm CTerm --Annotation with usage.
@@ -50,14 +51,15 @@ data Name
 
 --Values/types
 data Value
-  = VLam Value (Value -> Value)
+  = VLam NatAndw (Value -> Value)
   | VStar Natural
-  | VNat Natural
+  | VNats
   | VPi NatAndw Value (Value -> Value)
   | VPm NatAndw Value (Value -> Value)
   | VPa NatAndw Value (Value -> Value)
   | VNPm Value Value
   | VNeutral Neutral
+  | VNat Natural
 
 --A neutral term is either a variable or an application of a neutral term to a value
 data Neutral
@@ -67,13 +69,14 @@ data Neutral
 showVal :: Value -> String
 showVal (VLam _ f) = showFun f
 showVal (VStar i) = "*" ++ show i
-showVal (VNat i) = show i
+showVal VNats = "Nats"
 showVal (VPi n v f) = "[" ++ show n ++ "]" ++ showVal v ++ " -> " ++ showFun f
 showVal (VPm n v f) =
   "([" ++ show n ++ "]" ++ showVal v ++ ", " ++ showFun f ++ ")"
 showVal (VPa _ _ _) = "/\\"
 showVal (VNPm _ _) = "\\/"
 showVal (VNeutral _n) = "neutral "
+showVal (VNat i) = show i
 
 showFun :: (Value -> Value) -> String
 showFun _f = "\\x.t"
@@ -89,24 +92,34 @@ type Context = [(Name, Type)]
 
 toInt :: Natural -> Int
 toInt = fromInteger . toInteger
-{-
+
 --Evaluation
 type Env = [Value]
 
-iEval :: ITerm -> Env -> Value
-iEval (Star i) _d = VStar i
-iEval (Pi Omega ty ty') d = VPi Omega (cEval ty d) (\x -> cEval ty' (x : d))
-iEval (Pi (Natural n) ty ty') d =
+cEval :: CTerm -> Env -> Value
+cEval (Star i) _d = VStar i
+cEval Nats _ = VNats
+cEval (Pi Omega ty ty') d = VPi Omega (cEval ty d) (\x -> cEval ty' (x : d))
+cEval (Pi (Natural n) ty ty') d =
   VPi (Natural (n - 1)) (cEval ty d) (\x -> cEval ty' (x : d))
-iEval (Pm n ty ty') d =
+{-
+cEval (Pm Omega ty ty') d = VPm Omega (cEval ty d) (\x -> cEval ty' (x : d))
+cEval (Pm (Natural n) ty ty') d =
   VPm (Natural (n - 1)) (cEval ty d) (\x -> cEval ty' (x : d))
-iEval (Pa n ty ty') d =
+cEval (Pa Omega ty ty') d = VPa Omega (cEval ty d) (\x -> cEval ty' (x : d))
+cEval (Pa (Natural n) ty ty') d =
   VPa (Natural (n - 1)) (cEval ty d) (\x -> cEval ty' (x : d))
-iEval (Free x) _d = vfree x
-iEval (Bound ii) d = d !! (toInt ii) --(!!) :: [a] -> Int -> a, the list lookup operator.
+cEval (NPm ty ty') d = undefined -}
+cEval (Lam Omega e) d = VLam Omega (\x -> cEval e (x : d))
+cEval (Lam (Natural n) e) d = VLam (Natural (n - 1)) (\x -> cEval e (x : d))
+cEval (Conv ii) d = iEval ii d
+
+iEval :: ITerm -> Env -> Value
+iEval (Free x) _d           = vfree x
+iEval (Bound ii) d          = d !! (toInt ii) --(!!) :: [a] -> Int -> a, the list lookup operator.
+iEval (Nat n) _d            = VNat n
 iEval (App n iterm cterm) d = vapp (iEval iterm d) (cEval cterm d)
-iEval (Nat i) _ = VNat i
-iEval (NPm ty ty') d = undefined VNPm ty ty' d
+iEval (Ann n term _type) d  = cEval term d
 
 vapp :: Value -> Value -> Value
 vapp (VLam n f) v = f v
@@ -115,11 +128,7 @@ vapp x y =
   error
     ("Application (vapp) error. Cannot apply \n" ++
      showVal y ++ "\n to \n" ++ showVal x)
-
-cEval :: CTerm -> Env -> Value
-cEval (Conv ii) d = iEval ii d
-
---cEval (Lam  e)    d =  VLam (\ x -> cEval e (x : d))
+{-
 --substitution function for inferable terms
 iSubst :: Natural -> ITerm -> ITerm -> ITerm
 iSubst ii r (Bound j)

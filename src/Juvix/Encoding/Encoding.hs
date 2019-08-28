@@ -1,11 +1,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Juvix.Encoding.Encoding where
 
-import qualified Data.Map.Strict as Map
-import           Prelude         (error)
+import qualified Data.Map.Strict      as Map
+import           Prelude              (error)
 
-import           Juvix.Library   hiding (Sum, Product)
 import           Juvix.Encoding.Types
+import           Juvix.Library        hiding (Product, Sum)
 
 
 -- Generic Case expansion ------------------------------------------------------

@@ -186,5 +186,5 @@ iterm =  parens iterm
 parseString ∷ Parser a → String → Maybe a
 parseString p str =
      case parse p "" str of
-     Left e  -> Nothing
+     Left _  -> Nothing
      Right r -> Just r

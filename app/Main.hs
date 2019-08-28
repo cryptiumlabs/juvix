@@ -13,8 +13,6 @@ import           Config
 import           Interactive
 import           Options
 
-import qualified Juvix.EAL                    as Solve
-
 context ∷ IO Context
 context = do
   pwd   ← getCurrentDirectory
@@ -80,8 +78,6 @@ run ctx (Options cmd configPath) = do
     Version → do
       putDoc versionDoc
       exitSuccess
-    Solve -> do
-      print =<< Solve.computeTwo
     _ -> do
       putText "Not yet implemented!"
       exitFailure

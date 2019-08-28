@@ -1,12 +1,12 @@
 module Eal2 where
 
 import           Juvix.EAL.Check
-import           Juvix.EAL.EAL2
+import           Juvix.EAL.EAL
 import           Juvix.EAL.Solve
-import           Juvix.EAL.Types2
-import           Juvix.Library    hiding (Type, link, reduce)
+import           Juvix.EAL.Types
+import           Juvix.Library   hiding (Type, link, reduce)
 
-import qualified Data.Map.Strict  as Map
+import qualified Data.Map.Strict as Map
 
 testGen ∷ (RPT, Env)
 testGen = execWithAssignment testAssignment
@@ -54,6 +54,12 @@ resAnswerTwo = do
   let ((rtp, typ),env) = execWithAssignment churchMultTyp
                        $ generateTypeAndConstraitns churchMultTwo
   assignments    ← getConstraints (constraints env)
+  traceShowM "rtp-----------------------------"
+  traceShowM rtp
+  traceShowM "----------------------------------"
+  traceShowM "typ-----------------------------"
+  traceShowM typ
+  traceShowM "----------------------------------"
   case assignments of
     Just x  → pure $ Just (assignTerm x rtp, assignType x typ)
     Nothing → pure Nothing

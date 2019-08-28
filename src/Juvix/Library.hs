@@ -8,17 +8,17 @@ module Juvix.Library ( module Protolude
                      , traverseM
                      ) where
 
-import           Prelude                  (Show (..))
 import           Capability.Error
 import           Capability.Reader
 import           Capability.State
-import           Capability.Writer
 import           Capability.Stream
+import           Capability.Writer
+import           Prelude           (Show (..))
 import           Protolude         hiding ((:.:), Constraint, Fixity (..),
                                     MonadError (..), MonadReader (..),
                                     MonadState (..), ask, asks, catch,
-                                    catchJust, get, gets, local, modify, put,
-                                    reader, state, pass)
+                                    catchJust, get, gets, local, modify, pass,
+                                    put, reader, state)
 
 (∨) ∷ Bool → Bool → Bool
 (∨) = (||)
@@ -36,12 +36,12 @@ infixr 1 |<<
 (>>|) = flip fmap
 infixl 1 >>|
 
-(|>) :: a → (a → b) → b
+(|>) ∷ a → (a → b) → b
 (|>) = (&)
 infixl 1 |>
 
 
-traverseM :: (Monad m, Traversable m, Applicative f)
+traverseM ∷ (Monad m, Traversable m, Applicative f)
           ⇒ (a1 → f (m a2))
           → m a1
           → f (m a2)

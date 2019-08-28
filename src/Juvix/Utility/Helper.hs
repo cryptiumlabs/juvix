@@ -6,7 +6,7 @@ newtype Flip p a b = Flip { runFlip :: p b a }
                    deriving (Show, Generic, Eq, Ord, Typeable)
 
 
-untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) ⇒ f Bool → t → f ()
+untilNothingNTimesM ∷ (Num t, Ord t, Enum t, Monad f) ⇒ f Bool → t → f ()
 untilNothingNTimesM f n
   | n <= 0  = pure ()
   | otherwise = do
