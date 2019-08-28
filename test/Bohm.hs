@@ -13,9 +13,12 @@ import           Juvix.Utility
 
 import           Juvix.Visualize.Dot
 import           Juvix.Visualize.Graph
-import           Juvix.Bohm.Translation
+
+import           Juvix.EAL
 
 import           Text.Parsec
+
+import           Data.Graph.Inductive     hiding (Network, Node, delNodes,nodes)
 
 --test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test1 :: Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
@@ -44,6 +47,19 @@ test5 = runFlipNet (reduceAll 10) . astToNet <$> parseBohm "(2 + 2)"
 test6 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test6 = runFlipNet (reduceAll 0) . astToNet <$> parseBohm "( (lambda x. (x + 3 + 5)) 2)"
 
+
+test7 :: Maybe Bohm
+test7 = testAst $ runFlipNet (reduceAll 10) . astToNet <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+
+test7' :: Maybe Bohm
+test7' = testAst $ runMapNet (reduceAll 10) . astToNet <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+
+testBlah :: Either ParseError (Maybe (Adj EdgeInfo), InfoNet (FlipNet Lang))
+testBlah = runFlipNet' (do reduceAll 10
+                           net ← get @"net"
+                           return $ fmap lneighbors' $ fst $ match 3 (runFlip net)
+                        ) . astToNet <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+
 test6Gen ∷ IO (Either ParseError (InfoNet (FlipNet Lang)))
 test6Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet) (parseBohm "( (lambda x. (x + 3 + 5)) 2)")
 
@@ -52,11 +68,9 @@ test67Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet) (parseBohm "( (lamb
 
 -- run these on any of the tests above
 -- gives back a term for all except for Omega, but that is reasonable
+testAst :: DifferentRep net ⇒ Either a (InfoNet (net Lang)) → Maybe Bohm
 testAst (Right (InfoNet {net = n})) = netToAst n
-
--- run these on any of the tests above
--- gives back a term for all except for Omega, but that is reasonable
-testAst (Right (InfoNet {net = n})) = netToAst n
+testAst (Left _)                    = Nothing
 
 
 test78Back ∷ Maybe Juvix.Bohm.Type.Bohm
@@ -70,6 +84,16 @@ test78Back = netToAst n
 test8Gen ∷ IO (Either ParseError (InfoNet (FlipNet Lang)))
 test8Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet)
                     (parseBohm "(lambda x. lambda y. ((lambda z. (z (z y))) (lambda w. (x w))))")
+
+
+test9Gen :: IO (Either ParseError (InfoNet (FlipNet Lang)))
+test9Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet)
+                    (parseBohm "(lambda s . (lambda z . (s (s z))))")
+
+test10Gen :: IO (Either ParseError (InfoNet (FlipNet Lang)))
+test10Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNet)
+                     (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+
 
 printTest3 ∷ IO ()
 printTest3 = showNet "test3.dot" (runFlip net)

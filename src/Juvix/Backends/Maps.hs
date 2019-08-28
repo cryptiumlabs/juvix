@@ -160,6 +160,7 @@ auxFromGraph conv constructor num = do
   pure $ Just $ foldr f constructor edges
   where
     f (Edge (n1, n1port) (n2, n2port)) con
-      | n1 == num = conv (n2, n1port) con
-      | n2 == num = conv (n1, n2port) con
-      | otherwise = con
+      | n1 == num && n2 == num = conv (n1, n2port) (conv (n2, n1port) con)
+      | n1 == num             = conv (n2, n1port) con
+      | n2 == num             = conv (n1, n2port) con
+      | otherwise             = con

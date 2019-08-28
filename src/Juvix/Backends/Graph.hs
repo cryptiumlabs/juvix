@@ -110,6 +110,7 @@ auxFromGraph conv constructor num =
   fmap (foldr f constructor . lneighbors') . fst . match num . runFlip <$> get @"net"
   where
     f (Edge (n1, n1port) (n2, n2port), _) con
-      | n1 == num = conv (n2, n1port) con
-      | n2 == num = conv (n1, n2port) con
-      | otherwise = con
+      | n1 == num && n2 == num = conv (n1, n2port) (conv (n2, n1port) con)
+      | n1 == num             = conv (n2, n1port) con
+      | n2 == num             = conv (n1, n2port) con
+      | otherwise             = con
