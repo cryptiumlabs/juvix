@@ -82,23 +82,24 @@ number-Bit = λ where
   .fromNat 1 → `1
  where open Number
 
-_≟ᵇ_ : Decidable (_≡_ {A = Bit})
+_≟ᵇ_ : Decidable $ ≡-At Bit
 `0 ≟ᵇ `0 = yes refl
 `0 ≟ᵇ `1 = no (λ ())
 `1 ≟ᵇ `0 = no (λ ())
 `1 ≟ᵇ `1 = yes refl
 infix 4 _≟ᵇ_
 
-≡ᵇ-isDecEquivalence : IsDecEquivalence (_≡_ {A = Bit})
+≡ᵇ-isDecEquivalence : IsDecEquivalence $ ≡-At Bit
 ≡ᵇ-isDecEquivalence =
   record { ≡ ; _≟_ = _≟ᵇ_ }
 
 
 module _ {a} {A : Set a} where
-  ≡-isPartialOrder : IsPartialOrder _≡_ (_≡_ {A = A})
+  private ≡A = ≡-At A
+
+  ≡-isPartialOrder : IsPartialOrder ≡A ≡A
   ≡-isPartialOrder = record { ≡ ; antisym = const }
 
-  ≡-isDecPartialOrder : Decidable (_≡_ {A = A}) →
-                        IsDecPartialOrder _≡_ (_≡_ {A = A})
+  ≡-isDecPartialOrder : Decidable ≡A → IsDecPartialOrder ≡A ≡A
   ≡-isDecPartialOrder ≟ =
     record { isPartialOrder = ≡-isPartialOrder ; _≟_ = ≟ ; _≤?_ = ≟ }
