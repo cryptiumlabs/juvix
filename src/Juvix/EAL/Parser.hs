@@ -2,7 +2,7 @@
 
 module Juvix.EAL.Parser where
 
-import           Prelude                                (String)
+import           Prelude                                (error, String)
 import           Text.Parsec
 import           Text.Parsec.Expr                       as E
 import           Text.Parsec.String
@@ -76,31 +76,29 @@ parseBohmFile fname = do
 -- Grammar ---------------------------------------------------------------------
 expressionGen :: Stream s m Char ⇒ ParsecT s u m RPTI → ParsecT s u m RPTO
 expressionGen ealGen = do
+  bang  ← try (string "!-") <|> string "!"
   bangs ← many (try (string "!-") <|> string "!" <|> string " ")
-  term ← try ealGen
+  term  ← ealGen
   let f "!" = 1
       f _   = (-1)
-      num = sum (fmap f (filter (/= " ") bangs))
+      num = sum (fmap f (filter (/= " ") (bang : bangs)))
   pure (RBang num term)
 
 expression ∷ Parser RPTO
-expression = expressionGen eal
+expression = expressionGen eal <|> (RBang 0 <$> eal)
 
 expression' ∷ Parser RPTO
-expression' = expressionGen eal'
-
+expression' = expressionGen eal' <|> (RBang 0 <$> eal')
 
 eal ∷ Parser RPTI
-eal =  (lambda <?> "RLam")
-   <|> try (parens (lambda <?> "RLam"))
-   <|> try (application <?> "Application")
-   <|> try (parens (application <?> "Application"))
-   <|> (term <?> "RPTO")
+eal =  try (application <?> "Application")
+   <|> (lambda           <?> "RLam")
+   <|> (term        <?> "RPTO")
    <|> parens eal
 
 eal' ∷ Parser RPTI
-eal' =  (lambda <?> "RLam")
-    <|> try (parens (lambda <?> "RLam"))
+eal' =  try (parens eal')
+    <|> (lambda    <?> "RLam")
     <|> (term <?> "RPTO")
     -- Eal here is safe when it's in a ()'s
     <|> parens eal
@@ -124,8 +122,12 @@ lambda = do
   pure (RLam s body)
 
 application ∷ Parser RPTI
-application =
-  (RApp <$> expression' <*> expression)
+application = do
+  exp  ← expression'
+  exps ← many1 expression'
+  case exps of
+    []      → error "doesn't happen"
+    x :  xs → pure $ foldl (\acc x → RApp (RBang 0 acc) x) (RApp exp x) xs
 
 term ∷ Parser RPTI
 term = RVar <$> symbol
