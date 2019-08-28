@@ -52,7 +52,11 @@ handleSpecial str cont = do
     "tutorial" → do
       H.outputStrLn "Interactive tutorial coming soon!"
       cont
-    'c' : ' ' : rest -> do
+    'c' : 'p' : ' ' : rest -> do
+      let parsed = Core.parseString Core.cterm rest
+      H.outputStrLn $ show parsed
+      cont
+    'c' : 'e' : ' ' : rest -> do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
       case parsed of
@@ -64,7 +68,11 @@ handleSpecial str cont = do
             _ -> return ()
         Nothing -> return ()
       cont
-    'e' : ' ' : rest -> do
+    'e' : 'p' : ' ' : rest -> do
+      let parsed = EAL.parseEal rest
+      H.outputStrLn $ show parsed
+      cont
+    'e' : 'e' : ' ' : rest -> do
       let parsed = EAL.parseEal rest
       H.outputStrLn $ show parsed
       case parsed of
@@ -106,11 +114,13 @@ specialDoc (Special command helpDesc) = text $ T.unpack $ mconcat [":", command,
 
 specials ∷ [Special]
 specials = [
-  Special "c [term]"  "Parse a Juvix Core term",
-  Special "e [term]"  "Parse an EAL term",
-  Special "tutorial"  "Embark upon an interactive tutorial",
-  Special "?"         "Show this help message",
-  Special "exit"      "Quit interactive mode"
+  Special "cp [term]"   "Parse a Juvix Core term",
+  Special "ce [term"    "Parse a Juvix Core term, translate to EAL, solve constraints, evaluate & read-back",
+  Special "ep [term]"   "Parse an EAL term",
+  Special "ee [term]"   "Parse an EAL term, evaluate & read-back",
+  Special "tutorial"    "Embark upon an interactive tutorial",
+  Special "?"           "Show this help message",
+  Special "exit"        "Quit interactive mode"
   ]
 
 data Special = Special {
