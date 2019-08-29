@@ -62,7 +62,7 @@ handleSpecial str cont = do
       case parsed of
         Just cterm -> do
           let eval = Core.cEval cterm []
-          H.outputStrLn $ Core.showVal eval
+          H.outputStrLn $ show eval
         Nothing -> return ()
       cont
     'c' : 'e' : ' ' : rest -> do
