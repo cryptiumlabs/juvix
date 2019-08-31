@@ -38,16 +38,16 @@ newtype EnvNetInfoIO net a = EnvIO (StateT (InfoNet net) IO a)
     Field "net" () (MonadState (StateT (InfoNet net) IO))
 
 
-execInfoNet :: EnvNetInfo net a → InfoNet net → (InfoNet net)
+execInfoNet ∷ EnvNetInfo net a → InfoNet net → (InfoNet net)
 execInfoNet (EnvI m) = execState m
 
-runInfoNet :: EnvNetInfo net a → InfoNet net → (a, InfoNet net)
+runInfoNet ∷ EnvNetInfo net a → InfoNet net → (a, InfoNet net)
 runInfoNet (EnvI m) = runState m
 
-runNet :: EnvNetInfo net a → net → Integer → InfoNet net
+runNet ∷ EnvNetInfo net a → net → Integer → InfoNet net
 runNet f net size = execInfoNet f (InfoNet net (Info size 0 0 size  size))
 
-runNet' :: EnvNetInfo net a -> net -> Integer -> (a, InfoNet net)
+runNet' ∷ EnvNetInfo net a → net → Integer → (a, InfoNet net)
 runNet' f net size = runInfoNet f (InfoNet net (Info size 0 0 size  size))
 
 runInfoNetIO ∷ EnvNetInfoIO net a → InfoNet net → IO (InfoNet net)

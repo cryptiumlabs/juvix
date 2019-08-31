@@ -3,15 +3,9 @@ version: 2.1
 jobs:
   setup_dependencies:
     docker:
-      - image: fpco/stack-build:lts-13.30
+      - image: cgoes/juvix-ci
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: ln -s /usr/bin/g++-7 /usr/bin/g++
-      - run:
-          name: Install z3
-          command: git clone https://github.com/Z3Prover/z3.git && cd z3 && python scripts/mk_make.py && cd build && make && sudo make install
       - restore_cache:
           name: Restore cached dependencies
           keys:
@@ -36,16 +30,10 @@ jobs:
  
   test_suite:
     docker:
-      - image: fpco/stack-build:lts-13.30
+      - image: cgoes/juvix-ci
     steps:
       - attach_workspace:
           at: /root
-      - run:
-          name: Install dependencies
-          command: ln -s /usr/bin/g++-7 /usr/bin/g++
-      - run:
-          name: Install z3
-          command: cd z3 && python scripts/mk_make.py && cd build && make && sudo make install
       - run:
           name: Run tests
           command: stack test
