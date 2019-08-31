@@ -116,22 +116,25 @@ omegaAssignment = Map.fromList
   [ (someSymbolVal "x", ArrT (SymT (someSymbolVal "a")) (SymT (someSymbolVal "a")))
   ]
 
-
-notTypeableInEal ∷ ((p → p) → ((p → p) → p) → p) → ((p → p) → p) → p
-notTypeableInEal = (\n -> (n (\y -> (n (\_ -> y)) (\x -> (x (x y))))))
+notTypeableInEal ∷ a → a
+notTypeableInEal = \y -> ( (\n -> n (\y -> n (\_ -> y))) (\x -> (x (x y))) )
 
 notTypeableInEalL ∷ Term
 notTypeableInEalL =
-  (Lam (someSymbolVal "n")
-    (App (Var (someSymbolVal "n"))
-         (Lam (someSymbolVal "y")
-           (App (App (Var (someSymbolVal "n"))
-                     (Lam (someSymbolVal "z")
-                       (Var (someSymbolVal "y"))))
-                (Lam (someSymbolVal "x")
-                  (App (Var (someSymbolVal "x"))
-                       (App (Var (someSymbolVal "x"))
-                            (Var (someSymbolVal "y")))))))))
+  App
+    (Lam (someSymbolVal "n")
+      (App (Var (someSymbolVal "n"))
+           (Lam (someSymbolVal "y")
+              (App (Var (someSymbolVal "n"))
+                        (Lam (someSymbolVal "z")
+                        (Var (someSymbolVal "y")))
+            )
+      )
+    ))
+    (Lam (someSymbolVal "x")
+      (App (Var (someSymbolVal "x"))
+           (App (Var (someSymbolVal "x"))
+                (Var (someSymbolVal "y")))))
 
 arg0 ∷ Type
 arg0 = SymT (someSymbolVal "a")
@@ -148,7 +151,7 @@ arg3 = ArrT arg2 arg2
 
 notTypeableInEalTyp ∷ Map SomeSymbol Type
 notTypeableInEalTyp = Map.fromList
-  [ (someSymbolVal "n", ArrT arg1 (ArrT arg2 arg0))
+  [ (someSymbolVal "n", ArrT arg1 arg0)
   , (someSymbolVal "y", arg0)
   , (someSymbolVal "z", arg0)
   , (someSymbolVal "x", arg1)
