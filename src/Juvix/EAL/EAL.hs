@@ -99,8 +99,10 @@ boxAndTypeConstraint parameterizedAssignment term = do
       let occurrences   = occurrenceMap Map.! sym
           origBangParam = bangParam origParamTy
 
+      -- If non-linear (>= 2 occurrences), original type must be of form !A.
       when (occurrences >= 2) $
         addConstraint (Constraint [ConstraintVar 1 origBangParam] (Gte 1))
+
       -- Calculate parameterized type for subterm.
       paramTy ← reparameterize origParamTy
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
@@ -145,7 +147,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
       pure (RBang param (RLam sym body), resTy)
     App a b → do
       (a, aTy) ← rec a
-      let PArrT _ argTy resTy = aTy
+      let PArrT bangA argTy resTy = aTy
       put @"path" path
       put @"varPaths" varPaths
       (b, bTy) ← rec b
@@ -156,7 +158,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
       -- aTy = !^m(A₁ ⊸ B₁)
       -- bTy = A₂
       unificationConstraints argTy bTy
-      addConstraint (Constraint [ConstraintVar 1 (bangParam aTy)] (Eq 0))
+      addConstraint (Constraint [ConstraintVar 1 bangA] (Eq 0))
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
       -- where n = param
       -- and   k = bangParam resTy
@@ -171,14 +173,14 @@ boxAndTypeConstraint parameterizedAssignment term = do
       pure (RBang param (RApp a b), appTy)
 
 -- Generate constraints.
-generateTypeAndConstraitns ∷ ( HasState  "path"           Path            m
+generateTypeAndConstraints ∷ ( HasState  "path"           Path            m
                              , HasState  "varPaths"       VarPaths        m
                              , HasState  "nextParam"      Param           m
                              , HasState  "typeAssignment" TypeAssignment  m
                              , HasWriter "constraints"    [Constraint]    m
                              , HasState  "occurrenceMap"  OccurrenceMap   m )
                            ⇒ Term → m (RPT, ParamTypeAssignment)
-generateTypeAndConstraitns term = do
+generateTypeAndConstraints term = do
   parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
   boxAndTypeConstraint parameterizedAssignment term
@@ -191,7 +193,7 @@ generateConstraints ∷ ( HasState  "path"           Path            m
                       , HasWriter "constraints"    [Constraint]    m
                       , HasState  "occurrenceMap"  OccurrenceMap   m )
                     ⇒ Term → m RPT
-generateConstraints term = generateTypeAndConstraitns term
+generateConstraints term = generateTypeAndConstraints term
                            >>| fst
 
 {- Bracket Checker. -}
@@ -229,7 +231,7 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
         Just t → do
           newTyp ← addParamPos bangVar t
           if | bangParam t > 0 → pure (assign, newTyp)
-             | otherwise       → pure (Map.delete s assign, t)
+             | otherwise       → pure (Map.delete s assign, newTyp)
     rec' (RBang bangApp term@(RApp t1 t2)) assign = do
       (newAssign , type1) ← rec' t1 assign
       (newAssign', type2) ← rec' t2 newAssign

@@ -10,7 +10,7 @@ import           Juvix.Library   hiding (link, reduce)
 validEal ∷ Term → TypeAssignment → IO (Either Errors (RPT, ParamTypeAssignment))
 validEal term typMap = do
   let ((rpt, typ),env) = execWithAssignment typMap
-                       $ generateTypeAndConstraitns term
+                       $ generateTypeAndConstraints term
       constraint = constraints env
   -- Z3 constraint assignment
   assignment ← getConstraints constraint
