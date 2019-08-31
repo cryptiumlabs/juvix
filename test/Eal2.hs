@@ -21,7 +21,7 @@ test_counterexample ∷ T.TestTree
 test_counterexample = shouldNotBeTypeable counterexample counterexampleAssignment
 
 test_church_exp ∷ T.TestTree
-test_church_exp = shouldNotBeTypeable churchExp churchExpAssignment
+test_church_exp = shouldBeTypeable churchExp churchExpAssignment
 
 shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
@@ -111,20 +111,17 @@ exp =
             (Var (someSymbolVal "z")))))))
 
 threeLam ∷ Term
-threeLam = Lam (someSymbolVal "f")
-           (Lam (someSymbolVal "x")
-             (App (Var (someSymbolVal "f"))
-                  (App (Var (someSymbolVal "f"))
-                  (App (Var (someSymbolVal "f"))
-                       (Var (someSymbolVal "x"))))))
+threeLam = Lam (someSymbolVal "f") (Lam (someSymbolVal "x") (nTimesApp 10 (Var (someSymbolVal "f")) (Var (someSymbolVal "x"))))
 
 threeLam2 ∷ Term
-threeLam2 = Lam (someSymbolVal "f'")
-           (Lam (someSymbolVal "x'")
-             (App (Var (someSymbolVal "f'"))
-                  (App (Var (someSymbolVal "f'"))
-                       (App (Var (someSymbolVal "f'"))
-                            (Var (someSymbolVal "x'"))))))
+threeLam2 = Lam (someSymbolVal "f'") (Lam (someSymbolVal "x'") (nTimesApp 20 (Var (someSymbolVal "f'")) (Var (someSymbolVal "x'"))))
+
+nTimesApp ∷ Int → Term → Term → Term
+nTimesApp 0 _ b = b
+nTimesApp n a b = App a (nTimesApp (n - 1) a b)
+
+churchExp2 ∷ Term
+churchExp2 = exp
 
 churchExp ∷ Term
 churchExp =
