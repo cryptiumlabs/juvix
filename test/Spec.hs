@@ -1,4 +1,1 @@
-import           Protolude
-
-main ∷ IO ()
-main = return ()
+{-# OPTIONS_GHC -F -pgmF tasty-discover #-}
