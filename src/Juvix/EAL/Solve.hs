@@ -53,9 +53,9 @@ runMultipleConstraints numRepeat constraints syntax = do
 getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
   (r,v,s) ← Z3.evalZ3 (constraintSystem constraints)
-  putStrLn v
-  putText "-->"
-  print (r, s)
+  --putStrLn v
+  --putText "-->"
+  --print (r, s)
   pure s
 
 runConstraints ∷ [Constraint] → IO ()
