@@ -90,5 +90,5 @@ K =
                ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
 
 -- A : sort 0 ⊢ 1 (1 A → A) ∋ λ x . x
-I : ε ⨟ sort 0 ⊢ 1 - Π 1 0 0 ∋ Λ 0 ▷ ε ⨟ 0
-I = _
+I : ε ⨟ sort 0 ⊢ 1 - Π 1 0 1 ∋ Λ 0 ▷ ε ⨟ 0
+I = lam refl (elim refl (var refl (Only 1 0 (ε ⨟ 0 ⨟ 1) ∋ ε ⨟ refl ⨟[ refl ])))
