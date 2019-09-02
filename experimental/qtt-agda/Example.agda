@@ -39,7 +39,6 @@ example =
 example′ : ε ⊢ 2 - Π 1 (Π 2 A (Π 3 A A)) (Π 5 A A) ∋ Λ (Λ [ 1 ∙ 0 ∙ 0 ]) ▷ ε
 example′ = lam refl $ lam refl $ elim refl example
 
-
 -- A, B, C: sort 0 ⊢ 1 (1 (1 A → 1 B → C) → 1 A → 2 B → C) ∋ λ x y z. x z (y z)
 S : ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0
       ⊢ 1 - Π 1 (Π 1 2 (Π 1 2 2)) (Π 1 (Π 1 3 3) (Π 2 4 3))
@@ -89,3 +88,7 @@ K =
         (var (lookup Γ 1 ≡ 3   ∋ refl)
              (Only 1 1 (ε ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ∋
                ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+
+-- A : sort 0 ⊢ 1 (1 A → A) ∋ λ x . x
+I : ε ⨟ sort 0 ⊢ 1 - Π 1 0 0 ∋ Λ 0 ▷ ε ⨟ 0
+I = _
