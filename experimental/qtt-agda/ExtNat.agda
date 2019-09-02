@@ -1,8 +1,11 @@
 module ExtNat where
 
+-- ≤ is the normal ℕ ordering extended with ∞ as a maximum element
+-- ≼ has n ≼ ∞ for any finite n, but everything else unrelated
+
 -- four values of type Usages _ _ _ _ _ here:
--- * NoSub.any: no subusaging, anything on judgments
--- * NoSub.0-1: no subusaging, `0 or `1 on judgments
+-- * NoSub.any: ≼ for subusaging, anything on judgments
+-- * NoSub.0-1: ≼ for subusaging, `0 or `1 on judgments
 -- * ≤-Sub.any: ≤ for subusaging, anything on judgments
 -- * ≤-Sub.0-1: ≤ for subusaging, `0 or `1 on judgments
 
@@ -21,8 +24,10 @@ infix 1000 `_
 open Algebra.WithEq (≡-At ℕ∞)
 
 instance number-ℕ∞ : Number ℕ∞
-number-ℕ∞ .Number.Constraint _ = ⊤
-number-ℕ∞ .Number.fromNat    n = ` n
+number-ℕ∞ = λ where
+  .Constraint _ → ⊤
+  .fromNat    n → ` n
+ where open Number
 
 fromBit : Bit → ℕ∞
 fromBit `0 = 0 ; fromBit `1 = 1
@@ -84,7 +89,7 @@ infix 4 _≤?_
     isTotalOrder = record {
       isPartialOrder = record {
         isPreorder = record {
-          isEquivalence = ≡.isEquivalence ;
+          ≡ ;
           reflexive = λ{refl → ≤-refl} ;
           trans = ≤-trans
         } ;
@@ -95,6 +100,9 @@ infix 4 _≤?_
     _≟_ = _≟_ ;
     _≤?_ = _≤?_
   }
+
+≤-isDecPartialOrder : IsDecPartialOrder _≡_ _≤_
+≤-isDecPartialOrder = record { IsDecTotalOrder ≤-isDecTotalOrder }
 
 -- n ≼ ∞ for any n, otherwise equality
 data _≼_ : Rel ℕ∞ lzero where
@@ -185,7 +193,13 @@ infixl 7 _*_
     comm = +-comm
   }
 
-+-identity = IsCommutativeMonoid.identity +-isCommutativeMonoid
+open IsCommutativeMonoid +-isCommutativeMonoid public
+  using ()
+  renaming (isMonoid to +-isMonoid ;
+            identity to +-identity ;
+            identityˡ to +-identityˡ ;
+            identityʳ to +-identityʳ)
+
 
 *-isMagma : IsMagma _*_
 *-isMagma = record { ≡ ; ∙-cong = ≡.cong₂ _*_ }
@@ -230,65 +244,59 @@ infixl 7 _*_
 *-identityˡ (` n) = ≡.cong `_ $ ℕ.*-identityˡ n
 *-identityˡ ∞ = refl
 
-*-identityʳ : RightIdentity 1 _*_
-*-identityʳ n rewrite *-comm n 1 = *-identityˡ n
-
-*-identity : Identity 1 _*_
-*-identity = *-identityˡ , *-identityʳ
-
-*-isMonoid : IsMonoid _*_ 1
-*-isMonoid =
+*-isCommutativeMonoid : IsCommutativeMonoid _*_ 1
+*-isCommutativeMonoid =
   record {
     isSemigroup = *-isSemigroup ;
-    identity = *-identity
+    identityˡ = *-identityˡ ;
+    comm = *-comm
   }
 
-*-distribˡ-+ : _*_ DistributesOverˡ _+_
-*-distribˡ-+ (` m)     (` n)     (` p)     = ≡.cong `_ $ ℕ.*-distribˡ-+ m n p
-*-distribˡ-+ (` zero)  (` n)     ∞         = refl
-*-distribˡ-+ (` suc m) (` n)     ∞         = refl
-*-distribˡ-+ (` zero)  ∞         (` p)     = refl
-*-distribˡ-+ (` suc m) ∞         (` p)     = refl
-*-distribˡ-+ (` zero)  ∞         ∞         = refl
-*-distribˡ-+ (` suc m) ∞         ∞         = refl
-*-distribˡ-+ ∞         (` zero)  (` zero)  = refl
-*-distribˡ-+ ∞         (` zero)  (` suc p) = refl
-*-distribˡ-+ ∞         (` suc n) (` zero)  = refl
-*-distribˡ-+ ∞         (` suc n) (` suc p) = refl
-*-distribˡ-+ ∞         (` zero)  ∞         = refl
-*-distribˡ-+ ∞         (` suc n) ∞         = refl
-*-distribˡ-+ ∞         ∞         (` zero)  = refl
-*-distribˡ-+ ∞         ∞         (` suc p) = refl
-*-distribˡ-+ ∞         ∞         ∞         = refl
+open IsCommutativeMonoid *-isCommutativeMonoid public
+  using ()
+  renaming (isMonoid to *-isMonoid ;
+            identity to *-identity ;
+            identityʳ to *-identityʳ)
 
 *-distribʳ-+ : _*_ DistributesOverʳ _+_
-*-distribʳ-+ m n p
-  rewrite *-comm (n + p) m | *-comm n m | *-comm p m = *-distribˡ-+ m n p
-
-*-distrib-+ : _*_ DistributesOver _+_
-*-distrib-+ = *-distribˡ-+ , *-distribʳ-+
+*-distribʳ-+ (` m)     (` n)     (` p)     = ≡.cong `_ $ ℕ.*-distribʳ-+ m n p
+*-distribʳ-+ (` zero)  (` zero)  ∞         = refl
+*-distribʳ-+ (` zero)  (` suc n) ∞         = *-distribʳ-+ (` zero) (` n) ∞
+*-distribʳ-+ (` suc m) (` n)     ∞         = refl
+*-distribʳ-+ (` zero)  ∞         (` zero)  = refl
+*-distribʳ-+ (` zero)  ∞         (` suc p) = *-distribʳ-+ (` zero) ∞ (` p)
+*-distribʳ-+ (` suc m) ∞         (` p)     = refl
+*-distribʳ-+ (` zero)  ∞         ∞         = refl
+*-distribʳ-+ (` suc m) ∞         ∞         = refl
+*-distribʳ-+ ∞         (` zero)  (` zero)  = refl
+*-distribʳ-+ ∞         (` zero)  (` suc p) = refl
+*-distribʳ-+ ∞         (` suc n) (` zero)  = refl
+*-distribʳ-+ ∞         (` suc n) (` suc p) = refl
+*-distribʳ-+ ∞         (` zero)  ∞         = refl
+*-distribʳ-+ ∞         (` suc n) ∞         = refl
+*-distribʳ-+ ∞         ∞         (` zero)  = refl
+*-distribʳ-+ ∞         ∞         (` suc p) = refl
+*-distribʳ-+ ∞         ∞         ∞         = refl
 
 *-zeroˡ : LeftZero 0 _*_
 *-zeroˡ (` n) = refl
-*-zeroˡ ∞ = refl
+*-zeroˡ ∞     = refl
 
-*-zeroʳ : RightZero 0 _*_
-*-zeroʳ (` n) = ≡.cong `_ $ ℕ.*-zeroʳ n
-*-zeroʳ ∞ = refl
-
-*-zero : Zero 0 _*_
-*-zero = *-zeroˡ , *-zeroʳ
-
-isSemiring : IsSemiring _+_ _*_ 0 1
-isSemiring =
+isCommutativeSemiring : IsCommutativeSemiring _+_ _*_ 0 1
+isCommutativeSemiring =
   record {
-    isSemiringWithoutAnnihilatingZero = record {
-      +-isCommutativeMonoid = +-isCommutativeMonoid ;
-      *-isMonoid = *-isMonoid ;
-      distrib = *-distrib-+
-    } ;
-    zero = *-zero
+    +-isCommutativeMonoid = +-isCommutativeMonoid ;
+    *-isCommutativeMonoid = *-isCommutativeMonoid ;
+    distribʳ = *-distribʳ-+ ;
+    zeroˡ = *-zeroˡ
   }
+
+open IsCommutativeSemiring isCommutativeSemiring public
+  using (isSemiring)
+  renaming (zero to *-zero ;
+            zeroʳ to *-zeroʳ ;
+            distrib to *-distrib-+ ;
+            distribˡ to *-distribˡ-+)
 
 
 module NoSub where
@@ -321,8 +329,8 @@ module ≤-Sub where
     isUsages =
       record {
         IsUsages NoSub.Any.isUsages ;
-        isDecPartialOrderᵗ =
-          record { IsDecTotalOrder ≤-isDecTotalOrder }
+        isDecPartialOrderᵗ = ≤-isDecPartialOrder
+
       }
 
   module 0-1 where
