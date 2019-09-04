@@ -8,7 +8,7 @@ titlepage-rule-color: "FFFFFF"
 titlepage-rule-height: 1
 toc-own-page: true
 mainfont: DejaVuSerifCondensed
-fontsize: 7pt
+fontsize: 8pt
 author: Christopher Goes, Marty Stumpf, Jeremy Ornelas, Andy Morris
 date: \today \ - \textit{Prerelease}
 urlcolor: cyan
