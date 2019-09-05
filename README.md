@@ -17,6 +17,9 @@ Juvix's compiler architecture is purpose-built from the ground up for the partic
 of the smart contract use case — it prioritises behavioural verifiability, semantic precision, and output code efficiency over compilation speed,
 syntactical familiarity, and backwards compatibility with existing blockchain virtual machines.
 
+> Please note: the frontend language is not yet implemented as we are still working out some details of the type theory & compiler transformations.
+  Juvix may end up supporting an existing frontend language (or more than one).
+
 For details, see [the language reference](./doc/reference/language-reference.pdf).
 
 ## Caveats
