@@ -1,3 +1,13 @@
+-- there should be nothing surprising in here, it just reexports the most
+-- common parts of the stdlib
+--
+-- * Unit, Empty, Nat, Fin¹, Bool
+-- * Sum, Product, Maybe
+-- * Binary relations, Decidability, Equality
+-- * Function, which contains conveniences like `id`, `_$_`, `case_of_`, etc
+--
+-- ¹`Fin n` is [isomorphic to] the naturals less than `n`
+
 module Prelude where
 
 open import Agda.Primitive public using (Level ; lzero ; lsuc ; _⊔_)
@@ -8,8 +18,6 @@ record Lift {a} ℓ (A : Set a) : Set (a ⊔ ℓ) where
   instance constructor lift
   field ⦃ lower ⦄ : A
 
-open import Function public
-
 module ⊤ where
   open import Data.Unit public hiding (module ⊤)
 open ⊤ public using (⊤ ; tt)
@@ -18,7 +26,6 @@ module ⊥ where
   open import Data.Empty public hiding (module ⊥)
 open ⊥ public using (⊥ ; ⊥-elim)
 
-
 module ℕ where
   open import Data.Nat public hiding (module ℕ)
   open import Data.Nat.Properties public
@@ -26,7 +33,6 @@ module ℕ where
 
   instance number = Lit.number
 open ℕ public using (ℕ ; zero ; suc)
-
 
 module Fin where
   open import Data.Fin public hiding (module Fin)
@@ -37,6 +43,10 @@ module Fin where
   number = Lit.number _
 open Fin public using (Fin ; zero ; suc ; #_)
 
+module Bool where
+  open import Data.Bool public hiding (module Bool)
+  open import Data.Bool.Properties public
+open Bool public using (Bool ; true ; false ; if_then_else_)
 
 module ⊎ where
   open import Data.Sum public hiding (module _⊎_)
@@ -45,18 +55,13 @@ open ⊎ public using (_⊎_ ; inj₁ ; inj₂)
 
 module Σ where
   open import Data.Product public hiding (module Σ)
-open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; _,_ ; -,_)
-
+open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; ∃-syntax ;
+                     _,_ ; -,_ ; proj₁ ; proj₂)
 
 module Maybe where
   open import Data.Maybe public hiding (module Maybe)
   open import Data.Maybe.Properties public
 open Maybe public using (Maybe ; nothing ; just)
-
-module Bool where
-  open import Data.Bool public hiding (module Bool)
-  open import Data.Bool.Properties public
-open Bool public using (Bool ; true ; false ; if_then_else_)
 
 module Relation where
   open import Relation.Nullary public
@@ -84,3 +89,5 @@ module ≡ where
   At : ∀ {a} (A : Set a) → Rel A _
   At A = _≡_ {A = A}
 open ≡ public using (_≡_ ; refl) renaming (At to ≡-At)
+
+open import Function public
