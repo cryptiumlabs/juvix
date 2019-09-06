@@ -19,13 +19,13 @@ infix 1 _⟿ᵗ_ _⟿ᵉ_
 
 data _⟿ᵗ_ where
   υ : [ t ⦂ T ] ⟿ᵗ t
-  Πˡ : S ⟿ᵗ S′ → Π π S T ⟿ᵗ Π π S′ T
-  Πʳ : T ⟿ᵗ T′ → Π π S T ⟿ᵗ Π π S T′
-  Λ : t ⟿ᵗ t′ → Λ t ⟿ᵗ Λ t′
+  Πˡ : S ⟿ᵗ S′ → Π[ π / S ] T ⟿ᵗ Π[ π / S′ ] T
+  Πʳ : T ⟿ᵗ T′ → Π[ π / S ] T ⟿ᵗ Π[ π / S ] T′
+  Λ- : t ⟿ᵗ t′ → Λ t ⟿ᵗ Λ t′
   [_] : e ⟿ᵉ e′ → [ e ] ⟿ᵗ [ e′ ]
 
 data _⟿ᵉ_ where
-  β : (Λ t ⦂ Π π S T) ∙ s ⟿ᵉ substᵉ (t ⦂ T) (s ⦂ S)
+  β : (Λ t ⦂ Π[ π / S ] T) ∙ s ⟿ᵉ substᵉ (t ⦂ T) (s ⦂ S)
   ∙ˡ : f ⟿ᵉ f′ → f ∙ s ⟿ᵉ f′ ∙ s
   ∙ʳ : s ⟿ᵗ s′ → f ∙ s ⟿ᵉ f ∙ s′
   ⦂ˡ : s ⟿ᵗ s′ → s ⦂ S ⟿ᵉ s′ ⦂ S
