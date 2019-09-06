@@ -15,7 +15,7 @@ record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
     isDecPartialOrderᵗ : IsDecPartialOrder _≈ᵗ_ _≾ᵗ_
     isSemiringᵗ : IsSemiring _≈ᵗ_ _+_ _*_ ⟦ 0# ⟧ ⟦ 1# ⟧
 
-  open IsDecEquivalence isDecEquivalenceʲ public
+  open IsDecEquivalence isDecEquivalenceʲ public using ()
     renaming (isEquivalence to isEquivalenceʲ ;
               refl to reflʲ ; sym to symʲ ; trans to transʲ ;
               reflexive to reflexiveʲ ;
@@ -30,7 +30,7 @@ record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
               ≤-respˡ-≈ to ≾ᵗ-respˡ-≈ᵗ ;
               ≤-respʳ-≈ to ≾ᵗ-respʳ-≈ᵗ ;
               ≤-resp-≈ to ≾ᵗ-resp-≈ᵗ)
-  open IsSemiring isSemiringᵗ public
+  open IsSemiring isSemiringᵗ public using ()
     renaming (isEquivalence to isEquivalenceᵗ ;
               refl to reflᵗ ; sym to symᵗ ; trans to transᵗ ;
               reflexive to reflexiveᵗ ;
