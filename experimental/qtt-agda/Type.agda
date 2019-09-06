@@ -96,10 +96,10 @@ data _⊢_-_∋_▷_ where
   fun : Zero (Φ ⨟ ζ) →
         Γ ⊢ 0# - sort u ∋ S ▷ Φ →
         Γ ⨟ S ⊢ 0# - sort u ∋ T ▷ Φ ⨟ ζ →
-        Γ ⊢ 0# - sort u ∋ Π π S T ▷ Φ
+        Γ ⊢ 0# - sort u ∋ Π[ π / S ] T ▷ Φ
   lam : ρ′ ≾ᵗ ⟦ σ ⟧ * π →
         Γ ⨟ S ⊢ σ - T ∋ t ▷ Φ ⨟ ρ′ →
-        Γ ⊢ σ - Π π S T ∋ Λ t ▷ Φ
+        Γ ⊢ σ - Π[ π / S ] T ∋ Λ t ▷ Φ
   elim : S ⩿ T →
          Γ ⊢ σ - e ∈ S ▷ Φ →
          Γ ⊢ σ - T ∋ [ e ] ▷ Φ
@@ -113,7 +113,7 @@ data _⊢_-_∈_▷_ where
     -- var just uses whatever σ it's told. lam will check that it's ok later.
   app : Φ ≡ Φ₁ ⊕ π ⨵ Φ₂ →
         T′ ≡ substᵗ T (s ⦂ S) → 
-        Γ ⊢ σ - f ∈ Π π S T ▷ Φ₁ →
+        Γ ⊢ σ - f ∈ Π[ π / S ] T ▷ Φ₁ →
         Γ ⊢ σ - S ∋ s ▷ Φ₂ →
         Γ ⊢ σ - f ∙ s ∈ T′ ▷ Φ
     -- app does the multiplication in the conclusion like the QTT paper,
