@@ -83,9 +83,11 @@ module _ where
   open Number
 
   instance number-Elim : ∀ {n} → Number (Elim n)
-  number-Elim {n} .Constraint x = Lift _ $ Fin.number {n} .Constraint x
-  number-Elim .fromNat n = ` Fin.number .fromNat n
+  number-Elim {n} = λ where
+    .Constraint x → Lift _ $ Fin.number {n} .Constraint x
+    .fromNat n    → ` Fin.number .fromNat n
 
   instance number-Term : ∀ {n} → Number (Tm n)
-  number-Term {n} .Constraint = number-Elim {n} .Constraint
-  number-Term .fromNat n ⦃ x ⦄  = [ number-Elim .fromNat n ⦃ x ⦄ ]
+  number-Term {n} = λ where
+    .Constraint      → number-Elim {n} .Constraint
+    .fromNat n ⦃ x ⦄ → [ number-Elim .fromNat n ⦃ x ⦄ ]
