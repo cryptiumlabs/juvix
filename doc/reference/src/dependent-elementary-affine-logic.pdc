@@ -177,7 +177,15 @@ Enumerate the bracketing, scope, and typing conditions as (i), (ii), and (iii) r
 1. $t = \bar{!} u$
     1. $t$ does not satisfy the bracketing condition (i) in the first prefix, so this case is invalid
 1. $t = !u$
-    1. (this is the tricky case, to-do)
+    1. By the boxing lemma, $t$ can be written as $t = !v [x_1 := \bar{!}u_1, ... x_n := \bar{!}u_n]$, where $FV(v) = {x_1 ... x_n}$ and $path(v, x_i)$ is well-bracketed for all $x_i$
+    1. Let $y$ be an occurrence of a variable in $u_i$
+        1. $path(t, y) = ! :: path(v, x_i) :: \bar{!} :: path(u_i, y)$
+        1. $path(v, x_i)$ is well-bracketed, so $path(u_i, y)$ satisfies the bracketing condition and $u_i$ satisfies (i).
+        1. Since $t$ satisfies (ii) and (iii), $u_i$, a subterm of $t$, also satisfies (ii) and (iii).
+        1. Therefore there exists an EAL* derivation $∆_i ⊢ u_i : A_i$, where $A_i$ = $Γ(u_i)$, for $1 \le i \le n$.
+    1. Now examine $v$
+        1. Since $t$ satisfies the bracketing condition, by the boxing lemma, $v$ satisfies (i) and all free variables in $v$ have exactly one occurrence, so as $t$ satisfies (ii) $v$ does also.
+        1. (typing condition)
 
 ### Decoration
 
