@@ -28,9 +28,9 @@ languageDef =
         , "Quote"
         , "Global" --Free var
         , "w" --Omega
-        , "App"
+        , "App" --application
         ]
-    , Token.reservedOpNames = ["Conv", "\\", ":"]
+    , Token.reservedOpNames = ["Conv", "\\", ":", "cType"]
     }
 
 lexer ∷ Token.GenTokenParser String u Data.Functor.Identity.Identity
@@ -142,13 +142,13 @@ globalTerm = do
   gname <- gName
   return $ Global gname
 
-name ∷ Parser Name
-name = localTerm <|> quoteTerm <|> globalTerm
+pName ∷ Parser Name
+pName = localTerm <|> quoteTerm <|> globalTerm
 
 freeTerm ∷ Parser ITerm
 freeTerm = do
   reserved "Free"
-  fname <- name
+  fname <- pName
   return $ Free fname
 
 appTerm ∷ Parser ITerm
@@ -181,7 +181,12 @@ cterm =
   parens cterm <|> sortTerm <|> piTerm <|> pmTerm <|> paTerm <|> npmTerm <|>
   lamTerm <|>
   convTerm <|>
-  ctermOnly
+  convITerm
+
+convITerm ∷ Parser CTerm
+convITerm = do
+  theTerm <- iterm
+  return $ Conv theTerm
 
 iterm ∷ Parser ITerm
 iterm = parens iterm <|> boundTerm <|> freeTerm <|> appTerm <|> annTerm
@@ -194,8 +199,17 @@ ctermOnly = do
   anyTerm <- cOriTerm
   return
     (case anyTerm of
-       Left i  -> (Conv i)
+       Left i  -> Conv i
        Right c -> c)
+
+--the type checker takes in a term, its usage and type, and returns ...
+pCType ∷ Parser (Result ())
+pCType = do
+  reservedOp "cType"
+  theTerm <- ctermOnly
+  usage <- natw
+  theType <- ctermOnly
+  return $ cType 0 [] theTerm (usage, cEval theType [])
 
 parseString ∷ Parser a → String → Maybe a
 parseString p str =

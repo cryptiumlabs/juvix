@@ -6,6 +6,9 @@ import           Control.Monad.Except
 import           Numeric.Natural
 import           Prelude
 
+-- naming usage for easy change of semiring choice.
+type Usage = NatAndw
+
 data NatAndw -- semiring of (Nat,w) for usage annotation
   = SNat Natural -- 0, 1, or n usage
   | Omega -- unspecified usage
@@ -32,13 +35,13 @@ instance Num NatAndw where
 data CTerm
   = Star Natural -- (sort i) i th ordering of (closed) universe.
   | Nats -- (Prim) primitive type (naturals)
-  | Pi NatAndw CTerm CTerm -- formation rule of the dependent function type (PI).
-                              -- the NatAndw(π) tracks how many times x is used.
-  | Pm NatAndw CTerm CTerm -- dependent multiplicative conjunction (tensor product)
-  | Pa NatAndw CTerm CTerm -- dependent additive conjunction type
+  | Pi Usage CTerm CTerm -- formation rule of the dependent function type (PI).
+                              -- the Usage(π) tracks how many times x is used.
+  | Pm Usage CTerm CTerm -- dependent multiplicative conjunction (tensor product)
+  | Pa Usage CTerm CTerm -- dependent additive conjunction type
   | NPm CTerm CTerm -- non-dependent multiplicative disjunction type
-  | Lam NatAndw CTerm --(LAM) Introduction rule of PI.
-                        -- The abstracted variable's usage is tracked with the NatAndw(π).
+  | Lam Usage CTerm --(LAM) Introduction rule of PI.
+                        -- The abstracted variable's usage is tracked with the Usage(π).
   | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
               -- Conv is the constructor that embeds ITerm to CTerm
   deriving (Show, Eq)
@@ -49,8 +52,8 @@ data ITerm
   | Free Name -- Free variables of type name (see below)
   | Nat Natural -- primitive constant (naturals)
   | App ITerm CTerm -- elimination rule of PI (APP).
-                              -- the NatAndw(π) tracks how x is use.
-  | Ann NatAndw CTerm CTerm --Annotation with usage.
+                              -- the Usage(π) tracks how x is use.
+  | Ann Usage CTerm CTerm --Annotation with usage.
   deriving (Show, Eq)
 
 data Name
@@ -63,11 +66,11 @@ data Name
 data Value
   = VStar Natural
   | VNats
-  | VPi NatAndw Value (Value → Value)
-  | VPm NatAndw Value (Value → Value)
-  | VPa NatAndw Value (Value → Value)
+  | VPi Usage Value (Value → Value)
+  | VPm Usage Value (Value → Value)
+  | VPa Usage Value (Value → Value)
   | VNPm Value Value
-  | VLam NatAndw (Value → Value)
+  | VLam Usage (Value → Value)
   | VNeutral Neutral
   | VNat Natural
 
@@ -96,7 +99,7 @@ vfree ∷ Name → Value
 vfree n = VNeutral (NFree n)
 
 --Annotations include usage and type.
-type Annotation = (NatAndw, Value)
+type Annotation = (Usage, Value)
 
 --Contexts map variables to their types.
 type Context = [(Name, Annotation)]
@@ -190,32 +193,56 @@ errorMsg binder iterm expectedT gotT =
   show binder ++
   ") is of type \n" ++
   show (showVal (snd gotT)) ++
-  " , with" ++
+  " , with " ++
   show (fst gotT) ++
-  "usage.\n But the expected type is " ++
+  " usage.\n But the expected type is " ++
   show (showVal (snd expectedT)) ++
-  " , with" ++ show (fst expectedT) ++ "usage."
+  " , with " ++ show (fst expectedT) ++ " usage."
 
 --Type (and usage) checking
 type Result a = Either String a --when type checking fails, it throws an error.
 
---checkable terms take a type as input and returns ().
+--Usage comparisions
+--usageCompare required input
+--returns True when the input usage is compatible the required usage
+usageCompare ∷ Usage → Usage → Bool
+usageCompare (SNat 0) pi = pi == SNat 0 || pi == Omega
+usageCompare (SNat i) pi = pi == SNat i || pi == Omega
+usageCompare Omega pi    = True --actual usage can be any when required usage is unspecified.
+
+--checker for checkable terms checks the term against an annotation and returns ().
 cType ∷ Natural → Context → CTerm → Annotation → Result ()
-cType ii _g (Star n) v =
+cType ii _g (Star n) ann =
+  unless -- TODO i only needs to be < j in typing rule?
+    (usageCompare (SNat 0) (fst ann) && quote0 (snd ann) == Star (n + 1))
+    (throwError (errorMsg ii (Star n) (0, VStar (n + 1)) ann))
+cType ii _g Nats ann =
   unless
-    (fst v == 0 && quote0 (snd v) == Star (n + 1))
-    (throwError (errorMsg ii (Star n) (0, VStar (n + 1)) v))
-cType ii g (Conv e) v = do
-  v' <- iType ii g e
-  unless
-    (fst v == fst v' && quote0 (snd v) == quote0 (snd v'))
-    (throwError (errorMsg ii (Conv e) v v'))
+    (usageCompare (SNat 0) (fst ann) && quote0 (snd ann) == Star 0)
+    (throwError (errorMsg ii Nats (0, VStar 0) ann))
+-- as per the typing rule *-Pi, usage annotation is not checked.
+cType ii g (Pi pi varType resultType) ann = do
+  cType ii g varType ann
+  let ty = cEval varType []
+  cType
+    (ii + 1)
+    ((Local ii, (pi, ty)) : g)
+    (cSubst 0 (Free (Local ii)) resultType)
+    ann
+cType ii g (Pm pi var func) ann = undefined
+cType ii g (Pa pi var func) ann = undefined
+cType ii g (NPm first second) ann = undefined
 cType ii g (Lam pi f) (pi', VPi _pi ty ty') =
   cType
     (ii + 1)
     ((Local ii, (pi, ty)) : g)
     (cSubst 0 (Free (Local ii)) f)
     (pi', ty' (vfree (Local ii)))
+cType ii g (Conv e) ann = do
+  ann' <- iType ii g e
+  unless
+    (quote0 (snd ann) == quote0 ann')
+    (throwError (errorMsg ii (Conv e) ann (Omega, ann')))
 cType ii _g cterm theType =
   throwError
     ("Type mismatch: \n" ++
@@ -226,14 +253,25 @@ cType ii _g cterm theType =
      showVal (snd theType) ++ " with " ++ show (fst theType) ++ "usage.")
 
 --inferable terms have type as output.
-iType0 ∷ Context → ITerm → Result Annotation
+iType0 ∷ Context → ITerm → Result Value
 iType0 = iType 0
 
-iType ∷ Natural → Context → ITerm → Result Annotation
+iTypeErrorMsg ∷ Natural → Name → String
+iTypeErrorMsg ii x =
+  "Cannot find the type of \n" ++
+  show x ++ "\n (binder number " ++ show ii ++ ") in the environment."
+
+iType ∷ Natural → Context → ITerm → Result Value
 iType ii g (Free x) =
   case lookup x g of
-    Just ty -> return ty
-    Nothing ->
-      throwError
-        ("Cannot find the type of \n" ++
-         show x ++ "\n (binder number " ++ show ii ++ ") in the environment.")
+    Just ann -> return $ snd ann
+    Nothing  -> throwError (iTypeErrorMsg ii x)
+iType _ii _g (Nat _) = return VNats
+-- Typing rule not in lang ref atm?
+iType ii g (Ann pi theTerm theType)
+  --TODO check theType is of type Star first? But we have stakable universes now.
+  --cType ii g theType (0, VStar 0)
+ = do
+  let ty = cEval theType []
+  cType ii g theTerm (pi, ty)
+  return ty
