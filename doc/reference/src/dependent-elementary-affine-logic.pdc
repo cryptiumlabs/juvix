@@ -176,16 +176,24 @@ Enumerate the bracketing, scope, and typing conditions as (i), (ii), and (iii) r
     1. Apply an application rule followed by a contraction rule to get the judgement for $t$
 1. $t = \bar{!} u$
     1. $t$ does not satisfy the bracketing condition (i) in the first prefix, so this case is invalid
-1. $t = !u$
+1. $t =\ !u$
     1. By the boxing lemma, $t$ can be written as $t = !v [x_1 := \bar{!}u_1, ... x_n := \bar{!}u_n]$, where $FV(v) = {x_1 ... x_n}$ and $path(v, x_i)$ is well-bracketed for all $x_i$
     1. Let $y$ be an occurrence of a variable in $u_i$
-        1. $path(t, y) = ! :: path(v, x_i) :: \bar{!} :: path(u_i, y)$
+        1. $path(t, y) =\ ! :: path(v, x_i) :: \bar{!} :: path(u_i, y)$
         1. $path(v, x_i)$ is well-bracketed, so $path(u_i, y)$ satisfies the bracketing condition and $u_i$ satisfies (i).
         1. Since $t$ satisfies (ii) and (iii), $u_i$, a subterm of $t$, also satisfies (ii) and (iii).
         1. Therefore there exists an EAL* derivation $∆_i ⊢ u_i : A_i$, where $A_i$ = $Γ(u_i)$, for $1 \le i \le n$.
     1. Now examine $v$
         1. Since $t$ satisfies the bracketing condition, by the boxing lemma, $v$ satisfies (i) and all free variables in $v$ have exactly one occurrence, so as $t$ satisfies (ii) $v$ does also.
-        1. (typing condition)
+        1. Let $Γ'$ be defined as $Γ$ but $Γ'(x_i)$ = $Γ(\bar{!}u_i)$ for $1 \le i \le n$.
+            1. If $y$ occurs more than once in $v$ then it also does in $t$, hence $Γ(y) =\ !A$ so $Γ'(y) =\ !A$.
+            1. If $v_1 v_2$ is a subterm of $v$ then $v'_1 v'_2$, where $v'_i = v_i [x_1 := \bar{!}u_1, ... x_n := \bar{!}u_n]$, is a subterm of $t$ and $Γ'(v'_i)$ = $Γ(v_i)$
+            1. As $(t, Γ)$ satisfies (iii), so does $(v, Γ')$
+            1. $Γ(u_i) = A_i$ and $Γ(\bar{!}u_i)$ is defined, so $A_i =\ !B_i$ and $Γ'(x) = B_i$
+            1. As $v$ satisfies conditions (i), (ii), and (iii), by induction there exists an EAL* derivation $∆, x_1 : B_1, ..., x_n : B_n ⊢ v : C$ where $C = Γ'(v)$.
+        1. If $u_i$ and $u_j$ for $i /= j$ have a common free variable $y$, as $t$ satisfies the typing condition $Γ(y) =\ !B$.
+        1. Rename the free variables in common to the $u_i$s, apply a (prom) rule to obtain the judgements on $u_i$ and the judgement on $v$
+        1. Then apply (contr) rules separately for the final judgement $∆' ⊢ t :\ !C$, concluding the proof
 
 ### Decoration
 
