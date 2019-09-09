@@ -40,7 +40,9 @@ data Lang
   | Primar     Primar
   deriving Show
 
-data Auxiliary3 = IfElse deriving Show
+data Auxiliary3 = IfElse
+                | Curried3 (Primitive → Primitive → Primitive → Primitive)
+                deriving Show
 data Auxiliary2 = Or
                 | And
                 | Cons
@@ -50,11 +52,13 @@ data Auxiliary2 = Or
                 | FanIn Int
                 | Infix Infix
                 | InfixB InfixB
+                | Curried2 (Primitive → Primitive → Primitive)
                 deriving Show
 data Auxiliary1 = Not
                 | Car
                 | Cdr
                 | TestNil
+                | Curried1 (Primitive → Primitive)
                 | Curried (Int → Int)
                 | CurriedB (Int → Bool)
                 deriving Show
@@ -119,6 +123,7 @@ reduce = do
                       Just IsPrim {_tag0 = Fals} → True <$ ifElseRule node n False
                       Just IsPrim {_tag0 = Tru}  → True <$ ifElseRule node n True
                       _                          → pure isChanged
+                  Curried3 _f → undefined
               IsAux2 tag (Primary node) _ _ →
                 case tag of
                   And →
@@ -152,7 +157,10 @@ reduce = do
                       Nothing                         → pure isChanged
                   Infix inf   → curryOnInt  (infix2Function inf, n)   node isChanged
                   InfixB infb → curryOnIntB (infix2FunctionB infb, n) node isChanged
-                  _           → pure isChanged
+                  Curried2 _f → undefined
+                  -- Cases in which we fall through, and have the other node handle it
+                  Mu     → pure isChanged
+                  Lambda → pure isChanged
               IsAux1 tag (Primary node) _ →
                 case tag of
                   Not →
@@ -171,15 +179,28 @@ reduce = do
                     langToProperPort node >>= \case
                       Just IsPrim {_tag0 = IntLit i} → True <$ curryIntB (n, currb) (node, i)
                       _                              → pure isChanged
-                  _ → pure isChanged
+                  Curried1 _f → undefined
+                  -- Fall through cases
+                  Car     → pure isChanged
+                  TestNil → pure isChanged
               IsPrim tag (Primary node) →
                 case tag of
                   Erase →
                     langToProperPort node >>= \case
                     Just x  → True <$ eraseAll (x, node) n
                     Nothing → pure isChanged
-                  _ → pure isChanged
-              _ → pure isChanged
+                  -- Fall through cases
+                  Nil      → pure isChanged
+                  Tru      → pure isChanged
+                  Fals     → pure isChanged
+                  IntLit _ → pure isChanged
+                  Symbol _ → pure isChanged
+              -- Fall through cases
+              IsAux3 _ Free _ _ _ → pure isChanged
+              IsAux2 _ Free _ _   → pure isChanged
+              IsAux1 _ Free _     → pure isChanged
+              IsPrim _ Free       → pure isChanged
+
 
 curryOnInt ∷ (InfoNetworkDiff net Primitive Lang m)
            ⇒ (Int → Int → Int, Node) → Node → Bool → m Bool
