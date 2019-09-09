@@ -101,7 +101,63 @@ For each free variable $x$ in $(t_1 t_2)$ occurring more than once, all occurren
 
 That ends the encoding rules.
 
-Example from chat & paper (of derivation).
+> TODO: Example term encoding.
+
+### Bespoke function encoding
+
+### Basics
+
+Consider a Core term $f$ of type $A ⊸ B$.
+
+In the interaction net encoding compiler path, assuming EAL-typability, we would encode this (if of form $\x -> t$, for example) as:
+
+\begin{tikzpicture}
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\axWire{g/1}{l/1}{}{}
+\cutWire{g.out}{l/2}{}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+where `φ` is the recursive interaction net translation function.
+
+In the bespoke encoding path, we instead create a new node type $T$ and rewrite rule $R$ such that when the primary port of $T$ is connected to an application node to an argument $A$, we erase $T$, connect an eraser to $A$, and connect whatever the application node's primary port was connected to to a new subgraph which is equal to the encoding of $eval (f A)$.
+
+$eval (f A)$ can then be implemented by native evaluation semantics which do not utilize interaction nets. For example, if the Core term in question is a tail-recursive numerical computation, it can be compiled to a native loop (possibly using SIMD).
+
+Furthermore, we can safely encode non-EAL-typable terms this way, such as the Ackermann function, and they can safely interact with the rest of the interaction net (which must have been an EAL-typable term, treating the bespoke-encoded subterm as opaque).
+
+The decision of whether or not to take the bespoke path can be made for all subterms of this form according to some heuristic (or possibly exact cost calculation) in the compiler.
+
+### Dealing with various types
+
+Where $A$ and $B$ are both types which are encoded as primitive nodes (e.g. integers), this is trivial.
+
+Where $A$ is a primitive type and $B$ is a function of some arity, of only primitive-typed arguments, which then returns a primitive type, this can be implemented as a sequence of node types $T, T', T''$, etc. which keep the curried arguments and eventually evaluate when all arguments are provided (or even when some are provided, there is a continuum of options here).
+
+Where $A$ and/or arguments of $B$ are non-primitive types (e.g. functions), this becomes more complex, since we must convert between AST and interaction-net form during reduction.
+
+More generally, with our Core term $f$ of type $A ⊸ B$, encoding $f$ through the bespoke path would result in a set of new node types $T_i$ with possible curried internal data, and a set of rewrite rules $R_i$, the first $i - 1$ of which just deal with currying (although again, there is a continuum of options, but let's leave that out for now), and the last one of which is interesting, let it be $R$.
+
+$R$ must then cause, when connected to a primary port of an argument $A$:
+
+- Erasure of $R_i$ (the prior node).
+- Connection of an eraser to $A$.
+- Creation of a new subgraph $φ (eval (f (read-back A))$, where $φ$ is the recursive interaction net encoding function (which might itself perform bespoke encoding, although we need to be concerned about runtime costs here), and $read-back$ is the read-back function from nets to Core terms, run starting at $A$ as the root node.
+- Connection of the primary port of this subgraph to whatever $R_i$ was previously connected to.
+
+This follows all the interaction net laws and should preserve semantics - but there are oddities:
+
+- Read-back and (complex) encoding algorithms must be executed at runtime
+- Read-back must happen over a term A which may be in the progress of parallel reduction
+
+In general, we have no idea of the size (and corresponding read-back cost) of `A`, and it might be dependent on the order of reduction.
+
+### Bespoke datatype encoding
+
+- Primitive types (integer, string, bytes) ~> node types w/data
+- User-defined ADTs can be turned into custom nodes
 
 ## Oracle-free optimal reduction
 
@@ -368,18 +424,6 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
 \restylefloat{figure}
 
 ### Argument for correctness
-
-## Bespoke term encoding
-
-- Primitive types (integer, string, bytes) ~> node types w/data
-- n-arity primitive functions (+, -, *, concat, index) ~> rewrite rules
-- alt-term encoding: $lam x. x + x + x$ ~> $3 * x$ rewrite rule instead of multi-node graph
-
-- Over set of underlying opcodes & von-Neumann-ish VM (e.g. x86, LLVM, EVM).
-- Use linear types (e.g. rewrite memory locations in place)
-- Must be semantically equivalent to interaction system encoding after read-back
-- Must preserve any-order reduction (exists some maximum `n` rewrite steps after which graph read-back must have final form regardless of order)
-- Can relax diamond property (strong confluence)? unclear if necessary
 
 ## Evaluator cost model
 
