@@ -1,18 +1,18 @@
 module Juvix.Visualize.Dot where
 
-import           Control.Exception        hiding ()
+import           Control.Exception     hiding ()
 import           System.IO.Error
-import           Turtle                   hiding (FilePath, reduce)
+import           Turtle                hiding (FilePath, reduce)
 
 
-import qualified Data.Text                as T
+import qualified Data.Text             as T
 import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
-import           Juvix.Library            hiding (catch, reduce, throwIO,
-                                           writeFile)
-import           Juvix.Nets.Bohm
 import           Juvix.Bohm.Shared
-import           Juvix.Utility.Helper     as H
+import           Juvix.Library         hiding (catch, reduce, throwIO,
+                                        writeFile)
+import           Juvix.Nets.Bohm
+import           Juvix.Utility.Helper  as H
 import           Juvix.Visualize.Graph
 import           System.Directory
 

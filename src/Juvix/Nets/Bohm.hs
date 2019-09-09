@@ -7,9 +7,9 @@ module Juvix.Nets.Bohm where
 import           Control.Lens
 import           Prelude                  (Show (..))
 
-import           Juvix.Bohm.Shared
 import           Juvix.Backends.Env
 import           Juvix.Backends.Interface
+import           Juvix.Bohm.Shared
 import           Juvix.Library            hiding (link, reduce)
 import           Juvix.NodeInterface
 import qualified Juvix.Utility.Helper     as H
@@ -432,6 +432,22 @@ testNilCons numCons numTest = do
   deleteRewire [numCons, numTest] [erase1, erase2, false]
 
 
+curry2 ∷ InfoNetwork net Primitive Lang m
+       ⇒ (Primitive → Primitive → Maybe Primitive, Node)
+       → (Primitive, Node)
+       → m ()
+curry2 (nodeF, numNode) (p, numPrim) = do
+  incGraphSizeStep (-1)
+  curr ← newNode (Auxiliary1 $ Curried1 $ nodeF p)
+  let currNode = RELAuxiliary1 { node       = curr
+                               , primary    = ReLink numNode Aux2
+                               , auxiliary1 = ReLink numNode Aux1
+                               }
+  linkAll currNode
+  deleteRewire [numNode, numPrim] [curr]
+
+
+-- TODO :: Deprecate the non bespoke path, and move everything to bespoke! -----
 curryRuleGen ∷ InfoNetwork net Primitive a m
               ⇒ (t → a)
               → (Int → t, Node)
@@ -458,6 +474,7 @@ curryRuleB ∷ InfoNetwork net Primitive Lang m
          → (Int, Node)
          → m ()
 curryRuleB = curryRuleGen (Auxiliary1 . CurriedB)
+-- Deprecation end -------------------------------------------------------------
 
 fanIns ∷ InfoNetwork net Primitive Lang m
        ⇒ (Node, Int) → (Node, Int) → m ()
@@ -470,7 +487,7 @@ fanIns (numf1, lab1) (numf2, lab2)
   | otherwise =
     fanInAux2 numf1 (numf2, (FanIn lab2)) lab1
 
-
+-- TODO :: Deprecation begin ---------------------------------------------------
 curryInt ∷ InfoNetwork net Primitive Lang m
          ⇒ (Node, (Int → Int)) → (Node, Int) → m ()
 curryInt (numCurr, _curried) (numInt, i) = do
@@ -490,3 +507,4 @@ curryIntB (numCurr, _curriedB) (numInt, i) = do
             False → Primar Fals)
   relink (numCurr, Aux1) (node, Prim)
   deleteRewire [numCurr, numInt] [node]
+-- Deprecation end -------------------------------------------------------------
