@@ -6,6 +6,45 @@ Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type
 
 > Note: at present, the substructural typing in the core language is not required for optimal reduction — separate elementary affine logic assignments are inferred in the lower-level stage. Substructural typing is used in Juvix Core to provide additional precision to the programmer and enable optimisations in the bespoke compilation path to custom rewrite rules (such as avoiding garbage collection). In the future a closer fusion allowing the more precise usage information to inform interaction net construction is expected; this is an open research question.
 
+## Changes from QTT
+
+### Additional linear logic connectives
+
+Multiplicative disjunction - explicit parallelism
+Dependent additive conjunction - resourceful production
+
+### Usage polymorphism
+
+An example, with Church-encoded naturals:
+
+```haskell
+one :: 1 (1 (a -> a) -> 1 a -> a)
+
+two :: 1 (2 (a -> a) -> 1 a -> a)
+
+three :: 1 (3 (a -> a) -> 1 a -> a)
+```
+
+where, ideally, we have
+
+```haskell
+succ :: 1 (1 (n (a -> a) -> 1 a -> a) -> ((n + 1) (a -> a) -> 1 a -> a)
+```
+
+Several options:
+
+1: Typeclass-style usage polymorphism in the frontend language
+
+Frontend language level usage polymorphism, where succ must be instantiated for an n known at compile time at each call site (like a typeclass), and must be instantiated with w if n is unknown at the call site. This is easy, but probably not that useful, since often we won't know n for the argument at compile time.
+
+2: Usage polymorphism in the type theory
+
+Add a $forall u . T$, where $u$ ranges over the semiring, to the core type theory, and can then appear as a variable for any usage in $T$. This then will require n-variable polynomial constraint satisfiability checks during typechecking, but should have zero runtime cost. It may impact the kinds of memory management we can automate, not sure yet, but we should still have more information than without quantization at all (or, equivalently, with w).
+
+3: Dependent usaging in the type theory
+
+Add a $↑u$ term to lift a term to a usage, such that usages in $T$ in a dependent function of type $(x \overset{π}{:} S) → T$ can depend on $x$ (we must then choose some canonical bijective mapping between semiring elements and terms), and some sort of beta-equivalence proofs of usage correctness will be required of programmers using this kind of lifting (in order for the term to typecheck). (possibly also add a usage-to-term $↓u$, not sure)
+
 ## Preliminaries
 
 A *semiring* $R$ is a set $R$ with binary operations $+$ (addition) and $⋅$ (multiplication), such that $(R, +)$ is a commutative monoid with identity $0$,
