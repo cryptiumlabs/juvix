@@ -7,6 +7,7 @@ module Juvix.Nets.Bohm where
 import           Control.Lens
 import           Prelude                  (Show (..))
 
+import           Juvix.Bohm.Shared
 import           Juvix.Backends.Env
 import           Juvix.Backends.Interface
 import           Juvix.Library            hiding (link, reduce)
@@ -88,11 +89,11 @@ langToProperPort node = langToPort node (\l -> f l node)
     f (Auxiliary1 a) = aux1FromGraph (IsAux1 a)
     f (Primar     a) = aux0FromGraph (IsPrim a)
 -- Rewrite rules----------------------------------------------------------------
-reduceAll ∷ (InfoNetworkDiff net Lang m)
+reduceAll ∷ (InfoNetworkDiff net Primitive Lang m)
           ⇒ Int → m ()
 reduceAll = H.untilNothingNTimesM reduce
 
-reduce ∷ (InfoNetworkDiff net Lang m) ⇒ m Bool
+reduce ∷ (InfoNetworkDiff net Primitive Lang m) ⇒ m Bool
 reduce = do
   nodes'    ← nodes
   isChanged ← foldrM update False nodes'
@@ -180,21 +181,21 @@ reduce = do
                   _ → pure isChanged
               _ → pure isChanged
 
-curryOnInt ∷ (InfoNetworkDiff net Lang m)
+curryOnInt ∷ (InfoNetworkDiff net Primitive Lang m)
            ⇒ (Int → Int → Int, Node) → Node → Bool → m Bool
 curryOnInt opInfo node isChanged = do
   langToProperPort node >>= \case
     Just IsPrim {_tag0 = IntLit i} → True <$ curryRule opInfo (i, node)
     _                              → pure isChanged
 
-curryOnIntB ∷ (InfoNetworkDiff net Lang m)
+curryOnIntB ∷ (InfoNetworkDiff net Primitive Lang m)
             ⇒ (Int → Int → Bool, Node) → Node → Bool → m Bool
 curryOnIntB opInfo node isChanged =
   langToProperPort node >>= \case
     Just IsPrim {_tag0 = IntLit i} → True <$ curryRuleB opInfo (i, node)
     _                              → pure isChanged
 
-propPrimary ∷ (Aux2 s, InfoNetwork net Lang m)
+propPrimary ∷ (Aux2 s, InfoNetwork net Primitive Lang m)
             ⇒ (Node, s) → Node → m ()
 propPrimary (numDel, nodeDel) numProp = do
   relink (numDel, Aux1) (numProp, Prim)
@@ -208,7 +209,7 @@ propPrimary (numDel, nodeDel) numProp = do
       incGraphSizeStep (-1)
       delNodes [numDel]
 
-ifElseRule ∷ (InfoNetwork net Lang m)
+ifElseRule ∷ (InfoNetwork net Primitive Lang m)
            ⇒ Node → Node → Bool → m ()
 ifElseRule numPrimOnly numAuxs pred = do
   incGraphSizeStep (-1)
@@ -223,7 +224,7 @@ ifElseRule numPrimOnly numAuxs pred = do
   deleteRewire [numPrimOnly, numAuxs] [numErase]
 
 
-anihilateRewireAux ∷ (InfoNetwork net Lang m)
+anihilateRewireAux ∷ (InfoNetwork net Primitive Lang m)
                    ⇒ Node → Node → m ()
 anihilateRewireAux numPrimOnly numAuxs = do
   incGraphSizeStep (-2)
@@ -231,7 +232,7 @@ anihilateRewireAux numPrimOnly numAuxs = do
   delNodes [numPrimOnly, numAuxs]
 
 -- used for app lambda!
-anihilateRewireAuxTogether ∷ (InfoNetwork net Lang m)
+anihilateRewireAuxTogether ∷ (InfoNetwork net Primitive Lang m)
                            ⇒ Node → Node → m ()
 anihilateRewireAuxTogether numNode1 numNode2 = do
   incGraphSizeStep (-2)
@@ -240,7 +241,7 @@ anihilateRewireAuxTogether numNode1 numNode2 = do
   delNodes [numNode1, numNode2]
 
 -- o is Aux1 * is Aux2
-muExpand ∷ (InfoNetwork net Lang m)
+muExpand ∷ (InfoNetwork net Primitive Lang m)
          ⇒ Node → m ()
 muExpand muNum = do
   incGraphSizeStep 2
@@ -260,7 +261,7 @@ muExpand muNum = do
   traverse_ linkAll [nodeFanIn, nodeFanOut]
   deleteRewire [muNum] [fanIn, fanOut, newMu]
 
-fanInAux2 ∷ (InfoNetwork net Lang m)
+fanInAux2 ∷ (InfoNetwork net Primitive Lang m)
           ⇒ Node → (Node, Auxiliary2) → Int → m ()
 fanInAux2 numFan (numOther, otherLang) level = do
   incGraphSizeStep 2
@@ -291,7 +292,7 @@ fanInAux2 numFan (numOther, otherLang) level = do
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
 
-fanInAux0 ∷ (InfoNetwork net Lang m)
+fanInAux0 ∷ (InfoNetwork net Primitive Lang m)
           ⇒ Node → (Node, Primar) → m ()
 fanInAux0 numFan (numOther, otherLang) = do
   sequentalStep
@@ -306,7 +307,7 @@ fanInAux0 numFan (numOther, otherLang) = do
   traverse_ linkAll [nodeOther1, nodeOther2]
   deleteRewire [numFan, numOther] [other1, other2]
 
-fanInAux1 ∷ (InfoNetwork net Lang m)
+fanInAux1 ∷ (InfoNetwork net Primitive Lang m)
           ⇒ Node → (Node, Auxiliary1) → Int → m ()
 fanInAux1 numFan (numOther, otherLang) level = do
   incGraphSizeStep 1
@@ -330,7 +331,7 @@ fanInAux1 numFan (numOther, otherLang) level = do
   deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
 -- TODO :: delete node coming in!
-notExpand ∷ (Aux2 s, InfoNetwork net Lang m)
+notExpand ∷ (Aux2 s, InfoNetwork net Primitive Lang m)
           ⇒ (Node, ProperPort)
           → (Node, s)
           → Bool
@@ -351,7 +352,7 @@ notExpand _ _ updated = pure updated
 
 -- Erase should be connected to the main port atm, change this logic later
 -- when this isn't the case
-eraseAll ∷ (Aux3 s, InfoNetwork net Lang m)
+eraseAll ∷ (Aux3 s, InfoNetwork net Primitive Lang m)
          ⇒ (s, Node) → Node → m ()
 eraseAll (node, numNode) nodeErase = do
   (i,  mE)  ← auxDispatch (node^.aux1) Aux1
@@ -367,7 +368,7 @@ eraseAll (node, numNode) nodeErase = do
       relink (numNode, port) (numE, Prim)
       return (Just numE)
 
-consCar ∷ InfoNetwork net Lang m
+consCar ∷ InfoNetwork net Primitive Lang m
         ⇒ Node → Node → m ()
 consCar numCons numCar = do
   incGraphSizeStep (-1)
@@ -376,7 +377,7 @@ consCar numCons numCar = do
   rewire (numCons, Aux2) (numCar, Aux1)
   deleteRewire [numCons, numCar] [erase]
 
-consCdr ∷ InfoNetwork net Lang m
+consCdr ∷ InfoNetwork net Primitive Lang m
         ⇒ Node → Node → m ()
 consCdr numCons numCdr = do
   incGraphSizeStep (-1)
@@ -385,7 +386,7 @@ consCdr numCons numCdr = do
   rewire (numCons, Aux1) (numCdr, Aux1)
   deleteRewire [numCons, numCdr] [erase]
 
-testNilNil ∷ InfoNetwork net Lang m
+testNilNil ∷ InfoNetwork net Primitive Lang m
            ⇒ Node → Node → m ()
 testNilNil numTest numNil = do
   incGraphSizeStep (-1)
@@ -393,7 +394,7 @@ testNilNil numTest numNil = do
   relink (numTest, Aux1) (true, Prim)
   deleteRewire [numTest, numNil] [true]
 
-testNilCons ∷ InfoNetwork net Lang m
+testNilCons ∷ InfoNetwork net Primitive Lang m
             ⇒ Node → Node → m ()
 testNilCons numCons numTest = do
   incGraphSizeStep 1
@@ -407,7 +408,7 @@ testNilCons numCons numTest = do
   deleteRewire [numCons, numTest] [erase1, erase2, false]
 
 
-curryRuleGen ∷ InfoNetwork net a m
+curryRuleGen ∷ InfoNetwork net Primitive a m
               ⇒ (t → a)
               → (Int → t, Node)
               → (Int, Node)
@@ -422,19 +423,19 @@ curryRuleGen con (nodeF, numNode) (i, numInt) = do
   linkAll currNode
   deleteRewire [numNode, numInt] [curr]
 
-curryRule ∷ InfoNetwork net Lang m
+curryRule ∷ InfoNetwork net Primitive Lang m
          ⇒ (Int → Int → Int, Node)
          → (Int, Node)
          → m ()
 curryRule = curryRuleGen (Auxiliary1 . Curried)
 
-curryRuleB ∷ InfoNetwork net Lang m
+curryRuleB ∷ InfoNetwork net Primitive Lang m
          ⇒ (Int → Int → Bool, Node)
          → (Int, Node)
          → m ()
 curryRuleB = curryRuleGen (Auxiliary1 . CurriedB)
 
-fanIns ∷ InfoNetwork net Lang m
+fanIns ∷ InfoNetwork net Primitive Lang m
        ⇒ (Node, Int) → (Node, Int) → m ()
 fanIns (numf1, lab1) (numf2, lab2)
   | lab1 == lab2 = do
@@ -446,7 +447,7 @@ fanIns (numf1, lab1) (numf2, lab2)
     fanInAux2 numf1 (numf2, (FanIn lab2)) lab1
 
 
-curryInt ∷ InfoNetwork net Lang m
+curryInt ∷ InfoNetwork net Primitive Lang m
          ⇒ (Node, (Int → Int)) → (Node, Int) → m ()
 curryInt (numCurr, _curried) (numInt, i) = do
   incGraphSizeStep (-1)
@@ -454,7 +455,7 @@ curryInt (numCurr, _curried) (numInt, i) = do
   relink (numCurr, Aux1) (intLit, Prim)
   deleteRewire [numCurr, numInt] [intLit]
 
-curryIntB ∷ InfoNetwork net Lang m
+curryIntB ∷ InfoNetwork net Primitive Lang m
           ⇒ (Node, (Int → Bool)) → (Node, Int) → m ()
 curryIntB (numCurr, _curriedB) (numInt, i) = do
   incGraphSizeStep (-1)

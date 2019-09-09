@@ -8,19 +8,19 @@ import           Turtle                   hiding (FilePath, reduce)
 import qualified Data.Text                as T
 import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
-import           Juvix.Backends.Interface
 import           Juvix.Library            hiding (catch, reduce, throwIO,
                                            writeFile)
 import           Juvix.Nets.Bohm
+import           Juvix.Bohm.Shared
 import           Juvix.Utility.Helper     as H
 import           Juvix.Visualize.Graph
 import           System.Directory
 
-printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b)) → IO ()
+printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b) Primitive) → IO ()
 printTestn _   (Left _)                      = pure ()
 printTestn txt (Right (InfoNet {net = net})) = showNet txt (runFlip net)
 
-netToGif ∷ FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+netToGif ∷ FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang) Primitive)
 netToGif dir name num net = do
   createDirectoryIfMissing True dir
 
@@ -39,13 +39,11 @@ netToGif dir name num net = do
   _ ← procStrict "ffmpeg" ["-f", "image2", "-framerate", "2", "-i", appDir packName <> "%d" <> ".png", appDir packName <> ".gif"] mempty
   return result
 
-runGraphNet ∷ FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+runGraphNet ∷ FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang) Primitive)
 runGraphNet name num = runFlipNetIO (reducePrint name num)
 
 reducePrint ∷ ( MonadIO f
-              , HasState "info" Info f
-              , HasState "net" (FlipNet Lang) f
-              , DifferentRep FlipNet)
+              , InfoNetworkDiff FlipNet Primitive Lang f)
             ⇒ FilePath → Int → f ()
 reducePrint name num = flip H.untilNothingNTimesM num $ do
   info ← get @"info"

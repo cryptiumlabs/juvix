@@ -21,12 +21,12 @@ data NodeInfo a = NInfo { _typ   :: a
 makeLenses ''NodeInfo
 
 -- Run Function ----------------------------------------------------------------
-runMapNet ∷ EnvNetInfo (Net b) a → Net b → InfoNet (Net b)
+runMapNet ∷ EnvNetInfo (Net b) prim a → Net b → InfoNet (Net b) prim
 runMapNet f net = runNet f net (toInteger (length (ofNet net)))
 
 
 -- used for debugging, i.e. getting information back from the net
-runMapNet' ∷ EnvNetInfo (Net a1) a2 → Net a1 → (a2, InfoNet (Net a1))
+runMapNet' ∷ EnvNetInfo (Net a1) prim a2 → Net a1 → (a2, InfoNet (Net a1) prim)
 runMapNet' f net = runNet' f net (toInteger (length (ofNet net)))
 -- Network Instances  ----------------------------------------------------------
 

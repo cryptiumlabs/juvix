@@ -51,6 +51,7 @@ brackets   :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 parens     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 semiSep    :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
 braces     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
+operator'  :: Stream s m Char ⇒ ParsecT s u m String
 
 identifier = T.identifier lexer
 reserved   = T.reserved   lexer
@@ -64,6 +65,10 @@ comma      = T.comma      lexer
 braces     = T.braces     lexer
 brackets   = T.brackets   lexer
 natural    = T.natural    lexer
+operator'  = T.operator   lexer
+
+operator :: Stream s m Char ⇒ ParsecT s u m SomeSymbol
+operator = someSymbolVal <$> operator'
 
 symbol :: Stream s m Char ⇒ ParsecT s u m SomeSymbol
 symbol = someSymbolVal <$> identifier
@@ -238,4 +243,5 @@ optable = [ [createOpTable infix4, createOpTable infix4Op]
           , [createOpTable infix2]
           , [createOpTable infix1]
           , [createOpTable infix0]
+          , [createOpTable (Infix' . Unkown <$> operator)]
           ]

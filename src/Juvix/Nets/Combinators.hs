@@ -16,6 +16,9 @@ import qualified Juvix.Utility.Helper     as H
 
 -- Specific Port Type-----------------------------------------------------------
 
+-- | Combinators has no expansion map
+type Primitive = ()
+
 -- eventually turn this into a nice Class representation to easily extend!
 data ProperPort
   = Construct {_prim :: Primary, _aux1 :: Auxiliary, _aux2 :: Auxiliary}
@@ -53,10 +56,10 @@ langToProperPort node = langToPort node f
     f Era = eraFromGraph node
 
 -- Graph manipulation ----------------------------------------------------------
-reduceAll ∷ InfoNetworkDiff net Lang m ⇒ Int → m ()
+reduceAll ∷ InfoNetworkDiff net Primitive Lang m ⇒ Int → m ()
 reduceAll = H.untilNothingNTimesM reduce
 
-reduce ∷ InfoNetworkDiff net Lang m ⇒ m Bool
+reduce ∷ InfoNetworkDiff net Primitive Lang m ⇒ m Bool
 reduce = do
   nodes' ← nodes
   isChanged ← foldrM update False nodes'
@@ -99,7 +102,7 @@ reduce = do
                   Just x  -> True <$ erase node n x
 
 -- | Deals with the case when two nodes annihilate each other
-annihilate ∷ InfoNetwork net Lang m
+annihilate ∷ InfoNetwork net Primitive Lang m
            ⇒ Node → Node → ProperPort → ProperPort → m ()
 annihilate conNum1 conNum2 (Construct {}) (Construct {}) = do
   incGraphSizeStep (-2)
@@ -115,7 +118,7 @@ annihilate conNum1 conNum2 (Duplicate {}) (Duplicate {}) = do
 annihilate _ _ _ _ = error "the other nodes do not annihilate eachother"
 
 -- | Deals with the case when an Erase Node hits any other node
-erase ∷ InfoNetwork net Lang m ⇒ Node → Node → ProperPort → m ()
+erase ∷ InfoNetwork net Primitive Lang m ⇒ Node → Node → ProperPort → m ()
 erase conNum eraseNum port
   = case port of
       Construct {} → sequentalStep         *> rewire
@@ -131,7 +134,7 @@ erase conNum eraseNum port
       deleteRewire [conNum, eraseNum] [eraA, eraB]
 
 -- | conDup deals with the case when Constructor and Duplicate share a primary
-conDup ∷ InfoNetwork net Lang m
+conDup ∷ InfoNetwork net Primitive Lang m
        ⇒ Node → Node → ProperPort → ProperPort → m ()
 conDup conNum deconNum (Construct _ _auxA _auxB) (Duplicate _ _auxC _auxD) = do
   incGraphSizeStep 2
