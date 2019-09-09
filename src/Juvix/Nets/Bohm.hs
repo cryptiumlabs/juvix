@@ -40,8 +40,11 @@ data Lang
   | Primar     Primar
   deriving Show
 
+-- the final argument for the curries is maybe, as if the nodes don't line up
+-- a final type can't be constructed. This is untyped
+-- so type check at a higher level
 data Auxiliary3 = IfElse
-                | Curried3 (Primitive → Primitive → Primitive → Primitive)
+                | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive)
                 deriving Show
 data Auxiliary2 = Or
                 | And
@@ -52,13 +55,13 @@ data Auxiliary2 = Or
                 | FanIn Int
                 | Infix Infix
                 | InfixB InfixB
-                | Curried2 (Primitive → Primitive → Primitive)
+                | Curried2 (Primitive → Primitive → Maybe Primitive)
                 deriving Show
 data Auxiliary1 = Not
                 | Car
                 | Cdr
                 | TestNil
-                | Curried1 (Primitive → Primitive)
+                | Curried1 (Primitive → Maybe Primitive)
                 | Curried (Int → Int)
                 | CurriedB (Int → Bool)
                 deriving Show
