@@ -105,11 +105,11 @@ That ends the encoding rules.
 
 ### Bespoke function encoding
 
-### Basics
+#### Basics
 
 Consider a Core term $f$ of type $A ⊸ B$.
 
-In the interaction net encoding compiler path, assuming EAL-typability, we would encode this (if of form $\x -> t$, for example) as:
+In the interaction net encoding compiler path, assuming EAL-typeability, we would encode this (if of form $λx.t$, for example) as:
 
 \begin{tikzpicture}
 \inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
@@ -120,17 +120,17 @@ In the interaction net encoding compiler path, assuming EAL-typability, we would
 \outwire[]{l.out}{$A ⊸ B$}
 \end{tikzpicture}
 
-where `φ` is the recursive interaction net translation function.
+where $φ$ is the recursive interaction net translation function.
 
 In the bespoke encoding path, we instead create a new node type $T$ and rewrite rule $R$ such that when the primary port of $T$ is connected to an application node to an argument $A$, we erase $T$, connect an eraser to $A$, and connect whatever the application node's primary port was connected to to a new subgraph which is equal to the encoding of $eval (f A)$.
 
-$eval (f A)$ can then be implemented by native evaluation semantics which do not utilize interaction nets. For example, if the Core term in question is a tail-recursive numerical computation, it can be compiled to a native loop (possibly using SIMD).
+$eval (f A)$ can then be implemented by native evaluation semantics which do not utilise interaction nets. For example, if the Core term in question is a tail-recursive numerical computation, it can be compiled to a native loop (possibly using SIMD).
 
 Furthermore, we can safely encode non-EAL-typable terms this way, such as the Ackermann function, and they can safely interact with the rest of the interaction net (which must have been an EAL-typable term, treating the bespoke-encoded subterm as opaque).
 
 The decision of whether or not to take the bespoke path can be made for all subterms of this form according to some heuristic (or possibly exact cost calculation) in the compiler.
 
-### Dealing with various types
+#### Dealing with various types
 
 Where $A$ and $B$ are both types which are encoded as primitive nodes (e.g. integers), this is trivial.
 
@@ -152,7 +152,7 @@ This follows all the interaction net laws and should preserve semantics - but th
 - Read-back and (complex) encoding algorithms must be executed at runtime
 - Read-back must happen over a term A which may be in the progress of parallel reduction
 
-In general, we have no idea of the size (and corresponding read-back cost) of `A`, and it might be dependent on the order of reduction.
+In general, we have no idea of the size (and corresponding read-back cost) of $A$, and it might be dependent on the order of reduction.
 
 ### Bespoke datatype encoding
 

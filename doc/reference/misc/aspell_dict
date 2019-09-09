@@ -1,4 +1,4 @@
-personal_ws-1.1 en 241 
+personal_ws-1.1 en 251 
 succ
 textwidth
 AST
@@ -15,6 +15,7 @@ Pxs
 graphicx
 QTT
 booleans
+bijective
 polymorphism
 snd
 Superoptimal
@@ -63,6 +64,7 @@ typecheck
 bussproofs
 forall
 EVM
+Ackermann
 von
 typ
 textbackslash
@@ -85,14 +87,17 @@ fontsize
 FixM
 inetbigcell
 semiring
+SIMD
 TinyRAM
 nonfungible
 titlepage
 runtime
+ADTs
 overset
 color
 inequation
 Tezos
+typeability
 inet
 INet
 prooftree
@@ -124,6 +129,7 @@ destructors
 precontext
 typechecker
 bytestrings
+typeclass
 ABSALG
 cutWire
 Asperti
@@ -133,6 +139,8 @@ FPGA
 disjunction
 xxs
 ax
+satisfiability
+eval
 AxiomC
 catamorphism
 const
@@ -218,6 +226,7 @@ floatstyle
 Cedille
 ruleset
 verifiability
+haskell
 dataflow
 QuaternaryInfC
 precontexts
@@ -228,6 +237,7 @@ typecheckers
 DTEAL
 mathbb
 arg
+subgraph
 param
 TBD
 memoisation
