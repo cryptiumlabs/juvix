@@ -10,8 +10,16 @@ Juvix Core is primarily inspired by Quantitative Type Theory [@quantitative-type
 
 ### Additional linear logic connectives
 
-Multiplicative disjunction - explicit parallelism
-Dependent additive conjunction - resourceful production
+#### Multiplicative disjunction
+
+- Explicit parallelism
+- Hints for interaction net runtime
+- Translated as multiplicative conjunction, but must be de-structured as a whole
+
+#### Dependent additive conjunction
+
+- Resourceful production
+- Translated as multiplicative conjunction, but only one of $fst$ or $snd$ can be used
 
 ### Usage polymorphism
 
@@ -542,13 +550,15 @@ The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ 
 
 A binary relation $R$ has the diamond property iff. $∀ s p q . s R p ∧ s R q \implies ∃r . p R r ∧ q R r$.
 
-### Parallel-step reduction
-
-Parallel-step evaluation semantics a la McBride.
-
 ### Small-step reduction
 
 Small-step evaluation semantics (so that one-step beta equality can be used in the theorem prover).
+
+Needs to consider cost accounting.
+
+### Parallel-step reduction
+
+Parallel-step evaluation semantics a la McBride.
 
 ## Typechecking
 
