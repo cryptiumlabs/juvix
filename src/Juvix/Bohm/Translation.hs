@@ -12,9 +12,9 @@ import           Juvix.Library            hiding (empty, link)
 import qualified Juvix.Nets.Bohm          as B
 import           Juvix.NodeInterface
 
-data Env net = Env {level :: Int
-                   , net' :: net B.Lang
-                   , free :: Map SomeSymbol (Node, PortType)
+data Env net = Env { level :: Int
+                   , net'  :: net B.Lang
+                   , free  :: Map SomeSymbol (Node, PortType)
                    } deriving (Generic)
 
 newtype EnvState net a = EnvS (State (Env net) a)
@@ -70,6 +70,8 @@ astToNet bohm = net'
         (Just portInfo, _) → chaseAndCreateFan portInfo
         -- The symbol is Free, but used already, create a sharing node for it
         (Nothing, Just portInfo) → chaseAndCreateFan portInfo
+        -- Since we now take an environment, we now have to check if this
+        -- unkown symbol is a function or a symbol or what?
         -- The symbol is Free, just stash it in a symbol with no rewrite rules
         (Nothing, Nothing) → do
           nodeInfo ← (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim

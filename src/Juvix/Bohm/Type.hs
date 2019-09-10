@@ -24,9 +24,12 @@ data Bohm
   -- Not valid syntax but for read back of a graph
   | Erase
   -- Not valid syntax but for read back of a graph
-  | Curried' (Primitive → Primitive) Bohm
-  | Curried (Int → Int) Bohm
-  | CurriedB (Int → Bool) Bohm
+  | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) Bohm
+  | Curried2 (Primitive → Primitive → Maybe Primitive)             Bohm
+  | Curried1 (Primitive → Maybe Primitive)                         Bohm
+  -- TODO ∷ Deprecate
+  | Curried (Int → Int)                                            Bohm
+  | CurriedB (Int → Bool)                                             Bohm
   deriving Show
 
 data Op = Mult | Plus

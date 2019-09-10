@@ -19,15 +19,15 @@ type Net a   = Gr a EdgeInfo
 type FlipNet = Flip Gr EdgeInfo
 
 -- Run Function ----------------------------------------------------------------
-runFlipNet ∷ EnvNetInfo (FlipNet b) prim a → FlipNet b → InfoNet (FlipNet b) prim
+runFlipNet ∷ EnvNetInfo (FlipNet b) a → FlipNet b → InfoNet (FlipNet b)
 runFlipNet f net = runNet f net
                           (toInteger (length (Graph.nodes (runFlip net))))
 
-runFlipNet' ∷ EnvNetInfo (FlipNet b) prim a → FlipNet b → (a, InfoNet (FlipNet b) prim)
+runFlipNet' ∷ EnvNetInfo (FlipNet b) a → FlipNet b → (a, InfoNet (FlipNet b))
 runFlipNet' f net = runNet' f net
                            (toInteger (length (Graph.nodes (runFlip net))))
 
-runFlipNetIO ∷ EnvNetInfoIO (FlipNet b) prim a → FlipNet b → IO (InfoNet (FlipNet b) prim)
+runFlipNetIO ∷ EnvNetInfoIO (FlipNet b) a → FlipNet b → IO (InfoNet (FlipNet b))
 runFlipNetIO f net = runNetIO f net
                              (toInteger (length (Graph.nodes (runFlip net))))
 -- Network Instances  ----------------------------------------------------------
