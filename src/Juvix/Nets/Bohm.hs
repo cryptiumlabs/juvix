@@ -214,8 +214,8 @@ reduce = do
               IsPrim _ Free       → pure isChanged
 
 
-curryMatch :: (DifferentRep net, HasState "net" (net Lang) f)
-           ⇒ (t → (Primitive, Node) → f b) → t → Node → Bool → f Bool
+curryMatch :: (InfoNetworkDiff net Primitive Lang m)
+           ⇒ (t → (Primitive, Node) → m b) → t → Node → Bool → m Bool
 curryMatch curry currNodeInfo nodeConnected isChanged = do
   langToProperPort nodeConnected >>= \case
       Just IsPrim {_tag0 = Fals}      → True <$ curry currNodeInfo (PBool False, nodeConnected)
