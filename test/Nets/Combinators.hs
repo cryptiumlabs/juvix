@@ -60,5 +60,5 @@ nonTerminating = Flip $ buildGr
 -- Tests------------------------------------------------------------------------
 
 -- TODO: Write real tests
-test1 ∷ InfoNet (FlipNet Lang)
+test1 ∷ InfoNet (FlipNet Lang) Primitive
 test1 = runFlipNet (reduceAll 100) nonTerminating
