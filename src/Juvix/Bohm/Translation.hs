@@ -75,7 +75,7 @@ astToNet bohm customSymMap = net'
         -- The symbol is Free, but used already, create a sharing node for it
         (Nothing, Just portInfo) → chaseAndCreateFan portInfo
         -- Since we now take an environment, we now have to check if this
-        -- unkown symbol is a function or a symbol or what?
+        -- unknown symbol is a function or a symbol or what?
         (Nothing, Nothing) →
           case customSymMap Map.!? s of
             -- The symbol is Free, just stash it in a symbol with no rewrite rules
