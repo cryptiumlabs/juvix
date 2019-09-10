@@ -111,6 +111,12 @@
   + [[Bohm/Types]]
 **** Shared <<Bohm/Shared>>
 - Has the shared primitive type between the graph and the AST
+**** Default <<Bohm/Default>>
+- Has the default execution environment for net→Ast. Can be added to
+  via core expressions
+- _Relies on_
+  + [[Bohm/Types]]
+  + [[Bohm/Shared]]
 *** =Eal=
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
