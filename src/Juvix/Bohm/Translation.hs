@@ -197,15 +197,16 @@ netToAst net = evalEnvState run (Env 0 net mempty)
               Just port →
                 case port of
                   B.IsAux3 {B._tag3 = tag, B._prim = prim, B._aux2 = aux2, B._aux3 = aux3} →
-                    case tag of
-                      B.IfElse → do
-                        case (prim, aux2, aux3) of
-                          (Primary p, Auxiliary a2, Auxiliary a3) → do
-                            p  ← rec' p  (Just (n, Prim)) fanMap nodeVarMap
-                            a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarMap
-                            a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarMap
-                            pure (BT.If <$> p <*> a2 <*> a3)
-                          _ → pure Nothing
+                    case (prim, aux2, aux3) of
+                      (Primary p, Auxiliary a2, Auxiliary a3) → do
+                        p  ← rec' p  (Just (n, Prim)) fanMap nodeVarMap
+                        a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarMap
+                        a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarMap
+                        let tag' = case tag of
+                                    B.IfElse     → BT.If
+                                    B.Curried3 f → BT.Curried3 f
+                        pure (tag' <$> p <*> a2 <*> a3)
+                      _ → pure Nothing
                   B.IsAux2 {B._tag2 = tag, B._prim = prim, B._aux1 = aux1, B._aux2 = aux2} →
                     let parentAux1 con = do
                           case (prim, aux2) of
@@ -244,12 +245,13 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                             -- This case it has to Prim, so construct a full lambda
                             _ → fullLamCase lamOrMu
                     in case tag of
-                      B.Infix b  → parentAux1 (BT.Infix' (inFixMap b))
-                      B.InfixB b → parentAux1 (BT.Infix' (inFixMapB b))
-                      B.Or       → parentAux1 (BT.Infix' BT.Or)
-                      B.And      → parentAux1 (BT.Infix' BT.And)
-                      B.App      → parentAux1 BT.Application
-                      B.Cons     → parentPrim BT.Cons
+                      B.Infix b    → parentAux1 (BT.Infix' (inFixMap b))
+                      B.InfixB b   → parentAux1 (BT.Infix' (inFixMapB b))
+                      B.Curried2 f → parentAux1 (BT.Curried2 f)
+                      B.Or         → parentAux1 (BT.Infix' BT.Or)
+                      B.And        → parentAux1 (BT.Infix' BT.And)
+                      B.App        → parentAux1 BT.Application
+                      B.Cons       → parentPrim BT.Cons
                       -- Lambda may be the lambda node
                       -- Or the symbol the Lambda contains
                       B.Lambda   → lamMu BT.Lambda
@@ -348,6 +350,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                       B.TestNil    → parentAux BT.IsNil
                       B.Curried f  → parentAux (BT.Curried f)
                       B.CurriedB f → parentAux (BT.CurriedB f)
+                      B.Curried1 f → parentAux (BT.Curried1 f)
                   B.IsPrim {B._tag0 = tag} →
                     pure $ Just $
                       case tag of
