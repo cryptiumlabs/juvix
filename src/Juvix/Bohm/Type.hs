@@ -24,8 +24,8 @@ data Bohm
   -- Not valid syntax but for read back of a graph
   | Erase
   -- Not valid syntax but for read back of a graph
-  | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) Bohm
-  | Curried2 (Primitive → Primitive → Maybe Primitive)             Bohm
+  | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) Bohm Bohm Bohm
+  | Curried2 (Primitive → Primitive → Maybe Primitive)             Bohm Bohm
   | Curried1 (Primitive → Maybe Primitive)                         Bohm
   -- TODO ∷ Deprecate
   | Curried (Int → Int)                                            Bohm
@@ -38,5 +38,16 @@ data Op = Mult | Plus
         | And  | Eq
         | Neq  | Lt
         | Gt   | Ge
-        | Le   | Unkown SomeSymbol
+        | Le
         deriving Show
+
+
+-- | Constructs a Function from a primitive
+-- the final argument is maybe, as if the nodes don't line up
+-- a final type can't be constructed. This is untyped
+-- so type check at a higher level
+data Fn = Arg0 Primitive
+        | Arg1 (Primitive → Maybe Primitive)
+        | Arg2 (Primitive → Primitive → Maybe Primitive)
+        | Arg3 (Primitive → Primitive → Primitive → Maybe Primitive)
+        deriving (Show, Generic)

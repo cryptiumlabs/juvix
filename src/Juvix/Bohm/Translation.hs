@@ -8,6 +8,7 @@ import           Prelude                  (error)
 
 import           Juvix.Backends.Interface
 import qualified Juvix.Bohm.Type          as BT
+import           Juvix.Bohm.Shared
 import           Juvix.Library            hiding (empty, link)
 import qualified Juvix.Nets.Bohm          as B
 import           Juvix.NodeInterface
@@ -32,8 +33,8 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ BT.Bohm → net B.Lang
-astToNet bohm = net'
+astToNet ∷ Network net ⇒ BT.Bohm → Map.Map SomeSymbol BT.Fn → net B.Lang
+astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
     -- we return the port which the node above it in the AST connects to!
@@ -48,6 +49,9 @@ astToNet bohm = net'
     recursive (BT.Not b)     context    = genericAux1PrimArg b (B.Auxiliary1 B.Not)     context
     recursive (BT.Curried f b) context  = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried f) context
     recursive (BT.CurriedB f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.CurriedB f) context
+    recursive (BT.Curried1 f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
+    recursive (BT.Curried2 f b1 b2)     c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f)    c
+    recursive (BT.Curried3 f b1 b2 b3)  c     = genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
     recursive (BT.Infix' BT.Mult b1 b2) c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Prod)  c
     recursive (BT.Infix' BT.Plus b1 b2) c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Add)   c
     recursive (BT.Infix' BT.Sub b1 b2)  c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Sub)   c
@@ -72,11 +76,51 @@ astToNet bohm = net'
         (Nothing, Just portInfo) → chaseAndCreateFan portInfo
         -- Since we now take an environment, we now have to check if this
         -- unkown symbol is a function or a symbol or what?
-        -- The symbol is Free, just stash it in a symbol with no rewrite rules
-        (Nothing, Nothing) → do
-          nodeInfo ← (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim
-          put @"free" (Map.insert s nodeInfo frees)
-          pure nodeInfo
+        (Nothing, Nothing) →
+          case customSymMap Map.!? s of
+            -- The symbol is Free, just stash it in a symbol with no rewrite rules
+            Nothing → do
+              nodeInfo ← (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim
+              put @"free" (Map.insert s nodeInfo frees)
+              pure nodeInfo
+            -- These nodes are in the environment, make lambda abstractions for them
+            Just (BT.Arg0 v) →
+              -- Easy case, we are already complete
+              case v of
+                PInt i      → recursive (BT.IntLit i) context
+                PBool True  → recursive BT.True' context
+                PBool False → recursive BT.False' context
+            Just (BT.Arg1 f) → do
+              numLam  ← newNode (B.Auxiliary2 B.Lambda)
+              numCurr ← newNode (B.Auxiliary1 $ B.Curried1 f)
+              link (numLam, Aux2) (numCurr, Prim)
+              link (numLam, Aux1) (numCurr, Aux1)
+              pure (numLam, Prim)
+            Just (BT.Arg2 f) → do
+              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
+              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
+              numCurr ← newNode (B.Auxiliary2 $ B.Curried2 f)
+              -- Lambda chain
+              link (numLam1, Aux1) (numLam2, Prim)
+              link (numLam2, Aux1) (numCurr, Aux1)
+              -- argument placement
+              link (numLam1, Aux2) (numCurr, Prim)
+              link (numLam2, Aux2) (numCurr, Aux2)
+              pure (numLam1, Prim)
+            Just (BT.Arg3 f) → do
+              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
+              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
+              numLam3 ← newNode (B.Auxiliary2 B.Lambda) -- arg3
+              numCurr ← newNode (B.Auxiliary3 $ B.Curried3 f)
+              -- Lambda chain
+              link (numLam1, Aux1) (numLam2, Prim)
+              link (numLam2, Aux1) (numLam3, Prim)
+              link (numLam3, Aux1) (numCurr, Aux1)
+              -- Argument placement
+              link (numLam1, Aux2) (numCurr, Prim)
+              link (numLam2, Aux2) (numCurr, Aux3)
+              link (numLam3, Aux2) (numCurr, Aux2)
+              pure (numLam1, Prim)
     recursive (BT.Letrec sym body) context = do
       numMu          ← newNode (B.Auxiliary2 B.Mu)
       (bNode, bPort) ← recursive body (Map.insert sym (numMu, Aux2) context)
@@ -101,6 +145,7 @@ astToNet bohm = net'
       (b3Num, b3Port)  ← recursive b3 c
       link (numIf, Aux2) (b3Num, b3Port)
       pure (numIf, retPort)
+    -- see comment on primArg below to see what these arguments mean!
     genericAux1 (b1, pb1) (langToCreate, portToReturn) context = do
       numCar        ← newNode langToCreate
       (bNum, bPort) ← recursive b1 context
@@ -111,7 +156,18 @@ astToNet bohm = net'
       (b2Num, b2Port)   ← recursive b2 context
       link (numApp, pb2) (b2Num, b2Port)
       pure (numApp, retPort)
-    genericAux2PrimArg b1 b2 lc        = genericAux2 (b1, Prim) (b2, Aux2) (lc, Aux1)
+    genericAux3 (b1, pb1) (b2, pb2) (b3, pb3) retInfo context = do
+      (numApp, retPort) ← genericAux2 (b1, pb1) (b2, pb2) retInfo context
+      (b3Num, b3Port)   ← recursive b3 context
+      link (numApp, pb3) (b3Num, b3Port)
+      pure (numApp, retPort)
+    genericAux2PrimArg b1 b2 lc        = genericAux2 (b1, Prim) -- Connects b1 to Prim of lc
+                                                     (b2, Aux2) -- Connects b2 to Aux2 of lc
+                                                     (lc, Aux1) -- Aux1 of lc is the return node
+    genericAux3PrimArg b1 b2 b3 lc     = genericAux3 (b1, Prim) -- Connect b1 to Prim of lc
+                                                     (b2, Aux3) -- Connect b2 to Aux3 of lc
+                                                     (b3, Aux2) -- Connect b3 to Aux1 of lc
+                                                     (lc, Aux1) -- lc connects to Aux1 above it
     genericAux1PrimArg b1 langToCreate = genericAux1 (b1, Prim) (langToCreate, Aux1)
 
 data FanPorts = Circle | Star deriving Show

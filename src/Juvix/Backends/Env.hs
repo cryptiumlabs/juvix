@@ -15,15 +15,6 @@ data Info = Info { memoryAllocated  :: Integer
                  , currentGraphSize :: Integer
                  } deriving Show
 
--- | Constructs a Function from a primitive
--- the final argument is maybe, as if the nodes don't line up
--- a final type can't be constructed. This is untyped
--- so type check at a higher level
-data Fn prim = Arg0 prim
-             | Arg1 (prim → Maybe prim)
-             | Arg2 (prim → prim → Maybe prim)
-             | Arg3 (prim → prim → prim → Maybe prim)
-             deriving (Show, Generic)
 
 data InfoNet net = InfoNet { net :: net
                            , info :: Info
