@@ -115,9 +115,6 @@ expression' =  ifThenElse
 
 -- Infix Parser ----------------------------------------------------------------
 
-(<$$>) :: (Functor f1, Functor f2) ⇒ (a → b) → f1 (f2 a) → f1 (f2 b)
-(<$$>) = fmap . fmap
-
 createInfixUnkown :: SomeSymbol → Bohm → Bohm → Bohm
 createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
 
@@ -128,7 +125,7 @@ precedenceToOps =
      if | s == "or"  → E.Infix (Or  <$ reservedOp s) a
         | s == "and" → E.Infix (And <$ reservedOp s) a
         | otherwise  → E.Infix (createInfixUnkown (someSymbolVal s) <$ reservedOp s) a)
-  <$$>
+  <<$>>
     groupBy (\x y -> level x == level y)
             (reverse (sortOn level defaultSymbols))
 
