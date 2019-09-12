@@ -518,7 +518,9 @@ To-do: check if we can safely allow sub-usaging if the ring is the natural numbe
 
 Contraction is $(λx.t : (π x : S) → T)\ s ⇝_{β} (t:T)[x := s:S]$.
 
-The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
+De-annotation is $(t : T) ⇝_ν t$.
+
+The reflexive transitive closure of $⇝_{β}$ and $⇝_ν$ yields beta reduction $→_{β}$ as usual.
 
 ### Confluence
 
@@ -532,7 +534,54 @@ Needs to consider cost accounting.
 
 ### Parallel-step reduction
 
-Parallel-step evaluation semantics a la McBride.
+Let parallel reduction be $▷$, operating on usage-erased terms, by mutual induction.
+
+\begin{prooftree}
+\AxiomC{$$}
+\UnaryInfC{$∗_i ▷ ∗_i$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$$}
+\UnaryInfC{$x ▷ x$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$S ▷ S'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$(x : S) → T ▷ (x : S') → T'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ t'$}
+\UnaryInfC{$λx.t  ▷ λx.t'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ t'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$t : T  ▷ t'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$f ▷ f'$}
+\AxiomC{$s ▷ s'$}
+\BinaryInfC{$f s ▷ f' s'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ t'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$t : T ▷ t' \overset{π}{:} T'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ t'$}
+\AxiomC{$S ▷ S'$}
+\AxiomC{$T ▷ T'$}
+\AxiomC{$s ▷ s'$}
+\QuaternaryInfC{$(λx.t : (x : S) → T) s ▷ (t' : T') [x := s' : S']$}
+\end{prooftree}
 
 ## Typechecking
 
