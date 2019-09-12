@@ -14,24 +14,6 @@ import           Juvix.Library            hiding (link, reduce)
 import           Juvix.NodeInterface
 import qualified Juvix.Utility.Helper     as H
 
-data InfixB = Eq | Neq | More | Less | Meq | Leq deriving Show
-
-data Infix = Div | Sub | Add | Prod | Mod deriving Show
-
-infix2FunctionB ∷ Ord a ⇒ InfixB → a → a → Bool
-infix2FunctionB Eq   = (==)
-infix2FunctionB Neq  = (/=)
-infix2FunctionB More = (>)
-infix2FunctionB Less = (<)
-infix2FunctionB Meq  = (>=)
-infix2FunctionB Leq  = (<=)
-
-infix2Function ∷ Integral a ⇒ Infix → a → a → a
-infix2Function Div  = div
-infix2Function Add  = (+)
-infix2Function Prod = (*)
-infix2Function Mod  = mod
-infix2Function Sub  = (-)
 
 data Lang
   = Auxiliary3 Auxiliary3
@@ -53,8 +35,6 @@ data Auxiliary2 = Or
                 | Lambda
                 | App
                 | FanIn Int
-                | Infix Infix
-                | InfixB InfixB
                 | Curried2 (Primitive → Primitive → Maybe Primitive)
                 deriving Show
 data Auxiliary1 = Not
@@ -62,8 +42,6 @@ data Auxiliary1 = Not
                 | Cdr
                 | TestNil
                 | Curried1 (Primitive → Maybe Primitive)
-                | Curried (Int → Int)
-                | CurriedB (Int → Bool)
                 deriving Show
 data Primar = Erase
             | Nil
@@ -159,8 +137,6 @@ reduce = do
                       -- Update later to be `True <$ fanInAux3 n (node, _tag3) level`
                       Just IsAux3 {_tag3}             → pure isChanged
                       Nothing                         → pure isChanged
-                  Infix inf   → curryOnInt  (infix2Function inf, n)   node isChanged
-                  InfixB infb → curryOnIntB (infix2FunctionB infb, n) node isChanged
                   Curried2 f  → curryMatch curry2 (f, n) node isChanged
                   -- Cases in which we fall through, and have the other node handle it
                   Mu     → pure isChanged
@@ -175,14 +151,6 @@ reduce = do
                     langToProperPort node >>= \case
                       Just IsPrim {_tag0 = Nil} → True <$ propPrimary (n, port) node
                       _                         → pure isChanged
-                  Curried curr →
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = IntLit i} → True <$ curryInt (n, curr) (node, i)
-                      _                              → pure isChanged
-                  CurriedB currb →
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = IntLit i} → True <$ curryIntB (n, currb) (node, i)
-                      _                              → pure isChanged
                   -- case is slightly different from other cases
                   -- just return what the function gives us!
                   -- TODO :: Unify logic with other cases
@@ -222,23 +190,6 @@ curryMatch curry currNodeInfo nodeConnected isChanged = do
       Just IsPrim {_tag0 = Tru}       → True <$ curry currNodeInfo (PBool True , nodeConnected)
       Just IsPrim {_tag0 = IntLit i}  → True <$ curry currNodeInfo (PInt  i    , nodeConnected)
       _                               → pure isChanged
-
--- TODO :: Deprecation start ---------------------------------------------------
-curryOnInt ∷ (InfoNetworkDiff net Lang m)
-           ⇒ (Int → Int → Int, Node) → Node → Bool → m Bool
-curryOnInt opInfo node isChanged = do
-  langToProperPort node >>= \case
-    Just IsPrim {_tag0 = IntLit i} → True <$ curryRule opInfo (i, node)
-    _                              → pure isChanged
-
-curryOnIntB ∷ (InfoNetworkDiff net Lang m)
-            ⇒ (Int → Int → Bool, Node) → Node → Bool → m Bool
-curryOnIntB opInfo node isChanged =
-  langToProperPort node >>= \case
-    Just IsPrim {_tag0 = IntLit i} → True <$ curryRuleB opInfo (i, node)
-    _                              → pure isChanged
-
--- TODO :: Deprecation end -----------------------------------------------------
 
 propPrimary ∷ (Aux2 s, InfoNetwork net Lang m)
             ⇒ (Node, s) → Node → m ()
@@ -506,36 +457,6 @@ curry1 (nodeF, numNode) (p, numPrim) =
       deleteRewire [numNode, numPrim] [curr]
       pure $ True
 
-
--- TODO :: Deprecate the non bespoke path, and move everything to bespoke! -----
-curryRuleGen ∷ InfoNetwork net a m
-              ⇒ (t → a)
-              → (Int → t, Node)
-              → (Int, Node)
-              → m ()
-curryRuleGen con (nodeF, numNode) (i, numInt) = do
-  incGraphSizeStep (-1)
-  curr         ← newNode (con (nodeF i))
-  let currNode = RELAuxiliary1 { node       = curr
-                               , primary    = ReLink numNode Aux2
-                               , auxiliary1 = ReLink numNode Aux1
-                               }
-  linkAll currNode
-  deleteRewire [numNode, numInt] [curr]
-
-curryRule ∷ InfoNetwork net Lang m
-         ⇒ (Int → Int → Int, Node)
-         → (Int, Node)
-         → m ()
-curryRule = curryRuleGen (Auxiliary1 . Curried)
-
-curryRuleB ∷ InfoNetwork net Lang m
-         ⇒ (Int → Int → Bool, Node)
-         → (Int, Node)
-         → m ()
-curryRuleB = curryRuleGen (Auxiliary1 . CurriedB)
--- Deprecation end -------------------------------------------------------------
-
 fanIns ∷ InfoNetwork net Lang m
        ⇒ (Node, Int) → (Node, Int) → m ()
 fanIns (numf1, lab1) (numf2, lab2)
@@ -546,25 +467,3 @@ fanIns (numf1, lab1) (numf2, lab2)
       delNodes [numf1, numf2]
   | otherwise =
     fanInAux2 numf1 (numf2, (FanIn lab2)) lab1
-
--- TODO :: Deprecation begin ---------------------------------------------------
-curryInt ∷ InfoNetwork net Lang m
-         ⇒ (Node, (Int → Int)) → (Node, Int) → m ()
-curryInt (numCurr, _curried) (numInt, i) = do
-  incGraphSizeStep (-1)
-  intLit ← newNode (Primar (IntLit (_curried i)))
-  relink (numCurr, Aux1) (intLit, Prim)
-  deleteRewire [numCurr, numInt] [intLit]
-
-curryIntB ∷ InfoNetwork net Lang m
-          ⇒ (Node, (Int → Bool)) → (Node, Int) → m ()
-curryIntB (numCurr, _curriedB) (numInt, i) = do
-  incGraphSizeStep (-1)
-  let app = _curriedB i
-  node ← newNode
-          (case app of
-            True  → Primar Tru
-            False → Primar Fals)
-  relink (numCurr, Aux1) (node, Prim)
-  deleteRewire [numCurr, numInt] [node]
--- Deprecation end -------------------------------------------------------------

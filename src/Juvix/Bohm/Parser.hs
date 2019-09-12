@@ -2,6 +2,8 @@
 module Juvix.Bohm.Parser where
 
 import           Juvix.Library hiding ((<|>), many)
+import           Juvix.Bohm.Default
+import           Juvix.Bohm.Shared hiding (symbol)
 import           Prelude (String)
 
 import           Text.Parsec
@@ -13,6 +15,11 @@ import           Control.Monad.Fail (fail)
 
 import            Juvix.Bohm.Type
 
+-- Types------------------------------------------------------------------------
+
+-- Ops ends up being recursive on itself
+-- TODO :: Figure how to not make this dependent on itself
+type Ops m = [[Operator String () m Bohm]]
 -- Lexer------------------------------------------------------------------------
 langaugeDef :: Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
@@ -86,31 +93,53 @@ parseBohmFile fname = do
   input ← readFile fname
   pure $ parseBohm' fname (show input)
 
-expression' :: Parser Bohm
-expression' = ifThenElse
-          <|> (application <?> "help")
-          <|> cons
-          <|> car
-          <|> cdr
-          <|> isNil
-          <|> lambda
-          <|> letExp
-          <|> letRecExp
-          <|> notExp
-          <|> listExpression
-          <|> trueLit
-          <|> falseLit
-          <|> intLit
-          <|> symbol'
+-- poor type signatures can't find the monadic version of parsec outside of stream
+-- TODO :: rewrite this later
+
+expression' :: ParsecT String () Identity Bohm
+expression' =  ifThenElse
+           <|> (application <?> "help")
+           <|> cons
+           <|> car
+           <|> cdr
+           <|> isNil
+           <|> lambda
+           <|> letExp
+           <|> letRecExp
+           <|> notExp
+           <|> listExpression
+           <|> trueLit
+           <|> falseLit
+           <|> intLit
+           <|> symbol'
+
+-- Infix Parser ----------------------------------------------------------------
+
+(<$$>) :: (Functor f1, Functor f2) ⇒ (a → b) → f1 (f2 a) → f1 (f2 b)
+(<$$>) = fmap . fmap
+
+createInfixUnkown :: SomeSymbol → Bohm → Bohm → Bohm
+createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
+
+-- special cased and and or!
+precedenceToOps :: Stream s m Char ⇒ OperatorTable s u m Bohm
+precedenceToOps =
+  (\(Precedence _ s a) →
+     if | s == "or"  → E.Infix (Or  <$ reservedOp s) a
+        | s == "and" → E.Infix (And <$ reservedOp s) a
+        | otherwise  → E.Infix (createInfixUnkown (someSymbolVal s) <$ reservedOp s) a)
+  <$$>
+    groupBy (\x y -> level x == level y)
+            (reverse (sortOn level defaultSymbols))
 
 expression :: Parser Bohm
-expression = buildExpressionParser optable expression'
+expression = buildExpressionParser precedenceToOps expression'
 
-listExpression :: Parser Bohm
+listExpression :: ParsecT String () Identity Bohm
 listExpression = nil <|> listCase
 
--- Expression Parsers-----------------------------------------------------------
-ifThenElse :: Parser Bohm
+-- Expression Parser------------------------------------------------------------
+ifThenElse :: ParsecT String () Identity Bohm
 ifThenElse = do
   reserved "if"
   pred ← expression
@@ -120,37 +149,37 @@ ifThenElse = do
   else' ← expression
   pure $ If pred then' else'
 
-cons :: Parser Bohm
+cons :: ParsecT String () Identity Bohm
 cons = do
   reserved "cons"
   (arg1,arg2) ← parens ((,) <$> expression <*> (reservedOp "," *> expression))
   pure $ Cons arg1 arg2
 
-car :: Parser Bohm
+car :: ParsecT String () Identity Bohm
 car = do
   reserved "head"
   arg1 ← parens expression
   pure $ Car arg1
 
-cdr :: Parser Bohm
+cdr :: ParsecT String () Identity Bohm
 cdr = do
   reserved "tail"
   arg1 ← parens expression
   pure $ Cdr arg1
 
-isNil :: Parser Bohm
+isNil :: ParsecT String () Identity Bohm
 isNil = do
   reserved "isnil"
   arg1 ← parens expression
   pure $ IsNil arg1
 
-intLit :: Parser Bohm
+intLit :: ParsecT String () Identity Bohm
 intLit = do
   int ← integer
   pure $ IntLit (fromInteger int)
 
 
-lambda :: Parser Bohm
+lambda :: ParsecT String () Identity Bohm
 lambda = do
   reserved "lambda"
   sym ← symbol
@@ -158,7 +187,7 @@ lambda = do
   exp ← expression
   pure $ Lambda sym exp
 
-letExp :: Parser Bohm
+letExp :: ParsecT String () Identity Bohm
 letExp = do
   reserved "let"
   toBind ← symbol
@@ -168,7 +197,7 @@ letExp = do
   body ← expression
   pure $ Let toBind binding body
 
-letRecExp :: Parser Bohm
+letRecExp :: ParsecT String () Identity Bohm
 letRecExp = do
   reserved "letrec"
   toBind ← symbol
@@ -176,75 +205,34 @@ letRecExp = do
   exp ← expression
   pure $ Letrec toBind exp
 
-trueLit :: Parser Bohm
+trueLit :: ParsecT String () Identity Bohm
 trueLit = True' <$ reserved "true"
 
-falseLit :: Parser Bohm
+falseLit :: ParsecT String () Identity Bohm
 falseLit = False' <$ reserved "true"
 
-notExp :: Parser Bohm
+notExp :: ParsecT String () Identity Bohm
 notExp = do
   reserved "not"
   exp ← expression
   pure $ Not exp
 
-application :: Parser Bohm
+application :: ParsecT String () Identity Bohm
 application = do
   app ← parens (many expression)
   case app of
     []     → fail "empty list"
     (x:xs) → pure $ foldl' Application x xs
 
-symbol' :: Parser Bohm
+symbol' :: ParsecT String () Identity Bohm
 symbol' = Symbol' <$> symbol
 
 -- List Parser------------------------------------------------------------------
 
-nil :: Parser Bohm
+nil :: ParsecT String () Identity Bohm
 nil = Nil <$ reserved "nil"
 
-listCase :: Parser Bohm
+listCase :: ParsecT String () Identity Bohm
 listCase = do
   exprs ← brackets (expression `sepBy` comma)
   pure $ foldr Cons Nil exprs
-
--- Infix------------------------------------------------------------------------
-
-createOpTable :: ParsecT s u m (a → a → a) → Operator s u m a
-createOpTable term = E.Infix term AssocLeft
-
-createInfixOp :: String → Op → Parser (Bohm → Bohm → Bohm)
-createInfixOp opStr term = Infix' term <$ reservedOp opStr
-
-createInfix :: String → Op → Parser (Bohm → Bohm → Bohm)
-createInfix opStr term = Infix' term <$ reserved opStr
-
-listToChoiceOp :: [(String, Op)] → Parser (Bohm → Bohm → Bohm)
-listToChoiceOp = choice . fmap (uncurry createInfixOp)
-
-listToChoice :: [(String, Op)] → Parser (Bohm → Bohm → Bohm)
-listToChoice = choice . fmap (uncurry createInfix)
-
-infix0, infix1, infix2, infix3, infix4Op, infix4 :: Parser (Bohm → Bohm → Bohm)
-infix0 = listToChoice [("or", Or), ("mod", Mod)]
-
-infix1 = listToChoice [("and", And)]
-
-infix2 = listToChoiceOp [("==", Eq), ("<>", Neq), ("<", Lt), ("<=", Le), (">", Gt), (">=", Ge)]
-
-infix3 = listToChoiceOp [("+", Plus), ("-", Sub)]
-
-infix4Op = listToChoiceOp [("*", Mult)]
-infix4   = listToChoice   [("div", Division)]
-
-createInfixUnkown :: SomeSymbol → Bohm → Bohm → Bohm
-createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
-
-optable :: [[Operator String () Identity Bohm]]
-optable = [ [createOpTable infix4, createOpTable infix4Op]
-          , [createOpTable infix3]
-          , [createOpTable infix2]
-          , [createOpTable infix1]
-          , [createOpTable infix0]
-          , [createOpTable (createInfixUnkown <$> operator)]
-          ]

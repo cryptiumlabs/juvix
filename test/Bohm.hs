@@ -54,7 +54,7 @@ test5' ∷ Either ParseError (InfoNet (FlipNet Lang))
 test5' = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "(plus 2 2)"
 
 test6 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test6 = runFlipNet (reduceAll 0) . astToNetDefault <$> parseBohm "( (lambda x. (x + 3 + 5)) 2)"
+test6 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "( (lambda x. (x + 3 * 5)) 2)"
 
 
 test7 ∷ Maybe Bohm
