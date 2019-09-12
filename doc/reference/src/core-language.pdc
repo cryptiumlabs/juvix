@@ -526,15 +526,13 @@ The reflexive transitive closure of $⇝_{β}$ and $⇝_ν$ yields beta reductio
 
 A binary relation $R$ has the diamond property iff. $∀ s p q . s R p ∧ s R q \implies ∃r . p R r ∧ q R r$.
 
-### Small-step reduction
-
-Small-step evaluation semantics (so that one-step beta equality can be used in the theorem prover).
-
-Needs to consider cost accounting.
-
 ### Parallel-step reduction
 
 Let parallel reduction be $▷$, operating on usage-erased terms, by mutual induction.
+
+To-do: needs to consider cost accounting.
+
+> Note: The theorem prover will support a special one-step beta equality, which stops at the first application of contraction.
 
 \begin{prooftree}
 \AxiomC{$$}
@@ -572,7 +570,7 @@ Let parallel reduction be $▷$, operating on usage-erased terms, by mutual indu
 \begin{prooftree}
 \AxiomC{$t ▷ t'$}
 \AxiomC{$T ▷ T'$}
-\BinaryInfC{$t : T ▷ t' \overset{π}{:} T'$}
+\BinaryInfC{$t : T ▷ t' : T'$}
 \end{prooftree}
 
 \begin{prooftree}
