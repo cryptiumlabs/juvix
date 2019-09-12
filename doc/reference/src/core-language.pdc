@@ -274,11 +274,10 @@ required for the argument, respectively:
 
 \begin{prooftree}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ′}{:} S$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ π}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
-\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
 \RightLabel{App}
-\QuaternaryInfC{$Γ_1 + πΓ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
+\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
@@ -308,11 +307,10 @@ Type formation does not require any resources.
 Introduction rule:
 
 \begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ′}{:} S$}
-\AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ π}{:} S$}
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
-\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
-\QuaternaryInfC{$πΓ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$0Γ_1 = 0Γ_2$}
+\TrinaryInfC{$Γ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -328,10 +326,8 @@ Under the erased ($σ=0$) part of the theory, projection operators can be used a
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
-\UnaryInfC{$Γ ⊢ fst_⊗\ M \overset{0}{:} A$}
+\UnaryInfC{$Γ ⊢ fst_⊗\ M \overset{0}{:} S$}
 \end{prooftree}
-
-(should the last be $S$ ?)
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ M \overset{0}{:} (x \overset{π}{:} S) ⊗ T$}
@@ -444,28 +440,6 @@ Elimination rule:
 
 reformulate to be syntax-directed, we need some sort of "join"
 
-### Additive disjunction
-
-"Might be either"
-
-Presumably cannot be dependent.
-
-Formation rules:
-
-\begin{prooftree}
-\AxiomC{$Γ ⊢ A \overset{σ}{∶} S$}
-\RightLabel{$⊕_L$}
-\UnaryInfC{$Γ ⊢ (A \overset{σ}{∶} S) ⊕ (B \overset{σ'}{:} S)$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$Γ ⊢ B \overset{σ}{∶} S$}
-\RightLabel{$⊕_R$}
-\UnaryInfC{$Γ ⊢ (A \overset{σ'}{∶} S) ⊕ (B \overset{σ}{:} S)$}
-\end{prooftree}
-
-Do we get this for free with lambda-encoded datatypes?
-
 ### Self types
 
 \begin{prooftree}
@@ -534,7 +508,7 @@ Terms with the same type are judgementally equal under beta reduction:
 \TrinaryInfC{$Γ ⊢ M ≡ N \overset{σ}{:} S$}
 \end{prooftree}
 
-To-do: do we have / need a rule for term equality?
+To-do: do we need a rule for term equality?
 
 ### Sub-usaging
 
@@ -542,7 +516,7 @@ To-do: check if we can safely allow sub-usaging if the ring is the natural numbe
 
 ## Semantics
 
-Contraction is $(λx.t : (π x : S) → T) s ⇝_{β} (t:T)[x := s:S]$.
+Contraction is $(λx.t : (π x : S) → T)\ s ⇝_{β} (t:T)[x := s:S]$.
 
 The reflexive transitive closure of $⇝_{β}$ yields beta reduction $→_{β}$ as usual.
 
@@ -634,23 +608,7 @@ Computationally relevant terms are preserved, while terms which are only contemp
 - Representation
 - Deriving induction for Church-encoded numerals using self-types
 
-The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{n}{:} (s \overset{π}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
-
-### Linear lists
-
-Example from McBride's paper:
-
-$0List: (0X:∗)→∗$
-
-$ωnil: (0X:∗)→ListX$
-
-$ωcons: (0X:∗,1x:X,1xs:ListX)→ListX$
-
-$ωlit: (0X:∗,0P: (0x:ListX)→∗)→(1n:P(nilX))→(ωc: (1x:X,0xs:ListX,1p:Pxs)→P(consX xxs))→(1xs:ListX)→P xs$
-
-$ωappend:  (0X:∗,1xs:ListX,1ys:ListX)→ListX$
-
-$append=λX.λxs.λys.litX(λ.ListX)ys(λx.λ.λxs′.consX xxs′)xs$
+The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
 
 ### Linear logic connectives
 
