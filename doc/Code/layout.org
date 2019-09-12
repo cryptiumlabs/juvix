@@ -51,6 +51,8 @@
 **** =Bohm= <<Bohm>>
 - An evaluator for the Bohm Language
 - Serves as a reference way of creating interaction nets
+- _Relies on_
+  + [[Bohm/Shared]]
 **** =Combinators=
 - An evaluation for a simple combination calculus language, only has
   three ports
@@ -100,11 +102,21 @@
   + [[Bohm/Types]]
 **** Types <<Bohm/Types>>
 - Serves as the abstract syntax of =Bohm=
+- _Relies on_
+  + [[Bohm/Shared]]
 **** Translation
 - Translates =Bohm='s abstract syntax into Interaction nets
 - _Relies on_
   + [[Back-ends]]
   + [[Bohm/Types]]
+**** Shared <<Bohm/Shared>>
+- Has the shared primitive type between the graph and the AST
+**** Default <<Bohm/Default>>
+- Has the default execution environment for net→Ast. Can be added to
+  via core expressions
+- _Relies on_
+  + [[Bohm/Types]]
+  + [[Bohm/Shared]]
 *** =Eal=
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
@@ -145,6 +157,7 @@
   + [[Back-ends]]
     * [[Graph]] in particular
   + [[Bohm]]
+  + [[Bohm/Shared]]
 **** Graph
 - A simple function for showing the graph as a proper net
 - Really should be improved upon or removed

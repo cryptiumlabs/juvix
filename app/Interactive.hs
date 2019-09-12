@@ -110,7 +110,7 @@ transformAndEvaluateEal debug term = do
   let bohm = EAL.ealToBohm term
   when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)
   let net ∷ Graph.FlipNet Bohm.Lang
-      net = Bohm.astToNet bohm
+      net = Bohm.astToNet bohm Bohm.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (Bohm.reduceAll 1000000) net
       info = Env.info reduced

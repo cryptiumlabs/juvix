@@ -82,6 +82,8 @@ library:
     - Juvix.Bohm.Parser
     - Juvix.Bohm.Translation
     - Juvix.Bohm.Type
+    - Juvix.Bohm.Shared
+    - Juvix.Bohm.Default
     - Juvix.Bohm
     - Juvix.Library
     - Juvix.Visualize.Dot

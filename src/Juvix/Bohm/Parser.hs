@@ -14,7 +14,7 @@ import           Control.Monad.Fail (fail)
 import            Juvix.Bohm.Type
 
 -- Lexer------------------------------------------------------------------------
-langaugeDef :: Stream s m Char => GenLanguageDef s u m
+langaugeDef :: Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
               { T.reservedNames   = ["if", "then", "else", "let"
                                     , "letrec", "cons", "head", "tail", "nil"
@@ -35,7 +35,7 @@ langaugeDef = LanguageDef
               , commentLine       = ""
               }
 
-lexer :: Stream s m Char => T.GenTokenParser s u m
+lexer :: Stream s m Char ⇒ T.GenTokenParser s u m
 lexer = T.makeTokenParser langaugeDef
 
 
@@ -51,6 +51,7 @@ brackets   :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 parens     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 semiSep    :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
 braces     :: Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
+operator'  :: Stream s m Char ⇒ ParsecT s u m String
 
 identifier = T.identifier lexer
 reserved   = T.reserved   lexer
@@ -64,6 +65,10 @@ comma      = T.comma      lexer
 braces     = T.braces     lexer
 brackets   = T.brackets   lexer
 natural    = T.natural    lexer
+operator'  = T.operator   lexer
+
+operator :: Stream s m Char ⇒ ParsecT s u m SomeSymbol
+operator = someSymbolVal <$> operator'
 
 symbol :: Stream s m Char ⇒ ParsecT s u m SomeSymbol
 symbol = someSymbolVal <$> identifier
@@ -232,10 +237,14 @@ infix3 = listToChoiceOp [("+", Plus), ("-", Sub)]
 infix4Op = listToChoiceOp [("*", Mult)]
 infix4   = listToChoice   [("div", Division)]
 
+createInfixUnkown :: SomeSymbol → Bohm → Bohm → Bohm
+createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
+
 optable :: [[Operator String () Identity Bohm]]
 optable = [ [createOpTable infix4, createOpTable infix4Op]
           , [createOpTable infix3]
           , [createOpTable infix2]
           , [createOpTable infix1]
           , [createOpTable infix0]
+          , [createOpTable (createInfixUnkown <$> operator)]
           ]

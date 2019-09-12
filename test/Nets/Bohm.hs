@@ -6,6 +6,7 @@ import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
 import           Juvix.Backends.Interface
 import           Juvix.Nets.Bohm
+import           Juvix.Bohm.Shared
 import           Juvix.Utility
 
 test2 ∷ InfoNet (FlipNet Lang)

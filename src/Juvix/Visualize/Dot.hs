@@ -1,18 +1,17 @@
 module Juvix.Visualize.Dot where
 
-import           Control.Exception        hiding ()
+import           Control.Exception     hiding ()
 import           System.IO.Error
-import           Turtle                   hiding (FilePath, reduce)
+import           Turtle                hiding (FilePath, reduce)
 
 
-import qualified Data.Text                as T
+import qualified Data.Text             as T
 import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
-import           Juvix.Backends.Interface
-import           Juvix.Library            hiding (catch, reduce, throwIO,
-                                           writeFile)
+import           Juvix.Library         hiding (catch, reduce, throwIO,
+                                        writeFile)
 import           Juvix.Nets.Bohm
-import           Juvix.Utility.Helper     as H
+import           Juvix.Utility.Helper  as H
 import           Juvix.Visualize.Graph
 import           System.Directory
 
@@ -43,9 +42,7 @@ runGraphNet ∷ FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang)
 runGraphNet name num = runFlipNetIO (reducePrint name num)
 
 reducePrint ∷ ( MonadIO f
-              , HasState "info" Info f
-              , HasState "net" (FlipNet Lang) f
-              , DifferentRep FlipNet)
+              , InfoNetworkDiff FlipNet Lang f)
             ⇒ FilePath → Int → f ()
 reducePrint name num = flip H.untilNothingNTimesM num $ do
   info ← get @"info"
