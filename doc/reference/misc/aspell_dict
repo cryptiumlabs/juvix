@@ -1,4 +1,4 @@
-personal_ws-1.1 en 252 
+personal_ws-1.1 en 259 
 succ
 textwidth
 AST
@@ -34,6 +34,7 @@ toc
 mainfont
 cybercoin
 Juvix
+STG
 AlgebraM
 frontend
 boolean
@@ -87,6 +88,7 @@ interoperation
 fontsize
 FixM
 inetbigcell
+GHC's
 semiring
 SIMD
 TinyRAM
@@ -127,6 +129,7 @@ optimality
 Conor
 Stumpf
 destructors
+al
 precontext
 typechecker
 bytestrings
@@ -154,6 +157,7 @@ pseudoterms
 pagebreak
 semithick
 Fn
+et
 whnf
 newtheorem
 RightLabel
@@ -166,6 +170,7 @@ amsmath
 parallelises
 hyperref
 le
+redex
 conv
 Blockchains
 pluggable
@@ -208,10 +213,12 @@ xs
 REPL
 ZK
 ys
+redexes
 monadic
 DejaVuSerifCondensed
 wirecross
 restylefloat
+zs
 CUDA
 composable
 stateful

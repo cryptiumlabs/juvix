@@ -19,11 +19,19 @@ Beta-reduction is nontrivial, must search for & replace all instances of variabl
 
 Choice of reduction strategy: given $(λx. t_1) t_2$, which of $t_1$ or $t_2$ to reduce first.
 
-- Call-by-name: reduce $t_1$ first, substitute in $t_2$ for $x$ without reduction.
-- Call-by-value: reduce $t_2$ first, substitute in for $x$ after reduction.
-- Call-by-need: create thunk for evaluation of $t_2$, pass into $t_1$, if reduced value will be shared. Doesn't parallelise well.
+- Normal order: leftmost-outermost redex reduced first (arguments substituted before reduction).
 
-Find example of term with duplication from either strategy; see Asperti book.
+- Call-by-name: as normal order except that no reductions are performed inside abstractions.
+
+- Call-by-value: only outermost redexes reduced, only when right-hand side has reduced to a value (variable or lambda abstraction) - reduce $t_2$ first, substitute in for $x$ after reduction.
+
+- Call-by-need: create thunk for evaluation of $t_2$, pass into $t_1$, if reduced value will be shared. Challenge: "computing under a lambda", sharing a function. Haskell et al. don't do this.
+
+Computing under a function: $(λx.λy.map (λz. z + x + y) zs) 2 3$, $x + y$ should be evaluated once, GHC's STG machine does not do this (only evaluates function once all arguments are passed).
+
+(easy to optimise if 2 & 3 are known at compile time, but that's not the case in general)
+
+Example term: $λx.(x (λw.w)) λy.(λx.x x)(y z)$.
 
 Define optimality using Levy's framework.
 

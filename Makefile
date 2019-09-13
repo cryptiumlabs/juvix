@@ -10,7 +10,7 @@ build-watch:
 	stack build --copy-bins --fast --file-watch
 
 build-opt: clean
-	stack build --copy-bins --ghc-options "-O3"
+	stack build --copy-bins --ghc-options "-O3 -fllvm"
 
 lint:
 	stack exec -- hlint app src test
