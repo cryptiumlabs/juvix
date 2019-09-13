@@ -23,7 +23,7 @@ erase ∷ (HasState "typeAssignment" EAL.TypeAssignment m,
   ⇒ Core.CTerm → m EAL.Term
 erase term =
   case term of
-    Core.Lam _ body -> do
+    Core.Lam body -> do
       name <- newName
       let ty = EAL.SymT name
       modify @"typeAssignment" (insert name ty)

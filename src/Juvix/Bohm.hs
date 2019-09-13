@@ -5,7 +5,7 @@ module Juvix.Bohm (
   module Juvix.Bohm.Default
 ) where
 
+import           Juvix.Bohm.Default
 import           Juvix.Bohm.Parser
 import           Juvix.Bohm.Translation
 import           Juvix.Bohm.Type
-import           Juvix.Bohm.Default

@@ -47,25 +47,10 @@ astToNet bohm customSymMap = net'
     recursive (BT.Cdr b)     context    = genericAux1PrimArg b (B.Auxiliary1 B.Cdr)     context
     recursive (BT.IsNil b)   context    = genericAux1PrimArg b (B.Auxiliary1 B.TestNil) context
     recursive (BT.Not b)     context    = genericAux1PrimArg b (B.Auxiliary1 B.Not)     context
-    recursive (BT.Curried f b) context  = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried f) context
-    recursive (BT.CurriedB f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.CurriedB f) context
     recursive (BT.Curried1 f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
     recursive (BT.Curried2 f b1 b2)     c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f)    c
     recursive (BT.Curried3 f b1 b2 b3)  c     = genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
-    recursive (BT.Infix' BT.Mult b1 b2) c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Prod)  c
-    recursive (BT.Infix' BT.Plus b1 b2) c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Add)   c
-    recursive (BT.Infix' BT.Sub b1 b2)  c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Sub)   c
-    recursive (BT.Infix' BT.Mod b1 b2)  c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Mod)   c
-    recursive (BT.Infix' BT.Eq b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.Eq)   c
-    recursive (BT.Infix' BT.Neq b1 b2)  c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.Neq)  c
-    recursive (BT.Infix' BT.Lt b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.Less) c
-    recursive (BT.Infix' BT.Gt b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.More) c
-    recursive (BT.Infix' BT.Ge b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.Meq)  c
-    recursive (BT.Infix' BT.Le b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.InfixB B.Leq)  c
-    recursive (BT.Infix' BT.Division b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Infix B.Div)   c
     recursive (BT.Application b1 b2)    c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
-    recursive (BT.Infix' BT.Or b1 b2)   c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or)  c
-    recursive (BT.Infix' BT.And b1 b2)  c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
     recursive (BT.Cons b1 b2)           c     = genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
     recursive (BT.Symbol' s) context = do
       frees ← get @"free"
@@ -245,11 +230,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                             -- This case it has to Prim, so construct a full lambda
                             _ → fullLamCase lamOrMu
                     in case tag of
-                      B.Infix b    → parentAux1 (BT.Infix' (inFixMap b))
-                      B.InfixB b   → parentAux1 (BT.Infix' (inFixMapB b))
                       B.Curried2 f → parentAux1 (BT.Curried2 f)
-                      B.Or         → parentAux1 (BT.Infix' BT.Or)
-                      B.And        → parentAux1 (BT.Infix' BT.And)
                       B.App        → parentAux1 BT.Application
                       B.Cons       → parentPrim BT.Cons
                       -- Lambda may be the lambda node
@@ -348,8 +329,6 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                       B.Cdr        → parentAux BT.Cdr
                       B.Car        → parentAux BT.Car
                       B.TestNil    → parentAux BT.IsNil
-                      B.Curried f  → parentAux (BT.Curried f)
-                      B.CurriedB f → parentAux (BT.CurriedB f)
                       B.Curried1 f → parentAux (BT.Curried1 f)
                   B.IsPrim {B._tag0 = tag} →
                     pure $ Just $
@@ -407,20 +386,6 @@ chaseAndCreateFan (num,port) = do
       deleteEdge t1 (num,port)
       pure (numFan, Aux2)
 
-inFixMap ∷ B.Infix → BT.Op
-inFixMap B.Prod = BT.Mult
-inFixMap B.Add  = BT.Plus
-inFixMap B.Sub  = BT.Sub
-inFixMap B.Mod  = BT.Mod
-inFixMap B.Div  = BT.Division
-
-inFixMapB ∷ B.InfixB → BT.Op
-inFixMapB B.Eq   = BT.Eq
-inFixMapB B.Neq  = BT.Neq
-inFixMapB B.Less = BT.Lt
-inFixMapB B.More = BT.Gt
-inFixMapB B.Meq  = BT.Ge
-inFixMapB B.Leq  = BT.Le
 
 -- | numToSymbol generates a symbol from a number
 numToSymbol ∷ Int → SomeSymbol

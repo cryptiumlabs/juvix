@@ -40,7 +40,7 @@ data CTerm
   | Pm Usage CTerm CTerm -- dependent multiplicative conjunction (tensor product)
   | Pa Usage CTerm CTerm -- dependent additive conjunction type
   | NPm CTerm CTerm -- non-dependent multiplicative disjunction type
-  | Lam Usage CTerm --(LAM) Introduction rule of PI.
+  | Lam CTerm --(LAM) Introduction rule of PI.
                         -- The abstracted variable's usage is tracked with the Usage(π).
   | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
               -- Conv is the constructor that embeds ITerm to CTerm
@@ -70,12 +70,12 @@ data Value
   | VPm Usage Value (Value → Value)
   | VPa Usage Value (Value → Value)
   | VNPm Value Value
-  | VLam Usage (Value → Value)
+  | VLam (Value → Value)
   | VNeutral Neutral
   | VNat Natural
 
 showVal ∷ Value → String
-showVal (VLam _ f) = showFun f
+showVal (VLam f) = showFun f
 showVal (VStar i) = "*" ++ show i
 showVal VNats = "Nats"
 showVal (VPi n v f) = "[" ++ show n ++ "]" ++ showVal v ++ " -> " ++ showFun f
@@ -114,7 +114,7 @@ cEval (Pi pi ty ty') d = VPi pi (cEval ty d) (\x -> cEval ty' (x : d))
 cEval (Pm pi ty ty') d = VPm pi (cEval ty d) (\x -> cEval ty' (x : d))
 cEval (Pa pi ty ty') d = VPa pi (cEval ty d) (\x -> cEval ty' (x : d))
 cEval (NPm ty ty') d   = VNPm (cEval ty d) (cEval ty' d)
-cEval (Lam pi e) d     = VLam pi (\x -> cEval e (x : d))
+cEval (Lam e) d        = VLam (\x -> cEval e (x : d))
 cEval (Conv ii) d      = iEval ii d
 
 toInt ∷ Natural → Int
@@ -128,7 +128,7 @@ iEval (App iterm cterm) d    = vapp (iEval iterm d) (cEval cterm d)
 iEval (Ann _pi term _type) d = cEval term d
 
 vapp ∷ Value → Value → Value
-vapp (VLam _pi f) v = f v
+vapp (VLam f) v = f v
 vapp (VNeutral n) v = VNeutral (NApp n v)
 vapp x y =
   error
@@ -143,7 +143,7 @@ cSubst ii r (Pi pi ty ty') = Pi pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
 cSubst ii r (Pm pi ty ty') = Pm pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
 cSubst ii r (Pa pi ty ty') = Pa pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
 cSubst ii r (NPm fst snd)  = NPm (cSubst ii r fst) (cSubst ii r snd)
-cSubst ii r (Lam pi f)     = Lam pi (cSubst (ii + 1) r f)
+cSubst ii r (Lam f)        = Lam (cSubst (ii + 1) r f)
 cSubst ii r (Conv e)       = Conv (iSubst ii r e)
 
 --substitution function for inferable terms
@@ -171,7 +171,7 @@ quote ii (VPm pi fst snd) =
 quote ii (VPa pi fst snd) =
   Pa pi (quote ii fst) (quote (ii + 1) (snd (vfree (Quote ii))))
 quote ii (VNPm fst snd) = NPm (quote ii fst) (quote ii snd)
-quote ii (VLam pi f) = Lam pi (quote (ii + 1) (f (vfree (Quote ii))))
+quote ii (VLam f) = Lam (quote (ii + 1) (f (vfree (Quote ii))))
 quote ii (VNeutral n) = Conv (neutralQuote ii n)
 quote _ii (VNat n) = Conv (Nat n)
 
@@ -212,37 +212,48 @@ usageCompare Omega pi    = True --actual usage can be any when required usage is
 
 --checker for checkable terms checks the term against an annotation and returns ().
 cType ∷ Natural → Context → CTerm → Annotation → Result ()
+-- *
 cType ii _g (Star n) ann =
   unless -- TODO i only needs to be < j in typing rule?
-    (usageCompare (SNat 0) (fst ann) && quote0 (snd ann) == Star (n + 1))
+    (SNat 0 == fst ann && quote0 (snd ann) == Star (n + 1))
     (throwError (errorMsg ii (Star n) (0, VStar (n + 1)) ann))
 cType ii _g Nats ann =
   unless
-    (usageCompare (SNat 0) (fst ann) && quote0 (snd ann) == Star 0)
+    (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
     (throwError (errorMsg ii Nats (0, VStar 0) ann))
--- as per the typing rule *-Pi, usage annotation is not checked.
+-- *-Pi.M and N are of type Star i with 0 usage.
 cType ii g (Pi pi varType resultType) ann = do
-  cType ii g varType ann
-  let ty = cEval varType []
-  cType
-    (ii + 1)
-    ((Local ii, (pi, ty)) : g)
-    (cSubst 0 (Free (Local ii)) resultType)
-    ann
-cType ii g (Pm pi var func) ann = undefined
-cType ii g (Pa pi var func) ann = undefined
+  unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
+  let ty = snd ann
+  case ty of
+    VStar _ -> do
+      cType ii g varType ann -- checks varType is of type Star i
+      let ty = cEval varType []
+      cType -- checks resultType is of type Star i
+        (ii + 1)
+        ((Local ii, (pi, ty)) : g)
+        (cSubst 0 (Free (Local ii)) resultType)
+        ann
+    _ ->
+      throwError
+        "The variable type and the result type must be of type * at the same level."
+cType ii g (Pm pi varType resultType) ann = undefined
+cType ii g (Pa pi varType resultType) ann = undefined
 cType ii g (NPm first second) ann = undefined
-cType ii g (Lam pi f) (pi', VPi _pi ty ty') =
+-- (Lam) introduction rule of dependent function type
+-- Does Lam need NatAndw as input? The type checker doesn't seem to check that.
+cType ii g (Lam s) (sig, VPi pi ty ty') = do
+  let sVal = cEval s []
   cType
     (ii + 1)
-    ((Local ii, (pi, ty)) : g)
-    (cSubst 0 (Free (Local ii)) f)
-    (pi', ty' (vfree (Local ii)))
+    ((Local ii, (sig * pi, sVal)) : g) --put s in the context with usage sig*pi
+    (cSubst 0 (Free (Local ii)) s) --x (varType) in context S with sigma*pi usage.
+    (sig, ty' (vfree (Local ii))) --is of type M (usage sigma) in context T
 cType ii g (Conv e) ann = do
   ann' <- iType ii g e
   unless
-    (quote0 (snd ann) == quote0 ann')
-    (throwError (errorMsg ii (Conv e) ann (Omega, ann')))
+    (fst ann == fst ann' && quote0 (snd ann) == quote0 (snd ann'))
+    (throwError (errorMsg ii (Conv e) ann ann'))
 cType ii _g cterm theType =
   throwError
     ("Type mismatch: \n" ++
@@ -250,10 +261,10 @@ cType ii _g cterm theType =
      "\n (binder number " ++
      show ii ++
      ") is not a checkable term. Cannot check that it is of type " ++
-     showVal (snd theType) ++ " with " ++ show (fst theType) ++ "usage.")
+     showVal (snd theType) ++ " with " ++ show (fst theType) ++ " usage.")
 
 --inferable terms have type as output.
-iType0 ∷ Context → ITerm → Result Value
+iType0 ∷ Context → ITerm → Result Annotation
 iType0 = iType 0
 
 iTypeErrorMsg ∷ Natural → Name → String
@@ -261,17 +272,31 @@ iTypeErrorMsg ii x =
   "Cannot find the type of \n" ++
   show x ++ "\n (binder number " ++ show ii ++ ") in the environment."
 
-iType ∷ Natural → Context → ITerm → Result Value
+iType ∷ Natural → Context → ITerm → Result Annotation
 iType ii g (Free x) =
   case lookup x g of
-    Just ann -> return $ snd ann
+    Just ann -> return ann
     Nothing  -> throwError (iTypeErrorMsg ii x)
-iType _ii _g (Nat _) = return VNats
--- Typing rule not in lang ref atm?
+--Prim-Const typing rule
+iType _ii _g (Nat _) = return (Omega, VNats)
+--App rule, function M applies to N
+iType ii g (App m n) = do
+  mTy <- iType ii g m --type of M has to be of type Pi
+  case mTy of
+    (sig, VPi pi varTy resultTy) -> do
+      cType ii g n (pi, varTy) --N has to be of type varTy with usage pi
+      return (sig, resultTy (cEval n []))
+    _ ->
+      throwError
+        (show m ++
+         "\n (binder number " ++
+         show ii ++
+         ") is not a function type and thus \n" ++
+         show n ++ "\n cannot be applied to it.")
 iType ii g (Ann pi theTerm theType)
   --TODO check theType is of type Star first? But we have stakable universes now.
   --cType ii g theType (0, VStar 0)
  = do
   let ty = cEval theType []
   cType ii g theTerm (pi, ty)
-  return ty
+  return (pi, ty)

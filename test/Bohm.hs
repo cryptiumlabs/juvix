@@ -4,10 +4,10 @@ import           Juvix.Backends.Env
 import           Juvix.Backends.Graph
 import           Juvix.Backends.Interface
 import           Juvix.Backends.Maps
+import           Juvix.Bohm.Default
 import           Juvix.Bohm.Parser
 import           Juvix.Bohm.Translation
 import           Juvix.Bohm.Type
-import           Juvix.Bohm.Default
 import           Juvix.Library
 import           Juvix.Nets.Bohm
 import           Juvix.Utility
@@ -22,14 +22,14 @@ import           Text.Parsec
 import           Data.Graph.Inductive     hiding (Network, Node, delNodes,
                                            nodes)
 
-astToNetDefault :: Network net ⇒ Bohm → net Lang
+astToNetDefault ∷ Network net ⇒ Bohm → net Lang
 astToNetDefault net = astToNet net defaultEnv
 
 --test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test1 ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
 test1 = runMapNet (reduceAll 10 >> findEdge (1, Aux1)) . astToNetDefault <$> parseBohm "(lambda x. x)"
 
-test1' :: Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
+test1' ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
 test1' = runMapNet (reduceAll 1) . astToNetDefault <$> parseBohm "((lambda x. x) y)"
 
 parsed ∷ Network net ⇒ Either ParseError (net Lang)
@@ -54,7 +54,7 @@ test5' ∷ Either ParseError (InfoNet (FlipNet Lang))
 test5' = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "(plus 2 2)"
 
 test6 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test6 = runFlipNet (reduceAll 0) . astToNetDefault <$> parseBohm "( (lambda x. (x + 3 + 5)) 2)"
+test6 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "( (lambda x. (x + 3 * 5)) 2)"
 
 
 test7 ∷ Maybe Bohm

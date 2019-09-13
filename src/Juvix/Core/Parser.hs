@@ -103,9 +103,8 @@ npmTerm = do
 lamTerm ∷ Parser CTerm
 lamTerm = do
   reservedOp "\\"
-  pi <- natw
   func <- ctermOnly
-  return $ Lam pi func
+  return $ Lam func
 
 convTerm ∷ Parser CTerm
 convTerm = do
