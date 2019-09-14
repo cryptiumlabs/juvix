@@ -1,7 +1,13 @@
-all: compile
+all: map church
 
-compile:
-	rm -f Test Test.hi Test.o
-	stack exec -- ghc Test.hs -O0 -ddump-stg -ddump-asm
+clean:
+	rm -f *.hi *.ho
+	rm -rf Map Church
 
-.PHONY: compile
+map: clean
+	stack exec -- ghc Map.hs -O0 -ddump-stg -ddump-asm
+
+church: clean
+	stack exec -- ghc Church.hs -O0 -ddump-stg -ddump-asm
+
+.PHONY: clean map church
