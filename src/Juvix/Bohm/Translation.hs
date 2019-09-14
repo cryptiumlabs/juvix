@@ -48,10 +48,12 @@ astToNet bohm customSymMap = net'
     recursive (BT.IsNil b)   context    = genericAux1PrimArg b (B.Auxiliary1 B.TestNil) context
     recursive (BT.Not b)     context    = genericAux1PrimArg b (B.Auxiliary1 B.Not)     context
     recursive (BT.Curried1 f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
-    recursive (BT.Curried2 f b1 b2)     c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f)    c
-    recursive (BT.Curried3 f b1 b2 b3)  c     = genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
-    recursive (BT.Application b1 b2)    c     = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
-    recursive (BT.Cons b1 b2)           c     = genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
+    recursive (BT.Curried2 f b1 b2)     c = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f)    c
+    recursive (BT.Curried3 f b1 b2 b3)  c = genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
+    recursive (BT.Application b1 b2)    c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
+    recursive (BT.Cons b1 b2)           c = genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
+    recursive (BT.Or   b1 b2)           c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or)  c
+    recursive (BT.And  b1 b2)           c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
     recursive (BT.Symbol' s) context = do
       frees ← get @"free"
       case (context Map.!? s, frees Map.!? s) of
@@ -231,6 +233,8 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                             _ → fullLamCase lamOrMu
                     in case tag of
                       B.Curried2 f → parentAux1 (BT.Curried2 f)
+                      B.Or         → parentAux1 BT.Or
+                      B.And        → parentAux1 BT.And
                       B.App        → parentAux1 BT.Application
                       B.Cons       → parentPrim BT.Cons
                       -- Lambda may be the lambda node
