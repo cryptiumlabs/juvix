@@ -474,14 +474,12 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
     1. Think concentric boxes with natural number levels
 1. Level of node does not change during reduction
     1. Beta reduction only connects nodes on same level
-1. Levels can be chosen from contraction nodes of EAL type
+1. Levels can be chosen from contraction nodes of EAL type derivation
     1. Contraction nodes do not change level during proof-net reduction
     1. Also do not change level during abstract algorithm reduction
     1. If fans match label, must have originated from that level
     1. Algorithm is correct with EAL term subset since label indicates level of fan and level does not change according to EAL rules
-    1. No loops in EAL-encoded terms that would render labels underspecified
-1. Ergo equal-label ~ equal-level fans cancel and different-label ~ different-level fans duplicate
-1. QED
+    1. No loops in reduction of EAL-typable terms that would render labels underspecified
 
 (needs pretty pictures)
 
