@@ -99,7 +99,38 @@ For each free variable $x$ in $(t_1 t_2)$ occurring more than once, all occurren
 \axWire{h/1}{f/2}{}{}
 \end{tikzpicture}
 
-That ends the encoding rules.
+That ends the encoding rules for basic lambda terms.
+
+Interaction net encoding of $a \& b$:
+
+1. Primary port as pair, to be connected to destructor ($fst$ / $snd$)
+1. $3n + 2$ auxiliary ports where:
+    1. Two are for the subterms $a$ and $b$
+    1. $n$ are for the terms bound to free variables (resources) both subterms use
+    1. $n$ are connected to the binding sites in a
+    1. $n$ are connected to the binding sites in b
+1. Rewrite rule
+    1. If the destructor is $fst$ (vice versa if the destructor is $snd$):
+        1. Connects the wires between the $n$ free variables and the $n$ binding sites in $a$
+        1. Attaches erasers to the $n$ binding sites in $b$ and to $b$ itself
+        1. Erases $\&$ node
+        1. Attaches whatever destructor was connected to to $a$
+
+That way no duplication of resources need occur, matching the linear logic semantics.
+
+Note that this means reduction within $a$ and $b$, insofar as it depends on the values of the free variables, will not take place until the caller chooses which variant ($a$ or $b$) they want.
+
+Interaction net encoding of $a ⊗ b$:
+
+1. Primary port as pair, to be connected to destructor ("join")
+1. $2$ auxiliary ports, where:
+    1. Two are for the subterms $a$ and $b$
+1. Rewrite rule
+    1. Erases the ⊗ node
+    1. Creates a new ⊗ node, attaches its 2 auxiliary ports to a and b
+    1. Attaches whatever the destructor was attached to to the new ⊗ node's primary port
+
+This is structurally identical to the ⊗ encoding (perhaps we can simply erase the "join" destructor prior to runtime), but we should be able to place directives that inform the evaluator to evaluate the two subterms in parallel, as they are guaranteed not to share resources (no duplication required) and be completely disjoint subgraphs.
 
 > TODO: Example term encoding.
 

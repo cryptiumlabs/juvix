@@ -1,4 +1,4 @@
-personal_ws-1.1 en 259 
+personal_ws-1.1 en 262 
 succ
 textwidth
 AST
@@ -29,6 +29,7 @@ subterm
 GPUs
 callees
 src
+subgraphs
 typechecking
 toc
 mainfont
@@ -172,6 +173,7 @@ hyperref
 le
 redex
 conv
+underspecified
 Blockchains
 pluggable
 Neumann
@@ -212,6 +214,7 @@ TrinaryInfC
 xs
 REPL
 ZK
+destructor
 ys
 redexes
 monadic
