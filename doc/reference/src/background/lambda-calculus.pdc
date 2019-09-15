@@ -31,6 +31,8 @@ Computing under a function: $(λx.λy.map (λz. z + x + y) zs) 2 3$, $x + y$ sho
 
 (easy to optimise if 2 & 3 are known at compile time, but that's not the case in general)
 
+e.g. $n 2 I a$ with $n$ and $2$ Church-encoded naturals, exponential in $n$ because the applications of $I$ will be duplicated.
+
 Example term: $λx.(x (λw.w)) λy.(λx.x x)(y z)$.
 
 Define optimality using Levy's framework.
