@@ -1,5 +1,7 @@
 -- ⚠ caution: de Bruijn indices ⚠
 
+{-# OPTIONS --rewriting #-}
+
 module Example where
 
 open import Prelude
@@ -98,55 +100,64 @@ K =
 I : ε ⨟ sort 0 ⊢ 1 - Π[ 1 / 0 ] 1 ∋ Λ 0 ▷ ε ⨟ 0
 I = lam refl (elim refl (var refl (Only 1 0 (ε ⨟ 0 ⨟ 1) ∋ ε ⨟ refl ⨟[ refl ])))
 
-
 ChurchZero = K
+
+
+-- a nondependent function type
+_/_⇒_ : Usageᵗ → Tm n → Tm n → Tm n
+π / S ⇒ T = Π[ π / S ] (weakᵗ T)
+infixr 0 _/_⇒_
 
 -- for useful non-∞ usages we'd need usage polymorphism.
 -- which might be a nice thing to have imo.
 -- (is polynomial equality decidable? it seems like it should be)
 --
--- 0 A, B, C : sort 0
---   ⊢ 1 (∞ (∞ (∞ A → B) → ∞ C → A) → ∞ (∞ A → B) → ∞ C → B
+-- 0 A : sort 0
+--   ⊢ 1 (1 (∞ (1 A → A) → 1 A → A) → ∞ (1 A → A) → 1 A → A
 --   ∋ λ n f x. f (n f x)
 ChurchSuc :
-  ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0
-    ⊢ 1 - Π[ ∞ / Π[ ∞ / Π[ ∞ / 2 ] 2 ] Π[ ∞ / 1 ] 4 ]
-          Π[ ∞ / Π[ ∞ / 3 ] 3 ] Π[ ∞ / 2 ] 4
+  ε ⨟ sort 0
+    ⊢ 1 -
+      (let A = 0 in
+        1 / (∞ / (1 / A ⇒ A) ⇒ 1 / A ⇒ A) ⇒
+        ∞ / (1 / A ⇒ A) ⇒ 1 / A ⇒ A)
     ∋ Λ Λ Λ [ 1 ∙ [ 2 ∙ 1 ∙ 0 ] ]
-    ▷ ε ⨟ 0 ⨟ 0 ⨟ 0
+    ▷ ε ⨟ 0
 ChurchSuc =
   lam refl (lam refl (lam refl
     (elim refl
       (app refl refl
-        (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
+        (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
         (elim refl
           (app refl refl
             (app refl refl
-              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
+              (var refl (ε ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
               (elim refl
-                (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+                (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
             (elim refl
-              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
+              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
 
-{-
-0 | A : Type ⊢
-suc :
-  ∀ π0 ... π6.
-  (π0 | (π1 | (π2 | A) → A) → (π3 | A) → A) →
-  (π4 | (π5 | A) → A) →
-  (π6 | A) →
-  A
-where
-  π5 = π2
-  π2 * π3 = π6
-  1 + π2 * π1 = π4
-  π2 = π0
-i.e.
-suc :
-  ∀ πⁿ πᶠ πˣ π′.
-  (0 | A : Type) →
-  (πⁿ | n : (πᶠ | f : (πⁿ | x : A) → A) → (πˣ | x : A) → A) →
-  (πᶠ * π′ + 1 | f : (πⁿ | A) → A) →
-  (πˣ * π′ | x : A) →
-  A
--}
+
+open import Agda.Builtin.Equality.Rewrite
+private module S = Algebra.Generic.IsSemiring ℕ.*-+-isSemiring
+{-# REWRITE S.+-identityʳ S.zeroʳ S.*-identityʳ #-}
+
+ChurchSucPoly : (n : ℕ) →
+  ε ⨟ sort 0
+    ⊢ 1 -
+      (let A = 0 in
+        1 / (` n / (1 / A ⇒ A) ⇒ 1 / A ⇒ A) ⇒
+        ` suc n / (1 / A ⇒ A) ⇒ 1 / A ⇒ A)
+    ∋ Λ Λ Λ [ 1 ∙ [ 2 ∙ 1 ∙ 0 ] ]
+    ▷ ε ⨟ 0
+ChurchSucPoly n =
+  lam refl $ lam refl $ lam refl $
+    elim refl $
+      app refl refl
+        (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
+        (elim refl $
+          app refl refl
+            (app refl refl
+              (var refl (ε ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
+              (elim refl (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+            (elim refl (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ]))))
