@@ -50,8 +50,8 @@ data Zero : Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
   ε   : Zero ε
   _⨟_ : Zero Φ → ζ ≈ᵗ 0#ᵗ → Zero (Φ ⨟ ζ)
 
--- for Only ρ x Φ, all elements of Φ are zero
--- except for x, which is equal to ρ
+-- for Only σ x Φ, all elements of Φ are zero
+-- except for x, which is equal to ⟦ σ ⟧
 data Only : Usageʲ → Fin n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′) where
   _⨟[_] : Zero Φ     → ρ ≈ᵗ ⟦ σ ⟧ → Only σ zero (Φ ⨟ ρ)
   _⨟_   : Only σ x Φ → ζ ≈ᵗ 0#ᵗ   → Only σ (suc x) (Φ ⨟ ζ)
