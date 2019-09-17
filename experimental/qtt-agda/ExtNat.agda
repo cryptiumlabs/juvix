@@ -37,7 +37,7 @@ fromBit-inj {`0} {`0} refl = refl
 fromBit-inj {`1} {`1} refl = refl
 
 
-_≟_ : Decidable $ ≡-At ℕ∞
+_≟_ : Decidable₂ $ ≡-At ℕ∞
 ` m ≟ ` n with m ℕ.≟ n
 ` m ≟ ` n | yes p = yes $ ≡.cong `_ p
 ` m ≟ ` n | no ¬p = no λ{refl → ¬p refl}
@@ -55,7 +55,7 @@ data _≤_ : Rel ℕ∞ lzero where
   *≤∞ : ∀ {m}   → m ≤ ∞
 infix 4 _≤_
 
-_≤?_ : Decidable _≤_
+_≤?_ : Decidable₂ _≤_
 ` m ≤? ` n with m ℕ.≤? n
 ` m ≤? ` n | yes p = yes $ n≤n p
 ` m ≤? ` n | no ¬p = no λ{(n≤n p) → ¬p p}
@@ -117,7 +117,7 @@ infix 4 _≼_
 ≼-trans refl np   = np
 ≼-trans `≼∞  refl = `≼∞
 
-_≼?_ : Decidable _≼_
+_≼?_ : Decidable₂ _≼_
 ` m ≼? ` n  with m ℕ.≟ n
 ` m ≼? ` .m | yes refl = yes refl
 ` m ≼? ` n  | no ¬p    = no λ{refl → ¬p refl}

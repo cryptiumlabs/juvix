@@ -82,7 +82,7 @@ number-Bit = λ where
   .fromNat 1 → `1
  where open Number
 
-_≟ᵇ_ : Decidable $ ≡-At Bit
+_≟ᵇ_ : Decidable₂ $ ≡-At Bit
 `0 ≟ᵇ `0 = yes refl
 `0 ≟ᵇ `1 = no (λ ())
 `1 ≟ᵇ `0 = no (λ ())
@@ -100,6 +100,6 @@ module _ {a} {A : Set a} where
   ≡-isPartialOrder : IsPartialOrder ≡A ≡A
   ≡-isPartialOrder = record { ≡ ; antisym = const }
 
-  ≡-isDecPartialOrder : Decidable ≡A → IsDecPartialOrder ≡A ≡A
+  ≡-isDecPartialOrder : Decidable₂ ≡A → IsDecPartialOrder ≡A ≡A
   ≡-isDecPartialOrder ≟ =
     record { isPartialOrder = ≡-isPartialOrder ; _≟_ = ≟ ; _≤?_ = ≟ }
