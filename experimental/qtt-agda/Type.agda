@@ -75,7 +75,9 @@ infixl 7 _⨵_
 
 -- postmultiplication
 _⨴_ : Skel n → Usageᵗ → Skel n
-_⨴_ = flip _⨵_
+ε ⨴ π = ε
+(Φ ⨟ ρ) ⨴ π = Φ ⨴ π ⨟ ρ * π
+infixl 7 _⨴_
 
 
 data _⊢_-_∋_▷_ : Ctx n → Usageʲ → Typ n → Tm n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″)
