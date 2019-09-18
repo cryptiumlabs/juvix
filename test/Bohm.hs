@@ -86,7 +86,7 @@ test78Back ∷ Maybe Juvix.Bohm.Type.Bohm
 test78Back = netToAst n
   where
     Right (InfoNet {net = n}) =
-      fmap (runFlipNet (reduceAll 100) . astToNetDefault)
+      fmap (runFlipNet (reduceAll 1) . astToNetDefault)
            (parseBohm "(lambda x. lambda y. ((lambda z. (z (z y))) (lambda w. (x w))))")
 
 -- TODO ∷ run Net → Ast with this, and see if it gives back a church 2!

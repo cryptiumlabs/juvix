@@ -27,6 +27,7 @@ dependencies:
   - enummapset
   - turtle
   - directory
+  - symbol
 
 default-extensions:
   - NoImplicitPrelude
