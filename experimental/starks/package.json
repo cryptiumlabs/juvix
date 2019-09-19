@@ -1,0 +1,17 @@
+{
+  "name": "stark-experimentation",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "tsc": "tsc -p .",
+    "main": "node bin/index.js"
+  },
+  "author": "Christopher Goes <cwgoes@pluranimity.org>",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@guildofweavers/genstark": "^0.5.7",
+    "@types/node": "^12.7.5"
+  }
+}
