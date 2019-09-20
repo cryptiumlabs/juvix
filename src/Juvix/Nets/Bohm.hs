@@ -48,7 +48,7 @@ data Primar = Erase
             | Tru
             | Fals
             | IntLit Int
-            | Symbol SomeSymbol
+            | Symbol Symbol
             deriving Show
 
 

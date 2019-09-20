@@ -61,22 +61,22 @@ and' = onBool (&&)
 or' ∷ Primitive → Primitive → Maybe Primitive
 or' = onBool (||)
 
-defaultEnv ∷ Map SomeSymbol BT.Fn
+defaultEnv ∷ Map Symbol BT.Fn
 defaultEnv =
   Map.fromList
-    [ (someSymbolVal "plus", BT.Arg2 plus)
-    , (someSymbolVal "+", BT.Arg2 plus)
-    , (someSymbolVal "*", BT.Arg2 times)
-    , (someSymbolVal "-", BT.Arg2 minus)
-    , (someSymbolVal "<>", BT.Arg2 neq)
-    , (someSymbolVal "<", BT.Arg2 lt)
-    , (someSymbolVal ">", BT.Arg2 gt)
-    , (someSymbolVal "<=", BT.Arg2 le)
-    , (someSymbolVal ">=", BT.Arg2 ge)
-    , (someSymbolVal "==", BT.Arg2 eq)
-    , (someSymbolVal "and", BT.Arg2 and')
-    , (someSymbolVal "or", BT.Arg2 or')
-    , (someSymbolVal "mod", BT.Arg2 mod')
+    [ (intern "plus", BT.Arg2 plus)
+    , (intern "+", BT.Arg2 plus)
+    , (intern "*", BT.Arg2 times)
+    , (intern "-", BT.Arg2 minus)
+    , (intern "<>", BT.Arg2 neq)
+    , (intern "<", BT.Arg2 lt)
+    , (intern ">", BT.Arg2 gt)
+    , (intern "<=", BT.Arg2 le)
+    , (intern ">=", BT.Arg2 ge)
+    , (intern "==", BT.Arg2 eq)
+    , (intern "and", BT.Arg2 and')
+    , (intern "or", BT.Arg2 or')
+    , (intern "mod", BT.Arg2 mod')
     ]
 
 defaultSymbols ∷ [Precedence]

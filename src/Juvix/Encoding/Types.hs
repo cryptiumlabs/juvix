@@ -9,18 +9,18 @@ data Product = Product Product
              | None
              deriving Show
 
-data Sum = Branch SomeSymbol Product Sum
-         | Single SomeSymbol Product
+data Sum = Branch Symbol Product Sum
+         | Single Symbol Product
          deriving Show
 
-data Name = Adt SomeSymbol Sum
+data Name = Adt Symbol Sum
           deriving Show
 
 -- Object Syntax ---------------------------------------------------------------
 
 -- Replace with bohm later!
-data Lambda = Lambda SomeSymbol Lambda
-            | Value SomeSymbol
+data Lambda = Lambda Symbol Lambda
+            | Value Symbol
             | Application Lambda Lambda
             deriving Show
 
@@ -31,11 +31,11 @@ data Lambda = Lambda SomeSymbol Lambda
 -- /| S n → body
 data Switch = Case Lambda [Case]
 
-type Argument = SomeSymbol
+type Argument = Symbol
 
 type Body = Lambda
 
-data Case = C SomeSymbol [Argument] Body
+data Case = C Symbol [Argument] Body
 
 -- Environment type-------------------------------------------------------------
 -- TODO :: Add smaller environments for testing
@@ -45,38 +45,38 @@ data Case = C SomeSymbol [Argument] Body
 -- One function does not require constructor, the other does not have
 -- the missingCase writer
 
-type Branches = [SomeSymbol]
+type Branches = [Symbol]
 
 data Bound = Bound { lam     :: Lambda
                    -- This is to remember what ADΤ we belong to
-                   , adtName :: SomeSymbol
+                   , adtName :: Symbol
                    } deriving (Show, Generic)
 
-data Env = Env { constructors :: Map SomeSymbol Bound
+data Env = Env { constructors :: Map Symbol Bound
                -- | adtMap is a mapping between the adt name and the ordered cases thereof
-               , adtMap       :: Map SomeSymbol Branches
+               , adtMap       :: Map Symbol Branches
                -- | missingCases represent the missing cases of a match
-               , missingCases :: [SomeSymbol]
+               , missingCases :: [Symbol]
                } deriving (Show, Generic)
 
 data Errors = AlreadyDefined
-            | NotInAdt   SomeSymbol
-            | NotInMatch SomeSymbol SomeSymbol
-            | AdtNotDefined SomeSymbol
+            | NotInAdt   Symbol
+            | NotInMatch Symbol Symbol
+            | AdtNotDefined Symbol
             | MatchWithoutCases
             | InvalidAdt
             deriving Show
 
 newtype EnvS a = EnvS (StateT Env (Except Errors) a)
   deriving (Functor, Applicative, Monad)
-  deriving (HasState "constructors" (Map SomeSymbol Bound)) via
+  deriving (HasState "constructors" (Map Symbol Bound)) via
     Field "constructors" () (MonadState (StateT Env (Except Errors)))
-  deriving (HasState "adtMap" (Map SomeSymbol Branches)) via
+  deriving (HasState "adtMap" (Map Symbol Branches)) via
     Field "adtMap" () (MonadState (StateT Env (Except Errors)))
   deriving (HasThrow "err" Errors) via
     MonadError (StateT Env (Except Errors))
-  deriving ( HasStream "missingCases" [SomeSymbol]
-           , HasWriter "missingCases" [SomeSymbol] ) via
+  deriving ( HasStream "missingCases" [Symbol]
+           , HasWriter "missingCases" [Symbol] ) via
     WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
 
 runEnvsS ∷ EnvS a → Either Errors (a, Env)

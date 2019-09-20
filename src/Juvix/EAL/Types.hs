@@ -7,21 +7,21 @@ import           Juvix.Utility
 
 -- Untyped term.
 data Term
-  = Var SomeSymbol
+  = Var Symbol
   | App Term Term
-  | Lam SomeSymbol Term
+  | Lam Symbol Term
   deriving (Show, Eq)
 
 -- Simple type.
 data Type
-  = SymT SomeSymbol
+  = SymT Symbol
   | ArrT Type Type
   deriving (Show, Eq)
 
 -- Restricted pseudoterm (inner).
 data RPTI
-  = RVar SomeSymbol
-  | RLam SomeSymbol RPTO
+  = RVar Symbol
+  | RLam Symbol RPTO
   | RApp RPTO RPTO
   deriving (Show, Eq)
 
@@ -34,7 +34,7 @@ data RPTO
 type RPT = RPTO
 
 -- Simple type assignment (alias).
-type TypeAssignment = Map.Map SomeSymbol Type
+type TypeAssignment = Map.Map Symbol Type
 
 -- Parameterized restricted pseudoterm (alias).
 type PRPT = RPT
@@ -44,12 +44,12 @@ type Param = Int
 
 -- Parameterized type.
 data PType
-  = PSymT Param SomeSymbol
+  = PSymT Param Symbol
   | PArrT Param PType PType
   deriving (Show, Eq)
 
 -- Parameterized type assignment (alias).
-type ParamTypeAssignment = Map.Map SomeSymbol PType
+type ParamTypeAssignment = Map.Map Symbol PType
 
 -- Linear (in)equality constraint on parameters.
 data Constraint = Constraint {
@@ -73,10 +73,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = Map SomeSymbol Param
+type VarPaths = Map Symbol Param
 
 -- Occurrence map.
-type OccurrenceMap = Map SomeSymbol Int
+type OccurrenceMap = Map Symbol Int
 
 -- | Bracket Error Types
 data BracketErrors = TooManyOpen
@@ -111,12 +111,12 @@ data Errors = Typ TypeErrors
 -- Environment for errors.
 newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
   deriving (Functor, Applicative, Monad)
-  deriving (HasState "ctxt" (Map SomeSymbol Type)) via
+  deriving (HasState "ctxt" (Map Symbol Type)) via
     Field "ctxt" () (MonadState (ExceptT TypeErrors (State Info)))
   deriving (HasThrow "typ" TypeErrors) via
     MonadError (ExceptT TypeErrors (State Info))
 
-data Info = I {ctxt :: Map SomeSymbol Type} deriving (Show, Generic)
+data Info = I {ctxt :: Map Symbol Type} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env = Env {

@@ -7,51 +7,51 @@ import           Juvix.Encoding.Types
 import           Juvix.Library           hiding (Product, Sum)
 
 userNat ∷ Name
-userNat = Adt (someSymbolVal "Nat")
-              (Branch (someSymbolVal "Z") None
-                      (Single (someSymbolVal "S") Term))
+userNat = Adt (intern "Nat")
+              (Branch (intern "Z") None
+                      (Single (intern "S") Term))
 
 dUserNat ∷ Name
-dUserNat = Adt (someSymbolVal "Nat")
-               (Branch (someSymbolVal "Z") None
-                       (Branch (someSymbolVal "S") Term
-                               (Single (someSymbolVal "D") (Product Term))))
+dUserNat = Adt (intern "Nat")
+               (Branch (intern "Z") None
+                       (Branch (intern "S") Term
+                               (Single (intern "D") (Product Term))))
 
 
 -- Test cases for Nat ----------------------------------------------------------
 zero' ∷ Lambda
-zero' = app in' (app inl (Lambda (someSymbolVal "x")
-                           (Value (someSymbolVal "x"))))
+zero' = app in' (app inl (Lambda (intern "x")
+                           (Value (intern "x"))))
 
 succ' ∷ Lambda
-succ' = Lambda (someSymbolVal "c%gen1")
-               (app in' (app inr (app inl (Value (someSymbolVal "c%gen1")))))
+succ' = Lambda (intern "c%gen1")
+               (app in' (app inr (app inl (Value (intern "c%gen1")))))
 
 dup' ∷ Lambda
-dup' = Lambda (someSymbolVal "c%gen1")
-       (Lambda (someSymbolVal "c%gen2")
+dup' = Lambda (intern "c%gen1")
+       (Lambda (intern "c%gen2")
          (app in' (app inr
-                    (app inrOp (Lambda (someSymbolVal "%fun")
+                    (app inrOp (Lambda (intern "%fun")
                                  (Application
-                                   (Application (Value $ someSymbolVal "%fun")
-                                                (Value $ someSymbolVal "c%gen1"))
-                                   (Value $ someSymbolVal "c%gen2")))))))
+                                   (Application (Value $ intern "%fun")
+                                                (Value $ intern "c%gen1"))
+                                   (Value $ intern "c%gen2")))))))
 
 test2D ∷ Either Errors (Lambda, Env)
 test2D = runEnvsS $ do
   adtToMendler dUserNat
-  mendlerCase (Case (Value $ someSymbolVal "val")
-                  [ C (someSymbolVal "Z") []
-                      (Value $ someSymbolVal "True")
-                  , C (someSymbolVal "S") [someSymbolVal "n"]
-                      (Application (Value $ someSymbolVal "not")
-                                   (Application (Value $ someSymbolVal "rec")
-                                                (Value $ someSymbolVal "n")))
-                  , C (someSymbolVal "D") [someSymbolVal "n1"
-                                          , someSymbolVal "n2"]
-                      (Application (Value $ someSymbolVal "not")
-                                   (Application (Value $ someSymbolVal "rec")
-                                                (Value $ someSymbolVal "n1")))
+  mendlerCase (Case (Value $ intern "val")
+                  [ C (intern "Z") []
+                      (Value $ intern "True")
+                  , C (intern "S") [intern "n"]
+                      (Application (Value $ intern "not")
+                                   (Application (Value $ intern "rec")
+                                                (Value $ intern "n")))
+                  , C (intern "D") [intern "n1"
+                                          , intern "n2"]
+                      (Application (Value $ intern "not")
+                                   (Application (Value $ intern "rec")
+                                                (Value $ intern "n1")))
                   ])
 
 -- let rec f x i =
@@ -63,69 +63,69 @@ test2D = runEnvsS $ do
 test3D ∷ Either Errors (Lambda, Env)
 test3D = runEnvsS $ do
   adtToMendler dUserNat
-  mendlerCase (Case (Value $ someSymbolVal "val")
-                  [ C (someSymbolVal "Z") []
-                      (Value $ someSymbolVal "i")
-                  , C (someSymbolVal "S") [someSymbolVal "n"]
-                      (Application (Application (Value $ someSymbolVal "+")
-                                                (Value $ someSymbolVal "1"))
-                                   (Application (Application (Value $ someSymbolVal "rec")
-                                                             (Value $ someSymbolVal "n"))
-                                                (Value $ someSymbolVal "i")))
-                  , C (someSymbolVal "D") [someSymbolVal "n1"
-                                          , someSymbolVal "n2"]
-                      (Application (Application (Value $ someSymbolVal "+")
-                                                (Application (Application (Value $ someSymbolVal "rec")
-                                                                          (Value $ someSymbolVal "n2"))
-                                                             (Value $ someSymbolVal "0")))
-                                   (Application (Application (Value $ someSymbolVal "rec")
-                                                             (Value $ someSymbolVal "n1"))
-                                                (Value $ someSymbolVal "i")))
+  mendlerCase (Case (Value $ intern "val")
+                  [ C (intern "Z") []
+                      (Value $ intern "i")
+                  , C (intern "S") [intern "n"]
+                      (Application (Application (Value $ intern "+")
+                                                (Value $ intern "1"))
+                                   (Application (Application (Value $ intern "rec")
+                                                             (Value $ intern "n"))
+                                                (Value $ intern "i")))
+                  , C (intern "D") [intern "n1"
+                                          , intern "n2"]
+                      (Application (Application (Value $ intern "+")
+                                                (Application (Application (Value $ intern "rec")
+                                                                          (Value $ intern "n2"))
+                                                             (Value $ intern "0")))
+                                   (Application (Application (Value $ intern "rec")
+                                                             (Value $ intern "n1"))
+                                                (Value $ intern "i")))
                   ])
 
 test3D' ∷ Either Errors (Lambda, Env)
 test3D' = runEnvsS $ do
   adtToScott dUserNat
-  scottCase (Case (Value $ someSymbolVal "val")
-                  [ C (someSymbolVal "Z") []
-                      (Value $ someSymbolVal "i")
-                  , C (someSymbolVal "S") [someSymbolVal "n"]
-                      (Application (Application (Value $ someSymbolVal "+")
-                                                (Value $ someSymbolVal "1"))
-                                   (Application (Application (Value $ someSymbolVal "rec")
-                                                             (Value $ someSymbolVal "n"))
-                                                (Value $ someSymbolVal "i")))
-                  , C (someSymbolVal "D") [someSymbolVal "n1"
-                                          , someSymbolVal "n2"]
-                      (Application (Application (Value $ someSymbolVal "+")
-                                                (Application (Application (Value $ someSymbolVal "rec")
-                                                                          (Value $ someSymbolVal "n2"))
-                                                             (Value $ someSymbolVal "0")))
-                                   (Application (Application (Value $ someSymbolVal "rec")
-                                                             (Value $ someSymbolVal "n1"))
-                                                (Value $ someSymbolVal "i")))
+  scottCase (Case (Value $ intern "val")
+                  [ C (intern "Z") []
+                      (Value $ intern "i")
+                  , C (intern "S") [intern "n"]
+                      (Application (Application (Value $ intern "+")
+                                                (Value $ intern "1"))
+                                   (Application (Application (Value $ intern "rec")
+                                                             (Value $ intern "n"))
+                                                (Value $ intern "i")))
+                  , C (intern "D") [intern "n1"
+                                          , intern "n2"]
+                      (Application (Application (Value $ intern "+")
+                                                (Application (Application (Value $ intern "rec")
+                                                                          (Value $ intern "n2"))
+                                                             (Value $ intern "0")))
+                                   (Application (Application (Value $ intern "rec")
+                                                             (Value $ intern "n1"))
+                                                (Value $ intern "i")))
                   ])
 
 test1 ∷ Either Errors (Lambda, Env)
 test1 = runEnvsS $ do
   adtToMendler userNat
-  mendlerCase (Case (Value $ someSymbolVal "val")
-                  [ C (someSymbolVal "Z") []
-                      (Value $ someSymbolVal "True")
-                  , C (someSymbolVal "S") [someSymbolVal "n"]
-                      (Application (Value $ someSymbolVal "not")
-                                   (Application (Value $ someSymbolVal "rec")
-                                                (Value $ someSymbolVal "n")))])
+  mendlerCase (Case (Value $ intern "val")
+                  [ C (intern "Z") []
+                      (Value $ intern "True")
+                  , C (intern "S") [intern "n"]
+                      (Application (Value $ intern "not")
+                                   (Application (Value $ intern "rec")
+                                                (Value $ intern "n")))])
 
 
 test1' ∷ Either Errors (Lambda, Env)
 test1' = runEnvsS $ do
   adtToScott userNat
-  scottCase (Case (Value $ someSymbolVal "val")
-                  [ C (someSymbolVal "Z") []
-                      (Value $ someSymbolVal "True")
-                  , C (someSymbolVal "S") [someSymbolVal "n"]
-                      (Application (Value $ someSymbolVal "not")
-                                   (Application (Value $ someSymbolVal "rec")
-                                                (Value $ someSymbolVal "n")))])
+  scottCase (Case (Value $ intern "val")
+                  [ C (intern "Z") []
+                      (Value $ intern "True")
+                  , C (intern "S") [intern "n"]
+                      (Application (Value $ intern "not")
+                                   (Application (Value $ intern "rec")
+                                                (Value $ intern "n")))])
 

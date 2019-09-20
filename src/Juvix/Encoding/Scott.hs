@@ -9,8 +9,8 @@ import           Juvix.Encoding.Types
 import           Juvix.Library           hiding (Product, Sum)
 
 
-adtToScott  ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
-              , HasState "adtMap"       (Map SomeSymbol Branches) m
+adtToScott  ∷ ( HasState "constructors" (Map Symbol Bound)    m
+              , HasState "adtMap"       (Map Symbol Branches) m
               , HasThrow "err"          Errors                    m )
             ⇒ Name → m ()
 adtToScott (Adt name s) = sumRec s 1 (adtLength s)
@@ -26,18 +26,18 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
 
     sumProd None posAdt lengthAdt = generateLam posAdt lengthAdt identity
     sumProd Term posAdt lengthAdt =
-      Lambda (someSymbolVal "%arg1")
+      Lambda (intern "%arg1")
              (generateLam posAdt
                           lengthAdt
-                          (\b → Application b (Value $ someSymbolVal "%arg1")))
+                          (\b → Application b (Value $ intern "%arg1")))
     sumProd p@(Product _) posAdt lengthAdt = args (lengthProd p)
       where
-        args prodLen = foldr (\spot → Lambda (someSymbolVal $ "%arg" <> show spot))
+        args prodLen = foldr (\spot → Lambda (intern $ "%arg" <> show spot))
                              (encoding prodLen)
                              [1..prodLen]
         encoding prodLen = generateLam posAdt lengthAdt $
           \body →
-            foldl (\acc i → Application acc (Value $ someSymbolVal
+            foldl (\acc i → Application acc (Value $ intern
                                                    $ "%arg" <> show i))
                   body
                   [1..prodLen]
@@ -46,14 +46,14 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
         lengthProd None        = 0 -- I'm skeptical this case ever happens
 
     generateLam posAdt lengthAdt onPosAdt =
-      foldr (\spot → Lambda (someSymbolVal $ "%genArg" <> show spot))
-            (onPosAdt $ Value (someSymbolVal $ "%genArg" <> show posAdt))
+      foldr (\spot → Lambda (intern $ "%genArg" <> show spot))
+            (onPosAdt $ Value (intern $ "%genArg" <> show posAdt))
             [1..lengthAdt]
 
-scottCase ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
-            , HasState "adtMap"       (Map SomeSymbol Branches) m
+scottCase ∷ ( HasState "constructors" (Map Symbol Bound)    m
+            , HasState "adtMap"       (Map Symbol Branches) m
             , HasThrow "err"          Errors                    m
-            , HasWriter "missingCases" [SomeSymbol]             m )
+            , HasWriter "missingCases" [Symbol]             m )
           ⇒ Switch → m Lambda
 scottCase c = do
   -- expandedCase ends up coming out backwards in terms of application

@@ -13,8 +13,8 @@ import           Juvix.Library           hiding (Product, Sum)
 
 -- | adtToMendler converts an adt into an environment where the mendler
 -- encoding is defined for case functions
-adtToMendler ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
-               , HasState "adtMap"       (Map SomeSymbol Branches) m
+adtToMendler ∷ ( HasState "constructors" (Map Symbol Bound)    m
+               , HasState "adtMap"       (Map Symbol Branches) m
                , HasThrow "err"          Errors                    m )
              ⇒ Name → m ()
 adtToMendler (Adt name s) = sumRec s 0
@@ -28,37 +28,37 @@ adtToMendler (Adt name s) = sumRec s 0
     sumRec (Branch s p nextSum) posAdt = adtConstructor s (sumProd p posAdt) name
                                        *> sumRec nextSum (posAdt + 2)
 
-    sumProd None posAdt = numToIn posAdt (Lambda (someSymbolVal "x")
-                                                 (Value $ someSymbolVal "x"))
-    sumProd Term posAdt = Lambda (someSymbolVal "%gen1")
-                                 (numToIn posAdt (Value (someSymbolVal "%gen1")))
+    sumProd None posAdt = numToIn posAdt (Lambda (intern "x")
+                                                 (Value $ intern "x"))
+    sumProd Term posAdt = Lambda (intern "%gen1")
+                                 (numToIn posAdt (Value (intern "%gen1")))
     sumProd p@(Product _) posAdt = lambdas (numToInOp posAdt term)
       where
-        (lambdas, term) = rec' p 0 (identity, (Value (someSymbolVal "%fun")))
+        (lambdas, term) = rec' p 0 (identity, (Value (intern "%fun")))
 
         rec' x index (lambdasBeforeIn, termToBuild) =
-          let genI = someSymbolVal ("%gen" <> show index)
+          let genI = intern ("%gen" <> show index)
               app  = Application termToBuild (Value genI)
           in case x of
             Term →
               ( lambdasBeforeIn . Lambda genI
-              , Lambda (someSymbolVal "%fun") app)
+              , Lambda (intern "%fun") app)
             Product t  → rec' t
                               (succ index)
                               (lambdasBeforeIn . Lambda genI, app)
             None →
               ( lambdasBeforeIn
-              , Lambda (someSymbolVal "%fun")
+              , Lambda (intern "%fun")
                          (Application
                           termToBuild
-                          (Lambda (someSymbolVal "x")
-                                  (Value $ someSymbolVal "x"))))
+                          (Lambda (intern "x")
+                                  (Value $ intern "x"))))
 
 
-mendlerCase ∷ ( HasState "constructors" (Map SomeSymbol Bound)    m
-              , HasState "adtMap"       (Map SomeSymbol Branches) m
+mendlerCase ∷ ( HasState "constructors" (Map Symbol Bound)    m
+              , HasState "adtMap"       (Map Symbol Branches) m
               , HasThrow "err"          Errors                    m
-              , HasWriter "missingCases" [SomeSymbol]             m )
+              , HasWriter "missingCases" [Symbol]             m )
             ⇒ Switch → m Lambda
 
 mendlerCase c = do
@@ -66,13 +66,13 @@ mendlerCase c = do
   case expandedCase of
     Application on b →
       pure $ Application on
-           $ Lambda (someSymbolVal "rec") b
+           $ Lambda (intern "rec") b
     Lambda {} → error "doesn't happen"
     Value  {} → error "doesn't happen"
   where
-    onNoArg body   = Lambda (someSymbolVal "()") body
-    onrec c accLam = Lambda (someSymbolVal "c%gen")
-                            (Application (Application (Value (someSymbolVal "c%gen")) c)
+    onNoArg body   = Lambda (intern "()") body
+    onrec c accLam = Lambda (intern "c%gen")
+                            (Application (Application (Value (intern "c%gen")) c)
                                          accLam)
 
 
@@ -113,9 +113,9 @@ inl = Lambda x
                   $ Lambda l
                          $ Application (Value k) (Value x)
       where
-        x = someSymbolVal "x"
-        k = someSymbolVal "k"
-        l = someSymbolVal "l"
+        x = intern "x"
+        k = intern "k"
+        l = intern "l"
 
 -- | Op of inl that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
@@ -125,9 +125,9 @@ inlOp = Lambda x
                   $ Lambda l
                          $ Application (Value x) (Value k)
       where
-        x = someSymbolVal "x"
-        k = someSymbolVal "k"
-        l = someSymbolVal "l"
+        x = intern "x"
+        k = intern "k"
+        l = intern "l"
 
 
 inr ∷ Lambda
@@ -136,9 +136,9 @@ inr = Lambda y
                   $ Lambda l
                          $ Application (Value l) (Value y)
       where
-        y = someSymbolVal "y"
-        k = someSymbolVal "k"
-        l = someSymbolVal "l"
+        y = intern "y"
+        k = intern "k"
+        l = intern "l"
 
 -- | Op of inr that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
@@ -148,15 +148,15 @@ inrOp = Lambda y
                   $ Lambda l
                          $ Application (Value y) (Value l)
       where
-        y = someSymbolVal "y"
-        k = someSymbolVal "k"
-        l = someSymbolVal "l"
+        y = intern "y"
+        k = intern "k"
+        l = intern "l"
 
 foldM' ∷ Lambda
 foldM' = Lambda alg $ Lambda d $ Application (Value d) (Value alg)
   where
-    alg = someSymbolVal "alg"
-    d   = someSymbolVal "d"
+    alg = intern "alg"
+    d   = intern "d"
 
 in' ∷ Lambda
 in' = Lambda r
@@ -166,5 +166,5 @@ in' = Lambda r
                    (app foldM' (Value f)))
       (Value r)
   where
-    r = someSymbolVal "r"
-    f = someSymbolVal "f"
+    r = intern "r"
+    f = intern "f"

@@ -40,81 +40,81 @@ shouldNotBeTypeable term assignment =
       Left _  -> pure ()
 
 idTerm ∷ Term
-idTerm = Lam (someSymbolVal "x") (Var (someSymbolVal "x"))
+idTerm = Lam (intern "x") (Var (intern "x"))
 
 idAssignment ∷ TypeAssignment
-idAssignment = Map.fromList [ (someSymbolVal "x", SymT (someSymbolVal "a")) ]
+idAssignment = Map.fromList [ (intern "x", SymT (intern "a")) ]
 
 churchTwo ∷ Term
-churchTwo = Lam (someSymbolVal "s")
-             (Lam (someSymbolVal "z")
-               (App (Var (someSymbolVal "s"))
-                    (App (Var (someSymbolVal "s"))
-                         (Var (someSymbolVal "z")))))
+churchTwo = Lam (intern "s")
+             (Lam (intern "z")
+               (App (Var (intern "s"))
+                    (App (Var (intern "s"))
+                         (Var (intern "z")))))
 
 churchThree ∷ Term
-churchThree = Lam (someSymbolVal "s")
-             (Lam (someSymbolVal "z")
-               (App (Var (someSymbolVal "s"))
-                    (App (Var (someSymbolVal "s"))
-                         (App (Var (someSymbolVal "s"))
-                              (Var (someSymbolVal "z"))))))
+churchThree = Lam (intern "s")
+             (Lam (intern "z")
+               (App (Var (intern "s"))
+                    (App (Var (intern "s"))
+                         (App (Var (intern "s"))
+                              (Var (intern "z"))))))
 
 churchAssignment ∷ TypeAssignment
 churchAssignment = Map.fromList [
-  (someSymbolVal "s", ArrT (SymT (someSymbolVal "a")) (SymT (someSymbolVal "a"))),
-  (someSymbolVal "z", SymT (someSymbolVal "a"))
+  (intern "s", ArrT (SymT (intern "a")) (SymT (intern "a"))),
+  (intern "z", SymT (intern "a"))
   ]
 
 -- \y -> ( (\n -> n (\y -> n (\_ -> y))) (\x -> (x (x y))) ) :: a -> a
 counterexample ∷ Term
 counterexample =
   App
-    (Lam (someSymbolVal "n")
-      (App (Var (someSymbolVal "n"))
-           (Lam (someSymbolVal "y")
-              (App (Var (someSymbolVal "n"))
-                        (Lam (someSymbolVal "z")
-                        (Var (someSymbolVal "y")))
+    (Lam (intern "n")
+      (App (Var (intern "n"))
+           (Lam (intern "y")
+              (App (Var (intern "n"))
+                        (Lam (intern "z")
+                        (Var (intern "y")))
             )
       )
     ))
-    (Lam (someSymbolVal "x")
-      (App (Var (someSymbolVal "x"))
-           (App (Var (someSymbolVal "x"))
-                (Var (someSymbolVal "y")))))
+    (Lam (intern "x")
+      (App (Var (intern "x"))
+           (App (Var (intern "x"))
+                (Var (intern "y")))))
 
 arg0 ∷ Type
-arg0 = SymT (someSymbolVal "a")
+arg0 = SymT (intern "a")
 
 arg1 ∷ Type
-arg1 = ArrT (SymT (someSymbolVal "a"))
-            (SymT (someSymbolVal "a"))
+arg1 = ArrT (SymT (intern "a"))
+            (SymT (intern "a"))
 
-counterexampleAssignment ∷ Map SomeSymbol Type
+counterexampleAssignment ∷ Map Symbol Type
 counterexampleAssignment = Map.fromList
-  [ (someSymbolVal "n", ArrT arg1 arg0)
-  , (someSymbolVal "y", arg0)
-  , (someSymbolVal "z", arg0)
-  , (someSymbolVal "x", arg1)
+  [ (intern "n", ArrT arg1 arg0)
+  , (intern "y", arg0)
+  , (intern "z", arg0)
+  , (intern "x", arg1)
   ]
 
 exp ∷ Term
 exp =
-  (Lam (someSymbolVal "m")
-   (Lam (someSymbolVal "n")
-    (Lam (someSymbolVal "s")
-     (Lam (someSymbolVal "z")
-       (App (App (App (Var (someSymbolVal "m"))
-                 (Var (someSymbolVal "n")))
-            (Var (someSymbolVal "s")))
-            (Var (someSymbolVal "z")))))))
+  (Lam (intern "m")
+   (Lam (intern "n")
+    (Lam (intern "s")
+     (Lam (intern "z")
+       (App (App (App (Var (intern "m"))
+                 (Var (intern "n")))
+            (Var (intern "s")))
+            (Var (intern "z")))))))
 
 threeLam ∷ Term
-threeLam = Lam (someSymbolVal "f") (Lam (someSymbolVal "x") (nTimesApp 10 (Var (someSymbolVal "f")) (Var (someSymbolVal "x"))))
+threeLam = Lam (intern "f") (Lam (intern "x") (nTimesApp 10 (Var (intern "f")) (Var (intern "x"))))
 
 threeLam2 ∷ Term
-threeLam2 = Lam (someSymbolVal "f'") (Lam (someSymbolVal "x'") (nTimesApp 20 (Var (someSymbolVal "f'")) (Var (someSymbolVal "x'"))))
+threeLam2 = Lam (intern "f'") (Lam (intern "x'") (nTimesApp 20 (Var (intern "f'")) (Var (intern "x'"))))
 
 nTimesApp ∷ Int → Term → Term → Term
 nTimesApp 0 _ b = b
@@ -125,16 +125,16 @@ churchExp2 = exp
 
 churchExp ∷ Term
 churchExp =
-    (Lam (someSymbolVal "s'")
-      (Lam (someSymbolVal "z'")
+    (Lam (intern "s'")
+      (Lam (intern "z'")
         (App (App (App (App exp
                             threeLam)
                        threeLam2)
-                  (Var (someSymbolVal "s'")))
-             (Var (someSymbolVal "z'")))))
+                  (Var (intern "s'")))
+             (Var (intern "z'")))))
 
 zTy ∷ Type
-zTy = SymT (someSymbolVal "a")
+zTy = SymT (intern "a")
 
 sTy ∷ Type
 sTy = ArrT zTy zTy
@@ -144,16 +144,16 @@ nat = ArrT sTy sTy
 
 churchExpAssignment ∷ TypeAssignment
 churchExpAssignment = Map.fromList
-  [ (someSymbolVal "n", nat)
-  , (someSymbolVal "m", ArrT nat nat)
-  , (someSymbolVal "s", sTy)
-  , (someSymbolVal "s'", sTy)
-  , (someSymbolVal "z", zTy)
-  , (someSymbolVal "z'", zTy)
-  , (someSymbolVal "x'", zTy)
-  , (someSymbolVal "x", sTy)
-  , (someSymbolVal "f'", sTy)
-  , (someSymbolVal "f", nat)
+  [ (intern "n", nat)
+  , (intern "m", ArrT nat nat)
+  , (intern "s", sTy)
+  , (intern "s'", sTy)
+  , (intern "z", zTy)
+  , (intern "z'", zTy)
+  , (intern "x'", zTy)
+  , (intern "x", sTy)
+  , (intern "f'", sTy)
+  , (intern "f", nat)
   ]
 
 {- Examples from 3.0.1 of Asperti's book; they don't seem to typecheck though. -}

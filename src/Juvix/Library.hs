@@ -5,7 +5,7 @@ module Juvix.Library ( module Protolude
                      , module Capability.Writer
                      , module Capability.Stream
                      , (∨), (∧), (|<<), (>>|), (|>)
-                     , traverseM
+                     , traverseM, Symbol, intern
                      ) where
 
 import           Capability.Error
@@ -13,12 +13,13 @@ import           Capability.Reader
 import           Capability.State
 import           Capability.Stream
 import           Capability.Writer
-import           Prelude           (Show (..))
+import qualified Data.Text         as T
+import           Prelude           (Show (..), String)
 import           Protolude         hiding ((:.:), Constraint, Fixity (..),
                                     MonadError (..), MonadReader (..),
                                     MonadState (..), ask, asks, catch,
                                     catchJust, get, gets, local, modify, pass,
-                                    put, reader, state)
+                                    put, reader, state, SomeSymbol, Symbol)
 
 (∨) ∷ Bool → Bool → Bool
 (∨) = (||)
@@ -48,3 +49,12 @@ traverseM f = fmap join . traverse f
 
 instance Show ((->) a b) where
   show _ = "fun"
+
+
+newtype Symbol = Sym Text deriving (Eq, Ord)
+
+instance Show Symbol where
+  show (Sym t) = T.unpack t
+
+intern :: String → Symbol
+intern = Sym . T.pack

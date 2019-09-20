@@ -74,11 +74,11 @@ brackets   = T.brackets   lexer
 natural    = T.natural    lexer
 operator'  = T.operator   lexer
 
-operator ∷ Stream s m Char ⇒ ParsecT s u m SomeSymbol
-operator = someSymbolVal <$> operator'
+operator ∷ Stream s m Char ⇒ ParsecT s u m Symbol
+operator = intern <$> operator'
 
-symbol ∷ Stream s m Char ⇒ ParsecT s u m SomeSymbol
-symbol = someSymbolVal <$> identifier
+symbol ∷ Stream s m Char ⇒ ParsecT s u m Symbol
+symbol = intern <$> identifier
 
 -- Grammar ---------------------------------------------------------------------
 
@@ -115,7 +115,7 @@ expression' =  ifThenElse
 
 -- Infix Parser ----------------------------------------------------------------
 
-createInfixUnkown ∷ SomeSymbol → Bohm → Bohm → Bohm
+createInfixUnkown ∷ Symbol → Bohm → Bohm → Bohm
 createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
 
 -- special cased and and or!
@@ -124,7 +124,7 @@ precedenceToOps =
   (\(Precedence _ s a) →
      if | s == "or"  → E.Infix (Or  <$ reservedOp s) a
         | s == "and" → E.Infix (And <$ reservedOp s) a
-        | otherwise  → E.Infix (createInfixUnkown (someSymbolVal s) <$ reservedOp s) a)
+        | otherwise  → E.Infix (createInfixUnkown (intern s) <$ reservedOp s) a)
   <<$>>
     groupBy (\x y -> level x == level y)
             (reverse (sortOn level defaultSymbols))

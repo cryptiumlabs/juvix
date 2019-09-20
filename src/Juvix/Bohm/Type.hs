@@ -6,13 +6,13 @@ import           Juvix.Library
 -- TODO:: Investigate if it would be advantageous to promote this to a well typed gadt
 data Bohm
   = IntLit Int
-  | Lambda SomeSymbol Bohm
+  | Lambda Symbol Bohm
   | Application Bohm Bohm
   | Not Bohm
   | True'
   | False'
-  | Letrec SomeSymbol Bohm
-  | Let SomeSymbol Bohm Bohm
+  | Letrec Symbol Bohm
+  | Let Symbol Bohm Bohm
   | If Bohm Bohm Bohm
   | Cons Bohm Bohm
   | Or Bohm Bohm
@@ -21,7 +21,7 @@ data Bohm
   | Car Bohm
   | Cdr Bohm
   | IsNil Bohm
-  | Symbol' SomeSymbol
+  | Symbol' Symbol
   -- Not valid syntax but for read back of a graph
   | Erase
   -- Not valid syntax but for read back of a graph

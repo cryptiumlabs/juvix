@@ -110,8 +110,8 @@ types = buildExpressionParser optable types'
 types' ∷ Parser PType
 types' = bangs <|> specific
 
-symbol ∷ Stream s m Char ⇒ ParsecT s u m SomeSymbol
-symbol = someSymbolVal <$> identifier
+symbol ∷ Stream s m Char ⇒ ParsecT s u m Symbol
+symbol = intern <$> identifier
 
 lambda ∷ Parser RPTI
 lambda = do

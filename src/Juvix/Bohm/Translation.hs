@@ -15,14 +15,14 @@ import           Juvix.NodeInterface
 
 data Env net = Env { level :: Int
                    , net'  :: net B.Lang
-                   , free  :: Map SomeSymbol (Node, PortType)
+                   , free  :: Map Symbol (Node, PortType)
                    } deriving (Generic)
 
 newtype EnvState net a = EnvS (State (Env net) a)
   deriving (Functor, Applicative, Monad)
   deriving (HasState "level" Int) via
     Rename "level" (Field "level" () (MonadState (State (Env net))))
-  deriving (HasState "free" (Map SomeSymbol (Node, PortType))) via
+  deriving (HasState "free" (Map Symbol (Node, PortType))) via
     (Field "free" () (MonadState (State (Env net))))
   deriving (HasState "net" (net B.Lang)) via
     Rename "net'" (Field "net'" () (MonadState (State (Env net))))
@@ -33,7 +33,7 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ BT.Bohm → Map.Map SomeSymbol BT.Fn → net B.Lang
+astToNet ∷ Network net ⇒ BT.Bohm → Map.Map Symbol BT.Fn → net B.Lang
 astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
@@ -392,10 +392,10 @@ chaseAndCreateFan (num,port) = do
 
 
 -- | numToSymbol generates a symbol from a number
-numToSymbol ∷ Int → SomeSymbol
+numToSymbol ∷ Int → Symbol
 numToSymbol x
-  | x < 26    = someSymbolVal (return ((['x'..'z'] <> ['a'..'w']) !! x))
-  | otherwise = someSymbolVal ("%gen" <> show x)
+  | x < 26    = intern (return ((['x'..'z'] <> ['a'..'w']) !! x))
+  | otherwise = intern ("%gen" <> show x)
 
 
 -- | generate a new number based on the map size

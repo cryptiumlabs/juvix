@@ -36,30 +36,33 @@ erase term =
           pure (EAL.Var name)
         Core.Free n  ->
           case n of
-            Core.Global s -> pure (EAL.Var (someSymbolVal s))
+            Core.Global s -> pure (EAL.Var (intern s))
+            Core.Local _s -> undefined
+            Core.Quote _s -> undefined
         Core.App a b -> do
           a <- erase b
           b <- erase b
           pure (EAL.App a b)
         Core.Ann _ _ a -> do
           erase a
+        Core.Nat _nat -> undefined
     _               -> undefined
 
 unDeBruijin ∷ (HasState "nextName" Int m,
                 HasState "nameStack" [Int] m)
- ⇒ Int → m SomeSymbol
+ ⇒ Int → m Symbol
 unDeBruijin ind = do
   stack <- get @"nameStack"
-  pure (someSymbolVal $ show $ stack !! ind)
+  pure (intern $ show $ stack !! ind)
 
 newName ∷ (HasState "nextName" Int m,
            HasState "nameStack" [Int] m)
-  ⇒ m SomeSymbol
+  ⇒ m Symbol
 newName = do
   name <- get @"nextName"
   modify @"nextName" (+ 1)
   modify @"nameStack" ((:) name)
-  return (someSymbolVal (show name))
+  return (intern (show name))
 
 data Env = Env {
   typeAssignment :: EAL.TypeAssignment,
