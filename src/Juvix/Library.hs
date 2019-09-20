@@ -5,7 +5,7 @@ module Juvix.Library ( module Protolude
                      , module Capability.Writer
                      , module Capability.Stream
                      , (∨), (∧), (|<<), (>>|), (|>)
-                     , traverseM, Symbol, intern
+                     , traverseM, Symbol, intern, unintern
                      ) where
 
 import           Capability.Error
@@ -56,5 +56,8 @@ newtype Symbol = Sym Text deriving (Eq, Ord)
 instance Show Symbol where
   show (Sym t) = T.unpack t
 
-intern :: String → Symbol
+intern ∷ String → Symbol
 intern = Sym . T.pack
+
+unintern ∷ Symbol → String
+unintern (Sym s) = T.unpack s
