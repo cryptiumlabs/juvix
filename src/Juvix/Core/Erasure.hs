@@ -26,6 +26,8 @@ erase term =
     Core.Lam body -> do
       name <- newName
       let ty = EAL.SymT name
+      -- TODO :: replace map here with unordered map
+      -- the remove the Ord deriving from the Symbol type.
       modify @"typeAssignment" (insert name ty)
       body <- erase body
       pure (EAL.Lam name body)
