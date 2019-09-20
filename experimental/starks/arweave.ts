@@ -22,12 +22,16 @@ const generate = () => {
   // 1 GB
   // const size: number = 2 ** 20
   // 1 MB
-  const size: number = 1 * (2 ** 20)
-  // 1 MB
+  const size: number = 2.5 * (2 ** 20)
+  // 2.5 MB
   console.log('Generating random buffer of length', size, 'bytes')
   const buffer = Buffer.alloc(size)
   crypto.randomFillSync(buffer)
   return buffer
+}
+
+const sleep = (time: number) => {
+  return new Promise((resolve) => setTimeout(resolve, time));
 }
 
 try {
@@ -51,7 +55,7 @@ try {
       console.log('Balance (AR):', ar)
       var opts: any = {
         data: generate(),
-        reward: arweave.ar.arToWinston('0.003')
+        reward: arweave.ar.arToWinston('0.0125')
       }
       /*
       if (last_hash !== '') {
@@ -65,8 +69,9 @@ try {
       console.log('Last tx:', tx.last_tx)
       console.log('Hash:', tx.id)
       last_hash = tx.id
-      const response = await arweave.transactions.post(tx);
+      const response = await arweave.transactions.post(tx)
       console.log('Response:', response.status, response.data)
+      await sleep(30 * 1000)
     }
   })()
 } catch(err) {
