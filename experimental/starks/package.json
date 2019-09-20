@@ -6,12 +6,17 @@
   "main": "index.ts",
   "scripts": {
     "tsc": "tsc -p .",
-    "main": "node bin/index.js"
+    "main": "node bin/index.js",
+    "arweave": "node bin/arweave.js"
   },
   "author": "Christopher Goes <cwgoes@pluranimity.org>",
   "license": "GPL-3.0",
   "dependencies": {
     "@guildofweavers/genstark": "^0.5.7",
-    "@types/node": "^12.7.5"
+    "@types/follow-redirects": "^1.8.0",
+    "@types/mz": "0.0.32",
+    "@types/node": "^12.7.5",
+    "arweave": "^1.4.1",
+    "mz": "^2.7.0"
   }
 }
