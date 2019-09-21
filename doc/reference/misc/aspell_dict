@@ -1,4 +1,4 @@
-personal_ws-1.1 en 349 
+personal_ws-1.1 en 351 
 succ
 textwidth
 AST
@@ -127,6 +127,7 @@ semiring
 SIMD
 TinyRAM
 nonfungible
+Elaborator
 titlepage
 runtime
 ADTs
@@ -284,6 +285,7 @@ ADT
 qed
 inetcell
 TrinaryInfC
+ZF
 xs
 REPL
 ZK
