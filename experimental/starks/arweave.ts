@@ -22,8 +22,8 @@ const generate = () => {
   // 1 GB
   // const size: number = 2 ** 20
   // 1 MB
-  const size: number = 2.5 * (2 ** 20)
-  // 2.5 MB
+  const size: number = 1 * (2 ** 20)
+  // 1 MB
   console.log('Generating random buffer of length', size, 'bytes')
   const buffer = Buffer.alloc(size)
   crypto.randomFillSync(buffer)
@@ -55,7 +55,7 @@ try {
       console.log('Balance (AR):', ar)
       var opts: any = {
         data: generate(),
-        reward: arweave.ar.arToWinston('0.0125')
+        reward: arweave.ar.arToWinston('0.005')
       }
       /*
       if (last_hash !== '') {
