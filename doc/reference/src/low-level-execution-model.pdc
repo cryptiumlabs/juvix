@@ -829,6 +829,26 @@ In the future we may want to track more granular memory operations (reads/writes
 
 Machine backends are expected to provide a discrete cost model which can be utilised by the optimiser.
 
+## Evaluation strategies
+
+### Lazy (Levy-optimal)
+
+- Evaluate call-by-need, weak head normal form
+- Minimise number of beta-reductions
+
+### Parallel
+
+- Evaluate all primary pairs each step
+
+#### Safety under concurrency
+
+- How to avoid locks in rewriting?
+
+### Hybridised
+
+- Use parallel annotations
+- Consider cache locality, thread affinity
+
 ## Future optimisation strategies
 
 Juvix does not yet implement these, but the compiler architecture has kept their possibility in mind.
