@@ -1,4 +1,4 @@
-personal_ws-1.1 en 341 
+personal_ws-1.1 en 349 
 succ
 textwidth
 AST
@@ -27,6 +27,7 @@ Superoptimal
 parallelise
 ceruleanblue
 monoid
+Merkle
 Mazza's
 Asher
 mdframed
@@ -50,9 +51,11 @@ cybercoin
 Juvix
 STG
 AlgebraM
+DoS
 frontend
 boolean
 params
+decodable
 candypink
 topline
 encodings
@@ -127,6 +130,7 @@ nonfungible
 titlepage
 runtime
 ADTs
+STARKs
 overset
 color
 inequation
@@ -160,6 +164,7 @@ cmll
 typable
 notin
 ish
+typechecked
 TestNil
 microtype
 equalities
@@ -187,8 +192,8 @@ disjunction
 xxs
 ax
 satisfiability
-Eval
 eval
+pipelined
 innerbottommargin
 AxiomC
 catamorphism
@@ -200,6 +205,7 @@ ge
 consX
 eq
 pseudoterms
+Asterius
 mytheo
 meq
 pagebreak
@@ -234,13 +240,14 @@ vdash
 lavenderpurple
 Milner
 unintuitive
-TikZ
 tikz
+TikZ
 refl
 deconstructor
 tikzstyle
 tcbuselibrary
 inode
+Merkleized
 OpenCL
 pdc
 bondiblue
@@ -284,6 +291,7 @@ destructor
 newtcbtheorem
 ys
 redexes
+encodable
 monadic
 DejaVuSerifCondensed
 wirecross

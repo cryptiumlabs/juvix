@@ -128,13 +128,17 @@ header-includes:
 
 !include src/low-level-execution-model.pdc
 
-# Execution extensions
+# Cost accounting
 
-!include src/execution-extensions.pdc
+!include src/cost-accounting.pdc
 
 # Machine targets
 
 !include src/machine-targets.pdc
+
+# Distributed ledger integration
+
+!include src/distributed-ledger-integration.pdc
 
 # Future directions
 
