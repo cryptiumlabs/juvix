@@ -1,4 +1,4 @@
-personal_ws-1.1 en 353 
+personal_ws-1.1 en 354 
 succ
 textwidth
 AST
@@ -254,6 +254,7 @@ OpenCL
 pdc
 bondiblue
 verifiers
+SNARKs
 prover
 LaTeX
 Damiano

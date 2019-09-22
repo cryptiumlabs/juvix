@@ -53,7 +53,7 @@ Parallelism + versatility, maybe there are large efficiency gains possible, diff
 
 Full backend.
 
-## STARKs
+## Algebraic intermediate representation (STARKs)
 
 Ideally a developer-facing language would operate at a higher level, automatically determining the necessary registers, length of execution trace, transition function & transition constraints. I think this should be possible to do automatically pretty efficiently - possibly in some cases custom constraints could be defined & proved to be equivalent to correct execution of the transition function (e.g., for a layer l_n in a trace, l_n = f(l_n-1) <=> c l_n l_n-1 where c is the constraint relation).
 
@@ -73,3 +73,7 @@ Questions:
 - If we inline everything, can higher-order functions be erased (want to avoid interaction net evaluation, since that requires dynamic memory allocation)?
 - Transforms to reuse registers over time ~ may be prior literature or forms, e.g. SSA
 - Figure out rough numbers for size, proof time scaling vs. register count
+
+## Rank-1 constraint systems (SNARKs)
+
+Also possible, albeit likely less efficient encoding-wise (for repeated computation).

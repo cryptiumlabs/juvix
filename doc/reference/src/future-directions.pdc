@@ -25,22 +25,17 @@
 
 Juvix does not yet implement these, but the compiler architecture has kept their possibility in mind.
 
-### Speculative execution
-
-- "Strict" optimal reduction strategies
-- Evaluate based on predicting future input (feasible?)
-
 ### Stochastic superoptimisation
 
 - Utilise sparse sampling (probably Markov-chain Monte Carlo) to search the configuration space of semantically equivalent programs & select the fastest.
 - Probably useful at the level of choosing machine implementations of particular rewrite rules.
-- See Stochastic Superoptimisation [@stochastic-superoptimization]
+- See Stochastic Superoptimisation [@stochastic-superoptimization].
 - Will need a lot of clever tricks to avoid getting stuck in local minima (that paper details several).
-- See also STOKE [@stoke]
+- See also STOKE [@stoke].
 
 ### "Superoptimal" reduction strategies
 
 - Specifically those with the possibility of asymptotically-better performance than Levy's optimal reduction.
 - As far as I can tell, the only candidates here are forms of memoisation which attempt to detect syntactically identical structures during the reduction process which can then be linked and evaluated only once.
 - [Hash consing](https://en.wikipedia.org/wiki/Hash_consing) may have the most prior research.
-- Concerns about space-time trade-offs (may already be concerns).
+- Concerns about space-time trade-offs (already a concern with optimal reduction), likely low-payoff.

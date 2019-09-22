@@ -74,17 +74,18 @@ false t f = f
 not b t f = b f t
 ```
 
-$not . not$ fuses once.
+$not\ .\ not$ fuses once.
 
-$not . not . not . not$ fuses like this twice in parallel, then once.
+$not\ .\ not\ .\ not\ .\ not$ fuses like this twice in parallel, then once.
 
-$log n$ in the general case.
+$log\ n$ in the general case.
 
 whereas $not$ itself, naively applied $n$ times, would be linear complexity.
 
 Another example: fast exponentiation by squaring.
 
 Conclusions (tentative):
+
 - Elaborator-based approach a la ZF*, with eventual editor support or the like for ergonomics.
 - Parameterised costs for flexible machine targeting and easier upgrades.
 - Think more about how to deal with runtime fusion, as it results from semantics, not syntax.
