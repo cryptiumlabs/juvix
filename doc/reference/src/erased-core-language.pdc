@@ -93,6 +93,50 @@ In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the c
 
 ### Linear connectives
 
+#### Multiplicative conjunction
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$s \ ▶\ u$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{$\epsilon$-Erase-+}
+\QuaternaryInfC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T \ ▶\ (u, v)$}
+\end{prooftree}
+
+- what if one erases to nothing?
+
+#### Multiplicative disjunction
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (s\ \epsilon\ t) \overset{σ}{:} (S \parr T)$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$s \ ▶\ u$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{$\epsilon$-Erase-+}
+\QuaternaryInfC{$Γ ⊢ (u\ \epsilon\ v) \overset{σ}{:} (S \parr T) \ ▶\ (u\ \epsilon\ v)$}
+\end{prooftree}
+
+- what if one erases to nothing?
+
+#### Additive conjunction
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ fst_{\&}\ t \overset{σ}{:} S$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$t \ ▶\ u$}
+\RightLabel{fst-Erase-+}
+\TrinaryInfC{$fst_{\&}\ M\ ▶\ fst_{\&}\ u$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ snd_{\&}\ t \overset{σ}{:} S$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$t \ ▶\ u$}
+\RightLabel{snd-Erase-+}
+\TrinaryInfC{$snd_{\&}\ M\ ▶\ snd_{\&}\ u$}
+\end{prooftree}
+
 - Constructors, destructors erase to themselves.
 - How to split up - what if first element is 1-usage, second element 0-usage (e.g. term and proof about it)?
 

@@ -590,12 +590,8 @@ Lay out syntax-directed typechecker following McBride's paper.
 
 ### Church-encoded natural numbers
 
-- Representation
-- Deriving induction for Church-encoded numerals using self-types
-
 The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
 
-### Linear logic connectives
+### Linear induction
 
-- Linear logic disjunctions & conjunctions
-- Linear induction?
+To-do: Linear induction example.
