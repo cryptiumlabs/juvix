@@ -68,7 +68,7 @@ Let $K$ be the set of primitive types, $C$ be the set of primitive constants, an
 
 Let $F$ be the set of primitive functions, where each $f_i$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f_i}$, which provided an argument of the function input type computes an argument of the function output type.
 
-Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Juvix Core is erased, so they must be directly supported by the low-level execution model.
+Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Core is erased, so they must be directly supported by the low-level execution model. The core type theory and subsequent compilation pathways are parameterised over $K$, $C$, $F$, $⋮$, and the reduction operations $→_{f_i}$, which are assumed to be available as implicit parameters.
 
 ## Syntax
 

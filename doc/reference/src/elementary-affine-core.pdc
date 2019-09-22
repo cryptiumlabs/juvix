@@ -7,7 +7,7 @@
 Define:
 
 1. Formulae $A, B ::= \ α\ |\ A ⊸ B\ |\ !A$.
-1. Terms $t, u ::= $x\ |\ λx.t\ |\ t\ u\ |\ !t\ |\ \bar{!}t$.
+1. Terms $t, u ::= x\ |\ λx.t\ |\ t\ u\ |\ !t\ |\ \bar{!}t$.
 
 ## Semantics
 

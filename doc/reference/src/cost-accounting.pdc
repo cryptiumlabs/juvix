@@ -1,4 +1,18 @@
-## Approaches
+## Cost model
+
+Currently tracked:
+
+- Memory allocations
+- Sequential rewrite steps
+- Parallel rewrite steps
+- Maximum graph size
+- Final graph size
+
+In the future we may want to track more granular memory operations (reads/writes in addition to allocations) and computations associated with rewrite rules (all negligible-cost with interaction combinators, but not with e.g. integer arithmetic).
+
+Machine backends are expected to provide a discrete cost model which can be utilised by the optimiser.
+
+## Accounting approaches
 
 ### Cost per VM instruction
 

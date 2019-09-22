@@ -120,9 +120,9 @@ header-includes:
 
 !include src/whole-program-optimisation.pdc
 
-# Dependent elementary affine logic
+# Elementary affine core
 
-!include src/dependent-elementary-affine-logic.pdc
+!include src/elementary-affine-core.pdc
 
 # Low-level execution model
 

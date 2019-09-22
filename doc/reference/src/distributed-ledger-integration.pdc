@@ -12,6 +12,14 @@ I think the ideal target is WASM, which can be metered in a VM (e.g. Life) and a
 
 I am not sure whether it is necessary to also meter other semantics-preserving parts of the compiler (e.g. optimisation passes) - it might be possible for nodes to run these individually (and they might be on different platforms), but that could be problematic if particular passes could be DoS attack vectors or if cost semantics (of terms - #45) are dependent on optimisation passes (in which case they would need to be specified & checked in consensus).
 
+## Persistent interaction system state
+
+1. Defined equivalence semantics but implementation can change later
+1. Contracts themselves can call the compiler (needs more R&D)
+1. Bounties for proofs, sub-contract-upgrades, etc.
+1. More efficient than read-back after execution, just persist the graph of the state machine, many more optimisations automatically happen.
+1. Will be helpful for Juvix to be self-hosting or packaged as a runtime which can typecheck untrusted input.
+
 ## Architectural optimisations
 
 ### Fusing across sequentially applied transactions

@@ -23,6 +23,8 @@ also
 
 ## Interaction system encoding
 
+### Basic lambda calculus
+
 EAL term language $t ::= x\ |\ λx.t\ |\ (t u)\ |\ !t$.
 
 EAL type $A ::= α\ |\ A\ ⊸\ A\ |\ !A$.
@@ -101,96 +103,7 @@ For each free variable $x$ in $(t_1 t_2)$ occurring more than once, all occurren
 
 That ends the encoding rules for basic lambda terms.
 
-Interaction net encoding of $a \& b$:
-
-1. Primary port as pair, to be connected to destructor ($fst$ / $snd$)
-1. $3n + 2$ auxiliary ports where:
-    1. Two are for the subterms $a$ and $b$
-    1. $n$ are for the terms bound to free variables (resources) both subterms use
-    1. $n$ are connected to the binding sites in a
-    1. $n$ are connected to the binding sites in b
-1. Rewrite rule
-    1. If the destructor is $fst$ (vice versa if the destructor is $snd$):
-        1. Connects the wires between the $n$ free variables and the $n$ binding sites in $a$
-        1. Attaches erasers to the $n$ binding sites in $b$ and to $b$ itself
-        1. Erases $\&$ node
-        1. Attaches whatever destructor was connected to to $a$
-
-That way no duplication of resources need occur, matching the linear logic semantics.
-
-Note that this means reduction within $a$ and $b$, insofar as it depends on the values of the free variables, will not take place until the caller chooses which variant ($a$ or $b$) they want.
-
-Interaction net encoding of $a ⊗ b$:
-
-1. Primary port as pair, to be connected to destructor ("join")
-1. $2$ auxiliary ports, where:
-    1. Two are for the subterms $a$ and $b$
-1. Rewrite rule
-    1. Erases the ⊗ node
-    1. Creates a new ⊗ node, attaches its 2 auxiliary ports to a and b
-    1. Attaches whatever the destructor was attached to to the new ⊗ node's primary port
-
-This is structurally identical to the ⊗ encoding (perhaps we can simply erase the "join" destructor prior to runtime), but we should be able to place directives that inform the evaluator to evaluate the two subterms in parallel, as they are guaranteed not to share resources (no duplication required) and be completely disjoint subgraphs.
-
-> TODO: Example term encoding.
-
-### Bespoke function encoding
-
-#### Basics
-
-Consider a Core term $f$ of type $A ⊸ B$.
-
-In the interaction net encoding compiler path, assuming EAL-typeability, we would encode this (if of form $λx.t$, for example) as:
-
-\begin{tikzpicture}
-\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
-\inetbigcell[below = 30pt]{l}{$λ$}[3]
-
-\axWire{g/1}{l/1}{}{}
-\cutWire{g.out}{l/2}{}{}
-\outwire[]{l.out}{$A ⊸ B$}
-\end{tikzpicture}
-
-where $φ$ is the recursive interaction net translation function.
-
-In the bespoke encoding path, we instead create a new node type $T$ and rewrite rule $R$ such that when the primary port of $T$ is connected to an application node to an argument $A$, we erase $T$, connect an eraser to $A$, and connect whatever the application node's primary port was connected to to a new subgraph which is equal to the encoding of $eval (f A)$.
-
-$eval (f A)$ can then be implemented by native evaluation semantics which do not utilise interaction nets. For example, if the Core term in question is a tail-recursive numerical computation, it can be compiled to a native loop (possibly using SIMD).
-
-Furthermore, we can safely encode non-EAL-typable terms this way, such as the Ackermann function, and they can safely interact with the rest of the interaction net (which must have been an EAL-typable term, treating the bespoke-encoded subterm as opaque).
-
-The decision of whether or not to take the bespoke path can be made for all subterms of this form according to some heuristic (or possibly exact cost calculation) in the compiler.
-
-#### Dealing with various types
-
-Where $A$ and $B$ are both types which are encoded as primitive nodes (e.g. integers), this is trivial.
-
-Where $A$ is a primitive type and $B$ is a function of some arity, of only primitive-typed arguments, which then returns a primitive type, this can be implemented as a sequence of node types $T, T', T''$, etc. which keep the curried arguments and eventually evaluate when all arguments are provided (or even when some are provided, there is a continuum of options here).
-
-Where $A$ and/or arguments of $B$ are non-primitive types (e.g. functions), this becomes more complex, since we must convert between AST and interaction-net form during reduction.
-
-More generally, with our Core term $f$ of type $A ⊸ B$, encoding $f$ through the bespoke path would result in a set of new node types $T_i$ with possible curried internal data, and a set of rewrite rules $R_i$, the first $i - 1$ of which just deal with currying (although again, there is a continuum of options, but let's leave that out for now), and the last one of which is interesting, let it be $R$.
-
-$R$ must then cause, when connected to a primary port of an argument $A$:
-
-- Erasure of $R_i$ (the prior node).
-- Connection of an eraser to $A$.
-- Creation of a new subgraph $φ (eval (f (read-back A))$, where $φ$ is the recursive interaction net encoding function (which might itself perform bespoke encoding, although we need to be concerned about runtime costs here), and $read-back$ is the read-back function from nets to Core terms, run starting at $A$ as the root node.
-- Connection of the primary port of this subgraph to whatever $R_i$ was previously connected to.
-
-This follows all the interaction net laws and should preserve semantics - but there are oddities:
-
-- Read-back and (complex) encoding algorithms must be executed at runtime
-- Read-back must happen over a term A which may be in the progress of parallel reduction
-
-In general, we have no idea of the size (and corresponding read-back cost) of $A$, and it might be dependent on the order of reduction.
-
-### Bespoke datatype encoding
-
-- Primitive types (integer, string, bytes) ~> node types w/data
-- User-defined ADTs can be turned into custom nodes
-
-## Oracle-free optimal reduction
+#### Rewrite rules
 
 The oracle-free abstract algorithm for optimal reduction operates on four node types: $λ$ (lambda), $@$ (application), $f_i$ (fan, with index $i$), and $⊗$ (eraser). Rewrite rules always operate only on primary port pairs and consist of two categories: **annihilation** rules, which remove nodes, and **commutation** rules, which create nodes.
 
@@ -454,7 +367,128 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
 \floatstyle{boxed}
 \restylefloat{figure}
 
-### Argument for correctness
+
+
+### Linear connectives
+
+#### Multiplicative conjunction
+
+##### Constructor
+
+##### Destructor
+
+##### Rewrite rules
+
+#### Multiplicative disjunction
+
+Interaction net encoding of $a \parr b$:
+
+1. Primary port as pair, to be connected to destructor ("join")
+1. $2$ auxiliary ports, where:
+    1. Two are for the subterms $a$ and $b$
+1. Rewrite rule
+    1. Erases the ⊗ node
+    1. Creates a new ⊗ node, attaches its 2 auxiliary ports to a and b
+    1. Attaches whatever the destructor was attached to to the new ⊗ node's primary port
+
+This is structurally identical to the ⊗ encoding (perhaps we can simply erase the "join" destructor prior to runtime), but we should be able to place directives that inform the evaluator to evaluate the two subterms in parallel, as they are guaranteed not to share resources (no duplication required) and be completely disjoint subgraphs.
+
+##### Constructor
+
+##### Destructor
+
+##### Rewrite rules
+
+#### Additive conjunction
+
+Interaction net encoding of $a \& b$:
+
+1. Primary port as pair, to be connected to destructor ($fst$ / $snd$)
+1. $3n + 2$ auxiliary ports where:
+    1. Two are for the subterms $a$ and $b$
+    1. $n$ are for the terms bound to free variables (resources) both subterms use
+    1. $n$ are connected to the binding sites in a
+    1. $n$ are connected to the binding sites in b
+1. Rewrite rule
+    1. If the destructor is $fst$ (vice versa if the destructor is $snd$):
+        1. Connects the wires between the $n$ free variables and the $n$ binding sites in $a$
+        1. Attaches erasers to the $n$ binding sites in $b$ and to $b$ itself
+        1. Erases $\&$ node
+        1. Attaches whatever destructor was connected to to $a$
+
+That way no duplication of resources need occur, matching the linear logic semantics.
+
+Note that this means reduction within $a$ and $b$, insofar as it depends on the values of the free variables, will not take place until the caller chooses which variant ($a$ or $b$) they want.
+
+##### Constructor
+
+##### Destructor
+
+##### Rewrite rules
+
+### Primitive functions & constants
+
+#### Constructors
+
+#### Rewrite rules
+
+### Bespoke encoding
+
+#### Functions
+
+Consider a Core term $f$ of type $A ⊸ B$.
+
+In the interaction net encoding compiler path, assuming EAL-typeability, we would encode this (if of form $λx.t$, for example) as:
+
+\begin{tikzpicture}
+\inetbigcell[right = 30pt]{g}{$\phi (t)$}[4]
+\inetbigcell[below = 30pt]{l}{$λ$}[3]
+
+\axWire{g/1}{l/1}{}{}
+\cutWire{g.out}{l/2}{}{}
+\outwire[]{l.out}{$A ⊸ B$}
+\end{tikzpicture}
+
+where $φ$ is the recursive interaction net translation function.
+
+In the bespoke encoding path, we instead create a new node type $T$ and rewrite rule $R$ such that when the primary port of $T$ is connected to an application node to an argument $A$, we erase $T$, connect an eraser to $A$, and connect whatever the application node's primary port was connected to to a new subgraph which is equal to the encoding of $eval (f A)$.
+
+$eval (f A)$ can then be implemented by native evaluation semantics which do not utilise interaction nets. For example, if the Core term in question is a tail-recursive numerical computation, it can be compiled to a native loop (possibly using SIMD).
+
+Furthermore, we can safely encode non-EAL-typable terms this way, such as the Ackermann function, and they can safely interact with the rest of the interaction net (which must have been an EAL-typable term, treating the bespoke-encoded subterm as opaque).
+
+The decision of whether or not to take the bespoke path can be made for all subterms of this form according to some heuristic (or possibly exact cost calculation) in the compiler.
+
+#### Dealing with various types
+
+Where $A$ and $B$ are both types which are encoded as primitive nodes (e.g. integers), this is trivial.
+
+Where $A$ is a primitive type and $B$ is a function of some arity, of only primitive-typed arguments, which then returns a primitive type, this can be implemented as a sequence of node types $T, T', T''$, etc. which keep the curried arguments and eventually evaluate when all arguments are provided (or even when some are provided, there is a continuum of options here).
+
+Where $A$ and/or arguments of $B$ are non-primitive types (e.g. functions), this becomes more complex, since we must convert between AST and interaction-net form during reduction.
+
+More generally, with our Core term $f$ of type $A ⊸ B$, encoding $f$ through the bespoke path would result in a set of new node types $T_i$ with possible curried internal data, and a set of rewrite rules $R_i$, the first $i - 1$ of which just deal with currying (although again, there is a continuum of options, but let's leave that out for now), and the last one of which is interesting, let it be $R$.
+
+$R$ must then cause, when connected to a primary port of an argument $A$:
+
+- Erasure of $R_i$ (the prior node).
+- Connection of an eraser to $A$.
+- Creation of a new subgraph $φ (eval (f (read-back A))$, where $φ$ is the recursive interaction net encoding function (which might itself perform bespoke encoding, although we need to be concerned about runtime costs here), and $read-back$ is the read-back function from nets to Core terms, run starting at $A$ as the root node.
+- Connection of the primary port of this subgraph to whatever $R_i$ was previously connected to.
+
+This follows all the interaction net laws and should preserve semantics - but there are oddities:
+
+- Read-back and (complex) encoding algorithms must be executed at runtime
+- Read-back must happen over a term A which may be in the progress of parallel reduction
+
+In general, we have no idea of the size (and corresponding read-back cost) of $A$, and it might be dependent on the order of reduction.
+
+#### Datatypes
+
+- Primitive types (integer, string, bytes) ~> node types w/data
+- User-defined ADTs can be turned into custom nodes
+
+## Argument for correctness of the abstract algorithm
 
 1. Define the level of a subterm
     1. level a a = 0
@@ -483,7 +517,7 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
 
 (needs pretty pictures)
 
-### Argument for correctness of read-back
+## Argument for correctness of read-back
 
 We wish to show that a read-back of an EAL-expression that has undergone zero or more reductions gives back the same result as normal evaluation up to alpha equality.
 
@@ -515,9 +549,7 @@ The first lemma we wish to prove is the following
   $\therefore$ AST→Net has one free port
 \end{Lemma}
 
-
 Now we need to prove that evaluating this net does not change this fact
-
 
 \begin{Theorem}{AST→Net→Eval has one free port}{AST->Net->Eval}
   Let $A = Net(AST)$.
@@ -815,20 +847,6 @@ We now shall define one more definition before getting to our main theorem.
   $\therefore$ by induction read-back from a valid EAL-Net will give us the same expression up to $α$ equivalence as evaluating the node via a more traditional evaluation methods
 \end{Theorem}
 
-## Evaluator cost model
-
-Currently tracked:
-
-- Memory allocations
-- Sequential rewrite steps
-- Parallel rewrite steps
-- Maximum graph size
-- Final graph size
-
-In the future we may want to track more granular memory operations (reads/writes in addition to allocations) and computations associated with rewrite rules (all negligible-cost with interaction combinators, but not with e.g. integer arithmetic).
-
-Machine backends are expected to provide a discrete cost model which can be utilised by the optimiser.
-
 ## Evaluation strategies
 
 ### Lazy (Levy-optimal)
@@ -848,31 +866,3 @@ Machine backends are expected to provide a discrete cost model which can be util
 
 - Use parallel annotations
 - Consider cache locality, thread affinity
-
-## Future optimisation strategies
-
-Juvix does not yet implement these, but the compiler architecture has kept their possibility in mind.
-
-### Spacial memory contiguity
-
-Random access O(1) model is imperfect; sequential reads are faster. Ensure correspondence between graphical locality and spacial locality in memory, read nodes in blocks.
-
-### Speculative execution
-
-- "Strict" optimal reduction strategies
-- Evaluate based on predicting future input (feasible?)
-
-### Stochastic superoptimisation
-
-- Utilise sparse sampling (probably Markov-chain Monte Carlo) to search the configuration space of semantically equivalent programs & select the fastest.
-- Probably useful at the level of choosing machine implementations of particular rewrite rules.
-- See Stochastic Superoptimisation [@stochastic-superoptimization]
-- Will need a lot of clever tricks to avoid getting stuck in local minima (that paper details several).
-- See also STOKE [@stoke]
-
-### "Superoptimal" reduction strategies
-
-- Specifically those with the possibility of asymptotically-better performance than Levy's optimal reduction.
-- As far as I can tell, the only candidates here are forms of memoisation which attempt to detect syntactically identical structures during the reduction process which can then be linked and evaluated only once.
-- [Hash consing](https://en.wikipedia.org/wiki/Hash_consing) may have the most prior research.
-- Concerns about space-time trade-offs (may already be concerns).
