@@ -1,16 +1,48 @@
+The erased core captures the operational semantics of the core language, erasing contemplated (zero-usage) terms and dropping type & usage annotations which are not computationally necessary. Core terms can be erased directly or first passed through the elementary affine stratification checker in order to test compatibility with the abstract algorithm.
+
+Analogously to core, the erased core language is parameterised over a set $C$ of primitive constants, a set $F$ of primitive functions, and a set $→_{f_i}$ of associated reduction rules.
+
+## Syntax
+
+Let $u, v, w$ be terms.
+
+\begin{figure}[H]
+\caption{Erased core syntax}
+\begin{subfigure}[t]{0.7\textwidth}
+\begin{align*}
+u, v, w &::= x & \text{variable} \\
+&\ \ \ \ \ \ |\ c \in C & \text{primitive constant} \\
+&\ \ \ \ \ \ |\ f \in F & \text{primitive function} \\
+&\ \ \ \ \ \ |\ λx.u & \text{abstraction} \\
+&\ \ \ \ \ \ |\ u\ v & \text{application} \\
+&\ \ \ \ \ \ |\ (u, v)\ & \text{multiplicative conjunction} \\
+&\ \ \ \ \ \ |\ u\ \epsilon\ v & \text{additive conjunction} \\
+&\ \ \ \ \ \ |\ u\ \gamma\ v & \text{multiplicative disjunction} \\
+&\ \ \ \ \ \ |\ fst_{\&}\ u\ & \text{first projection for additive conjunction} \\
+&\ \ \ \ \ \ |\ snd_{\&}\ u\ & \text{second projection for additive conjunction} \\
+&\ \ \ \ \ \ |\ let\ (x, y) = u\ in\ v\ & \text{multiplicative conjunction pattern match}
+\end{align*}
+\end{subfigure}
+\end{figure}
+
 ## Erasure from core
 
-- Define erasure to untyped lambda calculus following McBride's paper.
-- Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
+Define the core erasure operator $▶$.
 
-Let programs of the untyped lambda calculus be $p ::= x\ |\ λx.p\ |\ p\ p\ |\ c$ where $c \in C$ is a primitive constant.
-
-Define the erasure operator $▶$, such that erasure judgements take the form $Γ ⊢ t \overset{σ}{:} S \ ▶\  p$.
+Erasure judgements take the form $Γ ⊢ t \overset{σ}{:} S \ ▶\  u$ with $t \overset{σ}{:} S$ a core judgement and $u$ an erased core term.
 
 \begin{prooftree}
-\AxiomC{$$}
-\RightLabel{Prim-Erase}
-\UnaryInfC{$c \ ▶\  c$}
+\AxiomC{$c \overset{σ}{:} S$}
+\AxiomC{$σ /= 0$}
+\RightLabel{Prim-Const-Erase-+}
+\BinaryInfC{$c \overset{σ}{:} S \ ▶\  c$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$f \overset{σ}{:} S$}
+\AxiomC{$σ /= 0$}
+\RightLabel{Prim-Fun-Erase-+}
+\BinaryInfC{$f \overset{σ}{:} S \ ▶\  f$}
 \end{prooftree}
 
 \begin{prooftree}
@@ -49,7 +81,7 @@ Define the erasure operator $▶$, such that erasure judgements take the form $�
 \TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N] \ ▶\  p\ p'$}
 \end{prooftree}
 
-In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $p$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it, only contemplate it.
+In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $u$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it, only contemplate it.
 
 Other terms erase as you would expect.
 

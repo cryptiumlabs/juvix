@@ -98,13 +98,14 @@ R, S, T, s, t &::= ∗_i\ & \text{sort $i$} &\ &\ *i \\
 \begin{align*}
 d, e, f &::= x\ & \text{variable} &\ &\ &\ x\\
 &\ \ \ \ \ \ |\ c \in C & \text{primitive constant} &\ &\ &\ \text{(varies)}\\
+&\ \ \ \ \ \ |\ f \in F & \text{primitive function} &\ &\ &\ \text{(varies)}\\
 &\ \ \ \ \ \ |\ f s\ & \text{application} &\ &\ &\ f s \\
-&\ \ \ \ \ \ |\ (s, t)\ & \text{pair} &\ &\ &\ (s, t) \\
+&\ \ \ \ \ \ |\ (s, t)\ & \text{multiplicative conjunction} &\ &\ &\ (s, t) \\
 &\ \ \ \ \ \ |\ s\ \epsilon\ t\ & \text{additive conjunction} &\ &\ &\ TBD \\
 &\ \ \ \ \ \ |\ s\ \gamma\ t\ & \text{multiplicative disjunction} &\ &\ &\ TBD \\
 &\ \ \ \ \ \ |\ fst_{\&}\ M\ & \text{first projection for additive conjunction} &\ &\ &\ fst\ M \\
 &\ \ \ \ \ \ |\ snd_{\&}\ M\ & \text{second projection for additive conjunction} &\ &\ &\ snd\ M \\
-&\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent pair pattern match} &\ &\ &\ let\ (x, y) = d\ in\ e \\
+&\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent multiplicative conjunction pattern match} &\ &\ &\ let\ (x, y) = d\ in\ e \\
 &\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} &\ &\ &\ s : [π]\ S \\
 \end{align*}
 \end{subfigure}
