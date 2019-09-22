@@ -106,6 +106,7 @@ d, e, f &::= x\ & \text{variable} &\ &\ &\ x\\
 &\ \ \ \ \ \ |\ fst_{\&}\ M\ & \text{first projection for additive conjunction} &\ &\ &\ fst\ M \\
 &\ \ \ \ \ \ |\ snd_{\&}\ M\ & \text{second projection for additive conjunction} &\ &\ &\ snd\ M \\
 &\ \ \ \ \ \ |\ let\ (x, y) = d\ in\ e\ & \text{dependent multiplicative conjunction pattern match} &\ &\ &\ let\ (x, y) = d\ in\ e \\
+&\ \ \ \ \ \ |\ ⊙ e & \text{multiplicative disjunction destructor} &\ &\ &\ join\ e \\
 &\ \ \ \ \ \ |\ s \overset{π}{:} S & \text{type \& usage annotation} &\ &\ &\ s : [π]\ S \\
 \end{align*}
 \end{subfigure}
@@ -433,13 +434,12 @@ do we need equality of 0-fragment?
 Elimination rule:
 
 \begin{prooftree}
-\AxiomC{$Γ_1, M \overset{σ}{:} S ⊢ M' \overset{σ'}{:} S'$}
-\AxiomC{$Γ_2, N \overset{σ}{:} T ⊢ N' \overset{σ'}{:} T'$}
+\AxiomC{$Γ ⊢ M \gamma\ N \overset{σ}{:} S \parr T$}
 \RightLabel{$\parr$-Elim}
-\BinaryInfC{$Γ_1 + Γ_2 + M \gamma\ N \overset{σ}{:} S \parr T ⊢ (M', N') \overset{σ'}{:} (S ⊗ T)$}
+\UnaryInfC{$Γ ⊢ ⊙\ (M \gamma\ N) \overset{σ'}{:} (S ⊗ T)$}
 \end{prooftree}
 
-reformulate to be syntax-directed, we need some sort of "join"
+$⊙$ can be thought of as a syntax-directed "join" operator.
 
 ### Self types
 

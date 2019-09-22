@@ -20,6 +20,7 @@ u, v, w &::= x & \text{variable} \\
 &\ \ \ \ \ \ |\ u\ \gamma\ v & \text{multiplicative disjunction} \\
 &\ \ \ \ \ \ |\ fst_{\&}\ u\ & \text{first projection for additive conjunction} \\
 &\ \ \ \ \ \ |\ snd_{\&}\ u\ & \text{second projection for additive conjunction} \\
+&\ \ \ \ \ \ |\ ⊙ e & \text{multiplicative disjunction destructor} \\
 &\ \ \ \ \ \ |\ let\ (x, y) = u\ in\ v\ & \text{multiplicative conjunction pattern match}
 \end{align*}
 \end{subfigure}
