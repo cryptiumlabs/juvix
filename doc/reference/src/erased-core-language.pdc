@@ -89,37 +89,115 @@ Note that $σ /= 0$ must hold, as the erasure of a computationally irrelevant te
 \TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N] \ ▶\  u\ v$}
 \end{prooftree}
 
+\begin{prooftree}
+\AxiomC{$Γ ⊢ s \overset{π}{:} S$}
+\AxiomC{$s \ ▶\ u$}
+\AxiomC{$π /= 0$}
+\RightLabel{Ann-Erase-+}
+\TrinaryInfC{$Γ ⊢ s \overset{π}{:} S \ ▶\ u$}
+\end{prooftree}
+
 In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $u$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it.
 
 ### Linear connectives
 
 #### Multiplicative conjunction
 
+##### Constructor
+
 \begin{prooftree}
 \AxiomC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \AxiomC{$σ /= 0$}
+\AxiomC{$π /= 0$}
 \AxiomC{$s \ ▶\ u$}
 \AxiomC{$t \ ▶\ v$}
-\RightLabel{$\epsilon$-Erase-+}
-\QuaternaryInfC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T \ ▶\ (u, v)$}
+\RightLabel{let-Erase-++}
+\QuinaryInfC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T \ ▶\ (u, v)$}
 \end{prooftree}
 
-- what if one erases to nothing?
+If the first element of the pair is used, the constructor is erased to the untyped constructor.
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$π = 0$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{let-Erase-0+}
+\QuaternaryInfC{$Γ ⊢ (s, t) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T \ ▶\ v$}
+\end{prooftree}
+
+If the first element of the pair is not used, the constructor is erased completely.
+
+##### Destructor
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ s \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$Γ_1 + Γ_2 ⊢ let\ (x, y) = s\ in\ t \overset{σ'}{:} M[z := (x,y)]$}
+\AxiomC{$σ, σ' /= 0$}
+\AxiomC{$s \ ▶\ u$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{⊗-Erase-++}
+\QuinaryInfC{$Γ_1 + Γ_2 ⊢ let\ (x, y) = s\ in\ t \overset{σ'}{:} M[z := (x,y)] \ ▶\ let\ (x, y) = u\ in\ v$}
+\end{prooftree}
+
+If the pair is used, the destructor is erased to the untyped destructor.
+
+\begin{prooftree}
+\AxiomC{$Γ_1 ⊢ s \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\AxiomC{$Γ_1 + Γ_2 ⊢ let\ (x, y) = s\ in\ t \overset{σ'}{:} M[z := (x,y)]$}
+\AxiomC{$σ = 0 ∧ σ' /= 0$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{⊗-Erase-0+}
+\QuaternaryInfC{$Γ_1 + Γ_2 ⊢ let\ (x, y) = s\ in\ t \overset{σ'}{:} M[z := (x,y)] \ ▶\ v$}
+\end{prooftree}
+
+If the pair is not used, the destructor is erased completely.
 
 #### Multiplicative disjunction
 
+##### Constructor
+
 \begin{prooftree}
-\AxiomC{$Γ ⊢ (s\ \epsilon\ t) \overset{σ}{:} (S \parr T)$}
+\AxiomC{$Γ ⊢ (s\ \gamma\ t) \overset{σ}{:} (S \parr T)$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$s \ ▶\ u$}
+\AxiomC{$t \ ▶\ v$}
+\RightLabel{$\gamma$-Erase-+}
+\QuaternaryInfC{$Γ ⊢ (u\ \gamma\ v) \overset{σ}{:} (S \parr T) \ ▶\ (u\ \gamma\ v)$}
+\end{prooftree}
+
+The constructor is erased to the untyped constructor.
+
+##### Destructor
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ ⊙\ M \overset{σ}{:} (S ⊗ T)$}
+\AxiomC{$σ /= 0$}
+\AxiomC{$M \ ▶\ u$}
+\RightLabel{$⊙$-Erase-+}
+\TrinaryInfC{$Γ ⊢ ⊙\ M \overset{σ}{:} (S ⊗ T) \ ▶\ ⊙ u$}
+\end{prooftree}
+
+The destructor is erased to the untyped destructor.
+
+#### Additive conjunction
+
+##### Constructor
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ (s\ \epsilon\ t) \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T$}
 \AxiomC{$σ /= 0$}
 \AxiomC{$s \ ▶\ u$}
 \AxiomC{$t \ ▶\ v$}
 \RightLabel{$\epsilon$-Erase-+}
-\QuaternaryInfC{$Γ ⊢ (u\ \epsilon\ v) \overset{σ}{:} (S \parr T) \ ▶\ (u\ \epsilon\ v)$}
+\QuaternaryInfC{$Γ ⊢ (s\ \epsilon\ t) \overset{σ}{:} (x \overset{π}{:} S)\ \&\ T \ ▶\ u \epsilon v$}
 \end{prooftree}
 
-- what if one erases to nothing?
+The constructor is erased to the untyped constructor.
 
-#### Additive conjunction
+Question: what if $π = 0$?
+
+##### Destructors
 
 \begin{prooftree}
 \AxiomC{$Γ ⊢ fst_{\&}\ t \overset{σ}{:} S$}
@@ -137,10 +215,7 @@ In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the c
 \TrinaryInfC{$snd_{\&}\ M\ ▶\ snd_{\&}\ u$}
 \end{prooftree}
 
-- Constructors, destructors erase to themselves.
-- How to split up - what if first element is 1-usage, second element 0-usage (e.g. term and proof about it)?
-
-Other terms erase as you would expect.
+The destructors are erased to the untyped destructors.
 
 ## Erasure from elementary affine core
 
