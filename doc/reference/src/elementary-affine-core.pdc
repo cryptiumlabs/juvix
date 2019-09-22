@@ -1,6 +1,6 @@
-- Alter to simple dependently-typed version
+Intermediary form to check stratification for compatibility with the abstract algorithm.
+
 - Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
-- Add & reason through arguments for correctness
 
 ## Syntax
 
@@ -8,10 +8,6 @@ Define:
 
 1. Formulae $A, B ::= \ α\ |\ A ⊸ B\ |\ !A$.
 1. Terms $t, u ::= x\ |\ λx.t\ |\ t\ u\ |\ !t\ |\ \bar{!}t$.
-
-## Semantics
-
-For well-typed terms, as the untyped lambda calculus (simply erase the bangs).
 
 ## Typing rules
 
@@ -58,11 +54,7 @@ For well-typed terms, as the untyped lambda calculus (simply erase the bangs).
 
 \end{figure}
 
-## Erasure to untyped lambda calculus
-
-Define erasure map $(-)$, just delete the $!$s.
-
-## Type inference
+## Box placement inference
 
 Adapted from previous work [@feasible-algorithm-typing-eal].
 

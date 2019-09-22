@@ -1,6 +1,6 @@
 The erased core captures the operational semantics of the core language, erasing contemplated (zero-usage) terms and dropping type & usage annotations which are not computationally necessary. Core terms can be erased directly or first passed through the elementary affine stratification checker in order to test compatibility with the abstract algorithm.
 
-Analogously to core, the erased core language is parameterised over a set $C$ of primitive constants, a set $F$ of primitive functions, and a set $→_{f_i}$ of associated reduction rules.
+Analogously to core, the erased core language is parameterised over a set $C$ of primitive constants, a set $F$ of primitive functions, and a set $→_{f}$ of associated reduction rules.
 
 ## Syntax
 
@@ -220,3 +220,7 @@ The destructors are erased to the untyped destructors.
 ## Erasure from elementary affine core
 
 Drop the $!$s and the $\bar{!}$s, discard type information.
+
+## Reduction semantics
+
+As core, sans the types.

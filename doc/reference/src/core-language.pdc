@@ -66,9 +66,9 @@ Let $S$ be a set of sorts $(i, j, k)$ with a total order.
 
 Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
 
-Let $F$ be the set of primitive functions, where each $f_i$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f_i}$, which provided an argument of the function input type computes an argument of the function output type.
+Let $F$ be the set of primitive functions, where each $f$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f}$, which provided an argument of the function input type computes an argument of the function output type.
 
-Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Core is erased, so they must be directly supported by the low-level execution model. The core type theory and subsequent compilation pathways are parameterised over $K$, $C$, $F$, $⋮$, and the reduction operations $→_{f_i}$, which are assumed to be available as implicit parameters.
+Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Core is erased, so they must be directly supported by the low-level execution model. The core type theory and subsequent compilation pathways are parameterised over $K$, $C$, $F$, $⋮$, and the reduction operations $→_{f}$, which are assumed to be available as implicit parameters.
 
 ## Syntax
 
@@ -515,7 +515,7 @@ To-do: do we need a rule for term equality?
 
 To-do: check if we can safely allow sub-usaging if the ring is the natural numbers, discuss here.
 
-## Semantics
+## Reduction semantics
 
 Contraction is $(λx.t : (π x : S) → T)\ s ⇝_{β} (t:T)[x := s:S]$.
 
@@ -531,9 +531,9 @@ A binary relation $R$ has the diamond property iff. $∀ s p q . s R p ∧ s R q
 
 Let parallel reduction be $▷$, operating on usage-erased terms, by mutual induction.
 
-To-do: needs to consider cost accounting.
+> Note: The theorem prover will support a special n-step beta equality, where the step count refers to contraction rule applications.
 
-> Note: The theorem prover will support a special one-step beta equality, which stops at the first application of contraction.
+#### Basic lambda calculus
 
 \begin{prooftree}
 \AxiomC{$$}
@@ -557,12 +557,6 @@ To-do: needs to consider cost accounting.
 \end{prooftree}
 
 \begin{prooftree}
-\AxiomC{$t ▷ t'$}
-\AxiomC{$T ▷ T'$}
-\BinaryInfC{$t : T  ▷ t'$}
-\end{prooftree}
-
-\begin{prooftree}
 \AxiomC{$f ▷ f'$}
 \AxiomC{$s ▷ s'$}
 \BinaryInfC{$f s ▷ f' s'$}
@@ -582,9 +576,110 @@ To-do: needs to consider cost accounting.
 \QuaternaryInfC{$(λx.t : (x : S) → T) s ▷ (t' : T') [x := s' : S']$}
 \end{prooftree}
 
+#### Linear connectives
+
+##### Multiplicative conjunction
+
+\begin{prooftree}
+\AxiomC{$S ▷ S'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$(x : S) ⊗ T ▷ (x : S') ⊗ T'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$s ▷ s'$}
+\AxiomC{$t ▷ t'$}
+\BinaryInfC{$(s, t) ▷ (s', t')$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$z ▷ (m, n)$}
+\AxiomC{$m ▷ m'$}
+\AxiomC{$n ▷ n'$}
+\AxiomC{$s ▷ s'$}
+\QuaternaryInfC{$let\ (x, y)\ =\ z\ in\ s ▷ s' [x := m', y := n']$}
+\end{prooftree}
+
+Reduction takes place inside a multiplicative conjunction.
+
+##### Multiplicative disjunction
+
+\begin{prooftree}
+\AxiomC{$S ▷ S'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$S \parr T ▷ S' \parr T'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$s ▷ s'$}
+\AxiomC{$t ▷ t'$}
+\BinaryInfC{$s\ \gamma\ t ▷ s'\ \gamma\ t'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ m\ \gamma\ n$}
+\AxiomC{$m ▷ m'$}
+\AxiomC{$n ▷ n'$}
+\TrinaryInfC{$⊙\ t ▷ (m', n')$}
+\end{prooftree}
+
+Reduction takes place inside a multiplicative disjunction.
+
+##### Additive disjunction
+
+\begin{prooftree}
+\AxiomC{$S ▷ S'$}
+\AxiomC{$T ▷ T'$}
+\BinaryInfC{$(x : S) \& T ▷ (x : S') ⊗ T'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ m\ \epsilon\ n$}
+\AxiomC{$m ▷ m'$}
+\BinaryInfC{$fst_{\&}\ t ▷ m'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$t ▷ m\ \epsilon\ n$}
+\AxiomC{$n ▷ n'$}
+\BinaryInfC{$snd_{\&}\ t ▷ n'$}
+\end{prooftree}
+
+Reduction does not take place until a destructor has been applied.
+
+### Self types
+
+\begin{prooftree}
+\AxiomC{$T ▷ T'$}
+\UnaryInfC{$ιx.T ▷ ιx.T'$}
+\end{prooftree}
+
+### Primitives
+
+\begin{prooftree}
+\AxiomC{$\kappa \in K$}
+\UnaryInfC{$\kappa ▷ \kappa$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$c \in C$}
+\UnaryInfC{$c ▷ c$}
+\end{prooftree}
+
+Primitive types and primitive constants reduce to themselves.
+
+\begin{prooftree}
+\AxiomC{$f \in F$}
+\AxiomC{$x ▷ x'$}
+\AxiomC{$x' →_{f} y$}
+\TrinaryInfC{$f x ▷ y$}
+\end{prooftree}
+
+Primitive functions reduce according to the reduction operation defined for the function.
+
 ## Typechecking
 
-Lay out syntax-directed typechecker following McBride's paper.
+To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ## Examples
 
