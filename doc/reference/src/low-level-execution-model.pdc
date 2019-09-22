@@ -364,11 +364,6 @@ The oracle-free abstract algorithm for optimal reduction operates on four node t
   \end{subfigure}
 \end{figure}
 
-\floatstyle{boxed}
-\restylefloat{figure}
-
-
-
 ### Linear connectives
 
 #### Multiplicative conjunction
@@ -426,11 +421,144 @@ Note that this means reduction within $a$ and $b$, insofar as it depends on the 
 
 ##### Rewrite rules
 
-### Primitive functions & constants
+### Primitive constants
 
 #### Constructors
 
 #### Rewrite rules
+
+\begin{figure}[H]
+  \caption{Constant-fan commutation}
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inetcell[]{a}{$f_i$}[5]
+      \inode[below = 40 pt]{b}{$c \in C$}
+      \inwire[]{a/1}{a}
+      \inwire[]{a/4}{d}
+      \cutWire{a.out}{b.north}{}{}
+    \end{tikzpicture}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.05\textwidth}
+    \huge{→}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inode[]{a}{$c$}
+      \inode[right = 20 pt]{b}{$c$}
+      \inwire[]{a}{a}
+      \inwire[]{b}{d}
+    \end{tikzpicture}
+  \end{subfigure}
+\end{figure}
+
+\begin{figure}[H]
+  \caption{Constant-eraser annihilation}
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inode[]{a}{$c \in C$}
+      \inode[below = 40 pt]{b}{$⊗$}
+      \vwire{a}{b}
+    \end{tikzpicture}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.05\textwidth}
+    \huge{→}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.1\textwidth}
+  \end{subfigure}
+\end{figure}
+
+### Primitive functions
+
+To-do: we need curriend functions for this case too. Should we just combine this with bespoke encoding?
+
+#### Constructors
+
+#### Rewrite rules
+
+\begin{figure}[H]
+  \caption{Function-fan commutation}
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inetcell[]{a}{$f_i$}[5]
+      \inode[below = 40 pt]{b}{$f$}
+      \inwire[]{a/1}{a}
+      \inwire[]{a/4}{d}
+      \cutWire{a.out}{b.north}{}{}
+    \end{tikzpicture}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.05\textwidth}
+    \huge{→}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inode[]{a}{$f$}
+      \inode[right = 20 pt]{b}{$f$}
+      \inwire[]{a}{a}
+      \inwire[]{b}{d}
+    \end{tikzpicture}
+  \end{subfigure}
+\end{figure}
+
+To-do: this is wrong, deal with $n$ ports.
+
+\begin{figure}[H]
+  \caption{Function-eraser commutation}
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inetcell[]{a}{$f$}[5]
+      \inode[below = 40 pt]{b}{$⊗$}
+      \inwire[]{a/1}{a}
+      \inwire[]{a/4}{d}
+      \cutWire{a.out}{b.north}{}{}
+    \end{tikzpicture}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.05\textwidth}
+    \huge{→}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inode[]{a}{$⊗$}
+      \inode[right = 20 pt]{b}{$⊗$}
+      \inwire[]{a}{a}
+      \inwire[]{b}{d}
+    \end{tikzpicture}
+  \end{subfigure}
+\end{figure}
+
+Generalises to $n$ auxiliary ports - a new eraser node is attached to each.
+
+\begin{figure}[H]
+  \caption{Function-constant application}
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inetcell[]{a}{$f$}[5]
+      \inetcell[rotate = 180, below = 50 pt]{l}{\rotatebox[origin=c]{180}{$c \in C$}}[5]
+      \inwire[]{a/1}{a}
+      \cutWire{a.out}{l.out}{}{}
+    \end{tikzpicture}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.05\textwidth}
+    \huge{→}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[c]{0.1\textwidth}
+    \begin{tikzpicture}
+      \inode[]{r}{$r$}
+      \inwire[]{r}{a}
+    \end{tikzpicture}
+  \end{subfigure}
+\end{figure}
+
+Where $r$ is the result of reducing $f c$ according to the defined rule $→_f$.
 
 ### Bespoke encoding
 
@@ -487,6 +615,9 @@ In general, we have no idea of the size (and corresponding read-back cost) of $A
 
 - Primitive types (integer, string, bytes) ~> node types w/data
 - User-defined ADTs can be turned into custom nodes
+
+\floatstyle{boxed}
+\restylefloat{figure}
 
 ## Argument for correctness of the abstract algorithm
 

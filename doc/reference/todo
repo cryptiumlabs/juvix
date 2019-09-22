@@ -1,0 +1,7 @@
+critical
+- define elementary affine core precisely, think about adapting inference algorithm, start adapting inference algorithm
+- more inet rewrite rules, fill in missing sections, duplicator interactions, eraser interactions (maybe generalise)
+- more discussion of reduction strategies
+
+not critical
+- cost accounting particulars
