@@ -1,4 +1,4 @@
-personal_ws-1.1 en 351 
+personal_ws-1.1 en 352 
 succ
 textwidth
 AST
@@ -241,8 +241,8 @@ vdash
 lavenderpurple
 Milner
 unintuitive
-tikz
 TikZ
+tikz
 refl
 deconstructor
 tikzstyle
@@ -268,6 +268,7 @@ usaging
 imprecisions
 antiquefuchsia
 logicproof
+Solana
 tt
 nilX
 instantiation

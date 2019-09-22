@@ -19,9 +19,12 @@ Syntax options:
 - Algebraic datatypes
 - Elaboration, tactics a la Idris
 - Holes
-- Type inference (when possible)
 
-Most features simply desugar to Core.
+- Usage inference (where possible)
+- Resource inference (where possible)
+- Type inference (where possible)
+
+All feature desugar to Core (with several passes, typeclass lookup, etc.)
 
 ## Lambda-encoding of algebraic datatypes
 

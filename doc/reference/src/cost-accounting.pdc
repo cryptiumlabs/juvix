@@ -90,3 +90,10 @@ Conclusions (tentative):
 - Think more about how to deal with runtime fusion, as it results from semantics, not syntax.
 - Think more about explicit parallelism and how that will interact with the cost model.
 - Think more about how QTT will interact with the cost model or could render inference easier.
+
+## Machine-level optimisations
+
+- Requires formalised VM semantics of particular machine model (in Juvix)
+- User can prove semantic equivalence of machine instruction sequences
+- Compiler can pick which instruction sequence is cheaper and compile to it (& pick differently in different cases)
+- Must be tied into cost accounting

@@ -585,69 +585,6 @@ To-do: needs to consider cost accounting.
 
 Lay out syntax-directed typechecker following McBride's paper.
 
-## Erasure
-
-- Define erasure to untyped lambda calculus following McBride's paper.
-- Define erasure to dependent elementary affine logic analogously (but not erasing the pi types).
-
-Let programs of the untyped lambda calculus be $p ::= x\ |\ λx.p\ |\ p\ p\ |\ c$ where $c \in C$ is a primitive constant.
-
-Define the erasure operator $▶$, such that erasure judgements take the form $Γ ⊢ t \overset{σ}{:} S \ ▶\  p$.
-
-\begin{prooftree}
-\AxiomC{$$}
-\RightLabel{Prim-Erase}
-\UnaryInfC{$c \ ▶\  c$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$⊢ 0Γ,x \overset{σ}{:} S, 0Γ′$}
-\RightLabel{Var-Erase-+}
-\UnaryInfC{$0Γ,x \overset{σ}{:} S, 0Γ′ ⊢ x \overset{σ}{:} S \ ▶\  x$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$t \overset{σ}{:} T \ ▶\  p$}
-\AxiomC{$σπ = 0$}
-\RightLabel{Lam-Erase-0}
-\BinaryInfC{$λx.t : (x \overset{π}{:} S) → T \ ▶\  p$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$t \overset{σ}{:} T \ ▶\  p$}
-\AxiomC{$σπ /= 0$}
-\RightLabel{Lam-Erase-+}
-\BinaryInfC{$λx.t : (x \overset{π}{:} S) → T \ ▶\  λx.p$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T \ ▶\  p$}
-\AxiomC{$Γ_2 ⊢ N \overset{0}{:} S$}
-\AxiomC{$σπ = 0$}
-\RightLabel{App-Erase-0}
-\TrinaryInfC{$Γ_1 ⊢ M N \overset{σ}{:} T[x := N] \ ▶\  p$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T \ ▶\  p$}
-\AxiomC{$Γ_2 ⊢ N \overset{σπ}{:} S \ ▶\  p'$}
-\AxiomC{$σπ /= 0$}
-\RightLabel{App-Erase-+}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N] \ ▶\  p\ p'$}
-\end{prooftree}
-
-In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $p$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it, only contemplate it.
-
-Other terms erase as you would expect.
-
-To-do:
-
-- Constants $c \in C$ erase to themselves
-- Functions $f \in F$ erase to themselves
-- Function applications $f x$ of primitive $f \in F$ erase to $f (▶ x)$.
-
-Computationally relevant terms are preserved, while terms which are only contemplated are erased.
-
 ## Examples
 
 ### Church-encoded natural numbers

@@ -116,13 +116,17 @@ header-includes:
 
 !include src/core-language.pdc
 
-# Whole-program optimisation
+# Core optimisation
 
-!include src/whole-program-optimisation.pdc
+!include src/core-optimisation.pdc
 
 # Elementary affine core
 
 !include src/elementary-affine-core.pdc
+
+# Erased core language
+
+!include src/erased-core-language.pdc
 
 # Low-level execution model
 

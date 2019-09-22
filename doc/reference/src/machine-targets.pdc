@@ -2,6 +2,7 @@ Machine defines:
 
 - Primitive types
 - Primitive functions & costs
+- Primitive typing relation
 - Bespoke encoding path
 - (optionally) Interaction net interpreter
 - (optionally) Optimisation passes
@@ -24,6 +25,7 @@ Bespoke compilation path only.
 
 - Stack tracking
 - Calling conventions
+- Clear stack when variable won't be used again
 
 ## WASM
 
@@ -32,6 +34,10 @@ Target WASM. Parallelism?
 ## EVM
 
 Target EVM v1.x. Maybe pointless and should focus on eWASM instead.
+
+## Berkeley Packet Filter
+
+Target [BPF](https://en.wikipedia.org/wiki/Berkeley_Packet_Filter) possibly, Solana uses this.
 
 ## GPUs (CUDA / OpenCL)
 
