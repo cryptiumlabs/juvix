@@ -35,6 +35,8 @@ Computationally relevant terms are preserved, while terms which are only contemp
 
 Note that $σ /= 0$ must hold, as the erasure of a computationally irrelevant term is nothing.
 
+### Primitives & lambda terms
+
 \begin{prooftree}
 \AxiomC{$c \overset{σ}{:} S$}
 \AxiomC{$σ /= 0$}
@@ -88,8 +90,13 @@ Note that $σ /= 0$ must hold, as the erasure of a computationally irrelevant te
 
 In the *Lam-Erase-0* rule, the variable $x$ bound in $t$ will not occur in the corresponding $u$, since it is bound with usage $0$, with which it will remain regardless of how the context splits, so the rule *Var-Erase-+* cannot consume it.
 
+### Linear connectives
+
+- Constructors, destructors erase to themselves.
+- How to split up - what if first element is 1-usage, second element 0-usage (e.g. term and proof about it)?
+
 Other terms erase as you would expect.
 
 ## Erasure from elementary affine core
 
-Drop the $!$s and the $\bar{!}$s.
+Drop the $!$s and the $\bar{!}$s, discard type information.
