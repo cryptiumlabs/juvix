@@ -1,15 +1,26 @@
 Intermediary form to check stratification for compatibility with the abstract algorithm.
 
-- Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
+To-do: Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
 
 ## Syntax
 
-Define:
+Let erased core terms be $t$ and core types be $T$.
 
-1. Formulae $A, B ::= \ α\ |\ A ⊸ B\ |\ !A$.
-1. Terms $t, u ::= x\ |\ λx.t\ |\ t\ u\ |\ !t\ |\ \bar{!}t$.
+Define elementary affine core formulae as $A, B ::=\ T\ |\ !A$.
+
+Define elementary affine core terms as $u, v ::= t\ |\ !u\ |\ \bar{!}u$.
+
+Elementary affine core operates on an annotated version of erased core but requires preservation of a type mapping such that the types of free variables can be looked up.
 
 ## Typing rules
+
+As core, except:
+
+- Usage annotations erased
+- All variables must be linear
+- Added weakening rule
+- Different rules for contraction & promotion
+- Variables can occur twice in additive conjunction (but no more)
 
 \begin{figure}[H]
 \caption{Typing rules for EAL}
@@ -94,6 +105,8 @@ path(!t, x)       = \ ! :: path(t, x) \\
 path(\bar{!}t, x) = \ \bar{!}t :: path(t, x)
 \end{align}
 
+To-do: changes for full core, should be trivial.
+
 Define the **sum** of a path $s(p)$ as:
 
 \begin{align}
@@ -129,6 +142,8 @@ Extend that map to a partial map $Γ$ from subterms of $t$ to EAL formulae as:
 Γ(λx.u) = A ⊸ B\text{ if } Γ'(x) = A, Γ'(u) = B \\
 Γ(t_1 t_2) = B\text{ if }Γ'(t_2) = A\text{ and }Γ'(t_1) = A⊸B\text{, undefined otherwise}
 \end{align}
+
+To-do: changes for full core, trivial except dependent types: function result type is dependent, bangs work the same way.
 
 Let $(t, Γ)$ be a pair of a pseudo-term $t$ and an assignment $Γ$. $t$ satisfies the **typing condition** if:
 
@@ -187,6 +202,8 @@ Enumerate the bracketing, scope, and typing conditions as (i), (ii), and (iii) r
         1. Rename the free variables in common to the $u_i$s, apply a (prom) rule to obtain the judgements on $u_i$ and the judgement on $v$
         1. Then apply (contr) rules separately for the final judgement $∆' ⊢ t :\ !C$, concluding the proof
 
+To-do: update for full core. Should be trivial, except possibly dependent type case.
+
 ### Decoration
 
 Consider the **declaration problem**:
@@ -244,6 +261,11 @@ Define the **typing constraints** for $(t,Σ)$ as the set of linear inequations 
 - for any subterm of $t$ with the form $x$ where $x$ has at least two occurrences and $Σ(x) = !^m A$, add the constraint $m \ge 1$
 - for any parameter $m$ in $par(Σ)$, add the constraint $m \ge 0$
 
+To-do: update for full core. Changes:
+
+- variables can occur once on each side of an additive conjunction without the constraint
+- do we need a constraint for the value in dependent types? can it appear as a computational variable? e.g. a function from types to types (identity), then it would be computed with though. maybe we don't need to do anything here, but should reason about it
+
 \begin{theorem}
 Let $t$ be a parameterised pseudo-term and $Σ$ be a parameterised type-assignment for $t$ such that $Σ(t)$ is defined. Given an instantiation $φ$ for $(t, Σ)$, $φΣ$ is defined and $(φ(t), φΣ)$ satisfies the typing condition if and only if $φ$ is a solution of $C^{typ}(t, Σ)$.
 \end{theorem}
@@ -253,37 +275,3 @@ Let $t$ be a parameterised pseudo-term and $Σ$ be a parameterised type-assignme
 Generated constraints are simple integer (in)equalities and can be solved in polynomial time. At present Juvix exports them to Z3.
 
 Multiple solutions may exist, in which case the solution with the least number of box-annotations is selected.
-
-### Argument for correctness
-
-Re-run correctness argument from paper, adapt as necessary.
-
-### Extensions
-
-\begin{figure}[h]
-\caption{Typing rules for DTEAL (TODO)}
-
-\begin{prooftree}
-\AxiomC{$Γ,x:A ⊢ t:B$}
-\RightLabel{abst}
-\UnaryInfC{$Γ ⊢ λx.t: \prod A. B$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$Γ,x:A ⊢ B: *$}
-\RightLabel{pi}
-\UnaryInfC{$Γ ⊢ \prod x: A. B : *$}
-\end{prooftree}
-
-\begin{prooftree}
-\AxiomC{$Γ_1 ⊢ t_1:\prod A. B$}
-\AxiomC{$Γ_2 ⊢ t_2:A$}
-\RightLabel{app}
-\BinaryInfC{$Γ_1,Γ_2 ⊢ (t_1 t_2):B[t_2/A]$}
-\end{prooftree}
-
-\end{figure}
-
-Q: Can we just split up the context in the (app) rule without problems? Equivalent to zero-usage in QTT?
-
-think about how to correctly translate r = lam-case 1 -> 2Y; 2 -> 3Z, h = (r & x) -> a, constraints should reflect dependently-typed usage calculations (though maybe we don't care for >= 2 usages).

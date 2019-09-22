@@ -120,13 +120,13 @@ header-includes:
 
 !include src/core-optimisation.pdc
 
-# Elementary affine core
-
-!include src/elementary-affine-core.pdc
-
 # Erased core language
 
 !include src/erased-core-language.pdc
+
+# Elementary affine core
+
+!include src/elementary-affine-core.pdc
 
 # Low-level execution model
 
