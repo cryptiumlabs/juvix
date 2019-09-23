@@ -3,7 +3,7 @@ module Juvix.EAL.Types where
 import qualified Data.Text             as T
 import qualified Juvix.Utility.HashMap as Map
 import           Juvix.Library         hiding (Type)
-import           Juvix.Utility
+import           Juvix.Utility         hiding (Map)
 
 -- Untyped term.
 data Term
