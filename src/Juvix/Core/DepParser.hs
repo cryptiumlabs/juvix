@@ -43,7 +43,7 @@ languageDef =
         [ "Inf"
         , "Lam"
         , ":"
-        , ":@:" --application
+        , "App" --application
         ]
     }
 
@@ -75,19 +75,21 @@ parseSimpleI ∷ (String, b) → Parser b
 parseSimpleI (str, term) = reserved str >> return term
     --List of simple ITerms without inputs
 
+reservedSimple ∷ [(String, ITerm)]
 reservedSimple = [("*", Star), ("Nat", Nat), ("Zero", Zero)]
 
 annTerm ∷ Parser ITerm
-annTerm =
-  do reserved "Ann"
-     theTerm <- ctermOnly
-     theType <- ctermOnly
-     return $ Ann theTerm theType
-     <|> do
+annTerm = do
+  reserved "Ann"
+  theTerm <- ctermOnly
+  theType <- ctermOnly
+  return $ Ann theTerm theType
+   {-  <|> do
     theTerm <- ctermOnly --Idris annotation syntax
     reservedOp ":"
     theType <- ctermOnly
     return $ Ann theTerm theType
+-}
 
 piTerm ∷ Parser ITerm
 piTerm = do
@@ -214,7 +216,7 @@ freeTerm = do
 
 appTerm ∷ Parser ITerm
 appTerm = do
-  reservedOp ":@:"
+  reservedOp "App"
   var <- iterm
   func <- ctermOnly
   eof
@@ -230,7 +232,7 @@ parseWhole a = do
 
 iterm ∷ Parser ITerm
 iterm =
-  Text.Parsec.try appTerm <|> parens iterm <|>
+  parens iterm <|>
   foldr1 (<|>) (map parseSimpleI reservedSimple) --ITerms without inputs
    <|>
   annTerm --ITerms with CTerms as input(s).
@@ -248,6 +250,8 @@ iterm =
   boundTerm --Bound var
    <|>
   freeTerm --Free var
+   <|>
+  appTerm
 
 infTerm ∷ Parser CTerm
 infTerm = do
@@ -257,12 +261,17 @@ infTerm = do
 
 lamTerm ∷ Parser CTerm
 lamTerm = do
-  reservedOp "Lam"
+  reservedOp "\\"
   cTerm <- ctermOnly
   return $ Lam cTerm
 
+convITerm ∷ Parser CTerm
+convITerm = do
+  theTerm <- iterm
+  return $ Inf theTerm
+
 cterm ∷ Parser CTerm
-cterm = parens cterm <|> infTerm <|> lamTerm
+cterm = parens cterm <|> infTerm <|> lamTerm <|> convITerm
 
 cOriTerm ∷ Parser (Either ITerm CTerm)
 cOriTerm = Text.Parsec.try (Left <$> iterm) <|> (Right <$> cterm)
