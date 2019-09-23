@@ -1003,16 +1003,25 @@ We now shall define one more definition before getting to our main theorem.
 
 - Evaluate call-by-need, weak head normal form
 - Minimise number of beta-reductions
+- No parallelism unless provably optimal (maybe in the case of par?)
 
 ### Parallel
 
 - Evaluate all primary pairs each step
-
-#### Safety under concurrency
-
-- How to avoid locks in rewriting?
+- Maybe, if the number of cores exceeds the possible parallelism
 
 ### Hybridised
 
 - Use parallel annotations
-- Consider cache locality, thread affinity
+- Use finite number of threads (~ number of available cores)
+- Use proofs about terms being used to annotate graph?
+
+### Implementation concerns
+
+#### Thread affinity & cache locality
+
+- Tie a thread to a spacial area of the interaction net.
+
+#### Safety under concurrency
+
+- How to avoid locks in rewriting?
