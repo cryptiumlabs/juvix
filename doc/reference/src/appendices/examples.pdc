@@ -1,7 +1,10 @@
 Examples of Juvix high level language, core translation, interaction net evaluation (full pipeline).
 
-Possible ideas (all with proofs):
+Possible ideas (all with proofs of correctness & bounded resource consumption):
 
 - Fungible & nonfungible token contracts
-- Social recovery - complex predicate account
+- Multi-signature contract with functional restrictions
+- Social recovery: complex predicate account
 - Prediction market with pluggable oracle
+- Simple shielded circuit with zero-knowledge types
+- Light client with proofs (ambitious, could start with PoA)
