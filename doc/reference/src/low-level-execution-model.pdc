@@ -1001,27 +1001,53 @@ We now shall define one more definition before getting to our main theorem.
 
 ### Lazy (Levy-optimal)
 
-- Evaluate call-by-need, weak head normal form
-- Minimise number of beta-reductions
-- No parallelism unless provably optimal (maybe in the case of par?)
+#### Algorithm
+
+1. Lazy: stop when root node is a constructor = root node connected by principal port to operator
+1. Each step:
+    1. Look for leftmost-outermost redex: starting from root of term, traverse any operator reached by an auxiliary port by existing from its principal port until we reach an operator at a principal port
+        1. Either the previous operator was the root node, in which case halt
+        1. Or we have found a redex (principal pair) - fire the redex and start again from the root
+    1. To avoid re-scanning the term from the root, push operators onto a stack while traversing
+        1. After firing a redex, pop the last operator and restart search
+
+#### Properties
+
+1. Minimises number of beta-reductions
+1. No parallelism
 
 ### Parallel
 
-- Evaluate all primary pairs each step
-- Maybe, if the number of cores exceeds the possible parallelism
+#### Algorithm
+
+1. Evaluate all primary pairs each step
+1. Initially scan for primary pairs, then only examine changed nodes each step
+
+#### Properties
+
+1. Maximally parallel
+1. Scanning may be expensive
+1. May reduce unnecessary redexes (compared to lazy algorithm)
+1. Unlikely to make sense if possible parallelism exceeds number of available cores
 
 ### Hybridised
 
-- Use parallel annotations
-- Use finite number of threads (~ number of available cores)
-- Use proofs about terms being used to annotate graph?
+#### Algorithm
+
+1. As lazy, but when parallel annotations are hit, fork process (or assign thread up to number of processors)
+
+#### Properties
+
+1. Requires parallel annotations placed by the compiler
+    1. Can definitely be placed when $\parr$ types are used
+    1. Use proofs about terms being used to annotate graph?
 
 ### Implementation concerns
 
 #### Thread affinity & cache locality
 
-- Tie a thread to a spacial area of the interaction net.
+1. Tie a thread to a spacial area of the interaction net.
 
 #### Safety under concurrency
 
-- How to avoid locks in rewriting?
+1. How to avoid locks in rewriting?
