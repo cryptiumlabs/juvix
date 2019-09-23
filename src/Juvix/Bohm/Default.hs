@@ -3,10 +3,10 @@
 module Juvix.Bohm.Default where
 
 import           Juvix.Bohm.Shared
-import qualified Juvix.Bohm.Type   as BT
-import           Juvix.Library     hiding (empty, link)
+import qualified Juvix.Bohm.Type       as BT
+import           Juvix.Library         hiding (empty, link)
 
-import qualified Data.Map.Strict   as Map
+import qualified Juvix.Utility.HashMap as Map
 import           Text.Parsec.Expr
 
 onIntGen ∷ (Int → Int → a) → Primitive → Primitive → Maybe a
@@ -61,7 +61,7 @@ and' = onBool (&&)
 or' ∷ Primitive → Primitive → Maybe Primitive
 or' = onBool (||)
 
-defaultEnv ∷ Map Symbol BT.Fn
+defaultEnv ∷ Map.Map Symbol BT.Fn
 defaultEnv =
   Map.fromList
     [ (intern "plus", BT.Arg2 plus)

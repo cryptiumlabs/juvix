@@ -51,7 +51,7 @@ instance Show ((->) a b) where
   show _ = "fun"
 
 
-newtype Symbol = Sym Text deriving (Eq, Ord)
+newtype Symbol = Sym Text deriving (Eq, Hashable)
 
 instance Show Symbol where
   show (Sym t) = T.unpack t

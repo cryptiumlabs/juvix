@@ -1,11 +1,13 @@
 module Juvix.EAL.EAL where
 
-import           Control.Arrow   (left)
-import qualified Data.Map.Strict as Map
-import qualified Juvix.Bohm.Type as BT
+import           Control.Arrow         (left)
+import           Prelude               (error)
+
+import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Bohm.Type       as BT
 import           Juvix.EAL.Types
-import           Juvix.Library   hiding (Type, link, reduce)
-import           Prelude         (error)
+import           Juvix.Library         hiding (Type, link, reduce)
+
 
 {- Main functionality. -}
 
@@ -205,7 +207,7 @@ bracketChecker t = runEither (rec' t 0 mempty)
             | changeBy + n + x == 0 = pure ()
             | changeBy + n + x >  0 = throw @"typ" TooManyOpenV
             | otherwise             = throw @"typ" TooManyClosingV
-      in case Map.lookup sym map of
+      in case map Map.!? sym of
         Just x  → f x
         Nothing → f 0
     rec' (RBang changeBy t) n map

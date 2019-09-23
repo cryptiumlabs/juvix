@@ -8,13 +8,14 @@ import           Prelude                 (error)
 import           Juvix.Encoding.Encoding
 import           Juvix.Encoding.Types
 import           Juvix.Library           hiding (Product, Sum)
+import qualified Juvix.Utility.HashMap   as Map
 
 -- TODO ∷ Properly setup a function transfrom to make it self terminate
 
 -- | adtToMendler converts an adt into an environment where the mendler
 -- encoding is defined for case functions
-adtToMendler ∷ ( HasState "constructors" (Map Symbol Bound)    m
-               , HasState "adtMap"       (Map Symbol Branches) m
+adtToMendler ∷ ( HasState "constructors" (Map.Map Symbol Bound)    m
+               , HasState "adtMap"       (Map.Map Symbol Branches) m
                , HasThrow "err"          Errors                    m )
              ⇒ Name → m ()
 adtToMendler (Adt name s) = sumRec s 0
@@ -55,12 +56,11 @@ adtToMendler (Adt name s) = sumRec s 0
                                   (Value $ intern "x"))))
 
 
-mendlerCase ∷ ( HasState "constructors" (Map Symbol Bound)    m
-              , HasState "adtMap"       (Map Symbol Branches) m
-              , HasThrow "err"          Errors                    m
-              , HasWriter "missingCases" [Symbol]             m )
+mendlerCase ∷ ( HasState "constructors"  (Map.Map Symbol Bound)    m
+              , HasState "adtMap"        (Map.Map Symbol Branches) m
+              , HasThrow "err"           Errors                    m
+              , HasWriter "missingCases" [Symbol]                  m )
             ⇒ Switch → m Lambda
-
 mendlerCase c = do
   expandedCase ← caseGen c onNoArg onrec
   case expandedCase of
