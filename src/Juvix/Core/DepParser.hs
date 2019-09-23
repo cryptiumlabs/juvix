@@ -1,7 +1,7 @@
 module Juvix.Core.DepParser where
 
 import           Data.Functor.Identity
-import           Juvix.Core.MainLang
+import           Juvix.Core.DepMainLang
 import           Prelude
 import           Text.Parsec
 import           Text.ParserCombinators.Parsec
