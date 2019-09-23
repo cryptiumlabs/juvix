@@ -425,6 +425,15 @@ Note that this means reduction within $a$ and $b$, insofar as it depends on the 
 
 #### Constructors
 
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \inode[]{c}{$c$}
+    \outwire[]{c}{$$}
+  \end{tikzpicture}
+\end{figure}
+
+Primitive constants are encoded as simple custom nodes.
+
 #### Rewrite rules
 
 \begin{figure}[H]
@@ -473,9 +482,20 @@ Note that this means reduction within $a$ and $b$, insofar as it depends on the 
 
 ### Primitive functions
 
-To-do: we need curriend functions for this case too. Should we just combine this with bespoke encoding?
+To-do: we need curried functions for this case too. Should we just combine this with bespoke encoding?
 
 #### Constructors
+
+\begin{figure}[H]
+  \begin{tikzpicture}
+    \inetbigcell[below = 20pt]{f}{$f$}[5]
+    \outwire[]{f.out}{$$}
+    \outwire[]{f/1}{$$}
+    \outwire[]{f/4}{$$}
+  \end{tikzpicture}
+\end{figure}
+
+Functions $f$ of arity $n$ are encoded as custom nodes with $n - 1$ auxiliary ports.
 
 #### Rewrite rules
 
@@ -540,7 +560,7 @@ Generalises to $n$ auxiliary ports - a new eraser node is attached to each.
   \begin{subfigure}[c]{0.1\textwidth}
     \begin{tikzpicture}
       \inetcell[]{a}{$f$}[5]
-      \inetcell[rotate = 180, below = 50 pt]{l}{\rotatebox[origin=c]{180}{$c \in C$}}[5]
+      \inetcell[rotate = 180, below = 50 pt]{l}{\rotatebox[origin=c]{180}{$c$}}[5]
       \inwire[]{a/1}{a}
       \cutWire{a.out}{l.out}{}{}
     \end{tikzpicture}
@@ -613,8 +633,7 @@ In general, we have no idea of the size (and corresponding read-back cost) of $A
 
 #### Datatypes
 
-- Primitive types (integer, string, bytes) ~> node types w/data
-- User-defined ADTs can be turned into custom nodes
+- Primitive types (integer, string, bytes) ~> node types w/data (same as constants)
 
 \floatstyle{boxed}
 \restylefloat{figure}
