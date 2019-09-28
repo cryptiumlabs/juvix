@@ -1,12 +1,22 @@
 Intermediary form to check stratification for compatibility with the abstract algorithm.
 
-To-do: Figure out what constraints are required for pi types, see https://hal.archives-ouvertes.fr/hal-00021834/document p15, can we do the same thing?
-
 ## Syntax
 
 Let erased core terms be $t$ and core types be $T$.
 
 Define elementary affine core formulae as $A, B ::=\ T\ |\ !A$.
+
+\begin{figure}[H]
+\begin{align*}
+T &::= ∗_i\ & \text{sort $i$} \\
+&\ \ \ \ \ \ |\ \kappa \in K & \text{primitive type} \\
+&\ \ \ \ \ \ |\ (x : S) → T\ & \text{dependent function type} \\
+&\ \ \ \ \ \ |\ (x : S) ⊗ T\ & \text{dependent multiplicative conjunction type} \\
+&\ \ \ \ \ \ |\ (x : S)\ \&\ T\ & \text{dependent additive conjunction type} \\
+&\ \ \ \ \ \ |\ T \parr T & \text{non-dependent multiplicative disjunction type} \\
+&\ \ \ \ \ \ |\ !T & \text{bang-type} \\
+\end{align*}
+\end{figure}
 
 Define elementary affine core terms as $u, v ::= t\ |\ !u\ |\ \bar{!}u$.
 
