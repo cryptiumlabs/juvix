@@ -3,7 +3,8 @@
 module Juvix.Bohm.Translation(astToNet, netToAst) where
 
 import           Data.List                ((!!))
-import qualified Data.Map.Strict          as Map
+import qualified Juvix.Utility.HashMap as Map
+--import qualified Data.Map.Strict          as Map
 import           Prelude                  (error)
 
 import           Juvix.Backends.Interface
@@ -15,14 +16,14 @@ import           Juvix.NodeInterface
 
 data Env net = Env { level :: Int
                    , net'  :: net B.Lang
-                   , free  :: Map Symbol (Node, PortType)
+                   , free  :: Map.Map Symbol (Node, PortType)
                    } deriving (Generic)
 
 newtype EnvState net a = EnvS (State (Env net) a)
   deriving (Functor, Applicative, Monad)
   deriving (HasState "level" Int) via
     Rename "level" (Field "level" () (MonadState (State (Env net))))
-  deriving (HasState "free" (Map Symbol (Node, PortType))) via
+  deriving (HasState "free" (Map.Map Symbol (Node, PortType))) via
     (Field "free" () (MonadState (State (Env net))))
   deriving (HasState "net" (net B.Lang)) via
     Rename "net'" (Field "net'" () (MonadState (State (Env net))))
@@ -173,11 +174,11 @@ data FanStatus = In FanPorts
                deriving Show
 
 netToAst ∷ DifferentRep net ⇒ net B.Lang → Maybe BT.Bohm
-netToAst net = evalEnvState run (Env 0 net mempty)
+netToAst net = evalEnvState run (Env 0 net Map.empty)
   where
     run = do
       -- rec' assumes that we are given a statement at the top of the graphical AST
-      let rec' n comeFrom fanMap nodeVarMap = do
+      let rec' n comeFrom fanMap nodeVarInfo@(nodeVarMap, nodeVarLengh) = do
             port ← B.langToProperPort n
             case port of
               Nothing → pure Nothing
@@ -186,9 +187,9 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                   B.IsAux3 {B._tag3 = tag, B._prim = prim, B._aux2 = aux2, B._aux3 = aux3} →
                     case (prim, aux2, aux3) of
                       (Primary p, Auxiliary a2, Auxiliary a3) → do
-                        p  ← rec' p  (Just (n, Prim)) fanMap nodeVarMap
-                        a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarMap
-                        a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarMap
+                        p  ← rec' p  (Just (n, Prim)) fanMap nodeVarInfo
+                        a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                        a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
                         let tag' = case tag of
                                     B.IfElse     → BT.If
                                     B.Curried3 f → BT.Curried3 f
@@ -198,26 +199,26 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                     let parentAux1 con = do
                           case (prim, aux2) of
                             (Primary p, Auxiliary a2) → do
-                              p  ← rec' p  (Just (n, Prim)) fanMap nodeVarMap
-                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarMap
+                              p  ← rec' p  (Just (n, Prim)) fanMap nodeVarInfo
+                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> p <*> a2)
                             _ → pure Nothing
                         parentPrim con = do
                           case (aux1, aux2) of
                             (Auxiliary a1, Auxiliary a2) → do
-                              a1 ← rec' a1 (Just (n, Aux1)) fanMap nodeVarMap
-                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarMap
+                              a1 ← rec' a1 (Just (n, Aux1)) fanMap nodeVarInfo
+                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> a1 <*> a2)
                             _ → pure Nothing
                         -- Case for Lambda and mu
                         lamMu lamOrMu = do
                           let fullLamCase lamOrMu =
-                                let num           = newMapNum nodeVarMap
+                                let num           = newMapNum nodeVarInfo
                                     symb          = numToSymbol num
                                     newNodeVarMap = Map.insert n symb nodeVarMap
                                 in case aux1 of
                                   Auxiliary a1 → do
-                                    a1 ← rec' a1 (Just (n, Aux1)) fanMap newNodeVarMap
+                                    a1 ← rec' a1 (Just (n, Aux1)) fanMap (newNodeVarMap, succ nodeVarLengh)
                                     pure (lamOrMu symb <$> a1)
                                   FreeNode → pure Nothing
                           mEdge ← traverseM findEdge comeFrom
@@ -256,7 +257,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                       cameFrom  = (Just (n, fanPortsToAux Circle))
                                   in case aux1 of
                                     Auxiliary aux1 →
-                                      rec' aux1 cameFrom newFanMap nodeVarMap
+                                      rec' aux1 cameFrom newFanMap nodeVarInfo
                                     -- Never happens by precondition!
                                     FreeNode → pure Nothing
                                 -- TODO :: unify with through function 19 lines below
@@ -265,7 +266,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                       cameFrom = Just (n, Prim)
                                   in case prim of
                                     Primary prim →
-                                      rec' prim cameFrom newFanMap nodeVarMap
+                                      rec' prim cameFrom newFanMap nodeVarInfo
                                     _ → pure Nothing -- doesn't happen!
                             case mPort of
                               -- We are starting at a FanIn or the graph is invalid!
@@ -284,7 +285,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                       cameFrom  = Just (n, Prim)
                                   in case prim of
                                     Primary prim →
-                                      rec' prim cameFrom newFanMap nodeVarMap
+                                      rec' prim cameFrom newFanMap nodeVarInfo
                                     Free → pure Nothing -- never happens
                             case mPort of
                               -- Shouldn't happen, as the previous node *must* exist
@@ -303,7 +304,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                         aux Circle = aux1
                                         aux Star   = aux2
                                     in case aux port of
-                                      Auxiliary aux → rec' aux cameFrom newFanMap nodeVarMap
+                                      Auxiliary aux → rec' aux cameFrom newFanMap nodeVarInfo
                                       FreeNode      → pure Nothing -- doesn't happen
                                   -- We have already completed a port, but have not yet gone through another
                                   -- so go through the other port
@@ -314,7 +315,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                                         auxFlip Circle = aux2
                                         auxFlip Star   = aux1
                                     case auxFlip port of
-                                      Auxiliary aux → rec' aux cameFrom (newFanMap port) nodeVarMap
+                                      Auxiliary aux → rec' aux cameFrom (newFanMap port) nodeVarInfo
                                       FreeNode      → pure Nothing -- doesn't happen
                                   [Completed Star, Completed Circle] → pure Nothing -- going back through both ports, odd!
                                   [Completed Circle, Completed Star] → pure Nothing -- going back through both ports, odd!
@@ -325,7 +326,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
                     let parentAux con =
                           case prim of
                             Primary prim → do
-                              prim ← rec' prim (Just (n, Prim)) fanMap nodeVarMap
+                              prim ← rec' prim (Just (n, Prim)) fanMap nodeVarInfo
                               pure (con <$> prim)
                             Free → pure Nothing -- doesn't happen
                     in case tag of
@@ -362,7 +363,7 @@ netToAst net = evalEnvState run (Env 0 net mempty)
         -- This case should only happen when the code is in a irreducible state
         []    → pure Nothing
         -- This case should happen when the graph is properly typed
-        [n]   → rec' n Nothing Map.empty Map.empty
+        [n]   → rec' n Nothing Map.empty (Map.empty, 0)
         -- This case should only happen if the graph is incomplete or has multiple
         -- dijoint sets of nodes in the graph
         _ : _ → pure Nothing
@@ -400,5 +401,5 @@ numToSymbol x
 
 -- | generate a new number based on the map size
 -- Only gives an unique if the key has an isomorphism with the size, and no data is deleted.
-newMapNum ∷ Map k a → Int
-newMapNum = Map.size
+newMapNum ∷ (Map.Map k a, Int) → Int
+newMapNum = snd

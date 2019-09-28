@@ -1,6 +1,7 @@
 module Juvix.Encoding.Types where
 
-import           Juvix.Library hiding (Product, Sum)
+import qualified Juvix.Utility.HashMap as Map
+import           Juvix.Library         hiding (Product, Sum)
 
 -- Adt Types -------------------------------------------------------------------
 
@@ -52,9 +53,9 @@ data Bound = Bound { lam     :: Lambda
                    , adtName :: Symbol
                    } deriving (Show, Generic)
 
-data Env = Env { constructors :: Map Symbol Bound
+data Env = Env { constructors :: Map.Map Symbol Bound
                -- | adtMap is a mapping between the adt name and the ordered cases thereof
-               , adtMap       :: Map Symbol Branches
+               , adtMap       :: Map.Map Symbol Branches
                -- | missingCases represent the missing cases of a match
                , missingCases :: [Symbol]
                } deriving (Show, Generic)
@@ -69,9 +70,9 @@ data Errors = AlreadyDefined
 
 newtype EnvS a = EnvS (StateT Env (Except Errors) a)
   deriving (Functor, Applicative, Monad)
-  deriving (HasState "constructors" (Map Symbol Bound)) via
+  deriving (HasState "constructors" (Map.Map Symbol Bound)) via
     Field "constructors" () (MonadState (StateT Env (Except Errors)))
-  deriving (HasState "adtMap" (Map Symbol Branches)) via
+  deriving (HasState "adtMap" (Map.Map Symbol Branches)) via
     Field "adtMap" () (MonadState (StateT Env (Except Errors)))
   deriving (HasThrow "err" Errors) via
     MonadError (StateT Env (Except Errors))
@@ -80,4 +81,4 @@ newtype EnvS a = EnvS (StateT Env (Except Errors) a)
     WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
 
 runEnvsS ∷ EnvS a → Either Errors (a, Env)
-runEnvsS (EnvS a) = runExcept (runStateT a (Env mempty mempty mempty))
+runEnvsS (EnvS a) = runExcept (runStateT a (Env Map.empty mempty mempty))

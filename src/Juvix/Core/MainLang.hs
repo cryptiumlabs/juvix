@@ -307,7 +307,7 @@ iType ii g (Free x) =
 iType _ii _g (Nat _) = return (Omega, VNats)
 --App rule, function M applies to N
 iType ii g (App m n) = do
-  mTy <- iType ii g m --type of M has to be of type Pi
+  mTy <- iType ii g m --annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) -> do
       cType ii g n (pi, varTy) --N has to be of type varTy with usage pi

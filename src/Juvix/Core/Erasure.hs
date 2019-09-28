@@ -2,7 +2,7 @@ module Juvix.Core.Erasure (
   erase'
 ) where
 
-import           Data.Map.Strict
+import           Juvix.Utility.HashMap
 import qualified Juvix.Core.MainLang as Core
 import qualified Juvix.EAL.Types     as EAL
 import           Juvix.Library       hiding (empty)

@@ -3,8 +3,8 @@ module Eal2 where
 import           Juvix.EAL.Check
 import           Juvix.EAL.Types
 import           Juvix.Library    hiding (Type, exp, link, reduce)
+import qualified Juvix.Utility    as Map
 
-import qualified Data.Map.Strict  as Map
 import qualified Test.Tasty       as T
 import qualified Test.Tasty.HUnit as T
 
@@ -91,7 +91,7 @@ arg1 ∷ Type
 arg1 = ArrT (SymT (intern "a"))
             (SymT (intern "a"))
 
-counterexampleAssignment ∷ Map Symbol Type
+counterexampleAssignment ∷ Map.Map Symbol Type
 counterexampleAssignment = Map.fromList
   [ (intern "n", ArrT arg1 arg0)
   , (intern "y", arg0)

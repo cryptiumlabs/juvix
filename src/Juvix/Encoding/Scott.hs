@@ -7,10 +7,11 @@ import           Prelude                 (error)
 import           Juvix.Encoding.Encoding
 import           Juvix.Encoding.Types
 import           Juvix.Library           hiding (Product, Sum)
+import qualified Juvix.Utility.HashMap   as Map
 
 
-adtToScott  ∷ ( HasState "constructors" (Map Symbol Bound)    m
-              , HasState "adtMap"       (Map Symbol Branches) m
+adtToScott  ∷ ( HasState "constructors" (Map.Map Symbol Bound)    m
+              , HasState "adtMap"       (Map.Map Symbol Branches) m
               , HasThrow "err"          Errors                    m )
             ⇒ Name → m ()
 adtToScott (Adt name s) = sumRec s 1 (adtLength s)
@@ -50,10 +51,10 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
             (onPosAdt $ Value (intern $ "%genArg" <> show posAdt))
             [1..lengthAdt]
 
-scottCase ∷ ( HasState "constructors" (Map Symbol Bound)    m
-            , HasState "adtMap"       (Map Symbol Branches) m
-            , HasThrow "err"          Errors                    m
-            , HasWriter "missingCases" [Symbol]             m )
+scottCase ∷ ( HasState "constructors"  (Map.Map Symbol Bound)    m
+            , HasState "adtMap"        (Map.Map Symbol Branches) m
+            , HasThrow "err"           Errors                    m
+            , HasWriter "missingCases" [Symbol]                  m )
           ⇒ Switch → m Lambda
 scottCase c = do
   -- expandedCase ends up coming out backwards in terms of application

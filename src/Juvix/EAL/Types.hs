@@ -1,9 +1,9 @@
 module Juvix.EAL.Types where
 
-import qualified Data.Map.Strict as Map
-import qualified Data.Text       as T
-import           Juvix.Library   hiding (Type)
-import           Juvix.Utility
+import qualified Data.Text             as T
+import qualified Juvix.Utility.HashMap as Map
+import           Juvix.Library         hiding (Type)
+import           Juvix.Utility         hiding (Map)
 
 -- Untyped term.
 data Term
@@ -73,10 +73,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = Map Symbol Param
+type VarPaths = Map.Map Symbol Param
 
 -- Occurrence map.
-type OccurrenceMap = Map Symbol Int
+type OccurrenceMap = Map.Map Symbol Int
 
 -- | Bracket Error Types
 data BracketErrors = TooManyOpen

@@ -19,6 +19,8 @@ dependencies:
   - text
   - mtl
   - containers
+  - unordered-containers
+  - hashable
   - fgl
   - lens
   - parsec

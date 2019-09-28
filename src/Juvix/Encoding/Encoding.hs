@@ -1,11 +1,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Juvix.Encoding.Encoding where
 
-import qualified Data.Map.Strict      as Map
-import           Prelude              (error)
+import qualified Juvix.Utility.HashMap as Map
+import           Prelude               (error)
 
 import           Juvix.Encoding.Types
-import           Juvix.Library        hiding (Product, Sum)
+import           Juvix.Library         hiding (Product, Sum)
 
 
 -- Generic Case expansion ------------------------------------------------------
@@ -13,10 +13,10 @@ import           Juvix.Library        hiding (Product, Sum)
 -- | caseGen takes an Case form and generates the proper expanded form
 -- takes a few arguments to determine what to do when there are no arguments to
 -- a case and how to combine the different cases
-caseGen ∷ ( HasState "constructors" (Map Symbol Bound)    m
-          , HasState "adtMap"       (Map Symbol Branches) m
-          , HasThrow "err"          Errors                    m
-          , HasWriter "missingCases" [Symbol]             m )
+caseGen ∷ ( HasState "constructors"  (Map.Map Symbol Bound)    m
+          , HasState "adtMap"        (Map.Map Symbol Branches) m
+          , HasThrow "err"           Errors                    m
+          , HasWriter "missingCases" [Symbol]                  m )
         ⇒ Switch
         → (Lambda → Lambda)           -- What to do when there are no arguments?
         → (Lambda → Lambda → Lambda)  -- How does the recursive case work?
@@ -58,10 +58,10 @@ caseGen (Case on cases@(C c _ _ :_)) onNoArg onRec = do
 
 -- Helper for Mendler and Scott encodings --------------------------------------
 
-adtConstructor ∷ ( HasState "adtMap" (Map Symbol [k]) m
-                 , HasState "constructors" (Map k Bound)  m
-                 , HasThrow "err" Errors                  m
-                 , Ord k
+adtConstructor ∷ ( HasState "adtMap"       (Map.Map Symbol [k]) m
+                 , HasState "constructors" (Map.Map k Bound)    m
+                 , HasThrow "err"          Errors               m
+                 , Hashable k, Eq k
                  ) ⇒ k → Lambda → Symbol → m ()
 adtConstructor s prod name = do
   modify' @"adtMap" (Map.alter (\case
