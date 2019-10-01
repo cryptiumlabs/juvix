@@ -78,6 +78,6 @@ run ctx (Options cmd configPath) = do
     Version → do
       putDoc versionDoc
       exitSuccess
-    _ -> do
+    _ → do
       putText "Not yet implemented!"
       exitFailure

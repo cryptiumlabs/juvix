@@ -52,7 +52,7 @@ runMultipleConstraints numRepeat constraints syntax = do
 
 getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
-  (r,v,s) ← Z3.evalZ3 (constraintSystem constraints)
+  (_r,_v,s) ← Z3.evalZ3 (constraintSystem constraints)
   --putStrLn v
   --putText "-->"
   --print (r, s)
@@ -112,10 +112,10 @@ makeVarMap constraints =
 
 makeParams ∷ Z3.MonadZ3 m ⇒ m Z3.Params
 makeParams = do
-  params <- Z3.mkParams
-  sym <- Z3.mkStringSymbol ":arith-lhs"
+  params ← Z3.mkParams
+  sym ← Z3.mkStringSymbol ":arith-lhs"
   Z3.paramsSetBool params sym True
-  sym <- Z3.mkStringSymbol ":som"
+  sym ← Z3.mkStringSymbol ":som"
   Z3.paramsSetBool params sym True
   pure params
 
@@ -126,9 +126,9 @@ constraintSystemGen ∷ Z3.MonadZ3 m
 constraintSystemGen constraints modifyAst = do
   varMap ← makeVarMap constraints
   ast    ← modifyAst varMap constraints
-  params <- makeParams
-  simplified <- Z3.simplifyEx ast params
-  model <- Z3.astToString simplified
+  params ← makeParams
+  simplified ← Z3.simplifyEx ast params
+  model ← Z3.astToString simplified
   Z3.assert simplified
   (res, sol) ← Z3.withModel $ \m →
     catMaybes <$> traverse (Z3.evalInt m) (Map.elems varMap)

@@ -67,7 +67,7 @@ makeFieldsNoPrefix ''ProperPort
 -- Find a way to fix the ugliness!
 langToProperPort ∷ (DifferentRep net, HasState "net" (net Lang) m)
                  ⇒ Node → m (Maybe ProperPort)
-langToProperPort node = langToPort node (\l -> f l node)
+langToProperPort node = langToPort node (\l → f l node)
   where
     f (Auxiliary3 a) = aux3FromGraph (IsAux3 a)
     f (Auxiliary2 a) = aux2FromGraph (IsAux2 a)
@@ -196,12 +196,12 @@ propPrimary ∷ (Aux2 s, InfoNetwork net Lang m)
 propPrimary (numDel, nodeDel) numProp = do
   relink (numDel, Aux1) (numProp, Prim)
   case auxToNode (nodeDel^.aux2) of
-    Just _ -> do
+    Just _ → do
       sequentalStep
       eraseNum ← newNode (Primar Erase)
       relink (numDel, Aux2) (eraseNum, Prim)
       deleteRewire [numDel] [eraseNum]
-    Nothing -> do
+    Nothing → do
       incGraphSizeStep (-1)
       delNodes [numDel]
 
