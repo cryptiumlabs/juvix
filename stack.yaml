@@ -16,3 +16,5 @@ extra-lib-dirs:
 
 extra-include-dirs:
   - .stack-work/prefix/include
+
+local-bin-path: /usr/local/bin

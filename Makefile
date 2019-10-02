@@ -1,7 +1,7 @@
 PWD=$(CURDIR)
 PREFIX="$(PWD)/.stack-work/prefix"
 
-all: setup build
+all: setup build-z3 build
 
 setup:
 	stack build --only-dependencies
@@ -12,7 +12,7 @@ build-z3:
 	cd z3/build && make -j $(shell nproc)
 	cd z3/build && PREFIX=$(PREFIX) make install
 
-build: build-z3
+build:
 	stack build --copy-bins --fast
 
 build-watch:
@@ -42,4 +42,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-watch build-opt lint format test repl-lib repl-exe clean clean-full
+.PHONY: all setup build build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full
