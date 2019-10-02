@@ -5,9 +5,19 @@ import           Juvix.Library         hiding (Type)
 import           Juvix.Utility         hiding (Map)
 import qualified Juvix.Utility.HashMap as Map
 
+import           GHC.Natural
+
+-- Primitive.
+data Prim
+  = Nat Natural
+  | NatAdd
+  | NatMul
+  deriving (Show, Eq)
+
 -- Untyped term.
 data Term
   = Var Symbol
+  | Prim Prim
   | App Term Term
   | Lam Symbol Term
   deriving (Show, Eq)
@@ -21,6 +31,7 @@ data Type
 -- Restricted pseudoterm (inner).
 data RPTI
   = RVar Symbol
+  | RPrim Prim
   | RLam Symbol RPTO
   | RApp RPTO RPTO
   deriving (Show, Eq)

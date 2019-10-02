@@ -25,9 +25,11 @@ erase term =
   case term of
     Core.Lam body -> do
       name <- newName
+      -- TODO: Instead calculate type of this lambda-bound variable.
       let ty = EAC.SymT name
       -- TODO :: replace map here with unordered map
-      -- the remove the Ord deriving from the Symbol type.
+      -- then remove the Ord deriving from the Symbol type.
+      stk <- get @"nameStack"
       modify @"typeAssignment" (insert name ty)
       body <- erase body
       pure (EAC.Lam name body)
@@ -42,12 +44,12 @@ erase term =
             Core.Local _s -> undefined
             Core.Quote _s -> undefined
         Core.App a b -> do
-          a <- erase b
+          a <- erase (Core.Conv a)
           b <- erase b
           pure (EAC.App a b)
         Core.Ann _ _ a -> do
           erase a
-        Core.Nat _nat -> undefined
+        Core.Nat n  -> pure (EAC.Prim (EAC.Nat n))
     _               -> undefined
 
 unDeBruijin ∷ (HasState "nextName" Int m,

@@ -1,4 +1,4 @@
-module Eal where
+module EAC where
 
 import           Juvix.EAC
 import           Juvix.Library
