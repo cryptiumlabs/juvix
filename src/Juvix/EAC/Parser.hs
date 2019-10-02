@@ -1,6 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Juvix.EAL.Parser where
+module Juvix.EAC.Parser where
 
 import           Prelude                                (String, error)
 import           Text.Parsec
@@ -9,7 +9,7 @@ import           Text.Parsec.String
 import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token    as T
 
-import           Juvix.EAL.Types
+import           Juvix.EAC.Types
 import           Juvix.Library                          hiding (Type, link,
                                                          many, optional, reduce,
                                                          try, (<|>))

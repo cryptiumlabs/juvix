@@ -15,7 +15,7 @@ import           Juvix.Utility
 import           Juvix.Visualize.Dot
 import           Juvix.Visualize.Graph
 
-import           Juvix.EAL
+import           Juvix.EAC
 
 import           Text.Parsec
 

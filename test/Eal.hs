@@ -1,6 +1,6 @@
 module Eal where
 
-import           Juvix.EAL
+import           Juvix.EAC
 import           Juvix.Library
 
 import           Text.Parsec

@@ -1,7 +1,7 @@
 module Eal2 where
 
-import           Juvix.EAL.Check
-import           Juvix.EAL.Types
+import           Juvix.EAC.Check
+import           Juvix.EAC.Types
 import           Juvix.Library    hiding (Type, exp, link, reduce)
 import qualified Juvix.Utility    as Map
 
@@ -25,7 +25,7 @@ test_church_exp = shouldBeTypeable churchExp churchExpAssignment
 
 shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
-  T.testCase (show term <> " should be typeable in EAL") $ do
+  T.testCase (show term <> " should be typeable in EAC") $ do
     valid <- validEal term assignment
     case valid of
       Right _ -> return ()
@@ -33,7 +33,7 @@ shouldBeTypeable term assignment =
 
 shouldNotBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldNotBeTypeable term assignment =
-  T.testCase (show term <> " should not be typeable in EAL") $ do
+  T.testCase (show term <> " should not be typeable in EAC") $ do
     valid <- validEal term assignment
     case valid of
       Right _ -> T.assertFailure "a satisfying assignment was found"

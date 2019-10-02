@@ -15,7 +15,7 @@ import qualified Juvix.Backends.Graph         as Graph
 import qualified Juvix.Backends.Maps          as Maps ()
 import qualified Juvix.Bohm                   as Bohm
 import qualified Juvix.Core                   as Core
-import qualified Juvix.EAL                    as EAL
+import qualified Juvix.EAC                    as EAC
 import qualified Juvix.Nets.Bohm              as Bohm
 
 interactive ∷ Context → Config → IO ()
@@ -77,19 +77,19 @@ handleSpecial str cont = do
         Nothing → return ()
       cont
     'e' : 'p' : ' ' : rest → do
-      let parsed = EAL.parseEal rest
+      let parsed = EAC.parseEal rest
       case parsed of
         Right r → transformAndEvaluateEal True r
         _       → return ()
       cont
     'e' : 'q' : ' ' : rest → do
-      let parsed = EAL.parseEal rest
+      let parsed = EAC.parseEal rest
       case parsed of
         Right r → transformAndEvaluateEal False r
         _       → return ()
       cont
     'e' : 'e' : ' ' : rest → do
-      let parsed = EAL.parseEal rest
+      let parsed = EAC.parseEal rest
       H.outputStrLn $ show parsed
       case parsed of
         Right r → transformAndEvaluateEal True r
@@ -98,16 +98,16 @@ handleSpecial str cont = do
     _ → H.outputStrLn "Unknown special command" >> cont
 
 eraseAndSolveCore ∷
-     Core.CTerm → H.InputT IO (Either EAL.Errors (EAL.RPT, EAL.ParamTypeAssignment))
+     Core.CTerm → H.InputT IO (Either EAC.Errors (EAC.RPT, EAC.ParamTypeAssignment))
 eraseAndSolveCore cterm = do
   let (term, typeAssignment) = Core.erase' cterm
-  res ← liftIO (EAL.validEal term typeAssignment)
-  H.outputStrLn ("Inferred EAL term & type: " <> show res)
+  res ← liftIO (EAC.validEal term typeAssignment)
+  H.outputStrLn ("Inferred EAC term & type: " <> show res)
   pure res
 
-transformAndEvaluateEal ∷ Bool → EAL.RPTO → H.InputT IO ()
+transformAndEvaluateEal ∷ Bool → EAC.RPTO → H.InputT IO ()
 transformAndEvaluateEal debug term = do
-  let bohm = EAL.ealToBohm term
+  let bohm = EAC.ealToBohm term
   when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)
   let net ∷ Graph.FlipNet Bohm.Lang
       net = Bohm.astToNet bohm Bohm.defaultEnv
@@ -135,10 +135,10 @@ specials =
   [ Special "cp [term]" "Parse a Juvix Core term"
   , Special "ct [term}" "Parse, typecheck, & evaluate a Juvix Core term"
   , Special "ce [term"
-            "Parse a Juvix Core term, translate to EAL, solve constraints, evaluate & read-back"
-  , Special "ep [term]" "Parse an EAL term"
-  , Special "ee [term]" "Parse an EAL term, evaluate & read-back"
-  , Special "eq [term]" "Parse an EAL term, evaluate & read-back quietly"
+            "Parse a Juvix Core term, translate to EAC, solve constraints, evaluate & read-back"
+  , Special "ep [term]" "Parse an EAC term"
+  , Special "ee [term]" "Parse an EAC term, evaluate & read-back"
+  , Special "eq [term]" "Parse an EAC term, evaluate & read-back quietly"
   , Special "tutorial" "Embark upon an interactive tutorial"
   , Special "?" "Show this help message"
   , Special "exit" "Quit interactive mode"

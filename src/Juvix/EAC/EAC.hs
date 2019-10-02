@@ -1,10 +1,10 @@
-module Juvix.EAL.EAL where
+module Juvix.EAC.EAC where
 
 import           Control.Arrow         (left)
 import           Prelude               (error)
 
 import qualified Juvix.Bohm.Type       as BT
-import           Juvix.EAL.Types
+import           Juvix.EAC.Types
 import           Juvix.Library         hiding (Type, link, reduce)
 import qualified Juvix.Utility.HashMap as Map
 

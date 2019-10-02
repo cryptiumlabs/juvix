@@ -1,11 +1,11 @@
-module Juvix.EAL.Solve where
+module Juvix.EAC.Solve where
 
 import qualified Data.Map        as Map
 import qualified Data.Set        as Set
 import           GHC.Base        (String)
 import qualified Z3.Monad        as Z3
 
-import           Juvix.EAL.Types
+import           Juvix.EAC.Types
 import           Juvix.Library   hiding (link, reduce)
 
 runMultipleConstraints ∷ Int → [Constraint] → RPT → IO ()

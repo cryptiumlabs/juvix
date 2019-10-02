@@ -70,12 +70,12 @@ library:
     - Juvix
     - Juvix.Core
     - Juvix.Core.MainLang
-    - Juvix.EAL
-    - Juvix.EAL.Check
-    - Juvix.EAL.EAL
-    - Juvix.EAL.Solve
-    - Juvix.EAL.Types
-    - Juvix.EAL.Parser
+    - Juvix.EAC
+    - Juvix.EAC.Check
+    - Juvix.EAC.EAC
+    - Juvix.EAC.Solve
+    - Juvix.EAC.Types
+    - Juvix.EAC.Parser
     - Juvix.Utility
     - Juvix.Nets.Bohm
     - Juvix.Nets.Combinators
