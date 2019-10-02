@@ -60,6 +60,7 @@ ghc-options:
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
   - -j6
+  - -static
 
 library:
   source-dirs: src

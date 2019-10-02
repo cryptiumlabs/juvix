@@ -8,9 +8,9 @@ setup:
 
 build-z3:
 	mkdir -p $(PREFIX)
-	cd z3 && test -f build/Makefile || python scripts/mk_make.py
+	cd z3 && test -f build/Makefile || python scripts/mk_make.py -p $(PREFIX)
 	cd z3/build && make -j $(shell nproc)
-	cd z3/build && PREFIX=$(PREFIX) make install
+	cd z3/build && make install
 
 build:
 	stack build --copy-bins --fast
