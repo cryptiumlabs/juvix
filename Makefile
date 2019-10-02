@@ -1,10 +1,16 @@
+PWD=$(CURDIR)
+PREFIX="$(PWD)/.stack-work/prefix"
+
 all: setup build
 
 setup:
 	stack build --only-dependencies
 
 build-z3:
-	cd z3 && python scripts/mk_make.py && cd build && make
+	mkdir -p $(PREFIX)
+	cd z3 && test -f build/Makefile || python scripts/mk_make.py
+	cd z3/build && make -j $(shell nproc)
+	cd z3/build && PREFIX=$(PREFIX) make install
 
 build: build-z3
 	stack build --copy-bins --fast

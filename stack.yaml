@@ -10,3 +10,9 @@ extra-deps:
   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 
 allow-newer: true
+
+extra-lib-dirs:
+  - .stack-work/prefix/lib
+
+extra-include-dirs:
+  - .stack-work/prefix/include
