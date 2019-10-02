@@ -70,6 +70,7 @@ library:
     - Juvix
     - Juvix.Core
     - Juvix.Core.MainLang
+    - Juvix.Core.Erasure
     - Juvix.EAC
     - Juvix.EAC.Check
     - Juvix.EAC.EAC
