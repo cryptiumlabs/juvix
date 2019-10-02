@@ -1,7 +1,7 @@
 PWD=$(CURDIR)
 PREFIX="$(PWD)/.stack-work/prefix"
 
-all: setup build-z3 build
+all: setup build
 
 setup:
 	stack build --only-dependencies
