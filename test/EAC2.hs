@@ -1,4 +1,4 @@
-module Eal2 where
+module EAC2 where
 
 import           Juvix.EAC.Check
 import           Juvix.EAC.Types
