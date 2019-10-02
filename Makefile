@@ -3,7 +3,10 @@ all: setup build
 setup:
 	stack build --only-dependencies
 
-build:
+build-z3:
+	cd z3 && python scripts/mk_make.py && cd build && make
+
+build: build-z3
 	stack build --copy-bins --fast
 
 build-watch:
