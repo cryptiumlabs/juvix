@@ -7,7 +7,6 @@ import           Numeric.Natural
 
 import           Juvix.Core.SemiRing
 import           Juvix.Library         hiding (show)
-import qualified Juvix.Utility.HashMap as Map
 
 import           Prelude               (Show (..), String, lookup, error)
 import           Control.Lens          ((^?), ix)
@@ -120,9 +119,6 @@ type Annotation = (Usage, Value)
 
 -- Contexts map variables to their types.
 type Context = [(Name, Annotation)]
-
--- | TypeContext is the context for typing
-type TypeContext = Map.HashMap Name Usage
 
 --Evaluation
 type Env = [Value]
