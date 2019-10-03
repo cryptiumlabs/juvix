@@ -124,7 +124,7 @@ type Context = [(Name, Annotation)]
 type Env = [Value]
 
 cEval ∷ CTerm → Env → Value
-ceval (Star i) _d      = VStar i
+cEval (Star i) _d      = VStar i
 cEval Nats _d          = VNats
 cEval (Pi pi ty ty') d = VPi pi (cEval ty d) (\x -> cEval ty' (x : d))
 cEval (Pm pi ty ty') d = VPm pi (cEval ty d) (\x -> cEval ty' (x : d))
