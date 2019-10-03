@@ -265,12 +265,10 @@ cType ii g (Pa pi varType resultType) ann = undefined
 cType ii g (NPm first second) ann = undefined
 -- (Lam) introduction rule of dependent function type
 -- Lam s should be of dependent function type (Pi pi ty ty').
-cType ii g (Lam s) (sig, VPi pi _ty ty') = do
-  traceShowM s
-  let sVal = cEval s []
+cType ii g (Lam s) (sig, (VPi pi ty ty')) =
   cType
     (ii + 1)
-    ((Local ii, (sig <.> pi, sVal)) : g) -- put s in the context with usage sig*pi
+    ((Local ii, (sig <.> pi, ty)) : g) -- put s in the context with usage sig*pi
     (cSubst 0 (Free (Local ii)) s)      -- x (varType) in context S with sigma*pi usage.
     (sig, ty' (vfree (Local ii)))       -- is of type M (usage sigma) in context T
 cType ii g (Lam s) ann =
