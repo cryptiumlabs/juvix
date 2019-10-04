@@ -64,7 +64,7 @@ two = Core.Lam
     $ Core.App (Core.Bound 1)
                (Core.Conv (Core.App (Core.Bound 1)
                                     (Core.Conv (Core.Bound 0))))
- 
+
 twoCompTy ∷ Core.Annotation
 twoCompTy = ( Core.SNat 1
             , Core.VPi (Core.SNat 2)
