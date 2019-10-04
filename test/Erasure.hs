@@ -17,10 +17,12 @@ identity ∷ Core.CTerm
 identity = Core.Lam (Core.Conv (Core.Bound 0))
 
 identityCompTy ∷ Core.Annotation
-identityCompTy = (Core.SNat 1, Core.VPi (Core.SNat 1) Core.VNats (const (Core.VNats)))
+identityCompTy = ( Core.SNat 1
+                 , Core.VPi (Core.SNat 1) Core.VNats (const (Core.VNats)))
 
 identityContTy ∷ Core.Annotation
-identityContTy = (Core.SNat 0, Core.VPi (Core.SNat 0) Core.VNats (const (Core.VNats)))
+identityContTy = ( Core.SNat 0
+                 , Core.VPi (Core.SNat 0) Core.VNats (const (Core.VNats)))
 
 test_identity_computational ∷ T.TestTree
 test_identity_computational = shouldCheck identity identityCompTy
@@ -39,16 +41,39 @@ shouldInfer term ann =
     Core.iType0 [] term T.@=? Right ann
 
 one ∷ Core.CTerm
-one = Core.Lam (Core.Lam (Core.Conv (Core.App (Core.Bound 1) (Core.Conv (Core.Bound 0)))))
+one = Core.Lam
+    $ Core.Lam
+    $ Core.Conv
+    $ Core.App (Core.Bound 1)
+               (Core.Conv (Core.Bound 0))
 
 oneCompTy ∷ Core.Annotation
-oneCompTy = (Core.SNat 1, Core.VPi (Core.SNat 1) (Core.VPi (Core.SNat 1) Core.VNats (const Core.VNats)) (const (Core.VPi (Core.SNat 1) Core.VNats (const Core.VNats))))
+oneCompTy = ( Core.SNat 1
+            , Core.VPi (Core.SNat 1)
+                       (Core.VPi (Core.SNat 1)
+                                 Core.VNats
+                                 (const Core.VNats))
+                       (const (Core.VPi (Core.SNat 1)
+                                        Core.VNats
+                                        (const Core.VNats))))
 
 two ∷ Core.CTerm
-two = Core.Lam (Core.Lam (Core.Conv (Core.App (Core.Bound 1) (Core.Conv (Core.App (Core.Bound 1) (Core.Conv (Core.Bound 0)))))))
-
+two = Core.Lam
+    $ Core.Lam
+    $ Core.Conv
+    $ Core.App (Core.Bound 1)
+               (Core.Conv (Core.App (Core.Bound 1)
+                                    (Core.Conv (Core.Bound 0))))
+ 
 twoCompTy ∷ Core.Annotation
-twoCompTy = (Core.SNat 1, Core.VPi (Core.SNat 2) (Core.VPi (Core.SNat 1) Core.VNats (const Core.VNats)) (const (Core.VPi (Core.SNat 1) Core.VNats (const Core.VNats))))
+twoCompTy = ( Core.SNat 1
+            , Core.VPi (Core.SNat 2)
+                       (Core.VPi (Core.SNat 1)
+                                 Core.VNats
+                                 (const Core.VNats))
+                       (const (Core.VPi (Core.SNat 1)
+                                        Core.VNats
+                                        (const Core.VNats))))
 
 eraseSolveEval ∷ Core.CTerm → IO ()
 eraseSolveEval cterm = do
