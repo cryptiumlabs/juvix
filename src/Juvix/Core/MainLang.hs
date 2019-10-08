@@ -81,9 +81,6 @@ data Value
   = VStar Natural
   | VNats
   | VPi Usage Value (Value → Value)
-  | VPm Usage Value (Value → Value)
-  | VPa Usage Value (Value → Value)
-  | VNPm Value Value
   | VLam (Value → Value)
   | VNeutral Neutral
   | VNat Natural
@@ -251,14 +248,6 @@ cType ii g (Conv e) ann = do
   unless
     (fst ann == fst ann' && quote0 (snd ann) == quote0 (snd ann'))
     (throwError (errorMsg ii (Conv e) ann ann'))
-cType ii _g cterm theType =
-  throwError
-    ("Type mismatch: \n" <>
-     show cterm <>
-     "\n (binder number " <>
-     show ii <>
-     ") is not a checkable term. Cannot check that it is of type " <>
-     show (snd theType) <> " with " <> show (fst theType) <> " usage.")
 
 --inferable terms have type as output.
 iType0 ∷ Context → ITerm → Result Annotation
@@ -270,6 +259,7 @@ iTypeErrorMsg ii x =
   show x <> "\n (binder number " <> show ii <> ") in the environment."
 
 iType ∷ Natural → Context → ITerm → Result Annotation
+--the type checker will never encounter a bound variable.
 iType ii g (Free x) =
   case lookup x g of
     Just ann -> return ann
