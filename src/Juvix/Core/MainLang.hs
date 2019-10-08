@@ -37,9 +37,7 @@ data CTerm
   | Nats -- (Prim) primitive type (naturals)
   | Pi Usage CTerm CTerm -- formation rule of the dependent function type (PI).
                               -- the Usage(π) tracks how many times x is used.
-  | Pm Usage CTerm CTerm -- dependent multiplicative conjunction (tensor product)
-  | Pa Usage CTerm CTerm -- dependent additive conjunction type
-  | NPm CTerm CTerm -- non-dependent multiplicative disjunction type
+
   | Lam CTerm --(LAM) Introduction rule of PI.
                         -- The abstracted variable's usage is tracked with the Usage(π).
   | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
@@ -51,10 +49,6 @@ instance Show CTerm where
   show Nats = "Nat "
   show (Pi _usage varTy resultTy) =
     "[Π] " <> show varTy <> "-> " <> show resultTy
-  show (Pm _usage first second) =
-    "([π] " <> show first <> ", " <> show second <> ") "
-  show (Pa _usage first second) = "/\\ " <> show first <> show second
-  show (NPm first second) = "\\/ " <> show first <> show second
   show (Lam var) = "\\x. " <> show var
   show (Conv term) --Conv should be invisible to users.
    = show term
@@ -127,9 +121,6 @@ cEval ∷ CTerm → Env → Value
 cEval (Star i) _d      = VStar i
 cEval Nats _d          = VNats
 cEval (Pi pi ty ty') d = VPi pi (cEval ty d) (\x -> cEval ty' (x : d))
-cEval (Pm pi ty ty') d = VPm pi (cEval ty d) (\x -> cEval ty' (x : d))
-cEval (Pa pi ty ty') d = VPa pi (cEval ty d) (\x -> cEval ty' (x : d))
-cEval (NPm ty ty') d   = VNPm (cEval ty d) (cEval ty' d)
 cEval (Lam e) d        = VLam (\x -> cEval e (x : d))
 cEval (Conv ii) d      = iEval ii d
 
@@ -156,9 +147,6 @@ cSubst ∷ Natural → ITerm → CTerm → CTerm
 cSubst _ii _r (Star i)     = Star i
 cSubst _ii _r Nats         = Nats
 cSubst ii r (Pi pi ty ty') = Pi pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
-cSubst ii r (Pm pi ty ty') = Pm pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
-cSubst ii r (Pa pi ty ty') = Pa pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
-cSubst ii r (NPm fst snd)  = NPm (cSubst ii r fst) (cSubst ii r snd)
 cSubst ii r (Lam f)        = Lam (cSubst (ii + 1) r f)
 cSubst ii r (Conv e)       = Conv (iSubst ii r e)
 
@@ -182,11 +170,6 @@ quote _ii (VStar n) = Star n
 quote _ii VNats = Nats
 quote ii (VPi pi v f) =
   Pi pi (quote ii v) (quote (ii + 1) (f (vfree (Quote ii))))
-quote ii (VPm pi fst snd) =
-  Pm pi (quote ii fst) (quote (ii + 1) (snd (vfree (Quote ii))))
-quote ii (VPa pi fst snd) =
-  Pa pi (quote ii fst) (quote (ii + 1) (snd (vfree (Quote ii))))
-quote ii (VNPm fst snd) = NPm (quote ii fst) (quote ii snd)
 quote ii (VLam f) = Lam (quote (ii + 1) (f (vfree (Quote ii))))
 quote ii (VNeutral n) = Conv (neutralQuote ii n)
 quote _ii (VNat n) = Conv (Nat n)
@@ -252,9 +235,6 @@ cType ii g (Pi pi varType resultType) ann = do
     _ ->
       throwError
         "The variable type and the result type must be of type * at the same level."
-cType ii g (Pm pi varType resultType) ann = undefined
-cType ii g (Pa pi varType resultType) ann = undefined
-cType ii g (NPm first second) ann = undefined
 -- (Lam) introduction rule of dependent function type
 cType ii g (Lam s) ann =
   case ann of

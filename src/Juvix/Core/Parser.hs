@@ -20,9 +20,6 @@ languageDef =
         [ "*" --sort
         , "Nat" --primitive Nat type
         , "[Π]" --function type
-        , "[π]" --dependent multiplicative conjunction type
-        , "/\\" --dependent additive conjunction type
-        , "\\/" --non-dependent multiplicative disjunction type
         , "Bound" --Bound var
         , "Free"
         , "Local"
@@ -79,29 +76,6 @@ piTerm = do
   input <- ctermOnly
   func <- ctermOnly
   return $ Pi pi input func
-
-pmTerm ∷ Parser CTerm
-pmTerm = do
-  reserved "[π]"
-  pm <- natw
-  input <- ctermOnly
-  func <- ctermOnly
-  return $ Pm pm input func
-
-paTerm ∷ Parser CTerm
-paTerm = do
-  reserved "/\\"
-  pa <- natw
-  input <- ctermOnly
-  func <- ctermOnly
-  return $ Pa pa input func
-
-npmTerm ∷ Parser CTerm
-npmTerm = do
-  reserved "\\/"
-  fst <- ctermOnly
-  snd <- ctermOnly
-  return $ NPm fst snd
 
 lamTerm ∷ Parser CTerm
 lamTerm = do
@@ -175,8 +149,7 @@ natTerm = Nat . fromInteger <$> natural
 
 cterm ∷ Parser CTerm
 cterm =
-  parens cterm <|> sortTerm <|> natTypeTerm <|> piTerm <|> pmTerm <|> paTerm <|>
-  npmTerm <|>
+  parens cterm <|> sortTerm <|> natTypeTerm <|> piTerm <|>
   lamTerm <|>
   convTerm <|>
   convITerm
