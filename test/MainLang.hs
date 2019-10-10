@@ -4,15 +4,10 @@ module MainLang where
 import           Juvix.Core.MainLang
 import           Juvix.Core.Parser
 
---import           Control.Monad.Except
---import           Numeric.Natural
 import           Prelude
 
---import           Test.Tasty.QuickCheck
 import qualified Test.Tasty          as T
 import qualified Test.Tasty.HUnit    as T
---import           Test.QuickCheck
---import           Test.QuickCheck.Gen
 
 identity ∷ CTerm
 identity = Lam (Conv (Bound 0))
