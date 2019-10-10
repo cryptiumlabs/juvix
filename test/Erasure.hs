@@ -13,68 +13,6 @@ import qualified Juvix.Nets.Bohm      as Bohm
 import qualified Test.Tasty           as T
 import qualified Test.Tasty.HUnit     as T
 
-identity ∷ Core.CTerm
-identity = Core.Lam (Core.Conv (Core.Bound 0))
-
-identityCompTy ∷ Core.Annotation
-identityCompTy = ( Core.SNat 1
-                 , Core.VPi (Core.SNat 1) Core.VNats (const (Core.VNats)))
-
-identityContTy ∷ Core.Annotation
-identityContTy = ( Core.SNat 0
-                 , Core.VPi (Core.SNat 0) Core.VNats (const (Core.VNats)))
-
-test_identity_computational ∷ T.TestTree
-test_identity_computational = shouldCheck identity identityCompTy
-
-test_identity_contemplation ∷ T.TestTree
-test_identity_contemplation = shouldCheck identity identityContTy
-
-shouldCheck ∷ Core.CTerm → Core.Annotation → T.TestTree
-shouldCheck term ann =
-  T.testCase (show term <> " should check as type " <> show ann) $
-    Core.cType 0 [] term ann T.@=? Right ()
-
-shouldInfer ∷ Core.ITerm → Core.Annotation → T.TestTree
-shouldInfer term ann =
-  T.testCase (show term <> " should infer to type " <> show ann) $
-    Core.iType0 [] term T.@=? Right ann
-
-one ∷ Core.CTerm
-one = Core.Lam
-    $ Core.Lam
-    $ Core.Conv
-    $ Core.App (Core.Bound 1)
-               (Core.Conv (Core.Bound 0))
-
-oneCompTy ∷ Core.Annotation
-oneCompTy = ( Core.SNat 1
-            , Core.VPi (Core.SNat 1)
-                       (Core.VPi (Core.SNat 1)
-                                 Core.VNats
-                                 (const Core.VNats))
-                       (const (Core.VPi (Core.SNat 1)
-                                        Core.VNats
-                                        (const Core.VNats))))
-
-two ∷ Core.CTerm
-two = Core.Lam
-    $ Core.Lam
-    $ Core.Conv
-    $ Core.App (Core.Bound 1)
-               (Core.Conv (Core.App (Core.Bound 1)
-                                    (Core.Conv (Core.Bound 0))))
-
-twoCompTy ∷ Core.Annotation
-twoCompTy = ( Core.SNat 1
-            , Core.VPi (Core.SNat 2)
-                       (Core.VPi (Core.SNat 1)
-                                 Core.VNats
-                                 (const Core.VNats))
-                       (const (Core.VPi (Core.SNat 1)
-                                        Core.VNats
-                                        (const Core.VNats))))
-
 eraseSolveEval ∷ Core.CTerm → IO ()
 eraseSolveEval cterm = do
   let (term, typeAssignment) = Erasure.erase' cterm

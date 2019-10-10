@@ -259,7 +259,8 @@ iTypeErrorMsg ii x =
   show x <> "\n (binder number " <> show ii <> ") in the environment."
 
 iType ∷ Natural → Context → ITerm → Result Annotation
---the type checker will never encounter a bound variable.
+--the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
+iType _ii _g (Bound _) = error "Bound variable cannot be inferred"
 iType ii g (Free x) =
   case lookup x g of
     Just ann -> return ann
