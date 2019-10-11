@@ -19,7 +19,8 @@ validEal term typMap = do
       Just x  →
         let valAssignment = assignTerm x rpt
             typAssignment = assignType x typ
-        -- TODO: If an assignment was generated, but either of these checks fails, we must have made a mistake in constraint generation.
+        -- TODO: If an assignment was generated, but either of these checks fails,
+        -- we must have made a mistake in constraint generation.
         -- <|> doesn't work, find out why and refactor code later
         in case bracketCheckerErr valAssignment of
           Left e  → Left e

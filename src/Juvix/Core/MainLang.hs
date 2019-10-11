@@ -2,34 +2,14 @@
 -- Atkey 2017 and McBride 2016.
 module Juvix.Core.MainLang where
 
-import           Control.Monad.Except
+import           Control.Monad.Except (throwError)
 import           Numeric.Natural
-import           Prelude
 
--- naming usage for easy change of semiring choice.
-type Usage = NatAndw
+import           Juvix.Core.SemiRing
+import           Juvix.Library        hiding (show)
 
-data NatAndw -- semiring of (Nat,w) for usage annotation
-  = SNat Natural -- 0, 1, or n usage
-  | Omega -- unspecified usage
-
-instance Show NatAndw where
-  show (SNat n) = show n
-  show Omega    = "w"
-
-instance Eq NatAndw where
-  SNat x == SNat y = x == y
-  SNat _ == Omega = True
-  Omega == _ = True
-
-instance Num NatAndw where
-  SNat x + SNat y = SNat (x + y)
-  Omega + _ = Omega
-  _ + Omega = Omega
-  SNat j * SNat k = SNat (j * k)
-  Omega * _ = Omega
-  _ * Omega = Omega
-  fromInteger x = SNat (fromInteger x)
+import           Prelude              (Show (..), String, lookup, error)
+import           Control.Lens         ((^?), ix)
 
 -- checkable terms
 data CTerm
@@ -124,12 +104,16 @@ cEval (Conv ii) d      = iEval ii d
 toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 
+-- TODO :: Promote iEval and cEval into the maybe monad and all call sites
 iEval ∷ ITerm → Env → Value
 iEval (Free x) _d            = vfree x
-iEval (Bound ii) d           = d !! toInt ii --(!!) :: [a] -> Int -> a, the list lookup operator.
 iEval (Nat n) _d             = VNat n
 iEval (App iterm cterm) d    = vapp (iEval iterm d) (cEval cterm d)
 iEval (Ann _pi term _type) d = cEval term d
+iEval (Bound ii) d =
+  case d ^? ix (toInt ii) of
+  Just x  → x
+  Nothing → error ("unbound index " <> show ii)
 
 vapp ∷ Value → Value → Value
 vapp (VLam f) v = f v
@@ -215,7 +199,7 @@ cType _ii _g (Star n) ann = do
 cType ii _g Nats ann =
   unless
     (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
-    (throwError (errorMsg ii Nats (0, VStar 0) ann))
+    (throwError (errorMsg ii Nats (zero, VStar 0) ann))
 -- *-Pi.M and N are of type Star i with 0 usage.
 cType ii g (Pi pi varType resultType) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
@@ -239,7 +223,7 @@ cType ii g (Lam s) ann =
      ->
       cType
         (ii + 1)
-        ((Local ii, (sig * pi, ty)) : g) --put s in the context with usage sig*pi
+        ((Local ii, (sig <.> pi, ty)) : g) --put s in the context with usage sig*pi
         (cSubst 0 (Free (Local ii)) s) --x (varType) in context S with sigma*pi usage.
         (sig, ty' (vfree (Local ii))) --is of type M (usage sigma) in context T
     _ -> throwError $ show (snd ann) <> " is not a function type but should be."
