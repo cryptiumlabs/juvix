@@ -3,6 +3,7 @@ module MainLang where
 
 import           Juvix.Core.MainLang
 import           Juvix.Core.Parser
+import           Juvix.Core.SemiRing
 
 import           Prelude
 
@@ -109,7 +110,7 @@ test_primitive_type_Nats = shouldParse "Nat" Nats
 
 test_dependent_fun ∷ T.TestTree
 test_dependent_fun = shouldParse
-        "[Π] 1 * 0 * 0" (Pi 1 (Star 0) (Star 0))
+        "[Π] 1 * 0 * 0" (Pi (SNat 1) (Star 0) (Star 0))
 
 test_lam_identity ∷ T.TestTree
 test_lam_identity = shouldParse "\\x. Bound 0" (Lam (Conv (Bound 0)))
