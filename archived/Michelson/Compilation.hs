@@ -16,7 +16,7 @@ import qualified Juvix.Backends.Michelson.Untyped           as MU
 import           Juvix.Lang
 import           Juvix.Utility
 
-compileToMichelsonSourceFile :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → Type → m Text
+compileToMichelsonSourceFile ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → Type → m Text
 compileToMichelsonSourceFile expr ty = do
   (M.SomeExpr code, paramTy, _, storageTy) <- compileToMichelson expr ty
   return $ T.unlines [
@@ -25,20 +25,20 @@ compileToMichelsonSourceFile expr ty = do
     "code " <> M.emitFinal code <> ";"
     ]
 
-compileToMichelson :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → Type → m (M.SomeExpr, MU.Type, MU.Type, MU.Type)
+compileToMichelson ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → Type → m (M.SomeExpr, MU.Type, MU.Type, MU.Type)
 compileToMichelson expr ty = do
   ((michelsonExpr', michelsonExprType), _) <- runStateT (exprToMichelson expr ty) []
   let michelsonExpr = leftSeq michelsonExpr'
   case michelsonExprType of
-    MU.LamT start@(MU.PairT paramTy startStorageTy) end@(MU.PairT retTy endStorageTy) | startStorageTy == endStorageTy -> do
+    MU.LamT start@(MU.PairT paramTy startStorageTy) end@(MU.PairT retTy endStorageTy) | startStorageTy == endStorageTy → do
       case (M.liftType paramTy, M.liftType startStorageTy, M.liftType retTy, M.liftType endStorageTy) of
-        (DynamicType (Proxy :: Proxy paramTyLifted), DynamicType (Proxy :: Proxy startStorageTyLifted), DynamicType (Proxy :: Proxy retTyLifted), DynamicType (Proxy :: Proxy endStorageTyLifted)) -> do
-          (M.SomeExpr (expr :: M.Expr (M.Stack a) (M.Stack b)), _) ← M.liftUntyped michelsonExpr (M.typeToStack start) (DynamicType (Proxy :: Proxy startStorageTyLifted))
-          case (eqT :: Maybe (a :~: (M.Pair paramTyLifted startStorageTyLifted, ())), eqT :: Maybe (b :~: (M.Pair retTyLifted endStorageTyLifted, ()))) of
-            (Just Refl, Just Refl) -> do
+        (DynamicType (Proxy ∷ Proxy paramTyLifted), DynamicType (Proxy ∷ Proxy startStorageTyLifted), DynamicType (Proxy ∷ Proxy retTyLifted), DynamicType (Proxy ∷ Proxy endStorageTyLifted)) → do
+          (M.SomeExpr (expr ∷ M.Expr (M.Stack a) (M.Stack b)), _) ← M.liftUntyped michelsonExpr (M.typeToStack start) (DynamicType (Proxy :: Proxy startStorageTyLifted))
+          case (eqT ∷ Maybe (a :~: (M.Pair paramTyLifted startStorageTyLifted, ())), eqT ∷ Maybe (b :~: (M.Pair retTyLifted endStorageTyLifted, ()))) of
+            (Just Refl, Just Refl) → do
               optimized <- M.optimize expr
               return (M.SomeExpr optimized, paramTy, retTy, startStorageTy)
-            _ ->
+            _ →
               throw (InternalFault ("cannot unify start/end stack types - start: " <> prettyPrintType (undefined :: a) <>
                 " but expected " <> prettyPrintType (undefined :: M.Pair startStorageTyLifted paramTyLifted, ()) <> ", end: "
                 <> prettyPrintType (undefined :: b) <> " but expected " <> prettyPrintType (undefined :: M.Pair retTyLifted endStorageTyLifted, ()) <>

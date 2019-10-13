@@ -8,7 +8,8 @@ import Juvix.Bohm.Shared
 import Juvix.Nets.Bohm
 import Juvix.Utility
 
-test2 :: InfoNet (FlipNet Lang)
+test2 ∷ InfoNet (FlipNet Lang)
+
 test2 =
   runFlipNet
     (reduceAll 10)

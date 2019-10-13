@@ -40,5 +40,6 @@ instance Semiring NatAndw where
   _ <.> Omega = Omega
 
 -- | numToNat is a helper function that converts an integer to NatAndW
-numToNat :: Integer → NatAndw
+numToNat ∷ Integer → NatAndw
+
 numToNat = SNat . fromInteger

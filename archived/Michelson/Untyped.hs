@@ -1,7 +1,8 @@
 module Juvix.Backends.Michelson.Untyped where
 
-import Juvix.Utility
-import Protolude hiding (Const (..), Type (..))
+import           Protolude     hiding (Const (..), Type (..))
+
+import           Juvix.Utility
 
 type Stack = [(StackElem, Type)]
 
@@ -9,6 +10,7 @@ data StackElem
   = ConstE Const
   | VarE Text
   | FuncResult
+
   deriving (Show, Eq, PrettyPrint)
 
 data Type
@@ -25,6 +27,7 @@ data Type
   | ListT Type
   | PairT Type Type
   | LamT Type Type
+
   deriving (Show, Eq, PrettyPrint)
 
 data Const
@@ -33,78 +36,91 @@ data Const
   | Bool Bool
   | Tez Integer
   | Int Integer
+
   deriving (Show, Eq, PrettyPrint)
 
 data Expr
-  = {- Stack Operations -}
 
-    Drop
+  {- Stack Operations -}
+
+  = Drop
   | Dup
   | Swap
   | Const Const
-  | {- Pairs -}
 
-    ConsPair
+  {- Pairs -}
+
+  | ConsPair
   | Car
   | Cdr
-  | {- Options -}
 
-    ConsSome
+  {- Options -}
+
+  | ConsSome
   | ConsNone
   | IfNone Expr Expr
-  | {- Unions -}
 
-    Left
+  {- Unions -}
+
+  | Left
   | Right
   | IfLeft Expr Expr
-  | {- Lists -}
 
-    ConsList
+  {- Lists -}
+
+  | ConsList
   | Nil Type
   | IfCons Expr Expr
   | ListMap
   | ListReduce
-  | {- Sets -}
 
-    EmptySet
+  {- Sets -}
+
+  | EmptySet
   | SetMap
   | SetReduce
   | SetMem
   | SetUpdate
   | SetSize
-  | {- Maps -}
 
-    EmptyMap
+  {- Maps -}
+
+  | EmptyMap
   | MapMap
   | MapReduce
   | MapMem
   | MapGet
   | MapUpdate
   | MapSize
-  | {- String Operations -}
 
-    Concat
-  | {- Timestamp Operations -}
+  {- String Operations -}
 
-    AddSecondsToTimestamp
+  | Concat
+
+  {- Timestamp Operations -}
+
+  | AddSecondsToTimestamp
   | AddTimestampToSeconds
-  | {- Currency Operations -}
 
-    AddTez
+  {- Currency Operations -}
+
+  | AddTez
   | SubTez
   | MulTezNat
   | MulNatTez
   | EdivTezNat
   | EdivTez
-  | {- Boolean Operations -}
 
-    Or
+  {- Boolean Operations -}
+
+  | Or
   | And
   | Xor
   | Not
-  | {- Integer Operations -}
 
-    NegNat
+    {- Integer Operations -}
+
+  | NegNat
   | NegInt
   | AbsNat
   | AbsInt
@@ -129,9 +145,10 @@ data Expr
   | XorNat
   | NotNat
   | NotInt
-  | {- Control -}
 
-    Seq Expr Expr
+  {- Control -}
+
+  | Seq Expr Expr
   | If Expr Expr
   | Loop Expr
   | Dip Expr
@@ -139,18 +156,20 @@ data Expr
   | Lambda Expr
   | Fail
   | Nop
-  | {- Comparision -}
 
-    Compare
+  {- Comparision -}
+
+  | Compare
   | Eq
   | Neq
   | Lt
   | Gt
   | Le
   | Ge
-  | {- Protocol -}
 
-    Manager
+  {- Protocol -}
+
+  | Manager
   | TransferTokens
   | CreateAccount
   | DefaultAccount
@@ -163,4 +182,5 @@ data Expr
   | StepsToQuota
   | Source
   | Amount
+
   deriving (Show, Eq, PrettyPrint)

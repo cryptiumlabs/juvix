@@ -13,31 +13,31 @@ import           Juvix.Utility.Sugar
  -}
 
 class (Eq a, PrettyPrint a, R.Typeable a) ⇒ Dynamical a where
-  unSum     :: forall m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
+  unSum     ∷ ∀ m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
   unSum     = throw . NotASumType
 
-  unProduct :: forall m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
+  unProduct ∷ ∀ m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
   unProduct = throw . NotAProductType
 
-  unOption  :: forall m . (MonadError DynamicError m) ⇒ Proxy a → m DynamicType
+  unOption  ∷ ∀ m . (MonadError DynamicError m) ⇒ Proxy a → m DynamicType
   unOption  = throw . NotAnOptionType
 
-  unArrow :: forall m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
+  unArrow ∷ ∀ m . (MonadError DynamicError m) ⇒ Proxy a → m (DynamicType, DynamicType)
   unArrow   = throw . NotAnArrowType
 
 data DynamicError where
-  CannotCast      :: forall a . Dynamical a ⇒ DynamicValue → R.TypeRep a → DynamicError
-  CannotUnify     :: forall a b . (Dynamical a, Dynamical b) ⇒ Proxy a → Proxy b → DynamicError
-  NotAnOptionType :: forall a . Dynamical a ⇒ Proxy a → DynamicError
-  NotAProductType :: forall a . Dynamical a ⇒ Proxy a → DynamicError
-  NotASumType     :: forall a . Dynamical a ⇒ Proxy a → DynamicError
-  NotAnArrowType  :: forall a . Dynamical a ⇒ Proxy a → DynamicError
+  CannotCast      ∷ ∀ a . Dynamical a ⇒ DynamicValue → R.TypeRep a → DynamicError
+  CannotUnify     ∷ ∀ a b . (Dynamical a, Dynamical b) ⇒ Proxy a → Proxy b → DynamicError
+  NotAnOptionType ∷ ∀ a . Dynamical a ⇒ Proxy a → DynamicError
+  NotAProductType ∷ ∀ a . Dynamical a ⇒ Proxy a → DynamicError
+  NotASumType     ∷ ∀ a . Dynamical a ⇒ Proxy a → DynamicError
+  NotAnArrowType  ∷ ∀ a . Dynamical a ⇒ Proxy a → DynamicError
 
 data DynamicValue where
-  DynamicValue :: forall a . Dynamical a ⇒ a → DynamicValue
+  DynamicValue ∷ ∀ a . Dynamical a ⇒ a → DynamicValue
 
 data DynamicType where
-  DynamicType :: forall a . (Dynamical a) ⇒ Proxy a → DynamicType
+  DynamicType ∷ ∀ a . (Dynamical a) ⇒ Proxy a → DynamicType
 
 instance Eq DynamicType where
   (==) (DynamicType (Proxy :: Proxy x)) (DynamicType (Proxy :: Proxy y)) =
@@ -50,23 +50,23 @@ instance PrettyPrint DynamicType where
 
   prettyPrintType (DynamicType (Proxy :: Proxy a)) = prettyPrintType (undefined :: a)
 
-toDynamicType :: forall a . (Dynamical a) ⇒ Proxy a → DynamicType
+toDynamicType ∷ ∀ a . (Dynamical a) ⇒ Proxy a → DynamicType
 toDynamicType = DynamicType
 
-toDynamicValue :: forall a. (Dynamical a) ⇒ a → DynamicValue
+toDynamicValue ∷ ∀ a. (Dynamical a) ⇒ a → DynamicValue
 toDynamicValue = DynamicValue
 
-fromDynamicValue :: forall a m . (MonadError DynamicError m, Dynamical a) ⇒ DynamicValue → m a
-fromDynamicValue dyn@(DynamicValue (b :: bT)) = do
-  let castRep = R.typeRep :: R.TypeRep a
-  case R.eqTypeRep castRep (R.typeRep :: R.TypeRep bT) of
-    Just R.HRefl -> return b
-    Nothing      -> throw (CannotCast dyn castRep)
+fromDynamicValue ∷ ∀ a m . (MonadError DynamicError m, Dynamical a) ⇒ DynamicValue → m a
+fromDynamicValue dyn@(DynamicValue (b ∷ bT)) = do
+  let castRep = R.typeRep ∷ R.TypeRep a
+  case R.eqTypeRep castRep (R.typeRep ∷ R.TypeRep bT) of
+    Just R.HRefl → return b
+    Nothing      → throw (CannotCast dyn castRep)
 
-liftDyn1 :: forall b . (forall a . Dynamical a ⇒ a → b) → DynamicValue → b
+liftDyn1 ∷ ∀ b . (∀ a . Dynamical a ⇒ a → b) → DynamicValue → b
 liftDyn1 func (DynamicValue a) = func a
 
-appDyn1 :: forall a b m . (Dynamical a, MonadError DynamicError m) ⇒ (a → b) → DynamicValue → m b
+appDyn1 ∷ ∀ a b m . (Dynamical a, MonadError DynamicError m) ⇒ (a → b) → DynamicValue → m b
 appDyn1 func = (|<<) func . fromDynamicValue
 
 instance Dynamical ()
@@ -75,16 +75,16 @@ instance Dynamical Bool
 instance Dynamical Integer
 
 instance (Dynamical a, Dynamical b) ⇒ Dynamical (Either a b) where
-  unSum (Proxy :: Proxy (Either a b)) = return (DynamicType (Proxy :: Proxy a), DynamicType (Proxy :: Proxy b))
+  unSum (Proxy ∷ Proxy (Either a b)) = return (DynamicType (Proxy ∷ Proxy a), DynamicType (Proxy ∷ Proxy b))
 
 instance (Dynamical a, Dynamical b) ⇒ Dynamical (a, b) where
-  unProduct (Proxy :: Proxy (x, y)) = return (DynamicType (Proxy :: Proxy a), DynamicType (Proxy :: Proxy b))
+  unProduct (Proxy ∷ Proxy (x, y)) = return (DynamicType (Proxy ∷ Proxy a), DynamicType (Proxy ∷ Proxy b))
 
 instance (Dynamical a) ⇒ Dynamical (Maybe a) where
-  unOption (Proxy :: Proxy (Maybe a)) = return (DynamicType (Proxy :: Proxy a))
+  unOption (Proxy ∷ Proxy (Maybe a)) = return (DynamicType (Proxy ∷ Proxy a))
 
 instance (Eq (a → b)) where
   _ == _ = False
 
 instance (Dynamical a, Dynamical b) ⇒ Dynamical (a → b) where
-  unArrow (Proxy :: Proxy (a → b)) = return (DynamicType (Proxy :: Proxy a), DynamicType (Proxy :: Proxy b))
+  unArrow (Proxy ∷ Proxy (a → b)) = return (DynamicType (Proxy ∷ Proxy a), DynamicType (Proxy ∷ Proxy b))

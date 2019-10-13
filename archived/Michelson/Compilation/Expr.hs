@@ -5,10 +5,10 @@ import           Control.Monad.Writer
 import qualified Data.Text                                  as T
 import           Protolude                                  hiding (Const, Type)
 
-import           Juvix.Backends.Michelson.Compilation.Type
 import           Juvix.Backends.Michelson.Compilation.Types
+import           Juvix.Backends.Michelson.Compilation.Type
+import Juvix.Backends.Michelson.Lift
 import           Juvix.Backends.Michelson.Compilation.Util
-import           Juvix.Backends.Michelson.Lift
 import qualified Juvix.Backends.Michelson.Untyped           as M
 import           Juvix.Lang
 import           Juvix.Utility
@@ -16,7 +16,7 @@ import           Juvix.Utility
 import qualified Idris.Core.TT                              as I
 import qualified IRTS.Lang                                  as I
 
-exprToMichelson :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → Type → m (M.Expr, M.Type)
+exprToMichelson ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → Type → m (M.Expr, M.Type)
 exprToMichelson expr ty = do
   ty@(M.LamT start end) <- typeToType ty
   modify ((:) (M.FuncResult, start))
@@ -27,10 +27,10 @@ exprToMichelson expr ty = do
  - Transform core expression to Michelson instruction sequence.
  - This requires tracking the stack state.
  - At the moment, this functions maintains a forward mapping from the Haskell expression type and the Michelson stack type.
- - :: { Haskell Type } ~ { Stack Pre-Evaluation } ⇒ { Stack Post-Evaluation }
+ - ∷ { Haskell Type } ~ { Stack Pre-Evaluation } ⇒ { Stack Post-Evaluation }
  -}
 
-liftGuard  :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → (Expr → m M.Expr) → m M.Expr
+liftGuard  ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → (Expr → m M.Expr) → m M.Expr
 liftGuard expr func = do
   stk <- get
   michelsonExpr <- func expr
@@ -40,19 +40,19 @@ liftGuard expr func = do
     throw (InternalFault ("Stack mismatch while compiling " <> prettyPrintValue expr <> " : end stack " <> prettyPrintValue end <> ", lifted stack: " <> prettyPrintValue endType))
   return michelsonExpr
 
-exprToExpr :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → m M.Expr
+exprToExpr ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Expr → m M.Expr
 exprToExpr expr = liftGuard expr $ \expr -> do
 
-  let tellReturn :: M.Expr → m M.Expr
+  let tellReturn ∷ M.Expr → m M.Expr
       tellReturn ret = tell [ExprToExpr expr ret] >> return ret
 
-      notYetImplemented :: m M.Expr
+      notYetImplemented ∷ m M.Expr
       notYetImplemented = throw (NotYetImplemented (prettyPrintValue expr))
 
-      failWith :: Text → m M.Expr
+      failWith ∷ Text → m M.Expr
       failWith = throw . NotYetImplemented
 
-      stackGuard :: (M.Stack → M.Stack → Bool) → m M.Expr → m M.Expr
+      stackGuard ∷ (M.Stack -> M.Stack -> Bool) -> m M.Expr -> m M.Expr
       stackGuard guard func = do
         pre   <- get
         res   <- func
@@ -61,16 +61,16 @@ exprToExpr expr = liftGuard expr $ \expr -> do
           throw (NotYetImplemented ("compilation violated stack invariant: " <> prettyPrintValue expr))
         return res
 
-      takesOne :: M.Stack → M.Stack → Bool
+      takesOne ∷ M.Stack -> M.Stack -> Bool
       takesOne post pre = post == drop 1 pre
 
-      addsOne :: M.Stack → M.Stack → Bool
+      addsOne ∷ M.Stack -> M.Stack -> Bool
       addsOne post pre = drop 1 post == pre
 
-      changesTop :: M.Stack → M.Stack → Bool
+      changesTop ∷ M.Stack -> M.Stack -> Bool
       changesTop post pre = drop 1 post == drop 1 pre
 
-      lambda :: Int → M.Stack → M.Stack → Bool
+      lambda ∷ Int -> M.Stack -> M.Stack -> Bool
       lambda nargs post pre = drop nargs pre == drop 1 post
 
   case expr of
@@ -83,19 +83,19 @@ exprToExpr expr = liftGuard expr $ \expr -> do
     I.LV name            -> stackGuard addsOne $ do
       stack <- get
       case position (prettyPrintValue name) stack of
-        Nothing -> throwError (NotYetImplemented ("variable not in scope: " <> prettyPrintValue name))
-        Just i  -> do
+        Nothing → throwError (NotYetImplemented ("variable not in scope: " <> prettyPrintValue name))
+        Just i  → do
           let before  = if i == 0 then M.Nop else rearrange i
               after   = if i == 0 then M.Nop else M.Dip (unrearrange i)
           genReturn (M.Seq (M.Seq before M.Dup) after)
 
-    -- :: (\a -> b) a ~ s ⇒ (b, s)
+    -- ∷ (\a → b) a ~ s ⇒ (b, s)
     I.LApp _ func args   -> stackGuard addsOne $ do
       args <- mapM exprToExpr args -- Check ordering.
       func <- exprToExpr func
       return (M.Seq (foldl M.Seq M.Nop args) func)
 
-    -- :: (\a -> b) a ~ s ⇒ (b, s)
+    -- ∷ (\a → b) a ~ s ⇒ (b, s)
     I.LLazyApp func args -> stackGuard addsOne $ do
       exprToExpr (I.LApp undefined (I.LV func) args)
 
@@ -111,7 +111,7 @@ exprToExpr expr = liftGuard expr $ \expr -> do
     I.LLet name val expr -> stackGuard addsOne $ do
       notYetImplemented
 
-    -- :: \a... -> b ~ (a..., s) ⇒ (b, s)
+    -- ∷ \a... → b ~ (a..., s) ⇒ (b, s)
     I.LLam [arg] body     -> stackGuard (lambda 1) $ do
       modify (\((x, t):xs) -> (M.VarE (prettyPrintValue arg), t):xs)
       inner <- exprToExpr body
@@ -125,11 +125,11 @@ exprToExpr expr = liftGuard expr $ \expr -> do
     -- ??
     I.LProj expr num     -> notYetImplemented
 
-    -- :: a ~ s ⇒ (a, s)
+    -- ∷ a ~ s ⇒ (a, s)
     I.LCon _ _ name args -> stackGuard addsOne $ do
       dataconToExpr name args
 
-    -- :: a ~ s ⇒ (a, s)
+    -- ∷ a ~ s ⇒ (a, s)
     ce@(I.LCase ct expr alts) -> stackGuard addsOne $ do
       -- Do we care about the case type?
       -- Generate switch on native repr (never constructor tag except for e.g. data Ord = A | B | C)
@@ -188,18 +188,18 @@ exprToExpr expr = liftGuard expr $ \expr -> do
 
       return evaluand
 
-    -- :: a ~ s ⇒ (a, s)
+    -- ∷ a ~ s ⇒ (a, s)
     I.LConst const       -> stackGuard addsOne $ do
       M.Const |<< constToExpr const
 
     -- (various)
     I.LForeign _ _ _     -> notYetImplemented
 
-    -- :: a ~ s ⇒ (a, s)
+    -- ∷ a ~ s ⇒ (a, s)
     I.LOp (I.LExternal (I.NS (I.UN prim) ["Prim", "Tezos"])) args -> stackGuard addsOne $ do
       primToExpr prim args
 
-    -- :: a ~ s ⇒ (a, s)
+    -- ∷ a ~ s ⇒ (a, s)
     I.LOp prim args      -> stackGuard addsOne $ do
       args <- mapM exprToExpr args
       prim <- primExprToExpr prim
@@ -209,14 +209,14 @@ exprToExpr expr = liftGuard expr $ \expr -> do
 
     I.LError msg         -> failWith (T.pack msg)
 
-genSwitch :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ M.Type → m (M.Expr → M.Expr → M.Expr)
+genSwitch ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ M.Type -> m (M.Expr -> M.Expr -> M.Expr)
 genSwitch M.BoolT         = return (\x y -> M.If y x) -- TODO
 genSwitch (M.EitherT _ _) = return M.IfLeft
 genSwitch (M.OptionT _)   = return M.IfNone
 genSwitch (M.ListT _)     = return M.IfCons
 genSwitch ty              = throw (NotYetImplemented ("genSwitch: " <> prettyPrintValue ty))
 
-dataconToExpr :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Name → [Expr] → m M.Expr
+dataconToExpr ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Name → [Expr] → m M.Expr
 dataconToExpr name args =
   case (name, args) of
     (I.NS (I.UN "True") ["Prim", "Tezos"], []) -> do
@@ -239,9 +239,9 @@ dataconToExpr name args =
       return $ M.Nil M.OperationT
     _ -> throw (NotYetImplemented ("data con: " <> prettyPrintValue name))
 
-primExprToExpr :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Prim → m M.Expr
+primExprToExpr ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Prim → m M.Expr
 primExprToExpr prim = do
-  let notYetImplemented :: m M.Expr
+  let notYetImplemented ∷ m M.Expr
       notYetImplemented = throw (NotYetImplemented $ prettyPrintValue prim)
 
   case prim of
@@ -254,9 +254,9 @@ primExprToExpr prim = do
 
     _                          -> notYetImplemented
 
-constToExpr :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Const → m M.Const
+constToExpr ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Const → m M.Const
 constToExpr const = do
-  let notYetImplemented :: m M.Const
+  let notYetImplemented ∷ m M.Const
       notYetImplemented = throw (NotYetImplemented (prettyPrintValue const))
 
 
@@ -272,7 +272,7 @@ constToExpr const = do
       return (M.String (T.pack s))
     _       -> notYetImplemented
 
-primToExpr :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Text → [Expr] → m M.Expr
+primToExpr ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m, MonadState M.Stack m) ⇒ Text → [Expr] -> m M.Expr
 primToExpr prim args =
   case (prim, args) of
     ("prim__tezosAmount", []) -> do

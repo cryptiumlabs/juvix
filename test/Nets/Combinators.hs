@@ -9,49 +9,56 @@ import Juvix.Nets.Combinators
 import Juvix.Utility
 
 -- Example Graphs --------------------------------------------------------------
-commute1 :: Net Lang
+commute1 ∷ Net Lang
+
 commute1 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Con, []),
       ([], 2, Dup, [])
     ]
 
-commute2 :: Net Lang
+commute2 ∷ Net Lang
+
 commute2 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Con, []),
       ([], 2, Era, [])
     ]
 
-commute3 :: Net Lang
+commute3 ∷ Net Lang
+
 commute3 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Dup, []),
       ([], 2, Era, [])
     ]
 
-annihilate1 :: Net Lang
+annihilate1 ∷ Net Lang
+
 annihilate1 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Con, []),
       ([], 2, Con, [])
     ]
 
-annihilate2 :: Net Lang
+annihilate2 ∷ Net Lang
+
 annihilate2 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Dup, []),
       ([], 2, Dup, [])
     ]
 
-annihilate3 :: Net Lang
+annihilate3 ∷ Net Lang
+
 annihilate3 =
   buildGr
     [ ([(Edge (2, Prim) (1, Prim), 2)], 1, Era, []),
       ([], 2, Era, [])
     ]
 
-nonTerminating :: FlipNet Lang
+nonTerminating ∷ FlipNet Lang
+
 nonTerminating =
   Flip $
     buildGr
@@ -76,5 +83,6 @@ nonTerminating =
 -- Tests------------------------------------------------------------------------
 
 -- TODO: Write real tests
-test1 :: InfoNet (FlipNet Lang)
+test1 ∷ InfoNet (FlipNet Lang)
+
 test1 = runFlipNet (reduceAll 100) nonTerminating
