@@ -6,8 +6,7 @@ import Juvix.Encoding.Scott
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)
 
-userNat ∷ Name
-
+userNat :: Name
 userNat =
   Adt
     (intern "Nat")
@@ -17,8 +16,7 @@ userNat =
         (Single (intern "S") Term)
     )
 
-dUserNat ∷ Name
-
+dUserNat :: Name
 dUserNat =
   Adt
     (intern "Nat")
@@ -33,8 +31,7 @@ dUserNat =
     )
 
 -- Test cases for Nat ----------------------------------------------------------
-zero' ∷ Lambda
-
+zero' :: Lambda
 zero' =
   app
     in'
@@ -46,15 +43,13 @@ zero' =
         )
     )
 
-succ' ∷ Lambda
-
+succ' :: Lambda
 succ' =
   Lambda
     (intern "c%gen1")
     (app in' (app inr (app inl (Value (intern "c%gen1")))))
 
-dup' ∷ Lambda
-
+dup' :: Lambda
 dup' =
   Lambda
     (intern "c%gen1")
@@ -81,8 +76,7 @@ dup' =
         )
     )
 
-test2D ∷ Either Errors (Lambda, Env)
-
+test2D :: Either Errors (Lambda, Env)
 test2D = runEnvsS $ do
   adtToMendler dUserNat
   mendlerCase
@@ -123,8 +117,7 @@ test2D = runEnvsS $ do
 --   | S n     → 1 + (f n i)
 --   | D n1 n2 → f n2 0 + f n1 i
 
-test3D ∷ Either Errors (Lambda, Env)
-
+test3D :: Either Errors (Lambda, Env)
 test3D = runEnvsS $ do
   adtToMendler dUserNat
   mendlerCase
@@ -177,8 +170,7 @@ test3D = runEnvsS $ do
         ]
     )
 
-test3D' ∷ Either Errors (Lambda, Env)
-
+test3D' :: Either Errors (Lambda, Env)
 test3D' = runEnvsS $ do
   adtToScott dUserNat
   scottCase
@@ -231,8 +223,7 @@ test3D' = runEnvsS $ do
         ]
     )
 
-test1 ∷ Either Errors (Lambda, Env)
-
+test1 :: Either Errors (Lambda, Env)
 test1 = runEnvsS $ do
   adtToMendler userNat
   mendlerCase
@@ -255,8 +246,7 @@ test1 = runEnvsS $ do
         ]
     )
 
-test1' ∷ Either Errors (Lambda, Env)
-
+test1' :: Either Errors (Lambda, Env)
 test1' = runEnvsS $ do
   adtToScott userNat
   scottCase
