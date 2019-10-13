@@ -29,15 +29,15 @@ parameterizeType ∷
   Type →
   m PType
 parameterizeType ty = do
-  param <- freshParam
+  param ← freshParam
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case ty of
     SymT sym →
       pure (PSymT param sym)
     ArrT arg body → do
-      arg <- parameterizeType arg
-      body <- parameterizeType body
+      arg ← parameterizeType arg
+      body ← parameterizeType body
       pure (PArrT param arg body)
 
 -- Parameterize type assignment.
@@ -48,7 +48,7 @@ parameterizeTypeAssignment ∷
   ) ⇒
   m ParamTypeAssignment
 parameterizeTypeAssignment = do
-  assignment <- get @"typeAssignment"
+  assignment ← get @"typeAssignment"
   traverse parameterizeType assignment
 
 -- Reparameterize.
@@ -59,7 +59,7 @@ reparameterize ∷
   PType →
   m PType
 reparameterize pty = do
-  param <- freshParam
+  param ← freshParam
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case pty of
@@ -94,9 +94,9 @@ boxAndTypeConstraint ∷
   m (RPT, PType)
 boxAndTypeConstraint parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterizedAssignment
-  varPaths <- get @"varPaths"
-  param <- addPath
-  path <- get @"path"
+  varPaths ← get @"varPaths"
+  param ← addPath
+  path ← get @"path"
   -- Boxing constraint.
   addConstraint (Constraint (ConstraintVar 1 <$> path) (Gte 0))
   case term of
@@ -107,14 +107,14 @@ boxAndTypeConstraint parameterizedAssignment term = do
         Nothing → addConstraint (Constraint (ConstraintVar 1 <$> path) (Eq 0))
       let origParamTy = parameterizedAssignment Map.! sym
       -- Typing constraint: variable occurrences.
-      occurrenceMap <- get @"occurrenceMap"
+      occurrenceMap ← get @"occurrenceMap"
       let occurrences = occurrenceMap Map.! sym
           origBangParam = bangParam origParamTy
       -- If non-linear (>= 2 occurrences), original type must be of form !A.
       when (occurrences >= 2) $
         addConstraint (Constraint [ConstraintVar 1 origBangParam] (Gte 1))
       -- Calculate parameterized type for subterm.
-      paramTy <- reparameterize origParamTy
+      paramTy ← reparameterize origParamTy
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
       -- where n = param
       -- and   k = origBangParam
@@ -132,17 +132,17 @@ boxAndTypeConstraint parameterizedAssignment term = do
       -- Return parameterized term.
       pure (RBang param (RVar sym), paramTy)
     Lam sym body → do
-      nextParam <- getNextParam
+      nextParam ← getNextParam
       modify' @"varPaths" (Map.insert sym nextParam)
-      (body, bodyTy) <- rec body
+      (body, bodyTy) ← rec body
       -- Calculate parameterized type for subterm.
-      lamTyParam <- freshParam
+      lamTyParam ← freshParam
       -- Typing constraint: m >= 0
       addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Gte 0))
       let argTy = parameterizedAssignment Map.! sym
           lamTy = PArrT lamTyParam argTy bodyTy
       -- Calculate final type.
-      resTy <- reparameterize lamTy
+      resTy ← reparameterize lamTy
       -- Typing constraint: m = 0
       addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Eq 0))
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
@@ -162,13 +162,13 @@ boxAndTypeConstraint parameterizedAssignment term = do
       -- Return parameterized term.
       pure (RBang param (RLam sym body), resTy)
     App a b → do
-      (a, aTy) <- rec a
+      (a, aTy) ← rec a
       let PArrT bangA argTy resTy = aTy
       put @"path" path
       put @"varPaths" varPaths
-      (b, bTy) <- rec b
+      (b, bTy) ← rec b
       -- Calculate parameterized type for subterm.
-      appTy <- reparameterize resTy
+      appTy ← reparameterize resTy
       -- Typing constraint: U(A₁, A₂) ∪ m = 0
       -- where the terms are from:
       -- aTy = !^m(A₁ ⊸ B₁)
@@ -204,7 +204,7 @@ generateTypeAndConstraints ∷
   Term →
   m (RPT, ParamTypeAssignment)
 generateTypeAndConstraints term = do
-  parameterizedAssignment <- parameterizeTypeAssignment
+  parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
   boxAndTypeConstraint parameterizedAssignment term
     >>| second (const parameterizedAssignment)
@@ -256,22 +256,22 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse
         Just t → do
-          newTyp <- addParamPos bangVar t
+          newTyp ← addParamPos bangVar t
           if
             | bangParam t > 0 → pure (assign, newTyp)
             | otherwise → pure (Map.delete s assign, newTyp)
     rec' (RBang bangApp term@(RApp t1 t2)) assign = do
-      (newAssign, type1) <- rec' t1 assign
-      (newAssign', type2) <- rec' t2 newAssign
+      (newAssign, type1) ← rec' t1 assign
+      (newAssign', type2) ← rec' t2 newAssign
       case type1 of
         PArrT _ arg result
           | arg == type2 → do
-            newTyp <- addParamPos bangApp result
+            newTyp ← addParamPos bangApp result
             pure (newAssign', newTyp)
           | otherwise → throw @"typ" (MisMatchArguments arg type2 term)
         t@PSymT {} → throw @"typ" (TypeIsNotFunction t)
     rec' (RBang x (RLam s t)) assign = do
-      (newAssign, bodyType) <- rec' t assign
+      (newAssign, bodyType) ← rec' t assign
       case assign Map.!? s of
         Just arg → pure (newAssign, PArrT x arg bodyType)
         Nothing → throw @"typ" MissingOverUse
@@ -306,14 +306,14 @@ getNextParam = get @"nextParam"
 -- | Generate fresh parameter.
 freshParam ∷ (HasState "nextParam" Param m) ⇒ m Param
 freshParam = do
-  param <- get @"nextParam"
+  param ← get @"nextParam"
   put @"nextParam" (succ param)
   pure param
 
 -- Append to path.
 addPath ∷ (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
 addPath = do
-  param <- freshParam
+  param ← freshParam
   modify' @"path" (<> [param])
   pure param
 

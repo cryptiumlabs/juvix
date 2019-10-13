@@ -110,15 +110,15 @@ parseEal' = runParser (whiteSpace *> expression <* eof) ()
 
 parseBohmFile ∷ FilePath → IO (Either ParseError RPTO)
 parseBohmFile fname = do
-  input <- readFile fname
+  input ← readFile fname
   pure $ parseEal' fname (show input)
 
 -- Grammar ---------------------------------------------------------------------
 expressionGen ∷ Stream s m Char ⇒ ParsecT s u m RPTI → ParsecT s u m RPTO
 expressionGen ealGen = do
-  bang <- try (string "!-") <|> string "!"
-  bangs <- many (try (string "!-") <|> string "!" <|> string " ")
-  term <- ealGen
+  bang ← try (string "!-") <|> string "!"
+  bangs ← many (try (string "!-") <|> string "!" <|> string " ")
+  term ← ealGen
   let f "!" = 1
       f _ = (- 1)
       num = sum (fmap f (filter (/= " ") (bang : bangs)))
@@ -157,15 +157,15 @@ symbol = intern <$> identifier
 lambda ∷ Parser RPTI
 lambda = do
   reserved "lambda" <|> reservedOp "\\" <|> reservedOp "λ"
-  s <- symbol
+  s ← symbol
   reservedOp "."
-  body <- expression
+  body ← expression
   pure (RLam s body)
 
 application ∷ Parser RPTI
 application = do
-  exp <- expression'
-  exps <- many1 expression'
+  exp ← expression'
+  exps ← many1 expression'
   case exps of
     [] → error "doesn't happen"
     x : xs → pure $ foldl (\acc x → RApp (RBang 0 acc) x) (RApp exp x) xs
@@ -175,8 +175,8 @@ term = RVar <$> symbol
 
 bangs ∷ Parser PType
 bangs = do
-  bangs <- many1 (try (string "!-") <|> string "!" <|> string " ")
-  typ <- parens types <|> types
+  bangs ← many1 (try (string "!-") <|> string "!" <|> string " ")
+  typ ← parens types <|> types
   let f "!" = 1
       f _ = (- 1)
       num = sum (fmap f (filter (/= " ") bangs))

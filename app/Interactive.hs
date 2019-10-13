@@ -18,7 +18,7 @@ import Prelude (String)
 
 interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
-  func <- return $ \str → return str
+  func ← return $ \str → return str
   H.runInputT (settings ctx) (mainLoop func)
 
 settings ∷ Context → H.Settings IO
@@ -31,7 +31,7 @@ settings ctx =
 
 mainLoop ∷ (String → IO String) → H.InputT IO ()
 mainLoop func = do
-  input <- H.getInputLine "jvxi >> "
+  input ← H.getInputLine "jvxi >> "
   case input of
     Nothing → return ()
     Just i → do
@@ -67,7 +67,7 @@ handleSpecial str cont = do
       H.outputStrLn $ show parsed
       case parsed of
         Just cterm → do
-          eal <- eraseAndSolveCore cterm
+          eal ← eraseAndSolveCore cterm
           case eal of
             Right (term, _) → do
               transformAndEvaluateEal True term
@@ -99,7 +99,7 @@ eraseAndSolveCore ∷
   Core.CTerm → H.InputT IO (Either EAC.Errors (EAC.RPT, EAC.ParamTypeAssignment))
 eraseAndSolveCore cterm = do
   let (term, typeAssignment) = Core.erase' cterm
-  res <- liftIO (EAC.validEal term typeAssignment)
+  res ← liftIO (EAC.validEal term typeAssignment)
   H.outputStrLn ("Inferred EAC term & type: " <> show res)
   pure res
 

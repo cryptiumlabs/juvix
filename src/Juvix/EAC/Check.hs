@@ -13,7 +13,7 @@ validEal term typMap = do
           generateTypeAndConstraints term
       constraint = constraints env
   -- Z3 constraint assignment
-  assignment <- getConstraints constraint
+  assignment ← getConstraints constraint
   pure $
     case assignment of
       Just x →

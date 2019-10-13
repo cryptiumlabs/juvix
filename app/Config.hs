@@ -19,7 +19,7 @@ defaultConfig = Config
 
 loadConfig ∷ FilePath → IO (Maybe Config)
 loadConfig path = do
-  config <- Y.decodeFileEither path
+  config ← Y.decodeFileEither path
   return $ case config of
     Right parsed → pure parsed
     Left _ → Nothing

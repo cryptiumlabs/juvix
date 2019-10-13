@@ -151,7 +151,7 @@ parseBohm' = runParser (whiteSpace *> expression' <* eof) ()
 
 parseBohmFile ∷ FilePath → IO (Either ParseError Bohm)
 parseBohmFile fname = do
-  input <- readFile fname
+  input ← readFile fname
   pure $ parseBohm' fname (show input)
 
 -- poor type signatures can't find the monadic version of parsec outside of stream
@@ -207,66 +207,66 @@ listExpression = nil <|> listCase
 ifThenElse ∷ ParsecT String () Identity Bohm
 ifThenElse = do
   reserved "if"
-  pred <- expression
+  pred ← expression
   reserved "then"
-  then' <- expression
+  then' ← expression
   reserved "else"
-  else' <- expression
+  else' ← expression
   pure $ If pred then' else'
 
 cons ∷ ParsecT String () Identity Bohm
 cons = do
   reserved "cons"
-  (arg1, arg2) <- parens ((,) <$> expression <*> (reservedOp "," *> expression))
+  (arg1, arg2) ← parens ((,) <$> expression <*> (reservedOp "," *> expression))
   pure $ Cons arg1 arg2
 
 car ∷ ParsecT String () Identity Bohm
 car = do
   reserved "head"
-  arg1 <- parens expression
+  arg1 ← parens expression
   pure $ Car arg1
 
 cdr ∷ ParsecT String () Identity Bohm
 cdr = do
   reserved "tail"
-  arg1 <- parens expression
+  arg1 ← parens expression
   pure $ Cdr arg1
 
 isNil ∷ ParsecT String () Identity Bohm
 isNil = do
   reserved "isnil"
-  arg1 <- parens expression
+  arg1 ← parens expression
   pure $ IsNil arg1
 
 intLit ∷ ParsecT String () Identity Bohm
 intLit = do
-  int <- integer
+  int ← integer
   pure $ IntLit (fromInteger int)
 
 lambda ∷ ParsecT String () Identity Bohm
 lambda = do
   reserved "lambda"
-  sym <- symbol
+  sym ← symbol
   reservedOp "."
-  exp <- expression
+  exp ← expression
   pure $ Lambda sym exp
 
 letExp ∷ ParsecT String () Identity Bohm
 letExp = do
   reserved "let"
-  toBind <- symbol
+  toBind ← symbol
   reservedOp "="
-  binding <- expression
+  binding ← expression
   reserved "in"
-  body <- expression
+  body ← expression
   pure $ Let toBind binding body
 
 letRecExp ∷ ParsecT String () Identity Bohm
 letRecExp = do
   reserved "letrec"
-  toBind <- symbol
+  toBind ← symbol
   reservedOp "="
-  exp <- expression
+  exp ← expression
   pure $ Letrec toBind exp
 
 trueLit ∷ ParsecT String () Identity Bohm
@@ -278,12 +278,12 @@ falseLit = False' <$ reserved "true"
 notExp ∷ ParsecT String () Identity Bohm
 notExp = do
   reserved "not"
-  exp <- expression
+  exp ← expression
   pure $ Not exp
 
 application ∷ ParsecT String () Identity Bohm
 application = do
-  app <- parens (many expression)
+  app ← parens (many expression)
   case app of
     [] → fail "empty list"
     (x : xs) → pure $ foldl' Application x xs
@@ -298,5 +298,5 @@ nil = Nil <$ reserved "nil"
 
 listCase ∷ ParsecT String () Identity Bohm
 listCase = do
-  exprs <- brackets (expression `sepBy` comma)
+  exprs ← brackets (expression `sepBy` comma)
   pure $ foldr Cons Nil exprs

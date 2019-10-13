@@ -25,7 +25,7 @@ test_church_exp = shouldBeTypeable churchExp churchExpAssignment
 shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
   T.testCase (show term <> " should be typeable in EAC") $ do
-    valid <- validEal term assignment
+    valid ← validEal term assignment
     case valid of
       Right _ → return ()
       Left er → T.assertFailure (show er)
@@ -33,7 +33,7 @@ shouldBeTypeable term assignment =
 shouldNotBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldNotBeTypeable term assignment =
   T.testCase (show term <> " should not be typeable in EAC") $ do
-    valid <- validEal term assignment
+    valid ← validEal term assignment
     case valid of
       Right _ → T.assertFailure "a satisfying assignment was found"
       Left _ → pure ()

@@ -57,8 +57,8 @@ reduceAll = H.untilNothingNTimesM reduce
 
 reduce ∷ InfoNetworkDiff net Lang m ⇒ m Bool
 reduce = do
-  nodes' <- nodes
-  isChanged <- foldrM update False nodes'
+  nodes' ← nodes
+  isChanged ← foldrM update False nodes'
   if isChanged
     then do
       modify @"info" (\c → c {parallelSteps = parallelSteps c + 1})
@@ -66,7 +66,7 @@ reduce = do
     else pure isChanged
   where
     update n isChanged = do
-      both <- isBothPrimary n
+      both ← isBothPrimary n
       if not both
         then pure isChanged
         else langToProperPort n >>= \case
@@ -127,8 +127,8 @@ erase conNum eraseNum port =
     Erase {} → incGraphSizeStep (- 2) *> delNodes [conNum, eraseNum]
   where
     rewire = do
-      eraA <- newNode Era
-      eraB <- newNode Era
+      eraA ← newNode Era
+      eraB ← newNode Era
       let nodeA = RELAuxiliary0 {node = eraA, primary = ReLink conNum Aux1}
           nodeB = RELAuxiliary0 {node = eraB, primary = ReLink conNum Aux2}
       traverse_ linkAll [nodeA, nodeB]
@@ -144,10 +144,10 @@ conDup ∷
   m ()
 conDup conNum deconNum (Construct _ _auxA _auxB) (Duplicate _ _auxC _auxD) = do
   incGraphSizeStep 2
-  dupA <- newNode Dup
-  dupB <- newNode Dup
-  conC <- newNode Con
-  conD <- newNode Con
+  dupA ← newNode Dup
+  dupB ← newNode Dup
+  conC ← newNode Con
+  conD ← newNode Con
   let nodeA = RELAuxiliary2
         { node = dupA,
           primary = ReLink conNum Aux1,

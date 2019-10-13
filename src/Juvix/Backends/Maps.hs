@@ -35,7 +35,7 @@ runMapNet' f net = runNet' f net (toInteger (length (ofNet net)))
 instance Network Net where
 
   link np1@(node1, port1) np2@(node2, port2) = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     case (Map.lookup node1 net, Map.lookup node2 net) of
       (Just n1, Just n2) →
         let newN1 = over edges (Map.insert port1 np2) n1
@@ -56,7 +56,7 @@ instance Network Net where
       Nothing → False
 
   newNode lang = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     let num
           | Map.null net = 0
           | otherwise = fst (Map.findMax net)
@@ -66,9 +66,9 @@ instance Network Net where
   nodes = fmap fst . Map.toList . ofNet <$> get @"net"
 
   findEdge (node, nodePort) = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     pure $ do
-      n <- Map.lookup node net
+      n ← Map.lookup node net
       -- If this fails it could be due
       -- to a node referring to itself
       -- this could mean the edge we are searching for
@@ -99,7 +99,7 @@ instance Network Net where
 
   -- This deletes nodes improperly lies here
   delNodes xs = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     let delEdges nodeNum node net =
           foldr (flip (deleteAllPoints nodeNum)) net (Map.toList (node ^. edges))
         delNodeAndEdges =
@@ -112,7 +112,7 @@ instance Network Net where
     put @"net" (Net (delNodeAndEdges net xs))
 
   deleteRewire oldNodesToDelete newNodes = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     let newNodeSet = Set.fromList newNodes
         neighbor = neighbors oldNodesToDelete net
         conflictingNeighbors = findConflict newNodeSet neighbor
@@ -137,11 +137,11 @@ deleteAllPoints n = foldr f
 
 neighbors ∷ [Node] → Map.EnumMap Node (NodeInfo a) → [EdgeInfo]
 neighbors oldNodes net = do
-  node <- oldNodes
+  node ← oldNodes
   case Map.lookup node net of
     Nothing → []
     Just x → do
-      (port, neigbhors) <- Map.toList (x ^. edges)
+      (port, neigbhors) ← Map.toList (x ^. edges)
       pure (Edge neigbhors (node, port))
 
 instance DifferentRep Net where
@@ -159,7 +159,7 @@ instance DifferentRep Net where
   aux5FromGraph con = auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
 
   langToPort n f = do
-    Net net <- get @"net"
+    Net net ← get @"net"
     case Map.lookup n net of
       Just context → f (context ^. typ)
       Nothing → pure Nothing
@@ -173,7 +173,7 @@ auxFromGraph ∷
   Node →
   m (Maybe b)
 auxFromGraph conv constructor num = do
-  Net net <- get @"net"
+  Net net ← get @"net"
   let edges = neighbors [num] net
   pure $ Just $ foldr f constructor edges
   where

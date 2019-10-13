@@ -81,7 +81,7 @@ mendlerCase ∷
   Switch →
   m Lambda
 mendlerCase c = do
-  expandedCase <- caseGen c onNoArg onrec
+  expandedCase ← caseGen c onNoArg onrec
   case expandedCase of
     Application on b →
       pure $ Application on $

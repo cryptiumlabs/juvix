@@ -25,11 +25,11 @@ caseGen ∷
 caseGen (Case _ []) _ _ =
   throw @"err" MatchWithoutCases
 caseGen (Case on cases@(C c _ _ : _)) onNoArg onRec = do
-  cons <- get @"constructors"
+  cons ← get @"constructors"
   case cons Map.!? c of
     Nothing → throw @"err" (NotInAdt c)
     Just Bound {adtName} → do
-      adtConstructors <- getOrderedConstructors adtName
+      adtConstructors ← getOrderedConstructors adtName
       case adtConstructors of
         [] → throw @"err" InvalidAdt
         _ → do
@@ -44,13 +44,13 @@ caseGen (Case on cases@(C c _ _ : _)) onNoArg onRec = do
               recCase t accLam = lambdaFromEnv (flip onRec accLam) t
               initial t = lambdaFromEnv identity t
               butLastadtCon = reverse (tailSafe (reverse adtConstructors))
-          last <- initial (lastDef (error "doesn't happen") adtConstructors)
-          expandedCase <- foldrM recCase last butLastadtCon
+          last ← initial (lastDef (error "doesn't happen") adtConstructors)
+          expandedCase ← foldrM recCase last butLastadtCon
           return $ Application on expandedCase
   where
     caseMap = foldr (\(C s args body) → Map.insert s (args, body)) mempty cases
     getOrderedConstructors adtName = do
-      adtMap <- get @"adtMap"
+      adtMap ← get @"adtMap"
       case adtMap Map.!? adtName of
         Just x → return x
         Nothing → throw @"err" (AdtNotDefined adtName)
@@ -77,7 +77,7 @@ adtConstructor s prod name = do
         )
         name
     )
-  cons <- get @"constructors"
+  cons ← get @"constructors"
   case cons Map.!? s of
     Just _ → throw @"err" AlreadyDefined
     Nothing → modify' @"constructors" (Map.insert s (Bound prod name))

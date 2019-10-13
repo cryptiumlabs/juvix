@@ -66,7 +66,7 @@ astToNet bohm customSymMap = net'
     recursive (BT.Or b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or) c
     recursive (BT.And b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
     recursive (BT.Symbol' s) context = do
-      frees <- get @"free"
+      frees ← get @"free"
       case (context Map.!? s, frees Map.!? s) of
         -- The symbol is bound, and thus we have a port and its number
         (Just portInfo, _) → chaseAndCreateFan portInfo
@@ -78,7 +78,7 @@ astToNet bohm customSymMap = net'
           case customSymMap Map.!? s of
             -- The symbol is Free, just stash it in a symbol with no rewrite rules
             Nothing → do
-              nodeInfo <- (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim
+              nodeInfo ← (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim
               put @"free" (Map.insert s nodeInfo frees)
               pure nodeInfo
             -- These nodes are in the environment, make lambda abstractions for them
@@ -89,15 +89,15 @@ astToNet bohm customSymMap = net'
                 PBool True → recursive BT.True' context
                 PBool False → recursive BT.False' context
             Just (BT.Arg1 f) → do
-              numLam <- newNode (B.Auxiliary2 B.Lambda)
-              numCurr <- newNode (B.Auxiliary1 $ B.Curried1 f)
+              numLam ← newNode (B.Auxiliary2 B.Lambda)
+              numCurr ← newNode (B.Auxiliary1 $ B.Curried1 f)
               link (numLam, Aux2) (numCurr, Prim)
               link (numLam, Aux1) (numCurr, Aux1)
               pure (numLam, Prim)
             Just (BT.Arg2 f) → do
-              numLam1 <- newNode (B.Auxiliary2 B.Lambda) -- arg1
-              numLam2 <- newNode (B.Auxiliary2 B.Lambda) -- arg2
-              numCurr <- newNode (B.Auxiliary2 $ B.Curried2 f)
+              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
+              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
+              numCurr ← newNode (B.Auxiliary2 $ B.Curried2 f)
               -- Lambda chain
               link (numLam1, Aux1) (numLam2, Prim)
               link (numLam2, Aux1) (numCurr, Aux1)
@@ -106,10 +106,10 @@ astToNet bohm customSymMap = net'
               link (numLam2, Aux2) (numCurr, Aux2)
               pure (numLam1, Prim)
             Just (BT.Arg3 f) → do
-              numLam1 <- newNode (B.Auxiliary2 B.Lambda) -- arg1
-              numLam2 <- newNode (B.Auxiliary2 B.Lambda) -- arg2
-              numLam3 <- newNode (B.Auxiliary2 B.Lambda) -- arg3
-              numCurr <- newNode (B.Auxiliary3 $ B.Curried3 f)
+              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
+              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
+              numLam3 ← newNode (B.Auxiliary2 B.Lambda) -- arg3
+              numCurr ← newNode (B.Auxiliary3 $ B.Curried3 f)
               -- Lambda chain
               link (numLam1, Aux1) (numLam2, Prim)
               link (numLam2, Aux1) (numLam3, Prim)
@@ -120,43 +120,43 @@ astToNet bohm customSymMap = net'
               link (numLam3, Aux2) (numCurr, Aux2)
               pure (numLam1, Prim)
     recursive (BT.Letrec sym body) context = do
-      numMu <- newNode (B.Auxiliary2 B.Mu)
-      (bNode, bPort) <- recursive body (Map.insert sym (numMu, Aux2) context)
+      numMu ← newNode (B.Auxiliary2 B.Mu)
+      (bNode, bPort) ← recursive body (Map.insert sym (numMu, Aux2) context)
       link (numMu, Aux1) (bNode, bPort)
       pure (numMu, Prim)
     recursive (BT.Lambda s body) context = do
-      numLam <- newNode (B.Auxiliary2 B.Lambda)
-      (bNode, bPort) <- recursive body (Map.insert s (numLam, Aux2) context)
+      numLam ← newNode (B.Auxiliary2 B.Lambda)
+      (bNode, bPort) ← recursive body (Map.insert s (numLam, Aux2) context)
       link (numLam, Aux1) (bNode, bPort)
-      aux2Filled <- findEdge (numLam, Aux2)
+      aux2Filled ← findEdge (numLam, Aux2)
       case aux2Filled of
         Nothing → do
-          numErase <- newNode (B.Primar B.Erase)
+          numErase ← newNode (B.Primar B.Erase)
           link (numLam, Aux2) (numErase, Prim)
         Just _ → pure ()
       pure (numLam, Prim)
     recursive (BT.Let sym bound body) context = do
-      (numBound, portBound) <- recursive bound context
+      (numBound, portBound) ← recursive bound context
       recursive body (Map.insert sym (numBound, portBound) context)
     recursive (BT.If b1 b2 b3) c = do
-      (numIf, retPort) <- genericAux2 (b1, Prim) (b2, Aux3) (B.Auxiliary3 B.IfElse, Aux1) c
-      (b3Num, b3Port) <- recursive b3 c
+      (numIf, retPort) ← genericAux2 (b1, Prim) (b2, Aux3) (B.Auxiliary3 B.IfElse, Aux1) c
+      (b3Num, b3Port) ← recursive b3 c
       link (numIf, Aux2) (b3Num, b3Port)
       pure (numIf, retPort)
     -- see comment on primArg below to see what these arguments mean!
     genericAux1 (b1, pb1) (langToCreate, portToReturn) context = do
-      numCar <- newNode langToCreate
-      (bNum, bPort) <- recursive b1 context
+      numCar ← newNode langToCreate
+      (bNum, bPort) ← recursive b1 context
       link (bNum, bPort) (numCar, pb1)
       pure (numCar, portToReturn)
     genericAux2 (b1, pb1) (b2, pb2) retInfo context = do
-      (numApp, retPort) <- genericAux1 (b1, pb1) retInfo context
-      (b2Num, b2Port) <- recursive b2 context
+      (numApp, retPort) ← genericAux1 (b1, pb1) retInfo context
+      (b2Num, b2Port) ← recursive b2 context
       link (numApp, pb2) (b2Num, b2Port)
       pure (numApp, retPort)
     genericAux3 (b1, pb1) (b2, pb2) (b3, pb3) retInfo context = do
-      (numApp, retPort) <- genericAux2 (b1, pb1) (b2, pb2) retInfo context
-      (b3Num, b3Port) <- recursive b3 context
+      (numApp, retPort) ← genericAux2 (b1, pb1) (b2, pb2) retInfo context
+      (b3Num, b3Port) ← recursive b3 context
       link (numApp, pb3) (b3Num, b3Port)
       pure (numApp, retPort)
     genericAux2PrimArg b1 b2 lc =
@@ -194,7 +194,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
     run = do
       -- rec' assumes that we are given a statement at the top of the graphical AST
       let rec' n comeFrom fanMap nodeVarInfo@(nodeVarMap, nodeVarLengh) = do
-            port <- B.langToProperPort n
+            port ← B.langToProperPort n
             case port of
               Nothing → pure Nothing
               Just port →
@@ -202,9 +202,9 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                   B.IsAux3 {B._tag3 = tag, B._prim = prim, B._aux2 = aux2, B._aux3 = aux3} →
                     case (prim, aux2, aux3) of
                       (Primary p, Auxiliary a2, Auxiliary a3) → do
-                        p <- rec' p (Just (n, Prim)) fanMap nodeVarInfo
-                        a2 <- rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
-                        a3 <- rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
+                        p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
+                        a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                        a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
                         let tag' = case tag of
                               B.IfElse → BT.If
                               B.Curried3 f → BT.Curried3 f
@@ -214,15 +214,15 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                     let parentAux1 con = do
                           case (prim, aux2) of
                             (Primary p, Auxiliary a2) → do
-                              p <- rec' p (Just (n, Prim)) fanMap nodeVarInfo
-                              a2 <- rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                              p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
+                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> p <*> a2)
                             _ → pure Nothing
                         parentPrim con = do
                           case (aux1, aux2) of
                             (Auxiliary a1, Auxiliary a2) → do
-                              a1 <- rec' a1 (Just (n, Aux1)) fanMap nodeVarInfo
-                              a2 <- rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                              a1 ← rec' a1 (Just (n, Aux1)) fanMap nodeVarInfo
+                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> a1 <*> a2)
                             _ → pure Nothing
                         -- Case for Lambda and mu
@@ -233,10 +233,10 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                     newNodeVarMap = Map.insert n symb nodeVarMap
                                  in case aux1 of
                                       Auxiliary a1 → do
-                                        a1 <- rec' a1 (Just (n, Aux1)) fanMap (newNodeVarMap, succ nodeVarLengh)
+                                        a1 ← rec' a1 (Just (n, Aux1)) fanMap (newNodeVarMap, succ nodeVarLengh)
                                         pure (lamOrMu symb <$> a1)
                                       FreeNode → pure Nothing
-                          mEdge <- traverseM findEdge comeFrom
+                          mEdge ← traverseM findEdge comeFrom
                           case mEdge of
                             -- We are pointing to the symbol of this lambda
                             Just (_, Aux2) →
@@ -266,7 +266,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                               -- we haven't visited or completed a fan in
                               -- Check if we came through the main port or Circle or Star
                               Nothing → do
-                                mPort <- traverseM findEdge comeFrom
+                                mPort ← traverseM findEdge comeFrom
                                 let freeChoice =
                                       let newFanMap = Map.insert i [In Circle] fanMap
                                           cameFrom = (Just (n, fanPortsToAux Circle))
@@ -294,7 +294,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                   _ → pure Nothing
                               -- We have been in a FanIn Before, figure out what state of the world we are in!
                               Just status → do
-                                mPort <- traverseM findEdge comeFrom
+                                mPort ← traverseM findEdge comeFrom
                                 let through con =
                                       let newFanMap = Map.insert i (In con : status) fanMap
                                           cameFrom = Just (n, Prim)
@@ -341,7 +341,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                     let parentAux con =
                           case prim of
                             Primary prim → do
-                              prim <- rec' prim (Just (n, Prim)) fanMap nodeVarInfo
+                              prim ← rec' prim (Just (n, Prim)) fanMap nodeVarInfo
                               pure (con <$> prim)
                             Free → pure Nothing -- doesn't happen
                      in case tag of
@@ -367,11 +367,11 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
           isFree B.IsAux1 {} = True
           isFree B.IsAux2 {} = True
           isFree B.IsAux3 {} = True
-      nodes <- nodes
-      frees <-
+      nodes ← nodes
+      frees ←
         filterM
           ( \n → do
-              n <- B.langToProperPort n
+              n ← B.langToProperPort n
               case n of
                 Nothing → pure False
                 Just x → pure (isFree x)
@@ -394,13 +394,13 @@ chaseAndCreateFan ∷
   (Node, PortType) →
   m (Node, PortType)
 chaseAndCreateFan (num, port) = do
-  lev <- get @"level"
-  edge <- findEdge (num, port)
+  lev ← get @"level"
+  edge ← findEdge (num, port)
   case edge of
     Nothing → pure (num, port)
     Just t1@(nConnected, connectedPort) → do
       put @"level" (succ lev)
-      numFan <- newNode (B.Auxiliary2 $ B.FanIn lev)
+      numFan ← newNode (B.Auxiliary2 $ B.FanIn lev)
       let nodeFan = RELAuxiliary2
             { node = numFan,
               primary = Link (Port port num),

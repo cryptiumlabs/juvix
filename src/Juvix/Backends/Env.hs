@@ -80,7 +80,7 @@ sequentalStep = modify' @"info" (\c → c {sequentalSteps = sequentalSteps c + 1
 
 incGraphSizeStep ∷ HasState "info" Info m ⇒ Integer → m ()
 incGraphSizeStep n = do
-  Info memAlloced seqStep parallelSteps largestGraph currGraph <- get @"info"
+  Info memAlloced seqStep parallelSteps largestGraph currGraph ← get @"info"
   let memoryAllocated
         | n > 0 = memAlloced + n
         | otherwise = memAlloced

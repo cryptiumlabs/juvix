@@ -145,7 +145,7 @@ linkHelper rel nodeType node =
 -- when the main nodes annihilate each other
 rewire ∷ (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
 rewire (a, pa) (b, pb) = do
-  edge <- findEdge (b, pb)
+  edge ← findEdge (b, pb)
   traverse_ (relink (a, pa)) edge
 
 -- post condition, must delete the old node passed after the set of transitions are done!

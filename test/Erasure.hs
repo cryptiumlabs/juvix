@@ -15,7 +15,7 @@ import qualified Test.Tasty.HUnit as T
 eraseSolveEval ∷ Core.CTerm → IO ()
 eraseSolveEval cterm = do
   let (term, typeAssignment) = Erasure.erase' cterm
-  res <- EAC.validEal term typeAssignment
+  res ← EAC.validEal term typeAssignment
   putText ("Inferred EAC term & type: " <> show res ∷ Text)
   case res of
     Left _ → return ()

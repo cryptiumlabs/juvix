@@ -235,7 +235,7 @@ cType ii g (Lam s) ann =
         (sig, ty' (vfree (Local ii))) --is of type M (usage sigma) in context T
     _ → throwError $ show (snd ann) <> " is not a function type but should be."
 cType ii g (Conv e) ann = do
-  ann' <- iType ii g e
+  ann' ← iType ii g e
   unless
     (fst ann == fst ann' && quote0 (snd ann) == quote0 (snd ann'))
     (throwError (errorMsg ii (Conv e) ann ann'))
@@ -263,7 +263,7 @@ iType ii g (Free x) =
 iType _ii _g (Nat _) = return (Omega, VNats)
 --App rule, function M applies to N
 iType ii g (App m n) = do
-  mTy <- iType ii g m --annotation of M is usage sig and Pi with pi usage.
+  mTy ← iType ii g m --annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
       cType ii g n (pi, varTy) --N has to be of type varTy with usage pi

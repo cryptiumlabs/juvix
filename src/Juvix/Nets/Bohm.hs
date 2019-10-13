@@ -94,8 +94,8 @@ reduceAll = H.untilNothingNTimesM reduce
 
 reduce ∷ (InfoNetworkDiff net Lang m) ⇒ m Bool
 reduce = do
-  nodes' <- nodes
-  isChanged <- foldrM update False nodes'
+  nodes' ← nodes
+  isChanged ← foldrM update False nodes'
   if isChanged
     then do
       modify @"info" (\c → c {parallelSteps = parallelSteps c + 1})
@@ -103,7 +103,7 @@ reduce = do
     else pure isChanged
   where
     update n isChanged = do
-      both <- isBothPrimary n
+      both ← isBothPrimary n
       if not both
         then pure isChanged
         else langToProperPort n >>= \case
@@ -218,7 +218,7 @@ propPrimary (numDel, nodeDel) numProp = do
   case auxToNode (nodeDel ^. aux2) of
     Just _ → do
       sequentalStep
-      eraseNum <- newNode (Primar Erase)
+      eraseNum ← newNode (Primar Erase)
       relink (numDel, Aux2) (eraseNum, Prim)
       deleteRewire [numDel] [eraseNum]
     Nothing → do
@@ -233,7 +233,7 @@ ifElseRule ∷
   m ()
 ifElseRule numPrimOnly numAuxs pred = do
   incGraphSizeStep (- 1)
-  numErase <- newNode (Primar Erase)
+  numErase ← newNode (Primar Erase)
   if pred
     then do
       relink (numAuxs, Aux2) (numErase, Prim)
@@ -272,9 +272,9 @@ muExpand ∷
   m ()
 muExpand muNum = do
   incGraphSizeStep 2
-  fanIn <- newNode (Auxiliary2 $ FanIn 0)
-  fanOut <- newNode (Auxiliary2 $ FanIn 0)
-  newMu <- newNode (Auxiliary2 $ FanIn 0)
+  fanIn ← newNode (Auxiliary2 $ FanIn 0)
+  fanOut ← newNode (Auxiliary2 $ FanIn 0)
+  newMu ← newNode (Auxiliary2 $ FanIn 0)
   let nodeFanIn = RELAuxiliary2
         { node = fanIn,
           primary = ReLink muNum Aux1,
@@ -298,10 +298,10 @@ fanInAux2 ∷
   m ()
 fanInAux2 numFan (numOther, otherLang) level = do
   incGraphSizeStep 2
-  other1 <- newNode (Auxiliary2 otherLang)
-  other2 <- newNode (Auxiliary2 otherLang)
-  fanIn1 <- newNode (Auxiliary2 (FanIn level))
-  fanIn2 <- newNode (Auxiliary2 (FanIn level))
+  other1 ← newNode (Auxiliary2 otherLang)
+  other2 ← newNode (Auxiliary2 otherLang)
+  fanIn1 ← newNode (Auxiliary2 (FanIn level))
+  fanIn2 ← newNode (Auxiliary2 (FanIn level))
   let nodeOther1 = RELAuxiliary2
         { node = other1,
           primary = ReLink numFan Aux1,
@@ -336,8 +336,8 @@ fanInAux0 ∷
   m ()
 fanInAux0 numFan (numOther, otherLang) = do
   sequentalStep
-  other1 <- newNode (Primar otherLang)
-  other2 <- newNode (Primar otherLang)
+  other1 ← newNode (Primar otherLang)
+  other2 ← newNode (Primar otherLang)
   let nodeOther1 = RELAuxiliary0
         { node = other1,
           primary = ReLink numFan Aux1
@@ -357,9 +357,9 @@ fanInAux1 ∷
   m ()
 fanInAux1 numFan (numOther, otherLang) level = do
   incGraphSizeStep 1
-  other1 <- newNode (Auxiliary1 otherLang)
-  other2 <- newNode (Auxiliary1 otherLang)
-  fanIn1 <- newNode (Auxiliary2 (FanIn level))
+  other1 ← newNode (Auxiliary1 otherLang)
+  other2 ← newNode (Auxiliary1 otherLang)
+  fanIn1 ← newNode (Auxiliary2 (FanIn level))
   let nodeOther1 = RELAuxiliary1
         { node = other1,
           primary = ReLink numFan Aux1,
@@ -387,12 +387,12 @@ notExpand ∷
   Bool →
   m Bool
 notExpand (n, IsPrim {_tag0 = Tru}) (notNum, notPort) _ = do
-  numFals <- newNode (Primar Fals)
+  numFals ← newNode (Primar Fals)
   delNodes [n]
   propPrimary (notNum, notPort) numFals
   pure True
 notExpand (n, IsPrim {_tag0 = Fals}) (notNum, notPort) _ = do
-  numFals <- newNode (Primar Tru)
+  numFals ← newNode (Primar Tru)
   delNodes [n]
   propPrimary (notNum, notPort) numFals
   pure True
@@ -406,16 +406,16 @@ eraseAll ∷
   Node →
   m ()
 eraseAll (node, numNode) nodeErase = do
-  (i, mE) <- auxDispatch (node ^. aux1) Aux1
-  (i2, mE2) <- auxDispatch (node ^. aux2) Aux2
-  (i3, mE3) <- auxDispatch (node ^. aux3) Aux3
+  (i, mE) ← auxDispatch (node ^. aux1) Aux1
+  (i2, mE2) ← auxDispatch (node ^. aux2) Aux2
+  (i3, mE3) ← auxDispatch (node ^. aux3) Aux3
   incGraphSizeStep (i + i2 + i3 - 2)
   deleteRewire [numNode, nodeErase] (catMaybes [mE, mE2, mE3])
   where
     auxDispatch FreeNode _ = pure (0, Nothing)
     auxDispatch (Auxiliary _) aux = (,) 1 <$> erase aux
     erase port = do
-      numE <- newNode (Primar Erase)
+      numE ← newNode (Primar Erase)
       relink (numNode, port) (numE, Prim)
       return (Just numE)
 
@@ -426,7 +426,7 @@ consCar ∷
   m ()
 consCar numCons numCar = do
   incGraphSizeStep (- 1)
-  erase <- newNode (Primar Erase)
+  erase ← newNode (Primar Erase)
   relink (numCons, Aux1) (erase, Prim)
   rewire (numCons, Aux2) (numCar, Aux1)
   deleteRewire [numCons, numCar] [erase]
@@ -438,7 +438,7 @@ consCdr ∷
   m ()
 consCdr numCons numCdr = do
   incGraphSizeStep (- 1)
-  erase <- newNode (Primar Erase)
+  erase ← newNode (Primar Erase)
   relink (numCons, Aux2) (erase, Prim)
   rewire (numCons, Aux1) (numCdr, Aux1)
   deleteRewire [numCons, numCdr] [erase]
@@ -450,7 +450,7 @@ testNilNil ∷
   m ()
 testNilNil numTest numNil = do
   incGraphSizeStep (- 1)
-  true <- newNode (Primar Tru)
+  true ← newNode (Primar Tru)
   relink (numTest, Aux1) (true, Prim)
   deleteRewire [numTest, numNil] [true]
 
@@ -461,9 +461,9 @@ testNilCons ∷
   m ()
 testNilCons numCons numTest = do
   incGraphSizeStep 1
-  erase1 <- newNode (Primar Erase)
-  erase2 <- newNode (Primar Erase)
-  false <- newNode (Primar Fals)
+  erase1 ← newNode (Primar Erase)
+  erase2 ← newNode (Primar Erase)
+  false ← newNode (Primar Fals)
   traverse_
     (uncurry relink)
     [ ((numCons, Aux1), (erase1, Prim)),
@@ -479,7 +479,7 @@ curry3 ∷
   m ()
 curry3 (nodeF, numNode) (p, numPrim) = do
   incGraphSizeStep (- 1)
-  curr <- newNode (Auxiliary2 $ Curried2 $ nodeF p)
+  curr ← newNode (Auxiliary2 $ Curried2 $ nodeF p)
   let currNode = RELAuxiliary2
         { node = curr,
           primary = ReLink numNode Aux3,
@@ -496,7 +496,7 @@ curry2 ∷
   m ()
 curry2 (nodeF, numNode) (p, numPrim) = do
   incGraphSizeStep (- 1)
-  curr <- newNode (Auxiliary1 $ Curried1 $ nodeF p)
+  curr ← newNode (Auxiliary1 $ Curried1 $ nodeF p)
   let currNode = RELAuxiliary1
         { node = curr,
           primary = ReLink numNode Aux2,
@@ -520,7 +520,7 @@ curry1 (nodeF, numNode) (p, numPrim) =
             PBool True → Tru
             PBool False → Fals
       incGraphSizeStep (- 1)
-      curr <- newNode (Primar node)
+      curr ← newNode (Primar node)
       let currNode = RELAuxiliary0
             { node = curr,
               primary = ReLink numNode Aux1

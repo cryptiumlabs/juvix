@@ -58,7 +58,7 @@ typeOf ∷
   Eal a →
   m WrappedTypes
 typeOf (Term s) = do
-  ctxt <- get @"ctxt"
+  ctxt ← get @"ctxt"
   case ctxt Map.!? s of
     Nothing → throw @"typ" MissingOverUse
     Just x@(WrapT (_ ∷ Types a)) →
@@ -67,12 +67,12 @@ typeOf (Term s) = do
         False → put @"ctxt" (Map.delete s ctxt) >> pure x
 typeOf (Lambda sym (symType ∷ Types a) t) = do
   modify @"ctxt" (Map.insert sym (WrapT symType))
-  WrapT (_ ∷ Types b) <- typeOfTerm t
+  WrapT (_ ∷ Types b) ← typeOfTerm t
   pure (WrapT (Lolly symType ∷ Types (a → b)))
 typeOf (App t1 t2) = do
-  WrapT (_ ∷ Types c) <- typeOfTerm t1
-  WrapT (_ ∷ Types b) <- typeOfTerm t2
-  (ArrowType (_ ∷ Proxy from), ArrowType (_ ∷ Proxy to)) <- pure (isFromA (Proxy ∷ Proxy c))
+  WrapT (_ ∷ Types c) ← typeOfTerm t1
+  WrapT (_ ∷ Types b) ← typeOfTerm t2
+  (ArrowType (_ ∷ Proxy from), ArrowType (_ ∷ Proxy to)) ← pure (isFromA (Proxy ∷ Proxy c))
   let ta = R.typeRep ∷ R.TypeRep b
       tb = R.typeRep ∷ R.TypeRep from
   case (R.eqTypeRep ta tb) of
@@ -85,7 +85,7 @@ typeOf (App t1 t2) = do
 
 --f ∷ ∀ k (a ∷ k). Arrowable a => Proxy a → [Bool]
 f p = do
-  (ArrowType (_ ∷ Proxy k), ArrowType (_ ∷ Proxy to)) <- pure (isFromA p)
+  (ArrowType (_ ∷ Proxy k), ArrowType (_ ∷ Proxy to)) ← pure (isFromA p)
   let ta = R.typeRep ∷ R.TypeRep k
       tb = R.typeRep ∷ R.TypeRep Int
       tc = R.typeRep ∷ R.TypeRep to

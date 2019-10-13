@@ -14,13 +14,13 @@ import Text.RawString.QQ
 
 context ∷ IO Context
 context = do
-  pwd <- getCurrentDirectory
-  home <- getHomeDirectory
+  pwd ← getCurrentDirectory
+  home ← getHomeDirectory
   return (Context pwd home)
 
 main ∷ IO ()
 main = do
-  ctx <- context
+  ctx ← context
   let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
   run ctx =<< execParser opts
 
@@ -70,7 +70,7 @@ interactiveDoc =
 
 run ∷ Context → Options → IO ()
 run ctx (Options cmd configPath) = do
-  maybeConfig <- loadConfig configPath
+  maybeConfig ← loadConfig configPath
   let conf = fromMaybe defaultConfig maybeConfig
   case cmd of
     Interactive → do

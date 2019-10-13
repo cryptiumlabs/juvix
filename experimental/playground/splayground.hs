@@ -109,7 +109,7 @@ iType ii g (Free x) =
     Nothing → throwError "unknown identifier"
 iType ii g (e1 :@: e2) =
   do
-    si <- iType ii g e1
+    si ← iType ii g e1
     case si of
       Fun ty ty' → do
         cType
@@ -125,7 +125,7 @@ iType ii g (e1 :@: e2) =
 cType ∷ Int → Context → CTerm → Type → Result ()
 cType ii g (Inf e) ty =
   do
-    ty' <- iType ii g e
+    ty' ← iType ii g e
     unless (ty == ty') (throwError "type mismatch")
 cType ii g (Lam e) (Fun ty ty') =
   cType

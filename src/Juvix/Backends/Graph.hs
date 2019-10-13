@@ -53,7 +53,7 @@ instance Network FlipNet where
      in modify @"net" (Flip . (insEdge edgeInfo) . runFlip)
 
   newNode lang = do
-    net <- runFlip <$> get @"net"
+    net ← runFlip <$> get @"net"
     let (_, maxNum)
           | isEmpty net = (0, 0)
           | otherwise = nodeRange net
@@ -63,7 +63,7 @@ instance Network FlipNet where
   delNodes xs = modify @"net" (Flip . Graph.delNodes xs . runFlip)
 
   deleteRewire oldNodesToDelete newNodes = do
-    Flip net <- get @"net"
+    Flip net ← get @"net"
     let newNodeSet = Set.fromList newNodes
         neighbors = fst <$> (oldNodesToDelete >>= lneighbors net)
         conflictingNeighbors = findConflict newNodeSet neighbors
@@ -79,7 +79,7 @@ instance Network FlipNet where
       )
 
   isBothPrimary node = do
-    net <- runFlip <$> get @"net"
+    net ← runFlip <$> get @"net"
     pure $ not
       $ null
       $ filter (\(Edge (_, p) (_, p')) → p == Prim && p' == Prim)
@@ -91,7 +91,7 @@ instance Network FlipNet where
   empty = Flip Graph.empty
 
   findEdge (node, port) = do
-    net <- runFlip <$> get @"net"
+    net ← runFlip <$> get @"net"
     pure (fmap other $ headMay $ filter f $ lneighbors net node)
     where
       f (Edge t1 t2, _)
@@ -118,7 +118,7 @@ instance DifferentRep FlipNet where
   aux5FromGraph con = auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
 
   langToPort n f = do
-    Flip net <- get @"net"
+    Flip net ← get @"net"
     case fst (match n net) of
       Just context → f $ snd $ labNode' context
       Nothing → pure Nothing

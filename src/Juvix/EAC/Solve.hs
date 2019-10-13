@@ -12,7 +12,7 @@ runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
       recGen _ _ _ 0 = pure ()
       recGen constraintCall printModel consZ3 num = do
-        (r, v, s) <- Z3.evalZ3 constraintCall
+        (r, v, s) ← Z3.evalZ3 constraintCall
         printModel v
         putText "-→"
         print (r, s)
@@ -43,8 +43,8 @@ runMultipleConstraints numRepeat constraints syntax = do
       recNext extra consZ3 =
         recGen
           ( do
-              e <- extra
-              z3s <- consZ3
+              e ← extra
+              z3s ← consZ3
               constraintSystemAnd constraints (e : z3s)
           )
           (\_ → pure ())
@@ -59,7 +59,7 @@ runMultipleConstraints numRepeat constraints syntax = do
 
 getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
-  (_r, _v, s) <- Z3.evalZ3 (constraintSystem constraints)
+  (_r, _v, s) ← Z3.evalZ3 (constraintSystem constraints)
   --putStrLn v
   --putText "-→"
   --print (r, s)
@@ -67,7 +67,7 @@ getConstraints constraints = do
 
 runConstraints ∷ [Constraint] → IO ()
 runConstraints constraints = do
-  (r, v, s) <- Z3.evalZ3 (constraintSystem constraints)
+  (r, v, s) ← Z3.evalZ3 (constraintSystem constraints)
   putStrLn v
   putText "-→"
   print (r, s)
@@ -77,21 +77,21 @@ collectVars = Set.unions . map Set.singleton . concatMap (map variable . vars)
 
 opToZ3 ∷ Op → Z3.AST → Z3.Z3 Z3.AST
 opToZ3 (Eq n) vs = do
-  i <- Z3.mkInteger (fromIntegral n)
+  i ← Z3.mkInteger (fromIntegral n)
   Z3.mkEq vs i
 opToZ3 (Gte n) vs = do
-  i <- Z3.mkInteger (fromIntegral n)
+  i ← Z3.mkInteger (fromIntegral n)
   Z3.mkGe vs i
 
 varToZ3 ∷ Map.Map Int Z3.AST → ConstraintVar → Z3.Z3 Z3.AST
 varToZ3 varMap (ConstraintVar coeff var) = do
   let z3Var = varMap Map.! var
-  coeff <- Z3.mkInteger (fromIntegral coeff)
+  coeff ← Z3.mkInteger (fromIntegral coeff)
   Z3.mkMul [coeff, z3Var]
 
 varsToZ3 ∷ Map.Map Int Z3.AST → [ConstraintVar] → Z3.Z3 Z3.AST
 varsToZ3 varMap vars = do
-  vars <- traverse (varToZ3 varMap) vars
+  vars ← traverse (varToZ3 varMap) vars
   case vars of
     [v] → pure v
     _ → Z3.mkAdd vars
@@ -104,8 +104,8 @@ constraintsToZ3 varMap constraints = Z3.mkAnd =<< traverse (constraintToZ3 varMa
 
 constraintsToZ3Extra ∷ [Z3.AST] → Map Int Z3.AST → [Constraint] → Z3.Z3 Z3.AST
 constraintsToZ3Extra extra varMap constraints = do
-  cons <- traverse (constraintToZ3 varMap) constraints
-  and <- Z3.mkAnd cons
+  cons ← traverse (constraintToZ3 varMap) constraints
+  and ← Z3.mkAnd cons
   Z3.mkAnd (and : extra)
 
 makeVarMap ∷ Z3.MonadZ3 f ⇒ [Constraint] → f (Map Int Z3.AST)
@@ -123,10 +123,10 @@ makeVarMap constraints =
 
 makeParams ∷ Z3.MonadZ3 m ⇒ m Z3.Params
 makeParams = do
-  params <- Z3.mkParams
-  sym <- Z3.mkStringSymbol ":arith-lhs"
+  params ← Z3.mkParams
+  sym ← Z3.mkStringSymbol ":arith-lhs"
   Z3.paramsSetBool params sym True
-  sym <- Z3.mkStringSymbol ":som"
+  sym ← Z3.mkStringSymbol ":som"
   Z3.paramsSetBool params sym True
   pure params
 
@@ -136,13 +136,13 @@ constraintSystemGen ∷
   (Map Int Z3.AST → [Constraint] → m Z3.AST) →
   m (Z3.Result, String, Maybe [Integer])
 constraintSystemGen constraints modifyAst = do
-  varMap <- makeVarMap constraints
-  ast <- modifyAst varMap constraints
-  params <- makeParams
-  simplified <- Z3.simplifyEx ast params
-  model <- Z3.astToString simplified
+  varMap ← makeVarMap constraints
+  ast ← modifyAst varMap constraints
+  params ← makeParams
+  simplified ← Z3.simplifyEx ast params
+  model ← Z3.astToString simplified
   Z3.assert simplified
-  (res, sol) <- Z3.withModel $ \m →
+  (res, sol) ← Z3.withModel $ \m →
     catMaybes <$> traverse (Z3.evalInt m) (Map.elems varMap)
   pure (res, model, sol)
 

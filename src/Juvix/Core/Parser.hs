@@ -65,7 +65,7 @@ natw =
 sortTerm ∷ Parser CTerm
 sortTerm = do
   reserved "*"
-  n <- natural
+  n ← natural
   return $ Star (fromInteger n)
 
 natTypeTerm ∷ Parser CTerm
@@ -76,27 +76,27 @@ natTypeTerm = do
 piTerm ∷ Parser CTerm
 piTerm = do
   reserved "[Π]"
-  pi <- natw
-  input <- ctermOnly
-  func <- ctermOnly
+  pi ← natw
+  input ← ctermOnly
+  func ← ctermOnly
   return $ Pi pi input func
 
 lamTerm ∷ Parser CTerm
 lamTerm = do
   reservedOp "\\x."
-  func <- ctermOnly
+  func ← ctermOnly
   return $ Lam func
 
 convTerm ∷ Parser CTerm
 convTerm = do
   reservedOp "Conv"
-  termToConvert <- iterm
+  termToConvert ← iterm
   return $ Conv termToConvert
 
 boundTerm ∷ Parser ITerm
 boundTerm = do
   reserved "Bound"
-  index <- natural
+  index ← natural
   return $ Bound (fromInteger index)
 
 --Parser for the global free variable name
@@ -107,19 +107,19 @@ gName = parens gName <|> identifier
 localTerm ∷ Parser Name
 localTerm = do
   reserved "Local"
-  index <- natural
+  index ← natural
   return $ Local (fromInteger index)
 
 quoteTerm ∷ Parser Name
 quoteTerm = do
   reserved "Quote"
-  index <- natural
+  index ← natural
   return $ Quote (fromInteger index)
 
 globalTerm ∷ Parser Name
 globalTerm = do
   reserved "Global"
-  gname <- gName
+  gname ← gName
   return $ Global gname
 
 pName ∷ Parser Name
@@ -128,23 +128,23 @@ pName = parens pName <|> localTerm <|> quoteTerm <|> globalTerm
 freeTerm ∷ Parser ITerm
 freeTerm = do
   reserved "Free"
-  fname <- pName
+  fname ← pName
   return $ Free fname
 
 appTerm ∷ Parser ITerm
 appTerm = do
   reservedOp "App"
-  func <- iterm
-  var <- ctermOnly
+  func ← iterm
+  var ← ctermOnly
   eof
   return $ App func var
 
 annTerm ∷ Parser ITerm
 annTerm = do
-  pi <- natw
-  term <- ctermOnly
+  pi ← natw
+  term ← ctermOnly
   reservedOp ":"
-  theType <- ctermOnly
+  theType ← ctermOnly
   eof
   return $ Ann pi term theType
 
@@ -160,7 +160,7 @@ cterm =
 
 convITerm ∷ Parser CTerm
 convITerm = do
-  theTerm <- iterm
+  theTerm ← iterm
   return $ Conv theTerm
 
 iterm ∷ Parser ITerm
@@ -172,7 +172,7 @@ cOriTerm = Text.Parsec.try (Left <$> iterm) <|> (Right <$> cterm)
 
 ctermOnly ∷ Parser CTerm
 ctermOnly = do
-  anyTerm <- cOriTerm
+  anyTerm ← cOriTerm
   return
     ( case anyTerm of
         Left i → Conv i
@@ -213,15 +213,15 @@ pCType ∷ Parser (Result ())
 pCType =
   parens pCType <|> do
     reservedOp "cType"
-    theTerm <- ctermOnly
-    usage <- natw
-    theType <- ctermOnly
+    theTerm ← ctermOnly
+    usage ← natw
+    theType ← ctermOnly
     return $ cType 0 [] theTerm (usage, cEval theType [])
 
 parseWhole ∷ Parser a → Parser a
 parseWhole p = do
   whiteSpace
-  t <- p
+  t ← p
   whiteSpace
   eof
   return t

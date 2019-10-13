@@ -72,7 +72,7 @@ scottCase ∷
 scottCase c = do
   -- expandedCase ends up coming out backwards in terms of application
   -- we fix this by inverting the application stack making on called on everything
-  expandedCase <- caseGen c onNoArg onrec
+  expandedCase ← caseGen c onNoArg onrec
   case expandedCase of
     Application on b → pure $ reverseApp on b
     Lambda {} → error "doesn't happen"
