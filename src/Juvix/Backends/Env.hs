@@ -16,7 +16,7 @@ data Info = Info { memoryAllocated  :: Integer
                  } deriving Show
 
 
-data InfoNet net = InfoNet { net :: net
+data InfoNet net = InfoNet { net  :: net
                            , info :: Info
                            } deriving (Show, Generic)
 

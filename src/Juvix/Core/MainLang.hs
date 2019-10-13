@@ -8,8 +8,8 @@ import           Numeric.Natural
 import           Juvix.Core.SemiRing
 import           Juvix.Library        hiding (show)
 
-import           Prelude              (Show (..), String, lookup, error)
-import           Control.Lens         ((^?), ix)
+import           Control.Lens         (ix, (^?))
+import           Prelude              (Show (..), String, error, lookup)
 
 -- checkable terms
 data CTerm

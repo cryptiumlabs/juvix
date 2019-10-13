@@ -3,13 +3,13 @@
 module Juvix.Bohm.Translation(astToNet, netToAst) where
 
 import           Data.List                ((!!))
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Utility.HashMap    as Map
 --import qualified Data.Map.Strict          as Map
 import           Prelude                  (error)
 
 import           Juvix.Backends.Interface
-import qualified Juvix.Bohm.Type          as BT
 import           Juvix.Bohm.Shared
+import qualified Juvix.Bohm.Type          as BT
 import           Juvix.Library            hiding (empty, link)
 import qualified Juvix.Nets.Bohm          as B
 import           Juvix.NodeInterface

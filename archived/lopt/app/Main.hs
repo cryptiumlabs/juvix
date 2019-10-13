@@ -1,10 +1,10 @@
 module Main where
 
-import           Protolude
-
-import           InteractionNet
+import InteractionNet
+import Protolude
 
 main ∷ IO ()
+
 main = do
   putText "Commute 1"
   print $ fullReduce trivialCommute1
