@@ -10,23 +10,21 @@ import Juvix.Utility
 import Juvix.Utility.HashMap
 import Prelude ((!!))
 
-erase' ∷ Core.CTerm → (EAC.Term, EAC.TypeAssignment)
-
+erase' :: Core.CTerm -> (EAC.Term, EAC.TypeAssignment)
 erase' cterm =
   let (term, env) = exec (erase cterm)
    in (term, typeAssignment env)
 
-exec ∷ EnvErasure a → (a, Env)
-
+exec :: EnvErasure a -> (a, Env)
 exec (EnvEra env) = runState env (Env empty 0 [])
 
-erase
-  ∷ ( HasState "typeAssignment" EAC.TypeAssignment m,
-      HasState "nextName" Int m,
-      HasState "nameStack" [Int] m
-    )
-  ⇒ Core.CTerm → m EAC.Term
-
+erase ::
+  ( HasState "typeAssignment" EAC.TypeAssignment m,
+    HasState "nextName" Int m,
+    HasState "nameStack" [Int] m
+  )
+    ⇒ Core.CTerm ->
+  m EAC.Term
 erase term =
   case term of
     Core.Lam body -> do
@@ -58,22 +56,21 @@ erase term =
         Core.Nat n -> pure (EAC.Prim (EAC.Nat n))
     _ -> undefined
 
-unDeBruijin
-  ∷ ( HasState "nextName" Int m,
-      HasState "nameStack" [Int] m
-    )
-  ⇒ Int → m Symbol
-
+unDeBruijin ::
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Int] m
+  )
+    ⇒ Int ->
+  m Symbol
 unDeBruijin ind = do
   stack <- get@"nameStack"
   pure (intern $ show $ stack !! ind)
 
-newName
-  ∷ ( HasState "nextName" Int m,
-      HasState "nameStack" [Int] m
-    )
-  ⇒ m Symbol
-
+newName ::
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Int] m
+  )
+    ⇒ m Symbol
 newName = do
   name <- get@"nextName"
   modify@"nextName" (+ 1)

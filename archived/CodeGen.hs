@@ -24,14 +24,14 @@ data Opts
         output :: FilePath
       }
 
-showUsage ∷ IO ()
+showUsage :: IO ()
 
 showUsage = do
   putText "A code generator which is intended to be called by the compiler, not by a user."
   putText "Usage: idris-codegen-juvix <ibc-files> [-o <output-file>]"
   exitWith ExitSuccess
 
-getOpts ∷ IO Opts
+getOpts :: IO Opts
 
 getOpts = do
   xs <- getArgs
@@ -42,7 +42,7 @@ getOpts = do
     process opts (x : xs) = process (opts {inputs = x : inputs opts}) xs
     process opts [] = opts
 
-codeGenSdecls ∷ Type → CodeGenerator
+codeGenSdecls :: Type → CodeGenerator
 
 codeGenSdecls ty ci = do
   putText $ "Type: " <> show ty
@@ -52,7 +52,7 @@ codeGenSdecls ty ci = do
   let LFun _ _ args body = decl
       expr = LLam args body
   putText $ "Main expr prettified: " <> prettyPrintValue expr
-  case runWriter $ runExceptT (M.compileToMichelsonSourceFile expr ty ∷ (ExceptT M.CompilationError (Writer [M.CompilationLog]) Text)) of
+  case runWriter $ runExceptT (M.compileToMichelsonSourceFile expr ty :: (ExceptT M.CompilationError (Writer [M.CompilationLog]) Text)) of
     (res, logs) -> do
       mapM_ (putText . prettyPrintValue) logs
       case res of
@@ -62,15 +62,15 @@ codeGenSdecls ty ci = do
           putText $ "Error during transpilation: " <> prettyPrintValue err
           exitFailure
 
-mainN ∷ Name
+mainN :: Name
 
 mainN = NS (UN "main") ["Main"]
 
-findMain ∷ [(Name, LDecl)] → (Name, LDecl)
+findMain :: [(Name, LDecl)] → (Name, LDecl)
 
 findMain decls = let Just f = head $ filter (\(name, _) -> name == mainN) decls in f
 
-sdeclMain ∷ Opts → Idris ()
+sdeclMain :: Opts → Idris ()
 
 sdeclMain opts = do
   elabPrims
@@ -81,7 +81,7 @@ sdeclMain opts = do
   let Just ty = lookupTyExact mainN (tt_ctxt is)
   runIO $ codeGenSdecls ty ir
 
-main ∷ IO ()
+main :: IO ()
 
 main = do
   opts <- getOpts

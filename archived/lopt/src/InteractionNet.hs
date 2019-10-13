@@ -27,15 +27,15 @@ data Port
 
 type Rule = Net → Integer → Integer → Maybe Net
 
-maxKey ∷ forall a b . (Num a, Ord a) ⇒ Map a b → a
+maxKey :: forall a b . (Num a, Ord a) ⇒ Map a b → a
 
 maxKey m = fromMaybe 0 $ head $ reverse $ M.keys m
 
-makeNet ∷ [(Kind, [Port])] → Net
+makeNet :: [(Kind, [Port])] → Net
 
 makeNet nodes = M.fromList $ zip [0 ..] $ map (\(k, p) -> Node k (M.fromList $ zip [0 ..] p)) nodes
 
-foldMaybe ∷ forall a b . a → [a → Maybe b] → Maybe b
+foldMaybe :: forall a b . a → [a → Maybe b] → Maybe b
 
 foldMaybe _ [] = Nothing
 foldMaybe x (f : fs) =
@@ -43,7 +43,7 @@ foldMaybe x (f : fs) =
     Just y -> Just y
     Nothing -> foldMaybe x fs
 
-newNode ∷ Kind → [Port] → Net → (Integer, Net)
+newNode :: Kind → [Port] → Net → (Integer, Net)
 
 newNode kind ports net =
   let index = maxKey net + 1
@@ -51,21 +51,21 @@ newNode kind ports net =
       newNet = M.insert index node net
    in (index, newNet)
 
-removeNode ∷ Integer → Net → Net
+removeNode :: Integer → Net → Net
 
 removeNode = M.delete
 
-removeNodes ∷ [Integer] → Net → Net
+removeNodes :: [Integer] → Net → Net
 
 removeNodes nodes net = foldl (flip removeNode) net nodes
 
-setPorts ∷ Integer → [Port] → Net → Net
+setPorts :: Integer → [Port] → Net → Net
 
 setPorts index ports net =
   let node = net M.! index
    in M.insert index (node {nodePorts = M.fromList $ zip [0 ..] ports}) net
 
-relink ∷ Node → Integer → Integer → Integer → Net → Net
+relink :: Node → Integer → Integer → Integer → Net → Net
 
 relink node oldPort newNode newPort net =
   let port = nodePorts node M.! oldPort
@@ -76,11 +76,11 @@ relink node oldPort newNode newPort net =
            in M.insert index updated net
         _ -> net
 
-commute1 ∷ Rule
+commute1 :: Rule
 
 commute1 net iA iB = Nothing
 
-commute2 ∷ Rule
+commute2 :: Rule
 
 commute2 net iA iB = do
   let nA = net M.! iA
@@ -95,7 +95,7 @@ commute2 net iA iB = do
       modify (removeNode iB)
     _ -> Nothing
 
-commute3 ∷ Rule
+commute3 :: Rule
 
 commute3 net iA iB = do
   let nA = net M.! iA
@@ -110,15 +110,15 @@ commute3 net iA iB = do
       modify (removeNode iB)
     _ -> Nothing
 
-annihilate1 ∷ Rule
+annihilate1 :: Rule
 
 annihilate1 net iA iB = Nothing
 
-annihilate2 ∷ Rule
+annihilate2 :: Rule
 
 annihilate2 net iA iB = Nothing
 
-annihilate3 ∷ Rule
+annihilate3 :: Rule
 
 annihilate3 net iA iB = do
   let nA = net M.! iA
@@ -127,11 +127,11 @@ annihilate3 net iA iB = do
     (Eraser, Eraser) -> return (removeNodes [iA, iB] net)
     _ -> mempty
 
-rules ∷ [Rule]
+rules :: [Rule]
 
 rules = [commute1, commute2, commute3, annihilate1, annihilate2, annihilate3]
 
-maybeReduce ∷ Net → Maybe Net
+maybeReduce :: Net → Maybe Net
 
 maybeReduce net = do
   let keys = M.keys net
@@ -141,7 +141,7 @@ maybeReduce net = do
       Just (Pointer index _) -> foldMaybe net $ map (\r -> \net -> r net k index) rules
       _ -> Nothing
 
-fullReduce ∷ Net → (Net, Integer)
+fullReduce :: Net → (Net, Integer)
 
 fullReduce net =
   let go net count =
@@ -150,7 +150,7 @@ fullReduce net =
           Nothing -> (net, count)
    in go net 0
 
-trivialCommute1 ∷ Net
+trivialCommute1 :: Net
 
 trivialCommute1 =
   makeNet
@@ -158,7 +158,7 @@ trivialCommute1 =
       (Duplicator, [Pointer 0 0, Free "c", Free "d"])
     ]
 
-trivialCommute2 ∷ Net
+trivialCommute2 :: Net
 
 trivialCommute2 =
   makeNet
@@ -166,7 +166,7 @@ trivialCommute2 =
       (Eraser, [Pointer 0 0])
     ]
 
-trivialCommute3 ∷ Net
+trivialCommute3 :: Net
 
 trivialCommute3 =
   makeNet
@@ -174,7 +174,7 @@ trivialCommute3 =
       (Eraser, [Pointer 0 0])
     ]
 
-trivialAnnihilate1 ∷ Net
+trivialAnnihilate1 :: Net
 
 trivialAnnihilate1 =
   makeNet
@@ -182,7 +182,7 @@ trivialAnnihilate1 =
       (Constructor, [Pointer 0 0, Free "c", Free "d"])
     ]
 
-trivialAnnihilate2 ∷ Net
+trivialAnnihilate2 :: Net
 
 trivialAnnihilate2 =
   makeNet
@@ -190,7 +190,7 @@ trivialAnnihilate2 =
       (Duplicator, [Pointer 0 0, Free "c", Free "d"])
     ]
 
-trivialAnnihilate3 ∷ Net
+trivialAnnihilate3 :: Net
 
 trivialAnnihilate3 =
   makeNet
@@ -198,7 +198,7 @@ trivialAnnihilate3 =
       (Eraser, [Pointer 0 0])
     ]
 
-nonterminating ∷ Net
+nonterminating :: Net
 
 nonterminating =
   makeNet

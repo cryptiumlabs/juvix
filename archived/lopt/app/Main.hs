@@ -3,7 +3,7 @@ module Main where
 import InteractionNet
 import Protolude
 
-main ∷ IO ()
+main :: IO ()
 
 main = do
   putText "Commute 1"

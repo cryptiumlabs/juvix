@@ -1,19 +1,18 @@
 module Erasure where
 
-import qualified Juvix.Backends.Env   as Env
+import qualified Juvix.Backends.Env as Env
 import qualified Juvix.Backends.Graph as Graph
-import qualified Juvix.Backends.Maps  as Maps ()
-import qualified Juvix.Bohm           as Bohm
-import qualified Juvix.Core           as Core
-import qualified Juvix.Core.Erasure   as Erasure
-import qualified Juvix.EAC            as EAC
-import           Juvix.Library        hiding (identity)
-import qualified Juvix.Nets.Bohm      as Bohm
+import qualified Juvix.Backends.Maps as Maps ()
+import qualified Juvix.Bohm as Bohm
+import qualified Juvix.Core as Core
+import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.EAC as EAC
+import Juvix.Library hiding (identity)
+import qualified Juvix.Nets.Bohm as Bohm
+import qualified Test.Tasty as T
+import qualified Test.Tasty.HUnit as T
 
-import qualified Test.Tasty           as T
-import qualified Test.Tasty.HUnit     as T
-
-eraseSolveEval ∷ Core.CTerm → IO ()
+eraseSolveEval :: Core.CTerm → IO ()
 eraseSolveEval cterm = do
   let (term, typeAssignment) = Erasure.erase' cterm
   res <- EAC.validEal term typeAssignment
@@ -23,7 +22,7 @@ eraseSolveEval cterm = do
     Right (term, assigmnent) -> do
       let bohm = EAC.ealToBohm term
       putText ("Converted to BOHM: " <> show bohm :: Text)
-      let net ∷ Graph.FlipNet Bohm.Lang
+      let net :: Graph.FlipNet Bohm.Lang
           net = Bohm.astToNet bohm Bohm.defaultEnv
       putText ("Translated to net: " <> show net :: Text)
       let reduced = Graph.runFlipNet (Bohm.reduceAll 1000000) net

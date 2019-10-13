@@ -1,18 +1,17 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE StandaloneDeriving     #-}
-{-# LANGUAGE TemplateHaskell        #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Juvix.Nets.Combinators where
 
-import           Control.Lens
-import           Data.Foldable            (foldrM)
-import           Prelude                  (error)
-
-import           Juvix.Backends.Env
-import           Juvix.Backends.Interface
-import           Juvix.Library            hiding (reduce)
-import           Juvix.NodeInterface
-import qualified Juvix.Utility.Helper     as H
+import Control.Lens
+import Data.Foldable (foldrM)
+import Juvix.Backends.Env
+import Juvix.Backends.Interface
+import Juvix.Library hiding (reduce)
+import Juvix.NodeInterface
+import qualified Juvix.Utility.Helper as H
+import Prelude (error)
 
 -- Specific Port Type-----------------------------------------------------------
 
@@ -20,7 +19,7 @@ import qualified Juvix.Utility.Helper     as H
 data ProperPort
   = Construct {_prim :: Primary, _aux1 :: Auxiliary, _aux2 :: Auxiliary}
   | Duplicate {_prim :: Primary, _aux1 :: Auxiliary, _aux2 :: Auxiliary}
-  | Erase     {_prim :: Primary}
+  | Erase {_prim :: Primary}
   deriving (Show)
 
 makeFieldsNoPrefix ''ProperPort
@@ -35,17 +34,17 @@ deriving instance Show Lang
 
 -- Graph to more typed construction---------------------------------------------
 -- Port manipulation
-conFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+conFromGraph :: (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 conFromGraph = aux2FromGraph Construct
 
-dupFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+dupFromGraph :: (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 dupFromGraph = aux2FromGraph Duplicate
 
-eraFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+eraFromGraph :: (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 eraFromGraph = aux0FromGraph Erase
 
 -- a bit of extra repeat work in this function!
-langToProperPort ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+langToProperPort :: (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 langToProperPort node = langToPort node f
   where
     f Con = conFromGraph node
@@ -53,60 +52,61 @@ langToProperPort node = langToPort node f
     f Era = eraFromGraph node
 
 -- Graph manipulation ----------------------------------------------------------
-reduceAll ∷ InfoNetworkDiff net Lang m ⇒ Int → m ()
+reduceAll :: InfoNetworkDiff net Lang m ⇒ Int → m ()
 reduceAll = H.untilNothingNTimesM reduce
 
-reduce ∷ InfoNetworkDiff net Lang m ⇒ m Bool
+reduce :: InfoNetworkDiff net Lang m ⇒ m Bool
 reduce = do
   nodes' ← nodes
   isChanged ← foldrM update False nodes'
-  if isChanged then do
-    modify @"info" (\c → c {parallelSteps = parallelSteps c + 1})
-    pure isChanged
-    else
-    pure isChanged
+  if isChanged
+    then do
+      modify@"info" (\c -> c {parallelSteps = parallelSteps c + 1})
+      pure isChanged
+    else pure isChanged
   where
     update n isChanged = do
       both ← isBothPrimary n
       if not both
         then pure isChanged
-        else
-        langToProperPort n >>= \case
-          Nothing   → pure isChanged
-          Just port →
+        else langToProperPort n >>= \case
+          Nothing -> pure isChanged
+          Just port ->
             -- The main port we are looking at
             case port of
-              Construct Free _ _                 → pure isChanged
-              Duplicate Free _ _                 → pure isChanged
-              Erase Free                         → pure isChanged
-              con@(Construct (Primary node) _ _) →
-                True <$
-                (langToProperPort node >>= \case
-                  Nothing             → error "nodes are undirected, precondition violated!"
-                  Just d@Duplicate {} → conDup     n node con d
-                  Just Erase {}       → erase      n node con
-                  Just c@Construct {} → annihilate n node con c)
-              dup@(Duplicate (Primary node) _ _) →
-                True <$
-                (langToProperPort node >>= \case
-                  Nothing             → error "nodes are undirected, precondition violated!"
-                  Just d@Duplicate {} → annihilate n node dup d
-                  Just Erase {}       → erase      n node dup
-                  Just c@Construct {} → conDup     node n c dup)
-              Erase (Primary node) →
+              Construct Free _ _ -> pure isChanged
+              Duplicate Free _ _ -> pure isChanged
+              Erase Free -> pure isChanged
+              con@(Construct (Primary node) _ _) ->
+                True
+                  <$ ( langToProperPort node >>= \case
+                         Nothing -> error "nodes are undirected, precondition violated!"
+                         Just d@Duplicate {} -> conDup n node con d
+                         Just Erase {} -> erase n node con
+                         Just c@Construct {} -> annihilate n node con c
+                     )
+              dup@(Duplicate (Primary node) _ _) ->
+                True
+                  <$ ( langToProperPort node >>= \case
+                         Nothing -> error "nodes are undirected, precondition violated!"
+                         Just d@Duplicate {} -> annihilate n node dup d
+                         Just Erase {} -> erase n node dup
+                         Just c@Construct {} -> conDup node n c dup
+                     )
+              Erase (Primary node) ->
                 langToProperPort node >>= \case
-                  Nothing → error "nodes are undirected, precondition violated!"
-                  Just x  → True <$ erase node n x
+                  Nothing -> error "nodes are undirected, precondition violated!"
+                  Just x -> True <$ erase node n x
 
 -- | Deals with the case when two nodes annihilate each other
-annihilate ∷ InfoNetwork net Lang m
-           ⇒ Node → Node → ProperPort → ProperPort → m ()
+annihilate ::
+  InfoNetwork net Lang m
+    ⇒ Node → Node → ProperPort → ProperPort → m ()
 annihilate conNum1 conNum2 (Construct {}) (Construct {}) = do
   incGraphSizeStep (-2)
   rewire (conNum1, Aux1) (conNum2, Aux2)
   rewire (conNum1, Aux2) (conNum2, Aux1)
   delNodes [conNum1, conNum2]
-
 annihilate conNum1 conNum2 (Duplicate {}) (Duplicate {}) = do
   incGraphSizeStep (-2)
   rewire (conNum1, Aux1) (conNum2, Aux1)
@@ -115,51 +115,55 @@ annihilate conNum1 conNum2 (Duplicate {}) (Duplicate {}) = do
 annihilate _ _ _ _ = error "the other nodes do not annihilate eachother"
 
 -- | Deals with the case when an Erase Node hits any other node
-erase ∷ InfoNetwork net Lang m ⇒ Node → Node → ProperPort → m ()
-erase conNum eraseNum port
-  = case port of
-      Construct {} → sequentalStep         *> rewire
-      Duplicate {} → sequentalStep         *> rewire
-      Erase {}     → incGraphSizeStep (-2) *> delNodes [conNum, eraseNum]
+erase :: InfoNetwork net Lang m ⇒ Node → Node → ProperPort → m ()
+erase conNum eraseNum port =
+  case port of
+    Construct {} -> sequentalStep *> rewire
+    Duplicate {} -> sequentalStep *> rewire
+    Erase {} -> incGraphSizeStep (-2) *> delNodes [conNum, eraseNum]
   where
     rewire = do
       eraA ← newNode Era
       eraB ← newNode Era
-      let nodeA = RELAuxiliary0 { node = eraA, primary = ReLink conNum Aux1 }
-          nodeB = RELAuxiliary0 { node = eraB, primary = ReLink conNum Aux2 }
+      let nodeA = RELAuxiliary0 {node = eraA, primary = ReLink conNum Aux1}
+          nodeB = RELAuxiliary0 {node = eraB, primary = ReLink conNum Aux2}
       traverse_ linkAll [nodeA, nodeB]
       deleteRewire [conNum, eraseNum] [eraA, eraB]
 
 -- | conDup deals with the case when Constructor and Duplicate share a primary
-conDup ∷ InfoNetwork net Lang m
-       ⇒ Node → Node → ProperPort → ProperPort → m ()
+conDup ::
+  InfoNetwork net Lang m
+    ⇒ Node → Node → ProperPort → ProperPort → m ()
 conDup conNum deconNum (Construct _ _auxA _auxB) (Duplicate _ _auxC _auxD) = do
   incGraphSizeStep 2
   dupA ← newNode Dup
   dupB ← newNode Dup
   conC ← newNode Con
   conD ← newNode Con
-  let nodeA = RELAuxiliary2 { node       = dupA
-                            , primary    = ReLink conNum Aux1
-                            , auxiliary1 = Link (Port Aux1 conD)
-                            , auxiliary2 = Link (Port Aux1 conC)
-                            }
-      nodeB = RELAuxiliary2 { node       = dupB
-                            , primary    = ReLink conNum Aux2
-                            , auxiliary1 = Link (Port Aux2 conD)
-                            , auxiliary2 = Link (Port Aux2 conC)
-                            }
-      nodeC = RELAuxiliary2 { node       = conC
-                            , primary    = ReLink deconNum Aux2
-                            , auxiliary1 = Link (Port Aux2 dupA)
-                            , auxiliary2 = Link (Port Aux2 dupB)
-                            }
-      nodeD = RELAuxiliary2 { node       = conD
-                            , primary    = ReLink deconNum Aux1
-                            , auxiliary1 = Link (Port Aux1 dupA)
-                            , auxiliary2 = Link (Port Aux1 dupB)
-                            }
+  let nodeA = RELAuxiliary2
+        { node = dupA,
+          primary = ReLink conNum Aux1,
+          auxiliary1 = Link (Port Aux1 conD),
+          auxiliary2 = Link (Port Aux1 conC)
+        }
+      nodeB = RELAuxiliary2
+        { node = dupB,
+          primary = ReLink conNum Aux2,
+          auxiliary1 = Link (Port Aux2 conD),
+          auxiliary2 = Link (Port Aux2 conC)
+        }
+      nodeC = RELAuxiliary2
+        { node = conC,
+          primary = ReLink deconNum Aux2,
+          auxiliary1 = Link (Port Aux2 dupA),
+          auxiliary2 = Link (Port Aux2 dupB)
+        }
+      nodeD = RELAuxiliary2
+        { node = conD,
+          primary = ReLink deconNum Aux1,
+          auxiliary1 = Link (Port Aux1 dupA),
+          auxiliary2 = Link (Port Aux1 dupB)
+        }
   traverse_ linkAll [nodeA, nodeB, nodeC, nodeD]
   deleteRewire [conNum, deconNum] [dupA, dupB, conC, conD]
-
 conDup _ _ _ _ = error "only send a construct and duplicate to conDup"

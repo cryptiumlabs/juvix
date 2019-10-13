@@ -1,20 +1,19 @@
 module Juvix.Backends.Michelson.Compilation.Type where
 
-import           Control.Monad.State
-import           Control.Monad.Writer
-import qualified Data.Text                                  as T
-import           Protolude                                  hiding (Const, Type)
+import Control.Monad.State
+import Control.Monad.Writer
+import qualified Data.Text as T
+import qualified IRTS.Lang as I
+import qualified Idris.Core.TT as I
+import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Untyped as M
+import Juvix.Lang
+import Juvix.Utility
+import Protolude hiding (Const, Type)
 
-import           Juvix.Backends.Michelson.Compilation.Types
-import           Juvix.Backends.Michelson.Compilation.Util
-import qualified Juvix.Backends.Michelson.Untyped           as M
-import           Juvix.Lang
-import           Juvix.Utility
+exprToType :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → m M.Type
 
-import qualified Idris.Core.TT                              as I
-import qualified IRTS.Lang                                  as I
-
-exprToType ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Expr → m M.Type
 exprToType expr =
   case expr of
     I.LLazyExp e -> exprToType e
@@ -24,7 +23,8 @@ exprToType expr =
     I.LV _ -> throw (NotYetImplemented ("exprToType (var): " <> prettyPrintValue expr))
     _ -> throw (NotYetImplemented ("exprToType: " <> prettyPrintValue expr))
 
-typeToType ∷ ∀ m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Type → m M.Type
+typeToType :: forall m . (MonadWriter [CompilationLog] m, MonadError CompilationError m) ⇒ Type → m M.Type
+
 typeToType ty =
   case ty of
     I.P _ name _ ->
@@ -44,7 +44,7 @@ typeToType ty =
       elemTy <- typeToType elemTy
       return $ M.ListT elemTy
     I.App _ _ _ -> do
-       throw (NotYetImplemented ("typeToType app: " <> prettyPrintValue ty))
+      throw (NotYetImplemented ("typeToType app: " <> prettyPrintValue ty))
     -- this is clumsy, is Idris replacing these?
     I.Constant const -> do
       case const of
@@ -54,7 +54,7 @@ typeToType ty =
         I.StrType -> return M.StringT
         _ -> throw (NotYetImplemented ("typeToType const: " <> prettyPrintValue const))
     I.Proj _ _ -> do
-       throw (NotYetImplemented ("typeToType proj: " <> prettyPrintValue ty))
+      throw (NotYetImplemented ("typeToType proj: " <> prettyPrintValue ty))
     I.Inferred ty -> typeToType ty
     I.Bind _ (I.Pi _ _ argTy _) retTy -> do
       argTy <- typeToType argTy

@@ -25,8 +25,8 @@ lint:
 	stack exec -- hlint app src test
 
 format:
-	find . -path ./.stack-work -prune -o -type f -name "*.hs" -exec stylish-haskell -i {} \;
-	find . -path ./.stack-work -prune -o -type f -name "*.hs" -exec ormolu --ghc-opt TypeApplications --ghc-opt UnicodeSyntax --ghc-opt DerivingVia --mode inplace {} \;
+	# find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec stylish-haskell -i {} \;
+	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --ghc-opt TypeApplications --ghc-opt UnicodeSyntax --ghc-opt DerivingVia --mode inplace {} \;
 
 test:
 	stack test --fast

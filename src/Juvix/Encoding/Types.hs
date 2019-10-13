@@ -31,8 +31,8 @@ data Lambda
 -- In the real code bake this adt into Bohm or the Lambda itself!!!!
 
 -- Case x of
--- /| Z   → body
--- /| S n → body
+-- /| Z   -> body
+-- /| S n -> body
 data Switch = Case Lambda [Case]
 
 type Argument = Symbol
@@ -95,6 +95,5 @@ newtype EnvS a = EnvS (StateT Env (Except Errors) a)
     )
     via WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
 
-runEnvsS ∷ EnvS a → Either Errors (a, Env)
-
+runEnvsS :: EnvS a → Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env Map.empty mempty mempty))
