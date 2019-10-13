@@ -64,6 +64,8 @@ juvix interactive
 
 ## Development
 
+[Ormolu](https://github.com/cryptiumlabs/ormolu) required for source formatting.
+
 To open a REPL with the library scoped:
 
 ```bash
