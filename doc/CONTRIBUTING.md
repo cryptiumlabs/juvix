@@ -2,6 +2,11 @@
 
 Contributions are welcome! Please consider the following guidelines.
 
+## Code formatting
+
+- Run `make format` to automatically format your code.
+- Any changes to code style should be submitted as pull requests to https://github.com/cryptiumlabs/ormolu
+
 ## Branch usage
 
 The mainline branch is `develop` (this will change post-1.0.0). Feature development should be done on feature branches.
