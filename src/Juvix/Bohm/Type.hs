@@ -3,7 +3,7 @@ module Juvix.Bohm.Type where
 import Juvix.Bohm.Shared
 import Juvix.Library
 
--- TODO:: Investigate if it would be advantageous to promote this to a well typed gadt
+-- TODO ∷ Investigate if it would be advantageous to promote this to a well typed gadt
 data Bohm
   = IntLit Int
   | Lambda Symbol Bohm

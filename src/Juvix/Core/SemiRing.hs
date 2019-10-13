@@ -8,9 +8,12 @@ import Prelude (Show (..))
 type Usage = NatAndw
 
 -- | NatAndw is the choice of the semiring for ({ℕ, ω}, (+), 0, (*), 1)
-data NatAndw -- semiring of (Nat,w) for usage annotation
-  = SNat Natural -- 0, 1, or n usage
-  | Omega -- unspecified usage
+data NatAndw
+  = -- | semiring of (Nat,w) for usage annotation
+    -- 0, 1, or n usage
+    SNat Natural
+  | -- | unspecified usage
+    Omega
 
 instance Show NatAndw where
   show (SNat n) = show n

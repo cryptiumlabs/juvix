@@ -7,6 +7,8 @@ import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Utility.HashMap as Map
 import Prelude (error)
 
+-- TODO include actual results for RPRIM
+
 {- Main functionality. -}
 
 -- Construct occurrence map.
@@ -243,6 +245,7 @@ bracketChecker t = runEither (rec' t 0 mempty)
               RLam s t → rec' t n' (Map.insert s (negate n') map)
               RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
               RVar _ → error "already is matched"
+              RPrim _ → undefined
 
 bracketCheckerErr ∷ RPTO → Either Errors ()
 bracketCheckerErr t = left Brack (bracketChecker t)
@@ -275,6 +278,7 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Just arg → pure (newAssign, PArrT x arg bodyType)
         Nothing → throw @"typ" MissingOverUse
+    rec' (RBang _bangVar (RPrim _p)) _assign = undefined
 
 typCheckerErr ∷ RPTO → ParamTypeAssignment → Either Errors ()
 typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
@@ -330,3 +334,4 @@ ealToBohm ∷ RPTO → BT.Bohm
 ealToBohm (RBang _ (RVar s)) = BT.Symbol' s
 ealToBohm (RBang _ (RLam s t)) = BT.Lambda s (ealToBohm t)
 ealToBohm (RBang _ (RApp t1 t2)) = BT.Application (ealToBohm t1) (ealToBohm t2)
+ealToBohm (RBang _ (RPrim _s)) = undefined

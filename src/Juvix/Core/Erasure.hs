@@ -31,9 +31,9 @@ erase term =
       name ← newName
       -- TODO: Instead calculate type of this lambda-bound variable.
       let ty = EAC.SymT name
-      -- TODO :: replace map here with unordered map
+      -- TODO ∷ replace map here with unordered map
       -- then remove the Ord deriving from the Symbol type.
-      stk ← get @"nameStack"
+      _stk ← get @"nameStack"
       modify @"typeAssignment" (insert name ty)
       body ← erase body
       pure (EAC.Lam name body)

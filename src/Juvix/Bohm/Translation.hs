@@ -7,8 +7,6 @@ module Juvix.Bohm.Translation
 where
 
 import Data.List ((!!))
---import qualified Data.Map.Strict          as Map
-
 import Juvix.Backends.Interface
 import Juvix.Bohm.Shared
 import qualified Juvix.Bohm.Type as BT
@@ -49,22 +47,34 @@ astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
     -- we return the port which the node above it in the AST connects to!
-    recursive (BT.IntLit x) _context = (,) <$> newNode (B.Primar $ B.IntLit x) <*> pure Prim
-    recursive BT.False' _context = (,) <$> newNode (B.Primar B.Fals) <*> pure Prim
-    recursive BT.True' _context = (,) <$> newNode (B.Primar B.Tru) <*> pure Prim
-    recursive BT.Nil _context = (,) <$> newNode (B.Primar B.Nil) <*> pure Prim
-    recursive (BT.Erase) _context = (,) <$> newNode (B.Primar B.Erase) <*> pure Prim
+    recursive (BT.IntLit x) _context =
+      (,) <$> newNode (B.Primar $ B.IntLit x) <*> pure Prim
+    recursive BT.False' _context =
+      (,) <$> newNode (B.Primar B.Fals) <*> pure Prim
+    recursive BT.True' _context =
+      (,) <$> newNode (B.Primar B.Tru) <*> pure Prim
+    recursive BT.Nil _context =
+      (,) <$> newNode (B.Primar B.Nil) <*> pure Prim
+    recursive (BT.Erase) _context =
+      (,) <$> newNode (B.Primar B.Erase) <*> pure Prim
     recursive (BT.Car b) context = genericAux1PrimArg b (B.Auxiliary1 B.Car) context
     recursive (BT.Cdr b) context = genericAux1PrimArg b (B.Auxiliary1 B.Cdr) context
-    recursive (BT.IsNil b) context = genericAux1PrimArg b (B.Auxiliary1 B.TestNil) context
     recursive (BT.Not b) context = genericAux1PrimArg b (B.Auxiliary1 B.Not) context
-    recursive (BT.Curried1 f b) context = genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
-    recursive (BT.Curried2 f b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f) c
-    recursive (BT.Curried3 f b1 b2 b3) c = genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
-    recursive (BT.Application b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
-    recursive (BT.Cons b1 b2) c = genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
-    recursive (BT.Or b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or) c
-    recursive (BT.And b1 b2) c = genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
+    recursive (BT.IsNil b) conte = genericAux1PrimArg b (B.Auxiliary1 B.TestNil) conte
+    recursive (BT.Curried1 f b) context =
+      genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
+    recursive (BT.Curried2 f b1 b2) c =
+      genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f) c
+    recursive (BT.Curried3 f b1 b2 b3) c =
+      genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
+    recursive (BT.Application b1 b2) c =
+      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
+    recursive (BT.Cons b1 b2) c =
+      genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
+    recursive (BT.Or b1 b2) c =
+      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or) c
+    recursive (BT.And b1 b2) c =
+      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
     recursive (BT.Symbol' s) context = do
       frees ← get @"free"
       case (context Map.!? s, frees Map.!? s) of
@@ -233,7 +243,12 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                     newNodeVarMap = Map.insert n symb nodeVarMap
                                  in case aux1 of
                                       Auxiliary a1 → do
-                                        a1 ← rec' a1 (Just (n, Aux1)) fanMap (newNodeVarMap, succ nodeVarLengh)
+                                        a1 ←
+                                          rec'
+                                            a1
+                                            (Just (n, Aux1))
+                                            fanMap
+                                            (newNodeVarMap, succ nodeVarLengh)
                                         pure (lamOrMu symb <$> a1)
                                       FreeNode → pure Nothing
                           mEdge ← traverseM findEdge comeFrom
@@ -275,7 +290,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                               rec' aux1 cameFrom newFanMap nodeVarInfo
                                             -- Never happens by precondition!
                                             FreeNode → pure Nothing
-                                    -- TODO :: unify with through function 19 lines below
+                                    -- TODO ∷ unify with through function 19 lines below
                                     fromCircleOrStar con =
                                       let newFanMap = Map.insert i [In con] fanMap
                                           cameFrom = Just (n, Prim)
@@ -301,7 +316,8 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                        in case prim of
                                             Primary prim →
                                               rec' prim cameFrom newFanMap nodeVarInfo
-                                            Free → pure Nothing -- never happens
+                                            Free →
+                                              pure Nothing -- never happens
                                 case mPort of
                                   -- Shouldn't happen, as the previous node *must* exist
                                   Nothing → pure Nothing
@@ -313,7 +329,8 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                   Just (_, Prim) → do
                                     case status of
                                       In port : xs →
-                                        -- adding the completed at the end keeps the precondition that In's are in front
+                                        -- adding the completed at the
+                                        -- end keeps the precondition that In's are in front
                                         let newFanMap = Map.insert i (xs <> [Completed port]) fanMap
                                             cameFrom = (Just (n, fanPortsToAux port))
                                             aux Circle = aux1
@@ -321,22 +338,32 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                          in case aux port of
                                               Auxiliary aux → rec' aux cameFrom newFanMap nodeVarInfo
                                               FreeNode → pure Nothing -- doesn't happen
-                                                  -- We have already completed a port, but have not yet gone through another
+                                                  -- We have already completed a port,
+                                                  -- but have not yet gone through another
                                                   -- so go through the other port
                                       [Completed port] → do
-                                        let newFanMap Star = Map.insert i ([In Circle, Completed port]) fanMap
-                                            newFanMap Circle = Map.insert i ([In Star, Completed port]) fanMap
+                                        let newFanMap Star =
+                                              Map.insert i ([In Circle, Completed port]) fanMap
+                                            newFanMap Circle =
+                                              Map.insert i ([In Star, Completed port]) fanMap
                                             cameFrom = (Just (n, fanPortsToAux port))
                                             auxFlip Circle = aux2
                                             auxFlip Star = aux1
                                         case auxFlip port of
-                                          Auxiliary aux → rec' aux cameFrom (newFanMap port) nodeVarInfo
-                                          FreeNode → pure Nothing -- doesn't happen
-                                      [Completed Star, Completed Circle] → pure Nothing -- going back through both ports, odd!
-                                      [Completed Circle, Completed Star] → pure Nothing -- going back through both ports, odd!
-                                      [Completed _, Completed _] → error "going through the same node twice!?!?"
-                                      [] → error "doesn't happen"
-                                      _ : _ → error "doesn't happen"
+                                          Auxiliary aux →
+                                            rec' aux cameFrom (newFanMap port) nodeVarInfo
+                                          -- doesn't happen
+                                          FreeNode →
+                                            pure Nothing
+                                      -- going back through both ports, odd! x2
+                                      [Completed Star, Completed Circle] → pure Nothing
+                                      [Completed Circle, Completed Star] → pure Nothing
+                                      [Completed _, Completed _] →
+                                        error "going through the same node twice!?!?"
+                                      [] →
+                                        error "doesn't happen"
+                                      _ : _ →
+                                        error "doesn't happen"
                   B.IsAux1 {B._tag1 = tag, B._prim = prim} →
                     let parentAux con =
                           case prim of

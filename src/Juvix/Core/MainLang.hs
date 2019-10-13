@@ -9,16 +9,21 @@ import Juvix.Library hiding (show)
 import Numeric.Natural
 import Prelude (Show (..), String, error, lookup)
 
--- checkable terms
+-- | checkable terms
 data CTerm
-  = Star Natural -- (sort i) i th ordering of (closed) universe.
-  | Nats -- (Prim) primitive type (naturals)
-  | Pi Usage CTerm CTerm -- formation rule of the dependent function type (PI).
-      -- the Usage(π) tracks how many times x is used.
-  | Lam CTerm --(LAM) Introduction rule of PI.
-      -- The abstracted variable's usage is tracked with the Usage(π).
-  | Conv ITerm --(CONV) conversion rule. TODO make sure 0Γ ⊢ S≡T
-      -- Conv is the constructor that embeds ITerm to CTerm
+  = -- | (sort i) i th ordering of (closed) universe.
+    Star Natural
+  | -- | 'Prim' primitive type (naturals)
+    Nats
+  | -- | formation rule of the dependent function type 'PI'.
+    -- the Usage(π) tracks how many times x is used.
+    Pi Usage CTerm CTerm
+  | -- | 'LAM' Introduction rule of PI.
+    -- The abstracted variable's usage is tracked with the Usage(π).
+    Lam CTerm
+  | -- | 'CONV' conversion rule. TODO make sure 0Γ ⊢ S≡T
+    -- 'Conv' is the constructor that embeds ITerm to CTerm
+    Conv ITerm
   deriving (Eq)
 
 instance Show CTerm where
@@ -27,33 +32,40 @@ instance Show CTerm where
   show (Pi _usage varTy resultTy) =
     "[Π] " <> show varTy <> "-> " <> show resultTy
   show (Lam var) = "\\x. " <> show var
-  show (Conv term) = --Conv should be invisible to users.
-    show term
+  -- Conv should be invisible to users.
+  show (Conv term) = show term
 
--- inferable terms
+-- | inferable terms
 data ITerm
-  = Bound Natural -- Bound variables, in de Bruijn indices
-  | Free Name -- Free variables of type name (see below)
-  | Nat Natural -- primitive constant (naturals)
-  | App ITerm CTerm -- elimination rule of PI (APP).
-  | Ann Usage CTerm CTerm --Annotation with usage.
+  = -- | Bound variables, in de Bruijn indices
+    Bound Natural
+  | -- | Free variables of type name (see below)
+    Free Name
+  | -- | primitive constant (naturals)
+    Nat Natural
+  | -- | elimination rule of PI (APP).
+    App ITerm CTerm
+  | -- | Annotation with usage.
+    Ann Usage CTerm CTerm
   deriving (Eq)
 
 instance Show ITerm where
-  show (Bound i) = "Bound " <> show i --to be improved
-  show (Free name) = show name --using derived show Name instance, to be improved
+  show (Bound i) = "Bound " <> show i -- to be improved
+  show (Free name) = show name -- using derived show Name instance, to be improved
   show (Nat i) = show i
   show (App f x) = show f <> show x
   show (Ann pi theTerm theType) =
     show theTerm <> " : [" <> show pi <> "] " <> show theType
 
 data Name
-  = Global String -- Global variables are represented by name thus type string
-  | Local Natural -- to convert a bound variable into a free one
+  = -- | Global variables are represented by name thus type string
+    Global String
+  | -- | to convert a bound variable into a free one
+    Local Natural
   | Quote Natural
   deriving (Show, Eq)
 
---Values/types
+-- | Values/types
 data Value
   = VStar Natural
   | VNats
@@ -68,26 +80,26 @@ instance Eq Value where
 instance Show Value where
   show x = show (quote0 x)
 
---A neutral term is either a variable or an application of a neutral term to a value
+-- | A neutral term is either a variable or an application of a neutral term to a value
 data Neutral
   = NFree Name
   | NApp Neutral Value
   deriving (Show, Eq)
 
---vfree creates the value corresponding to a free variable
+-- | 'vfree' creates the value corresponding to a free variable
 vfree ∷ Name → Value
 vfree n = VNeutral (NFree n)
 
---Annotations include usage and type.
+-- | 'Annotations' include usage and type.
 type Annotation = (Usage, Value)
 
---Contexts map variables to their types.
+-- Contexts map variables to their types.
 type Context = [(Name, Annotation)]
 
---Evaluation
+-- Evaluation
 type Env = [Value]
 
---initial environment
+-- initial environment
 initEnv ∷ Env
 initEnv = []
 
@@ -101,7 +113,7 @@ cEval (Conv ii) d = iEval ii d
 toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 
--- TODO :: Promote iEval and cEval into the maybe monad and all call sites
+-- TODO ∷ Promote iEval and cEval into the maybe monad and all call sites
 iEval ∷ ITerm → Env → Value
 iEval (Free x) _d = vfree x
 iEval (Nat n) _d = VNat n
@@ -123,7 +135,7 @@ vapp x y =
         <> show x
     )
 
---substitution function for checkable terms
+-- substitution function for checkable terms
 cSubst ∷ Natural → ITerm → CTerm → CTerm
 cSubst _ii _r (Star i) = Star i
 cSubst _ii _r Nats = Nats
@@ -131,7 +143,7 @@ cSubst ii r (Pi pi ty ty') = Pi pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
 cSubst ii r (Lam f) = Lam (cSubst (ii + 1) r f)
 cSubst ii r (Conv e) = Conv (iSubst ii r e)
 
---substitution function for inferable terms
+-- substitution function for inferable terms
 iSubst ∷ Natural → ITerm → ITerm → ITerm
 iSubst ii r (Bound j)
   | ii == j = r
@@ -141,8 +153,7 @@ iSubst _ii _r (Nat n) = Nat n
 iSubst ii r (App it ct) = App (iSubst ii r it) (cSubst ii r ct)
 iSubst ii r (Ann pi term t) = Ann pi (cSubst ii r term) (cSubst ii r t)
 
---iSubst ii r (App iterm cterm) =
---Quotation: takes a value back to a term
+-- Quotation: takes a value back to a term
 quote0 ∷ Value → CTerm
 quote0 = quote 0
 
@@ -159,12 +170,12 @@ neutralQuote ∷ Natural → Neutral → ITerm
 neutralQuote ii (NFree x) = boundfree ii x
 neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
 
---checks if the variable occurring at the head of the application is a bound variable or a free name
+-- checks if the variable occurring at the head of the application is a bound variable or a free name
 boundfree ∷ Natural → Name → ITerm
 boundfree ii (Quote k) = Bound (ii - k - 1)
 boundfree _ii x = Free x
 
---error message for inferring/checking types
+-- error message for inferring/checking types
 errorMsg ∷ Natural → CTerm → Annotation → Annotation → String
 errorMsg binder cterm expectedT gotT =
   "Type mismatched. \n"
@@ -181,14 +192,11 @@ errorMsg binder cterm expectedT gotT =
     <> show (fst expectedT)
     <> " usage."
 
---Type (and usage) checking
+-- Type (and usage) checking
 type Result a = Either String a --when type checking fails, it throws an error.
 
---checker for checkable terms checks the term against an annotation and returns ().
+-- | 'checker' for checkable terms checks the term against an annotation and returns ().
 cType ∷ Natural → Context → CTerm → Annotation → Result ()
-
--- *
-
 cType _ii _g (Star n) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
   let ty = snd ann
@@ -225,12 +233,13 @@ cType ii g (Pi pi varType resultType) ann = do
 -- (Lam) introduction rule of dependent function type
 cType ii g (Lam s) ann =
   case ann of
-    (sig, VPi pi ty ty') → --Lam s should be of dependent function type (Pi pi ty ty').
+    (sig, VPi pi ty ty') →
+      -- Lam s should be of dependent function type (Pi pi ty ty').
       cType
         (ii + 1)
-        ((Local ii, (sig <.> pi, ty)) : g) --put s in the context with usage sig*pi
-        (cSubst 0 (Free (Local ii)) s) --x (varType) in context S with sigma*pi usage.
-        (sig, ty' (vfree (Local ii))) --is of type M (usage sigma) in context T
+        ((Local ii, (sig <.> pi, ty)) : g) -- put s in the context with usage sig*pi
+        (cSubst 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
+        (sig, ty' (vfree (Local ii))) -- is of type M (usage sigma) in context T
     _ → throwError $ show (snd ann) <> " is not a function type but should be."
 cType ii g (Conv e) ann = do
   ann' ← iType ii g e
@@ -238,7 +247,7 @@ cType ii g (Conv e) ann = do
     (fst ann == fst ann' && quote0 (snd ann) == quote0 (snd ann'))
     (throwError (errorMsg ii (Conv e) ann ann'))
 
---inferable terms have type as output.
+-- inferable terms have type as output.
 iType0 ∷ Context → ITerm → Result Annotation
 iType0 = iType 0
 
@@ -251,20 +260,20 @@ iTypeErrorMsg ii x =
     <> ") in the environment."
 
 iType ∷ Natural → Context → ITerm → Result Annotation
---the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
+-- the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
 iType _ii _g (Bound _) = error "Bound variable cannot be inferred"
 iType ii g (Free x) =
   case lookup x g of
     Just ann → return ann
     Nothing → throwError (iTypeErrorMsg ii x)
---Prim-Const typing rule
+-- Prim-Const typing rule
 iType _ii _g (Nat _) = return (Omega, VNats)
---App rule, function M applies to N
+-- App rule, function M applies to N
 iType ii g (App m n) = do
-  mTy ← iType ii g m --annotation of M is usage sig and Pi with pi usage.
+  mTy ← iType ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      cType ii g n (pi, varTy) --N has to be of type varTy with usage pi
+      cType ii g n (pi, varTy) -- N has to be of type varTy with usage pi
       return (sig, resultTy (cEval n []))
     _ →
       throwError
@@ -276,8 +285,8 @@ iType ii g (App m n) = do
             <> "\n cannot be applied to it."
         )
 iType ii g (Ann pi theTerm theType) =
-  --TODO check theType is of type Star first? But we have stakable universes now.
-  --cType ii g theType (0, VStar 0)
+  -- TODO check theType is of type Star first? But we have stakable universes now.
+  -- cType ii g theType (0, VStar 0)
   do
     let ty = cEval theType []
     cType ii g theTerm (pi, ty)

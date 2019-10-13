@@ -19,15 +19,15 @@ languageDef =
       Token.identStart = letter,
       Token.identLetter = alphaNum,
       Token.reservedNames =
-        [ "*", --sort
-          "Nat", --primitive Nat type
-          "[Π]", --function type
-          "Bound", --Bound var
+        [ "*", -- sort
+          "Nat", -- primitive Nat type
+          "[Π]", -- function type
+          "Bound", -- Bound var
           "Free",
           "Local",
           "Quote",
-          "Global", --Free var
-          "w" --Omega
+          "Global", -- Free var
+          "w" -- Omega
         ],
       Token.reservedOpNames = ["App", "Conv", "\\x.", ":", "cType"]
     }
@@ -99,11 +99,11 @@ boundTerm = do
   index ← natural
   return $ Bound (fromInteger index)
 
---Parser for the global free variable name
+-- Parser for the global free variable name
 gName ∷ Parser String
 gName = parens gName <|> identifier
 
---Parser for Name data type
+-- Parser for Name data type
 localTerm ∷ Parser Name
 localTerm = do
   reserved "Local"
@@ -208,7 +208,7 @@ natMultTerm = do
 pValue :: Parser Value
 pValue = parens pValue <|> natAddTerm <|> natSubTerm <|> natMultTerm
 -}
---the type checker takes in a term, its usage and type, and returns ...
+-- the type checker takes in a term, its usage and type, and returns ...
 pCType ∷ Parser (Result ())
 pCType =
   parens pCType <|> do

@@ -54,51 +54,39 @@ lexer ∷ Stream s m Char ⇒ T.GenTokenParser s u m
 lexer = T.makeTokenParser langaugeDef
 
 identifier ∷ Stream s m Char ⇒ ParsecT s u m String
-
-natural ∷ Stream s m Char ⇒ ParsecT s u m Integer
-
-reserved ∷ Stream s m Char ⇒ String → ParsecT s u m ()
-
-reservedOp ∷ Stream s m Char ⇒ String → ParsecT s u m ()
-
-semi ∷ Stream s m Char ⇒ ParsecT s u m String
-
-integer ∷ Stream s m Char ⇒ ParsecT s u m Integer
-
-whiteSpace ∷ Stream s m Char ⇒ ParsecT s u m ()
-
-comma ∷ Stream s m Char ⇒ ParsecT s u m String
-
-brackets ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-
-parens ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-
-semiSep ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
-
-braces ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-
 identifier = T.identifier lexer
 
+reserved ∷ Stream s m Char ⇒ String → ParsecT s u m ()
 reserved = T.reserved lexer
 
+reservedOp ∷ Stream s m Char ⇒ String → ParsecT s u m ()
 reservedOp = T.reservedOp lexer
 
+parens ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 parens = T.parens lexer
 
+integer ∷ Stream s m Char ⇒ ParsecT s u m Integer
 integer = T.integer lexer
 
+semi ∷ Stream s m Char ⇒ ParsecT s u m String
 semi = T.semi lexer
 
+semiSep ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
 semiSep = T.semiSep lexer
 
+whiteSpace ∷ Stream s m Char ⇒ ParsecT s u m ()
 whiteSpace = T.whiteSpace lexer
 
+comma ∷ Stream s m Char ⇒ ParsecT s u m String
 comma = T.comma lexer
 
+braces ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 braces = T.braces lexer
 
+brackets ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 brackets = T.brackets lexer
 
+natural ∷ Stream s m Char ⇒ ParsecT s u m Integer
 natural = T.natural lexer
 
 -- Full Parsers ----------------------------------------------------------------

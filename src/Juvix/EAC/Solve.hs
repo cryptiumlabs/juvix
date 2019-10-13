@@ -7,6 +7,8 @@ import Juvix.EAC.Types
 import Juvix.Library hiding (link, reduce)
 import qualified Z3.Monad as Z3
 
+-- TODO ∷ handle RPrim
+
 runMultipleConstraints ∷ Int → [Constraint] → RPT → IO ()
 runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
@@ -52,10 +54,14 @@ runMultipleConstraints numRepeat constraints syntax = do
   recFirst numRepeat
   where
     -- Could use a list, since this should be ascending, but I do not assume that
-    grabTermNumbers (RBang i (RLam _ t)) s = grabTermNumbers t (Set.insert i s)
-    grabTermNumbers (RBang i (RVar _)) s = Set.insert i s
+    grabTermNumbers (RBang i (RLam _ t)) s =
+      grabTermNumbers t (Set.insert i s)
+    grabTermNumbers (RBang i (RVar _)) s =
+      Set.insert i s
     grabTermNumbers (RBang i (RApp t1 t2)) s =
       grabTermNumbers t1 (grabTermNumbers t2 (Set.insert i s))
+    grabTermNumbers (RBang _i (RPrim _)) _s =
+      undefined
 
 getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
@@ -113,9 +119,7 @@ makeVarMap constraints =
   let vars = Set.toList (collectVars constraints)
    in traverse
         ( \v →
-            ( Z3.mkStringSymbol ("m_" <> show v)
-                >>= Z3.mkIntVar
-            )
+            (Z3.mkStringSymbol ("m_" <> show v) >>= Z3.mkIntVar)
               >>| (,) v
         )
         vars
