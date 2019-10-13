@@ -166,7 +166,7 @@ reduce = do
                       _ → pure isChanged
                   -- case is slightly different from other cases
                   -- just return what the function gives us!
-                  -- TODO ∷ Unify logic with other cases
+                  -- TODO :: Unify logic with other cases
                   Curried1 f →
                     langToProperPort node >>= \case
                       Just IsPrim {_tag0 = Fals} → curry1 (f, n) (PBool False, node)
@@ -379,7 +379,7 @@ fanInAux1 numFan (numOther, otherLang) level = do
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
--- TODO ∷ delete node coming in!
+-- TODO :: delete node coming in!
 notExpand ∷
   (Aux2 s, InfoNetwork net Lang m) ⇒
   (Node, ProperPort) →

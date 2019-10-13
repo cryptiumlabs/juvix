@@ -67,7 +67,7 @@ testBlah =
   runFlipNet'
     ( do
         reduceAll 10
-        net ← get@"net"
+        net ← get @"net"
         return $ fmap lneighbors' $ fst $ match 3 (runFlip net)
     )
     . astToNetDefault

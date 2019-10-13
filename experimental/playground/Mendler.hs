@@ -36,8 +36,8 @@ two' = succ' (succ' zero')
 three ∷ Nat
 three = succ' two'
 
---predAlg ∷ (t → N (FixM N)) → N t → AlgebraM N x → x
---predAlg ∷ AlgebraM N (FixM N) -- (t → N (FixM N)) → N t → AlgebraM N x → x
+--predAlg :: (t -> N (FixM N)) -> N t -> AlgebraM N x -> x
+--predAlg :: AlgebraM N (FixM N) -- (t -> N (FixM N)) -> N t -> AlgebraM N x -> x
 predAlg ∷ Nat → Nat
 predAlg n =
   case out' n of

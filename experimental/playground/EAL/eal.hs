@@ -80,10 +80,10 @@ typeOf (App t1 t2) = do
     Just T.HRefl →
       pure (WrapT (Specific ∷ Types from))
 
---data Forget (a ∷ k) where
---  F ∷ (a ∷ k) → Forget (a ∷ *)
+--data Forget (a :: k) where
+--  F :: (a :: k) -> Forget (a :: *)
 
---f ∷ ∀ k (a ∷ k). Arrowable a => Proxy a → [Bool]
+--f :: forall k (a :: k). Arrowable a => Proxy a -> [Bool]
 f p = do
   (ArrowType (_ ∷ Proxy k), ArrowType (_ ∷ Proxy to)) ← pure (isFromA p)
   let ta = R.typeRep ∷ R.TypeRep k
@@ -97,7 +97,7 @@ f p = do
         Just T.HRefl → [True]
         Nothing → [False]
 
--- typeOfTerm ∷ (HasState "ctxt" (Map SomeSymbol WrappedTypes) m, HasThrow "typ" TypeErrors m
+-- typeOfTerm :: (HasState "ctxt" (Map SomeSymbol WrappedTypes) m, HasThrow "typ" TypeErrors m
 --          , Arrowable a)
 --        ⇒ Term a → m WrappedTypes
 typeOfTerm (Bang n t) = undefined

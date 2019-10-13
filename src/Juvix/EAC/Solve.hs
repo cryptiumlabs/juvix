@@ -14,7 +14,7 @@ runMultipleConstraints numRepeat constraints syntax = do
       recGen constraintCall printModel consZ3 num = do
         (r, v, s) ← Z3.evalZ3 constraintCall
         printModel v
-        putText "-→"
+        putText "-->"
         print (r, s)
         case s of
           Just x →
@@ -61,7 +61,7 @@ getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
   (_r, _v, s) ← Z3.evalZ3 (constraintSystem constraints)
   --putStrLn v
-  --putText "-→"
+  --putText "-->"
   --print (r, s)
   pure s
 
@@ -69,7 +69,7 @@ runConstraints ∷ [Constraint] → IO ()
 runConstraints constraints = do
   (r, v, s) ← Z3.evalZ3 (constraintSystem constraints)
   putStrLn v
-  putText "-→"
+  putText "-->"
   print (r, s)
 
 collectVars ∷ [Constraint] → Set.Set Int

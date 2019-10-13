@@ -275,7 +275,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                               rec' aux1 cameFrom newFanMap nodeVarInfo
                                             -- Never happens by precondition!
                                             FreeNode → pure Nothing
-                                    -- TODO ∷ unify with through function 19 lines below
+                                    -- TODO :: unify with through function 19 lines below
                                     fromCircleOrStar con =
                                       let newFanMap = Map.insert i [In con] fanMap
                                           cameFrom = Just (n, Prim)

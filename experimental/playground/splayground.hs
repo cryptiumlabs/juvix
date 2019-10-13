@@ -53,7 +53,7 @@ type NameEnv v = [(Name, v)]
 iEval ∷ ITerm → (NameEnv Value, Env) → Value
 iEval (Ann e _) d = cEval e d
 iEval (Free x) d = case lookup x (fst d) of Nothing → (vfree x); Just v → v
-iEval (Bound ii) d = (snd d) !! ii --(!!) ∷ [a] → Int → a. It's the list lookup operator.
+iEval (Bound ii) d = (snd d) !! ii --(!!) :: [a] -> Int -> a. It's the list lookup operator.
 iEval (e1 :@: e2) d = vapp (iEval e1 d) (cEval e2 d)
 
 vapp ∷ Value → Value → Value
@@ -112,13 +112,8 @@ iType ii g (e1 :@: e2) =
     si ← iType ii g e1
     case si of
       Fun ty ty' → do
-        cType
-          ii
-          g
-          e2
-          ty
-          return
-          ty'
+        cType ii g e2 ty
+        return ty'
       _ → throwError "illegal application"
 
 --checkable terms takes a type as input and returns ().

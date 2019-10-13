@@ -205,7 +205,7 @@ natMultTerm = do
   return $ natOp (*) (Nat (fromInteger x)) (Nat (fromInteger y))
 
 --parser for values
-pValue ∷ Parser Value
+pValue :: Parser Value
 pValue = parens pValue <|> natAddTerm <|> natSubTerm <|> natMultTerm
 -}
 --the type checker takes in a term, its usage and type, and returns ...

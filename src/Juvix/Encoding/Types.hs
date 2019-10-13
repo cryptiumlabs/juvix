@@ -42,7 +42,7 @@ type Body = Lambda
 data Case = C Symbol [Argument] Body
 
 -- Environment type-------------------------------------------------------------
--- TODO ∷ Add smaller environments for testing
+-- TODO :: Add smaller environments for testing
 -- Doesn't matter much here, as all these values are pure
 -- All this means is that we waste 1 allocation of a list and a map
 

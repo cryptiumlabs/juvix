@@ -26,15 +26,15 @@ type Nat = Mu Nat'
 -- Manually creating Mu
 type Huffman b c = ∀ a. ((Plus c (b → a) → a) → a)
 
---leaf ∷ c → Huffman b c
+--leaf :: c → Huffman b c
 --leaf = inl
 
---zero'' ∷ Nat
+--zero'' :: Nat
 --zero'' = undefined
 
 zero' = inl ()
 
---one' ∷ Nat
+--one' :: Nat
 one' = inr zero'
 
 --succ = fix inr

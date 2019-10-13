@@ -19,7 +19,7 @@ import Prelude (String)
 -- Types------------------------------------------------------------------------
 
 -- Ops ends up being recursive on itself
--- TODO ∷ Figure how to not make this dependent on itself
+-- TODO :: Figure how to not make this dependent on itself
 type Ops m = [[Operator String () m Bohm]]
 
 -- Lexer------------------------------------------------------------------------
@@ -155,7 +155,7 @@ parseBohmFile fname = do
   pure $ parseBohm' fname (show input)
 
 -- poor type signatures can't find the monadic version of parsec outside of stream
--- TODO ∷ rewrite this later
+-- TODO :: rewrite this later
 
 expression' ∷ ParsecT String () Identity Bohm
 expression' =

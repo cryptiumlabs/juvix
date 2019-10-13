@@ -25,10 +25,9 @@ instance Show CTerm where
   show (Star n) = "* " <> show n
   show Nats = "Nat "
   show (Pi _usage varTy resultTy) =
-    "[Π] " <> show varTy <> "→ " <> show resultTy
+    "[Π] " <> show varTy <> "-> " <> show resultTy
   show (Lam var) = "\\x. " <> show var
-  show (Conv term) =
-    --Conv should be invisible to users.
+  show (Conv term) = --Conv should be invisible to users.
     show term
 
 -- inferable terms
@@ -102,7 +101,7 @@ cEval (Conv ii) d = iEval ii d
 toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 
--- TODO ∷ Promote iEval and cEval into the maybe monad and all call sites
+-- TODO :: Promote iEval and cEval into the maybe monad and all call sites
 iEval ∷ ITerm → Env → Value
 iEval (Free x) _d = vfree x
 iEval (Nat n) _d = VNat n
@@ -226,8 +225,7 @@ cType ii g (Pi pi varType resultType) ann = do
 -- (Lam) introduction rule of dependent function type
 cType ii g (Lam s) ann =
   case ann of
-    (sig, VPi pi ty ty') →
-      --Lam s should be of dependent function type (Pi pi ty ty').
+    (sig, VPi pi ty ty') → --Lam s should be of dependent function type (Pi pi ty ty').
       cType
         (ii + 1)
         ((Local ii, (sig <.> pi, ty)) : g) --put s in the context with usage sig*pi

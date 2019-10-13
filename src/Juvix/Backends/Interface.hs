@@ -53,7 +53,7 @@ data Relink
 data EdgeInfo = Edge (Node, PortType) (Node, PortType)
   deriving (Show, Eq)
 
--- TODO ∷ Once neighbor is in, delete this type class
+-- TODO :: Once neighbor is in, delete this type class
 -- and provide these as all derived functions!
 
 -- | a network that has one type for nodes but another for
@@ -108,8 +108,8 @@ class Network net where
 
   delNodes ∷ NetState (net a) m ⇒ [Node] → m ()
 
-  -- TODO ∷ remove deleteRewire, add neighbors, and move auxFromGraph to here!
-  -- TODO ∷ make a helper function that does most of deleteRewire, just send in neighbors
+  -- TODO :: remove deleteRewire, add neighbors, and move auxFromGraph to here!
+  -- TODO :: make a helper function that does most of deleteRewire, just send in neighbors
   deleteRewire ∷ NetState (net a) m ⇒ [Node] → [Node] → m ()
 
   deleteEdge ∷ NetState (net a) m ⇒ (Node, PortType) → (Node, PortType) → m ()
