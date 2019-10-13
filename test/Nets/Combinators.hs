@@ -75,6 +75,6 @@ nonTerminating =
 
 -- Tests------------------------------------------------------------------------
 
--- TODO: Write real tests
+-- TODO ∷ Write real tests
 test1 ∷ InfoNet (FlipNet Lang)
 test1 = runFlipNet (reduceAll 100) nonTerminating

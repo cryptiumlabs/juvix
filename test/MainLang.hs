@@ -108,23 +108,24 @@ twoCompTy =
       )
   )
 
---property tests of type checker:
---the term's inferred type equals to the input type
---property test of evaluator:
+-- property tests of type checker:
+-- the term's inferred type equals to the input type
+-- property test of evaluator:
 -- \x.x (any term) evaluates to (any term evaluated)
-{-lamProp ∷ CTerm → Env → Property
+{- lamProp ∷ CTerm → Env → Property
 lamProp cterm env = App (cEval (Lam Bound 0) env) cterm == cterm-}
 -- any constant term evaluates to itself
---constProp ∷ CTerm → Env → Bool
---constProp (Star i) env = cEval (Star i) env == VStar i
---constProp Nats env     = cEval Nats env == VNats
---constProp _ _          = True --Not testing non-const terms
+-- constProp ∷ CTerm → Env → Bool
+-- constProp (Star i) env = cEval (Star i) env == VStar i
+-- constProp Nats env     = cEval Nats env == VNats
+-- constProp _ _          = True --Not testing non-const terms
 
-{-TODO need to combine generators to generate CTerms http://hackage.haskell.org/package/QuickCheck-2.13.2/docs/Test-QuickCheck-Gen.html
+{- TODO need to combine generators to generate
+   CTerms http://hackage.haskell.org/package/QuickCheck-2.13.2/docs/Test-QuickCheck-Gen.html
 instance Arbitrary CTerm where
   arbitrary = CTerm -}
 
---unit tests for cterm parser.
+-- unit tests for cterm parser.
 shouldParse ∷ String → CTerm → T.TestTree
 shouldParse term parsed =
   T.testCase (show term <> " should parse as " <> show parsed) $
@@ -159,7 +160,7 @@ test_silent_convert_Free = shouldParse "Free (Global aStringName)" (Conv (Free (
 
 test_silent_convert_App ∷ T.TestTree
 test_silent_convert_App =
-  --doesn't make sense now because there is no ITerm that is a function atm.
+  -- doesn't make sense now because there is no ITerm that is a function atm.
   shouldParse "App Bound 0 Nat" (Conv (App (Bound 0) Nats))
 
 test_silent_convert_Ann ∷ T.TestTree

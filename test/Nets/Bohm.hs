@@ -4,7 +4,6 @@ import Data.Graph.Inductive
 import Juvix.Backends.Env
 import Juvix.Backends.Graph
 import Juvix.Backends.Interface
-import Juvix.Bohm.Shared
 import Juvix.Nets.Bohm
 import Juvix.Utility
 

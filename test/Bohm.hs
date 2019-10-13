@@ -27,7 +27,9 @@ astToNetDefault net = astToNet net defaultEnv
 
 --test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test1 ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
-test1 = runMapNet (reduceAll 10 >> findEdge (1, Aux1)) . astToNetDefault <$> parseBohm "(lambda x. x)"
+test1 =
+  runMapNet (reduceAll 10 >> findEdge (1, Aux1)) . astToNetDefault
+    <$> parseBohm "(lambda x. x)"
 
 test1' ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
 test1' = runMapNet (reduceAll 1) . astToNetDefault <$> parseBohm "((lambda x. x) y)"
@@ -36,16 +38,25 @@ parsed ∷ Network net ⇒ Either ParseError (net Lang)
 parsed = astToNetDefault <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
 test2' ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
-test2' = runMapNet (reduceAll 10) . astToNetDefault <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
+test2' =
+  runMapNet (reduceAll 10) . astToNetDefault
+    <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
 test2 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test2 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
+test2 =
+  runFlipNet (reduceAll 10) . astToNetDefault
+    <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
 test3 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test3 = runFlipNet (reduceAll 1) . astToNetDefault <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
+test3 =
+  runFlipNet (reduceAll 1) . astToNetDefault
+    <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
 test4 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test4 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "(lambda y. (lambda x. (y x)) (lambda x. 2 + x))"
+test4 =
+  runFlipNet (reduceAll 10)
+    . astToNetDefault
+    <$> parseBohm "(lambda y. (lambda x. (y x)) (lambda x. 2 + x))"
 
 test5 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test5 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "(2 + 2)"
@@ -57,10 +68,16 @@ test6 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test6 = runFlipNet (reduceAll 10) . astToNetDefault <$> parseBohm "( (lambda x. (x + 3 * 5)) 2)"
 
 test7 ∷ Maybe Bohm
-test7 = testAst $ runFlipNet (reduceAll 10) . astToNetDefault <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+test7 =
+  testAst $
+    runFlipNet (reduceAll 10)
+      . astToNetDefault <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
 
 test7' ∷ Maybe Bohm
-test7' = testAst $ runMapNet (reduceAll 10) . astToNetDefault <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+test7' =
+  testAst $
+    runMapNet (reduceAll 10) . astToNetDefault
+      <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
 
 testBlah ∷ Either ParseError (Maybe (Adj EdgeInfo), InfoNet (FlipNet Lang))
 testBlah =
@@ -74,10 +91,16 @@ testBlah =
     <$> (ealToBohm <$> parseEal "lambda x. (lambda y. (lambda z. z))")
 
 test6Gen ∷ IO (Either ParseError (InfoNet (FlipNet Lang)))
-test6Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNetDefault) (parseBohm "( (lambda x. (x + 3 + 5)) 2)")
+test6Gen =
+  traverse
+    (netToGif "tmp/" "boo" 1000 . astToNetDefault)
+    (parseBohm "( (lambda x. (x + 3 + 5)) 2)")
 
 test67Gen ∷ IO (Either ParseError (InfoNet (FlipNet Lang)))
-test67Gen = traverse (netToGif "tmp/" "boo" 1000 . astToNetDefault) (parseBohm "( (lambda x. (x + y + y)) 2)")
+test67Gen =
+  traverse
+    (netToGif "tmp/" "boo" 1000 . astToNetDefault)
+    (parseBohm "( (lambda x. (x + y + y)) 2)")
 
 -- run these on any of the tests above
 -- gives back a term for all except for Omega, but that is reasonable
