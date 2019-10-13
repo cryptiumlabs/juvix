@@ -6,9 +6,9 @@ import Juvix.Library hiding (Nat, foldM)
 -- Attempt 4 is a success!!!
 
 -- Attempt 4 -------------------------------------------------------------------
-type AlgebraM (f ∷ * → *) (x ∷ *) = forall (r ∷ *). (r → x) → (f r) → x
+type AlgebraM (f ∷ * → *) (x ∷ *) = ∀ (r ∷ *). (r → x) → (f r) → x
 
-type FixM f = forall x. AlgebraM f x → x
+type FixM f = ∀ x. AlgebraM f x → x
 
 foldM ∷ AlgebraM f x → (AlgebraM f x → x) → x
 foldM alg d = d alg
@@ -18,10 +18,10 @@ data N r = Z | S r deriving (Functor)
 
 type Nat = FixM N
 
-in' ∷ forall (f ∷ * → *) (x ∷ *). f (AlgebraM f x → x) → (AlgebraM f x → x)
+in' ∷ ∀ (f ∷ * → *) (x ∷ *). f (AlgebraM f x → x) → (AlgebraM f x → x)
 in' r f = f (foldM f) r
 
-out' ∷ forall f x. Functor f ⇒ (FixM f) → f (AlgebraM f x → x)
+out' ∷ ∀ f x. Functor f ⇒ (FixM f) → f (AlgebraM f x → x)
 out' fr = fr (\rec fr' → fmap (\r → in' (rec r)) fr')
 
 zero' ∷ Nat
@@ -44,7 +44,7 @@ predAlg n =
     Z → zero'
     S n → n
 
-out'' ∷ forall f. Functor f ⇒ (FixM f) → f (FixM f)
+out'' ∷ ∀ f. Functor f ⇒ (FixM f) → f (FixM f)
 out'' = undefined
 
 switchCase ∷ Nat → Nat → Nat → Nat
@@ -67,7 +67,7 @@ isEvenAlgN rec' n =
     S n → not (rec' n)
 
 -- attempt 3 : BB encoding/Church with extra! ----------------------------------
-type NatBB a = forall b. (() → b) → (a → b) → b
+type NatBB a = ∀ b. (() → b) → (a → b) → b
 
 newtype NatBoehm a = Boehm {unBoehm ∷ NatBB a}
 
@@ -103,7 +103,7 @@ one3 ∷ NatBoehm (NatBoehm a)
 one3 = Boehm (\_z s → s zero3)
 
 -- attempt 2 : NatF ◂ ★ ➔ ★ = λ R: ★. ∀ X: ★. X ➔ (R ➔ X ➔ X) ➔ X. -------------
-type NatF (r ∷ *) = forall (x ∷ *). x → (r → x → x) → x
+type NatF (r ∷ *) = ∀ (x ∷ *). x → (r → x → x) → x
 
 newtype Nat' a = Nat' {unNat ∷ NatF a}
 

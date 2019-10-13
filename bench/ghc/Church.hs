@@ -7,7 +7,7 @@ module Main where
 
 import Prelude (IO, print)
 
-type Num = forall a. (a → a) → (a → a)
+type Num = ∀ a. (a → a) → (a → a)
 
 zero ∷ Num
 zero s z = z

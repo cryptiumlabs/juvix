@@ -1,5 +1,4 @@
-import           Juvix.Library hiding (Nat)
-
+import Juvix.Library hiding (Nat)
 
 inl ∷ t1 → (t1 → t2) → p → t2
 inl = \x k _l → k x
@@ -9,7 +8,6 @@ inr = \y _k l → l y
 
 case' ∷ (t1 → t2 → t3) → t1 → t2 → t3
 case' = \i k l → i k l
-
 
 type Plus x y = ∀ z. (x → z) → (y → z) → z
 
@@ -40,7 +38,6 @@ zero' = inl ()
 one' = inr zero'
 
 --succ = fix inr
-
 
 newtype Huffman' b c = Huffman' (∀ a. ∀ z. ((c → z) → (b → a → z) → z) → a)
 
