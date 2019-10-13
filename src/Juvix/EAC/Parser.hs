@@ -19,7 +19,7 @@ import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
 import Prelude (String, error)
 
-langaugeDef :: Stream s m Char => GenLanguageDef s u m
+langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
   { T.reservedNames = ["lambda"],
     T.reservedOpNames =
@@ -50,32 +50,32 @@ langaugeDef = LanguageDef
     commentLine = ""
   }
 
-lexer :: Stream s m Char => T.GenTokenParser s u m
+lexer ∷ Stream s m Char ⇒ T.GenTokenParser s u m
 lexer = T.makeTokenParser langaugeDef
 
-identifier :: Stream s m Char => ParsecT s u m String
+identifier ∷ Stream s m Char ⇒ ParsecT s u m String
 
-natural :: Stream s m Char => ParsecT s u m Integer
+natural ∷ Stream s m Char ⇒ ParsecT s u m Integer
 
-reserved :: Stream s m Char => String -> ParsecT s u m ()
+reserved ∷ Stream s m Char ⇒ String → ParsecT s u m ()
 
-reservedOp :: Stream s m Char => String -> ParsecT s u m ()
+reservedOp ∷ Stream s m Char ⇒ String → ParsecT s u m ()
 
-semi :: Stream s m Char => ParsecT s u m String
+semi ∷ Stream s m Char ⇒ ParsecT s u m String
 
-integer :: Stream s m Char => ParsecT s u m Integer
+integer ∷ Stream s m Char ⇒ ParsecT s u m Integer
 
-whiteSpace :: Stream s m Char => ParsecT s u m ()
+whiteSpace ∷ Stream s m Char ⇒ ParsecT s u m ()
 
-comma :: Stream s m Char => ParsecT s u m String
+comma ∷ Stream s m Char ⇒ ParsecT s u m String
 
-brackets :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
+brackets ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 
-parens :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
+parens ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 
-semiSep :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
+semiSep ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
 
-braces :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
+braces ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 
 identifier = T.identifier lexer
 
@@ -102,19 +102,19 @@ brackets = T.brackets lexer
 natural = T.natural lexer
 
 -- Full Parsers ----------------------------------------------------------------
-parseEal :: String -> Either ParseError RPTO
+parseEal ∷ String → Either ParseError RPTO
 parseEal = parseEal' ""
 
-parseEal' :: SourceName -> String -> Either ParseError RPTO
+parseEal' ∷ SourceName → String → Either ParseError RPTO
 parseEal' = runParser (whiteSpace *> expression <* eof) ()
 
-parseBohmFile :: FilePath -> IO (Either ParseError RPTO)
+parseBohmFile ∷ FilePath → IO (Either ParseError RPTO)
 parseBohmFile fname = do
   input <- readFile fname
   pure $ parseEal' fname (show input)
 
 -- Grammar ---------------------------------------------------------------------
-expressionGen :: Stream s m Char => ParsecT s u m RPTI -> ParsecT s u m RPTO
+expressionGen ∷ Stream s m Char ⇒ ParsecT s u m RPTI → ParsecT s u m RPTO
 expressionGen ealGen = do
   bang <- try (string "!-") <|> string "!"
   bangs <- many (try (string "!-") <|> string "!" <|> string " ")
@@ -124,20 +124,20 @@ expressionGen ealGen = do
       num = sum (fmap f (filter (/= " ") (bang : bangs)))
   pure (RBang num term)
 
-expression :: Parser RPTO
+expression ∷ Parser RPTO
 expression = expressionGen eal <|> (RBang 0 <$> eal)
 
-expression' :: Parser RPTO
+expression' ∷ Parser RPTO
 expression' = expressionGen eal' <|> (RBang 0 <$> eal')
 
-eal :: Parser RPTI
+eal ∷ Parser RPTI
 eal =
   try (application <?> "Application")
     <|> (lambda <?> "RLam")
     <|> (term <?> "RPTO")
     <|> parens eal
 
-eal' :: Parser RPTI
+eal' ∷ Parser RPTI
 eal' =
   try (parens eal')
     <|> (lambda <?> "RLam")
@@ -145,16 +145,16 @@ eal' =
     -- Eal here is safe when it's in a ()'s
     <|> parens eal
 
-types :: Parser PType
+types ∷ Parser PType
 types = buildExpressionParser optable types'
 
-types' :: Parser PType
+types' ∷ Parser PType
 types' = bangs <|> specific
 
-symbol :: Stream s m Char => ParsecT s u m Symbol
+symbol ∷ Stream s m Char ⇒ ParsecT s u m Symbol
 symbol = intern <$> identifier
 
-lambda :: Parser RPTI
+lambda ∷ Parser RPTI
 lambda = do
   reserved "lambda" <|> reservedOp "\\" <|> reservedOp "λ"
   s <- symbol
@@ -162,18 +162,18 @@ lambda = do
   body <- expression
   pure (RLam s body)
 
-application :: Parser RPTI
+application ∷ Parser RPTI
 application = do
   exp <- expression'
   exps <- many1 expression'
   case exps of
-    [] -> error "doesn't happen"
-    x : xs -> pure $ foldl (\acc x -> RApp (RBang 0 acc) x) (RApp exp x) xs
+    [] → error "doesn't happen"
+    x : xs → pure $ foldl (\acc x → RApp (RBang 0 acc) x) (RApp exp x) xs
 
-term :: Parser RPTI
+term ∷ Parser RPTI
 term = RVar <$> symbol
 
-bangs :: Parser PType
+bangs ∷ Parser PType
 bangs = do
   bangs <- many1 (try (string "!-") <|> string "!" <|> string " ")
   typ <- parens types <|> types
@@ -182,18 +182,18 @@ bangs = do
       num = sum (fmap f (filter (/= " ") bangs))
   pure $ addSymT num typ
 
-addSymT :: Param -> PType -> PType
+addSymT ∷ Param → PType → PType
 addSymT n (PSymT a b) = PSymT (n + a) b
 addSymT n (PArrT a b c) = PArrT (n + a) b c
 
-specific :: Parser PType
+specific ∷ Parser PType
 specific = PSymT 0 <$> symbol
 
-createOpTable :: ParsecT s u m (a -> a -> a) -> Operator s u m a
+createOpTable ∷ ParsecT s u m (a → a → a) → Operator s u m a
 createOpTable term = E.Infix term AssocRight
 
-lolly :: Stream s m Char => ParsecT s u m (PType -> PType -> PType)
+lolly ∷ Stream s m Char ⇒ ParsecT s u m (PType → PType → PType)
 lolly = PArrT 0 <$ reservedOp "-o"
 
-optable :: [[Operator String () Identity PType]]
+optable ∷ [[Operator String () Identity PType]]
 optable = [[createOpTable lolly]]

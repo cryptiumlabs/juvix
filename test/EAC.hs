@@ -4,16 +4,16 @@ import Juvix.EAC
 import Juvix.Library
 import Text.Parsec
 
-parseTest1 :: Either ParseError RPTO
+parseTest1 ∷ Either ParseError RPTO
 parseTest1 = parseEal "!! (λ x : a -o b. !-!- x)"
 
-parseTest2 :: Either ParseError RPTO
+parseTest2 ∷ Either ParseError RPTO
 parseTest2 = parseEal "!!((λ x : Forall. x) (λx : a -o b. (x y)))"
 
-parseTest3 :: Either ParseError RPTO
+parseTest3 ∷ Either ParseError RPTO
 parseTest3 = parseEal "!!(λ x : Forall. !-!-x λx : a -o b -o c. !-!-(x y))"
 
-exampleBracket :: RPTO
+exampleBracket ∷ RPTO
 exampleBracket =
   RBang
     0
@@ -40,5 +40,5 @@ exampleBracket =
         )
     )
 
-exampleBracketRun :: Either BracketErrors ()
+exampleBracketRun ∷ Either BracketErrors ()
 exampleBracketRun = bracketChecker exampleBracket

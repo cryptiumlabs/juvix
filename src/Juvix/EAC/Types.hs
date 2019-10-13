@@ -64,16 +64,16 @@ type ParamTypeAssignment = Map.Map Symbol PType
 -- Linear (in)equality constraint on parameters.
 data Constraint
   = Constraint
-      { vars :: [ConstraintVar],
-        op :: Op
+      { vars ∷ [ConstraintVar],
+        op ∷ Op
       }
   deriving (Show, Eq)
 
 -- Variable in constraint.
 data ConstraintVar
   = ConstraintVar
-      { coefficient :: Int,
-        variable :: Param
+      { coefficient ∷ Int,
+        variable ∷ Param
       }
   deriving (Show, Eq)
 
@@ -103,7 +103,7 @@ data BracketErrors
 
 -- | Runner Type for Bracket and TypeError
 newtype EitherTyp b a
-  = EitherBracket {runEither :: (Either b a)}
+  = EitherBracket {runEither ∷ (Either b a)}
   deriving
     (Functor, Applicative, Monad)
     via Except b
@@ -136,17 +136,17 @@ newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
     (HasThrow "typ" TypeErrors)
     via MonadError (ExceptT TypeErrors (State Info))
 
-data Info = I {ctxt :: Map Symbol Type} deriving (Show, Generic)
+data Info = I {ctxt ∷ Map Symbol Type} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env
   = Env
-      { path :: Path,
-        varPaths :: VarPaths,
-        typeAssignment :: TypeAssignment,
-        nextParam :: Param,
-        constraints :: [Constraint],
-        occurrenceMap :: OccurrenceMap
+      { path ∷ Path,
+        varPaths ∷ VarPaths,
+        typeAssignment ∷ TypeAssignment,
+        nextParam ∷ Param,
+        constraints ∷ [Constraint],
+        occurrenceMap ∷ OccurrenceMap
       }
   deriving (Show, Eq, Generic)
 

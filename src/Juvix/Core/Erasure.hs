@@ -10,24 +10,24 @@ import Juvix.Utility
 import Juvix.Utility.HashMap
 import Prelude ((!!))
 
-erase' :: Core.CTerm -> (EAC.Term, EAC.TypeAssignment)
+erase' ∷ Core.CTerm → (EAC.Term, EAC.TypeAssignment)
 erase' cterm =
   let (term, env) = exec (erase cterm)
    in (term, typeAssignment env)
 
-exec :: EnvErasure a -> (a, Env)
+exec ∷ EnvErasure a → (a, Env)
 exec (EnvEra env) = runState env (Env empty 0 [])
 
-erase ::
+erase ∷
   ( HasState "typeAssignment" EAC.TypeAssignment m,
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m
-  ) =>
-  Core.CTerm ->
+  ) ⇒
+  Core.CTerm →
   m EAC.Term
 erase term =
   case term of
-    Core.Lam body -> do
+    Core.Lam body → do
       name <- newName
       -- TODO: Instead calculate type of this lambda-bound variable.
       let ty = EAC.SymT name
@@ -37,39 +37,39 @@ erase term =
       modify @"typeAssignment" (insert name ty)
       body <- erase body
       pure (EAC.Lam name body)
-    Core.Conv iterm -> do
+    Core.Conv iterm → do
       case iterm of
-        Core.Bound n -> do
+        Core.Bound n → do
           name <- unDeBruijin (fromIntegral n)
           pure (EAC.Var name)
-        Core.Free n ->
+        Core.Free n →
           case n of
-            Core.Global s -> pure (EAC.Var (intern s))
-            Core.Local _s -> undefined
-            Core.Quote _s -> undefined
-        Core.App a b -> do
+            Core.Global s → pure (EAC.Var (intern s))
+            Core.Local _s → undefined
+            Core.Quote _s → undefined
+        Core.App a b → do
           a <- erase (Core.Conv a)
           b <- erase b
           pure (EAC.App a b)
-        Core.Ann _ _ a -> do
+        Core.Ann _ _ a → do
           erase a
-        Core.Nat n -> pure (EAC.Prim (EAC.Nat n))
-    _ -> undefined
+        Core.Nat n → pure (EAC.Prim (EAC.Nat n))
+    _ → undefined
 
-unDeBruijin ::
+unDeBruijin ∷
   ( HasState "nextName" Int m,
     HasState "nameStack" [Int] m
-  ) =>
-  Int ->
+  ) ⇒
+  Int →
   m Symbol
 unDeBruijin ind = do
   stack <- get @"nameStack"
   pure (intern $ show $ stack !! ind)
 
-newName ::
+newName ∷
   ( HasState "nextName" Int m,
     HasState "nameStack" [Int] m
-  ) =>
+  ) ⇒
   m Symbol
 newName = do
   name <- get @"nextName"
@@ -79,9 +79,9 @@ newName = do
 
 data Env
   = Env
-      { typeAssignment :: EAC.TypeAssignment,
-        nextName :: Int,
-        nameStack :: [Int]
+      { typeAssignment ∷ EAC.TypeAssignment,
+        nextName ∷ Int,
+        nameStack ∷ [Int]
       }
   deriving (Show, Eq, Generic)
 

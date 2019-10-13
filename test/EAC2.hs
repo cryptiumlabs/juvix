@@ -7,44 +7,44 @@ import qualified Juvix.Utility as Map
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-test_id :: T.TestTree
+test_id ∷ T.TestTree
 test_id = shouldBeTypeable idTerm idAssignment
 
-test_churchTwo :: T.TestTree
+test_churchTwo ∷ T.TestTree
 test_churchTwo = shouldBeTypeable churchTwo churchAssignment
 
-test_churchThree :: T.TestTree
+test_churchThree ∷ T.TestTree
 test_churchThree = shouldBeTypeable churchThree churchAssignment
 
-test_counterexample :: T.TestTree
+test_counterexample ∷ T.TestTree
 test_counterexample = shouldNotBeTypeable counterexample counterexampleAssignment
 
-test_church_exp :: T.TestTree
+test_church_exp ∷ T.TestTree
 test_church_exp = shouldBeTypeable churchExp churchExpAssignment
 
-shouldBeTypeable :: Term -> TypeAssignment -> T.TestTree
+shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
   T.testCase (show term <> " should be typeable in EAC") $ do
     valid <- validEal term assignment
     case valid of
-      Right _ -> return ()
-      Left er -> T.assertFailure (show er)
+      Right _ → return ()
+      Left er → T.assertFailure (show er)
 
-shouldNotBeTypeable :: Term -> TypeAssignment -> T.TestTree
+shouldNotBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldNotBeTypeable term assignment =
   T.testCase (show term <> " should not be typeable in EAC") $ do
     valid <- validEal term assignment
     case valid of
-      Right _ -> T.assertFailure "a satisfying assignment was found"
-      Left _ -> pure ()
+      Right _ → T.assertFailure "a satisfying assignment was found"
+      Left _ → pure ()
 
-idTerm :: Term
+idTerm ∷ Term
 idTerm = Lam (intern "x") (Var (intern "x"))
 
-idAssignment :: TypeAssignment
+idAssignment ∷ TypeAssignment
 idAssignment = Map.fromList [(intern "x", SymT (intern "a"))]
 
-churchTwo :: Term
+churchTwo ∷ Term
 churchTwo =
   Lam
     (intern "s")
@@ -59,7 +59,7 @@ churchTwo =
         )
     )
 
-churchThree :: Term
+churchThree ∷ Term
 churchThree =
   Lam
     (intern "s")
@@ -77,7 +77,7 @@ churchThree =
         )
     )
 
-churchAssignment :: TypeAssignment
+churchAssignment ∷ TypeAssignment
 churchAssignment =
   Map.fromList
     [ (intern "s", ArrT (SymT (intern "a")) (SymT (intern "a"))),
@@ -85,7 +85,7 @@ churchAssignment =
     ]
 
 -- \y → ( (\n → n (\y → n (\_ → y))) (\x → (x (x y))) ) ∷ a → a
-counterexample :: Term
+counterexample ∷ Term
 counterexample =
   App
     ( Lam
@@ -115,16 +115,16 @@ counterexample =
         )
     )
 
-arg0 :: Type
+arg0 ∷ Type
 arg0 = SymT (intern "a")
 
-arg1 :: Type
+arg1 ∷ Type
 arg1 =
   ArrT
     (SymT (intern "a"))
     (SymT (intern "a"))
 
-counterexampleAssignment :: Map.Map Symbol Type
+counterexampleAssignment ∷ Map.Map Symbol Type
 counterexampleAssignment =
   Map.fromList
     [ (intern "n", ArrT arg1 arg0),
@@ -133,7 +133,7 @@ counterexampleAssignment =
       (intern "x", arg1)
     ]
 
-exp :: Term
+exp ∷ Term
 exp =
   ( Lam
       (intern "m")
@@ -158,20 +158,20 @@ exp =
       )
   )
 
-threeLam :: Term
+threeLam ∷ Term
 threeLam = Lam (intern "f") (Lam (intern "x") (nTimesApp 10 (Var (intern "f")) (Var (intern "x"))))
 
-threeLam2 :: Term
+threeLam2 ∷ Term
 threeLam2 = Lam (intern "f'") (Lam (intern "x'") (nTimesApp 20 (Var (intern "f'")) (Var (intern "x'"))))
 
-nTimesApp :: Int -> Term -> Term -> Term
+nTimesApp ∷ Int → Term → Term → Term
 nTimesApp 0 _ b = b
 nTimesApp n a b = App a (nTimesApp (n - 1) a b)
 
-churchExp2 :: Term
+churchExp2 ∷ Term
 churchExp2 = exp
 
-churchExp :: Term
+churchExp ∷ Term
 churchExp =
   ( Lam
       (intern "s'")
@@ -193,16 +193,16 @@ churchExp =
       )
   )
 
-zTy :: Type
+zTy ∷ Type
 zTy = SymT (intern "a")
 
-sTy :: Type
+sTy ∷ Type
 sTy = ArrT zTy zTy
 
-nat :: Type
+nat ∷ Type
 nat = ArrT sTy sTy
 
-churchExpAssignment :: TypeAssignment
+churchExpAssignment ∷ TypeAssignment
 churchExpAssignment =
   Map.fromList
     [ (intern "n", nat),

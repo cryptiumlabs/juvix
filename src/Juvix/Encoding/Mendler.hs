@@ -13,12 +13,12 @@ import Prelude (error)
 
 -- | adtToMendler converts an adt into an environment where the mendler
 -- encoding is defined for case functions
-adtToMendler ::
+adtToMendler ∷
   ( HasState "constructors" (Map.Map Symbol Bound) m,
     HasState "adtMap" (Map.Map Symbol Branches) m,
     HasThrow "err" Errors m
-  ) =>
-  Name ->
+  ) ⇒
+  Name →
   m ()
 adtToMendler (Adt name s) = sumRec s 0
   where
@@ -50,16 +50,16 @@ adtToMendler (Adt name s) = sumRec s 0
           let genI = intern ("%gen" <> show index)
               app = Application termToBuild (Value genI)
            in case x of
-                Term ->
+                Term →
                   ( lambdasBeforeIn . Lambda genI,
                     Lambda (intern "%fun") app
                   )
-                Product t ->
+                Product t →
                   rec'
                     t
                     (succ index)
                     (lambdasBeforeIn . Lambda genI, app)
-                None ->
+                None →
                   ( lambdasBeforeIn,
                     Lambda
                       (intern "%fun")
@@ -72,22 +72,22 @@ adtToMendler (Adt name s) = sumRec s 0
                       )
                   )
 
-mendlerCase ::
+mendlerCase ∷
   ( HasState "constructors" (Map.Map Symbol Bound) m,
     HasState "adtMap" (Map.Map Symbol Branches) m,
     HasThrow "err" Errors m,
     HasWriter "missingCases" [Symbol] m
-  ) =>
-  Switch ->
+  ) ⇒
+  Switch →
   m Lambda
 mendlerCase c = do
   expandedCase <- caseGen c onNoArg onrec
   case expandedCase of
-    Application on b ->
+    Application on b →
       pure $ Application on $
         Lambda (intern "rec") b
-    Lambda {} -> error "doesn't happen"
-    Value {} -> error "doesn't happen"
+    Lambda {} → error "doesn't happen"
+    Value {} → error "doesn't happen"
   where
     onNoArg body = Lambda (intern "()") body
     onrec c accLam =
@@ -100,7 +100,7 @@ mendlerCase c = do
 
 -- Helpers for Mendler encoding ------------------------------------------------
 
-numToInGen :: Int -> Lambda -> Lambda
+numToInGen ∷ Int → Lambda → Lambda
 numToInGen 0 arg = app in' arg
 numToInGen n arg = app in' (rec' n arg)
   where
@@ -116,19 +116,19 @@ numToInGen n arg = app in' (rec' n arg)
 -- Single ∧ Pos == 2 ⇒ inr (inr ...)       | 3
 -- Branch ∧ Pos == 2 ⇒ inr (inr (inl ...)) | 4
 
-numToIn :: Int -> Lambda -> Lambda
+numToIn ∷ Int → Lambda → Lambda
 numToIn n arg
   | even n = numToInGen n (app inl arg)
   | otherwise = numToInGen n (app inr arg)
 
-numToInOp :: Int -> Lambda -> Lambda
+numToInOp ∷ Int → Lambda → Lambda
 numToInOp n arg
   | even n = numToInGen n (app inlOp arg)
   | otherwise = numToInGen n (app inrOp arg)
 
 -- Lambda Abstraction for mendler encoding -------------------------------------
 
-inl :: Lambda
+inl ∷ Lambda
 inl =
   Lambda x
     $ Lambda k
@@ -141,7 +141,7 @@ inl =
 
 -- | Op of inl that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
-inlOp :: Lambda
+inlOp ∷ Lambda
 inlOp =
   Lambda x
     $ Lambda k
@@ -152,7 +152,7 @@ inlOp =
     k = intern "k"
     l = intern "l"
 
-inr :: Lambda
+inr ∷ Lambda
 inr =
   Lambda y
     $ Lambda k
@@ -165,7 +165,7 @@ inr =
 
 -- | Op of inr that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
-inrOp :: Lambda
+inrOp ∷ Lambda
 inrOp =
   Lambda y
     $ Lambda k
@@ -176,13 +176,13 @@ inrOp =
     k = intern "k"
     l = intern "l"
 
-foldM' :: Lambda
+foldM' ∷ Lambda
 foldM' = Lambda alg $ Lambda d $ Application (Value d) (Value alg)
   where
     alg = intern "alg"
     d = intern "d"
 
-in' :: Lambda
+in' ∷ Lambda
 in' =
   Lambda r
     $ Lambda f

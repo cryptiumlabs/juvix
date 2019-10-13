@@ -23,21 +23,21 @@ type Net a = Gr a EdgeInfo
 type FlipNet = Flip Gr EdgeInfo
 
 -- Run Function ----------------------------------------------------------------
-runFlipNet :: EnvNetInfo (FlipNet b) a -> FlipNet b -> InfoNet (FlipNet b)
+runFlipNet ∷ EnvNetInfo (FlipNet b) a → FlipNet b → InfoNet (FlipNet b)
 runFlipNet f net =
   runNet
     f
     net
     (toInteger (length (Graph.nodes (runFlip net))))
 
-runFlipNet' :: EnvNetInfo (FlipNet b) a -> FlipNet b -> (a, InfoNet (FlipNet b))
+runFlipNet' ∷ EnvNetInfo (FlipNet b) a → FlipNet b → (a, InfoNet (FlipNet b))
 runFlipNet' f net =
   runNet'
     f
     net
     (toInteger (length (Graph.nodes (runFlip net))))
 
-runFlipNetIO :: EnvNetInfoIO (FlipNet b) a -> FlipNet b -> IO (InfoNet (FlipNet b))
+runFlipNetIO ∷ EnvNetInfoIO (FlipNet b) a → FlipNet b → IO (InfoNet (FlipNet b))
 runFlipNetIO f net =
   runNetIO
     f
@@ -82,7 +82,7 @@ instance Network FlipNet where
     net <- runFlip <$> get @"net"
     pure $ not
       $ null
-      $ filter (\(Edge (_, p) (_, p')) -> p == Prim && p' == Prim)
+      $ filter (\(Edge (_, p) (_, p')) → p == Prim && p' == Prim)
       $ fmap fst
       $ lneighbors net node
 
@@ -120,16 +120,16 @@ instance DifferentRep FlipNet where
   langToPort n f = do
     Flip net <- get @"net"
     case fst (match n net) of
-      Just context -> f $ snd $ labNode' context
-      Nothing -> pure Nothing
+      Just context → f $ snd $ labNode' context
+      Nothing → pure Nothing
 
 -- Graph to more typed construction Helper --------------------------------------
 
-auxFromGraph ::
-  (HasState "net" (FlipNet a) m) =>
-  ((Node, PortType) -> b -> b) ->
-  b ->
-  Node ->
+auxFromGraph ∷
+  (HasState "net" (FlipNet a) m) ⇒
+  ((Node, PortType) → b → b) →
+  b →
+  Node →
   m (Maybe b)
 auxFromGraph conv constructor num =
   fmap (foldr f constructor . lneighbors') . fst . match num . runFlip <$> get @"net"

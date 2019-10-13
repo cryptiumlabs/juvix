@@ -10,24 +10,24 @@ import Juvix.Backends.Interface
 import Juvix.Library hiding (empty, link)
 import Juvix.NodeInterface
 
-newtype Net a = Net {ofNet :: Map.EnumMap Node (NodeInfo a)}
+newtype Net a = Net {ofNet ∷ Map.EnumMap Node (NodeInfo a)}
   deriving (Show)
 
 data NodeInfo a
   = NInfo
-      { _typ :: a,
-        _edges :: Map.EnumMap PortType (Node, PortType)
+      { _typ ∷ a,
+        _edges ∷ Map.EnumMap PortType (Node, PortType)
       }
   deriving (Show)
 
 makeLenses ''NodeInfo
 
 -- Run Function ----------------------------------------------------------------
-runMapNet :: EnvNetInfo (Net b) a -> Net b -> InfoNet (Net b)
+runMapNet ∷ EnvNetInfo (Net b) a → Net b → InfoNet (Net b)
 runMapNet f net = runNet f net (toInteger (length (ofNet net)))
 
 -- used for debugging, i.e. getting information back from the net
-runMapNet' :: EnvNetInfo (Net a1) a2 -> Net a1 -> (a2, InfoNet (Net a1))
+runMapNet' ∷ EnvNetInfo (Net a1) a2 → Net a1 → (a2, InfoNet (Net a1))
 runMapNet' f net = runNet' f net (toInteger (length (ofNet net)))
 
 -- Network Instances  ----------------------------------------------------------
@@ -37,7 +37,7 @@ instance Network Net where
   link np1@(node1, port1) np2@(node2, port2) = do
     Net net <- get @"net"
     case (Map.lookup node1 net, Map.lookup node2 net) of
-      (Just n1, Just n2) ->
+      (Just n1, Just n2) →
         let newN1 = over edges (Map.insert port1 np2) n1
             newN2 = over edges (Map.insert port2 np1) n2
          in put @"net" $
@@ -45,15 +45,15 @@ instance Network Net where
                 ( Map.insert node2 newN2 $
                     Map.insert node1 newN1 net
                 )
-      _ -> pure ()
+      _ → pure ()
 
   empty = Net Map.empty
 
   isBothPrimary n =
     findEdge (n, Prim) >>| \case
-      Just (_, Prim) -> True
-      Just (_, _) -> False
-      Nothing -> False
+      Just (_, Prim) → True
+      Just (_, _) → False
+      Nothing → False
 
   newNode lang = do
     Net net <- get @"net"
@@ -85,15 +85,15 @@ instance Network Net where
   deleteEdge node1@(n1, p1) node2@(n2, p2) = do
     let isSame pt edge node =
           case Map.lookup pt edge of
-            Just x | x == node -> True
-            _ -> False
+            Just x | x == node → True
+            _ → False
         deleteIfDiff pt edge node
           | isSame pt edge node = over edges (Map.delete pt)
           | otherwise = identity
     modify @"net"
       ( Net
-          . Map.adjust (\x -> deleteIfDiff p1 (x ^. edges) node1 x) n1
-          . Map.adjust (\x -> deleteIfDiff p2 (x ^. edges) node2 x) n2
+          . Map.adjust (\x → deleteIfDiff p1 (x ^. edges) node1 x) n1
+          . Map.adjust (\x → deleteIfDiff p2 (x ^. edges) node2 x) n2
           . ofNet
       )
 
@@ -104,10 +104,10 @@ instance Network Net where
           foldr (flip (deleteAllPoints nodeNum)) net (Map.toList (node ^. edges))
         delNodeAndEdges =
           foldr
-            ( \nodeNum net ->
+            ( \nodeNum net →
                 case Map.lookup nodeNum net of
-                  Just node -> Map.delete nodeNum (delEdges nodeNum node net)
-                  Nothing -> net
+                  Just node → Map.delete nodeNum (delEdges nodeNum node net)
+                  Nothing → net
             )
     put @"net" (Net (delNodeAndEdges net xs))
 
@@ -119,28 +119,28 @@ instance Network Net where
     traverse_ (uncurry link) conflictingNeighbors
     delNodes oldNodesToDelete
 
-deleteAllPoints ::
-  (Foldable t, Enum k) =>
-  Node ->
-  Map.EnumMap k (NodeInfo a) ->
-  t (k, PortType) ->
+deleteAllPoints ∷
+  (Foldable t, Enum k) ⇒
+  Node →
+  Map.EnumMap k (NodeInfo a) →
+  t (k, PortType) →
   Map.EnumMap k (NodeInfo a)
 deleteAllPoints n = foldr f
   where
-    f (n, pt) = Map.adjust (\x -> deleteIfDiff pt (x ^. edges) x) n
+    f (n, pt) = Map.adjust (\x → deleteIfDiff pt (x ^. edges) x) n
     deleteIfDiff pt edge
       | isSame pt edge = over edges (Map.delete pt)
       | otherwise = identity
     isSame pt edge = case Map.lookup pt edge of
-      Just x | fst x == n -> True
-      _ -> False
+      Just x | fst x == n → True
+      _ → False
 
-neighbors :: [Node] -> Map.EnumMap Node (NodeInfo a) -> [EdgeInfo]
+neighbors ∷ [Node] → Map.EnumMap Node (NodeInfo a) → [EdgeInfo]
 neighbors oldNodes net = do
   node <- oldNodes
   case Map.lookup node net of
-    Nothing -> []
-    Just x -> do
+    Nothing → []
+    Just x → do
       (port, neigbhors) <- Map.toList (x ^. edges)
       pure (Edge neigbhors (node, port))
 
@@ -161,16 +161,16 @@ instance DifferentRep Net where
   langToPort n f = do
     Net net <- get @"net"
     case Map.lookup n net of
-      Just context -> f (context ^. typ)
-      Nothing -> pure Nothing
+      Just context → f (context ^. typ)
+      Nothing → pure Nothing
 
 -- Graph to more typed construction Helper --------------------------------------
 
-auxFromGraph ::
-  HasState "net" (Net a) m =>
-  ((Node, PortType) -> b -> b) ->
-  b ->
-  Node ->
+auxFromGraph ∷
+  HasState "net" (Net a) m ⇒
+  ((Node, PortType) → b → b) →
+  b →
+  Node →
   m (Maybe b)
 auxFromGraph conv constructor num = do
   Net net <- get @"net"

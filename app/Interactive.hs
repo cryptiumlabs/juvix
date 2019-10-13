@@ -16,12 +16,12 @@ import qualified System.Console.Haskeline as H
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Prelude (String)
 
-interactive :: Context -> Config -> IO ()
+interactive ∷ Context → Config → IO ()
 interactive ctx _ = do
-  func <- return $ \str -> return str
+  func <- return $ \str → return str
   H.runInputT (settings ctx) (mainLoop func)
 
-settings :: Context -> H.Settings IO
+settings ∷ Context → H.Settings IO
 settings ctx =
   H.Settings
     { H.complete = H.completeFilename,
@@ -29,85 +29,85 @@ settings ctx =
       H.autoAddHistory = True
     }
 
-mainLoop :: (String -> IO String) -> H.InputT IO ()
+mainLoop ∷ (String → IO String) → H.InputT IO ()
 mainLoop func = do
   input <- H.getInputLine "jvxi >> "
   case input of
-    Nothing -> return ()
-    Just i -> do
+    Nothing → return ()
+    Just i → do
       case i of
-        (':' : special) -> handleSpecial special (mainLoop func)
-        inp -> do
+        (':' : special) → handleSpecial special (mainLoop func)
+        inp → do
           H.outputStrLn =<< liftIO (func inp)
           mainLoop func
 
-handleSpecial :: String -> H.InputT IO () -> H.InputT IO ()
+handleSpecial ∷ String → H.InputT IO () → H.InputT IO ()
 handleSpecial str cont = do
   case str of
-    "?" -> liftIO (putDoc specialsDoc) >> cont
-    "exit" -> return ()
-    "tutorial" -> do
+    "?" → liftIO (putDoc specialsDoc) >> cont
+    "exit" → return ()
+    "tutorial" → do
       H.outputStrLn "Interactive tutorial coming soon!"
       cont
-    'c' : 'p' : ' ' : rest -> do
+    'c' : 'p' : ' ' : rest → do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
       cont
-    'c' : 't' : ' ' : rest -> do
+    'c' : 't' : ' ' : rest → do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
       case parsed of
-        Just cterm -> do
+        Just cterm → do
           let eval = Core.cEval cterm []
           H.outputStrLn $ show eval
-        Nothing -> return ()
+        Nothing → return ()
       cont
-    'c' : 'e' : ' ' : rest -> do
+    'c' : 'e' : ' ' : rest → do
       let parsed = Core.parseString Core.cterm rest
       H.outputStrLn $ show parsed
       case parsed of
-        Just cterm -> do
+        Just cterm → do
           eal <- eraseAndSolveCore cterm
           case eal of
-            Right (term, _) -> do
+            Right (term, _) → do
               transformAndEvaluateEal True term
-            _ -> return ()
-        Nothing -> return ()
+            _ → return ()
+        Nothing → return ()
       cont
-    'e' : 'p' : ' ' : rest -> do
+    'e' : 'p' : ' ' : rest → do
       let parsed = EAC.parseEal rest
       case parsed of
-        Right r -> transformAndEvaluateEal True r
-        _ -> return ()
+        Right r → transformAndEvaluateEal True r
+        _ → return ()
       cont
-    'e' : 'q' : ' ' : rest -> do
+    'e' : 'q' : ' ' : rest → do
       let parsed = EAC.parseEal rest
       case parsed of
-        Right r -> transformAndEvaluateEal False r
-        _ -> return ()
+        Right r → transformAndEvaluateEal False r
+        _ → return ()
       cont
-    'e' : 'e' : ' ' : rest -> do
+    'e' : 'e' : ' ' : rest → do
       let parsed = EAC.parseEal rest
       H.outputStrLn $ show parsed
       case parsed of
-        Right r -> transformAndEvaluateEal True r
-        _ -> return ()
+        Right r → transformAndEvaluateEal True r
+        _ → return ()
       cont
-    _ -> H.outputStrLn "Unknown special command" >> cont
+    _ → H.outputStrLn "Unknown special command" >> cont
 
-eraseAndSolveCore ::
-  Core.CTerm -> H.InputT IO (Either EAC.Errors (EAC.RPT, EAC.ParamTypeAssignment))
+eraseAndSolveCore ∷
+  Core.CTerm → H.InputT IO (Either EAC.Errors (EAC.RPT, EAC.ParamTypeAssignment))
 eraseAndSolveCore cterm = do
   let (term, typeAssignment) = Core.erase' cterm
   res <- liftIO (EAC.validEal term typeAssignment)
   H.outputStrLn ("Inferred EAC term & type: " <> show res)
   pure res
 
-transformAndEvaluateEal :: Bool -> EAC.RPTO -> H.InputT IO ()
+transformAndEvaluateEal ∷ Bool → EAC.RPTO → H.InputT IO ()
 transformAndEvaluateEal debug term = do
   let bohm = EAC.ealToBohm term
   when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)
-  let net :: Graph.FlipNet Bohm.Lang
+  let net ∷ Graph.FlipNet Bohm.Lang
       net = Bohm.astToNet bohm Bohm.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (Bohm.reduceAll 1000000) net
@@ -118,7 +118,7 @@ transformAndEvaluateEal debug term = do
   when debug $ H.outputStrLn ("Reduction info: " <> show info)
   H.outputStrLn ("Read-back term: " <> show readback)
 
-specialsDoc :: Doc
+specialsDoc ∷ Doc
 specialsDoc =
   mconcat
     [ line,
@@ -126,11 +126,11 @@ specialsDoc =
       line
     ]
 
-specialDoc :: Special -> Doc
+specialDoc ∷ Special → Doc
 specialDoc (Special command helpDesc) =
   text $ T.unpack $ mconcat [":", command, " - ", helpDesc]
 
-specials :: [Special]
+specials ∷ [Special]
 specials =
   [ Special "cp [term]" "Parse a Juvix Core term",
     Special "ct [term}" "Parse, typecheck, & evaluate a Juvix Core term",
@@ -147,6 +147,6 @@ specials =
 
 data Special
   = Special
-      { specialCommand :: Text,
-        specialHelpDesc :: Text
+      { specialCommand ∷ Text,
+        specialHelpDesc ∷ Text
       }
