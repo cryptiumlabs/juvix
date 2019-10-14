@@ -6,10 +6,15 @@ open import Agda.Primitive public using (Level ; lzero ; lsuc ; _⊔_)
 import Level.Literals
 instance numberLevel = Level.Literals.Levelℕ
 
+it : ∀ {a} {A : Set a} ⦃ x : A ⦄ → A
+it ⦃ x ⦄ = x
+
 -- like the one from stdlib but with more instance
 record Lift {a} ℓ (A : Set a) : Set (a ⊔ ℓ) where
   instance constructor lift
   field ⦃ lower ⦄ : A
+
+pattern lift′ x = lift ⦃ x ⦄
 
 open import Function public
 
