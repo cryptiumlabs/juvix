@@ -10,10 +10,10 @@ private
  variable
   n : ℕ
   π : Usageᵗ
-  s s′ t t′ S S′ T T′ : Tm n
+  s s′ t t′ S S′ T T′ : Term n
   e e′ f f′ : Elim n
 
-data _⟿ᵗ_ : Rel (Tm n) lzero
+data _⟿ᵗ_ : Rel (Term n) lzero
 data _⟿ᵉ_ : Rel (Elim n) lzero
 infix 1 _⟿ᵗ_ _⟿ᵉ_
 
@@ -32,14 +32,14 @@ data _⟿ᵉ_ where
   ⦂ʳ : S ⟿ᵗ S′ → s ⦂ S ⟿ᵉ s ⦂ S′
 
 
-_⟿*_ : Rel (Tm n) _
+_⟿*_ : Rel (Term n) _
 _⟿*_ = Star _⟿ᵗ_
 infix 1 _⟿*_
 
-_⇓ : Tm n → Set _
+_⇓ : Term n → Set _
 T ⇓ = ∀ {T′} → ¬ (T ⟿ᵗ T′)
 infix 10 _⇓
 
-_⟿!_ : Rel (Tm n) _
+_⟿!_ : Rel (Term n) _
 S ⟿! T = (S ⟿* T) × (T ⇓)
 infix 1 _⟿!_

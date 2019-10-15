@@ -19,34 +19,35 @@ private variable x y : Var n
 Universe = ℕ
 private variable u v : Universe
 
-data Tm n : Set ℓᵗ
+data Term n : Set ℓᵗ
 data Elim n : Set ℓᵗ
-Typ = Tm
+Type = Term
 
-data Tm n where
-  sort : (u : Universe) → Typ n
-  Π[_/_]_ : (π : Usageᵗ) (S : Typ n) (T : Typ (suc n)) → Typ n
-  Λ_   : (t : Tm (suc n)) → Tm n
-  [_]  : (e : Elim n) → Tm n
+
+data Term n where
+  sort : (u : Universe) → Type n
+  Π[_/_]_ : (π : Usageᵗ) (S : Type n) (T : Type (suc n)) → Type n
+  Λ_   : (t : Term (suc n)) → Term n
+  [_]  : (e : Elim n) → Term n
 infixr 150 Π[_/_]_ Λ_
-private variable s s′ t t′ : Tm n ; S S′ T T′ R R′ : Typ n
+private variable s s′ t t′ : Term n ; S S′ T T′ R R′ : Type n
 
 data Elim n where
   `_  : (x : Var n) → Elim n
-  _∙_ : (f : Elim n) (s : Tm n) → Elim n
-  _⦂_ : (s : Tm n) (S : Typ n) → Elim n
+  _∙_ : (f : Elim n) (s : Term n) → Elim n
+  _⦂_ : (s : Term n) (S : Type n) → Elim n
 infix 1000 `_ ; infixl 200 _∙_ ; infix 100 _⦂_
 private variable e e′ f f′ : Elim n
 
 
-data _⩿_ : Rel (Typ n) lzero where
+data _⩿_ : Rel (Type n) lzero where
   sort : u ℕ.≤ v → sort u ⩿ sort {n} v
   Π    : S′ ⩿ S → T ⩿ T′ → Π[ π / S ] T ⩿ Π[ π / S′ ] T′
   refl : S ⩿ S
   -- (maybe recurse into other structures?)
 infix 4 _⩿_
 
-weakᵗ′ : Var (suc n) → Tm n → Tm (suc n)
+weakᵗ′ : Var (suc n) → Term n → Term (suc n)
 weakᵉ′ : Var (suc n) → Elim n → Elim (suc n)
 weakᵗ′ i (sort u)  = sort u
 weakᵗ′ i (Π[ π / S ] T) = Π[ π / weakᵗ′ i S ] weakᵗ′ (suc i) T
@@ -56,12 +57,12 @@ weakᵉ′ i (` x)     = ` Fin.punchIn i x
 weakᵉ′ i (f ∙ s)   = weakᵉ′ i f ∙ weakᵗ′ i s
 weakᵉ′ i (s ⦂ S)   = weakᵗ′ i s ⦂ weakᵗ′ i S
 
-weakᵗ : Tm n → Tm (suc n)
+weakᵗ : Term n → Term (suc n)
 weakᵗ = weakᵗ′ zero
 weakᵉ : Elim n → Elim (suc n)
 weakᵉ = weakᵉ′ zero
 
-substᵗ′ : Var (suc n) → Tm (suc n) → Elim n → Tm n
+substᵗ′ : Var (suc n) → Term (suc n) → Elim n → Term n
 substᵉ′ : Var (suc n) → Elim (suc n) → Elim n → Elim n
 substᵗ′ i (sort u) e = sort u
 substᵗ′ i (Π[ π / S ] T) e =
@@ -73,7 +74,7 @@ substᵉ′ i (` x) e =
 substᵉ′ i (f ∙ s) e = substᵉ′ i f e ∙ substᵗ′ i s e
 substᵉ′ i (s ⦂ S) e = substᵗ′ i s e ⦂ substᵗ′ i S e
 
-substᵗ : Tm (suc n) → Elim n → Tm n
+substᵗ : Term (suc n) → Elim n → Term n
 substᵗ = substᵗ′ zero
 substᵉ : Elim (suc n) → Elim n → Elim n
 substᵉ = substᵉ′ zero
@@ -89,7 +90,7 @@ module _ where
     .Constraint x → Lift _ $ Fin.number {n} .Constraint x
     .fromNat n    → ` Fin.number .fromNat n
 
-  instance number-Term : ∀ {n} → Number (Tm n)
+  instance number-Term : ∀ {n} → Number (Term n)
   number-Term {n} = λ where
     .Constraint      → number-Elim {n} .Constraint
     .fromNat n ⦃ x ⦄ → [ number-Elim .fromNat n ⦃ x ⦄ ]

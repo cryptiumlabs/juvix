@@ -15,7 +15,7 @@ variable
   n : ℕ
   e : Elim n
 
-A : ∀ {n} → Tm n
+A : ∀ {n} → Term n
 A = sort 0
 
 -- 2 f: 2 A → 3 A → A, 10 x: A ⊢ 2 f x x ∈ A
@@ -104,7 +104,7 @@ ChurchZero = K
 
 
 -- a nondependent function type
-_/_⇒_ : Usageᵗ → Tm n → Tm n → Tm n
+_/_⇒_ : Usageᵗ → Term n → Term n → Term n
 π / S ⇒ T = Π[ π / S ] (weakᵗ T)
 infixr 0 _/_⇒_
 

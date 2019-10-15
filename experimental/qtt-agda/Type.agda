@@ -17,7 +17,7 @@ private
   x : Var n
   σ : Usageʲ
   π ρ ρ′ ζ : Usageᵗ
-  R S T T′ s t : Tm n
+  R S T T′ s t : Term n
   e f : Elim n
 
 
@@ -25,11 +25,11 @@ private
 -- which are handled by Skel
 data Ctx : ℕ → Set ℓᵗ where
   ε : Ctx 0
-  _⨟_ : (Γ : Ctx n) (S : Typ n) → Ctx (suc n)
+  _⨟_ : (Γ : Ctx n) (S : Type n) → Ctx (suc n)
 infixl 5 _⨟_
 private variable Γ : Ctx n
 
-lookup : Ctx n → Fin n → Typ n
+lookup : Ctx n → Fin n → Type n
 lookup (Γ ⨟ S) zero    = weakᵗ S
 lookup (Γ ⨟ S) (suc x) = weakᵗ $ lookup Γ x
 
@@ -80,8 +80,10 @@ _⨴_ : Skel n → Usageᵗ → Skel n
 infixl 7 _⨴_
 
 
-data _⊢_-_∋_▷_ : Ctx n → Usageʲ → Typ n → Tm n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″)
-data _⊢_-_∈_▷_ : Ctx n → Usageʲ → Elim n → Typ n → Skel n → Set (ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″)
+ℓ = ℓᵗ ⊔ ℓᵗ′ ⊔ ℓᵗ″
+
+data _⊢_-_∋_▷_ : Ctx n → Usageʲ → Type n → Term n → Skel n → Set ℓ
+data _⊢_-_∈_▷_ : Ctx n → Usageʲ → Elim n → Type n → Skel n → Set ℓ
 infix 0 _⊢_-_∋_▷_ _⊢_-_∈_▷_
 
 -- the constructors are given the same names as in IGPON.
