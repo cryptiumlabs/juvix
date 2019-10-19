@@ -1,16 +1,17 @@
-open import Usage as U
-
 module Eval where
 
 open import Prelude
-open import Relation.Binary.Construct.Closure.ReflexiveTransitive
+open import Relation.Binary.Construct.Closure.ReflexiveTransitive as RT
+open import Relation.Binary.Construct.Closure.Transitive as T
+open import Relation.Binary.Construct.Closure.Symmetric as S
+open import Relation.Binary.Construct.Union as U
 open import QTT
 
 private
  variable
   n : ℕ
   s s′ t t′ z z′ w w′ : Term n
-  S S′ T T′ : Type n
+  S S′ T T′ U U′ : Type n
   π π′ ρ ρ′ : Usage n
   e e′ f f′ : Elim n
 
@@ -67,14 +68,57 @@ data _⟿ᵉ_ where
   ⦂ʳ : S ⟿ᵗ S′ → s ⦂ S ⟿ᵉ s ⦂ S′
 
 
-_⟿*_ : Rel (Term n) _
-_⟿*_ = Star _⟿ᵗ_
-infix 1 _⟿*_
+module _ where
+  open Relation hiding (_∪_)
 
-_⇓ : Pred (Term n) _
-T ⇓ = ∀ {T′} → ¬ (T ⟿ᵗ T′)
-infix 10 _⇓
+  _⇓ : Pred (Term n) _
+  T ⇓ = Empty (T ⟿ᵗ_)
+  infix 10 _⇓
 
-_⟿!_ : Rel (Term n) _
-S ⟿! T = (S ⟿* T) × (T ⇓)
-infix 1 _⟿!_
+  _⟿*_ _⟿+_ _⟿!_ : Rel (Term n) _
+  _⟿*_ = Star _⟿ᵗ_
+  _⟿+_ = Plus _⟿ᵗ_
+  S ⟿! T = (S ⟿* T) × (T ⇓)
+  infix 1 _⟿*_ _⟿+_ _⟿!_
+
+
+  ⟿ᵗ-At ⟿+-At ⟿*-At ⟿!-At : ∀ n → Rel (Term n) _
+  ⟿ᵗ-At _ = _⟿ᵗ_
+  ⟿+-At _ = _⟿+_
+  ⟿*-At _ = _⟿*_
+  ⟿!-At _ = _⟿!_
+
+  ≋-At : ∀ n → Rel (Term n) _
+  ≋-At _ = Star $ SymClosure _⟿ᵗ_
+
+  _≋_ : Rel (Term n) _
+  _≋_ = ≋-At _
+  infix 4 _≋_
+
+  ≋-isEquiv : Relation.IsEquivalence $ ≋-At n
+  ≋-isEquiv =
+    record { refl = ε ; sym = RT.reverse $ S.symmetric _⟿ᵗ_ ; trans = _◅◅_ }
+
+  ≋-setoid : ℕ → Relation.Setoid _ _
+  ≋-setoid n = record { isEquivalence = ≋-isEquiv {n} }
+
+  module _ {n} where
+    open Relation.IsEquivalence (≋-isEquiv {n}) public using ()
+      renaming (refl to ≋-refl ; sym to ≋-sym ; trans to ≋-trans)
+
+  plus-star : _⟿+_ ⇒₂ ⟿*-At n
+  plus-star [ R ]           = R ◅ ε
+  plus-star (_ ∼⁺⟨ R₁ ⟩ R₂) = plus-star R₁ ◅◅ plus-star R₂
+
+  star-plus : _⟿*_ ⇒₂ (_≡_ ∪ ⟿+-At n)
+  star-plus ε        = inj₁ refl
+  star-plus (R ◅ Rs) with star-plus Rs
+  star-plus (R ◅ Rs) | inj₁ refl = inj₂ [ R ]
+  star-plus (R ◅ Rs) | inj₂ Rs′  = inj₂ (_ ∼⁺⟨ [ R ] ⟩ Rs′)
+
+  star-≋ : _⟿*_ ⇒₂ ≋-At n
+  star-≋ ε        = ε
+  star-≋ (R ◅ Rs) = fwd R ◅ star-≋ Rs
+
+  plus-≋ : _⟿+_ ⇒₂ ≋-At n
+  plus-≋ = star-≋ ∘ plus-star
