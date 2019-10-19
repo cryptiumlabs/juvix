@@ -70,7 +70,7 @@ data _*ᶜ_↦_ : (π : Usage n) (Φ₁ Φ : Skel n) → Set where
   cons : (C : chopᵗ π ≡ just π′) (M : π′ *ᶜ Φ₁ ↦ Φ) (E : π′ *ᵘ ρ ≋ σ) →
          π *ᶜ (Φ₁ ⨟ ρ) ↦ (Φ ⨟ σ)
 syntax cons C M E = M ⨟[ C ] E
-infixr 5 cons
+infixl 5 cons
 
 _*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
 π *ᶜ ε        = -, ε
