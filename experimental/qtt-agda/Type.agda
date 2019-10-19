@@ -42,24 +42,41 @@ private variable Φ Φ₁ Φ₂ Φ₂′ : Skel n
 
 data Zero : (Φ : Skel n) → Set where
   ε   : Zero ε
-  _⨟- : Zero Φ → Zero (Φ ⨟ 0ᵘ)
-infixl 1000 _⨟-
+  _⨟_ : (Z : Zero Φ) (E : ζ ≋ 0ᵘ) → Zero (Φ ⨟ ζ)
+
+zeroᶜ : ∃ (Zero {n})
+zeroᶜ {zero}  = -, ε
+zeroᶜ {suc n} = -, zeroᶜ .proj₂ ⨟ ≋-refl
 
 data Only : (Φ : Skel n) (x : Var n) (π : Usage n) → Set where
   here  : Zero Φ     → Only (Φ ⨟ ρ) 0       (weakᵗ ρ)
   there : Only Φ x ρ → Only (Φ ⨟ π) (suc x) (weakᵗ ρ)
 
 data _+ᶜ_↦_ : (Φ₁ Φ₂ Φ : Skel n) → Set where
-  ε        : ε +ᶜ ε ↦ ε
-  _⨟[_+ᵘ_] : (P : Φ₁ +ᶜ Φ₂ ↦ Φ) (π ρ : Usage n) →
-             (Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) ↦ (Φ ⨟ (π +ᵘ ρ))
+  ε   : ε +ᶜ ε ↦ ε
+  _⨟_ : (A : Φ₁ +ᶜ Φ₂ ↦ Φ) (E : π +ᵘ ρ ≋ σ) →
+        (Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) ↦ (Φ ⨟ σ)
+
+_+ᶜ_ : (Φ₁ Φ₂ : Skel n) → ∃ (Φ₁ +ᶜ Φ₂ ↦_)
+ε        +ᶜ ε        = -, ε
+(Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = Σ.map (_⨟ π +ᵘ ρ) (_⨟ ≋-refl) (Φ₁ +ᶜ Φ₂)
+
+
+private variable π′ : Usage n
 
 data _*ᶜ_↦_ : (π : Usage n) (Φ₁ Φ : Skel n) → Set where
-  -- ??? what does it mean to multiply by a usage that probably won't
-  -- be in scope for the whole context
-  -- what does u ∙ (1 x: ℕ, ω y: ℕ, 0 u : 𝓤, 1 z : ℕ) 𝑚𝑒𝑎𝑛?
-  --           ↑                      ↑
+  ε    : π *ᶜ ε ↦ ε
+  zero : (Z : Zero Φ) (C : chopᵗ π ≡ nothing) → π *ᶜ Φ₁ ↦ Φ
+  cons : (C : chopᵗ π ≡ just π′) (M : π′ *ᶜ Φ₁ ↦ Φ) (E : π′ *ᵘ ρ ≋ σ) →
+         π *ᶜ (Φ₁ ⨟ ρ) ↦ (Φ ⨟ σ)
+syntax cons C M E = M ⨟[ C ] E
+infixr 5 cons
 
+_*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
+π *ᶜ ε        = -, ε
+π *ᶜ (Φ₁ ⨟ ρ) with chopᵗ π | inspect chopᵗ π
+π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] = -, (π′ *ᶜ Φ₁) .proj₂ ⨟[ eq ] ≋-refl
+π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] = -, zero (zeroᶜ .proj₂) eq
 
 data _⊢_-_∋_▷_ : Ctx n → Usage n → Type n → Term n → Skel n → Set
 data _⊢_-_∈_▷_ : Ctx n → Usage n → Elim n → Type n → Skel n → Set
