@@ -71,3 +71,6 @@ test_ann_func_parens = shouldParse "(@ (\\x -> x) : w (* 0))" (Elim (Ann Omega (
 
 test_app_ann ∷ T.TestTree
 test_app_ann = shouldParse "(@ (\\x -> x) : w (* 0)) y" (Elim (App (Ann Omega (Lam "x" (Elim (Var "x"))) (Star 0)) (Elim (Var "y"))))
+
+test_2_paren ∷ T.TestTree
+test_2_paren = shouldParse "(2)" (Elim (Prim (Natural 2)))
