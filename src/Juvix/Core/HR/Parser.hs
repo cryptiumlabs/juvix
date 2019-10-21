@@ -4,8 +4,8 @@ import Data.Functor.Identity
 import Juvix.Core.HR.Types
 import Juvix.Core.Types
 import Juvix.Core.Usage
-import Juvix.Library hiding ((<|>))
-import Text.Parsec
+import Juvix.Library hiding ((<|>), try)
+import Text.Parsec hiding (try)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language hiding (reservedNames, reservedOpNames)
@@ -65,10 +65,10 @@ generateParser parameterisation =
       whiteSpace = Token.whiteSpace lexer
       usage ∷ Parser Usage
       usage =
-        do
-          reserved "w"
-          return Omega
-          <|> do SNat . fromInteger <$> natural
+          (reserved "w"
+           >> return Omega
+          )
+          <|> SNat . fromInteger <$> natural
       primTyTerm ∷ Parser (Term primTy primVal)
       primTyTerm = PrimTy |<< parseTy parameterisation lexer
       sortTerm ∷ Parser (Term primTy primVal)
@@ -93,7 +93,7 @@ generateParser parameterisation =
       binder ∷ Parser Symbol
       binder = intern |<< identifier
       term ∷ Parser (Term primTy primVal)
-      term = termOnly <|> elimTerm
+      term = try termOnly <|> elimTerm
       termOnly ∷ Parser (Term primTy primVal)
       termOnly =
         parens termOnly <|> primTyTerm <|> sortTerm <|> piTerm <|> lamTerm
@@ -110,7 +110,6 @@ generateParser parameterisation =
         reservedOp ":"
         pi ← usage
         theType ← term
-        eof
         pure (Ann pi theTerm theType)
       varElim ∷ Parser (Elim primTy primVal)
       varElim = Var |<< binder
@@ -118,7 +117,7 @@ generateParser parameterisation =
       elim = buildExpressionParser ops elim'
       elim' ∷ Parser (Elim primTy primVal)
       elim' =
-        parens elim <|> primElim <|> annElim <|> varElim
+        parens elim <|> try primElim <|> annElim <|> varElim
       parseWhole ∷ Parser a → Parser a
       parseWhole p = do
         whiteSpace
@@ -126,9 +125,11 @@ generateParser parameterisation =
         whiteSpace
         eof
         return t
-      parseString ∷ Parser a → String → Maybe a
-      parseString p str =
-        case parse p "" str of
-          Left _ → Nothing
-          Right r → Just r
-   in parseString (parseWhole term)
+   in parseString' (parseWhole term)
+
+
+parseString' ∷ Parser a → String → Maybe a
+parseString' p str =
+  case parse p "" str of
+    Left _ → Nothing
+    Right r → Just r
