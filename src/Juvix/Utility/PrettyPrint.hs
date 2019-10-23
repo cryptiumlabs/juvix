@@ -1,7 +1,7 @@
 module Juvix.Utility.PrettyPrint where
 
 import qualified Data.Text as T
-import Protolude
+import Juvix.Library
 import qualified Type.Reflection as R
 
 class PrettyPrint a where

@@ -7,7 +7,7 @@ where
 
 import Data.HashMap.Strict
 import Data.Hashable (Hashable)
-import Protolude (Eq, Maybe)
+import Juvix.Library (Eq, Maybe)
 
 type Map = HashMap
 
