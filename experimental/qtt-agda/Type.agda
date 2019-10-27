@@ -16,7 +16,7 @@ private
   u v : Universe
   x : Var n
   σ π ρ ρ′ ζ : Usage n
-  R S T T′ s t : Term n
+  R S S′ T T′ s t : Term n
   e f : Elim n
 
 
@@ -24,7 +24,7 @@ data Ctx : ℕ → Set where
   ε : Ctx 0
   _⨟_ : (Γ : Ctx n) (S : Type n) → Ctx (suc n)
 infixl 5 _⨟_
-private variable Γ : Ctx n
+private variable Γ Γ′ : Ctx n
 
 data _‼_↦_ : (Γ : Ctx n) (x : Var n) (S : Type n) → Set where
   here  : Γ ⨟ S ‼ 0 ↦ weakᵗ S
@@ -38,6 +38,15 @@ infix 10 _‼_
 
 Skel = Ctx
 private variable Φ Φ₁ Φ₂ Φ₂′ : Skel n
+
+data _⟿ᶜ_ : Rel (Ctx n) lzero where
+  here  : (ss : S ⟿ᵗ S′) → (Γ ⨟ S) ⟿ᶜ (Γ  ⨟ S′)
+  there : (γγ : Γ ⟿ᶜ Γ′) → (Γ ⨟ S) ⟿ᶜ (Γ′ ⨟ S)
+
+open module Evalᶜ = Eval.Derived (λ {n} → _⟿ᶜ_ {n}) public using ()
+  renaming (_⟿+_ to _⟿ᶜ+_ ; _⟿*_ to _⟿ᶜ*_ ; _⟿!_ to _⟿ᶜ!_ ;
+            ⟿+-At to ⟿ᶜ+-At ; ⟿*-At to ⟿ᶜ*-At ; ⟿!-At to ⟿ᶜ!-At ;
+            _⇓ to _⇓ᶜ ; _≋_ to _≋ᶜ_ ; ≋-At to ≋ᶜ-At)
 
 
 data Zero : (Φ : Skel n) → Set where
