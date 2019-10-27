@@ -35,6 +35,7 @@ data Term n where
   _+ᵘ_ _*ᵘ_ : (π ρ : Usage n) → Usage n
   [_]       : (e : Elim n) → Term n
 infixr 150 𝚷[_/_]_ 𝛌_
+infixl 300 _+ᵘ_ ; infixl 310 _*ᵘ_
 private variable s t : Term n ; S S′ T T′ : Type n ; π ρ : Usage n
 
 data Elim n where
@@ -44,7 +45,7 @@ data Elim n where
            (z : Term n) (s : Term (suc n)) (w : Term n) →
            (π : Usage n) → Elim n
   _⦂_    : (s : Term n) (S : Type n) → Elim n
-infix 1000 `_ ; infixl 200 _∙_ ; infix 100 _⦂_
+infix 1000 `_ ; infixl 400 _∙_ ; infix 100 _⦂_
 private variable e f : Elim n
 
 

@@ -56,11 +56,12 @@ data _+ᶜ_↦_ : (Φ₁ Φ₂ Φ : Skel n) → Set where
   ε   : ε +ᶜ ε ↦ ε
   _⨟_ : (A : Φ₁ +ᶜ Φ₂ ↦ Φ) (E : π +ᵘ ρ ≋ᵗ σ) →
         (Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) ↦ (Φ ⨟ σ)
+infix 1 _+ᶜ_↦_
 
 _+ᶜ_ : (Φ₁ Φ₂ : Skel n) → ∃ (Φ₁ +ᶜ Φ₂ ↦_)
 ε        +ᶜ ε        = -, ε
 (Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = Σ.map (_⨟ π +ᵘ ρ) (_⨟ Evalᵗ.≋-refl) (Φ₁ +ᶜ Φ₂)
-
+infix 300 _+ᶜ_
 
 
 private variable π′ : Usage n
@@ -71,6 +72,7 @@ data _*ᶜ_↦_ : (π : Usage n) (Φ₁ Φ : Skel n) → Set where
   cons : (C : chopᵗ π ≡ just π′) (M : π′ *ᶜ Φ₁ ↦ Φ) (E : π′ *ᵘ ρ ≋ᵗ σ) →
          π *ᶜ (Φ₁ ⨟ ρ) ↦ (Φ ⨟ σ)
 syntax cons C M E = M ⨟[ C ] E
+infix 0 _*ᶜ_↦_
 infixl 5 cons
 
 _*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
@@ -78,6 +80,7 @@ _*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
 π *ᶜ (Φ₁ ⨟ ρ) with chopᵗ π | inspect chopᵗ π
 π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] = -, (π′ *ᶜ Φ₁) .proj₂ ⨟[ eq ] Evalᵗ.≋-refl
 π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] = -, zero (zeroᶜ .proj₂) eq
+infix 310 _*ᶜ_
 
 data _⊢_-_∋_▷_ : Ctx n → Usage n → Type n → Term n → Skel n → Set
 data _⊢_-_∈_▷_ : Ctx n → Usage n → Elim n → Type n → Skel n → Set
