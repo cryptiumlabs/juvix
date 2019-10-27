@@ -2,64 +2,41 @@ module Juvix.Core.EAC.Types where
 
 import qualified Data.Text as T
 import GHC.Natural
+import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Type)
-import Juvix.Utility hiding (Map)
-import qualified Juvix.Utility.HashMap as Map
-
--- Primitive.
-data Prim
-  = Nat Natural
-  | NatAdd
-  | NatMul
-  deriving (Show, Eq)
-
--- Untyped term.
-data Term
-  = Var Symbol
-  | Prim Prim
-  | App Term Term
-  | Lam Symbol Term
-  deriving (Show, Eq)
-
--- Simple type.
-data Type
-  = SymT Symbol
-  | ArrT Type Type
-  deriving (Show, Eq)
+import Juvix.Utility
 
 -- Restricted pseudoterm (inner).
-data RPTI
+data RPTI primVal
   = RVar Symbol
-  | RPrim Prim
-  | RLam Symbol RPTO
-  | RApp RPTO RPTO
-  deriving (Show, Eq)
+  | RPrim primVal
+  | RLam Symbol (RPTO primVal)
+  | RApp (RPTO primVal) (RPTO primVal)
+  deriving (Show, Eq, Generic)
 
 -- Restricted pseudoterm (outer).
-data RPTO
-  = RBang Int RPTI
+data RPTO primVal
+  = RBang Int (RPTI primVal)
   deriving (Show, Eq)
 
 -- Restricted pseudoterm (alias).
-type RPT = RPTO
-
--- Simple type assignment (alias).
-type TypeAssignment = Map.Map Symbol Type
+type RPT primVal = RPTO primVal
 
 -- Parameterized restricted pseudoterm (alias).
-type PRPT = RPT
+type PRPT primVal = RPT primVal
 
 -- Parameter (alias).
 type Param = Int
 
 -- Parameterized type.
-data PType
+data PType primTy
   = PSymT Param Symbol
-  | PArrT Param PType PType
+  | PPrimT primTy
+  | PArrT Param (PType primTy) (PType primTy)
   deriving (Show, Eq)
 
 -- Parameterized type assignment (alias).
-type ParamTypeAssignment = Map.Map Symbol PType
+type ParamTypeAssignment primTy = HashMap Symbol (PType primTy)
 
 -- Linear (in)equality constraint on parameters.
 data Constraint
@@ -87,10 +64,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = Map.Map Symbol Param
+type VarPaths = HashMap Symbol Param
 
 -- Occurrence map.
-type OccurrenceMap = Map.Map Symbol Int
+type OccurrenceMap = HashMap Symbol Int
 
 -- | Bracket Error Types
 data BracketErrors
@@ -112,66 +89,66 @@ newtype EitherTyp b a
     via MonadError (Except b)
 
 -- | Error type when running the type Chekcer
-data TypeErrors
-  = MisMatchArguments PType PType RPTI
-  | TypeIsNotFunction PType
+data TypeErrors primTy primVal
+  = MisMatchArguments (PType primTy) (PType primTy) (RPTI primVal)
+  | TypeIsNotFunction (PType primTy)
   | MissingOverUse
   | ExpectedFunction
   | TooManyHats
   deriving (Show)
 
 -- | Total errors among Type and Bracket Errors
-data Errors
-  = Typ TypeErrors
+data Errors primTy primVal
+  = Typ (TypeErrors primTy primVal)
   | Brack BracketErrors
   deriving (Show)
 
 -- Environment for errors.
-newtype EnvError a = EnvError (ExceptT TypeErrors (State Info) a)
+newtype EnvError primTy primVal a = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (Map Symbol Type))
-    via Field "ctxt" () (MonadState (ExceptT TypeErrors (State Info)))
+    (HasState "ctxt" (HashMap Symbol (Erased.Type primTy)))
+    via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
   deriving
-    (HasThrow "typ" TypeErrors)
-    via MonadError (ExceptT TypeErrors (State Info))
+    (HasThrow "typ" (TypeErrors primTy primVal))
+    via MonadError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)))
 
-data Info = I {ctxt ∷ Map Symbol Type} deriving (Show, Generic)
+data Info primTy = I {ctxt ∷ HashMap Symbol (Erased.Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
-data Env
+data Env primTy
   = Env
       { path ∷ Path,
         varPaths ∷ VarPaths,
-        typeAssignment ∷ TypeAssignment,
+        typeAssignment ∷ Erased.TypeAssignment primTy,
         nextParam ∷ Param,
         constraints ∷ [Constraint],
         occurrenceMap ∷ OccurrenceMap
       }
   deriving (Show, Eq, Generic)
 
-newtype EnvConstraint a = EnvCon (State Env a)
+newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "path" Path)
-    via Field "path" () (MonadState (State Env))
+    via Field "path" () (MonadState (State (Env primTy)))
   deriving
     (HasState "varPaths" VarPaths)
-    via Field "varPaths" () (MonadState (State Env))
+    via Field "varPaths" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "typeAssignment" TypeAssignment)
-    via Field "typeAssignment" () (MonadState (State Env))
+    (HasState "typeAssignment" (Erased.TypeAssignment primTy))
+    via Field "typeAssignment" () (MonadState (State (Env primTy)))
   deriving
     (HasState "nextParam" Param)
-    via Field "nextParam" () (MonadState (State Env))
+    via Field "nextParam" () (MonadState (State (Env primTy)))
   deriving
     (HasState "occurrenceMap" OccurrenceMap)
-    via Field "occurrenceMap" () (MonadState (State Env))
+    via Field "occurrenceMap" () (MonadState (State (Env primTy)))
   deriving
     ( HasStream "constraints" [Constraint],
       HasWriter "constraints" [Constraint]
     )
-    via WriterLog (Field "constraints" () (MonadState (State Env)))
+    via WriterLog (Field "constraints" () (MonadState (State (Env primTy))))
 
 instance PrettyPrint ConstraintVar where
   prettyPrintValue (ConstraintVar coeff var) =

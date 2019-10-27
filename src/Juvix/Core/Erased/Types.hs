@@ -11,7 +11,8 @@ data Term primVal
   deriving (Show, Eq, Generic)
 
 data Type primTy
-  = Star Natural
+  = SymT Symbol
+  | Star Natural
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
     Pi (Type primTy) (Type primTy)
