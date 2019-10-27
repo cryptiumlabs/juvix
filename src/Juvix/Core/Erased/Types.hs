@@ -1,6 +1,7 @@
 module Juvix.Core.Erased.Types where
 
 import Juvix.Library hiding (Type)
+import Juvix.Utility
 
 data Term primVal
   = Var Symbol
@@ -15,3 +16,5 @@ data Type primTy
   | -- TODO: How to deal with dependency?
     Pi (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
+
+type TypeAssignment primTy = HashMap Symbol (Type primTy)
