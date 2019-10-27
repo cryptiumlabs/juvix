@@ -11,6 +11,10 @@ open import Relation.Binary.Construct.Closure.Symmetric as S
   using (SymClosure ; fwd ; bwd)
 open import Relation.Binary.Construct.Union as U
 
+open import Codata.Thunk using (Thunk ; force)
+open import Codata.Delay as Delay using (Delay ; now ; later)
+
+
 private
  variable
   n : ℕ
@@ -348,6 +352,12 @@ module Derived {t ℓ} {F : ℕ → Set t}
 
   plus-≋ : _⟿+_ ⇒₂ ≋-At n
   plus-≋ = star-≋ ∘ plus-star
+
+  eval : (X : F n) → ∀[ Delay (∃[ Z ] (X ⟿! Z)) ]
+  eval X with step X
+  ... | no  V       = now (-, ε , V)
+  ... | yes (Y , R) = later λ where .force → cons-R $ eval Y
+    where cons-R = Delay.map λ where (Z , Rs , V) → Z , R ◅ Rs , V
 
 
 open module Evalᵗ = Derived (λ {n} → _⟿ᵗ_ {n}) stepᵗ public using ()
