@@ -57,7 +57,7 @@ open ⊎ public using (_⊎_ ; inj₁ ; inj₂)
 
 module Σ where
   open import Data.Product public hiding (module Σ)
-open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; ∃-syntax ;
+open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; ∃-syntax ; ∄ ; ∄-syntax ;
                      _,_ ; -,_ ; proj₁ ; proj₂)
 
 module Maybe where

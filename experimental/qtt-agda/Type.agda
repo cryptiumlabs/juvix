@@ -42,11 +42,11 @@ private variable Φ Φ₁ Φ₂ Φ₂′ : Skel n
 
 data Zero : (Φ : Skel n) → Set where
   ε   : Zero ε
-  _⨟_ : (Z : Zero Φ) (E : ζ ≋ 0ᵘ) → Zero (Φ ⨟ ζ)
+  _⨟_ : (Z : Zero Φ) (E : ζ ≋ᵗ 0ᵘ) → Zero (Φ ⨟ ζ)
 
 zeroᶜ : ∃ (Zero {n})
 zeroᶜ {zero}  = -, ε
-zeroᶜ {suc n} = -, zeroᶜ .proj₂ ⨟ ≋-refl
+zeroᶜ {suc n} = -, zeroᶜ .proj₂ ⨟ Evalᵗ.≋-refl
 
 data Only : (Φ : Skel n) (x : Var n) (π : Usage n) → Set where
   here  : Zero Φ     → Only (Φ ⨟ ρ) 0       (weakᵗ ρ)
@@ -54,12 +54,13 @@ data Only : (Φ : Skel n) (x : Var n) (π : Usage n) → Set where
 
 data _+ᶜ_↦_ : (Φ₁ Φ₂ Φ : Skel n) → Set where
   ε   : ε +ᶜ ε ↦ ε
-  _⨟_ : (A : Φ₁ +ᶜ Φ₂ ↦ Φ) (E : π +ᵘ ρ ≋ σ) →
+  _⨟_ : (A : Φ₁ +ᶜ Φ₂ ↦ Φ) (E : π +ᵘ ρ ≋ᵗ σ) →
         (Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) ↦ (Φ ⨟ σ)
 
 _+ᶜ_ : (Φ₁ Φ₂ : Skel n) → ∃ (Φ₁ +ᶜ Φ₂ ↦_)
 ε        +ᶜ ε        = -, ε
-(Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = Σ.map (_⨟ π +ᵘ ρ) (_⨟ ≋-refl) (Φ₁ +ᶜ Φ₂)
+(Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = Σ.map (_⨟ π +ᵘ ρ) (_⨟ Evalᵗ.≋-refl) (Φ₁ +ᶜ Φ₂)
+
 
 
 private variable π′ : Usage n
@@ -67,7 +68,7 @@ private variable π′ : Usage n
 data _*ᶜ_↦_ : (π : Usage n) (Φ₁ Φ : Skel n) → Set where
   ε    : π *ᶜ ε ↦ ε
   zero : (Z : Zero Φ) (C : chopᵗ π ≡ nothing) → π *ᶜ Φ₁ ↦ Φ
-  cons : (C : chopᵗ π ≡ just π′) (M : π′ *ᶜ Φ₁ ↦ Φ) (E : π′ *ᵘ ρ ≋ σ) →
+  cons : (C : chopᵗ π ≡ just π′) (M : π′ *ᶜ Φ₁ ↦ Φ) (E : π′ *ᵘ ρ ≋ᵗ σ) →
          π *ᶜ (Φ₁ ⨟ ρ) ↦ (Φ ⨟ σ)
 syntax cons C M E = M ⨟[ C ] E
 infixl 5 cons
@@ -75,7 +76,7 @@ infixl 5 cons
 _*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
 π *ᶜ ε        = -, ε
 π *ᶜ (Φ₁ ⨟ ρ) with chopᵗ π | inspect chopᵗ π
-π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] = -, (π′ *ᶜ Φ₁) .proj₂ ⨟[ eq ] ≋-refl
+π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] = -, (π′ *ᶜ Φ₁) .proj₂ ⨟[ eq ] Evalᵗ.≋-refl
 π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] = -, zero (zeroᶜ .proj₂) eq
 
 data _⊢_-_∋_▷_ : Ctx n → Usage n → Type n → Term n → Skel n → Set

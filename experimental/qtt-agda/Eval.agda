@@ -289,36 +289,40 @@ stepᵉ (s ⦂ S) | no ¬Rs | no  ¬RS      = no λ where
   (_ , ⦂ʳ RS) → ¬RS (-, RS)
 
 
-module _ where
+module Derived {t ℓ} {F : ℕ → Set t}
+               (_⟿_ : ∀ {n} → Rel (F n) ℓ)
+               (step  : ∀ {n} (t : F n) → Dec (∃ (t ⟿_)))
+ where
   open Relation hiding (_∪_)
 
-  _⇓ : Pred (Term n) _
-  T ⇓ = Empty (T ⟿ᵗ_)
+  private variable X Y Z : F n
+
+  _⇓ : Pred (F n) _
+  X ⇓ = ∄[ Y ] (X ⟿ Y)
   infix 10 _⇓
 
-  _⟿*_ _⟿+_ _⟿!_ : Rel (Term n) _
-  _⟿*_ = Star _⟿ᵗ_
-  _⟿+_ = Plus _⟿ᵗ_
-  S ⟿! T = (S ⟿* T) × (T ⇓)
+  _⟿+_ _⟿*_ _⟿!_ : Rel (F n) _
+  _⟿+_ = Plus′ _⟿_
+  _⟿*_ = Star _⟿_
+  X ⟿! Y = (X ⟿* Y) × (Y ⇓)
   infix 1 _⟿*_ _⟿+_ _⟿!_
 
-
-  ⟿ᵗ-At ⟿+-At ⟿*-At ⟿!-At : ∀ n → Rel (Term n) _
-  ⟿ᵗ-At _ = _⟿ᵗ_
+  ⟿-At ⟿+-At ⟿*-At ⟿!-At : ∀ n → Rel (F n) _
+  ⟿-At _ = _⟿_
   ⟿+-At _ = _⟿+_
   ⟿*-At _ = _⟿*_
   ⟿!-At _ = _⟿!_
 
-  ≋-At : ∀ n → Rel (Term n) _
-  ≋-At _ = Star $ SymClosure _⟿ᵗ_
+  ≋-At : ∀ n → Rel (F n) _
+  ≋-At _ = Star $ SymClosure _⟿_
 
-  _≋_ : Rel (Term n) _
+  _≋_ : Rel (F n) _
   _≋_ = ≋-At _
   infix 4 _≋_
 
   ≋-isEquiv : Relation.IsEquivalence $ ≋-At n
   ≋-isEquiv =
-    record { refl = ε ; sym = RT.reverse $ S.symmetric _⟿ᵗ_ ; trans = _◅◅_ }
+    record { refl = ε ; sym = RT.reverse $ S.symmetric _⟿_ ; trans = _◅◅_ }
 
   ≋-setoid : ℕ → Relation.Setoid _ _
   ≋-setoid n = record { isEquivalence = ≋-isEquiv {n} }
@@ -328,14 +332,15 @@ module _ where
       renaming (refl to ≋-refl ; sym to ≋-sym ; trans to ≋-trans)
 
   plus-star : _⟿+_ ⇒₂ ⟿*-At n
-  plus-star [ R ]           = R ◅ ε
-  plus-star (_ ∼⁺⟨ R₁ ⟩ R₂) = plus-star R₁ ◅◅ plus-star R₂
+  plus-star [ R ]    = R ◅ ε
+  plus-star (R ∷ Rs) = R ◅ plus-star Rs
 
   star-plus : _⟿*_ ⇒₂ (_≡_ ∪ ⟿+-At n)
   star-plus ε        = inj₁ refl
-  star-plus (R ◅ Rs) with star-plus Rs
-  star-plus (R ◅ Rs) | inj₁ refl = inj₂ [ R ]
-  star-plus (R ◅ Rs) | inj₂ Rs′  = inj₂ (_ ∼⁺⟨ [ R ] ⟩ Rs′)
+  star-plus (R ◅ Rs) = inj₂ $ R ∷′ star-plus Rs where
+    _∷′_ : X ⟿ Y → (Y ≡ Z) ⊎ (Y ⟿+ Z) → X ⟿+ Z
+    R ∷′ inj₁ refl = [ R ]
+    R ∷′ inj₂ Rs   = R ∷ Rs
 
   star-≋ : _⟿*_ ⇒₂ ≋-At n
   star-≋ ε        = ε
@@ -343,3 +348,14 @@ module _ where
 
   plus-≋ : _⟿+_ ⇒₂ ≋-At n
   plus-≋ = star-≋ ∘ plus-star
+
+
+open module Evalᵗ = Derived (λ {n} → _⟿ᵗ_ {n}) stepᵗ public using ()
+  renaming (_⟿+_ to _⟿ᵗ+_ ; _⟿*_ to _⟿ᵗ*_ ; _⟿!_ to _⟿ᵗ!_ ;
+            ⟿+-At to ⟿ᵗ+-At ; ⟿*-At to ⟿ᵗ*-At ; ⟿!-At to ⟿ᵗ!-At ;
+            _⇓ to _⇓ᵗ ; eval to evalᵗ ; _≋_ to _≋ᵗ_ ; ≋-At to ≋ᵗ-At)
+
+open module Evalᵉ = Derived (λ {n} → _⟿ᵉ_ {n}) stepᵉ public using ()
+  renaming (_⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
+            ⟿+-At to ⟿ᵉ+-At ; ⟿*-At to ⟿ᵉ*-At ; ⟿!-At to ⟿ᵉ!-At ;
+            _⇓ to _⇓ᵉ ; eval to evalᵉ ; _≋_ to _≋ᵉ_ ; ≋-At to ≋ᵉ-At)
