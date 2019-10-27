@@ -161,15 +161,12 @@ data _⊢_-_∈_▷_ where
             Γ ⊢ σ - e ∈ R ▷ Φ
   ty-` : Γ ‼ x ↦ S → Only Φ x σ →
          Γ ⊢ σ - ` x ∈ S ▷ Φ
-    -- ty-` just uses whatever σ it's told. lam will check that it's ok later.
   ty-∙ : π *ᶜ Φ₂ ↦ Φ₂′ →
          Φ₁ +ᶜ Φ₂′ ↦ Φ →
          T′ ≡ substᵗ T (s ⦂ S) →
          Γ ⊢ σ - f ∈ 𝚷[ π / S ] T ▷ Φ₁ →
          Γ ⊢ σ - S ∋ s ▷ Φ₂ →
          Γ ⊢ σ - f ∙ s ∈ T′ ▷ Φ
-    -- ty-∙ does the multiplication in the conclusion like the QTT paper,
-    -- so it's compatible with {0,1}-only judgements
   ty-⦂ : Zero Φ₁ →
          Γ ⊢ 0ᵘ - ⋆ u ∋ S ▷ Φ₁ →
          Γ ⊢ σ - S ∋ s ▷ Φ₂ →
