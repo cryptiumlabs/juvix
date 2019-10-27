@@ -139,7 +139,7 @@ data _⊢_-_∈_▷_ : Ctx n → Usage n → Elim n → Type n → Skel n → Se
 infix 0 _⊢_-_∋_▷_ _⊢_-_∈_▷_
 
 data _⊢_-_∋_▷_ where
-  ty-pre : T ⟿ᵗ R →
+  ty-pre : T ⟿ᵗ+ R →
            Γ ⊢ σ - R ∋ t ▷ Φ →
            Γ ⊢ σ - T ∋ t ▷ Φ
   ty-⋆ : u < v → Zero Φ →
@@ -156,7 +156,7 @@ data _⊢_-_∋_▷_ where
           Γ ⊢ σ - T ∋ [ e ] ▷ Φ
 
 data _⊢_-_∈_▷_ where
-  ty-post : S ⟿ᵗ R →
+  ty-post : S ⟿ᵗ+ R →
             Γ ⊢ σ - e ∈ S ▷ Φ →
             Γ ⊢ σ - e ∈ R ▷ Φ
   ty-` : Γ ‼ x ↦ S → Only Φ x σ →
