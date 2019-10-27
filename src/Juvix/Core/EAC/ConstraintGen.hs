@@ -1,4 +1,4 @@
-module Juvix.Core.EAC.EAC where
+module Juvix.Core.EAC.ConstraintGen where
 
 import Control.Arrow (left)
 import qualified Juvix.Bohm.Type as BT

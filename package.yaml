@@ -77,7 +77,7 @@ library:
     - Juvix.Core.Parameterisations.Naturals
     - Juvix.Core.EAC
     - Juvix.Core.EAC.Check
-    - Juvix.Core.EAC.EAC
+    - Juvix.Core.EAC.ConstraintGen
     - Juvix.Core.EAC.Solve
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser

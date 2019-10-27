@@ -1,7 +1,7 @@
 module Juvix.Core.EAC.Check where
 
 import qualified Data.Map.Strict as Map
-import Juvix.Core.EAC.EAC
+import Juvix.Core.EAC.ConstraintGen
 import Juvix.Core.EAC.Solve
 import Juvix.Core.EAC.Types
 import Juvix.Library hiding (link, reduce)
