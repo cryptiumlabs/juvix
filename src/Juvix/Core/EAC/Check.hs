@@ -1,9 +1,9 @@
-module Juvix.EAC.Check where
+module Juvix.Core.EAC.Check where
 
 import qualified Data.Map.Strict as Map
-import Juvix.EAC.EAC
-import Juvix.EAC.Solve
-import Juvix.EAC.Types
+import Juvix.Core.EAC.EAC
+import Juvix.Core.EAC.Solve
+import Juvix.Core.EAC.Types
 import Juvix.Library hiding (link, reduce)
 
 validEal ∷ Term → TypeAssignment → IO (Either Errors (RPT, ParamTypeAssignment))

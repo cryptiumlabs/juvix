@@ -1,7 +1,7 @@
 module EAC2 where
 
-import Juvix.EAC.Check
-import Juvix.EAC.Types
+import Juvix.Core.EAC.Check
+import Juvix.Core.EAC.Types
 import Juvix.Library hiding (Type, exp, link, reduce)
 import qualified Juvix.Utility as Map
 import qualified Test.Tasty as T

@@ -75,12 +75,12 @@ library:
     - Juvix.Core.Erasure
     - Juvix.Core.Usage
     - Juvix.Core.Parameterisations.Naturals
-    - Juvix.EAC
-    - Juvix.EAC.Check
-    - Juvix.EAC.EAC
-    - Juvix.EAC.Solve
-    - Juvix.EAC.Types
-    - Juvix.EAC.Parser
+    - Juvix.Core.EAC
+    - Juvix.Core.EAC.Check
+    - Juvix.Core.EAC.EAC
+    - Juvix.Core.EAC.Solve
+    - Juvix.Core.EAC.Types
+    - Juvix.Core.EAC.Parser
     - Juvix.Utility
     - Juvix.Utility.HashMap
     - Juvix.Nets.Bohm

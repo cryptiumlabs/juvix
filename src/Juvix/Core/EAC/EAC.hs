@@ -1,8 +1,8 @@
-module Juvix.EAC.EAC where
+module Juvix.Core.EAC.EAC where
 
 import Control.Arrow (left)
 import qualified Juvix.Bohm.Type as BT
-import Juvix.EAC.Types
+import Juvix.Core.EAC.Types
 import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Utility.HashMap as Map
 import Prelude (error)

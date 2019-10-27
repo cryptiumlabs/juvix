@@ -14,7 +14,7 @@ import Juvix.Bohm.Default
 import Juvix.Bohm.Parser
 import Juvix.Bohm.Translation
 import Juvix.Bohm.Type
-import Juvix.EAC
+import Juvix.Core.EAC
 import Juvix.Library
 import Juvix.Nets.Bohm
 import Juvix.Utility

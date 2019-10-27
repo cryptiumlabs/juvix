@@ -1,4 +1,4 @@
-module Juvix.EAC.Types where
+module Juvix.Core.EAC.Types where
 
 import qualified Data.Text as T
 import GHC.Natural

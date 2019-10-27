@@ -1,8 +1,8 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Juvix.EAC.Parser where
+module Juvix.Core.EAC.Parser where
 
-import Juvix.EAC.Types
+import Juvix.Core.EAC.Types
 import Juvix.Library hiding
   ( (<|>),
     Type,
