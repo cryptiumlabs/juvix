@@ -91,10 +91,52 @@ _*ᶜ_ : (π : Usage n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
 π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] = -, zero (zeroᶜ .proj₂) eq
 infix 310 _*ᶜ_
 
+
+data _≾ᵘ_ : Rel (Usage n) lzero where
+  refl : π ≋ᵗ ρ  → π ≾ᵘ ρ
+  -≾ω  : ρ ≋ᵗ ωᵘ → π ≾ᵘ ρ
+infix 4 _≾ᵘ_
+
+≾ᵘ-At : ∀ n → Rel (Usage n) _
+≾ᵘ-At _ = _≾ᵘ_
+
+module _ where
+  open Relation
+  open Evalᵗ
+
+  ≾ᵘ-refl : Reflexive $ ≾ᵘ-At n
+  ≾ᵘ-refl = refl ≋-refl
+
+  ≾ᵘ-antisym : Antisymmetric _≋_ $ ≾ᵘ-At n
+  ≾ᵘ-antisym (refl E) (refl F) = E
+  ≾ᵘ-antisym (refl E) (-≾ω V)  = E
+  ≾ᵘ-antisym (-≾ω W)  (refl F) = ≋-sym F
+  ≾ᵘ-antisym (-≾ω W)  (-≾ω V)  = ≋-trans V (≋-sym W)
+
+  ≾ᵘ-trans : Transitive $ ≾ᵘ-At n
+  ≾ᵘ-trans (refl E) (refl F) = refl $ ≋-trans E F
+  ≾ᵘ-trans (refl _) (-≾ω V)  = -≾ω V
+  ≾ᵘ-trans (-≾ω W)  (refl F) = -≾ω (≋-trans (≋-sym F) W)
+  ≾ᵘ-trans (-≾ω W)  (-≾ω V)  = -≾ω V
+
+  ≾ᵘ-isPO : IsPartialOrder _≋_ $ ≾ᵘ-At n
+  ≾ᵘ-isPO =
+    record {
+      isPreorder = record {
+        isEquivalence = ≋-isEquiv ;
+        reflexive = refl ;
+        trans = ≾ᵘ-trans
+      } ;
+      antisym = ≾ᵘ-antisym
+    }
+
+  ≾ᵘ-poset : ℕ → Poset _ _ _
+  ≾ᵘ-poset n = record { isPartialOrder = ≾ᵘ-isPO {n} }
+
+
 data _⊢_-_∋_▷_ : Ctx n → Usage n → Type n → Term n → Skel n → Set
 data _⊢_-_∈_▷_ : Ctx n → Usage n → Elim n → Type n → Skel n → Set
 infix 0 _⊢_-_∋_▷_ _⊢_-_∈_▷_
-
 
 data _⊢_-_∋_▷_ where
   ty-pre : T ⟿ᵗ R →
@@ -106,8 +148,8 @@ data _⊢_-_∋_▷_ where
          Γ ⊢ 0ᵘ - ⋆ u ∋ S ▷ Φ →
          Γ ⨟ S ⊢ 0ᵘ - ⋆ u ∋ T ▷ Φ ⨟ ζ →
          Γ ⊢ 0ᵘ - ⋆ u ∋ 𝚷[ π / S ] T ▷ Φ
-  ty-𝛌 : -- ρ′ ≾ᵗ ⟦ σ ⟧ * π →
-         Γ ⨟ S ⊢ weakᵗ σ - T ∋ t ▷ Φ ⨟ ρ {- ρ′ -} →
+  ty-𝛌 : ρ′ ≾ᵘ σ *ᵘ π →
+         Γ ⨟ S ⊢ weakᵗ σ - T ∋ t ▷ Φ ⨟ ρ′ →
          Γ ⊢ σ - 𝚷[ π / S ] T ∋ 𝛌 t ▷ Φ
   ty-[] : S ⩿ T →
           Γ ⊢ σ - e ∈ S ▷ Φ →
