@@ -125,6 +125,7 @@ cType ::
   -> Term primTy primVal
   -> Annotation primTy primVal
   -> Result ()
+-- *
 cType _ _ii _g t@(Star n) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
   let ty = snd ann
@@ -137,10 +138,7 @@ cType _ _ii _g t@(Star n) ann = do
          show (snd ann) <>
          " is * of a equal or lower universe.")
     _ -> throwError $ "* n is of type * but " <> show (snd ann) <> " is not *."
-cType _ ii _g x@(PrimTy _) ann =
-  unless
-    (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
-    (throwError (errorMsg ii x (zero, VStar 0) ann))
+-- *-Pi (introduction rule of universe)
 cType p ii g (Pi pi varType resultType) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
   let ty = snd ann
@@ -157,7 +155,12 @@ cType p ii g (Pi pi varType resultType) ann = do
     _ ->
       throwError
         "The variable type and the result type must be of type * at the same level."
--- (Lam) introduction rule of dependent function type
+-- primitive types
+cType _ ii _g x@(PrimTy _) ann =
+  unless
+    (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
+    (throwError (errorMsg ii x (zero, VStar 0) ann))
+-- Lam (introduction rule of dependent function type)
 cType p ii g (Lam s) ann =
   case ann of
     (sig, VPi pi ty ty')
@@ -170,6 +173,7 @@ cType p ii g (Lam s) ann =
         (cSubst 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
         (sig, ty' (vfree (Local ii))) -- is of type M (usage sigma) in context T
     _ -> throwError $ show (snd ann) <> " is not a function type but should be."
+--
 cType p ii g (Elim e) ann = do
   ann' <- iType p ii g e
   unless
@@ -203,14 +207,14 @@ iType _ ii g (Free x) =
   case lookup x g of
     Just ann -> return ann
     Nothing  -> throwError (iTypeErrorMsg ii x)
--- Prim-Const typing rule
+-- Prim-Const
 iType p _ii _g (Prim prim) =
   let arrow [x]    = VPrimTy x
       arrow (x:xs) = VPi Omega (VPrimTy x) (const (arrow xs))
    in case typeOf p arrow prim of
         Right a -> return (Omega, VPrimTy a)
         Left f  -> return (Omega, f)
--- App rule, function M applies to N
+-- App (function M applies to N)
 iType p ii g (App m n) = do
   mTy <- iType p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
@@ -223,6 +227,7 @@ iType p ii g (App m n) = do
          ") is not a function type and thus \n" <>
          show n <>
          "\n cannot be applied to it.")
+--
 iType p ii g (Ann pi theTerm theType)
   -- TODO check theType is of type Star first? But we have stakable universes now.
   -- cType ii g theType (0, VStar 0)
