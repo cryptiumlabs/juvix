@@ -1,7 +1,7 @@
 module Juvix.Core.HR.Types where
 
-import           Juvix.Core.Usage
-import           Juvix.Library
+import Juvix.Core.Usage
+import Juvix.Library
 
 --checkable terms
 data Term primTy primVal

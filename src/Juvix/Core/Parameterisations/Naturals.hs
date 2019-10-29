@@ -17,7 +17,7 @@ data NatVal
   | Add -- f addition
   | Sub -- f substraction
   | Mul -- f multiplication
-  | Curried NatVal Natural 
+  | Curried NatVal Natural
   deriving (Show, Eq)
 
 typeOf ∷ ∀ a. ([NatTy] → a) → NatVal → Either a NatTy
