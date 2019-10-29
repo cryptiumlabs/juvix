@@ -9,7 +9,8 @@ wget -nv -O "llvm-${LLVM_VERSION}.src.tar.xz"     "${MIRROR}/${LLVM_VERSION}/llv
 
 # Extract
 echo "Extracting: llvm-${LLVM_VERSION}.src.tar.xz"
-tar xf "llvm-${LLVM_VERSION}.src.tar.xz"
+# No same owner, as the UID and GID are too high for cricle CI :(
+tar xf "llvm-${LLVM_VERSION}.src.tar.xz" --no-same-owner
 
 cd ./llvm-${LLVM_VERSION}.src
 
