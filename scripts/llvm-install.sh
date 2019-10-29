@@ -3,12 +3,9 @@ set -eou pipefail
 
 MIRROR="http://releases.llvm.org"
 
-# Determine architecture
-ARCH=$(dpkg --print-architecture)
-
 # Download
 echo "Downloading llvm-9.0.0.src.tar.xz"
-wget -nv -O "llvm-9.0.0.src.tar.xz"     "${MIRROR}/${LLVM_VERSION}/llvm-9.0.0.src.tar.xz"
+wget -nv -O "llvm-9.0.0.src.tar.xz"     "${MIRROR}/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
 
 # Install
 # echo "Installing ${TARGET}"
@@ -21,17 +18,12 @@ cd build
 
 cmake ../
 
-# mkdir ../../bin/opt
-
 cmake --build .
 
 cmake --build . --target install
 
 cd ../..
 
-
+# Cleanup
 rm llvm-9.0.0.src.tar.xz
 rm -rf llvm-9.0.0.src
-# Cleanup
-# rm -rf "${DOWNLOAD_FILE}" "${TARGET}/" llvm-install.sh
-mkdir "juvix"
