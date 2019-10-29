@@ -214,12 +214,12 @@ iType p _ii _g (Prim prim) =
    in case typeOf p arrow prim of
         Right a -> return (Omega, VPrimTy a)
         Left f  -> return (Omega, f)
--- App (function M applies to N)
+-- App, function M applies to N (Elimination rule of dependent function types)
 iType p ii g (App m n) = do
   mTy <- iType p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) -> do
-      cType p ii g n (pi, varTy) -- N has to be of type varTy with usage pi
+      cType p ii g n (sig <.> pi, varTy) -- N has to be of type varTy with usage sig*pi
       return (sig, resultTy (cEval p n []))
     _ ->
       throwError
