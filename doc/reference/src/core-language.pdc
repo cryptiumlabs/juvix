@@ -228,10 +228,10 @@ Let $S$ be a set of sorts ${i, j, k}$ with a total order.
 #### Introduction rule
 
 \begin{prooftree}
-\AxiomC{$0Γ ⊢ M \overset{0}{:} ∗_i$}
-\AxiomC{$0Γ, x \overset{0}{:} M ⊢ N \overset{0}{:} ∗_i$}
+\AxiomC{$0Γ ⊢ V \overset{0}{:} ∗_i$}
+\AxiomC{$0Γ, x \overset{0}{:} V ⊢ R \overset{0}{:} ∗_i$}
 \RightLabel{∗-Pi}
-\BinaryInfC{$Γ ⊢ (x \overset{π}{:} M) → N \overset{0}{:} ∗_i$}
+\BinaryInfC{$Γ ⊢ (x \overset{π}{:} V) → R \overset{0}{:} ∗_i$}
 \end{prooftree}
 
 $σ = 0$ fragment only.
