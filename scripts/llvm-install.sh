@@ -4,26 +4,30 @@ set -eou pipefail
 MIRROR="http://releases.llvm.org"
 
 # Download
-echo "Downloading llvm-9.0.0.src.tar.xz"
-wget -nv -O "llvm-9.0.0.src.tar.xz"     "${MIRROR}/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
+echo "Downloading: llvm-${LLVM_VERSION}.src.tar.xz"
+wget -nv -O "llvm-${LLVM_VERSION}.src.tar.xz"     "${MIRROR}/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
 
-# Install
-# echo "Installing ${TARGET}"
-tar xf "llvm-9.0.0.src.tar.xz"
+# Extract
+echo "Extracting: llvm-${LLVM_VERSION}.src.tar.xz"
+tar xf "llvm-${LLVM_VERSION}.src.tar.xz"
 
-cd ./llvm-9.0.0.src
+cd ./llvm-${LLVM_VERSION}.src
 
 mkdir build
 cd build
 
+# Building
+echo "Building: llvm-${LLVM_VERSION}.src.tar.xz"
 cmake ../
 
 cmake --build .
 
+# Building
+echo "Installing llvm-${LLVM_VERSION}.src.tar.xz"
 cmake --build . --target install
 
 cd ../..
 
 # Cleanup
-rm llvm-9.0.0.src.tar.xz
-rm -rf llvm-9.0.0.src
+rm llvm-${LLVM_VERSION}.src.tar.xz
+rm -rf llvm-${LLVM_VERSION}.src
