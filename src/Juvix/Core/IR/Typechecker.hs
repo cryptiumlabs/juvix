@@ -155,11 +155,11 @@ cType p ii g (Pi pi varType resultType) ann = do
     _ ->
       throwError
         "The variable type and the result type must be of type * at the same level."
--- primitive types
+-- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 cType _ ii _g x@(PrimTy _) ann =
   unless
     (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
-    (throwError (errorMsg ii x (zero, VStar 0) ann))
+    (throwError (errorMsg ii x (SNat 0, VStar 0) ann))
 -- Lam (introduction rule of dependent function type)
 cType p ii g (Lam s) ann =
   case ann of
@@ -207,7 +207,7 @@ iType _ ii g (Free x) =
   case lookup x g of
     Just ann -> return ann
     Nothing  -> throwError (iTypeErrorMsg ii x)
--- Prim-Const
+-- Prim-Const and Prim-Fn, pi = omega
 iType p _ii _g (Prim prim) =
   let arrow [x]    = VPrimTy x
       arrow (x:xs) = VPi Omega (VPrimTy x) (const (arrow xs))
@@ -227,10 +227,10 @@ iType p ii g (App m n) = do
          ") is not a function type and thus \n" <>
          show n <>
          "\n cannot be applied to it.")
---
+-- Conv
 iType p ii g (Ann pi theTerm theType)
   -- TODO check theType is of type Star first? But we have stakable universes now.
-  -- cType ii g theType (0, VStar 0)
+  -- cType p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
  = do
   let ty = cEval p theType []
   cType p ii g theTerm (pi, ty)
