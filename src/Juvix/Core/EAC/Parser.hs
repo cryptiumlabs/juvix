@@ -2,6 +2,8 @@
 
 module Juvix.Core.EAC.Parser where
 
+{-
+
 import Juvix.Core.EAC.Types
 import Juvix.Library hiding
   ( (<|>),
@@ -185,3 +187,5 @@ lolly = PArrT 0 <$ reservedOp "-o"
 
 optable ∷ [[Operator String () Identity PType]]
 optable = [[createOpTable lolly]]
+
+-}

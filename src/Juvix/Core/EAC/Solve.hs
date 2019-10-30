@@ -9,7 +9,7 @@ import qualified Z3.Monad as Z3
 
 -- TODO ∷ handle RPrim
 
-runMultipleConstraints ∷ Int → [Constraint] → RPT → IO ()
+runMultipleConstraints ∷ ∀ a. Int → [Constraint] → RPT a → IO ()
 runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
       recGen _ _ _ 0 = pure ()

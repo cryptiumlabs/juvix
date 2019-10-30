@@ -6,6 +6,10 @@ import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Type)
 import Juvix.Utility
 
+type Term = Erased.Term
+
+type Type = Erased.Type
+
 -- Restricted pseudoterm (inner).
 data RPTI primVal
   = RVar Symbol
