@@ -370,3 +370,71 @@ open module Evalᵉ = Derived (λ {n} → _⟿ᵉ_ {n}) stepᵉ public using ()
             _⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
             ⟿+-At to ⟿ᵉ+-At ; ⟿*-At to ⟿ᵉ*-At ; ⟿!-At to ⟿ᵉ!-At ;
             _⇓ to _⇓ᵉ ; eval to evalᵉ ; _≋_ to _≋ᵉ_ ; ≋-At to ≋ᵉ-At)
+
+
+module _ {n} where
+  open Relation
+
+  𝚷-cong : 𝚷[_/_]_ Preserves₃ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
+  𝚷-cong Rπ RS RT =
+    RT.gmap _ (⊎.map 𝚷₁ 𝚷₁) Rπ ◅◅
+    RT.gmap _ (⊎.map 𝚷₂ 𝚷₂) RS ◅◅
+    RT.gmap _ (⊎.map 𝚷₃ 𝚷₃) RT
+
+  𝛌-cong : 𝛌_ Preserves _≋ᵗ_ ⟶ ≋ᵗ-At n
+  𝛌-cong = RT.gmap _ (⊎.map 𝛌- 𝛌-)
+
+  sucᵘ-cong : sucᵘ Preserves _≋ᵗ_ ⟶ ≋ᵗ-At n
+  sucᵘ-cong = RT.gmap _ (⊎.map sucᵘ sucᵘ)
+
+  +ᵘ-cong : _+ᵘ_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
+  +ᵘ-cong Rπ Rρ = RT.gmap _ (⊎.map +ᵘˡ +ᵘˡ) Rπ ◅◅ RT.gmap _ (⊎.map +ᵘʳ +ᵘʳ) Rρ
+
+  *ᵘ-cong : _*ᵘ_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
+  *ᵘ-cong Rπ Rρ = RT.gmap _ (⊎.map *ᵘˡ *ᵘˡ) Rπ ◅◅ RT.gmap _ (⊎.map *ᵘʳ *ᵘʳ) Rρ
+
+  []-cong : [_] Preserves _≋ᵉ_ ⟶ ≋ᵗ-At n
+  []-cong = RT.gmap _ (⊎.map [_] [_])
+
+  ∙-cong : _∙_ Preserves₂ _≋ᵉ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+  ∙-cong Rf Rs = RT.gmap _ (⊎.map ∙ˡ ∙ˡ) Rf ◅◅ RT.gmap _ (⊎.map ∙ʳ ∙ʳ) Rs
+
+  𝓤-elim-cong : 𝓤-elim Preserves₅
+                _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+  𝓤-elim-cong RT Rz Rs Rw Rπ =
+    RT.gmap _ (⊎.map 𝓤-elim₁ 𝓤-elim₁) RT ◅◅
+    RT.gmap _ (⊎.map 𝓤-elim₂ 𝓤-elim₂) Rz ◅◅
+    RT.gmap _ (⊎.map 𝓤-elim₃ 𝓤-elim₃) Rs ◅◅
+    RT.gmap _ (⊎.map 𝓤-elim₄ 𝓤-elim₄) Rw ◅◅
+    RT.gmap _ (⊎.map 𝓤-elim₅ 𝓤-elim₅) Rπ
+
+  ⦂-cong : _⦂_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+  ⦂-cong Rs RS = RT.gmap _ (⊎.map ⦂ˡ ⦂ˡ) Rs ◅◅ RT.gmap _ (⊎.map ⦂ʳ ⦂ʳ) RS
+
+
+  open ℕ using (_+_ ; _*_)
+  open Evalᵗ
+
+  private
+    variable a b c : ℕ
+
+    ⌜_⌝ : ℕ → Term n
+    ⌜ a ⌝ = fromNat a
+
+  +ᵘ-ℕ : a + b ≡ c → ⌜ a ⌝ +ᵘ ⌜ b ⌝ ≋ᵗ ⌜ c ⌝
+  +ᵘ-ℕ {zero}  refl = fwd +ᵘ-0   ◅ ε
+  +ᵘ-ℕ {suc a} refl = fwd +ᵘ-suc ◅ sucᵘ-cong (+ᵘ-ℕ refl)
+
+  +ᵘ-ℕ′ : c ≡ a + b → ⌜ c ⌝ ≋ᵗ ⌜ a ⌝ +ᵘ ⌜ b ⌝
+  +ᵘ-ℕ′ = ≋-sym ∘ +ᵘ-ℕ ∘ ≡.sym
+
+  *ᵘ-ℕ : a * b ≡ c → ⌜ a ⌝ *ᵘ ⌜ b ⌝ ≋ᵗ ⌜ c ⌝
+  *ᵘ-ℕ {zero}      refl = inj₁ *ᵘ-0 ◅ ε
+  *ᵘ-ℕ {suc a} {b} refl rewrite ℕ.+-comm b (a * b) =
+    fwd *ᵘ-suc ◅ +ᵘ-cong (*ᵘ-ℕ refl) Evalᵗ.≋-refl ◅◅ +ᵘ-ℕ refl
+
+  *ᵘ-ℕ′ : c ≡ a * b → ⌜ c ⌝ ≋ᵗ ⌜ a ⌝ *ᵘ ⌜ b ⌝
+  *ᵘ-ℕ′ = ≋-sym ∘ *ᵘ-ℕ ∘ ≡.sym
+
+1-*ᵘ : 1 *ᵘ π ≋ᵗ π
+1-*ᵘ = Evalᵗ.star-≋ $ *ᵘ-suc ◅ +ᵘˡ *ᵘ-0 ◅ +ᵘ-0 ◅ ε
