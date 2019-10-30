@@ -1,5 +1,3 @@
-open import Usage as U
-
 module Type where
 
 open import Prelude
