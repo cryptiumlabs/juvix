@@ -15,7 +15,7 @@ data NatTy
 data NatVal
   = Natural Natural -- c
   | Add -- f addition
-  | Sub -- f substraction
+  | Sub -- f subtraction
   | Mul -- f multiplication
   | Curried NatVal Natural
   deriving (Show, Eq)
