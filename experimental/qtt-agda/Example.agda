@@ -1,7 +1,5 @@
 -- ⚠ caution: de Bruijn indices ⚠
 
-{-# OPTIONS --rewriting #-}
-
 module Example where
 
 open import Prelude
