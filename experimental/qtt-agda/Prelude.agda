@@ -74,6 +74,33 @@ module Relation where
   open import Relation.Binary public
     renaming (Irrelevant to Irrelevant₂ ; Recomputable to Recomputable₂ ;
               Universal to Universal₂ ; Decidable to Decidable₂ ; _⇒_ to _⇒₂_)
+
+  module _ where
+    private variable ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ : Level ; A B C D E F : Set _
+
+    _Preserves₃_⟶_⟶_⟶_ :
+      (A → B → C → D) → Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Set _
+    f Preserves₃ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ =
+      ∀ {a a′ b b′ c c′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ →
+      f a b c ∼ᵈ f a′ b′ c′
+
+    _Preserves₄_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Set _
+    f Preserves₄ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ =
+      ∀ {a a′ b b′ c c′ d d′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ →
+      f a b c d ∼ᵉ f a′ b′ c′ d′
+
+    _Preserves₅_⟶_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E → F) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Rel F ℓ₆ → Set _
+    f Preserves₅ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ ⟶ _∼ᶠ_ =
+      ∀ {a a′ b b′ c c′ d d′ e e′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ → e ∼ᵉ e′ →
+      f a b c d e ∼ᶠ f a′ b′ c′ d′ e′
+
 open Relation public
   using (Dec ; yes ; no ; ¬_ ; True ; False ; ⌊_⌋ ;
          Pred ; Decidable₁ ; Rel ; Decidable₂)
