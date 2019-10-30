@@ -168,3 +168,10 @@ chopᵗ : Term (suc n) → Maybe (Term n)
 chopᵗ t = substᵗ″ MaybeC.applicative zero t nothing
 chopᵉ : Elim (suc n) → Maybe (Elim n)
 chopᵉ t = substᵉ″ MaybeC.applicative zero t nothing
+
+
+instance number-Term : Number (Term n)
+number-Term = record { Constraint = λ _ → ⊤ ; fromNat = λ n → fn n } where
+  fn : ℕ → Term n
+  fn zero    = 0ᵘ
+  fn (suc n) = sucᵘ $ fn n
