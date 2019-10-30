@@ -76,7 +76,6 @@ data _⟿ᵉ_ where
   ⦂ʳ : S ⟿ᵗ S′ → s ⦂ S ⟿ᵉ s ⦂ S′
 
 
-
 private
   data Is-0   : Term n → Set where is-0   : Is-0   $ 0ᵘ {n}
   data Is-suc : Term n → Set where is-suc : Is-suc $ sucᵘ π
@@ -361,11 +360,13 @@ module Derived {t ℓ} {F : ℕ → Set t}
 
 
 open module Evalᵗ = Derived (λ {n} → _⟿ᵗ_ {n}) stepᵗ public using ()
-  renaming (_⟿+_ to _⟿ᵗ+_ ; _⟿*_ to _⟿ᵗ*_ ; _⟿!_ to _⟿ᵗ!_ ;
+  renaming (⟿-At to ⟿ᵗ-At ;
+            _⟿+_ to _⟿ᵗ+_ ; _⟿*_ to _⟿ᵗ*_ ; _⟿!_ to _⟿ᵗ!_ ;
             ⟿+-At to ⟿ᵗ+-At ; ⟿*-At to ⟿ᵗ*-At ; ⟿!-At to ⟿ᵗ!-At ;
             _⇓ to _⇓ᵗ ; eval to evalᵗ ; _≋_ to _≋ᵗ_ ; ≋-At to ≋ᵗ-At)
 
 open module Evalᵉ = Derived (λ {n} → _⟿ᵉ_ {n}) stepᵉ public using ()
-  renaming (_⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
+  renaming (⟿-At to ⟿ᵉ-At ;
+            _⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
             ⟿+-At to ⟿ᵉ+-At ; ⟿*-At to ⟿ᵉ*-At ; ⟿!-At to ⟿ᵉ!-At ;
             _⇓ to _⇓ᵉ ; eval to evalᵉ ; _≋_ to _≋ᵉ_ ; ≋-At to ≋ᵉ-At)
