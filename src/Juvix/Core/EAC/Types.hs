@@ -2,13 +2,9 @@ module Juvix.Core.EAC.Types where
 
 import qualified Data.Text as T
 import GHC.Natural
-import qualified Juvix.Core.Erased.Types as Erased
+import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type)
 import Juvix.Utility
-
-type Term = Erased.Term
-
-type Type = Erased.Type
 
 -- Restricted pseudoterm (inner).
 data RPTI primVal
@@ -111,20 +107,20 @@ data Errors primTy primVal
 newtype EnvError primTy primVal a = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (HashMap Symbol (Erased.Type primTy)))
+    (HasState "ctxt" (HashMap Symbol (Type primTy)))
     via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
     via MonadError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)))
 
-data Info primTy = I {ctxt ∷ HashMap Symbol (Erased.Type primTy)} deriving (Show, Generic)
+data Info primTy = I {ctxt ∷ HashMap Symbol (Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env primTy
   = Env
       { path ∷ Path,
         varPaths ∷ VarPaths,
-        typeAssignment ∷ Erased.TypeAssignment primTy,
+        typeAssignment ∷ TypeAssignment primTy,
         nextParam ∷ Param,
         constraints ∷ [Constraint],
         occurrenceMap ∷ OccurrenceMap
@@ -140,7 +136,7 @@ newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)
     (HasState "varPaths" VarPaths)
     via Field "varPaths" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "typeAssignment" (Erased.TypeAssignment primTy))
+    (HasState "typeAssignment" (TypeAssignment primTy))
     via Field "typeAssignment" () (MonadState (State (Env primTy)))
   deriving
     (HasState "nextParam" Param)

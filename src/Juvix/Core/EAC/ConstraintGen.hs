@@ -3,6 +3,7 @@ module Juvix.Core.EAC.ConstraintGen where
 import Control.Arrow (left)
 import qualified Juvix.Bohm.Type as BT
 import Juvix.Core.EAC.Types
+import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Utility.HashMap as Map
 import Prelude (error)
@@ -37,7 +38,7 @@ parameterizeType ty = do
   case ty of
     SymT sym →
       pure (PSymT param sym)
-    ArrT arg body → do
+    Pi arg body → do
       arg ← parameterizeType arg
       body ← parameterizeType body
       pure (PArrT param arg body)
