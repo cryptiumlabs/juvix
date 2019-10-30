@@ -56,8 +56,8 @@ zeroᶜ {zero}  = -, ε
 zeroᶜ {suc n} = -, zeroᶜ .proj₂ ⨟ Evalᵗ.≋-refl
 
 data Only : (Φ : Skel n) (x : Var n) (π : Usage n) → Set where
-  here  : Zero Φ     → Only (Φ ⨟ ρ) 0       (weakᵗ ρ)
-  there : Only Φ x ρ → Only (Φ ⨟ π) (suc x) (weakᵗ ρ)
+  here  : Zero Φ                → Only (Φ ⨟ ρ) 0       (weakᵗ ρ)
+  there : Only Φ x ρ → π ≋ᵗ 0ᵘ → Only (Φ ⨟ π) (suc x) (weakᵗ ρ)
 
 data _+ᶜ_↦_ : (Φ₁ Φ₂ Φ : Skel n) → Set where
   ε   : ε +ᶜ ε ↦ ε
