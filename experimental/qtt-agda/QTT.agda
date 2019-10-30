@@ -48,6 +48,9 @@ data Elim n where
 infix 1000 `_ ; infixl 400 _∙_ ; infix 100 _⦂_
 private variable e f : Elim n
 
+pattern ``_ x = [ ` x ]
+infix 1000 ``_
+
 
 data _⩿_ : Rel (Type n) lzero where
   ⋆    : (uv : u ℕ.≤ v) → ⋆ u ⩿ ⋆ {n} v
