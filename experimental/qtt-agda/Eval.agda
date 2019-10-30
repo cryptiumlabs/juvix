@@ -17,7 +17,7 @@ open import Codata.Delay as Delay using (Delay ; now ; later)
 
 private
  variable
-  n : ℕ
+  n n′ : ℕ
   s s′ t t′ z z′ w w′ : Term n
   S S′ T T′ U U′ : Type n
   π π′ ρ ρ′ : Usage n
@@ -48,7 +48,7 @@ data _⟿ᵗ_ where
   *ᵘˡ : π ⟿ᵗ π′ → π *ᵘ ρ ⟿ᵗ π′ *ᵘ ρ
   *ᵘʳ : ρ ⟿ᵗ ρ′ → π *ᵘ ρ ⟿ᵗ π  *ᵘ ρ′
   *ᵘ-0   : 0ᵘ     *ᵘ ρ      ⟿ᵗ 0ᵘ
-  *ᵘ-suc : sucᵘ π *ᵘ ρ      ⟿ᵗ ρ +ᵘ (π *ᵘ ρ)
+  *ᵘ-suc : sucᵘ π *ᵘ ρ      ⟿ᵗ π *ᵘ ρ +ᵘ ρ
   *ᵘ-ω0  : ωᵘ     *ᵘ 0ᵘ     ⟿ᵗ 0ᵘ {n}
   *ᵘ-ωs  : ωᵘ     *ᵘ sucᵘ ρ ⟿ᵗ ωᵘ
   *ᵘ-ωω  : ωᵘ     *ᵘ ωᵘ     ⟿ᵗ ωᵘ {n}
