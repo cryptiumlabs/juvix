@@ -6,158 +6,162 @@ module Example where
 
 open import Prelude
 
-open import Usage
-open import ExtNat
-open import QTT NoSub.any hiding (_+_ ; _*_)
-open import Type NoSub.any
+open import QTT
+open import Type
+open import Eval
+
+open import Relation.Binary.Construct.Closure.ReflexiveTransitive
+open import Relation.Binary.Construct.Closure.Symmetric
 
 variable
   n : ℕ
+  π : Term n
   e : Elim n
 
-A : ∀ {n} → Term n
-A = sort 0
+A : Term n
+A = ⋆ 0
+
+pattern _⨟!_ xs x = xs ⨟[ refl ] x
+infixl 5 _⨟!_
+
+-- a macro to generate the long strings of ... ⨟ +ᵘ-ℕ refl ⨟ ... and
+-- similar boring things would probably go a long way to helping
+-- readability
+
 
 -- 2 f: 2 A → 3 A → A, 10 x: A ⊢ 2 f x x ∈ A
 -- though note that the usages in the context are *outputs*
 -- i.e. they're not checked against anything
-example : ε ⨟ Π[ 2 / A ] Π[ 3 / A ] A ⨟ A ⊢ 2 - (1 ∙ 0 ∙ 0) ∈ A ▷ ε ⨟ 2 ⨟ 10
-example =
-  let Γ = ε ⨟ Π[ 2 / A ] Π[ 3 / A ] A ⨟ A in
-  app (ε ⨟ 2 ⨟ 10 ≡ (ε ⨟ 2 ⨟ 4) ⊕ 3 ⨵ (ε ⨟ 0 ⨟ 2)   ∋ refl)
-      (A ≡ substᵗ A (0 ⦂ A)   ∋ refl)
-    (app (ε ⨟ 2 ⨟ 4 ≡ (ε ⨟ 2 ⨟ 0) ⊕ 2 ⨵ (ε ⨟ 0 ⨟ 2)   ∋ refl)
-         (Π[ 3 / A ] A ≡ substᵗ (Π[ 3 / A ] A) (0 ⦂ A)   ∋ refl)
-      (var (lookup Γ 1 ≡ Π[ 2 / A ] Π[ 3 / A ] A   ∋ refl)
-           (Only 2 1 (ε ⨟ 2 ⨟ 0)   ∋ ε ⨟[ refl ] ⨟ refl))
-      (elim (A ⩿ A   ∋ refl)
-        (var (lookup Γ 0 ≡ A   ∋ refl)
-             (Only 2 0 (ε ⨟ 0 ⨟ 2)   ∋ ε ⨟ refl ⨟[ refl ]))))
-    (elim (A ⩿ A   ∋ refl)
-      (var (lookup Γ 0 ≡ A   ∋ refl)
-           (Only 2 0 (ε ⨟ 0 ⨟ 2)   ∋ ε ⨟ refl ⨟[ refl ])))
+f-x-x : ε ⨟ 𝚷[ 2 / A ] 𝚷[ 3 / A ] A ⨟ A
+        ⊢ 2 - (` 1 ∙ `` 0  ∙ `` 0) ∈ A
+        ▷ ε ⨟ 2 ⨟ 10
+f-x-x =
+  ty-∙ (ε ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl)
+       (ε ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl)
+       refl
+    (ty-∙ (ε ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl)
+          (ε ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl)
+          refl
+      (ty-` (there here) (there (here ε) ε))
+      (ty-[] refl (ty-` here (here (ε ⨟ ε)))))
+    (ty-[] refl (ty-` here (here (ε ⨟ ε))))
+
+
 
 -- ⊢ 2 (1 f: (2 A → 3 A → A)) → 5 A → A ∋ λ f x. f x x
-example′ : ε ⊢ 2 - Π[ 1 / Π[ 2 / A ] Π[ 3 / A ] A ] Π[ 5 / A ] A
-             ∋ Λ Λ [ 1 ∙ 0 ∙ 0 ] ▷ ε
-example′ = lam refl $ lam refl $ elim refl example
+f-x-x′ : ε ⊢ 2 - 𝚷[ 1 / 𝚷[ 2 / A ] 𝚷[ 3 / A ] A ] 𝚷[ 5 / A ] A
+             ∋ 𝛌 𝛌 [ ` 1 ∙ `` 0 ∙ `` 0 ] ▷ ε
+f-x-x′ =
+  ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+    (ty-𝛌 (refl (*ᵘ-ℕ′ refl)) (ty-[] refl f-x-x))
 
--- A, B, C: sort 0 ⊢ 1 (1 (1 A → 1 B → C) → 1 A → 2 B → C) ∋ λ x y z. x z (y z)
-S : ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0
-      ⊢ 1 - Π[ 1 / Π[ 1 / 2 ] Π[ 1 / 2 ] 2 ]
-            Π[ 1 / Π[ 1 / 3 ] 3 ] Π[ 2 / 4 ] 3
-      ∋ Λ Λ Λ [ 2 ∙ 0 ∙ [ 1 ∙ 0 ] ]
+
+ -- A, B, C: ⋆ 0 ⊢ 1 (1 (1 A → 1 B → C) → 1 A → 2 B → C) ∋ λ x y z. x z (y z)
+S : ε ⨟ ⋆ 0 ⨟ ⋆ 0 ⨟ ⋆ 0
+      ⊢ 1 - 𝚷[ 1 / 𝚷[ 1 / `` 2 ] 𝚷[ 1 / `` 2 ] `` 2 ]
+            𝚷[ 1 / 𝚷[ 1 / `` 3 ] `` 3 ] 𝚷[ 2 / `` 4 ] `` 3
+      ∋ 𝛌 𝛌 𝛌 [ ` 2 ∙ `` 0 ∙ [ ` 1 ∙ `` 0 ] ]
       ▷ ε ⨟ 0 ⨟ 0 ⨟ 0
 S =
-  let Γ = ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0 ⨟
-          Π[ 1 / 2 ] Π[ 1 / 2 ] 2 ⨟
-          Π[ 1 / 3 ] 3 ⨟ 4
-  in
-  lam (1 ≾ᵗ 1 * 1   ∋ refl)
-    (lam (1 ≾ᵗ 1 * 1   ∋ refl)
-      (lam (2 ≾ᵗ 1 * 2   ∋ refl)
-        (elim (3 ⩿ 3   ∋ refl)
-          (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1 ⨟ 2) ≡
-                (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 1) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1)
-                  ∋ refl)
-               (3 ≡ substᵗ 4 ([ 1 ∙ 0 ] ⦂ 4)   ∋ refl)
-            (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 1) ≡
-                  (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 0) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1)
-                    ∋ refl)
-                 (Π[ 1 / 4 ] 4 ≡ substᵗ (Π[ 1 / 5 ] 5) (0 ⦂ 5)   ∋ refl)
-              (var (lookup Γ 2 ≡ Π[ 1 / 5 ] Π[ 1 / 5 ] 5  ∋ refl)
-                   (Only 1 2 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 0) ∋
-                     ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
-              (elim (5 ⩿ 5   ∋ refl)
-                (var (lookup Γ 0 ≡ 5   ∋ refl)
-                     (Only 1 0 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1) ∋
-                       ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ]))))
-            (elim (4 ⩿ 4   ∋ refl)
-              (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1) ≡
-                    (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1)
-                      ∋ refl)
-                   (4 ≡ substᵗ 5 (0 ⦂ 5)   ∋ refl)
-                (var (lookup Γ 1 ≡ Π[ 1 / 5 ] 5   ∋ refl)
-                     (Only 1 1 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ∋
-                      ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
-                (elim (5 ⩿ 5   ∋ refl)
-                  (var (lookup Γ 0 ≡ 5   ∋ refl)
-                       (Only 1 0 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1) ∋
-                        ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
+  ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+    (ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+      (ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+        (ty-[] refl
+          (ty-∙ (ε ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl)
+                (ε ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl)
+                refl
+            (ty-∙ (ε ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl)
+                  (ε ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl)
+                  refl
+              (ty-` (there (there here))
+                    (there (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε) ε))
+              (ty-[] refl
+                (ty-` here (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)))))
+            (ty-[] refl
+              (ty-∙ (ε ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl ⨟! *ᵘ-ℕ refl)
+                    (ε ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl ⨟ +ᵘ-ℕ refl)
+                    refl
+                (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)) ε))
+                (ty-[] refl
+                  (ty-` here (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε))))))))))
 
--- 0 A, B : sort 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
-K : ε ⨟ sort 0 ⨟ sort 0 ⊢ 1 - Π[ 1 / 1 ] Π[ 0 / 1 ] 3 ∋ Λ Λ 1 ▷ ε ⨟ 0 ⨟ 0
+-- 0 A, B : ⋆ 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
+K : ε ⨟ ⋆ 0 ⨟ ⋆ 0 ⊢ 1 - 𝚷[ 1 / `` 1 ] 𝚷[ 0 / `` 1 ] `` 3 ∋ 𝛌 𝛌 `` 1 ▷ ε ⨟ 0 ⨟ 0
 K =
-  let Γ = ε ⨟ sort 0 ⨟ sort 0 ⨟ 1 ⨟ 1 in
-  lam (1 * 1 ≼ 1   ∋ refl)
-    (lam (0 * 1 ≼ 0   ∋ refl)
-      (elim (3 ⩿ 3   ∋ refl)
-        (var (lookup Γ 1 ≡ 3   ∋ refl)
-             (Only 1 1 (ε ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ∋
-               ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+  ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+    (ty-𝛌 (refl (*ᵘ-ℕ′ refl))
+      (ty-[] refl
+        (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε)) ε))))
 
--- A : sort 0 ⊢ 1 (1 A → A) ∋ λ x . x
-I : ε ⨟ sort 0 ⊢ 1 - Π[ 1 / 0 ] 1 ∋ Λ 0 ▷ ε ⨟ 0
-I = lam refl (elim refl (var refl (Only 1 0 (ε ⨟ 0 ⨟ 1) ∋ ε ⨟ refl ⨟[ refl ])))
+-- A : ⋆ 0 ⊢ 1 (1 A → A) ∋ λ x . x
+I : ε ⨟ ⋆ 0 ⊢ 1 - 𝚷[ 1 / `` 0 ] `` 1 ∋ 𝛌 `` 0 ▷ ε ⨟ 0
+I = ty-𝛌 (refl (*ᵘ-ℕ′ refl)) (ty-[] refl (ty-` here (here (ε ⨟ ε))))
 
 ChurchZero = K
 
 
--- a nondependent function type
-_/_⇒_ : Usageᵗ → Term n → Term n → Term n
-π / S ⇒ T = Π[ π / S ] (weakᵗ T)
-infixr 0 _/_⇒_
-
--- for useful non-∞ usages we'd need usage polymorphism.
--- which might be a nice thing to have imo.
--- (is polynomial equality decidable? it seems like it should be)
---
--- 0 A : sort 0
---   ⊢ 1 (1 (∞ (1 A → A) → 1 A → A) → ∞ (1 A → A) → 1 A → A
---   ∋ λ n f x. f (n f x)
-ChurchSuc :
-  ε ⨟ sort 0
-    ⊢ 1 -
-      (let A = 0 in
-        1 / (∞ / (1 / A ⇒ A) ⇒ 1 / A ⇒ A) ⇒
-        ∞ / (1 / A ⇒ A) ⇒ 1 / A ⇒ A)
-    ∋ Λ Λ Λ [ 1 ∙ [ 2 ∙ 1 ∙ 0 ] ]
-    ▷ ε ⨟ 0
+-- 0 A : ⋆₀
+-- ⊢ (0 u: 𝓤) → 1 (u (1 A → A) → 1 A → A) → {suc u} (1 A → A) → 1 A → A
+-- ∋ λu. λn. λs. λz. s (n s z)
+ChurchSuc : ε ⨟ ⋆ 0
+          ⊢ 1
+          - 𝚷[ 0 / 𝓤 ]
+            𝚷[ 1 / 𝚷[ `` 0 / 𝚷[ 1 / `` 1 ] `` 2 ] 𝚷[ 1 / `` 2 ] `` 3 ]
+            𝚷[ sucᵘ (`` 1) / 𝚷[ 1 / `` 2 ] `` 3 ] 𝚷[ 1 / `` 3 ] `` 4
+          ∋ 𝛌 𝛌 𝛌 𝛌 [ ` 1 ∙ [ ` 2 ∙ `` 1 ∙ `` 0 ] ]
+          ▷ ε ⨟ 0
 ChurchSuc =
-  lam refl (lam refl (lam refl
-    (elim refl
-      (app refl refl
-        (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
-        (elim refl
-          (app refl refl
-            (app refl refl
-              (var refl (ε ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
-              (elim refl
-                (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
-            (elim refl
-              (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
+  ty-𝛌 (refl ε)
+    (ty-𝛌 (refl ε)
+      (ty-𝛌 (refl 1-*ᵘ)
+        (ty-𝛌 (refl ε)
+          (ty-[] refl
+            (ty-∙ (ε ⨟! ε ⨟! ε ⨟! ε ⨟! ε ⨟! ε)
+                  (ε ⨟ aux₀ ⨟ (inj₁ +ᵘ-0 ◅ ε) ⨟ aux₁ ⨟ aux₂ ⨟ aux₃)
+                  refl
+              (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε))
+              (ty-[] refl
+                (ty-∙ (ε ⨟! ε ⨟! ε ⨟! ε ⨟! ε ⨟! ε)
+                      (ε ⨟ ε ⨟ aux₄ ⨟ ε ⨟ ε ⨟ ε)
+                      refl
+                  (ty-∙ (zero (ε ⨟ ε ⨟ ε) refl ⨟! ε ⨟! ε ⨟! ε)
+                        (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)
+                        refl
+                    (ty-` (there (there here))
+                          (there (there (here (ε ⨟ ε ⨟ ε)) ε) ε))
+                    (ty-[] refl
+                      (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε))))
+                  (ty-[] refl
+                    (ty-` here (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)))))))))))
+ where
+  postulate
+    -- I think there are at least three potential options here:
+    -- 
+    -- 1. make `ChurchSuc` require a use of `subst`
+    -- 2. add a couple more reduction rules, including these
+    -- 3. add a semiring solver for arithmetic expressions
+    FIXME-*0 : π *ᵘ 0 ≋ᵗ 0
+    FIXME-*1 : π *ᵘ 1 ≋ᵗ π
+    FIXME-+0 : π +ᵘ 0 ≋ᵗ π
 
+  aux₀ : 0 +ᵘ 1 *ᵘ (0 +ᵘ 0 +ᵘ 1 *ᵘ 0) ≋ᵗ (Term n ∋ 0)
+  aux₀ = fwd +ᵘ-0 ◅ 1-*ᵘ ◅◅ +ᵘ-cong (fwd +ᵘ-0 ◅ ε) 1-*ᵘ ◅◅ fwd +ᵘ-0 ◅ ε
 
-open import Agda.Builtin.Equality.Rewrite
-private module S = Algebra.Generic.IsSemiring ℕ.*-+-isSemiring
-{-# REWRITE S.+-identityʳ S.zeroʳ S.*-identityʳ #-}
+  aux₁ : 0 +ᵘ 1 *ᵘ (1 +ᵘ π *ᵘ 0 +ᵘ 1 *ᵘ 0) ≋ᵗ 1 *ᵘ 1
+  aux₁ = fwd +ᵘ-0 ◅
+         *ᵘ-cong ε (+ᵘ-cong (+ᵘ-cong ε FIXME-*0 ◅◅ +ᵘ-ℕ refl) (*ᵘ-ℕ refl) ◅◅
+         +ᵘ-ℕ refl)
 
-ChurchSucPoly : (n : ℕ) →
-  ε ⨟ sort 0
-    ⊢ 1 -
-      (let A = 0 in
-        1 / (` n / (1 / A ⇒ A) ⇒ 1 / A ⇒ A) ⇒
-        ` suc n / (1 / A ⇒ A) ⇒ 1 / A ⇒ A)
-    ∋ Λ Λ Λ [ 1 ∙ [ 2 ∙ 1 ∙ 0 ] ]
-    ▷ ε ⨟ 0
-ChurchSucPoly n =
-  lam refl $ lam refl $ lam refl $
-    elim refl $
-      app refl refl
-        (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
-        (elim refl $
-          app refl refl
-            (app refl refl
-              (var refl (ε ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
-              (elim refl (var refl (ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
-            (elim refl (var refl (ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ]))))
+  aux₂ : 1 +ᵘ 1 *ᵘ (0 +ᵘ π *ᵘ 1 +ᵘ 1 *ᵘ 0) ≋ᵗ 1 *ᵘ (1 *ᵘ sucᵘ π)
+  aux₂ = +ᵘ-cong ε (1-*ᵘ ◅◅ +ᵘ-cong (fwd +ᵘ-0 ◅ FIXME-*1) (*ᵘ-ℕ refl) ◅◅
+                    FIXME-+0) ◅◅
+         fwd +ᵘ-suc ◅ sucᵘ-cong (fwd +ᵘ-0 ◅ ε) ◅◅
+         Evalᵗ.≋-sym (1-*ᵘ ◅◅ 1-*ᵘ)
+
+  aux₃ : 0 +ᵘ 1 *ᵘ (0 +ᵘ π *ᵘ 0 +ᵘ 1 *ᵘ 1) ≋ᵗ 1 *ᵘ 1
+  aux₃ = fwd +ᵘ-0 ◅
+         *ᵘ-cong ε (+ᵘ-cong (fwd +ᵘ-0 ◅ FIXME-*0) (*ᵘ-ℕ refl) ◅◅ fwd +ᵘ-0 ◅ ε)
+
+  aux₄ : 0 +ᵘ 0 +ᵘ 1 *ᵘ 0 ≋ᵗ (Term n ∋ 0)
+  aux₄ = +ᵘ-cong (fwd +ᵘ-0 ◅ ε) (fwd *ᵘ-suc ◅ +ᵘ-cong (fwd *ᵘ-0 ◅ ε) ε) ◅◅
+         fwd +ᵘ-0 ◅ fwd +ᵘ-0 ◅ ε
