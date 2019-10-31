@@ -42,7 +42,7 @@ data Elim n where
   `_     : (x : Var n) → Elim n
   _∙_    : (f : Elim n) (s : Term n) → Elim n
   𝓤-elim : (T : Type (suc n)) →
-           (z : Term n) (s : Term (suc n)) (w : Term n) →
+           (z : Term n) (s : Term (suc (suc n))) (w : Term n) →
            (π : Usage n) → Elim n
   _⦂_    : (s : Term n) (S : Type n) → Elim n
 infix 1000 `_ ; infixl 400 _∙_ ; infix 100 _⦂_
@@ -112,8 +112,8 @@ weakᵉ′ x (` y) = ` Fin.punchIn x y
 weakᵉ′ x (f ∙ s) = weakᵉ′ x f ∙ weakᵗ′ x s
 weakᵉ′ x (s ⦂ S) = weakᵗ′ x s ⦂ weakᵗ′ x S
 weakᵉ′ x (𝓤-elim T z s w π) =
-  let x′ = suc x in
-  𝓤-elim (weakᵗ′ x′ T) (weakᵗ′ x z) (weakᵗ′ x′ s) (weakᵗ′ x w) (weakᵗ′ x π)
+  let x′ = suc x ; x″ = suc x′ in
+  𝓤-elim (weakᵗ′ x′ T) (weakᵗ′ x z) (weakᵗ′ x″ s) (weakᵗ′ x w) (weakᵗ′ x π)
 
 weakᵗ : Term n → Term (suc n)
 weakᵗ = weakᵗ′ zero
@@ -146,9 +146,10 @@ module _ {F : Set → Set} (A : RawApplicative F) where
   substᵉ″ x (f ∙ s) e = pure _∙_ ⊛ substᵉ″ x f e ⊛ substᵗ″ x s e
   substᵉ″ x (s ⦂ S) e = pure _⦂_ ⊛ substᵗ″ x s e ⊛ substᵗ″ x S e
   substᵉ″ x (𝓤-elim T z s w π) e =
-    let x′ = suc x ; e′ = weakᵉ′ x <$> e in
+    let x′ = suc x  ; e′ = weakᵉ′ x  <$> e
+        x″ = suc x′ ; e″ = weakᵉ′ x′ <$> e′ in
     pure 𝓤-elim ⊛ substᵗ″ x′ T e′
-                ⊛ substᵗ″ x  z e ⊛ substᵗ″ x′ s e′ ⊛ substᵗ″ x w e
+                ⊛ substᵗ″ x  z e ⊛ substᵗ″ x″ s e″ ⊛ substᵗ″ x w e
                 ⊛ substᵗ″ x  π e
 
 -- substitute for a given variable
