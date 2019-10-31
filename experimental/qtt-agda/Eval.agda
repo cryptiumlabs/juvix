@@ -63,8 +63,9 @@ data _⟿ᵉ_ where
   β-𝓤0 : 𝓤-elim T z s w 0ᵘ ⟿ᵉ z ⦂ substᵗ T (0ᵘ ⦂ 𝓤)
   -- FIXME i think this is right?
   β-𝓤s : 𝓤-elim T z s w (sucᵘ π) ⟿ᵉ
-         let s′ = substᵗ s (π ⦂ 𝓤) ; T′ = substᵗ T (sucᵘ π ⦂ 𝓤) in
-         (s′ ⦂ T′) ∙ [ 𝓤-elim T z s w π ]
+         let s′ = substᵗ (substᵗ s (weakᵗ π ⦂ 𝓤)) (𝓤-elim T z s w π)
+             T′ = substᵗ T (sucᵘ π ⦂ 𝓤)
+         in  s′ ⦂ T′
   β-𝓤ω : 𝓤-elim T z s w ωᵘ ⟿ᵉ w ⦂ substᵗ T (ωᵘ ⦂ 𝓤)
   𝓤-elim₁ : T ⟿ᵗ T′ → 𝓤-elim T z s w π ⟿ᵉ 𝓤-elim T′ z  s  w  π
   𝓤-elim₂ : z ⟿ᵗ z′ → 𝓤-elim T z s w π ⟿ᵉ 𝓤-elim T  z′ s  w  π
