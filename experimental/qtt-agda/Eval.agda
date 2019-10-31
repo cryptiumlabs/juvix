@@ -87,60 +87,47 @@ private
     is-suc : IsUsageCon $ sucᵘ π
     is-ω   : IsUsageCon $ ωᵘ {n}
 
+  isUsageCon? : Decidable₁ $ IsUsageCon {n}
+  isUsageCon? (⋆ _)          = no λ()
+  isUsageCon? 𝓤              = no λ()
+  isUsageCon? (𝚷[ _ / _ ] _) = no λ()
+  isUsageCon? (𝛌 _)          = no λ()
+  isUsageCon? 0ᵘ             = yes is-0
+  isUsageCon? ωᵘ             = yes is-ω
+  isUsageCon? (sucᵘ _)       = yes is-suc
+  isUsageCon? (_ +ᵘ _)       = no λ()
+  isUsageCon? (_ *ᵘ _)       = no λ()
+  isUsageCon? [ _ ]          = no λ()
+
   is-0? : Decidable₁ $ Is-0 {n}
-  is-0? (⋆ u) = no (λ ())
-  is-0? 𝓤 = no (λ ())
-  is-0? (𝚷[ π / S ] T) = no (λ ())
-  is-0? (𝛌 t) = no (λ ())
-  is-0? 0ᵘ = yes is-0
-  is-0? ωᵘ = no (λ ())
-  is-0? (sucᵘ π) = no (λ ())
-  is-0? (π +ᵘ ρ) = no (λ ())
-  is-0? (π *ᵘ ρ) = no (λ ())
-  is-0? [ e ] = no (λ ())
+  is-0? s with isUsageCon? s
+  ... | yes is-0   = yes is-0
+  ... | yes is-suc = no λ()
+  ... | yes is-ω   = no λ()
+  ... | no  ¬u     = no λ{is-0 → ¬u is-0}
 
   is-suc? : Decidable₁ $ Is-suc {n}
-  is-suc? (⋆ u) = no (λ ())
-  is-suc? 𝓤 = no (λ ())
-  is-suc? (𝚷[ π / S ] T) = no (λ ())
-  is-suc? (𝛌 t) = no (λ ())
-  is-suc? 0ᵘ = no (λ ())
-  is-suc? ωᵘ = no (λ ())
-  is-suc? (sucᵘ π) = yes is-suc
-  is-suc? (π +ᵘ ρ) = no (λ ())
-  is-suc? (π *ᵘ ρ) = no (λ ())
-  is-suc? [ e ] = no (λ ())
+  is-suc? s with isUsageCon? s
+  ... | yes is-0   = no λ()
+  ... | yes is-suc = yes is-suc
+  ... | yes is-ω   = no λ()
+  ... | no  ¬u     = no λ{is-suc → ¬u is-suc}
 
   is-ω? : Decidable₁ $ Is-ω {n}
-  is-ω? (⋆ u) = no (λ ())
-  is-ω? 𝓤 = no (λ ())
-  is-ω? (𝚷[ π / S ] T) = no (λ ())
-  is-ω? (𝛌 t) = no (λ ())
-  is-ω? 0ᵘ = no (λ ())
-  is-ω? ωᵘ = yes is-ω
-  is-ω? (sucᵘ π) = no (λ ())
-  is-ω? (π +ᵘ ρ) = no (λ ())
-  is-ω? (π *ᵘ ρ) = no (λ ())
-  is-ω? [ e ] = no (λ ())
-
-  isUsageCon? : Decidable₁ $ IsUsageCon {n}
-  isUsageCon? t with is-0? t | is-suc? t  | is-ω? t
-  isUsageCon? _ | yes is-0   | s?         | ω?       = yes is-0
-  isUsageCon? _ | no ¬0      | yes is-suc | ω?       = yes is-suc
-  isUsageCon? _ | no ¬0      | no ¬s      | yes is-ω = yes is-ω
-  isUsageCon? _ | no ¬0      | no ¬s      | no ¬ω    = no λ where
-    is-0   → ¬0 is-0
-    is-suc → ¬s is-suc
-    is-ω   → ¬ω is-ω
+  is-ω? s with isUsageCon? s
+  ... | yes is-0   = no λ()
+  ... | yes is-suc = no λ()
+  ... | yes is-ω   = yes is-ω
+  ... | no  ¬u     = no λ{is-ω → ¬u is-ω}
 
   isTypeAnn? : (e : Elim n) → Dec $ ∃[ s ] ∃[ S ] (e ≡ s ⦂ S)
   isTypeAnn? (` x)              = no λ()
   isTypeAnn? (e ∙ s)            = no λ()
   isTypeAnn? (𝓤-elim T z s w π) = no λ()
-  isTypeAnn? (s ⦂ S)            = yes (-, -, refl)
+  isTypeAnn? (s ⦂ S)            = yes (s , S , refl)
 
   isTyLam? : (e : Elim n) →
-             Dec (∃[ t ] ∃[ π ] ∃[ S ] ∃[ T ] (e ≡ 𝛌 t ⦂ 𝚷[ π / S ] T))
+             Dec (∃[ s ] ∃[ π ] ∃[ S ] ∃[ T ] (e ≡ 𝛌 s ⦂ 𝚷[ π / S ] T))
   isTyLam? (` x)                = no λ()
   isTyLam? (e ∙ s)              = no λ()
   isTyLam? (𝓤-elim T z s w π)   = no λ()
@@ -149,7 +136,7 @@ private
   isTyLam? (𝚷[ π / S₁ ] T ⦂ S)  = no λ()
   isTyLam? (𝛌 s ⦂ ⋆ u)          = no λ()
   isTyLam? (𝛌 s ⦂ 𝓤)            = no λ()
-  isTyLam? (𝛌 s ⦂ 𝚷[ π / S ] T) = yes (-, -, -, -, refl)
+  isTyLam? (𝛌 s ⦂ 𝚷[ π / S ] T) = yes (s , π , S , T , refl)
   isTyLam? (𝛌 s ⦂ 𝛌 S)          = no λ()
   isTyLam? (𝛌 s ⦂ 0ᵘ)           = no λ()
   isTyLam? (𝛌 s ⦂ ωᵘ)           = no λ()
@@ -172,40 +159,40 @@ stepᵗ (⋆ u) = no λ()
 stepᵗ 𝓤     = no λ()
 
 stepᵗ (𝚷[ π / S ] T) with stepᵗ π
-stepᵗ (𝚷[ π / S ] T) | yes (_ , Rπ)                   = yes (-, 𝚷₁ Rπ)
-stepᵗ (𝚷[ π / S ] T) | no ¬Rπ with stepᵗ S
-stepᵗ (𝚷[ π / S ] T) | no ¬Rπ | yes (_ , RS)          = yes (-, 𝚷₂ RS)
-stepᵗ (𝚷[ π / S ] T) | no ¬Rπ | no ¬RS with stepᵗ T
-stepᵗ (𝚷[ π / S ] T) | no ¬Rπ | no ¬RS | yes (_ , RT) = yes (-, 𝚷₃ RT)
-stepᵗ (𝚷[ π / S ] T) | no ¬Rπ | no ¬RS | no ¬RT       = no λ where
+... | yes (_ , Rπ) = yes (-, 𝚷₁ Rπ)
+... | no ¬Rπ with stepᵗ S
+... | yes (_ , RS) = yes (-, 𝚷₂ RS)
+... | no ¬RS with stepᵗ T
+... | yes (_ , RT) = yes (-, 𝚷₃ RT)
+... | no ¬RT       = no λ where
   (_ , 𝚷₁ Rπ) → ¬Rπ (-, Rπ)
   (_ , 𝚷₂ RS) → ¬RS (-, RS)
   (_ , 𝚷₃ RT) → ¬RT (-, RT)
 
 stepᵗ (𝛌 t) with stepᵗ t
-stepᵗ (𝛌 t) | yes (_ , R) = yes (-, 𝛌- R)
-stepᵗ (𝛌 t) | no  ¬R      = no λ{(_ , 𝛌- R) → ¬R (-, R)}
+... | yes (_ , R) = yes (-, 𝛌- R)
+... | no  ¬R      = no λ{(_ , 𝛌- R) → ¬R (-, R)}
 
 stepᵗ 0ᵘ = no λ()
 stepᵗ ωᵘ = no λ()
 
 stepᵗ (sucᵘ π) with is-ω? π
-stepᵗ (sucᵘ .ωᵘ) | yes is-ω              = yes (-, sucᵘ-ω)
-stepᵗ (sucᵘ π)   | no  π≢ω with stepᵗ π
-stepᵗ (sucᵘ π)   | no  π≢ω | yes (_ , R) = yes (-, sucᵘ R)
-stepᵗ (sucᵘ π)   | no  π≢ω | no  ¬R      = no λ where
+... | yes is-ω = yes (-, sucᵘ-ω)
+... | no  π≢ω with stepᵗ π
+... | yes (_ , R) = yes (-, sucᵘ R)
+... | no  ¬R      = no λ where
   (_ , sucᵘ R) → ¬R (-, R)
   (_ , sucᵘ-ω) → π≢ω is-ω
 
 stepᵗ (π +ᵘ ρ) with isUsageCon? π
-stepᵗ (.0ᵘ +ᵘ ρ)       | yes is-0                      = yes (-, +ᵘ-0)
-stepᵗ (.(sucᵘ _) +ᵘ ρ) | yes is-suc                    = yes (-, +ᵘ-suc)
-stepᵗ (.ωᵘ +ᵘ ρ)       | yes is-ω                      = yes (-, +ᵘ-ω)
-stepᵗ (π +ᵘ ρ)         | no ¬u with stepᵗ π
-stepᵗ (π +ᵘ ρ)         | no ¬u | yes (_ , Rπ)          = yes (-, +ᵘˡ Rπ)
-stepᵗ (π +ᵘ ρ)         | no ¬u | no ¬Rπ with stepᵗ ρ
-stepᵗ (π +ᵘ ρ)         | no ¬u | no ¬Rπ | yes (_ , Rρ) = yes (-, +ᵘʳ Rρ)
-stepᵗ (π +ᵘ ρ)         | no ¬u | no ¬Rπ | no ¬Rρ       = no λ where
+... | yes is-0   = yes (-, +ᵘ-0)
+... | yes is-suc = yes (-, +ᵘ-suc)
+... | yes is-ω   = yes (-, +ᵘ-ω)
+... | no ¬u with stepᵗ π
+... | yes (_ , Rπ) = yes (-, +ᵘˡ Rπ)
+... | no ¬Rπ with stepᵗ ρ
+... | yes (_ , Rρ) = yes (-, +ᵘʳ Rρ)
+... | no ¬Rρ       = no λ where
   (_ , +ᵘˡ R)  → ¬Rπ (-, R)
   (_ , +ᵘʳ R)  → ¬Rρ (-, R)
   (_ , +ᵘ-0)   → ¬u is-0
@@ -213,24 +200,24 @@ stepᵗ (π +ᵘ ρ)         | no ¬u | no ¬Rπ | no ¬Rρ       = no λ where
   (_ , +ᵘ-ω)   → ¬u is-ω
 
 stepᵗ (π *ᵘ ρ) with isUsageCon? π
-stepᵗ (.0ᵘ *ᵘ ρ)         | yes is-0                         = yes (-, *ᵘ-0)
-stepᵗ (.(sucᵘ _) *ᵘ ρ)   | yes is-suc                       = yes (-, *ᵘ-suc)
-stepᵗ (.ωᵘ *ᵘ ρ)         | yes is-ω with isUsageCon? ρ
-stepᵗ (.ωᵘ *ᵘ .0ᵘ)       | yes is-ω | yes is-0              = yes (-, *ᵘ-ω0)
-stepᵗ (.ωᵘ *ᵘ .(sucᵘ _)) | yes is-ω | yes is-suc            = yes (-, *ᵘ-ωs)
-stepᵗ (.ωᵘ *ᵘ .ωᵘ)       | yes is-ω | yes is-ω              = yes (-, *ᵘ-ωω)
-stepᵗ (.ωᵘ *ᵘ ρ)         | yes is-ω | no ¬uρ with stepᵗ ρ
-stepᵗ (.ωᵘ *ᵘ ρ)         | yes is-ω | no ¬uρ | yes (_ , Rρ) = yes (-, *ᵘʳ Rρ)
-stepᵗ (.ωᵘ *ᵘ ρ)         | yes is-ω | no ¬uρ | no ¬Rρ       = no λ where
+... | yes is-0   = yes (-, *ᵘ-0)
+... | yes is-suc = yes (-, *ᵘ-suc)
+... | yes is-ω with isUsageCon? ρ
+... | yes is-0   = yes (-, *ᵘ-ω0)
+... | yes is-suc = yes (-, *ᵘ-ωs)
+... | yes is-ω   = yes (-, *ᵘ-ωω)
+... | no ¬uρ with stepᵗ ρ
+... | yes (_ , Rρ) = yes (-, *ᵘʳ Rρ)
+... | no ¬Rρ       = no λ where
   (_ , *ᵘʳ Rρ) → ¬Rρ (-, Rρ)
   (_ , *ᵘ-ω0)  → ¬uρ is-0
   (_ , *ᵘ-ωs)  → ¬uρ is-suc
   (_ , *ᵘ-ωω)  → ¬uρ is-ω
 stepᵗ (π *ᵘ ρ) | no ¬uπ with stepᵗ π
-stepᵗ (π *ᵘ ρ) | no ¬uπ | yes (_ , Rπ)          = yes (-, *ᵘˡ Rπ)
-stepᵗ (π *ᵘ ρ) | no ¬uπ | no ¬Rπ with stepᵗ ρ
-stepᵗ (π *ᵘ ρ) | no ¬uπ | no ¬Rπ | yes (_ , Rρ) = yes (-, *ᵘʳ Rρ)
-stepᵗ (π *ᵘ ρ) | no ¬uπ | no ¬Rπ | no ¬Rρ       = no λ where
+... | yes (_ , Rπ) = yes (-, *ᵘˡ Rπ)
+... | no ¬Rπ with stepᵗ ρ
+... | yes (_ , Rρ) = yes (-, *ᵘʳ Rρ)
+... | no ¬Rρ       = no λ where
   (_ , *ᵘˡ R)  → ¬Rπ (-, R)
   (_ , *ᵘʳ R)  → ¬Rρ (-, R)
   (_ , *ᵘ-0)   → ¬uπ is-0
@@ -240,30 +227,30 @@ stepᵗ (π *ᵘ ρ) | no ¬uπ | no ¬Rπ | no ¬Rρ       = no λ where
   (_ , *ᵘ-ωω)  → ¬uπ is-ω
 
 stepᵗ [ e ] with isTypeAnn? e
-stepᵗ [ .(s ⦂ S) ] | yes (s , S , refl)   = yes (-, υ)
-stepᵗ [ e ]        | no ¬⦂ with stepᵉ e
-stepᵗ [ e ]        | no ¬⦂ | yes (_ , Re) = yes (-, [ Re ])
-stepᵗ [ e ]        | no ¬⦂ | no ¬Re       = no λ where
+... | yes (_ , _ , refl) = yes (-, υ)
+... | no ¬⦂ with stepᵉ e
+... | yes (_ , Re) = yes (-, [ Re ])
+... | no ¬Re       = no λ where
   (_ , υ)      → ¬⦂  (-, -, refl)
   (_ , [ Re ]) → ¬Re (-, Re)
 
 stepᵉ (` x) = no λ()
 
 stepᵉ (e ∙ s) with isTyLam? e
-stepᵉ (e ∙ s) | yes (t , π , S , T , refl)    = yes (-, β-∙)
-stepᵉ (e ∙ s) | no ¬𝛌 with stepᵉ e
-stepᵉ (e ∙ s) | no ¬𝛌 | yes (_ , Re)          = yes (-, ∙ˡ Re)
-stepᵉ (e ∙ s) | no ¬𝛌 | no ¬Re with stepᵗ s
-stepᵉ (e ∙ s) | no ¬𝛌 | no ¬Re | yes (_ , Rs) = yes (-, ∙ʳ Rs)
-stepᵉ (e ∙ s) | no ¬𝛌 | no ¬Re | no ¬Rs       = no λ where
+... | yes (t , π , S , T , refl) = yes (-, β-∙)
+... | no ¬𝛌 with stepᵉ e
+... | yes (_ , Re) = yes (-, ∙ˡ Re)
+... | no ¬Re with stepᵗ s
+... | yes (_ , Rs) = yes (-, ∙ʳ Rs)
+... | no ¬Rs       = no λ where
   (_ , β-∙)   → ¬𝛌 (-, -, -, -, refl)
   (_ , ∙ˡ Re) → ¬Re (-, Re)
   (_ , ∙ʳ Rs) → ¬Rs (-, Rs)
 
 stepᵉ (𝓤-elim T z s w π) with isUsageCon? π
-stepᵉ (𝓤-elim T z s w .0ᵘ)       | yes is-0   = yes (-, β-𝓤0)
-stepᵉ (𝓤-elim T z s w .(sucᵘ _)) | yes is-suc = yes (-, β-𝓤s)
-stepᵉ (𝓤-elim T z s w .ωᵘ)       | yes is-ω   = yes (-, β-𝓤ω)
+... | yes is-0   = yes (-, β-𝓤0)
+... | yes is-suc = yes (-, β-𝓤s)
+... | yes is-ω   = yes (-, β-𝓤ω)
 ... | no ¬u with stepᵗ T
 ... | yes (_ , RT) = yes (-, 𝓤-elim₁ RT)
 ... | no ¬RT with stepᵗ z
@@ -285,10 +272,10 @@ stepᵉ (𝓤-elim T z s w .ωᵘ)       | yes is-ω   = yes (-, β-𝓤ω)
   (_ , 𝓤-elim₅ Rπ) → ¬Rπ (-, Rπ)
 
 stepᵉ (s ⦂ S) with stepᵗ s
-stepᵉ (s ⦂ S) | yes (_ , Rs)          = yes (-, ⦂ˡ Rs)
-stepᵉ (s ⦂ S) | no ¬Rs with stepᵗ S
-stepᵉ (s ⦂ S) | no ¬Rs | yes (_ , RS) = yes (-, ⦂ʳ RS)
-stepᵉ (s ⦂ S) | no ¬Rs | no  ¬RS      = no λ where
+... | yes (_ , Rs) = yes (-, ⦂ˡ Rs)
+... | no ¬Rs with stepᵗ S
+... | yes (_ , RS) = yes (-, ⦂ʳ RS)
+... | no  ¬RS      = no λ where
   (_ , ⦂ˡ Rs) → ¬Rs (-, Rs)
   (_ , ⦂ʳ RS) → ¬RS (-, RS)
 
