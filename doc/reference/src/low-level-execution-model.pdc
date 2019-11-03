@@ -13,7 +13,7 @@ Additional type data from the core language, such as exact variable usage counts
 the instantiation of quantitative type theory with the natural ring, are available to the interaction
 system construction algorithm.
 
-also
+Also
 - refl (equality) proofs in core language can be used by compiler, e.g. with total supply of a token = constant, for queries on the total supply the constant can be returned; more generally if two expressions are equal the compiler can choose which one to evaluate
 - will be more effective if graph representation is persistent, instead of written / read-back each contract call. can be used for both code & data
 
