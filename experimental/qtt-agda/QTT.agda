@@ -94,7 +94,6 @@ module _ where
   ⩿-poset : ℕ → Poset _ _ _
   ⩿-poset n = record { isPartialOrder = ⩿-isPO {n} }
 
-
 -- weakˣ′ x M inserts an extra bound variable between x - 1 and x
 weakᵗ′ : Var (suc n) → Term n → Term (suc n)
 weakᵉ′ : Var (suc n) → Elim n → Elim (suc n)
@@ -114,11 +113,6 @@ weakᵉ′ x (s ⦂ S) = weakᵗ′ x s ⦂ weakᵗ′ x S
 weakᵉ′ x (𝓤-elim T z s w π) =
   let x′ = suc x ; x″ = suc x′ in
   𝓤-elim (weakᵗ′ x′ T) (weakᵗ′ x z) (weakᵗ′ x″ s) (weakᵗ′ x w) (weakᵗ′ x π)
-
-weakᵗ : Term n → Term (suc n)
-weakᵗ = weakᵗ′ zero
-weakᵉ : Elim n → Elim (suc n)
-weakᵉ = weakᵉ′ zero
 
 
 module _ {F : Set → Set} (A : RawApplicative F) where
@@ -152,23 +146,34 @@ module _ {F : Set → Set} (A : RawApplicative F) where
                 ⊛ substᵗ″ x  z e ⊛ substᵗ″ x″ s e″ ⊛ substᵗ″ x w e
                 ⊛ substᵗ″ x  π e
 
--- substitute for a given variable
-substᵗ′ : Var (suc n) → Term (suc n) → Elim n → Term n
-substᵗ′ = substᵗ″ IdC.applicative
-substᵉ′ : Var (suc n) → Elim (suc n) → Elim n → Elim n
-substᵉ′ = substᵉ″ IdC.applicative
 
--- substitute for variable #0
-substᵗ : Term (suc n) → Elim n → Term n
-substᵗ = substᵗ′ zero
-substᵉ : Elim (suc n) → Elim n → Elim n
-substᵉ = substᵉ′ zero
+module Subst {ℓ} {𝒯 ℰ : ℕ → Set ℓ}
+             (weak′   : ∀ {n} → Var (suc n) → 𝒯 n → 𝒯 (suc n))
+             (subst″  : ∀ {F} → RawApplicative F → ∀ {n} →
+                        Var (suc n) → 𝒯 (suc n) → F (ℰ n) → F (𝒯 n))
+ where
+  weak : 𝒯 n → 𝒯 (suc n)
+  weak = weak′ 0
 
--- remove variable #0 from scope, fail if it's used anywhere
-chopᵗ : Term (suc n) → Maybe (Term n)
-chopᵗ t = substᵗ″ MaybeC.applicative zero t nothing
-chopᵉ : Elim (suc n) → Maybe (Elim n)
-chopᵉ t = substᵉ″ MaybeC.applicative zero t nothing
+  subst′ : Var (suc n) → 𝒯 (suc n) → ℰ n → 𝒯 n
+  subst′ = subst″ IdC.applicative
+
+  subst : 𝒯 (suc n) → ℰ n → 𝒯 n
+  subst = subst′ 0
+
+  chop′ : Var (suc n) → 𝒯 (suc n) → Maybe (𝒯 n)
+  chop′ x t = subst″ MaybeC.applicative x t nothing
+
+  chop : 𝒯 (suc n) → Maybe (𝒯 n)
+  chop = chop′ 0
+
+open Subst weakᵗ′ substᵗ″ public using ()
+  renaming (weak to weakᵗ ; subst′ to substᵗ′ ; subst to substᵗ ;
+            chop′ to chopᵗ′ ; chop to chopᵗ)
+
+open Subst weakᵉ′ substᵉ″ public using ()
+  renaming (weak to weakᵉ ; subst′ to substᵉ′ ; subst to substᵉ ;
+            chop′ to chopᵉ′ ; chop to chopᵉ)
 
 
 instance number-Term : Number (Term n)
