@@ -176,6 +176,46 @@ open Subst weakᵉ′ substᵉ″ public using ()
             chop′ to chopᵉ′ ; chop to chopᵉ)
 
 
+punchIn-≢ : x ≢ Fin.punchIn x y
+punchIn-≢ {x = zero}  {y}     ()
+punchIn-≢ {x = suc x} {zero}  ()
+punchIn-≢ {x = suc x} {suc y} eq = punchIn-≢ $ Fin.suc-injective eq
+
+punchOutIn : (x≢pi : x ≢ Fin.punchIn x y) → Fin.punchOut x≢pi ≡ y
+punchOutIn {x = zero}  {y}     _   = refl
+punchOutIn {x = suc x} {zero}  _   = refl
+punchOutIn {x = suc x} {suc y} ¬eq = ≡.cong suc (punchOutIn (¬eq ∘ ≡.cong suc))
+
+subst-weakᵗ : (s : Term n) (x : Fin (suc n)) (e : Elim n) →
+              substᵗ′ x (weakᵗ′ x s) e ≡ s
+subst-weakᵉ : (f : Elim n) (x : Fin (suc n)) (e : Elim n) →
+              substᵉ′ x (weakᵉ′ x f) e ≡ f
+subst-weakᵗ (⋆ u) x e = refl
+subst-weakᵗ 𝓤 x e = refl
+subst-weakᵗ (𝚷[ π / S ] T) x e
+  rewrite subst-weakᵗ π x e
+        | subst-weakᵗ S x e
+        | subst-weakᵗ T (suc x) (weakᵉ′ x e) = refl
+subst-weakᵗ (𝛌 s) x e rewrite subst-weakᵗ s (suc x) (weakᵉ′ x e) = refl
+subst-weakᵗ 0ᵘ x e = refl
+subst-weakᵗ ωᵘ x e = refl
+subst-weakᵗ (sucᵘ π) x e rewrite subst-weakᵗ π x e = refl
+subst-weakᵗ (π +ᵘ ρ) x e rewrite subst-weakᵗ π x e | subst-weakᵗ ρ x e = refl
+subst-weakᵗ (π *ᵘ ρ) x e rewrite subst-weakᵗ π x e | subst-weakᵗ ρ x e = refl
+subst-weakᵗ [ f ] x e rewrite subst-weakᵉ f x e = refl
+subst-weakᵉ (` y) x e with x Fin.≟ Fin.punchIn x y
+... | yes p = ⊥-elim $ punchIn-≢ p
+... | no  x≢pi rewrite punchOutIn x≢pi = refl
+subst-weakᵉ (f ∙ s) x e rewrite subst-weakᵉ f x e | subst-weakᵗ s x e = refl
+subst-weakᵉ (𝓤-elim T z s w π) x e
+  rewrite subst-weakᵗ T (suc x)       (weakᵉ′ x e)
+        | subst-weakᵗ z x             e
+        | subst-weakᵗ s (suc (suc x)) (weakᵉ′ (suc x) (weakᵉ′ x e))
+        | subst-weakᵗ w x             e
+        | subst-weakᵗ π x             e = refl
+subst-weakᵉ (s ⦂ S) x e rewrite subst-weakᵗ s x e | subst-weakᵗ S x e = refl
+
+
 instance number-Term : Number (Term n)
 number-Term = record { Constraint = λ _ → ⊤ ; fromNat = λ n → fn n } where
   fn : ℕ → Term n

@@ -123,6 +123,6 @@ module ≡ where
 
   At : ∀ {a} (A : Set a) → Rel A _
   At A = _≡_ {A = A}
-open ≡ public using (_≡_ ; refl) renaming (At to ≡-At)
+open ≡ public using (_≡_ ; _≢_ ; refl) renaming (At to ≡-At)
 
 open import Function public
