@@ -13,7 +13,7 @@ import Prelude (error)
 {- Main functionality. -}
 
 -- Construct occurrence map.
-setOccurrenceMap ∷ (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term → m ()
+setOccurrenceMap ∷ (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
 setOccurrenceMap term = do
   case term of
     Var sym →
@@ -29,8 +29,8 @@ parameterizeType ∷
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m
   ) ⇒
-  Type →
-  m PType
+  Type primTy →
+  m (PType primTy)
 parameterizeType ty = do
   param ← freshParam
   -- Typing constraint: m >= 0
@@ -47,9 +47,9 @@ parameterizeType ty = do
 parameterizeTypeAssignment ∷
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m,
-    HasState "typeAssignment" TypeAssignment m
+    HasState "typeAssignment" (TypeAssignment primTy) m
   ) ⇒
-  m ParamTypeAssignment
+  m (ParamTypeAssignment primTy)
 parameterizeTypeAssignment = do
   assignment ← get @"typeAssignment"
   traverse parameterizeType assignment
@@ -59,8 +59,8 @@ reparameterize ∷
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m
   ) ⇒
-  PType →
-  m PType
+  PType primTy →
+  m (PType primTy)
 reparameterize pty = do
   param ← freshParam
   -- Typing constraint: m >= 0
@@ -71,8 +71,8 @@ reparameterize pty = do
 
 unificationConstraints ∷
   (HasWriter "constraints" [Constraint] m) ⇒
-  PType →
-  PType →
+  PType primTy →
+  PType primTy →
   m ()
 unificationConstraints (PSymT a _) (PSymT b _) =
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
@@ -80,7 +80,8 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
   unificationConstraints aArg bArg
   unificationConstraints aRes bRes
-unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
+
+--unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
 
 -- Generate boxing & typing constraints.
 -- In one pass to avoid keeping extra maps.
@@ -92,9 +93,9 @@ boxAndTypeConstraint ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
-  ParamTypeAssignment →
-  Term →
-  m (RPT, PType)
+  ParamTypeAssignment primTy →
+  Term primVal →
+  m (RPT primVal, PType primTy)
 boxAndTypeConstraint parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterizedAssignment
   varPaths ← get @"varPaths"
@@ -200,12 +201,12 @@ generateTypeAndConstraints ∷
   ( HasState "path" Path m,
     HasState "varPaths" VarPaths m,
     HasState "nextParam" Param m,
-    HasState "typeAssignment" TypeAssignment m,
+    HasState "typeAssignment" (TypeAssignment primTy) m,
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
-  Term →
-  m (RPT, ParamTypeAssignment)
+  Term primVal →
+  m (RPT primVal, ParamTypeAssignment primTy)
 generateTypeAndConstraints term = do
   parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
@@ -216,18 +217,18 @@ generateConstraints ∷
   ( HasState "path" Path m,
     HasState "varPaths" VarPaths m,
     HasState "nextParam" Param m,
-    HasState "typeAssignment" TypeAssignment m,
+    HasState "typeAssignment" (TypeAssignment primTy) m,
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
-  Term →
-  m RPT
+  Term primVal →
+  m (RPT primVal)
 generateConstraints term =
   generateTypeAndConstraints term
     >>| fst
 
 {- Bracket Checker. -}
-bracketChecker ∷ RPTO → Either BracketErrors ()
+bracketChecker ∷ RPTO primVal → Either BracketErrors ()
 bracketChecker t = runEither (rec' t 0 mempty)
   where
     rec' (RBang changeBy (RVar sym)) n map =
@@ -248,12 +249,12 @@ bracketChecker t = runEither (rec' t 0 mempty)
               RVar _ → error "already is matched"
               RPrim _ → undefined
 
-bracketCheckerErr ∷ RPTO → Either Errors ()
+bracketCheckerErr ∷ RPTO primVal → Either (Errors primTy primVal) ()
 bracketCheckerErr t = left Brack (bracketChecker t)
 
 {- Type Checker. -}
 -- Precondition ∷ all terms inside of RPTO must be unique
-typChecker ∷ RPTO → ParamTypeAssignment → Either TypeErrors ()
+typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
 typChecker t typAssign = runEither (() <$ rec' t typAssign)
   where
     rec' (RBang bangVar (RVar s)) assign =
@@ -281,22 +282,22 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
         Nothing → throw @"typ" MissingOverUse
     rec' (RBang _bangVar (RPrim _p)) _assign = undefined
 
-typCheckerErr ∷ RPTO → ParamTypeAssignment → Either Errors ()
+typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
 typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
 
 {- Utility. -}
 
 -- The outer bang parameter.
-bangParam ∷ PType → Param
+bangParam ∷ PType primTy → Param
 bangParam (PSymT param _) = param
 bangParam (PArrT param _ _) = param
 
-putParam ∷ Param → PType → PType
+putParam ∷ Param → PType primTy → PType primTy
 putParam p (PSymT _ s) = PSymT p s
 putParam p (PArrT _ t1 t2) = PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
-addParamPos ∷ HasThrow "typ" TypeErrors m ⇒ Param → PType → m PType
+addParamPos ∷ HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
 addParamPos toAdd (PSymT p s)
   | toAdd + p < 0 = throw @"typ" TooManyHats
   | otherwise = pure (PSymT (toAdd + p) s)
@@ -327,11 +328,11 @@ addConstraint ∷ HasWriter "constraints" [Constraint] m ⇒ Constraint → m ()
 addConstraint con = tell @"constraints" [con]
 
 -- Execute with prior assignment.
-execWithAssignment ∷ TypeAssignment → EnvConstraint a → (a, Env)
+execWithAssignment ∷ TypeAssignment primTy → EnvConstraint primTy a → (a, Env primTy)
 execWithAssignment assignment (EnvCon env) =
   runState env (Env [] mempty assignment 0 [] mempty)
 
-ealToBohm ∷ RPTO → BT.Bohm
+ealToBohm ∷ RPTO primVal → BT.Bohm
 ealToBohm (RBang _ (RVar s)) = BT.Symbol' s
 ealToBohm (RBang _ (RLam s t)) = BT.Lambda s (ealToBohm t)
 ealToBohm (RBang _ (RApp t1 t2)) = BT.Application (ealToBohm t1) (ealToBohm t2)

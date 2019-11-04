@@ -4,9 +4,10 @@ import qualified Data.Map.Strict as Map
 import Juvix.Core.EAC.ConstraintGen
 import Juvix.Core.EAC.Solve
 import Juvix.Core.EAC.Types
+import Juvix.Core.Erased.Types
 import Juvix.Library hiding (link, reduce)
 
-validEal ∷ Term → TypeAssignment → IO (Either Errors (RPT, ParamTypeAssignment))
+validEal ∷ ∀ primTy primVal. (Eq primTy) ⇒ Term primVal → TypeAssignment primTy → IO (Either (Errors primTy primVal) (RPT primVal, ParamTypeAssignment primTy))
 validEal term typMap = do
   let ((rpt, typ), env) =
         execWithAssignment typMap $
@@ -31,14 +32,14 @@ validEal term typMap = do
       Nothing →
         Left (Brack InvalidAssignment)
 
-assignType ∷ [Integer] → ParamTypeAssignment → ParamTypeAssignment
+assignType ∷ [Integer] → ParamTypeAssignment primTy → ParamTypeAssignment primTy
 assignType assignment typ = typ >>| placeVals
   where
     conMap = Map.fromList (zip [0 ..] (fromInteger <$> assignment))
     placeVals (PArrT p t1 t2) = PArrT (conMap Map.! p) (placeVals t1) (placeVals t2)
     placeVals (PSymT p s) = PSymT (conMap Map.! p) s
 
-assignTerm ∷ [Integer] → RPT → RPT
+assignTerm ∷ [Integer] → RPT primVal → RPT primVal
 assignTerm assignment syn = placeVals syn
   where
     conMap = Map.fromList (zip [0 ..] (fromInteger <$> assignment))
