@@ -80,7 +80,6 @@ handleSpecial str cont = do
             _ → return ()
         Nothing → return ()
       cont
-    -}
     'e' : 'p' : ' ' : rest → do
       let parsed = EAC.parseEal rest
       case parsed of
@@ -100,6 +99,7 @@ handleSpecial str cont = do
         Right r → transformAndEvaluateEal True r
         _ → return ()
       cont
+    -}
     _ → H.outputStrLn "Unknown special command" >> cont
 
 {-
@@ -112,7 +112,7 @@ eraseAndSolveCore cterm = do
   pure res
 -}
 
-transformAndEvaluateEal ∷ Bool → EAC.RPTO → H.InputT IO ()
+transformAndEvaluateEal ∷ ∀ primVal. Bool → EAC.RPTO primVal → H.InputT IO ()
 transformAndEvaluateEal debug term = do
   let bohm = EAC.ealToBohm term
   when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)

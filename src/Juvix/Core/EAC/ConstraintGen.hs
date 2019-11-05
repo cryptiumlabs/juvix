@@ -13,7 +13,7 @@ import Prelude (error)
 {- Main functionality. -}
 
 -- Construct occurrence map.
-setOccurrenceMap ∷ (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
+setOccurrenceMap ∷ ∀ m primVal. (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
 setOccurrenceMap term = do
   case term of
     Var sym →
@@ -26,6 +26,7 @@ setOccurrenceMap term = do
 
 -- Parameterize type.
 parameterizeType ∷
+  ∀ m primTy.
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m
   ) ⇒
@@ -45,6 +46,7 @@ parameterizeType ty = do
 
 -- Parameterize type assignment.
 parameterizeTypeAssignment ∷
+  ∀ m primTy.
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m,
     HasState "typeAssignment" (TypeAssignment primTy) m
@@ -56,6 +58,7 @@ parameterizeTypeAssignment = do
 
 -- Reparameterize.
 reparameterize ∷
+  ∀ m primTy.
   ( HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m
   ) ⇒
@@ -70,6 +73,7 @@ reparameterize pty = do
     PArrT _ a b → pure (PArrT param a b)
 
 unificationConstraints ∷
+  ∀ m primTy.
   (HasWriter "constraints" [Constraint] m) ⇒
   PType primTy →
   PType primTy →
@@ -87,6 +91,7 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
 -- In one pass to avoid keeping extra maps.
 -- TODO ∷ Change occurrenceMap to a reader at this point in the code
 boxAndTypeConstraint ∷
+  ∀ m primTy primVal.
   ( HasState "path" Path m,
     HasState "varPaths" VarPaths m,
     HasState "nextParam" Param m,
@@ -198,6 +203,7 @@ boxAndTypeConstraint parameterizedAssignment term = do
 
 -- Generate constraints.
 generateTypeAndConstraints ∷
+  ∀ m primTy primVal.
   ( HasState "path" Path m,
     HasState "varPaths" VarPaths m,
     HasState "nextParam" Param m,
@@ -288,16 +294,16 @@ typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
 {- Utility. -}
 
 -- The outer bang parameter.
-bangParam ∷ PType primTy → Param
+bangParam ∷ ∀ primTy. PType primTy → Param
 bangParam (PSymT param _) = param
 bangParam (PArrT param _ _) = param
 
-putParam ∷ Param → PType primTy → PType primTy
+putParam ∷ ∀ primTy. Param → PType primTy → PType primTy
 putParam p (PSymT _ s) = PSymT p s
 putParam p (PArrT _ t1 t2) = PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
-addParamPos ∷ HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
+addParamPos ∷ ∀ m primTy primVal. HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
 addParamPos toAdd (PSymT p s)
   | toAdd + p < 0 = throw @"typ" TooManyHats
   | otherwise = pure (PSymT (toAdd + p) s)
@@ -306,29 +312,29 @@ addParamPos toAdd (PArrT p t1 t2)
   | otherwise = pure (PArrT (toAdd + p) t1 t2)
 
 -- | Get the next fresh parameter
-getNextParam ∷ (HasState "nextParam" b f, Enum b) ⇒ f b
+getNextParam ∷ ∀ b f. (HasState "nextParam" b f, Enum b) ⇒ f b
 getNextParam = get @"nextParam"
 
 -- | Generate fresh parameter.
-freshParam ∷ (HasState "nextParam" Param m) ⇒ m Param
+freshParam ∷ ∀ m. (HasState "nextParam" Param m) ⇒ m Param
 freshParam = do
   param ← get @"nextParam"
   put @"nextParam" (succ param)
   pure param
 
 -- Append to path.
-addPath ∷ (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
+addPath ∷ ∀ m. (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
 addPath = do
   param ← freshParam
   modify' @"path" (<> [param])
   pure param
 
 -- Add constraint.
-addConstraint ∷ HasWriter "constraints" [Constraint] m ⇒ Constraint → m ()
+addConstraint ∷ ∀ m. HasWriter "constraints" [Constraint] m ⇒ Constraint → m ()
 addConstraint con = tell @"constraints" [con]
 
 -- Execute with prior assignment.
-execWithAssignment ∷ TypeAssignment primTy → EnvConstraint primTy a → (a, Env primTy)
+execWithAssignment ∷ ∀ primTy a. TypeAssignment primTy → EnvConstraint primTy a → (a, Env primTy)
 execWithAssignment assignment (EnvCon env) =
   runState env (Env [] mempty assignment 0 [] mempty)
 
