@@ -81,6 +81,7 @@ library:
     - Juvix.Core.EAC.Solve
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
+    - Juvix.Core.EAC.Erasure
     - Juvix.Utility
     - Juvix.Utility.HashMap
     - Juvix.Nets.Bohm
