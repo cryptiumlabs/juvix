@@ -75,6 +75,7 @@ library:
     - Juvix.Core.Erased.Types
     - Juvix.Core.Erasure
     - Juvix.Core.Usage
+    - Juvix.Core.Types
     - Juvix.Core.Parameterisations.Naturals
     - Juvix.Core.EAC
     - Juvix.Core.EAC.Check
@@ -83,6 +84,7 @@ library:
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
+    - Juvix.Core.Parameterisations.Unit
     - Juvix.Utility
     - Juvix.Utility.HashMap
     - Juvix.Nets.Bohm
@@ -108,7 +110,6 @@ library:
     - Juvix.NodeInterface
     - Juvix.Utility.Helper
     - Juvix.Utility.PrettyPrint
-    - Juvix.Core.Types
     - Juvix.Core.Translate
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types

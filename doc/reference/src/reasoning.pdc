@@ -1,6 +1,6 @@
 What changes are made from these prior systems, and why might one expect the solutions proposed to realise the criteria outlined previously?
 
-Juvix is efficiently executable in machine time through a novel execution model & an expressive typesystem permitting aggressive optimisation and is efficiently verifiable in developer time through proof bureaucracy automation & composable verification. The rigour of the type system enables composition of contracts to a degree of complexity not possible with less precise languages, and the ability to deploy to multiple ledgers provides flexibility to and reduces development costs for language users. 
+Juvix is efficiently executable in machine time through a novel execution model & an expressive typesystem permitting aggressive optimisation and is efficiently verifiable in developer time through proof bureaucracy automation & composable verification. The rigour of the type system enables composition of contracts to a degree of complexity not possible with less precise languages, and the ability to deploy to multiple ledgers provides flexibility to and reduces development costs for language users.
 
 ## Machine-time-efficient execution
 
@@ -22,7 +22,7 @@ The dependent type system of Juvix Core enables it to express arbitrary properti
 
 ### Hint & bypass compiler when necessary
 
-Primitives are provided to allow developers to bypass the usual compilation pipeline and construct hand-optimised rewrite rules specialised to the underlying machine, optionally proving equivalence of their hand-optimised rewrite rules to the compiler-generates ones using a formalised interpreter for the machine model.
+Primitives are provided to allow developers to bypass the usual compilation pipeline and construct hand-optimised rewrite rules specialised to the underlying machine, optionally proving equivalence of their hand-optimised rewrite rules to the compiler-generated ones using a formalised interpreter for the machine model.
 
 ## Developer-time-efficient formal proof construction
 

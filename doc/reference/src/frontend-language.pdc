@@ -24,7 +24,7 @@ Syntax options:
 - Resource inference (where possible)
 - Type inference (where possible)
 
-All feature desugar to Core (with several passes, typeclass lookup, etc.)
+All features desugar to Core (with several passes, typeclass lookup, etc.)
 
 ## Lambda-encoding of algebraic datatypes
 
@@ -182,4 +182,4 @@ Another important aspect to Scott encodings is that they can not be typed in `Sy
 
 ## Desugaring
 
-or recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the EAL* level. However, at a future date Mendler encodings will be added.
+For recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the EAL* level. However, at a future date Mendler encodings will be added.

@@ -1,20 +1,29 @@
 module Juvix.Core.Parameterisations.Naturals where
 
-import Juvix.Core.Types hiding (apply, parseTy, parseVal, reservedNames, reservedOpNames, typeOf)
+import Juvix.Core.Types hiding
+  ( apply,
+    parseTy,
+    parseVal,
+    reservedNames,
+    reservedOpNames,
+    typeOf,
+  )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
+-- k: primitive type: naturals
 data NatTy
   = Nat
   deriving (Show, Eq)
 
+-- c: primitive constant and f: functions
 data NatVal
-  = Natural Natural
-  | Add
-  | Sub
-  | Mul
+  = Natural Natural -- c
+  | Add -- f addition
+  | Sub -- f subtraction
+  | Mul -- f multiplication
   | Curried NatVal Natural
   deriving (Show, Eq)
 
@@ -40,7 +49,8 @@ parseTy lexer = do
   pure Nat
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseVal lexer = parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
+parseVal lexer =
+  parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
 
 parseNat ∷ Token.GenTokenParser String () Identity → Parser NatVal
 parseNat lexer = Natural . fromIntegral |<< Token.natural lexer
@@ -60,5 +70,6 @@ reservedNames = ["Nat", "+", "-", "*"]
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-naturals ∷ Parameterisation NatTy NatVal
-naturals = Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+nat ∷ Parameterisation NatTy NatVal
+nat =
+  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

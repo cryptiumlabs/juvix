@@ -3,140 +3,172 @@ module CoreTypechecker where
 
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.Naturals
+import Juvix.Core.Parameterisations.Unit
+import Juvix.Core.Types
 import Juvix.Core.Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-type Term = IR.Term NatTy NatVal
+type NatTerm = IR.Term NatTy NatVal
 
-type Elim = IR.Elim NatTy NatVal
+type NatElim = IR.Elim NatTy NatVal
 
-type Value = IR.Value NatTy NatVal
+type NatValue = IR.Value NatTy NatVal
 
-type Annotation = IR.Annotation NatTy NatVal
+type NatAnnotation = IR.Annotation NatTy NatVal
 
-identity ∷ Term
+type UnitTerm = IR.Term UnitTy UnitVal
+
+type UnitElim = IR.Elim UnitTy UnitVal
+
+type UnitValue = IR.Value UnitTy UnitVal
+
+type UnitAnnotation = IR.Annotation UnitTy UnitVal
+
+identity ∷ ∀ primTy primVal. IR.Term primTy primVal
 identity = IR.Lam (IR.Elim (IR.Bound 0))
 
-identityCompTy ∷ Annotation
-identityCompTy =
-  ( SNat 1,
-    IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))
-  )
+identityNatCompTy ∷ NatAnnotation
+identityNatCompTy =
+  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
-identityContTy ∷ Annotation
-identityContTy =
-  ( SNat 0,
-    IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))
-  )
+identityUnitCompTy ∷ UnitAnnotation
+identityUnitCompTy =
+  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy TUnit) (const (IR.VPrimTy TUnit)))
 
-identityApplication ∷ Term
-identityApplication = IR.Elim (IR.App (IR.Ann (SNat 1) identity (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))) (IR.Elim (IR.Prim (Natural 1))))
+identityNatContTy ∷ NatAnnotation
+identityNatContTy =
+  (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
-natTy ∷ Annotation
+identityApplication ∷ NatTerm
+identityApplication =
+  IR.Elim
+    ( IR.App
+        ( IR.Ann
+            (SNat 1)
+            identity
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+        )
+        (IR.Elim (IR.Prim (Natural 1)))
+    )
+
+natTy ∷ NatAnnotation
 natTy = (SNat 1, IR.VPrimTy Nat)
 
 test_identity_computational ∷ T.TestTree
-test_identity_computational = shouldCheck identity identityCompTy
+test_identity_computational = shouldCheck nat identity identityNatCompTy
+
+test_identity_unit_computational ∷ T.TestTree
+test_identity_unit_computational = shouldCheck unit identity identityUnitCompTy
 
 test_identity_contemplation ∷ T.TestTree
-test_identity_contemplation = shouldCheck identity identityContTy
+test_identity_contemplation = shouldCheck nat identity identityNatContTy
 
 test_identity_application ∷ T.TestTree
-test_identity_application = shouldCheck identityApplication natTy
+test_identity_application = shouldCheck nat identityApplication natTy
 
 test_nats_type_star0 ∷ T.TestTree
-test_nats_type_star0 = shouldCheck (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
+test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
 
 test_nat1 ∷ T.TestTree
-test_nat1 = shouldInfer (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
+test_nat1 = shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
 
 test_add_nat ∷ T.TestTree
-test_add_nat = shouldInfer (IR.App (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1)))) (IR.Elim (IR.Prim (Natural 2)))) (Omega, IR.VPrimTy Nat)
+test_add_nat =
+  shouldInfer
+    nat
+    ( IR.App
+        (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1))))
+        (IR.Elim (IR.Prim (Natural 2)))
+    )
+    (Omega, IR.VPrimTy Nat)
 
 test_eval_add ∷ T.TestTree
-test_eval_add = shouldEval (IR.Elim (IR.App (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1)))) (IR.Elim (IR.Prim (Natural 2))))) (IR.VPrim (Natural 3))
+test_eval_add =
+  shouldEval
+    nat
+    ( IR.Elim
+        ( IR.App
+            (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1))))
+            (IR.Elim (IR.Prim (Natural 2)))
+        )
+    )
+    (IR.VPrim (Natural 3))
 
 test_eval_sub ∷ T.TestTree
-test_eval_sub = shouldEval (IR.Elim (IR.App (IR.App (IR.Prim Sub) (IR.Elim (IR.Prim (Natural 5)))) (IR.Elim (IR.Prim (Natural 2))))) (IR.VPrim (Natural 3))
+test_eval_sub =
+  shouldEval
+    nat
+    ( IR.Elim
+        ( IR.App
+            (IR.App (IR.Prim Sub) (IR.Elim (IR.Prim (Natural 5))))
+            (IR.Elim (IR.Prim (Natural 2)))
+        )
+    )
+    (IR.VPrim (Natural 3))
 
 --unit tests for cType
-shouldCheck ∷ Term → Annotation → T.TestTree
-shouldCheck term ann =
+shouldCheck ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Term primTy primVal →
+  IR.Annotation primTy primVal →
+  T.TestTree
+shouldCheck param term ann =
   T.testCase (show term <> " should check as type " <> show ann) $
-    IR.cType naturals 0 [] term ann T.@=? Right ()
+    IR.cType param 0 [] term ann T.@=? Right ()
 
 --unit tests for iType
-shouldInfer ∷ Elim → Annotation → T.TestTree
-shouldInfer term ann =
+shouldInfer ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Elim primTy primVal →
+  IR.Annotation primTy primVal →
+  T.TestTree
+shouldInfer param term ann =
   T.testCase (show term <> " should infer to type " <> show ann) $
-    IR.iType0 naturals [] term T.@=? Right ann
+    IR.iType0 param [] term T.@=? Right ann
 
-shouldEval ∷ Term → Value → T.TestTree
-shouldEval term res =
+shouldEval ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Term primTy primVal →
+  IR.Value primTy primVal →
+  T.TestTree
+shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    IR.cEval naturals term IR.initEnv T.@=? res
+    IR.cEval param term IR.initEnv T.@=? res
 
-one ∷ Term
-one =
-  IR.Lam
-    $ IR.Lam
-    $ IR.Elim
-    $ IR.App
-      (IR.Bound 1)
-      (IR.Elim (IR.Bound 0))
+one ∷ ∀ primTy primVal. IR.Term primTy primVal
+one = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
 
-oneCompTy ∷ Annotation
+oneCompTy ∷ NatAnnotation
 oneCompTy =
   ( SNat 1,
     IR.VPi
       (SNat 1)
-      ( IR.VPi
-          (SNat 1)
-          (IR.VPrimTy Nat)
-          (const (IR.VPrimTy Nat))
-      )
-      ( const
-          ( IR.VPi
-              (SNat 1)
-              (IR.VPrimTy Nat)
-              (const (IR.VPrimTy Nat))
-          )
-      )
+      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+      (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 
-two ∷ Term
+two ∷ ∀ primTy primVal. IR.Term primTy primVal
 two =
   IR.Lam
     $ IR.Lam
     $ IR.Elim
-    $ IR.App
-      (IR.Bound 1)
-      ( IR.Elim
-          ( IR.App
-              (IR.Bound 1)
-              (IR.Elim (IR.Bound 0))
-          )
-      )
+    $ IR.App (IR.Bound 1) (IR.Elim (IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))))
 
-twoCompTy ∷ Annotation
+twoCompTy ∷ NatAnnotation
 twoCompTy =
   ( SNat 1,
     IR.VPi
       (SNat 2)
-      ( IR.VPi
-          (SNat 1)
-          (IR.VPrimTy Nat)
-          (const (IR.VPrimTy Nat))
-      )
-      ( const
-          ( IR.VPi
-              (SNat 1)
-              (IR.VPrimTy Nat)
-              (const (IR.VPrimTy Nat))
-          )
-      )
+      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+      (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 -- property tests of type checker:
 -- the term's inferred type equals to the input type
@@ -149,7 +181,6 @@ lamProp cterm env = IR.App (cEval (IR.Lam IR.Bound 0) env) cterm == cterm-}
 -- constProp (Star i) env = cEval (Star i) env == IR.VStar i
 -- constProp IR.PrimTy Nat env     = cEval IR.PrimTy Nat env == IR.VPrimTy Nat
 -- constProp _ _          = True --Not testing non-const terms
-
 {- TODO need to combine generators to generate
    Terms http://hackage.haskell.org/package/QuickCheck-2.13.2/docs/Test-QuickCheck-Gen.html
 instance Arbitrary Term where

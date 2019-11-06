@@ -82,7 +82,7 @@ traverseM ∷
   f (m a2)
 traverseM f = fmap join . traverse f
 
-instance Show ((->) a b) where
+instance Show (a → b) where
   show _ = "fun"
 
 newtype Symbol = Sym Text deriving (Eq, Hashable)

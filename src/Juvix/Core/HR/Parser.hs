@@ -8,7 +8,10 @@ import Juvix.Library hiding ((<|>), try)
 import Text.Parsec hiding (try)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Language hiding (reservedNames, reservedOpNames)
+import Text.ParserCombinators.Parsec.Language hiding
+  ( reservedNames,
+    reservedOpNames,
+  )
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
@@ -27,7 +30,10 @@ baseReservedOpNames =
     "->" -- arrow
   ]
 
-generateParser ∷ ∀ primTy primVal. Parameterisation primTy primVal → (String → Maybe (Term primTy primVal))
+generateParser ∷
+  ∀ primTy primVal.
+  Parameterisation primTy primVal →
+  (String → Maybe (Term primTy primVal))
 generateParser parameterisation =
   let opNames ∷ [String]
       opNames = baseReservedOpNames <> reservedOpNames parameterisation
@@ -39,12 +45,14 @@ generateParser parameterisation =
             Token.commentLine = "//",
             Token.identStart = letter,
             Token.identLetter = alphaNum,
-            Token.reservedNames = baseReservedNames <> reservedNames parameterisation,
+            Token.reservedNames =
+              baseReservedNames <> reservedNames parameterisation,
             Token.reservedOpNames = opNames
           }
       ops ∷ [[Operator Char () (Elim primTy primVal)]]
       ops = [[Infix appl AssocLeft]]
-      appl ∷ Parser ((Elim primTy primVal) → (Elim primTy primVal) → (Elim primTy primVal))
+      appl ∷
+        Parser (Elim primTy primVal → Elim primTy primVal → Elim primTy primVal)
       appl = do
         whiteSpace
         notFollowedBy (choice (map reservedOp opNames))
@@ -64,11 +72,7 @@ generateParser parameterisation =
       whiteSpace ∷ Parser ()
       whiteSpace = Token.whiteSpace lexer
       usage ∷ Parser Usage
-      usage =
-        ( reserved "w"
-            >> return Omega
-        )
-          <|> SNat . fromInteger <$> natural
+      usage = (reserved "w" >> return Omega) <|> SNat . fromInteger <$> natural
       primTyTerm ∷ Parser (Term primTy primVal)
       primTyTerm = PrimTy |<< parseTy parameterisation lexer
       sortTerm ∷ Parser (Term primTy primVal)
@@ -116,8 +120,7 @@ generateParser parameterisation =
       elim ∷ Parser (Elim primTy primVal)
       elim = buildExpressionParser ops elim'
       elim' ∷ Parser (Elim primTy primVal)
-      elim' =
-        parens elim <|> try primElim <|> annElim <|> varElim
+      elim' = try primElim <|> annElim <|> varElim <|> parens elim
       parseWhole ∷ Parser a → Parser a
       parseWhole p = do
         whiteSpace

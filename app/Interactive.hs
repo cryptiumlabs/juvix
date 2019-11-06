@@ -44,7 +44,7 @@ mainLoop func = do
           mainLoop func
 
 parseString ∷ String → Maybe (Core.Term NatTy NatVal)
-parseString = Core.generateParser naturals
+parseString = Core.generateParser nat
 
 handleSpecial ∷ String → H.InputT IO () → H.InputT IO ()
 handleSpecial str cont = do
@@ -111,7 +111,6 @@ eraseAndSolveCore cterm = do
   H.outputStrLn ("Inferred EAC term & type: " <> show res)
   pure res
 -}
-
 transformAndEvaluateEal ∷ ∀ primVal. Bool → EAC.RPTO primVal → H.InputT IO ()
 transformAndEvaluateEal debug term = do
   let bohm = EAC.ealToBohm term
@@ -129,11 +128,7 @@ transformAndEvaluateEal debug term = do
 
 specialsDoc ∷ Doc
 specialsDoc =
-  mconcat
-    [ line,
-      mconcat (fmap (flip (<>) line . specialDoc) specials),
-      line
-    ]
+  mconcat [line, mconcat (fmap (flip (<>) line . specialDoc) specials), line]
 
 specialDoc ∷ Special → Doc
 specialDoc (Special command helpDesc) =
