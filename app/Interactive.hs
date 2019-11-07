@@ -8,12 +8,14 @@ import qualified Juvix.Backends.Graph as Graph
 import qualified Juvix.Backends.Maps as Maps ()
 import qualified Juvix.Bohm as Bohm
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.EAC as EAC
+import qualified Juvix.Core.Erased as Erased
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import Juvix.Core.Parameterisations.Naturals
+import Juvix.Library
 import qualified Juvix.Nets.Bohm as Bohm
+import Monad
 import Options
-import Protolude
 import qualified System.Console.Haskeline as H
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Prelude (String)
@@ -56,65 +58,35 @@ handleSpecial str cont = do
       cont
     'c' : 'p' : ' ' : rest → do
       let parsed = parseString rest
-      H.outputStrLn $ show parsed
-      cont
-    {-
-    'c' : 't' : ' ' : rest → do
-      let parsed = Core.parseString Core.term rest
-      H.outputStrLn $ show parsed
-      case parsed of
-        Just cterm → do
-          let eval = Core.cEval cterm []
-          H.outputStrLn $ show eval
-        Nothing → return ()
+      H.outputStrLn (show parsed)
       cont
     'c' : 'e' : ' ' : rest → do
-      let parsed = Core.parseString Core.term rest
-      H.outputStrLn $ show parsed
+      let parsed = parseString rest
+      H.outputStrLn (show parsed)
       case parsed of
-        Just cterm → do
-          eal ← eraseAndSolveCore cterm
-          case eal of
-            Right (term, _) → do
-              transformAndEvaluateEal True term
+        Just (HR.Elim (HR.Ann usage term ty)) → do
+          erased ← liftIO (exec (Core.typecheckErase term usage ty))
+          H.outputStrLn (show erased)
+        _ → H.outputStrLn "must enter a valid annotated core term"
+      cont
+    'c' : 't' : ' ' : rest → do
+      let parsed = parseString rest
+      H.outputStrLn (show parsed)
+      case parsed of
+        Just (HR.Elim (HR.Ann usage term ty)) → do
+          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty))
+          H.outputStrLn (show erased)
+          case erased of
+            (Right (term, _), _) → do
+              transformAndEvaluateErasedCore True term
             _ → return ()
-        Nothing → return ()
+        _ → H.outputStrLn "must enter a valid annotated core term"
       cont
-    'e' : 'p' : ' ' : rest → do
-      let parsed = EAC.parseEal rest
-      case parsed of
-        Right r → transformAndEvaluateEal True r
-        _ → return ()
-      cont
-    'e' : 'q' : ' ' : rest → do
-      let parsed = EAC.parseEal rest
-      case parsed of
-        Right r → transformAndEvaluateEal False r
-        _ → return ()
-      cont
-    'e' : 'e' : ' ' : rest → do
-      let parsed = EAC.parseEal rest
-      H.outputStrLn $ show parsed
-      case parsed of
-        Right r → transformAndEvaluateEal True r
-        _ → return ()
-      cont
-    -}
     _ → H.outputStrLn "Unknown special command" >> cont
 
-{-
-eraseAndSolveCore ∷
-  Core.Term → H.InputT IO (Either EAC.Errors (EAC.RPT, EAC.ParamTypeAssignment))
-eraseAndSolveCore cterm = do
-  let (term, typeAssignment) = Core.erase' cterm
-  res ← liftIO (EAC.validEal term typeAssignment)
-  H.outputStrLn ("Inferred EAC term & type: " <> show res)
-  pure res
--}
-{-
-transformAndEvaluateEal ∷ ∀ primVal. Bool → EAC.RPTO primVal → H.InputT IO ()
-transformAndEvaluateEal debug term = do
-  let bohm = EAC.ealToBohm term
+transformAndEvaluateErasedCore ∷ ∀ primVal. Bool → Erased.Term primVal → H.InputT IO ()
+transformAndEvaluateErasedCore debug term = do
+  let bohm = Bohm.erasedCoreToBohm term
   when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)
   let net ∷ Graph.FlipNet Bohm.Lang
       net = Bohm.astToNet bohm Bohm.defaultEnv
@@ -126,7 +98,6 @@ transformAndEvaluateEal debug term = do
   let readback = Bohm.netToAst res
   when debug $ H.outputStrLn ("Reduction info: " <> show info)
   H.outputStrLn ("Read-back term: " <> show readback)
--}
 
 specialsDoc ∷ Doc
 specialsDoc =
@@ -138,14 +109,12 @@ specialDoc (Special command helpDesc) =
 
 specials ∷ [Special]
 specials =
-  [ Special "cp [term]" "Parse a Juvix Core term",
-    Special "ct [term}" "Parse, typecheck, & evaluate a Juvix Core term",
+  [ Special "cp [term]" "Parse a core term",
+    Special "ce [term]" "Parse, typecheck, & erase a core term",
+    Special "ct [term}" "Parse, typecheck, & evaluate a core term",
     Special
-      "ce [term"
-      "Parse a Juvix Core term, translate to EAC, solve constraints, evaluate & read-back",
-    Special "ep [term]" "Parse an EAC term",
-    Special "ee [term]" "Parse an EAC term, evaluate & read-back",
-    Special "eq [term]" "Parse an EAC term, evaluate & read-back quietly",
+      "cs [term"
+      "Parse a core term, erase it, translate it to EAC, solve constraints, evaluate & read-back",
     Special "tutorial" "Embark upon an interactive tutorial",
     Special "?" "Show this help message",
     Special "exit" "Quit interactive mode"
