@@ -30,6 +30,7 @@ dependencies:
   - turtle
   - directory
   - time
+  - morley
 
 default-extensions:
   - NoImplicitPrelude

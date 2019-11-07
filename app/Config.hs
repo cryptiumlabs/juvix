@@ -8,13 +8,15 @@ import Protolude
 
 data Config
   = Config
-      { configTezosNode ∷ Text
+      { configTezosNodeHost ∷ Text,
+        configTezosNodePort ∷ Int
       }
   deriving (Generic)
 
 defaultConfig ∷ Config
 defaultConfig = Config
-  { configTezosNode = "127.0.0.1"
+  { configTezosNodeHost = "127.0.0.1",
+    configTezosNodePort = 8732
   }
 
 loadConfig ∷ FilePath → IO (Maybe Config)

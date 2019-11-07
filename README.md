@@ -42,7 +42,12 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 
 ## Installation
 
-Install with ([Stack](https://haskellstack.org) and [z3](https://github.com/Z3Prover/z3) required):
+Dependencies:
+
+- ([Stack](https://haskellstack.org)
+- [z3](https://github.com/Z3Prover/z3)
+
+Install with:
 
 ```bash
 make
