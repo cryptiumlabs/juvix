@@ -105,6 +105,7 @@ identityAppI =
 kcombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- K = \x.\y.x
 kcombinator = IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))
 
+-- Nat -> (Nat -> Nat)
 kCompTy ∷ NatAnnotation
 kCompTy =
   ( SNat 1,
@@ -125,13 +126,13 @@ identityAppK =
             (SNat 1)
             ( IR.Pi
                 (SNat 1)
-                (IR.VPrimTy Nat)
-                (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+                (IR.PrimTy Nat)
+                (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))
             )
-            ( IR.VPi
+            ( IR.Pi
                 (SNat 1)
-                (IR.VPrimTy Nat)
-                (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+                (IR.PrimTy Nat)
+                (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))
             )
         )
     )
@@ -141,8 +142,8 @@ identityAppK =
             kcombinator
             ( IR.Pi
                 (SNat 1)
-                (IR.VPrimTy Nat)
-                (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+                (IR.PrimTy Nat)
+                (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))
             )
         )
     )
