@@ -111,6 +111,7 @@ eraseAndSolveCore cterm = do
   H.outputStrLn ("Inferred EAC term & type: " <> show res)
   pure res
 -}
+{-
 transformAndEvaluateEal ∷ ∀ primVal. Bool → EAC.RPTO primVal → H.InputT IO ()
 transformAndEvaluateEal debug term = do
   let bohm = EAC.ealToBohm term
@@ -125,6 +126,7 @@ transformAndEvaluateEal debug term = do
   let readback = Bohm.netToAst res
   when debug $ H.outputStrLn ("Reduction info: " <> show info)
   H.outputStrLn ("Read-back term: " <> show readback)
+-}
 
 specialsDoc ∷ Doc
 specialsDoc =

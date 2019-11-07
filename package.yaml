@@ -72,10 +72,11 @@ library:
     - Juvix.Core.HR
     - Juvix.Core.IR
     - Juvix.Core.Erased
-    - Juvix.Core.Erased.Transform
     - Juvix.Core.Erased.Evaluator
     - Juvix.Core.Erased.Types
     - Juvix.Core.Erasure
+    - Juvix.Core.Erasure.Algorithm
+    - Juvix.Core.Erasure.Types
     - Juvix.Core.Usage
     - Juvix.Core.Types
     - Juvix.Core.Parameterisations.Naturals
@@ -113,6 +114,7 @@ library:
     - Juvix.Utility.Helper
     - Juvix.Utility.PrettyPrint
     - Juvix.Core.Translate
+    - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Typechecker
