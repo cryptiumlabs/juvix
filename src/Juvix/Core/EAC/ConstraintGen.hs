@@ -337,9 +337,3 @@ addConstraint con = tell @"constraints" [con]
 execWithAssignment ∷ ∀ primTy a. TypeAssignment primTy → EnvConstraint primTy a → (a, Env primTy)
 execWithAssignment assignment (EnvCon env) =
   runState env (Env [] mempty assignment 0 [] mempty)
-
-ealToBohm ∷ RPTO primVal → BT.Bohm
-ealToBohm (RBang _ (RVar s)) = BT.Symbol' s
-ealToBohm (RBang _ (RLam s t)) = BT.Lambda s (ealToBohm t)
-ealToBohm (RBang _ (RApp t1 t2)) = BT.Application (ealToBohm t1) (ealToBohm t2)
-ealToBohm (RBang _ (RPrim _s)) = undefined

@@ -1,7 +1,6 @@
 module Juvix.Core.EAC.Types where
 
 import qualified Data.Text as T
-import GHC.Natural
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type)
 import Juvix.Utility

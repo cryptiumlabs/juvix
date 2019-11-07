@@ -3,8 +3,6 @@ module Juvix.Core.IR.Typechecker where
 import Control.Lens ((^?), ix)
 import Control.Monad.Except (throwError)
 import Juvix.Core.IR.Types
-import Juvix.Core.Parameterisations.Naturals
-import Juvix.Core.Parameterisations.Unit
 import Juvix.Core.Types
 import Juvix.Core.Usage
 import Juvix.Library hiding (show)

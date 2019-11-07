@@ -4,6 +4,7 @@ module Juvix.Core.EAC.Parser
   ( parseEal,
     parseEal',
     parseBohmFile,
+    types,
   )
 where
 
@@ -30,8 +31,6 @@ type PType = EAC.PType ()
 type RPTO = EAC.RPTO ()
 
 type RPTI = EAC.RPTI ()
-
-type RPT = EAC.RPT ()
 
 langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef
