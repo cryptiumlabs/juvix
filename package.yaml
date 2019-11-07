@@ -29,6 +29,7 @@ dependencies:
   - enummapset
   - turtle
   - directory
+  - time
 
 default-extensions:
   - NoImplicitPrelude

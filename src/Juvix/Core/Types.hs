@@ -2,6 +2,8 @@ module Juvix.Core.Types where
 
 import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Erasure.Types as ET
+import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -25,5 +27,6 @@ data PipelineError primTy primVal
   deriving (Show, Generic)
 
 data PipelineLog primTy primVal
-  = LogTodo
+  = LogHRtoIR (HR.Term primTy primVal) (IR.Term primTy primVal)
+  | LogRanZ3 Double
   deriving (Show, Generic)

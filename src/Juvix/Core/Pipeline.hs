@@ -28,8 +28,14 @@ typecheckAffineErase ∷
   HR.Term primTy primVal →
   m (EC.Term primVal, EC.TypeAssignment primTy)
 typecheckAffineErase term usage ty = do
+  -- First typecheck & generate erased core.
   (erased, assignment) ← typecheckErase term usage ty
+  -- Then invoke Z3 to check elementary-affine-ness.
+  start ← liftIO unixTime
   result ← liftIO (EAC.validEal erased assignment)
+  end ← liftIO unixTime
+  tell @"log" (LogRanZ3 (end - start))
+  -- Return accordingly.
   case result of
     Right (eac, _) → do
       let erasedEac = EAC.erase eac
@@ -53,10 +59,15 @@ typecheckErase ∷
   HR.Term primTy primVal →
   m (EC.Term primVal, EC.TypeAssignment primTy)
 typecheckErase term usage ty = do
+  -- Fetch the parameterisation, needed for typechecking.
   parameterisation ← ask @"parameterisation"
+  -- First convert HR to IR.
   let irTerm = hrToIR term
-      irType = hrToIR ty
-      irTypeValue = IR.cEval parameterisation irType IR.initEnv
+  tell @"log" (LogHRtoIR term irTerm)
+  let irType = hrToIR ty
+  tell @"log" (LogHRtoIR ty irType)
+  let irTypeValue = IR.cEval parameterisation irType IR.initEnv
+  -- Typecheck & return accordingly.
   case IR.cType parameterisation 0 [] irTerm (usage, irTypeValue) of
     Right () → do
       case erase term usage ty of

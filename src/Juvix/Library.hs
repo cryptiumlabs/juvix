@@ -15,6 +15,7 @@ module Juvix.Library
     Symbol,
     intern,
     unintern,
+    unixTime,
   )
 where
 
@@ -25,6 +26,7 @@ import Capability.Stream
 import Capability.Writer
 import Data.String (fromString)
 import qualified Data.Text as T
+import Data.Time.Clock.POSIX
 import Numeric.Natural
 import Protolude hiding
   ( (:.:),
@@ -98,3 +100,6 @@ intern = Sym . T.pack
 
 unintern ∷ Symbol → String
 unintern (Sym s) = T.unpack s
+
+unixTime ∷ IO Double
+unixTime = fromRational . realToFrac |<< getPOSIXTime
