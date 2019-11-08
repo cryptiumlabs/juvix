@@ -3,7 +3,7 @@ module Juvix.Core.EAC.Types where
 import qualified Data.Text as T
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type)
-import Juvix.Utility
+import qualified Juvix.Library.HashMap as Map
 
 -- Restricted pseudoterm (inner).
 data RPTI primVal
@@ -35,7 +35,7 @@ data PType primTy
   deriving (Show, Eq)
 
 -- Parameterized type assignment (alias).
-type ParamTypeAssignment primTy = HashMap Symbol (PType primTy)
+type ParamTypeAssignment primTy = Map.Map Symbol (PType primTy)
 
 -- Linear (in)equality constraint on parameters.
 data Constraint
@@ -63,10 +63,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = HashMap Symbol Param
+type VarPaths = Map.Map Symbol Param
 
 -- Occurrence map.
-type OccurrenceMap = HashMap Symbol Int
+type OccurrenceMap = Map.Map Symbol Int
 
 -- | Bracket Error Types
 data BracketErrors
@@ -106,13 +106,13 @@ data Errors primTy primVal
 newtype EnvError primTy primVal a = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (HashMap Symbol (Type primTy)))
+    (HasState "ctxt" (Map.Map Symbol (Type primTy)))
     via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
     via MonadError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)))
 
-data Info primTy = I {ctxt ∷ HashMap Symbol (Type primTy)} deriving (Show, Generic)
+data Info primTy = I {ctxt ∷ Map.Map Symbol (Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env primTy

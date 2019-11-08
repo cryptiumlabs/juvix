@@ -5,7 +5,7 @@ module Juvix.Interpreter.InteractionNet.Default where
 import Juvix.Interpreter.InteractionNet.Shared
 import qualified Juvix.Interpreter.InteractionNet.Type as Type
 import Juvix.Library hiding (empty, link)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import Text.Parsec.Expr
 
 onIntGen ∷ (Int → Int → a) → Primitive → Primitive → Maybe a

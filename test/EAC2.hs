@@ -4,7 +4,7 @@ import Juvix.Core.EAC.Check
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
 import Juvix.Library hiding (Type, exp, link, reduce)
-import qualified Juvix.Utility as Map
+import qualified Juvix.Library.HashMap as Map
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

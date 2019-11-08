@@ -1,4 +1,4 @@
-module Juvix.Utility.HashMap
+module Juvix.Library.HashMap
   ( module Data.HashMap.Strict,
     Map,
     (!?),
@@ -7,7 +7,7 @@ where
 
 import Data.HashMap.Strict
 import Data.Hashable (Hashable)
-import Juvix.Library (Eq, Maybe)
+import Protolude (Eq, Maybe)
 
 type Map = HashMap
 

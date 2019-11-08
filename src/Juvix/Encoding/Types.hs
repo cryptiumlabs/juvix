@@ -1,7 +1,7 @@
 module Juvix.Encoding.Types where
 
 import Juvix.Library hiding (Product, Sum)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 
 -- Adt Types -------------------------------------------------------------------
 

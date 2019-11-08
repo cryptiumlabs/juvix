@@ -11,7 +11,6 @@ import Juvix.Library hiding
     throwIO,
     writeFile,
   )
-import Juvix.Utility.Helper as H
 import Juvix.Visualize.Graph
 import System.Directory
 import System.IO.Error
@@ -50,7 +49,7 @@ reducePrint ∷
   FilePath →
   Int →
   f ()
-reducePrint name num = flip H.untilNothingNTimesM num $ do
+reducePrint name num = flip untilNothingNTimesM num $ do
   info ← get @"info"
   ctxt ← get @"net"
   liftIO (showNet (name <> show (parallelSteps info)) (runFlip ctxt))

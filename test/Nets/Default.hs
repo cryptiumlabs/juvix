@@ -5,7 +5,7 @@ import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
-import Juvix.Utility
+import Juvix.Library
 
 test2 ∷ InfoNet (FlipNet Lang)
 test2 =

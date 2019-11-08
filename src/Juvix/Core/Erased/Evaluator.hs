@@ -5,12 +5,12 @@ where
 
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Map, evaluate)
-import Juvix.Utility
+import qualified Juvix.Library.HashMap as Map
 
 evaluate ∷
   ∀ primVal m.
   ( HasReader "apply" (primVal → primVal → Maybe primVal) m,
-    HasState "env" (Map Symbol (Term primVal)) m
+    HasState "env" (Map.Map Symbol (Term primVal)) m
   ) ⇒
   Term primVal →
   m (Term primVal)
@@ -18,7 +18,7 @@ evaluate term =
   case term of
     Var s → do
       env ← get @"env"
-      case lookup s env of
+      case Map.lookup s env of
         Just v → pure v
         Nothing → pure (Var s)
     Prim p → pure (Prim p)
@@ -33,6 +33,6 @@ evaluate term =
             Just r → pure (Prim r)
             Nothing → undefined
         (Lam s t, v) → do
-          modify @"env" (insert s v)
+          modify @"env" (Map.insert s v)
           evaluate t
         _ → pure (App f x)

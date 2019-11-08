@@ -5,7 +5,7 @@ module Juvix.Encoding.Scott where
 import Juvix.Encoding.Encoding
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
 adtToScott ∷

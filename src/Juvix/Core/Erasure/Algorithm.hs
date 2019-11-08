@@ -9,7 +9,7 @@ import qualified Juvix.Core.HR.Types as Core
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Usage as Core
 import Juvix.Library hiding (empty)
-import Juvix.Utility
+import qualified Juvix.Library.HashMap as Map
 
 erase ∷ Core.Parameterisation primTy primVal → Core.Term primTy primVal → Core.Usage → Core.Term primTy primVal → Either ErasureError (Erased.Term primVal, Erased.TypeAssignment primTy)
 erase parameterisation term usage ty =
@@ -18,7 +18,7 @@ erase parameterisation term usage ty =
         (erased, typeAssignment env)
 
 exec ∷ EnvErasure primTy a → (Either ErasureError a, Env primTy)
-exec (EnvEra env) = runState (runExceptT env) (Env empty 0 [])
+exec (EnvEra env) = runState (runExceptT env) (Env Map.empty 0 [])
 
 eraseTerm ∷
   ∀ primTy primVal m.
@@ -43,7 +43,7 @@ eraseTerm parameterisation term usage ty =
         let Core.Pi argUsage varTy retTy = ty
             bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
-        modify @"typeAssignment" (insert name ty)
+        modify @"typeAssignment" (Map.insert name ty)
         -- TODO resTy is a function, which we must deal with.
         body ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.

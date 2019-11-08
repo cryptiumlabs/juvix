@@ -4,7 +4,7 @@ import Control.Arrow (left)
 import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type, link, reduce)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
 -- TODO include actual results for RPRIM

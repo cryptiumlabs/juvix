@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Name as Name

@@ -10,7 +10,6 @@ import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Library hiding (reduce)
-import qualified Juvix.Utility.Helper as H
 import Prelude (error)
 
 -- Specific Port Type-----------------------------------------------------------
@@ -53,7 +52,7 @@ langToProperPort node = langToPort node f
 
 -- Graph manipulation ----------------------------------------------------------
 reduceAll ∷ InfoNetworkDiff net Lang m ⇒ Int → m ()
-reduceAll = H.untilNothingNTimesM reduce
+reduceAll = untilNothingNTimesM reduce
 
 reduce ∷ InfoNetworkDiff net Lang m ⇒ m Bool
 reduce = do

@@ -2,7 +2,6 @@ module Juvix.Core.Erasure.Types where
 
 import qualified Juvix.Core.Erased as Erased
 import Juvix.Library hiding (empty)
-import Juvix.Utility
 
 data Env primTy
   = Env

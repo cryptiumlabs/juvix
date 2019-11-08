@@ -6,6 +6,7 @@ module Juvix.Library
     module Capability.Writer,
     module Capability.Stream,
     module Numeric.Natural,
+    module Juvix.Library.PrettyPrint,
     (∨),
     (∧),
     (|<<),
@@ -16,6 +17,10 @@ module Juvix.Library
     intern,
     unintern,
     unixTime,
+    Flip (..),
+    untilNothingNTimesM,
+    untilNothing,
+    sortOnFlip,
   )
 where
 
@@ -24,9 +29,11 @@ import Capability.Reader
 import Capability.State
 import Capability.Stream
 import Capability.Writer
+import Data.Hashable (Hashable)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
+import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
   ( (:.:),
@@ -104,3 +111,25 @@ unintern (Sym s) = T.unpack s
 
 unixTime ∷ IO Double
 unixTime = fromRational . realToFrac |<< getPOSIXTime
+
+newtype Flip p a b = Flip {runFlip ∷ p b a}
+  deriving (Show, Generic, Eq, Ord, Typeable)
+
+untilNothingNTimesM ∷ (Num t, Ord t, Enum t, Monad f) ⇒ f Bool → t → f ()
+untilNothingNTimesM f n
+  | n <= 0 = pure ()
+  | otherwise = do
+    f >>= \case
+      True → untilNothingNTimesM f (pred n)
+      False → pure ()
+
+untilNothing ∷ (t → Maybe t) → t → t
+untilNothing f a = case f a of
+  Nothing → a
+  Just a → untilNothing f a
+
+-- | like sortOn from the stdlib, is an optimized version of `sortBy (comparing f)`
+-- However instead of sorting from lowest to highest, this sorts from higher to lowest
+sortOnFlip ∷ Ord b ⇒ (a → b) → [a] → [a]
+sortOnFlip f =
+  fmap snd . sortBy (flip (comparing fst)) . fmap (\x → let y = f x in y `seq` (y, x))

@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Codegen.Sum where
 import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Library hiding (Type)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type

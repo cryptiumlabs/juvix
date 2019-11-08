@@ -1,7 +1,7 @@
 module Juvix.Core.Erased.Types where
 
 import Juvix.Library hiding (Type)
-import Juvix.Utility
+import qualified Juvix.Library.HashMap as Map
 
 data Term primVal
   = Var Symbol
@@ -18,4 +18,4 @@ data Type primTy
     Pi (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
 
-type TypeAssignment primTy = HashMap Symbol (Type primTy)
+type TypeAssignment primTy = Map.Map Symbol (Type primTy)

@@ -18,7 +18,6 @@ import Juvix.Interpreter.InteractionNet.Parser
 import Juvix.Interpreter.InteractionNet.Translation
 import Juvix.Interpreter.InteractionNet.Type
 import Juvix.Library
-import Juvix.Utility
 import Juvix.Visualize.Dot
 import Juvix.Visualize.Graph
 import Text.Parsec

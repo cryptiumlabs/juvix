@@ -4,7 +4,7 @@ module Juvix.Encoding.Encoding where
 
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
 -- Generic Case expansion ------------------------------------------------------

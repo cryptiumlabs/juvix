@@ -13,7 +13,7 @@ import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Interpreter.InteractionNet.Shared
 import qualified Juvix.Interpreter.InteractionNet.Type as Type
 import Juvix.Library hiding (empty, link)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
 data Env net

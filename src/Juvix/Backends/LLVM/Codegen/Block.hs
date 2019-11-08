@@ -6,7 +6,7 @@ import Data.ByteString.Short
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
-import Juvix.Utility.HashMap as Map
+import Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST
 import LLVM.AST.AddrSpace

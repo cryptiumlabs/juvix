@@ -9,7 +9,7 @@ import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
 import Juvix.Library hiding (Type)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import LLVM.AST as AST
 import LLVM.AST.AddrSpace
 import LLVM.AST.DataLayout (DataLayout (..))

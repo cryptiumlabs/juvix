@@ -93,8 +93,6 @@ library:
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
     - Juvix.Core.Parameterisations.Unit
-    - Juvix.Utility
-    - Juvix.Utility.HashMap
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default
@@ -109,6 +107,8 @@ library:
     - Juvix.Interpreter.InteractionNet.Shared
     - Juvix.Interpreter.InteractionNet.Default
     - Juvix.Library
+    - Juvix.Library.HashMap
+    - Juvix.Library.PrettyPrint
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph
     - Juvix.Encoding.Encoding
@@ -125,8 +125,6 @@ library:
     - Juvix.Backends.LLVM.Codegen.Graph
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
-    - Juvix.Utility.Helper
-    - Juvix.Utility.PrettyPrint
     - Juvix.Core.Translate
     - Juvix.Core.Pipeline
     - Juvix.Core.Utility

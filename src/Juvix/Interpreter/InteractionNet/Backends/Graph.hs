@@ -15,7 +15,6 @@ import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Library hiding (empty, link, reduce)
-import Juvix.Utility.Helper
 import Prelude (error)
 
 type Net a = Gr a EdgeInfo

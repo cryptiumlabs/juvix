@@ -6,7 +6,6 @@ import Juvix.Interpreter.InteractionNet.Backends.Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Combinators
 import Juvix.Library
-import Juvix.Utility
 
 -- Example Graphs --------------------------------------------------------------
 commute1 ∷ Net Lang

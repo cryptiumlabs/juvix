@@ -10,7 +10,6 @@ import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library hiding (link, reduce)
-import qualified Juvix.Utility.Helper as H
 import Prelude (Show (..))
 
 data Lang
@@ -90,7 +89,7 @@ reduceAll ∷
   (InfoNetworkDiff net Lang m) ⇒
   Int →
   m ()
-reduceAll = H.untilNothingNTimesM reduce
+reduceAll = untilNothingNTimesM reduce
 
 reduce ∷ (InfoNetworkDiff net Lang m) ⇒ m Bool
 reduce = do

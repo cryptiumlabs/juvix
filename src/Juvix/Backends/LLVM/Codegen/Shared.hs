@@ -2,7 +2,7 @@
 module Juvix.Backends.LLVM.Codegen.Shared where
 
 import Juvix.Library hiding (Type)
-import qualified Juvix.Utility.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST ()
 import qualified LLVM.AST.Constant as C ()
