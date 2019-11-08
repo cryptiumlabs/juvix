@@ -43,8 +43,10 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 ## Installation
 
 Requirements for installing:
+
 - [Stack](https://haskellstack.org)
-- [z3](https://github.com/Z3Prover/z3)
+- [z3](https://github.com/Z3Prover/z3) (this can be installed with `make build-z3`)
+- [libff](https://github.com/scipr-lab/libff) (this can be installed with `make build-libff`)
 - [LLVM9](https://llvm.org/)
 
 

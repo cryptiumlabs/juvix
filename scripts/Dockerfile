@@ -1,4 +1,4 @@
-FROM fpco/stack-build:lts-13.30
+FROM fpco/stack-build:lts-14.12
 
 RUN ln -s /usr/bin/g++-7 /usr/bin/g++
 
@@ -11,3 +11,7 @@ ENV LLVM_VERSION 9.0.0
 # Install Clang and LLVM
 COPY llvm-install.sh .
 RUN ./llvm-install.sh
+
+# Install libff
+COPY ./install-libff.sh .
+RUN ./install-libff.sh

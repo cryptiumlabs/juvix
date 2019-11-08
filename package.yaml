@@ -35,6 +35,7 @@ dependencies:
   - time
   - morley
   - bulletproofs
+  - hevm
 
 default-extensions:
   - NoImplicitPrelude

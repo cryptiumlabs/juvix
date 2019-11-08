@@ -6,6 +6,9 @@ all: setup build
 setup:
 	stack build --only-dependencies
 
+build-libff:
+	./scripts/build-libff.sh
+
 build-z3:
 	mkdir -p $(PREFIX)
 	cd z3 && test -f build/Makefile || python scripts/mk_make.py -p $(PREFIX)
@@ -42,4 +45,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full
+.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full
