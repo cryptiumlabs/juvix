@@ -1,13 +1,13 @@
-module Juvix.LLVM.Codegen.Types
-  ( module Juvix.LLVM.Codegen.Types,
-    module Juvix.LLVM.Codegen.Shared,
+module Juvix.Backends.LLVM.Codegen.Types
+  ( module Juvix.Backends.LLVM.Codegen.Types,
+    module Juvix.Backends.LLVM.Codegen.Shared,
   )
 where
 
 import Data.ByteString.Short
-import qualified Juvix.LLVM.Codegen.Constants as Constants
-import Juvix.LLVM.Codegen.Shared
-import Juvix.LLVM.Codegen.Sum
+import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
+import Juvix.Backends.LLVM.Codegen.Shared
+import Juvix.Backends.LLVM.Codegen.Sum
 import Juvix.Library hiding (Type)
 import qualified Juvix.Utility.HashMap as Map
 import LLVM.AST as AST

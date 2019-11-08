@@ -1,8 +1,8 @@
 -- | Provides a mechanism for defining Sum types
-module Juvix.LLVM.Codegen.Sum where
+module Juvix.Backends.LLVM.Codegen.Sum where
 
-import qualified Juvix.LLVM.Codegen.Constants as Constants
-import Juvix.LLVM.Codegen.Shared
+import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
+import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Library hiding (Type)
 import qualified Juvix.Utility.HashMap as Map
 import LLVM.AST

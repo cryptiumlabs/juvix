@@ -1,5 +1,5 @@
 -- | Module for predefined constants
-module Juvix.LLVM.Codegen.Constants where
+module Juvix.Backends.LLVM.Codegen.Constants where
 
 import Juvix.Library hiding (Type)
 import qualified LLVM.AST.Type as Type

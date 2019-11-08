@@ -1,10 +1,10 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Juvix.LLVM.Codegen.Block where
+module Juvix.Backends.LLVM.Codegen.Block where
 
 import Data.ByteString.Short
-import Juvix.LLVM.Codegen.Shared
-import Juvix.LLVM.Codegen.Types as Types
+import Juvix.Backends.LLVM.Codegen.Shared
+import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
 import Juvix.Utility.HashMap as Map
 import LLVM.AST
