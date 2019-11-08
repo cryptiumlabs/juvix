@@ -40,7 +40,9 @@ typecheckAffineErase term usage ty = do
   case result of
     Right (eac, _) → do
       let erasedEac = EAC.erase eac
-      unless (erasedEac == erased) (throw @"error" (InternalInconsistencyError "erased affine core should always match erased core"))
+      unless
+        (erasedEac == erased)
+        (throw @"error" (InternalInconsistencyError "erased affine core should always match erased core"))
       pure (erased, assignment)
     Left err → throw @"error" (EACError err)
 

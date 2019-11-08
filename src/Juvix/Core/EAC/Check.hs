@@ -7,7 +7,12 @@ import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (link, reduce)
 
-validEal ∷ ∀ primTy primVal. (Eq primTy) ⇒ Term primVal → TypeAssignment primTy → IO (Either (Errors primTy primVal) (RPT primVal, ParamTypeAssignment primTy))
+validEal ∷
+  ∀ primTy primVal.
+  (Eq primTy) ⇒
+  Term primVal →
+  TypeAssignment primTy →
+  IO (Either (Errors primTy primVal) (RPT primVal, ParamTypeAssignment primTy))
 validEal term typMap = do
   let ((rpt, typ), env) =
         execWithAssignment typMap $
