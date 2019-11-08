@@ -29,4 +29,5 @@ newtype EnvErasure primTy a = EnvEra (ExceptT ErasureError (State (Env primTy)) 
 
 data ErasureError
   = Unsupported
+  | CannotEraseZeroUsageTerm
   deriving (Show, Eq, Generic)

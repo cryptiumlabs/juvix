@@ -72,7 +72,7 @@ typecheckErase term usage ty = do
   -- Typecheck & return accordingly.
   case IR.cType parameterisation 0 [] irTerm (usage, irTypeValue) of
     Right () → do
-      case erase term usage ty of
+      case erase parameterisation term usage ty of
         Right res → pure res
         Left err → throw @"error" (ErasureError err)
     Left err → throw @"error" (TypecheckerError (Text.pack err))
