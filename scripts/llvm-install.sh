@@ -33,7 +33,6 @@ cd ../..
 rm llvm-${LLVM_VERSION}.src.tar.xz
 rm -rf llvm-${LLVM_VERSION}.src
 
-
 # This fixes the error with libLLVM-9.so for some reason!!!!
 apt-get update
-apt-get install ranger
+apt-get -y install ranger
