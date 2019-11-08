@@ -1,7 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Juvix.Backends.Graph where
+module Juvix.Interpreter.InteractionNet.Backends.Graph where
 
 import Data.Graph.Inductive hiding
   ( Network,
@@ -11,10 +11,10 @@ import Data.Graph.Inductive hiding
   )
 import qualified Data.Graph.Inductive as Graph
 import qualified Data.Set as Set
-import Juvix.Backends.Env
-import Juvix.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Library hiding (empty, link, reduce)
-import Juvix.NodeInterface
+import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Utility.Helper
 import Prelude (error)
 

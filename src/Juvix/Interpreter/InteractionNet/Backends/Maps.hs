@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.Backends.Maps where
+module Juvix.Interpreter.InteractionNet.Backends.Maps where
 
 import Control.Lens
 import qualified Data.EnumMap.Strict as Map
 import qualified Data.Set as Set
-import Juvix.Backends.Env
-import Juvix.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Library hiding (empty, link)
-import Juvix.NodeInterface
+import Juvix.Interpreter.InteractionNet.NodeInterface
 
 newtype Net a = Net {ofNet ∷ Map.EnumMap Node (NodeInfo a)}
   deriving (Show)

@@ -3,7 +3,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.NodeInterface where
+module Juvix.Interpreter.InteractionNet.NodeInterface where
 
 import Control.Lens
 import Data.Graph.Inductive

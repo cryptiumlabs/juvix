@@ -1,7 +1,6 @@
 module Juvix.Core.EAC.ConstraintGen where
 
 import Control.Arrow (left)
-import qualified Juvix.Bohm.Type as BT
 import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
 import Juvix.Library hiding (Type, link, reduce)

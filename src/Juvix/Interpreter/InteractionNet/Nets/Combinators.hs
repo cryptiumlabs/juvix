@@ -2,14 +2,14 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.Nets.Combinators where
+module Juvix.Interpreter.InteractionNet.Nets.Combinators where
 
 import Control.Lens
 import Data.Foldable (foldrM)
-import Juvix.Backends.Env
-import Juvix.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Library hiding (reduce)
-import Juvix.NodeInterface
+import Juvix.Interpreter.InteractionNet.NodeInterface
 import qualified Juvix.Utility.Helper as H
 import Prelude (error)
 

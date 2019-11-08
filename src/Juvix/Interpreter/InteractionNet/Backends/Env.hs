@@ -1,9 +1,9 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Juvix.Backends.Env where
+module Juvix.Interpreter.InteractionNet.Backends.Env where
 
-import Juvix.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Library
 
 -- | Info Stores diagnostic data on how much memory a particular graph reduction uses

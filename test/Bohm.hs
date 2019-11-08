@@ -6,42 +6,42 @@ import Data.Graph.Inductive hiding
     delNodes,
     nodes,
   )
-import Juvix.Backends.Env
-import Juvix.Backends.Graph
-import Juvix.Backends.Interface
-import Juvix.Backends.Maps
-import Juvix.Bohm
-import Juvix.Bohm.Default
-import Juvix.Bohm.Parser
-import Juvix.Bohm.Translation
-import Juvix.Bohm.Type
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Graph
+import Juvix.Interpreter.InteractionNet.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Backends.Maps
+import Juvix.Interpreter.InteractionNet
+import Juvix.Interpreter.InteractionNet.Default
+import Juvix.Interpreter.InteractionNet.Parser
+import Juvix.Interpreter.InteractionNet.Translation
+import Juvix.Interpreter.InteractionNet.Type
 import Juvix.Core.EAC
 import Juvix.Library
-import Juvix.Nets.Bohm
+import Juvix.Interpreter.InteractionNet.Nets.Bohm
 import Juvix.Utility
 import Juvix.Visualize.Dot
 import Juvix.Visualize.Graph
 import Text.Parsec
 
 ealToBohm ∷ ∀ primVal. RPTO primVal → Bohm
-ealToBohm = erasedCoreToBohm . erase
+ealToBohm = erasedCoreToInteractionNetAST . erase
 
 astToNetDefault ∷ Network net ⇒ Bohm → net Lang
 astToNetDefault net = astToNet net defaultEnv
 
 --test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
-test1 ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
+test1 ∷ Either ParseError (InfoNet (Juvix.Interpreter.InteractionNet.Backends.Maps.Net Lang))
 test1 =
   runMapNet (reduceAll 10 >> findEdge (1, Aux1)) . astToNetDefault
     <$> parseBohm "(lambda x. x)"
 
-test1' ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
+test1' ∷ Either ParseError (InfoNet (Juvix.Interpreter.InteractionNet.Backends.Maps.Net Lang))
 test1' = runMapNet (reduceAll 1) . astToNetDefault <$> parseBohm "((lambda x. x) y)"
 
 parsed ∷ Network net ⇒ Either ParseError (net Lang)
 parsed = astToNetDefault <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
 
-test2' ∷ Either ParseError (InfoNet (Juvix.Backends.Maps.Net Lang))
+test2' ∷ Either ParseError (InfoNet (Juvix.Interpreter.InteractionNet.Backends.Maps.Net Lang))
 test2' =
   runMapNet (reduceAll 10) . astToNetDefault
     <$> parseBohm "((lambda x. (x x)) (lambda x. (x x)))"
@@ -115,7 +115,7 @@ testAst ∷ DifferentRep net ⇒ Either a (InfoNet (net Lang)) → Maybe Bohm
 testAst (Right (InfoNet {net = n})) = netToAst n
 testAst (Left _) = Nothing
 
-test78Back ∷ Maybe Juvix.Bohm.Type.Bohm
+test78Back ∷ Maybe Juvix.Interpreter.InteractionNet.Type.Bohm
 test78Back = netToAst n
   where
     Right (InfoNet {net = n}) =

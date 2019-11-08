@@ -3,17 +3,17 @@ module Interactive where
 import Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
-import qualified Juvix.Backends.Env as Env
-import qualified Juvix.Backends.Graph as Graph
-import qualified Juvix.Backends.Maps as Maps ()
-import qualified Juvix.Bohm as Bohm
+import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
+import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
+import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
+import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import Juvix.Core.Parameterisations.Naturals
 import Juvix.Library
-import qualified Juvix.Nets.Bohm as Bohm
+import qualified Juvix.Interpreter.InteractionNet.Nets.Bohm as INet
 import Monad
 import Options
 import qualified System.Console.Haskeline as H
@@ -86,16 +86,16 @@ handleSpecial str cont = do
 
 transformAndEvaluateErasedCore ∷ ∀ primVal. Bool → Erased.Term primVal → H.InputT IO ()
 transformAndEvaluateErasedCore debug term = do
-  let bohm = Bohm.erasedCoreToBohm term
-  when debug $ H.outputStrLn ("Converted to BOHM: " <> show bohm)
-  let net ∷ Graph.FlipNet Bohm.Lang
-      net = Bohm.astToNet bohm Bohm.defaultEnv
+  let ast = INet.erasedCoreToInteractionNetAST term
+  when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
+  let net ∷ Graph.FlipNet INet.Lang
+      net = INet.astToNet ast INet.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
-  let reduced = Graph.runFlipNet (Bohm.reduceAll 1000000) net
+  let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
       info = Env.info reduced
       res = Env.net reduced
   when debug $ H.outputStrLn ("Reduced net: " <> show res)
-  let readback = Bohm.netToAst res
+  let readback = INet.netToAst res
   when debug $ H.outputStrLn ("Reduction info: " <> show info)
   H.outputStrLn ("Read-back term: " <> show readback)
 

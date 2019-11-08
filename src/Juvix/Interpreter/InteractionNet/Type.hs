@@ -1,6 +1,6 @@
-module Juvix.Bohm.Type where
+module Juvix.Interpreter.InteractionNet.Type where
 
-import Juvix.Bohm.Shared
+import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library
 
 -- TODO ∷ Investigate if it would be advantageous to promote this to a well typed gadt

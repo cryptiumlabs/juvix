@@ -2,14 +2,14 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.Nets.Bohm where
+module Juvix.Interpreter.InteractionNet.Nets.Bohm where
 
 import Control.Lens
-import Juvix.Backends.Env
-import Juvix.Backends.Interface
-import Juvix.Bohm.Shared
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library hiding (link, reduce)
-import Juvix.NodeInterface
+import Juvix.Interpreter.InteractionNet.NodeInterface
 import qualified Juvix.Utility.Helper as H
 import Prelude (Show (..))
 

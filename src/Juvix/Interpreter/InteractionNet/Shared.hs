@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Juvix.Bohm.Shared where
+module Juvix.Interpreter.InteractionNet.Shared where
 
 import Juvix.Library
 import Text.Parsec.Expr

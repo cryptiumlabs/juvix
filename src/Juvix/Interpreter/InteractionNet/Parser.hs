@@ -1,11 +1,11 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Juvix.Bohm.Parser where
+module Juvix.Interpreter.InteractionNet.Parser where
 
 import Control.Monad.Fail (fail)
-import Juvix.Bohm.Default
-import Juvix.Bohm.Shared hiding (symbol)
-import Juvix.Bohm.Type
+import Juvix.Interpreter.InteractionNet.Default
+import Juvix.Interpreter.InteractionNet.Shared hiding (symbol)
+import Juvix.Interpreter.InteractionNet.Type
 import Juvix.Library hiding ((<|>), many)
 import qualified Juvix.Utility.HashMap as Map
 import Juvix.Utility.Helper

@@ -1,14 +1,9 @@
 module Erasure where
 
-import qualified Juvix.Backends.Env as Env
-import qualified Juvix.Backends.Graph as Graph
-import qualified Juvix.Backends.Maps as Maps ()
-import qualified Juvix.Bohm as Bohm
-import qualified Juvix.Core as Core
-import qualified Juvix.Core.EAC as EAC
+import qualified Juvix.Core.Erased as Erased
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Erasure as Erasure
 import Juvix.Library hiding (identity)
-import qualified Juvix.Nets.Bohm as Bohm
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

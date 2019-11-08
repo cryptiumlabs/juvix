@@ -1,13 +1,13 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Juvix.Backends.Interface where
+module Juvix.Interpreter.InteractionNet.Backends.Interface where
 
 import Control.Lens
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Juvix.Library hiding (link)
-import Juvix.NodeInterface
+import Juvix.Interpreter.InteractionNet.NodeInterface
 
 type Node = Int
 

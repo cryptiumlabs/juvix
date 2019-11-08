@@ -1,18 +1,18 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Juvix.Bohm.Translation
+module Juvix.Interpreter.InteractionNet.Translation
   ( astToNet,
     netToAst,
   )
 where
 
 import Data.List ((!!))
-import Juvix.Backends.Interface
-import Juvix.Bohm.Shared
-import qualified Juvix.Bohm.Type as BT
+import Juvix.Interpreter.InteractionNet.Backends.Interface
+import Juvix.Interpreter.InteractionNet.Shared
+import qualified Juvix.Interpreter.InteractionNet.Type as BT
 import Juvix.Library hiding (empty, link)
-import qualified Juvix.Nets.Bohm as B
-import Juvix.NodeInterface
+import qualified Juvix.Interpreter.InteractionNet.Nets.Bohm as B
+import Juvix.Interpreter.InteractionNet.NodeInterface
 import qualified Juvix.Utility.HashMap as Map
 import Prelude (error)
 

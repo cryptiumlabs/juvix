@@ -2,15 +2,15 @@ module Juvix.Visualize.Dot where
 
 import Control.Exception hiding ()
 import qualified Data.Text as T
-import Juvix.Backends.Env
-import Juvix.Backends.Graph
+import Juvix.Interpreter.InteractionNet.Backends.Env
+import Juvix.Interpreter.InteractionNet.Backends.Graph
 import Juvix.Library hiding
   ( catch,
     reduce,
     throwIO,
     writeFile,
   )
-import Juvix.Nets.Bohm
+import Juvix.Interpreter.InteractionNet.Nets.Bohm
 import Juvix.Utility.Helper as H
 import Juvix.Visualize.Graph
 import System.Directory

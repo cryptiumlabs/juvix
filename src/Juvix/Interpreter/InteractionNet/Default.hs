@@ -1,9 +1,9 @@
 -- | Gives the default execution environment for netToAst
 -- Can be added to via core translation
-module Juvix.Bohm.Default where
+module Juvix.Interpreter.InteractionNet.Default where
 
-import Juvix.Bohm.Shared
-import qualified Juvix.Bohm.Type as BT
+import Juvix.Interpreter.InteractionNet.Shared
+import qualified Juvix.Interpreter.InteractionNet.Type as BT
 import Juvix.Library hiding (empty, link)
 import qualified Juvix.Utility.HashMap as Map
 import Text.Parsec.Expr
