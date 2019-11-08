@@ -1,8 +1,8 @@
 module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.HR as HR
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T

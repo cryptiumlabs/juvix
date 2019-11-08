@@ -97,7 +97,7 @@ library:
     - Juvix.Utility.HashMap
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
-    - Juvix.Interpreter.InteractionNet.Nets.Bohm
+    - Juvix.Interpreter.InteractionNet.Nets.Default
     - Juvix.Interpreter.InteractionNet.Nets.Combinators
     - Juvix.Interpreter.InteractionNet.Backends.Interface
     - Juvix.Interpreter.InteractionNet.Backends.Env

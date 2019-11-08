@@ -13,8 +13,8 @@ import qualified Data.Graph.Inductive as Graph
 import qualified Data.Set as Set
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Library hiding (empty, link, reduce)
 import Juvix.Interpreter.InteractionNet.NodeInterface
+import Juvix.Library hiding (empty, link, reduce)
 import Juvix.Utility.Helper
 import Prelude (error)
 

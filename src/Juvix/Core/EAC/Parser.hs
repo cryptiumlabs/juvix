@@ -3,7 +3,7 @@
 module Juvix.Core.EAC.Parser
   ( parseEal,
     parseEal',
-    parseBohmFile,
+    parseEalFile,
     types,
   )
 where
@@ -109,8 +109,8 @@ parseEal = parseEal' ""
 parseEal' ∷ SourceName → String → Either ParseError RPTO
 parseEal' = runParser (whiteSpace *> expression <* eof) ()
 
-parseBohmFile ∷ FilePath → IO (Either ParseError RPTO)
-parseBohmFile fname = do
+parseEalFile ∷ FilePath → IO (Either ParseError RPTO)
+parseEalFile fname = do
   input ← readFile fname
   pure $ parseEal' fname (show input)
 

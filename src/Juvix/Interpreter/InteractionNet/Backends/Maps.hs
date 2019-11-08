@@ -7,8 +7,8 @@ import qualified Data.EnumMap.Strict as Map
 import qualified Data.Set as Set
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Library hiding (empty, link)
 import Juvix.Interpreter.InteractionNet.NodeInterface
+import Juvix.Library hiding (empty, link)
 
 newtype Net a = Net {ofNet ∷ Map.EnumMap Node (NodeInfo a)}
   deriving (Show)

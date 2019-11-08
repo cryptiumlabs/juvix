@@ -8,18 +8,18 @@ where
 
 import Data.List ((!!))
 import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Interpreter.InteractionNet.Shared
-import qualified Juvix.Interpreter.InteractionNet.Type as BT
-import Juvix.Library hiding (empty, link)
-import qualified Juvix.Interpreter.InteractionNet.Nets.Bohm as B
+import qualified Juvix.Interpreter.InteractionNet.Nets.Default as AST
 import Juvix.Interpreter.InteractionNet.NodeInterface
+import Juvix.Interpreter.InteractionNet.Shared
+import qualified Juvix.Interpreter.InteractionNet.Type as Type
+import Juvix.Library hiding (empty, link)
 import qualified Juvix.Utility.HashMap as Map
 import Prelude (error)
 
 data Env net
   = Env
       { level ∷ Int,
-        net' ∷ net B.Lang,
+        net' ∷ net AST.Lang,
         free ∷ Map.Map Symbol (Node, PortType)
       }
   deriving (Generic)
@@ -33,7 +33,7 @@ newtype EnvState net a = EnvS (State (Env net) a)
     (HasState "free" (Map.Map Symbol (Node, PortType)))
     via (Field "free" () (MonadState (State (Env net))))
   deriving
-    (HasState "net" (net B.Lang))
+    (HasState "net" (net AST.Lang))
     via Rename "net'" (Field "net'" () (MonadState (State (Env net))))
 
 execEnvState ∷ Network net ⇒ EnvState net a → Env net → Env net
@@ -42,40 +42,40 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ BT.Bohm → Map.Map Symbol BT.Fn → net B.Lang
+astToNet ∷ Network net ⇒ Type.AST → Map.Map Symbol Type.Fn → net AST.Lang
 astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
     -- we return the port which the node above it in the AST connects to!
-    recursive (BT.IntLit x) _context =
-      (,) <$> newNode (B.Primar $ B.IntLit x) <*> pure Prim
-    recursive BT.False' _context =
-      (,) <$> newNode (B.Primar B.Fals) <*> pure Prim
-    recursive BT.True' _context =
-      (,) <$> newNode (B.Primar B.Tru) <*> pure Prim
-    recursive BT.Nil _context =
-      (,) <$> newNode (B.Primar B.Nil) <*> pure Prim
-    recursive (BT.Erase) _context =
-      (,) <$> newNode (B.Primar B.Erase) <*> pure Prim
-    recursive (BT.Car b) context = genericAux1PrimArg b (B.Auxiliary1 B.Car) context
-    recursive (BT.Cdr b) context = genericAux1PrimArg b (B.Auxiliary1 B.Cdr) context
-    recursive (BT.Not b) context = genericAux1PrimArg b (B.Auxiliary1 B.Not) context
-    recursive (BT.IsNil b) conte = genericAux1PrimArg b (B.Auxiliary1 B.TestNil) conte
-    recursive (BT.Curried1 f b) context =
-      genericAux1PrimArg b (B.Auxiliary1 $ B.Curried1 f) context
-    recursive (BT.Curried2 f b1 b2) c =
-      genericAux2PrimArg b1 b2 (B.Auxiliary2 $ B.Curried2 f) c
-    recursive (BT.Curried3 f b1 b2 b3) c =
-      genericAux3PrimArg b1 b2 b3 (B.Auxiliary3 $ B.Curried3 f) c
-    recursive (BT.Application b1 b2) c =
-      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.App) c
-    recursive (BT.Cons b1 b2) c =
-      genericAux2 (b1, Aux2) (b2, Aux1) (B.Auxiliary2 B.Cons, Prim) c
-    recursive (BT.Or b1 b2) c =
-      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.Or) c
-    recursive (BT.And b1 b2) c =
-      genericAux2PrimArg b1 b2 (B.Auxiliary2 B.And) c
-    recursive (BT.Symbol' s) context = do
+    recursive (Type.IntLit x) _context =
+      (,) <$> newNode (AST.Primar $ AST.IntLit x) <*> pure Prim
+    recursive Type.False' _context =
+      (,) <$> newNode (AST.Primar AST.Fals) <*> pure Prim
+    recursive Type.True' _context =
+      (,) <$> newNode (AST.Primar AST.Tru) <*> pure Prim
+    recursive Type.Nil _context =
+      (,) <$> newNode (AST.Primar AST.Nil) <*> pure Prim
+    recursive (Type.Erase) _context =
+      (,) <$> newNode (AST.Primar AST.Erase) <*> pure Prim
+    recursive (Type.Car b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Car) context
+    recursive (Type.Cdr b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Cdr) context
+    recursive (Type.Not b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Not) context
+    recursive (Type.IsNil b) conte = genericAux1PrimArg b (AST.Auxiliary1 AST.TestNil) conte
+    recursive (Type.Curried1 f b) context =
+      genericAux1PrimArg b (AST.Auxiliary1 $ AST.Curried1 f) context
+    recursive (Type.Curried2 f b1 b2) c =
+      genericAux2PrimArg b1 b2 (AST.Auxiliary2 $ AST.Curried2 f) c
+    recursive (Type.Curried3 f b1 b2 b3) c =
+      genericAux3PrimArg b1 b2 b3 (AST.Auxiliary3 $ AST.Curried3 f) c
+    recursive (Type.Application b1 b2) c =
+      genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.App) c
+    recursive (Type.Cons b1 b2) c =
+      genericAux2 (b1, Aux2) (b2, Aux1) (AST.Auxiliary2 AST.Cons, Prim) c
+    recursive (Type.Or b1 b2) c =
+      genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.Or) c
+    recursive (Type.And b1 b2) c =
+      genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.And) c
+    recursive (Type.Symbol' s) context = do
       frees ← get @"free"
       case (context Map.!? s, frees Map.!? s) of
         -- The symbol is bound, and thus we have a port and its number
@@ -88,26 +88,26 @@ astToNet bohm customSymMap = net'
           case customSymMap Map.!? s of
             -- The symbol is Free, just stash it in a symbol with no rewrite rules
             Nothing → do
-              nodeInfo ← (,) <$> (newNode (B.Primar $ B.Symbol s)) <*> pure Prim
+              nodeInfo ← (,) <$> (newNode (AST.Primar $ AST.Symbol s)) <*> pure Prim
               put @"free" (Map.insert s nodeInfo frees)
               pure nodeInfo
             -- These nodes are in the environment, make lambda abstractions for them
-            Just (BT.Arg0 v) →
+            Just (Type.Arg0 v) →
               -- Easy case, we are already complete
               case v of
-                PInt i → recursive (BT.IntLit i) context
-                PBool True → recursive BT.True' context
-                PBool False → recursive BT.False' context
-            Just (BT.Arg1 f) → do
-              numLam ← newNode (B.Auxiliary2 B.Lambda)
-              numCurr ← newNode (B.Auxiliary1 $ B.Curried1 f)
+                PInt i → recursive (Type.IntLit i) context
+                PBool True → recursive Type.True' context
+                PBool False → recursive Type.False' context
+            Just (Type.Arg1 f) → do
+              numLam ← newNode (AST.Auxiliary2 AST.Lambda)
+              numCurr ← newNode (AST.Auxiliary1 $ AST.Curried1 f)
               link (numLam, Aux2) (numCurr, Prim)
               link (numLam, Aux1) (numCurr, Aux1)
               pure (numLam, Prim)
-            Just (BT.Arg2 f) → do
-              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
-              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
-              numCurr ← newNode (B.Auxiliary2 $ B.Curried2 f)
+            Just (Type.Arg2 f) → do
+              numLam1 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg1
+              numLam2 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg2
+              numCurr ← newNode (AST.Auxiliary2 $ AST.Curried2 f)
               -- Lambda chain
               link (numLam1, Aux1) (numLam2, Prim)
               link (numLam2, Aux1) (numCurr, Aux1)
@@ -115,11 +115,11 @@ astToNet bohm customSymMap = net'
               link (numLam1, Aux2) (numCurr, Prim)
               link (numLam2, Aux2) (numCurr, Aux2)
               pure (numLam1, Prim)
-            Just (BT.Arg3 f) → do
-              numLam1 ← newNode (B.Auxiliary2 B.Lambda) -- arg1
-              numLam2 ← newNode (B.Auxiliary2 B.Lambda) -- arg2
-              numLam3 ← newNode (B.Auxiliary2 B.Lambda) -- arg3
-              numCurr ← newNode (B.Auxiliary3 $ B.Curried3 f)
+            Just (Type.Arg3 f) → do
+              numLam1 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg1
+              numLam2 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg2
+              numLam3 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg3
+              numCurr ← newNode (AST.Auxiliary3 $ AST.Curried3 f)
               -- Lambda chain
               link (numLam1, Aux1) (numLam2, Prim)
               link (numLam2, Aux1) (numLam3, Prim)
@@ -129,27 +129,27 @@ astToNet bohm customSymMap = net'
               link (numLam2, Aux2) (numCurr, Aux3)
               link (numLam3, Aux2) (numCurr, Aux2)
               pure (numLam1, Prim)
-    recursive (BT.Letrec sym body) context = do
-      numMu ← newNode (B.Auxiliary2 B.Mu)
+    recursive (Type.Letrec sym body) context = do
+      numMu ← newNode (AST.Auxiliary2 AST.Mu)
       (bNode, bPort) ← recursive body (Map.insert sym (numMu, Aux2) context)
       link (numMu, Aux1) (bNode, bPort)
       pure (numMu, Prim)
-    recursive (BT.Lambda s body) context = do
-      numLam ← newNode (B.Auxiliary2 B.Lambda)
+    recursive (Type.Lambda s body) context = do
+      numLam ← newNode (AST.Auxiliary2 AST.Lambda)
       (bNode, bPort) ← recursive body (Map.insert s (numLam, Aux2) context)
       link (numLam, Aux1) (bNode, bPort)
       aux2Filled ← findEdge (numLam, Aux2)
       case aux2Filled of
         Nothing → do
-          numErase ← newNode (B.Primar B.Erase)
+          numErase ← newNode (AST.Primar AST.Erase)
           link (numLam, Aux2) (numErase, Prim)
         Just _ → pure ()
       pure (numLam, Prim)
-    recursive (BT.Let sym bound body) context = do
+    recursive (Type.Let sym bound body) context = do
       (numBound, portBound) ← recursive bound context
       recursive body (Map.insert sym (numBound, portBound) context)
-    recursive (BT.If b1 b2 b3) c = do
-      (numIf, retPort) ← genericAux2 (b1, Prim) (b2, Aux3) (B.Auxiliary3 B.IfElse, Aux1) c
+    recursive (Type.If b1 b2 b3) c = do
+      (numIf, retPort) ← genericAux2 (b1, Prim) (b2, Aux3) (AST.Auxiliary3 AST.IfElse, Aux1) c
       (b3Num, b3Port) ← recursive b3 c
       link (numIf, Aux2) (b3Num, b3Port)
       pure (numIf, retPort)
@@ -198,29 +198,29 @@ data FanStatus
   | Completed FanPorts
   deriving (Show)
 
-netToAst ∷ DifferentRep net ⇒ net B.Lang → Maybe BT.Bohm
+netToAst ∷ DifferentRep net ⇒ net AST.Lang → Maybe Type.AST
 netToAst net = evalEnvState run (Env 0 net Map.empty)
   where
     run = do
       -- rec' assumes that we are given a statement at the top of the graphical AST
       let rec' n comeFrom fanMap nodeVarInfo@(nodeVarMap, nodeVarLengh) = do
-            port ← B.langToProperPort n
+            port ← AST.langToProperPort n
             case port of
               Nothing → pure Nothing
               Just port →
                 case port of
-                  B.IsAux3 {B._tag3 = tag, B._prim = prim, B._aux2 = aux2, B._aux3 = aux3} →
+                  AST.IsAux3 {AST._tag3 = tag, AST._prim = prim, AST._aux2 = aux2, AST._aux3 = aux3} →
                     case (prim, aux2, aux3) of
                       (Primary p, Auxiliary a2, Auxiliary a3) → do
                         p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
                         a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                         a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
                         let tag' = case tag of
-                              B.IfElse → BT.If
-                              B.Curried3 f → BT.Curried3 f
+                              AST.IfElse → Type.If
+                              AST.Curried3 f → Type.Curried3 f
                         pure (tag' <$> p <*> a2 <*> a3)
                       _ → pure Nothing
-                  B.IsAux2 {B._tag2 = tag, B._prim = prim, B._aux1 = aux1, B._aux2 = aux2} →
+                  AST.IsAux2 {AST._tag2 = tag, AST._prim = prim, AST._aux1 = aux1, AST._aux2 = aux2} →
                     let parentAux1 con = do
                           case (prim, aux2) of
                             (Primary p, Auxiliary a2) → do
@@ -257,23 +257,23 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                             Just (_, Aux2) →
                               -- The symbol has to be here, or else, there is an issue
                               -- in the AST!
-                              pure (Just (BT.Symbol' (nodeVarMap Map.! n)))
+                              pure (Just (Type.Symbol' (nodeVarMap Map.! n)))
                             -- We must be starting with Lambda, thus make a full lambda!
                             Nothing → fullLamCase lamOrMu
                             -- This case it has to Prim, so construct a full lambda
                             _ → fullLamCase lamOrMu
                      in case tag of
-                          B.Curried2 f → parentAux1 (BT.Curried2 f)
-                          B.Or → parentAux1 BT.Or
-                          B.And → parentAux1 BT.And
-                          B.App → parentAux1 BT.Application
-                          B.Cons → parentPrim BT.Cons
+                          AST.Curried2 f → parentAux1 (Type.Curried2 f)
+                          AST.Or → parentAux1 Type.Or
+                          AST.And → parentAux1 Type.And
+                          AST.App → parentAux1 Type.Application
+                          AST.Cons → parentPrim Type.Cons
                           -- Lambda may be the lambda node
                           -- Or the symbol the Lambda contains
-                          B.Lambda → lamMu BT.Lambda
+                          AST.Lambda → lamMu Type.Lambda
                           -- same with mu
-                          B.Mu → lamMu BT.Letrec
-                          B.FanIn i → do
+                          AST.Mu → lamMu Type.Letrec
+                          AST.FanIn i → do
                             -- First we are going to look up if we came from the fan
                             -- in of this fan out note that we don't cover the impossible
                             -- case where we enter through Aux1 in both the same fan in/out
@@ -364,7 +364,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                         error "doesn't happen"
                                       _ : _ →
                                         error "doesn't happen"
-                  B.IsAux1 {B._tag1 = tag, B._prim = prim} →
+                  AST.IsAux1 {AST._tag1 = tag, AST._prim = prim} →
                     let parentAux con =
                           case prim of
                             Primary prim → do
@@ -372,33 +372,33 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                               pure (con <$> prim)
                             Free → pure Nothing -- doesn't happen
                      in case tag of
-                          B.Not → parentAux BT.Not
-                          B.Cdr → parentAux BT.Cdr
-                          B.Car → parentAux BT.Car
-                          B.TestNil → parentAux BT.IsNil
-                          B.Curried1 f → parentAux (BT.Curried1 f)
-                  B.IsPrim {B._tag0 = tag} →
+                          AST.Not → parentAux Type.Not
+                          AST.Cdr → parentAux Type.Cdr
+                          AST.Car → parentAux Type.Car
+                          AST.TestNil → parentAux Type.IsNil
+                          AST.Curried1 f → parentAux (Type.Curried1 f)
+                  AST.IsPrim {AST._tag0 = tag} →
                     pure $ Just $
                       case tag of
-                        B.Erase → BT.Erase
-                        B.Nil → BT.Nil
-                        B.Tru → BT.True'
-                        B.Fals → BT.False'
-                        B.IntLit i → BT.IntLit i
-                        B.Symbol s → BT.Symbol' s
-          isFree (B.IsAux3 _ (Primary _) (Auxiliary _) (Auxiliary _) (Auxiliary _)) = False
-          isFree (B.IsAux2 _ (Primary _) (Auxiliary _) (Auxiliary _)) = False
-          isFree (B.IsAux1 _ (Primary _) (Auxiliary _)) = False
-          isFree (B.IsPrim _ (Primary _)) = False
-          isFree B.IsPrim {} = True
-          isFree B.IsAux1 {} = True
-          isFree B.IsAux2 {} = True
-          isFree B.IsAux3 {} = True
+                        AST.Erase → Type.Erase
+                        AST.Nil → Type.Nil
+                        AST.Tru → Type.True'
+                        AST.Fals → Type.False'
+                        AST.IntLit i → Type.IntLit i
+                        AST.Symbol s → Type.Symbol' s
+          isFree (AST.IsAux3 _ (Primary _) (Auxiliary _) (Auxiliary _) (Auxiliary _)) = False
+          isFree (AST.IsAux2 _ (Primary _) (Auxiliary _) (Auxiliary _)) = False
+          isFree (AST.IsAux1 _ (Primary _) (Auxiliary _)) = False
+          isFree (AST.IsPrim _ (Primary _)) = False
+          isFree AST.IsPrim {} = True
+          isFree AST.IsAux1 {} = True
+          isFree AST.IsAux2 {} = True
+          isFree AST.IsAux3 {} = True
       nodes ← nodes
       frees ←
         filterM
           ( \n → do
-              n ← B.langToProperPort n
+              n ← AST.langToProperPort n
               case n of
                 Nothing → pure False
                 Just x → pure (isFree x)
@@ -417,7 +417,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
 
 -- | Creates a fan if the port is taken, and prepares to be connected
 chaseAndCreateFan ∷
-  (Network net, HasState "level" Int m, HasState "net" (net B.Lang) m) ⇒
+  (Network net, HasState "level" Int m, HasState "net" (net AST.Lang) m) ⇒
   (Node, PortType) →
   m (Node, PortType)
 chaseAndCreateFan (num, port) = do
@@ -427,7 +427,7 @@ chaseAndCreateFan (num, port) = do
     Nothing → pure (num, port)
     Just t1@(nConnected, connectedPort) → do
       put @"level" (succ lev)
-      numFan ← newNode (B.Auxiliary2 $ B.FanIn lev)
+      numFan ← newNode (AST.Auxiliary2 $ AST.FanIn lev)
       let nodeFan = RELAuxiliary2
             { node = numFan,
               primary = Link (Port port num),

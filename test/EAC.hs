@@ -1,6 +1,5 @@
 module EAC where
 
-
 import Juvix.Core.EAC
 import Juvix.Library
 import Text.Parsec

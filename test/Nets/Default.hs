@@ -1,10 +1,10 @@
-module Nets.Bohm where
+module Nets.Default where
 
 import Data.Graph.Inductive
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Interpreter.InteractionNet.Nets.Bohm
+import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Utility
 
 test2 ∷ InfoNet (FlipNet Lang)

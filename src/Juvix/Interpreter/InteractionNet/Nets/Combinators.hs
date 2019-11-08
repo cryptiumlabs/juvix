@@ -8,8 +8,8 @@ import Control.Lens
 import Data.Foldable (foldrM)
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Library hiding (reduce)
 import Juvix.Interpreter.InteractionNet.NodeInterface
+import Juvix.Library hiding (reduce)
 import qualified Juvix.Utility.Helper as H
 import Prelude (error)
 

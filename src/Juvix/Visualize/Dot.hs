@@ -4,13 +4,13 @@ import Control.Exception hiding ()
 import qualified Data.Text as T
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Graph
+import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding
   ( catch,
     reduce,
     throwIO,
     writeFile,
   )
-import Juvix.Interpreter.InteractionNet.Nets.Bohm
 import Juvix.Utility.Helper as H
 import Juvix.Visualize.Graph
 import System.Directory

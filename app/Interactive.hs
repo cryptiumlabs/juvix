@@ -3,17 +3,17 @@ module Interactive where
 import Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
-import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
-import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
-import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
-import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import Juvix.Core.Parameterisations.Naturals
+import qualified Juvix.Interpreter.InteractionNet as INet
+import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
+import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
+import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
+import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
-import qualified Juvix.Interpreter.InteractionNet.Nets.Bohm as INet
 import Monad
 import Options
 import qualified System.Console.Haskeline as H

@@ -3,7 +3,7 @@
 module Juvix.Interpreter.InteractionNet.Default where
 
 import Juvix.Interpreter.InteractionNet.Shared
-import qualified Juvix.Interpreter.InteractionNet.Type as BT
+import qualified Juvix.Interpreter.InteractionNet.Type as Type
 import Juvix.Library hiding (empty, link)
 import qualified Juvix.Utility.HashMap as Map
 import Text.Parsec.Expr
@@ -54,20 +54,20 @@ eq = onIntB (==)
 neq ∷ Primitive → Primitive → Maybe Primitive
 neq = onIntB (/=)
 
-defaultEnv ∷ Map.Map Symbol BT.Fn
+defaultEnv ∷ Map.Map Symbol Type.Fn
 defaultEnv =
   Map.fromList
-    [ (intern "plus", BT.Arg2 plus),
-      (intern "+", BT.Arg2 plus),
-      (intern "*", BT.Arg2 times),
-      (intern "-", BT.Arg2 minus),
-      (intern "<>", BT.Arg2 neq),
-      (intern "<", BT.Arg2 lt),
-      (intern ">", BT.Arg2 gt),
-      (intern "<=", BT.Arg2 le),
-      (intern ">=", BT.Arg2 ge),
-      (intern "==", BT.Arg2 eq),
-      (intern "mod", BT.Arg2 mod')
+    [ (intern "plus", Type.Arg2 plus),
+      (intern "+", Type.Arg2 plus),
+      (intern "*", Type.Arg2 times),
+      (intern "-", Type.Arg2 minus),
+      (intern "<>", Type.Arg2 neq),
+      (intern "<", Type.Arg2 lt),
+      (intern ">", Type.Arg2 gt),
+      (intern "<=", Type.Arg2 le),
+      (intern ">=", Type.Arg2 ge),
+      (intern "==", Type.Arg2 eq),
+      (intern "mod", Type.Arg2 mod')
     ]
 
 defaultSymbols ∷ [Precedence]
@@ -90,12 +90,12 @@ defaultSymbols =
 -- | Serves as the default map for special cased functions
 -- And and Or are in here, as they can be done more efficiently than
 -- waiting for all the arguments before short circuiting, by compiling
--- directly to Bohm instead
+-- directly to the AST instead
 defaultSpecial ∷
   (Eq k, Hashable k, IsString k) ⇒
-  Map.HashMap k (BT.Bohm → BT.Bohm → BT.Bohm)
+  Map.HashMap k (Type.AST → Type.AST → Type.AST)
 defaultSpecial =
   Map.fromList
-    [ ("or", BT.Or),
-      ("and", BT.And)
+    [ ("or", Type.Or),
+      ("and", Type.And)
     ]
