@@ -140,14 +140,14 @@ termToInstr term = stackGuard term $ \term → do
     -- forM_ args (\a -> modify ((:) (M.VarE (prettyPrintValue a), M.PairT M.BoolT M.BoolT)))
 
     -- TODO: This is a hack.
+    -- :: (\a b -> c) a b ~ (a, (b, s)) => (c, s)
     J.App (J.App func arg1) arg2 →
       stackCheck addsOne $ do
         arg2 ← termToInstr arg2
         arg1 ← termToInstr arg1
         func ← termToInstr func
         pure (M.SeqEx [arg2, arg1, func])
-    -- TODO: Linear logic types (when added to core), etc.
-    -- :: (\a -> b) a ~ s => (b, s)
+    -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
       stackCheck addsOne $ do
