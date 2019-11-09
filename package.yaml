@@ -119,6 +119,7 @@ library:
     - Juvix.Encoding.Types
     - Juvix.Backends
     - Juvix.Backends.Michelson
+    - Juvix.Backends.Michelson.Parameterisation
     - Juvix.Backends.Michelson.Compilation
     - Juvix.Backends.Michelson.Compilation.Term
     - Juvix.Backends.Michelson.Compilation.Type
