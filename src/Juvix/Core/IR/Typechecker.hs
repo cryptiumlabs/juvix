@@ -214,9 +214,7 @@ iType _ ii g (Free x) =
 iType p _ii _g (Prim prim) =
   let arrow [x] = VPrimTy x
       arrow (x : xs) = VPi Omega (VPrimTy x) (const (arrow xs))
-   in case Juvix.Core.Types.typeOf p arrow prim of
-        Right a → return (Omega, VPrimTy a)
-        Left f → return (Omega, f)
+   in pure (Omega, arrow (Juvix.Core.Types.typeOf p prim))
 -- App, function M applies to N (Elimination rule of dependent function types)
 iType p ii g (App m n) = do
   mTy ← iType p ii g m -- annotation of M is usage sig and Pi with pi usage.

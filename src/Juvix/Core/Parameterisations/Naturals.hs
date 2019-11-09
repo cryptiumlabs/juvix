@@ -27,12 +27,12 @@ data NatVal
   | Curried NatVal Natural
   deriving (Show, Eq)
 
-typeOf ∷ ∀ a. ([NatTy] → a) → NatVal → Either a NatTy
-typeOf _ (Natural _) = Right Nat
-typeOf arrow (Curried _ _) = Left $ arrow [Nat, Nat]
-typeOf arrow Add = Left $ arrow [Nat, Nat, Nat]
-typeOf arrow Sub = Left $ arrow [Nat, Nat, Nat]
-typeOf arrow Mul = Left $ arrow [Nat, Nat, Nat]
+typeOf ∷ NatVal → [NatTy]
+typeOf (Natural _) = [Nat]
+typeOf (Curried _ _) = [Nat, Nat]
+typeOf Add = [Nat, Nat, Nat]
+typeOf Sub = [Nat, Nat, Nat]
+typeOf Mul = [Nat, Nat, Nat]
 
 apply ∷ NatVal → NatVal → Maybe NatVal
 apply Add (Natural x) = pure (Curried Add x)

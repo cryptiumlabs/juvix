@@ -11,14 +11,15 @@ import Prelude (String)
 
 data Parameterisation primTy primVal
   = Parameterisation
-      { -- TODO: This should always apply to lists of at least length 1 and should always return `a` instead.
-        typeOf ∷ ∀ a. ([primTy] → a) → primVal → Either a primTy,
+      { -- Returns an arrow.
+        typeOf ∷ primVal → [primTy],
         apply ∷ primVal → primVal → Maybe primVal,
         parseTy ∷ Token.GenTokenParser String () Identity → Parser primTy,
         parseVal ∷ Token.GenTokenParser String () Identity → Parser primVal,
         reservedNames ∷ [String],
         reservedOpNames ∷ [String]
       }
+  deriving (Generic)
 
 data PipelineError primTy primVal
   = InternalInconsistencyError Text
