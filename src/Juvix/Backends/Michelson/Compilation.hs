@@ -27,11 +27,11 @@ compileToMichelson ∷
   Type →
   m (M.SomeContract)
 compileToMichelson term ty = do
-  michelsonOp' ← termToInstr term
-  let michelsonOp = leftSeq michelsonOp'
   michelsonTy ← typeToType ty
   case michelsonTy of
     M.Type (M.TLambda argTy retTy) _ → do
+      michelsonOp' ← termToMichelson term argTy
+      let michelsonOp = leftSeq michelsonOp'
       let contract = M.Contract argTy retTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
         Right (M.SomeContract instr start end) → do

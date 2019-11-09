@@ -2,7 +2,11 @@ module Juvix.Backends.Michelson.Compilation.Util where
 
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Library hiding (Type)
+import Michelson.TypeCheck
 import Michelson.Untyped
+
+stackToStack ∷ Stack → SomeHST
+stackToStack = undefined
 
 pack ∷
   ∀ m.
