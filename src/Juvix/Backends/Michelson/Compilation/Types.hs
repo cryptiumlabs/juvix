@@ -2,8 +2,8 @@ module Juvix.Backends.Michelson.Compilation.Types where
 
 import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
-import qualified Michelson.Untyped as M
 import qualified Michelson.TypeCheck as M
+import qualified Michelson.Untyped as M
 
 data CompilationError
   = NotYetImplemented
