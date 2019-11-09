@@ -60,6 +60,7 @@ default-extensions:
   - TypeInType
   - DerivingVia
   - TypeApplications
+  - StandaloneDeriving
 
 ghc-options:
   - -ferror-spans

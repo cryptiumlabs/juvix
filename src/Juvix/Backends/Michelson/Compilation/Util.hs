@@ -10,7 +10,7 @@ pack ∷
   Type →
   m ExpandedInstr
 pack (Type TUnit _) = pure (PUSH "" (Type TUnit "") ValueUnit)
-pack _ = throw @"compilationError" NotYetImplemented
+pack ty = throw @"compilationError" (NotYetImplemented ("pack: " <> show ty))
 
 unpack ∷
   ∀ m.
@@ -38,7 +38,9 @@ unpack (Type ty _) binds =
           pure (PrimEx (CDR "" ""))
         [Nothing, Nothing] →
           genReturn (PrimEx DROP)
-    _ → throw @"compilationError" NotYetImplemented
+        _ → throw @"compilationError" (InternalFault "binds do not match type")
+    _ → throw @"compilationError" (NotYetImplemented ("unpack: " <> show ty))
+unpack _ _ = throw @"compilationError" (InternalFault "invalid unpack type")
 
 unpackDrop ∷
   ∀ m.
@@ -50,7 +52,7 @@ unpackDrop ∷
 unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust binds))))
 
 position ∷ Symbol → Stack → Maybe Natural
-position n [] = Nothing
+position _ [] = Nothing
 position n (x : xs) = if fst x == VarE n then Just 0 else (+) 1 |<< position n xs
 
 dropFirst ∷ Symbol → Stack → Stack
@@ -118,4 +120,5 @@ genFunc instr =
           f ← genFunc (SeqEx ops)
           return (\(x : xs) → x : f xs)
         AMOUNT _ → pure ((:) (FuncResultE, Type (Tc CMutez) ""))
-    _ → throw @"compilationError" NotYetImplemented
+        _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
+    _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))

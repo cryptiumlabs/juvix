@@ -13,13 +13,15 @@ import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
 
+-- TODO: We might want to do this in a different way to preserve annotations.
 contractToSource ∷ M.SomeContract → Text
 contractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
 
 compileToMichelson ∷
   ∀ m.
   ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
   Term →
   Type →
