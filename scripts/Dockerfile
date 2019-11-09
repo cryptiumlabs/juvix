@@ -11,5 +11,5 @@ COPY llvm-install.sh .
 RUN ./llvm-install.sh
 
 # Install libff
-COPY ./install-libff.sh .
-RUN ./install-libff.sh
+COPY ./build-libff.sh .
+RUN ./build-libff.sh
