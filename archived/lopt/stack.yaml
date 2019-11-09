@@ -1,4 +1,0 @@
-resolver: lts-13.17
-packages:
-- .
-compiler-check: newer-minor
