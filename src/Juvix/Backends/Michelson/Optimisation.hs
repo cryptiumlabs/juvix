@@ -37,8 +37,8 @@ optimise' expr =
     (IF_CONS x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF_CONS x y)
     (IF_NONE x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF_NONE x y)
     (DIP e) → DIP |<< optimise' e
+#if defined(OPTIMISE)
     {- We can assume Seq will be left-forced. -}
-#if defined(OPTIMIZE)
     (Seq (Seq DUP (DIP e)) DROP) → optimise' e
     (Seq (DIP e) DROP) → optimise' (Seq DROP e)
     (Seq (Seq (Seq e DUP) SWAP) DROP) → optimise' e
@@ -48,7 +48,7 @@ optimise' expr =
     (Seq DUP SWAP) → pure DUP
     (Seq DUP DROP) → pure Nop
     (Seq SWAP SWAP) → pure Nop
-    (Seq FAILWITH e) → pure FAILWITH
+    (Seq FAILWITH _) → pure FAILWITH
 #endif
     (Seq e Nop) → optimise' e
     (Seq Nop e) → optimise' e
