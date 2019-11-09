@@ -28,3 +28,27 @@ data StackElem
 
 data SomeInstr where
   SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
+
+execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
+execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])
+
+data Env
+  = Env
+      { stack ∷ Stack,
+        compilationLog ∷ [CompilationLog]
+      }
+  deriving (Generic)
+
+newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) a)
+  deriving (Functor, Applicative, Monad)
+  deriving
+    ( HasStream "compilationLog" [CompilationLog],
+      HasWriter "compilationLog" [CompilationLog]
+    )
+    via WriterLog (Field "compilationLog" () (MonadState (ExceptT CompilationError (State Env))))
+  deriving
+    (HasState "stack" Stack)
+    via Field "stack" () (MonadState (ExceptT CompilationError (State Env)))
+  deriving
+    (HasThrow "compilationError" CompilationError)
+    via MonadError (ExceptT CompilationError (State Env))

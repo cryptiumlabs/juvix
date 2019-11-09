@@ -17,6 +17,11 @@ import qualified Michelson.Untyped as M
 contractToSource ∷ M.SomeContract → Text
 contractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
 
+compile ∷ Term → Type → (Either CompilationError M.SomeContract, [CompilationLog])
+compile term ty =
+  let (ret, env) = execWithStack [] (compileToMichelson term ty)
+   in (ret, compilationLog env)
+
 compileToMichelson ∷
   ∀ m.
   ( HasState "stack" Stack m,
