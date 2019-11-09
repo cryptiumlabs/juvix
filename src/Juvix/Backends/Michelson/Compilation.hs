@@ -35,5 +35,5 @@ compileToMichelson term ty = do
         Right (M.SomeContract instr start end) → do
           optimised ← optimise instr
           pure (M.SomeContract optimised start end)
-        Left _ → throw @"compilationError" NotYetImplemented
-    _ → throw @"compilationError" NotYetImplemented
+        Left err → throw @"compilationError" (DidNotTypecheck err)
+    _ → throw @"compilationError" InvalidInputType
