@@ -11,17 +11,8 @@ stackToStack [] = SomeHST SNil
 stackToStack ((_, ty) : xs) =
   case stackToStack xs of
     SomeHST tail →
-      MT.withSomeSingT (typeToT ty) $ \sty →
+      MT.withSomeSingT (MT.fromUType ty) $ \sty →
         SomeHST (sty -:& tail)
-
--- TODO: I bet this exists in Morley somewhere.
-typeToT ∷ Type → MT.T
-typeToT (Type ty _) =
-  case ty of
-    TOperation → MT.TOperation
-    TUnit → MT.TUnit
-    TPair _ _ x y → MT.TPair (typeToT x) (typeToT y)
-    TList l → MT.TList (typeToT l)
 
 pack ∷
   ∀ m.
