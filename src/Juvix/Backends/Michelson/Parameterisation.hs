@@ -11,6 +11,8 @@ type Type = C.Type PrimTy
 
 type Value = M.Value' M.ExpandedOp
 
+type Op = M.ExpandedOp
+
 data PrimTy
   = PrimTy M.Type
   deriving (Show, Eq, Generic)
