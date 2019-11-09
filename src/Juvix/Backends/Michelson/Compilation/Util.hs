@@ -3,10 +3,16 @@ module Juvix.Backends.Michelson.Compilation.Util where
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
+import qualified Michelson.Typed as MT
 import Michelson.Untyped
 
 stackToStack ∷ Stack → SomeHST
-stackToStack = undefined
+stackToStack [] = SomeHST SNil
+stackToStack ((_, Type ty _) : xs) =
+  case stackToStack xs of
+    SomeHST tail →
+      case ty of
+        TUnit → SomeHST (MT.STUnit -:& tail)
 
 pack ∷
   ∀ m.
