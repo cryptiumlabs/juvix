@@ -16,7 +16,7 @@ jobs:
           no_output_timeout: 1200
       - run:
           name: Build Juvix
-          command: stack build --copy-bins --fast
+          command: stack build --copy-bins --fast +RTS -N2 -qg
       - persist_to_workspace:
           root: /root
           paths:
@@ -36,7 +36,7 @@ jobs:
           at: /root
       - run:
           name: Run tests
-          command: stack test
+          command: stack test +RTS -N2 -qg
           no_output_timeout: 1200
 
 workflows:
