@@ -75,8 +75,10 @@ termToInstr ∷
 termToInstr term = stackGuard term $ \term → do
   let notYetImplemented ∷ m Op
       notYetImplemented = throw @"compilationError" (NotYetImplemented ("termToInstr: " <> show term))
+
       failWith ∷ Text → m Op
       failWith = throw @"compilationError" . InternalFault
+
       stackCheck ∷ (Stack → Stack → Bool) → m Op → m Op
       stackCheck guard func = do
         pre ← get @"stack"
@@ -85,6 +87,7 @@ termToInstr term = stackGuard term $ \term → do
         if guard post pre
           then pure res
           else failWith ("compilation violated stack invariant: " <> show term)
+
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
     --       since we copy the variable each time. We should be able to use precise usage information

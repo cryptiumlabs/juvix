@@ -324,17 +324,20 @@ fanInAux1 numFan (numOther, otherLang) level = do
           primary = ReLink numFan Aux1,
           auxiliary1 = Link (Port Aux1 fanIn1)
         }
+
       nodeOther2 = RELAuxiliary1
         { node = other2,
           primary = ReLink numFan Aux2,
           auxiliary1 = Link (Port Aux2 fanIn1)
         }
+
       nodeFan1 = RELAuxiliary2
         { node = fanIn1,
           primary = ReLink numOther Aux1,
           auxiliary1 = Link (Port Aux1 other1),
           auxiliary2 = Link (Port Aux1 other2)
         }
+
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
@@ -356,24 +359,28 @@ fanInAux2 numFan (numOther, otherLang) level = do
           auxiliary1 = Link (Port Aux1 fanIn2),
           auxiliary2 = Link (Port Aux1 fanIn1)
         }
+
       nodeOther2 = RELAuxiliary2
         { node = other2,
           primary = ReLink numFan Aux2,
           auxiliary1 = Link (Port Aux2 fanIn2),
           auxiliary2 = Link (Port Aux2 fanIn1)
         }
+
       nodeFan1 = RELAuxiliary2
         { node = fanIn1,
           primary = ReLink numOther Aux2,
           auxiliary1 = Link (Port Aux2 other1),
           auxiliary2 = Link (Port Aux2 other2)
         }
+
       nodeFan2 = RELAuxiliary2
         { node = fanIn2,
           primary = ReLink numOther Aux1,
           auxiliary1 = Link (Port Aux1 other1),
           auxiliary2 = Link (Port Aux1 other2)
         }
+
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
 
@@ -397,6 +404,7 @@ fanInAux3 numFan (numOther, otherLang) level = do
           auxiliary2 = Link (Port Aux1 fanIn2),
           auxiliary3 = Link (Port Aux1 fanIn3)
         }
+
       nodeOther2 = RELAuxiliary3
         { node = other2,
           primary = ReLink numFan Aux2,
@@ -404,24 +412,28 @@ fanInAux3 numFan (numOther, otherLang) level = do
           auxiliary2 = Link (Port Aux2 fanIn2),
           auxiliary3 = Link (Port Aux2 fanIn3)
         }
+
       nodeFan1 = RELAuxiliary2
         { node = fanIn1,
           primary = ReLink numOther Aux1,
           auxiliary1 = Link (Port Aux1 other1),
           auxiliary2 = Link (Port Aux1 other2)
         }
+
       nodeFan2 = RELAuxiliary2
         { node = fanIn2,
           primary = ReLink numOther Aux2,
           auxiliary1 = Link (Port Aux2 other1),
           auxiliary2 = Link (Port Aux2 other2)
         }
+
       nodeFan3 = RELAuxiliary2
         { node = fanIn3,
           primary = ReLink numOther Aux3,
           auxiliary1 = Link (Port Aux3 other1),
           auxiliary2 = Link (Port Aux3 other2)
         }
+
   traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2, nodeFan3]
   deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2, fanIn3]
 

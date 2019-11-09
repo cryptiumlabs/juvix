@@ -84,9 +84,13 @@ incGraphSizeStep n = do
   let memoryAllocated
         | n > 0 = memAlloced + n
         | otherwise = memAlloced
+
       currentGraphSize = n + currGraph
+
       biggestGraphSize = max currentGraphSize largestGraph
+
       sequentalSteps = succ seqStep
+
   put @"info" Info
     { memoryAllocated,
       currentGraphSize,

@@ -153,24 +153,28 @@ conDup conNum deconNum (Construct _ _auxA _auxB) (Duplicate _ _auxC _auxD) = do
           auxiliary1 = Link (Port Aux1 conD),
           auxiliary2 = Link (Port Aux1 conC)
         }
+
       nodeB = RELAuxiliary2
         { node = dupB,
           primary = ReLink conNum Aux2,
           auxiliary1 = Link (Port Aux2 conD),
           auxiliary2 = Link (Port Aux2 conC)
         }
+
       nodeC = RELAuxiliary2
         { node = conC,
           primary = ReLink deconNum Aux2,
           auxiliary1 = Link (Port Aux2 dupA),
           auxiliary2 = Link (Port Aux2 dupB)
         }
+
       nodeD = RELAuxiliary2
         { node = conD,
           primary = ReLink deconNum Aux1,
           auxiliary1 = Link (Port Aux1 dupA),
           auxiliary2 = Link (Port Aux1 dupB)
         }
+
   traverse_ linkAll [nodeA, nodeB, nodeC, nodeD]
   deleteRewire [conNum, deconNum] [dupA, dupB, conC, conD]
 conDup _ _ _ _ = error "only send a construct and duplicate to conDup"

@@ -92,8 +92,11 @@ transformAndEvaluateErasedCore debug term = do
       net = INet.astToNet ast INet.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
+
       info = Env.info reduced
+
       res = Env.net reduced
+
   when debug $ H.outputStrLn ("Reduced net: " <> show res)
   let readback = INet.netToAst res
   when debug $ H.outputStrLn ("Reduction info: " <> show info)

@@ -254,6 +254,7 @@ intOfNumPorts typ numPort cont = do
   generateIf typ tag smallBranch largeBranch
   where
     smallBranch = branchGen numPortsSmall numPortsSmallValue return
+
     largeBranch = branchGen numPortsLarge numPortsLargeValuePtr $
       \vPtr → do
         deref2 ← Block.getElementPtr $
@@ -263,6 +264,7 @@ intOfNumPorts typ numPort cont = do
               Types.indincies' = Block.constant32List [0, 1]
             }
         load numPortsLargeValue deref2
+
     -- Generic logic
     branchGen variant variantType extraDeref = do
       casted ← bitCast numPort (varientToType variant)

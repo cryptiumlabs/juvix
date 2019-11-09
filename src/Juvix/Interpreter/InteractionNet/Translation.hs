@@ -46,6 +46,7 @@ astToNet ∷ Network net ⇒ Type.AST → Map.Map Symbol Type.Fn → net AST.Lan
 astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
+
     -- we return the port which the node above it in the AST connects to!
     recursive (Type.IntLit x) _context =
       (,) <$> newNode (AST.Primar $ AST.IntLit x) <*> pure Prim
@@ -153,33 +154,39 @@ astToNet bohm customSymMap = net'
       (b3Num, b3Port) ← recursive b3 c
       link (numIf, Aux2) (b3Num, b3Port)
       pure (numIf, retPort)
+
     -- see comment on primArg below to see what these arguments mean!
     genericAux1 (b1, pb1) (langToCreate, portToReturn) context = do
       numCar ← newNode langToCreate
       (bNum, bPort) ← recursive b1 context
       link (bNum, bPort) (numCar, pb1)
       pure (numCar, portToReturn)
+
     genericAux2 (b1, pb1) (b2, pb2) retInfo context = do
       (numApp, retPort) ← genericAux1 (b1, pb1) retInfo context
       (b2Num, b2Port) ← recursive b2 context
       link (numApp, pb2) (b2Num, b2Port)
       pure (numApp, retPort)
+
     genericAux3 (b1, pb1) (b2, pb2) (b3, pb3) retInfo context = do
       (numApp, retPort) ← genericAux2 (b1, pb1) (b2, pb2) retInfo context
       (b3Num, b3Port) ← recursive b3 context
       link (numApp, pb3) (b3Num, b3Port)
       pure (numApp, retPort)
+
     genericAux2PrimArg b1 b2 lc =
       genericAux2
         (b1, Prim) -- Connects b1 to Prim of lc
         (b2, Aux2) -- Connects b2 to Aux2 of lc
         (lc, Aux1) -- Aux1 of lc is the return node
+
     genericAux3PrimArg b1 b2 b3 lc =
       genericAux3
         (b1, Prim) -- Connect b1 to Prim of lc
         (b2, Aux3) -- Connect b2 to Aux3 of lc
         (b3, Aux2) -- Connect b3 to Aux1 of lc
         (lc, Aux1) -- lc connects to Aux1 above it
+
     genericAux1PrimArg b1 langToCreate = genericAux1 (b1, Prim) (langToCreate, Aux1)
 
 data FanPorts = Circle | Star deriving (Show)
@@ -228,6 +235,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                               a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> p <*> a2)
                             _ → pure Nothing
+
                         parentPrim con = do
                           case (aux1, aux2) of
                             (Auxiliary a1, Auxiliary a2) → do
@@ -235,12 +243,16 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                               a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
                               pure (con <$> a1 <*> a2)
                             _ → pure Nothing
+
                         -- Case for Lambda and mu
                         lamMu lamOrMu = do
                           let fullLamCase lamOrMu =
                                 let num = newMapNum nodeVarInfo
+
                                     symb = numToSymbol num
+
                                     newNodeVarMap = Map.insert n symb nodeVarMap
+
                                  in case aux1 of
                                       Auxiliary a1 → do
                                         a1 ←
@@ -262,6 +274,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                             Nothing → fullLamCase lamOrMu
                             -- This case it has to Prim, so construct a full lambda
                             _ → fullLamCase lamOrMu
+
                      in case tag of
                           AST.Curried2 f → parentAux1 (Type.Curried2 f)
                           AST.Or → parentAux1 Type.Or
@@ -332,9 +345,12 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                         -- adding the completed at the
                                         -- end keeps the precondition that In's are in front
                                         let newFanMap = Map.insert i (xs <> [Completed port]) fanMap
+
                                             cameFrom = (Just (n, fanPortsToAux port))
+
                                             aux Circle = aux1
                                             aux Star = aux2
+
                                          in case aux port of
                                               Auxiliary aux → rec' aux cameFrom newFanMap nodeVarInfo
                                               FreeNode → pure Nothing -- doesn't happen
@@ -346,9 +362,12 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                               Map.insert i ([In Circle, Completed port]) fanMap
                                             newFanMap Circle =
                                               Map.insert i ([In Star, Completed port]) fanMap
+
                                             cameFrom = (Just (n, fanPortsToAux port))
+
                                             auxFlip Circle = aux2
                                             auxFlip Star = aux1
+
                                         case auxFlip port of
                                           Auxiliary aux →
                                             rec' aux cameFrom (newFanMap port) nodeVarInfo

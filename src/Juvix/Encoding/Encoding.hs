@@ -41,9 +41,13 @@ caseGen (Case on cases@(C c _ _ : _)) onNoArg onRec = do
                     pure (f idL)
                   Just ([], body) → pure (f $ onNoArg body)
                   Just (args, body) → pure (f (foldr Lambda body args))
+
               recCase t accLam = lambdaFromEnv (flip onRec accLam) t
+
               initial t = lambdaFromEnv identity t
+
               butLastadtCon = reverse (tailSafe (reverse adtConstructors))
+
           last ← initial (lastDef (error "doesn't happen") adtConstructors)
           expandedCase ← foldrM recCase last butLastadtCon
           return $ Application on expandedCase

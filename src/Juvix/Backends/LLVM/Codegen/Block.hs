@@ -103,8 +103,11 @@ addBlock bname = do
   ix ← get @"blockCount"
   nms ← get @"names"
   let new = emptyBlock ix
+
       (qname, supply) = uniqueName bname nms
+
       name = internName qname
+
   put @"blocks" (Map.insert name new bls)
   put @"blockCount" (succ ix)
   put @"names" supply

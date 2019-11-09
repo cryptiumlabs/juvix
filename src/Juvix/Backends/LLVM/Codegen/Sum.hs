@@ -99,10 +99,14 @@ insertSums ∷
 insertSums sumName variants symTbl varTbl typTbl = (newSymTbl, newVarTbl, newTypTbl)
   where
     sum' = createSum variants
+
     tag' = tagSizeIntExn (tagSize variants)
+
     typTbl' = Map.insert sumName sum' typTbl
+
     symTbl' =
       Map.insert sumName (LocalReference sum' (mkName (unintern sumName))) symTbl
+
     newVarTbl =
       fst $
         foldr
@@ -121,6 +125,7 @@ insertSums sumName variants symTbl varTbl typTbl = (newSymTbl, newVarTbl, newTyp
           )
           (varTbl, 0)
           variants
+
     newTypTbl =
       foldr
         ( \(Variant _s n t) tbl →
@@ -128,6 +133,7 @@ insertSums sumName variants symTbl varTbl typTbl = (newSymTbl, newVarTbl, newTyp
         )
         typTbl'
         variants
+
     newSymTbl =
       foldr
         ( \(Variant _s n t) tbl →

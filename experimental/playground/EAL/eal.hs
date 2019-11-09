@@ -87,9 +87,13 @@ typeOf (App t1 t2) = do
 f p = do
   (ArrowType (_ ∷ Proxy k), ArrowType (_ ∷ Proxy to)) ← pure (isFromA p)
   let ta = R.typeRep ∷ R.TypeRep k
+
       tb = R.typeRep ∷ R.TypeRep Int
+
       tc = R.typeRep ∷ R.TypeRep to
+
       td = R.typeRep ∷ Arrowable to ⇒ R.TypeRep to
+
   case (R.eqTypeRep ta tb) of
     Nothing → [False, False]
     Just T.HRefl →
