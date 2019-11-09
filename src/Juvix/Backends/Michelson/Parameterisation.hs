@@ -9,6 +9,8 @@ type Term = C.Term PrimVal
 
 type Type = C.Type PrimTy
 
+type Value = M.Value' M.ExpandedOp
+
 data PrimTy
   = PrimTy M.Type
   deriving (Show, Eq, Generic)
