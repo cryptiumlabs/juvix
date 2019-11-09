@@ -29,20 +29,34 @@ data PrimVal
 
   deriving (Show, Eq, Generic)
 
+-- TODO: Add rest of primitive values.
 typeOf ∷ PrimVal → [PrimTy]
-typeOf = undefined
+typeOf (PrimConst v) = [PrimTy (M.Type (constType v) "")]
 
+constType ∷ M.Value' Op → M.T
+constType v =
+  case v of
+    M.ValueInt _ → M.Tc M.CInt
+    M.ValueUnit → M.TUnit
+
+-- TODO: Use interpreter for this.
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
-apply = undefined
+apply _ _ = Nothing
 
+-- TODO: parse all types.
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
-parseTy = undefined
+parseTy lexer = do
+  Token.reserved lexer "Unit"
+  pure (PrimTy (M.Type M.TUnit ""))
 
+-- TODO: parse all values.
 parseVal ∷ Token.GenTokenParser String () Identity → Parser PrimVal
-parseVal = undefined
+parseVal lexer = do
+  Token.reserved lexer "()"
+  pure (PrimConst (M.ValueUnit))
 
 reservedNames ∷ [String]
-reservedNames = []
+reservedNames = ["Unit", "()"]
 
 reservedOpNames ∷ [String]
 reservedOpNames = []

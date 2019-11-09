@@ -61,7 +61,7 @@ stackGuard term func = do
 {-
  - Transform core term to Michelson instruction sequence.
  - This requires tracking the stack (what variables are where).
- - At present, this function enforces a unidirection mapping from the term type to the Michelson stack type.
+ - At present, this function enforces a unidirectional mapping from the term type to the Michelson stack type.
  - :: { Haskell Type } ~ { Stack Pre-Evaluation } => { Stack Post-Evaluation }
  -}
 termToInstr ∷

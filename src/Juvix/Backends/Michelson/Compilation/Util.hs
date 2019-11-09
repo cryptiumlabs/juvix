@@ -95,7 +95,7 @@ unrollSeq op =
   case op of
     PrimEx instr → [PrimEx instr]
     SeqEx xs → concatMap unrollSeq xs
-    WithSrcEx _ _ → undefined
+    WithSrcEx _ op → unrollSeq op
 
 genReturn ∷
   ∀ m.
