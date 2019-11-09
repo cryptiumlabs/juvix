@@ -12,6 +12,7 @@ import qualified Z3.Monad as Z3
 runMultipleConstraints ∷ ∀ a. Int → [Constraint] → RPT a → IO ()
 runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
+
       recGen _ _ _ 0 = pure ()
       recGen constraintCall printModel consZ3 num = do
         (r, v, s) ← Z3.evalZ3 constraintCall
@@ -21,6 +22,7 @@ runMultipleConstraints numRepeat constraints syntax = do
         case s of
           Just x →
             let bounds = filter (\(i, _) → Set.member i numset) (zip [0 ..] x)
+
                 newCons =
                   bounds
                     >>| ( \(i, x) →
@@ -28,20 +30,24 @@ runMultipleConstraints numRepeat constraints syntax = do
                               [ConstraintVar 1 i]
                               (Eq (fromInteger x))
                         )
+
                 extraConstraint =
                   makeVarMap newCons
                     >>= flip constraintsToZ3 newCons
                     >>= Z3.mkNot
+
              in recNext
                   extraConstraint
                   consZ3
                   (pred num)
           Nothing → pure ()
+
       recFirst =
         recGen
           (constraintSystem constraints)
           putStrLn
           (pure [])
+
       recNext extra consZ3 =
         recGen
           ( do
@@ -51,6 +57,7 @@ runMultipleConstraints numRepeat constraints syntax = do
           )
           (\_ → pure ())
           ((:) <$> extra <*> consZ3)
+
   recFirst numRepeat
   where
     -- Could use a list, since this should be ascending, but I do not assume that

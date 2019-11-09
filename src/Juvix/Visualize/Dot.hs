@@ -26,8 +26,11 @@ netToGif dir name num net = do
   result ← runGraphNet (dir <> "/" <> name) num net
   dirs ← listDirectory dir
   let imagesGen = T.pack <$> filter (\x → isPrefixOf name x ∧ not (T.isInfixOf "." (T.pack x))) dirs
+
       appDir = ((T.pack dir <> "") <>)
+
       packName = T.pack name
+
   traverse_
     ( \f → do
         removeIfExists (T.unpack (appDir (f <> ".png")))

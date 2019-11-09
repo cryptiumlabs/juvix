@@ -136,7 +136,9 @@ inl =
     $ Application (Value k) (Value x)
   where
     x = intern "x"
+
     k = intern "k"
+
     l = intern "l"
 
 -- | Op of inl that has the first argument call the 2nd
@@ -149,7 +151,9 @@ inlOp =
     $ Application (Value x) (Value k)
   where
     x = intern "x"
+
     k = intern "k"
+
     l = intern "l"
 
 inr ∷ Lambda
@@ -160,7 +164,9 @@ inr =
     $ Application (Value l) (Value y)
   where
     y = intern "y"
+
     k = intern "k"
+
     l = intern "l"
 
 -- | Op of inr that has the first argument call the 2nd
@@ -173,7 +179,9 @@ inrOp =
     $ Application (Value y) (Value l)
   where
     y = intern "y"
+
     k = intern "k"
+
     l = intern "l"
 
 foldM' ∷ Lambda

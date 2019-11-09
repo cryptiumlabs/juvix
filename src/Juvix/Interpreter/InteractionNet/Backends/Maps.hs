@@ -114,8 +114,11 @@ instance Network Net where
   deleteRewire oldNodesToDelete newNodes = do
     Net net ← get @"net"
     let newNodeSet = Set.fromList newNodes
+
         neighbor = neighbors oldNodesToDelete net
+
         conflictingNeighbors = findConflict newNodeSet neighbor
+
     traverse_ (uncurry link) conflictingNeighbors
     delNodes oldNodesToDelete
 
@@ -128,9 +131,11 @@ deleteAllPoints ∷
 deleteAllPoints n = foldr f
   where
     f (n, pt) = Map.adjust (\x → deleteIfDiff pt (x ^. edges) x) n
+
     deleteIfDiff pt edge
       | isSame pt edge = over edges (Map.delete pt)
       | otherwise = identity
+
     isSame pt edge = case Map.lookup pt edge of
       Just x | fst x == n → True
       _ → False

@@ -64,8 +64,11 @@ instance Network FlipNet where
   deleteRewire oldNodesToDelete newNodes = do
     Flip net ← get @"net"
     let newNodeSet = Set.fromList newNodes
+
         neighbors = fst <$> (oldNodesToDelete >>= lneighbors net)
+
         conflictingNeighbors = findConflict newNodeSet neighbors
+
     traverse_ (uncurry link) conflictingNeighbors
     delNodes oldNodesToDelete
 
