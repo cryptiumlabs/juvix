@@ -11,9 +11,13 @@ type Type = C.Type PrimTy
 
 data PrimTy
   = PrimTy M.Type
+  deriving (Show, Eq, Generic)
 
 data PrimVal
   = PrimVal ()
+  -- TODO: Add Michelson primitive constants, instructions which are functions.
+
+  deriving (Show, Eq, Generic)
 
 michelson ∷ C.Parameterisation PrimTy PrimVal
 michelson = undefined

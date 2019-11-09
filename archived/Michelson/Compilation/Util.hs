@@ -39,16 +39,6 @@ unpack ty binds = throw (NotYetImplemented (T.concat ["unpack: ", prettyPrintVal
 unpackDrop ∷ forall m . (MonadError CompilationError m, MonadState M.Stack m) ⇒ [Maybe T.Text] → m M.Expr
 unpackDrop binds = genReturn (foldDrop (length (filter isJust binds)))
 
-rearrange ∷ Int → M.Expr
-rearrange 0 = M.Nop
-rearrange 1 = M.Swap
-rearrange n = M.Seq (M.Dip (rearrange (n - 1))) M.Swap
-
-unrearrange ∷ Int → M.Expr
-unrearrange 0 = M.Nop
-unrearrange 1 = M.Swap
-unrearrange n = M.Seq M.Swap (M.Dip (unrearrange (n - 1)))
-
 position ∷ T.Text → M.Stack → Maybe Int
 position n []     = Nothing
 position n (x:xs) = if fst x == M.VarE n then Just 0 else (+) 1 |<< position n xs
@@ -56,28 +46,6 @@ position n (x:xs) = if fst x == M.VarE n then Just 0 else (+) 1 |<< position n x
 dropFirst ∷ T.Text → M.Stack → M.Stack
 dropFirst n (x:xs) = if fst x == M.VarE n then xs else x : dropFirst n xs
 dropFirst _ []     = []
-
-foldDrop ∷ Int → M.Expr
-foldDrop 0 = M.Nop
-foldDrop n = M.Dip (foldSeq (replicate n M.Drop))
-
-leftSeq ∷ M.Expr → M.Expr
-leftSeq = foldSeq . unrollSeq
-
-unrollSeq ∷ M.Expr → [M.Expr]
-unrollSeq expr =
-  case expr of
-    M.Seq x y    → [x, y]
-
-    M.IfLeft x y → [M.IfLeft (leftSeq x) (leftSeq y)]
-    M.Dip x      → [M.Dip (leftSeq x)]
-    M.If x y     → [M.If (leftSeq x) (leftSeq y)]
-
-    _            → [expr]
-
-foldSeq ∷ [M.Expr] → M.Expr
-foldSeq []     = M.Nop
-foldSeq (x:xs) = M.Seq x (foldSeq xs)
 
 unitaryTypes ∷ [M.Type]
 unitaryTypes = [M.UnitT, M.IntT, M.TezT, M.KeyT, M.BoolT]
