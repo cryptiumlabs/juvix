@@ -18,7 +18,10 @@ data PrimTy
   deriving (Show, Eq, Generic)
 
 data PrimVal
-  = PrimVal ()
+  = PrimConst (M.Value' Op)
+  | PrimPair
+  | PrimFst
+  | PrimSnd
   -- TODO: Add Michelson primitive constants, instructions which are functions.
 
   deriving (Show, Eq, Generic)

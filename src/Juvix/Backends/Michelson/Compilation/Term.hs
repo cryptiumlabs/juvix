@@ -88,6 +88,29 @@ termToInstr term = stackGuard term $ \term → do
           then pure res
           else failWith ("compilation violated stack invariant: " <> show term)
 
+      primToInstr ∷ PrimVal → m Op
+      primToInstr prim =
+        case prim of
+          -- :: \x -> y ~ (x, s) => (y, s)
+          PrimFst → stackCheck (lambda 1) $ do
+            genReturn (M.PrimEx (M.CAR "" ""))
+          -- :: \x -> y ~ (x, s) => (y, s)
+          PrimSnd → stackCheck (lambda 1) $ do
+            genReturn (M.PrimEx (M.CDR "" ""))
+          -- :: \x y -> a ~ (x, (y, s)) => (a, s)
+          PrimPair → stackCheck (lambda 2) $ do
+            modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
+            pure (M.PrimEx (M.PAIR "" "" "" ""))
+          -- :: a ~ s => (a, s)
+          PrimConst const → stackCheck addsOne $ do
+            case const of
+              M.ValueUnit → do
+                modify @"stack" ((:) (FuncResultE, M.Type M.TUnit ""))
+                pure (M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit))
+              M.ValueNil → do
+                modify @"stack" ((:) (FuncResultE, M.Type (M.TList (M.Type M.TOperation "")) ""))
+                pure (M.PrimEx (M.NIL "" "" (M.Type M.TOperation "")))
+
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
     --       since we copy the variable each time. We should be able to use precise usage information
@@ -102,9 +125,9 @@ termToInstr term = stackGuard term $ \term → do
             let before = rearrange i
                 after = M.PrimEx (M.DIP [unrearrange i])
             genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
-    -- :: a ~ s => (a, s)
+    -- :: (varies)
     J.Prim prim →
-      stackCheck addsOne (primToInstr prim)
+      primToInstr prim
     -- :: \a -> b ~ (a, s) => (b, s)
     J.Lam arg body →
       stackCheck (lambda 1) $ do
@@ -116,6 +139,14 @@ termToInstr term = stackGuard term $ \term → do
     -- Ordering: Treat as \a b -> c ~= \a -> \b -> c, e.g. reverse stack order.
     -- forM_ args (\a -> modify ((:) (M.VarE (prettyPrintValue a), M.PairT M.BoolT M.BoolT)))
 
+    -- TODO: This is a hack.
+    J.App (J.App func arg1) arg2 →
+      stackCheck addsOne $ do
+        arg2 ← termToInstr arg2
+        arg1 ← termToInstr arg1
+        func ← termToInstr func
+        pure (M.SeqEx [arg2, arg1, func])
+    -- TODO: Linear logic types (when added to core), etc.
     -- :: (\a -> b) a ~ s => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
@@ -137,19 +168,6 @@ changesTop post pre = drop 1 post == pre
 
 lambda ∷ Natural → Stack → Stack → Bool
 lambda nargs post pre = drop (fromIntegral nargs) pre == drop 1 post
-
-primToInstr ∷
-  ∀ m.
-  ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m
-  ) ⇒
-  PrimVal →
-  m Op
-primToInstr prim =
-  case prim of
-    PrimVal () → do
-      modify @"stack" ((:) (FuncResultE, M.Type M.TUnit ""))
-      pure (M.PrimEx (M.PUSH "" (M.Type M.TUnit "") (M.ValueUnit)))
 
 genSwitch ∷
   ∀ m.

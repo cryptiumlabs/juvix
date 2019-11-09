@@ -34,10 +34,10 @@ compileToMichelson ∷
 compileToMichelson term ty = do
   michelsonTy ← typeToType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy retTy) _ → do
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
       michelsonOp' ← termToMichelson term argTy
       let michelsonOp = leftSeq michelsonOp'
-      let contract = M.Contract argTy retTy [michelsonOp]
+      let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
         Right (M.SomeContract instr start end) → do
           optimised ← optimise instr

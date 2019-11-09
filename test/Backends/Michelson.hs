@@ -14,12 +14,12 @@ shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    (show (fst (compile term ty)) T.@=? contract)
+    ((contractToSource |<< fst (compile term ty)) T.@=? Right contract)
 
 --(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
 
 test_identity ∷ T.TestTree
-test_identity = shouldCompile identityTerm identityType ""
+test_identity = shouldCompile identityTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
 {-
 identityContract :: M.SomeContract
@@ -29,10 +29,13 @@ identityContract = M.SomeContract (MT.Seq MT.DUP MT.DROP)
 -}
 
 identityTerm ∷ Term
-identityTerm = J.Lam "x" (J.Var "x")
+identityTerm = J.Lam "x" (J.App (J.App (J.Prim PrimPair) (J.Prim (PrimConst M.ValueNil))) (J.App (J.Prim PrimFst) (J.Var "x")))
 
 identityType ∷ Type
-identityType = J.Pi unit unit
+identityType = J.Pi (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
 
-unit ∷ Type
-unit = J.PrimTy (PrimTy (M.Type M.TUnit ""))
+opl ∷ M.Type
+opl = M.Type (M.TList (M.Type M.TOperation "")) ""
+
+unit ∷ M.Type
+unit = M.Type M.TUnit ""

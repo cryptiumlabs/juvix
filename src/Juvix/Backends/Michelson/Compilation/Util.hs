@@ -8,11 +8,20 @@ import Michelson.Untyped
 
 stackToStack ∷ Stack → SomeHST
 stackToStack [] = SomeHST SNil
-stackToStack ((_, Type ty _) : xs) =
+stackToStack ((_, ty) : xs) =
   case stackToStack xs of
     SomeHST tail →
-      case ty of
-        TUnit → SomeHST (MT.STUnit -:& tail)
+      MT.withSomeSingT (typeToT ty) $ \sty →
+        SomeHST (sty -:& tail)
+
+-- TODO: I bet this exists in Morley somewhere.
+typeToT ∷ Type → MT.T
+typeToT (Type ty _) =
+  case ty of
+    TOperation → MT.TOperation
+    TUnit → MT.TUnit
+    TPair _ _ x y → MT.TPair (typeToT x) (typeToT y)
+    TList l → MT.TList (typeToT l)
 
 pack ∷
   ∀ m.
@@ -130,5 +139,6 @@ genFunc instr =
           f ← genFunc (SeqEx ops)
           return (\(x : xs) → x : f xs)
         AMOUNT _ → pure ((:) (FuncResultE, Type (Tc CMutez) ""))
+        NIL _ _ _ → pure ((:) (FuncResultE, Type (TList (Type TOperation "")) ""))
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
