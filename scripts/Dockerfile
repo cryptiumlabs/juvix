@@ -13,3 +13,6 @@ RUN ./llvm-install.sh
 # Install libff
 COPY ./build-libff.sh .
 RUN ./build-libff.sh
+
+RUN mv /usr/local/lib/libLLVM* /usr/lib
+RUN mv /usr/local/bin/llvm* /usr/bin

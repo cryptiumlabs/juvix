@@ -49,6 +49,7 @@ The following are required:
 - [Stack](https://haskellstack.org)
 - [z3](https://github.com/Z3Prover/z3) (this can be installed with `make build-z3`)
 - [libff](https://github.com/scipr-lab/libff) (this can be installed with `make build-libff`)
+- [libsecp256k1](https://github.com/bitcoin-core/secp256k1) (you can likely install this with your package manager)
 - [LLVM9](https://llvm.org/) (you can likely install this with your package manager)
 
 ### Building
