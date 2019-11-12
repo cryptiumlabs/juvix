@@ -7,6 +7,7 @@ import Juvix.Library hiding (Type, local)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
@@ -49,24 +50,41 @@ link = body >>= define Type.void "link" args
 
 -- perform offsets
 
+isBothPrimary ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  m Operand.Operand
 isBothPrimary = body >>= define Type.i1 "is_both_primary" args
   where
-    args = [(nodeType, "node")]
+    args = [(nodePointer, "node_ptr")]
     body = do
       makeFunction "is_both_primary" args
       mainPort ← allocaNumPorts False (Operand.ConstantOperand (C.Int 32 0))
       -- TODO ∷ Maybe bad, we should have an environemnt of edges that I can just call
       edge ← findEdge
-      port ← call portType edge (Block.emptyArgs [mainPort])
-      nodePtr ← getElementPtr $
+      nodePtr ← Block.externf "node_ptr"
+      node ← load nodeType nodePtr
+      port ← call portType edge (Block.emptyArgs [node, mainPort])
+      otherNodePtr ← getElementPtr $
         Types.Minimal
           { Types.type' = nodePointer,
             Types.address' = port,
             Types.indincies' = Block.constant32List [0, 1]
           }
-      node ← load nodePointer nodePtr
-      -- run compare function
-      cmp ← undefined
+      -- convert ptrs to ints
+      nodeInt ← ptrToInt nodePtr pointerSize
+      otherNodeInt ← ptrToInt otherNodePtr pointerSize
+      -- compare the pointers to see if they are the same
+      cmp ← icmp IntPred.EQ nodeInt otherNodeInt
       _ ← ret cmp
       createBlocks
 

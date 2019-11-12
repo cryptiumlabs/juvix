@@ -142,6 +142,9 @@ numPortsSmall =
         typ' = numPortsSmallValue
       }
 
+pointerSize ∷ Type
+pointerSize = Type.i16
+
 numPortsSmallValue ∷ Type
 numPortsSmallValue = Type.i16
 

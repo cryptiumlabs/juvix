@@ -391,6 +391,7 @@ generateIf ty cond tr fl = do
 -- Effects
 --------------------------------------------------------------------------------
 
+emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
 
 call ∷
@@ -445,6 +446,10 @@ store ∷
   m ()
 store ptr val = unnminstr $ Store False ptr val Nothing 0 []
 
+--------------------------------------------------------------------------------
+-- Casting Operations
+--------------------------------------------------------------------------------
+
 bitCast ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (HashMap Name BlockState) m,
@@ -455,6 +460,17 @@ bitCast ∷
   Type →
   m Operand
 bitCast op typ = instr typ $ BitCast op typ []
+
+ptrToInt ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m
+  ) ⇒
+  Operand →
+  Type →
+  m Operand
+ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
 
 --------------------------------------------------------------------------------
 -- Pointer Operations
