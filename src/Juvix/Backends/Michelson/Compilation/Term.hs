@@ -105,10 +105,10 @@ termToInstr term = stackGuard term $ \term → do
           PrimConst const → stackCheck addsOne $ do
             case const of
               M.ValueUnit → do
-                modify @"stack" ((:) (FuncResultE, M.Type M.TUnit ""))
+                modify @"stack" ((FuncResultE, M.Type M.TUnit "") :)
                 pure (M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit))
               M.ValueNil → do
-                modify @"stack" ((:) (FuncResultE, M.Type (M.TList (M.Type M.TOperation "")) ""))
+                modify @"stack" ((FuncResultE, M.Type (M.TList (M.Type M.TOperation "") :) ""))
                 pure (M.PrimEx (M.NIL "" "" (M.Type M.TOperation "")))
 
   case term of

@@ -63,7 +63,7 @@ unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust bind
 
 position ∷ Symbol → Stack → Maybe Natural
 position _ [] = Nothing
-position n (x : xs) = if fst x == VarE n then Just 0 else (+) 1 |<< position n xs
+position n (x : xs) = if fst x == VarE n then Just 0 else succ |<< position n xs
 
 dropFirst ∷ Symbol → Stack → Stack
 dropFirst n (x : xs) = if fst x == VarE n then xs else x : dropFirst n xs

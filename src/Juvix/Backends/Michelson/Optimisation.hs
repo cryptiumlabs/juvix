@@ -32,10 +32,10 @@ optimise' ∷ ∀ a b m.
   m (Instr a b)
 optimise' expr =
   case expr of
-    (IF x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF x y)
-    (IF_LEFT x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF_LEFT x y)
-    (IF_CONS x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF_CONS x y)
-    (IF_NONE x y) → optimise' x >>= \x → optimise' y >>= \y → pure (IF_NONE x y)
+    (IF x y) → IF <$> optimise' x <*> optimise' y
+    (IF_LEFT x y) → IF_LEFT <$> optimise' x <*> optimise' y
+    (IF_CONS x y) → IF_CONS <$> optimise' x <*> optimise' y
+    (IF_NONE x y) → IF_NONE <$> optimise' x <*> optimise' y
     (DIP e) → DIP |<< optimise' e
 #if defined(OPTIMISE)
     {- We can assume Seq will be left-forced. -}
@@ -52,5 +52,5 @@ optimise' expr =
 #endif
     (Seq e Nop) → optimise' e
     (Seq Nop e) → optimise' e
-    (Seq x y) → optimise' x >>= \x → optimise' y >>= \y → pure (Seq x y)
+    (Seq x y) → Seq <$> optimise' x <*> optimise' y
     expr → pure expr
