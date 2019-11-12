@@ -17,17 +17,21 @@ shouldCompile term ty contract =
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
     ((contractToSource |<< fst (compile term ty)) T.@=? Right contract)
 
-shouldOptimise :: MT.Instr a b -> MT.Instr a b -> T.TestTree
+shouldOptimise ∷ MT.Instr a b → MT.Instr a b → T.TestTree
 shouldOptimise instr opt =
   T.testCase
     (show instr <> " should optimise to " <> show opt)
     (optimise' instr T.@=? Just opt)
 
-test_optimise_dup_drop :: T.TestTree
+test_optimise_dup_drop ∷ T.TestTree
 test_optimise_dup_drop = shouldOptimise (MT.Seq MT.DUP MT.DROP) MT.Nop
 
 test_identity ∷ T.TestTree
-test_identity = shouldCompile identityTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+test_identity =
+  shouldCompile
+    identityTerm
+    identityType
+    "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
 --(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
 {-
@@ -38,7 +42,16 @@ identityContract = M.SomeContract (MT.Seq MT.DUP MT.DROP)
 -}
 
 identityTerm ∷ Term
-identityTerm = J.Lam "x" (J.App (J.App (J.Prim PrimPair) (J.Prim (PrimConst M.ValueNil))) (J.App (J.Prim PrimFst) (J.Var "x")))
+identityTerm =
+  J.Lam
+    "x"
+    ( J.App
+        ( J.App
+            (J.Prim PrimPair)
+            (J.Prim (PrimConst M.ValueNil))
+        )
+        (J.App (J.Prim PrimFst) (J.Var "x"))
+    )
 
 identityType ∷ Type
 identityType = J.Pi (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))

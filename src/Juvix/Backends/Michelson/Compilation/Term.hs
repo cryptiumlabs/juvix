@@ -18,7 +18,7 @@ termToMichelson ∷
   M.Type →
   m Op
 termToMichelson term argTy = do
-  modify @"stack" ((:) (FuncResultE, argTy))
+  modify @"stack" ((FuncResultE, argTy) :)
   instr ← termToInstr term
   tell @"compilationLog" [TermToInstr term instr]
   pure instr
@@ -108,8 +108,9 @@ termToInstr term = stackGuard term $ \term → do
                 modify @"stack" ((FuncResultE, M.Type M.TUnit "") :)
                 pure (M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit))
               M.ValueNil → do
-                modify @"stack" ((FuncResultE, M.Type (M.TList (M.Type M.TOperation "") :) ""))
+                modify @"stack" ((FuncResultE, M.Type (M.TList (M.Type M.TOperation "")) "") :)
                 pure (M.PrimEx (M.NIL "" "" (M.Type M.TOperation "")))
+              _ → notYetImplemented
 
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
@@ -154,8 +155,6 @@ termToInstr term = stackGuard term $ \term → do
         arg ← termToInstr arg
         func ← termToInstr func
         pure (M.SeqEx [arg, func])
-    -- TODO: Linear logic types (when added to core), etc.
-    _ → notYetImplemented
 
 takesOne ∷ Stack → Stack → Bool
 takesOne post pre = post == drop 1 pre

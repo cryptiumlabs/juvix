@@ -9,10 +9,15 @@ import Michelson.Typed
 
 {-  This is a simple optimization strategy which replaces sequences of Michelson instructions with equivalent sequences of fewer instructions.
 
-    At the moment nontrivial programs are unlikely to compile to the smallest equivalent Michelson instruction sequence, but little time has been spent on optimization so far - a high degree should be possible; the Haskell typesystem provides very strong guarantees.
-    A more interesting / potentially more effective strategy might be to search the space of equivalent Michelson programs, which at small program sizes using bounded heuristic search should be computationally feasible
-      - then choose the one with the fewest instructions (or based on some other gas-estimation preference function).
-    This optimization function is typed in the Instr GADT, so it cannot produce invalid output Michelson. However, the typesystem does not enforce computation correctness; that would require dependent types. -}
+      At the moment nontrivial programs are unlikely to compile to the smallest equivalent Michelson instruction sequence,
+    but little time has been spent on optimization so far - a high degree should be possible; the Haskell typesystem provides very strong guarantees.
+      A more interesting / potentially more effective strategy might be to search the space of equivalent Michelson programs,
+    which at small program sizes using bounded heuristic search should be computationally feasible -
+    then choose the one with the fewest instructions (or based on some other gas-estimation preference function).
+      This optimization function is typed in the Instr GADT, so it cannot produce invalid output Michelson.
+    However, the typesystem does not enforce computation correctness; that would require dependent types.
+
+-}
 
 optimise ∷ ∀ a b m.
   (HasWriter "compilationLog" [CompilationLog] m) ⇒

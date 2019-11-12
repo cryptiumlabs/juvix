@@ -38,13 +38,13 @@ unpack (Type ty _) binds =
     TPair _ _ fT sT →
       case binds of
         [Just fst, Just snd] → do
-          modify @"stack" ((<>) [(VarE fst, fT), (VarE snd, sT)] . drop 1)
+          modify @"stack" (appendDrop [(VarE fst, fT), (VarE snd, sT)])
           pure (SeqEx [PrimEx (DUP ""), PrimEx (CDR "" ""), PrimEx SWAP, PrimEx (CAR "" "")])
         [Just fst, Nothing] → do
-          modify @"stack" ((:) (VarE fst, fT) . drop 1)
+          modify @"stack" (appendDrop [(VarE fst, fT)])
           pure (PrimEx (CAR "" ""))
         [Nothing, Just snd] → do
-          modify @"stack" ((:) (VarE snd, sT) . drop 1)
+          modify @"stack" (appendDrop [(VarE snd, sT)])
           pure (PrimEx (CDR "" ""))
         [Nothing, Nothing] →
           genReturn (PrimEx DROP)
@@ -60,6 +60,9 @@ unpackDrop ∷
   [Maybe Symbol] →
   m ExpandedOp
 unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust binds))))
+
+appendDrop ∷ Stack → Stack → Stack
+appendDrop prefix = (<>) prefix . drop 1
 
 position ∷ Symbol → Stack → Maybe Natural
 position _ [] = Nothing
