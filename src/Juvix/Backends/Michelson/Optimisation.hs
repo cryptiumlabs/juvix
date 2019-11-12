@@ -42,6 +42,8 @@ optimise' expr =
     (IF_CONS x y) → IF_CONS <$> optimise' x <*> optimise' y
     (IF_NONE x y) → IF_NONE <$> optimise' x <*> optimise' y
     (DIP e) → DIP |<< optimise' e
+    -- This can't be done in the typed form.
+    --(Seq (Seq op (LAMBDA (VLam l))) EXEC) -> pure (Seq op l)
 #if defined(OPTIMISE)
     {- We can assume Seq will be left-forced. -}
     (Seq (Seq DUP (DIP e)) DROP) → optimise' e

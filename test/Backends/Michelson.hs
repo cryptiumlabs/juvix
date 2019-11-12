@@ -33,6 +33,9 @@ test_identity =
     identityType
     "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
+test_identity_app :: T.TestTree
+test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+
 --(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
 {-
 identityContract :: M.SomeContract
@@ -52,6 +55,9 @@ identityTerm =
         )
         (J.App (J.Prim PrimFst) (J.Var "x"))
     )
+
+identityAppTerm :: Term
+identityAppTerm = J.Lam "x" (J.App (J.Lam "f" (J.App (J.App (J.Var "f") (J.Prim (PrimConst M.ValueNil))) (J.App (J.Prim PrimFst) (J.Var "x")))) (J.Prim PrimPair))
 
 identityType ∷ Type
 identityType = J.Pi (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
