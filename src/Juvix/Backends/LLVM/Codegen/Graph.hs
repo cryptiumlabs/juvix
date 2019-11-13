@@ -138,7 +138,16 @@ allocaPorts = body >>= defineVarArgs portArrayLen "alloca_ports" args
 
 -- derived from the core functions
 
-relink = undefined
+relink ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  m Operand.Operand
+relink = body >>= Block.define Type.void "relink" args
   where
     args =
       [ (nodeType, "node_old"),
@@ -153,15 +162,19 @@ relink = undefined
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
       oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
       -- TODO ∷ Abstract out this bit ---------------------------------------------
-      --
-      numPointsTo ← loadElementPtr $
-        Types.Minimal
-          { Types.type' = numPorts,
-            Types.address' = oldPointsTo,
-            Types.indincies' = Block.constant32List [0, 2]
-          }
-      -- END Abstracting out bits -------------------------------------------------
-      undefined
+      let intoGen typ num = loadElementPtr $
+            Types.Minimal
+              { Types.type' = numPorts,
+                Types.address' = oldPointsTo,
+                Types.indincies' = Block.constant32List [0, num]
+              }
+      numPointsTo ← intoGen numPorts 2
+      nodePointsToPtr ← intoGen nodePointer 1
+      nodePointsTo ← load nodeType nodePointsToPtr
+      -- End Abstracting out bits -------------------------------------------------
+      _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
+      _ ← retNull
+      createBlocks
 
 --------------------------------------------------------------------------------
 -- Helpers
