@@ -18,7 +18,17 @@ import qualified LLVM.AST.Type as Type
 -- Main Functions
 --------------------------------------------------------------------------------
 
--- take 4 Operand.Operand
+-- TODO ∷ delNodes, deleteRewire, deleteEdge
+
+allocaNode ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  m Operand.Operand
+allocaNode = alloca nodeType
+
 link ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
@@ -30,7 +40,7 @@ link ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-link = body >>= define Type.void "link" args
+link = body >>= Block.define Type.void "link" args
   where
     args =
       ( [ (nodeType, "node_1"),
@@ -63,7 +73,7 @@ isBothPrimary ∷
     HasState "varTab" VariantToType m
   ) ⇒
   m Operand.Operand
-isBothPrimary = body >>= define Type.i1 "is_both_primary" args
+isBothPrimary = body >>= Block.define Type.i1 "is_both_primary" args
   where
     args = [(nodePointer, "node_ptr")]
     body = do
@@ -100,7 +110,7 @@ findEdge ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-findEdge = body >>= define portType "find_edge" args
+findEdge = body >>= Block.define Types.portType "find_edge" args
   where
     args = [(nodeType, "node"), (numPorts, "port")]
     body = do
@@ -115,30 +125,6 @@ findEdge = body >>= define portType "find_edge" args
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
-
-makeFunction ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
-  ) ⇒
-  Symbol →
-  [(Type.Type, Name.Name)] →
-  m ()
-makeFunction name args = do
-  entry ← addBlock name
-  _ ← setBlock entry
-  -- Maybe not needed?
-  traverse_
-    ( \(typ, nam) → do
-        var ← alloca typ
-        store var (local typ nam)
-        assign (nameToSymbol nam) var
-    )
-    args
 
 -- Logic for setPort expanded
 

@@ -129,7 +129,7 @@ data MinimalPtr
 
 -- | 'varientToType' takes the type out of the variant
 varientToType ∷ VariantInfo → Type
-varientToType Variant {typ' = typ'} = typ'
+varientToType = typ'
 
 -- | 'numPortsSmall' is used for the number of ports that fit within 16 bits
 numPortsSmall ∷ VariantInfo
