@@ -533,6 +533,18 @@ getElementPtr (Minimal address indices type') =
         indices = indices
       }
 
+loadElementPtr ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m
+  ) ⇒
+  MinimalPtr →
+  m Operand
+loadElementPtr minimal = do
+  ptr ← getElementPtr minimal
+  load (Types.type' minimal) ptr
+
 constant32List ∷ Functor f ⇒ f Integer → f Operand
 constant32List = fmap (ConstantOperand . C.Int 32)
 

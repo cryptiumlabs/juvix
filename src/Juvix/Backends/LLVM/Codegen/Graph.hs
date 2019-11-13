@@ -152,13 +152,15 @@ relink = undefined
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
       oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
-      -- TODO ∷ Abstract out this bit
-      numPointsTo ← getElementPtr $
+      -- TODO ∷ Abstract out this bit ---------------------------------------------
+      --
+      numPointsTo ← loadElementPtr $
         Types.Minimal
           { Types.type' = numPorts,
             Types.address' = oldPointsTo,
             Types.indincies' = Block.constant32List [0, 2]
           }
+      -- END Abstracting out bits -------------------------------------------------
       undefined
 
 --------------------------------------------------------------------------------
@@ -252,13 +254,12 @@ getPort ∷
   m Operand.Operand
 getPort node port = do
   intOfNumPorts nodePointer port $ \value → do
-    portsPtr ← getElementPtr $
+    ports ← loadElementPtr $
       Types.Minimal
         { Types.type' = portData,
           Types.address' = node,
           Types.indincies' = Block.constant32List [0, 2]
         }
-    ports ← load portData portsPtr
     -- allocate the new pointer
     getElementPtr $
       Types.Minimal
@@ -287,37 +288,34 @@ intOfNumPorts ∷
   m Operand.Operand
 intOfNumPorts typ numPort cont = do
   -- grab the tag from the numPort
-  tagPtr ← Block.getElementPtr $
+  tag ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = Type.i1,
         Types.address' = numPort,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  tag ← load Type.i1 tagPtr
   generateIf typ tag smallBranch largeBranch
   where
     smallBranch = branchGen numPortsSmall numPortsSmallValue return
 
     largeBranch = branchGen numPortsLarge numPortsLargeValuePtr $
-      \vPtr → do
-        deref2 ← Block.getElementPtr $
+      \vPtr →
+        Block.loadElementPtr $
           Types.Minimal
             { Types.type' = numPortsLargeValue,
               Types.address' = vPtr,
               Types.indincies' = Block.constant32List [0, 1]
             }
-        load numPortsLargeValue deref2
 
     -- Generic logic
     branchGen variant variantType extraDeref = do
       casted ← bitCast numPort (varientToType variant)
-      valueP ← Block.getElementPtr $
+      value ← Block.loadElementPtr $
         Types.Minimal
           { Types.type' = variantType,
             Types.address' = casted,
             Types.indincies' = Block.constant32List [0, 1]
           }
-      value ← load variantType valueP
       -- Does nothing for the small case
       value ← extraDeref value
       cont value
@@ -336,32 +334,28 @@ portPointsTo ∷
 portPointsTo (portType ∷ Operand.Operand) = do
   -- TODO ∷ see if there is any special logic for packed Types
   -- Do I have to index by size?
-  nodePtrPtr ← Block.getElementPtr $
+  nodePtr ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = nodePointer,
         Types.address' = portType,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  -- Finish grabbing the node from the pointer
-  nodePtr ← load nodePointer nodePtrPtr
   -- get the node which it points to
-  nodeTypePtr ← getElementPtr $
+  nodeType ← loadElementPtr $
     Types.Minimal
       { Types.type' = nodeType,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  node ← load nodeType nodeTypePtr
   -- Get the numPort
-  numPortPtr ← Block.getElementPtr $
+  numPort ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = numPorts,
         Types.address' = portType,
         -- Index may change due to being packed
         Types.indincies' = Block.constant32List [0, 2]
       }
-  numPort ← load numPorts numPortPtr
-  getPort node numPort
+  getPort nodeType numPort
 
 -- | Allocates a 'numPorts'
 allocaNumPortsStatic ∷
