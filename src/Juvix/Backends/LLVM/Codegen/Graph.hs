@@ -205,7 +205,7 @@ rewire = body >>= Block.define Type.void "rewire" args
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
       (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-      oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p2])
+      oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p1])
       let intoGen typ num = loadElementPtr $
             Types.Minimal
               { Types.type' = typ,
@@ -218,7 +218,7 @@ rewire = body >>= Block.define Type.void "rewire" args
       -- End Abstracting out bits -------------------------------------------------
       _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
       _ ← retNull
-      undefined
+      createBlocks
 
 --------------------------------------------------------------------------------
 -- Helpers
