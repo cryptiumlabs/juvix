@@ -129,6 +129,7 @@ library:
     - Juvix.Backends.LLVM.Codegen.Graph
     - Juvix.Backends.LLVM.Codegen
     - Juvix.Backends.LLVM.Net.EAC
+    - Juvix.Backends.LLVM.Net.EAC.Types
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate
