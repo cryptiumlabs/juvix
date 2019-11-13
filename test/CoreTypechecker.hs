@@ -56,7 +56,7 @@ identityApplication =
 natTy ∷ NatAnnotation
 natTy = (SNat 1, IR.VPrimTy Nat)
 
--- (I:(Nat->Nat)->(Nat->Nat) I:(Nat->Nat)) I:Nat type checked to NatTy
+-- (I:(Nat->Nat)->(Nat->Nat) I:(Nat->Nat)) 1 type checked to NatTy
 identityAppINat1 ∷ NatElim
 identityAppINat1 =
   IR.App
@@ -147,6 +147,39 @@ identityAppK =
             )
         )
     )
+
+scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
+scombinator =
+  IR.Lam --x (Bound 2)
+    ( IR.Lam --y (Bound 1)
+        ( IR.Lam --z (Bound 0)
+            ( IR.App
+                ( IR.App
+                    (IR.Bound 2) --TODO Annotate this
+                    (IR.Elim (IR.Bound 0))
+                )
+                ( IR.App
+                    (IR.Bound 1) --TODO Annotate this
+                    (IR.Elim (IR.Bound 0))
+                )
+            )
+        )
+    )
+
+-- x: (Nat -> Nat) -> (Nat -> Nat) ->
+-- y: (Nat -> Nat) -> (Nat -> Nat) ->
+-- z: (Nat -> Nat) -> (Nat -> Nat) ->
+-- -> (Nat -> Nat)
+-- For example, S (III) = (II) (II) = I I = I
+sCompNatTy ∷ NatAnnotation
+sCompNatTy =
+  --TODO
+  ( SNat 1,
+    IR.VPi
+      (SNat 1)
+      (IR.VPrimTy Nat)
+      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+  )
 
 test_identity_computational ∷ T.TestTree
 test_identity_computational = shouldCheck nat identity identityNatCompTy
