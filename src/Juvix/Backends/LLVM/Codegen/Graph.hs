@@ -70,8 +70,8 @@ isBothPrimary = body >>= Block.define Type.i1 "is_both_primary" args
     body = do
       makeFunction "is_both_primary" args
       mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
-      -- TODO ∷ Maybe bad, we should have an environemnt of edges that I can just call
-      edge ← findEdge
+      -- TODO ∷ Make sure findEdge is in the environment
+      edge ← Block.externf "find_edge"
       nodePtr ← Block.externf "node_ptr"
       node ← load nodeType nodePtr
       port ← call portType edge (Block.emptyArgs [node, mainPort])
@@ -108,8 +108,10 @@ findEdge = body >>= Block.define Types.portType "find_edge" args
       makeFunction "find_edge" args
       node ← Block.externf "node"
       pNum ← Block.externf "port"
-      port ← getPort node pNum
-      other ← portPointsTo port
+      portPtr ← getPort node pNum
+      port ← load portType portPtr
+      otherPtr ← portPointsTo port
+      other ← load portType otherPtr
       _ ← ret other
       createBlocks
 
@@ -134,6 +136,30 @@ allocaPorts = body >>= defineVarArgs portArrayLen "alloca_ports" args
     args = [(portType, "P")]
     body = undefined
 
+-- derived from the core functions
+
+relink = undefined
+  where
+    args =
+      [ (nodeType, "node_old"),
+        (numPorts, "port_old"),
+        (nodeType, "node_new"),
+        (numPorts, "port_new")
+      ]
+    body = do
+      edge ← Block.externf "find_edge"
+      link ← Block.externf "link"
+      (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
+      (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
+      oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
+      -- TODO ∷ Abstract out this bit
+      numPointsTo ← getElementPtr $
+        Types.Minimal
+          { Types.type' = numPorts,
+            Types.address' = oldPointsTo,
+            Types.indincies' = Block.constant32List [0, 2]
+          }
+      undefined
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -225,7 +251,7 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  intOfNumPorts portType port $ \value → do
+  intOfNumPorts nodePointer port $ \value → do
     portsPtr ← getElementPtr $
       Types.Minimal
         { Types.type' = portData,

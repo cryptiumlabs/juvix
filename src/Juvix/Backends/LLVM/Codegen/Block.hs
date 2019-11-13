@@ -619,6 +619,7 @@ createVariantAllocaFunction variantName argTypes = do
              in body >>= define sumTyp varCName args
 
 -- TODO ∷ Remove repeat code!!!
+
 -- | creates a variant
 createVariant ∷
   ( HasThrow "err" Errors m,

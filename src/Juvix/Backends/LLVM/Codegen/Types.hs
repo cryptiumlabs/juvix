@@ -224,13 +224,12 @@ nodeType = StructureType
 portData ∷ Type
 portData = ArrayType 0 portType
 
-
 -- Holds the port type and the size of it for easy transition into nodeType
 portArrayLen ∷ Type
 portArrayLen = StructureType
   { isPacked = False,
     elementTypes =
-    [ numPorts,
-      portData
-    ]
+      [ numPorts,
+        portData
+      ]
   }
