@@ -140,10 +140,12 @@ allocaPorts = body >>= defineVarArgs portArrayLen "alloca_ports" args
 
 relink ∷
   ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Names m,
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
@@ -156,6 +158,7 @@ relink = body >>= Block.define Type.void "relink" args
         (numPorts, "port_new")
       ]
     body = do
+      makeFunction "relink" args
       edge ← Block.externf "find_edge"
       link ← Block.externf "link"
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
@@ -164,7 +167,7 @@ relink = body >>= Block.define Type.void "relink" args
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       let intoGen typ num = loadElementPtr $
             Types.Minimal
-              { Types.type' = numPorts,
+              { Types.type' = typ,
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
@@ -175,6 +178,47 @@ relink = body >>= Block.define Type.void "relink" args
       _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
       _ ← retNull
       createBlocks
+
+rewire ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  m Operand.Operand
+rewire = body >>= Block.define Type.void "rewire" args
+  where
+    args =
+      [ (nodeType, "node_one"),
+        (numPorts, "port_one"),
+        (nodeType, "node_two"),
+        (numPorts, "port_two")
+      ]
+    body = do
+      makeFunction "rewire" args
+      edge ← Block.externf "find_edge"
+      relink ← Block.externf "relink"
+      -- TODO ∷ Abstract out this bit ---------------------------------------------
+      (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
+      (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
+      oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p2])
+      let intoGen typ num = loadElementPtr $
+            Types.Minimal
+              { Types.type' = typ,
+                Types.address' = oldPointsTo,
+                Types.indincies' = Block.constant32List [0, num]
+              }
+      numPointsTo ← intoGen numPorts 2
+      nodePointsToPtr ← intoGen nodePointer 1
+      nodePointsTo ← load nodeType nodePointsToPtr
+      -- End Abstracting out bits -------------------------------------------------
+      _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
+      _ ← retNull
+      undefined
 
 --------------------------------------------------------------------------------
 -- Helpers
