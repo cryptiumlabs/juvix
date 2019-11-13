@@ -215,7 +215,7 @@ nodeType ∷ Type
 nodeType = StructureType
   { isPacked = True,
     elementTypes =
-      [ numPorts, -- length of this node
+      [ numPorts, -- length of the portData
         ArrayType 0 portType, -- variable size array of ports
         ArrayType 0 dataType -- variable size array of data the node stores
       ]
@@ -223,3 +223,14 @@ nodeType = StructureType
 
 portData ∷ Type
 portData = ArrayType 0 portType
+
+
+-- Holds the port type and the size of it for easy transition into nodeType
+portArrayLen ∷ Type
+portArrayLen = StructureType
+  { isPacked = False,
+    elementTypes =
+    [ numPorts,
+      portData
+    ]
+  }

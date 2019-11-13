@@ -20,15 +20,6 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ delNodes, deleteRewire, deleteEdge
 
-allocaNode ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  m Operand.Operand
-allocaNode = alloca nodeType
-
 link ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
@@ -78,7 +69,7 @@ isBothPrimary = body >>= Block.define Type.i1 "is_both_primary" args
     args = [(nodePointer, "node_ptr")]
     body = do
       makeFunction "is_both_primary" args
-      mainPort ← allocaNumPorts False (Operand.ConstantOperand (C.Int 32 0))
+      mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
       -- TODO ∷ Maybe bad, we should have an environemnt of edges that I can just call
       edge ← findEdge
       nodePtr ← Block.externf "node_ptr"
@@ -121,6 +112,28 @@ findEdge = body >>= Block.define Types.portType "find_edge" args
       other ← portPointsTo port
       _ ← ret other
       createBlocks
+
+-- TODO ∷ allocaPorts, allocaPortType, allocaData, allocaNodeType
+-- Name           | Arguments
+-- allocaNodeType : two array args
+-- allocaPortType : nodePointer ∧ numPorts
+-- allocaPorts    : variable args of ports
+-- allocaData     : variable args of dataType
+
+allocaNode ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  m Operand.Operand
+allocaNode = alloca nodeType
+
+allocaPorts = body >>= defineVarArgs portArrayLen "alloca_ports" args
+  where
+    args = [(portType, "P")]
+    body = undefined
+
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -325,7 +338,7 @@ portPointsTo (portType ∷ Operand.Operand) = do
   getPort node numPort
 
 -- | Allocates a 'numPorts'
-allocaNumPorts ∷
+allocaNumPortsStatic ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
@@ -336,7 +349,7 @@ allocaNumPorts ∷
   Bool →
   Operand.Operand →
   m Operand.Operand
-allocaNumPorts (isLarge ∷ Bool) (value ∷ Operand.Operand) =
+allocaNumPortsStatic (isLarge ∷ Bool) (value ∷ Operand.Operand) =
   -- Call Block.createVariant
   -- Issue is that I need to register this sum type in the map
   -- else it is an error.
