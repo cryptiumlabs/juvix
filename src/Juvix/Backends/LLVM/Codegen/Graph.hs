@@ -18,7 +18,9 @@ import qualified LLVM.AST.Type as Type
 -- Main Functions
 --------------------------------------------------------------------------------
 
--- TODO ∷ delNodes, deleteRewire, deleteEdge
+-- TODO ∷ delNodes, deleteRewire, deleteEdge, allocaNode in full
+
+-- TODO ∷ abstract over the define pattern seen below?
 
 link ∷
   ( HasThrow "err" Errors m,
@@ -31,23 +33,18 @@ link ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-link = body >>= Block.define Type.void "link" args
+link = Block.defineFunction Type.void "link" args $
+  do
+    setPort ("node_1", "port_1") ("node_2", "port_2")
+    setPort ("node_2", "port_2") ("node_1", "port_1")
+    retNull
   where
     args =
-      ( [ (nodeType, "node_1"),
-          (numPorts, "port_1"),
-          (nodeType, "node_2"),
-          (numPorts, "port_2")
-        ] ∷
-          [(Type.Type, Name.Name)]
-      )
-    -- TODO ∷ Abstract most of the logic in this function
-    body = do
-      makeFunction "link" args
-      setPort ("node_1", "port_1") ("node_2", "port_2")
-      setPort ("node_2", "port_2") ("node_1", "port_1")
-      _ ← retNull
-      createBlocks
+      [ (nodeType, "node_1"),
+        (numPorts, "port_1"),
+        (nodeType, "node_2"),
+        (numPorts, "port_2")
+      ]
 
 -- perform offsets
 
@@ -64,30 +61,28 @@ isBothPrimary ∷
     HasState "varTab" VariantToType m
   ) ⇒
   m Operand.Operand
-isBothPrimary = body >>= Block.define Type.i1 "is_both_primary" args
+isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
+  do
+    mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
+    -- TODO ∷ Make sure findEdge is in the environment
+    edge ← Block.externf "find_edge"
+    nodePtr ← Block.externf "node_ptr"
+    node ← load nodeType nodePtr
+    port ← call portType edge (Block.emptyArgs [node, mainPort])
+    otherNodePtr ← getElementPtr $
+      Types.Minimal
+        { Types.type' = nodePointer,
+          Types.address' = port,
+          Types.indincies' = Block.constant32List [0, 1]
+        }
+    -- convert ptrs to ints
+    nodeInt ← ptrToInt nodePtr pointerSize
+    otherNodeInt ← ptrToInt otherNodePtr pointerSize
+    -- compare the pointers to see if they are the same
+    cmp ← icmp IntPred.EQ nodeInt otherNodeInt
+    ret cmp
   where
     args = [(nodePointer, "node_ptr")]
-    body = do
-      makeFunction "is_both_primary" args
-      mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
-      -- TODO ∷ Make sure findEdge is in the environment
-      edge ← Block.externf "find_edge"
-      nodePtr ← Block.externf "node_ptr"
-      node ← load nodeType nodePtr
-      port ← call portType edge (Block.emptyArgs [node, mainPort])
-      otherNodePtr ← getElementPtr $
-        Types.Minimal
-          { Types.type' = nodePointer,
-            Types.address' = port,
-            Types.indincies' = Block.constant32List [0, 1]
-          }
-      -- convert ptrs to ints
-      nodeInt ← ptrToInt nodePtr pointerSize
-      otherNodeInt ← ptrToInt otherNodePtr pointerSize
-      -- compare the pointers to see if they are the same
-      cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-      _ ← ret cmp
-      createBlocks
 
 -- The logic assumes that the operation always succeeds
 findEdge ∷
@@ -101,19 +96,17 @@ findEdge ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-findEdge = body >>= Block.define Types.portType "find_edge" args
+findEdge = Block.defineFunction Types.portType "find_edge" args $
+  do
+    node ← Block.externf "node"
+    pNum ← Block.externf "port"
+    portPtr ← getPort node pNum
+    port ← load portType portPtr
+    otherPtr ← portPointsTo port
+    other ← load portType otherPtr
+    ret other
   where
     args = [(nodeType, "node"), (numPorts, "port")]
-    body = do
-      makeFunction "find_edge" args
-      node ← Block.externf "node"
-      pNum ← Block.externf "port"
-      portPtr ← getPort node pNum
-      port ← load portType portPtr
-      otherPtr ← portPointsTo port
-      other ← load portType otherPtr
-      _ ← ret other
-      createBlocks
 
 -- TODO ∷ allocaPorts, allocaPortType, allocaData, allocaNodeType
 -- Name           | Arguments
@@ -131,10 +124,11 @@ allocaNode ∷
   m Operand.Operand
 allocaNode = alloca nodeType
 
-allocaPorts = body >>= defineVarArgs portArrayLen "alloca_ports" args
+allocaPorts = Block.defineFunctionVarArgs portArrayLen "alloca_ports" args $
+  do
+    undefined
   where
     args = [(portType, "P")]
-    body = undefined
 
 -- derived from the core functions
 
@@ -149,7 +143,26 @@ relink ∷
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
-relink = body >>= Block.define Type.void "relink" args
+relink = Block.defineFunction Type.void "relink" args $
+  do
+    edge ← Block.externf "find_edge"
+    link ← Block.externf "link"
+    (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
+    (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
+    oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
+    -- TODO ∷ Abstract out this bit ---------------------------------------------
+    let intoGen typ num = loadElementPtr $
+          Types.Minimal
+            { Types.type' = typ,
+              Types.address' = oldPointsTo,
+              Types.indincies' = Block.constant32List [0, num]
+            }
+    numPointsTo ← intoGen numPorts 2
+    nodePointsToPtr ← intoGen nodePointer 1
+    nodePointsTo ← load nodeType nodePointsToPtr
+    -- End Abstracting out bits -------------------------------------------------
+    _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
+    retNull
   where
     args =
       [ (nodeType, "node_old"),
@@ -157,27 +170,6 @@ relink = body >>= Block.define Type.void "relink" args
         (nodeType, "node_new"),
         (numPorts, "port_new")
       ]
-    body = do
-      makeFunction "relink" args
-      edge ← Block.externf "find_edge"
-      link ← Block.externf "link"
-      (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
-      (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
-      -- TODO ∷ Abstract out this bit ---------------------------------------------
-      let intoGen typ num = loadElementPtr $
-            Types.Minimal
-              { Types.type' = typ,
-                Types.address' = oldPointsTo,
-                Types.indincies' = Block.constant32List [0, num]
-              }
-      numPointsTo ← intoGen numPorts 2
-      nodePointsToPtr ← intoGen nodePointer 1
-      nodePointsTo ← load nodeType nodePointsToPtr
-      -- End Abstracting out bits -------------------------------------------------
-      _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
-      _ ← retNull
-      createBlocks
 
 rewire ∷
   ( HasThrow "err" Errors m,
@@ -190,7 +182,26 @@ rewire ∷
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
-rewire = body >>= Block.define Type.void "rewire" args
+rewire = Block.defineFunction Type.void "rewire" args $
+  do
+    edge ← Block.externf "find_edge"
+    relink ← Block.externf "relink"
+    -- TODO ∷ Abstract out this bit ---------------------------------------------
+    (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
+    (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
+    oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p1])
+    let intoGen typ num = loadElementPtr $
+          Types.Minimal
+            { Types.type' = typ,
+              Types.address' = oldPointsTo,
+              Types.indincies' = Block.constant32List [0, num]
+            }
+    numPointsTo ← intoGen numPorts 2
+    nodePointsToPtr ← intoGen nodePointer 1
+    nodePointsTo ← load nodeType nodePointsToPtr
+    -- End Abstracting out bits -------------------------------------------------
+    _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
+    retNull
   where
     args =
       [ (nodeType, "node_one"),
@@ -198,27 +209,8 @@ rewire = body >>= Block.define Type.void "rewire" args
         (nodeType, "node_two"),
         (numPorts, "port_two")
       ]
-    body = do
-      makeFunction "rewire" args
-      edge ← Block.externf "find_edge"
-      relink ← Block.externf "relink"
-      -- TODO ∷ Abstract out this bit ---------------------------------------------
-      (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
-      (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-      oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p1])
-      let intoGen typ num = loadElementPtr $
-            Types.Minimal
-              { Types.type' = typ,
-                Types.address' = oldPointsTo,
-                Types.indincies' = Block.constant32List [0, num]
-              }
-      numPointsTo ← intoGen numPorts 2
-      nodePointsToPtr ← intoGen nodePointer 1
-      nodePointsTo ← load nodeType nodePointsToPtr
-      -- End Abstracting out bits -------------------------------------------------
-      _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
-      _ ← retNull
-      createBlocks
+
+delNode = undefined
 
 --------------------------------------------------------------------------------
 -- Helpers

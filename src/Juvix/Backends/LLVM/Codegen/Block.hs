@@ -119,6 +119,44 @@ makeFunction name args = do
     )
     args
 
+defineFunctionGen ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  Bool →
+  Type →
+  Symbol →
+  [(Type, Name)] →
+  m a →
+  m Operand
+defineFunctionGen bool retty name args body =
+  (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
+
+defineFunction,
+  defineFunctionVarArgs ∷
+    ( HasThrow "err" Errors m,
+      HasState "blockCount" Int m,
+      HasState "blocks" (HashMap Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name m,
+      HasState "moduleDefinitions" [Definition] m,
+      HasState "names" Names m,
+      HasState "symtab" (HashMap Symbol Operand) m
+    ) ⇒
+    Type →
+    Symbol →
+    [(Type, Name)] →
+    m a →
+    m Operand
+defineFunction = defineFunctionGen False
+defineFunctionVarArgs = defineFunctionGen True
+
 --------------------------------------------------------------------------------
 -- Block Stack
 --------------------------------------------------------------------------------
