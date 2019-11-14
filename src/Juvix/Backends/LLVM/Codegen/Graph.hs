@@ -63,6 +63,8 @@ isBothPrimary ∷
   m Operand.Operand
 isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
   do
+    -- TODO ∷ should this call be abstracted somewhere?!
+    -- Why should Ι allocate for every port?!
     mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
     -- TODO ∷ Make sure findEdge is in the environment
     edge ← Block.externf "find_edge"
