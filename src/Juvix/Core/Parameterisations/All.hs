@@ -40,23 +40,20 @@ unitValToAll = UnitVal
 typeOf ∷ AllVal → [AllTy]
 typeOf (NatVal nat) =
   fmap natTyToAll (Naturals.typeOf nat)
-typeOf (UnitVal unit) = [UnitTy Unit.TUnit]
-typeOf _ = []
+typeOf (UnitVal unit) = fmap unitTyToAll (Unit.typeOf unit)
 
 apply ∷ AllVal → AllVal → Maybe AllVal
 apply (NatVal nat1) (NatVal nat2) =
-  case Naturals.apply nat1 nat2 of
-    Just val → pure (natValToAll val)
-    Nothing → Nothing
+  fmap natValToAll (Naturals.apply nat1 nat2)
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser AllTy
 parseTy lexer =
-  (natTyToAll <$> (Naturals.parseTy lexer)) <|> (unitTyToAll <$> (Unit.parseTy lexer))
+  (natTyToAll <$> Naturals.parseTy lexer) <|> (unitTyToAll <$> Unit.parseTy lexer)
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser AllVal
 parseVal lexer =
-  (natValToAll <$> (Naturals.parseVal lexer))
+  (natValToAll <$> Naturals.parseVal lexer)
     <|> fmap unitValToAll (Unit.parseVal lexer)
 
 reservedNames ∷ [String]
