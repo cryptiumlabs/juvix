@@ -21,6 +21,27 @@ Pushing minor changes (typo fixes) to another person's branch is fine. Ask befor
 
 Before 1.0.0, you may merge your own PRs, review is not required (but feel free to request a review if you would like one, Github has a button to do so).
 
+## Editing Environments
+
+- __Intero + Emacs__
+  - Sadly by default intero does not work out of the box for code in the `test/` directory
+  - To allow intero to integrate nicely with this project please type `M-x intero-targets` and select the following
+    ```
+    [x] juvix:lib
+    [ ] juvix:exe:juvix
+    [x] juvix:test:juvix-test
+    ```
+    - This should write the elisp file `.dir-locals.el`
+    ```elisp
+    ;;; Directory Local Variables
+    ;;; For more information see (info "(emacs) Directory Variables")
+
+    ((haskell-mode
+       (intero-targets "juvix:lib" "juvix:test:juvix-test")))
+    ```
+    - Upon further uses, emacs will ask about unsafe variable values, allow it to cache in your .emacs that the code is safe
+  - You may have to open emacs in the directory of Juvix for emacs + intero to work properly
+
 ## Pre-commit hooks
 
 Please put the following in `.git/hooks/pre-commit` and run `chmod +x .git/hooks/pre-commit`.
