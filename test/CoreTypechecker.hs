@@ -2,6 +2,7 @@
 module CoreTypechecker where
 
 import qualified Juvix.Core.IR as IR
+import Juvix.Core.Parameterisations.All
 import Juvix.Core.Parameterisations.Naturals
 import Juvix.Core.Parameterisations.Unit
 import Juvix.Core.Types

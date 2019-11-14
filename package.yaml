@@ -88,6 +88,8 @@ library:
     - Juvix.Core.Usage
     - Juvix.Core.Types
     - Juvix.Core.Parameterisations.Naturals
+    - Juvix.Core.Parameterisations.Unit
+    - Juvix.Core.Parameterisations.All
     - Juvix.Core.EAC
     - Juvix.Core.EAC.Check
     - Juvix.Core.EAC.ConstraintGen
@@ -95,7 +97,6 @@ library:
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
-    - Juvix.Core.Parameterisations.Unit
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default

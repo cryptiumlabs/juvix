@@ -1,5 +1,7 @@
 module Juvix.Core.Parameterisations.All where
 
+import qualified Juvix.Core.Parameterisations.Naturals as Naturals
+import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Core.Types hiding
   ( apply,
     parseTy,
@@ -15,77 +17,53 @@ import Prelude (String)
 
 -- all primitive types
 data AllTy
-  = Nat
-  | TUnit
-  deriving (Show, Eq)
+  = NatTy Naturals.NatTy
+  | UnitTy Unit.UnitTy
 
 -- c: primitive constant and f: functions
 data AllVal
-  = Natural Natural -- c (NatTy)
-  | Add -- f addition
-  | Sub -- f subtraction
-  | Mul -- f multiplication
-  | Curried NatVal Natural
-  | Unit -- c (UnitTy)
-  deriving (Show, Eq)
+  = NatVal Naturals.NatVal
+  | UnitVal Unit.UnitVal
+
+natTyToAll ∷ Naturals.NatTy → AllTy
+natTyToAll = NatTy
+
+natValToAll ∷ Naturals.NatVal → AllVal
+natValToAll = NatVal
+
+unitTyToAll ∷ Unit.UnitTy → AllTy
+unitTyToAll = UnitTy
+
+unitValToAll ∷ Unit.UnitVal → AllVal
+unitValToAll = UnitVal
 
 typeOf ∷ AllVal → [AllTy]
-typeOf (Natural _) = [Nat]
-typeOf (Curried _ _) = [Nat, Nat]
-typeOf Add = [Nat, Nat, Nat]
-typeOf Sub = [Nat, Nat, Nat]
-typeOf Mul = [Nat, Nat, Nat]
-typeOf Unit = [TUnit]
+typeOf (NatVal nat) =
+  fmap natTyToAll (Naturals.typeOf nat)
+typeOf (UnitVal unit) = [UnitTy Unit.TUnit]
+typeOf _ = []
 
 apply ∷ AllVal → AllVal → Maybe AllVal
-apply Add (Natural x) = pure (Curried Add x)
-apply Sub (Natural x) = pure (Curried Sub x)
-apply Mul (Natural x) = pure (Curried Mul x)
-apply (Curried Add x) (Natural y) = pure (Natural (x + y))
-apply (Curried Sub x) (Natural y) = pure (Natural (x - y))
-apply (Curried Mul x) (Natural y) = pure (Natural (x * y))
+apply (NatVal nat1) (NatVal nat2) =
+  case Naturals.apply nat1 nat2 of
+    Just val → pure (natValToAll val)
+    Nothing → Nothing
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser AllTy
 parseTy lexer =
-  do
-    Token.reserved lexer "Nat"
-    pure Nat
-    <|> do
-      Token.reserved lexer "Unit"
-      pure TUnit
+  (natTyToAll <$> (Naturals.parseTy lexer)) <|> (unitTyToAll <$> (Unit.parseTy lexer))
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser AllVal
 parseVal lexer =
-  parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
-    <|> do
-      Token.reserved lexer "()"
-      pure Unit
-
-parseNat ∷ Token.GenTokenParser String () Identity → Parser AllVal
-parseNat lexer = Natural . fromIntegral |<< Token.natural lexer
-
-parseAdd ∷ Token.GenTokenParser String () Identity → Parser AllVal
-parseAdd lexer = Token.reserved lexer "+" >> pure Add
-
-parseSub ∷ Token.GenTokenParser String () Identity → Parser AllVal
-parseSub lexer = Token.reserved lexer "-" >> pure Sub
-
-parseMul ∷ Token.GenTokenParser String () Identity → Parser AllVal
-parseMul lexer = Token.reserved lexer "*" >> pure Mul
+  (natValToAll <$> (Naturals.parseVal lexer))
+    <|> fmap unitValToAll (Unit.parseVal lexer)
 
 reservedNames ∷ [String]
-reservedNames =
-  [ "Nat",
-    "+",
-    "-",
-    "*", --Nat
-    "Unit",
-    "()" --Unit
-  ]
+reservedNames = Naturals.reservedNames <> Unit.reservedNames
 
 reservedOpNames ∷ [String]
-reservedOpNames = []
+reservedOpNames = Naturals.reservedOpNames <> Unit.reservedOpNames
 
 all ∷ Parameterisation AllTy AllVal
 all =
