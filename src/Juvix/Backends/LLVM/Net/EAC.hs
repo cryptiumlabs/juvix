@@ -37,3 +37,6 @@ anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" arg
     Codegen.delNode node2
   where
     args = [(Codegen.nodeType, "node_1"), (Codegen.nodeType, "node_2")]
+
+
+-- TODO ∷ make fast rewires and slow rewires
