@@ -13,7 +13,7 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
--- all primitive types 
+-- all primitive types
 data AllTy
   = Nat
   | TUnit
@@ -47,21 +47,20 @@ apply (Curried Mul x) (Natural y) = pure (Natural (x * y))
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser AllTy
-parseTy lexer = 
+parseTy lexer =
   do
     Token.reserved lexer "Nat"
     pure Nat
-    <|>
-  do
-    Token.reserved lexer "Unit"
-    pure TUnit
+    <|> do
+      Token.reserved lexer "Unit"
+      pure TUnit
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser AllVal
 parseVal lexer =
-  parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer <|>
-  do
-    Token.reserved lexer "()"
-    pure Unit
+  parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
+    <|> do
+      Token.reserved lexer "()"
+      pure Unit
 
 parseNat ∷ Token.GenTokenParser String () Identity → Parser AllVal
 parseNat lexer = Natural . fromIntegral |<< Token.natural lexer
@@ -76,9 +75,13 @@ parseMul ∷ Token.GenTokenParser String () Identity → Parser AllVal
 parseMul lexer = Token.reserved lexer "*" >> pure Mul
 
 reservedNames ∷ [String]
-reservedNames = 
-  ["Nat", "+", "-", "*", --Nat
-   "Unit", "()" --Unit
+reservedNames =
+  [ "Nat",
+    "+",
+    "-",
+    "*", --Nat
+    "Unit",
+    "()" --Unit
   ]
 
 reservedOpNames ∷ [String]
