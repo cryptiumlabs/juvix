@@ -176,12 +176,12 @@ kAppI =
         kcombinator
         ( IR.Pi
             (SNat 1)
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
             ( IR.Pi
                 (SNat 1)
                 (IR.PrimTy Nat)
                 (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
             )
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
         )
     )
     ( IR.Elim
