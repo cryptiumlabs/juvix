@@ -124,6 +124,16 @@ kCompTy =
       (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 
+-- Nat -> () -> Nat
+kCompTyWithUnit :: AllAnnotation
+kCompTyWithUnit =
+  ( SNat 1,
+    IR.VPi
+      (SNat 1)
+      (IR.VPrimTy (All.NatTy Nat))
+      (const (IR.VPi (SNat 0) (IR.VPrimTy (All.UnitTy TUnit)) (const (IR.VPrimTy (All.NatTy Nat)))))
+  )
+
 -- I:(Nat->Nat->Nat)->(Nat->Nat->Nat) K:(Nat->Nat->Nat) should type check to (Nat->Nat->Nat)
 identityAppK ∷ NatElim
 identityAppK =
@@ -256,6 +266,9 @@ test_identity_app_I = shouldInfer nat identityAppI identityNatCompTy
 
 test_kcombinator_computational ∷ T.TestTree
 test_kcombinator_computational = shouldCheck nat kcombinator kCompTy
+
+test_kcombinatorUnit_computational ∷ T.TestTree
+test_kcombinatorUnit_computational = shouldCheck All.all kcombinator kCompTyWithUnit
 
 test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy

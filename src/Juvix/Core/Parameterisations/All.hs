@@ -19,11 +19,13 @@ import Prelude (String)
 data AllTy
   = NatTy Naturals.NatTy
   | UnitTy Unit.UnitTy
+  deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
 data AllVal
   = NatVal Naturals.NatVal
   | UnitVal Unit.UnitVal
+  deriving (Show, Eq)
 
 natTyToAll ∷ Naturals.NatTy → AllTy
 natTyToAll = NatTy
