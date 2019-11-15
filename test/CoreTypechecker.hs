@@ -201,7 +201,23 @@ kAppICompTy =
       (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 
-{- scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
+{-
+-- Because S returns functions, it's not general because of the annotations.
+-- For example, S (KSK) = (KK) (SK) = K:Nat-> Nat-> Nat
+-- this S takes in KSK, and has x and y annotated as follows:
+-- (x = K that takes inputs
+--     (1) K, with type signature of z, and
+--     (2) SK, the S takes in K and 2 Nats, and has the signature (Nat -> Nat -> Nat) -> Nat -> Nat -> Nat,
+--             the K has the type signature of z. So SK has the signature of Nat -> Nat -> Nat
+-- so x has the signature of (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)
+-- (y = S that takes in K and 2 Nats and returns a Nat:) (Nat -> Nat-> Nat) -> Nat -> Nat -> Nat
+-- (z = K:) Nat -> Nat -> Nat
+-- (returns z) -> Nat -> Nat -> Nat
+-- To sum, type signature of S in this example is:
+-- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
+-- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
+-- (Nat -> Nat -> Nat)
+scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
 scombinator =
   IR.Lam --x (Bound 2)
     ( IR.Lam --y (Bound 1)
@@ -213,27 +229,24 @@ scombinator =
                         (IR.Ann
                             (SNat 1)
                             (IR.Bound 2)
-                            ())
+                            () -- Annotation of x                  
+                        )
                         (IR.Elim (IR.Bound 0))
-                        ))
-                        ( IR.App
-                            (IR.Bound 1) --TODO Annotate this
-                            (IR.Elim (IR.Bound 0))
+                    )
+                    () -- Annotation of the outside App
+                )
+                ( IR.App
+                    (IR.Ann
+                        (SNat 1)
+                        (IR.Bound 1)
+                        () -- Annotation of y                  
+                    )
+                    (IR.Elim (IR.Bound 0))
                 )
             )
         )
     )
 
--- For example, S (KSK) = (KK) (SK) = K:Nat-> Nat-> Nat
--- (x = K that takes inputs
---     (1) K, with type signature of z, and
---     (2) SK, the S takes in K and 2 Nats, and has the signature (Nat -> Nat -> Nat) -> Nat -> Nat -> Nat,
---             the K has the type signature of z. So SK has the signature of Nat -> Nat -> Nat
--- so x has the signature of (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)
--- (y = S that takes in K and 2 Nats and returns a Nat:) (Nat -> Nat-> Nat) -> Nat -> Nat -> Nat
--- (z = K:) Nat -> Nat -> Nat
--- (returns z) -> Nat -> Nat -> Nat
--- To sum, type signature of S in this example is:
 -- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
 -- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
 -- (Nat -> Nat -> Nat)
