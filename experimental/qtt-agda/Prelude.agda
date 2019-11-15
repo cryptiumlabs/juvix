@@ -35,8 +35,7 @@ module ℕ where
 open ℕ public using (ℕ ; zero ; suc)
 
 module Fin where
-  import Data.Fin hiding (module Fin ;
-                          0F ; 1F ; 2F ; 3F ; 4F ; 5F ; 6F ; 7F ; 8F ; 9F)
+  import Data.Fin hiding (module Fin)
   open Data.Fin public
   open import Data.Fin.Properties public
   import Data.Fin.Literals as Lit
@@ -68,7 +67,7 @@ open Maybe public using (Maybe ; nothing ; just)
 module Relation where
   open import Relation.Nullary public renaming (Irrelevant to Irrelevant₀)
   open import Relation.Nullary.Decidable public
-  open import Relation.Unary public
+  open import Relation.Unary public hiding (⌊_⌋)
     renaming (Irrelevant to Irrelevant₁ ; Recomputable to Recomputable₁ ;
               Universal to Universal₁ ; Decidable to Decidable₁ ; _⇒_ to _⇒₁_)
   open import Relation.Binary public
