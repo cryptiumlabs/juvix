@@ -75,7 +75,7 @@ module Relation where
               Universal to Universal₂ ; Decidable to Decidable₂ ; _⇒_ to _⇒₂_)
 
   module _ where
-    private variable ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ : Level ; A B C D E F : Set _
+    private variable ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ : Level ; A B C D E F G : Set _
 
     _Preserves₃_⟶_⟶_⟶_ :
       (A → B → C → D) → Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Set _
@@ -99,6 +99,15 @@ module Relation where
       ∀ {a a′ b b′ c c′ d d′ e e′} →
       a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ → e ∼ᵉ e′ →
       f a b c d e ∼ᶠ f a′ b′ c′ d′ e′
+
+    _Preserves₆_⟶_⟶_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E → F → G) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Rel F ℓ₆ →
+      Rel G ℓ₇ → Set _
+    𝑓 Preserves₆ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ ⟶ _∼ᶠ_ ⟶ _∼ᵍ_ =
+      ∀ {a a′ b b′ c c′ d d′ e e′ f f′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ → e ∼ᵉ e′ → f ∼ᶠ f′ →
+      𝑓 a b c d e f ∼ᵍ 𝑓 a′ b′ c′ d′ e′ f′
 
 open Relation public
   using (Dec ; yes ; no ; ¬_ ; True ; False ; ⌊_⌋ ;
