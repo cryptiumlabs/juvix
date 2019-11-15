@@ -2,7 +2,7 @@
 module CoreTypechecker where
 
 import qualified Juvix.Core.IR as IR
-import Juvix.Core.Parameterisations.All
+import Juvix.Core.Parameterisations.All as All 
 import Juvix.Core.Parameterisations.Naturals
 import Juvix.Core.Parameterisations.Unit
 import Juvix.Core.Types
@@ -12,20 +12,19 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
 type NatTerm = IR.Term NatTy NatVal
-
 type NatElim = IR.Elim NatTy NatVal
-
 type NatValue = IR.Value NatTy NatVal
-
 type NatAnnotation = IR.Annotation NatTy NatVal
 
 type UnitTerm = IR.Term UnitTy UnitVal
-
 type UnitElim = IR.Elim UnitTy UnitVal
-
 type UnitValue = IR.Value UnitTy UnitVal
-
 type UnitAnnotation = IR.Annotation UnitTy UnitVal
+
+type AllTerm = IR.Term AllTy AllVal
+type AllElim = IR.Elim AllTy AllVal
+type AllValue = IR.Value AllTy AllVal
+type AllAnnotation = IR.Annotation AllTy AllVal
 
 identity ∷ ∀ primTy primVal. IR.Term primTy primVal
 identity = IR.Lam (IR.Elim (IR.Bound 0))
@@ -57,7 +56,7 @@ identityApplication =
 natTy ∷ NatAnnotation
 natTy = (SNat 1, IR.VPrimTy Nat)
 
--- (I:(Nat->Nat)->(Nat->Nat) I:(Nat->Nat)) I:Nat type checked to NatTy
+-- (I:(Nat->Nat)->(Nat->Nat) I:(Nat->Nat)) 1 type checked to NatTy
 identityAppINat1 ∷ NatElim
 identityAppINat1 =
   IR.App
@@ -149,6 +148,84 @@ identityAppK =
         )
     )
 
+--K: (Nat -> Nat) -> Nat -> (Nat -> Nat) I:Nat -> Nat type checks to Nat -> (Nat -> Nat)
+kAppI :: NatElim
+kAppI =
+  IR.App
+    (IR.Ann
+      (SNat 1)
+      kcombinator
+      (IR.Pi 
+        (SNat 1) 
+        (IR.Pi 
+            (SNat 1) 
+            (IR.PrimTy Nat)
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))) 
+        (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)))
+    )
+    ( IR.Elim
+        ( IR.Ann
+            (SNat 1)
+            identity
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+        )
+    )
+
+kAppICompTy :: NatAnnotation
+kAppICompTy =
+  ( SNat 1,
+  IR.VPi
+    (SNat 1)
+    (IR.VPrimTy Nat)
+    (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+  )
+
+
+{- scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
+scombinator =
+  IR.Lam --x (Bound 2)
+    ( IR.Lam --y (Bound 1)
+        ( IR.Lam --z (Bound 0)
+            ( IR.App
+                (IR.Ann
+                    (SNat 1)    
+                    ( IR.App
+                        (IR.Ann
+                            (SNat 1)
+                            (IR.Bound 2)
+                            ())
+                        (IR.Elim (IR.Bound 0))
+                        ))
+                        ( IR.App
+                            (IR.Bound 1) --TODO Annotate this
+                            (IR.Elim (IR.Bound 0))
+                )
+            )
+        )
+    )
+
+-- For example, S (KSK) = (KK) (SK) = K:Nat-> Nat-> Nat 
+-- (x = K that takes inputs 
+--     (1) K, with type signature of z, and 
+--     (2) SK, the S takes in K and 2 Nats, and has the signature (Nat -> Nat -> Nat) -> Nat -> Nat -> Nat,
+--             the K has the type signature of z. So SK has the signature of Nat -> Nat -> Nat
+-- so x has the signature of (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)
+-- (y = S that takes in K and 2 Nats and returns a Nat:) (Nat -> Nat-> Nat) -> Nat -> Nat -> Nat 
+-- (z = K:) Nat -> Nat -> Nat 
+-- (returns z) -> Nat -> Nat -> Nat
+-- To sum, type signature of S in this example is:
+-- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
+-- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
+-- (Nat -> Nat -> Nat)
+sCompNatTy ∷ NatAnnotation
+sCompNatTy =
+  ( SNat 1,
+    IR.VPi
+      (SNat 1)
+      (IR.VPrimTy Nat)
+      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+  )
+ -}    
 test_identity_computational ∷ T.TestTree
 test_identity_computational = shouldCheck nat identity identityNatCompTy
 
@@ -172,6 +249,12 @@ test_kcombinator_computational = shouldCheck nat kcombinator kCompTy
 
 test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy
+
+test_k_app_I ::T.TestTree
+test_k_app_I = shouldInfer nat kAppI kAppICompTy
+
+--test_siii :: T.TestTree
+--test_siii = shouldInfer all scombinator
 
 test_nats_type_star0 ∷ T.TestTree
 test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
