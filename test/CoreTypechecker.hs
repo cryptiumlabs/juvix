@@ -125,7 +125,7 @@ kCompTy =
   )
 
 -- Nat -> () -> Nat
-kCompTyWithUnit :: AllAnnotation
+kCompTyWithUnit ∷ AllAnnotation
 kCompTyWithUnit =
   ( SNat 1,
     IR.VPi
