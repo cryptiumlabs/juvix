@@ -200,6 +200,13 @@ portType = StructureType
       ]
   }
 
+-- TODO ∷ getElementPtr returns int32*?
+portPointer ∷ Type
+portPointer = PointerType
+  { pointerReferent = portType,
+    pointerAddrSpace = AddrSpace 32
+  }
+
 portTypeSize ∷ Num p ⇒ p
 portTypeSize = 33
 

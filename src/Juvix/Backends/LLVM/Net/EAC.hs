@@ -39,4 +39,19 @@ anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" arg
     args = [(Codegen.nodeType, "node_1"), (Codegen.nodeType, "node_2")]
 
 
--- TODO ∷ make fast rewires and slow rewires
+
+
+-- TODO ∷ make fast fanInAux and slow fanInAux
+
+-- | 'fanInAuxStar' is a slower version of 'fanInAux*' where * ∈ ℤ/4ℤ.
+-- This function is used when it can not be determined that 'fanInAux*'
+fanInAuxStar = undefined
+
+
+fanInAux0 = undefined
+
+fanInAux1 = undefined
+
+fanInAux2 = undefined
+
+fanInAux3 = undefined

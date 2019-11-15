@@ -134,7 +134,7 @@ allocaPorts = Block.defineFunctionVarArgs portArrayLen "alloca_ports" args $
 
 -- derived from the core functions
 
-relink ∷
+linkConnectedPort ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -145,7 +145,7 @@ relink ∷
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
-relink = Block.defineFunction Type.void "relink" args $
+linkConnectedPort = Block.defineFunction Type.void "link_connected_port" args $
   do
     edge ← Block.externf "find_edge"
     link ← Block.externf "link"
@@ -187,7 +187,7 @@ rewire ∷
 rewire = Block.defineFunction Type.void "rewire" args $
   do
     edge ← Block.externf "find_edge"
-    relink ← Block.externf "relink"
+    relink ← Block.externf "link_connected_port"
     -- TODO ∷ Abstract out this bit ---------------------------------------------
     (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
     (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
@@ -304,7 +304,7 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  intOfNumPorts nodePointer port $ \value → do
+  intOfNumPorts portPointer port $ \value → do
     ports ← loadElementPtr $
       Types.Minimal
         { Types.type' = portData,
