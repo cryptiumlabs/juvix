@@ -36,6 +36,9 @@ test_used_arg = shouldEraseTo unit (appTerm, SNat 1, appTy) (Erased.Lam "f" (Era
 test_app_unused_arg ∷ T.TestTree
 test_app_unused_arg = shouldEraseTo unit (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy) (HR.Elim (HR.Prim Unit))), SNat 1, identityTy) (Erased.Lam "y" (Erased.Var "y"))
 
+test_unused_function ∷ T.TestTree
+test_unused_function = shouldEraseTo unit (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy2) identityTerm), SNat 1, identityTy) (Erased.Lam "y" (Erased.Var "y"))
+
 identityTerm ∷ HR.Term UnitTy UnitVal
 identityTerm = HR.Lam "y" (HR.Elim (HR.Var "y"))
 
@@ -53,6 +56,9 @@ constTerm = HR.Lam "x" identityTerm
 
 constTy ∷ HR.Term UnitTy UnitVal
 constTy = HR.Pi (SNat 0) unitTy (HR.Lam "_" identityTy)
+
+constTy2 ∷ HR.Term UnitTy UnitVal
+constTy2 = HR.Pi (SNat 0) identityTy (HR.Lam "_" identityTy)
 
 unitTerm ∷ HR.Term UnitTy UnitVal
 unitTerm = HR.Elim (HR.Prim Unit)
