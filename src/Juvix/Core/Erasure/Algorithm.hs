@@ -72,14 +72,16 @@ eraseTerm parameterisation term usage ty =
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
             -- TODO: Correct context, will the empty context work?
-            let Right (fUsage, fTy) = IR.iType0 parameterisation [] fIR
-                fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
-            f ← eraseTerm parameterisation (Core.Elim f) fUsage fty
-            if argUsage == Core.SNat 0
-              then pure f
-              else do
-                x ← eraseTerm parameterisation x argUsage fArgTy
-                pure (Erased.App f x)
+            case IR.iType0 parameterisation [] fIR of
+              Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
+              Right (fUsage, fTy) → do
+                let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
+                f ← eraseTerm parameterisation (Core.Elim f) fUsage fty
+                if argUsage == Core.SNat 0
+                  then pure f
+                  else do
+                    x ← eraseTerm parameterisation x argUsage fArgTy
+                    pure (Erased.App f x)
           Core.Ann usage term ty → eraseTerm parameterisation term usage ty
 
 eraseType ∷

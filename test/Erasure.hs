@@ -30,11 +30,20 @@ test_trivial_unit = shouldEraseTo unit (HR.Elim (HR.Prim Unit), SNat 1, HR.PrimT
 test_unused_arg ∷ T.TestTree
 test_unused_arg = shouldEraseTo unit (constTerm, SNat 1, constTy) (Erased.Lam "y" (Erased.Var "y"))
 
+test_app_unused_arg ∷ T.TestTree
+test_app_unused_arg = shouldEraseTo unit (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy) (HR.Elim (HR.Prim Unit))), SNat 1, identityTy) (Erased.Lam "y" (Erased.Var "y"))
+
+identityTerm ∷ HR.Term UnitTy UnitVal
+identityTerm = HR.Lam "y" (HR.Elim (HR.Var "y"))
+
+identityTy ∷ HR.Term UnitTy UnitVal
+identityTy = HR.Pi (SNat 1) unitTy (HR.Lam "_" unitTy)
+
 constTerm ∷ HR.Term UnitTy UnitVal
-constTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y")))
+constTerm = HR.Lam "x" identityTerm
 
 constTy ∷ HR.Term UnitTy UnitVal
-constTy = HR.Pi (SNat 0) unitTy (HR.Lam "_" (HR.Pi (SNat 1) unitTy (HR.Lam "_" unitTy)))
+constTy = HR.Pi (SNat 0) unitTy (HR.Lam "_" identityTy)
 
 unitTerm ∷ HR.Term UnitTy UnitVal
 unitTerm = HR.Elim (HR.Prim Unit)

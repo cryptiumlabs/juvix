@@ -175,7 +175,7 @@ cType p ii g (Lam s) ann =
         ((Local ii, (sig <.> pi, ty)) : g) -- put s in the context with usage sig*pi
         (cSubst 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
         (sig, ty' (vfree (Local ii))) -- is of type M (usage sigma) in context T
-    _ → throwError $ show (snd ann) <> " is not a function type but should be."
+    _ → throwError $ show (snd ann) <> " is not a function type but should be - while checking " <> show (Lam s)
 --
 cType p ii g (Elim e) ann = do
   ann' ← iType p ii g e
