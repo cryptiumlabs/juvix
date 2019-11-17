@@ -20,7 +20,24 @@ shouldEraseTo ∷
 shouldEraseTo parameterisation (term, usage, ty) erased =
   T.testCase
     (show (term, usage, ty) <> " should erase to " <> show erased)
-    ((fst |<< Erasure.erase parameterisation term usage ty) T.@=? Right erased)
+    ( Right erased
+        T.@=? ((fst |<< Erasure.erase parameterisation term usage ty))
+    )
 
 test_trivial_unit ∷ T.TestTree
 test_trivial_unit = shouldEraseTo unit (HR.Elim (HR.Prim Unit), SNat 1, HR.PrimTy TUnit) (Erased.Prim Unit)
+
+test_unused_arg ∷ T.TestTree
+test_unused_arg = shouldEraseTo unit (constTerm, SNat 1, constTy) (Erased.Lam "y" (Erased.Var "y"))
+
+constTerm ∷ HR.Term UnitTy UnitVal
+constTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y")))
+
+constTy ∷ HR.Term UnitTy UnitVal
+constTy = HR.Pi (SNat 0) unitTy (HR.Lam "_" (HR.Pi (SNat 1) unitTy (HR.Lam "_" unitTy)))
+
+unitTerm ∷ HR.Term UnitTy UnitVal
+unitTerm = HR.Elim (HR.Prim Unit)
+
+unitTy ∷ HR.Term UnitTy UnitVal
+unitTy = HR.PrimTy TUnit

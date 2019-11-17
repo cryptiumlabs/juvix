@@ -64,7 +64,7 @@ eraseTerm parameterisation term usage ty =
         body ← eraseTerm parameterisation body bodyUsage retTyBody
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
-        pure (if usage <> argUsage == Core.SNat 0 then body else Erased.Lam name body)
+        pure (if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body)
       Core.Elim elim →
         case elim of
           Core.Var n → pure (Erased.Var n)
