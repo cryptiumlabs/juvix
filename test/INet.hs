@@ -7,6 +7,7 @@ import Data.Graph.Inductive hiding
     nodes,
   )
 import Juvix.Core.EAC
+import Juvix.Core.Parameterisations.Unit
 import Juvix.Interpreter.InteractionNet
 import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Graph
@@ -22,13 +23,13 @@ import Juvix.Visualize.Dot
 import Juvix.Visualize.Graph
 import Text.Parsec
 
-type PrimVal = ()
+type PrimVal = UnitVal
 
 ealToINet ∷ ∀ primVal. RPTO primVal → AST primVal
 ealToINet = erasedCoreToInteractionNetAST . erase
 
-astToNetDefault ∷ Network net ⇒ AST primVal → net (Lang primVal)
-astToNetDefault net = astToNet net defaultEnv
+astToNetDefault ∷ Network net ⇒ AST PrimVal → net (Lang PrimVal)
+astToNetDefault net = astToNet unit net defaultEnv
 
 --test1 ∷ Either ParseError (InfoNet (FlipNet Lang))
 test1 ∷ Either ParseError (InfoNet (Juvix.Interpreter.InteractionNet.Backends.Maps.Net (Lang PrimVal)))

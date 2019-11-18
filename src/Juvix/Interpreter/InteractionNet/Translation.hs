@@ -7,6 +7,7 @@ module Juvix.Interpreter.InteractionNet.Translation
 where
 
 import Data.List ((!!))
+import qualified Juvix.Core.Types as Core
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import qualified Juvix.Interpreter.InteractionNet.Nets.Default as AST
 import Juvix.Interpreter.InteractionNet.NodeInterface
@@ -42,8 +43,8 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net primVal a → Env net primVal → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ Type.AST primVal → Map.Map Symbol Type.Fn → net (AST.Lang primVal)
-astToNet bohm customSymMap = net'
+astToNet ∷ ∀ primTy primVal net. Network net ⇒ Core.Parameterisation primTy primVal → Type.AST primVal → Map.Map Symbol Type.Fn → net (AST.Lang primVal)
+astToNet param bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
 
