@@ -20,7 +20,7 @@ erase ∷
   Core.Term primTy primVal →
   Core.Usage →
   Core.Term primTy primVal →
-  Either ErasureError (Erased.Term primVal, Erased.TypeAssignment primTy)
+  Either ErasureError ((Erased.Term primVal, Erased.Type primTy), Erased.TypeAssignment primTy)
 erase parameterisation term usage ty =
   let (erased, env) = exec (eraseTerm parameterisation term usage ty)
    in erased >>| \erased →
@@ -45,7 +45,7 @@ eraseTerm ∷
   Core.Term primTy primVal →
   Core.Usage →
   Core.Term primTy primVal →
-  m (Erased.Term primVal)
+  m (Erased.Term primVal, Erased.Type primTy)
 eraseTerm parameterisation term usage ty =
   if usage == Core.SNat 0
     then throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
@@ -56,20 +56,22 @@ eraseTerm parameterisation term usage ty =
       Core.Lam name body → do
         -- The type must be a dependent function.
         let Core.Pi argUsage varTy retTy = ty
+        funcTy ← eraseType parameterisation ty
         -- TODO: Is this correct?
         let bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
         let varTyIR = IR.cEval parameterisation (hrToIR varTy) []
         modify @"context" ((:) (IR.Global (show name), (argUsage, varTyIR)))
-        body ← eraseTerm parameterisation body bodyUsage retTy
+        (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
-        pure (if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body)
-      Core.Elim elim →
+        pure ((if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body), funcTy)
+      Core.Elim elim → do
+        elimTy ← eraseType parameterisation ty
         case elim of
-          Core.Var n → pure (Erased.Var n)
-          Core.Prim p → pure (Erased.Prim p)
+          Core.Var n → pure (Erased.Var n, elimTy)
+          Core.Prim p → pure (Erased.Prim p, elimTy)
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
             context ← get @"context"
@@ -77,13 +79,15 @@ eraseTerm parameterisation term usage ty =
               Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
               Right (fUsage, fTy) → do
                 let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
-                f ← eraseTerm parameterisation (Core.Elim f) fUsage fty
+                (f, _) ← eraseTerm parameterisation (Core.Elim f) fUsage fty
                 if argUsage == Core.SNat 0
-                  then pure f
+                  then pure (f, elimTy)
                   else do
-                    x ← eraseTerm parameterisation x argUsage fArgTy
-                    pure (Erased.App f x)
-          Core.Ann usage term ty → eraseTerm parameterisation term usage ty
+                    (x, _) ← eraseTerm parameterisation x argUsage fArgTy
+                    pure (Erased.App f x, elimTy)
+          Core.Ann usage term ty → do
+            (term, _) ← eraseTerm parameterisation term usage ty
+            pure (term, elimTy)
 
 eraseType ∷
   ∀ primTy primVal m.

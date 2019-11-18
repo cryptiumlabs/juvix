@@ -14,7 +14,7 @@ import Juvix.Library
 import Options
 import Types
 
-typecheck ∷ FilePath → Backend → IO (Erased.Term PrimVal)
+typecheck ∷ FilePath → Backend → IO (Erased.Term PrimVal, Erased.Type PrimTy)
 typecheck fin Michelson = do
   source ← readFile fin
   let parsed = Core.generateParser michelson (T.unpack source)
@@ -22,15 +22,19 @@ typecheck fin Michelson = do
     Just (HR.Elim (HR.Ann usage term ty)) → do
       erased ← liftIO (exec (Core.typecheckErase term usage ty) michelson)
       case erased of
-        (Right (term, typeAssignment), _) →
-          pure term
-    _ → exitFailure
+        (Right ((term, ty), typeAssignment), _) →
+          pure (term, ty)
+        other → do
+          T.putStrLn (show other)
+          exitFailure
+    err → do
+      T.putStrLn (show err)
+      exitFailure
 typecheck _ _ = exitFailure
 
 compile ∷ FilePath → FilePath → Backend → IO ()
 compile fin fout backend = do
-  term ← typecheck fin backend
-  let ty = undefined
+  (term, ty) ← typecheck fin backend
   let (res, logs) = M.compile term ty
   case res of
     Left err → do
