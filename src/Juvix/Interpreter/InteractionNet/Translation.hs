@@ -42,7 +42,7 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ Type.AST → Map.Map Symbol Type.Fn → net AST.Lang
+astToNet ∷ Network net ⇒ Type.AST primVal → Map.Map Symbol Type.Fn → net AST.Lang
 astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
@@ -205,7 +205,7 @@ data FanStatus
   | Completed FanPorts
   deriving (Show)
 
-netToAst ∷ DifferentRep net ⇒ net AST.Lang → Maybe Type.AST
+netToAst ∷ DifferentRep net ⇒ net AST.Lang → Maybe (Type.AST primVal)
 netToAst net = evalEnvState run (Env 0 net Map.empty)
   where
     run = do

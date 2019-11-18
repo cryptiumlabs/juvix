@@ -93,7 +93,7 @@ defaultSymbols =
 -- directly to the AST instead
 defaultSpecial ∷
   (Eq k, Hashable k, IsString k) ⇒
-  Map.HashMap k (Type.AST → Type.AST → Type.AST)
+  Map.HashMap k (Type.AST primVal → Type.AST primVal → Type.AST primVal)
 defaultSpecial =
   Map.fromList
     [ ("or", Type.Or),

@@ -19,7 +19,7 @@ import Prelude (String)
 
 -- Ops ends up being recursive on itself
 -- TODO ∷ Figure how to not make this dependent on itself
-type Ops m = [[Operator String () m AST]]
+type Ops m primVal = [[Operator String () m (AST primVal)]]
 
 -- Lexer------------------------------------------------------------------------
 langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
@@ -131,13 +131,13 @@ symbol = intern <$> identifier
 
 -- Grammar ---------------------------------------------------------------------
 
-parseAST ∷ String → Either ParseError AST
+parseAST ∷ String → Either ParseError (AST primVal)
 parseAST = parseAST' ""
 
-parseAST' ∷ SourceName → String → Either ParseError AST
+parseAST' ∷ SourceName → String → Either ParseError (AST primVal)
 parseAST' = runParser (whiteSpace *> expression' <* eof) ()
 
-parseASTFile ∷ FilePath → IO (Either ParseError AST)
+parseASTFile ∷ FilePath → IO (Either ParseError (AST primVal))
 parseASTFile fname = do
   input ← readFile fname
   pure $ parseAST' fname (show input)
@@ -145,7 +145,7 @@ parseASTFile fname = do
 -- poor type signatures can't find the monadic version of parsec outside of stream
 -- TODO ∷ rewrite this later
 
-expression' ∷ ParsecT String () Identity AST
+expression' ∷ ParsecT String () Identity (AST primVal)
 expression' =
   ifThenElse
     <|> (application <?> "help")
@@ -165,12 +165,12 @@ expression' =
 
 -- Infix Parser ----------------------------------------------------------------
 
-createInfixUnkown ∷ Symbol → AST → AST → AST
+createInfixUnkown ∷ Symbol → AST primVal → AST primVal → AST primVal
 createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
 
 -- So far only the defaultSpecial is sent in, but in the future, pass in extensions
 -- to both defaultSpecial and defaultSymbols.
-precedenceToOps ∷ Stream s m Char ⇒ OperatorTable s u m AST
+precedenceToOps ∷ Stream s m Char ⇒ OperatorTable s u m (AST primVal)
 precedenceToOps =
   ( \(Precedence _ s a) →
       let ins = intern s
@@ -185,14 +185,14 @@ precedenceToOps =
       (\x y → level x == level y)
       (sortOnFlip level defaultSymbols)
 
-expression ∷ Parser AST
+expression ∷ Parser (AST primVal)
 expression = buildExpressionParser precedenceToOps expression'
 
-listExpression ∷ ParsecT String () Identity AST
+listExpression ∷ ParsecT String () Identity (AST primVal)
 listExpression = nil <|> listCase
 
 -- Expression Parser------------------------------------------------------------
-ifThenElse ∷ ParsecT String () Identity AST
+ifThenElse ∷ ParsecT String () Identity (AST primVal)
 ifThenElse = do
   reserved "if"
   pred ← expression
@@ -202,36 +202,36 @@ ifThenElse = do
   else' ← expression
   pure $ If pred then' else'
 
-cons ∷ ParsecT String () Identity AST
+cons ∷ ParsecT String () Identity (AST primVal)
 cons = do
   reserved "cons"
   (arg1, arg2) ← parens ((,) <$> expression <*> (reservedOp "," *> expression))
   pure $ Cons arg1 arg2
 
-car ∷ ParsecT String () Identity AST
+car ∷ ParsecT String () Identity (AST primVal)
 car = do
   reserved "head"
   arg1 ← parens expression
   pure $ Car arg1
 
-cdr ∷ ParsecT String () Identity AST
+cdr ∷ ParsecT String () Identity (AST primVal)
 cdr = do
   reserved "tail"
   arg1 ← parens expression
   pure $ Cdr arg1
 
-isNil ∷ ParsecT String () Identity AST
+isNil ∷ ParsecT String () Identity (AST primVal)
 isNil = do
   reserved "isnil"
   arg1 ← parens expression
   pure $ IsNil arg1
 
-intLit ∷ ParsecT String () Identity AST
+intLit ∷ ParsecT String () Identity (AST primVal)
 intLit = do
   int ← integer
   pure $ IntLit (fromInteger int)
 
-lambda ∷ ParsecT String () Identity AST
+lambda ∷ ParsecT String () Identity (AST primVal)
 lambda = do
   reserved "lambda"
   sym ← symbol
@@ -239,7 +239,7 @@ lambda = do
   exp ← expression
   pure $ Lambda sym exp
 
-letExp ∷ ParsecT String () Identity AST
+letExp ∷ ParsecT String () Identity (AST primVal)
 letExp = do
   reserved "let"
   toBind ← symbol
@@ -249,7 +249,7 @@ letExp = do
   body ← expression
   pure $ Let toBind binding body
 
-letRecExp ∷ ParsecT String () Identity AST
+letRecExp ∷ ParsecT String () Identity (AST primVal)
 letRecExp = do
   reserved "letrec"
   toBind ← symbol
@@ -257,34 +257,34 @@ letRecExp = do
   exp ← expression
   pure $ Letrec toBind exp
 
-trueLit ∷ ParsecT String () Identity AST
+trueLit ∷ ParsecT String () Identity (AST primVal)
 trueLit = True' <$ reserved "true"
 
-falseLit ∷ ParsecT String () Identity AST
+falseLit ∷ ParsecT String () Identity (AST primVal)
 falseLit = False' <$ reserved "true"
 
-notExp ∷ ParsecT String () Identity AST
+notExp ∷ ParsecT String () Identity (AST primVal)
 notExp = do
   reserved "not"
   exp ← expression
   pure $ Not exp
 
-application ∷ ParsecT String () Identity AST
+application ∷ ParsecT String () Identity (AST primVal)
 application = do
   app ← parens (many expression)
   case app of
     [] → fail "empty list"
     (x : xs) → pure $ foldl' Application x xs
 
-symbol' ∷ ParsecT String () Identity AST
+symbol' ∷ ParsecT String () Identity (AST primVal)
 symbol' = Symbol' <$> symbol
 
 -- List Parser------------------------------------------------------------------
 
-nil ∷ ParsecT String () Identity AST
+nil ∷ ParsecT String () Identity (AST primVal)
 nil = Nil <$ reserved "nil"
 
-listCase ∷ ParsecT String () Identity AST
+listCase ∷ ParsecT String () Identity (AST primVal)
 listCase = do
   exprs ← brackets (expression `sepBy` comma)
   pure $ foldr Cons Nil exprs

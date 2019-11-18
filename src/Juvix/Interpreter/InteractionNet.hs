@@ -14,7 +14,7 @@ import Juvix.Interpreter.InteractionNet.Translation
 import Juvix.Interpreter.InteractionNet.Type
 import Juvix.Library
 
-erasedCoreToInteractionNetAST ∷ ∀ primVal. Erased.Term primVal → AST
+erasedCoreToInteractionNetAST ∷ ∀ primVal. Erased.Term primVal → AST primVal
 erasedCoreToInteractionNetAST term =
   case term of
     Erased.Var s → Symbol' s
