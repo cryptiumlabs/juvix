@@ -40,8 +40,8 @@ data _⟿ᵗ_ where
 
   ↑- : π ⟿ᵗ π′ → ↑ π ⟿ᵗ ↑ π′
 
-  BINOPˡ : s ⟿ᵗ s′ → s ⟪ o ⟫ t ⟿ᵗ s′ ⟪ o ⟫ t
-  BINOPʳ : t ⟿ᵗ t′ → s ⟪ o ⟫ t ⟿ᵗ s  ⟪ o ⟫ t′
+  binˡ : s ⟿ᵗ s′ → s ⟪ o ⟫ t ⟿ᵗ s′ ⟪ o ⟫ t
+  binʳ : t ⟿ᵗ t′ → s ⟪ o ⟫ t ⟿ᵗ s  ⟪ o ⟫ t′
 
   +-0 : 0ᵘ     + ρ ⟿ᵗ ρ
   +-s : sucᵘ π + ρ ⟿ᵗ sucᵘ (π + ρ)
@@ -258,12 +258,12 @@ stepᵗ (π + ρ) with isUsage? π
 ... | yes is-0   = yes (-, +-0)
 ... | yes is-suc = yes (-, +-s)
 ... | no  ¬uπ with stepᵗ π
-... | yes (_ , Rπ) = yes (-, BINOPˡ Rπ)
+... | yes (_ , Rπ) = yes (-, binˡ Rπ)
 ... | no  ¬Rπ with stepᵗ ρ
-... | yes (_ , Rρ) = yes (-, BINOPʳ Rρ)
+... | yes (_ , Rρ) = yes (-, binʳ Rρ)
 ... | no  ¬Rρ = no λ where
-  (_ , BINOPˡ Rπ) → ¬Rπ (-, Rπ)
-  (_ , BINOPʳ Rρ) → ¬Rρ (-, Rρ)
+  (_ , binˡ Rπ) → ¬Rπ (-, Rπ)
+  (_ , binʳ Rρ) → ¬Rρ (-, Rρ)
   (_ , +-0)   → ¬uπ is-0
   (_ , +-s)   → ¬uπ is-suc
 
@@ -271,12 +271,12 @@ stepᵗ (π * ρ) with isUsage? π
 ... | yes is-0   = yes (-, *-0)
 ... | yes is-suc = yes (-, *-s)
 ... | no  ¬uπ with stepᵗ π
-... | yes (_ , Rπ) = yes (-, BINOPˡ Rπ)
+... | yes (_ , Rπ) = yes (-, binˡ Rπ)
 ... | no  ¬Rπ with stepᵗ ρ
-... | yes (_ , Rρ) = yes (-, BINOPʳ Rρ)
+... | yes (_ , Rρ) = yes (-, binʳ Rρ)
 ... | no  ¬Rρ = no λ where
-  (_ , BINOPˡ R) → ¬Rπ (-, R)
-  (_ , BINOPʳ R) → ¬Rρ (-, R)
+  (_ , binˡ R) → ¬Rπ (-, R)
+  (_ , binʳ R) → ¬Rρ (-, R)
   (_ , *-0)  → ¬uπ is-0
   (_ , *-s)  → ¬uπ is-suc
 
@@ -285,15 +285,15 @@ stepᵗ (π +ʷ ρ) with are-+ʷ? π ρ
 ... | yes ω- = yes (-, +ʷ-ωˡ)
 ... | yes -ω = yes (-, +ʷ-ωʳ)
 ... | no ¬+ with stepᵗ π
-... | yes (_ , Rπ) = yes (-, BINOPˡ Rπ)
+... | yes (_ , Rπ) = yes (-, binˡ Rπ)
 ... | no  ¬Rπ with stepᵗ ρ
-... | yes (_ , Rρ) = yes (-, BINOPʳ Rρ)
+... | yes (_ , Rρ) = yes (-, binʳ Rρ)
 ... | no  ¬Rρ = no λ where
   (_ , +ʷ-↑)  → ¬+  ↑↑
   (_ , +ʷ-ωˡ) → ¬+  ω-
   (_ , +ʷ-ωʳ) → ¬+  -ω
-  (_ , BINOPˡ R) → ¬Rπ (-, R)
-  (_ , BINOPʳ R) → ¬Rρ (-, R)
+  (_ , binˡ R) → ¬Rπ (-, R)
+  (_ , binʳ R) → ¬Rρ (-, R)
 
 stepᵗ (π *ʷ ρ) with are-*ʷ? π ρ
 ... | yes ↑↑ = yes (-, *ʷ-↑)
@@ -303,9 +303,9 @@ stepᵗ (π *ʷ ρ) with are-*ʷ? π ρ
 ... | yes ωs = yes (-, *ʷ-ωs)
 ... | yes ωω = yes (-, *ʷ-ωω)
 ... | no ¬p with stepᵗ π
-... | yes (_ , Rπ) = yes (-, BINOPˡ Rπ)
+... | yes (_ , Rπ) = yes (-, binˡ Rπ)
 ... | no  ¬Rπ with stepᵗ ρ
-... | yes (_ , Rρ) = yes (-, BINOPʳ Rρ)
+... | yes (_ , Rρ) = yes (-, binʳ Rρ)
 ... | no  ¬Rρ = no λ where
   (_ , *ʷ-↑)   → ¬p ↑↑
   (_ , *ʷ-0ω)  → ¬p 0ω
@@ -313,8 +313,8 @@ stepᵗ (π *ʷ ρ) with are-*ʷ? π ρ
   (_ , *ʷ-sω)  → ¬p sω
   (_ , *ʷ-ωs)  → ¬p ωs
   (_ , *ʷ-ωω)  → ¬p ωω
-  (_ , BINOPˡ Rπ) → ¬Rπ (-, Rπ)
-  (_ , BINOPʳ Rρ) → ¬Rρ (-, Rρ)
+  (_ , binˡ Rπ) → ¬Rπ (-, Rπ)
+  (_ , binʳ Rρ) → ¬Rρ (-, Rρ)
 
 stepᵗ 0ᵘ = no λ()
 
@@ -525,8 +525,8 @@ module _ {n} where
 
   bin-cong : _⟪ o ⟫_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
   bin-cong Rπ Rρ =
-    RT.gmap _ (⊎.map BINOPˡ BINOPˡ) Rπ ◅◅
-    RT.gmap _ (⊎.map BINOPʳ BINOPʳ) Rρ
+    RT.gmap _ (⊎.map binˡ binˡ) Rπ ◅◅
+    RT.gmap _ (⊎.map binʳ binʳ) Rρ
 
   +-cong : _+_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
   +-cong = bin-cong
@@ -594,4 +594,4 @@ module _ {n} where
   *-ℕ′ = ≋-sym ∘ *-ℕ ∘ ≡.sym
 
 1-* : 1 * π ≋ᵗ π
-1-* = Evalᵗ.star-≋ $ *-s ◅ BINOPˡ *-0 ◅ +-0 ◅ ε
+1-* = Evalᵗ.star-≋ $ *-s ◅ binˡ *-0 ◅ +-0 ◅ ε
