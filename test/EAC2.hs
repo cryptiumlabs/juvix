@@ -1,6 +1,7 @@
 module EAC2 where
 
 import Juvix.Core.EAC.Check
+import Juvix.Core.Types
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
 import Juvix.Library hiding (Type, exp, link, reduce)
@@ -11,6 +12,9 @@ import qualified Test.Tasty.HUnit as T
 type Term = ET.Term ()
 
 type Type = ET.Type ()
+
+unitParam :: Parameterisation () ()
+unitParam = Parameterisation (const [()]) (\_ _ -> Nothing) undefined undefined [] []
 
 type TypeAssignment = ET.TypeAssignment ()
 
@@ -32,7 +36,7 @@ test_church_exp = shouldBeTypeable churchExp churchExpAssignment
 shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
   T.testCase (show term <> " should be typeable in EAC") $ do
-    valid ← validEal term assignment
+    valid ← validEal unitParam term assignment
     case valid of
       Right _ → return ()
       Left er → T.assertFailure (show er)
@@ -40,7 +44,7 @@ shouldBeTypeable term assignment =
 shouldNotBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldNotBeTypeable term assignment =
   T.testCase (show term <> " should not be typeable in EAC") $ do
-    valid ← validEal term assignment
+    valid ← validEal unitParam term assignment
     case valid of
       Right _ → T.assertFailure "a satisfying assignment was found"
       Left _ → pure ()
