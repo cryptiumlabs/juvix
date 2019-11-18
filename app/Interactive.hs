@@ -84,11 +84,11 @@ handleSpecial str cont = do
       cont
     _ → H.outputStrLn "Unknown special command" >> cont
 
-transformAndEvaluateErasedCore ∷ ∀ primVal. Bool → Erased.Term primVal → H.InputT IO ()
+transformAndEvaluateErasedCore ∷ ∀ primVal. (Show primVal) ⇒ Bool → Erased.Term primVal → H.InputT IO ()
 transformAndEvaluateErasedCore debug term = do
   let ast = INet.erasedCoreToInteractionNetAST term
   when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
-  let net ∷ Graph.FlipNet INet.Lang
+  let net ∷ Graph.FlipNet (INet.Lang primVal)
       net = INet.astToNet ast INet.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net

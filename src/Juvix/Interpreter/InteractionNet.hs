@@ -12,12 +12,11 @@ import Juvix.Interpreter.InteractionNet.Default
 import Juvix.Interpreter.InteractionNet.Parser
 import Juvix.Interpreter.InteractionNet.Translation
 import Juvix.Interpreter.InteractionNet.Type
-import Juvix.Library
 
 erasedCoreToInteractionNetAST ∷ ∀ primVal. Erased.Term primVal → AST primVal
 erasedCoreToInteractionNetAST term =
   case term of
     Erased.Var s → Symbol' s
-    Erased.Prim _ → undefined
+    Erased.Prim p → Prim p
     Erased.Lam s t → Lambda s (erasedCoreToInteractionNetAST t)
     Erased.App f x → Application (erasedCoreToInteractionNetAST f) (erasedCoreToInteractionNetAST x)

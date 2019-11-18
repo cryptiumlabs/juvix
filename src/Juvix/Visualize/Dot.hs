@@ -20,7 +20,7 @@ printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b)) → IO ()
 printTestn _ (Left _) = pure ()
 printTestn txt (Right (InfoNet {net = net})) = showNet txt (runFlip net)
 
-netToGif ∷ FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+netToGif ∷ FilePath → FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
 netToGif dir name num net = do
   createDirectoryIfMissing True dir
   result ← runGraphNet (dir <> "/" <> name) num net
@@ -42,12 +42,12 @@ netToGif dir name num net = do
   _ ← procStrict "ffmpeg" ["-f", "image2", "-framerate", "2", "-i", appDir packName <> "%d" <> ".png", appDir packName <> ".gif"] mempty
   return result
 
-runGraphNet ∷ FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+runGraphNet ∷ FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
 runGraphNet name num = runFlipNetIO (reducePrint name num)
 
 reducePrint ∷
   ( MonadIO f,
-    InfoNetworkDiff FlipNet Lang f
+    InfoNetworkDiff FlipNet (Lang primVal) f
   ) ⇒
   FilePath →
   Int →

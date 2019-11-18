@@ -16,37 +16,40 @@ import Juvix.Library hiding (empty, link)
 import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
-data Env net
+data Env net primVal
   = Env
       { level ∷ Int,
-        net' ∷ net AST.Lang,
+        net' ∷ net (AST.Lang primVal),
         free ∷ Map.Map Symbol (Node, PortType)
       }
   deriving (Generic)
 
-newtype EnvState net a = EnvS (State (Env net) a)
+newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "level" Int)
-    via Rename "level" (Field "level" () (MonadState (State (Env net))))
+    via Rename "level" (Field "level" () (MonadState (State (Env net primVal))))
   deriving
     (HasState "free" (Map.Map Symbol (Node, PortType)))
-    via (Field "free" () (MonadState (State (Env net))))
+    via (Field "free" () (MonadState (State (Env net primVal))))
   deriving
-    (HasState "net" (net AST.Lang))
-    via Rename "net'" (Field "net'" () (MonadState (State (Env net))))
+    (HasState "net" (net (AST.Lang primVal)))
+    via Rename "net'" (Field "net'" () (MonadState (State (Env net primVal))))
 
-execEnvState ∷ Network net ⇒ EnvState net a → Env net → Env net
+execEnvState ∷ Network net ⇒ EnvState net primVal a → Env net primVal → Env net primVal
 execEnvState (EnvS m) = execState m
 
-evalEnvState ∷ Network net ⇒ EnvState net a → Env net → a
+evalEnvState ∷ Network net ⇒ EnvState net primVal a → Env net primVal → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ Network net ⇒ Type.AST primVal → Map.Map Symbol Type.Fn → net AST.Lang
+astToNet ∷ Network net ⇒ Type.AST primVal → Map.Map Symbol Type.Fn → net (AST.Lang primVal)
 astToNet bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
 
+    recursive (Type.Prim p) _context =
+      -- TODO: Determine arity, construct primitive or function accordingly.
+      undefined
     -- we return the port which the node above it in the AST connects to!
     recursive (Type.IntLit x) _context =
       (,) <$> newNode (AST.Primar $ AST.IntLit x) <*> pure Prim
@@ -205,7 +208,7 @@ data FanStatus
   | Completed FanPorts
   deriving (Show)
 
-netToAst ∷ DifferentRep net ⇒ net AST.Lang → Maybe (Type.AST primVal)
+netToAst ∷ DifferentRep net ⇒ net (AST.Lang primVal) → Maybe (Type.AST primVal)
 netToAst net = evalEnvState run (Env 0 net Map.empty)
   where
     run = do
@@ -436,7 +439,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
 
 -- | Creates a fan if the port is taken, and prepares to be connected
 chaseAndCreateFan ∷
-  (Network net, HasState "level" Int m, HasState "net" (net AST.Lang) m) ⇒
+  (Network net, HasState "level" Int m, HasState "net" (net (AST.Lang primVal)) m) ⇒
   (Node, PortType) →
   m (Node, PortType)
 chaseAndCreateFan (num, port) = do

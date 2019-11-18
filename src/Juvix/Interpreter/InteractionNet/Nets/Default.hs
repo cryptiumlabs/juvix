@@ -12,22 +12,22 @@ import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library hiding (link, reduce)
 import Prelude (Show (..))
 
-data Lang
-  = Auxiliary3 Auxiliary3
-  | Auxiliary2 Auxiliary2
-  | Auxiliary1 Auxiliary1
-  | Primar Primar
+data Lang primVal
+  = Auxiliary3 (Auxiliary3 primVal)
+  | Auxiliary2 (Auxiliary2 primVal)
+  | Auxiliary1 (Auxiliary1 primVal)
+  | Primar (Primar primVal)
   deriving (Show)
 
 -- the final argument for the curries is maybe, as if the nodes don't line up
 -- a final type can't be constructed. This is untyped
 -- so type check at a higher level
-data Auxiliary3
+data Auxiliary3 primVal
   = IfElse
   | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive)
   deriving (Show)
 
-data Auxiliary2
+data Auxiliary2 primval
   = Or
   | And
   | Cons
@@ -38,7 +38,7 @@ data Auxiliary2
   | Curried2 (Primitive → Primitive → Maybe Primitive)
   deriving (Show)
 
-data Auxiliary1
+data Auxiliary1 primVal
   = Not
   | Car
   | Cdr
@@ -46,7 +46,7 @@ data Auxiliary1
   | Curried1 (Primitive → Maybe Primitive)
   deriving (Show)
 
-data Primar
+data Primar primVal
   = Erase
   | Nil
   | Tru
@@ -55,17 +55,29 @@ data Primar
   | Symbol Symbol
   deriving (Show)
 
-data ProperPort
+data ProperPort primVal
   = IsAux3
-      { _tag3 ∷ Auxiliary3,
+      { _tag3 ∷ Auxiliary3 primVal,
         _prim ∷ Primary,
         _aux1 ∷ Auxiliary,
         _aux2 ∷ Auxiliary,
         _aux3 ∷ Auxiliary
       }
-  | IsAux2 {_tag2 ∷ Auxiliary2, _prim ∷ Primary, _aux1 ∷ Auxiliary, _aux2 ∷ Auxiliary}
-  | IsAux1 {_tag1 ∷ Auxiliary1, _prim ∷ Primary, _aux1 ∷ Auxiliary}
-  | IsPrim {_tag0 ∷ Primar, _prim ∷ Primary}
+  | IsAux2
+      { _tag2 ∷ Auxiliary2 primVal,
+        _prim ∷ Primary,
+        _aux1 ∷ Auxiliary,
+        _aux2 ∷ Auxiliary
+      }
+  | IsAux1
+      { _tag1 ∷ Auxiliary1 primVal,
+        _prim ∷ Primary,
+        _aux1 ∷ Auxiliary
+      }
+  | IsPrim
+      { _tag0 ∷ Primar primVal,
+        _prim ∷ Primary
+      }
   deriving (Show)
 
 makeFieldsNoPrefix ''ProperPort
@@ -74,9 +86,9 @@ makeFieldsNoPrefix ''ProperPort
 
 -- Find a way to fix the ugliness!
 langToProperPort ∷
-  (DifferentRep net, HasState "net" (net Lang) m) ⇒
+  (DifferentRep net, HasState "net" (net (Lang primVal)) m) ⇒
   Node →
-  m (Maybe ProperPort)
+  m (Maybe (ProperPort primVal))
 langToProperPort node = langToPort node (\l → f l node)
   where
     f (Auxiliary3 a) = aux3FromGraph (IsAux3 a)
@@ -86,12 +98,12 @@ langToProperPort node = langToPort node (\l → f l node)
 
 -- Rewrite rules----------------------------------------------------------------
 reduceAll ∷
-  (InfoNetworkDiff net Lang m) ⇒
+  (InfoNetworkDiff net (Lang primVal) m) ⇒
   Int →
   m ()
 reduceAll = untilNothingNTimesM reduce
 
-reduce ∷ (InfoNetworkDiff net Lang m) ⇒ m Bool
+reduce ∷ (InfoNetworkDiff net (Lang primVal) m) ⇒ m Bool
 reduce = do
   nodes' ← nodes
   isChanged ← foldrM update False nodes'
@@ -193,7 +205,7 @@ reduce = do
               IsPrim _ Free → pure isChanged
 
 curryMatch ∷
-  (InfoNetworkDiff net Lang m) ⇒
+  (InfoNetworkDiff net (Lang primVal) m) ⇒
   (t → (Primitive, Node) → m b) →
   t →
   Node →
@@ -207,7 +219,7 @@ curryMatch curry currNodeInfo nodeConnected isChanged = do
     _ → pure isChanged
 
 propPrimary ∷
-  (Aux2 s, InfoNetwork net Lang m) ⇒
+  (Aux2 s, InfoNetwork net (Lang primVal) m) ⇒
   (Node, s) →
   Node →
   m ()
@@ -224,7 +236,7 @@ propPrimary (numDel, nodeDel) numProp = do
       delNodes [numDel]
 
 ifElseRule ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
   Node →
   Bool →
@@ -242,7 +254,7 @@ ifElseRule numPrimOnly numAuxs pred = do
   deleteRewire [numPrimOnly, numAuxs] [numErase]
 
 anihilateRewireAux ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
   Node →
   m ()
@@ -253,7 +265,7 @@ anihilateRewireAux numPrimOnly numAuxs = do
 
 -- used for app lambda!
 anihilateRewireAuxTogether ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
   Node →
   m ()
@@ -265,7 +277,7 @@ anihilateRewireAuxTogether numNode1 numNode2 = do
 
 -- o is Aux1 * is Aux2
 muExpand ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
   m ()
 muExpand muNum = do
@@ -289,9 +301,9 @@ muExpand muNum = do
   deleteRewire [muNum] [fanIn, fanOut, newMu]
 
 fanInAux0 ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
-  (Node, Primar) →
+  (Node, Primar primVal) →
   m ()
 fanInAux0 numFan (numOther, otherLang) = do
   sequentalStep
@@ -309,9 +321,9 @@ fanInAux0 numFan (numOther, otherLang) = do
   deleteRewire [numFan, numOther] [other1, other2]
 
 fanInAux1 ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
-  (Node, Auxiliary1) →
+  (Node, Auxiliary1 primVal) →
   Int →
   m ()
 fanInAux1 numFan (numOther, otherLang) level = do
@@ -342,9 +354,9 @@ fanInAux1 numFan (numOther, otherLang) level = do
   deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
 fanInAux2 ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
-  (Node, Auxiliary2) →
+  (Node, Auxiliary2 primVal) →
   Int →
   m ()
 fanInAux2 numFan (numOther, otherLang) level = do
@@ -385,9 +397,9 @@ fanInAux2 numFan (numOther, otherLang) level = do
   deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
 
 fanInAux3 ∷
-  (InfoNetwork net Lang m) ⇒
+  (InfoNetwork net (Lang primVal) m) ⇒
   Node →
-  (Node, Auxiliary3) →
+  (Node, Auxiliary3 primVal) →
   Int →
   m ()
 fanInAux3 numFan (numOther, otherLang) level = do
@@ -439,8 +451,8 @@ fanInAux3 numFan (numOther, otherLang) level = do
 
 -- TODO :: delete node coming in!
 notExpand ∷
-  (Aux2 s, InfoNetwork net Lang m) ⇒
-  (Node, ProperPort) →
+  (Aux2 s, InfoNetwork net (Lang primVal) m) ⇒
+  (Node, ProperPort primVal) →
   (Node, s) →
   Bool →
   m Bool
@@ -459,7 +471,7 @@ notExpand _ _ updated = pure updated
 -- Erase should be connected to the main port atm, change this logic later
 -- when this isn't the case
 eraseAll ∷
-  (Aux3 s, InfoNetwork net Lang m) ⇒
+  (Aux3 s, InfoNetwork net (Lang primVal) m) ⇒
   (s, Node) →
   Node →
   m ()
@@ -478,7 +490,7 @@ eraseAll (node, numNode) nodeErase = do
       return (Just numE)
 
 consCar ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   Node →
   Node →
   m ()
@@ -490,7 +502,7 @@ consCar numCons numCar = do
   deleteRewire [numCons, numCar] [erase]
 
 consCdr ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   Node →
   Node →
   m ()
@@ -502,7 +514,7 @@ consCdr numCons numCdr = do
   deleteRewire [numCons, numCdr] [erase]
 
 testNilNil ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   Node →
   Node →
   m ()
@@ -513,7 +525,7 @@ testNilNil numTest numNil = do
   deleteRewire [numTest, numNil] [true]
 
 testNilCons ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   Node →
   Node →
   m ()
@@ -531,7 +543,7 @@ testNilCons numCons numTest = do
   deleteRewire [numCons, numTest] [erase1, erase2, false]
 
 curry3 ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   (Primitive → Primitive → Primitive → Maybe Primitive, Node) →
   (Primitive, Node) →
   m ()
@@ -548,7 +560,7 @@ curry3 (nodeF, numNode) (p, numPrim) = do
   deleteRewire [numNode, numPrim] [curr]
 
 curry2 ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   (Primitive → Primitive → Maybe Primitive, Node) →
   (Primitive, Node) →
   m ()
@@ -565,7 +577,7 @@ curry2 (nodeF, numNode) (p, numPrim) = do
 
 -- The bool represents if the graph was updated
 curry1 ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   (Primitive → Maybe Primitive, Node) →
   (Primitive, Node) →
   m Bool
@@ -588,7 +600,7 @@ curry1 (nodeF, numNode) (p, numPrim) =
       pure $ True
 
 fanIns ∷
-  InfoNetwork net Lang m ⇒
+  InfoNetwork net (Lang primVal) m ⇒
   (Node, Int) →
   (Node, Int) →
   m ()

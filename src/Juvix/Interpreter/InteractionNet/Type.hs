@@ -27,6 +27,7 @@ data AST primVal
     Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal) (AST primVal)
   | Curried2 (Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal)
   | Curried1 (Primitive → Maybe Primitive) (AST primVal)
+  | Prim primVal
   deriving (Show)
 
 -- | Constructs a Function from a primitive
