@@ -1,9 +1,9 @@
 module EAC2 where
 
 import Juvix.Core.EAC.Check
-import Juvix.Core.Types
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
+import Juvix.Core.Types
 import Juvix.Library hiding (Type, exp, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified Test.Tasty as T
@@ -13,10 +13,10 @@ type Term = ET.Term ()
 
 type Type = ET.Type ()
 
-unitParam :: Parameterisation () ()
-unitParam = Parameterisation (const [()]) (\_ _ -> Nothing) undefined undefined [] []
-
 type TypeAssignment = ET.TypeAssignment ()
+
+unitParam ∷ Parameterisation () ()
+unitParam = Parameterisation (const [()]) (\_ _ → Nothing) undefined undefined [] []
 
 test_id ∷ T.TestTree
 test_id = shouldBeTypeable idTerm idAssignment
