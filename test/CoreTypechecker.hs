@@ -168,7 +168,7 @@ identityAppK =
     )
 
 -- (K: Nat -> Nat -> Nat 1) should type check to Nat -> Nat
-kApp1 :: NatElim
+kApp1 ∷ NatElim
 kApp1 =
   IR.App
     ( IR.Ann
@@ -182,8 +182,8 @@ kApp1 =
     )
     (IR.Elim (IR.Prim (Natural 1)))
 
-natToNatTy :: NatAnnotation
-natToNatTy = 
+natToNatTy ∷ NatAnnotation
+natToNatTy =
   (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
 --K: (Nat -> Nat) -> Nat -> (Nat -> Nat) I:Nat -> Nat type checks to Nat -> (Nat -> Nat)
@@ -219,7 +219,6 @@ kAppICompTy =
       (IR.VPrimTy Nat)
       (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
-  
 
 {-
 -- Because S returns functions, it's not general because of the annotations.
@@ -307,9 +306,9 @@ test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy
 
 test_k_app_I ∷ T.TestTree
-test_k_app_I = shouldInfer nat kAppI kAppICompTy
+test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
 
-test_k_app_1 :: T.TestTree
+test_k_app_1 ∷ T.TestTree
 test_k_app_1 = shouldInfer nat kApp1 natToNatTy
 
 --test_siii :: T.TestTree
