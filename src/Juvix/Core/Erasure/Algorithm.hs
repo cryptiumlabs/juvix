@@ -56,15 +56,13 @@ eraseTerm parameterisation term usage ty =
       Core.Lam name body → do
         -- The type must be a dependent function.
         let Core.Pi argUsage varTy retTy = ty
-        -- retTy is a function, so we match out the body.
-        let Core.Lam _ retTyBody = retTy
         -- TODO: Is this correct?
         let bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
         let varTyIR = IR.cEval parameterisation (hrToIR varTy) []
         modify @"context" ((:) (IR.Global (show name), (argUsage, varTyIR)))
-        body ← eraseTerm parameterisation body bodyUsage retTyBody
+        body ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
         pure (if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body)
@@ -101,9 +99,7 @@ eraseType parameterisation term = do
     Core.PrimTy p → pure (Erased.PrimTy p)
     Core.Pi _ argTy retTy → do
       arg ← eraseType parameterisation argTy
-      -- retTy is a function, so we match out the body.
-      let Core.Lam _ retTyBody = retTy
-      ret ← eraseType parameterisation retTyBody
+      ret ← eraseType parameterisation retTy
       pure (Erased.Pi arg ret)
     Core.Lam _ _ → throw @"erasureError" Unsupported
     Core.Elim elim →

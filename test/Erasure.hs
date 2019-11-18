@@ -43,22 +43,22 @@ identityTerm ∷ HR.Term UnitTy UnitVal
 identityTerm = HR.Lam "y" (HR.Elim (HR.Var "y"))
 
 identityTy ∷ HR.Term UnitTy UnitVal
-identityTy = HR.Pi (SNat 1) unitTy (HR.Lam "_" unitTy)
+identityTy = HR.Pi (SNat 1) unitTy unitTy
 
 appTerm ∷ HR.Term UnitTy UnitVal
 appTerm = HR.Lam "f" (HR.Lam "x" (HR.Elim (HR.App (HR.Var "f") (HR.Elim (HR.Var "x")))))
 
 appTy ∷ HR.Term UnitTy UnitVal
-appTy = HR.Pi (SNat 1) identityTy (HR.Lam "_" (HR.Pi (SNat 1) unitTy (HR.Lam "_" unitTy)))
+appTy = HR.Pi (SNat 1) identityTy (HR.Pi (SNat 1) unitTy unitTy)
 
 constTerm ∷ HR.Term UnitTy UnitVal
 constTerm = HR.Lam "x" identityTerm
 
 constTy ∷ HR.Term UnitTy UnitVal
-constTy = HR.Pi (SNat 0) unitTy (HR.Lam "_" identityTy)
+constTy = HR.Pi (SNat 0) unitTy identityTy
 
 constTy2 ∷ HR.Term UnitTy UnitVal
-constTy2 = HR.Pi (SNat 0) identityTy (HR.Lam "_" identityTy)
+constTy2 = HR.Pi (SNat 0) identityTy identityTy
 
 unitTerm ∷ HR.Term UnitTy UnitVal
 unitTerm = HR.Elim (HR.Prim Unit)
