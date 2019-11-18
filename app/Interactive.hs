@@ -8,6 +8,7 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import Juvix.Core.Parameterisations.Naturals
+import qualified Juvix.Core.Types as Core
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
@@ -78,18 +79,18 @@ handleSpecial str cont = do
           H.outputStrLn (show erased)
           case erased of
             (Right (term, _), _) → do
-              transformAndEvaluateErasedCore True term
+              transformAndEvaluateErasedCore nat True term
             _ → return ()
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
     _ → H.outputStrLn "Unknown special command" >> cont
 
-transformAndEvaluateErasedCore ∷ ∀ primVal. Bool → Erased.Term primVal → H.InputT IO ()
-transformAndEvaluateErasedCore debug term = do
+transformAndEvaluateErasedCore ∷ ∀ primTy primVal. (Show primVal) ⇒ Core.Parameterisation primTy primVal → Bool → Erased.Term primVal → H.InputT IO ()
+transformAndEvaluateErasedCore parameterisation debug term = do
   let ast = INet.erasedCoreToInteractionNetAST term
   when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
-  let net ∷ Graph.FlipNet INet.Lang
-      net = INet.astToNet ast INet.defaultEnv
+  let net ∷ Graph.FlipNet (INet.Lang primVal)
+      net = INet.astToNet parameterisation ast INet.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
 

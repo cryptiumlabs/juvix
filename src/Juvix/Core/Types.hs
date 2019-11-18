@@ -21,6 +21,9 @@ data Parameterisation primTy primVal
       }
   deriving (Generic)
 
+arity ∷ ∀ primTy primVal. Parameterisation primTy primVal → primVal → Int
+arity param = length . typeOf param
+
 data PipelineError primTy primVal
   = InternalInconsistencyError Text
   | TypecheckerError Text
