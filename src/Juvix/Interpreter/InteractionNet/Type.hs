@@ -27,6 +27,8 @@ data AST primVal
     Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal) (AST primVal)
   | Curried2 (Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal)
   | Curried1 (Primitive → Maybe Primitive) (AST primVal)
+  | PrimCurried2 (primVal → primVal → Maybe primVal) (AST primVal) (AST primVal)
+  | PrimCurried1 (primVal → Maybe primVal) (AST primVal)
   | Prim primVal
   deriving (Show)
 
@@ -34,7 +36,7 @@ data AST primVal
 -- the final argument is maybe, as if the nodes don't line up
 -- a final type can't be constructed. This is untyped
 -- so type check at a higher level
-data Fn
+data Fn primVal
   = Arg0 Primitive
   | Arg1 (Primitive → Maybe Primitive)
   | Arg2 (Primitive → Primitive → Maybe Primitive)

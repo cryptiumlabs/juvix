@@ -27,7 +27,7 @@ data Auxiliary3 primVal
   | Curried3 (Primitive → Primitive → Primitive → Maybe Primitive)
   deriving (Show)
 
-data Auxiliary2 primval
+data Auxiliary2 primVal
   = Or
   | And
   | Cons
@@ -35,6 +35,7 @@ data Auxiliary2 primval
   | Lambda
   | App
   | FanIn Int
+  | PrimCurried2 (primVal → primVal → Maybe primVal)
   | Curried2 (Primitive → Primitive → Maybe Primitive)
   deriving (Show)
 
@@ -43,6 +44,7 @@ data Auxiliary1 primVal
   | Car
   | Cdr
   | TestNil
+  | PrimCurried1 (primVal → Maybe primVal)
   | Curried1 (Primitive → Maybe Primitive)
   deriving (Show)
 
@@ -162,6 +164,7 @@ reduce = do
                       Just IsAux3 {_tag3} → True <$ fanInAux3 n (node, _tag3) level
                       Nothing → pure isChanged
                   Curried2 f → curryMatch curry2 (f, n) node isChanged
+                  PrimCurried2 f → curryMatchPrim curryPrim2 (f, n) node isChanged
                   -- Cases in which we fall through, and have the other node handle it
                   Mu → pure isChanged
                   Lambda → pure isChanged
@@ -184,6 +187,10 @@ reduce = do
                       Just IsPrim {_tag0 = Tru} → curry1 (f, n) (PBool True, node)
                       Just IsPrim {_tag0 = IntLit i} → curry1 (f, n) (PInt i, node)
                       _ → pure isChanged
+                  PrimCurried1 f →
+                    langToProperPort node >>= \case
+                      Just IsPrim {_tag0 = PrimVal p} → curryPrim1 (f, n) (p, node)
+                      _ → pure isChanged
                   -- Fall through cases
                   Car → pure isChanged
                   TestNil → pure isChanged
@@ -199,6 +206,7 @@ reduce = do
                   Fals → pure isChanged
                   IntLit _ → pure isChanged
                   Symbol _ → pure isChanged
+                  PrimVal _ → pure isChanged
               -- Fall through cases
               IsAux3 _ Free _ _ _ → pure isChanged
               IsAux2 _ Free _ _ → pure isChanged
@@ -217,6 +225,18 @@ curryMatch curry currNodeInfo nodeConnected isChanged = do
     Just IsPrim {_tag0 = Fals} → True <$ curry currNodeInfo (PBool False, nodeConnected)
     Just IsPrim {_tag0 = Tru} → True <$ curry currNodeInfo (PBool True, nodeConnected)
     Just IsPrim {_tag0 = IntLit i} → True <$ curry currNodeInfo (PInt i, nodeConnected)
+    _ → pure isChanged
+
+curryMatchPrim ∷
+  (InfoNetworkDiff net (Lang primVal) m) ⇒
+  (t → (primVal, Node) → m b) →
+  t →
+  Node →
+  Bool →
+  m Bool
+curryMatchPrim curry currNodeInfo nodeConnected isChanged = do
+  langToProperPort nodeConnected >>= \case
+    Just IsPrim {_tag0 = PrimVal p} → True <$ curry currNodeInfo (p, nodeConnected)
     _ → pure isChanged
 
 propPrimary ∷
@@ -576,6 +596,22 @@ curry2 (nodeF, numNode) (p, numPrim) = do
   linkAll currNode
   deleteRewire [numNode, numPrim] [curr]
 
+curryPrim2 ∷
+  InfoNetwork net (Lang primVal) m ⇒
+  (primVal → primVal → Maybe primVal, Node) →
+  (primVal, Node) →
+  m ()
+curryPrim2 (nodeF, numNode) (p, numPrim) = do
+  incGraphSizeStep (- 1)
+  curr ← newNode (Auxiliary1 $ PrimCurried1 $ nodeF p)
+  let currNode = RELAuxiliary1
+        { node = curr,
+          primary = ReLink numNode Aux2,
+          auxiliary1 = ReLink numNode Aux1
+        }
+  linkAll currNode
+  deleteRewire [numNode, numPrim] [curr]
+
 -- The bool represents if the graph was updated
 curry1 ∷
   InfoNetwork net (Lang primVal) m ⇒
@@ -590,6 +626,26 @@ curry1 (nodeF, numNode) (p, numPrim) =
             PInt i → IntLit i
             PBool True → Tru
             PBool False → Fals
+      incGraphSizeStep (- 1)
+      curr ← newNode (Primar node)
+      let currNode = RELAuxiliary0
+            { node = curr,
+              primary = ReLink numNode Aux1
+            }
+      linkAll currNode
+      deleteRewire [numNode, numPrim] [curr]
+      pure $ True
+
+curryPrim1 ∷
+  InfoNetwork net (Lang primVal) m ⇒
+  (primVal → Maybe primVal, Node) →
+  (primVal, Node) →
+  m Bool
+curryPrim1 (nodeF, numNode) (p, numPrim) =
+  case nodeF p of
+    Nothing → pure False
+    Just x → do
+      let node = PrimVal x
       incGraphSizeStep (- 1)
       curr ← newNode (Primar node)
       let currNode = RELAuxiliary0

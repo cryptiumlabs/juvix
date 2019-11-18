@@ -54,7 +54,7 @@ eq = onIntB (==)
 neq ∷ Primitive → Primitive → Maybe Primitive
 neq = onIntB (/=)
 
-defaultEnv ∷ Map.Map Symbol Type.Fn
+defaultEnv ∷ Map.Map Symbol (Type.Fn primVal)
 defaultEnv =
   Map.fromList
     [ (intern "plus", Type.Arg2 plus),
