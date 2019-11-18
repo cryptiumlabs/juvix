@@ -33,6 +33,6 @@ newtype EnvErasure primTy primVal a = EnvEra (ExceptT ErasureError (State (Env p
 
 data ErasureError
   = Unsupported
-  | CannotEraseZeroUsageTerm
+  | CannotEraseZeroUsageTerm Text
   | InternalError Text
   deriving (Show, Eq, Generic)

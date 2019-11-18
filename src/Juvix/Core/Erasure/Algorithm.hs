@@ -48,7 +48,7 @@ eraseTerm ∷
   m (Erased.Term primVal)
 eraseTerm parameterisation term usage ty =
   if usage == Core.SNat 0
-    then throw @"erasureError" CannotEraseZeroUsageTerm
+    then throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
     else case term of
       Core.Star _ → throw @"erasureError" Unsupported
       Core.PrimTy _ → throw @"erasureError" Unsupported

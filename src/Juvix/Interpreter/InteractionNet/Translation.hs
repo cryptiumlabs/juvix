@@ -50,7 +50,7 @@ astToNet parameterisation bohm customSymMap = net'
 
     -- we return the port which the node above it in the AST connects to!
     recursive (Type.Prim p) _context = do
-      let arity = Core.arity parameterisation p
+      let arity = Core.arity parameterisation p - 1
       case arity of
         0 → (,) <$> newNode (AST.Primar $ AST.PrimVal p) <*> pure Prim
         1 → do

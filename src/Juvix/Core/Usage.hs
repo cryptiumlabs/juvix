@@ -13,15 +13,11 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
+  deriving (Eq)
 
 instance Show NatAndw where
   show (SNat n) = show n
   show Omega = "w"
-
-instance Eq NatAndw where
-  SNat x == SNat y = x == y
-  SNat _ == Omega = True
-  Omega == _ = True
 
 -- Addition is the semi-Ring/Monoid instance
 instance Semigroup NatAndw where

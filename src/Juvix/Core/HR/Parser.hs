@@ -131,7 +131,7 @@ generateParser parameterisation =
       annElim ∷ Parser (Elim primTy primVal)
       annElim = do
         reservedOp "@"
-        theTerm ← termOnly
+        theTerm ← term
         reservedOp ":"
         pi ← usage
         theType ← term

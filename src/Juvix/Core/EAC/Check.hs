@@ -33,7 +33,7 @@ validEal parameterisation term typMap = do
             case bracketCheckerErr valAssignment of
               Left e → Left e
               Right _ →
-                case typCheckerErr valAssignment typAssignment of
+                case typCheckerErr parameterisation valAssignment typAssignment of
                   Left e → Left e
                   Right _ → Right (valAssignment, typAssignment)
       Nothing →

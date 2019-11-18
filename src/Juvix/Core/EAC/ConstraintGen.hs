@@ -266,16 +266,18 @@ bracketChecker t = runEither (rec' t 0 mempty)
               RLam s t → rec' t n' (Map.insert s (negate n') map)
               RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
               RVar _ → error "already is matched"
-              RPrim _ → undefined
+              RPrim _ → pure ()
 
 bracketCheckerErr ∷ RPTO primVal → Either (Errors primTy primVal) ()
 bracketCheckerErr t = left Brack (bracketChecker t)
 
 {- Type Checker. -}
 -- Precondition ∷ all terms inside of RPTO must be unique
-typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
-typChecker t typAssign = runEither (() <$ rec' t typAssign)
+typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
+typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
   where
+    arrow [x] = PPrimT x
+    arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
     rec' (RBang bangVar (RVar s)) assign =
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse
@@ -299,10 +301,10 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Just arg → pure (newAssign, PArrT x arg bodyType)
         Nothing → throw @"typ" MissingOverUse
-    rec' (RBang _bangVar (RPrim _p)) _assign = undefined
+    rec' (RBang _bangVar (RPrim _p)) _assign = pure (_assign, (arrow (typeOf parameterisation _p)))
 
-typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
-typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
+typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
+typCheckerErr parameterisation t typeAssign = left Typ (typChecker parameterisation t typeAssign)
 
 {- Utility. -}
 
