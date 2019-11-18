@@ -523,6 +523,9 @@ module _ {n} where
   sucᵘ-cong : sucᵘ Preserves _≋ᵗ_ ⟶ ≋ᵗ-At n
   sucᵘ-cong = RT.gmap _ (⊎.map sucᵘ sucᵘ)
 
+  ↑-cong : ↑_ Preserves _≋ᵗ_ ⟶ ≋ᵗ-At n
+  ↑-cong = RT.gmap _ (⊎.map ↑- ↑-)
+
   bin-cong : _⟪ o ⟫_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
   bin-cong Rπ Rρ =
     RT.gmap _ (⊎.map binˡ binˡ) Rπ ◅◅
@@ -593,5 +596,27 @@ module _ {n} where
   *-ℕ′ : c ≡ a *ᴺ b → ⌜ c ⌝ ≋ᵗ ⌜ a ⌝ * ⌜ b ⌝
   *-ℕ′ = ≋-sym ∘ *-ℕ ∘ ≡.sym
 
+  +ʷ-ℕ : a +ᴺ b ≡ c → ↑ ⌜ a ⌝ +ʷ ↑ ⌜ b ⌝ ≋ᵗ ↑ ⌜ c ⌝
+  +ʷ-ℕ refl = fwd +ʷ-↑ ◅ ↑-cong (+-ℕ refl)
+
+  +ʷ-ℕ′ : c ≡ a +ᴺ b → ↑ ⌜ c ⌝ ≋ᵗ ↑ ⌜ a ⌝ +ʷ ↑ ⌜ b ⌝
+  +ʷ-ℕ′ = ≋-sym ∘ +ʷ-ℕ ∘ ≡.sym
+
+  *ʷ-ℕ : a *ᴺ b ≡ c → ↑ ⌜ a ⌝ *ʷ ↑ ⌜ b ⌝ ≋ᵗ ↑ ⌜ c ⌝
+  *ʷ-ℕ refl = fwd *ʷ-↑ ◅ ↑-cong (*-ℕ refl)
+
+  *ʷ-ℕ′ : c ≡ a *ᴺ b → ↑ ⌜ c ⌝ ≋ᵗ ↑ ⌜ a ⌝ *ʷ ↑ ⌜ b ⌝
+  *ʷ-ℕ′ = ≋-sym ∘ *ʷ-ℕ ∘ ≡.sym
+
+
 1-* : 1 * π ≋ᵗ π
 1-* = Evalᵗ.star-≋ $ *-s ◅ binˡ *-0 ◅ +-0 ◅ ε
+
+1-*ʷ : ↑ 1 *ʷ ↑ π ≋ᵗ ↑ π
+1-*ʷ = fwd *ʷ-↑ ◅ ↑-cong 1-*
+
+0-+ : 0 + π ≋ᵗ π
+0-+ = fwd +-0 ◅ ε
+
+0-+ʷ : ↑ 0 +ʷ ↑ π ≋ᵗ ↑ π
+0-+ʷ = fwd +ʷ-↑ ◅ ↑-cong 0-+
