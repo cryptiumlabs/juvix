@@ -41,6 +41,7 @@ assignType ∷ [Integer] → ParamTypeAssignment primTy → ParamTypeAssignment 
 assignType assignment typ = typ >>| placeVals
   where
     conMap = Map.fromList (zip [0 ..] (fromInteger <$> assignment))
+    placeVals (PPrimT p) = PPrimT p
     placeVals (PArrT p t1 t2) = PArrT (conMap Map.! p) (placeVals t1) (placeVals t2)
     placeVals (PSymT p s) = PSymT (conMap Map.! p) s
 

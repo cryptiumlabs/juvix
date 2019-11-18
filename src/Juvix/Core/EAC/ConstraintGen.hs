@@ -36,6 +36,8 @@ parameterizeType ty = do
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case ty of
+    PrimTy p →
+      pure (PPrimT p)
     SymT sym →
       pure (PSymT param sym)
     Pi arg body → do
@@ -68,6 +70,7 @@ reparameterize pty = do
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case pty of
+    PPrimT p → pure (PPrimT p)
     PSymT _ sym → pure (PSymT param sym)
     PArrT _ a b → pure (PArrT param a b)
 
@@ -77,6 +80,8 @@ unificationConstraints ∷
   PType primTy →
   PType primTy →
   m ()
+unificationConstraints (PPrimT p1) (PPrimT p2) =
+  pure ()
 unificationConstraints (PSymT a _) (PSymT b _) =
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
 unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
@@ -294,15 +299,18 @@ typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
 
 -- The outer bang parameter.
 bangParam ∷ ∀ primTy. PType primTy → Param
+bangParam (PPrimT _) = 0
 bangParam (PSymT param _) = param
 bangParam (PArrT param _ _) = param
 
 putParam ∷ ∀ primTy. Param → PType primTy → PType primTy
+putParam _ (PPrimT p) = PPrimT p
 putParam p (PSymT _ s) = PSymT p s
 putParam p (PArrT _ t1 t2) = PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
 addParamPos ∷ ∀ m primTy primVal. HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
+addParamPos _ (PPrimT p) = pure (PPrimT p)
 addParamPos toAdd (PSymT p s)
   | toAdd + p < 0 = throw @"typ" TooManyHats
   | otherwise = pure (PSymT (toAdd + p) s)
