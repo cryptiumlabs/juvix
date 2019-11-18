@@ -47,9 +47,9 @@ eraseTerm ∷
   Core.Term primTy primVal →
   m (Erased.Term primVal, Erased.Type primTy)
 eraseTerm parameterisation term usage ty =
-  if usage == Core.SNat 0
-    then throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
-    else case term of
+  case usage of
+    Core.SNat 0 → throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
+    _ → case term of
       Core.Star _ → throw @"erasureError" Unsupported
       Core.PrimTy _ → throw @"erasureError" Unsupported
       Core.Pi _ _ _ → throw @"erasureError" Unsupported
@@ -66,7 +66,7 @@ eraseTerm parameterisation term usage ty =
         (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
-        pure ((if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body), funcTy)
+        pure ((case usage <.> argUsage of Core.SNat 0 → body; _ → Erased.Lam name body), funcTy)
       Core.Elim elim → do
         elimTy ← eraseType parameterisation ty
         case elim of
@@ -80,9 +80,9 @@ eraseTerm parameterisation term usage ty =
               Right (fUsage, fTy) → do
                 let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
                 (f, _) ← eraseTerm parameterisation (Core.Elim f) fUsage fty
-                if argUsage == Core.SNat 0
-                  then pure (f, elimTy)
-                  else do
+                case argUsage of
+                  Core.SNat 0 → pure (f, elimTy)
+                  _ → do
                     (x, _) ← eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
           Core.Ann usage term ty → do
