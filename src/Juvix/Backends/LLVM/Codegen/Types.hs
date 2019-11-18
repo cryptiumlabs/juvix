@@ -240,3 +240,10 @@ portArrayLen = StructureType
         portData
       ]
   }
+
+-- TODO ∷ This changes per platform
+vaList ∷ Type
+vaList = StructureType
+  { isPacked = False,
+    elementTypes = [PointerType Type.i8 (AddrSpace 32)]
+  }

@@ -126,6 +126,39 @@ allocaNode ∷
   m Operand.Operand
 allocaNode = alloca nodeType
 
+-- H variants below mean that we are able to allocate from Haskell and
+-- need not make a function
+
+allocaPortsH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+allocaPortsH mPorts = do
+  ports ← alloca (Type.ArrayType (fromIntegral len) Types.portType)
+  traverse_
+    ( \(p, i) →
+        case p of
+          Nothing → pure ()
+          Just p → do
+            ptr ← getElementPtr $
+              Types.Minimal
+                { Types.type' = portType,
+                  Types.address' = ports,
+                  Types.indincies' = Block.constant32List [0, i]
+                }
+            store ptr p
+    )
+    (zip mPorts [1 ..])
+  pure ports
+  where
+    len = length mPorts
+
+-- TODO ∷ figure out var args
+-- not needed right away as we know how many args we need from Haskell
 allocaPorts = Block.defineFunctionVarArgs portArrayLen "alloca_ports" args $
   do
     undefined

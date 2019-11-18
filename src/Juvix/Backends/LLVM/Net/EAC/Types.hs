@@ -24,8 +24,8 @@ eac = Type.StructureType
       ]
   }
 
-app ∷ C.Constant
+app, dup, lam, era ∷ C.Constant
 app = C.Int {C.integerBits = tagInt, C.integerValue = 0}
-
-lambda ∷ C.Constant
-lambda = C.Int {C.integerBits = tagInt, C.integerValue = 1}
+lam = C.Int {C.integerBits = tagInt, C.integerValue = 1}
+era = C.Int {C.integerBits = tagInt, C.integerValue = 2}
+dup = C.Int {C.integerBits = tagInt, C.integerValue = 3}
