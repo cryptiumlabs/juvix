@@ -1,12 +1,12 @@
-module Monad where
+module Types where
 
 import Juvix.Core.Parameterisations.Naturals
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (log)
 
-exec ∷ EnvExec NatTy NatVal a → IO (Either (Core.PipelineError NatTy NatVal) a, [Core.PipelineLog NatTy NatVal])
-exec (EnvE env) = do
-  (ret, env) ← runStateT (runExceptT env) (Env nat [])
+exec ∷ EnvExec primTy primVal a → Core.Parameterisation primTy primVal → IO (Either (Core.PipelineError primTy primVal) a, [Core.PipelineLog primTy primVal])
+exec (EnvE env) param = do
+  (ret, env) ← runStateT (runExceptT env) (Env param [])
   pure (ret, log env)
 
 data Env primTy primVal
@@ -30,3 +30,6 @@ newtype EnvExec primTy primVal a = EnvE (ExceptT (Core.PipelineError primTy prim
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal))
     via MonadError (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))
+
+data SomeBackend where
+  SomeBackend ∷ ∀ primTy primVal. Core.Parameterisation primTy primVal → SomeBackend

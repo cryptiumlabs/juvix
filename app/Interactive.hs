@@ -15,10 +15,10 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
 import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
-import Monad
 import Options
 import qualified System.Console.Haskeline as H
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
+import Types
 import Prelude (String)
 
 interactive ∷ Context → Config → IO ()
@@ -66,7 +66,7 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckErase term usage ty))
+          erased ← liftIO (exec (Core.typecheckErase term usage ty) nat)
           H.outputStrLn (show erased)
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
@@ -75,7 +75,7 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty))
+          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty) nat)
           H.outputStrLn (show erased)
           case erased of
             (Right (term, _), _) → do
