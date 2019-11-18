@@ -50,7 +50,10 @@ astToNet param bohm customSymMap = net'
 
     recursive (Type.Prim p) _context =
       -- TODO: Determine arity, construct primitive or function accordingly.
-      undefined
+      let arity = Core.arity param p
+       in case arity of
+            0 → (,) <$> newNode (AST.Primar $ AST.PrimVal p) <*> pure Prim
+            _ → undefined
     -- we return the port which the node above it in the AST connects to!
     recursive (Type.IntLit x) _context =
       (,) <$> newNode (AST.Primar $ AST.IntLit x) <*> pure Prim
@@ -403,6 +406,7 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                   AST.IsPrim {AST._tag0 = tag} →
                     pure $ Just $
                       case tag of
+                        AST.PrimVal p → Type.Prim p
                         AST.Erase → Type.Erase
                         AST.Nil → Type.Nil
                         AST.Tru → Type.True'

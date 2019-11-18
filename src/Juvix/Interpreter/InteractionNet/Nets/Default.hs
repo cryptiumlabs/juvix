@@ -53,6 +53,7 @@ data Primar primVal
   | Fals
   | IntLit Int
   | Symbol Symbol
+  | PrimVal primVal
   deriving (Show)
 
 data ProperPort primVal
