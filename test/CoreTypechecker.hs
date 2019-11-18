@@ -50,6 +50,33 @@ identityNatContTy ∷ NatAnnotation
 identityNatContTy =
   (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
+-- dependent identity function, a : * -> a -> a
+depIdentity ∷ ∀ primTy primVal. IR.Term primTy primVal
+depIdentity =
+  IR.Lam
+    ( IR.Lam
+        ( IR.Elim
+            ( IR.Ann
+                (SNat 0)
+                (IR.Elim (IR.Bound 0))
+                (IR.Elim (IR.Bound 1))
+            )
+        )
+    )
+
+{- TODO
+depIdentityCompTy ∷ AllAnnotation
+depIdentityCompTy =
+  ( SNat 0,
+    IR.VPi
+      (SNat 0)
+      (IR.VStar 0)
+      ( IR.vapp
+          All.all
+          (IR.VLam (IR.VPrimTy))
+      )
+  )
+ -}
 identityApplication ∷ NatTerm
 identityApplication =
   IR.Elim
@@ -305,6 +332,7 @@ test_kcombinatorUnit_computational = shouldCheck All.all kcombinator kCompTyWith
 test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy
 
+-- TODO investigate why this test fail.
 test_k_app_I ∷ T.TestTree
 test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
 
