@@ -26,8 +26,8 @@ erase parameterisation term usage ty =
    in erased >>| \erased →
         (erased, typeAssignment env)
 
-exec ∷ EnvErasure primTy a → (Either ErasureError a, Env primTy)
-exec (EnvEra env) = runState (runExceptT env) (Env Map.empty 0 [])
+exec ∷ EnvErasure primTy primVal a → (Either ErasureError a, Env primTy primVal)
+exec (EnvEra env) = runState (runExceptT env) (Env Map.empty [] 0 [])
 
 eraseTerm ∷
   ∀ primTy primVal m.
@@ -35,6 +35,7 @@ eraseTerm ∷
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" ErasureError m,
+    HasState "context" (IR.Context primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -61,6 +62,8 @@ eraseTerm parameterisation term usage ty =
         let bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
+        let varTyIR = IR.cEval parameterisation (hrToIR varTy) []
+        modify @"context" ((:) (IR.Global (show name), (argUsage, varTyIR)))
         body ← eraseTerm parameterisation body bodyUsage retTyBody
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
@@ -71,8 +74,8 @@ eraseTerm parameterisation term usage ty =
           Core.Prim p → pure (Erased.Prim p)
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
-            -- TODO: Correct context, will the empty context work?
-            case IR.iType0 parameterisation [] fIR of
+            context ← get @"context"
+            case IR.iType0 parameterisation context fIR of
               Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
               Right (fUsage, fTy) → do
                 let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
