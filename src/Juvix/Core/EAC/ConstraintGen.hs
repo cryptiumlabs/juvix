@@ -3,6 +3,7 @@ module Juvix.Core.EAC.ConstraintGen where
 import Control.Arrow (left)
 import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
+import Juvix.Core.Types
 import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
@@ -15,6 +16,8 @@ import Prelude (error)
 setOccurrenceMap ∷ ∀ m primVal. (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
 setOccurrenceMap term = do
   case term of
+    Prim _ →
+      pure ()
     Var sym →
       modify' @"occurrenceMap" (Map.insertWith (+) sym 1)
     Lam _ b → do
@@ -102,17 +105,21 @@ boxAndTypeConstraint ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   ParamTypeAssignment primTy →
   Term primVal →
   m (RPT primVal, PType primTy)
-boxAndTypeConstraint parameterizedAssignment term = do
-  let rec = boxAndTypeConstraint parameterizedAssignment
+boxAndTypeConstraint parameterisation parameterizedAssignment term = do
+  let rec = boxAndTypeConstraint parameterisation parameterizedAssignment
+      arrow [x] = PPrimT x
+      arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
   varPaths ← get @"varPaths"
   param ← addPath
   path ← get @"path"
   -- Boxing constraint.
   addConstraint (Constraint (ConstraintVar 1 <$> path) (Gte 0))
   case term of
+    Prim p → pure (RBang 0 (RPrim p), arrow (typeOf parameterisation p))
     Var sym → do
       -- Boxing constraint.
       case varPaths Map.!? sym of
@@ -215,12 +222,13 @@ generateTypeAndConstraints ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   Term primVal →
   m (RPT primVal, ParamTypeAssignment primTy)
-generateTypeAndConstraints term = do
+generateTypeAndConstraints parameterisation term = do
   parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
-  boxAndTypeConstraint parameterizedAssignment term
+  boxAndTypeConstraint parameterisation parameterizedAssignment term
     >>| second (const parameterizedAssignment)
 
 generateConstraints ∷
@@ -231,10 +239,11 @@ generateConstraints ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   Term primVal →
   m (RPT primVal)
-generateConstraints term =
-  generateTypeAndConstraints term
+generateConstraints parameterisation term =
+  generateTypeAndConstraints parameterisation term
     >>| fst
 
 {- Bracket Checker. -}

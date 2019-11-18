@@ -31,9 +31,11 @@ typecheckAffineErase ∷
 typecheckAffineErase term usage ty = do
   -- First typecheck & generate erased core.
   (erased, assignment) ← typecheckErase term usage ty
+  -- Fetch the parameterisation, needed for EAC inference (TODO: get rid of this dependency).
+  parameterisation ← get @"parameterisation"
   -- Then invoke Z3 to check elementary-affine-ness.
   start ← liftIO unixTime
-  result ← liftIO (EAC.validEal erased assignment)
+  result ← liftIO (EAC.validEal parameterisation erased assignment)
   end ← liftIO unixTime
   tell @"log" [LogRanZ3 (end - start)]
   -- Return accordingly.

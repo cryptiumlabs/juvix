@@ -5,18 +5,20 @@ import Juvix.Core.EAC.ConstraintGen
 import Juvix.Core.EAC.Solve
 import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
+import Juvix.Core.Types
 import Juvix.Library hiding (link, reduce)
 
 validEal ∷
   ∀ primTy primVal.
   (Eq primTy) ⇒
+  Parameterisation primTy primVal →
   Term primVal →
   TypeAssignment primTy →
   IO (Either (Errors primTy primVal) (RPT primVal, ParamTypeAssignment primTy))
-validEal term typMap = do
+validEal parameterisation term typMap = do
   let ((rpt, typ), env) =
         execWithAssignment typMap $
-          generateTypeAndConstraints term
+          generateTypeAndConstraints parameterisation term
       constraint = constraints env
   -- Z3 constraint assignment
   assignment ← getConstraints constraint
@@ -53,6 +55,7 @@ assignTerm assignment syn = placeVals syn
       RBang
         (conMap Map.! i)
         ( case t of
+            RPrim p → RPrim p
             RLam s t → RLam s (placeVals t)
             RApp t1 t2 → RApp (placeVals t1) (placeVals t2)
             RVar s → RVar s
