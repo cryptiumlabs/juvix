@@ -130,6 +130,8 @@ library:
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.JIT
+    - Juvix.Backends.LLVM.JIT.Types
+    - Juvix.Backends.LLVM.JIT.Execution
     - Juvix.Backends.LLVM.Codegen.Constants
     - Juvix.Backends.LLVM.Codegen.Sum
     - Juvix.Backends.LLVM.Codegen.Types
