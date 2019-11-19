@@ -1,6 +1,4 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload "cl-org-mode")
-  (ql:quickload "trivia")
   (ql:quickload "fset")
   (asdf:load-system :uiop))
 
@@ -23,6 +21,9 @@
     `(or
       (eql :none)
       (satisfies just-p)))
+
+(defun nothing? (x)
+  (eq +nothing+ x))
 
 ;; -----------------------------------------------------------------------------
 ;; Directory and file types
@@ -53,9 +54,49 @@
 ;; -----------------------------------------------------------------------------
 
 
-(defun files-and-dirs (directroy)
-  "rec"
-  2)
+(defun files-and-dirs (directory)
+  "recursively grabs the file and directories
+forming a list of org-directory and file info"
+  (let* ((files          (uiop:directory-files directory))
+         (sub-dirs       (uiop:subdirectories  directory))
+         (dirs-annotated (mapcar (lambda (dir)
+                                   (let* ((name  (file-name dir))
+                                          (file? (find-if
+                                                  (lambda (x)
+                                                    (equal (file-name x) name))
+                                                  files)))
+                                     (make-org-directory
+                                      :file (if file?
+                                                (make-just :val file?)
+                                                +nothing+)
+                                      :dir  (files-and-dirs dir))))
+                                 sub-dirs))
+         ;; slow version of set-difference that maintains ordering
+         (files-annotated
+           (mapcar (lambda (file)
+                     (make-file-info :path file))
+            (remove-if (lambda (file)
+                         (member-if (lambda (dir-ann)
+                                      (if (nothing? (org-directory-file dir-ann))
+                                          nil
+                                          (equal (just-val (org-directory-file dir-ann))
+                                                 file)))
+                                    dirs-annotated))
+                       files))))
+    (append files-annotated dirs-annotated)))
+
+(defun lose-dir-information (file-dir-list)
+  "forgets the directory information and puts all files into a flat list"
+  (mapcan (lambda (file-dir)
+            (cond ((and (org-directory-p file-dir)
+                        (just-p (org-directory-file file-dir)))
+                   (cons (just-val (org-directory-file file-dir))
+                         (lose-dir-information (org-directory-dir file-dir))))
+                  ((org-directory-p file-dir)
+                   (lose-dir-information (org-directory-dir file-dir)))
+                  (t
+                   (list (file-info-path file-dir)))))
+          file-dir-list))
 
 ;; -----------------------------------------------------------------------------
 ;; Handling Conflicting Files
@@ -147,3 +188,5 @@ Returns a string that reconstructs the unique identifier for the file"
                           #P"~/Documents/Work/Repo/juvix/holder/Library.hs"
                           #P"~Documents/Work/Repo/juvix/holder/Libr.hs")
                     :all-conflicts nil)
+
+(files-and-dirs "../../holder/")
