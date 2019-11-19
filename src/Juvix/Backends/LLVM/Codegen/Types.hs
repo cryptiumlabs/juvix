@@ -247,3 +247,12 @@ vaList = StructureType
   { isPacked = False,
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
+
+voidStarTy ∷ Type
+voidStarTy = PointerType VoidType (AddrSpace 32)
+
+voidTy ∷ Type
+voidTy = VoidType
+
+size_t ∷ Type
+size_t = IntegerType 32

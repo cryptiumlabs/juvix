@@ -296,6 +296,36 @@ external retty label argtys = do
       (mkName label)
 
 --------------------------------------------------------------------------------
+-- Memory management
+--------------------------------------------------------------------------------
+
+-- malloc & free need to be defined once and then can be called normally with `externf`
+
+malloc ∷
+  ∀ m.
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  m ()
+malloc = do
+  let name = "malloc"
+  op ← external voidStarTy name [(size_t, "size")]
+  modify @"symtab" (Map.insert name op)
+  pure ()
+
+free ∷
+  ∀ m.
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  m ()
+free = do
+  let name = "free"
+  op ← external voidTy name []
+  modify @"symtab" (Map.insert name op)
+  pure ()
+
+--------------------------------------------------------------------------------
 -- Integer Operations
 --------------------------------------------------------------------------------
 
