@@ -10,6 +10,7 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import Data.Function
 
 type NatTerm = IR.Term NatTy NatVal
 
@@ -64,19 +65,28 @@ depIdentity =
         )
     )
 
-{- TODO
-depIdentityCompTy ∷ AllAnnotation
+depIdentityCompTy ∷ forall primTy primVal. IR.Annotation primTy primVal
 depIdentityCompTy =
   ( SNat 0,
     IR.VPi
       (SNat 0)
       (IR.VStar 0)
-      ( IR.vapp
-          All.all
-          (IR.VLam (IR.VPrimTy))
+      (const 
+        (IR.VPi
+          (SNat 1)
+          (IR.VNeutral (IR.NFree (IR.Local 0)))
+          id
+        )
       )
   )
- -}
+
+  {- (IR.VPi
+          (SNat 1)
+          (IR.VPrimTy primTy)
+          (const IR.VPrimTy primTy)
+        )(IR.vapp -- vapp:: Parameterisation -> Value -> Value -> Value
+  All.all --param
+  (IR.VLam (IR.VPrimTy)) -- Value -}
 identityApplication ∷ NatTerm
 identityApplication =
   IR.Elim
@@ -247,7 +257,6 @@ kAppICompTy =
       (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 
-{-
 -- Because S returns functions, it's not general because of the annotations.
 -- For example, S (KSK) = (KK) (SK) = K:Nat-> Nat-> Nat
 -- this S takes in KSK, and has x and y annotated as follows:
@@ -263,6 +272,9 @@ kAppICompTy =
 -- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
 -- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
 -- (Nat -> Nat -> Nat)
+
+-- S (K11) = (K 1) (1 1) doesn't work because one cannot properly annotate the second input of K (1 1).
+{-
 scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
 scombinator =
   IR.Lam --x (Bound 2)
@@ -339,8 +351,8 @@ test_identity_app_k = shouldInfer nat identityAppK kCompTy
 test_k_app_1 ∷ T.TestTree
 test_k_app_1 = shouldInfer nat kApp1 natToNatTy
 
---test_siii :: T.TestTree
---test_siii = shouldInfer all scombinator
+--test_depIdentity :: T.TestTree
+--test_depIdentity = shouldCheck All.all depIdentity depIdentityCompTy
 
 test_nats_type_star0 ∷ T.TestTree
 test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
