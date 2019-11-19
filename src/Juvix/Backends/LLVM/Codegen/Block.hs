@@ -14,10 +14,12 @@ import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
 import qualified LLVM.AST.IntegerPredicate as IntPred
+import qualified LLVM.AST.Linkage as L
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.ParameterAttribute as ParameterAttribute
 import qualified LLVM.AST.Type as Type
+import Prelude (String)
 
 --------------------------------------------------------------------------------
 -- Codegen Operations
@@ -270,6 +272,28 @@ terminator trm = do
   blk ← current
   modifyBlock (blk {term = Just trm})
   return trm
+
+--------------------------------------------------------------------------------
+-- External linking
+--------------------------------------------------------------------------------
+
+external ∷ (HasState "moduleDefinitions" [Definition] m) ⇒ Type → String → [(Type, Name)] → m Operand
+external retty label argtys = do
+  addDefn
+    $ GlobalDefinition
+    $ functionDefaults
+      { Global.parameters = ((\(ty, nm) → Parameter ty nm []) <$> argtys, False),
+        Global.callingConvention = CC.Fast, -- TODO
+        Global.returnType = retty,
+        Global.basicBlocks = [],
+        Global.name = mkName label,
+        Global.linkage = L.External
+      }
+  return
+    $ ConstantOperand
+    $ C.GlobalReference
+      (PointerType (FunctionType retty (fst <$> argtys) False) (AddrSpace 0))
+      (mkName label)
 
 --------------------------------------------------------------------------------
 -- Integer Operations
