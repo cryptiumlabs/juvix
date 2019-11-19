@@ -12,7 +12,7 @@
 ;; Maybe type
 ;; -----------------------------------------------------------------------------
 
-;; todo better type it
+;; TODO better type it
 (defconstant +nothing+ :none)
 
 (defstruct just val)
@@ -46,6 +46,12 @@
   (alias +nothing+ :type maybe))
 
 ;; -----------------------------------------------------------------------------
+;; Program Constants
+;; -----------------------------------------------------------------------------
+
+(defparameter *acceptable-extensions* (fset:set "hs"))
+
+;; -----------------------------------------------------------------------------
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
@@ -55,21 +61,49 @@
         (sub-dirs (uiop:subdirectories directory)))
     3))
 
+
+;; -----------------------------------------------------------------------------
+;; Org Generation
+;; -----------------------------------------------------------------------------
+
+;; TODO parameterize this over the project name and language!
+(defun relevent-imports (lines conflict-map)
+  (let ((imports (remove-if (complement (lambda (x) (uiop:string-prefix-p "import" x)))
+                            lines)))
+    ))
+
+
+;; -----------------------------------------------------------------------------
+;; Conflict Map and Haskell Import Conversion
+;; -----------------------------------------------------------------------------
+
+
+(defun conflict-map-to-haskell-import (conflict-map)
+  (fset:m))
+
+;; TODO Parameterize this much better
+(defun convert-path (file &optional (dir-before-lirbary "src"))
+  
+  )
+
+
 ;; -----------------------------------------------------------------------------
 ;; Getting Directory and File lists
 ;; -----------------------------------------------------------------------------
-
 
 (defun get-directory-info (directory)
   (let* ((annote-1     (files-and-dirs directory))
          (conflict-map (construct-file-alias-map (lose-dir-information annote-1))))
     (alias-file-info annote-1 conflict-map)))
 
-(defun files-and-dirs (directory)
+(defun files-and-dirs (directory &optional (valid-extensions *acceptable-extensions*))
   "recursively grabs the file and directories
 forming a list of org-directory and file info"
-  (let* ((files          (uiop:directory-files directory))
-         (sub-dirs       (uiop:subdirectories  directory))
+  (let* ((sub-dirs       (uiop:subdirectories  directory))
+         (files          (remove-if (complement (lambda (x)
+                                                  (fset:@ valid-extensions
+                                                          (pathname-type x))))
+                                    (uiop:directory-files directory)))
          (dirs-annotated (mapcar (lambda (dir)
                                    (let* ((name  (file-name dir))
                                           (file? (find-if
@@ -216,14 +250,15 @@ Returns a string that reconstructs the unique identifier for the file"
           ((= extra-context 1)
            name)
           (t
-           (let* ((disambigous-path   (last (pathname-directory file)
-                                            (1- extra-context)))
-                  (reconstructed-path (butlast (mapcan (lambda (s) (list s "/"))
-                                                       (append disambigous-path
-                                                               (list name))))))
-             (apply #'concatenate 'string reconstructed-path))))))
+           (let ((disambigous-path (last (pathname-directory file)
+                                         (1- extra-context))))
+             (reconstruct-path (append disambigous-path (list name))))))))
 
-
+(defun reconstruct-path (xs &optional (connector "/"))
+  (apply #'concatenate
+         'string
+         (butlast (mapcan (lambda (s) (list s connector))
+                          xs))))
 ;; -----------------------------------------------------------------------------
 ;; Tests
 ;; -----------------------------------------------------------------------------
