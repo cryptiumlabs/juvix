@@ -79,12 +79,21 @@
 
 
 (defun conflict-map-to-haskell-import (conflict-map)
-  (fset:m))
+  (fset:image (lambda (key value)
+                (values (convert-path key) value))
+              conflict-map))
 
 ;; TODO Parameterize this much better
-(defun convert-path (file &optional (dir-before-lirbary "src"))
-  
-  )
+(defun convert-path (file &optional (dir-before-library "src"))
+  (labels ((last-dir-before (xs)
+             (let ((next (member dir-before-library xs :test #'equal)))
+               (if next
+                   (last-dir-before (cdr next))
+                   xs))))
+    (reconstruct-path (append
+                       (last-dir-before (pathname-directory file))
+                       (list (pathname-name file)))
+                      ".")))
 
 
 ;; -----------------------------------------------------------------------------
@@ -273,3 +282,7 @@ Returns a string that reconstructs the unique identifier for the file"
 (get-directory-info "../../holder/")
 
 (files-and-dirs "../../holder/")
+
+(construct-file-alias-map
+ (lose-dir-information
+  (files-and-dirs "../../holder/src/")))
