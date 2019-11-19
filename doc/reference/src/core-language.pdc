@@ -58,11 +58,11 @@ succ :: 1 (1 (n (a -> a) -> 1 a -> a) -> ((n + 1) (a -> a) -> 1 a -> a)
 
 #### Typeclass-style usage polymorphism in the frontend language
 
-Frontend language level usage polymorphism, where $succ$ must be instantiated for an $n$ known at compile time at each call site (like a typeclass), and must be instantiated with $w$ if $n$ is unknown at the call site. This is easy, but probably not that useful, since often we won't know $n$ for the argument at compile time.
+Frontend language level usage polymorphism, where $succ$ must be instantiated for an $n$ known at compile time at each call site (like a typeclass), and must be instantiated with $ω$ if $n$ is unknown at the call site. This is easy, but probably not that useful, since often we won't know $n$ for the argument at compile time.
 
 #### Usage polymorphism in the type theory
 
-Add a $forall u . T$, where $u$ ranges over the semiring, to the core type theory, and can then appear as a variable for any usage in $T$. This then will require n-variable polynomial constraint satisfiability checks during typechecking, but should have zero runtime cost. It may impact the kinds of memory management we can automate, not sure yet, but we should still have more information than without quantisation at all (or, equivalently, with w).
+Add a $∀ u .\, T$, where $u$ ranges over the semiring, to the core type theory, and can then appear as a variable for any usage in $T$. This then will require n-variable polynomial constraint satisfiability checks during typechecking, but should have zero runtime cost. It may impact the kinds of memory management we can automate, not sure yet, but we should still have more information than without quantisation at all (or, equivalently, with $ω$).
 
 #### Dependent usaging in the type theory
 
