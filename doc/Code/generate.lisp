@@ -17,6 +17,11 @@
 
 (defstruct just val)
 
+(defun map-just (f val)
+  (if (just-p val)
+      (make-just :val (funcall f (just-val val)))
+      val))
+
 (deftype maybe ()
     `(or
       (eql :none)
@@ -31,6 +36,7 @@
 
 (defstruct org-directory
   ;; some directories have a file that re-export things
+  ;; let it be a maybe file-info
   (file +nothing+ :type maybe)
   ;; a dir consists of either a file-info-p or a org-directory-p
   (dir  nil       :type list))
@@ -54,6 +60,11 @@
 ;; -----------------------------------------------------------------------------
 
 
+(defun get-directory-info (directory)
+  (let* ((annote-1     (files-and-dirs directory))
+         (conflict-map (construct-file-alias-map (lose-dir-information annote-1))))
+    (alias-file-info annote-1 conflict-map)))
+
 (defun files-and-dirs (directory)
   "recursively grabs the file and directories
 forming a list of org-directory and file info"
@@ -67,7 +78,8 @@ forming a list of org-directory and file info"
                                                   files)))
                                      (make-org-directory
                                       :file (if file?
-                                                (make-just :val file?)
+                                                (make-just
+                                                 :val (make-file-info :path file?))
                                                 +nothing+)
                                       :dir  (files-and-dirs dir))))
                                  sub-dirs))
@@ -79,8 +91,10 @@ forming a list of org-directory and file info"
                          (member-if (lambda (dir-ann)
                                       (if (nothing? (org-directory-file dir-ann))
                                           nil
-                                          (equal (just-val (org-directory-file dir-ann))
-                                                 file)))
+                                          (equal file
+                                                 (file-info-path
+                                                  (just-val
+                                                   (org-directory-file dir-ann))))))
                                     dirs-annotated))
                        files))))
     (append files-annotated dirs-annotated)))
@@ -90,7 +104,9 @@ forming a list of org-directory and file info"
   (mapcan (lambda (file-dir)
             (cond ((and (org-directory-p file-dir)
                         (just-p (org-directory-file file-dir)))
-                   (cons (just-val (org-directory-file file-dir))
+                   (cons (file-info-path
+                          (just-val
+                           (org-directory-file file-dir)))
                          (lose-dir-information (org-directory-dir file-dir))))
                   ((org-directory-p file-dir)
                    (lose-dir-information (org-directory-dir file-dir)))
@@ -98,11 +114,41 @@ forming a list of org-directory and file info"
                    (list (file-info-path file-dir)))))
           file-dir-list))
 
+(defun mapcar-file-dir (path-f alias-f file-dirs)
+  "Applies path-f to all files in a list and alias-f to all alias and files
+   to a list of file-info and org-directory"
+  (flet ((alias-call (file-info)
+           (make-file-info
+            :path  (funcall path-f  (file-info-path file-info))
+            :alias (funcall alias-f
+                            (file-info-alias file-info)
+                            (file-info-path file-info)))))
+    (mapcar (lambda (file-dir)
+              (if (org-directory-p file-dir)
+                  (make-org-directory
+                   :file (map-just #'alias-call
+                                   (org-directory-file file-dir))
+                   :dir (mapcar-file-dir path-f
+                                         alias-f
+                                         (org-directory-dir file-dir)))
+                  (alias-call file-dir)))
+            file-dirs)))
+
+(defun alias-file-info (file-dirs alias-map)
+  (mapcar-file-dir #'identity
+                   (lambda (alias path)
+                     (declare (ignore alias))
+                     (let ((lookup (fset:lookup alias-map path)))
+                       (if lookup
+                           (make-just :val lookup)
+                           +nothing+)))
+                   file-dirs))
+
 ;; -----------------------------------------------------------------------------
 ;; Handling Conflicting Files
 ;; -----------------------------------------------------------------------------
 
-(defun consturct-file-alias-map (files)
+(defun construct-file-alias-map (files)
   "finds any files that share the same identifier
 and returns a map of files to their alias"
   (flet ((add-file (map file)
@@ -188,5 +234,7 @@ Returns a string that reconstructs the unique identifier for the file"
                           #P"~/Documents/Work/Repo/juvix/holder/Library.hs"
                           #P"~Documents/Work/Repo/juvix/holder/Libr.hs")
                     :all-conflicts nil)
+
+(get-directory-info "../../holder/")
 
 (files-and-dirs "../../holder/")
