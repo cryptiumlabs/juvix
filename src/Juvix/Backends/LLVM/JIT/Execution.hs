@@ -4,6 +4,7 @@ module Juvix.Backends.LLVM.JIT.Execution where
 
 import qualified Data.ByteString.Char8 as B
 import Foreign.Ptr (FunPtr, castFunPtr)
+import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
 import LLVM.Context
@@ -17,27 +18,34 @@ foreign import ccall "dynamic" haskFun ∷ FunPtr (IO Double) → (IO Double)
 run ∷ FunPtr a → IO Double
 run fn = haskFun (castFunPtr fn ∷ FunPtr (IO Double))
 
-jit ∷ Context → (EE.MCJIT → IO a) → IO a
-jit c = EE.withMCJIT c optlevel model ptrelim fastins
+jit ∷ Config → Context → (EE.MCJIT → IO a) → IO a
+jit config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
   where
-    optlevel = Just 3 -- optimization level
+    optlevel = convOptLevel (configOptimisationLevel config)
 
-    model = Nothing -- code model ( Default )
+    model = Nothing -- code model (default)
 
     ptrelim = Nothing -- frame pointer elimination
 
-    fastins = Nothing -- fast instruction selection
+    fastins = Nothing -- fast instruction selection, apparently not yet supported
 
-passes ∷ PassSetSpec
-passes = defaultCuratedPassSetSpec {optLevel = Just 3}
+passes ∷ Config → PassSetSpec
+passes config = defaultCuratedPassSetSpec {optLevel = convOptLevel (configOptimisationLevel config)}
 
-runJIT ∷ AST.Module → IO AST.Module
-runJIT mod = do
+convOptLevel ∷ OptimisationLevel → Maybe Word
+convOptLevel None = Nothing
+convOptLevel O0 = pure 0
+convOptLevel O1 = pure 1
+convOptLevel O2 = pure 2
+convOptLevel O3 = pure 3
+
+runJIT ∷ Config → AST.Module → IO AST.Module
+runJIT config mod = do
   withContext $ \context →
-    jit context $ \executionEngine → do
+    jit config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
-        withPassManager passes $ \pm → do
+        withPassManager (passes config) $ \pm → do
           -- optimise module
           _ ← runPassManager pm m
           -- fetch the optimised ast
