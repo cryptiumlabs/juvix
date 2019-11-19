@@ -1,6 +1,7 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
+import Data.Function
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals
@@ -10,7 +11,6 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Data.Function
 
 type NatTerm = IR.Term NatTy NatVal
 
@@ -65,28 +65,28 @@ depIdentity =
         )
     )
 
-depIdentityCompTy ∷ forall primTy primVal. IR.Annotation primTy primVal
+depIdentityCompTy ∷ ∀ primTy primVal. IR.Annotation primTy primVal
 depIdentityCompTy =
   ( SNat 0,
     IR.VPi
       (SNat 0)
       (IR.VStar 0)
-      (const 
-        (IR.VPi
-          (SNat 1)
-          (IR.VNeutral (IR.NFree (IR.Local 0)))
-          id
-        )
+      ( const
+          ( IR.VPi
+              (SNat 1)
+              (IR.VNeutral (IR.NFree (IR.Local 0)))
+              id
+          )
       )
   )
 
-  {- (IR.VPi
-          (SNat 1)
-          (IR.VPrimTy primTy)
-          (const IR.VPrimTy primTy)
-        )(IR.vapp -- vapp:: Parameterisation -> Value -> Value -> Value
-  All.all --param
-  (IR.VLam (IR.VPrimTy)) -- Value -}
+{- (IR.VPi
+        (SNat 1)
+        (IR.VPrimTy primTy)
+        (const IR.VPrimTy primTy)
+      )(IR.vapp -- vapp:: Parameterisation -> Value -> Value -> Value
+All.all --param
+(IR.VLam (IR.VPrimTy)) -- Value -}
 identityApplication ∷ NatTerm
 identityApplication =
   IR.Elim
