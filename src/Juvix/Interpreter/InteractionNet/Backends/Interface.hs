@@ -1,13 +1,12 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE NamedFieldPuns #-}
+
 -- |
 -- - Interface serves as a file that has common types between the various
 --   back ends along with two interfaces each back-end must support
 --   + This also includes functions derived from the interface functions!
 -- - This file will be the file [[Nets]] will import as it provides the
 --   interface along with derived functions
-
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Juvix.Interpreter.InteractionNet.Backends.Interface where
 
 import Control.Lens

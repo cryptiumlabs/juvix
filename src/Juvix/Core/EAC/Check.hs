@@ -1,4 +1,3 @@
-
 -- |
 -- - A constraint checker for EAC.
 module Juvix.Core.EAC.Check where

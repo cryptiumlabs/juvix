@@ -12,7 +12,6 @@
 --   3. Type Classes aliases for having just a Primary port, or an
 --      Auxiliary port and a Primary, or two Auxiliary ports and a
 --      primary, and so forth.
-
 module Juvix.Interpreter.InteractionNet.NodeInterface where
 
 import Control.Lens

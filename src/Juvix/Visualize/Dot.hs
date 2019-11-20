@@ -4,7 +4,6 @@
 -- - Also provides a way of generating gifs (and the images used to
 --   generate said gif), displaying every reduction step until the term
 --   is normalized
-
 module Juvix.Visualize.Dot where
 
 import Control.Exception hiding ()

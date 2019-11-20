@@ -1,8 +1,7 @@
--- |
--- - Has the code necessary to generate LLVM Code
-
 {-# LANGUAGE NamedFieldPuns #-}
 
+-- |
+-- - Has the code necessary to generate LLVM Code
 module Juvix.Backends.LLVM.Codegen.Block where
 
 import Data.ByteString.Short

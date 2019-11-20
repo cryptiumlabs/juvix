@@ -8,7 +8,6 @@
 --   1. Con
 --   2. Dup
 --   3. Era
-
 module Juvix.Interpreter.InteractionNet.Nets.Combinators where
 
 import Control.Lens
