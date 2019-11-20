@@ -66,11 +66,34 @@
 ;; Org Generation
 ;; -----------------------------------------------------------------------------
 
+(defun haskell-import-to-org-alias (imports conflict-map)
+  (mapcar (lambda (import)
+            (or (fset:lookup conflict-map import)
+                (car (last (uiop:split-string import :separator ".")))))
+          imports))
+
 ;; TODO parameterize this over the project name and language!
-(defun relevent-imports (lines conflict-map)
-  (let ((imports (remove-if (complement (lambda (x) (uiop:string-prefix-p "import" x)))
-                            lines)))
-    ))
+;; TODO consider if we should add a lifted version of this, adding to file info
+;; - _Advantages_
+;;   + Modular
+;;   + Multiple passes
+;; - _Disadvantages_
+;;   + extra allocation
+;;   + doesn't stream the data into org file generation
+(defun relevent-imports (lines project-name)
+  "takes LINES of a source code, and a PROJECT-NAME and filters for imports
+that match the project name"
+  (let* ((imports     (remove-if (complement (lambda (x)
+                                               (uiop:string-prefix-p "import" x)))
+                                 lines))
+         (modules     (mapcar (lambda (import)
+                                ;; TODO make this cadr logic generic
+                                (cadr (uiop:split-string import)))
+                              imports))
+         (project-imp (remove-if (complement (lambda (m)
+                                               (uiop:string-prefix-p project-name m)))
+                                 modules)))
+    project-imp))
 
 
 ;; -----------------------------------------------------------------------------
@@ -286,3 +309,14 @@ Returns a string that reconstructs the unique identifier for the file"
 (construct-file-alias-map
  (lose-dir-information
   (files-and-dirs "../../holder/src/")))
+
+(haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
+                                   "Juvix.Interpreter.InteractionNet.Backends.Graph")
+                             (conflict-map-to-haskell-import
+                              (construct-file-alias-map
+                               (lose-dir-information
+                                (files-and-dirs "../../src/")))))
+
+(relevent-imports (uiop:read-file-lines
+                   #P"/home/loli/Documents/Work/Repo/juvix/holder/src/Library.hs")
+                  "Juvix")
