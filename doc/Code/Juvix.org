@@ -1,8 +1,17 @@
 * Juvix
 ** Backends
 *** LLVM
+- Serves as the LLVM backend compiler to Juvix.
+- This is an alternative to the interpreter provided.
 **** Codegen
+- _Relies on_
+  + [[Block]]
+  + [[Constants]]
+  + [[Codegen/Default]]
+  + [[Codegen/Graph]]
+  + [[Codegen/Types]]
 ***** Block
+- Has the code necessary to generate LLVM Code
 - _Relies on_
   + [[Codegen/Shared]]
   + [[Codegen/Types]]
@@ -10,6 +19,10 @@
   + [[HashMap]]
 ***** Constants
 Module for predefined constants
+- _Relies on_
+  + [[Library]]
+***** Default <<Codegen/Default>>
+This module provides the default environment to run LLVM code in
 - _Relies on_
   + [[Library]]
 ***** Graph <<Codegen/Graph>>
@@ -24,6 +37,8 @@ Shared between Types and Sum
   + [[Library]]
 ***** Sum
 Provides a mechanism for defining Sum types
+- Has the code to encode a sum type via what is defined by the user or
+  what is defined to create the interaction net system.
 - _Relies on_
   + [[Codegen/Shared]]
   + [[Library]]
@@ -33,7 +48,12 @@ Provides a mechanism for defining Sum types
   + [[Sum]]
   + [[Library]]
 **** Net
-***** EAC
+***** EAC <<Net/EAC>>
+- _Relies on_
+  + [[Library]]
+****** Types <<Net/EAC/Types>>
+- _Relies on_
+  + [[Library]]
 *** Michelson
 **** Optimisation
 - _Relies on_
@@ -96,40 +116,49 @@ Provides a mechanism for defining Sum types
 *** Utility
 - _Relies on_
   + [[Library]]
-*** EAC
+*** EAC <<Core/EAC>>
+- This directory contains the implementation of =Eal= and the inferred
+  bracket checker on =Eal=
 - _Relies on_
   + [[Check]]
   + [[ConstraintGen]]
   + [[EAC/Erasure]]
   + [[EAC/Parser]]
   + [[Solve]]
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
 **** Check
+- A constraint checker for EAC.
 - _Relies on_
   + [[ConstraintGen]]
   + [[Solve]]
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
   + [[Erased/Types]]
+  + [[Core/Types]]
   + [[Library]]
 **** ConstraintGen
 - _Relies on_
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
   + [[Erased/Types]]
+  + [[Core/Types]]
   + [[Library]]
 **** Erasure <<EAC/Erasure>>
 - _Relies on_
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
   + [[Erased/Types]]
 **** Parser <<EAC/Parser>>
 - _Relies on_
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
   + [[Unit]]
   + [[Library]]
 **** Solve
+- A Z3 solver for the generated =Eal= Constraints
+- Can generate multiple constraints that will be used along side the
+  Bracket checker to confirm that the solved constraints Z3 gives us
+  is correct
 - _Relies on_
-  + [[EAC/Types]]
+  + [[Core/EAC/Types]]
   + [[Library]]
-**** Types <<EAC/Types>>
+**** Types <<Core/EAC/Types>>
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
@@ -150,6 +179,7 @@ Provides a mechanism for defining Sum types
 **** Algorithm
 - _Relies on_
   + [[Erasure/Types]]
+  + [[Translate]]
   + [[Library]]
 **** Types <<Erasure/Types>>
 - _Relies on_
@@ -197,15 +227,26 @@ Provides a mechanism for defining Sum types
   + [[Library]]
 ** Encoding
 *** Encoding
+- This provides generic functions used by the various encodings in
+  this directory
 - _Relies on_
   + [[Encoding/Types]]
   + [[Library]]
 *** Mendler
+- Gives a =Mendler= encoding from an =ADT=.
+- This file is not done as Ι have yet to find a way to convert any
+  general recursive function into a proper =Mendler= form.
+- This however will do the boilerplate of changing an =ADT= to
+  =Mendler= and the structure of a case expression into proper
+  =Mendler= form
 - _Relies on_
   + [[Encoding]]
   + [[Encoding/Types]]
   + [[Library]]
 *** Scott
+- Gives a =Scott= encoding from an =ADT= and works properly for case
+  expressions
+- Overall this encoding just works™
 - _Relies on_
   + [[Encoding]]
   + [[Encoding/Types]]
@@ -227,9 +268,18 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** NodeInterface
+- Serves as a generic lens layer for various Node types in interaction nets
+  1. Primary port details
+     - Open or Bound?
+  2. Auxiliary port details
+     - Open or Bound?
+  3. Type Classes aliases for having just a Primary port, or an
+     Auxiliary port and a Primary, or two Auxiliary ports and a
+     primary, and so forth.
 - _Relies on_
   + [[Library]]
 **** Parser <<InteractionNet/Parser>>
+- Parses the syntax according to the formal =BNF=
 - _Relies on_
   + [[InteractionNet/Default]]
   + [[InteractionNet/Shared]]
@@ -239,6 +289,8 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
 **** Translation
+- Translates the default abstract syntax into Interaction nets
+  + Also translates the net into the an ast
 - _Relies on_
   + [[Interface]]
   + [[NodeInterface]]
@@ -250,20 +302,38 @@ Can be added to via core translation
   + [[Library]]
 **** Backends
 ***** Env
+- Env serves as the environment for running the back-ends
+  + This includes the diagnostic information about how the code is ran
+  + Also includes the effect handler types and the runner functions
+    for them
+- Also gives functions needed to increment diagnostic information
+  + see =incGraphStepSize= and =sequentalStep=
+  + File will also be imported in [[Nets]] due to these two functions
 - _Relies on_
   + [[Interface]]
   + [[Library]]
 ***** Graph <<Backends/Graph>>
+- This is an implementation of said interfacing using =FGL=
+- This code will imported in Tests as a possible back-end for testing.
+  + This back-end is more useful than [[Maps]] as it can produce
+    graphical outputs, see [[Visualize]]
 - _Relies on_
   + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
 ***** Interface
+- Interface serves as a file that has common types between the various
+  back ends along with two interfaces each back-end must support
+  + This also includes functions derived from the interface functions!
+- This file will be the file [[Nets]] will import as it provides the
+  interface along with derived functions
 - _Relies on_
   + [[NodeInterface]]
   + [[Library]]
 ***** Maps
+- this is an implementation of said interface using the =EnumMap= data structure
+- This code will be imported in Tests as a possible back-end for testing
 - _Relies on_
   + [[Env]]
   + [[Interface]]
@@ -271,12 +341,19 @@ Can be added to via core translation
   + [[Library]]
 **** Nets
 ***** Combinators
+- An evaluation for a simple combination calculus language, only has
+  three ports
+  1. Con
+  2. Dup
+  3. Era
 - _Relies on_
   + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
 ***** Default <<Nets/Default>>
+- An evaluator for the Default Language
+- Serves as a reference way of creating interaction nets
 - _Relies on_
   + [[Env]]
   + [[Interface]]
@@ -284,12 +361,28 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 ** Library
+- The standard Library for the project
+  + Thus all code will depend on this module without stating otherwise
+- Is mostly =Protolude= except with a few changes
+  + _Additions_
+    * ∨   :: Serves as an or function
+    * ∧   :: Serves as an and function
+    * |<< :: Serves as a map function
+    * >>| :: Serves as the flip map function
+  + _Changes_
+    * The Capability library is imported and replaces the standard =MTL=
+      constructs in =Protolude=
 - _Relies on_
   + [[PrettyPrint]]
 *** HashMap
 *** PrettyPrint
 ** Visualize
 *** Dot
+- Generates a dot file in order to produce a simple image of a
+  interaction net
+- Also provides a way of generating gifs (and the images used to
+  generate said gif), displaying every reduction step until the term
+  is normalized
 - _Relies on_
   + [[Env]]
   + [[Backends/Graph]]
@@ -297,5 +390,7 @@ Can be added to via core translation
   + [[Library]]
   + [[Visualize/Graph]]
 *** Graph <<Visualize/Graph>>
+- A simple function for showing the graph as a proper net
+- Really should be improved upon or removed
 - _Relies on_
   + [[Library]]

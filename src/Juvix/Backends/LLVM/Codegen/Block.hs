@@ -1,3 +1,6 @@
+-- |
+-- - Has the code necessary to generate LLVM Code
+
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Juvix.Backends.LLVM.Codegen.Block where

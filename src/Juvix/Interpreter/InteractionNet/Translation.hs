@@ -1,5 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
+-- | - Translates the default abstract syntax into Interaction nets
+--   + Also translates the net into the an ast
 module Juvix.Interpreter.InteractionNet.Translation
   ( astToNet,
     netToAst,

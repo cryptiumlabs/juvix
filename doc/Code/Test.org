@@ -28,6 +28,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Check]]
   + [[Types]]
+  + [[Types]]
   + [[Library]]
 * Encoding
 - _Relies on_
@@ -38,6 +39,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
 * Erasure
 - _Relies on_
+  + [[Unit]]
+  + [[Usage]]
   + [[Library]]
 * INet
 - _Relies on_

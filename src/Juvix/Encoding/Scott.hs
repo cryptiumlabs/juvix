@@ -1,5 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
+-- |
+-- - Gives a =Scott= encoding from an =ADT= and works properly for case
+--   expressions
+-- - Overall this encoding just works™
+
 module Juvix.Encoding.Scott where
 
 import Juvix.Encoding.Encoding

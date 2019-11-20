@@ -1,11 +1,15 @@
+* Compile
+- _Relies on_
+  + [[Parameterisation]]
+  + [[Library]]
 * Config
 * Interactive
 - _Relies on_
   + [[Naturals]]
   + [[Library]]
 * Main
-* Monad
+* Options
+* Types
 - _Relies on_
   + [[Naturals]]
   + [[Library]]
-* Options
