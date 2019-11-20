@@ -3,7 +3,8 @@
   (asdf:load-system :uiop))
 
 (defpackage #:code-generation
-  (:use #:common-lisp))
+  (:use #:common-lisp)
+  (:export :generate-org-file))
 
 (in-package :code-generation)
 
