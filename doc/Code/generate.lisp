@@ -78,7 +78,7 @@
                                 text)
                           (rec level (cdr dirs))))
                        (t
-                        (let ((text (generate-headline-directory (car dirs)
+                        (let ((text (generate-headlines-directory (car dirs)
                                                                  haskell-conflict-map
                                                                  level)))
                           (mapc (lambda (line)
@@ -452,7 +452,7 @@ Returns a string that reconstructs the unique identifier for the file"
 
 ;; (get-directory-info "../../holder/")
 
-;; (files-and-dirs "../../holder/src/")
+;; (files-and-dirs "../../src/")
 
 ;; (construct-file-alias-map
 ;;  (lose-dir-information
