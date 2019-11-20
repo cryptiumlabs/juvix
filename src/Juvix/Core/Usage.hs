@@ -20,8 +20,8 @@ instance Show NatAndw where
 
 instance Eq NatAndw where
   SNat x == SNat y = x == y
-  SNat _ == Omega = True
-  Omega == _ = True
+  Omega == _ = False
+  SNat x == Omega = True
 
 -- Addition is the semi-Ring/Monoid instance
 instance Semigroup NatAndw where
