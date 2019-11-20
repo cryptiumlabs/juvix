@@ -38,7 +38,8 @@
   ;; let it be a maybe file-info
   (file +nothing+ :type maybe)
   ;; a dir consists of either a file-info-p or a org-directory-p
-  (dir  nil       :type list))
+  (dir  nil       :type list)
+  (name ""        :type string))
 
 (defstruct file-info
   (path  ""        :type pathname)
@@ -54,24 +55,76 @@
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
-(defun generate-org-file (directory)
-  ;; (labels ((rec (directory conflicts))))
-  (let ((files    (uiop:directory-files directory))
-        (sub-dirs (uiop:subdirectories directory)))
-    3))
+(defun generate-org-file (directory output-file)
+  ;; TODO remove repeat calls to construct-file-alias-map
+  (let ((files                (get-directory-info directory))
+        (haskell-conflict-map (conflict-map-to-haskell-import
+                               (construct-file-alias-map
+                                (lose-dir-information
+                                 (files-and-dirs directory))))))
+    (with-open-file (file output-file
+                          :direction         :output
+                          :if-exists         :supersede
+                          :if-does-not-exist :create)
+      (labels ((rec (level dirs)
+                 (cond ((null dirs)
+                        nil)
+                       ((file-info-p (car dirs))
+                        (let ((text (generate-headlines (car dirs)
+                                                        haskell-conflict-map
+                                                        level)))
+                          (mapc (lambda (line)
+                                  (write-line line file))
+                                text)
+                          (rec level (cdr dirs))))
+                       (t
+                        (let ((text (generate-headline-directory (car dirs)
+                                                                 haskell-conflict-map
+                                                                 level)))
+                          (mapc (lambda (line)
+                                  (write-line line file))
+                                text)
+                          (rec (1+ level) (org-directory-dir (car dirs)))
+                          (rec level (cdr dirs)))))))
+        (rec 1 files)))))
 
 
 ;; -----------------------------------------------------------------------------
 ;; Org Generation
 ;; -----------------------------------------------------------------------------
 
+(defun generate-headlines-directory (dir conflict-map level &optional (name "Juvix"))
+  (if (just-p (org-directory-file dir))
+      (generate-headlines (just-val (org-directory-file dir)) conflict-map level name)
+      (list (concatenate 'string (org-header (org-directory-name dir) level)))))
+
+;; conflict-map-haskell is to just avoid repeat work of constantly
+;; converting the conflict-map to a haskell one
+(defun generate-headlines (file-info conflict-map level &optional (name "Juvix"))
+  (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
+         (comments (module-comments lines))
+         (imports  (import-generation
+                    (haskell-import-to-org-alias (relevent-imports lines name)
+                                                 conflict-map)))
+         (headline (org-header
+                    (if (just-p (file-info-alias file-info))
+                        (concatenate 'string
+                                     (pathname-name (file-info-path file-info))
+                                     " "
+                                     (create-reference
+                                      (just-val (file-info-alias file-info))))
+                        (pathname-name (file-info-path file-info)))
+                    level)))
+    (cons headline
+          (append comments imports))))
+
 (defun import-generation (org-aliases &optional (indent-level 0))
   "generates a list where each line is a new line with proper org generation"
-  (cons (ident-cycle (under-score "Relies on") indent-level)
-        (mapcar (lambda (alias)
-                  (ident-cycle (text-reference alias) (1+ indent-level)))
-                org-aliases)))
-
+  (when org-aliases
+    (cons (ident-cycle (under-score "Relies on") indent-level)
+          (mapcar (lambda (alias)
+                    (ident-cycle (text-reference alias) (1+ indent-level)))
+                  org-aliases))))
 
 ;; -----------------------------------------------------------------------------
 ;; Org Formatting
@@ -222,7 +275,8 @@ forming a list of org-directory and file info"
                                                 (make-just
                                                  :val (make-file-info :path file?))
                                                 +nothing+)
-                                      :dir  (files-and-dirs dir))))
+                                      :dir  (files-and-dirs dir)
+                                      :name name)))
                                  sub-dirs))
          ;; slow version of set-difference that maintains ordering
          (files-annotated
@@ -271,7 +325,8 @@ forming a list of org-directory and file info"
                                    (org-directory-file file-dir))
                    :dir (mapcar-file-dir path-f
                                          alias-f
-                                         (org-directory-dir file-dir)))
+                                         (org-directory-dir file-dir))
+                   :name (org-directory-name file-dir))
                   (alias-call file-dir)))
             file-dirs)))
 
@@ -322,8 +377,8 @@ the file name to their unique identifier"
                     (conflict-set (remove-if (lambda (x)
                                                (not (member-if
                                                      (lambda (y)
-                                                       (and (equalp (cadr x) (cadr y))
-                                                            (not (equalp x y))))
+                                                       (and (equal (cadr x) (cadr y))
+                                                            (not (equal x y))))
                                                      file-alias)))
                                              file-alias))
                     (non-conflict (remove-if (lambda (x) (member x conflict-set))
@@ -387,42 +442,44 @@ Returns a string that reconstructs the unique identifier for the file"
 ;; -----------------------------------------------------------------------------
 ;; Tests
 ;; -----------------------------------------------------------------------------
-(consturct-file-alias-map (append (uiop:directory-files "../../holder/")
-                                  (uiop:directory-files "../../holder/Src/")))
+;; (consturct-file-alias-map (append (uiop:directory-files "../../holder/")
+;;                                   (uiop:directory-files "../../holder/Src/")))
 
-(disambiguate-files (list #P"~/Documents/Work/Repo/juvix/holder/Src/Library.hs"
-                          #P"~/Documents/Work/Repo/juvix/holder/Library.hs"
-                          #P"~Documents/Work/Repo/juvix/holder/Libr.hs")
-                    :all-conflicts nil)
+;; (disambiguate-files (list #P"~/Documents/Work/Repo/juvix/holder/Src/Library.hs"
+;;                           #P"~/Documents/Work/Repo/juvix/holder/Library.hs"
+;;                           #P"~Documents/Work/Repo/juvix/holder/Libr.hs")
+;;                     :all-conflicts nil)
 
-(get-directory-info "../../holder/")
+;; (get-directory-info "../../holder/")
 
-(files-and-dirs "../../holder/")
+;; (files-and-dirs "../../holder/src/")
 
-(construct-file-alias-map
- (lose-dir-information
-  (files-and-dirs "../../holder/src/")))
+;; (construct-file-alias-map
+;;  (lose-dir-information
+;;   (files-and-dirs "../../holder/src/")))
 
-(haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
-                                   "Juvix.Interpreter.InteractionNet.Backends.Graph")
-                             (conflict-map-to-haskell-import
-                              (construct-file-alias-map
-                               (lose-dir-information
-                                (files-and-dirs "../../src/")))))
+;; (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
+;;                                    "Juvix.Interpreter.InteractionNet.Backends.Graph")
+;;                              (conflict-map-to-haskell-import
+;;                               (construct-file-alias-map
+;;                                (lose-dir-information
+;;                                 (files-and-dirs "../../src/")))))
 
-(relevent-imports (uiop:read-file-lines
-                   #P"/home/loli/Documents/Work/Repo/juvix/holder/src/Library.hs")
-                  "Juvix")
+;; (relevent-imports (uiop:read-file-lines
+;;                    #P"~/Documents/Work/Repo/juvix/holder/src/Library.hs")
+;;                   "Juvix")
 
 
-(import-generation
- (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
-                                    "Juvix.Interpreter.InteractionNet.Backends.Graph"
-                                    "Juvix.Interpreter.InteractionNet.Nets.Default")
-                              (conflict-map-to-haskell-import
-                               (construct-file-alias-map
-                                (lose-dir-information
-                                 (files-and-dirs "../../src/"))))))
+;; (import-generation
+;;  (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
+;;                                     "Juvix.Interpreter.InteractionNet.Backends.Graph"
+;;                                     "Juvix.Interpreter.InteractionNet.Nets.Default")
+;;                               (conflict-map-to-haskell-import
+;;                                (construct-file-alias-map
+;;                                 (lose-dir-information
+;;                                  (files-and-dirs "../../src/"))))))
 
-(module-comments (uiop:read-file-lines
-                  #P"/home/loli/Documents/Work/Repo/juvix/holder/src/Library.hs"))
+;; (module-comments (uiop:read-file-lines
+;;                   #P"~/Documents/Work/Repo/juvix/holder/src/Library.hs"))
+
+;; (generate-org-file "../../holder/src/" "Test.org")
