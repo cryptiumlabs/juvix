@@ -1,0 +1,301 @@
+* Juvix
+** Backends
+*** LLVM
+**** Codegen
+***** Block
+- _Relies on_
+  + [[Codegen/Shared]]
+  + [[Codegen/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Constants
+Module for predefined constants
+- _Relies on_
+  + [[Library]]
+***** Graph <<Codegen/Graph>>
+Operations necessary to update nodes
+- _Relies on_
+  + [[Block]]
+  + [[Codegen/Types]]
+  + [[Library]]
+***** Shared <<Codegen/Shared>>
+Shared between Types and Sum
+- _Relies on_
+  + [[Library]]
+***** Sum
+Provides a mechanism for defining Sum types
+- _Relies on_
+  + [[Codegen/Shared]]
+  + [[Library]]
+***** Types <<Codegen/Types>>
+- _Relies on_
+  + [[Codegen/Shared]]
+  + [[Sum]]
+  + [[Library]]
+**** Net
+***** EAC
+*** Michelson
+**** Optimisation
+- _Relies on_
+  + [[Library]]
+  + [[Compilation/Types]]
+**** Parameterisation
+- _Relies on_
+  + [[Library]]
+**** Compilation
+- _Relies on_
+  + [[Term]]
+  + [[Compilation/Type]]
+  + [[Compilation/Types]]
+  + [[Util]]
+  + [[Optimisation]]
+  + [[Parameterisation]]
+  + [[Library]]
+***** Term
+- _Relies on_
+  + [[Compilation/Types]]
+  + [[Util]]
+  + [[Parameterisation]]
+  + [[Library]]
+***** Type <<Compilation/Type>>
+- _Relies on_
+  + [[Compilation/Types]]
+  + [[Parameterisation]]
+  + [[Library]]
+***** Types <<Compilation/Types>>
+- _Relies on_
+  + [[Parameterisation]]
+  + [[Library]]
+***** Util
+- _Relies on_
+  + [[Compilation/Types]]
+  + [[Library]]
+** Core
+- _Relies on_
+  + [[Core/Erasure]]
+  + [[Pipeline]]
+  + [[Translate]]
+  + [[Usage]]
+*** Pipeline
+- _Relies on_
+  + [[Core/Erasure]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Usage]]
+  + [[Library]]
+*** Translate
+- _Relies on_
+  + [[Utility]]
+  + [[Library]]
+*** Types <<Core/Types>>
+- _Relies on_
+  + [[Library]]
+*** Usage
+- _Relies on_
+  + [[Library]]
+*** Utility
+- _Relies on_
+  + [[Library]]
+*** EAC
+- _Relies on_
+  + [[Check]]
+  + [[ConstraintGen]]
+  + [[EAC/Erasure]]
+  + [[EAC/Parser]]
+  + [[Solve]]
+  + [[EAC/Types]]
+**** Check
+- _Relies on_
+  + [[ConstraintGen]]
+  + [[Solve]]
+  + [[EAC/Types]]
+  + [[Erased/Types]]
+  + [[Library]]
+**** ConstraintGen
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Erased/Types]]
+  + [[Library]]
+**** Erasure <<EAC/Erasure>>
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Erased/Types]]
+**** Parser <<EAC/Parser>>
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Unit]]
+  + [[Library]]
+**** Solve
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Library]]
+**** Types <<EAC/Types>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+*** Erased
+- _Relies on_
+  + [[Evaluator]]
+  + [[Erased/Types]]
+**** Evaluator
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+**** Types <<Erased/Types>>
+- _Relies on_
+  + [[Library]]
+*** Erasure <<Core/Erasure>>
+- _Relies on_
+  + [[Algorithm]]
+**** Algorithm
+- _Relies on_
+  + [[Erasure/Types]]
+  + [[Library]]
+**** Types <<Erasure/Types>>
+- _Relies on_
+  + [[Library]]
+*** HR
+- _Relies on_
+  + [[HR/Parser]]
+  + [[HR/Types]]
+**** Parser <<HR/Parser>>
+- _Relies on_
+  + [[HR/Types]]
+  + [[Core/Types]]
+  + [[Usage]]
+  + [[Library]]
+**** Types <<HR/Types>>
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+*** IR
+- _Relies on_
+  + [[Typechecker]]
+  + [[IR/Types]]
+**** Typechecker
+- _Relies on_
+  + [[IR/Types]]
+  + [[Core/Types]]
+  + [[Usage]]
+  + [[Library]]
+**** Types <<IR/Types>>
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+*** Parameterisations
+**** All
+- _Relies on_
+  + [[Core/Types]]
+  + [[Library]]
+**** Naturals
+- _Relies on_
+  + [[Core/Types]]
+  + [[Library]]
+**** Unit
+- _Relies on_
+  + [[Core/Types]]
+  + [[Library]]
+** Encoding
+*** Encoding
+- _Relies on_
+  + [[Encoding/Types]]
+  + [[Library]]
+*** Mendler
+- _Relies on_
+  + [[Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+*** Scott
+- _Relies on_
+  + [[Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+*** Types <<Encoding/Types>>
+- _Relies on_
+  + [[Library]]
+** Interpreter
+*** InteractionNet
+- _Relies on_
+  + [[InteractionNet/Default]]
+  + [[InteractionNet/Parser]]
+  + [[Translation]]
+  + [[InteractionNet/Type]]
+**** Default <<InteractionNet/Default>>
+Gives the default execution environment for netToAst
+Can be added to via core translation
+- _Relies on_
+  + [[InteractionNet/Shared]]
+  + [[Library]]
+**** NodeInterface
+- _Relies on_
+  + [[Library]]
+**** Parser <<InteractionNet/Parser>>
+- _Relies on_
+  + [[InteractionNet/Default]]
+  + [[InteractionNet/Shared]]
+  + [[InteractionNet/Type]]
+  + [[Library]]
+**** Shared <<InteractionNet/Shared>>
+- _Relies on_
+  + [[Library]]
+**** Translation
+- _Relies on_
+  + [[Interface]]
+  + [[NodeInterface]]
+  + [[InteractionNet/Shared]]
+  + [[Library]]
+**** Type <<InteractionNet/Type>>
+- _Relies on_
+  + [[InteractionNet/Shared]]
+  + [[Library]]
+**** Backends
+***** Env
+- _Relies on_
+  + [[Interface]]
+  + [[Library]]
+***** Graph <<Backends/Graph>>
+- _Relies on_
+  + [[Env]]
+  + [[Interface]]
+  + [[NodeInterface]]
+  + [[Library]]
+***** Interface
+- _Relies on_
+  + [[NodeInterface]]
+  + [[Library]]
+***** Maps
+- _Relies on_
+  + [[Env]]
+  + [[Interface]]
+  + [[NodeInterface]]
+  + [[Library]]
+**** Nets
+***** Combinators
+- _Relies on_
+  + [[Env]]
+  + [[Interface]]
+  + [[NodeInterface]]
+  + [[Library]]
+***** Default <<Nets/Default>>
+- _Relies on_
+  + [[Env]]
+  + [[Interface]]
+  + [[NodeInterface]]
+  + [[InteractionNet/Shared]]
+  + [[Library]]
+** Library
+- _Relies on_
+  + [[PrettyPrint]]
+*** HashMap
+*** PrettyPrint
+** Visualize
+*** Dot
+- _Relies on_
+  + [[Env]]
+  + [[Backends/Graph]]
+  + [[Nets/Default]]
+  + [[Library]]
+  + [[Visualize/Graph]]
+*** Graph <<Visualize/Graph>>
+- _Relies on_
+  + [[Library]]
