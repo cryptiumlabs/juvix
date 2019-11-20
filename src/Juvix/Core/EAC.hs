@@ -1,3 +1,6 @@
+-- |
+-- - This directory contains the implementation of =Eal= and the inferred
+--   bracket checker on =Eal=
 module Juvix.Core.EAC
   ( module Juvix.Core.EAC.ConstraintGen,
     module Juvix.Core.EAC.Types,

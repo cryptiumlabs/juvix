@@ -1,5 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 
+-- | - Parses the syntax according to the formal =BNF=
+
 module Juvix.Interpreter.InteractionNet.Parser where
 
 import Control.Monad.Fail (fail)

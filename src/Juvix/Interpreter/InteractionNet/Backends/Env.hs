@@ -1,3 +1,12 @@
+-- |
+-- - Env serves as the environment for running the back-ends
+--   + This includes the diagnostic information about how the code is ran
+--   + Also includes the effect handler types and the runner functions
+--     for them
+-- - Also gives functions needed to increment diagnostic information
+--   + see =incGraphStepSize= and =sequentalStep=
+--   + File will also be imported in [[Nets]] due to these two functions
+
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE NamedFieldPuns #-}
 

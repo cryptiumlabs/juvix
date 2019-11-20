@@ -1,3 +1,9 @@
+-- |
+-- - This is an implementation of said interfacing using =FGL=
+-- - This code will imported in Tests as a possible back-end for testing.
+--   + This back-end is more useful than [[Maps]] as it can produce
+--     graphical outputs, see [[Visualize]]
+
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE NamedFieldPuns #-}
 

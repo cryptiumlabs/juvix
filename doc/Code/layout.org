@@ -178,7 +178,7 @@
 - This is an alternative to the interpreter provided.
 **** Sum <<LLVM/Sum>>
 - Has the code to encode a sum type via what is defined by the user or
-  what is defined to create the interaction net systen.
+  what is defined to create the interaction net system.
 - _Relies on_
   + [[LLVM/Shared]]
 **** Shared <<LLVM/Shared>>
