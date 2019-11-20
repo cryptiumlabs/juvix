@@ -39,7 +39,15 @@ _‼_ : (Γ : Ctx n) (x : Var n) → ∃ (Γ ‼ x ↦_)
 (Γ ⨟ S) ‼ suc x = Σ.map weakᵗ there $ Γ ‼ x
 infix 10 _‼_
 
-data _⟿ᶜ_ : Rel (Ctx n) lzero where
+data ⟿ᶜ-At : ∀ n → Rel (Ctx n) lzero
+
+open module Evalᶜ = Eval.Derived ⟿ᶜ-At public using ()
+  renaming (_⟿_ to _⟿ᶜ_ ;
+            _⟿+_ to _⟿ᶜ+_ ; _⟿*_ to _⟿ᶜ*_ ; _⟿!_ to _⟿ᶜ!_ ;
+            ⟿+-At to ⟿ᶜ+-At ; ⟿*-At to ⟿ᶜ*-At ; ⟿!-At to ⟿ᶜ!-At ;
+            _⇓ to _⇓ᶜ ; _≋_ to _≋ᶜ_ ; ≋-At to ≋ᶜ-At)
+
+data ⟿ᶜ-At where
   here  : (ss : S ⟿ᵗ S′) → (Γ ⨟ S) ⟿ᶜ (Γ  ⨟ S′)
   there : (γγ : Γ ⟿ᶜ Γ′) → (Γ ⨟ S) ⟿ᶜ (Γ′ ⨟ S)
 
@@ -53,10 +61,7 @@ stepᶜ (Γ ⨟ S) with stepᵗ S
   (_ , here  RS) → ¬RS (-, RS)
   (_ , there RΓ) → ¬RΓ (-, RΓ)
 
-open module Evalᶜ = Eval.Derived (λ {n} → _⟿ᶜ_ {n}) stepᶜ public using ()
-  renaming (_⟿+_ to _⟿ᶜ+_ ; _⟿*_ to _⟿ᶜ*_ ; _⟿!_ to _⟿ᶜ!_ ;
-            ⟿+-At to ⟿ᶜ+-At ; ⟿*-At to ⟿ᶜ*-At ; ⟿!-At to ⟿ᶜ!-At ;
-            _⇓ to _⇓ᶜ ; _≋_ to _≋ᶜ_ ; ≋-At to ≋ᶜ-At)
+open Evalᶜ.Eval stepᶜ public renaming (eval to evalᶜ)
 
 
 data Zero : (Φ : Skel n) → Set where

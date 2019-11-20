@@ -25,12 +25,101 @@ private
   𝔅 𝔅′ : Binder n
   o : BinOp
 
-data _⟿ᵗ_ : Rel (Term n) lzero
-data _⟿ᵉ_ : Rel (Elim n) lzero
-data _⟿ᵇ_ : Rel (Binder n) lzero
-infix 1 _⟿ᵗ_ _⟿ᵉ_
 
-data _⟿ᵗ_ where
+module Derived {t ℓ} {𝒯 : ℕ → Set t}
+               (⟿-At : ∀ n → Rel (𝒯 n) ℓ)
+ where
+  open Relation hiding (_∪_)
+
+  private variable X Y Z : 𝒯 n
+
+  _⟿_ : Rel (𝒯 n) _
+  _⟿_ {n} = ⟿-At n
+
+  _⇓ : Pred (𝒯 n) _
+  X ⇓ = ∄[ Y ] (X ⟿ Y)
+  infix 10 _⇓
+
+  _⟿+_ _⟿*_ _⟿!_ : Rel (𝒯 n) _
+  _⟿+_ = Plus′ _⟿_
+  _⟿*_ = Star _⟿_
+  X ⟿! Y = (X ⟿* Y) × (Y ⇓)
+  infix 1 _⟿*_ _⟿+_ _⟿!_
+
+  ⟿+-At ⟿*-At ⟿!-At : ∀ n → Rel (𝒯 n) _
+  ⟿+-At _ = _⟿+_
+  ⟿*-At _ = _⟿*_
+  ⟿!-At _ = _⟿!_
+
+  ≋-At : ∀ n → Rel (𝒯 n) _
+  ≋-At _ = Star $ SymClosure _⟿_
+
+  _≋_ : Rel (𝒯 n) _
+  _≋_ = ≋-At _
+  infix 4 _≋_
+
+  ≋-isEquiv : Relation.IsEquivalence $ ≋-At n
+  ≋-isEquiv =
+    record { refl = ε ; sym = RT.reverse $ S.symmetric _⟿_ ; trans = _◅◅_ }
+
+  ≋-setoid : ℕ → Relation.Setoid _ _
+  ≋-setoid n = record { isEquivalence = ≋-isEquiv {n} }
+
+  module _ {n} where
+    open Relation.IsEquivalence (≋-isEquiv {n}) public using ()
+      renaming (refl to ≋-refl ; sym to ≋-sym ; trans to ≋-trans)
+
+  plus-star : _⟿+_ ⇒₂ ⟿*-At n
+  plus-star [ R ]    = R ◅ ε
+  plus-star (R ∷ Rs) = R ◅ plus-star Rs
+
+  star-plus : _⟿*_ ⇒₂ (_≡_ ∪ ⟿+-At n)
+  star-plus ε        = inj₁ refl
+  star-plus (R ◅ Rs) = inj₂ $ R ∷′ star-plus Rs where
+    _∷′_ : X ⟿ Y → (Y ≡ Z) ⊎ (Y ⟿+ Z) → X ⟿+ Z
+    R ∷′ inj₁ refl = [ R ]
+    R ∷′ inj₂ Rs   = R ∷ Rs
+
+  star-≋ : _⟿*_ ⇒₂ ≋-At n
+  star-≋ ε        = ε
+  star-≋ (R ◅ Rs) = fwd R ◅ star-≋ Rs
+
+  plus-≋ : _⟿+_ ⇒₂ ≋-At n
+  plus-≋ = star-≋ ∘ plus-star
+
+  module Eval (step : ∀ {n} (t : 𝒯 n) → Dec (∃ (t ⟿_))) where
+    eval : (X : 𝒯 n) → ∀[ Delay (∃[ Z ] (X ⟿! Z)) ]
+    eval X with step X
+    ... | no  V       = now (-, ε , V)
+    ... | yes (Y , R) = later λ{.force → cons-R $ eval Y}
+      where cons-R = Delay.map λ{(Z , Rs , V) → Z , R ◅ Rs , V}
+
+
+data ⟿ᵗ-At n : Rel (Term n) lzero
+data ⟿ᵉ-At n : Rel (Elim n) lzero
+data ⟿ᵇ-At n : Rel (Binder n) lzero
+
+
+open module Evalᵗ = Derived ⟿ᵗ-At public using ()
+  renaming (_⟿_ to _⟿ᵗ_ ;
+            _⟿+_ to _⟿ᵗ+_ ; _⟿*_ to _⟿ᵗ*_ ; _⟿!_ to _⟿ᵗ!_ ;
+            ⟿+-At to ⟿ᵗ+-At ; ⟿*-At to ⟿ᵗ*-At ; ⟿!-At to ⟿ᵗ!-At ;
+            _⇓ to _⇓ᵗ ; _≋_ to _≋ᵗ_ ; ≋-At to ≋ᵗ-At)
+
+open module Evalᵉ = Derived ⟿ᵉ-At public using ()
+  renaming (_⟿_ to _⟿ᵉ_ ;
+            _⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
+            ⟿+-At to ⟿ᵉ+-At ; ⟿*-At to ⟿ᵉ*-At ; ⟿!-At to ⟿ᵉ!-At ;
+            _⇓ to _⇓ᵉ ; _≋_ to _≋ᵉ_ ; ≋-At to ≋ᵉ-At)
+
+open module Evalᵇ = Derived ⟿ᵇ-At public using ()
+  renaming (_⟿_ to _⟿ᵇ_ ;
+            _⟿+_ to _⟿ᵇ+_ ; _⟿*_ to _⟿ᵇ*_ ; _⟿!_ to _⟿ᵇ!_ ;
+            ⟿+-At to ⟿ᵇ+-At ; ⟿*-At to ⟿ᵇ*-At ; ⟿!-At to ⟿ᵇ!-At ;
+            _⇓ to _⇓ᵇ ; _≋_ to _≋ᵇ_ ; ≋-At to ≋ᵇ-At)
+
+
+data ⟿ᵗ-At n where
   υ : [ t ⦂ T ] ⟿ᵗ t
 
   BIND-𝔅 : 𝔅 ⟿ᵇ 𝔅′ → BIND 𝔅 t ⟿ᵗ BIND 𝔅′ t
@@ -54,15 +143,15 @@ data _⟿ᵗ_ where
   +ʷ-ωʳ : π   +ʷ ωᵘ  ⟿ᵗ ωᵘ
 
   *ʷ-↑  : ↑ π      *ʷ ↑ ρ      ⟿ᵗ ↑ (π * ρ)
-  *ʷ-0ω : ↑ 0ᵘ     *ʷ ωᵘ       ⟿ᵗ ↑ 0ᵘ {n}
-  *ʷ-ω0 : ωᵘ       *ʷ ↑ 0ᵘ     ⟿ᵗ ↑ 0ᵘ {n}
+  *ʷ-0ω : ↑ 0ᵘ     *ʷ ωᵘ       ⟿ᵗ ↑ 0ᵘ
+  *ʷ-ω0 : ωᵘ       *ʷ ↑ 0ᵘ     ⟿ᵗ ↑ 0ᵘ
   *ʷ-sω : ↑ sucᵘ π *ʷ ωᵘ       ⟿ᵗ ωᵘ
   *ʷ-ωs : ωᵘ       *ʷ ↑ sucᵘ π ⟿ᵗ ωᵘ
-  *ʷ-ωω : ωᵘ       *ʷ ωᵘ       ⟿ᵗ ωᵘ {n}
+  *ʷ-ωω : ωᵘ       *ʷ ωᵘ       ⟿ᵗ ωᵘ
 
   [_] : e ⟿ᵉ e′ → [ e ] ⟿ᵗ [ e′ ]
 
-data _⟿ᵉ_ where
+data ⟿ᵉ-At n where
   β-∙ : (𝛌 t ⦂ 𝚷[ π / S ] T) ∙ s ⟿ᵉ substᵉ (t ⦂ T) (s ⦂ S)
   ∙ˡ : f ⟿ᵉ f′ → f ∙ s ⟿ᵉ f′ ∙ s
   ∙ʳ : s ⟿ᵗ s′ → f ∙ s ⟿ᵉ f ∙ s′
@@ -90,7 +179,7 @@ data _⟿ᵉ_ where
   ⦂ˡ : s ⟿ᵗ s′ → s ⦂ S ⟿ᵉ s′ ⦂ S
   ⦂ʳ : S ⟿ᵗ S′ → s ⦂ S ⟿ᵉ s  ⦂ S′
 
-data _⟿ᵇ_ where
+data ⟿ᵇ-At n where
   `𝚷-π : π ⟿ᵗ π′ → `𝚷[ π / S ] ⟿ᵇ `𝚷[ π′ / S  ]
   `𝚷-S : S ⟿ᵗ S′ → `𝚷[ π / S ] ⟿ᵇ `𝚷[ π  / S′ ]
 
@@ -414,91 +503,9 @@ stepᵇ `𝚷[ π / S ] with stepᵗ π
 
 stepᵇ `𝛌 = no λ()
 
-
-module Derived {t ℓ} {F : ℕ → Set t}
-               (_⟿_ : ∀ {n} → Rel (F n) ℓ)
-               (step  : ∀ {n} (t : F n) → Dec (∃ (t ⟿_)))
- where
-  open Relation hiding (_∪_)
-
-  private variable X Y Z : F n
-
-  _⇓ : Pred (F n) _
-  X ⇓ = ∄[ Y ] (X ⟿ Y)
-  infix 10 _⇓
-
-  _⟿+_ _⟿*_ _⟿!_ : Rel (F n) _
-  _⟿+_ = Plus′ _⟿_
-  _⟿*_ = Star _⟿_
-  X ⟿! Y = (X ⟿* Y) × (Y ⇓)
-  infix 1 _⟿*_ _⟿+_ _⟿!_
-
-  ⟿-At ⟿+-At ⟿*-At ⟿!-At : ∀ n → Rel (F n) _
-  ⟿-At _ = _⟿_
-  ⟿+-At _ = _⟿+_
-  ⟿*-At _ = _⟿*_
-  ⟿!-At _ = _⟿!_
-
-  ≋-At : ∀ n → Rel (F n) _
-  ≋-At _ = Star $ SymClosure _⟿_
-
-  _≋_ : Rel (F n) _
-  _≋_ = ≋-At _
-  infix 4 _≋_
-
-  ≋-isEquiv : Relation.IsEquivalence $ ≋-At n
-  ≋-isEquiv =
-    record { refl = ε ; sym = RT.reverse $ S.symmetric _⟿_ ; trans = _◅◅_ }
-
-  ≋-setoid : ℕ → Relation.Setoid _ _
-  ≋-setoid n = record { isEquivalence = ≋-isEquiv {n} }
-
-  module _ {n} where
-    open Relation.IsEquivalence (≋-isEquiv {n}) public using ()
-      renaming (refl to ≋-refl ; sym to ≋-sym ; trans to ≋-trans)
-
-  plus-star : _⟿+_ ⇒₂ ⟿*-At n
-  plus-star [ R ]    = R ◅ ε
-  plus-star (R ∷ Rs) = R ◅ plus-star Rs
-
-  star-plus : _⟿*_ ⇒₂ (_≡_ ∪ ⟿+-At n)
-  star-plus ε        = inj₁ refl
-  star-plus (R ◅ Rs) = inj₂ $ R ∷′ star-plus Rs where
-    _∷′_ : X ⟿ Y → (Y ≡ Z) ⊎ (Y ⟿+ Z) → X ⟿+ Z
-    R ∷′ inj₁ refl = [ R ]
-    R ∷′ inj₂ Rs   = R ∷ Rs
-
-  star-≋ : _⟿*_ ⇒₂ ≋-At n
-  star-≋ ε        = ε
-  star-≋ (R ◅ Rs) = fwd R ◅ star-≋ Rs
-
-  plus-≋ : _⟿+_ ⇒₂ ≋-At n
-  plus-≋ = star-≋ ∘ plus-star
-
-  eval : (X : F n) → ∀[ Delay (∃[ Z ] (X ⟿! Z)) ]
-  eval X with step X
-  ... | no  V       = now (-, ε , V)
-  ... | yes (Y , R) = later λ{.force → cons-R $ eval Y}
-    where cons-R = Delay.map λ{(Z , Rs , V) → Z , R ◅ Rs , V}
-
-
-open module Evalᵗ = Derived (λ {n} → _⟿ᵗ_ {n}) stepᵗ public using ()
-  renaming (⟿-At to ⟿ᵗ-At ;
-            _⟿+_ to _⟿ᵗ+_ ; _⟿*_ to _⟿ᵗ*_ ; _⟿!_ to _⟿ᵗ!_ ;
-            ⟿+-At to ⟿ᵗ+-At ; ⟿*-At to ⟿ᵗ*-At ; ⟿!-At to ⟿ᵗ!-At ;
-            _⇓ to _⇓ᵗ ; eval to evalᵗ ; _≋_ to _≋ᵗ_ ; ≋-At to ≋ᵗ-At)
-
-open module Evalᵉ = Derived (λ {n} → _⟿ᵉ_ {n}) stepᵉ public using ()
-  renaming (⟿-At to ⟿ᵉ-At ;
-            _⟿+_ to _⟿ᵉ+_ ; _⟿*_ to _⟿ᵉ*_ ; _⟿!_ to _⟿ᵉ!_ ;
-            ⟿+-At to ⟿ᵉ+-At ; ⟿*-At to ⟿ᵉ*-At ; ⟿!-At to ⟿ᵉ!-At ;
-            _⇓ to _⇓ᵉ ; eval to evalᵉ ; _≋_ to _≋ᵉ_ ; ≋-At to ≋ᵉ-At)
-
-open module Evalᵇ = Derived (λ {n} → _⟿ᵇ_ {n}) stepᵇ public using ()
-  renaming (⟿-At to ⟿ᵇ-At ;
-            _⟿+_ to _⟿ᵇ+_ ; _⟿*_ to _⟿ᵇ*_ ; _⟿!_ to _⟿ᵇ!_ ;
-            ⟿+-At to ⟿ᵇ+-At ; ⟿*-At to ⟿ᵇ*-At ; ⟿!-At to ⟿ᵇ!-At ;
-            _⇓ to _⇓ᵇ ; eval to evalᵇ ; _≋_ to _≋ᵇ_ ; ≋-At to ≋ᵇ-At)
+open Evalᵗ.Eval stepᵗ public renaming (eval to evalᵗ)
+open Evalᵉ.Eval stepᵉ public renaming (eval to evalᵉ)
+open Evalᵇ.Eval stepᵇ public renaming (eval to evalᵇ)
 
 
 module _ {n} where
