@@ -210,7 +210,7 @@ that match the project name"
 (defun module-comments (file-lines)
   (let* ((module-comments
            (remove-if (lambda (x)
-                        (uiop:string-prefix-p "{-#" x))
+                        (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
             (take-until (lambda (x) (uiop:string-prefix-p "module" x)) file-lines)))
          (special (car module-comments))
          (valid-module (if special
