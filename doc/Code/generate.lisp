@@ -7,7 +7,6 @@
 
 (in-package :code-generation)
 
-;; (uiop:directory-files "../../holder/")
 ;; -----------------------------------------------------------------------------
 ;; Maybe type
 ;; -----------------------------------------------------------------------------
@@ -66,7 +65,62 @@
 ;; Org Generation
 ;; -----------------------------------------------------------------------------
 
+(defun import-generation (org-aliases &optional (indent-level 0))
+  "generates a list where each line is a new line with proper org generation"
+  (cons (ident-cycle (under-score "Relies on") indent-level)
+        (mapcar (lambda (alias)
+                  (ident-cycle (text-reference alias) (1+ indent-level)))
+                org-aliases)))
+
+
+;; -----------------------------------------------------------------------------
+;; Org Formatting
+;; -----------------------------------------------------------------------------
+
+(defun org-header (text level)
+  (concatenate 'string (repeat-s level "*") " " text))
+
+(defun ident-spacing (ident-level)
+  (repeat-s (* 2 ident-level) " "))
+
+(defun ident-symbol (ident-level)
+  (case (mod ident-level 3)
+    (0 "-")
+    (1 "+")
+    (2 "*")))
+
+;; TODO replace a lot of concatenates with formats!
+
+(defun under-score (text)
+  (concatenate 'string "_" text "_"))
+
+(defun ident-numbers (text ident-level num)
+  (concatenate 'string
+               (ident-spacing ident-level)
+               (write-to-string num)
+               " "
+               text))
+(defun ident-cycle (text ident-level)
+  (concatenate 'string
+               (ident-spacing ident-level)
+               (ident-symbol ident-level)
+               " "
+               text))
+
+
+(defun create-reference (alias)
+  (concatenate 'string "<<" alias ">>"))
+
+(defun text-reference (alias)
+  (concatenate 'string "[[" alias "]]"))
+
+;; -----------------------------------------------------------------------------
+;; Imports to Org Aliases
+;; -----------------------------------------------------------------------------
+
+
 (defun haskell-import-to-org-alias (imports conflict-map)
+  "takes a list of Haskell imports and transforms them into their org-mode alias"
   (mapcar (lambda (import)
             (or (fset:lookup conflict-map import)
                 (car (last (uiop:split-string import :separator ".")))))
@@ -94,6 +148,27 @@ that match the project name"
                                                (uiop:string-prefix-p project-name m)))
                                  modules)))
     project-imp))
+
+
+;; -----------------------------------------------------------------------------
+;; Haskell comment clean up
+;; -----------------------------------------------------------------------------
+
+(defun module-comments (file-lines)
+  (let* ((module-comments
+           (take-until (lambda (x) (uiop:string-prefix-p "module" x)) file-lines))
+         (special (car module-comments))
+         (valid-module (if special
+                           (uiop:string-prefix-p "-- |" special)
+                           nil)))
+    (if valid-module
+        (remove-if #'uiop:emptyp
+                   (cons (strip-haskell-comments special t)
+                         (mapcar #'strip-haskell-comments (cdr module-comments))))
+        nil)))
+
+(defun strip-haskell-comments (line &optional start-doc)
+  (subseq line (min (if start-doc 5 3) (length line))))
 
 
 ;; -----------------------------------------------------------------------------
@@ -292,6 +367,24 @@ Returns a string that reconstructs the unique identifier for the file"
          (butlast (mapcan (lambda (s) (list s connector))
                           xs))))
 ;; -----------------------------------------------------------------------------
+;; Helpers Utility
+;; -----------------------------------------------------------------------------
+
+(defun repeat (n thing)
+  "repeats THING N times"
+  (loop for i from 0 to (1- n) collect thing))
+
+(defun repeat-s (n thing)
+  (apply #'concatenate 'string (repeat n thing)))
+
+(defun take-until (pred xs)
+  (labels ((rec (current acc)
+             (if (or (null current) (funcall pred (car current)))
+                 (reverse acc)
+                 (rec (cdr current) (cons (car current) acc)))))
+    (rec xs nil)))
+
+;; -----------------------------------------------------------------------------
 ;; Tests
 ;; -----------------------------------------------------------------------------
 (consturct-file-alias-map (append (uiop:directory-files "../../holder/")
@@ -320,3 +413,16 @@ Returns a string that reconstructs the unique identifier for the file"
 (relevent-imports (uiop:read-file-lines
                    #P"/home/loli/Documents/Work/Repo/juvix/holder/src/Library.hs")
                   "Juvix")
+
+
+(import-generation
+ (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
+                                    "Juvix.Interpreter.InteractionNet.Backends.Graph"
+                                    "Juvix.Interpreter.InteractionNet.Nets.Default")
+                              (conflict-map-to-haskell-import
+                               (construct-file-alias-map
+                                (lose-dir-information
+                                 (files-and-dirs "../../src/"))))))
+
+(module-comments (uiop:read-file-lines
+                  #P"/home/loli/Documents/Work/Repo/juvix/holder/src/Library.hs"))
