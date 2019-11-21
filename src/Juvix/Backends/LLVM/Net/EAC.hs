@@ -6,11 +6,12 @@ import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
-import qualified LLVM.AST as AST
+
 --------------------------------------------------------------------------------
 -- Interaction Net runner
 --------------------------------------------------------------------------------
@@ -88,41 +89,59 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
         (Codegen.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
       ]
 
-fanInAux1 = undefined
+fanInAux1 allocF = undefined
 
-fanInAux2 = undefined
+fanInAux2 allocF = undefined
 
-fanInAux3 = undefined
+fanInAux3 allocF = undefined
 
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
-allocaEra ∷
+allocaGen ∷
   ( HasThrow "err" Codegen.Errors m,
-    HasState
-      "blocks"
-      (Map.HashMap Name.Name Codegen.BlockState)
-      m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
-  m ()
-allocaEra = do
-  era ← Codegen.alloca Types.eac
-  node ← Codegen.allocaNodeH [Nothing] []
-  tag ← Codegen.getElementPtr $
+  C.Constant →
+  Int →
+  Int →
+  m Operand.Operand
+allocaGen type' portLen dataLen = do
+  eac ← Codegen.alloca Types.eac
+  node ← Codegen.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+  tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,
-        Codegen.address' = era,
+        Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
-  Codegen.store tag (Operand.ConstantOperand Types.era)
+  Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Types.tag,
-        Codegen.address' = era,
+      { Codegen.type' = Codegen.nodeType,
+        Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
   Codegen.store nodePtr node
+  pure eac
+
+allocaEra,
+  allocaFanIn,
+  allocaApp,
+  allocaLam ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "typTab" Codegen.TypeTable m,
+      HasState "varTab" Codegen.VariantToType m
+    ) ⇒
+    m Operand.Operand
+allocaEra = allocaGen Types.era 1 0
+allocaApp = allocaGen Types.app 3 0
+allocaLam = allocaGen Types.lam 3 0
+allocaFanIn = allocaGen Types.dup 3 0
