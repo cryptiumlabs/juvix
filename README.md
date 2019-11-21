@@ -97,6 +97,8 @@ juvix interactive
 
 [Ormolu](https://github.com/cryptiumlabs/ormolu) required for source formatting.
 
+[Quicklisp](https://www.quicklisp.org/beta/) and [sbcl](http://www.sbcl.org/) required for generation of code layout documentation. 
+
 To open a REPL with the library scoped:
 
 ```bash
