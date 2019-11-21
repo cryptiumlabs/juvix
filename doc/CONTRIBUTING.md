@@ -7,6 +7,10 @@ Contributions are welcome! Please consider the following guidelines.
 - Run `make format` to automatically format your code.
 - Any changes to code style should be submitted as pull requests to https://github.com/cryptiumlabs/ormolu
 
+## Documentation
+
+Add a brief description of any module you create before the module and after pragmas. Start each line of the description with `--`. The first line of the description should be `--|`. E.g., see [this](https://github.com/cryptiumlabs/juvix/blob/15ca9e5e602d24cf09fe87fc059e3e0ee78ad6db/src/Juvix/Encoding/Encoding.hs#L3).
+
 ## Branch usage
 
 The mainline branch is `develop` (this will change post-1.0.0). Feature development should be done on feature branches.
