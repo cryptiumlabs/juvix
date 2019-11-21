@@ -21,7 +21,7 @@ shouldEraseTo parameterisation (term, usage, ty) erased =
   T.testCase
     (show (term, usage, ty) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? (((fst . fst) |<< Erasure.erase parameterisation term usage ty))
+        T.@=? ((fst |<< Erasure.erase parameterisation term usage ty))
     )
 
 test_trivial_unit ∷ T.TestTree
