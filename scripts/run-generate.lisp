@@ -1,4 +1,3 @@
-#!/bin/sbcl --script
 
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
                                        (user-homedir-pathname))))
