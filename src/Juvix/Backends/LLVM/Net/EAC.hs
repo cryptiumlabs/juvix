@@ -19,7 +19,7 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ Maybe add metadata at some point?
 
--- These functions work off the nodeType signature not Types.eac
+-- this function work off the nodeType signature not Types.eac
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
@@ -44,10 +44,41 @@ anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" arg
 -- This function is used when it can not be determined that 'fanInAux*'
 fanInAuxStar = undefined
 
-fanInAux0 = undefined
+fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
+  do
+    era1 ← allocF
+    era2 ← allocF
+    undefined
+  where
+    args =
+      [ (Codegen.nodeType, "node"), -- we send in the alloc function for it. Do case before
+        (Codegen.nodeType, "fanIn") -- we know this must be a fanIn so no need for tag
+      ]
 
 fanInAux1 = undefined
 
 fanInAux2 = undefined
 
 fanInAux3 = undefined
+
+
+--------------------------------------------------------------------------------
+-- Allocations
+--------------------------------------------------------------------------------
+allocaEra = do
+  era ← Codegen.alloca Types.eac
+  node ← Codegen.allocaNodeH [Nothing] []
+  tag ← Codegen.getElementPtr $
+    Codegen.Minimal
+    { Codegen.type' = Types.tag,
+      Codegen.address' = era,
+      Codegen.indincies' = Codegen.constant32List [0,1]
+    }
+  Codegen.store tag (Operand.ConstantOperand Types.era)
+  nodePtr ← Codegen.getElementPtr $
+    Codegen.Minimal
+    { Codegen.type' = Types.tag,
+      Codegen.address' = era,
+      Codegen.indincies' = Codegen.constant32List [0,1]
+    }
+  Codegen.store nodePtr node

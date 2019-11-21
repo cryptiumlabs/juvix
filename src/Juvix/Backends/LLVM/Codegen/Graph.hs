@@ -129,16 +129,57 @@ allocaNode = alloca nodeType
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
 
-allocaPortsH ∷
+-- TODO ∷ could be storing data wrong... find out
+allocaNodeH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+allocaNodeH mPorts mData = do
+  node ← allocaNode
+  portSize ← allocaNumPortNum (length mPorts)
+  ports ← allocaPortsH mPorts
+  data' ← allocaDataH mData
+  tagPtr ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.numPorts,
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 1]
+      }
+  store tagPtr portSize
+  portPtr ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.portData, -- do I really want to say size 0?
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 2]
+      }
+  store portPtr ports
+  dataPtr ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Type.ArrayType 0 Types.dataType, -- do I really want to say size 0?
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 3]
+      }
+  store dataPtr data'
+  pure node
+
+allocaGenH ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m
   ) ⇒
   [Maybe Operand.Operand] →
+  Type.Type →
   m Operand.Operand
-allocaPortsH mPorts = do
-  ports ← alloca (Type.ArrayType (fromIntegral len) Types.portType)
+allocaGenH mPortData type' = do
+  ports ← alloca (Type.ArrayType (fromIntegral len) type')
   traverse_
     ( \(p, i) →
         case p of
@@ -146,16 +187,29 @@ allocaPortsH mPorts = do
           Just p → do
             ptr ← getElementPtr $
               Types.Minimal
-                { Types.type' = portType,
+                { Types.type' = type',
                   Types.address' = ports,
                   Types.indincies' = Block.constant32List [0, i]
                 }
             store ptr p
     )
-    (zip mPorts [1 ..])
+    (zip mPortData [1 ..])
   pure ports
   where
-    len = length mPorts
+    len = length mPortData
+
+
+allocaPortsH,
+  allocaDataH ∷
+    ( HasThrow "err" Errors m,
+      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m
+    ) ⇒
+    [Maybe Operand.Operand] →
+    m Operand.Operand
+allocaPortsH mPorts = allocaGenH mPorts Types.portType
+allocaDataH mPorts = allocaGenH mPorts Types.dataType
 
 -- TODO ∷ figure out var args
 -- not needed right away as we know how many args we need from Haskell
@@ -469,3 +523,18 @@ allocaNumPortsStatic (isLarge ∷ Bool) (value ∷ Operand.Operand) =
       store ptr value
       -- TODO ∷ register this variant
       Block.createVariant "numPorts_small" [ptr]
+
+-- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
+allocaNumPortNum ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  Int →
+  m Operand.Operand
+allocaNumPortNum n
+  | n <= 2 ^ (Types.numPortsSize - 1) = undefined
+  | otherwise = undefined
