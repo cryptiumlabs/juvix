@@ -51,14 +51,17 @@
 ;; -----------------------------------------------------------------------------
 
 (defparameter *acceptable-extensions* (fset:set "hs"))
+(defparameter *filtered-path-prefix*  (fset:set "."))
 
 ;; -----------------------------------------------------------------------------
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
-(defun generate-org-file (directory output-file)
+(defun generate-org-file (directory output-file
+                          &optional (filtered-dirs *filtered-path-prefix*)
+                                    (valid-extensions *acceptable-extensions*))
   ;; TODO remove repeat calls to construct-file-alias-map
-  (let ((files                (get-directory-info directory))
+  (let ((files                (get-directory-info directory filtered-dirs valid-extensions))
         (haskell-conflict-map (conflict-map-to-haskell-import
                                (construct-file-alias-map
                                 (lose-dir-information
@@ -254,15 +257,26 @@ that match the project name"
 ;; Getting Directory and File lists
 ;; -----------------------------------------------------------------------------
 
-(defun get-directory-info (directory)
-  (let* ((annote-1     (files-and-dirs directory))
+(defun get-directory-info (directory &optional (filtered-dirs *filtered-path-prefix*)
+                                               (valid-extensions *acceptable-extensions*))
+  (let* ((annote-1     (files-and-dirs directory filtered-dirs valid-extensions))
          (conflict-map (construct-file-alias-map (lose-dir-information annote-1))))
     (alias-file-info annote-1 conflict-map)))
 
-(defun files-and-dirs (directory &optional (valid-extensions *acceptable-extensions*))
+(defun files-and-dirs (directory &optional (filtered-dirs *filtered-path-prefix*)
+                                           (valid-extensions *acceptable-extensions*))
   "recursively grabs the file and directories
 forming a list of org-directory and file info"
-  (let* ((sub-dirs       (uiop:subdirectories  directory))
+  (let* ((sub-dirs       (remove-if
+                          (lambda (dir)
+                            (some
+                             #'identity
+                             (fset:convert 'list
+                                           (fset:image
+                                            (lambda (x)
+                                              (uiop:string-prefix-p x (file-name dir)))
+                                            filtered-dirs))))
+                          (uiop:subdirectories directory)))
          (files          (remove-if (complement (lambda (x)
                                                   (fset:@ valid-extensions
                                                           (pathname-type x))))
