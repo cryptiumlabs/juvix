@@ -65,7 +65,7 @@ isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
   do
     -- TODO ∷ should this call be abstracted somewhere?!
     -- Why should Ι allocate for every port?!
-    mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
+    mainPort ← mainPort
     -- TODO ∷ Make sure findEdge is in the environment
     edge ← Block.externf "find_edge"
     nodePtr ← Block.externf "node_ptr"
@@ -197,7 +197,6 @@ allocaGenH mPortData type' = do
   pure ports
   where
     len = length mPortData
-
 
 allocaPortsH,
   allocaDataH ∷
@@ -538,3 +537,26 @@ allocaNumPortNum ∷
 allocaNumPortNum n
   | n <= 2 ^ (Types.numPortsSize - 1) = undefined
   | otherwise = undefined
+
+--------------------------------------------------------------------------------
+-- Port Aliases
+--------------------------------------------------------------------------------
+
+mainPort,
+  auxiliary1,
+  auxiliary2,
+  auxiliary3,
+  auxiliary4 ∷
+    ( HasThrow "err" Errors m,
+      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "typTab" TypeTable m,
+      HasState "varTab" VariantToType m
+    ) ⇒
+    m Operand.Operand
+mainPort = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
+auxiliary1 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1))
+auxiliary2 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2))
+auxiliary3 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3))
+auxiliary4 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4))
