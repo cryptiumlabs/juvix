@@ -1,7 +1,6 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
-import Data.Function
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals
