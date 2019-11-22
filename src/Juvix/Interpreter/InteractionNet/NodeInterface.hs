@@ -3,6 +3,15 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- |
+-- - Serves as a generic lens layer for various Node types in interaction nets
+--   1. Primary port details
+--      - Open or Bound?
+--   2. Auxiliary port details
+--      - Open or Bound?
+--   3. Type Classes aliases for having just a Primary port, or an
+--      Auxiliary port and a Primary, or two Auxiliary ports and a
+--      primary, and so forth.
 module Juvix.Interpreter.InteractionNet.NodeInterface where
 
 import Control.Lens

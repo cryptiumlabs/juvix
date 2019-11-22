@@ -1,3 +1,9 @@
+-- |
+-- - Generates a dot file in order to produce a simple image of a
+--   interaction net
+-- - Also provides a way of generating gifs (and the images used to
+--   generate said gif), displaying every reduction step until the term
+--   is normalized
 module Juvix.Visualize.Dot where
 
 import Control.Exception hiding ()

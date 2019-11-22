@@ -2,6 +2,9 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- |
+-- - An evaluator for the Default Language
+-- - Serves as a reference way of creating interaction nets
 module Juvix.Interpreter.InteractionNet.Nets.Default where
 
 import Control.Lens

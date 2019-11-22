@@ -1,5 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- |
+-- - this is an implementation of said interface using the =EnumMap= data structure
+-- - This code will be imported in Tests as a possible back-end for testing
 module Juvix.Interpreter.InteractionNet.Backends.Maps where
 
 import Control.Lens

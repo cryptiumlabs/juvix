@@ -1,3 +1,6 @@
+-- |
+-- - A simple function for showing the graph as a proper net
+-- - Really should be improved upon or removed
 module Juvix.Visualize.Graph where
 
 import Data.Graph.Inductive (Graph)
