@@ -65,8 +65,8 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
   do
     fanIn ← Codegen.externf "fan_in"
     node ← Codegen.externf "node"
-    era1 ← allocF
-    era2 ← allocF
+    era1 ← allocF >>= nodeOf
+    era2 ← allocF >>= nodeOf
     aux1 ← Codegen.auxiliary1
     aux2 ← Codegen.auxiliary2
     mainPort ← Codegen.mainPort
@@ -91,7 +91,86 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
 
 fanInAux1 allocF = undefined
 
-fanInAux2 allocF = undefined
+-- TODO ∷ change interface for link and linkOtherNode to be more like
+-- the interpreter
+
+fanInAux2 ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
+  ) ⇒
+  m Operand.Operand →
+  m Operand.Operand
+fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
+  do
+    -- Nodes in env
+    fanIn ← Codegen.externf "fan_in"
+    node ← Codegen.externf "node"
+    -- new nodes
+    fan1 ← allocaFanIn >>= nodeOf
+    fan2 ← allocaFanIn >>= nodeOf
+    nod1 ← allocF >>= nodeOf
+    nod2 ← allocF >>= nodeOf
+    -- ports and functions
+    mainPort ← Codegen.mainPort
+    auxiliary1 ← Codegen.auxiliary1
+    auxiliary2 ← Codegen.auxiliary2
+    linkConnectedPort ← Codegen.externf "link_connected_port"
+    link ← Codegen.externf "link"
+    -- TODO ∷ Abstract
+    _ ←
+      Codegen.call
+        Type.void
+        linkConnectedPort
+        (Codegen.emptyArgs [fanIn, auxiliary1, nod1, mainPort])
+    _ ←
+      Codegen.call
+        Type.void
+        link
+        (Codegen.emptyArgs [nod1, auxiliary1, fan2, auxiliary1])
+    _ ←
+      Codegen.call
+        Type.void
+        link
+        (Codegen.emptyArgs [nod1, auxiliary2, fan1, auxiliary1])
+    _ ←
+      Codegen.call
+        Type.void
+        linkConnectedPort
+        (Codegen.emptyArgs [fanIn, auxiliary2, nod2, mainPort])
+    _ ←
+      Codegen.call
+        Type.void
+        link
+        (Codegen.emptyArgs [nod2, auxiliary1, fan2, auxiliary2])
+    _ ←
+      Codegen.call
+        Type.void
+        link
+        (Codegen.emptyArgs [nod2, auxiliary2, fan1, auxiliary2])
+    _ ←
+      Codegen.call
+        Type.void
+        linkConnectedPort
+        (Codegen.emptyArgs [node, auxiliary2, fan1, mainPort])
+    _ ←
+      Codegen.call
+        Type.void
+        linkConnectedPort
+        (Codegen.emptyArgs [node, auxiliary1, fan2, mainPort])
+    Codegen.retNull
+  where
+    args =
+      [ (Codegen.nodeType, "node"),
+        (Codegen.nodeType, "fan_in")
+      ]
 
 fanInAux3 allocF = undefined
 
@@ -124,7 +203,7 @@ allocaGen type' portLen dataLen = do
     Codegen.Minimal
       { Codegen.type' = Codegen.nodeType,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 1]
+        Codegen.indincies' = Codegen.constant32List [0, 2]
       }
   Codegen.store nodePtr node
   pure eac
@@ -145,3 +224,19 @@ allocaEra = allocaGen Types.era 1 0
 allocaApp = allocaGen Types.app 3 0
 allocaLam = allocaGen Types.lam 3 0
 allocaFanIn = allocaGen Types.dup 3 0
+
+nodeOf ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+nodeOf eac = do
+  Codegen.loadElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.nodeType,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0, 2]
+      }
