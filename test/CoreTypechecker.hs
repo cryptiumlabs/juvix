@@ -207,14 +207,44 @@ kApp1 =
         ( IR.Pi
             (SNat 1)
             (IR.PrimTy Nat)
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+            (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))
         )
     )
     (IR.Elim (IR.Prim (Natural 1)))
 
 natToNatTy ∷ NatAnnotation
 natToNatTy =
-  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+  ( SNat 1,
+    IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))
+  )
+
+-- ((K: Nat -> (Nat -> Nat) -> Nat) 1) should type check to (Nat -> Nat) -> Nat
+kFunApp1 ∷ NatElim
+kFunApp1 =
+  IR.App
+    ( IR.Ann
+        (SNat 1)
+        kcombinator
+        ( IR.Pi
+            (SNat 1)
+            (IR.PrimTy Nat)
+            ( IR.Pi
+                (SNat 0)
+                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+                (IR.PrimTy Nat)
+            )
+        )
+    )
+    (IR.Elim (IR.Prim (Natural 1)))
+
+kFunApp1CompTy ∷ NatAnnotation
+kFunApp1CompTy =
+  ( SNat 1,
+    IR.VPi
+      (SNat 0)
+      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+      (const (IR.VPrimTy Nat))
+  )
 
 --K: (Nat -> Nat) -> Nat -> (Nat -> Nat) I:Nat -> Nat type checks to Nat -> (Nat -> Nat)
 kAppI ∷ NatElim
@@ -344,7 +374,9 @@ test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
 test_k_app_1 ∷ T.TestTree
 test_k_app_1 = shouldInfer nat kApp1 natToNatTy
 
---TODO
+test_kFun_app_1 ∷ T.TestTree
+test_kFun_app_1 = shouldInfer nat kFunApp1 kFunApp1CompTy
+
 test_depIdentity ∷ T.TestTree
 test_depIdentity = shouldCheck All.all depIdentity depIdentityCompTy
 
