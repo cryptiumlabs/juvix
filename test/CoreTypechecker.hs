@@ -74,8 +74,8 @@ depIdentityCompTy =
       ( const
           ( IR.VPi
               (SNat 1)
-              (IR.VNeutral (IR.NFree (IR.Local 1))) -- second input is of type of the first input
-              id -- the function's return is of the type that's the same as the second input
+              (IR.VNeutral (IR.NFree (IR.Local 0))) -- second input is of type of the first input
+              (const (IR.VNeutral (IR.NFree (IR.Local 0)))) -- the function's return is of the type that's the same as the second input
           )
       )
   )
