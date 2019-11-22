@@ -257,7 +257,7 @@ kAppI =
             (SNat 1)
             (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
             ( IR.Pi
-                (SNat 1)
+                (SNat 0)
                 (IR.PrimTy Nat)
                 (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
             )
@@ -275,9 +275,9 @@ kAppICompTy ∷ NatAnnotation
 kAppICompTy =
   ( SNat 1,
     IR.VPi
-      (SNat 1)
+      (SNat 0)
       (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
 
 -- Because S returns functions, it's not general because of the annotations.
@@ -367,7 +367,6 @@ test_kcombinatorUnit_computational = shouldCheck All.all kcombinator kCompTyWith
 test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy
 
--- TODO investigate why this test fail with the same expected and got type.
 test_k_app_I ∷ T.TestTree
 test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
 
