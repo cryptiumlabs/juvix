@@ -70,23 +70,16 @@ depIdentityCompTy =
   ( SNat 0,
     IR.VPi
       (SNat 0)
-      (IR.VStar 0)
+      (IR.VStar 0) -- first input is of type type
       ( const
           ( IR.VPi
               (SNat 1)
-              (IR.VNeutral (IR.NFree (IR.Local 0)))
-              id
+              (IR.VNeutral (IR.NFree (IR.Local 1))) -- second input is of type of the first input
+              id -- the function's return is of the type that's the same as the second input
           )
       )
   )
 
-{- (IR.VPi
-        (SNat 1)
-        (IR.VPrimTy primTy)
-        (const IR.VPrimTy primTy)
-      )(IR.vapp -- vapp:: Parameterisation -> Value -> Value -> Value
-All.all --param
-(IR.VLam (IR.VPrimTy)) -- Value -}
 identityApplication ∷ NatTerm
 identityApplication =
   IR.Elim
@@ -344,15 +337,16 @@ test_kcombinatorUnit_computational = shouldCheck All.all kcombinator kCompTyWith
 test_identity_app_k ∷ T.TestTree
 test_identity_app_k = shouldInfer nat identityAppK kCompTy
 
--- TODO investigate why this test fail.
---test_k_app_I ∷ T.TestTree
---test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
+-- TODO investigate why this test fail with the same expected and got type.
+test_k_app_I ∷ T.TestTree
+test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
 
 test_k_app_1 ∷ T.TestTree
 test_k_app_1 = shouldInfer nat kApp1 natToNatTy
 
---test_depIdentity :: T.TestTree
---test_depIdentity = shouldCheck All.all depIdentity depIdentityCompTy
+--TODO
+test_depIdentity ∷ T.TestTree
+test_depIdentity = shouldCheck All.all depIdentity depIdentityCompTy
 
 test_nats_type_star0 ∷ T.TestTree
 test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
