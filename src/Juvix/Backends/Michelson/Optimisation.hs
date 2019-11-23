@@ -29,8 +29,8 @@ optimiseSeq ∷ [Op] → [Op]
 optimiseSeq ops =
   case ops of
     {- Simple stack manipulations. -}
-    (PrimEx (DUP _) : PrimEx (DIP e) : PrimEx DROP : rest) → SeqEx e : rest
-    (PrimEx (DIP e) : PrimEx DROP : rest) → PrimEx DROP : SeqEx e : rest
+    (PrimEx (DUP _) : PrimEx (DIP e) : PrimEx DROP : rest) → e <> rest
+    (PrimEx (DIP e) : PrimEx DROP : rest) → PrimEx DROP : e <> rest
     (PrimEx (DUP _) : PrimEx SWAP : PrimEx DROP : rest) → rest
     (PrimEx (DUP _) : PrimEx (DIP [PrimEx DROP]) : rest) → rest
     (PrimEx SWAP : PrimEx (DUP _) : PrimEx (DIP [PrimEx SWAP]) : rest) → PrimEx (DIP [PrimEx (DUP "")]) : PrimEx SWAP : rest
@@ -40,6 +40,7 @@ optimiseSeq ops =
     {- Failures. -}
     (PrimEx FAILWITH : _) → [PrimEx FAILWITH]
     {- Lambda / exec. -}
+    (PrimEx (LAMBDA _ _ _ l) : PrimEx (EXEC _) : rest) → l <> rest
     --(Seq (Seq op (LAMBDA (VLam l))) EXEC) -> pure (Seq op l)
     {- Recursive case. -}
     (op : rest) → optimiseSingle op : optimiseSeq rest

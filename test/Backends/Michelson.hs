@@ -5,8 +5,6 @@ import Juvix.Backends.Michelson.Optimisation
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Types as J
 import Juvix.Library hiding (Type)
-import qualified Michelson.TypeCheck as M
-import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -25,6 +23,9 @@ shouldOptimise instr opt =
 
 test_optimise_dup_drop ∷ T.TestTree
 test_optimise_dup_drop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]) (M.SeqEx [])
+
+test_optimise_lambda_exec ∷ T.TestTree
+test_optimise_lambda_exec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
 
 test_identity ∷ T.TestTree
 test_identity =
