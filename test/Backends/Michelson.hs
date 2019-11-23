@@ -13,7 +13,7 @@ shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    ((contractToSource |<< fst (compile term ty)) T.@=? Right contract)
+    (Right contract T.@=? (contractToSource |<< fst (compile term ty)))
 
 shouldOptimise ∷ Op → Op → T.TestTree
 shouldOptimise instr opt =

@@ -96,12 +96,15 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
         case prim of
           -- :: \x -> y ~ (x, s) => (y, s)
           PrimFst → stackCheck (lambda 1) $ do
+            -- TODO: return lambda (pair x y) x CAR
             genReturn (M.PrimEx (M.CAR "" ""))
           -- :: \x -> y ~ (x, s) => (y, s)
           PrimSnd → stackCheck (lambda 1) $ do
+            -- TODO: return lambda (pair x y) y CDR
             genReturn (M.PrimEx (M.CDR "" ""))
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck (lambda 2) $ do
+            -- TODO: return lambda (x, y) (x, y)
             modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
             pure (M.PrimEx (M.PAIR "" "" "" ""))
           -- :: a ~ s => (a, s)
@@ -139,10 +142,8 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
         inner ← termToInstr body paramTy
         after ← genReturn (foldDrop 1)
         pure (M.SeqEx [inner, after])
-    -- TODO (maybe): Multi-arg lambdas.
-    -- Ordering: Treat as \a b -> c ~= \a -> \b -> c, e.g. reverse stack order.
-    -- forM_ args (\a -> modify ((:) (M.VarE (prettyPrintValue a), M.PairT M.BoolT M.BoolT)))
 
+    {-
     -- TODO: Will this work in all cases?
     -- Consider app, e.g. (\f -> f 1 2) pair, seems problematic.
     -- :: (\a ... {n} b -> c) a ... {n} b ~ (a, ... {n} (b, s)) => (c, s)
@@ -156,13 +157,15 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
         args ← mapM (flip termToInstr paramTy) (reverse args)
         func ← termToInstr fn paramTy
         pure (M.SeqEx (args <> [func]))
+    -}
+
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
       stackCheck addsOne $ do
-        arg ← termToInstr arg paramTy
-        func ← termToInstr func paramTy
-        pure (M.SeqEx [arg, func])
+        func ← termToInstr func paramTy -- :: Lam a b
+        arg ← termToInstr arg paramTy -- :: a
+        pure (M.SeqEx [func, arg, M.PrimEx (M.EXEC "")])
 
 takesOne ∷ Stack → Stack → Bool
 takesOne post pre = post == drop 1 pre
