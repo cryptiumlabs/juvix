@@ -47,10 +47,27 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 The following are required:
 
 - [Stack](https://haskellstack.org)
-- [z3](https://github.com/Z3Prover/z3) (this can be installed with `make build-z3`)
-- [libff](https://github.com/scipr-lab/libff) (this can be installed with `make build-libff`)
-- [libsecp256k1](https://github.com/bitcoin-core/secp256k1) (you can likely install this with your package manager)
-- [LLVM9](https://llvm.org/) (you can likely install this with your package manager)
+- [z3](https://github.com/Z3Prover/z3)
+- [libff](https://github.com/scipr-lab/libff)
+- [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
+- [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API)
+- [LLVM9](https://llvm.org/)
+
+#### Instructions for Linux
+
+- **Stack**
+  - For Ubuntu/Debian : `apt install stack`
+  - For Arch Linux    : `pacman -S stack`
+- **Z3**
+  - `make build-z3` while in the `juvix` directory
+- **libsecp256k1**
+  - For Ubuntu/Debian : `apt install libsecp256k1-dev`
+  - For Arch Linux : `pacman -S libsecp256k1`
+- **Openssl Libssl API**
+  - For Ubuntu/Debian : `apt install libssl-dev`
+  - For Arch Linux : `pacman -S openssl`
+- **LLVM9**
+  - For Arch Linux : `pacman -S llvm`
 
 ### Building
 
@@ -79,6 +96,8 @@ juvix interactive
 ## Development
 
 [Ormolu](https://github.com/cryptiumlabs/ormolu) required for source formatting.
+
+[Quicklisp](https://www.quicklisp.org/beta/) and [sbcl](http://www.sbcl.org/) required for the automatic generation of documentation in [doc/Code](https://github.com/cryptiumlabs/juvix/tree/develop/doc/Code).
 
 To open a REPL with the library scoped:
 

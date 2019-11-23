@@ -1,3 +1,15 @@
+-- |
+-- - The standard Library for the project
+--   + Thus all code will depend on this module without stating otherwise
+-- - Is mostly =Protolude= except with a few changes
+--   + _Additions_
+--     * ∨   :: Serves as an or function
+--     * ∧   :: Serves as an and function
+--     * |<< :: Serves as a map function
+--     * >>| :: Serves as the flip map function
+--   + _Changes_
+--     * The Capability library is imported and replaces the standard =MTL=
+--       constructs in =Protolude=
 module Juvix.Library
   ( module Protolude,
     module Capability.State,

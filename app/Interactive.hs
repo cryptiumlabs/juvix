@@ -8,16 +8,17 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import Juvix.Core.Parameterisations.Naturals
+import qualified Juvix.Core.Types as Core
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
 import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
-import Monad
 import Options
 import qualified System.Console.Haskeline as H
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
+import Types
 import Prelude (String)
 
 interactive ∷ Context → Config → IO ()
@@ -65,7 +66,7 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckErase term usage ty))
+          erased ← liftIO (exec (Core.typecheckErase term usage ty) nat)
           H.outputStrLn (show erased)
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
@@ -74,22 +75,22 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty))
+          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty) nat)
           H.outputStrLn (show erased)
           case erased of
             (Right (term, _), _) → do
-              transformAndEvaluateErasedCore True term
+              transformAndEvaluateErasedCore nat True term
             _ → return ()
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
     _ → H.outputStrLn "Unknown special command" >> cont
 
-transformAndEvaluateErasedCore ∷ ∀ primVal. Bool → Erased.Term primVal → H.InputT IO ()
-transformAndEvaluateErasedCore debug term = do
+transformAndEvaluateErasedCore ∷ ∀ primTy primVal. (Show primVal) ⇒ Core.Parameterisation primTy primVal → Bool → Erased.Term primVal → H.InputT IO ()
+transformAndEvaluateErasedCore parameterisation debug term = do
   let ast = INet.erasedCoreToInteractionNetAST term
   when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
-  let net ∷ Graph.FlipNet INet.Lang
-      net = INet.astToNet ast INet.defaultEnv
+  let net ∷ Graph.FlipNet (INet.Lang primVal)
+      net = INet.astToNet parameterisation ast INet.defaultEnv
   when debug $ H.outputStrLn ("Translated to net: " <> show net)
   let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
 

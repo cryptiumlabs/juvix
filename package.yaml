@@ -88,6 +88,8 @@ library:
     - Juvix.Core.Usage
     - Juvix.Core.Types
     - Juvix.Core.Parameterisations.Naturals
+    - Juvix.Core.Parameterisations.Unit
+    - Juvix.Core.Parameterisations.All
     - Juvix.Core.EAC
     - Juvix.Core.EAC.Check
     - Juvix.Core.EAC.ConstraintGen
@@ -95,7 +97,6 @@ library:
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
-    - Juvix.Core.Parameterisations.Unit
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default
@@ -134,6 +135,10 @@ library:
     - Juvix.Backends.LLVM.Codegen.Shared
     - Juvix.Backends.LLVM.Codegen.Block
     - Juvix.Backends.LLVM.Codegen.Graph
+    - Juvix.Backends.LLVM.Codegen.Default
+    - Juvix.Backends.LLVM.Codegen
+    - Juvix.Backends.LLVM.Net.EAC
+    - Juvix.Backends.LLVM.Net.EAC.Types
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate

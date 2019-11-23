@@ -1,5 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
+-- |
+-- - Has the code necessary to generate LLVM Code
 module Juvix.Backends.LLVM.Codegen.Block where
 
 import Data.ByteString.Short
@@ -14,6 +16,8 @@ import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
 import qualified LLVM.AST.IntegerPredicate as IntPred
+import qualified LLVM.AST.Name as Name
+import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.ParameterAttribute as ParameterAttribute
 import qualified LLVM.AST.Type as Type
 
@@ -55,14 +59,15 @@ emptyModule label = AST.defaultModule {moduleName = label}
 addDefn ∷ HasState "moduleDefinitions" [Definition] m ⇒ Definition → m ()
 addDefn d = modify @"moduleDefinitions" (<> [d])
 
-define ∷
+defineGen ∷
   HasState "moduleDefinitions" [Definition] m ⇒
+  Bool →
   Type →
   Symbol →
   [(Type, Name)] →
   [BasicBlock] →
   m Operand
-define retty label argtys body = do
+defineGen isVarArgs retty label argtys body = do
   addDefn
     $ GlobalDefinition
     $ functionDefaults
@@ -71,15 +76,88 @@ define retty label argtys body = do
         Global.callingConvention = CC.GHC,
         Global.returnType = retty,
         Global.basicBlocks = body,
-        Global.name = (internName label)
+        Global.name = internName label
       }
   return
     $ ConstantOperand
     $ C.GlobalReference
-      (PointerType (FunctionType retty (fst <$> argtys) False) (AddrSpace 0))
+      (PointerType (FunctionType retty (fst <$> argtys) isVarArgs) (AddrSpace 0))
       (internName label)
   where
-    params = ((\(ty, nm) → Parameter ty nm []) <$> argtys, False)
+    params = ((\(ty, nm) → Parameter ty nm []) <$> argtys, isVarArgs)
+
+define,
+  defineVarArgs ∷
+    HasState "moduleDefinitions" [Definition] m ⇒
+    Type →
+    Symbol →
+    [(Type, Name)] →
+    [BasicBlock] →
+    m Operand
+define = defineGen False
+defineVarArgs = defineGen True
+
+makeFunction ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "names" Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
+  ) ⇒
+  Symbol →
+  [(Type.Type, Name.Name)] →
+  m ()
+makeFunction name args = do
+  entry ← addBlock name
+  _ ← setBlock entry
+  -- Maybe not needed?
+  traverse_
+    ( \(typ, nam) → do
+        var ← alloca typ
+        store var (local typ nam)
+        assign (nameToSymbol nam) var
+    )
+    args
+
+defineFunctionGen ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  Bool →
+  Type →
+  Symbol →
+  [(Type, Name)] →
+  m a →
+  m Operand
+defineFunctionGen bool retty name args body =
+  (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
+
+defineFunction,
+  defineFunctionVarArgs ∷
+    ( HasThrow "err" Errors m,
+      HasState "blockCount" Int m,
+      HasState "blocks" (HashMap Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name m,
+      HasState "moduleDefinitions" [Definition] m,
+      HasState "names" Names m,
+      HasState "symtab" (HashMap Symbol Operand) m
+    ) ⇒
+    Type →
+    Symbol →
+    [(Type, Name)] →
+    m a →
+    m Operand
+defineFunction = defineFunctionGen False
+defineFunctionVarArgs = defineFunctionGen True
 
 --------------------------------------------------------------------------------
 -- Block Stack
@@ -391,6 +469,7 @@ generateIf ty cond tr fl = do
 -- Effects
 --------------------------------------------------------------------------------
 
+emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
 
 call ∷
@@ -445,6 +524,10 @@ store ∷
   m ()
 store ptr val = unnminstr $ Store False ptr val Nothing 0 []
 
+--------------------------------------------------------------------------------
+-- Casting Operations
+--------------------------------------------------------------------------------
+
 bitCast ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (HashMap Name BlockState) m,
@@ -455,6 +538,17 @@ bitCast ∷
   Type →
   m Operand
 bitCast op typ = instr typ $ BitCast op typ []
+
+ptrToInt ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m
+  ) ⇒
+  Operand →
+  Type →
+  m Operand
+ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
 
 --------------------------------------------------------------------------------
 -- Pointer Operations
@@ -479,12 +573,104 @@ getElementPtr (Minimal address indices type') =
         indices = indices
       }
 
+loadElementPtr ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m
+  ) ⇒
+  MinimalPtr →
+  m Operand
+loadElementPtr minimal = do
+  ptr ← getElementPtr minimal
+  load (Types.type' minimal) ptr
+
 constant32List ∷ Functor f ⇒ f Integer → f Operand
 constant32List = fmap (ConstantOperand . C.Int 32)
 
 --------------------------------------------------------------------------------
 -- Sum Type Declarations
 --------------------------------------------------------------------------------
+argsGen ∷ [Name.Name]
+argsGen = (mkName . ("_" <>) . show) <$> ([1 ..] ∷ [Integer])
+
+variantCreationName ∷ Symbol → Symbol
+variantCreationName = (<> "_%func")
+
+-- | creates a variant creation definition function
+createVariantAllocaFunction ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" (HashMap Symbol Operand) m,
+    HasState "typTab" (HashMap Symbol Type) m,
+    HasState "varTab" (HashMap Symbol SumInfo) m
+  ) ⇒
+  Symbol →
+  [Type] →
+  m Operand
+createVariantAllocaFunction variantName argTypes = do
+  varTable ← get @"varTab"
+  typTable ← get @"typTab"
+  case Map.lookup variantName varTable of
+    Nothing →
+      throw @"err" (NoSuchVariant (show variantName))
+    Just
+      ( S
+          { sum' = sumName,
+            offset = offset,
+            tagSize' = tag
+          }
+        ) →
+        case Map.lookup sumName typTable of
+          Nothing →
+            throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
+          Just sumTyp →
+            let varCName = variantCreationName variantName
+
+                args = zip argTypes argsGen
+
+                body = do
+                  makeFunction varCName args
+                  sum ← alloca sumTyp
+                  getEle ← getElementPtr $
+                    Minimal
+                      { Types.type' = sumTyp,
+                        Types.address' = sum,
+                        Types.indincies' = constant32List [0, 0]
+                      }
+                  store
+                    getEle
+                    (ConstantOperand (C.Int tag (toInteger offset)))
+                  -- TODO ∷ remove the ! call here
+                  let varType = typTable Map.! variantName
+                  casted ← bitCast sum varType
+                  foldM_
+                    ( \i (_type', name) →
+                        do
+                          inst ← externf name
+                          ele ←
+                            getElementPtr $
+                              Minimal
+                                { Types.type' = varType,
+                                  Types.address' = casted,
+                                  Types.indincies' = constant32List [0, i]
+                                }
+                          store ele inst
+                          pure (succ i)
+                    )
+                    1 -- not 0, as 0 is reserved for the tag that was set
+                    args
+                  _ ← ret casted
+                  createBlocks
+
+             in body >>= define sumTyp varCName args
+
+-- TODO ∷ Remove repeat code!!!
 
 -- | creates a variant
 createVariant ∷

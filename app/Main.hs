@@ -2,6 +2,7 @@
 
 module Main where
 
+import Compile
 import Config
 import Development.GitRev
 import Interactive
@@ -73,6 +74,10 @@ run ctx (Options cmd configPath) = do
   maybeConfig ← loadConfig configPath
   let conf = fromMaybe defaultConfig maybeConfig
   case cmd of
+    Typecheck fin backend → do
+      typecheck fin backend >> pure ()
+    Compile fin fout backend →
+      compile fin fout backend
     Interactive → do
       putDoc interactiveDoc
       if isJust maybeConfig
