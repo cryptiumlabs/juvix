@@ -17,14 +17,14 @@ shouldCompile term ty contract =
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
     ((contractToSource |<< fst (compile term ty)) T.@=? Right contract)
 
-shouldOptimise ∷ MT.Instr a b → MT.Instr a b → T.TestTree
+shouldOptimise ∷ Op → Op → T.TestTree
 shouldOptimise instr opt =
   T.testCase
     (show instr <> " should optimise to " <> show opt)
-    (optimise' instr T.@=? Just opt)
+    (opt T.@=? optimiseSingle instr)
 
 test_optimise_dup_drop ∷ T.TestTree
-test_optimise_dup_drop = shouldOptimise (MT.Seq MT.DUP MT.DROP) MT.Nop
+test_optimise_dup_drop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]) (M.SeqEx [])
 
 test_identity ∷ T.TestTree
 test_identity =

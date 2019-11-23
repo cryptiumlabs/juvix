@@ -39,8 +39,11 @@ compileToMichelson term ty = do
       let michelsonOp = leftSeq michelsonOp'
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
-        Right (M.SomeContract instr start end) → do
-          optimised ← optimise instr
-          pure (M.SomeContract optimised start end)
+        Right _ → do
+          optimised ← optimise michelsonOp
+          let optimisedContract = M.Contract paramTy storageTy [optimised]
+          case M.typeCheckContract Map.empty optimisedContract of
+            Right c → pure c
+            Left err → throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
         Left err → throw @"compilationError" (DidNotTypecheck err)
     _ → throw @"compilationError" InvalidInputType
