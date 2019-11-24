@@ -30,10 +30,12 @@ typecheckAffineErase ∷
   m (EC.Term primVal, EC.TypeAssignment primTy)
 typecheckAffineErase term usage ty = do
   -- First typecheck & generate erased core.
-  (erased, assignment) ← typecheckErase term usage ty
+  ((erased, _), assignment) ← typecheckErase term usage ty
+  -- Fetch the parameterisation, needed for EAC inference (TODO: get rid of this dependency).
+  parameterisation ← get @"parameterisation"
   -- Then invoke Z3 to check elementary-affine-ness.
   start ← liftIO unixTime
-  result ← liftIO (EAC.validEal erased assignment)
+  result ← liftIO (EAC.validEal parameterisation erased assignment)
   end ← liftIO unixTime
   tell @"log" [LogRanZ3 (end - start)]
   -- Return accordingly.
@@ -61,7 +63,7 @@ typecheckErase ∷
   HR.Term primTy primVal →
   Usage →
   HR.Term primTy primVal →
-  m (EC.Term primVal, EC.TypeAssignment primTy)
+  m ((EC.Term primVal, EC.Type primTy), EC.TypeAssignment primTy)
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   parameterisation ← get @"parameterisation"

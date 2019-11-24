@@ -3,6 +3,7 @@ module Juvix.Core.EAC.ConstraintGen where
 import Control.Arrow (left)
 import Juvix.Core.EAC.Types
 import Juvix.Core.Erased.Types
+import Juvix.Core.Types
 import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
@@ -15,6 +16,8 @@ import Prelude (error)
 setOccurrenceMap ∷ ∀ m primVal. (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
 setOccurrenceMap term = do
   case term of
+    Prim _ →
+      pure ()
     Var sym →
       modify' @"occurrenceMap" (Map.insertWith (+) sym 1)
     Lam _ b → do
@@ -36,6 +39,8 @@ parameterizeType ty = do
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case ty of
+    PrimTy p →
+      pure (PPrimT p)
     SymT sym →
       pure (PSymT param sym)
     Pi arg body → do
@@ -68,6 +73,7 @@ reparameterize pty = do
   -- Typing constraint: m >= 0
   addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
   case pty of
+    PPrimT p → pure (PPrimT p)
     PSymT _ sym → pure (PSymT param sym)
     PArrT _ a b → pure (PArrT param a b)
 
@@ -77,6 +83,8 @@ unificationConstraints ∷
   PType primTy →
   PType primTy →
   m ()
+unificationConstraints (PPrimT p1) (PPrimT p2) =
+  pure ()
 unificationConstraints (PSymT a _) (PSymT b _) =
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
 unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
@@ -97,17 +105,21 @@ boxAndTypeConstraint ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   ParamTypeAssignment primTy →
   Term primVal →
   m (RPT primVal, PType primTy)
-boxAndTypeConstraint parameterizedAssignment term = do
-  let rec = boxAndTypeConstraint parameterizedAssignment
+boxAndTypeConstraint parameterisation parameterizedAssignment term = do
+  let rec = boxAndTypeConstraint parameterisation parameterizedAssignment
+      arrow [x] = PPrimT x
+      arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
   varPaths ← get @"varPaths"
   param ← addPath
   path ← get @"path"
   -- Boxing constraint.
   addConstraint (Constraint (ConstraintVar 1 <$> path) (Gte 0))
   case term of
+    Prim p → pure (RBang 0 (RPrim p), arrow (typeOf parameterisation p))
     Var sym → do
       -- Boxing constraint.
       case varPaths Map.!? sym of
@@ -210,12 +222,13 @@ generateTypeAndConstraints ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   Term primVal →
   m (RPT primVal, ParamTypeAssignment primTy)
-generateTypeAndConstraints term = do
+generateTypeAndConstraints parameterisation term = do
   parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
-  boxAndTypeConstraint parameterizedAssignment term
+  boxAndTypeConstraint parameterisation parameterizedAssignment term
     >>| second (const parameterizedAssignment)
 
 generateConstraints ∷
@@ -226,10 +239,11 @@ generateConstraints ∷
     HasWriter "constraints" [Constraint] m,
     HasState "occurrenceMap" OccurrenceMap m
   ) ⇒
+  Parameterisation primTy primVal →
   Term primVal →
   m (RPT primVal)
-generateConstraints term =
-  generateTypeAndConstraints term
+generateConstraints parameterisation term =
+  generateTypeAndConstraints parameterisation term
     >>| fst
 
 {- Bracket Checker. -}
@@ -252,16 +266,18 @@ bracketChecker t = runEither (rec' t 0 mempty)
               RLam s t → rec' t n' (Map.insert s (negate n') map)
               RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
               RVar _ → error "already is matched"
-              RPrim _ → undefined
+              RPrim _ → pure ()
 
 bracketCheckerErr ∷ RPTO primVal → Either (Errors primTy primVal) ()
 bracketCheckerErr t = left Brack (bracketChecker t)
 
 {- Type Checker. -}
 -- Precondition ∷ all terms inside of RPTO must be unique
-typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
-typChecker t typAssign = runEither (() <$ rec' t typAssign)
+typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
+typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
   where
+    arrow [x] = PPrimT x
+    arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
     rec' (RBang bangVar (RVar s)) assign =
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse
@@ -285,24 +301,27 @@ typChecker t typAssign = runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Just arg → pure (newAssign, PArrT x arg bodyType)
         Nothing → throw @"typ" MissingOverUse
-    rec' (RBang _bangVar (RPrim _p)) _assign = undefined
+    rec' (RBang _bangVar (RPrim _p)) _assign = pure (_assign, (arrow (typeOf parameterisation _p)))
 
-typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
-typCheckerErr t typeAssing = left Typ (typChecker t typeAssing)
+typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
+typCheckerErr parameterisation t typeAssign = left Typ (typChecker parameterisation t typeAssign)
 
 {- Utility. -}
 
 -- The outer bang parameter.
 bangParam ∷ ∀ primTy. PType primTy → Param
+bangParam (PPrimT _) = 0
 bangParam (PSymT param _) = param
 bangParam (PArrT param _ _) = param
 
 putParam ∷ ∀ primTy. Param → PType primTy → PType primTy
+putParam _ (PPrimT p) = PPrimT p
 putParam p (PSymT _ s) = PSymT p s
 putParam p (PArrT _ t1 t2) = PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
 addParamPos ∷ ∀ m primTy primVal. HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
+addParamPos _ (PPrimT p) = pure (PPrimT p)
 addParamPos toAdd (PSymT p s)
   | toAdd + p < 0 = throw @"typ" TooManyHats
   | otherwise = pure (PSymT (toAdd + p) s)

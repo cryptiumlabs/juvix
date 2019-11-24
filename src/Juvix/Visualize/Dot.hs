@@ -1,3 +1,9 @@
+-- |
+-- - Generates a dot file in order to produce a simple image of a
+--   interaction net
+-- - Also provides a way of generating gifs (and the images used to
+--   generate said gif), displaying every reduction step until the term
+--   is normalized
 module Juvix.Visualize.Dot where
 
 import Control.Exception hiding ()
@@ -20,7 +26,7 @@ printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b)) → IO ()
 printTestn _ (Left _) = pure ()
 printTestn txt (Right (InfoNet {net = net})) = showNet txt (runFlip net)
 
-netToGif ∷ FilePath → FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+netToGif ∷ ∀ primVal. Show primVal ⇒ FilePath → FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
 netToGif dir name num net = do
   createDirectoryIfMissing True dir
   result ← runGraphNet (dir <> "/" <> name) num net
@@ -42,12 +48,13 @@ netToGif dir name num net = do
   _ ← procStrict "ffmpeg" ["-f", "image2", "-framerate", "2", "-i", appDir packName <> "%d" <> ".png", appDir packName <> ".gif"] mempty
   return result
 
-runGraphNet ∷ FilePath → Int → FlipNet Lang → IO (InfoNet (FlipNet Lang))
+runGraphNet ∷ ∀ primVal. Show primVal ⇒ FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
 runGraphNet name num = runFlipNetIO (reducePrint name num)
 
 reducePrint ∷
   ( MonadIO f,
-    InfoNetworkDiff FlipNet Lang f
+    Show primVal,
+    InfoNetworkDiff FlipNet (Lang primVal) f
   ) ⇒
   FilePath →
   Int →

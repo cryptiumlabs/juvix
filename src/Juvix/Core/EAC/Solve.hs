@@ -1,3 +1,8 @@
+-- |
+-- - A Z3 solver for the generated =Eal= Constraints
+-- - Can generate multiple constraints that will be used along side the
+--   Bracket checker to confirm that the solved constraints Z3 gives us
+--   is correct
 module Juvix.Core.EAC.Solve where
 
 import qualified Data.Map as Map

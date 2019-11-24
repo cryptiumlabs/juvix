@@ -1,5 +1,8 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
+-- |
+-- - This provides generic functions used by the various encodings in
+--   this directory
 module Juvix.Encoding.Encoding where
 
 import Juvix.Encoding.Types

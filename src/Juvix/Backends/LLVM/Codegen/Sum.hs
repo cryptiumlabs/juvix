@@ -1,4 +1,6 @@
 -- | Provides a mechanism for defining Sum types
+-- - Has the code to encode a sum type via what is defined by the user or
+--   what is defined to create the interaction net system.
 module Juvix.Backends.LLVM.Codegen.Sum where
 
 import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants

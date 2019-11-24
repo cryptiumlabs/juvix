@@ -3,38 +3,40 @@ module Juvix.Interpreter.InteractionNet.Type where
 import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library
 
--- TODO ∷ Investigate if it would be advantageous to promote this to a well typed gadt
-data AST
+data AST primVal
   = IntLit Int
-  | Lambda Symbol AST
-  | Application AST AST
-  | Not AST
+  | Lambda Symbol (AST primVal)
+  | Application (AST primVal) (AST primVal)
+  | Not (AST primVal)
   | True'
   | False'
-  | Letrec Symbol AST
-  | Let Symbol AST AST
-  | If AST AST AST
-  | Cons AST AST
-  | Or AST AST
-  | And AST AST
+  | Letrec Symbol (AST primVal)
+  | Let Symbol (AST primVal) (AST primVal)
+  | If (AST primVal) (AST primVal) (AST primVal)
+  | Cons (AST primVal) (AST primVal)
+  | Or (AST primVal) (AST primVal)
+  | And (AST primVal) (AST primVal)
   | Nil
-  | Car AST
-  | Cdr AST
-  | IsNil AST
+  | Car (AST primVal)
+  | Cdr (AST primVal)
+  | IsNil (AST primVal)
   | Symbol' Symbol
   | -- Not valid syntax but for read back of a graph
     Erase
   | -- Not valid syntax but for read back of a graph
-    Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) AST AST AST
-  | Curried2 (Primitive → Primitive → Maybe Primitive) AST AST
-  | Curried1 (Primitive → Maybe Primitive) AST
+    Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal) (AST primVal)
+  | Curried2 (Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal)
+  | Curried1 (Primitive → Maybe Primitive) (AST primVal)
+  | PrimCurried2 (primVal → primVal → Maybe primVal) (AST primVal) (AST primVal)
+  | PrimCurried1 (primVal → Maybe primVal) (AST primVal)
+  | Prim primVal
   deriving (Show)
 
 -- | Constructs a Function from a primitive
 -- the final argument is maybe, as if the nodes don't line up
 -- a final type can't be constructed. This is untyped
 -- so type check at a higher level
-data Fn
+data Fn primVal
   = Arg0 Primitive
   | Arg1 (Primitive → Maybe Primitive)
   | Arg2 (Primitive → Primitive → Maybe Primitive)

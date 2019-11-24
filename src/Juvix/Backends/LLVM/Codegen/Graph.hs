@@ -7,6 +7,7 @@ import Juvix.Library hiding (Type, local)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
@@ -17,7 +18,10 @@ import qualified LLVM.AST.Type as Type
 -- Main Functions
 --------------------------------------------------------------------------------
 
--- take 4 Operand.Operand
+-- TODO ∷ delNodes, deleteRewire, deleteEdge, allocaNode in full
+
+-- TODO ∷ abstract over the define pattern seen below?
+
 link ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
@@ -29,46 +33,58 @@ link ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-link = body >>= define Type.void "link" args
+link = Block.defineFunction Type.void "link" args $
+  do
+    setPort ("node_1", "port_1") ("node_2", "port_2")
+    setPort ("node_2", "port_2") ("node_1", "port_1")
+    retNull
   where
     args =
-      ( [ (nodeType, "node_1"),
-          (numPorts, "port_1"),
-          (nodeType, "node_2"),
-          (numPorts, "port_2")
-        ] ∷
-          [(Type.Type, Name.Name)]
-      )
-    -- TODO ∷ Abstract most of the logic in this function
-    body = do
-      makeFunction "link" args
-      setPort ("node_1", "port_1") ("node_2", "port_2")
-      setPort ("node_2", "port_2") ("node_1", "port_1")
-      _ ← retNull
-      createBlocks
+      [ (nodeType, "node_1"),
+        (numPorts, "port_1"),
+        (nodeType, "node_2"),
+        (numPorts, "port_2")
+      ]
 
 -- perform offsets
 
-isBothPrimary = body >>= define Type.i1 "is_both_primary" args
+isBothPrimary ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  m Operand.Operand
+isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
+  do
+    -- TODO ∷ should this call be abstracted somewhere?!
+    -- Why should Ι allocate for every port?!
+    mainPort ← allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
+    -- TODO ∷ Make sure findEdge is in the environment
+    edge ← Block.externf "find_edge"
+    nodePtr ← Block.externf "node_ptr"
+    node ← load nodeType nodePtr
+    port ← call portType edge (Block.emptyArgs [node, mainPort])
+    otherNodePtr ← getElementPtr $
+      Types.Minimal
+        { Types.type' = nodePointer,
+          Types.address' = port,
+          Types.indincies' = Block.constant32List [0, 1]
+        }
+    -- convert ptrs to ints
+    nodeInt ← ptrToInt nodePtr pointerSize
+    otherNodeInt ← ptrToInt otherNodePtr pointerSize
+    -- compare the pointers to see if they are the same
+    cmp ← icmp IntPred.EQ nodeInt otherNodeInt
+    ret cmp
   where
-    args = [(nodeType, "node")]
-    body = do
-      makeFunction "is_both_primary" args
-      mainPort ← allocaNumPorts False (Operand.ConstantOperand (C.Int 32 0))
-      -- TODO ∷ Maybe bad, we should have an environemnt of edges that I can just call
-      edge ← findEdge
-      port ← call portType edge (Block.emptyArgs [mainPort])
-      nodePtr ← getElementPtr $
-        Types.Minimal
-          { Types.type' = nodePointer,
-            Types.address' = port,
-            Types.indincies' = Block.constant32List [0, 1]
-          }
-      node ← load nodePointer nodePtr
-      -- run compare function
-      cmp ← undefined
-      _ ← ret cmp
-      createBlocks
+    args = [(nodePointer, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
 findEdge ∷
@@ -82,45 +98,158 @@ findEdge ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-findEdge = body >>= define portType "find_edge" args
+findEdge = Block.defineFunction Types.portType "find_edge" args $
+  do
+    node ← Block.externf "node"
+    pNum ← Block.externf "port"
+    portPtr ← getPort node pNum
+    port ← load portType portPtr
+    otherPtr ← portPointsTo port
+    other ← load portType otherPtr
+    ret other
   where
     args = [(nodeType, "node"), (numPorts, "port")]
-    body = do
-      makeFunction "find_edge" args
-      node ← Block.externf "node"
-      pNum ← Block.externf "port"
-      port ← getPort node pNum
-      other ← portPointsTo port
-      _ ← ret other
-      createBlocks
 
---------------------------------------------------------------------------------
--- Helpers
---------------------------------------------------------------------------------
+-- TODO ∷ allocaPorts, allocaPortType, allocaData, allocaNodeType
+-- Name           | Arguments
+-- allocaNodeType : two array args
+-- allocaPortType : nodePointer ∧ numPorts
+-- allocaPorts    : variable args of ports
+-- allocaData     : variable args of dataType
 
-makeFunction ∷
+allocaNode ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  m Operand.Operand
+allocaNode = alloca nodeType
+
+-- H variants below mean that we are able to allocate from Haskell and
+-- need not make a function
+
+allocaPortsH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+allocaPortsH mPorts = do
+  ports ← alloca (Type.ArrayType (fromIntegral len) Types.portType)
+  traverse_
+    ( \(p, i) →
+        case p of
+          Nothing → pure ()
+          Just p → do
+            ptr ← getElementPtr $
+              Types.Minimal
+                { Types.type' = portType,
+                  Types.address' = ports,
+                  Types.indincies' = Block.constant32List [0, i]
+                }
+            store ptr p
+    )
+    (zip mPorts [1 ..])
+  pure ports
+  where
+    len = length mPorts
+
+-- TODO ∷ figure out var args
+-- not needed right away as we know how many args we need from Haskell
+allocaPorts = Block.defineFunctionVarArgs portArrayLen "alloca_ports" args $
+  do
+    undefined
+  where
+    args = [(portType, "P")]
+
+-- derived from the core functions
+
+linkConnectedPort ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
     HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symtab" SymbolTable m
   ) ⇒
-  Symbol →
-  [(Type.Type, Name.Name)] →
-  m ()
-makeFunction name args = do
-  entry ← addBlock name
-  _ ← setBlock entry
-  -- Maybe not needed?
-  traverse_
-    ( \(typ, nam) → do
-        var ← alloca typ
-        store var (local typ nam)
-        assign (nameToSymbol nam) var
-    )
-    args
+  m Operand.Operand
+linkConnectedPort = Block.defineFunction Type.void "link_connected_port" args $
+  do
+    edge ← Block.externf "find_edge"
+    link ← Block.externf "link"
+    (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
+    (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
+    oldPointsTo ← call Types.portType edge (Block.emptyArgs [nOld, pOld])
+    -- TODO ∷ Abstract out this bit ---------------------------------------------
+    let intoGen typ num = loadElementPtr $
+          Types.Minimal
+            { Types.type' = typ,
+              Types.address' = oldPointsTo,
+              Types.indincies' = Block.constant32List [0, num]
+            }
+    numPointsTo ← intoGen numPorts 2
+    nodePointsToPtr ← intoGen nodePointer 1
+    nodePointsTo ← load nodeType nodePointsToPtr
+    -- End Abstracting out bits -------------------------------------------------
+    _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
+    retNull
+  where
+    args =
+      [ (nodeType, "node_old"),
+        (numPorts, "port_old"),
+        (nodeType, "node_new"),
+        (numPorts, "port_new")
+      ]
+
+rewire ∷
+  ( HasThrow "err" Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Names m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  m Operand.Operand
+rewire = Block.defineFunction Type.void "rewire" args $
+  do
+    edge ← Block.externf "find_edge"
+    relink ← Block.externf "link_connected_port"
+    -- TODO ∷ Abstract out this bit ---------------------------------------------
+    (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
+    (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
+    oldPointsTo ← call Types.portType edge (Block.emptyArgs [n1, p1])
+    let intoGen typ num = loadElementPtr $
+          Types.Minimal
+            { Types.type' = typ,
+              Types.address' = oldPointsTo,
+              Types.indincies' = Block.constant32List [0, num]
+            }
+    numPointsTo ← intoGen numPorts 2
+    nodePointsToPtr ← intoGen nodePointer 1
+    nodePointsTo ← load nodeType nodePointsToPtr
+    -- End Abstracting out bits -------------------------------------------------
+    _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
+    retNull
+  where
+    args =
+      [ (nodeType, "node_one"),
+        (numPorts, "port_one"),
+        (nodeType, "node_two"),
+        (numPorts, "port_two")
+      ]
+
+delNode = undefined
+
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
 
 -- Logic for setPort expanded
 
@@ -208,14 +337,13 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  intOfNumPorts portType port $ \value → do
-    portsPtr ← getElementPtr $
+  intOfNumPorts portPointer port $ \value → do
+    ports ← loadElementPtr $
       Types.Minimal
         { Types.type' = portData,
           Types.address' = node,
           Types.indincies' = Block.constant32List [0, 2]
         }
-    ports ← load portData portsPtr
     -- allocate the new pointer
     getElementPtr $
       Types.Minimal
@@ -244,37 +372,34 @@ intOfNumPorts ∷
   m Operand.Operand
 intOfNumPorts typ numPort cont = do
   -- grab the tag from the numPort
-  tagPtr ← Block.getElementPtr $
+  tag ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = Type.i1,
         Types.address' = numPort,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  tag ← load Type.i1 tagPtr
   generateIf typ tag smallBranch largeBranch
   where
     smallBranch = branchGen numPortsSmall numPortsSmallValue return
 
     largeBranch = branchGen numPortsLarge numPortsLargeValuePtr $
-      \vPtr → do
-        deref2 ← Block.getElementPtr $
+      \vPtr →
+        Block.loadElementPtr $
           Types.Minimal
             { Types.type' = numPortsLargeValue,
               Types.address' = vPtr,
               Types.indincies' = Block.constant32List [0, 1]
             }
-        load numPortsLargeValue deref2
 
     -- Generic logic
     branchGen variant variantType extraDeref = do
       casted ← bitCast numPort (varientToType variant)
-      valueP ← Block.getElementPtr $
+      value ← Block.loadElementPtr $
         Types.Minimal
           { Types.type' = variantType,
             Types.address' = casted,
             Types.indincies' = Block.constant32List [0, 1]
           }
-      value ← load variantType valueP
       -- Does nothing for the small case
       value ← extraDeref value
       cont value
@@ -293,35 +418,31 @@ portPointsTo ∷
 portPointsTo (portType ∷ Operand.Operand) = do
   -- TODO ∷ see if there is any special logic for packed Types
   -- Do I have to index by size?
-  nodePtrPtr ← Block.getElementPtr $
+  nodePtr ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = nodePointer,
         Types.address' = portType,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  -- Finish grabbing the node from the pointer
-  nodePtr ← load nodePointer nodePtrPtr
   -- get the node which it points to
-  nodeTypePtr ← getElementPtr $
+  nodeType ← loadElementPtr $
     Types.Minimal
       { Types.type' = nodeType,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  node ← load nodeType nodeTypePtr
   -- Get the numPort
-  numPortPtr ← Block.getElementPtr $
+  numPort ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = numPorts,
         Types.address' = portType,
         -- Index may change due to being packed
         Types.indincies' = Block.constant32List [0, 2]
       }
-  numPort ← load numPorts numPortPtr
-  getPort node numPort
+  getPort nodeType numPort
 
 -- | Allocates a 'numPorts'
-allocaNumPorts ∷
+allocaNumPortsStatic ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
@@ -332,7 +453,7 @@ allocaNumPorts ∷
   Bool →
   Operand.Operand →
   m Operand.Operand
-allocaNumPorts (isLarge ∷ Bool) (value ∷ Operand.Operand) =
+allocaNumPortsStatic (isLarge ∷ Bool) (value ∷ Operand.Operand) =
   -- Call Block.createVariant
   -- Issue is that I need to register this sum type in the map
   -- else it is an error.

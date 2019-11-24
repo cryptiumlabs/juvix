@@ -1,6 +1,13 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
+-- |
+-- - Gives a =Mendler= encoding from an =ADT=.
+-- - This file is not done as Ι have yet to find a way to convert any
+--   general recursive function into a proper =Mendler= form.
+-- - This however will do the boilerplate of changing an =ADT= to
+--   =Mendler= and the structure of a case expression into proper
+--   =Mendler= form
 module Juvix.Encoding.Mendler where
 
 import Juvix.Encoding.Encoding

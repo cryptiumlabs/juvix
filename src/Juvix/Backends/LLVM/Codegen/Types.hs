@@ -129,7 +129,7 @@ data MinimalPtr
 
 -- | 'varientToType' takes the type out of the variant
 varientToType ∷ VariantInfo → Type
-varientToType Variant {typ' = typ'} = typ'
+varientToType = typ'
 
 -- | 'numPortsSmall' is used for the number of ports that fit within 16 bits
 numPortsSmall ∷ VariantInfo
@@ -141,6 +141,9 @@ numPortsSmall =
         name = "small",
         typ' = numPortsSmallValue
       }
+
+pointerSize ∷ Type
+pointerSize = Type.i16
 
 numPortsSmallValue ∷ Type
 numPortsSmallValue = Type.i16
@@ -197,6 +200,13 @@ portType = StructureType
       ]
   }
 
+-- TODO ∷ getElementPtr returns int32*?
+portPointer ∷ Type
+portPointer = PointerType
+  { pointerReferent = portType,
+    pointerAddrSpace = AddrSpace 32
+  }
+
 portTypeSize ∷ Num p ⇒ p
 portTypeSize = 33
 
@@ -212,7 +222,7 @@ nodeType ∷ Type
 nodeType = StructureType
   { isPacked = True,
     elementTypes =
-      [ numPorts, -- length of this node
+      [ numPorts, -- length of the portData
         ArrayType 0 portType, -- variable size array of ports
         ArrayType 0 dataType -- variable size array of data the node stores
       ]
@@ -220,3 +230,20 @@ nodeType = StructureType
 
 portData ∷ Type
 portData = ArrayType 0 portType
+
+-- Holds the port type and the size of it for easy transition into nodeType
+portArrayLen ∷ Type
+portArrayLen = StructureType
+  { isPacked = False,
+    elementTypes =
+      [ numPorts,
+        portData
+      ]
+  }
+
+-- TODO ∷ This changes per platform
+vaList ∷ Type
+vaList = StructureType
+  { isPacked = False,
+    elementTypes = [PointerType Type.i8 (AddrSpace 32)]
+  }

@@ -2,6 +2,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- |
+-- - An evaluation for a simple combination calculus language, only has
+--   three ports
+--   1. Con
+--   2. Dup
+--   3. Era
 module Juvix.Interpreter.InteractionNet.Nets.Combinators where
 
 import Control.Lens
