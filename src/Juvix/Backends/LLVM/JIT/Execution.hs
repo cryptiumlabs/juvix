@@ -5,6 +5,7 @@ module Juvix.Backends.LLVM.JIT.Execution
   )
 where
 
+import Control.Concurrent
 import qualified Data.ByteString.Char8 as B
 import Foreign.Ptr (FunPtr, castFunPtr)
 import Juvix.Backends.LLVM.JIT.Types
@@ -42,9 +43,11 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
-jit ∷ Config → AST.Module → AST.Name → Word32 -> IO Word32
-jit config mod name param = do
-  withContext $ \context →
+jit ∷ Config → AST.Module → AST.Name → IO (Word32 → IO Word32)
+jit config mod name = do
+  paramChan ← newChan
+  resultChan ← newChan
+  void $ forkIO $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
@@ -57,5 +60,9 @@ jit config mod name param = do
           EE.withModuleInEngine executionEngine m $ \ee → do
             fref ← EE.getFunction ee name
             case fref of
-              Just fn → run fn param
-              Nothing → return 0
+              Just fn → forever $ do
+                param ← readChan paramChan
+                res ← run fn param
+                writeChan resultChan res
+              Nothing → return ()
+  return $ \param → writeChan paramChan param >> readChan resultChan
