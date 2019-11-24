@@ -82,6 +82,7 @@ library:
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
+    - Juvix.Core.IRAnn
     - Juvix.Core.Erased
     - Juvix.Core.ErasedAnn
     - Juvix.Core.Erased.Evaluator
@@ -158,6 +159,8 @@ library:
     - Juvix.Core.HR.Types
     - Juvix.Core.HRAnn.Types
     - Juvix.Core.HRAnn.Erasure
+    - Juvix.Core.IRAnn.Types
+    - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
     - Juvix.Core.ErasedAnn.Erasure
 
