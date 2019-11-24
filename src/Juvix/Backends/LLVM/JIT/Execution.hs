@@ -42,8 +42,8 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
-jit ∷ Config → AST.Module → AST.Name → IO (Word32 → IO Word32)
-jit config mod name = do
+jit ∷ Config → AST.Module → AST.Name → Word32 -> IO Word32
+jit config mod name param = do
   withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
@@ -55,7 +55,7 @@ jit config mod name = do
           s ← moduleLLVMAssembly m
           B.putStrLn s
           EE.withModuleInEngine executionEngine m $ \ee → do
-            mainfn ← EE.getFunction ee name
-            case mainfn of
-              Just fn → pure (run fn)
-              Nothing → return (const (return 0))
+            fref ← EE.getFunction ee name
+            case fref of
+              Just fn → run fn param
+              Nothing → return 0
