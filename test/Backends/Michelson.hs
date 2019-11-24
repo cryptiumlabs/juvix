@@ -28,15 +28,15 @@ test_optimise_dup_drop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx 
 test_optimise_lambda_exec ∷ T.TestTree
 test_optimise_lambda_exec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
 
-test_identity ∷ T.TestTree
-test_identity =
-  shouldCompile
-    identityTerm
-    identityType
-    "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+--test_identity ∷ T.TestTree
+--test_identity =
+--  shouldCompile
+--    identityTerm
+--    identityType
+--    "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
-test_identity_app ∷ T.TestTree
-test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+--test_identity_app ∷ T.TestTree
+--test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
 --(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
 {-
