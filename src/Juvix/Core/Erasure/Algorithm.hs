@@ -101,10 +101,10 @@ eraseType parameterisation term = do
   case term of
     Core.Star n → pure (Erased.Star n)
     Core.PrimTy p → pure (Erased.PrimTy p)
-    Core.Pi _ argTy retTy → do
+    Core.Pi argUsage argTy retTy → do
       arg ← eraseType parameterisation argTy
       ret ← eraseType parameterisation retTy
-      pure (Erased.Pi arg ret)
+      pure (Erased.Pi argUsage arg ret)
     Core.Lam _ _ → throw @"erasureError" Unsupported
     Core.Elim elim →
       case elim of

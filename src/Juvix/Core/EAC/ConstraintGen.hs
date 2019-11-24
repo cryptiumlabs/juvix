@@ -43,7 +43,7 @@ parameterizeType ty = do
       pure (PPrimT p)
     SymT sym →
       pure (PSymT param sym)
-    Pi arg body → do
+    Pi _ arg body → do
       arg ← parameterizeType arg
       body ← parameterizeType body
       pure (PArrT param arg body)
