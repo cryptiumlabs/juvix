@@ -7,8 +7,8 @@ import Juvix.Library
 data Term primTy primVal
   = Star Natural
   | PrimTy primTy
-  | Pi Usage (AnnTerm primTy primVal) (AnnTerm primTy primVal)
-  | Lam (AnnTerm primTy primVal)
+  | Pi Usage (Term primTy primVal) (Term primTy primVal)
+  | Lam (Term primTy primVal)
   | Elim (AnnElim primTy primVal)
   deriving (Show, Eq, Generic)
 
@@ -16,8 +16,8 @@ data Elim primTy primVal
   = Bound Natural
   | Free IR.Name
   | Prim primVal
-  | App (AnnElim primTy primVal) (AnnTerm primTy primVal)
-  | Ann Usage (AnnTerm primTy primVal) (AnnTerm primTy primVal)
+  | App (AnnElim primTy primVal) (Term primTy primVal)
+  | Ann Usage (Term primTy primVal) (Term primTy primVal)
   deriving (Show, Eq, Generic)
 
 type AnnTerm primTy primVal = (Term primTy primVal, Usage, Term primTy primVal)

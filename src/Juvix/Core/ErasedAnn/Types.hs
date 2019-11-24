@@ -6,8 +6,8 @@ import Juvix.Library hiding (Type)
 data Term primTy primVal
   = Var Symbol
   | Prim primVal
-  | Lam Symbol (AnnTerm primTy primVal)
-  | App (AnnTerm primTy primVal) (AnnTerm primTy primVal)
+  | Lam Symbol (Term primTy primVal)
+  | App (AnnTerm primTy primVal) (Term primTy primVal)
   deriving (Show, Eq, Generic)
 
 data Type primTy primVal
