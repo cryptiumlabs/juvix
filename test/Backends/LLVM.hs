@@ -37,7 +37,7 @@ mallocFreeModule =
         functionDefaults
           { G.returnType = voidStarTy,
             G.name = Name "malloc",
-            G.parameters = ([Parameter (IntegerType {typeBits = 32}) (Name "size") []], False),
+            G.parameters = ([Parameter (IntegerType {typeBits = 64}) (Name "size") []], False),
             G.callingConvention = CC.Fast,
             G.basicBlocks = [],
             G.linkage = L.External
@@ -65,13 +65,13 @@ mallocFreeModule =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidStarTy, argumentTypes = [IntegerType {typeBits = 32}], isVarArg = False})
+                                    (ptr $ FunctionType {resultType = voidStarTy, argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
                                     (Name "malloc")
                                 )
                             ),
                         callingConvention = CC.C,
                         returnAttributes = [],
-                        arguments = [(ConstantOperand (C.Int {C.integerBits = 32, C.integerValue = 10}), [])],
+                        arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 10}), [])],
                         functionAttributes = [],
                         metadata = []
                       },
