@@ -1,11 +1,10 @@
+-- | Quantitative type implementation inspired by
+--   Atkey 2018 and McBride 2016.
 module Juvix.Core.IR.Types where
 
 import Juvix.Core.Usage
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
-
--- Quantitative type implementation inspired by
--- Atkey 2017 and McBride 2016.
 
 -- | checkable terms
 data Term primTy primVal
@@ -64,57 +63,131 @@ data Name
   deriving (Show, Eq)
 
 -- | Values/types
-data Value primTy primVal
+data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
-  | VPi Usage (Value primTy primVal) (Value primTy primVal → Value primTy primVal)
-  | VLam (Value primTy primVal → Value primTy primVal)
-  | VNeutral (Neutral primTy primVal)
+  | VPi Usage (Value primTy primVal m) (Value primTy primVal m → m (Value primTy primVal m))
+  | VLam (Value primTy primVal m → m (Value primTy primVal m))
+  | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
 
 -- | A neutral term is either a variable or an application of a neutral term to a value
-data Neutral primTy primVal
+data Neutral primTy primVal m
   = NFree Name
-  | NApp (Neutral primTy primVal) (Value primTy primVal)
-  deriving (Show, Eq)
+  | NApp (Neutral primTy primVal m) (Value primTy primVal m)
 
 -- | 'Annotations' include usage and type.
-type Annotation primTy primVal = (Usage, Value primTy primVal)
+type Annotation primTy primVal m = (Usage, Value primTy primVal m)
 
 -- Contexts map variables to their types.
-type Context primTy primVal = [(Name, Annotation primTy primVal)]
+type Context primTy primVal m = [(Name, Annotation primTy primVal m)]
 
 -- Evaluation
-type Env primTy primVal = [Value primTy primVal]
+type Env primTy primVal m = [Value primTy primVal m]
 
-instance (Eq primTy, Eq primVal) ⇒ Eq (Value primTy primVal) where
-  x == y = quote0 x == quote0 y
+instance (Eq primTy, Eq primVal) ⇒ Eq (Value primTy primVal (EnvTypecheck primTy primVal)) where
+  x == y = fst (exec (quote0 x)) == fst (exec (quote0 y))
 
-instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal) where
-  show x = show (quote0 x)
+instance (Eq primTy, Eq primVal) ⇒ Eq (Neutral primTy primVal (EnvTypecheck primTy primVal)) where
+  NFree x == NFree y = x == y
+  NApp a b == NApp c d = a == c && b == d
+  _ == _ = False
+
+instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
+  show x = show (fst (exec (quote0 x)))
+
+instance (Show primTy, Show primVal) ⇒ Show (Neutral primTy primVal (EnvTypecheck primTy primVal)) where
+  show (NFree n) = "NFree " <> show n
+  show (NApp n v) = "NApp " <> show n <> " " <> show v
+
+data TypecheckError primTy primVal m
+  = TypeMismatch Natural (Term primTy primVal) (Annotation primTy primVal m) (Annotation primTy primVal m)
+  | UniverseMismatch (Term primTy primVal) (Value primTy primVal m)
+  | CannotApply (Value primTy primVal m) (Value primTy primVal m)
+  | ShouldBeStar (Value primTy primVal m)
+  | ShouldBeFunctionType (Value primTy primVal m) (Term primTy primVal)
+  | TODO String
+
+instance (Eq primTy, Eq primVal) ⇒ Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) where
+  _ == _ = False -- TODO
+
+instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) where
+  show (TypeMismatch binder term expectedT gotT) =
+    "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
+      <> ") is of type \n"
+      <> show (show (snd gotT))
+      <> " , with "
+      <> show (fst gotT)
+      <> " usage.\n But the expected type is "
+      <> show (show (snd expectedT))
+      <> " , with "
+      <> show (fst expectedT)
+      <> " usage."
+  show (UniverseMismatch t ty) =
+    show t <> " is of type * of a higher universe. But the expected type "
+      <> show ty
+      <> " is * of a equal or lower universe."
+  show (CannotApply f x) =
+    "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
+  show (ShouldBeStar ty) =
+    "* n is of type * but " <> show ty <> " is not *."
+  show (ShouldBeFunctionType ty f) =
+    show ty <> " is not a function type but should be - while checking " <> show f
+  show (TODO msg) = show msg
+
+data EnvCtx primTy primVal
+  = EnvCtx
+  deriving (Show, Eq, Generic)
+
+newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)) a)
+  deriving (Functor, Applicative, Monad)
+  deriving
+    (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
+    via MonadError (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (MonadState (State (EnvCtx primTy primVal))))
+
+exec ∷ EnvTypecheck primTy primVal a → (Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a, EnvCtx primTy primVal)
+exec (EnvTyp env) = runState (runExceptT env) (EnvCtx)
 
 -- Quotation: takes a value back to a term
-quote0 ∷ Value primTy primVal → Term primTy primVal
+quote0 ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Value primTy primVal m →
+  m (Term primTy primVal)
 quote0 = quote 0
 
-quote ∷ Natural → Value primTy primVal → Term primTy primVal
-quote _ii (VStar n) = Star n
-quote _ii (VPrimTy p) = PrimTy p
+quote ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Natural →
+  Value primTy primVal m →
+  m (Term primTy primVal)
+quote _ii (VStar n) = pure (Star n)
+quote _ii (VPrimTy p) = pure (PrimTy p)
 quote ii (VPi pi v f) =
-  Pi pi (quote ii v) (quote (ii + 1) (f (vfree (Quote ii))))
-quote ii (VLam f) = Lam (quote (ii + 1) (f (vfree (Quote ii))))
-quote ii (VNeutral n) = Elim (neutralQuote ii n)
-quote _ii (VPrim p) = Elim (Prim p)
+  Pi pi <$> quote ii v <*> (quote (ii + 1) =<< f (vfree (Quote ii)))
+quote ii (VLam f) = Lam <$> (quote (ii + 1) =<< f (vfree (Quote ii)))
+quote ii (VNeutral n) = Elim <$> neutralQuote ii n
+quote _ii (VPrim p) = pure (Elim (Prim p))
 
-neutralQuote ∷ Natural → Neutral primTy primVal → Elim primTy primVal
-neutralQuote ii (NFree x) = boundfree ii x
-neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
+neutralQuote ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Natural →
+  Neutral primTy primVal m →
+  m (Elim primTy primVal)
+neutralQuote ii (NFree x) = pure (boundfree ii x)
+neutralQuote ii (NApp n v) = App <$> neutralQuote ii n <*> quote ii v
 
 -- | 'vfree' creates the value corresponding to a free variable
-vfree ∷ Name → Value primTy primVal
+vfree ∷ Name → Value primTy primVal m
 vfree n = VNeutral (NFree n)
 
 -- checks if the variable occurring at the head of the application is a bound variable or a free name
 boundfree ∷ Natural → Name → Elim primTy primVal
 boundfree ii (Quote k) = Bound (ii - k - 1)
 boundfree _ii x = Free x
+
+-- initial environment
+initEnv ∷ Env primTy primVal m
+initEnv = []
