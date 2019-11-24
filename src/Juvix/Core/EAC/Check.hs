@@ -1,3 +1,5 @@
+-- |
+-- - A constraint checker for EAC.
 module Juvix.Core.EAC.Check where
 
 import qualified Data.Map.Strict as Map

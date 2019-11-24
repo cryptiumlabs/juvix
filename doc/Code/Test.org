@@ -1,0 +1,84 @@
+* CoreConv
+- _Relies on_
+  + [[Core]]
+  + [[Library]]
+* CoreParser
+- _Relies on_
+  + [[HR]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+* CoreTypechecker
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+* EAC
+- _Relies on_
+  + [[EAC]]
+  + [[Unit]]
+  + [[Library]]
+* EAC2
+- _Relies on_
+  + [[Check]]
+  + [[Types]]
+  + [[Types]]
+  + [[Library]]
+* Encoding
+- _Relies on_
+  + [[Encoding]]
+  + [[Mendler]]
+  + [[Scott]]
+  + [[Types]]
+  + [[Library]]
+* Erasure
+- _Relies on_
+  + [[Unit]]
+  + [[Usage]]
+  + [[Library]]
+* INet
+- _Relies on_
+  + [[EAC]]
+  + [[Unit]]
+  + [[InteractionNet]]
+  + [[Env]]
+  + [[Graph]]
+  + [[Interface]]
+  + [[Maps]]
+  + [[Default]]
+  + [[Default]]
+  + [[Parser]]
+  + [[Translation]]
+  + [[Type]]
+  + [[Library]]
+  + [[Dot]]
+  + [[Graph]]
+* Spec
+* Backends
+** Michelson
+- _Relies on_
+  + [[Compilation]]
+  + [[Optimisation]]
+  + [[Parameterisation]]
+  + [[Library]]
+* Nets
+** Combinators
+- _Relies on_
+  + [[Env]]
+  + [[Graph]]
+  + [[Interface]]
+  + [[Combinators]]
+  + [[Library]]
+** Default
+- _Relies on_
+  + [[Env]]
+  + [[Graph]]
+  + [[Interface]]
+  + [[Default]]
+  + [[Library]]
