@@ -142,7 +142,6 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
         inner ← termToInstr body paramTy
         after ← genReturn (foldDrop 1)
         pure (M.SeqEx [inner, after])
-
     {-
     -- TODO: Will this work in all cases?
     -- Consider app, e.g. (\f -> f 1 2) pair, seems problematic.
