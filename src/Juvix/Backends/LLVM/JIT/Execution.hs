@@ -1,6 +1,9 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module Juvix.Backends.LLVM.JIT.Execution where
+module Juvix.Backends.LLVM.JIT.Execution
+  ( jit,
+  )
+where
 
 import qualified Data.ByteString.Char8 as B
 import Foreign.Ptr (FunPtr, castFunPtr)
@@ -13,13 +16,13 @@ import LLVM.Module as Mod
 import LLVM.PassManager
 import LLVM.Target
 
-foreign import ccall "dynamic" haskFun ∷ FunPtr (IO Double) → (IO Double)
+foreign import ccall "dynamic" haskFun ∷ FunPtr (Word32 → IO Word32) → (Word32 → IO Word32)
 
-run ∷ FunPtr a → IO Double
-run fn = haskFun (castFunPtr fn ∷ FunPtr (IO Double))
+run ∷ FunPtr a → (Word32 → IO Word32)
+run fn = haskFun (castFunPtr fn ∷ FunPtr (Word32 → IO Word32))
 
-jit ∷ Config → Context → (EE.MCJIT → IO a) → IO a
-jit config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
+runJIT ∷ Config → Context → (EE.MCJIT → IO a) → IO a
+runJIT config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
   where
     optlevel = convOptLevel (configOptimisationLevel config)
 
@@ -39,26 +42,20 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
-runJIT ∷ Config → AST.Module → IO AST.Module
-runJIT config mod = do
+jit ∷ Config → AST.Module → AST.Name → IO (Word32 → IO Word32)
+jit config mod name = do
   withContext $ \context →
-    jit config context $ \executionEngine → do
+    runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
         withPassManager (passes config) $ \pm → do
           -- optimise module
           _ ← runPassManager pm m
-          -- fetch the optimised ast
-          optmod ← moduleAST m
           -- convert to llvm assembly
           s ← moduleLLVMAssembly m
           B.putStrLn s
           EE.withModuleInEngine executionEngine m $ \ee → do
-            mainfn ← EE.getFunction ee "main"
+            mainfn ← EE.getFunction ee name
             case mainfn of
-              Just fn → do
-                res ← run fn
-                putStrLn $ "Evaluated to: " ++ show res
-              Nothing → return ()
-          -- Return the optimized module
-          return optmod
+              Just fn → pure (run fn)
+              Nothing → return (const (return 0))
