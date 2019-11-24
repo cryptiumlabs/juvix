@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Codegen.Types
   )
 where
 
-import Data.ByteString.Short
+import Data.ByteString.Short hiding (empty)
 import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
@@ -255,4 +255,4 @@ voidTy ∷ Type
 voidTy = VoidType
 
 size_t ∷ Type
-size_t = IntegerType 32
+size_t = IntegerType 64
