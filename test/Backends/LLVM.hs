@@ -20,7 +20,7 @@ import qualified Test.Tasty.HUnit as T
 
 test_example_jit ∷ T.TestTree
 test_example_jit = T.testCase "example module should jit function" $ do
-  fn ← jit (Config None) exampleModule "_foo"
+  (fn :: Word32 -> IO Word32) ← jit (Config None) exampleModule "_foo"
   res ← fn 7
   42 T.@=? res
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-
 module Juvix.Backends.LLVM.JIT.Execution
   ( jit,
   )
@@ -7,7 +5,6 @@ where
 
 import Control.Concurrent
 import qualified Data.ByteString.Char8 as B
-import Foreign.Ptr (FunPtr, castFunPtr)
 import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
@@ -16,11 +13,6 @@ import qualified LLVM.ExecutionEngine as EE
 import LLVM.Module as Mod
 import LLVM.PassManager
 import LLVM.Target
-
-foreign import ccall "dynamic" haskFun ∷ FunPtr (Word32 → IO Word32) → (Word32 → IO Word32)
-
-run ∷ FunPtr a → (Word32 → IO Word32)
-run fn = haskFun (castFunPtr fn ∷ FunPtr (Word32 → IO Word32))
 
 runJIT ∷ Config → Context → (EE.MCJIT → IO a) → IO a
 runJIT config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
@@ -43,7 +35,10 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
-jit ∷ Config → AST.Module → AST.Name → IO (Word32 → IO Word32)
+-- Note: in order to allow this to return functions, a green thread is forked to retain module
+-- state & handle function calls. This will not be cleaned up until the program quits. If we
+-- end up calling `jit` a lot a different design might be in order.
+jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → IO (a → IO b)
 jit config mod name = do
   paramChan ← newChan
   resultChan ← newChan
@@ -60,9 +55,11 @@ jit config mod name = do
           EE.withModuleInEngine executionEngine m $ \ee → do
             fref ← EE.getFunction ee name
             case fref of
-              Just fn → forever $ do
-                param ← readChan paramChan
-                res ← run fn param
-                writeChan resultChan res
+              Just fn → do
+                let hsFunc = castImport fn
+                forever $ do
+                  param ← readChan paramChan
+                  res ← hsFunc param
+                  writeChan resultChan res
               Nothing → return ()
   return $ \param → writeChan paramChan param >> readChan resultChan
