@@ -61,7 +61,7 @@ eraseTerm parameterisation term usage ty =
         let bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
-        let varTyIR = IR.cEval parameterisation (hrToIR varTy) []
+        let varTyIR = IR.evalTerm parameterisation (hrToIR varTy) []
         modify @"context" ((:) (IR.Global (show name), (argUsage, varTyIR)))
         (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
@@ -75,7 +75,7 @@ eraseTerm parameterisation term usage ty =
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
             context ← get @"context"
-            case IR.iType0 parameterisation context fIR of
+            case IR.typeElim0 parameterisation context fIR of
               Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
               Right (fUsage, fTy) → do
                 let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)

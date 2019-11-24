@@ -72,9 +72,9 @@ typecheckErase term usage ty = do
   tell @"log" [LogHRtoIR term irTerm]
   let irType = hrToIR ty
   tell @"log" [LogHRtoIR ty irType]
-  let irTypeValue = IR.cEval parameterisation irType IR.initEnv
+  let irTypeValue = IR.evalTerm parameterisation irType IR.initEnv
   -- Typecheck & return accordingly.
-  case IR.cType parameterisation 0 [] irTerm (usage, irTypeValue) of
+  case IR.typeTerm parameterisation 0 [] irTerm (usage, irTypeValue) of
     Right () → do
       case erase parameterisation term usage ty of
         Right res → pure res

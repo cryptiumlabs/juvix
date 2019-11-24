@@ -13,36 +13,36 @@ initEnv ∷ Env primTy primVal
 initEnv = []
 
 --evaluation of checkable terms
-cEval ∷
+evalTerm ∷
   (Show primTy, Show primVal) ⇒
   Parameterisation primTy primVal →
   Term primTy primVal →
   Env primTy primVal →
   Value primTy primVal
-cEval _ (Star i) _d = VStar i
-cEval _ (PrimTy p) _d = VPrimTy p
-cEval param (Pi pi ty ty') d =
-  VPi pi (cEval param ty d) (\x → cEval param ty' (x : d))
-cEval param (Lam e) d = VLam (\x → cEval param e (x : d))
-cEval param (Elim ii) d = iEval param ii d
+evalTerm _ (Star i) _d = VStar i
+evalTerm _ (PrimTy p) _d = VPrimTy p
+evalTerm param (Pi pi ty ty') d =
+  VPi pi (evalTerm param ty d) (\x → evalTerm param ty' (x : d))
+evalTerm param (Lam e) d = VLam (\x → evalTerm param e (x : d))
+evalTerm param (Elim ii) d = evalElim param ii d
 
 toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 
 --evaluation of inferable terms
--- TODO ∷ Promote iEval and cEval into the maybe monad and all call sites
-iEval ∷
+-- TODO ∷ Promote evalElim and evalTerm into the maybe monad and all call sites
+evalElim ∷
   (Show primTy, Show primVal) ⇒
   Parameterisation primTy primVal →
   Elim primTy primVal →
   Env primTy primVal →
   Value primTy primVal
-iEval _ (Free x) _d = vfree x
-iEval _ (Prim p) _d = VPrim p
-iEval param (App iterm cterm) d =
-  vapp param (iEval param iterm d) (cEval param cterm d)
-iEval param (Ann _pi term _type) d = cEval param term d
-iEval _ (Bound ii) d =
+evalElim _ (Free x) _d = vfree x
+evalElim _ (Prim p) _d = VPrim p
+evalElim param (App iterm cterm) d =
+  vapp param (evalElim param iterm d) (evalTerm param cterm d)
+evalElim param (Ann _pi term _type) d = evalTerm param term d
+evalElim _ (Bound ii) d =
   fromMaybe (error ("unbound index " <> show ii)) (d ^? ix (toInt ii))
 
 vapp ∷
@@ -68,32 +68,32 @@ vapp _ x y =
     )
 
 -- substitution function for checkable terms
-cSubst ∷
+substTerm ∷
   (Show primTy, Show primVal) ⇒
   Natural →
   Elim primTy primVal →
   Term primTy primVal →
   Term primTy primVal
-cSubst _ii _r (Star i) = Star i
-cSubst _ii _r (PrimTy p) = PrimTy p
-cSubst ii r (Pi pi ty ty') = Pi pi (cSubst ii r ty) (cSubst (ii + 1) r ty')
-cSubst ii r (Lam f) = Lam (cSubst (ii + 1) r f)
-cSubst ii r (Elim e) = Elim (iSubst ii r e)
+substTerm _ii _r (Star i) = Star i
+substTerm _ii _r (PrimTy p) = PrimTy p
+substTerm ii r (Pi pi ty ty') = Pi pi (substTerm ii r ty) (substTerm (ii + 1) r ty')
+substTerm ii r (Lam f) = Lam (substTerm (ii + 1) r f)
+substTerm ii r (Elim e) = Elim (substElim ii r e)
 
 -- substitution function for inferable terms
-iSubst ∷
+substElim ∷
   (Show primTy, Show primVal) ⇒
   Natural →
   Elim primTy primVal →
   Elim primTy primVal →
   Elim primTy primVal
-iSubst ii r (Bound j)
+substElim ii r (Bound j)
   | ii == j = r
   | otherwise = Bound j
-iSubst _ii _r (Free y) = Free y
-iSubst _ii _r (Prim p) = Prim p
-iSubst ii r (App it ct) = App (iSubst ii r it) (cSubst ii r ct)
-iSubst ii r (Ann pi term t) = Ann pi (cSubst ii r term) (cSubst ii r t)
+substElim _ii _r (Free y) = Free y
+substElim _ii _r (Prim p) = Prim p
+substElim ii r (App it ct) = App (substElim ii r it) (substTerm ii r ct)
+substElim ii r (Ann pi term t) = Ann pi (substTerm ii r term) (substTerm ii r t)
 
 -- error message for inferring/checking types
 errorMsg ∷
@@ -119,7 +119,7 @@ errorMsg binder cterm expectedT gotT =
 type Result a = Either String a --when type checking fails, it throws an error.
 
 -- | 'checker' for checkable terms checks the term against an annotation and returns ().
-cType ∷
+typeTerm ∷
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   Natural →
@@ -130,7 +130,7 @@ cType ∷
 
 -- *
 
-cType _ _ii _g t@(Star n) ann = do
+typeTerm _ _ii _g t@(Star n) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
   let ty = snd ann
   case ty of
@@ -143,61 +143,61 @@ cType _ _ii _g t@(Star n) ann = do
               <> " is * of a equal or lower universe."
         )
     _ → throwError $ "* n is of type * but " <> show (snd ann) <> " is not *."
-cType p ii g (Pi pi varType resultType) ann = do
+typeTerm p ii g (Pi pi varType resultType) ann = do
   unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
   let ty = snd ann
   case ty of
     VStar _ → do
-      cType p ii g varType ann -- checks varType is of type Star i
-      let ty = cEval p varType []
-      cType
+      typeTerm p ii g varType ann -- checks varType is of type Star i
+      let ty = evalTerm p varType []
+      typeTerm
         p -- checks resultType is of type Star i
         (ii + 1)
         ((Local ii, (pi, ty)) : g)
-        (cSubst 0 (Free (Local ii)) resultType)
+        (substTerm 0 (Free (Local ii)) resultType)
         ann
     _ →
       throwError
         "The variable type and the result type must be of type * at the same level."
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
-cType _ ii _g x@(PrimTy _) ann =
+typeTerm _ ii _g x@(PrimTy _) ann =
   unless
     (SNat 0 == fst ann && quote0 (snd ann) == Star 0)
     (throwError (errorMsg ii x (SNat 0, VStar 0) ann))
 -- Lam (introduction rule of dependent function type)
-cType p ii g (Lam s) ann =
+typeTerm p ii g (Lam s) ann =
   case ann of
     (sig, VPi pi ty ty') →
       -- Lam s should be of dependent function type (Pi pi ty ty').
-      cType
+      typeTerm
         p
         (ii + 1)
         ((Local ii, (sig <.> pi, ty)) : g) -- put s in the context with usage sig*pi
-        (cSubst 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
+        (substTerm 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
         (sig, ty' (vfree (Local ii))) -- is of type M (usage sigma) in context T
     _ → throwError $ show (snd ann) <> " is not a function type but should be - while checking " <> show (Lam s)
 --
-cType p ii g (Elim e) ann = do
-  ann' ← iType p ii g e
+typeTerm p ii g (Elim e) ann = do
+  ann' ← typeElim p ii g e
   unless
     (fst ann' `allowsUsageOf` fst ann && quote0 (snd ann) == quote0 (snd ann'))
     (throwError (errorMsg ii (Elim e) ann ann'))
 
 -- inferable terms have type as output.
-iType0 ∷
+typeElim0 ∷
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   Context primTy primVal →
   Elim primTy primVal →
   Result (Annotation primTy primVal)
-iType0 p = iType p 0
+typeElim0 p = typeElim p 0
 
-iTypeErrorMsg ∷ Natural → Name → String
-iTypeErrorMsg ii x =
+typeElimErrorMsg ∷ Natural → Name → String
+typeElimErrorMsg ii x =
   "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii
     <> ") in the environment."
 
-iType ∷
+typeElim ∷
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   Natural →
@@ -205,23 +205,23 @@ iType ∷
   Elim primTy primVal →
   Result (Annotation primTy primVal)
 -- the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
-iType _ _ii _g (Bound _) = error "Bound variable cannot be inferred"
-iType _ ii g (Free x) =
+typeElim _ _ii _g (Bound _) = error "Bound variable cannot be inferred"
+typeElim _ ii g (Free x) =
   case lookup x g of
     Just ann → return ann
-    Nothing → throwError (iTypeErrorMsg ii x)
+    Nothing → throwError (typeElimErrorMsg ii x)
 -- Prim-Const and Prim-Fn, pi = omega
-iType p _ii _g (Prim prim) =
+typeElim p _ii _g (Prim prim) =
   let arrow (x :| []) = VPrimTy x
       arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (arrow (y :| ys)))
    in pure (Omega, arrow (Juvix.Core.Types.typeOf p prim))
 -- App, function M applies to N (Elimination rule of dependent function types)
-iType p ii g (App m n) = do
-  mTy ← iType p ii g m -- annotation of M is usage sig and Pi with pi usage.
+typeElim p ii g (App m n) = do
+  mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      cType p ii g n (sig <.> pi, varTy) -- N has to be of type varTy with usage sig*pi
-      return (sig, resultTy (cEval p n []))
+      typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type varTy with usage sig*pi
+      return (sig, resultTy (evalTerm p n []))
     _ →
       throwError
         ( show m <> "\n (binder number " <> show ii
@@ -230,10 +230,10 @@ iType p ii g (App m n) = do
             <> "\n cannot be applied to it."
         )
 -- Conv
-iType p ii g (Ann pi theTerm theType) =
+typeElim p ii g (Ann pi theTerm theType) =
   -- TODO check theType is of type Star first? But we have stakable universes now.
-  -- cType p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
+  -- typeTerm p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
   do
-    let ty = cEval p theType []
-    cType p ii g theTerm (pi, ty)
+    let ty = evalTerm p theType []
+    typeTerm p ii g theTerm (pi, ty)
     return (pi, ty)
