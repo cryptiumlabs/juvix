@@ -12,7 +12,7 @@ import Prelude (String)
 data Parameterisation primTy primVal
   = Parameterisation
       { -- Returns an arrow.
-        typeOf ∷ primVal → [primTy],
+        typeOf ∷ primVal → NonEmpty primTy,
         apply ∷ primVal → primVal → Maybe primVal,
         parseTy ∷ Token.GenTokenParser String () Identity → Parser primTy,
         parseVal ∷ Token.GenTokenParser String () Identity → Parser primVal,

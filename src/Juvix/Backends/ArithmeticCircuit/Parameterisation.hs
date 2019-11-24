@@ -15,8 +15,8 @@ type PrimTy = ()
 
 type PrimVal = ()
 
-typeOf ∷ PrimVal → [PrimTy]
-typeOf () = [()]
+typeOf ∷ PrimVal → NonEmpty PrimTy
+typeOf () = () :| []
 
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply _ _ = Nothing

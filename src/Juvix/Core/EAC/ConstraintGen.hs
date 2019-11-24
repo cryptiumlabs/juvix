@@ -111,8 +111,8 @@ boxAndTypeConstraint ∷
   m (RPT primVal, PType primTy)
 boxAndTypeConstraint parameterisation parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterisation parameterizedAssignment
-      arrow [x] = PPrimT x
-      arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
+      arrow (x :| []) = PPrimT x
+      arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
   varPaths ← get @"varPaths"
   param ← addPath
   path ← get @"path"
@@ -276,8 +276,8 @@ bracketCheckerErr t = left Brack (bracketChecker t)
 typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
 typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
   where
-    arrow [x] = PPrimT x
-    arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
+    arrow (x :| []) = PPrimT x
+    arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
     rec' (RBang bangVar (RVar s)) assign =
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse

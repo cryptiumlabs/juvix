@@ -30,8 +30,8 @@ data PrimVal
   deriving (Show, Eq, Generic)
 
 -- TODO: Add rest of primitive values.
-typeOf ∷ PrimVal → [PrimTy]
-typeOf (PrimConst v) = [PrimTy (M.Type (constType v) "")]
+typeOf ∷ PrimVal → NonEmpty PrimTy
+typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
 
 constType ∷ M.Value' Op → M.T
 constType v =

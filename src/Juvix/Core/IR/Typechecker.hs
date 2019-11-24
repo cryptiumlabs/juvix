@@ -212,8 +212,8 @@ iType _ ii g (Free x) =
     Nothing → throwError (iTypeErrorMsg ii x)
 -- Prim-Const and Prim-Fn, pi = omega
 iType p _ii _g (Prim prim) =
-  let arrow [x] = VPrimTy x
-      arrow (x : xs) = VPi Omega (VPrimTy x) (const (arrow xs))
+  let arrow (x :| []) = VPrimTy x
+      arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (arrow (y :| ys)))
    in pure (Omega, arrow (Juvix.Core.Types.typeOf p prim))
 -- App, function M applies to N (Elimination rule of dependent function types)
 iType p ii g (App m n) = do
