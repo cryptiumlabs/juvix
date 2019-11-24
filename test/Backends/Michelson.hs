@@ -4,6 +4,7 @@ import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Optimisation
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Types as J
+import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
@@ -61,7 +62,7 @@ identityAppTerm ∷ Term
 identityAppTerm = J.Lam "x" (J.App (J.Lam "f" (J.App (J.App (J.Var "f") (J.Prim (PrimConst M.ValueNil))) (J.App (J.Prim PrimFst) (J.Var "x")))) (J.Prim PrimPair))
 
 identityType ∷ Type
-identityType = J.Pi (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
+identityType = J.Pi Omega (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
 
 opl ∷ M.Type
 opl = M.Type (M.TList (M.Type M.TOperation "")) ""

@@ -392,7 +392,7 @@ shouldCheck ∷
   T.TestTree
 shouldCheck param term ann =
   T.testCase (show term <> " should check as type " <> show ann) $
-    IR.cType param 0 [] term ann T.@=? Right ()
+    IR.typeTerm param 0 [] term ann T.@=? Right ()
 
 --unit tests for iType
 shouldInfer ∷
@@ -404,7 +404,7 @@ shouldInfer ∷
   T.TestTree
 shouldInfer param term ann =
   T.testCase (show term <> " should infer to type " <> show ann) $
-    IR.iType0 param [] term T.@=? Right ann
+    IR.typeElim0 param [] term T.@=? Right ann
 
 shouldEval ∷
   ∀ primTy primVal.
@@ -415,7 +415,7 @@ shouldEval ∷
   T.TestTree
 shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    IR.cEval param term IR.initEnv T.@=? res
+    IR.evalTerm param term IR.initEnv T.@=? res
 
 one ∷ ∀ primTy primVal. IR.Term primTy primVal
 one = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
