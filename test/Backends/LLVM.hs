@@ -23,8 +23,8 @@ import qualified Test.Tasty.HUnit as T
 test_malloc_free_jit ∷ T.TestTree
 test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
   (fn ∷ Word32 → IO Word32) ← jit (Config None) mallocFreeModule "test"
-  res ← fn 7
-  43 T.@=? res
+  res ← fn 30
+  30 T.@=? res
 
 mallocFreeModule ∷ LLVM.AST.Module
 mallocFreeModule =
@@ -71,7 +71,7 @@ mallocFreeModule =
                             ),
                         callingConvention = CC.C,
                         returnAttributes = [],
-                        arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 10}), [])],
+                        arguments = [(LocalReference i32 (Name "bar"), [])],
                         functionAttributes = [],
                         metadata = []
                       },
@@ -92,7 +92,7 @@ mallocFreeModule =
                         metadata = []
                       }
                   ]
-                  ( Do $ Ret (Just (ConstantOperand (C.Int 32 43))) []
+                  ( Do $ Ret (Just (LocalReference i32 (Name "bar"))) []
                   )
               ]
           }

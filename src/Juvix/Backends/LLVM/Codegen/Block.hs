@@ -285,7 +285,7 @@ external retty label argtys = do
     $ GlobalDefinition
     $ functionDefaults
       { Global.parameters = ((\(ty, nm) → Parameter ty nm []) <$> argtys, False),
-        Global.callingConvention = CC.Fast, -- TODO
+        Global.callingConvention = CC.Fast, -- TODO: Do we always want this?
         Global.returnType = retty,
         Global.basicBlocks = [],
         Global.name = mkName label,
