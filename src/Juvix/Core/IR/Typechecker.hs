@@ -5,14 +5,7 @@ import Juvix.Core.IR.Types
 import Juvix.Core.Types
 import Juvix.Core.Usage
 import Juvix.Library hiding (show)
-import Prelude (Show (..), String, error, lookup)
-
-throwError ∷
-  ∀ primTy primVal m a.
-  (HasThrow "typecheckError" (TypecheckError primTy primVal m) m) ⇒
-  String →
-  m a
-throwError err = throw @"typecheckError" (TODO err)
+import Prelude (lookup)
 
 --evaluation of checkable terms
 evalTerm ∷
@@ -56,7 +49,7 @@ evalElim param (App elim term) d = do
   vapp param elim term
 evalElim param (Ann _pi term _type) d = evalTerm param term d
 evalElim _ (Bound ii) d =
-  fromMaybe (throwError ("unbound index " <> show ii)) (pure |<< (d ^? ix (toInt ii)))
+  fromMaybe (throw @"typecheckError" (UnboundIndex ii)) (pure |<< (d ^? ix (toInt ii)))
 
 vapp ∷
   ∀ primTy primVal m.
@@ -73,11 +66,7 @@ vapp _ (VNeutral n) v = pure (VNeutral (NApp n v))
 vapp param (VPrim x) (VPrim y) =
   case Juvix.Core.Types.apply param x y of
     Just v → pure (VPrim v)
-    Nothing →
-      error
-        ( "Primitive application error: cannot apply " <> show x <> " to "
-            <> show y
-        )
+    Nothing → throw @"typecheckError" (CannotApply (VPrim x) (VPrim y))
 vapp _ f x = throw @"typecheckError" (CannotApply f x)
 
 -- substitution function for checkable terms
@@ -127,7 +116,7 @@ typeTerm ∷
 -- *
 
 typeTerm _ _ii _g t@(Star n) ann = do
-  unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
+  unless (SNat 0 == fst ann) (throw @"typecheckError" SigmaMustBeZero) -- checks sigma = 0.
   let ty = snd ann
   case ty of
     VStar j →
@@ -136,7 +125,7 @@ typeTerm _ _ii _g t@(Star n) ann = do
         (throw @"typecheckError" (UniverseMismatch t ty))
     _ → throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g (Pi pi varType resultType) ann = do
-  unless (SNat 0 == fst ann) (throwError "Sigma has to be 0.") -- checks sigma = 0.
+  unless (SNat 0 == fst ann) (throw @"typecheckError" SigmaMustBeZero) -- checks sigma = 0.
   case snd ann of
     VStar _ → do
       typeTerm p ii g varType ann -- checks varType is of type Star i
@@ -148,8 +137,7 @@ typeTerm p ii g (Pi pi varType resultType) ann = do
         (substTerm 0 (Free (Local ii)) resultType)
         ann
     _ →
-      throwError
-        "The variable type and the result type must be of type * at the same level."
+      throw @"typecheckError" UniverseLevelMustMatch
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii _g x@(PrimTy _) ann = do
   ty ← quote0 (snd ann)
@@ -193,11 +181,6 @@ typeElim0 ∷
   m (Annotation primTy primVal m)
 typeElim0 p = typeElim p 0
 
-typeElimErrorMsg ∷ Natural → Name → String
-typeElimErrorMsg ii x =
-  "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii
-    <> ") in the environment."
-
 typeElim ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
@@ -212,11 +195,11 @@ typeElim ∷
   Elim primTy primVal →
   m (Annotation primTy primVal m)
 -- the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
-typeElim _ _ii _g (Bound _) = error "Bound variable cannot be inferred"
+typeElim _ _ii _g (Bound _) = throw @"typecheckError" BoundVariableCannotBeInferred
 typeElim _ ii g (Free x) =
   case lookup x g of
     Just ann → return ann
-    Nothing → throwError (typeElimErrorMsg ii x)
+    Nothing → throw @"typecheckError" (UnboundBinder ii x)
 -- Prim-Const and Prim-Fn, pi = omega
 typeElim p _ii _g (Prim prim) =
   let arrow (x :| []) = VPrimTy x
@@ -231,12 +214,7 @@ typeElim p ii g (App m n) = do
       res ← resultTy =<< evalTerm p n []
       return (sig, res)
     _ →
-      throwError
-        ( show m <> "\n (binder number " <> show ii
-            <> ") is not a function type and thus \n"
-            <> show n
-            <> "\n cannot be applied to it."
-        )
+      throw @"typecheckError" (MustBeFunction m ii n)
 -- Conv
 typeElim p ii g (Ann pi theTerm theType) =
   -- TODO check theType is of type Star first? But we have stakable universes now.

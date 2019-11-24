@@ -106,7 +106,12 @@ data TypecheckError primTy primVal m
   | CannotApply (Value primTy primVal m) (Value primTy primVal m)
   | ShouldBeStar (Value primTy primVal m)
   | ShouldBeFunctionType (Value primTy primVal m) (Term primTy primVal)
-  | TODO String
+  | UnboundIndex Natural
+  | SigmaMustBeZero
+  | UniverseLevelMustMatch
+  | UnboundBinder Natural Name
+  | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
+  | BoundVariableCannotBeInferred
 
 instance (Eq primTy, Eq primVal) ⇒ Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) where
   _ == _ = False -- TODO
@@ -133,7 +138,22 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
     "* n is of type * but " <> show ty <> " is not *."
   show (ShouldBeFunctionType ty f) =
     show ty <> " is not a function type but should be - while checking " <> show f
-  show (TODO msg) = show msg
+  show (UnboundIndex n) =
+    "unbound index " <> show n
+  show (SigmaMustBeZero) =
+    "Sigma has to be 0."
+  show (UniverseLevelMustMatch) =
+    "The variable type and the result type must be of type * at the same level."
+  show (UnboundBinder ii x) =
+    "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
+  show (MustBeFunction m ii n) =
+    ( show m <> "\n (binder number " <> show ii
+        <> ") is not a function type and thus \n"
+        <> show n
+        <> "\n cannot be applied to it."
+    )
+  show (BoundVariableCannotBeInferred) =
+    "Bound variable cannot be inferred"
 
 data EnvCtx primTy primVal
   = EnvCtx
