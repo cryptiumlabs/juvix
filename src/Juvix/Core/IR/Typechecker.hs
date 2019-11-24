@@ -7,7 +7,7 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (show)
 import Prelude (lookup)
 
---evaluation of checkable terms
+-- evaluation of checkable terms
 evalTerm ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
@@ -29,8 +29,7 @@ evalTerm param (Elim ii) d = evalElim param ii d
 toInt ∷ Natural → Int
 toInt = fromInteger . toInteger
 
---evaluation of inferable terms
--- TODO ∷ Promote evalElim and evalTerm into the maybe monad and all call sites
+-- evaluation of inferable terms
 evalElim ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
@@ -51,6 +50,7 @@ evalElim param (Ann _pi term _type) d = evalTerm param term d
 evalElim _ (Bound ii) d =
   fromMaybe (throw @"typecheckError" (UnboundIndex ii)) (pure |<< (d ^? ix (toInt ii)))
 
+-- value application function
 vapp ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
