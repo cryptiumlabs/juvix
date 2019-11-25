@@ -1,0 +1,58 @@
+* Syntax thoughts
+Initial ideas on syntax
+** Arrows
+- Arrow syntax is relatively simple
+
+- Without sugar all arrows will look like
+
+  #+BEGIN_SRC idris
+    f : (x : Int) -1-> (y : Int) -w-> C -(x+y)-> D
+  #+END_SRC
+-
+  + Note :: In the unicode extension ω can replace w
+  + Note :: the last arrow requires dependent useages
+
+- With sugar it would look something like this
+  #+BEGIN_SRC idris
+    f : (x : Int) -o (y : Int) -> C -(x+y)-> D
+  #+END_SRC
+  + We can see that -o stands for 1 useage, and -> stands for
+    unlimited useages
+  + Note :: In the unicode extension → can replace ->
+  + Note :: In the unicode extension  ⊸ can replace -o
+
+**  Stand alone useages
+- Due to arrows being only applicable with bindings, we can not
+  determine the useage of the following
+
+   #+BEGIN_SRC idris
+     f : A
+   #+END_SRC
+- Thus we may want a way to quantify the useage of variables without arrows.
+
+- The following ideas were thought of
+
+  #+BEGIN_SRC idris
+    f 2 : A
+
+    f : A ~2
+    f : ~2 A
+  #+END_SRC
+  + The first idea was rejected because it is ambiguous in some
+    situations
+  + I also don't fully like the second, as how does this work with
+    named arguments? It seems like arbitrary extra syntax
+  + Thus I would like suggestions on what this should look like.
+
+** Additive conjunction
+- The literature uses `&` for this, however to be less confusing for the user I suggest this
+  #+BEGIN_SRC idris
+     Data A : Set where
+       | F : X \/ Y -o A
+
+     f : (x : A) -o X
+    f x = (_1 x)
+  #+END_SRC
+  + Note :: _1 is a placeholder for a better name of accessing the
+            first variant without being able to inspect on the second
+  + Note :: in the unicode extension ∨ can replace `\/`
