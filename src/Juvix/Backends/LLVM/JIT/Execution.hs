@@ -42,7 +42,7 @@ jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → 
 jit config mod name = do
   paramChan ← newChan
   resultChan ← newChan
-  void $ forkIO $ withContext $ \context →
+  void $ forkOS $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
