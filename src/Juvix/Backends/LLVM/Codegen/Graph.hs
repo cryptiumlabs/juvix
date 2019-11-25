@@ -143,7 +143,7 @@ allocaNodeH ∷
   m Operand.Operand
 allocaNodeH mPorts mData = do
   node ← allocaNode
-  portSize ← allocaNumPortNum (length mPorts)
+  portSize ← allocaNumPortNum (fromIntegral $ length mPorts)
   ports ← allocaPortsH mPorts
   data' ← allocaDataH mData
   tagPtr ← getElementPtr $
@@ -196,7 +196,7 @@ allocaGenH mPortData type' = do
     (zip mPortData [1 ..])
   pure ports
   where
-    len = length mPortData
+    len = fromIntegral (length mPortData)
 
 allocaPortsH,
   allocaDataH ∷
@@ -515,13 +515,13 @@ allocaNumPortsStatic (isLarge ∷ Bool) (value ∷ Operand.Operand) =
   case isLarge of
     False →
       -- TODO ∷ register this variant
-      Block.createVariant "numPorts_large" [value]
+      Block.createVariant "numPorts_small" [value]
     True → do
       -- Allocate a pointer to the value
       ptr ← alloca nodePointer
       store ptr value
       -- TODO ∷ register this variant
-      Block.createVariant "numPorts_small" [ptr]
+      Block.createVariant "numPorts_large" [ptr]
 
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷
@@ -532,11 +532,13 @@ allocaNumPortNum ∷
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
-  Int →
+  Integer →
   m Operand.Operand
 allocaNumPortNum n
-  | n <= 2 ^ (Types.numPortsSize - 1) = undefined
-  | otherwise = undefined
+  | n <= 2 ^ (Types.numPortsSize - 1) =
+    allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 16 n))
+  | otherwise =
+    allocaNumPortsStatic True (Operand.ConstantOperand (C.Int 64 n))
 
 --------------------------------------------------------------------------------
 -- Port Aliases

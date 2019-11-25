@@ -29,8 +29,8 @@ import qualified LLVM.AST.Type as Type
 anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
-    aux1 ← Codegen.allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1))
-    aux2 ← Codegen.allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2))
+    aux1 ← Codegen.auxiliary1
+    aux2 ← Codegen.auxiliary2
     rewire ← Codegen.externf "rewire"
     node1 ← Codegen.externf "node_1"
     node2 ← Codegen.externf "node_2"
