@@ -38,11 +38,11 @@ convOptLevel O3 = pure 3
 -- Note: in order to allow this to return functions, a green thread is forked to retain module
 -- state & handle function calls. This will not be cleaned up until the program quits. If we
 -- end up calling `jit` a lot a different design might be in order.
-jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → IO (a → IO b)
+jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → IO (a → IO b, IO ())
 jit config mod name = do
   paramChan ← newChan
   resultChan ← newChan
-  void $ forkIO $ withContext $ \context →
+  thread <- forkIO $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
@@ -62,4 +62,5 @@ jit config mod name = do
                   res ← hsFunc param
                   writeChan resultChan res
               Nothing → return ()
-  return $ \param → writeChan paramChan param >> readChan resultChan
+  let func param = writeChan paramChan param >> readChan resultChan
+  return (func, killThread thread)
