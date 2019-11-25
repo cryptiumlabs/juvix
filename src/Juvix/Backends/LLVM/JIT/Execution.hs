@@ -42,7 +42,7 @@ jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → 
 jit config mod name = do
   paramChan ← newChan
   resultChan ← newChan
-  thread <- forkIO $ withContext $ \context →
+  void $ forkIO $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
@@ -52,15 +52,23 @@ jit config mod name = do
           -- convert to llvm assembly
           s ← moduleLLVMAssembly m
           B.putStrLn s
+          B.putStrLn "getting execution engine"
           EE.withModuleInEngine executionEngine m $ \ee → do
             fref ← EE.getFunction ee name
+            B.putStrLn "got fn"
             case fref of
               Just fn → do
                 let hsFunc = castImport fn
-                forever $ do
-                  param ← readChan paramChan
-                  res ← hsFunc param
-                  writeChan resultChan res
+                    loop = do
+                      param ← readChan paramChan
+                      case param of
+                        Just p -> do
+                          res ← hsFunc p
+                          writeChan resultChan res
+                          loop
+                        Nothing -> return ()
+                B.putStrLn "starting loop"
+                loop
               Nothing → return ()
-  let func param = writeChan paramChan param >> readChan resultChan
-  return (func, killThread thread)
+  let func param = writeChan paramChan (Just param) >> readChan resultChan
+  return (func, writeChan paramChan Nothing)
