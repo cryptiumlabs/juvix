@@ -13,8 +13,10 @@ Add a brief description of any module you create before the module definition.
 This can be placed before or after (more idiomatically) after file specific pragmas.
 Much like haddock, the comments must begin with `--|` as the first comment and `--` for the consecutive lines.
 
-The comment formatting follows [org formatting](http://ergoemacs.org/emacs/emacs_org_markup.html), Just note that
-one should avoid adding headlines (* at the start of the line) as to avoid conflicts in generation.
+The comment formatting follows [org formatting](http://ergoemacs.org/emacs/emacs_org_markup.html)
+
+Adding headlines to code is also allowed, nesting the headline inside the current headline level while also putting `Relies on`
+before any nested directories
 
 Also try to keep each comment line below 82 characters long, breaking the line into a second line at the same indentation level
 and on the next line will not newline any generation from the org file itself.
