@@ -20,8 +20,8 @@ import LLVM.Module
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-test_malloc_free_jit ∷ T.TestTree
-test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
+fn_test_malloc_free_jit ∷ T.TestTree
+fn_test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
   (fn ∷ Word32 → IO Word32, kill) ← jit (Config None) mallocFreeModule "test"
   res ← fn 7
   kill
@@ -99,8 +99,8 @@ mallocFreeModule =
           }
     ]
 
-test_example_jit ∷ T.TestTree
-test_example_jit = T.testCase "example module should jit function" $ do
+fn_test_example_jit ∷ T.TestTree
+fn_test_example_jit = T.testCase "example module should jit function" $ do
   (fn ∷ Word32 → IO Word32, kill) ← jit (Config None) exampleModule "_foo"
   res ← fn 7
   kill
