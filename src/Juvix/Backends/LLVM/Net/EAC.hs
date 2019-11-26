@@ -70,7 +70,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     lamEraCase ← Codegen.addBlock "switch.lam.era"
     lamDupCase ← Codegen.addBlock "switch.lam.dup"
     lamExtCase ← Codegen.addBlock "switch.lam.exit"
-
     lCdr ← undefined
     Codegen.br extCase
     -- %era case
@@ -82,7 +81,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     eraEraCase ← Codegen.addBlock "switch.era.era"
     eraDupCase ← Codegen.addBlock "switch.era.dup"
     eraExtCase ← Codegen.addBlock "switch.era.exit"
-
     eCdr ← undefined
     Codegen.br extCase
     -- %dup case
@@ -94,7 +92,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     dupEraCase ← Codegen.addBlock "switch.dup.era"
     dupDupCase ← Codegen.addBlock "switch.dup.dup"
     dupExtCase ← Codegen.addBlock "switch.dup.exit"
-
     dCdr ← undefined
     Codegen.br extCase
     -- %default case
@@ -357,3 +354,6 @@ nodeOf eac = do
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
+
+findMainPort = do
+  undefined

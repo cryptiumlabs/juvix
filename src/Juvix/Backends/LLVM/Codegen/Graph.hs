@@ -61,7 +61,7 @@ isBothPrimary ∷
     HasState "varTab" VariantToType m
   ) ⇒
   m Operand.Operand
-isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
+isBothPrimary = Block.defineFunction Types.bothPrimary "is_both_primary" args $
   do
     -- TODO ∷ should this call be abstracted somewhere?!
     -- Why should Ι allocate for every port?!
@@ -71,7 +71,7 @@ isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
     nodePtr ← Block.externf "node_ptr"
     node ← load nodeType nodePtr
     port ← call portType edge (Block.emptyArgs [node, mainPort])
-    otherNodePtr ← getElementPtr $
+    otherNodePtr ← loadElementPtr $
       Types.Minimal
         { Types.type' = nodePointer,
           Types.address' = port,
@@ -82,7 +82,12 @@ isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
     otherNodeInt ← ptrToInt otherNodePtr pointerSize
     -- compare the pointers to see if they are the same
     cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-    ret cmp
+    return' ← Block.alloca Types.bothPrimary
+    tag ← getIsPrimaryEle return'
+    nod ← getPrimaryNode return'
+    store tag cmp
+    store nod otherNodePtr
+    ret return'
   where
     args = [(nodePointer, "node_ptr")]
 
@@ -562,3 +567,59 @@ auxiliary1 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1))
 auxiliary2 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2))
 auxiliary3 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3))
 auxiliary4 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4))
+
+--------------------------------------------------------------------------------
+-- Accessor aliases
+--------------------------------------------------------------------------------
+
+getIsPrimaryEle ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+getIsPrimaryEle bothPrimary =
+  getElementPtr $
+    Types.Minimal
+      { Types.type' = Type.i1,
+        Types.address' = bothPrimary,
+        Types.indincies' = Block.constant32List [0, 0]
+      }
+
+loadIsPrimaryEle ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+loadIsPrimaryEle e = getIsPrimaryEle e >>= load Type.i1
+
+getPrimaryNode ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+getPrimaryNode bothPrimary =
+  getElementPtr $
+    Types.Minimal
+      { Types.type' = nodePointer,
+        Types.address' = bothPrimary,
+        Types.indincies' = Block.constant32List [0, 1]
+      }
+
+loadPrimaryNode ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+loadPrimaryNode e = getPrimaryNode e >>= load Type.i1
