@@ -17,21 +17,16 @@ import qualified LLVM.AST.Type as Type
 --------------------------------------------------------------------------------
 
 -- TODO ∷ consider the return type
+-- TODO ∷ remove boileprlate
 reduce ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
-    HasState
-      "blocks"
-      (Map.HashMap Name.Name Codegen.BlockState)
-      m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "moduleDefinitions" [AST.Definition] m,
     HasState "names" Codegen.Names m,
-    HasState
-      "symtab"
-      (Map.HashMap Symbol Operand.Operand)
-      m
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
 reduce = Codegen.defineFunction Type.void "reduce" args $
@@ -45,7 +40,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     eraCase ← Codegen.addBlock "switch.era"
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
-    extCase ← Codegen.addBlock "switch.exist"
+    extCase ← Codegen.addBlock "switch.exit"
     car ← Types.loadCar eacList
     cdr ← Types.loadCdr eacList
     _term ←
@@ -60,21 +55,46 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %app case
     -----------------------------------
     Codegen.setBlock appCase
+    -- nested switch cases
+    appLamCase ← Codegen.addBlock "switch.app.lam"
+    appEraCase ← Codegen.addBlock "switch.app.era"
+    appDupCase ← Codegen.addBlock "switch.app.dup"
+    appExtCase ← Codegen.addBlock "switch.app.exit"
     aCdr ← undefined
     Codegen.br extCase
     -- %lam case
     -----------------------------------
     Codegen.setBlock lamCase
+    -- nested switch cases
+    lamAppCase ← Codegen.addBlock "switch.lam.app"
+    lamEraCase ← Codegen.addBlock "switch.lam.era"
+    lamDupCase ← Codegen.addBlock "switch.lam.dup"
+    lamExtCase ← Codegen.addBlock "switch.lam.exit"
+
     lCdr ← undefined
     Codegen.br extCase
     -- %era case
     -----------------------------------
     Codegen.setBlock eraCase
+    -- nested switch cases
+    eraAppCase ← Codegen.addBlock "switch.era.app"
+    eraLamCase ← Codegen.addBlock "switch.era.lam"
+    eraEraCase ← Codegen.addBlock "switch.era.era"
+    eraDupCase ← Codegen.addBlock "switch.era.dup"
+    eraExtCase ← Codegen.addBlock "switch.era.exit"
+
     eCdr ← undefined
     Codegen.br extCase
     -- %dup case
     -----------------------------------
     Codegen.setBlock dupCase
+    -- nested switch cases
+    dupAppCase ← Codegen.addBlock "switch.dup.app"
+    dupLamCase ← Codegen.addBlock "switch.dup.lam"
+    dupEraCase ← Codegen.addBlock "switch.dup.era"
+    dupDupCase ← Codegen.addBlock "switch.dup.dup"
+    dupExtCase ← Codegen.addBlock "switch.dup.exit"
+
     dCdr ← undefined
     Codegen.br extCase
     -- %default case
@@ -320,7 +340,7 @@ allocaEra,
 allocaEra = allocaGen Types.era 1 0
 allocaApp = allocaGen Types.app 3 0
 allocaLam = allocaGen Types.lam 3 0
-allocaFanIn = allocaGen Types.dup 3 0
+allocaFanIn = allocaGen Types.dup 3 1
 
 nodeOf ∷
   ( HasThrow "err" Codegen.Errors m,
