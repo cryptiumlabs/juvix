@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Net.EAC where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
-import Juvix.Library
+import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
@@ -17,8 +17,27 @@ import qualified LLVM.AST.Type as Type
 --------------------------------------------------------------------------------
 
 -- TODO ∷ consider the return type
+reduce ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState
+      "blocks"
+      (Map.HashMap Name.Name Codegen.BlockState)
+      m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState
+      "symtab"
+      (Map.HashMap Symbol Operand.Operand)
+      m
+  ) ⇒
+  m Operand.Operand
 reduce = Codegen.defineFunction Type.void "reduce" args $
   do
+    -- recursive function, properly register
+    reduce ← Codegen.externf "reduce"
     -- switch creations
     eacList ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
@@ -26,6 +45,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     eraCase ← Codegen.addBlock "switch.era"
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
+    extCase ← Codegen.addBlock "switch.exist"
     car ← Types.loadCar eacList
     cdr ← Types.loadCdr eacList
     _term ←
@@ -37,7 +57,44 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.era, eraCase),
           (Types.dup, dupCase)
         ]
-    undefined
+    -- %app case
+    -----------------------------------
+    Codegen.setBlock appCase
+    aCdr ← undefined
+    Codegen.br extCase
+    -- %lam case
+    -----------------------------------
+    Codegen.setBlock lamCase
+    lCdr ← undefined
+    Codegen.br extCase
+    -- %era case
+    -----------------------------------
+    Codegen.setBlock eraCase
+    eCdr ← undefined
+    Codegen.br extCase
+    -- %dup case
+    -----------------------------------
+    Codegen.setBlock dupCase
+    dCdr ← undefined
+    Codegen.br extCase
+    -- %default case
+    -----------------------------------
+    Codegen.setBlock defCase
+    deCdr ← pure cdr
+    Codegen.br extCase
+    -- %exit case
+    -----------------------------------
+    Codegen.setBlock extCase
+    cdr ←
+      Codegen.phi
+        Types.eacList
+        [ (deCdr, defCase),
+          (dCdr, dupCase),
+          (aCdr, appCase),
+          (eCdr, eraCase),
+          (lCdr, lamCase)
+        ]
+    Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
     args = [(Types.eacList, "eac_list")]
 
@@ -53,6 +110,19 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
+anihilateRewireAux ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
+  ) ⇒
+  m Operand.Operand
 anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
