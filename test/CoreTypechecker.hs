@@ -325,7 +325,7 @@ ski1 =
                             )
                         )
                         ( IR.Pi -- Annotation of xz: Nat -> Nat
-                            (SNat 1)
+                            (SNat 0)
                             (IR.PrimTy Nat)
                             (IR.PrimTy Nat)
                         )
