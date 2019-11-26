@@ -16,9 +16,36 @@ import qualified LLVM.AST.Type as Type
 -- Interaction Net runner
 --------------------------------------------------------------------------------
 
+-- TODO ∷ consider the return type
+reduce = Codegen.defineFunction Type.void "reduce" args $
+  do
+    -- switch creations
+    eacList ← Codegen.externf "eac_list"
+    appCase ← Codegen.addBlock "switch.app"
+    lamCase ← Codegen.addBlock "switch.lam"
+    eraCase ← Codegen.addBlock "switch.era"
+    dupCase ← Codegen.addBlock "switch.dup"
+    defCase ← Codegen.addBlock "switch.default"
+    car ← Types.loadCar eacList
+    cdr ← Types.loadCdr eacList
+    _term ←
+      Codegen.switch
+        car
+        defCase
+        [ (Types.app, appCase),
+          (Types.lam, lamCase),
+          (Types.era, eraCase),
+          (Types.dup, dupCase)
+        ]
+    undefined
+  where
+    args = [(Types.eacList, "eac_list")]
+
 --------------------------------------------------------------------------------
 -- Reduction rules
 --------------------------------------------------------------------------------
+
+-- TODO ∷ modify these functions to return Types.eacLPointer type
 
 -- TODO ∷ Maybe add metadata at some point?
 
@@ -196,14 +223,14 @@ allocaGen type' portLen dataLen = do
     Codegen.Minimal
       { Codegen.type' = Types.tag,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 1]
+        Codegen.indincies' = Codegen.constant32List [0, 0]
       }
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Codegen.nodeType,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 2]
+        Codegen.indincies' = Codegen.constant32List [0, 1]
       }
   Codegen.store nodePtr node
   pure eac
@@ -238,5 +265,5 @@ nodeOf eac = do
     Codegen.Minimal
       { Codegen.type' = Codegen.nodeType,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 2]
+        Codegen.indincies' = Codegen.constant32List [0, 1]
       }
