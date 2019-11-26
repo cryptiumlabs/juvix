@@ -278,9 +278,9 @@ kAppICompTy =
       (IR.VPrimTy Nat)
       (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
-
+-- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
--- For example, S (KSK) = (KK) (SK) = K:Nat-> Nat-> Nat
+-- For example, S KSK = KK (SK) = K:Nat-> Nat-> Nat
 -- this S takes in KSK, and has x and y annotated as follows:
 -- (x = K that takes inputs
 --     (1) K, with type signature of z, and
@@ -295,50 +295,60 @@ kAppICompTy =
 -- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
 -- (Nat -> Nat -> Nat)
 
--- S (K11) = (K 1) (1 1) doesn't work because one cannot properly annotate the second input of K (1 1).
-{-
-scombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
-scombinator =
-  IR.Lam --x (Bound 2)
-    ( IR.Lam --y (Bound 1)
-        ( IR.Lam --z (Bound 0)
-            ( IR.App
-                (IR.Ann
-                    (SNat 1)
-                    ( IR.App
-                        (IR.Ann
+-- SKI1 = K 1 (I 1)
+-- the first input K takes inputs 1 and 1 so has type signature of Nat -> Nat -> Nat
+-- the second input I has type signature Nat -> Nat
+-- the third input is Nat
+-- type signature of this S is (Nat -> Nat -> Nat) -> (Nat -> Nat) -> Nat -> Nat
+ski1 ∷ NatTerm -- ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
+ski1 =
+  IR.Lam --x/first input (Bound 2, counting from output)
+    ( IR.Lam --y/second input (Bound 1, counting from output)
+        ( IR.Lam --z/third input (Bound 0, counting from output)
+            ( IR.Elim 
+              ( IR.App -- xz applies to yz
+                ( IR.Ann
+                    ( SNat 1)
+                    ( IR.Elim 
+                      ( IR.App -- x applies to z
+                        ( IR.Ann
                             (SNat 1)
-                            (IR.Bound 2)
-                            () -- Annotation of x
+                            (IR.Elim (IR.Bound 2)) -- x
+                            (IR.Pi 
+                              (SNat 1) 
+                              (IR.PrimTy Nat) 
+                              (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))) -- Annotation of x: (Nat -> Nat -> Nat)
                         )
-                        (IR.Elim (IR.Bound 0))
+                        (IR.Elim (IR.Bound 0)) -- z
+                      )
                     )
-                    () -- Annotation of the outside App
+                    (IR.Pi -- Annotation of xz: Nat -> Nat
+                      (SNat 1) 
+                      (IR.PrimTy Nat)
+                      (IR.PrimTy Nat)
+                    )
                 )
-                ( IR.App
-                    (IR.Ann
+                ( IR.Elim 
+                  (IR.App -- y applies to z
+                      ( IR.Ann
                         (SNat 1)
-                        (IR.Bound 1)
-                        () -- Annotation of y
-                    )
-                    (IR.Elim (IR.Bound 0))
+                        (IR.Elim (IR.Bound 1)) -- y
+                        (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- Annotation of y
+                      )
+                    (IR.Elim (IR.Bound 0)) -- z
+                  ) 
                 )
+              )
             )
         )
     )
-
--- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
--- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
--- (Nat -> Nat -> Nat)
-sCompNatTy ∷ NatAnnotation
-sCompNatTy =
+-- K 1 (I 1) = 1, so should type checked to Nat
+ski1CompNatTy ∷ NatAnnotation
+ski1CompNatTy =
   ( SNat 1,
-    IR.VPi
-      (SNat 1)
-      (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+    IR.VPrimTy Nat
   )
- -}
+
 test_identity_computational ∷ T.TestTree
 test_identity_computational = shouldCheck nat identity identityNatCompTy
 
@@ -383,6 +393,9 @@ test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
 
 test_nat1 ∷ T.TestTree
 test_nat1 = shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
+
+test_ski1 :: T.TestTree
+test_ski1 = shouldCheck nat ski1 ski1CompNatTy
 
 test_add_nat ∷ T.TestTree
 test_add_nat =
