@@ -75,7 +75,7 @@ isBothPrimary = Block.defineFunction Type.i1 "is_both_primary" args $
       Types.Minimal
         { Types.type' = nodePointer,
           Types.address' = port,
-          Types.indincies' = Block.constant32List [0, 1]
+          Types.indincies' = Block.constant32List [0, 0]
         }
     -- convert ptrs to ints
     nodeInt ← ptrToInt nodePtr pointerSize
@@ -150,21 +150,21 @@ allocaNodeH mPorts mData = do
     Types.Minimal
       { Types.type' = Types.numPorts,
         Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.portData, -- do I really want to say size 0?
         Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 2]
+        Types.indincies' = Block.constant32List [0, 1]
       }
   store portPtr ports
   dataPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Type.ArrayType 0 Types.dataType, -- do I really want to say size 0?
         Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 3]
+        Types.indincies' = Block.constant32List [0, 2]
       }
   store dataPtr data'
   pure node
@@ -193,7 +193,7 @@ allocaGenH mPortData type' = do
                 }
             store ptr p
     )
-    (zip mPortData [1 ..])
+    (zip mPortData [0 ..])
   pure ports
   where
     len = fromIntegral (length mPortData)
@@ -245,8 +245,8 @@ linkConnectedPort = Block.defineFunction Type.void "link_connected_port" args $
               Types.address' = oldPointsTo,
               Types.indincies' = Block.constant32List [0, num]
             }
-    numPointsTo ← intoGen numPorts 2
-    nodePointsToPtr ← intoGen nodePointer 1
+    numPointsTo ← intoGen numPorts 1
+    nodePointsToPtr ← intoGen nodePointer 0
     nodePointsTo ← load nodeType nodePointsToPtr
     -- End Abstracting out bits -------------------------------------------------
     _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
@@ -284,8 +284,8 @@ rewire = Block.defineFunction Type.void "rewire" args $
               Types.address' = oldPointsTo,
               Types.indincies' = Block.constant32List [0, num]
             }
-    numPointsTo ← intoGen numPorts 2
-    nodePointsToPtr ← intoGen nodePointer 1
+    numPointsTo ← intoGen numPorts 1
+    nodePointsToPtr ← intoGen nodePointer 0
     nodePointsTo ← load nodeType nodePointsToPtr
     -- End Abstracting out bits -------------------------------------------------
     _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
@@ -354,13 +354,13 @@ newPortType node offset = do
     Types.Minimal
       { Types.type' = nodePointer,
         Types.address' = newPort,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   offsetPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = numPorts,
         Types.address' = newPort,
-        Types.indincies' = Block.constant32List [0, 2]
+        Types.indincies' = Block.constant32List [0, 1]
       }
   -- allocate pointer to the node
   givenNodePtr ← alloca nodePointer
@@ -368,7 +368,7 @@ newPortType node offset = do
     Types.Minimal
       { Types.type' = nodeType,
         Types.address' = givenNodePtr,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   -- Store the node to it
   store placeToStoreNode node
@@ -395,7 +395,7 @@ getPort node port = do
       Types.Minimal
         { Types.type' = portData,
           Types.address' = node,
-          Types.indincies' = Block.constant32List [0, 2]
+          Types.indincies' = Block.constant32List [0, 1]
         }
     -- allocate the new pointer
     getElementPtr $
@@ -429,7 +429,7 @@ intOfNumPorts typ numPort cont = do
     Types.Minimal
       { Types.type' = Type.i1,
         Types.address' = numPort,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   generateIf typ tag smallBranch largeBranch
   where
@@ -441,7 +441,7 @@ intOfNumPorts typ numPort cont = do
           Types.Minimal
             { Types.type' = numPortsLargeValue,
               Types.address' = vPtr,
-              Types.indincies' = Block.constant32List [0, 1]
+              Types.indincies' = Block.constant32List [0, 0]
             }
 
     -- Generic logic
@@ -475,14 +475,14 @@ portPointsTo (portType ∷ Operand.Operand) = do
     Types.Minimal
       { Types.type' = nodePointer,
         Types.address' = portType,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   -- get the node which it points to
   nodeType ← loadElementPtr $
     Types.Minimal
       { Types.type' = nodeType,
         Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 1]
+        Types.indincies' = Block.constant32List [0, 0]
       }
   -- Get the numPort
   numPort ← Block.loadElementPtr $
@@ -490,7 +490,7 @@ portPointsTo (portType ∷ Operand.Operand) = do
       { Types.type' = numPorts,
         Types.address' = portType,
         -- Index may change due to being packed
-        Types.indincies' = Block.constant32List [0, 2]
+        Types.indincies' = Block.constant32List [0, 1]
       }
   getPort nodeType numPort
 
