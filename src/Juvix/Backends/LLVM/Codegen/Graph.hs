@@ -535,7 +535,7 @@ allocaNumPortNum ∷
   Integer →
   m Operand.Operand
 allocaNumPortNum n
-  | n <= 2 ^ (Types.numPortsSize - 1) =
+  | n <= 2 ^ (Types.numPortsSize - 1 ∷ Integer) =
     allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 16 n))
   | otherwise =
     allocaNumPortsStatic True (Operand.ConstantOperand (C.Int 64 n))
