@@ -278,6 +278,7 @@ kAppICompTy =
       (IR.VPrimTy Nat)
       (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
   )
+
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
 -- For example, S KSK = KK (SK) = K:Nat-> Nat-> Nat
@@ -305,43 +306,45 @@ ski1 =
   IR.Lam --x/first input (Bound 2, counting from output)
     ( IR.Lam --y/second input (Bound 1, counting from output)
         ( IR.Lam --z/third input (Bound 0, counting from output)
-            ( IR.Elim 
-              ( IR.App -- xz applies to yz
-                ( IR.Ann
-                    ( SNat 1)
-                    ( IR.Elim 
-                      ( IR.App -- x applies to z
-                        ( IR.Ann
-                            (SNat 1)
-                            (IR.Elim (IR.Bound 2)) -- x
-                            (IR.Pi 
-                              (SNat 1) 
-                              (IR.PrimTy Nat) 
-                              (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat))) -- Annotation of x: (Nat -> Nat -> Nat)
-                        )
-                        (IR.Elim (IR.Bound 0)) -- z
-                      )
-                    )
-                    (IR.Pi -- Annotation of xz: Nat -> Nat
-                      (SNat 1) 
-                      (IR.PrimTy Nat)
-                      (IR.PrimTy Nat)
-                    )
-                )
-                ( IR.Elim 
-                  (IR.App -- y applies to z
-                      ( IR.Ann
+            ( IR.Elim
+                ( IR.App -- xz applies to yz
+                    ( IR.Ann
                         (SNat 1)
-                        (IR.Elim (IR.Bound 1)) -- y
-                        (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- Annotation of y
-                      )
-                    (IR.Elim (IR.Bound 0)) -- z
-                  ) 
+                        ( IR.Elim
+                            ( IR.App -- x applies to z
+                                ( IR.Ann
+                                    (SNat 1)
+                                    (IR.Elim (IR.Bound 2)) -- x
+                                    ( IR.Pi
+                                        (SNat 1)
+                                        (IR.PrimTy Nat)
+                                        (IR.Pi (SNat 0) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- Annotation of x: (Nat -> Nat -> Nat)
+                                    )
+                                )
+                                (IR.Elim (IR.Bound 0)) -- z
+                            )
+                        )
+                        ( IR.Pi -- Annotation of xz: Nat -> Nat
+                            (SNat 1)
+                            (IR.PrimTy Nat)
+                            (IR.PrimTy Nat)
+                        )
+                    )
+                    ( IR.Elim
+                        ( IR.App -- y applies to z
+                            ( IR.Ann
+                                (SNat 1)
+                                (IR.Elim (IR.Bound 1)) -- y
+                                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- Annotation of y
+                            )
+                            (IR.Elim (IR.Bound 0)) -- z
+                        )
+                    )
                 )
-              )
             )
         )
     )
+
 -- K 1 (I 1) = 1, so should type checked to Nat
 ski1CompNatTy ∷ NatAnnotation
 ski1CompNatTy =
@@ -394,7 +397,7 @@ test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
 test_nat1 ∷ T.TestTree
 test_nat1 = shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
 
-test_ski1 :: T.TestTree
+test_ski1 ∷ T.TestTree
 test_ski1 = shouldCheck nat ski1 ski1CompNatTy
 
 test_add_nat ∷ T.TestTree
