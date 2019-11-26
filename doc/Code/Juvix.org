@@ -1,5 +1,28 @@
 * Juvix
 ** Backends
+- [[Backends]] are the targets for optimized code output specific to a
+  platform
+- Currently the LLVM backend will serve as the reference
+  implementation
+- The following backends are planned
+  1. LLVM
+  2. Michelson
+  3. WASM
+     - Most likely through LLVM
+  4. Various Arithmetic Circuits
+     - For use in ZKP's
+*** ArithmeticCircuit
+**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Library]]
+**** Compilation <<ArithmeticCircuit/Compilation>>
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[Library]]
+***** Types <<ArithmeticCircuit/Compilation/Types>>
+- _Relies on_
+  + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
@@ -58,37 +81,37 @@ Provides a mechanism for defining Sum types
 **** Optimisation
 - _Relies on_
   + [[Library]]
-  + [[Compilation/Types]]
-**** Parameterisation
+  + [[Michelson/Compilation/Types]]
+**** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
   + [[Library]]
-**** Compilation
+**** Compilation <<Michelson/Compilation>>
 - _Relies on_
   + [[Term]]
   + [[Compilation/Type]]
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Util]]
   + [[Optimisation]]
-  + [[Parameterisation]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Term
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Util]]
-  + [[Parameterisation]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Type <<Compilation/Type>>
 - _Relies on_
-  + [[Compilation/Types]]
-  + [[Parameterisation]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
-***** Types <<Compilation/Types>>
+***** Types <<Michelson/Compilation/Types>>
 - _Relies on_
-  + [[Parameterisation]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Util
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Library]]
 ** Core
 - _Relies on_
@@ -255,6 +278,9 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Library]]
 ** Interpreter
+- Although slower than [[Backends]], the interpreter serves as a
+  reference point to play, modify, and debug features that will go
+  in the various compiler backends
 *** InteractionNet
 - _Relies on_
   + [[InteractionNet/Default]]
@@ -297,6 +323,19 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** Type <<InteractionNet/Type>>
+- Serves as the AST for all operations on [[Nets/Default]]
+- Resembles the =BOHM= syntax/operation set, however it alters the
+  operation set quite a bit
+  + _Added_
+    1. Notion of some kind of primitive value
+    2. Curry 1-3
+       - This allows custom functions to be manifested on primitive
+         values
+  + _Removed_
+    1. =Letrec=
+       - While here, it isn't fully implemented
+    2. Hard coded math operations
+       - This has been moved to primitive value operations
 - _Relies on_
   + [[InteractionNet/Shared]]
   + [[Library]]
@@ -375,6 +414,11 @@ Can be added to via core translation
 - _Relies on_
   + [[PrettyPrint]]
 *** HashMap
+- The HashMap for the codebase.
+- Basically just imports Data.HashMap.Strict
+  + While giving the operation =!?=.
+- Every hash in the code base should use this, except when it needs
+  to compare keys by the =Ordering= metric instead.
 *** PrettyPrint
 ** Visualize
 *** Dot

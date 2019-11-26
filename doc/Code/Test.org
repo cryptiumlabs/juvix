@@ -61,6 +61,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Graph]]
 * Spec
 * Backends
+** ArithmeticCircuit
+- _Relies on_
+  + [[Compilation]]
+  + [[Parameterisation]]
+  + [[Library]]
 ** Michelson
 - _Relies on_
   + [[Compilation]]

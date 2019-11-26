@@ -26,6 +26,8 @@ extra-deps:
 - boomerang-1.4.5.6@sha256:4f8407b9482a500ef9f8dc3fa13f9615d4d33a7c530b67c1ca27535e136a152d,1965
 - web-routes-th-0.22.6.4@sha256:1e7817a65a8908d6c681790a534e583371a16680c7951d11901202c121c722fb,1547
 - unexceptionalio-0.4.0@sha256:c59fa6be7b923fa32ad6a830f96918cd3019b5a6dba019c81da19df9955d8d58,1239
+- mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
+- semirings-0.5.1
 - brick-0.46
 - github: acid-state/safecopy
   commit: 1be0894daeefff5126b25c9483ce2bf21845d05b
@@ -39,6 +41,16 @@ extra-deps:
   commit: 38dd682fa6c433e5720bd9022779ffc6a1ce00fc
   subdirs:
     - src/hevm
+- github: adjoint-io/pairing
+  commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
+- github: adjoint-io/elliptic-curve
+  commit: 52b7eba38db0b3aa3619f2916c518f8f3ee63aaf
+- github: adjoint-io/galois-field
+  commit: 95fc86b61c573518ff6a1ab1b9f23301482b2577
+- github: adjoint-io/sonic
+  commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
+- github: adjoint-io/poly
+  commit: b75b853025ea75ba64f62f39d4524832f0117e36
 
 allow-newer: true
 
