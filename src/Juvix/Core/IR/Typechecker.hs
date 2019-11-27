@@ -1,12 +1,11 @@
 module Juvix.Core.IR.Typechecker where
 
-import Control.Monad.Writer as W
 import Juvix.Core.IR.Evaluator
 import Juvix.Core.IR.Types
 import Juvix.Core.Types
 import Juvix.Core.Usage
 import Juvix.Library hiding (show)
-import Prelude (String, lookup)
+import Prelude (lookup)
 
 -- | 'checker' for checkable terms checks the term against an annotation and returns ().
 typeTerm ∷
@@ -22,33 +21,19 @@ typeTerm ∷
   Context primTy primVal m →
   Term primTy primVal →
   Annotation primTy primVal m →
-  Writer [LogEntry] (m ())
+  m ()
 
-data LogEntry = LogEntry {msg ∷ String}
-  deriving (Eq, Show)
+-- *
 
-logOutput ∷ String → Writer [LogEntry] ()
-logOutput s = W.tell [LogEntry s]
-
--- * (Universe formation rule)
-
-typeTerm _ _ii _g t@(Star i) ann = do
-  logOutput "Checking that Sigma is zero"
+typeTerm _ _ii _g t@(Star n) ann = do
   unless (SNat 0 == fst ann) (throw @"typecheckError" SigmaMustBeZero) -- checks sigma = 0.
   let ty = snd ann
-  logOutput "Checking that the annotation is of type *j, and j>i "
   case ty of
     VStar j →
-      if (i >= j)
-        then
-          ( do
-              logOutput "j is not greater then"
-              return (throw @"typecheckError" (UniverseMismatch t ty))
-          )
-        else return (return ()) -- TODO use Monad transformer? Not sure why this unless doesn't work.
-    _ → do
-      logOutput " The annotation is not of type *."
-      return (throw @"typecheckError" (ShouldBeStar (snd ann)))
+      unless
+        (n < j)
+        (throw @"typecheckError" (UniverseMismatch t ty))
+    _ → throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g (Pi pi varType resultType) ann = do
   unless (SNat 0 == fst ann) (throw @"typecheckError" SigmaMustBeZero) -- checks sigma = 0.
   case snd ann of
