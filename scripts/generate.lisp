@@ -106,7 +106,7 @@
 ;; converting the conflict-map to a haskell one
 (defun generate-headlines (file-info conflict-map level &optional (name "Juvix"))
   (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
-         (comments (module-comments lines))
+         (comments (module-comments lines level))
          (imports  (import-generation
                     (haskell-import-to-org-alias (relevent-imports lines name)
                                                  conflict-map)))
@@ -118,9 +118,15 @@
                                      (create-reference
                                       (just-val (file-info-alias file-info))))
                         (pathname-name (file-info-path file-info)))
-                    level)))
-    (cons headline
-          (append comments imports))))
+                    level))
+         (inner-headline  (position "*" comments :test #'uiop:string-prefix-p)))
+    (if inner-headline
+        (let ((comments-before (subseq comments 0 inner-headline))
+              (comments-after  (subseq comments inner-headline)))
+          (cons headline
+                (append comments-before imports comments-after)))
+        (cons headline
+              (append comments imports)))))
 
 (defun import-generation (org-aliases &optional (indent-level 0))
   "generates a list where each line is a new line with proper org generation"
@@ -211,20 +217,27 @@ that match the project name"
 ;; Haskell comment clean up
 ;; -----------------------------------------------------------------------------
 
-(defun module-comments (file-lines)
+(defun module-comments (file-lines &optional (level 0))
   (let* ((module-comments
            (remove-if (lambda (x)
                         (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
-            (take-until (lambda (x) (uiop:string-prefix-p "module" x)) file-lines)))
+                      (take-until (lambda (x) (uiop:string-prefix-p "module" x)) file-lines)))
          (special (car module-comments))
          (valid-module (if special
                            (uiop:string-prefix-p "-- |" special)
                            nil)))
-    (if valid-module
-        (remove-if #'uiop:emptyp
-                   (cons (strip-haskell-comments special t)
-                         (mapcar #'strip-haskell-comments (cdr module-comments))))
-        nil)))
+    (flet ((update-headline-level (line)
+             (if (uiop:string-prefix-p "*" line)
+                 (concatenate 'string
+                              (repeat-s level "*")
+                              line)
+                 line)))
+      (if valid-module
+          (remove-if #'uiop:emptyp
+                     (mapcar #'update-headline-level
+                      (cons (strip-haskell-comments special t)
+                            (mapcar #'strip-haskell-comments (cdr module-comments)))))
+          nil))))
 
 (defun strip-haskell-comments (line &optional start-doc)
   (subseq line (min (if start-doc 5 3) (length line))))

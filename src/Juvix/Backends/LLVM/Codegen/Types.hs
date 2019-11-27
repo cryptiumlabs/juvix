@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Codegen.Types
   )
 where
 
-import Data.ByteString.Short
+import Data.ByteString.Short hiding (empty)
 import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
@@ -248,8 +248,18 @@ vaList = StructureType
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
 
+
 bothPrimary ∷ Type
 bothPrimary = StructureType
   { isPacked = False,
     elementTypes = [Type.i1, nodePointer]
   }
+
+voidStarTy ∷ Type
+voidStarTy = PointerType VoidType (AddrSpace 32)
+
+voidTy ∷ Type
+voidTy = VoidType
+
+size_t ∷ Type
+size_t = IntegerType 64

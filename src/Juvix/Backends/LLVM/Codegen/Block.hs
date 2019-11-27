@@ -16,10 +16,12 @@ import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
 import qualified LLVM.AST.IntegerPredicate as IntPred
+import qualified LLVM.AST.Linkage as L
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.ParameterAttribute as ParameterAttribute
 import qualified LLVM.AST.Type as Type
+import Prelude (String)
 
 --------------------------------------------------------------------------------
 -- Codegen Operations
@@ -272,6 +274,58 @@ terminator trm = do
   blk ← current
   modifyBlock (blk {term = Just trm})
   return trm
+
+--------------------------------------------------------------------------------
+-- External linking
+--------------------------------------------------------------------------------
+
+external ∷ (HasState "moduleDefinitions" [Definition] m) ⇒ Type → String → [(Type, Name)] → m Operand
+external retty label argtys = do
+  addDefn
+    $ GlobalDefinition
+    $ functionDefaults
+      { Global.parameters = ((\(ty, nm) → Parameter ty nm []) <$> argtys, False),
+        Global.callingConvention = CC.Fast, -- TODO: Do we always want this?
+        Global.returnType = retty,
+        Global.basicBlocks = [],
+        Global.name = mkName label,
+        Global.linkage = L.External
+      }
+  return
+    $ ConstantOperand
+    $ C.GlobalReference
+      (PointerType (FunctionType retty (fst <$> argtys) False) (AddrSpace 0))
+      (mkName label)
+
+--------------------------------------------------------------------------------
+-- Memory management
+--------------------------------------------------------------------------------
+
+-- malloc & free need to be defined once and then can be called normally with `externf`
+
+defineMalloc ∷
+  ∀ m.
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  m ()
+defineMalloc = do
+  let name = "malloc"
+  op ← external voidStarTy name [(size_t, "size")]
+  modify @"symtab" (Map.insert name op)
+  pure ()
+
+defineFree ∷
+  ∀ m.
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symtab" (HashMap Symbol Operand) m
+  ) ⇒
+  m ()
+defineFree = do
+  let name = "free"
+  op ← external voidTy name []
+  modify @"symtab" (Map.insert name op)
+  pure ()
 
 --------------------------------------------------------------------------------
 -- Integer Operations
