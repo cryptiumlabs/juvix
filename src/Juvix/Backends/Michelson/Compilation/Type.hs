@@ -2,7 +2,7 @@ module Juvix.Backends.Michelson.Compilation.Type where
 
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.Erased.Types as J
+import qualified Juvix.Core.ErasedAnn.Types as J
 import Juvix.Library hiding (Type)
 import qualified Michelson.Untyped.Type as M
 

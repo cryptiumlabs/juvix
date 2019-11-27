@@ -8,7 +8,7 @@ data Term primTy primVal
   = Star Natural
   | PrimTy primTy
   | Pi Usage (Term primTy primVal) (Term primTy primVal)
-  | Lam (Term primTy primVal)
+  | Lam (AnnTerm primTy primVal)
   | Elim (AnnElim primTy primVal)
   deriving (Show, Eq, Generic)
 
@@ -16,7 +16,7 @@ data Elim primTy primVal
   = Bound Natural
   | Free IR.Name
   | Prim primVal
-  | App (AnnElim primTy primVal) (Term primTy primVal)
+  | App (AnnElim primTy primVal) (AnnTerm primTy primVal)
   | Ann Usage (Term primTy primVal) (Term primTy primVal)
   deriving (Show, Eq, Generic)
 

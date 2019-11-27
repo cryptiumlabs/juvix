@@ -3,7 +3,7 @@ module Juvix.Backends.Michelson.Compilation.Term where
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.Erased.Types as J
+import qualified Juvix.Core.ErasedAnn.Types as J
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
@@ -30,11 +30,11 @@ stackGuard ∷
   ) ⇒
   Term →
   M.Type →
-  (Term → m Op) →
+  m Op →
   m Op
 stackGuard term paramTy func = do
   start ← get @"stack"
-  instr ← func term
+  instr ← func
   end ← get @"stack"
   case stackToStack start of
     M.SomeHST startStack → do
@@ -75,7 +75,7 @@ termToInstr ∷
   Term →
   M.Type →
   m Op
-termToInstr term paramTy = stackGuard term paramTy $ \term → do
+termToInstr ann@(term, usage, ty) paramTy = stackGuard ann paramTy $ do
   let notYetImplemented ∷ m Op
       notYetImplemented = throw @"compilationError" (NotYetImplemented ("termToInstr: " <> show term))
 

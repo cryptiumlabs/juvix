@@ -1,6 +1,6 @@
 module Juvix.Backends.Michelson.Parameterisation where
 
-import qualified Juvix.Core.Erased.Types as C
+import qualified Juvix.Core.ErasedAnn.Types as C
 import qualified Juvix.Core.Types as C
 import Juvix.Library
 import qualified Michelson.Untyped as M
@@ -8,9 +8,9 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
-type Term = C.Term PrimVal
+type Term = C.AnnTerm PrimTy PrimVal
 
-type Type = C.Type PrimTy
+type Type = C.Type PrimTy PrimVal
 
 type Value = M.Value' M.ExpandedOp
 
