@@ -8,5 +8,5 @@ eraseTerm term =
   case term of
     Var s → E.Var s
     Prim p → E.Prim p
-    Lam s b → E.Lam s (eraseTerm b)
-    App (f, _, _) x → E.App (eraseTerm f) (eraseTerm x)
+    Lam s (b, _, _) → E.Lam s (eraseTerm b)
+    App (f, _, _) (x, _, _) → E.App (eraseTerm f) (eraseTerm x)
