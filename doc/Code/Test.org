@@ -66,6 +66,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Compilation]]
   + [[Parameterisation]]
   + [[Library]]
+** LLVM
+- _Relies on_
+  + [[Codegen]]
+  + [[JIT]]
+  + [[Library]]
 ** Michelson
 - _Relies on_
   + [[Compilation]]

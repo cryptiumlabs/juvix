@@ -70,8 +70,23 @@ Provides a mechanism for defining Sum types
   + [[Codegen/Shared]]
   + [[Sum]]
   + [[Library]]
+**** JIT
+- _Relies on_
+  + [[Execution]]
+  + [[JIT/Types]]
+***** Execution
+- _Relies on_
+  + [[JIT/Types]]
+  + [[Library]]
+***** Types <<JIT/Types>>
+- _Relies on_
+  + [[Library]]
 **** Net
 ***** EAC <<Net/EAC>>
+- =EAC= serves as the place where the interaction net rules for the
+  EAC layer gets run
+- The form given to =EAC= is not the base EAC AST, but instead a
+  pre processed =EAC= graph that the initial graph will be made on
 - _Relies on_
   + [[Library]]
 ****** Types <<Net/EAC/Types>>
