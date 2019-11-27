@@ -1,3 +1,8 @@
+-- |
+-- - =EAC= serves as the place where the interaction net rules for the
+--   EAC layer gets run
+-- - The form given to =EAC= is not the base EAC AST, but instead a
+--   pre processed =EAC= graph that the initial graph will be made on
 module Juvix.Backends.LLVM.Net.EAC where
 
 -- TODO ∷ abstract all all imports to LLVM
@@ -8,6 +13,7 @@ import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
@@ -33,6 +39,8 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"
+    isBothPrimary ← Codegen.externf "is_both_primary"
+    anihilateRewireAux ← Codegen.externf "anihilate_rewire_aux"
     -- switch creations
     eacList ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
@@ -43,9 +51,10 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     extCase ← Codegen.addBlock "switch.exit"
     car ← Types.loadCar eacList
     cdr ← Types.loadCdr eacList
+    tag ← tagOf car
     _term ←
       Codegen.switch
-        car
+        tag
         defCase
         [ (Types.app, appCase),
           (Types.lam, lamCase),
@@ -53,17 +62,51 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.dup, dupCase)
         ]
     -- %app case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock appCase
     -- nested switch cases
     appLamCase ← Codegen.addBlock "switch.app.lam"
     appEraCase ← Codegen.addBlock "switch.app.era"
     appDupCase ← Codegen.addBlock "switch.app.dup"
     appExtCase ← Codegen.addBlock "switch.app.exit"
+    -- TODO ∷ Prove this branch is unnecessary
+    appContCase ← Codegen.addBlock "switch.app.continue"
+    nodePtr ← nodeOf car
+    tagNode ← Codegen.call Codegen.bothPrimary isBothPrimary (Codegen.emptyArgs [nodePtr])
+    isPrimary ← Codegen.loadIsPrimaryEle tagNode
+    -- TODO ∷ Prove this branch is unnecessary
+    test ←
+      Codegen.icmp
+        IntPred.EQ
+        isPrimary
+        (Operand.ConstantOperand (C.Int 2 1))
+    Codegen.cbr test appContCase extCase
+    -- %switch.app.continue
+    ---------------------------------------------
+    -- TODO ∷ fix the type of this.... need the rules to work on eac!!!
+    Codegen.setBlock appContCase
+    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
+    tagOther ← tagOf nodeOther
+    _ ←
+      Codegen.switch
+        tagOther
+        defCase
+        [ (Types.lam, appLamCase),
+          (Types.era, appEraCase),
+          (Types.dup, appDupCase)
+        ]
+    -- %switch.app.lam
+    ---------------------------------------------
+    Codegen.setBlock appLamCase
+    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
+    node ← Codegen.load Codegen.nodeType nodePtr
+    -- No new nodes are made
+    _ ← Codegen.call Type.void anihilateRewireAux (Codegen.emptyArgs [node, nodeOther])
+    aCdr ← pure cdr
     aCdr ← undefined
     Codegen.br extCase
     -- %lam case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock lamCase
     -- nested switch cases
     lamAppCase ← Codegen.addBlock "switch.lam.app"
@@ -73,7 +116,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     lCdr ← undefined
     Codegen.br extCase
     -- %era case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock eraCase
     -- nested switch cases
     eraAppCase ← Codegen.addBlock "switch.era.app"
@@ -84,7 +127,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     eCdr ← undefined
     Codegen.br extCase
     -- %dup case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock dupCase
     -- nested switch cases
     dupAppCase ← Codegen.addBlock "switch.dup.app"
@@ -95,12 +138,12 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     dCdr ← undefined
     Codegen.br extCase
     -- %default case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock defCase
     deCdr ← pure cdr
     Codegen.br extCase
     -- %exit case
-    -----------------------------------
+    ------------------------------------------------------
     Codegen.setBlock extCase
     cdr ←
       Codegen.phi
@@ -355,5 +398,18 @@ nodeOf eac = do
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
 
-findMainPort = do
-  undefined
+tagOf ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+tagOf eac = do
+  Codegen.loadElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Types.tag,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }

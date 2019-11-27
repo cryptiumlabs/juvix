@@ -24,7 +24,7 @@ eac = Type.StructureType
   { Type.isPacked = True,
     Type.elementTypes =
       [ tag,
-        Codegen.nodeType
+        Codegen.nodePointer
       ]
   }
 
