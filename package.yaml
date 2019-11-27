@@ -36,6 +36,8 @@ dependencies:
   - morley
   - bulletproofs
   - hevm
+  - elliptic-curve
+  - sonic
 
 default-extensions:
   - NoImplicitPrelude
@@ -128,6 +130,10 @@ library:
     - Juvix.Backends.Michelson.Compilation.Types
     - Juvix.Backends.Michelson.Compilation.Util
     - Juvix.Backends.Michelson.Optimisation
+    - Juvix.Backends.ArithmeticCircuit
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation
+    - Juvix.Backends.ArithmeticCircuit.Compilation
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.Codegen.Constants
     - Juvix.Backends.LLVM.Codegen.Sum

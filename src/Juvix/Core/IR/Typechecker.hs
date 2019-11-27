@@ -180,7 +180,7 @@ cType p ii g (Lam s) ann =
 cType p ii g (Elim e) ann = do
   ann' ← iType p ii g e
   unless
-    (fst ann == fst ann' && quote0 (snd ann) == quote0 (snd ann'))
+    (fst ann' `allowsUsageOf` fst ann && quote0 (snd ann) == quote0 (snd ann'))
     (throwError (errorMsg ii (Elim e) ann ann'))
 
 -- inferable terms have type as output.
