@@ -62,11 +62,11 @@ jit config mod name = do
                     loop = do
                       param ← readChan paramChan
                       case param of
-                        Just p -> do
+                        Just p → do
                           res ← hsFunc p
                           writeChan resultChan res
                           loop
-                        Nothing -> return ()
+                        Nothing → return ()
                 B.putStrLn "starting loop"
                 loop
               Nothing → return ()

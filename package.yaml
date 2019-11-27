@@ -158,6 +158,7 @@ library:
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Typechecker
+    - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
     - Juvix.Core.HR.Types
     - Juvix.Core.HRAnn.Types

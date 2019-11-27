@@ -248,7 +248,6 @@ vaList = StructureType
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
 
-
 bothPrimary ∷ Type
 bothPrimary = StructureType
   { isPacked = False,

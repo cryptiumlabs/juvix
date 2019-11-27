@@ -94,9 +94,16 @@ Provides a mechanism for defining Sum types
   + [[Library]]
 *** Michelson
 **** Optimisation
+This is a simple optimization strategy which replaces sequences of Michelson instructions with equivalent sequences of fewer instructions.
+   At the moment nontrivial programs are unlikely to compile to the smallest equivalent Michelson instruction sequence,
+but little time has been spent on optimization so far - a high degree should be possible; the Haskell typesystem provides very strong guarantees.
+   A more interesting / potentially more effective strategy might be to search the space of equivalent Michelson programs,
+ which at small program sizes using bounded heuristic search should be computationally feasible -
+ then choose the one with the fewest instructions (or based on some other gas-estimation preference function).
 - _Relies on_
-  + [[Library]]
   + [[Michelson/Compilation/Types]]
+  + [[Michelson/Parameterisation]]
+  + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
   + [[Library]]
@@ -202,14 +209,26 @@ Provides a mechanism for defining Sum types
   + [[Library]]
 *** Erased
 - _Relies on_
-  + [[Evaluator]]
+  + [[Erased/Evaluator]]
   + [[Erased/Types]]
-**** Evaluator
+**** Evaluator <<Erased/Evaluator>>
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
 **** Types <<Erased/Types>>
 - _Relies on_
+  + [[Usage]]
+  + [[Library]]
+*** ErasedAnn
+- _Relies on_
+  + [[ErasedAnn/Erasure]]
+  + [[ErasedAnn/Types]]
+**** Erasure <<ErasedAnn/Erasure>>
+- _Relies on_
+  + [[ErasedAnn/Types]]
+**** Types <<ErasedAnn/Types>>
+- _Relies on_
+  + [[Usage]]
   + [[Library]]
 *** Erasure <<Core/Erasure>>
 - _Relies on_
@@ -236,17 +255,51 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Usage]]
   + [[Library]]
+*** HRAnn
+- _Relies on_
+  + [[HRAnn/Erasure]]
+  + [[HRAnn/Types]]
+**** Erasure <<HRAnn/Erasure>>
+- _Relies on_
+  + [[HRAnn/Types]]
+**** Types <<HRAnn/Types>>
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
 *** IR
 - _Relies on_
+  + [[IR/Evaluator]]
   + [[Typechecker]]
   + [[IR/Types]]
+**** Evaluator <<IR/Evaluator>>
+This includes the evaluators (evalTerm and evalElim),
+the value application function (vapp) and
+the substitution functions (substTerm and substElim).
+- _Relies on_
+  + [[IR/Types]]
+  + [[Core/Types]]
+  + [[Library]]
 **** Typechecker
 - _Relies on_
+  + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Core/Types]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+*** IRAnn
+- _Relies on_
+  + [[IRAnn/Erasure]]
+  + [[IRAnn/Types]]
+**** Erasure <<IRAnn/Erasure>>
+- _Relies on_
+  + [[IRAnn/Types]]
+**** Types <<IRAnn/Types>>
 - _Relies on_
   + [[Usage]]
   + [[Library]]

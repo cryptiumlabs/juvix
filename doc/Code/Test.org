@@ -29,6 +29,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Check]]
   + [[Types]]
   + [[Types]]
+  + [[Usage]]
   + [[Library]]
 * Encoding
 - _Relies on_
@@ -65,6 +66,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Compilation]]
   + [[Parameterisation]]
+  + [[Usage]]
   + [[Library]]
 ** LLVM
 - _Relies on_
@@ -76,6 +78,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Compilation]]
   + [[Optimisation]]
   + [[Parameterisation]]
+  + [[Usage]]
   + [[Library]]
 * Nets
 ** Combinators
