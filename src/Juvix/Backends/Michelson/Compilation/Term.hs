@@ -1,6 +1,7 @@
 module Juvix.Backends.Michelson.Compilation.Term where
 
 import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn.Types as J
@@ -18,10 +19,13 @@ termToMichelson ∷
   M.Type →
   m Op
 termToMichelson term paramTy = do
-  modify @"stack" ((FuncResultE, paramTy) :)
-  instr ← termToInstr term paramTy
-  tell @"compilationLog" [TermToInstr term instr]
-  pure instr
+  case term of
+    (J.Lam arg body, _, _) -> do
+      modify @"stack" ((VarE arg, paramTy) :)
+      instr ← termToInstr body paramTy
+      tell @"compilationLog" [TermToInstr body instr]
+      pure instr
+    _ -> throw @"compilationError" (NotYetImplemented "must be lambda")
 
 stackGuard ∷
   ∀ m.
@@ -180,9 +184,12 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- Call-by-value (evaluate argument first).
     J.App func arg →
       stackCheck addsOne $ do
+        let (_, _, J.Pi _ _ resTy) = func
+        resTy <- typeToType resTy
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
-            -- Then pair up (a) with (vars) and execute the function.
+        modify @"stack" ((:) (FuncResultE, resTy))
+        -- Then pair up (a) with (vars) and execute the function.
         pure
           ( M.SeqEx
               [ func,

@@ -35,8 +35,8 @@ test_identity =
     identityType
     "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
-test_identity_app ∷ T.TestTree
-test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+-- test_identity_app ∷ T.TestTree
+-- test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
 --(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
 {-
@@ -52,12 +52,16 @@ identityTerm =
       "x"
       ( J.App
           ( J.App
-              (J.Prim PrimPair, SNat 1, undefined)
-              (J.Prim (PrimConst M.ValueNil), SNat 1, undefined),
+              (J.Prim PrimPair, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
+                (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")))))
+              (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))),
             SNat 1,
-            undefined
+            J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")))
           )
-          (J.App (J.Prim PrimFst, SNat 1, undefined) (J.Var "x", SNat 1, undefined), SNat 1, undefined),
+          (J.App
+            (J.Prim PrimFst, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
+            (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+          SNat 1, J.PrimTy (PrimTy (M.Type M.TUnit ""))),
         SNat 1,
         J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
       ),
