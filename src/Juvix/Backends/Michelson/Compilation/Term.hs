@@ -1,7 +1,7 @@
 module Juvix.Backends.Michelson.Compilation.Term where
 
-import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Type
+import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn.Types as J
@@ -20,12 +20,12 @@ termToMichelson ∷
   m Op
 termToMichelson term paramTy = do
   case term of
-    (J.Lam arg body, _, _) -> do
+    (J.Lam arg body, _, _) → do
       modify @"stack" ((VarE arg, paramTy) :)
       instr ← termToInstr body paramTy
       tell @"compilationLog" [TermToInstr body instr]
       pure instr
-    _ -> throw @"compilationError" (NotYetImplemented "must be lambda")
+    _ → throw @"compilationError" (NotYetImplemented "must be lambda")
 
 stackGuard ∷
   ∀ m.
@@ -126,10 +126,38 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             notYetImplemented
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
-            -- TODO: return lambda (x, y) (x, y)
-            modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
-            pure (M.PrimEx (M.PAIR "" "" "" ""))
-            notYetImplemented
+            let J.Pi _ argTy retTy = ty
+            ty ← typeToType ty
+            retTy ← typeToType retTy
+            modify @"stack" ((:) (FuncResultE, ty))
+            pure
+              ( M.PrimEx
+                  ( M.PUSH
+                      ""
+                      ty
+                      ( M.ValuePair
+                          M.ValueUnit
+                          -- ((), lam a -> ((), lam b -> (a, b)))
+                          ( M.ValueLambda
+                              ( M.SeqEx
+                                  [ M.PrimEx
+                                      ( M.PUSH
+                                          ""
+                                          retTy
+                                          ( M.ValueLambda (M.PrimEx (M.DUP "") :| [M.PrimEx M.DROP])
+                                          )
+                                      ),
+                                    M.PrimEx M.SWAP,
+                                    M.PrimEx (M.PAIR "" "" "" "")
+                                  ]
+                                  :| []
+                              )
+                          )
+                      )
+                  )
+              )
+          -- TODO: return lambda (x, y) (x, y)
+          -- modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
           -- :: a ~ s => (a, s)
           PrimConst const → stackCheck addsOne $ do
             let J.PrimTy (PrimTy t) = ty
@@ -185,7 +213,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     J.App func arg →
       stackCheck addsOne $ do
         let (_, _, J.Pi _ _ resTy) = func
-        resTy <- typeToType resTy
+        resTy ← typeToType resTy
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
         modify @"stack" ((:) (FuncResultE, resTy))
