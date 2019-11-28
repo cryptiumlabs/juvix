@@ -108,7 +108,8 @@ data TypecheckError primTy primVal m
   | ShouldBeFunctionType (Value primTy primVal m) (Term primTy primVal)
   | UnboundIndex Natural
   | SigmaMustBeZero
-  | UniverseLevelMustMatch
+  | UsageMustBeZero
+  | UsageNotCompatible (Annotation primTy primVal m) (Annotation primTy primVal m)
   | UnboundBinder Natural Name
   | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
   | BoundVariableCannotBeInferred
@@ -142,8 +143,10 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
     "unbound index " <> show n
   show (SigmaMustBeZero) =
     "Sigma has to be 0."
-  show (UniverseLevelMustMatch) =
-    "The variable type and the result type must be of type * at the same level."
+  show (UsageMustBeZero) =
+    "Usage has to be 0."
+  show (UsageNotCompatible expectedU gotU) =
+    "The usage of " <> (show (fst gotU)) <> "is not compatible with " <> (show (fst expectedU))
   show (UnboundBinder ii x) =
     "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
   show (MustBeFunction m ii n) =
