@@ -126,9 +126,16 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             notYetImplemented
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
-            let J.Pi _ argTy retTy = ty
-            ty ← typeToType ty
-            retTy ← typeToType retTy
+            let J.Pi _ argTy retTy@(J.Pi _ _ fTy) = ty
+            ty ← typeToTypeLam ty
+            retTy ← typeToTypeLam retTy
+            let fTy =
+                  M.Type
+                    ( M.TLambda
+                        (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")
+                        (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")
+                    )
+                    ""
             modify @"stack" ((:) (FuncResultE, ty))
             pure
               ( M.PrimEx
@@ -137,13 +144,13 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                       ty
                       ( M.ValuePair
                           M.ValueUnit
-                          -- ((), lam a -> ((), lam b -> (a, b)))
+                          -- ((), lam a -> (a, lam b -> (a, b)))
                           ( M.ValueLambda
                               ( M.SeqEx
                                   [ M.PrimEx
                                       ( M.PUSH
                                           ""
-                                          retTy
+                                          fTy
                                           ( M.ValueLambda (M.PrimEx (M.DUP "") :| [M.PrimEx M.DROP])
                                           )
                                       ),
@@ -213,7 +220,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     J.App func arg →
       stackCheck addsOne $ do
         let (_, _, J.Pi _ _ resTy) = func
-        resTy ← typeToType resTy
+        resTy ← typeToTypeLam resTy
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
         modify @"stack" ((:) (FuncResultE, resTy))
