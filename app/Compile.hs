@@ -42,5 +42,5 @@ compile fin fout backend = do
       T.putStrLn (show err)
       exitFailure
     Right c → do
-      T.writeFile fout (M.contractToSource c)
+      T.writeFile fout (M.untypedContractToSource (fst c))
 compile _ _ _ = exitFailure

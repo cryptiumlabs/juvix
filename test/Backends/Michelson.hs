@@ -14,7 +14,7 @@ shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    (Right contract T.@=? (contractToSource |<< fst (compile term ty)))
+    (Right contract T.@=? ((untypedContractToSource . fst) |<< fst (compile term ty)))
 
 shouldOptimise ∷ Op → Op → T.TestTree
 shouldOptimise instr opt =
@@ -37,14 +37,6 @@ test_identity =
 
 -- test_identity_app ∷ T.TestTree
 -- test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
-
---(show (fst (compile term ty)) T.@=? ((show (Right contract :: Either () M.SomeContract)) :: Text))
-{-
-identityContract :: M.SomeContract
-identityContract = M.SomeContract (MT.Seq MT.DUP MT.DROP)
-  (MT.STPair (MT.STList MT.STOperation) MT.STUnit M.-:& M.SNil)
-  (MT.STPair (MT.STList MT.STOperation) MT.STUnit M.-:& M.SNil)
--}
 
 identityTerm ∷ Term
 identityTerm =

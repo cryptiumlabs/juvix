@@ -13,11 +13,13 @@ import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
 
--- TODO: We might want to do this in a different way to preserve annotations.
-contractToSource ∷ M.SomeContract → Text
-contractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
+typedContractToSource ∷ M.SomeContract → Text
+typedContractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
 
-compile ∷ Term → Type → (Either CompilationError M.SomeContract, [CompilationLog])
+untypedContractToSource :: M.Contract' M.ExpandedOp -> Text
+untypedContractToSource c = L.toStrict (M.printUntypedContract c)
+
+compile ∷ Term → Type → (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compile term ty =
   let (ret, env) = execWithStack [] (compileToMichelson term ty)
    in (ret, compilationLog env)
@@ -30,7 +32,7 @@ compileToMichelson ∷
   ) ⇒
   Term →
   Type →
-  m (M.SomeContract)
+  m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelson term ty = do
   michelsonTy ← typeToType ty
   case michelsonTy of
@@ -43,7 +45,7 @@ compileToMichelson term ty = do
           optimised ← optimise michelsonOp
           let optimisedContract = M.Contract paramTy storageTy [optimised]
           case M.typeCheckContract Map.empty optimisedContract of
-            Right c → pure c
+            Right c → pure (optimisedContract, c)
             Left err → throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
         Left err → throw @"compilationError" (DidNotTypecheck err)
     _ → throw @"compilationError" InvalidInputType
