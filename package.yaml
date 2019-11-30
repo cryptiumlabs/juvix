@@ -86,6 +86,7 @@ library:
     - Juvix.Core.Erased
     - Juvix.Core.ErasedAnn
     - Juvix.Core.Erased.Evaluator
+    - Juvix.Core.Erased.Util
     - Juvix.Core.Erased.Types
     - Juvix.Core.Erasure
     - Juvix.Core.Erasure.Algorithm

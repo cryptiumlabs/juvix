@@ -24,10 +24,10 @@ termToMichelson term paramTy = do
       modify @"stack" ((VarE arg, paramTy) :)
       instr' ← termToInstr body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
-      modify @"stack" (\(x : y : xs) → x : xs)
+      modify @"stack" (\(x : _ : xs) → x : xs)
       tell @"compilationLog" [TermToInstr body instr]
       pure instr
-    _ → throw @"compilationError" (NotYetImplemented "must be lambda")
+    _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
 
 stackGuard ∷
   ∀ m.
@@ -101,36 +101,19 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       primToInstr ∷ PrimVal → m Op
       primToInstr prim =
         case prim of
-          -- :: \x -> y ~ (x, s) => (y, s)
+          -- :: \x -> y ~ s => (f, s)
           PrimFst → stackCheck addsOne $ do
-            let J.Pi _ (J.PrimTy (PrimTy (M.Type pair@(M.TPair _ _ xT _) _))) _ = ty
-
-                lamTy = M.Type (M.TLambda (M.Type (M.TPair "" "" (M.Type pair "") (M.Type M.TUnit "")) "") xT) ""
-
-                retTy = M.Type (M.TPair "" "" (M.Type M.TUnit "") lamTy) ""
-
+            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
+                (_, retTy) = lamRetTy [] pairTy xT
+            throw @"compilationError" (NotYetImplemented (show retTy))
             modify @"stack" ((:) (FuncResultE, retTy))
-            pure
-              ( M.PrimEx
-                  ( M.PUSH
-                      ""
-                      retTy
-                      ( M.ValuePair
-                          M.ValueUnit
-                          ( M.ValueLambda
-                              ( M.PrimEx (M.CAR "" "")
-                                  :| [ M.PrimEx (M.CAR "" "")
-                                     ]
-                              )
-                          )
-                      )
-                  )
-              )
-          -- :: \x -> y ~ (x, s) => (y, s)
+            pure (oneArgPrim [M.PrimEx (M.CAR "" "")] retTy)
+          -- :: \x -> y ~ s => (f, s)
           PrimSnd → stackCheck addsOne $ do
-            -- TODO: return lambda (pair x y) y CDR
-            genReturn (M.PrimEx (M.CDR "" ""))
-            notYetImplemented
+            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
+                (_, retTy) = lamRetTy [] pairTy yT
+            modify @"stack" ((:) (FuncResultE, retTy))
+            pure (oneArgPrim [M.PrimEx (M.CDR "" "")] retTy)
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
             -- type: Pi _ argTy

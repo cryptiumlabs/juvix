@@ -136,3 +136,6 @@ genFunc instr =
         NIL _ _ _ → pure ((:) (FuncResultE, Type (TList (Type TOperation "")) ""))
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
+
+oneArgPrim ∷ [ExpandedOp] → Type → ExpandedOp
+oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValuePair ValueUnit (ValueLambda (PrimEx (CAR "" "") :| ops))))
