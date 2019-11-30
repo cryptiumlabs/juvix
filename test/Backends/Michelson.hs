@@ -35,8 +35,8 @@ test_identity =
     identityType
     "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP {CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
 
--- test_identity_app ∷ T.TestTree
--- test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+test_identity_app ∷ T.TestTree
+test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
 
 identityTerm ∷ Term
 identityTerm =
@@ -77,14 +77,37 @@ identityAppTerm =
   ( J.Lam
       "x"
       ( J.App
-          (J.Lam "f" (J.App (J.App (J.Var "f", SNat 1, undefined) (J.Prim (PrimConst M.ValueNil), SNat 1, undefined), SNat 1, undefined) (J.App (J.Prim PrimFst, SNat 1, undefined) (J.Var "x", SNat 1, undefined), SNat 1, undefined), SNat 1, undefined), SNat 1, undefined)
-          (J.Prim PrimPair, SNat 1, undefined),
+          ( J.Lam
+              "f"
+              ( J.App
+                  ( J.App (J.Var "f", SNat 1, pairTy) (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy opl)),
+                    SNat 1,
+                    J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")))
+                  )
+                  (J.App (J.Prim PrimFst, SNat 1, fstTy) (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))), SNat 1, J.PrimTy (PrimTy (M.Type M.TUnit ""))),
+                SNat 1,
+                J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
+              ),
+            SNat 1,
+            J.Pi (SNat 1) pairTy (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
+          )
+          (J.Prim PrimPair, SNat 1, pairTy),
         SNat 1,
-        undefined
+        J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
       ),
     SNat 1,
-    undefined
+    identityType
   )
+
+fstTy ∷ Type
+fstTy = J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))
+
+pairTy ∷ Type
+pairTy =
+  J.Pi
+    (SNat 1)
+    (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
+    (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
 
 identityType ∷ Type
 identityType = J.Pi Omega (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
