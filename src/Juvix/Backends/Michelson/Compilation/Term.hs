@@ -126,13 +126,12 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             notYetImplemented
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
-            let J.Pi _ argTy retTy@(J.Pi _ _ fTy) = ty
-            ty ← typeToTypeLam ty
-            retTy ← typeToTypeLam retTy
+            let J.Pi _ argTy (J.Pi _ _ fTy) = ty
+            ty ← typeToTypeLam ty [[], [M.Type (M.TList (M.Type M.TOperation "")) ""]]
             let fTy =
                   M.Type
                     ( M.TLambda
-                        (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")
+                        (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type (M.TList (M.Type M.TOperation "")) "")) "")
                         (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")
                     )
                     ""
@@ -151,9 +150,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                                       ( M.PUSH
                                           ""
                                           fTy
-                                          ( M.ValueLambda (M.PrimEx (M.DUP "") :| [M.PrimEx M.DROP])
+                                          ( M.ValueLambda (M.PrimEx (M.DUP "") :| [M.PrimEx (M.CDR "" ""), M.PrimEx (M.DIP [M.PrimEx (M.CAR "" "")]), M.PrimEx (M.PAIR "" "" "" "")])
                                           )
                                       ),
+                                    M.PrimEx (M.DIP [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" ""), M.PrimEx (M.DIP [M.PrimEx (M.CAR "" "")]), M.PrimEx M.SWAP, M.PrimEx (M.DIP [M.PrimEx M.DROP])]),
                                     M.PrimEx M.SWAP,
                                     M.PrimEx (M.PAIR "" "" "" "")
                                   ]
@@ -167,9 +167,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           -- modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
           -- :: a ~ s => (a, s)
           PrimConst const → stackCheck addsOne $ do
-            let J.PrimTy (PrimTy t) = ty
-            modify @"stack" ((:) (FuncResultE, t))
-            pure (M.PrimEx (M.PUSH "" t const))
+            case const of
+              M.ValueNil -> do
+                let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
+                modify @"stack" ((:) (FuncResultE, t))
+                pure (M.PrimEx (M.NIL "" "" elemTy))
+              _ -> do
+                let J.PrimTy (PrimTy t) = ty
+                modify @"stack" ((:) (FuncResultE, t))
+                pure (M.PrimEx (M.PUSH "" t const))
 
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
@@ -220,10 +226,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     J.App func arg →
       stackCheck addsOne $ do
         let (_, _, J.Pi _ _ resTy) = func
-        resTy ← typeToTypeLam resTy
+        resTy ← typeToTypeLam resTy [[], []] -- TODO
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
-        modify @"stack" ((:) (FuncResultE, resTy))
+        modify @"stack" ((:) (FuncResultE, resTy) . drop 2)
         -- Then pair up (a) with (vars) and execute the function.
         pure
           ( M.SeqEx
