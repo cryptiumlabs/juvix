@@ -16,7 +16,7 @@ import qualified Michelson.Untyped as M
 typedContractToSource ∷ M.SomeContract → Text
 typedContractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
 
-untypedContractToSource :: M.Contract' M.ExpandedOp -> Text
+untypedContractToSource ∷ M.Contract' M.ExpandedOp → Text
 untypedContractToSource c = L.toStrict (M.printUntypedContract c)
 
 compile ∷ Term → Type → (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])

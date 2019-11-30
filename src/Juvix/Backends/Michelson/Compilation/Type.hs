@@ -25,7 +25,7 @@ typeToTypeLam ∷
   ∀ m.
   (HasThrow "compilationError" CompilationError m) ⇒
   Type →
-  [[M.Type]] ->
+  [[M.Type]] →
   m M.Type
 typeToTypeLam ty closureTypes =
   case ty of
@@ -34,15 +34,16 @@ typeToTypeLam ty closureTypes =
     J.PrimTy (PrimTy mTy) → pure mTy
     J.Pi _ argTy retTy → do
       case closureTypes of
-        [] -> throw @"compilationError" InvalidInputType
-        ty : tys -> do
+        [] → throw @"compilationError" InvalidInputType
+        ty : tys → do
           -- TODO: We also need to deal with closures in the argument. Maybe we need a new `Type` data structure.
           argTy ← typeToTypeLam argTy []
           retTy ← typeToTypeLam retTy tys
           let closureTy = closureType ty
           pure (M.Type (M.TPair "" "" closureTy (M.Type (M.TLambda (M.Type (M.TPair "" "" argTy closureTy) "") retTy) "")) "")
 
-closureType :: [M.Type] -> M.Type
-closureType (x : []) = x
-closureType (x : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
+-- No free variables - ()
+-- Free variables: nested pair of free variables in order, finally ().
+closureType ∷ [M.Type] → M.Type
 closureType [] = M.Type M.TUnit ""
+closureType (x : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""

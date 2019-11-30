@@ -33,7 +33,7 @@ test_identity =
   shouldCompile
     identityTerm
     identityType
-    "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"
+    "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP {CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
 
 -- test_identity_app ∷ T.TestTree
 -- test_identity_app = shouldCompile identityAppTerm identityType "parameter unit;storage unit;code {{DUP; {DIP {{}}; {CAR; {NIL operation; {PAIR % %; {DIP {{DROP}}; {}}}}}}}};"

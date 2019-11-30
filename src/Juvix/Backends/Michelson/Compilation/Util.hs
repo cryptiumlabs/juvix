@@ -80,7 +80,7 @@ rearrange n = SeqEx [PrimEx (DIP [rearrange (n - 1)]), PrimEx SWAP]
 unrearrange ∷ Natural → ExpandedOp
 unrearrange 0 = SeqEx []
 unrearrange 1 = PrimEx SWAP
-unrearrange n = SeqEx [PrimEx (DIP [unrearrange (n - 1)]), PrimEx SWAP]
+unrearrange n = SeqEx [PrimEx SWAP, PrimEx (DIP [unrearrange (n - 1)])]
 
 foldDrop ∷ Natural → ExpandedOp
 foldDrop 0 = SeqEx []
@@ -120,7 +120,7 @@ genFunc instr =
   case instr of
     SeqEx is → do
       fs ← mapM genFunc is
-      pure (\s → foldl (flip ($)) s (reverse fs))
+      pure (\s → foldl (flip ($)) s fs)
     PrimEx p →
       case p of
         DROP → pure (drop 1)
