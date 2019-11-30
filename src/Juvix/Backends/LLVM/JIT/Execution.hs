@@ -9,6 +9,7 @@ import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
 import LLVM.Context
+import LLVM.CodeModel
 import qualified LLVM.ExecutionEngine as EE
 import LLVM.Module as Mod
 import LLVM.PassManager
@@ -19,7 +20,7 @@ runJIT config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
   where
     optlevel = convOptLevel (configOptimisationLevel config)
 
-    model = Nothing -- code model (default)
+    model = Just JITDefault -- code model (jit default)
 
     ptrelim = Nothing -- frame pointer elimination
 
@@ -42,7 +43,7 @@ jit ∷ (DynamicImport (a → IO b)) ⇒ Config → AST.Module → AST.Name → 
 jit config mod name = do
   paramChan ← newChan
   resultChan ← newChan
-  void $ forkOS $ withContext $ \context →
+  void $ forkIO $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       initializeAllTargets
       withModuleFromAST context mod $ \m →
@@ -54,6 +55,7 @@ jit config mod name = do
           B.putStrLn s
           B.putStrLn "getting execution engine"
           EE.withModuleInEngine executionEngine m $ \ee → do
+            B.putStrLn "gettin fn"
             fref ← EE.getFunction ee name
             B.putStrLn "got fn"
             case fref of
