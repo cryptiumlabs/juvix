@@ -83,7 +83,8 @@ unificationConstraints ∷
   PType primTy →
   PType primTy →
   m ()
-unificationConstraints (PPrimT p1) (PPrimT p2) =
+unificationConstraints (PPrimT _) (PPrimT _) =
+  -- TODO: Check p1 == p2 here?
   pure ()
 unificationConstraints (PSymT a _) (PSymT b _) =
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
@@ -91,6 +92,9 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
   unificationConstraints aArg bArg
   unificationConstraints aRes bRes
+unificationConstraints _ _ =
+  -- TODO: Throw an error here?
+  pure mempty
 
 --unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
 
@@ -295,7 +299,7 @@ typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
             newTyp ← addParamPos bangApp result
             pure (newAssign', newTyp)
           | otherwise → throw @"typ" (MisMatchArguments arg type2 term)
-        t@PSymT {} → throw @"typ" (TypeIsNotFunction t)
+        t@_ → throw @"typ" (TypeIsNotFunction t)
     rec' (RBang x (RLam s t)) assign = do
       (newAssign, bodyType) ← rec' t assign
       case assign Map.!? s of

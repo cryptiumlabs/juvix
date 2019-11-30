@@ -4,7 +4,6 @@ import qualified Bulletproofs.ArithmeticCircuit as C
 import Data.Curve.Weierstrass.SECP256K1 (Fr)
 import Juvix.Backends.ArithmeticCircuit.Compilation.Types
 import Juvix.Backends.ArithmeticCircuit.Parameterisation
-import qualified Juvix.Core.Erased.Types as J
 import Juvix.Library hiding (Type)
 
 compile ∷
