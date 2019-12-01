@@ -117,6 +117,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
             let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
+            -- need uniform type for closures: ... must be bytes
             firstArgTy ← typeToType firstArgTy
             secondArgTy ← typeToType secondArgTy
             -- TODO: Clean this up.
@@ -201,6 +202,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       stackCheck addsOne $ do
         let J.Pi _ argTy retTy = ty
         -- TODO: How to deal with packed lambdas here? Do we need to?
+        -- We do, these might be functions, not like primitives.
+        -- If the argument is a lambda, we don't know what its closure type is.
+        -- Need to change environment to bytes? ugh. hopefully this can be optimised out later.
+        -- TODO: Change environment to bytes, unpack, unwrap the option. This will require fancy optimisations.
         argTy ← typeToType argTy
         retTy ← typeToType retTy
         stack ← get @"stack"
@@ -232,7 +237,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
         stack ← get @"stack"
-        throw @"compilationError" (NotYetImplemented (show stack))
+        --throw @"compilationError" (NotYetImplemented (show stack))
         modify @"stack" (\(_ : (_, M.Type (M.TPair _ _ _ (M.Type (M.TLambda _ retTy) _)) _) : xs) → (FuncResultE, retTy) : xs)
         -- Then pair up (a) with (vars) and execute the function.
         pure
