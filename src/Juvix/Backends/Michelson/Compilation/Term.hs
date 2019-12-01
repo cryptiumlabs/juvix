@@ -118,8 +118,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           PrimPair → stackCheck addsOne $ do
             let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
             -- need uniform type for closures: ... must be bytes
-            firstArgTy ← typeToType firstArgTy
-            secondArgTy ← typeToType secondArgTy
+            firstArgTy ← typeToTypeForClosure firstArgTy
+            secondArgTy ← typeToTypeForClosure secondArgTy
             -- TODO: Clean this up.
             let mkPair x y = M.Type (M.TPair "" "" x y) ""
 
@@ -206,20 +206,18 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         -- If the argument is a lambda, we don't know what its closure type is.
         -- Need to change environment to bytes? ugh. hopefully this can be optimised out later.
         -- TODO: Change environment to bytes, unpack, unwrap the option. This will require fancy optimisations.
-        argTy ← typeToType argTy
-        retTy ← typeToType retTy
+        argTy ← typeToTypeForClosure argTy
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
-
             freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
-
-            (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
-
         vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
         packOp ← packClosure free
         put @"stack" []
         unpackOp ← unpackClosure ((arg, argTy) : freeWithTypes)
         inner ← termToInstr body paramTy
+        post <- get @"stack"
+        let ((_, retTy) : _) = post
+        let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
         put @"stack" ((FuncResultE, rTy) : stack)
         pure
           ( M.SeqEx
