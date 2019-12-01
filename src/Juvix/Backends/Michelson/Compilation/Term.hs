@@ -215,13 +215,14 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         put @"stack" []
         unpackOp ← unpackClosure ((arg, argTy) : freeWithTypes)
         inner ← termToInstr body paramTy
-        post <- get @"stack"
+        dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
+        post ← get @"stack"
         let ((_, retTy) : _) = post
         let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
         put @"stack" ((FuncResultE, rTy) : stack)
         pure
           ( M.SeqEx
-              [ M.PrimEx (M.PUSH "" lTy (M.ValueLambda (unpackOp :| [inner]))),
+              [ M.PrimEx (M.PUSH "" lTy (M.ValueLambda (unpackOp :| [inner, dropOp]))),
                 M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
                 M.SeqEx vars,
                 packOp,

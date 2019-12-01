@@ -175,6 +175,16 @@ unpackClosure env = do
         )
     )
 
+dropClosure ∷
+  ∀ m.
+  (HasState "stack" Stack m) ⇒
+  [(Symbol, Type)] →
+  m ExpandedOp
+dropClosure env = do
+  let count = length env
+  modify @"stack" (\(x : xs) → x : drop count xs)
+  pure (PrimEx (DIP (replicate count (PrimEx DROP))))
+
 carN ∷ Int → ExpandedOp
 carN 0 = SeqEx []
 carN 1 = PrimEx (CAR "" "")
