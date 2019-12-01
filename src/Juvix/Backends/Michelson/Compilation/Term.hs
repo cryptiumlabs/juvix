@@ -4,7 +4,8 @@ import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.ErasedAnn.Types as J
+import qualified Juvix.Core.Erased.Util as J
+import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
@@ -105,7 +106,6 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           PrimFst → stackCheck addsOne $ do
             let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
                 (_, retTy) = lamRetTy [] pairTy xT
-            throw @"compilationError" (NotYetImplemented (show retTy))
             modify @"stack" ((:) (FuncResultE, retTy))
             pure (oneArgPrim [M.PrimEx (M.CAR "" "")] retTy)
           -- :: \x -> y ~ s => (f, s)
@@ -116,10 +116,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             pure (oneArgPrim [M.PrimEx (M.CDR "" "")] retTy)
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
-            -- type: Pi _ argTy
             let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
             firstArgTy ← typeToType firstArgTy
             secondArgTy ← typeToType secondArgTy
+            -- TODO: Clean this up.
             let mkPair x y = M.Type (M.TPair "" "" x y) ""
 
                 mkUnit = M.Type (M.TUnit) ""
@@ -199,18 +199,40 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- :: \a -> b ~ s => ((vars, Lam a b), s)
     J.Lam arg body →
       stackCheck addsOne $ do
-        throw @"compilationError" (NotYetImplemented "lam")
-        -- TODO FIXME
-        modify @"stack" (\((_, t) : xs) → (VarE arg, t) : xs)
+        let J.Pi _ argTy retTy = ty
+        -- TODO: How to deal with packed lambdas here? Do we need to?
+        argTy ← typeToType argTy
+        retTy ← typeToType retTy
+        stack ← get @"stack"
+        let free = J.free (J.eraseTerm term)
+
+            freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
+
+            (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
+
+        vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
+        packOp ← packClosure free
+        put @"stack" []
+        unpackOp ← unpackClosure ((arg, argTy) : freeWithTypes)
         inner ← termToInstr body paramTy
-        after ← genReturn (foldDrop 1)
-        pure (M.SeqEx [inner, after])
+        put @"stack" ((FuncResultE, rTy) : stack)
+        pure
+          ( M.SeqEx
+              [ M.PrimEx (M.PUSH "" lTy (M.ValueLambda (unpackOp :| [inner]))),
+                M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
+                M.SeqEx vars,
+                packOp,
+                M.PrimEx (M.PAIR "" "" "" "") -- pair the env & lambda
+              ]
+          )
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
       stackCheck addsOne $ do
         func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
+        stack ← get @"stack"
+        throw @"compilationError" (NotYetImplemented (show stack))
         modify @"stack" (\(_ : (_, M.Type (M.TPair _ _ _ (M.Type (M.TLambda _ retTy) _)) _) : xs) → (FuncResultE, retTy) : xs)
         -- Then pair up (a) with (vars) and execute the function.
         pure

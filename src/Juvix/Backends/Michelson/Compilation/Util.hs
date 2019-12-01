@@ -64,6 +64,10 @@ unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust bind
 appendDrop ∷ Stack → Stack → Stack
 appendDrop prefix = (<>) prefix . drop 1
 
+lookupType ∷ Symbol → Stack → Maybe Type
+lookupType _ [] = Nothing
+lookupType n (x : xs) = if fst x == VarE n then pure (snd x) else lookupType n xs
+
 position ∷ Symbol → Stack → Maybe Natural
 position _ [] = Nothing
 position n (x : xs) = if fst x == VarE n then Just 0 else succ |<< position n xs
@@ -139,3 +143,39 @@ genFunc instr =
 
 oneArgPrim ∷ [ExpandedOp] → Type → ExpandedOp
 oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValuePair ValueUnit (ValueLambda (PrimEx (CAR "" "") :| ops))))
+
+packClosure ∷
+  ∀ m.
+  ( HasState "stack" Stack m,
+    HasThrow "compilationError" CompilationError m
+  ) ⇒
+  [Symbol] →
+  m ExpandedOp
+packClosure vars = do
+  let count = length vars
+  genReturn
+    ( SeqEx
+        ( replicate count (PrimEx (PAIR "" "" "" ""))
+        )
+    )
+
+unpackClosure ∷
+  ∀ m.
+  (HasState "stack" Stack m) ⇒
+  [(Symbol, Type)] →
+  m ExpandedOp
+unpackClosure env = do
+  let count = length env
+  modify @"stack" ((<>) (map (\(s, t) → (VarE s, t)) env))
+  -- dup (count - 1) times,
+  pure
+    ( SeqEx
+        ( replicate (count - 1) (PrimEx (DUP ""))
+            <> [carN count]
+        )
+    )
+
+carN ∷ Int → ExpandedOp
+carN 0 = SeqEx []
+carN 1 = PrimEx (CAR "" "")
+carN n = SeqEx [PrimEx (CAR "" ""), PrimEx (DIP [carN (n - 1)])]
