@@ -1,6 +1,10 @@
-* Syntax thoughts
-Initial ideas on syntax
-** Arrows
+
+
+* Usage Syntax
+
+** Inside Arrows (Jeremy)
+*** Arrows
+**** Initial Idea
 - Arrow syntax is relatively simple
 
 - Without sugar all arrows will look like
@@ -20,8 +24,7 @@ Initial ideas on syntax
     unlimited useages
   + Note :: In the unicode extension → can replace ->
   + Note :: In the unicode extension  ⊸ can replace -o
-
-**  Stand alone useages
+***  Stand alone usages
 - Due to arrows being only applicable with bindings, we can not
   determine the useage of the following
 
@@ -43,8 +46,41 @@ Initial ideas on syntax
   + I also don't fully like the second, as how does this work with
     named arguments? It seems like arbitrary extra syntax
   + Thus I would like suggestions on what this should look like.
+*** Underlying philosophy
+- Noise is bad for reading code and is detail that one should be able
+  to reason about effectively.
+- For Arrows, this means that users should be able to read the default
+  arrows as one would from other languages (→ means unlimited usages
+  in other languages).
+  + There is a de-sugared arrows that new users can use instead while learning?
+** Consistent Usages (Chris)
+- Instead of having special arrows as described in the initial idea,
+  instead have usage come be the first variable after every :
+  #+BEGIN_SRC idris
+    f : 2 (x : 3 Int) -> Double
 
-** Additive conjunction
+    f : w (x : 2 Int -> y : 1 () -> IO ())
+  #+END_SRC
+- This is consistent, since every variable has sugar
+*** Underlying philosophy
+- TODO (Chris)
+** Analysis
+- _Inside Arrows_
+  + pros
+    * Cleaner type signatures
+    * Clean sugar and familiar sugar
+  + cons
+    * Implicit for beginners
+- _Consistent Usages_
+  + pros
+    * More explicit
+    * Gets users more used to usage
+  + cons
+    * A few extra characters for every signature
+    * How does sugar get added from this system? (Jeremy)
+
+* Additive conjunction
+** Initial ideas (Jeremy)
 - The literature uses `&` for this, however to be less confusing for the user I suggest this
   #+BEGIN_SRC idris
      Data A : Set where
