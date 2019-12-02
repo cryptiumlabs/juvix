@@ -40,7 +40,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"
-    isBothPrimary ← Codegen.externf "is_both_primary"
     anihilateRewireAux ← Codegen.externf "anihilate_rewire_aux"
     -- switch creations
     eacList ← Codegen.externf "eac_list"
@@ -73,7 +72,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- TODO ∷ Prove this branch is unnecessary
     appContCase ← Codegen.addBlock "switch.app.continue"
     nodePtr ← nodeOf car
-    tagNode ← Codegen.call Defs.bothPrimary isBothPrimary (Codegen.emptyArgs [nodePtr])
+    tagNode ← Defs.isBothPrimary [nodePtr]
     isPrimary ← Codegen.loadIsPrimaryEle tagNode
     -- TODO ∷ Prove this branch is unnecessary
     test ←
@@ -189,11 +188,10 @@ anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" arg
     -- TODO remove these explicit allocations
     aux1 ← Codegen.auxiliary1
     aux2 ← Codegen.auxiliary2
-    rewire ← Codegen.externf "rewire"
     node1 ← Codegen.externf "node_1"
     node2 ← Codegen.externf "node_2"
-    _ ← Codegen.call Type.void rewire (Codegen.emptyArgs [node1, aux1, node2, aux1])
-    _ ← Codegen.call Type.void rewire (Codegen.emptyArgs [node1, aux2, node2, aux2])
+    Codegen.rewire [node1, aux1, node2, aux1]
+    Codegen.rewire [node1, aux2, node2, aux2]
     _ ← Codegen.delNode node1
     Codegen.delNode node2
   where
@@ -229,17 +227,8 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
     aux2 ← Codegen.auxiliary2
     mainPort ← Codegen.mainPort
     -- abstract out this string!
-    linkConnectedPort ← Codegen.externf "link_connected_port"
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, aux1, era1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, aux2, era2, mainPort])
+    Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
+    Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
     Codegen.retNull
   where
     args =
@@ -280,49 +269,15 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
     mainPort ← Codegen.mainPort
     auxiliary1 ← Codegen.auxiliary1
     auxiliary2 ← Codegen.auxiliary2
-    linkConnectedPort ← Codegen.externf "link_connected_port"
-    link ← Codegen.externf "link"
     -- TODO ∷ Abstract
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, auxiliary1, nod1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod1, auxiliary1, fan2, auxiliary1])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod1, auxiliary2, fan1, auxiliary1])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, auxiliary2, nod2, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod2, auxiliary1, fan2, auxiliary2])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod2, auxiliary2, fan1, auxiliary2])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [node, auxiliary2, fan1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [node, auxiliary1, fan2, mainPort])
+    Codegen.linkConnectedPort [fanIn, auxiliary1, nod1, mainPort]
+    Codegen.link [nod1, auxiliary1, fan2, auxiliary1]
+    Codegen.link [nod1, auxiliary2, fan1, auxiliary1]
+    Codegen.linkConnectedPort [fanIn, auxiliary2, nod2, mainPort]
+    Codegen.link [nod2, auxiliary1, fan2, auxiliary2]
+    Codegen.link [nod2, auxiliary2, fan1, auxiliary2]
+    Codegen.linkConnectedPort [node, auxiliary2, fan1, mainPort]
+    Codegen.linkConnectedPort [node, auxiliary1, fan2, mainPort]
     Codegen.retNull
   where
     args =

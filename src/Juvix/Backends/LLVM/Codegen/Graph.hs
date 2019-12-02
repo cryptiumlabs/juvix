@@ -12,7 +12,53 @@ import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
 
--- TODO ∷ abstract out getElementPointer and load into a single operation
+--------------------------------------------------------------------------------
+-- Call Alias for Main Functions
+--------------------------------------------------------------------------------
+
+callGen ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  Type.Type →
+  [Operand.Operand] →
+  Name.Name →
+  m Operand.Operand
+callGen typ' args fn = do
+  f ← Block.externf fn
+  Block.call typ' f (Block.emptyArgs args)
+
+link,
+  linkConnectedPort,
+  rewire ∷
+    ( HasThrow "err" Errors m,
+      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "symtab" SymbolTable m
+    ) ⇒
+    [Operand.Operand] →
+    m ()
+link args = callGen Type.void args "link" >> pure ()
+rewire args = callGen Type.void args "rewire" >> pure ()
+linkConnectedPort args = callGen Type.void args "link_connected_port" >> pure ()
+
+isBothPrimary,
+  findEdge ∷
+    ( HasThrow "err" Errors m,
+      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "symtab" SymbolTable m
+    ) ⇒
+    Type.Type →
+    [Operand.Operand] →
+    m Operand.Operand
+isBothPrimary typ args = callGen (Types.bothPrimary typ) args "is_both_primary"
+findEdge typ args = callGen typ args "find_edge"
 
 --------------------------------------------------------------------------------
 -- Main Functions
@@ -22,7 +68,7 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ abstract over the define pattern seen below?
 
-link ∷
+link' ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -33,7 +79,7 @@ link ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-link = Block.defineFunction Type.void "link" args $
+link' = Block.defineFunction Type.void "link" args $
   do
     setPort ("node_1", "port_1") ("node_2", "port_2")
     setPort ("node_2", "port_2") ("node_1", "port_1")
@@ -48,7 +94,7 @@ link = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-isBothPrimary ∷
+isBothPrimary' ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -62,7 +108,7 @@ isBothPrimary ∷
   ) ⇒
   Type.Type →
   m Operand.Operand
-isBothPrimary nodePtrTyp =
+isBothPrimary' nodePtrTyp =
   Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
@@ -94,7 +140,7 @@ isBothPrimary nodePtrTyp =
     args = [(nodePtrTyp, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
-findEdge ∷
+findEdge' ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -106,7 +152,7 @@ findEdge ∷
   ) ⇒
   Type.Type →
   m Operand.Operand
-findEdge nodPtrTyp = Block.defineFunction nodPtrTyp "find_edge" args $
+findEdge' nodPtrTyp = Block.defineFunction nodPtrTyp "find_edge" args $
   do
     node ← Block.externf "node"
     pNum ← Block.externf "port"
@@ -228,7 +274,7 @@ allocaPorts = Block.defineFunctionVarArgs portArrayLen "alloca_ports" args $
 
 -- derived from the core functions
 
-linkConnectedPort ∷
+linkConnectedPort' ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -239,7 +285,7 @@ linkConnectedPort ∷
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
-linkConnectedPort = Block.defineFunction Type.void "link_connected_port" args $
+linkConnectedPort' = Block.defineFunction Type.void "link_connected_port" args $
   do
     edge ← Block.externf "find_edge"
     link ← Block.externf "link"
@@ -267,7 +313,7 @@ linkConnectedPort = Block.defineFunction Type.void "link_connected_port" args $
         (numPorts, "port_new")
       ]
 
-rewire ∷
+rewire' ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -278,7 +324,7 @@ rewire ∷
     HasState "symtab" SymbolTable m
   ) ⇒
   m Operand.Operand
-rewire = Block.defineFunction Type.void "rewire" args $
+rewire' = Block.defineFunction Type.void "rewire" args $
   do
     edge ← Block.externf "find_edge"
     relink ← Block.externf "link_connected_port"

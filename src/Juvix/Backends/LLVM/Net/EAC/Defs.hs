@@ -14,7 +14,30 @@ import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
 
-isBothPrimary ∷
+--------------------------------------------------------------------------------
+-- Aliases
+--------------------------------------------------------------------------------
+isBothPrimary,
+  findEdge ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "symtab" Codegen.SymbolTable m
+    ) ⇒
+    [Operand.Operand] →
+    m Operand.Operand
+isBothPrimary = Codegen.isBothPrimary Types.eacPointer
+findEdge = Codegen.findEdge Types.eacPointer
+
+bothPrimary ∷ Type.Type
+bothPrimary = Codegen.bothPrimary Types.eacPointer
+
+--------------------------------------------------------------------------------
+-- Graph operation definitions
+--------------------------------------------------------------------------------
+
+isBothPrimary' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -27,9 +50,9 @@ isBothPrimary ∷
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
   m Operand.Operand
-isBothPrimary = Codegen.isBothPrimary Types.eacPointer
+isBothPrimary' = Codegen.isBothPrimary' Types.eacPointer
 
-findEdge ∷
+findEdge' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -40,7 +63,4 @@ findEdge ∷
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   m Operand.Operand
-findEdge = Codegen.findEdge Types.eacPointer
-
-bothPrimary ∷ Type.Type
-bothPrimary = Codegen.bothPrimary Types.eacPointer
+findEdge' = Codegen.findEdge' Types.eacPointer
