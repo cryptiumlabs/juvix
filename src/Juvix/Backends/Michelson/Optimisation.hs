@@ -1,7 +1,7 @@
 -- |
 -- - This is a simple optimization strategy which replaces sequences of
---     Michelson instructions with equivalent sequences of fewer
---     instructions.
+--   Michelson instructions with equivalent sequences of fewer
+--   instructions.
 --   + At the moment nontrivial programs are unlikely to compile to
 --     the smallest equivalent Michelson instruction sequence,
 -- - but little time has been spent on optimization so far - a high
