@@ -248,10 +248,10 @@ vaList = StructureType
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
 
-bothPrimary ∷ Type
-bothPrimary = StructureType
+bothPrimary ∷ Type → Type
+bothPrimary nodePtrType = StructureType
   { isPacked = False,
-    elementTypes = [Type.i1, nodePointer]
+    elementTypes = [Type.i1, nodePtrType]
   }
 
 voidStarTy ∷ Type

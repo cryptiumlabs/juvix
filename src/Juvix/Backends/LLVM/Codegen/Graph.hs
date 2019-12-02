@@ -60,8 +60,10 @@ isBothPrimary ∷
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
+  Type.Type →
   m Operand.Operand
-isBothPrimary = Block.defineFunction Types.bothPrimary "is_both_primary" args $
+isBothPrimary nodePtrTyp =
+  Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
   do
     -- TODO ∷ should this call be abstracted somewhere?!
     -- Why should Ι allocate for every port?!
@@ -82,14 +84,14 @@ isBothPrimary = Block.defineFunction Types.bothPrimary "is_both_primary" args $
     otherNodeInt ← ptrToInt otherNodePtr pointerSize
     -- compare the pointers to see if they are the same
     cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-    return' ← Block.alloca Types.bothPrimary
+    return' ← Block.alloca (Types.bothPrimary nodePtrTyp)
     tag ← getIsPrimaryEle return'
     nod ← getPrimaryNode return'
     store tag cmp
     store nod otherNodePtr
     ret return'
   where
-    args = [(nodePointer, "node_ptr")]
+    args = [(nodePtrTyp, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
 findEdge ∷
@@ -102,8 +104,9 @@ findEdge ∷
     HasState "names" Names m,
     HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
+  Type.Type →
   m Operand.Operand
-findEdge = Block.defineFunction Types.portType "find_edge" args $
+findEdge nodPtrTyp = Block.defineFunction nodPtrTyp "find_edge" args $
   do
     node ← Block.externf "node"
     pNum ← Block.externf "port"
