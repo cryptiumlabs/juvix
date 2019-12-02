@@ -121,11 +121,11 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
-      <> show (show (snd gotT))
+      <> show (snd gotT)
       <> " , with "
       <> show (fst gotT)
       <> " usage.\n But the expected type is "
-      <> show (show (snd expectedT))
+      <> show (snd expectedT)
       <> " , with "
       <> show (fst expectedT)
       <> " usage."

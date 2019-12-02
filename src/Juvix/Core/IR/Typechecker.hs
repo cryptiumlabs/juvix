@@ -1,10 +1,5 @@
 module Juvix.Core.IR.Typechecker where
 
-<<<<<<< HEAD
-import Control.Monad.Writer as W
-import Data.Monoid
-=======
->>>>>>> develop
 import Juvix.Core.IR.Evaluator
 import Juvix.Core.IR.Types
 import Juvix.Core.Types
@@ -14,9 +9,9 @@ import Prelude (String, lookup, show)
 
 -- | 'checker' for checkable terms checks the term against an annotation and returns ().
 typeTerm ∷
-<<<<<<< HEAD
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -27,24 +22,25 @@ typeTerm ∷
   Context primTy primVal m →
   Term primTy primVal →
   Annotation primTy primVal m →
-  Writer (Endo [LogEntry]) (m ())
+  m ()
 
-data LogEntry = LogEntry {msg ∷ String}
+data TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Eq, Show)
 
-logOutput ∷ String → Writer (Endo [LogEntry]) ()
-logOutput s = W.tell $ Endo ([LogEntry s] <>)
+logOutput ∷ ∀ m. HasWriter "typecheckerLog" [TypecheckerLog] m ⇒ String → m ()
+logOutput s = tell @"typecheckerLog" [TypecheckerLog s]
 
 checkerIntroLog ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
     Show primTy,
     Show primVal,
     (Show (Value primTy primVal m))
   ) ⇒
   Term primTy primVal →
   Annotation primTy primVal m →
-  Writer (Endo [LogEntry]) ()
+  m ()
 checkerIntroLog t ann =
   logOutput
     ( "Type checking the term "
@@ -57,17 +53,22 @@ checkerIntroLog t ann =
         <> (show t)
     )
 
+failed ∷ String
+failed = "Check failed. "
+
+passed ∷ String
+passed = "Check passed. "
+
 threwError ∷
-=======
->>>>>>> develop
   ∀ primTy primVal m.
   ( Show primTy,
     Show primVal,
-    Show (TypecheckError primTy primVal m)
+    Show (TypecheckError primTy primVal m),
+    Show (TypecheckerLog)
   ) ⇒
   TypecheckError primTy primVal m →
   String
-threwError e = show "Threw type check error " <> show e <> " to user. "
+threwError e = show "Threw type check error \" " <> show e <> " \" to user. "
 
 -- * (Universe formation rule)
 
@@ -78,7 +79,11 @@ typeTerm _ _ii _g t@(Star i) ann = do
     (SNat 0 == fst ann)
     ( do
         logOutput $
-          "Sigma is not zero. " <> threwError SigmaMustBeZero
+          failed
+            <> "Sigma is "
+            <> show (fst ann)
+            <> ", which is not zero. "
+            <> threwError SigmaMustBeZero
         throw @"typecheckError" SigmaMustBeZero
     ) -- checks sigma = 0.
   logOutput "Checking that the annotation is of type *j, and j>i. "
@@ -87,27 +92,57 @@ typeTerm _ _ii _g t@(Star i) ann = do
       if (i >= j)
         then
           ( do
-              logOutput $ "j is not greater than i. " <> threwError (UniverseMismatch t (snd ann))
-              return (throw @"typecheckError" (UniverseMismatch t (snd ann)))
+              logOutput $
+                failed
+                  <> "The input annotation is of * level"
+                  <> show j
+                  <> ", which is not greater than the term's * level "
+                  <> show i
+                  <> ". "
+                  <> threwError (UniverseMismatch t (snd ann))
+              throw @"typecheckError" (UniverseMismatch t (snd ann))
           )
-        else return (return ()) -- TODO? figure out how to make `unless` work.
+        else
+          ( do
+              logOutput $
+                passed
+                  <> "The input annotation is of * level"
+                  <> show j
+                  <> ", which is greater than the term's * level "
+                  <> show i
+                  <> ". "
+              return ()
+          )
     _ → do
-      logOutput $ " The annotation is not of type *. " <> threwError (ShouldBeStar (snd ann))
-      return (throw @"typecheckError" (ShouldBeStar (snd ann)))
+      logOutput $
+        failed
+          <> " The annotation is not of type *, it is of type "
+          <> show (snd ann)
+          <> threwError (ShouldBeStar (snd ann))
+      throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g t@(Pi pi varType resultType) ann = do
   checkerIntroLog t ann
   logOutput "patterned matched to be a dependent function type term. Type checker applies the universe introduction rule. Checking that sigma is zero."
   unless -- checks sigma = 0.
     (SNat 0 == fst ann)
     ( do
-        logOutput $ "Sigma is not zero. " <> threwError SigmaMustBeZero
+        logOutput $
+          failed
+            <> "Sigma is "
+            <> show (fst ann)
+            <> ", which is not zero. "
+            <> threwError SigmaMustBeZero
         throw @"typecheckError" SigmaMustBeZero
     )
   case snd ann of -- checks that type is *i
     VStar _ → do
       logOutput "Checking that the variable is of type *i. "
       typeTerm p ii g varType ann -- checks varType is of type Star i
-      logOutput "Variable is of type *i. Checking that the result is of type *i. "
+      logOutput $
+        passed
+          <> "Variable is of type "
+          <> show (snd ann)
+          <> ". Checking that the result is of type *i. "
       ty ← evalTerm p varType []
       typeTerm
         p -- checks resultType is of type Star i
@@ -128,16 +163,16 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
     then
       ( do
           logOutput "Usage is not zero. "
-          return (throw @"typecheckError" (UsageMustBeZero))
+          throw @"typecheckError" (UsageMustBeZero)
       )
     else
       if (quote0 (snd ann) /= Star 0)
         then
           ( do
               logOutput "Type is not * 0"
-              return (throw @"typecheckError" (TypeMismatch ii x (SNat 0, VStar 0) ann))
+              throw @"typecheckError" (TypeMismatch ii x (SNat 0, VStar 0) ann)
           )
-        else return (return ())
+        else return ()
 -- Lam (introduction rule of dependent function type)
 typeTerm p ii g (Lam s) ann =
   case ann of
@@ -160,14 +195,14 @@ typeTerm p ii g (Elim e) ann = do
     then
       ( do
           logOutput "Usages not compatible. "
-          return (throw @"typecheckError" (UsageNotCompatible ann' ann))
+          throw @"typecheckError" (UsageNotCompatible ann' ann)
       )
     else
       if (annt /= annt')
         then
           ( do
               logOutput $ "Annotation types are not the same. " <> threwError (TypeMismatch ii (Elim e) ann ann')
-              return (throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann'))
+              throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
         else (throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann'))
 
