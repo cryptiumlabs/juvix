@@ -1,7 +1,10 @@
 module Juvix.Core.IR.Typechecker where
 
+<<<<<<< HEAD
 import Control.Monad.Writer as W
 import Data.Monoid
+=======
+>>>>>>> develop
 import Juvix.Core.IR.Evaluator
 import Juvix.Core.IR.Types
 import Juvix.Core.Types
@@ -11,6 +14,7 @@ import Prelude (String, lookup, show)
 
 -- | 'checker' for checkable terms checks the term against an annotation and returns ().
 typeTerm ∷
+<<<<<<< HEAD
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
     Show primTy,
@@ -54,6 +58,8 @@ checkerIntroLog t ann =
     )
 
 threwError ∷
+=======
+>>>>>>> develop
   ∀ primTy primVal m.
   ( Show primTy,
     Show primVal,
