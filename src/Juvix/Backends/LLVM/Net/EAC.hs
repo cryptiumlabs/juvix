@@ -8,6 +8,7 @@ module Juvix.Backends.LLVM.Net.EAC where
 -- TODO ∷ abstract all all imports to LLVM
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
@@ -72,7 +73,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- TODO ∷ Prove this branch is unnecessary
     appContCase ← Codegen.addBlock "switch.app.continue"
     nodePtr ← nodeOf car
-    tagNode ← Codegen.call Codegen.bothPrimary isBothPrimary (Codegen.emptyArgs [nodePtr])
+    tagNode ← Codegen.call Defs.bothPrimary isBothPrimary (Codegen.emptyArgs [nodePtr])
     isPrimary ← Codegen.loadIsPrimaryEle tagNode
     -- TODO ∷ Prove this branch is unnecessary
     test ←
