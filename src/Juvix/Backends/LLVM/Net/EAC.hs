@@ -8,6 +8,7 @@ module Juvix.Backends.LLVM.Net.EAC where
 -- TODO ∷ abstract all all imports to LLVM
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import qualified Juvix.Backends.LLVM.DSL as DSL
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
@@ -238,9 +239,6 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
 
 fanInAux1 allocF = undefined
 
--- TODO ∷ change interface for link and linkOtherNode to be more like
--- the interpreter
-
 fanInAux2 ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
@@ -265,19 +263,30 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
     fan2 ← allocaFanIn >>= nodeOf
     nod1 ← allocF >>= nodeOf
     nod2 ← allocF >>= nodeOf
-    -- ports and functions
-    mainPort ← Codegen.mainPort
-    auxiliary1 ← Codegen.auxiliary1
-    auxiliary2 ← Codegen.auxiliary2
-    -- TODO ∷ Abstract
-    Codegen.linkConnectedPort [fanIn, auxiliary1, nod1, mainPort]
-    Codegen.link [nod1, auxiliary1, fan2, auxiliary1]
-    Codegen.link [nod1, auxiliary2, fan1, auxiliary1]
-    Codegen.linkConnectedPort [fanIn, auxiliary2, nod2, mainPort]
-    Codegen.link [nod2, auxiliary1, fan2, auxiliary2]
-    Codegen.link [nod2, auxiliary2, fan1, auxiliary2]
-    Codegen.linkConnectedPort [node, auxiliary2, fan1, mainPort]
-    Codegen.linkConnectedPort [node, auxiliary1, fan2, mainPort]
+    DSL.linkAll
+      DSL.defRel
+        { DSL.node = nod1,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
+        }
+    DSL.linkAll
+      DSL.defRel
+        { DSL.node = nod2,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
+        }
+    DSL.linkAll
+      DSL.defRel
+        { DSL.node = fan1,
+          DSL.primary = DSL.LinkConnected node DSL.Aux2
+        }
+    DSL.linkAll
+      DSL.defRel
+        { DSL.node = fan2,
+          DSL.primary = DSL.LinkConnected node DSL.Aux1
+        }
     Codegen.retNull
   where
     args =

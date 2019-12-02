@@ -17,28 +17,47 @@ import Prelude (error)
 data Relink node port
   = RelAuxiliary
       { node ∷ node,
-        primary ∷ Maybe (REL node port),
-        auxiliary1 ∷ Maybe (REL node port),
-        auxiliary2 ∷ Maybe (REL node port),
-        auxiliary3 ∷ Maybe (REL node port),
-        auxiliary4 ∷ Maybe (REL node port)
+        primary ∷ REL node port,
+        auxiliary1 ∷ REL node port,
+        auxiliary2 ∷ REL node port,
+        auxiliary3 ∷ REL node port,
+        auxiliary4 ∷ REL node port
       }
 
 defRel ∷ Relink node port
 defRel =
   RelAuxiliary
     (error "put in default node into relAuxiliary")
-    Nothing
-    Nothing
-    Nothing
-    Nothing
-    Nothing
+    None
+    None
+    None
+    None
+    None
 
 -- | REL: a type that displays whether we are linking from an old node or just adding a new link
 data REL node port
   = Link node port
   | LinkConnected node port
+  | None
   deriving (Show)
+
+data Auxiliary = Prim | Aux1 | Aux2 | Aux3 | Aux4 deriving (Show, Eq)
+
+auxiliaryToPort ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
+  ) ⇒
+  Auxiliary →
+  m Operand.Operand
+auxiliaryToPort Prim = Codegen.mainPort
+auxiliaryToPort Aux1 = Codegen.auxiliary1
+auxiliaryToPort Aux2 = Codegen.auxiliary2
+auxiliaryToPort Aux3 = Codegen.auxiliary3
+auxiliaryToPort Aux4 = Codegen.auxiliary4
 
 linkAll ∷
   ( HasThrow "err" Codegen.Errors f,
@@ -49,30 +68,40 @@ linkAll ∷
     HasState "typTab" Codegen.TypeTable f,
     HasState "varTab" Codegen.VariantToType f
   ) ⇒
-  Relink Operand.Operand Operand.Operand →
+  Relink Operand.Operand Auxiliary →
   f ()
 linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
   -- Reodoing Codegen.mainPort/auxiliary* may or may not have an extra cost.
-  -- Find out!
-  let flipHelper p f = p >>= linkHelper f node
-  traverse_ (flipHelper Codegen.mainPort) p
-  traverse_ (flipHelper Codegen.auxiliary1) a1
-  traverse_ (flipHelper Codegen.auxiliary2) a2
-  traverse_ (flipHelper Codegen.auxiliary3) a3
-  traverse_ (flipHelper Codegen.auxiliary4) a4
+  -- TODO ∷ if it does, make them once at the top level and pass them around in the env!
+  let flipHelper p l = linkHelper l node p
+  flipHelper Codegen.mainPort p
+  flipHelper Codegen.auxiliary1 a1
+  flipHelper Codegen.auxiliary2 a2
+  flipHelper Codegen.auxiliary3 a3
+  flipHelper Codegen.auxiliary4 a4
 
 linkHelper ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
-    HasState "symtab" Codegen.SymbolTable m
+    HasState "symtab" Codegen.SymbolTable m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
   ) ⇒
-  REL Operand.Operand Operand.Operand →
+  REL Operand.Operand Auxiliary →
   Operand.Operand →
-  Operand.Operand →
+  m Operand.Operand →
   m ()
-linkHelper (Link nl pl) node port =
-  Codegen.link [node, port, nl, pl]
-linkHelper (LinkConnected nl pl) node port =
-  Codegen.linkConnectedPort [nl, pl, node, port]
+linkHelper None _ _ =
+  pure ()
+linkHelper (Link nl pl) node port = do
+  -- TODO ∷ see if this extra "allocation" actually is costly
+  port ← port
+  p ← auxiliaryToPort pl
+  Codegen.link [node, port, nl, p]
+linkHelper (LinkConnected nl pl) node port = do
+  -- TODO ∷ see if this extra "allocation" actually is costly
+  port ← port
+  p ← auxiliaryToPort pl
+  Codegen.linkConnectedPort [nl, p, node, port]
