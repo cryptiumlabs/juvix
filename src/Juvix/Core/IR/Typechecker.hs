@@ -250,7 +250,7 @@ typeElim p ii g (App m n) = do
   mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      (fst (runWriter (typeTerm p ii g n (sig <.> pi, varTy)))) -- N has to be of type varTy with usage sig*pi
+      (fst (writer (typeTerm p ii g n (sig <.> pi, varTy)))) -- N has to be of type varTy with usage sig*pi
       res ← resultTy =<< evalTerm p n []
       return (sig, res)
     _ →
@@ -261,5 +261,5 @@ typeElim p ii g (Ann pi theTerm theType) =
   -- typeTerm p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
   do
     ty ← evalTerm p theType []
-    fst $ runWriter $ typeTerm p ii g theTerm (pi, ty)
+    fst $ writer $ typeTerm p ii g theTerm (pi, ty)
     return (pi, ty)
