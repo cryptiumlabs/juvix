@@ -64,32 +64,32 @@ isBothPrimary ∷
   m Operand.Operand
 isBothPrimary nodePtrTyp =
   Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
-  do
-    -- TODO ∷ should this call be abstracted somewhere?!
-    -- Why should Ι allocate for every port?!
-    mainPort ← mainPort
-    -- TODO ∷ Make sure findEdge is in the environment
-    edge ← Block.externf "find_edge"
-    nodePtr ← Block.externf "node_ptr"
-    node ← load nodeType nodePtr
-    port ← call portType edge (Block.emptyArgs [node, mainPort])
-    otherNodePtr ← loadElementPtr $
-      Types.Minimal
-        { Types.type' = nodePointer,
-          Types.address' = port,
-          Types.indincies' = Block.constant32List [0, 0]
-        }
-    -- convert ptrs to ints
-    nodeInt ← ptrToInt nodePtr pointerSize
-    otherNodeInt ← ptrToInt otherNodePtr pointerSize
-    -- compare the pointers to see if they are the same
-    cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-    return' ← Block.alloca (Types.bothPrimary nodePtrTyp)
-    tag ← getIsPrimaryEle return'
-    nod ← getPrimaryNode return'
-    store tag cmp
-    store nod otherNodePtr
-    ret return'
+    do
+      -- TODO ∷ should this call be abstracted somewhere?!
+      -- Why should Ι allocate for every port?!
+      mainPort ← mainPort
+      -- TODO ∷ Make sure findEdge is in the environment
+      edge ← Block.externf "find_edge"
+      nodePtr ← Block.externf "node_ptr"
+      node ← load nodeType nodePtr
+      port ← call portType edge (Block.emptyArgs [node, mainPort])
+      otherNodePtr ← loadElementPtr $
+        Types.Minimal
+          { Types.type' = nodePointer,
+            Types.address' = port,
+            Types.indincies' = Block.constant32List [0, 0]
+          }
+      -- convert ptrs to ints
+      nodeInt ← ptrToInt nodePtr pointerSize
+      otherNodeInt ← ptrToInt otherNodePtr pointerSize
+      -- compare the pointers to see if they are the same
+      cmp ← icmp IntPred.EQ nodeInt otherNodeInt
+      return' ← Block.alloca (Types.bothPrimary nodePtrTyp)
+      tag ← getIsPrimaryEle return'
+      nod ← getPrimaryNode return'
+      store tag cmp
+      store nod otherNodePtr
+      ret return'
   where
     args = [(nodePtrTyp, "node_ptr")]
 
