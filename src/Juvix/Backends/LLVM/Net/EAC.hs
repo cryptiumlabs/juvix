@@ -49,13 +49,28 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
     extCase ← Codegen.addBlock "switch.exit"
+    -- TODO ∷ Check if car is there
     car ← Types.loadCar eacList
+    -- %car check branch
+    ------------------------------------------------------
+
     cdr ← Types.loadCdr eacList
+    -- moved from %app case.
+    -- Should not do extra work being here----
+    nodePtr ← nodeOf car
+    tagNode ← Defs.isBothPrimary [nodePtr]
+    isPrimary ← Codegen.loadIsPrimaryEle tagNode
+    test ←
+      Codegen.icmp
+        IntPred.EQ
+        isPrimary
+        (Operand.ConstantOperand (C.Int 2 1))
+    -- end of moved code----------------------
     tag ← tagOf car
     _term ←
       Codegen.switch
         tag
-        defCase
+        defCase -- this should never happen
         [ (Types.app, appCase),
           (Types.lam, lamCase),
           (Types.era, eraCase),
@@ -64,29 +79,20 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %app case
     ------------------------------------------------------
     Codegen.setBlock appCase
-    appExtCase ← Codegen.addBlock "switch.app.exit"
-    -- TODO ∷ Prove this branch is unnecessary
     appContCase ← Codegen.addBlock "switch.app.continue"
-    nodePtr ← nodeOf car
-    tagNode ← Defs.isBothPrimary [nodePtr]
-    isPrimary ← Codegen.loadIsPrimaryEle tagNode
-    -- TODO ∷ Prove this branch is unnecessary
-    test ←
-      Codegen.icmp
-        IntPred.EQ
-        isPrimary
-        (Operand.ConstantOperand (C.Int 2 1))
     Codegen.cbr test appContCase extCase
+    -- TODO ∷ Prove this branch is unnecessary
     -- %switch.app.continue
     ---------------------------------------------
     Codegen.setBlock appContCase
     -- nested switch cases
+    appExtCase ← Codegen.addBlock "switch.app.exit"
     appLamCase ← Codegen.addBlock "switch.app.lam"
     appEraCase ← Codegen.addBlock "switch.app.era"
     appDupCase ← Codegen.addBlock "switch.app.dup"
     -- properly tagged
-    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Types.eac
-    tagOther ← tagOf nodeOther
+    nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
+    tagOther ← tagOf nodeEac
     _ ←
       Codegen.switch
         tagOther
@@ -95,11 +101,10 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.era, appEraCase),
           (Types.dup, appDupCase)
         ]
-    aCdr ← undefined
     -- %switch.app.lam
     ---------------------------------------------
     Codegen.setBlock appLamCase
-    nodeOther ← nodeOf nodeOther >>= Codegen.load Defs.nodeType
+    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
     node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
     anihilateRewireAux [node, nodeOther]
@@ -108,10 +113,28 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %switch.app.dup
     ---------------------------------------------
     Codegen.setBlock appDupCase
-    nodeOther ← nodeOf nodeOther >>= Codegen.load Defs.nodeType
+    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
     node ← Codegen.load Defs.nodeType nodePtr
     adCdr ← fanInAux2App [node, nodeOther]
     Codegen.br appExtCase
+    -- %switch.app.era
+    ---------------------------------------------
+    Codegen.setBlock appEraCase
+    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
+    node ← Codegen.load Defs.nodeType nodePtr
+    aeCdr ← undefined node nodeOther
+    Codegen.br appExtCase
+    -- %switch.app.exit
+    ---------------------------------------------
+    Codegen.setBlock appExtCase
+    appCdr ←
+      Codegen.phi
+        Types.eacList
+        [ (aeCdr, appEraCase),
+          (adCdr, appDupCase),
+          (alCdr, appLamCase)
+        ]
+    Codegen.br extCase
     -- %lam case
     ------------------------------------------------------
     Codegen.setBlock lamCase
@@ -147,7 +170,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %default case
     ------------------------------------------------------
     Codegen.setBlock defCase
-    deCdr ← pure cdr
     Codegen.br extCase
     -- %exit case
     ------------------------------------------------------
@@ -155,15 +177,75 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     cdr ←
       Codegen.phi
         Types.eacList
-        [ (deCdr, defCase),
-          (dCdr, dupCase),
-          (aCdr, appCase),
-          (eCdr, eraCase),
-          (lCdr, lamCase)
+        [ (cdr, defCase),
+          (cdr, dupCase),
+          (cdr, appCase),
+          (cdr, eraCase),
+          (cdr, lamCase),
+          (appCdr, appExtCase)
         ]
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
     args = [(Types.eacList, "eac_list")]
+
+--------------------------------------------------------------------------------
+-- Code generation rules
+--------------------------------------------------------------------------------
+
+genContinueCase ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "names" Codegen.Names m
+  ) ⇒
+  Operand.Operand →
+  Operand.Operand →
+  Operand.Operand →
+  Name.Name →
+  [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
+  Symbol →
+  m (Operand.Operand, Name.Name)
+genContinueCase tagNode nodePtr cdr defCase cases prefix = do
+  nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
+  tagOther ← tagOf nodeEac
+  blocksGeneratedList ← genBlockNames
+  extBranch ← Codegen.addBlock (prefix <> "switch.exit")
+  let generateBody (_, branch, rule) = do
+        -- %prefix.branch case
+        ------------------------------------------------------
+        _ ← Codegen.setBlock branch
+        -- node Types in which to do operations on
+        nodeOther' ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
+        nodePrimar ← Codegen.load Defs.nodeType nodePtr
+        updateList ← rule [nodePrimar, nodeOther', cdr]
+        Codegen.br extBranch
+        pure (updateList, branch)
+      -- remove the rule as it's not needed in the switch
+      switchArgs = fmap namesOf blocksGeneratedList
+  _ ← Codegen.switch tagOther defCase switchArgs
+  -- generate body, and return the list, switch pair
+  phiList ← traverse generateBody blocksGeneratedList
+  -- %prefix.switch.exit case
+  ------------------------------------------------------
+  _ ← Codegen.setBlock extBranch
+  newList ←
+    Codegen.phi
+      Types.eacList
+      phiList
+  pure (newList, extBranch)
+  where
+    appendName = (\(t, b, f) → (t, prefix <> b, f)) <$> cases
+
+    genBlockNames =
+      traverse
+        ( \(t, b, f) →
+            (,,) t <$> Codegen.addBlock b <*> pure f
+        )
+        appendName
+
+    namesOf (t, b, _) = (t, b)
 
 --------------------------------------------------------------------------------
 -- Reduction rules
