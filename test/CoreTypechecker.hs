@@ -270,6 +270,25 @@ kAppI =
         )
     )
 
+--K: (Nat -> Nat) -> Nat -> (Nat -> Nat) I:Nat -> Nat type checks to Nat -> (Nat -> Nat)
+kAppINotAnnotated ∷ NatElim
+kAppINotAnnotated =
+  IR.App
+    ( IR.Ann
+        (SNat 1)
+        kcombinator
+        ( IR.Pi
+            (SNat 1)
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+            ( IR.Pi
+                (SNat 0)
+                (IR.PrimTy Nat)
+                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+            )
+        )
+    )
+    identity
+
 kAppICompTy ∷ NatAnnotation
 kAppICompTy =
   ( SNat 1,
@@ -381,6 +400,9 @@ test_identity_app_k = shouldInfer nat identityAppK kCompTy
 
 test_k_app_I ∷ T.TestTree
 test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
+
+test_k_app_I_not_ann ∷ T.TestTree
+test_k_app_I_not_ann = shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy
 
 test_k_app_1 ∷ T.TestTree
 test_k_app_1 = shouldInfer nat kApp1 natToNatTy
