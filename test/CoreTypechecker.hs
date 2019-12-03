@@ -314,14 +314,15 @@ kAppICompTy =
 -- ((Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat) -> (Nat -> Nat -> Nat)) ->
 -- ((Nat -> Nat -> Nat) -> Nat -> Nat -> Nat)
 -- (Nat -> Nat -> Nat)
+-- this example is too long, not doing this atm
 
--- SKI1 = K 1 (I 1)
--- the first input K takes inputs 1 and 1 so has type signature of Nat -> Nat -> Nat
--- the second input I has type signature Nat -> Nat
+-- example of s combinator with the following signature:
+-- the first has type signature of 1 Nat -> 0 Nat -> Nat
+-- the second input has type signature 1 Nat -> Nat
 -- the third input is Nat
--- type signature of this S is (Nat -> Nat -> Nat) -> (Nat -> Nat) -> Nat -> Nat
-ski1 ∷ NatTerm -- ∀ primTy primVal. IR.Term primTy primVal -- S = \x.\y.\z. (xz) (yz)
-ski1 =
+-- type signature of this S is (1 Nat -> 0 Nat -> Nat) -> (1 Nat -> Nat) -> Nat -> Nat
+scombinator ∷ NatTerm -- S = \x.\y.\z. (xz) (yz)
+scombinator =
   IR.Lam --x/first input (Bound 2, counting from output)
     ( IR.Lam --y/second input (Bound 1, counting from output)
         ( IR.Lam --z/third input (Bound 0, counting from output)
@@ -363,6 +364,37 @@ ski1 =
             )
         )
     )
+
+scombinatorCompNatTy ∷ NatAnnotation
+scombinatorCompNatTy =
+  ( SNat 1,
+    IR.VPi
+      (SNat 1)
+      (IR.VPrimTy Nat) -- (1 Nat ->
+      ( const
+          ( IR.VPi
+              (SNat 0)
+              (IR.VPrimTy Nat) -- 0 Nat ->
+              ( const
+                  ( IR.VPi
+                      (SNat 1)
+                      ( IR.VPi
+                          (SNat 1)
+                          (IR.VPrimTy Nat) -- Nat) ->
+                          (const (IR.VPrimTy Nat)) --(1 Nat ->
+                      )
+                      ( const
+                          ( IR.VPi
+                              (SNat 1)
+                              (IR.VPrimTy Nat) -- 1 Nat ->
+                              (const (IR.VPrimTy Nat)) -- Nat
+                          )
+                      )
+                  )
+              )
+          )
+      )
+  )
 
 -- K 1 (I 1) = 1, so should type checked to Nat
 ski1CompNatTy ∷ NatAnnotation
@@ -419,8 +451,8 @@ test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
 test_nat1 ∷ T.TestTree
 test_nat1 = shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
 
-test_ski1 ∷ T.TestTree
-test_ski1 = shouldCheck nat ski1 ski1CompNatTy
+test_scombinator ∷ T.TestTree
+test_scombinator = shouldCheck nat scombinator scombinatorCompNatTy
 
 test_add_nat ∷ T.TestTree
 test_add_nat =
