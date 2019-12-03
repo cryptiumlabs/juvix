@@ -10,6 +10,7 @@ import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
+import qualified LLVM.AST.Type as Type
 import Prelude (error)
 
 -- | Type for specifying how one wants to link nodes
@@ -52,6 +53,7 @@ auxiliaryToPort ∷
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
   Auxiliary →
+  Type.Type →
   m Operand.Operand
 auxiliaryToPort Prim = Codegen.mainPort
 auxiliaryToPort Aux1 = Codegen.auxiliary1
@@ -68,17 +70,18 @@ linkAll ∷
     HasState "typTab" Codegen.TypeTable f,
     HasState "varTab" Codegen.VariantToType f
   ) ⇒
+  Type.Type →
   Relink Operand.Operand Auxiliary →
   f ()
-linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
+linkAll t (RelAuxiliary node p a1 a2 a3 a4) = do
   -- Reodoing Codegen.mainPort/auxiliary* may or may not have an extra cost.
   -- TODO ∷ if it does, make them once at the top level and pass them around in the env!
-  let flipHelper p l = linkHelper l node p
-  flipHelper Codegen.mainPort p
-  flipHelper Codegen.auxiliary1 a1
-  flipHelper Codegen.auxiliary2 a2
-  flipHelper Codegen.auxiliary3 a3
-  flipHelper Codegen.auxiliary4 a4
+  let flipHelper p l = linkHelper t l node p
+  flipHelper (Codegen.mainPort t) p
+  flipHelper (Codegen.auxiliary1 t) a1
+  flipHelper (Codegen.auxiliary2 t) a2
+  flipHelper (Codegen.auxiliary3 t) a3
+  flipHelper (Codegen.auxiliary4 t) a4
 
 linkHelper ∷
   ( HasThrow "err" Codegen.Errors m,
@@ -89,19 +92,20 @@ linkHelper ∷
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
+  Type.Type →
   REL Operand.Operand Auxiliary →
   Operand.Operand →
   m Operand.Operand →
   m ()
-linkHelper None _ _ =
+linkHelper _ None _ _ =
   pure ()
-linkHelper (Link nl pl) node port = do
+linkHelper ty (Link nl pl) node port = do
   -- TODO ∷ see if this extra "allocation" actually is costly
   port ← port
-  p ← auxiliaryToPort pl
+  p ← auxiliaryToPort pl ty
   Codegen.link [node, port, nl, p]
-linkHelper (LinkConnected nl pl) node port = do
+linkHelper ty (LinkConnected nl pl) node port = do
   -- TODO ∷ see if this extra "allocation" actually is costly
   port ← port
-  p ← auxiliaryToPort pl
+  p ← auxiliaryToPort pl ty
   Codegen.linkConnectedPort [nl, p, node, port]

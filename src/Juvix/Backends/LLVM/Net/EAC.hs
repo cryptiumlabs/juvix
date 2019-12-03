@@ -86,7 +86,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     ---------------------------------------------
     -- TODO ∷ fix the type of this.... need the rules to work on eac!!!
     Codegen.setBlock appContCase
-    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
+    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Defs.nodeType
     tagOther ← tagOf nodeOther
     _ ←
       Codegen.switch
@@ -99,8 +99,8 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %switch.app.lam
     ---------------------------------------------
     Codegen.setBlock appLamCase
-    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
-    node ← Codegen.load Codegen.nodeType nodePtr
+    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Defs.nodeType
+    node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
     _ ← Codegen.call Type.void anihilateRewireAux (Codegen.emptyArgs [node, nodeOther])
     aCdr ← pure cdr
@@ -187,8 +187,8 @@ anihilateRewireAux ∷
 anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
-    aux1 ← Codegen.auxiliary1
-    aux2 ← Codegen.auxiliary2
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
     node1 ← Codegen.externf "node_1"
     node2 ← Codegen.externf "node_2"
     Codegen.rewire [node1, aux1, node2, aux1]
@@ -196,7 +196,7 @@ anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" arg
     _ ← Codegen.delNode node1
     Codegen.delNode node2
   where
-    args = [(Codegen.nodeType, "node_1"), (Codegen.nodeType, "node_2")]
+    args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
 
 -- TODO ∷ make fast fanInAux and slow fanInAux
 
@@ -224,17 +224,17 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
     node ← Codegen.externf "node"
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
-    aux1 ← Codegen.auxiliary1
-    aux2 ← Codegen.auxiliary2
-    mainPort ← Codegen.mainPort
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
+    mainPort ← Defs.mainPort
     -- abstract out this string!
     Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
     Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
     Codegen.retNull
   where
     args =
-      [ (Codegen.nodeType, "node"), -- we send in the alloc function for it. Do case before
-        (Codegen.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
+      [ (Defs.nodeType, "node"), -- we send in the alloc function for it. Do case before
+        (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
       ]
 
 fanInAux1 allocF = undefined
@@ -263,26 +263,26 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
     fan2 ← allocaFanIn >>= nodeOf
     nod1 ← allocF >>= nodeOf
     nod2 ← allocF >>= nodeOf
-    DSL.linkAll
+    Defs.linkAll
       DSL.defRel
         { DSL.node = nod1,
           DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
           DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
           DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
         }
-    DSL.linkAll
+    Defs.linkAll
       DSL.defRel
         { DSL.node = nod2,
           DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
           DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
           DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
         }
-    DSL.linkAll
+    Defs.linkAll
       DSL.defRel
         { DSL.node = fan1,
           DSL.primary = DSL.LinkConnected node DSL.Aux2
         }
-    DSL.linkAll
+    Defs.linkAll
       DSL.defRel
         { DSL.node = fan2,
           DSL.primary = DSL.LinkConnected node DSL.Aux1
@@ -290,8 +290,8 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
     Codegen.retNull
   where
     args =
-      [ (Codegen.nodeType, "node"),
-        (Codegen.nodeType, "fan_in")
+      [ (Defs.nodeType, "node"),
+        (Defs.nodeType, "fan_in")
       ]
 
 fanInAux3 allocF = undefined
@@ -313,7 +313,7 @@ allocaGen ∷
   m Operand.Operand
 allocaGen type' portLen dataLen = do
   eac ← Codegen.alloca Types.eac
-  node ← Codegen.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+  node ← Defs.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,
@@ -323,7 +323,7 @@ allocaGen type' portLen dataLen = do
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Codegen.nodeType,
+      { Codegen.type' = Defs.nodeType,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -358,7 +358,7 @@ nodeOf ∷
 nodeOf eac = do
   Codegen.loadElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Codegen.nodeType,
+      { Codegen.type' = Defs.nodeType,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
