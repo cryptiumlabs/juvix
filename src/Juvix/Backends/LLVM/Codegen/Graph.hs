@@ -236,7 +236,7 @@ allocaGenH ∷
   Type.Type →
   m Operand.Operand
 allocaGenH mPortData type' = do
-  ports ← alloca (Type.ArrayType (fromIntegral len) type')
+  ports ← alloca (Type.ArrayType len type')
   traverse_
     ( \(p, i) →
         case p of
@@ -253,7 +253,7 @@ allocaGenH mPortData type' = do
     (zip mPortData [0 ..])
   pure ports
   where
-    len = fromIntegral (length mPortData)
+    len = fromIntegral (length mPortData ∷ Int)
 
 allocaPortsH ∷
   ( HasThrow "err" Errors m,
@@ -454,7 +454,7 @@ getPort ∷
   Type.Type →
   m Operand.Operand
 getPort node port nodePtrType = do
-  intOfNumPorts (portPointer nodePtrType) port nodePtrType $ \value → do
+  intOfNumPorts (portPointer nodePtrType) port $ \value → do
     ports ← loadElementPtr $
       Types.Minimal
         { Types.type' = portData nodePtrType,
@@ -485,10 +485,9 @@ intOfNumPorts ∷
   ) ⇒
   Type.Type →
   Operand.Operand →
-  Type.Type →
   (Operand.Operand → m Operand.Operand) →
   m Operand.Operand
-intOfNumPorts typ numPort nodePtrType cont = do
+intOfNumPorts typ numPort cont = do
   -- grab the tag from the numPort
   tag ← Block.loadElementPtr $
     Types.Minimal

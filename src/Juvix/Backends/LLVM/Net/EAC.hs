@@ -95,6 +95,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.era, appEraCase),
           (Types.dup, appDupCase)
         ]
+    aCdr ← undefined
     -- %switch.app.lam
     ---------------------------------------------
     Codegen.setBlock appLamCase
@@ -102,9 +103,15 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
     anihilateRewireAux [node, nodeOther]
-    aCdr ← pure cdr
-    aCdr ← undefined
-    Codegen.br extCase
+    alCdr ← pure cdr
+    Codegen.br appExtCase
+    -- %switch.app.dup
+    ---------------------------------------------
+    Codegen.setBlock appDupCase
+    nodeOther ← nodeOf nodeOther >>= Codegen.load Defs.nodeType
+    node ← Codegen.load Defs.nodeType nodePtr
+    adCdr ← fanInAux2App [node, nodeOther]
+    Codegen.br appExtCase
     -- %lam case
     ------------------------------------------------------
     Codegen.setBlock lamCase
@@ -252,7 +259,7 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
 
 fanInAux1 allocF = undefined
 
-fanInAux2 ∷
+fanInAux2' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -264,9 +271,10 @@ fanInAux2 ∷
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
+  Symbol →
   m Operand.Operand →
   m Operand.Operand
-fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
+fanInAux2' name allocF = Codegen.defineFunction Type.void name args $
   do
     -- Nodes in env
     fanIn ← Codegen.externf "fan_in"
@@ -306,6 +314,48 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
       [ (Defs.nodeType, "node"),
         (Defs.nodeType, "fan_in")
       ]
+
+-- TODO ∷ remove, put these in the environment with some kind of decalarative
+-- dispatch system that can handle dynamic node addition
+
+-- instantiations
+fanInAux2F',
+  fanInAux2A',
+  fanInAux2L',
+  fanInAux2E' ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blockCount" Int m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "moduleDefinitions" [AST.Definition] m,
+      HasState "names" Codegen.Names m,
+      HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+      HasState "typTab" Codegen.TypeTable m,
+      HasState "varTab" Codegen.VariantToType m
+    ) ⇒
+    m Operand.Operand
+fanInAux2A' = fanInAux2' "fan_in_aux_2_app" allocaApp
+fanInAux2F' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
+fanInAux2L' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
+fanInAux2E' = fanInAux2' "fan_in_aux_2_era" allocaEra
+
+fanInAux2App,
+  fanInAux2FanIn,
+  fanInAux2Lambda,
+  fanInAux2Era ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "symtab" Codegen.SymbolTable m
+    ) ⇒
+    [Operand.Operand] →
+    m Operand.Operand
+fanInAux2App args = Codegen.callGen Type.void args "fan_in_aux_2_app"
+fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
+fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
+fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 
 fanInAux3 allocF = undefined
 
