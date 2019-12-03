@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Juvix.Core.Erasure.Algorithm
   ( erase,
   )
@@ -14,8 +16,13 @@ import Juvix.Library hiding (empty)
 import qualified Juvix.Library.HashMap as Map
 
 erase ∷
-  ∀ primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  ∀ primTy primVal m.
+  ( HasWriter "typecheckerLog" [IR.TypecheckerLog] m,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal
+  ) ⇒
   Core.Parameterisation primTy primVal →
   Core.Term primTy primVal →
   Core.Usage →
@@ -36,6 +43,7 @@ eraseTerm ∷
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" ErasureError m,
     HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
+    HasWriter "typecheckerLog" [IR.TypecheckerLog] m,
     Show primTy,
     Show primVal,
     Eq primTy,

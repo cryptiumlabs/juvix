@@ -31,7 +31,7 @@ data TypecheckerLog = TypecheckerLog {msg ∷ String}
 logOutput ∷ ∀ m. HasWriter "typecheckerLog" [TypecheckerLog] m ⇒ String → m ()
 logOutput s = tell @"typecheckerLog" [TypecheckerLog s]
 
-checkerIntroLog ∷
+typeTermIntroLog ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [TypecheckerLog] m,
@@ -42,7 +42,7 @@ checkerIntroLog ∷
   Term primTy primVal →
   Annotation primTy primVal m →
   m ()
-checkerIntroLog t ann =
+typeTermIntroLog t ann =
   logOutput
     ( "Type checking the term "
         <> (show t)
@@ -60,10 +60,13 @@ failed = "Check failed. "
 passed ∷ String
 passed = "Check passed. "
 
+typechecked ∷ String
+typechecked = "The term is type checked successfully. "
+
 -- * (Universe formation rule)
 
 typeTerm _ _ii _g t@(Star i) ann = do
-  checkerIntroLog t ann
+  typeTermIntroLog t ann
   logOutput "patterned matched to be a * term. Type checker applies the universe formation rule. Checking that Sigma is zero. "
   unless
     (SNat 0 == fst ann)
@@ -99,6 +102,7 @@ typeTerm _ _ii _g t@(Star i) ann = do
                   <> ", which is greater than the term's * level "
                   <> show i
                   <> ". "
+                  <> typechecked
               return ()
           )
     _ → do
@@ -108,7 +112,7 @@ typeTerm _ _ii _g t@(Star i) ann = do
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g t@(Pi pi varType resultType) ann = do
-  checkerIntroLog t ann
+  typeTermIntroLog t ann
   logOutput "patterned matched to be a dependent function type term. Type checker applies the universe introduction rule. Checking that sigma is zero."
   unless -- checks sigma = 0.
     (SNat 0 == fst ann)
@@ -126,7 +130,7 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
       typeTerm p ii g varType ann -- checks varType is of type Star i
       logOutput $
         passed
-          <> "Variable is of type "
+          <> "The variable is of type "
           <> show (snd ann)
           <> ". Checking that the result is of type *i. "
       ty ← evalTerm p varType []
@@ -136,35 +140,55 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
         ((Local ii, (pi, ty)) : g)
         (substTerm 0 (Free (Local ii)) resultType)
         ann
-    -- TODO: logOutput "Result is of type *i. The variable and the result are at the same * level."
+      logOutput $
+        passed
+          <> "Result is of type *i. The variable and the result are at the same * level."
+          <> typechecked
     _ → do
-      logOutput "The annotation is not of type *. "
+      logOutput $
+        failed
+          <> "The annotation is not of type *. "
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii _g x@(PrimTy _) ann = do
   ty ← quote0 (snd ann)
-  checkerIntroLog x ann
+  typeTermIntroLog x ann
   logOutput
-    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage and type * 0")
+    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage. ")
   if (SNat 0 /= fst ann)
     then
       ( do
-          logOutput "Usage is not zero. "
+          logOutput $
+            failed
+              <> "The input usage is "
+              <> show (fst ann)
+              <> ", which is not zero. "
           throw @"typecheckError" (UsageMustBeZero)
       )
-    else
+    else do
+      logOutput "Checking that input annotation is of type *0. "
       if (ty /= Star 0)
         then
           ( do
-              logOutput "Type is not * 0"
+              logOutput $
+                failed
+                  <> "The input type is "
+                  <> show ty
+                  <> ", which is not * 0. "
               throw @"typecheckError" (TypeMismatch ii x (SNat 0, VStar 0) ann)
           )
-        else return ()
+        else do
+          logOutput $ passed <> typechecked
+          return ()
 -- Lam (introduction rule of dependent function type)
-typeTerm p ii g (Lam s) ann =
+typeTerm p ii g t@(Lam s) ann = do
+  typeTermIntroLog t ann
+  logOutput
+    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage. ")
   case ann of
     (sig, VPi pi ty ty') → do
       -- Lam s should be of dependent function type (Pi pi ty ty').
+      logOutput "Checking that "
       ty' ← ty' (vfree (Local ii))
       typeTerm
         p
@@ -174,7 +198,8 @@ typeTerm p ii g (Lam s) ann =
         (sig, ty') -- is of type M (usage sigma) in context T
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam s))
 --
-typeTerm p ii g (Elim e) ann = do
+typeTerm p ii g t@(Elim e) ann = do
+  typeTermIntroLog t ann
   ann' ← typeElim p ii g e
   annt ← quote0 (snd ann)
   annt' ← quote0 (snd ann')
@@ -193,14 +218,33 @@ typeTerm p ii g (Elim e) ann = do
           )
         else (throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann'))
 
+typeElimIntroLog ∷
+  ∀ primTy primVal m.
+  ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
+    Show primTy,
+    Show primVal,
+    (Show (Value primTy primVal m))
+  ) ⇒
+  Elim primTy primVal →
+  m ()
+typeElimIntroLog elim =
+  logOutput
+    ( "Type checking the term "
+        <> (show elim)
+        <> ", which "
+    )
+
 -- inferable terms have type as output.
 typeElim0 ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
     Show primTy,
     Show primVal,
     Eq primTy,
-    Eq primVal
+    Eq primVal,
+    (Show (Value primTy primVal m))
   ) ⇒
   Parameterisation primTy primVal →
   Context primTy primVal m →
@@ -211,10 +255,12 @@ typeElim0 p = typeElim p 0
 typeElim ∷
   ∀ primTy primVal m.
   ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
     Show primTy,
     Show primVal,
     Eq primTy,
-    Eq primVal
+    Eq primVal,
+    (Show (Value primTy primVal m))
   ) ⇒
   Parameterisation primTy primVal →
   Natural →
@@ -222,13 +268,37 @@ typeElim ∷
   Elim primTy primVal →
   m (Annotation primTy primVal m)
 -- the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
-typeElim _ _ii _g (Bound _) = throw @"typecheckError" BoundVariableCannotBeInferred
-typeElim _ ii g (Free x) =
+typeElim _ _ii _g e@(Bound _) = do
+  typeElimIntroLog e
+  logOutput
+    ("patterned matched to be a bound variable. ")
+  throw @"typecheckError" BoundVariableCannotBeInferred
+typeElim _ ii g e@(Free x) = do
+  typeElimIntroLog e
+  logOutput
+    ("patterned matched to be a free variable. Looking up the free variable in the context " <> show g)
   case lookup x g of
-    Just ann → return ann
-    Nothing → throw @"typecheckError" (UnboundBinder ii x)
+    Just ann → do
+      logOutput $
+        passed
+          <> "The variable is found in the context with annotation of usage"
+          <> show (fst ann)
+          <> "and type of "
+          <> show (snd ann)
+      return ann
+    Nothing → do
+      logOutput $
+        failed
+          <> "cannot find "
+          <> show e
+          <> "in the context "
+          <> show g
+      throw @"typecheckError" (UnboundBinder ii x)
 -- Prim-Const and Prim-Fn, pi = omega
-typeElim p _ii _g (Prim prim) =
+typeElim p _ii _g e@(Prim prim) = do
+  typeElimIntroLog e
+  logOutput
+    ("patterned matched to be a primitive type const/fn")
   let arrow (x :| []) = VPrimTy x
       arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (pure (arrow (y :| ys))))
    in pure (Omega, arrow (Juvix.Core.Types.typeOf p prim))
@@ -237,7 +307,7 @@ typeElim p ii g (App m n) = do
   mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      (fst (writer (typeTerm p ii g n (sig <.> pi, varTy)))) -- N has to be of type varTy with usage sig*pi
+      typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type varTy with usage sig*pi
       res ← resultTy =<< evalTerm p n []
       return (sig, res)
     _ →
@@ -248,5 +318,5 @@ typeElim p ii g (Ann pi theTerm theType) =
   -- typeTerm p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
   do
     ty ← evalTerm p theType []
-    fst $ writer $ typeTerm p ii g theTerm (pi, ty)
+    typeTerm p ii g theTerm (pi, ty)
     return (pi, ty)
