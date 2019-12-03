@@ -15,7 +15,8 @@ typeTerm ∷
     Show primTy,
     Show primVal,
     Eq primTy,
-    Eq primVal
+    Eq primVal,
+    (Show (Value primTy primVal m))
   ) ⇒
   Parameterisation primTy primVal →
   Natural →
@@ -59,17 +60,6 @@ failed = "Check failed. "
 passed ∷ String
 passed = "Check passed. "
 
-threwError ∷
-  ∀ primTy primVal m.
-  ( Show primTy,
-    Show primVal,
-    Show (TypecheckError primTy primVal m),
-    Show (TypecheckerLog)
-  ) ⇒
-  TypecheckError primTy primVal m →
-  String
-threwError e = show "Threw type check error \" " <> show e <> " \" to user. "
-
 -- * (Universe formation rule)
 
 typeTerm _ _ii _g t@(Star i) ann = do
@@ -83,7 +73,6 @@ typeTerm _ _ii _g t@(Star i) ann = do
             <> "Sigma is "
             <> show (fst ann)
             <> ", which is not zero. "
-            <> threwError SigmaMustBeZero
         throw @"typecheckError" SigmaMustBeZero
     ) -- checks sigma = 0.
   logOutput "Checking that the annotation is of type *j, and j>i. "
@@ -99,7 +88,6 @@ typeTerm _ _ii _g t@(Star i) ann = do
                   <> ", which is not greater than the term's * level "
                   <> show i
                   <> ". "
-                  <> threwError (UniverseMismatch t (snd ann))
               throw @"typecheckError" (UniverseMismatch t (snd ann))
           )
         else
@@ -118,7 +106,6 @@ typeTerm _ _ii _g t@(Star i) ann = do
         failed
           <> " The annotation is not of type *, it is of type "
           <> show (snd ann)
-          <> threwError (ShouldBeStar (snd ann))
       throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g t@(Pi pi varType resultType) ann = do
   checkerIntroLog t ann
@@ -131,7 +118,6 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
             <> "Sigma is "
             <> show (fst ann)
             <> ", which is not zero. "
-            <> threwError SigmaMustBeZero
         throw @"typecheckError" SigmaMustBeZero
     )
   case snd ann of -- checks that type is *i
@@ -152,10 +138,11 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
         ann
     -- TODO: logOutput "Result is of type *i. The variable and the result are at the same * level."
     _ → do
-      logOutput $ "The annotation is not of type *. " <> threwError (ShouldBeStar (snd ann))
+      logOutput "The annotation is not of type *. "
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii _g x@(PrimTy _) ann = do
+  ty ← quote0 (snd ann)
   checkerIntroLog x ann
   logOutput
     ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage and type * 0")
@@ -166,7 +153,7 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
           throw @"typecheckError" (UsageMustBeZero)
       )
     else
-      if (quote0 (snd ann) /= Star 0)
+      if (ty /= Star 0)
         then
           ( do
               logOutput "Type is not * 0"
@@ -201,7 +188,7 @@ typeTerm p ii g (Elim e) ann = do
       if (annt /= annt')
         then
           ( do
-              logOutput $ "Annotation types are not the same. " <> threwError (TypeMismatch ii (Elim e) ann ann')
+              logOutput "Annotation types are not the same. "
               throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
         else (throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann'))
