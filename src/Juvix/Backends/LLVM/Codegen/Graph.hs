@@ -674,7 +674,7 @@ getPrimaryNode ∷
 getPrimaryNode nodePtrType bothPrimary =
   getElementPtr $
     Types.Minimal
-      { Types.type' = nodePointer nodePtrType,
+      { Types.type' = nodePtrType,
         Types.address' = bothPrimary,
         Types.indincies' = Block.constant32List [0, 1]
       }
@@ -688,4 +688,4 @@ loadPrimaryNode ∷
   Type.Type →
   Operand.Operand →
   m Operand.Operand
-loadPrimaryNode nodePtrType e = getPrimaryNode nodePtrType e >>= load Type.i1
+loadPrimaryNode nodePtrType e = getPrimaryNode nodePtrType e >>= load nodePtrType

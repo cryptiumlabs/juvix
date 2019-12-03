@@ -41,7 +41,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"
-    anihilateRewireAux ← Codegen.externf "anihilate_rewire_aux"
     -- switch creations
     eacList ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
@@ -102,7 +101,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Defs.nodeType
     node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
-    _ ← Codegen.call Type.void anihilateRewireAux (Codegen.emptyArgs [node, nodeOther])
+    anihilateRewireAux [node, nodeOther]
     aCdr ← pure cdr
     aCdr ← undefined
     Codegen.br extCase
@@ -169,9 +168,23 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 
 -- this function work off the nodeType signature not Types.eac
 
+anihilateRewireAux ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" Codegen.SymbolTable m
+  ) ⇒
+  [Operand.Operand] →
+  m ()
+anihilateRewireAux args = do
+  anihilate ← Codegen.externf "anihilate_rewire_aux"
+  _ ← Codegen.call Type.void anihilate (Codegen.emptyArgs args)
+  pure ()
+
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-anihilateRewireAux ∷
+anihilateRewireAux' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -184,7 +197,7 @@ anihilateRewireAux ∷
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
   m Operand.Operand
-anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
+anihilateRewireAux' = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
     aux1 ← Defs.auxiliary1
