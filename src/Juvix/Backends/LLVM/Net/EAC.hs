@@ -64,10 +64,6 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %app case
     ------------------------------------------------------
     Codegen.setBlock appCase
-    -- nested switch cases
-    appLamCase ← Codegen.addBlock "switch.app.lam"
-    appEraCase ← Codegen.addBlock "switch.app.era"
-    appDupCase ← Codegen.addBlock "switch.app.dup"
     appExtCase ← Codegen.addBlock "switch.app.exit"
     -- TODO ∷ Prove this branch is unnecessary
     appContCase ← Codegen.addBlock "switch.app.continue"
@@ -83,9 +79,13 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     Codegen.cbr test appContCase extCase
     -- %switch.app.continue
     ---------------------------------------------
-    -- TODO ∷ fix the type of this.... need the rules to work on eac!!!
     Codegen.setBlock appContCase
-    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Defs.nodeType
+    -- nested switch cases
+    appLamCase ← Codegen.addBlock "switch.app.lam"
+    appEraCase ← Codegen.addBlock "switch.app.era"
+    appDupCase ← Codegen.addBlock "switch.app.dup"
+    -- properly tagged
+    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Types.eac
     tagOther ← tagOf nodeOther
     _ ←
       Codegen.switch
@@ -98,7 +98,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %switch.app.lam
     ---------------------------------------------
     Codegen.setBlock appLamCase
-    nodeOther ← Defs.loadPrimaryNode isPrimary >>= Codegen.load Defs.nodeType
+    nodeOther ← nodeOf nodeOther >>= Codegen.load Defs.nodeType
     node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
     anihilateRewireAux [node, nodeOther]
