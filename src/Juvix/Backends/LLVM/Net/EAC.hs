@@ -52,11 +52,11 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     nullCase ← Codegen.addBlock "empty.list"
     carExists ← Codegen.addBlock "car.check"
     nullCheck ← Types.checkNull eacLPtr
-    Codegen.cbr nullCheck carExists nullCase
+    _ ← Codegen.cbr nullCheck carExists nullCase
     -- %empty.list branch
     ------------------------------------------------------
     Codegen.setBlock nullCase
-    Codegen.retNull
+    _ ← Codegen.retNull
     -- %car.check branch
     ------------------------------------------------------
     Codegen.setBlock carExists
@@ -89,7 +89,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     let contCase case' name = do
           Codegen.setBlock case'
           conCase ← Codegen.addBlock name
-          Codegen.cbr test conCase extCase
+          _ ← Codegen.cbr test conCase extCase
           -- %switch.*.continue
           Codegen.setBlock conCase
 
@@ -106,9 +106,9 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "app"
         [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2App),
-          (Types.era, "switch.era", (\xs → undefined))
+          (Types.era, "switch.era", (\xs → undefined xs))
         ]
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %lam case
     ------------------------------------------------------
     contCase lamCase "switch.lam.continue"
@@ -117,9 +117,9 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "lam"
         [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2Lambda),
-          (Types.era, "switch.era", (\xs → undefined))
+          (Types.era, "switch.era", (\xs → undefined xs))
         ]
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %era case
     ------------------------------------------------------
     contCase lamCase "switch.era.continue"
@@ -131,7 +131,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.dup, "switch.dup", fanInAux2Era),
           (Types.era, "switch.era", undefined)
         ]
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %dup case
     ------------------------------------------------------
     contCase lamCase "switch.fan_in.continue"
@@ -143,11 +143,11 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.dup, "switch.dup", fanInAux2FanIn . swapArgs),
           (Types.era, "switch.era", fanInAux2Era . swapArgs)
         ]
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %default case
     ------------------------------------------------------
     Codegen.setBlock defCase
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %exit case
     ------------------------------------------------------
     Codegen.setBlock extCase
@@ -200,7 +200,7 @@ genContinueCase tagNode nodePtr cdr defCase prefix cases = do
         nodeOther' ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
         nodePrimar ← Codegen.load Defs.nodeType nodePtr
         updateList ← rule [nodePrimar, nodeOther', cdr]
-        Codegen.br extBranch
+        _ ← Codegen.br extBranch
         pure (updateList, branch)
       -- remove the rule as it's not needed in the switch
       switchArgs = fmap namesOf blocksGeneratedList
@@ -303,7 +303,6 @@ fanInAux0 ∷
 fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
   do
     fanIn ← Codegen.externf "fan_in"
-    node ← Codegen.externf "node"
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
     aux1 ← Defs.auxiliary1
@@ -319,7 +318,7 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
         (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
       ]
 
-fanInAux1 allocF = undefined
+fanInAux1 _allocF = undefined
 
 fanInAux2' ∷
   ( HasThrow "err" Codegen.Errors m,
