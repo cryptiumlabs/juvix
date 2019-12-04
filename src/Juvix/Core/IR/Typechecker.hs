@@ -7,24 +7,6 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (show)
 import Prelude (String, lookup, show)
 
--- | 'checker' for checkable terms checks the term against an annotation and returns ().
-typeTerm ∷
-  ∀ primTy primVal m.
-  ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
-    HasWriter "typecheckerLog" [TypecheckerLog] m,
-    Show primTy,
-    Show primVal,
-    Eq primTy,
-    Eq primVal,
-    (Show (Value primTy primVal m))
-  ) ⇒
-  Parameterisation primTy primVal →
-  Natural →
-  Context primTy primVal m →
-  Term primTy primVal →
-  Annotation primTy primVal m →
-  m ()
-
 data TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Eq, Show)
 
@@ -60,8 +42,40 @@ failed = "Check failed. "
 passed ∷ String
 passed = "Check passed. "
 
-typechecked ∷ String
-typechecked = "The term is type checked successfully. "
+typechecked ∷
+  ∀ primTy primVal m.
+  ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
+    Show primTy,
+    Show primVal,
+    (Show (Value primTy primVal m))
+  ) ⇒
+  Term primTy primVal →
+  Annotation primTy primVal m →
+  String
+typechecked term ann =
+  "The term is type checked successfully. It has usage of "
+    <> show (fst ann)
+    <> "and type "
+    <> show (snd ann)
+
+-- | 'checker' for checkable terms checks the term against an annotation and returns ().
+typeTerm ∷
+  ∀ primTy primVal m.
+  ( HasThrow "typecheckError" (TypecheckError primTy primVal m) m,
+    HasWriter "typecheckerLog" [TypecheckerLog] m,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    (Show (Value primTy primVal m))
+  ) ⇒
+  Parameterisation primTy primVal →
+  Natural →
+  Context primTy primVal m →
+  Term primTy primVal →
+  Annotation primTy primVal m →
+  m ()
 
 -- * (Universe formation rule)
 
@@ -78,6 +92,11 @@ typeTerm _ _ii _g t@(Star i) ann = do
             <> ", which is not zero. "
         throw @"typecheckError" SigmaMustBeZero
     ) -- checks sigma = 0.
+  logOutput $
+    passed
+      <> "The input usage "
+      <> show (fst ann)
+      <> "is zero. "
   logOutput "Checking that the annotation is of type *j, and j>i. "
   case (snd ann) of
     VStar j →
@@ -102,13 +121,13 @@ typeTerm _ _ii _g t@(Star i) ann = do
                   <> ", which is greater than the term's * level "
                   <> show i
                   <> ". "
-                  <> typechecked
+                  <> typechecked t ann
               return ()
           )
     _ → do
       logOutput $
         failed
-          <> " The annotation is not of type *, it is of type "
+          <> " The input annotation is not of * type, it is of type "
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
 typeTerm p ii g t@(Pi pi varType resultType) ann = do
@@ -119,35 +138,56 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
     ( do
         logOutput $
           failed
-            <> "Sigma is "
+            <> "The input usage (sigma) is "
             <> show (fst ann)
             <> ", which is not zero. "
         throw @"typecheckError" SigmaMustBeZero
     )
-  case snd ann of -- checks that type is *i
+  logOutput $
+    passed
+      <> "The input usage (sigma) is "
+      <> show (fst ann)
+      <> ", it is zero, as required. "
+  logOutput $
+    "Checking that the input type "
+      <> show (snd ann)
+      <> "is *i. "
+  case snd ann of
     VStar _ → do
-      logOutput "Checking that the variable is of type *i. "
-      typeTerm p ii g varType ann -- checks varType is of type Star i
       logOutput $
         passed
-          <> "The variable is of type "
+          <> "The input type is "
           <> show (snd ann)
-          <> ". Checking that the result is of type *i. "
+          <> ", it is *i, as required. "
+      logOutput $
+        "Checking that the variable (V) type checked against the input annotation, which is of usage "
+          <> show (fst ann)
+          <> " and of type "
+          <> show (snd ann)
+      typeTerm p ii g varType ann
+      logOutput $
+        passed
+          <> "The variable (V) is compatible with the input usage "
+          <> show (fst ann)
+          <> " and type "
+          <> show (snd ann)
+          <> ". Checking that the result (R) type checked against the input annotation. "
       ty ← evalTerm p varType []
       typeTerm
-        p -- checks resultType is of type Star i
+        p -- param
         (ii + 1)
-        ((Local ii, (pi, ty)) : g)
-        (substTerm 0 (Free (Local ii)) resultType)
+        ((Local ii, (pi, ty)) : g) -- add V to the context
+        (substTerm 0 (Free (Local ii)) resultType) -- substitute V to R
         ann
       logOutput $
         passed
-          <> "Result is of type *i. The variable and the result are at the same * level."
-          <> typechecked
+          <> "Result (R) has usage of is of type *i. The variable and the result are at the same * level."
+          <> typechecked t ann
     _ → do
       logOutput $
         failed
-          <> "The annotation is not of type *. "
+          <> "The annotation is not of type *, it is of type "
+          <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii _g x@(PrimTy _) ann = do
@@ -178,25 +218,26 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
               throw @"typecheckError" (TypeMismatch ii x (SNat 0, VStar 0) ann)
           )
         else do
-          logOutput $ passed <> typechecked
+          logOutput $ passed <> typechecked x ann
           return ()
 -- Lam (introduction rule of dependent function type)
-typeTerm p ii g t@(Lam s) ann = do
+typeTerm p ii g t@(Lam m) ann = do
   typeTermIntroLog t ann
   logOutput
-    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage. ")
+    ("patterned matched to be a Lam term. Checking that input annotation is of dependent function type. ")
   case ann of
     (sig, VPi pi ty ty') → do
-      -- Lam s should be of dependent function type (Pi pi ty ty').
-      logOutput "Checking that "
-      ty' ← ty' (vfree (Local ii))
+      -- Lam m should be of dependent function type (Pi). See the dependent function type formation rule.
+      logOutput $ passed <> "Checking that with x (annotated with sig*pi usage) in "
+      ty' ← ty' (vfree (Local ii)) -- apply the function
       typeTerm
-        p
+        p -- param
         (ii + 1)
-        ((Local ii, (sig <.> pi, ty)) : g) -- put s in the context with usage sig*pi
-        (substTerm 0 (Free (Local ii)) s) -- x (varType) in context S with sigma*pi usage.
-        (sig, ty') -- is of type M (usage sigma) in context T
-    _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam s))
+        ((Local ii, (sig <.> pi, ty)) : g) -- put x in the context with usage sig*pi and type ty
+        (substTerm 0 (Free (Local ii)) m) -- substitute x to m
+        (sig, ty') -- is of type M with usage sigma
+      logOutput $ "" <> typechecked t ann
+    _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
 --
 typeTerm p ii g t@(Elim e) ann = do
   typeTermIntroLog t ann

@@ -35,6 +35,7 @@ eraseTerm ∷
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" ErasureError m,
+    HasWriter "typecheckerLog" [IR.TypecheckerLog] m,
     HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
     Show primTy,
     Show primVal,
@@ -75,7 +76,7 @@ eraseTerm parameterisation term usage ty =
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
             context ← get @"context"
-            case fst (IR.exec (writer $ IR.typeElim0 parameterisation context fIR)) of
+            case fst (IR.exec (IR.typeElim0 parameterisation context fIR)) of
               Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
               Right (fUsage, fTy) → do
                 let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
