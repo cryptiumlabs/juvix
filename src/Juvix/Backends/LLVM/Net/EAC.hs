@@ -318,7 +318,22 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
         (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
       ]
 
-fanInAux1 _allocF = undefined
+fanInAux1' ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
+  ) ⇒
+  Symbol →
+  m Operand.Operand →
+  m Operand.Operand
+fanInAux1' _allocF = undefined
 
 fanInAux2' ∷
   ( HasThrow "err" Codegen.Errors m,
@@ -418,8 +433,6 @@ fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
 fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 
-fanInAux3 allocF = undefined
-
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
@@ -479,7 +492,7 @@ nodeOf ∷
   ) ⇒
   Operand.Operand →
   m Operand.Operand
-nodeOf eac = do
+nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
       { Codegen.type' = Defs.nodeType,
@@ -495,7 +508,7 @@ tagOf ∷
   ) ⇒
   Operand.Operand →
   m Operand.Operand
-tagOf eac = do
+tagOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,
