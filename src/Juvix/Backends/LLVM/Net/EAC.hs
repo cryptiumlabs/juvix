@@ -85,56 +85,16 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %switch.app.continue
     ---------------------------------------------
     Codegen.setBlock appContCase
-    -- nested switch cases
-    appExtCase ← Codegen.addBlock "switch.app.exit"
-    appLamCase ← Codegen.addBlock "switch.app.lam"
-    appEraCase ← Codegen.addBlock "switch.app.era"
-    appDupCase ← Codegen.addBlock "switch.app.dup"
-    -- properly tagged
-    nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
-    tagOther ← tagOf nodeEac
-    _ ←
-      Codegen.switch
-        tagOther
-        defCase
-        [ (Types.lam, appLamCase),
-          (Types.era, appEraCase),
-          (Types.dup, appDupCase)
-        ]
-    -- %switch.app.lam
-    ---------------------------------------------
-    Codegen.setBlock appLamCase
-    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
-    node ← Codegen.load Defs.nodeType nodePtr
-    -- No new nodes are made
-    annihilateRewireAux [node, nodeOther]
-    alCdr ← pure cdr
-    Codegen.br appExtCase
-    -- %switch.app.dup
-    ---------------------------------------------
-    Codegen.setBlock appDupCase
-    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
-    node ← Codegen.load Defs.nodeType nodePtr
-    adCdr ← fanInAux2App [node, nodeOther]
-    Codegen.br appExtCase
-    -- %switch.app.era
-    ---------------------------------------------
-    Codegen.setBlock appEraCase
-    nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
-    node ← Codegen.load Defs.nodeType nodePtr
-    aeCdr ← undefined node nodeOther
-    Codegen.br appExtCase
-    -- %switch.app.exit
-    ---------------------------------------------
-    Codegen.setBlock appExtCase
-    appCdr ←
-      Codegen.phi
-        Types.eacList
-        [ (aeCdr, appEraCase),
-          (adCdr, appDupCase),
-          (alCdr, appLamCase)
-        ]
-    Codegen.br extCase
+    genContinueCase
+      tagNode
+      nodePtr
+      cdr
+      defCase
+      "app"
+      [ (Types.app, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
+        (Types.dup, "switch.dup", fanInAux2App),
+        (Types.era, "switch.era", (\xs → undefined))
+      ]
     -- %lam case
     ------------------------------------------------------
     Codegen.setBlock lamCase
@@ -204,10 +164,10 @@ genContinueCase ∷
   Operand.Operand →
   Operand.Operand →
   Name.Name →
-  [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
   Symbol →
+  [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
   m (Operand.Operand, Name.Name)
-genContinueCase tagNode nodePtr cdr defCase cases prefix = do
+genContinueCase tagNode nodePtr cdr defCase prefix cases = do
   nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
   tagOther ← tagOf nodeEac
   blocksGeneratedList ← genBlockNames
