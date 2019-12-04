@@ -49,11 +49,19 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
     extCase ← Codegen.addBlock "switch.exit"
-    -- TODO ∷ Check if car is there
-    car ← Types.loadCar eacList
-    -- %car check branch
+    nullCase ← Codegen.addBlock "empty.list"
+    carExists ← Codegen.addBlock "car.check"
+    nullCheck ← Types.checkNull eacList
+    Codegen.cbr nullCheck carExists nullCase
+    -- %empty.list branch
     ------------------------------------------------------
-
+    Codegen.setBlock nullCase
+    Codegen.retNull
+    -- %car.check branch
+    ------------------------------------------------------
+    Codegen.setBlock carExists
+    car ← Types.loadCar eacList
+    -- TODO ∷ cdr may still be unsafe!??!?!
     cdr ← Types.loadCdr eacList
     -- moved from %app case.
     -- Should not do extra work being here----
