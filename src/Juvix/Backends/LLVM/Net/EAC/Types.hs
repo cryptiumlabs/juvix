@@ -7,6 +7,7 @@ import qualified Juvix.Library.HashMap as Map
 
 import qualified LLVM.AST.AddrSpace as Addr
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
@@ -24,7 +25,7 @@ eac = Type.StructureType
   { Type.isPacked = True,
     Type.elementTypes =
       [ tag,
-        Codegen.nodePointer
+        Codegen.nodePointer eacPointer
       ]
   }
 
@@ -46,6 +47,16 @@ eacList = Type.StructureType
 
 eacLPointer ∷ Type.Type
 eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
+
+checkNull ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer))
 
 loadCar,
   loadCdr ∷
@@ -74,3 +85,14 @@ loadCdr eacList = do
           Codegen.indincies' = Codegen.constant32List [0, 1]
         }
   Codegen.load eac eacPointer
+
+loadList ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+loadList eacPointer =
+  Codegen.load eacList eacPointer

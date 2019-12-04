@@ -20,3 +20,7 @@ data Type primTy
   deriving (Show, Eq, Generic)
 
 type TypeAssignment primTy = Map.Map Symbol (Type primTy)
+
+data EvaluationError primVal
+  = PrimitiveApplicationError primVal primVal
+  deriving (Show, Eq, Generic)

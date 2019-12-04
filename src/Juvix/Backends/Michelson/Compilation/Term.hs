@@ -1,9 +1,11 @@
 module Juvix.Backends.Michelson.Compilation.Term where
 
+import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.Erased.Types as J
+import qualified Juvix.Core.Erased.Util as J
+import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
@@ -18,10 +20,15 @@ termToMichelson ∷
   M.Type →
   m Op
 termToMichelson term paramTy = do
-  modify @"stack" ((FuncResultE, paramTy) :)
-  instr ← termToInstr term paramTy
-  tell @"compilationLog" [TermToInstr term instr]
-  pure instr
+  case term of
+    (J.Lam arg body, _, _) → do
+      modify @"stack" ((VarE arg, paramTy) :)
+      instr' ← termToInstr body paramTy
+      let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
+      modify @"stack" (\(x : _ : xs) → x : xs)
+      tell @"compilationLog" [TermToInstr body instr]
+      pure instr
+    _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
 
 stackGuard ∷
   ∀ m.
@@ -30,11 +37,11 @@ stackGuard ∷
   ) ⇒
   Term →
   M.Type →
-  (Term → m Op) →
+  m Op →
   m Op
 stackGuard term paramTy func = do
   start ← get @"stack"
-  instr ← func term
+  instr ← func
   end ← get @"stack"
   case stackToStack start of
     M.SomeHST startStack → do
@@ -64,6 +71,7 @@ stackGuard term paramTy func = do
  - Transform core term to Michelson instruction sequence.
  - This requires tracking the stack (what variables are where).
  - At present, this function enforces a unidirectional mapping from the term type to the Michelson stack type.
+ - TODO: Right now, usage information is ignored. It should be used in the future to avoid unnecessary stack elements.
  - :: { Haskell Type } ~ { Stack Pre-Evaluation } => { Stack Post-Evaluation }
  -}
 termToInstr ∷
@@ -75,7 +83,7 @@ termToInstr ∷
   Term →
   M.Type →
   m Op
-termToInstr term paramTy = stackGuard term paramTy $ \term → do
+termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
   let notYetImplemented ∷ m Op
       notYetImplemented = throw @"compilationError" (NotYetImplemented ("termToInstr: " <> show term))
 
@@ -89,39 +97,91 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
         post ← get @"stack"
         if guard post pre
           then pure res
-          else failWith ("compilation violated stack invariant: " <> show term)
+          else failWith ("compilation violated stack invariant: " <> show term <> " prior stack " <> show pre <> " posterior stack " <> show post)
 
       primToInstr ∷ PrimVal → m Op
       primToInstr prim =
         case prim of
-          -- :: \x -> y ~ (x, s) => (y, s)
-          PrimFst → stackCheck (lambda 1) $ do
-            -- TODO: return lambda (pair x y) x CAR
-            genReturn (M.PrimEx (M.CAR "" ""))
-          -- :: \x -> y ~ (x, s) => (y, s)
-          PrimSnd → stackCheck (lambda 1) $ do
-            -- TODO: return lambda (pair x y) y CDR
-            genReturn (M.PrimEx (M.CDR "" ""))
+          -- :: \x -> y ~ s => (f, s)
+          PrimFst → stackCheck addsOne $ do
+            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
+                (_, retTy) = lamRetTy [] pairTy xT
+            modify @"stack" ((:) (FuncResultE, retTy))
+            pure (oneArgPrim [M.PrimEx (M.CAR "" "")] retTy)
+          -- :: \x -> y ~ s => (f, s)
+          PrimSnd → stackCheck addsOne $ do
+            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
+                (_, retTy) = lamRetTy [] pairTy yT
+            modify @"stack" ((:) (FuncResultE, retTy))
+            pure (oneArgPrim [M.PrimEx (M.CDR "" "")] retTy)
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
-          PrimPair → stackCheck (lambda 2) $ do
-            -- TODO: return lambda (x, y) (x, y)
-            modify @"stack" (\((_, xT) : (_, yT) : xs) → (FuncResultE, M.Type (M.TPair "" "" xT yT) "") : xs)
-            pure (M.PrimEx (M.PAIR "" "" "" ""))
+          PrimPair → stackCheck addsOne $ do
+            let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
+            firstArgTy ← typeToTypeForClosure firstArgTy
+            secondArgTy ← typeToTypeForClosure secondArgTy
+            -- TODO: Clean this up.
+            let mkPair x y = M.Type (M.TPair "" "" x y) ""
+
+                mkUnit = M.Type (M.TUnit) ""
+
+                mkLam x y = M.Type (M.TLambda x y) ""
+
+                secondLamTy = mkLam (mkPair secondArgTy (mkPair firstArgTy mkUnit)) (mkPair firstArgTy secondArgTy)
+
+                firstLamTy = mkLam (mkPair firstArgTy mkUnit) (mkPair (mkPair firstArgTy mkUnit) secondLamTy)
+
+                retTy = mkPair mkUnit firstLamTy
+
+            modify @"stack" ((:) (FuncResultE, retTy))
+            pure
+              ( M.PrimEx
+                  ( M.PUSH
+                      ""
+                      retTy
+                      ( M.ValuePair
+                          M.ValueUnit
+                          ( M.ValueLambda
+                              ( M.SeqEx
+                                  [ M.PrimEx
+                                      ( M.DIP
+                                          [ M.PrimEx
+                                              ( M.PUSH
+                                                  ""
+                                                  secondLamTy
+                                                  ( M.ValueLambda
+                                                      ( M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CAR "" ""), M.PrimEx (M.DIP [M.PrimEx (M.CDR "" ""), M.PrimEx (M.CAR "" "")]), M.PrimEx M.SWAP, M.PrimEx (M.PAIR "" "" "" "")]
+                                                          :| []
+                                                      )
+                                                  )
+                                              )
+                                          ]
+                                      ),
+                                    M.PrimEx (M.PAIR "" "" "" "")
+                                  ]
+                                  :| []
+                              )
+                          )
+                      )
+                  )
+              )
           -- :: a ~ s => (a, s)
           PrimConst const → stackCheck addsOne $ do
             case const of
-              M.ValueUnit → do
-                modify @"stack" ((FuncResultE, M.Type M.TUnit "") :)
-                pure (M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit))
               M.ValueNil → do
-                modify @"stack" ((FuncResultE, M.Type (M.TList (M.Type M.TOperation "")) "") :)
-                pure (M.PrimEx (M.NIL "" "" (M.Type M.TOperation "")))
-              _ → notYetImplemented
+                let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
+                modify @"stack" ((:) (FuncResultE, t))
+                pure (M.PrimEx (M.NIL "" "" elemTy))
+              _ → do
+                let J.PrimTy (PrimTy t) = ty
+                modify @"stack" ((:) (FuncResultE, t))
+                pure (M.PrimEx (M.PUSH "" t const))
 
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
     --       since we copy the variable each time. We should be able to use precise usage information
     --       to relax the stack invariant and avoid duplicating variables that won't be used again.
+    -- TODO: There is probably some nicer sugar for this in Michelson now.
+    -- Variable: find the variable in the stack & duplicate it at the top.
     -- :: a ~ s => (a, s)
     J.Var n →
       stackCheck addsOne $ do
@@ -132,39 +192,60 @@ termToInstr term paramTy = stackGuard term paramTy $ \term → do
             let before = rearrange i
                 after = M.PrimEx (M.DIP [unrearrange i])
             genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
+    -- Primitive: varies.
     -- :: (varies)
     J.Prim prim →
       primToInstr prim
-    -- :: \a -> b ~ (a, s) => (b, s)
+    -- :: \a -> b ~ s => ((vars, Lam a b), s)
     J.Lam arg body →
-      stackCheck (lambda 1) $ do
-        modify @"stack" (\((_, t) : xs) → (VarE arg, t) : xs)
-        inner ← termToInstr body paramTy
-        after ← genReturn (foldDrop 1)
-        pure (M.SeqEx [inner, after])
-    {-
-    -- TODO: Will this work in all cases?
-    -- Consider app, e.g. (\f -> f 1 2) pair, seems problematic.
-    -- :: (\a ... {n} b -> c) a ... {n} b ~ (a, ... {n} (b, s)) => (c, s)
-    J.App func arg →
       stackCheck addsOne $ do
-        let rec f args =
-              case f of
-                J.App f a → rec f (a : args)
-                _ → (f, args)
-            (fn, args) = rec func [arg]
-        args ← mapM (flip termToInstr paramTy) (reverse args)
-        func ← termToInstr fn paramTy
-        pure (M.SeqEx (args <> [func]))
-    -}
-
+        let J.Pi _ argTy retTy = ty
+        -- TODO: How to deal with packed lambdas here? For now, we don't.
+        -- If the argument is a lambda, we don't know what its closure type is.
+        argTy ← typeToTypeForClosure argTy
+        stack ← get @"stack"
+        let free = J.free (J.eraseTerm term)
+            freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
+        vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
+        packOp ← packClosure free
+        put @"stack" []
+        unpackOp ← unpackClosure ((arg, argTy) : freeWithTypes)
+        inner ← termToInstr body paramTy
+        dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
+        post ← get @"stack"
+        let ((_, retTy) : _) = post
+        let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
+        put @"stack" ((FuncResultE, rTy) : stack)
+        pure
+          ( M.SeqEx
+              [ M.PrimEx (M.PUSH "" lTy (M.ValueLambda (unpackOp :| [inner, dropOp]))),
+                M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
+                M.SeqEx vars,
+                packOp,
+                M.PrimEx (M.PAIR "" "" "" "") -- pair the env & lambda
+              ]
+          )
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
       stackCheck addsOne $ do
-        func ← termToInstr func paramTy -- :: Lam a b
+        func ← termToInstr func paramTy -- :: (vars, Lam (a, vars) b)
         arg ← termToInstr arg paramTy -- :: a
-        pure (M.SeqEx [func, arg, M.PrimEx (M.EXEC "")])
+        stack ← get @"stack"
+        modify @"stack" (\(_ : (_, M.Type (M.TPair _ _ _ (M.Type (M.TLambda _ retTy) _)) _) : xs) → (FuncResultE, retTy) : xs)
+        -- Then pair up (a) with (vars) and execute the function.
+        pure
+          ( M.SeqEx
+              [ func,
+                arg,
+                M.PrimEx (M.DIP [M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CAR "" ""), M.PrimEx (M.DIP [M.PrimEx (M.CDR "" "")])]]),
+                -- Unpacked, now arg : env : lambda
+                M.PrimEx (M.PAIR "" "" "" ""),
+                -- Paired, now (arg, env) : lambda
+                M.PrimEx (M.EXEC "")
+                -- Then execute the function.
+              ]
+          )
 
 takesOne ∷ Stack → Stack → Bool
 takesOne post pre = post == drop 1 pre
@@ -174,9 +255,6 @@ addsOne post pre = drop 1 post == pre
 
 changesTop ∷ Stack → Stack → Bool
 changesTop post pre = drop 1 post == pre
-
-lambda ∷ Natural → Stack → Stack → Bool
-lambda nargs post pre = drop (fromIntegral nargs) pre == drop 1 post
 
 genSwitch ∷
   ∀ m.

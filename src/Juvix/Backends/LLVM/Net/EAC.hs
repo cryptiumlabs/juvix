@@ -8,6 +8,8 @@ module Juvix.Backends.LLVM.Net.EAC where
 -- TODO ∷ abstract all all imports to LLVM
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import qualified Juvix.Backends.LLVM.DSL as DSL
+import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
@@ -39,124 +41,191 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"
-    isBothPrimary ← Codegen.externf "is_both_primary"
-    anihilateRewireAux ← Codegen.externf "anihilate_rewire_aux"
     -- switch creations
-    eacList ← Codegen.externf "eac_list"
+    eacLPtr ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
     lamCase ← Codegen.addBlock "switch.lam"
     eraCase ← Codegen.addBlock "switch.era"
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
     extCase ← Codegen.addBlock "switch.exit"
-    car ← Types.loadCar eacList
-    cdr ← Types.loadCdr eacList
-    tag ← tagOf car
-    _term ←
-      Codegen.switch
-        tag
-        defCase
-        [ (Types.app, appCase),
-          (Types.lam, lamCase),
-          (Types.era, eraCase),
-          (Types.dup, dupCase)
-        ]
-    -- %app case
+    nullCase ← Codegen.addBlock "empty.list"
+    carExists ← Codegen.addBlock "car.check"
+    nullCheck ← Types.checkNull eacLPtr
+    _ ← Codegen.cbr nullCheck carExists nullCase
+    -- %empty.list branch
     ------------------------------------------------------
-    Codegen.setBlock appCase
-    -- nested switch cases
-    appLamCase ← Codegen.addBlock "switch.app.lam"
-    appEraCase ← Codegen.addBlock "switch.app.era"
-    appDupCase ← Codegen.addBlock "switch.app.dup"
-    appExtCase ← Codegen.addBlock "switch.app.exit"
-    -- TODO ∷ Prove this branch is unnecessary
-    appContCase ← Codegen.addBlock "switch.app.continue"
+    Codegen.setBlock nullCase
+    _ ← Codegen.retNull
+    -- %car.check branch
+    ------------------------------------------------------
+    Codegen.setBlock carExists
+    eacList ← Types.loadList eacLPtr
+    car ← Types.loadCar eacList
+    -- TODO ∷ cdr may still be unsafe!??!?!
+    cdr ← Types.loadCdr eacList
+    -- moved from %app case.
+    -- Should not do extra work being here----
     nodePtr ← nodeOf car
-    tagNode ← Codegen.call Codegen.bothPrimary isBothPrimary (Codegen.emptyArgs [nodePtr])
+    tagNode ← Defs.isBothPrimary [nodePtr]
     isPrimary ← Codegen.loadIsPrimaryEle tagNode
-    -- TODO ∷ Prove this branch is unnecessary
     test ←
       Codegen.icmp
         IntPred.EQ
         isPrimary
         (Operand.ConstantOperand (C.Int 2 1))
-    Codegen.cbr test appContCase extCase
-    -- %switch.app.continue
-    ---------------------------------------------
-    -- TODO ∷ fix the type of this.... need the rules to work on eac!!!
-    Codegen.setBlock appContCase
-    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
-    tagOther ← tagOf nodeOther
-    _ ←
+    -- end of moved code----------------------
+    tag ← tagOf car
+    _term ←
       Codegen.switch
-        tagOther
-        defCase
-        [ (Types.lam, appLamCase),
-          (Types.era, appEraCase),
-          (Types.dup, appDupCase)
+        tag
+        defCase -- this should never happen
+        [ (Types.app, appCase),
+          (Types.lam, lamCase),
+          (Types.era, eraCase),
+          (Types.dup, dupCase)
         ]
-    -- %switch.app.lam
-    ---------------------------------------------
-    Codegen.setBlock appLamCase
-    nodeOther ← Codegen.loadPrimaryNode isPrimary >>= Codegen.load Codegen.nodeType
-    node ← Codegen.load Codegen.nodeType nodePtr
-    -- No new nodes are made
-    _ ← Codegen.call Type.void anihilateRewireAux (Codegen.emptyArgs [node, nodeOther])
-    aCdr ← pure cdr
-    aCdr ← undefined
-    Codegen.br extCase
+    -- TODO ∷ Prove this branch is unnecessary
+    let contCase case' name = do
+          Codegen.setBlock case'
+          conCase ← Codegen.addBlock name
+          _ ← Codegen.cbr test conCase extCase
+          -- %switch.*.continue
+          Codegen.setBlock conCase
+
+        genContinueCaseD = genContinueCase tagNode nodePtr cdr defCase
+
+        swapArgs (x : y : xs) = y : x : xs
+        swapArgs xs = xs
+
+    -- %app case
+    ------------------------------------------------------
+    contCase appCase "switch.app.continue"
+    (aCdr, aExit) ←
+      genContinueCaseD
+        "app"
+        [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
+          (Types.dup, "switch.dup", fanInAux2App),
+          (Types.era, "switch.era", (\xs → undefined xs))
+        ]
+    _ ← Codegen.br extCase
     -- %lam case
     ------------------------------------------------------
-    Codegen.setBlock lamCase
-    -- nested switch cases
-    lamAppCase ← Codegen.addBlock "switch.lam.app"
-    lamEraCase ← Codegen.addBlock "switch.lam.era"
-    lamDupCase ← Codegen.addBlock "switch.lam.dup"
-    lamExtCase ← Codegen.addBlock "switch.lam.exit"
-    lCdr ← undefined
-    Codegen.br extCase
+    contCase lamCase "switch.lam.continue"
+    (lCdr, lExit) ←
+      genContinueCaseD
+        "lam"
+        [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
+          (Types.dup, "switch.dup", fanInAux2Lambda),
+          (Types.era, "switch.era", (\xs → undefined xs))
+        ]
+    _ ← Codegen.br extCase
     -- %era case
     ------------------------------------------------------
-    Codegen.setBlock eraCase
-    -- nested switch cases
-    eraAppCase ← Codegen.addBlock "switch.era.app"
-    eraLamCase ← Codegen.addBlock "switch.era.lam"
-    eraEraCase ← Codegen.addBlock "switch.era.era"
-    eraDupCase ← Codegen.addBlock "switch.era.dup"
-    eraExtCase ← Codegen.addBlock "switch.era.exit"
-    eCdr ← undefined
-    Codegen.br extCase
+    contCase lamCase "switch.era.continue"
+    (eCdr, eExit) ←
+      genContinueCaseD
+        "fan_in"
+        [ (Types.app, "switch.app", undefined),
+          (Types.lam, "switch.lam", undefined),
+          (Types.dup, "switch.dup", fanInAux2Era),
+          (Types.era, "switch.era", undefined)
+        ]
+    _ ← Codegen.br extCase
     -- %dup case
     ------------------------------------------------------
-    Codegen.setBlock dupCase
-    -- nested switch cases
-    dupAppCase ← Codegen.addBlock "switch.dup.app"
-    dupLamCase ← Codegen.addBlock "switch.dup.lam"
-    dupEraCase ← Codegen.addBlock "switch.dup.era"
-    dupDupCase ← Codegen.addBlock "switch.dup.dup"
-    dupExtCase ← Codegen.addBlock "switch.dup.exit"
-    dCdr ← undefined
-    Codegen.br extCase
+    contCase lamCase "switch.fan_in.continue"
+    (fCdr, fExit) ←
+      genContinueCaseD
+        "fan_in"
+        [ (Types.app, "switch.app", fanInAux2App . swapArgs),
+          (Types.lam, "switch.lam", fanInAux2Lambda . swapArgs),
+          (Types.dup, "switch.dup", fanInAux2FanIn . swapArgs),
+          (Types.era, "switch.era", fanInAux2Era . swapArgs)
+        ]
+    _ ← Codegen.br extCase
     -- %default case
     ------------------------------------------------------
     Codegen.setBlock defCase
-    deCdr ← pure cdr
-    Codegen.br extCase
+    _ ← Codegen.br extCase
     -- %exit case
     ------------------------------------------------------
     Codegen.setBlock extCase
     cdr ←
       Codegen.phi
         Types.eacList
-        [ (deCdr, defCase),
-          (dCdr, dupCase),
-          (aCdr, appCase),
-          (eCdr, eraCase),
-          (lCdr, lamCase)
+        [ (cdr, defCase),
+          (cdr, dupCase),
+          (cdr, appCase),
+          (cdr, eraCase),
+          (cdr, lamCase),
+          (aCdr, aExit),
+          (lCdr, lExit),
+          (fCdr, fExit),
+          (eCdr, eExit)
         ]
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
-    args = [(Types.eacList, "eac_list")]
+    args = [(Types.eacPointer, "eac_list")]
+
+--------------------------------------------------------------------------------
+-- Code generation rules
+--------------------------------------------------------------------------------
+
+genContinueCase ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "names" Codegen.Names m
+  ) ⇒
+  Operand.Operand →
+  Operand.Operand →
+  Operand.Operand →
+  Name.Name →
+  Symbol →
+  [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
+  m (Operand.Operand, Name.Name)
+genContinueCase tagNode nodePtr cdr defCase prefix cases = do
+  nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
+  tagOther ← tagOf nodeEac
+  blocksGeneratedList ← genBlockNames
+  extBranch ← Codegen.addBlock (prefix <> "switch.exit")
+  let generateBody (_, branch, rule) = do
+        -- %prefix.branch case
+        ------------------------------------------------------
+        _ ← Codegen.setBlock branch
+        -- node Types in which to do operations on
+        nodeOther' ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
+        nodePrimar ← Codegen.load Defs.nodeType nodePtr
+        updateList ← rule [nodePrimar, nodeOther', cdr]
+        _ ← Codegen.br extBranch
+        pure (updateList, branch)
+      -- remove the rule as it's not needed in the switch
+      switchArgs = fmap namesOf blocksGeneratedList
+  _ ← Codegen.switch tagOther defCase switchArgs
+  -- generate body, and return the list, switch pair
+  phiList ← traverse generateBody blocksGeneratedList
+  -- %prefix.switch.exit case
+  ------------------------------------------------------
+  _ ← Codegen.setBlock extBranch
+  newList ←
+    Codegen.phi
+      Types.eacList
+      phiList
+  pure (newList, extBranch)
+  where
+    appendName = (\(t, b, f) → (t, prefix <> b, f)) <$> cases
+
+    genBlockNames =
+      traverse
+        ( \(t, b, f) →
+            (,,) t <$> Codegen.addBlock b <*> pure f
+        )
+        appendName
+
+    namesOf (t, b, _) = (t, b)
 
 --------------------------------------------------------------------------------
 -- Reduction rules
@@ -168,9 +237,23 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 
 -- this function work off the nodeType signature not Types.eac
 
+annihilateRewireAux ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" Codegen.SymbolTable m
+  ) ⇒
+  [Operand.Operand] →
+  m ()
+annihilateRewireAux args = do
+  annihilate ← Codegen.externf "annihilate_rewire_aux"
+  _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
+  pure ()
+
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-anihilateRewireAux ∷
+annihilateRewireAux' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -183,20 +266,19 @@ anihilateRewireAux ∷
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
   m Operand.Operand
-anihilateRewireAux = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
+annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
-    aux1 ← Codegen.auxiliary1
-    aux2 ← Codegen.auxiliary2
-    rewire ← Codegen.externf "rewire"
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
     node1 ← Codegen.externf "node_1"
     node2 ← Codegen.externf "node_2"
-    _ ← Codegen.call Type.void rewire (Codegen.emptyArgs [node1, aux1, node2, aux1])
-    _ ← Codegen.call Type.void rewire (Codegen.emptyArgs [node1, aux2, node2, aux2])
+    Codegen.rewire [node1, aux1, node2, aux1]
+    Codegen.rewire [node1, aux2, node2, aux2]
     _ ← Codegen.delNode node1
     Codegen.delNode node2
   where
-    args = [(Codegen.nodeType, "node_1"), (Codegen.nodeType, "node_2")]
+    args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
 
 -- TODO ∷ make fast fanInAux and slow fanInAux
 
@@ -221,37 +303,22 @@ fanInAux0 ∷
 fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
   do
     fanIn ← Codegen.externf "fan_in"
-    node ← Codegen.externf "node"
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
-    aux1 ← Codegen.auxiliary1
-    aux2 ← Codegen.auxiliary2
-    mainPort ← Codegen.mainPort
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
+    mainPort ← Defs.mainPort
     -- abstract out this string!
-    linkConnectedPort ← Codegen.externf "link_connected_port"
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, aux1, era1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, aux2, era2, mainPort])
+    Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
+    Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
     Codegen.retNull
   where
     args =
-      [ (Codegen.nodeType, "node"), -- we send in the alloc function for it. Do case before
-        (Codegen.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
+      [ (Defs.nodeType, "node"), -- we send in the alloc function for it. Do case before
+        (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
       ]
 
-fanInAux1 allocF = undefined
-
--- TODO ∷ change interface for link and linkOtherNode to be more like
--- the interpreter
-
-fanInAux2 ∷
+fanInAux1' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -263,9 +330,27 @@ fanInAux2 ∷
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
+  Symbol →
   m Operand.Operand →
   m Operand.Operand
-fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
+fanInAux1' _allocF = undefined
+
+fanInAux2' ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m
+  ) ⇒
+  Symbol →
+  m Operand.Operand →
+  m Operand.Operand
+fanInAux2' name allocF = Codegen.defineFunction Type.void name args $
   do
     -- Nodes in env
     fanIn ← Codegen.externf "fan_in"
@@ -275,61 +360,78 @@ fanInAux2 allocF = Codegen.defineFunction Type.void "fan_in_aux_2" args $
     fan2 ← allocaFanIn >>= nodeOf
     nod1 ← allocF >>= nodeOf
     nod2 ← allocF >>= nodeOf
-    -- ports and functions
-    mainPort ← Codegen.mainPort
-    auxiliary1 ← Codegen.auxiliary1
-    auxiliary2 ← Codegen.auxiliary2
-    linkConnectedPort ← Codegen.externf "link_connected_port"
-    link ← Codegen.externf "link"
-    -- TODO ∷ Abstract
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, auxiliary1, nod1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod1, auxiliary1, fan2, auxiliary1])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod1, auxiliary2, fan1, auxiliary1])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [fanIn, auxiliary2, nod2, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod2, auxiliary1, fan2, auxiliary2])
-    _ ←
-      Codegen.call
-        Type.void
-        link
-        (Codegen.emptyArgs [nod2, auxiliary2, fan1, auxiliary2])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [node, auxiliary2, fan1, mainPort])
-    _ ←
-      Codegen.call
-        Type.void
-        linkConnectedPort
-        (Codegen.emptyArgs [node, auxiliary1, fan2, mainPort])
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = nod1,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = nod2,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = fan1,
+          DSL.primary = DSL.LinkConnected node DSL.Aux2
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = fan2,
+          DSL.primary = DSL.LinkConnected node DSL.Aux1
+        }
     Codegen.retNull
   where
     args =
-      [ (Codegen.nodeType, "node"),
-        (Codegen.nodeType, "fan_in")
+      [ (Defs.nodeType, "node"),
+        (Defs.nodeType, "fan_in")
       ]
 
-fanInAux3 allocF = undefined
+-- TODO ∷ remove, put these in the environment with some kind of decalarative
+-- dispatch system that can handle dynamic node addition
+
+-- instantiations
+fanInAux2F',
+  fanInAux2A',
+  fanInAux2L',
+  fanInAux2E' ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blockCount" Int m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "moduleDefinitions" [AST.Definition] m,
+      HasState "names" Codegen.Names m,
+      HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+      HasState "typTab" Codegen.TypeTable m,
+      HasState "varTab" Codegen.VariantToType m
+    ) ⇒
+    m Operand.Operand
+fanInAux2A' = fanInAux2' "fan_in_aux_2_app" allocaApp
+fanInAux2F' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
+fanInAux2L' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
+fanInAux2E' = fanInAux2' "fan_in_aux_2_era" allocaEra
+
+fanInAux2App,
+  fanInAux2FanIn,
+  fanInAux2Lambda,
+  fanInAux2Era ∷
+    ( HasThrow "err" Codegen.Errors m,
+      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+      HasState "count" Word m,
+      HasState "currentBlock" Name.Name m,
+      HasState "symtab" Codegen.SymbolTable m
+    ) ⇒
+    [Operand.Operand] →
+    m Operand.Operand
+fanInAux2App args = Codegen.callGen Type.void args "fan_in_aux_2_app"
+fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
+fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
+fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 
 --------------------------------------------------------------------------------
 -- Allocations
@@ -348,7 +450,7 @@ allocaGen ∷
   m Operand.Operand
 allocaGen type' portLen dataLen = do
   eac ← Codegen.alloca Types.eac
-  node ← Codegen.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+  node ← Defs.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,
@@ -358,7 +460,7 @@ allocaGen type' portLen dataLen = do
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Codegen.nodeType,
+      { Codegen.type' = Defs.nodeType,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -390,10 +492,10 @@ nodeOf ∷
   ) ⇒
   Operand.Operand →
   m Operand.Operand
-nodeOf eac = do
+nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Codegen.nodeType,
+      { Codegen.type' = Defs.nodeType,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -406,7 +508,7 @@ tagOf ∷
   ) ⇒
   Operand.Operand →
   m Operand.Operand
-tagOf eac = do
+tagOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,

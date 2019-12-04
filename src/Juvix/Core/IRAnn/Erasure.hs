@@ -9,7 +9,7 @@ eraseTerm term =
     Star n → IR.Star n
     PrimTy t → IR.PrimTy t
     Pi u a b → IR.Pi u (eraseTerm a) (eraseTerm b)
-    Lam b → IR.Lam (eraseTerm b)
+    Lam (b, _, _) → IR.Lam (eraseTerm b)
     Elim (e, _, _) → IR.Elim (eraseElim e)
 
 eraseElim ∷ ∀ primTy primVal. Elim primTy primVal → IR.Elim primTy primVal
@@ -18,5 +18,5 @@ eraseElim elim =
     Bound s → IR.Bound s
     Free n → IR.Free n
     Prim p → IR.Prim p
-    App (f, _, _) x → IR.App (eraseElim f) (eraseTerm x)
+    App (f, _, _) (x, _, _) → IR.App (eraseElim f) (eraseTerm x)
     Ann u x y → IR.Ann u (eraseTerm x) (eraseTerm y)

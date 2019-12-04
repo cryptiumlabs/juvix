@@ -26,6 +26,13 @@
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
+**** DSL
+Serves as a mini DSL layer above LLVM
+- _Relies on_
+  + [[Library]]
+***** What is included?
+1. _Relink_
+   - gives a declarative way to do a bunch of links and relinks
 **** Codegen
 - _Relies on_
   + [[Block]]
@@ -87,6 +94,13 @@ Provides a mechanism for defining Sum types
   EAC layer gets run
 - The form given to =EAC= is not the base EAC AST, but instead a
   pre processed =EAC= graph that the initial graph will be made on
+- _Relies on_
+  + [[Library]]
+****** Defs
+- Specializes the functions in Graph to fit [[Net/EAC/Types]]
+  + Later in the DSL Layer!
+- Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
+- Also generates the proper types associated with them
 - _Relies on_
   + [[Library]]
 ****** Types <<Net/EAC/Types>>

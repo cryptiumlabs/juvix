@@ -10,7 +10,8 @@ import qualified Juvix.Library.HashMap as Map
 evaluate ∷
   ∀ primVal m.
   ( HasReader "apply" (primVal → primVal → Maybe primVal) m,
-    HasState "env" (Map.Map Symbol (Term primVal)) m
+    HasState "env" (Map.Map Symbol (Term primVal)) m,
+    HasThrow "evaluationError" (EvaluationError primVal) m
   ) ⇒
   Term primVal →
   m (Term primVal)
@@ -31,7 +32,7 @@ evaluate term =
           apply ← ask @"apply"
           case apply f' x' of
             Just r → pure (Prim r)
-            Nothing → undefined
+            Nothing → throw @"evaluationError" (PrimitiveApplicationError f' x')
         (Lam s t, v) → do
           modify @"env" (Map.insert s v)
           evaluate t

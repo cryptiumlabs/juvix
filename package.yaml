@@ -86,6 +86,7 @@ library:
     - Juvix.Core.Erased
     - Juvix.Core.ErasedAnn
     - Juvix.Core.Erased.Evaluator
+    - Juvix.Core.Erased.Util
     - Juvix.Core.Erased.Types
     - Juvix.Core.Erasure
     - Juvix.Core.Erasure.Algorithm
@@ -151,6 +152,8 @@ library:
     - Juvix.Backends.LLVM.Codegen
     - Juvix.Backends.LLVM.Net.EAC
     - Juvix.Backends.LLVM.Net.EAC.Types
+    - Juvix.Backends.LLVM.Net.EAC.Defs
+    - Juvix.Backends.LLVM.DSL
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate
