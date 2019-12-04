@@ -139,8 +139,11 @@ defineFunctionGen ∷
   [(Type, Name)] →
   m a →
   m Operand
-defineFunctionGen bool retty name args body =
-  (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
+defineFunctionGen bool retty name args body = do
+  functionOperand ←
+    (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
+  assign name functionOperand
+  pure functionOperand
 
 defineFunction,
   defineFunctionVarArgs ∷
@@ -312,8 +315,7 @@ defineMalloc ∷
 defineMalloc = do
   let name = "malloc"
   op ← external voidStarTy name [(size_t, "size")]
-  modify @"symtab" (Map.insert name op)
-  pure ()
+  assign name op
 
 defineFree ∷
   ∀ m.
@@ -323,9 +325,37 @@ defineFree ∷
   m ()
 defineFree = do
   let name = "free"
-  op ← external voidTy name []
-  modify @"symtab" (Map.insert name op)
-  pure ()
+  op ← external voidTy name [(Types.voidStarTy, "type")]
+  assign name op
+
+mallocType ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  Integer →
+  Type →
+  m Operand
+mallocType size type' = do
+  malloc ← externf "malloc"
+  voidPtr ← call Types.voidStarTy malloc (emptyArgs [Operand.ConstantOperand (C.Int 32 size)])
+  bitCast voidPtr type'
+
+free ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  Operand →
+  m Operand
+free thing = do
+  free ← externf "free"
+  casted ← bitCast thing Types.voidStarTy
+  call Types.voidTy free (emptyArgs [casted])
 
 --------------------------------------------------------------------------------
 -- Integer Operations
