@@ -107,7 +107,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     nodeOther ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
     node ← Codegen.load Defs.nodeType nodePtr
     -- No new nodes are made
-    anihilateRewireAux [node, nodeOther]
+    annihilateRewireAux [node, nodeOther]
     alCdr ← pure cdr
     Codegen.br appExtCase
     -- %switch.app.dup
@@ -257,7 +257,7 @@ genContinueCase tagNode nodePtr cdr defCase cases prefix = do
 
 -- this function work off the nodeType signature not Types.eac
 
-anihilateRewireAux ∷
+annihilateRewireAux ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
@@ -266,14 +266,14 @@ anihilateRewireAux ∷
   ) ⇒
   [Operand.Operand] →
   m ()
-anihilateRewireAux args = do
-  anihilate ← Codegen.externf "anihilate_rewire_aux"
-  _ ← Codegen.call Type.void anihilate (Codegen.emptyArgs args)
+annihilateRewireAux args = do
+  annihilate ← Codegen.externf "annihilate_rewire_aux"
+  _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
   pure ()
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-anihilateRewireAux' ∷
+annihilateRewireAux' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
@@ -286,7 +286,7 @@ anihilateRewireAux' ∷
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
   m Operand.Operand
-anihilateRewireAux' = Codegen.defineFunction Type.void "anihilate_rewire_aux" args $
+annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
     aux1 ← Defs.auxiliary1
