@@ -85,16 +85,17 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %switch.app.continue
     ---------------------------------------------
     Codegen.setBlock appContCase
-    genContinueCase
-      tagNode
-      nodePtr
-      cdr
-      defCase
-      "app"
-      [ (Types.app, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
-        (Types.dup, "switch.dup", fanInAux2App),
-        (Types.era, "switch.era", (\xs → undefined))
-      ]
+    (aCdr, aExit) ←
+      genContinueCase
+        tagNode
+        nodePtr
+        cdr
+        defCase
+        "app"
+        [ (Types.app, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
+          (Types.dup, "switch.dup", fanInAux2App),
+          (Types.era, "switch.era", (\xs → undefined))
+        ]
     -- %lam case
     ------------------------------------------------------
     Codegen.setBlock lamCase
@@ -142,7 +143,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (cdr, appCase),
           (cdr, eraCase),
           (cdr, lamCase),
-          (appCdr, appExtCase)
+          (aCdr, aExit)
         ]
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
