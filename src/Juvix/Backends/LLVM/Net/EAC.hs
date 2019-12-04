@@ -42,7 +42,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"
     -- switch creations
-    eacList ← Codegen.externf "eac_list"
+    eacLPtr ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
     lamCase ← Codegen.addBlock "switch.lam"
     eraCase ← Codegen.addBlock "switch.era"
@@ -51,7 +51,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     extCase ← Codegen.addBlock "switch.exit"
     nullCase ← Codegen.addBlock "empty.list"
     carExists ← Codegen.addBlock "car.check"
-    nullCheck ← Types.checkNull eacList
+    nullCheck ← Types.checkNull eacLPtr
     Codegen.cbr nullCheck carExists nullCase
     -- %empty.list branch
     ------------------------------------------------------
@@ -60,6 +60,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     -- %car.check branch
     ------------------------------------------------------
     Codegen.setBlock carExists
+    eacList ← Types.loadList eacLPtr
     car ← Types.loadCar eacList
     -- TODO ∷ cdr may still be unsafe!??!?!
     cdr ← Types.loadCdr eacList
@@ -165,7 +166,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         ]
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
-    args = [(Types.eacList, "eac_list")]
+    args = [(Types.eacPointer, "eac_list")]
 
 --------------------------------------------------------------------------------
 -- Code generation rules

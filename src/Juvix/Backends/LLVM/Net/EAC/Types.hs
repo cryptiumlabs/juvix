@@ -85,3 +85,14 @@ loadCdr eacList = do
           Codegen.indincies' = Codegen.constant32List [0, 1]
         }
   Codegen.load eac eacPointer
+
+loadList ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  Operand.Operand →
+  m Operand.Operand
+loadList eacPointer =
+  Codegen.load eacList eacPointer
