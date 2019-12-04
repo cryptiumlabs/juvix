@@ -76,57 +76,64 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (Types.era, eraCase),
           (Types.dup, dupCase)
         ]
+    -- TODO ∷ Prove this branch is unnecessary
+    let contCase case' name = do
+          Codegen.setBlock case'
+          conCase ← Codegen.addBlock name
+          Codegen.cbr test conCase extCase
+          -- %switch.*.continue
+          Codegen.setBlock conCase
+
+        genContinueCaseD = genContinueCase tagNode nodePtr cdr defCase
+
+        swapArgs (x : y : xs) = y : x : xs
+        swapArgs xs = xs
+
     -- %app case
     ------------------------------------------------------
-    Codegen.setBlock appCase
-    appContCase ← Codegen.addBlock "switch.app.continue"
-    Codegen.cbr test appContCase extCase
-    -- TODO ∷ Prove this branch is unnecessary
-    -- %switch.app.continue
-    ---------------------------------------------
-    Codegen.setBlock appContCase
+    contCase appCase "switch.app.continue"
     (aCdr, aExit) ←
-      genContinueCase
-        tagNode
-        nodePtr
-        cdr
-        defCase
+      genContinueCaseD
         "app"
-        [ (Types.app, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
+        [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2App),
           (Types.era, "switch.era", (\xs → undefined))
         ]
+    Codegen.br extCase
     -- %lam case
     ------------------------------------------------------
-    Codegen.setBlock lamCase
-    -- nested switch cases
-    lamAppCase ← Codegen.addBlock "switch.lam.app"
-    lamEraCase ← Codegen.addBlock "switch.lam.era"
-    lamDupCase ← Codegen.addBlock "switch.lam.dup"
-    lamExtCase ← Codegen.addBlock "switch.lam.exit"
-    lCdr ← undefined
+    contCase lamCase "switch.lam.continue"
+    (lCdr, lExit) ←
+      genContinueCaseD
+        "lam"
+        [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
+          (Types.dup, "switch.dup", fanInAux2Lambda),
+          (Types.era, "switch.era", (\xs → undefined))
+        ]
     Codegen.br extCase
     -- %era case
     ------------------------------------------------------
-    Codegen.setBlock eraCase
-    -- nested switch cases
-    eraAppCase ← Codegen.addBlock "switch.era.app"
-    eraLamCase ← Codegen.addBlock "switch.era.lam"
-    eraEraCase ← Codegen.addBlock "switch.era.era"
-    eraDupCase ← Codegen.addBlock "switch.era.dup"
-    eraExtCase ← Codegen.addBlock "switch.era.exit"
-    eCdr ← undefined
+    contCase lamCase "switch.era.continue"
+    (eCdr, eExit) ←
+      genContinueCaseD
+        "fan_in"
+        [ (Types.app, "switch.app", undefined),
+          (Types.lam, "switch.lam", undefined),
+          (Types.dup, "switch.dup", fanInAux2Era),
+          (Types.era, "switch.era", undefined)
+        ]
     Codegen.br extCase
     -- %dup case
     ------------------------------------------------------
-    Codegen.setBlock dupCase
-    -- nested switch cases
-    dupAppCase ← Codegen.addBlock "switch.dup.app"
-    dupLamCase ← Codegen.addBlock "switch.dup.lam"
-    dupEraCase ← Codegen.addBlock "switch.dup.era"
-    dupDupCase ← Codegen.addBlock "switch.dup.dup"
-    dupExtCase ← Codegen.addBlock "switch.dup.exit"
-    dCdr ← undefined
+    contCase lamCase "switch.fan_in.continue"
+    (fCdr, fExit) ←
+      genContinueCaseD
+        "fan_in"
+        [ (Types.app, "switch.app", fanInAux2App . swapArgs),
+          (Types.lam, "switch.lam", fanInAux2Lambda . swapArgs),
+          (Types.dup, "switch.dup", fanInAux2FanIn . swapArgs),
+          (Types.era, "switch.era", fanInAux2Era . swapArgs)
+        ]
     Codegen.br extCase
     -- %default case
     ------------------------------------------------------
@@ -143,7 +150,10 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (cdr, appCase),
           (cdr, eraCase),
           (cdr, lamCase),
-          (aCdr, aExit)
+          (aCdr, aExit),
+          (lCdr, lExit),
+          (fCdr, fExit),
+          (eCdr, eExit)
         ]
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
