@@ -684,6 +684,56 @@ argsGen = (mkName . ("_" <>) . show) <$> ([1 ..] ∷ [Integer])
 variantCreationName ∷ Symbol → Symbol
 variantCreationName = (<> "_%func")
 
+-- | Generic logic to create a variant, used in 'createVariantAllocaFunction'
+-- and 'createVariantGen'
+variantCreation ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "typTab" TypeTable m,
+    Integral a,
+    Foldable t
+  ) ⇒
+  Type →
+  Symbol →
+  Word32 →
+  t Operand →
+  a →
+  (Type → m Operand) →
+  m Operand
+variantCreation sumTyp variantName tag args offset allocFn = do
+  typTable ← get @"typTab"
+  sum ← allocFn sumTyp
+  getEle ← getElementPtr $
+    Minimal
+      { Types.type' = sumTyp,
+        Types.address' = sum,
+        Types.indincies' = constant32List [0, 0]
+      }
+  store
+    getEle
+    (ConstantOperand (C.Int tag (toInteger offset)))
+  -- TODO ∷ remove the ! call here
+  let varType = typTable Map.! variantName
+  casted ← bitCast sum varType
+  foldM_
+    ( \i inst → do
+        ele ←
+          getElementPtr $
+            Minimal
+              { Types.type' = varType,
+                Types.address' = casted,
+                Types.indincies' = constant32List [0, i]
+              }
+        store ele inst
+        pure (succ i)
+    )
+    1 -- not 0, as 0 is reserved for the tag that was set
+    args
+  pure casted
+
+-- TODO ∷ Remove repeat code!!!
 -- TODO ∷ use, so far the createVariant is only used
 
 -- | creates a variant creation definition function
@@ -721,41 +771,11 @@ createVariantAllocaFunction variantName argTypes = do
           Just sumTyp →
             let varCName = variantCreationName variantName
                 args = zip argTypes argsGen
-             in defineFunction sumTyp varCName args $
-                  do
-                    sum ← alloca sumTyp
-                    getEle ← getElementPtr $
-                      Minimal
-                        { Types.type' = sumTyp,
-                          Types.address' = sum,
-                          Types.indincies' = constant32List [0, 0]
-                        }
-                    store
-                      getEle
-                      (ConstantOperand (C.Int tag (toInteger offset)))
-                    -- TODO ∷ remove the ! call here
-                    let varType = typTable Map.! variantName
-                    casted ← bitCast sum varType
-                    foldM_
-                      ( \i (_type', name) →
-                          do
-                            inst ← externf name
-                            ele ←
-                              getElementPtr $
-                                Minimal
-                                  { Types.type' = varType,
-                                    Types.address' = casted,
-                                    Types.indincies' = constant32List [0, i]
-                                  }
-                            store ele inst
-                            pure (succ i)
-                      )
-                      1 -- not 0, as 0 is reserved for the tag that was set
-                      args
-                    _ ← ret casted
-                    createBlocks
-
--- TODO ∷ Remove repeat code!!!
+             in defineFunction sumTyp varCName args $ do
+                  argsName ← traverse (externf . snd) args
+                  casted ← variantCreation sumTyp variantName tag argsName offset alloca
+                  _ ← ret casted
+                  createBlocks
 
 createVariantGen ∷
   ( HasThrow "err" Errors m,
@@ -786,35 +806,8 @@ createVariantGen variantName args allocFn = do
         case Map.lookup sumName typTable of
           Nothing →
             throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
-          Just sumTyp → do
-            sum ← allocFn sumTyp
-            getEle ← getElementPtr $
-              Minimal
-                { Types.type' = sumTyp,
-                  Types.address' = sum,
-                  Types.indincies' = constant32List [0, 0]
-                }
-            store
-              getEle
-              (ConstantOperand (C.Int tag (toInteger offset)))
-            -- TODO ∷ remove the ! call here
-            let varType = typTable Map.! variantName
-            casted ← bitCast sum varType
-            foldM_
-              ( \i inst → do
-                  ele ←
-                    getElementPtr $
-                      Minimal
-                        { Types.type' = varType,
-                          Types.address' = casted,
-                          Types.indincies' = constant32List [0, i]
-                        }
-                  store ele inst
-                  pure (succ i)
-              )
-              1 -- not 0, as 0 is reserved for the tag that was set
-              args
-            pure casted
+          Just sumTyp →
+            variantCreation sumTyp variantName tag args offset alloca
 
 -- | Creates a variant by calling alloca
 allocaVariant ∷
