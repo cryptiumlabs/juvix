@@ -5,6 +5,7 @@ module Juvix.Backends.LLVM.Net.Environment where
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
+import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
@@ -34,6 +35,11 @@ initialModule = do
   _ ← EAC.fanInAux2A'
   _ ← EAC.fanInAux2L'
   _ ← EAC.fanInAux2E'
+  Codegen.mainPort' Types.eacPointer
+  Codegen.auxiliary1' Types.eacPointer
+  Codegen.auxiliary2' Types.eacPointer
+  Codegen.auxiliary3' Types.eacPointer
+  Codegen.auxiliary4' Types.eacPointer
   -- register the hardcoded variants
   modify @"typTab" (Map.insert "numPorts" Codegen.numPorts)
   modify @"varTab"

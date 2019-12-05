@@ -114,7 +114,7 @@ isBothPrimary' nodePtrTyp =
     do
       -- TODO ∷ should this call be abstracted somewhere?!
       -- Why should Ι allocate for every port?!
-      mainPort ← mainPort nodePtrTyp
+      mainPort ← mainPort
       -- TODO ∷ Make sure findEdge is in the environment
       edge ← Block.externf "find_edge"
       nodePtr ← Block.externf "node_ptr"
@@ -727,25 +727,51 @@ mallocNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType mallocNumPort
 
 -- TODO ∷ put these in the env, and allocate them once at the top level
 
-mainPort,
-  auxiliary1,
-  auxiliary2,
-  auxiliary3,
-  auxiliary4 ∷
+mainPort',
+  auxiliary1',
+  auxiliary2',
+  auxiliary3',
+  auxiliary4' ∷
     ( HasThrow "err" Errors m,
       HasState "blocks" (Map.HashMap Name.Name BlockState) m,
       HasState "count" Word m,
       HasState "currentBlock" Name.Name m,
       HasState "typTab" TypeTable m,
+      HasState "symtab" SymbolTable m,
       HasState "varTab" VariantToType m
     ) ⇒
     Type.Type →
+    m ()
+mainPort' t =
+  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0)) t
+    >>= Block.assign "main_port"
+auxiliary1' t =
+  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1)) t
+    >>= Block.assign "main_port"
+auxiliary2' t =
+  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2)) t
+    >>= Block.assign "main_port"
+auxiliary3' t =
+  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3)) t
+    >>= Block.assign "main_port"
+auxiliary4' t =
+  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4)) t
+    >>= Block.assign "main_port"
+
+mainPort,
+  auxiliary1,
+  auxiliary2,
+  auxiliary3,
+  auxiliary4 ∷
+    ( HasState "symtab" SymbolTable m,
+      HasThrow "err" Errors m
+    ) ⇒
     m Operand.Operand
-mainPort = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
-auxiliary1 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1))
-auxiliary2 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2))
-auxiliary3 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3))
-auxiliary4 = allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4))
+mainPort = Block.externf "main_port"
+auxiliary1 = Block.externf "auxiliary_port_1"
+auxiliary2 = Block.externf "auxiliary_port_2"
+auxiliary3 = Block.externf "auxiliary_port_3"
+auxiliary4 = Block.externf "auxiliary_port_4"
 
 --------------------------------------------------------------------------------
 -- Accessor aliases

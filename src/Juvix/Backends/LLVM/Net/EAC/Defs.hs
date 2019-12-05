@@ -39,19 +39,15 @@ mainPort,
   auxiliary2,
   auxiliary3,
   auxiliary4 ∷
-    ( HasThrow "err" Codegen.Errors m,
-      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
-      HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
+    ( HasState "symtab" Codegen.SymbolTable m,
+      HasThrow "err" Codegen.Errors m
     ) ⇒
     m Operand.Operand
-mainPort = Codegen.mainPort Types.eacPointer
-auxiliary1 = Codegen.auxiliary1 Types.eacPointer
-auxiliary2 = Codegen.auxiliary2 Types.eacPointer
-auxiliary3 = Codegen.auxiliary3 Types.eacPointer
-auxiliary4 = Codegen.auxiliary4 Types.eacPointer
+mainPort = Codegen.mainPort
+auxiliary1 = Codegen.auxiliary1
+auxiliary2 = Codegen.auxiliary2
+auxiliary3 = Codegen.auxiliary3
+auxiliary4 = Codegen.auxiliary4
 
 linkAll ∷
   ( HasThrow "err" Codegen.Errors f,
@@ -64,7 +60,7 @@ linkAll ∷
   ) ⇒
   DSL.Relink Operand.Operand DSL.Auxiliary →
   f ()
-linkAll = DSL.linkAll Types.eacPointer
+linkAll = DSL.linkAll
 
 nodeType ∷ Type.Type
 nodeType = Codegen.nodeType Types.eacPointer
