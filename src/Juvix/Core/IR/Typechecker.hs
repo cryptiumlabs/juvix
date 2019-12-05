@@ -127,7 +127,8 @@ typeTerm _ _ii _g t@(Star i) ann = do
           <> " The input annotation is not of * type, it is of type "
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
-typeTerm p ii g t@(Pi pi varType resultType) ann = do
+  -- *-Pi (Universe introduction rule)
+typeTerm p ii g t@(Pi _pi varType resultType) ann = do
   typeTermIntroLog t ann
   logOutput "patterned matched to be a dependent function type term. Type checker applies the universe introduction rule. Checking that sigma is zero."
   unless -- checks sigma = 0.
@@ -157,28 +158,25 @@ typeTerm p ii g t@(Pi pi varType resultType) ann = do
           <> show (snd ann)
           <> ", it is *i, as required. "
       logOutput $
-        "Checking that the variable (V) type checked against the input annotation, which is of usage "
-          <> show (fst ann)
-          <> " and of type "
-          <> show (snd ann)
+        "Checking that the variable (V) type checked to the input annotation, which is just type checked to be of usage 0 and type *i. "
       typeTerm p ii g varType ann
       logOutput $
         passed
-          <> "The variable (V) is compatible with the input usage "
+          <> "The variable (V) is "
           <> show (fst ann)
           <> " and type "
           <> show (snd ann)
-          <> ". Checking that the result (R) type checked against the input annotation. "
-      ty ← evalTerm p varType []
+          <> ", as required. Checking that the result (R), with x of type V in the context, type checked against the input annotation. "
+      ty ← evalTerm p varType [] -- V
       typeTerm
         p -- param
         (ii + 1)
-        ((Local ii, (pi, ty)) : g) -- add V to the context
-        (substTerm 0 (Free (Local ii)) resultType) -- substitute V to R
-        ann
+        ((Local ii, (SNat 0, ty)) : g) -- add x of type V, with zero usage to the context
+        (substTerm 0 (Free (Local ii)) resultType) -- implies an R
+        ann -- of 0 usage and type *i
       logOutput $
         passed
-          <> "Result (R) has usage of is of type *i. The variable and the result are at the same * level."
+          <> "Result (R) has usage of is of type *i. "
           <> typechecked t ann
     _ → do
       logOutput $
@@ -217,25 +215,28 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
         else do
           logOutput $ passed <> typechecked x ann
           return ()
--- Lam (introduction rule of dependent function type)
+-- Lam (introduction rule of dependent function type), requires Pi (formation rule of dependent function type)
 typeTerm p ii g t@(Lam m) ann = do
   typeTermIntroLog t ann
   logOutput
-    ("patterned matched to be a Lam term. Checking that input annotation is of dependent function type. ")
+    "patterned matched to be a Lam term. Checking that input annotation has sigma usage and is dependent function type (Pi). "
   case ann of
     (sig, VPi pi ty ty') → do
-      -- Lam m should be of dependent function type (Pi). See the dependent function type formation rule.
-      logOutput $ passed <> "Checking that with x (annotated with sig*pi usage) in "
-      ty' ← ty' (vfree (Local ii)) -- apply the function
+      -- Lam m should be of dependent function type (Pi) with sigma usage. 
+      logOutput $ 
+        passed <> 
+        "Checking that M, with x (annotated with sig*pi usage) in the context, type checked against the input annotation. "
+      ty' ← ty' (vfree (Local ii)) -- apply the function, result is of type T
       typeTerm
         p -- param
         (ii + 1)
         ((Local ii, (sig <.> pi, ty)) : g) -- put x in the context with usage sig*pi and type ty
-        (substTerm 0 (Free (Local ii)) m) -- substitute x to m
-        (sig, ty') -- is of type M with usage sigma
-      logOutput $ "" <> typechecked t ann
+        (substTerm 0 (Free (Local ii)) m) -- implies an m
+        (sig, ty') -- of type T with usage sigma
+      logOutput $ 
+        passed <> typechecked t ann
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
---
+-- 
 typeTerm p ii g t@(Elim e) ann = do
   typeTermIntroLog t ann
   ann' ← typeElim p ii g e
@@ -251,7 +252,7 @@ typeTerm p ii g t@(Elim e) ann = do
       if (annt /= annt')
         then
           ( do
-              logOutput "Annotation types are not the same. "
+              logOutput "The types are not the same. "
               throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
         else return ()
@@ -309,19 +310,20 @@ typeElim ∷
 typeElim _ _ii _g e@(Bound _) = do
   typeElimIntroLog e
   logOutput
-    ("patterned matched to be a bound variable. ")
+    ("patterned matched to be a bound variable. Bound variables cannot be inferred. ")
   throw @"typecheckError" BoundVariableCannotBeInferred
 typeElim _ ii g e@(Free x) = do
   typeElimIntroLog e
-  logOutput
-    ("patterned matched to be a free variable. Looking up the free variable in the context " <> show g)
+  logOutput $
+    "patterned matched to be a free variable. Looking up the free variable in the context " 
+    <> show g
   case lookup x g of
     Just ann → do
       logOutput $
         passed
-          <> "The variable is found in the context with annotation of usage"
+          <> "The variable is found in the context with annotation of usage "
           <> show (fst ann)
-          <> "and type of "
+          <> "and type "
           <> show (snd ann)
       return ann
     Nothing → do
@@ -335,26 +337,51 @@ typeElim _ ii g e@(Free x) = do
 -- Prim-Const and Prim-Fn, pi = omega
 typeElim p _ii _g e@(Prim prim) = do
   typeElimIntroLog e
-  logOutput
-    ("patterned matched to be a primitive type const/fn")
+  logOutput "patterned matched to be a primitive type const/fn. "
   let arrow (x :| []) = VPrimTy x
       arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (pure (arrow (y :| ys))))
-   in pure (Omega, arrow (Juvix.Core.Types.typeOf p prim))
+   in do
+    pure (Omega, (arrow (Juvix.Core.Types.typeOf p prim)))
+    --logOutput $ show e <> " type checked to usage " <> show Omega <> " and type " <> show ty
 -- App, function M applies to N (Elimination rule of dependent function types)
-typeElim p ii g (App m n) = do
+typeElim p ii g e@(App m n) = do
+  typeElimIntroLog e
+  logOutput "patterned matched to be an App term. Checking that M has usage sigma and type dependent function (Pi). " 
   mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type varTy with usage sig*pi
-      res ← resultTy =<< evalTerm p n []
+      logOutput $
+        passed <>
+        "The function (M) has usage " <>
+        show sig <>
+        " and dependent function type " <>
+        show (snd mTy) <>
+        " as required. Checking that the function argument (N) is of the argument type (S) with sigma*pi usage. "
+      typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type S (varTy) with usage sig*pi
+      logOutput $
+        passed <>
+        "The function argument (N) has usage " <>
+        show (sig <.> pi) <>
+        " and type " <>
+        show varTy
+      res ← resultTy =<< evalTerm p n [] -- T[x:=N]
+      logOutput $ 
+        show e <>
+        "type checked to usage of " <>
+        show sig <>
+        " and type of " <>
+        show res
       return (sig, res)
-    _ →
+    _ → do
+      logOutput $
+        failed <> 
+        "The function (M) is not of type dependent function. "  
       throw @"typecheckError" (MustBeFunction m ii n)
 -- Conv
-typeElim p ii g (Ann pi theTerm theType) =
-  -- TODO check theType is of type Star first? But we have stakable universes now.
-  -- typeTerm p ii g theType (pi, VStar 0) but if theType is function type then pi == 0 as per the *-Pi rule?
-  do
-    ty ← evalTerm p theType []
-    typeTerm p ii g theTerm (pi, ty)
-    return (pi, ty)
+typeElim p ii g e@(Ann pi theTerm theType) = do
+  typeElimIntroLog e
+  logOutput "patterned matched to be an Ann term. Checking that theTerm (M) has usage sigma and its type (S) is equivalent to the input type (T). " 
+  ty ← evalTerm p theType [] -- the input type, T
+  typeTerm p ii g theTerm (pi, ty) -- checks that M has usage sigma and type S == T
+  logOutput $ passed 
+  return (pi, ty) -- M has sigma usage and type T
