@@ -7,9 +7,6 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (show)
 import Prelude (String, lookup, show)
 
-data TypecheckerLog = TypecheckerLog {msg ∷ String}
-  deriving (Eq, Show)
-
 logOutput ∷ ∀ m. HasWriter "typecheckerLog" [TypecheckerLog] m ⇒ String → m ()
 logOutput s = tell @"typecheckerLog" [TypecheckerLog s]
 

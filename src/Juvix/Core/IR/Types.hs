@@ -158,8 +158,13 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
   show (BoundVariableCannotBeInferred) =
     "Bound variable cannot be inferred"
 
+newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
+  deriving (Show, Eq, Generic)
+
 data EnvCtx primTy primVal
-  = EnvCtx
+  = EnvCtx {
+    typecheckerLog :: [TypecheckerLog]
+  }
   deriving (Show, Eq, Generic)
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)) a)
@@ -167,9 +172,13 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy p
   deriving
     (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
     via MonadError (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (MonadState (State (EnvCtx primTy primVal))))
+  deriving
+    (HasStream "typecheckerLog" [TypecheckerLog],
+     HasWriter "typecheckerLog" [TypecheckerLog])
+    via WriterLog (Field "typecheckerLog" () (MonadState (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal))))) 
 
 exec ∷ EnvTypecheck primTy primVal a → (Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a, EnvCtx primTy primVal)
-exec (EnvTyp env) = runState (runExceptT env) (EnvCtx)
+exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
 -- Quotation: takes a value back to a term
 quote0 ∷
