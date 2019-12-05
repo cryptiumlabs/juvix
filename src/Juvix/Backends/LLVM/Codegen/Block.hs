@@ -140,8 +140,11 @@ defineFunctionGen ∷
   m a →
   m Operand
 defineFunctionGen bool retty name args body = do
+  oldSymTab ← get @"symtab"
   functionOperand ←
     (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
+  -- TODO ∷ figure out if LLVM functions can leak out of their local scope
+  put @"symtab" oldSymTab
   assign name functionOperand
   pure functionOperand
 
