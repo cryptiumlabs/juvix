@@ -172,8 +172,8 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
         p -- param
         (ii + 1)
         ((Local ii, (SNat 0, ty)) : g) -- add x of type V, with zero usage to the context
-        (substTerm 0 (Free (Local ii)) resultType) -- implies an R
-        ann -- of 0 usage and type *i
+        (substTerm 0 (Free (Local ii)) resultType) -- R, with x in the context 
+        ann -- is of 0 usage and type *i
       logOutput $
         passed
           <> "Result (R) has usage of is of type *i. "
@@ -231,8 +231,8 @@ typeTerm p ii g t@(Lam m) ann = do
         p -- param
         (ii + 1)
         ((Local ii, (sig <.> pi, ty)) : g) -- put x in the context with usage sig*pi and type ty
-        (substTerm 0 (Free (Local ii)) m) -- implies an m
-        (sig, ty') -- of type T with usage sigma
+        (substTerm 0 (Free (Local ii)) m) -- m, with x in the context
+        (sig, ty') -- is of type T with usage sigma
       logOutput $ 
         passed <> typechecked t ann
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
