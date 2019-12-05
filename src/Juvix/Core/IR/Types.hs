@@ -162,9 +162,9 @@ newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Show, Eq, Generic)
 
 data EnvCtx primTy primVal
-  = EnvCtx {
-    typecheckerLog :: [TypecheckerLog]
-  }
+  = EnvCtx
+      { typecheckerLog ∷ [TypecheckerLog]
+      }
   deriving (Show, Eq, Generic)
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)) a)
@@ -173,9 +173,10 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy p
     (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
     via MonadError (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (MonadState (State (EnvCtx primTy primVal))))
   deriving
-    (HasStream "typecheckerLog" [TypecheckerLog],
-     HasWriter "typecheckerLog" [TypecheckerLog])
-    via WriterLog (Field "typecheckerLog" () (MonadState (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal))))) 
+    ( HasStream "typecheckerLog" [TypecheckerLog],
+      HasWriter "typecheckerLog" [TypecheckerLog]
+    )
+    via WriterLog (Field "typecheckerLog" () (MonadState (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)))))
 
 exec ∷ EnvTypecheck primTy primVal a → (Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a, EnvCtx primTy primVal)
 exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])

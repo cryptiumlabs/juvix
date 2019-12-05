@@ -254,7 +254,7 @@ typeTerm p ii g t@(Elim e) ann = do
               logOutput "Annotation types are not the same. "
               throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
-        else (throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann'))
+        else return ()
 
 typeElimIntroLog ∷
   ∀ primTy primVal m.
