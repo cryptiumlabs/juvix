@@ -35,7 +35,6 @@ eraseTerm ∷
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" ErasureError m,
-    HasWriter "typecheckerLog" [IR.TypecheckerLog] m,
     HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
     Show primTy,
     Show primVal,
