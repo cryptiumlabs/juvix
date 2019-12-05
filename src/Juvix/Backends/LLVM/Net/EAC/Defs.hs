@@ -69,18 +69,19 @@ linkAll = DSL.linkAll Types.eacPointer
 nodeType ∷ Type.Type
 nodeType = Codegen.nodeType Types.eacPointer
 
-allocaNodeH ∷
+mallocNodeH ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+    HasState "varTab" Codegen.VariantToType m,
+    HasState "symtab" Codegen.SymbolTable m
   ) ⇒
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
   m Operand.Operand
-allocaNodeH xs ys = Codegen.allocaNodeH xs ys Types.eacPointer
+mallocNodeH xs ys = Codegen.mallocNodeH xs ys Types.eacPointer (Types.tagInt + Codegen.nodePointerSize)
 
 loadPrimaryNode ∷
   ( HasThrow "err" Codegen.Errors m,

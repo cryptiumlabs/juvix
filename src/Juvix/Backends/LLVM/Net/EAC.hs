@@ -356,8 +356,8 @@ fanInAux2' name allocF = Codegen.defineFunction Type.void name args $
     fanIn ← Codegen.externf "fan_in"
     node ← Codegen.externf "node"
     -- new nodes
-    fan1 ← allocaFanIn >>= nodeOf
-    fan2 ← allocaFanIn >>= nodeOf
+    fan1 ← mallocFanIn >>= nodeOf
+    fan2 ← mallocFanIn >>= nodeOf
     nod1 ← allocF >>= nodeOf
     nod2 ← allocF >>= nodeOf
     Defs.linkAll
@@ -411,10 +411,10 @@ fanInAux2F',
       HasState "varTab" Codegen.VariantToType m
     ) ⇒
     m Operand.Operand
-fanInAux2A' = fanInAux2' "fan_in_aux_2_app" allocaApp
-fanInAux2F' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
-fanInAux2L' = fanInAux2' "fan_in_aux_2_fan_in" allocaFanIn
-fanInAux2E' = fanInAux2' "fan_in_aux_2_era" allocaEra
+fanInAux2A' = fanInAux2' "fan_in_aux_2_app" mallocApp
+fanInAux2F' = fanInAux2' "fan_in_aux_2_fan_in" mallocFanIn
+fanInAux2L' = fanInAux2' "fan_in_aux_2_fan_in" mallocFanIn
+fanInAux2E' = fanInAux2' "fan_in_aux_2_era" mallocEra
 
 fanInAux2App,
   fanInAux2FanIn,
@@ -436,21 +436,22 @@ fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
-allocaGen ∷
+mallocGen ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+    HasState "varTab" Codegen.VariantToType m,
+    HasState "symtab" Codegen.SymbolTable m
   ) ⇒
   C.Constant →
   Int →
   Int →
   m Operand.Operand
-allocaGen type' portLen dataLen = do
-  eac ← Codegen.alloca Types.eac
-  node ← Defs.allocaNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+mallocGen type' portLen dataLen = do
+  eac ← Codegen.mallocType Types.tagInt Types.eac
+  node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Types.tag,
@@ -467,22 +468,23 @@ allocaGen type' portLen dataLen = do
   Codegen.store nodePtr node
   pure eac
 
-allocaEra,
-  allocaFanIn,
-  allocaApp,
-  allocaLam ∷
+mallocEra,
+  mallocFanIn,
+  mallocApp,
+  mallocLam ∷
     ( HasThrow "err" Codegen.Errors m,
       HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
       HasState "count" Word m,
       HasState "currentBlock" Name.Name m,
       HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
+      HasState "varTab" Codegen.VariantToType m,
+      HasState "symtab" Codegen.SymbolTable m
     ) ⇒
     m Operand.Operand
-allocaEra = allocaGen Types.era 1 0
-allocaApp = allocaGen Types.app 3 0
-allocaLam = allocaGen Types.lam 3 0
-allocaFanIn = allocaGen Types.dup 3 1
+mallocEra = mallocGen Types.era 1 0
+mallocApp = mallocGen Types.app 3 0
+mallocLam = mallocGen Types.lam 3 0
+mallocFanIn = mallocGen Types.dup 3 1
 
 nodeOf ∷
   ( HasThrow "err" Codegen.Errors m,

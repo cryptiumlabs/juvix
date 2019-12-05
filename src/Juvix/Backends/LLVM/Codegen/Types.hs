@@ -194,6 +194,9 @@ nodePointer nodePtrType = PointerType
     pointerAddrSpace = AddrSpace 16
   }
 
+nodePointerSize ∷ Num p ⇒ p
+nodePointerSize = 16
+
 portType ∷ Type → Type
 portType nodePtr = StructureType
   { isPacked = True,

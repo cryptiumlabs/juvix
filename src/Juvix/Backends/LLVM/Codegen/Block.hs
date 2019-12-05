@@ -312,7 +312,7 @@ external retty label argtys = do
 defineMalloc ∷
   ∀ m.
   ( HasState "moduleDefinitions" [Definition] m,
-    HasState "symtab" (HashMap Symbol Operand) m
+    HasState "symtab" SymbolTable m
   ) ⇒
   m ()
 defineMalloc = do
@@ -323,7 +323,7 @@ defineMalloc = do
 defineFree ∷
   ∀ m.
   ( HasState "moduleDefinitions" [Definition] m,
-    HasState "symtab" (HashMap Symbol Operand) m
+    HasState "symtab" SymbolTable m
   ) ⇒
   m ()
 defineFree = do
@@ -693,9 +693,9 @@ createVariantAllocaFunction ∷
     HasState "currentBlock" Name m,
     HasState "moduleDefinitions" [Definition] m,
     HasState "names" Names m,
-    HasState "symtab" (HashMap Symbol Operand) m,
-    HasState "typTab" (HashMap Symbol Type) m,
-    HasState "varTab" (HashMap Symbol SumInfo) m
+    HasState "symtab" SymbolTable m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
   ) ⇒
   Symbol →
   [Type] →
@@ -759,8 +759,7 @@ createVariantAllocaFunction variantName argTypes = do
 
 -- TODO ∷ Remove repeat code!!!
 
--- | creates a variant
-createVariant ∷
+createVariantGen ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (HashMap Name BlockState) m,
     HasState "count" Word m,
@@ -771,8 +770,9 @@ createVariant ∷
   ) ⇒
   Symbol →
   t Operand →
+  (Type → m Operand) →
   m Operand
-createVariant variantName args = do
+createVariantGen variantName args allocFn = do
   varTable ← get @"varTab"
   typTable ← get @"typTab"
   case Map.lookup variantName varTable of
@@ -789,7 +789,7 @@ createVariant variantName args = do
           Nothing →
             throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
           Just sumTyp → do
-            sum ← alloca sumTyp
+            sum ← allocFn sumTyp
             getEle ← getElementPtr $
               Minimal
                 { Types.type' = sumTyp,
@@ -817,6 +817,38 @@ createVariant variantName args = do
               1 -- not 0, as 0 is reserved for the tag that was set
               args
             pure casted
+
+-- | Creates a variant by calling alloca
+allocaVariant ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m,
+    Foldable t
+  ) ⇒
+  Symbol →
+  t Operand →
+  m Operand
+allocaVariant variantName args = createVariantGen variantName args alloca
+
+-- | Creates a variant by calling malloc
+mallocVariant ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m,
+    HasState "symtab" SymbolTable m,
+    Foldable t
+  ) ⇒
+  Symbol →
+  t Operand →
+  Integer →
+  m Operand
+mallocVariant variantName args size = createVariantGen variantName args (mallocType size)
 
 -------------------------------------------------------------------------------
 -- Symbol Table

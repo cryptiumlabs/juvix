@@ -172,37 +172,41 @@ findEdge' nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
 -- allocaPorts    : variable args of ports
 -- allocaData     : variable args of dataType
 
-allocaNode ∷
+mallocNode ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
   ) ⇒
   Type.Type →
+  Integer →
   m Operand.Operand
-allocaNode = alloca . nodeType
+mallocNode t size = Block.mallocType size (nodeType t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
 
 -- TODO ∷ could be storing data wrong... find out
-allocaNodeH ∷
+mallocNodeH ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m
+    HasState "varTab" VariantToType m,
+    HasState "symtab" SymbolTable m
   ) ⇒
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
   Type.Type →
+  Integer →
   m Operand.Operand
-allocaNodeH mPorts mData nodePtrType = do
-  node ← allocaNode nodePtrType
-  portSize ← allocaNumPortNum (fromIntegral $ length mPorts) nodePtrType
-  ports ← allocaPortsH mPorts nodePtrType
-  data' ← allocaDataH mData
+mallocNodeH mPorts mData nodePtrType nodeSize = do
+  node ← mallocNode nodePtrType nodeSize
+  portSize ← mallocNumPortNum (fromIntegral $ length mPorts) nodePtrType
+  ports ← mallocPortsH mPorts nodePtrType
+  data' ← mallocDataH mData
   tagPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.numPorts,
@@ -226,7 +230,8 @@ allocaNodeH mPorts mData nodePtrType = do
   store dataPtr data'
   pure node
 
-allocaGenH ∷
+-- | used to create the malloc and alloca functions for ports and data
+createGenH ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
@@ -234,9 +239,10 @@ allocaGenH ∷
   ) ⇒
   [Maybe Operand.Operand] →
   Type.Type →
+  (Type.Type → Integer → m Operand.Operand) →
   m Operand.Operand
-allocaGenH mPortData type' = do
-  ports ← alloca (Type.ArrayType len type')
+createGenH mPortData type' alloc = do
+  ports ← alloc (Type.ArrayType len type') (fromIntegral len)
   traverse_
     ( \(p, i) →
         case p of
@@ -254,6 +260,43 @@ allocaGenH mPortData type' = do
   pure ports
   where
     len = fromIntegral (length mPortData ∷ Int)
+
+mallocGenH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  Type.Type →
+  Integer →
+  m Operand.Operand
+mallocGenH mPortData type' dataSize =
+  createGenH mPortData type' (\t len → Block.mallocType (len * dataSize) t)
+
+allocaGenH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  Type.Type →
+  m Operand.Operand
+allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
+
+mallocPortsH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  Type.Type →
+  m Operand.Operand
+mallocPortsH mPorts typ = mallocGenH mPorts (Types.portType typ) Types.portTypeSize
 
 allocaPortsH ∷
   ( HasThrow "err" Errors m,
@@ -275,6 +318,17 @@ allocaDataH ∷
   [Maybe Operand.Operand] →
   m Operand.Operand
 allocaDataH mPorts = allocaGenH mPorts Types.dataType
+
+mallocDataH ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+mallocDataH mPorts = mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
@@ -400,18 +454,20 @@ setPort (n1, p1) (n2, p2) nodePtrType = do
   store portLocation p2Ptr
   pure ()
 
+-- TODO ∷ should be malloc
 newPortType ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
     HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m
   ) ⇒
   Operand.Operand →
   Operand.Operand →
   Type.Type →
   m Operand.Operand
 newPortType node offset nodePtrType = do
-  newPort ← alloca (portType nodePtrType)
+  newPort ← Block.mallocType Types.portTypeSize (Types.portType nodePtrType)
   -- This is a ptr to a ptr
   nodePtr ← getElementPtr $
     Types.Minimal
@@ -426,7 +482,7 @@ newPortType node offset nodePtrType = do
         Types.indincies' = Block.constant32List [0, 1]
       }
   -- allocate pointer to the node
-  givenNodePtr ← alloca (nodePointer nodePtrType)
+  givenNodePtr ← Block.mallocType Types.nodePointerSize (Types.nodePointer nodePtrType)
   placeToStoreNode ← getElementPtr $
     Types.Minimal
       { Types.type' = nodeType nodePtrType,
@@ -560,6 +616,38 @@ portPointsTo portType nodePtrType = do
   getPort nodeType numPort nodePtrType
 
 -- | Allocates a 'numPorts'
+createNumPortsStaticGen ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  Bool →
+  Operand.Operand →
+  Type.Type →
+  (Symbol → [Operand.Operand] → Integer → m Operand.Operand) →
+  (Type.Type → Integer → m Operand.Operand) →
+  m Operand.Operand
+createNumPortsStaticGen isLarge value nodePtrType allocVar alloc =
+  -- Call Block.createVariant
+  -- Issue is that I need to register this sum type in the map
+  -- else it is an error.
+  -- see if this is okay, if not make custom logic just for the
+  -- sums to create the language
+  case isLarge of
+    False →
+      -- TODO ∷ register this variant
+      allocVar "numPorts_small" [value] Types.numPortsSize
+    True → do
+      -- Allocate a pointer to the value
+      ptr ← alloc (nodePointer nodePtrType) Types.nodePointerSize
+      store ptr value
+      -- TODO ∷ register this variant
+      allocVar "numPorts_large" [ptr] Types.numPortsSize
+
+-- | Allocates 'numPorts' via allcoca
 allocaNumPortsStatic ∷
   ( HasThrow "err" Errors m,
     HasState "blocks" (Map.HashMap Name.Name BlockState) m,
@@ -573,21 +661,36 @@ allocaNumPortsStatic ∷
   Type.Type →
   m Operand.Operand
 allocaNumPortsStatic isLarge value nodePtrType =
-  -- Call Block.createVariant
-  -- Issue is that I need to register this sum type in the map
-  -- else it is an error.
-  -- see if this is okay, if not make custom logic just for the
-  -- sums to create the language
-  case isLarge of
-    False →
-      -- TODO ∷ register this variant
-      Block.createVariant "numPorts_small" [value]
-    True → do
-      -- Allocate a pointer to the value
-      ptr ← alloca (nodePointer nodePtrType)
-      store ptr value
-      -- TODO ∷ register this variant
-      Block.createVariant "numPorts_large" [ptr]
+  createNumPortsStaticGen
+    isLarge
+    value
+    nodePtrType
+    (\s xs _ → Block.allocaVariant s xs)
+    (const . alloca)
+
+-- | Allocates 'numPorts' via allcoca
+mallocNumPortsStatic ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m,
+    HasState "symtab" SymbolTable m
+  ) ⇒
+  Bool →
+  Operand.Operand →
+  Type.Type →
+  m Operand.Operand
+mallocNumPortsStatic isLarge value nodePtrType =
+  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip mallocType)
+
+createNumPortNumGen ∷ Integer → t → (Bool → Operand.Operand → t → p) → p
+createNumPortNumGen n nodePtrType alloc
+  | n <= 2 ^ (Types.numPortsSize - 1 ∷ Integer) =
+    alloc False (Operand.ConstantOperand (C.Int 16 n)) nodePtrType
+  | otherwise =
+    alloc True (Operand.ConstantOperand (C.Int 64 n)) nodePtrType
 
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷
@@ -601,15 +704,28 @@ allocaNumPortNum ∷
   Integer →
   Type.Type →
   m Operand.Operand
-allocaNumPortNum n nodePtrType
-  | n <= 2 ^ (Types.numPortsSize - 1 ∷ Integer) =
-    allocaNumPortsStatic False (Operand.ConstantOperand (C.Int 16 n)) nodePtrType
-  | otherwise =
-    allocaNumPortsStatic True (Operand.ConstantOperand (C.Int 64 n)) nodePtrType
+allocaNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType allocaNumPortsStatic
+
+-- | like 'mallocNumPortStatic', except it takes a number and allocates the correct operand
+mallocNumPortNum ∷
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "symtab" SymbolTable m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  ) ⇒
+  Integer →
+  Type.Type →
+  m Operand.Operand
+mallocNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType mallocNumPortsStatic
 
 --------------------------------------------------------------------------------
 -- Port Aliases
 --------------------------------------------------------------------------------
+
+-- TODO ∷ put these in the env, and allocate them once at the top level
 
 mainPort,
   auxiliary1,
