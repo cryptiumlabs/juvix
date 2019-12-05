@@ -39,6 +39,7 @@ Serves as a mini DSL layer above LLVM
   + [[Constants]]
   + [[Codegen/Default]]
   + [[Codegen/Graph]]
+  + [[Codegen/Shared]]
   + [[Codegen/Types]]
 ***** Block
 - Has the code necessary to generate LLVM Code

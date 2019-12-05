@@ -137,6 +137,19 @@ link' ∷
   m Operand.Operand
 link' = Codegen.link' Types.eacPointer
 
+rewire' ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symtab" Codegen.SymbolTable m
+  ) ⇒
+  m Operand.Operand
+rewire' = Codegen.rewire' Types.eacPointer
+
 linkConnectedPort' ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
