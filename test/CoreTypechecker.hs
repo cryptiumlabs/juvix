@@ -35,62 +35,69 @@ type AllValue = IR.Value AllTy AllVal
 
 type AllAnnotation = IR.Annotation AllTy AllVal
 
+-- \x. x
 identity ∷ ∀ primTy primVal. IR.Term primTy primVal
 identity = IR.Lam (IR.Elim (IR.Bound 0))
 
+-- annotation of identity: (1, 1 Nat -> Nat)
 identityNatCompTy ∷ NatAnnotation
 identityNatCompTy =
   (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
+-- annotation of identity: (1, 1 Unit -> Unit)
 identityUnitCompTy ∷ UnitAnnotation
 identityUnitCompTy =
   (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy TUnit) (const (IR.VPrimTy TUnit)))
 
+-- contemplating annotation of identity: (0, 0 Nat -> Nat)
 identityNatContTy ∷ NatAnnotation
 identityNatContTy =
   (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
--- dependent identity function, a : * -> a -> a
+-- dependent identity function, \t.\x.x 0: t
 depIdentity ∷ ∀ primTy primVal. IR.Term primTy primVal
 depIdentity =
-  IR.Lam
-    ( IR.Lam
-        ( IR.Elim
-            ( IR.Ann
-                (SNat 0)
-                (IR.Elim (IR.Bound 0))
-                (IR.Elim (IR.Bound 1))
+  IR.Lam -- first input \t.
+    ( IR.Lam -- second input \x.
+        ( IR.Elim -- output
+            ( IR.Ann -- annotation is of
+                (SNat 1) -- 1 usage
+                (IR.Elim (IR.Bound 0)) -- x is the output, which is
+                (IR.Elim (IR.Bound 1)) -- of type t
             )
         )
     )
 
+-- dependent identity annotation (0, 0 * -> 1 t -> t)
 depIdentityCompTy ∷ ∀ primTy primVal. IR.Annotation primTy primVal
 depIdentityCompTy =
-  ( SNat 0,
-    IR.VPi
-      (SNat 0)
-      (IR.VStar 0) -- first input is of type type
+  ( SNat 1, -- the usage of the dependent identity function
+    IR.VPi -- the first input, t
+      (SNat 0) -- t's usage
+      (IR.VStar 0) -- first input's type, is type
       ( const
-          ( IR.VPi
-              (SNat 1)
-              (IR.VNeutral (IR.NFree (IR.Local 0))) -- second input is of type of the first input
-              (const (IR.VNeutral (IR.NFree (IR.Local 0)))) -- the function's return is of the type that's the same as the second input
+          ( IR.VPi -- the second input, x
+              (SNat 1) -- x's usage
+              (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
+              (const (IR.VNeutral (IR.NFree (IR.Local 0)))) -- the output is of the type that's the same as the second input of this annotation. I.e., t
           )
       )
   )
 
+-- \x.x 1
 identityApplication ∷ NatTerm
 identityApplication =
   IR.Elim
-    ( IR.App
-        ( IR.Ann
-            (SNat 1)
-            identity
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+    ( IR.App -- Applying
+        ( IR.Ann -- the function that has annotation of
+            (SNat 1) -- usage 1
+            identity -- the identity function
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- type of 1 Nat -> Nat
         )
-        (IR.Elim (IR.Prim (Natural 1)))
+        (IR.Elim (IR.Prim (Natural 1))) -- applies to 1
     )
 
+-- annotation (1, Nat)
 natTy ∷ NatAnnotation
 natTy = (SNat 1, IR.VPrimTy Nat)
 
