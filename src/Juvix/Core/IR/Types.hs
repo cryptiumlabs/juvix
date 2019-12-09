@@ -108,7 +108,8 @@ data TypecheckError primTy primVal m
   | ShouldBeFunctionType (Value primTy primVal m) (Term primTy primVal)
   | UnboundIndex Natural
   | SigmaMustBeZero
-  | UniverseLevelMustMatch
+  | UsageMustBeZero
+  | UsageNotCompatible (Annotation primTy primVal m) (Annotation primTy primVal m)
   | UnboundBinder Natural Name
   | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
   | BoundVariableCannotBeInferred
@@ -120,11 +121,11 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
-      <> show (show (snd gotT))
+      <> show (snd gotT)
       <> " , with "
       <> show (fst gotT)
       <> " usage.\n But the expected type is "
-      <> show (show (snd expectedT))
+      <> show (snd expectedT)
       <> " , with "
       <> show (fst expectedT)
       <> " usage."
@@ -142,8 +143,10 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
     "unbound index " <> show n
   show (SigmaMustBeZero) =
     "Sigma has to be 0."
-  show (UniverseLevelMustMatch) =
-    "The variable type and the result type must be of type * at the same level."
+  show (UsageMustBeZero) =
+    "Usage has to be 0."
+  show (UsageNotCompatible expectedU gotU) =
+    "The usage of " <> (show (fst gotU)) <> "is not compatible with " <> (show (fst expectedU))
   show (UnboundBinder ii x) =
     "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
   show (MustBeFunction m ii n) =
@@ -155,8 +158,13 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
   show (BoundVariableCannotBeInferred) =
     "Bound variable cannot be inferred"
 
+newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
+  deriving (Show, Eq, Generic)
+
 data EnvCtx primTy primVal
   = EnvCtx
+      { typecheckerLog ∷ [TypecheckerLog]
+      }
   deriving (Show, Eq, Generic)
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)) a)
@@ -164,9 +172,14 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy p
   deriving
     (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
     via MonadError (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (MonadState (State (EnvCtx primTy primVal))))
+  deriving
+    ( HasStream "typecheckerLog" [TypecheckerLog],
+      HasWriter "typecheckerLog" [TypecheckerLog]
+    )
+    via WriterLog (Field "typecheckerLog" () (MonadState (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)))))
 
 exec ∷ EnvTypecheck primTy primVal a → (Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a, EnvCtx primTy primVal)
-exec (EnvTyp env) = runState (runExceptT env) (EnvCtx)
+exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
 -- Quotation: takes a value back to a term
 quote0 ∷

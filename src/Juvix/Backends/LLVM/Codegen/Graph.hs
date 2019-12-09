@@ -3,9 +3,8 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
-import Juvix.Library hiding (Type, local)
+import Juvix.Library hiding (Type, local, link)
 import qualified Juvix.Library.HashMap as Map
-import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -17,16 +16,7 @@ import qualified LLVM.AST.Type as Type
 --------------------------------------------------------------------------------
 
 callGen ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Type.Type →
-  [Operand.Operand] →
-  Name.Name →
-  m Operand.Operand
+  Types.Call m ⇒ Type.Type → [Operand.Operand] → Name.Name → m Operand.Operand
 callGen typ' args fn = do
   f ← Block.externf fn
   Block.call typ' f (Block.emptyArgs args)
@@ -34,29 +24,14 @@ callGen typ' args fn = do
 link,
   linkConnectedPort,
   rewire ∷
-    ( HasThrow "err" Errors m,
-      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
-      HasState "symtab" SymbolTable m
-    ) ⇒
-    [Operand.Operand] →
-    m ()
+    Call m ⇒ [Operand.Operand] → m ()
 link args = callGen Type.void args "link" >> pure ()
 rewire args = callGen Type.void args "rewire" >> pure ()
 linkConnectedPort args = callGen Type.void args "link_connected_port" >> pure ()
 
 isBothPrimary,
   findEdge ∷
-    ( HasThrow "err" Errors m,
-      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
-      HasState "symtab" SymbolTable m
-    ) ⇒
-    Type.Type →
-    [Operand.Operand] →
-    m Operand.Operand
+    Call m ⇒ Type.Type → [Operand.Operand] → m Operand.Operand
 isBothPrimary typ args = callGen (Types.bothPrimary typ) args "is_both_primary"
 findEdge typ args = callGen typ args "find_edge"
 
@@ -68,19 +43,8 @@ findEdge typ args = callGen typ args "find_edge"
 
 -- TODO ∷ abstract over the define pattern seen below?
 
-link' ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
-  ) ⇒
-  Type.Type →
-  m Operand.Operand
-link' nodePtrType = Block.defineFunction Type.void "link" args $
+defineLink ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineLink nodePtrType = Block.defineFunction Type.void "link" args $
   do
     setPort ("node_1", "port_1") ("node_2", "port_2") nodePtrType
     setPort ("node_2", "port_2") ("node_1", "port_1") nodePtrType
@@ -95,31 +59,15 @@ link' nodePtrType = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-isBothPrimary' ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
-    HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m
-  ) ⇒
-  Type.Type →
-  m Operand.Operand
-isBothPrimary' nodePtrTyp =
+defineIsBothPrimary ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineIsBothPrimary nodePtrTyp =
   Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
-      -- Why should Ι allocate for every port?!
       mainPort ← mainPort
-      -- TODO ∷ Make sure findEdge is in the environment
-      edge ← Block.externf "find_edge"
       nodePtr ← Block.externf "node_ptr"
       node ← load (nodeType nodePtrTyp) nodePtr
-      port ← call (portType nodePtrTyp) edge (Block.emptyArgs [node, mainPort])
+      port ← findEdge (portType nodePtrTyp) [node, mainPort]
       otherNodePtr ← loadElementPtr $
         Types.Minimal
           { Types.type' = nodePointer nodePtrTyp,
@@ -141,19 +89,8 @@ isBothPrimary' nodePtrTyp =
     args = [(nodePtrTyp, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
-findEdge' ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
-  ) ⇒
-  Type.Type →
-  m Operand.Operand
-findEdge' nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
+defineFindEdge ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
   do
     node ← Block.externf "node"
     pNum ← Block.externf "port"
@@ -172,30 +109,18 @@ findEdge' nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
 -- allocaPorts    : variable args of ports
 -- allocaData     : variable args of dataType
 
-mallocNode ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Type.Type →
-  Integer →
-  m Operand.Operand
-mallocNode t size = Block.mallocType size (nodeType t)
+mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
+mallocNode t size = Block.malloc size (nodeType t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
 
 -- TODO ∷ could be storing data wrong... find out
 mallocNodeH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
-    HasState "symtab" SymbolTable m
+    HasState "symTab" SymbolTable m
   ) ⇒
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
@@ -232,11 +157,7 @@ mallocNodeH mPorts mData nodePtrType nodeSize = do
 
 -- | used to create the malloc and alloca functions for ports and data
 createGenH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
+  RetInstruction m ⇒
   [Maybe Operand.Operand] →
   Type.Type →
   (Type.Type → Integer → m Operand.Operand) →
@@ -262,96 +183,34 @@ createGenH mPortData type' alloc = do
     len = fromIntegral (length mPortData ∷ Int)
 
 mallocGenH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  Type.Type →
-  Integer →
-  m Operand.Operand
+  Call m ⇒ [Maybe Operand.Operand] → Type.Type → Integer → m Operand.Operand
 mallocGenH mPortData type' dataSize =
-  createGenH mPortData type' (\t len → Block.mallocType (len * dataSize) t)
+  createGenH mPortData type' (\t len → Block.malloc (len * dataSize) t)
 
-allocaGenH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  Type.Type →
-  m Operand.Operand
+allocaGenH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
 
-mallocPortsH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  Type.Type →
-  m Operand.Operand
+mallocPortsH ∷ Call m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 mallocPortsH mPorts typ = mallocGenH mPorts (Types.portType typ) Types.portTypeSize
 
-allocaPortsH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  Type.Type →
-  m Operand.Operand
+allocaPortsH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 allocaPortsH mPorts = allocaGenH mPorts . Types.portType
 
-allocaDataH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  m Operand.Operand
+allocaDataH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 allocaDataH mPorts = allocaGenH mPorts Types.dataType
 
-mallocDataH ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  [Maybe Operand.Operand] →
-  m Operand.Operand
+mallocDataH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocDataH mPorts = mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
-linkConnectedPort' ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Type.Type →
-  m Operand.Operand
-linkConnectedPort' nodePtrType =
+defineLinkConnectedPort ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineLinkConnectedPort nodePtrType =
   Block.defineFunction Type.void "link_connected_port" args $
     do
-      edge ← Block.externf "find_edge"
-      link ← Block.externf "link"
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← call (Types.portType nodePtrType) edge (Block.emptyArgs [nOld, pOld])
+      oldPointsTo ← findEdge (Types.portType nodePtrType) [nOld, pOld]
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       let intoGen typ num = loadElementPtr $
             Types.Minimal
@@ -363,7 +222,7 @@ linkConnectedPort' nodePtrType =
       nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
       nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
       -- End Abstracting out bits -------------------------------------------------
-      _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
+      _ ← link [nNew, pNew, numPointsTo, nodePointsTo]
       retNull
   where
     args =
@@ -373,26 +232,13 @@ linkConnectedPort' nodePtrType =
         (numPorts, "port_new")
       ]
 
-rewire' ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Type.Type →
-  m Operand.Operand
-rewire' nodePtrType = Block.defineFunction Type.void "rewire" args $
+defineRewire ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
   do
-    edge ← Block.externf "find_edge"
-    relink ← Block.externf "link_connected_port"
     -- TODO ∷ Abstract out this bit ---------------------------------------------
     (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
     (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-    oldPointsTo ← call (Types.portType nodePtrType) edge (Block.emptyArgs [n1, p1])
+    oldPointsTo ← findEdge (Types.portType nodePtrType) [n1, p1]
     let intoGen typ num = loadElementPtr $
           Types.Minimal
             { Types.type' = typ,
@@ -403,7 +249,7 @@ rewire' nodePtrType = Block.defineFunction Type.void "rewire" args $
     nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
     nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
     -- End Abstracting out bits -------------------------------------------------
-    _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
+    _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
     retNull
   where
     args =
@@ -439,7 +285,7 @@ setPort ∷
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
-    HasState "symtab" SymbolTable m
+    HasState "symTab" SymbolTable m
   ) ⇒
   (Name.Name, Name.Name) →
   (Name.Name, Name.Name) →
@@ -454,20 +300,9 @@ setPort (n1, p1) (n2, p2) nodePtrType = do
   store portLocation p2Ptr
   pure ()
 
--- TODO ∷ should be malloc
-newPortType ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Operand.Operand →
-  Operand.Operand →
-  Type.Type →
-  m Operand.Operand
+newPortType ∷ Call m ⇒ Operand.Operand → Operand.Operand → Type.Type → m Operand.Operand
 newPortType node offset nodePtrType = do
-  newPort ← Block.mallocType Types.portTypeSize (Types.portType nodePtrType)
+  newPort ← Block.malloc Types.portTypeSize (Types.portType nodePtrType)
   -- This is a ptr to a ptr
   nodePtr ← getElementPtr $
     Types.Minimal
@@ -482,7 +317,7 @@ newPortType node offset nodePtrType = do
         Types.indincies' = Block.constant32List [0, 1]
       }
   -- allocate pointer to the node
-  givenNodePtr ← Block.mallocType Types.nodePointerSize (Types.nodePointer nodePtrType)
+  givenNodePtr ← Block.malloc Types.nodePointerSize (Types.nodePointer nodePtrType)
   placeToStoreNode ← getElementPtr $
     Types.Minimal
       { Types.type' = nodeType nodePtrType,
@@ -498,11 +333,8 @@ newPortType node offset nodePtrType = do
   pure newPort
 
 getPort ∷
-  ( HasThrow "err" Errors m,
+  ( RetInstruction m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
     HasState "names" Names m
   ) ⇒
   Operand.Operand →
@@ -532,11 +364,8 @@ getPort node port nodePtrType = do
 -- | 'intOfNumPorts' generates an int of two different sizes to be used in cont logic
 -- the type referees to the final type in the cont logic
 intOfNumPorts ∷
-  ( HasThrow "err" Errors m,
+  ( RetInstruction m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
     HasState "names" Names m
   ) ⇒
   Type.Type →
@@ -579,11 +408,8 @@ intOfNumPorts typ numPort cont = do
 
 -- | 'portPointsTo' is a function which grabs the portType of the node a portType points to
 portPointsTo ∷
-  ( HasThrow "err" Errors m,
+  ( RetInstruction m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
     HasState "names" Names m
   ) ⇒
   Operand.Operand →
@@ -617,10 +443,7 @@ portPointsTo portType nodePtrType = do
 
 -- | Allocates a 'numPorts'
 createNumPortsStaticGen ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
@@ -649,10 +472,7 @@ createNumPortsStaticGen isLarge value nodePtrType allocVar alloc =
 
 -- | Allocates 'numPorts' via allcoca
 allocaNumPortsStatic ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
@@ -670,20 +490,17 @@ allocaNumPortsStatic isLarge value nodePtrType =
 
 -- | Allocates 'numPorts' via allcoca
 mallocNumPortsStatic ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
-    HasState "symtab" SymbolTable m
+    HasState "symTab" SymbolTable m
   ) ⇒
   Bool →
   Operand.Operand →
   Type.Type →
   m Operand.Operand
 mallocNumPortsStatic isLarge value nodePtrType =
-  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip mallocType)
+  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip Block.malloc)
 
 createNumPortNumGen ∷ Integer → t → (Bool → Operand.Operand → t → p) → p
 createNumPortNumGen n nodePtrType alloc
@@ -694,10 +511,7 @@ createNumPortNumGen n nodePtrType alloc
 
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
@@ -708,13 +522,10 @@ allocaNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType allocaNumPort
 
 -- | like 'mallocNumPortStatic', except it takes a number and allocates the correct operand
 mallocNumPortNum ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" SymbolTable m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m
+    HasState "varTab" VariantToType m,
+    HasState "symTab" SymbolTable m
   ) ⇒
   Integer →
   Type.Type →
@@ -725,36 +536,32 @@ mallocNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType mallocNumPort
 -- Port Aliases
 --------------------------------------------------------------------------------
 
--- TODO ∷ put these in the env, and allocate them once at the top level
+-- TODO ∷ overload ports, so these are just ints and not a box around them
 
-mainPort',
-  auxiliary1',
-  auxiliary2',
-  auxiliary3',
-  auxiliary4' ∷
-    ( HasThrow "err" Errors m,
-      HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
+defineMainPort,
+  defineAuxiliary1,
+  defineAuxiliary2,
+  defineAuxiliary3,
+  defineAuxiliary4 ∷
+    ( Define m,
       HasState "typTab" TypeTable m,
-      HasState "symtab" SymbolTable m,
       HasState "varTab" VariantToType m
     ) ⇒
     Type.Type →
     m ()
-mainPort' t =
+defineMainPort t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0)) t
     >>= Block.assign "main_port"
-auxiliary1' t =
+defineAuxiliary1 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1)) t
     >>= Block.assign "main_port"
-auxiliary2' t =
+defineAuxiliary2 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2)) t
     >>= Block.assign "main_port"
-auxiliary3' t =
+defineAuxiliary3 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3)) t
     >>= Block.assign "main_port"
-auxiliary4' t =
+defineAuxiliary4 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4)) t
     >>= Block.assign "main_port"
 
@@ -763,7 +570,7 @@ mainPort,
   auxiliary2,
   auxiliary3,
   auxiliary4 ∷
-    ( HasState "symtab" SymbolTable m,
+    ( HasState "symTab" SymbolTable m,
       HasThrow "err" Errors m
     ) ⇒
     m Operand.Operand
@@ -777,14 +584,7 @@ auxiliary4 = Block.externf "auxiliary_port_4"
 -- Accessor aliases
 --------------------------------------------------------------------------------
 
-getIsPrimaryEle ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Operand.Operand →
-  m Operand.Operand
+getIsPrimaryEle ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 getIsPrimaryEle bothPrimary =
   getElementPtr $
     Types.Minimal
@@ -793,25 +593,10 @@ getIsPrimaryEle bothPrimary =
         Types.indincies' = Block.constant32List [0, 0]
       }
 
-loadIsPrimaryEle ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Operand.Operand →
-  m Operand.Operand
+loadIsPrimaryEle ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadIsPrimaryEle e = getIsPrimaryEle e >>= load Type.i1
 
-getPrimaryNode ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Type.Type →
-  Operand.Operand →
-  m Operand.Operand
+getPrimaryNode ∷ RetInstruction m ⇒ Type.Type → Operand.Operand → m Operand.Operand
 getPrimaryNode nodePtrType bothPrimary =
   getElementPtr $
     Types.Minimal
@@ -820,13 +605,5 @@ getPrimaryNode nodePtrType bothPrimary =
         Types.indincies' = Block.constant32List [0, 1]
       }
 
-loadPrimaryNode ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Type.Type →
-  Operand.Operand →
-  m Operand.Operand
+loadPrimaryNode ∷ RetInstruction m ⇒ Type.Type → Operand.Operand → m Operand.Operand
 loadPrimaryNode nodePtrType e = getPrimaryNode nodePtrType e >>= load nodePtrType
