@@ -62,16 +62,16 @@ depIdentity =
         ( IR.Elim -- output
             ( IR.Ann -- annotation is of
                 (SNat 1) -- 1 usage
-                (IR.Elim (IR.Bound 0)) -- x is the output, which is
+                (IR.Elim (IR.Bound 0)) -- x is the output, which has annotation (1, t)
                 (IR.Elim (IR.Bound 1)) -- of type t
             )
         )
     )
 
--- dependent identity annotation (0, 0 * -> 1 t -> t)
+-- dependent identity annotation (1, 0 * -> 1 t -> t)
 depIdentityCompTy ∷ ∀ primTy primVal. IR.Annotation primTy primVal
 depIdentityCompTy =
-  ( SNat 1, -- the usage of the dependent identity function
+  ( SNat 0, -- the usage of the dependent identity function
     IR.VPi -- the first input, t
       (SNat 0) -- t's usage
       (IR.VStar 0) -- first input's type, is type
@@ -91,7 +91,7 @@ identityApplication =
     ( IR.App -- Applying
         ( IR.Ann -- the function that has annotation of
             (SNat 1) -- usage 1
-            identity -- the identity function
+            identity -- the identity function, which has annotation (1, 1 Nat -> Nat)
             (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- type of 1 Nat -> Nat
         )
         (IR.Elim (IR.Prim (Natural 1))) -- applies to 1
@@ -101,25 +101,29 @@ identityApplication =
 natTy ∷ NatAnnotation
 natTy = (SNat 1, IR.VPrimTy Nat)
 
--- (I:(Nat->Nat)->(Nat->Nat) I:(Nat->Nat)) 1 type checked to NatTy
+-- (I:1 (1 Nat->Nat) -> (1 Nat->Nat) I:(1 Nat->Nat) ) 1 type checked to NatTy
 identityAppINat1 ∷ NatElim
 identityAppINat1 =
-  IR.App
-    ( IR.App
+  IR.App -- applying (identity to identity) to 1
+    ( IR.App -- applying identity to identity
         ( IR.Ann
-            (SNat 1)
-            identity
+            (SNat 1) -- the first 1 in the annotation
+            identity -- has annotation ( 1, 1 ((1 Nat -> Nat)) -> (1 Nat -> Nat) )
             ( IR.Pi
-                (SNat 1)
-                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
-                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+                (SNat 1) -- the second 1 in the annotation
+                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- the third 1 in the annotation, (1 Nat -> Nat)
+                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- the forth 1 in the annotation, (1 Nat -> Nat)
             )
         )
         ( IR.Elim
             ( IR.Ann
-                (SNat 1)
-                identity
-                (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+                (SNat 1) -- the first 1 in the annotation
+                identity -- has annotation (1, 1 Nat -> Nat)
+                ( IR.Pi
+                    (SNat 1) -- the second 1 in the annotation
+                    (IR.PrimTy Nat) -- 1 Nat ->
+                    (IR.PrimTy Nat) -- Nat
+                )
             )
         )
     )
@@ -129,48 +133,60 @@ identityAppINat1 =
 -- I:(Nat->Nat) I:(Nat->Nat) correctly does not type checked
 identityAppI ∷ NatElim
 identityAppI =
-  IR.App
+  IR.App -- applying identity to identity
     ( IR.Ann
-        (SNat 1)
-        identity
+        (SNat 1) -- the first 1 in the annotation
+        identity -- has annotation (1, (1, (1 Nat -> Nat) ) -> (1 Nat -> Nat) ) )
         ( IR.Pi
-            (SNat 1)
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+            (SNat 1) -- the second 1 in the annotation
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- the third 1 in the annotation 1 Nat -> Nat
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- the forth 1 in the annotation 1 Nat -> Nat
         )
     )
     ( IR.Elim
         ( IR.Ann
-            (SNat 1)
-            identity
-            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat))
+            (SNat 1) -- the first 1 of the annotation
+            identity -- annotation (1, 1 Nat -> Nat)
+            (IR.Pi (SNat 1) (IR.PrimTy Nat) (IR.PrimTy Nat)) -- the second 1 of the annotation, 1 Nat -> Nat
         )
     )
 
 kcombinator ∷ ∀ primTy primVal. IR.Term primTy primVal -- K = \x.\y.x
 kcombinator = IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))
 
--- Nat -> (Nat -> Nat)
+-- K has annotation (1, 1 Nat -> 0 Nat -> Nat )
 kCompTy ∷ NatAnnotation
 kCompTy =
-  ( SNat 1,
-    IR.VPi
-      (SNat 1)
-      (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+  ( SNat 1, -- the usage of k
+    IR.VPi -- first input, 1 Nat
+      (SNat 1) -- is used once in the output
+      (IR.VPrimTy Nat) -- of type Nat
+      ( const
+          ( IR.VPi -- second input, 0 Nat
+              (SNat 0) -- is not used in the output
+              (IR.VPrimTy Nat) -- of type Nat
+              (const (IR.VPrimTy Nat)) -- the output is of type Nat
+          )
+      )
   )
 
--- Nat -> () -> Nat
+-- K has annotation (1, 1 Nat -> 0 () -> Nat)
 kCompTyWithUnit ∷ AllAnnotation
 kCompTyWithUnit =
-  ( SNat 1,
-    IR.VPi
-      (SNat 1)
-      (IR.VPrimTy (All.NatTy Nat))
-      (const (IR.VPi (SNat 0) (IR.VPrimTy (All.UnitTy TUnit)) (const (IR.VPrimTy (All.NatTy Nat)))))
+  ( SNat 1, -- usage of k
+    IR.VPi -- first input, 1 Nat
+      (SNat 1) -- is used once in the output
+      (IR.VPrimTy (All.NatTy Nat)) -- of type Nat
+      ( const
+          ( IR.VPi -- second input, 0 Unit
+              (SNat 0) -- is not used in the output
+              (IR.VPrimTy (All.UnitTy TUnit)) -- of type Unit
+              (const (IR.VPrimTy (All.NatTy Nat))) -- the output is of type Nat
+          )
+      )
   )
 
--- I:(Nat->Nat->Nat)->(Nat->Nat->Nat) K:(Nat->Nat->Nat) should type check to (Nat->Nat->Nat)
+-- I K has annotation (1, 1 (1 Nat -> 0 Nat -> Nat) -> ( 1 Nat -> 0 Nat -> Nat) -> (1 Nat -> 0 Nat-> Nat) )
 identityAppK ∷ NatElim
 identityAppK =
   IR.App
