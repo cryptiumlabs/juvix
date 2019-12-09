@@ -54,7 +54,7 @@ identityNatContTy ∷ NatAnnotation
 identityNatContTy =
   (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
 
--- dependent identity function, \t.\x.x 0: t
+-- dependent identity function, \t.\x.x 1: t
 depIdentity ∷ ∀ primTy primVal. IR.Term primTy primVal
 depIdentity =
   IR.Lam -- first input \t.
