@@ -65,17 +65,17 @@ loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 -- Graph operation definitions
 --------------------------------------------------------------------------------
 
-isBothPrimary' ∷ Codegen.Define m ⇒ m Operand.Operand
-isBothPrimary' = Codegen.isBothPrimary' Types.eacPointer
+defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
+defineIsBothPrimary = Codegen.defineIsBothPrimary Types.eacPointer
 
-findEdge' ∷ Codegen.Define m ⇒ m Operand.Operand
-findEdge' = Codegen.findEdge' Types.eacPointer
+defineFindEdge ∷ Codegen.Define m ⇒ m Operand.Operand
+defineFindEdge = Codegen.defineFindEdge Types.eacPointer
 
-link' ∷ Codegen.Define m ⇒ m Operand.Operand
-link' = Codegen.link' Types.eacPointer
+defineLink ∷ Codegen.Define m ⇒ m Operand.Operand
+defineLink = Codegen.defineLink Types.eacPointer
 
-rewire' ∷ Codegen.Define m ⇒ m Operand.Operand
-rewire' = Codegen.rewire' Types.eacPointer
+defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand
+defineRewire = Codegen.defineRewire Types.eacPointer
 
-linkConnectedPort' ∷ Codegen.Define m ⇒ m Operand.Operand
-linkConnectedPort' = Codegen.linkConnectedPort' Types.eacPointer
+defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
+defineLinkConnectedPort = Codegen.defineLinkConnectedPort Types.eacPointer

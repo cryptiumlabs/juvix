@@ -16,20 +16,22 @@ initialModule ∷
   ) ⇒
   m ()
 initialModule = do
-  _ ← Defs.isBothPrimary'
-  _ ← Defs.findEdge'
-  _ ← Defs.link'
-  _ ← Defs.rewire'
-  _ ← Defs.linkConnectedPort'
-  _ ← EAC.fanInAux2F'
-  _ ← EAC.fanInAux2A'
-  _ ← EAC.fanInAux2L'
-  _ ← EAC.fanInAux2E'
-  Codegen.mainPort' Types.eacPointer
-  Codegen.auxiliary1' Types.eacPointer
-  Codegen.auxiliary2' Types.eacPointer
-  Codegen.auxiliary3' Types.eacPointer
-  Codegen.auxiliary4' Types.eacPointer
+  _ ← Defs.defineIsBothPrimary
+  _ ← Defs.defineFindEdge
+  _ ← Defs.defineLink
+  _ ← Defs.defineRewire
+  _ ← Defs.defineLinkConnectedPort
+  _ ← EAC.defineFanInAux2F
+  _ ← EAC.defineFanInAux2A
+  _ ← EAC.defineFanInAux2L
+  _ ← EAC.defineFanInAux2E
+  Codegen.defineMalloc
+  Codegen.defineFree
+  Codegen.defineMainPort Types.eacPointer
+  Codegen.defineAuxiliary1 Types.eacPointer
+  Codegen.defineAuxiliary2 Types.eacPointer
+  Codegen.defineAuxiliary3 Types.eacPointer
+  Codegen.defineAuxiliary4 Types.eacPointer
   -- register the hardcoded variants
   modify @"typTab" (Map.insert "numPorts" Codegen.numPorts)
   modify @"varTab"

@@ -284,7 +284,7 @@ fanInAux1' ∷
   m Operand.Operand
 fanInAux1' _allocF = undefined
 
-fanInAux2' ∷
+defineFanInAux2 ∷
   ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
@@ -292,7 +292,7 @@ fanInAux2' ∷
   Symbol →
   m Operand.Operand →
   m Operand.Operand
-fanInAux2' name allocF = Codegen.defineFunction Type.void name args $
+defineFanInAux2 name allocF = Codegen.defineFunction Type.void name args $
   do
     -- Nodes in env
     fanIn ← Codegen.externf "fan_in"
@@ -337,19 +337,19 @@ fanInAux2' name allocF = Codegen.defineFunction Type.void name args $
 -- dispatch system that can handle dynamic node addition
 
 -- instantiations
-fanInAux2F',
-  fanInAux2A',
-  fanInAux2L',
-  fanInAux2E' ∷
+defineFanInAux2F,
+  defineFanInAux2A,
+  defineFanInAux2L,
+  defineFanInAux2E ∷
     ( Codegen.Define m,
       HasState "typTab" Codegen.TypeTable m,
       HasState "varTab" Codegen.VariantToType m
     ) ⇒
     m Operand.Operand
-fanInAux2A' = fanInAux2' "fan_in_aux_2_app" mallocApp
-fanInAux2F' = fanInAux2' "fan_in_aux_2_fan_in" mallocFanIn
-fanInAux2L' = fanInAux2' "fan_in_aux_2_fan_in" mallocFanIn
-fanInAux2E' = fanInAux2' "fan_in_aux_2_era" mallocEra
+defineFanInAux2A = defineFanInAux2 "fan_in_aux_2_app" mallocApp
+defineFanInAux2F = defineFanInAux2 "fan_in_aux_2_fan_in" mallocFanIn
+defineFanInAux2L = defineFanInAux2 "fan_in_aux_2_fan_in" mallocFanIn
+defineFanInAux2E = defineFanInAux2 "fan_in_aux_2_era" mallocEra
 
 fanInAux2App,
   fanInAux2FanIn,
@@ -374,7 +374,7 @@ mallocGen ∷
   Int →
   m Operand.Operand
 mallocGen type' portLen dataLen = do
-  eac ← Codegen.mallocType Types.tagInt Types.eac
+  eac ← Codegen.malloc Types.tagInt Types.eac
   node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal

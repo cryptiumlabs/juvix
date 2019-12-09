@@ -43,8 +43,8 @@ findEdge typ args = callGen typ args "find_edge"
 
 -- TODO ∷ abstract over the define pattern seen below?
 
-link' ∷ Define m ⇒ Type.Type → m Operand.Operand
-link' nodePtrType = Block.defineFunction Type.void "link" args $
+defineLink ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineLink nodePtrType = Block.defineFunction Type.void "link" args $
   do
     setPort ("node_1", "port_1") ("node_2", "port_2") nodePtrType
     setPort ("node_2", "port_2") ("node_1", "port_1") nodePtrType
@@ -59,8 +59,8 @@ link' nodePtrType = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-isBothPrimary' ∷ Define m ⇒ Type.Type → m Operand.Operand
-isBothPrimary' nodePtrTyp =
+defineIsBothPrimary ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineIsBothPrimary nodePtrTyp =
   Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
@@ -92,8 +92,8 @@ isBothPrimary' nodePtrTyp =
     args = [(nodePtrTyp, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
-findEdge' ∷ Define m ⇒ Type.Type → m Operand.Operand
-findEdge' nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
+defineFindEdge ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
   do
     node ← Block.externf "node"
     pNum ← Block.externf "port"
@@ -113,7 +113,7 @@ findEdge' nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
 -- allocaData     : variable args of dataType
 
 mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
-mallocNode t size = Block.mallocType size (nodeType t)
+mallocNode t size = Block.malloc size (nodeType t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
@@ -188,7 +188,7 @@ createGenH mPortData type' alloc = do
 mallocGenH ∷
   Call m ⇒ [Maybe Operand.Operand] → Type.Type → Integer → m Operand.Operand
 mallocGenH mPortData type' dataSize =
-  createGenH mPortData type' (\t len → Block.mallocType (len * dataSize) t)
+  createGenH mPortData type' (\t len → Block.malloc (len * dataSize) t)
 
 allocaGenH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
@@ -207,8 +207,8 @@ mallocDataH mPorts = mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
-linkConnectedPort' ∷ Define m ⇒ Type.Type → m Operand.Operand
-linkConnectedPort' nodePtrType =
+defineLinkConnectedPort ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineLinkConnectedPort nodePtrType =
   Block.defineFunction Type.void "link_connected_port" args $
     do
       edge ← Block.externf "find_edge"
@@ -237,8 +237,8 @@ linkConnectedPort' nodePtrType =
         (numPorts, "port_new")
       ]
 
-rewire' ∷ Define m ⇒ Type.Type → m Operand.Operand
-rewire' nodePtrType = Block.defineFunction Type.void "rewire" args $
+defineRewire ∷ Define m ⇒ Type.Type → m Operand.Operand
+defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
   do
     edge ← Block.externf "find_edge"
     relink ← Block.externf "link_connected_port"
@@ -309,7 +309,7 @@ setPort (n1, p1) (n2, p2) nodePtrType = do
 
 newPortType ∷ Call m ⇒ Operand.Operand → Operand.Operand → Type.Type → m Operand.Operand
 newPortType node offset nodePtrType = do
-  newPort ← Block.mallocType Types.portTypeSize (Types.portType nodePtrType)
+  newPort ← Block.malloc Types.portTypeSize (Types.portType nodePtrType)
   -- This is a ptr to a ptr
   nodePtr ← getElementPtr $
     Types.Minimal
@@ -324,7 +324,7 @@ newPortType node offset nodePtrType = do
         Types.indincies' = Block.constant32List [0, 1]
       }
   -- allocate pointer to the node
-  givenNodePtr ← Block.mallocType Types.nodePointerSize (Types.nodePointer nodePtrType)
+  givenNodePtr ← Block.malloc Types.nodePointerSize (Types.nodePointer nodePtrType)
   placeToStoreNode ← getElementPtr $
     Types.Minimal
       { Types.type' = nodeType nodePtrType,
@@ -507,7 +507,7 @@ mallocNumPortsStatic ∷
   Type.Type →
   m Operand.Operand
 mallocNumPortsStatic isLarge value nodePtrType =
-  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip mallocType)
+  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip Block.malloc)
 
 createNumPortNumGen ∷ Integer → t → (Bool → Operand.Operand → t → p) → p
 createNumPortNumGen n nodePtrType alloc
@@ -543,32 +543,32 @@ mallocNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType mallocNumPort
 -- Port Aliases
 --------------------------------------------------------------------------------
 
--- TODO ∷ put these in the env, and allocate them once at the top level
+-- TODO ∷ overload ports, so these are just ints and not a box around them
 
-mainPort',
-  auxiliary1',
-  auxiliary2',
-  auxiliary3',
-  auxiliary4' ∷
+defineMainPort,
+  defineAuxiliary1,
+  defineAuxiliary2,
+  defineAuxiliary3,
+  defineAuxiliary4 ∷
     ( Define m,
       HasState "typTab" TypeTable m,
       HasState "varTab" VariantToType m
     ) ⇒
     Type.Type →
     m ()
-mainPort' t =
+defineMainPort t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0)) t
     >>= Block.assign "main_port"
-auxiliary1' t =
+defineAuxiliary1 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1)) t
     >>= Block.assign "main_port"
-auxiliary2' t =
+defineAuxiliary2 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2)) t
     >>= Block.assign "main_port"
-auxiliary3' t =
+defineAuxiliary3 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3)) t
     >>= Block.assign "main_port"
-auxiliary4' t =
+defineAuxiliary4 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4)) t
     >>= Block.assign "main_port"
 

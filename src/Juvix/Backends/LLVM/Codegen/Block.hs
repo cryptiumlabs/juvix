@@ -286,8 +286,8 @@ defineFree = do
   op ← external voidTy name [(Types.voidStarTy, "type")]
   assign name op
 
-mallocType ∷ Call m ⇒ Integer → Type → m Operand
-mallocType size type' = do
+malloc ∷ Call m ⇒ Integer → Type → m Operand
+malloc size type' = do
   malloc ← externf "malloc"
   voidPtr ← call Types.voidStarTy malloc (emptyArgs [Operand.ConstantOperand (C.Int 32 size)])
   bitCast voidPtr type'
@@ -634,7 +634,7 @@ mallocVariant ∷
   t Operand →
   Integer →
   m Operand
-mallocVariant variantName args size = createVariantGen variantName args (mallocType size)
+mallocVariant variantName args size = createVariantGen variantName args (malloc size)
 
 -------------------------------------------------------------------------------
 -- Symbol Table
