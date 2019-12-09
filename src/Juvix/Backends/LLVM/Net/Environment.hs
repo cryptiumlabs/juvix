@@ -8,20 +8,11 @@ import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
-import qualified LLVM.AST as AST
-import qualified LLVM.AST.Name as Name
 
 initialModule ∷
-  ( HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" Codegen.SymbolTable m,
+  ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasThrow "err" Codegen.Errors m
+    HasState "varTab" Codegen.VariantToType m
   ) ⇒
   m ()
 initialModule = do
