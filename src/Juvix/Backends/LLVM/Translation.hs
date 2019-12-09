@@ -30,7 +30,7 @@ erasedCoreToLLVM :: forall primTy primVal m .
     HasState "names" Codegen.Names m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symTab" Codegen.SymbolTable m
   ) =>
   Core.Parameterisation primTy primVal -> Erased.Term primVal -> m ()
 erasedCoreToLLVM parameterisation term = do
@@ -49,7 +49,7 @@ networkToLLVM :: forall primVal m .
     HasState "names" Codegen.Names m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symTab" Codegen.SymbolTable m
   ) =>
   Graph.FlipNet (Lang primVal) -> m ()
 networkToLLVM n = do
@@ -67,16 +67,4 @@ networkToLLVM n = do
   Codegen.defineFree
   -- Define `reduce` (in the future, this will depend on bespoke encodings).
   void EAC.reduce
-  -- Allocate all nodes.
-  ns <- flip mapM ns $ \(node, kind, edges) -> do
-    ref <- case kind of
-              Primar pri ->
-                case pri of
-                  Erase -> EAC.mallocEra
-              Auxiliary2 aux ->
-                case aux of
-                  Lambda -> EAC.mallocLam
-                  App -> EAC.mallocApp
-                  FanIn _ -> EAC.mallocFanIn
-    pure (node, kind, edges, ref)
   pure ()
