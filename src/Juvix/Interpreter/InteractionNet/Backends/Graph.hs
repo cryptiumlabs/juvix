@@ -97,6 +97,10 @@ instance Network FlipNet where
 
   empty = Flip Graph.empty
 
+  allEdges node = do
+    net ← runFlip <$> get @"net"
+    pure (fmap (\(Edge (_, port) (otherNode, otherPort), _) -> (port, otherNode, otherPort)) $ lneighbors net node)
+
   findEdge (node, port) = do
     net ← runFlip <$> get @"net"
     pure (fmap other $ headMay $ filter f $ lneighbors net node)

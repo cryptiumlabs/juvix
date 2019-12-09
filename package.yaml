@@ -142,6 +142,7 @@ library:
     - Juvix.Backends.LLVM.JIT
     - Juvix.Backends.LLVM.JIT.Types
     - Juvix.Backends.LLVM.JIT.Execution
+    - Juvix.Backends.LLVM.Translation
     - Juvix.Backends.LLVM.Codegen.Constants
     - Juvix.Backends.LLVM.Codegen.Sum
     - Juvix.Backends.LLVM.Codegen.Types

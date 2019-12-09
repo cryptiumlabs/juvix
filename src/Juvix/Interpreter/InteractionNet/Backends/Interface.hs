@@ -133,6 +133,8 @@ class Network net where
 
   findEdge ∷ NetState (net a) m ⇒ (Node, PortType) → m (Maybe (Node, PortType))
 
+  allEdges :: NetState (net a) m => Node -> m [(PortType, Node, PortType)]
+
 -- Derived function of network -------------------------------------------------
 
 linkAll ∷ (Network net, NetState (net a) m) ⇒ Relink → m ()
