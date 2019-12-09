@@ -3,7 +3,7 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
-import Juvix.Library hiding (Type, local)
+import Juvix.Library hiding (Type, local, link)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
@@ -64,13 +64,10 @@ defineIsBothPrimary nodePtrTyp =
   Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
-      -- Why should Ι allocate for every port?!
       mainPort ← mainPort
-      -- TODO ∷ Make sure findEdge is in the environment
-      edge ← Block.externf "find_edge"
       nodePtr ← Block.externf "node_ptr"
       node ← load (nodeType nodePtrTyp) nodePtr
-      port ← call (portType nodePtrTyp) edge (Block.emptyArgs [node, mainPort])
+      port ← findEdge (portType nodePtrTyp) [node, mainPort]
       otherNodePtr ← loadElementPtr $
         Types.Minimal
           { Types.type' = nodePointer nodePtrTyp,
@@ -211,11 +208,9 @@ defineLinkConnectedPort ∷ Define m ⇒ Type.Type → m Operand.Operand
 defineLinkConnectedPort nodePtrType =
   Block.defineFunction Type.void "link_connected_port" args $
     do
-      edge ← Block.externf "find_edge"
-      link ← Block.externf "link"
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← call (Types.portType nodePtrType) edge (Block.emptyArgs [nOld, pOld])
+      oldPointsTo ← findEdge (Types.portType nodePtrType) [nOld, pOld]
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       let intoGen typ num = loadElementPtr $
             Types.Minimal
@@ -227,7 +222,7 @@ defineLinkConnectedPort nodePtrType =
       nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
       nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
       -- End Abstracting out bits -------------------------------------------------
-      _ ← call Type.void link (Block.emptyArgs [nNew, pNew, numPointsTo, nodePointsTo])
+      _ ← link [nNew, pNew, numPointsTo, nodePointsTo]
       retNull
   where
     args =
@@ -240,12 +235,10 @@ defineLinkConnectedPort nodePtrType =
 defineRewire ∷ Define m ⇒ Type.Type → m Operand.Operand
 defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
   do
-    edge ← Block.externf "find_edge"
-    relink ← Block.externf "link_connected_port"
     -- TODO ∷ Abstract out this bit ---------------------------------------------
     (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
     (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-    oldPointsTo ← call (Types.portType nodePtrType) edge (Block.emptyArgs [n1, p1])
+    oldPointsTo ← findEdge (Types.portType nodePtrType) [n1, p1]
     let intoGen typ num = loadElementPtr $
           Types.Minimal
             { Types.type' = typ,
@@ -256,7 +249,7 @@ defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
     nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
     nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
     -- End Abstracting out bits -------------------------------------------------
-    _ ← call Type.void relink (Block.emptyArgs [n2, p2, numPointsTo, nodePointsTo])
+    _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
     retNull
   where
     args =
