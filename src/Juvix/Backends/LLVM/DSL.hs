@@ -7,8 +7,6 @@ module Juvix.Backends.LLVM.DSL where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Library hiding (reduce)
-import qualified Juvix.Library.HashMap as Map
-import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import Prelude (error)
 
@@ -44,7 +42,7 @@ data REL node port
 data Auxiliary = Prim | Aux1 | Aux2 | Aux3 | Aux4 deriving (Show, Eq)
 
 auxiliaryToPort ∷
-  ( HasState "symtab" Codegen.SymbolTable m,
+  ( HasState "symTab" Codegen.SymbolTable m,
     HasThrow "err" Codegen.Errors m
   ) ⇒
   Auxiliary →
@@ -55,15 +53,7 @@ auxiliaryToPort Aux2 = Codegen.auxiliary2
 auxiliaryToPort Aux3 = Codegen.auxiliary3
 auxiliaryToPort Aux4 = Codegen.auxiliary4
 
-linkAll ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" Codegen.SymbolTable m
-  ) ⇒
-  Relink Operand.Operand Auxiliary →
-  m ()
+linkAll ∷ Codegen.Call m ⇒ Relink Operand.Operand Auxiliary → m ()
 linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
   -- Reodoing Codegen.mainPort/auxiliary* may or may not have an extra cost.
   -- TODO ∷ if it does, make them once at the top level and pass them around in the env!
@@ -75,12 +65,7 @@ linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
   flipHelper Codegen.auxiliary4 a4
 
 linkHelper ∷
-  ( HasThrow "err" Codegen.Errors f,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) f,
-    HasState "count" Word f,
-    HasState "currentBlock" Name.Name f,
-    HasState "symtab" Codegen.SymbolTable f
-  ) ⇒
+  Codegen.Call f ⇒
   REL Operand.Operand Auxiliary →
   Operand.Operand →
   f Operand.Operand →

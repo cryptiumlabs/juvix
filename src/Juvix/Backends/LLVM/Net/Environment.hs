@@ -10,7 +10,6 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Name as Name
-import qualified LLVM.AST.Operand as Operand
 
 initialModule ∷
   ( HasState "blockCount" Int m,
@@ -19,7 +18,7 @@ initialModule ∷
     HasState "currentBlock" Name.Name m,
     HasState "moduleDefinitions" [AST.Definition] m,
     HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    HasState "symtab" Codegen.SymbolTable m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasThrow "err" Codegen.Errors m

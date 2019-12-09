@@ -13,7 +13,6 @@ import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
-import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -26,17 +25,7 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ consider the return type
 -- TODO ∷ remove boileprlate
-reduce ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
-  ) ⇒
-  m Operand.Operand
+reduce ∷ Codegen.Define m ⇒ m Operand.Operand
 reduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
@@ -237,15 +226,7 @@ genContinueCase tagNode nodePtr cdr defCase prefix cases = do
 
 -- this function work off the nodeType signature not Types.eac
 
-annihilateRewireAux ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" Codegen.SymbolTable m
-  ) ⇒
-  [Operand.Operand] →
-  m ()
+annihilateRewireAux ∷ Codegen.Call m ⇒ [Operand.Operand] → m ()
 annihilateRewireAux args = do
   annihilate ← Codegen.externf "annihilate_rewire_aux"
   _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
@@ -253,19 +234,7 @@ annihilateRewireAux args = do
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-annihilateRewireAux' ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  m Operand.Operand
+annihilateRewireAux' ∷ Codegen.Define m ⇒ m Operand.Operand
 annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
   do
     -- TODO remove these explicit allocations
@@ -286,20 +255,7 @@ annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" 
 -- This function is used when it can not be determined that 'fanInAux*'
 fanInAuxStar = undefined
 
-fanInAux0 ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  m Operand.Operand →
-  m Operand.Operand
+fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
 fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
   do
     fanIn ← Codegen.externf "fan_in"
@@ -319,14 +275,7 @@ fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
       ]
 
 fanInAux1' ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+  ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
@@ -336,14 +285,7 @@ fanInAux1' ∷
 fanInAux1' _allocF = undefined
 
 fanInAux2' ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+  ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m
   ) ⇒
@@ -399,14 +341,7 @@ fanInAux2F',
   fanInAux2A',
   fanInAux2L',
   fanInAux2E' ∷
-    ( HasThrow "err" Codegen.Errors m,
-      HasState "blockCount" Int m,
-      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
-      HasState "moduleDefinitions" [AST.Definition] m,
-      HasState "names" Codegen.Names m,
-      HasState "symtab" (Map.HashMap Symbol Operand.Operand) m,
+    ( Codegen.Define m,
       HasState "typTab" Codegen.TypeTable m,
       HasState "varTab" Codegen.VariantToType m
     ) ⇒
@@ -420,14 +355,7 @@ fanInAux2App,
   fanInAux2FanIn,
   fanInAux2Lambda,
   fanInAux2Era ∷
-    ( HasThrow "err" Codegen.Errors m,
-      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
-      HasState "symtab" Codegen.SymbolTable m
-    ) ⇒
-    [Operand.Operand] →
-    m Operand.Operand
+    Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
 fanInAux2App args = Codegen.callGen Type.void args "fan_in_aux_2_app"
 fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
 fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
@@ -437,13 +365,9 @@ fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 -- Allocations
 --------------------------------------------------------------------------------
 mallocGen ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
+  ( Codegen.Call m,
     HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "symtab" Codegen.SymbolTable m
+    HasState "varTab" Codegen.VariantToType m
   ) ⇒
   C.Constant →
   Int →
@@ -472,13 +396,9 @@ mallocEra,
   mallocFanIn,
   mallocApp,
   mallocLam ∷
-    ( HasThrow "err" Codegen.Errors m,
-      HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name.Name m,
+    ( Codegen.Call m,
       HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m,
-      HasState "symtab" Codegen.SymbolTable m
+      HasState "varTab" Codegen.VariantToType m
     ) ⇒
     m Operand.Operand
 mallocEra = mallocGen Types.era 1 0
@@ -486,14 +406,7 @@ mallocApp = mallocGen Types.app 3 0
 mallocLam = mallocGen Types.lam 3 0
 mallocFanIn = mallocGen Types.dup 3 1
 
-nodeOf ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Operand.Operand →
-  m Operand.Operand
+nodeOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
@@ -502,14 +415,7 @@ nodeOf eac =
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
 
-tagOf ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m
-  ) ⇒
-  Operand.Operand →
-  m Operand.Operand
+tagOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 tagOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal

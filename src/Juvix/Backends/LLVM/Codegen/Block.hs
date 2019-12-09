@@ -106,7 +106,7 @@ makeFunction ∷
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
-    HasState "symtab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symTab" (Map.HashMap Symbol Operand.Operand) m
   ) ⇒
   Symbol →
   [(Type.Type, Name.Name)] →
@@ -124,46 +124,19 @@ makeFunction name args = do
     args
 
 defineFunctionGen ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
-    HasState "moduleDefinitions" [Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" (HashMap Symbol Operand) m
-  ) ⇒
-  Bool →
-  Type →
-  Symbol →
-  [(Type, Name)] →
-  m a →
-  m Operand
+  Types.Define m ⇒ Bool → Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunctionGen bool retty name args body = do
-  oldSymTab ← get @"symtab"
+  oldSymTab ← get @"symTab"
   functionOperand ←
     (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
-  put @"symtab" oldSymTab
+  put @"symTab" oldSymTab
   assign name functionOperand
   pure functionOperand
 
 defineFunction,
   defineFunctionVarArgs ∷
-    ( HasThrow "err" Errors m,
-      HasState "blockCount" Int m,
-      HasState "blocks" (HashMap Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name m,
-      HasState "moduleDefinitions" [Definition] m,
-      HasState "names" Names m,
-      HasState "symtab" (HashMap Symbol Operand) m
-    ) ⇒
-    Type →
-    Symbol →
-    [(Type, Name)] →
-    m a →
-    m Operand
+    Define m ⇒ Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunction = defineFunctionGen False
 defineFunctionVarArgs = defineFunctionGen True
 
@@ -226,7 +199,7 @@ current = do
     Nothing → throw @"err" (NoSuchBlock (show c))
 
 externf ∷
-  ( HasState "symtab" SymbolTable m,
+  ( HasState "symTab" SymbolTable m,
     HasThrow "err" Errors m
   ) ⇒
   Name →
@@ -240,15 +213,7 @@ nameToSymbol (Name n) = (intern (show n))
 local ∷ Type → Name → Operand
 local = LocalReference
 
-instr ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Type →
-  Instruction →
-  m Operand
+instr ∷ RetInstruction m ⇒ Type → Instruction → m Operand
 instr typ ins = do
   n ← fresh
   let ref = UnName n
@@ -309,52 +274,25 @@ external retty label argtys = do
 
 -- malloc & free need to be defined once and then can be called normally with `externf`
 
-defineMalloc ∷
-  ∀ m.
-  ( HasState "moduleDefinitions" [Definition] m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  m ()
+defineMalloc ∷ Extern m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
   op ← external voidStarTy name [(size_t, "size")]
   assign name op
 
-defineFree ∷
-  ∀ m.
-  ( HasState "moduleDefinitions" [Definition] m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  m ()
+defineFree ∷ Extern m ⇒ m ()
 defineFree = do
   let name = "free"
   op ← external voidTy name [(Types.voidStarTy, "type")]
   assign name op
 
-mallocType ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Integer →
-  Type →
-  m Operand
+mallocType ∷ Call m ⇒ Integer → Type → m Operand
 mallocType size type' = do
   malloc ← externf "malloc"
   voidPtr ← call Types.voidStarTy malloc (emptyArgs [Operand.ConstantOperand (C.Int 32 size)])
   bitCast voidPtr type'
 
-free ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
-    HasState "symtab" SymbolTable m
-  ) ⇒
-  Operand →
-  m Operand
+free ∷ Call m ⇒ Operand → m Operand
 free thing = do
   free ← externf "free"
   casted ← bitCast thing Types.voidStarTy
@@ -369,15 +307,7 @@ sdiv,
   add,
   sub,
   mul ∷
-    ( HasThrow "err" Errors m,
-      HasState "blocks" (HashMap Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name m
-    ) ⇒
-    Type →
-    Operand →
-    Operand →
-    m Operand
+    RetInstruction m ⇒ Type → Operand → Operand → m Operand
 sdiv t a b = instr t SDiv
   { exact = False,
     operand0 = a,
@@ -419,15 +349,7 @@ mul t a b = instr t Mul
   }
 
 icmp ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  IntPred.IntegerPredicate →
-  Operand →
-  Operand →
-  m Operand
+  RetInstruction m ⇒ IntPred.IntegerPredicate → Operand → Operand → m Operand
 icmp iPred op1 op2 = instr Type.i1 $ ICmp iPred op1 op2 []
 
 --------------------------------------------------------------------------------
@@ -440,15 +362,7 @@ fdiv,
   fadd,
   fsub,
   fmul ∷
-    ( HasThrow "err" Errors m,
-      HasState "blocks" (HashMap Name BlockState) m,
-      HasState "count" Word m,
-      HasState "currentBlock" Name m
-    ) ⇒
-    Type →
-    Operand →
-    Operand →
-    m Operand
+    RetInstruction m ⇒ Type → Operand → Operand → m Operand
 fdiv t a b = instr t $ FDiv noFastMathFlags a b []
 fadd t a b = instr t $ FAdd noFastMathFlags a b []
 fsub t a b = instr t $ FSub noFastMathFlags a b []
@@ -458,71 +372,27 @@ fmul t a b = instr t $ FMul noFastMathFlags a b []
 -- Control Flow
 --------------------------------------------------------------------------------
 
-ret ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Operand →
-  m (Named Terminator)
+ret ∷ Instruct m ⇒ Operand → m (Named Terminator)
 ret val = terminator $ Do $ Ret (Just val) []
 
-retNull ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  m (Named Terminator)
+retNull ∷ Instruct m ⇒ m (Named Terminator)
 retNull = terminator $ Do $ Ret Nothing []
 
-cbr ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Operand →
-  Name →
-  Name →
-  m (Named Terminator)
+cbr ∷ Instruct m ⇒ Operand → Name → Name → m (Named Terminator)
 cbr cond tr fl = terminator $ Do $ CondBr cond tr fl []
 
-br ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Name →
-  m (Named Terminator)
+br ∷ Instruct m ⇒ Name → m (Named Terminator)
 br val = terminator $ Do $ Br val []
 
-phi ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Type →
-  [(Operand, Name)] →
-  m Operand
+phi ∷ RetInstruction m ⇒ Type → [(Operand, Name)] → m Operand
 phi ty incoming = instr ty $ Phi ty incoming []
 
-switch ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Operand →
-  Name →
-  [(C.Constant, Name)] →
-  m (Named Terminator)
+switch ∷ Instruct m ⇒ Operand → Name → [(C.Constant, Name)] → m (Named Terminator)
 switch val default' dests = terminator $ Do $ Switch val default' dests []
 
 generateIf ∷
-  ( HasThrow "err" Errors m,
+  ( RetInstruction m,
     HasState "blockCount" Int m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
     HasState "names" Names m
   ) ⇒
   Type →
@@ -560,11 +430,7 @@ emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
 
 call ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
+  RetInstruction m ⇒
   Type →
   Operand →
   [(Operand, [ParameterAttribute.ParameterAttribute])] →
@@ -581,60 +447,23 @@ call typ fn args = instr typ $
     }
 
 alloca ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Type →
-  m Operand
+  RetInstruction m ⇒ Type → m Operand
 alloca ty = instr ty $ Alloca ty Nothing 0 []
 
-load ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Type →
-  Operand →
-  m Operand
+load ∷ RetInstruction m ⇒ Type → Operand → m Operand
 load typ ptr = instr typ $ Load False ptr Nothing 0 []
 
-store ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
-    HasState "currentBlock" Name m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Operand →
-  Operand →
-  m ()
+store ∷ Instruct m ⇒ Operand → Operand → m ()
 store ptr val = unnminstr $ Store False ptr val Nothing 0 []
 
 --------------------------------------------------------------------------------
 -- Casting Operations
 --------------------------------------------------------------------------------
 
-bitCast ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Operand →
-  Type →
-  m Operand
+bitCast ∷ RetInstruction m ⇒ Operand → Type → m Operand
 bitCast op typ = instr typ $ BitCast op typ []
 
-ptrToInt ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  Operand →
-  Type →
-  m Operand
+ptrToInt ∷ RetInstruction m ⇒ Operand → Type → m Operand
 ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
 
 --------------------------------------------------------------------------------
@@ -643,14 +472,7 @@ ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
 
 -- | 'getElementPtr' gets an index of a struct or an array as a pointer
 -- Takes a minimal data type to emulate named arguments
-getElementPtr ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  MinimalPtr →
-  m Operand
+getElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 getElementPtr (Minimal address indices type') =
   instr type' $
     GetElementPtr
@@ -660,14 +482,7 @@ getElementPtr (Minimal address indices type') =
         indices = indices
       }
 
-loadElementPtr ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m
-  ) ⇒
-  MinimalPtr →
-  m Operand
+loadElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 loadElementPtr minimal = do
   ptr ← getElementPtr minimal
   load (Types.type' minimal) ptr
@@ -687,10 +502,7 @@ variantCreationName = (<> "_%func")
 -- | Generic logic to create a variant, used in 'createVariantAllocaFunction'
 -- and 'createVariantGen'
 variantCreation ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     Integral a,
     Foldable t
@@ -738,14 +550,7 @@ variantCreation sumTyp variantName tag args offset allocFn = do
 
 -- | creates a variant creation definition function
 createVariantAllocaFunction ∷
-  ( HasThrow "err" Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
-    HasState "moduleDefinitions" [Definition] m,
-    HasState "names" Names m,
-    HasState "symtab" SymbolTable m,
+  ( Define m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
   ) ⇒
@@ -778,10 +583,7 @@ createVariantAllocaFunction variantName argTypes = do
                   createBlocks
 
 createVariantGen ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     Foldable t
@@ -807,14 +609,11 @@ createVariantGen variantName args allocFn = do
           Nothing →
             throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
           Just sumTyp →
-            variantCreation sumTyp variantName tag args offset alloca
+            variantCreation sumTyp variantName tag args offset allocFn
 
 -- | Creates a variant by calling alloca
 allocaVariant ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
+  ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     Foldable t
@@ -826,13 +625,9 @@ allocaVariant variantName args = createVariantGen variantName args alloca
 
 -- | Creates a variant by calling malloc
 mallocVariant ∷
-  ( HasThrow "err" Errors m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name m,
+  ( Call m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
-    HasState "symtab" SymbolTable m,
     Foldable t
   ) ⇒
   Symbol →
@@ -845,22 +640,18 @@ mallocVariant variantName args size = createVariantGen variantName args (mallocT
 -- Symbol Table
 -------------------------------------------------------------------------------
 
-assign ∷
-  (HasState "symtab" SymbolTable m) ⇒
-  Symbol →
-  Operand →
-  m ()
+assign ∷ (HasState "symTab" SymbolTable m) ⇒ Symbol → Operand → m ()
 assign var x = do
-  modify @"symtab" (Map.insert var x)
+  modify @"symTab" (Map.insert var x)
 
 getvar ∷
-  ( HasState "symtab" SymbolTable m,
+  ( HasState "symTab" SymbolTable m,
     HasThrow "err" Errors m
   ) ⇒
   Symbol →
   m Operand
 getvar var = do
-  syms ← get @"symtab"
+  syms ← get @"symTab"
   case Map.lookup var syms of
     Just x →
       return x
