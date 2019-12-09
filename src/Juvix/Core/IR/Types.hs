@@ -108,7 +108,6 @@ data TypecheckError primTy primVal m
   | ShouldBeFunctionType (Value primTy primVal m) (Term primTy primVal)
   | UnboundIndex Natural
   | SigmaMustBeZero
-  | SigmaMustBe0or1
   | UsageMustBeZero
   | UsageNotCompatible (Annotation primTy primVal m) (Annotation primTy primVal m)
   | UnboundBinder Natural Name
@@ -144,8 +143,6 @@ instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (En
     "unbound index " <> show n
   show (SigmaMustBeZero) =
     "Sigma has to be 0."
-  show (SigmaMustBe0or1) =
-    "Sigma must be 0 or 1."
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =

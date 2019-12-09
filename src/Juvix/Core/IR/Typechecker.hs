@@ -224,17 +224,6 @@ typeTerm p ii g t@(Lam m) ann = do
     (sig, VPi pi ty ty') → do
       -- Lam m should be of dependent function type (Pi) with sigma usage. 
       logOutput $ 
-        "Checking that input usage " <> 
-        show sig <>
-        " is 0 or 1. "
-      unless  
-        (sig == SNat 0 || sig == SNat 1)
-        (do
-          logOutput $
-            failed <> "Sigma is not 0 or 1. "
-          throw @"typecheckError" (SigmaMustBe0or1)
-        )
-      logOutput $ 
         passed <> 
         "Checking that M, with x (annotated with sig*pi usage) in the context, type checked against the input annotation. "
       ty' ← ty' (vfree (Local ii)) -- apply the function, result is of type T
@@ -361,17 +350,6 @@ typeElim p ii g e@(App m n) = do
   mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
     (sig, VPi pi varTy resultTy) → do
-      logOutput $ 
-        "Checking that input usage " <> 
-        show sig <>
-        " is 0 or 1. "
-      unless  
-        (sig == SNat 0 || sig == SNat 1)
-        (do
-          logOutput $
-            failed <> "Sigma is not 0 or 1. "
-          throw @"typecheckError" (SigmaMustBe0or1)
-        )
       logOutput $
         passed <>
         "The function (M) has usage " <>
