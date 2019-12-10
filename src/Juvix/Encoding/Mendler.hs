@@ -21,8 +21,8 @@ import Prelude (error)
 -- | adtToMendler converts an adt into an environment where the mendler
 -- encoding is defined for case functions
 adtToMendler ∷
-  ( HasState "constructors" (Map.Map Symbol Bound) m,
-    HasState "adtMap" (Map.Map Symbol Branches) m,
+  ( HasState "constructors" (Map.T Symbol Bound) m,
+    HasState "adtMap" (Map.T Symbol Branches) m,
     HasThrow "err" Errors m
   ) ⇒
   Name →
@@ -80,8 +80,8 @@ adtToMendler (Adt name s) = sumRec s 0
                   )
 
 mendlerCase ∷
-  ( HasState "constructors" (Map.Map Symbol Bound) m,
-    HasState "adtMap" (Map.Map Symbol Branches) m,
+  ( HasState "constructors" (Map.T Symbol Bound) m,
+    HasState "adtMap" (Map.T Symbol Branches) m,
     HasThrow "err" Errors m,
     HasWriter "missingCases" [Symbol] m
   ) ⇒

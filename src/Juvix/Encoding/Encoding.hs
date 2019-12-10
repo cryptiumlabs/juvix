@@ -16,8 +16,8 @@ import Prelude (error)
 -- takes a few arguments to determine what to do when there are no arguments to
 -- a case and how to combine the different cases
 caseGen ∷
-  ( HasState "constructors" (Map.Map Symbol Bound) m,
-    HasState "adtMap" (Map.Map Symbol Branches) m,
+  ( HasState "constructors" (Map.T Symbol Bound) m,
+    HasState "adtMap" (Map.T Symbol Branches) m,
     HasThrow "err" Errors m,
     HasWriter "missingCases" [Symbol] m
   ) ⇒
@@ -65,8 +65,8 @@ caseGen (Case on cases@(C c _ _ : _)) onNoArg onRec = do
 -- Helper for Mendler and Scott encodings --------------------------------------
 
 adtConstructor ∷
-  ( HasState "adtMap" (Map.Map Symbol [k]) m,
-    HasState "constructors" (Map.Map k Bound) m,
+  ( HasState "adtMap" (Map.T Symbol [k]) m,
+    HasState "constructors" (Map.T k Bound) m,
     HasThrow "err" Errors m,
     Hashable k,
     Eq k

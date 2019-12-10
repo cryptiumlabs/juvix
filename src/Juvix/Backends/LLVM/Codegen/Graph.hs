@@ -3,7 +3,7 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
-import Juvix.Library hiding (Type, local, link)
+import Juvix.Library hiding (Type, link, local)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred

@@ -26,7 +26,7 @@ data CodegenState
       { -- | Name of the active block to append to
         currentBlock ∷ Name,
         -- | Blocks for function
-        blocks ∷ Map.Map Name BlockState,
+        blocks ∷ Map.T Name BlockState,
         -- | Function scope symbol table
         symTab ∷ SymbolTable,
         -- | Mapping from symbol to Type
@@ -70,7 +70,7 @@ newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) 
     (HasState "currentBlock" Name)
     via Field "currentBlock" () (MonadState (ExceptT Errors (State CodegenState)))
   deriving
-    (HasState "blocks" (Map.Map Name BlockState))
+    (HasState "blocks" (Map.T Name BlockState))
     via Field "blocks" () (MonadState (ExceptT Errors (State CodegenState)))
   deriving
     (HasState "symTab" SymbolTable)
@@ -119,7 +119,7 @@ newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
 
 type Instruct m =
   ( HasThrow "err" Errors m,
-    HasState "blocks" (Map.Map Name BlockState) m,
+    HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m
   )
 

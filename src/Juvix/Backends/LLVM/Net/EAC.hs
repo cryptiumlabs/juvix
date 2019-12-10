@@ -164,7 +164,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 genContinueCase ∷
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
+    HasState "blocks" (Map.T Name.Name Codegen.BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Codegen.Names m

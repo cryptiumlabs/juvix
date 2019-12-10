@@ -19,7 +19,7 @@ data Type primTy
     Pi Usage (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
 
-type TypeAssignment primTy = Map.Map Symbol (Type primTy)
+type TypeAssignment primTy = Map.T Symbol (Type primTy)
 
 data EvaluationError primVal
   = PrimitiveApplicationError primVal primVal
