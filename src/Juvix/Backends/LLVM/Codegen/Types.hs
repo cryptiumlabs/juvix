@@ -1,10 +1,12 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Juvix.Backends.LLVM.Codegen.Types
   ( module Juvix.Backends.LLVM.Codegen.Types,
     module Juvix.Backends.LLVM.Codegen.Shared,
   )
 where
 
-import Data.ByteString.Short
+import Data.ByteString.Short hiding (empty)
 import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
@@ -112,6 +114,39 @@ newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
     via Field "moduleDefinitions" () (MonadState (State AST.Module))
 
 --------------------------------------------------------------------------------
+-- Effect Aliases
+--------------------------------------------------------------------------------
+
+type Instruct m =
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.Map Name BlockState) m,
+    HasState "currentBlock" Name m
+  )
+
+type RetInstruction m =
+  ( HasState "count" Word m,
+    Instruct m
+  )
+
+type Define m =
+  ( RetInstruction m,
+    HasState "blockCount" Int m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m,
+    HasState "symTab" SymbolTable m
+  )
+
+type Extern m =
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symTab" SymbolTable m
+  )
+
+type Call m =
+  ( RetInstruction m,
+    HasState "symTab" SymbolTable m
+  )
+
+--------------------------------------------------------------------------------
 -- Haskell Types
 --------------------------------------------------------------------------------
 
@@ -126,6 +161,9 @@ data MinimalPtr
 --------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
+
+-- TODO ∷ change all Type → Type into a reader monad
+-- instantiate similar to how Parsec does it
 
 -- | 'varientToType' takes the type out of the variant
 varientToType ∷ VariantInfo → Type
@@ -185,25 +223,28 @@ numPortsSize = 17
 
 -- | Construct a 16 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
-nodePointer ∷ Type
-nodePointer = PointerType
-  { pointerReferent = nodeType,
+nodePointer ∷ Type → Type
+nodePointer nodePtrType = PointerType
+  { pointerReferent = nodeType nodePtrType,
     pointerAddrSpace = AddrSpace 16
   }
 
-portType ∷ Type
-portType = StructureType
+nodePointerSize ∷ Num p ⇒ p
+nodePointerSize = 16
+
+portType ∷ Type → Type
+portType nodePtr = StructureType
   { isPacked = True,
     elementTypes =
-      [ nodePointer, -- the pointer to the other node
+      [ nodePtr, -- the pointer to the other node
         numPorts -- the offset from the base of the node where the port is
       ]
   }
 
 -- TODO ∷ getElementPtr returns int32*?
-portPointer ∷ Type
-portPointer = PointerType
-  { pointerReferent = portType,
+portPointer ∷ Type → Type
+portPointer nodePtr = PointerType
+  { pointerReferent = portType nodePtr,
     pointerAddrSpace = AddrSpace 32
   }
 
@@ -218,26 +259,26 @@ dataTypeSize ∷ Num p ⇒ p
 dataTypeSize = 64
 
 -- TODO ∷ Figure out how to get varying data in here
-nodeType ∷ Type
-nodeType = StructureType
+nodeType ∷ Type → Type
+nodeType nodePtrType = StructureType
   { isPacked = True,
     elementTypes =
       [ numPorts, -- length of the portData
-        ArrayType 0 portType, -- variable size array of ports
+        ArrayType 0 (portType nodePtrType), -- variable size array of ports
         ArrayType 0 dataType -- variable size array of data the node stores
       ]
   }
 
-portData ∷ Type
-portData = ArrayType 0 portType
+portData ∷ Type → Type
+portData nodePtrType = ArrayType 0 (portType nodePtrType)
 
 -- Holds the port type and the size of it for easy transition into nodeType
-portArrayLen ∷ Type
-portArrayLen = StructureType
+portArrayLen ∷ Type → Type
+portArrayLen nodePtrType = StructureType
   { isPacked = False,
     elementTypes =
       [ numPorts,
-        portData
+        portData nodePtrType
       ]
   }
 
@@ -247,3 +288,18 @@ vaList = StructureType
   { isPacked = False,
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
+
+bothPrimary ∷ Type → Type
+bothPrimary nodePtrType = StructureType
+  { isPacked = False,
+    elementTypes = [Type.i1, nodePtrType]
+  }
+
+voidStarTy ∷ Type
+voidStarTy = PointerType VoidType (AddrSpace 32)
+
+voidTy ∷ Type
+voidTy = VoidType
+
+size_t ∷ Type
+size_t = IntegerType 64

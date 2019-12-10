@@ -27,12 +27,12 @@ data NatVal
   | Curried NatVal Natural
   deriving (Show, Eq)
 
-typeOf ∷ NatVal → [NatTy]
-typeOf (Natural _) = [Nat]
-typeOf (Curried _ _) = [Nat, Nat]
-typeOf Add = [Nat, Nat, Nat]
-typeOf Sub = [Nat, Nat, Nat]
-typeOf Mul = [Nat, Nat, Nat]
+typeOf ∷ NatVal → NonEmpty NatTy
+typeOf (Natural _) = Nat :| []
+typeOf (Curried _ _) = Nat :| [Nat]
+typeOf Add = Nat :| [Nat, Nat]
+typeOf Sub = Nat :| [Nat, Nat]
+typeOf Mul = Nat :| [Nat, Nat]
 
 apply ∷ NatVal → NatVal → Maybe NatVal
 apply Add (Natural x) = pure (Curried Add x)

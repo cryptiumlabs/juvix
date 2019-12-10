@@ -1,5 +1,6 @@
 module Juvix.Core.Erased.Types where
 
+import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
 
@@ -15,7 +16,11 @@ data Type primTy
   | Star Natural
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
-    Pi (Type primTy) (Type primTy)
+    Pi Usage (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
 
 type TypeAssignment primTy = Map.Map Symbol (Type primTy)
+
+data EvaluationError primVal
+  = PrimitiveApplicationError primVal primVal
+  deriving (Show, Eq, Generic)

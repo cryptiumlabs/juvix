@@ -11,11 +11,12 @@ data CompilationError
   | InvalidInputType
   | InternalFault Text
   | DidNotTypecheck M.TCError
+  | DidNotTypecheckAfterOptimisation M.TCError
   deriving (Show, Eq, Generic)
 
 data CompilationLog
   = TermToInstr Term Op
-  | Optimised SomeInstr SomeInstr
+  | Optimised Op Op
   deriving (Generic)
 
 type Stack = [(StackElem, M.Type)]

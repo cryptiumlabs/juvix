@@ -43,7 +43,7 @@ parameterizeType ty = do
       pure (PPrimT p)
     SymT sym →
       pure (PSymT param sym)
-    Pi arg body → do
+    Pi _ arg body → do
       arg ← parameterizeType arg
       body ← parameterizeType body
       pure (PArrT param arg body)
@@ -83,7 +83,8 @@ unificationConstraints ∷
   PType primTy →
   PType primTy →
   m ()
-unificationConstraints (PPrimT p1) (PPrimT p2) =
+unificationConstraints (PPrimT _) (PPrimT _) =
+  -- TODO: Check p1 == p2 here?
   pure ()
 unificationConstraints (PSymT a _) (PSymT b _) =
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
@@ -91,6 +92,9 @@ unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
   addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
   unificationConstraints aArg bArg
   unificationConstraints aRes bRes
+unificationConstraints _ _ =
+  -- TODO: Throw an error here?
+  pure mempty
 
 --unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
 
@@ -111,8 +115,8 @@ boxAndTypeConstraint ∷
   m (RPT primVal, PType primTy)
 boxAndTypeConstraint parameterisation parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterisation parameterizedAssignment
-      arrow [x] = PPrimT x
-      arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
+      arrow (x :| []) = PPrimT x
+      arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
   varPaths ← get @"varPaths"
   param ← addPath
   path ← get @"path"
@@ -276,8 +280,8 @@ bracketCheckerErr t = left Brack (bracketChecker t)
 typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
 typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
   where
-    arrow [x] = PPrimT x
-    arrow (x : xs) = PArrT 0 (PPrimT x) (arrow xs)
+    arrow (x :| []) = PPrimT x
+    arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
     rec' (RBang bangVar (RVar s)) assign =
       case assign Map.!? s of
         Nothing → throw @"typ" MissingOverUse
@@ -295,7 +299,7 @@ typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
             newTyp ← addParamPos bangApp result
             pure (newAssign', newTyp)
           | otherwise → throw @"typ" (MisMatchArguments arg type2 term)
-        t@PSymT {} → throw @"typ" (TypeIsNotFunction t)
+        t@_ → throw @"typ" (TypeIsNotFunction t)
     rec' (RBang x (RLam s t)) assign = do
       (newAssign, bodyType) ← rec' t assign
       case assign Map.!? s of

@@ -15,17 +15,17 @@ type PrimTy = ()
 
 type PrimVal = ()
 
-typeOf ∷ PrimVal → [PrimTy]
-typeOf () = [()]
+typeOf ∷ PrimVal → NonEmpty PrimTy
+typeOf () = () :| []
 
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
-parseTy lexer = undefined
+parseTy _ = mempty
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser PrimVal
-parseVal lexer = undefined
+parseVal _ = mempty
 
 reservedNames ∷ [String]
 reservedNames = []

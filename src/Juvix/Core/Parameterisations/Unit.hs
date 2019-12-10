@@ -23,8 +23,8 @@ data UnitVal
   = Unit
   deriving (Show, Eq)
 
-typeOf ∷ UnitVal → [UnitTy]
-typeOf Unit = [TUnit]
+typeOf ∷ UnitVal → NonEmpty UnitTy
+typeOf Unit = TUnit :| []
 
 apply ∷ UnitVal → UnitVal → Maybe UnitVal
 apply _ _ = Nothing

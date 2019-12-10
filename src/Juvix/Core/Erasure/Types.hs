@@ -7,7 +7,7 @@ import Juvix.Library hiding (empty)
 data Env primTy primVal
   = Env
       { typeAssignment ∷ Erased.TypeAssignment primTy,
-        context ∷ IR.Context primTy primVal,
+        context ∷ IR.Context primTy primVal (IR.EnvTypecheck primTy primVal),
         nextName ∷ Int,
         nameStack ∷ [Int]
       }
@@ -19,7 +19,7 @@ newtype EnvErasure primTy primVal a = EnvEra (ExceptT ErasureError (State (Env p
     (HasState "typeAssignment" (Erased.TypeAssignment primTy))
     via Field "typeAssignment" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
   deriving
-    (HasState "context" (IR.Context primTy primVal))
+    (HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)))
     via Field "context" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
   deriving
     (HasState "nextName" Int)
