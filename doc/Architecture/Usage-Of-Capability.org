@@ -1,9 +1,9 @@
 * Usage of the Capability Library
-- Historically Haskell is written with the =mtl= library. This library
-  allows =Monads= to stack ontop of each other in a linear fashion. This
+- Historically Haskell has been written with the =mtl= library. This library
+  allows =Monads= to stack on top of each other in a linear fashion. This
   is very nice, as it allows the pluming of how each layer interacts to
-  be abstracted away. However these advancements do not come without a
-  cost which are outlined below
+  be abstracted away. However these advancements do not come without
+  costs which are outlined below
   + _Downsides with MTL_
     * [[https://www.fpcomplete.com/blog/2017/06/readert-design-pattern][ReaderT design pattern]].
       - This means that as our monad stacks grow and our state monad
@@ -46,14 +46,14 @@
         it is, thankfully.
   + _Inefficiencies in execution_
     # TODO put in source
-    * GHC thankfully knows how to optimize a single layer Monad like
-      reader or State very well, so performance should be great.
+    * GHC thankfully knows how to optimize a single layer monad like
+      Reader or State very well, so performance should be great.
 
 ** Further Improvements
-Currently the Capability library only Displays each field of a record
-as an effect, ideally we'd instead have effects explain certain kinds
+Currently the capability library only displays each field of a record
+as an effect. Ideally we'd have effects explain certain kinds
 of computation instead, and logically bundle these fields into some
 kind of greater effect.
 
 Tomas has brought to my attention of the [[https://github.com/hasura/eff][eff library]] which may some
-day replace our usage of capability or aid the usage.
+day replace or aid our usage of capability.
