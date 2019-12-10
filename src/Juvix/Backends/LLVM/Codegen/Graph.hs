@@ -281,7 +281,7 @@ delNode = undefined
 setPort ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "blocks" (Map.T Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
