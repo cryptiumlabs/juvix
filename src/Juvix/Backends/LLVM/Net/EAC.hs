@@ -3,6 +3,25 @@
 --   EAC layer gets run
 -- - The form given to =EAC= is not the base EAC AST, but instead a
 --   pre processed =EAC= graph that the initial graph will be made on
+--
+-- - _Allocation_
+--   + layout :
+--     {eac | NodePtr* [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+--     * Similar to the one in Graph, however it also has the eac tag
+--
+--    | Part         | Alloca Or Malloc   |
+--    |--------------+--------------------|
+--    | eac          | Malloc             |
+--    | portSize     | Malloc             |
+--    | PortArray    | Malloc             |
+--    | DataArray    | Malloc             |
+--    | PortLocation | Not Allocated Here |
+--    | NodePtr      | Not Allocated Here |
+--    | Data         | Not Allocated Here |
+--
+-- - Node Pointers are allocated at node creation time, so not the
+--   responsibility of the node to de-allocate, but instead uses the
+--   default strategy laid out in [[Codegen/Graph]]
 module Juvix.Backends.LLVM.Net.EAC where
 
 -- TODO ∷ abstract all all imports to LLVM
@@ -364,26 +383,6 @@ fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
-
-
--- layout :
---   {eac | Node [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
---
--- | Part         | Alloca Or Malloc   |
--- |--------------+--------------------|
--- | eac          | Malloc             |
--- | portSize     | Malloc             |
--- | PortArray    | Malloc             |
--- | DataArray    | Malloc             |
--- | PortLocation | Not Allocated Here |
--- | NodePtr      | Not Allocated Here |
--- | Data         | Not Allocated Here |
---
---- ports are mallocd at the top level
---- Node Pointers are allocated at node creation time, so not the
---  responsibility of the node to de-allocate
-
-
 
 mallocGen ∷
   ( Codegen.Call m,

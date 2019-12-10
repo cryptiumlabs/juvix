@@ -1,9 +1,46 @@
 -- | Operations necessary to update nodes
+--
+-- - Allocation layout as described by =mallocNodeH=
+--
+--   + layout :
+--     [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
+--
+--   | Part         | Alloca Or Malloc  |
+--   |--------------+-------------------|
+--   | portSize     | Malloc            |
+--   | PortArray    | Malloc            |
+--   | DataArray    | Malloc            |
+--   | PortLocation | Previously Allocd |
+--   | NodePtr      | Previously Allocd |
+--   | Data         | Previously Allocd |
+--
+-- - Notably PortLocation, NodePtr, and Data are not allocated here,
+--   but are instead sent in.
+--
+-- - Currently =defineMainPort=, =defineAuxiliary1= \dots
+--   =defineAuxiliary4= malloc the first four ports, and this is what
+--   link sets for the nodes.
+--
+--   + This has some trade offs, namely we don't have to alloca more
+--     ports, however this will lead to waste if say =auxiliary4= is
+--     never used.
+--
+--   + In the future this should turn to an alloca, and thus to
+--     dealloc a node, we need not iterate over i.
+--
+-- - For de-allocating a node, one needs only to de-allocate the
+--   portSize, the two arrays, and the node pointer itself.
+--
+--   + Currently, node pointers are allocated when nodes are made, and
+--     so are not the responsibility of a node to deallocate all the
+--     pointers.
+--     * this however is up to the Net representation themselves, and
+--       thus should modify the default deallocate node functionality
 module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
-import Juvix.Library hiding (Type, local, link)
+import Juvix.Library hiding (Type, link, local)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
@@ -102,24 +139,11 @@ defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
   where
     args = [(nodeType nodePtrType, "node"), (numPorts, "port")]
 
-
 mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
 mallocNode t size = Block.malloc size (nodeType t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
-
--- layout :
---   [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
-
--- | Part         | Alloca Or Malloc  |
--- |--------------+-------------------|
--- | portSize     | Malloc            |
--- | PortArray    | Malloc            |
--- | DataArray    | Malloc            |
--- | PortLocation | Previously Allocd |
--- | NodePtr      | Previously Allocd |
--- | Data         | Previously Allocd |
 
 -- TODO ∷ could be storing data wrong... find out
 mallocNodeH ∷
