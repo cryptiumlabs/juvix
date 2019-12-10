@@ -82,6 +82,7 @@ depIdentityCompTy =
                   (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
                   (const (pure (IR.VNeutral (IR.NFree (IR.Local 0)))))
                 -- the output is of the type that's the same as the second input of this annotation. I.e., t
+                -- TODO: is this right? Chris thinks `t` should be at index 1 and the return type should be t
               )
           )
       )
