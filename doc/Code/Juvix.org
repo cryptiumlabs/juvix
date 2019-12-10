@@ -39,6 +39,7 @@ Serves as a mini DSL layer above LLVM
   + [[Constants]]
   + [[Codegen/Default]]
   + [[Codegen/Graph]]
+  + [[Codegen/Shared]]
   + [[Codegen/Types]]
 ***** Block
 - Has the code necessary to generate LLVM Code
@@ -89,6 +90,10 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Library]]
 **** Net
+***** Environment
+- Serves as the default environment for executing EAC code
+- _Relies on_
+  + [[Library]]
 ***** EAC <<Net/EAC>>
 - =EAC= serves as the place where the interaction net rules for the
   EAC layer gets run

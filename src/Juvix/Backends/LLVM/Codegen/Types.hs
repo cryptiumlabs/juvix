@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Juvix.Backends.LLVM.Codegen.Types
   ( module Juvix.Backends.LLVM.Codegen.Types,
     module Juvix.Backends.LLVM.Codegen.Shared,
@@ -112,6 +114,39 @@ newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
     via Field "moduleDefinitions" () (MonadState (State AST.Module))
 
 --------------------------------------------------------------------------------
+-- Effect Aliases
+--------------------------------------------------------------------------------
+
+type Instruct m =
+  ( HasThrow "err" Errors m,
+    HasState "blocks" (Map.Map Name BlockState) m,
+    HasState "currentBlock" Name m
+  )
+
+type RetInstruction m =
+  ( HasState "count" Word m,
+    Instruct m
+  )
+
+type Define m =
+  ( RetInstruction m,
+    HasState "blockCount" Int m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m,
+    HasState "symTab" SymbolTable m
+  )
+
+type Extern m =
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symTab" SymbolTable m
+  )
+
+type Call m =
+  ( RetInstruction m,
+    HasState "symTab" SymbolTable m
+  )
+
+--------------------------------------------------------------------------------
 -- Haskell Types
 --------------------------------------------------------------------------------
 
@@ -193,6 +228,9 @@ nodePointer nodePtrType = PointerType
   { pointerReferent = nodeType nodePtrType,
     pointerAddrSpace = AddrSpace 16
   }
+
+nodePointerSize ∷ Num p ⇒ p
+nodePointerSize = 16
 
 portType ∷ Type → Type
 portType nodePtr = StructureType

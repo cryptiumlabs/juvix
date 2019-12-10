@@ -7,10 +7,7 @@ module Juvix.Backends.LLVM.DSL where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Library hiding (reduce)
-import qualified Juvix.Library.HashMap as Map
-import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
-import qualified LLVM.AST.Type as Type
 import Prelude (error)
 
 -- | Type for specifying how one wants to link nodes
@@ -45,15 +42,10 @@ data REL node port
 data Auxiliary = Prim | Aux1 | Aux2 | Aux3 | Aux4 deriving (Show, Eq)
 
 auxiliaryToPort ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+  ( HasState "symTab" Codegen.SymbolTable m,
+    HasThrow "err" Codegen.Errors m
   ) ⇒
   Auxiliary →
-  Type.Type →
   m Operand.Operand
 auxiliaryToPort Prim = Codegen.mainPort
 auxiliaryToPort Aux1 = Codegen.auxiliary1
@@ -61,51 +53,30 @@ auxiliaryToPort Aux2 = Codegen.auxiliary2
 auxiliaryToPort Aux3 = Codegen.auxiliary3
 auxiliaryToPort Aux4 = Codegen.auxiliary4
 
-linkAll ∷
-  ( HasThrow "err" Codegen.Errors f,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) f,
-    HasState "count" Word f,
-    HasState "currentBlock" Name.Name f,
-    HasState "symtab" Codegen.SymbolTable f,
-    HasState "typTab" Codegen.TypeTable f,
-    HasState "varTab" Codegen.VariantToType f
-  ) ⇒
-  Type.Type →
-  Relink Operand.Operand Auxiliary →
-  f ()
-linkAll t (RelAuxiliary node p a1 a2 a3 a4) = do
+linkAll ∷ Codegen.Call m ⇒ Relink Operand.Operand Auxiliary → m ()
+linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
   -- Reodoing Codegen.mainPort/auxiliary* may or may not have an extra cost.
   -- TODO ∷ if it does, make them once at the top level and pass them around in the env!
-  let flipHelper p l = linkHelper t l node p
-  flipHelper (Codegen.mainPort t) p
-  flipHelper (Codegen.auxiliary1 t) a1
-  flipHelper (Codegen.auxiliary2 t) a2
-  flipHelper (Codegen.auxiliary3 t) a3
-  flipHelper (Codegen.auxiliary4 t) a4
+  let flipHelper p l = linkHelper l node p
+  flipHelper Codegen.mainPort p
+  flipHelper Codegen.auxiliary1 a1
+  flipHelper Codegen.auxiliary2 a2
+  flipHelper Codegen.auxiliary3 a3
+  flipHelper Codegen.auxiliary4 a4
 
 linkHelper ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "symtab" Codegen.SymbolTable m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  Type.Type →
+  Codegen.Call f ⇒
   REL Operand.Operand Auxiliary →
   Operand.Operand →
-  m Operand.Operand →
-  m ()
-linkHelper _ None _ _ =
+  f Operand.Operand →
+  f ()
+linkHelper None _ _ =
   pure ()
-linkHelper ty (Link nl pl) node port = do
-  -- TODO ∷ see if this extra "allocation" actually is costly
+linkHelper (Link nl pl) node port = do
   port ← port
-  p ← auxiliaryToPort pl ty
+  p ← auxiliaryToPort pl
   Codegen.link [node, port, nl, p]
-linkHelper ty (LinkConnected nl pl) node port = do
-  -- TODO ∷ see if this extra "allocation" actually is costly
+linkHelper (LinkConnected nl pl) node port = do
   port ← port
-  p ← auxiliaryToPort pl ty
+  p ← auxiliaryToPort pl
   Codegen.linkConnectedPort [nl, p, node, port]
