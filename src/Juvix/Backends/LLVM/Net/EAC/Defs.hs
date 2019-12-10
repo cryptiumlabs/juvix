@@ -79,3 +79,6 @@ defineRewire = Codegen.defineRewire Types.eacPointer
 
 defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
 defineLinkConnectedPort = Codegen.defineLinkConnectedPort Types.eacPointer
+
+deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
+deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr Types.eacPointer

@@ -86,6 +86,11 @@ Operations necessary to update nodes
     pointers.
     * this however is up to the Net representation themselves, and
       thus should modify the default deallocate node functionality
+- TODO :: Consider a separate allocation strategy, namely instead
+          of mallocing portSize portArray and dataArray, alloca
+          them all, and just malloc the node pointer over it with
+          the full size, Rewrite this entire section and the
+          deallocate function if this is more optimal
 - _Relies on_
   + [[Block]]
   + [[Codegen/Types]]

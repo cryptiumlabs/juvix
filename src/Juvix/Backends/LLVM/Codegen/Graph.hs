@@ -36,6 +36,12 @@
 --     pointers.
 --     * this however is up to the Net representation themselves, and
 --       thus should modify the default deallocate node functionality
+--
+-- - TODO :: Consider a separate allocation strategy, namely instead
+--           of mallocing portSize portArray and dataArray, alloca
+--           them all, and just malloc the node pointer over it with
+--           the full size, Rewrite this entire section and the
+--           deallocate function if this is more optimal
 module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
@@ -289,7 +295,31 @@ defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
         (numPorts, "port_two")
       ]
 
-delNode = undefined
+deAllocateNode ∷ Define m ⇒ Operand.Operand → Type.Type → m Operand.Operand
+deAllocateNode nodePtr nodePtrType = do
+  node ← load (nodeType nodePtrType) nodePtr
+  size ← getElementPtr $
+    Types.Minimal
+      { Types.type' = numPorts,
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 0]
+      }
+  ports ← getElementPtr $
+    Types.Minimal
+      { Types.type' = portData nodePtrType,
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 1]
+      }
+  datas ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Type.ArrayType 0 dataType,
+        Types.address' = node,
+        Types.indincies' = Block.constant32List [0, 2]
+      }
+  _ ← free datas
+  _ ← free ports
+  _ ← free size
+  free nodePtr
 
 --------------------------------------------------------------------------------
 -- Helpers

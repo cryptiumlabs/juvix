@@ -251,20 +251,22 @@ annihilateRewireAux args = do
   _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
   pure ()
 
+-- TODO ∷ send in eac Pointers and deallocate them as well
+-- TODO ∷ fixup node type being sent in!
+
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
 annihilateRewireAux' ∷ Codegen.Define m ⇒ m Operand.Operand
 annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
   do
-    -- TODO remove these explicit allocations
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
     node1 ← Codegen.externf "node_1"
     node2 ← Codegen.externf "node_2"
     Codegen.rewire [node1, aux1, node2, aux1]
     Codegen.rewire [node1, aux2, node2, aux2]
-    _ ← Codegen.delNode node1
-    Codegen.delNode node2
+    _ ← Defs.deAllocateNode node1
+    Defs.deAllocateNode node2
   where
     args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
 
