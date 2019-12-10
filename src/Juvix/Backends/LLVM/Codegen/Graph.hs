@@ -102,18 +102,24 @@ defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
   where
     args = [(nodeType nodePtrType, "node"), (numPorts, "port")]
 
--- TODO ∷ allocaPorts, allocaPortType, allocaData, allocaNodeType
--- Name           | Arguments
--- allocaNodeType : two array args
--- allocaPortType : nodePointer ∧ numPorts
--- allocaPorts    : variable args of ports
--- allocaData     : variable args of dataType
 
 mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
 mallocNode t size = Block.malloc size (nodeType t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
+
+-- layout :
+--   [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
+
+-- | Part         | Alloca Or Malloc  |
+-- |--------------+-------------------|
+-- | portSize     | Malloc            |
+-- | PortArray    | Malloc            |
+-- | DataArray    | Malloc            |
+-- | PortLocation | Previously Allocd |
+-- | NodePtr      | Previously Allocd |
+-- | Data         | Previously Allocd |
 
 -- TODO ∷ could be storing data wrong... find out
 mallocNodeH ∷

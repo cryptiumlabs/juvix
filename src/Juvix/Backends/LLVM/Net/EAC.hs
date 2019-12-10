@@ -364,6 +364,27 @@ fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
+
+
+-- layout :
+--   {eac | Node [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+--
+-- | Part         | Alloca Or Malloc   |
+-- |--------------+--------------------|
+-- | eac          | Malloc             |
+-- | portSize     | Malloc             |
+-- | PortArray    | Malloc             |
+-- | DataArray    | Malloc             |
+-- | PortLocation | Not Allocated Here |
+-- | NodePtr      | Not Allocated Here |
+-- | Data         | Not Allocated Here |
+--
+--- ports are mallocd at the top level
+--- Node Pointers are allocated at node creation time, so not the
+--  responsibility of the node to de-allocate
+
+
+
 mallocGen ∷
   ( Codegen.Call m,
     HasState "typTab" Codegen.TypeTable m,
