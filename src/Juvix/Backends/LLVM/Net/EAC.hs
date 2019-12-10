@@ -256,8 +256,9 @@ annihilateRewireAux args = do
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-annihilateRewireAux' ∷ Codegen.Define m ⇒ m Operand.Operand
-annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
+defineAnnihilateRewireAux ∷ Codegen.Define m ⇒ m Operand.Operand
+defineAnnihilateRewireAux =
+  Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
   do
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
