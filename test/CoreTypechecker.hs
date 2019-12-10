@@ -75,14 +75,16 @@ depIdentityCompTy =
     IR.VPi -- the first input, t
       (SNat 0) -- t's usage
       (IR.VStar 0) -- first input's type, is type
-      ( const (pure
-          ( IR.VPi -- the second input, x
-              (SNat 1) -- x's usage
-              (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
-              (const (pure (IR.VNeutral (IR.NFree (IR.Local 0))))) 
-              -- the output is of the type that's the same as the second input of this annotation. I.e., t
+      ( const
+          ( pure
+              ( IR.VPi -- the second input, x
+                  (SNat 1) -- x's usage
+                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
+                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 0)))))
+                -- the output is of the type that's the same as the second input of this annotation. I.e., t
+              )
           )
-      ))
+      )
   )
 
 -- \x.x 1
@@ -162,13 +164,15 @@ kCompTy =
     IR.VPi -- first input, 1 Nat
       (SNat 1) -- is used once in the output
       (IR.VPrimTy Nat) -- of type Nat
-      ( const (pure
-          ( IR.VPi -- second input, 0 Nat
-              (SNat 0) -- is not used in the output
-              (IR.VPrimTy Nat) -- of type Nat
-              (const (pure (IR.VPrimTy Nat))) -- the output is of type Nat
+      ( const
+          ( pure
+              ( IR.VPi -- second input, 0 Nat
+                  (SNat 0) -- is not used in the output
+                  (IR.VPrimTy Nat) -- of type Nat
+                  (const (pure (IR.VPrimTy Nat))) -- the output is of type Nat
+              )
           )
-      ))
+      )
   )
 
 -- K computation annotation (1, 1 Nat -> 0 () -> Nat)
@@ -178,13 +182,15 @@ kCompTyWithUnit =
     IR.VPi -- first input, 1 Nat
       (SNat 1) -- is used once in the output
       (IR.VPrimTy (All.NatTy Nat)) -- of type Nat
-      ( const (pure
-          ( IR.VPi -- second input, 0 Unit
-              (SNat 0) -- is not used in the output
-              (IR.VPrimTy (All.UnitTy TUnit)) -- of type Unit
-              (const (pure (IR.VPrimTy (All.NatTy Nat)))) -- the output is of type Nat
+      ( const
+          ( pure
+              ( IR.VPi -- second input, 0 Unit
+                  (SNat 0) -- is not used in the output
+                  (IR.VPrimTy (All.UnitTy TUnit)) -- of type Unit
+                  (const (pure (IR.VPrimTy (All.NatTy Nat)))) -- the output is of type Nat
+              )
           )
-      ))
+      )
   )
 
 -- I K computation annotation (1, 1 (1 Nat -> 0 Nat -> Nat) -> ( 1 Nat -> 0 Nat -> Nat) -> (1 Nat -> 0 Nat-> Nat) )
@@ -240,7 +246,7 @@ kApp1 =
 natToNatTy ∷ NatAnnotation
 natToNatTy =
   ( SNat 1, -- sig usage
-    IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure(IR.VPrimTy Nat))) -- 0 Nat -> Nat
+    IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))) -- 0 Nat -> Nat
   )
 
 -- (1 (K: 1 Nat -> 0 (1 Nat -> Nat) -> Nat) 1) should type check to 0 (1 Nat -> Nat) -> Nat
@@ -403,31 +409,37 @@ scombinatorCompNatTy =
       ( IR.VPi
           (SNat 1)
           (IR.VPrimTy Nat) -- (1 Nat ->
-          ( const (pure
-              ( IR.VPi
-                  (SNat 0)
-                  (IR.VPrimTy Nat) -- 0 Nat ->
-                  (const (pure (IR.VPrimTy Nat))) -- Nat) ->
-              )
-          ))
-      )
-      ( const (pure
-          ( IR.VPi -- second input, (1 Nat -> Nat)
-              (SNat 1) -- usage of (1 Nat -> Nat)
-              ( IR.VPi
-                  (SNat 1)
-                  (IR.VPrimTy Nat) --(1 Nat ->
-                  (const (pure (IR.VPrimTy Nat))) -- Nat) ->
-              )
-              ( const (pure
+          ( const
+              ( pure
                   ( IR.VPi
-                      (SNat 2)
-                      (IR.VPrimTy Nat) -- 2 Nat ->
-                      (const (pure (IR.VPrimTy Nat))) -- Nat
-                  ))
+                      (SNat 0)
+                      (IR.VPrimTy Nat) -- 0 Nat ->
+                      (const (pure (IR.VPrimTy Nat))) -- Nat) ->
+                  )
               )
           )
-      ))
+      )
+      ( const
+          ( pure
+              ( IR.VPi -- second input, (1 Nat -> Nat)
+                  (SNat 1) -- usage of (1 Nat -> Nat)
+                  ( IR.VPi
+                      (SNat 1)
+                      (IR.VPrimTy Nat) --(1 Nat ->
+                      (const (pure (IR.VPrimTy Nat))) -- Nat) ->
+                  )
+                  ( const
+                      ( pure
+                          ( IR.VPi
+                              (SNat 2)
+                              (IR.VPrimTy Nat) -- 2 Nat ->
+                              (const (pure (IR.VPrimTy Nat))) -- Nat
+                          )
+                      )
+                  )
+              )
+          )
+      )
   )
 
 -- K 1 (I 1) = 1, so should type checked to (1, Nat)
