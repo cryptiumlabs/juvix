@@ -46,6 +46,9 @@ linkAll = DSL.linkAll
 nodeType ∷ Type.Type
 nodeType = Codegen.nodeType Types.eacPointer
 
+nodePointer ∷ Type.Type
+nodePointer = Codegen.nodePointer Types.eacPointer
+
 mallocNodeH ∷
   ( Codegen.RetInstruction m,
     HasState "typTab" Codegen.TypeTable m,

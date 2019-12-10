@@ -101,7 +101,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           -- %switch.*.continue
           Codegen.setBlock conCase
 
-        genContinueCaseD = genContinueCase tagNode nodePtr cdr defCase
+        genContinueCaseD = genContinueCase tagNode (nodePtr, car) cdr defCase
 
         swapArgs (x : y : xs) = y : x : xs
         swapArgs xs = xs
@@ -189,14 +189,15 @@ genContinueCase ∷
     HasState "names" Codegen.Names m
   ) ⇒
   Operand.Operand →
-  Operand.Operand →
+  (Operand.Operand, Operand.Operand) →
   Operand.Operand →
   Name.Name →
   Symbol →
   [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
   m (Operand.Operand, Name.Name)
-genContinueCase tagNode nodePtr cdr defCase prefix cases = do
-  nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
+genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
+  nodeEacPtr ← Defs.loadPrimaryNode tagNode
+  nodeEac ← Codegen.load Types.eac nodeEacPtr
   tagOther ← tagOf nodeEac
   blocksGeneratedList ← genBlockNames
   extBranch ← Codegen.addBlock (prefix <> "switch.exit")
@@ -204,10 +205,16 @@ genContinueCase tagNode nodePtr cdr defCase prefix cases = do
         -- %prefix.branch case
         ------------------------------------------------------
         _ ← Codegen.setBlock branch
-        -- node Types in which to do operations on
-        nodeOther' ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
-        nodePrimar ← Codegen.load Defs.nodeType nodePtr
-        updateList ← rule [nodePrimar, nodeOther', cdr]
+        -- node Pointer in which to do operations on
+        nodeOtherPtr ← nodeOf nodeEac
+        updateList ←
+          rule
+            [ mainNodePtr,
+              nodeEacPtr,
+              nodeOtherPtr,
+              mainEac,
+              cdr
+            ]
         _ ← Codegen.br extBranch
         pure (updateList, branch)
       -- remove the rule as it's not needed in the switch
@@ -259,15 +266,15 @@ annihilateRewireAux args = do
 defineAnnihilateRewireAux ∷ Codegen.Define m ⇒ m Operand.Operand
 defineAnnihilateRewireAux =
   Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
-  do
-    aux1 ← Defs.auxiliary1
-    aux2 ← Defs.auxiliary2
-    node1 ← Codegen.externf "node_1"
-    node2 ← Codegen.externf "node_2"
-    Codegen.rewire [node1, aux1, node2, aux1]
-    Codegen.rewire [node1, aux2, node2, aux2]
-    _ ← Defs.deAllocateNode node1
-    Defs.deAllocateNode node2
+    do
+      aux1 ← Defs.auxiliary1
+      aux2 ← Defs.auxiliary2
+      node1 ← Codegen.externf "node_1"
+      node2 ← Codegen.externf "node_2"
+      Codegen.rewire [node1, aux1, node2, aux1]
+      Codegen.rewire [node1, aux2, node2, aux2]
+      _ ← Defs.deAllocateNode node1
+      Defs.deAllocateNode node2
   where
     args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
 
@@ -433,7 +440,7 @@ nodeOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Defs.nodeType,
+      { Codegen.type' = Defs.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
