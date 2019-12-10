@@ -294,7 +294,7 @@ defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
         (nodeType nodePtrType, "node_two"),
         (numPorts, "port_two")
       ]
-
+-- TODO: Should these be contiguous? If they were contiguous (even if they had separate pointers) we could free them with one free, one would suppose.
 deAllocateNode ∷ Define m ⇒ Operand.Operand → Type.Type → m Operand.Operand
 deAllocateNode nodePtr nodePtrType = do
   node ← load (nodeType nodePtrType) nodePtr
