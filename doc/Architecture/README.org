@@ -1,10 +1,11 @@
 * Architecture Choices
+
 This directory outlines various architectural choices throughout the
 code base that may seem non-obvious.
 
-The directory thus contains the "what" and "why" each choice has been made.
+The directory thus contains the "what" and "why" of each choice that has been made.
 
 Currently the format of this document is to have each design choice as
 a self contained file in this directory.
 - Later this may change as we experiment with other renders outside of
-  github's org viewer.
+  Github's org viewer.
