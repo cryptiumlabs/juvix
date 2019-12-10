@@ -246,6 +246,16 @@ genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
 -- Reduction rules
 --------------------------------------------------------------------------------
 
+-- | args is the argument for all rules that get called
+args :: IsString b => [(Type.Type, b)]
+args =
+  [ (Defs.nodePointer, "node_1"),
+    (Types.eacPointer, "eac_ptr_1"),
+    (Defs.nodePointer, "node_2"),
+    (Types.eacPointer, "eac_ptr_2"),
+    (Types.eacList, "eac_list")
+  ]
+
 -- TODO ∷ modify these functions to return Types.eacLPointer type
 
 -- TODO ∷ Maybe add metadata at some point?
@@ -265,19 +275,24 @@ annihilateRewireAux args = do
 -- This rule applies to Application ↔ Lambda
 defineAnnihilateRewireAux ∷ Codegen.Define m ⇒ m Operand.Operand
 defineAnnihilateRewireAux =
-  Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
+  Codegen.defineFunction Types.eacList "annihilate_rewire_aux" args $
     do
       aux1 ← Defs.auxiliary1
       aux2 ← Defs.auxiliary2
-      node1 ← Codegen.externf "node_1"
-      node2 ← Codegen.externf "node_2"
+      node1P ← Codegen.externf "node_1"
+      node2P ← Codegen.externf "node_2"
+      node1 ← Codegen.load Defs.nodeType node1P
+      node2 ← Codegen.load Defs.nodeType node2P
+      -- TODO :: check if these calls create more main nodes to put back
       Codegen.rewire [node1, aux1, node2, aux1]
       Codegen.rewire [node1, aux2, node2, aux2]
-      _ ← Defs.deAllocateNode node1
-      Defs.deAllocateNode node2
-  where
-    args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
-
+      _ ← Defs.deAllocateNode node1P
+      _ ← Defs.deAllocateNode node2P
+      eacPtr1 ← Codegen.externf "eac_ptr_1"
+      eacPtr2 ← Codegen.externf "eac_ptr_2"
+      _ ← Codegen.free eacPtr1
+      _ ← Codegen.free eacPtr2
+      Codegen.externf "eac_list" >>= Codegen.ret
 -- TODO ∷ make fast fanInAux and slow fanInAux
 
 -- | 'fanInAuxStar' is a slower version of 'fanInAux*' where * ∈ ℤ/4ℤ.
@@ -285,23 +300,19 @@ defineAnnihilateRewireAux =
 fanInAuxStar = undefined
 
 fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
-fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
+fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
   do
-    fanIn ← Codegen.externf "fan_in"
+    fanIn ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
     mainPort ← Defs.mainPort
-    -- abstract out this string!
+    -- TODO :: determine if these create a new main port which we must append
+    -- to the eac_list
     Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
     Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
-    Codegen.retNull
-  where
-    args =
-      [ (Defs.nodeType, "node"), -- we send in the alloc function for it. Do case before
-        (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
-      ]
+    Codegen.externf "eac_list" >>= Codegen.ret
 
 fanInAux1' ∷
   ( Codegen.Define m,
@@ -321,16 +332,18 @@ defineFanInAux2 ∷
   Symbol →
   m Operand.Operand →
   m Operand.Operand
-defineFanInAux2 name allocF = Codegen.defineFunction Type.void name args $
+defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
   do
     -- Nodes in env
-    fanIn ← Codegen.externf "fan_in"
-    node ← Codegen.externf "node"
+    fanIn ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
+    node ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
     -- new nodes
     fan1 ← mallocFanIn >>= nodeOf
     fan2 ← mallocFanIn >>= nodeOf
     nod1 ← allocF >>= nodeOf
     nod2 ← allocF >>= nodeOf
+    -- TODO :: determine if these create a new main port which we must append
+    -- to the eac_list
     Defs.linkAll
       DSL.defRel
         { DSL.node = nod1,
@@ -355,12 +368,7 @@ defineFanInAux2 name allocF = Codegen.defineFunction Type.void name args $
         { DSL.node = fan2,
           DSL.primary = DSL.LinkConnected node DSL.Aux1
         }
-    Codegen.retNull
-  where
-    args =
-      [ (Defs.nodeType, "node"),
-        (Defs.nodeType, "fan_in")
-      ]
+    Codegen.externf "eac_list" >>= Codegen.ret
 
 -- TODO ∷ remove, put these in the environment with some kind of decalarative
 -- dispatch system that can handle dynamic node addition
