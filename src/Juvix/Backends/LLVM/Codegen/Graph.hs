@@ -1,18 +1,34 @@
 -- | Operations necessary to update nodes
 --
--- - Allocation layout as described by =mallocNodeH=
+-- - =mallocNodeH= Allocation
 --
 --   + layout :
---     [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
+--     Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
 --
---   | Part         | Alloca Or Malloc  |
---   |--------------+-------------------|
---   | portSize     | Malloc            |
---   | PortArray    | Malloc            |
---   | DataArray    | Malloc            |
---   | PortLocation | Previously Allocd |
---   | NodePtr      | Previously Allocd |
---   | Data         | Previously Allocd |
+--   | Part         | Alloca Or Malloc      |
+--   |--------------+-----------------------|
+--   | node         | Malloc                |
+--   | portSize     | Stored on Node malloc |
+--   | PortArray    | Stored on Node malloc |
+--   | DataArray    | Stored on Node malloc |
+--   | PortLocation | Previously Allocd     |
+--   | NodePtr      | Previously Allocd     |
+--   | Data         | Previously Allocd     |
+--
+--   + _Sub allocation functions used_
+--
+--     * =mallocNode=
+--       | node | Malloc |
+--
+--     * =allocaNumPortNum=
+--       | portsSize | Alloca |
+--
+--     * =allocaPortsH=
+--       | portArray | Alloca |
+--
+--     * =allocaDataH=
+--       | dataArray | Alloca |
+--
 --
 -- - Notably PortLocation, NodePtr, and Data are not allocated here,
 --   but are instead sent in.
@@ -28,20 +44,13 @@
 --   + In the future this should turn to an alloca, and thus to
 --     dealloc a node, we need not iterate over i.
 --
--- - For de-allocating a node, one needs only to de-allocate the
---   portSize, the two arrays, and the node pointer itself.
+-- - For deallocation, just deallocate the node pointer itself
 --
 --   + Currently, node pointers are allocated when nodes are made, and
 --     so are not the responsibility of a node to deallocate all the
 --     pointers.
 --     * this however is up to the Net representation themselves, and
 --       thus should modify the default deallocate node functionality
---
--- - TODO :: Consider a separate allocation strategy, namely instead
---           of mallocing portSize portArray and dataArray, alloca
---           them all, and just malloc the node pointer over it with
---           the full size, Rewrite this entire section and the
---           deallocate function if this is more optimal
 module Juvix.Backends.LLVM.Codegen.Graph where
 
 import Juvix.Backends.LLVM.Codegen.Block as Block
@@ -146,7 +155,7 @@ defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
     args = [(nodeType nodePtrType, "node"), (numPorts, "port")]
 
 mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
-mallocNode t size = Block.malloc size (nodeType t)
+mallocNode t size = Block.malloc size (Types.nodePointer t)
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
@@ -161,35 +170,38 @@ mallocNodeH ∷
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
   Type.Type →
-  Integer →
   m Operand.Operand
-mallocNodeH mPorts mData nodePtrType nodeSize = do
-  node ← mallocNode nodePtrType nodeSize
-  portSize ← mallocNumPortNum (fromIntegral $ length mPorts) nodePtrType
-  ports ← mallocPortsH mPorts nodePtrType
-  data' ← mallocDataH mData
+mallocNodeH mPorts mData nodePtrType = do
+  let totalSize =
+        Types.nodePointerSize
+        + (length mPorts * Types.portTypeSize)
+        + (length mData * Types.dataTypeSize)
+  nodePtr ← mallocNode nodePtrType (fromIntegral totalSize)
+  portSize ← allocaNumPortNum (fromIntegral $ length mPorts) nodePtrType
+  ports ← allocaPortsH mPorts nodePtrType
+  data' ← allocaDataH mData
   tagPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.numPorts,
-        Types.address' = node,
+        Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.portData nodePtrType, -- do I really want to say size 0?
-        Types.address' = node,
+        Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
   store portPtr ports
   dataPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Type.ArrayType 0 Types.dataType, -- do I really want to say size 0?
-        Types.address' = node,
+        Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 2]
       }
   store dataPtr data'
-  pure node
+  pure nodePtr
 
 -- | used to create the malloc and alloca functions for ports and data
 createGenH ∷
@@ -294,32 +306,9 @@ defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
         (nodeType nodePtrType, "node_two"),
         (numPorts, "port_two")
       ]
--- TODO: Should these be contiguous? If they were contiguous (even if they had separate pointers) we could free them with one free, one would suppose.
-deAllocateNode ∷ Define m ⇒ Operand.Operand → Type.Type → m Operand.Operand
-deAllocateNode nodePtr nodePtrType = do
-  node ← load (nodeType nodePtrType) nodePtr
-  size ← getElementPtr $
-    Types.Minimal
-      { Types.type' = numPorts,
-        Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 0]
-      }
-  ports ← getElementPtr $
-    Types.Minimal
-      { Types.type' = portData nodePtrType,
-        Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 1]
-      }
-  datas ← getElementPtr $
-    Types.Minimal
-      { Types.type' = Type.ArrayType 0 dataType,
-        Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 2]
-      }
-  _ ← free datas
-  _ ← free ports
-  _ ← free size
-  free nodePtr
+
+deAllocateNode ∷ Define m ⇒ Operand.Operand → m Operand.Operand
+deAllocateNode nodePtr = free nodePtr
 
 --------------------------------------------------------------------------------
 -- Helpers
@@ -565,9 +554,9 @@ mallocNumPortsStatic isLarge value nodePtrType =
 createNumPortNumGen ∷ Integer → t → (Bool → Operand.Operand → t → p) → p
 createNumPortNumGen n nodePtrType alloc
   | n <= 2 ^ (Types.numPortsSize - 1 ∷ Integer) =
-    alloc False (Operand.ConstantOperand (C.Int 16 n)) nodePtrType
+    alloc False (Operand.ConstantOperand (C.Int Types.pointerSizeInt n)) nodePtrType
   | otherwise =
-    alloc True (Operand.ConstantOperand (C.Int 64 n)) nodePtrType
+    alloc True (Operand.ConstantOperand (C.Int Types.numPortsLargeValueInt n)) nodePtrType
 
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷

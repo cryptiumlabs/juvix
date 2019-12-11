@@ -28,7 +28,7 @@ eac = Type.StructureType
   }
 
 eacPointer ∷ Type.Type
-eacPointer = Type.PointerType eac (Addr.AddrSpace 32)
+eacPointer = Type.PointerType eac (Addr.AddrSpace Codegen.nodePointerSize)
 
 app, dup, lam, era ∷ C.Constant
 app = C.Int {C.integerBits = tagInt, C.integerValue = 0}

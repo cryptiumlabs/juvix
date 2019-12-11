@@ -175,16 +175,19 @@ numPortsSmall =
   updateVariant
     Type.i1
     Variant
-      { size = 16,
+      { size = 32,
         name = "small",
         typ' = numPortsSmallValue
       }
 
+pointerSizeInt ∷ Num p ⇒ p
+pointerSizeInt = 32
+
 pointerSize ∷ Type
-pointerSize = Type.i16
+pointerSize = Type.i32
 
 numPortsSmallValue ∷ Type
-numPortsSmallValue = Type.i16
+numPortsSmallValue = Type.i32
 
 -- | 'numPortsLarge' is used for the number of ports that don't fit within 16 bits
 numPortsLarge ∷ VariantInfo
@@ -192,7 +195,7 @@ numPortsLarge =
   updateVariant
     Type.i1
     Variant
-      { size = 16,
+      { size = 32,
         name = "large",
         typ' = numPortsLargeValuePtr
       }
@@ -200,11 +203,14 @@ numPortsLarge =
 numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
 
+numPortsLargeValueInt ∷ Num p ⇒ p
+numPortsLargeValueInt = 64
+
 numPortsLargeValuePtr ∷ Type
 numPortsLargeValuePtr = PointerType
   { -- TODO ∷ change to something more variable than i64
     pointerReferent = numPortsLargeValue,
-    pointerAddrSpace = AddrSpace 16
+    pointerAddrSpace = AddrSpace 32
   }
 
 -- number of ports on a node or the port offset
@@ -219,18 +225,18 @@ numPorts =
     typ = createSum [numPortsLarge, numPortsSmall]
 
 numPortsSize ∷ Num p ⇒ p
-numPortsSize = 17
+numPortsSize = 33
 
--- | Construct a 16 bit port space so we can put many inside a node cheaply
+-- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
 nodePointer ∷ Type → Type
 nodePointer nodePtrType = PointerType
   { pointerReferent = nodeType nodePtrType,
-    pointerAddrSpace = AddrSpace 16
+    pointerAddrSpace = AddrSpace 32
   }
 
 nodePointerSize ∷ Num p ⇒ p
-nodePointerSize = 16
+nodePointerSize = 32
 
 portType ∷ Type → Type
 portType nodePtr = StructureType

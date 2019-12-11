@@ -59,7 +59,7 @@ mallocNodeH ∷
   [Maybe Operand.Operand] →
   m Operand.Operand
 mallocNodeH xs ys =
-  Codegen.mallocNodeH xs ys Types.eacPointer (Types.tagInt + Codegen.nodePointerSize)
+  Codegen.mallocNodeH xs ys Types.eacPointer
 
 loadPrimaryNode ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
@@ -84,4 +84,4 @@ defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
 defineLinkConnectedPort = Codegen.defineLinkConnectedPort Types.eacPointer
 
 deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
-deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr Types.eacPointer
+deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr
