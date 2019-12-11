@@ -18,6 +18,9 @@ tag = Codegen.i4
 tagInt ∷ Num p ⇒ p
 tagInt = 4
 
+eacSize ∷ Num p ⇒ p
+eacSize = tagInt + Codegen.nodePointerSize
+
 eac ∷ Type.Type
 eac = Type.StructureType
   { Type.isPacked = True,

@@ -6,18 +6,20 @@
 --
 -- - _Allocation_
 --   + layout :
---     {eac | NodePtr* [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+--     eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
 --     * Similar to the one in Graph, however it also has the eac tag
 --
---    | Part         | Alloca Or Malloc   |
---    |--------------+--------------------|
---    | eac          | Malloc             |
---    | portSize     | Malloc             |
---    | PortArray    | Malloc             |
---    | DataArray    | Malloc             |
---    | PortLocation | Not Allocated Here |
---    | NodePtr      | Not Allocated Here |
---    | Data         | Not Allocated Here |
+--    | Part         | Alloca Or Malloc      |
+--    |--------------+-----------------------|
+--    | eac          | Malloc                |
+--    | tag          | Stored on Eac Malloc  |
+--    | NodePtr*     | Malloc                |
+--    | portSize     | Stored on Node Malloc |
+--    | PortArray    | Stored on Node Malloc |
+--    | DataArray    | Stored on Node Malloc |
+--    | PortLocation | Not Allocated Here    |
+--    | NodePtr      | Not Allocated Here    |
+--    | Data         | Not Allocated Here    |
 --
 -- - Node Pointers are allocated at node creation time, so not the
 --   responsibility of the node to de-allocate, but instead uses the
@@ -413,7 +415,9 @@ mallocGen ∷
   Int →
   m Operand.Operand
 mallocGen type' portLen dataLen = do
-  eac ← Codegen.malloc Types.tagInt Types.eac
+  -- malloc call
+  eac ← Codegen.malloc Types.eacSize Types.eac
+  -- malloc call
   node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal

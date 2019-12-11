@@ -1,19 +1,28 @@
 -- | Operations necessary to update nodes
 --
+-- - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
+--   | Part       | Alloca Or Malloc |
+--   |------------+------------------|
+--   | MainPort   | Malloc top level |
+--   | Auxiliary1 | Malloc top level |
+--   | Auxiliary2 | Malloc top level |
+--   | Auxiliary3 | Malloc top level |
+--   | Auxiliary4 | Malloc top level |
+--
 -- - =mallocNodeH= Allocation
 --
 --   + layout :
 --     Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
 --
---   | Part         | Alloca Or Malloc      |
---   |--------------+-----------------------|
---   | node         | Malloc                |
---   | portSize     | Stored on Node malloc |
---   | PortArray    | Stored on Node malloc |
---   | DataArray    | Stored on Node malloc |
---   | PortLocation | Previously Allocd     |
---   | NodePtr      | Previously Allocd     |
---   | Data         | Previously Allocd     |
+--   | Part         | Alloca Or Malloc                   |
+--   |--------------+------------------------------------|
+--   | Node         | Malloc                             |
+--   | portSize     | Stored on Node malloc              |
+--   | PortArray    | Stored on Node malloc              |
+--   | DataArray    | Stored on Node malloc              |
+--   | PortLocation | (Null) Allocad from PortArray Call |
+--   | NodePtr      | (Null) Allocad from PortArray Call |
+--   | Data         | (Null) Allocad from DataArray Call |
 --
 --   + _Sub allocation functions used_
 --
@@ -28,6 +37,17 @@
 --
 --     * =allocaDataH=
 --       | dataArray | Alloca |
+--
+--   + the values that are null will be set from outside when the node
+--     is instantiated.
+--     * Data will be **Allocad**
+--
+--     * Port Location is shown to be **malloc** above by =mainPort=
+--       \dots =Auxiliary4=. However in the future we may **alloca** a value
+--       to store here
+--
+--     * NodePtr is **mallocd** in the same way this node is, and thus
+--       is external
 --
 --
 -- - Notably PortLocation, NodePtr, and Data are not allocated here,
@@ -143,12 +163,12 @@ defineIsBothPrimary nodePtrTyp =
 defineFindEdge ∷ Define m ⇒ Type.Type → m Operand.Operand
 defineFindEdge nodePtrType =
   Block.defineFunction (Types.portPointer nodePtrType) "find_edge" args $
-  do
-    node ← Block.externf "node"
-    pNum ← Block.externf "port"
-    portPtr ← getPort node pNum nodePtrType
-    otherPortPtr ← portPointsTo portPtr nodePtrType
-    ret otherPortPtr
+    do
+      node ← Block.externf "node"
+      pNum ← Block.externf "port"
+      portPtr ← getPort node pNum nodePtrType
+      otherPortPtr ← portPointsTo portPtr nodePtrType
+      ret otherPortPtr
   where
     args = [(nodePointer nodePtrType, "node"), (numPortsPointer, "port")]
 
@@ -282,22 +302,22 @@ defineRewire ∷ Define m ⇒ Type.Type → (Operand.Operand → m Operand.Opera
 defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
   Block.defineFunction Type.void "rewire" args $
     do
-    -- TODO ∷ Abstract out this bit ---------------------------------------------
-    (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
-    (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-    oldPointsTo ← findEdge (Types.portPointer nodePtrType) [n1, p1]
-    let intoGen typ num = loadElementPtr $
-          Types.Minimal
-            { Types.type' = typ,
-              Types.address' = oldPointsTo,
-              Types.indincies' = Block.constant32List [0, num]
-            }
-    numPointsTo ← intoGen numPorts 1
-    nodePointsToPtr ← intoGen nodePtrType 0
-    nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
-    -- End Abstracting out bits -------------------------------------------------
-    _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
-    retNull
+      -- TODO ∷ Abstract out this bit ---------------------------------------------
+      (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
+      (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
+      oldPointsTo ← findEdge (Types.portPointer nodePtrType) [n1, p1]
+      let intoGen typ num = loadElementPtr $
+            Types.Minimal
+              { Types.type' = typ,
+                Types.address' = oldPointsTo,
+                Types.indincies' = Block.constant32List [0, num]
+              }
+      numPointsTo ← intoGen numPorts 1
+      nodePointsToPtr ← intoGen nodePtrType 0
+      nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
+      -- End Abstracting out bits -------------------------------------------------
+      _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
+      retNull
   where
     args =
       [ (nodePointer nodePtrType, "node_one"),

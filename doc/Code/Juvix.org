@@ -58,18 +58,26 @@ This module provides the default environment to run LLVM code in
   + [[Library]]
 ***** Graph <<Codegen/Graph>>
 Operations necessary to update nodes
+- =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
+  | Part       | Alloca Or Malloc |
+  |------------+------------------|
+  | MainPort   | Malloc top level |
+  | Auxiliary1 | Malloc top level |
+  | Auxiliary2 | Malloc top level |
+  | Auxiliary3 | Malloc top level |
+  | Auxiliary4 | Malloc top level |
 - =mallocNodeH= Allocation
   + layout :
     Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
-  | Part         | Alloca Or Malloc      |
-  |--------------+-----------------------|
-  | node         | Malloc                |
-  | portSize     | Stored on Node malloc |
-  | PortArray    | Stored on Node malloc |
-  | DataArray    | Stored on Node malloc |
-  | PortLocation | Previously Allocd     |
-  | NodePtr      | Previously Allocd     |
-  | Data         | Previously Allocd     |
+  | Part         | Alloca Or Malloc                   |
+  |--------------+------------------------------------|
+  | Node         | Malloc                             |
+  | portSize     | Stored on Node malloc              |
+  | PortArray    | Stored on Node malloc              |
+  | DataArray    | Stored on Node malloc              |
+  | PortLocation | (Null) Allocad from PortArray Call |
+  | NodePtr      | (Null) Allocad from PortArray Call |
+  | Data         | (Null) Allocad from DataArray Call |
   + _Sub allocation functions used_
     * =mallocNode=
       | node | Malloc |
@@ -79,6 +87,14 @@ Operations necessary to update nodes
       | portArray | Alloca |
     * =allocaDataH=
       | dataArray | Alloca |
+  + the values that are null will be set from outside when the node
+    is instantiated.
+    * Data will be **Allocad**
+    * Port Location is shown to be **malloc** above by =mainPort=
+      \dots =Auxiliary4=. However in the future we may **alloca** a value
+      to store here
+    * NodePtr is **mallocd** in the same way this node is, and thus
+      is external
 - Notably PortLocation, NodePtr, and Data are not allocated here,
   but are instead sent in.
 - Currently =defineMainPort=, =defineAuxiliary1= \dots
@@ -138,17 +154,19 @@ Provides a mechanism for defining Sum types
   pre processed =EAC= graph that the initial graph will be made on
 - _Allocation_
   + layout :
-    {eac | NodePtr* [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
     * Similar to the one in Graph, however it also has the eac tag
-   | Part         | Alloca Or Malloc   |
-   |--------------+--------------------|
-   | eac          | Malloc             |
-   | portSize     | Malloc             |
-   | PortArray    | Malloc             |
-   | DataArray    | Malloc             |
-   | PortLocation | Not Allocated Here |
-   | NodePtr      | Not Allocated Here |
-   | Data         | Not Allocated Here |
+   | Part         | Alloca Or Malloc      |
+   |--------------+-----------------------|
+   | eac          | Malloc                |
+   | tag          | Stored on Eac Malloc  |
+   | NodePtr*     | Malloc                |
+   | portSize     | Stored on Node Malloc |
+   | PortArray    | Stored on Node Malloc |
+   | DataArray    | Stored on Node Malloc |
+   | PortLocation | Not Allocated Here    |
+   | NodePtr      | Not Allocated Here    |
+   | Data         | Not Allocated Here    |
 - Node Pointers are allocated at node creation time, so not the
   responsibility of the node to de-allocate, but instead uses the
   default strategy laid out in [[Codegen/Graph]]

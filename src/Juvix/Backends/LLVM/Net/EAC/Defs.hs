@@ -84,10 +84,10 @@ defineRewire =
     $ \eac → do
       Codegen.loadElementPtr $
         Codegen.Minimal
-        { Codegen.type' = nodePointer,
-          Codegen.address' = eac,
-          Codegen.indincies' = Codegen.constant32List [0, 0]
-        }
+          { Codegen.type' = nodePointer,
+            Codegen.address' = eac,
+            Codegen.indincies' = Codegen.constant32List [0, 0]
+          }
 
 defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
 defineLinkConnectedPort =
@@ -96,10 +96,10 @@ defineLinkConnectedPort =
     $ \eac → do
       Codegen.loadElementPtr $
         Codegen.Minimal
-        { Codegen.type' = nodePointer,
-          Codegen.address' = eac,
-          Codegen.indincies' = Codegen.constant32List [0, 0]
-        }
+          { Codegen.type' = nodePointer,
+            Codegen.address' = eac,
+            Codegen.indincies' = Codegen.constant32List [0, 0]
+          }
 
 deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
 deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr
