@@ -39,7 +39,7 @@ unitTyToAll = UnitTy
 unitValToAll ∷ Unit.UnitVal → AllVal
 unitValToAll = UnitVal
 
-typeOf ∷ AllVal → [AllTy]
+typeOf ∷ AllVal → NonEmpty AllTy
 typeOf (NatVal nat) =
   fmap natTyToAll (Naturals.typeOf nat)
 typeOf (UnitVal unit) = fmap unitTyToAll (Unit.typeOf unit)

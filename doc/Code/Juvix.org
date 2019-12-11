@@ -1,14 +1,48 @@
 * Juvix
 ** Backends
+- [[Backends]] are the targets for optimized code output specific to a
+  platform
+- Currently the LLVM backend will serve as the reference
+  implementation
+- The following backends are planned
+  1. LLVM
+  2. Michelson
+  3. WASM
+     - Most likely through LLVM
+  4. Various Arithmetic Circuits
+     - For use in ZKP's
+*** ArithmeticCircuit
+**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+**** Compilation <<ArithmeticCircuit/Compilation>>
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[Library]]
+***** Types <<ArithmeticCircuit/Compilation/Types>>
+- _Relies on_
+  + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
+**** DSL
+Serves as a mini DSL layer above LLVM
+- _Relies on_
+  + [[Codegen]]
+  + [[Library]]
+***** What is included?
+1. _Relink_
+   - gives a declarative way to do a bunch of links and relinks
 **** Codegen
 - _Relies on_
   + [[Block]]
   + [[Constants]]
   + [[Codegen/Default]]
   + [[Codegen/Graph]]
+  + [[Codegen/Shared]]
   + [[Codegen/Types]]
 ***** Block
 - Has the code necessary to generate LLVM Code
@@ -31,64 +65,131 @@ Operations necessary to update nodes
   + [[Block]]
   + [[Codegen/Types]]
   + [[Library]]
+  + [[HashMap]]
 ***** Shared <<Codegen/Shared>>
 Shared between Types and Sum
 - _Relies on_
   + [[Library]]
+  + [[HashMap]]
 ***** Sum
 Provides a mechanism for defining Sum types
 - Has the code to encode a sum type via what is defined by the user or
   what is defined to create the interaction net system.
 - _Relies on_
+  + [[Constants]]
   + [[Codegen/Shared]]
   + [[Library]]
+  + [[HashMap]]
 ***** Types <<Codegen/Types>>
 - _Relies on_
+  + [[Constants]]
   + [[Codegen/Shared]]
   + [[Sum]]
   + [[Library]]
-**** Net
-***** EAC <<Net/EAC>>
+  + [[HashMap]]
+**** JIT
 - _Relies on_
+  + [[Execution]]
+  + [[JIT/Types]]
+***** Execution
+- _Relies on_
+  + [[JIT/Types]]
+  + [[Library]]
+***** Types <<JIT/Types>>
+- _Relies on_
+  + [[Library]]
+**** Net
+***** Environment
+- Serves as the default environment for executing EAC code
+- _Relies on_
+  + [[Codegen]]
+  + [[Net/EAC]]
+  + [[Defs]]
+  + [[Net/EAC/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** EAC <<Net/EAC>>
+- =EAC= serves as the place where the interaction net rules for the
+  EAC layer gets run
+- The form given to =EAC= is not the base EAC AST, but instead a
+  pre processed =EAC= graph that the initial graph will be made on
+- _Relies on_
+  + [[Codegen]]
+  + [[DSL]]
+  + [[Defs]]
+  + [[Net/EAC/Types]]
+  + [[Library]]
+  + [[HashMap]]
+****** Defs
+- Specializes the functions in Graph to fit [[Net/EAC/Types]]
+  + Later in the DSL Layer!
+- Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
+- Also generates the proper types associated with them
+- _Relies on_
+  + [[Codegen]]
+  + [[DSL]]
+  + [[Net/EAC/Types]]
   + [[Library]]
 ****** Types <<Net/EAC/Types>>
 - _Relies on_
+  + [[Codegen]]
   + [[Library]]
 *** Michelson
 **** Optimisation
+- This is a simple optimization strategy which replaces sequences of
+  Michelson instructions with equivalent sequences of fewer
+  instructions.
+  + At the moment nontrivial programs are unlikely to compile to
+    the smallest equivalent Michelson instruction sequence,
+- but little time has been spent on optimization so far - a high
+  degree should be possible; the Haskell typesystem provides very
+  strong guarantees.
+  + A more interesting / potentially more effective strategy might
+    be to search the space of equivalent Michelson programs,
+    which at small program sizes using bounded heuristic search
+    should be computationally feasible -
+    then choose the one with the fewest instructions (or based on
+    some other gas-estimation preference function).
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
-  + [[Compilation/Types]]
-**** Parameterisation
+**** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Core/Types]]
   + [[Library]]
-**** Compilation
+**** Compilation <<Michelson/Compilation>>
 - _Relies on_
   + [[Term]]
   + [[Compilation/Type]]
-  + [[Compilation/Types]]
-  + [[Util]]
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
   + [[Optimisation]]
-  + [[Parameterisation]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Term
 - _Relies on_
-  + [[Compilation/Types]]
-  + [[Util]]
-  + [[Parameterisation]]
+  + [[Compilation/Type]]
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[Michelson/Parameterisation]]
+  + [[Erased/Util]]
+  + [[ErasedAnn]]
   + [[Library]]
 ***** Type <<Compilation/Type>>
 - _Relies on_
-  + [[Compilation/Types]]
-  + [[Parameterisation]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn/Types]]
   + [[Library]]
-***** Types <<Compilation/Types>>
+***** Types <<Michelson/Compilation/Types>>
 - _Relies on_
-  + [[Parameterisation]]
+  + [[Michelson/Parameterisation]]
   + [[Library]]
-***** Util
+***** Util <<Compilation/Util>>
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Library]]
 ** Core
 - _Relies on_
@@ -98,17 +199,27 @@ Provides a mechanism for defining Sum types
   + [[Usage]]
 *** Pipeline
 - _Relies on_
+  + [[Core/EAC]]
+  + [[Erased]]
   + [[Core/Erasure]]
+  + [[HR]]
+  + [[IR]]
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
   + [[Library]]
 *** Translate
 - _Relies on_
+  + [[HR]]
+  + [[IR]]
   + [[Utility]]
   + [[Library]]
 *** Types <<Core/Types>>
 - _Relies on_
+  + [[Core/EAC/Types]]
+  + [[Erasure/Types]]
+  + [[HR/Types]]
+  + [[IR/Types]]
   + [[Library]]
 *** Usage
 - _Relies on_
@@ -141,12 +252,14 @@ Provides a mechanism for defining Sum types
   + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Erasure <<EAC/Erasure>>
 - _Relies on_
   + [[Core/EAC/Types]]
   + [[Erased/Types]]
 **** Parser <<EAC/Parser>>
 - _Relies on_
+  + [[Core/EAC/Types]]
   + [[Core/EAC/Types]]
   + [[Unit]]
   + [[Library]]
@@ -162,27 +275,56 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+  + [[HashMap]]
 *** Erased
 - _Relies on_
-  + [[Evaluator]]
+  + [[Erased/Evaluator]]
   + [[Erased/Types]]
-**** Evaluator
+  + [[Erased/Util]]
+**** Evaluator <<Erased/Evaluator>>
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Types <<Erased/Types>>
 - _Relies on_
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
+**** Util <<Erased/Util>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+*** ErasedAnn
+- _Relies on_
+  + [[ErasedAnn/Erasure]]
+  + [[ErasedAnn/Types]]
+**** Erasure <<ErasedAnn/Erasure>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[ErasedAnn/Types]]
+**** Types <<ErasedAnn/Types>>
+- _Relies on_
+  + [[Usage]]
   + [[Library]]
 *** Erasure <<Core/Erasure>>
 - _Relies on_
   + [[Algorithm]]
 **** Algorithm
 - _Relies on_
+  + [[Erased]]
   + [[Erasure/Types]]
+  + [[HR/Types]]
+  + [[IR]]
   + [[Translate]]
+  + [[Core/Types]]
+  + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 **** Types <<Erasure/Types>>
 - _Relies on_
+  + [[Erased]]
+  + [[IR/Types]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -198,23 +340,62 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Usage]]
   + [[Library]]
+*** HRAnn
+- _Relies on_
+  + [[HRAnn/Erasure]]
+  + [[HRAnn/Types]]
+**** Erasure <<HRAnn/Erasure>>
+- _Relies on_
+  + [[HR/Types]]
+  + [[HRAnn/Types]]
+**** Types <<HRAnn/Types>>
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
 *** IR
 - _Relies on_
+  + [[IR/Evaluator]]
   + [[Typechecker]]
   + [[IR/Types]]
+**** Evaluator <<IR/Evaluator>>
+This includes the evaluators (evalTerm and evalElim),
+the value application function (vapp) and
+the substitution functions (substTerm and substElim).
+- _Relies on_
+  + [[IR/Types]]
+  + [[Core/Types]]
+  + [[Library]]
 **** Typechecker
 - _Relies on_
+  + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Core/Types]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
 - _Relies on_
+  + [[Usage]]
+  + [[Library]]
+*** IRAnn
+- _Relies on_
+  + [[IRAnn/Erasure]]
+  + [[IRAnn/Types]]
+**** Erasure <<IRAnn/Erasure>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IRAnn/Types]]
+**** Types <<IRAnn/Types>>
+- _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
+  + [[Naturals]]
+  + [[Unit]]
   + [[Core/Types]]
   + [[Library]]
 **** Naturals
@@ -232,6 +413,7 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Encoding/Types]]
   + [[Library]]
+  + [[HashMap]]
 *** Mendler
 - Gives a =Mendler= encoding from an =ADT=.
 - This file is not done as Ι have yet to find a way to convert any
@@ -243,6 +425,7 @@ Provides a mechanism for defining Sum types
   + [[Encoding]]
   + [[Encoding/Types]]
   + [[Library]]
+  + [[HashMap]]
 *** Scott
 - Gives a =Scott= encoding from an =ADT= and works properly for case
   expressions
@@ -251,12 +434,18 @@ Provides a mechanism for defining Sum types
   + [[Encoding]]
   + [[Encoding/Types]]
   + [[Library]]
+  + [[HashMap]]
 *** Types <<Encoding/Types>>
 - _Relies on_
   + [[Library]]
+  + [[HashMap]]
 ** Interpreter
+- Although slower than [[Backends]], the interpreter serves as a
+  reference point to play, modify, and debug features that will go
+  in the various compiler backends
 *** InteractionNet
 - _Relies on_
+  + [[Erased/Types]]
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
   + [[Translation]]
@@ -266,7 +455,9 @@ Gives the default execution environment for netToAst
 Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Shared]]
+  + [[InteractionNet/Type]]
   + [[Library]]
+  + [[HashMap]]
 **** NodeInterface
 - Serves as a generic lens layer for various Node types in interaction nets
   1. Primary port details
@@ -285,6 +476,7 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[InteractionNet/Type]]
   + [[Library]]
+  + [[HashMap]]
 **** Shared <<InteractionNet/Shared>>
 - _Relies on_
   + [[Library]]
@@ -292,11 +484,28 @@ Can be added to via core translation
 - Translates the default abstract syntax into Interaction nets
   + Also translates the net into the an ast
 - _Relies on_
+  + [[Core/Types]]
   + [[Interface]]
+  + [[Nets/Default]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
+  + [[InteractionNet/Type]]
   + [[Library]]
+  + [[HashMap]]
 **** Type <<InteractionNet/Type>>
+- Serves as the AST for all operations on [[Nets/Default]]
+- Resembles the =BOHM= syntax/operation set, however it alters the
+  operation set quite a bit
+  + _Added_
+    1. Notion of some kind of primitive value
+    2. Curry 1-3
+       - This allows custom functions to be manifested on primitive
+         values
+  + _Removed_
+    1. =Letrec=
+       - While here, it isn't fully implemented
+    2. Hard coded math operations
+       - This has been moved to primitive value operations
 - _Relies on_
   + [[InteractionNet/Shared]]
   + [[Library]]
@@ -375,6 +584,11 @@ Can be added to via core translation
 - _Relies on_
   + [[PrettyPrint]]
 *** HashMap
+- The HashMap for the codebase.
+- Basically just imports Data.HashMap.Strict
+  + While giving the operation =!?=.
+- Every hash in the code base should use this, except when it needs
+  to compare keys by the =Ordering= metric instead.
 *** PrettyPrint
 ** Visualize
 *** Dot

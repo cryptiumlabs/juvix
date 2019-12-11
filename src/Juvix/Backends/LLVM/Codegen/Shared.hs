@@ -8,9 +8,9 @@ import qualified LLVM.AST as AST ()
 import qualified LLVM.AST.Constant as C ()
 import LLVM.AST.Global as Global ()
 
-type SymbolTable = Map.Map Symbol Operand
+type SymbolTable = Map.T Symbol Operand
 
-type TypeTable = Map.Map Symbol Type
+type TypeTable = Map.T Symbol Type
 
 data SumInfo
   = S
@@ -22,9 +22,9 @@ data SumInfo
 
 -- | a mapping between the variant and the sum type along with
 -- the tag associated with it
-type VariantToType = Map.Map Symbol SumInfo
+type VariantToType = Map.T Symbol SumInfo
 
-type Names = Map.Map Symbol Int
+type Names = Map.T Symbol Int
 
 uniqueName ∷ Symbol → Names → (Symbol, Names)
 uniqueName nm ns =

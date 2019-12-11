@@ -17,7 +17,7 @@ type NatElim = IR.Elim NatTy NatVal
 
 type NatValue = IR.Value NatTy NatVal
 
-type NatAnnotation = IR.Annotation NatTy NatVal
+type NatAnnotation = IR.Annotation NatTy NatVal (IR.EnvTypecheck NatTy NatVal)
 
 type UnitTerm = IR.Term UnitTy UnitVal
 
@@ -25,7 +25,7 @@ type UnitElim = IR.Elim UnitTy UnitVal
 
 type UnitValue = IR.Value UnitTy UnitVal
 
-type UnitAnnotation = IR.Annotation UnitTy UnitVal
+type UnitAnnotation = IR.Annotation UnitTy UnitVal (IR.EnvTypecheck UnitTy UnitVal)
 
 type AllTerm = IR.Term AllTy AllVal
 
@@ -33,22 +33,22 @@ type AllElim = IR.Elim AllTy AllVal
 
 type AllValue = IR.Value AllTy AllVal
 
-type AllAnnotation = IR.Annotation AllTy AllVal
+type AllAnnotation = IR.Annotation AllTy AllVal (IR.EnvTypecheck AllTy AllVal)
 
 identity ∷ ∀ primTy primVal. IR.Term primTy primVal
 identity = IR.Lam (IR.Elim (IR.Bound 0))
 
 identityNatCompTy ∷ NatAnnotation
 identityNatCompTy =
-  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
 
 identityUnitCompTy ∷ UnitAnnotation
 identityUnitCompTy =
-  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy TUnit) (const (IR.VPrimTy TUnit)))
+  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy TUnit) (const (pure (IR.VPrimTy TUnit))))
 
 identityNatContTy ∷ NatAnnotation
 identityNatContTy =
-  (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+  (SNat 0, IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
 
 -- dependent identity function, a : * -> a -> a
 depIdentity ∷ ∀ primTy primVal. IR.Term primTy primVal
@@ -148,7 +148,7 @@ kCompTy =
     IR.VPi
       (SNat 1)
       (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (const (pure (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )
 
 -- Nat -> () -> Nat
@@ -158,7 +158,7 @@ kCompTyWithUnit =
     IR.VPi
       (SNat 1)
       (IR.VPrimTy (All.NatTy Nat))
-      (const (IR.VPi (SNat 0) (IR.VPrimTy (All.UnitTy TUnit)) (const (IR.VPrimTy (All.NatTy Nat)))))
+      (const (pure (IR.VPi (SNat 0) (IR.VPrimTy (All.UnitTy TUnit)) (const (pure (IR.VPrimTy (All.NatTy Nat)))))))
   )
 
 -- I:(Nat->Nat->Nat)->(Nat->Nat->Nat) K:(Nat->Nat->Nat) should type check to (Nat->Nat->Nat)
@@ -211,7 +211,7 @@ kApp1 =
 
 natToNatTy ∷ NatAnnotation
 natToNatTy =
-  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
+  (SNat 1, IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
 
 --K: (Nat -> Nat) -> Nat -> (Nat -> Nat) I:Nat -> Nat type checks to Nat -> (Nat -> Nat)
 kAppI ∷ NatElim
@@ -244,7 +244,7 @@ kAppICompTy =
     IR.VPi
       (SNat 1)
       (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (const (pure (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )
 
 {-
@@ -302,7 +302,7 @@ sCompNatTy =
     IR.VPi
       (SNat 1)
       (IR.VPrimTy Nat)
-      (const (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (const (pure (IR.VPi (SNat 0) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )
  -}
 test_identity_computational ∷ T.TestTree
@@ -388,11 +388,11 @@ shouldCheck ∷
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   IR.Term primTy primVal →
-  IR.Annotation primTy primVal →
+  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
   T.testCase (show term <> " should check as type " <> show ann) $
-    IR.cType param 0 [] term ann T.@=? Right ()
+    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
 
 --unit tests for iType
 shouldInfer ∷
@@ -400,22 +400,22 @@ shouldInfer ∷
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   IR.Elim primTy primVal →
-  IR.Annotation primTy primVal →
+  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldInfer param term ann =
   T.testCase (show term <> " should infer to type " <> show ann) $
-    IR.iType0 param [] term T.@=? Right ann
+    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
 
 shouldEval ∷
   ∀ primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
   Parameterisation primTy primVal →
   IR.Term primTy primVal →
-  IR.Value primTy primVal →
+  IR.Value primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    IR.cEval param term IR.initEnv T.@=? res
+    fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
 
 one ∷ ∀ primTy primVal. IR.Term primTy primVal
 one = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
@@ -425,8 +425,8 @@ oneCompTy =
   ( SNat 1,
     IR.VPi
       (SNat 1)
-      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
-      (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
+      (const (pure (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )
 
 two ∷ ∀ primTy primVal. IR.Term primTy primVal
@@ -441,6 +441,6 @@ twoCompTy =
   ( SNat 1,
     IR.VPi
       (SNat 2)
-      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat)))
-      (const (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (IR.VPrimTy Nat))))
+      (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
+      (const (pure (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )

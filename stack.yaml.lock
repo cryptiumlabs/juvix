@@ -159,6 +159,20 @@ packages:
   original:
     hackage: unexceptionalio-0.4.0@sha256:c59fa6be7b923fa32ad6a830f96918cd3019b5a6dba019c81da19df9955d8d58,1239
 - completed:
+    hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
+    pantry-tree:
+      size: 352
+      sha256: c88ce4f9c35e18140f75d94d14a0c52fafc2944a2611a955af4757f555bd0884
+  original:
+    hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
+- completed:
+    hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
+    pantry-tree:
+      size: 610
+      sha256: cc4e01176f1a56c97dc923416a6939dcdc004584cccf8a2b1c67bd156b31179a
+  original:
+    hackage: semirings-0.5.1
+- completed:
     hackage: brick-0.46@sha256:78629a4da6b759c78ec264bedc9e794edeb55a302d17015d0278620eef4ebe29,13852
     pantry-tree:
       size: 3752
@@ -237,6 +251,76 @@ packages:
   original:
     subdir: src/hevm
     url: https://github.com/dapphub/dapptools/archive/38dd682fa6c433e5720bd9022779ffc6a1ce00fc.tar.gz
+- completed:
+    size: 36625
+    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
+    cabal-file:
+      size: 3498
+      sha256: 86b5ab4efb4cb0367aebc7b25237f1066aec701cd2c292597d70a3ae4c9bc39a
+    name: pairing
+    version: 1.0.0
+    sha256: 39b4fd7914c53bdad59ba03d9060f13d926599641b5b67363f47a6f1b3a31db7
+    pantry-tree:
+      size: 2067
+      sha256: 3fb7682cd0321c4ef8b547f343cfee4ad3457514a8305458a948463eb6220590
+  original:
+    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
+- completed:
+    size: 77092
+    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
+    cabal-file:
+      size: 7856
+      sha256: fb8fa2120b0330bf4cb07c8511ab7fe6d046ac508440b326db2a7314dd49c5d9
+    name: elliptic-curve
+    version: 0.3.1
+    sha256: bf05e963f92daf3b88f32e756ab1bfa0b8fa9683ac9b30bf202aca3228e9acf1
+    pantry-tree:
+      size: 9970
+      sha256: 4c3c18badc18db9effd416ea73615371f927fc97ddbcb0c564f6cc77fd4efff1
+  original:
+    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
+- completed:
+    size: 20311
+    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
+    cabal-file:
+      size: 3581
+      sha256: 0ff6cf1c79f37639c71148f3213599ae310abc4e8519970b2ca587293e0d3fbd
+    name: galois-field
+    version: 1.0.1
+    sha256: a67df5de45445ec454d93c6c94f8e24327a6b6a8471bdf3c1f9ebb43ca9dbddb
+    pantry-tree:
+      size: 1785
+      sha256: 5d1fbed6827618a1b4718afc571b727c31ea5ad97d9ca39d72c8b77c72ab2376
+  original:
+    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
+- completed:
+    size: 16425
+    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
+    cabal-file:
+      size: 4250
+      sha256: d08dc4255ec4164d8f1f54c70b29997dd67a7bc1ce547ff89efa16be19f8a48d
+    name: sonic
+    version: 0.3.0
+    sha256: a2004eb9ea30eba13294c768106847aa6cb1e5cdddfb763cd397ceb6da5c04b9
+    pantry-tree:
+      size: 1385
+      sha256: 144ced136259458ad7a3fc5d7684ec7244dd80afb950041ff34cbf76d6d5e2f5
+  original:
+    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
+- completed:
+    size: 24372
+    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
+    cabal-file:
+      size: 2085
+      sha256: d4bef2a796a5567b888e568e8c3117e4c2f5d1108b803ec46bd7804d593ab869
+    name: poly
+    version: 0.3.2.0
+    sha256: 6940270f46bc6b54c52397e837b9bcee87c90002665cc2a1302964494153d461
+    pantry-tree:
+      size: 2109
+      sha256: 05ebc44a9cc5ecda047aa0179020615941ae5b698586854d121b4219ec3cc114
+  original:
+    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 snapshots:
 - completed:
     size: 545658

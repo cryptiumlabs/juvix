@@ -22,7 +22,7 @@ build-watch:
 	stack build --copy-bins --fast --file-watch
 
 build-opt: clean
-	stack build --copy-bins --ghc-options "-O3 -fllvm -DOPTIMISE"
+	stack build --copy-bins --ghc-options "-O3 -fllvm"
 
 lint:
 	stack exec -- hlint app src test
@@ -31,7 +31,7 @@ format:
 	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --mode inplace {} \;
 
 test:
-	stack test --fast --ghc-options "-DOPTIMISE"
+	stack test --fast
 
 repl-lib:
 	stack ghci juvix:lib

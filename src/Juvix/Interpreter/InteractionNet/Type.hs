@@ -1,3 +1,17 @@
+-- |
+-- - Serves as the AST for all operations on [[Nets/Default]]
+-- - Resembles the =BOHM= syntax/operation set, however it alters the
+--   operation set quite a bit
+--   + _Added_
+--     1. Notion of some kind of primitive value
+--     2. Curry 1-3
+--        - This allows custom functions to be manifested on primitive
+--          values
+--   + _Removed_
+--     1. =Letrec=
+--        - While here, it isn't fully implemented
+--     2. Hard coded math operations
+--        - This has been moved to primitive value operations
 module Juvix.Interpreter.InteractionNet.Type where
 
 import Juvix.Interpreter.InteractionNet.Shared

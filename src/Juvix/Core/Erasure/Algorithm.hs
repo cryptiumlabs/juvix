@@ -35,7 +35,7 @@ eraseTerm ∷
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" ErasureError m,
-    HasState "context" (IR.Context primTy primVal) m,
+    HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -47,9 +47,9 @@ eraseTerm ∷
   Core.Term primTy primVal →
   m (Erased.Term primVal, Erased.Type primTy)
 eraseTerm parameterisation term usage ty =
-  case usage of
-    Core.SNat 0 → throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
-    _ → case term of
+  if usage == Core.SNat 0
+    then throw @"erasureError" (CannotEraseZeroUsageTerm (show (term, usage, ty)))
+    else case term of
       Core.Star _ → throw @"erasureError" Unsupported
       Core.PrimTy _ → throw @"erasureError" Unsupported
       Core.Pi _ _ _ → throw @"erasureError" Unsupported
@@ -61,12 +61,12 @@ eraseTerm parameterisation term usage ty =
         let bodyUsage = Core.SNat 1
         ty ← eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
-        let varTyIR = IR.cEval parameterisation (hrToIR varTy) []
+        let (Right varTyIR, _) = IR.exec (IR.evalTerm parameterisation (hrToIR varTy) [])
         modify @"context" ((:) (IR.Global (show name), (argUsage, varTyIR)))
         (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
-        pure ((case usage <.> argUsage of Core.SNat 0 → body; _ → Erased.Lam name body), funcTy)
+        pure ((if usage <.> argUsage == Core.SNat 0 then body else Erased.Lam name body), funcTy)
       Core.Elim elim → do
         elimTy ← eraseType parameterisation ty
         case elim of
@@ -75,14 +75,15 @@ eraseTerm parameterisation term usage ty =
           Core.App f x → do
             let IR.Elim fIR = hrToIR (Core.Elim f)
             context ← get @"context"
-            case IR.iType0 parameterisation context fIR of
+            case fst (IR.exec (IR.typeElim0 parameterisation context fIR)) of
               Left err → throw @"erasureError" (InternalError (show err <> " while attempting to erase " <> show f))
               Right (fUsage, fTy) → do
-                let fty@(Core.Pi argUsage fArgTy _) = irToHR (IR.quote0 fTy)
+                let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
+                let fty@(Core.Pi argUsage fArgTy _) = irToHR qFTy
                 (f, _) ← eraseTerm parameterisation (Core.Elim f) fUsage fty
-                case argUsage of
-                  Core.SNat 0 → pure (f, elimTy)
-                  _ → do
+                if argUsage == Core.SNat 0
+                  then pure (f, elimTy)
+                  else do
                     (x, _) ← eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
           Core.Ann usage term ty → do
@@ -101,10 +102,10 @@ eraseType parameterisation term = do
   case term of
     Core.Star n → pure (Erased.Star n)
     Core.PrimTy p → pure (Erased.PrimTy p)
-    Core.Pi _ argTy retTy → do
+    Core.Pi argUsage argTy retTy → do
       arg ← eraseType parameterisation argTy
       ret ← eraseType parameterisation retTy
-      pure (Erased.Pi arg ret)
+      pure (Erased.Pi argUsage arg ret)
     Core.Lam _ _ → throw @"erasureError" Unsupported
     Core.Elim elim →
       case elim of

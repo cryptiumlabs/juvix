@@ -54,7 +54,7 @@ eq = onIntB (==)
 neq ∷ Primitive → Primitive → Maybe Primitive
 neq = onIntB (/=)
 
-defaultEnv ∷ Map.Map Symbol (Type.Fn primVal)
+defaultEnv ∷ Map.T Symbol (Type.Fn primVal)
 defaultEnv =
   Map.fromList
     [ (intern "plus", Type.Arg2 plus),
@@ -93,7 +93,7 @@ defaultSymbols =
 -- directly to the AST instead
 defaultSpecial ∷
   (Eq k, Hashable k, IsString k) ⇒
-  Map.HashMap k (Type.AST primVal → Type.AST primVal → Type.AST primVal)
+  Map.T k (Type.AST primVal → Type.AST primVal → Type.AST primVal)
 defaultSpecial =
   Map.fromList
     [ ("or", Type.Or),

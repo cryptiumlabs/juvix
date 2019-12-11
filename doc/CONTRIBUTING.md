@@ -9,7 +9,26 @@ Contributions are welcome! Please consider the following guidelines.
 
 ## Documentation
 
-Add a brief description of any module you create before the module and after pragmas. Start each line of the description with `--`. The first line of the description should be `--|`. E.g., see [this](https://github.com/cryptiumlabs/juvix/blob/15ca9e5e602d24cf09fe87fc059e3e0ee78ad6db/src/Juvix/Encoding/Encoding.hs#L3).
+Add a brief description of any module you create before the module definition.
+This can be placed before or after (more idiomatically) after file specific pragmas.
+Much like haddock, the comments must begin with `--|` as the first comment and `--` for the consecutive lines.
+
+The comment formatting follows [org formatting](http://ergoemacs.org/emacs/emacs_org_markup.html)
+
+Adding headlines to code is also allowed, nesting the headline inside the current headline level while also putting `Relies on`
+before any nested directories
+
+Also try to keep each comment line below 82 characters long, breaking the line into a second line at the same indentation level
+and on the next line will not newline any generation from the org file itself.
+
+An example of this generation [can be seen here](https://github.com/cryptiumlabs/juvix/blob/15ca9e5e602d24cf09fe87fc059e3e0ee78ad6db/src/Juvix/Encoding/Encoding.hs#L3).
+
+The best way to write the documentation is by getting an org mode extension and writing the comments in said extension.
+- [atom](https://atom.io/packages/org-mode)
+- [vim](https://github.com/jceb/vim-orgmode)
+- [vscode](https://marketplace.visualstudio.com/items?itemName=tootone.org-mode)
+- [emacs](https://orgmode.org/)
+  + [emacs-in-buffer](http://pragmaticemacs.com/emacs/write-code-comments-in-org-mode-with-poporg/)
 
 ## Branch usage
 

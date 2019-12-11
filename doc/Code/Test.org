@@ -1,6 +1,8 @@
 * CoreConv
 - _Relies on_
   + [[Core]]
+  + [[HR]]
+  + [[IR]]
   + [[Library]]
 * CoreParser
 - _Relies on_
@@ -13,6 +15,7 @@
 * CoreTypechecker
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
+  + [[IR]]
   + [[All]]
   + [[Naturals]]
   + [[Unit]]
@@ -29,7 +32,10 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Check]]
   + [[Types]]
   + [[Types]]
+  + [[Types]]
+  + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 * Encoding
 - _Relies on_
   + [[Encoding]]
@@ -39,7 +45,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
 * Erasure
 - _Relies on_
+  + [[Erased]]
+  + [[Erasure]]
+  + [[HR]]
   + [[Unit]]
+  + [[Types]]
   + [[Usage]]
   + [[Library]]
 * INet
@@ -61,11 +71,25 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Graph]]
 * Spec
 * Backends
+** ArithmeticCircuit
+- _Relies on_
+  + [[Compilation]]
+  + [[Parameterisation]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+** LLVM
+- _Relies on_
+  + [[Codegen]]
+  + [[JIT]]
+  + [[Library]]
 ** Michelson
 - _Relies on_
   + [[Compilation]]
   + [[Optimisation]]
   + [[Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
 * Nets
 ** Combinators

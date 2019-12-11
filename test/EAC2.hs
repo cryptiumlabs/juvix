@@ -4,6 +4,7 @@ import Juvix.Core.EAC.Check
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
 import Juvix.Core.Types
+import Juvix.Core.Usage
 import Juvix.Library hiding (Type, exp, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified Test.Tasty as T
@@ -16,7 +17,7 @@ type Type = ET.Type ()
 type TypeAssignment = ET.TypeAssignment ()
 
 unitParam ∷ Parameterisation () ()
-unitParam = Parameterisation (const [()]) (\_ _ → Nothing) undefined undefined [] []
+unitParam = Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
 
 test_id ∷ T.TestTree
 test_id = shouldBeTypeable idTerm idAssignment
@@ -91,7 +92,7 @@ churchThree =
 churchAssignment ∷ TypeAssignment
 churchAssignment =
   Map.fromList
-    [ (intern "s", Pi (SymT (intern "a")) (SymT (intern "a"))),
+    [ (intern "s", Pi Omega (SymT (intern "a")) (SymT (intern "a"))),
       (intern "z", SymT (intern "a"))
     ]
 
@@ -132,13 +133,14 @@ arg0 = SymT (intern "a")
 arg1 ∷ Type
 arg1 =
   Pi
+    Omega
     (SymT (intern "a"))
     (SymT (intern "a"))
 
 counterexampleAssignment ∷ Map.Map Symbol Type
 counterexampleAssignment =
   Map.fromList
-    [ (intern "n", Pi arg1 arg0),
+    [ (intern "n", Pi Omega arg1 arg0),
       (intern "y", arg0),
       (intern "z", arg0),
       (intern "x", arg1)
@@ -208,16 +210,16 @@ zTy ∷ Type
 zTy = SymT (intern "a")
 
 sTy ∷ Type
-sTy = Pi zTy zTy
+sTy = Pi Omega zTy zTy
 
 nat ∷ Type
-nat = Pi sTy sTy
+nat = Pi Omega sTy sTy
 
 churchExpAssignment ∷ TypeAssignment
 churchExpAssignment =
   Map.fromList
     [ (intern "n", nat),
-      (intern "m", Pi nat nat),
+      (intern "m", Pi Omega nat nat),
       (intern "s", sTy),
       (intern "s'", sTy),
       (intern "z", zTy),

@@ -13,8 +13,8 @@ import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
 adtToScott ∷
-  ( HasState "constructors" (Map.Map Symbol Bound) m,
-    HasState "adtMap" (Map.Map Symbol Branches) m,
+  ( HasState "constructors" (Map.T Symbol Bound) m,
+    HasState "adtMap" (Map.T Symbol Branches) m,
     HasThrow "err" Errors m
   ) ⇒
   Name →
@@ -71,8 +71,8 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
         [1 .. lengthAdt]
 
 scottCase ∷
-  ( HasState "constructors" (Map.Map Symbol Bound) m,
-    HasState "adtMap" (Map.Map Symbol Branches) m,
+  ( HasState "constructors" (Map.T Symbol Bound) m,
+    HasState "adtMap" (Map.T Symbol Branches) m,
     HasThrow "err" Errors m,
     HasWriter "missingCases" [Symbol] m
   ) ⇒
