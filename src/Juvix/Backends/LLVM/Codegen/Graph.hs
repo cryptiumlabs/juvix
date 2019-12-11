@@ -174,8 +174,8 @@ mallocNodeH ∷
 mallocNodeH mPorts mData nodePtrType = do
   let totalSize =
         Types.nodePointerSize
-        + (length mPorts * Types.portTypeSize)
-        + (length mData * Types.dataTypeSize)
+          + (length mPorts * Types.portTypeSize)
+          + (length mData * Types.dataTypeSize)
   nodePtr ← mallocNode nodePtrType (fromIntegral totalSize)
   portSize ← allocaNumPortNum (fromIntegral $ length mPorts) nodePtrType
   ports ← allocaPortsH mPorts nodePtrType

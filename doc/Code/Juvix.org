@@ -58,17 +58,27 @@ This module provides the default environment to run LLVM code in
   + [[Library]]
 ***** Graph <<Codegen/Graph>>
 Operations necessary to update nodes
-- Allocation layout as described by =mallocNodeH=
+- =mallocNodeH= Allocation
   + layout :
-    [portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
-  | Part         | Alloca Or Malloc  |
-  |--------------+-------------------|
-  | portSize     | Malloc            |
-  | PortArray    | Malloc            |
-  | DataArray    | Malloc            |
-  | PortLocation | Previously Allocd |
-  | NodePtr      | Previously Allocd |
-  | Data         | Previously Allocd |
+    Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
+  | Part         | Alloca Or Malloc      |
+  |--------------+-----------------------|
+  | node         | Malloc                |
+  | portSize     | Stored on Node malloc |
+  | PortArray    | Stored on Node malloc |
+  | DataArray    | Stored on Node malloc |
+  | PortLocation | Previously Allocd     |
+  | NodePtr      | Previously Allocd     |
+  | Data         | Previously Allocd     |
+  + _Sub allocation functions used_
+    * =mallocNode=
+      | node | Malloc |
+    * =allocaNumPortNum=
+      | portsSize | Alloca |
+    * =allocaPortsH=
+      | portArray | Alloca |
+    * =allocaDataH=
+      | dataArray | Alloca |
 - Notably PortLocation, NodePtr, and Data are not allocated here,
   but are instead sent in.
 - Currently =defineMainPort=, =defineAuxiliary1= \dots
@@ -79,18 +89,12 @@ Operations necessary to update nodes
     never used.
   + In the future this should turn to an alloca, and thus to
     dealloc a node, we need not iterate over i.
-- For de-allocating a node, one needs only to de-allocate the
-  portSize, the two arrays, and the node pointer itself.
+- For deallocation, just deallocate the node pointer itself
   + Currently, node pointers are allocated when nodes are made, and
     so are not the responsibility of a node to deallocate all the
     pointers.
     * this however is up to the Net representation themselves, and
       thus should modify the default deallocate node functionality
-- TODO :: Consider a separate allocation strategy, namely instead
-          of mallocing portSize portArray and dataArray, alloca
-          them all, and just malloc the node pointer over it with
-          the full size, Rewrite this entire section and the
-          deallocate function if this is more optimal
 - _Relies on_
   + [[Block]]
   + [[Codegen/Types]]

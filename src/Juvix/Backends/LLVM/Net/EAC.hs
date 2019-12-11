@@ -247,7 +247,7 @@ genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
 --------------------------------------------------------------------------------
 
 -- | args is the argument for all rules that get called
-args :: IsString b => [(Type.Type, b)]
+args ∷ IsString b ⇒ [(Type.Type, b)]
 args =
   [ (Defs.nodePointer, "node_1"),
     (Types.eacPointer, "eac_ptr_1"),
@@ -293,6 +293,7 @@ defineAnnihilateRewireAux =
       _ ← Codegen.free eacPtr1
       _ ← Codegen.free eacPtr2
       Codegen.externf "eac_list" >>= Codegen.ret
+
 -- TODO ∷ make fast fanInAux and slow fanInAux
 
 -- | 'fanInAuxStar' is a slower version of 'fanInAux*' where * ∈ ℤ/4ℤ.
