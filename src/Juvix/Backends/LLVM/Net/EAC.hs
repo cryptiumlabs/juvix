@@ -9,17 +9,17 @@
 --     eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
 --     * Similar to the one in Graph, however it also has the eac tag
 --
---    | Part         | Alloca Or Malloc      |
---    |--------------+-----------------------|
---    | eac          | Malloc                |
---    | tag          | Stored on Eac Malloc  |
---    | NodePtr*     | Malloc                |
---    | portSize     | Stored on Node Malloc |
---    | PortArray    | Stored on Node Malloc |
---    | DataArray    | Stored on Node Malloc |
---    | PortLocation | Not Allocated Here    |
---    | NodePtr      | Not Allocated Here    |
---    | Data         | Not Allocated Here    |
+--    | Part         | Alloca Or Malloc                   |
+--    |--------------+------------------------------------|
+--    | eac          | Malloc                             |
+--    | tag          | Stored on Eac Malloc               |
+--    | NodePtr*     | Malloc from =mallocNode=           |
+--    | portSize     | Stored on Node Malloc              |
+--    | PortArray    | Stored on Node Malloc              |
+--    | DataArray    | Stored on Node Malloc              |
+--    | PortLocation | (Null) Allocad from PortArray Call |
+--    | NodePtr      | (Null) Allocad from PortArray Call |
+--    | Data         | (Null) Allocad from DataArray Call |
 --
 -- - Node Pointers are allocated at node creation time, so not the
 --   responsibility of the node to de-allocate, but instead uses the
