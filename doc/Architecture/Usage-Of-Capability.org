@@ -20,7 +20,7 @@
       - Due to =MTL= Working as a list of effects rather than a set of
         effects, the more layers one adds to one's =MTL= stack, the
         slower the execution speed is.
-      - Even worse, [[https://blog.infinitenegativeutility.com/2016/7/writer-monads-and-space-leaks][is that the writer monad always leaks sapce]] and
+      - Even worse, [[https://blog.infinitenegativeutility.com/2016/7/writer-monads-and-space-leaks][is that the writer monad always leaks space]] and
         thus should be avoided
 - Solving These Issues with [[https://www.tweag.io/posts/2018-10-04-capability.html][the =Capability= library]]
   + _Fundamental ideas_
