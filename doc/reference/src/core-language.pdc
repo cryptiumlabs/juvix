@@ -79,9 +79,9 @@ In canonical Juvix Core the type theory is instantiated over the semiring of nat
 
 Let $S$ be a set of sorts $(i, j, k)$ with a total order. 
 
-Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
+Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type and usage.
 
-Let $F$ be the set of primitive functions, where each $f$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f}$, which provided an argument of the function input type computes an argument of the function output type.
+Let $F$ be the set of primitive functions, where each $f$ is related to a function type, including an argument usage annotation, by the $⋮$ relation and endowed with a reduction operation $→_{f}$, which provided an argument of the function input type computes an argument of the function output type.
 
 Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Core is erased, so they must be directly supported by the low-level execution model. The core type theory and subsequent compilation pathways are parameterised over $K$, $C$, $F$, $⋮$, and the reduction operations $→_{f}$, which are assumed to be available as implicit parameters.
 
@@ -187,7 +187,17 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
-where $σ \in {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with. 
+where $σ \in {0,1}$, except for primitive constants.
+
+Primitive constant term judgements have the form:
+
+\begin{align}
+⊢ M \overset{γ}{:} S
+\end{align}
+
+where $γ$ is any element in the semiring.
+
+A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with.
 
 E.g., for the following judgement:
 
@@ -245,9 +255,9 @@ $σ = 0$ fragment only.
 \begin{prooftree}
 \AxiomC{$c \in C$}
 \AxiomC{$\kappa \in K$}
-\AxiomC{$c ⋮ \kappa$}
+\AxiomC{$c ⋮ (γ, \kappa)$}
 \RightLabel{Prim-Const}
-\TrinaryInfC{$⊢ c \overset{σ}{:} \kappa$}
+\TrinaryInfC{$⊢ c \overset{γ}{:} \kappa$}
 \end{prooftree}
 
 Primitive constants are typed according to the primitive typing relation, and they can be produced in any computational quantity wherever desired.
@@ -258,9 +268,9 @@ Primitive constants are typed according to the primitive typing relation, and th
 
 \begin{prooftree}
 \AxiomC{$f \in F$}
-\AxiomC{$f ⋮ (x \overset{π}{:} S) → T$}
+\AxiomC{$f ⋮ (γ, (x \overset{π}{:} S) → T)$}
 \RightLabel{Prim-Fn}
-\BinaryInfC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\BinaryInfC{$⊢ f \overset{γ}{:} (x \overset{π}{:} S) → T$}
 \end{prooftree}
 
 Primitive functions are typed according to the primitive typing relation, and they can be produced in any computational quantity wherever desired.
@@ -309,10 +319,10 @@ required for the argument, respectively:
 
 \begin{prooftree}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ π}{:} S$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
 \RightLabel{App}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
+\TrinaryInfC{$Γ_1 + π Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
@@ -338,10 +348,10 @@ Type formation does not require any resources.
 #### Introduction rule
 
 \begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ π}{:} S$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\TrinaryInfC{$π Γ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \end{prooftree}
 
 This is similar to the introduction rule for dependent function types above.
