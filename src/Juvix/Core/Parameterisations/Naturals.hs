@@ -17,7 +17,7 @@ import Prelude (String)
 -- k: primitive type: naturals
 data NatTy
   = Nat
-  deriving (Eq, Show)
+  deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
 data NatVal
