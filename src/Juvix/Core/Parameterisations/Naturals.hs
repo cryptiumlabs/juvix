@@ -11,12 +11,13 @@ import Juvix.Core.Types hiding
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
+import Text.Show
 import Prelude (String)
 
 -- k: primitive type: naturals
 data NatTy
   = Nat
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 -- c: primitive constant and f: functions
 data NatVal
@@ -25,7 +26,14 @@ data NatVal
   | Sub -- f subtraction
   | Mul -- f multiplication
   | Curried NatVal Natural
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show NatVal where
+  show (Natural x) = " Nat " <> Text.Show.show x <> " "
+  show Add = " + "
+  show Sub = " - "
+  show Mul = " * "
+  show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
 typeOf ∷ NatVal → NonEmpty NatTy
 typeOf (Natural _) = Nat :| []
