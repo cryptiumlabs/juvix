@@ -103,10 +103,10 @@ defineLink nodePtrType = Block.defineFunction Type.void "link" args $
     retNull
   where
     args =
-      [ (nodeType nodePtrType, "node_1"),
-        (numPorts, "port_1"),
-        (nodeType nodePtrType, "node_2"),
-        (numPorts, "port_2")
+      [ (nodePointer nodePtrType, "node_1"),
+        (numPortsPointer, "port_1"),
+        (nodePointer nodePtrType, "node_2"),
+        (numPortsPointer, "port_2")
       ]
 
 -- perform offsets
@@ -118,12 +118,11 @@ defineIsBothPrimary nodePtrTyp =
       -- TODO ∷ should this call be abstracted somewhere?!
       mainPort ← mainPort
       nodePtr ← Block.externf "node_ptr"
-      node ← load (nodeType nodePtrTyp) nodePtr
-      port ← findEdge (portType nodePtrTyp) [node, mainPort]
+      portPtr ← findEdge (Types.portPointer nodePtrTyp) [nodePtr, mainPort]
       otherNodePtr ← loadElementPtr $
         Types.Minimal
           { Types.type' = nodePointer nodePtrTyp,
-            Types.address' = port,
+            Types.address' = portPtr,
             Types.indincies' = Block.constant32List [0, 0]
           }
       -- convert ptrs to ints
@@ -142,17 +141,16 @@ defineIsBothPrimary nodePtrTyp =
 
 -- The logic assumes that the operation always succeeds
 defineFindEdge ∷ Define m ⇒ Type.Type → m Operand.Operand
-defineFindEdge nodePtrType = Block.defineFunction nodePtrType "find_edge" args $
+defineFindEdge nodePtrType =
+  Block.defineFunction (Types.portPointer nodePtrType) "find_edge" args $
   do
     node ← Block.externf "node"
     pNum ← Block.externf "port"
     portPtr ← getPort node pNum nodePtrType
-    port ← load (portType nodePtrType) portPtr
-    otherPtr ← portPointsTo port nodePtrType
-    other ← load (portType nodePtrType) otherPtr
-    ret other
+    otherPortPtr ← portPointsTo portPtr nodePtrType
+    ret otherPortPtr
   where
-    args = [(nodeType nodePtrType, "node"), (numPorts, "port")]
+    args = [(nodePointer nodePtrType, "node"), (numPortsPointer, "port")]
 
 mallocNode ∷ Call m ⇒ Type.Type → Integer → m Operand.Operand
 mallocNode t size = Block.malloc size (Types.nodePointer t)
@@ -252,41 +250,42 @@ mallocDataH mPorts = mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
-defineLinkConnectedPort ∷ Define m ⇒ Type.Type → m Operand.Operand
-defineLinkConnectedPort nodePtrType =
+defineLinkConnectedPort ∷ Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
+defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
   Block.defineFunction Type.void "link_connected_port" args $
     do
+      -- TODO ∷ Abstract out this bit ---------------------------------------------
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← findEdge (Types.portType nodePtrType) [nOld, pOld]
-      -- TODO ∷ Abstract out this bit ---------------------------------------------
-      let intoGen typ num = loadElementPtr $
+      oldPointsTo ← findEdge (Types.portPointer nodePtrType) [nOld, pOld]
+      let intoGen typ num = getElementPtr $
             Types.Minimal
               { Types.type' = typ,
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
       numPointsTo ← intoGen numPorts 1
-      nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
-      nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
+      nodePointsToPtr ← intoGen nodePtrType 0
+      nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
       -- End Abstracting out bits -------------------------------------------------
       _ ← link [nNew, pNew, numPointsTo, nodePointsTo]
       retNull
   where
     args =
-      [ (nodeType nodePtrType, "node_old"),
-        (numPorts, "port_old"),
-        (nodeType nodePtrType, "node_new"),
-        (numPorts, "port_new")
+      [ (nodePointer nodePtrType, "node_old"),
+        (numPortsPointer, "port_old"),
+        (nodePointer nodePtrType, "node_new"),
+        (numPortsPointer, "port_new")
       ]
 
-defineRewire ∷ Define m ⇒ Type.Type → m Operand.Operand
-defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
-  do
+defineRewire ∷ Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
+defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
+  Block.defineFunction Type.void "rewire" args $
+    do
     -- TODO ∷ Abstract out this bit ---------------------------------------------
     (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
     (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-    oldPointsTo ← findEdge (Types.portType nodePtrType) [n1, p1]
+    oldPointsTo ← findEdge (Types.portPointer nodePtrType) [n1, p1]
     let intoGen typ num = loadElementPtr $
           Types.Minimal
             { Types.type' = typ,
@@ -294,17 +293,17 @@ defineRewire nodePtrType = Block.defineFunction Type.void "rewire" args $
               Types.indincies' = Block.constant32List [0, num]
             }
     numPointsTo ← intoGen numPorts 1
-    nodePointsToPtr ← intoGen (nodePointer nodePtrType) 0
-    nodePointsTo ← load (nodeType nodePtrType) nodePointsToPtr
+    nodePointsToPtr ← intoGen nodePtrType 0
+    nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
     -- End Abstracting out bits -------------------------------------------------
     _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
     retNull
   where
     args =
-      [ (nodeType nodePtrType, "node_one"),
-        (numPorts, "port_one"),
-        (nodeType nodePtrType, "node_two"),
-        (numPorts, "port_two")
+      [ (nodePointer nodePtrType, "node_one"),
+        (numPortsPointer, "port_one"),
+        (nodePointer nodePtrType, "node_two"),
+        (numPortsPointer, "port_two")
       ]
 
 deAllocateNode ∷ Define m ⇒ Operand.Operand → m Operand.Operand
@@ -343,44 +342,33 @@ setPort ∷
 setPort (n1, p1) (n2, p2) nodePtrType = do
   (no1, po1) ← (,) <$> Block.externf n1 <*> Block.externf p1
   (no2, po2) ← (,) <$> Block.externf n2 <*> Block.externf p2
-  -- Grab the int value of port 1
+  -- Grab the port pointer of no1 at port p1
   portLocation ← getPort no1 po1 nodePtrType
-  p2Ptr ← newPortType no2 po2 nodePtrType
-  store portLocation p2Ptr
-  pure ()
+  -- set the port to be no1 and po1
+  setPortType portLocation no2 po2 nodePtrType
 
-newPortType ∷ Call m ⇒ Operand.Operand → Operand.Operand → Type.Type → m Operand.Operand
-newPortType node offset nodePtrType = do
-  newPort ← Block.malloc Types.portTypeSize (Types.portType nodePtrType)
-  -- This is a ptr to a ptr
+setPortType ∷
+  Call m ⇒ Operand.Operand → Operand.Operand → Operand.Operand → Type.Type → m ()
+setPortType portPtr node offset nodePtrType = do
   nodePtr ← getElementPtr $
     Types.Minimal
       { Types.type' = nodePointer nodePtrType,
-        Types.address' = newPort,
+        Types.address' = portPtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
   offsetPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = numPorts,
-        Types.address' = newPort,
+        Types.address' = portPtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
-  -- allocate pointer to the node
-  givenNodePtr ← Block.malloc Types.nodePointerSize (Types.nodePointer nodePtrType)
-  placeToStoreNode ← getElementPtr $
-    Types.Minimal
-      { Types.type' = nodeType nodePtrType,
-        Types.address' = givenNodePtr,
-        Types.indincies' = Block.constant32List [0, 0]
-      }
-  -- Store the node to it
-  store placeToStoreNode node
-  -- now store the pointer to the newPort
-  store nodePtr givenNodePtr
+  -- now store the pointer to the Newport
+  store nodePtr node
   -- store the offset
   store offsetPtr offset
-  pure newPort
+  pure ()
 
+-- | 'getPort' takes a node* and a numPort* for operands and gives back a port*
 getPort ∷
   ( RetInstruction m,
     HasState "blockCount" Int m,
@@ -398,12 +386,10 @@ getPort node port nodePtrType = do
           Types.address' = node,
           Types.indincies' = Block.constant32List [0, 1]
         }
-    -- allocate the new pointer
     getElementPtr $
       Types.Minimal
-        { Types.type' = portType nodePtrType,
+        { Types.type' = portPointer nodePtrType,
           Types.address' = ports,
-          -- TODO ∷ Ι may have to count size here, I don't think so?
           Types.indincies' =
             [ Operand.ConstantOperand (C.Int 32 0),
               value
@@ -444,7 +430,7 @@ intOfNumPorts typ numPort cont = do
 
     -- Generic logic
     branchGen variant variantType extraDeref = do
-      casted ← bitCast numPort (varientToType variant)
+      casted ← bitCast numPort (Types.pointerOf (varientToType variant))
       value ← Block.loadElementPtr $
         Types.Minimal
           { Types.type' = variantType,
@@ -473,22 +459,15 @@ portPointsTo portType nodePtrType = do
         Types.address' = portType,
         Types.indincies' = Block.constant32List [0, 0]
       }
-  -- get the node which it points to
-  nodeType ← loadElementPtr $
-    Types.Minimal
-      { Types.type' = nodeType nodePtrType,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 0]
-      }
   -- Get the numPort
-  numPort ← Block.loadElementPtr $
+  numPort ← Block.getElementPtr $
     Types.Minimal
-      { Types.type' = numPorts,
+      { Types.type' = numPortsPointer,
         Types.address' = portType,
         -- Index may change due to being packed
         Types.indincies' = Block.constant32List [0, 1]
       }
-  getPort nodeType numPort nodePtrType
+  getPort nodePtr numPort nodePtrType
 
 -- | Allocates a 'numPorts'
 createNumPortsStaticGen ∷
@@ -549,7 +528,14 @@ mallocNumPortsStatic ∷
   Type.Type →
   m Operand.Operand
 mallocNumPortsStatic isLarge value nodePtrType =
-  createNumPortsStaticGen isLarge value nodePtrType Block.mallocVariant (flip Block.malloc)
+  -- we do . pointerOf here, as the malloc version sets the type to a * to it
+  -- unlike the alloca which we just need to say the type itself
+  createNumPortsStaticGen
+    isLarge
+    value
+    nodePtrType
+    Block.mallocVariant
+    (flip Block.malloc . pointerOf)
 
 createNumPortNumGen ∷ Integer → t → (Bool → Operand.Operand → t → p) → p
 createNumPortNumGen n nodePtrType alloc
