@@ -1,7 +1,7 @@
 module Type where
 
 open import Prelude
-open ℕ using (_<_)
+open ℕ using () renaming (_<_ to _<ᴺ_ ; _≤_ to _≤ᴺ_)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
 open import Relation.Binary.PropositionalEquality
 
@@ -20,9 +20,24 @@ private
   o : BinOp
 
 
-data Ctx′ (F : ℕ → Set ℓ) : ℕ → Set ℓ where
-  ε : Ctx′ F 0
-  _⨟_ : (Γ : Ctx′ F n) (S : F n) → Ctx′ F (suc n)
+-- subtyping wrt universe levels
+data ⩿-At n : Rel (Type n) lzero
+
+_⩿_ : Rel (Type n) _
+_⩿_ = ⩿-At _
+infix 4 _⩿_
+
+data ⩿-At n where
+  ⩿-⋆    : (uv : u ≤ᴺ v) → ⋆ u ⩿ ⋆ v
+  -- contravariant in input, covariant in output
+  ⩿-𝚷    : (ss : S′ ⩿ S) (tt : T ⩿ T′) → 𝚷[ π / S ] T ⩿ 𝚷[ π / S′ ] T′
+  ⩿-refl : S ⩿ S
+  -- (todo: maybe recurse into other structures?)
+
+
+data Ctx′ (𝒯 : ℕ → Set ℓ) : ℕ → Set ℓ where
+  ε : Ctx′ 𝒯 0
+  _⨟_ : (Γ : Ctx′ 𝒯 n) (S : 𝒯 n) → Ctx′ 𝒯 (suc n)
 infixl 5 _⨟_
 
 Ctx  = Ctx′ Type
@@ -30,13 +45,14 @@ Skel = Ctx′ Usageω
 private variable Γ Γ′ : Ctx n ; Φ Φ′ Φ₀ Φ₁ Φ₂ Φ₂′ : Skel n
 
 data _‼_↦_ : (Γ : Ctx n) (x : Var n) (S : Type n) → Set where
-  here  : Γ ⨟ S ‼ 0 ↦ weakᵗ S
-  there : Γ ‼ x ↦ S → Γ ⨟ T ‼ suc x ↦ weakᵗ S
+  here  : Γ ⨟ S ‼ 0     ↦ weakᵗ S
+  there : Γ     ‼ x     ↦ S →
+          Γ ⨟ T ‼ suc x ↦ weakᵗ S
 infix 0 _‼_↦_
 
 _‼_ : (Γ : Ctx n) (x : Var n) → ∃ (Γ ‼ x ↦_)
 (Γ ⨟ S) ‼ zero  = weakᵗ S , here
-(Γ ⨟ S) ‼ suc x = Σ.map weakᵗ there $ Γ ‼ x
+(Γ ⨟ S) ‼ suc x = let T , L = Γ ‼ x in weakᵗ T , there L
 infix 10 _‼_
 
 data ⟿ᶜ-At : ∀ n → Rel (Ctx n) lzero
@@ -48,8 +64,8 @@ open module Evalᶜ = Eval.Derived ⟿ᶜ-At public using ()
             _⇓ to _⇓ᶜ ; _≋_ to _≋ᶜ_ ; ≋-At to ≋ᶜ-At)
 
 data ⟿ᶜ-At where
-  here  : (ss : S ⟿ᵗ S′) → (Γ ⨟ S) ⟿ᶜ (Γ  ⨟ S′)
-  there : (γγ : Γ ⟿ᶜ Γ′) → (Γ ⨟ S) ⟿ᶜ (Γ′ ⨟ S)
+  here  : (RS : S ⟿ᵗ S′) → (Γ ⨟ S) ⟿ᶜ (Γ  ⨟ S′)
+  there : (RΓ : Γ ⟿ᶜ Γ′) → (Γ ⨟ S) ⟿ᶜ (Γ′ ⨟ S)
 
 stepᶜ : (Γ : Ctx n) → Dec (∃[ Γ′ ] (Γ ⟿ᶜ Γ′))
 stepᶜ ε       = no λ()
@@ -68,9 +84,11 @@ data Zero : (Φ : Skel n) → Set where
   ε   : Zero ε
   _⨟_ : (Z : Zero Φ) (E : ζ ≋ᵗ ↑ 0ᵘ) → Zero (Φ ⨟ ζ)
 
-zeroᶜ : ∃ (Zero {n})
-zeroᶜ {zero}  = -, ε
-zeroᶜ {suc n} = -, zeroᶜ .proj₂ ⨟ Evalᵗ.≋-refl
+zeroᶜ : Σ[ Φ ∈ Skel n ] (Zero Φ)
+zeroᶜ {zero}  = ε , ε
+zeroᶜ {suc n} =
+  let Φ , Z = zeroᶜ {n} in
+  (Φ ⨟ ↑ 0ᵘ) , (Z ⨟ Evalᵗ.≋-refl)
 
 data Only : (Φ : Skel n) (x : Var n) (π : Usageω n) → Set where
   here  : Zero Φ                  → Only (Φ ⨟ ρ) 0       (weakᵗ ρ)
@@ -83,8 +101,10 @@ data _+ᶜ_↦_ : (Φ₁ Φ₂ Φ : Skel n) → Set where
 infix 1 _+ᶜ_↦_
 
 _+ᶜ_ : (Φ₁ Φ₂ : Skel n) → ∃ (Φ₁ +ᶜ Φ₂ ↦_)
-ε        +ᶜ ε        = -, ε
-(Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = Σ.map (_⨟ π +ʷ ρ) (_⨟ Evalᵗ.≋-refl) (Φ₁ +ᶜ Φ₂)
+ε        +ᶜ ε        = ε , ε
+(Φ₁ ⨟ π) +ᶜ (Φ₂ ⨟ ρ) = 
+  let Φ , A = Φ₁ +ᶜ Φ₂ in
+  (Φ ⨟ π +ʷ ρ) , (A ⨟ Evalᵗ.≋-refl)
 infix 300 _+ᶜ_
 
 
@@ -100,10 +120,13 @@ infix 0 _*ᶜ_↦_
 infixl 5 cons
 
 _*ᶜ_ : (π : Usageω n) (Φ₁ : Skel n) → ∃ (π *ᶜ Φ₁ ↦_)
-π *ᶜ ε        = -, ε
+π *ᶜ ε        = ε , ε
 π *ᶜ (Φ₁ ⨟ ρ) with chopᵗ π | inspect chopᵗ π
-π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] = -, (π′ *ᶜ Φ₁) .proj₂ ⨟[ eq ] Evalᵗ.≋-refl
-π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] = -, zero (zeroᶜ .proj₂) eq
+π *ᶜ (Φ₁ ⨟ ρ) | just π′ | [ eq ] =
+  let Φ , M = π′ *ᶜ Φ₁ in
+  (Φ ⨟ π′ *ʷ ρ) , (M ⨟[ eq ] Evalᵗ.≋-refl)
+π *ᶜ (Φ₁ ⨟ ρ) | nothing | [ eq ] =
+  let Φ , Z = zeroᶜ in Φ , zero Z eq
 infix 310 _*ᶜ_
 
 
@@ -114,39 +137,6 @@ infix 4 _≾ᵘ_
 
 ≾ᵘ-At : ∀ n → Rel (Usage n) _
 ≾ᵘ-At _ = _≾ᵘ_
-
-module _ where
-  open Relation
-  open Evalᵗ
-
-  ≾ᵘ-refl : Reflexive $ ≾ᵘ-At n
-  ≾ᵘ-refl = refl ≋-refl
-
-  ≾ᵘ-antisym : Antisymmetric _≋_ $ ≾ᵘ-At n
-  ≾ᵘ-antisym (refl E) (refl F) = E
-  ≾ᵘ-antisym (refl E) (-≾ω V)  = E
-  ≾ᵘ-antisym (-≾ω W)  (refl F) = ≋-sym F
-  ≾ᵘ-antisym (-≾ω W)  (-≾ω V)  = ≋-trans V (≋-sym W)
-
-  ≾ᵘ-trans : Transitive $ ≾ᵘ-At n
-  ≾ᵘ-trans (refl E) (refl F) = refl $ ≋-trans E F
-  ≾ᵘ-trans (refl _) (-≾ω V)  = -≾ω V
-  ≾ᵘ-trans (-≾ω W)  (refl F) = -≾ω (≋-trans (≋-sym F) W)
-  ≾ᵘ-trans (-≾ω W)  (-≾ω V)  = -≾ω V
-
-  ≾ᵘ-isPO : IsPartialOrder _≋_ $ ≾ᵘ-At n
-  ≾ᵘ-isPO =
-    record {
-      isPreorder = record {
-        isEquivalence = ≋-isEquiv ;
-        reflexive = refl ;
-        trans = ≾ᵘ-trans
-      } ;
-      antisym = ≾ᵘ-antisym
-    }
-
-  ≾ᵘ-poset : ℕ → Poset _ _ _
-  ≾ᵘ-poset n = record { isPartialOrder = ≾ᵘ-isPO {n} }
 
 
 binOpTy : BinOp → Type n
@@ -181,7 +171,7 @@ data _⊢_-_∋_▷_ where
     Γ ⊢ σ - T ∋ t ▷ Φ
 
   ty-⋆ :
-    u < v →
+    u <ᴺ v →
     Zero Φ →
     Γ ⊢ 0ᵘ - ⋆ v ∋ ⋆ u ▷ Φ
 

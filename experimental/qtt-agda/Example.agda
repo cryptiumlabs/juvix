@@ -5,8 +5,11 @@ module Example where
 open import Prelude
 
 open import QTT
+open import Hole
 open import Type
 open import Eval
+
+open Evalᵗ using () renaming (≋-refl to reflᵗ)
 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
 open import Relation.Binary.Construct.Closure.Symmetric
@@ -40,9 +43,9 @@ f-x-x =
     (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
           (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
           refl
-      (ty-` (there here) (there (here ε) ε))
-      (ty-[] ⩿-refl (ty-` here (here (ε ⨟ ε)))))
-    (ty-[] ⩿-refl (ty-` here (here (ε ⨟ ε))))
+      (ty-` (there here) (there (here ε) reflᵗ))
+      (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ)))))
+    (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ))))
 
 
 
@@ -71,16 +74,16 @@ S =
                   (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
                   refl
               (ty-` (there (there here))
-                    (there (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε) ε))
+                    (there (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ) reflᵗ))
               (ty-[] ⩿-refl
-                (ty-` here (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)))))
+                (ty-` here (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)))))
             (ty-[] ⩿-refl
               (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
                     (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
                     refl
-                (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)) ε))
+                (ty-` (there here) (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))
                 (ty-[] ⩿-refl
-                  (ty-` here (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε))))))))))
+                  (ty-` here (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ))))))))))
 
 -- 0 A, B : ⋆ 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
 K : ε ⨟ ⋆ 0 ⨟ ⋆ 0
@@ -91,11 +94,11 @@ K =
   ty-𝛌′ (refl (*ʷ-ℕ′ refl))
     (ty-𝛌′ (refl (*ʷ-ℕ′ refl))
       (ty-[] ⩿-refl
-        (ty-` (there here) (there (here (ε ⨟ ε ⨟ ε)) ε))))
+        (ty-` (there here) (there (here (ε ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))))
 
 -- A : ⋆ 0 ⊢ 1 (1 A → A) ∋ λ x . x
 I : ε ⨟ ⋆ 0 ⊢ ↑ 1 - 𝚷[ ↑ 1 / ‶ 0 ] ‶ 1 ∋ 𝛌 ‶ 0 ▷ ε ⨟ ↑ 0
-I = ty-𝛌′ (refl (*ʷ-ℕ′ refl)) (ty-[] ⩿-refl (ty-` here (here (ε ⨟ ε))))
+I = ty-𝛌′ (refl (*ʷ-ℕ′ refl)) (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ))))
 
 ChurchZero = K
 
@@ -111,32 +114,32 @@ ChurchSuc : ε ⨟ ⋆ 0
           ∋ 𝛌 𝛌 𝛌 𝛌 [ ` 1 ∙ [ ` 2 ∙ ‶ 1 ∙ ‶ 0 ] ]
           ▷ ε ⨟ ↑ 0
 ChurchSuc =
-  ty-𝛌′ (refl ε)
-    (ty-𝛌′ (refl ε)
-      (ty-𝛌′ (refl ε)
-        (ty-𝛌′ (refl ε)
+  ty-𝛌′ (refl reflᵗ)
+    (ty-𝛌′ (refl reflᵗ)
+      (ty-𝛌′ (refl reflᵗ)
+        (ty-𝛌′ (refl reflᵗ)
           (ty-[] ⩿-refl
             (ty-∙′ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟!
                          1-*ʷ ⨟! *ʷ-ℕ refl)
                    (ε ⨟ +ʷ-ℕ refl ⨟ 0+0=1*0 ⨟ 0+1=1*1 ⨟ 1+π=1*sucπ ⨟ 0+1=1*1)
               (ty-` (there here)
-                    (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε))
+                    (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))
               (ty-[] ⩿-refl
                 (ty-∙′ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟!
                              *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
                        (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟
                             FIXME-+ʷ-0 ⨟ +ʷ-ℕ refl)
-                  (ty-∙′ (zero (ε ⨟ ε ⨟ ε) refl ⨟!
+                  (ty-∙′ (zero (ε ⨟ reflᵗ ⨟ reflᵗ) refl ⨟!
                            FIXME-*ʷ-0 ⨟! FIXME-*ʷ-1 ⨟! FIXME-*ʷ-0)
                          (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ 0-+ʷ ⨟ 0-+ʷ)
                     (ty-` (there (there here))
-                          (there (there (here (ε ⨟ ε ⨟ ε)) ε) ε))
+                          (there (there (here (ε ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ) reflᵗ))
                     (ty-[] ⩿-refl
                       (ty-` (there here)
-                            (there (here (ε ⨟ ε ⨟ ε ⨟ ε)) ε))))
+                            (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))))
                   (ty-[] ⩿-refl
                     (ty-` here
-                          (here (ε ⨟ ε ⨟ ε ⨟ ε ⨟ ε)))))))))))
+                          (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)))))))))))
   where
     postulate
       -- I think there are at least three potential options here:
@@ -149,14 +152,16 @@ ChurchSuc =
       FIXME-+ʷ-0 : ↑ π +ʷ ↑ 0 ≋ᵗ ↑ π
 
     0+0=1*0 : ↑ 0 +ʷ ↑ 0 ≋ᵗ ↑ 1 *ʷ ↑ 0
-    0+0=1*0 = +ʷ-ℕ refl ◅◅ *ʷ-ℕ′ refl
+    0+0=1*0 = ↑ 0 , +ʷ-ℕ-⟿ refl , *ʷ-ℕ-⟿ refl
 
     -- (this one is used twice with different ns hence the ≋ᵗ-At business)
     0+1=1*1 : ↑ 0 +ʷ ↑ 1 ⟨ ≋ᵗ-At n ⟩ ↑ 1 *ʷ ↑ 1
-    0+1=1*1 = +ʷ-ℕ refl ◅◅ *ʷ-ℕ′ refl
+    0+1=1*1 = ↑ 1 , +ʷ-ℕ-⟿ refl , *ʷ-ℕ-⟿ refl
 
     1+π=1*sucπ : ↑ 1 +ʷ ↑ π ≋ᵗ ↑ 1 *ʷ ↑ sucᵘ π
-    1+π=1*sucπ =
-      fwd +ʷ-↑ ◅
-      ↑-cong (fwd +-s ◅ sucᵘ-cong (fwd +-0 ◅ ε) ◅◅ Evalᵗ.≋-sym 1-*) ◅◅
-      bwd *ʷ-↑ ◅ ε
+    1+π=1*sucπ {π = π} =
+      ↑ sucᵘ π ,
+      stepHereᵗ +ʷ-↑ ◅
+        congWrap*ᵗ (↑ ■)
+          (stepHereᵗ +-s ◅ congWrapᵗ (sucᵘ ■) (stepHereᵗ +-0) ◅ ε) ,
+      1-*ʷ-⟿
