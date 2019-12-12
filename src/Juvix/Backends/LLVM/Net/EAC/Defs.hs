@@ -40,8 +40,25 @@ auxiliary3 = Codegen.auxiliary3
 auxiliary4 = Codegen.auxiliary4
 
 linkAll ∷
-  Codegen.Call f ⇒ DSL.Relink Operand.Operand DSL.Auxiliary → f ()
+  Codegen.Call f ⇒ DSL.Relink Operand.Operand Operand.Operand DSL.Auxiliary → f ()
 linkAll = DSL.linkAll
+
+linkAllCons ∷
+  ( Codegen.RetInstruction m,
+    HasState "symTab" Codegen.SymbolTable m,
+    HasState "blockCount" Int m,
+    HasState "names" Codegen.Names m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasThrow "err" Codegen.Errors m
+  ) ⇒
+  Operand.Operand →
+  DSL.Relink
+    (DSL.Node Operand.Operand Operand.Operand)
+    Operand.Operand
+    DSL.Auxiliary →
+  m Operand.Operand
+linkAllCons = DSL.linkAllCons Types.cons Types.eacPointer
 
 nodeType ∷ Type.Type
 nodeType = Codegen.nodeType Types.eacPointer

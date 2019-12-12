@@ -643,7 +643,7 @@ getIsPrimaryEle ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 getIsPrimaryEle bothPrimary =
   getElementPtr $
     Types.Minimal
-      { Types.type' = Type.i1,
+      { Types.type' = Types.pointerOf Type.i1,
         Types.address' = bothPrimary,
         Types.indincies' = Block.constant32List [0, 0]
       }
@@ -655,7 +655,7 @@ getPrimaryNode ∷ RetInstruction m ⇒ Type.Type → Operand.Operand → m Oper
 getPrimaryNode nodePtrType bothPrimary =
   getElementPtr $
     Types.Minimal
-      { Types.type' = nodePtrType,
+      { Types.type' = Types.pointerOf nodePtrType,
         Types.address' = bothPrimary,
         Types.indincies' = Block.constant32List [0, 1]
       }

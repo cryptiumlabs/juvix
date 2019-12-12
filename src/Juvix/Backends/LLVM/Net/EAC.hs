@@ -173,6 +173,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (fCdr, fExit),
           (eCdr, eExit)
         ]
+    _ ← Codegen.free eacLPtr
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
     args = [(Types.eacPointer, "eac_list")]
