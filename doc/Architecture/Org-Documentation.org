@@ -1,0 +1,49 @@
+* Org Documentation
+Overall the code-base is documented by a mix of Markdown files and Org
+files.
+
+** Org Vs Markdown
+It may seem quite odd that the code base is split between these
+formats.
+
+The decision of what format to use is up to the developer of each
+documentation file/folder, and thus the choices seem rather arbitrary.
+
+- For example, the developer of the org documentation for code found it
+  quicker to hack together an org file than a markdown file.
+
+Both Markdown and Org have good editor support and online viewers, so
+for this purpose, they are at parity.
+
+Overall, the Juvix team as a whole has no strong feelings either way
+about Org Vs Markdown and thinks that there are more important questions in life.
+
+*** Unique Benefits of Org
+- in Emacs, [[https://github.com/pinard/poporg][poporg mode]] allows a developer to write comments in any
+  programming language as if they were in org mode.
+  + [[https://emacs.stackexchange.com/questions/42443/minor-markdown-mode-for-comments][It sadly seems that this is lacking for Markdown]]
+*** Unique Benefits of Markdown
+- it renders correctly in `vim`.
+
+** Org Mode in Code Documentation
+Originally the documentation was written by hand in an org file
+describing the purpose of each file as to get new contributors up to
+speed on what certain modules were for. It was meant as a quick way to
+view the code base and see how various modules interacted with each
+other
+
+Since =Juvix= is rapidly changing, this document quickly became out of
+date and rather sparse, however a [[https://github.com/cryptiumlabs/juvix/blob/develop/scripts/generate.lisp][LISP generation file was created]] to
+automatically generate these documents. Previous descriptions of the
+org files were copied and pasted into the top of Haskell modules so it
+would be automatically generated.
+
+*** Why/Why not Haddock
+We intend on eventually having Haddock docs along with these
+informal org mode docs.
+
+Changes to the lisp generation may be required to properly support both
+styles.
+
+** Org Mode in Architecture Choices
+This was again down to choice of the original developer.

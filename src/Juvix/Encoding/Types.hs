@@ -61,9 +61,9 @@ data Bound
 
 data Env
   = Env
-      { constructors ∷ Map.Map Symbol Bound,
+      { constructors ∷ Map.T Symbol Bound,
         -- | adtMap is a mapping between the adt name and the ordered cases thereof
-        adtMap ∷ Map.Map Symbol Branches,
+        adtMap ∷ Map.T Symbol Branches,
         -- | missingCases represent the missing cases of a match
         missingCases ∷ [Symbol]
       }
@@ -81,10 +81,10 @@ data Errors
 newtype EnvS a = EnvS (StateT Env (Except Errors) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "constructors" (Map.Map Symbol Bound))
+    (HasState "constructors" (Map.T Symbol Bound))
     via Field "constructors" () (MonadState (StateT Env (Except Errors)))
   deriving
-    (HasState "adtMap" (Map.Map Symbol Branches))
+    (HasState "adtMap" (Map.T Symbol Branches))
     via Field "adtMap" () (MonadState (StateT Env (Except Errors)))
   deriving
     (HasThrow "err" Errors)

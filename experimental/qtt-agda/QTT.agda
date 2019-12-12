@@ -1,91 +1,287 @@
-open import Usage as U
+module QTT where
 
-module QTT {ℓʲ ℓʲ′ ℓᵗ ℓᵗ′ ℓᵗ″} (usages : Usages ℓʲ ℓʲ′ ℓᵗ ℓᵗ′ ℓᵗ″) where
+-- Terms, variable occurrences, etc, are indexed by the number of
+-- bound variables in scope
 
 open import Prelude
+open ℕ using () renaming (_+_ to _+ᴺ_)
+
+open import Category.Applicative
+import Function.Identity.Categorical as IdC
+import Data.Maybe.Categorical as MaybeC
 
 private variable m n : ℕ
 
-open module Usage = Usages usages public
-  using (Usageʲ ; Usageᵗ ; ⟦_⟧ ;
-         _+_ ; _*_ ; 0# ; 0#ᵗ ; 1# ; 1#ᵗ ;
-         _≈ʲ_ ; _≟ʲ_ ; _≈ᵗ_ ; _≟ᵗ_ ; _≾ᵗ_ ; _≾ᵗ?_)
-private variable π π′ ρ ρ′ ζ : Usageᵗ ; σ σ′ : Usageʲ
--- ζ stands for usages which should be zero
-
+-- bound variables
 Var = Fin
 private variable x y : Var n
 
+-- universe levels
 Universe = ℕ
 private variable u v : Universe
 
-data Tm n : Set ℓᵗ
-data Elim n : Set ℓᵗ
-Typ = Tm
+data Term n : Set
+data Elim n : Set
+Type   = Term
+Usage  = Term -- finite usages
+Usageω = Term -- maybe-infinite usages
 
-data Tm n where
-  sort : (u : Universe) → Typ n
-  Π    : (π : Usageᵗ) (S : Typ n) (T : Typ (suc n)) → Typ n
-  Λ    : (t : Tm (suc n)) → Tm n
-  [_]  : (e : Elim n) → Tm n
-private variable s s′ t t′ : Tm n ; S S′ T T′ R R′ : Typ n
 
+data CoreType : Set where
+  `⋆  : (u : Universe) → CoreType -- type of types
+  `𝓤  : CoreType -- type of finite usages
+  `𝓤ω : CoreType -- type of maybe-infinite usages
+
+data Binder n : Set where
+  `𝚷[_/_] : (π : Usageω n) (S : Type n) → Binder n
+  `𝛌      : Binder n
+
+data BinOp : Set where
+  `+  `*  : BinOp -- finite
+  `+ʷ `*ʷ : BinOp -- infinite
+
+-- terms which can be checked against a given type
+data Term n where
+  -- builtin type ⋆, 𝓤 or 𝓤ω
+  CORE      : (K : CoreType) → Type n
+
+  -- binder (λ or Π)
+  BIND      : (B : Binder n) → Term (suc n) → Term n
+
+  -- binary operation
+  _⟪_⟫_     : (s : Term n) (o : BinOp) (t : Term n) → Term n
+
+  -- finite usages
+  0ᵘ        : Usage n
+  sucᵘ      : (π : Usage n) → Usage n
+
+  -- infinite usages
+  ↑_        : (π : Usage n) → Usageω n
+  ωᵘ        : Usageω n
+
+  -- elimination
+  [_]       : (e : Elim n) → Term n
+private variable s t : Term n ; S S′ T T′ : Type n ; π ρ ρᵀ : Usage n
+
+infix 1000 ↑_
+infix 250 _⟪_⟫_
+
+pattern ⋆ i = CORE (`⋆ i)
+pattern 𝓤   = CORE `𝓤
+pattern 𝓤ω  = CORE `𝓤ω
+
+pattern _+_  π ρ = π ⟪ `+  ⟫ ρ
+pattern _*_  π ρ = π ⟪ `*  ⟫ ρ
+pattern _+ʷ_ π ρ = π ⟪ `+ʷ ⟫ ρ
+pattern _*ʷ_ π ρ = π ⟪ `*ʷ ⟫ ρ
+infixl 300 _+_ _+ʷ_ ; infixl 310 _*_ _*ʷ_
+
+pattern 𝚷[_/_]_ π S T = BIND `𝚷[ π / S ] T
+pattern 𝛌_          t = BIND `𝛌          t
+infixr 150 𝚷[_/_]_ 𝛌_
+
+-- eliminations, whose type can be inferred
 data Elim n where
-  `_  : (x : Var n) → Elim n
-  _∙_ : (f : Elim n) (s : Tm n) → Elim n
-  _⦂_ : (s : Tm n) (S : Typ n) → Elim n
-infix 1000 `_ ; infixl 200 _∙_ ; infix 100 _⦂_
-private variable e e′ f f′ : Elim n
+  -- bound variable
+  `_ : (x : Var n) → Elim n
+  -- application
+  _∙_ : (f : Elim n) (s : Term n) → Elim n
 
+  -- eliminator for 𝓤
+  𝓤-elim  :
+    (T : Type (suc n)) →  -- result type
+    (ρ ρᵀ : Usageω n) →   -- usages of π & T[π] in the suc case
+    (z : Term n) →        -- '0ᵘ' case
+    (s : Term (2 +ᴺ n)) → -- 'sucᵘ π' case (bound vars are π and T[π])
+    (π : Usage n) → Elim n
 
-data _⩿_ : Rel (Typ n) lzero where
-  sort : u ℕ.≤ v → sort u ⩿ sort {n} v
-  Π    : S′ ⩿ S → T ⩿ T′ → Π π S T ⩿ Π π S′ T′
-  refl : S ⩿ S
-  -- (maybe recurse into other structures?)
-infix 4 _⩿_
+  -- eliminator for 𝓤ω
+  𝓤ω-elim :
+    (T : Type (suc n)) → -- result type
+    (ρ : Usageω n) →     -- usage of π in the ↑ case
+    (d : Term (suc n)) → -- '↑ π' case (d for definite; bound var is π)
+    (w : Term n) →       -- 'ω' case
+    (π : Usageω n) → Elim n
 
-weakᵗ′ : Var (suc n) → Tm n → Tm (suc n)
+  -- type annotation for a term
+  _⦂_ : (s : Term n) (S : Type n) → Elim n
+infix 1000 `_ ; infixl 400 _∙_ ; infix 100 _⦂_
+private variable e f : Elim n
+
+pattern ‶_ x = [ ` x ] -- bound variable in a term
+infix 1000 ‶_
+
+-- weakˣ′ x M inserts an extra bound variable between x - 1 and x
+-- in the common case weakˣ′ 0 (aka weakˣ) it inserts a variable
+-- before all dangling variables without disturbing binders inside the
+-- term
+weakᵗ′ : Var (suc n) → Term n → Term (suc n)
 weakᵉ′ : Var (suc n) → Elim n → Elim (suc n)
-weakᵗ′ i (sort u)  = sort u
-weakᵗ′ i (Π π S T) = Π π (weakᵗ′ i S) (weakᵗ′ (suc i) T)
-weakᵗ′ i (Λ t)     = Λ (weakᵗ′ (suc i) t)
-weakᵗ′ i [ e ]     = [ weakᵉ′ i e ]
-weakᵉ′ i (` x)     = ` Fin.punchIn i x
-weakᵉ′ i (f ∙ s)   = weakᵉ′ i f ∙ weakᵗ′ i s
-weakᵉ′ i (s ⦂ S)   = weakᵗ′ i s ⦂ weakᵗ′ i S
-
-weakᵗ : Tm n → Tm (suc n)
-weakᵗ = weakᵗ′ zero
-weakᵉ : Elim n → Elim (suc n)
-weakᵉ = weakᵉ′ zero
-
-substᵗ′ : Var (suc n) → Tm (suc n) → Elim n → Tm n
-substᵉ′ : Var (suc n) → Elim (suc n) → Elim n → Elim n
-substᵗ′ i (sort u) e = sort u
-substᵗ′ i (Π π S T) e = Π π (substᵗ′ i S e) (substᵗ′ (suc i) T (weakᵉ′ i e))
-substᵗ′ i (Λ t) e = Λ (substᵗ′ (suc i) t (weakᵉ′ i e))
-substᵗ′ i [ f ] e = [ substᵉ′ i f e ]
-substᵉ′ i (` x) e =
-  case i Fin.≟ x of λ{(yes _) → e ; (no i≢x) → ` Fin.punchOut i≢x}
-substᵉ′ i (f ∙ s) e = substᵉ′ i f e ∙ substᵗ′ i s e
-substᵉ′ i (s ⦂ S) e = substᵗ′ i s e ⦂ substᵗ′ i S e
-
-substᵗ : Tm (suc n) → Elim n → Tm n
-substᵗ = substᵗ′ zero
-substᵉ : Elim (suc n) → Elim n → Elim n
-substᵉ = substᵉ′ zero
+weakᵇ′ : Var (suc n) → Binder n → Binder (suc n)
+weakᵗ′ x (CORE K) = CORE K
+weakᵗ′ x (BIND B T) = BIND (weakᵇ′ x B) (weakᵗ′ (suc x) T)
+weakᵗ′ x (s ⟪ o ⟫ t) = weakᵗ′ x s ⟪ o ⟫ weakᵗ′ x t
+weakᵗ′ x 0ᵘ = 0ᵘ
+weakᵗ′ x (sucᵘ π) = sucᵘ (weakᵗ′ x π)
+weakᵗ′ x (↑ π) = ↑ weakᵗ′ x π
+weakᵗ′ x ωᵘ = ωᵘ
+weakᵗ′ x [ e ] = [ weakᵉ′ x e ]
+weakᵉ′ x (` y) = ` Fin.punchIn x y
+weakᵉ′ x (f ∙ s) = weakᵉ′ x f ∙ weakᵗ′ x s
+weakᵉ′ x (𝓤-elim T ρ ρᵀ z s π) =
+  let x′ = suc x ; x″ = suc x′ in
+  𝓤-elim (weakᵗ′ x′ T) (weakᵗ′ x ρ) (weakᵗ′ x ρᵀ)
+         (weakᵗ′ x z) (weakᵗ′ x″ s) (weakᵗ′ x π)
+weakᵉ′ x (𝓤ω-elim T ρ d w π) =
+  let x′ = suc x in
+  𝓤ω-elim (weakᵗ′ x′ T) (weakᵗ′ x ρ)
+          (weakᵗ′ x′ d) (weakᵗ′ x w) (weakᵗ′ x π)
+weakᵉ′ x (s ⦂ S) = weakᵗ′ x s ⦂ weakᵗ′ x S
+weakᵇ′ x `𝚷[ π / S ] = `𝚷[ weakᵗ′ x π / weakᵗ′ x S ]
+weakᵇ′ x `𝛌 = `𝛌
 
 
+-- substˣ″ x M e replaces occurrences of variable x in M with the
+-- result of e (and shuffles the remaining indices accordingly)
+module _ {F : Set → Set} (A : RawApplicative F) where
+  open RawApplicative A using (pure ; _<$>_ ; _⊛_)
+  substᵗ″ : Var (suc n) → Term (suc n) → F (Elim n) → F (Term n)
+  substᵉ″ : Var (suc n) → Elim (suc n) → F (Elim n) → F (Elim n)
+  substᵇ″ : Var (suc n) → Binder (suc n) → F (Elim n) → F (Binder n)
+  substᵗ″ x (CORE K) e = pure $ CORE K
+  substᵗ″ x (BIND B T) e =
+    pure BIND ⊛ substᵇ″ x B e
+              ⊛ (substᵗ″ (suc x) T (weakᵉ′ x <$> e))
+  substᵗ″ x (s ⟪ o ⟫ t) e =
+    pure (_⟪ o ⟫_) ⊛ substᵗ″ x s e ⊛ substᵗ″ x t e
+  substᵗ″ x 0ᵘ e = pure 0ᵘ
+  substᵗ″ x (sucᵘ π) e = sucᵘ <$> substᵗ″ x π e
+  substᵗ″ x (↑ π) e = ↑_ <$> substᵗ″ x π e
+  substᵗ″ x ωᵘ e = pure ωᵘ
+  substᵗ″ x [ f ] e = [_] <$> substᵉ″ x f e
+  substᵉ″ x (` y) e = case x Fin.≟ y of λ where
+    (yes _)  → e
+    (no x≢y) → pure $ ` Fin.punchOut x≢y
+  substᵉ″ x (f ∙ s) e = pure _∙_ ⊛ substᵉ″ x f e ⊛ substᵗ″ x s e
+  substᵉ″ x (𝓤-elim T ρ ρᵀ z s π) e =
+    let x′ = suc x  ; e′ = weakᵉ′ x  <$> e
+        x″ = suc x′ ; e″ = weakᵉ′ x′ <$> e′ in
+    pure 𝓤-elim ⊛ substᵗ″ x′ T e′
+                ⊛ substᵗ″ x ρ e
+                ⊛ substᵗ″ x ρᵀ e
+                ⊛ substᵗ″ x  z e ⊛ substᵗ″ x″ s e″
+                ⊛ substᵗ″ x  π e
+  substᵉ″ x (𝓤ω-elim T ρ d w π) e =
+    let x′ = suc x  ; e′ = weakᵉ′ x <$> e in
+    pure 𝓤ω-elim ⊛ substᵗ″ x′ T e′
+                 ⊛ substᵗ″ x ρ e
+                 ⊛ substᵗ″ x′ d e′ ⊛ substᵗ″ x w e
+                 ⊛ substᵗ″ x  π e
+  substᵉ″ x (s ⦂ S) e = pure _⦂_ ⊛ substᵗ″ x s e ⊛ substᵗ″ x S e
+  substᵇ″ x `𝚷[ π / S ] e = pure `𝚷[_/_] ⊛ substᵗ″ x π e ⊛ substᵗ″ x S e
+  substᵇ″ x `𝛌 e = pure `𝛌
 
--- allows using de Bruijn indices as terms/elims
-module _ where
-  open Number
+module Subst {ℓ} {𝒯 ℰ : ℕ → Set ℓ}
+             (weak′  : ∀ {n} → Var (suc n) → 𝒯 n → 𝒯 (suc n))
+             (subst″ : ∀ {F} → RawApplicative F → ∀ {n} →
+                       Var (suc n) → 𝒯 (suc n) → F (ℰ n) → F (𝒯 n))
+ where
+  weak : 𝒯 n → 𝒯 (suc n)
+  weak = weak′ 0
 
-  instance number-Elim : ∀ {n} → Number (Elim n)
-  number-Elim {n} .Constraint x = Lift _ $ Fin.number {n} .Constraint x
-  number-Elim .fromNat n = ` Fin.number .fromNat n
+  subst′ : Var (suc n) → 𝒯 (suc n) → ℰ n → 𝒯 n
+  subst′ = subst″ IdC.applicative
 
-  instance number-Term : ∀ {n} → Number (Tm n)
-  number-Term {n} .Constraint = number-Elim {n} .Constraint
-  number-Term .fromNat n ⦃ x ⦄  = [ number-Elim .fromNat n ⦃ x ⦄ ]
+  subst : 𝒯 (suc n) → ℰ n → 𝒯 n
+  subst = subst′ 0
+
+  -- chop′ x M removes the variable x from M's scope, which decreases
+  -- all higher dB indices by 1. It fails if x is actually used anywhere
+  chop′ : Var (suc n) → 𝒯 (suc n) → Maybe (𝒯 n)
+  chop′ x t = subst″ MaybeC.applicative x t nothing
+
+  chop : 𝒯 (suc n) → Maybe (𝒯 n)
+  chop = chop′ 0
+
+open Subst weakᵗ′ substᵗ″ public using ()
+  renaming (weak to weakᵗ ; subst′ to substᵗ′ ; subst to substᵗ ;
+            chop′ to chopᵗ′ ; chop to chopᵗ)
+
+open Subst weakᵉ′ substᵉ″ public using ()
+  renaming (weak to weakᵉ ; subst′ to substᵉ′ ; subst to substᵉ ;
+            chop′ to chopᵉ′ ; chop to chopᵉ)
+
+open Subst weakᵇ′ substᵇ″ public using ()
+  renaming (weak to weakᵇ ; subst′ to substᵇ′ ; subst to substᵇ ;
+            chop′ to chopᵇ′ ; chop to chopᵇ)
+
+
+private
+  -- 'punchIn x' increments all variables ≥ x, which leaves a hole
+  -- where x itself was, so 'punchIn x y' can never be x
+  punchIn-≢ : x ≢ Fin.punchIn x y
+  punchIn-≢ {x = zero}  {y}     ()
+  punchIn-≢ {x = suc x} {zero}  ()
+  punchIn-≢ {x = suc x} {suc y} eq = punchIn-≢ $ Fin.suc-injective eq
+
+  -- inserting a variable and then removing the same one is the same
+  -- as doing nothing
+  punchOutIn : (x≢y′ : x ≢ Fin.punchIn x y) → Fin.punchOut x≢y′ ≡ y
+  punchOutIn {x = zero}  {y}     _    = refl
+  punchOutIn {x = suc x} {zero}  _    = refl
+  punchOutIn {x = suc x} {suc y} x≢y′ =
+    ≡.cong suc $ punchOutIn $ x≢y′ ∘ ≡.cong suc
+
+-- if you add a variable to a scope, and then substitute for that
+-- (unused) variable, then overall nothing happens
+--
+-- [the only case which does anything is `_ on LL256-258]
+subst-weakᵗ : (s : Term n) (x : Fin (suc n)) (e : Elim n) →
+              substᵗ′ x (weakᵗ′ x s) e ≡ s
+subst-weakᵉ : (f : Elim n) (x : Fin (suc n)) (e : Elim n) →
+              substᵉ′ x (weakᵉ′ x f) e ≡ f
+subst-weakᵇ : (B : Binder n) (x : Fin (suc n)) (e : Elim n) →
+              substᵇ′ x (weakᵇ′ x B) e ≡ B
+subst-weakᵗ (CORE _) x e = refl
+subst-weakᵗ (BIND B T) x e
+  rewrite subst-weakᵇ B x e | subst-weakᵗ T (suc x) (weakᵉ′ x e) = refl
+subst-weakᵗ (s ⟪ o ⟫ t) x e
+  rewrite subst-weakᵗ s x e | subst-weakᵗ t x e = refl
+subst-weakᵗ 0ᵘ x e = refl
+subst-weakᵗ (sucᵘ π) x e rewrite subst-weakᵗ π x e = refl
+subst-weakᵗ (↑ π) x e rewrite subst-weakᵗ π x e = refl
+subst-weakᵗ ωᵘ x e = refl
+subst-weakᵗ [ f ] x e rewrite subst-weakᵉ f x e = refl
+subst-weakᵉ (` y) x e with x Fin.≟ Fin.punchIn x y
+... | yes x≡y′ = ⊥-elim $ punchIn-≢ x≡y′
+... | no  x≢y′ rewrite punchOutIn x≢y′ = refl
+subst-weakᵉ (f ∙ s) x e rewrite subst-weakᵉ f x e | subst-weakᵗ s x e = refl
+subst-weakᵉ (𝓤-elim T ρ ρᵀ z s π) x e
+  rewrite subst-weakᵗ T  (suc x)       (weakᵉ′ x e)
+        | subst-weakᵗ ρ  x             e
+        | subst-weakᵗ ρᵀ x             e
+        | subst-weakᵗ z  x             e
+        | subst-weakᵗ s  (suc (suc x)) (weakᵉ′ (suc x) (weakᵉ′ x e))
+        | subst-weakᵗ π  x             e = refl
+subst-weakᵉ (𝓤ω-elim T ρ d w π) x e
+  rewrite subst-weakᵗ T  (suc x) (weakᵉ′ x e)
+        | subst-weakᵗ ρ  x             e
+        | subst-weakᵗ d  (suc x) (weakᵉ′ x e)
+        | subst-weakᵗ w  x       e
+        | subst-weakᵗ π  x       e = refl
+subst-weakᵉ (s ⦂ S) x e rewrite subst-weakᵗ s x e | subst-weakᵗ S x e = refl
+subst-weakᵇ `𝚷[ π / S ] x e
+  rewrite subst-weakᵗ π x e | subst-weakᵗ S x e = refl
+subst-weakᵇ `𝛌 x e = refl
+
+
+-- convert a natural to a constant usage
+natToUsage : ℕ → Usage n
+natToUsage zero    = 0ᵘ
+natToUsage (suc n) = sucᵘ $ natToUsage n
+
+-- use numerals in terms for usages
+-- (which means bound vars have to be ` n)
+instance number-Term : Number (Usage n)
+number-Term .Number.Constraint _ = ⊤
+number-Term .Number.fromNat    n = natToUsage n

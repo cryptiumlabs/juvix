@@ -4,91 +4,164 @@ module Example where
 
 open import Prelude
 
-open import Usage
-open import ExtNat hiding (_*_ ; _+_)
-open import QTT NoSub.any
-open import Type NoSub.any
+open import QTT
+open import Hole
+open import Type
+open import Eval
+
+open Evalᵗ using () renaming (≋-refl to reflᵗ)
+
+open import Relation.Binary.Construct.Closure.ReflexiveTransitive
+open import Relation.Binary.Construct.Closure.Symmetric
 
 variable
   n : ℕ
+  π : Term n
   e : Elim n
 
-A : ∀ {n} → Tm n
-A = sort 0
+A : Term n
+A = ⋆ 0
+
+pattern _⨟!_ xs x = xs ⨟[ refl ] x
+infixl 5 _⨟!_
+
+-- a macro to generate the long strings of ... ⨟ +-ℕ refl ⨟ ... and
+-- similar boring things would probably go a long way to helping
+-- readability
+
 
 -- 2 f: 2 A → 3 A → A, 10 x: A ⊢ 2 f x x ∈ A
 -- though note that the usages in the context are *outputs*
 -- i.e. they're not checked against anything
-example : ε ⨟ Π 2 A (Π 3 A A) ⨟ A ⊢ 2 - (1 ∙ 0 ∙ 0) ∈ A ▷ ε ⨟ 2 ⨟ 10
-example =
-  let Γ = ε ⨟ Π 2 A (Π 3 A A) ⨟ A in
-  app (ε ⨟ 2 ⨟ 10 ≡ (ε ⨟ 2 ⨟ 4) ⊕ 3 ⨵ (ε ⨟ 0 ⨟ 2)   ∋ refl)
-      (A ≡ substᵗ A (0 ⦂ A)   ∋ refl)
-    (app (ε ⨟ 2 ⨟ 4 ≡ (ε ⨟ 2 ⨟ 0) ⊕ 2 ⨵ (ε ⨟ 0 ⨟ 2)   ∋ refl)
-         (Π 3 A A ≡ substᵗ (Π 3 A A) (0 ⦂ A)   ∋ refl)
-      (var (lookup Γ 1 ≡ Π 2 A (Π 3 A A)   ∋ refl)
-           (Only 2 1 (ε ⨟ 2 ⨟ 0)   ∋ ε ⨟[ refl ] ⨟ refl))
-      (elim (A ⩿ A   ∋ refl)
-        (var (lookup Γ 0 ≡ A   ∋ refl)
-             (Only 2 0 (ε ⨟ 0 ⨟ 2)   ∋ ε ⨟ refl ⨟[ refl ]))))
-    (elim (A ⩿ A   ∋ refl)
-      (var (lookup Γ 0 ≡ A   ∋ refl)
-           (Only 2 0 (ε ⨟ 0 ⨟ 2)   ∋ ε ⨟ refl ⨟[ refl ])))
+f-x-x : ε ⨟ 𝚷[ ↑ 2 / A ] 𝚷[ ↑ 3 / A ] A ⨟ A
+        ⊢ ↑ 2 - (` 1 ∙ ‶ 0  ∙ ‶ 0) ∈ A
+        ▷ ε ⨟ ↑ 2 ⨟ ↑ 10
+f-x-x =
+  ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+       (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
+       refl
+    (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+          (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
+          refl
+      (ty-` (there here) (there (here ε) reflᵗ))
+      (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ)))))
+    (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ))))
+
+
 
 -- ⊢ 2 (1 f: (2 A → 3 A → A)) → 5 A → A ∋ λ f x. f x x
-example′ : ε ⊢ 2 - Π 1 (Π 2 A (Π 3 A A)) (Π 5 A A) ∋ Λ (Λ [ 1 ∙ 0 ∙ 0 ]) ▷ ε
-example′ = lam refl $ lam refl $ elim refl example
+f-x-x′ : ε ⊢ ↑ 2 - 𝚷[ ↑ 1 / 𝚷[ ↑ 2 / A ] 𝚷[ ↑ 3 / A ] A ] 𝚷[ ↑ 5 / A ] A
+             ∋ 𝛌 𝛌 [ ` 1 ∙ ‶ 0 ∙ ‶ 0 ] ▷ ε
+f-x-x′ =
+  ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+    (ty-𝛌′ (refl (*ʷ-ℕ′ refl)) (ty-[] ⩿-refl f-x-x))
 
--- A, B, C: sort 0 ⊢ 1 (1 (1 A → 1 B → C) → 1 A → 2 B → C) ∋ λ x y z. x z (y z)
-S : ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0
-      ⊢ 1 - Π 1 (Π 1 2 (Π 1 2 2)) (Π 1 (Π 1 3 3) (Π 2 4 3))
-      ∋ Λ (Λ (Λ [ 2 ∙ 0 ∙ [ 1 ∙ 0 ] ]))
-      ▷ ε ⨟ 0 ⨟ 0 ⨟ 0
+ -- A, B, C: ⋆ 0 ⊢ 1 (1 (1 A → 1 B → C) → 1 A → 2 B → C) ∋ λ x y z. x z (y z)
+S : ε ⨟ ⋆ 0 ⨟ ⋆ 0 ⨟ ⋆ 0
+      ⊢ ↑ 1 - 𝚷[ ↑ 1 / 𝚷[ ↑ 1 / ‶ 2 ] 𝚷[ ↑ 1 / ‶ 2 ] ‶ 2 ]
+              𝚷[ ↑ 1 / 𝚷[ ↑ 1 / ‶ 3 ] ‶ 3 ] 𝚷[ ↑ 2 / ‶ 4 ] ‶ 3
+      ∋ 𝛌 𝛌 𝛌 [ ` 2 ∙ ‶ 0 ∙ [ ` 1 ∙ ‶ 0 ] ]
+      ▷ ε ⨟ ↑ 0 ⨟ ↑ 0 ⨟ ↑ 0
 S =
-  let Γ = ε ⨟ sort 0 ⨟ sort 0 ⨟ sort 0 ⨟ Π 1 2 (Π 1 2 2) ⨟ Π 1 3 3 ⨟ 4 in
-  lam (1 ≾ᵗ 1 * 1   ∋ refl)
-    (lam (1 ≾ᵗ 1 * 1   ∋ refl)
-      (lam (2 ≾ᵗ 1 * 2   ∋ refl)
-        (elim (3 ⩿ 3   ∋ refl)
-          (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1 ⨟ 2) ≡
-                (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 1) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1)
-                  ∋ refl)
-               (3 ≡ substᵗ 4 ([ 1 ∙ 0 ] ⦂ 4)   ∋ refl)
-            (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 1) ≡
-                  (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 0) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1)
-                    ∋ refl)
-                 (Π 1 4 4 ≡ substᵗ (Π 1 5 5) (0 ⦂ 5)   ∋ refl)
-              (var (lookup Γ 2 ≡ Π 1 5 (Π 1 5 5)  ∋ refl)
-                   (Only 1 2 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0 ⨟ 0) ∋
-                     ε ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl ⨟ refl))
-              (elim (5 ⩿ 5   ∋ refl)
-                (var (lookup Γ 0 ≡ 5   ∋ refl)
-                     (Only 1 0 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1) ∋
-                       ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ]))))
-            (elim (4 ⩿ 4   ∋ refl)
-              (app ((ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 1) ≡
-                    (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ⊕ 1 ⨵ (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1)
-                      ∋ refl)
-                   (4 ≡ substᵗ 5 (0 ⦂ 5)   ∋ refl)
-                (var (lookup Γ 1 ≡ Π 1 5 5   ∋ refl)
-                     (Only 1 1 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ∋
-                      ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))
-                (elim (5 ⩿ 5   ∋ refl)
-                  (var (lookup Γ 0 ≡ 5   ∋ refl)
-                       (Only 1 0 (ε ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 0 ⨟ 1) ∋
-                        ε ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟ refl ⨟[ refl ])))))))))
+  ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+    (ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+      (ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+        (ty-[] ⩿-refl
+          (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+                (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
+                refl
+            (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+                  (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
+                  refl
+              (ty-` (there (there here))
+                    (there (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ) reflᵗ))
+              (ty-[] ⩿-refl
+                (ty-` here (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)))))
+            (ty-[] ⩿-refl
+              (ty-∙ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+                    (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl)
+                    refl
+                (ty-` (there here) (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))
+                (ty-[] ⩿-refl
+                  (ty-` here (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ))))))))))
 
--- A, B : sort 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
-K : ε ⨟ sort 0 ⨟ sort 0 ⊢ 1 - Π 1 1 (Π 0 1 3) ∋ Λ (Λ 1) ▷ ε ⨟ 0 ⨟ 0
+-- 0 A, B : ⋆ 0 ⊢ 1 (1 A → 0 B → A) ∋ λ x y. x
+K : ε ⨟ ⋆ 0 ⨟ ⋆ 0
+  ⊢ ↑ 1 - 𝚷[ ↑ 1 / ‶ 1 ] 𝚷[ ↑ 0 / ‶ 1 ] ‶ 3
+  ∋ 𝛌 𝛌 ‶ 1
+  ▷ ε ⨟ ↑ 0 ⨟ ↑ 0
 K =
-  let Γ = ε ⨟ sort 0 ⨟ sort 0 ⨟ 1 ⨟ 1 in
-  lam (1 * 1 ≼ 1   ∋ refl)
-    (lam (0 * 1 ≼ 0   ∋ refl)
-      (elim (3 ⩿ 3   ∋ refl)
-        (var (lookup Γ 1 ≡ 3   ∋ refl)
-             (Only 1 1 (ε ⨟ 0 ⨟ 0 ⨟ 1 ⨟ 0) ∋
-               ε ⨟ refl ⨟ refl ⨟[ refl ] ⨟ refl))))
+  ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+    (ty-𝛌′ (refl (*ʷ-ℕ′ refl))
+      (ty-[] ⩿-refl
+        (ty-` (there here) (there (here (ε ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))))
 
--- A : sort 0 ⊢ 1 (1 A → A) ∋ λ x . x
-I : ε ⨟ sort 0 ⊢ 1 - Π 1 0 1 ∋ Λ 0 ▷ ε ⨟ 0
-I = lam refl (elim refl (var refl (Only 1 0 (ε ⨟ 0 ⨟ 1) ∋ ε ⨟ refl ⨟[ refl ])))
+-- A : ⋆ 0 ⊢ 1 (1 A → A) ∋ λ x . x
+I : ε ⨟ ⋆ 0 ⊢ ↑ 1 - 𝚷[ ↑ 1 / ‶ 0 ] ‶ 1 ∋ 𝛌 ‶ 0 ▷ ε ⨟ ↑ 0
+I = ty-𝛌′ (refl (*ʷ-ℕ′ refl)) (ty-[] ⩿-refl (ty-` here (here (ε ⨟ reflᵗ))))
+
+ChurchZero = K
+
+
+-- 0 A : ⋆₀
+-- ⊢ (0 u: 𝓤) → 1 (u (1 A → A) → 1 A → A) → {suc u} (1 A → A) → 1 A → A
+-- ∋ λu. λn. λs. λz. s (n s z)
+ChurchSuc : ε ⨟ ⋆ 0
+          ⊢ ↑ 1
+          - 𝚷[ ↑ 0 / 𝓤 ]
+            𝚷[ ↑ 1 / 𝚷[ ↑ ‶ 0 / 𝚷[ ↑ 1 / ‶ 1 ] ‶ 2 ] 𝚷[ ↑ 1 / ‶ 2 ] ‶ 3 ]
+            𝚷[ ↑ sucᵘ (‶ 1) / 𝚷[ ↑ 1 / ‶ 2 ] ‶ 3 ] 𝚷[ ↑ 1 / ‶ 3 ] ‶ 4
+          ∋ 𝛌 𝛌 𝛌 𝛌 [ ` 1 ∙ [ ` 2 ∙ ‶ 1 ∙ ‶ 0 ] ]
+          ▷ ε ⨟ ↑ 0
+ChurchSuc =
+  ty-𝛌′ (refl reflᵗ)
+    (ty-𝛌′ (refl reflᵗ)
+      (ty-𝛌′ (refl reflᵗ)
+        (ty-𝛌′ (refl reflᵗ)
+          (ty-[] ⩿-refl
+            (ty-∙′ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟!
+                         1-*ʷ ⨟! *ʷ-ℕ refl)
+                   (ε ⨟ +ʷ-ℕ refl ⨟ 0+0=1*0 ⨟ 0+1=1*1 ⨟ 1+π=1*sucπ ⨟ 0+1=1*1)
+              (ty-` (there here)
+                    (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))
+              (ty-[] ⩿-refl
+                (ty-∙′ (ε ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟! *ʷ-ℕ refl ⨟!
+                             *ʷ-ℕ refl ⨟! *ʷ-ℕ refl)
+                       (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟
+                            FIXME-+ʷ-0 ⨟ +ʷ-ℕ refl)
+                  (ty-∙′ (zero (ε ⨟ reflᵗ ⨟ reflᵗ) refl ⨟!
+                           FIXME-*ʷ-0 ⨟! FIXME-*ʷ-1 ⨟! FIXME-*ʷ-0)
+                         (ε ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ +ʷ-ℕ refl ⨟ 0-+ʷ ⨟ 0-+ʷ)
+                    (ty-` (there (there here))
+                          (there (there (here (ε ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ) reflᵗ))
+                    (ty-[] ⩿-refl
+                      (ty-` (there here)
+                            (there (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)) reflᵗ))))
+                  (ty-[] ⩿-refl
+                    (ty-` here
+                          (here (ε ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ ⨟ reflᵗ)))))))))))
+  where
+    postulate
+      -- I think there are at least three potential options here:
+      --
+      -- 1. make `ChurchSuc` require a use of `subst`
+      -- 2. add a couple more reduction rules, including these
+      -- 3. add a semiring solver for arithmetic expressions
+      FIXME-*ʷ-0 : ↑ π *ʷ ↑ 0 ≋ᵗ ↑ 0
+      FIXME-*ʷ-1 : ↑ π *ʷ ↑ 1 ≋ᵗ ↑ π
+      FIXME-+ʷ-0 : ↑ π +ʷ ↑ 0 ≋ᵗ ↑ π
+
+    0+0=1*0 : ↑ 0 +ʷ ↑ 0 ≋ᵗ ↑ 1 *ʷ ↑ 0
+    0+0=1*0 = ↑ 0 , +ʷ-ℕ-⟿ refl , *ʷ-ℕ-⟿ refl
+
+    -- (this one is used twice with different ns hence the ≋ᵗ-At business)
+    0+1=1*1 : ↑ 0 +ʷ ↑ 1 ⟨ ≋ᵗ-At n ⟩ ↑ 1 *ʷ ↑ 1
+    0+1=1*1 = ↑ 1 , +ʷ-ℕ-⟿ refl , *ʷ-ℕ-⟿ refl
+
+    1+π=1*sucπ : ↑ 1 +ʷ ↑ π ≋ᵗ ↑ 1 *ʷ ↑ sucᵘ π
+    1+π=1*sucπ {π = π} =
+      ↑ sucᵘ π ,
+      stepHereᵗ +ʷ-↑ ◅
+        congWrap*ᵗ (↑ ■)
+          (stepHereᵗ +-s ◅ congWrapᵗ (sucᵘ ■) (stepHereᵗ +-0) ◅ ε) ,
+      1-*ʷ-⟿

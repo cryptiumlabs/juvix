@@ -7,6 +7,7 @@
 module Juvix.Library.HashMap
   ( module Data.HashMap.Strict,
     Map,
+    T,
     (!?),
   )
 where
@@ -16,6 +17,8 @@ import Data.Hashable (Hashable)
 import Protolude (Eq, Maybe)
 
 type Map = HashMap
+
+type T = Map
 
 (!?) ∷ (Eq k, Hashable k) ⇒ HashMap k v → k → Maybe v
 (!?) m k = lookup k m

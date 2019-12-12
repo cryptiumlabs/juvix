@@ -10,7 +10,7 @@ import qualified Juvix.Library.HashMap as Map
 evaluate ∷
   ∀ primVal m.
   ( HasReader "apply" (primVal → primVal → Maybe primVal) m,
-    HasState "env" (Map.Map Symbol (Term primVal)) m,
+    HasState "env" (Map.T Symbol (Term primVal)) m,
     HasThrow "evaluationError" (EvaluationError primVal) m
   ) ⇒
   Term primVal →

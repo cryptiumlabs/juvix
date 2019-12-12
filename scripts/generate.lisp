@@ -108,7 +108,7 @@
   (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
          (comments (module-comments lines level))
          (imports  (import-generation
-                    (haskell-import-to-org-alias (relevent-imports lines name)
+                    (haskell-import-to-org-alias (relevent-imports-haskell lines name)
                                                  conflict-map)))
          (headline (org-header
                     (if (just-p (file-info-alias file-info))
@@ -197,7 +197,7 @@
 ;; - _Disadvantages_
 ;;   + extra allocation
 ;;   + doesn't stream the data into org file generation
-(defun relevent-imports (lines project-name)
+(defun relevent-imports-haskell (lines project-name)
   "takes LINES of a source code, and a PROJECT-NAME and filters for imports
 that match the project name"
   (let* ((imports     (remove-if (complement (lambda (x)
@@ -205,7 +205,12 @@ that match the project name"
                                  lines))
          (modules     (mapcar (lambda (import)
                                 ;; TODO make this cadr logic generic
-                                (cadr (uiop:split-string import)))
+                                (let ((split-import (uiop:split-string import)))
+                                  (cond
+                                    ((equalp (cadr split-import) "qualified")
+                                     (caddr split-import))
+                                    (t
+                                     (cadr split-import)))))
                               imports))
          (project-imp (remove-if (complement (lambda (m)
                                                (uiop:string-prefix-p project-name m)))

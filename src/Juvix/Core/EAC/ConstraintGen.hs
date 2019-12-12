@@ -277,7 +277,13 @@ bracketCheckerErr t = left Brack (bracketChecker t)
 
 {- Type Checker. -}
 -- Precondition ∷ all terms inside of RPTO must be unique
-typChecker ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (TypeErrors primTy primVal) ()
+typChecker ∷
+  ∀ primTy primVal.
+  (Eq primTy) ⇒
+  Parameterisation primTy primVal →
+  RPTO primVal →
+  ParamTypeAssignment primTy →
+  Either (TypeErrors primTy primVal) ()
 typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
   where
     arrow (x :| []) = PPrimT x
@@ -305,10 +311,18 @@ typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Just arg → pure (newAssign, PArrT x arg bodyType)
         Nothing → throw @"typ" MissingOverUse
-    rec' (RBang _bangVar (RPrim _p)) _assign = pure (_assign, (arrow (typeOf parameterisation _p)))
+    rec' (RBang _bangVar (RPrim _p)) _assign =
+      pure (_assign, (arrow (typeOf parameterisation _p)))
 
-typCheckerErr ∷ ∀ primTy primVal. (Eq primTy) ⇒ Parameterisation primTy primVal → RPTO primVal → ParamTypeAssignment primTy → Either (Errors primTy primVal) ()
-typCheckerErr parameterisation t typeAssign = left Typ (typChecker parameterisation t typeAssign)
+typCheckerErr ∷
+  ∀ primTy primVal.
+  (Eq primTy) ⇒
+  Parameterisation primTy primVal →
+  RPTO primVal →
+  ParamTypeAssignment primTy →
+  Either (Errors primTy primVal) ()
+typCheckerErr parameterisation t typeAssign =
+  left Typ (typChecker parameterisation t typeAssign)
 
 {- Utility. -}
 
@@ -324,7 +338,12 @@ putParam p (PSymT _ s) = PSymT p s
 putParam p (PArrT _ t1 t2) = PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
-addParamPos ∷ ∀ m primTy primVal. HasThrow "typ" (TypeErrors primTy primVal) m ⇒ Param → PType primTy → m (PType primTy)
+addParamPos ∷
+  ∀ m primTy primVal.
+  HasThrow "typ" (TypeErrors primTy primVal) m ⇒
+  Param →
+  PType primTy →
+  m (PType primTy)
 addParamPos _ (PPrimT p) = pure (PPrimT p)
 addParamPos toAdd (PSymT p s)
   | toAdd + p < 0 = throw @"typ" TooManyHats

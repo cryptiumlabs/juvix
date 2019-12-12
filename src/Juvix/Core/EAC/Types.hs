@@ -35,7 +35,7 @@ data PType primTy
   deriving (Show, Eq)
 
 -- Parameterized type assignment (alias).
-type ParamTypeAssignment primTy = Map.Map Symbol (PType primTy)
+type ParamTypeAssignment primTy = Map.T Symbol (PType primTy)
 
 -- Linear (in)equality constraint on parameters.
 data Constraint
@@ -63,10 +63,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = Map.Map Symbol Param
+type VarPaths = Map.T Symbol Param
 
 -- Occurrence map.
-type OccurrenceMap = Map.Map Symbol Int
+type OccurrenceMap = Map.T Symbol Int
 
 -- | Bracket Error Types
 data BracketErrors
@@ -106,13 +106,13 @@ data Errors primTy primVal
 newtype EnvError primTy primVal a = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (Map.Map Symbol (Type primTy)))
+    (HasState "ctxt" (Map.T Symbol (Type primTy)))
     via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
     via MonadError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)))
 
-data Info primTy = I {ctxt ∷ Map.Map Symbol (Type primTy)} deriving (Show, Generic)
+data Info primTy = I {ctxt ∷ Map.T Symbol (Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env primTy

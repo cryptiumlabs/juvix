@@ -8,7 +8,7 @@ import Data.ByteString.Short
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
-import Juvix.Library.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST
 import LLVM.AST.AddrSpace
@@ -36,7 +36,7 @@ fresh = do
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
-createBlocks ∷ HasState "blocks" (HashMap Name BlockState) f ⇒ f [BasicBlock]
+createBlocks ∷ HasState "blocks" (Map.T Name BlockState) f ⇒ f [BasicBlock]
 createBlocks = fmap makeBlock . sortBlocks . Map.toList <$> get @"blocks"
 
 makeBlock ∷ (Name, BlockState) → BasicBlock
@@ -102,11 +102,11 @@ defineVarArgs = defineGen True
 makeFunction ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "blocks" (Map.T Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
-    HasState "symTab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symTab" Types.SymbolTable m
   ) ⇒
   Symbol →
   [(Type.Type, Name.Name)] →
@@ -152,7 +152,7 @@ getBlock = entry
 
 addBlock ∷
   ( HasState "blockCount" Int m,
-    HasState "blocks" (HashMap Name BlockState) m,
+    HasState "blocks" (Map.T Name BlockState) m,
     HasState "names" Names m
   ) ⇒
   Symbol →
@@ -176,7 +176,7 @@ setBlock ∷ HasState "currentBlock" Name m ⇒ Name → m ()
 setBlock bName = put @"currentBlock" bName
 
 modifyBlock ∷
-  ( HasState "blocks" (HashMap Name v) m,
+  ( HasState "blocks" (Map.T Name v) m,
     HasState "currentBlock" Name m
   ) ⇒
   v →
@@ -186,7 +186,7 @@ modifyBlock new = do
   modify @"blocks" (Map.insert active new)
 
 current ∷
-  ( HasState "blocks" (HashMap Name b) m,
+  ( HasState "blocks" (Map.T Name b) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
@@ -223,7 +223,7 @@ instr typ ins = do
   pure (local typ ref)
 
 unnminstr ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
+  ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
@@ -235,7 +235,7 @@ unnminstr ins = do
   modifyBlock (blk {stack = (Do ins) : i})
 
 terminator ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
+  ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
