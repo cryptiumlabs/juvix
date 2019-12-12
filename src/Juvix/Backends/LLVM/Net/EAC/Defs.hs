@@ -86,7 +86,6 @@ defineLinkConnectedPort = loadPtrGen Codegen.defineLinkConnectedPort
 deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
 deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr
 
-
 loadPtrGen ∷ Codegen.Define m ⇒ (Type.Type → (Operand.Operand → m Operand.Operand) → t) → t
 loadPtrGen f =
   f

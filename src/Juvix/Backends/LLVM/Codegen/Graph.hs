@@ -76,7 +76,6 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
-
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -207,16 +206,16 @@ mallocNodeH mPorts mData nodePtrType = do
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
-      -- do I really want to say size 0?
-      { Types.type' = Types.pointerOf (Types.portData nodePtrType),
+      { -- do I really want to say size 0?
+        Types.type' = Types.pointerOf (Types.portData nodePtrType),
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
   store portPtr ports
   dataPtr ← getElementPtr $
     Types.Minimal
-      -- do I really want to say size 0?
-      { Types.type' = Types.pointerOf (Type.ArrayType 0 Types.dataType),
+      { -- do I really want to say size 0?
+        Types.type' = Types.pointerOf (Type.ArrayType 0 Types.dataType),
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 2]
       }

@@ -522,7 +522,7 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
-  -- Verify my pointerOf is correct here
+    -- Verify my pointerOf is correct here
     Minimal
       { Types.type' = Types.pointerOf sumTyp,
         Types.address' = sum,
