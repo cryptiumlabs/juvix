@@ -50,7 +50,7 @@ instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
   show (Bound i) = "Bound " <> show i -- to be improved
   show (Free name) = show name -- using derived show Name instance, to be improved
   show (Prim p) = show p
-  show (App f x) = show f <> show x
+  show (App f x) = show f <> " " <> show x
   show (Ann pi theTerm theType) =
     show theTerm <> " : [" <> show pi <> "] " <> show theType
 
