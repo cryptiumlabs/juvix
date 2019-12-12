@@ -433,8 +433,8 @@ scombinatorCompNatTy =
                   ( const
                       ( pure
                           ( IR.VPi
-                              (SNat 0)
-                              (IR.VPrimTy Nat) -- 1 Nat ->
+                              (SNat 2)
+                              (IR.VPrimTy Nat) -- 2 Nat ->
                               (const (pure (IR.VPrimTy Nat))) -- Nat
                           )
                       )
@@ -598,13 +598,3 @@ twoCompTy =
       (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))
       (const (pure (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat))))))
   )
-
-main ∷ IO ()
-main =
-  T.defaultMain (shouldCheck nat scombinator scombinatorCompNatTy)
-    `Control.Exception.catch` ( \e → do
-                                  if e == ExitSuccess
-                                    then putByteString "OK"
-                                    else putByteString $ "Failed. " <> show IR.TypecheckerLog
-                                  Juvix.Library.throwIO e
-                              )
