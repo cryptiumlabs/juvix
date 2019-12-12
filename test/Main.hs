@@ -17,7 +17,15 @@ main =
   T.defaultMain (shouldCheck nat scombinator scombinatorCompNatTy)
     `Control.Exception.catch` ( \e → do
                                   if e == ExitSuccess
-                                    then putByteString "OK"
-                                    else putByteString $ "Failed. " <> show IR.TypecheckerLog
+                                    then putByteString "All tests passed."
+                                    else
+                                      putStr $
+                                        concatMap
+                                          IR.msg
+                                          --TODO add newline (intersperse
+                                          --  "\n"
+                                          ( IR.typecheckerLog $
+                                              snd (IR.exec (IR.typeTerm nat 0 [] scombinator scombinatorCompNatTy))
+                                          )
                                   Juvix.Library.throwIO e
                               )
