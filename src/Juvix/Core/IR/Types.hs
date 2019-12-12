@@ -165,7 +165,7 @@ instance
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
-    "The usage of " <> (show (fst gotU)) <> "is not compatible with " <> (show (fst expectedU))
+    "The usage of " <> (show (fst gotU)) <> " is not compatible with " <> (show (fst expectedU))
   show (UnboundBinder ii x) =
     "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
   show (MustBeFunction m ii n) =

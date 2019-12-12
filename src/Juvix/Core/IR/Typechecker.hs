@@ -238,7 +238,7 @@ typeTerm p ii g t@(Lam m) ann = do
   logOutput
     ( concat
         [ "patterned matched to be a Lam term. Checking that input annotation ",
-          "has sigma usage and is dependent function type (Pi)."
+          "has sigma usage and is of dependent function type (Pi)."
         ]
     )
   case ann of

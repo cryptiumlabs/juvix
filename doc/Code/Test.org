@@ -22,6 +22,15 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Types]]
   + [[Usage]]
   + [[Library]]
+* CoreTypecheckerFromHR
+- _Relies on_
+  + [[HR]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
 * EAC
 - _Relies on_
   + [[EAC]]
