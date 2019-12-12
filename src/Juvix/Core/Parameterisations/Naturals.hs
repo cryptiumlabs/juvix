@@ -29,10 +29,10 @@ data NatVal
   deriving (Eq)
 
 instance Show NatVal where
-  show (Natural x) = " Nat " <> Text.Show.show x <> " "
-  show Add = " + "
-  show Sub = " - "
-  show Mul = " * "
+  show (Natural x) = "Nat " <> Text.Show.show x
+  show Add = "+"
+  show Sub = "-"
+  show Mul = "*"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
 typeOf ∷ NatVal → NonEmpty NatTy
