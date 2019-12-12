@@ -296,8 +296,8 @@ fanInAuxStar = undefined
 fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
 fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
   do
-    node ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
-    fanIn ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
+    node ← Codegen.externf "node_1"
+    fanIn ← Codegen.externf "node_2"
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
     aux1 ← Defs.auxiliary1
@@ -333,8 +333,8 @@ defineFanInAux2 ∷
 defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
   do
     -- Nodes in env
-    fanIn ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
-    node ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
+    fanIn ← Codegen.externf "node_2"
+    node ← Codegen.externf "node_1"
     -- new nodes
     fan1 ← mallocFanIn >>= nodeOf
     fan2 ← mallocFanIn >>= nodeOf
@@ -398,8 +398,8 @@ defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
     eacPtr1 ← Codegen.externf "eac_ptr_1"
     eacPtr2 ← Codegen.externf "eac_ptr_2"
     eacList ← Codegen.externf "eac_list"
-    fanIn1 ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
-    fanIn2 ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
+    fanIn1 ← Codegen.externf "node_1"
+    fanIn2 ← Codegen.externf "node_2"
     data1 ← dataLookup fanIn1
     data2 ← dataLookup fanIn2
     label1 ← labelLookup data1
