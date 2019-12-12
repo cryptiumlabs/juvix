@@ -149,7 +149,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "fan_in"
         [ (Types.app, "switch.app", fanInAux2App . swapArgs),
           (Types.lam, "switch.lam", fanInAux2Lambda . swapArgs),
-          (Types.dup, "switch.dup", fanInAux2FanIn . swapArgs),
+          (Types.dup, "switch.dup", fanInFanIn),
           (Types.era, "switch.era", fanInAux2Era . swapArgs)
         ]
     _ ← Codegen.br extCase
@@ -373,12 +373,15 @@ defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
     -- TODO ∷ add to eacList, as we create nodes, main Ports?!
     Codegen.ret eacList
 
-fanInFanIn ∷
+fanInFanIn ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+fanInFanIn args = Codegen.callGen Types.eacList args "fan_in_rule"
+
+defineFanInFanIn ∷
   ( Codegen.MallocNode m,
     Codegen.Define m
   ) ⇒
   m Operand.Operand
-fanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
+defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
   do
     let dataLookup addr = Codegen.loadElementPtr $
           Codegen.Minimal
