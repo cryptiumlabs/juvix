@@ -26,6 +26,7 @@ initialModule = do
   _ ← EAC.defineFanInAux2L
   _ ← EAC.defineFanInAux2E
   _ ← EAC.defineAnnihilateRewireAux
+  _ ← EAC.defineEraseNodes
   Codegen.defineMalloc
   Codegen.defineFree
   Codegen.defineMainPort Types.eacPointer

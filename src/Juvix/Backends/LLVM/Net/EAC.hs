@@ -115,7 +115,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "app"
         [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2App),
-          (Types.era, "switch.era", (\xs → undefined xs))
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %lam case
@@ -126,7 +126,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "lam"
         [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2Lambda),
-          (Types.era, "switch.era", (\xs → undefined xs))
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %era case
@@ -135,10 +135,10 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     (eCdr, eExit) ←
       genContinueCaseD
         "fan_in"
-        [ (Types.app, "switch.app", undefined),
-          (Types.lam, "switch.lam", undefined),
+        [ (Types.app, "switch.app", eraseNodes),
+          (Types.lam, "switch.lam", eraseNodes),
           (Types.dup, "switch.dup", fanInAux2Era),
-          (Types.era, "switch.era", undefined)
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %dup case
@@ -257,11 +257,9 @@ args =
 
 -- this function work off the nodeType signature not Types.eac
 
-annihilateRewireAux ∷ Codegen.Call m ⇒ [Operand.Operand] → m ()
-annihilateRewireAux args = do
-  annihilate ← Codegen.externf "annihilate_rewire_aux"
-  _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
-  pure ()
+annihilateRewireAux ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+annihilateRewireAux args =
+  Codegen.callGen Types.eacList args "annihilate_rewire_aux"
 
 -- TODO ∷ send in eac Pointers and deallocate them as well
 -- TODO ∷ fixup node type being sent in!
@@ -285,8 +283,8 @@ defineAnnihilateRewireAux =
       _ ← Defs.deAllocateNode node2P
       eacPtr1 ← Codegen.externf "eac_ptr_1"
       eacPtr2 ← Codegen.externf "eac_ptr_2"
-      _ ← Codegen.free eacPtr1
-      _ ← Codegen.free eacPtr2
+      _ ← freeEac eacPtr1
+      _ ← freeEac eacPtr2
       Codegen.externf "eac_list" >>= Codegen.ret
 
 -- TODO ∷ make fast fanInAux and slow fanInAux
@@ -298,6 +296,7 @@ fanInAuxStar = undefined
 fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
 fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
   do
+    node ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
     fanIn ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
@@ -308,7 +307,11 @@ fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
     -- to the eac_list
     Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
     Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
-    Codegen.externf "eac_list" >>= Codegen.ret
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ← Codegen.externf "eac_list"
+    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+    Codegen.ret eacList
 
 fanInAux1' ∷
   ( Codegen.Define m,
@@ -321,9 +324,8 @@ fanInAux1' ∷
 fanInAux1' _allocF = undefined
 
 defineFanInAux2 ∷
-  ( Codegen.Define m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+  ( Codegen.MallocNode m,
+    Codegen.Define m
   ) ⇒
   Symbol →
   m Operand.Operand →
@@ -364,7 +366,119 @@ defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
         { DSL.node = fan2,
           DSL.primary = DSL.LinkConnected node DSL.Aux1
         }
-    Codegen.externf "eac_list" >>= Codegen.ret
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ← Codegen.externf "eac_list"
+    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+    -- TODO ∷ add to eacList, as we create nodes, main Ports?!
+    Codegen.ret eacList
+
+fanInFanIn ∷
+  ( Codegen.MallocNode m,
+    Codegen.Define m
+  ) ⇒
+  m Operand.Operand
+fanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
+  do
+    let dataLookup addr = Codegen.loadElementPtr $
+          Codegen.Minimal
+            { Codegen.type' = Codegen.dataArray,
+              Codegen.address' = addr,
+              Codegen.indincies' = Codegen.constant32List [0, 2]
+            }
+        labelLookup addr = Codegen.loadElementPtr $
+          Codegen.Minimal
+            { Codegen.type' = Codegen.dataType,
+              Codegen.address' = addr,
+              Codegen.indincies' = Codegen.constant32List [0, 0]
+            }
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ← Codegen.externf "eac_list"
+    fanIn1 ← Codegen.externf "node_1" >>= Codegen.load Defs.nodeType
+    fanIn2 ← Codegen.externf "node_2" >>= Codegen.load Defs.nodeType
+    data1 ← dataLookup fanIn1
+    data2 ← dataLookup fanIn2
+    label1 ← labelLookup data1
+    label2 ← labelLookup data2
+    test ← Codegen.icmp IntPred.EQ label1 label2
+    sameFan ← Codegen.addBlock "same.fan"
+    diffFan ← Codegen.addBlock "diff.fan"
+    continue ← Codegen.addBlock "continue.fan"
+    _ ← Codegen.cbr test sameFan diffFan
+    -- %same.fan
+    ------------------------------------------------------
+    Codegen.setBlock sameFan
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
+    Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
+    Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
+    let sameList = eacList
+    _ ← Codegen.br continue
+    -- %diff.fan
+    ------------------------------------------------------
+    -- TODO ∷ be able to abstract it to share logic with defineFanInAux2
+    Codegen.setBlock diffFan
+    let addData addr data' = do
+          arr ← dataLookup addr
+          labPtr ← Codegen.getElementPtr $
+            Codegen.Minimal
+              { Codegen.type' = Codegen.pointerOf Codegen.dataType,
+                Codegen.address' = arr,
+                Codegen.indincies' = Codegen.constant32List [0, 0]
+              }
+          Codegen.store labPtr data'
+    -- ABSTRACT START-----------------------------------------------------------
+    -- Nodes in env
+    let fanIn = fanIn2
+        node = fanIn1
+    -- new nodes
+    fan1 ← mallocFanIn >>= nodeOf
+    fan2 ← mallocFanIn >>= nodeOf
+    nod1 ← mallocFanIn >>= nodeOf
+    nod2 ← mallocFanIn >>= nodeOf
+    -- TODO :: determine if these create a new main port which we must append
+    -- to the eac_list
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = nod1,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = nod2,
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = fan1,
+          DSL.primary = DSL.LinkConnected node DSL.Aux2
+        }
+    Defs.linkAll
+      DSL.defRel
+        { DSL.node = fan2,
+          DSL.primary = DSL.LinkConnected node DSL.Aux1
+        }
+    -- ABSTRACT END-------------------------------------------------------------
+    addData fan1 data2
+    addData fan2 data2
+    addData nod1 data1
+    addData nod2 data1
+    -- TODO ∷ add to eacList
+    let diffList = eacList
+    _ ← Codegen.br continue
+    -- %continue.fan
+    ------------------------------------------------------
+    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+    finalList ←
+      Codegen.phi
+        Types.eacList
+        [(sameList, sameFan), (diffList, diffFan)]
+    Codegen.ret finalList
 
 -- TODO ∷ remove, put these in the environment with some kind of decalarative
 -- dispatch system that can handle dynamic node addition
@@ -374,9 +488,8 @@ defineFanInAux2F,
   defineFanInAux2A,
   defineFanInAux2L,
   defineFanInAux2E ∷
-    ( Codegen.Define m,
-      HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
+    ( Codegen.MallocNode m,
+      Codegen.Define m
     ) ⇒
     m Operand.Operand
 defineFanInAux2A = defineFanInAux2 "fan_in_aux_2_app" mallocApp
@@ -394,19 +507,31 @@ fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
 fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 
+eraseNodes ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+eraseNodes args = Codegen.callGen Types.eacList args "erase_nodes"
+
+defineEraseNodes ∷ Codegen.Define m ⇒ m Operand.Operand
+defineEraseNodes = Codegen.defineFunction Types.eacList "erase_nodes" args $
+  do
+    nodePtr1 ← Codegen.externf "node_1"
+    nodePtr2 ← Codegen.externf "node_2"
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    _ ← Defs.deAllocateNode nodePtr1
+    _ ← Defs.deAllocateNode nodePtr2
+    _ ← freeEac eacPtr1
+    _ ← freeEac eacPtr2
+    Codegen.externf "eac_list" >>= Codegen.ret
+
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
 
+freeEac ∷ Codegen.Call m ⇒ Operand.Operand → m Operand.Operand
+freeEac = Codegen.free
+
 mallocGen ∷
-  ( Codegen.Call m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  C.Constant →
-  Int →
-  Int →
-  m Operand.Operand
+  Codegen.MallocNode m ⇒ C.Constant → Int → Int → m Operand.Operand
 mallocGen type' portLen dataLen = do
   -- malloc call
   eac ← Codegen.malloc Types.eacSize Types.eac
@@ -432,11 +557,7 @@ mallocEra,
   mallocFanIn,
   mallocApp,
   mallocLam ∷
-    ( Codegen.Call m,
-      HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
-    ) ⇒
-    m Operand.Operand
+    Codegen.MallocNode m ⇒ m Operand.Operand
 mallocEra = mallocGen Types.era 1 0
 mallocApp = mallocGen Types.app 3 0
 mallocLam = mallocGen Types.lam 3 0

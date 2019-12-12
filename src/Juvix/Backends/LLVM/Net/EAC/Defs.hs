@@ -50,11 +50,7 @@ nodePointer ∷ Type.Type
 nodePointer = Codegen.nodePointer Types.eacPointer
 
 mallocNodeH ∷
-  ( Codegen.RetInstruction m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "symTab" Codegen.SymbolTable m
-  ) ⇒
+  Codegen.MallocNode m ⇒
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
   m Operand.Operand

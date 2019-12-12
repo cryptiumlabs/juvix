@@ -198,12 +198,7 @@ current = do
     Just x → return x
     Nothing → throw @"err" (NoSuchBlock (show c))
 
-externf ∷
-  ( HasState "symTab" SymbolTable m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Name →
-  m Operand
+externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
 nameToSymbol ∷ Name → Symbol
@@ -274,13 +269,13 @@ external retty label argtys = do
 
 -- malloc & free need to be defined once and then can be called normally with `externf`
 
-defineMalloc ∷ Extern m ⇒ m ()
+defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
   op ← external voidStarTy name [(size_t, "size")]
   assign name op
 
-defineFree ∷ Extern m ⇒ m ()
+defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
   op ← external voidTy name [(Types.voidStarTy, "type")]

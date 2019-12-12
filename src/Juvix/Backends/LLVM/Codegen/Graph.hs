@@ -538,15 +538,7 @@ allocaNumPortsStatic isLarge value nodePtrType =
 
 -- | Allocates 'numPorts' via allcoca
 mallocNumPortsStatic ∷
-  ( RetInstruction m,
-    HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m,
-    HasState "symTab" SymbolTable m
-  ) ⇒
-  Bool →
-  Operand.Operand →
-  Type.Type →
-  m Operand.Operand
+  Types.MallocNode m ⇒ Bool → Operand.Operand → Type.Type → m Operand.Operand
 mallocNumPortsStatic isLarge value nodePtrType =
   -- we do . pointerOf here, as the malloc version sets the type to a * to it
   -- unlike the alloca which we just need to say the type itself
@@ -566,25 +558,12 @@ createNumPortNumGen n nodePtrType alloc
 
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷
-  ( RetInstruction m,
-    HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m
-  ) ⇒
-  Integer →
-  Type.Type →
-  m Operand.Operand
+  Types.AllocaNode m ⇒ Integer → Type.Type → m Operand.Operand
 allocaNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType allocaNumPortsStatic
 
 -- | like 'mallocNumPortStatic', except it takes a number and allocates the correct operand
 mallocNumPortNum ∷
-  ( RetInstruction m,
-    HasState "typTab" TypeTable m,
-    HasState "varTab" VariantToType m,
-    HasState "symTab" SymbolTable m
-  ) ⇒
-  Integer →
-  Type.Type →
-  m Operand.Operand
+  Types.MallocNode m ⇒ Integer → Type.Type → m Operand.Operand
 mallocNumPortNum n nodePtrType = createNumPortNumGen n nodePtrType mallocNumPortsStatic
 
 --------------------------------------------------------------------------------
@@ -599,8 +578,7 @@ defineMainPort,
   defineAuxiliary3,
   defineAuxiliary4 ∷
     ( Define m,
-      HasState "typTab" TypeTable m,
-      HasState "varTab" VariantToType m
+      MallocNode m
     ) ⇒
     Type.Type →
     m ()
@@ -625,10 +603,7 @@ mainPort,
   auxiliary2,
   auxiliary3,
   auxiliary4 ∷
-    ( HasState "symTab" SymbolTable m,
-      HasThrow "err" Errors m
-    ) ⇒
-    m Operand.Operand
+    Externf m ⇒ m Operand.Operand
 mainPort = Block.externf "main_port"
 auxiliary1 = Block.externf "auxiliary_port_1"
 auxiliary2 = Block.externf "auxiliary_port_2"
