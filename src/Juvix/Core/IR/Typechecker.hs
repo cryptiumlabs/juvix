@@ -267,14 +267,14 @@ typeTerm p ii g t@(Elim e) ann = do
   if not (fst ann' `allowsUsageOf` fst ann)
     then
       ( do
-          logOutput "Usages not compatible. "
+          logOutput "Usages not compatible."
           throw @"typecheckError" (UsageNotCompatible ann' ann)
       )
     else
       if (annt /= annt')
         then
           ( do
-              logOutput "The types are not the same. "
+              logOutput "The types are not the same."
               throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
         else return ()
@@ -332,7 +332,7 @@ typeElim ∷
 typeElim _ _ii _g e@(Bound _) = do
   typeElimIntroLog e
   logOutput
-    ("patterned matched to be a bound variable. Bound variables cannot be inferred. ")
+    "patterned matched to be a bound variable. Bound variables cannot be inferred."
   throw @"typecheckError" BoundVariableCannotBeInferred
 typeElim _ ii g e@(Free x) = do
   typeElimIntroLog e
@@ -359,7 +359,7 @@ typeElim _ ii g e@(Free x) = do
 -- Prim-Const and Prim-Fn, pi = omega
 typeElim p _ii _g e@(Prim prim) = do
   typeElimIntroLog e
-  logOutput "patterned matched to be a primitive type const/fn. "
+  logOutput "patterned matched to be a primitive type const/fn."
   let arrow (x :| []) = VPrimTy x
       arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (pure (arrow (y :| ys))))
    in do
