@@ -522,8 +522,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
+  -- Verify my pointerOf is correct here
     Minimal
-      { Types.type' = sumTyp,
+      { Types.type' = Types.pointerOf sumTyp,
         Types.address' = sum,
         Types.indincies' = constant32List [0, 0]
       }
@@ -537,8 +538,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     ( \i inst → do
         ele ←
           getElementPtr $
+            -- Verify my pointerOf is correct here
             Minimal
-              { Types.type' = varType,
+              { Types.type' = Types.pointerOf varType,
                 Types.address' = casted,
                 Types.indincies' = constant32List [0, i]
               }

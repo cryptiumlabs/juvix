@@ -33,7 +33,6 @@ import qualified Juvix.Backends.LLVM.DSL as DSL
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
-import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -183,13 +182,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 --------------------------------------------------------------------------------
 
 genContinueCase ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "names" Codegen.Names m
-  ) ⇒
+  Codegen.Define m ⇒
   Operand.Operand →
   (Operand.Operand, Operand.Operand) →
   Operand.Operand →
@@ -421,14 +414,14 @@ mallocGen type' portLen dataLen = do
   node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Types.tag,
+      { Codegen.type' = Codegen.pointerOf Types.tag,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Defs.nodeType,
+      { Codegen.type' = Codegen.pointerOf Defs.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }

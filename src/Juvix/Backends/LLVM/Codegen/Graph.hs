@@ -76,7 +76,7 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
-import qualified Juvix.Library.HashMap as Map
+
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -141,7 +141,7 @@ defineIsBothPrimary nodePtrTyp =
       portPtr ← findEdge (Types.portPointer nodePtrTyp) [nodePtr, mainPort]
       otherNodePtr ← loadElementPtr $
         Types.Minimal
-          { Types.type' = nodePointer nodePtrTyp,
+          { Types.type' = nodePtrTyp,
             Types.address' = portPtr,
             Types.indincies' = Block.constant32List [0, 0]
           }
@@ -200,21 +200,23 @@ mallocNodeH mPorts mData nodePtrType = do
   data' ← allocaDataH mData
   tagPtr ← getElementPtr $
     Types.Minimal
-      { Types.type' = Types.numPorts,
+      { Types.type' = Types.numPortsPointer,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
-      { Types.type' = Types.portData nodePtrType, -- do I really want to say size 0?
+      -- do I really want to say size 0?
+      { Types.type' = Types.pointerOf (Types.portData nodePtrType),
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
   store portPtr ports
   dataPtr ← getElementPtr $
     Types.Minimal
-      { Types.type' = Type.ArrayType 0 Types.dataType, -- do I really want to say size 0?
+      -- do I really want to say size 0?
+      { Types.type' = Types.pointerOf (Type.ArrayType 0 Types.dataType),
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 2]
       }
@@ -257,20 +259,23 @@ allocaGenH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m 
 allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
 
 mallocPortsH ∷ Call m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
-mallocPortsH mPorts typ = mallocGenH mPorts (Types.portType typ) Types.portTypeSize
+mallocPortsH mPorts typ =
+  mallocGenH mPorts (Types.pointerOf (Types.portType typ)) Types.portTypeSize
 
 allocaPortsH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
-allocaPortsH mPorts = allocaGenH mPorts . Types.portType
+allocaPortsH mPorts = allocaGenH mPorts . Types.pointerOf . Types.portType
 
 allocaDataH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
-allocaDataH mPorts = allocaGenH mPorts Types.dataType
+allocaDataH mPorts = allocaGenH mPorts (Types.pointerOf Types.dataType)
 
 mallocDataH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
-mallocDataH mPorts = mallocGenH mPorts Types.dataType Types.dataTypeSize
+mallocDataH mPorts =
+  mallocGenH mPorts (Types.pointerOf Types.dataType) Types.dataTypeSize
 
 -- derived from the core functions
 
-defineLinkConnectedPort ∷ Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
+defineLinkConnectedPort ∷
+  Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
 defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
   Block.defineFunction Type.void "link_connected_port" args $
     do
@@ -284,11 +289,11 @@ defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
-      numPointsTo ← intoGen numPorts 1
-      nodePointsToPtr ← intoGen nodePtrType 0
+      numPointsTo ← intoGen numPortsPointer 1
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePtrType) 0 >>= load nodePtrType
       nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
       -- End Abstracting out bits -------------------------------------------------
-      _ ← link [nNew, pNew, numPointsTo, nodePointsTo]
+      _ ← link [nNew, pNew, nodePointsTo, numPointsTo]
       retNull
   where
     args =
@@ -305,18 +310,18 @@ defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
       (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-      oldPointsTo ← findEdge (Types.portPointer nodePtrType) [n1, p1]
-      let intoGen typ num = loadElementPtr $
+      oldPointsTo ← findEdge (Types.portPointer nodePtrType) [n1, p1] -- portPtr
+      let intoGen typ num = getElementPtr $
             Types.Minimal
               { Types.type' = typ,
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
-      numPointsTo ← intoGen numPorts 1
-      nodePointsToPtr ← intoGen nodePtrType 0
+      numPointsTo ← intoGen numPortsPointer 1
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePtrType) 0 >>= load nodePtrType
       nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
       -- End Abstracting out bits -------------------------------------------------
-      _ ← linkConnectedPort [n2, p2, numPointsTo, nodePointsTo]
+      _ ← linkConnectedPort [n2, p2, nodePointsTo, numPointsTo]
       retNull
   where
     args =
@@ -347,13 +352,9 @@ deAllocateNode nodePtr = free nodePtr
 -- \ 4. do operation
 
 setPort ∷
-  ( HasThrow "err" Errors m,
+  ( Call m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "names" Names m,
-    HasState "symTab" SymbolTable m
+    HasState "names" Names m
   ) ⇒
   (Name.Name, Name.Name) →
   (Name.Name, Name.Name) →
@@ -378,7 +379,7 @@ setPortType portPtr node offset nodePtrType = do
       }
   offsetPtr ← getElementPtr $
     Types.Minimal
-      { Types.type' = numPorts,
+      { Types.type' = numPortsPointer,
         Types.address' = portPtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
