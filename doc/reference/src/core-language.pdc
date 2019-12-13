@@ -736,7 +736,7 @@ Define an `Eq` type:
 \AxiomC{$t \overset{0}{:} ∗_i$}
 \AxiomC{$x \overset{0}{:} t$}
 \AxiomC{$y \overset{0}{:} t$}
-\Label{$Eq-Form$}
+\RightLabel{$Eq-Form$}
 \TrinaryInfC{$Eq t x y \overset{0}{:} ∗_j$}
 \end{prooftree}
 
@@ -745,7 +745,7 @@ And a single `Refl` constructor:
 \begin{prooftree}
 \AxiomC{$t \overset{0}{:} ∗_i$}
 \AxiomC{$x \overset{0}{:} t$}
-\Label{$Refl$}
+\RightLabel{$Refl$}
 \BinaryInfC{$Refl \overset{0}{:} Eq t x x$}
 \end{prooftree}
 
