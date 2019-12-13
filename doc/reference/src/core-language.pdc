@@ -714,7 +714,7 @@ The dependent I ("identity") combinator can be typed as: $⊢ λt.λx.(x \overse
 
 ### Church-encoded natural numbers
 
-The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
+The dependent Church-encoded natural $n$ can be typed as $⊢ λt.λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} ((a \overset{1}{:} t) → t)) → (z \overset{1}{:} t) → t$ where $s$ is applied $n$ times.
 
 ### Linear induction
 
