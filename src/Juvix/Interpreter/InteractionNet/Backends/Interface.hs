@@ -133,7 +133,7 @@ class Network net where
 
   findEdge ∷ NetState (net a) m ⇒ (Node, PortType) → m (Maybe (Node, PortType))
 
-  allEdges :: NetState (net a) m => Node -> m [(PortType, Node, PortType)]
+  allEdges ∷ NetState (net a) m ⇒ Node → m [(PortType, Node, PortType)]
 
 -- Derived function of network -------------------------------------------------
 
