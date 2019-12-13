@@ -150,13 +150,7 @@ entry = get @"currentBlock"
 getBlock ∷ (HasState "currentBlock" Name m) ⇒ m Name
 getBlock = entry
 
-addBlock ∷
-  ( HasState "blockCount" Int m,
-    HasState "blocks" (Map.T Name BlockState) m,
-    HasState "names" Names m
-  ) ⇒
-  Symbol →
-  m Name
+addBlock ∷ NewBlock m ⇒ Symbol → m Name
 addBlock bname = do
   bls ← get @"blocks"
   ix ← get @"blockCount"

@@ -324,6 +324,67 @@ fanInAux1' ∷
   m Operand.Operand
 fanInAux1' _allocF = undefined
 
+aux2Gen ∷
+  ( Codegen.MallocNode m,
+    Codegen.Define m
+  ) ⇒
+  m Operand.Operand →
+  (Operand.Operand, Operand.Operand) →
+  (Operand.Operand, Operand.Operand) →
+  Operand.Operand →
+  (Operand.Operand → Operand.Operand → m ()) →
+  (Operand.Operand → Operand.Operand → m ()) →
+  m Operand.Operand
+aux2Gen allocF (node, eacPtr1) (fanIn, eacPtr2) eacList copyFanData copyNodeData = do
+  -- new nodes
+  fan1Eac ← mallocFanIn
+  fan2Eac ← mallocFanIn
+  nod1Eac ← allocF
+  nod2Eac ← allocF
+  fan1 ← nodeOf fan1Eac
+  fan2 ← nodeOf fan2Eac
+  nod1 ← nodeOf nod1Eac
+  nod2 ← nodeOf nod2Eac
+  -- TODO :: determine if these create a new main port which we must append
+  -- to the eac_list
+  eacList ←
+    Defs.linkAllCons
+      eacList
+      DSL.defRel
+        { DSL.node = DSL.Node {DSL.tagNode = nod1Eac, DSL.node' = nod1},
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
+        }
+  eacList ←
+    Defs.linkAllCons
+      eacList
+      DSL.defRel
+        { DSL.node = DSL.Node {DSL.tagNode = nod2Eac, DSL.node' = nod2},
+          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
+          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
+          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
+        }
+  eacList ←
+    Defs.linkAllCons
+      eacList
+      DSL.defRel
+        { DSL.node = DSL.Node {DSL.tagNode = fan1Eac, DSL.node' = fan1},
+          DSL.primary = DSL.LinkConnected node DSL.Aux2
+        }
+  eacList ←
+    Defs.linkAllCons
+      eacList
+      DSL.defRel
+        { DSL.node = DSL.Node {DSL.tagNode = fan2Eac, DSL.node' = fan2},
+          DSL.primary = DSL.LinkConnected node DSL.Aux1
+        }
+  copyNodeData node nod1 -- with the custom function we may ignore node/FanIn
+  copyNodeData node nod2 -- for one that already grabs data to save some
+  copyFanData fanIn fan1 -- operations as to get here we may have already
+  copyFanData fanIn fan2 -- gotten it
+  eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+
 defineFanInAux2 ∷
   ( Codegen.MallocNode m,
     Codegen.Define m
@@ -336,42 +397,17 @@ defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
     -- Nodes in env
     fanIn ← Codegen.externf "node_2"
     node ← Codegen.externf "node_1"
-    -- new nodes
-    fan1 ← mallocFanIn >>= nodeOf
-    fan2 ← mallocFanIn >>= nodeOf
-    nod1 ← allocF >>= nodeOf
-    nod2 ← allocF >>= nodeOf
-    -- TODO :: determine if these create a new main port which we must append
-    -- to the eac_list
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = nod1,
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
-          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
-          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = nod2,
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
-          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
-          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = fan1,
-          DSL.primary = DSL.LinkConnected node DSL.Aux2
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = fan2,
-          DSL.primary = DSL.LinkConnected node DSL.Aux1
-        }
+    eacList ← Codegen.externf "eac_list"
     eacPtr1 ← Codegen.externf "eac_ptr_1"
     eacPtr2 ← Codegen.externf "eac_ptr_2"
-    eacList ← Codegen.externf "eac_list"
-    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
-    -- TODO ∷ add to eacList, as we create nodes, main Ports?!
+    eacList ←
+      aux2Gen
+        allocF
+        (node, eacPtr1)
+        (fanIn, eacPtr2)
+        eacList
+        (\oldF newF → dataPortLookup oldF >>= addData newF)
+        (\_ _ → pure ()) -- no data on node for now!
     Codegen.ret eacList
 
 fanInFanIn ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
@@ -384,27 +420,15 @@ defineFanInFanIn ∷
   m Operand.Operand
 defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
   do
-    let dataLookup addr = Codegen.loadElementPtr $
-          Codegen.Minimal
-            { Codegen.type' = Codegen.dataArray,
-              Codegen.address' = addr,
-              Codegen.indincies' = Codegen.constant32List [0, 2]
-            }
-        labelLookup addr = Codegen.loadElementPtr $
-          Codegen.Minimal
-            { Codegen.type' = Codegen.dataType,
-              Codegen.address' = addr,
-              Codegen.indincies' = Codegen.constant32List [0, 0]
-            }
     eacPtr1 ← Codegen.externf "eac_ptr_1"
     eacPtr2 ← Codegen.externf "eac_ptr_2"
     eacList ← Codegen.externf "eac_list"
     fanIn1 ← Codegen.externf "node_1"
     fanIn2 ← Codegen.externf "node_2"
-    data1 ← dataLookup fanIn1
-    data2 ← dataLookup fanIn2
-    label1 ← labelLookup data1
-    label2 ← labelLookup data2
+    data1 ← dataPortLookup fanIn1
+    data2 ← dataPortLookup fanIn2
+    label1 ← fanLabelLookup data1
+    label2 ← fanLabelLookup data2
     test ← Codegen.icmp IntPred.EQ label1 label2
     sameFan ← Codegen.addBlock "same.fan"
     diffFan ← Codegen.addBlock "diff.fan"
@@ -418,66 +442,22 @@ defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
     Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
     Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
     let sameList = eacList
+    _ ← eraseNodes [fanIn1, eacPtr1, fanIn2, eacPtr2, eacList]
     _ ← Codegen.br continue
     -- %diff.fan
     ------------------------------------------------------
-    -- TODO ∷ be able to abstract it to share logic with defineFanInAux2
     Codegen.setBlock diffFan
-    let addData addr data' = do
-          arr ← dataLookup addr
-          labPtr ← Codegen.getElementPtr $
-            Codegen.Minimal
-              { Codegen.type' = Codegen.pointerOf Codegen.dataType,
-                Codegen.address' = arr,
-                Codegen.indincies' = Codegen.constant32List [0, 0]
-              }
-          Codegen.store labPtr data'
-    -- ABSTRACT START-----------------------------------------------------------
-    -- Nodes in env
-    let fanIn = fanIn2
-        node = fanIn1
-    -- new nodes
-    fan1 ← mallocFanIn >>= nodeOf
-    fan2 ← mallocFanIn >>= nodeOf
-    nod1 ← mallocFanIn >>= nodeOf
-    nod2 ← mallocFanIn >>= nodeOf
-    -- TODO :: determine if these create a new main port which we must append
-    -- to the eac_list
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = nod1,
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
-          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
-          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = nod2,
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
-          DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
-          DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = fan1,
-          DSL.primary = DSL.LinkConnected node DSL.Aux2
-        }
-    Defs.linkAll
-      DSL.defRel
-        { DSL.node = fan2,
-          DSL.primary = DSL.LinkConnected node DSL.Aux1
-        }
-    -- ABSTRACT END-------------------------------------------------------------
-    addData fan1 data2
-    addData fan2 data2
-    addData nod1 data1
-    addData nod2 data1
-    -- TODO ∷ add to eacList
-    let diffList = eacList
+    diffList ←
+      aux2Gen
+        mallocFanIn
+        (fanIn1, eacPtr1)
+        (fanIn2, eacPtr2)
+        eacList
+        (\_ newF → addData newF data2)
+        (\_ newN → addData newN data1)
     _ ← Codegen.br continue
     -- %continue.fan
     ------------------------------------------------------
-    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
     finalList ←
       Codegen.phi
         Types.eacList
@@ -584,3 +564,34 @@ tagOf eac =
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
+
+--------------------------------------------------------------------------------
+-- Helper functions
+--------------------------------------------------------------------------------
+
+dataPortLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+dataPortLookup addr = Codegen.loadElementPtr $
+  Codegen.Minimal
+    { Codegen.type' = Codegen.dataArray,
+      Codegen.address' = addr,
+      Codegen.indincies' = Codegen.constant32List [0, 2]
+    }
+
+addData ∷ Codegen.RetInstruction m ⇒ Operand.Operand → Operand.Operand → m ()
+addData addr data' = do
+  arr ← dataPortLookup addr
+  labPtr ← Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf Codegen.dataType,
+        Codegen.address' = arr,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
+  Codegen.store labPtr data'
+
+fanLabelLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+fanLabelLookup addr = Codegen.loadElementPtr $
+  Codegen.Minimal
+    { Codegen.type' = Codegen.dataType,
+      Codegen.address' = addr,
+      Codegen.indincies' = Codegen.constant32List [0, 0]
+    }

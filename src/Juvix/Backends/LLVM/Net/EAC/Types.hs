@@ -56,15 +56,7 @@ eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
 checkNull ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer))
 
-cons ∷
-  ( Codegen.RetInstruction m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "symTab" Codegen.SymbolTable m
-  ) ⇒
-  Operand.Operand →
-  Operand.Operand →
-  m Operand.Operand
+cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand
 cons ele eacList = do
   newList ← Codegen.malloc (Codegen.nodePointerSize + Codegen.nodePointerSize) eacLPointer
   car ← Codegen.loadElementPtr $

@@ -135,6 +135,12 @@ type MallocNode m =
     HasState "symTab" SymbolTable m
   )
 
+type NewBlock m =
+  ( HasState "blockCount" Int m,
+    HasState "blocks" (Map.T Name BlockState) m,
+    HasState "names" Names m
+  )
+
 type AllocaNode m =
   ( RetInstruction m,
     HasState "typTab" TypeTable m,

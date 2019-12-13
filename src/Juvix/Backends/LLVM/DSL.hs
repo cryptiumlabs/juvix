@@ -49,12 +49,7 @@ data REL node port
 
 data Auxiliary = Prim | Aux1 | Aux2 | Aux3 | Aux4 deriving (Show, Eq)
 
-auxiliaryToPort ∷
-  ( HasState "symTab" Codegen.SymbolTable m,
-    HasThrow "err" Codegen.Errors m
-  ) ⇒
-  Auxiliary →
-  m Operand.Operand
+auxiliaryToPort ∷ Codegen.Externf m ⇒ Auxiliary → m Operand.Operand
 auxiliaryToPort Prim = Codegen.mainPort
 auxiliaryToPort Aux1 = Codegen.auxiliary1
 auxiliaryToPort Aux2 = Codegen.auxiliary2
@@ -62,11 +57,8 @@ auxiliaryToPort Aux3 = Codegen.auxiliary3
 auxiliaryToPort Aux4 = Codegen.auxiliary4
 
 linkAllCons ∷
-  ( Codegen.RetInstruction m,
-    HasState "symTab" Codegen.SymbolTable m,
-    HasState "blockCount" Int m,
-    HasState "names" Codegen.Names m,
-    HasThrow "err" Codegen.Errors m
+  ( Codegen.Call m,
+    Codegen.NewBlock m
   ) ⇒
   (t → Operand.Operand → m Operand.Operand) →
   Type.Type →
@@ -110,11 +102,8 @@ linkHelper (LinkConnected nl pl) node port = do
   Codegen.linkConnectedPort [nl, p, node, port]
 
 linkHelperP ∷
-  ( Codegen.RetInstruction m,
-    HasState "symTab" Codegen.SymbolTable m,
-    HasState "blockCount" Int m,
-    HasState "names" Codegen.Names m,
-    HasThrow "err" Codegen.Errors m
+  ( Codegen.Call m,
+    Codegen.NewBlock m
   ) ⇒
   (t → Operand.Operand → m Operand.Operand) →
   Type.Type →
@@ -132,12 +121,12 @@ linkHelperP cons nodePtrType eacList n tagN node port =
         continueComp ← Codegen.addBlock "case.continue"
         isPrimary ← Codegen.loadIsPrimaryEle v
         currentBlock ← Codegen.getBlock
-        Codegen.cbr isPrimary primaryCase continueComp
+        _ ← Codegen.cbr isPrimary primaryCase continueComp
         -- %case.primary branch
         ------------------------------------------------------
         Codegen.setBlock primaryCase
         newList ← cons tagN eacList
-        Codegen.br continueComp
+        _ ← Codegen.br continueComp
         -- %empty.continue branch
         ------------------------------------------------------
         Codegen.phi nodePtrType [(eacList, currentBlock), (newList, primaryCase)]

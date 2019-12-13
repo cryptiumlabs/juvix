@@ -29,10 +29,7 @@ mainPort,
   auxiliary2,
   auxiliary3,
   auxiliary4 ∷
-    ( HasState "symTab" Codegen.SymbolTable m,
-      HasThrow "err" Codegen.Errors m
-    ) ⇒
-    m Operand.Operand
+    Codegen.Externf m ⇒ m Operand.Operand
 mainPort = Codegen.mainPort
 auxiliary1 = Codegen.auxiliary1
 auxiliary2 = Codegen.auxiliary2
@@ -44,13 +41,9 @@ linkAll ∷
 linkAll = DSL.linkAll
 
 linkAllCons ∷
-  ( Codegen.RetInstruction m,
-    HasState "symTab" Codegen.SymbolTable m,
-    HasState "blockCount" Int m,
-    HasState "names" Codegen.Names m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasThrow "err" Codegen.Errors m
+  ( Codegen.Call m,
+    Codegen.NewBlock m,
+    Codegen.MallocNode m
   ) ⇒
   Operand.Operand →
   DSL.Relink
@@ -97,13 +90,13 @@ defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
 defineLinkConnectedPort = loadPtrGen Codegen.defineLinkConnectedPort
 
 deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
-deAllocateNode nodePtr = Codegen.deAllocateNode nodePtr
+deAllocateNode = Codegen.deAllocateNode
 
 loadPtrGen ∷ Codegen.Define m ⇒ (Type.Type → (Operand.Operand → m Operand.Operand) → t) → t
 loadPtrGen f =
   f
     Types.eacPointer
-    $ \eac → do
+    $ \eac →
       Codegen.loadElementPtr $
         Codegen.Minimal
           { Codegen.type' = nodePointer,
