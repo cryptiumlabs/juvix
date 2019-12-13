@@ -704,9 +704,21 @@ To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ### Dependent identity function
 
-The dependent identity function can be typed in the computational fragment as $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → ((x \overset{1}{:} t) → t)$.
+The dependent identity function can be typed as: $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
 
 ### SKI combinators
+
+#### S combinator
+
+The dependent S ("substitution") combinator can be typed as: $λt1.λt2.λt3.λx.λy.λz.x z (y z) \overset{1}{:} (x \overset{1}{:} ((a \overset{1}{:} t1) → (b \overset{1}{:} t2) → t3)) → (y \overset{1}{:} ((a \overset{1}{:} t1) → t2)) → (z \overset{2}{:} t1) → t3$.
+
+#### K combinator
+
+The dependent K ("constant") combinator can be typed as: $⊢ λt1.λt2.λx.λy.x \overset{1}{:} (t1 \overset{0}{:} ∗_i) → (t2 \overset{0}{:} ∗_i) → (x \overset{1}{:} t1) → (y \overset{0}{:} t2) → t1$.
+
+#### I combinator
+
+The dependent I ("identity") combinator can be typed as: ⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
 
 ### Church-encoded natural numbers
 
