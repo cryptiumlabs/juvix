@@ -4,7 +4,6 @@ module Juvix.Backends.LLVM.Translation where
 
 import qualified Data.HashMap.Strict as Map
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
-import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Types as Core
 import Juvix.Interpreter.InteractionNet hiding (Erase, Lambda)
@@ -12,9 +11,6 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding (empty, reduce)
-import qualified LLVM.AST as AST
-import qualified LLVM.AST.Name as Name
-import qualified LLVM.AST.Operand as Operand
 
 {-
  - TODO: Separate out the common logic from the interpreter & this file into a shared module.
@@ -22,17 +18,7 @@ import qualified LLVM.AST.Operand as Operand
 
 erasedCoreToLLVM ∷
   ∀ primTy primVal m.
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "symTab" Codegen.SymbolTable m
-  ) ⇒
+  Codegen.MallocNode m ⇒
   Core.Parameterisation primTy primVal →
   Erased.Term primVal →
   m ()
@@ -46,17 +32,7 @@ erasedCoreToLLVM parameterisation term = do
 
 networkToLLVM ∷
   ∀ primVal m.
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "moduleDefinitions" [AST.Definition] m,
-    HasState "names" Codegen.Names m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m,
-    HasState "symTab" Codegen.SymbolTable m
-  ) ⇒
+  Codegen.MallocNode m ⇒
   Graph.FlipNet (Lang primVal) →
   m ()
 networkToLLVM n = do

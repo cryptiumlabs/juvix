@@ -40,7 +40,6 @@ Serves as a mini DSL layer above LLVM
 Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM.
 - _Relies on_
   + [[Codegen]]
-  + [[Net/EAC]]
   + [[Erased/Types]]
   + [[Core/Types]]
   + [[InteractionNet]]
@@ -52,7 +51,6 @@ Translates erased core terms (must be EAC-typable) to native interaction nets in
 - _Relies on_
   + [[Block]]
   + [[Constants]]
-  + [[Codegen/Default]]
   + [[Codegen/Graph]]
   + [[Codegen/Shared]]
   + [[Codegen/Types]]
@@ -69,8 +67,6 @@ Module for predefined constants
   + [[Library]]
 ***** Default <<Codegen/Default>>
 This module provides the default environment to run LLVM code in
-- _Relies on_
-  + [[Library]]
 ***** Graph <<Codegen/Graph>>
 Operations necessary to update nodes
 - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
