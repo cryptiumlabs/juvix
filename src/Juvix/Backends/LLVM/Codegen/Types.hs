@@ -62,6 +62,8 @@ data Errors
     DoesNotHappen Text
   | -- | Error that happens when a variable out of scope is called
     VariableNotInScope Text
+  | -- | Error that happens when a block lacks a terminator when it should have one
+    BlockLackingTerminator Int
   deriving (Show)
 
 newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) a}

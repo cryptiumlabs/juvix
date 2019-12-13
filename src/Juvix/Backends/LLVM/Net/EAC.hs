@@ -288,11 +288,7 @@ defineAnnihilateRewireAux =
       _ ← freeEac eacPtr2
       Codegen.externf "eac_list" >>= Codegen.ret
 
--- TODO ∷ make fast fanInAux and slow fanInAux
-
--- | 'fanInAuxStar' is a slower version of 'fanInAux*' where * ∈ ℤ/4ℤ.
--- This function is used when it can not be determined that 'fanInAux*'
-fanInAuxStar = undefined
+-- TODO ∷ fully generalize fanIn Logic and generate them dynamically
 
 fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
 fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
@@ -313,16 +309,6 @@ fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
     eacList ← Codegen.externf "eac_list"
     _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
     Codegen.ret eacList
-
-fanInAux1' ∷
-  ( Codegen.Define m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  Symbol →
-  m Operand.Operand →
-  m Operand.Operand
-fanInAux1' _allocF = undefined
 
 aux2Gen ∷
   ( Codegen.MallocNode m,
