@@ -279,16 +279,7 @@ Primitive functions can be dependently-typed.
 
 #### Elimination rule
 
-\begin{prooftree}
-\AxiomC{$f \in F$}
-\AxiomC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ ⊢ M \overset{σ'}{:} S$}
-\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
-\RightLabel{Prim-App}
-\QuaternaryInfC{$πΓ ⊢ f M \overset{σ}{:} T[x := M]$}
-\end{prooftree}
-
-Applications of primitive functions impose the same usage constraints as regular abstractions.
+Primitive functions use the same elimination rule as native lambda abstractions.
 
 ### Dependent function types
 
