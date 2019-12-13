@@ -310,10 +310,11 @@ required for the argument, respectively:
 
 \begin{prooftree}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ}{:} S$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ'}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$σ' = 0 ⇔ (π = 0 ∨ σ = 0)$}
 \RightLabel{App}
-\TrinaryInfC{$Γ_1 + π Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
+\QuaternaryInfC{$Γ_1 + π Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
