@@ -204,7 +204,6 @@ tests:
       - tasty-hunit
       - tasty-quickcheck
       - QuickCheck
-      - tasty-discover
       - temporary
       - raw-strings-qq
       - process
