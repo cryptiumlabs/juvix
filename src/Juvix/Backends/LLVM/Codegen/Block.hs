@@ -8,7 +8,7 @@ import Data.ByteString.Short
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
-import Juvix.Library.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST
 import LLVM.AST.AddrSpace
@@ -36,7 +36,7 @@ fresh = do
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
-createBlocks ∷ HasState "blocks" (HashMap Name BlockState) f ⇒ f [BasicBlock]
+createBlocks ∷ HasState "blocks" (Map.T Name BlockState) f ⇒ f [BasicBlock]
 createBlocks = fmap makeBlock . sortBlocks . Map.toList <$> get @"blocks"
 
 makeBlock ∷ (Name, BlockState) → BasicBlock
@@ -102,11 +102,11 @@ defineVarArgs = defineGen True
 makeFunction ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name BlockState) m,
+    HasState "blocks" (Map.T Name.Name BlockState) m,
     HasState "count" Word m,
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
-    HasState "symTab" (Map.HashMap Symbol Operand.Operand) m
+    HasState "symTab" Types.SymbolTable m
   ) ⇒
   Symbol →
   [(Type.Type, Name.Name)] →
@@ -150,13 +150,7 @@ entry = get @"currentBlock"
 getBlock ∷ (HasState "currentBlock" Name m) ⇒ m Name
 getBlock = entry
 
-addBlock ∷
-  ( HasState "blockCount" Int m,
-    HasState "blocks" (HashMap Name BlockState) m,
-    HasState "names" Names m
-  ) ⇒
-  Symbol →
-  m Name
+addBlock ∷ NewBlock m ⇒ Symbol → m Name
 addBlock bname = do
   bls ← get @"blocks"
   ix ← get @"blockCount"
@@ -176,7 +170,7 @@ setBlock ∷ HasState "currentBlock" Name m ⇒ Name → m ()
 setBlock bName = put @"currentBlock" bName
 
 modifyBlock ∷
-  ( HasState "blocks" (HashMap Name v) m,
+  ( HasState "blocks" (Map.T Name v) m,
     HasState "currentBlock" Name m
   ) ⇒
   v →
@@ -186,7 +180,7 @@ modifyBlock new = do
   modify @"blocks" (Map.insert active new)
 
 current ∷
-  ( HasState "blocks" (HashMap Name b) m,
+  ( HasState "blocks" (Map.T Name b) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
@@ -198,12 +192,7 @@ current = do
     Just x → return x
     Nothing → throw @"err" (NoSuchBlock (show c))
 
-externf ∷
-  ( HasState "symTab" SymbolTable m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Name →
-  m Operand
+externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
 nameToSymbol ∷ Name → Symbol
@@ -223,7 +212,7 @@ instr typ ins = do
   pure (local typ ref)
 
 unnminstr ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
+  ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
@@ -235,7 +224,7 @@ unnminstr ins = do
   modifyBlock (blk {stack = (Do ins) : i})
 
 terminator ∷
-  ( HasState "blocks" (HashMap Name BlockState) m,
+  ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
   ) ⇒
@@ -274,13 +263,13 @@ external retty label argtys = do
 
 -- malloc & free need to be defined once and then can be called normally with `externf`
 
-defineMalloc ∷ Extern m ⇒ m ()
+defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
   op ← external voidStarTy name [(size_t, "size")]
   assign name op
 
-defineFree ∷ Extern m ⇒ m ()
+defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
   op ← external voidTy name [(Types.voidStarTy, "type")]
@@ -446,9 +435,11 @@ call typ fn args = instr typ $
       metadata = []
     }
 
-alloca ∷
-  RetInstruction m ⇒ Type → m Operand
-alloca ty = instr ty $ Alloca ty Nothing 0 []
+-- TODO :: is the pointerOf on the ty needed
+-- the LLVM8 testing on newKledi shows it being the same type back
+-- however that would be incorrect?!
+alloca ∷ RetInstruction m ⇒ Type → m Operand
+alloca ty = instr (pointerOf ty) $ Alloca ty Nothing 0 []
 
 load ∷ RetInstruction m ⇒ Type → Operand → m Operand
 load typ ptr = instr typ $ Load False ptr Nothing 0 []
@@ -484,7 +475,9 @@ getElementPtr (Minimal address indices type') =
 
 loadElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 loadElementPtr minimal = do
-  ptr ← getElementPtr minimal
+  ptr ←
+    getElementPtr
+      (minimal {Types.type' = pointerOf (Types.type' minimal)})
   load (Types.type' minimal) ptr
 
 constant32List ∷ Functor f ⇒ f Integer → f Operand
@@ -518,8 +511,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
+    -- Verify my pointerOf is correct here
     Minimal
-      { Types.type' = sumTyp,
+      { Types.type' = Types.pointerOf sumTyp,
         Types.address' = sum,
         Types.indincies' = constant32List [0, 0]
       }
@@ -533,8 +527,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     ( \i inst → do
         ele ←
           getElementPtr $
+            -- Verify my pointerOf is correct here
             Minimal
-              { Types.type' = varType,
+              { Types.type' = Types.pointerOf varType,
                 Types.address' = casted,
                 Types.indincies' = constant32List [0, i]
               }

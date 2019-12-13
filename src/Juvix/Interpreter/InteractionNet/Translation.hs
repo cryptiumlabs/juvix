@@ -25,7 +25,7 @@ data Env net primVal
   = Env
       { level ∷ Int,
         net' ∷ net (AST.Lang primVal),
-        free ∷ Map.Map Symbol (Node, PortType)
+        free ∷ Map.T Symbol (Node, PortType)
       }
   deriving (Generic)
 
@@ -35,7 +35,7 @@ newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
     (HasState "level" Int)
     via Rename "level" (Field "level" () (MonadState (State (Env net primVal))))
   deriving
-    (HasState "free" (Map.Map Symbol (Node, PortType)))
+    (HasState "free" (Map.T Symbol (Node, PortType)))
     via (Field "free" () (MonadState (State (Env net primVal))))
   deriving
     (HasState "net" (net (AST.Lang primVal)))
@@ -47,7 +47,13 @@ execEnvState (EnvS m) = execState m
 evalEnvState ∷ Network net ⇒ EnvState net primVal a → Env net primVal → a
 evalEnvState (EnvS m) = evalState m
 
-astToNet ∷ ∀ primTy primVal net. Network net ⇒ Core.Parameterisation primTy primVal → Type.AST primVal → Map.Map Symbol (Type.Fn primVal) → net (AST.Lang primVal)
+astToNet ∷
+  ∀ primTy primVal net.
+  Network net ⇒
+  Core.Parameterisation primTy primVal →
+  Type.AST primVal →
+  Map.T Symbol (Type.Fn primVal) →
+  net (AST.Lang primVal)
 astToNet parameterisation bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
@@ -66,7 +72,15 @@ astToNet parameterisation bohm customSymMap = net'
         2 → do
           numLam1 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg1
           numLam2 ← newNode (AST.Auxiliary2 AST.Lambda) -- arg2
-          numCurr ← newNode (AST.Auxiliary2 $ AST.PrimCurried2 (\x y → Core.apply parameterisation p x >>= (\f → Core.apply parameterisation f y)))
+          numCurr ←
+            newNode
+              ( AST.Auxiliary2 $
+                  AST.PrimCurried2
+                    ( \x y →
+                        Core.apply parameterisation p x
+                          >>= (\f → Core.apply parameterisation f y)
+                    )
+              )
           -- Lambda chain
           link (numLam1, Aux1) (numLam2, Prim)
           link (numLam2, Aux1) (numCurr, Aux1)
@@ -247,174 +261,184 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
               Nothing → pure Nothing
               Just port →
                 case port of
-                  AST.IsAux3 {AST._tag3 = tag, AST._prim = prim, AST._aux2 = aux2, AST._aux3 = aux3} →
-                    case (prim, aux2, aux3) of
-                      (Primary p, Auxiliary a2, Auxiliary a3) → do
-                        p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
-                        a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
-                        a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
-                        let tag' = case tag of
-                              AST.IfElse → Type.If
-                              AST.Curried3 f → Type.Curried3 f
-                        pure (tag' <$> p <*> a2 <*> a3)
-                      _ → pure Nothing
-                  AST.IsAux2 {AST._tag2 = tag, AST._prim = prim, AST._aux1 = aux1, AST._aux2 = aux2} →
-                    let parentAux1 con = do
-                          case (prim, aux2) of
-                            (Primary p, Auxiliary a2) → do
-                              p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
-                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
-                              pure (con <$> p <*> a2)
-                            _ → pure Nothing
+                  AST.IsAux3
+                    { AST._tag3 = tag,
+                      AST._prim = prim,
+                      AST._aux2 = aux2,
+                      AST._aux3 = aux3
+                    } →
+                      case (prim, aux2, aux3) of
+                        (Primary p, Auxiliary a2, Auxiliary a3) → do
+                          p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
+                          a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                          a3 ← rec' a3 (Just (n, Aux3)) fanMap nodeVarInfo
+                          let tag' = case tag of
+                                AST.IfElse → Type.If
+                                AST.Curried3 f → Type.Curried3 f
+                          pure (tag' <$> p <*> a2 <*> a3)
+                        _ → pure Nothing
+                  AST.IsAux2
+                    { AST._tag2 = tag,
+                      AST._prim = prim,
+                      AST._aux1 = aux1,
+                      AST._aux2 = aux2
+                    } →
+                      let parentAux1 con = do
+                            case (prim, aux2) of
+                              (Primary p, Auxiliary a2) → do
+                                p ← rec' p (Just (n, Prim)) fanMap nodeVarInfo
+                                a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                                pure (con <$> p <*> a2)
+                              _ → pure Nothing
 
-                        parentPrim con = do
-                          case (aux1, aux2) of
-                            (Auxiliary a1, Auxiliary a2) → do
-                              a1 ← rec' a1 (Just (n, Aux1)) fanMap nodeVarInfo
-                              a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
-                              pure (con <$> a1 <*> a2)
-                            _ → pure Nothing
+                          parentPrim con = do
+                            case (aux1, aux2) of
+                              (Auxiliary a1, Auxiliary a2) → do
+                                a1 ← rec' a1 (Just (n, Aux1)) fanMap nodeVarInfo
+                                a2 ← rec' a2 (Just (n, Aux2)) fanMap nodeVarInfo
+                                pure (con <$> a1 <*> a2)
+                              _ → pure Nothing
 
-                        -- Case for Lambda and mu
-                        lamMu lamOrMu = do
-                          let fullLamCase lamOrMu =
-                                let num = newMapNum nodeVarInfo
+                          -- Case for Lambda and mu
+                          lamMu lamOrMu = do
+                            let fullLamCase lamOrMu =
+                                  let num = newMapNum nodeVarInfo
 
-                                    symb = numToSymbol num
+                                      symb = numToSymbol num
 
-                                    newNodeVarMap = Map.insert n symb nodeVarMap
+                                      newNodeVarMap = Map.insert n symb nodeVarMap
 
-                                 in case aux1 of
-                                      Auxiliary a1 → do
-                                        a1 ←
-                                          rec'
-                                            a1
-                                            (Just (n, Aux1))
-                                            fanMap
-                                            (newNodeVarMap, succ nodeVarLengh)
-                                        pure (lamOrMu symb <$> a1)
-                                      FreeNode → pure Nothing
-                          mEdge ← traverseM findEdge comeFrom
-                          case mEdge of
-                            -- We are pointing to the symbol of this lambda
-                            Just (_, Aux2) →
-                              -- The symbol has to be here, or else, there is an issue
-                              -- in the AST!
-                              pure (Just (Type.Symbol' (nodeVarMap Map.! n)))
-                            -- We must be starting with Lambda, thus make a full lambda!
-                            Nothing → fullLamCase lamOrMu
-                            -- This case it has to Prim, so construct a full lambda
-                            _ → fullLamCase lamOrMu
+                                   in case aux1 of
+                                        Auxiliary a1 → do
+                                          a1 ←
+                                            rec'
+                                              a1
+                                              (Just (n, Aux1))
+                                              fanMap
+                                              (newNodeVarMap, succ nodeVarLengh)
+                                          pure (lamOrMu symb <$> a1)
+                                        FreeNode → pure Nothing
+                            mEdge ← traverseM findEdge comeFrom
+                            case mEdge of
+                              -- We are pointing to the symbol of this lambda
+                              Just (_, Aux2) →
+                                -- The symbol has to be here, or else, there is an issue
+                                -- in the AST!
+                                pure (Just (Type.Symbol' (nodeVarMap Map.! n)))
+                              -- We must be starting with Lambda, thus make a full lambda!
+                              Nothing → fullLamCase lamOrMu
+                              -- This case it has to Prim, so construct a full lambda
+                              _ → fullLamCase lamOrMu
 
-                     in case tag of
-                          AST.Curried2 f → parentAux1 (Type.Curried2 f)
-                          AST.PrimCurried2 f → parentAux1 (Type.PrimCurried2 f)
-                          AST.Or → parentAux1 Type.Or
-                          AST.And → parentAux1 Type.And
-                          AST.App → parentAux1 Type.Application
-                          AST.Cons → parentPrim Type.Cons
-                          -- Lambda may be the lambda node
-                          -- Or the symbol the Lambda contains
-                          AST.Lambda → lamMu Type.Lambda
-                          -- same with mu
-                          AST.Mu → lamMu Type.Letrec
-                          AST.FanIn i → do
-                            -- First we are going to look up if we came from the fan
-                            -- in of this fan out note that we don't cover the impossible
-                            -- case where we enter through Aux1 in both the same fan in/out
-                            case fanMap Map.!? i of
-                              -- we haven't visited or completed a fan in
-                              -- Check if we came through the main port or Circle or Star
-                              Nothing → do
-                                mPort ← traverseM findEdge comeFrom
-                                let freeChoice =
-                                      let newFanMap = Map.insert i [In Circle] fanMap
-                                          cameFrom = (Just (n, fanPortsToAux Circle))
-                                       in case aux1 of
-                                            Auxiliary aux1 →
-                                              rec' aux1 cameFrom newFanMap nodeVarInfo
-                                            -- Never happens by precondition!
-                                            FreeNode → pure Nothing
-                                    -- TODO ∷ unify with through function 19 lines below
-                                    fromCircleOrStar con =
-                                      let newFanMap = Map.insert i [In con] fanMap
-                                          cameFrom = Just (n, Prim)
-                                       in case prim of
-                                            Primary prim →
-                                              rec' prim cameFrom newFanMap nodeVarInfo
-                                            _ → pure Nothing -- doesn't happen!
-                                case mPort of
-                                  -- We are starting at a FanIn or the graph is invalid!
-                                  -- So pick the circle direction to go with!
-                                  Nothing → freeChoice
-                                  Just (_, Prim) → freeChoice -- from fan-In, pick a direction to go!
-                                  Just (_, Aux2) → fromCircleOrStar Star -- from ★, mark it; go through prim!
-                                  Just (_, Aux1) → fromCircleOrStar Circle -- from ●, mark it; go through prim!
-                                      -- This case should never happen
-                                  _ → pure Nothing
-                              -- We have been in a FanIn Before, figure out what state of the world we are in!
-                              Just status → do
-                                mPort ← traverseM findEdge comeFrom
-                                let through con =
-                                      let newFanMap = Map.insert i (In con : status) fanMap
-                                          cameFrom = Just (n, Prim)
-                                       in case prim of
-                                            Primary prim →
-                                              rec' prim cameFrom newFanMap nodeVarInfo
-                                            Free →
-                                              pure Nothing -- never happens
-                                case mPort of
-                                  -- Shouldn't happen, as the previous node *must* exist
-                                  Nothing → pure Nothing
-                                  Just (_, Aux1) → through (auxToFanPorts Aux1)
-                                  Just (_, Aux2) → through (auxToFanPorts Aux2)
-                                  Just (_, Aux3) → pure Nothing -- Shouldn't happen!
-                                  Just (_, Aux4) → pure Nothing -- Shouldn't happen!
-                                  Just (_, Aux5) → pure Nothing -- Shouldn't happen!
-                                  Just (_, Prim) → do
-                                    case status of
-                                      In port : xs →
-                                        -- adding the completed at the
-                                        -- end keeps the precondition that In's are in front
-                                        let newFanMap = Map.insert i (xs <> [Completed port]) fanMap
+                       in case tag of
+                            AST.Curried2 f → parentAux1 (Type.Curried2 f)
+                            AST.PrimCurried2 f → parentAux1 (Type.PrimCurried2 f)
+                            AST.Or → parentAux1 Type.Or
+                            AST.And → parentAux1 Type.And
+                            AST.App → parentAux1 Type.Application
+                            AST.Cons → parentPrim Type.Cons
+                            -- Lambda may be the lambda node
+                            -- Or the symbol the Lambda contains
+                            AST.Lambda → lamMu Type.Lambda
+                            -- same with mu
+                            AST.Mu → lamMu Type.Letrec
+                            AST.FanIn i → do
+                              -- First we are going to look up if we came from the fan
+                              -- in of this fan out note that we don't cover the impossible
+                              -- case where we enter through Aux1 in both the same fan in/out
+                              case fanMap Map.!? i of
+                                -- we haven't visited or completed a fan in
+                                -- Check if we came through the main port or Circle or Star
+                                Nothing → do
+                                  mPort ← traverseM findEdge comeFrom
+                                  let freeChoice =
+                                        let newFanMap = Map.insert i [In Circle] fanMap
+                                            cameFrom = (Just (n, fanPortsToAux Circle))
+                                         in case aux1 of
+                                              Auxiliary aux1 →
+                                                rec' aux1 cameFrom newFanMap nodeVarInfo
+                                              -- Never happens by precondition!
+                                              FreeNode → pure Nothing
+                                      -- TODO ∷ unify with through function 19 lines below
+                                      fromCircleOrStar con =
+                                        let newFanMap = Map.insert i [In con] fanMap
+                                            cameFrom = Just (n, Prim)
+                                         in case prim of
+                                              Primary prim →
+                                                rec' prim cameFrom newFanMap nodeVarInfo
+                                              _ → pure Nothing -- doesn't happen!
+                                  case mPort of
+                                    -- We are starting at a FanIn or the graph is invalid!
+                                    -- So pick the circle direction to go with!
+                                    Nothing → freeChoice
+                                    Just (_, Prim) → freeChoice -- from fan-In, pick a direction to go!
+                                    Just (_, Aux2) → fromCircleOrStar Star -- from ★, mark it; go through prim!
+                                    Just (_, Aux1) → fromCircleOrStar Circle -- from ●, mark it; go through prim!
+                                        -- This case should never happen
+                                    _ → pure Nothing
+                                -- We have been in a FanIn Before, figure out what state of the world we are in!
+                                Just status → do
+                                  mPort ← traverseM findEdge comeFrom
+                                  let through con =
+                                        let newFanMap = Map.insert i (In con : status) fanMap
+                                            cameFrom = Just (n, Prim)
+                                         in case prim of
+                                              Primary prim →
+                                                rec' prim cameFrom newFanMap nodeVarInfo
+                                              Free →
+                                                pure Nothing -- never happens
+                                  case mPort of
+                                    -- Shouldn't happen, as the previous node *must* exist
+                                    Nothing → pure Nothing
+                                    Just (_, Aux1) → through (auxToFanPorts Aux1)
+                                    Just (_, Aux2) → through (auxToFanPorts Aux2)
+                                    Just (_, Aux3) → pure Nothing -- Shouldn't happen!
+                                    Just (_, Aux4) → pure Nothing -- Shouldn't happen!
+                                    Just (_, Aux5) → pure Nothing -- Shouldn't happen!
+                                    Just (_, Prim) → do
+                                      case status of
+                                        In port : xs →
+                                          -- adding the completed at the
+                                          -- end keeps the precondition that In's are in front
+                                          let newFanMap = Map.insert i (xs <> [Completed port]) fanMap
 
-                                            cameFrom = (Just (n, fanPortsToAux port))
+                                              cameFrom = (Just (n, fanPortsToAux port))
 
-                                            aux Circle = aux1
-                                            aux Star = aux2
+                                              aux Circle = aux1
+                                              aux Star = aux2
 
-                                         in case aux port of
-                                              Auxiliary aux → rec' aux cameFrom newFanMap nodeVarInfo
-                                              FreeNode → pure Nothing -- doesn't happen
-                                                  -- We have already completed a port,
-                                                  -- but have not yet gone through another
-                                                  -- so go through the other port
-                                      [Completed port] → do
-                                        let newFanMap Star =
-                                              Map.insert i ([In Circle, Completed port]) fanMap
-                                            newFanMap Circle =
-                                              Map.insert i ([In Star, Completed port]) fanMap
+                                           in case aux port of
+                                                Auxiliary aux → rec' aux cameFrom newFanMap nodeVarInfo
+                                                FreeNode → pure Nothing -- doesn't happen
+                                                    -- We have already completed a port,
+                                                    -- but have not yet gone through another
+                                                    -- so go through the other port
+                                        [Completed port] → do
+                                          let newFanMap Star =
+                                                Map.insert i ([In Circle, Completed port]) fanMap
+                                              newFanMap Circle =
+                                                Map.insert i ([In Star, Completed port]) fanMap
 
-                                            cameFrom = (Just (n, fanPortsToAux port))
+                                              cameFrom = (Just (n, fanPortsToAux port))
 
-                                            auxFlip Circle = aux2
-                                            auxFlip Star = aux1
+                                              auxFlip Circle = aux2
+                                              auxFlip Star = aux1
 
-                                        case auxFlip port of
-                                          Auxiliary aux →
-                                            rec' aux cameFrom (newFanMap port) nodeVarInfo
-                                          -- doesn't happen
-                                          FreeNode →
-                                            pure Nothing
-                                      -- going back through both ports, odd! x2
-                                      [Completed Star, Completed Circle] → pure Nothing
-                                      [Completed Circle, Completed Star] → pure Nothing
-                                      [Completed _, Completed _] →
-                                        error "going through the same node twice!?!?"
-                                      [] →
-                                        error "doesn't happen"
-                                      _ : _ →
-                                        error "doesn't happen"
+                                          case auxFlip port of
+                                            Auxiliary aux →
+                                              rec' aux cameFrom (newFanMap port) nodeVarInfo
+                                            -- doesn't happen
+                                            FreeNode →
+                                              pure Nothing
+                                        -- going back through both ports, odd! x2
+                                        [Completed Star, Completed Circle] → pure Nothing
+                                        [Completed Circle, Completed Star] → pure Nothing
+                                        [Completed _, Completed _] →
+                                          error "going through the same node twice!?!?"
+                                        [] →
+                                          error "doesn't happen"
+                                        _ : _ →
+                                          error "doesn't happen"
                   AST.IsAux1 {AST._tag1 = tag, AST._prim = prim} →
                     let parentAux con =
                           case prim of

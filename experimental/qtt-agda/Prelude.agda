@@ -1,3 +1,13 @@
+-- there should be nothing surprising in here, it just reexports the most
+-- common parts of the stdlib
+--
+-- * Unit, Empty, Nat, Fin¹, Bool
+-- * Sum, Product, Maybe
+-- * Binary relations, Decidability, Equality
+-- * Function, which contains conveniences like `id`, `_$_`, `case_of_`, etc
+--
+-- ¹`Fin n` is [isomorphic to] the naturals less than `n`
+
 module Prelude where
 
 open import Agda.Primitive public using (Level ; lzero ; lsuc ; _⊔_)
@@ -8,8 +18,6 @@ record Lift {a} ℓ (A : Set a) : Set (a ⊔ ℓ) where
   instance constructor lift
   field ⦃ lower ⦄ : A
 
-open import Function public
-
 module ⊤ where
   open import Data.Unit public hiding (module ⊤)
 open ⊤ public using (⊤ ; tt)
@@ -17,7 +25,6 @@ open ⊤ public using (⊤ ; tt)
 module ⊥ where
   open import Data.Empty public hiding (module ⊥)
 open ⊥ public using (⊥ ; ⊥-elim)
-
 
 module ℕ where
   open import Data.Nat public hiding (module ℕ)
@@ -27,9 +34,9 @@ module ℕ where
   instance number = Lit.number
 open ℕ public using (ℕ ; zero ; suc)
 
-
 module Fin where
-  open import Data.Fin public hiding (module Fin)
+  import Data.Fin hiding (module Fin)
+  open Data.Fin public
   open import Data.Fin.Properties public
   import Data.Fin.Literals as Lit
 
@@ -37,6 +44,10 @@ module Fin where
   number = Lit.number _
 open Fin public using (Fin ; zero ; suc ; #_)
 
+module Bool where
+  open import Data.Bool public hiding (module Bool)
+  open import Data.Bool.Properties public
+open Bool public using (Bool ; true ; false ; if_then_else_)
 
 module ⊎ where
   open import Data.Sum public hiding (module _⊎_)
@@ -45,25 +56,62 @@ open ⊎ public using (_⊎_ ; inj₁ ; inj₂)
 
 module Σ where
   open import Data.Product public hiding (module Σ)
-open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; _,_ ; -,_)
-
+open Σ public using (Σ ; Σ-syntax ; _×_ ; ∃ ; ∃-syntax ; ∄ ; ∄-syntax ;
+                     _,_ ; -,_ ; proj₁ ; proj₂)
 
 module Maybe where
   open import Data.Maybe public hiding (module Maybe)
   open import Data.Maybe.Properties public
 open Maybe public using (Maybe ; nothing ; just)
 
-module Bool where
-  open import Data.Bool public hiding (module Bool)
-  open import Data.Bool.Properties public
-open Bool public using (Bool ; true ; false ; if_then_else_)
-
 module Relation where
-  open import Relation.Nullary public
+  open import Relation.Nullary public renaming (Irrelevant to Irrelevant₀)
   open import Relation.Nullary.Decidable public
-  open import Relation.Binary public hiding (Irrelevant)
+  open import Relation.Unary public hiding (⌊_⌋)
+    renaming (Irrelevant to Irrelevant₁ ; Recomputable to Recomputable₁ ;
+              Universal to Universal₁ ; Decidable to Decidable₁ ; _⇒_ to _⇒₁_)
+  open import Relation.Binary public
+    renaming (Irrelevant to Irrelevant₂ ; Recomputable to Recomputable₂ ;
+              Universal to Universal₂ ; Decidable to Decidable₂ ; _⇒_ to _⇒₂_)
+
+  module _ where
+    private variable ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ : Level ; A B C D E F G : Set _
+
+    _Preserves₃_⟶_⟶_⟶_ :
+      (A → B → C → D) → Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Set _
+    f Preserves₃ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ =
+      ∀ {a a′ b b′ c c′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ →
+      f a b c ∼ᵈ f a′ b′ c′
+
+    _Preserves₄_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Set _
+    f Preserves₄ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ =
+      ∀ {a a′ b b′ c c′ d d′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ →
+      f a b c d ∼ᵉ f a′ b′ c′ d′
+
+    _Preserves₅_⟶_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E → F) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Rel F ℓ₆ → Set _
+    f Preserves₅ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ ⟶ _∼ᶠ_ =
+      ∀ {a a′ b b′ c c′ d d′ e e′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ → e ∼ᵉ e′ →
+      f a b c d e ∼ᶠ f a′ b′ c′ d′ e′
+
+    _Preserves₆_⟶_⟶_⟶_⟶_⟶_⟶_ :
+      (A → B → C → D → E → F → G) →
+      Rel A ℓ₁ → Rel B ℓ₂ → Rel C ℓ₃ → Rel D ℓ₄ → Rel E ℓ₅ → Rel F ℓ₆ →
+      Rel G ℓ₇ → Set _
+    𝑓 Preserves₆ _∼ᵃ_ ⟶ _∼ᵇ_ ⟶ _∼ᶜ_ ⟶ _∼ᵈ_ ⟶ _∼ᵉ_ ⟶ _∼ᶠ_ ⟶ _∼ᵍ_ =
+      ∀ {a a′ b b′ c c′ d d′ e e′ f f′} →
+      a ∼ᵃ a′ → b ∼ᵇ b′ → c ∼ᶜ c′ → d ∼ᵈ d′ → e ∼ᵉ e′ → f ∼ᶠ f′ →
+      𝑓 a b c d e f ∼ᵍ 𝑓 a′ b′ c′ d′ e′ f′
+
 open Relation public
-  using (Rel ; Dec ; yes ; no ; Decidable ; ¬_ ; True ; False ; ⌊_⌋)
+  using (Dec ; yes ; no ; ¬_ ; True ; False ; ⌊_⌋ ;
+         Pred ; Decidable₁ ; Rel ; Decidable₂)
 
 module Algebra where
   open import Algebra public
@@ -83,4 +131,6 @@ module ≡ where
 
   At : ∀ {a} (A : Set a) → Rel A _
   At A = _≡_ {A = A}
-open ≡ public using (_≡_ ; refl) renaming (At to ≡-At)
+open ≡ public using (_≡_ ; _≢_ ; refl) renaming (At to ≡-At)
+
+open import Function public

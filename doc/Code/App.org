@@ -1,15 +1,31 @@
 * Compile
 - _Relies on_
+  + [[Compilation]]
   + [[Parameterisation]]
+  + [[Core]]
+  + [[Erased]]
+  + [[HR]]
+  + [[HR]]
   + [[Library]]
 * Config
 * Interactive
 - _Relies on_
+  + [[Core]]
+  + [[Erased]]
+  + [[HR]]
+  + [[HR]]
   + [[Naturals]]
+  + [[Types]]
+  + [[InteractionNet]]
+  + [[Env]]
+  + [[Graph]]
+  + [[Maps]]
+  + [[Default]]
   + [[Library]]
 * Main
 * Options
 * Types
 - _Relies on_
   + [[Naturals]]
+  + [[Types]]
   + [[Library]]

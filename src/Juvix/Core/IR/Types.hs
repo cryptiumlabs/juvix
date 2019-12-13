@@ -50,7 +50,7 @@ instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
   show (Bound i) = "Bound " <> show i -- to be improved
   show (Free name) = show name -- using derived show Name instance, to be improved
   show (Prim p) = show p
-  show (App f x) = show f <> show x
+  show (App f x) = show f <> " " <> show x
   show (Ann pi theTerm theType) =
     show theTerm <> " : [" <> show pi <> "] " <> show theType
 
@@ -85,10 +85,16 @@ type Context primTy primVal m = [(Name, Annotation primTy primVal m)]
 -- Evaluation
 type Env primTy primVal m = [Value primTy primVal m]
 
-instance (Eq primTy, Eq primVal) ⇒ Eq (Value primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Value primTy primVal (EnvTypecheck primTy primVal))
+  where
   x == y = fst (exec (quote0 x)) == fst (exec (quote0 y))
 
-instance (Eq primTy, Eq primVal) ⇒ Eq (Neutral primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
+  where
   NFree x == NFree y = x == y
   NApp a b == NApp c d = a == c && b == d
   _ == _ = False
@@ -96,12 +102,19 @@ instance (Eq primTy, Eq primVal) ⇒ Eq (Neutral primTy primVal (EnvTypecheck pr
 instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
   show x = show (fst (exec (quote0 x)))
 
-instance (Show primTy, Show primVal) ⇒ Show (Neutral primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Show primTy, Show primVal) ⇒
+  Show (Neutral primTy primVal (EnvTypecheck primTy primVal))
+  where
   show (NFree n) = "NFree " <> show n
   show (NApp n v) = "NApp " <> show n <> " " <> show v
 
 data TypecheckError primTy primVal m
-  = TypeMismatch Natural (Term primTy primVal) (Annotation primTy primVal m) (Annotation primTy primVal m)
+  = TypeMismatch
+      Natural
+      (Term primTy primVal)
+      (Annotation primTy primVal m)
+      (Annotation primTy primVal m)
   | UniverseMismatch (Term primTy primVal) (Value primTy primVal m)
   | CannotApply (Value primTy primVal m) (Value primTy primVal m)
   | ShouldBeStar (Value primTy primVal m)
@@ -114,10 +127,16 @@ data TypecheckError primTy primVal m
   | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
   | BoundVariableCannotBeInferred
 
-instance (Eq primTy, Eq primVal) ⇒ Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+  where
   _ == _ = False -- TODO
 
-instance (Show primTy, Show primVal) ⇒ Show (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Show primTy, Show primVal) ⇒
+  Show (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+  where
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
@@ -167,18 +186,38 @@ data EnvCtx primTy primVal
       }
   deriving (Show, Eq, Generic)
 
-newtype EnvTypecheck primTy primVal a = EnvTyp (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)) a)
+type EnvAlias primTy primVal a =
+  ( ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+      (State (EnvCtx primTy primVal))
+      a
+  )
+
+newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
     (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
-    via MonadError (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (MonadState (State (EnvCtx primTy primVal))))
+    via MonadError
+          ( ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+              (MonadState (State (EnvCtx primTy primVal)))
+          )
   deriving
     ( HasStream "typecheckerLog" [TypecheckerLog],
       HasWriter "typecheckerLog" [TypecheckerLog]
     )
-    via WriterLog (Field "typecheckerLog" () (MonadState (ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) (State (EnvCtx primTy primVal)))))
+    via WriterLog
+          ( Field "typecheckerLog" ()
+              ( MonadState
+                  ( ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+                      (State (EnvCtx primTy primVal))
+                  )
+              )
+          )
 
-exec ∷ EnvTypecheck primTy primVal a → (Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a, EnvCtx primTy primVal)
+exec ∷
+  EnvTypecheck primTy primVal a →
+  ( Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a,
+    EnvCtx primTy primVal
+  )
 exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
 -- Quotation: takes a value back to a term
@@ -216,7 +255,8 @@ neutralQuote ii (NApp n v) = App <$> neutralQuote ii n <*> quote ii v
 vfree ∷ Name → Value primTy primVal m
 vfree n = VNeutral (NFree n)
 
--- checks if the variable occurring at the head of the application is a bound variable or a free name
+-- checks if the variable occurring at the head of
+-- the application is a bound variable or a free name
 boundfree ∷ Natural → Name → Elim primTy primVal
 boundfree ii (Quote k) = Bound (ii - k - 1)
 boundfree _ii x = Free x

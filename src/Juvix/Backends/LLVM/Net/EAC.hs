@@ -3,6 +3,27 @@
 --   EAC layer gets run
 -- - The form given to =EAC= is not the base EAC AST, but instead a
 --   pre processed =EAC= graph that the initial graph will be made on
+--
+-- - _Allocation_
+--   + layout :
+--     eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+--     * Similar to the one in Graph, however it also has the eac tag
+--
+--    | Part         | Alloca Or Malloc                   |
+--    |--------------+------------------------------------|
+--    | eac          | Malloc                             |
+--    | tag          | Stored on Eac Malloc               |
+--    | NodePtr*     | Malloc from =mallocNode=           |
+--    | portSize     | Stored on Node Malloc              |
+--    | PortArray    | Stored on Node Malloc              |
+--    | DataArray    | Stored on Node Malloc              |
+--    | PortLocation | (Null) Allocad from PortArray Call |
+--    | NodePtr      | (Null) Allocad from PortArray Call |
+--    | Data         | (Null) Allocad from DataArray Call |
+--
+-- - Node Pointers are allocated at node creation time, so not the
+--   responsibility of the node to de-allocate, but instead uses the
+--   default strategy laid out in [[Codegen/Graph]]
 module Juvix.Backends.LLVM.Net.EAC where
 
 -- TODO ∷ abstract all all imports to LLVM
@@ -12,7 +33,6 @@ import qualified Juvix.Backends.LLVM.DSL as DSL
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
-import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
@@ -82,7 +102,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           -- %switch.*.continue
           Codegen.setBlock conCase
 
-        genContinueCaseD = genContinueCase tagNode nodePtr cdr defCase
+        genContinueCaseD = genContinueCase tagNode (nodePtr, car) cdr defCase
 
         swapArgs (x : y : xs) = y : x : xs
         swapArgs xs = xs
@@ -95,7 +115,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "app"
         [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2App),
-          (Types.era, "switch.era", (\xs → undefined xs))
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %lam case
@@ -106,7 +126,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "lam"
         [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
           (Types.dup, "switch.dup", fanInAux2Lambda),
-          (Types.era, "switch.era", (\xs → undefined xs))
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %era case
@@ -115,10 +135,10 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
     (eCdr, eExit) ←
       genContinueCaseD
         "fan_in"
-        [ (Types.app, "switch.app", undefined),
-          (Types.lam, "switch.lam", undefined),
+        [ (Types.app, "switch.app", eraseNodes),
+          (Types.lam, "switch.lam", eraseNodes),
           (Types.dup, "switch.dup", fanInAux2Era),
-          (Types.era, "switch.era", undefined)
+          (Types.era, "switch.era", eraseNodes)
         ]
     _ ← Codegen.br extCase
     -- %dup case
@@ -129,7 +149,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
         "fan_in"
         [ (Types.app, "switch.app", fanInAux2App . swapArgs),
           (Types.lam, "switch.lam", fanInAux2Lambda . swapArgs),
-          (Types.dup, "switch.dup", fanInAux2FanIn . swapArgs),
+          (Types.dup, "switch.dup", fanInFanIn),
           (Types.era, "switch.era", fanInAux2Era . swapArgs)
         ]
     _ ← Codegen.br extCase
@@ -153,6 +173,7 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
           (fCdr, fExit),
           (eCdr, eExit)
         ]
+    _ ← Codegen.free eacLPtr
     Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
   where
     args = [(Types.eacPointer, "eac_list")]
@@ -162,22 +183,17 @@ reduce = Codegen.defineFunction Type.void "reduce" args $
 --------------------------------------------------------------------------------
 
 genContinueCase ∷
-  ( HasThrow "err" Codegen.Errors m,
-    HasState "blockCount" Int m,
-    HasState "blocks" (Map.HashMap Name.Name Codegen.BlockState) m,
-    HasState "count" Word m,
-    HasState "currentBlock" Name.Name m,
-    HasState "names" Codegen.Names m
-  ) ⇒
+  Codegen.Define m ⇒
   Operand.Operand →
-  Operand.Operand →
+  (Operand.Operand, Operand.Operand) →
   Operand.Operand →
   Name.Name →
   Symbol →
   [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
   m (Operand.Operand, Name.Name)
-genContinueCase tagNode nodePtr cdr defCase prefix cases = do
-  nodeEac ← Defs.loadPrimaryNode tagNode >>= Codegen.load Types.eac
+genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
+  nodeEacPtr ← Defs.loadPrimaryNode tagNode
+  nodeEac ← Codegen.load Types.eac nodeEacPtr
   tagOther ← tagOf nodeEac
   blocksGeneratedList ← genBlockNames
   extBranch ← Codegen.addBlock (prefix <> "switch.exit")
@@ -185,10 +201,16 @@ genContinueCase tagNode nodePtr cdr defCase prefix cases = do
         -- %prefix.branch case
         ------------------------------------------------------
         _ ← Codegen.setBlock branch
-        -- node Types in which to do operations on
-        nodeOther' ← nodeOf nodeEac >>= Codegen.load Defs.nodeType
-        nodePrimar ← Codegen.load Defs.nodeType nodePtr
-        updateList ← rule [nodePrimar, nodeOther', cdr]
+        -- node Pointer in which to do operations on
+        nodeOtherPtr ← nodeOf nodeEac
+        updateList ←
+          rule
+            [ mainNodePtr,
+              nodeEacPtr,
+              nodeOtherPtr,
+              mainEac,
+              cdr
+            ]
         _ ← Codegen.br extBranch
         pure (updateList, branch)
       -- remove the rule as it's not needed in the switch
@@ -220,34 +242,51 @@ genContinueCase tagNode nodePtr cdr defCase prefix cases = do
 -- Reduction rules
 --------------------------------------------------------------------------------
 
+-- | args is the argument for all rules that get called
+args ∷ IsString b ⇒ [(Type.Type, b)]
+args =
+  [ (Defs.nodePointer, "node_1"),
+    (Types.eacPointer, "eac_ptr_1"),
+    (Defs.nodePointer, "node_2"),
+    (Types.eacPointer, "eac_ptr_2"),
+    (Types.eacList, "eac_list")
+  ]
+
 -- TODO ∷ modify these functions to return Types.eacLPointer type
 
 -- TODO ∷ Maybe add metadata at some point?
 
 -- this function work off the nodeType signature not Types.eac
 
-annihilateRewireAux ∷ Codegen.Call m ⇒ [Operand.Operand] → m ()
-annihilateRewireAux args = do
-  annihilate ← Codegen.externf "annihilate_rewire_aux"
-  _ ← Codegen.call Type.void annihilate (Codegen.emptyArgs args)
-  pure ()
+annihilateRewireAux ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+annihilateRewireAux args =
+  Codegen.callGen Types.eacList args "annihilate_rewire_aux"
+
+-- TODO ∷ send in eac Pointers and deallocate them as well
+-- TODO ∷ fixup node type being sent in!
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-annihilateRewireAux' ∷ Codegen.Define m ⇒ m Operand.Operand
-annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" args $
-  do
-    -- TODO remove these explicit allocations
-    aux1 ← Defs.auxiliary1
-    aux2 ← Defs.auxiliary2
-    node1 ← Codegen.externf "node_1"
-    node2 ← Codegen.externf "node_2"
-    Codegen.rewire [node1, aux1, node2, aux1]
-    Codegen.rewire [node1, aux2, node2, aux2]
-    _ ← Codegen.delNode node1
-    Codegen.delNode node2
-  where
-    args = [(Defs.nodeType, "node_1"), (Defs.nodeType, "node_2")]
+defineAnnihilateRewireAux ∷ Codegen.Define m ⇒ m Operand.Operand
+defineAnnihilateRewireAux =
+  Codegen.defineFunction Types.eacList "annihilate_rewire_aux" args $
+    do
+      aux1 ← Defs.auxiliary1
+      aux2 ← Defs.auxiliary2
+      node1P ← Codegen.externf "node_1"
+      node2P ← Codegen.externf "node_2"
+      node1 ← Codegen.load Defs.nodeType node1P
+      node2 ← Codegen.load Defs.nodeType node2P
+      -- TODO :: check if these calls create more main nodes to put back
+      Codegen.rewire [node1, aux1, node2, aux1]
+      Codegen.rewire [node1, aux2, node2, aux2]
+      _ ← Defs.deAllocateNode node1P
+      _ ← Defs.deAllocateNode node2P
+      eacPtr1 ← Codegen.externf "eac_ptr_1"
+      eacPtr2 ← Codegen.externf "eac_ptr_2"
+      _ ← freeEac eacPtr1
+      _ ← freeEac eacPtr2
+      Codegen.externf "eac_list" >>= Codegen.ret
 
 -- TODO ∷ make fast fanInAux and slow fanInAux
 
@@ -256,23 +295,24 @@ annihilateRewireAux' = Codegen.defineFunction Type.void "annihilate_rewire_aux" 
 fanInAuxStar = undefined
 
 fanInAux0 ∷ Codegen.Define m ⇒ m Operand.Operand → m Operand.Operand
-fanInAux0 allocF = Codegen.defineFunction Type.void "fan_in_aux_0" args $
+fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
   do
-    fanIn ← Codegen.externf "fan_in"
+    node ← Codegen.externf "node_1"
+    fanIn ← Codegen.externf "node_2"
     era1 ← allocF >>= nodeOf
     era2 ← allocF >>= nodeOf
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
     mainPort ← Defs.mainPort
-    -- abstract out this string!
+    -- TODO :: determine if these create a new main port which we must append
+    -- to the eac_list
     Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
     Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
-    Codegen.retNull
-  where
-    args =
-      [ (Defs.nodeType, "node"), -- we send in the alloc function for it. Do case before
-        (Defs.nodeType, "fan_in") -- we know this must be a fanIn so no need for tag
-      ]
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ← Codegen.externf "eac_list"
+    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+    Codegen.ret eacList
 
 fanInAux1' ∷
   ( Codegen.Define m,
@@ -284,54 +324,145 @@ fanInAux1' ∷
   m Operand.Operand
 fanInAux1' _allocF = undefined
 
-defineFanInAux2 ∷
-  ( Codegen.Define m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+aux2Gen ∷
+  ( Codegen.MallocNode m,
+    Codegen.Define m
   ) ⇒
-  Symbol →
   m Operand.Operand →
+  (Operand.Operand, Operand.Operand) →
+  (Operand.Operand, Operand.Operand) →
+  Operand.Operand →
+  (Operand.Operand → Operand.Operand → m ()) →
+  (Operand.Operand → Operand.Operand → m ()) →
   m Operand.Operand
-defineFanInAux2 name allocF = Codegen.defineFunction Type.void name args $
-  do
-    -- Nodes in env
-    fanIn ← Codegen.externf "fan_in"
-    node ← Codegen.externf "node"
-    -- new nodes
-    fan1 ← mallocFanIn >>= nodeOf
-    fan2 ← mallocFanIn >>= nodeOf
-    nod1 ← allocF >>= nodeOf
-    nod2 ← allocF >>= nodeOf
-    Defs.linkAll
+aux2Gen allocF (node, eacPtr1) (fanIn, eacPtr2) eacList copyFanData copyNodeData = do
+  -- new nodes
+  fan1Eac ← mallocFanIn
+  fan2Eac ← mallocFanIn
+  nod1Eac ← allocF
+  nod2Eac ← allocF
+  fan1 ← nodeOf fan1Eac
+  fan2 ← nodeOf fan2Eac
+  nod1 ← nodeOf nod1Eac
+  nod2 ← nodeOf nod2Eac
+  -- TODO :: determine if these create a new main port which we must append
+  -- to the eac_list
+  eacList ←
+    Defs.linkAllCons
+      eacList
       DSL.defRel
-        { DSL.node = nod1,
+        { DSL.node = DSL.Node {DSL.tagNode = nod1Eac, DSL.node' = nod1},
           DSL.primary = DSL.LinkConnected fanIn DSL.Aux1,
           DSL.auxiliary1 = DSL.Link fan2 DSL.Aux1,
           DSL.auxiliary2 = DSL.Link fan1 DSL.Aux1
         }
-    Defs.linkAll
+  eacList ←
+    Defs.linkAllCons
+      eacList
       DSL.defRel
-        { DSL.node = nod2,
+        { DSL.node = DSL.Node {DSL.tagNode = nod2Eac, DSL.node' = nod2},
           DSL.primary = DSL.LinkConnected fanIn DSL.Aux2,
           DSL.auxiliary1 = DSL.Link fan2 DSL.Aux2,
           DSL.auxiliary2 = DSL.Link fan1 DSL.Aux2
         }
-    Defs.linkAll
+  eacList ←
+    Defs.linkAllCons
+      eacList
       DSL.defRel
-        { DSL.node = fan1,
+        { DSL.node = DSL.Node {DSL.tagNode = fan1Eac, DSL.node' = fan1},
           DSL.primary = DSL.LinkConnected node DSL.Aux2
         }
-    Defs.linkAll
+  eacList ←
+    Defs.linkAllCons
+      eacList
       DSL.defRel
-        { DSL.node = fan2,
+        { DSL.node = DSL.Node {DSL.tagNode = fan2Eac, DSL.node' = fan2},
           DSL.primary = DSL.LinkConnected node DSL.Aux1
         }
-    Codegen.retNull
-  where
-    args =
-      [ (Defs.nodeType, "node"),
-        (Defs.nodeType, "fan_in")
-      ]
+  copyNodeData node nod1 -- with the custom function we may ignore node/FanIn
+  copyNodeData node nod2 -- for one that already grabs data to save some
+  copyFanData fanIn fan1 -- operations as to get here we may have already
+  copyFanData fanIn fan2 -- gotten it
+  eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+
+defineFanInAux2 ∷
+  ( Codegen.MallocNode m,
+    Codegen.Define m
+  ) ⇒
+  Symbol →
+  m Operand.Operand →
+  m Operand.Operand
+defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
+  do
+    -- Nodes in env
+    fanIn ← Codegen.externf "node_2"
+    node ← Codegen.externf "node_1"
+    eacList ← Codegen.externf "eac_list"
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ←
+      aux2Gen
+        allocF
+        (node, eacPtr1)
+        (fanIn, eacPtr2)
+        eacList
+        (\oldF newF → dataPortLookup oldF >>= addData newF)
+        (\_ _ → pure ()) -- no data on node for now!
+    Codegen.ret eacList
+
+fanInFanIn ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+fanInFanIn args = Codegen.callGen Types.eacList args "fan_in_rule"
+
+defineFanInFanIn ∷
+  ( Codegen.MallocNode m,
+    Codegen.Define m
+  ) ⇒
+  m Operand.Operand
+defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
+  do
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    eacList ← Codegen.externf "eac_list"
+    fanIn1 ← Codegen.externf "node_1"
+    fanIn2 ← Codegen.externf "node_2"
+    data1 ← dataPortLookup fanIn1
+    data2 ← dataPortLookup fanIn2
+    label1 ← fanLabelLookup data1
+    label2 ← fanLabelLookup data2
+    test ← Codegen.icmp IntPred.EQ label1 label2
+    sameFan ← Codegen.addBlock "same.fan"
+    diffFan ← Codegen.addBlock "diff.fan"
+    continue ← Codegen.addBlock "continue.fan"
+    _ ← Codegen.cbr test sameFan diffFan
+    -- %same.fan
+    ------------------------------------------------------
+    Codegen.setBlock sameFan
+    aux1 ← Defs.auxiliary1
+    aux2 ← Defs.auxiliary2
+    Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
+    Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
+    let sameList = eacList
+    _ ← eraseNodes [fanIn1, eacPtr1, fanIn2, eacPtr2, eacList]
+    _ ← Codegen.br continue
+    -- %diff.fan
+    ------------------------------------------------------
+    Codegen.setBlock diffFan
+    diffList ←
+      aux2Gen
+        mallocFanIn
+        (fanIn1, eacPtr1)
+        (fanIn2, eacPtr2)
+        eacList
+        (\_ newF → addData newF data2)
+        (\_ newN → addData newN data1)
+    _ ← Codegen.br continue
+    -- %continue.fan
+    ------------------------------------------------------
+    finalList ←
+      Codegen.phi
+        Types.eacList
+        [(sameList, sameFan), (diffList, diffFan)]
+    Codegen.ret finalList
 
 -- TODO ∷ remove, put these in the environment with some kind of decalarative
 -- dispatch system that can handle dynamic node addition
@@ -341,9 +472,8 @@ defineFanInAux2F,
   defineFanInAux2A,
   defineFanInAux2L,
   defineFanInAux2E ∷
-    ( Codegen.Define m,
-      HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
+    ( Codegen.MallocNode m,
+      Codegen.Define m
     ) ⇒
     m Operand.Operand
 defineFanInAux2A = defineFanInAux2 "fan_in_aux_2_app" mallocApp
@@ -361,31 +491,46 @@ fanInAux2Era args = Codegen.callGen Type.void args "fan_in_aux_2_era"
 fanInAux2FanIn args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 fanInAux2Lambda args = Codegen.callGen Type.void args "fan_in_aux_2_fan_in"
 
+eraseNodes ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
+eraseNodes args = Codegen.callGen Types.eacList args "erase_nodes"
+
+defineEraseNodes ∷ Codegen.Define m ⇒ m Operand.Operand
+defineEraseNodes = Codegen.defineFunction Types.eacList "erase_nodes" args $
+  do
+    nodePtr1 ← Codegen.externf "node_1"
+    nodePtr2 ← Codegen.externf "node_2"
+    eacPtr1 ← Codegen.externf "eac_ptr_1"
+    eacPtr2 ← Codegen.externf "eac_ptr_2"
+    _ ← Defs.deAllocateNode nodePtr1
+    _ ← Defs.deAllocateNode nodePtr2
+    _ ← freeEac eacPtr1
+    _ ← freeEac eacPtr2
+    Codegen.externf "eac_list" >>= Codegen.ret
+
 --------------------------------------------------------------------------------
 -- Allocations
 --------------------------------------------------------------------------------
+
+freeEac ∷ Codegen.Call m ⇒ Operand.Operand → m Operand.Operand
+freeEac = Codegen.free
+
 mallocGen ∷
-  ( Codegen.Call m,
-    HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
-  ) ⇒
-  C.Constant →
-  Int →
-  Int →
-  m Operand.Operand
+  Codegen.MallocNode m ⇒ C.Constant → Int → Int → m Operand.Operand
 mallocGen type' portLen dataLen = do
-  eac ← Codegen.malloc Types.tagInt Types.eac
+  -- malloc call
+  eac ← Codegen.malloc Types.eacSize Types.eac
+  -- malloc call
   node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Types.tag,
+      { Codegen.type' = Codegen.pointerOf Types.tag,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Defs.nodeType,
+      { Codegen.type' = Codegen.pointerOf Defs.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -396,11 +541,7 @@ mallocEra,
   mallocFanIn,
   mallocApp,
   mallocLam ∷
-    ( Codegen.Call m,
-      HasState "typTab" Codegen.TypeTable m,
-      HasState "varTab" Codegen.VariantToType m
-    ) ⇒
-    m Operand.Operand
+    Codegen.MallocNode m ⇒ m Operand.Operand
 mallocEra = mallocGen Types.era 1 0
 mallocApp = mallocGen Types.app 3 0
 mallocLam = mallocGen Types.lam 3 0
@@ -410,7 +551,7 @@ nodeOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Defs.nodeType,
+      { Codegen.type' = Defs.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -423,3 +564,34 @@ tagOf eac =
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
+
+--------------------------------------------------------------------------------
+-- Helper functions
+--------------------------------------------------------------------------------
+
+dataPortLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+dataPortLookup addr = Codegen.loadElementPtr $
+  Codegen.Minimal
+    { Codegen.type' = Codegen.dataArray,
+      Codegen.address' = addr,
+      Codegen.indincies' = Codegen.constant32List [0, 2]
+    }
+
+addData ∷ Codegen.RetInstruction m ⇒ Operand.Operand → Operand.Operand → m ()
+addData addr data' = do
+  arr ← dataPortLookup addr
+  labPtr ← Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf Codegen.dataType,
+        Codegen.address' = arr,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
+  Codegen.store labPtr data'
+
+fanLabelLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+fanLabelLookup addr = Codegen.loadElementPtr $
+  Codegen.Minimal
+    { Codegen.type' = Codegen.dataType,
+      Codegen.address' = addr,
+      Codegen.indincies' = Codegen.constant32List [0, 0]
+    }

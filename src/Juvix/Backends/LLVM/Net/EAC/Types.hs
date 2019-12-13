@@ -18,6 +18,9 @@ tag = Codegen.i4
 tagInt ∷ Num p ⇒ p
 tagInt = 4
 
+eacSize ∷ Num p ⇒ p
+eacSize = tagInt + Codegen.nodePointerSize
+
 eac ∷ Type.Type
 eac = Type.StructureType
   { Type.isPacked = True,
@@ -28,7 +31,7 @@ eac = Type.StructureType
   }
 
 eacPointer ∷ Type.Type
-eacPointer = Type.PointerType eac (Addr.AddrSpace 32)
+eacPointer = Type.PointerType eac (Addr.AddrSpace Codegen.nodePointerSize)
 
 app, dup, lam, era ∷ C.Constant
 app = C.Int {C.integerBits = tagInt, C.integerValue = 0}
@@ -46,30 +49,50 @@ eacList = Type.StructureType
 eacLPointer ∷ Type.Type
 eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
 
+--------------------------------------------------------------------------------
+-- EacList operations
+--------------------------------------------------------------------------------
+
 checkNull ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer))
 
-loadCar ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-loadCar eacList = do
-  eacPointer ←
+cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand
+cons ele eacList = do
+  newList ← Codegen.malloc (Codegen.nodePointerSize + Codegen.nodePointerSize) eacLPointer
+  car ← Codegen.loadElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf eacPointer,
+        Codegen.address' = newList,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
+  cdr ←
     Codegen.loadElementPtr $
       Codegen.Minimal
-        { Codegen.type' = eacPointer,
-          Codegen.address' = eacList,
-          Codegen.indincies' = Codegen.constant32List [0, 0]
+        { Codegen.type' = Codegen.pointerOf eacLPointer,
+          Codegen.address' = newList,
+          Codegen.indincies' = Codegen.constant32List [0, 1]
         }
-  Codegen.load eac eacPointer
+  Codegen.store car ele
+  Codegen.store cdr eacList
+  pure newList
+
+loadCar ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+loadCar eacList = do
+  Codegen.loadElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = eacPointer,
+        Codegen.address' = eacList,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
 
 loadCdr ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadCdr eacList = do
-  eacPointer ←
-    Codegen.loadElementPtr $
-      Codegen.Minimal
-        { Codegen.type' = eacLPointer,
-          Codegen.address' = eacList,
-          Codegen.indincies' = Codegen.constant32List [0, 1]
-        }
-  Codegen.load eac eacPointer
+  Codegen.loadElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = eacLPointer,
+        Codegen.address' = eacList,
+        Codegen.indincies' = Codegen.constant32List [0, 1]
+      }
 
 loadList ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadList eacPointer =
