@@ -199,7 +199,7 @@ where $γ$ is any element in the semiring.
 
 A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with.
 
-E.g., for the following judgement:
+For example, consider the following judgement:
 
 \begin{align*}
     n \overset{0}{:} Nat, x \overset{1}{:} Fin(n) ⊢ x \overset{\sigma}{:} Fin(n)
@@ -218,7 +218,7 @@ Computational judgement:
 \end{align*}
 
 Because the final colon is annotated to one, during computation, $n$ is used exactly $0$ times, $x$ is used exactly one time.
-In our language, $x$ can also be annotated as $ω$, indicating that it is used an arbitrary number of times.
+$x$ can also be annotated as $ω$, indicating that it can be used (computed with) an arbitrary number of times.
 
 ## Typing rules
 
@@ -701,6 +701,12 @@ Primitive functions reduce according to the reduction operation defined for the 
 To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ## Examples
+
+### Dependent identity function
+
+The dependent identity function can be typed in the computational fragment as $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → ((x \overset{1}{:} t) → t)$.
+
+### SKI combinators
 
 ### Church-encoded natural numbers
 
