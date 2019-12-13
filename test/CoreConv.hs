@@ -15,20 +15,28 @@ shouldConvertIR ∷ IR.Term () () → HR.Term () () → T.TestTree
 shouldConvertIR ir hr =
   T.testCase (show ir <> " should convert to " <> show hr) (hr T.@=? irToHR ir)
 
-test_identity_hr ∷ T.TestTree
-test_identity_hr = shouldConvertHR (HR.Lam "x" (HR.Elim (HR.Var "x"))) (IR.Lam (IR.Elim (IR.Bound 0)))
+test_coreConversions ∷ T.TestTree
+test_coreConversions =
+  T.testGroup
+    "Core Conversions"
+    [ hrToirConversion,
+      irTohrConversion
+    ]
 
-test_const_hr ∷ T.TestTree
-test_const_hr = shouldConvertHR (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "x")))) (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1))))
+hrToirConversion ∷ T.TestTree
+hrToirConversion =
+  T.testGroup
+    "Converting Human Readable form to Intermediate Readable form"
+    [ shouldConvertHR (HR.Lam "x" (HR.Elim (HR.Var "x"))) (IR.Lam (IR.Elim (IR.Bound 0))),
+      shouldConvertHR (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "x")))) (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))),
+      shouldConvertHR (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y")))) (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
+    ]
 
-test_ignore_hr ∷ T.TestTree
-test_ignore_hr = shouldConvertHR (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y")))) (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
-
-test_identity_ir ∷ T.TestTree
-test_identity_ir = shouldConvertIR (IR.Lam (IR.Elim (IR.Bound 0))) (HR.Lam "0" (HR.Elim (HR.Var "0")))
-
-test_const_ir ∷ T.TestTree
-test_const_ir = shouldConvertIR (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))) (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "0"))))
-
-test_ignore_ir ∷ T.TestTree
-test_ignore_ir = shouldConvertIR (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0)))) (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "1"))))
+irTohrConversion ∷ T.TestTree
+irTohrConversion =
+  T.testGroup
+    "Converting Intermediate Readable form to Human Readable form"
+    [ shouldConvertIR (IR.Lam (IR.Elim (IR.Bound 0))) (HR.Lam "0" (HR.Elim (HR.Var "0"))),
+      shouldConvertIR (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))) (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "0")))),
+      shouldConvertIR (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0)))) (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "1"))))
+    ]
