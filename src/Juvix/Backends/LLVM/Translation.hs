@@ -61,10 +61,4 @@ networkToLLVM n = do
                 edges <- allEdges n
                 pure (n, l, edges)
               pure ann
-  -- Define `malloc` (externally linked).
-  Codegen.defineMalloc
-  -- Define `free` (externally linked).
-  Codegen.defineFree
-  -- Define `reduce` (in the future, this will depend on bespoke encodings).
-  void EAC.reduce
   pure ()
