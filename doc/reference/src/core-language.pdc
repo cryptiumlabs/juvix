@@ -698,23 +698,58 @@ To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 The dependent identity function can be typed as: $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
 
+This should also typecheck if the $x$ argument usage is replaced with $w$ (instead of $1$).
+
 ### SKI combinators
 
 #### S combinator
 
 The dependent S ("substitution") combinator can be typed as: $λt1.λt2.λt3.λx.λy.λz.x z (y z) \overset{1}{:} (x \overset{1}{:} ((a \overset{1}{:} t1) → (b \overset{1}{:} t2) → t3)) → (y \overset{1}{:} ((a \overset{1}{:} t1) → t2)) → (z \overset{2}{:} t1) → t3$.
 
+This should also typecheck if the $x$, $y$, and $z$ argument usages are replaced with $w$ (instead of $1$ and $2$).
+
 #### K combinator
 
 The dependent K ("constant") combinator can be typed as: $⊢ λt1.λt2.λx.λy.x \overset{1}{:} (t1 \overset{0}{:} ∗_i) → (t2 \overset{0}{:} ∗_i) → (x \overset{1}{:} t1) → (y \overset{0}{:} t2) → t1$.
+
+This should also typecheck if the $x$ and $y$ argument usages are replaced with $w$ (instead of $1$ and $0$).
 
 #### I combinator
 
 The dependent I ("identity") combinator can be typed as: $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
 
+This should also typecheck if the $x$ argument usage is replaced with $w$ (instead of $1$).
+
 ### Church-encoded natural numbers
 
 The dependent Church-encoded natural $n$ can be typed as $⊢ λt.λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} ((a \overset{1}{:} t) → t)) → (z \overset{1}{:} t) → t$ where $s$ is applied $n$ times.
+
+This should also typecheck if the $s$ argument usage is replaced with $w$ (instead of $n$ for some specific $n$).
+
+### Primitive equality
+
+Assume a primitive type of naturals, including literals, and a primitive addition function.
+
+Define an `Eq` type:
+
+\begin{prooftree}
+\AxiomC{$t \overset{0}{:} ∗_i$}
+\AxiomC{$x \overset{0}{:} t$}
+\AxiomC{$y \overset{0}{:} t$}
+\Label{$Eq-Form$}
+\TrinaryInfC{$Eq t x y \overset{0}{:} ∗_j$}
+\end{prooftree}
+
+And a single `Refl` constructor:
+
+\begin{prooftree}
+\AxiomC{$t \overset{0}{:} ∗_i$}
+\AxiomC{$x \overset{0}{:} t$}
+\Label{$Refl$}
+\BinaryInfC{$Refl \overset{0}{:} Eq t x x$}
+\end{prooftree}
+
+Then $Refl \overset{0}{:} Eq Nat (1 + 1) 2$ can be derived, since the conversion rule will be applied when checking the (annotated) $Refl$.
 
 ### Linear induction
 
