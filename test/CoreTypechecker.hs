@@ -99,7 +99,7 @@ skiComp =
       shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy,
       shouldInfer nat kApp1 natToNatTy,
       shouldInfer nat kFunApp1 kFunApp1CompTy
-      --, shouldCheck nat scombinator scombinatorCompNatTy
+      -- shouldCheck nat scombinator scombinatorCompNatTy
     ]
 
 natComp ∷ T.TestTree
