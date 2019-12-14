@@ -560,6 +560,10 @@ Elimination rule:
 
 (evaluates to `n x`)
 
+Colloquially, if you have a type dependent on two values & a proof of their equality, and a function from
+one value to a value of that type, you can eliminate two distinct values & a proof of their equality to
+derive a value of the type, dependent on both values, which evaluates as the function applied to either one.
+
 ### Sub-usaging
 
 To-do: check if we can safely allow sub-usaging if the ring is the natural numbers, discuss here.
