@@ -187,7 +187,7 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
-where $σ \in {0,1}$, except for primitive constants.
+where $σ \in {0,1}$.
 
 Primitive constant term judgements have the form:
 
