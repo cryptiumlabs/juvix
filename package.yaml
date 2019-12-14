@@ -76,6 +76,7 @@ library:
   source-dirs: src
   dependencies:
     - z3
+    - c-storable-deriving
   exposed-modules:
     - Juvix
     - Juvix.Core

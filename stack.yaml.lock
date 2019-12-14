@@ -166,6 +166,13 @@ packages:
   original:
     hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
 - completed:
+    hackage: c-storable-deriving-0.1.3@sha256:510aa8423d6b3df57a39365569195ddc5bd4b04b0ff58ba1345c1f309ae6f89e,1030
+    pantry-tree:
+      size: 369
+      sha256: 17a631450a907af3253c3aa95414239b1adea9c5d9777705d6beab712cdf61a6
+  original:
+    hackage: c-storable-deriving-0.1.3@sha256:510aa8423d6b3df57a39365569195ddc5bd4b04b0ff58ba1345c1f309ae6f89e,1030
+- completed:
     hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
     pantry-tree:
       size: 610

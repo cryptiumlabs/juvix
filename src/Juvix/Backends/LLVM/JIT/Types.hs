@@ -2,12 +2,32 @@
 
 module Juvix.Backends.LLVM.JIT.Types where
 
+import Foreign.CStorable
 import Foreign.Ptr (FunPtr, castFunPtr)
+import Foreign.Storable
 import Juvix.Library
 
 foreign import ccall "dynamic" word32Fn ∷ FunPtr (Word32 → IO Word32) → (Word32 → IO Word32)
 
 foreign import ccall "dynamic" doubleFn ∷ FunPtr (Double → IO Double) → (Double → IO Double)
+
+foreign import ccall "dynamic" nodeFn ∷ FunPtr (Ptr Node → IO ()) → (Ptr Node → IO ())
+
+instance CStorable Node
+
+instance Storable Node where
+
+  sizeOf = cSizeOf
+
+  alignment = cAlignment
+
+  poke = cPoke
+
+  peek = cPeek
+
+data Node
+  = Node Int Int
+  deriving (Generic)
 
 data OptimisationLevel
   = -- TODO: Determine if none / O0 are equivalent.
@@ -36,3 +56,6 @@ instance DynamicImport (Word32 → IO Word32) where
 
 instance DynamicImport (Double → IO Double) where
   unFunPtr = doubleFn
+
+instance DynamicImport (Ptr Node → IO ()) where
+  unFunPtr = nodeFn
