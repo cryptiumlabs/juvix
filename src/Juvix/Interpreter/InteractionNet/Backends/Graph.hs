@@ -99,7 +99,7 @@ instance Network FlipNet where
 
   allEdges node = do
     net ← runFlip <$> get @"net"
-    pure (fmap (\(Edge (_, port) (otherNode, otherPort), _) -> (port, otherNode, otherPort)) $ lneighbors net node)
+    pure (fmap (\(Edge (_, port) (otherNode, otherPort), _) → (port, otherNode, otherPort)) $ lneighbors net node)
 
   findEdge (node, port) = do
     net ← runFlip <$> get @"net"

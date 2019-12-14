@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 -- |
 -- - Has the code necessary to generate LLVM Code
 module Juvix.Backends.LLVM.Codegen.Block where
@@ -36,14 +34,20 @@ fresh = do
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
-createBlocks ∷ HasState "blocks" (Map.T Name BlockState) f ⇒ f [BasicBlock]
-createBlocks = fmap makeBlock . sortBlocks . Map.toList <$> get @"blocks"
+createBlocks ∷
+  ( HasState "blocks" (Map.HashMap Name BlockState) m,
+    HasThrow "err" Errors m
+  ) ⇒
+  m [BasicBlock]
+createBlocks = do
+  sortedBlocks ← sortBlocks . Map.toList <$> get @"blocks"
+  traverse makeBlock sortedBlocks
 
-makeBlock ∷ (Name, BlockState) → BasicBlock
-makeBlock (l, BlockState _ s t) = BasicBlock l (reverse s) (maketerm t)
+makeBlock ∷ HasThrow "err" Errors f ⇒ (Name, BlockState) → f BasicBlock
+makeBlock (l, BlockState i s t) = maketerm t >>| BasicBlock l (reverse s)
   where
-    maketerm (Just x) = x
-    maketerm Nothing = undefined -- error $ "Block has no terminator: " <> show l
+    maketerm (Just x) = pure x
+    maketerm Nothing = throw @"err" (BlockLackingTerminator i)
 
 sortBlocks ∷ [(a, BlockState)] → [(a, BlockState)]
 sortBlocks = sortBy (compare `on` (idx . snd))

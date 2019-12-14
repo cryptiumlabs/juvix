@@ -36,11 +36,21 @@ Serves as a mini DSL layer above LLVM
 ***** What is included?
 1. _Relink_
    - gives a declarative way to do a bunch of links and relinks
+**** Translation <<LLVM/Translation>>
+Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM.
+- _Relies on_
+  + [[Codegen]]
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[InteractionNet]]
+  + [[Backends/Graph]]
+  + [[Interface]]
+  + [[Nets/Default]]
+  + [[Library]]
 **** Codegen
 - _Relies on_
   + [[Block]]
   + [[Constants]]
-  + [[Codegen/Default]]
   + [[Codegen/Graph]]
   + [[Codegen/Shared]]
   + [[Codegen/Types]]
@@ -57,8 +67,6 @@ Module for predefined constants
   + [[Library]]
 ***** Default <<Codegen/Default>>
 This module provides the default environment to run LLVM code in
-- _Relies on_
-  + [[Library]]
 ***** Graph <<Codegen/Graph>>
 Operations necessary to update nodes
 - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
@@ -118,7 +126,6 @@ Operations necessary to update nodes
   + [[Block]]
   + [[Codegen/Types]]
   + [[Library]]
-  + [[HashMap]]
 ***** Shared <<Codegen/Shared>>
 Shared between Types and Sum
 - _Relies on_
@@ -190,7 +197,6 @@ Provides a mechanism for defining Sum types
   + [[Defs]]
   + [[Net/EAC/Types]]
   + [[Library]]
-  + [[HashMap]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
@@ -519,7 +525,7 @@ Quantitative type implementation inspired by
   + [[Erased/Types]]
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
-  + [[Translation]]
+  + [[InteractionNet/Translation]]
   + [[InteractionNet/Type]]
 **** Default <<InteractionNet/Default>>
 Gives the default execution environment for netToAst
@@ -551,7 +557,7 @@ Can be added to via core translation
 **** Shared <<InteractionNet/Shared>>
 - _Relies on_
   + [[Library]]
-**** Translation
+**** Translation <<InteractionNet/Translation>>
 - Translates the default abstract syntax into Interaction nets
   + Also translates the net into the an ast
 - _Relies on_

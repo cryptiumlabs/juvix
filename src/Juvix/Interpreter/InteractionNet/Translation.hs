@@ -6,7 +6,7 @@ module Juvix.Interpreter.InteractionNet.Translation
   ( astToNet,
     netToAst,
     evalEnvState,
-    Env(..)
+    Env (..),
   )
 where
 
