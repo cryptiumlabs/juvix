@@ -77,6 +77,7 @@ importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) = do
   case maybeFunc of
     Just (DynamicFunc (f ∷ x → IO y)) →
       case (eqT ∷ Maybe (x :~: a), eqT ∷ Maybe (y :~: b)) of
+        -- This should always be true but GHC can't prove it, blah.
         (Just Refl, Just Refl) → pure (pure f)
         _ → pure Nothing
     Nothing → pure Nothing
