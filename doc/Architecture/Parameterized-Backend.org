@@ -1,0 +1,18 @@
+* Parameterized Backend
+
+Juvix parameterises the type theory & core language over a set of primitive data types
+and primitive values, which can include native data types such as strings, integers, or sets,
+and native functions such as addition, subtraction, string concatenation, set membership, etc.
+The language & typechecker can then be instantiated over a particular backend which provides
+concrete sets of primitives and a primitive type-checking relation. Backends are integrated
+into the language itself as special values, so that the standard library can nicely abstract
+primitives with different underlying implementations into common typeclasses for numbers,
+strings, etc. and resolve operators to the correct backend at compile time as instructed
+by the developer. This will allow contract authors to write a single contract
+in the frontend language and target different backends with compiler switches
+or compile to more efficient upgraded versions of a virtual machine later on, with
+minimal or no code changes, and also eases the path towards integrated typechecking
+of applications with components on multiple backends (perhaps multiple ledgers and
+a zkSNARK circuit, for example).
+
+This is done with type variables (e.g. `data Term primTy primVal`).

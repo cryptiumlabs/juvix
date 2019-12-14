@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 -- |
 -- - Has the code necessary to generate LLVM Code
 module Juvix.Backends.LLVM.Codegen.Block where
@@ -36,14 +34,20 @@ fresh = do
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
-createBlocks ∷ HasState "blocks" (Map.T Name BlockState) f ⇒ f [BasicBlock]
-createBlocks = fmap makeBlock . sortBlocks . Map.toList <$> get @"blocks"
+createBlocks ∷
+  ( HasState "blocks" (Map.HashMap Name BlockState) m,
+    HasThrow "err" Errors m
+  ) ⇒
+  m [BasicBlock]
+createBlocks = do
+  sortedBlocks ← sortBlocks . Map.toList <$> get @"blocks"
+  traverse makeBlock sortedBlocks
 
-makeBlock ∷ (Name, BlockState) → BasicBlock
-makeBlock (l, BlockState _ s t) = BasicBlock l (reverse s) (maketerm t)
+makeBlock ∷ HasThrow "err" Errors f ⇒ (Name, BlockState) → f BasicBlock
+makeBlock (l, BlockState i s t) = maketerm t >>| BasicBlock l (reverse s)
   where
-    maketerm (Just x) = x
-    maketerm Nothing = undefined -- error $ "Block has no terminator: " <> show l
+    maketerm (Just x) = pure x
+    maketerm Nothing = throw @"err" (BlockLackingTerminator i)
 
 sortBlocks ∷ [(a, BlockState)] → [(a, BlockState)]
 sortBlocks = sortBy (compare `on` (idx . snd))
@@ -150,13 +154,7 @@ entry = get @"currentBlock"
 getBlock ∷ (HasState "currentBlock" Name m) ⇒ m Name
 getBlock = entry
 
-addBlock ∷
-  ( HasState "blockCount" Int m,
-    HasState "blocks" (Map.T Name BlockState) m,
-    HasState "names" Names m
-  ) ⇒
-  Symbol →
-  m Name
+addBlock ∷ NewBlock m ⇒ Symbol → m Name
 addBlock bname = do
   bls ← get @"blocks"
   ix ← get @"blockCount"
@@ -198,12 +196,7 @@ current = do
     Just x → return x
     Nothing → throw @"err" (NoSuchBlock (show c))
 
-externf ∷
-  ( HasState "symTab" SymbolTable m,
-    HasThrow "err" Errors m
-  ) ⇒
-  Name →
-  m Operand
+externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
 nameToSymbol ∷ Name → Symbol
@@ -274,13 +267,13 @@ external retty label argtys = do
 
 -- malloc & free need to be defined once and then can be called normally with `externf`
 
-defineMalloc ∷ Extern m ⇒ m ()
+defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
   op ← external voidStarTy name [(size_t, "size")]
   assign name op
 
-defineFree ∷ Extern m ⇒ m ()
+defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
   op ← external voidTy name [(Types.voidStarTy, "type")]
@@ -446,9 +439,11 @@ call typ fn args = instr typ $
       metadata = []
     }
 
-alloca ∷
-  RetInstruction m ⇒ Type → m Operand
-alloca ty = instr ty $ Alloca ty Nothing 0 []
+-- TODO :: is the pointerOf on the ty needed
+-- the LLVM8 testing on newKledi shows it being the same type back
+-- however that would be incorrect?!
+alloca ∷ RetInstruction m ⇒ Type → m Operand
+alloca ty = instr (pointerOf ty) $ Alloca ty Nothing 0 []
 
 load ∷ RetInstruction m ⇒ Type → Operand → m Operand
 load typ ptr = instr typ $ Load False ptr Nothing 0 []
@@ -484,7 +479,9 @@ getElementPtr (Minimal address indices type') =
 
 loadElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 loadElementPtr minimal = do
-  ptr ← getElementPtr minimal
+  ptr ←
+    getElementPtr
+      (minimal {Types.type' = pointerOf (Types.type' minimal)})
   load (Types.type' minimal) ptr
 
 constant32List ∷ Functor f ⇒ f Integer → f Operand
@@ -518,8 +515,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
+    -- Verify my pointerOf is correct here
     Minimal
-      { Types.type' = sumTyp,
+      { Types.type' = Types.pointerOf sumTyp,
         Types.address' = sum,
         Types.indincies' = constant32List [0, 0]
       }
@@ -533,8 +531,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     ( \i inst → do
         ele ←
           getElementPtr $
+            -- Verify my pointerOf is correct here
             Minimal
-              { Types.type' = varType,
+              { Types.type' = Types.pointerOf varType,
                 Types.address' = casted,
                 Types.indincies' = constant32List [0, i]
               }

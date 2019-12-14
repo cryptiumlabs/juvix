@@ -15,7 +15,7 @@ record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
     isDecPartialOrderᵗ : IsDecPartialOrder _≈ᵗ_ _≾ᵗ_
     isSemiringᵗ : IsSemiring _≈ᵗ_ _+_ _*_ ⟦ 0# ⟧ ⟦ 1# ⟧
 
-  open IsDecEquivalence isDecEquivalenceʲ public
+  open IsDecEquivalence isDecEquivalenceʲ public using ()
     renaming (isEquivalence to isEquivalenceʲ ;
               refl to reflʲ ; sym to symʲ ; trans to transʲ ;
               reflexive to reflexiveʲ ;
@@ -30,7 +30,7 @@ record IsUsages {j j′ t t′ t″} {J : Set j} {T : Set t}
               ≤-respˡ-≈ to ≾ᵗ-respˡ-≈ᵗ ;
               ≤-respʳ-≈ to ≾ᵗ-respʳ-≈ᵗ ;
               ≤-resp-≈ to ≾ᵗ-resp-≈ᵗ)
-  open IsSemiring isSemiringᵗ public
+  open IsSemiring isSemiringᵗ public using ()
     renaming (isEquivalence to isEquivalenceᵗ ;
               refl to reflᵗ ; sym to symᵗ ; trans to transᵗ ;
               reflexive to reflexiveᵗ ;
@@ -82,23 +82,24 @@ number-Bit = λ where
   .fromNat 1 → `1
  where open Number
 
-_≟ᵇ_ : Decidable (_≡_ {A = Bit})
+_≟ᵇ_ : Decidable₂ $ ≡-At Bit
 `0 ≟ᵇ `0 = yes refl
 `0 ≟ᵇ `1 = no (λ ())
 `1 ≟ᵇ `0 = no (λ ())
 `1 ≟ᵇ `1 = yes refl
 infix 4 _≟ᵇ_
 
-≡ᵇ-isDecEquivalence : IsDecEquivalence (_≡_ {A = Bit})
+≡ᵇ-isDecEquivalence : IsDecEquivalence $ ≡-At Bit
 ≡ᵇ-isDecEquivalence =
   record { ≡ ; _≟_ = _≟ᵇ_ }
 
 
 module _ {a} {A : Set a} where
-  ≡-isPartialOrder : IsPartialOrder _≡_ (_≡_ {A = A})
+  private ≡A = ≡-At A
+
+  ≡-isPartialOrder : IsPartialOrder ≡A ≡A
   ≡-isPartialOrder = record { ≡ ; antisym = const }
 
-  ≡-isDecPartialOrder : Decidable (_≡_ {A = A}) →
-                        IsDecPartialOrder _≡_ (_≡_ {A = A})
+  ≡-isDecPartialOrder : Decidable₂ ≡A → IsDecPartialOrder ≡A ≡A
   ≡-isDecPartialOrder ≟ =
     record { isPartialOrder = ≡-isPartialOrder ; _≟_ = ≟ ; _≤?_ = ≟ }
