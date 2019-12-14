@@ -1,4 +1,4 @@
-personal_ws-1.1 en 408 
+personal_ws-1.1 en 412 
 ABSALG
 ADT
 ADTs
@@ -47,6 +47,7 @@ GHC's
 GPUs
 Hindley
 IBC
+INRIA
 INet
 Idris
 IfThenElse
@@ -119,6 +120,7 @@ antiquefuchsia
 appendToNet
 arg
 arity
+atomics
 automata
 ax
 axWire
@@ -241,6 +243,7 @@ lang
 lavenderpurple
 le
 leq
+linkPorts
 llvm
 loadState
 locatable
@@ -313,6 +316,7 @@ redex
 redexes
 reduceUntilComplete
 refl
+relink
 renewenvironment
 resetcolorseries
 restylefloat

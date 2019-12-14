@@ -999,6 +999,20 @@ We now shall define one more definition before getting to our main theorem.
 
 ## Evaluation strategies
 
+### Simple
+
+First version: order-independent sequential reduction.
+- Reduce primary pairs until we run out of primary pairs.
+- Track a set of outstanding primary pairs. We will have an initial set when we create the graph. Whenever we connect ports, if the two ports are primary, add the pair to the set. When we reduce a pair, remove it from the set. (I think this will go in `linkPorts` or `relink`, one of those)
+- Pick primary pairs from the set in any order and reduce them.
+
+(in practice this set can be a stack or something)
+(but we should try randomly reducing one of the pairs just to test)
+
+Second version: order-independent parallel reduction the simple way, where we just have some thread pool of constant `n` threads and have each reduce a primary pair at once and somehow track the set in a synchronised way. From this we should learn what kind of locks or lock-free data structures or concurrency primitives (e.g. atomics) we need and will work most efficiently for parallel reduction.
+
+Third version: start putting metadata on nodes (e.g. associated with linear logic types where we have some idea that subgraphs can be computed in parallel) and use this metadata at runtime to allocate threads more efficiently, possibly prove non-existence of certain kinds of contention and avoid concurrency primitives (e.g. locks) etc.
+
 ### Lazy (Levy-optimal)
 
 #### Algorithm

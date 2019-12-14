@@ -16,5 +16,3 @@ Questions:
 - If we inline everything, can higher-order functions be erased (want to avoid interaction net evaluation, since that requires dynamic memory allocation)?
 - Transforms to reuse registers over time ~ may be prior literature or forms, e.g. SSA
 - Figure out rough numbers for size, proof time scaling vs. register count
-
-

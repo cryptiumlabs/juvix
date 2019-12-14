@@ -690,6 +690,10 @@ Primitive functions reduce according to the reduction operation defined for the 
 
 To-do: Lay out syntax-directed typechecker following McBride's paper.
 
+## Termination checking
+
+!include core/termination-checking.pdc
+
 ## Examples
 
 ### Church-encoded natural numbers
