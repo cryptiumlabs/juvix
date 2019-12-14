@@ -112,8 +112,7 @@
                                 text)
                           (rec (1+ level) (org-directory-dir (car dirs)))
                           (rec level (cdr dirs)))))))
-        (rec 1 files)
-        nil))))
+        (rec 1 files)))))
 
 
 ;; -----------------------------------------------------------------------------
@@ -390,7 +389,7 @@ forming a list of org-directory and file info"
                    (list (file-info-path file-dir)))))
           file-dir-list))
 
-(sig mapcar-file-dir (-> (-> (or string pathname) t) (-> maybe (or string pathname) t) list list))
+(sig mapcar-file-dir (-> (-> pathname t) (-> maybe pathname t) list list))
 (defun mapcar-file-dir (path-f alias-f file-dirs)
   "Applies path-f to all files in a list and alias-f to all alias and files
    to a list of file-info and org-directory"
