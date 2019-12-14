@@ -24,10 +24,8 @@ erasedCoreToLLVM ∷
   m ()
 erasedCoreToLLVM parameterisation term = do
   let netAST = erasedCoreToInteractionNetAST term
-
       graph ∷ Graph.FlipNet (Lang primVal)
       graph = astToNet parameterisation netAST Map.empty
-
   networkToLLVM graph
 
 networkToLLVM ∷
