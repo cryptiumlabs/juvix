@@ -9,6 +9,27 @@
 (in-package :code-generation)
 
 ;; -----------------------------------------------------------------------------
+;; Typing Macros
+;; -----------------------------------------------------------------------------
+
+(defmacro sig (f type)
+  `(declaim (ftype ,(if (and (listp type) (eq '-> (car type)))
+                        (macroexpand-1 type)
+                        type)
+                   ,f)))
+
+(defmacro -> (&rest args)
+  (let ((return-type (car (last args))))
+    `(function
+      ;; recuresively expand the argument
+      ,(mapcar  (lambda (arg)
+                 (if (and (listp arg) (eq '-> (car arg)))
+                     (macroexpand-1 arg)
+                     arg))
+                (butlast args))
+      ,return-type)))
+
+;; -----------------------------------------------------------------------------
 ;; Maybe type
 ;; -----------------------------------------------------------------------------
 
@@ -50,13 +71,14 @@
 ;; Program Constants
 ;; -----------------------------------------------------------------------------
 
-(defparameter *acceptable-extensions* (fset:set "hs"))
-(defparameter *filtered-path-prefix*  (fset:set "."))
+(defparameter *acceptable-extensions* (the fset:set (fset:set "hs")))
+(defparameter *filtered-path-prefix*  (the fset:set (fset:set ".")))
 
 ;; -----------------------------------------------------------------------------
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
+(sig generate-org-file (-> pathname pathname &optional fset:set fset:set t))
 (defun generate-org-file (directory output-file
                           &optional (filtered-dirs *filtered-path-prefix*)
                                     (valid-extensions *acceptable-extensions*))
@@ -83,20 +105,23 @@
                           (rec level (cdr dirs))))
                        (t
                         (let ((text (generate-headlines-directory (car dirs)
-                                                                 haskell-conflict-map
-                                                                 level)))
+                                                                  haskell-conflict-map
+                                                                  level)))
                           (mapc (lambda (line)
                                   (write-line line file))
                                 text)
                           (rec (1+ level) (org-directory-dir (car dirs)))
                           (rec level (cdr dirs)))))))
-        (rec 1 files)))))
+        (rec 1 files)
+        nil))))
 
 
 ;; -----------------------------------------------------------------------------
 ;; Org Generation
 ;; -----------------------------------------------------------------------------
 
+(sig generate-headlines-directory
+     (-> org-directory fset:map fixnum &optional string list))
 (defun generate-headlines-directory (dir conflict-map level &optional (name "Juvix"))
   (if (just-p (org-directory-file dir))
       (generate-headlines (just-val (org-directory-file dir)) conflict-map level name)
@@ -104,6 +129,8 @@
 
 ;; conflict-map-haskell is to just avoid repeat work of constantly
 ;; converting the conflict-map to a haskell one
+(sig generate-headlines
+     (-> file-info fset:map fixnum &optional string list))
 (defun generate-headlines (file-info conflict-map level &optional (name "Juvix"))
   (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
          (comments (module-comments lines level))
@@ -128,6 +155,8 @@
         (cons headline
               (append comments imports)))))
 
+(sig import-generation
+     (-> list &optional fixnum list))
 (defun import-generation (org-aliases &optional (indent-level 0))
   "generates a list where each line is a new line with proper org generation"
   (when org-aliases
@@ -140,29 +169,36 @@
 ;; Org Formatting
 ;; -----------------------------------------------------------------------------
 
+(sig org-header (-> string fixnum string))
 (defun org-header (text level)
   (concatenate 'string (repeat-s level "*") " " text))
 
+(sig ident-spacing (-> fixnum string))
 (defun ident-spacing (ident-level)
   (repeat-s (* 2 ident-level) " "))
 
+(sig ident-symbol (-> fixnum string))
 (defun ident-symbol (ident-level)
-  (case (mod ident-level 3)
+  (ecase (mod ident-level 3)
     (0 "-")
     (1 "+")
     (2 "*")))
 
 ;; TODO replace a lot of concatenates with formats!
 
+(sig under-score (-> string string))
 (defun under-score (text)
   (concatenate 'string "_" text "_"))
 
+(sig ident-numbers (-> string fixnum fixnum string))
 (defun ident-numbers (text ident-level num)
   (concatenate 'string
                (ident-spacing ident-level)
                (write-to-string num)
                " "
                text))
+
+(sig ident-cycle (-> string fixnum string))
 (defun ident-cycle (text ident-level)
   (concatenate 'string
                (ident-spacing ident-level)
@@ -170,10 +206,11 @@
                " "
                text))
 
-
+(sig create-reference (-> string string))
 (defun create-reference (alias)
   (concatenate 'string "<<" alias ">>"))
 
+(sig test-reference (-> string string))
 (defun text-reference (alias)
   (concatenate 'string "[[" alias "]]"))
 
@@ -182,6 +219,7 @@
 ;; -----------------------------------------------------------------------------
 
 
+(sig haskell-import-to-org-alias (-> list fset:map list))
 (defun haskell-import-to-org-alias (imports conflict-map)
   "takes a list of Haskell imports and transforms them into their org-mode alias"
   (mapcar (lambda (import)
@@ -197,6 +235,7 @@
 ;; - _Disadvantages_
 ;;   + extra allocation
 ;;   + doesn't stream the data into org file generation
+(sig relevent-imports-haskell (-> list string list))
 (defun relevent-imports-haskell (lines project-name)
   "takes LINES of a source code, and a PROJECT-NAME and filters for imports
 that match the project name"
@@ -222,6 +261,7 @@ that match the project name"
 ;; Haskell comment clean up
 ;; -----------------------------------------------------------------------------
 
+(sig module-comments (-> list &optional fixnum list))
 (defun module-comments (file-lines &optional (level 0))
   (let* ((module-comments
            (remove-if (lambda (x)
@@ -244,6 +284,7 @@ that match the project name"
                             (mapcar #'strip-haskell-comments (cdr module-comments)))))
           nil))))
 
+(sig strip-haskell-comments (-> sequence &optional Boolean sequence))
 (defun strip-haskell-comments (line &optional start-doc)
   (subseq line (min (if start-doc 5 3) (length line))))
 
@@ -252,13 +293,14 @@ that match the project name"
 ;; Conflict Map and Haskell Import Conversion
 ;; -----------------------------------------------------------------------------
 
-
+(sig conflict-map-to-haskell-import (-> fset:map (or fset:map t)))
 (defun conflict-map-to-haskell-import (conflict-map)
   (fset:image (lambda (key value)
                 (values (convert-path key) value))
               conflict-map))
 
 ;; TODO Parameterize this much better
+(sig convert-path (-> pathname &optional string string))
 (defun convert-path (file &optional (dir-before-library "src"))
   (labels ((last-dir-before (xs)
              (let ((next (member dir-before-library xs :test #'equal)))
@@ -275,12 +317,15 @@ that match the project name"
 ;; Getting Directory and File lists
 ;; -----------------------------------------------------------------------------
 
+(sig get-directory-info
+     (-> pathname &optional fset:set fset:set list))
 (defun get-directory-info (directory &optional (filtered-dirs *filtered-path-prefix*)
                                                (valid-extensions *acceptable-extensions*))
   (let* ((annote-1     (files-and-dirs directory filtered-dirs valid-extensions))
          (conflict-map (construct-file-alias-map (lose-dir-information annote-1))))
     (alias-file-info annote-1 conflict-map)))
 
+(sig files-and-dirs (-> pathname &optional fset:set fset:set list))
 (defun files-and-dirs (directory &optional (filtered-dirs *filtered-path-prefix*)
                                            (valid-extensions *acceptable-extensions*))
   "recursively grabs the file and directories
@@ -329,6 +374,7 @@ forming a list of org-directory and file info"
                        files))))
     (append files-annotated dirs-annotated)))
 
+(sig lose-dir-information (-> list list))
 (defun lose-dir-information (file-dir-list)
   "forgets the directory information and puts all files into a flat list"
   (mapcan (lambda (file-dir)
@@ -344,6 +390,7 @@ forming a list of org-directory and file info"
                    (list (file-info-path file-dir)))))
           file-dir-list))
 
+(sig mapcar-file-dir (-> (-> (or string pathname) t) (-> maybe (or string pathname) t) list list))
 (defun mapcar-file-dir (path-f alias-f file-dirs)
   "Applies path-f to all files in a list and alias-f to all alias and files
    to a list of file-info and org-directory"
@@ -365,6 +412,7 @@ forming a list of org-directory and file info"
                   (alias-call file-dir)))
             file-dirs)))
 
+(sig alias-file-info (-> list fset:map list))
 (defun alias-file-info (file-dirs alias-map)
   (mapcar-file-dir #'identity
                    (lambda (alias path)
@@ -379,6 +427,7 @@ forming a list of org-directory and file info"
 ;; Handling Conflicting Files
 ;; -----------------------------------------------------------------------------
 
+(sig construct-file-alias-map (-> list (or fset:map t)))
 (defun construct-file-alias-map (files)
   "finds any files that share the same identifier
 and returns a map of files to their alias"
@@ -400,6 +449,7 @@ and returns a map of files to their alias"
 
 ;; may do the job of consturct-file-alias-map, however this algorithm is slow
 ;; for a large amount of files
+(sig disambiguate-files (-> list &key (:all-conflicts Boolean) fset:map))
 (defun disambiguate-files (file-list &key all-conflicts)
   "takes a list of files and returns a map from
 the file name to their unique identifier"
@@ -437,6 +487,7 @@ the file name to their unique identifier"
 ;; File Naming Helpers
 ;; -----------------------------------------------------------------------------
 
+(sig file-name (-> pathname &optional fixnum string))
 (defun file-name (file &optional (extra-context 1))
   "takes a file and how much extra context is needed to disambiguate the file
 Returns a string that reconstructs the unique identifier for the file"
@@ -451,6 +502,7 @@ Returns a string that reconstructs the unique identifier for the file"
                                          (1- extra-context))))
              (reconstruct-path (append disambigous-path (list name))))))))
 
+(sig reconstruct-path (-> list &optional string string))
 (defun reconstruct-path (xs &optional (connector "/"))
   (apply #'concatenate
          'string
@@ -464,6 +516,7 @@ Returns a string that reconstructs the unique identifier for the file"
   "repeats THING N times"
   (loop for i from 0 to (1- n) collect thing))
 
+(sig repeat-s (-> fixnum string string))
 (defun repeat-s (n thing)
   (apply #'concatenate 'string (repeat n thing)))
 
@@ -517,4 +570,4 @@ Returns a string that reconstructs the unique identifier for the file"
 ;; (module-comments (uiop:read-file-lines
 ;;                   #P"~/Documents/Work/Repo/juvix/holder/src/Library.hs"))
 
-;; (generate-org-file "../../holder/src/" "Test.org")
+;; (generate-org-file #p"../src/" #p"../doc/Code/Juvix.org")

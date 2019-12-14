@@ -6,6 +6,6 @@
 
 (load "./generate.lisp")
 
-(code-generation:generate-org-file "../src/" #p"../doc/Code/Juvix.org")
-(code-generation:generate-org-file "../app/" #p"../doc/Code/App.org")
-(code-generation:generate-org-file "../test/" #p"../doc/Code/Test.org")
+(code-generation:generate-org-file #p"../src/" #p"../doc/Code/Juvix.org")
+(code-generation:generate-org-file #p"../app/" #p"../doc/Code/App.org")
+(code-generation:generate-org-file #p"../test/" #p"../doc/Code/Test.org")
