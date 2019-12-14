@@ -44,9 +44,13 @@ abstract: Juvix synthesises a high-level frontend syntax, dependent-linearly-typ
 
 !include src/prior-work.pdc
 
-# Reasoning
+# Desiderata
 
-!include src/reasoning.pdc
+!include src/desiderata.pdc
+
+# Ingredients
+
+!include src/ingredients.pdc
 
 # Theoretical background
 
