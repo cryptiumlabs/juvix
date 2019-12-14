@@ -520,6 +520,46 @@ Terms with the same type are judgementally equal under beta reduction:
 
 To-do: do we need a rule for term equality?
 
+### Inductive primitive types
+
+Primitive types & values can also be defined which reference terms & eliminators, respectively, and come with custom derivation rules.
+
+For example, consider the equality type `Eq` and constructor `Refl`.
+
+Formation rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ t \overset{0}{:} ∗_i$}
+\AxiomC{$Γ ⊢ x \overset{0}{:} t$}
+\AxiomC{$Γ ⊢ y \overset{0}{:} t$}
+\RightLabel{Eq-Form}
+\TrinaryInfC{$Γ ⊢ Eq\ t\ x\ y\ \overset{0}{:} ∗_i$}
+\end{prooftree}
+
+Introduction rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ t \overset{0}{:} ∗_i$}
+\AxiomC{$Γ ⊢ x \overset{0}{:} t$}
+\RightLabel{Eq-Intro}
+\BinaryInfC{$Γ ⊢ Refl\ t\ x\ \overset{0}{:} Eq\ t\ x\ x$}
+\end{prooftree}
+
+If $x →_{β} y$, the type $Eq\ t\ x\ y$ should reduce to $Eq\ t\ x\ x$ by the conversion rule, so $Refl\ t\ x\ \overset{0}{:} Eq\ t\ x\ y$ should typecheck.
+
+Elimination rule:
+
+\begin{prooftree}
+\AxiomC{$Γ ⊢ t \overset{0}{:} ∗_i$}
+\AxiomC{$Γ ⊢ m \overset{0}{:} (x \overset{0}{:} t) → (y \overset{0}{:} t) → (e \overset{0}{:} Eq\ t\ x\ y) → ∗_i$}
+\AxiomC{$Γ ⊢ n \overset{0}{:} (z \overset{0}{:} t) → m\ z\ z\ (Refl\ t\ z)$}
+\AxiomC{$Γ ⊢ x \overset{0}{:} t, y \overset{0}{:} t, e \overset{0}{:} Eq\ t\ x\ y$}
+\RightLabel{Eq-Elim}
+\QuaternaryInfC{$Γ ⊢ eqElim\ t\ m\ n\ x\ y\ e\ \overset{0}{:} m\ x\ y\ e$}
+\end{prooftree}
+
+(evaluates to `n x`)
+
 ### Sub-usaging
 
 To-do: check if we can safely allow sub-usaging if the ring is the natural numbers, discuss here.
