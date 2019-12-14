@@ -134,11 +134,9 @@ abstract: Juvix synthesises a high-level frontend syntax, dependent-linearly-typ
 
 !include src/future-directions.pdc
 
-# Appendices
+# Examples
 
-## Examples
-
-!include src/appendices/examples.pdc
+!include src/examples.pdc
 
 \pagebreak
 

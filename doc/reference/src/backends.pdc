@@ -1,44 +1,47 @@
-Backend defines:
+## Backend requirements
 
-- Primitive types
-- Primitive functions & costs
-- Primitive typing relation
-- Bespoke encoding path
-- (optionally) Interaction net interpreter
-- (optionally) Optimisation passes
+!include backends/requirements.pdc
 
-## LLVM
+## Backend fusion
+
+!include backends/fusion.pdc
+
+## Currently supported backends
+
+### LLVM
 
 !include backends/llvm.pdc
 
-## Michelson
+### Michelson
 
 !include backends/michelson.pdc
 
-## WASM
+### WASM
 
 !include backends/wasm.pdc
 
-## EVM
+## Planned backends
+
+### EVM
 
 !include backends/evm.pdc
 
-## Berkeley Packet Filter
+### Berkeley Packet Filter
 
 !include backends/berkeley-packet-filter.pdc
 
-## GPUs (CUDA)
+### GPUs (CUDA)
 
 !include backends/cuda.pdc
 
-## FPGA
+### FPGA
 
 !include backends/fpga.pdc
 
-## Algebraic intermediate representation (STARKs)
-
-!include backends/air.pdc
-
-## Rank-1 constraint systems (SNARKs)
+### Rank-1 constraint systems (SNARKs)
 
 !include backends/r1cs.pdc
+
+### Algebraic intermediate representation (STARKs)
+
+!include backends/air.pdc
