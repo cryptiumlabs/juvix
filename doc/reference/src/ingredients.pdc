@@ -1,11 +1,15 @@
-What changes are made from these prior systems, and why might one expect the solutions proposed to realise the criteria outlined previously?
+*What theoretical ingredients & practical architectural choices does Juvix make to realise these desiderata?*
+
+*What changes are made from these prior systems, and why might one expect the solutions proposed to work?*
 
 ## Dependent types
+
+### Basics
 
 The first and most essential ingredient is that of *dependent types*: a typesystem expressive enough
 to allow terms written in Juvix to express properties about the computation behaviour of other terms.
 
-For example (not yet in Juvix), the fairness of Tendermint proposer election has been [partially verified in Idris](https://github.com/cwgoes/tm-proposer-idris), which has the same kind of dependent typesystem:
+For example, the fairness of Tendermint proposer election has been [partially verified in Idris](https://github.com/cwgoes/tm-proposer-idris), which has the same kind of dependent typesystem:
 
 ```
 fairlyProportional :
@@ -27,6 +31,8 @@ and inhabiting the type of `fairlyProportional` with a valid term proves that it
 In English, this proof could be read as "a validator, in a sequence of proposer elections where no other power changes take place,
 proposes no fewer blocks than the total blocks in the epoch multiplied by its fraction of stake less one,
 and proposes no more blocks than the total blocks in the epoch multiplied by its fraction of stake plus one".
+
+### Comparisons to other techniques
 
 Dependent types as implemented in Juvix satisfy all three dimensions of the [lambda cube](https://en.wikipedia.org/wiki/Lambda_cube):
 terms can depend on types, types can depend on types, and types can depend on terms. In accordance
@@ -69,7 +75,9 @@ creates no runtime overhead. Detailed usage accounting also allows Juvix to avoi
 optimise stack usage, and safely modify values in-place, in various situations depending on the types
 and the granularity of usage annotations provided.
 
-## Whole-program optimisation & efficient execution
+## Efficient execution
+
+### Whole-program optimisation
 
 Juvix takes advantage of the unique trade-offs of the smart contract use case — small source-code sizes and
 infrequent deployment, which allow for longer compile times and wider optimisation searches — to enable
@@ -78,15 +86,13 @@ rather than any specific one, drawn from multiple inspirations including [GRIN](
 including compile-time evaluation, inlining, fusion, case simplification, common sub-expression elimination,
 various dead code elimination checks, and rewriting provably equivalent terms.
 
+### Interaction net evaluation
+
 For certain backends, Juvix can evaluate lambda calculus terms using the abstract model
 of interaction nets, as outlined by [Lamping, Asperti, and Guerrini](https://www.cambridge.org/vi/academic/subjects/computer-science/programming-languages-and-applied-logic/optimal-implementation-functional-programming-languages?format=HB) and inspired by [prior work](https://medium.com/@maiavictor/solving-the-mystery-behind-abstract-algorithms-magical-optimizations-144225164b07).
 Interaction nets minimise the number of beta reductions by sharing evaluations, perform runtime fusion, support automatic parallelism, and handle
 large closures efficiently. They come with some overhead, but this can be mitigated with [bespoke encoding](https://github.com/cryptiumlabs/juvix/issues/85)
 — generating custom rewrite rules at compile-time — for small, performance-critical functions.
-
-### Optimal, parallelisable, higher-order-friendly evaluation
-
-Juvix utilises a fundamentally different evaluation model (as compared to present functional programming languages), based on recent theoretical advances in optimal lambda calculus reduction using interaction nets, which avoids any unnecessary duplication of reducible sub-expressions, parallelises by default, dynamically fuses composable terms at runtime, and handles higher-order functions & lexical closures efficiently without garbage collection. To take maximal advantage of this evaluation model, Juvix translates high-level algebraic datatypes into pure lambda calculus representations. In cases where optimal reduction requires too much bookkeeping or imposes undesired overhead, Juvix compiles subterms directly into rewrite rules which still enjoy the native parallelism and strong confluence properties of the interaction net model.
 
 ### Linear dependent types obviate garbage collection and ensure type erasure
 
@@ -100,7 +106,7 @@ Purpose-built for the smart contract use case, Juvix's optimiser requires a disc
 
 The dependent type system of Juvix Core enables it to express arbitrary properties of its own terms, including equality of functions — proofs of which can be utilised by the optimiser to select between reducible expressions known to be semantically equivalent at compile time.
 
-### Hint & bypass compiler when necessary
+### Programmer-directed optimisations
 
 Primitives are provided to allow developers to bypass the usual compilation pipeline and construct hand-optimised rewrite rules specialised to the underlying machine, optionally proving equivalence of their hand-optimised rewrite rules to the compiler-generated ones using a formalised interpreter for the machine model.
 
