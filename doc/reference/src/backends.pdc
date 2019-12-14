@@ -1,0 +1,44 @@
+Backend defines:
+
+- Primitive types
+- Primitive functions & costs
+- Primitive typing relation
+- Bespoke encoding path
+- (optionally) Interaction net interpreter
+- (optionally) Optimisation passes
+
+## LLVM
+
+!include backends/llvm.pdc
+
+## Michelson
+
+!include backends/michelson.pdc
+
+## WASM
+
+!include backends/wasm.pdc
+
+## EVM
+
+!include backends/evm.pdc
+
+## Berkeley Packet Filter
+
+!include backends/berkeley-packet-filter.pdc
+
+## GPUs (CUDA)
+
+!include backends/cuda.pdc
+
+## FPGA
+
+!include backends/fpga.pdc
+
+## Algebraic intermediate representation (STARKs)
+
+!include backends/air.pdc
+
+## Rank-1 constraint systems (SNARKs)
+
+!include backends/r1cs.pdc

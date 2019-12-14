@@ -1,4 +1,4 @@
-personal_ws-1.1 en 355 
+personal_ws-1.1 en 362 
 ABSALG
 ADT
 ADTs
@@ -111,6 +111,7 @@ ax
 axWire
 backend
 backends
+berkeley
 bfseries
 bigstar
 bijective
@@ -151,6 +152,7 @@ contr
 conv
 cref
 cryptographic
+cuda
 cutWire
 cybercoin
 dataflow
@@ -174,10 +176,12 @@ eq
 equalities
 et
 eval
+evm
 floatstyle
 fontsize
 fonttitle
 forall
+fpga
 framemethod
 frontend
 fst
@@ -212,6 +216,7 @@ lang
 lavenderpurple
 le
 leq
+llvm
 locatable
 logicproof
 mainfont
@@ -221,6 +226,7 @@ mdframed
 mediumpersianblue
 memoisation
 meq
+michelson
 microtype
 monadic
 monoid
@@ -347,6 +353,7 @@ verifiers
 von
 vspace
 vwire
+wasm
 whnf
 wirecross
 wirestraight

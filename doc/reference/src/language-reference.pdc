@@ -118,9 +118,9 @@ abstract: Juvix synthesises a high-level frontend syntax, dependent-linearly-typ
 
 !include src/cost-accounting.pdc
 
-# Machine targets
+# Backends
 
-!include src/machine-targets.pdc
+!include src/backends.pdc
 
 # Distributed ledger integration
 
