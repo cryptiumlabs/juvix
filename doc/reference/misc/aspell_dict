@@ -1,4 +1,4 @@
-personal_ws-1.1 en 412 
+personal_ws-1.1 en 413 
 ABSALG
 ADT
 ADTs
@@ -43,6 +43,7 @@ FanOut
 FanPort
 FixM
 Fn
+GHC
 GHC's
 GPUs
 Hindley
