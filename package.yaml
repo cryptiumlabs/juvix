@@ -151,6 +151,7 @@ library:
     - Juvix.Backends.LLVM.Codegen.Block
     - Juvix.Backends.LLVM.Codegen.Graph
     - Juvix.Backends.LLVM.Codegen
+    - Juvix.Backends.LLVM.Net.API
     - Juvix.Backends.LLVM.Net.EAC
     - Juvix.Backends.LLVM.Net.EAC.Types
     - Juvix.Backends.LLVM.Net.EAC.Defs
