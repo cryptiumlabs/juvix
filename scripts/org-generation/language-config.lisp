@@ -1,8 +1,9 @@
 ;; configuration file for code generation
 
+(enabled haskell)
 
 (haskell
-  :name Juvix)
+  :name "Juvix")
 
 (lisp
  ;; this makes it use the asd file to check imports instead of loads

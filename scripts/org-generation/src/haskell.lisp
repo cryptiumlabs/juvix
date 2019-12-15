@@ -6,17 +6,34 @@
         #:org-generation/types
         #:org-generation/maybe
         #:org-generation/type-signature)
-  (:nicknames #:og/haskell))
+  (:nicknames #:og/haskell)
+  (:export #:module-comments
+           #:import-generation
+           #:initalize
+           #:*extension*))
 
 (in-package :org-generation/haskell)
+
+;; -----------------------------------------------------------------------------
+;; Context
+;; -----------------------------------------------------------------------------
+
+(defstruct context
+  (name (error "initalize-context") :type string))
 
 ;; -----------------------------------------------------------------------------
 ;; Exporting Interface Functions
 ;; -----------------------------------------------------------------------------
 
+(defparameter *extension* "hs")
 
-(defun import-generation () 2)
 
+(sig import-generation (-> context fset:map list list))
+(defun import-generation (context conflict-map lines)
+  (haskell-import-to-org-alias (relevent-imports-haskell lines (context-name context))
+                               conflict-map))
+
+;; TODO :: decide if module-comments should get the context as well
 (sig module-comments (-> list &optional fixnum list))
 (defun module-comments (file-lines &optional (level 0))
   (let* ((module-comments
@@ -42,12 +59,9 @@
           nil))))
 
 
-(defun initialize () t)
-
-;; -----------------------------------------------------------------------------
-;; Config instantiating
-;; -----------------------------------------------------------------------------
-
+(defun initialize (sexp)
+  "Initializes the context for the Haskell configuration"
+  (apply #'make-context sexp))
 
 ;; -----------------------------------------------------------------------------
 ;; Imports to Org Aliases
