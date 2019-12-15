@@ -8,7 +8,9 @@
   ((:file "type-signature")
    (:file "maybe")
    (:file "types" :depends-on ("maybe"))
-   (:file "code-generation" :depends-on ("types" "type-signature" "maybe")))
+   (:file "utility" :depends-on ("type-signature"))
+   (:file "haskell" :depends-on ("maybe" "types"))
+   (:file "code-generation" :depends-on ("utility" "types" "type-signature" "maybe")))
   :in-order-to ((asdf:test-op (asdf:test-op :org-generation/test))))
 
 (asdf:defsystem :org-generation/test

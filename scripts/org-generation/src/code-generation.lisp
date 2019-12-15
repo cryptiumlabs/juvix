@@ -112,11 +112,11 @@
 
 (sig org-header (-> string fixnum string))
 (defun org-header (text level)
-  (concatenate 'string (repeat-s level "*") " " text))
+  (concatenate 'string (og/utility:repeat-s level "*") " " text))
 
 (sig ident-spacing (-> fixnum string))
 (defun ident-spacing (ident-level)
-  (repeat-s (* 2 ident-level) " "))
+  (og/utility:repeat-s (* 2 ident-level) " "))
 
 (sig ident-symbol (-> fixnum string))
 (defun ident-symbol (ident-level)
@@ -207,7 +207,8 @@ that match the project name"
   (let* ((module-comments
            (remove-if (lambda (x)
                         (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
-                      (take-until (lambda (x) (uiop:string-prefix-p "module" x)) file-lines)))
+                      (og/utility:take-until (lambda (x) (uiop:string-prefix-p "module" x))
+                                             file-lines)))
          (special (car module-comments))
          (valid-module (if special
                            (uiop:string-prefix-p "-- |" special)
@@ -215,7 +216,7 @@ that match the project name"
     (flet ((update-headline-level (line)
              (if (uiop:string-prefix-p "*" line)
                  (concatenate 'string
-                              (repeat-s level "*")
+                              (og/utility:repeat-s level "*")
                               line)
                  line)))
       (if valid-module
@@ -449,24 +450,6 @@ Returns a string that reconstructs the unique identifier for the file"
          'string
          (butlast (mapcan (lambda (s) (list s connector))
                           xs))))
-;; -----------------------------------------------------------------------------
-;; Helpers Utility
-;; -----------------------------------------------------------------------------
-
-(defun repeat (n thing)
-  "repeats THING N times"
-  (loop for i from 0 to (1- n) collect thing))
-
-(sig repeat-s (-> fixnum string string))
-(defun repeat-s (n thing)
-  (apply #'concatenate 'string (repeat n thing)))
-
-(defun take-until (pred xs)
-  (labels ((rec (current acc)
-             (if (or (null current) (funcall pred (car current)))
-                 (reverse acc)
-                 (rec (cdr current) (cons (car current) acc)))))
-    (rec xs nil)))
 
 ;; -----------------------------------------------------------------------------
 ;; Tests
