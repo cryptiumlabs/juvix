@@ -5,4 +5,5 @@
   :name Juvix)
 
 (lisp
-  :asdf #p"org-generation.asd")
+ ;; this makes it use the asd file to check imports instead of loads
+ :asdf #p"org-generation.asd")
