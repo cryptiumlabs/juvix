@@ -1,55 +1,12 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload "fset")
-  (asdf:load-system :uiop))
 
-(defpackage #:code-generation
-  (:use #:common-lisp)
+(defpackage #:org-generation/code-generation
+  (:nicknames #:og/code-generation)
+  (:use #:common-lisp
+        #:org-generation/type-signature
+        #:org-generation/maybe)
   (:export :generate-org-file))
 
-(in-package :code-generation)
-
-;; -----------------------------------------------------------------------------
-;; Typing Macros
-;; -----------------------------------------------------------------------------
-
-(defmacro sig (f type)
-  `(declaim (ftype ,(if (and (listp type) (eq '-> (car type)))
-                        (macroexpand-1 type)
-                        type)
-                   ,f)))
-
-(defmacro -> (&rest args)
-  (let ((return-type (car (last args))))
-    `(function
-      ;; recuresively expand the argument
-      ,(mapcar  (lambda (arg)
-                 (if (and (listp arg) (eq '-> (car arg)))
-                     (macroexpand-1 arg)
-                     arg))
-                (butlast args))
-      ,return-type)))
-
-;; -----------------------------------------------------------------------------
-;; Maybe type
-;; -----------------------------------------------------------------------------
-
-;; TODO better type it
-(defconstant +nothing+ :none)
-
-(defstruct just val)
-
-(defun map-just (f val)
-  (if (just-p val)
-      (make-just :val (funcall f (just-val val)))
-      val))
-
-(deftype maybe ()
-    `(or
-      (eql :none)
-      (satisfies just-p)))
-
-(defun nothing? (x)
-  (eq +nothing+ x))
+(in-package :org-generation/code-generation)
 
 ;; -----------------------------------------------------------------------------
 ;; Directory and file types
@@ -550,7 +507,7 @@ Returns a string that reconstructs the unique identifier for the file"
 ;;                              (conflict-map-to-haskell-import
 ;;                               (construct-file-alias-map
 ;;                                (lose-dir-information
-;;                                 (files-and-dirs "../../src/")))))
+;;                                 (files-and-dirs #P"../src/")))))
 
 ;; (relevent-imports (uiop:read-file-lines
 ;;                    #P"~/Documents/Work/Repo/juvix/holder/src/Library.hs")
