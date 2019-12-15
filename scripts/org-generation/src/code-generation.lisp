@@ -3,26 +3,11 @@
   (:nicknames #:og/code-generation)
   (:use #:common-lisp
         #:org-generation/type-signature
-        #:org-generation/maybe)
+        #:org-generation/maybe
+        #:org-generation/types)
   (:export :generate-org-file))
 
 (in-package :org-generation/code-generation)
-
-;; -----------------------------------------------------------------------------
-;; Directory and file types
-;; -----------------------------------------------------------------------------
-
-(defstruct org-directory
-  ;; some directories have a file that re-export things
-  ;; let it be a maybe file-info
-  (file +nothing+ :type maybe)
-  ;; a dir consists of either a file-info-p or a org-directory-p
-  (dir  nil       :type list)
-  (name ""        :type string))
-
-(defstruct file-info
-  (path  ""        :type pathname)
-  (alias +nothing+ :type maybe))
 
 ;; -----------------------------------------------------------------------------
 ;; Program Constants

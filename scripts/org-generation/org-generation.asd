@@ -7,7 +7,8 @@
   :components
   ((:file "type-signature")
    (:file "maybe")
-   (:file "code-generation" :depends-on ("type-signature" "maybe")))
+   (:file "types" :depends-on ("maybe"))
+   (:file "code-generation" :depends-on ("types" "type-signature" "maybe")))
   :in-order-to ((asdf:test-op (asdf:test-op :org-generation/test))))
 
 (asdf:defsystem :org-generation/test
