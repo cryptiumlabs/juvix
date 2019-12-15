@@ -1,8 +1,8 @@
 ;; configuration file for code generation
 
 
-'(haskell
+(haskell
   :name Juvix)
 
-'(lisp
+(lisp
   :asdf #p"org-generation.asd")
