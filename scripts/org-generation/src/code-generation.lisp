@@ -74,7 +74,9 @@
      (-> file-info fset:map fixnum &optional string list))
 (defun generate-headlines (file-info conflict-map level &optional (name "Juvix"))
   (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
+         ;; TODO move this part out
          (comments (module-comments lines level))
+         ;; TODO move this part out
          (imports  (import-generation
                     (haskell-import-to-org-alias (relevent-imports-haskell lines name)
                                                  conflict-map)))
@@ -96,6 +98,8 @@
         (cons headline
               (append comments imports)))))
 
+;; fine to keep in this module
+;; not haskell specific
 (sig import-generation
      (-> list &optional fixnum list))
 (defun import-generation (org-aliases &optional (indent-level 0))
@@ -369,6 +373,10 @@ forming a list of org-directory and file info"
 ;; Handling Conflicting Files
 ;; -----------------------------------------------------------------------------
 
+;; - TODO :: tweak logic to use modules, and if two files share the
+;;           same file extension, note that by naming the file
+;;           .extension in the alias
+
 (sig construct-file-alias-map (-> list (or fset:map t)))
 (defun construct-file-alias-map (files)
   "finds any files that share the same identifier
@@ -468,7 +476,7 @@ Returns a string that reconstructs the unique identifier for the file"
 
 ;; (construct-file-alias-map
 ;;  (lose-dir-information
-;;   (files-and-dirs "../../holder/src/")))
+;;   (files-and-dirs #p"../holder/src/")))
 
 ;; (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
 ;;                                    "Juvix.Interpreter.InteractionNet.Backends.Graph")
