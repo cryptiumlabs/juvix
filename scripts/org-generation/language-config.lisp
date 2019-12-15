@@ -1,9 +1,10 @@
 ;; configuration file for code generation
 
-(enabled haskell)
+(:enabled haskell)
 
 (haskell
-  :name "Juvix")
+ :name "Juvix"
+ :dir-before-code ("src" "app" "test"))
 
 (lisp
  ;; this makes it use the asd file to check imports instead of loads

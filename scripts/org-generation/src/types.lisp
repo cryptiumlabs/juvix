@@ -28,5 +28,5 @@
   (name ""        :type string))
 
 (defstruct file-info
-  (path  ""        :type pathname)
+  (path  #p""      :type pathname)
   (alias +nothing+ :type maybe))

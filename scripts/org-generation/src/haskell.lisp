@@ -10,7 +10,8 @@
   (:export #:module-comments
            #:import-generation
            #:initalize
-           #:*extension*))
+           #:*extension*
+           #:convert-path))
 
 (in-package :org-generation/haskell)
 
@@ -19,7 +20,8 @@
 ;; -----------------------------------------------------------------------------
 
 (defstruct context
-  (name (error "initalize-context") :type string))
+  (name (error "initalize-context") :type string)
+  (dir-before-code (list "src" "app" "test") :type list))
 
 ;; -----------------------------------------------------------------------------
 ;; Exporting Interface Functions
@@ -34,8 +36,8 @@
                                conflict-map))
 
 ;; TODO :: decide if module-comments should get the context as well
-(sig module-comments (-> list &optional fixnum list))
-(defun module-comments (file-lines &optional (level 0))
+(sig module-comments (-> list fixnum list))
+(defun module-comments (file-lines level)
   (let* ((module-comments
            (remove-if (lambda (x)
                         (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
@@ -63,9 +65,28 @@
   "Initializes the context for the Haskell configuration"
   (apply #'make-context sexp))
 
+(sig convert-path (-> pathname context string))
+(defun convert-path (file context)
+  "converts a pathname to the haskell import name"
+  (labels ((last-dir-before (xs)
+             (let ((next
+                     (reduce (lambda (acc y)
+                               (if acc
+                                   acc
+                                   (member y xs :test #'equal)))
+                             (context-dir-before-code context)
+                             :initial-value  nil)))
+               (if next
+                   (last-dir-before (cdr next))
+                   xs))))
+    (og/utility:reconstruct-path (append
+                                  (last-dir-before (pathname-directory file))
+                                  (list (pathname-name file)))
+                                 ".")))
+
 ;; -----------------------------------------------------------------------------
 ;; Imports to Org Aliases
-;; -----------------------------------------------------------------------------p
+;; -----------------------------------------------------------------------------
 
 
 (sig haskell-import-to-org-alias (-> list fset:map list))

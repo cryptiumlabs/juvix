@@ -20,16 +20,17 @@
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
-(sig generate-org-file (-> pathname pathname &optional fset:set fset:set t))
-(defun generate-org-file (directory output-file
-                          &optional (filtered-dirs *filtered-path-prefix*)
-                                    (valid-extensions *acceptable-extensions*))
-  ;; TODO remove repeat calls to construct-file-alias-map
-  (let ((files                (get-directory-info directory filtered-dirs valid-extensions))
-        (haskell-conflict-map (conflict-map-to-haskell-import
-                               (construct-file-alias-map
-                                (lose-dir-information
-                                 (files-and-dirs directory))))))
+(sig generate-org-file (-> pathname pathname pathname &optional fset:set t))
+(defun generate-org-file (config directory output-file
+                          &optional (filtered-dirs *filtered-path-prefix*))
+  (let* ((config       (og/context:read-config config))
+         (extensions   (og/context:valid-extensions config))
+         (files-dirs   (files-and-dirs directory filtered-dirs extensions))
+         (alias-map    (construct-file-alias-map
+                        (lose-dir-information
+                         (files-and-dirs directory filtered-dirs extensions))))
+         (files        (alias-file-info files-dirs alias-map))
+         (conflict-map (og/context:alias-map-to-language-import config alias-map)))
     (with-open-file (file output-file
                           :direction         :output
                           :if-exists         :supersede
@@ -38,16 +39,18 @@
                  (cond ((null dirs)
                         nil)
                        ((file-info-p (car dirs))
-                        (let ((text (generate-headlines (car dirs)
-                                                        haskell-conflict-map
+                        (let ((text (generate-headlines config
+                                                        (car dirs)
+                                                        conflict-map
                                                         level)))
                           (mapc (lambda (line)
                                   (write-line line file))
                                 text)
                           (rec level (cdr dirs))))
                        (t
-                        (let ((text (generate-headlines-directory (car dirs)
-                                                                  haskell-conflict-map
+                        (let ((text (generate-headlines-directory config
+                                                                  (car dirs)
+                                                                  conflict-map
                                                                   level)))
                           (mapc (lambda (line)
                                   (write-line line file))
@@ -61,25 +64,22 @@
 ;; Org Generation
 ;; -----------------------------------------------------------------------------
 
-(sig generate-headlines-directory
-     (-> org-directory fset:map fixnum &optional string list))
-(defun generate-headlines-directory (dir conflict-map level &optional (name "Juvix"))
+(sig generate-headlines-directory (-> fset:map org-directory fset:map fixnum list))
+(defun generate-headlines-directory (config dir conflict-map level)
   (if (just-p (org-directory-file dir))
-      (generate-headlines (just-val (org-directory-file dir)) conflict-map level name)
+      (generate-headlines config
+                          (just-val (org-directory-file dir))
+                          conflict-map
+                          level)
       (list (concatenate 'string (org-header (org-directory-name dir) level)))))
 
-;; conflict-map-haskell is to just avoid repeat work of constantly
-;; converting the conflict-map to a haskell one
-(sig generate-headlines
-     (-> file-info fset:map fixnum &optional string list))
-(defun generate-headlines (file-info conflict-map level &optional (name "Juvix"))
+
+(sig generate-headlines (-> fset:map file-info fset:map fixnum list))
+(defun generate-headlines (config file-info conflict-map level)
   (let* ((lines    (uiop:read-file-lines (file-info-path file-info)))
-         ;; TODO move this part out
-         (comments (module-comments lines level))
-         ;; TODO move this part out
+         (comments (og/context:module-comments config file-info lines level))
          (imports  (import-generation
-                    (haskell-import-to-org-alias (relevent-imports-haskell lines name)
-                                                 conflict-map)))
+                    (og/context:import-org-aliases config file-info conflict-map lines)))
          (headline (org-header
                     (if (just-p (file-info-alias file-info))
                         (concatenate 'string
@@ -98,8 +98,6 @@
         (cons headline
               (append comments imports)))))
 
-;; fine to keep in this module
-;; not haskell specific
 (sig import-generation
      (-> list &optional fixnum list))
 (defun import-generation (org-aliases &optional (indent-level 0))
@@ -160,106 +158,6 @@
   (concatenate 'string "[[" alias "]]"))
 
 ;; -----------------------------------------------------------------------------
-;; Imports to Org Aliases
-;; -----------------------------------------------------------------------------
-
-
-(sig haskell-import-to-org-alias (-> list fset:map list))
-(defun haskell-import-to-org-alias (imports conflict-map)
-  "takes a list of Haskell imports and transforms them into their org-mode alias"
-  (mapcar (lambda (import)
-            (or (fset:lookup conflict-map import)
-                (car (last (uiop:split-string import :separator ".")))))
-          imports))
-
-;; TODO parameterize this over the project name and language!
-;; TODO consider if we should add a lifted version of this, adding to file info
-;; - _Advantages_
-;;   + Modular
-;;   + Multiple passes
-;; - _Disadvantages_
-;;   + extra allocation
-;;   + doesn't stream the data into org file generation
-(sig relevent-imports-haskell (-> list string list))
-(defun relevent-imports-haskell (lines project-name)
-  "takes LINES of a source code, and a PROJECT-NAME and filters for imports
-that match the project name"
-  (let* ((imports     (remove-if (complement (lambda (x)
-                                               (uiop:string-prefix-p "import" x)))
-                                 lines))
-         (modules     (mapcar (lambda (import)
-                                ;; TODO make this cadr logic generic
-                                (let ((split-import (uiop:split-string import)))
-                                  (cond
-                                    ((equalp (cadr split-import) "qualified")
-                                     (caddr split-import))
-                                    (t
-                                     (cadr split-import)))))
-                              imports))
-         (project-imp (remove-if (complement (lambda (m)
-                                               (uiop:string-prefix-p project-name m)))
-                                 modules)))
-    project-imp))
-
-
-;; -----------------------------------------------------------------------------
-;; Haskell comment clean up
-;; -----------------------------------------------------------------------------
-
-(sig module-comments (-> list &optional fixnum list))
-(defun module-comments (file-lines &optional (level 0))
-  (let* ((module-comments
-           (remove-if (lambda (x)
-                        (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
-                      (og/utility:take-until (lambda (x) (uiop:string-prefix-p "module" x))
-                                             file-lines)))
-         (special (car module-comments))
-         (valid-module (if special
-                           (uiop:string-prefix-p "-- |" special)
-                           nil)))
-    (flet ((update-headline-level (line)
-             (if (uiop:string-prefix-p "*" line)
-                 (concatenate 'string
-                              (og/utility:repeat-s level "*")
-                              line)
-                 line)))
-      (if valid-module
-          (remove-if #'uiop:emptyp
-                     (mapcar #'update-headline-level
-                      (cons (strip-haskell-comments special t)
-                            (mapcar #'strip-haskell-comments (cdr module-comments)))))
-          nil))))
-
-(sig strip-haskell-comments (-> sequence &optional Boolean sequence))
-(defun strip-haskell-comments (line &optional start-doc)
-  (subseq line (min (if start-doc 5 3) (length line))))
-
-
-;; -----------------------------------------------------------------------------
-;; Conflict Map and Haskell Import Conversion
-;; -----------------------------------------------------------------------------
-
-(sig conflict-map-to-haskell-import (-> fset:map (or fset:map t)))
-(defun conflict-map-to-haskell-import (conflict-map)
-  (fset:image (lambda (key value)
-                (values (convert-path key) value))
-              conflict-map))
-
-;; TODO Parameterize this much better
-(sig convert-path (-> pathname &optional string string))
-(defun convert-path (file &optional (dir-before-library "src"))
-  (labels ((last-dir-before (xs)
-             (let ((next (member dir-before-library xs :test #'equal)))
-               (if next
-                   (last-dir-before (cdr next))
-                   xs))))
-    (reconstruct-path (append
-                       (last-dir-before (pathname-directory file))
-                       (list (pathname-name file)))
-                      ".")))
-
-
-;; -----------------------------------------------------------------------------
 ;; Getting Directory and File lists
 ;; -----------------------------------------------------------------------------
 
@@ -283,7 +181,8 @@ forming a list of org-directory and file info"
                              (fset:convert 'list
                                            (fset:image
                                             (lambda (x)
-                                              (uiop:string-prefix-p x (file-name dir)))
+                                              (uiop:string-prefix-p
+                                               x (og/utility:file-name dir)))
                                             filtered-dirs))))
                           (uiop:subdirectories directory)))
          (files          (remove-if (complement (lambda (x)
@@ -291,10 +190,10 @@ forming a list of org-directory and file info"
                                                           (pathname-type x))))
                                     (uiop:directory-files directory)))
          (dirs-annotated (mapcar (lambda (dir)
-                                   (let* ((name  (file-name dir))
+                                   (let* ((name  (og/utility:file-name dir))
                                           (file? (find-if
                                                   (lambda (x)
-                                                    (equal (file-name x) name))
+                                                    (equal (og/utility:file-name x) name))
                                                   files)))
                                      (make-org-directory
                                       :file (if file?
@@ -382,7 +281,7 @@ forming a list of org-directory and file info"
   "finds any files that share the same identifier
 and returns a map of files to their alias"
   (flet ((add-file (map file)
-           (let* ((name   (file-name file))
+           (let* ((name   (og/utility:file-name file))
                   (lookup (fset:lookup map name))) ; returns nil if none found
              (fset:with map name (cons file lookup))))
          (add-conflicts (map key conflicting-files)
@@ -407,7 +306,7 @@ the file name to their unique identifier"
              (let* ((file-alias   (mapcar (lambda (x)
                                             (list
                                              x
-                                             (file-name x dir-path-length)))
+                                             (og/utility:file-name x dir-path-length)))
                                           remaining-conflicts))
                     (conflict-set (remove-if (lambda (x)
                                                (not (member-if
@@ -432,32 +331,6 @@ the file name to their unique identifier"
     (rec file-list
          (fset:empty-map)
          (if all-conflicts 2 1))))
-
-;; -----------------------------------------------------------------------------
-;; File Naming Helpers
-;; -----------------------------------------------------------------------------
-
-(sig file-name (-> pathname &optional fixnum string))
-(defun file-name (file &optional (extra-context 1))
-  "takes a file and how much extra context is needed to disambiguate the file
-Returns a string that reconstructs the unique identifier for the file"
-  (let ((name (pathname-name file)))
-    ;; directories have no name!
-    (cond ((not name)
-           (car (last (pathname-directory file))))
-          ((= extra-context 1)
-           name)
-          (t
-           (let ((disambigous-path (last (pathname-directory file)
-                                         (1- extra-context))))
-             (reconstruct-path (append disambigous-path (list name))))))))
-
-(sig reconstruct-path (-> list &optional string string))
-(defun reconstruct-path (xs &optional (connector "/"))
-  (apply #'concatenate
-         'string
-         (butlast (mapcan (lambda (s) (list s connector))
-                          xs))))
 
 ;; -----------------------------------------------------------------------------
 ;; Tests

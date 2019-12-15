@@ -10,7 +10,7 @@
    (:file "types" :depends-on ("maybe"))
    (:file "utility" :depends-on ("type-signature"))
    (:file "haskell" :depends-on ("maybe" "types"))
-   (:file "context" :depends-on ("haskell"))
+   (:file "context" :depends-on ("haskell" "types"))
    (:file "code-generation" :depends-on ("context" "utility" "types" "type-signature" "maybe")))
   :in-order-to ((asdf:test-op (asdf:test-op :org-generation/test))))
 

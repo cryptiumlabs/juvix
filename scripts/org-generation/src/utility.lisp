@@ -3,7 +3,9 @@
   (:nicknames #:og/utility)
   (:export #:repeat
            #:repeat-s
-           #:take-until))
+           #:take-until
+           #:file-name
+           #:reconstruct-path))
 
 (in-package :org-generation/utility)
 
@@ -21,3 +23,30 @@
                  (reverse acc)
                  (rec (cdr current) (cons (car current) acc)))))
     (rec xs nil)))
+
+
+;; -----------------------------------------------------------------------------
+;; File Naming Helpers
+;; -----------------------------------------------------------------------------
+
+(sig file-name (-> pathname &optional fixnum string))
+(defun file-name (file &optional (extra-context 1))
+  "takes a file and how much extra context is needed to disambiguate the file
+Returns a string that reconstructs the unique identifier for the file"
+  (let ((name (pathname-name file)))
+    ;; directories have no name!
+    (cond ((not name)
+           (car (last (pathname-directory file))))
+          ((= extra-context 1)
+           name)
+          (t
+           (let ((disambigous-path (last (pathname-directory file)
+                                         (1- extra-context))))
+             (reconstruct-path (append disambigous-path (list name))))))))
+
+(sig reconstruct-path (-> list &optional string string))
+(defun reconstruct-path (xs &optional (connector "/"))
+  (apply #'concatenate
+         'string
+         (butlast (mapcan (lambda (s) (list s connector))
+                          xs))))
