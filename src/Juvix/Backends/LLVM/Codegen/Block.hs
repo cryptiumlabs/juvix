@@ -55,6 +55,24 @@ sortBlocks = sortBy (compare `on` (idx . snd))
 entryBlockName ∷ IsString p ⇒ p
 entryBlockName = "entry"
 
+emptyCodegen ∷ Types.CodegenState
+emptyCodegen = Types.CodegenState
+  { Types.currentBlock = mkName entryBlockName,
+    Types.blocks = Map.empty,
+    Types.symTab = Map.empty,
+    Types.typTab = Map.empty,
+    Types.varTab = Map.empty,
+    Types.count = 0,
+    Types.names = Map.empty,
+    Types.blockCount = 1
+  }
+
+execEnvState ∷ Codegen a → SymbolTable → CodegenState
+execEnvState (Types.CodeGen m) a = execState (runExceptT m) (emptyCodegen {Types.symTab = a})
+
+evalEnvState ∷ Codegen a → SymbolTable → Either Errors a
+evalEnvState (Types.CodeGen m) a = evalState (runExceptT m) (emptyCodegen {Types.symTab = a})
+
 --------------------------------------------------------------------------------
 -- Module Level
 --------------------------------------------------------------------------------
