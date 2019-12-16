@@ -8,6 +8,7 @@ import CoreConv
 import CoreParser
 import CoreTypechecker
 import EAC2
+import Erasure
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals
@@ -42,7 +43,8 @@ allCheckedTests =
     "All tests that are checked"
     [ coreTests,
       backendTests,
-      eac2Tests
+      eac2Tests,
+      erasureTests
     ]
 
 main ∷ IO ()
