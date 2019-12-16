@@ -33,7 +33,7 @@ backendTests =
   T.testGroup
     "Backend tests"
     [ backendCircuit,
-      -- backendLLVM, these tests are causing errors
+      -- backendLLVM, these tests are causing LLVM errors
       backendMichelson
     ]
 
@@ -50,17 +50,4 @@ allCheckedTests =
 main ∷ IO ()
 main =
   T.defaultMain allCheckedTests
-    `Control.Exception.catch` ( \e → do
-                                  if e == ExitSuccess
-                                    then putByteString "All tests passed."
-                                    else
-                                      putStr $
-                                        concatMap
-                                          IR.msg
-                                          --TODO add newline (intersperse
-                                          --  "\n"
-                                          ( IR.typecheckerLog $
-                                              snd (IR.exec (IR.typeTerm All.all 0 [] depIdentity depIdentityCompTy))
-                                          )
-                                  Juvix.Library.throwIO e
-                              )
+  

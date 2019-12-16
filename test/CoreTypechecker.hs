@@ -45,8 +45,19 @@ shouldCheck ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
-  T.testCase (show term <> " should check as type " <> show ann) $
-    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
+  T.testCase
+    ( show term
+        <> " should check as type "
+        <> show ann
+        <>
+        --TODO add newline (intersperse "\n"
+        concatMap
+          IR.msg
+          ( IR.typecheckerLog $
+              snd (IR.exec (IR.typeTerm param 0 [] term ann))
+          )
+    )
+    $ fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
 
 --unit test generator for typeElim
 shouldInfer ∷
