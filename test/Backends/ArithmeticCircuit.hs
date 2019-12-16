@@ -16,8 +16,11 @@ shouldCompile term ty circuit =
     (show term <> " :: " <> show ty <> " should compile to " <> show circuit)
     (compile term ty T.@=? Just circuit)
 
-test_equal ∷ T.TestTree
-test_equal = shouldCompile equalTerm equalType equalCircuit
+backendCircuit ∷ T.TestTree
+backendCircuit =
+  T.testGroup
+    "Backend arithmetic circuit"
+    [shouldCompile equalTerm equalType equalCircuit]
 
 equalTerm ∷ Term
 equalTerm = J.Lam "x" (J.Var "x")

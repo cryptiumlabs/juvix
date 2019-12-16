@@ -72,9 +72,8 @@ shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
     fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
 
-test_core ∷ T.TestTree
-test_core =
-  --TODO after moving away from discover, can rename to coreTests
+coreCheckerEval ∷ T.TestTree
+coreCheckerEval =
   T.testGroup
     "Core type checker and evaluator tests"
     [ skiComp,

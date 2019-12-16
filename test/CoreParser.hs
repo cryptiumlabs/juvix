@@ -38,8 +38,8 @@ parseStringPrim ∷
   Maybe (Term primTy primVal)
 parseStringPrim = generateParser
 
-test_CoreParser ∷ T.TestTree
-test_CoreParser =
+coreParser ∷ T.TestTree
+coreParser =
   T.testGroup
     "Core parser"
     [ shouldParse "* 0" (Star 0),
