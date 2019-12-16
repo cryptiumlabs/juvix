@@ -27,24 +27,6 @@ abstract: Juvix synthesises a high-level frontend syntax, dependent-linearly-typ
           This document is designed to be a first-principles explanation of Juvix. No familiarity with the theoretical background is assumed.
           Readers previously acquainted with the lambda calculus, sequent calculus, simply-typed lambda calculus, the calculus of constructions,
           linear logic, interaction nets, elementary affine logic, and Lamping's optimal reduction algorithm may skip the associated subsections in chapter five.
-header-includes:
-    - \usepackage{graphicx}
-    - \usepackage{hyperref}
-    - \usepackage{bussproofs}
-    - \usepackage{amsmath}
-    - \usepackage{spaghettinet}
-    - \usepackage{cmll}
-    - \usepackage{microtype}
-    - \usepackage{float}
-    - \floatstyle{boxed}
-    - \restylefloat{figure}
-    - \usepackage{subcaption}
-    - \usepackage{tikz}
-    - \usetikzlibrary{arrows,automata}
-    - \newtheorem{theorem}{Theorem}
-    - \usepackage[many]{tcolorbox}
-    - \tcbuselibrary{theorems}
-    - \input{src/definitions}
 ---
 
 \pagebreak
