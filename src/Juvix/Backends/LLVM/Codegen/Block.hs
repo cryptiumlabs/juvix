@@ -64,7 +64,8 @@ emptyCodegen = Types.CodegenState
     Types.varTab = Map.empty,
     Types.count = 0,
     Types.names = Map.empty,
-    Types.blockCount = 1
+    Types.blockCount = 1,
+    Types.moduleAST = emptyModule "EAC"
   }
 
 execEnvState ∷ Codegen a → SymbolTable → CodegenState

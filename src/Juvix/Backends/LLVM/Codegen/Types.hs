@@ -38,7 +38,8 @@ data CodegenState
         -- | Count of unnamed instructions
         count ∷ Word,
         -- | Name Supply
-        names ∷ Names
+        names ∷ Names,
+        moduleAST ∷ AST.Module
       }
   deriving (Show, Generic)
 
@@ -95,6 +96,23 @@ newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) 
   deriving
     (HasThrow "err" Errors)
     via MonadError (ExceptT Errors (State CodegenState))
+  deriving
+    (HasState "moduleAST" AST.Module)
+    via Field "moduleAST" () (MonadState (ExceptT Errors (State CodegenState)))
+
+instance HasState "moduleDefinitions" [Definition] Codegen where
+
+  get_ _ = moduleDefinitions <$> (get @"moduleAST")
+
+  put_ _ x = do
+    c ← get @"moduleAST"
+    put @"moduleAST" (c {moduleDefinitions = x})
+
+  state_ _ state = do
+    c ← get @"moduleDefinitions"
+    let (a, res) = state c
+    put @"moduleDefinitions" res
+    pure a
 
 -- TODO ∷ see if this is still useful
 newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}

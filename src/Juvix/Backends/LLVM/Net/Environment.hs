@@ -9,6 +9,8 @@ import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
+import qualified Juvix.Backends.LLVM.JIT as JIT
+
 initialModule ∷
   ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
@@ -49,3 +51,7 @@ initialModule = do
             Codegen.tagSize' = 1
           }
     )
+
+
+runInitModule ∷ Codegen.CodegenState
+runInitModule = Codegen.execEnvState initialModule Map.empty
