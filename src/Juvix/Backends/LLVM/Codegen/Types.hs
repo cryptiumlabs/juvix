@@ -62,6 +62,8 @@ data Errors
     DoesNotHappen Text
   | -- | Error that happens when a variable out of scope is called
     VariableNotInScope Text
+  | -- | Error that happens when a block lacks a terminator when it should have one
+    BlockLackingTerminator Int
   deriving (Show)
 
 newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) a}
@@ -128,17 +130,41 @@ type RetInstruction m =
     Instruct m
   )
 
-type Define m =
+type MallocNode m =
   ( RetInstruction m,
-    HasState "blockCount" Int m,
-    HasState "moduleDefinitions" [Definition] m,
-    HasState "names" Names m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m,
     HasState "symTab" SymbolTable m
   )
 
-type Extern m =
+type NewBlock m =
+  ( HasState "blockCount" Int m,
+    HasState "blocks" (Map.T Name BlockState) m,
+    HasState "names" Names m
+  )
+
+type AllocaNode m =
+  ( RetInstruction m,
+    HasState "typTab" TypeTable m,
+    HasState "varTab" VariantToType m
+  )
+
+type Define m =
+  ( RetInstruction m,
+    Externf m,
+    HasState "blockCount" Int m,
+    HasState "moduleDefinitions" [Definition] m,
+    HasState "names" Names m
+  )
+
+type External m =
   ( HasState "moduleDefinitions" [Definition] m,
     HasState "symTab" SymbolTable m
+  )
+
+type Externf m =
+  ( HasState "symTab" SymbolTable m,
+    HasThrow "err" Errors m
   )
 
 type Call m =
@@ -269,10 +295,13 @@ nodeType nodePtrType = StructureType
   { isPacked = True,
     elementTypes =
       [ numPorts, -- length of the portData
-        ArrayType 0 (portType nodePtrType), -- variable size array of ports
-        ArrayType 0 dataType -- variable size array of data the node stores
+        portData nodePtrType, -- variable size array of ports
+        dataArray -- variable size array of data the node stores
       ]
   }
+
+dataArray ∷ Type
+dataArray = ArrayType 0 dataType
 
 portData ∷ Type → Type
 portData nodePtrType = ArrayType 0 (portType nodePtrType)

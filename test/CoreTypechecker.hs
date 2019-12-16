@@ -36,6 +36,104 @@ type AllValue = IR.Value AllTy AllVal
 
 type AllAnnotation = IR.Annotation AllTy AllVal (IR.EnvTypecheck AllTy AllVal)
 
+--unit test generator for typeTerm
+shouldCheck ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Term primTy primVal →
+  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
+  T.TestTree
+shouldCheck param term ann =
+  T.testCase (show term <> " should check as type " <> show ann) $
+    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
+
+--unit test generator for typeElim
+shouldInfer ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Elim primTy primVal →
+  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
+  T.TestTree
+shouldInfer param term ann =
+  T.testCase (show term <> " should infer to type " <> show ann) $
+    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
+
+--unit test generator for evalTerm
+shouldEval ∷
+  ∀ primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+  Parameterisation primTy primVal →
+  IR.Term primTy primVal →
+  IR.Value primTy primVal (IR.EnvTypecheck primTy primVal) →
+  T.TestTree
+shouldEval param term res =
+  T.testCase (show term <> " should evaluate to " <> show res) $
+    fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
+
+test_core ∷ T.TestTree
+test_core =
+  --TODO after moving away from discover, can rename to coreTests
+  T.testGroup
+    "Core type checker and evaluator tests"
+    [ skiComp,
+      natComp,
+      dependentFunctionComp,
+      evaluations,
+      skiCont
+    ]
+
+skiComp ∷ T.TestTree
+skiComp =
+  T.testGroup
+    "SKI combinators Computational typing"
+    [ shouldCheck nat identity identityNatCompTy,
+      shouldCheck unit identity identityUnitCompTy,
+      shouldCheck nat identityApplication natTy,
+      shouldInfer nat identityAppINat1 natTy,
+      shouldInfer nat identityAppI identityNatCompTy,
+      shouldCheck nat kcombinator kCompTy,
+      shouldCheck All.all kcombinator kCompTyWithUnit,
+      shouldInfer nat identityAppK kCompTy,
+      shouldCheck nat (IR.Elim kAppI) kAppICompTy,
+      shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy,
+      shouldInfer nat kApp1 natToNatTy,
+      shouldInfer nat kFunApp1 kFunApp1CompTy
+      -- shouldCheck nat scombinator scombinatorCompNatTy
+    ]
+
+natComp ∷ T.TestTree
+natComp =
+  T.testGroup
+    "Nat Computational typing"
+    [ shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0),
+      shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat),
+      shouldInfer nat add12 (Omega, IR.VPrimTy Nat)
+    ]
+
+dependentFunctionComp ∷ T.TestTree
+dependentFunctionComp =
+  T.testGroup
+    "Dependent Functions Computational typing"
+    [ shouldCheck All.all depIdentity depIdentityCompTy
+    ]
+
+evaluations ∷ T.TestTree
+evaluations =
+  T.testGroup
+    "Evaluations"
+    [ shouldEval nat (IR.Elim add12) (IR.VPrim (Natural 3)),
+      shouldEval nat sub52 (IR.VPrim (Natural 3))
+    ]
+
+skiCont ∷ T.TestTree
+skiCont =
+  T.testGroup
+    "SKI combinators contemplational typing"
+    [ shouldCheck nat identity identityNatContTy
+    ]
+
 -- \x. x
 identity ∷ ∀ primTy primVal. IR.Term primTy primVal
 identity = IR.Lam (IR.Elim (IR.Bound 0))
@@ -451,125 +549,19 @@ ski1CompNatTy =
     IR.VPrimTy Nat
   )
 
-test_identity_computational ∷ T.TestTree
-test_identity_computational = shouldCheck nat identity identityNatCompTy
+add12 ∷ NatElim
+add12 =
+  IR.App
+    (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1))))
+    (IR.Elim (IR.Prim (Natural 2)))
 
-test_identity_unit_computational ∷ T.TestTree
-test_identity_unit_computational = shouldCheck unit identity identityUnitCompTy
-
-test_identity_contemplation ∷ T.TestTree
-test_identity_contemplation = shouldCheck nat identity identityNatContTy
-
-test_identity_application ∷ T.TestTree
-test_identity_application = shouldCheck nat identityApplication natTy
-
-test_identity_app_I_Nat1 ∷ T.TestTree
-test_identity_app_I_Nat1 = shouldInfer nat identityAppINat1 natTy
-
-test_identity_app_I ∷ T.TestTree
-test_identity_app_I = shouldInfer nat identityAppI identityNatCompTy
-
-test_kcombinator_computational ∷ T.TestTree
-test_kcombinator_computational = shouldCheck nat kcombinator kCompTy
-
-test_kcombinatorUnit_computational ∷ T.TestTree
-test_kcombinatorUnit_computational = shouldCheck All.all kcombinator kCompTyWithUnit
-
-test_identity_app_k ∷ T.TestTree
-test_identity_app_k = shouldInfer nat identityAppK kCompTy
-
-test_k_app_I ∷ T.TestTree
-test_k_app_I = shouldCheck nat (IR.Elim kAppI) kAppICompTy
-
-test_k_app_I_not_ann ∷ T.TestTree
-test_k_app_I_not_ann = shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy
-
-test_k_app_1 ∷ T.TestTree
-test_k_app_1 = shouldInfer nat kApp1 natToNatTy
-
-test_kFun_app_1 ∷ T.TestTree
-test_kFun_app_1 = shouldInfer nat kFunApp1 kFunApp1CompTy
-
-test_depIdentity ∷ T.TestTree
-test_depIdentity = shouldCheck All.all depIdentity depIdentityCompTy
-
-test_nats_type_star0 ∷ T.TestTree
-test_nats_type_star0 = shouldCheck nat (IR.PrimTy Nat) (SNat 0, IR.VStar 0)
-
-test_nat1 ∷ T.TestTree
-test_nat1 = shouldInfer nat (IR.Prim (Natural 1)) (Omega, IR.VPrimTy Nat)
-
---test_scombinator ∷ T.TestTree
---test_scombinator = shouldCheck nat scombinator scombinatorCompNatTy
-
-test_add_nat ∷ T.TestTree
-test_add_nat =
-  shouldInfer
-    nat
+sub52 ∷ NatTerm
+sub52 =
+  IR.Elim
     ( IR.App
-        (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1))))
+        (IR.App (IR.Prim Sub) (IR.Elim (IR.Prim (Natural 5))))
         (IR.Elim (IR.Prim (Natural 2)))
     )
-    (Omega, IR.VPrimTy Nat)
-
-test_eval_add ∷ T.TestTree
-test_eval_add =
-  shouldEval
-    nat
-    ( IR.Elim
-        ( IR.App
-            (IR.App (IR.Prim Add) (IR.Elim (IR.Prim (Natural 1))))
-            (IR.Elim (IR.Prim (Natural 2)))
-        )
-    )
-    (IR.VPrim (Natural 3))
-
-test_eval_sub ∷ T.TestTree
-test_eval_sub =
-  shouldEval
-    nat
-    ( IR.Elim
-        ( IR.App
-            (IR.App (IR.Prim Sub) (IR.Elim (IR.Prim (Natural 5))))
-            (IR.Elim (IR.Prim (Natural 2)))
-        )
-    )
-    (IR.VPrim (Natural 3))
-
---unit tests for cType
-shouldCheck ∷
-  ∀ primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
-  Parameterisation primTy primVal →
-  IR.Term primTy primVal →
-  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
-  T.TestTree
-shouldCheck param term ann =
-  T.testCase (show term <> " should check as type " <> show ann) $
-    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
-
---unit tests for iType
-shouldInfer ∷
-  ∀ primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
-  Parameterisation primTy primVal →
-  IR.Elim primTy primVal →
-  IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
-  T.TestTree
-shouldInfer param term ann =
-  T.testCase (show term <> " should infer to type " <> show ann) $
-    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
-
-shouldEval ∷
-  ∀ primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
-  Parameterisation primTy primVal →
-  IR.Term primTy primVal →
-  IR.Value primTy primVal (IR.EnvTypecheck primTy primVal) →
-  T.TestTree
-shouldEval param term res =
-  T.testCase (show term <> " should evaluate to " <> show res) $
-    fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
 
 one ∷ ∀ primTy primVal. IR.Term primTy primVal
 one = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
