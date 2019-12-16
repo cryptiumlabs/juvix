@@ -1,10 +1,11 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# OPTIONS_GHC -fplugin-opt=Foreign.Storable.Generic.Plugin:-v1 #-}
+{-# OPTIONS_GHC -fplugin=Foreign.Storable.Generic.Plugin #-}
 
 module Juvix.Backends.LLVM.JIT.Types where
 
-import Foreign.CStorable
 import Foreign.Ptr (FunPtr, castFunPtr)
-import Foreign.Storable
+import Foreign.Storable.Generic
 import Juvix.Library
 
 foreign import ccall "dynamic" word32Fn ∷ FunPtr (Word32 → IO Word32) → (Word32 → IO Word32)
@@ -13,17 +14,7 @@ foreign import ccall "dynamic" doubleFn ∷ FunPtr (Double → IO Double) → (D
 
 foreign import ccall "dynamic" nodeFn ∷ FunPtr (Ptr Node → IO ()) → (Ptr Node → IO ())
 
-instance CStorable Node
-
-instance Storable Node where
-
-  sizeOf = cSizeOf
-
-  alignment = cAlignment
-
-  poke = cPoke
-
-  peek = cPeek
+instance GStorable Node
 
 data Node
   = Node Int Int

@@ -12,12 +12,16 @@ import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
 
+-- TODO: c2hs / hs2c (whatever) for conversion types?
+-- for now: manually
+
 defineCreateNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineCreateNet =
-  Codegen.defineFunction Type.void "createNet" [] $
+  Codegen.defineFunction Type.void "createNet" [(undefined, "nodes")] $ do
     -- TODO
     -- Clear the current net
-    -- call appendToNet with nodes
+    -- Call appendToNet with nodes
+    Codegen.callGen Type.void [undefined] "appendToNet"
     pure ()
 
 defineReadNet ∷ Codegen.Define m ⇒ m Operand.Operand
@@ -43,7 +47,7 @@ defineLoadState =
 
 defineAppendToNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineAppendToNet =
-  Codegen.defineFunction Type.void "appendToNet" [] $
+  Codegen.defineFunction Type.void "appendToNet" [(undefined, "nodes")] $
     -- TODO
     -- Append nodes to the net
     -- Call `createNode` on each
