@@ -129,7 +129,9 @@ typeTerm _ _ii _g t@(Star i) ann = do
     _ → do
       logOutput $
         failed
-          <> " The input annotation is not of * type, it is of type "
+          <> " The input annotation "
+          <> show ann
+          <> " is not of * type, it is of type "
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- ★- Pi (Universe introduction rule)
@@ -267,14 +269,14 @@ typeTerm p ii g t@(Elim e) ann = do
   if not (fst ann' `allowsUsageOf` fst ann)
     then
       ( do
-          logOutput "Usages not compatible."
+          logOutput $ "Usages not compatible. The input usage is " <> show (fst ann) <> "but the term's usage is " <> show (fst ann')
           throw @"typecheckError" (UsageNotCompatible ann' ann)
       )
     else
       if (annt /= annt')
         then
           ( do
-              logOutput "The types are not the same."
+              logOutput $ "The types are not the same. The input type is " <> show annt <> "but the term's type is " <> show annt'
               throw @"typecheckError" (TypeMismatch ii (Elim e) ann ann')
           )
         else return ()
@@ -379,7 +381,9 @@ typeElim p ii g e@(App m n) = do
     (sig, VPi pi varTy resultTy) → do
       logOutput $
         passed
-          <> "The function (M) has usage "
+          <> "The function (M) "
+          <> show m
+          <> " has usage "
           <> show sig
           <> " and dependent function type "
           <> show (snd mTy)
@@ -403,7 +407,9 @@ typeElim p ii g e@(App m n) = do
     _ → do
       logOutput $
         failed
-          <> "The function (M) is not of type dependent function."
+          <> "The function (M) "
+          <> show m
+          <> " is not of type dependent function."
       throw @"typecheckError" (MustBeFunction m ii n)
 -- Conv
 typeElim p ii g e@(Ann pi theTerm theType) = do
@@ -411,8 +417,10 @@ typeElim p ii g e@(Ann pi theTerm theType) = do
   logOutput
     ( concat
         [ "patterned matched to be an Ann term. Checking that theTerm ",
+          show theTerm,
           "(M) has usage sigma and its type (S) is equivalent ",
-          "to the input type (T)."
+          "to the input type (T), ",
+          show theType
         ]
     )
   ty ← evalTerm p theType [] -- the input type, T

@@ -106,8 +106,14 @@ skiComp =
       shouldCheck nat (IR.Elim kAppI) kAppICompTy,
       shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy,
       shouldInfer nat kApp1 natToNatTy,
-      shouldInfer nat kFunApp1 kFunApp1CompTy
-      -- shouldCheck nat scombinator scombinatorCompNatTy
+      shouldInfer
+        nat
+        kFunApp1
+        kFunApp1CompTy,
+      shouldCheck
+        nat
+        scombinator
+        scombinatorCompNatTy
     ]
 
 natComp ∷ T.TestTree
@@ -123,8 +129,14 @@ dependentFunctionComp ∷ T.TestTree
 dependentFunctionComp =
   T.testGroup
     "Dependent Functions Computational typing"
-    [ shouldCheck All.all depIdentity depIdentityCompTy
-      -- shouldCheck All.all depIdentity depIdentityCompTyLocal1
+    [ shouldCheck
+        All.all
+        depIdentity
+        depIdentityCompTy,
+      shouldCheck
+        All.all
+        depIdentity
+        depIdentityCompTyLocal1
     ]
 
 evaluations ∷ T.TestTree
