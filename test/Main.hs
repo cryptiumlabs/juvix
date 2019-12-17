@@ -25,9 +25,9 @@ coreTests ∷ T.TestTree
 coreTests =
   T.testGroup
     "Core tests"
-    [ coreCheckerEval,
-      coreConversions,
-      coreParser
+    [ coreCheckerEval
+      --coreConversions,
+      --coreParser
     ]
 
 backendTests ∷ T.TestTree
@@ -44,7 +44,7 @@ allCheckedTests =
   T.testGroup
     "All tests that are checked"
     [ coreTests,
-      backendTests,
+      --backendTests,
       eac2Tests,
       erasureTests
     ]
