@@ -50,4 +50,3 @@ allCheckedTests =
 main ∷ IO ()
 main =
   T.defaultMain allCheckedTests
-  

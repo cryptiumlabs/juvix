@@ -45,19 +45,14 @@ shouldCheck ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
-  T.testCase
-    ( show term
-        <> " should check as type "
-        <> show ann
-        <>
-        --TODO add newline (intersperse "\n"
-        concatMap
-          IR.msg
-          ( IR.typecheckerLog $
-              snd (IR.exec (IR.typeTerm param 0 [] term ann))
-          )
-    )
-    $ fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
+  let logs = concatMap IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeTerm param 0 [] term ann)))
+   in T.testCase
+        ( show term
+            <> " should check as type "
+            <> show ann
+            <> show logs
+        )
+        $ fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
 
 --unit test generator for typeElim
 shouldInfer ∷
@@ -68,8 +63,9 @@ shouldInfer ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldInfer param term ann =
-  T.testCase (show term <> " should infer to type " <> show ann) $
-    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
+  let logs = concatMap IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeElim0 param [] term)))
+   in T.testCase (show term <> " should infer to type " <> show ann <> show logs) $
+        fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
 
 --unit test generator for evalTerm
 shouldEval ∷
