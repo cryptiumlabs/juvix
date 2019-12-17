@@ -3,7 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
--- import qualified Juvix.Backends.LLVM.Net.EAC as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
@@ -35,7 +35,6 @@ initialModule = do
             Codegen.tagSize' = 1
           }
     )
-  Codegen.addBlock "bad" >>= Codegen.setBlock
   -- registering types----------------------------------------------
   Codegen.addType "list" Types.testList
   Codegen.addType Codegen.numPortsName Codegen.numPorts
@@ -43,6 +42,7 @@ initialModule = do
   Codegen.addType Codegen.nodeTypeName Codegen.nodeType
   Codegen.addType Types.eacName Types.eac
   -- ---------------------------------------------------------------
+  Codegen.addBlock "bad" >>= Codegen.setBlock
   Codegen.defineMalloc
   Codegen.defineFree
   Codegen.defineMainPort
@@ -50,11 +50,13 @@ initialModule = do
   Codegen.defineAuxiliary2
   Codegen.defineAuxiliary3
   Codegen.defineAuxiliary4
-  _ ← Codegen.alloca Types.testListPointer
+  -- _ ← Codegen.alloca Types.testListPointer
+--  _ ← Codegen.defineLink
+  -- _ ← EAC.defineTest
+  _ ← EAC.defineTest
   -- _ ← Defs.defineIsBothPrimary
   -- _ ← Defs.defineFindEdge
   -- _ ← EAC.mallocEra
-  -- _ ← Defs.defineLink
   -- _ ← Defs.defineRewire
   -- _ ← Defs.defineLinkConnectedPort
   -- _ ← EAC.defineFanInAux2F

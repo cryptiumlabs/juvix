@@ -6,6 +6,7 @@ import Compile
 import Config
 import Development.GitRev
 import Interactive
+import Juvix.Backends.LLVM.Net.Environment
 import Options
 import Options.Applicative
 import Protolude
@@ -21,9 +22,14 @@ context = do
 
 main ∷ IO ()
 main = do
-  ctx ← context
-  let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
-  run ctx =<< execParser opts
+  case runInitModule' of
+    Left x  → print "Left \n" >> print x
+    Right () → print "did it"
+--  print runInitModule
+
+-- ctx ← context
+-- let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
+-- run ctx =<< execParser opts
 
 disclaimerDoc ∷ Doc
 disclaimerDoc =

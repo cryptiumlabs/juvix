@@ -1,8 +1,8 @@
 module Backends.LLVM where
 
 import Juvix.Backends.LLVM.Codegen as Codegen
-import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT
+import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
 import Juvix.Library
 import LLVM.AST
@@ -130,7 +130,6 @@ exampleModule =
           }
     ]
 
-
 exampleModule2 ∷ LLVM.AST.Module
 exampleModule2 =
   Module
@@ -150,8 +149,8 @@ exampleModule2 =
                   ( Do $ Ret (Just (LocalReference Types.testList (UnName 2))) []
                   )
               ]
-          }
-    , GlobalDefinition $
+          },
+      GlobalDefinition $
         functionDefaults
           { G.returnType = i32,
             G.name = Name "test",
@@ -176,6 +175,24 @@ exampleModule2 =
                         metadata = []
                       },
                     UnName 2 := Alloca Types.testList Nothing 0 [],
+                    UnName 3 := Call
+                      { tailCallKind = Nothing,
+                        I.function =
+                          Right
+                            ( ConstantOperand
+                                ( C.GlobalReference
+                                    (ptr $ FunctionType {resultType = voidTy
+                                                        , argumentTypes = []
+                                                        , isVarArg = False})
+                                    (Name "test_function")
+                                )
+                            ),
+                        callingConvention = CC.Fast,
+                        returnAttributes = [],
+                        arguments = [],
+                        functionAttributes = [],
+                        metadata = []
+                      },
                     Do $ Call
                       { tailCallKind = Nothing,
                         I.function =
@@ -199,15 +216,12 @@ exampleModule2 =
           }
     ]
 
-
-fn_test_example_jit' ∷ T.TestTree
-fn_test_example_jit' = T.testCase "example module should jit function" $ do
+test_example_jit' ∷ T.TestTree
+test_example_jit' = T.testCase "example module should jit function" $ do
   let module' = Codegen.moduleAST runInitModule
-  let newModule = module' { LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
+  let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
-
   (fn ∷ Word32 → IO Word32, kill) ← jit (Config None) newModule "test"
   res ← fn 7
   kill
   43 T.@=? res
-

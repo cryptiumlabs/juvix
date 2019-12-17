@@ -581,3 +581,14 @@ fanLabelLookup addr = Codegen.loadElementPtr $
       Codegen.address' = addr,
       Codegen.indincies' = Codegen.constant32List [0, 0]
     }
+
+
+
+-- dumb define test
+defineTest = Codegen.defineFunction Type.void "test_function" [] $ do
+  -- era ← mallocEra
+  -- app ← mallocApp
+  -- main ← Codegen.mainPort
+  -- main' ← Codegen.mainPort
+--  Codegen.link [era, main, app, main']
+  Codegen.retNull
