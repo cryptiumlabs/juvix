@@ -43,6 +43,9 @@ initialModule = do
   Codegen.defineAuxiliary4 Types.eacPointer
   -- _ ← Defs.defineIsBothPrimary
   -- _ ← Defs.defineFindEdge
+  Codegen.addType "list" Types.testList
+  _ ← Codegen.alloca Types.testListPointer
+  -- _ ← EAC.mallocEra
   -- _ ← Defs.defineLink
   -- _ ← Defs.defineRewire
   -- _ ← Defs.defineLinkConnectedPort

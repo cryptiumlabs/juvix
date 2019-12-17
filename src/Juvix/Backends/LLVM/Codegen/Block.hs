@@ -84,6 +84,9 @@ emptyModule label = AST.defaultModule {moduleName = label}
 addDefn ∷ HasState "moduleDefinitions" [Definition] m ⇒ Definition → m ()
 addDefn d = modify @"moduleDefinitions" (<> [d])
 
+addType name typ =
+  addDefn (TypeDefinition name (Just typ))
+
 defineGen ∷
   HasState "moduleDefinitions" [Definition] m ⇒
   Bool →
@@ -416,21 +419,26 @@ generateIf ty cond tr fl = do
   ifThen ← addBlock "if.then"
   ifElse ← addBlock "if.else"
   ifExit ← addBlock "if.exit"
-  -- Entry
+  -- %entry
+  ------------------
   test ← icmp IntPred.EQ cond (ConstantOperand (C.Int 2 1))
   _ ← cbr test ifThen ifElse
   -- if.then
+  ------------------
   setBlock ifThen
-  -- Should be fine if we have the correct effects
   t ← tr
   _ ← br ifExit
   ifThen ← getBlock
+
   -- if.else
+  ------------------
   setBlock ifElse
   f ← fl
   _ ← br ifExit
   ifElse ← getBlock
+
   -- if.exit
+  ------------------
   setBlock ifExit
   phi ty [(t, ifThen), (f, ifElse)]
 

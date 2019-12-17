@@ -49,6 +49,16 @@ eacList = Type.StructureType
 eacLPointer ∷ Type.Type
 eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
 
+testList ∷ Type.Type
+testList = Type.StructureType
+  { -- change to true later?
+    Type.isPacked = False,
+    Type.elementTypes = [Type.i1, testListPointer]
+  }
+
+
+testListPointer ∷ Type.Type
+testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
 --------------------------------------------------------------------------------
 -- EacList operations
 --------------------------------------------------------------------------------

@@ -399,13 +399,14 @@ getPort ∷
   Type.Type →
   m Operand.Operand
 getPort node port nodePtrType = do
+  ports ← loadElementPtr $
+    Types.Minimal
+    { Types.type' = portData nodePtrType,
+      Types.address' = node,
+      Types.indincies' = Block.constant32List [0, 1]
+    }
   intOfNumPorts (portPointer nodePtrType) port $ \value → do
-    ports ← loadElementPtr $
-      Types.Minimal
-        { Types.type' = portData nodePtrType,
-          Types.address' = node,
-          Types.indincies' = Block.constant32List [0, 1]
-        }
+    Block.addBlock "test" >>= Block.setBlock
     getElementPtr $
       Types.Minimal
         { Types.type' = portPointer nodePtrType,
