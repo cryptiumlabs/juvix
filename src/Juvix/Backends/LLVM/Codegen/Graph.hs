@@ -587,16 +587,16 @@ defineMainPort t =
     >>= Block.assign "main_port"
 defineAuxiliary1 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1)) t
-    >>= Block.assign "main_port"
+    >>= Block.assign "auxiliary1"
 defineAuxiliary2 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2)) t
-    >>= Block.assign "main_port"
+    >>= Block.assign "auxiliary2"
 defineAuxiliary3 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3)) t
-    >>= Block.assign "main_port"
+    >>= Block.assign "auxiliary3"
 defineAuxiliary4 t =
   mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4)) t
-    >>= Block.assign "main_port"
+    >>= Block.assign "auxiliary4"
 
 mainPort,
   auxiliary1,

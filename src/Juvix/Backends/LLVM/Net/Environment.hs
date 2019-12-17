@@ -18,27 +18,9 @@ initialModule ∷
   ) ⇒
   m ()
 initialModule = do
-  _ ← Defs.defineIsBothPrimary
-  _ ← Defs.defineFindEdge
-  _ ← Defs.defineLink
-  _ ← Defs.defineRewire
-  _ ← Defs.defineLinkConnectedPort
-  _ ← EAC.defineFanInAux2F
-  _ ← EAC.defineFanInAux2A
-  _ ← EAC.defineFanInAux2L
-  _ ← EAC.defineFanInAux2E
-  _ ← EAC.defineAnnihilateRewireAux
-  _ ← EAC.defineEraseNodes
-  _ ← EAC.defineFanInFanIn
-  Codegen.defineMalloc
-  Codegen.defineFree
-  Codegen.defineMainPort Types.eacPointer
-  Codegen.defineAuxiliary1 Types.eacPointer
-  Codegen.defineAuxiliary2 Types.eacPointer
-  Codegen.defineAuxiliary3 Types.eacPointer
-  Codegen.defineAuxiliary4 Types.eacPointer
-  -- register the hardcoded variants
-  modify @"typTab" (Map.insert "numPorts" Codegen.numPorts)
+  modify @"typTab" (Map.insert "numPorts" Codegen.numPorts
+                   . Map.insert "numPorts_large" (Codegen.numPortsLargeValuePtr)
+                   . Map.insert "numPorts_small" (Codegen.numPortsSmallValue))
   modify @"varTab"
     ( Map.insert "numPorts_small" Codegen.S
         { Codegen.sum' = "numPorts",
@@ -51,7 +33,32 @@ initialModule = do
             Codegen.tagSize' = 1
           }
     )
+  Codegen.addBlock "bad" >>=  Codegen.setBlock
+  Codegen.defineMalloc
+  Codegen.defineFree
+  Codegen.defineMainPort Types.eacPointer
+  Codegen.defineAuxiliary1 Types.eacPointer
+  Codegen.defineAuxiliary2 Types.eacPointer
+  Codegen.defineAuxiliary3 Types.eacPointer
+  Codegen.defineAuxiliary4 Types.eacPointer
+  -- _ ← Defs.defineIsBothPrimary
+  -- _ ← Defs.defineFindEdge
+  -- _ ← Defs.defineLink
+  -- _ ← Defs.defineRewire
+  -- _ ← Defs.defineLinkConnectedPort
+  -- _ ← EAC.defineFanInAux2F
+  -- _ ← EAC.defineFanInAux2A
+  -- _ ← EAC.defineFanInAux2L
+  -- _ ← EAC.defineFanInAux2E
+  -- _ ← EAC.defineAnnihilateRewireAux
+  -- _ ← EAC.defineEraseNodes
+  -- _ ← EAC.defineFanInFanIn
+  pure ()
 
 
 runInitModule ∷ Codegen.CodegenState
 runInitModule = Codegen.execEnvState initialModule Map.empty
+
+
+runInitModule' :: Either Codegen.Errors ()
+runInitModule' = Codegen.evalEnvState initialModule Map.empty
