@@ -200,8 +200,8 @@ exampleModule2 =
     ]
 
 
-test_example_jit' ∷ T.TestTree
-test_example_jit' = T.testCase "example module should jit function" $ do
+fn_test_example_jit' ∷ T.TestTree
+fn_test_example_jit' = T.testCase "example module should jit function" $ do
   let module' = Codegen.moduleAST runInitModule
   let newModule = module' { LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
