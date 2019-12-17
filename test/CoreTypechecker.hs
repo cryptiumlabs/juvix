@@ -123,8 +123,8 @@ dependentFunctionComp ∷ T.TestTree
 dependentFunctionComp =
   T.testGroup
     "Dependent Functions Computational typing"
-    [ shouldCheck All.all depIdentity depIdentityCompTy,
-      shouldCheck All.all depIdentity depIdentityCompTyLocal1
+    [ shouldCheck All.all depIdentity depIdentityCompTy
+      -- shouldCheck All.all depIdentity depIdentityCompTyLocal1
     ]
 
 evaluations ∷ T.TestTree
