@@ -24,7 +24,7 @@ eacSize = tagInt + Codegen.nodePointerSize
 eacNameRef ∷ Type.Type
 eacNameRef = Type.NamedTypeReference eacName
 
-eacName ∷ IsString p => p
+eacName ∷ IsString p ⇒ p
 eacName = "eac_node"
 
 eac ∷ Type.Type
@@ -62,9 +62,9 @@ testList = Type.StructureType
     Type.elementTypes = [Type.i1, testListPointer]
   }
 
-
 testListPointer ∷ Type.Type
 testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
+
 --------------------------------------------------------------------------------
 -- EacList operations
 --------------------------------------------------------------------------------

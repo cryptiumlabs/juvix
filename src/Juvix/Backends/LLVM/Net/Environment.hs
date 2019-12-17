@@ -4,7 +4,7 @@ module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 -- import qualified Juvix.Backends.LLVM.Net.EAC as EAC
--- import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
+import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
@@ -18,9 +18,11 @@ initialModule ∷
   ) ⇒
   m ()
 initialModule = do
-  modify @"typTab" (Map.insert "numPorts" Codegen.numPorts
-                   . Map.insert "numPorts_large" (Codegen.numPortsLargeValuePtr)
-                   . Map.insert "numPorts_small" (Codegen.numPortsSmallValue))
+  modify @"typTab"
+    ( Map.insert "numPorts" Codegen.numPorts
+        . Map.insert "numPorts_large" (Codegen.numPortsLargeValuePtr)
+        . Map.insert "numPorts_small" (Codegen.numPortsSmallValue)
+    )
   modify @"varTab"
     ( Map.insert "numPorts_small" Codegen.S
         { Codegen.sum' = "numPorts",
@@ -36,10 +38,10 @@ initialModule = do
   Codegen.addBlock "bad" >>= Codegen.setBlock
   -- registering types----------------------------------------------
   Codegen.addType "list" Types.testList
-  Codegen.addType Codegen.numPortsName Codegen.numPortsNameRef
-  Codegen.addType Codegen.portTypeName Codegen.portTypeNameRef
-  Codegen.addType Codegen.nodeTypeName Codegen.nodeTypeNameRef
-  Codegen.addType Types.eacName Types.eacNameRef
+  Codegen.addType Codegen.numPortsName Codegen.numPorts
+  Codegen.addType Codegen.portTypeName Defs.portType
+  Codegen.addType Codegen.nodeTypeName Codegen.nodeType
+  Codegen.addType Types.eacName Types.eac
   -- ---------------------------------------------------------------
   Codegen.defineMalloc
   Codegen.defineFree
@@ -64,10 +66,8 @@ initialModule = do
   -- _ ← EAC.defineFanInFanIn
   pure ()
 
-
 runInitModule ∷ Codegen.CodegenState
 runInitModule = Codegen.execEnvState initialModule Map.empty
 
-
-runInitModule' :: Either Codegen.Errors ()
+runInitModule' ∷ Either Codegen.Errors ()
 runInitModule' = Codegen.evalEnvState initialModule Map.empty

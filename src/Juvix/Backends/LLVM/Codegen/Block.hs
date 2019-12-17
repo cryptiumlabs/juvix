@@ -222,8 +222,8 @@ externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
 nameToSymbol ∷ Name → Symbol
-nameToSymbol (UnName n) = (intern (filter (/=  '\"') (show n)))
-nameToSymbol (Name n) = (intern (filter (/=  '\"') (show n)))
+nameToSymbol (UnName n) = (intern (filter (/= '\"') (show n)))
+nameToSymbol (Name n) = (intern (filter (/= '\"') (show n)))
 
 local ∷ Type → Name → Operand
 local = LocalReference
@@ -429,14 +429,12 @@ generateIf ty cond tr fl = do
   t ← tr
   _ ← br ifExit
   ifThen ← getBlock
-
   -- if.else
   ------------------
   setBlock ifElse
   f ← fl
   _ ← br ifExit
   ifElse ← getBlock
-
   -- if.exit
   ------------------
   setBlock ifExit

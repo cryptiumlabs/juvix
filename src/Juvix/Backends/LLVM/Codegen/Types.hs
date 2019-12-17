@@ -259,7 +259,7 @@ numPortsLargeValuePtr = pointerOf numPortsLargeValue
 numPortsPointer ∷ Type
 numPortsPointer = pointerOf numPorts
 
-numPortsNameRef :: Type
+numPortsNameRef ∷ Type
 numPortsNameRef = Type.NamedTypeReference numPortsName
 
 numPortsName ∷ IsString p ⇒ p
@@ -282,7 +282,7 @@ numPortsSize = 33
 nodePointerSize ∷ Num p ⇒ p
 nodePointerSize = 32
 
-portTypeNameRef :: Type
+portTypeNameRef ∷ Type
 portTypeNameRef = Type.NamedTypeReference portTypeName
 
 portTypeName ∷ IsString p ⇒ p

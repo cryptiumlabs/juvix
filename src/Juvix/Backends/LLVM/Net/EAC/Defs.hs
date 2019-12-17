@@ -24,6 +24,9 @@ findEdge = Codegen.findEdge Types.eacPointer
 bothPrimary ∷ Type.Type
 bothPrimary = Codegen.bothPrimary Types.eacPointer
 
+portType ∷ Type.Type
+portType = Codegen.portType Types.eacPointer
+
 mainPort,
   auxiliary1,
   auxiliary2,
