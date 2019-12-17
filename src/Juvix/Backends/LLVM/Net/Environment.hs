@@ -3,13 +3,13 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
-import qualified Juvix.Backends.LLVM.Net.EAC as EAC
-import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
+-- import qualified Juvix.Backends.LLVM.Net.EAC as EAC
+-- import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
-import qualified Juvix.Backends.LLVM.JIT as JIT
+-- import qualified Juvix.Backends.LLVM.JIT as JIT
 
 initialModule ∷
   ( Codegen.Define m,
@@ -33,18 +33,24 @@ initialModule = do
             Codegen.tagSize' = 1
           }
     )
-  Codegen.addBlock "bad" >>=  Codegen.setBlock
+  Codegen.addBlock "bad" >>= Codegen.setBlock
+  -- registering types----------------------------------------------
+  Codegen.addType "list" Types.testList
+  Codegen.addType Codegen.numPortsName Codegen.numPortsNameRef
+  Codegen.addType Codegen.portTypeName Codegen.portTypeNameRef
+  Codegen.addType Codegen.nodeTypeName Codegen.nodeTypeNameRef
+  Codegen.addType Types.eacName Types.eacNameRef
+  -- ---------------------------------------------------------------
   Codegen.defineMalloc
   Codegen.defineFree
-  Codegen.defineMainPort Types.eacPointer
-  Codegen.defineAuxiliary1 Types.eacPointer
-  Codegen.defineAuxiliary2 Types.eacPointer
-  Codegen.defineAuxiliary3 Types.eacPointer
-  Codegen.defineAuxiliary4 Types.eacPointer
+  Codegen.defineMainPort
+  Codegen.defineAuxiliary1
+  Codegen.defineAuxiliary2
+  Codegen.defineAuxiliary3
+  Codegen.defineAuxiliary4
+  _ ← Codegen.alloca Types.testListPointer
   -- _ ← Defs.defineIsBothPrimary
   -- _ ← Defs.defineFindEdge
-  Codegen.addType "list" Types.testList
-  _ ← Codegen.alloca Types.testListPointer
   -- _ ← EAC.mallocEra
   -- _ ← Defs.defineLink
   -- _ ← Defs.defineRewire

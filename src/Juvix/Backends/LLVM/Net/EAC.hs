@@ -245,9 +245,9 @@ genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
 -- | args is the argument for all rules that get called
 args ∷ IsString b ⇒ [(Type.Type, b)]
 args =
-  [ (Defs.nodePointer, "node_1"),
+  [ (Codegen.nodePointer, "node_1"),
     (Types.eacPointer, "eac_ptr_1"),
-    (Defs.nodePointer, "node_2"),
+    (Codegen.nodePointer, "node_2"),
     (Types.eacPointer, "eac_ptr_2"),
     (Types.eacList, "eac_list")
   ]
@@ -275,13 +275,13 @@ defineAnnihilateRewireAux =
       aux2 ← Defs.auxiliary2
       node1P ← Codegen.externf "node_1"
       node2P ← Codegen.externf "node_2"
-      node1 ← Codegen.load Defs.nodeType node1P
-      node2 ← Codegen.load Defs.nodeType node2P
+      node1 ← Codegen.load Codegen.nodeType node1P
+      node2 ← Codegen.load Codegen.nodeType node2P
       -- TODO :: check if these calls create more main nodes to put back
       Codegen.rewire [node1, aux1, node2, aux1]
       Codegen.rewire [node1, aux2, node2, aux2]
-      _ ← Defs.deAllocateNode node1P
-      _ ← Defs.deAllocateNode node2P
+      _ ← Codegen.deAllocateNode node1P
+      _ ← Codegen.deAllocateNode node2P
       eacPtr1 ← Codegen.externf "eac_ptr_1"
       eacPtr2 ← Codegen.externf "eac_ptr_2"
       _ ← freeEac eacPtr1
@@ -487,8 +487,8 @@ defineEraseNodes = Codegen.defineFunction Types.eacList "erase_nodes" args $
     nodePtr2 ← Codegen.externf "node_2"
     eacPtr1 ← Codegen.externf "eac_ptr_1"
     eacPtr2 ← Codegen.externf "eac_ptr_2"
-    _ ← Defs.deAllocateNode nodePtr1
-    _ ← Defs.deAllocateNode nodePtr2
+    _ ← Codegen.deAllocateNode nodePtr1
+    _ ← Codegen.deAllocateNode nodePtr2
     _ ← freeEac eacPtr1
     _ ← freeEac eacPtr2
     Codegen.externf "eac_list" >>= Codegen.ret
@@ -506,7 +506,7 @@ mallocGen type' portLen dataLen = do
   -- malloc call
   eac ← Codegen.malloc Types.eacSize Types.eac
   -- malloc call
-  node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+  node ← Codegen.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Codegen.pointerOf Types.tag,
@@ -516,7 +516,7 @@ mallocGen type' portLen dataLen = do
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf Defs.nodePointer,
+      { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
@@ -537,7 +537,7 @@ nodeOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 nodeOf eac =
   Codegen.loadElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Defs.nodePointer,
+      { Codegen.type' = Codegen.nodePointer,
         Codegen.address' = eac,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }

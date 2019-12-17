@@ -259,6 +259,12 @@ numPortsLargeValuePtr = pointerOf numPortsLargeValue
 numPortsPointer ∷ Type
 numPortsPointer = pointerOf numPorts
 
+numPortsNameRef :: Type
+numPortsNameRef = Type.NamedTypeReference numPortsName
+
+numPortsName ∷ IsString p ⇒ p
+numPortsName = "graph_num_ports"
+
 -- number of ports on a node or the port offset
 numPorts ∷ Type
 numPorts =
@@ -276,6 +282,12 @@ numPortsSize = 33
 nodePointerSize ∷ Num p ⇒ p
 nodePointerSize = 32
 
+portTypeNameRef :: Type
+portTypeNameRef = Type.NamedTypeReference portTypeName
+
+portTypeName ∷ IsString p ⇒ p
+portTypeName = "graph_port"
+
 portType ∷ Type → Type
 portType nodePtr = StructureType
   { isPacked = True,
@@ -285,12 +297,8 @@ portType nodePtr = StructureType
       ]
   }
 
--- TODO ∷ getElementPtr returns int32*?
-portPointer ∷ Type → Type
-portPointer nodePtr = PointerType
-  { pointerReferent = portType nodePtr,
-    pointerAddrSpace = AddrSpace 32
-  }
+portPointer ∷ Type
+portPointer = pointerOf portTypeNameRef
 
 portTypeSize ∷ Num p ⇒ p
 portTypeSize = 33
@@ -304,16 +312,22 @@ dataTypeSize = 64
 
 -- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
-nodePointer ∷ Type → Type
-nodePointer nodePtrType = pointerOf (nodeType nodePtrType)
+nodePointer ∷ Type
+nodePointer = pointerOf nodeTypeNameRef
+
+nodeTypeNameRef ∷ Type
+nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
+
+nodeTypeName ∷ IsString p ⇒ p
+nodeTypeName = "graph_node"
 
 -- TODO ∷ Figure out how to get varying data in here
-nodeType ∷ Type → Type
-nodeType nodePtrType = StructureType
+nodeType ∷ Type
+nodeType = StructureType
   { isPacked = True,
     elementTypes =
       [ numPorts, -- length of the portData
-        portData nodePtrType, -- variable size array of ports
+        portData, -- variable size array of ports
         dataArray -- variable size array of data the node stores
       ]
   }
@@ -321,16 +335,16 @@ nodeType nodePtrType = StructureType
 dataArray ∷ Type
 dataArray = ArrayType 0 dataType
 
-portData ∷ Type → Type
-portData nodePtrType = ArrayType 0 (portType nodePtrType)
+portData ∷ Type
+portData = ArrayType 0 portTypeNameRef
 
 -- Holds the port type and the size of it for easy transition into nodeType
-portArrayLen ∷ Type → Type
-portArrayLen nodePtrType = StructureType
+portArrayLen ∷ Type
+portArrayLen = StructureType
   { isPacked = False,
     elementTypes =
       [ numPorts,
-        portData nodePtrType
+        portData
       ]
   }
 
