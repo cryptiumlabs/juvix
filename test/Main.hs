@@ -49,4 +49,4 @@ allCheckedTests =
     ]
 
 main ∷ IO ()
-main = T.defaultMain (T.localOption (T.HideSuccesses True) allCheckedTests)
+main = T.defaultMain allCheckedTests
