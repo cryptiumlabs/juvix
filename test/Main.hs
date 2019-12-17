@@ -18,6 +18,8 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Test.Tasty.Ingredients as T
+import qualified Test.Tasty.Ingredients.Basic as T
 
 coreTests ∷ T.TestTree
 coreTests =
@@ -48,5 +50,4 @@ allCheckedTests =
     ]
 
 main ∷ IO ()
-main =
-  T.defaultMain allCheckedTests
+main = T.defaultMain (T.localOption (T.HideSuccesses True) allCheckedTests)
