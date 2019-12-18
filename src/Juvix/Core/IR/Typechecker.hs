@@ -201,7 +201,10 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
           <> typechecked t ann
     _ → do
       logOutput $
-        failed
+        " Current context is "
+          <> show
+            g
+            failed
           <> "The annotation is not of type *, it is of type "
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
@@ -403,12 +406,16 @@ typeElim p ii g e@(App m n) = do
           <> show sig
           <> " and dependent function type "
           <> show (snd mTy)
-          <> " as required. Checking that the function argument (N) is of the argument"
+          <> " as required. Checking that the function argument (N)"
+          <> show n
+          <> " is of the argument"
           <> " type (S) with sigma*pi usage."
       typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type S (varTy) with usage sig*pi
       logOutput $
         passed
-          <> "The function argument (N) has usage "
+          <> "The function argument (N) "
+          <> show n
+          <> " has usage "
           <> show (sig <.> pi)
           <> " and type "
           <> show varTy
