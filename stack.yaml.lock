@@ -166,6 +166,20 @@ packages:
   original:
     hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
 - completed:
+    hackage: derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
+    pantry-tree:
+      size: 1404
+      sha256: 6d598d44e8c13087a5fb334632d3e20a5a9e0026cd9ecdfba978c66c484ddbb5
+  original:
+    hackage: derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
+- completed:
+    hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+    pantry-tree:
+      size: 2321
+      sha256: 855bdb6f5c0a8b66a05be19524512fef45a47345d67051dbc2ff83a2e96abd93
+  original:
+    hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+- completed:
     hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
     pantry-tree:
       size: 610

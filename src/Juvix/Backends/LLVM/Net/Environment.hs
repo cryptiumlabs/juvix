@@ -3,6 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -66,6 +67,16 @@ initialModule = do
   -- _ ← EAC.defineAnnihilateRewireAux
   -- _ ← EAC.defineEraseNodes
   -- _ ← EAC.defineFanInFanIn
+
+  -- define the API
+  {-
+  _ ← API.defineCreateNet
+  _ ← API.defineReadNet
+  _ ← API.defineSaveState
+  _ ← API.defineLoadState
+  _ ← API.defineAppendToNet
+  _ ← API.defineReduceUntilComplete
+  -}
   pure ()
 
 runInitModule ∷ Codegen.CodegenState
