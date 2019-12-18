@@ -3,6 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -35,6 +36,15 @@ initialModule = do
   Codegen.defineAuxiliary2 Types.eacPointer
   Codegen.defineAuxiliary3 Types.eacPointer
   Codegen.defineAuxiliary4 Types.eacPointer
+  -- define the API
+  {-
+  _ ← API.defineCreateNet
+  _ ← API.defineReadNet
+  _ ← API.defineSaveState
+  _ ← API.defineLoadState
+  _ ← API.defineAppendToNet
+  _ ← API.defineReduceUntilComplete
+  -}
   -- register the hardcoded variants
   modify @"typTab" (Map.insert "numPorts" Codegen.numPorts)
   modify @"varTab"
