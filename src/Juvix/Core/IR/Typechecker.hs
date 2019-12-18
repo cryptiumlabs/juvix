@@ -20,10 +20,13 @@ typeTermIntroLog ∷
   ) ⇒
   Term primTy primVal →
   Annotation primTy primVal m →
+  Context primTy primVal m →
   m ()
-typeTermIntroLog t ann =
+typeTermIntroLog t ann g =
   logOutput
-    ( "Type checking the term "
+    ( ". The current context is "
+        <> (show g)
+        <> ". Type checking the term "
         <> (show t)
         <> "against the input annotation with usage of "
         <> (show (fst ann))
@@ -75,13 +78,13 @@ typeTerm ∷
   m ()
 -- ★ (Universe formation rule)
 
-typeTerm _ _ii _g t@(Star i) ann = do
-  typeTermIntroLog t ann
+typeTerm _ _ii g t@(Star i) ann = do
+  typeTermIntroLog t ann g
   logOutput
     ( concat
         [ "patterned matched to be a * term. Type checker ",
           "applies the universe formation rule. ",
-          "Checking that Sigma is zero."
+          "Checking that Sigma is zero. "
         ]
     )
   unless
@@ -136,12 +139,12 @@ typeTerm _ _ii _g t@(Star i) ann = do
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- ★- Pi (Universe introduction rule)
 typeTerm p ii g t@(Pi _pi varType resultType) ann = do
-  typeTermIntroLog t ann
+  typeTermIntroLog t ann g
   logOutput
     ( concat
         [ "patterned matched to be a dependent function type term. ",
           "Type checker applies the universe introduction rule. ",
-          "Checking that sigma is zero."
+          "Checking that sigma is zero. "
         ]
     )
   unless -- checks sigma = 0.
@@ -208,11 +211,11 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
-typeTerm _ ii _g x@(PrimTy _) ann = do
+typeTerm _ ii g x@(PrimTy _) ann = do
   ty ← quote0 (snd ann)
-  typeTermIntroLog x ann
+  typeTermIntroLog x ann g
   logOutput
-    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage.")
+    ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage. ")
   if (SNat 0 /= fst ann)
     then
       ( do
@@ -220,7 +223,7 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
             failed
               <> "The input usage is "
               <> show (fst ann)
-              <> ", which is not zero."
+              <> ", which is not zero. "
           throw @"typecheckError" (UsageMustBeZero)
       )
     else do
@@ -240,11 +243,11 @@ typeTerm _ ii _g x@(PrimTy _) ann = do
           return ()
 -- Lam (introduction rule of dependent function type), requires Pi (formation rule of dependent function type)
 typeTerm p ii g t@(Lam m) ann = do
-  typeTermIntroLog t ann
+  typeTermIntroLog t ann g
   logOutput
     ( concat
         [ "patterned matched to be a Lam term. Checking that input annotation ",
-          "has sigma usage and is of dependent function type (Pi)."
+          "has sigma usage and is of dependent function type (Pi). "
         ]
     )
   case ann of
@@ -275,7 +278,7 @@ typeTerm p ii g t@(Lam m) ann = do
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
 --
 typeTerm p ii g t@(Elim e) ann = do
-  typeTermIntroLog t ann
+  typeTermIntroLog t ann g
   logOutput $
     "patterned matched to be an Elim term. Checking that input annotation "
       <> show ann
@@ -308,10 +311,13 @@ typeElimIntroLog ∷
     (Show (Value primTy primVal m))
   ) ⇒
   Elim primTy primVal →
+  Context primTy primVal m →
   m ()
-typeElimIntroLog elim =
+typeElimIntroLog elim g =
   logOutput
-    ( "Type checking the term "
+    ( "The current context is "
+        <> show g
+        <> ". Type checking the term "
         <> (show elim)
         <> ", which "
     )
@@ -349,13 +355,13 @@ typeElim ∷
   Elim primTy primVal →
   m (Annotation primTy primVal m)
 -- the type checker should never encounter a bound variable (as in LambdaPi)? To be confirmed.
-typeElim _ _ii _g e@(Bound _) = do
-  typeElimIntroLog e
+typeElim _ _ii g e@(Bound _) = do
+  typeElimIntroLog e g
   logOutput
     "patterned matched to be a bound variable. Bound variables cannot be inferred."
   throw @"typecheckError" BoundVariableCannotBeInferred
 typeElim _ ii g e@(Free x) = do
-  typeElimIntroLog e
+  typeElimIntroLog e g
   logOutput $
     "patterned matched to be a free variable. Check that the free variable is in the context "
       <> show g
@@ -377,8 +383,8 @@ typeElim _ ii g e@(Free x) = do
           <> show g
       throw @"typecheckError" (UnboundBinder ii x)
 -- Prim-Const and Prim-Fn, pi = omega
-typeElim p _ii _g e@(Prim prim) = do
-  typeElimIntroLog e
+typeElim p _ii g e@(Prim prim) = do
+  typeElimIntroLog e g
   logOutput "patterned matched to be a primitive type const/fn."
   let arrow (x :| []) = VPrimTy x
       arrow (x :| (y : ys)) = VPi Omega (VPrimTy x) (const (pure (arrow (y :| ys))))
@@ -387,7 +393,7 @@ typeElim p _ii _g e@(Prim prim) = do
 --logOutput $ show e <> " type checked to usage " <> show Omega <> " and type " <> show ty
 -- App, function M applies to N (Elimination rule of dependent function types)
 typeElim p ii g e@(App m n) = do
-  typeElimIntroLog e
+  typeElimIntroLog e g
   logOutput
     ( concat
         [ "patterned matched to be an App term. Checking that M ",
@@ -435,7 +441,7 @@ typeElim p ii g e@(App m n) = do
       throw @"typecheckError" (MustBeFunction m ii n)
 -- Conv
 typeElim p ii g e@(Ann pi theTerm theType) = do
-  typeElimIntroLog e
+  typeElimIntroLog e g
   logOutput
     ( concat
         [ "patterned matched to be an Ann term. Checking that theTerm ",
