@@ -396,21 +396,22 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  ports ← loadElementPtr $
+  ports ← getElementPtr $
     Types.Minimal
-      { Types.type' = portData,
+      { Types.type' = Types.pointerOf portData,
         Types.address' = node,
         Types.indincies' = Block.constant32List [0, 1]
       }
   intOfNumPorts portPointer port $ \value → do
-    Block.addBlock "test" >>= Block.setBlock
+    -- unsafe, please fix later!
+    i32Value ← Block.trunc value Type.i32
     getElementPtr $
       Types.Minimal
         { Types.type' = portPointer,
           Types.address' = ports,
           Types.indincies' =
             [ Operand.ConstantOperand (C.Int 32 0),
-              value
+              i32Value
             ]
         }
 

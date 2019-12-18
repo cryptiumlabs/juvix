@@ -3,7 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
--- -- -- import qualified Juvix.Backends.LLVM.Net.API as API
+-- import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -46,15 +46,14 @@ initialModule = do
   Codegen.addBlock "bad" >>= Codegen.setBlock
   Codegen.defineMalloc
   Codegen.defineFree
-  Codegen.defineMainPort
-  Codegen.defineAuxiliary1
-  Codegen.defineAuxiliary2
-  Codegen.defineAuxiliary3
-  Codegen.defineAuxiliary4
-  -- _ ← Codegen.alloca Types.testListPointer
---  _ ← Codegen.defineLink
-  -- _ ← EAC.defineTest
+  -- Codegen.defineMainPort
+  -- Codegen.defineAuxiliary1
+  -- Codegen.defineAuxiliary2
+  -- Codegen.defineAuxiliary3
+  -- Codegen.defineAuxiliary4
   _ ← EAC.defineTest
+  -- _ ← Codegen.defineLink
+  -- _ ← Codegen.alloca Types.testListPointer
   -- _ ← Defs.defineIsBothPrimary
   -- _ ← Defs.defineFindEdge
   -- _ ← EAC.mallocEra

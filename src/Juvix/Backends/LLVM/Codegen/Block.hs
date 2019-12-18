@@ -160,7 +160,8 @@ defineFunctionGen bool retty name args body = do
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
   put @"symTab" oldSymTab
   -- flush out blocks after functions
-  put @"blocks" Map.empty
+  -- comment for debugging!
+  -- put @"blocks" Map.empty
   assign name functionOperand
   pure functionOperand
 
@@ -489,6 +490,9 @@ bitCast op typ = instr typ $ BitCast op typ []
 
 ptrToInt ∷ RetInstruction m ⇒ Operand → Type → m Operand
 ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
+
+trunc ∷ RetInstruction m ⇒ Operand → Type → m Operand
+trunc op typ = instr typ $ Trunc op typ []
 
 --------------------------------------------------------------------------------
 -- Pointer Operations
