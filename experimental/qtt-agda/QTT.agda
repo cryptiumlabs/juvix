@@ -40,8 +40,8 @@ data Binder n : Set where
 data BinOpKind : Set where `+ `* : BinOpKind
 
 data BinOp n : Set where
-  fin : (• : BinOpKind) (𝜋   : Usageᴱ n) (ρ : Usage n) → BinOp n -- finite
-  inf : (• : BinOpKind) (𝜋 𝜌 : Usageωᴱ n)              → BinOp n -- infinite
+  fin : (• : BinOpKind) (𝜋   : Usageᴱ  n) (ρ : Usage n) → BinOp n -- finite
+  inf : (• : BinOpKind) (𝜋 𝜌 : Usageωᴱ n)               → BinOp n -- infinite
 
 -- terms which can be checked against a given type
 data Term n where
