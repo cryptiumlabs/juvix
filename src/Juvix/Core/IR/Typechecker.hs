@@ -202,9 +202,8 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
     _ → do
       logOutput $
         " Current context is "
-          <> show
-            g
-            failed
+          <> show g
+          <> failed
           <> "The annotation is not of type *, it is of type "
           <> show (snd ann)
       throw @"typecheckError" (ShouldBeStar (snd ann))
