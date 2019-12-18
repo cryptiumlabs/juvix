@@ -194,7 +194,9 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
         (substTerm 0 (Free (Local ii)) resultType) -- R, with x in the context
         ann -- is of 0 usage and type *i
       logOutput $
-        passed
+        " Current context is "
+          <> show g
+          <> passed
           <> "Result (R) has usage of is of type *i. "
           <> typechecked t ann
     _ → do
@@ -248,7 +250,13 @@ typeTerm p ii g t@(Lam m) ann = do
       -- Lam m should be of dependent function type (Pi) with sigma usage.
       logOutput $
         passed
-          <> "Checking that M, with x (annotated with sig*pi usage) in the context, "
+          <> "Checking that M, "
+          <> show m
+          <> " , with x, annotated with sig*pi ("
+          <> show sig
+          <> "*"
+          <> show pi
+          <> ") usage in the context, "
           <> "type checked against the input annotation."
       ty' ← ty' (vfree (Local ii)) -- apply the function, result is of type T
       typeTerm
@@ -258,11 +266,19 @@ typeTerm p ii g t@(Lam m) ann = do
         (substTerm 0 (Free (Local ii)) m) -- m, with x in the context
         (sig, ty') -- is of type T with usage sigma
       logOutput $
-        passed <> typechecked t ann
+        " The current context is "
+          <> show g
+          <> passed
+          <> typechecked t ann
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
 --
 typeTerm p ii g t@(Elim e) ann = do
   typeTermIntroLog t ann
+  logOutput $
+    "patterned matched to be an Elim term. Checking that input annotation "
+      <> show ann
+      <> " is compatible with the term "
+      <> show t
   ann' ← typeElim p ii g e
   annt ← quote0 (snd ann)
   annt' ← quote0 (snd ann')
@@ -339,7 +355,7 @@ typeElim _ _ii _g e@(Bound _) = do
 typeElim _ ii g e@(Free x) = do
   typeElimIntroLog e
   logOutput $
-    "patterned matched to be a free variable. Looking up the free variable in the context "
+    "patterned matched to be a free variable. Check that the free variable is in the context "
       <> show g
   case lookup x g of
     Just ann → do

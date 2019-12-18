@@ -159,10 +159,18 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Library]]
 **** Net
+***** API
+- _Relies on_
+  + [[Codegen]]
+  + [[DSL]]
+  + [[Defs]]
+  + [[Net/EAC/Types]]
+  + [[Library]]
 ***** Environment
 - Serves as the default environment for executing EAC code
 - _Relies on_
   + [[Codegen]]
+  + [[API]]
   + [[Net/EAC]]
   + [[Defs]]
   + [[Net/EAC/Types]]
