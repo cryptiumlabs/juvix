@@ -74,7 +74,7 @@ createVariantName sumName varName = sumName <> "-" <> varName
 createSum ∷ [VariantInfo] → Type
 createSum variants =
   StructureType
-    { isPacked = False,
+    { isPacked = True,
       elementTypes =
         [tag, arrSize]
     }

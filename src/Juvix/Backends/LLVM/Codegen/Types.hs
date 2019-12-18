@@ -224,6 +224,8 @@ numPortsSmall =
         typ' = numPortsSmallValue
       }
 
+numPortsSmallType = typ' numPortsSmall
+
 pointerOf ∷ Type → Type
 pointerOf typ = PointerType typ (AddrSpace 32)
 
@@ -246,6 +248,8 @@ numPortsLarge =
         name = "large",
         typ' = numPortsLargeValuePtr
       }
+
+numPortsLargeType = typ' numPortsSmall
 
 numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
@@ -341,7 +345,7 @@ portData = ArrayType 0 portTypeNameRef
 -- Holds the port type and the size of it for easy transition into nodeType
 portArrayLen ∷ Type
 portArrayLen = StructureType
-  { isPacked = False,
+  { isPacked = True,
     elementTypes =
       [ numPorts,
         portData
@@ -351,7 +355,7 @@ portArrayLen = StructureType
 -- TODO ∷ This changes per platform
 vaList ∷ Type
 vaList = StructureType
-  { isPacked = False,
+  { isPacked = True,
     elementTypes = [PointerType Type.i8 (AddrSpace 32)]
   }
 

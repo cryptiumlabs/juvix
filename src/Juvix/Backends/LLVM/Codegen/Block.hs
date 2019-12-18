@@ -153,10 +153,14 @@ defineFunctionGen ∷
   Types.Define m ⇒ Bool → Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunctionGen bool retty name args body = do
   oldSymTab ← get @"symTab"
+  -- flush the blocks so we can have clean block for functions
+  put @"blocks" Map.empty
   functionOperand ←
     (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
   put @"symTab" oldSymTab
+  -- flush out blocks after functions
+  put @"blocks" Map.empty
   assign name functionOperand
   pure functionOperand
 
@@ -551,7 +555,7 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     (ConstantOperand (C.Int tag (toInteger offset)))
   -- TODO ∷ remove the ! call here
   let varType = typTable Map.! variantName
-  casted ← bitCast sum varType
+  casted ← bitCast sum (Types.pointerOf varType)
   foldM_
     ( \i inst → do
         ele ←

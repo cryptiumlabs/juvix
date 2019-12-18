@@ -3,7 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
-import qualified Juvix.Backends.LLVM.Net.API as API
+-- -- -- import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -21,8 +21,8 @@ initialModule ∷
 initialModule = do
   modify @"typTab"
     ( Map.insert "numPorts" Codegen.numPorts
-        . Map.insert "numPorts_large" (Codegen.numPortsLargeValuePtr)
-        . Map.insert "numPorts_small" (Codegen.numPortsSmallValue)
+        . Map.insert "numPorts_large" (Codegen.numPortsLargeType)
+        . Map.insert "numPorts_small" (Codegen.numPortsSmallType)
     )
   modify @"varTab"
     ( Map.insert "numPorts_small" Codegen.S

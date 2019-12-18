@@ -89,7 +89,7 @@ mallocFreeModule =
                                     (Name "free")
                                 )
                             ),
-                        callingConvention = CC.C,
+                        callingConvention = CC.GHC,
                         returnAttributes = [],
                         arguments = [(LocalReference voidStarTy (UnName 1), [])],
                         functionAttributes = [],
@@ -177,24 +177,24 @@ exampleModule2 =
                         metadata = []
                       },
                     UnName 2 := Alloca Types.testList Nothing 0 [],
-                    UnName 3 := Call
-                      { tailCallKind = Nothing,
-                        I.function =
-                          Right
-                            ( ConstantOperand
-                                ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidTy
-                                                        , argumentTypes = []
-                                                        , isVarArg = False})
-                                    (Name "test_function")
-                                )
-                            ),
-                        callingConvention = CC.Fast,
-                        returnAttributes = [],
-                        arguments = [],
-                        functionAttributes = [],
-                        metadata = []
-                      },
+                    -- UnName 3 := Call
+                    --   { tailCallKind = Nothing,
+                    --     I.function =
+                    --       Right
+                    --         ( ConstantOperand
+                    --             ( C.GlobalReference
+                    --                 (ptr $ FunctionType {resultType = voidTy
+                    --                                     , argumentTypes = []
+                    --                                     , isVarArg = False})
+                    --                 (Name "test_function")
+                    --             )
+                    --         ),
+                    --     callingConvention = CC.Fast,
+                    --     returnAttributes = [],
+                    --     arguments = [],
+                    --     functionAttributes = [],
+                    --     metadata = []
+                    --   },
                     Do $ Call
                       { tailCallKind = Nothing,
                         I.function =
@@ -223,7 +223,8 @@ test_example_jit' = T.testCase "example module should jit function" $ do
   let module' = Codegen.moduleAST runInitModule
   let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
-  (fn ∷ Word32 → IO Word32, kill) ← jit (Config None) newModule "test"
+  (imp, kill) ← jitWith (Config None) newModule dynamicImport
+  Just fn ← importAs imp "test" (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
   kill
   43 T.@=? res

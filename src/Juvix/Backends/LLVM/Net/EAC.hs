@@ -504,7 +504,7 @@ mallocGen ∷
   Codegen.MallocNode m ⇒ C.Constant → Int → Int → m Operand.Operand
 mallocGen type' portLen dataLen = do
   -- malloc call
-  eac ← Codegen.malloc Types.eacSize Types.eac
+  eac ← Codegen.malloc Types.eacSize Types.eacPointer
   -- malloc call
   node ← Codegen.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
   tagPtr ← Codegen.getElementPtr $
@@ -582,13 +582,11 @@ fanLabelLookup addr = Codegen.loadElementPtr $
       Codegen.indincies' = Codegen.constant32List [0, 0]
     }
 
-
-
 -- dumb define test
-defineTest = Codegen.defineFunction Type.void "test_function" [] $ do
-  -- era ← mallocEra
+defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
+  era ← mallocEra
   -- app ← mallocApp
   -- main ← Codegen.mainPort
   -- main' ← Codegen.mainPort
---  Codegen.link [era, main, app, main']
-  Codegen.retNull
+  -- Codegen.link [era, main, app, main']
+  Codegen.ret era

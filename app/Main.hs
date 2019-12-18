@@ -25,7 +25,7 @@ main = do
   case runInitModule' of
     Left x  → print "Left \n" >> print x
     Right () → print "did it"
---  print runInitModule
+  print runInitModule
 
 -- ctx ← context
 -- let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
