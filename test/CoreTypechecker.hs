@@ -46,6 +46,7 @@ shouldCheck ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
+  -- TODO: take out the logs and put them in an IO monad.
   let logs = intercalate "\n" $ map IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeTerm param 0 [] term ann)))
    in T.testCase
         ( show term
@@ -545,8 +546,8 @@ scombinatorCompNatTy =
                   ( const
                       ( pure
                           ( IR.VPi
-                              (SNat 2)
-                              (IR.VPrimTy Nat) -- 2 Nat ->
+                              (SNat 1)
+                              (IR.VPrimTy Nat) -- 1 Nat ->
                               (const (pure (IR.VPrimTy Nat))) -- Nat
                           )
                       )

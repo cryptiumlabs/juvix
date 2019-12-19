@@ -20,12 +20,15 @@ typeTermIntroLog ∷
   ) ⇒
   Term primTy primVal →
   Annotation primTy primVal m →
+  Natural →
   Context primTy primVal m →
   m ()
-typeTermIntroLog t ann g =
+typeTermIntroLog t ann ii g =
   logOutput
     ( ". The current context is "
         <> (show g)
+        <> ". The current index is "
+        <> show ii
         <> ". Type checking the term "
         <> (show t)
         <> "against the input annotation with usage of "
@@ -78,8 +81,8 @@ typeTerm ∷
   m ()
 -- ★ (Universe formation rule)
 
-typeTerm _ _ii g t@(Star i) ann = do
-  typeTermIntroLog t ann g
+typeTerm _ ii g t@(Star i) ann = do
+  typeTermIntroLog t ann ii g
   logOutput
     ( concat
         [ "patterned matched to be a * term. Type checker ",
@@ -139,7 +142,7 @@ typeTerm _ _ii g t@(Star i) ann = do
       throw @"typecheckError" (ShouldBeStar (snd ann))
 -- ★- Pi (Universe introduction rule)
 typeTerm p ii g t@(Pi _pi varType resultType) ann = do
-  typeTermIntroLog t ann g
+  typeTermIntroLog t ann ii g
   logOutput
     ( concat
         [ "patterned matched to be a dependent function type term. ",
@@ -213,7 +216,7 @@ typeTerm p ii g t@(Pi _pi varType resultType) ann = do
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii g x@(PrimTy _) ann = do
   ty ← quote0 (snd ann)
-  typeTermIntroLog x ann g
+  typeTermIntroLog x ann ii g
   logOutput
     ("patterned matched to be a primitive type term. Checking that input annotation is of zero usage. ")
   if (SNat 0 /= fst ann)
@@ -243,7 +246,7 @@ typeTerm _ ii g x@(PrimTy _) ann = do
           return ()
 -- Lam (introduction rule of dependent function type), requires Pi (formation rule of dependent function type)
 typeTerm p ii g t@(Lam m) ann = do
-  typeTermIntroLog t ann g
+  typeTermIntroLog t ann ii g
   logOutput
     ( concat
         [ "patterned matched to be a Lam term. Checking that input annotation ",
@@ -278,7 +281,7 @@ typeTerm p ii g t@(Lam m) ann = do
     _ → throw @"typecheckError" (ShouldBeFunctionType (snd ann) (Lam m))
 --
 typeTerm p ii g t@(Elim e) ann = do
-  typeTermIntroLog t ann g
+  typeTermIntroLog t ann ii g
   logOutput $
     "patterned matched to be an Elim term. Checking that input annotation "
       <> show ann
