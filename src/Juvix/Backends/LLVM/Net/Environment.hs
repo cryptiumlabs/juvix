@@ -37,14 +37,10 @@ initialModule = do
   Codegen.defineAuxiliary3 Types.eacPointer
   Codegen.defineAuxiliary4 Types.eacPointer
   -- define the API
-  {-
   _ ← API.defineCreateNet
   _ ← API.defineReadNet
-  _ ← API.defineSaveState
-  _ ← API.defineLoadState
   _ ← API.defineAppendToNet
   _ ← API.defineReduceUntilComplete
-  -}
   -- register the hardcoded variants
   modify @"typTab" (Map.insert "numPorts" Codegen.numPorts)
   modify @"varTab"
