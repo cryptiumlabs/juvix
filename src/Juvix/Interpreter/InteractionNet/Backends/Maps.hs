@@ -84,6 +84,12 @@ instance Network Net where
       Map.lookup nodePort (n ^. edges)
         <|> findSelf (Map.toList (n ^. edges))
 
+  allEdges node = do
+    Net net ← get @"net"
+    pure $ case Map.lookup node net of
+      Just ni → fmap (\(x, (y, z)) → (x, y, z)) $ Map.toList $ ni ^. edges
+      Nothing → []
+
   -- Note this does not remove all edges to the deleted node
   deleteEdge node1@(n1, p1) node2@(n2, p2) = do
     let isSame pt edge node =
