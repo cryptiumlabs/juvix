@@ -347,7 +347,7 @@ defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
         (numPortsPointer, "port_two")
       ]
 
-deAllocateNode ∷ Define m ⇒ Operand.Operand → m Operand.Operand
+deAllocateNode ∷ Define m ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
   portPtr ← getElementPtr $
     Types.Minimal

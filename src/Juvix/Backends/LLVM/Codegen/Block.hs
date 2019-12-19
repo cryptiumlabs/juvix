@@ -312,11 +312,11 @@ malloc size type' = do
   voidPtr ← call (Types.pointerOf Type.i8) malloc (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
   bitCast voidPtr type'
 
-free ∷ Call m ⇒ Operand → m Operand
+free ∷ Call m ⇒ Operand → m ()
 free thing = do
   free ← externf "free"
   casted ← bitCast thing (Types.pointerOf Type.i8)
-  call Types.voidTy free (emptyArgs [casted])
+  callVoid free (emptyArgs [casted])
 
 --------------------------------------------------------------------------------
 -- Integer Operations
@@ -451,6 +451,23 @@ generateIf ty cond tr fl = do
 
 emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
+
+callVoid ∷
+  RetInstruction m ⇒
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
+  m ()
+callVoid fn args = unnminstr $
+  Call
+    { functionAttributes = [],
+      tailCallKind = Nothing,
+      callingConvention = CC.GHC,
+      returnAttributes = [],
+      function = Right fn,
+      arguments = args,
+      metadata = []
+    }
+
 
 call ∷
   RetInstruction m ⇒

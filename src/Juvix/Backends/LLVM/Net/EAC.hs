@@ -497,7 +497,7 @@ defineEraseNodes = Codegen.defineFunction Types.eacList "erase_nodes" args $
 -- Allocations
 --------------------------------------------------------------------------------
 
-freeEac ∷ Codegen.Call m ⇒ Operand.Operand → m Operand.Operand
+freeEac ∷ Codegen.Call m ⇒ Operand.Operand → m ()
 freeEac = Codegen.free
 
 mallocGen ∷
@@ -507,27 +507,20 @@ mallocGen type' portLen dataLen = do
   eac ← Codegen.malloc Types.eacSize Types.eacPointer
   -- malloc call
   node ← Codegen.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
-  -- alloca test
-  test ← Codegen.alloca Type.i32
-  Codegen.store test (Operand.ConstantOperand (C.Int 32 0))
-  testvl ← Codegen.load Type.i32 test
-  -- alloca test over
-  -- tagPtr ← Codegen.getElementPtr $
-  --   Codegen.Minimal
-  --     { Codegen.type' = Codegen.pointerOf Types.tag,
-  --       Codegen.address' = eac,
-  --       Codegen.indincies' = [ testvl,
-  --                              testvl
-  --                            ]
-  --     }
-  -- Codegen.store tagPtr (Operand.ConstantOperand type')
-  -- nodePtr ← Codegen.getElementPtr $
-  --   Codegen.Minimal
-  --     { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
-  --       Codegen.address' = eac,
-  --       Codegen.indincies' = Codegen.constant32List [0, 1]
-  --     }
-  -- Codegen.store nodePtr node
+  tagPtr ← Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf Types.tag,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0,0]
+      }
+  Codegen.store tagPtr (Operand.ConstantOperand type')
+  nodePtr ← Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0, 1]
+      }
+  Codegen.store nodePtr node
   pure eac
 
 mallocEra,
@@ -592,8 +585,9 @@ fanLabelLookup addr = Codegen.loadElementPtr $
 -- dumb define test
 defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
   era ← mallocEra
-  -- app ← mallocApp
+  app ← mallocApp
   -- main ← Codegen.mainPort
   -- main' ← Codegen.mainPort
   -- Codegen.link [era, main, app, main']
+  _ ← Codegen.free app
   Codegen.ret era
