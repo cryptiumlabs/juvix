@@ -309,14 +309,19 @@ defineFree = do
 malloc ∷ Call m ⇒ Integer → Type → m Operand
 malloc size type' = do
   malloc ← externf "malloc"
-  voidPtr ← call (Types.pointerOf Type.i8) malloc (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
+  voidPtr ←
+    instr (Types.pointerOf Type.i8) $
+      callConvention
+        CC.Fast
+        malloc
+        (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
   bitCast voidPtr type'
 
 free ∷ Call m ⇒ Operand → m ()
 free thing = do
   free ← externf "free"
   casted ← bitCast thing (Types.pointerOf Type.i8)
-  callVoid free (emptyArgs [casted])
+  unnminstr (callConvention CC.Fast free (emptyArgs [casted]))
 
 --------------------------------------------------------------------------------
 -- Integer Operations
@@ -452,6 +457,21 @@ generateIf ty cond tr fl = do
 emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
 
+callConvention ∷
+  CC.CallingConvention →
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
+  Instruction
+callConvention convention fn args = Call
+  { functionAttributes = [],
+    tailCallKind = Nothing,
+    callingConvention = convention,
+    returnAttributes = [],
+    function = Right fn,
+    arguments = args,
+    metadata = []
+  }
+
 callVoid ∷
   RetInstruction m ⇒
   Operand →
@@ -467,7 +487,6 @@ callVoid fn args = unnminstr $
       arguments = args,
       metadata = []
     }
-
 
 call ∷
   RetInstruction m ⇒

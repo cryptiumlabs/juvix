@@ -511,7 +511,7 @@ mallocGen type' portLen dataLen = do
     Codegen.Minimal
       { Codegen.type' = Codegen.pointerOf Types.tag,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0,0]
+        Codegen.indincies' = Codegen.constant32List [0, 0]
       }
   Codegen.store tagPtr (Operand.ConstantOperand type')
   nodePtr ← Codegen.getElementPtr $
