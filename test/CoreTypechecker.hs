@@ -110,11 +110,11 @@ skiComp =
       shouldInfer
         nat
         kFunApp1
-        kFunApp1CompTy,
-      shouldCheck
-        nat
-        scombinator
-        scombinatorCompNatTy
+        kFunApp1CompTy {- ,
+        shouldCheck
+          nat
+          scombinator
+          scombinatorCompNatTy -}
     ]
 
 natComp ∷ T.TestTree
