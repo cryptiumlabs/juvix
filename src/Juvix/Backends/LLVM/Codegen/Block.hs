@@ -30,6 +30,9 @@ fresh = do
   put @"count" (succ i)
   pure i
 
+resetCount ∷ (HasState "count" s m, Num s) ⇒ m ()
+resetCount = put @"count" 0
+
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
@@ -155,13 +158,15 @@ defineFunctionGen bool retty name args body = do
   oldSymTab ← get @"symTab"
   -- flush the blocks so we can have clean block for functions
   put @"blocks" Map.empty
+  resetCount
   functionOperand ←
     (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
   put @"symTab" oldSymTab
   -- flush out blocks after functions
   -- comment for debugging!
-  -- put @"blocks" Map.empty
+  put @"blocks" Map.empty
+  resetCount
   assign name functionOperand
   pure functionOperand
 

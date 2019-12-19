@@ -46,13 +46,13 @@ initialModule = do
   Codegen.addBlock "bad" >>= Codegen.setBlock
   Codegen.defineMalloc
   Codegen.defineFree
-  -- Codegen.defineMainPort
-  -- Codegen.defineAuxiliary1
-  -- Codegen.defineAuxiliary2
-  -- Codegen.defineAuxiliary3
-  -- Codegen.defineAuxiliary4
+  Codegen.defineMainPort
+  Codegen.defineAuxiliary1
+  Codegen.defineAuxiliary2
+  Codegen.defineAuxiliary3
+  Codegen.defineAuxiliary4
   _ ← EAC.defineTest
-  -- _ ← Codegen.defineLink
+  _ ← Codegen.defineLink
   -- _ ← Codegen.alloca Types.testListPointer
   -- _ ← Defs.defineIsBothPrimary
   -- _ ← Defs.defineFindEdge

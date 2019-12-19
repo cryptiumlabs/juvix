@@ -272,7 +272,7 @@ numPortsLargeValuePtr ∷ Type
 numPortsLargeValuePtr = pointerOf numPortsLargeValue
 
 numPortsPointer ∷ Type
-numPortsPointer = pointerOf numPorts
+numPortsPointer = pointerOf numPortsNameRef
 
 numPortsNameRef ∷ Type
 numPortsNameRef = Type.NamedTypeReference numPortsName
@@ -308,7 +308,7 @@ portType nodePtr = StructureType
   { isPacked = True,
     elementTypes =
       [ nodePtr, -- the pointer to the other node
-        numPorts -- the offset from the base of the node where the port is
+        numPortsNameRef -- the offset from the base of the node where the port is
       ]
   }
 
@@ -341,7 +341,7 @@ nodeType ∷ Type
 nodeType = StructureType
   { isPacked = True,
     elementTypes =
-      [ numPorts, -- length of the portData
+      [ numPortsNameRef, -- length of the portData
         portData, -- variable size array of ports
         dataArray -- variable size array of data the node stores
       ]

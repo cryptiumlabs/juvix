@@ -76,7 +76,9 @@ module Juvix.Backends.LLVM.Codegen.Graph where
 import Juvix.Backends.LLVM.Codegen.Block as Block
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
+import LLVM.AST
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.Global as Global
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
@@ -210,7 +212,7 @@ mallocNodeH mPorts mData = do
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
-  portSize ← load numPorts portSizeP
+  portSize ← load numPortsNameRef portSizeP
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
@@ -436,7 +438,7 @@ getPort node port = do
         Types.indincies' = Block.constant32List [0, 1]
       }
   intOfNumPorts portPointer port $ \value → do
-    -- unsafe, please fix later!
+    -- TODO ∷ unsafe, please fix later!
     i32Value ← Block.trunc value Type.i32
     getElementPtr $
       Types.Minimal
@@ -538,7 +540,7 @@ createNumPortsStaticGen isLarge value allocVar alloc =
   -- else it is an error.
   -- see if this is okay, if not make custom logic just for the
   -- sums to create the language
-  let castIt x = Block.bitCast x (Types.pointerOf Types.numPorts)
+  let castIt x = Block.bitCast x (Types.pointerOf Types.numPortsNameRef)
    in case isLarge of
         False → do
           small ← allocVar "numPorts_small" [value] Types.numPortsSize
@@ -606,25 +608,39 @@ defineMainPort,
   defineAuxiliary2,
   defineAuxiliary3,
   defineAuxiliary4 ∷
-    ( Define m,
-      MallocNode m
-    ) ⇒
-    m ()
-defineMainPort =
-  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 0))
-    >>= Block.assign "main_port"
-defineAuxiliary1 =
-  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 1))
-    >>= Block.assign "auxiliary1"
-defineAuxiliary2 =
-  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 2))
-    >>= Block.assign "auxiliary2"
-defineAuxiliary3 =
-  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 3))
-    >>= Block.assign "auxiliary3"
-defineAuxiliary4 =
-  mallocNumPortsStatic False (Operand.ConstantOperand (C.Int 32 4))
-    >>= Block.assign "auxiliary4"
+    HasState "moduleDefinitions" [Definition] m ⇒ m ()
+defineMainPort = constantPort "main_port" 0
+defineAuxiliary1 = constantPort "auxiliary1" 1
+defineAuxiliary2 = constantPort "auxiliary2" 2
+defineAuxiliary3 = constantPort "auxiliary3" 3
+defineAuxiliary4 = constantPort "auxiliary4" 4
+
+-- TODO :: abstract out hardcoded value!
+constantPort ∷ HasState "moduleDefinitions" [Definition] m ⇒ Name → Integer → m ()
+constantPort name v =
+  addDefn
+    $ GlobalDefinition
+    $ Global.globalVariableDefaults
+      { Global.name = name,
+        Global.isConstant = True,
+        Global.type' = Types.numPortsNameRef,
+        Global.initializer = Just C.Struct
+          { C.structName = Just Types.numPortsName,
+            C.isPacked = True,
+            C.memberValues =
+              [ C.Int 1 0,
+                C.Array
+                  { C.memberType = Type.i16,
+                    C.memberValues =
+                      [ C.Int 16 0,
+                        C.Int 16 0,
+                        C.Int 16 0,
+                        C.Int 16 v
+                      ]
+                  }
+              ]
+          }
+      }
 
 mainPort,
   auxiliary1,
