@@ -188,15 +188,20 @@ mallocNodeH ∷
   [Maybe Operand.Operand] →
   m Operand.Operand
 mallocNodeH mPorts mData = do
+  let anyThere xs =
+        case length xs of
+          0 → 0
+          _ → 1
   let totalSize =
-        Types.nodePointerSize
-          + (length mPorts * Types.portTypeSize)
-          + (length mData * Types.dataTypeSize)
+        Types.numPortsSize
+          + (anyThere mPorts * Types.pointerSizeInt)
+          + (anyThere mData * Types.pointerSizeInt) :: Integer
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
   portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
-  ports ← allocaPortsH mPorts
-  data' ← allocaDataH mData
+  -- the bitCast is for turning the size of the array to 0
+  -- for proper dynamically sized arrays
+  ports ← mallocPortsH mPorts >>= flip bitCast Types.portData
   tagPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.numPortsPointer,
@@ -208,19 +213,26 @@ mallocNodeH mPorts mData = do
   portPtr ← getElementPtr $
     Types.Minimal
       { -- do I really want to say size 0?
+        -- Yes, as we have to bitcast what get back to size 0!
         Types.type' = Types.pointerOf Types.portData,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
   store portPtr ports
-  dataPtr ← getElementPtr $
-    Types.Minimal
-      { -- do I really want to say size 0?
-        Types.type' = Types.pointerOf Types.dataArray,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 2]
-      }
-  store dataPtr data'
+  -- let's not allocate data if we don't have to!
+  case anyThere mData :: Integer of
+    0 → pure ()
+    _ → do
+    data' ← mallocDataH mData >>= flip bitCast Types.dataArray
+    dataPtr ← getElementPtr $
+      Types.Minimal
+        { -- do I really want to say size 0?
+          -- Yes, as we have to bitcast what get back to size 0!
+          Types.type' = Types.pointerOf Types.dataArray,
+          Types.address' = nodePtr,
+          Types.indincies' = Block.constant32List [0, 2]
+        }
+    store dataPtr data'
   pure nodePtr
 
 -- | used to create the malloc and alloca functions for ports and data
@@ -253,14 +265,14 @@ createGenH mPortData type' alloc = do
 mallocGenH ∷
   Call m ⇒ [Maybe Operand.Operand] → Type.Type → Integer → m Operand.Operand
 mallocGenH mPortData type' dataSize =
-  createGenH mPortData type' (\t len → Block.malloc (len * dataSize) t)
+  createGenH mPortData type' (\t len → Block.malloc (len * dataSize) (Types.pointerOf t))
 
 allocaGenH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
 
 mallocPortsH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocPortsH mPorts =
-  mallocGenH mPorts Types.portPointer Types.portTypeSize
+  mallocGenH mPorts Types.portTypeNameRef Types.portTypeSize
 
 allocaPortsH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 allocaPortsH mPorts = allocaGenH mPorts Types.portTypeNameRef
@@ -270,7 +282,7 @@ allocaDataH mPorts = allocaGenH mPorts Types.dataType
 
 mallocDataH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocDataH mPorts =
-  mallocGenH mPorts (Types.pointerOf Types.dataType) Types.dataTypeSize
+  mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
