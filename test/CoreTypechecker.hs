@@ -133,7 +133,11 @@ dependentFunctionComp =
     [ shouldCheck
         All.all
         depIdentity
-        depIdentityCompTy
+        depIdentityCompTy,
+      shouldCheck
+        All.all
+        depIdentity
+        depIdentityCompTyOmega
     ]
 
 evaluations ∷ T.TestTree
@@ -195,6 +199,24 @@ depIdentityCompTy =
           ( pure
               ( IR.VPi -- the second input, x
                   (SNat 1) -- x's usage
+                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- Local 0 is the first input, i.e. t. x is of type t
+                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 0))))) -- the return type is t
+              )
+          )
+      )
+  )
+
+-- computation dependent identity annotation (1, 0 * -> 1 t -> t)
+depIdentityCompTyOmega ∷ AllAnnotation
+depIdentityCompTyOmega =
+  ( SNat 1, -- the sig usage of the dependent identity function
+    IR.VPi -- the first input, t
+      (SNat 0) -- t's usage
+      (IR.VStar 0) -- first input's type, is type
+      ( const
+          ( pure
+              ( IR.VPi -- the second input, x
+                  Omega -- x's usage
                   (IR.VNeutral (IR.NFree (IR.Local 0))) -- Local 0 is the first input, i.e. t. x is of type t
                   (const (pure (IR.VNeutral (IR.NFree (IR.Local 0))))) -- the return type is t
               )

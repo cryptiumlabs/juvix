@@ -416,8 +416,13 @@ typeElim p ii g e@(App m n) = do
           <> show (snd mTy)
           <> " as required. Checking that the function argument (N)"
           <> show n
-          <> " is of the argument"
-          <> " type (S) with sigma*pi usage."
+          <> " is of the argument type S ("
+          <> show varTy
+          <> ") with sigma*pi "
+          <> show sig
+          <> "*"
+          <> show pi
+          <> " usage. "
       typeTerm p ii g n (sig <.> pi, varTy) -- N has to be of type S (varTy) with usage sig*pi
       logOutput $
         passed
