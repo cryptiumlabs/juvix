@@ -18,8 +18,8 @@
 --   |--------------+------------------------------------|
 --   | Node         | Malloc                             |
 --   | portSize     | Stored on Node malloc              |
---   | PortArray    | Stored on Node malloc              |
---   | DataArray    | Stored on Node malloc              |
+--   | PortArray    | Malloc                             |
+--   | DataArray    | Malloc Maybe                       |
 --   | PortLocation | (Null) Allocad from PortArray Call |
 --   | NodePtr      | (Null) Allocad from PortArray Call |
 --   | Data         | (Null) Allocad from DataArray Call |
@@ -32,11 +32,11 @@
 --     * =allocaNumPortNum=
 --       | portsSize | Alloca |
 --
---     * =allocaPortsH=
---       | portArray | Alloca |
+--     * =mallocPortsH=
+--       | portArray | Malloc |
 --
---     * =allocaDataH=
---       | dataArray | Alloca |
+--     * =mallocDataH=
+--       | dataArray | Malloc |
 --
 --   + the values that are null will be set from outside when the node
 --     is instantiated.
@@ -195,7 +195,8 @@ mallocNodeH mPorts mData = do
   let totalSize =
         Types.numPortsSize
           + (anyThere mPorts * Types.pointerSizeInt)
-          + (anyThere mData * Types.pointerSizeInt) :: Integer
+          + (anyThere mData * Types.pointerSizeInt) ∷
+          Integer
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
   portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
@@ -220,19 +221,21 @@ mallocNodeH mPorts mData = do
       }
   store portPtr ports
   -- let's not allocate data if we don't have to!
-  case anyThere mData :: Integer of
-    0 → pure ()
+  case anyThere mData ∷ Integer of
+    -- do this when we pass more information to deAllocateNode
+    -- Until then it's not safe
+    -- 0 → pure ()
     _ → do
-    data' ← mallocDataH mData >>= flip bitCast Types.dataArray
-    dataPtr ← getElementPtr $
-      Types.Minimal
-        { -- do I really want to say size 0?
-          -- Yes, as we have to bitcast what get back to size 0!
-          Types.type' = Types.pointerOf Types.dataArray,
-          Types.address' = nodePtr,
-          Types.indincies' = Block.constant32List [0, 2]
-        }
-    store dataPtr data'
+      data' ← mallocDataH mData >>= flip bitCast Types.dataArray
+      dataPtr ← getElementPtr $
+        Types.Minimal
+          { -- do I really want to say size 0?
+            -- Yes, as we have to bitcast what get back to size 0!
+            Types.type' = Types.pointerOf Types.dataArray,
+            Types.address' = nodePtr,
+            Types.indincies' = Block.constant32List [0, 2]
+          }
+      store dataPtr data'
   pure nodePtr
 
 -- | used to create the malloc and alloca functions for ports and data
@@ -344,7 +347,22 @@ defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
       ]
 
 deAllocateNode ∷ Define m ⇒ Operand.Operand → m Operand.Operand
-deAllocateNode nodePtr = free nodePtr
+deAllocateNode nodePtr = do
+  portPtr ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Types.portData,
+        Types.address' = nodePtr,
+        Types.indincies' = Block.constant32List [0, 1]
+      }
+  dataPtr ← loadElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Types.dataArray,
+        Types.address' = nodePtr,
+        Types.indincies' = Block.constant32List [0, 2]
+      }
+  _ ← free portPtr
+  _ ← free dataPtr
+  free nodePtr
 
 --------------------------------------------------------------------------------
 -- Helpers

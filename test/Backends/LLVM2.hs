@@ -112,7 +112,7 @@ exampleModule2 =
           }
     ]
 
-test_example_jit' :: IO ()
+test_example_jit' ∷ IO ()
 test_example_jit' = do
   let module' = Codegen.moduleAST runInitModule
   let newModule =

@@ -84,8 +84,8 @@ Operations necessary to update nodes
   |--------------+------------------------------------|
   | Node         | Malloc                             |
   | portSize     | Stored on Node malloc              |
-  | PortArray    | Stored on Node malloc              |
-  | DataArray    | Stored on Node malloc              |
+  | PortArray    | Malloc                             |
+  | DataArray    | Malloc Maybe                       |
   | PortLocation | (Null) Allocad from PortArray Call |
   | NodePtr      | (Null) Allocad from PortArray Call |
   | Data         | (Null) Allocad from DataArray Call |
@@ -94,10 +94,10 @@ Operations necessary to update nodes
       | node | Malloc |
     * =allocaNumPortNum=
       | portsSize | Alloca |
-    * =allocaPortsH=
-      | portArray | Alloca |
-    * =allocaDataH=
-      | dataArray | Alloca |
+    * =mallocPortsH=
+      | portArray | Malloc |
+    * =mallocDataH=
+      | dataArray | Malloc |
   + the values that are null will be set from outside when the node
     is instantiated.
     * Data will be **Allocad**
@@ -159,6 +159,10 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Library]]
 **** Net
+***** API
+- _Relies on_
+  + [[Codegen]]
+  + [[Library]]
 ***** Environment
 - Serves as the default environment for executing EAC code
 - _Relies on_
@@ -175,7 +179,7 @@ Provides a mechanism for defining Sum types
   pre processed =EAC= graph that the initial graph will be made on
 - _Allocation_
   + layout :
-    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr]* | DataArray[Data]*]}
     * Similar to the one in Graph, however it also has the eac tag
    | Part         | Alloca Or Malloc                   |
    |--------------+------------------------------------|
@@ -183,8 +187,8 @@ Provides a mechanism for defining Sum types
    | tag          | Stored on Eac Malloc               |
    | NodePtr*     | Malloc from =mallocNode=           |
    | portSize     | Stored on Node Malloc              |
-   | PortArray    | Stored on Node Malloc              |
-   | DataArray    | Stored on Node Malloc              |
+   | PortArray    | Malloc                             |
+   | DataArray    | Malloc Maybe                       |
    | PortLocation | (Null) Allocad from PortArray Call |
    | NodePtr      | (Null) Allocad from PortArray Call |
    | Data         | (Null) Allocad from DataArray Call |

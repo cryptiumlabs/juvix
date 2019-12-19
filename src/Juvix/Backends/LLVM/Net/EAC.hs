@@ -6,7 +6,7 @@
 --
 -- - _Allocation_
 --   + layout :
---     eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+--     eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr]* | DataArray[Data]*]}
 --     * Similar to the one in Graph, however it also has the eac tag
 --
 --    | Part         | Alloca Or Malloc                   |
@@ -15,8 +15,8 @@
 --    | tag          | Stored on Eac Malloc               |
 --    | NodePtr*     | Malloc from =mallocNode=           |
 --    | portSize     | Stored on Node Malloc              |
---    | PortArray    | Stored on Node Malloc              |
---    | DataArray    | Stored on Node Malloc              |
+--    | PortArray    | Malloc                             |
+--    | DataArray    | Malloc Maybe                       |
 --    | PortLocation | (Null) Allocad from PortArray Call |
 --    | NodePtr      | (Null) Allocad from PortArray Call |
 --    | Data         | (Null) Allocad from DataArray Call |
