@@ -37,7 +37,7 @@ typeToTypeForClosure ty =
 -- Free variables: nested pair of free variables in order, finally ().
 closureType ∷ [(Symbol, M.Type)] → M.Type
 closureType [] = M.Type M.TUnit ""
-closureType ((n, x) : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
+closureType ((_, x) : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
 
 -- TODO: Figure out how to add nice annotations without breaking equality comparisons.
 lamTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → M.Type

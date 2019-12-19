@@ -84,10 +84,7 @@ termToInstr ∷
   M.Type →
   m Op
 termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
-  let notYetImplemented ∷ m Op
-      notYetImplemented = throw @"compilationError" (NotYetImplemented ("termToInstr: " <> show term))
-
-      failWith ∷ Text → m Op
+  let failWith ∷ Text → m Op
       failWith = throw @"compilationError" . InternalFault
 
       stackCheck ∷ (Stack → Stack → Bool) → m Op → m Op
