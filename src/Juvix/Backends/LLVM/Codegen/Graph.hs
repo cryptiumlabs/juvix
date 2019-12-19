@@ -190,7 +190,8 @@ mallocNodeH ∷
 mallocNodeH mPorts mData = do
   let anyThere xs =
         case length xs of
-          0 → 0
+          -- 1 until it's safe to not to
+          0 → 1
           _ → 1
   let totalSize =
         Types.numPortsSize
