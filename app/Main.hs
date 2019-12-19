@@ -23,7 +23,7 @@ context = do
 main ∷ IO ()
 main = do
   case runInitModule' of
-    Left x  → print "Left \n" >> print x
+    Left x → print "Left \n" >> print x
     Right () → print "did it"
   print runInitModule
 

@@ -55,7 +55,12 @@ exampleModule2 =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidStarTy, argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
+                                    ( ptr $ FunctionType
+                                        { resultType = voidStarTy,
+                                          argumentTypes = [IntegerType {typeBits = 64}],
+                                          isVarArg = False
+                                        }
+                                    )
                                     (Name "malloc")
                                 )
                             ),
@@ -107,9 +112,15 @@ exampleModule2 =
           }
     ]
 
+test_example_jit' :: IO ()
 test_example_jit' = do
   let module' = Codegen.moduleAST runInitModule
-  let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
+  let newModule =
+        module'
+          { LLVM.AST.moduleDefinitions =
+              LLVM.AST.moduleDefinitions module'
+                <> LLVM.AST.moduleDefinitions exampleModule2
+          }
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
   (imp, kill) ← jitWith (Config None) newModule dynamicImport
   Just fn ← importAs imp "test" (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
@@ -117,4 +128,4 @@ test_example_jit' = do
   kill
 
 test' ∷ MonadIO m ⇒ m ()
-test' = putStr $ ppllvm (Codegen.moduleAST runInitModule)
+test' = putStr (ppllvm (Codegen.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)

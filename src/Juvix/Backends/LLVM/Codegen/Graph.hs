@@ -192,8 +192,9 @@ mallocNodeH mPorts mData = do
         Types.nodePointerSize
           + (length mPorts * Types.portTypeSize)
           + (length mData * Types.dataTypeSize)
+  -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
-  portSize ← allocaNumPortNum (fromIntegral $ length mPorts)
+  portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
   ports ← allocaPortsH mPorts
   data' ← allocaDataH mData
   tagPtr ← getElementPtr $
@@ -202,6 +203,7 @@ mallocNodeH mPorts mData = do
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
+  portSize ← load numPorts portSizeP
   store tagPtr portSize
   portPtr ← getElementPtr $
     Types.Minimal
@@ -214,7 +216,7 @@ mallocNodeH mPorts mData = do
   dataPtr ← getElementPtr $
     Types.Minimal
       { -- do I really want to say size 0?
-        Types.type' = Types.pointerOf (Type.ArrayType 0 Types.dataType),
+        Types.type' = Types.pointerOf Types.dataArray,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 2]
       }
@@ -261,10 +263,10 @@ mallocPortsH mPorts =
   mallocGenH mPorts Types.portPointer Types.portTypeSize
 
 allocaPortsH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
-allocaPortsH mPorts = allocaGenH mPorts Types.portPointer
+allocaPortsH mPorts = allocaGenH mPorts Types.portTypeNameRef
 
 allocaDataH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
-allocaDataH mPorts = allocaGenH mPorts (Types.pointerOf Types.dataType)
+allocaDataH mPorts = allocaGenH mPorts Types.dataType
 
 mallocDataH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocDataH mPorts =
@@ -411,6 +413,7 @@ getPort node port = do
           Types.address' = ports,
           Types.indincies' =
             [ Operand.ConstantOperand (C.Int 32 0),
+              Operand.ConstantOperand (C.Int 32 0),
               i32Value
             ]
         }
@@ -504,16 +507,17 @@ createNumPortsStaticGen isLarge value allocVar alloc =
   -- else it is an error.
   -- see if this is okay, if not make custom logic just for the
   -- sums to create the language
-  case isLarge of
-    False →
-      -- TODO ∷ register this variant
-      allocVar "numPorts_small" [value] Types.numPortsSize
-    True → do
-      -- Allocate a pointer to the value
-      ptr ← alloc nodePointer Types.nodePointerSize
-      store ptr value
-      -- TODO ∷ register this variant
-      allocVar "numPorts_large" [ptr] Types.numPortsSize
+  let castIt x = Block.bitCast x (Types.pointerOf Types.numPorts)
+   in case isLarge of
+        False → do
+          small ← allocVar "numPorts_small" [value] Types.numPortsSize
+          castIt small
+        True → do
+          -- Allocate a pointer to the value
+          ptr ← alloc nodePointer Types.nodePointerSize
+          store ptr value
+          large ← allocVar "numPorts_large" [ptr] Types.numPortsSize
+          castIt large
 
 -- | Allocates 'numPorts' via allcoca
 allocaNumPortsStatic ∷

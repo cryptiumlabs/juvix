@@ -348,20 +348,10 @@ nodeType = StructureType
   }
 
 dataArray ∷ Type
-dataArray = ArrayType 0 dataType
+dataArray = pointerOf (ArrayType 0 dataType)
 
 portData ∷ Type
-portData = ArrayType 0 portTypeNameRef
-
--- Holds the port type and the size of it for easy transition into nodeType
-portArrayLen ∷ Type
-portArrayLen = StructureType
-  { isPacked = True,
-    elementTypes =
-      [ numPorts,
-        portData
-      ]
-  }
+portData = pointerOf (ArrayType 0 portTypeNameRef)
 
 -- TODO ∷ This changes per platform
 vaList ∷ Type

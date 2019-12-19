@@ -71,10 +71,13 @@ createVariantName sumName varName = sumName <> "-" <> varName
 -- Important functions
 -----------------------------------------------------------------------------------------
 
+sumPack ∷ Bool
+sumPack = True
+
 createSum ∷ [VariantInfo] → Type
 createSum variants =
   StructureType
-    { isPacked = True,
+    { isPacked = sumPack,
       elementTypes =
         [tag, arrSize]
     }
@@ -87,7 +90,7 @@ updateVariant ∷ Type → VariantInfo → VariantInfo
 updateVariant tagSize (Variant s n (StructureType p ele)) =
   Variant s n (StructureType p (tagSize : ele))
 updateVariant tagSize (Variant s n t) =
-  Variant s n (StructureType False [tagSize, t])
+  Variant s n (StructureType sumPack [tagSize, t])
 
 -- | 'insertSums' creates a sum type, and inserts the new types into the symbol table
 -- and the variant table for all the newly created variants
