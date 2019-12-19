@@ -507,20 +507,27 @@ mallocGen type' portLen dataLen = do
   eac ← Codegen.malloc Types.eacSize Types.eacPointer
   -- malloc call
   node ← Codegen.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
-  tagPtr ← Codegen.getElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf Types.tag,
-        Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 0]
-      }
-  Codegen.store tagPtr (Operand.ConstantOperand type')
-  nodePtr ← Codegen.getElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
-        Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 1]
-      }
-  Codegen.store nodePtr node
+  -- alloca test
+  test ← Codegen.alloca Type.i32
+  Codegen.store test (Operand.ConstantOperand (C.Int 32 0))
+  testvl ← Codegen.load Type.i32 test
+  -- alloca test over
+  -- tagPtr ← Codegen.getElementPtr $
+  --   Codegen.Minimal
+  --     { Codegen.type' = Codegen.pointerOf Types.tag,
+  --       Codegen.address' = eac,
+  --       Codegen.indincies' = [ testvl,
+  --                              testvl
+  --                            ]
+  --     }
+  -- Codegen.store tagPtr (Operand.ConstantOperand type')
+  -- nodePtr ← Codegen.getElementPtr $
+  --   Codegen.Minimal
+  --     { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
+  --       Codegen.address' = eac,
+  --       Codegen.indincies' = Codegen.constant32List [0, 1]
+  --     }
+  -- Codegen.store nodePtr node
   pure eac
 
 mallocEra,

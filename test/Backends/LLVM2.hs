@@ -19,7 +19,7 @@ import LLVM.AST.Type
 -- -- import LLVM.Context
 -- -- import LLVM.ExecutionEngine
 -- -- import LLVM.Module
-
+import LLVM.Pretty
 
 exampleModule2 ∷ LLVM.AST.Module
 exampleModule2 =
@@ -107,7 +107,6 @@ exampleModule2 =
           }
     ]
 
-
 test_example_jit' = do
   let module' = Codegen.moduleAST runInitModule
   let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
@@ -116,3 +115,6 @@ test_example_jit' = do
   Just fn ← importAs imp "test" (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
   kill
+
+test' ∷ MonadIO m ⇒ m ()
+test' = putStr $ ppllvm (Codegen.moduleAST runInitModule)

@@ -9,7 +9,6 @@ import Juvix.Library hiding (Type, local)
 import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST
-import LLVM.AST.AddrSpace
 import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
@@ -29,7 +28,7 @@ fresh ∷ (HasState "count" b m, Enum b) ⇒ m b
 fresh = do
   i ← get @"count"
   put @"count" (succ i)
-  pure (succ i)
+  pure i
 
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
@@ -84,6 +83,7 @@ emptyModule label = AST.defaultModule {moduleName = label}
 addDefn ∷ HasState "moduleDefinitions" [Definition] m ⇒ Definition → m ()
 addDefn d = modify @"moduleDefinitions" (<> [d])
 
+addType ∷ HasState "moduleDefinitions" [Definition] m ⇒ Name → Type → m ()
 addType name typ =
   addDefn (TypeDefinition name (Just typ))
 
@@ -109,7 +109,7 @@ defineGen isVarArgs retty label argtys body = do
   return
     $ ConstantOperand
     $ C.GlobalReference
-      (PointerType (FunctionType retty (fst <$> argtys) isVarArgs) (AddrSpace 0))
+      (Types.pointerOf (FunctionType retty (fst <$> argtys) isVarArgs))
       (internName label)
   where
     params = ((\(ty, nm) → Parameter ty nm []) <$> argtys, isVarArgs)
@@ -285,7 +285,7 @@ external retty label argtys = do
   return
     $ ConstantOperand
     $ C.GlobalReference
-      (PointerType (FunctionType retty (fst <$> argtys) False) (AddrSpace 0))
+      (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
       (mkName label)
 
 --------------------------------------------------------------------------------
@@ -297,25 +297,25 @@ external retty label argtys = do
 defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
-  op ← external voidStarTy name [(size_t, "size")]
+  op ← external (Types.pointerOf Type.i8) name [(Types.size_t, "size")]
   assign name op
 
 defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
-  op ← external voidTy name [(Types.voidStarTy, "type")]
+  op ← external voidTy name [(Types.pointerOf Type.i8, "type")]
   assign name op
 
 malloc ∷ Call m ⇒ Integer → Type → m Operand
 malloc size type' = do
   malloc ← externf "malloc"
-  voidPtr ← call Types.voidStarTy malloc (emptyArgs [Operand.ConstantOperand (C.Int 32 size)])
+  voidPtr ← call (Types.pointerOf Type.i8) malloc (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
   bitCast voidPtr type'
 
 free ∷ Call m ⇒ Operand → m Operand
 free thing = do
   free ← externf "free"
-  casted ← bitCast thing Types.voidStarTy
+  casted ← bitCast thing (Types.pointerOf Type.i8)
   call Types.voidTy free (emptyArgs [casted])
 
 --------------------------------------------------------------------------------
@@ -548,9 +548,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
-    -- Verify my pointerOf is correct here
+    -- The pointerOf is now correct!
     Minimal
-      { Types.type' = Types.pointerOf sumTyp,
+      { Types.type' = Types.pointerOf (Type.IntegerType tag),
         Types.address' = sum,
         Types.indincies' = constant32List [0, 0]
       }
@@ -564,9 +564,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     ( \i inst → do
         ele ←
           getElementPtr $
-            -- Verify my pointerOf is correct here
+            -- The pointerOf is now correct!
             Minimal
-              { Types.type' = Types.pointerOf varType,
+              { Types.type' = Types.pointerOf (intoStructTypeErr varType i),
                 Types.address' = casted,
                 Types.indincies' = constant32List [0, i]
               }

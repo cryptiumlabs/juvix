@@ -16,6 +16,7 @@ import LLVM.AST as AST
 import LLVM.AST.AddrSpace
 import LLVM.AST.DataLayout (DataLayout (..))
 import qualified LLVM.AST.Type as Type
+import Prelude ((!!))
 
 --------------------------------------------------------------------------------
 -- Codegen State
@@ -203,6 +204,14 @@ data MinimalPtr
   deriving (Show)
 
 --------------------------------------------------------------------------------
+-- LLVM Type Operations
+--------------------------------------------------------------------------------
+
+-- TODO :: Replace with safe lens call instead!
+intoStructTypeErr ∷ Integral a ⇒ Type → a → Type
+intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
+
+--------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
 
@@ -224,19 +233,20 @@ numPortsSmall =
         typ' = numPortsSmallValue
       }
 
+numPortsSmallType ∷ Type
 numPortsSmallType = typ' numPortsSmall
 
 pointerOf ∷ Type → Type
-pointerOf typ = PointerType typ (AddrSpace 32)
+pointerOf typ = PointerType typ (AddrSpace 0)
 
 pointerSizeInt ∷ Num p ⇒ p
-pointerSizeInt = 32
+pointerSizeInt = 64
 
 pointerSize ∷ Type
-pointerSize = Type.i32
+pointerSize = Type.i64
 
 numPortsSmallValue ∷ Type
-numPortsSmallValue = Type.i32
+numPortsSmallValue = Type.i64
 
 -- | 'numPortsLarge' is used for the number of ports that don't fit within 16 bits
 numPortsLarge ∷ VariantInfo
@@ -244,12 +254,13 @@ numPortsLarge =
   updateVariant
     Type.i1
     Variant
-      { size = 32,
+      { size = 64,
         name = "large",
         typ' = numPortsLargeValuePtr
       }
 
-numPortsLargeType = typ' numPortsSmall
+numPortsLargeType ∷ Type
+numPortsLargeType = typ' numPortsLarge
 
 numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
@@ -281,10 +292,10 @@ numPorts =
     typ = createSum [numPortsLarge, numPortsSmall]
 
 numPortsSize ∷ Num p ⇒ p
-numPortsSize = 33
+numPortsSize = 65
 
 nodePointerSize ∷ Num p ⇒ p
-nodePointerSize = 32
+nodePointerSize = 64
 
 portTypeNameRef ∷ Type
 portTypeNameRef = Type.NamedTypeReference portTypeName
@@ -305,7 +316,7 @@ portPointer ∷ Type
 portPointer = pointerOf portTypeNameRef
 
 portTypeSize ∷ Num p ⇒ p
-portTypeSize = 33
+portTypeSize = numPortsSize + pointerSizeInt
 
 -- TODO ∷ Figure out how to have an un-tagged union here for all baked in types
 dataType ∷ Type
@@ -356,7 +367,7 @@ portArrayLen = StructureType
 vaList ∷ Type
 vaList = StructureType
   { isPacked = True,
-    elementTypes = [PointerType Type.i8 (AddrSpace 32)]
+    elementTypes = [pointerOf Type.i8]
   }
 
 bothPrimary ∷ Type → Type
@@ -366,10 +377,13 @@ bothPrimary nodePtrType = StructureType
   }
 
 voidStarTy ∷ Type
-voidStarTy = PointerType VoidType (AddrSpace 32)
+voidStarTy = pointerOf VoidType
 
 voidTy ∷ Type
 voidTy = VoidType
 
 size_t ∷ Type
 size_t = IntegerType 64
+
+size_t_int ∷ Num p ⇒ p
+size_t_int = 64
