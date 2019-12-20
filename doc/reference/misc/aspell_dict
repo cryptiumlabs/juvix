@@ -1,4 +1,4 @@
-personal_ws-1.1 en 355 
+personal_ws-1.1 en 356 
 ABSALG
 ADT
 ADTs
@@ -141,6 +141,7 @@ colback
 colframe
 color
 colored
+combinator
 combinators
 composable
 compositional

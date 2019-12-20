@@ -22,6 +22,14 @@ import LLVM.Module
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
+backendLLVM ∷ T.TestTree
+backendLLVM =
+  T.testGroup
+    "Backend LLVM"
+    [ fn_test_malloc_free_jit,
+      fn_test_example_jit
+    ]
+
 fn_test_malloc_free_jit ∷ T.TestTree
 fn_test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
   (imp, kill) ← jitWith (Config None) mallocFreeModule dynamicImport

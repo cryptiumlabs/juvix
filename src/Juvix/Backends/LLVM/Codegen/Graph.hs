@@ -327,7 +327,7 @@ defineLinkConnectedPort =
       ]
 
 defineRewire ∷ Define m ⇒ m Operand.Operand
-defineRewire  =
+defineRewire =
   Block.defineFunction Type.void "rewire" args $
     do
       -- TODO ∷ Abstract out this bit ---------------------------------------------
