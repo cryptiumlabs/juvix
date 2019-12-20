@@ -29,6 +29,7 @@ extra-deps:
 - mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
 - derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
 - derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+- jsonschema-gen-0.4.1.0@sha256:ad30f5f5609fd55fcc9a50ef68681ab577fa78b88dadd38531bc3a727d933c3a,2368
 - semirings-0.5.1
 - brick-0.46
 - github: acid-state/safecopy

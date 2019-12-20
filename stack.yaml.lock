@@ -180,6 +180,13 @@ packages:
   original:
     hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
 - completed:
+    hackage: jsonschema-gen-0.4.1.0@sha256:ad30f5f5609fd55fcc9a50ef68681ab577fa78b88dadd38531bc3a727d933c3a,2368
+    pantry-tree:
+      size: 776
+      sha256: 79bddd4b1f34131048bf2a26da0280f53bc615937577e999433c5e24a5531c97
+  original:
+    hackage: jsonschema-gen-0.4.1.0@sha256:ad30f5f5609fd55fcc9a50ef68681ab577fa78b88dadd38531bc3a727d933c3a,2368
+- completed:
     hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
     pantry-tree:
       size: 610

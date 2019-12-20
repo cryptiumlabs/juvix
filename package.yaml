@@ -38,6 +38,7 @@ dependencies:
   - hevm
   - elliptic-curve
   - sonic
+  - aeson
 
 default-extensions:
   - NoImplicitPrelude
@@ -78,7 +79,7 @@ library:
     - z3
     - derive-storable
     - derive-storable-plugin
-#    - jsonschema-gen
+    - jsonschema-gen
   exposed-modules:
     - Juvix
     - Juvix.Core
@@ -130,7 +131,7 @@ library:
     - Juvix.Encoding.Types
     - Juvix.INetIR
     - Juvix.INetIR.Types
-#    - Juvix.INetIR.JSON
+    - Juvix.INetIR.JSON
     - Juvix.Backends
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
