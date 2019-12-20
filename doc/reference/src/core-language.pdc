@@ -694,12 +694,6 @@ To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ## Examples
 
-### Dependent identity function
-
-The dependent identity function can be typed as: $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
-
-This should also typecheck if the $x$ argument usage is replaced with $w$ (instead of $1$).
-
 ### SKI combinators
 
 #### S combinator
