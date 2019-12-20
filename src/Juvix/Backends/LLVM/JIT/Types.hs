@@ -68,11 +68,11 @@ instance DynamicImport (Double → IO Double) (Double → IO Double) where
 instance DynamicImport (Ptr Node → IO ()) (Ptr Node → IO ()) where
   unFunPtr = nodeFn
 
-instance DynamicImport (IO OpaqueNetPtr) (IO OpaqueNetPtr) where
-  unFunPtr = createNetFn
+instance DynamicImport (IO OpaqueNetPtr) (() → IO OpaqueNetPtr) where
+  unFunPtr = const . createNetFn
 
-instance DynamicImport (OpaqueNetPtr → Ptr Node → IO ()) (OpaqueNetPtr → Ptr Node → IO ()) where
-  unFunPtr = appendToNetFn
+instance DynamicImport (OpaqueNetPtr → Ptr Node → IO ()) ((OpaqueNetPtr, Ptr Node) → IO ()) where
+  unFunPtr = uncurry . appendToNetFn
 
 instance DynamicImport (OpaqueNetPtr → IO (Ptr Node)) (OpaqueNetPtr → IO (Ptr Node)) where
   unFunPtr = readNetFn
