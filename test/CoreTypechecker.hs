@@ -1,6 +1,8 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
+import Control.Exception
+import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals
@@ -44,8 +46,15 @@ shouldCheck ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
-  T.testCase (show term <> " should check as type " <> show ann) $
-    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
+  -- TODO: take out the logs and put them in an IO monad.
+  let logs = intercalate "\n" $ map IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeTerm param 0 [] term ann)))
+   in T.testCase
+        ( show term
+            <> " should check as type "
+            <> show ann
+            <> show logs
+        )
+        $ fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
 
 --unit test generator for typeElim
 shouldInfer ∷
@@ -56,8 +65,9 @@ shouldInfer ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldInfer param term ann =
-  T.testCase (show term <> " should infer to type " <> show ann) $
-    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
+  let logs = concatMap IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeElim0 param [] term)))
+   in T.testCase (show term <> " should infer to type " <> show ann <> show logs) $
+        fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
 
 --unit test generator for evalTerm
 shouldEval ∷
@@ -71,9 +81,8 @@ shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
     fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
 
-test_core ∷ T.TestTree
-test_core =
-  --TODO after moving away from discover, can rename to coreTests
+coreCheckerEval ∷ T.TestTree
+coreCheckerEval =
   T.testGroup
     "Core type checker and evaluator tests"
     [ skiComp,
@@ -98,8 +107,14 @@ skiComp =
       shouldCheck nat (IR.Elim kAppI) kAppICompTy,
       shouldCheck nat (IR.Elim kAppINotAnnotated) kAppICompTy,
       shouldInfer nat kApp1 natToNatTy,
-      shouldInfer nat kFunApp1 kFunApp1CompTy
-      -- shouldCheck nat scombinator scombinatorCompNatTy
+      shouldInfer
+        nat
+        kFunApp1
+        kFunApp1CompTy {- ,
+        shouldCheck
+          nat
+          scombinator
+          scombinatorCompNatTy -}
     ]
 
 natComp ∷ T.TestTree
@@ -115,7 +130,18 @@ dependentFunctionComp ∷ T.TestTree
 dependentFunctionComp =
   T.testGroup
     "Dependent Functions Computational typing"
-    [ shouldCheck All.all depIdentity depIdentityCompTy
+    [ shouldCheck
+        All.all
+        depIdentity
+        depIdentityCompTy,
+      shouldCheck
+        All.all
+        depIdentity
+        depIdentityCompTyOmega,
+      shouldCheck
+        All.all
+        depK
+        depKCompTy
     ]
 
 evaluations ∷ T.TestTree
@@ -177,10 +203,26 @@ depIdentityCompTy =
           ( pure
               ( IR.VPi -- the second input, x
                   (SNat 1) -- x's usage
-                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
-                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 0)))))
-                -- the output is of the type that's the same as the second input of this annotation. I.e., t
-                -- TODO: is this right? Chris thinks `t` should be at index 1 and the return type should be t
+                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- Local 0 is the first input, i.e. t. x is of type t
+                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 0))))) -- the return type is t
+              )
+          )
+      )
+  )
+
+-- computation dependent identity annotation (1, 0 * -> w t -> t)
+depIdentityCompTyOmega ∷ AllAnnotation
+depIdentityCompTyOmega =
+  ( SNat 1, -- the sig usage of the dependent identity function
+    IR.VPi -- the first input, t
+      (SNat 0) -- t's usage
+      (IR.VStar 0) -- first input's type, is type
+      ( const
+          ( pure
+              ( IR.VPi -- the second input, x
+                  Omega -- x's usage
+                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- Local 0 is the first input, i.e. t. x is of type t
+                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 0))))) -- the return type is t
               )
           )
       )
@@ -431,6 +473,63 @@ kAppICompTy =
       (const (pure (IR.VPi (SNat 1) (IR.VPrimTy Nat) (const (pure (IR.VPrimTy Nat)))))) -- (1 Nat -> Nat)
   )
 
+-- dependent k, \t1.\t2.\x:t1.\y:t2.x 1: t1
+depK ∷ ∀ primTy primVal. IR.Term primTy primVal
+depK =
+  IR.Lam -- first input t1, Bound 3 counting from output
+    ( IR.Lam -- second input t2, Bound 2 counting from output
+        ( IR.Lam -- third input x, Bound 1 counting from output
+            ( IR.Lam -- forth input y, Bound 0 counting from output
+                ( IR.Elim -- output
+                    ( IR.Ann -- annotation is of
+                        (SNat 1) -- 1 usage
+                        (IR.Elim (IR.Bound 1)) -- x is the output, which has annotation (1, t)
+                        (IR.Elim (IR.Bound 3)) -- of type t1
+                    )
+                )
+            )
+        )
+    )
+
+-- computation dependent k annotation
+-- \t1.\t2.\x.\y.x 1: (t1 0: *0) -> (t2 0: *0) -> (x 1: t1) -> (y 0: t2) -> t1
+depKCompTy ∷ AllAnnotation
+depKCompTy =
+  ( SNat 1, -- the sig usage of the dependent identity function
+    IR.VPi -- the first input, t1
+      (SNat 0) -- t1's usage
+      (IR.VStar 0) -- t1's type
+      ( const
+          ( pure
+              ( IR.VPi -- the second input, t2
+                  (SNat 0) -- t2's usage
+                  (IR.VStar 0) -- t2's type
+                  ( const
+                      ( pure
+                          ( IR.VPi -- the third input, x
+                              (SNat 1) -- x's usage
+                              (IR.VNeutral (IR.NFree (IR.Local 0))) -- x's type, Local 0 is the first input (t1)
+                              ( const
+                                  ( pure
+                                      ( IR.VPi -- the forth input, y
+                                          (SNat 0) -- y's usage
+                                          (IR.VNeutral (IR.NFree (IR.Local 1))) -- y's type, Local 1 is the second input (t2)
+                                          ( const
+                                              ( pure
+                                                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- output type is t1
+                                              )
+                                          )
+                                      )
+                                  )
+                              )
+                          )
+                      )
+                  )
+              )
+          )
+      )
+  )
+
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
 -- For example, S KSK = KK (SK) = K:Nat-> Nat-> Nat
@@ -530,8 +629,8 @@ scombinatorCompNatTy =
                   ( const
                       ( pure
                           ( IR.VPi
-                              (SNat 2)
-                              (IR.VPrimTy Nat) -- 2 Nat ->
+                              Omega
+                              (IR.VPrimTy Nat) -- w Nat ->
                               (const (pure (IR.VPrimTy Nat))) -- Nat
                           )
                       )

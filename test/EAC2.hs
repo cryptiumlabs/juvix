@@ -19,21 +19,6 @@ type TypeAssignment = ET.TypeAssignment ()
 unitParam ∷ Parameterisation () ()
 unitParam = Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
 
-test_id ∷ T.TestTree
-test_id = shouldBeTypeable idTerm idAssignment
-
-test_churchTwo ∷ T.TestTree
-test_churchTwo = shouldBeTypeable churchTwo churchAssignment
-
-test_churchThree ∷ T.TestTree
-test_churchThree = shouldBeTypeable churchThree churchAssignment
-
-test_counterexample ∷ T.TestTree
-test_counterexample = shouldNotBeTypeable counterexample counterexampleAssignment
-
-test_church_exp ∷ T.TestTree
-test_church_exp = shouldBeTypeable churchExp churchExpAssignment
-
 shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
 shouldBeTypeable term assignment =
   T.testCase (show term <> " should be typeable in EAC") $ do
@@ -49,6 +34,17 @@ shouldNotBeTypeable term assignment =
     case valid of
       Right _ → T.assertFailure "a satisfying assignment was found"
       Left _ → pure ()
+
+eac2Tests ∷ T.TestTree
+eac2Tests =
+  T.testGroup
+    "EAC2"
+    [ shouldBeTypeable idTerm idAssignment,
+      shouldBeTypeable churchTwo churchAssignment,
+      shouldBeTypeable churchThree churchAssignment,
+      shouldNotBeTypeable counterexample counterexampleAssignment,
+      shouldBeTypeable churchExp churchExpAssignment
+    ]
 
 idTerm ∷ Term
 idTerm = Lam (intern "x") (Var (intern "x"))
@@ -148,28 +144,27 @@ counterexampleAssignment =
 
 exp ∷ Term
 exp =
-  ( Lam
-      (intern "m")
-      ( Lam
-          (intern "n")
-          ( Lam
-              (intern "s")
-              ( Lam
-                  (intern "z")
-                  ( App
-                      ( App
-                          ( App
-                              (Var (intern "m"))
-                              (Var (intern "n"))
-                          )
-                          (Var (intern "s"))
-                      )
-                      (Var (intern "z"))
-                  )
-              )
-          )
-      )
-  )
+  Lam
+    (intern "m")
+    ( Lam
+        (intern "n")
+        ( Lam
+            (intern "s")
+            ( Lam
+                (intern "z")
+                ( App
+                    ( App
+                        ( App
+                            (Var (intern "m"))
+                            (Var (intern "n"))
+                        )
+                        (Var (intern "s"))
+                    )
+                    (Var (intern "z"))
+                )
+            )
+        )
+    )
 
 threeLam ∷ Term
 threeLam = Lam (intern "f") (Lam (intern "x") (nTimesApp 10 (Var (intern "f")) (Var (intern "x"))))
@@ -186,25 +181,24 @@ churchExp2 = exp
 
 churchExp ∷ Term
 churchExp =
-  ( Lam
-      (intern "s'")
-      ( Lam
-          (intern "z'")
-          ( App
-              ( App
-                  ( App
-                      ( App
-                          exp
-                          threeLam
-                      )
-                      threeLam2
-                  )
-                  (Var (intern "s'"))
-              )
-              (Var (intern "z'"))
-          )
-      )
-  )
+  Lam
+    (intern "s'")
+    ( Lam
+        (intern "z'")
+        ( App
+            ( App
+                ( App
+                    ( App
+                        exp
+                        threeLam
+                    )
+                    threeLam2
+                )
+                (Var (intern "s'"))
+            )
+            (Var (intern "z'"))
+        )
+    )
 
 zTy ∷ Type
 zTy = SymT (intern "a")

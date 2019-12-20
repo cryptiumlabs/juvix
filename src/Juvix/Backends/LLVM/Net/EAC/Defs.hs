@@ -24,6 +24,9 @@ findEdge = Codegen.findEdge Types.eacPointer
 bothPrimary ∷ Type.Type
 bothPrimary = Codegen.bothPrimary Types.eacPointer
 
+portType ∷ Type.Type
+portType = Codegen.portType Types.eacPointer
+
 mainPort,
   auxiliary1,
   auxiliary2,
@@ -53,20 +56,6 @@ linkAllCons ∷
   m Operand.Operand
 linkAllCons = DSL.linkAllCons Types.cons Types.eacPointer
 
-nodeType ∷ Type.Type
-nodeType = Codegen.nodeType Types.eacPointer
-
-nodePointer ∷ Type.Type
-nodePointer = Codegen.nodePointer Types.eacPointer
-
-mallocNodeH ∷
-  Codegen.MallocNode m ⇒
-  [Maybe Operand.Operand] →
-  [Maybe Operand.Operand] →
-  m Operand.Operand
-mallocNodeH xs ys =
-  Codegen.mallocNodeH xs ys Types.eacPointer
-
 loadPrimaryNode ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 
@@ -74,32 +63,22 @@ loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 -- Graph operation definitions
 --------------------------------------------------------------------------------
 
+mallocNodeH ∷
+  ( Codegen.RetInstruction m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasState "symTab" Codegen.SymbolTable m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+mallocNodeH mPorts mData = Codegen.mallocNodeH mPorts mData 4
+
 defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
 defineIsBothPrimary = Codegen.defineIsBothPrimary Types.eacPointer
 
-defineFindEdge ∷ Codegen.Define m ⇒ m Operand.Operand
-defineFindEdge = Codegen.defineFindEdge Types.eacPointer
-
-defineLink ∷ Codegen.Define m ⇒ m Operand.Operand
-defineLink = Codegen.defineLink Types.eacPointer
-
 defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand
-defineRewire = loadPtrGen Codegen.defineRewire
+defineRewire = Codegen.defineRewire
 
 defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
-defineLinkConnectedPort = loadPtrGen Codegen.defineLinkConnectedPort
-
-deAllocateNode ∷ Codegen.Define m ⇒ Operand.Operand → m Operand.Operand
-deAllocateNode = Codegen.deAllocateNode
-
-loadPtrGen ∷ Codegen.Define m ⇒ (Type.Type → (Operand.Operand → m Operand.Operand) → t) → t
-loadPtrGen f =
-  f
-    Types.eacPointer
-    $ \eac →
-      Codegen.loadElementPtr $
-        Codegen.Minimal
-          { Codegen.type' = nodePointer,
-            Codegen.address' = eac,
-            Codegen.indincies' = Codegen.constant32List [0, 0]
-          }
+defineLinkConnectedPort = Codegen.defineLinkConnectedPort

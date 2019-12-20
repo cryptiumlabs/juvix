@@ -22,21 +22,31 @@ shouldOptimise instr opt =
     (show instr <> " should optimise to " <> show opt)
     (opt T.@=? optimiseSingle instr)
 
-test_optimise_dup_drop ∷ T.TestTree
-test_optimise_dup_drop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]) (M.SeqEx [])
+backendMichelson ∷ T.TestTree
+backendMichelson =
+  T.testGroup
+    "Backend Michelson"
+    [ optimiseDupDrop,
+      optimiseLambdaExec,
+      identityFn,
+      identityApp
+    ]
 
-test_optimise_lambda_exec ∷ T.TestTree
-test_optimise_lambda_exec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
+optimiseDupDrop ∷ T.TestTree
+optimiseDupDrop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]) (M.SeqEx [])
 
-test_identity ∷ T.TestTree
-test_identity =
+optimiseLambdaExec ∷ T.TestTree
+optimiseLambdaExec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
+
+identityFn ∷ T.TestTree
+identityFn =
   shouldCompile
     identityTerm
     identityType
     "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP {CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
 
-test_identity_app ∷ T.TestTree
-test_identity_app =
+identityApp ∷ T.TestTree
+identityApp =
   shouldCompile
     identityAppTerm
     identityType
@@ -81,33 +91,32 @@ identityAppTerm =
   ( J.Lam
       "y"
       ( J.App
-          ( ( J.Lam
-                "x"
-                ( J.App
-                    ( J.App
-                        ( J.Prim PrimPair,
-                          SNat 1,
-                          J.Pi
-                            (SNat 1)
-                            (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
-                            (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
-                        )
-                        (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))),
-                      SNat 1,
-                      J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")))
-                    )
-                    ( J.App
-                        (J.Prim PrimFst, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
-                        (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
-                      SNat 1,
-                      J.PrimTy (PrimTy (M.Type M.TUnit ""))
-                    ),
-                  SNat 1,
-                  J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
-                ),
-              SNat 1,
-              identityType
-            )
+          ( J.Lam
+              "x"
+              ( J.App
+                  ( J.App
+                      ( J.Prim PrimPair,
+                        SNat 1,
+                        J.Pi
+                          (SNat 1)
+                          (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
+                          (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
+                      )
+                      (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))),
+                    SNat 1,
+                    J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) "")))
+                  )
+                  ( J.App
+                      (J.Prim PrimFst, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
+                      (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+                    SNat 1,
+                    J.PrimTy (PrimTy (M.Type M.TUnit ""))
+                  ),
+                SNat 1,
+                J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
+              ),
+            SNat 1,
+            identityType
           )
           (J.Var "y", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
         SNat 1,

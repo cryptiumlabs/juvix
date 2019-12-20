@@ -31,6 +31,7 @@ dependencies:
   - directory
   - llvm-hs
   - llvm-hs-pure
+  - llvm-hs-pretty
   - bytestring
   - time
   - morley
@@ -76,6 +77,8 @@ library:
   source-dirs: src
   dependencies:
     - z3
+    - derive-storable
+    - derive-storable-plugin
   exposed-modules:
     - Juvix
     - Juvix.Core
@@ -150,6 +153,7 @@ library:
     - Juvix.Backends.LLVM.Codegen.Block
     - Juvix.Backends.LLVM.Codegen.Graph
     - Juvix.Backends.LLVM.Codegen
+    - Juvix.Backends.LLVM.Net.API
     - Juvix.Backends.LLVM.Net.EAC
     - Juvix.Backends.LLVM.Net.EAC.Types
     - Juvix.Backends.LLVM.Net.EAC.Defs
@@ -192,7 +196,7 @@ executables:
 
 tests:
   juvix-test:
-    main:         Spec.hs
+    main:         Main.hs
     source-dirs:  test
     ghc-options:
       - -threaded
@@ -204,7 +208,6 @@ tests:
       - tasty-hunit
       - tasty-quickcheck
       - QuickCheck
-      - tasty-discover
       - temporary
       - raw-strings-qq
       - process

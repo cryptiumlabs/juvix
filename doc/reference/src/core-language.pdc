@@ -79,9 +79,9 @@ In canonical Juvix Core the type theory is instantiated over the semiring of nat
 
 Let $S$ be a set of sorts $(i, j, k)$ with a total order. 
 
-Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type.
+Let $K$ be the set of primitive types, $C$ be the set of primitive constants, and $⋮$ be the typing relation between primitive constants and primitive types, which must assign to each primitive constant a unique primitive type and usage.
 
-Let $F$ be the set of primitive functions, where each $f$ is related to a function type by the $⋮$ relation and endowed with a reduction operation $→_{f}$, which provided an argument of the function input type computes an argument of the function output type.
+Let $F$ be the set of primitive functions, where each $f$ is related to a function type, including an argument usage annotation, by the $⋮$ relation and endowed with a reduction operation $→_{f}$, which provided an argument of the function input type computes an argument of the function output type.
 
 Primitive types, primitive constants, and primitive functions are threaded-through to the untyped lambda calculus to which Core is erased, so they must be directly supported by the low-level execution model. The core type theory and subsequent compilation pathways are parameterised over $K$, $C$, $F$, $⋮$, and the reduction operations $→_{f}$, which are assumed to be available as implicit parameters.
 
@@ -187,9 +187,19 @@ Term judgements have the form:
 Γ ⊢ M \overset{σ}{:} S
 \end{align}
 
-where $σ \in {0,1}$. A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with. 
+where $σ \in {0,1}$.
 
-E.g., for the following judgement:
+Primitive constant term judgements have the form:
+
+\begin{align}
+⊢ M \overset{γ}{:} S
+\end{align}
+
+where $γ$ is any element in the semiring.
+
+A judgement with $σ = 0$ constructs a term with no computational content, while a judgement with $σ = 1$ constructs a term which will be computed with.
+
+For example, consider the following judgement:
 
 \begin{align*}
     n \overset{0}{:} Nat, x \overset{1}{:} Fin(n) ⊢ x \overset{\sigma}{:} Fin(n)
@@ -208,7 +218,7 @@ Computational judgement:
 \end{align*}
 
 Because the final colon is annotated to one, during computation, $n$ is used exactly $0$ times, $x$ is used exactly one time.
-In our language, $x$ can also be annotated as $ω$, indicating that it is used an arbitrary number of times.
+$x$ can also be annotated as $ω$, indicating that it can be used (computed with) an arbitrary number of times.
 
 ## Typing rules
 
@@ -245,9 +255,9 @@ $σ = 0$ fragment only.
 \begin{prooftree}
 \AxiomC{$c \in C$}
 \AxiomC{$\kappa \in K$}
-\AxiomC{$c ⋮ \kappa$}
+\AxiomC{$c ⋮ (γ, \kappa)$}
 \RightLabel{Prim-Const}
-\TrinaryInfC{$⊢ c \overset{σ}{:} \kappa$}
+\TrinaryInfC{$⊢ c \overset{γ}{:} \kappa$}
 \end{prooftree}
 
 Primitive constants are typed according to the primitive typing relation, and they can be produced in any computational quantity wherever desired.
@@ -258,9 +268,9 @@ Primitive constants are typed according to the primitive typing relation, and th
 
 \begin{prooftree}
 \AxiomC{$f \in F$}
-\AxiomC{$f ⋮ (x \overset{π}{:} S) → T$}
+\AxiomC{$f ⋮ (γ, (x \overset{π}{:} S) → T)$}
 \RightLabel{Prim-Fn}
-\BinaryInfC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
+\BinaryInfC{$⊢ f \overset{γ}{:} (x \overset{π}{:} S) → T$}
 \end{prooftree}
 
 Primitive functions are typed according to the primitive typing relation, and they can be produced in any computational quantity wherever desired.
@@ -269,16 +279,7 @@ Primitive functions can be dependently-typed.
 
 #### Elimination rule
 
-\begin{prooftree}
-\AxiomC{$f \in F$}
-\AxiomC{$⊢ f \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ ⊢ M \overset{σ'}{:} S$}
-\AxiomC{$σ′=0 ⇔ (π=0 ∨ σ=0)$}
-\RightLabel{Prim-App}
-\QuaternaryInfC{$πΓ ⊢ f M \overset{σ}{:} T[x := M]$}
-\end{prooftree}
-
-Applications of primitive functions impose the same usage constraints as regular abstractions.
+Primitive functions use the same elimination rule as native lambda abstractions.
 
 ### Dependent function types
 
@@ -309,10 +310,11 @@ required for the argument, respectively:
 
 \begin{prooftree}
 \AxiomC{$Γ_1 ⊢ M \overset{σ}{:} (x \overset{π}{:} S) → T$}
-\AxiomC{$Γ_2 ⊢ N \overset{σ π}{:} S$}
+\AxiomC{$Γ_2 ⊢ N \overset{σ'}{:} S$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
+\AxiomC{$σ' = 0 ⇔ (π = 0 ∨ σ = 0)$}
 \RightLabel{App}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
+\QuaternaryInfC{$Γ_1 + π Γ_2 ⊢ M N \overset{σ}{:} T[x := N]$}
 \end{prooftree}
 
 - $0Γ_1 = 0Γ_2$ means that $Γ_1$ and $Γ_2$ have the same variables with the same types
@@ -338,10 +340,10 @@ Type formation does not require any resources.
 #### Introduction rule
 
 \begin{prooftree}
-\AxiomC{$Γ_1 ⊢ M \overset{σ π}{:} S$}
+\AxiomC{$Γ_1 ⊢ M \overset{σ}{:} S$}
 \AxiomC{$Γ_2 ⊢ N \overset{σ}{:} T[x := M]$}
 \AxiomC{$0Γ_1 = 0Γ_2$}
-\TrinaryInfC{$Γ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
+\TrinaryInfC{$π Γ_1 + Γ_2 ⊢ (M,N) \overset{σ}{:} (x \overset{π}{:} S) ⊗ T$}
 \end{prooftree}
 
 This is similar to the introduction rule for dependent function types above.
@@ -740,9 +742,56 @@ To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ## Examples
 
+### SKI combinators
+
+#### S combinator
+
+The dependent S ("substitution") combinator can be typed as: $λt1.λt2.λt3.λx.λy.λz.x z (y z) \overset{1}{:} (x \overset{1}{:} ((a \overset{1}{:} t1) → (b \overset{1}{:} t2) → t3)) → (y \overset{1}{:} ((a \overset{1}{:} t1) → t2)) → (z \overset{2}{:} t1) → t3$.
+
+This should also typecheck if the $x$, $y$, and $z$ argument usages are replaced with $w$ (instead of $1$ and $2$).
+
+#### K combinator
+
+The dependent K ("constant") combinator can be typed as: $⊢ λt1.λt2.λx.λy.x \overset{1}{:} (t1 \overset{0}{:} ∗_i) → (t2 \overset{0}{:} ∗_i) → (x \overset{1}{:} t1) → (y \overset{0}{:} t2) → t1$.
+
+This should also typecheck if the $x$ and $y$ argument usages are replaced with $w$ (instead of $1$ and $0$).
+
+#### I combinator
+
+The dependent I ("identity") combinator can be typed as: $⊢ λt.λx.(x \overset{1}{:} t) \overset{1}{:} (t \overset{0}{:} ∗_i) → (x \overset{1}{:} t) → t$.
+
+This should also typecheck if the $x$ argument usage is replaced with $w$ (instead of $1$).
+
 ### Church-encoded natural numbers
 
-The Church-encoded natural $n$ can be typed as $⊢ λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} a → a) → (z \overset{1}{:} a) → a$ where $s$ is applied $n$ times.
+The dependent Church-encoded natural $n$ can be typed as $⊢ λt.λs.z.s {...} s z \overset{1}{:} (s \overset{n}{:} ((a \overset{1}{:} t) → t)) → (z \overset{1}{:} t) → t$ where $s$ is applied $n$ times.
+
+This should also typecheck if the $s$ argument usage is replaced with $w$ (instead of $n$ for some specific $n$).
+
+### Primitive equality
+
+Assume a primitive type of naturals, including literals, and a primitive addition function.
+
+Define an `Eq` type:
+
+\begin{prooftree}
+\AxiomC{$t \overset{0}{:} ∗_i$}
+\AxiomC{$x \overset{0}{:} t$}
+\AxiomC{$y \overset{0}{:} t$}
+\RightLabel{$Eq-Form$}
+\TrinaryInfC{$Eq t x y \overset{0}{:} ∗_j$}
+\end{prooftree}
+
+And a single `Refl` constructor:
+
+\begin{prooftree}
+\AxiomC{$t \overset{0}{:} ∗_i$}
+\AxiomC{$x \overset{0}{:} t$}
+\RightLabel{$Refl$}
+\BinaryInfC{$Refl \overset{0}{:} Eq t x x$}
+\end{prooftree}
+
+Then $Refl \overset{0}{:} Eq Nat (1 + 1) 2$ can be derived, since the conversion rule will be applied when checking the (annotated) $Refl$.
 
 ### Linear induction
 

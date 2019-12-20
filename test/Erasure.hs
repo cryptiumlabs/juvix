@@ -21,23 +21,47 @@ shouldEraseTo parameterisation (term, usage, ty) erased =
   T.testCase
     (show (term, usage, ty) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? (((fst . fst) |<< Erasure.erase parameterisation term usage ty))
+        T.@=? ((fst . fst) |<< Erasure.erase parameterisation term usage ty)
     )
 
-test_trivial_unit ∷ T.TestTree
-test_trivial_unit = shouldEraseTo unit (HR.Elim (HR.Prim Unit), SNat 1, HR.PrimTy TUnit) (Erased.Prim Unit)
+erasureTests ∷ T.TestTree
+erasureTests =
+  T.testGroup
+    "Erasure"
+    [ shouldEraseTo unit (HR.Elim (HR.Prim Unit), SNat 1, HR.PrimTy TUnit) (Erased.Prim Unit),
+      shouldEraseTo unit (constTerm, SNat 1, constTy) (Erased.Lam "y" (Erased.Var "y")),
+      usedArg,
+      appUnusedArg,
+      unusedFunction
+    ]
 
-test_unused_arg ∷ T.TestTree
-test_unused_arg = shouldEraseTo unit (constTerm, SNat 1, constTy) (Erased.Lam "y" (Erased.Var "y"))
+usedArg ∷ T.TestTree
+usedArg =
+  shouldEraseTo
+    unit
+    (appTerm, SNat 1, appTy)
+    (Erased.Lam "f" (Erased.Lam "x" (Erased.App (Erased.Var "f") (Erased.Var "x"))))
 
-test_used_arg ∷ T.TestTree
-test_used_arg = shouldEraseTo unit (appTerm, SNat 1, appTy) (Erased.Lam "f" (Erased.Lam "x" (Erased.App (Erased.Var "f") (Erased.Var "x"))))
+appUnusedArg ∷ T.TestTree
+appUnusedArg =
+  shouldEraseTo
+    unit
+    ( HR.Elim
+        ( HR.App
+            (HR.Ann (SNat 1) constTerm constTy)
+            (HR.Elim (HR.Prim Unit))
+        ),
+      SNat 1,
+      identityTy
+    )
+    (Erased.Lam "y" (Erased.Var "y"))
 
-test_app_unused_arg ∷ T.TestTree
-test_app_unused_arg = shouldEraseTo unit (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy) (HR.Elim (HR.Prim Unit))), SNat 1, identityTy) (Erased.Lam "y" (Erased.Var "y"))
-
-test_unused_function ∷ T.TestTree
-test_unused_function = shouldEraseTo unit (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy2) identityTerm), SNat 1, identityTy) (Erased.Lam "y" (Erased.Var "y"))
+unusedFunction ∷ T.TestTree
+unusedFunction =
+  shouldEraseTo
+    unit
+    (HR.Elim (HR.App (HR.Ann (SNat 1) constTerm constTy2) identityTerm), SNat 1, identityTy)
+    (Erased.Lam "y" (Erased.Var "y"))
 
 identityTerm ∷ HR.Term UnitTy UnitVal
 identityTerm = HR.Lam "y" (HR.Elim (HR.Var "y"))
