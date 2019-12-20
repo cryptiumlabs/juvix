@@ -15,8 +15,8 @@ shouldConvertIR ∷ IR.Term () () → HR.Term () () → T.TestTree
 shouldConvertIR ir hr =
   T.testCase (show ir <> " should convert to " <> show hr) (hr T.@=? irToHR ir)
 
-test_coreConversions ∷ T.TestTree
-test_coreConversions =
+coreConversions ∷ T.TestTree
+coreConversions =
   T.testGroup
     "Core Conversions"
     [ hrToirConversion,

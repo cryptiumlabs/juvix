@@ -1,6 +1,8 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
+import Control.Exception
+import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals
@@ -44,8 +46,14 @@ shouldCheck ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldCheck param term ann =
-  T.testCase (show term <> " should check as type " <> show ann) $
-    fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
+  let logs = intercalate "\n" $ map IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeTerm param 0 [] term ann)))
+   in T.testCase
+        ( show term
+            <> " should check as type "
+            <> show ann
+            <> show logs
+        )
+        $ fst (IR.exec (IR.typeTerm param 0 [] term ann)) T.@=? Right ()
 
 --unit test generator for typeElim
 shouldInfer ∷
@@ -56,8 +64,9 @@ shouldInfer ∷
   IR.Annotation primTy primVal (IR.EnvTypecheck primTy primVal) →
   T.TestTree
 shouldInfer param term ann =
-  T.testCase (show term <> " should infer to type " <> show ann) $
-    fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
+  let logs = concatMap IR.msg (IR.typecheckerLog $ snd (IR.exec (IR.typeElim0 param [] term)))
+   in T.testCase (show term <> " should infer to type " <> show ann <> show logs) $
+        fst (IR.exec (IR.typeElim0 param [] term)) T.@=? Right ann
 
 --unit test generator for evalTerm
 shouldEval ∷
@@ -71,9 +80,8 @@ shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
     fst (IR.exec (IR.evalTerm param term IR.initEnv)) T.@=? Right res
 
-test_core ∷ T.TestTree
-test_core =
-  --TODO after moving away from discover, can rename to coreTests
+coreCheckerEval ∷ T.TestTree
+coreCheckerEval =
   T.testGroup
     "Core type checker and evaluator tests"
     [ skiComp,
@@ -116,6 +124,7 @@ dependentFunctionComp =
   T.testGroup
     "Dependent Functions Computational typing"
     [ shouldCheck All.all depIdentity depIdentityCompTy
+      -- shouldCheck All.all depIdentity depIdentityCompTyLocal1
     ]
 
 evaluations ∷ T.TestTree
@@ -181,6 +190,24 @@ depIdentityCompTy =
                   (const (pure (IR.VNeutral (IR.NFree (IR.Local 0)))))
                 -- the output is of the type that's the same as the second input of this annotation. I.e., t
                 -- TODO: is this right? Chris thinks `t` should be at index 1 and the return type should be t
+              )
+          )
+      )
+  )
+
+depIdentityCompTyLocal1 ∷ AllAnnotation
+depIdentityCompTyLocal1 =
+  ( SNat 1, -- the sig usage of the dependent identity function
+    IR.VPi -- the first input, t
+      (SNat 0) -- t's usage
+      (IR.VStar 0) -- first input's type, is type
+      ( const
+          ( pure
+              ( IR.VPi -- the second input, x
+                  (SNat 1) -- x's usage
+                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- x is of type of the first input, i.e., t
+                  (const (pure (IR.VNeutral (IR.NFree (IR.Local 1)))))
+                -- the return type is the type of the first input
               )
           )
       )

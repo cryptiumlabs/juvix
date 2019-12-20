@@ -199,7 +199,7 @@ executables:
 
 tests:
   juvix-test:
-    main:         Spec.hs
+    main:         Main.hs
     source-dirs:  test
     ghc-options:
       - -threaded
@@ -211,7 +211,6 @@ tests:
       - tasty-hunit
       - tasty-quickcheck
       - QuickCheck
-      - tasty-discover
       - temporary
       - raw-strings-qq
       - process
