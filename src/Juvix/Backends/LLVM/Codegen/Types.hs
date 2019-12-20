@@ -16,6 +16,7 @@ import LLVM.AST as AST
 import LLVM.AST.AddrSpace
 import LLVM.AST.DataLayout (DataLayout (..))
 import qualified LLVM.AST.Type as Type
+import Prelude ((!!))
 
 --------------------------------------------------------------------------------
 -- Codegen State
@@ -38,7 +39,8 @@ data CodegenState
         -- | Count of unnamed instructions
         count ∷ Word,
         -- | Name Supply
-        names ∷ Names
+        names ∷ Names,
+        moduleAST ∷ AST.Module
       }
   deriving (Show, Generic)
 
@@ -95,6 +97,23 @@ newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) 
   deriving
     (HasThrow "err" Errors)
     via MonadError (ExceptT Errors (State CodegenState))
+  deriving
+    (HasState "moduleAST" AST.Module)
+    via Field "moduleAST" () (MonadState (ExceptT Errors (State CodegenState)))
+
+instance HasState "moduleDefinitions" [Definition] Codegen where
+
+  get_ _ = moduleDefinitions <$> (get @"moduleAST")
+
+  put_ _ x = do
+    c ← get @"moduleAST"
+    put @"moduleAST" (c {moduleDefinitions = x})
+
+  state_ _ state = do
+    c ← get @"moduleDefinitions"
+    let (a, res) = state c
+    put @"moduleDefinitions" res
+    pure a
 
 -- TODO ∷ see if this is still useful
 newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
@@ -185,6 +204,14 @@ data MinimalPtr
   deriving (Show)
 
 --------------------------------------------------------------------------------
+-- LLVM Type Operations
+--------------------------------------------------------------------------------
+
+-- TODO :: Replace with safe lens call instead!
+intoStructTypeErr ∷ Integral a ⇒ Type → a → Type
+intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
+
+--------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
 
@@ -206,17 +233,20 @@ numPortsSmall =
         typ' = numPortsSmallValue
       }
 
+numPortsSmallType ∷ Type
+numPortsSmallType = typ' numPortsSmall
+
 pointerOf ∷ Type → Type
-pointerOf typ = PointerType typ (AddrSpace 32)
+pointerOf typ = PointerType typ (AddrSpace 0)
 
 pointerSizeInt ∷ Num p ⇒ p
-pointerSizeInt = 32
+pointerSizeInt = 64
 
 pointerSize ∷ Type
-pointerSize = Type.i32
+pointerSize = Type.i64
 
 numPortsSmallValue ∷ Type
-numPortsSmallValue = Type.i32
+numPortsSmallValue = Type.i64
 
 -- | 'numPortsLarge' is used for the number of ports that don't fit within 16 bits
 numPortsLarge ∷ VariantInfo
@@ -224,10 +254,13 @@ numPortsLarge =
   updateVariant
     Type.i1
     Variant
-      { size = 32,
+      { size = 64,
         name = "large",
         typ' = numPortsLargeValuePtr
       }
+
+numPortsLargeType ∷ Type
+numPortsLargeType = typ' numPortsLarge
 
 numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
@@ -239,7 +272,13 @@ numPortsLargeValuePtr ∷ Type
 numPortsLargeValuePtr = pointerOf numPortsLargeValue
 
 numPortsPointer ∷ Type
-numPortsPointer = pointerOf numPorts
+numPortsPointer = pointerOf numPortsNameRef
+
+numPortsNameRef ∷ Type
+numPortsNameRef = Type.NamedTypeReference numPortsName
+
+numPortsName ∷ IsString p ⇒ p
+numPortsName = "graph_num_ports"
 
 -- number of ports on a node or the port offset
 numPorts ∷ Type
@@ -253,29 +292,31 @@ numPorts =
     typ = createSum [numPortsLarge, numPortsSmall]
 
 numPortsSize ∷ Num p ⇒ p
-numPortsSize = 33
+numPortsSize = 65
 
 nodePointerSize ∷ Num p ⇒ p
-nodePointerSize = 32
+nodePointerSize = 64
+
+portTypeNameRef ∷ Type
+portTypeNameRef = Type.NamedTypeReference portTypeName
+
+portTypeName ∷ IsString p ⇒ p
+portTypeName = "graph_port"
 
 portType ∷ Type → Type
 portType nodePtr = StructureType
   { isPacked = True,
     elementTypes =
       [ nodePtr, -- the pointer to the other node
-        numPorts -- the offset from the base of the node where the port is
+        numPortsNameRef -- the offset from the base of the node where the port is
       ]
   }
 
--- TODO ∷ getElementPtr returns int32*?
-portPointer ∷ Type → Type
-portPointer nodePtr = PointerType
-  { pointerReferent = portType nodePtr,
-    pointerAddrSpace = AddrSpace 32
-  }
+portPointer ∷ Type
+portPointer = pointerOf portTypeNameRef
 
 portTypeSize ∷ Num p ⇒ p
-portTypeSize = 33
+portTypeSize = numPortsSize + pointerSizeInt
 
 -- TODO ∷ Figure out how to have an un-tagged union here for all baked in types
 dataType ∷ Type
@@ -286,41 +327,37 @@ dataTypeSize = 64
 
 -- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
-nodePointer ∷ Type → Type
-nodePointer nodePtrType = pointerOf (nodeType nodePtrType)
+nodePointer ∷ Type
+nodePointer = pointerOf nodeTypeNameRef
 
--- TODO ∷ Figure out how to get varying data in here
-nodeType ∷ Type → Type
-nodeType nodePtrType = StructureType
+nodeTypeNameRef ∷ Type
+nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
+
+nodeTypeName ∷ IsString p ⇒ p
+nodeTypeName = "graph_node"
+
+nodeType ∷ [Type] → Type
+nodeType extraData = StructureType
   { isPacked = True,
     elementTypes =
-      [ numPorts, -- length of the portData
-        portData nodePtrType, -- variable size array of ports
+      [ numPortsNameRef, -- length of the portData
+        portData, -- variable size array of ports
         dataArray -- variable size array of data the node stores
       ]
+        <> extraData -- contains tag and other data a node may need
   }
 
 dataArray ∷ Type
-dataArray = ArrayType 0 dataType
+dataArray = pointerOf (ArrayType 0 dataType)
 
-portData ∷ Type → Type
-portData nodePtrType = ArrayType 0 (portType nodePtrType)
-
--- Holds the port type and the size of it for easy transition into nodeType
-portArrayLen ∷ Type → Type
-portArrayLen nodePtrType = StructureType
-  { isPacked = False,
-    elementTypes =
-      [ numPorts,
-        portData nodePtrType
-      ]
-  }
+portData ∷ Type
+portData = pointerOf (ArrayType 0 portTypeNameRef)
 
 -- TODO ∷ This changes per platform
 vaList ∷ Type
 vaList = StructureType
-  { isPacked = False,
-    elementTypes = [PointerType Type.i8 (AddrSpace 32)]
+  { isPacked = True,
+    elementTypes = [pointerOf Type.i8]
   }
 
 bothPrimary ∷ Type → Type
@@ -330,10 +367,13 @@ bothPrimary nodePtrType = StructureType
   }
 
 voidStarTy ∷ Type
-voidStarTy = PointerType VoidType (AddrSpace 32)
+voidStarTy = pointerOf VoidType
 
 voidTy ∷ Type
 voidTy = VoidType
 
 size_t ∷ Type
 size_t = IntegerType 64
+
+size_t_int ∷ Num p ⇒ p
+size_t_int = 64

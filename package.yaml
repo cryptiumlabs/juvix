@@ -31,6 +31,7 @@ dependencies:
   - directory
   - llvm-hs
   - llvm-hs-pure
+  - llvm-hs-pretty
   - bytestring
   - time
   - morley

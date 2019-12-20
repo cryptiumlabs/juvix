@@ -6,6 +6,7 @@ import Compile
 import Config
 import Development.GitRev
 import Interactive
+import Juvix.Backends.LLVM.Net.Environment
 import Options
 import Options.Applicative
 import Protolude

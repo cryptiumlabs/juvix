@@ -11,7 +11,7 @@ import EAC2
 import Erasure
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
-import Juvix.Core.Parameterisations.Naturals
+import Juvix.Core.Parameterisations.Naturals as Nat
 import Juvix.Core.Parameterisations.Unit
 import Juvix.Core.Types
 import Juvix.Core.Usage

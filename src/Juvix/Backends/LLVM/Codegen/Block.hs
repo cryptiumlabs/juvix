@@ -9,7 +9,6 @@ import Juvix.Library hiding (Type, local)
 import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
 import qualified LLVM.AST as AST
-import LLVM.AST.AddrSpace
 import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
@@ -29,7 +28,10 @@ fresh ∷ (HasState "count" b m, Enum b) ⇒ m b
 fresh = do
   i ← get @"count"
   put @"count" (succ i)
-  pure (succ i)
+  pure i
+
+resetCount ∷ (HasState "count" s m, Num s) ⇒ m ()
+resetCount = put @"count" 0
 
 emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
@@ -55,6 +57,25 @@ sortBlocks = sortBy (compare `on` (idx . snd))
 entryBlockName ∷ IsString p ⇒ p
 entryBlockName = "entry"
 
+emptyCodegen ∷ Types.CodegenState
+emptyCodegen = Types.CodegenState
+  { Types.currentBlock = mkName entryBlockName,
+    Types.blocks = Map.empty,
+    Types.symTab = Map.empty,
+    Types.typTab = Map.empty,
+    Types.varTab = Map.empty,
+    Types.count = 0,
+    Types.names = Map.empty,
+    Types.blockCount = 1,
+    Types.moduleAST = emptyModule "EAC"
+  }
+
+execEnvState ∷ Codegen a → SymbolTable → CodegenState
+execEnvState (Types.CodeGen m) a = execState (runExceptT m) (emptyCodegen {Types.symTab = a})
+
+evalEnvState ∷ Codegen a → SymbolTable → Either Errors a
+evalEnvState (Types.CodeGen m) a = evalState (runExceptT m) (emptyCodegen {Types.symTab = a})
+
 --------------------------------------------------------------------------------
 -- Module Level
 --------------------------------------------------------------------------------
@@ -64,6 +85,10 @@ emptyModule label = AST.defaultModule {moduleName = label}
 
 addDefn ∷ HasState "moduleDefinitions" [Definition] m ⇒ Definition → m ()
 addDefn d = modify @"moduleDefinitions" (<> [d])
+
+addType ∷ HasState "moduleDefinitions" [Definition] m ⇒ Name → Type → m ()
+addType name typ =
+  addDefn (TypeDefinition name (Just typ))
 
 defineGen ∷
   HasState "moduleDefinitions" [Definition] m ⇒
@@ -79,7 +104,7 @@ defineGen isVarArgs retty label argtys body = do
     $ functionDefaults
       { Global.parameters = params,
         -- Figure out which is best!
-        Global.callingConvention = CC.GHC,
+        Global.callingConvention = CC.Fast,
         Global.returnType = retty,
         Global.basicBlocks = body,
         Global.name = internName label
@@ -87,7 +112,7 @@ defineGen isVarArgs retty label argtys body = do
   return
     $ ConstantOperand
     $ C.GlobalReference
-      (PointerType (FunctionType retty (fst <$> argtys) isVarArgs) (AddrSpace 0))
+      (Types.pointerOf (FunctionType retty (fst <$> argtys) isVarArgs))
       (internName label)
   where
     params = ((\(ty, nm) → Parameter ty nm []) <$> argtys, isVarArgs)
@@ -118,23 +143,25 @@ makeFunction ∷
 makeFunction name args = do
   entry ← addBlock name
   _ ← setBlock entry
-  -- Maybe not needed?
   traverse_
-    ( \(typ, nam) → do
-        var ← alloca typ
-        store var (local typ nam)
-        assign (nameToSymbol nam) var
-    )
+    (\(typ, nam) → assign (nameToSymbol nam) (local typ nam))
     args
 
 defineFunctionGen ∷
   Types.Define m ⇒ Bool → Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunctionGen bool retty name args body = do
   oldSymTab ← get @"symTab"
+  -- flush the blocks so we can have clean block for functions
+  put @"blocks" Map.empty
+  resetCount
   functionOperand ←
     (makeFunction name args >> body >> createBlocks) >>= defineGen bool retty name args
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
   put @"symTab" oldSymTab
+  -- flush out blocks after functions
+  -- comment for debugging!
+  put @"blocks" Map.empty
+  resetCount
   assign name functionOperand
   pure functionOperand
 
@@ -200,8 +227,8 @@ externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
 nameToSymbol ∷ Name → Symbol
-nameToSymbol (UnName n) = (intern (show n))
-nameToSymbol (Name n) = (intern (show n))
+nameToSymbol (UnName n) = (intern (filter (/= '\"') (show n)))
+nameToSymbol (Name n) = (intern (filter (/= '\"') (show n)))
 
 local ∷ Type → Name → Operand
 local = LocalReference
@@ -258,7 +285,7 @@ external retty label argtys = do
   return
     $ ConstantOperand
     $ C.GlobalReference
-      (PointerType (FunctionType retty (fst <$> argtys) False) (AddrSpace 0))
+      (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
       (mkName label)
 
 --------------------------------------------------------------------------------
@@ -270,26 +297,31 @@ external retty label argtys = do
 defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
-  op ← external voidStarTy name [(size_t, "size")]
+  op ← external (Types.pointerOf Type.i8) name [(Types.size_t, "size")]
   assign name op
 
 defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
-  op ← external voidTy name [(Types.voidStarTy, "type")]
+  op ← external voidTy name [(Types.pointerOf Type.i8, "type")]
   assign name op
 
 malloc ∷ Call m ⇒ Integer → Type → m Operand
 malloc size type' = do
   malloc ← externf "malloc"
-  voidPtr ← call Types.voidStarTy malloc (emptyArgs [Operand.ConstantOperand (C.Int 32 size)])
+  voidPtr ←
+    instr (Types.pointerOf Type.i8) $
+      callConvention
+        CC.Fast
+        malloc
+        (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
   bitCast voidPtr type'
 
-free ∷ Call m ⇒ Operand → m Operand
+free ∷ Call m ⇒ Operand → m ()
 free thing = do
   free ← externf "free"
-  casted ← bitCast thing Types.voidStarTy
-  call Types.voidTy free (emptyArgs [casted])
+  casted ← bitCast thing (Types.pointerOf Type.i8)
+  unnminstr (callConvention CC.Fast free (emptyArgs [casted]))
 
 --------------------------------------------------------------------------------
 -- Integer Operations
@@ -397,21 +429,24 @@ generateIf ty cond tr fl = do
   ifThen ← addBlock "if.then"
   ifElse ← addBlock "if.else"
   ifExit ← addBlock "if.exit"
-  -- Entry
+  -- %entry
+  ------------------
   test ← icmp IntPred.EQ cond (ConstantOperand (C.Int 2 1))
   _ ← cbr test ifThen ifElse
   -- if.then
+  ------------------
   setBlock ifThen
-  -- Should be fine if we have the correct effects
   t ← tr
   _ ← br ifExit
   ifThen ← getBlock
   -- if.else
+  ------------------
   setBlock ifElse
   f ← fl
   _ ← br ifExit
   ifElse ← getBlock
   -- if.exit
+  ------------------
   setBlock ifExit
   phi ty [(t, ifThen), (f, ifElse)]
 
@@ -421,6 +456,37 @@ generateIf ty cond tr fl = do
 
 emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
 emptyArgs = fmap (\x → (x, []))
+
+callConvention ∷
+  CC.CallingConvention →
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
+  Instruction
+callConvention convention fn args = Call
+  { functionAttributes = [],
+    tailCallKind = Nothing,
+    callingConvention = convention,
+    returnAttributes = [],
+    function = Right fn,
+    arguments = args,
+    metadata = []
+  }
+
+callVoid ∷
+  RetInstruction m ⇒
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
+  m ()
+callVoid fn args = unnminstr $
+  Call
+    { functionAttributes = [],
+      tailCallKind = Nothing,
+      callingConvention = CC.Fast,
+      returnAttributes = [],
+      function = Right fn,
+      arguments = args,
+      metadata = []
+    }
 
 call ∷
   RetInstruction m ⇒
@@ -432,7 +498,7 @@ call typ fn args = instr typ $
   Call
     { functionAttributes = [],
       tailCallKind = Nothing,
-      callingConvention = CC.GHC,
+      callingConvention = CC.Fast,
       returnAttributes = [],
       function = Right fn,
       arguments = args,
@@ -460,6 +526,9 @@ bitCast op typ = instr typ $ BitCast op typ []
 
 ptrToInt ∷ RetInstruction m ⇒ Operand → Type → m Operand
 ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
+
+trunc ∷ RetInstruction m ⇒ Operand → Type → m Operand
+trunc op typ = instr typ $ Trunc op typ []
 
 --------------------------------------------------------------------------------
 -- Pointer Operations
@@ -515,9 +584,9 @@ variantCreation sumTyp variantName tag args offset allocFn = do
   typTable ← get @"typTab"
   sum ← allocFn sumTyp
   getEle ← getElementPtr $
-    -- Verify my pointerOf is correct here
+    -- The pointerOf is now correct!
     Minimal
-      { Types.type' = Types.pointerOf sumTyp,
+      { Types.type' = Types.pointerOf (Type.IntegerType tag),
         Types.address' = sum,
         Types.indincies' = constant32List [0, 0]
       }
@@ -526,14 +595,14 @@ variantCreation sumTyp variantName tag args offset allocFn = do
     (ConstantOperand (C.Int tag (toInteger offset)))
   -- TODO ∷ remove the ! call here
   let varType = typTable Map.! variantName
-  casted ← bitCast sum varType
+  casted ← bitCast sum (Types.pointerOf varType)
   foldM_
     ( \i inst → do
         ele ←
           getElementPtr $
-            -- Verify my pointerOf is correct here
+            -- The pointerOf is now correct!
             Minimal
-              { Types.type' = Types.pointerOf varType,
+              { Types.type' = Types.pointerOf (intoStructTypeErr varType i),
                 Types.address' = casted,
                 Types.indincies' = constant32List [0, i]
               }
