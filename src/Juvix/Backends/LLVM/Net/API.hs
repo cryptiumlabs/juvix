@@ -16,6 +16,8 @@ import qualified LLVM.AST.Type as Type
 -- TODO: c2hs / hs2c (whatever) for conversion types?
 -- for now: manually
 
+type OpaqueNet = Word32
+
 word32 ∷ Type.Type
 word32 = Codegen.int
 
@@ -67,7 +69,7 @@ defineReadNet =
   Codegen.defineFunction Type.void "readNet" [(opaqueNetType, "net")] $ do
     netPtr ← Codegen.externf "net"
     net ← Codegen.load Types.eacLPointer netPtr
-    -- TODO: Read the current net, return a list of nodes
+    -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
     Codegen.retNull
 

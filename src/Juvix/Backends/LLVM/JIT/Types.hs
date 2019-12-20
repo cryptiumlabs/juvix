@@ -15,6 +15,16 @@ foreign import ccall "dynamic" doubleFn ∷ FunPtr (Double → IO Double) → (D
 
 foreign import ccall "dynamic" nodeFn ∷ FunPtr (Ptr Node → IO ()) → (Ptr Node → IO ())
 
+foreign import ccall "dynamic" createNetFn ∷ FunPtr (IO OpaqueNetPtr) → IO OpaqueNetPtr
+
+foreign import ccall "dynamic" appendToNetFn ∷ FunPtr (OpaqueNetPtr → Ptr Node → IO ()) → (OpaqueNetPtr → Ptr Node → IO ())
+
+foreign import ccall "dynamic" readNetFn ∷ FunPtr (OpaqueNetPtr → IO (Ptr Node)) → (OpaqueNetPtr → IO (Ptr Node))
+
+foreign import ccall "dynamic" reduceFn ∷ FunPtr (OpaqueNetPtr → IO ()) → (OpaqueNetPtr → IO ())
+
+type OpaqueNetPtr = Ptr Word32
+
 type Port = IR.Port
 
 type Node = IR.Node ()
@@ -42,18 +52,30 @@ data Config
       }
   deriving (Show, Eq)
 
-class DynamicImport a where
+class DynamicImport a b | b → a where
 
-  unFunPtr ∷ FunPtr a → a
+  unFunPtr ∷ FunPtr a → b
 
-  castImport ∷ ∀ b. FunPtr b → a
-  castImport = unFunPtr . castFunPtr
+  castImport ∷ ∀ c. FunPtr c → b
+  castImport = (unFunPtr ∷ FunPtr a → b) . castFunPtr
 
-instance DynamicImport (Word32 → IO Word32) where
+instance DynamicImport (Word32 → IO Word32) (Word32 → IO Word32) where
   unFunPtr = word32Fn
 
-instance DynamicImport (Double → IO Double) where
+instance DynamicImport (Double → IO Double) (Double → IO Double) where
   unFunPtr = doubleFn
 
-instance DynamicImport (Ptr Node → IO ()) where
+instance DynamicImport (Ptr Node → IO ()) (Ptr Node → IO ()) where
   unFunPtr = nodeFn
+
+instance DynamicImport (IO OpaqueNetPtr) (IO OpaqueNetPtr) where
+  unFunPtr = createNetFn
+
+instance DynamicImport (OpaqueNetPtr → Ptr Node → IO ()) (OpaqueNetPtr → Ptr Node → IO ()) where
+  unFunPtr = appendToNetFn
+
+instance DynamicImport (OpaqueNetPtr → IO (Ptr Node)) (OpaqueNetPtr → IO (Ptr Node)) where
+  unFunPtr = readNetFn
+
+instance DynamicImport (OpaqueNetPtr → IO ()) (OpaqueNetPtr → IO ()) where
+  unFunPtr = reduceFn

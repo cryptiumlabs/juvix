@@ -64,6 +64,7 @@ default-extensions:
   - DerivingVia
   - TypeApplications
   - StandaloneDeriving
+  - FunctionalDependencies
 
 ghc-options:
   - -ferror-spans

@@ -12,10 +12,10 @@ import LLVM.PassManager
 
 -- Need some datatypes to wrap since GHC doesn't yet support impredicative polymorphism.
 data DynamicFunc where
-  DynamicFunc ∷ ∀ a b. (DynamicImport (a → IO b), Typeable a, Typeable b) ⇒ (a → IO b) → DynamicFunc
+  DynamicFunc ∷ ∀ a b c d. (DynamicImport (a → IO b) (c → IO d), Typeable a, Typeable b, Typeable c, Typeable d) ⇒ (c → IO d) → DynamicFunc
 
 data DynamicImportTypeProxy where
-  DynamicImportTypeProxy ∷ ∀ a b. (DynamicImport (a → IO b), Typeable a, Typeable b) ⇒ Proxy a → Proxy b → DynamicImportTypeProxy
+  DynamicImportTypeProxy ∷ ∀ a b c d. (DynamicImport (a → IO b) (c → IO d), Typeable a, Typeable b, Typeable c, Typeable d) ⇒ Proxy a → Proxy b → Proxy c → Proxy d → DynamicImportTypeProxy
 
 runJIT ∷ Config → Context → (EE.MCJIT → IO a) → IO a
 runJIT config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
@@ -69,12 +69,14 @@ jitWith config mod func = do
   let func param = writeChan paramChan (Just param) >> readChan resultChan
   return (func, writeChan paramChan Nothing)
 
-importAs ∷ ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc)) → (∀ a b. (DynamicImport (a → IO b), Typeable a, Typeable b) ⇒ AST.Name → Proxy a → Proxy b → IO (Maybe (a → IO b)))
-importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) = do
-  maybeFunc ← imp (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b))
+importAs ∷
+  ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc)) →
+  (∀ a b c d. (DynamicImport (a → IO b) (c → IO d), Typeable a, Typeable b, Typeable c, Typeable d) ⇒ AST.Name → Proxy a → Proxy b → Proxy c → Proxy d → IO (Maybe (c → IO d)))
+importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) (Proxy ∷ Proxy d) = do
+  maybeFunc ← imp (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) (Proxy ∷ Proxy d))
   case maybeFunc of
     Just (DynamicFunc (f ∷ x → IO y)) →
-      case (eqT ∷ Maybe (x :~: a), eqT ∷ Maybe (y :~: b)) of
+      case (eqT ∷ Maybe (x :~: c), eqT ∷ Maybe (y :~: d)) of
         -- This should always be true but GHC can't prove it, blah.
         (Just Refl, Just Refl) → pure (pure f)
         _ → pure Nothing
@@ -84,13 +86,13 @@ dynamicImport ∷ EE.ExecutableModule EE.MCJIT → IO ((AST.Name, DynamicImportT
 dynamicImport ee = do
   actions ← newMVar []
   let terminate = mapM_ (\x → x) =<< readMVar actions
-      handler (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b)) = do
+      handler (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) (Proxy ∷ Proxy d)) = do
         fref ← EE.getFunction ee name
         case fref of
           Just fn → do
             paramChan ← newChan
             resultChan ← newChan
-            let hsFunc = castImport fn ∷ a → IO b
+            let hsFunc = castImport fn ∷ c → IO d
                 loop = do
                   param ← readChan paramChan
                   case param of
@@ -101,7 +103,7 @@ dynamicImport ee = do
                     Nothing → return ()
             modifyMVar_ actions (pure . (:) (writeChan paramChan Nothing))
             void $ forkIO loop
-            let func ∷ a → IO b
+            let func ∷ c → IO d
                 func param = writeChan paramChan (Just param) >> readChan resultChan
             pure (Just (DynamicFunc func))
           Nothing →
