@@ -78,19 +78,7 @@ defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
 defineIsBothPrimary = Codegen.defineIsBothPrimary Types.eacPointer
 
 defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand
-defineRewire = loadPtrGen Codegen.defineRewire
+defineRewire = Codegen.defineRewire
 
 defineLinkConnectedPort ∷ Codegen.Define m ⇒ m Operand.Operand
-defineLinkConnectedPort = loadPtrGen Codegen.defineLinkConnectedPort
-
-loadPtrGen ∷ Codegen.Define m ⇒ (Type.Type → (Operand.Operand → m Operand.Operand) → t) → t
-loadPtrGen f =
-  f
-    Types.eacPointer
-    $ \eac →
-      Codegen.loadElementPtr $
-        Codegen.Minimal
-          { Codegen.type' = Codegen.nodePointer,
-            Codegen.address' = eac,
-            Codegen.indincies' = Codegen.constant32List [0, 0]
-          }
+defineLinkConnectedPort = Codegen.defineLinkConnectedPort

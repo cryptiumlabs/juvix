@@ -299,9 +299,8 @@ mallocDataH mPorts =
 
 -- derived from the core functions
 
-defineLinkConnectedPort ∷
-  Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
-defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
+defineLinkConnectedPort ∷ Define m ⇒ m Operand.Operand
+defineLinkConnectedPort =
   Block.defineFunction Type.void "link_connected_port" args $
     do
       -- TODO ∷ Abstract out this bit ---------------------------------------------
@@ -315,10 +314,9 @@ defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
                 Types.indincies' = Block.constant32List [0, num]
               }
       numPointsTo ← intoGen numPortsPointer 1
-      nodePointsToPtr ← intoGen (Types.pointerOf nodePtrType) 0 >>= load nodePtrType
-      nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= load nodePointer
       -- End Abstracting out bits -------------------------------------------------
-      _ ← link [nNew, pNew, nodePointsTo, numPointsTo]
+      _ ← link [nNew, pNew, nodePointsToPtr, numPointsTo]
       retNull
   where
     args =
@@ -328,8 +326,8 @@ defineLinkConnectedPort nodePtrType nodePtrTypeToGraphNodePtr =
         (numPortsPointer, "port_new")
       ]
 
-defineRewire ∷ Define m ⇒ Type.Type → (Operand.Operand → m Operand.Operand) → m Operand.Operand
-defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
+defineRewire ∷ Define m ⇒ m Operand.Operand
+defineRewire  =
   Block.defineFunction Type.void "rewire" args $
     do
       -- TODO ∷ Abstract out this bit ---------------------------------------------
@@ -343,10 +341,9 @@ defineRewire nodePtrType nodePtrTypeToGraphNodePtr =
                 Types.indincies' = Block.constant32List [0, num]
               }
       numPointsTo ← intoGen numPortsPointer 1
-      nodePointsToPtr ← intoGen (Types.pointerOf nodePtrType) 0 >>= load nodePtrType
-      nodePointsTo ← nodePtrTypeToGraphNodePtr nodePointsToPtr
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= load nodePointer
       -- End Abstracting out bits -------------------------------------------------
-      _ ← linkConnectedPort [n2, p2, nodePointsTo, numPointsTo]
+      _ ← linkConnectedPort [n2, p2, nodePointsToPtr, numPointsTo]
       retNull
   where
     args =

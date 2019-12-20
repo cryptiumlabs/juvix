@@ -2,13 +2,13 @@ module Juvix.Backends.LLVM.Net.API where
 
 -- TODO ∷ abstract all all imports to LLVM
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
-import qualified Juvix.Backends.LLVM.DSL as DSL
-import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
-import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
+-- -- import qualified Juvix.Backends.LLVM.DSL as DSL
+-- -- import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
+-- -- import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
-import qualified LLVM.AST.Constant as C
-import qualified LLVM.AST.IntegerPredicate as IntPred
-import qualified LLVM.AST.Name as Name
+-- -- import qualified LLVM.AST.Constant as C
+-- -- import qualified LLVM.AST.IntegerPredicate as IntPred
+-- -- import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
 
