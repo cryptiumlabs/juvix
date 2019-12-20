@@ -22,14 +22,9 @@ context = do
 
 main ∷ IO ()
 main = do
-  case runInitModule' of
-    Left x → print "Left \n" >> print x
-    Right () → print "did it"
-  print runInitModule
-
--- ctx ← context
--- let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
--- run ctx =<< execParser opts
+  ctx ← context
+  let opts = info (options ctx <**> helper) (fullDesc <> headerDoc (Just aboutDoc))
+  run ctx =<< execParser opts
 
 disclaimerDoc ∷ Doc
 disclaimerDoc =
