@@ -104,7 +104,7 @@ defineGen isVarArgs retty label argtys body = do
     $ functionDefaults
       { Global.parameters = params,
         -- Figure out which is best!
-        Global.callingConvention = CC.GHC,
+        Global.callingConvention = CC.Fast,
         Global.returnType = retty,
         Global.basicBlocks = body,
         Global.name = internName label
@@ -481,7 +481,7 @@ callVoid fn args = unnminstr $
   Call
     { functionAttributes = [],
       tailCallKind = Nothing,
-      callingConvention = CC.GHC,
+      callingConvention = CC.Fast,
       returnAttributes = [],
       function = Right fn,
       arguments = args,
@@ -498,7 +498,7 @@ call typ fn args = instr typ $
   Call
     { functionAttributes = [],
       tailCallKind = Nothing,
-      callingConvention = CC.GHC,
+      callingConvention = CC.Fast,
       returnAttributes = [],
       function = Right fn,
       arguments = args,

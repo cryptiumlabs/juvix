@@ -94,13 +94,19 @@ callGen typ' args fn = do
   f ← Block.externf fn
   Block.call typ' f (Block.emptyArgs args)
 
+callGenVoid ∷
+  Types.Call m ⇒ [Operand.Operand] → Name.Name → m ()
+callGenVoid args fn = do
+  f ← Block.externf fn
+  Block.callVoid f (Block.emptyArgs args)
+
 link,
   linkConnectedPort,
   rewire ∷
     Call m ⇒ [Operand.Operand] → m ()
-link args = callGen Type.void args "link" >> pure ()
-rewire args = callGen Type.void args "rewire" >> pure ()
-linkConnectedPort args = callGen Type.void args "link_connected_port" >> pure ()
+link args = callGenVoid args "link"
+rewire args = callGenVoid args "rewire"
+linkConnectedPort args = callGenVoid args "link_connected_port"
 
 isBothPrimary,
   findEdge ∷
@@ -134,7 +140,7 @@ defineLink = Block.defineFunction Type.void "link" args $
 
 defineIsBothPrimary ∷ Define m ⇒ Type.Type → m Operand.Operand
 defineIsBothPrimary nodePtrTyp =
-  Block.defineFunction (Types.bothPrimary nodePtrTyp) "is_both_primary" args $
+  Block.defineFunction (Types.pointerOf (Types.bothPrimary nodePtrTyp)) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
       mainPort ← mainPort
@@ -403,10 +409,10 @@ setPort (n1, p1) (n2, p2) = do
 
 setPortType ∷
   Call m ⇒ Operand.Operand → Operand.Operand → Operand.Operand → m ()
-setPortType portPtr node offset = do
+setPortType portPtr node givenOffsetPtr = do
   nodePtr ← getElementPtr $
     Types.Minimal
-      { Types.type' = nodePointer,
+      { Types.type' = Types.pointerOf nodePointer,
         Types.address' = portPtr,
         Types.indincies' = Block.constant32List [0, 0]
       }
@@ -419,6 +425,7 @@ setPortType portPtr node offset = do
   -- now store the pointer to the Newport
   store nodePtr node
   -- store the offset
+  offset ← load Types.numPortsNameRef givenOffsetPtr
   store offsetPtr offset
   pure ()
 
@@ -607,7 +614,10 @@ defineMainPort,
   defineAuxiliary2,
   defineAuxiliary3,
   defineAuxiliary4 ∷
-    HasState "moduleDefinitions" [Definition] m ⇒ m ()
+    ( HasState "moduleDefinitions" [Definition] m,
+      HasState "symTab" SymbolTable m
+    ) ⇒
+    m ()
 defineMainPort = constantPort "main_port" 0
 defineAuxiliary1 = constantPort "auxiliary1" 1
 defineAuxiliary2 = constantPort "auxiliary2" 2
@@ -615,8 +625,14 @@ defineAuxiliary3 = constantPort "auxiliary3" 3
 defineAuxiliary4 = constantPort "auxiliary4" 4
 
 -- TODO :: abstract out hardcoded value!
-constantPort ∷ HasState "moduleDefinitions" [Definition] m ⇒ Name → Integer → m ()
-constantPort name v =
+constantPort ∷
+  ( HasState "moduleDefinitions" [Definition] m,
+    HasState "symTab" SymbolTable m
+  ) ⇒
+  Name →
+  Integer →
+  m ()
+constantPort name v = do
   addDefn
     $ GlobalDefinition
     $ Global.globalVariableDefaults
@@ -640,6 +656,9 @@ constantPort name v =
               ]
           }
       }
+  assign
+    (Block.nameToSymbol name)
+    (ConstantOperand (C.GlobalReference (Types.pointerOf Types.numPortsNameRef) name))
 
 mainPort,
   auxiliary1,

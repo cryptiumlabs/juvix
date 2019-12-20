@@ -566,8 +566,7 @@ fanLabelLookup addr = Codegen.loadElementPtr $
 defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
   era ← mallocEra
   app ← mallocApp
-  -- main ← Codegen.mainPort
-  -- main' ← Codegen.mainPort
-  -- Codegen.link [era, main, app, main']
+  main ← Codegen.mainPort
+  Codegen.link [era, main, app, main]
   _ ← Codegen.free app
   Codegen.ret era

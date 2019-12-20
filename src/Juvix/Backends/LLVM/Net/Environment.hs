@@ -50,11 +50,11 @@ initialModule = do
   Codegen.defineAuxiliary2
   Codegen.defineAuxiliary3
   Codegen.defineAuxiliary4
-  _ ← EAC.defineTest
   _ ← Codegen.defineLink
+  _ ← EAC.defineTest
   -- _ ← Codegen.alloca Types.testListPointer
-  -- _ ← Defs.defineIsBothPrimary
-  -- _ ← Defs.defineFindEdge
+  _ ← Codegen.defineFindEdge
+  _ ← Defs.defineIsBothPrimary
   -- _ ← EAC.mallocEra
   -- _ ← Defs.defineRewire
   -- _ ← Defs.defineLinkConnectedPort
