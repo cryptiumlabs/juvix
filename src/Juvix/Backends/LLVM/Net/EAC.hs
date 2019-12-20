@@ -275,8 +275,8 @@ defineAnnihilateRewireAux =
       aux2 ← Defs.auxiliary2
       node1P ← Codegen.externf "node_1"
       node2P ← Codegen.externf "node_2"
-      node1 ← Codegen.load Codegen.nodeType node1P
-      node2 ← Codegen.load Codegen.nodeType node2P
+      node1 ← Codegen.load Codegen.nodeTypeNameRef node1P
+      node2 ← Codegen.load Codegen.nodeTypeNameRef node2P
       -- TODO :: check if these calls create more main nodes to put back
       Codegen.rewire [node1, aux1, node2, aux1]
       Codegen.rewire [node1, aux2, node2, aux2]
@@ -504,24 +504,10 @@ mallocGen ∷
   Codegen.MallocNode m ⇒ C.Constant → Int → Int → m Operand.Operand
 mallocGen type' portLen dataLen = do
   -- malloc call
-  eac ← Codegen.malloc Types.eacSize Types.eacPointer
-  -- malloc call
-  node ← Codegen.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
-  tagPtr ← Codegen.getElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf Types.tag,
-        Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 0]
-      }
+  node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
+  tagPtr ← tagOf node
   Codegen.store tagPtr (Operand.ConstantOperand type')
-  nodePtr ← Codegen.getElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf Codegen.nodePointer,
-        Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 1]
-      }
-  Codegen.store nodePtr node
-  pure eac
+  pure node
 
 mallocEra,
   mallocFanIn,
@@ -534,21 +520,15 @@ mallocLam = mallocGen Types.lam 3 0
 mallocFanIn = mallocGen Types.dup 3 1
 
 nodeOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-nodeOf eac =
-  Codegen.loadElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.nodePointer,
-        Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 1]
-      }
+nodeOf eac = pure eac
 
 tagOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 tagOf eac =
-  Codegen.loadElementPtr $
+  Codegen.getElementPtr $
     Codegen.Minimal
-      { Codegen.type' = Types.tag,
+      { Codegen.type' = Codegen.pointerOf Types.tag,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 0]
+        Codegen.indincies' = Codegen.constant32List [0, 3]
       }
 
 --------------------------------------------------------------------------------

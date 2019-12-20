@@ -188,8 +188,9 @@ mallocNodeH ∷
   ) ⇒
   [Maybe Operand.Operand] →
   [Maybe Operand.Operand] →
+  Integer →
   m Operand.Operand
-mallocNodeH mPorts mData = do
+mallocNodeH mPorts mData extraData = do
   let anyThere xs =
         case length xs of
           -- 1 until it's safe to not to
@@ -198,8 +199,8 @@ mallocNodeH mPorts mData = do
   let totalSize =
         Types.numPortsSize
           + (anyThere mPorts * Types.pointerSizeInt)
-          + (anyThere mData * Types.pointerSizeInt) ∷
-          Integer
+          + (anyThere mData * Types.pointerSizeInt)
+          + extraData
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
   portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
@@ -431,23 +432,21 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  ports ← getElementPtr $
+  portsPtrPtr ← getElementPtr $
     Types.Minimal
       { Types.type' = Types.pointerOf portData,
         Types.address' = node,
         Types.indincies' = Block.constant32List [0, 1]
       }
+  portsPtr ← load portData portsPtrPtr
   intOfNumPorts portPointer port $ \value → do
-    -- TODO ∷ unsafe, please fix later!
-    i32Value ← Block.trunc value Type.i32
     getElementPtr $
       Types.Minimal
         { Types.type' = portPointer,
-          Types.address' = ports,
+          Types.address' = portsPtr,
           Types.indincies' =
             [ Operand.ConstantOperand (C.Int 32 0),
-              Operand.ConstantOperand (C.Int 32 0),
-              i32Value
+              value
             ]
         }
 
@@ -470,7 +469,7 @@ intOfNumPorts typ numPort cont = do
         Types.address' = numPort,
         Types.indincies' = Block.constant32List [0, 0]
       }
-  generateIf typ tag smallBranch largeBranch
+  generateIf typ tag largeBranch smallBranch
   where
     smallBranch = branchGen numPortsSmall numPortsSmallValue return
 
@@ -480,7 +479,7 @@ intOfNumPorts typ numPort cont = do
           Types.Minimal
             { Types.type' = numPortsLargeValue,
               Types.address' = vPtr,
-              Types.indincies' = Block.constant32List [0, 0]
+              Types.indincies' = Block.constant32List [0]
             }
 
     -- Generic logic

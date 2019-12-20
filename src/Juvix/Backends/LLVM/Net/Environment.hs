@@ -40,7 +40,6 @@ initialModule = do
   Codegen.addType "list" Types.testList
   Codegen.addType Codegen.numPortsName Codegen.numPorts
   Codegen.addType Codegen.portTypeName Defs.portType
-  Codegen.addType Codegen.nodeTypeName Codegen.nodeType
   Codegen.addType Types.eacName Types.eac
   -- ---------------------------------------------------------------
   Codegen.addBlock "bad" >>= Codegen.setBlock

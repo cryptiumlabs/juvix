@@ -25,16 +25,10 @@ eacNameRef ∷ Type.Type
 eacNameRef = Type.NamedTypeReference eacName
 
 eacName ∷ IsString p ⇒ p
-eacName = "eac_node"
+eacName = Codegen.nodeTypeName
 
 eac ∷ Type.Type
-eac = Type.StructureType
-  { Type.isPacked = True,
-    Type.elementTypes =
-      [ tag,
-        Codegen.nodePointer
-      ]
-  }
+eac = Codegen.nodeType [tag]
 
 eacPointer ∷ Type.Type
 eacPointer = Type.PointerType eacNameRef (Addr.AddrSpace 0)

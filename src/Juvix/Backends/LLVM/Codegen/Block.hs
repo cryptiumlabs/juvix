@@ -143,13 +143,8 @@ makeFunction ∷
 makeFunction name args = do
   entry ← addBlock name
   _ ← setBlock entry
-  -- Maybe not needed?
   traverse_
-    ( \(typ, nam) → do
-        var ← alloca typ
-        store var (local typ nam)
-        assign (nameToSymbol nam) var
-    )
+    (\(typ, nam) → assign (nameToSymbol nam) (local typ nam))
     args
 
 defineFunctionGen ∷

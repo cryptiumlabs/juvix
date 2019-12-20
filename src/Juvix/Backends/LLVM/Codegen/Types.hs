@@ -336,15 +336,15 @@ nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
 nodeTypeName ∷ IsString p ⇒ p
 nodeTypeName = "graph_node"
 
--- TODO ∷ Figure out how to get varying data in here
-nodeType ∷ Type
-nodeType = StructureType
+nodeType ∷ [Type] → Type
+nodeType extraData = StructureType
   { isPacked = True,
     elementTypes =
       [ numPortsNameRef, -- length of the portData
         portData, -- variable size array of ports
         dataArray -- variable size array of data the node stores
       ]
+        <> extraData -- contains tag and other data a node may need
   }
 
 dataArray ∷ Type

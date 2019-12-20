@@ -63,6 +63,17 @@ loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 -- Graph operation definitions
 --------------------------------------------------------------------------------
 
+mallocNodeH ∷
+  ( Codegen.RetInstruction m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasState "symTab" Codegen.SymbolTable m
+  ) ⇒
+  [Maybe Operand.Operand] →
+  [Maybe Operand.Operand] →
+  m Operand.Operand
+mallocNodeH mPorts mData = Codegen.mallocNodeH mPorts mData 4
+
 defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
 defineIsBothPrimary = Codegen.defineIsBothPrimary Types.eacPointer
 
