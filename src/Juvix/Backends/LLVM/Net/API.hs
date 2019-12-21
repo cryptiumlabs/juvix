@@ -31,6 +31,9 @@ nodeAddressPointer = Type.PointerType nodeAddress (Addr.AddrSpace 32)
 nodeType ∷ Type.Type
 nodeType = Type.NamedTypeReference "node"
 
+eacListPointer :: Type.Type
+eacListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
+
 nodePointer ∷ Type.Type
 nodePointer = Type.PointerType nodeType (Addr.AddrSpace 32)
 
@@ -45,7 +48,7 @@ node = Type.StructureType
   }
 
 opaqueNetType ∷ Type.Type
-opaqueNetType = Type.PointerType Types.eacLPointer (Addr.AddrSpace 32)
+opaqueNetType = Type.PointerType eacListPointer (Addr.AddrSpace 32)
 
 -- This API model passes pointers back & forth.
 -- createNet :: IO (Ptr Net)
@@ -58,7 +61,7 @@ defineCreateNet =
   Codegen.defineFunction opaqueNetType "createNet" [] $ do
     -- Note: this is not a pointer to an EAC list, but rather a pointer to a pointer to an EAC list.
     -- This is intentional since we need to malloc when `appendToNet` is called.
-    eac ← Codegen.malloc 32 Types.eacLPointer
+    eac ← Codegen.malloc 32 eacListPointer
     -- Just return the pointer.
     Codegen.ret eac
 
@@ -66,7 +69,7 @@ defineReadNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReadNet =
   Codegen.defineFunction Type.void "readNet" [(opaqueNetType, "net")] $ do
     netPtr ← Codegen.externf "net"
-    net ← Codegen.load Types.eacLPointer netPtr
+    net ← Codegen.load eacListPointer netPtr
     -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
     Codegen.retNull
@@ -87,7 +90,7 @@ defineReduceUntilComplete =
   Codegen.defineFunction Type.void "reduceUntilComplete" [(opaqueNetType, "net")] $ do
     -- Load the current EAC list pointer.
     netPtr ← Codegen.externf "net"
-    net ← Codegen.load Types.eacLPointer netPtr
+    net ← Codegen.load eacListPointer netPtr
     -- Call reduce, which recurses until there are no primary pairs left.
     Codegen.callGen Type.void [net] "reduce"
     -- Return.
