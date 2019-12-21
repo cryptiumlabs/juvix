@@ -6,18 +6,18 @@ module Juvix.Backends.LLVM.JIT
   )
 where
 
+import Foreign.Marshal.Array
+import Foreign.Storable
 import Juvix.Backends.LLVM.JIT.Execution
 import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
 
--- TODO: These should be arrays (foreign array)
--- TODO: These should accept lists
 data NetAPI
   = NetAPI
       { createNet ∷ IO OpaqueNetPtr,
-        appendToNet ∷ OpaqueNetPtr → Ptr Node → IO (),
-        readNet ∷ OpaqueNetPtr → IO (Ptr Node),
+        appendToNet ∷ OpaqueNetPtr → [Node] → IO (),
+        readNet ∷ OpaqueNetPtr → IO [Node],
         reduceUntilComplete ∷ OpaqueNetPtr → IO ()
       }
 
@@ -25,14 +25,19 @@ jitToNetAPI ∷ Config → AST.Module → IO (NetAPI, IO ())
 jitToNetAPI config mod = do
   (imp, kill) ← jitWith config mod dynamicImport
   Just createNetFn ← importAs imp "createNet" (Proxy ∷ Proxy (IO OpaqueNetPtr)) (Proxy ∷ Proxy ()) (Proxy ∷ Proxy OpaqueNetPtr)
-  Just appendToNetFn ← importAs imp "appendToNet" (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → IO ())) (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node)) (Proxy ∷ Proxy ())
-  Just readNetFn ← importAs imp "readNet" (Proxy ∷ Proxy (OpaqueNetPtr → IO (Ptr Node))) (Proxy ∷ Proxy OpaqueNetPtr) (Proxy ∷ Proxy (Ptr Node))
+  Just appendToNetFn ← importAs imp "appendToNet" (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → Int → IO ())) (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node, Int)) (Proxy ∷ Proxy ())
+  Just readNetFn ← importAs imp "readNet" (Proxy ∷ Proxy (OpaqueNetPtr → IO (Ptr Nodes))) (Proxy ∷ Proxy OpaqueNetPtr) (Proxy ∷ Proxy (Ptr Nodes))
   Just reduceUntilCompleteFn ← importAs imp "reduceUntilComplete" (Proxy ∷ Proxy (OpaqueNetPtr → IO ())) (Proxy ∷ Proxy OpaqueNetPtr) (Proxy ∷ Proxy ())
   pure
     ( NetAPI
         { createNet = createNetFn (),
-          appendToNet = curry appendToNetFn,
-          readNet = readNetFn,
+          appendToNet = \ptr nodes → do
+            let len = length nodes
+            arr ← newArray nodes
+            appendToNetFn (ptr, arr, len),
+          readNet = \ptr → do
+            (Nodes arr len) ← peek =<< readNetFn ptr
+            peekArray len arr,
           reduceUntilComplete = reduceUntilCompleteFn
         },
       kill

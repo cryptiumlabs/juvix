@@ -33,6 +33,8 @@ module Juvix.Library
     untilNothingNTimesM,
     untilNothing,
     sortOnFlip,
+    uncurry3,
+    curry3,
   )
 where
 
@@ -150,3 +152,9 @@ sortOnFlip f =
           let y = f x
            in y `seq` (y, x)
       )
+
+uncurry3 ∷ (a → b → c → d) → (a, b, c) → d
+uncurry3 fn (a, b, c) = fn a b c
+
+curry3 ∷ ((a, b, c) → d) → a → b → c → d
+curry3 fn a b c = fn (a, b, c)
