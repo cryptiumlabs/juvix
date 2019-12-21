@@ -83,7 +83,7 @@ mallocFreeModule =
                                     (Name "malloc")
                                 )
                             ),
-                        callingConvention = CC.C,
+                        callingConvention = CC.Fast,
                         returnAttributes = [],
                         arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 10}), [])],
                         functionAttributes = [],
@@ -99,7 +99,7 @@ mallocFreeModule =
                                     (Name "free")
                                 )
                             ),
-                        callingConvention = CC.GHC,
+                        callingConvention = CC.Fast,
                         returnAttributes = [],
                         arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
                         functionAttributes = [],
@@ -180,7 +180,7 @@ exampleModule2 =
                                     (Name "malloc")
                                 )
                             ),
-                        callingConvention = CC.C,
+                        callingConvention = CC.Fast,
                         returnAttributes = [],
                         arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 32}), [])],
                         functionAttributes = [],
@@ -215,7 +215,7 @@ exampleModule2 =
                                     (Name "free")
                                 )
                             ),
-                        callingConvention = CC.C,
+                        callingConvention = CC.Fast,
                         returnAttributes = [],
                         arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
                         functionAttributes = [],
