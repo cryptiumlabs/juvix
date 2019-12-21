@@ -1,6 +1,7 @@
 module Backends.LLVM where
 
 import Juvix.Backends.LLVM.Codegen as Codegen
+import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
@@ -14,6 +15,7 @@ import qualified LLVM.AST.Global as G
 import qualified LLVM.AST.Instruction as I (function)
 import qualified LLVM.AST.Linkage as L
 import LLVM.AST.Name
+import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type
 import qualified LLVM.AST.Visibility as V
 import LLVM.Context
@@ -26,12 +28,12 @@ backendLLVM ∷ T.TestTree
 backendLLVM =
   T.testGroup
     "Backend LLVM"
-    [ fn_test_malloc_free_jit,
-      fn_test_example_jit
+    [ test_malloc_free_jit,
+      test_example_jit
     ]
 
-fn_test_malloc_free_jit ∷ T.TestTree
-fn_test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
+test_malloc_free_jit ∷ T.TestTree
+test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
   (imp, kill) ← jitWith (Config None) mallocFreeModule dynamicImport
   Just fn ← importAs imp "test" (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
@@ -47,7 +49,7 @@ mallocFreeModule =
     Nothing
     [ GlobalDefinition $
         functionDefaults
-          { G.returnType = voidStarTy,
+          { G.returnType = (Types.pointerOf Type.i8),
             G.name = Name "malloc",
             G.parameters = ([Parameter (IntegerType {typeBits = 64}) (Name "size") []], False),
             G.callingConvention = CC.Fast,
@@ -58,7 +60,7 @@ mallocFreeModule =
         functionDefaults
           { G.returnType = voidTy,
             G.name = Name "free",
-            G.parameters = ([Parameter voidStarTy (Name "") []], False),
+            G.parameters = ([Parameter (Types.pointerOf Type.i8) (Name "") []], False),
             G.callingConvention = CC.Fast,
             G.basicBlocks = [],
             G.linkage = L.External
@@ -77,7 +79,7 @@ mallocFreeModule =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidStarTy, argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
+                                    (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
                                     (Name "malloc")
                                 )
                             ),
@@ -93,13 +95,13 @@ mallocFreeModule =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [voidStarTy], isVarArg = False})
+                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
                                     (Name "free")
                                 )
                             ),
                         callingConvention = CC.GHC,
                         returnAttributes = [],
-                        arguments = [(LocalReference voidStarTy (UnName 1), [])],
+                        arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
                         functionAttributes = [],
                         metadata = []
                       }
@@ -110,8 +112,8 @@ mallocFreeModule =
           }
     ]
 
-fn_test_example_jit ∷ T.TestTree
-fn_test_example_jit = T.testCase "example module should jit function" $ do
+test_example_jit ∷ T.TestTree
+test_example_jit = T.testCase "example module should jit function" $ do
   (imp, kill) ← jitWith (Config None) exampleModule dynamicImport
   Just fn ← importAs imp "_foo" (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
@@ -174,7 +176,7 @@ exampleModule2 =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidStarTy, argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
+                                    (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
                                     (Name "malloc")
                                 )
                             ),
@@ -209,13 +211,13 @@ exampleModule2 =
                           Right
                             ( ConstantOperand
                                 ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [voidStarTy], isVarArg = False})
+                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
                                     (Name "free")
                                 )
                             ),
                         callingConvention = CC.C,
                         returnAttributes = [],
-                        arguments = [(LocalReference voidStarTy (UnName 1), [])],
+                        arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
                         functionAttributes = [],
                         metadata = []
                       }

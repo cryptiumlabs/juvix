@@ -34,7 +34,7 @@ backendTests =
   T.testGroup
     "Backend tests"
     [ backendCircuit,
-      -- backendLLVM, these tests are causing LLVM errors
+      backendLLVM,
       backendMichelson
     ]
 

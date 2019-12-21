@@ -31,7 +31,7 @@ format:
 	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --mode inplace {} \;
 
 test:
-	stack test --fast --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --test-arguments "--hide-successes --ansi-tricks false" +RTS -N4
 
 repl-lib:
 	stack ghci juvix:lib
