@@ -77,12 +77,25 @@ defineReadNet =
 defineAppendToNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineAppendToNet =
   Codegen.defineFunction Type.void "appendToNet" [(nodePointer, "nodes"), (word32, "node_count")] $ do
+    nodes <- Codegen.externf "nodes"
+    node_count <- Codegen.externf "node_count"
+    forLoop <- Codegen.addBlock "for.loop"
+    forExit <- Codegen.addBlock "for.exit"
     -- Create a counter to track position
-    counter ← Codegen.alloca nodeType
-    -- TODO
-    -- Append nodes to the net
-    -- Call `createNode` on each
-    -- Append to the primary pair list as necessary
+    counter ← Codegen.alloca word32
+    Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
+    Codegen.br forLoop
+    -- Loop case: convert node, increment counter.
+    Codegen.setBlock forLoop
+    ind <- Codegen.load word32 counter
+    -- TODO: Append node at index `ind`.
+    -- Call `createNode` on each, which will append to the primary pair list as necessary
+    next <- Codegen.add word32 ind (Operand.ConstantOperand (C.Int 32 0))
+    Codegen.store counter next
+    cond <- Codegen.icmp IntPred.EQ node_count counter
+    Codegen.cbr cond forLoop forExit
+    -- Exit case: return.
+    Codegen.setBlock forExit
     Codegen.retNull
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand

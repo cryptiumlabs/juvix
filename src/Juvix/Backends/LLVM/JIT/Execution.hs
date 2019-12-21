@@ -46,8 +46,10 @@ jitWith config mod func = do
   resultChan ← newChan
   endChan ← newChan
   void $ forkIO $ withContext $ \context →
-    runJIT config context $ \executionEngine →
-      withModuleFromAST context mod $ \m →
+    runJIT config context $ \executionEngine → do
+      putText "calling withModuleFromAST"
+      withModuleFromAST context mod $ \m → do
+        putText "calling withPassManager"
         withPassManager (passes config) $ \pm → do
           -- optimise module
           _ ← runPassManager pm m

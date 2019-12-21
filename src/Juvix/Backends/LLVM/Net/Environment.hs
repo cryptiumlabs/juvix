@@ -66,6 +66,7 @@ initialModule = do
   -- _ ← EAC.defineFanInFanIn
 
   -- define the API
+  Codegen.addType "node" API.node
   _ ← API.defineCreateNet
   _ ← API.defineReadNet
   _ ← API.defineAppendToNet
