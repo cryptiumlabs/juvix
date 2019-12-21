@@ -2,9 +2,9 @@ module Juvix.INetIR.Types where
 
 import Juvix.Library
 
-type Address = Integer
+type Address = Int
 
-type Slot = Integer
+type Slot = Int
 
 data Port
   = -- Port, referencing another node at a particular address & slot.

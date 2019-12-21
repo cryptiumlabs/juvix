@@ -9,11 +9,13 @@ import Juvix.Backends.LLVM.JIT
 import Juvix.Backends.LLVM.Net.Environment
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Types as Core
-import Juvix.Interpreter.InteractionNet hiding (Erase, Lambda)
+import qualified Juvix.INetIR.Types as INIR
+import Juvix.Interpreter.InteractionNet hiding (Erase, Lambda, Prim)
 import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
-import Juvix.Library hiding (empty, reduce)
+import Juvix.Library hiding (empty, link, reduce)
+import Prelude ((!!))
 
 evalErasedCoreInLLVM ∷
   ∀ primTy primVal m.
@@ -44,17 +46,58 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Create a new net.
   net ← liftIO createNet
   -- Append the nodes.
-  let nodes = [] -- TODO
+  let nodes = flip map (zip [0 ..] ns) $ \(ind, (_, l, edges)) →
+        INIR.Node
+          { INIR.nodeAddress = ind,
+            INIR.nodeKind = case l of
+              Primar Erase → INIR.Eraser
+              Auxiliary2 Lambda → INIR.Constructor 0
+              Auxiliary2 App → INIR.Constructor 1
+              Auxiliary2 (FanIn i) → INIR.Constructor (fromIntegral i),
+            INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
+          }
   liftIO (appendToNet net nodes)
   -- Reduce it.
   liftIO (reduceUntilComplete net)
   -- Read-back the nodes
   nodes ← liftIO (readNet net)
+  -- Translate into a native graph.
   let graph ∷ Graph.FlipNet (Lang primVal)
-      graph = undefined
-  -- TODO: read-back term
+      graph = flip evalEnvState (Env 0 empty Map.empty) $ do
+        ns ← flip mapM nodes $ \node →
+          newNode $ case INIR.nodeKind node of
+            INIR.Eraser → Primar Erase
+            INIR.Constructor 0 → Auxiliary2 Lambda
+            INIR.Constructor 1 → Auxiliary2 App
+            INIR.Constructor n → Auxiliary2 (FanIn (fromIntegral n))
+        flip mapM_ nodes $ \node → do
+          let addr = ns !! INIR.nodeAddress node
+          flip mapM_ (zip [0 ..] $ INIR.nodePorts node) $ \(slot, (INIR.Port otherAddr' otherSlot)) → do
+            let otherAddr = ns !! otherAddr'
+            -- TODO: Double-linkage?
+            link (addr, indexToPortType slot) (otherAddr, indexToPortType otherSlot)
+        net ← get @"net"
+        pure net
+  -- Read-back the graph.
   let res ∷ Erased.Term primVal
       Just res = interactionNetASTToErasedCore |<< netToAst graph
   -- Free the module.
   liftIO kill
+  -- Return the resulting term.
   pure res
+
+portTypeToIndex ∷ PortType → INIR.Slot
+portTypeToIndex Prim = 0
+portTypeToIndex Aux1 = 1
+portTypeToIndex Aux2 = 2
+portTypeToIndex Aux3 = 3
+portTypeToIndex Aux4 = 4
+portTypeToIndex Aux5 = 5
+
+indexToPortType ∷ INIR.Slot → PortType
+indexToPortType 0 = Prim
+indexToPortType 1 = Aux1
+indexToPortType 2 = Aux2
+indexToPortType 3 = Aux3
+indexToPortType 4 = Aux4
+indexToPortType 5 = Aux5
