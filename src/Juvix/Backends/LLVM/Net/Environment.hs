@@ -70,7 +70,6 @@ initialModule = do
   _ ← API.defineReadNet
   _ ← API.defineAppendToNet
   _ ← API.defineReduceUntilComplete
-
   pure ()
 
 runInitModule ∷ Codegen.CodegenState

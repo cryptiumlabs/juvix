@@ -4,6 +4,7 @@ module Juvix.Backends.LLVM.Translation where
 
 import qualified Data.HashMap.Strict as Map
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
+import Juvix.Backends.LLVM.JIT
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Types as Core
 import Juvix.Interpreter.InteractionNet hiding (Erase, Lambda)
@@ -11,7 +12,6 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding (empty, reduce)
-import Juvix.Backends.LLVM.JIT
 
 {-
  - TODO: Separate out the common logic from the interpreter & this file into a shared module.
@@ -19,7 +19,7 @@ import Juvix.Backends.LLVM.JIT
 
 erasedCoreToLLVM ∷
   ∀ primTy primVal m.
-  (MonadIO m) =>
+  (MonadIO m) ⇒
   Core.Parameterisation primTy primVal →
   Erased.Term primVal →
   m (Erased.Term primVal)
@@ -29,16 +29,16 @@ erasedCoreToLLVM parameterisation term = do
       graph ∷ Graph.FlipNet (Lang primVal)
       graph = astToNet parameterisation netAST Map.empty
 
-  (api, kill) <- liftIO $ networkToLLVM graph
+  (api, kill) ← liftIO $ networkToLLVM graph
   -- TODO: use the api
   -- TODO: read-back term
-  let res :: Erased.Term primVal
+  let res ∷ Erased.Term primVal
       res = undefined
   pure res
 
 networkToLLVM ∷
   ∀ primVal m.
-  (MonadIO m) =>
+  (MonadIO m) ⇒
   Graph.FlipNet (Lang primVal) →
   m (NetAPI, IO ())
 networkToLLVM n = do
