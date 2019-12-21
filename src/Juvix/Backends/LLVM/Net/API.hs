@@ -72,6 +72,7 @@ defineReadNet =
     net ← Codegen.load eacListPointer netPtr
     -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
+    -- Maybe return duplicate nodes & de-duplicate in haskell.
     Codegen.retNull
 
 defineAppendToNet ∷ Codegen.Define m ⇒ m Operand.Operand
@@ -88,14 +89,23 @@ defineAppendToNet =
     -- Loop case: convert node, increment counter.
     Codegen.setBlock forLoop
     ind <- Codegen.load word32 counter
-    -- TODO: Append node at index `ind`.
-    -- Call `createNode` on each, which will append to the primary pair list as necessary
+    -- Load node at index `ind`.
+    nodePtr <- Codegen.getElementPtr (Codegen.Minimal {
+                  Codegen.address' = nodes,
+                  Codegen.type' = nodePointer,
+                  Codegen.indincies' = [Operand.ConstantOperand (C.Int 32 0), ind]
+                  })
+    node <- Codegen.load node nodePtr
+    -- Create the in-memory node.
+    kind <- mallocApp -- TODO: Switch on node kind.
+    -- TODO: Link things (second loop iteration? need the ability to look up node pointers)
     next <- Codegen.add word32 ind (Operand.ConstantOperand (C.Int 32 0))
     Codegen.store counter next
     cond <- Codegen.icmp IntPred.EQ node_count counter
     Codegen.cbr cond forLoop forExit
     -- Exit case: return.
     Codegen.setBlock forExit
+    -- TODO: Primary pairs?
     Codegen.retNull
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand
