@@ -44,6 +44,7 @@ jitWith ∷ ∀ a b. Config → AST.Module → (EE.ExecutableModule EE.MCJIT →
 jitWith config mod func = do
   paramChan ← newChan
   resultChan ← newChan
+  endChan ← newChan
   void $ forkIO $ withContext $ \context →
     runJIT config context $ \executionEngine → do
       withModuleFromAST context mod $ \m →
@@ -64,10 +65,10 @@ jitWith config mod func = do
                       res ← handler p
                       writeChan resultChan res
                       loop
-                    Nothing → terminate
+                    Nothing → terminate >> writeChan endChan ()
             loop
   let func param = writeChan paramChan (Just param) >> readChan resultChan
-  return (func, writeChan paramChan Nothing)
+  return (func, writeChan paramChan Nothing >> readChan endChan)
 
 importAs ∷
   ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc)) →
@@ -92,6 +93,7 @@ dynamicImport ee = do
           Just fn → do
             paramChan ← newChan
             resultChan ← newChan
+            termChan ← newChan
             let hsFunc = castImport fn ∷ b → IO c
                 loop = do
                   param ← readChan paramChan
@@ -100,8 +102,8 @@ dynamicImport ee = do
                       res ← hsFunc p
                       writeChan resultChan res
                       loop
-                    Nothing → return ()
-            modifyMVar_ actions (pure . (:) (writeChan paramChan Nothing))
+                    Nothing → writeChan termChan () >> pure ()
+            modifyMVar_ actions (pure . (:) (writeChan paramChan Nothing >> readChan termChan))
             void $ forkIO loop
             let func ∷ b → IO c
                 func param = writeChan paramChan (Just param) >> readChan resultChan
