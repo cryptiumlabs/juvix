@@ -57,7 +57,7 @@ initialModule = do
   _ ← Defs.defineIsBothPrimary
   _ ← Defs.defineLinkConnectedPort
   _ ← Defs.defineRewire
-  _ <- EAC.defineReduce
+  --_ <- EAC.defineReduce
   -- _ ← EAC.defineFanInAux2F
   -- _ ← EAC.defineFanInAux2A
   -- _ ← EAC.defineFanInAux2L
@@ -71,7 +71,7 @@ initialModule = do
   _ ← API.defineCreateNet
   _ ← API.defineReadNet
   _ ← API.defineAppendToNet
-  _ ← API.defineReduceUntilComplete
+  --_ ← API.defineReduceUntilComplete
   pure ()
 
 runInitModule ∷ Codegen.CodegenState

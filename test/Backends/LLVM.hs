@@ -31,7 +31,7 @@ backendLLVM ∷ T.TestTree
 backendLLVM =
   T.testGroup
     "Backend LLVM"
-    [ test_malloc_free_jit,
+    [ --test_malloc_free_jit
       test_example_jit,
       test_eval_jit
     ]

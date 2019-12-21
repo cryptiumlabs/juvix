@@ -1,10 +1,10 @@
 module Juvix.Backends.LLVM.JIT.Execution where
 
 import Control.Concurrent
-import qualified Data.Map.Strict as Map
-import Data.IORef
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Short as BS
+import Data.IORef
+import qualified Data.Map.Strict as Map
 import Foreign.Ptr
 import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
@@ -56,20 +56,30 @@ orcJitWith config mod func = do
   resultChan ← newChan
   endChan ← newChan
   void $ forkIO $ withContext $ \context → do
-    resolvers <- newIORef Map.empty
-    withModuleFromAST context mod $ \m →
-      withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm →
-        withExecutionSession $ \es →
-          withModuleKey es $ \k →
-            withObjectLinkingLayer es (\k -> fmap (\rs -> rs Map.! k) (readIORef resolvers)) $ \objectLayer →
+    resolvers ← newIORef Map.empty
+    withModuleFromAST context mod $ \m → do
+      putText "got module"
+      asm ← moduleLLVMAssembly m
+      B.putStrLn asm
+      withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm → do
+        putText "got target machine"
+        withExecutionSession $ \es → do
+          putText "got execution session"
+          withModuleKey es $ \k → do
+            putText "got module key"
+            withObjectLinkingLayer es (\k → fmap (\rs → rs Map.! k) (readIORef resolvers)) $ \objectLayer → do
+              putText "got linking layer"
               withIRCompileLayer objectLayer tm $ \compileLayer → do
+                putText "got compile layer"
                 withSymbolResolver es (SymbolResolver (\sym → findSymbol compileLayer sym True)) $ \resolver → do
+                  modifyIORef' resolvers (Map.insert k resolver)
+                  putText "got symbol resolver"
                   withModule compileLayer k m $ do
-                    asm ← moduleLLVMAssembly m
-                    B.putStrLn asm
+                    putText "got module"
                     (handler, terminate) ← func $ \(AST.Name name) → do
                       mainSymbol ← mangleSymbol compileLayer name
                       sym ← findSymbol compileLayer mainSymbol True
+                      putText (show sym)
                       pure $ case sym of
                         Right (JITSymbol f _) → pure (castPtrToFunPtr (wordPtrToPtr f))
                         _ → Nothing
