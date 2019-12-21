@@ -1,14 +1,26 @@
 module Juvix.Backends.LLVM.JIT.Execution where
 
 import Control.Concurrent
+import qualified Data.Map.Strict as Map
+import Data.IORef
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Short as BS
+import Foreign.Ptr
 import Juvix.Backends.LLVM.JIT.Types
 import Juvix.Library
 import qualified LLVM.AST as AST
+import qualified LLVM.CodeGenOpt as CodeGenOpt
+import qualified LLVM.CodeModel as CodeModel
 import LLVM.Context
 import qualified LLVM.ExecutionEngine as EE
+import LLVM.Internal.OrcJIT.CompileLayer
+import LLVM.Linking
 import LLVM.Module as Mod
+import LLVM.Module
+import LLVM.OrcJIT
 import LLVM.PassManager
+import qualified LLVM.Relocation as Reloc
+import LLVM.Target
 
 -- Need some datatypes to wrap since GHC doesn't yet support impredicative polymorphism.
 data DynamicFunc where
@@ -38,10 +50,45 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
+orcJitWith ∷ ∀ a b. Config → AST.Module → ((AST.Name → IO (Maybe (FunPtr ()))) → IO ((a → IO b), IO ())) → IO (a → IO b, IO ())
+orcJitWith config mod func = do
+  paramChan ← newChan
+  resultChan ← newChan
+  endChan ← newChan
+  void $ forkIO $ withContext $ \context → do
+    resolvers <- newIORef Map.empty
+    withModuleFromAST context mod $ \m →
+      withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm →
+        withExecutionSession $ \es →
+          withModuleKey es $ \k →
+            withObjectLinkingLayer es (\k -> fmap (\rs -> rs Map.! k) (readIORef resolvers)) $ \objectLayer →
+              withIRCompileLayer objectLayer tm $ \compileLayer → do
+                withSymbolResolver es (SymbolResolver (\sym → findSymbol compileLayer sym True)) $ \resolver → do
+                  withModule compileLayer k m $ do
+                    asm ← moduleLLVMAssembly m
+                    B.putStrLn asm
+                    (handler, terminate) ← func $ \(AST.Name name) → do
+                      mainSymbol ← mangleSymbol compileLayer name
+                      sym ← findSymbol compileLayer mainSymbol True
+                      pure $ case sym of
+                        Right (JITSymbol f _) → pure (castPtrToFunPtr (wordPtrToPtr f))
+                        _ → Nothing
+                    let loop = do
+                          param ← readChan paramChan
+                          case param of
+                            Just p → do
+                              res ← handler p
+                              writeChan resultChan res
+                              loop
+                            Nothing → terminate >> writeChan endChan ()
+                    loop
+  let func param = writeChan paramChan (Just param) >> readChan resultChan
+  return (func, writeChan paramChan Nothing >> readChan endChan)
+
 -- In order to allow this to return functions, a green thread is forked to retain module
 -- state & handle function calls. The second element of the returned pair is an IO action to kill the thread.
-jitWith ∷ ∀ a b. Config → AST.Module → (EE.ExecutableModule EE.MCJIT → IO ((a → IO b), IO ())) → IO (a → IO b, IO ())
-jitWith config mod func = do
+mcJitWith ∷ ∀ a b. Config → AST.Module → ((AST.Name → IO (Maybe (FunPtr ()))) → IO ((a → IO b), IO ())) → IO (a → IO b, IO ())
+mcJitWith config mod func = do
   paramChan ← newChan
   resultChan ← newChan
   endChan ← newChan
@@ -59,7 +106,7 @@ jitWith config mod func = do
           B.putStrLn "getting execution engine"
           EE.withModuleInEngine executionEngine m $ \ee → do
             B.putStrLn "got execution engine"
-            (handler, terminate) ← func ee
+            (handler, terminate) ← func (EE.getFunction ee)
             let loop = do
                   param ← readChan paramChan
                   case param of
@@ -85,13 +132,13 @@ importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) = 
         _ → pure Nothing
     Nothing → pure Nothing
 
-dynamicImport ∷ EE.ExecutableModule EE.MCJIT → IO ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc), IO ())
-dynamicImport ee = do
+dynamicImport ∷ (AST.Name → IO (Maybe (FunPtr ()))) → IO ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc), IO ())
+dynamicImport lookup = do
   actions ← newMVar []
   let terminate = mapM_ (\x → x) =<< readMVar actions
       handler (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c)) = do
         putText ("Importing: " <> show name)
-        fref ← EE.getFunction ee name
+        fref ← lookup name
         case fref of
           Just fn → do
             paramChan ← newChan

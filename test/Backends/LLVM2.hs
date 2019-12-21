@@ -122,7 +122,7 @@ test_example_jit' = do
                 <> LLVM.AST.moduleDefinitions exampleModule2
           }
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
-  (imp, kill) ← jitWith (Config None) newModule dynamicImport
+  (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
   Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
   kill

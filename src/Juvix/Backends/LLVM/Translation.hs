@@ -15,8 +15,8 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding (empty, link, reduce)
-import Prelude ((!!))
 import LLVM.Pretty
+import Prelude ((!!))
 
 evalErasedCoreInLLVM ∷
   ∀ primTy primVal m.
@@ -28,7 +28,7 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Generate the LLVM module.
   let mod = Codegen.moduleAST runInitModule
   -- Pretty-print the module.
-  putStr (ppllvm mod) >> putStr ("\n" :: Text)
+  putStr (ppllvm mod) >> putStr ("\n" ∷ Text)
   -- JIT the module.
   liftIO (putText "Just-in-time compiling initial module...")
   (NetAPI createNet appendToNet readNet reduceUntilComplete, kill) ← liftIO (jitToNetAPI (Config None) mod)
