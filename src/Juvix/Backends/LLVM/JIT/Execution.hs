@@ -46,7 +46,7 @@ jitWith config mod func = do
   resultChan ← newChan
   endChan ← newChan
   void $ forkIO $ withContext $ \context →
-    runJIT config context $ \executionEngine → do
+    runJIT config context $ \executionEngine →
       withModuleFromAST context mod $ \m →
         withPassManager (passes config) $ \pm → do
           -- optimise module
@@ -88,6 +88,7 @@ dynamicImport ee = do
   actions ← newMVar []
   let terminate = mapM_ (\x → x) =<< readMVar actions
       handler (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c)) = do
+        putText ("Importing: " <> show name)
         fref ← EE.getFunction ee name
         case fref of
           Just fn → do

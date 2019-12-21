@@ -5,6 +5,9 @@ import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
+import Juvix.Backends.LLVM.Translation
+import qualified Juvix.Core.Erased as E
+import Juvix.Core.Parameterisations.Unit
 import Juvix.Library
 import LLVM.AST
 import LLVM.AST.AddrSpace
@@ -28,9 +31,17 @@ backendLLVM ∷ T.TestTree
 backendLLVM =
   T.testGroup
     "Backend LLVM"
-    [ test_malloc_free_jit,
-      test_example_jit
+    [ --test_malloc_free_jit,
+      --test_example_jit,
+      test_eval_jit
     ]
+
+test_eval_jit ∷ T.TestTree
+test_eval_jit = T.testCase "x should evaluate to x" $ do
+  let term ∷ E.Term UnitVal
+      term = E.Var "x"
+  res ← evalErasedCoreInLLVM unit term
+  term T.@=? res
 
 test_malloc_free_jit ∷ T.TestTree
 test_malloc_free_jit = T.testCase "malloc free module should jit" $ do

@@ -27,6 +27,7 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Generate the LLVM module.
   let mod = Codegen.moduleAST runInitModule
   -- JIT the module.
+  liftIO (putText "Just-in-time compiling initial module...")
   (NetAPI createNet appendToNet readNet reduceUntilComplete, kill) ← liftIO (jitToNetAPI (Config None) mod)
   -- Convert the term to a graph.
   let netAST = erasedCoreToInteractionNetAST term
@@ -44,6 +45,7 @@ evalErasedCoreInLLVM parameterisation term = do
           pure (n, l, edges)
         pure ann
   -- Create a new net.
+  liftIO (putText "Creating net...")
   net ← liftIO createNet
   -- Append the nodes.
   let nodes = flip map (zip [0 ..] ns) $ \(ind, (_, l, edges)) →
