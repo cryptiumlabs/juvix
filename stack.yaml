@@ -40,6 +40,8 @@ extra-deps:
   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 - github: cwgoes/uuid-orphans
   commit: e23b58b46affb978c17a0eb3e760d28b058658ce
+- github: cryptiumlabs/jsonschema-gen
+  commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
 - github: dapphub/dapptools
   commit: 38dd682fa6c433e5720bd9022779ffc6a1ce00fc
   subdirs:

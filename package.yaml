@@ -39,6 +39,7 @@ dependencies:
   - hevm
   - elliptic-curve
   - sonic
+  - aeson
 
 default-extensions:
   - NoImplicitPrelude
@@ -64,6 +65,7 @@ default-extensions:
   - DerivingVia
   - TypeApplications
   - StandaloneDeriving
+  - FunctionalDependencies
 
 ghc-options:
   - -ferror-spans
@@ -79,6 +81,7 @@ library:
     - z3
     - derive-storable
     - derive-storable-plugin
+    - jsonschema-gen
   exposed-modules:
     - Juvix
     - Juvix.Core
@@ -128,6 +131,9 @@ library:
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
     - Juvix.Encoding.Types
+    - Juvix.INetIR
+    - Juvix.INetIR.Types
+    - Juvix.INetIR.JSON
     - Juvix.Backends
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation

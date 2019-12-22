@@ -72,8 +72,8 @@ runMultipleConstraints numRepeat constraints syntax = do
       Set.insert i s
     grabTermNumbers (RBang i (RApp t1 t2)) s =
       grabTermNumbers t1 (grabTermNumbers t2 (Set.insert i s))
-    grabTermNumbers (RBang _i (RPrim _)) _s =
-      undefined
+    grabTermNumbers (RBang _i (RPrim _)) s =
+      s
 
 getConstraints ∷ [Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do

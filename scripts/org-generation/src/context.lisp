@@ -46,9 +46,10 @@ the language specific import"
                        (context   (fset:lookup config extension)))
                   (values
                    (if context
-                       (funcall (lookup (language-context-package context) 'convert-path)
-                                key
-                                (language-context-context context))
+                       (uiop:symbol-call (language-context-package context)
+                                         'convert-path
+                                         key
+                                         (language-context-context context))
                        key)
                    value)))
               alias-map))
@@ -58,18 +59,18 @@ the language specific import"
   "calls the import-generation function on the language context, the conflict-map
 that has the language import, and the lines of the file"
   (let ((context (fset:lookup config (pathname-type (file-info-path file-info)))))
-    (funcall (lookup (language-context-package context)
-                     'import-generation)
-             (language-context-context context)
-             conflict-map
-             lines)))
+    (uiop:symbol-call (language-context-package context)
+                      'import-generation
+                      (language-context-context context)
+                      conflict-map
+                      lines)))
 
 (defun module-comments (config file-info lines level)
   (let ((context (fset:lookup config (pathname-type (file-info-path file-info)))))
-    (funcall (lookup (language-context-package context)
-                     'module-comments)
-             lines
-             level)))
+    (uiop:symbol-call (language-context-package context)
+                      'module-comments
+                      lines
+                      level)))
 ;; -----------------------------------------------------------------------------
 ;; Config Generation
 ;; -----------------------------------------------------------------------------
@@ -85,8 +86,10 @@ with a fully initialized context"
                              (lookup-value package '*extension*)
                              (make-language-context
                               :package package
-                              :context (funcall (lookup package 'initialize)
-                                                (fset:lookup config symbol))))
+                              :context (uiop:symbol-call
+                                        package
+                                        'initialize
+                                        (fset:lookup config symbol))))
                   map)))
           (enabled-languages config)
           :initial-value (fset:empty-map)))
@@ -127,14 +130,7 @@ with a fully initialized context"
 
 (sig lookup-value (-> package symbol t))
 (defun lookup-value (package symbol)
-  (symbol-value (find-symbol (symbol-name symbol)
-                             package)))
-
-(sig lookup (-> package symbol symbol))
-(defun lookup (package symbol)
-  (find-symbol (symbol-name symbol)
-               package))
-
+  (symbol-value (uiop:find-symbol* symbol package)))
 
 ;; tests
 

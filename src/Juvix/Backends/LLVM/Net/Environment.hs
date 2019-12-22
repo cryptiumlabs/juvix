@@ -3,7 +3,7 @@
 module Juvix.Backends.LLVM.Net.Environment where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
--- import qualified Juvix.Backends.LLVM.Net.API as API
+import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -56,7 +56,7 @@ initialModule = do
   _ ← Codegen.defineFindEdge
   _ ← Defs.defineIsBothPrimary
   _ ← Defs.defineLinkConnectedPort
-  -- _ ← Defs.defineRewire
+  _ ← Defs.defineRewire
   -- _ ← EAC.defineFanInAux2F
   -- _ ← EAC.defineFanInAux2A
   -- _ ← EAC.defineFanInAux2L
@@ -64,16 +64,14 @@ initialModule = do
   -- _ ← EAC.defineAnnihilateRewireAux
   -- _ ← EAC.defineEraseNodes
   -- _ ← EAC.defineFanInFanIn
+  --_ <- EAC.defineReduce
 
   -- define the API
-  {-
-  _ ← API.defineCreateNet
-  _ ← API.defineReadNet
-  _ ← API.defineSaveState
-  _ ← API.defineLoadState
-  _ ← API.defineAppendToNet
-  _ ← API.defineReduceUntilComplete
-  -}
+  --Codegen.addType "node" API.node
+  --_ ← API.defineCreateNet
+  --_ ← API.defineReadNet
+  --_ ← API.defineAppendToNet
+  --_ ← API.defineReduceUntilComplete
   pure ()
 
 runInitModule ∷ Codegen.CodegenState

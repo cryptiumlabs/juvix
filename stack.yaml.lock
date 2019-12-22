@@ -19,6 +19,13 @@ packages:
   original:
     hackage: llvm-hs-pure-9.0.0
 - completed:
+    hackage: llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
+    pantry-tree:
+      size: 4741
+      sha256: dbad27efec25efc9bb739682f0770953086119bdb85b84c09ce103ddde1b5343
+  original:
+    hackage: llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd
+- completed:
     hackage: capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62,2424
     pantry-tree:
       size: 1700
@@ -249,6 +256,20 @@ packages:
       sha256: bed044eaaea4ab1dd921fb46c0e22b53d645efac3613674062c5f4eb5f8411c0
   original:
     url: https://github.com/cwgoes/uuid-orphans/archive/e23b58b46affb978c17a0eb3e760d28b058658ce.tar.gz
+- completed:
+    size: 13404
+    url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
+    cabal-file:
+      size: 2263
+      sha256: b62cbe842800d5f07ee3c9ed3600bf7eb17dab2380ddcd2471ff83a19b459185
+    name: jsonschema-gen
+    version: 0.4.1.0
+    sha256: fe5cab6b471e30feff3708a780d287357ccc80ae7278ea663bb3b99254a4ef4d
+    pantry-tree:
+      size: 873
+      sha256: 8610bcb77a390b74cacf7360b8b29a08f3fc241bab92a414653ffbd3d57dfd54
+  original:
+    url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
     size: 363050
     subdir: src/hevm

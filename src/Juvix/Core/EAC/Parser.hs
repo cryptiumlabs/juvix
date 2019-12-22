@@ -79,29 +79,8 @@ reservedOp = T.reservedOp lexer
 parens ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
 parens = T.parens lexer
 
-integer ∷ Stream s m Char ⇒ ParsecT s u m Integer
-integer = T.integer lexer
-
-semi ∷ Stream s m Char ⇒ ParsecT s u m String
-semi = T.semi lexer
-
-semiSep ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m [a]
-semiSep = T.semiSep lexer
-
 whiteSpace ∷ Stream s m Char ⇒ ParsecT s u m ()
 whiteSpace = T.whiteSpace lexer
-
-comma ∷ Stream s m Char ⇒ ParsecT s u m String
-comma = T.comma lexer
-
-braces ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-braces = T.braces lexer
-
-brackets ∷ Stream s m Char ⇒ ParsecT s u m a → ParsecT s u m a
-brackets = T.brackets lexer
-
-natural ∷ Stream s m Char ⇒ ParsecT s u m Integer
-natural = T.natural lexer
 
 -- Full Parsers ----------------------------------------------------------------
 parseEal ∷ String → Either ParseError RPTO
@@ -187,6 +166,7 @@ bangs = do
 addSymT ∷ Param → PType → PType
 addSymT n (PSymT a b) = PSymT (n + a) b
 addSymT n (PArrT a b c) = PArrT (n + a) b c
+addSymT _ (PPrimT p) = PPrimT p
 
 specific ∷ Parser PType
 specific = PSymT 0 <$> symbol

@@ -45,8 +45,8 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ consider the return type
 -- TODO ∷ remove boileprlate
-reduce ∷ Codegen.Define m ⇒ m Operand.Operand
-reduce = Codegen.defineFunction Type.void "reduce" args $
+defineReduce ∷ Codegen.Define m ⇒ m Operand.Operand
+defineReduce = Codegen.defineFunction Type.void "reduce" args $
   do
     -- recursive function, properly register
     reduce ← Codegen.externf "reduce"

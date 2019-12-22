@@ -12,7 +12,7 @@ import Juvix.Interpreter.InteractionNet.Backends.Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Interpreter.InteractionNet.Shared
-import Juvix.Library hiding (link, reduce)
+import Juvix.Library hiding (curry3, link, reduce)
 import Prelude (Show (..))
 
 data Lang primVal
