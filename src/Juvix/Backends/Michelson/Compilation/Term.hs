@@ -114,8 +114,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
             let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
-            firstArgTy ← typeToTypeForClosure firstArgTy
-            secondArgTy ← typeToTypeForClosure secondArgTy
+            firstArgTy ← typeToType firstArgTy
+            secondArgTy ← typeToType secondArgTy
             -- TODO: Clean this up.
             let mkPair x y = M.Type (M.TPair "" "" x y) ""
 
@@ -199,7 +199,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         let J.Pi _ argTy retTy = ty
         -- TODO: How to deal with packed lambdas here? For now, we don't.
         -- If the argument is a lambda, we don't know what its closure type is.
-        argTy ← typeToTypeForClosure argTy
+        argTy ← typeToType argTy
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
             freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free

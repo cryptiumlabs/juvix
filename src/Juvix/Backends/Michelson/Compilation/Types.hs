@@ -30,9 +30,6 @@ data StackElem
 data SomeInstr where
   SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
 
-execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
-execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])
-
 data Env
   = Env
       { stack ∷ Stack,
@@ -53,3 +50,6 @@ newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) 
   deriving
     (HasThrow "compilationError" CompilationError)
     via MonadError (ExceptT CompilationError (State Env))
+
+execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
+execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])

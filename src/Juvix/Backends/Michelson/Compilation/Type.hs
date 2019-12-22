@@ -21,18 +21,6 @@ typeToType ty =
       retTy ← typeToType retTy
       pure (M.Type (M.TLambda argTy retTy) "")
 
-typeToTypeForClosure ∷
-  ∀ m.
-  (HasThrow "compilationError" CompilationError m) ⇒
-  Type →
-  m M.Type
-typeToTypeForClosure ty =
-  case ty of
-    J.SymT _ → throw @"compilationError" InvalidInputType
-    J.Star _ → throw @"compilationError" InvalidInputType
-    J.PrimTy (PrimTy mTy) → pure mTy
-    J.Pi _ argTy retTy → throw @"compilationError" (NotYetImplemented "cannot capture a lambda in a closure")
-
 -- No free variables - ()
 -- Free variables: nested pair of free variables in order, finally ().
 closureType ∷ [(Symbol, M.Type)] → M.Type
