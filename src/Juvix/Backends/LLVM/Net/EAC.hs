@@ -273,11 +273,9 @@ defineAnnihilateRewireAux =
       aux2 ← Defs.auxiliary2
       node1P ← Codegen.externf "node_1"
       node2P ← Codegen.externf "node_2"
-      node1 ← Codegen.load Codegen.nodeTypeNameRef node1P
-      node2 ← Codegen.load Codegen.nodeTypeNameRef node2P
       -- TODO :: check if these calls create more main nodes to put back
-      Codegen.rewire [node1, aux1, node2, aux1]
-      Codegen.rewire [node1, aux2, node2, aux2]
+      Codegen.rewire [node1P, aux1, node2P, aux1]
+      Codegen.rewire [node1P, aux2, node2P, aux2]
       _ ← Codegen.deAllocateNode node1P
       _ ← Codegen.deAllocateNode node2P
       _ ← freeEac node1P

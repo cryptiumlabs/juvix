@@ -64,7 +64,7 @@ initialModule = do
   _ ← EAC.defineFanInAux2L
   _ ← EAC.defineFanInAux2F
 
-  -- _ ← EAC.defineAnnihilateRewireAux
+  _ ← EAC.defineAnnihilateRewireAux
   -- _ ← EAC.defineFanInFanIn
   --_ <- EAC.defineReduce
 
