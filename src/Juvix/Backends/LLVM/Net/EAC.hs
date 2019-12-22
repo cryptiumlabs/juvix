@@ -246,9 +246,7 @@ genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
 args ∷ IsString b ⇒ [(Type.Type, b)]
 args =
   [ (Codegen.nodePointer, "node_1"),
-    (Types.eacPointer, "eac_ptr_1"),
     (Codegen.nodePointer, "node_2"),
-    (Types.eacPointer, "eac_ptr_2"),
     (Types.eacList, "eac_list")
   ]
 
@@ -282,10 +280,8 @@ defineAnnihilateRewireAux =
       Codegen.rewire [node1, aux2, node2, aux2]
       _ ← Codegen.deAllocateNode node1P
       _ ← Codegen.deAllocateNode node2P
-      eacPtr1 ← Codegen.externf "eac_ptr_1"
-      eacPtr2 ← Codegen.externf "eac_ptr_2"
-      _ ← freeEac eacPtr1
-      _ ← freeEac eacPtr2
+      _ ← freeEac node1P
+      _ ← freeEac node2P
       Codegen.externf "eac_list" >>= Codegen.ret
 
 -- TODO ∷ fully generalize fanIn Logic and generate them dynamically
@@ -295,8 +291,8 @@ fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
   do
     node ← Codegen.externf "node_1"
     fanIn ← Codegen.externf "node_2"
-    era1 ← allocF >>= nodeOf
-    era2 ← allocF >>= nodeOf
+    era1 ← allocF
+    era2 ← allocF
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
     mainPort ← Defs.mainPort
@@ -304,10 +300,8 @@ fanInAux0 allocF = Codegen.defineFunction Types.eacList "fan_in_aux_0" args $
     -- to the eac_list
     Codegen.linkConnectedPort [fanIn, aux1, era1, mainPort]
     Codegen.linkConnectedPort [fanIn, aux2, era2, mainPort]
-    eacPtr1 ← Codegen.externf "eac_ptr_1"
-    eacPtr2 ← Codegen.externf "eac_ptr_2"
     eacList ← Codegen.externf "eac_list"
-    _ ← eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+    _ ← eraseNodes [node, fanIn, eacList]
     Codegen.ret eacList
 
 aux2Gen ∷
@@ -315,13 +309,13 @@ aux2Gen ∷
     Codegen.Define m
   ) ⇒
   m Operand.Operand →
-  (Operand.Operand, Operand.Operand) →
-  (Operand.Operand, Operand.Operand) →
+  Operand.Operand →
+  Operand.Operand →
   Operand.Operand →
   (Operand.Operand → Operand.Operand → m ()) →
   (Operand.Operand → Operand.Operand → m ()) →
   m Operand.Operand
-aux2Gen allocF (node, eacPtr1) (fanIn, eacPtr2) eacList copyFanData copyNodeData = do
+aux2Gen allocF node fanIn eacList copyFanData copyNodeData = do
   -- new nodes
   fan1Eac ← mallocFanIn
   fan2Eac ← mallocFanIn
@@ -369,7 +363,7 @@ aux2Gen allocF (node, eacPtr1) (fanIn, eacPtr2) eacList copyFanData copyNodeData
   copyNodeData node nod2 -- for one that already grabs data to save some
   copyFanData fanIn fan1 -- operations as to get here we may have already
   copyFanData fanIn fan2 -- gotten it
-  eraseNodes [node, eacPtr1, fanIn, eacPtr2, eacList]
+  eraseNodes [node, fanIn, eacList]
 
 defineFanInAux2 ∷
   ( Codegen.MallocNode m,
@@ -381,16 +375,14 @@ defineFanInAux2 ∷
 defineFanInAux2 name allocF = Codegen.defineFunction Types.eacList name args $
   do
     -- Nodes in env
-    fanIn ← Codegen.externf "node_2"
     node ← Codegen.externf "node_1"
+    fanIn ← Codegen.externf "node_2"
     eacList ← Codegen.externf "eac_list"
-    eacPtr1 ← Codegen.externf "eac_ptr_1"
-    eacPtr2 ← Codegen.externf "eac_ptr_2"
     eacList ←
       aux2Gen
         allocF
-        (node, eacPtr1)
-        (fanIn, eacPtr2)
+        node
+        fanIn
         eacList
         (\oldF newF → dataPortLookup oldF >>= addData newF)
         (\_ _ → pure ()) -- no data on node for now!
@@ -406,8 +398,6 @@ defineFanInFanIn ∷
   m Operand.Operand
 defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
   do
-    eacPtr1 ← Codegen.externf "eac_ptr_1"
-    eacPtr2 ← Codegen.externf "eac_ptr_2"
     eacList ← Codegen.externf "eac_list"
     fanIn1 ← Codegen.externf "node_1"
     fanIn2 ← Codegen.externf "node_2"
@@ -428,7 +418,7 @@ defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
     Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
     Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
     let sameList = eacList
-    _ ← eraseNodes [fanIn1, eacPtr1, fanIn2, eacPtr2, eacList]
+    _ ← eraseNodes [fanIn1, fanIn2, eacList]
     _ ← Codegen.br continue
     -- %diff.fan
     ------------------------------------------------------
@@ -436,8 +426,8 @@ defineFanInFanIn = Codegen.defineFunction Types.eacList "fan_in_rule" args $
     diffList ←
       aux2Gen
         mallocFanIn
-        (fanIn1, eacPtr1)
-        (fanIn2, eacPtr2)
+        fanIn1
+        fanIn2
         eacList
         (\_ newF → addData newF data2)
         (\_ newN → addData newN data1)
@@ -485,12 +475,8 @@ defineEraseNodes = Codegen.defineFunction Types.eacList "erase_nodes" args $
   do
     nodePtr1 ← Codegen.externf "node_1"
     nodePtr2 ← Codegen.externf "node_2"
-    eacPtr1 ← Codegen.externf "eac_ptr_1"
-    eacPtr2 ← Codegen.externf "eac_ptr_2"
     _ ← Codegen.deAllocateNode nodePtr1
     _ ← Codegen.deAllocateNode nodePtr2
-    _ ← freeEac eacPtr1
-    _ ← freeEac eacPtr2
     Codegen.externf "eac_list" >>= Codegen.ret
 
 --------------------------------------------------------------------------------

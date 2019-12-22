@@ -56,7 +56,7 @@ initialModule = do
   _ ← Codegen.defineFindEdge
   _ ← Defs.defineIsBothPrimary
   _ ← Defs.defineLinkConnectedPort
-  _ ← Defs.defineRewire
+  -- _ ← Defs.defineRewire
   -- _ ← EAC.defineFanInAux2F
   -- _ ← EAC.defineFanInAux2A
   -- _ ← EAC.defineFanInAux2L

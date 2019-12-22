@@ -9,7 +9,7 @@ import LLVM.Context
 import qualified LLVM.ExecutionEngine as EE
 import LLVM.Module as Mod
 import LLVM.PassManager
-import LLVM.Target
+-- -- import LLVM.Target
 
 -- Need some datatypes to wrap since GHC doesn't yet support impredicative polymorphism.
 data DynamicFunc where
