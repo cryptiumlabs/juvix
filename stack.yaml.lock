@@ -271,21 +271,21 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
-    size: 363050
+    size: 363229
     subdir: src/hevm
-    url: https://github.com/dapphub/dapptools/archive/38dd682fa6c433e5720bd9022779ffc6a1ce00fc.tar.gz
+    url: https://github.com/dapphub/dapptools/archive/5f6812169f99a71d12d21229f410238c4c2af964.tar.gz
     cabal-file:
       size: 6306
       sha256: 8729cfbcd4bbf4c392f75efdd0b54bcdee2b785b761197e2b053bd6bc72c55f8
     name: hevm
     version: '0.35'
-    sha256: 5ddef048ecfdf9aad5aa5850cd766fd8bf247ed1055c3cd2e85112373e5bc153
+    sha256: d0331819e6f362595e69034949b357b87a4863064a89bec354c668c617827da0
     pantry-tree:
       size: 3288
-      sha256: 5dc2e6893be4eedafd6ec8f02d6017958fa5b660f11e81d613072c55ec15006b
+      sha256: 1f783a42855d93c4bd9862824952d32de8eab8c2661aa60ca1fc170aa2bc4c58
   original:
     subdir: src/hevm
-    url: https://github.com/dapphub/dapptools/archive/38dd682fa6c433e5720bd9022779ffc6a1ce00fc.tar.gz
+    url: https://github.com/dapphub/dapptools/archive/5f6812169f99a71d12d21229f410238c4c2af964.tar.gz
 - completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
