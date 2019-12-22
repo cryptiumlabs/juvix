@@ -41,6 +41,7 @@ initialModule = do
   Codegen.addType Codegen.numPortsName Codegen.numPorts
   Codegen.addType Codegen.portTypeName Defs.portType
   Codegen.addType Types.eacName Types.eac
+  Codegen.addType Types.eacListName Types.eacList
   -- ---------------------------------------------------------------
   Codegen.addBlock "bad" >>= Codegen.setBlock
   Codegen.defineMalloc
@@ -57,12 +58,13 @@ initialModule = do
   _ ← Defs.defineIsBothPrimary
   _ ← Defs.defineLinkConnectedPort
   _ ← Defs.defineRewire
-  -- _ ← EAC.defineFanInAux2F
-  -- _ ← EAC.defineFanInAux2A
-  -- _ ← EAC.defineFanInAux2L
-  -- _ ← EAC.defineFanInAux2E
+  _ ← EAC.defineEraseNodes
+  _ ← EAC.defineFanInAux0E
+  _ ← EAC.defineFanInAux2A
+  _ ← EAC.defineFanInAux2L
+  _ ← EAC.defineFanInAux2F
+
   -- _ ← EAC.defineAnnihilateRewireAux
-  -- _ ← EAC.defineEraseNodes
   -- _ ← EAC.defineFanInFanIn
   --_ <- EAC.defineReduce
 

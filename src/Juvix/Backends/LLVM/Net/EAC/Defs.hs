@@ -16,13 +16,13 @@ import qualified LLVM.AST.Type as Type
 -- Aliases
 --------------------------------------------------------------------------------
 isBothPrimary ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
-isBothPrimary = Codegen.isBothPrimary Types.eacPointer
+isBothPrimary = Codegen.isBothPrimary
 
 findEdge ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
-findEdge = Codegen.findEdge Types.eacPointer
+findEdge = Codegen.findEdge
 
 bothPrimary ∷ Type.Type
-bothPrimary = Codegen.bothPrimary Types.eacPointer
+bothPrimary = Codegen.bothPrimary
 
 portType ∷ Type.Type
 portType = Codegen.portType Types.eacPointer
@@ -54,7 +54,7 @@ linkAllCons ∷
     Operand.Operand
     DSL.Auxiliary →
   m Operand.Operand
-linkAllCons = DSL.linkAllCons Types.cons Types.eacPointer
+linkAllCons = DSL.linkAllCons Types.cons Types.eacLPointer
 
 loadPrimaryNode ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
@@ -75,7 +75,7 @@ mallocNodeH ∷
 mallocNodeH mPorts mData = Codegen.mallocNodeH mPorts mData 4
 
 defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
-defineIsBothPrimary = Codegen.defineIsBothPrimary Types.eacPointer
+defineIsBothPrimary = Codegen.defineIsBothPrimary
 
 defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand
 defineRewire = Codegen.defineRewire

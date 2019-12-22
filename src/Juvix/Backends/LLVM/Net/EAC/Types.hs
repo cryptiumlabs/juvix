@@ -39,6 +39,12 @@ lam = C.Int {C.integerBits = tagInt, C.integerValue = 1}
 era = C.Int {C.integerBits = tagInt, C.integerValue = 2}
 dup = C.Int {C.integerBits = tagInt, C.integerValue = 3}
 
+eacListNameRef ∷ Type.Type
+eacListNameRef = Type.NamedTypeReference eacListName
+
+eacListName ∷ IsString p ⇒ p
+eacListName = "eac_list"
+
 eacList ∷ Type.Type
 eacList = Type.StructureType
   { -- change to true later?
@@ -47,7 +53,7 @@ eacList = Type.StructureType
   }
 
 eacLPointer ∷ Type.Type
-eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
+eacLPointer = Type.PointerType eacListNameRef (Addr.AddrSpace 0)
 
 testList ∷ Type.Type
 testList = Type.StructureType
@@ -57,7 +63,7 @@ testList = Type.StructureType
   }
 
 testListPointer ∷ Type.Type
-testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
+testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 0)
 
 --------------------------------------------------------------------------------
 -- EacList operations
@@ -69,14 +75,14 @@ checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer)
 cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand
 cons ele eacList = do
   newList ← Codegen.malloc (Codegen.nodePointerSize + Codegen.nodePointerSize) eacLPointer
-  car ← Codegen.loadElementPtr $
+  car ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Codegen.pointerOf eacPointer,
         Codegen.address' = newList,
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
   cdr ←
-    Codegen.loadElementPtr $
+    Codegen.getElementPtr $
       Codegen.Minimal
         { Codegen.type' = Codegen.pointerOf eacLPointer,
           Codegen.address' = newList,
@@ -105,4 +111,4 @@ loadCdr eacList =
       }
 
 loadList ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-loadList = Codegen.load eacList
+loadList = Codegen.load eacListNameRef

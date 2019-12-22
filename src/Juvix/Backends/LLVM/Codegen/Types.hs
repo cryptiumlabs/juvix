@@ -360,10 +360,10 @@ vaList = StructureType
     elementTypes = [pointerOf Type.i8]
   }
 
-bothPrimary ∷ Type → Type
-bothPrimary nodePtrType = StructureType
+bothPrimary ∷ Type
+bothPrimary = StructureType
   { isPacked = False,
-    elementTypes = [Type.i1, nodePtrType]
+    elementTypes = [Type.i1, nodePointer]
   }
 
 voidStarTy ∷ Type

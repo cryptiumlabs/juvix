@@ -110,9 +110,9 @@ linkConnectedPort args = callGenVoid args "link_connected_port"
 
 isBothPrimary,
   findEdge ∷
-    Call m ⇒ Type.Type → [Operand.Operand] → m Operand.Operand
-isBothPrimary typ args = callGen (Types.bothPrimary typ) args "is_both_primary"
-findEdge typ args = callGen typ args "find_edge"
+    Call m ⇒ [Operand.Operand] → m Operand.Operand
+isBothPrimary args = callGen (Types.pointerOf Types.bothPrimary) args "is_both_primary"
+findEdge args = callGen Types.portPointer args "find_edge"
 
 --------------------------------------------------------------------------------
 -- Main Functions
@@ -138,17 +138,17 @@ defineLink = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-defineIsBothPrimary ∷ Define m ⇒ Type.Type → m Operand.Operand
-defineIsBothPrimary nodePtrTyp =
-  Block.defineFunction (Types.pointerOf (Types.bothPrimary nodePtrTyp)) "is_both_primary" args $
+defineIsBothPrimary ∷ Define m ⇒ m Operand.Operand
+defineIsBothPrimary =
+  Block.defineFunction (Types.pointerOf Types.bothPrimary) "is_both_primary" args $
     do
       -- TODO ∷ should this call be abstracted somewhere?!
       mainPort ← mainPort
       nodePtr ← Block.externf "node_ptr"
-      portPtr ← findEdge Types.portPointer [nodePtr, mainPort]
+      portPtr ← findEdge [nodePtr, mainPort]
       otherNodePtr ← loadElementPtr $
         Types.Minimal
-          { Types.type' = nodePtrTyp,
+          { Types.type' = Types.nodePointer,
             Types.address' = portPtr,
             Types.indincies' = Block.constant32List [0, 0]
           }
@@ -157,14 +157,14 @@ defineIsBothPrimary nodePtrTyp =
       otherNodeInt ← ptrToInt otherNodePtr pointerSize
       -- compare the pointers to see if they are the same
       cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-      return' ← Block.alloca (Types.bothPrimary nodePtrTyp)
+      return' ← Block.alloca Types.bothPrimary
       tag ← getIsPrimaryEle return'
-      nod ← getPrimaryNode nodePtrTyp return'
+      nod ← getPrimaryNode Types.nodePointer return'
       store tag cmp
       store nod otherNodePtr
       ret return'
   where
-    args = [(nodePtrTyp, "node_ptr")]
+    args = [(Types.nodePointer, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
 defineFindEdge ∷ Define m ⇒ m Operand.Operand
@@ -306,7 +306,7 @@ defineLinkConnectedPort =
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← findEdge Types.portPointer [nOld, pOld]
+      oldPointsTo ← findEdge [nOld, pOld]
       let intoGen typ num = getElementPtr $
             Types.Minimal
               { Types.type' = typ,
@@ -333,7 +333,7 @@ defineRewire =
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
       (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-      oldPointsTo ← findEdge Types.portPointer [n1, p1] -- portPtr
+      oldPointsTo ← findEdge [n1, p1] -- portPtr
       let intoGen typ num = getElementPtr $
             Types.Minimal
               { Types.type' = typ,
@@ -355,15 +355,15 @@ defineRewire =
 
 deAllocateNode ∷ Define m ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
-  portPtr ← getElementPtr $
+  portPtr ← loadElementPtr $
     Types.Minimal
-      { Types.type' = Types.pointerOf Types.portData,
+      { Types.type' = Types.portData,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 1]
       }
   dataPtr ← loadElementPtr $
     Types.Minimal
-      { Types.type' = Types.pointerOf Types.dataArray,
+      { Types.type' = Types.dataArray,
         Types.address' = nodePtr,
         Types.indincies' = Block.constant32List [0, 2]
       }
@@ -664,10 +664,10 @@ mainPort,
   auxiliary4 ∷
     Externf m ⇒ m Operand.Operand
 mainPort = Block.externf "main_port"
-auxiliary1 = Block.externf "auxiliary_port_1"
-auxiliary2 = Block.externf "auxiliary_port_2"
-auxiliary3 = Block.externf "auxiliary_port_3"
-auxiliary4 = Block.externf "auxiliary_port_4"
+auxiliary1 = Block.externf "auxiliary1"
+auxiliary2 = Block.externf "auxiliary2"
+auxiliary3 = Block.externf "auxiliary3"
+auxiliary4 = Block.externf "auxiliary4"
 
 --------------------------------------------------------------------------------
 -- Accessor aliases

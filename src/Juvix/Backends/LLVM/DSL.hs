@@ -65,14 +65,14 @@ linkAllCons ∷
   Operand.Operand →
   Relink (Node t Operand.Operand) Operand.Operand Auxiliary →
   m Operand.Operand
-linkAllCons cons nodePtrTyp eacList (RelAuxiliary (Node tagN node) p a1 a2 a3 a4) = do
+linkAllCons cons eacListPtrType eacList (RelAuxiliary (Node tagN node) p a1 a2 a3 a4) = do
   let flipHelper p l = linkHelper l node p
   flipHelper Codegen.auxiliary1 a1
   flipHelper Codegen.auxiliary2 a2
   flipHelper Codegen.auxiliary3 a3
   flipHelper Codegen.auxiliary4 a4
   -- Always do this last
-  linkHelperP cons nodePtrTyp eacList p tagN node Codegen.mainPort
+  linkHelperP cons eacListPtrType eacList p tagN node Codegen.mainPort
 
 linkAll ∷ Codegen.Call m ⇒ Relink Operand.Operand Operand.Operand Auxiliary → m ()
 linkAll (RelAuxiliary node p a1 a2 a3 a4) = do
@@ -113,10 +113,10 @@ linkHelperP ∷
   Operand.Operand →
   m Operand.Operand →
   m Operand.Operand
-linkHelperP cons nodePtrType eacList n tagN node port =
+linkHelperP cons eacListPtrType eacList n tagN node port =
   -- todo integrate this in a better way with link and link connected
   let consOnto = do
-        v ← Codegen.isBothPrimary nodePtrType [node]
+        v ← Codegen.isBothPrimary [node]
         primaryCase ← Codegen.addBlock "case.primary"
         continueComp ← Codegen.addBlock "case.continue"
         isPrimary ← Codegen.loadIsPrimaryEle v
@@ -129,7 +129,8 @@ linkHelperP cons nodePtrType eacList n tagN node port =
         _ ← Codegen.br continueComp
         -- %empty.continue branch
         ------------------------------------------------------
-        Codegen.phi nodePtrType [(eacList, currentBlock), (newList, primaryCase)]
+        Codegen.setBlock continueComp
+        Codegen.phi eacListPtrType [(eacList, currentBlock), (newList, primaryCase)]
    in case n of
         None → pure eacList
         Link nl pl → do
