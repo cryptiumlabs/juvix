@@ -67,11 +67,11 @@ initialModule = do
   -- _ ← EAC.defineFanInFanIn
 
   -- define the API
-  Codegen.addType "node" API.node
-  _ ← API.defineCreateNet
-  _ ← API.defineReadNet
-  _ ← API.defineAppendToNet
-  _ ← API.defineReduceUntilComplete
+  --Codegen.addType "node" API.node
+  --_ ← API.defineCreateNet
+  --_ ← API.defineReadNet
+  --_ ← API.defineAppendToNet
+  --_ ← API.defineReduceUntilComplete
   pure ()
 
 runInitModule ∷ Codegen.CodegenState
