@@ -24,7 +24,7 @@ data NetAPI
 jitToNetAPI ∷ Config → AST.Module → IO (NetAPI, IO ())
 jitToNetAPI config mod = do
   putText "Loading into LLVM runtime..."
-  (imp, kill) ← orcJitWith config mod dynamicImport
+  (imp, kill) ← mcJitWith config mod dynamicImport
   putText "Importing functions...."
   Just createNetFn ← importAs imp "createNet" (Proxy ∷ Proxy (IO OpaqueNetPtr)) (Proxy ∷ Proxy ()) (Proxy ∷ Proxy OpaqueNetPtr)
   Just appendToNetFn ← importAs imp "appendToNet" (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → Int → IO ())) (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node, Int)) (Proxy ∷ Proxy ())

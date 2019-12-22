@@ -71,7 +71,7 @@ initialModule = do
   _ ← API.defineCreateNet
   _ ← API.defineReadNet
   _ ← API.defineAppendToNet
-  --_ ← API.defineReduceUntilComplete
+  _ ← API.defineReduceUntilComplete
   pure ()
 
 runInitModule ∷ Codegen.CodegenState

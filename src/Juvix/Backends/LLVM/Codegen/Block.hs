@@ -431,7 +431,7 @@ generateIf ty cond tr fl = do
   ifExit ← addBlock "if.exit"
   -- %entry
   ------------------
-  test ← icmp IntPred.EQ cond (ConstantOperand (C.Int 2 1))
+  test ← icmp IntPred.EQ cond (ConstantOperand (C.Int 1 1))
   _ ← cbr test ifThen ifElse
   -- if.then
   ------------------
