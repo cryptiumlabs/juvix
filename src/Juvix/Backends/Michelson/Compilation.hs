@@ -12,12 +12,13 @@ import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
+import qualified Michelson.Typed as M (FullContract(..))
 
 typedContractToSource ∷ M.SomeContract → Text
-typedContractToSource (M.SomeContract instr _ _) = L.toStrict (M.printTypedContract instr)
+typedContractToSource (M.SomeContract (M.FullContract instr _ _)) = L.toStrict (M.printTypedContract False instr)
 
 untypedContractToSource ∷ M.Contract' M.ExpandedOp → Text
-untypedContractToSource c = L.toStrict (M.printUntypedContract c)
+untypedContractToSource c = L.toStrict (M.printUntypedContract False c)
 
 compile ∷ Term → Type → (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compile term ty =

@@ -102,15 +102,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           -- :: \x -> y ~ s => (f, s)
           PrimFst → stackCheck addsOne $ do
             let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
-                (_, retTy) = lamRetTy [] pairTy xT
+                retTy = M.Type (M.TLambda pairTy xT) ""
             modify @"stack" ((:) (FuncResultE, retTy))
-            pure (oneArgPrim [M.PrimEx (M.CAR "" "")] retTy)
+            pure (oneArgPrim (M.PrimEx (M.CAR "" "") :| []) retTy)
           -- :: \x -> y ~ s => (f, s)
           PrimSnd → stackCheck addsOne $ do
             let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
-                (_, retTy) = lamRetTy [] pairTy yT
+                retTy = M.Type (M.TLambda pairTy yT) ""
             modify @"stack" ((:) (FuncResultE, retTy))
-            pure (oneArgPrim [M.PrimEx (M.CDR "" "")] retTy)
+            pure (oneArgPrim (M.PrimEx (M.CDR "" "") :| []) retTy)
           -- :: \x y -> a ~ (x, (y, s)) => (a, s)
           PrimPair → stackCheck addsOne $ do
             let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
@@ -219,7 +219,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
                 M.SeqEx vars,
                 packOp,
-                M.PrimEx (M.PAIR "" "" "" "") -- pair the env & lambda
+                M.PrimEx (M.PAIR "" "" "" ""), -- pair the env & lambda
+                M.PrimEx (M.APPLY "")
               ]
           )
     -- :: (\a -> b) a ~ (a, s) => (b, s)
@@ -263,6 +264,6 @@ genSwitch ∷
   m (Op → Op → Op)
 genSwitch M.Tbool = pure (\x y → M.PrimEx (M.IF [y] [x])) -- TODO: Why flipped?
 genSwitch (M.TOr _ _ _ _) = pure (\x y → M.PrimEx (M.IF_LEFT [x] [y]))
-genSwitch (M.TOption _ _) = pure (\x y → M.PrimEx (M.IF_NONE [x] [y]))
+genSwitch (M.TOption _) = pure (\x y → M.PrimEx (M.IF_NONE [x] [y]))
 genSwitch (M.TList _) = pure (\x y → M.PrimEx (M.IF_CONS [x] [y]))
 genSwitch ty = throw @"compilationError" (NotYetImplemented ("genSwitch: " <> show ty))

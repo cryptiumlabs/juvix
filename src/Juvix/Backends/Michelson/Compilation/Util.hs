@@ -141,8 +141,8 @@ genFunc instr =
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
 
-oneArgPrim ∷ [ExpandedOp] → Type → ExpandedOp
-oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValuePair ValueUnit (ValueLambda (PrimEx (CAR "" "") :| ops))))
+oneArgPrim ∷ NonEmpty ExpandedOp → Type → ExpandedOp
+oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValueLambda ops))
 
 packClosure ∷
   ∀ m.

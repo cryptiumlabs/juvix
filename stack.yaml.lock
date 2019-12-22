@@ -33,19 +33,26 @@ packages:
   original:
     hackage: capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62,2424
 - completed:
+    hackage: morley-0.5.0@sha256:9e76a5bdaff0e769d75f88d1a85b021f35aa25bd322d08b1714ccf823a2f5bc9,11430
+    pantry-tree:
+      size: 14496
+      sha256: 45754c950052e6bec59ebe89512c25aee7975eb13b0d8b7ebf92380de9603739
+  original:
+    hackage: morley-0.5.0@sha256:9e76a5bdaff0e769d75f88d1a85b021f35aa25bd322d08b1714ccf823a2f5bc9,11430
+- completed:
+    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+    pantry-tree:
+      size: 270
+      sha256: 402cd467a690373ca891fa31650376312be351244c6d7e187ca9961d3708de0a
+  original:
+    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+- completed:
     hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
     pantry-tree:
       size: 224
       sha256: 969d6b60ea298ffb81697dd350e76774a2f876103a147117f832400451ad2cc3
   original:
     hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
-- completed:
-    hackage: morley-0.3.0.1@sha256:dc7586ba0c1a2a5ba4a3e4a5afa4527463b91c73dfb58a7162d4297a97eb7688,10436
-    pantry-tree:
-      size: 9548
-      sha256: 18a6088ac62d8c3e1e2d011981009b148c3a9b68aef8fa0b8f6ab83ee2da42c6
-  original:
-    hackage: morley-0.3.0.1@sha256:dc7586ba0c1a2a5ba4a3e4a5afa4527463b91c73dfb58a7162d4297a97eb7688,10436
 - completed:
     hackage: aeson-options-0.1.0@sha256:2d0c25afbb2d038bd5b57de8d042e319ea1a5ec7d7b92810d8a0cf0777882b6a,1244
     pantry-tree:
@@ -67,13 +74,6 @@ packages:
       sha256: 84ce6d618602d39e89e28b1a9cc41f0def4786d7046ac0a742557b5ab5381466
   original:
     hackage: hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
-- completed:
-    hackage: morley-prelude-0.2.0.1@sha256:307db535ef79b0e0ed40c7bfbe305cd67c7561f686ae46bf985a971a9a064f5c,2083
-    pantry-tree:
-      size: 261
-      sha256: 2e4a913b38e302636973b18eda867244e4b69b9a8e9029aab536878310d356c8
-  original:
-    hackage: morley-prelude-0.2.0.1@sha256:307db535ef79b0e0ed40c7bfbe305cd67c7561f686ae46bf985a971a9a064f5c,2083
 - completed:
     hackage: ghci-pretty-0.0.2@sha256:5f6c2a9f1d391aa0ad3c3d0bfe1f39decfe94be50fbf5a5279e2dbc18f8b4c51,1409
     pantry-tree:
@@ -186,6 +186,34 @@ packages:
       sha256: 855bdb6f5c0a8b66a05be19524512fef45a47345d67051dbc2ff83a2e96abd93
   original:
     hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+- completed:
+    hackage: pretty-terminal-0.1.0.0@sha256:e9135d86ebb2a8e3aaf5a79088de4628dbd49988388e0fbfc26c5ecb3c399ad9,1638
+    pantry-tree:
+      size: 385
+      sha256: fecec01e618890c284e57cb873b8f9531f479562b7cf08497aef097da3ef90ec
+  original:
+    hackage: pretty-terminal-0.1.0.0@sha256:e9135d86ebb2a8e3aaf5a79088de4628dbd49988388e0fbfc26c5ecb3c399ad9,1638
+- completed:
+    hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
+    pantry-tree:
+      size: 214
+      sha256: c07e39492e0b8da34f87b3f7516f7739d60543013e7f22bc7db0dbe99eb57540
+  original:
+    hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
+- completed:
+    hackage: constraints-0.11@sha256:44f80a313d5d4fcfb3c18eb6625dd3db4bb845d5ca8d3b1f62125a4b7241e590,2186
+    pantry-tree:
+      size: 867
+      sha256: 1d56051f040b16ba2e55dced7f6ed0bdac7d2a28dbd844bf283425ddb5f5b6cc
+  original:
+    hackage: constraints-0.11
+- completed:
+    hackage: singletons-2.5.1@sha256:c1e95523813ecabb06c765180e200187287fc1b0e3cf710e913dac32c314dfab,6991
+    pantry-tree:
+      size: 23281
+      sha256: b0ebbc83146b196f7c41d8500544e40a734e29fb552e834800c63221302fb0e8
+  original:
+    hackage: singletons-2.5.1
 - completed:
     hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
     pantry-tree:
@@ -358,7 +386,7 @@ packages:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 snapshots:
 - completed:
-    size: 545658
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/12.yaml
-    sha256: 26b807457213126d26b595439d705dc824dbb7618b0de6b900adc2bf6a059406
-  original: lts-14.12
+    size: 525662
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/15.yaml
+    sha256: c5e673e5723931b64ef2eb5004f6d9ea3c95b58d48388dbc4de6f66b97c81f7a
+  original: lts-14.15

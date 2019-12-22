@@ -29,9 +29,9 @@ closureType ((_, x) : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
 
 -- TODO: Figure out how to add nice annotations without breaking equality comparisons.
 lamTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → M.Type
-lamTy env argTy retTy = M.Type (M.TLambda (M.Type (M.TPair "" "" argTy (closureType env)) "") retTy) ""
+lamTy env argTy retTy = M.Type (M.TLambda (M.Type (M.TPair "" "" (closureType env) argTy) "") retTy) ""
 
 lamRetTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → (M.Type, M.Type)
 lamRetTy env argTy retTy =
   let lTy = lamTy env argTy retTy
-   in (lTy, M.Type (M.TPair "" "" (closureType env) lTy) "")
+   in (lTy, M.Type (M.TLambda argTy retTy) "")
