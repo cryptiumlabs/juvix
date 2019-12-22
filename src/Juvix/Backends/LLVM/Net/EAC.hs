@@ -113,7 +113,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     (aCdr, aExit) ←
       genContinueCaseD
         "app"
-        [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x >> pure cdr)),
+        [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x)),
           (Types.dup, "switch.dup", fanInAux2App),
           (Types.era, "switch.era", eraseNodes)
         ]
@@ -124,7 +124,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     (lCdr, lExit) ←
       genContinueCaseD
         "lam"
-        [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x) >> pure cdr)),
+        [ (Types.app, "switch.app", (\x → annihilateRewireAux (swapArgs x))),
           (Types.dup, "switch.dup", fanInAux2Lambda),
           (Types.era, "switch.era", eraseNodes)
         ]
@@ -406,7 +406,6 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     test ← Codegen.icmp IntPred.EQ label1 label2
     sameFan ← Codegen.addBlock "same.fan"
     diffFan ← Codegen.addBlock "diff.fan"
-    continue ← Codegen.addBlock "continue.fan"
     _ ← Codegen.cbr test sameFan diffFan
     -- %same.fan
     ------------------------------------------------------
@@ -417,7 +416,6 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
     let sameList = eacList
     _ ← eraseNodes [fanIn1, fanIn2, eacList]
-    _ ← Codegen.br continue
     -- %diff.fan
     ------------------------------------------------------
     Codegen.setBlock diffFan
@@ -429,9 +427,17 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
         eacList
         (\_ newF → addData newF data2)
         (\_ newN → addData newN data1)
+
+    -- weird ordering to get continue.fan to be last!
+    continue ← Codegen.addBlock "continue.fan"
+    _ ← Codegen.br continue
+    -- %same.fan
+    ------------------------------------------------------
+    Codegen.setBlock sameFan
     _ ← Codegen.br continue
     -- %continue.fan
     ------------------------------------------------------
+    Codegen.setBlock continue
     finalList ←
       Codegen.phi
         Types.eacLPointer

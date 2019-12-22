@@ -65,7 +65,7 @@ initialModule = do
   _ ← EAC.defineFanInAux2F
 
   _ ← EAC.defineAnnihilateRewireAux
-  -- _ ← EAC.defineFanInFanIn
+  _ ← EAC.defineFanInFanIn
   --_ <- EAC.defineReduce
 
   -- define the API
