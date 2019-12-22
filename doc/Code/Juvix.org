@@ -37,11 +37,15 @@ Serves as a mini DSL layer above LLVM
 1. _Relink_
    - gives a declarative way to do a bunch of links and relinks
 **** Translation <<LLVM/Translation>>
-Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM.
+Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM, evaluates it, and reads-back the resulting term.
+TODO: Separate out the common logic from the interpreter & this file into a shared module.
 - _Relies on_
   + [[Codegen]]
+  + [[JIT]]
+  + [[Environment]]
   + [[Erased/Types]]
   + [[Core/Types]]
+  + [[INetIR/Types]]
   + [[InteractionNet]]
   + [[Backends/Graph]]
   + [[Interface]]
@@ -151,22 +155,27 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Execution]]
   + [[JIT/Types]]
+  + [[Library]]
 ***** Execution
 - _Relies on_
   + [[JIT/Types]]
   + [[Library]]
 ***** Types <<JIT/Types>>
 - _Relies on_
+  + [[INetIR/Types]]
   + [[Library]]
 **** Net
 ***** API
 - _Relies on_
   + [[Codegen]]
+  + [[Net/EAC]]
+  + [[Net/EAC/Types]]
   + [[Library]]
 ***** Environment
 - Serves as the default environment for executing EAC code
 - _Relies on_
   + [[Codegen]]
+  + [[API]]
   + [[Net/EAC]]
   + [[Defs]]
   + [[Net/EAC/Types]]
@@ -520,6 +529,17 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** INetIR
+- _Relies on_
+  + [[JSON]]
+  + [[INetIR/Types]]
+*** JSON
+- _Relies on_
+  + [[INetIR/Types]]
+  + [[Library]]
+*** Types <<INetIR/Types>>
+- _Relies on_
+  + [[Library]]
 ** Interpreter
 - Although slower than [[Backends]], the interpreter serves as a
   reference point to play, modify, and debug features that will go
