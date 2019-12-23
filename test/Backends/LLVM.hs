@@ -32,10 +32,26 @@ backendLLVM =
   T.testGroup
     "Backend LLVM"
     [ --test_eval_jit,
+      --test_example_jit,
+      --test_malloc_free_jit,
       test_init_module,
-      test_malloc_free_jit,
-      test_example_jit
+      test_init_module_jit
     ]
+
+test_init_module_jit :: T.TestTree
+test_init_module_jit = T.testCase "init module should jit successfully" $ do
+  let mod = Codegen.moduleAST runInitModule
+  let newModule =
+        mod
+          { LLVM.AST.moduleDefinitions =
+              LLVM.AST.moduleDefinitions mod
+                <> LLVM.AST.moduleDefinitions exampleModule2
+          }
+  (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
+  Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
+  res ← fn 7
+  kill
+  43 T.@=? res
 
 test_init_module :: T.TestTree
 test_init_module = T.testCase "init module should be created successfully" $ do
