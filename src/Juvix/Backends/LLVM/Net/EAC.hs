@@ -79,7 +79,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
       Codegen.icmp
         IntPred.EQ
         isPrimary
-        (Operand.ConstantOperand (C.Int 2 1))
+        (Operand.ConstantOperand (C.Int 1 1))
     -- end of moved code----------------------
     tagP ← tagOf car
     tag ← Codegen.load Types.tag tagP
