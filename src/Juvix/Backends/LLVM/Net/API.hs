@@ -78,7 +78,26 @@ defineReadNet =
 
 defineAppendToNet ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet =
-  Codegen.defineFunction Type.void "appendToNet" [(nodePointer, "nodes"), (int32, "node_count")] $ do
+  Codegen.defineFunction Type.void "appendToNet" [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")] $ do
+    netPtr <- Codegen.externf "net"
+    topNode <- EAC.mallocTop
+    appNode <- EAC.mallocApp
+    lamNode <- EAC.mallocLam
+    lamNode2 <- EAC.mallocLam
+    aux1 <- Codegen.auxiliary1
+    aux2 <- Codegen.auxiliary2
+    main <- Codegen.mainPort
+    Codegen.linkConnectedPort [topNode, aux1, appNode, aux1]
+    Codegen.linkConnectedPort [appNode, main, lamNode, main]
+    Codegen.linkConnectedPort [appNode, aux2, lamNode2, main]
+    Codegen.linkConnectedPort [lamNode, aux1, lamNode, aux2]
+    Codegen.linkConnectedPort [lamNode2, aux1, lamNode2, aux2]
+    eac_list <- Codegen.malloc 64 Types.eacList
+    ptr <- Codegen.getElementPtr (Codegen.Minimal { Codegen.address' = eac_list, Codegen.type' = Types.eacList, Codegen.indincies' = [Operand.ConstantOperand (C.Int 32 0)] })
+    Codegen.store ptr appNode
+    Codegen.store netPtr eac_list
+    Codegen.retNull
+    {-
     nodes ← Codegen.externf "nodes"
     node_count ← Codegen.externf "node_count"
     forLoop ← Codegen.addBlock "for.loop"
@@ -106,8 +125,6 @@ defineAppendToNet =
     -- Exit case: next loop.
     Codegen.setBlock forExit
     Codegen.retNull
-
-    {-
     Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
     Codegen.br forLoop2
     -- Second loop: link nodes.
