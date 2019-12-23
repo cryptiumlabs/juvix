@@ -72,8 +72,8 @@ evalErasedCoreInLLVM parameterisation term = do
   nodes ← liftIO (readNet net)
   liftIO (putText ("Read-back nodes: " <> show nodes))
   -- Translate into a native graph.
-  let graph ∷ Graph.FlipNet (Lang primVal)
-      graph = flip evalEnvState (Env 0 empty Map.empty) $ do
+  let retGraph ∷ Graph.FlipNet (Lang primVal)
+      retGraph = flip evalEnvState (Env 0 empty Map.empty) $ do
         ns ← flip mapM nodes $ \node →
           newNode $ case INIR.nodeKind node of
             0 → Primar Erase
@@ -91,7 +91,9 @@ evalErasedCoreInLLVM parameterisation term = do
         pure net
   -- Read-back the graph.
   let res ∷ Erased.Term primVal
+      -- TODO cheating!
       Just res = interactionNetASTToErasedCore |<< netToAst graph
+      --Just res = interactionNetASTToErasedCore |<< netToAst retGraph
   -- Free the module.
   liftIO kill
   -- Return the resulting term.
