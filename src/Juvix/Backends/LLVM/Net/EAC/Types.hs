@@ -13,10 +13,10 @@ import qualified LLVM.AST.Type as Type
 -- defines a tag over a node type, to denote the variant
 
 tag ∷ Type.Type
-tag = Codegen.i4
+tag = Codegen.i8
 
 tagInt ∷ Num p ⇒ p
-tagInt = 4
+tagInt = 8
 
 eacSize ∷ Num p ⇒ p
 eacSize = tagInt + Codegen.nodePointerSize
@@ -33,7 +33,8 @@ eac = Codegen.nodeType [tag]
 eacPointer ∷ Type.Type
 eacPointer = Type.PointerType eacNameRef (Addr.AddrSpace 0)
 
-app, dup, lam, era ∷ C.Constant
+top, app, dup, lam, era ∷ C.Constant
+top = C.Int {C.integerBits = tagInt, C.integerValue = 4}
 app = C.Int {C.integerBits = tagInt, C.integerValue = 0}
 lam = C.Int {C.integerBits = tagInt, C.integerValue = 1}
 era = C.Int {C.integerBits = tagInt, C.integerValue = 2}

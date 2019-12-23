@@ -21,7 +21,7 @@ int32 ∷ Type.Type
 int32 = Codegen.int
 
 nodeKind ∷ Type.Type
-nodeKind = Codegen.i4
+nodeKind = Codegen.i8
 
 nodeAddress ∷ Type.Type
 nodeAddress = Codegen.int
@@ -83,8 +83,8 @@ defineAppendToNet =
     node_count ← Codegen.externf "node_count"
     forLoop ← Codegen.addBlock "for.loop"
     forExit ← Codegen.addBlock "for.exit"
-    forLoop2 ← Codegen.addBlock "for.loop.2"
-    forExit2 ← Codegen.addBlock "for.exit.2"
+    --forLoop2 ← Codegen.addBlock "for.loop.2"
+    --forExit2 ← Codegen.addBlock "for.exit.2"
     -- Create a counter to track position
     counter ← Codegen.alloca int32
     Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
@@ -106,6 +106,8 @@ defineAppendToNet =
     -- Exit case: next loop.
     Codegen.setBlock forExit
     Codegen.retNull
+
+    {-
     Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
     Codegen.br forLoop2
     -- Second loop: link nodes.
@@ -124,6 +126,7 @@ defineAppendToNet =
     Codegen.setBlock forExit2
     -- TODO: Set eac list pointer?
     Codegen.retNull
+    -}
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReduceUntilComplete =

@@ -495,11 +495,13 @@ mallocGen type' portLen dataLen = do
   Codegen.store tagPtr (Operand.ConstantOperand type')
   pure node
 
-mallocEra,
+mallocTop,
+  mallocEra,
   mallocFanIn,
   mallocApp,
   mallocLam ∷
     Codegen.MallocNode m ⇒ m Operand.Operand
+mallocTop = mallocGen Types.top 2 0
 mallocEra = mallocGen Types.era 1 0
 mallocApp = mallocGen Types.app 3 0
 mallocLam = mallocGen Types.lam 3 0
