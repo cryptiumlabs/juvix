@@ -96,7 +96,7 @@ defineAppendToNet =
         ( Codegen.Minimal
             { Codegen.address' = nodes,
               Codegen.type' = nodePointer,
-              Codegen.indincies' = [Operand.ConstantOperand (C.Int 32 0), ind]
+              Codegen.indincies' = [ind]
             }
         )
     -- Create the in-memory node.
