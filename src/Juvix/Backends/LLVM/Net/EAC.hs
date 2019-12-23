@@ -48,8 +48,6 @@ import qualified LLVM.AST.Type as Type
 defineReduce ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReduce = Codegen.defineFunction Type.void "reduce" args $
   do
-    -- recursive function, properly register
-    reduce ← Codegen.externf "reduce"
     -- switch creations
     eacLPtr ← Codegen.externf "eac_list"
     appCase ← Codegen.addBlock "switch.app"
@@ -113,7 +111,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     (aCdr, aExit) ←
       genContinueCaseD
         "app"
-        [ (Types.lam, "switch.lam", (\x → annihilateRewireAux x)),
+        [ (Types.lam, "switch.lam", annihilateRewireAux),
           (Types.dup, "switch.dup", fanInAux2App),
           (Types.era, "switch.era", eraseNodes)
         ]
@@ -174,7 +172,10 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
           (eCdr, eExit)
         ]
     _ ← Codegen.free eacLPtr
-    Codegen.call Type.void reduce (Codegen.emptyArgs [cdr])
+    -- recursive function, properly register
+    reduce ← Codegen.externf "reduce"
+    Codegen.callVoid reduce (Codegen.emptyArgs [cdr])
+    Codegen.retNull
   where
     args = [(Types.eacLPointer, "eac_list")]
 
@@ -427,7 +428,6 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
         eacList
         (\_ newF → addData newF label2)
         (\_ newN → addData newN label1)
-
     lastDiff ← Codegen.getBlock
     -- weird ordering to get continue.fan to be last!
     continue ← Codegen.addBlock "continue.fan"
@@ -533,8 +533,6 @@ dataPortLookupNoLoad addr = Codegen.getElementPtr $
       Codegen.indincies' = Codegen.constant32List [0, 2]
     }
 
-
-
 dataPortLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 dataPortLookup addr = Codegen.loadElementPtr $
   Codegen.Minimal
@@ -558,7 +556,6 @@ addDataWhole ∷ Codegen.RetInstruction m ⇒ Operand.Operand → Operand.Operan
 addDataWhole addr data' = do
   arr ← dataPortLookupNoLoad addr
   Codegen.store arr data'
-
 
 fanLabelLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 fanLabelLookup addr = Codegen.loadElementPtr $

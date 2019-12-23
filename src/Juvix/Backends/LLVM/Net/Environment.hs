@@ -63,11 +63,9 @@ initialModule = do
   _ ← EAC.defineFanInAux2A
   _ ← EAC.defineFanInAux2L
   _ ← EAC.defineFanInAux2F
-
   _ ← EAC.defineAnnihilateRewireAux
   _ ← EAC.defineFanInFanIn
-  -- _ <- EAC.defineReduce
-
+  _ ← EAC.defineReduce
   -- define the API
   --Codegen.addType "node" API.node
   --_ ← API.defineCreateNet
