@@ -34,7 +34,7 @@ backendLLVM =
     "Backend LLVM"
     [ --test_example_jit,
       --test_malloc_free_jit,
-      -- test_eval_jit,
+      test_eval_jit,
       test_init_module,
       test_init_module_jit
     ]
@@ -63,7 +63,7 @@ test_init_module = T.testCase "init module should be created successfully" $ do
 test_eval_jit ∷ T.TestTree
 test_eval_jit = T.testCase "x should evaluate to x" $ do
   let term ∷ E.Term UnitVal
-      term = E.Var "x"
+      term = E.Lam "x" (E.Var "x")
   res ← evalErasedCoreInLLVM unit term
   term T.@=? res
 

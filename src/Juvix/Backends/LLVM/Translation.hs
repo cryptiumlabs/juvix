@@ -61,10 +61,14 @@ evalErasedCoreInLLVM parameterisation term = do
               Auxiliary2 (FanIn i) → i
             --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
           }
+  liftIO (putText ("Appending nodes..."))
+  liftIO (putText ("Nodes: " <> show nodes))
   liftIO (appendToNet net nodes)
   -- Reduce it.
+  liftIO (putText "Reducing...")
   liftIO (reduceUntilComplete net)
   -- Read-back the nodes
+  liftIO (putText "Reading-back...")
   nodes ← liftIO (readNet net)
   -- Translate into a native graph.
   let graph ∷ Graph.FlipNet (Lang primVal)
