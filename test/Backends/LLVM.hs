@@ -38,7 +38,7 @@ backendLLVM =
       test_init_module_jit
     ]
 
-test_init_module_jit :: T.TestTree
+test_init_module_jit ∷ T.TestTree
 test_init_module_jit = T.testCase "init module should jit successfully" $ do
   let mod = Codegen.moduleAST runInitModule
   let newModule =
@@ -53,7 +53,7 @@ test_init_module_jit = T.testCase "init module should jit successfully" $ do
   kill
   43 T.@=? res
 
-test_init_module :: T.TestTree
+test_init_module ∷ T.TestTree
 test_init_module = T.testCase "init module should be created successfully" $ do
   let init = runInitModule'
   Right () T.@=? init

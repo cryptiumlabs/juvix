@@ -26,8 +26,7 @@ backendMichelson ∷ T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
-    [
-      --identityFn,
+    [ --identityFn,
       --identityApp,
       --identityApp2,
       optimiseDupDrop,
