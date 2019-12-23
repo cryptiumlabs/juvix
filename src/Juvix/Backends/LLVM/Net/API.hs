@@ -68,13 +68,14 @@ defineCreateNet =
 
 defineReadNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReadNet =
-  Codegen.defineFunction Type.void "readNet" [(opaqueNetType, "net")] $ do
+  Codegen.defineFunction nodePointer "readNet" [(opaqueNetType, "net")] $ do
     netPtr ← Codegen.externf "net"
     net ← Codegen.load eacListPointer netPtr
     -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
     -- Maybe return duplicate nodes & de-duplicate in haskell.
-    Codegen.retNull
+    ret <- Codegen.malloc 32 nodePointer
+    Codegen.ret ret
 
 defineAppendToNet ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet =
@@ -87,11 +88,11 @@ defineAppendToNet =
     aux1 <- Codegen.auxiliary1
     aux2 <- Codegen.auxiliary2
     main <- Codegen.mainPort
-    Codegen.linkConnectedPort [topNode, aux1, appNode, aux1]
-    Codegen.linkConnectedPort [appNode, main, lamNode, main]
-    Codegen.linkConnectedPort [appNode, aux2, lamNode2, main]
-    Codegen.linkConnectedPort [lamNode, aux1, lamNode, aux2]
-    Codegen.linkConnectedPort [lamNode2, aux1, lamNode2, aux2]
+    Codegen.link [topNode, aux1, appNode, aux1]
+    Codegen.link [appNode, main, lamNode, main]
+    Codegen.link [appNode, aux2, lamNode2, main]
+    Codegen.link [lamNode, aux1, lamNode, aux2]
+    Codegen.link [lamNode2, aux1, lamNode2, aux2]
     eac_list <- Types.cons appNode (Operand.ConstantOperand (C.Null Types.eacLPointer))
     Codegen.store netPtr eac_list
     Codegen.retNull
