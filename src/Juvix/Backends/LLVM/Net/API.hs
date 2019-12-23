@@ -15,7 +15,7 @@ import qualified LLVM.AST.Type as Type
 -- TODO: c2hs / hs2c (whatever) for conversion types?
 -- for now: manually
 
-type OpaqueNet = int32
+type OpaqueNet = Word32
 
 int32 ∷ Type.Type
 int32 = Codegen.int
@@ -27,7 +27,7 @@ nodeAddress ∷ Type.Type
 nodeAddress = Codegen.int
 
 nodeAddressPointer ∷ Type.Type
-nodeAddressPointer = Type.PointerType nodeAddress (Addr.AddrSpace 32)
+nodeAddressPointer = Type.PointerType nodeAddress (Addr.AddrSpace 0)
 
 nodeType ∷ Type.Type
 nodeType = Type.NamedTypeReference "node"
@@ -36,7 +36,7 @@ eacListPointer ∷ Type.Type
 eacListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
 
 nodePointer ∷ Type.Type
-nodePointer = Type.PointerType nodeType (Addr.AddrSpace 32)
+nodePointer = Type.PointerType nodeType (Addr.AddrSpace 0)
 
 node ∷ Type.Type
 node = Type.StructureType

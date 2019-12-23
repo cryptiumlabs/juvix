@@ -26,6 +26,7 @@ import LLVM.ExecutionEngine
 import LLVM.Module
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import LLVM.Pretty
 
 backendLLVM ∷ T.TestTree
 backendLLVM =
@@ -47,6 +48,7 @@ test_init_module_jit = T.testCase "init module should jit successfully" $ do
               LLVM.AST.moduleDefinitions mod
                 <> LLVM.AST.moduleDefinitions exampleModule2
           }
+  putStr (ppllvm (Codegen.moduleAST runInitModule)) >> putStr ("\n" :: Text)
   (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
   Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
