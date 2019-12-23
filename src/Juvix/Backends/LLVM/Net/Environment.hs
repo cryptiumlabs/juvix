@@ -66,12 +66,13 @@ initialModule = do
   _ ← EAC.defineAnnihilateRewireAux
   _ ← EAC.defineFanInFanIn
   _ ← EAC.defineReduce
-  -- define the API
-  --Codegen.addType "node" API.node
-  --_ ← API.defineCreateNet
-  --_ ← API.defineReadNet
-  --_ ← API.defineAppendToNet
-  --_ ← API.defineReduceUntilComplete
+  -- begin API definitions
+  Codegen.addType "node" API.node
+  _ ← API.defineCreateNet
+  _ ← API.defineReadNet
+  _ ← API.defineAppendToNet
+  _ ← API.defineReduceUntilComplete
+  -- end API definitions
   pure ()
 
 runInitModule ∷ Codegen.CodegenState

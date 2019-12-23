@@ -66,7 +66,7 @@ data Errors
     VariableNotInScope Text
   | -- | Error that happens when a block lacks a terminator when it should have one
     BlockLackingTerminator Int
-  deriving (Show)
+  deriving (Show, Eq)
 
 newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) a}
   deriving (Functor, Applicative, Monad)

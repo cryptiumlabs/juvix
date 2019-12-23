@@ -32,9 +32,15 @@ backendLLVM =
   T.testGroup
     "Backend LLVM"
     [ --test_eval_jit,
+      test_init_module,
       test_malloc_free_jit,
       test_example_jit
     ]
+
+test_init_module :: T.TestTree
+test_init_module = T.testCase "init module should be created successfully" $ do
+  let init = runInitModule'
+  Right () T.@=? init
 
 test_eval_jit ∷ T.TestTree
 test_eval_jit = T.testCase "x should evaluate to x" $ do
