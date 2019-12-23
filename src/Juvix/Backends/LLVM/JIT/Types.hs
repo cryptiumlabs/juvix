@@ -27,6 +27,8 @@ type OpaqueNetPtr = Ptr Word32
 
 type Port = IR.Port
 
+type Kind = IR.Kind ()
+
 type Node = IR.Node ()
 
 data Nodes
@@ -38,11 +40,11 @@ data Nodes
 
 instance GStorable Nodes
 
-instance Storable Port
+instance GStorable Port
 
 -- TODO: Gstorable, need to alter library.
 
-instance Storable Node
+instance GStorable Node
 
 -- TODO: GStorable, need to alter library.
 

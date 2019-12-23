@@ -14,6 +14,14 @@ data Port
       }
   deriving (Show, Eq, Generic, Typeable)
 
+type Kind dataTy = Int
+
+data Node dataTy
+  = Node { nodeAddress :: Address, nodeKind :: Kind dataTy }
+  deriving (Show, Eq, Generic, Typeable)
+
+{-
+
 data Kind dataTy
   = -- Eraser node.
     Eraser
@@ -40,6 +48,8 @@ data Node dataTy
         nodePorts ∷ [Port]
       }
   deriving (Show, Eq, Generic, Typeable)
+
+-}
 
 data BespokeFunction opType
   = -- Bespoke function, with a unique number and an operation.

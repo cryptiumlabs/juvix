@@ -6,6 +6,7 @@ import Data.JSON.Schema.Generator hiding (generate)
 import Juvix.INetIR.Types
 import Juvix.Library
 
+{-
 instance JSONSchemaGen Port
 
 instance (Typeable dataTy, JSONSchemaGen dataTy) ⇒ JSONSchemaGen (Kind dataTy)
@@ -15,6 +16,7 @@ instance (Typeable dataTy, JSONSchemaGen dataTy) ⇒ JSONSchemaGen (Node dataTy)
 instance (Typeable opTy, JSONSchemaGen opTy) ⇒ JSONSchemaGen (BespokeFunction opTy)
 
 instance (Typeable dataTy, JSONSchemaGen dataTy, Typeable opTy, JSONSchemaGen opTy) ⇒ JSONSchemaGen (Net dataTy opTy)
+-}
 
 generate ∷ JSONSchemaGen a ⇒ Proxy a → A.Value
 generate = convert options . toSchema defaultOptions
