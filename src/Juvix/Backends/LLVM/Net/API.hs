@@ -118,6 +118,7 @@ defineReduceUntilComplete =
     netPtr ← Codegen.externf "net"
     net ← Codegen.load eacListPointer netPtr
     -- Call reduce, which recurses until there are no primary pairs left.
-    Codegen.callGen Type.void [net] "reduce"
+    reduce ← Codegen.externf "reduce"
+    _ ← Codegen.callVoid reduce (Codegen.emptyArgs [net])
     -- Return.
     Codegen.retNull
