@@ -164,6 +164,7 @@ unpackClosure ∷
   (HasState "stack" Stack m) ⇒
   [(Symbol, Type)] →
   m ExpandedOp
+unpackClosure [] = pure (PrimEx DROP)
 unpackClosure env = do
   let count = length env
   modify @"stack" ((<>) (map (\(s, t) → (VarE s, t)) env))

@@ -11,8 +11,8 @@ import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
+import qualified Michelson.Typed as M (FullContract (..))
 import qualified Michelson.Untyped as M
-import qualified Michelson.Typed as M (FullContract(..))
 
 typedContractToSource ∷ M.SomeContract → Text
 typedContractToSource (M.SomeContract (M.FullContract instr _ _)) = L.toStrict (M.printTypedContract False instr)
