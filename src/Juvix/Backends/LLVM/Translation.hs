@@ -70,6 +70,7 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Read-back the nodes
   liftIO (putText "Reading-back...")
   nodes ← liftIO (readNet net)
+  liftIO (putText ("Read-back nodes: " <> show nodes))
   -- Translate into a native graph.
   let graph ∷ Graph.FlipNet (Lang primVal)
       graph = flip evalEnvState (Env 0 empty Map.empty) $ do
