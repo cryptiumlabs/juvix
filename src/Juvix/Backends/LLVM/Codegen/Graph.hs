@@ -644,10 +644,10 @@ constantPort name v = do
                 C.Array
                   { C.memberType = Type.i16,
                     C.memberValues =
-                      [ C.Int 16 0,
+                      [ C.Int 16 v,
                         C.Int 16 0,
                         C.Int 16 0,
-                        C.Int 16 v
+                        C.Int 16 0
                       ]
                   }
               ]
