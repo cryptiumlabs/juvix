@@ -425,9 +425,10 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
         fanIn1
         fanIn2
         eacList
-        (\_ newF → addData newF data2)
-        (\_ newN → addData newN data1)
+        (\_ newF → addData newF label2)
+        (\_ newN → addData newN label1)
 
+    lastDiff ← Codegen.getBlock
     -- weird ordering to get continue.fan to be last!
     continue ← Codegen.addBlock "continue.fan"
     _ ← Codegen.br continue
@@ -441,7 +442,7 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     finalList ←
       Codegen.phi
         Types.eacLPointer
-        [(sameList, sameFan), (diffList, diffFan)]
+        [(sameList, sameFan), (diffList, lastDiff)]
     Codegen.ret finalList
 
 -- TODO ∷ remove, put these in the environment with some kind of decalarative
