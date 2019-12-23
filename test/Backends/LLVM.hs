@@ -32,9 +32,9 @@ backendLLVM ∷ T.TestTree
 backendLLVM =
   T.testGroup
     "Backend LLVM"
-    [ --test_eval_jit,
-      --test_example_jit,
+    [ --test_example_jit,
       --test_malloc_free_jit,
+      -- test_eval_jit,
       test_init_module,
       test_init_module_jit
     ]

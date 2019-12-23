@@ -83,32 +83,47 @@ defineAppendToNet =
     node_count ← Codegen.externf "node_count"
     forLoop ← Codegen.addBlock "for.loop"
     forExit ← Codegen.addBlock "for.exit"
+    forLoop2 <- Codegen.addBlock "for.loop.2"
+    forExit2 <- Codegen.addBlock "for.exit.2"
+
     -- Create a counter to track position
     counter ← Codegen.alloca int32
     Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
     Codegen.br forLoop
+
     -- Loop case: convert node, increment counter.
     Codegen.setBlock forLoop
     ind ← Codegen.load int32 counter
     -- Load node at index `ind`.
-    node ←
-      Codegen.loadElementPtr
-        ( Codegen.Minimal
-            { Codegen.address' = nodes,
-              Codegen.type' = nodePointer,
-              Codegen.indincies' = [ind]
-            }
-        )
+    node ← Codegen.loadElementPtr (Codegen.Minimal { Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind] })
     -- Create the in-memory node.
     kind ← EAC.mallocApp -- TODO: Switch on node kind.
-      -- TODO: Link things (second loop iteration? need the ability to look up node pointers)
+    -- Write the address to the list.
+    addr <- Codegen.getElementPtr (Codegen.Minimal { Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind, Operand.ConstantOperand (C.Int 32 0)] })
+    Codegen.store addr kind
     next ← Codegen.add int32 ind (Operand.ConstantOperand (C.Int 32 0))
     Codegen.store counter next
     cond ← Codegen.icmp IntPred.EQ node_count next
     Codegen.cbr cond forLoop forExit
-    -- Exit case: return.
+
+    -- Exit case: next loop.
     Codegen.setBlock forExit
-    -- TODO: Primary pairs?
+    Codegen.store counter (Operand.ConstantOperand (C.Int 32 0))
+    Codegen.br forLoop2
+
+    -- Second loop: link nodes.
+    Codegen.setBlock forLoop2
+    ind <- Codegen.load int32 counter
+    -- Load node at index `ind`.
+    node ← Codegen.loadElementPtr (Codegen.Minimal { Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind] })
+    -- TODO: Link things, lookup node pointers.
+    next ← Codegen.add int32 ind (Operand.ConstantOperand (C.Int 32 0))
+    Codegen.store counter next
+    cond ← Codegen.icmp IntPred.EQ node_count next
+    Codegen.cbr cond forLoop forExit
+
+    -- Exit case: return.
+    Codegen.setBlock forExit2
     Codegen.retNull
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand
