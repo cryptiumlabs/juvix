@@ -55,9 +55,9 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     eraCase ← Codegen.addBlock "switch.era"
     dupCase ← Codegen.addBlock "switch.dup"
     defCase ← Codegen.addBlock "switch.default"
-    extCase ← Codegen.addBlock "switch.exit"
     nullCase ← Codegen.addBlock "empty.list"
     carExists ← Codegen.addBlock "car.check"
+    extCase ← Codegen.addBlockNumber "switch.exit" 1000
     nullCheck ← Types.checkNull eacLPtr
     _ ← Codegen.cbr nullCheck carExists nullCase
     -- %empty.list branch
@@ -67,10 +67,9 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     -- %car.check branch
     ------------------------------------------------------
     Codegen.setBlock carExists
-    eacList ← Types.loadList eacLPtr
-    car ← Types.loadCar eacList
+    car ← Types.loadCar eacLPtr
     -- TODO ∷ cdr may still be unsafe!??!?!
-    cdr ← Types.loadCdr eacList
+    cdr ← Types.loadCdr eacLPtr
     -- moved from %app case.
     -- Should not do extra work being here----
     nodePtr ← nodeOf car
@@ -82,7 +81,8 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
         isPrimary
         (Operand.ConstantOperand (C.Int 2 1))
     -- end of moved code----------------------
-    tag ← tagOf car
+    tagP ← tagOf car
+    tag ← Codegen.load Types.tag tagP
     _term ←
       Codegen.switch
         tag
@@ -100,7 +100,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
           -- %switch.*.continue
           Codegen.setBlock conCase
 
-        genContinueCaseD = genContinueCase tagNode (nodePtr, car) cdr defCase
+        genContinueCaseD = genContinueCase tagNode car cdr defCase
 
         swapArgs (x : y : xs) = y : x : xs
         swapArgs xs = xs
@@ -129,7 +129,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     _ ← Codegen.br extCase
     -- %era case
     ------------------------------------------------------
-    contCase lamCase "switch.era.continue"
+    contCase eraCase "switch.era.continue"
     (eCdr, eExit) ←
       genContinueCaseD
         "fan_in"
@@ -141,7 +141,7 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     _ ← Codegen.br extCase
     -- %dup case
     ------------------------------------------------------
-    contCase lamCase "switch.fan_in.continue"
+    contCase dupCase "switch.fan_in.continue"
     (fCdr, fExit) ←
       genContinueCaseD
         "fan_in"
@@ -186,30 +186,25 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
 genContinueCase ∷
   Codegen.Define m ⇒
   Operand.Operand →
-  (Operand.Operand, Operand.Operand) →
+  Operand.Operand →
   Operand.Operand →
   Name.Name →
   Symbol →
   [(C.Constant, Symbol, [Operand.Operand] → m Operand.Operand)] →
   m (Operand.Operand, Name.Name)
-genContinueCase tagNode (mainNodePtr, mainEac) cdr defCase prefix cases = do
+genContinueCase tagNode mainEac cdr defCase prefix cases = do
   nodeEacPtr ← Defs.loadPrimaryNode tagNode
-  nodeEac ← Codegen.load Types.eac nodeEacPtr
-  tagOther ← tagOf nodeEac
+  tagOther ← tagOf nodeEacPtr >>= Codegen.load Types.tag
   blocksGeneratedList ← genBlockNames
   extBranch ← Codegen.addBlock (prefix <> "switch.exit")
   let generateBody (_, branch, rule) = do
         -- %prefix.branch case
         ------------------------------------------------------
         _ ← Codegen.setBlock branch
-        -- node Pointer in which to do operations on
-        nodeOtherPtr ← nodeOf nodeEac
         updateList ←
           rule
-            [ mainNodePtr,
+            [ mainEac,
               nodeEacPtr,
-              nodeOtherPtr,
-              mainEac,
               cdr
             ]
         _ ← Codegen.br extBranch

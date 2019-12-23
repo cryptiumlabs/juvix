@@ -191,6 +191,21 @@ entry = get @"currentBlock"
 getBlock ∷ (HasState "currentBlock" Name m) ⇒ m Name
 getBlock = entry
 
+-- TODO ∷ hack make a proper algorithm later!
+addBlockNumber ∷ NewBlock m ⇒ Symbol → Int → m Name
+addBlockNumber bname number = do
+  bls ← get @"blocks"
+  nms ← get @"names"
+  let new = emptyBlock number
+
+      (qname, supply) = uniqueName bname nms
+
+      name = internName qname
+
+  put @"blocks" (Map.insert name new bls)
+  put @"names" supply
+  return name
+
 addBlock ∷ NewBlock m ⇒ Symbol → m Name
 addBlock bname = do
   bls ← get @"blocks"

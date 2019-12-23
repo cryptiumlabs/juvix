@@ -69,8 +69,15 @@ testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSp
 -- EacList operations
 --------------------------------------------------------------------------------
 
+-- TODO ∷ make sure this works, I doubt it checks null pointers properly
+-- probably need a tag to determine when a list is null?
 checkNull ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer))
+checkNull xs = do
+  xsI ← Codegen.ptrToInt xs Type.i64
+  Codegen.icmp
+    IntPred.EQ
+    (Operand.ConstantOperand (C.PtrToInt (C.Null eacLPointer) Type.i64))
+    xsI
 
 cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand
 cons ele eacList = do
