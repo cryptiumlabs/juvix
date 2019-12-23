@@ -92,9 +92,8 @@ defineAppendToNet =
     Codegen.linkConnectedPort [appNode, aux2, lamNode2, main]
     Codegen.linkConnectedPort [lamNode, aux1, lamNode, aux2]
     Codegen.linkConnectedPort [lamNode2, aux1, lamNode2, aux2]
-    eac_list <- Codegen.malloc 64 Types.eacList
-    ptr <- Codegen.getElementPtr (Codegen.Minimal { Codegen.address' = eac_list, Codegen.type' = Types.eacList, Codegen.indincies' = [Operand.ConstantOperand (C.Int 32 0)] })
-    Codegen.store ptr appNode
+    eac_list <- Codegen.malloc 64 (Type.PointerType Types.eacList (Addr.AddrSpace 0))
+    eac_list <- Types.cons appNode eac_list
     Codegen.store netPtr eac_list
     Codegen.retNull
     {-
