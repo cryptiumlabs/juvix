@@ -91,9 +91,7 @@ evalErasedCoreInLLVM parameterisation term = do
         pure net
   -- Read-back the graph.
   let res ∷ Erased.Term primVal
-      -- TODO cheating!
-      Just res = interactionNetASTToErasedCore |<< netToAst graph
-      --Just res = interactionNetASTToErasedCore |<< netToAst retGraph
+      Just res = interactionNetASTToErasedCore |<< netToAst retGraph
   -- Free the module.
   liftIO kill
   -- Return the resulting term.

@@ -12,7 +12,7 @@ i4 ∷ Type.Type
 i4 = Type.IntegerType 4
 
 -- | An abbreviation for 'IntegerType' 8
-i8 :: Type.Type
+i8 ∷ Type.Type
 i8 = Type.IntegerType 8
 
 -- TODO ∷ change this based on the machine, C++ pargma?
