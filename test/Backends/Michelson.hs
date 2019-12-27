@@ -38,7 +38,8 @@ backendMichelson =
       --identityApp,
       --identityApp2,
       optimiseDupDrop,
-      optimiseLambdaExec
+      optimiseLambdaExec,
+      identityExpr
     ]
 
 optimiseDupDrop ∷ T.TestTree
@@ -46,6 +47,13 @@ optimiseDupDrop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]
 
 optimiseLambdaExec ∷ T.TestTree
 optimiseLambdaExec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
+
+identityExpr :: T.TestTree
+identityExpr =
+  shouldCompileExpr
+    identityTerm
+    identityType
+    (SomeInstr (MT.DROP))
 
 identityFn ∷ T.TestTree
 identityFn =
