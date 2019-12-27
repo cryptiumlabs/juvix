@@ -30,6 +30,11 @@ data StackElem
 data SomeInstr where
   SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
 
+deriving instance Show (SomeInstr)
+
+instance Eq SomeInstr where
+  _ == _ = False
+
 data Env
   = Env
       { stack ∷ Stack,
