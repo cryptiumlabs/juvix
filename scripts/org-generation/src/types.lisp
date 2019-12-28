@@ -13,9 +13,19 @@
            #:copy-file-info
            #:make-file-info
            #:file-info-path
-           #:file-info-alias)
+           #:file-info-alias
+
+           #:file-info-extended
+           #:file-info-extended-p
+           #:make-file-info-extended
+           #:file-info-extended-path
+           #:file-info-extended-alias
+           #:file-info-extended-lines
+
+           #:extend-file-info)
   (:use #:cl
-        #:org-generation/maybe))
+        #:org-generation/maybe
+        #:org-generation/type-signature))
 
 (in-package :org-generation/types)
 
@@ -30,3 +40,13 @@
 (defstruct file-info
   (path  #p""      :type pathname)
   (alias +nothing+ :type maybe))
+
+(defstruct (file-info-extended (:include file-info))
+  (lines nil :type list))
+
+
+(sig extend-file-info (-> file-info list file-info-extended))
+(defun extend-file-info (file-info lines)
+  (make-file-info-extended :path  (file-info-path  file-info)
+                           :alias (file-info-alias file-info)
+                           :lines lines))

@@ -30,19 +30,20 @@
 (defparameter *extension* "hs")
 
 
-(sig import-generation (-> context fset:map list list))
-(defun import-generation (context conflict-map lines)
-  (haskell-import-to-org-alias (relevent-imports-haskell lines (context-name context))
+(sig import-generation (-> context fset:map file-info-extended list))
+(defun import-generation (context conflict-map file-c)
+  (haskell-import-to-org-alias (relevent-imports-haskell (file-info-extended-lines file-c)
+                                                         (context-name context))
                                conflict-map))
 
 ;; TODO :: decide if module-comments should get the context as well
-(sig module-comments (-> list fixnum list))
-(defun module-comments (file-lines level)
+(sig module-comments (-> file-info-extended fixnum list))
+(defun module-comments (file-context level)
   (let* ((module-comments
            (remove-if (lambda (x)
                         (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
                       (og/utility:take-until (lambda (x) (uiop:string-prefix-p "module" x))
-                                             file-lines)))
+                                             (file-info-extended-lines file-context))))
          (special (car module-comments))
          (valid-module (if special
                            (uiop:string-prefix-p "-- |" special)

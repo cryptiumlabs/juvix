@@ -7,7 +7,7 @@
   :components
   ((:file "type-signature")
    (:file "maybe")
-   (:file "types" :depends-on ("maybe"))
+   (:file "types" :depends-on ("maybe" "type-signature"))
    (:file "utility" :depends-on ("type-signature"))
    (:file "haskell" :depends-on ("maybe" "types"))
    (:file "context" :depends-on ("haskell" "types"))
