@@ -5,7 +5,8 @@
            #:repeat-s
            #:take-until
            #:file-name
-           #:reconstruct-path))
+           #:reconstruct-path
+           #:update-headline-level))
 
 (in-package :org-generation/utility)
 
@@ -24,6 +25,14 @@
                  (rec (cdr current) (cons (car current) acc)))))
     (rec xs nil)))
 
+;; remove to an org specific file
+(sig update-headline-level (-> string fixnum string))
+(defun update-headline-level (line level)
+  (if (uiop:string-prefix-p "*" line)
+      (concatenate 'string
+                   (repeat-s level "*")
+                   line)
+      line))
 
 ;; -----------------------------------------------------------------------------
 ;; File Naming Helpers

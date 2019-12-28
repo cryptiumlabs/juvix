@@ -37,8 +37,8 @@
                                conflict-map))
 
 ;; TODO :: decide if module-comments should get the context as well
-(sig module-comments (-> file-info-extended fixnum list))
-(defun module-comments (file-context level)
+(sig module-comments (-> file-info-extended list))
+(defun module-comments (file-context)
   (let* ((module-comments
            (remove-if (lambda (x)
                         (or (uiop:string-prefix-p "{-#" x) (equal "" x)))
@@ -48,18 +48,10 @@
          (valid-module (if special
                            (uiop:string-prefix-p "-- |" special)
                            nil)))
-    (flet ((update-headline-level (line)
-             (if (uiop:string-prefix-p "*" line)
-                 (concatenate 'string
-                              (og/utility:repeat-s level "*")
-                              line)
-                 line)))
-      (if valid-module
-          (remove-if #'uiop:emptyp
-                     (mapcar #'update-headline-level
-                      (cons (strip-haskell-comments special t)
-                            (mapcar #'strip-haskell-comments (cdr module-comments)))))
-          nil))))
+    (if valid-module
+        (cons (strip-haskell-comments special t)
+              (mapcar #'strip-haskell-comments (cdr module-comments)))
+        nil)))
 
 
 (defun initialize (sexp)

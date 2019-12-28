@@ -67,10 +67,11 @@ that has the language import, and the lines of the file"
 
 (defun module-comments (config file-info lines level)
   (let ((context (fset:lookup config (pathname-type (file-info-path file-info)))))
-    (uiop:symbol-call (language-context-package context)
-                      'module-comments
-                      (extend-file-info file-info lines)
-                      level)))
+    (remove-if #'uiop:emptyp
+               (mapcar (lambda (x) (og/utility:update-headline-level x level))
+                       (uiop:symbol-call (language-context-package context)
+                                         'module-comments
+                                         (extend-file-info file-info lines))))))
 ;; -----------------------------------------------------------------------------
 ;; Config Generation
 ;; -----------------------------------------------------------------------------

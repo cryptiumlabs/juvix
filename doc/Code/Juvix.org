@@ -225,6 +225,9 @@ Provides a mechanism for defining Sum types
   + [[Codegen]]
   + [[Library]]
 *** Michelson
+- _Relies on_
+  + [[Michelson/Compilation]]
+  + [[Michelson/Parameterisation]]
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer

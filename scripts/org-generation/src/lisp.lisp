@@ -38,20 +38,45 @@
 
 (sig import-generation (-> context fset:map file-info-extended list))
 (defun import-generation (context conflict-map file-context)
-  (let ((a 2))
-    (fset:lookup (context-file-import context) (file-info-extended-path file-context))
-    (list a)))
+  (lisp-import-to-org-alias
+   (fset:lookup (context-file-import context)
+                (file-info-extended-path file-context))
+   conflict-map))
 
-;; TODO :: decide if module-comments should get the context as well
-(defun module-comments (file-context &optional (level 0))
-  t)
+(defun module-comments (file-context)
+  (let* ((comments (og/utility:take-until
+                    (complement (lambda (x)
+                                  ;; TODO improve this. support " ;", " "
+                                  (or (uiop:emptyp x) (uiop:string-prefix-p ";" x))))
+                    (file-info-extended-lines file-context))))
+    (mapcar #'strip-lisp-comments comments)))
 
 
 (defun initialize (sexp)
-  "Initializes the context for the Haskell configuration"
-  (apply #'make-config sexp))
+  "Initializes the context for the Lisp configuration"
+  (let ((config (apply #'make-config sexp)))
+    config))
 
 
 (defun convert-path (file context)
   (declare (ignore context))
   file)
+
+;; -----------------------------------------------------------------------------
+;; Imports to Org Aliases
+;; -----------------------------------------------------------------------------
+(sig lisp-import-to-org-alias (-> list fset:map list))
+(defun lisp-import-to-org-alias (imports conflict-map)
+  "takes a list of lisp imports and transforms them into their org-mode alias"
+  (mapcar (lambda (import)
+            (or (fset:lookup conflict-map import)
+                (pathname-name import)))
+          imports))
+
+;; -----------------------------------------------------------------------------
+;; Lisp comment clean up
+;; -----------------------------------------------------------------------------
+
+(sig strip-lisp-comments (-> sequence sequence))
+(defun strip-lisp-comments (line)
+  (string-left-trim  (list #\; #\Space #\Tab) line))
