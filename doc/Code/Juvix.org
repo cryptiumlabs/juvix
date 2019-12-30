@@ -40,8 +40,8 @@ Serves as a mini DSL layer above LLVM
 Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM, evaluates it, and reads-back the resulting term.
 TODO: Separate out the common logic from the interpreter & this file into a shared module.
 - _Relies on_
-  + [[Codegen]]
   + [[JIT]]
+  + [[MonadEnvironment]]
   + [[Environment]]
   + [[Erased/Types]]
   + [[Core/Types]]
@@ -178,6 +178,7 @@ Provides a mechanism for defining Sum types
   + [[API]]
   + [[Net/EAC]]
   + [[Defs]]
+  + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
   + [[HashMap]]
@@ -220,11 +221,23 @@ Provides a mechanism for defining Sum types
   + [[DSL]]
   + [[Net/EAC/Types]]
   + [[Library]]
+****** MonadEnvironment
+- This serves as the monad in which all operations are run
+- This is an extension of EACState
+  + Sadly we can't extend types easily in Haskell, hence the
+    boilerplate in this file
+- _Relies on_
+  + [[Codegen]]
+  + [[Library]]
+  + [[HashMap]]
 ****** Types <<Net/EAC/Types>>
 - _Relies on_
   + [[Codegen]]
   + [[Library]]
 *** Michelson
+- _Relies on_
+  + [[Michelson/Compilation]]
+  + [[Michelson/Parameterisation]]
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer

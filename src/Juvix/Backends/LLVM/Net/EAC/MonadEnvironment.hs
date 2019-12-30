@@ -109,8 +109,7 @@ emptyEACL1 ∷ EACState
 emptyEACL1 = emptyEAC {debug = 1}
 
 debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
-debugLevelOne f = whenM ((1 <=) <$> ask @"debug") f
-
+debugLevelOne = whenM ((1 <=) <$> ask @"debug")
 
 execEACState ∷ EAC a → SymbolTable → EACState
 execEACState (EACGen m) a = execState (runExceptT m) (emptyEAC {symTab = a})

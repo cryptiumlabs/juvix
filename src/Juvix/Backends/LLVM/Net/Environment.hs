@@ -6,6 +6,7 @@ import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import qualified Juvix.Backends.LLVM.Net.API as API
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
@@ -75,8 +76,8 @@ initialModule = do
   -- end API definitions
   pure ()
 
-runInitModule ∷ Codegen.CodegenState
-runInitModule = Codegen.execEnvState initialModule Map.empty
+runInitModule ∷ EAC.EACState
+runInitModule = EAC.execEACStateLevel1 initialModule Map.empty
 
 runInitModule' ∷ Either Codegen.Errors ()
-runInitModule' = Codegen.evalEnvState initialModule Map.empty
+runInitModule' = EAC.evalEACStateLevel1 initialModule Map.empty
