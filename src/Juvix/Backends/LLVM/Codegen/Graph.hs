@@ -142,6 +142,7 @@ defineIsBothPrimary ∷ Define m ⇒ m Operand.Operand
 defineIsBothPrimary =
   Block.defineFunction (Types.pointerOf Types.bothPrimary) "is_both_primary" args $
     do
+      return' ← Block.alloca Types.bothPrimary
       -- TODO ∷ should this call be abstracted somewhere?!
       mainPort ← mainPort
       nodePtr ← Block.externf "node_ptr"
@@ -157,7 +158,6 @@ defineIsBothPrimary =
       otherNodeInt ← ptrToInt otherNodePtr pointerSize
       -- compare the pointers to see if they are the same
       cmp ← icmp IntPred.EQ nodeInt otherNodeInt
-      return' ← Block.alloca Types.bothPrimary
       tag ← getIsPrimaryEle return'
       nod ← getPrimaryNode Types.nodePointer return'
       store tag cmp
@@ -212,7 +212,6 @@ mallocNodeH mPorts mData extraData = do
           + extraData
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
-  portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
   -- the bitCast is for turning the size of the array to 0
   -- for proper dynamically sized arrays
   ports ← mallocPortsH mPorts >>= flip bitCast Types.portData
@@ -220,6 +219,7 @@ mallocNodeH mPorts mData extraData = do
   store portPtr ports
   when (not Types.bitSizeEncodingPoint) $
     do
+      portSizeP ← allocaNumPortNum (fromIntegral $ length mPorts)
       tagPtr ← getElementPtr $
         Types.Minimal
           { Types.type' = Types.numPortsPointer,
