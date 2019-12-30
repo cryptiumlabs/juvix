@@ -1,6 +1,7 @@
 module Backends.LLVM2 where
 
-import Juvix.Backends.LLVM.Codegen as Codegen
+import Juvix.Backends.LLVM.Codegen
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.JIT as JIT
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
@@ -114,7 +115,7 @@ exampleModule2 =
 
 test_example_jit' ∷ IO ()
 test_example_jit' = do
-  let module' = Codegen.moduleAST runInitModule
+  let module' = EAC.moduleAST runInitModule
   let newModule =
         module'
           { LLVM.AST.moduleDefinitions =
@@ -128,4 +129,4 @@ test_example_jit' = do
   kill
 
 test' ∷ MonadIO m ⇒ m ()
-test' = putStr (ppllvm (Codegen.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
+test' = putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)

@@ -1,10 +1,10 @@
 module Backends.LLVM where
 
-import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Translation
 import qualified Juvix.Core.Erased as E
 import Juvix.Core.Parameterisations.Unit
@@ -41,14 +41,14 @@ backendLLVM =
 
 test_init_module_jit ∷ T.TestTree
 test_init_module_jit = T.testCase "init module should jit successfully" $ do
-  let mod = Codegen.moduleAST runInitModule
+  let mod = EAC.moduleAST runInitModule
   let newModule =
         mod
           { LLVM.AST.moduleDefinitions =
               LLVM.AST.moduleDefinitions mod
                 <> LLVM.AST.moduleDefinitions exampleModule2
           }
-  putStr (ppllvm (Codegen.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
+  putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
   (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
   Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
   res ← fn 7
@@ -265,7 +265,7 @@ exampleModule2 =
 
 test_example_jit' ∷ T.TestTree
 test_example_jit' = T.testCase "example module should jit function" $ do
-  let module' = Codegen.moduleAST runInitModule
+  let module' = EAC.moduleAST runInitModule
   let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
   (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
