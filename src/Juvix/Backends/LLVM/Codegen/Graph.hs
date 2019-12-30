@@ -218,7 +218,7 @@ mallocNodeH mPorts mData extraData = do
   ports ← mallocPortsH mPorts >>= flip bitCast Types.portData
   portPtr ← getPortData nodePtr
   store portPtr ports
-  when Types.bitSizeEncodingPoint $
+  when (not Types.bitSizeEncodingPoint) $
     do
       tagPtr ← getElementPtr $
         Types.Minimal
@@ -441,7 +441,8 @@ intOfNumPorts ∷
   (Operand.Operand → m Operand.Operand) →
   m Operand.Operand
 intOfNumPorts typ numPort cont
-  | Types.bitSizeEncodingPoint = cont numPort
+  | Types.bitSizeEncodingPoint =
+    load (Type.IntegerType Types.addressSpace) numPort >>= cont
   | otherwise = do
     -- grab the tag from the numPort
     tag ← Block.loadElementPtr $
@@ -570,12 +571,19 @@ createNumPortNumGen n alloc
 -- | like 'allocaNumPortStatic', except it takes a number and allocates the correct operand
 allocaNumPortNum ∷
   Types.AllocaNode m ⇒ Integer → m Operand.Operand
-allocaNumPortNum n = createNumPortNumGen n allocaNumPortsStatic
+allocaNumPortNum n
+  | Types.bitSizeEncodingPoint = Block.alloca (Type.IntegerType Types.addressSpace)
+  | otherwise = createNumPortNumGen n allocaNumPortsStatic
 
 -- | like 'mallocNumPortStatic', except it takes a number and allocates the correct operand
 mallocNumPortNum ∷
   Types.MallocNode m ⇒ Integer → m Operand.Operand
-mallocNumPortNum n = createNumPortNumGen n mallocNumPortsStatic
+mallocNumPortNum n
+  | Types.bitSizeEncodingPoint =
+    Block.malloc
+      Types.numPortsSize
+      (Types.pointerOf (Type.IntegerType Types.addressSpace))
+  | otherwise = createNumPortNumGen n mallocNumPortsStatic
 
 --------------------------------------------------------------------------------
 -- Port Aliases
