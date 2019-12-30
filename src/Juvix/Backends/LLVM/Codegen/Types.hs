@@ -8,7 +8,6 @@ where
 
 import Data.ByteString.Short hiding (empty)
 import qualified Distribution.System as System
-import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
 import Juvix.Library hiding (Type)
@@ -386,7 +385,6 @@ nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
 nodeTypeName ∷ IsString p ⇒ p
 nodeTypeName = "graph_node"
 
--- TODO ∷ move extraData to the front!
 nodeType ∷ Type → [Type] → Type
 nodeType tag extraData
   | bitSizeEncodingPoint =

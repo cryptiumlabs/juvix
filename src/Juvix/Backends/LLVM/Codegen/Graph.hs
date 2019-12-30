@@ -202,8 +202,11 @@ mallocNodeH mPorts mData extraData = do
           -- 1 until it's safe to not to
           0 → 1
           _ → 1
+      tagSize
+        | Types.bitSizeEncodingPoint = 0
+        | otherwise = Types.numPortsSize
   let totalSize =
-        Types.numPortsSize
+        tagSize
           + (anyThere mPorts * Types.pointerSizeInt)
           + (anyThere mData * Types.pointerSizeInt)
           + extraData
@@ -213,23 +216,18 @@ mallocNodeH mPorts mData extraData = do
   -- the bitCast is for turning the size of the array to 0
   -- for proper dynamically sized arrays
   ports ← mallocPortsH mPorts >>= flip bitCast Types.portData
-  tagPtr ← getElementPtr $
-    Types.Minimal
-      { Types.type' = Types.numPortsPointer,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 0]
-      }
-  portSize ← load numPortsNameRef portSizeP
-  store tagPtr portSize
-  portPtr ← getElementPtr $
-    Types.Minimal
-      { -- do I really want to say size 0?
-        -- Yes, as we have to bitcast what get back to size 0!
-        Types.type' = Types.pointerOf Types.portData,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 1]
-      }
+  portPtr ← getPortData nodePtr
   store portPtr ports
+  when Types.bitSizeEncodingPoint $
+    do
+      tagPtr ← getElementPtr $
+        Types.Minimal
+          { Types.type' = Types.numPortsPointer,
+            Types.address' = nodePtr,
+            Types.indincies' = Block.constant32List [0, 0]
+          }
+      portSize ← load numPortsNameRef portSizeP
+      store tagPtr portSize
   -- let's not allocate data if we don't have to!
   case anyThere mData ∷ Integer of
     -- do this when we pass more information to deAllocateNode
@@ -237,14 +235,7 @@ mallocNodeH mPorts mData extraData = do
     -- 0 → pure ()
     _ → do
       data' ← mallocDataH mData >>= flip bitCast Types.dataArray
-      dataPtr ← getElementPtr $
-        Types.Minimal
-          { -- do I really want to say size 0?
-            -- Yes, as we have to bitcast what get back to size 0!
-            Types.type' = Types.pointerOf Types.dataArray,
-            Types.address' = nodePtr,
-            Types.indincies' = Block.constant32List [0, 2]
-          }
+      dataPtr ← getDataArray nodePtr
       store dataPtr data'
   pure nodePtr
 
@@ -306,7 +297,7 @@ defineLinkConnectedPort =
       -- TODO ∷ Abstract out this bit ---------------------------------------------
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo ← findEdge [nOld, pOld]
+      oldPointsTo ← findEdge [nOld, pOld] -- portPtr
       let intoGen typ num = getElementPtr $
             Types.Minimal
               { Types.type' = typ,
@@ -355,18 +346,8 @@ defineRewire =
 
 deAllocateNode ∷ Define m ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
-  portPtr ← loadElementPtr $
-    Types.Minimal
-      { Types.type' = Types.portData,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 1]
-      }
-  dataPtr ← loadElementPtr $
-    Types.Minimal
-      { Types.type' = Types.dataArray,
-        Types.address' = nodePtr,
-        Types.indincies' = Block.constant32List [0, 2]
-      }
+  portPtr ← loadPortData nodePtr
+  dataPtr ← loadDataArray nodePtr
   _ ← free portPtr
   _ ← free dataPtr
   free nodePtr
@@ -436,13 +417,7 @@ getPort ∷
   Operand.Operand →
   m Operand.Operand
 getPort node port = do
-  portsPtrPtr ← getElementPtr $
-    Types.Minimal
-      { Types.type' = Types.pointerOf portData,
-        Types.address' = node,
-        Types.indincies' = Block.constant32List [0, 1]
-      }
-  portsPtr ← load portData portsPtrPtr
+  portsPtr ← loadPortData node
   intOfNumPorts portPointer port $ \value → do
     getElementPtr $
       Types.Minimal
@@ -465,15 +440,17 @@ intOfNumPorts ∷
   Operand.Operand →
   (Operand.Operand → m Operand.Operand) →
   m Operand.Operand
-intOfNumPorts typ numPort cont = do
-  -- grab the tag from the numPort
-  tag ← Block.loadElementPtr $
-    Types.Minimal
-      { Types.type' = Type.i1,
-        Types.address' = numPort,
-        Types.indincies' = Block.constant32List [0, 0]
-      }
-  generateIf typ tag largeBranch smallBranch
+intOfNumPorts typ numPort cont
+  | Types.bitSizeEncodingPoint = cont numPort
+  | otherwise = do
+    -- grab the tag from the numPort
+    tag ← Block.loadElementPtr $
+      Types.Minimal
+        { Types.type' = Type.i1,
+          Types.address' = numPort,
+          Types.indincies' = Block.constant32List [0, 0]
+        }
+    generateIf typ tag largeBranch smallBranch
   where
     smallBranch = branchGen numPortsSmall numPortsSmallValue return
 
@@ -636,7 +613,16 @@ constantPort name v = do
       { Global.name = name,
         Global.isConstant = True,
         Global.type' = Types.numPortsNameRef,
-        Global.initializer = Just C.Struct
+        Global.initializer = Just nodeValue
+      }
+  assign
+    (Block.nameToSymbol name)
+    (ConstantOperand (C.GlobalReference (Types.pointerOf Types.numPortsNameRef) name))
+  where
+    nodeValue
+      | Types.bitSizeEncodingPoint = C.Int Types.addressSpace v
+      | otherwise =
+        C.Struct
           { C.structName = Just Types.numPortsName,
             C.isPacked = True,
             C.memberValues =
@@ -652,10 +638,6 @@ constantPort name v = do
                   }
               ]
           }
-      }
-  assign
-    (Block.nameToSymbol name)
-    (ConstantOperand (C.GlobalReference (Types.pointerOf Types.numPortsNameRef) name))
 
 mainPort,
   auxiliary1,
@@ -668,6 +650,41 @@ auxiliary1 = Block.externf "auxiliary1"
 auxiliary2 = Block.externf "auxiliary2"
 auxiliary3 = Block.externf "auxiliary3"
 auxiliary4 = Block.externf "auxiliary4"
+
+--------------------------------------------------------------------------------
+-- Type aliases accessor functions
+--------------------------------------------------------------------------------
+getPortData ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+getPortData nodePtr =
+  getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Types.portData,
+        Types.address' = nodePtr,
+        Types.indincies' = Block.constant32List [0, loc]
+      }
+  where
+    loc
+      | Types.bitSizeEncodingPoint = 1
+      | otherwise = 2
+
+loadPortData ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+loadPortData np = getPortData np >>= load Types.portData
+
+getDataArray ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+getDataArray nodePtr =
+  getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Types.dataArray,
+        Types.address' = nodePtr,
+        Types.indincies' = Block.constant32List [0, loc]
+      }
+  where
+    loc
+      | Types.bitSizeEncodingPoint = 2
+      | otherwise = 3
+
+loadDataArray ∷ RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+loadDataArray np = getDataArray np >>= load Types.dataArray
 
 --------------------------------------------------------------------------------
 -- Accessor aliases
