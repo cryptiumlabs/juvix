@@ -15,8 +15,7 @@ import Juvix.Library
 typecheckAffineErase ∷
   ∀ primTy primVal m.
   ( HasWriter "log" [PipelineLog primTy primVal] m,
-    -- TODO Should be HasReader
-    HasState "parameterisation" (Parameterisation primTy primVal) m,
+    HasReader "parameterisation" (Parameterisation primTy primVal) m,
     HasThrow "error" (PipelineError primTy primVal) m,
     MonadIO m,
     Eq primTy,
@@ -32,7 +31,7 @@ typecheckAffineErase term usage ty = do
   -- First typecheck & generate erased core.
   ((erased, _), assignment) ← typecheckErase term usage ty
   -- Fetch the parameterisation, needed for EAC inference (TODO: get rid of this dependency).
-  parameterisation ← get @"parameterisation"
+  parameterisation ← ask @"parameterisation"
   -- Then invoke Z3 to check elementary-affine-ness.
   start ← liftIO unixTime
   result ← liftIO (EAC.validEal parameterisation erased assignment)
@@ -52,8 +51,7 @@ typecheckAffineErase term usage ty = do
 typecheckErase ∷
   ∀ primTy primVal m.
   ( HasWriter "log" [PipelineLog primTy primVal] m,
-    -- TODO Should be HasReader
-    HasState "parameterisation" (Parameterisation primTy primVal) m,
+    HasReader "parameterisation" (Parameterisation primTy primVal) m,
     HasThrow "error" (PipelineError primTy primVal) m,
     Eq primTy,
     Eq primVal,
@@ -66,7 +64,7 @@ typecheckErase ∷
   m ((EC.Term primVal, EC.Type primTy), EC.TypeAssignment primTy)
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
-  parameterisation ← get @"parameterisation"
+  parameterisation ← ask @"parameterisation"
   -- First convert HR to IR.
   let irTerm = hrToIR term
   tell @"log" [LogHRtoIR term irTerm]

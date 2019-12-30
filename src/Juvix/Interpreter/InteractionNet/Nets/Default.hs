@@ -103,13 +103,10 @@ langToProperPort node = langToPort node (\l → f l node)
     f (Primar a) = aux0FromGraph (IsPrim a)
 
 -- Rewrite rules----------------------------------------------------------------
-reduceAll ∷
-  (InfoNetworkDiff net (Lang primVal) m) ⇒
-  Int →
-  m ()
+reduceAll ∷ InfoNetworkDiff net (Lang primVal) m ⇒ Int → m ()
 reduceAll = untilNothingNTimesM reduce
 
-reduce ∷ (InfoNetworkDiff net (Lang primVal) m) ⇒ m Bool
+reduce ∷ InfoNetworkDiff net (Lang primVal) m ⇒ m Bool
 reduce = do
   nodes' ← nodes
   isChanged ← foldrM update False nodes'

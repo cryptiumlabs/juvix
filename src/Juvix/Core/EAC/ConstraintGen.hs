@@ -107,7 +107,7 @@ boxAndTypeConstraint ∷
     HasState "varPaths" VarPaths m,
     HasState "nextParam" Param m,
     HasWriter "constraints" [Constraint] m,
-    HasState "occurrenceMap" OccurrenceMap m
+    HasReader "occurrenceMap" OccurrenceMap m
   ) ⇒
   Parameterisation primTy primVal →
   ParamTypeAssignment primTy →
@@ -131,7 +131,7 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
         Nothing → addConstraint (Constraint (ConstraintVar 1 <$> path) (Eq 0))
       let origParamTy = parameterizedAssignment Map.! sym
       -- Typing constraint: variable occurrences.
-      occurrenceMap ← get @"occurrenceMap"
+      occurrenceMap ← ask @"occurrenceMap"
       let occurrences = occurrenceMap Map.! sym
           origBangParam = bangParam origParamTy
       -- If non-linear (>= 2 occurrences), original type must be of form !A.
@@ -224,7 +224,8 @@ generateTypeAndConstraints ∷
     HasState "nextParam" Param m,
     HasState "typeAssignment" (TypeAssignment primTy) m,
     HasWriter "constraints" [Constraint] m,
-    HasState "occurrenceMap" OccurrenceMap m
+    HasState "occurrenceMap" OccurrenceMap m,
+    HasReader "occurrenceMap" OccurrenceMap m
   ) ⇒
   Parameterisation primTy primVal →
   Term primVal →
@@ -241,7 +242,8 @@ generateConstraints ∷
     HasState "nextParam" Param m,
     HasState "typeAssignment" (TypeAssignment primTy) m,
     HasWriter "constraints" [Constraint] m,
-    HasState "occurrenceMap" OccurrenceMap m
+    HasState "occurrenceMap" OccurrenceMap m,
+    HasReader "occurrenceMap" OccurrenceMap m
   ) ⇒
   Parameterisation primTy primVal →
   Term primVal →

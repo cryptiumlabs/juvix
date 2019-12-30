@@ -144,6 +144,9 @@ newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)
     (HasState "occurrenceMap" OccurrenceMap)
     via Field "occurrenceMap" () (MonadState (State (Env primTy)))
   deriving
+    (HasReader "occurrenceMap" OccurrenceMap)
+    via Field "occurrenceMap" () (ReadStatePure (MonadState (State (Env primTy))))
+  deriving
     ( HasStream "constraints" [Constraint],
       HasWriter "constraints" [Constraint]
     )
