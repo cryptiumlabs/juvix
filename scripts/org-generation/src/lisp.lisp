@@ -33,7 +33,6 @@
 ;; Exporting Interface Functions
 ;; -----------------------------------------------------------------------------
 
-
 (defparameter *extension* "lisp")
 
 (sig import-generation (-> context fset:map file-info-extended list))
@@ -58,6 +57,7 @@
     config))
 
 
+
 (defun convert-path (file context)
   (declare (ignore context))
   file)
@@ -72,6 +72,14 @@
             (or (fset:lookup conflict-map import)
                 (pathname-name import)))
           imports))
+
+;; -----------------------------------------------------------------------------
+;; Processing ASDF files
+;; -----------------------------------------------------------------------------
+
+(defun process-defsystem (&key components pathname &allow-other-keys)
+  (list components pathname))
+
 
 ;; -----------------------------------------------------------------------------
 ;; Lisp comment clean up
