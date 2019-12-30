@@ -5,12 +5,10 @@
 --     boilerplate in this file
 module Juvix.Backends.LLVM.Net.EAC.MonadEnvironment where
 
-import Juvix.Backends.LLVM.Codegen
+import Juvix.Backends.LLVM.Codegen hiding (CodegenState (..))
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
-
 import LLVM.AST as AST
-
 
 data EACState
   = EACState
@@ -33,12 +31,13 @@ data EACState
         moduleAST ∷ AST.Module,
         -- new data for EAC!
         --
+
         -- | Debug level
         debug ∷ Int
       }
   deriving (Show, Generic)
 
-newtype EAC a = CodeGen {runEAC ∷ ExceptT Errors (State EACState) a}
+newtype EAC a = EACGen {runEAC ∷ ExceptT Errors (State EACState) a}
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "currentBlock" Name)
@@ -87,3 +86,40 @@ instance HasState "moduleDefinitions" [Definition] EAC where
     let (a, res) = state c
     put @"moduleDefinitions" res
     pure a
+
+--------------------------------------------------------------------------------
+-- Functions
+--------------------------------------------------------------------------------
+
+emptyEAC ∷ EACState
+emptyEAC = EACState
+  { currentBlock = mkName entryBlockName,
+    blocks = Map.empty,
+    symTab = Map.empty,
+    typTab = Map.empty,
+    varTab = Map.empty,
+    count = 0,
+    names = Map.empty,
+    blockCount = 1,
+    moduleAST = emptyModule "EAC",
+    debug = 0
+  }
+
+emptyEACL1 ∷ EACState
+emptyEACL1 = emptyEAC {debug = 1}
+
+debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
+debugLevelOne f = whenM ((1 <=) <$> ask @"debug") f
+
+
+execEACState ∷ EAC a → SymbolTable → EACState
+execEACState (EACGen m) a = execState (runExceptT m) (emptyEAC {symTab = a})
+
+evalEACState ∷ EAC a → SymbolTable → Either Errors a
+evalEACState (EACGen m) a = evalState (runExceptT m) (emptyEAC {symTab = a})
+
+execEACStateLevel1 ∷ EAC a → SymbolTable → EACState
+execEACStateLevel1 (EACGen m) a = execState (runExceptT m) (emptyEACL1 {symTab = a})
+
+evalEACStateLevel1 ∷ EAC a → SymbolTable → Either Errors a
+evalEACStateLevel1 (EACGen m) a = evalState (runExceptT m) (emptyEACL1 {symTab = a})
