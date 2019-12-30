@@ -40,6 +40,7 @@ dependencies:
   - elliptic-curve
   - sonic
   - aeson
+  - Cabal
 
 default-extensions:
   - NoImplicitPrelude

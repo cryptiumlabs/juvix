@@ -28,7 +28,7 @@ eacName ∷ IsString p ⇒ p
 eacName = Codegen.nodeTypeName
 
 eac ∷ Type.Type
-eac = Codegen.nodeType [tag]
+eac = Codegen.nodeType tag []
 
 eacPointer ∷ Type.Type
 eacPointer = Type.PointerType eacNameRef (Addr.AddrSpace 0)
