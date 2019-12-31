@@ -33,7 +33,7 @@ pred :: Nat -> Nat
 pred = \n -> cfun n zero (\x -> x)
 
 toNum :: Nat -> Int
-toNum = \n -> cfun n 0 (\x -> 1 + num x)
+toNum = \n -> cfun n 0 (\x -> 1 + toNum x)
 
 newtype List a = List { unList :: forall r . r -> (a -> List a -> r) -> r }
 
