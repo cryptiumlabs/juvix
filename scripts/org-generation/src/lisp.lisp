@@ -54,7 +54,12 @@
 (defun initialize (sexp)
   "Initializes the context for the Lisp configuration"
   (let ((config (apply #'make-config sexp)))
-    config))
+    (make-context
+     :file-import
+     (reduce (lambda (map system)
+               (apply #'process-defsystem (config-asdf config) map system))
+             (uiop:read-file-forms (config-asdf config))
+             :initial-value (fset:empty-map)))))
 
 
 
@@ -77,8 +82,21 @@
 ;; Processing ASDF files
 ;; -----------------------------------------------------------------------------
 
-(defun process-defsystem (&key components pathname &allow-other-keys)
-  (list components pathname))
+(defun process-defsystem (asdf-file import-map &key components pathname &allow-other-keys)
+  (let ((path-name
+          (if pathname
+              (merge-pathnames pathname asdf-file))))
+    (labels ((append-lisp-file (file path)
+               (truename (merge-pathnames (concatenate 'string file ".lisp") path)))
+             (file-dep (import-map &key file depends-on &allow-other-keys)
+               (fset:with import-map
+                          (append-lisp-file file path-name)
+                          (mapcar (lambda (file) (append-lisp-file file path-name))
+                                  depends-on))))
+      (reduce (lambda (import-map file)
+                (apply #'file-dep import-map file))
+              components
+              :initial-value import-map))))
 
 
 ;; -----------------------------------------------------------------------------
@@ -88,3 +106,40 @@
 (sig strip-lisp-comments (-> sequence sequence))
 (defun strip-lisp-comments (line)
   (string-left-trim  (list #\; #\Space #\Tab) line))
+
+;; -----------------------------------------------------------------------------
+;; Testing
+;; -----------------------------------------------------------------------------
+
+;; (apply #'process-defsystem #P"org-generation.asd" (fset:empty-map) *x*)
+
+
+;; #S(ORG-GENERATION/LISP::CONTEXT
+;;    :FILE-IMPORT #{|
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/lisp.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/types.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/maybe.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/type-signature.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/maybe.lisp"
+;;                     NIL)
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/types.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/maybe.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/type-signature.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/context.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/haskell.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/types.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/haskell.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/maybe.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/types.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/utility.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/type-signature.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/type-signature.lisp"
+;;                     NIL)
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/code-generation.lisp"
+;;                     (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/context.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/utility.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/types.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/type-signature.lisp"
+;;                      #P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/src/maybe.lisp"))
+;;                    (#P"/home/loli/Documents/Work/Repo/juvix/scripts/org-generation/test/run-tests.lisp"
+;;                     NIL) |})

@@ -1,0 +1,38 @@
+* language-config
+configuration file for code generation
+* src
+** code-generation
+- _Relies on_
+  + [[context]]
+  + [[utility]]
+  + [[types]]
+  + [[type-signature]]
+  + [[maybe]]
+** context
+- _Relies on_
+  + [[haskell]]
+  + [[types]]
+** haskell
+This Package gives the proper functions for org-generation of a
+language to work
+- _Relies on_
+  + [[maybe]]
+  + [[types]]
+** lisp
+This Package gives the proper functions for org-generation of a
+language to work
+- _Relies on_
+  + [[types]]
+  + [[maybe]]
+  + [[type-signature]]
+** maybe
+** type-signature
+** types
+- _Relies on_
+  + [[maybe]]
+  + [[type-signature]]
+** utility
+- _Relies on_
+  + [[type-signature]]
+* test
+** run-tests

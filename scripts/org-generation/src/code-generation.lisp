@@ -5,7 +5,8 @@
         #:org-generation/type-signature
         #:org-generation/maybe
         #:org-generation/types)
-  (:export :generate-org-file))
+  (:export :generate-org-file
+           :gen-config))
 
 (in-package :org-generation/code-generation)
 
@@ -20,15 +21,17 @@
 ;; Main Functionality
 ;; -----------------------------------------------------------------------------
 
-(sig generate-org-file (-> pathname pathname pathname &optional fset:set t))
+(sig gen-config (-> pathname fset:map))
+(defun gen-config (config)
+  (og/context:read-config config))
+
+
+(sig generate-org-file (-> fset:map pathname pathname &optional fset:set t))
 (defun generate-org-file (config directory output-file
                           &optional (filtered-dirs *filtered-path-prefix*))
-  (let* ((config       (og/context:read-config config))
-         (extensions   (og/context:valid-extensions config))
-         (files-dirs   (files-and-dirs directory filtered-dirs extensions))
-         (alias-map    (construct-file-alias-map
-                        (lose-dir-information
-                         (files-and-dirs directory filtered-dirs extensions))))
+  (let* ((extensions   (og/context:valid-extensions config))
+         (files-dirs   (files-and-dirs directory extensions filtered-dirs))
+         (alias-map    (construct-file-alias-map (lose-dir-information files-dirs)))
          (files        (alias-file-info files-dirs alias-map))
          (conflict-map (og/context:alias-map-to-language-import config alias-map)))
     (with-open-file (file output-file
@@ -161,17 +164,8 @@
 ;; Getting Directory and File lists
 ;; -----------------------------------------------------------------------------
 
-(sig get-directory-info
-     (-> pathname &optional fset:set fset:set list))
-(defun get-directory-info (directory &optional (filtered-dirs *filtered-path-prefix*)
-                                               (valid-extensions *acceptable-extensions*))
-  (let* ((annote-1     (files-and-dirs directory filtered-dirs valid-extensions))
-         (conflict-map (construct-file-alias-map (lose-dir-information annote-1))))
-    (alias-file-info annote-1 conflict-map)))
-
-(sig files-and-dirs (-> pathname &optional fset:set fset:set list))
-(defun files-and-dirs (directory &optional (filtered-dirs *filtered-path-prefix*)
-                                           (valid-extensions *acceptable-extensions*))
+(sig files-and-dirs (-> pathname fset:set &optional fset:set list))
+(defun files-and-dirs (directory valid-extensions &optional (filtered-dirs *filtered-path-prefix*))
   "recursively grabs the file and directories
 forming a list of org-directory and file info"
   (let* ((sub-dirs       (remove-if
@@ -186,8 +180,7 @@ forming a list of org-directory and file info"
                                             filtered-dirs))))
                           (uiop:subdirectories directory)))
          (files          (remove-if (complement (lambda (x)
-                                                  (fset:@ valid-extensions
-                                                          (pathname-type x))))
+                                                  (fset:lookup valid-extensions (pathname-type x))))
                                     (uiop:directory-files directory)))
          (dirs-annotated (mapcar (lambda (dir)
                                    (let* ((name  (og/utility:file-name dir))
@@ -200,23 +193,23 @@ forming a list of org-directory and file info"
                                                 (make-just
                                                  :val (make-file-info :path file?))
                                                 +nothing+)
-                                      :dir  (files-and-dirs dir)
+                                      :dir  (files-and-dirs dir valid-extensions)
                                       :name name)))
                                  sub-dirs))
          ;; slow version of set-difference that maintains ordering
          (files-annotated
            (mapcar (lambda (file)
                      (make-file-info :path file))
-            (remove-if (lambda (file)
-                         (member-if (lambda (dir-ann)
-                                      (if (nothing? (org-directory-file dir-ann))
-                                          nil
-                                          (equal file
-                                                 (file-info-path
-                                                  (just-val
-                                                   (org-directory-file dir-ann))))))
-                                    dirs-annotated))
-                       files))))
+                   (remove-if (lambda (file)
+                                (member-if (lambda (dir-ann)
+                                             (if (nothing? (org-directory-file dir-ann))
+                                                 nil
+                                                 (equal file
+                                                        (file-info-path
+                                                         (just-val
+                                                          (org-directory-file dir-ann))))))
+                                           dirs-annotated))
+                              files))))
     (append files-annotated dirs-annotated)))
 
 (sig lose-dir-information (-> list list))
@@ -347,9 +340,10 @@ the file name to their unique identifier"
 
 ;; (files-and-dirs "../../src/")
 
-;; (construct-file-alias-map
-;;  (lose-dir-information
-;;   (files-and-dirs #p"../holder/src/")))
+;; (print
+;;  (construct-file-alias-map
+;;   (lose-dir-information
+;;    (files-and-dirs #p"../holder/src/"))))
 
 ;; (haskell-import-to-org-alias (list "Juvix.Library.PrettyPrint"
 ;;                                    "Juvix.Interpreter.InteractionNet.Backends.Graph")
