@@ -98,7 +98,6 @@
               components
               :initial-value import-map))))
 
-
 ;; -----------------------------------------------------------------------------
 ;; Lisp comment clean up
 ;; -----------------------------------------------------------------------------
@@ -111,4 +110,7 @@
 ;; Testing
 ;; -----------------------------------------------------------------------------
 
-;; (apply #'process-defsystem #P"org-generation.asd" (fset:empty-map) *x*)
+;; (apply #'process-defsystem
+;;        #P"org-generation.asd"
+;;        (fset:empty-map)
+;;        (car (uiop:read-file-forms (truename #P"../org-generation/org-generation.asd"))))
