@@ -372,27 +372,27 @@ udiv t a b = instr t UDiv
   }
 add t a b = instr t Add
   { -- no signed warp
-    nsw = False,
+    nsw = True,
     -- no unSigned warp
-    nuw = False,
+    nuw = True,
     operand0 = a,
     operand1 = b,
     metadata = []
   }
 sub t a b = instr t Sub
   { -- no signed warp
-    nsw = False,
+    nsw = True,
     -- no unSigned warp
-    nuw = False,
+    nuw = True,
     operand0 = a,
     operand1 = b,
     metadata = []
   }
 mul t a b = instr t Mul
   { -- no signed warp
-    nsw = False,
+    nsw = True,
     -- no unSigned warp
-    nuw = False,
+    nuw = True,
     operand0 = a,
     operand1 = b,
     metadata = []

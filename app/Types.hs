@@ -1,10 +1,12 @@
 module Types where
 
-import Juvix.Core.Parameterisations.Naturals
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (log)
 
-exec ∷ EnvExec primTy primVal a → Core.Parameterisation primTy primVal → IO (Either (Core.PipelineError primTy primVal) a, [Core.PipelineLog primTy primVal])
+exec ∷
+  EnvExec primTy primVal a →
+  Core.Parameterisation primTy primVal →
+  IO (Either (Core.PipelineError primTy primVal) a, [Core.PipelineLog primTy primVal])
 exec (EnvE env) param = do
   (ret, env) ← runStateT (runExceptT env) (Env param [])
   pure (ret, log env)
@@ -24,9 +26,8 @@ newtype EnvExec primTy primVal a = EnvE (ExceptT (Core.PipelineError primTy prim
     )
     via WriterLog (Field "log" () (MonadState (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))))
   deriving
-    -- TODO: Should be HasReader, this library is finicky.
-    (HasState "parameterisation" (Core.Parameterisation primTy primVal))
-    via (Field "parameterisation" () (MonadState (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))))
+    (HasReader "parameterisation" (Core.Parameterisation primTy primVal))
+    via Field "parameterisation" () (ReadStatePure (MonadState (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))))
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal))
     via MonadError (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))

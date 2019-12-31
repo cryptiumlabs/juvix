@@ -26,10 +26,34 @@ jitToNetAPI config mod = do
   putText "Loading into LLVM runtime..."
   (imp, kill) ← mcJitWith config mod dynamicImport
   putText "Importing functions...."
-  Just createNetFn ← importAs imp "createNet" (Proxy ∷ Proxy (IO OpaqueNetPtr)) (Proxy ∷ Proxy ()) (Proxy ∷ Proxy OpaqueNetPtr)
-  Just appendToNetFn ← importAs imp "appendToNet" (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → Int → IO ())) (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node, Int)) (Proxy ∷ Proxy ())
-  Just readNetFn ← importAs imp "readNet" (Proxy ∷ Proxy (OpaqueNetPtr → IO (Ptr Nodes))) (Proxy ∷ Proxy OpaqueNetPtr) (Proxy ∷ Proxy (Ptr Nodes))
-  Just reduceUntilCompleteFn ← importAs imp "reduceUntilComplete" (Proxy ∷ Proxy (OpaqueNetPtr → IO ())) (Proxy ∷ Proxy OpaqueNetPtr) (Proxy ∷ Proxy ())
+  Just createNetFn ←
+    importAs
+      imp
+      "createNet"
+      (Proxy ∷ Proxy (IO OpaqueNetPtr))
+      (Proxy ∷ Proxy ())
+      (Proxy ∷ Proxy OpaqueNetPtr)
+  Just appendToNetFn ←
+    importAs
+      imp
+      "appendToNet"
+      (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → Int → IO ()))
+      (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node, Int))
+      (Proxy ∷ Proxy ())
+  Just readNetFn ←
+    importAs
+      imp
+      "readNet"
+      (Proxy ∷ Proxy (OpaqueNetPtr → IO (Ptr Nodes)))
+      (Proxy ∷ Proxy OpaqueNetPtr)
+      (Proxy ∷ Proxy (Ptr Nodes))
+  Just reduceUntilCompleteFn ←
+    importAs
+      imp
+      "reduceUntilComplete"
+      (Proxy ∷ Proxy (OpaqueNetPtr → IO ()))
+      (Proxy ∷ Proxy OpaqueNetPtr)
+      (Proxy ∷ Proxy ())
   putText "Generating API..."
   pure
     ( NetAPI

@@ -4,8 +4,8 @@
 module Juvix.Backends.LLVM.Translation where
 
 import qualified Data.HashMap.Strict as Map
-import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as Environment
 import Juvix.Backends.LLVM.Net.Environment
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Types as Core
@@ -26,7 +26,7 @@ evalErasedCoreInLLVM ∷
   m (Erased.Term primVal)
 evalErasedCoreInLLVM parameterisation term = do
   -- Generate the LLVM module.
-  let mod = Codegen.moduleAST runInitModule
+  let mod = Environment.moduleAST runInitModule
   -- Pretty-print the module.
   putStr (ppllvm mod) >> putStr ("\n" ∷ Text)
   -- JIT the module.

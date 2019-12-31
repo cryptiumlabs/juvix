@@ -28,7 +28,7 @@ eacName ∷ IsString p ⇒ p
 eacName = Codegen.nodeTypeName
 
 eac ∷ Type.Type
-eac = Codegen.nodeType [tag]
+eac = Codegen.nodeType tag []
 
 eacPointer ∷ Type.Type
 eacPointer = Type.PointerType eacNameRef (Addr.AddrSpace 0)
@@ -74,10 +74,15 @@ testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSp
 -- probably need a tag to determine when a list is null?
 checkNull ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
 checkNull xs = do
-  xsI ← Codegen.ptrToInt xs Type.i64
+  xsI ← Codegen.ptrToInt xs (Type.IntegerType Codegen.addressSpace)
   Codegen.icmp
     IntPred.EQ
-    (Operand.ConstantOperand (C.PtrToInt (C.Null eacLPointer) Type.i64))
+    ( Operand.ConstantOperand
+        ( C.PtrToInt
+            (C.Null eacLPointer)
+            (Type.IntegerType Codegen.addressSpace)
+        )
+    )
     xsI
 
 cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand

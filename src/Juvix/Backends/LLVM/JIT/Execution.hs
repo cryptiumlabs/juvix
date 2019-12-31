@@ -24,10 +24,20 @@ import LLVM.Target
 
 -- Need some datatypes to wrap since GHC doesn't yet support impredicative polymorphism.
 data DynamicFunc where
-  DynamicFunc ∷ ∀ a b c. (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒ (b → IO c) → DynamicFunc
+  DynamicFunc ∷
+    ∀ a b c.
+    (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒
+    (b → IO c) →
+    DynamicFunc
 
 data DynamicImportTypeProxy where
-  DynamicImportTypeProxy ∷ ∀ a b c. (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒ Proxy a → Proxy b → Proxy c → DynamicImportTypeProxy
+  DynamicImportTypeProxy ∷
+    ∀ a b c.
+    (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒
+    Proxy a →
+    Proxy b →
+    Proxy c →
+    DynamicImportTypeProxy
 
 runJIT ∷ Config → Context → (EE.MCJIT → IO a) → IO a
 runJIT config ctx = EE.withMCJIT ctx optlevel model ptrelim fastins
@@ -50,7 +60,14 @@ convOptLevel O1 = pure 1
 convOptLevel O2 = pure 2
 convOptLevel O3 = pure 3
 
-orcJitWith ∷ ∀ a b. Config → AST.Module → ((AST.Name → IO (Maybe (FunPtr ()))) → IO ((a → IO b), IO ())) → IO (a → IO b, IO ())
+orcJitWith ∷
+  ∀ a b.
+  Config →
+  AST.Module →
+  ( (AST.Name → IO (Maybe (FunPtr ()))) →
+    IO ((a → IO b), IO ())
+  ) →
+  IO (a → IO b, IO ())
 orcJitWith config mod func = do
   paramChan ← newChan
   resultChan ← newChan
@@ -131,7 +148,14 @@ mcJitWith config mod func = do
 
 importAs ∷
   ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc)) →
-  (∀ a b c. (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒ AST.Name → Proxy a → Proxy b → Proxy c → IO (Maybe (b → IO c)))
+  ( ∀ a b c.
+    (DynamicImport a (b → IO c), Typeable a, Typeable b, Typeable c) ⇒
+    AST.Name →
+    Proxy a →
+    Proxy b →
+    Proxy c →
+    IO (Maybe (b → IO c))
+  )
 importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) = do
   maybeFunc ← imp (name, DynamicImportTypeProxy (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c))
   case maybeFunc of
@@ -142,7 +166,9 @@ importAs imp name (Proxy ∷ Proxy a) (Proxy ∷ Proxy b) (Proxy ∷ Proxy c) = 
         _ → pure Nothing
     Nothing → pure Nothing
 
-dynamicImport ∷ (AST.Name → IO (Maybe (FunPtr ()))) → IO ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc), IO ())
+dynamicImport ∷
+  (AST.Name → IO (Maybe (FunPtr ()))) →
+  IO ((AST.Name, DynamicImportTypeProxy) → IO (Maybe DynamicFunc), IO ())
 dynamicImport lookup = do
   actions ← newMVar []
   let terminate = mapM_ (\x → x) =<< readMVar actions

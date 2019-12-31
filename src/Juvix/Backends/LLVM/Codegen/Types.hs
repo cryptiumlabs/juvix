@@ -7,7 +7,7 @@ module Juvix.Backends.LLVM.Codegen.Types
 where
 
 import Data.ByteString.Short hiding (empty)
-import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
+import qualified Distribution.System as System
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
 import Juvix.Library hiding (Type)
@@ -212,23 +212,67 @@ intoStructTypeErr ∷ Integral a ⇒ Type → a → Type
 intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
 
 --------------------------------------------------------------------------------
--- LLVM Types
+-- System Architecture
 --------------------------------------------------------------------------------
 
--- TODO ∷ change all Type → Type into a reader monad
--- instantiate similar to how Parsec does it
+-- for all architectures we will want to know the addressing space
+-- for architectures that are sufficiently big, we will want to really cut corners
+-- with indirection.
+-- In reality, it seems most architectures we should care about are 32 bit or higher
+-- however, on the off chance, we are forced into an 8 bit architecture, we have variants
+-- for port numbers, so we can support large number of arguments (is this even useful on small archs?)
+
+addressSpace ∷ Num p ⇒ p
+addressSpace =
+  case System.buildArch of
+    System.X86_64 → 64
+    System.I386 → 32
+    System.Mips → 32
+    System.PPC → 32
+    System.PPC64 → 64
+    System.Sparc → 64
+    System.Arm → 32
+    System.AArch64 → 64
+    -- has 16 bit instructions
+    System.SH → 32
+    System.IA64 → 64
+    -- These have 24/31 bit addressing
+    -- may be more apt to return 24/31?
+    System.S390 → 32
+    System.Alpha → 64
+    -- seems to be 64?
+    System.Hppa → 64
+    -- seems to be PowerPC architecture!?!??
+    System.Rs6000 → 32
+    -- may have to lower to 24?
+    System.M68k → 32
+    System.Vax → 32
+    -- 32 I guess?
+    System.JavaScript → 32
+    -- otherwise assume it's a 32 bit architecture
+    System.OtherArch _ → 32
+
+-- | 'bitSizeEncodingPoint' is used to determine if we need a layer of indirection
+-- around all our number types to have a bigger argument list
+bitSizeEncodingPoint ∷ Bool
+bitSizeEncodingPoint = addressSpace >= (17 ∷ Int)
+
+--------------------------------------------------------------------------------
+-- LLVM Types
+--------------------------------------------------------------------------------
 
 -- | 'varientToType' takes the type out of the variant
 varientToType ∷ VariantInfo → Type
 varientToType = typ'
 
--- | 'numPortsSmall' is used for the number of ports that fit within 16 bits
+-- | 'numPortsSmall' is used for the number of ports that fit within 8/16 bits
+-- Only gets used when architectures have less than 17 bits of addressing
 numPortsSmall ∷ VariantInfo
 numPortsSmall =
   updateVariant
     Type.i1
     Variant
-      { size = 32,
+      { size = addressSpace,
         name = "small",
         typ' = numPortsSmallValue
       }
@@ -240,21 +284,22 @@ pointerOf ∷ Type → Type
 pointerOf typ = PointerType typ (AddrSpace 0)
 
 pointerSizeInt ∷ Num p ⇒ p
-pointerSizeInt = 64
+pointerSizeInt = addressSpace
 
 pointerSize ∷ Type
-pointerSize = Type.i64
+pointerSize = IntegerType addressSpace
 
 numPortsSmallValue ∷ Type
-numPortsSmallValue = Type.i64
+numPortsSmallValue = IntegerType addressSpace
 
--- | 'numPortsLarge' is used for the number of ports that don't fit within 16 bits
+-- | 'numPortsLarge' is used for the number of ports that don't fit within 8/16 bits
+-- Only gets used when architectures have less than 17 bits of addressing
 numPortsLarge ∷ VariantInfo
 numPortsLarge =
   updateVariant
     Type.i1
     Variant
-      { size = 64,
+      { size = addressSpace,
         name = "large",
         typ' = numPortsLargeValuePtr
       }
@@ -266,7 +311,7 @@ numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
 
 numPortsLargeValueInt ∷ Num p ⇒ p
-numPortsLargeValueInt = 64
+numPortsLargeValueInt = addressSpace
 
 numPortsLargeValuePtr ∷ Type
 numPortsLargeValuePtr = pointerOf numPortsLargeValue
@@ -282,20 +327,24 @@ numPortsName = "graph_num_ports"
 
 -- number of ports on a node or the port offset
 numPorts ∷ Type
-numPorts =
-  typ
-    { elementTypes =
-        let _ : rest = elementTypes typ
-         in Type.i1 : rest
-    }
+numPorts
+  | bitSizeEncodingPoint = IntegerType addressSpace
+  | otherwise =
+    typ
+      { elementTypes =
+          let _ : rest = elementTypes typ
+           in Type.i1 : rest
+      }
   where
     typ = createSum [numPortsLarge, numPortsSmall]
 
 numPortsSize ∷ Num p ⇒ p
-numPortsSize = 65
+numPortsSize
+  | bitSizeEncodingPoint = addressSpace
+  | otherwise = 1 + addressSpace
 
 nodePointerSize ∷ Num p ⇒ p
-nodePointerSize = 64
+nodePointerSize = addressSpace
 
 portTypeNameRef ∷ Type
 portTypeNameRef = Type.NamedTypeReference portTypeName
@@ -320,10 +369,10 @@ portTypeSize = numPortsSize + pointerSizeInt
 
 -- TODO ∷ Figure out how to have an un-tagged union here for all baked in types
 dataType ∷ Type
-dataType = Constants.int
+dataType = IntegerType addressSpace
 
 dataTypeSize ∷ Num p ⇒ p
-dataTypeSize = 64
+dataTypeSize = addressSpace
 
 -- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
@@ -336,16 +385,33 @@ nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
 nodeTypeName ∷ IsString p ⇒ p
 nodeTypeName = "graph_node"
 
-nodeType ∷ [Type] → Type
-nodeType extraData = StructureType
-  { isPacked = True,
-    elementTypes =
-      [ numPortsNameRef, -- length of the portData
-        portData, -- variable size array of ports
-        dataArray -- variable size array of data the node stores
-      ]
-        <> extraData -- contains tag and other data a node may need
-  }
+nodeType ∷ Type → [Type] → Type
+nodeType tag extraData
+  | bitSizeEncodingPoint =
+    abstracted
+      { elementTypes =
+          [ tag,
+            portData, -- variable size array of ports
+            dataArray -- variable size array of data the node stores
+          ]
+            <> extraData -- contains tag and other data a node may need
+      }
+  | otherwise =
+    abstracted
+      { elementTypes =
+          [ tag,
+            numPortsNameRef, -- length of the portData
+            portData, -- variable size array of ports
+            dataArray -- variable size array of data the node stores
+          ]
+            <> extraData -- contains tag and other data a node may need
+      }
+  where
+    abstracted =
+      StructureType
+        { isPacked = True,
+          elementTypes = []
+        }
 
 dataArray ∷ Type
 dataArray = pointerOf (ArrayType 0 dataType)
@@ -373,7 +439,7 @@ voidTy ∷ Type
 voidTy = VoidType
 
 size_t ∷ Type
-size_t = IntegerType 64
+size_t = IntegerType addressSpace
 
 size_t_int ∷ Num p ⇒ p
-size_t_int = 64
+size_t_int = addressSpace

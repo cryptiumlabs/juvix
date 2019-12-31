@@ -378,7 +378,7 @@ defineFanInAux2 name allocF = Codegen.defineFunction Types.eacLPointer name args
         node
         fanIn
         eacList
-        (\oldF newF → dataPortLookup oldF >>= addDataWhole newF)
+        (\oldF newF → Codegen.loadDataArray oldF >>= addDataWhole newF)
         (\_ _ → pure ()) -- no data on node for now!
     Codegen.ret eacList
 
@@ -395,8 +395,8 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     eacList ← Codegen.externf "eac_list"
     fanIn1 ← Codegen.externf "node_1"
     fanIn2 ← Codegen.externf "node_2"
-    data1 ← dataPortLookup fanIn1
-    data2 ← dataPortLookup fanIn2
+    data1 ← Codegen.loadDataArray fanIn1
+    data2 ← Codegen.loadDataArray fanIn2
     label1 ← fanLabelLookup data1
     label2 ← fanLabelLookup data2
     test ← Codegen.icmp IntPred.EQ label1 label2
@@ -516,31 +516,16 @@ tagOf eac =
     Codegen.Minimal
       { Codegen.type' = Codegen.pointerOf Types.tag,
         Codegen.address' = eac,
-        Codegen.indincies' = Codegen.constant32List [0, 3]
+        Codegen.indincies' = Codegen.constant32List [0, 0]
       }
 
 --------------------------------------------------------------------------------
 -- Helper functions
 --------------------------------------------------------------------------------
-dataPortLookupNoLoad ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-dataPortLookupNoLoad addr = Codegen.getElementPtr $
-  Codegen.Minimal
-    { Codegen.type' = Codegen.pointerOf Codegen.dataArray,
-      Codegen.address' = addr,
-      Codegen.indincies' = Codegen.constant32List [0, 2]
-    }
-
-dataPortLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-dataPortLookup addr = Codegen.loadElementPtr $
-  Codegen.Minimal
-    { Codegen.type' = Codegen.dataArray,
-      Codegen.address' = addr,
-      Codegen.indincies' = Codegen.constant32List [0, 2]
-    }
 
 addData ∷ Codegen.RetInstruction m ⇒ Operand.Operand → Operand.Operand → m ()
 addData addr data' = do
-  arr ← dataPortLookup addr
+  arr ← Codegen.loadDataArray addr
   labPtr ← Codegen.getElementPtr $
     Codegen.Minimal
       { Codegen.type' = Codegen.pointerOf Codegen.dataType,
@@ -551,7 +536,7 @@ addData addr data' = do
 
 addDataWhole ∷ Codegen.RetInstruction m ⇒ Operand.Operand → Operand.Operand → m ()
 addDataWhole addr data' = do
-  arr ← dataPortLookupNoLoad addr
+  arr ← Codegen.getDataArray addr
   Codegen.store arr data'
 
 fanLabelLookup ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand

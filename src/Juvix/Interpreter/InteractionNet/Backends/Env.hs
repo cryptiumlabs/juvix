@@ -33,7 +33,6 @@ data InfoNet net
   deriving (Show, Generic)
 
 -- TODO ∷ make generic type to remove repeat here!
--- TODO ∷ replace HasState with HasReader
 type InfoNetwork net a m =
   ( HasState "info" Info m,
     HasState "net" (net a) m,
@@ -46,7 +45,6 @@ type InfoNetworkDiff net a m =
     DifferentRep net
   )
 
--- TODO ∷ replace HasState with HasReader
 newtype EnvNetInfo net a = EnvI (State (InfoNet net) a)
   deriving (Functor, Applicative, Monad)
   deriving

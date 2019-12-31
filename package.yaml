@@ -40,6 +40,7 @@ dependencies:
   - elliptic-curve
   - sonic
   - aeson
+  - Cabal
 
 default-extensions:
   - NoImplicitPrelude
@@ -164,6 +165,7 @@ library:
     - Juvix.Backends.LLVM.Net.EAC.Types
     - Juvix.Backends.LLVM.Net.EAC.Defs
     - Juvix.Backends.LLVM.Net.Environment
+    - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
     - Juvix.Backends.LLVM.DSL
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
