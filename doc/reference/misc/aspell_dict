@@ -1,4 +1,4 @@
-personal_ws-1.1 en 409 
+personal_ws-1.1 en 414 
 ABSALG
 ADT
 ADTs
@@ -64,6 +64,7 @@ Merkle
 Merkleized
 Milner
 Neumann
+Num
 Nuttin
 OpenCL
 Ornelas
@@ -102,6 +103,7 @@ UX
 UnaryInfC
 Uniswap
 VM
+Vect
 WLOG
 ZF
 ZK
@@ -213,6 +215,7 @@ haskell
 hyperref
 idA
 idB
+idris
 iff
 imprecisions
 incrementElectMany
@@ -406,5 +409,7 @@ wirestraight
 xs
 xxs
 ys
+zipAdd
+zipWith
 zkSNARK
 zs
