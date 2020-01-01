@@ -1,1 +1,1 @@
-do notation a la Idris
+do notation a la Idris/Haskell

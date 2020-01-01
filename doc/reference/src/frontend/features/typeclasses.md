@@ -1,1 +1,1 @@
-typeclasses a la Idris
+typeclasses a la Idris, at least initially

@@ -1,2 +1,3 @@
-
 - Algebraic datatypes a la Idris
+- Positive (non-strict OK)
+- Declaration style similar to Haskell GADTs

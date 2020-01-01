@@ -1,4 +1,4 @@
-All features desugar to Core (with several passes, typeclass lookup, etc.)
+All features desugar to Core (with several passes, typeclass lookup, etc).
 
 ### Datatypes
 

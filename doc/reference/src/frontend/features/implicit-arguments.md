@@ -1,1 +1,1 @@
-{ a } a la Idris
+implicit arguments a la Idris

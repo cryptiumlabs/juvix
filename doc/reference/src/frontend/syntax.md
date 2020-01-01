@@ -1,4 +1,4 @@
-Primarily inspired by Haskell & Idris. Alterations for explicit usage accounting & (in the future) for resource accounting.
+Juvix's frontend syntax is primarily inspired by Haskell & Idris, with alterations for explicit usage accounting & (in the future) for resource accounting.
 
 ```
 zipWith : n (a -> b -> c) -> Vect n a -> Vect n b -> Vect n c
@@ -23,7 +23,7 @@ zipAdd : (a : 0 Type) -> (n : 0 Nat) -> (d : 0 (Num a)) -> Vect n a -> Vect n a 
 zipAdd a n d xs ys = zipWith a a a n ((+) d) xs ys
 ```
 
-usage accounting
+Usage annotations are optional. Implicit usage arguments or constraints are inferred where possible, but explicit annotations may sometimes be required.
 
 ```
 f : 2 (x : 3 Int) -> Double
@@ -31,6 +31,5 @@ f : 2 (x : 3 Int) -> Double
 f : w (x : 2 Int -> y : () -> IO ())
 ```
 
-is no usage annotation equivalent to an implicit usage argument?
-
-that seems like it would be nice, then we can unify & infer where possible
+By default, no usage annotation is equivalent to an implicit usage argument. The unification algorithm will attempt to infer constraints
+involving multiple usage arguments where possible.
