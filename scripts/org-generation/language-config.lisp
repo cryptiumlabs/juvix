@@ -1,6 +1,8 @@
 ;; configuration file for code generation
 
-(:enabled haskell)
+
+
+(:enabled haskell lisp)
 
 (haskell
  :name "Juvix"
@@ -8,4 +10,4 @@
 
 (lisp
  ;; this makes it use the asd file to check imports instead of loads
- :asdf #p"org-generation.asd")
+ :asdf #p"./org-generation/org-generation.asd")

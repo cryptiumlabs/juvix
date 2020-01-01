@@ -2,9 +2,9 @@ module Backends.LLVM where
 
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
-import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Translation
 import qualified Juvix.Core.Erased as E
 import Juvix.Core.Parameterisations.Unit

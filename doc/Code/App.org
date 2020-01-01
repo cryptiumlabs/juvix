@@ -28,6 +28,5 @@
 * Options
 * Types
 - _Relies on_
-  + [[Naturals]]
   + [[Types]]
   + [[Library]]

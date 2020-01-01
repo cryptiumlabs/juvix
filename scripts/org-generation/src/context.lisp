@@ -1,3 +1,30 @@
+;;; - This module servers as the abstraction from the first class
+;;;   module design of this application.
+;;;   + This module does this by simply wrapping all module calls in
+;;;     proper function calls that dispatch to the inner module table
+;;;     that is formed.
+;;;   + This inner module table is then passed back to the higher
+;;;     level as the context that must be passed back down.
+;;; - This module also handles the parsing and initialization of the
+;;;   sexp config itself.
+;;;   + This config file has all the parameters that a specific module
+;;;     needs to run its =initialize= function.
+;;; * Module Hash Table
+;;; The layout of the Module specific module table is as follows.
+;;; #+BEGIN_EXAMPLE
+;;;   module.*extension* ---> { module, module.context }
+;;; #+END_EXAMPLE
+;;;   + module.context is created by calling =module.initialize= on
+;;;     the config sexp that is given in
+;;; * Interface for valid modules
+;;; #+BEGIN_SRC lisp
+;;;   (sig import-generation (-> context fset:map file-info-extended list))
+;;;   (sig module-comments   (-> file-info-extended list))
+;;;   (sig initalize         (-> list module.context))
+;;;   (sig convert-path      (-> pathname context t))
+;;;   ;; the t here can be anything the module needs!
+;;; #+END_SRC
+;;;
 
 (defpackage #:org-generation/context
   (:nicknames #:og/context)
@@ -63,14 +90,15 @@ that has the language import, and the lines of the file"
                       'import-generation
                       (language-context-context context)
                       conflict-map
-                      lines)))
+                      (extend-file-info file-info lines))))
 
 (defun module-comments (config file-info lines level)
   (let ((context (fset:lookup config (pathname-type (file-info-path file-info)))))
-    (uiop:symbol-call (language-context-package context)
-                      'module-comments
-                      lines
-                      level)))
+    (remove-if #'uiop:emptyp
+               (mapcar (lambda (x) (og/utility:update-headline-level x level))
+                       (uiop:symbol-call (language-context-package context)
+                                         'module-comments
+                                         (extend-file-info file-info lines))))))
 ;; -----------------------------------------------------------------------------
 ;; Config Generation
 ;; -----------------------------------------------------------------------------

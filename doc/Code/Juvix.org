@@ -146,7 +146,6 @@ Provides a mechanism for defining Sum types
   + [[HashMap]]
 ***** Types <<Codegen/Types>>
 - _Relies on_
-  + [[Constants]]
   + [[Codegen/Shared]]
   + [[Sum]]
   + [[Library]]

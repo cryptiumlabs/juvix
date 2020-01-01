@@ -88,9 +88,9 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
 ** LLVM
 - _Relies on_
-  + [[Codegen]]
   + [[Types]]
   + [[JIT]]
+  + [[MonadEnvironment]]
   + [[Types]]
   + [[Environment]]
   + [[Translation]]
@@ -101,6 +101,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Codegen]]
   + [[JIT]]
+  + [[MonadEnvironment]]
   + [[Types]]
   + [[Environment]]
   + [[Library]]
