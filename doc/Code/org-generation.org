@@ -9,9 +9,15 @@ configuration file for code generation
   + [[type-signature]]
   + [[maybe]]
 ** context
+- This module servers as the abstraction from the first class
+  module design of this application
+  + This module does this by simply wrapping all module calls in
+    proper function calls that dispatch to the inner module table
+    that is formed
 - _Relies on_
   + [[haskell]]
   + [[types]]
+*** Module Hash Table
 ** haskell
 This Package gives the proper functions for org-generation of a
 language to work

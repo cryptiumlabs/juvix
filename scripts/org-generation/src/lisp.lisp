@@ -85,7 +85,8 @@
 (defun process-defsystem (asdf-file import-map &key components pathname &allow-other-keys)
   (let ((path-name
           (if pathname
-              (merge-pathnames pathname asdf-file))))
+              (merge-pathnames pathname asdf-file)
+              asdf-file)))
     (labels ((append-lisp-file (file path)
                (truename (merge-pathnames (concatenate 'string file ".lisp") path)))
              (file-dep (import-map &key file depends-on &allow-other-keys)
@@ -104,7 +105,11 @@
 
 (sig strip-lisp-comments (-> sequence sequence))
 (defun strip-lisp-comments (line)
-  (string-left-trim  (list #\; #\Space #\Tab) line))
+  (let ((str (string-left-trim (list #\;)
+                               (string-left-trim (list #\Space #\Tab) line))))
+    (if (> (length str) 0)
+        (subseq str 1)
+        str)))
 
 ;; -----------------------------------------------------------------------------
 ;; Testing

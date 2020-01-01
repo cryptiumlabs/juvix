@@ -1,3 +1,10 @@
+;;; - This module servers as the abstraction from the first class
+;;;   module design of this application
+;;;   + This module does this by simply wrapping all module calls in
+;;;     proper function calls that dispatch to the inner module table
+;;;     that is formed
+;;; * Module Hash Table
+;;;
 
 (defpackage #:org-generation/context
   (:nicknames #:og/context)
