@@ -4,19 +4,12 @@ This chapter defines the high-level dependently-typed frontend syntax in which d
 
 ## Syntax
 
-Syntax options:
-
-1. Idris [@idris-systems-programming-meets-full-dependent-types] / Haskell [@haskell] flavoured
-1. Lisp-like [@common-lisp]
+!include frontend/syntax.pdc
 
 ## Features
 
 !include frontend/features.pdc
 
-## Lambda-encoding of algebraic datatypes
+## Elaboration to core
 
-!include frontend/lambda-encoding.pdc
-
-## Unification
-
-!include frontend/unification.pdc
+!include frontend/elaboration.pdc

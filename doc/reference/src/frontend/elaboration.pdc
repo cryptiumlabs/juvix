@@ -1,0 +1,11 @@
+### Tactics
+
+!include elaboration/tactics.pdc
+
+### Lambda-encoding of algebraic datatypes
+
+!include elaboration/lambda-encoding.pdc
+
+### Unification
+
+!include elaboration/unification.pdc

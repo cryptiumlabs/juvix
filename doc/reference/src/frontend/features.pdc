@@ -1,16 +1,33 @@
-- Nested, dependent pattern matching
-- Typeclasses a la Idris
-- Implicit arguments a la Idris (mostly)
-- Linear variable usage annotations over the integer semiring, syntax a bit like [Granule](https://granule-project.github.io/granule.html) perhaps
-- Case expressions
-- Algebraic datatypes
-- Elaboration, tactics a la Idris
-- Holes
-
-- Usage inference (where possible)
-- Resource inference (where possible)
-- Type inference (where possible)
-
 All features desugar to Core (with several passes, typeclass lookup, etc.)
 
+### Datatypes
 
+!include features/datatypes.pdc
+
+### Dependent pattern matching
+
+!include features/dependent-pattern-matching.pdc
+
+### Syntactical do-notation
+
+!include features/do-notation.pdc
+
+### Typeclasses
+
+!include features/typeclasses.pdc
+
+### Implicit arguments
+
+!include features/implicit-arguments.pdc
+
+### Type inference
+
+!include features/type-inference.pdc
+
+### Usage inference
+
+!include features/usage-inference.pdc
+
+### Holes
+
+!include features/holes.pdc

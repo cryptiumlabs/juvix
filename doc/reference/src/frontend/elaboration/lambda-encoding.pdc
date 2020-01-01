@@ -1,4 +1,4 @@
-### Mendler
+#### Mendler
 
 Mendler style F-algebras have the unique advantage of being strongly normalising for positive and negative inductive datatypes without sacrificing constant time destructors or a linear-space representation. This is achieved through the Mendler representation of the algebraic datatype being a catamorphism with an explicit recursive deconstructor. The strongly normalising property of the Mendler style algebra is only achieved in the absence of deconstructors that are not the internal catamorphism, which shall be referred to as external deconstructors (todo :: find source).
 
@@ -121,7 +121,7 @@ let dup  = in dup-c  : Nat
 
 As we can also see, this enhancement only affects the last inr/inl in which the representation takes multiple arguments.
 
-### Scott
+#### Scott
 
 Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ constructors. Due to this simple "case switch" layout, the encoding takes linear space.
 
@@ -150,6 +150,6 @@ let rec pred =
 ```
 Another important aspect to Scott encodings is that they can not be typed in `System-F` alone, but instead `System-F` extended with covariant recursive types[@scott]. Due to this, Scott encodings can be typed safely in Juvix Core.
 
-## Desugaring
+#### Desugaring
 
 For recursive functions that are not too restricted, transforming Mendler algebras into arbitrary recursive function takes some work. As such, the Scott encoding is currently the default encoding at the EAL* level. However, at a future date Mendler encodings will be added.
