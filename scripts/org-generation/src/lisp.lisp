@@ -42,6 +42,7 @@
                 (file-info-extended-path file-context))
    conflict-map))
 
+(sig module-comments (-> file-info-extended list))
 (defun module-comments (file-context)
   (let* ((comments (og/utility:take-until
                     (complement (lambda (x)
@@ -63,6 +64,7 @@
 
 
 
+(sig convert-path (-> pathname context pathname))
 (defun convert-path (file context)
   (declare (ignore context))
   file)
