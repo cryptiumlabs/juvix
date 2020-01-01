@@ -7,8 +7,8 @@ import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
-import qualified Michelson.Untyped as M
 import qualified Michelson.Typed as MT
+import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -24,7 +24,7 @@ shouldOptimise instr opt =
     (show instr <> " should optimise to " <> show opt)
     (opt T.@=? optimiseSingle instr)
 
-shouldCompileExpr :: Term -> Type -> SomeInstr -> T.TestTree
+shouldCompileExpr ∷ Term → Type → SomeInstr → T.TestTree
 shouldCompileExpr term ty out =
   T.testCase
     (show term <> " should compile to " <> show out)
@@ -48,7 +48,7 @@ optimiseDupDrop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]
 optimiseLambdaExec ∷ T.TestTree
 optimiseLambdaExec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
 
-identityExpr :: T.TestTree
+identityExpr ∷ T.TestTree
 identityExpr =
   shouldCompileExpr
     identityTerm

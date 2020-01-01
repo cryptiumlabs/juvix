@@ -1,3 +1,5 @@
+-- |
+-- - Types used internally by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Types where
 
 import Juvix.Backends.Michelson.Parameterisation
@@ -16,7 +18,8 @@ data CompilationError
 
 data CompilationLog
   = TermToInstr Term Op
-  | Optimised Op Op
+  | OptimisedByJuvix Op Op
+  | OptimisedByMorley SomeInstr SomeInstr
   deriving (Generic)
 
 type Stack = [(StackElem, M.Type)]

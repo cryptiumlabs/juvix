@@ -1,3 +1,5 @@
+-- |
+-- - Entrypoints into compilation from core terms to Michelson terms & contracts.
 module Juvix.Backends.Michelson.Compilation where
 
 import qualified Data.Map as Map
@@ -25,7 +27,7 @@ compileContract term ty =
   let (ret, env) = execWithStack [] (compileToMichelsonContract term ty)
    in (ret, compilationLog env)
 
-compileExpr :: Term -> Type -> (Either CompilationError SomeInstr, [CompilationLog])
+compileExpr ∷ Term → Type → (Either CompilationError SomeInstr, [CompilationLog])
 compileExpr term ty =
   let (ret, env) = execWithStack [] (compileToMichelsonExpr term ty)
    in (ret, compilationLog env)
@@ -57,22 +59,22 @@ compileToMichelsonContract term ty = do
     _ → throw @"compilationError" InvalidInputType
 
 -- TODO: This shouldn't require being a function.
-compileToMichelsonExpr ::
-  forall m.
+compileToMichelsonExpr ∷
+  ∀ m.
   ( HasState "stack" Stack m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
-  ) =>
-  Term ->
-  Type ->
+  ) ⇒
+  Term →
+  Type →
   m (SomeInstr)
 compileToMichelsonExpr term ty = do
-  michelsonTy <- typeToType ty
+  michelsonTy ← typeToType ty
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
-      michelsonOp' <- termToMichelson term argTy
+      michelsonOp' ← termToMichelson term argTy
       let michelsonOp = leftSeq michelsonOp'
-      MT.withSomeSingT (MT.fromUType argTy) $ \sty ->
+      MT.withSomeSingT (MT.fromUType argTy) $ \sty →
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
-          Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
-          Left err -> throw @"compilationError" (DidNotTypecheck err)
+          Right (_ M.:/ (s M.::: _)) → pure (SomeInstr s)
+          Left err → throw @"compilationError" (DidNotTypecheck err)

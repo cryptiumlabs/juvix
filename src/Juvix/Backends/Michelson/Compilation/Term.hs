@@ -1,5 +1,8 @@
+-- |
+-- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Term where
 
+import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
@@ -29,43 +32,6 @@ termToMichelson term paramTy = do
       tell @"compilationLog" [TermToInstr body instr]
       pure instr
     _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
-
-stackGuard ∷
-  ∀ m.
-  ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m
-  ) ⇒
-  Term →
-  M.Type →
-  m Op →
-  m Op
-stackGuard term paramTy func = do
-  start ← get @"stack"
-  instr ← func
-  end ← get @"stack"
-  case stackToStack start of
-    M.SomeHST startStack → do
-      -- TODO: Real originated contracts.
-      let originatedContracts = mempty
-      case M.runTypeCheck paramTy originatedContracts (M.typeCheckList [instr] startStack) of
-        Left err → throw @"compilationError" (DidNotTypecheck err)
-        Right (_ M.:/ (M.AnyOutInstr _)) → throw @"compilationError" (NotYetImplemented "any out instr")
-        Right (_ M.:/ (_ M.::: endType)) → do
-          if stackToStack end == M.SomeHST endType
-            then pure instr
-            else
-              throw @"compilationError"
-                ( InternalFault
-                    ( mconcat
-                        [ "stack mismatch while compiling ",
-                          show term,
-                          " - end stack: ",
-                          show end,
-                          ", lifted stack: ",
-                          show endType
-                        ]
-                    )
-                )
 
 {-
  - Transform core term to Michelson instruction sequence.

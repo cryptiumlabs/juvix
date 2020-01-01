@@ -33,11 +33,11 @@ data PrimTyEx term
 
 type Term2Ex = Term2 PrimTyEx ()
 
-test1 :: Term2Ex
+test1 ∷ Term2Ex
 test1 = Star2 0
 
-test2 :: Term2Ex
+test2 ∷ Term2Ex
 test2 = Prim2 (PrimTy0)
 
-test3 :: Term2Ex
+test3 ∷ Term2Ex
 test3 = Prim2 (PrimPairT (Star2 0) (Star2 1))
