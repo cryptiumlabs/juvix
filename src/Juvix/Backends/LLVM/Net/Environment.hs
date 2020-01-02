@@ -16,7 +16,8 @@ import qualified Juvix.Library.HashMap as Map
 initialModule ∷
   ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
-    HasState "varTab" Codegen.VariantToType m
+    HasState "varTab" Codegen.VariantToType m,
+    HasReader "debug" Int m
   ) ⇒
   m ()
 initialModule = do
@@ -45,6 +46,7 @@ initialModule = do
   Codegen.addType Types.eacListName Types.eacList
   -- ---------------------------------------------------------------
   Codegen.addBlock "bad" >>= Codegen.setBlock
+  Codegen.definePrintf
   Codegen.defineMalloc
   Codegen.defineFree
   Codegen.defineMainPort

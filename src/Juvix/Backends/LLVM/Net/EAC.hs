@@ -28,6 +28,7 @@ module Juvix.Backends.LLVM.Net.EAC where
 
 -- TODO ∷ abstract all all imports to LLVM
 
+import Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
 import qualified Juvix.Backends.LLVM.DSL as DSL
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as Defs
@@ -552,6 +553,18 @@ defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
   era ← mallocEra
   app ← mallocApp
   main ← Codegen.mainPort
+  debugLevelOne $ do
+    str ← Codegen.cStringPointer "eraTag %i \n"
+    ptrIn ← Codegen.getElementPtr $
+      Codegen.Minimal
+      {
+        Codegen.type' = Codegen.pointerOf Type.i8,
+        Codegen.address' = str,
+        Codegen.indincies' = Codegen.constant32List [0,0]
+      }
+    tag ← tagOf era >>= Codegen.load Types.tag
+    _ ← Codegen.printf [ptrIn, tag]
+    pure ()
   Codegen.link [era, main, app, main]
   _ ← Codegen.free app
   Codegen.ret era
