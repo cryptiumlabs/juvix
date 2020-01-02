@@ -37,9 +37,9 @@ backendMichelson =
     [ --identityFn,
       --identityApp,
       --identityApp2,
+      --identityExpr,
       optimiseDupDrop,
-      optimiseLambdaExec,
-      identityExpr
+      optimiseLambdaExec
     ]
 
 optimiseDupDrop ∷ T.TestTree

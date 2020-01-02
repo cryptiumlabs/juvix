@@ -110,15 +110,13 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 M.PrimEx (M.APPLY "")
               ]
           )
-
     -- Special-case full application of primitive functions.
-    J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 ->
+    J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 →
       stackCheck addsOne $ do
-        args <- mapM (flip termToInstr paramTy) [b, a]
+        args ← mapM (flip termToInstr paramTy) [b, a]
         -- TODO
-        func <- genReturn (M.PrimEx (M.PAIR "" "" "" ""))
+        func ← genReturn (M.PrimEx (M.PAIR "" "" "" ""))
         pure (M.SeqEx (args <> [func]))
-
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
