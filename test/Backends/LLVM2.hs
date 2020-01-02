@@ -2,20 +2,20 @@ module Backends.LLVM2 where
 
 import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT
-import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
 import Juvix.Library
 import LLVM.AST
-import qualified LLVM.AST.Type as Type
 -- -- import LLVM.AST.AddrSpace
 -- -- import qualified LLVM.AST.Attribute as A
 import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as G
 import qualified LLVM.AST.Instruction as I (function)
+import qualified LLVM.AST.Type as Type
 -- -- import qualified LLVM.AST.Linkage as L
 -- -- import LLVM.AST.Name
 import LLVM.AST.Type
@@ -141,16 +141,16 @@ testLink = Codegen.defineFunction Type.void "test_link" [] $ do
     portEra ← Codegen.getPort era main
     hpefullyAppNode ← Codegen.loadElementPtr $
       Codegen.Minimal
-      { Codegen.type' = Codegen.nodePointer,
-        Codegen.address' = portEra,
-        Codegen.indincies' = Codegen.constant32List [0,0]
-      }
+        { Codegen.type' = Codegen.nodePointer,
+          Codegen.address' = portEra,
+          Codegen.indincies' = Codegen.constant32List [0, 0]
+        }
     hopefullyMainPort ← Codegen.loadElementPtr $
       Codegen.Minimal
-      { Codegen.type' = Codegen.numPortsNameRef,
-        Codegen.address' = portEra,
-        Codegen.indincies' = Codegen.constant32List [0,1]
-      }
+        { Codegen.type' = Codegen.numPortsNameRef,
+          Codegen.address' = portEra,
+          Codegen.indincies' = Codegen.constant32List [0, 1]
+        }
     _ ← Codegen.printCString "appPointer %p \n" [app]
     _ ← Codegen.printCString "mainPortEra: port %i, node %p \n" [hopefullyMainPort, hpefullyAppNode]
     pure ()
@@ -170,10 +170,8 @@ newInitModule = do
   _ ← testLink
   pure ()
 
-
 test' ∷ MonadIO m ⇒ m ()
 test' = putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
 
 test'' ∷ MonadIO m ⇒ m ()
 test'' = putStr (ppllvm (EAC.moduleAST (runModule newInitModule))) >> putStr ("\n" ∷ Text)
-

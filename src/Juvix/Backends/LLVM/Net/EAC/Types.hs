@@ -67,6 +67,19 @@ testListPointer ∷ Type.Type
 testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 0)
 
 --------------------------------------------------------------------------------
+-- Node operations
+--------------------------------------------------------------------------------
+
+tagOf ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
+tagOf eac =
+  Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf tag,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
+
+--------------------------------------------------------------------------------
 -- EacList operations
 --------------------------------------------------------------------------------
 

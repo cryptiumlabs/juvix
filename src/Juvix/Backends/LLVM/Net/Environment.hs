@@ -85,7 +85,6 @@ runModule mod = EAC.execEACStateLevel1 mod Map.empty
 runModule' ∷ EAC.EAC () → Either Codegen.Errors ()
 runModule' mod = EAC.evalEACStateLevel1 mod Map.empty
 
-
 runInitModule ∷ EAC.EACState
 runInitModule = EAC.execEACStateLevel1 initialModule Map.empty
 

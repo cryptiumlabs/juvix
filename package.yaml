@@ -167,6 +167,7 @@ library:
     - Juvix.Backends.LLVM.Net.EAC
     - Juvix.Backends.LLVM.Net.EAC.Types
     - Juvix.Backends.LLVM.Net.EAC.Defs
+    - Juvix.Backends.LLVM.Net.EAC.Debug
     - Juvix.Backends.LLVM.Net.Environment
     - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
     - Juvix.Backends.LLVM.DSL
