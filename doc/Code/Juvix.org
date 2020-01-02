@@ -207,10 +207,18 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]
+  + [[Debug]]
   + [[Defs]]
   + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
+  + [[HashMap]]
+****** Debug
+Serves as a module for various debugging functions
+- _Relies on_
+  + [[Codegen]]
+  + [[Library]]
+  + [[HashMap]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
