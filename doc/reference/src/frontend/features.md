@@ -4,6 +4,10 @@ All features desugar to Core (with several passes, typeclass lookup, etc).
 
 !include features/datatypes.md
 
+### Record types
+
+!include features/record-types.md
+
 ### Dependent pattern matching
 
 !include features/dependent-pattern-matching.md
