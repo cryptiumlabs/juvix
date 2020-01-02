@@ -108,6 +108,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 ** Michelson
 - _Relies on_
   + [[Compilation]]
+  + [[Types]]
   + [[Optimisation]]
   + [[Parameterisation]]
   + [[ErasedAnn]]

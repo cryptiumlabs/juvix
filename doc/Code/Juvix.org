@@ -262,6 +262,7 @@ Provides a mechanism for defining Sum types
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
+- Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Term]]
   + [[Compilation/Type]]
@@ -270,8 +271,32 @@ Provides a mechanism for defining Sum types
   + [[Optimisation]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
-***** Term
+***** Checks
+- Sanity checks for Michelson compilation.
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[Michelson/Parameterisation]]
+  + [[Library]]
+***** Datatypes
+Datatypes & pattern matching.
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[Library]]
+***** Prim
+- Compilation of primitive terms to Michelson instruction sequences.
+- _Relies on_
+  + [[Compilation/Type]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Library]]
+***** Term
+- Compilation of core terms to Michelson instruction sequences.
+- _Relies on_
+  + [[Checks]]
+  + [[Prim]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
@@ -280,16 +305,19 @@ Provides a mechanism for defining Sum types
   + [[ErasedAnn]]
   + [[Library]]
 ***** Type <<Compilation/Type>>
+- Functions for representation of types in the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Michelson/Parameterisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
+- Types used internally by the Michelson backend.
 - _Relies on_
   + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
+Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Library]]
