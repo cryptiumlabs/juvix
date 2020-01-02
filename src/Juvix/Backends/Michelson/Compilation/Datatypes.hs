@@ -53,3 +53,17 @@ unpackDrop ∷
   [Maybe Symbol] →
   m ExpandedOp
 unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust binds))))
+
+genSwitch ∷
+  ∀ m.
+  ( HasState "stack" Stack m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  T →
+  m (ExpandedOp → ExpandedOp → ExpandedOp)
+genSwitch Tbool = pure (\x y → PrimEx (IF [y] [x])) -- TODO: Why flipped?
+genSwitch (TOr _ _ _ _) = pure (\x y → PrimEx (IF_LEFT [x] [y]))
+genSwitch (TOption _) = pure (\x y → PrimEx (IF_NONE [x] [y]))
+genSwitch (TList _) = pure (\x y → PrimEx (IF_CONS [x] [y]))
+genSwitch ty = throw @"compilationError" (NotYetImplemented ("genSwitch: " <> show ty))

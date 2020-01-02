@@ -8,6 +8,9 @@ import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
 import Michelson.Untyped
 
+failWith ∷ ∀ m. (HasThrow "compilationError" CompilationError m) ⇒ Text → m ExpandedOp
+failWith = throw @"compilationError" . InternalFault
+
 stackToStack ∷ Stack → SomeHST
 stackToStack [] = SomeHST SNil
 stackToStack ((_, ty) : xs) =
@@ -95,9 +98,6 @@ genFunc instr =
         NIL _ _ _ → pure ((:) (FuncResultE, Type (TList (Type TOperation "")) ""))
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
-
-oneArgPrim ∷ NonEmpty ExpandedOp → Type → ExpandedOp
-oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValueLambda ops))
 
 packClosure ∷
   ∀ m.

@@ -3,6 +3,7 @@
 module Juvix.Backends.Michelson.Compilation.Term where
 
 import Juvix.Backends.Michelson.Compilation.Checks
+import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
@@ -50,10 +51,7 @@ termToInstr ∷
   M.Type →
   m Op
 termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
-  let failWith ∷ Text → m Op
-      failWith = throw @"compilationError" . InternalFault
-
-      stackCheck ∷ (Stack → Stack → Bool) → m Op → m Op
+  let stackCheck ∷ (Stack → Stack → Bool) → m Op → m Op
       stackCheck guard func = do
         pre ← get @"stack"
         res ← func
@@ -61,79 +59,6 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         if guard post pre
           then pure res
           else failWith ("compilation violated stack invariant: " <> show term <> " prior stack " <> show pre <> " posterior stack " <> show post)
-
-      primToInstr ∷ PrimVal → m Op
-      primToInstr prim =
-        case prim of
-          -- :: \x -> y ~ s => (f, s)
-          PrimFst → stackCheck addsOne $ do
-            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
-                retTy = M.Type (M.TLambda pairTy xT) ""
-            modify @"stack" ((:) (FuncResultE, retTy))
-            pure (oneArgPrim (M.PrimEx (M.CAR "" "") :| []) retTy)
-          -- :: \x -> y ~ s => (f, s)
-          PrimSnd → stackCheck addsOne $ do
-            let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
-                retTy = M.Type (M.TLambda pairTy yT) ""
-            modify @"stack" ((:) (FuncResultE, retTy))
-            pure (oneArgPrim (M.PrimEx (M.CDR "" "") :| []) retTy)
-          -- :: \x y -> a ~ (x, (y, s)) => (a, s)
-          PrimPair → stackCheck addsOne $ do
-            let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
-            firstArgTy ← typeToType firstArgTy
-            secondArgTy ← typeToType secondArgTy
-            -- TODO: Clean this up.
-            let mkPair x y = M.Type (M.TPair "" "" x y) ""
-
-                mkUnit = M.Type (M.TUnit) ""
-
-                mkLam x y = M.Type (M.TLambda x y) ""
-
-                secondLamTy = mkLam (mkPair firstArgTy secondArgTy) (mkPair firstArgTy secondArgTy) -- ??
-
-                firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
-
-            modify @"stack" ((:) (FuncResultE, firstLamTy))
-            pure
-              ( M.PrimEx
-                  ( M.PUSH
-                      ""
-                      firstLamTy
-                      ( M.ValueLambda
-                          ( M.SeqEx
-                              [ M.PrimEx
-                                  ( M.DIP
-                                      [ M.PrimEx
-                                          ( M.PUSH
-                                              ""
-                                              secondLamTy
-                                              ( M.ValueLambda
-                                                  ( M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]
-                                                      :| []
-                                                  )
-                                              )
-                                          )
-                                      ]
-                                  ),
-                                M.PrimEx (M.APPLY "")
-                              ]
-                              :| []
-                          )
-                      )
-                  )
-              )
-          -- :: a ~ s => (a, s)
-          PrimConst const → stackCheck addsOne $ do
-            case const of
-              M.ValueNil → do
-                let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
-                modify @"stack" ((:) (FuncResultE, t))
-                pure (M.PrimEx (M.NIL "" "" elemTy))
-              _ → do
-                let J.PrimTy (PrimTy t) = ty
-                modify @"stack" ((:) (FuncResultE, t))
-                pure (M.PrimEx (M.PUSH "" t const))
-
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
     --       since we copy the variable each time. We should be able to use precise usage information
@@ -150,10 +75,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             let before = rearrange i
                 after = M.PrimEx (M.DIP [unrearrange i])
             genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
-    -- Primitive: varies.
-    -- :: (varies)
-    J.Prim prim →
-      primToInstr prim
+    -- Primitive: adds one item to the stack.
+    J.Prim prim → stackCheck addsOne (primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
     J.Lam arg body →
       stackCheck addsOne $ do
@@ -162,7 +85,6 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
             freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
-        --_ <- if length freeWithTypes > 0 then failWith ("free: " <> show freeWithTypes) else pure (M.PrimEx M.DROP)
         modify @"stack" ((<>) [(FuncResultE, M.Type M.TUnit ""), (FuncResultE, M.Type M.TUnit "")]) -- TODO: second is a lambda, but it doesn't matter, this just needs to be positionally accurate for var lookup
         vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
         packOp ← packClosure free
@@ -212,17 +134,3 @@ addsOne post pre = drop 1 post == pre
 
 changesTop ∷ Stack → Stack → Bool
 changesTop post pre = drop 1 post == pre
-
-genSwitch ∷
-  ∀ m.
-  ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
-  ) ⇒
-  M.T →
-  m (Op → Op → Op)
-genSwitch M.Tbool = pure (\x y → M.PrimEx (M.IF [y] [x])) -- TODO: Why flipped?
-genSwitch (M.TOr _ _ _ _) = pure (\x y → M.PrimEx (M.IF_LEFT [x] [y]))
-genSwitch (M.TOption _) = pure (\x y → M.PrimEx (M.IF_NONE [x] [y]))
-genSwitch (M.TList _) = pure (\x y → M.PrimEx (M.IF_CONS [x] [y]))
-genSwitch ty = throw @"compilationError" (NotYetImplemented ("genSwitch: " <> show ty))
