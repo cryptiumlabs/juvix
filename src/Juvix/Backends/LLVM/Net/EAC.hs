@@ -554,15 +554,8 @@ defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
   app ← mallocApp
   main ← Codegen.mainPort
   debugLevelOne $ do
-    str ← Codegen.cStringPointer "eraTag %i \n"
-    ptrIn ← Codegen.getElementPtr $
-      Codegen.Minimal
-        { Codegen.type' = Codegen.pointerOf Type.i8,
-          Codegen.address' = str,
-          Codegen.indincies' = Codegen.constant32List [0, 0]
-        }
     tag ← tagOf era >>= Codegen.load Types.tag
-    _ ← Codegen.printf [ptrIn, tag]
+    _ ← Codegen.printCString "eraTag %i \n" [tag]
     pure ()
   Codegen.link [era, main, app, main]
   _ ← Codegen.free app

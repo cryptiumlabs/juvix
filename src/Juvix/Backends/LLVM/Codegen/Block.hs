@@ -369,6 +369,17 @@ cStringPointer str = do
     vec = cString str
     len = fromIntegral (length str + 1)
 
+printCString :: Call m ⇒ [Char] → [Operand] → m Operand
+printCString str args = do
+    str ← cStringPointer str
+    ptrIn ← getElementPtr $
+      Types.Minimal
+        { Types.type' = Types.pointerOf Type.i8,
+          Types.address' = str,
+          Types.indincies' = constant32List [0, 0]
+        }
+    printf (ptrIn : args)
+
 --------------------------------------------------------------------------------
 -- Memory management
 --------------------------------------------------------------------------------
