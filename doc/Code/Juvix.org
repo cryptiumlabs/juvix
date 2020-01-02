@@ -208,6 +208,7 @@ Provides a mechanism for defining Sum types
   + [[Codegen]]
   + [[DSL]]
   + [[Defs]]
+  + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
 ****** Defs

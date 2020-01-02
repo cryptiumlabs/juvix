@@ -355,7 +355,6 @@ printf args = do
   printf ← externf "printf"
   instr Type.i32 $ callConvention CC.C printf (emptyArgs args)
 
-
 cString ∷ [Char] → C.Constant
 cString str = C.Array Type.i8 (C.Int 8 . fromIntegral . ord <$> terminatedStr)
   where
