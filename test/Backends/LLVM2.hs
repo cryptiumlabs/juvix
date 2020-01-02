@@ -1,12 +1,15 @@
 module Backends.LLVM2 where
 
-import Juvix.Backends.LLVM.Codegen
+import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT
 import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
 import Juvix.Library
 import LLVM.AST
+import qualified LLVM.AST.Type as Type
 -- -- import LLVM.AST.AddrSpace
 -- -- import qualified LLVM.AST.Attribute as A
 import qualified LLVM.AST.CallingConvention as CC
@@ -128,5 +131,49 @@ test_example_jit' = do
   res ← fn 7
   kill
 
+-- TODO ∷ figure out why this segfaults when added to the module!
+testLink = Codegen.defineFunction Type.void "test_link" [] $ do
+  era ← EAC.mallocEra
+  app ← EAC.mallocApp
+  main ← Codegen.mainPort
+  Codegen.link [era, main, app, main]
+  EAC.debugLevelOne $ do
+    portEra ← Codegen.getPort era main
+    hpefullyAppNode ← Codegen.loadElementPtr $
+      Codegen.Minimal
+      { Codegen.type' = Codegen.nodePointer,
+        Codegen.address' = portEra,
+        Codegen.indincies' = Codegen.constant32List [0,0]
+      }
+    hopefullyMainPort ← Codegen.loadElementPtr $
+      Codegen.Minimal
+      { Codegen.type' = Codegen.numPortsNameRef,
+        Codegen.address' = portEra,
+        Codegen.indincies' = Codegen.constant32List [0,1]
+      }
+    _ ← Codegen.printCString "appPointer %p \n" [app]
+    _ ← Codegen.printCString "mainPortEra: port %i, node %p \n" [hopefullyMainPort, hpefullyAppNode]
+    pure ()
+  _ ← Codegen.free app
+  _ ← Codegen.free era
+  Codegen.retNull
+
+newInitModule ∷
+  ( Codegen.Define m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasReader "debug" Int m
+  ) ⇒
+  m ()
+newInitModule = do
+  initialModule
+  _ ← testLink
+  pure ()
+
+
 test' ∷ MonadIO m ⇒ m ()
 test' = putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
+
+test'' ∷ MonadIO m ⇒ m ()
+test'' = putStr (ppllvm (EAC.moduleAST (runModule newInitModule))) >> putStr ("\n" ∷ Text)
+
