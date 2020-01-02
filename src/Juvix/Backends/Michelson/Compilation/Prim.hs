@@ -39,9 +39,13 @@ primToInstr prim ty =
       secondArgTy ← typeToType secondArgTy
       -- TODO: Clean this up.
       let mkPair x y = M.Type (M.TPair "" "" x y) ""
+
           mkLam x y = M.Type (M.TLambda x y) ""
+
           secondLamTy = mkLam (mkPair firstArgTy secondArgTy) (mkPair firstArgTy secondArgTy) -- ??
+
           firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
+
       modify @"stack" ((:) (FuncResultE, firstLamTy))
       pure
         ( M.PrimEx

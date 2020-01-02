@@ -85,7 +85,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
             freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
-        modify @"stack" ((<>) [(FuncResultE, M.Type M.TUnit ""), (FuncResultE, M.Type M.TUnit "")]) -- TODO: second is a lambda, but it doesn't matter, this just needs to be positionally accurate for var lookup
+        modify @"stack" ((<>) [(FuncResultE, M.Type M.TUnit ""), (FuncResultE, M.Type M.TUnit "")]) -- TODO: second is a lambda, but it doesn't matter, this just needs to be positionally accurate for var lookup.
         vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
         packOp ← packClosure free
         put @"stack" []
@@ -110,6 +110,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 M.PrimEx (M.APPLY "")
               ]
           )
+
+    -- Special-case full application of primitive functions.
+    J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 ->
+      stackCheck addsOne $ do
+        args <- mapM (flip termToInstr paramTy) [b, a]
+        -- TODO
+        func <- genReturn (M.PrimEx (M.PAIR "" "" "" ""))
+        pure (M.SeqEx (args <> [func]))
+
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →

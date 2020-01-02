@@ -46,6 +46,9 @@ constType v =
     M.ValueTrue → M.Tc M.CBool
     M.ValueFalse → M.Tc M.CBool
 
+arity :: PrimVal -> Int
+arity = flip ((-)) 1 . length . typeOf 
+
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
