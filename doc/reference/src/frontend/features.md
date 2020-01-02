@@ -31,3 +31,11 @@ All features desugar to Core (with several passes, typeclass lookup, etc).
 ### Holes
 
 !include features/holes.md
+
+### Modules
+
+!include features/modules.md
+
+### Automatic proof search
+
+!include features/automatic-proof-search.md
