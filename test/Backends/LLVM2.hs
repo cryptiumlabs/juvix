@@ -3,6 +3,8 @@ module Backends.LLVM2 where
 import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC as EAC
+import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
@@ -15,6 +17,7 @@ import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as G
 import qualified LLVM.AST.Instruction as I (function)
+import qualified LLVM.AST.Type as Type
 import qualified LLVM.AST.Type as Type
 -- -- import qualified LLVM.AST.Linkage as L
 -- -- import LLVM.AST.Name

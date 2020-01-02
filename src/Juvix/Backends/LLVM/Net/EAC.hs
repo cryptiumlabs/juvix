@@ -36,12 +36,13 @@ import Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
 import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
+import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
-import qualified LLVM.AST as AST
+
 --------------------------------------------------------------------------------
 -- Interaction Net runner
 --------------------------------------------------------------------------------
@@ -296,47 +297,50 @@ defineAnnihilateRewireAux =
 
 -- TODO ∷ fully generalize fanIn Logic and generate them dynamically
 
-defineFanInAux0 ∷ (Codegen.Define m, HasReader "debug" Int m, Codegen.MallocNode m)
-  ⇒ Symbol → m Operand.Operand → m Operand.Operand
+defineFanInAux0 ∷
+  (Codegen.Define m, HasReader "debug" Int m, Codegen.MallocNode m) ⇒
+  Symbol →
+  m Operand.Operand →
+  m Operand.Operand
 defineFanInAux0 name allocF = Codegen.defineFunction Types.eacLPointer name args $
   do
     node ← Codegen.externf "node_1"
     fanIn ← Codegen.externf "node_2"
     debugLevelOne $ do
-        -- TODO ∷ print fan label as well
-        _ ←
-          Codegen.printCString
-            "rule fan_in_aux_0: node_1 %p | fan_in %p \n"
-            [node, fanIn]
-        pure ()
+      -- TODO ∷ print fan label as well
+      _ ←
+        Codegen.printCString
+          "rule fan_in_aux_0: node_1 %p | fan_in %p \n"
+          [node, fanIn]
+      pure ()
     eacList ← Codegen.externf "eac_list"
     era1 ← allocF
     era2 ← allocF
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
     debugLevelOne $ do
-        -- TODO ∷ print fan label as well
-        _ ← Codegen.printCString "Connecting new Node 1 main port to \n" []
-        Debug.printNodePort fanIn aux1
-        _ ← Codegen.printCString "Connecting new Node 2 main port to \n" []
-        Debug.printNodePort fanIn aux2
-        pure ()
+      -- TODO ∷ print fan label as well
+      _ ← Codegen.printCString "Connecting new Node 1 main port to \n" []
+      Debug.printNodePort fanIn aux1
+      _ ← Codegen.printCString "Connecting new Node 2 main port to \n" []
+      Debug.printNodePort fanIn aux2
+      pure ()
     -- TODO :: determine if these create a new main port which we must append
     -- to the eac_list
     eacList ←
       Defs.linkAllCons
         eacList
         DSL.defRel
-        { DSL.node = DSL.Node {DSL.tagNode = era1, DSL.node' = era1},
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux1
-        }
+          { DSL.node = DSL.Node {DSL.tagNode = era1, DSL.node' = era1},
+            DSL.primary = DSL.LinkConnected fanIn DSL.Aux1
+          }
     eacList ←
       Defs.linkAllCons
         eacList
         DSL.defRel
-        { DSL.node = DSL.Node {DSL.tagNode = era2, DSL.node' = era2},
-          DSL.primary = DSL.LinkConnected fanIn DSL.Aux2
-        }
+          { DSL.node = DSL.Node {DSL.tagNode = era2, DSL.node' = era2},
+            DSL.primary = DSL.LinkConnected fanIn DSL.Aux2
+          }
     _ ← eraseNodes [node, fanIn, eacList]
     Codegen.ret eacList
 
