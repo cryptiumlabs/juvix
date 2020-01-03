@@ -1,5 +1,6 @@
 module Backends.LLVM2 where
 
+import qualified Juvix.Library.HashMap as Map
 import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
@@ -10,25 +11,20 @@ import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
 import Juvix.Library
-import LLVM.AST
--- -- import LLVM.AST.AddrSpace
--- -- import qualified LLVM.AST.Attribute as A
+import LLVM.AST as AST
 import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as G
 import qualified LLVM.AST.Instruction as I (function)
 import qualified LLVM.AST.Type as Type
-import qualified LLVM.AST.Type as Type
--- -- import qualified LLVM.AST.Linkage as L
--- -- import LLVM.AST.Name
+import qualified LLVM.AST.Name as Name
+import qualified LLVM.AST.Operand as Operand
+
 import LLVM.AST.Type
--- -- import qualified LLVM.AST.Visibility as V
--- -- import LLVM.Context
--- -- import LLVM.ExecutionEngine
--- -- import LLVM.Module
+
 import LLVM.Pretty
 
-exampleModule2 ∷ LLVM.AST.Module
+exampleModule2 ∷ AST.Module
 exampleModule2 =
   Module
     "runSomethingModule"
@@ -124,9 +120,9 @@ test_example_jit' = do
   let module' = EAC.moduleAST runInitModule
   let newModule =
         module'
-          { LLVM.AST.moduleDefinitions =
-              LLVM.AST.moduleDefinitions module'
-                <> LLVM.AST.moduleDefinitions exampleModule2
+          { AST.moduleDefinitions =
+              AST.moduleDefinitions module'
+                <> AST.moduleDefinitions exampleModule2
           }
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
   (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
@@ -135,6 +131,20 @@ test_example_jit' = do
   kill
 
 -- TODO ∷ figure out why this segfaults when added to the module!
+testLink ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.T Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symTab" Codegen.SymbolTable m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasReader "debug" Int m
+  ) ⇒
+  m Operand.Operand
 testLink = Codegen.defineFunction Type.void "test_link" [] $ do
   era ← EAC.mallocEra
   app ← EAC.mallocApp
@@ -161,6 +171,34 @@ testLink = Codegen.defineFunction Type.void "test_link" [] $ do
   _ ← Codegen.free era
   Codegen.retNull
 
+-- dumb define test
+defineTest ∷
+  ( HasThrow "err" Codegen.Errors m,
+    HasState "blockCount" Int m,
+    HasState "blocks" (Map.T Name.Name Codegen.BlockState) m,
+    HasState "count" Word m,
+    HasState "currentBlock" Name.Name m,
+    HasState "moduleDefinitions" [AST.Definition] m,
+    HasState "names" Codegen.Names m,
+    HasState "symTab" Codegen.SymbolTable m,
+    HasState "typTab" Codegen.TypeTable m,
+    HasState "varTab" Codegen.VariantToType m,
+    HasReader "debug" Int m
+  ) ⇒
+  m Operand.Operand
+defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
+  era ← EAC.mallocEra
+  app ← EAC.mallocApp
+  main ← Codegen.mainPort
+  EAC.debugLevelOne $ do
+    tag ← Types.tagOf era >>= Codegen.load Types.tag
+    _ ← Codegen.printCString "eraTag %i \n" [tag]
+    _ ← Codegen.printCString "eraPtr %p \n" [era]
+    pure ()
+  Codegen.link [era, main, app, main]
+  _ ← Codegen.free app
+  Codegen.ret era
+
 newInitModule ∷
   ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
@@ -171,6 +209,7 @@ newInitModule ∷
 newInitModule = do
   initialModule
   _ ← testLink
+  _ ← defineTest
   pure ()
 
 test' ∷ MonadIO m ⇒ m ()

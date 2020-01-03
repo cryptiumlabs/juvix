@@ -419,6 +419,12 @@ defineFanInAux2 name allocF = Codegen.defineFunction Types.eacLPointer name args
     node ← Codegen.externf "node_1"
     fanIn ← Codegen.externf "node_2"
     eacList ← Codegen.externf "eac_list"
+    debugLevelOne $ do
+      _ ←
+        Codegen.printCString
+          (unintern name <> ": node_1 %p | node_2 %p \n")
+          [node, fanIn]
+      pure ()
     eacList ←
       aux2Gen
         allocF
@@ -434,7 +440,8 @@ fanInFanIn args = Codegen.callGen Types.eacLPointer args "fan_in_rule"
 
 defineFanInFanIn ∷
   ( Codegen.MallocNode m,
-    Codegen.Define m
+    Codegen.Define m,
+    HasReader "debug" Int m
   ) ⇒
   m Operand.Operand
 defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
@@ -442,6 +449,11 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     eacList ← Codegen.externf "eac_list"
     fanIn1 ← Codegen.externf "node_1"
     fanIn2 ← Codegen.externf "node_2"
+    -- TODO ∷ Print the fanIn number
+    debugLevelOne $ do
+      _ ←
+        Codegen.printCString "fan_in_rule: node_1 %p | node_2 %p \n" [fanIn1, fanIn2]
+      pure ()
     data1 ← Codegen.loadDataArray fanIn1
     data2 ← Codegen.loadDataArray fanIn2
     label1 ← fanLabelLookup data1
@@ -455,6 +467,13 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     Codegen.setBlock sameFan
     aux1 ← Defs.auxiliary1
     aux2 ← Defs.auxiliary2
+    debugLevelOne $ do
+      _ ←
+        Codegen.printCString
+          "The FanIns have the same label, firing rewires"
+          []
+      pure ()
+    -- TODO ∷ add checked rewrire
     Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
     Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
     let sameList = eacList
@@ -462,6 +481,12 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
     -- %diff.fan
     ------------------------------------------------------
     Codegen.setBlock diffFan
+    debugLevelOne $ do
+      _ ←
+        Codegen.printCString
+          "The FanIns have a different label, firing rewires"
+          []
+      pure ()
     diffList ←
       aux2Gen
         mallocFanIn
@@ -518,11 +543,17 @@ fanInAux0Era args = Codegen.callGen Types.eacLPointer args "fan_in_aux_0_era"
 eraseNodes ∷ Codegen.Call m ⇒ [Operand.Operand] → m Operand.Operand
 eraseNodes args = Codegen.callGen Types.eacLPointer args "erase_nodes"
 
-defineEraseNodes ∷ Codegen.Define m ⇒ m Operand.Operand
+defineEraseNodes ∷ (Codegen.Define m, HasReader "debug" Int m) ⇒ m Operand.Operand
 defineEraseNodes = Codegen.defineFunction Types.eacLPointer "erase_nodes" args $
   do
     nodePtr1 ← Codegen.externf "node_1"
     nodePtr2 ← Codegen.externf "node_2"
+    debugLevelOne $ do
+      _ ←
+        Codegen.printCString
+          "rule erase_nodes: node_1 %p | node_2 %p \n"
+          [nodePtr1, nodePtr1]
+      pure ()
     _ ← Codegen.deAllocateNode nodePtr1
     _ ← Codegen.deAllocateNode nodePtr2
     Codegen.externf "eac_list" >>= Codegen.ret

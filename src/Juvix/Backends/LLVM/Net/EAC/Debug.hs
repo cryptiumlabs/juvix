@@ -36,7 +36,9 @@ printNodePort nodePtr port = do
         Codegen.address' = portEra,
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
-  -- TODO ∷ use intOfNumPorts instead!
-  p ← Codegen.load (Type.IntegerType Codegen.addressSpace) port
-  _ ← Codegen.printCString "node: %p at port: %i : < port: %p, node: %p > \n" [nodePtr, p, pointToNode, port]
+  -- TODO ∷ use intOfNumPorts!
+  _ ←
+    Codegen.printCString
+      "node: %p at port: %i : < port: %p, node: %p > \n"
+      [nodePtr, port, pointToNode, port]
   pure ()

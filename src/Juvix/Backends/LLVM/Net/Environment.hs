@@ -39,7 +39,6 @@ initialModule = do
           }
     )
   -- registering types----------------------------------------------
-  Codegen.addType "list" Types.testList
   Codegen.addType Codegen.numPortsName Codegen.numPorts
   Codegen.addType Codegen.portTypeName Defs.portType
   Codegen.addType Types.eacName Types.eac
