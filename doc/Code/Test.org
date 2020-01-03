@@ -109,6 +109,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Types]]
   + [[Environment]]
   + [[Library]]
+  + [[HashMap]]
 ** Michelson
 - _Relies on_
   + [[Compilation]]

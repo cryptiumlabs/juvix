@@ -208,7 +208,7 @@ genContinueCase tagNode mainEac cdr defCase prefix cases = do
         updateList ←
           rule
             [ mainEac,
-              nodeEacPtr,
+              Nodeeacptr,
               cdr
             ]
         _ ← Codegen.br extBranch
@@ -284,10 +284,14 @@ defineAnnihilateRewireAux =
         _ ← Codegen.printCString " firing off rewire 1\n" []
         Debug.printNodePort node1P aux1
         Debug.printNodePort node2P aux1
+      --
+      Codegen.rewire [node1P, aux1, node2P, aux1]
+      --
+      debugLevelOne $ do
         _ ← Codegen.printCString " firing off rewire 2\n" []
         Debug.printNodePort node1P aux2
         Debug.printNodePort node2P aux2
-      Codegen.rewire [node1P, aux1, node2P, aux1]
+      --
       Codegen.rewire [node1P, aux2, node2P, aux2]
       _ ← Codegen.deAllocateNode node1P
       _ ← Codegen.deAllocateNode node2P
@@ -474,7 +478,18 @@ defineFanInFanIn = Codegen.defineFunction Types.eacLPointer "fan_in_rule" args $
           []
       pure ()
     -- TODO ∷ add checked rewrire
+    debugLevelOne $ do
+      _ ← Codegen.printCString " firing off rewire 1\n" []
+      Debug.printNodePort fanIn1 aux1
+      Debug.printNodePort fanIn2 aux2
+    --
     Codegen.rewire [fanIn1, aux1, fanIn2, aux2]
+    --
+    debugLevelOne $ do
+      _ ← Codegen.printCString " firing off rewire 2\n" []
+      Debug.printNodePort fanIn1 aux2
+      Debug.printNodePort fanIn2 aux1
+    --
     Codegen.rewire [fanIn1, aux2, fanIn2, aux1]
     let sameList = eacList
     _ ← eraseNodes [fanIn1, fanIn2, eacList]
