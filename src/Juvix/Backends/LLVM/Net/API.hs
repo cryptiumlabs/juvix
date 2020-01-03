@@ -33,7 +33,7 @@ nodeType ∷ Type.Type
 nodeType = Type.NamedTypeReference "node"
 
 eacListPointer ∷ Type.Type
-eacListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 32)
+eacListPointer = Types.eacLPointer
 
 nodePointer ∷ Type.Type
 nodePointer = Type.PointerType nodeType (Addr.AddrSpace 0)
@@ -49,7 +49,7 @@ node = Type.StructureType
   }
 
 opaqueNetType ∷ Type.Type
-opaqueNetType = Type.PointerType eacListPointer (Addr.AddrSpace 32)
+opaqueNetType = Type.PointerType eacListPointer (Addr.AddrSpace 0)
 
 -- This API model passes pointers back & forth.
 -- createNet :: IO (Ptr Net)
@@ -62,7 +62,7 @@ defineCreateNet =
   Codegen.defineFunction opaqueNetType "createNet" [] $ do
     -- Note: this is not a pointer to an EAC list, but rather a pointer to a pointer to an EAC list.
     -- This is intentional since we need to malloc when `appendToNet` is called.
-    eac ← Codegen.malloc 32 eacListPointer
+    eac ← Codegen.malloc Codegen.addressSpace eacListPointer
     -- Just return the pointer.
     Codegen.ret eac
 
@@ -74,12 +74,12 @@ defineReadNet =
     -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
     -- Maybe return duplicate nodes & de-duplicate in haskell.
-    ret ← Codegen.malloc 32 nodePointer
+    ret ← Codegen.malloc Codegen.addressSpace nodePointer
     Codegen.ret ret
 
 defineAppendToNet ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet =
-  Codegen.defineFunction Type.void "appendToNet" [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")] $ do
+  Codegen.defineFunction Type.void "appendToNet" args $ do
     netPtr ← Codegen.externf "net"
     topNode ← EAC.mallocTop
     appNode ← EAC.mallocApp
@@ -96,6 +96,8 @@ defineAppendToNet =
     eac_list ← Types.cons appNode (Operand.ConstantOperand (C.Null Types.eacLPointer))
     Codegen.store netPtr eac_list
     Codegen.retNull
+    where
+      args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
 
 {-
 nodes ← Codegen.externf "nodes"
