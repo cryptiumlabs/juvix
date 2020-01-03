@@ -7,7 +7,6 @@ import Juvix.Library hiding (reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
-import qualified LLVM.AST.Type as Type
 
 printNodePort ∷
   ( HasThrow "err" Codegen.Errors m,

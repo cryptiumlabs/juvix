@@ -208,7 +208,7 @@ genContinueCase tagNode mainEac cdr defCase prefix cases = do
         updateList ←
           rule
             [ mainEac,
-              Nodeeacptr,
+              nodeEacPtr,
               cdr
             ]
         _ ← Codegen.br extBranch
