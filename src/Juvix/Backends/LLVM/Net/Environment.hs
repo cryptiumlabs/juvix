@@ -70,11 +70,11 @@ initialModule = do
   _ ← EAC.defineReduce
   _ ← EAC.testLink
   -- begin API definitions
-  -- Codegen.addType "node" API.node
-  -- _ ← API.defineCreateNet
-  -- _ ← API.defineReadNet
-  -- _ ← API.defineAppendToNet
-  -- _ ← API.defineReduceUntilComplete
+  Codegen.addType "node" API.node
+  _ ← API.defineCreateNet
+  _ ← API.defineReadNet
+  _ ← API.defineAppendToNet
+  _ ← API.defineReduceUntilComplete
   -- end API definitions
   pure ()
 

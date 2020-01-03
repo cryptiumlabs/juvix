@@ -59,16 +59,16 @@ opaqueNetType = Type.PointerType eacListPointer (Addr.AddrSpace 0)
 
 defineCreateNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineCreateNet =
-  Codegen.defineFunction opaqueNetType "createNet" [] $ do
+  Codegen.defineFunction opaqueNetType "create_net" [] $ do
     -- Note: this is not a pointer to an EAC list, but rather a pointer to a pointer to an EAC list.
     -- This is intentional since we need to malloc when `appendToNet` is called.
-    eac ← Codegen.malloc Codegen.addressSpace eacListPointer
+    eac ← Codegen.malloc Codegen.addressSpace opaqueNetType
     -- Just return the pointer.
     Codegen.ret eac
 
 defineReadNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReadNet =
-  Codegen.defineFunction nodePointer "readNet" [(opaqueNetType, "net")] $ do
+  Codegen.defineFunction nodePointer "read_net" [(opaqueNetType, "net")] $ do
     netPtr ← Codegen.externf "net"
     net ← Codegen.load eacListPointer netPtr
     -- TODO: Walk the current net, return a list of nodes
@@ -149,7 +149,7 @@ Codegen.retNull
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReduceUntilComplete =
-  Codegen.defineFunction Type.void "reduceUntilComplete" [(opaqueNetType, "net")] $ do
+  Codegen.defineFunction Type.void "reduce_until_complete" [(opaqueNetType, "net")] $ do
     -- Load the current EAC list pointer.
     netPtr ← Codegen.externf "net"
     net ← Codegen.load eacListPointer netPtr
