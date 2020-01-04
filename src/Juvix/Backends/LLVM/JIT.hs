@@ -29,28 +29,28 @@ jitToNetAPI config mod = do
   Just createNetFn ←
     importAs
       imp
-      "createNet"
+      "create_net"
       (Proxy ∷ Proxy (IO OpaqueNetPtr))
       (Proxy ∷ Proxy ())
       (Proxy ∷ Proxy OpaqueNetPtr)
   Just appendToNetFn ←
     importAs
       imp
-      "appendToNet"
+      "append_to_net"
       (Proxy ∷ Proxy (OpaqueNetPtr → Ptr Node → Int → IO ()))
       (Proxy ∷ Proxy (OpaqueNetPtr, Ptr Node, Int))
       (Proxy ∷ Proxy ())
   Just readNetFn ←
     importAs
       imp
-      "readNet"
+      "read_net"
       (Proxy ∷ Proxy (OpaqueNetPtr → IO (Ptr Nodes)))
       (Proxy ∷ Proxy OpaqueNetPtr)
       (Proxy ∷ Proxy (Ptr Nodes))
   Just reduceUntilCompleteFn ←
     importAs
       imp
-      "reduceUntilComplete"
+      "reduce_until_complete"
       (Proxy ∷ Proxy (OpaqueNetPtr → IO ()))
       (Proxy ∷ Proxy OpaqueNetPtr)
       (Proxy ∷ Proxy ())

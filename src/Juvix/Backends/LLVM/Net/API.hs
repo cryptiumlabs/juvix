@@ -79,7 +79,7 @@ defineReadNet =
 
 defineAppendToNet ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet =
-  Codegen.defineFunction Type.void "appendToNet" args $ do
+  Codegen.defineFunction Type.void "append_to_net" args $ do
     netPtr ← Codegen.externf "net"
     topNode ← EAC.mallocTop
     appNode ← EAC.mallocApp
