@@ -1,1 +1,1 @@
-typeclasses a la Idris, at least initially
+Typeclasses will come in a future frontend language release.

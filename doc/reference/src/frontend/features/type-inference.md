@@ -1,1 +1,1 @@
-type inference using unification
+Type inference, where possible, is facilitated by unification.

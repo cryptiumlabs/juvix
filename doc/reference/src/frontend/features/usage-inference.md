@@ -1,1 +1,1 @@
-usage inference using unification
+Usage inference, where possible, is facilitated by unification.
