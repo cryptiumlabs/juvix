@@ -75,6 +75,7 @@ initialModule = do
   _ ← API.defineReadNet
   _ ← API.defineAppendToNet
   _ ← API.defineReduceUntilComplete
+  _ <- API.defineTest
   -- end API definitions
   pure ()
 
