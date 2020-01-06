@@ -39,7 +39,8 @@ initialModule = do
           }
     )
   -- registering types----------------------------------------------
-  if Codegen.bitSizeEncodingPoint then pure () else Codegen.addType Codegen.numPortsName Codegen.numPorts
+ when Codegen.bitSizeEncodingPoint $
+   Codegen.addType Codegen.numPortsName Codegen.numPorts
   Codegen.addType Codegen.portTypeName Defs.portType
   Codegen.addType Types.eacName Types.eac
   Codegen.addType Types.eacListName Types.eacList

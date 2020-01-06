@@ -65,7 +65,7 @@ defineTest =
     append_to_net ← Codegen.externf "append_to_net"
     reduce_until_complete ← Codegen.externf "reduce_until_complete"
     ptr ← Codegen.call opaqueNetType create_net (Codegen.emptyArgs [])
-    Codegen.callVoid append_to_net (Codegen.emptyArgs [ptr, Operand.ConstantOperand (C.Null nodePointer), Operand.ConstantOperand (C.Int 64 0)])
+    Codegen.callVoid append_to_net (Codegen.emptyArgs [ptr, Operand.ConstantOperand (C.Null nodePointer), Operand.ConstantOperand (C.Int Codegen.addressSpace 0)])
     Codegen.callVoid reduce_until_complete (Codegen.emptyArgs [ptr])
     Codegen.retNull
 

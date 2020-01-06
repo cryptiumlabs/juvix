@@ -320,7 +320,9 @@ numPortsPointer ∷ Type
 numPortsPointer = pointerOf numPortsNameRef
 
 numPortsNameRef ∷ Type
-numPortsNameRef = if bitSizeEncodingPoint then Type.IntegerType addressSpace else Type.NamedTypeReference numPortsName
+numPortsNameRef
+  | bitSizeEncodingPoint = Type.IntegerType addressSpace
+  | otherwise = Type.NamedTypeReference numPortsName
 
 numPortsName ∷ IsString p ⇒ p
 numPortsName = "graph_num_ports"
