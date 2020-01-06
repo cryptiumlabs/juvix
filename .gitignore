@@ -23,3 +23,7 @@ tmp/
 
 # Agda temporary
 *.agdai
+
+# LLVM temporary
+*.ll
+*.s
