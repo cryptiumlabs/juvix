@@ -76,8 +76,6 @@ orcJitWith config mod func = do
     resolvers ← newIORef Map.empty
     withModuleFromAST context mod $ \m → do
       putText "got module"
-      asm ← moduleLLVMAssembly m
-      B.writeFile "test.ll" asm
       withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm → do
         putText "got target machine"
         withExecutionSession $ \es → do
