@@ -128,11 +128,13 @@ defineAppendToNet' =
     Codegen.setBlock forLoop
     ind ← Codegen.load int32 counter
     -- Load node at index `ind`.
-    node ← Codegen.loadElementPtr (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind]})
+    node ← Codegen.loadElementPtr
+      (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind]})
     -- Create the in-memory node.
     kind ← EAC.mallocApp -- TODO: Switch on node kind.
       -- Write the address to the list.
-    addr ← Codegen.getElementPtr (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind, Operand.ConstantOperand (C.Int 32 0)]})
+    addr ← Codegen.getElementPtr
+      (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind, Operand.ConstantOperand (C.Int 32 0)]})
     Codegen.store addr kind
     next ← Codegen.add int32 ind (Operand.ConstantOperand (C.Int 32 1))
     Codegen.store counter next
@@ -147,8 +149,10 @@ defineAppendToNet' =
     Codegen.setBlock forLoop2
     ind ← Codegen.load int32 counter
     -- Load node at index `ind`.
-    node ← Codegen.loadElementPtr (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind]})
-    ptr ← Codegen.loadElementPtr (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind, Operand.ConstantOperand (C.Int 32 0)]})
+    node ← Codegen.loadElementPtr
+      (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind]})
+    ptr ← Codegen.loadElementPtr
+      (Codegen.Minimal {Codegen.address' = nodes, Codegen.type' = nodePointer, Codegen.indincies' = [ind, Operand.ConstantOperand (C.Int 32 0)]})
     -- TODO: Link things, lookup node pointers.
     -- Alter parameter?
     next ← Codegen.add int32 ind (Operand.ConstantOperand (C.Int 32 1))
