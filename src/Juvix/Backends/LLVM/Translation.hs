@@ -23,8 +23,8 @@ jitInitialModule :: IO (NetAPI, IO ())
 jitInitialModule = do
    -- Generate the LLVM module.
   let mod = Environment.moduleAST runInitModule
-  -- Pretty-print the module.
-  T.writeFile "test.ll" (ppllvm mod)
+  -- Pretty-print the module to a file for reference.
+  T.writeFile "initial_module.ll" (ppllvm mod)
   -- JIT the module.
   putText "Just-in-time compiling initial module..."
   jitToNetAPI (Config None) mod
