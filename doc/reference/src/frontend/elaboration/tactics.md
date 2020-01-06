@@ -1,1 +1,1 @@
-tactics a la Idris
+Tactics as inspired by Idris.

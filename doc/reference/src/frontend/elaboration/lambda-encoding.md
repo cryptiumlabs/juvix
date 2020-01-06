@@ -73,7 +73,6 @@ We can see that this definition of `pred_alg` is O(1), as the call to `rec` is o
 
 Instead we have to define a function `out` which turns a `FixM f` into a `f (FixM f)` with the additional constraint that `f` must be a functor. This is a hard constraint that type systems without dependent intersection types and O(1) heterogeneous equality must have [@cedille]. The force of using `out` in `pred_alg` makes getting the predecessor of a ℕ O(n).
 
-
 Another property of this algebra is that this encoding is able to achieve linear space unlike previous encodings that took quadratic if not exponential space to achieve proof of termination and O(1) predecessor [@cedille].
 
 Now that we have some understanding of the inductive nature of the Mendler encoding, we must also strip the ADT tags of `Z` and `S` into base lambda. We will first only consider sum types which contains at most one field, and then investigate how we can modify our representation to include product types with more fields.
@@ -126,7 +125,6 @@ As we can also see, this enhancement only affects the last inr/inl in which the 
 Scott encoding, unlike the Mendler F-Algebra, does not contain an internal catamorphism. Instead Scott encodings are laid out as a simple "case switch". We can see the general layout here for some branch $Cᵢ$ which contains $n$ pieces of data that resides in a sum type with $m$ constructors. Due to this simple "case switch" layout, the encoding takes linear space.
 
 $((λx₁…xₙ.\, λC₁…Cᵢ…Cₘ.\, Cᵢ \, x₁…xₙ))$
-
 
 Since the constructor simply chooses which lambda to apply to the next term, we get O(1) predecessor (or case analysis generally). However since the form is not a catamorphism there is no proof of termination in an unrestricted setting.
 
