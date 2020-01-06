@@ -4,6 +4,7 @@
 module Juvix.Backends.LLVM.Translation where
 
 import qualified Data.HashMap.Strict as Map
+import qualified Data.Text.Lazy.IO as T
 import Juvix.Backends.LLVM.JIT hiding (Node)
 import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as Environment
 import Juvix.Backends.LLVM.Net.Environment
@@ -16,12 +17,11 @@ import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding (empty, link, reduce)
 import LLVM.Pretty
-import qualified Data.Text.Lazy.IO as T
 import Prelude ((!!))
 
-jitInitialModule :: IO (NetAPI, IO ())
+jitInitialModule ∷ IO (NetAPI, IO ())
 jitInitialModule = do
-   -- Generate the LLVM module.
+  -- Generate the LLVM module.
   let mod = Environment.moduleAST runInitModule
   -- Pretty-print the module to a file for reference.
   T.writeFile "initial_module.ll" (ppllvm mod)
@@ -37,10 +37,12 @@ evalErasedCoreInLLVM ∷
   m (Erased.Term primVal)
 evalErasedCoreInLLVM parameterisation term = do
   (NetAPI createNet appendToNet readNet reduceUntilComplete, kill) ← liftIO jitInitialModule
- -- Convert the term to a graph.
+  -- Convert the term to a graph.
   let netAST = erasedCoreToInteractionNetAST term
+
       graph ∷ Graph.FlipNet (Lang primVal)
       graph = astToNet parameterisation netAST Map.empty
+
   -- Walk the graph; fetch all nodes.
   let ns = flip evalEnvState (Env 0 graph Map.empty) $ do
         nodes ← nodes
@@ -86,15 +88,15 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Return the resulting term.
   pure res
 
-nodeFromIR :: forall net primVal m dataTy . (Network net, HasState "net" (net (Lang primVal)) m) => INIR.Node dataTy -> m Node
+nodeFromIR ∷ ∀ net primVal m dataTy. (Network net, HasState "net" (net (Lang primVal)) m) ⇒ INIR.Node dataTy → m Node
 nodeFromIR = \node →
-          newNode $ case INIR.nodeKind node of
-            0 → Primar Erase
-            1 → Auxiliary2 Lambda
-            2 → Auxiliary2 App
-            n → Auxiliary2 (FanIn (fromIntegral n))
+  newNode $ case INIR.nodeKind node of
+    0 → Primar Erase
+    1 → Auxiliary2 Lambda
+    2 → Auxiliary2 App
+    n → Auxiliary2 (FanIn (fromIntegral n))
 
-nodeToIR :: forall k a primVal c (dataTy :: k) . (INIR.Address, (a, Lang primVal, c)) -> INIR.Node dataTy
+nodeToIR ∷ ∀ k a primVal c (dataTy ∷ k). (INIR.Address, (a, Lang primVal, c)) → INIR.Node dataTy
 nodeToIR (ind, (_, l, edges)) =
   INIR.Node
     { INIR.nodeAddress = ind,

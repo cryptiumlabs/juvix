@@ -58,13 +58,13 @@ opaqueNetType = Type.PointerType eacListPointer (Addr.AddrSpace 0)
 -- reduceUntilComplete :: Ptr Net -> IO ()
 -- test :: IO ()
 
-defineTest :: Codegen.Define m => m Operand.Operand
+defineTest ∷ Codegen.Define m ⇒ m Operand.Operand
 defineTest =
   Codegen.defineFunction Type.void "test" [] $ do
-    create_net <- Codegen.externf "create_net"
-    append_to_net <- Codegen.externf "append_to_net"
+    create_net ← Codegen.externf "create_net"
+    append_to_net ← Codegen.externf "append_to_net"
     reduce_until_complete ← Codegen.externf "reduce_until_complete"
-    ptr <- Codegen.call opaqueNetType create_net (Codegen.emptyArgs [])
+    ptr ← Codegen.call opaqueNetType create_net (Codegen.emptyArgs [])
     Codegen.callVoid append_to_net (Codegen.emptyArgs [ptr, Operand.ConstantOperand (C.Null nodePointer), Operand.ConstantOperand (C.Int 64 0)])
     Codegen.callVoid reduce_until_complete (Codegen.emptyArgs [ptr])
     Codegen.retNull
@@ -108,8 +108,8 @@ defineAppendToNet =
     eac_list ← Types.cons appNode (Operand.ConstantOperand (C.Null Types.eacLPointer))
     Codegen.store netPtr eac_list
     Codegen.retNull
-    where
-      args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
+  where
+    args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
 
 defineAppendToNet' ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet' =
@@ -159,8 +159,8 @@ defineAppendToNet' =
     Codegen.setBlock forExit2
     -- TODO: Set eac list pointer?
     Codegen.retNull
-    where
-      args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
+  where
+    args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
 
 defineReduceUntilComplete ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReduceUntilComplete =

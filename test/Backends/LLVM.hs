@@ -68,10 +68,10 @@ test_eval_jit = T.testCase "x should evaluate to x" $ do
   res ← evalErasedCoreInLLVM unit term
   term T.@=? res
 
-test_create_net_kill :: T.TestTree
+test_create_net_kill ∷ T.TestTree
 test_create_net_kill = T.testCase "create net & kill should work" $ do
-  (api, kill) <- jitInitialModule
-  _ <- createNet api
+  (api, kill) ← jitInitialModule
+  _ ← createNet api
   kill
 
 test_malloc_free_jit ∷ T.TestTree
