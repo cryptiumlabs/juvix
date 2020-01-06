@@ -16,6 +16,7 @@ import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library hiding (empty, link, reduce)
 import LLVM.Pretty
+import qualified Data.Text.Lazy.IO as T
 import Prelude ((!!))
 
 jitInitialModule :: IO (NetAPI, IO ())
@@ -23,7 +24,7 @@ jitInitialModule = do
    -- Generate the LLVM module.
   let mod = Environment.moduleAST runInitModule
   -- Pretty-print the module.
-  putStr (ppllvm mod) >> putStr ("\n" ∷ Text)
+  T.writeFile "test.ll" (ppllvm mod)
   -- JIT the module.
   putText "Just-in-time compiling initial module..."
   jitToNetAPI (Config None) mod

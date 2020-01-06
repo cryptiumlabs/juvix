@@ -34,6 +34,7 @@ backendLLVM =
     "Backend LLVM"
     [ test_example_jit,
       test_malloc_free_jit,
+      test_create_net_kill,
       --test_eval_jit,
       --test_init_module_jit,
       test_init_module
@@ -66,6 +67,12 @@ test_eval_jit = T.testCase "x should evaluate to x" $ do
       term = E.Lam "x" (E.Var "x")
   res ← evalErasedCoreInLLVM unit term
   term T.@=? res
+
+test_create_net_kill :: T.TestTree
+test_create_net_kill = T.testCase "create net & kill should work" $ do
+  (api, kill) <- jitInitialModule
+  _ <- createNet api
+  kill
 
 test_malloc_free_jit ∷ T.TestTree
 test_malloc_free_jit = T.testCase "malloc free module should jit" $ do

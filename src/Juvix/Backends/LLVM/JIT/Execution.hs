@@ -77,7 +77,7 @@ orcJitWith config mod func = do
     withModuleFromAST context mod $ \m → do
       putText "got module"
       asm ← moduleLLVMAssembly m
-      B.putStrLn asm
+      B.writeFile "test.ll" asm
       withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm → do
         putText "got target machine"
         withExecutionSession $ \es → do
@@ -129,7 +129,6 @@ mcJitWith config mod func = do
           _ ← runPassManager pm m
           -- convert to llvm assembly
           s ← moduleLLVMAssembly m
-          B.putStrLn s
           B.putStrLn "getting execution engine"
           EE.withModuleInEngine executionEngine m $ \ee → do
             B.putStrLn "got execution engine"
