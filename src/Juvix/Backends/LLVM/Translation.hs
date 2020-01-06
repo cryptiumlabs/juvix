@@ -4,7 +4,7 @@
 module Juvix.Backends.LLVM.Translation where
 
 import qualified Data.HashMap.Strict as Map
-import Juvix.Backends.LLVM.JIT
+import Juvix.Backends.LLVM.JIT hiding (Node)
 import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as Environment
 import Juvix.Backends.LLVM.Net.Environment
 import qualified Juvix.Core.Erased.Types as Erased
@@ -18,6 +18,16 @@ import Juvix.Library hiding (empty, link, reduce)
 import LLVM.Pretty
 import Prelude ((!!))
 
+jitInitialModule :: IO (NetAPI, IO ())
+jitInitialModule = do
+   -- Generate the LLVM module.
+  let mod = Environment.moduleAST runInitModule
+  -- Pretty-print the module.
+  putStr (ppllvm mod) >> putStr ("\n" ∷ Text)
+  -- JIT the module.
+  putText "Just-in-time compiling initial module..."
+  jitToNetAPI (Config None) mod
+
 evalErasedCoreInLLVM ∷
   ∀ primTy primVal m.
   (MonadIO m) ⇒
@@ -25,19 +35,11 @@ evalErasedCoreInLLVM ∷
   Erased.Term primVal →
   m (Erased.Term primVal)
 evalErasedCoreInLLVM parameterisation term = do
-  -- Generate the LLVM module.
-  let mod = Environment.moduleAST runInitModule
-  -- Pretty-print the module.
-  putStr (ppllvm mod) >> putStr ("\n" ∷ Text)
-  -- JIT the module.
-  liftIO (putText "Just-in-time compiling initial module...")
-  (NetAPI createNet appendToNet readNet reduceUntilComplete, kill) ← liftIO (jitToNetAPI (Config None) mod)
-  -- Convert the term to a graph.
+  (NetAPI createNet appendToNet readNet reduceUntilComplete, kill) ← liftIO jitInitialModule
+ -- Convert the term to a graph.
   let netAST = erasedCoreToInteractionNetAST term
-
       graph ∷ Graph.FlipNet (Lang primVal)
       graph = astToNet parameterisation netAST Map.empty
-
   -- Walk the graph; fetch all nodes.
   let ns = flip evalEnvState (Env 0 graph Map.empty) $ do
         nodes ← nodes
@@ -51,16 +53,7 @@ evalErasedCoreInLLVM parameterisation term = do
   liftIO (putText "Creating net...")
   net ← liftIO createNet
   -- Append the nodes.
-  let nodes = flip map (zip [0 ..] ns) $ \(ind, (_, l, edges)) →
-        INIR.Node
-          { INIR.nodeAddress = ind,
-            INIR.nodeKind = case l of
-              Primar Erase → 0
-              Auxiliary2 Lambda → 1
-              Auxiliary2 App → 2
-              Auxiliary2 (FanIn i) → i
-            --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
-          }
+  let nodes = flip map (zip [0 ..] ns) nodeToIR
   liftIO (putText ("Appending nodes..."))
   liftIO (putText ("Nodes: " <> show nodes))
   liftIO (appendToNet net nodes)
@@ -74,12 +67,7 @@ evalErasedCoreInLLVM parameterisation term = do
   -- Translate into a native graph.
   let retGraph ∷ Graph.FlipNet (Lang primVal)
       retGraph = flip evalEnvState (Env 0 empty Map.empty) $ do
-        ns ← flip mapM nodes $ \node →
-          newNode $ case INIR.nodeKind node of
-            0 → Primar Erase
-            1 → Auxiliary2 Lambda
-            2 → Auxiliary2 App
-            n → Auxiliary2 (FanIn (fromIntegral n))
+        ns ← mapM nodeFromIR nodes
         flip mapM_ nodes $ \node → do
           let addr = ns !! INIR.nodeAddress node
           -- TODO: Ports
@@ -96,6 +84,26 @@ evalErasedCoreInLLVM parameterisation term = do
   liftIO kill
   -- Return the resulting term.
   pure res
+
+nodeFromIR :: forall net primVal m dataTy . (Network net, HasState "net" (net (Lang primVal)) m) => INIR.Node dataTy -> m Node
+nodeFromIR = \node →
+          newNode $ case INIR.nodeKind node of
+            0 → Primar Erase
+            1 → Auxiliary2 Lambda
+            2 → Auxiliary2 App
+            n → Auxiliary2 (FanIn (fromIntegral n))
+
+nodeToIR :: forall k a primVal c (dataTy :: k) . (INIR.Address, (a, Lang primVal, c)) -> INIR.Node dataTy
+nodeToIR (ind, (_, l, edges)) =
+  INIR.Node
+    { INIR.nodeAddress = ind,
+      INIR.nodeKind = case l of
+        Primar Erase → 0
+        Auxiliary2 Lambda → 1
+        Auxiliary2 App → 2
+        Auxiliary2 (FanIn i) → i
+      --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
+    }
 
 portTypeToIndex ∷ PortType → INIR.Slot
 portTypeToIndex Prim = 0
