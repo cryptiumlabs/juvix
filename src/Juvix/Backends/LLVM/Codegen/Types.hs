@@ -40,7 +40,9 @@ data CodegenState
         count ∷ Word,
         -- | Name Supply
         names ∷ Names,
-        moduleAST ∷ AST.Module
+        moduleAST ∷ AST.Module,
+        -- | Debug level
+        debug ∷ Int
       }
   deriving (Show, Generic)
 
@@ -100,6 +102,9 @@ newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) 
   deriving
     (HasState "moduleAST" AST.Module)
     via Field "moduleAST" () (MonadState (ExceptT Errors (State CodegenState)))
+  deriving
+    (HasReader "debug" Int)
+    via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State CodegenState))))
 
 instance HasState "moduleDefinitions" [Definition] Codegen where
 
