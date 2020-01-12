@@ -78,6 +78,8 @@ initialModule = do
   _ ← API.defineReduceUntilComplete
   _ ← API.defineTest
   -- end API definitions
+  _ ← Defs.definePrintListInner
+  _ ← Defs.definePrintList
   pure ()
 
 runModule ∷ EAC.EAC () → EAC.EACState

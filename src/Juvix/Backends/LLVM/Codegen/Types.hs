@@ -262,6 +262,9 @@ addressSpace =
 bitSizeEncodingPoint ∷ Bool
 bitSizeEncodingPoint = addressSpace >= (17 ∷ Int)
 
+debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
+debugLevelOne = whenM ((1 <=) <$> ask @"debug")
+
 --------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
