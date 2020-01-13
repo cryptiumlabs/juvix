@@ -86,6 +86,7 @@ getPort node port = do
             ]
         }
 
+-- TODO ∷ make a nicer one without a continuation!
 -- | 'intOfNumPorts' generates an int of two different sizes to be used in cont logic
 -- the type referees to the final type in the cont logic
 intOfNumPorts ∷

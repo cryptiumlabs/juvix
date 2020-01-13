@@ -3,7 +3,7 @@ module Juvix.Backends.LLVM.Codegen.Graph.Definitons where
 
 import qualified Juvix.Backends.LLVM.Codegen.Block as Block
 import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
-
+import qualified Juvix.Backends.LLVM.Codegen.Graph.Debug as Debug
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
 import LLVM.AST
@@ -52,10 +52,23 @@ findEdge args = callGen Types.portPointer args "find_edge"
 
 -- TODO ∷ abstract over the define pattern seen below?
 
-defineLink ∷ Define m ⇒ m Operand.Operand
+defineLink ∷ (Define m, Debug m) ⇒ m Operand.Operand
 defineLink = Block.defineFunction Type.void "link" args $
   do
+    aux1 ← auxiliary1
+    aux2 ← auxiliary2
+    node1 ← Block.externf "node_1"
+    node2 ← Block.externf "node_1"
+    Types.debugLevelOne $ do
+      _ ← Block.printCString "Executing Link rule \n" []
+      _ ← Block.printCString "Calling Link on \n" []
+      Debug.printNodePort node1 aux1
+      Debug.printNodePort node2 aux2
     Ops.setPort ("node_1", "port_1") ("node_2", "port_2")
+    Types.debugLevelOne $ do
+      _ ← Block.printCString "Calling Link on \n" []
+      Debug.printNodePort node1 aux2
+      Debug.printNodePort node2 aux1
     Ops.setPort ("node_2", "port_2") ("node_1", "port_1")
     Block.retNull
   where
@@ -68,10 +81,12 @@ defineLink = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-defineIsBothPrimary ∷ Define m ⇒ m Operand.Operand
+defineIsBothPrimary ∷ (Define m, Debug m) ⇒ m Operand.Operand
 defineIsBothPrimary =
   Block.defineFunction (Types.pointerOf Types.bothPrimary) "is_both_primary" args $
     do
+      Types.debugLevelOne $
+        Block.printCString "Executing is_both_primary rule \n" [] >> pure ()
       return' ← Block.alloca Types.bothPrimary
       -- TODO ∷ should this call be abstracted somewhere?!
       mainPort ← mainPort
@@ -97,12 +112,21 @@ defineIsBothPrimary =
     args = [(Types.nodePointer, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
-defineFindEdge ∷ Define m ⇒ m Operand.Operand
+defineFindEdge ∷ (Debug m, Define m) ⇒ m Operand.Operand
 defineFindEdge =
   Block.defineFunction Types.portPointer "find_edge" args $
     do
       node ← Block.externf "node"
       pNum ← Block.externf "port"
+      -----------------------------------------------------------------
+      Types.debugLevelOne $ do
+        _ ← Block.printCString "Executing find_edge rule \n" []
+        _ ← Block.printCString "Finding node and edge of %p \n" [node]
+        -- TODO ∷ abstract better!
+        port ← Block.load (Type.IntegerType Types.addressSpace) pNum
+        Debug.printNodePort node port
+        pure ()
+      -----------------------------------------------------------------
       portPtr ← Ops.getPort node pNum
       otherPortPtr ← Ops.portPointsTo portPtr
       Block.ret otherPortPtr
@@ -118,6 +142,7 @@ mallocNode size = Block.malloc size Types.nodePointer
 -- TODO ∷ could be storing data wrong... find out
 mallocNodeH ∷
   ( RetInstruction m,
+    Debug m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     HasState "symTab" SymbolTable m
@@ -142,12 +167,15 @@ mallocNodeH mPorts mData extraData = do
           + extraData
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
   nodePtr ← mallocNode (fromIntegral totalSize)
+  -----------------------------------------------------------------
+  Types.debugLevelOne $
+    Block.printCString "Allocating node %p \n" [nodePtr] >> pure ()
   -- the bitCast is for turning the size of the array to 0
   -- for proper dynamically sized arrays
   ports ← mallocPortsH mPorts >>= flip Block.bitCast Types.portData
   portPtr ← Ops.getPortData nodePtr
   Block.store portPtr ports
-  when (not Types.bitSizeEncodingPoint) $
+  unless Types.bitSizeEncodingPoint $
     do
       portSizeP ← Ops.allocaNumPortNum (fromIntegral $ length mPorts)
       tagPtr ← Block.getElementPtr $
@@ -274,8 +302,10 @@ defineRewire =
         (numPortsPointer, "port_two")
       ]
 
-deAllocateNode ∷ Define m ⇒ Operand.Operand → m ()
+deAllocateNode ∷ (Debug m, Define m) ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
+  Types.debugLevelOne $
+    Block.printCString "De-allocating node %p \n" [nodePtr] >> pure ()
   portPtr ← Ops.loadPortData nodePtr
   dataPtr ← Ops.loadDataArray nodePtr
   _ ← Block.free portPtr

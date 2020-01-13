@@ -24,7 +24,7 @@ printNodePort nodePtr port = do
         Types.indincies' = Block.constant32List [0, 0]
       }
   -- TODO ∷ use intOfNumPorts instead!
-  port ← Block.loadElementPtr $
+  port' ← Block.loadElementPtr $
     Types.Minimal
       { Types.type' = Types.numPortsNameRef,
         Types.address' = portEra,
@@ -33,6 +33,6 @@ printNodePort nodePtr port = do
   -- TODO ∷ use intOfNumPorts!
   _ ←
     Block.printCString
-      "node: %p at port: %i : < port: %p, node: %p > \n"
-      [nodePtr, port, pointToNode, port]
+      "node: %p at port: %i -*-> <node: %p, port: %i> \n"
+      [nodePtr, port, pointToNode, port']
   pure ()
