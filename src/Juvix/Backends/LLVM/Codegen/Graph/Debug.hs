@@ -2,11 +2,11 @@
 -- Serves as a module for various debugging functions
 module Juvix.Backends.LLVM.Codegen.Graph.Debug where
 
+import qualified Juvix.Backends.LLVM.Codegen.Block as Block
+import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
+import qualified Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (reduce)
 import qualified LLVM.AST.Operand as Operand
-import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
-import qualified Juvix.Backends.LLVM.Codegen.Block as Block
-import qualified Juvix.Backends.LLVM.Codegen.Types as Types
 
 printNodePort ∷
   ( Types.Call m,
@@ -36,4 +36,3 @@ printNodePort nodePtr port = do
       "node: %p at port: %i : < port: %p, node: %p > \n"
       [nodePtr, port, pointToNode, port]
   pure ()
-

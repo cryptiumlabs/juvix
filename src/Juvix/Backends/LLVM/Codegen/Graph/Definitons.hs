@@ -1,19 +1,17 @@
 -- | Operations necessary to update nodes
-
 module Juvix.Backends.LLVM.Codegen.Graph.Definitons where
 
-import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
 import Juvix.Backends.LLVM.Codegen.Block as Block
+import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
 import LLVM.AST
-import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Global as Global
+import qualified LLVM.AST.IntegerPredicate as IntPred
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
-
 
 --------------------------------------------------------------------------------
 -- Call Alias for Main Functions
@@ -282,7 +280,6 @@ deAllocateNode nodePtr = do
   _ ← free portPtr
   _ ← free dataPtr
   free nodePtr
-
 
 --------------------------------------------------------------------------------
 -- Port Aliases

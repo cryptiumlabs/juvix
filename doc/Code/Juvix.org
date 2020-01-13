@@ -71,65 +71,6 @@ Module for predefined constants
   + [[Library]]
 ***** Default <<Codegen/Default>>
 This module provides the default environment to run LLVM code in
-***** Graph <<Codegen/Graph>>
-Operations necessary to update nodes
-- =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
-  | Part       | Alloca Or Malloc |
-  |------------+------------------|
-  | MainPort   | Malloc top level |
-  | Auxiliary1 | Malloc top level |
-  | Auxiliary2 | Malloc top level |
-  | Auxiliary3 | Malloc top level |
-  | Auxiliary4 | Malloc top level |
-- =mallocNodeH= Allocation
-  + layout :
-    Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
-  | Part         | Alloca Or Malloc                   |
-  |--------------+------------------------------------|
-  | Node         | Malloc                             |
-  | portSize     | Stored on Node malloc              |
-  | PortArray    | Malloc                             |
-  | DataArray    | Malloc Maybe                       |
-  | PortLocation | (Null) Allocad from PortArray Call |
-  | NodePtr      | (Null) Allocad from PortArray Call |
-  | Data         | (Null) Allocad from DataArray Call |
-  + _Sub allocation functions used_
-    * =mallocNode=
-      | node | Malloc |
-    * =allocaNumPortNum=
-      | portsSize | Alloca |
-    * =mallocPortsH=
-      | portArray | Malloc |
-    * =mallocDataH=
-      | dataArray | Malloc |
-  + the values that are null will be set from outside when the node
-    is instantiated.
-    * Data will be **Allocad**
-    * Port Location is shown to be **malloc** above by =mainPort=
-      \dots =Auxiliary4=. However in the future we may **alloca** a value
-      to store here
-    * NodePtr is **mallocd** in the same way this node is, and thus
-      is external
-- Notably PortLocation, NodePtr, and Data are not allocated here,
-  but are instead sent in.
-- Currently =defineMainPort=, =defineAuxiliary1= \dots
-  =defineAuxiliary4= malloc the first four ports, and this is what
-  link sets for the nodes.
-  + This has some trade offs, namely we don't have to alloca more
-    ports, however this will lead to waste if say =auxiliary4= is
-    never used.
-  + In the future this should turn to an alloca, and thus to
-    dealloc a node, we need not iterate over i.
-- For deallocation, just deallocate the node pointer itself
-  + Currently, node pointers are allocated when nodes are made, and
-    so are not the responsibility of a node to deallocate all the
-    pointers.
-    * this however is up to the Net representation themselves, and
-      thus should modify the default deallocate node functionality
-- _Relies on_
-  + [[Block]]
-  + [[Codegen/Types]]
-  + [[Library]]
 ***** Shared <<Codegen/Shared>>
 Shared between Types and Sum
 - _Relies on_
@@ -150,6 +91,32 @@ Provides a mechanism for defining Sum types
   + [[Sum]]
   + [[Library]]
   + [[HashMap]]
+***** Graph <<Codegen/Graph>>
+Serves as a front end for the Graph folder
+- _Relies on_
+  + [[Graph/Debug]]
+  + [[Definitons]]
+  + [[Operations]]
+****** Debug <<Graph/Debug>>
+Serves as a module for various debugging functions
+- _Relies on_
+  + [[Block]]
+  + [[Operations]]
+  + [[Codegen/Types]]
+  + [[Library]]
+****** Definitons
+Operations necessary to update nodes
+- _Relies on_
+  + [[Block]]
+  + [[Operations]]
+  + [[Codegen/Types]]
+  + [[Library]]
+****** Operations
+Functions that help with more complex Graph operations
+- _Relies on_
+  + [[Block]]
+  + [[Codegen/Types]]
+  + [[Library]]
 **** JIT
 - _Relies on_
   + [[Execution]]
@@ -207,23 +174,22 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]
-  + [[Debug]]
+  + [[EAC/Debug]]
   + [[Defs]]
   + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
   + [[HashMap]]
-****** Debug
+****** Debug <<EAC/Debug>>
 Serves as a module for various debugging functions
 - _Relies on_
   + [[Codegen]]
-  + [[Library]]
-  + [[HashMap]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
 - Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
 - Also generates the proper types associated with them
+- Also has some miscellaneous debug information
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]

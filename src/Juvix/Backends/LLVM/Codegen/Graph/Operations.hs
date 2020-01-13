@@ -1,9 +1,9 @@
 -- | Functions that help with more complex Graph operations
 module Juvix.Backends.LLVM.Codegen.Graph.Operations where
 
-import Juvix.Library hiding (Type, link, local)
 import qualified Juvix.Backends.LLVM.Codegen.Block as Block
 import qualified Juvix.Backends.LLVM.Codegen.Types as Types
+import Juvix.Library hiding (Type, link, local)
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
@@ -241,7 +241,6 @@ mallocNumPortNum n
       Types.numPortsSize
       (Types.pointerOf (Type.IntegerType Types.addressSpace))
   | otherwise = createNumPortNumGen n mallocNumPortsStatic
-
 
 --------------------------------------------------------------------------------
 -- Type aliases accessor functions
