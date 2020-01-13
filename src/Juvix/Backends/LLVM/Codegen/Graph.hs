@@ -1,7 +1,7 @@
 -- |
 -- Serves as a front end for the Graph folder
 module Juvix.Backends.LLVM.Codegen.Graph
-  ( module Juvix.Backends.LLVM.Codegen.Graph.Definitons,
+  ( module Juvix.Backends.LLVM.Codegen.Graph.Definitions,
     module Juvix.Backends.LLVM.Codegen.Graph.Operations,
     module Juvix.Backends.LLVM.Codegen.Graph.Debug,
   )
