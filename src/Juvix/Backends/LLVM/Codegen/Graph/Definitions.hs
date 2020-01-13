@@ -70,7 +70,7 @@
 --     pointers.
 --     * this however is up to the Net representation themselves, and
 --       thus should modify the default deallocate node functionality
-module Juvix.Backends.LLVM.Codegen.Graph.Definitons where
+module Juvix.Backends.LLVM.Codegen.Graph.Definitions where
 
 import qualified Juvix.Backends.LLVM.Codegen.Block as Block
 import qualified Juvix.Backends.LLVM.Codegen.Graph.Debug as Debug

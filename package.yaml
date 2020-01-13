@@ -164,7 +164,7 @@ library:
     - Juvix.Backends.LLVM.Codegen.Graph
     - Juvix.Backends.LLVM.Codegen.Graph.Debug
     - Juvix.Backends.LLVM.Codegen.Graph.Operations
-    - Juvix.Backends.LLVM.Codegen.Graph.Definitons
+    - Juvix.Backends.LLVM.Codegen.Graph.Definitions
     - Juvix.Backends.LLVM.Codegen
     - Juvix.Backends.LLVM.Net.API
     - Juvix.Backends.LLVM.Net.EAC
