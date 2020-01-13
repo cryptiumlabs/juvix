@@ -1,25 +1,19 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Juvix.Core.IRAnn.Types where
 
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Usage
-import Juvix.Library
 
-data Term primTy primVal
-  = Star Natural
-  | PrimTy primTy
-  | Pi Usage (Term primTy primVal) (Term primTy primVal)
-  | Lam (AnnTerm primTy primVal)
-  | Elim (AnnElim primTy primVal)
-  deriving (Show, Eq, Generic)
+data Typed
 
-data Elim primTy primVal
-  = Bound Natural
-  | Free IR.Name
-  | Prim primVal
-  | App (AnnElim primTy primVal) (AnnTerm primTy primVal)
-  | Ann Usage (Term primTy primVal) (Term primTy primVal)
-  deriving (Show, Eq, Generic)
+instance IR.TEExt Typed where
+  type XLam Typed primTy primVal = TermAnnotation primTy primVal
+  type XElim Typed primTy primVal = TermAnnotation primTy primVal
+  type XApp Typed primTy primVal =
+      (TermAnnotation primTy primVal, TermAnnotation primTy primVal)
 
-type AnnTerm primTy primVal = (Term primTy primVal, Usage, Term primTy primVal)
+type TermAnnotation primTy primVal = (Usage, Term primTy primVal)
 
-type AnnElim primTy primVal = (Elim primTy primVal, Usage, Term primTy primVal)
+type Term = IR.Term' Typed
+type Elim = IR.Elim' Typed
