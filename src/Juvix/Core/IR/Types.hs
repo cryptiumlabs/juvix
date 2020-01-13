@@ -1,41 +1,17 @@
-{-# LANGUAGE ConstraintKinds, EmptyCase, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies, UndecidableInstances #-}
 
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
-module Juvix.Core.IR.Types where
+module Juvix.Core.IR.Types
+  (module Juvix.Core.IR.Types,
+   module Juvix.Core.IR.Extension)
+where
 
 import Juvix.Core.Usage
+import Juvix.Core.IR.Extension
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
-import Data.Kind (Type, Constraint)
 
-
--- | Marker type for having no extensions
-data NoExt
-
-class TermExt ext where
-  type XStar   ext primTy primVal
-  type XStar   ext primTy primVal = ()
-  type XPrimTy ext primTy primVal
-  type XPrimTy ext primTy primVal = ()
-  type XPi     ext primTy primVal
-  type XPi     ext primTy primVal = ()
-  type XLam    ext primTy primVal
-  type XLam    ext primTy primVal = ()
-  type XElim'  ext primTy primVal
-  type XElim'  ext primTy primVal = ()
-  type XTerm   ext primTy primVal
-  type XTerm   ext primTy primVal = Void
-
-instance TermExt NoExt
-
-type TermAll (c :: Type -> Constraint) ext primTy primVal =
-  (c (XStar   ext primTy primVal),
-   c (XPrimTy ext primTy primVal),
-   c (XPi     ext primTy primVal),
-   c (XLam    ext primTy primVal),
-   c (XElim'  ext primTy primVal),
-   c (XTerm   ext primTy primVal))
 
 -- | checkable terms
 data Term' ext primTy primVal
@@ -52,19 +28,20 @@ data Term' ext primTy primVal
     Lam (Term' ext primTy primVal) (XLam ext primTy primVal)
   | -- | 'CONV' conversion rule. TODO make sure 0Γ ⊢ S≡T
     -- 'Elim' is the constructor that embeds Elim to Term
-    Elim (Elim' ext primTy primVal) (XElim' ext primTy primVal)
+    Elim (Elim' ext primTy primVal) (XElim ext primTy primVal)
   | -- | Extension point for other construction forms
-    XTerm (XTerm ext primTy primVal)
-
-type Term = Term' NoExt
+    TermX (TermX ext primTy primVal)
 
 deriving instance
-  (Eq primTy, Eq primVal,
-   TermAll Eq ext primTy primVal,
-   ElimAll Eq ext primTy primVal) =>
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) =>
   Eq (Term' ext primTy primVal)
 
--- FIXME what to do about annotations?
+deriving instance
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) =>
+  Show (Term' ext primTy primVal)
+
+-- FIXME add pretty-printer
+{-
 instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
   show (Star n ()) = "* " <> show n
   show (PrimTy p ()) = show p
@@ -74,31 +51,7 @@ instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
   -- Elim should be invisible to users.
   show (Elim term ()) = show term
   show (XTerm v) = case v of {}
-
-
-class ElimExt ext where
-  type XBound  ext primTy primVal
-  type XBound  ext primTy primVal = ()
-  type XFree   ext primTy primVal
-  type XFree   ext primTy primVal = ()
-  type XPrim   ext primTy primVal
-  type XPrim   ext primTy primVal = ()
-  type XApp    ext primTy primVal
-  type XApp    ext primTy primVal = ()
-  type XAnn    ext primTy primVal
-  type XAnn    ext primTy primVal = ()
-  type XElim   ext primTy primVal
-  type XElim   ext primTy primVal = Void
-
-instance ElimExt NoExt
-
-type ElimAll (c :: Type -> Constraint) ext primTy primVal =
-  (c (XBound  ext primTy primVal),
-   c (XFree   ext primTy primVal),
-   c (XPrim   ext primTy primVal),
-   c (XApp    ext primTy primVal),
-   c (XAnn    ext primTy primVal),
-   c (XElim   ext primTy primVal))
+-}
 
 -- | inferable terms
 data Elim' ext primTy primVal
@@ -115,17 +68,22 @@ data Elim' ext primTy primVal
     Ann Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
         (XAnn ext primTy primVal)
   | -- | Extension point for other elimination forms
-    XElim (XElim ext primTy primVal)
-
-type Elim = Elim' NoExt
+    ElimX (ElimX ext primTy primVal)
 
 deriving instance
-  (Eq primTy, Eq primVal,
-   ElimAll Eq ext primTy primVal,
-   TermAll Eq ext primTy primVal)
-  => Eq (Elim' ext primTy primVal)
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) =>
+  Eq (Elim' ext primTy primVal)
 
--- FIXME
+deriving instance
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) =>
+  Show (Elim' ext primTy primVal)
+
+
+type Term = Term' NoExt
+type Elim = Elim' NoExt
+
+-- FIXME pretty-printer
+{-
 instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
   show (Bound i ()) = "Bound " <> show i -- to be improved
   show (Free name ()) = show name
@@ -135,6 +93,9 @@ instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
   show (Ann pi theTerm theType ()) =
     show theTerm <> " : [" <> show pi <> "] " <> show theType
   show (XElim v) = case v of {}
+-}
+
+
 
 data Name
   = -- | Global variables are represented by name thus type string
