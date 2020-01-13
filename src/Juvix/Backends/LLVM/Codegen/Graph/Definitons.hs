@@ -1,4 +1,75 @@
 -- | Operations necessary to update nodes
+-- - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
+--   | Part       | Alloca Or Malloc |
+--   |------------+------------------|
+--   | MainPort   | Malloc top level |
+--   | Auxiliary1 | Malloc top level |
+--   | Auxiliary2 | Malloc top level |
+--   | Auxiliary3 | Malloc top level |
+--   | Auxiliary4 | Malloc top level |
+--
+-- - =mallocNodeH= Allocation
+--
+--   + layout :
+--     Node[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]
+--
+--   | Part         | Alloca Or Malloc                   |
+--   |--------------+------------------------------------|
+--   | Node         | Malloc                             |
+--   | portSize     | Stored on Node malloc              |
+--   | PortArray    | Malloc                             |
+--   | DataArray    | Malloc Maybe                       |
+--   | PortLocation | (Null) Allocad from PortArray Call |
+--   | NodePtr      | (Null) Allocad from PortArray Call |
+--   | Data         | (Null) Allocad from DataArray Call |
+--
+--   + _Sub allocation functions used_
+--
+--     * =mallocNode=
+--       | node | Malloc |
+--
+--     * =allocaNumPortNum=
+--       | portsSize | Alloca |
+--
+--     * =mallocPortsH=
+--       | portArray | Malloc |
+--
+--     * =mallocDataH=
+--       | dataArray | Malloc |
+--
+--   + the values that are null will be set from outside when the node
+--     is instantiated.
+--     * Data will be **Allocad**
+--
+--     * Port Location is shown to be **malloc** above by =mainPort=
+--       \dots =Auxiliary4=. However in the future we may **alloca** a value
+--       to store here
+--
+--     * NodePtr is **mallocd** in the same way this node is, and thus
+--       is external
+--
+--
+-- - Notably PortLocation, NodePtr, and Data are not allocated here,
+--   but are instead sent in.
+--
+-- - Currently =defineMainPort=, =defineAuxiliary1= \dots
+--   =defineAuxiliary4= malloc the first four ports, and this is what
+--   link sets for the nodes.
+--
+--   + This has some trade offs, namely we don't have to alloca more
+--     ports, however this will lead to waste if say =auxiliary4= is
+--     never used.
+--
+--   + In the future this should turn to an alloca, and thus to
+--     dealloc a node, we need not iterate over i.
+--
+-- - For deallocation, just deallocate the node pointer itself
+--
+--   + Currently, node pointers are allocated when nodes are made, and
+--     so are not the responsibility of a node to deallocate all the
+--     pointers.
+--     * this however is up to the Net representation themselves, and
+--       thus should modify the default deallocate node functionality
 module Juvix.Backends.LLVM.Codegen.Graph.Definitons where
 
 import qualified Juvix.Backends.LLVM.Codegen.Block as Block
