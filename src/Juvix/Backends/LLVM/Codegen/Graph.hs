@@ -8,5 +8,5 @@ module Juvix.Backends.LLVM.Codegen.Graph
 where
 
 import Juvix.Backends.LLVM.Codegen.Graph.Debug
-import Juvix.Backends.LLVM.Codegen.Graph.Definitons
+import Juvix.Backends.LLVM.Codegen.Graph.Definitions
 import Juvix.Backends.LLVM.Codegen.Graph.Operations
