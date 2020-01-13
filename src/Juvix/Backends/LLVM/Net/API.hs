@@ -8,7 +8,6 @@ import Juvix.Library hiding (reduce)
 import qualified LLVM.AST.AddrSpace as Addr
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.IntegerPredicate as IntPred
-import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
 
@@ -96,7 +95,8 @@ defineReadNet =
     ret ← Codegen.malloc Codegen.addressSpace nodePointer
     Codegen.ret ret
 
-defineAppendToNet ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
+defineAppendToNet ∷
+  (Codegen.Debug m, Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet =
   Codegen.defineFunction Type.void "append_to_net" args $ do
     netPtr ← Codegen.externf "net"
@@ -118,7 +118,8 @@ defineAppendToNet =
   where
     args = [(opaqueNetType, "net"), (nodePointer, "nodes"), (int32, "node_count")]
 
-defineAppendToNet' ∷ (Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
+defineAppendToNet' ∷
+  (Codegen.Debug m, Codegen.Define m, Codegen.MallocNode m) ⇒ m Operand.Operand
 defineAppendToNet' =
   Codegen.defineFunction Type.void "append_to_net" args $ do
     nodes ← Codegen.externf "nodes"

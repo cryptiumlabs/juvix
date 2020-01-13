@@ -350,7 +350,8 @@ defineFanInAux0 name allocF = Codegen.defineFunction Types.eacLPointer name args
 
 aux2Gen ∷
   ( Codegen.MallocNode m,
-    Codegen.Define m
+    Codegen.Define m,
+    Codegen.Debug m
   ) ⇒
   m Operand.Operand →
   Operand.Operand →
@@ -581,7 +582,7 @@ freeEac ∷ Codegen.Call m ⇒ Operand.Operand → m ()
 freeEac = Codegen.free
 
 mallocGen ∷
-  Codegen.MallocNode m ⇒ C.Constant → Int → Int → m Operand.Operand
+  (Codegen.MallocNode m, Codegen.Debug m) ⇒ C.Constant → Int → Int → m Operand.Operand
 mallocGen type' portLen dataLen = do
   -- malloc call
   node ← Defs.mallocNodeH (replicate portLen Nothing) (replicate dataLen Nothing)
@@ -594,7 +595,7 @@ mallocTop,
   mallocFanIn,
   mallocApp,
   mallocLam ∷
-    Codegen.MallocNode m ⇒ m Operand.Operand
+    (Codegen.Debug m, Codegen.MallocNode m) ⇒ m Operand.Operand
 mallocTop = mallocGen Types.top 2 0
 mallocEra = mallocGen Types.era 1 0
 mallocApp = mallocGen Types.app 3 0

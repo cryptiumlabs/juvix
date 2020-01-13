@@ -109,6 +109,7 @@ loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 
 mallocNodeH ∷
   ( Codegen.RetInstruction m,
+    Codegen.Debug m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasState "symTab" Codegen.SymbolTable m
@@ -118,7 +119,7 @@ mallocNodeH ∷
   m Operand.Operand
 mallocNodeH mPorts mData = Codegen.mallocNodeH mPorts mData 4
 
-defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
+defineIsBothPrimary ∷ (Codegen.Define m, Codegen.Debug m) ⇒ m Operand.Operand
 defineIsBothPrimary = Codegen.defineIsBothPrimary
 
 defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand
