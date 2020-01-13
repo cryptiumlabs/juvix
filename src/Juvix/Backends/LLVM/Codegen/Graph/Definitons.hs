@@ -1,8 +1,9 @@
 -- | Operations necessary to update nodes
 module Juvix.Backends.LLVM.Codegen.Graph.Definitons where
 
-import Juvix.Backends.LLVM.Codegen.Block as Block
+import qualified Juvix.Backends.LLVM.Codegen.Block as Block
 import qualified Juvix.Backends.LLVM.Codegen.Graph.Operations as Ops
+
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, link, local)
 import LLVM.AST
@@ -56,7 +57,7 @@ defineLink = Block.defineFunction Type.void "link" args $
   do
     Ops.setPort ("node_1", "port_1") ("node_2", "port_2")
     Ops.setPort ("node_2", "port_2") ("node_1", "port_1")
-    retNull
+    Block.retNull
   where
     args =
       [ (nodePointer, "node_1"),
@@ -76,22 +77,22 @@ defineIsBothPrimary =
       mainPort ← mainPort
       nodePtr ← Block.externf "node_ptr"
       portPtr ← findEdge [nodePtr, mainPort]
-      otherNodePtr ← loadElementPtr $
+      otherNodePtr ← Block.loadElementPtr $
         Types.Minimal
           { Types.type' = Types.nodePointer,
             Types.address' = portPtr,
             Types.indincies' = Block.constant32List [0, 0]
           }
       -- convert ptrs to ints
-      nodeInt ← ptrToInt nodePtr pointerSize
-      otherNodeInt ← ptrToInt otherNodePtr pointerSize
+      nodeInt ← Block.ptrToInt nodePtr pointerSize
+      otherNodeInt ← Block.ptrToInt otherNodePtr pointerSize
       -- compare the pointers to see if they are the same
-      cmp ← icmp IntPred.EQ nodeInt otherNodeInt
+      cmp ← Block.icmp IntPred.EQ nodeInt otherNodeInt
       tag ← Ops.getIsPrimaryEle return'
       nod ← Ops.getPrimaryNode Types.nodePointer return'
-      store tag cmp
-      store nod otherNodePtr
-      ret return'
+      Block.store tag cmp
+      Block.store nod otherNodePtr
+      Block.ret return'
   where
     args = [(Types.nodePointer, "node_ptr")]
 
@@ -104,7 +105,7 @@ defineFindEdge =
       pNum ← Block.externf "port"
       portPtr ← Ops.getPort node pNum
       otherPortPtr ← Ops.portPointsTo portPtr
-      ret otherPortPtr
+      Block.ret otherPortPtr
   where
     args = [(nodePointer, "node"), (numPortsPointer, "port")]
 
@@ -143,29 +144,29 @@ mallocNodeH mPorts mData extraData = do
   nodePtr ← mallocNode (fromIntegral totalSize)
   -- the bitCast is for turning the size of the array to 0
   -- for proper dynamically sized arrays
-  ports ← mallocPortsH mPorts >>= flip bitCast Types.portData
+  ports ← mallocPortsH mPorts >>= flip Block.bitCast Types.portData
   portPtr ← Ops.getPortData nodePtr
-  store portPtr ports
+  Block.store portPtr ports
   when (not Types.bitSizeEncodingPoint) $
     do
       portSizeP ← Ops.allocaNumPortNum (fromIntegral $ length mPorts)
-      tagPtr ← getElementPtr $
+      tagPtr ← Block.getElementPtr $
         Types.Minimal
           { Types.type' = Types.numPortsPointer,
             Types.address' = nodePtr,
             Types.indincies' = Block.constant32List [0, 0]
           }
-      portSize ← load numPortsNameRef portSizeP
-      store tagPtr portSize
+      portSize ← Block.load numPortsNameRef portSizeP
+      Block.store tagPtr portSize
   -- let's not allocate data if we don't have to!
   case anyThere mData ∷ Integer of
     -- do this when we pass more information to deAllocateNode
     -- Until then it's not safe
     -- 0 → pure ()
     _ → do
-      data' ← mallocDataH mData >>= flip bitCast Types.dataArray
+      data' ← mallocDataH mData >>= flip Block.bitCast Types.dataArray
       dataPtr ← Ops.getDataArray nodePtr
-      store dataPtr data'
+      Block.store dataPtr data'
   pure nodePtr
 
 -- | used to create the malloc and alloca functions for ports and data
@@ -182,13 +183,13 @@ createGenH mPortData type' alloc = do
         case p of
           Nothing → pure ()
           Just p → do
-            ptr ← getElementPtr $
+            ptr ← Block.getElementPtr $
               Types.Minimal
                 { Types.type' = type',
                   Types.address' = ports,
                   Types.indincies' = Block.constant32List [0, i]
                 }
-            store ptr p
+            Block.store ptr p
     )
     (zip mPortData [0 ..])
   pure ports
@@ -227,17 +228,17 @@ defineLinkConnectedPort =
       (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
       (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
       oldPointsTo ← findEdge [nOld, pOld] -- portPtr
-      let intoGen typ num = getElementPtr $
+      let intoGen typ num = Block.getElementPtr $
             Types.Minimal
               { Types.type' = typ,
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
       numPointsTo ← intoGen numPortsPointer 1
-      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= load nodePointer
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
       -- End Abstracting out bits -------------------------------------------------
       _ ← link [nNew, pNew, nodePointsToPtr, numPointsTo]
-      retNull
+      Block.retNull
   where
     args =
       [ (nodePointer, "node_old"),
@@ -254,17 +255,17 @@ defineRewire =
       (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
       (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
       oldPointsTo ← findEdge [n1, p1] -- portPtr
-      let intoGen typ num = getElementPtr $
+      let intoGen typ num = Block.getElementPtr $
             Types.Minimal
               { Types.type' = typ,
                 Types.address' = oldPointsTo,
                 Types.indincies' = Block.constant32List [0, num]
               }
       numPointsTo ← intoGen numPortsPointer 1
-      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= load nodePointer
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
       -- End Abstracting out bits -------------------------------------------------
       _ ← linkConnectedPort [n2, p2, nodePointsToPtr, numPointsTo]
-      retNull
+      Block.retNull
   where
     args =
       [ (nodePointer, "node_one"),
@@ -277,9 +278,9 @@ deAllocateNode ∷ Define m ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
   portPtr ← Ops.loadPortData nodePtr
   dataPtr ← Ops.loadDataArray nodePtr
-  _ ← free portPtr
-  _ ← free dataPtr
-  free nodePtr
+  _ ← Block.free portPtr
+  _ ← Block.free dataPtr
+  Block.free nodePtr
 
 --------------------------------------------------------------------------------
 -- Port Aliases
@@ -311,7 +312,7 @@ constantPort ∷
   Integer →
   m ()
 constantPort name v = do
-  addDefn
+  Block.addDefn
     $ GlobalDefinition
     $ Global.globalVariableDefaults
       { Global.name = name,
@@ -319,7 +320,7 @@ constantPort name v = do
         Global.type' = Types.numPortsNameRef,
         Global.initializer = Just nodeValue
       }
-  assign
+  Block.assign
     (Block.nameToSymbol name)
     (ConstantOperand (C.GlobalReference (Types.pointerOf Types.numPortsNameRef) name))
   where
