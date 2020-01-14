@@ -80,6 +80,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         case position n stack of
           Nothing → failWith ("variable not in scope: " <> show n)
           Just i → do
+            -- TODO ∷ replace with dip call
             let before = rearrange i
                 after = M.PrimEx (M.DIP [unrearrange i])
             genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
