@@ -43,7 +43,6 @@ unpack (Type ty _) binds =
           genReturn (PrimEx DROP)
         _ → throw @"compilationError" (InternalFault "binds do not match type")
     _ → throw @"compilationError" (NotYetImplemented ("unpack: " <> show ty))
-unpack _ _ = throw @"compilationError" (InternalFault "invalid unpack type")
 
 unpackDrop ∷
   ∀ m.

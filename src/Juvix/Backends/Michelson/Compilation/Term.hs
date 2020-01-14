@@ -11,7 +11,7 @@ import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Util as J
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
-import qualified Michelson.TypeCheck as M
+-- import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
 
 termToMichelson ∷
@@ -58,7 +58,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         post ← get @"stack"
         if guard post pre
           then pure res
-          else failWith ("compilation violated stack invariant: " <> show term <> " prior stack " <> show pre <> " posterior stack " <> show post)
+          else
+            failWith
+              ( "compilation violated stack invariant: "
+                  <> show term
+                  <> " prior stack "
+                  <> show pre
+                  <> " posterior stack "
+                  <> show post
+              )
   case term of
     -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
     --       since we copy the variable each time. We should be able to use precise usage information
@@ -85,13 +93,20 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
             freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
-        modify @"stack" ((<>) [(FuncResultE, M.Type M.TUnit ""), (FuncResultE, M.Type M.TUnit "")]) -- TODO: second is a lambda, but it doesn't matter, this just needs to be positionally accurate for var lookup.
-        vars ← mapM (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
+        -- TODO: second is a lambda, but it doesn't matter,
+        -- this just needs to be positionally accurate for var lookup.
+        modify @"stack"
+          ( [ (FuncResultE, M.Type M.TUnit ""),
+              (FuncResultE, M.Type M.TUnit "")
+            ]
+              <>
+          )
+        vars ← traverse (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
         packOp ← packClosure free
         put @"stack" []
         let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
         unpackOp ← unpackClosure freeWithTypes
-        modify @"stack" ((:) (VarE arg, argTy))
+        modify @"stack" ((VarE arg, argTy) :)
         inner ← termToInstr body paramTy
         dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
         post ← get @"stack"
@@ -100,7 +115,20 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         put @"stack" ((FuncResultE, rTy) : stack)
         pure
           ( M.SeqEx
-              [ M.PrimEx (M.PUSH "" lTy (M.ValueLambda (argUnpack :| [M.PrimEx (M.DIP [M.PrimEx (M.CAR "" ""), unpackOp]), inner, dropOp]))),
+              [ M.PrimEx
+                  ( M.PUSH
+                      ""
+                      lTy
+                      ( M.ValueLambda
+                          ( argUnpack
+                              :| [ M.PrimEx
+                                     (M.DIP [M.PrimEx (M.CAR "" ""), unpackOp]),
+                                   inner,
+                                   dropOp
+                                 ]
+                          )
+                      )
+                  ),
                 M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
                 -- Evaluate everything in the closure.
                 M.SeqEx vars,
@@ -123,8 +151,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       stackCheck addsOne $ do
         func ← termToInstr func paramTy -- :: Lam a b
         arg ← termToInstr arg paramTy -- :: a
-        stack ← get @"stack"
-        modify @"stack" (\(_ : (_, (M.Type (M.TLambda _ retTy) _)) : xs) → (FuncResultE, retTy) : xs)
+        modify @"stack"
+          ( \(_ : (_, (M.Type (M.TLambda _ retTy) _)) : xs) →
+              (FuncResultE, retTy) : xs
+          )
         pure
           ( M.SeqEx
               [ func, -- Evaluate the function.

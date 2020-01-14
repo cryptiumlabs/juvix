@@ -27,9 +27,11 @@ stackGuard term paramTy func = do
     M.SomeHST startStack → do
       -- TODO: Real originated contracts.
       let originatedContracts = mempty
-      case M.runTypeCheck paramTy originatedContracts (M.typeCheckList [instr] startStack) of
+          typedChecked = M.typeCheckList [instr] startStack
+      case M.runTypeCheck paramTy originatedContracts typedChecked of
         Left err → throw @"compilationError" (DidNotTypecheck err)
-        Right (_ M.:/ (M.AnyOutInstr _)) → throw @"compilationError" (NotYetImplemented "any out instr")
+        Right (_ M.:/ (M.AnyOutInstr _)) →
+          throw @"compilationError" (NotYetImplemented "any out instr")
         Right (_ M.:/ (_ M.::: endType)) → do
           if stackToStack end == M.SomeHST endType
             then pure instr

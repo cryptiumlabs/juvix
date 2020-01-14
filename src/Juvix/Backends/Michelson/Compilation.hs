@@ -77,4 +77,6 @@ compileToMichelsonExpr term ty = do
       MT.withSomeSingT (MT.fromUType argTy) $ \sty →
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
           Right (_ M.:/ (s M.::: _)) → pure (SomeInstr s)
+          -- TODO ∷ Figure out what this case should be
+          Right (_ M.:/ (M.AnyOutInstr _)) → undefined
           Left err → throw @"compilationError" (DidNotTypecheck err)

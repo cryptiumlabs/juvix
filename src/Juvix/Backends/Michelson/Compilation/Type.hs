@@ -21,7 +21,8 @@ typeToType ty =
     J.SymT _ → throw @"compilationError" InvalidInputType
     J.Star _ → throw @"compilationError" InvalidInputType
     J.PrimTy (PrimTy mTy) → pure mTy
-    J.Pi _ argTy retTy → do
+    -- TODO ∷ Integrate usage information into this
+    J.Pi _usages argTy retTy → do
       argTy ← typeToType argTy
       retTy ← typeToType retTy
       pure (M.Type (M.TLambda argTy retTy) "")
