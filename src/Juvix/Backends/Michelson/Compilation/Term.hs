@@ -10,6 +10,7 @@ import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Util as J
 import qualified Juvix.Core.ErasedAnn as J
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 -- import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
@@ -119,6 +120,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 M.PrimEx (M.APPLY "")
               ]
           )
+    -- TODO ∷ remove this special case
     -- Special-case full application of primitive functions.
     J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 →
       stackCheck term addsOne $ do
@@ -128,6 +130,23 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         pure (M.SeqEx (args <> [func]))
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
+    J.App apps arg →
+      stackCheck term addsOne $
+        let (lam, args) = foldApps apps [arg]
+         in case lam of
+              (J.LamM capture arguments body, _usage, lamTy) →
+                let argsL = length args
+                    lamArgsL = length arguments
+                 in if
+                      | argsL == lamArgsL → do
+                        undefined
+                      | argsL < lamArgsL → do
+                        undefined
+                      | otherwise → do
+                        -- argsL > lamArgsL
+                        undefined
+              t → do
+                failWith ("Applications applied to non lambda term: " <> show t)
     J.App func arg →
       stackCheck term addsOne $ do
         func ← termToInstr func paramTy -- :: Lam a b
@@ -167,9 +186,21 @@ varCase term n = stackCheck term addsOne $ do
     Nothing → failWith ("variable not in scope: " <> show n)
     Just i → do
       -- TODO ∷ replace with dip call
+
       let before = rearrange i
           after = M.PrimEx (M.DIP [unrearrange i])
       genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
+
+foldApps ∷
+  J.AnnTerm primTy primVal →
+  [J.AnnTerm primTy primVal] →
+  ( (J.Term primTy primVal, Usage.Usage, J.Type primTy primVal),
+    [J.AnnTerm primTy primVal]
+  )
+foldApps ((J.App f arg), _, _) args =
+  foldApps f (arg : args)
+foldApps inner args =
+  (inner, args)
 
 --------------------------------------------------------------------------------
 -- Helpers
