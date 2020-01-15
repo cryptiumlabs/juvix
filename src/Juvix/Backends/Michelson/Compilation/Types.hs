@@ -24,7 +24,11 @@ data CompilationLog
   | OptimisedByMorley SomeInstr SomeInstr
   deriving (Generic)
 
-type Stack = [(StackElem, M.Type)]
+data Stack
+  = Stack
+      { stack' ∷ [(StackElem, M.Type)],
+        size ∷ Int
+      }
 
 data StackElem
   = VarE Symbol (Maybe StackVal)
@@ -67,3 +71,26 @@ newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) 
 
 execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
 execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])
+
+ins ∷
+  HasState "stack" Stack m ⇒
+  (StackElem, M.Type) →
+  (Int → Int) →
+  m ()
+ins v f = do
+  Stack stack' size ← get @"stack"
+  put @"stack" (Stack (v : stack') (f size))
+
+-- | 'consStack', cons on a value v to our representation of the stack
+-- This stack may have more values tha the real one, as we store
+-- constants on this stack for resolution, however these will not appear
+-- in the real michelson stack
+consStack ∷
+  HasState "stack" Stack m ⇒
+  (StackElem, M.Type) →
+  m ()
+consStack v@(VarE _ (Just FuncResultE), _) = ins v succ
+consStack v@(VarE _ (Just (ConstE _)), _) = ins v identity
+consStack v@(VarE _ Nothing, _) = ins v succ
+consStack v@(Val (ConstE _), _) = ins v identity
+consStack v@(Val FuncResultE, _) = ins v succ
