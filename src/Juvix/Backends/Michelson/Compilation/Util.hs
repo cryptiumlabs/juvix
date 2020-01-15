@@ -8,6 +8,10 @@ import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
 import Michelson.Untyped
 
+-- TODO ∷ find better name
+failWith' ∷ (HasThrow "compilationError" CompilationError m) ⇒ Text → m a
+failWith' = throw @"compilationError" . InternalFault
+
 failWith ∷ ∀ m. (HasThrow "compilationError" CompilationError m) ⇒ Text → m ExpandedOp
 failWith = throw @"compilationError" . InternalFault
 
@@ -140,6 +144,15 @@ dropClosure env = do
   let count = length env
   modify @"stack" (\(x : xs) → x : drop count xs)
   pure (PrimEx (DIP (replicate count (PrimEx DROP))))
+
+pop ∷
+  (HasState "stack" Stack m, HasThrow "compilationError" CompilationError m) ⇒
+  m (StackElem, Type)
+pop = do
+  s ← get @"stack"
+  case s of
+    x : xs → x <$ put @"stack" xs
+    [] → throw @"compilationError" NotEnoughStackSpace
 
 carN ∷ Int → ExpandedOp
 carN 0 = SeqEx []

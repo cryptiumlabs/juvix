@@ -14,6 +14,8 @@ data CompilationError
   | InternalFault Text
   | DidNotTypecheck M.TCError
   | DidNotTypecheckAfterOptimisation M.TCError
+  | -- Should never happen!
+    NotEnoughStackSpace
   deriving (Show, Eq, Generic)
 
 data CompilationLog
@@ -25,8 +27,12 @@ data CompilationLog
 type Stack = [(StackElem, M.Type)]
 
 data StackElem
+  = VarE Symbol (Maybe StackVal)
+  | Val StackVal
+  deriving (Show, Eq, Generic)
+
+data StackVal
   = ConstE Value
-  | VarE Symbol
   | FuncResultE
   deriving (Show, Eq, Generic)
 

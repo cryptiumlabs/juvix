@@ -12,6 +12,5 @@ eraseTerm term =
     -- TODO ∷ remove, as normal lam is useless!
     Lam s (b, _, _) → E.Lam s (eraseTerm b)
     -- TODO ∷ add proper lam to be erased to!
-    LamM _ args (b, _, _) →
-      foldr (\s b → E.Lam s b) (eraseTerm b) args
+    LamM _ args (bod, _, _) → foldr E.Lam (eraseTerm bod) args
     App (f, _, _) (x, _, _) → E.App (eraseTerm f) (eraseTerm x)

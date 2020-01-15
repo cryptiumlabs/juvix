@@ -70,7 +70,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- :: \a -> b ~ s => (Lam a b, s)
     J.Lam arg body →
       stackCheck term addsOne $ do
-        let J.Pi _ argTy retTy = ty
+        let J.Pi _ argTy _retTy = ty
         argTy ← typeToType argTy
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
@@ -141,12 +141,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                       | argsL == lamArgsL → do
                         undefined
                       | argsL < lamArgsL → do
+                        let (lams, extraArgs) = splitAt argsL arguments
                         undefined
                       | otherwise → do
                         -- argsL > lamArgsL
+                        let (args, extraApplied) = splitAt lamArgsL args
                         undefined
               t → do
                 failWith ("Applications applied to non lambda term: " <> show t)
+    -- TODO ∷ remove
     J.App func arg →
       stackCheck term addsOne $ do
         func ← termToInstr func paramTy -- :: Lam a b
@@ -218,14 +221,53 @@ stackCheck term guard func = do
   pre ← get @"stack"
   res ← func
   post ← get @"stack"
-  if guard post pre
-    then pure res
-    else
-      failWith
-        ( "compilation violated stack invariant: "
-            <> show term
-            <> " prior stack "
-            <> show pre
-            <> " posterior stack "
-            <> show post
-        )
+  unless (guard post pre) $
+    failWith'
+      ( "compilation violated stack invariant: "
+          <> show term
+          <> " prior stack "
+          <> show pre
+          <> " posterior stack "
+          <> show post
+      )
+  pure res
+
+-- TODO ∷ find a monadic version of mapAccumR
+
+argTypeFromLam ∷
+  ( Foldable t,
+    HasState "stack" Stack m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  J.Type PrimTy PrimVal →
+  M.Type →
+  t (a, Term) →
+  m (J.Type PrimTy PrimVal, [(a, M.Type)])
+argTypeFromLam t (paramTy ∷ M.Type) =
+  foldrM
+    ( \(sym, arg) (t, args) →
+        case t of
+          J.Pi _usage aType rest → do
+            argEval ← termToInstr arg paramTy
+            aType ← typeToType aType
+            v ← pop
+            case v of
+              VarE _ _ → failWith' "Never happens"
+              -- TODO ∷ change logic if we get a constant
+              --        don't extend the env, but push the constant
+              --        to the stack
+              Val (ConstE v) →
+                undefined
+              Val (FuncResultE) →
+                undefined
+            modify @"stack" ((VarE sym (Just v), aType) :)
+            pure (rest, aType : args)
+          _ →
+            failWith'
+              ( "compilation argument invariant : "
+                  <> show t
+                  <> " is not of Pi/Lambda type"
+              )
+    )
+    (t, [])

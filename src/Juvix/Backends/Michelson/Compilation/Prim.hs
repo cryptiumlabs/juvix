@@ -46,7 +46,7 @@ primToInstr prim ty =
 
           firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
 
-      modify @"stack" ((:) (FuncResultE, firstLamTy))
+      modify @"stack" ((FuncResultE, firstLamTy) :)
       pure
         ( M.PrimEx
             ( M.PUSH
@@ -84,7 +84,7 @@ primToInstr prim ty =
           pure (M.PrimEx (M.NIL "" "" elemTy))
         _ → do
           let J.PrimTy (PrimTy t) = ty
-          modify @"stack" ((:) (FuncResultE, t))
+          modify @"stack" ((FuncResultE, t) :)
           pure (M.PrimEx (M.PUSH "" t const))
 
 oneArgPrim ∷ NonEmpty Op → M.Type → Op
