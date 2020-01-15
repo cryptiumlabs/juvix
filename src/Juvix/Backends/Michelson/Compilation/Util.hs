@@ -30,9 +30,25 @@ lookupType ∷ Symbol → Stack → Maybe Type
 lookupType _ [] = Nothing
 lookupType n (x : xs) = if fst x == VarE n then pure (snd x) else lookupType n xs
 
-position ∷ Symbol → Stack → Maybe Natural
-position _ [] = Nothing
-position n (x : xs) = if fst x == VarE n then Just 0 else succ |<< position n xs
+
+data Lookup = Value Value
+            | Position Natural
+
+-- | 'lookup' looks up a symbol from the stack
+-- May return None if the symbol does not exist at all on the stack
+-- Otherwise, the function returns Either
+-- a Value if the symbol is not stored on the stack
+-- or the position, if the value is stored on the stack
+lookup ∷ Symbol → Stack → Maybe Lookup
+lookup n (Stack stack' size) = go stack' 0
+  where
+    go ((v@(VarE n' _), _) : _) acc
+      | n' == n && inStack v = Just (Position acc)
+      -- One should deduce that before calling position
+      | n' == n = Just (Value (valueOfErr v))
+    go ((v, _) : vs) acc
+      | inStack v = go vs (succ acc)
+      | otherwise = go vs acc
 
 dropFirst ∷ Symbol → Stack → Stack
 dropFirst n (x : xs) = if fst x == VarE n then xs else x : dropFirst n xs

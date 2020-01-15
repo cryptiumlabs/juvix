@@ -7,6 +7,7 @@ import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
+import Prelude (error)
 
 data CompilationError
   = NotYetImplemented Text
@@ -72,25 +73,36 @@ newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) 
 execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
 execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])
 
-ins ∷
-  HasState "stack" Stack m ⇒
-  (StackElem, M.Type) →
-  (Int → Int) →
-  m ()
-ins v f = do
-  Stack stack' size ← get @"stack"
-  put @"stack" (Stack (v : stack') (f size))
+ins ∷ (StackElem, M.Type) → (Int → Int) → Stack → Stack
+ins v f (Stack stack' size) = Stack (v : stack') (f size)
+
+-- | 'inStack' determines if the given
+inStack ∷ StackElem → Bool
+inStack (VarE _ (Just FuncResultE)) = True
+inStack (VarE _ (Just (ConstE _))) = False
+inStack (VarE _ Nothing) = True
+inStack (Val (ConstE _)) = False
+inStack (Val FuncResultE) = True
+
+-- invariant ¬ inStack = valueOf is valid!
+valueOfErr ∷ StackElem → Value
+valueOfErr (VarE _ (Just (ConstE i))) = i
+valueOfErr (Val (ConstE i)) = i
+valueOfErr (Val FuncResultE) = error "called valueOf with a stored value"
+valueOfErr (VarE _ Nothing) = error "called valueOf with a stored value"
+valueOfErr (VarE _ (Just FuncResultE)) = error "called valueOf with a stored value"
+
+-- | 'cons' is like 'consStack', however it works ont ehs tack directly,
+-- not from within a monad
+cons ∷ (StackElem, M.Type) → Stack → Stack
+cons v = ins v f
+  where
+    f | inStack (fst v) = succ
+      | otherwise = identity
 
 -- | 'consStack', cons on a value v to our representation of the stack
 -- This stack may have more values tha the real one, as we store
 -- constants on this stack for resolution, however these will not appear
 -- in the real michelson stack
-consStack ∷
-  HasState "stack" Stack m ⇒
-  (StackElem, M.Type) →
-  m ()
-consStack v@(VarE _ (Just FuncResultE), _) = ins v succ
-consStack v@(VarE _ (Just (ConstE _)), _) = ins v identity
-consStack v@(VarE _ Nothing, _) = ins v succ
-consStack v@(Val (ConstE _), _) = ins v identity
-consStack v@(Val FuncResultE, _) = ins v succ
+consStack ∷ HasState "stack" Stack m ⇒ (StackElem, M.Type) → m ()
+consStack = modify @"stack" . cons
