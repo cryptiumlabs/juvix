@@ -17,12 +17,16 @@ import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 
 typedContractToSource ∷ M.SomeContract → Text
-typedContractToSource (M.SomeContract (MT.FullContract instr _ _)) = L.toStrict (M.printTypedContract False instr)
+typedContractToSource (M.SomeContract (MT.FullContract instr _ _)) =
+  L.toStrict (M.printTypedContract False instr)
 
 untypedContractToSource ∷ M.Contract' M.ExpandedOp → Text
 untypedContractToSource c = L.toStrict (M.printUntypedContract False c)
 
-compileContract ∷ Term → Type → (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
+compileContract ∷
+  Term →
+  Type →
+  (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term ty =
   let (ret, env) = execWithStack [] (compileToMichelsonContract term ty)
    in (ret, compilationLog env)

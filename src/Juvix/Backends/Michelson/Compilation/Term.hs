@@ -37,8 +37,10 @@ termToMichelson term paramTy = do
 {-
  - Transform core term to Michelson instruction sequence.
  - This requires tracking the stack (what variables are where).
- - At present, this function enforces a unidirectional mapping from the term type to the Michelson stack type.
- - TODO: Right now, usage information is ignored. It should be used in the future to avoid unnecessary stack elements.
+ - At present, this function enforces a unidirectional mapping from
+   the term type to the Michelson stack type.
+ - TODO: Right now, usage information is ignored. It should be used in
+   the future to avoid unnecessary stack elements.
  - :: { Haskell Type } ~ { Stack Pre-Evaluation } => { Stack Post-Evaluation }
  -}
 termToInstr ∷
@@ -51,44 +53,22 @@ termToInstr ∷
   M.Type →
   m Op
 termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
-  let stackCheck ∷ (Stack → Stack → Bool) → m Op → m Op
-      stackCheck guard func = do
-        pre ← get @"stack"
-        res ← func
-        post ← get @"stack"
-        if guard post pre
-          then pure res
-          else
-            failWith
-              ( "compilation violated stack invariant: "
-                  <> show term
-                  <> " prior stack "
-                  <> show pre
-                  <> " posterior stack "
-                  <> show post
-              )
   case term of
-    -- TODO: Right now, this is pretty inefficient, even if optimisations later on sometimes help,
-    --       since we copy the variable each time. We should be able to use precise usage information
-    --       to relax the stack invariant and avoid duplicating variables that won't be used again.
+    -- TODO: Right now, this is pretty inefficient, even if
+    --       optimisations later on sometimes help,
+    --       since we copy the variable each time. We should be able
+    --       to use precise usage information
+    --       to relax the stack invariant and avoid duplicating
+    --       variables that won't be used again.
     -- TODO: There is probably some nicer sugar for this in Michelson now.
     -- Variable: find the variable in the stack & duplicate it at the top.
     -- :: a ~ s => (a, s)
-    J.Var n →
-      stackCheck addsOne $ do
-        stack ← get @"stack"
-        case position n stack of
-          Nothing → failWith ("variable not in scope: " <> show n)
-          Just i → do
-            -- TODO ∷ replace with dip call
-            let before = rearrange i
-                after = M.PrimEx (M.DIP [unrearrange i])
-            genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
+    J.Var n → varCase term n
     -- Primitive: adds one item to the stack.
-    J.Prim prim → stackCheck addsOne (primToInstr prim ty)
+    J.Prim prim → stackCheck term addsOne (primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
     J.Lam arg body →
-      stackCheck addsOne $ do
+      stackCheck term addsOne $ do
         let J.Pi _ argTy retTy = ty
         argTy ← typeToType argTy
         stack ← get @"stack"
@@ -102,7 +82,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             ]
               <>
           )
-        vars ← traverse (\f → termToInstr (J.Var f, undefined, undefined) paramTy) free
+        vars ← traverse (\f → stackGuard f paramTy (varCase term f)) free
         packOp ← packClosure free
         put @"stack" []
         let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
@@ -141,7 +121,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           )
     -- Special-case full application of primitive functions.
     J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 →
-      stackCheck addsOne $ do
+      stackCheck term addsOne $ do
         args ← mapM (flip termToInstr paramTy) [b, a]
         -- TODO
         func ← genReturn (M.PrimEx (M.PAIR "" "" "" ""))
@@ -149,7 +129,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App func arg →
-      stackCheck addsOne $ do
+      stackCheck term addsOne $ do
         func ← termToInstr func paramTy -- :: Lam a b
         arg ← termToInstr arg paramTy -- :: a
         modify @"stack"
@@ -172,3 +152,49 @@ addsOne post pre = drop 1 post == pre
 
 changesTop ∷ Stack → Stack → Bool
 changesTop post pre = drop 1 post == pre
+
+varCase ∷
+  ( HasState "stack" Stack m,
+    HasThrow "compilationError" CompilationError m,
+    Show a2
+  ) ⇒
+  a2 →
+  Symbol →
+  m Op
+varCase term n = stackCheck term addsOne $ do
+  stack ← get @"stack"
+  case position n stack of
+    Nothing → failWith ("variable not in scope: " <> show n)
+    Just i → do
+      -- TODO ∷ replace with dip call
+      let before = rearrange i
+          after = M.PrimEx (M.DIP [unrearrange i])
+      genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
+
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
+stackCheck ∷
+  ( HasState "stack" Stack m,
+    HasThrow "compilationError" CompilationError m,
+    Show a2
+  ) ⇒
+  a2 →
+  (Stack → Stack → Bool) →
+  m Op →
+  m Op
+stackCheck term guard func = do
+  pre ← get @"stack"
+  res ← func
+  post ← get @"stack"
+  if guard post pre
+    then pure res
+    else
+      failWith
+        ( "compilation violated stack invariant: "
+            <> show term
+            <> " prior stack "
+            <> show pre
+            <> " posterior stack "
+            <> show post
+        )
