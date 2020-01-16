@@ -92,12 +92,26 @@ valueOfErr (Val FuncResultE) = error "called valueOf with a stored value"
 valueOfErr (VarE _ Nothing) = error "called valueOf with a stored value"
 valueOfErr (VarE _ (Just FuncResultE)) = error "called valueOf with a stored value"
 
+-- | 'carErr' gets the first element off the stack
+-- may return an error
+car ∷ Stack → (StackElem, M.Type)
+car (Stack (s : _) _) = s
+car (Stack [] _) = error "Called car on an empty list"
+
+-- | 'cdr' removes the first element of the list
+cdr ∷ Stack → Stack
+cdr (Stack (s : ss) size)
+  | inStack (fst s) = Stack ss (pred size)
+  | otherwise = Stack ss size
+cdr (Stack [] size) = Stack [] size
+
 -- | 'cons' is like 'consStack', however it works ont ehs tack directly,
 -- not from within a monad
 cons ∷ (StackElem, M.Type) → Stack → Stack
 cons v = ins v f
   where
-    f | inStack (fst v) = succ
+    f
+      | inStack (fst v) = succ
       | otherwise = identity
 
 -- | 'consStack', cons on a value v to our representation of the stack

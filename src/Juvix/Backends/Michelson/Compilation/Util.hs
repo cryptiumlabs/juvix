@@ -9,30 +9,45 @@ import qualified Michelson.Typed as MT
 import Michelson.Untyped
 
 -- TODO ∷ find better name
-failWith' ∷ (HasThrow "compilationError" CompilationError m) ⇒ Text → m a
+failWith' ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
 failWith' = throw @"compilationError" . InternalFault
 
-failWith ∷ ∀ m. (HasThrow "compilationError" CompilationError m) ⇒ Text → m ExpandedOp
+failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m ExpandedOp
 failWith = throw @"compilationError" . InternalFault
 
+-- TODO ∷ don't add a value if it is a constant
 stackToStack ∷ Stack → SomeHST
-stackToStack [] = SomeHST SNil
-stackToStack ((_, ty) : xs) =
-  case stackToStack xs of
-    SomeHST tail →
-      MT.withSomeSingT (MT.fromUType ty) $ \sty →
-        SomeHST (sty -:& tail)
+stackToStack (Stack stack' _) =
+  foldr
+    ( \(_, ty) (SomeHST tail) →
+        MT.withSomeSingT (MT.fromUType ty) $ \sty →
+          SomeHST (sty -:& tail)
+    )
+    (SomeHST SNil)
+    (filter (inStack . fst) stack')
+
+append ∷ Stack → Stack → Stack
+append (Stack pres size) (Stack posts size') = Stack (pres <> posts) (size + size')
 
 appendDrop ∷ Stack → Stack → Stack
-appendDrop prefix = (<>) prefix . drop 1
+appendDrop prefix = append prefix . cdr
 
 lookupType ∷ Symbol → Stack → Maybe Type
-lookupType _ [] = Nothing
-lookupType n (x : xs) = if fst x == VarE n then pure (snd x) else lookupType n xs
+lookupType n (Stack stack' _) = go stack'
+  where
+    go ((VarE n' _, typ) : _)
+      | n' == n = Just typ
+    go ((_, _) : xs) = go xs
+    go [] = Nothing
 
+dropS ∷ (Ord t, Num t, Enum t) ⇒ t → Stack → Stack
+dropS n xs
+  | n <= 0 = xs
+  | otherwise = dropS (pred n) (cdr xs)
 
-data Lookup = Value Value
-            | Position Natural
+data Lookup
+  = Value Value
+  | Position Natural
 
 -- | 'lookup' looks up a symbol from the stack
 -- May return None if the symbol does not exist at all on the stack
@@ -40,19 +55,28 @@ data Lookup = Value Value
 -- a Value if the symbol is not stored on the stack
 -- or the position, if the value is stored on the stack
 lookup ∷ Symbol → Stack → Maybe Lookup
-lookup n (Stack stack' size) = go stack' 0
+lookup n (Stack stack' _) = go stack' 0
   where
     go ((v@(VarE n' _), _) : _) acc
-      | n' == n && inStack v = Just (Position acc)
-      -- One should deduce that before calling position
-      | n' == n = Just (Value (valueOfErr v))
+      | n' == n && inStack v =
+        Just (Position acc)
+      | n' == n =
+        Just (Value (valueOfErr v))
     go ((v, _) : vs) acc
       | inStack v = go vs (succ acc)
       | otherwise = go vs acc
 
-dropFirst ∷ Symbol → Stack → Stack
-dropFirst n (x : xs) = if fst x == VarE n then xs else x : dropFirst n xs
-dropFirst _ [] = []
+dropFirst ∷ Symbol → Stack → [(StackElem, Type)] → Stack
+dropFirst n (Stack stack' size) = go stack'
+  where
+    go ((v@(VarE n' _), _) : xs) acc
+      | n' == n && inStack v =
+        Stack (reverse acc <> xs) (pred size)
+      | n' == n =
+        Stack (reverse acc <> xs) size
+    go (v : vs) acc =
+      go vs (v : acc)
+    go [] _ = Stack stack' size
 
 rearrange ∷ Natural → ExpandedOp
 rearrange 0 = SeqEx []
@@ -105,17 +129,37 @@ genFunc instr =
       pure (\s → foldl (flip ($)) s fs)
     PrimEx p →
       case p of
-        DROP → pure (drop 1)
-        DUP _ → pure (\(x : xs) → x : x : xs)
-        SWAP → pure (\(x : y : xs) → y : x : xs)
-        CAR _ _ → pure (\((_, Type (TPair _ _ x _) _) : xs) → (FuncResultE, x) : xs)
-        CDR _ _ → pure (\((_, Type (TPair _ _ _ y) _) : xs) → (FuncResultE, y) : xs)
-        PAIR _ _ _ _ → pure (\((_, xT) : (_, yT) : xs) → (FuncResultE, Type (TPair "" "" xT yT) "") : xs)
+        DROP → pure cdr
+        DUP _ → pure (\s → cons (car s) s)
+        SWAP →
+          pure
+            ( \ss →
+                let cs = cdr ss
+                 in cons (car cs) (cons (car ss) cs)
+            )
+        -- TODO ∷ remove the FuncResultE of these, and have constant propagation
+        CAR _ _ →
+          pure
+            ( \s@(Stack ((_, Type (TPair _ _ x _) _) : _) _) →
+                cons (Val FuncResultE, x) (cdr s)
+            )
+        CDR _ _ →
+          pure
+            ( \s@(Stack ((_, Type (TPair _ _ _ y) _) : _) _) →
+                cons (Val FuncResultE, y) (cdr s)
+            )
+        PAIR _ _ _ _ →
+          pure
+            ( \ss@(Stack ((_, xT) : (_, yT) : _) _) →
+                cons
+                  (Val FuncResultE, Type (TPair "" "" xT yT) "")
+                  (cdr (cdr ss))
+            )
         DIP ops → do
           f ← genFunc (SeqEx ops)
-          return (\(x : xs) → x : f xs)
-        AMOUNT _ → pure ((:) (FuncResultE, Type (Tc CMutez) ""))
-        NIL _ _ _ → pure ((:) (FuncResultE, Type (TList (Type TOperation "")) ""))
+          pure (\ss → cons (car ss) (f (cdr ss)))
+        AMOUNT _ → pure (cons (Val FuncResultE, Type (Tc CMutez) ""))
+        NIL _ _ _ → pure (cons (Val FuncResultE, Type (TList (Type TOperation "")) ""))
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
 
@@ -142,7 +186,11 @@ unpackClosure ∷
 unpackClosure [] = pure (PrimEx DROP)
 unpackClosure env = do
   let count = length env
-  modify @"stack" ((<>) (map (\(s, t) → (VarE s, t)) env))
+  modify @"stack"
+    ( append
+        $ Stack (fmap (\(s, t) → (VarE s Nothing, t)) env)
+        $ length env
+    )
   -- dup (count - 1) times,
   pure
     ( SeqEx
@@ -158,7 +206,7 @@ dropClosure ∷
   m ExpandedOp
 dropClosure env = do
   let count = length env
-  modify @"stack" (\(x : xs) → x : drop count xs)
+  modify @"stack" (\xs → cons (car xs) (dropS count (cdr xs)))
   pure (PrimEx (DIP (replicate count (PrimEx DROP))))
 
 pop ∷
@@ -167,8 +215,8 @@ pop ∷
 pop = do
   s ← get @"stack"
   case s of
-    x : xs → x <$ put @"stack" xs
-    [] → throw @"compilationError" NotEnoughStackSpace
+    Stack (x : _) _ → x <$ put @"stack" (cdr s)
+    Stack [] _ → throw @"compilationError" NotEnoughStackSpace
 
 carN ∷ Int → ExpandedOp
 carN 0 = SeqEx []
