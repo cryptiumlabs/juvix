@@ -27,10 +27,10 @@ termToMichelson ∷
 termToMichelson term paramTy = do
   case term of
     (J.Lam arg body, _, _) → do
-      modify @"stack" ((VarE arg, paramTy) :)
+      modify @"stack" (cons (VarE arg Nothing, paramTy))
       instr' ← termToInstr body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
-      modify @"stack" (\(x : _ : xs) → x : xs)
+      modify @"stack" (\xs → cons (car xs) (cdr (cdr xs)))
       tell @"compilationLog" [TermToInstr body instr]
       pure instr
     _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
@@ -78,23 +78,24 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         -- TODO: second is a lambda, but it doesn't matter,
         -- this just needs to be positionally accurate for var lookup.
         modify @"stack"
-          ( [ (FuncResultE, M.Type M.TUnit ""),
-              (FuncResultE, M.Type M.TUnit "")
-            ]
-              <>
+          ( append $
+              fromList
+                [ (Val FuncResultE, M.Type M.TUnit ""),
+                  (Val FuncResultE, M.Type M.TUnit "")
+                ]
           )
         vars ← traverse (\f → stackGuard f paramTy (varCase term f)) free
         packOp ← packClosure free
-        put @"stack" []
+        put @"stack" (fromList [])
         let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
         unpackOp ← unpackClosure freeWithTypes
-        modify @"stack" ((VarE arg, argTy) :)
+        modify @"stack" (cons (VarE arg Nothing, argTy))
         inner ← termToInstr body paramTy
         dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
         post ← get @"stack"
-        let ((_, retTy) : _) = post
+        let (Stack ((_, retTy) : _) _) = post
         let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
-        put @"stack" ((FuncResultE, rTy) : stack)
+        put @"stack" (cons (Val FuncResultE, rTy) stack)
         pure
           ( M.SeqEx
               [ M.PrimEx
@@ -155,8 +156,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         func ← termToInstr func paramTy -- :: Lam a b
         arg ← termToInstr arg paramTy -- :: a
         modify @"stack"
-          ( \(_ : (_, (M.Type (M.TLambda _ retTy) _)) : xs) →
-              (FuncResultE, retTy) : xs
+          ( \s@(Stack (_ : (_, (M.Type (M.TLambda _ retTy) _)) : _) _) →
+              cons (Val FuncResultE, retTy) (cdr (cdr s))
           )
         pure
           ( M.SeqEx
@@ -167,13 +168,13 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           )
 
 takesOne ∷ Stack → Stack → Bool
-takesOne post pre = post == drop 1 pre
+takesOne post pre = post == dropS 1 pre
 
 addsOne ∷ Stack → Stack → Bool
-addsOne post pre = drop 1 post == pre
+addsOne post pre = dropS 1 post == pre
 
 changesTop ∷ Stack → Stack → Bool
-changesTop post pre = drop 1 post == pre
+changesTop post pre = dropS 1 post == pre
 
 varCase ∷
   ( HasState "stack" Stack m,
@@ -185,9 +186,10 @@ varCase ∷
   m Op
 varCase term n = stackCheck term addsOne $ do
   stack ← get @"stack"
-  case position n stack of
+  case lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
-    Just i → do
+    Just (Value i) → undefined
+    Just (Position i) → do
       -- TODO ∷ replace with dip call
 
       let before = rearrange i
@@ -243,15 +245,15 @@ argTypeFromLam ∷
   J.Type PrimTy PrimVal →
   M.Type →
   t (a, Term) →
-  m (J.Type PrimTy PrimVal, [(a, M.Type)])
-argTypeFromLam t (paramTy ∷ M.Type) =
+  m (J.Type PrimTy PrimVal, [M.Type])
+argTypeFromLam t paramTy =
   foldrM
     ( \(sym, arg) (t, args) →
         case t of
           J.Pi _usage aType rest → do
             argEval ← termToInstr arg paramTy
             aType ← typeToType aType
-            v ← pop
+            (v, vType) ← pop
             case v of
               VarE _ _ → failWith' "Never happens"
               -- TODO ∷ change logic if we get a constant
@@ -261,7 +263,7 @@ argTypeFromLam t (paramTy ∷ M.Type) =
                 undefined
               Val (FuncResultE) →
                 undefined
-            modify @"stack" ((VarE sym (Just v), aType) :)
+            -- modify @"stack" (cons (VarE sym (Just v), aType))
             pure (rest, aType : args)
           _ →
             failWith'

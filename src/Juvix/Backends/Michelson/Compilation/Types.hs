@@ -30,6 +30,7 @@ data Stack
       { stack' ∷ [(StackElem, M.Type)],
         size ∷ Int
       }
+  deriving (Show, Eq)
 
 data StackElem
   = VarE Symbol (Maybe StackVal)

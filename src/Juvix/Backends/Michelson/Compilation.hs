@@ -28,12 +28,12 @@ compileContract ∷
   Type →
   (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term ty =
-  let (ret, env) = execWithStack [] (compileToMichelsonContract term ty)
+  let (ret, env) = execWithStack (fromList []) (compileToMichelsonContract term ty)
    in (ret, compilationLog env)
 
 compileExpr ∷ Term → Type → (Either CompilationError SomeInstr, [CompilationLog])
 compileExpr term ty =
-  let (ret, env) = execWithStack [] (compileToMichelsonExpr term ty)
+  let (ret, env) = execWithStack (fromList []) (compileToMichelsonExpr term ty)
    in (ret, compilationLog env)
 
 compileToMichelsonContract ∷

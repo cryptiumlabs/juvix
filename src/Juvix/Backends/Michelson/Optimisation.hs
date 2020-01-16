@@ -20,7 +20,7 @@ import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
 import qualified Michelson.Optimizer as MO
 import qualified Michelson.Typed as MT
-import Michelson.Untyped hiding (Op)
+import Michelson.Untyped
 
 optimiseWithMorley ∷
   ∀ m inp out.
