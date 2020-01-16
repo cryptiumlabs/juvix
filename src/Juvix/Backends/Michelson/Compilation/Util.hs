@@ -26,6 +26,9 @@ stackToStack (Stack stack' _) =
     (SomeHST SNil)
     (filter (inStack . fst) stack')
 
+fromList ∷ Foldable t ⇒ t (StackElem, Type) → Stack
+fromList = foldr cons (Stack [] 0)
+
 append ∷ Stack → Stack → Stack
 append (Stack pres size) (Stack posts size') = Stack (pres <> posts) (size + size')
 
@@ -174,10 +177,7 @@ packClosure ∷
 packClosure vars = do
   let count = length vars
   genReturn
-    ( SeqEx
-        ( replicate count (PrimEx (PAIR "" "" "" ""))
-        )
-    )
+    (SeqEx (replicate count (PrimEx (PAIR "" "" "" ""))))
 
 unpackClosure ∷
   ∀ m.

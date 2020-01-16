@@ -19,18 +19,19 @@ primToInstr ∷
   J.Type PrimTy PrimVal →
   m Op
 primToInstr prim ty =
+  -- TODO ∷ Optimize this for values!
   case prim of
     -- :: \x -> y ~ s => (f, s)
     PrimFst → do
       let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
           retTy = M.Type (M.TLambda pairTy xT) ""
-      modify @"stack" ((:) (FuncResultE, retTy))
+      modify @"stack" (cons (Val FuncResultE, retTy))
       pure (oneArgPrim (M.PrimEx (M.CAR "" "") :| []) retTy)
     -- :: \x -> y ~ s => (f, s)
     PrimSnd → do
       let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
           retTy = M.Type (M.TLambda pairTy yT) ""
-      modify @"stack" ((:) (FuncResultE, retTy))
+      modify @"stack" (cons (Val FuncResultE, retTy))
       pure (oneArgPrim (M.PrimEx (M.CDR "" "") :| []) retTy)
     -- :: \x y -> a ~ (x, (y, s)) => (a, s)
     PrimPair → do
@@ -46,7 +47,7 @@ primToInstr prim ty =
 
           firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
 
-      modify @"stack" ((FuncResultE, firstLamTy) :)
+      modify @"stack" (cons (Val FuncResultE, firstLamTy))
       pure
         ( M.PrimEx
             ( M.PUSH
@@ -80,11 +81,11 @@ primToInstr prim ty =
       case const of
         M.ValueNil → do
           let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
-          modify @"stack" ((:) (FuncResultE, t))
+          modify @"stack" (cons (Val FuncResultE, t))
           pure (M.PrimEx (M.NIL "" "" elemTy))
         _ → do
           let J.PrimTy (PrimTy t) = ty
-          modify @"stack" ((FuncResultE, t) :)
+          modify @"stack" (cons (Val FuncResultE, t))
           pure (M.PrimEx (M.PUSH "" t const))
 
 oneArgPrim ∷ NonEmpty Op → M.Type → Op

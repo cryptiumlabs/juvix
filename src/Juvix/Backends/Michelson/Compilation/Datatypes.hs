@@ -26,18 +26,18 @@ unpack ∷
 unpack (Type ty _) binds =
   case ty of
     Tbool → do
-      modify @"stack" (drop 1)
+      modify @"stack" (dropS (1 ∷ Int))
       return (SeqEx [])
     TPair _ _ fT sT →
       case binds of
         [Just fst, Just snd] → do
-          modify @"stack" (appendDrop [(VarE fst, fT), (VarE snd, sT)])
+          modify @"stack" (appendDrop (fromList [(VarE fst Nothing, fT), (VarE snd Nothing, sT)]))
           pure (SeqEx [PrimEx (DUP ""), PrimEx (CDR "" ""), PrimEx SWAP, PrimEx (CAR "" "")])
         [Just fst, Nothing] → do
-          modify @"stack" (appendDrop [(VarE fst, fT)])
+          modify @"stack" (appendDrop (fromList [(VarE fst Nothing, fT)]))
           pure (PrimEx (CAR "" ""))
         [Nothing, Just snd] → do
-          modify @"stack" (appendDrop [(VarE snd, sT)])
+          modify @"stack" (appendDrop (fromList [(VarE snd Nothing, sT)]))
           pure (PrimEx (CDR "" ""))
         [Nothing, Nothing] →
           genReturn (PrimEx DROP)
