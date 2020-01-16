@@ -133,21 +133,33 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- Call-by-value (evaluate argument first).
     J.App apps arg →
       stackCheck term addsOne $
-        let (lam, args) = foldApps apps [arg]
+        let (lam, args) = argsFromApps apps
          in case lam of
-              (J.LamM capture arguments body, _usage, lamTy) →
+              (J.LamM capture arguments body, _usage, lamTy) → do
+                insts ← evaluateAndPushArgs arguments lamTy args paramTy
                 let argsL = length args
                     lamArgsL = length arguments
-                 in if
-                      | argsL == lamArgsL → do
-                        undefined
-                      | argsL < lamArgsL → do
-                        let (lams, extraArgs) = splitAt argsL arguments
-                        undefined
-                      | otherwise → do
-                        -- argsL > lamArgsL
-                        let (args, extraApplied) = splitAt lamArgsL args
-                        undefined
+                if
+                  | argsL == lamArgsL → do
+                    f ← termToInstr body paramTy
+                    pure
+                      ( M.SeqEx
+                          ( insts
+                              <> [ f,
+                                   M.PrimEx
+                                     (M.DIP (replicate argsL (M.PrimEx M.DROP)))
+                                 ]
+                          )
+                      )
+                  | argsL < lamArgsL → do
+                    let (lams, extraArgs) = splitAt argsL arguments
+                    undefined
+                  | otherwise → do
+                      -- argsL > lamArgsL
+                      -- TODO ∷ rather hard to figure out, need to recursively go
+                      -- through the body to figure out names... etc etc.
+                    let (args, extraApplied) = splitAt lamArgsL args
+                    undefined
               t → do
                 failWith ("Applications applied to non lambda term: " <> show t)
     -- TODO ∷ remove
@@ -234,42 +246,87 @@ stackCheck term guard func = do
       )
   pure res
 
--- TODO ∷ find a monadic version of mapAccumR
+argsFromApps ∷
+  J.AnnTerm primTy primVal →
+  ( (J.Term primTy primVal, Usage.Usage, J.Type primTy primVal),
+    [J.AnnTerm primTy primVal]
+  )
+argsFromApps xs = go xs []
+  where
+    go (J.App inner arg, _, _) acc = go inner (arg : acc)
+    go inner acc = (inner, reverse acc)
 
-argTypeFromLam ∷
-  ( Foldable t,
+typesFromPi ∷
+  HasThrow "compilationError" CompilationError f ⇒
+  J.Type PrimTy PrimVal →
+  f [M.Type]
+typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
+typesFromPi _ = pure []
+
+-- TODO ∷ have a function which grabs all names of
+--        lambdas recursively for over applied functions
+evaluateAndPushArgs ∷
+  ( HasThrow "compilationError" CompilationError m,
     HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
+  [Symbol] →
   J.Type PrimTy PrimVal →
+  [Term] →
   M.Type →
-  t (a, Term) →
-  m (J.Type PrimTy PrimVal, [M.Type])
-argTypeFromLam t paramTy =
+  m [Op]
+evaluateAndPushArgs names t args paramTy = do
+  types ← typesFromPi t
+  let namedArgs = zip (zip names types) args
   foldrM
-    ( \(sym, arg) (t, args) →
-        case t of
-          J.Pi _usage aType rest → do
-            argEval ← termToInstr arg paramTy
-            aType ← typeToType aType
-            (v, vType) ← pop
-            case v of
-              VarE _ _ → failWith' "Never happens"
-              -- TODO ∷ change logic if we get a constant
-              --        don't extend the env, but push the constant
-              --        to the stack
-              Val (ConstE v) →
-                undefined
-              Val (FuncResultE) →
-                undefined
-            -- modify @"stack" (cons (VarE sym (Just v), aType))
-            pure (rest, aType : args)
-          _ →
-            failWith'
-              ( "compilation argument invariant : "
-                  <> show t
-                  <> " is not of Pi/Lambda type"
-              )
+    ( \((name, _type'), arg) instrs → do
+        -- TODO ∷ assert that _type' and typeV are the same!
+        argEval ← termToInstr arg paramTy
+        (v, typeV) ← pop
+        case v of
+          VarE _ _ → failWith' "Never happens"
+          Val v →
+            modify @"stack" (cons (VarE name (Just v), typeV))
+        pure (argEval : instrs)
     )
-    (t, [])
+    []
+    namedArgs
+-- TODO ∷ find a monadic version of mapAccumR
+
+-- argTypeFromLam ∷
+--   ( Foldable t,
+--     HasState "stack" Stack m,
+--     HasThrow "compilationError" CompilationError m,
+--     HasWriter "compilationLog" [CompilationLog] m
+--   ) ⇒
+--   J.Type PrimTy PrimVal →
+--   M.Type →
+--   t (a, Term) →
+--   m (J.Type PrimTy PrimVal, [M.Type])
+-- argTypeFromLam t paramTy =
+--   foldrM
+--     ( \(sym, arg) (t, args) →
+--         case t of
+--           J.Pi _usage aType rest → do
+--             argEval ← termToInstr arg paramTy
+--             aType ← typeToType aType
+--             (v, vType) ← pop
+--             case v of
+--               VarE _ _ → failWith' "Never happens"
+--               -- TODO ∷ change logic if we get a constant
+--               --        don't extend the env, but push the constant
+--               --        to the stack
+--               Val (ConstE v) →
+--                 undefined
+--               Val (FuncResultE) →
+--                 undefined
+--             modify @"stack" (cons (VarE sym (Just v), aType))
+--             pure (rest, aType : args)
+--           _ →
+--             failWith'
+--               ( "compilation argument invariant : "
+--                   <> show t
+--                   <> " is not of Pi/Lambda type"
+--               )
+--     )
+--     (t, [])
