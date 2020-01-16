@@ -65,6 +65,7 @@ lookup n (Stack stack' _) = go stack' 0
     go ((v, _) : vs) acc
       | inStack v = go vs (succ acc)
       | otherwise = go vs acc
+    go [] _ = Nothing
 
 dropFirst ∷ Symbol → Stack → [(StackElem, Type)] → Stack
 dropFirst n (Stack stack' size) = go stack'
