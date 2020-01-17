@@ -131,37 +131,77 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         pure (M.SeqEx (args <> [func]))
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
-    J.App apps arg →
-      stackCheck term addsOne $
-        let (lam, args) = argsFromApps apps
-         in case lam of
-              (J.LamM capture arguments body, _usage, lamTy) → do
-                insts ← evaluateAndPushArgs arguments lamTy args paramTy
-                let argsL = length args
-                    lamArgsL = length arguments
-                if
-                  | argsL == lamArgsL → do
-                    f ← termToInstr body paramTy
-                    pure
-                      ( M.SeqEx
-                          ( insts
-                              <> [ f,
-                                   M.PrimEx
-                                     (M.DIP (replicate argsL (M.PrimEx M.DROP)))
-                                 ]
-                          )
+    J.App _ _ →
+      stackCheck term addsOne $ do
+        pre ← get @"stack"
+        let (lam, args) = argsFromApps ann
+        case lam of
+          (J.LamM capture arguments body, _usage, lamTy) → do
+            insts ← evaluateAndPushArgs arguments lamTy args paramTy
+            let argsL = length args
+                lamArgsL = length arguments
+            if
+              | argsL == lamArgsL → do
+                f ← termToInstr body paramTy
+                pure
+                  ( M.SeqEx
+                      ( insts
+                          <> [ f,
+                               M.PrimEx
+                                 (M.DIP (replicate argsL (M.PrimEx M.DROP)))
+                             ]
                       )
-                  | argsL < lamArgsL → do
-                    let (lams, extraArgs) = splitAt argsL arguments
-                    undefined
-                  | otherwise → do
-                      -- argsL > lamArgsL
-                      -- TODO ∷ rather hard to figure out, need to recursively go
-                      -- through the body to figure out names... etc etc.
-                    let (args, extraApplied) = splitAt lamArgsL args
-                    undefined
-              t → do
-                failWith ("Applications applied to non lambda term: " <> show t)
+                  )
+              | argsL < lamArgsL → do
+                let (lams, extraArgs) = splitAt argsL arguments
+                    inEnvironment = lams <> capture
+                captureInsts ←
+                  traverse
+                    ( \x → do
+                        currentStack ← get @"stack"
+                        case lookup x currentStack of
+                          Nothing →
+                            failWith'
+                              ( "free variable in lambda"
+                                  <> " doesn't exist"
+                              )
+                          Just (Value v) → do
+                            let (Just type') = lookupType x currentStack
+                            modify @"stack" (cons (VarE x (Just (ConstE v)), type'))
+                            pure (M.SeqEx [])
+                          Just (Position p) → do
+                            let (Just type') = lookupType x currentStack
+                            let inst = dupToFront (fromIntegral p)
+                            modify @"stack" (cons (VarE x Nothing, type'))
+                            pure inst
+                    )
+                    capture
+                Stack currentStack _ ← get @"stack"
+                let realValues =
+                      length
+                      $ filter (inStack . fst)
+                      $ take (length inEnvironment) currentStack
+                -- TODO ∷ WHAΤ about reaminign args
+                --       do we need to compile to multiple lambas
+                --       how to share logic with actual lam case
+                packInstrs ← genReturn (pairN (realValues - 1))
+                modify @"stack" (\stack@(Stack stack' _) →
+                                   let pairs = car stack
+                                       -- TODO ∷ filter harder, so we don't bring unwanted
+                                       --         constants this is to save space
+                                       filtered = filter (not . inStack . fst) stack'
+                                   in cons pairs (Stack filtered 0)
+                                )
+                body ← termToInstr body paramTy
+                undefined
+              | otherwise → do
+                -- argsL > lamArgsL
+                -- TODO ∷ rather hard to figure out, need to recursively go
+                -- through the body to figure out names... etc etc.
+                let (args, extraApplied) = splitAt lamArgsL args
+                undefined
+          t → do
+            failWith ("Applications applied to non lambda term: " <> show t)
     -- TODO ∷ remove
     J.App func arg →
       stackCheck term addsOne $ do

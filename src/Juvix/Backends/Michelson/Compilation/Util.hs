@@ -82,6 +82,10 @@ dropFirst n (Stack stack' size) = go stack'
       go vs (v : acc)
     go [] _ = Stack stack' size
 
+dupToFront ∷ Word → ExpandedOp
+dupToFront 0 = PrimEx (DUP "")
+dupToFront n = SeqEx [PrimEx (DIG n), PrimEx (DUP ""), PrimEx (DUG n)]
+
 rearrange ∷ Natural → ExpandedOp
 rearrange 0 = SeqEx []
 rearrange 1 = PrimEx SWAP
@@ -167,8 +171,10 @@ genFunc instr =
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
 
+pairN ∷ Int → ExpandedOp
+pairN count = SeqEx (replicate count (PrimEx (PAIR "" "" "" "")))
+
 packClosure ∷
-  ∀ m.
   ( HasState "stack" Stack m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
