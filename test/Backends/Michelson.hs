@@ -28,9 +28,12 @@ shouldCompileExpr ∷ Term → Type → T.TestTree
 shouldCompileExpr term ty =
   T.testCase
     (show term <> " should compile to an instruction sequence")
-    ((case fst (compileExpr term ty) of
-       Right _ -> True
-       _ -> False) T.@? "failed to compile")
+    ( ( case fst (compileExpr term ty) of
+          Right _ → True
+          Left _ → False
+      )
+        T.@? "failed to compile"
+    )
 
 backendMichelson ∷ T.TestTree
 backendMichelson =
@@ -40,6 +43,8 @@ backendMichelson =
       --identityApp,
       --identityApp2,
       identityExpr,
+      identityExpr2,
+      identityExpr3,
       optimiseDupDrop,
       optimiseLambdaExec
     ]
@@ -54,6 +59,18 @@ identityExpr ∷ T.TestTree
 identityExpr =
   shouldCompileExpr
     identityTerm2
+    identityType2
+
+identityExpr2 ∷ T.TestTree
+identityExpr2 =
+  shouldCompileExpr
+    identityAppExpr
+    identityType2
+
+identityExpr3 ∷ T.TestTree
+identityExpr3 =
+  shouldCompileExpr
+    identityAppExpr2
     identityType2
 
 identityFn ∷ T.TestTree
@@ -141,12 +158,6 @@ primLam ∷ NonEmpty M.Type → Type
 primLam (ty :| []) = J.PrimTy (PrimTy ty)
 primLam (ty :| (t : ts)) = J.Pi (SNat 1) (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
-primPairTy =
-  J.Pi
-    (SNat 1)
-    (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
-    (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
-
 identityAppTerm ∷ Term
 identityAppTerm =
   ( J.Lam
@@ -182,6 +193,43 @@ identityAppTerm =
       ),
     SNat 1,
     identityType
+  )
+
+identityAppExpr ∷ Term
+identityAppExpr =
+  ( J.Lam
+      "y"
+      ( J.App
+          ( J.Lam
+              "x"
+              ( J.App
+                  ( J.App
+                      ( J.Prim PrimPair,
+                        SNat 1,
+                        primPairTy2
+                      )
+                      (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))),
+                    SNat 1,
+                    J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) "")))
+                  )
+                  ( J.App
+                      (J.Prim PrimFst, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
+                      (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+                    SNat 1,
+                    J.PrimTy (PrimTy (M.Type M.TUnit ""))
+                  ),
+                SNat 1,
+                J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) ""))
+              ),
+            SNat 1,
+            identityType2
+          )
+          (J.Var "y", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+        SNat 1,
+        J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) ""))
+      ),
+    SNat 1,
+    identityType2
   )
 
 identityAppTerm2 ∷ Term
@@ -221,6 +269,43 @@ identityAppTerm2 =
     identityType
   )
 
+identityAppExpr2 ∷ Term
+identityAppExpr2 =
+  ( J.Lam
+      "x"
+      ( J.App
+          ( J.Lam
+              "f"
+              ( J.App
+                  ( J.App
+                      ( J.Var "f",
+                        SNat 1,
+                        primPairTy2
+                      )
+                      (J.Prim (PrimConst M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))),
+                    SNat 1,
+                    J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) "")))
+                  )
+                  ( J.App
+                      (J.Prim PrimFst, SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
+                      (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+                    SNat 1,
+                    J.PrimTy (PrimTy (M.Type M.TUnit ""))
+                  ),
+                SNat 1,
+                J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) ""))
+              ),
+            SNat 1,
+            J.Pi (SNat 1) primPairTy2 (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) "")))
+          )
+          (J.Prim PrimPair, SNat 1, primPairTy2),
+        SNat 1,
+        J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) ""))
+      ),
+    SNat 1,
+    identityType2
+  )
+
 fstTy ∷ Type
 fstTy = J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))
 
@@ -237,7 +322,7 @@ identityType = J.Pi Omega (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""
 identityType2 ∷ Type
 identityType2 = J.Pi Omega (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unit unit) ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) "")))
 
-unitl :: M.Type
+unitl ∷ M.Type
 unitl = M.Type (M.TList (M.Type M.TUnit "")) ""
 
 opl ∷ M.Type
@@ -245,3 +330,15 @@ opl = M.Type (M.TList (M.Type M.TOperation "")) ""
 
 unit ∷ M.Type
 unit = M.Type M.TUnit ""
+
+primPairTy =
+  J.Pi
+    (SNat 1)
+    (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
+    (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
+
+primPairTy2 =
+  J.Pi
+    (SNat 1)
+    (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) "")))
+    (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) ""))))
