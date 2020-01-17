@@ -36,7 +36,7 @@ compile ∷ FilePath → FilePath → Backend → IO ()
 compile fin fout backend = do
   (term, ty) ← typecheck fin backend
   -- TODO: Annotated version.
-  let (res, logs) = M.compile undefined undefined
+  let (res, logs) = M.compileContract undefined undefined
   case res of
     Left err → do
       T.putStrLn (show err)

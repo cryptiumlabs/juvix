@@ -139,10 +139,13 @@ library:
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
     - Juvix.Backends.Michelson.Compilation
+    - Juvix.Backends.Michelson.Compilation.Prim
     - Juvix.Backends.Michelson.Compilation.Term
     - Juvix.Backends.Michelson.Compilation.Type
+    - Juvix.Backends.Michelson.Compilation.Checks
     - Juvix.Backends.Michelson.Compilation.Types
     - Juvix.Backends.Michelson.Compilation.Util
+    - Juvix.Backends.Michelson.Compilation.Datatypes
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
@@ -159,11 +162,15 @@ library:
     - Juvix.Backends.LLVM.Codegen.Shared
     - Juvix.Backends.LLVM.Codegen.Block
     - Juvix.Backends.LLVM.Codegen.Graph
+    - Juvix.Backends.LLVM.Codegen.Graph.Debug
+    - Juvix.Backends.LLVM.Codegen.Graph.Operations
+    - Juvix.Backends.LLVM.Codegen.Graph.Definitions
     - Juvix.Backends.LLVM.Codegen
     - Juvix.Backends.LLVM.Net.API
     - Juvix.Backends.LLVM.Net.EAC
     - Juvix.Backends.LLVM.Net.EAC.Types
     - Juvix.Backends.LLVM.Net.EAC.Defs
+    - Juvix.Backends.LLVM.Net.EAC.Debug
     - Juvix.Backends.LLVM.Net.Environment
     - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
     - Juvix.Backends.LLVM.DSL

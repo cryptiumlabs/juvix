@@ -2,7 +2,7 @@
 -- - Has the code necessary to generate LLVM Code
 module Juvix.Backends.LLVM.Codegen.Block where
 
-import Data.ByteString.Short
+import Data.ByteString.Short hiding (length)
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Library hiding (Type, local)
@@ -67,7 +67,8 @@ emptyCodegen = Types.CodegenState
     Types.count = 0,
     Types.names = Map.empty,
     Types.blockCount = 1,
-    Types.moduleAST = emptyModule "EAC"
+    Types.moduleAST = emptyModule "EAC",
+    Types.debug = 0
   }
 
 execEnvState ∷ Codegen a → SymbolTable → CodegenState
@@ -313,6 +314,73 @@ external retty label argtys = do
       (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
       (mkName label)
 
+externalVar ∷ (HasState "moduleDefinitions" [Definition] m) ⇒ Type → String → [(Type, Name)] → m Operand
+externalVar retty label argtys = do
+  addDefn
+    $ GlobalDefinition
+    $ functionDefaults
+      { Global.parameters =
+          ( ( \(ty, nm) →
+                Parameter
+                  ty
+                  nm
+                  [ParameterAttribute.NoAlias, ParameterAttribute.NoCapture]
+            )
+              <$> argtys,
+            True
+          ),
+        Global.callingConvention = CC.C, -- TODO: Do we always want this?
+        Global.returnType = retty,
+        Global.basicBlocks = [],
+        Global.name = mkName label,
+        Global.linkage = L.External
+      }
+  return
+    $ ConstantOperand
+    $ C.GlobalReference
+      (Types.pointerOf (FunctionType retty (fst <$> argtys) True))
+      (mkName label)
+
+--------------------------------------------------------------------------------
+-- Printing facility
+--------------------------------------------------------------------------------
+
+definePrintf ∷ External m ⇒ m ()
+definePrintf = do
+  let name = "printf"
+  op ← externalVar Type.i32 name [(Types.pointerOf Type.i8, "n")]
+  assign name op
+
+printf ∷ Call m ⇒ [Operand] → m Operand
+printf args = do
+  printf ← externf "printf"
+  instr Type.i32 $ callConvention CC.C printf (emptyArgs args)
+
+cString ∷ [Char] → C.Constant
+cString str = C.Array Type.i8 (C.Int 8 . fromIntegral . ord <$> terminatedStr)
+  where
+    terminatedStr = str <> "\00"
+
+cStringPointer ∷ RetInstruction m ⇒ [Char] → m Operand
+cStringPointer str = do
+  t ← alloca (Type.ArrayType len Type.i8)
+  store t (Operand.ConstantOperand vec)
+  pure t
+  where
+    vec = cString str
+    len = fromIntegral (length str + 1)
+
+printCString ∷ Call m ⇒ [Char] → [Operand] → m Operand
+printCString str args = do
+  str ← cStringPointer str
+  ptrIn ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Type.i8,
+        Types.address' = str,
+        Types.indincies' = constant32List [0, 0]
+      }
+  printf (ptrIn : args)
+
 --------------------------------------------------------------------------------
 -- Memory management
 --------------------------------------------------------------------------------
@@ -334,13 +402,13 @@ defineFree = do
 malloc ∷ Call m ⇒ Integer → Type → m Operand
 malloc size type' = do
   malloc ← externf "malloc"
-  voidPtr ←
+  i8Ptr ←
     instr (Types.pointerOf Type.i8) $
       callConvention
         CC.Fast
         malloc
         (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
-  bitCast voidPtr type'
+  bitCast i8Ptr type'
 
 free ∷ Call m ⇒ Operand → m ()
 free thing = do

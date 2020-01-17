@@ -29,11 +29,10 @@ data EACState
         -- | Name Supply
         names ∷ Names,
         moduleAST ∷ AST.Module,
-        -- new data for EAC!
-        --
-
         -- | Debug level
         debug ∷ Int
+        -- new data for EAC!
+        --
       }
   deriving (Show, Generic)
 

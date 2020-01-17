@@ -3,6 +3,9 @@
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
 
+;; dependency for new systems without fset
+(quicklisp:quickload "fset" :silent t)
+
 (load "./org-generation/org-generation.asd")
 
 (asdf:load-system :org-generation)

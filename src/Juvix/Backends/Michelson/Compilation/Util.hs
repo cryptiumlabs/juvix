@@ -1,3 +1,5 @@
+-- |
+-- Utility functions used by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Util where
 
 import Juvix.Backends.Michelson.Compilation.Types
@@ -6,6 +8,9 @@ import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
 import Michelson.Untyped
 
+failWith ∷ ∀ m. (HasThrow "compilationError" CompilationError m) ⇒ Text → m ExpandedOp
+failWith = throw @"compilationError" . InternalFault
+
 stackToStack ∷ Stack → SomeHST
 stackToStack [] = SomeHST SNil
 stackToStack ((_, ty) : xs) =
@@ -13,53 +18,6 @@ stackToStack ((_, ty) : xs) =
     SomeHST tail →
       MT.withSomeSingT (MT.fromUType ty) $ \sty →
         SomeHST (sty -:& tail)
-
-pack ∷
-  ∀ m.
-  (HasThrow "compilationError" CompilationError m) ⇒
-  Type →
-  m ExpandedInstr
-pack (Type TUnit _) = pure (PUSH "" (Type TUnit "") ValueUnit)
-pack ty = throw @"compilationError" (NotYetImplemented ("pack: " <> show ty))
-
-unpack ∷
-  ∀ m.
-  ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m
-  ) ⇒
-  Type →
-  [Maybe Symbol] →
-  m ExpandedOp
-unpack (Type ty _) binds =
-  case ty of
-    Tbool → do
-      modify @"stack" (drop 1)
-      return (SeqEx [])
-    TPair _ _ fT sT →
-      case binds of
-        [Just fst, Just snd] → do
-          modify @"stack" (appendDrop [(VarE fst, fT), (VarE snd, sT)])
-          pure (SeqEx [PrimEx (DUP ""), PrimEx (CDR "" ""), PrimEx SWAP, PrimEx (CAR "" "")])
-        [Just fst, Nothing] → do
-          modify @"stack" (appendDrop [(VarE fst, fT)])
-          pure (PrimEx (CAR "" ""))
-        [Nothing, Just snd] → do
-          modify @"stack" (appendDrop [(VarE snd, sT)])
-          pure (PrimEx (CDR "" ""))
-        [Nothing, Nothing] →
-          genReturn (PrimEx DROP)
-        _ → throw @"compilationError" (InternalFault "binds do not match type")
-    _ → throw @"compilationError" (NotYetImplemented ("unpack: " <> show ty))
-unpack _ _ = throw @"compilationError" (InternalFault "invalid unpack type")
-
-unpackDrop ∷
-  ∀ m.
-  ( HasState "stack" Stack m,
-    HasThrow "compilationError" CompilationError m
-  ) ⇒
-  [Maybe Symbol] →
-  m ExpandedOp
-unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust binds))))
 
 appendDrop ∷ Stack → Stack → Stack
 appendDrop prefix = (<>) prefix . drop 1
@@ -140,9 +98,6 @@ genFunc instr =
         NIL _ _ _ → pure ((:) (FuncResultE, Type (TList (Type TOperation "")) ""))
         _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
-
-oneArgPrim ∷ NonEmpty ExpandedOp → Type → ExpandedOp
-oneArgPrim ops retTy = PrimEx (PUSH "" retTy (ValueLambda ops))
 
 packClosure ∷
   ∀ m.

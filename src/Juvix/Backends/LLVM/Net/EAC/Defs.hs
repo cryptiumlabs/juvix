@@ -3,6 +3,7 @@
 --   + Later in the DSL Layer!
 -- - Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
 -- - Also generates the proper types associated with them
+-- - Also has some miscellaneous debug information
 module Juvix.Backends.LLVM.Net.EAC.Defs where
 
 import qualified Juvix.Backends.LLVM.Codegen as Codegen
@@ -11,6 +12,49 @@ import qualified Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Library
 import qualified LLVM.AST.Operand as Operand
 import qualified LLVM.AST.Type as Type
+
+--------------------------------------------------------------------------------
+-- Extra Definitions
+--------------------------------------------------------------------------------
+
+printList ∷ Codegen.Call m ⇒ [Operand.Operand] → m ()
+printList args =
+  Codegen.callGenVoid args "print_list"
+
+definePrintList ∷ Codegen.Define m ⇒ m Operand.Operand
+definePrintList = Codegen.defineFunction Type.void "print_list" args $ do
+  _ ← Codegen.printCString "[" []
+  listPtr ← Codegen.externf "list_ptr"
+  printInner ← Codegen.externf "print_list_inner"
+  _ ← Codegen.callVoid printInner (Codegen.emptyArgs [listPtr])
+  Codegen.retNull
+  where
+    args = [(Types.eacLPointer, "list_ptr")]
+
+definePrintListInner ∷ Codegen.Define m ⇒ m Operand.Operand
+definePrintListInner = Codegen.defineFunction Type.void "print_list_inner" args $
+  do
+    listPtr ← Codegen.externf "list_ptr"
+    existsCase ← Codegen.addBlock "exists.case"
+    exitCase ← Codegen.addBlock "exit.case"
+    nullCheck ← Types.checkNull listPtr
+    _ ← Codegen.cbr nullCheck existsCase exitCase
+    -- %exists.case branch
+    ------------------------------------------------------
+    Codegen.setBlock existsCase
+    car ← Types.loadCar listPtr
+    _ ← Codegen.printCString " %p, " [car]
+    printInner ← Codegen.externf "print_list_inner"
+    cdr ← Types.loadCdr listPtr
+    _ ← Codegen.callVoid printInner (Codegen.emptyArgs [cdr])
+    _ ← Codegen.retNull
+    -- %exit.case branch
+    ------------------------------------------------------
+    _ ← Codegen.setBlock exitCase
+    _ ← Codegen.printCString "] \n" []
+    Codegen.retNull
+  where
+    args = [(Types.eacLPointer, "list_ptr")]
 
 --------------------------------------------------------------------------------
 -- Aliases
@@ -65,6 +109,7 @@ loadPrimaryNode = Codegen.loadPrimaryNode Types.eacPointer
 
 mallocNodeH ∷
   ( Codegen.RetInstruction m,
+    Codegen.Debug m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasState "symTab" Codegen.SymbolTable m
@@ -74,7 +119,7 @@ mallocNodeH ∷
   m Operand.Operand
 mallocNodeH mPorts mData = Codegen.mallocNodeH mPorts mData 4
 
-defineIsBothPrimary ∷ Codegen.Define m ⇒ m Operand.Operand
+defineIsBothPrimary ∷ (Codegen.Define m, Codegen.Debug m) ⇒ m Operand.Operand
 defineIsBothPrimary = Codegen.defineIsBothPrimary
 
 defineRewire ∷ Codegen.Define m ⇒ m Operand.Operand

@@ -1,11 +1,13 @@
 module Backends.Michelson where
 
 import Juvix.Backends.Michelson.Compilation
+import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Optimisation
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
+import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -14,13 +16,19 @@ shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    (Right contract T.@=? ((untypedContractToSource . fst) |<< fst (compile term ty)))
+    (Right contract T.@=? ((untypedContractToSource . fst) |<< fst (compileContract term ty)))
 
 shouldOptimise ∷ Op → Op → T.TestTree
 shouldOptimise instr opt =
   T.testCase
     (show instr <> " should optimise to " <> show opt)
     (opt T.@=? optimiseSingle instr)
+
+shouldCompileExpr ∷ Term → Type → SomeInstr → T.TestTree
+shouldCompileExpr term ty out =
+  T.testCase
+    (show term <> " should compile to " <> show out)
+    (Right out T.@=? (fst (compileExpr term ty)))
 
 backendMichelson ∷ T.TestTree
 backendMichelson =
@@ -29,6 +37,7 @@ backendMichelson =
     [ --identityFn,
       --identityApp,
       --identityApp2,
+      --identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec
     ]
@@ -38,6 +47,13 @@ optimiseDupDrop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]
 
 optimiseLambdaExec ∷ T.TestTree
 optimiseLambdaExec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
+
+identityExpr ∷ T.TestTree
+identityExpr =
+  shouldCompileExpr
+    identityTerm
+    identityType
+    (SomeInstr (MT.DROP))
 
 identityFn ∷ T.TestTree
 identityFn =

@@ -18,7 +18,19 @@ module Juvix.Backends.Michelson.Optimisation where
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
+import qualified Michelson.Optimizer as MO
+import qualified Michelson.Typed as MT
 import Michelson.Untyped hiding (Op)
+
+optimiseWithMorley ∷
+  ∀ m inp out.
+  (HasWriter "compilationLog" [CompilationLog] m) ⇒
+  MT.Instr inp out →
+  m (MT.Instr inp out)
+optimiseWithMorley op = do
+  let opt = MO.optimize op
+  tell @"compilationLog" [OptimisedByMorley (SomeInstr op) (SomeInstr opt)]
+  pure opt
 
 optimise ∷
   ∀ m.
@@ -31,7 +43,7 @@ optimise op = do
             two = optimiseSingle one
         if one == two then pure two else inner two
   ret ← inner op
-  tell @"compilationLog" [Optimised op ret]
+  tell @"compilationLog" [OptimisedByJuvix op ret]
   pure ret
 
 optimiseSeq ∷ [Op] → [Op]

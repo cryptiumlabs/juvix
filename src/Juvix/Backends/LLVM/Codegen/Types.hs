@@ -40,7 +40,9 @@ data CodegenState
         count ∷ Word,
         -- | Name Supply
         names ∷ Names,
-        moduleAST ∷ AST.Module
+        moduleAST ∷ AST.Module,
+        -- | Debug level
+        debug ∷ Int
       }
   deriving (Show, Generic)
 
@@ -100,6 +102,9 @@ newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) 
   deriving
     (HasState "moduleAST" AST.Module)
     via Field "moduleAST" () (MonadState (ExceptT Errors (State CodegenState)))
+  deriving
+    (HasReader "debug" Int)
+    via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State CodegenState))))
 
 instance HasState "moduleDefinitions" [Definition] Codegen where
 
@@ -191,6 +196,8 @@ type Call m =
     HasState "symTab" SymbolTable m
   )
 
+type Debug m = HasReader "debug" Int m
+
 --------------------------------------------------------------------------------
 -- Haskell Types
 --------------------------------------------------------------------------------
@@ -257,6 +264,9 @@ addressSpace =
 bitSizeEncodingPoint ∷ Bool
 bitSizeEncodingPoint = addressSpace >= (17 ∷ Int)
 
+debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
+debugLevelOne = whenM ((1 <=) <$> ask @"debug")
+
 --------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
@@ -320,7 +330,9 @@ numPortsPointer ∷ Type
 numPortsPointer = pointerOf numPortsNameRef
 
 numPortsNameRef ∷ Type
-numPortsNameRef = Type.NamedTypeReference numPortsName
+numPortsNameRef
+  | bitSizeEncodingPoint = Type.IntegerType addressSpace
+  | otherwise = Type.NamedTypeReference numPortsName
 
 numPortsName ∷ IsString p ⇒ p
 numPortsName = "graph_num_ports"
