@@ -3,6 +3,7 @@ Automatic split & fill a la Agda `auto`.
 See [paper](https://wenkokke.github.io/pubs/mpc2015.pdf).
 
 Possible alterations/additions:
+
 - Alterations to take into account usage constraints (when known)
 - Try case-splitting where applicable (& continue searching)
 - Attempt to prove the negation
