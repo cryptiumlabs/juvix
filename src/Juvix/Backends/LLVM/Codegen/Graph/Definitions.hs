@@ -193,9 +193,7 @@ defineFindEdge =
       Types.debugLevelOne $ do
         _ ← Block.printCString "Executing find_edge rule \n" []
         _ ← Block.printCString "Finding node and edge of %p \n" [node]
-        -- TODO ∷ abstract better!
-        port ← Block.load (Type.IntegerType Types.addressSpace) pNum
-        Debug.printNodePort node port
+        Debug.printNodePort node pNum
         pure ()
       -----------------------------------------------------------------
       portPtr ← Ops.getPort node pNum
