@@ -1,0 +1,10 @@
+{
+  "name": "pipeline",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "GPL3",
+  "private": true,
+  "dependencies": {
+    "javascript-state-machine": "^3.1.0"
+  }
+}
