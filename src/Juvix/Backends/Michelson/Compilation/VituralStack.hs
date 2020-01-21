@@ -89,7 +89,7 @@ nil ∷ T
 nil = T [] 0
 
 isNil ∷ T → Bool
-isNil = (T [] 0 ==)
+isNil = (nil ==)
 
 -- | 'consT', cons on a value v to our representation of the stack
 -- This stack may have more values tha the real one, as we store
@@ -105,7 +105,7 @@ take n stack@(T (_ : _) _)
   | otherwise = cons (car stack) (take (pred n) (cdr stack))
 
 fromList ∷ Foldable t ⇒ t (Elem, Untyped.Type) → T
-fromList = foldr cons (T [] 0)
+fromList = foldr cons nil
 
 append ∷ T → T → T
 append (T pres size) (T posts size') = T (pres <> posts) (size + size')

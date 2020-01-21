@@ -67,18 +67,18 @@ genReturn ∷
   ExpandedOp →
   m ExpandedOp
 genReturn instr = do
-  modify @"stack" =<< genFunc instr
+  modify @"stack" =<< instToStackEff instr
   pure instr
 
-genFunc ∷
+instToStackEff ∷
   ∀ m.
   (HasThrow "compilationError" CompilationError m) ⇒
   ExpandedOp →
   m (VStack.T → VStack.T)
-genFunc instr =
+instToStackEff instr =
   case instr of
     SeqEx is → do
-      fs ← mapM genFunc is
+      fs ← mapM instToStackEff is
       pure (\s → foldl (flip ($)) s fs)
     PrimEx p →
       case p of
@@ -109,7 +109,7 @@ genFunc instr =
                   (cdr (cdr ss))
             )
         DIP ops → do
-          f ← genFunc (SeqEx ops)
+          f ← instToStackEff (SeqEx ops)
           pure (\ss → cons (car ss) (f (cdr ss)))
         AMOUNT _ →
           pure (cons (VStack.Val VStack.FuncResultE, Type (Tc CMutez) ""))
@@ -121,8 +121,8 @@ genFunc instr =
                 )
             )
         _ →
-          throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
-    _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
+          throw @"compilationError" (NotYetImplemented ("instToStackEff: " <> show p))
+    _ → throw @"compilationError" (NotYetImplemented ("instToStackEff: " <> show instr))
 
 pairN ∷ Int → ExpandedOp
 pairN count = SeqEx (replicate count (PrimEx (PAIR "" "" "" "")))
