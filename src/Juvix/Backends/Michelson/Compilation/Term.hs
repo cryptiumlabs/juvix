@@ -176,14 +176,24 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                             pure inst
                     )
                     capture
-                Stack currentStack _ ← get @"stack"
+                current@(Stack currentStack _) ← get @"stack"
                 let realValues =
                       length
                       $ filter (inStack . fst)
                       $ take (length inEnvironment) currentStack
-                -- TODO ∷ WHAΤ about reaminign args
+                -- TODO ∷ WHAΤ about remaining args
                 --       do we need to compile to multiple lambas
                 --       how to share logic with actual lam case
+                extraArgsWithTypes ← zip extraArgs . drop argsL <$> typesFromPi lamTy
+                traverse_
+                  (\(extra, extraType) →
+                      modify @"stack" (cons (VarE extra Nothing, extraType))
+                  )
+                  extraArgsWithTypes
+                modify @"stack" (takeStack (length inEnvironment))
+                body ← termToInstr body paramTy
+                --
+                put @"stack" current
                 packInstrs ← genReturn (pairN (realValues - 1))
                 modify @"stack" (\stack@(Stack stack' _) →
                                    let pairs = car stack
@@ -192,7 +202,6 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                                        filtered = filter (not . inStack . fst) stack'
                                    in cons pairs (Stack filtered 0)
                                 )
-                body ← termToInstr body paramTy
                 undefined
               | otherwise → do
                 -- argsL > lamArgsL

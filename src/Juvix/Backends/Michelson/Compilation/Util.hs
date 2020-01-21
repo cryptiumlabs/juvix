@@ -26,6 +26,13 @@ stackToStack (Stack stack' _) =
     (SomeHST SNil)
     (filter (inStack . fst) stack')
 
+takeStack ∷ Int → Stack → Stack
+takeStack _ (Stack [] i) = Stack [] i -- i should be 0
+takeStack n stack@(Stack (_ : _) _)
+  | n <= 0 = stack
+  | otherwise = cons (car stack) (takeStack (pred n) (cdr stack))
+
+
 fromList ∷ Foldable t ⇒ t (StackElem, Type) → Stack
 fromList = foldr cons (Stack [] 0)
 
