@@ -297,6 +297,7 @@ Serves as a module for various debugging functions
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VituralStack]]
   + [[Optimisation]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
@@ -305,6 +306,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VituralStack]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Datatypes
@@ -312,12 +314,14 @@ Datatypes & pattern matching.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VituralStack]]
   + [[Library]]
 ***** Prim
 - Compilation of primitive terms to Michelson instruction sequences.
 - _Relies on_
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
+  + [[VituralStack]]
   + [[Michelson/Parameterisation]]
   + [[ErasedAnn]]
   + [[Library]]
@@ -329,6 +333,7 @@ Datatypes & pattern matching.
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VituralStack]]
   + [[Michelson/Parameterisation]]
   + [[Erased/Util]]
   + [[ErasedAnn]]
@@ -344,12 +349,31 @@ Datatypes & pattern matching.
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
+  + [[VituralStack]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VituralStack]]
+  + [[Library]]
+***** VituralStack
+- Serves as a virtual stack over Michelson
+- This stack has a few properties
+  + The values on this stack may or may not be on the real
+    stack. However for convention this should be largely ignored,
+    except when you wish to do an operation like pair
+    * This can be fix in the future
+    * Until then, one should filter out the virtual stack items
+- We keep virtual items on the ="stack"= as that makes the details
+  on whether something is constant propagation or not act
+  consistently with each other.
+  + After all, what may not be a constant now, may be in the
+    future, or vice versa!
+- Import with qualified and the name of =VT=
+- _Relies on_
+  + [[Michelson/Parameterisation]]
   + [[Library]]
 ** Core
 - _Relies on_
