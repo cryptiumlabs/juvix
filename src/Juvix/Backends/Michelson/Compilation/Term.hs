@@ -7,6 +7,7 @@ import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Util as J
 import qualified Juvix.Core.ErasedAnn as J
@@ -17,7 +18,7 @@ import qualified Michelson.Untyped as M
 
 termToMichelson ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -27,7 +28,7 @@ termToMichelson ∷
 termToMichelson term paramTy = do
   case term of
     (J.Lam arg body, _, _) → do
-      modify @"stack" (cons (VarE arg Nothing, paramTy))
+      modify @"stack" (cons (VStack.VarE arg Nothing, paramTy))
       instr' ← termToInstr body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
       modify @"stack" (\xs → cons (car xs) (cdr (cdr xs)))
@@ -46,7 +47,7 @@ termToMichelson term paramTy = do
  -}
 termToInstr ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -74,28 +75,29 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         argTy ← typeToType argTy
         stack ← get @"stack"
         let free = J.free (J.eraseTerm term)
-            freeWithTypes = map (\v → let Just t = lookupType v stack in (v, t)) free
+            freeWithTypes =
+              map (\v → let Just t = VStack.lookupType v stack in (v, t)) free
         -- TODO: second is a lambda, but it doesn't matter,
         -- this just needs to be positionally accurate for var lookup.
         modify @"stack"
-          ( append $
-              fromList
-                [ (Val FuncResultE, M.Type M.TUnit ""),
-                  (Val FuncResultE, M.Type M.TUnit "")
+          ( VStack.append $
+              VStack.fromList
+                [ (VStack.Val VStack.FuncResultE, M.Type M.TUnit ""),
+                  (VStack.Val VStack.FuncResultE, M.Type M.TUnit "")
                 ]
           )
         vars ← traverse (\f → stackGuard f paramTy (varCase term f)) free
         packOp ← packClosure free
-        put @"stack" (fromList [])
+        put @"stack" (VStack.fromList [])
         let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
         unpackOp ← unpackClosure freeWithTypes
-        modify @"stack" (cons (VarE arg Nothing, argTy))
+        modify @"stack" (cons (VStack.VarE arg Nothing, argTy))
         inner ← termToInstr body paramTy
         dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
         post ← get @"stack"
-        let (Stack ((_, retTy) : _) _) = post
+        let (VStack.T ((_, retTy) : _) _) = post
         let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
-        put @"stack" (cons (Val FuncResultE, rTy) stack)
+        put @"stack" (cons (VStack.Val VStack.FuncResultE, rTy) stack)
         pure
           ( M.SeqEx
               [ M.PrimEx
@@ -159,49 +161,55 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                   traverse
                     ( \x → do
                         currentStack ← get @"stack"
-                        case lookup x currentStack of
+                        case VStack.lookup x currentStack of
                           Nothing →
                             failWith'
                               ( "free variable in lambda"
                                   <> " doesn't exist"
                               )
-                          Just (Value v) → do
-                            let (Just type') = lookupType x currentStack
-                            modify @"stack" (cons (VarE x (Just (ConstE v)), type'))
+                          Just (VStack.Value v) → do
+                            let (Just type') = VStack.lookupType x currentStack
+                            modify @"stack"
+                              ( cons
+                                  ( VStack.VarE x (Just (VStack.ConstE v)),
+                                    type'
+                                  )
+                              )
                             pure (M.SeqEx [])
-                          Just (Position p) → do
-                            let (Just type') = lookupType x currentStack
+                          Just (VStack.Position p) → do
+                            let (Just type') = VStack.lookupType x currentStack
                             let inst = dupToFront (fromIntegral p)
-                            modify @"stack" (cons (VarE x Nothing, type'))
+                            modify @"stack" (cons (VStack.VarE x Nothing, type'))
                             pure inst
                     )
                     capture
-                current@(Stack currentStack _) ← get @"stack"
+                current@(VStack.T currentStack _) ← get @"stack"
                 let realValues =
                       length
-                      $ filter (inStack . fst)
-                      $ take (length inEnvironment) currentStack
+                        $ filter (VStack.inT . fst)
+                        $ take (length inEnvironment) currentStack
                 -- TODO ∷ WHAΤ about remaining args
                 --       do we need to compile to multiple lambas
                 --       how to share logic with actual lam case
                 extraArgsWithTypes ← zip extraArgs . drop argsL <$> typesFromPi lamTy
                 traverse_
-                  (\(extra, extraType) →
-                      modify @"stack" (cons (VarE extra Nothing, extraType))
+                  ( \(extra, extraType) →
+                      modify @"stack" (cons (VStack.VarE extra Nothing, extraType))
                   )
                   extraArgsWithTypes
-                modify @"stack" (takeStack (length inEnvironment))
+                modify @"stack" (VStack.take (length inEnvironment))
                 body ← termToInstr body paramTy
                 --
                 put @"stack" current
                 packInstrs ← genReturn (pairN (realValues - 1))
-                modify @"stack" (\stack@(Stack stack' _) →
-                                   let pairs = car stack
-                                       -- TODO ∷ filter harder, so we don't bring unwanted
-                                       --         constants this is to save space
-                                       filtered = filter (not . inStack . fst) stack'
-                                   in cons pairs (Stack filtered 0)
-                                )
+                modify @"stack"
+                  ( \stack@(VStack.T stack' _) →
+                      let pairs = car stack
+                          -- TODO ∷ filter harder, so we don't bring unwanted
+                          --         constants this is to save space
+                          filtered = filter (not . VStack.inT . fst) stack'
+                       in cons pairs (VStack.T filtered 0)
+                  )
                 undefined
               | otherwise → do
                 -- argsL > lamArgsL
@@ -217,8 +225,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         func ← termToInstr func paramTy -- :: Lam a b
         arg ← termToInstr arg paramTy -- :: a
         modify @"stack"
-          ( \s@(Stack (_ : (_, (M.Type (M.TLambda _ retTy) _)) : _) _) →
-              cons (Val FuncResultE, retTy) (cdr (cdr s))
+          ( \s@(VStack.T (_ : (_, (M.Type (M.TLambda _ retTy) _)) : _) _) →
+              cons (VStack.Val VStack.FuncResultE, retTy) (cdr (cdr s))
           )
         pure
           ( M.SeqEx
@@ -228,17 +236,17 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
               ]
           )
 
-takesOne ∷ Stack → Stack → Bool
-takesOne post pre = post == dropS 1 pre
+takesOne ∷ VStack.T → VStack.T → Bool
+takesOne post pre = post == VStack.drop 1 pre
 
-addsOne ∷ Stack → Stack → Bool
-addsOne post pre = dropS 1 post == pre
+addsOne ∷ VStack.T → VStack.T → Bool
+addsOne post pre = VStack.drop 1 post == pre
 
-changesTop ∷ Stack → Stack → Bool
-changesTop post pre = dropS 1 post == pre
+changesTop ∷ VStack.T → VStack.T → Bool
+changesTop post pre = VStack.drop 1 post == pre
 
 varCase ∷
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     Show a2
   ) ⇒
@@ -247,10 +255,10 @@ varCase ∷
   m Op
 varCase term n = stackCheck term addsOne $ do
   stack ← get @"stack"
-  case lookup n stack of
+  case VStack.lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
-    Just (Value i) → undefined
-    Just (Position i) → do
+    Just (VStack.Value i) → undefined
+    Just (VStack.Position i) → do
       -- TODO ∷ replace with dip call
 
       let before = rearrange i
@@ -272,12 +280,12 @@ foldApps inner args =
 -- Helpers
 --------------------------------------------------------------------------------
 stackCheck ∷
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     Show a2
   ) ⇒
   a2 →
-  (Stack → Stack → Bool) →
+  (VStack.T → VStack.T → Bool) →
   m Op →
   m Op
 stackCheck term guard func = do
@@ -316,7 +324,7 @@ typesFromPi _ = pure []
 --        lambdas recursively for over applied functions
 evaluateAndPushArgs ∷
   ( HasThrow "compilationError" CompilationError m,
-    HasState "stack" Stack m,
+    HasState "stack" VStack.T m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
   [Symbol] →
@@ -333,9 +341,9 @@ evaluateAndPushArgs names t args paramTy = do
         argEval ← termToInstr arg paramTy
         (v, typeV) ← pop
         case v of
-          VarE _ _ → failWith' "Never happens"
-          Val v →
-            modify @"stack" (cons (VarE name (Just v), typeV))
+          VStack.VarE _ _ → failWith' "Never happens"
+          VStack.Val v →
+            modify @"stack" (cons (VStack.VarE name (Just v), typeV))
         pure (argEval : instrs)
     )
     []

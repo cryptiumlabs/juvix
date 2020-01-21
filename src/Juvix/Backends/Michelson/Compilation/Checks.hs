@@ -4,6 +4,7 @@ module Juvix.Backends.Michelson.Compilation.Checks where
 
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
@@ -11,7 +12,7 @@ import qualified Michelson.Untyped as M
 
 -- Check that the stack types tracked internally & of the instruction match.
 stackGuard ∷
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     Show a
   ) ⇒

@@ -8,6 +8,7 @@ import Juvix.Backends.Michelson.Compilation.Term
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Backends.Michelson.Optimisation
 import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library hiding (Type)
@@ -28,17 +29,17 @@ compileContract ∷
   Type →
   (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term ty =
-  let (ret, env) = execWithStack (fromList []) (compileToMichelsonContract term ty)
+  let (ret, env) = execWithStack (VStack.fromList []) (compileToMichelsonContract term ty)
    in (ret, compilationLog env)
 
 compileExpr ∷ Term → Type → (Either CompilationError SomeInstr, [CompilationLog])
 compileExpr term ty =
-  let (ret, env) = execWithStack (fromList []) (compileToMichelsonExpr term ty)
+  let (ret, env) = execWithStack (VStack.fromList []) (compileToMichelsonExpr term ty)
    in (ret, compilationLog env)
 
 compileToMichelsonContract ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -65,7 +66,7 @@ compileToMichelsonContract term ty = do
 -- TODO: This shouldn't require being a function.
 compileToMichelsonExpr ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒

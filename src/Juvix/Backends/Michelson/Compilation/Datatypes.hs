@@ -4,6 +4,7 @@ module Juvix.Backends.Michelson.Compilation.Datatypes where
 
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Library hiding (Type)
 import Michelson.Untyped
 
@@ -17,7 +18,7 @@ pack ty = throw @"compilationError" (NotYetImplemented ("pack: " <> show ty))
 
 unpack ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   Type →
@@ -26,18 +27,35 @@ unpack ∷
 unpack (Type ty _) binds =
   case ty of
     Tbool → do
-      modify @"stack" (dropS (1 ∷ Int))
+      modify @"stack" (VStack.drop (1 ∷ Int))
       return (SeqEx [])
     TPair _ _ fT sT →
       case binds of
         [Just fst, Just snd] → do
-          modify @"stack" (appendDrop (fromList [(VarE fst Nothing, fT), (VarE snd Nothing, sT)]))
+          modify @"stack"
+            ( VStack.appendDrop
+                ( VStack.fromList
+                    [ (VStack.VarE fst Nothing, fT),
+                      (VStack.VarE snd Nothing, sT)
+                    ]
+                )
+            )
           pure (SeqEx [PrimEx (DUP ""), PrimEx (CDR "" ""), PrimEx SWAP, PrimEx (CAR "" "")])
         [Just fst, Nothing] → do
-          modify @"stack" (appendDrop (fromList [(VarE fst Nothing, fT)]))
+          modify @"stack"
+            ( VStack.appendDrop
+                ( VStack.fromList
+                    [(VStack.VarE fst Nothing, fT)]
+                )
+            )
           pure (PrimEx (CAR "" ""))
         [Nothing, Just snd] → do
-          modify @"stack" (appendDrop (fromList [(VarE snd Nothing, sT)]))
+          modify @"stack"
+            ( VStack.appendDrop
+                ( VStack.fromList
+                    [(VStack.VarE snd Nothing, sT)]
+                )
+            )
           pure (PrimEx (CDR "" ""))
         [Nothing, Nothing] →
           genReturn (PrimEx DROP)
@@ -46,7 +64,7 @@ unpack (Type ty _) binds =
 
 unpackDrop ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   [Maybe Symbol] →
@@ -55,7 +73,7 @@ unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust bind
 
 genSwitch ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒

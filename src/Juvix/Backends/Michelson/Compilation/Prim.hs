@@ -4,6 +4,7 @@ module Juvix.Backends.Michelson.Compilation.Prim where
 
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
@@ -11,7 +12,7 @@ import qualified Michelson.Untyped as M
 
 primToInstr ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -25,13 +26,13 @@ primToInstr prim ty =
     PrimFst → do
       let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
           retTy = M.Type (M.TLambda pairTy xT) ""
-      modify @"stack" (cons (Val FuncResultE, retTy))
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, retTy))
       pure (oneArgPrim (M.PrimEx (M.CAR "" "") :| []) retTy)
     -- :: \x -> y ~ s => (f, s)
     PrimSnd → do
       let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
           retTy = M.Type (M.TLambda pairTy yT) ""
-      modify @"stack" (cons (Val FuncResultE, retTy))
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, retTy))
       pure (oneArgPrim (M.PrimEx (M.CDR "" "") :| []) retTy)
     -- :: \x y -> a ~ (x, (y, s)) => (a, s)
     PrimPair → do
@@ -47,7 +48,7 @@ primToInstr prim ty =
 
           firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
 
-      modify @"stack" (cons (Val FuncResultE, firstLamTy))
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, firstLamTy))
       pure
         ( M.PrimEx
             ( M.PUSH
@@ -81,11 +82,11 @@ primToInstr prim ty =
       case const of
         M.ValueNil → do
           let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
-          modify @"stack" (cons (Val FuncResultE, t))
+          modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.NIL "" "" elemTy))
         _ → do
           let J.PrimTy (PrimTy t) = ty
-          modify @"stack" (cons (Val FuncResultE, t))
+          modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.PUSH "" t const))
 
 oneArgPrim ∷ NonEmpty Op → M.Type → Op

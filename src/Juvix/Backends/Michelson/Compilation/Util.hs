@@ -3,6 +3,7 @@
 module Juvix.Backends.Michelson.Compilation.Util where
 
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
@@ -16,78 +17,15 @@ failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m Expan
 failWith = throw @"compilationError" . InternalFault
 
 -- TODO ∷ don't add a value if it is a constant
-stackToStack ∷ Stack → SomeHST
-stackToStack (Stack stack' _) =
+stackToStack ∷ VStack.T → SomeHST
+stackToStack (VStack.T stack' _) =
   foldr
     ( \(_, ty) (SomeHST tail) →
         MT.withSomeSingT (MT.fromUType ty) $ \sty →
           SomeHST (sty -:& tail)
     )
     (SomeHST SNil)
-    (filter (inStack . fst) stack')
-
-takeStack ∷ Int → Stack → Stack
-takeStack _ (Stack [] i) = Stack [] i -- i should be 0
-takeStack n stack@(Stack (_ : _) _)
-  | n <= 0 = stack
-  | otherwise = cons (car stack) (takeStack (pred n) (cdr stack))
-
-
-fromList ∷ Foldable t ⇒ t (StackElem, Type) → Stack
-fromList = foldr cons (Stack [] 0)
-
-append ∷ Stack → Stack → Stack
-append (Stack pres size) (Stack posts size') = Stack (pres <> posts) (size + size')
-
-appendDrop ∷ Stack → Stack → Stack
-appendDrop prefix = append prefix . cdr
-
-lookupType ∷ Symbol → Stack → Maybe Type
-lookupType n (Stack stack' _) = go stack'
-  where
-    go ((VarE n' _, typ) : _)
-      | n' == n = Just typ
-    go ((_, _) : xs) = go xs
-    go [] = Nothing
-
-dropS ∷ (Ord t, Num t, Enum t) ⇒ t → Stack → Stack
-dropS n xs
-  | n <= 0 = xs
-  | otherwise = dropS (pred n) (cdr xs)
-
-data Lookup
-  = Value Value
-  | Position Natural
-
--- | 'lookup' looks up a symbol from the stack
--- May return None if the symbol does not exist at all on the stack
--- Otherwise, the function returns Either
--- a Value if the symbol is not stored on the stack
--- or the position, if the value is stored on the stack
-lookup ∷ Symbol → Stack → Maybe Lookup
-lookup n (Stack stack' _) = go stack' 0
-  where
-    go ((v@(VarE n' _), _) : _) acc
-      | n' == n && inStack v =
-        Just (Position acc)
-      | n' == n =
-        Just (Value (valueOfErr v))
-    go ((v, _) : vs) acc
-      | inStack v = go vs (succ acc)
-      | otherwise = go vs acc
-    go [] _ = Nothing
-
-dropFirst ∷ Symbol → Stack → [(StackElem, Type)] → Stack
-dropFirst n (Stack stack' size) = go stack'
-  where
-    go ((v@(VarE n' _), _) : xs) acc
-      | n' == n && inStack v =
-        Stack (reverse acc <> xs) (pred size)
-      | n' == n =
-        Stack (reverse acc <> xs) size
-    go (v : vs) acc =
-      go vs (v : acc)
-    go [] _ = Stack stack' size
+    (filter (VStack.inT . fst) stack')
 
 dupToFront ∷ Word → ExpandedOp
 dupToFront 0 = PrimEx (DUP "")
@@ -123,7 +61,7 @@ unrollSeq op =
 
 genReturn ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   ExpandedOp →
@@ -136,7 +74,7 @@ genFunc ∷
   ∀ m.
   (HasThrow "compilationError" CompilationError m) ⇒
   ExpandedOp →
-  m (Stack → Stack)
+  m (VStack.T → VStack.T)
 genFunc instr =
   case instr of
     SeqEx is → do
@@ -155,34 +93,42 @@ genFunc instr =
         -- TODO ∷ remove the FuncResultE of these, and have constant propagation
         CAR _ _ →
           pure
-            ( \s@(Stack ((_, Type (TPair _ _ x _) _) : _) _) →
-                cons (Val FuncResultE, x) (cdr s)
+            ( \s@(VStack.T ((_, Type (TPair _ _ x _) _) : _) _) →
+                cons (VStack.Val VStack.FuncResultE, x) (cdr s)
             )
         CDR _ _ →
           pure
-            ( \s@(Stack ((_, Type (TPair _ _ _ y) _) : _) _) →
-                cons (Val FuncResultE, y) (cdr s)
+            ( \s@(VStack.T ((_, Type (TPair _ _ _ y) _) : _) _) →
+                cons (VStack.Val VStack.FuncResultE, y) (cdr s)
             )
         PAIR _ _ _ _ →
           pure
-            ( \ss@(Stack ((_, xT) : (_, yT) : _) _) →
+            ( \ss@(VStack.T ((_, xT) : (_, yT) : _) _) →
                 cons
-                  (Val FuncResultE, Type (TPair "" "" xT yT) "")
+                  (VStack.Val VStack.FuncResultE, Type (TPair "" "" xT yT) "")
                   (cdr (cdr ss))
             )
         DIP ops → do
           f ← genFunc (SeqEx ops)
           pure (\ss → cons (car ss) (f (cdr ss)))
-        AMOUNT _ → pure (cons (Val FuncResultE, Type (Tc CMutez) ""))
-        NIL _ _ _ → pure (cons (Val FuncResultE, Type (TList (Type TOperation "")) ""))
-        _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
+        AMOUNT _ →
+          pure (cons (VStack.Val VStack.FuncResultE, Type (Tc CMutez) ""))
+        NIL _ _ _ →
+          pure
+            ( cons
+                ( VStack.Val VStack.FuncResultE,
+                  Type (TList (Type TOperation "")) ""
+                )
+            )
+        _ →
+          throw @"compilationError" (NotYetImplemented ("genFunc: " <> show p))
     _ → throw @"compilationError" (NotYetImplemented ("genFunc: " <> show instr))
 
 pairN ∷ Int → ExpandedOp
 pairN count = SeqEx (replicate count (PrimEx (PAIR "" "" "" "")))
 
 packClosure ∷
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   [Symbol] →
@@ -194,15 +140,15 @@ packClosure vars = do
 
 unpackClosure ∷
   ∀ m.
-  (HasState "stack" Stack m) ⇒
+  (HasState "stack" VStack.T m) ⇒
   [(Symbol, Type)] →
   m ExpandedOp
 unpackClosure [] = pure (PrimEx DROP)
 unpackClosure env = do
   let count = length env
   modify @"stack"
-    ( append
-        $ Stack (fmap (\(s, t) → (VarE s Nothing, t)) env)
+    ( VStack.append
+        $ VStack.T (fmap (\(s, t) → (VStack.VarE s Nothing, t)) env)
         $ length env
     )
   -- dup (count - 1) times,
@@ -215,22 +161,22 @@ unpackClosure env = do
 
 dropClosure ∷
   ∀ m.
-  (HasState "stack" Stack m) ⇒
+  (HasState "stack" VStack.T m) ⇒
   [(Symbol, Type)] →
   m ExpandedOp
 dropClosure env = do
   let count = length env
-  modify @"stack" (\xs → cons (car xs) (dropS count (cdr xs)))
+  modify @"stack" (\xs → cons (car xs) (VStack.drop count (cdr xs)))
   pure (PrimEx (DIP (replicate count (PrimEx DROP))))
 
 pop ∷
-  (HasState "stack" Stack m, HasThrow "compilationError" CompilationError m) ⇒
-  m (StackElem, Type)
+  (HasState "stack" VStack.T m, HasThrow "compilationError" CompilationError m) ⇒
+  m (VStack.Elem, Type)
 pop = do
   s ← get @"stack"
   case s of
-    Stack (x : _) _ → x <$ put @"stack" (cdr s)
-    Stack [] _ → throw @"compilationError" NotEnoughStackSpace
+    VStack.T (x : _) _ → x <$ put @"stack" (cdr s)
+    VStack.T [] _ → throw @"compilationError" NotEnoughStackSpace
 
 carN ∷ Int → ExpandedOp
 carN 0 = SeqEx []
