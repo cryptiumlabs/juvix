@@ -1,5 +1,3 @@
-{-# LANGUAGE ConstraintKinds, TypeFamilies #-}
-
 -- |
 -- Extensions to the IR abstract syntax.
 module Juvix.Core.IR.Extension

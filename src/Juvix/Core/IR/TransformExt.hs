@@ -1,14 +1,7 @@
-{-# LANGUAGE EmptyCase, PatternSynonyms, TypeFamilies, ViewPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Transformations between different extensions.
-module Juvix.Core.IR.TransformExt
-  (ExtTransformTEF,
-   pattern ExtTransformTE,
-     etStar, etPrimTy, etPi, etLam, etElim, etBound,
-     etFree, etPrim, etApp, etAnn, etTermX, etElimX,
-   extTransformTF, extTransformEF, extTransformT, extTransformE,
-   extForgetT, extForgetE)
-where
+module Juvix.Core.IR.TransformExt where
 
 import Juvix.Library hiding (Coerce)
 import Juvix.Core.IR.Types
@@ -71,13 +64,13 @@ pattern ExtTransformTE { etStar, etPrimTy, etPi, etLam, etElim, etBound,
 extTransformTF :: Applicative f
                => ExtTransformTEF f ext1 ext2 primTy primVal
                -> Term' ext1 primTy primVal -> f (Term' ext2 primTy primVal)
-extTransformTF fs (Star i e)   = Star i <$> etfStar fs e
-extTransformTF fs (PrimTy k e) = PrimTy k <$> etfPrimTy fs e
-extTransformTF fs (Pi π s t e) = Pi π <$> extTransformTF fs s
-                                      <*> extTransformTF fs t
-                                      <*> etfPi fs e
-extTransformTF fs (Lam t e)    = Lam <$> extTransformTF fs t <*> etfLam fs e
-extTransformTF fs (Elim f e)   = Elim <$> extTransformEF fs f <*> etfElim fs e
+extTransformTF fs (Star' i e)   = Star' i <$> etfStar fs e
+extTransformTF fs (PrimTy' k e) = PrimTy' k <$> etfPrimTy fs e
+extTransformTF fs (Pi' π s t e) = Pi' π <$> extTransformTF fs s
+                                        <*> extTransformTF fs t
+                                        <*> etfPi fs e
+extTransformTF fs (Lam' t e)    = Lam' <$> extTransformTF fs t <*> etfLam fs e
+extTransformTF fs (Elim' f e)   = Elim' <$> extTransformEF fs f <*> etfElim fs e
 extTransformTF fs (TermX e)    = TermX <$> etfTermX fs e
 
 extTransformT :: ExtTransformTE ext1 ext2 primTy primVal
@@ -87,15 +80,15 @@ extTransformT fs t = runIdentity $ extTransformTF fs t
 extTransformEF :: Applicative f
                => ExtTransformTEF f ext1 ext2 primTy primVal
                -> Elim' ext1 primTy primVal -> f (Elim' ext2 primTy primVal)
-extTransformEF fs (Bound x e) = Bound x <$> etfBound fs e
-extTransformEF fs (Free x e) = Free x <$> etfFree fs e
-extTransformEF fs (Prim k e) = Prim k <$> etfPrim fs e
-extTransformEF fs (App f s e) = App <$> extTransformEF fs f
-                                    <*> extTransformTF fs s
-                                    <*> etfApp fs e
-extTransformEF fs (Ann π s t e) = Ann π <$> extTransformTF fs s
-                                        <*> extTransformTF fs t
-                                        <*> etfAnn fs e
+extTransformEF fs (Bound' x e) = Bound' x <$> etfBound fs e
+extTransformEF fs (Free' x e) = Free' x <$> etfFree fs e
+extTransformEF fs (Prim' k e) = Prim' k <$> etfPrim fs e
+extTransformEF fs (App' f s e) = App' <$> extTransformEF fs f
+                                      <*> extTransformTF fs s
+                                      <*> etfApp fs e
+extTransformEF fs (Ann' π s t e) = Ann' π <$> extTransformTF fs s
+                                          <*> extTransformTF fs t
+                                          <*> etfAnn fs e
 extTransformEF fs (ElimX e) = ElimX <$> etfElimX fs e
 
 extTransformE :: ExtTransformTE ext1 ext2 primTy primVal
@@ -104,8 +97,8 @@ extTransformE fs t = runIdentity $ extTransformEF fs t
 
 
 forgetter :: (TermX ext primTy primVal ~ Void,
-              ElimX ext primTy primVal ~ Void) =>
-             ExtTransformTE ext NoExt primTy primVal
+              ElimX ext primTy primVal ~ Void)
+          => ExtTransformTE ext NoExt primTy primVal
 forgetter =
   ExtTransformTE (const ()) (const ()) (const ()) (const ())
                  (const ()) (const ()) (const ()) (const ())

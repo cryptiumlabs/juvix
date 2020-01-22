@@ -1,21 +1,20 @@
 module Juvix.Core.HRAnn.Erasure where
 
+import Juvix.Library
 import qualified Juvix.Core.HR.Types as HR
 import Juvix.Core.HRAnn.Types
+import Juvix.Core.IR.TransformExt
+
+
+hrForgetter :: ExtTransformTE HRAnn HR.HR primTy primVal
+hrForgetter =
+  ExtTransformTE
+    identity identity identity fst (const ())
+    absurd absurd identity (const ()) identity
+    absurd identity
 
 eraseTerm ∷ ∀ primTy primVal. Term primTy primVal → HR.Term primTy primVal
-eraseTerm term =
-  case term of
-    Star n → HR.Star n
-    PrimTy t → HR.PrimTy t
-    Pi u a b → HR.Pi u (eraseTerm a) (eraseTerm b)
-    Lam s (b, _, _) → HR.Lam s (eraseTerm b)
-    Elim (e, _, _) → HR.Elim (eraseElim e)
+eraseTerm = extTransformT hrForgetter
 
 eraseElim ∷ ∀ primTy primVal. Elim primTy primVal → HR.Elim primTy primVal
-eraseElim elim =
-  case elim of
-    Var s → HR.Var s
-    Prim p → HR.Prim p
-    App (f, _, _) (x, _, _) → HR.App (eraseElim f) (eraseTerm x)
-    Ann u x y → HR.Ann u (eraseTerm x) (eraseTerm y)
+eraseElim = extTransformE hrForgetter

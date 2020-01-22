@@ -67,6 +67,10 @@ default-extensions:
   - TypeApplications
   - StandaloneDeriving
   - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
 
 ghc-options:
   - -ferror-spans

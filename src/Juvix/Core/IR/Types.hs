@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
@@ -16,19 +16,19 @@ import Prelude (Show (..), String)
 -- | checkable terms
 data Term' ext primTy primVal
   = -- | (sort i) i th ordering of (closed) universe.
-    Star Natural (XStar ext primTy primVal)
+    Star' Natural (XStar ext primTy primVal)
   | -- | 'PrimTy' primitive type
-    PrimTy primTy (XPrimTy ext primTy primVal)
+    PrimTy' primTy (XPrimTy ext primTy primVal)
   | -- | formation rule of the dependent function type 'PI'.
     -- the Usage(π) tracks how many times x is used.
-    Pi Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
-      (XPi ext primTy primVal)
+    Pi' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
+       (XPi ext primTy primVal)
   | -- | 'LAM' Introduction rule of PI.
     -- The abstracted variable's usage is tracked with the Usage(π).
-    Lam (Term' ext primTy primVal) (XLam ext primTy primVal)
+    Lam' (Term' ext primTy primVal) (XLam ext primTy primVal)
   | -- | 'CONV' conversion rule. TODO make sure 0Γ ⊢ S≡T
     -- 'Elim' is the constructor that embeds Elim to Term
-    Elim (Elim' ext primTy primVal) (XElim ext primTy primVal)
+    Elim' (Elim' ext primTy primVal) (XElim ext primTy primVal)
   | -- | Extension point for other construction forms
     TermX (TermX ext primTy primVal)
 
@@ -56,17 +56,17 @@ instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
 -- | inferable terms
 data Elim' ext primTy primVal
   = -- | Bound variables, in de Bruijn indices
-    Bound Natural (XBound ext primTy primVal)
+    Bound' Natural (XBound ext primTy primVal)
   | -- | Free variables of type name (see below)
-    Free Name (XFree ext primTy primVal)
+    Free' Name (XFree ext primTy primVal)
   | -- | primitive constant
-    Prim primVal (XPrim ext primTy primVal)
+    Prim' primVal (XPrim ext primTy primVal)
   | -- | elimination rule of PI (APP).
-    App (Elim' ext primTy primVal) (Term' ext primTy primVal)
-        (XApp ext primTy primVal)
+    App' (Elim' ext primTy primVal) (Term' ext primTy primVal)
+         (XApp ext primTy primVal)
   | -- | Annotation with usage.
-    Ann Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
-        (XAnn ext primTy primVal)
+    Ann' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
+         (XAnn ext primTy primVal)
   | -- | Extension point for other elimination forms
     ElimX (ElimX ext primTy primVal)
 
@@ -80,7 +80,45 @@ deriving instance
 
 
 type Term = Term' NoExt
+
+pattern Star :: Natural -> Term primTy primVal
+pattern Star i = Star' i ()
+
+pattern PrimTy :: primTy -> Term primTy primVal
+pattern PrimTy t = PrimTy' t ()
+
+pattern Pi :: Usage -> Term primTy primVal -> Term primTy primVal
+           -> Term primTy primVal
+pattern Pi π s t = Pi' π s t ()
+
+pattern Lam :: Term primTy primVal -> Term primTy primVal
+pattern Lam t = Lam' t ()
+
+pattern Elim :: Elim primTy primVal -> Term primTy primVal
+pattern Elim e = Elim' e ()
+
+{-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
+
+
 type Elim = Elim' NoExt
+
+pattern Bound :: Natural -> Elim primTy primVal
+pattern Bound x = Bound' x ()
+
+pattern Free :: Name -> Elim primTy primVal
+pattern Free x = Free' x ()
+
+pattern Prim :: primVal -> Elim primTy primVal
+pattern Prim x = Prim' x ()
+
+pattern App :: Elim primTy primVal -> Term primTy primVal -> Elim primTy primVal
+pattern App s t = App' s t ()
+
+pattern Ann :: Usage -> Term primTy primVal -> Term primTy primVal
+            -> Elim primTy primVal
+pattern Ann π s t = Ann' π s t ()
+
+{-# COMPLETE Bound, Free, Prim, App, Ann #-}
 
 -- FIXME pretty-printer
 {-
@@ -109,7 +147,8 @@ data Name
 data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
-  | VPi Usage (Value primTy primVal m) (Value primTy primVal m → m (Value primTy primVal m))
+  | VPi Usage (Value primTy primVal m)
+        (Value primTy primVal m → m (Value primTy primVal m))
   | VLam (Value primTy primVal m → m (Value primTy primVal m))
   | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
@@ -134,23 +173,16 @@ instance
   where
   x == y = fst (exec (quote0 x)) == fst (exec (quote0 y))
 
-instance
+deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
-  where
-  NFree x == NFree y = x == y
-  NApp a b == NApp c d = a == c && b == d
-  _ == _ = False
 
 instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
   show x = show (fst (exec (quote0 x)))
 
-instance
+deriving instance
   (Show primTy, Show primVal) ⇒
   Show (Neutral primTy primVal (EnvTypecheck primTy primVal))
-  where
-  show (NFree n) = "NFree " <> show n
-  show (NApp n v) = "NApp " <> show n <> " " <> show v
 
 data TypecheckError primTy primVal m
   = TypeMismatch
@@ -170,11 +202,9 @@ data TypecheckError primTy primVal m
   | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
   | BoundVariableCannotBeInferred
 
-instance
+deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
-  where
-  _ == _ = False -- TODO
 
 instance
   (Show primTy, Show primVal) ⇒
@@ -277,15 +307,14 @@ quote ∷
   Natural →
   Value primTy primVal m →
   m (Term primTy primVal)
-quote _ii (VStar n) = pure (Star n ())
-quote _ii (VPrimTy p) = pure (PrimTy p ())
+quote _ii (VStar n) = pure (Star n)
+quote _ii (VPrimTy p) = pure (PrimTy p)
 quote ii (VPi pi v f) =
   Pi pi <$> quote ii v <*> (quote (ii + 1) =<< f (vfree (Quote ii)))
-        <*> pure ()
 quote ii (VLam f) =
-  Lam <$> (quote (ii + 1) =<< f (vfree (Quote ii))) <*> pure ()
-quote ii (VNeutral n) = Elim <$> neutralQuote ii n <*> pure ()
-quote _ii (VPrim p) = pure (Elim (Prim p ()) ())
+  Lam <$> (quote (ii + 1) =<< f (vfree (Quote ii)))
+quote ii (VNeutral n) = Elim <$> neutralQuote ii n
+quote _ii (VPrim p) = pure (Elim (Prim p))
 
 neutralQuote ∷
   ∀ primTy primVal m.
@@ -294,8 +323,7 @@ neutralQuote ∷
   Neutral primTy primVal m →
   m (Elim primTy primVal)
 neutralQuote ii (NFree x) = pure (boundfree ii x)
-neutralQuote ii (NApp n v) =
-  App <$> neutralQuote ii n <*> quote ii v <*> pure ()
+neutralQuote ii (NApp n v) = App <$> neutralQuote ii n <*> quote ii v
 
 -- | 'vfree' creates the value corresponding to a free variable
 vfree ∷ Name → Value primTy primVal m
@@ -304,8 +332,8 @@ vfree n = VNeutral (NFree n)
 -- checks if the variable occurring at the head of
 -- the application is a bound variable or a free name
 boundfree ∷ Natural → Name → Elim primTy primVal
-boundfree ii (Quote k) = Bound (ii - k - 1) ()
-boundfree _ii x = Free x ()
+boundfree ii (Quote k) = Bound (ii - k - 1)
+boundfree _ii x = Free x
 
 -- initial environment
 initEnv ∷ Env primTy primVal m
