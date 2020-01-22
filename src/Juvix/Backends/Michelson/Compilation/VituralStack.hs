@@ -11,11 +11,12 @@
 --   consistently with each other.
 --   + After all, what may not be a constant now, may be in the
 --     future, or vice versa!
--- - Import with qualified and the name of =VT=
+-- - Import with qualified and the name of =VStack=
 module Juvix.Backends.Michelson.Compilation.VituralStack where
 
 import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
 import Juvix.Library hiding (Type, drop, take)
+import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
 import Prelude (error)
 
@@ -101,7 +102,7 @@ consT = modify @"stack" . cons
 take ∷ Int → T → T
 take _ (T [] i) = T [] i -- i should be 0
 take n stack@(T (_ : _) _)
-  | n <= 0 = stack
+  | n <= 0 = nil
   | otherwise = cons (car stack) (take (pred n) (cdr stack))
 
 fromList ∷ Foldable t ⇒ t (Elem, Untyped.Type) → T
@@ -159,3 +160,29 @@ dropFirst n (T stack' size) = go stack'
     go (v : vs) acc =
       go vs (v : acc)
     go [] _ = T stack' size
+
+symbolsInT ∷ [Symbol] → T → [Symbol]
+symbolsInT symbs (T stack' _) =
+  filter f symbs
+  where
+    vars =
+      Map.fromList
+        ( concatMap
+            ( \(x, _) →
+                case x of
+                  VarE s t → [(s, t)]
+                  _ → []
+            )
+            stack'
+        )
+    f x =
+      case Map.lookup x vars of
+        Just x → True
+        Nothing → False
+
+insertAt ∷ Foldable t ⇒ Int → t (Elem, Untyped.Type) → T → T
+insertAt n xs stack =
+  foldr cons (foldr cons postDrop xs) (stack' dropped)
+  where
+    postDrop = drop n stack
+    dropped = take n stack

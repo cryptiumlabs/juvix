@@ -127,6 +127,22 @@ instToStackEff instr =
 pairN ∷ Int → ExpandedOp
 pairN count = SeqEx (replicate count (PrimEx (PAIR "" "" "" "")))
 
+unpackTuple ∷ ExpandedOp
+unpackTuple =
+  SeqEx
+    [ PrimEx (DUP ""),
+      PrimEx (CAR "" ""),
+      PrimEx (DIP [PrimEx (CDR "" "")])
+    ]
+
+unpackTupleN ∷ (Eq t, Num t, Enum t) ⇒ t → ExpandedOp
+unpackTupleN 0 = SeqEx []
+unpackTupleN n =
+  SeqEx
+    [ unpackTuple,
+      PrimEx (DIP [unpackTupleN (pred n)])
+    ]
+
 packClosure ∷
   ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m

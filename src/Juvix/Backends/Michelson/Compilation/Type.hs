@@ -39,14 +39,21 @@ closureType ((_, x) : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
 {-
  - Lambda types: (closure type, argument type) -> (return type)
  -}
-{- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
-lamTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → M.Type
-lamTy env argTy retTy = M.Type (M.TLambda (M.Type (M.TPair "" "" (closureType env) argTy) "") retTy) ""
 
-{-
- - Return the lambda type & the type of the resulting lambda once the closure is APPLY-ed
- -}
-lamRetTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → (M.Type, M.Type)
-lamRetTy env argTy retTy =
-  let lTy = lamTy env argTy retTy
-   in (lTy, M.Type (M.TLambda argTy retTy) "")
+lamType ∷ [(Symbol, M.Type)] → [(Symbol, M.Type)] → M.Type → M.Type
+lamType argsPlusClosures extraArgs retTy =
+  M.Type
+    ( M.TLambda
+        ( M.Type
+            ( M.TPair
+                ""
+                ""
+                (closureType argsPlusClosures)
+                (closureType extraArgs)
+            )
+            ""
+        )
+        retTy
+    )
+    ""
+{- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}

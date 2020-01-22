@@ -2,6 +2,9 @@
 -- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Term where
 
+-- import qualified Michelson.TypeCheck as M
+
+import Data.Maybe (fromJust) -- bad remove!
 import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
@@ -13,7 +16,6 @@ import qualified Juvix.Core.Erased.Util as J
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
--- import qualified Michelson.TypeCheck as M
 import qualified Michelson.Untyped as M
 
 termToMichelson ∷
@@ -69,60 +71,57 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- Primitive: adds one item to the stack.
     J.Prim prim → stackCheck term addsOne (primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
-    J.Lam arg body →
-      stackCheck term addsOne $ do
-        let J.Pi _ argTy _retTy = ty
-        argTy ← typeToType argTy
-        stack ← get @"stack"
-        let free = J.free (J.eraseTerm term)
-            freeWithTypes =
-              map (\v → let Just t = VStack.lookupType v stack in (v, t)) free
-        -- TODO: second is a lambda, but it doesn't matter,
-        -- this just needs to be positionally accurate for var lookup.
-        modify @"stack"
-          ( VStack.append $
-              VStack.fromList
-                [ (VStack.Val VStack.FuncResultE, M.Type M.TUnit ""),
-                  (VStack.Val VStack.FuncResultE, M.Type M.TUnit "")
-                ]
-          )
-        vars ← traverse (\f → stackGuard f paramTy (varCase term f)) free
-        packOp ← packClosure free
-        put @"stack" (VStack.fromList [])
-        let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
-        unpackOp ← unpackClosure freeWithTypes
-        modify @"stack" (cons (VStack.VarE arg Nothing, argTy))
-        inner ← termToInstr body paramTy
-        dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
-        post ← get @"stack"
-        let (VStack.T ((_, retTy) : _) _) = post
-        let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
-        put @"stack" (cons (VStack.Val VStack.FuncResultE, rTy) stack)
-        pure
-          ( M.SeqEx
-              [ M.PrimEx
-                  ( M.PUSH
-                      ""
-                      lTy
-                      ( M.ValueLambda
-                          ( argUnpack
-                              :| [ M.PrimEx
-                                     (M.DIP [M.PrimEx (M.CAR "" ""), unpackOp]),
-                                   inner,
-                                   dropOp
-                                 ]
-                          )
-                      )
-                  ),
-                M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
-                -- Evaluate everything in the closure.
-                M.SeqEx vars,
-                -- Pack the closure.
-                packOp,
-                -- Partially apply the function.
-                M.PrimEx (M.APPLY "")
-              ]
-          )
+    J.Lam arg body → undefined
+    -- stackCheck term addsOne $ do
+    --   let J.Pi _ argTy _retTy = ty
+    --   argTy ← typeToType argTy
+    --   stack ← get @"stack"
+    --   let free = J.free (J.eraseTerm term)
+    --       freeWithTypes =
+    --         map (\v → let Just t = VStack.lookupType v stack in (v, t)) free
+    --   -- TODO: second is a lambda, but it doesn't matter,
+    --   -- this just needs to be positionally accurate for var lookup.
+    --   modify @"stack"
+    --     ( VStack.append $
+    --         VStack.fromList
+    --           [ (VStack.Val VStack.FuncResultE, M.Type M.TUnit ""),
+    --             (VStack.Val VStack.FuncResultE, M.Type M.TUnit "")
+    --           ]
+    --     )
+    --   vars ← traverse (\f → stackGuard f paramTy (varCase term f)) free
+    --   packOp ← packClosure free
+    --   put @"stack" (VStack.fromList [])
+    --   let argUnpack = M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx (M.CDR "" "")]
+    --   unpackOp ← unpackClosure freeWithTypes
+    --   modify @"stack" (cons (VStack.VarE arg Nothing, argTy))
+    --   inner ← termToInstr body paramTy
+    --   dropOp ← dropClosure ((arg, argTy) : freeWithTypes)
+    --   post ← get @"stack"
+    --   let (VStack.T ((_, retTy) : _) _) = post
+    --   let (lTy, rTy) = lamRetTy freeWithTypes argTy retTy
+    --   put @"stack" (cons (VStack.Val VStack.FuncResultE, rTy) stack)
+    --   pure
+    --     (M.SeqEx
+    --         [M.PrimEx
+    --             (M.PUSH
+    --                 ""
+    --                 lTy
+    --                 (M.ValueLambda
+    --                     (argUnpack
+    --                         :| [M.PrimEx
+    --                                (M.DIP [M.PrimEx (M.CAR "" ""), unpackOp]),
+    --                              inner,
+    --                              dropOp
+    --                            ]))),
+    --           M.PrimEx (M.PUSH "" (M.Type M.TUnit "") M.ValueUnit),
+    --           -- Evaluate everything in the closure.
+    --           M.SeqEx vars,
+    --           -- Pack the closure.
+    --           packOp,
+    --           -- Partially apply the function.
+    --           M.PrimEx (M.APPLY "")
+    --         ]
+    --     )
     -- TODO ∷ remove this special case
     -- Special-case full application of primitive functions.
     J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 →
@@ -139,11 +138,11 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         let (lam, args) = argsFromApps ann
         case lam of
           (J.LamM capture arguments body, _usage, lamTy) → do
-            insts ← evaluateAndPushArgs arguments lamTy args paramTy
             let argsL = length args
                 lamArgsL = length arguments
             if
               | argsL == lamArgsL → do
+                insts ← evaluateAndPushArgs arguments lamTy args paramTy
                 f ← termToInstr body paramTy
                 pure
                   ( M.SeqEx
@@ -157,6 +156,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
               | argsL < lamArgsL → do
                 let (lams, extraArgs) = splitAt argsL arguments
                     inEnvironment = lams <> capture
+                -- we could evaluate the captures or args first
                 captureInsts ←
                   traverse
                     ( \x → do
@@ -183,34 +183,71 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                             pure inst
                     )
                     capture
+                insts ← evaluateAndPushArgs arguments lamTy args paramTy
                 current@(VStack.T currentStack _) ← get @"stack"
-                let realValues =
+                let realValuesGen xs =
                       length
                         $ filter (VStack.inT . fst)
-                        $ take (length inEnvironment) currentStack
+                        $ take (length xs) currentStack
+
+                    realValues = realValuesGen inEnvironment
+
+                    numVarsInClosure = (length (inEnvironment <> extraArgs))
+
                 -- TODO ∷ WHAΤ about remaining args
                 --       do we need to compile to multiple lambas
                 --       how to share logic with actual lam case
                 extraArgsWithTypes ← zip extraArgs . drop argsL <$> typesFromPi lamTy
-                traverse_
-                  ( \(extra, extraType) →
-                      modify @"stack" (cons (VStack.VarE extra Nothing, extraType))
-                  )
-                  extraArgsWithTypes
-                modify @"stack" (VStack.take (length inEnvironment))
+                let createExtraArgs =
+                      (\ (extra, extraType) → (VStack.VarE extra Nothing, extraType))
+                      <$> extraArgsWithTypes
+                modify @"stack" (VStack.insertAt (length inEnvironment) createExtraArgs)
+                modify @"stack" (VStack.take numVarsInClosure)
                 body ← termToInstr body paramTy
                 --
                 put @"stack" current
                 packInstrs ← genReturn (pairN (realValues - 1))
-                modify @"stack"
-                  ( \stack@(VStack.T stack' _) →
-                      let pairs = car stack
-                          -- TODO ∷ filter harder, so we don't bring unwanted
-                          --         constants this is to save space
-                          filtered = filter (not . VStack.inT . fst) stack'
-                       in cons pairs (VStack.T filtered 0)
-                  )
-                undefined
+                -- TODO ∷ must be there due to captureInsts effect and other inserts
+                --        however, we should write this better.
+
+                let inEnvironmentTypes =
+                      (\x → (x, fromJust (VStack.lookupType x current)))
+                        <$> VStack.symbolsInT inEnvironment current
+                lTy ← lamType inEnvironmentTypes extraArgsWithTypes
+                      <$> returnTypeFromPi lamTy
+                -- TODO ∷ what if all captures or arguments are constants? This will end horribly!
+                pure $
+                  M.SeqEx
+                    [ M.PrimEx
+                        ( M.PUSH
+                            ""
+                            lTy
+                            ( M.ValueLambda
+                                ( M.SeqEx
+                                    [ unpackTuple,
+                                      M.PrimEx
+                                        ( M.DIP
+                                            [ unpackTupleN
+                                                ( length
+                                                    (VStack.symbolsInT extraArgs current)
+                                                    - 1
+                                                )
+                                            ]
+                                        ),
+                                      unpackTupleN
+                                        (length
+                                         (VStack.symbolsInT inEnvironment current)
+                                         - 1)
+                                    ]
+                                    :| [body]
+                                )
+                            )
+                        ),
+                      M.SeqEx captureInsts,
+                      M.SeqEx insts,
+                      packInstrs,
+                      M.PrimEx (M.APPLY "")
+                    ]
               | otherwise → do
                 -- argsL > lamArgsL
                 -- TODO ∷ rather hard to figure out, need to recursively go
@@ -237,7 +274,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           )
 
 takesOne ∷ VStack.T → VStack.T → Bool
-takesOne post pre = post == VStack.drop 1 pre
+takesOne post pre = post == VStack.drop (1 ∷ Int) pre
 
 addsOne ∷ VStack.T → VStack.T → Bool
 addsOne post pre = VStack.drop 1 post == pre
@@ -319,6 +356,9 @@ typesFromPi ∷
   f [M.Type]
 typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
 typesFromPi _ = pure []
+
+returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
+returnTypeFromPi x = typeToType x
 
 -- TODO ∷ have a function which grabs all names of
 --        lambdas recursively for over applied functions
