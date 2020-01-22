@@ -199,8 +199,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 --       how to share logic with actual lam case
                 extraArgsWithTypes ← zip extraArgs . drop argsL <$> typesFromPi lamTy
                 let createExtraArgs =
-                      (\ (extra, extraType) → (VStack.VarE extra Nothing, extraType))
-                      <$> extraArgsWithTypes
+                      (\(extra, extraType) → (VStack.VarE extra Nothing, extraType))
+                        <$> extraArgsWithTypes
                 modify @"stack" (VStack.insertAt (length inEnvironment) createExtraArgs)
                 modify @"stack" (VStack.take numVarsInClosure)
                 body ← termToInstr body paramTy
@@ -213,8 +213,9 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 let inEnvironmentTypes =
                       (\x → (x, fromJust (VStack.lookupType x current)))
                         <$> VStack.symbolsInT inEnvironment current
-                lTy ← lamType inEnvironmentTypes extraArgsWithTypes
-                      <$> returnTypeFromPi lamTy
+                lTy ←
+                  lamType inEnvironmentTypes extraArgsWithTypes
+                    <$> returnTypeFromPi lamTy
                 -- TODO ∷ what if all captures or arguments are constants? This will end horribly!
                 pure $
                   M.SeqEx
@@ -235,9 +236,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                                             ]
                                         ),
                                       unpackTupleN
-                                        (length
-                                         (VStack.symbolsInT inEnvironment current)
-                                         - 1)
+                                        ( length
+                                            (VStack.symbolsInT inEnvironment current)
+                                            - 1
+                                        )
                                     ]
                                     :| [body]
                                 )
@@ -252,6 +254,24 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 -- argsL > lamArgsL
                 -- TODO ∷ rather hard to figure out, need to recursively go
                 -- through the body to figure out names... etc etc.
+                -- - _Notes on how to do this_ :
+                --   + if f is overapplied, f fully applied returns a
+                --     function, so there's a lambda on the stack
+                --   + just EVAL or APPLY the lambda
+                --   + f a b = let z = a + b = \x -> x + z
+                --   + f a b = let z = a + b = \x -> \y -> x + y + z
+                --   + if that is applied to 4 arguments, we should
+                --     inline
+                --   + if is applied to 3 args, like the underapplied
+                --     case
+                --   + if we compile body of f and there is a lambda
+                --   + then the lambda needs to handle the naming
+                --   + there are two ways to fix
+                --   + one - de bruijin indices
+                --   + two - optimise it out later
+                --   + PUSH lambda; args; EXEC
+                --   + introspect type
+                --   + args; lambda body
                 let (args, extraApplied) = splitAt lamArgsL args
                 undefined
           t → do
