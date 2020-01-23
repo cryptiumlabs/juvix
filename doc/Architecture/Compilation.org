@@ -1,0 +1,62 @@
+* Compilation
+** Michelson
+Michelson is an interpreted stack based language on-top of the Tezos
+chain.
+
+Since we are compiling to Michelson, some interesting considerations
+must be made
+*** Push/Enter vs Eval/Apply
+Although the drawbacks of Push/Enter compared to Eval/Apply are well
+known [fn:1] [fn:2], for an interpretive stack based languages, the
+caveats in that statement go away.
+1. _Eval/Apply is easier to compile to a normal C like language_
+   - Michelson is a stack based language, this point does not apply
+2. _Push/Enter spread complexity around when trying to make a fast compiler_
+   - Michelson is an interpreted language, and in particular, creating
+     lambdas (closures) for over compilation is quite costly. What
+     would be cheaper for this language would be to simply push the
+     arguments onto the stack for the new function to consume, and
+     inline said function.
+*** Compilation Strategy
+Currently annotated Core is translated directly into Michelson
+
+This is less than ideal for more than a few reasons, and will be
+changed at a current release.
+
+However until that time, we will document what is *currently* being
+done and how to improve it
+
+One last note is that names are assumed to not be overlapping, as this
+happens higher up in the compilation process
+**** Virtual Stack
+Currently in compiling Michelson we have what we labeled the =Virtual
+Stack= (vstack), This stack could all be in the real stack or none of it could
+be. What could be stored on the vstack is all the various constants,
+as these would waste computation if passed around normally.
+
+This vstack was designed so that, one could easily reason about the
+stack without having to worry about “If I dup this, would it really
+dup it, or just dup what is on top of the *real* stack?”
+
+Thus primitives have to be aware of this virtual stack.
+  + The alternative (map with names to constants) has this as well.
+***** Debate
+It is argued that a mapping from names to constants is better for this
+task.
+
+Namely, it is argued that this strategy separates our view of the stack
+with the real stack.
+
+Also, as of now, this model also has some issues, as that we often do
+care about clearing the stack except for constants, and our logic does
+specialize on this distinction.
+  + I will note that this point is only really a temporary problem
+    that will go away with a proper DSL, not the hacked out version
+    that we have now.
+  + This point should be reconsidered when we go forward with a nice
+    DSL layer and pipeline down
+* Footnotes
+
+[fn:1] [[https://www.microsoft.com/en-us/research/publication/make-fast-curry-pushenter-vs-evalapply/?from=http%253A%252F%252Fresearch.microsoft.com%252F~simonpj%252Fpapers%252Feval-apply%252F][How to make a fast curry: push/enter vs eval/apply]]
+
+[fn:2] [[https://xavierleroy.org/talks/zam-kazam05.pdf][From Krivine's machine to Caml Implementations]]
