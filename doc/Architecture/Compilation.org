@@ -1,6 +1,6 @@
 * Compilation
 ** Michelson
-Michelson is an interpreted stack based language which runs on the Tezos
+[[https://michelson.org/][Michelson]] is an interpreted stack based language which runs on the Tezos
 chain.
 
 Since we are compiling to Michelson, some interesting considerations
@@ -13,15 +13,23 @@ caveats in that statement go away.
    - Michelson is a stack based language, this point does not apply
 2. _Push/Enter spread complexity around when trying to make a fast compiler_
    - Michelson is an interpreted language, and in particular, creating
-     lambdas (closures) for over compilation is quite costly. What
+     lambdas (closures) for over evaluation is quite costly. What
      would be cheaper for this language would be to simply push the
      arguments onto the stack for the new function to consume, and
      inline said function.
 *** Compilation Strategy
 Currently annotated Core is translated directly into Michelson
 
+What this means is that we map names of local variables to stack
+positions. Thus, before evaluating any function, we must first
+properly set the names
+  + This has some serious issues in the Push/Enter model currently, as
+    if we over-evaluate, then we need to know the names in which to
+    compile the extra args to!
+  + With careful consideration this can hopefully be solved.
+
 This is less than ideal for more than a few reasons, and will be
-changed at a current release.
+changed at a future release.
 
 However until that time, we will document what is *currently* being
 done and how to improve it
@@ -55,6 +63,13 @@ specialize on this distinction.
     that we have now.
   + This point should be reconsidered when we go forward with a nice
     DSL layer and pipeline down
+
+Another point that should be considered is a separate layer that folds
+all constants before hand
+  + this requires extra work, and if we do any smart compilation like
+    say compile generics functions ahead of time, this would require
+    extra work, rather then just having the primitives of the language
+    handle it themselves.
 * Footnotes
 
 [fn:1] [[https://www.microsoft.com/en-us/research/publication/make-fast-curry-pushenter-vs-evalapply/?from=http%253A%252F%252Fresearch.microsoft.com%252F~simonpj%252Fpapers%252Feval-apply%252F][How to make a fast curry: push/enter vs eval/apply]]
