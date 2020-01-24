@@ -49,11 +49,19 @@ import qualified LLVM.AST.Type as Type
 
 -- TODO ∷ consider the return type
 -- TODO ∷ remove boileprlate
-defineReduce ∷ Codegen.Define m ⇒ m Operand.Operand
+defineReduce ∷ (Codegen.Define m, Codegen.Debug m) ⇒ m Operand.Operand
 defineReduce = Codegen.defineFunction Type.void "reduce" args $
   do
+    debugLevelOne $ do
+      _ ← Codegen.printCString "rule reduce starting." []
+      pure ()
     -- switch creations
     eacLPtr ← Codegen.externf "eac_list"
+    -- Current Eac list
+    debugLevelOne $ do
+      _ ← Codegen.printCString "eac_list: " []
+      _ ← Defs.printList [eacLPtr]
+      pure ()
     appCase ← Codegen.addBlock "switch.app"
     lamCase ← Codegen.addBlock "switch.lam"
     eraCase ← Codegen.addBlock "switch.era"
@@ -87,6 +95,10 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
     -- end of moved code----------------------
     tagP ← Types.tagOf car
     tag ← Codegen.load Types.tag tagP
+    debugLevelOne $ do
+      _ ← Codegen.printCString "node found in list: tag: %i " [tag]
+      _ ← Codegen.mainPort >>= Debug.printNodePort nodePtr
+      pure ()
     _term ←
       Codegen.switch
         tag
@@ -103,6 +115,14 @@ defineReduce = Codegen.defineFunction Type.void "reduce" args $
           _ ← Codegen.cbr test conCase extCase
           -- %switch.*.continue
           Codegen.setBlock conCase
+          debugLevelOne $ do
+            _ ←
+              Codegen.printCString
+                ( "Other primary node found, hitting case: "
+                    <> unintern name
+                )
+                []
+            pure ()
 
         genContinueCaseD = genContinueCase tagNode car cdr defCase
 
@@ -265,7 +285,7 @@ annihilateRewireAux args =
 
 -- mimic rules from the interpreter
 -- This rule applies to Application ↔ Lambda
-defineAnnihilateRewireAux ∷ (Codegen.Define m, HasReader "debug" Int m) ⇒ m Operand.Operand
+defineAnnihilateRewireAux ∷ (Codegen.Define m, Codegen.Debug m) ⇒ m Operand.Operand
 defineAnnihilateRewireAux =
   Codegen.defineFunction Types.eacLPointer "annihilate_rewire_aux" args $
     do

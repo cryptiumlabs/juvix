@@ -54,6 +54,8 @@ initialModule = do
   Codegen.defineAuxiliary2
   Codegen.defineAuxiliary3
   Codegen.defineAuxiliary4
+  _ ← Defs.definePrintListInner
+  _ ← Defs.definePrintList
   _ ← Codegen.defineLink
   _ ← EAC.defineTest
   -- _ ← Codegen.alloca Types.testListPointer
@@ -78,8 +80,6 @@ initialModule = do
   _ ← API.defineReduceUntilComplete
   _ ← API.defineTest
   -- end API definitions
-  _ ← Defs.definePrintListInner
-  _ ← Defs.definePrintList
   pure ()
 
 runModule ∷ EAC.EAC () → EAC.EACState
