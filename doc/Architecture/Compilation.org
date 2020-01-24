@@ -1,6 +1,6 @@
 * Compilation
 ** Michelson
-Michelson is an interpreted stack based language on-top of the Tezos
+Michelson is an interpreted stack based language which runs on the Tezos
 chain.
 
 Since we are compiling to Michelson, some interesting considerations
