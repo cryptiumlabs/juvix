@@ -70,6 +70,8 @@ all constants before hand
     say compile generics functions ahead of time, this would require
     extra work, rather then just having the primitives of the language
     handle it themselves.
+  + whether or not it makes sense to inline, & what can be inlined,
+    may vary based on the backend & its cost model
 * Footnotes
 
 [fn:1] [[https://www.microsoft.com/en-us/research/publication/make-fast-curry-pushenter-vs-evalapply/?from=http%253A%252F%252Fresearch.microsoft.com%252F~simonpj%252Fpapers%252Feval-apply%252F][How to make a fast curry: push/enter vs eval/apply]]
