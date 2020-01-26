@@ -31,7 +31,7 @@
 **** DSL
 Serves as a mini DSL layer above LLVM
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[Library]]
 ***** What is included?
 1. _Relink_
@@ -51,7 +51,7 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
   + [[Interface]]
   + [[Nets/Default]]
   + [[Library]]
-**** Codegen
+**** Codegen <<Backends/LLVM/Codegen>>
 - _Relies on_
   + [[Block]]
   + [[Constants]]
@@ -95,7 +95,7 @@ Provides a mechanism for defining Sum types
 Serves as a front end for the Graph folder
 - _Relies on_
   + [[Graph/Debug]]
-  + [[Definitons]]
+  + [[Definitions]]
   + [[Operations]]
 ****** Debug <<Graph/Debug>>
 Serves as a module for various debugging functions
@@ -104,7 +104,7 @@ Serves as a module for various debugging functions
   + [[Operations]]
   + [[Codegen/Types]]
   + [[Library]]
-****** Definitons
+****** Definitions
 Operations necessary to update nodes
 - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
   | Part       | Alloca Or Malloc |
@@ -187,14 +187,14 @@ Functions that help with more complex Graph operations
 **** Net
 ***** API
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[Net/EAC]]
   + [[Net/EAC/Types]]
   + [[Library]]
 ***** Environment
 - Serves as the default environment for executing EAC code
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[API]]
   + [[Net/EAC]]
   + [[Defs]]
@@ -226,7 +226,7 @@ Functions that help with more complex Graph operations
   responsibility of the node to de-allocate, but instead uses the
   default strategy laid out in [[Codegen/Graph]]
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[DSL]]
   + [[EAC/Debug]]
   + [[Defs]]
@@ -237,7 +237,7 @@ Functions that help with more complex Graph operations
 ****** Debug <<EAC/Debug>>
 Serves as a module for various debugging functions
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
@@ -245,7 +245,7 @@ Serves as a module for various debugging functions
 - Also generates the proper types associated with them
 - Also has some miscellaneous debug information
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[DSL]]
   + [[Net/EAC/Types]]
   + [[Library]]
@@ -255,12 +255,12 @@ Serves as a module for various debugging functions
   + Sadly we can't extend types easily in Haskell, hence the
     boilerplate in this file
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[Library]]
   + [[HashMap]]
 ****** Types <<Net/EAC/Types>>
 - _Relies on_
-  + [[Codegen]]
+  + [[Backends/LLVM/Codegen]]
   + [[Library]]
 *** Michelson
 - _Relies on_
@@ -739,6 +739,12 @@ Can be added to via core translation
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
   + [[Library]]
+** LLVM
+*** Codegen <<Juvix/LLVM/Codegen>>
+- _Relies on_
+  + [[Shared]]
+  + [[Library]]
+  + [[HashMap]]
 ** Library
 - The standard Library for the project
   + Thus all code will depend on this module without stating otherwise
