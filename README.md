@@ -101,7 +101,9 @@ juvix interactive
 
 [Ormolu](https://github.com/cryptiumlabs/ormolu) required for source formatting.
 
-[Quicklisp](https://www.quicklisp.org/beta/) and [sbcl](http://www.sbcl.org/) required for the automatic generation of documentation in [doc/Code](https://github.com/cryptiumlabs/juvix/tree/develop/doc/Code).
+[Roswell](https://github.com/roswell/roswell) is required for automatic generation of documentation in [doc/Code](https://github.com/cryptiumlabs/juvix/tree/develop/doc/Code).
+
+Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install cryptiumlabs/org-generation`.
 
 To open a REPL with the library scoped:
 
