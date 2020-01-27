@@ -11,9 +11,6 @@ import Juvix.Core.IR.Types
 import Juvix.Core.Types
 import Juvix.Library hiding (show)
 
--- TODO: extend functions to annotated terms:
--- - eval*
--- - subst*
 
 -- evaluation of checkable terms
 evalTermWith ∷
