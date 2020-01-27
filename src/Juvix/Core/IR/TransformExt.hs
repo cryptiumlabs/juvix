@@ -100,9 +100,22 @@ forgetter :: (TermX ext primTy primVal ~ Void,
               ElimX ext primTy primVal ~ Void)
           => ExtTransformTE ext NoExt primTy primVal
 forgetter =
-  ExtTransformTE (const ()) (const ()) (const ()) (const ())
-                 (const ()) (const ()) (const ()) (const ())
-                 (const ()) (const ()) absurd     absurd
+  ExtTransformTE {
+    etStar   = const (),
+    etPrimTy = const (),
+    etPi     = const (),
+    etLam    = const (),
+    etElim   = const (),
+
+    etBound = const (),
+    etFree  = const (),
+    etPrim  = const (),
+    etApp   = const (),
+    etAnn   = const (),
+
+    etTermX = absurd,
+    etElimX = absurd
+  }
 
 extForgetT :: (TermX ext primTy primVal ~ Void,
                ElimX ext primTy primVal ~ Void)
