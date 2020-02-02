@@ -29,7 +29,8 @@ val string_cmp : Map.cmp string
 let string_cmp = string_cmp_total (); string_cmp'
 
 (*******************************************************************)
-(* Boiler plate over *)
+(* Boiler plate over      *)
+(*** Begin Type Definitions *)
 (*******************************************************************)
 
 type address = a : string {String.length a == 36 }
@@ -37,10 +38,9 @@ type address = a : string {String.length a == 36 }
 type accounts = Map.ordmap address nat string_cmp
 
 // we have to specify they are nats :(
-val add_account_values : Map.ordmap address nat string_cmp -> nat
+val add_account_values : accounts -> nat
 let add_account_values accounts =
  MapProp.fold (fun _key (v : nat) (acc : nat) -> v + acc) accounts 0
-
 
 unopteq type storage = {
   total_supply : nat;
@@ -58,7 +58,39 @@ unopteq type token = {
   version : nat;  // version of the token contract
   name    : string;
   symbol  : Char.char;
+  owner   : address // it seems that tokens can have owners for minting
 }
+
+unopteq type tx_transfer = {
+    from_account     : address;
+    to_account       : address;
+    transfer_ammount : nat
+  }
+
+unopteq type tx_mint = {
+  mint_ammount    : nat;
+  mint_to_account : address
+}
+
+unopteq type tx_burn = {
+  burn_ammount      : nat;
+  burn_from_account : address
+}
+
+unopteq type tx_data =
+  | Transfer of tx_transfer
+  | Mint     of tx_mint
+  | Burn     of tx_burn
+
+unopteq type tx = {
+  tx_data               : tx_data;
+  tx_authroized_account : address
+}
+
+(*******************************************************************)
+(* End Type Definitions *)
+(**** Begin Functions On Accounts *)
+(*******************************************************************)
 
 
 val has_n : accounts -> address -> nat -> bool
@@ -105,7 +137,6 @@ val transfer_add : acc : accounts
                  -> Lemma
                   (ensures ( add_account_values acc + num
                            == add_account_values (account_add acc add num)))
-
 let transfer_add acc add num =
   match Map.select add acc with
   | Some balance -> admit ()
@@ -128,7 +159,8 @@ val transfer_maintains_supply
   -> num      : nat
   -> Lemma
     (requires (has_n acc add_from num))
-    (ensures (add_account_values acc == add_account_values (transfer_acc acc add_from add_to num)))
+    (ensures (add_account_values acc
+              == add_account_values (transfer_acc acc add_from add_to num)))
 let transfer_maintains_supply acc add_from add_to num =
   transfer_sub acc add_from num;
   transfer_add (account_sub acc add_from num) add_to num
@@ -143,4 +175,18 @@ let transfer stor add_from add_to num =
   let new_acc = account_add (account_sub stor.accounts add_from num) add_to num in
   transfer_maintains_supply stor.accounts add_from add_to num;
   { total_supply = stor.total_supply;
-    accounts     = new_acc }
+    accounts     = new_acc
+  }
+
+
+(*******************************************************************)
+(* End Type Definitions *)
+(**** Begin Functions On Accounts *)
+(*******************************************************************)
+
+
+type transaction_error =
+  | Not_enough_funds
+
+val execute_transaction : token -> tx -> c_or transaction_error token
+let extract_transaction token tx = admit ()
