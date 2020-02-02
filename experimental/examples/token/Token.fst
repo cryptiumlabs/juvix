@@ -47,7 +47,7 @@ unopteq type storage = {
   accounts : a : accounts { total_supply = add_account_values a };
 }
 
-val emtpy_storage : storage
+val empty_storage : storage
 let empty_storage = {
   total_supply = 0;
   accounts = Map.empty;
@@ -66,17 +66,6 @@ let has_n accounts add to_transfer =
   match Map.select add accounts with
   | Some n -> to_transfer <= n
   | None   -> false
-
-// useless lemma, thought i needed it, but I just did to_transfer >= n.
-// in the function above by accident.
-val has_more : sto : storage
-             -> add : address
-             -> num : nat
-             -> Lemma
-               (requires (has_n sto.accounts add num))
-               (ensures  (num <= Some?.v (Map.select add sto.accounts)))
-let has_more sto add num = ()
-
 
 val account_sub : acc : accounts
                 -> add : address
