@@ -32,7 +32,7 @@ let string_cmp = string_cmp_total (); string_cmp'
 (* Boiler plate over *)
 (*******************************************************************)
 
-type address = string
+type address = a : string {String.length a == 36 }
 
 type accounts = Map.ordmap address nat string_cmp
 
@@ -92,7 +92,7 @@ val transfer_sub : acc : accounts
                  -> num : nat
                  -> Lemma
                   (requires (has_n acc add num))
-                  (ensures ( (add_account_values acc - num)
+                  (ensures (  add_account_values acc - num
                            == add_account_values (account_sub acc add num)))
 let transfer_sub acc add num =
   match Map.select add acc with
@@ -114,7 +114,7 @@ val transfer_add : acc : accounts
                  -> add : address
                  -> num : nat
                  -> Lemma
-                  (ensures ( (add_account_values acc + num)
+                  (ensures ( add_account_values acc + num
                            == add_account_values (account_add acc add num)))
 
 let transfer_add acc add num =
