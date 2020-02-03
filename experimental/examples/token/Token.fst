@@ -62,18 +62,18 @@ unopteq type token = {
 }
 
 unopteq type tx_transfer = {
-    from_account     : address;
-    to_account       : address;
-    transfer_ammount : nat
-  }
+  from_account    : address;
+  to_account      : address;
+  transfer_amount : nat
+}
 
 unopteq type tx_mint = {
-  mint_ammount    : nat;
+  mint_amount     : nat;
   mint_to_account : address
 }
 
 unopteq type tx_burn = {
-  burn_ammount      : nat;
+  burn_amount       : nat;
   burn_from_account : address
 }
 
@@ -165,13 +165,13 @@ let transfer_maintains_supply acc add_from add_to num =
   transfer_sub acc add_from num;
   transfer_add (account_sub acc add_from num) add_to num
 
-val transfer
+val transfer_stor
   : stor     : storage
   -> add_from : address
   -> add_to   : address
   -> num      : nat {has_n stor.accounts add_from num}
   -> storage
-let transfer stor add_from add_to num =
+let transfer_stor stor add_from add_to num =
   let new_acc = account_add (account_sub stor.accounts add_from num) add_to num in
   transfer_maintains_supply stor.accounts add_from add_to num;
   { total_supply = stor.total_supply;
@@ -181,12 +181,98 @@ let transfer stor add_from add_to num =
 
 (*******************************************************************)
 (* End Type Definitions *)
-(**** Begin Functions On Accounts *)
+(**** Begin Validations On Tokens *)
 (*******************************************************************)
 
 
+val valid_transfer : token -> tx -> bool
+let valid_transfer token tx =
+  match tx.tx_data with
+  | Transfer {from_account; transfer_amount} ->
+    has_n token.storage.accounts from_account transfer_amount
+    && tx.tx_authroized_account = from_account
+  | Mint _ | Burn _ ->
+    false
+
+val valid_mint : token -> tx -> bool
+let valid_mint token tx =
+  match tx.tx_data with
+  | Mint mint           -> token.owner = tx.tx_authroized_account
+  | Transfer _ | Burn _ -> false
+
+val valid_burn : token -> tx -> bool
+let valid_burn token tx =
+  match tx.tx_data with
+  | Burn {burn_from_account; burn_amount} ->
+    has_n token.storage.accounts burn_from_account burn_amount
+    && tx.tx_authroized_account = burn_from_account
+  | Transfer _ | Mint _ ->
+    false
+
+
+(*******************************************************************)
+(* End validations on tokens *)
+(**** Begin Functions On Tokens *)
+(*******************************************************************)
+
+val transfer : tok : token
+             -> tx  : tx { valid_transfer tok tx }
+             -> token
+let transfer token transaction =
+  match transaction.tx_data with
+  | Transfer {from_account; to_account; transfer_amount} ->
+    { token
+      with storage = transfer_stor token.storage
+                                   from_account
+                                   to_account
+                                   transfer_amount
+    }
+
+val mint : tok : token
+         -> tx : tx { valid_mint tok tx}
+         -> token
+let mint token transaction =
+  match transaction.tx_data with
+  | Mint {mint_amount; mint_to_account} ->
+    transfer_add token.storage.accounts mint_to_account mint_amount;
+    { token
+      with storage = {
+        total_supply = token.storage.total_supply + mint_amount;
+        accounts     = account_add token.storage.accounts mint_to_account mint_amount
+      }}
+
+val burn : tok : token
+         -> tx : tx { valid_burn tok tx}
+         -> token
+let burn token transaction =
+  match transaction.tx_data with
+  | Burn {burn_from_account; burn_amount} ->
+    transfer_sub token.storage.accounts burn_from_account burn_amount;
+    { token
+      with storage = {
+        total_supply = token.storage.total_supply - burn_amount;
+        accounts     = account_sub token.storage.accounts burn_from_account burn_amount
+      }}
+
 type transaction_error =
   | Not_enough_funds
+  | Not_same_account
+  | Not_owner_token
+  | Not_enough_tokens
 
 val execute_transaction : token -> tx -> c_or transaction_error token
-let extract_transaction token tx = admit ()
+
+let extract_transaction token tx =
+  match tx.tx_data with
+  | Transfer _ ->
+    if valid_transfer token tx
+    then Right (transfer token tx)
+    else Left Not_enough_funds // todo determine what the error is
+  | Mint _ ->
+    if valid_mint token tx
+    then Right (mint token tx)
+    else Left Not_owner_token
+  | Burn _ ->
+    if valid_burn token tx
+    then Right (burn token tx)
+    else Left Not_enough_tokens
