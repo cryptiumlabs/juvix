@@ -31,12 +31,36 @@ termToMichelson term paramTy = do
   case term of
     (J.Lam arg body, _, _) → do
       modify @"stack" (cons (VStack.VarE arg Nothing, paramTy))
-      instr' ← termToInstr body paramTy
+      instr' ← termToInstrOuter body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
       modify @"stack" (\xs → cons (car xs) (cdr (cdr xs)))
       tell @"compilationLog" [TermToInstr body instr]
       pure instr
     _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
+
+termToInstrOuter :: 
+  ∀ m.
+  ( HasState "stack" VStack.T m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  Term →
+  M.Type →
+  m Op
+termToInstrOuter term ty = do
+  maybeOp <- termToInstr term ty
+  case maybeOp of
+    Right op -> pure op
+    Left lam -> do
+      -- TODO: Actually compile the lambda to a closure.
+      -- We should never need to do this elsewhere.
+      -- ergo, if we do not return a lambda, we should never
+      -- compile to a lambda, except for the michelson built-ins
+      -- which take lambdas
+      -- todo: formalise this a bit
+      -- todo: deal with michelson builtins which take lambdas
+      -- they will have to use this function or something
+      undefined
 
 {-
  - Transform core term to Michelson instruction sequence.
@@ -55,7 +79,7 @@ termToInstr ∷
   ) ⇒
   Term →
   M.Type →
-  m Op
+  m (Either () Op)
 termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
   case term of
     -- TODO: Right now, this is pretty inefficient, even if
@@ -67,11 +91,24 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- TODO: There is probably some nicer sugar for this in Michelson now.
     -- Variable: find the variable in the stack & duplicate it at the top.
     -- :: a ~ s => (a, s)
-    J.Var n → varCase term n
+    J.Var n → pure <$> varCase term n
     -- Primitive: adds one item to the stack.
-    J.Prim prim → stackCheck term addsOne (primToInstr prim ty)
+    J.Prim prim → pure <$> stackCheck term addsOne (primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
-    J.Lam arg body → undefined
+    J.LamM capture arg body → do
+      -- TODO: Add intermediate return form
+      -- we will either inline or compile to a lambda, and we don't yet know
+      -- we can safely assume captures are on the stack when we inline
+      -- we don't want to fix what the layout of the stack is yet
+      -- just don't compile it yet, return an intermediate form
+      -- partially applied form needs to include "bound arguments", rename?
+      -- what does the intermediate form need to include?
+      -- - names of the arguments that are remaining
+      -- - the number of stack elements to drop when we have actually inlined the function
+      -- - but do we? builtins will consume themselves anyways (we do still need to copy)
+      -- - non-builtins - multiple names for arguments?
+      -- lambdas don't consume their args BUT builtins DO so we must copy (for now) before inlining a built-in
+      undefined
     -- stackCheck term addsOne $ do
     --   let J.Pi _ argTy _retTy = ty
     --   argTy ← typeToType argTy
@@ -122,18 +159,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     --           M.PrimEx (M.APPLY "")
     --         ]
     --     )
-    -- TODO ∷ remove this special case
-    -- Special-case full application of primitive functions.
-    J.App (J.App (J.Prim prim, _, _) a, _, _) b | arity prim == 2 →
-      stackCheck term addsOne $ do
-        args ← mapM (flip termToInstr paramTy) [b, a]
-        -- TODO
-        func ← genReturn (M.PrimEx (M.PAIR "" "" "" ""))
-        pure (M.SeqEx (args <> [func]))
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App _ _ →
-      stackCheck term addsOne $ do
+      fmap pure $ stackCheck term addsOne $ do
         pre ← get @"stack"
         let (lam, args) = argsFromApps ann
         case lam of
@@ -143,7 +172,14 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
             if
               | argsL == lamArgsL → do
                 insts ← evaluateAndPushArgs arguments lamTy args paramTy
-                f ← termToInstr body paramTy
+                -- TODO: deal with this correctly
+                -- if f is still under-evaluated (i.e. partially applied)
+                -- leave the arguments on the stack
+                -- and return the under-evaluated form
+                -- need to assert that we correctly drop them later, this is complicated!
+                -- need to pass things to be dropped along with the partially applied function datatype
+                f' ← termToInstr body paramTy
+                let Right f = f'
                 pure
                   ( M.SeqEx
                       ( insts
@@ -154,6 +190,10 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                       )
                   )
               | argsL < lamArgsL → do
+                -- TODO: refactor this to return a partially applied function which we might be able to inline
+                -- evaluate the argument which we do in fact have
+                -- push them to the stack with correct names
+                -- return the under-evaluated form with appropriate "drop" instructions (names?)
                 let (lams, extraArgs) = splitAt argsL arguments
                     inEnvironment = lams <> capture
                 -- we could evaluate the captures or args first
@@ -203,7 +243,9 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                         <$> extraArgsWithTypes
                 modify @"stack" (VStack.insertAt (length inEnvironment) createExtraArgs)
                 modify @"stack" (VStack.take numVarsInClosure)
-                body ← termToInstr body paramTy
+                -- TODO: deal with this correctly
+                body' ← termToInstr body paramTy
+                let Right body = body'
                 --
                 put @"stack" current
                 packInstrs ← genReturn (pairN (realValues - 1))
@@ -252,46 +294,23 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                     ]
               | otherwise → do
                 -- argsL > lamArgsL
-                -- TODO ∷ rather hard to figure out, need to recursively go
-                -- through the body to figure out names... etc etc.
-                -- - _Notes on how to do this_ :
-                --   + if f is overapplied, f fully applied returns a
-                --     function, so there's a lambda on the stack
-                --   + just EVAL or APPLY the lambda
-                --   + f a b = let z = a + b = \x -> x + z
-                --   + f a b = let z = a + b = \x -> \y -> x + y + z
-                --   + if that is applied to 4 arguments, we should
-                --     inline
-                --   + if is applied to 3 args, like the underapplied
-                --     case
-                --   + if we compile body of f and there is a lambda
-                --   + then the lambda needs to handle the naming
-                --   + there are two ways to fix
-                --   + one - de bruijin indices
-                --   + two - optimise it out later
-                --   + PUSH lambda; args; EXEC
-                --   + introspect type
-                --   + args; lambda body
+                -- TODO
+                -- Add `inline` option to `termToInstr` --> superseded by additional return form
+                -- When `f` is fully applied, inline it
+                -- When `f` is overapplied, inline it, but if there is then a function in the body of `f`, don't inline that
+                --    (this will hit a `Lam` case in the body of `f` or when compiling an argument)
+                --    unless that function is also fully applied, in which case do inline it
+                --    ~~> need some way to return a partially applied function that will either be compiled to a lambda or
+                --    will be inlined if it is fully applied in an enclosing application node
                 let (args, extraApplied) = splitAt lamArgsL args
+                -- behave like fully applied case
+                -- then check if the lambda returned a partially applied thing and if it did, apply it, else return it
+                -- what if that also returned a lambda? have to recursively apply as long as we have args left
+                -- if we still have an underapplied function, return it instead of compiling to a lambda, might be able to inline above
+                -- keep applying until we run out of arguments (still might result in underapplied function)
                 undefined
           t → do
             failWith ("Applications applied to non lambda term: " <> show t)
-    -- TODO ∷ remove
-    J.App func arg →
-      stackCheck term addsOne $ do
-        func ← termToInstr func paramTy -- :: Lam a b
-        arg ← termToInstr arg paramTy -- :: a
-        modify @"stack"
-          ( \s@(VStack.T (_ : (_, (M.Type (M.TLambda _ retTy) _)) : _) _) →
-              cons (VStack.Val VStack.FuncResultE, retTy) (cdr (cdr s))
-          )
-        pure
-          ( M.SeqEx
-              [ func, -- Evaluate the function.
-                arg, -- Evaluate the argument.
-                M.PrimEx (M.EXEC "") -- Execute the function.
-              ]
-          )
 
 takesOne ∷ VStack.T → VStack.T → Bool
 takesOne post pre = post == VStack.drop (1 ∷ Int) pre
@@ -398,7 +417,9 @@ evaluateAndPushArgs names t args paramTy = do
   foldrM
     ( \((name, _type'), arg) instrs → do
         -- TODO ∷ assert that _type' and typeV are the same!
-        argEval ← termToInstr arg paramTy
+        -- TODO: deal with this correctly
+        argEval' ← termToInstr arg paramTy
+        let Right argEval = argEval'
         (v, typeV) ← pop
         case v of
           VStack.VarE _ _ → failWith' "Never happens"
