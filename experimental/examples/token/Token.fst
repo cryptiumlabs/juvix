@@ -215,9 +215,11 @@ let valid_burn token tx =
 (**** Begin Functions On Tokens *)
 (*******************************************************************)
 
-val transfer : tok : token
-             -> tx  : tx { valid_transfer tok tx }
-             -> token
+val token_transaction : (token -> tx -> Prims.Tot bool) -> Prims.Tot Type0
+let token_transaction f =
+  tok : token -> tx : tx { f tok tx } -> token
+
+val transfer : token_transaction valid_transfer
 let transfer token transaction =
   match transaction.tx_data with
   | Transfer {from_account; to_account; transfer_amount} ->
@@ -228,9 +230,7 @@ let transfer token transaction =
                                    transfer_amount
     }
 
-val mint : tok : token
-         -> tx : tx { valid_mint tok tx}
-         -> token
+val mint : token_transaction valid_mint
 let mint token transaction =
   match transaction.tx_data with
   | Mint {mint_amount; mint_to_account} ->
@@ -241,9 +241,7 @@ let mint token transaction =
         accounts     = account_add token.storage.accounts mint_to_account mint_amount
       }}
 
-val burn : tok : token
-         -> tx : tx { valid_burn tok tx}
-         -> token
+val burn : token_transaction valid_burn
 let burn token transaction =
   match transaction.tx_data with
   | Burn {burn_from_account; burn_amount} ->
@@ -275,3 +273,4 @@ let execute_transaction token tx =
     if valid_burn token tx
     then Right (burn token tx)
     else Left Not_enough_tokens
+
