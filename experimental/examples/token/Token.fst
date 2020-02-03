@@ -261,8 +261,7 @@ type transaction_error =
   | Not_enough_tokens
 
 val execute_transaction : token -> tx -> c_or transaction_error token
-
-let extract_transaction token tx =
+let execute_transaction token tx =
   match tx.tx_data with
   | Transfer _ ->
     if valid_transfer token tx
