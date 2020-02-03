@@ -108,6 +108,7 @@ let account_sub accounts add number =
   | Some balance -> Map.update add (balance - number) accounts
 
 
+// No feedback given, so don't know next move :(
 val transfer_sub : acc : accounts
                  -> add : address
                  -> num : nat
@@ -131,6 +132,7 @@ let account_add acc add num =
   | Some b' -> Map.update add (b' + num) acc
   | None    -> Map.update add num        acc
 
+// No feedback given, so don't know next move :(
 val transfer_add : acc : accounts
                  -> add : address
                  -> num : nat
@@ -215,7 +217,7 @@ let valid_burn token tx =
 (**** Begin Functions On Tokens *)
 (*******************************************************************)
 
-val token_transaction : (token -> tx -> Prims.Tot bool) -> Prims.Tot Type0
+val token_transaction : (token -> tx -> bool) -> Type0
 let token_transaction f =
   tok : token -> tx : tx { f tok tx } -> token
 
@@ -273,4 +275,3 @@ let execute_transaction token tx =
     if valid_burn token tx
     then Right (burn token tx)
     else Left Not_enough_tokens
-
