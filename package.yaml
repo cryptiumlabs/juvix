@@ -147,7 +147,7 @@ library:
     - Juvix.Backends.Michelson.Compilation.Util
     - Juvix.Backends.Michelson.Compilation.Datatypes
     - Juvix.Backends.Michelson.Optimisation
-    - Juvix.Backends.Michelson.Compilation.VituralStack
+    - Juvix.Backends.Michelson.Compilation.VirtualStack
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Compilation

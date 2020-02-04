@@ -12,7 +12,7 @@
 --   + After all, what may not be a constant now, may be in the
 --     future, or vice versa!
 -- - Import with qualified and the name of =VStack=
-module Juvix.Backends.Michelson.Compilation.VituralStack where
+module Juvix.Backends.Michelson.Compilation.VirtualStack where
 
 import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
 import Juvix.Library hiding (Type, drop, take)

@@ -3,7 +3,7 @@
 module Juvix.Backends.Michelson.Compilation.Util where
 
 import Juvix.Backends.Michelson.Compilation.Types
-import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
+import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
 import qualified Michelson.Typed as MT

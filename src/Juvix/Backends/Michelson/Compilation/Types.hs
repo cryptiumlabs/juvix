@@ -8,7 +8,7 @@ module Juvix.Backends.Michelson.Compilation.Types
   )
 where
 
-import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
+import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
