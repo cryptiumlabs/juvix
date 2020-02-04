@@ -275,3 +275,47 @@ let execute_transaction token tx =
     if valid_burn token tx
     then Right (burn token tx)
     else Left Not_enough_tokens
+
+val valid_transfer_transaction
+  : tok : token
+  -> tx  : tx
+  -> Lemma (requires (valid_transfer tok tx))
+          (ensures (
+            let Right new_tok = execute_transaction tok tx in
+            tok.storage.total_supply == new_tok.storage.total_supply))
+let valid_transfer_transaction tok tx = ()
+
+
+val valid_mint_transaction
+  : tok : token
+  -> tx  : tx
+  -> Lemma (requires (valid_mint tok tx))
+          (ensures (
+            let Right new_tok = execute_transaction tok tx in
+            let Mint {mint_amount} = tx.tx_data in
+            tok.storage.total_supply + mint_amount == new_tok.storage.total_supply))
+let valid_mint_transaction tok tx = ()
+
+val valid_burn_transaction
+  : tok : token
+  -> tx  : tx
+  -> Lemma (requires (valid_burn tok tx))
+          (ensures (
+            let Right new_tok = execute_transaction tok tx in
+            let Burn {burn_amount} = tx.tx_data in
+            tok.storage.total_supply - burn_amount == new_tok.storage.total_supply))
+let valid_burn_transaction tok tx = ()
+
+let isLeft = function
+  | Left _  -> true
+  | Right _ -> false
+
+val non_valid_transaction
+  : tok : token
+  -> tx  : tx
+  -> Lemma (requires (not (valid_burn tok tx)
+                   /\ not (valid_mint tok tx)
+                   /\ not (valid_transfer tok tx)))
+          (ensures (isLeft (execute_transaction tok tx)))
+let non_valid_transaction tok tx = ()
+
