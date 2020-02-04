@@ -35,8 +35,8 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [ (VStack.VarE fst Nothing, fT),
-                      (VStack.VarE snd Nothing, sT)
+                    [ (VStack.varE fst Nothing, fT),
+                      (VStack.varE snd Nothing, sT)
                     ]
                 )
             )
@@ -45,7 +45,7 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [(VStack.VarE fst Nothing, fT)]
+                    [(VStack.varE fst Nothing, fT)]
                 )
             )
           pure (PrimEx (CAR "" ""))
@@ -53,7 +53,7 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [(VStack.VarE snd Nothing, sT)]
+                    [(VStack.varE snd Nothing, sT)]
                 )
             )
           pure (PrimEx (CDR "" ""))
