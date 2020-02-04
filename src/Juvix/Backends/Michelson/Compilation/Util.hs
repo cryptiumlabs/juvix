@@ -8,6 +8,7 @@ import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
 import Michelson.Untyped
+import qualified Data.Set as Set
 
 -- TODO ∷ find better name
 failWith' ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
@@ -164,7 +165,7 @@ unpackClosure env = do
   let count = length env
   modify @"stack"
     ( VStack.append
-        $ VStack.T (fmap (\(s, t) → (VStack.VarE s Nothing, t)) env)
+        $ VStack.T (fmap (\(s, t) → (VStack.VarE (Set.singleton s) Nothing, t)) env)
         $ length env
     )
   -- dup (count - 1) times,

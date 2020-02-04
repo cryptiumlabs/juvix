@@ -12,7 +12,7 @@ import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import qualified Juvix.Backends.Michelson.Compilation.VituralStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.Erased.Util as J
+
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
@@ -30,7 +30,7 @@ termToMichelson ∷
 termToMichelson term paramTy = do
   case term of
     (J.Lam arg body, _, _) → do
-      modify @"stack" (cons (VStack.VarE arg Nothing, paramTy))
+      modify @"stack" (cons (VStack.varE arg Nothing, paramTy))
       instr' ← termToInstrOuter body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
       modify @"stack" (\xs → cons (car xs) (cdr (cdr xs)))
@@ -38,7 +38,7 @@ termToMichelson term paramTy = do
       pure instr
     _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
 
-termToInstrOuter :: 
+termToInstrOuter ::
   ∀ m.
   ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
@@ -211,7 +211,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                             let (Just type') = VStack.lookupType x currentStack
                             modify @"stack"
                               ( cons
-                                  ( VStack.VarE x (Just (VStack.ConstE v)),
+                                  ( VStack.varE x (Just (VStack.ConstE v)),
                                     type'
                                   )
                               )
@@ -219,7 +219,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                           Just (VStack.Position p) → do
                             let (Just type') = VStack.lookupType x currentStack
                             let inst = dupToFront (fromIntegral p)
-                            modify @"stack" (cons (VStack.VarE x Nothing, type'))
+                            modify @"stack" (cons (VStack.varE x Nothing, type'))
                             pure inst
                     )
                     capture
@@ -239,7 +239,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
                 --       how to share logic with actual lam case
                 extraArgsWithTypes ← zip extraArgs . drop argsL <$> typesFromPi lamTy
                 let createExtraArgs =
-                      (\(extra, extraType) → (VStack.VarE extra Nothing, extraType))
+                      (\(extra, extraType) → (VStack.varE extra Nothing, extraType))
                         <$> extraArgsWithTypes
                 modify @"stack" (VStack.insertAt (length inEnvironment) createExtraArgs)
                 modify @"stack" (VStack.take numVarsInClosure)
@@ -424,7 +424,7 @@ evaluateAndPushArgs names t args paramTy = do
         case v of
           VStack.VarE _ _ → failWith' "Never happens"
           VStack.Val v →
-            modify @"stack" (cons (VStack.VarE name (Just v), typeV))
+            modify @"stack" (cons (VStack.varE name (Just v), typeV))
         pure (argEval : instrs)
     )
     []

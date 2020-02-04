@@ -18,6 +18,7 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
+import qualified Data.Set as Set
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -32,9 +33,12 @@ data T
   deriving (Show, Eq)
 
 data Elem
-  = VarE Symbol (Maybe Val)
+  = VarE (Set.Set Symbol) (Maybe Val)
   | Val Val
   deriving (Show, Eq, Generic)
+
+varE ∷ Symbol → Maybe Val → Elem
+varE x t = VarE (Set.singleton x) t
 
 data Val
   = ConstE Parameterisation.Value
@@ -118,7 +122,7 @@ lookupType ∷ Symbol → T → Maybe Untyped.Type
 lookupType n (T stack' _) = go stack'
   where
     go ((VarE n' _, typ) : _)
-      | n' == n = Just typ
+      | Set.member n n' = Just typ
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
@@ -140,9 +144,9 @@ lookup ∷ Symbol → T → Maybe Lookup
 lookup n (T stack' _) = go stack' 0
   where
     go ((v@(VarE n' _), _) : _) acc
-      | n' == n && inT v =
+      | Set.member n n' && inT v =
         Just (Position acc)
-      | n' == n =
+      | Set.member n n' =
         Just (Value (valueOfErr v))
     go ((v, _) : vs) acc
       | inT v = go vs (succ acc)
@@ -153,9 +157,9 @@ dropFirst ∷ Symbol → T → [(Elem, Untyped.Type)] → T
 dropFirst n (T stack' size) = go stack'
   where
     go ((v@(VarE n' _), _) : xs) acc
-      | n' == n && inT v =
+      | Set.member n n' && inT v =
         T (reverse acc <> xs) (pred size)
-      | n' == n =
+      | Set.member n n' =
         T (reverse acc <> xs) size
     go (v : vs) acc =
       go vs (v : acc)
@@ -170,14 +174,14 @@ symbolsInT symbs (T stack' _) =
         ( concatMap
             ( \(x, _) →
                 case x of
-                  VarE s t → [(s, t)]
+                  VarE s t → fmap (\s -> (s,t)) (Set.toList s)
                   _ → []
             )
             stack'
         )
     f x =
       case Map.lookup x vars of
-        Just x → True
+        Just _ → True
         Nothing → False
 
 insertAt ∷ Foldable t ⇒ Int → t (Elem, Untyped.Type) → T → T
