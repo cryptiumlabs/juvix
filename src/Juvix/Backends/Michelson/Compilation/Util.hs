@@ -10,11 +10,7 @@ import qualified Michelson.Typed as MT
 import Michelson.Untyped
 import qualified Data.Set as Set
 
--- TODO ∷ find better name
-failWith' ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
-failWith' = throw @"compilationError" . InternalFault
-
-failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m ExpandedOp
+failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
 failWith = throw @"compilationError" . InternalFault
 
 -- TODO ∷ don't add a value if it is a constant

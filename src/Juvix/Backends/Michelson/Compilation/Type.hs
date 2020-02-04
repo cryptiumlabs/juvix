@@ -57,3 +57,13 @@ lamType argsPlusClosures extraArgs retTy =
     )
     ""
 {- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
+
+typesFromPi ∷
+  HasThrow "compilationError" CompilationError f ⇒
+  J.Type PrimTy PrimVal →
+  f [M.Type]
+typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
+typesFromPi _ = pure []
+
+returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
+returnTypeFromPi x = typeToType x
