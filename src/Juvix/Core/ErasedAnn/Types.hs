@@ -1,6 +1,6 @@
 module Juvix.Core.ErasedAnn.Types where
 
-import Juvix.Core.Usage
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
 data Term primTy primVal
@@ -15,7 +15,7 @@ data Type primTy primVal
   | Star Natural
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
-    Pi Usage (Type primTy primVal) (Type primTy primVal)
+    Pi Usage.T (Type primTy primVal) (Type primTy primVal)
   deriving (Show, Eq, Generic)
 
-type AnnTerm primTy primVal = (Term primTy primVal, Usage, Type primTy primVal)
+type AnnTerm primTy primVal = (Term primTy primVal, Usage.T, Type primTy primVal)

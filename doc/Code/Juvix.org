@@ -266,6 +266,8 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
+**** Contract
+This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer
@@ -290,6 +292,8 @@ Serves as a module for various debugging functions
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
+  + [[Contract]]
+  + [[Usage]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_

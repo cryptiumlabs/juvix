@@ -2,19 +2,22 @@ module Juvix.Backends.Michelson.Parameterisation where
 
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
-import qualified Juvix.Core.ErasedAnn.Types as C
-import qualified Juvix.Core.Types as C
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Untyped as M
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
+import qualified Juvix.Backends.Michelson.Contract as Contract
+import qualified Michelson.Interpret as Interpt
+import qualified Juvix.Core.Usage as Usage
 import Prelude (String)
 
-type Term = C.AnnTerm PrimTy PrimVal
+type Term = CoreErased.AnnTerm PrimTy PrimVal
 
-type Type = C.Type PrimTy PrimVal
+type Type = CoreErased.Type PrimTy PrimVal
 
 type Value = M.Value' M.ExpandedOp
 
@@ -30,13 +33,15 @@ data PrimVal
   | PrimFst
   | PrimSnd
   -- TODO: Add all Michelson instructions which are functions.
-
   deriving (Show, Eq, Generic)
 
 -- TODO: Add rest of primitive values.
 -- TODO: Add dependent functions for pair, fst, snd, etc.
 typeOf ∷ PrimVal → NonEmpty PrimTy
 typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
+
+-- constructTerm ∷ PrimVal → Term
+-- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
 
 constType ∷ M.Value' Op → M.T
 constType v =
@@ -47,7 +52,7 @@ constType v =
     M.ValueFalse → M.Tc M.CBool
 
 arity ∷ PrimVal → Int
-arity = flip ((-)) 1 . length . typeOf
+arity = pred . length . typeOf
 
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
@@ -85,5 +90,7 @@ reservedNames = []
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-michelson ∷ C.Parameterisation PrimTy PrimVal
-michelson = C.Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+michelson ∷ Core.Parameterisation PrimTy PrimVal
+michelson =
+  Core.Parameterisation
+    typeOf apply parseTy parseVal reservedNames reservedOpNames
