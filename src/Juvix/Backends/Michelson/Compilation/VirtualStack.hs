@@ -14,11 +14,11 @@
 -- - Import with qualified and the name of =VStack=
 module Juvix.Backends.Michelson.Compilation.VirtualStack where
 
+import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
-import qualified Data.Set as Set
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ symbolsInT symbs (T stack' _) =
         ( concatMap
             ( \(x, _) →
                 case x of
-                  VarE s t → fmap (\s -> (s,t)) (Set.toList s)
+                  VarE s t → fmap (\s → (s, t)) (Set.toList s)
                   _ → []
             )
             stack'

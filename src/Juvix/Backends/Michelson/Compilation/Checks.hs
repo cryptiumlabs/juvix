@@ -25,8 +25,8 @@ stackGuard term paramTy func = do
   maybeInstr ← func
   end ← get @"stack"
   case maybeInstr of
-    Left _ -> pure maybeInstr
-    Right instr -> do
+    Left _ → pure maybeInstr
+    Right instr → do
       case stackToStack start of
         M.SomeHST startStack → do
           -- TODO: Real originated contracts.

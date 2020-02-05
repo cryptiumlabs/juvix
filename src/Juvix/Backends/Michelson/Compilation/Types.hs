@@ -10,20 +10,21 @@ where
 
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
+import qualified Juvix.Core.ErasedAnn as J -- TODO: name this differently
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
-import qualified Juvix.Core.ErasedAnn as J -- TODO: name this differently
 
 type VStack = VStack.T
 
-data LamPartial = LamPartial {
-    ops :: [Op],
-    captures :: [Symbol], -- note: semantically this should be a set :)
-    remArgs :: [Symbol],
-    body :: Term,
-    ty :: J.Type PrimTy PrimVal
-  }
+data LamPartial
+  = LamPartial
+      { ops ∷ [Op],
+        captures ∷ [Symbol], -- note: semantically this should be a set :)
+        remArgs ∷ [Symbol],
+        body ∷ Term,
+        ty ∷ J.Type PrimTy PrimVal
+      }
   deriving (Show, Eq, Generic)
 
 data CompilationError

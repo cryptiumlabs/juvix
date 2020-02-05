@@ -2,13 +2,13 @@
 -- Utility functions used by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Util where
 
+import qualified Data.Set as Set
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
 import qualified Michelson.Typed as MT
 import Michelson.Untyped
-import qualified Data.Set as Set
 
 failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
 failWith = throw @"compilationError" . InternalFault
