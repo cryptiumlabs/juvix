@@ -4,8 +4,8 @@ module Juvix.Backends.Michelson.Compilation where
 
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy as L
-import Juvix.Backends.Michelson.Compilation.Term
 import Juvix.Backends.Michelson.Compilation.Lambda
+import Juvix.Backends.Michelson.Compilation.Term
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util

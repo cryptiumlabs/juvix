@@ -27,6 +27,19 @@ typeToType ty =
       retTy ← typeToType retTy
       pure (M.Type (M.TLambda argTy retTy) "")
 
+-- Drop n arguments from a lambda type.
+dropNArgs ∷
+  ∀ m.
+  (HasThrow "compilationError" CompilationError m) ⇒
+  Type →
+  Int →
+  m Type
+dropNArgs ty 0 = pure ty
+dropNArgs ty n =
+  case ty of
+    J.Pi _ _ retTy → dropNArgs retTy (n - 1)
+    _ → throw @"compilationError" InvalidInputType
+
 {-
  - Closure packing:
  - No free variables - ()
@@ -56,6 +69,7 @@ lamType argsPlusClosures extraArgs retTy =
         retTy
     )
     ""
+
 {- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
 
 typesFromPi ∷

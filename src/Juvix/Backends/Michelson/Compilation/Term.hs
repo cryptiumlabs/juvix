@@ -2,9 +2,6 @@
 -- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Term where
 
--- import qualified Michelson.TypeCheck as M
-
-import Data.Maybe (fromJust) -- bad remove!
 import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
@@ -12,7 +9,6 @@ import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
-
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
@@ -60,73 +56,82 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       -- ~~
       -- Note: lambdas don't consume their args BUT builtins DO so we must copy (for now) before inlining a built-in
       pure (Left (LamPartial [] capture args body ty))
+    J.Lam _ _ → do
+      failWith ("This term should not exist")
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App _ _ → do
       -- TODO: figure out how to do stack check here
-        pre ← get @"stack"
-        let (lam, args) = argsFromApps ann
-        case lam of
-          (J.LamM capture arguments body, _usage, lamTy) → do
-            let argsL = length args
-                lamArgsL = length arguments
-            insts <- evaluateAndPushArgs arguments lamTy args paramTy
-            if
-              | argsL == lamArgsL → do
-                -- need to assert that we correctly drop them later, this is complicated!
-                -- need to pass things to be dropped along with the partially applied function datatype
-                eitherFuncOp ← termToInstr body paramTy
-                case eitherFuncOp of
-                  Right f -> do
-                    -- Fully applied case without a lambda: evaluate all the arguments, inline the function, drop the args.
-                    pure $ Right
-                      ( M.SeqEx
-                          ( insts
-                              <> [ f,
-                                   M.PrimEx
-                                    (M.DIP (replicate argsL (M.PrimEx M.DROP)))
-                                ]
-                          )
-                      )
-                  Left (LamPartial ops captures remArgs body ty) -> do
-                    -- Fully applied case with a returned lambda: return the instructions followed by the lambda, defer evaluation of the body.
-                    pure (Left (LamPartial (insts <> ops) captures remArgs body ty))
-              | argsL < lamArgsL → do
-                -- todo: the lambda type is now wrong, fix this, must eat n arguments
-                let (evaluatedArgs, remainingArgs) = splitAt argsL arguments
-                -- Here we are turning formerly bound arguments into captures.
-                pure (Left (LamPartial insts (capture <> evaluatedArgs) remainingArgs body ty))
-              | otherwise → do
-                -- argsL > lamArgsL
-                -- TODO
-                -- Add `inline` option to `termToInstr` --> superseded by additional return form
-                -- When `f` is fully applied, inline it
-                -- When `f` is overapplied, inline it, but if there is then a function in the body of `f`, don't inline that
-                --    (this will hit a `Lam` case in the body of `f` or when compiling an argument)
-                --    unless that function is also fully applied, in which case do inline it
-                --    ~~> need some way to return a partially applied function that will either be compiled to a lambda or
-                --    will be inlined if it is fully applied in an enclosing application node
-                let (args, extraApplied) = splitAt lamArgsL args
-                eitherFuncOp <- termToInstr body paramTy
-                case eitherFuncOp of
-                  Right _ -> failWith "invalid case"
-                  Left (LamPartial ops captures args body ty) -> do
-                    case compare (length args) (length extraApplied) of
-                      EQ -> do
-                        body <- termToInstr body paramTy
-                        case body of
-                          Right b -> do
-                            pure (Right (M.SeqEx (insts <> ops <> [b])))
-                          Left _ -> undefined
-                      GT -> do
-                        -- todo: the lambda type is now wrong, fix this, must eat n arguments
-                        pure (Left (LamPartial (insts <> ops) (capture <> extraApplied) (drop (length extraApplied) args) body ty))
-                      LT -> do
-                        -- another overapplied case, we must recurse (first: separate out this function)
-                        undefined
+      let (lam, args) = argsFromApps ann
+      case lam of
+        (J.LamM captures arguments body, _usage, lamTy) → do
+          insts ← evaluateAndPushArgs arguments lamTy args paramTy
+          recurseApplication (captures, arguments, body) lamTy args insts paramTy
+        ann@(J.Prim prim, _, primTy) → do
+          -- Treat the primitive as a function with n arguments, the body will eventually be inlined (or packed in a lambda).
+          let arguments = replicate (arity prim) "_"
+          insts ← evaluateAndPushArgs arguments primTy args paramTy
+          recurseApplication ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -}) primTy args insts paramTy
+        t → do
+          failWith ("Applications applied to non lambda term: " <> show t)
 
-          t → do
-            failWith ("Applications applied to non lambda term: " <> show t)
+-- captures, arguments, body are for the function
+-- lamTy is the type of the function
+-- args are the arguments to which it is being applied
+recurseApplication ∷
+  ∀ m a.
+  ( HasState "stack" VStack.T m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  ([Symbol], [Symbol], Term) →
+  J.Type PrimTy PrimVal →
+  [a] →
+  [Op] →
+  M.Type →
+  m (Either LamPartial M.ExpandedOp)
+recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
+  let argsL = length args
+      lamArgsL = length lamArguments
+  case compare argsL lamArgsL of
+    EQ → do
+      -- Exactly applied case, we have the correct number of arguments.
+      -- need to assert that we correctly drop them later, this is complicated!
+      -- need to pass things to be dropped along with the partially applied function datatype
+      eitherFuncOp ← termToInstr body paramTy
+      case eitherFuncOp of
+        Right f → do
+          -- Fully applied case without a lambda: evaluate all the arguments, inline the function, drop the args.
+          pure $
+            Right
+              ( M.SeqEx
+                  ( insts
+                      <> [ f,
+                           M.PrimEx
+                             (M.DIP (replicate argsL (M.PrimEx M.DROP)))
+                         ]
+                  )
+              )
+        Left (LamPartial ops captures remArgs body ty) → do
+          -- Fully applied case with a returned lambda: return the instructions followed by the lambda, defer evaluation of the body.
+          -- Will this type be correct if we compile this to a lambda?
+          pure (Left (LamPartial (insts <> ops) captures remArgs body ty))
+    LT → do
+      -- Underapplied case, we don't yet have enough arguments to inline.
+      -- Here we are turning formerly bound arguments into captures.
+      let (evaluatedArgs, remainingArgs) = splitAt argsL lamArguments
+      lamTy ← dropNArgs lamTy argsL
+      pure (Left (LamPartial insts (captures <> evaluatedArgs) remainingArgs body lamTy))
+    GT → do
+      -- Overapplied case, we must figure out what the body is and recurse.
+      let (args, extraApplied) = splitAt lamArgsL args
+      eitherFuncOp ← termToInstr body paramTy
+      case eitherFuncOp of
+        Right _ → failWith "invalid case"
+        Left (LamPartial ops parCaptures parArgs parBody parTy) → do
+          -- todo: are these captures correct
+          -- Will this type be correct if we compile this to a lambda?
+          recurseApplication (parCaptures, parArgs, parBody) parTy extraApplied (insts <> ops) paramTy
 
 takesOne ∷ VStack.T → VStack.T → Bool
 takesOne post pre = post == VStack.drop (1 ∷ Int) pre
@@ -149,10 +154,9 @@ varCase term n = stackCheck term addsOne $ do
   stack ← get @"stack"
   case VStack.lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
-    Just (VStack.Value i) → undefined
+    Just (VStack.Value _i) → undefined
     Just (VStack.Position i) → do
       -- TODO ∷ replace with dip call
-
       let before = rearrange i
           after = M.PrimEx (M.DIP [unrearrange i])
       genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
@@ -195,6 +199,8 @@ stackCheck term guard func = do
       )
   pure res
 
+-- this could also be AppM
+-- seems like a useful pass
 argsFromApps ∷
   J.AnnTerm primTy primVal →
   ( (J.Term primTy primVal, Usage.Usage, J.Type primTy primVal),

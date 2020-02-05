@@ -1,4 +1,3 @@
-
 -- |
 -- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Lambda where
@@ -6,13 +5,12 @@ module Juvix.Backends.Michelson.Compilation.Lambda where
 import Data.Maybe (fromJust) -- bad remove!
 import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Prim
-import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Term -- TODO fixme
+import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
-
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
@@ -38,7 +36,7 @@ termToMichelson term paramTy = do
       pure instr
     _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
 
-termToInstrOuter ::
+termToInstrOuter ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
@@ -48,10 +46,10 @@ termToInstrOuter ::
   M.Type →
   m Op
 termToInstrOuter term ty = do
-  maybeOp <- termToInstr term ty
+  maybeOp ← termToInstr term ty
   case maybeOp of
-    Right op -> pure op
-    Left (LamPartial ops captures args body _) -> do
+    Right op → pure op
+    Left (LamPartial ops captures args body _) → do
       -- TODO: Actually compile the lambda to a closure.
       -- We should never need to do this elsewhere.
       -- ergo, if we do not return a lambda, we should never
@@ -62,10 +60,15 @@ termToInstrOuter term ty = do
       -- they will have to use this function or something
       undefined
 
-funcToLambda :: forall m . (HasState "stack" VStack.T m,
-                 HasThrow "compilationError" CompilationError m,
-                 HasWriter "compilationLog" [CompilationLog] m) =>
-                LamPartial -> M.Type -> m M.ExpandedOp
+funcToLambda ∷
+  ∀ m.
+  ( HasState "stack" VStack.T m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  LamPartial →
+  M.Type →
+  m M.ExpandedOp
 funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
   -- ~~
   -- Here we are dealing with a (possibly previously partially applied)
@@ -112,8 +115,11 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
         length
           $ filter (VStack.inT . fst)
           $ take (length xs) currentStack
-      realValues = realValuesGen captures 
+
+      realValues = realValuesGen captures
+
       numVarsInClosure = (length (captures <> args))
+
   extraArgsWithTypes ← zip args . drop (length args) <$> typesFromPi lamTy
   let createExtraArgs =
         (\(extra, extraType) → (VStack.varE extra Nothing, extraType))
