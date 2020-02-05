@@ -7,7 +7,6 @@ import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Compilation.Util
-import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.Erased.Util as J
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library

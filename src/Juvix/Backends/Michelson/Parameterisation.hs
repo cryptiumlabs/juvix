@@ -1,46 +1,31 @@
-module Juvix.Backends.Michelson.Parameterisation where
+module Juvix.Backends.Michelson.Parameterisation
+  ( module Juvix.Backends.Michelson.Parameterisation,
+    module Juvix.Backends.Michelson.Compilation.Types
+  )where
 
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Backends.Michelson.Contract as Contract
+import qualified Juvix.Backends.Michelson.Compilation.Prim as Prim
+import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Untyped as M
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import qualified Juvix.Backends.Michelson.Contract as Contract
 import qualified Michelson.Interpret as Interpt
 import qualified Juvix.Core.Usage as Usage
 import Prelude (String)
-
-type Term = CoreErased.AnnTerm PrimTy PrimVal
-
-type Type = CoreErased.Type PrimTy PrimVal
-
-type Value = M.Value' M.ExpandedOp
-
-type Op = M.ExpandedOp
-
-data PrimTy
-  = PrimTy M.Type
-  deriving (Show, Eq, Generic)
-
-data PrimVal
-  = PrimConst (M.Value' Op)
-  | PrimPair
-  | PrimFst
-  | PrimSnd
-  -- TODO: Add all Michelson instructions which are functions.
-  deriving (Show, Eq, Generic)
 
 -- TODO: Add rest of primitive values.
 -- TODO: Add dependent functions for pair, fst, snd, etc.
 typeOf ∷ PrimVal → NonEmpty PrimTy
 typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
 
--- constructTerm ∷ PrimVal → Term
+-- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
 
 constType ∷ M.Value' Op → M.T
@@ -57,7 +42,12 @@ arity = pred . length . typeOf
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
-apply _ _ = Nothing
+apply t1 _t2 = Nothing
+  where
+    primTy :| _ = typeOf t1
+    runPrim = execWithStack [] $ do
+      Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+      undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
 parseTy lexer =

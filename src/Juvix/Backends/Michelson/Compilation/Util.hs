@@ -2,7 +2,7 @@
 -- Utility functions used by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Util where
 
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types hiding (Type)
 import Juvix.Library hiding (Type)
 import Michelson.TypeCheck
 import qualified Michelson.Typed as MT

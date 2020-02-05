@@ -2,7 +2,7 @@
 -- Datatypes & pattern matching.
 module Juvix.Backends.Michelson.Compilation.Datatypes where
 
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types hiding (Type)
 import Juvix.Backends.Michelson.Compilation.Util
 import Juvix.Library hiding (Type)
 import Michelson.Untyped

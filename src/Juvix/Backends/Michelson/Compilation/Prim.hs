@@ -4,7 +4,6 @@ module Juvix.Backends.Michelson.Compilation.Prim where
 
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
-import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
 import qualified Michelson.Untyped as M

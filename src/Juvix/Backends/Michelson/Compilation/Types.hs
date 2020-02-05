@@ -2,11 +2,31 @@
 -- - Types used internally by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Types where
 
-import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+
+data PrimTy
+  = PrimTy M.Type
+  deriving (Show, Eq, Generic)
+
+data PrimVal
+  = PrimConst (M.Value' Op)
+  | PrimPair
+  | PrimFst
+  | PrimSnd
+  -- TODO: Add all Michelson instructions which are functions.
+  deriving (Show, Eq, Generic)
+
+type Term = CoreErased.AnnTerm PrimTy PrimVal
+
+type Type = CoreErased.Type PrimTy PrimVal
+
+type Value = M.Value' M.ExpandedOp
+
+type Op = M.ExpandedOp
 
 data CompilationError
   = NotYetImplemented Text

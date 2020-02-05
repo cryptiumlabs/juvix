@@ -289,10 +289,12 @@ This module provides a default contract environment
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[ErasedAnn/Types]]
   + [[Core/Types]]
-  + [[Library]]
+  + [[ErasedAnn/Types]]
   + [[Contract]]
+  + [[Prim]]
+  + [[Michelson/Compilation/Types]]
+  + [[Library]]
   + [[Usage]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
@@ -322,7 +324,6 @@ Datatypes & pattern matching.
 - _Relies on_
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[ErasedAnn]]
   + [[Library]]
 ***** Term
@@ -333,7 +334,6 @@ Datatypes & pattern matching.
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[Michelson/Parameterisation]]
   + [[Erased/Util]]
   + [[ErasedAnn]]
   + [[Library]]
@@ -341,14 +341,13 @@ Datatypes & pattern matching.
 - Functions for representation of types in the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
-  + [[Michelson/Parameterisation]]
   + [[Library]]
+  + [[ErasedAnn/Types]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
 - _Relies on_
