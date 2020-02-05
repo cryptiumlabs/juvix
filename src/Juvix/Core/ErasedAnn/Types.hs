@@ -8,7 +8,7 @@ data Term primTy primVal
   | Prim primVal
   | Lam Symbol (AnnTerm primTy primVal)
   | LamM
-      { capture ∷ [Symbol], -- Caputre
+      { capture ∷ [Symbol], -- Capture
         arguments ∷ [Symbol], -- Arguments
           -- the Term in AnnTerm is not lam!
         body ∷ AnnTerm primTy primVal

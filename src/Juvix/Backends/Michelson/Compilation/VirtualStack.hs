@@ -126,7 +126,7 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
-drop ∷ (Ord t, Num t, Enum t) ⇒ t → T → T
+drop ∷ Int → T → T
 drop n xs
   | n <= 0 = xs
   | otherwise = drop (pred n) (cdr xs)

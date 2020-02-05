@@ -2,9 +2,6 @@
 -- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Term where
 
--- import qualified Michelson.TypeCheck as M
-
-import Data.Maybe (fromJust) -- bad remove!
 import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
@@ -59,22 +56,40 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       -- ~~
       -- Note: lambdas don't consume their args BUT builtins DO so we must copy (for now) before inlining a built-in
       pure (Left (LamPartial [] capture args body ty))
+    J.Lam _ _ → do
+      failWith ("This term should not exist")
     -- :: (\a -> b) a ~ (a, s) => (b, s)
     -- Call-by-value (evaluate argument first).
     J.App _ _ → do
       -- TODO: figure out how to do stack check here
-      pre ← get @"stack"
       let (lam, args) = argsFromApps ann
       case lam of
         (J.LamM captures arguments body, _usage, lamTy) → do
           insts ← evaluateAndPushArgs arguments lamTy args paramTy
           recurseApplication (captures, arguments, body) lamTy args insts paramTy
+        ann@(J.Prim prim, _, primTy) → do
+          -- Treat the primitive as a function with n arguments, the body will eventually be inlined (or packed in a lambda).
+          let arguments = replicate (arity prim) "_"
+          insts ← evaluateAndPushArgs arguments primTy args paramTy
+          recurseApplication ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -}) primTy args insts paramTy
         t → do
           failWith ("Applications applied to non lambda term: " <> show t)
 
 -- captures, arguments, body are for the function
 -- lamTy is the type of the function
 -- args are the arguments to which it is being applied
+recurseApplication ∷
+  ∀ m a.
+  ( HasState "stack" VStack.T m,
+    HasThrow "compilationError" CompilationError m,
+    HasWriter "compilationLog" [CompilationLog] m
+  ) ⇒
+  ([Symbol], [Symbol], Term) →
+  J.Type PrimTy PrimVal →
+  [a] →
+  [Op] →
+  M.Type →
+  m (Either LamPartial M.ExpandedOp)
 recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
   let argsL = length args
       lamArgsL = length lamArguments
@@ -139,10 +154,9 @@ varCase term n = stackCheck term addsOne $ do
   stack ← get @"stack"
   case VStack.lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
-    Just (VStack.Value i) → undefined
+    Just (VStack.Value _i) → undefined
     Just (VStack.Position i) → do
       -- TODO ∷ replace with dip call
-
       let before = rearrange i
           after = M.PrimEx (M.DIP [unrearrange i])
       genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
@@ -185,6 +199,8 @@ stackCheck term guard func = do
       )
   pure res
 
+-- this could also be AppM
+-- seems like a useful pass
 argsFromApps ∷
   J.AnnTerm primTy primVal →
   ( (J.Term primTy primVal, Usage.Usage, J.Type primTy primVal),
