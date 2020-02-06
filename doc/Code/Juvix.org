@@ -350,6 +350,21 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Library]]
+**** DSL
+***** Instructions
+- This module serves as a lower layer DSL that is just a binding
+  over the untyped instruction bindings
+- _Relies on_
+  + [[Library]]
+***** InstructionsEff
+- This module includes a higher level DSL which each instruction
+  has a stack effect
+  + This is similar to the base LLVM bindings we have.
+  + So for example, emitting an =add=, eats two items from the
+    virtual stack, and adds an =Instr.Add= instruction to the
+    sequence of instructions to execute
+- _Relies on_
+  + [[Instructions]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]
