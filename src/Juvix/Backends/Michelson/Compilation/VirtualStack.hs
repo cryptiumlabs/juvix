@@ -19,6 +19,7 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
+import qualified Michelson.Untyped.Instr as Instr
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -125,6 +126,21 @@ lookupType n (T stack' _) = go stack'
       | Set.member n n' = Just typ
     go ((_, _) : xs) = go xs
     go [] = Nothing
+
+promote ∷ Int → T → ([Instr.ExpandedOp], T)
+promote _n stack
+  | isNil stack = ([], stack)
+promote 0 stack = ([], stack)
+promote n stack =
+  let (insts, newStack) = promote (pred n) (cdr stack) in
+  let pushVal v t = Instr.PrimEx (Instr.PUSH "" t v) : insts in
+  case car stack of
+    (Val (ConstE v), t) →
+      (pushVal v t, cons (Val FuncResultE, t) newStack)
+    (VarE x (Just (ConstE v)), t) →
+      (pushVal v t, cons (VarE x (Just FuncResultE), t) newStack)
+    a →
+      (insts, cons a newStack)
 
 drop ∷ Int → T → T
 drop n xs
