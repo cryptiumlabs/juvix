@@ -132,15 +132,15 @@ promote _n stack
   | isNil stack = ([], stack)
 promote 0 stack = ([], stack)
 promote n stack =
-  let (insts, newStack) = promote (pred n) (cdr stack) in
-  let pushVal v t = Instr.PrimEx (Instr.PUSH "" t v) : insts in
-  case car stack of
-    (Val (ConstE v), t) →
-      (pushVal v t, cons (Val FuncResultE, t) newStack)
-    (VarE x (Just (ConstE v)), t) →
-      (pushVal v t, cons (VarE x (Just FuncResultE), t) newStack)
-    a →
-      (insts, cons a newStack)
+  let (insts, newStack) = promote (pred n) (cdr stack)
+   in let pushVal v t = Instr.PrimEx (Instr.PUSH "" t v) : insts
+       in case car stack of
+            (Val (ConstE v), t) →
+              (pushVal v t, cons (Val FuncResultE, t) newStack)
+            (VarE x (Just (ConstE v)), t) →
+              (pushVal v t, cons (VarE x (Just FuncResultE), t) newStack)
+            a →
+              (insts, cons a newStack)
 
 drop ∷ Int → T → T
 drop n xs
