@@ -4,7 +4,7 @@
 --   + The values on this stack may or may not be on the real
 --     stack. However for convention this should be largely ignored,
 --     except when you wish to do an operation like pair
---     * This can be fix in the future
+--     * This can be fixed in the future
 --     * Until then, one should filter out the virtual stack items
 -- - We keep virtual items on the ="stack"= as that makes the details
 --   on whether something is constant propagation or not act
@@ -41,6 +41,9 @@ data Elem
 varE ∷ Symbol → Maybe Val → Elem
 varE x t = VarE (Set.singleton x) t
 
+varNone ∷ Symbol → Elem
+varNone x = VarE (Set.singleton x) Nothing
+
 data Val
   = ConstE Parameterisation.Value
   | FuncResultE
@@ -53,7 +56,7 @@ data Val
 ins ∷ (Elem, Untyped.Type) → (Int → Int) → T → T
 ins v f (T stack' size) = T (v : stack') (f size)
 
--- | 'inT' determines if the given
+-- | 'inT' determines if the given element is on the real stack or not
 inT ∷ Elem → Bool
 inT (VarE _ (Just FuncResultE)) = True
 inT (VarE _ (Just (ConstE _))) = False

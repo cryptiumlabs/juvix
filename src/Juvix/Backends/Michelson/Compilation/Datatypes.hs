@@ -27,7 +27,7 @@ unpack ∷
 unpack (Type ty _) binds =
   case ty of
     Tbool → do
-      modify @"stack" (VStack.drop (1 ∷ Int))
+      modify @"stack" (VStack.drop 1)
       return (SeqEx [])
     TPair _ _ fT sT →
       case binds of
@@ -35,8 +35,8 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [ (VStack.varE fst Nothing, fT),
-                      (VStack.varE snd Nothing, sT)
+                    [ (VStack.varNone fst, fT),
+                      (VStack.varNone snd, sT)
                     ]
                 )
             )
@@ -45,7 +45,7 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [(VStack.varE fst Nothing, fT)]
+                    [(VStack.varNone fst, fT)]
                 )
             )
           pure (PrimEx (CAR "" ""))
@@ -53,7 +53,7 @@ unpack (Type ty _) binds =
           modify @"stack"
             ( VStack.appendDrop
                 ( VStack.fromList
-                    [(VStack.varE snd Nothing, sT)]
+                    [(VStack.varNone snd, sT)]
                 )
             )
           pure (PrimEx (CDR "" ""))
