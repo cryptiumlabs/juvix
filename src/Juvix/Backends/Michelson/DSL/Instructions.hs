@@ -231,7 +231,6 @@ ifLeft = Instr.PrimEx ... Instr.IF_LEFT
 
 if' :: [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
 if' = Instr.PrimEx ... Instr.IF
-
 map :: [Instr.ExpandedOp] → Instr.ExpandedOp
 map = Instr.PrimEx . Instr.MAP ""
 
@@ -252,3 +251,14 @@ dip = Instr.PrimEx . Instr.DIP
 
 dipN :: Word → [Instr.ExpandedOp] → Instr.ExpandedOp
 dipN = Instr.PrimEx ... Instr.DIPN
+
+
+instance Semigroup Instr.ExpandedOp where
+  Instr.SeqEx xs <> Instr.SeqEx ys =
+    Instr.SeqEx (xs <> ys)
+  Instr.SeqEx xs <> y = Instr.SeqEx (xs <> [y])
+  x <> Instr.SeqEx ys = Instr.SeqEx (x : ys)
+  x <> y = Instr.SeqEx [x, y]
+
+instance Monoid Instr.ExpandedOp where
+  mempty = Instr.SeqEx []
