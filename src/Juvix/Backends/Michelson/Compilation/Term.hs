@@ -13,6 +13,7 @@ import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Michelson.Untyped as M
+import qualified Data.Set as Set
 
 {-
  - Transform core term to Michelson instruction sequence.
@@ -54,7 +55,8 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
       -- We are ASSUMING that all names are unique, so captures will be in the stack,
       -- and will be kept around & available for lookup when we later inline the body.
       -- ~~
-      -- Note: lambdas don't consume their args BUT builtins DO so we must copy (for now) before inlining a built-in
+      -- Note: lambdas don't consume their args BUT builtins DO so we
+      --       must copy (for now) before inlining a built-in
       pure (Left (LamPartial [] capture args body ty))
     J.Lam _ _ → do
       failWith ("This term should not exist")
@@ -68,10 +70,16 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           insts ← evaluateAndPushArgs arguments lamTy args paramTy
           recurseApplication (captures, arguments, body) lamTy args insts paramTy
         ann@(J.Prim prim, _, primTy) → do
-          -- Treat the primitive as a function with n arguments, the body will eventually be inlined (or packed in a lambda).
+          -- Treat the primitive as a function with n arguments
+          -- , the body will eventually be inlined (or packed in a lambda).
           let arguments = replicate (arity prim) "_"
           insts ← evaluateAndPushArgs arguments primTy args paramTy
-          recurseApplication ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -}) primTy args insts paramTy
+          recurseApplication
+             ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -})
+             primTy
+             args
+             insts
+             paramTy
         t → do
           failWith ("Applications applied to non lambda term: " <> show t)
 
@@ -234,7 +242,8 @@ evaluateAndPushArgs names t args paramTy = do
         let Right argEval = argEval'
         (v, typeV) ← pop
         case v of
-          VStack.VarE _ _ → failWith "Never happens"
+          VStack.VarE x v →
+            modify @"stack" (cons (VStack.VarE (Set.insert name x) v, typeV))
           VStack.Val v →
             modify @"stack" (cons (VStack.varE name (Just v), typeV))
         pure (argEval : instrs)
