@@ -142,7 +142,7 @@ recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
           recurseApplication (parCaptures, parArgs, parBody) parTy extraApplied (insts <> ops) paramTy
 
 takesOne ∷ VStack.T → VStack.T → Bool
-takesOne post pre = post == VStack.drop (1 ∷ Int) pre
+takesOne post pre = post == VStack.drop 1 pre
 
 addsOne ∷ VStack.T → VStack.T → Bool
 addsOne post pre = VStack.drop 1 post == pre
