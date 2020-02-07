@@ -266,6 +266,8 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
+**** Contract
+This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer
@@ -293,11 +295,12 @@ Serves as a module for various debugging functions
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
+  + [[Lambda]]
   + [[Term]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Optimisation]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
@@ -306,7 +309,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Datatypes
@@ -314,14 +317,28 @@ Datatypes & pattern matching.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
+  + [[Library]]
+***** Lambda
+- Compilation of core terms to Michelson instruction sequences.
+- _Relies on_
+  + [[Checks]]
+  + [[Prim]]
+  + [[Term]]
+  + [[Compilation/Type]]
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
 ***** Prim
 - Compilation of primitive terms to Michelson instruction sequences.
 - _Relies on_
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
   + [[ErasedAnn]]
   + [[Library]]
@@ -333,9 +350,8 @@ Datatypes & pattern matching.
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
-  + [[Erased/Util]]
   + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
@@ -349,16 +365,17 @@ Datatypes & pattern matching.
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
+  + [[ErasedAnn]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[VituralStack]]
+  + [[VirtualStack]]
   + [[Library]]
-***** VituralStack
+***** VirtualStack
 - Serves as a virtual stack over Michelson
 - This stack has a few properties
   + The values on this stack may or may not be on the real
@@ -371,10 +388,11 @@ Utility functions used by the Michelson backend.
   consistently with each other.
   + After all, what may not be a constant now, may be in the
     future, or vice versa!
-- Import with qualified and the name of =VT=
+- Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Parameterisation]]
   + [[Library]]
+  + [[HashMap]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]
