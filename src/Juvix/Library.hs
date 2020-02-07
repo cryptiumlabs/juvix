@@ -24,6 +24,7 @@ module Juvix.Library
     (|<<),
     (>>|),
     (|>),
+    (...),
     traverseM,
     Symbol,
     intern,
@@ -158,3 +159,6 @@ uncurry3 fn (a, b, c) = fn a b c
 
 curry3 ∷ ((a, b, c) → d) → a → b → c → d
 curry3 fn a b c = fn (a, b, c)
+
+(...) ∷ (b → c) → (a1 → a2 → b) → a1 → a2 → c
+(...) = (.) . (.)
