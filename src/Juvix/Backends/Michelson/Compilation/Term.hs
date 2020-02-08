@@ -121,7 +121,8 @@ recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
                   )
               )
         Left (LamPartial ops captures remArgs body ty) → do
-          -- Fully applied case with a returned lambda: return the instructions followed by the lambda, defer evaluation of the body.
+          -- Fully applied case with a returned lambda: return the instructions
+          -- followed by the lambda, defer evaluation of the body.
           -- Will this type be correct if we compile this to a lambda?
           pure (Left (LamPartial (insts <> ops) captures remArgs body ty))
     LT → do
@@ -150,6 +151,7 @@ addsOne post pre = VStack.drop 1 post == pre
 changesTop ∷ VStack.T → VStack.T → Bool
 changesTop post pre = VStack.drop 1 post == pre
 
+-- TODO ∷ to account for constant propagation we should change the output type
 varCase ∷
   ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
@@ -162,7 +164,11 @@ varCase term n = stackCheck term addsOne $ do
   stack ← get @"stack"
   case VStack.lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
-    Just (VStack.Value _i) → undefined
+    -- TODO ∷ figure out how to do constant propagation here
+    Just (VStack.Value v) →
+      let Just t = VStack.lookupType n stack in
+      genReturn (M.PrimEx (M.PUSH "" t v))
+
     Just (VStack.Position i) → do
       -- TODO ∷ replace with dip call
       let before = rearrange i
@@ -239,14 +245,22 @@ evaluateAndPushArgs names t args paramTy = do
         -- TODO ∷ assert that _type' and typeV are the same!
         -- TODO: deal with this correctly
         argEval' ← termToInstr arg paramTy
-        let Right argEval = argEval'
         (v, typeV) ← pop
         case v of
           VStack.VarE x v →
             modify @"stack" (cons (VStack.VarE (Set.insert name x) v, typeV))
           VStack.Val v →
             modify @"stack" (cons (VStack.varE name (Just v), typeV))
-        pure (argEval : instrs)
+        case argEval' of
+          Right argEval →
+            pure (argEval : instrs)
+          Left _lamPartial →
+            -- TODO ∷ turn this into an op?
+            --        Really the output of this should probably be a custom
+            --        sum type that accounts for the lambda,
+            --        Maybe we should even set the vstack to hold these lambdas
+            --        then have a decision function to decide if it's inlined or not
+            undefined
     )
     []
     namedArgs
