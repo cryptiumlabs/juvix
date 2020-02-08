@@ -322,8 +322,6 @@ Datatypes & pattern matching.
 ***** Lambda
 - Compilation of core terms to Michelson instruction sequences.
 - _Relies on_
-  + [[Checks]]
-  + [[Prim]]
   + [[Term]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
@@ -331,7 +329,6 @@ Datatypes & pattern matching.
   + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
   + [[ErasedAnn]]
-  + [[Usage]]
   + [[Library]]
 ***** Prim
 - Compilation of primitive terms to Michelson instruction sequences.
@@ -367,7 +364,6 @@ Datatypes & pattern matching.
 - _Relies on_
   + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
-  + [[ErasedAnn]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
@@ -381,7 +377,7 @@ Utility functions used by the Michelson backend.
   + The values on this stack may or may not be on the real
     stack. However for convention this should be largely ignored,
     except when you wish to do an operation like pair
-    * This can be fix in the future
+    * This can be fixed in the future
     * Until then, one should filter out the virtual stack items
 - We keep virtual items on the ="stack"= as that makes the details
   on whether something is constant propagation or not act
@@ -391,6 +387,7 @@ Utility functions used by the Michelson backend.
 - Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Parameterisation]]
+  + [[ErasedAnn]]
   + [[Library]]
   + [[HashMap]]
 ** Core

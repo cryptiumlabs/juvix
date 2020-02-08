@@ -12,6 +12,7 @@ import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+import qualified Prelude as Prelude (show)
 import qualified Michelson.Untyped as M
 import qualified Data.Set as Set
 
@@ -72,7 +73,11 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
         ann@(J.Prim prim, _, primTy) → do
           -- Treat the primitive as a function with n arguments
           -- , the body will eventually be inlined (or packed in a lambda).
-          let arguments = replicate (arity prim) "_"
+          -- TODO ∷ generate better unique names
+          let arguments =
+                intern
+                <$> replicate (arity prim) "_"
+                <> fmap Prelude.show ([1..] ∷ [Integer])
           insts ← evaluateAndPushArgs arguments primTy args paramTy
           recurseApplication
              ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -})
@@ -109,7 +114,8 @@ recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
       eitherFuncOp ← termToInstr body paramTy
       case eitherFuncOp of
         Right f → do
-          -- Fully applied case without a lambda: evaluate all the arguments, inline the function, drop the args.
+          -- Fully applied case without a lambda: evaluate all the arguments,
+          -- inline the function, drop the args.
           pure $
             Right
               ( M.SeqEx
@@ -126,13 +132,13 @@ recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
           -- Will this type be correct if we compile this to a lambda?
           pure (Left (LamPartial (insts <> ops) captures remArgs body ty))
     LT → do
-      -- Underapplied case, we don't yet have enough arguments to inline.
+      -- Under-applied case, we don't yet have enough arguments to inline.
       -- Here we are turning formerly bound arguments into captures.
       let (evaluatedArgs, remainingArgs) = splitAt argsL lamArguments
       lamTy ← dropNArgs lamTy argsL
       pure (Left (LamPartial insts (captures <> evaluatedArgs) remainingArgs body lamTy))
     GT → do
-      -- Overapplied case, we must figure out what the body is and recurse.
+      -- Over-applied case, we must figure out what the body is and recurse.
       let (args, extraApplied) = splitAt lamArgsL args
       eitherFuncOp ← termToInstr body paramTy
       case eitherFuncOp of
@@ -150,12 +156,6 @@ addsOne post pre = VStack.drop 1 post == pre
 
 changesTop ∷ VStack.T → VStack.T → Bool
 changesTop post pre = VStack.drop 1 post == pre
-
--- TODO ∷ to account for constant propagation we should change the output type
---        the output type must also change in a scenario like this
--- let f g = g 3
--- f (\x → x + 2)
--- we don't want to inline say a lambda, instead propogate up the either
 
 varCase ∷
   ( HasState "stack" VStack.T m,
@@ -229,8 +229,6 @@ argsFromApps xs = go xs []
     go (J.App inner arg, _, _) acc = go inner (arg : acc)
     go inner acc = (inner, reverse acc)
 
--- TODO ∷ have a function which grabs all names of
---        lambdas recursively for over applied functions
 evaluateAndPushArgs ∷
   ( HasThrow "compilationError" CompilationError m,
     HasState "stack" VStack.T m,
@@ -245,26 +243,28 @@ evaluateAndPushArgs names t args paramTy = do
   types ← typesFromPi t
   let namedArgs = zip (zip names types) args
   foldrM
-    ( \((name, _type'), arg) instrs → do
+    ( \((name, type'), arg) instrs → do
         -- TODO ∷ assert that _type' and typeV are the same!
         -- TODO: deal with this correctly
         argEval' ← termToInstr arg paramTy
-        (v, typeV) ← pop
-        case v of
-          VStack.VarE x v →
-            modify @"stack" (cons (VStack.VarE (Set.insert name x) v, typeV))
-          VStack.Val v →
-            modify @"stack" (cons (VStack.varE name (Just v), typeV))
         case argEval' of
-          Right argEval →
+          Right argEval → do
+            (v, typeV) ← pop
+            case v of
+              VStack.VarE x v →
+                modify @"stack" (cons (VStack.VarE (Set.insert name x) v, typeV))
+              VStack.Val v →
+                modify @"stack" (cons (VStack.varE name (Just v), typeV))
             pure (argEval : instrs)
-          Left _lamPartial →
-            -- TODO ∷ turn this into an op?
-            --        Really the output of this should probably be a custom
-            --        sum type that accounts for the lambda,
-            --        Maybe we should even set the vstack to hold these lambdas
-            --        then have a decision function to decide if it's inlined or not
-            undefined
+          -- In this case, Lambda adds nothing to the stack
+          -- This could have been via an application or a lambda
+          -- Application   ⟹ args are on the vstack, but not the lam
+          -- ¬ Application ⟹ Nothing has been added
+          Left lamPart → do
+            modify
+              @"stack"
+              (cons (VStack.varE name (Just (VStack.LamPartialE lamPart)), type'))
+            pure instrs
     )
     []
     namedArgs
