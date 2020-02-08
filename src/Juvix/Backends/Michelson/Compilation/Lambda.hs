@@ -3,8 +3,6 @@
 module Juvix.Backends.Michelson.Compilation.Lambda where
 
 import Data.Maybe (fromJust) -- bad remove!
-import Juvix.Backends.Michelson.Compilation.Checks
-import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Term -- TODO fixme
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
@@ -12,7 +10,6 @@ import Juvix.Backends.Michelson.Compilation.Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Michelson.Untyped as M
 
@@ -49,7 +46,7 @@ termToInstrOuter term ty = do
   maybeOp ← termToInstr term ty
   case maybeOp of
     Right op → pure op
-    Left (LamPartial ops captures args body _) → do
+    Left (LamPartial _ops _captures _args _body _) → do
       -- TODO: Actually compile the lambda to a closure.
       -- We should never need to do this elsewhere.
       -- ergo, if we do not return a lambda, we should never
@@ -94,10 +91,13 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
                     <> " doesn't exist"
                 )
             Just (VStack.Value v) → do
-              let (Just type') = VStack.lookupType x currentStack
+              let Just type' = VStack.lookupType x currentStack
+                  val = case v of
+                        VStack.Val' v → VStack.ConstE v
+                        VStack.Lam' l → VStack.LamPartialE l
               modify @"stack"
                 ( cons
-                    ( VStack.varE x (Just (VStack.ConstE v)),
+                    ( VStack.varE x (Just val),
                       type'
                     )
                 )

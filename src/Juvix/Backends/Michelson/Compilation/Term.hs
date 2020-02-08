@@ -44,7 +44,7 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
     -- TODO: There is probably some nicer sugar for this in Michelson now.
     -- Variable: find the variable in the stack & duplicate it at the top.
     -- :: a ~ s => (a, s)
-    J.Var n → pure <$> varCase term n
+    J.Var n → varCase n
     -- Primitive: adds one item to the stack.
     J.Prim prim → pure <$> stackCheck term addsOne (primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
@@ -152,28 +152,32 @@ changesTop ∷ VStack.T → VStack.T → Bool
 changesTop post pre = VStack.drop 1 post == pre
 
 -- TODO ∷ to account for constant propagation we should change the output type
+--        the output type must also change in a scenario like this
+-- let f g = g 3
+-- f (\x → x + 2)
+-- we don't want to inline say a lambda, instead propogate up the either
+
 varCase ∷
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    Show a2
+    HasThrow "compilationError" CompilationError m
   ) ⇒
-  a2 →
   Symbol →
-  m Op
-varCase term n = stackCheck term addsOne $ do
+  m (Either LamPartial Op)
+varCase n = do
   stack ← get @"stack"
   case VStack.lookup n stack of
     Nothing → failWith ("variable not in scope: " <> show n)
     -- TODO ∷ figure out how to do constant propagation here
-    Just (VStack.Value v) →
+    Just (VStack.Value (VStack.Val' v)) →
       let Just t = VStack.lookupType n stack in
-      genReturn (M.PrimEx (M.PUSH "" t v))
-
+      Right <$> genReturn (M.PrimEx (M.PUSH "" t v))
+    Just (VStack.Value (VStack.Lam' l)) →
+      pure (Left l)
     Just (VStack.Position i) → do
       -- TODO ∷ replace with dip call
       let before = rearrange i
           after = M.PrimEx (M.DIP [unrearrange i])
-      genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
+      Right <$> genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
 
 foldApps ∷
   J.AnnTerm primTy primVal →

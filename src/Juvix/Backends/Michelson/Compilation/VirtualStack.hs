@@ -16,6 +16,7 @@ module Juvix.Backends.Michelson.Compilation.VirtualStack where
 
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Parameterisation as Parameterisation
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
@@ -44,10 +45,27 @@ varE x t = VarE (Set.singleton x) t
 varNone ∷ Symbol → Elem
 varNone x = VarE (Set.singleton x) Nothing
 
+
+data LamPartial
+  = LamPartial
+      { ops ∷ [Parameterisation.Op],
+        captures ∷ [Symbol], -- note: semantically this should be a set :)
+        remArgs ∷ [Symbol],
+        body ∷ Parameterisation.Term,
+        ty ∷ ErasedAnn.Type Parameterisation.PrimTy Parameterisation.PrimVal
+      }
+  deriving (Show, Eq, Generic)
+
+
 data Val
   = ConstE Parameterisation.Value
   | FuncResultE
+  | LamPartialE LamPartial
   deriving (Show, Eq, Generic)
+
+data NotInStack
+  = Val' Untyped.Value
+  | Lam' LamPartial
 
 --------------------------------------------------------------------------------
 -- T operation functions
@@ -60,17 +78,21 @@ ins v f (T stack' size) = T (v : stack') (f size)
 inT ∷ Elem → Bool
 inT (VarE _ (Just FuncResultE)) = True
 inT (VarE _ (Just (ConstE _))) = False
+inT (VarE _ (Just (LamPartialE _))) = False
 inT (VarE _ Nothing) = True
 inT (Val (ConstE _)) = False
 inT (Val FuncResultE) = True
+inT (Val (LamPartialE _)) = False
 
 -- invariant ¬ inT = valueOf is valid!
-valueOfErr ∷ Elem → Parameterisation.Value
-valueOfErr (VarE _ (Just (ConstE i))) = i
-valueOfErr (Val (ConstE i)) = i
-valueOfErr (Val FuncResultE) = error "called valueOf with a stored value"
-valueOfErr (VarE _ Nothing) = error "called valueOf with a stored value"
-valueOfErr (VarE _ (Just FuncResultE)) = error "called valueOf with a stored value"
+notInStackOf ∷ Elem → NotInStack
+notInStackOf (VarE _ (Just (LamPartialE l))) = Lam' l
+notInStackOf (Val (LamPartialE l)) = Lam' l
+notInStackOf (VarE _ (Just (ConstE i))) = Val' i
+notInStackOf (Val (ConstE i)) = Val' i
+notInStackOf (Val FuncResultE) = error "called valueOf with a stored value"
+notInStackOf (VarE _ Nothing) = error "called valueOf with a stored value"
+notInStackOf (VarE _ (Just FuncResultE)) = error "called valueOf with a stored value"
 
 -- | 'car' gets the first element off the stack
 -- may return an error
@@ -142,6 +164,9 @@ promote n stack =
               (pushVal v t, cons (Val FuncResultE, t) newStack)
             (VarE x (Just (ConstE v)), t) →
               (pushVal v t, cons (VarE x (Just FuncResultE), t) newStack)
+            -- TODO ∷ add a case for lambda
+            --        What do we dispatch to, to promote it?
+            --        Maybe have to move this function into utils!?
             a →
               (insts, cons a newStack)
 
@@ -150,8 +175,9 @@ drop n xs
   | n <= 0 = xs
   | otherwise = drop (pred n) (cdr xs)
 
+
 data Lookup
-  = Value Untyped.Value
+  = Value NotInStack
   | Position Natural
 
 -- | 'lookup' looks up a symbol from the stack
@@ -166,7 +192,7 @@ lookup n (T stack' _) = go stack' 0
       | Set.member n n' && inT v =
         Just (Position acc)
       | Set.member n n' =
-        Just (Value (valueOfErr v))
+        Just (Value (notInStackOf v))
     go ((v, _) : vs) acc
       | inT v = go vs (succ acc)
       | otherwise = go vs acc
