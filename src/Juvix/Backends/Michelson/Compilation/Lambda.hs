@@ -139,6 +139,12 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
     lamType capturesTypes extraArgsWithTypes
       <$> returnTypeFromPi lamTy
   -- Step 6: Return the sequence of Michelson instructions, ending in `APPLY`.
+  let dipGen x =
+        case length (VStack.symbolsInT x current) of
+          0 → M.SeqEx []
+          i → M.PrimEx (M.DIP [unpackTupleN (pred i)])
+      dipArgs = dipGen args
+      dipCurr = dipGen captures
   pure $
     M.SeqEx
       [ M.SeqEx ops,
@@ -149,20 +155,8 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
               ( M.ValueLambda
                   ( M.SeqEx
                       [ unpackTuple,
-                        M.PrimEx
-                          ( M.DIP
-                              [ unpackTupleN
-                                  ( length
-                                      (VStack.symbolsInT args current)
-                                      - 1
-                                  )
-                              ]
-                          ),
-                        unpackTupleN
-                          ( length
-                              (VStack.symbolsInT captures current)
-                              - 1
-                          )
+                        dipArgs,
+                        dipCurr
                       ]
                       :| [body]
                   )
