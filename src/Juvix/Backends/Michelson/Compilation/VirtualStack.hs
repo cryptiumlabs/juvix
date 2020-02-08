@@ -45,7 +45,6 @@ varE x t = VarE (Set.singleton x) t
 varNone ∷ Symbol → Elem
 varNone x = VarE (Set.singleton x) Nothing
 
-
 data LamPartial
   = LamPartial
       { ops ∷ [Parameterisation.Op],
@@ -56,7 +55,6 @@ data LamPartial
       }
   deriving (Show, Eq, Generic)
 
-
 data Val
   = ConstE Parameterisation.Value
   | FuncResultE
@@ -66,6 +64,16 @@ data Val
 data NotInStack
   = Val' Untyped.Value
   | Lam' LamPartial
+
+--------------------------------------------------------------------------------
+-- T Instances
+--------------------------------------------------------------------------------
+
+instance Semigroup T where
+  (T pres size) <> (T posts size') = T (pres <> posts) (size + size')
+
+instance Monoid T where
+  mempty = T [] 0
 
 --------------------------------------------------------------------------------
 -- T operation functions
@@ -117,7 +125,7 @@ cons v = ins v f
       | otherwise = identity
 
 nil ∷ T
-nil = T [] 0
+nil = mempty
 
 isNil ∷ T → Bool
 isNil = (nil ==)
@@ -139,7 +147,7 @@ fromList ∷ Foldable t ⇒ t (Elem, Untyped.Type) → T
 fromList = foldr cons nil
 
 append ∷ T → T → T
-append (T pres size) (T posts size') = T (pres <> posts) (size + size')
+append = (<>)
 
 appendDrop ∷ T → T → T
 appendDrop prefix = append prefix . cdr
@@ -219,7 +227,7 @@ symbolsInT symbs (T stack' _) =
         ( concatMap
             ( \(x, _) →
                 case x of
-                  VarE s t → fmap (\s → (s, t)) (Set.toList s)
+                  VarE s t → (\s → (s, t)) <$> Set.toList s
                   _ → []
             )
             stack'
