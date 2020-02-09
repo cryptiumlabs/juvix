@@ -36,7 +36,6 @@ dependencies:
   - time
   - morley
   - bulletproofs
-  - hevm
   - elliptic-curve
   - sonic
   - aeson
