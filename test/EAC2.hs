@@ -39,12 +39,13 @@ eac2Tests ∷ T.TestTree
 eac2Tests =
   T.testGroup
     "EAC2"
-    [ shouldBeTypeable idTerm idAssignment,
-      shouldBeTypeable churchTwo churchAssignment,
-      shouldBeTypeable churchThree churchAssignment,
-      shouldNotBeTypeable counterexample counterexampleAssignment,
-      shouldBeTypeable churchExp churchExpAssignment
-    ]
+    []
+
+--shouldBeTypeable idTerm idAssignment,
+--shouldBeTypeable churchTwo churchAssignment,
+--shouldBeTypeable churchThree churchAssignment,
+--shouldNotBeTypeable counterexample counterexampleAssignment,
+--shouldBeTypeable churchExp churchExpAssignment
 
 idTerm ∷ Term
 idTerm = Lam (intern "x") (Var (intern "x"))

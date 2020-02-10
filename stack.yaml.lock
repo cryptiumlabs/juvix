@@ -5,12 +5,12 @@
 
 packages:
 - completed:
-    hackage: llvm-hs-9.0.0@sha256:b036b8d3a78607310382f82b7c5303ffc31afb9735875bb64521501144cc5728,8700
+    hackage: llvm-hs-9.0.1@sha256:ee6ec2eb8cba4daf2a43586388a87dbfd6a2ec6d81d1f9965896ac187acad286,8700
     pantry-tree:
       size: 13599
-      sha256: d572dd639dd315c94eccdfd9b10a3c266163cf945778141087a003c1ed836a91
+      sha256: 537616dec1351bd9f7905182f82f132359cf3058ebbb059c03b4edcef04b2689
   original:
-    hackage: llvm-hs-9.0.0
+    hackage: llvm-hs-9.0.1
 - completed:
     hackage: llvm-hs-pure-9.0.0@sha256:134779f40086a366279f678e670b610d7a7618b28dd43f65894078fd20e04629,2945
     pantry-tree:
@@ -312,22 +312,6 @@ packages:
       sha256: 8610bcb77a390b74cacf7360b8b29a08f3fc241bab92a414653ffbd3d57dfd54
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
-- completed:
-    size: 363229
-    subdir: src/hevm
-    url: https://github.com/dapphub/dapptools/archive/5f6812169f99a71d12d21229f410238c4c2af964.tar.gz
-    cabal-file:
-      size: 6306
-      sha256: 8729cfbcd4bbf4c392f75efdd0b54bcdee2b785b761197e2b053bd6bc72c55f8
-    name: hevm
-    version: '0.35'
-    sha256: d0331819e6f362595e69034949b357b87a4863064a89bec354c668c617827da0
-    pantry-tree:
-      size: 3288
-      sha256: 1f783a42855d93c4bd9862824952d32de8eab8c2661aa60ca1fc170aa2bc4c58
-  original:
-    subdir: src/hevm
-    url: https://github.com/dapphub/dapptools/archive/5f6812169f99a71d12d21229f410238c4c2af964.tar.gz
 - completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz

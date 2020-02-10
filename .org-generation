@@ -1,0 +1,9 @@
+;; configuration file for code generation
+
+;; TODO ∷ re-enable lisp
+
+(:enabled haskell)
+
+(haskell
+ :name "Juvix"
+ :dir-before-code ("src" "app" "test"))
