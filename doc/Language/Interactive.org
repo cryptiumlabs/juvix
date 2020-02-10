@@ -1,3 +1,48 @@
 * Interaction of the Juvix Programming Language
-In many respects Juvix should
+In many respects Juvix should be easy to use!
 
+Writing proofs isn't commonly considered easy for programmers. We intend to improve developers' experience on writing proofs for smart contracts using Juvix. Below I list some things we can learn from existing proof assistants and propose some improvements we can consider implementing in Juvix.
+
+# Things to learn from Idris
+
+1. Hot keys that perform interactive and automatic actions such as:
+  - case splits
+  - proof search
+  - lifting a hole
+  - ...
+Although these sometimes don't work correctly in Idris, (so it may be difficult to implement them correctly) they do speed up proofs in some cases.
+
+# Things to learn from Coq
+
+1. The CoqIde has a nice layout that presents useful information:
+  - The large window on the left is displaying the various script buffers. 
+  - The upper right window is the goal window, where goals to be proven are displayed. 
+  - The lower right window is the message window, where various messages resulting from commands are displayed. 
+  - At the bottom is the status bar. Holes are in orange and completed proofs are in green.
+  - there are a few useful menu items: tactics, templates, queries
+2. In CoqIde, the tool bar below the menu perform useful interactive functions:
+  - a '.' indicates the end of a command in a proof
+  - 'forward one command' processes 1 command, and displays it in the goal window the context and resulting goal/subgoal of that command.
+  - makes available options very clear in each step.
+  - when in doubt, use tactic 'simpl'! And you can see right away if anything changes.
+  - you know you can end the proof with `reflexivity` when something is in the form of `x=x` in the goal window!
+
+3. The tactics are a bit more precise than in Idris:
+  - `simpl` is explicit (not so in Idris)
+  - `rewrite` with `->` or `<-` specified by default(similar to `replace with` in idris, `rewrite` in idris doesn't specify directions)
+  - easier naming of the inductive hypothesis?
+  - `induction n as [|n' IHn'].`
+  - `assert` is a useful tactic to use when otherwise the proof assistant is confused which variables to rewrite. Although in Idris, you can specify which variables for the proofs with inputs, which is clearer in some cases. 
+
+# Things we can do to improve these further
+
+Agda still to be surveyed. But from what I've experienced so far, to improve user experience, I propose we have a dedicated Juvix IDE similar to Coq, with the following improvements:
+
+- to improve CoqIde's `forward one command` and `backward one command` functions, we can show the whole proof while 'zooming in' the current subgoal. This gives the users more information on the bigger picture of what they are proving.
+- use the `forward/backward one command` to improve smart contract development experience by stating other status of the smart contract. E.g., the possible vulnerabilities, gas/storage cost changes (if one can estimate them) of the subjected command etc.
+- automatically add what's in the context instead of having users write 'intros'. List the given context clear and users can go from there. Coq has done a bit of it with induction too. When you write `induction`, Coq automatically add the `nat` in the context.
+- improved error messages: 
+  - for Idris, the error messages don't tell you what's wrong, just where it is. 
+  - for Coq, I have to guess what they're saying too. We should write it in plain English. (I have some of my own translations from Coq error messages to English already!)
+- have an additional pane displaying related theorems. When writing proofs, making all the given theorms/proven propositions easily searchable and referenced would be a great help. E.g., if the proofs involves booleans, the ide should show a list of theorems that are related to boolean operators (`and` and `or`) that users can use. And maybe hot keys to paste the theorem names and an easy way to put them in the context (like `assert`).
+- add useful menu items such as in CoqIde: tactics, templates, queries. The templates can also include smart contract specific sets, e.g., entry points, contract signatures, etc.
