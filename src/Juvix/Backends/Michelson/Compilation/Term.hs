@@ -2,6 +2,7 @@
 -- - Compilation of core terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Term where
 
+import qualified Data.Set as Set
 import Juvix.Backends.Michelson.Compilation.Checks
 import Juvix.Backends.Michelson.Compilation.Prim
 import Juvix.Backends.Michelson.Compilation.Type
@@ -12,9 +13,8 @@ import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
-import qualified Prelude as Prelude (show)
 import qualified Michelson.Untyped as M
-import qualified Data.Set as Set
+import qualified Prelude as Prelude (show)
 
 {-
  - Transform core term to Michelson instruction sequence.
@@ -76,15 +76,15 @@ termToInstr ann@(term, _, ty) paramTy = stackGuard ann paramTy $ do
           -- TODO ∷ generate better unique names
           let arguments =
                 intern
-                <$> replicate (arity prim) "_"
-                <> fmap Prelude.show ([1..] ∷ [Integer])
+                  <$> replicate (arity prim) "_"
+                  <> fmap Prelude.show ([1 ..] ∷ [Integer])
           insts ← evaluateAndPushArgs arguments primTy args paramTy
           recurseApplication
-             ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -})
-             primTy
-             args
-             insts
-             paramTy
+            ([], arguments {- the arguments to the primitive -}, ann {- will be inlined -})
+            primTy
+            args
+            insts
+            paramTy
         t → do
           failWith ("Applications applied to non lambda term: " <> show t)
 
@@ -169,8 +169,8 @@ varCase n = do
     Nothing → failWith ("variable not in scope: " <> show n)
     -- TODO ∷ figure out how to do constant propagation here
     Just (VStack.Value (VStack.Val' v)) →
-      let Just t = VStack.lookupType n stack in
-      Right <$> genReturn (M.PrimEx (M.PUSH "" t v))
+      let Just t = VStack.lookupType n stack
+       in Right <$> genReturn (M.PrimEx (M.PUSH "" t v))
     Just (VStack.Value (VStack.Lam' l)) →
       pure (Left l)
     Just (VStack.Position i) → do

@@ -5,7 +5,7 @@ module Juvix.Backends.Michelson.Compilation.Types
     VStack.car,
     VStack.cdr,
     VStack.cons,
-    VStack.LamPartial(..)
+    VStack.LamPartial (..),
   )
 where
 

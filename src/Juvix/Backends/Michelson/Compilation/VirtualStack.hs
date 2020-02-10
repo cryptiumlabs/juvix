@@ -183,7 +183,6 @@ drop n xs
   | n <= 0 = xs
   | otherwise = drop (pred n) (cdr xs)
 
-
 data Lookup
   = Value NotInStack
   | Position Natural

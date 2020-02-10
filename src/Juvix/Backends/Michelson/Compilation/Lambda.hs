@@ -93,8 +93,8 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
             Just (VStack.Value v) → do
               let Just type' = VStack.lookupType x currentStack
                   val = case v of
-                        VStack.Val' v → VStack.ConstE v
-                        VStack.Lam' l → VStack.LamPartialE l
+                    VStack.Val' v → VStack.ConstE v
+                    VStack.Lam' l → VStack.LamPartialE l
               modify @"stack"
                 ( cons
                     ( VStack.varE x (Just val),
@@ -143,8 +143,11 @@ funcToLambda (LamPartial ops captures args body lamTy) paramTy = do
         case length (VStack.symbolsInT x current) of
           0 → M.SeqEx []
           i → M.PrimEx (M.DIP [unpackTupleN (pred i)])
+
       dipArgs = dipGen args
+
       dipCurr = dipGen captures
+
   pure $
     M.SeqEx
       [ M.SeqEx ops,
