@@ -79,5 +79,7 @@ typesFromPi ∷
 typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
 typesFromPi _ = pure []
 
+returnTypeFromPi ::
+  HasThrow "compilationError" CompilationError m ⇒ J.Type PrimTy PrimVal → m M.Type
 returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
 returnTypeFromPi x = typeToType x
