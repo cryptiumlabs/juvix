@@ -301,7 +301,6 @@ This module provides a default contract environment
   + [[Compilation/Environment]]
   + [[Lambda]]
   + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
   + [[VirtualStack]]
   + [[Optimisation]]

@@ -5,12 +5,11 @@ module Juvix.Backends.Michelson.Compilation where
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy as L
 import Juvix.Backends.Michelson.Compilation.Environment
-import Juvix.Backends.Michelson.Compilation.Lambda
-import Juvix.Backends.Michelson.Compilation.Type
-import Juvix.Backends.Michelson.Compilation.Types
-import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.Lambda as Lambda
+import qualified Juvix.Backends.Michelson.Compilation.Type as Type
+import qualified Juvix.Backends.Michelson.Compilation.Util as Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import Juvix.Backends.Michelson.Optimisation
+import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
@@ -47,15 +46,15 @@ compileToMichelsonContract ∷
   Type →
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term ty = do
-  michelsonTy ← typeToType ty
+  michelsonTy ← Type.typeToType ty
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
-      michelsonOp' ← termToMichelson term argTy
-      let michelsonOp = leftSeq michelsonOp'
+      michelsonOp' ← Lambda.termToMichelson term argTy
+      let michelsonOp = Util.leftSeq michelsonOp'
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
         Right _ → do
-          optimised ← optimise michelsonOp
+          optimised ← Optimisation.optimise michelsonOp
           let optimisedContract = M.Contract paramTy storageTy [optimised]
           case M.typeCheckContract Map.empty optimisedContract of
             Right c → pure (optimisedContract, c)
@@ -74,11 +73,11 @@ compileToMichelsonExpr ∷
   Type →
   m (SomeInstr)
 compileToMichelsonExpr term ty = do
-  michelsonTy ← typeToType ty
+  michelsonTy ← Type.typeToType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
-      michelsonOp' ← termToMichelson term argTy
-      let michelsonOp = leftSeq michelsonOp'
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ → do
+      michelsonOp' ← Lambda.termToMichelson term argTy
+      let michelsonOp = Util.leftSeq michelsonOp'
       MT.withSomeSingT (MT.fromUType argTy) $ \sty →
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
           Right (_ M.:/ (s M.::: _)) → pure (SomeInstr s)

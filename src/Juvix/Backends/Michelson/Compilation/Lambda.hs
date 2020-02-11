@@ -5,7 +5,7 @@ module Juvix.Backends.Michelson.Compilation.Lambda where
 import Data.Maybe (fromJust) -- bad remove!
 import qualified Juvix.Backends.Michelson.Compilation.Term as Term -- TODO fixme
 import qualified Juvix.Backends.Michelson.Compilation.Type as Type
-import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.Util as Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
@@ -15,12 +15,12 @@ import qualified Michelson.Untyped as M
 termToMichelson ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
+    HasThrow "compilationError" Types.CompilationError m,
+    HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
-  Term →
+  Types.Term →
   M.Type →
-  m Op
+  m Types.Op
 termToMichelson term paramTy = do
   case term of
     (ErasedAnn.Lam arg body, _, _) → do
@@ -28,19 +28,19 @@ termToMichelson term paramTy = do
       instr' ← termToInstrOuter body paramTy
       let instr = M.SeqEx [instr', M.PrimEx (M.DIP [M.PrimEx M.DROP])]
       modify @"stack" (\xs → VStack.cons (VStack.car xs) (VStack.cdr (VStack.cdr xs)))
-      tell @"compilationLog" [TermToInstr body instr]
+      tell @"compilationLog" [Types.TermToInstr body instr]
       pure instr
-    _ → throw @"compilationError" (NotYetImplemented "must be a lambda function")
+    _ → throw @"compilationError" (Types.NotYetImplemented "must be a lambda function")
 
 termToInstrOuter ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
+    HasThrow "compilationError" Types.CompilationError m,
+    HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
-  Term →
+  Types.Term →
   M.Type →
-  m Op
+  m Types.Op
 termToInstrOuter term ty = do
   maybeOp ← Term.termToInstr term ty
   case maybeOp of
@@ -59,8 +59,8 @@ termToInstrOuter term ty = do
 funcToLambda ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
+    HasThrow "compilationError" Types.CompilationError m,
+    HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
   VStack.LamPartial →
   M.Type →

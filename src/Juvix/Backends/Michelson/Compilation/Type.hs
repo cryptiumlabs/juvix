@@ -2,7 +2,7 @@
 -- - Functions for representation of types in the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Type where
 
-import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Core.ErasedAnn.Types as J
 import Juvix.Library hiding (Type)
 import qualified Michelson.Untyped as M
@@ -12,14 +12,14 @@ import qualified Michelson.Untyped as M
  -}
 typeToType ∷
   ∀ m.
-  (HasThrow "compilationError" CompilationError m) ⇒
-  Type →
+  (HasThrow "compilationError" Types.CompilationError m) ⇒
+  Types.Type →
   m M.Type
 typeToType ty =
   case ty of
-    J.SymT _ → throw @"compilationError" InvalidInputType
-    J.Star _ → throw @"compilationError" InvalidInputType
-    J.PrimTy (PrimTy mTy) → pure mTy
+    J.SymT _ → throw @"compilationError" Types.InvalidInputType
+    J.Star _ → throw @"compilationError" Types.InvalidInputType
+    J.PrimTy (Types.PrimTy mTy) → pure mTy
     -- TODO ∷ Integrate usage information into this
     J.Pi _usages argTy retTy → do
       argTy ← typeToType argTy
@@ -29,15 +29,15 @@ typeToType ty =
 -- Drop n arguments from a lambda type.
 dropNArgs ∷
   ∀ m.
-  (HasThrow "compilationError" CompilationError m) ⇒
-  Type →
+  (HasThrow "compilationError" Types.CompilationError m) ⇒
+  Types.Type →
   Int →
-  m Type
+  m Types.Type
 dropNArgs ty 0 = pure ty
 dropNArgs ty n =
   case ty of
     J.Pi _ _ retTy → dropNArgs retTy (n - 1)
-    _ → throw @"compilationError" InvalidInputType
+    _ → throw @"compilationError" Types.InvalidInputType
 
 {-
  - Closure packing:
@@ -72,13 +72,15 @@ lamType argsPlusClosures extraArgs retTy =
 {- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
 
 typesFromPi ∷
-  HasThrow "compilationError" CompilationError f ⇒
-  J.Type PrimTy PrimVal →
+  HasThrow "compilationError" Types.CompilationError f ⇒
+  J.Type Types.PrimTy Types.PrimVal →
   f [M.Type]
 typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
 typesFromPi _ = pure []
 
 returnTypeFromPi ∷
-  HasThrow "compilationError" CompilationError m ⇒ J.Type PrimTy PrimVal → m M.Type
+  HasThrow "compilationError" Types.CompilationError m ⇒
+  J.Type Types.PrimTy Types.PrimVal →
+  m M.Type
 returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
 returnTypeFromPi x = typeToType x
