@@ -16,11 +16,10 @@
 module Juvix.Backends.Michelson.Optimisation where
 
 import Juvix.Backends.Michelson.Compilation.Types
-import Juvix.Backends.Michelson.Parameterisation
 import Juvix.Library
 import qualified Michelson.Optimizer as MO
 import qualified Michelson.Typed as MT
-import Michelson.Untyped hiding (Op)
+import Michelson.Untyped
 
 optimiseWithMorley ∷
   ∀ m inp out.
@@ -50,14 +49,22 @@ optimiseSeq ∷ [Op] → [Op]
 optimiseSeq ops =
   case ops of
     {- Simple stack manipulations. -}
-    (PrimEx (DUP _) : PrimEx (DIP e) : PrimEx DROP : rest) → e <> rest
-    (PrimEx (DIP e) : PrimEx DROP : rest) → PrimEx DROP : e <> rest
-    (PrimEx (DUP _) : PrimEx SWAP : PrimEx DROP : rest) → rest
-    (PrimEx (DUP _) : PrimEx (DIP [PrimEx DROP]) : rest) → rest
-    (PrimEx SWAP : PrimEx (DUP _) : PrimEx (DIP [PrimEx SWAP]) : rest) → PrimEx (DIP [PrimEx (DUP "")]) : PrimEx SWAP : rest
-    (PrimEx (DUP ann) : PrimEx SWAP : rest) → PrimEx (DUP ann) : rest
-    (PrimEx SWAP : PrimEx SWAP : rest) → rest
-    (PrimEx (DUP _) : PrimEx DROP : rest) → rest
+    (PrimEx (DUP _) : PrimEx (DIP e) : PrimEx DROP : rest) →
+      e <> rest
+    (PrimEx (DIP e) : PrimEx DROP : rest) →
+      PrimEx DROP : e <> rest
+    (PrimEx (DUP _) : PrimEx SWAP : PrimEx DROP : rest) →
+      rest
+    (PrimEx (DUP _) : PrimEx (DIP [PrimEx DROP]) : rest) →
+      rest
+    (PrimEx SWAP : PrimEx (DUP _) : PrimEx (DIP [PrimEx SWAP]) : rest) →
+      PrimEx (DIP [PrimEx (DUP "")]) : PrimEx SWAP : rest
+    (PrimEx (DUP ann) : PrimEx SWAP : rest) →
+      PrimEx (DUP ann) : rest
+    (PrimEx SWAP : PrimEx SWAP : rest) →
+      rest
+    (PrimEx (DUP _) : PrimEx DROP : rest) →
+      rest
     {- Failures. -}
     (PrimEx FAILWITH : _) → [PrimEx FAILWITH]
     {- Lambda / exec. -}

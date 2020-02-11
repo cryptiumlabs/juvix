@@ -3,7 +3,6 @@
 module Juvix.Backends.Michelson.Compilation.Type where
 
 import Juvix.Backends.Michelson.Compilation.Types
-import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn.Types as J
 import Juvix.Library hiding (Type)
 import qualified Michelson.Untyped as M
@@ -27,6 +26,19 @@ typeToType ty =
       retTy ← typeToType retTy
       pure (M.Type (M.TLambda argTy retTy) "")
 
+-- Drop n arguments from a lambda type.
+dropNArgs ∷
+  ∀ m.
+  (HasThrow "compilationError" CompilationError m) ⇒
+  Type →
+  Int →
+  m Type
+dropNArgs ty 0 = pure ty
+dropNArgs ty n =
+  case ty of
+    J.Pi _ _ retTy → dropNArgs retTy (n - 1)
+    _ → throw @"compilationError" InvalidInputType
+
 {-
  - Closure packing:
  - No free variables - ()
@@ -39,14 +51,34 @@ closureType ((_, x) : xs) = M.Type (M.TPair "" "" x (closureType xs)) ""
 {-
  - Lambda types: (closure type, argument type) -> (return type)
  -}
-{- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
-lamTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → M.Type
-lamTy env argTy retTy = M.Type (M.TLambda (M.Type (M.TPair "" "" (closureType env) argTy) "") retTy) ""
 
-{-
- - Return the lambda type & the type of the resulting lambda once the closure is APPLY-ed
- -}
-lamRetTy ∷ [(Symbol, M.Type)] → M.Type → M.Type → (M.Type, M.Type)
-lamRetTy env argTy retTy =
-  let lTy = lamTy env argTy retTy
-   in (lTy, M.Type (M.TLambda argTy retTy) "")
+lamType ∷ [(Symbol, M.Type)] → [(Symbol, M.Type)] → M.Type → M.Type
+lamType argsPlusClosures extraArgs retTy =
+  M.Type
+    ( M.TLambda
+        ( M.Type
+            ( M.TPair
+                ""
+                ""
+                (closureType argsPlusClosures)
+                (closureType extraArgs)
+            )
+            ""
+        )
+        retTy
+    )
+    ""
+
+{- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
+
+typesFromPi ∷
+  HasThrow "compilationError" CompilationError f ⇒
+  J.Type PrimTy PrimVal →
+  f [M.Type]
+typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
+typesFromPi _ = pure []
+
+returnTypeFromPi ∷
+  HasThrow "compilationError" CompilationError m ⇒ J.Type PrimTy PrimVal → m M.Type
+returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
+returnTypeFromPi x = typeToType x

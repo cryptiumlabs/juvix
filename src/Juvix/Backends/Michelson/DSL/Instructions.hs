@@ -4,11 +4,11 @@
 module Juvix.Backends.Michelson.DSL.Instructions where
 
 import Juvix.Library
+import qualified Michelson.Untyped.Contract as Contract
 import qualified Michelson.Untyped.Ext as Ext
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as Type
 import qualified Michelson.Untyped.Value as Value
-import qualified Michelson.Untyped.Contract as Contract
 
 ext ∷ Ext.ExtInstrAbstract Instr.ExpandedOp → Instr.ExpandedOp
 ext = Instr.PrimEx . Instr.EXT
@@ -223,35 +223,35 @@ address = Instr.PrimEx (Instr.ADDRESS "")
 chainID ∷ Instr.ExpandedOp
 chainID = Instr.PrimEx (Instr.CHAIN_ID "")
 
-ifNone :: [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
+ifNone ∷ [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
 ifNone = Instr.PrimEx ... Instr.IF_NONE
 
-ifLeft :: [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
+ifLeft ∷ [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
 ifLeft = Instr.PrimEx ... Instr.IF_LEFT
 
-if' :: [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
+if' ∷ [Instr.ExpandedOp] → [Instr.ExpandedOp] → Instr.ExpandedOp
 if' = Instr.PrimEx ... Instr.IF
-map :: [Instr.ExpandedOp] → Instr.ExpandedOp
+
+map ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 map = Instr.PrimEx . Instr.MAP ""
 
-iter :: [Instr.ExpandedOp] → Instr.ExpandedOp
+iter ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 iter = Instr.PrimEx . Instr.ITER
 
-loop :: [Instr.ExpandedOp] → Instr.ExpandedOp
+loop ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 loop = Instr.PrimEx . Instr.LOOP
 
-loopLeft :: [Instr.ExpandedOp] → Instr.ExpandedOp
+loopLeft ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 loopLeft = Instr.PrimEx . Instr.LOOP_LEFT
 
 lambda ∷ Type.Type → Type.Type → [Instr.ExpandedOp] → Instr.ExpandedOp
 lambda = (Instr.PrimEx .) ... Instr.LAMBDA ""
 
-dip :: [Instr.ExpandedOp] → Instr.ExpandedOp
+dip ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 dip = Instr.PrimEx . Instr.DIP
 
-dipN :: Word → [Instr.ExpandedOp] → Instr.ExpandedOp
+dipN ∷ Word → [Instr.ExpandedOp] → Instr.ExpandedOp
 dipN = Instr.PrimEx ... Instr.DIPN
-
 
 instance Semigroup Instr.ExpandedOp where
   Instr.SeqEx xs <> Instr.SeqEx ys =

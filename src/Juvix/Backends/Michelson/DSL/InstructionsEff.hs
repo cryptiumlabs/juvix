@@ -8,7 +8,6 @@
 -- - For constant progoation, have a function say take-2 that looks at
 --   the top two items in the stack and then returns back either if
 --   they were constants or not and dispatches logic based on that
-
 module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions

@@ -31,7 +31,7 @@
 **** DSL
 Serves as a mini DSL layer above LLVM
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[Library]]
 ***** What is included?
 1. _Relink_
@@ -42,7 +42,7 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
 - _Relies on_
   + [[JIT]]
   + [[MonadEnvironment]]
-  + [[Environment]]
+  + [[Net/Environment]]
   + [[Erased/Types]]
   + [[Core/Types]]
   + [[INetIR/Types]]
@@ -51,7 +51,7 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
   + [[Interface]]
   + [[Nets/Default]]
   + [[Library]]
-**** Codegen <<Backends/LLVM/Codegen>>
+**** Codegen
 - _Relies on_
   + [[Block]]
   + [[Constants]]
@@ -187,14 +187,14 @@ Functions that help with more complex Graph operations
 **** Net
 ***** API
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[Net/EAC]]
   + [[Net/EAC/Types]]
   + [[Library]]
-***** Environment
+***** Environment <<Net/Environment>>
 - Serves as the default environment for executing EAC code
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[API]]
   + [[Net/EAC]]
   + [[Defs]]
@@ -226,7 +226,7 @@ Functions that help with more complex Graph operations
   responsibility of the node to de-allocate, but instead uses the
   default strategy laid out in [[Codegen/Graph]]
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[DSL]]
   + [[EAC/Debug]]
   + [[Defs]]
@@ -237,7 +237,7 @@ Functions that help with more complex Graph operations
 ****** Debug <<EAC/Debug>>
 Serves as a module for various debugging functions
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
@@ -245,7 +245,7 @@ Serves as a module for various debugging functions
 - Also generates the proper types associated with them
 - Also has some miscellaneous debug information
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[DSL]]
   + [[Net/EAC/Types]]
   + [[Library]]
@@ -255,17 +255,19 @@ Serves as a module for various debugging functions
   + Sadly we can't extend types easily in Haskell, hence the
     boilerplate in this file
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[Library]]
   + [[HashMap]]
 ****** Types <<Net/EAC/Types>>
 - _Relies on_
-  + [[Backends/LLVM/Codegen]]
+  + [[Codegen]]
   + [[Library]]
 *** Michelson
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
+**** Contract
+This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer
@@ -283,73 +285,117 @@ Serves as a module for various debugging functions
     some other gas-estimation preference function).
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
+  + [[Compilation/Environment]]
+  + [[Prim]]
+  + [[Michelson/Compilation/Types]]
+  + [[Contract]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Term]]
+  + [[Compilation/Environment]]
+  + [[Lambda]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
   + [[Optimisation]]
-  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Checks
 - Sanity checks for Michelson compilation.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[Michelson/Parameterisation]]
+  + [[VirtualStack]]
   + [[Library]]
 ***** Datatypes
 Datatypes & pattern matching.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[Library]]
+***** Environment <<Compilation/Environment>>
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Library]]
+***** Lambda
+- Compilation of core terms to Michelson instruction sequences.
+- _Relies on_
+  + [[Term]]
+  + [[Compilation/Type]]
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn]]
   + [[Library]]
 ***** Prim
 - Compilation of primitive terms to Michelson instruction sequences.
 - _Relies on_
+  + [[Compilation/Environment]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
+  + [[VirtualStack]]
   + [[ErasedAnn]]
   + [[Library]]
 ***** Term
 - Compilation of core terms to Michelson instruction sequences.
 - _Relies on_
   + [[Checks]]
+  + [[Compilation/Environment]]
   + [[Prim]]
   + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
-  + [[Erased/Util]]
   + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
 ***** Type <<Compilation/Type>>
 - Functions for representation of types in the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
-  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[VirtualStack]]
   + [[Library]]
+***** VirtualStack
+- Serves as a virtual stack over Michelson
+- This stack has a few properties
+  + The values on this stack may or may not be on the real
+    stack. However for convention this should be largely ignored,
+    except when you wish to do an operation like pair
+    * This can be fixed in the future
+    * Until then, one should filter out the virtual stack items
+- We keep virtual items on the ="stack"= as that makes the details
+  on whether something is constant propagation or not act
+  consistently with each other.
+  + After all, what may not be a constant now, may be in the
+    future, or vice versa!
+- Import with qualified and the name of =VStack=
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[HashMap]]
 **** DSL
 ***** Instructions
 - This module serves as a lower layer DSL that is just a binding
@@ -480,6 +526,7 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Erased/Types]]
   + [[ErasedAnn/Types]]
+  + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[Usage]]
@@ -757,12 +804,6 @@ Can be added to via core translation
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
   + [[Library]]
-** LLVM
-*** Codegen <<Juvix/LLVM/Codegen>>
-- _Relies on_
-  + [[Shared]]
-  + [[Library]]
-  + [[HashMap]]
 ** Library
 - The standard Library for the project
   + Thus all code will depend on this module without stating otherwise
