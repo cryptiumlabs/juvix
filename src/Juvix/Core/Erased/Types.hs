@@ -7,7 +7,8 @@ import qualified Juvix.Library.HashMap as Map
 data Term primVal
   = Var Symbol
   | Prim primVal
-  | Lam Symbol (Term primVal)
+  | -- TODO ∷ add proper lam with capture and arguments here!
+    Lam Symbol (Term primVal)
   | App (Term primVal) (Term primVal)
   deriving (Show, Eq, Generic)
 

@@ -7,6 +7,12 @@ data Term primTy primVal
   = Var Symbol
   | Prim primVal
   | Lam Symbol (AnnTerm primTy primVal)
+  | LamM
+      { capture ∷ [Symbol], -- Capture
+        arguments ∷ [Symbol], -- Arguments
+          -- the Term in AnnTerm is not lam!
+        body ∷ AnnTerm primTy primVal
+      }
   | App (AnnTerm primTy primVal) (AnnTerm primTy primVal)
   deriving (Show, Eq, Generic)
 

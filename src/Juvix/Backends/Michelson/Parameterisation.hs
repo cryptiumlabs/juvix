@@ -1,23 +1,23 @@
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
-    module Juvix.Backends.Michelson.Compilation.Types
-  )where
+    module Juvix.Backends.Michelson.Compilation.Types,
+  )
+where
 
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
-import qualified Juvix.Core.Types as Core
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
-import qualified Juvix.Backends.Michelson.Contract as Contract
+import qualified Juvix.Backends.Michelson.Compilation.Environment as Env
 import qualified Juvix.Backends.Michelson.Compilation.Prim as Prim
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Contract as Contract ()
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Untyped as M
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import qualified Michelson.Interpret as Interpt
-import qualified Juvix.Core.Usage as Usage
 import Prelude (String)
 
 -- TODO: Add rest of primitive values.
@@ -45,7 +45,7 @@ apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
-    runPrim = execWithStack [] $ do
+    runPrim = Env.execWithStack mempty $ do
       Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
@@ -83,4 +83,9 @@ reservedOpNames = []
 michelson ∷ Core.Parameterisation PrimTy PrimVal
 michelson =
   Core.Parameterisation
-    typeOf apply parseTy parseVal reservedNames reservedOpNames
+    typeOf
+    apply
+    parseTy
+    parseVal
+    reservedNames
+    reservedOpNames

@@ -39,12 +39,10 @@ backendMichelson ∷ T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
-    [ --identityFn,
-      --identityApp,
-      --identityApp2,
-      identityExpr,
-      identityExpr2,
-      identityExpr3,
+    [ -- identityFn,
+      -- identityApp,
+      -- identityApp2,
+      -- identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec
     ]

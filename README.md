@@ -62,16 +62,22 @@ The following are required:
 - **Stack**
   - For Ubuntu/Debian : `apt install stack`
   - For Arch Linux    : `pacman -S stack`
+  - For macOS : `brew install haskell-stack`
 - **Z3**
   - `make build-z3` while in the `juvix` directory
 - **libsecp256k1**
   - For Ubuntu/Debian : `apt install libsecp256k1-dev`
   - For Arch Linux : `pacman -S libsecp256k1`
+  - For macOS : `brew tap cuber/homebrew-libsecp256k1 && brew install libsecp256k1`
 - **Openssl Libssl API**
   - For Ubuntu/Debian : `apt install libssl-dev`
   - For Arch Linux : `pacman -S openssl`
+  - For macOS : `brew install openssl`
 - **LLVM9**
   - For Arch Linux : `pacman -S llvm`
+  - For macOS : it requires the latest xcode, then `brew install
+    llvm-hs/llvm/llvm-9`,  if it crashes due to “unknown xcode version”, run
+    `sudo xcode-select -r`. For newly installed xcode, you will need to accept Apple’s terms and conditions.
 
 ### Building
 

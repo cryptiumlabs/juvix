@@ -2,15 +2,20 @@
 -- - Compilation of primitive terms to Michelson instruction sequences.
 module Juvix.Backends.Michelson.Compilation.Prim where
 
+import Juvix.Backends.Michelson.Compilation.Environment hiding (Type)
 import Juvix.Backends.Michelson.Compilation.Type
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library
 import qualified Michelson.Untyped as M
 
+promoteInStack ∷ HasState "stack" VStack.T f ⇒ Int → f [M.ExpandedOp]
+promoteInStack n = fst . VStack.promote n <$> get @"stack"
+
 primToInstr ∷
   ∀ m.
-  ( HasState "stack" Stack m,
+  ( HasState "stack" VStack.T m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -18,73 +23,40 @@ primToInstr ∷
   J.Type PrimTy PrimVal →
   m Op
 primToInstr prim ty =
+  -- Inline all functions, assumed they will have been correctly dealt with previously.
+  -- Think about whether the order will be correct here - it matters.
+  -- TODO ∷ do analysis for when we can move the constants into being constant
+  --        operations instead of just promoting them
+  -- If arguments are both constants, drop both from vstack, PUSH the addition (e.g.)
+  -- If one is real, one is not, push the constant to the stack, add an ADD instruction.
   case prim of
     -- :: \x -> y ~ s => (f, s)
     PrimFst → do
-      let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ xT _) _))) _ = ty
-          retTy = M.Type (M.TLambda pairTy xT) ""
-      modify @"stack" ((:) (FuncResultE, retTy))
-      pure (oneArgPrim (M.PrimEx (M.CAR "" "") :| []) retTy)
-    -- :: \x -> y ~ s => (f, s)
+      let J.Pi _ (J.PrimTy (PrimTy (M.Type (M.TPair _ _ xT _) _))) _ = ty
+      promoted ← promoteInStack 1
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, xT) . VStack.drop 1)
+      pure (M.SeqEx (promoted <> [M.PrimEx (M.CAR "" "")]))
     PrimSnd → do
-      let J.Pi _ (J.PrimTy (PrimTy pairTy@(M.Type (M.TPair _ _ _ yT) _))) _ = ty
-          retTy = M.Type (M.TLambda pairTy yT) ""
-      modify @"stack" ((:) (FuncResultE, retTy))
-      pure (oneArgPrim (M.PrimEx (M.CDR "" "") :| []) retTy)
-    -- :: \x y -> a ~ (x, (y, s)) => (a, s)
+      let J.Pi _ (J.PrimTy (PrimTy (M.Type (M.TPair _ _ _ yT) _))) _ = ty
+      promoted ← promoteInStack 1
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, yT) . VStack.drop 1)
+      pure (M.SeqEx (promoted <> [M.PrimEx (M.CDR "" ""), M.PrimEx (M.CAR "" "")]))
     PrimPair → do
       let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
-      firstArgTy ← typeToType firstArgTy
-      secondArgTy ← typeToType secondArgTy
-      -- TODO: Clean this up.
-      let mkPair x y = M.Type (M.TPair "" "" x y) ""
-
-          mkLam x y = M.Type (M.TLambda x y) ""
-
-          secondLamTy = mkLam (mkPair firstArgTy secondArgTy) (mkPair firstArgTy secondArgTy) -- ??
-
-          firstLamTy = mkLam firstArgTy (mkLam secondArgTy (mkPair firstArgTy secondArgTy))
-
-      modify @"stack" ((:) (FuncResultE, firstLamTy))
-      pure
-        ( M.PrimEx
-            ( M.PUSH
-                ""
-                firstLamTy
-                ( M.ValueLambda
-                    ( M.SeqEx
-                        [ M.PrimEx
-                            ( M.DIP
-                                [ M.PrimEx
-                                    ( M.PUSH
-                                        ""
-                                        secondLamTy
-                                        ( M.ValueLambda
-                                            ( M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]
-                                                :| []
-                                            )
-                                        )
-                                    )
-                                ]
-                            ),
-                          M.PrimEx (M.APPLY "")
-                        ]
-                        :| []
-                    )
-                )
-            )
-        )
+      xT ← typeToType firstArgTy
+      yT ← typeToType secondArgTy
+      let pairTy = M.Type (M.TPair "" "" xT yT) ""
+      promoted ← promoteInStack 2
+      modify @"stack" (cons (VStack.Val VStack.FuncResultE, pairTy) . VStack.drop 2)
+      pure (M.SeqEx (promoted <> [M.PrimEx (M.PAIR "" "" "" "")]))
     -- :: a ~ s => (a, s)
     PrimConst const → do
       case const of
         M.ValueNil → do
           let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
-          modify @"stack" ((:) (FuncResultE, t))
+          modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.NIL "" "" elemTy))
         _ → do
           let J.PrimTy (PrimTy t) = ty
-          modify @"stack" ((:) (FuncResultE, t))
+          modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.PUSH "" t const))
-
-oneArgPrim ∷ NonEmpty Op → M.Type → Op
-oneArgPrim ops retTy = M.PrimEx (M.PUSH "" retTy (M.ValueLambda ops))

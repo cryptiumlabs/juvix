@@ -5,6 +5,7 @@ import Prelude (Show (..))
 
 -- | Usage is an alias for the semiring representation
 type T = NatAndw
+
 type Usage = NatAndw
 
 -- | NatAndw is the choice of the semiring for ({ℕ, ω}, (+), 0, (*), 1)
