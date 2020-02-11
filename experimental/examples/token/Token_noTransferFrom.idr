@@ -10,19 +10,6 @@ Account = Nat
 ||| Address is the key hash, a string of length 36.
 Address : Type
 Address = String
-{- Attempt at making address a dependent type
-data Address : Type where
-  MkAddress : (s : String) -> (length s = 36) -> Address
-
-stringToAddress : (s : String) -> Maybe Address
-stringToAddress s = case length s == 36 of
-                         False => Nothing
-                         True => Just MkAddress
--}
-
--- Prove address is a string of length 36.
---address36Char : (address : String) -> length address = 36
---address36Char address = ?address36Char_rhs
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
@@ -37,6 +24,7 @@ record Storage where
 
 data Error = NotEnoughBalance
            | FailedToAuthenticate
+           | InvariantsDoNotHold
 
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
@@ -49,42 +37,31 @@ getAccount address accounts = case lookup address accounts of
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @tokens the amount of tokens to be transferred
-total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (SortedMap Address Account)
+total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
 performTransfer from dest tokens storage =
   let fromBalance = getAccount from (accounts storage)
       destBalance = getAccount dest (accounts storage) in
         case lte tokens fromBalance of
              False => Left NotEnoughBalance
              True => let accountsStored = insert from (minus fromBalance tokens) (accounts storage) in
-                       Right (insert dest (destBalance + tokens) accountsStored)
+                       Right (record {accounts = (insert dest (destBalance + tokens) accountsStored)} storage)
+
+transferInvariants : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Bool
+transferInvariants from dest tokens storage =
+  let transfer = performTransfer from dest tokens storage in
+    case transfer of
+      Left _ => False
+      Right sAfterTransfer => totalSupply storage == totalSupply sAfterTransfer
 
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
-total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (SortedMap Address Account))
+total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
 createAccount dest tokens storage =
-  let owner = owner storage in
+  if transferInvariants (owner storage) dest tokens storage then --can include other invariants that need to hold
+    let owner = owner storage in
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => Right (performTransfer owner dest tokens storage)
-
-pvalues : SortedMap Address Account -> Type
-pvalues m = values m = []
-pvaluesempty : pvalues empty
-pvaluesempty = Refl
-
-{-
-psortedMape : (k : Address) -> (em : SortedMap Address Account) -> (em = empty) -> (lookup k em = Nothing)
-psortedMape _ Empty _ impossible
-psortedMape _ (M _ _) _ impossible
--}
-
---Prove the total supply is the sum of all account balances. TODO define owner account & balance and its relation to totalSupply.
-ptotalValues : Nat -> SortedMap Address Account -> Type
-ptotalSupplyToken : ptotalValues (totalSupply storage) (accounts storage)
-ptotalSupplyToken = ?rhs
-
-
-
---ptotalSupplyToken totalSupply (accounts )
---ptotalSupplyToken totalSupply allAccount prf = ?totalSupplyToken_rhs
+  else
+    Left InvariantsDoNotHold --if any of the variants do not hold, createAccount will not go through. So if it goes through the invariants hold.
