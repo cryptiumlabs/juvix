@@ -1,12 +1,12 @@
 * Interaction of the Juvix Programming Language
 In many respects Juvix should be easy to use!
 
+* Lessons Learned from Other Languages
 Writing proofs isn't commonly considered easy for programmers. We
 intend to improve developers' experience on writing proofs for smart
 contracts using Juvix. Below I list some things we can learn from
 existing proof assistants and propose some improvements we can
 consider implementing in Juvix.
-
 ** Things to learn from Idris
 
 1. Hot keys that perform interactive and automatic actions such as:
