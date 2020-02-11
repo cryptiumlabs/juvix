@@ -1,25 +1,26 @@
 -- |
--- Datatypes & pattern matching.
+-- Datatypes and pattern matching.
 module Juvix.Backends.Michelson.Compilation.Datatypes where
 
-import Juvix.Backends.Michelson.Compilation.Types hiding (Type)
-import Juvix.Backends.Michelson.Compilation.Util
+import qualified Juvix.Backends.Michelson.Compilation.Types as Type
+import qualified Juvix.Backends.Michelson.Compilation.Util as Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library hiding (Type)
 import Michelson.Untyped
 
 pack ∷
   ∀ m.
-  (HasThrow "compilationError" CompilationError m) ⇒
+  (HasThrow "compilationError" Type.CompilationError m) ⇒
   Type →
   m ExpandedInstr
 pack (Type TUnit _) = pure (PUSH "" (Type TUnit "") ValueUnit)
-pack ty = throw @"compilationError" (NotYetImplemented ("pack: " <> show ty))
+pack ty =
+  throw @"compilationError" (Type.NotYetImplemented ("pack: " <> show ty))
 
 unpack ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m
+    HasThrow "compilationError" Type.CompilationError m
   ) ⇒
   Type →
   [Maybe Symbol] →
@@ -58,24 +59,25 @@ unpack (Type ty _) binds =
             )
           pure (PrimEx (CDR "" ""))
         [Nothing, Nothing] →
-          genReturn (PrimEx DROP)
-        _ → throw @"compilationError" (InternalFault "binds do not match type")
-    _ → throw @"compilationError" (NotYetImplemented ("unpack: " <> show ty))
+          Util.genReturn (PrimEx DROP)
+        _ → throw @"compilationError" (Type.InternalFault "binds do not match type")
+    _ → throw @"compilationError" (Type.NotYetImplemented ("unpack: " <> show ty))
 
 unpackDrop ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m
+    HasThrow "compilationError" Type.CompilationError m
   ) ⇒
   [Maybe Symbol] →
   m ExpandedOp
-unpackDrop binds = genReturn (foldDrop (fromIntegral (length (filter isJust binds))))
+unpackDrop binds =
+  Util.genReturn (Util.foldDrop (fromIntegral (length (filter isJust binds))))
 
 genSwitch ∷
   ∀ m.
   ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
+    HasThrow "compilationError" Type.CompilationError m,
+    HasWriter "compilationLog" [Type.CompilationLog] m
   ) ⇒
   T →
   m (ExpandedOp → ExpandedOp → ExpandedOp)
@@ -83,4 +85,5 @@ genSwitch Tbool = pure (\x y → PrimEx (IF [y] [x])) -- TODO: Why flipped?
 genSwitch (TOr _ _ _ _) = pure (\x y → PrimEx (IF_LEFT [x] [y]))
 genSwitch (TOption _) = pure (\x y → PrimEx (IF_NONE [x] [y]))
 genSwitch (TList _) = pure (\x y → PrimEx (IF_CONS [x] [y]))
-genSwitch ty = throw @"compilationError" (NotYetImplemented ("genSwitch: " <> show ty))
+genSwitch ty =
+  throw @"compilationError" (Type.NotYetImplemented ("genSwitch: " <> show ty))

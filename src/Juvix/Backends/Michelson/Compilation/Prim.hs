@@ -3,10 +3,9 @@
 module Juvix.Backends.Michelson.Compilation.Prim where
 
 import Juvix.Backends.Michelson.Compilation.Environment hiding (Type)
-import Juvix.Backends.Michelson.Compilation.Type
-import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.Type as Type
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import qualified Juvix.Core.ErasedAnn as J
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library
 import qualified Michelson.Untyped as M
 
@@ -20,7 +19,7 @@ primToInstr ∷
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
   PrimVal →
-  J.Type PrimTy PrimVal →
+  ErasedAnn.Type PrimTy PrimVal →
   m Op
 primToInstr prim ty =
   -- Inline all functions, assumed they will have been correctly dealt with previously.
@@ -32,19 +31,19 @@ primToInstr prim ty =
   case prim of
     -- :: \x -> y ~ s => (f, s)
     PrimFst → do
-      let J.Pi _ (J.PrimTy (PrimTy (M.Type (M.TPair _ _ xT _) _))) _ = ty
+      let ErasedAnn.Pi _ (ErasedAnn.PrimTy (PrimTy (M.Type (M.TPair _ _ xT _) _))) _ = ty
       promoted ← promoteInStack 1
       modify @"stack" (cons (VStack.Val VStack.FuncResultE, xT) . VStack.drop 1)
       pure (M.SeqEx (promoted <> [M.PrimEx (M.CAR "" "")]))
     PrimSnd → do
-      let J.Pi _ (J.PrimTy (PrimTy (M.Type (M.TPair _ _ _ yT) _))) _ = ty
+      let ErasedAnn.Pi _ (ErasedAnn.PrimTy (PrimTy (M.Type (M.TPair _ _ _ yT) _))) _ = ty
       promoted ← promoteInStack 1
       modify @"stack" (cons (VStack.Val VStack.FuncResultE, yT) . VStack.drop 1)
       pure (M.SeqEx (promoted <> [M.PrimEx (M.CDR "" ""), M.PrimEx (M.CAR "" "")]))
     PrimPair → do
-      let J.Pi _ firstArgTy (J.Pi _ secondArgTy _) = ty
-      xT ← typeToType firstArgTy
-      yT ← typeToType secondArgTy
+      let ErasedAnn.Pi _ firstArgTy (ErasedAnn.Pi _ secondArgTy _) = ty
+      xT ← Type.typeToType firstArgTy
+      yT ← Type.typeToType secondArgTy
       let pairTy = M.Type (M.TPair "" "" xT yT) ""
       promoted ← promoteInStack 2
       modify @"stack" (cons (VStack.Val VStack.FuncResultE, pairTy) . VStack.drop 2)
@@ -53,10 +52,10 @@ primToInstr prim ty =
     PrimConst const → do
       case const of
         M.ValueNil → do
-          let J.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
+          let ErasedAnn.PrimTy (PrimTy t@(M.Type (M.TList elemTy) _)) = ty
           modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.NIL "" "" elemTy))
         _ → do
-          let J.PrimTy (PrimTy t) = ty
+          let ErasedAnn.PrimTy (PrimTy t) = ty
           modify @"stack" (cons (VStack.Val VStack.FuncResultE, t))
           pure (M.PrimEx (M.PUSH "" t const))
