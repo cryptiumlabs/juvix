@@ -36,17 +36,17 @@ cases.
      command.
    - makes available options very clear in each step.
    - when in doubt, use tactic 'simpl'! And you can see right away if anything changes.
-   - you know you can end the proof with `reflexivity` when something
-     is in the form of `x=x` in the goal window!
+   - you know you can end the proof with =reflexivity= when something
+     is in the form of =x=x= in the goal window!
 
 3. The tactics are a bit more precise than in Idris:
-   - `simpl` is explicit (not so in Idris)
-   - `rewrite` with `->` or `<-` specified by default(similar to
-     `replace with` in idris, `rewrite` in idris doesn't specify
+   - simpl :: is explicit (not so in Idris)
+   - rewrite :: with =->= or =<-= specified by default(similar to
+     =replace with= in idris, =rewrite= in idris doesn't specify
      directions)
    - easier naming of the inductive hypothesis?
-   - `induction n as [|n' IHn'].`
-   - `assert` is a useful tactic to use when otherwise the proof
+   - induction n as [|n' IHn']. ::
+   - assert :: is a useful tactic to use when otherwise the proof
      assistant is confused which variables to rewrite. Although in
      Idris, you can specify which variables for the proofs with
      inputs, which is clearer in some cases.
@@ -56,12 +56,12 @@ Agda still to be surveyed. But from what I've experienced so far, to
 improve user experience, I propose we have a dedicated Juvix IDE
 similar to Coq, with the following improvements:
 
-- to improve CoqIde's `forward one command` and `backward one command`
+- to improve CoqIde's =forward one command= and =backward one command=
   functions, we can show the whole proof while 'zooming in' the
   current subgoal. This gives the users more information on the bigger
   picture of what they are proving.
 
-- use the `forward/backward one command` to improve smart contract
+- use the =forward/backward one command= to improve smart contract
   development experience by stating other status of the smart
   contract. E.g., the possible vulnerabilities, gas/storage cost
   changes (if one can estimate them) of the subjected command etc.
@@ -69,7 +69,7 @@ similar to Coq, with the following improvements:
 - automatically add what's in the context instead of having users
   write 'intros'. List the given context clear and users can go from
   there. Coq has done a bit of it with induction too. When you write
-  `induction`, Coq automatically add the `nat` in the context.
+  =induction=, Coq automatically add the =nat= in the context.
 
 - improved error messages:
   + for Idris, the error messages don't tell you what's wrong, just
@@ -82,9 +82,9 @@ similar to Coq, with the following improvements:
   proofs, making all the given theorms/proven propositions easily
   searchable and referenced would be a great help. E.g., if the proofs
   involves booleans, the ide should show a list of theorems that are
-  related to boolean operators (`and` and `or`) that users can
+  related to boolean operators (=and= and =or=) that users can
   use. And maybe hot keys to paste the theorem names and an easy way
-  to put them in the context (like `assert`).
+  to put them in the context (like =assert=).
 
 - add useful menu items such as in CoqIde: tactics, templates,
   queries. The templates can also include smart contract specific
