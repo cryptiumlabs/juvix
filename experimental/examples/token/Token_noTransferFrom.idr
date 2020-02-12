@@ -71,3 +71,25 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => Right (performTransfer owner dest tokens storage)
+--||| Sigs are the names of functions
+data FName = PerformTransfer
+           | CreateAccount
+
+--||| fnSig returns the function signature of the input function
+total performTransferSig : Type
+performTransferSig =
+  (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
+total createAccountSig : Type
+createAccountSig =
+  (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
+
+total whichFn : FName -> Type
+whichFn PerformTransfer = performTransferSig
+whichFn CreateAccount = createAccountSig
+
+--||| totalSupplyInvariant makes sure the totalSupply is unchanged with all relevant functions
+totalSupplyInvariant :  -> Bool
+totalSupplyInvariant (performTransfer from dest tokens storage) =
+  case fn of
+      Left _ => False
+      Right afterfn => totalSupply storage == totalSupply sAfterTransfer
