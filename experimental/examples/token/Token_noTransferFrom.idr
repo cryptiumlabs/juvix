@@ -53,9 +53,21 @@ transferInvariants from dest tokens storage =
     case transfer of
       Left _ => False
       Right sAfterTransfer => totalSupply storage == totalSupply sAfterTransfer
+{-
+provenAction : (Storage -> Either Error Storage) -> Storage -> Either Error storage
+provenAction fn storage =
+  let result = fn storage in
+  case result of
+    Left -> result
+    Right newStorage ->
+      if invariants then result
+      else Left InvariantsDoNotHold
 
+provenAction (transfer f d t) s
+provenAction (createAccount d t) s
+-}
 ||| provenTransfer runs performTransfer if transferInvariants returns True.
-total provenTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
+total provenTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 provenTransfer from dest tokens storage =
   if transferInvariants (owner storage) dest tokens storage then
     performTransfer from dest tokens storage
@@ -65,13 +77,13 @@ provenTransfer from dest tokens storage =
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
-total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
+total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 createAccount dest tokens storage =
     let owner = owner storage in
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
-           True => Right (performTransfer owner dest tokens storage)
-||| FName are the names of functions
+           True => performTransfer owner dest tokens storage
+{-||| FName are the names of functions
 data FName = PerformTransfer
            | CreateAccount
 
@@ -82,9 +94,11 @@ fnSig PerformTransfer = Either Error (Storage)
 fnSig CreateAccount = Either Error (Either Error (Storage))
   --(dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
 
+
 --||| totalSupplyInvariant makes sure the totalSupply is unchanged with all relevant functions
-totalSupplyInvariant : (fnName : FName) -> (fn : fnSig fnName) -> Bool
-totalSupplyInvariant PerformTransfer (performTransfer from dest tokens storage) =
-  case fn of
+totalSupplyInvariant : (Storage -> Either Error Storage) -> Bool
+totalSupplyInvariant fn =
+  case (fn of
       Left _ => False
-      Right afterfn => totalSupply storage == totalSupply sAfterTransfer
+      Right afterfn => totalSupply storage == totalSupply afterfn
+-}
