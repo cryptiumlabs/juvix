@@ -46,6 +46,7 @@ performTransfer from dest tokens storage =
              True => let accountsStored = insert from (minus fromBalance tokens) (accounts storage) in
                        Right (record {accounts = (insert dest (destBalance + tokens) accountsStored)} storage)
 
+||| transferInvariants makes sure the totalSupply is unchanged with performTransfer
 transferInvariants : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Bool
 transferInvariants from dest tokens storage =
   let transfer = performTransfer from dest tokens storage in
@@ -53,15 +54,20 @@ transferInvariants from dest tokens storage =
       Left _ => False
       Right sAfterTransfer => totalSupply storage == totalSupply sAfterTransfer
 
+||| provenTransfer runs performTransfer if transferInvariants returns True.
+total provenTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
+provenTransfer from dest tokens storage =
+  if transferInvariants (owner storage) dest tokens storage then
+    performTransfer from dest tokens storage
+  else
+    Left InvariantsDoNotHold
+
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
 total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
 createAccount dest tokens storage =
-  if transferInvariants (owner storage) dest tokens storage then --can include other invariants that need to hold
     let owner = owner storage in
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => Right (performTransfer owner dest tokens storage)
-  else
-    Left InvariantsDoNotHold --if any of the variants do not hold, createAccount will not go through. So if it goes through the invariants hold.
