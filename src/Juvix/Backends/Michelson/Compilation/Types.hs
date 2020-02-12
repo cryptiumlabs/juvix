@@ -42,7 +42,7 @@ data CompilationLog
   = TermToInstr Term Op
   | OptimisedByJuvix Op Op
   | OptimisedByMorley SomeInstr SomeInstr
-  deriving (Generic)
+  deriving (Generic, Show)
 
 data SomeInstr where
   SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr

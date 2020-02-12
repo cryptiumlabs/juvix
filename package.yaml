@@ -148,6 +148,7 @@ library:
     - Juvix.Backends.Michelson.Compilation.Datatypes
     - Juvix.Backends.Michelson.DSL.Instructions
     - Juvix.Backends.Michelson.DSL.InstructionsEff
+    - Juvix.Backends.Michelson.DSL.Environment
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.Michelson.Compilation.VirtualStack
