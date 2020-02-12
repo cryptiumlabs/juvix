@@ -393,6 +393,11 @@ Utility functions used by the Michelson backend.
   + [[Library]]
   + [[HashMap]]
 **** DSL
+***** Environment <<DSL/Environment>>
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Library]]
 ***** Instructions
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
