@@ -7,10 +7,16 @@ import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
+import qualified Michelson.Untyped.Instr as Instr
 
 data PrimTy
   = PrimTy M.Type
   deriving (Show, Eq, Generic)
+
+-- TODO ∷ replace PrimVal with this eventually!
+data NewPrim
+  = Constant (M.Value' Op)
+  | Inst (Instr.InstrAbstract Op)
 
 data PrimVal
   = PrimConst (M.Value' Op)

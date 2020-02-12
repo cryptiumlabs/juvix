@@ -17,7 +17,9 @@ data Env
         -- | count of unnamed arguments for primitives.
         count ∷ Word,
         -- | Debug level.
-        debug ∷ Int
+        debug ∷ Int,
+        -- | Pending arguments on the Stack.
+        pending ∷ [Symbol]
       }
   deriving (Show, Generic)
 
@@ -41,11 +43,16 @@ newtype MichelsonCompilation a
     (HasState "count" Word)
     via Field "count" () (MonadState (ExceptT CompError (State Env)))
   deriving
+    (HasState "pending" [Symbol])
+    via Field "pending" () (MonadState (ExceptT CompError (State Env)))
+  deriving
     (HasThrow "compilationError" CompError)
     via MonadError (ExceptT CompError (State Env))
   deriving
     (HasReader "debug" Int)
     via Field "debug" () (ReadStatePure (MonadState (ExceptT CompError (State Env))))
+
+type Ops m = HasState "ops" [Types.Op] m
 
 type Instruction m =
   ( HasState "stack" VStack.T m,
