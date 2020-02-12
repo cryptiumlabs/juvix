@@ -17,6 +17,7 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
+import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- Top Level Types
@@ -62,9 +63,24 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
+and = onBoolGen Instructions.and (&&)
+
+xor = onBoolGen Instructions.xor (/=)
+
+or = onBoolGen Instructions.or (||)
+
 --------------------------------------------------------------------------------
--- Helpers
+-- Helpers for Main Functionality
 --------------------------------------------------------------------------------
+
+onBoolGen op f =
+  onTwoArgs
+    op
+    ( \instr1 instr2 →
+        let i1 = valToBool instr1
+            i2 = valToBool instr2
+         in Constant (boolToVal (f i1 i2))
+    )
 
 intGen op f = onIntGen op (\x y → V.ValueInt (f x y))
 
@@ -109,8 +125,25 @@ addExpanded ∷ Env.Ops m ⇒ Protect → m ()
 addExpanded (Protect (Expanded _) i) = addInstrs i
 addExpanded (Protect (Constant v) _) = addInstr (Instructions.push undefined v)
 
+--------------------------------------------------------------------------------
+-- Effect Wrangling
+--------------------------------------------------------------------------------
+
 addInstrs ∷ Env.Ops m ⇒ [Instr.ExpandedOp] → m ()
 addInstrs x = modify @"ops" (x <>)
 
 addInstr ∷ Env.Ops m ⇒ Instr.ExpandedOp → m ()
 addInstr x = modify @"ops" (x :)
+
+--------------------------------------------------------------------------------
+-- Boolean Conversions
+--------------------------------------------------------------------------------
+
+boolToVal ∷ Bool → V.Value' op
+boolToVal True = V.ValueTrue
+boolToVal False = V.ValueFalse
+
+valToBool ∷ V.Value' op → Bool
+valToBool V.ValueTrue = True
+valToBool V.ValueFalse = False
+valToBool _ = error "called valToBool on a non Michelson Bool"
