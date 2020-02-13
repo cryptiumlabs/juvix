@@ -26,6 +26,10 @@ data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
 
+initStorage : Storage
+initStorage =
+  MkStorage (insert "qwer" 1000 empty) 1 1000 "Cool" "C" "qwer"
+
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
 total getAccount : (address : Address) -> SortedMap Address Account -> Nat
