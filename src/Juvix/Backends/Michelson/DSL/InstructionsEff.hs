@@ -27,11 +27,16 @@ import Prelude (error)
 --   = Curr
 --   | Completed Expanded
 
+data Curr
+  = C
+      { fun ∷ ∀ m. Env.Reduction m ⇒ [Types.NewTerm] → m Expanded
+      }
+
 data Expanded
   = Constant (V.Value' Types.Op)
   | Expanded (Instr.ExpandedOp)
   | -- | Curr is a stand in for lambda or curry
-    Curr
+    Curr Curr
 
 --------------------------------------------------------------------------------
 -- Main Functionality
@@ -40,13 +45,7 @@ data Expanded
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Expanded
 inst = undefined
 
-allConstants ∷ [Expanded] → Bool
-allConstants = all f
-  where
-    f (Constant _) = True
-    f (Expanded _) = False
-    f (Curr {}) = True
-
+addAll ∷ Env.Reduction m ⇒ Types.NewTerm → Types.NewTerm → m Expanded
 addAll instr1 instr2 = add [instr2, instr1]
 
 add, mul, sub, ediv, and, xor, or ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Expanded
@@ -63,6 +62,8 @@ ediv =
         0 → V.ValueNone
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
+
+-- var
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -115,7 +116,7 @@ onTwoArgs op f instrs = do
               pure (Expanded op)
     _ → throw @"compilationError" Types.NotEnoughArguments
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Environment Protections and Promotions
 --------------------------------------------------------------------------------
 
@@ -164,3 +165,14 @@ valToBool ∷ V.Value' op → Bool
 valToBool V.ValueTrue = True
 valToBool V.ValueFalse = False
 valToBool _ = error "called valToBool on a non Michelson Bool"
+
+--------------------------------------------------------------------------------
+-- Misc
+--------------------------------------------------------------------------------
+
+allConstants ∷ [Expanded] → Bool
+allConstants = all f
+  where
+    f (Constant _) = True
+    f (Expanded _) = False
+    f (Curr {}) = True

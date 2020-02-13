@@ -17,20 +17,15 @@ data PrimTy
 data NewPrim
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
-
-type NewTerm = CoreErased.AnnTerm PrimTy PrimVal
-
-data PrimVal
-  = PrimConst (M.Value' Op)
-  | PrimPair
-  | PrimFst
-  | PrimSnd
-  -- TODO: Add all Michelson instructions which are functions.
   deriving (Show, Eq, Generic)
 
-type Term = CoreErased.AnnTerm PrimTy PrimVal
+type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
 
-type Type = CoreErased.Type PrimTy PrimVal
+type PrimVal = NewPrim
+
+type Term = CoreErased.AnnTerm PrimTy NewPrim
+
+type Type = CoreErased.Type PrimTy NewPrim
 
 type Value = M.Value' M.ExpandedOp
 

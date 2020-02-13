@@ -51,7 +51,7 @@ data LamPartial
         captures ∷ [Symbol], -- note: semantically this should be a set :)
         remArgs ∷ [Symbol],
         body ∷ Types.Term,
-        ty ∷ ErasedAnn.Type Types.PrimTy Types.PrimVal
+        ty ∷ Types.Type
       }
   deriving (Show, Eq, Generic)
 

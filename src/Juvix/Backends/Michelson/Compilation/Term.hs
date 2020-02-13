@@ -98,7 +98,7 @@ recurseApplication ∷
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒
   ([Symbol], [Symbol], Env.Term) →
-  ErasedAnn.Type Env.PrimTy Env.PrimVal →
+  Env.Type →
   [a] →
   [Env.Op] →
   M.Type →
@@ -186,10 +186,10 @@ varCase n = do
       Right <$> Util.genReturn (M.SeqEx [before, M.PrimEx (M.DUP ""), after])
 
 foldApps ∷
-  ErasedAnn.AnnTerm primTy primVal →
-  [ErasedAnn.AnnTerm primTy primVal] →
-  ( (ErasedAnn.Term primTy primVal, Usage.Usage, ErasedAnn.Type primTy primVal),
-    [ErasedAnn.AnnTerm primTy primVal]
+  Env.Term →
+  [Env.Term] →
+  ( Env.Term,
+    [Env.Term]
   )
 foldApps ((ErasedAnn.App f arg), _, _) args =
   foldApps f (arg : args)
@@ -241,7 +241,7 @@ evaluateAndPushArgs ∷
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒
   [Symbol] →
-  ErasedAnn.Type Env.PrimTy Env.PrimVal →
+  Env.Type →
   [Env.Term] →
   M.Type →
   m [Env.Op]

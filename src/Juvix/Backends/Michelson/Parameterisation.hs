@@ -23,7 +23,7 @@ import Prelude (String)
 -- TODO: Add rest of primitive values.
 -- TODO: Add dependent functions for pair, fst, snd, etc.
 typeOf ∷ PrimVal → NonEmpty PrimTy
-typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
+typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
@@ -46,7 +46,7 @@ apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
     runPrim = Env.execWithStack mempty $ do
-      Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+      -- Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
@@ -63,7 +63,7 @@ parseVal lexer =
   try
     ( do
         val ← wrapParser lexer M.value
-        pure (PrimConst (M.expandValue val))
+        pure (Constant (M.expandValue val))
     )
 
 wrapParser ∷ Token.GenTokenParser String () Identity → M.Parser a → Parser a

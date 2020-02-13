@@ -72,15 +72,11 @@ lamType argsPlusClosures extraArgs retTy =
 {- TODO: Figure out how to add nice annotations without breaking equality comparisons. -}
 
 typesFromPi ∷
-  HasThrow "compilationError" Types.CompilationError f ⇒
-  J.Type Types.PrimTy Types.PrimVal →
-  f [M.Type]
+  HasThrow "compilationError" Types.CompilationError f ⇒ Types.Type → f [M.Type]
 typesFromPi (J.Pi _usage aType rest) = (:) <$> typeToType aType <*> typesFromPi rest
 typesFromPi _ = pure []
 
 returnTypeFromPi ∷
-  HasThrow "compilationError" Types.CompilationError m ⇒
-  J.Type Types.PrimTy Types.PrimVal →
-  m M.Type
+  HasThrow "compilationError" Types.CompilationError m ⇒ Types.Type → m M.Type
 returnTypeFromPi (J.Pi _usage _ rest) = returnTypeFromPi rest
 returnTypeFromPi x = typeToType x
