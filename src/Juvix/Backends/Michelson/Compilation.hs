@@ -37,8 +37,7 @@ compileExpr term ty =
    in (ret, compilationLog env)
 
 compileToMichelsonContract ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T VStack.LamPartial) m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒
@@ -64,8 +63,7 @@ compileToMichelsonContract term ty = do
 
 -- TODO: This shouldn't require being a function.
 compileToMichelsonExpr ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T VStack.LamPartial) m,
     HasThrow "compilationError" CompilationError m,
     HasWriter "compilationLog" [CompilationLog] m
   ) ⇒

@@ -10,33 +10,15 @@
 --   they were constants or not and dispatches logic based on that
 module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
+import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import Juvix.Library
-import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
-
---------------------------------------------------------------------------------
--- Top Level Types
---------------------------------------------------------------------------------
-
--- data Top
---   = Curr
---   | Completed Expanded
-
-data Curr
-  = C
-      { fun ∷ ∀ m. Env.Reduction m ⇒ [Types.NewTerm] → m Expanded
-      }
-
-data Expanded
-  = Constant (V.Value' Types.Op)
-  | Expanded (Instr.ExpandedOp)
-  | -- | Curr is a stand in for lambda or curry
-    Curr Curr
 
 --------------------------------------------------------------------------------
 -- Main Functionality
@@ -63,7 +45,19 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
--- var
+-- naive dup to front logic
+
+var symb = do
+  stack ← get @"stack"
+  case VStack.lookup symb stack of
+    Nothing →
+      throw @"compilationError" (Types.NotInStack symb)
+    Just (VStack.Value (VStack.Val' value)) →
+      pure (Constant value)
+    Just (VStack.Value (VStack.Lam' lamPartial)) →
+      undefined
+    Just (VStack.Position usage index) →
+      undefined
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality

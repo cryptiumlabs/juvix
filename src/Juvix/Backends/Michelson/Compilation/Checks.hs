@@ -11,9 +11,10 @@ import qualified Michelson.Untyped as M
 
 -- Check that the stack types tracked internally & of the instruction match.
 stackGuard ∷
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Types.CompilationError m,
-    Show a
+    Show a,
+    Show lamType
   ) ⇒
   a →
   M.Type →

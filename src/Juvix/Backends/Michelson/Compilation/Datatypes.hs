@@ -18,8 +18,7 @@ pack ty =
   throw @"compilationError" (Type.NotYetImplemented ("pack: " <> show ty))
 
 unpack ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Type.CompilationError m
   ) ⇒
   Type →
@@ -64,8 +63,7 @@ unpack (Type ty _) binds =
     _ → throw @"compilationError" (Type.NotYetImplemented ("unpack: " <> show ty))
 
 unpackDrop ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Type.CompilationError m
   ) ⇒
   [Maybe Symbol] →
@@ -74,8 +72,7 @@ unpackDrop binds =
   Util.genReturn (Util.foldDrop (fromIntegral (length (filter isJust binds))))
 
 genSwitch ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Type.CompilationError m,
     HasWriter "compilationLog" [Type.CompilationLog] m
   ) ⇒

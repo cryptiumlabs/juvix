@@ -389,7 +389,7 @@ Utility functions used by the Michelson backend.
 - Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
   + [[HashMap]]
 **** DSL
@@ -415,6 +415,7 @@ Utility functions used by the Michelson backend.
   they were constants or not and dispatches logic based on that
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[Library]]

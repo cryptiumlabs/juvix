@@ -27,7 +27,7 @@ import qualified Prelude as Prelude (show)
  -}
 termToInstr ∷
   ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" Env.VStack m,
     HasThrow "compilationError" Env.CompilationError m,
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒
@@ -93,7 +93,7 @@ termToInstr ann@(term, _, ty) paramTy = Checks.stackGuard ann paramTy $ do
 -- args are the arguments to which it is being applied
 recurseApplication ∷
   ∀ m a.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" Env.VStack m,
     HasThrow "compilationError" Env.CompilationError m,
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒
@@ -154,17 +154,17 @@ recurseApplication (captures, lamArguments, body) lamTy args insts paramTy = do
             (insts <> ops)
             paramTy
 
-takesOne ∷ VStack.T → VStack.T → Bool
+takesOne ∷ Env.VStack → Env.VStack → Bool
 takesOne post pre = post == VStack.drop 1 pre
 
-addsOne ∷ VStack.T → VStack.T → Bool
+addsOne ∷ Env.VStack → Env.VStack → Bool
 addsOne post pre = VStack.drop 1 post == pre
 
-changesTop ∷ VStack.T → VStack.T → Bool
+changesTop ∷ Env.VStack → Env.VStack → Bool
 changesTop post pre = VStack.drop 1 post == pre
 
 varCase ∷
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" Env.VStack m,
     HasThrow "compilationError" Env.CompilationError m
   ) ⇒
   Symbol →
@@ -200,12 +200,13 @@ foldApps inner args =
 -- Helpers
 --------------------------------------------------------------------------------
 stackCheck ∷
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Env.CompilationError m,
-    Show a2
+    Show a2,
+    Show lamType
   ) ⇒
   a2 →
-  (VStack.T → VStack.T → Bool) →
+  (VStack.T lamType → VStack.T lamType → Bool) →
   m Env.Op →
   m Env.Op
 stackCheck term guard func = do
@@ -237,7 +238,7 @@ argsFromApps xs = go xs []
 
 evaluateAndPushArgs ∷
   ( HasThrow "compilationError" Env.CompilationError m,
-    HasState "stack" VStack.T m,
+    HasState "stack" Env.VStack m,
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒
   [Symbol] →

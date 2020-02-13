@@ -9,12 +9,12 @@ import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library
 import qualified Michelson.Untyped as M
 
-promoteInStack ∷ HasState "stack" VStack.T f ⇒ Int → f [M.ExpandedOp]
+promoteInStack ∷ HasState "stack" Env.VStack f ⇒ Int → f [M.ExpandedOp]
 promoteInStack n = fst . VStack.promote n <$> get @"stack"
 
 primToInstr ∷
   ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" Env.VStack m,
     HasThrow "compilationError" Env.CompilationError m,
     HasWriter "compilationLog" [Env.CompilationLog] m
   ) ⇒

@@ -38,6 +38,7 @@ data CompilationError
   | DidNotTypecheck M.TCError
   | DidNotTypecheckAfterOptimisation M.TCError
   | NotEnoughArguments
+  | NotInStack Symbol
   | -- Should never happen!
     NotEnoughStackSpace
   deriving (Show, Eq, Generic)

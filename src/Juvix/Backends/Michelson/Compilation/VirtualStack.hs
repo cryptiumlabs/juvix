@@ -16,10 +16,10 @@ module Juvix.Backends.Michelson.Compilation.VirtualStack where
 
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
-import qualified Juvix.Core.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import Prelude (error)
 
@@ -27,22 +27,22 @@ import Prelude (error)
 -- T operation Type
 --------------------------------------------------------------------------------
 
-data T
+data T lamType
   = T
-      { stack' ∷ [(Elem, Untyped.Type)],
+      { stack' ∷ [(Elem lamType, Untyped.Type)],
         size ∷ Int
       }
   deriving (Show, Eq)
 
-data Elem
-  = VarE (Set.Set Symbol) Usage.T (Maybe Val)
-  | Val Val
+data Elem lamType
+  = VarE (Set.Set Symbol) Usage.T (Maybe (Val lamType))
+  | Val (Val lamType)
   deriving (Show, Eq, Generic)
 
-varE ∷ Symbol → Maybe Val → Elem
+varE ∷ Symbol → Maybe (Val lamType) → Elem lamType
 varE x t = VarE (Set.singleton x) Usage.Omega t
 
-varNone ∷ Symbol → Elem
+varNone ∷ Symbol → Elem lamType
 varNone x = VarE (Set.singleton x) Usage.Omega Nothing
 
 data LamPartial
@@ -55,35 +55,35 @@ data LamPartial
       }
   deriving (Show, Eq, Generic)
 
-data Val
+data Val lamType
   = ConstE Types.Value
   | FuncResultE
-  | LamPartialE LamPartial
+  | LamPartialE lamType
   deriving (Show, Eq, Generic)
 
-data NotInStack
+data NotInStack lamType
   = Val' Untyped.Value
-  | Lam' LamPartial
+  | Lam' lamType
 
 --------------------------------------------------------------------------------
 -- T Instances
 --------------------------------------------------------------------------------
 
-instance Semigroup T where
+instance Semigroup (T lamType) where
   (T pres size) <> (T posts size') = T (pres <> posts) (size + size')
 
-instance Monoid T where
+instance Monoid (T lamType) where
   mempty = T [] 0
 
 --------------------------------------------------------------------------------
 -- T operation functions
 --------------------------------------------------------------------------------
 
-ins ∷ (Elem, Untyped.Type) → (Int → Int) → T → T
+ins ∷ (Elem lamType, Untyped.Type) → (Int → Int) → T lamType → T lamType
 ins v f (T stack' size) = T (v : stack') (f size)
 
 -- | 'inT' determines if the given element is on the real stack or not
-inT ∷ Elem → Bool
+inT ∷ Elem lamType → Bool
 inT (VarE _ _ (Just FuncResultE)) = True
 inT (VarE _ _ (Just (ConstE _))) = False
 inT (VarE _ _ (Just (LamPartialE _))) = False
@@ -93,7 +93,7 @@ inT (Val FuncResultE) = True
 inT (Val (LamPartialE _)) = False
 
 -- invariant ¬ inT = valueOf is valid!
-notInStackOf ∷ Elem → NotInStack
+notInStackOf ∷ Elem lamType → NotInStack lamType
 notInStackOf (VarE _ _ (Just (LamPartialE l))) = Lam' l
 notInStackOf (Val (LamPartialE l)) = Lam' l
 notInStackOf (VarE _ _ (Just (ConstE i))) = Val' i
@@ -104,12 +104,12 @@ notInStackOf (VarE _ _ (Just FuncResultE)) = error "called valueOf with a stored
 
 -- | 'car' gets the first element off the stack
 -- may return an error
-car ∷ T → (Elem, Untyped.Type)
+car ∷ T lamType → (Elem lamType, Untyped.Type)
 car (T (s : _) _) = s
 car (T [] _) = error "Called car on an empty list"
 
 -- | 'cdr' removes the first element of the list
-cdr ∷ T → T
+cdr ∷ T lamType → T lamType
 cdr (T (s : ss) size)
   | inT (fst s) = T ss (pred size)
   | otherwise = T ss size
@@ -117,42 +117,42 @@ cdr (T [] size) = T [] size
 
 -- | 'cons' is like 'consT', however it works ont ehs tack directly,
 -- not from within a monad
-cons ∷ (Elem, Untyped.Type) → T → T
+cons ∷ (Elem lamType, Untyped.Type) → T lamType → T lamType
 cons v = ins v f
   where
     f
       | inT (fst v) = succ
       | otherwise = identity
 
-nil ∷ T
+nil ∷ T lamType
 nil = mempty
 
-isNil ∷ T → Bool
+isNil ∷ Eq lamType ⇒ T lamType → Bool
 isNil = (nil ==)
 
 -- | 'consT', cons on a value v to our representation of the stack
 -- This stack may have more values tha the real one, as we store
 -- constants on this stack for resolution, however these will not appear
 -- in the real michelson stack
-consT ∷ HasState "stack" T m ⇒ (Elem, Untyped.Type) → m ()
+consT ∷ HasState "stack" (T lamType) m ⇒ (Elem lamType, Untyped.Type) → m ()
 consT = modify @"stack" . cons
 
-take ∷ Int → T → T
+take ∷ Int → T lamType → T lamType
 take _ (T [] i) = T [] i -- i should be 0
 take n stack@(T (_ : _) _)
   | n <= 0 = nil
   | otherwise = cons (car stack) (take (pred n) (cdr stack))
 
-fromList ∷ Foldable t ⇒ t (Elem, Untyped.Type) → T
+fromList ∷ Foldable t ⇒ t (Elem lamType, Untyped.Type) → T lamType
 fromList = foldr cons nil
 
-append ∷ T → T → T
+append ∷ T lamType → T lamType → T lamType
 append = (<>)
 
-appendDrop ∷ T → T → T
+appendDrop ∷ T lamType → T lamType → T lamType
 appendDrop prefix = append prefix . cdr
 
-lookupType ∷ Symbol → T → Maybe Untyped.Type
+lookupType ∷ Symbol → T lamType → Maybe Untyped.Type
 lookupType n (T stack' _) = go stack'
   where
     go ((VarE n' _ _, typ) : _)
@@ -160,7 +160,7 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
-promote ∷ Int → T → ([Instr.ExpandedOp], T)
+promote ∷ Eq lamType ⇒ Int → T lamType → ([Instr.ExpandedOp], T lamType)
 promote _n stack
   | isNil stack = ([], stack)
 promote 0 stack = ([], stack)
@@ -178,13 +178,13 @@ promote n stack =
             a →
               (insts, cons a newStack)
 
-drop ∷ Int → T → T
+drop ∷ Int → T lamType → T lamType
 drop n xs
   | n <= 0 = xs
   | otherwise = drop (pred n) (cdr xs)
 
-data Lookup
-  = Value NotInStack
+data Lookup lamType
+  = Value (NotInStack lamType)
   | Position Usage.T Natural
 
 -- | 'lookup' looks up a symbol from the stack
@@ -192,7 +192,7 @@ data Lookup
 -- Otherwise, the function returns Either
 -- a Value if the symbol is not stored on the stack
 -- or the position, if the value is stored on the stack
-lookup ∷ Symbol → T → Maybe Lookup
+lookup ∷ Symbol → T lamType → Maybe (Lookup lamType)
 lookup n (T stack' _) = go stack' 0
   where
     go ((v@(VarE n' usage _), _) : _) acc
@@ -205,7 +205,7 @@ lookup n (T stack' _) = go stack' 0
       | otherwise = go vs acc
     go [] _ = Nothing
 
-dropFirst ∷ Symbol → T → [(Elem, Untyped.Type)] → T
+dropFirst ∷ Symbol → T lamType → [(Elem lamType, Untyped.Type)] → T lamType
 dropFirst n (T stack' size) = go stack'
   where
     go ((v@(VarE n' _ _), _) : xs) acc
@@ -217,7 +217,7 @@ dropFirst n (T stack' size) = go stack'
       go vs (v : acc)
     go [] _ = T stack' size
 
-symbolsInT ∷ [Symbol] → T → [Symbol]
+symbolsInT ∷ [Symbol] → T lamType → [Symbol]
 symbolsInT symbs (T stack' _) =
   filter f symbs
   where
@@ -236,7 +236,7 @@ symbolsInT symbs (T stack' _) =
         Just _ → True
         Nothing → False
 
-insertAt ∷ Foldable t ⇒ Int → t (Elem, Untyped.Type) → T → T
+insertAt ∷ Foldable t ⇒ Int → t (Elem lamType, Untyped.Type) → T lamType → T lamType
 insertAt n xs stack =
   foldr cons (foldr cons postDrop xs) (stack' dropped)
   where

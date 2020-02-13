@@ -14,7 +14,7 @@ failWith ∷ HasThrow "compilationError" CompilationError m ⇒ Text → m a
 failWith = throw @"compilationError" . InternalFault
 
 -- TODO ∷ don't add a value if it is a constant
-stackToStack ∷ VStack.T → SomeHST
+stackToStack ∷ VStack.T lamType → SomeHST
 stackToStack (VStack.T stack' _) =
   foldr
     ( \(_, ty) (SomeHST tail) →
@@ -57,8 +57,7 @@ unrollSeq op =
     WithSrcEx _ op → unrollSeq op
 
 genReturn ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   ExpandedOp →
@@ -68,10 +67,9 @@ genReturn instr = do
   pure instr
 
 instToStackEff ∷
-  ∀ m.
   (HasThrow "compilationError" CompilationError m) ⇒
   ExpandedOp →
-  m (VStack.T → VStack.T)
+  m (VStack.T lamType → VStack.T lamType)
 instToStackEff instr =
   case instr of
     SeqEx is → do
@@ -141,7 +139,7 @@ unpackTupleN n =
     ]
 
 packClosure ∷
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" CompilationError m
   ) ⇒
   [Symbol] →
@@ -152,8 +150,7 @@ packClosure vars = do
     (SeqEx (replicate count (PrimEx (PAIR "" "" "" ""))))
 
 unpackClosure ∷
-  ∀ m.
-  (HasState "stack" VStack.T m) ⇒
+  (HasState "stack" (VStack.T lamType) m) ⇒
   [(Symbol, Type)] →
   m ExpandedOp
 unpackClosure [] = pure (PrimEx DROP)
@@ -173,8 +170,7 @@ unpackClosure env = do
     )
 
 dropClosure ∷
-  ∀ m.
-  (HasState "stack" VStack.T m) ⇒
+  (HasState "stack" (VStack.T lamType) m) ⇒
   [(Symbol, Type)] →
   m ExpandedOp
 dropClosure env = do
@@ -183,8 +179,8 @@ dropClosure env = do
   pure (PrimEx (DIP (replicate count (PrimEx DROP))))
 
 pop ∷
-  (HasState "stack" VStack.T m, HasThrow "compilationError" CompilationError m) ⇒
-  m (VStack.Elem, Type)
+  (HasState "stack" (VStack.T lamType) m, HasThrow "compilationError" CompilationError m) ⇒
+  m (VStack.Elem lamType, Type)
 pop = do
   s ← get @"stack"
   case s of

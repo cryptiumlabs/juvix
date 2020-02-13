@@ -13,8 +13,7 @@ import Juvix.Library
 import qualified Michelson.Untyped as M
 
 termToMichelson ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T VStack.LamPartial) m,
     HasThrow "compilationError" Types.CompilationError m,
     HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
@@ -33,8 +32,7 @@ termToMichelson term paramTy = do
     _ → throw @"compilationError" (Types.NotYetImplemented "must be a lambda function")
 
 termToInstrOuter ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T VStack.LamPartial) m,
     HasThrow "compilationError" Types.CompilationError m,
     HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
@@ -57,8 +55,7 @@ termToInstrOuter term ty = do
       undefined
 
 funcToLambda ∷
-  ∀ m.
-  ( HasState "stack" VStack.T m,
+  ( HasState "stack" (VStack.T VStack.LamPartial) m,
     HasThrow "compilationError" Types.CompilationError m,
     HasWriter "compilationLog" [Types.CompilationLog] m
   ) ⇒
