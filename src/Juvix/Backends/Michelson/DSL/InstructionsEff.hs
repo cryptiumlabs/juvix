@@ -24,13 +24,13 @@ import Prelude (error)
 -- Main Functionality
 --------------------------------------------------------------------------------
 
-inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Expanded
+inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst = undefined
 
-addAll ∷ Env.Reduction m ⇒ Types.NewTerm → Types.NewTerm → m Expanded
+addAll ∷ Env.Reduction m ⇒ Types.NewTerm → Types.NewTerm → m Env.Expanded
 addAll instr1 instr2 = add [instr2, instr1]
 
-add, mul, sub, ediv, and, xor, or ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Expanded
+add, mul, sub, ediv, and, xor, or ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
 sub = intGen Instructions.sub (-)
@@ -53,9 +53,9 @@ var symb = do
     Nothing →
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) →
-      pure (Constant value)
+      pure (Env.Constant value)
     Just (VStack.Value (VStack.Lam' lamPartial)) →
-      undefined
+      pure (Env.Curr lamPartial)
     Just (VStack.Position usage index) →
       undefined
 
@@ -68,7 +68,7 @@ type OnTerm m input result =
   Instr.ExpandedOp →
   (input → input → result) →
   [Types.NewTerm] →
-  m Expanded
+  m Env.Expanded
 
 onBoolGen ∷ OnTerm m Bool Bool
 onBoolGen op f =
@@ -77,7 +77,7 @@ onBoolGen op f =
     ( \instr1 instr2 →
         let i1 = valToBool instr1
             i2 = valToBool instr2
-         in Constant (boolToVal (f i1 i2))
+         in Env.Constant (boolToVal (f i1 i2))
     )
 
 intGen ∷ OnTerm m Integer Integer
@@ -90,10 +90,10 @@ onIntGen op f =
     ( \instr1 instr2 →
         let V.ValueInt i1 = instr1
             V.ValueInt i2 = instr2
-         in Constant (f i1 i2)
+         in Env.Constant (f i1 i2)
     )
 
-onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Expanded
+onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f instrs = do
   v ← traverse (protect . inst) instrs
   case v of
@@ -101,13 +101,13 @@ onTwoArgs op f instrs = do
       let instrs = [instr2, instr1]
        in if
             | allConstants (val <$> instrs) →
-              let Constant i1 = val instr1
-                  Constant i2 = val instr2
+              let Env.Constant i1 = val instr1
+                  Env.Constant i2 = val instr2
                in pure (f i1 i2)
             | otherwise → do
               traverse_ addExpanded instrs
               addInstr op
-              pure (Expanded op)
+              pure (Env.Expanded op)
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
@@ -116,11 +116,11 @@ onTwoArgs op f instrs = do
 
 data Protect
   = Protect
-      { val ∷ Expanded,
+      { val ∷ Env.Expanded,
         insts ∷ [Types.Op]
       }
 
-protect ∷ Env.Ops m ⇒ m Expanded → m Protect
+protect ∷ Env.Ops m ⇒ m Env.Expanded → m Protect
 protect inst = do
   curr ← get @"ops"
   v ← inst
@@ -133,9 +133,9 @@ protect inst = do
 -- This is because when this is called it'll only be called in a function like
 -- map and fold
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
-addExpanded (Protect (Expanded _) i) = addInstrs i
-addExpanded (Protect (Constant v) _) = addInstr (Instructions.push undefined v)
-addExpanded (Protect (Curr {}) _) = undefined
+addExpanded (Protect (Env.Expanded _) i) = addInstrs i
+addExpanded (Protect (Env.Constant v) _) = addInstr (Instructions.push undefined v)
+addExpanded (Protect (Env.Curr {}) _) = undefined
 
 --------------------------------------------------------------------------------
 -- Effect Wrangling
@@ -164,9 +164,9 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 -- Misc
 --------------------------------------------------------------------------------
 
-allConstants ∷ [Expanded] → Bool
+allConstants ∷ [Env.Expanded] → Bool
 allConstants = all f
   where
-    f (Constant _) = True
-    f (Expanded _) = False
-    f (Curr {}) = True
+    f (Env.Constant _) = True
+    f (Env.Expanded _) = False
+    f (Env.Curr {}) = True
