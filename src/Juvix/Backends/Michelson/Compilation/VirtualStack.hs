@@ -205,6 +205,20 @@ lookup n (T stack' _) = go stack' 0
       | otherwise = go vs acc
     go [] _ = Nothing
 
+dig ∷ Int → T lamType → T lamType
+dig i (T stack' n) =
+  case splitAt i stack' of
+    (xs, []) → T xs n
+    (xs, y : ys) → T (y : xs <> ys) n
+
+dupDig ∷ Int → T lamType → T lamType
+dupDig i (T stack' n) =
+  case splitAt i stack' of
+    (xs, []) →
+      T xs n
+    (xs, (y, ty) : ys) →
+      cons (usageOne y, ty) (T (xs <> ((predUsage y, ty) : ys)) n)
+
 dropFirst ∷ Symbol → T lamType → [(Elem lamType, Untyped.Type)] → T lamType
 dropFirst n (T stack' size) = go stack'
   where
@@ -242,3 +256,15 @@ insertAt n xs stack =
   where
     postDrop = drop n stack
     dropped = take n stack
+
+--------------------------------------------------------------------------------
+-- Usage Manipulation
+--------------------------------------------------------------------------------
+
+predUsage ∷ Elem lamType → Elem lamType
+predUsage v@(Val {}) = v
+predUsage (VarE s usage val) = VarE s (Usage.pred usage) val
+
+usageOne ∷ Elem lamType → Elem lamType
+usageOne v@(Val {}) = v
+usageOne (VarE s _ val) = VarE s one val

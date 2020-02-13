@@ -419,7 +419,6 @@ Utility functions used by the Michelson backend.
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[Library]]
-  + [[HashMap]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]

@@ -47,6 +47,7 @@ ediv =
 
 -- naive dup to front logic
 
+var ∷ (Env.Instruction m, Env.Error m) ⇒ Symbol → m Env.Expanded
 var symb = do
   stack ← get @"stack"
   case VStack.lookup symb stack of
@@ -56,8 +57,11 @@ var symb = do
       pure (Env.Constant value)
     Just (VStack.Value (VStack.Lam' lamPartial)) →
       pure (Env.Curr lamPartial)
-    Just (VStack.Position usage index) →
-      undefined
+    Just (VStack.Position usage index)
+      | one == usage →
+        Env.Expanded <$> moveToFront index
+      | otherwise →
+        Env.Expanded <$> dupToFront index
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -111,8 +115,26 @@ onTwoArgs op f instrs = do
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
--- Environment Protections and Promotions
+-- Environment Protections, Promotions, and Movements
 --------------------------------------------------------------------------------
+
+moveToFront ∷ (Env.Instruction m, Integral a) ⇒ a → m Instr.ExpandedOp
+moveToFront num = do
+  let inst = Instructions.dig (fromIntegral num)
+  addInstr inst
+  modify @"stack" (VStack.dig (fromIntegral num))
+  pure inst
+
+dupToFront ∷ (Env.Instruction m, Integral a) ⇒ a → m Instr.ExpandedOp
+dupToFront num = do
+  modify @"stack" (VStack.dupDig (fromIntegral num))
+  let instrs =
+        [ Instructions.dig (fromIntegral num),
+          Instructions.dup,
+          Instructions.dug (fromIntegral num)
+        ]
+  addInstrs instrs
+  pure (fold instrs)
 
 data Protect
   = Protect

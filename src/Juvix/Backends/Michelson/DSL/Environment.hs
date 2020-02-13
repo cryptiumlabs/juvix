@@ -105,6 +105,8 @@ type Instruction m =
     Ops m
   )
 
+type Error = HasThrow "compilationError" CompError
+
 type Primitive m =
   ( Instruction m,
     HasState "count" Word m
