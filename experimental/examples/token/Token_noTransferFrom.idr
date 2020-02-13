@@ -53,19 +53,16 @@ transferInvariants from dest tokens storage =
     case transfer of
       Left _ => False
       Right sAfterTransfer => totalSupply storage == totalSupply sAfterTransfer
-{-
-provenAction : (Storage -> Either Error Storage) -> Storage -> Either Error storage
-provenAction fn storage =
+
+provenTotalSupplyAction : (Storage -> Either Error Storage) -> Storage -> Either Error Storage
+provenTotalSupplyAction fn storage =
   let result = fn storage in
   case result of
-    Left -> result
-    Right newStorage ->
-      if invariants then result
+    Left _ => result
+    Right newStorage =>
+      if totalSupply newStorage == totalSupply storage then result
       else Left InvariantsDoNotHold
 
-provenAction (transfer f d t) s
-provenAction (createAccount d t) s
--}
 ||| provenTransfer runs performTransfer if transferInvariants returns True.
 total provenTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 provenTransfer from dest tokens storage =
