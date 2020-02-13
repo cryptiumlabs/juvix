@@ -2,7 +2,6 @@
 -- Utility functions used by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Util where
 
-import qualified Data.Set as Set
 import Juvix.Backends.Michelson.Compilation.Types hiding (Type)
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Backends.Michelson.Compilation.VirtualStack (car, cdr, cons)
@@ -162,7 +161,7 @@ unpackClosure env = do
   let count = length env
   modify @"stack"
     ( VStack.append
-        $ VStack.T (fmap (\(s, t) → (VStack.VarE (Set.singleton s) Nothing, t)) env)
+        $ VStack.T (fmap (\(s, t) → (VStack.varE s Nothing, t)) env)
         $ length env
     )
   -- dup (count - 1) times,

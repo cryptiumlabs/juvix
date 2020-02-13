@@ -46,7 +46,7 @@ apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
     runPrim = Env.execWithStack mempty $ do
-      -- Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+      Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy

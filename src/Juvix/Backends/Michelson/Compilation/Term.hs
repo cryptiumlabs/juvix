@@ -179,7 +179,7 @@ varCase n = do
        in Right <$> Util.genReturn (M.PrimEx (M.PUSH "" t v))
     Just (VStack.Value (VStack.Lam' l)) →
       pure (Left l)
-    Just (VStack.Position i) → do
+    Just (VStack.Position _usage i) → do
       -- TODO ∷ replace with dip call
       let before = Util.rearrange i
           after = M.PrimEx (M.DIP [Util.unrearrange i])
@@ -257,8 +257,8 @@ evaluateAndPushArgs names t args paramTy = do
           Right argEval → do
             (v, typeV) ← Util.pop
             case v of
-              VStack.VarE x v →
-                modify @"stack" (VStack.cons (VStack.VarE (Set.insert name x) v, typeV))
+              VStack.VarE x u v →
+                modify @"stack" (VStack.cons (VStack.VarE (Set.insert name x) u v, typeV))
               VStack.Val v →
                 modify @"stack" (VStack.cons (VStack.varE name (Just v), typeV))
             pure (argEval : instrs)

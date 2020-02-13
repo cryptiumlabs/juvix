@@ -101,7 +101,7 @@ funcToLambda (VStack.LamPartial ops captures args body lamTy) paramTy = do
                     )
                 )
               pure (M.SeqEx [])
-            Just (VStack.Position p) → do
+            Just (VStack.Position _usage p) → do
               let (Just type') = VStack.lookupType x currentStack
               let inst = Util.dupToFront (fromIntegral p)
               modify @"stack" (VStack.cons (VStack.varE x Nothing, type'))
