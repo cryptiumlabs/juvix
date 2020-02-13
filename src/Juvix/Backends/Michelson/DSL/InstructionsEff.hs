@@ -23,22 +23,21 @@ import Prelude (error)
 -- Top Level Types
 --------------------------------------------------------------------------------
 
-data Top
-  = Curr
-  | Completed Expanded
+-- data Top
+--   = Curr
+--   | Completed Expanded
 
 data Expanded
   = Constant (V.Value' Types.Op)
   | Expanded (Instr.ExpandedOp)
+  | -- | Curr is a stand in for lambda or curry
+    Curr
 
 --------------------------------------------------------------------------------
 -- Main Functionality
 --------------------------------------------------------------------------------
 
-envMapping =
-  Map.fromList [(Instr.ADD, (+))]
-
--- inst ∷ Types.NewPrim → Expanded
+inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Expanded
 inst = undefined
 
 allConstants ∷ [Expanded] → Bool
@@ -46,15 +45,17 @@ allConstants = all f
   where
     f (Constant _) = True
     f (Expanded _) = False
+    f (Curr {}) = True
 
 addAll instr1 instr2 = add [instr2, instr1]
 
+add, mul, sub, ediv, and, xor, or ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Expanded
 add = intGen Instructions.add (+)
-
 mul = intGen Instructions.mul (*)
-
 sub = intGen Instructions.sub (-)
-
+and = onBoolGen Instructions.and (&&)
+xor = onBoolGen Instructions.xor (/=)
+or = onBoolGen Instructions.or (||)
 ediv =
   onIntGen
     Instructions.ediv
@@ -63,16 +64,18 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
-and = onBoolGen Instructions.and (&&)
-
-xor = onBoolGen Instructions.xor (/=)
-
-or = onBoolGen Instructions.or (||)
-
 --------------------------------------------------------------------------------
--- Helpers for Main Functionality
+-- Reduction Helpers for Main functionality
 --------------------------------------------------------------------------------
 
+type OnTerm m input result =
+  Env.Reduction m ⇒
+  Instr.ExpandedOp →
+  (input → input → result) →
+  [Types.NewTerm] →
+  m Expanded
+
+onBoolGen ∷ OnTerm m Bool Bool
 onBoolGen op f =
   onTwoArgs
     op
@@ -82,8 +85,10 @@ onBoolGen op f =
          in Constant (boolToVal (f i1 i2))
     )
 
+intGen ∷ OnTerm m Integer Integer
 intGen op f = onIntGen op (\x y → V.ValueInt (f x y))
 
+onIntGen ∷ OnTerm m Integer (V.Value' Types.Op)
 onIntGen op f =
   onTwoArgs
     op
@@ -93,18 +98,26 @@ onIntGen op f =
          in Constant (f i1 i2)
     )
 
+onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Expanded
 onTwoArgs op f instrs = do
-  instr2 : instr1 : _ ← traverse (protect . inst) instrs
-  let instrs = [instr2, instr1]
-  if
-    | allConstants (val <$> instrs) →
-      let Constant i1 = val instr1
-          Constant i2 = val instr2
-       in pure (f i1 i2)
-    | otherwise → do
-      traverse_ addExpanded instrs
-      addInstr op
-      pure (Expanded op)
+  v ← traverse (protect . inst) instrs
+  case v of
+    instr2 : instr1 : _ →
+      let instrs = [instr2, instr1]
+       in if
+            | allConstants (val <$> instrs) →
+              let Constant i1 = val instr1
+                  Constant i2 = val instr2
+               in pure (f i1 i2)
+            | otherwise → do
+              traverse_ addExpanded instrs
+              addInstr op
+              pure (Expanded op)
+    _ → throw @"compilationError" Types.NotEnoughArguments
+
+--------------------------------------------------------------------------------
+-- Environment Protections and Promotions
+--------------------------------------------------------------------------------
 
 data Protect
   = Protect
@@ -121,9 +134,13 @@ protect inst = do
   pure Protect {val = v, insts = after}
 
 -- for constant intructions the list should be empty!
+-- This should actually promote lambda and curry into a Lambda Michelson form
+-- This is because when this is called it'll only be called in a function like
+-- map and fold
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
 addExpanded (Protect (Expanded _) i) = addInstrs i
 addExpanded (Protect (Constant v) _) = addInstr (Instructions.push undefined v)
+addExpanded (Protect (Curr {}) _) = undefined
 
 --------------------------------------------------------------------------------
 -- Effect Wrangling

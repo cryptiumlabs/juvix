@@ -18,6 +18,8 @@ data NewPrim
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
 
+type NewTerm = CoreErased.AnnTerm PrimTy PrimVal
+
 data PrimVal
   = PrimConst (M.Value' Op)
   | PrimPair
@@ -40,6 +42,7 @@ data CompilationError
   | InternalFault Text
   | DidNotTypecheck M.TCError
   | DidNotTypecheckAfterOptimisation M.TCError
+  | NotEnoughArguments
   | -- Should never happen!
     NotEnoughStackSpace
   deriving (Show, Eq, Generic)
