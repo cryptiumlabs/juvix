@@ -46,31 +46,6 @@ performTransfer from dest tokens storage =
              True => let accountsStored = insert from (minus fromBalance tokens) (accounts storage) in
                        Right (record {accounts = (insert dest (destBalance + tokens) accountsStored)} storage)
 
-||| transferInvariants makes sure the totalSupply is unchanged with performTransfer
-transferInvariants : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Bool
-transferInvariants from dest tokens storage =
-  let transfer = performTransfer from dest tokens storage in
-    case transfer of
-      Left _ => False
-      Right sAfterTransfer => totalSupply storage == totalSupply sAfterTransfer
-
-provenTotalSupplyAction : (Storage -> Either Error Storage) -> Storage -> Either Error Storage
-provenTotalSupplyAction fn storage =
-  let result = fn storage in
-  case result of
-    Left _ => result
-    Right newStorage =>
-      if totalSupply newStorage == totalSupply storage then result
-      else Left InvariantsDoNotHold
-
-||| provenTransfer runs performTransfer if transferInvariants returns True.
-total provenTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
-provenTransfer from dest tokens storage =
-  if transferInvariants (owner storage) dest tokens storage then
-    performTransfer from dest tokens storage
-  else
-    Left InvariantsDoNotHold
-
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
@@ -80,22 +55,15 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
-{-||| FName are the names of functions
-data FName = PerformTransfer
-           | CreateAccount
 
-||| fnSig returns the function signature of the input function
-total fnSig : FName -> Type
-fnSig PerformTransfer = Either Error (Storage)
-  --(from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
-fnSig CreateAccount = Either Error (Either Error (Storage))
-  --(dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (Storage))
-
-
---||| totalSupplyInvariant makes sure the totalSupply is unchanged with all relevant functions
-totalSupplyInvariant : (Storage -> Either Error Storage) -> Bool
-totalSupplyInvariant fn =
-  case (fn of
-      Left _ => False
-      Right afterfn => totalSupply storage == totalSupply afterfn
--}
+||| provenTotalSupplyAction checks that totalSupply is conserved from running the input function.
+||| @fn the input function and all its input arguments except the storage
+||| @storage the storage input to fn
+provenTotalSupplyAction : (fn : (Storage -> Either Error Storage)) -> (storage : Storage) -> Either Error Storage
+provenTotalSupplyAction fn storage =
+ let result = fn storage in
+ case result of
+   Left _ => result
+   Right newStorage =>
+     if totalSupply newStorage == totalSupply storage then result
+     else Left InvariantsDoNotHold
