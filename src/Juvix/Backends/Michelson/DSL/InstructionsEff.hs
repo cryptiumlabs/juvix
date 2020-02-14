@@ -74,8 +74,10 @@ name symb f@(form, usage, type') = do
   case form of
     Ann.Var {} →
       modify @"stack" (VStack.nameTop symb)
+    -- all prims shouldn't add their arguments to the vstack
     Ann.Prim {} →
-      consVar symb result usage type'
+      modify @"stack" (VStack.nameTop symb)
+      -- consVar symb result usage type'
   pure result
 
 --------------------------------------------------------------------------------
@@ -126,6 +128,8 @@ onTwoArgs op f instrs = do
             | otherwise → do
               traverse_ addExpanded instrs
               addInstr op
+              modify @"stack" (VStack.drop 2)
+              consVal (Env.Expanded op) undefined
               pure (Env.Expanded op)
     _ → throw @"compilationError" Types.NotEnoughArguments
 
@@ -212,6 +216,15 @@ expandedToStack ∷ Env.Expanded → VStack.Val Env.Curr
 expandedToStack (Env.Constant v) = VStack.ConstE v
 expandedToStack (Env.Expanded _) = VStack.FuncResultE
 expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
+
+consVal ∷ HasState "stack" (VStack.T Env.Curr) m ⇒ Env.Expanded → Types.Type → m ()
+consVal result type' =
+  modify @"stack" $
+    VStack.cons
+      ( VStack.Val
+          (expandedToStack result),
+        typeToPrimType type'
+      )
 
 consVar ∷
   HasState "stack" (VStack.T Env.Curr) m ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
