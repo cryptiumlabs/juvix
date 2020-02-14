@@ -17,7 +17,7 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library
+import Juvix.Library hiding (or, and, xor)
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as Untyped
 import qualified Michelson.Untyped.Value as V
@@ -79,6 +79,23 @@ name symb f@(form, usage, type') = do
       modify @"stack" (VStack.nameTop symb)
   -- consVar symb result usage type'
   pure result
+
+
+
+-- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
+primToFargs
+  :: (Env.Reduction m, Num b) ⇒ Types.NewPrim → ([Types.NewTerm] → m Env.Expanded, b)
+primToFargs (Types.Constant _) = undefined
+primToFargs (Types.Inst inst) =
+  case inst of
+    Instr.ADD _ → (add, 2)
+    Instr.SUB _ → (sub, 2)
+    Instr.MUL _ → (mul, 2)
+    Instr.EDIV _ → (ediv, 2)
+    Instr.OR {} → (or, 2)
+    Instr.AND _ → (and, 2)
+    Instr.XOR _ → (xor, 2)
+
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
