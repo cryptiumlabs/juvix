@@ -77,7 +77,7 @@ name symb f@(form, usage, type') = do
     -- all prims shouldn't add their arguments to the vstack
     Ann.Prim {} →
       modify @"stack" (VStack.nameTop symb)
-      -- consVar symb result usage type'
+  -- consVar symb result usage type'
   pure result
 
 --------------------------------------------------------------------------------
@@ -118,19 +118,21 @@ onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f instrs = do
   v ← traverse (protect . inst) instrs
   case v of
-    instr2 : instr1 : _ →
+    instr2 : instr1 : _ → do
       let instrs = [instr2, instr1]
-       in if
-            | allConstants (val <$> instrs) →
-              let Env.Constant i1 = val instr1
-                  Env.Constant i2 = val instr2
-               in pure (f i1 i2)
-            | otherwise → do
-              traverse_ addExpanded instrs
-              addInstr op
-              modify @"stack" (VStack.drop 2)
-              consVal (Env.Expanded op) undefined
-              pure (Env.Expanded op)
+      res ←
+        if
+          | allConstants (val <$> instrs) →
+            let Env.Constant i1 = val instr1
+                Env.Constant i2 = val instr2
+             in pure (f i1 i2)
+          | otherwise → do
+            traverse_ addExpanded instrs
+            addInstr op
+            pure (Env.Expanded op)
+      modify @"stack" (VStack.drop 2)
+      consVal res undefined
+      pure res
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
@@ -237,7 +239,6 @@ consVar symb result usage type' =
           (Just (expandedToStack result)),
         typeToPrimType type'
       )
-
 
 typeToPrimType ∷ Types.Type → Untyped.Type
 typeToPrimType = undefined

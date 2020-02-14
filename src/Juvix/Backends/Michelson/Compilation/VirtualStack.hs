@@ -192,20 +192,19 @@ drop n xs
   | n <= 0 = xs
   | otherwise =
     let c = car xs
-    in case c of
-      (VarE x i _, _ )
-        | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
-      _ →
-        drop (pred n) (cdr xs)
+     in case c of
+          (VarE x i _, _)
+            | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
+          _ →
+            drop (pred n) (cdr xs)
 
-updateUsageList :: Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
+updateUsageList ∷ Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
 updateUsageList symbs usage stack = f stack
   where
-    f ((VarE s i ele ,ty) : xs)
+    f ((VarE s i ele, ty) : xs)
       | not (Set.disjoint symbs s) = (VarE s (i <> usage) ele, ty) : xs
     f (x : xs) = x : f xs
     f [] = []
-
 
 updateUsage ∷ Set.Set Symbol → Usage.T → T lamType → T lamType
 updateUsage symbs usage (T stack i) = T (updateUsageList symbs usage stack) i
