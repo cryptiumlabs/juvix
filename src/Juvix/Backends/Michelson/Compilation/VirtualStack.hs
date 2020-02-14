@@ -190,7 +190,25 @@ nameTop sym t =
 drop ∷ Int → T lamType → T lamType
 drop n xs
   | n <= 0 = xs
-  | otherwise = drop (pred n) (cdr xs)
+  | otherwise =
+    let c = car xs
+    in case c of
+      (VarE x i _, _ )
+        | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
+      _ →
+        drop (pred n) (cdr xs)
+
+updateUsageList :: Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
+updateUsageList symbs usage stack = f stack
+  where
+    f ((VarE s i ele ,ty) : xs)
+      | not (Set.disjoint symbs s) = (VarE s (i <> usage) ele, ty) : xs
+    f (x : xs) = x : f xs
+    f [] = []
+
+
+updateUsage ∷ Set.Set Symbol → Usage.T → T lamType → T lamType
+updateUsage symbs usage (T stack i) = T (updateUsageList symbs usage stack) i
 
 data Lookup lamType
   = Value (NotInStack lamType)
@@ -226,12 +244,17 @@ dupDig i (T stack' n) =
     (xs, []) →
       T xs n
     (xs, (y, ty) : ys) →
-      cons (usageOne y, ty) (T (xs <> ((predUsage y, ty) : ys)) n)
+      cons (predUsage y, ty) (T (xs <> ((usageOne y, ty) : ys)) n)
 
 dropFirst ∷ Symbol → T lamType → [(Elem lamType, Untyped.Type)] → T lamType
 dropFirst n (T stack' size) = go stack'
   where
-    go ((v@(VarE n' _ _), _) : xs) acc
+    -- in case c of
+    --   (VarE x i _, _ )
+    --     | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
+    go ((v@(VarE n' usages _), _) : xs) acc
+      | Set.member n n' && inT v && usages /= mempty =
+        T (reverse acc <> (updateUsageList n' (Usage.pred usages) xs)) (pred size)
       | Set.member n n' && inT v =
         T (reverse acc <> xs) (pred size)
       | Set.member n n' =
