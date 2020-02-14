@@ -418,6 +418,8 @@ Utility functions used by the Michelson backend.
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ** Core
 - _Relies on_

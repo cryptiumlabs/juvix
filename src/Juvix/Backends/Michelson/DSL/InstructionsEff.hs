@@ -15,8 +15,11 @@ import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Core.ErasedAnn.Types as Ann
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Michelson.Untyped.Instr as Instr
+import qualified Michelson.Untyped.Type as Untyped
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
@@ -62,6 +65,18 @@ var symb = do
         Env.Expanded <$> moveToFront index
       | otherwise →
         Env.Expanded <$> dupToFront index
+
+-- |
+-- Name calls inst, and then determines how best to name the form in the VStack
+name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
+name symb f@(form, usage, type') = do
+  result ← inst f
+  case form of
+    Ann.Var {} →
+      modify @"stack" (VStack.nameTop symb)
+    Ann.Prim {} →
+      consVar symb result usage type'
+  pure result
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -192,3 +207,24 @@ allConstants = all f
     f (Env.Constant _) = True
     f (Env.Expanded _) = False
     f (Env.Curr {}) = True
+
+expandedToStack ∷ Env.Expanded → VStack.Val Env.Curr
+expandedToStack (Env.Constant v) = VStack.ConstE v
+expandedToStack (Env.Expanded _) = VStack.FuncResultE
+expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
+
+consVar ∷
+  HasState "stack" (VStack.T Env.Curr) m ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
+consVar symb result usage type' =
+  modify @"stack" $
+    VStack.cons
+      ( VStack.VarE
+          (Set.singleton symb)
+          usage
+          (Just (expandedToStack result)),
+        typeToPrimType type'
+      )
+
+
+typeToPrimType ∷ Types.Type → Untyped.Type
+typeToPrimType = undefined

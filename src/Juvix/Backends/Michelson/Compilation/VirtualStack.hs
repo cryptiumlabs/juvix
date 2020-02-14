@@ -178,6 +178,15 @@ promote n stack =
             a →
               (insts, cons a newStack)
 
+nameTop ∷ Symbol → T lamType → T lamType
+nameTop sym t =
+  case hd of
+    (Val i, ty) → cons (varE sym (Just i), ty) rest
+    (VarE s u mb, ty) → cons (VarE (Set.insert sym s) u mb, ty) rest
+  where
+    hd = car t
+    rest = cdr t
+
 drop ∷ Int → T lamType → T lamType
 drop n xs
   | n <= 0 = xs
