@@ -237,6 +237,9 @@ dig i (T stack' n) =
     (xs, []) → T xs n
     (xs, y : ys) → T (y : xs <> ys) n
 
+-- | 'dupDig' duplicates the element at position i to the front of the stack
+-- with the full amount of usages leaving a one usage var left at the previous location
+-- A Precondition is that at position n the 'usageOf y' >= 1
 dupDig ∷ Int → T lamType → T lamType
 dupDig i (T stack' n) =
   case splitAt i stack' of
@@ -248,9 +251,6 @@ dupDig i (T stack' n) =
 dropFirst ∷ Symbol → T lamType → [(Elem lamType, Untyped.Type)] → T lamType
 dropFirst n (T stack' size) = go stack'
   where
-    -- in case c of
-    --   (VarE x i _, _ )
-    --     | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
     go ((v@(VarE n' usages _), _) : xs) acc
       | Set.member n n' && inT v && usages /= mempty =
         T (reverse acc <> (updateUsageList n' (Usage.pred usages) xs)) (pred size)
@@ -291,6 +291,10 @@ insertAt n xs stack =
 --------------------------------------------------------------------------------
 -- Usage Manipulation
 --------------------------------------------------------------------------------
+
+usageOf ∷ Elem lamType → Usage.T
+usageOf (Val {}) = Usage.Omega
+usageOf (VarE _ usage _) = usage
 
 predUsage ∷ Elem lamType → Elem lamType
 predUsage v@(Val {}) = v

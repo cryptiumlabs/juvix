@@ -48,8 +48,6 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
--- naive dup to front logic
-
 var ∷ (Env.Instruction m, Env.Error m) ⇒ Symbol → m Env.Expanded
 var symb = do
   stack ← get @"stack"
@@ -69,7 +67,7 @@ var symb = do
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
 name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
-name symb f@(form, usage, type') = do
+name symb f@(form, _usage, _type') = do
   result ← inst f
   case form of
     Ann.Var {} →
@@ -96,6 +94,36 @@ primToFargs (Types.Inst inst) =
     Instr.AND _ → (and, 2)
     Instr.XOR _ → (xor, 2)
 
+
+appM form@(t,u,ty) args usage type' =
+  case t of
+    Ann.Prim p →
+      let (f,lPrim) = primToFargs p
+          argsL = length args
+      in case argsL `compare` lPrim of
+        EQ → f args
+        -- TODO ∷ bind names from env, apply them to current args
+        -- take more args and stick them in the env, then have the
+        -- form of the application be only locations?
+        LT → undefined
+        -- this should never happen, due to type checking??
+        GT →
+          throw
+            @"compilationError"
+            (Types.InternalFault "Michelson call with too many args")
+    Ann.LamM {} → undefined
+    Ann.Var _ → do
+      v ← inst form
+      case v of
+        Env.Curr c → undefined
+        -- these two cases would only be valid if we expanded into a Michelson
+        -- lambda, however would we ever do that?
+        Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
+        Env.Expanded _ → throw @"compilationError" (Types.InternalFault "App on Michelson")
+    -- Preconditition violated
+    Ann.AppM {} → throw @"compilationError" (Types.InternalFault "App after App")
+    Ann.App {} → throw @"compilationError" (Types.InternalFault "No Single Apps")
+    Ann.Lam {} → throw @"compilationError" (Types.InternalFault "No Single Lambdas")
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -133,7 +161,7 @@ onIntGen op f =
 
 onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f instrs = do
-  v ← traverse (protect . inst) instrs
+  v ← traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
     instr2 : instr1 : _ → do
       let instrs = [instr2, instr1]
@@ -188,14 +216,10 @@ protect inst = do
   put @"ops" curr
   pure Protect {val = v, insts = after}
 
--- for constant intructions the list should be empty!
--- This should actually promote lambda and curry into a Lambda Michelson form
--- This is because when this is called it'll only be called in a function like
--- map and fold
+-- Promoting types happen elsewhere
+-- so protect just serves to hold the ops effects
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
-addExpanded (Protect (Env.Expanded _) i) = addInstrs i
-addExpanded (Protect (Env.Constant v) _) = addInstr (Instructions.push undefined v)
-addExpanded (Protect (Env.Curr {}) _) = undefined
+addExpanded (Protect _ i) = addInstrs i
 
 --------------------------------------------------------------------------------
 -- Effect Wrangling
@@ -259,3 +283,5 @@ consVar symb result usage type' =
 
 typeToPrimType ∷ Types.Type → Untyped.Type
 typeToPrimType = undefined
+
+promoteTopStack = undefined
