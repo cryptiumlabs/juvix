@@ -17,7 +17,7 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (or, and, xor)
+import Juvix.Library hiding (and, or, xor)
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as Untyped
 import qualified Michelson.Untyped.Value as V
@@ -78,11 +78,9 @@ name symb f@(form, _usage, _type') = do
   -- consVar symb result usage type'
   pure result
 
-
-
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
-primToFargs
-  :: (Env.Reduction m, Num b) ⇒ Types.NewPrim → ([Types.NewTerm] → m Env.Expanded, b)
+primToFargs ∷
+  (Env.Reduction m, Num b) ⇒ Types.NewPrim → ([Types.NewTerm] → m Env.Expanded, b)
 primToFargs (Types.Constant _) = undefined
 primToFargs (Types.Inst inst) =
   case inst of
@@ -94,23 +92,24 @@ primToFargs (Types.Inst inst) =
     Instr.AND _ → (and, 2)
     Instr.XOR _ → (xor, 2)
 
-
-appM form@(t,u,ty) args usage type' =
+appM form@(t, u, ty) args usage type' =
   case t of
     Ann.Prim p →
-      let (f,lPrim) = primToFargs p
+      let (f, lPrim) = primToFargs p
           argsL = length args
-      in case argsL `compare` lPrim of
-        EQ → f args
-        -- TODO ∷ bind names from env, apply them to current args
-        -- take more args and stick them in the env, then have the
-        -- form of the application be only locations?
-        LT → undefined
-        -- this should never happen, due to type checking??
-        GT →
-          throw
-            @"compilationError"
-            (Types.InternalFault "Michelson call with too many args")
+       in case argsL `compare` lPrim of
+            EQ → f args
+            -- TODO ∷ bind names from env, apply them to current args
+            -- take more args and stick them in the env, then have the
+            -- form of the application be only locations?
+            LT → do
+              names ← reserveNames (fromIntegral lPrim)
+              undefined
+            -- this should never happen, due to type checking??
+            GT →
+              throw
+                @"compilationError"
+                (Types.InternalFault "Michelson call with too many args")
     Ann.LamM {} → undefined
     Ann.Var _ → do
       v ← inst form
@@ -221,6 +220,16 @@ protect inst = do
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
 addExpanded (Protect _ i) = addInstrs i
 
+promoteTopStack = undefined
+
+reserveNames ∷ HasState "count" Word m ⇒ Word → m [Word]
+reserveNames i = do
+  c ← get @"count"
+  put @"count" (i + c)
+  pure [c .. c + i - 1]
+
+apply = undefined
+
 --------------------------------------------------------------------------------
 -- Effect Wrangling
 --------------------------------------------------------------------------------
@@ -283,5 +292,3 @@ consVar symb result usage type' =
 
 typeToPrimType ∷ Types.Type → Untyped.Type
 typeToPrimType = undefined
-
-promoteTopStack = undefined
