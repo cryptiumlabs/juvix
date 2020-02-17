@@ -42,11 +42,16 @@ data Expanded
     Curr Curr
   deriving (Show)
 
+newtype Fun = Fun (∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded)
+
+unFun ∷ Reduction m ⇒ Fun → [Types.NewTerm] → m Expanded
+unFun (Fun f) = f
+
 data Curr
   = C
       { -- | The function itself that we will call when we have enough arguments
         --   To expand
-        fun ∷ ∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded,
+        fun ∷ Fun,
         -- | 'argsLeft' are the arguments that are left on the stack
         argsLeft ∷ [Symbol],
         -- | 'argsApplied' are the names of the arguments that have been already applied

@@ -79,18 +79,17 @@ name symb f@(form, _usage, _type') = do
   pure result
 
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
-primToFargs ∷
-  (Env.Reduction m, Num b) ⇒ Types.NewPrim → ([Types.NewTerm] → m Env.Expanded, b)
+primToFargs ∷ Num b ⇒ Types.NewPrim → (Env.Fun, b)
 primToFargs (Types.Constant _) = undefined
 primToFargs (Types.Inst inst) =
   case inst of
-    Instr.ADD _ → (add, 2)
-    Instr.SUB _ → (sub, 2)
-    Instr.MUL _ → (mul, 2)
-    Instr.EDIV _ → (ediv, 2)
-    Instr.OR {} → (or, 2)
-    Instr.AND _ → (and, 2)
-    Instr.XOR _ → (xor, 2)
+    Instr.ADD _ → (Env.Fun add, 2)
+    Instr.SUB _ → (Env.Fun sub, 2)
+    Instr.MUL _ → (Env.Fun mul, 2)
+    Instr.EDIV _ → (Env.Fun ediv, 2)
+    Instr.OR {} → (Env.Fun or, 2)
+    Instr.AND _ → (Env.Fun and, 2)
+    Instr.XOR _ → (Env.Fun xor, 2)
 
 appM form@(t, u, ty) args usage type' =
   case t of
@@ -98,12 +97,16 @@ appM form@(t, u, ty) args usage type' =
       let (f, lPrim) = primToFargs p
           argsL = length args
        in case argsL `compare` lPrim of
-            EQ → f args
+            EQ → Env.unFun f args
             -- TODO ∷ bind names from env, apply them to current args
             -- take more args and stick them in the env, then have the
             -- form of the application be only locations?
             LT → do
               names ← reserveNames (fromIntegral lPrim)
+              let constructed = Env.C
+                    { Env.fun = f,
+                      Env.argsLeft = undefined
+                    }
               undefined
             -- this should never happen, due to type checking??
             GT →
