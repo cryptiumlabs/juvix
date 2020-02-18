@@ -51,12 +51,21 @@ ediv =
 var ∷ (Env.Instruction m, Env.Error m) ⇒ Symbol → m Env.Expanded
 var symb = do
   stack ← get @"stack"
+  let pushStack value =
+        case VStack.lookupType symb stack of
+          Just t → do
+            modify @"stack" (VStack.cons (VStack.var1E symb (Just value), t))
+          Nothing →
+            throw @"compilationError" (Types.NotInStack symb)
   case VStack.lookup symb stack of
     Nothing →
       throw @"compilationError" (Types.NotInStack symb)
-    Just (VStack.Value (VStack.Val' value)) →
+    -- TODO ∷ reduce usage by 1
+    Just (VStack.Value (VStack.Val' value)) → do
+      pushStack (VStack.ConstE value)
       pure (Env.Constant value)
-    Just (VStack.Value (VStack.Lam' lamPartial)) →
+    Just (VStack.Value (VStack.Lam' lamPartial)) → do
+      pushStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
     Just (VStack.Position usage index)
       | one == usage →
@@ -245,31 +254,51 @@ reserveNames i = do
 
 apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
 apply closure args remainingArgs = do
-  let exactLessThan = do
-        let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
-        traverse_
-          (uncurry name)
-          (reverse (zip toEvalNames args))
-        traverse_
-          (modify @"stack" . uncurry VStack.addName)
-          (zip alreadyEvaledNames remainingArgs)
   case fromIntegral (length args + length remainingArgs) `compare` Env.left closure of
     EQ → do
       -- usage and type doesn't matter here!
-      exactLessThan
-      Env.unFun
-        (Env.fun closure)
-        ((\v → (Ann.Var v, Usage.SNat 1, Env.ty closure)) <$> reverse (Env.argsLeft closure))
+      evalArgsAndName
+      app
     LT → do
-      exactLessThan
+      evalArgsAndName
       -- TODO ∷ make new closure, and apply args to the fun in the closure
       -- allowing more arguments to come, in a cont style!
       undefined
     GT →
       -- TODO ∷ figure out which arguments go unnamed, name them
       -- then carry it over to the recursion
-      undefined
-
+      case fromIntegral (length args) `compare` Env.left closure of
+        EQ → do
+          evalArgsAndName
+          expanded ← app
+          recur expanded remainingArgs
+        GT → do
+          evalArgsAndName
+          expanded ← app
+          undefined
+        -- only case where we can't name all the args according to this schema!
+        LT → do
+          expanded ← app
+          undefined
+    where
+      evalArgsAndName = do
+        let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
+        traverse_
+          (uncurry name)
+          (reverse (zip toEvalNames args))
+        traverse_
+          (modify @"stack" . uncurry VStack.addName)
+          (zip remainingArgs alreadyEvaledNames)
+      app =
+        Env.unFun
+          (Env.fun closure)
+          ((\v → (Ann.Var v, one, Env.ty closure)) <$> reverse (Env.argsLeft closure))
+      recur (Env.Curr c) xs =
+        apply c [] xs
+      recur (Env.Constant _) _ =
+        throw @"compilationError" (Types.InternalFault "apply to non lam")
+      recur (Env.Expanded _) _ =
+        throw @"compilationError" (Types.InternalFault "apply to non lam")
 --------------------------------------------------------------------------------
 -- Effect Wrangling
 --------------------------------------------------------------------------------

@@ -44,6 +44,9 @@ data Elem lamType
 varE ∷ Symbol → Maybe (Val lamType) → Elem lamType
 varE x t = VarE (Set.singleton x) Usage.Omega t
 
+var1E ∷ Symbol → Maybe (Val lamType) → Elem lamType
+var1E x t = VarE (Set.singleton x) one t
+
 varNone ∷ Symbol → Elem lamType
 varNone x = VarE (Set.singleton x) Usage.Omega Nothing
 
