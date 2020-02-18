@@ -47,6 +47,8 @@ newtype Fun = Fun (∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded)
 unFun ∷ Reduction m ⇒ Fun → [Types.NewTerm] → m Expanded
 unFun (Fun f) = f
 
+-- TODO ∷ have usage information stored with the args?
+-- May be fine without, as the terms we take ourselves should know their usage?
 data Curr
   = C
       { -- | The function itself that we will call when we have enough arguments
@@ -54,6 +56,8 @@ data Curr
         fun ∷ Fun,
         -- | 'argsLeft' are the arguments that are left on the stack
         argsLeft ∷ [Symbol],
+        -- Currently useless as we have no usage information?
+
         -- | 'argsApplied' are the names of the arguments that have been already applied
         argsApplied ∷ [Symbol],
         -- | 'left' are the number of arguments left.

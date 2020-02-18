@@ -91,33 +91,45 @@ primToFargs (Types.Inst inst) =
     Instr.AND _ → (Env.Fun and, 2)
     Instr.XOR _ → (Env.Fun xor, 2)
 
-appM form@(t, u, ty) args usage type' =
+appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
+appM form@(t, _u, ty) args =
   case t of
     Ann.Prim p →
       let (f, lPrim) = primToFargs p
           argsL = length args
        in case argsL `compare` lPrim of
             EQ → Env.unFun f args
-            -- TODO ∷ bind names from env, apply them to current args
-            -- take more args and stick them in the env, then have the
-            -- form of the application be only locations?
             LT → do
               names ← reserveNames (fromIntegral lPrim)
+              -- TODO ∷ set the usage of the arguments to 1
               let constructed = Env.C
                     { Env.fun = f,
-                      Env.argsLeft = undefined
+                      Env.argsLeft = names,
+                      Env.left = fromIntegral lPrim,
+                      Env.captures = Set.empty,
+                      Env.ty = ty,
+                      Env.argsApplied = []
                     }
-              undefined
+              apply constructed args []
             -- this should never happen, due to type checking??
             GT →
               throw
                 @"compilationError"
                 (Types.InternalFault "Michelson call with too many args")
-    Ann.LamM {} → undefined
+    Ann.LamM captures arguments body →
+      let constructed = Env.C
+            { Env.fun = Env.Fun (const (inst body)),
+              Env.argsLeft = arguments,
+              Env.captures = Set.fromList captures,
+              Env.left = fromIntegral (length arguments),
+              Env.ty = ty,
+              Env.argsApplied = []
+            }
+       in apply constructed args []
     Ann.Var _ → do
       v ← inst form
       case v of
-        Env.Curr c → undefined
+        Env.Curr c → apply c args []
         -- these two cases would only be valid if we expanded into a Michelson
         -- lambda, however would we ever do that?
         Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
@@ -225,13 +237,38 @@ addExpanded (Protect _ i) = addInstrs i
 
 promoteTopStack = undefined
 
-reserveNames ∷ HasState "count" Word m ⇒ Word → m [Word]
+reserveNames ∷ HasState "count" Word m ⇒ Word → m [Symbol]
 reserveNames i = do
   c ← get @"count"
   put @"count" (i + c)
-  pure [c .. c + i - 1]
+  pure (intern . show <$> [c .. c + i - 1])
 
-apply = undefined
+apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
+apply closure args remainingArgs = do
+  let exactLessThan = do
+        let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
+        traverse_
+          (uncurry name)
+          (reverse (zip toEvalNames args))
+        traverse_
+          (modify @"stack" . uncurry VStack.addName)
+          (zip alreadyEvaledNames remainingArgs)
+  case fromIntegral (length args + length remainingArgs) `compare` Env.left closure of
+    EQ → do
+      -- usage and type doesn't matter here!
+      exactLessThan
+      Env.unFun
+        (Env.fun closure)
+        ((\v → (Ann.Var v, Usage.SNat 1, Env.ty closure)) <$> reverse (Env.argsLeft closure))
+    LT → do
+      exactLessThan
+      -- TODO ∷ make new closure, and apply args to the fun in the closure
+      -- allowing more arguments to come, in a cont style!
+      undefined
+    GT →
+      -- TODO ∷ figure out which arguments go unnamed, name them
+      -- then carry it over to the recursion
+      undefined
 
 --------------------------------------------------------------------------------
 -- Effect Wrangling

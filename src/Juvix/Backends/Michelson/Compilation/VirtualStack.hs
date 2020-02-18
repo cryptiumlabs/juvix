@@ -23,6 +23,8 @@ import qualified Michelson.Untyped as Untyped
 import qualified Michelson.Untyped.Instr as Instr
 import Prelude (error)
 
+-- TODO ∷ consolidate the various recursions into a generic combinator
+
 --------------------------------------------------------------------------------
 -- T operation Type
 --------------------------------------------------------------------------------
@@ -177,6 +179,13 @@ promote n stack =
             --        Maybe have to move this function into utils!?
             a →
               (insts, cons a newStack)
+
+addName ∷ Symbol → Symbol → T lamType → T lamType
+addName toFind toAdd (T stack i) = T (f <$> stack) i
+  where
+    f (VarE x i t, type')
+      | Set.member toFind x = (VarE (Set.insert toAdd x) i t, type')
+    f t = t
 
 nameTop ∷ Symbol → T lamType → T lamType
 nameTop sym t =
