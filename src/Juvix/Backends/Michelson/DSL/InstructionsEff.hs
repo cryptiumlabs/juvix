@@ -277,7 +277,7 @@ apply closure args remainingArgs = do
               Env.fun = Env.Fun $ \args →
                 Env.unFun
                   (Env.fun closure)
-                  (fmap makeVar (reverse captured) <> args)
+                  (args <> fmap makeVar (reverse captured))
             }
 
       consVal con (Env.ty closure)
