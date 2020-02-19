@@ -30,10 +30,14 @@ import Prelude (error)
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst = undefined
 
-addAll ∷ Env.Reduction m ⇒ Types.NewTerm → Types.NewTerm → m Env.Expanded
-addAll instr1 instr2 = add [instr2, instr1]
-
-add, mul, sub, ediv, and, xor, or ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Env.Expanded
+add,
+  mul,
+  sub,
+  ediv,
+  and,
+  xor,
+  or ∷
+    Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
 sub = intGen Instructions.sub (-)
@@ -88,23 +92,24 @@ name symb f@(form, _usage, _type') = do
   pure result
 
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
-primToFargs ∷ Num b ⇒ Types.NewPrim → (Env.Fun, b)
-primToFargs (Types.Constant _) = undefined
-primToFargs (Types.Inst inst) =
+primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
+primToFargs (Types.Constant _) _ = undefined
+primToFargs (Types.Inst inst) ty =
   case inst of
-    Instr.ADD _ → (Env.Fun add, 2)
-    Instr.SUB _ → (Env.Fun sub, 2)
-    Instr.MUL _ → (Env.Fun mul, 2)
-    Instr.EDIV _ → (Env.Fun ediv, 2)
-    Instr.OR {} → (Env.Fun or, 2)
-    Instr.AND _ → (Env.Fun and, 2)
-    Instr.XOR _ → (Env.Fun xor, 2)
+    -- Can't abstract out pattern due to bad forall resolution!
+    Instr.ADD _ → (Env.Fun (add ty), 2)
+    Instr.SUB _ → (Env.Fun (sub ty), 2)
+    Instr.MUL _ → (Env.Fun (mul ty), 2)
+    Instr.EDIV _ → (Env.Fun (ediv ty), 2)
+    Instr.OR {} → (Env.Fun (or ty), 2)
+    Instr.AND _ → (Env.Fun (and ty), 2)
+    Instr.XOR _ → (Env.Fun (xor ty), 2)
 
 appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
 appM form@(t, _u, ty) args =
   case t of
     Ann.Prim p →
-      let (f, lPrim) = primToFargs p
+      let (f, lPrim) = primToFargs p ty
           argsL = length args
        in case argsL `compare` lPrim of
             EQ → Env.unFun f args
@@ -156,6 +161,7 @@ type OnTerm m input result =
   Env.Reduction m ⇒
   Instr.ExpandedOp →
   (input → input → result) →
+  Types.Type →
   [Types.NewTerm] →
   m Env.Expanded
 
@@ -183,7 +189,7 @@ onIntGen op f =
     )
 
 onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Env.Expanded
-onTwoArgs op f instrs = do
+onTwoArgs op f typ instrs = do
   v ← traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
     instr2 : instr1 : _ → do
@@ -199,7 +205,7 @@ onTwoArgs op f instrs = do
             addInstr op
             pure (Env.Expanded op)
       modify @"stack" (VStack.drop 2)
-      consVal res undefined
+      consVal res typ
       pure res
     _ → throw @"compilationError" Types.NotEnoughArguments
 
