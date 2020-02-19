@@ -16,6 +16,7 @@ module Juvix.Backends.Michelson.Compilation.VirtualStack where
 
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
@@ -132,8 +133,10 @@ cons v = ins v f
 nil ∷ T lamType
 nil = mempty
 
-isNil ∷ Eq lamType ⇒ T lamType → Bool
-isNil = (nil ==)
+isNil ∷ T lamType → Bool
+isNil (T (_ : _) _) = False
+isNil (T [] 0) = True
+isNil (T [] _) = False
 
 -- | 'consT', cons on a value v to our representation of the stack
 -- This stack may have more values tha the real one, as we store
@@ -165,13 +168,13 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
-promote ∷ Eq lamType ⇒ Int → T lamType → ([Instr.ExpandedOp], T lamType)
+promote ∷ Int → T lamType → ([Instr.ExpandedOp], T lamType)
 promote _n stack
   | isNil stack = ([], stack)
 promote 0 stack = ([], stack)
 promote n stack =
   let (insts, newStack) = promote (pred n) (cdr stack)
-   in let pushVal v t = Instr.PrimEx (Instr.PUSH "" t v) : insts
+   in let pushVal v t = Instructions.push t v : insts
        in case car stack of
             (Val (ConstE v), t) →
               (pushVal v t, cons (Val FuncResultE, t) newStack)

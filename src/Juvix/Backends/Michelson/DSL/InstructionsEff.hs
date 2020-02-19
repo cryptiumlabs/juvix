@@ -244,7 +244,13 @@ protect inst = do
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
 addExpanded (Protect _ i) = addInstrs i
 
-promoteTopStack = undefined
+promoteTopStack ∷ Env.Instruction m ⇒ Env.Expanded → m Env.Expanded
+promoteTopStack x = do
+  stack ← get @"stack"
+  let (insts, stack') = VStack.promote 1 stack
+  put @"stack" stack'
+  addInstrs insts
+  pure x
 
 reserveNames ∷ HasState "count" Word m ⇒ Word → m [Symbol]
 reserveNames i = do

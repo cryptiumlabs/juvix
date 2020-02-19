@@ -389,6 +389,7 @@ Utility functions used by the Michelson backend.
 - Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[Instructions]]
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]
