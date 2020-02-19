@@ -262,7 +262,7 @@ apply closure args remainingArgs = do
       app
     LT → do
       evalArgsAndName
-      -- TODO ∷ make new closure, and apply args to the fun in the closure
+      -- make new closure, and apply args to the fun in the closure
       -- allowing more arguments to come, in a cont style!
       let remaining = Env.left closure - total_length
 
@@ -283,31 +283,36 @@ apply closure args remainingArgs = do
       consVal con (Env.ty closure)
       pure con
     GT →
-      -- TODO ∷ figure out which arguments go unnamed, name them
+      -- figure out which arguments go unnamed, name them
       -- then carry it over to the recursion
       case fromIntegral (length args) `compare` Env.left closure of
         EQ → do
           evalArgsAndName
           expanded ← app
           recur expanded remainingArgs
-        GT → do
+        LT → do
+          let notRemaining = length args - fromIntegral (Env.left closure)
+              newRemaining = drop notRemaining remainingArgs
           evalArgsAndName
           expanded ← app
-          undefined
+          recur expanded newRemaining
         -- only case where we can't name all the args according to this schema!
-        LT → do
+        GT → do
+          let unNamed = drop (fromIntegral $ Env.left closure) args
+          moreReserved ← reserveNames (fromIntegral (length unNamed))
+          traverseName (zip moreReserved unNamed)
+          traverseName (zip (Env.argsLeft closure) args)
           expanded ← app
-          undefined
+          recur expanded (moreReserved <> remainingArgs)
   where
     evalArgsAndName = do
       let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
-      traverse_
-        (uncurry name)
-        (reverse (zip toEvalNames args))
+      traverseName (zip toEvalNames args)
       traverse_
         (modify @"stack" . uncurry VStack.addName)
         (zip remainingArgs alreadyEvaledNames)
 
+    traverseName = traverse_ (uncurry name) . reverse
     app =
       Env.unFun
         (Env.fun closure)
