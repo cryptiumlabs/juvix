@@ -252,6 +252,13 @@ reserveNames i = do
   put @"count" (i + c)
   pure (intern . show <$> [c .. c + i - 1])
 
+-- TODO ∷ drop extra things from the vstack, mainly
+-- 1. the function we move to the front
+-- 2. the expanded lambda we create
+-- Note that it isn't vital, as these aren't stored in the real Michelson stack
+-- Other things considered:
+-- We don't need to drop the arguments we eval and name, as they should be eaten
+-- by the functions they call with the appropriate usages
 apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
 apply closure args remainingArgs = do
   let total_length = fromIntegral (length args + length remainingArgs)
@@ -313,6 +320,7 @@ apply closure args remainingArgs = do
         (zip remainingArgs alreadyEvaledNames)
 
     traverseName = traverse_ (uncurry name) . reverse
+
     app =
       Env.unFun
         (Env.fun closure)
