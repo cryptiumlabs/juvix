@@ -254,7 +254,8 @@ reserveNames i = do
 
 apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
 apply closure args remainingArgs = do
-  case fromIntegral (length args + length remainingArgs) `compare` Env.left closure of
+  let total_length = fromIntegral (length args + length remainingArgs)
+  case total_length `compare` Env.left closure of
     EQ → do
       -- usage and type doesn't matter here!
       evalArgsAndName
@@ -263,7 +264,24 @@ apply closure args remainingArgs = do
       evalArgsAndName
       -- TODO ∷ make new closure, and apply args to the fun in the closure
       -- allowing more arguments to come, in a cont style!
-      undefined
+      let remaining = Env.left closure - total_length
+
+          (captured, left) = splitAt (fromIntegral total_length) (Env.argsLeft closure)
+
+          con = Env.Curr Env.C
+            { Env.left = remaining,
+              Env.argsLeft = left,
+              Env.captures = foldr Set.insert (Env.captures closure) captured,
+              Env.ty = Env.ty closure,
+              Env.argsApplied = [],
+              Env.fun = Env.Fun $ \args →
+                Env.unFun
+                  (Env.fun closure)
+                  (fmap makeVar (reverse captured) <> args)
+            }
+
+      consVal con (Env.ty closure)
+      pure con
     GT →
       -- TODO ∷ figure out which arguments go unnamed, name them
       -- then carry it over to the recursion
@@ -280,25 +298,30 @@ apply closure args remainingArgs = do
         LT → do
           expanded ← app
           undefined
-    where
-      evalArgsAndName = do
-        let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
-        traverse_
-          (uncurry name)
-          (reverse (zip toEvalNames args))
-        traverse_
-          (modify @"stack" . uncurry VStack.addName)
-          (zip remainingArgs alreadyEvaledNames)
-      app =
-        Env.unFun
-          (Env.fun closure)
-          ((\v → (Ann.Var v, one, Env.ty closure)) <$> reverse (Env.argsLeft closure))
-      recur (Env.Curr c) xs =
-        apply c [] xs
-      recur (Env.Constant _) _ =
-        throw @"compilationError" (Types.InternalFault "apply to non lam")
-      recur (Env.Expanded _) _ =
-        throw @"compilationError" (Types.InternalFault "apply to non lam")
+  where
+    evalArgsAndName = do
+      let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
+      traverse_
+        (uncurry name)
+        (reverse (zip toEvalNames args))
+      traverse_
+        (modify @"stack" . uncurry VStack.addName)
+        (zip remainingArgs alreadyEvaledNames)
+
+    app =
+      Env.unFun
+        (Env.fun closure)
+        (makeVar <$> reverse (Env.argsLeft closure))
+
+    makeVar v = (Ann.Var v, one, Env.ty closure)
+
+    recur (Env.Curr c) xs =
+      apply c [] xs
+    recur (Env.Constant _) _ =
+      throw @"compilationError" (Types.InternalFault "apply to non lam")
+    recur (Env.Expanded _) _ =
+      throw @"compilationError" (Types.InternalFault "apply to non lam")
+
 --------------------------------------------------------------------------------
 -- Effect Wrangling
 --------------------------------------------------------------------------------
