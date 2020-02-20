@@ -2,6 +2,7 @@ module Main
 
 import Data.SortedMap
 import Data.Vect
+import Data.Fin
 
 ||| Account contains the balance of the token.
 Account : Type
@@ -11,23 +12,24 @@ Account = Nat
 Address : Type
 Address = String
 
+sumOfAccounts : SortedMap Address Account -> Nat
+sumOfAccounts accounts = sum $ values accounts
+
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
-record SafeStorage (fixedTotalSupply : Nat) (fixedOwner: Address) where
-    constructor MkSafeStorage
+record Storage where
+    constructor MkStorage
     accounts : SortedMap Address Account
     version : Nat --version of the token standard
-    totalSupply : fixedTotalSupply
+    totalSupply : Fin (sumOfAccounts accounts)
     name : String
     symbol : String
-    owner : fixedOwner
-  
+    owner : Address
+
+--use setter function to set owner?
 data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
-
-sumOfAccounts : SortedMap Address Account -> Nat
-sumOfAccounts accounts = sum $ values accounts
 
 initStorage : Storage
 initStorage =
