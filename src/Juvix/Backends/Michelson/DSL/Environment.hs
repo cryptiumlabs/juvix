@@ -55,27 +55,23 @@ data Curr
         --   To expand
         fun ∷ Fun,
         -- | 'argsLeft' are the arguments that are left on the stack
+        -- This should also contain usage information!
         argsLeft ∷ [Symbol],
-        -- Currently useless as we have no usage information?
-
-        -- | 'argsApplied' are the names of the arguments that have been already applied
-        argsApplied ∷ [Symbol],
         -- | 'left' are the number of arguments left.
         --   This number should be (length 'argsLeft')
         left ∷ Integer,
         -- | 'captures' are the captured arguments in the environment of the function
+        -- This set should also contain usage information for each left
         captures ∷ Set.Set Symbol,
         -- | 'ty' is the type of the partial
         ty ∷ Types.Type
       }
 
 instance Show Curr where
-  show (C _ al aa l c ty) =
+  show (C _ al l c ty) =
     "C "
       <> "{ fun, argsLeft: "
       <> show al
-      <> " argsApplied: "
-      <> show aa
       <> " left: "
       <> show l
       <> " captures: "

@@ -121,8 +121,7 @@ appM form@(t, _u, ty) args =
                       Env.argsLeft = names,
                       Env.left = fromIntegral lPrim,
                       Env.captures = Set.empty,
-                      Env.ty = ty,
-                      Env.argsApplied = []
+                      Env.ty = ty
                     }
               apply constructed args []
             -- this should never happen, due to type checking??
@@ -136,8 +135,7 @@ appM form@(t, _u, ty) args =
               Env.argsLeft = arguments,
               Env.captures = Set.fromList captures,
               Env.left = fromIntegral (length arguments),
-              Env.ty = ty,
-              Env.argsApplied = []
+              Env.ty = ty
             }
        in apply constructed args []
     Ann.Var _ → do
@@ -292,7 +290,6 @@ apply closure args remainingArgs = do
               Env.argsLeft = left,
               Env.captures = foldr Set.insert (Env.captures closure) captured,
               Env.ty = eatType (fromIntegral totalLength) (Env.ty closure),
-              Env.argsApplied = [],
               Env.fun = Env.Fun $ \args →
                 Env.unFun
                   (Env.fun closure)
