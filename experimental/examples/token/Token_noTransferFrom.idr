@@ -13,24 +13,21 @@ Address = String
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
-record Storage where
-    constructor MkStorage
+record SafeStorage (fixedTotalSupply : Nat) (fixedOwner: Address) where
+    constructor MkSafeStorage
     accounts : SortedMap Address Account
     version : Nat --version of the token standard
-    totalSupply : Nat
+    totalSupply : fixedTotalSupply
     name : String
     symbol : String
-    owner : Address
-
+    owner : fixedOwner
+  
 data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
 
-data SafeStorage : Nat -> Address -> Type where
-  Safe : SafeStorage 1000 "qwer"
-
 sumOfAccounts : SortedMap Address Account -> Nat
-sumOfAccounts accounts = sum $ values accounts 
+sumOfAccounts accounts = sum $ values accounts
 
 initStorage : Storage
 initStorage =
