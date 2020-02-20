@@ -103,10 +103,14 @@ newtype MichelsonCompilation a
     (HasReader "debug" Int)
     via Field "debug" () (ReadStatePure (MonadState (ExceptT CompError (State Env))))
 
+type Count m = HasState "count" Word m
+
 type Ops m = HasState "ops" [Types.Op] m
 
+type Stack m = HasState "stack" (VStack.T Curr) m
+
 type Instruction m =
-  ( HasState "stack" (VStack.T Curr) m,
+  ( Stack m,
     Ops m
   )
 
@@ -114,7 +118,7 @@ type Error = HasThrow "compilationError" CompError
 
 type Primitive m =
   ( Instruction m,
-    HasState "count" Word m
+    Count m
   )
 
 type Reduction m =

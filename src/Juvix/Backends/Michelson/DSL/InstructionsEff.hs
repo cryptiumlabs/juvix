@@ -28,7 +28,17 @@ import Prelude (error)
 --------------------------------------------------------------------------------
 
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
-inst = undefined
+inst (t, _usage, ty) =
+  case t of
+    Ann.Var symbol → var symbol
+    Ann.LamM c a b → let v = (lambda c a b ty) in v <$ consVal v ty
+    Ann.AppM fun a → appM fun a
+    Ann.Prim prim' →
+      case prim' of
+        Types.Inst _ → constructPrim prim' ty
+        Types.Constant m → do
+          consVal (Env.Constant m) ty
+          pure (Env.Constant m)
 
 add,
   mul,
@@ -52,8 +62,8 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
-lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Curr
-lambda captures arguments body type' = Env.C
+lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Expanded
+lambda captures arguments body type' = Env.Curr Env.C
   { Env.captures = Set.fromList captures,
     Env.argsLeft = arguments,
     Env.left = fromIntegral (length arguments),
@@ -102,7 +112,7 @@ name symb f@(form, _usage, _type') = do
 
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
 primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
-primToFargs (Types.Constant (V.ValueLambda lam)) ty =
+primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
   case inst of
@@ -120,48 +130,33 @@ primToFargs (Types.Constant _) _ =
 appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
 appM form@(t, _u, ty) args =
   case t of
+    -- We could remove this special logic, however it would
+    -- result in inefficient Michelson!
     Ann.Prim p →
       let (f, lPrim) = primToFargs p ty
           argsL = length args
        in case argsL `compare` lPrim of
             EQ → Env.unFun f args
             LT → do
-              names ← reserveNames (fromIntegral lPrim)
-              -- TODO ∷ set the usage of the arguments to 1
-              let constructed = Env.C
-                    { Env.fun = f,
-                      Env.argsLeft = names,
-                      Env.left = fromIntegral lPrim,
-                      Env.captures = Set.empty,
-                      Env.ty = ty
-                    }
-              apply constructed args []
-            -- this should never happen, due to type checking??
+              form ← inst form
+              applyExpanded form args
             GT →
               throw
                 @"compilationError"
                 (Types.InternalFault "Michelson call with too many args")
-    Ann.LamM captures arguments body →
-      let constructed = Env.C
-            { Env.fun = Env.Fun (const (inst body)),
-              Env.argsLeft = arguments,
-              Env.captures = Set.fromList captures,
-              Env.left = fromIntegral (length arguments),
-              Env.ty = ty
-            }
-       in apply constructed args []
-    Ann.Var _ → do
-      v ← inst form
-      case v of
-        Env.Curr c → apply c args []
-        -- these two cases would only be valid if we expanded into a Michelson
-        -- lambda, however would we ever do that?
-        Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
-        Env.Expanded _ → throw @"compilationError" (Types.InternalFault "App on Michelson")
-    -- Preconditition violated
-    Ann.AppM {} → throw @"compilationError" (Types.InternalFault "App after App")
-    Ann.App {} → throw @"compilationError" (Types.InternalFault "No Single Apps")
-    Ann.Lam {} → throw @"compilationError" (Types.InternalFault "No Single Lambdas")
+    _ → do
+      form ← inst form
+      applyExpanded form args
+
+applyExpanded ∷ Env.Reduction m ⇒ Env.Expanded → [Types.NewTerm] → m Env.Expanded
+applyExpanded expanded args = do
+  modify @"stack" (VStack.drop 1)
+  case expanded of
+    Env.Curr c → apply c args []
+    -- these two cases would only be valid if we expanded into a Michelson
+    -- lambda, however would we ever do that?
+    Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
+    Env.Expanded _ → throw @"compilationError" (Types.InternalFault "App on Michelson")
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -401,6 +396,26 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 --------------------------------------------------------------------------------
 -- Misc
 --------------------------------------------------------------------------------
+-- let (f, lPrim) = primToFargs p ty
+--     argsL = length args
+--   names ← reserveNames (fromIntegral lPrim)
+--   apply constructed args []
+-- -- this should never happen, due to type checking??
+
+constructPrim ∷ (Env.Stack m, Env.Count m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
+constructPrim prim ty = do
+  let (f, lPrim) = primToFargs prim ty
+  names ← reserveNames lPrim
+  -- TODO ∷ set the usage of the arguments to 1
+  let c = Env.Curr $ Env.C
+        { Env.fun = f,
+          Env.argsLeft = names,
+          Env.left = fromIntegral lPrim,
+          Env.captures = Set.empty,
+          Env.ty = ty
+        }
+  consVal c ty
+  pure c
 
 allConstants ∷ [Env.Expanded] → Bool
 allConstants = all f
