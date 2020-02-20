@@ -21,7 +21,7 @@ record Storage where
     constructor MkStorage
     accounts : SortedMap Address Account
     version : Nat --version of the token standard
-    totalSupply : Fin (sumOfAccounts accounts)
+    totalSupply : Fin (sumOfAccounts accounts + 1)
     name : String
     symbol : String
     owner : Address
