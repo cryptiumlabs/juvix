@@ -52,6 +52,15 @@ ediv =
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
 
+lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Curr
+lambda captures arguments body type' = Env.C
+  { Env.captures = Set.fromList captures,
+    Env.argsLeft = arguments,
+    Env.left = fromIntegral (length arguments),
+    Env.ty = type',
+    Env.fun = Env.Fun (const (inst body))
+  }
+
 var ∷ (Env.Instruction m, Env.Error m) ⇒ Symbol → m Env.Expanded
 var symb = do
   stack ← get @"stack"
@@ -93,7 +102,8 @@ name symb f@(form, _usage, _type') = do
 
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
 primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
-primToFargs (Types.Constant _) _ = undefined
+primToFargs (Types.Constant (V.ValueLambda lam)) ty =
+  (undefined, 1)
 primToFargs (Types.Inst inst) ty =
   case inst of
     -- Can't abstract out pattern due to bad forall resolution!
@@ -104,6 +114,8 @@ primToFargs (Types.Inst inst) ty =
     Instr.OR {} → (Env.Fun (or ty), 2)
     Instr.AND _ → (Env.Fun (and ty), 2)
     Instr.XOR _ → (Env.Fun (xor ty), 2)
+primToFargs (Types.Constant _) _ =
+  error "Tried to apply a Michelson Constant"
 
 appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
 appM form@(t, _u, ty) args =
