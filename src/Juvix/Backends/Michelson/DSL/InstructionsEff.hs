@@ -298,24 +298,43 @@ apply closure args remainingArgs = do
                   (Env.fun closure)
                   (args <> fmap makeVar (reverse captured))
             }
-
+      -- TODO ∷ update type
       consVal con (Env.ty closure)
       pure con
+    -- So in this case, we have
+    --  | args + remainingArgs | > left/|argsLeft|
+    -- We thus need to determine, the args left to eval, do we have enough
+    -- names for them?
+    -- If so then we can just name them all without reserving any extra names
+    -- however if we can't then we need to reserve names first then eval!
     GT →
       -- figure out which arguments go unnamed, name them
       -- then carry it over to the recursion
       case fromIntegral (length args) `compare` Env.left closure of
+        -- This case we have | args | = left\|argsLeft|, so we
+        -- can just eval the args and name them, we know, none of the
+        -- remaining args get a new name nor are applied, so carry over to
+        -- next application
         EQ → do
           evalArgsAndName
           expanded ← app
           recur expanded remainingArgs
+        -- Here we have | args | < left, so we know we have enough names
+        -- to name them all, there will be a few names that spill over to
+        -- the remaining args, this number is `left - | args |`
+        -- Example ∷ argsLeft = [_1, _2]. args = [3], remaining = [_4,_5, ...]
+        -- evalArgsAndName ==> [_1 = 3, _2 = _4], but we have [_5, ... remaining
+        -- drop (2 - 1) [_4, _5, ...] = [_5 ...]
         LT → do
-          let notRemaining = length args - fromIntegral (Env.left closure)
+          let notRemaining = fromIntegral (Env.left closure) - length args
               newRemaining = drop notRemaining remainingArgs
           evalArgsAndName
           expanded ← app
           recur expanded newRemaining
-        -- only case where we can't name all the args according to this schema!
+        -- In this case, we lack enough names for arguments since | args | > left
+        -- So we need to see how many arguments are left, this is `| args | - left`
+        -- we then need to reserve that many, eval right to left, then append the args
+        -- left to the remaining args, since they too need to be applied
         GT → do
           let unNamed = drop (fromIntegral $ Env.left closure) args
           moreReserved ← reserveNames (fromIntegral (length unNamed))
