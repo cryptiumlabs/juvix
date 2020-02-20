@@ -46,6 +46,12 @@ add,
   ediv,
   and,
   xor,
+  neq,
+  eq,
+  lt,
+  gt,
+  le,
+  ge,
   or ∷
     Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
 add = intGen Instructions.add (+)
@@ -61,6 +67,12 @@ ediv =
         0 → V.ValueNone
         y → V.ValueSome (V.ValuePair (V.ValueInt (x `div` y)) (V.ValueInt (rem x y)))
     )
+eq = onInt1 Instructions.eq (boolToVal . (== 0))
+neq = onInt1 Instructions.neq (boolToVal . (/= 0))
+le = onInt1 Instructions.le (boolToVal . (<= 0))
+lt = onInt1 Instructions.lt (boolToVal . (< 0))
+gt = onInt1 Instructions.ge (boolToVal . (>= 0))
+ge = onInt1 Instructions.gt (boolToVal . (> 0))
 
 lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Expanded
 lambda captures arguments body type' = Env.Curr Env.C
@@ -162,15 +174,21 @@ applyExpanded expanded args = do
 -- Reduction Helpers for Main functionality
 --------------------------------------------------------------------------------
 
-type OnTerm m input result =
+type OnTerm m f =
   Env.Reduction m ⇒
   Instr.ExpandedOp →
-  (input → input → result) →
+  f →
   Types.Type →
   [Types.NewTerm] →
   m Env.Expanded
 
-onBoolGen ∷ OnTerm m Bool Bool
+type OnTerm2 m input result =
+  OnTerm m (input → input → result)
+
+type OnTerm1 m input result =
+  OnTerm m (input → result)
+
+onBoolGen ∷ OnTerm2 m Bool Bool
 onBoolGen op f =
   onTwoArgs
     op
@@ -180,10 +198,19 @@ onBoolGen op f =
          in Env.Constant (boolToVal (f i1 i2))
     )
 
-intGen ∷ OnTerm m Integer Integer
+intGen ∷ OnTerm2 m Integer Integer
 intGen op f = onIntGen op (\x y → V.ValueInt (f x y))
 
-onIntGen ∷ OnTerm m Integer (V.Value' Types.Op)
+onInt1 ∷ OnTerm1 m Integer (V.Value' Types.Op)
+onInt1 op f =
+  onOneArgs
+    op
+    ( \instr1 →
+        let V.ValueInt i1 = instr1
+         in Env.Constant (f i1)
+    )
+
+onIntGen ∷ OnTerm2 m Integer (V.Value' Types.Op)
 onIntGen op f =
   onTwoArgs
     op
@@ -193,7 +220,7 @@ onIntGen op f =
          in Env.Constant (f i1 i2)
     )
 
-onTwoArgs ∷ OnTerm m (V.Value' Types.Op) Env.Expanded
+onTwoArgs ∷ OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
   v ← traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
@@ -207,6 +234,25 @@ onTwoArgs op f typ instrs = do
              in pure (f i1 i2)
           | otherwise → do
             traverse_ addExpanded instrs
+            addInstr op
+            pure (Env.Expanded op)
+      modify @"stack" (VStack.drop 2)
+      consVal res typ
+      pure res
+    _ → throw @"compilationError" Types.NotEnoughArguments
+
+onOneArgs ∷ OnTerm1 m (V.Value' Types.Op) Env.Expanded
+onOneArgs op f typ instrs = do
+  v ← traverse (protect . (inst >=> promoteTopStack)) instrs
+  case v of
+    instr1 : _ → do
+      res ←
+        if
+          | allConstants [val instr1] →
+            let Env.Constant i1 = val instr1
+             in pure (f i1)
+          | otherwise → do
+            addExpanded instr1
             addInstr op
             pure (Env.Expanded op)
       modify @"stack" (VStack.drop 2)
@@ -396,11 +442,6 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 --------------------------------------------------------------------------------
 -- Misc
 --------------------------------------------------------------------------------
--- let (f, lPrim) = primToFargs p ty
---     argsL = length args
---   names ← reserveNames (fromIntegral lPrim)
---   apply constructed args []
--- -- this should never happen, due to type checking??
 
 constructPrim ∷ (Env.Stack m, Env.Count m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
 constructPrim prim ty = do

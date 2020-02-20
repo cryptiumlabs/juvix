@@ -166,6 +166,9 @@ le = Instr.PrimEx (Instr.LE "")
 ge ∷ Instr.ExpandedOp
 ge = Instr.PrimEx (Instr.GE "")
 
+gt ∷ Instr.ExpandedOp
+gt = Instr.PrimEx (Instr.GT "")
+
 int ∷ Instr.ExpandedOp
 int = Instr.PrimEx (Instr.INT "")
 
