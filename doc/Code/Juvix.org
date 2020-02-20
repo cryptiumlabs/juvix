@@ -422,6 +422,7 @@ Utility functions used by the Michelson backend.
   + [[ErasedAnn/Types]]
   + [[Usage]]
   + [[Library]]
+  + [[Library]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]

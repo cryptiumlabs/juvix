@@ -17,7 +17,8 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (and, or, xor)
+import Juvix.Library hiding (abs, and, or, xor)
+import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as Untyped
 import qualified Michelson.Untyped.Value as V
@@ -52,6 +53,9 @@ add,
   gt,
   le,
   ge,
+  neg,
+  abs,
+  isNat,
   or ∷
     Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
 add = intGen Instructions.add (+)
@@ -73,6 +77,12 @@ le = onInt1 Instructions.le (boolToVal . (<= 0))
 lt = onInt1 Instructions.lt (boolToVal . (< 0))
 gt = onInt1 Instructions.ge (boolToVal . (>= 0))
 ge = onInt1 Instructions.gt (boolToVal . (> 0))
+neg = intGen1 Instructions.neg negate
+abs = intGen1 Instructions.abs Juvix.Library.abs
+isNat =
+  onInt1
+    Instructions.isNat
+    (\x → if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
 lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Expanded
 lambda captures arguments body type' = Env.Curr Env.C
@@ -132,10 +142,19 @@ primToFargs (Types.Inst inst) ty =
     Instr.ADD _ → (Env.Fun (add ty), 2)
     Instr.SUB _ → (Env.Fun (sub ty), 2)
     Instr.MUL _ → (Env.Fun (mul ty), 2)
-    Instr.EDIV _ → (Env.Fun (ediv ty), 2)
     Instr.OR {} → (Env.Fun (or ty), 2)
     Instr.AND _ → (Env.Fun (and ty), 2)
     Instr.XOR _ → (Env.Fun (xor ty), 2)
+    Instr.EQ {} → (Env.Fun (eq ty), 1)
+    Instr.NEQ _ → (Env.Fun (neq ty), 1)
+    Instr.LT {} → (Env.Fun (lt ty), 1)
+    Instr.LE {} → (Env.Fun (le ty), 1)
+    Instr.GE {} → (Env.Fun (ge ty), 1)
+    Instr.GT {} → (Env.Fun (gt ty), 1)
+    Instr.NEG _ → (Env.Fun (neg ty), 1)
+    Instr.ABS _ → (Env.Fun (abs ty), 1)
+    Instr.EDIV _ → (Env.Fun (ediv ty), 2)
+    Instr.ISNAT _ → (Env.Fun (isNat ty), 1)
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 
@@ -200,6 +219,9 @@ onBoolGen op f =
 
 intGen ∷ OnTerm2 m Integer Integer
 intGen op f = onIntGen op (\x y → V.ValueInt (f x y))
+
+intGen1 ∷ OnTerm1 m Integer Integer
+intGen1 op f = onInt1 op (\x → V.ValueInt (f x))
 
 onInt1 ∷ OnTerm1 m Integer (V.Value' Types.Op)
 onInt1 op f =
