@@ -26,6 +26,12 @@ data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
 
+data SafeStorage : Nat -> Address -> Type where
+  Safe : SafeStorage 1000 "qwer"
+
+sumOfAccounts : SortedMap Address Account -> Nat
+sumOfAccounts accounts = sum $ values accounts 
+
 initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" 1000 empty) 1 1000 "Cool" "C" "qwer"
