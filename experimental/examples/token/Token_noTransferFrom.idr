@@ -15,6 +15,11 @@ Address = String
 sumOfAccounts : SortedMap Address Account -> Nat
 sumOfAccounts accounts = sum $ values accounts
 
+--a sorted map (of accounts) indexed over the sum of all accounts
+data FixedSortedMap : Nat -> Type where
+  Empty : FixedSortedMap 0
+  Insert :  (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t + v) --TODO maybe wrong because insert could also update!
+
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
 record Storage where
@@ -25,16 +30,16 @@ record Storage where
     name : String
     symbol : String
     owner : Address
+--TODO fix the problem that there is no setter function for the dependent fields.
 
---use setter function to set owner?
 data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
-
+{-
 initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" 1000 empty) 1 1000 "Cool" "C" "qwer"
-
+-}
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
 total getAccount : (address : Address) -> SortedMap Address Account -> Nat
@@ -64,26 +69,3 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
--- **********End of contract without safety checks**********
-
--- Below code is optional,
--- running above functions (e.g., performTransfer) via provenAction adds safety listed in invariants.
-||| invariants checks whether certain invariants hold and returns True if they do.
-||| @oldStorage the storage before running the function
-||| @newStorage the storage after running the function
-invariants : (oldStorage : Storage) -> (newStorage : Storage) -> Bool
-invariants oldS newS =
- (totalSupply oldS == totalSupply newS) && --totalSupply conserved
- (owner oldS == owner newS) --the owner of the token contract is unchanged
-
-||| provenTotalSupplyAction checks that totalSupply is conserved from running the input function.
-||| @fn the input function (e.g., performTransfer) and all its input arguments except the storage
-||| @storage the storage input to fn
-provenAction : (fn : (Storage -> Either Error Storage)) -> (storage : Storage) -> Either Error Storage
-provenAction fn storage =
- let result = fn storage in
- case result of
-   Left _ => result
-   Right newStorage =>
-     if invariants storage newStorage then result
-     else Left InvariantsDoNotHold
