@@ -273,8 +273,8 @@ reserveNames i = do
 -- by the functions they call with the appropriate usages
 apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
 apply closure args remainingArgs = do
-  let total_length = fromIntegral (length args + length remainingArgs)
-  case total_length `compare` Env.left closure of
+  let totalLength = fromIntegral (length args + length remainingArgs)
+  case totalLength `compare` Env.left closure of
     EQ → do
       -- usage and type doesn't matter here!
       evalArgsAndName
@@ -283,24 +283,24 @@ apply closure args remainingArgs = do
       evalArgsAndName
       -- make new closure, and apply args to the fun in the closure
       -- allowing more arguments to come, in a cont style!
-      let remaining = Env.left closure - total_length
+      let remaining = Env.left closure - totalLength
 
-          (captured, left) = splitAt (fromIntegral total_length) (Env.argsLeft closure)
+          (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
 
-          con = Env.Curr Env.C
+          con = Env.C
             { Env.left = remaining,
               Env.argsLeft = left,
               Env.captures = foldr Set.insert (Env.captures closure) captured,
-              Env.ty = Env.ty closure,
+              Env.ty = eatType (fromIntegral totalLength) (Env.ty closure),
               Env.argsApplied = [],
               Env.fun = Env.Fun $ \args →
                 Env.unFun
                   (Env.fun closure)
                   (args <> fmap makeVar (reverse captured))
             }
-      -- TODO ∷ update type
-      consVal con (Env.ty closure)
-      pure con
+
+      consVal (Env.Curr con) (Env.ty con)
+      pure (Env.Curr con)
     -- So in this case, we have
     --  | args + remainingArgs | > left/|argsLeft|
     -- We thus need to determine, the args left to eval, do we have enough
@@ -428,3 +428,8 @@ consVar symb result usage type' =
 
 typeToPrimType ∷ Types.Type → Untyped.Type
 typeToPrimType = undefined
+
+eatType ∷ Natural → Types.Type → Types.Type
+eatType 0 t = t
+eatType x (Ann.Pi _ _ a) = eatType (pred x) a
+eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
