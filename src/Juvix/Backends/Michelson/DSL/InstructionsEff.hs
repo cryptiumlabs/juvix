@@ -32,7 +32,7 @@ inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst (t, _usage, ty) =
   case t of
     Ann.Var symbol → var symbol
-    Ann.LamM c a b → let v = (lambda c a b ty) in v <$ consVal v ty
+    Ann.LamM c a b → let v = lambda c a b ty in v <$ consVal v ty
     Ann.AppM fun a → appM fun a
     Ann.Prim prim' →
       case prim' of
