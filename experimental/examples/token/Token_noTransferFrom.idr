@@ -1,6 +1,6 @@
 module Main
 
-import Data.SortedMap
+import SumSortedMap
 import Data.Vect
 import Data.Fin
 
@@ -16,13 +16,12 @@ sumOfAccounts : SortedMap Address Account -> Nat
 sumOfAccounts accounts = sum $ values accounts
 
 --a sorted map (of accounts) indexed over the sum of all accounts
-data FixedSortedMap : Nat -> Type where
-  Empty : FixedSortedMap 0
-  NonEmpty : FixedSortedMap n
-
+data FixedSortedMap : (s : Nat) -> (k : Type) -> (v : Type) -> Type where
+  Empty : Ord k => FixedSortedMap Z k v
+  M : (o : Ord k) => (n:Nat) -> Tree n k v o -> FixedSortedMap ?canitakevsomehow k v
+{-
 add :  (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t + v) --TODO maybe wrong because insert could also update!
-add k v Empty = insert k v empty
-add k v
+add k v Empty =
 delete : (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t - v)
 
 ||| The storage has type Storage which is a record with fields accounts,
@@ -40,11 +39,11 @@ record Storage where
 data Error = NotEnoughBalance
            | FailedToAuthenticate
            | InvariantsDoNotHold
-{-
+
 initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" 1000 empty) 1 1000 "Cool" "C" "qwer"
--}
+
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
 total getAccount : (address : Address) -> SortedMap Address Account -> Nat
@@ -74,3 +73,5 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
+
+-}

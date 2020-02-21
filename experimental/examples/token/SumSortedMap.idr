@@ -1,8 +1,8 @@
 module SumSortedMap
-||| A sorted map indexed with the sum of v (v is account balances)
-private
-data Tree : (sumOfv : Nat) -> Nat -> (k : Type) -> (v : Nat) -> Ord k -> Type where
-  Leaf : k -> v -> Tree v Z k v o
+
+public export
+data Tree : Nat -> (k : Type) -> Type -> Ord k -> Type where
+  Leaf : k -> v -> Tree Z k v o
   Branch2 : Tree n k v o -> k -> Tree n k v o -> Tree (S n) k v o
   Branch3 : Tree n k v o -> k -> Tree n k v o -> k -> Tree n k v o -> Tree (S n) k v o
 
