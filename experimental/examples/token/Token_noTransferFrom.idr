@@ -19,10 +19,11 @@ sumOfAccounts accounts = sum $ values accounts
 data FixedSortedMap : (s : Nat) -> (k : Type) -> (v : Type) -> Type where
   Empty : Ord k => FixedSortedMap Z k v
   M : (o : Ord k) => (n:Nat) -> Tree n k v o -> FixedSortedMap ?canitakevsomehow k v
+
+add :  (k : Address) -> (v : Account) -> FixedSortedMap s Address Account -> FixedSortedMap (s + v) Address Account --TODO maybe wrong because insert could also update!
+add k v Empty = M 0 (Leaf k v)
 {-
-add :  (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t + v) --TODO maybe wrong because insert could also update!
-add k v Empty =
-delete : (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t - v)
+delete : (k : Address) -> (v : Account) -> FixedSortedMap t -> FixedSortedMap (t - v)
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
@@ -30,7 +31,7 @@ record Storage where
     constructor MkStorage
     version : Nat --version of the token standard
     totalSupply : Nat
-    accounts : FixedSortedMap totalSupply
+    accounts : FixedSortedMap totalSupply Address Account
     name : String
     symbol : String
     owner : Address
