@@ -18,15 +18,20 @@ sumOfAccounts accounts = sum $ values accounts
 --a sorted map (of accounts) indexed over the sum of all accounts
 data FixedSortedMap : Nat -> Type where
   Empty : FixedSortedMap 0
-  Insert :  (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t + v) --TODO maybe wrong because insert could also update!
+  NonEmpty : FixedSortedMap n
+
+add :  (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t + v) --TODO maybe wrong because insert could also update!
+add k v Empty = insert k v empty
+add k v
+delete : (k : Address) -> (v : Nat) -> FixedSortedMap t -> FixedSortedMap (t - v)
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
 record Storage where
     constructor MkStorage
-    accounts : SortedMap Address Account
     version : Nat --version of the token standard
-    totalSupply : Fin (sumOfAccounts accounts + 1)
+    totalSupply : Nat
+    accounts : FixedSortedMap totalSupply
     name : String
     symbol : String
     owner : Address
