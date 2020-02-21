@@ -13,7 +13,7 @@ import Prelude (Show (..))
 data Env
   = Env
       { -- | The Virtual stack that mimics the real Michelson stack.
-        stack ∷ VStack.T Curr,
+        stack ∷ VStack.T Curried,
         -- | Information during Compilation.
         compilationLog ∷ [Types.CompilationLog],
         -- | The Operations for the Michelson Contract.
@@ -39,7 +39,7 @@ data Expanded
   = Constant (V.Value' Types.Op)
   | Expanded (Instr.ExpandedOp)
   | -- | Curr is a stand in for lambda or curry
-    Curr Curr
+    Curr Curried
   deriving (Show)
 
 newtype Fun = Fun (∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded)
@@ -49,7 +49,7 @@ unFun (Fun f) = f
 
 -- TODO ∷ have usage information stored with the args?
 -- May be fine without, as the terms we take ourselves should know their usage?
-data Curr
+data Curried
   = C
       { -- | The function itself that we will call when we have enough arguments
         --   To expand
@@ -67,7 +67,7 @@ data Curr
         ty ∷ Types.Type
       }
 
-instance Show Curr where
+instance Show Curried where
   show (C _ al l c ty) =
     "C "
       <> "{ fun, argsLeft: "
@@ -88,7 +88,7 @@ newtype MichelsonCompilation a
     )
     via WriterLog (Field "compilationLog" () (MonadState (ExceptT CompError (State Env))))
   deriving
-    (HasState "stack" (VStack.T Curr))
+    (HasState "stack" (VStack.T Curried))
     via Field "stack" () (MonadState (ExceptT CompError (State Env)))
   deriving
     (HasState "ops" [Types.Op])
@@ -107,7 +107,7 @@ type Count m = HasState "count" Word m
 
 type Ops m = HasState "ops" [Types.Op] m
 
-type Stack m = HasState "stack" (VStack.T Curr) m
+type Stack m = HasState "stack" (VStack.T Curried) m
 
 type Instruction m =
   ( Stack m,

@@ -160,24 +160,20 @@ primToFargs (Types.Constant _) _ =
 
 appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
 appM form@(t, _u, ty) args =
-  case t of
-    -- We could remove this special logic, however it would
-    -- result in inefficient Michelson!
-    Ann.Prim p →
-      let (f, lPrim) = primToFargs p ty
-          argsL = length args
-       in case argsL `compare` lPrim of
-            EQ → Env.unFun f args
-            LT → do
-              form ← inst form
-              applyExpanded form args
-            GT →
-              throw
-                @"compilationError"
-                (Types.InternalFault "Michelson call with too many args")
-    _ → do
-      form ← inst form
-      applyExpanded form args
+  let app = inst form >>= flip applyExpanded args
+   in case t of
+        -- We could remove this special logic, however it would
+        -- result in inefficient Michelson!
+        Ann.Prim p →
+          let (f, lPrim) = primToFargs p ty
+           in case length args `compare` lPrim of
+                EQ → Env.unFun f args
+                LT → app
+                GT →
+                  throw
+                    @"compilationError"
+                    (Types.InternalFault "Michelson call with too many args")
+        _ → app
 
 applyExpanded ∷ Env.Reduction m ⇒ Env.Expanded → [Types.NewTerm] → m Env.Expanded
 applyExpanded expanded args = do
@@ -344,7 +340,7 @@ reserveNames i = do
 -- Other things considered:
 -- We don't need to drop the arguments we eval and name, as they should be eaten
 -- by the functions they call with the appropriate usages
-apply ∷ Env.Reduction m ⇒ Env.Curr → [Types.NewTerm] → [Symbol] → m Env.Expanded
+apply ∷ Env.Reduction m ⇒ Env.Curried → [Types.NewTerm] → [Symbol] → m Env.Expanded
 apply closure args remainingArgs = do
   let totalLength = fromIntegral (length args + length remainingArgs)
   case totalLength `compare` Env.left closure of
@@ -487,12 +483,12 @@ allConstants = all f
     f (Env.Expanded _) = False
     f (Env.Curr {}) = True
 
-expandedToStack ∷ Env.Expanded → VStack.Val Env.Curr
+expandedToStack ∷ Env.Expanded → VStack.Val Env.Curried
 expandedToStack (Env.Constant v) = VStack.ConstE v
 expandedToStack (Env.Expanded _) = VStack.FuncResultE
 expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
 
-consVal ∷ HasState "stack" (VStack.T Env.Curr) m ⇒ Env.Expanded → Types.Type → m ()
+consVal ∷ Env.Stack m ⇒ Env.Expanded → Types.Type → m ()
 consVal result type' =
   modify @"stack" $
     VStack.cons
@@ -502,7 +498,7 @@ consVal result type' =
       )
 
 consVar ∷
-  HasState "stack" (VStack.T Env.Curr) m ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
+  Env.Stack m ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
 consVar symb result usage type' =
   modify @"stack" $
     VStack.cons
