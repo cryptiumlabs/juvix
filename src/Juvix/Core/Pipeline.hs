@@ -11,7 +11,8 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Core.Usage
 import Juvix.Library
 
--- For interaction net evaluation, includes elementary affine check, requires MonadIO for Z3.
+-- For interaction net evaluation, includes elementary affine check
+-- , requires MonadIO for Z3.
 typecheckAffineErase ∷
   ∀ primTy primVal m.
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
@@ -30,7 +31,8 @@ typecheckAffineErase ∷
 typecheckAffineErase term usage ty = do
   -- First typecheck & generate erased core.
   ((erased, _), assignment) ← typecheckErase term usage ty
-  -- Fetch the parameterisation, needed for EAC inference (TODO: get rid of this dependency).
+  -- Fetch the parameterisation, needed for EAC inference
+  -- TODO ∷ get rid of this dependency.
   parameterisation ← ask @"parameterisation"
   -- Then invoke Z3 to check elementary-affine-ness.
   start ← liftIO unixTime
@@ -68,17 +70,17 @@ typecheckErase ∷
   m ((EC.Term primVal, EC.Type primTy), EC.TypeAssignment primTy)
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
-  parameterisation ← ask @"parameterisation"
+  param ← ask @"parameterisation"
   -- First convert HR to IR.
   let irTerm = Translate.hrToIR term
   let irType = Translate.hrToIR ty
   tell @"log" [Types.LogHRtoIR term irTerm]
   tell @"log" [Types.LogHRtoIR ty irType]
-  let (Right irTypeValue, _) = IR.exec (IR.evalTerm parameterisation irType IR.initEnv)
+  let (Right irTypeValue, _) = IR.exec (IR.evalTerm param irType IR.initEnv)
   -- Typecheck & return accordingly.
-  case fst (IR.exec (IR.typeTerm parameterisation 0 [] irTerm (usage, irTypeValue))) of
+  case fst (IR.exec (IR.typeTerm param 0 [] irTerm (usage, irTypeValue))) of
     Right () → do
-      case Erasure.erase parameterisation term usage ty of
+      case Erasure.erase param term usage ty of
         Right res → pure res
         Left err → throw @"error" (Types.ErasureError err)
     Left err → throw @"error" (Types.TypecheckerError (Text.pack (show err)))

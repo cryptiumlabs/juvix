@@ -36,7 +36,8 @@ data NumPort
 -- Rewrite REL into tagless final, so we aren't memory
 -- wasting on this silly tag, just pass in the function!
 
--- | REL: a type that displays whether we are linking from an old node or just adding a new link
+-- | REL: a type that displays whether we are linking
+-- from an old node or just adding a new link
 data REL a
   = Link a
   | ReLink Node PortType
@@ -122,7 +123,8 @@ class Network net where
   delNodes ∷ NetState (net a) m ⇒ [Node] → m ()
 
   -- TODO ∷ remove deleteRewire, add neighbors, and move auxFromGraph to here!
-  -- TODO ∷ make a helper function that does most of deleteRewire, just send in neighbors
+  -- TODO ∷ make a helper function that does most of deleteRewire,
+  --        just send in neighbors
   deleteRewire ∷ NetState (net a) m ⇒ [Node] → [Node] → m ()
 
   deleteEdge ∷ NetState (net a) m ⇒ (Node, PortType) → (Node, PortType) → m ()
@@ -153,7 +155,8 @@ linkAll (RELAuxiliary3 {primary, node, auxiliary1, auxiliary2, auxiliary3}) =
     (\(t, nt) → linkHelper t nt node)
     [(primary, Prim), (auxiliary1, Aux1), (auxiliary2, Aux2), (auxiliary3, Aux3)]
 
-linkHelper ∷ (Network net, NetState (net a) m) ⇒ REL NumPort → PortType → Node → m ()
+linkHelper ∷
+  (Network net, NetState (net a) m) ⇒ REL NumPort → PortType → Node → m ()
 linkHelper rel nodeType node =
   case rel of
     Link (Port portType node1) → link (node, nodeType) (node1, portType)
@@ -162,13 +165,16 @@ linkHelper rel nodeType node =
 
 -- | rewire is used to wire two auxiliary nodes together
 -- when the main nodes annihilate each other
-rewire ∷ (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
+rewire ∷
+  (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
 rewire (a, pa) (b, pb) = do
   edge ← findEdge (b, pb)
   traverse_ (relink (a, pa)) edge
 
--- post condition, must delete the old node passed after the set of transitions are done!
-relink ∷ (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
+-- post condition, must delete the old node passed
+-- after the set of transitions are done!
+relink ∷
+  (Network net, NetState (net a) m) ⇒ (Node, PortType) → (Node, PortType) → m ()
 relink old new = do
   findEdge old >>= \case
     Just portToRelinkTo → link new portToRelinkTo

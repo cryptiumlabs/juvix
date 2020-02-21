@@ -14,7 +14,8 @@ module Juvix.Interpreter.InteractionNet.Backends.Env where
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Library
 
--- | Info Stores diagnostic data on how much memory a particular graph reduction uses
+-- | Info Stores diagnostic data on how much memory
+-- a particular graph reduction uses
 data Info
   = Info
       { memoryAllocated ∷ Integer,

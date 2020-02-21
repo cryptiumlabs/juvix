@@ -1,11 +1,11 @@
 module Juvix.Core.IRAnn.Erasure where
 
-import Juvix.Core.IR.TransformExt
+import qualified Juvix.Core.IR.TransformExt as Trans
 import qualified Juvix.Core.IR.Types as IR
-import Juvix.Core.IRAnn.Types
+import qualified Juvix.Core.IRAnn.Types as IRAnn
 
-eraseTerm ∷ ∀ primTy primVal. Term primTy primVal → IR.Term primTy primVal
-eraseTerm = extForgetT
+eraseTerm ∷ ∀ primTy primVal. IRAnn.Term primTy primVal → IR.Term primTy primVal
+eraseTerm = Trans.extForgetT
 
-eraseElim ∷ ∀ primTy primVal. Elim primTy primVal → IR.Elim primTy primVal
-eraseElim = extForgetE
+eraseElim ∷ ∀ primTy primVal. IRAnn.Elim primTy primVal → IR.Elim primTy primVal
+eraseElim = Trans.extForgetE

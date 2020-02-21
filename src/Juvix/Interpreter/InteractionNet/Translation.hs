@@ -195,7 +195,8 @@ astToNet parameterisation bohm customSymMap = net'
       (numBound, portBound) ← recursive bound context
       recursive body (Map.insert sym (numBound, portBound) context)
     recursive (Type.If b1 b2 b3) c = do
-      (numIf, retPort) ← genericAux2 (b1, Prim) (b2, Aux3) (AST.Auxiliary3 AST.IfElse, Aux1) c
+      (numIf, retPort) ←
+        genericAux2 (b1, Prim) (b2, Aux3) (AST.Auxiliary3 AST.IfElse, Aux1) c
       (b3Num, b3Port) ← recursive b3 c
       link (numIf, Aux2) (b3Num, b3Port)
       pure (numIf, retPort)
@@ -249,6 +250,8 @@ data FanStatus
   = In FanPorts
   | Completed FanPorts
   deriving (Show)
+
+-- TODO ∷ longest function in the code base, refactor it down!!!
 
 netToAst ∷ DifferentRep net ⇒ net (AST.Lang primVal) → Maybe (Type.AST primVal)
 netToAst net = evalEnvState run (Env 0 net Map.empty)
@@ -369,14 +372,18 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                               _ → pure Nothing -- doesn't happen!
                                   case mPort of
                                     -- We are starting at a FanIn or the graph is invalid!
-                                    -- So pick the circle direction to go with!
+                                    -- Nothing: So pick the circle direction to go with!
+                                    -- Prim:    from fan-In, pick a direction to go!
+                                    -- Aux2:    from ★, mark it; go through prim!
+                                    -- Aux1:    from ●, mark it; go through prim!
                                     Nothing → freeChoice
-                                    Just (_, Prim) → freeChoice -- from fan-In, pick a direction to go!
-                                    Just (_, Aux2) → fromCircleOrStar Star -- from ★, mark it; go through prim!
-                                    Just (_, Aux1) → fromCircleOrStar Circle -- from ●, mark it; go through prim!
-                                        -- This case should never happen
+                                    Just (_, Prim) → freeChoice
+                                    Just (_, Aux2) → fromCircleOrStar Star
+                                    Just (_, Aux1) → fromCircleOrStar Circle
+                                    -- This case should never happen
                                     _ → pure Nothing
-                                -- We have been in a FanIn Before, figure out what state of the world we are in!
+                                -- We have been in a FanIn Before,
+                                -- figure out what state of the world we are in!
                                 Just status → do
                                   mPort ← traverseM findEdge comeFrom
                                   let through con =
@@ -522,6 +529,7 @@ numToSymbol x
   | otherwise = intern ("%gen" <> show x)
 
 -- | generate a new number based on the map size
--- Only gives an unique if the key has an isomorphism with the size, and no data is deleted.
+-- Only gives an unique if the key has an isomorphism with the size
+-- , and no data is deleted.
 newMapNum ∷ (Map.Map k a, Int) → Int
 newMapNum = snd

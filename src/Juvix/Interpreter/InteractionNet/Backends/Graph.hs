@@ -99,7 +99,13 @@ instance Network FlipNet where
 
   allEdges node = do
     net ← runFlip <$> get @"net"
-    pure (fmap (\(Edge (_, port) (otherNode, otherPort), _) → (port, otherNode, otherPort)) $ lneighbors net node)
+    pure
+      ( fmap
+          ( \(Edge (_, port) (otherNode, otherPort), _) →
+              (port, otherNode, otherPort)
+          )
+          $ lneighbors net node
+      )
 
   findEdge (node, port) = do
     net ← runFlip <$> get @"net"
@@ -122,11 +128,14 @@ instance DifferentRep FlipNet where
 
   aux2FromGraph con = auxFromGraph convAux2 (con Free FreeNode FreeNode)
 
-  aux3FromGraph con = auxFromGraph convAux3 (con Free FreeNode FreeNode FreeNode)
+  aux3FromGraph con =
+    auxFromGraph convAux3 (con Free FreeNode FreeNode FreeNode)
 
-  aux4FromGraph con = auxFromGraph convAux4 (con Free FreeNode FreeNode FreeNode FreeNode)
+  aux4FromGraph con =
+    auxFromGraph convAux4 (con Free FreeNode FreeNode FreeNode FreeNode)
 
-  aux5FromGraph con = auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
+  aux5FromGraph con =
+    auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
 
   langToPort n f = do
     Flip net ← get @"net"
@@ -143,7 +152,8 @@ auxFromGraph ∷
   Node →
   m (Maybe b)
 auxFromGraph conv constructor num =
-  fmap (foldr f constructor . lneighbors') . fst . match num . runFlip <$> get @"net"
+  fmap (foldr f constructor . lneighbors') . fst . match num . runFlip
+    <$> get @"net"
   where
     f (Edge (n1, n1port) (n2, n2port), _) con
       | n1 == num && n2 == num = conv (n1, n2port) (conv (n2, n1port) con)

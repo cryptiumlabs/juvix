@@ -43,9 +43,12 @@ instance Semiring NatAndw where
 numToNat ∷ Integer → NatAndw
 numToNat = SNat . fromInteger
 
+-- variables annotated with n can be used n times.
+-- variables annotated with Omega can be used any times.
+
 -- | allowsUsageOf is the function that checks usage compatibility
 allowsUsageOf ∷ Usage → Usage → Bool
-allowsUsageOf (SNat x) (SNat y) = x == y --variables annotated with n can be used n times.
-allowsUsageOf Omega (SNat _) = True -- variables annotated with Omega can be used any times.
+allowsUsageOf (SNat x) (SNat y) = x == y
+allowsUsageOf Omega (SNat _) = True
 allowsUsageOf Omega Omega = True
 allowsUsageOf (SNat _) Omega = False

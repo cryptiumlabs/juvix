@@ -39,17 +39,21 @@ deriving instance Show Lang
 
 -- Graph to more typed construction---------------------------------------------
 -- Port manipulation
-conFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+conFromGraph ∷
+  (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 conFromGraph = aux2FromGraph Construct
 
-dupFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+dupFromGraph ∷
+  (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 dupFromGraph = aux2FromGraph Duplicate
 
-eraFromGraph ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+eraFromGraph ∷
+  (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 eraFromGraph = aux0FromGraph Erase
 
 -- a bit of extra repeat work in this function!
-langToProperPort ∷ (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
+langToProperPort ∷
+  (DifferentRep net, HasState "net" (net Lang) m) ⇒ Node → m (Maybe ProperPort)
 langToProperPort node = langToPort node f
   where
     f Con = conFromGraph node
@@ -85,7 +89,8 @@ reduce = do
               con@(Construct (Primary node) _ _) →
                 True
                   <$ ( langToProperPort node >>= \case
-                         Nothing → error "nodes are undirected, precondition violated!"
+                         Nothing →
+                           error "nodes are undirected, precondition violated!"
                          Just d@Duplicate {} → conDup n node con d
                          Just Erase {} → erase n node con
                          Just c@Construct {} → annihilate n node con c
@@ -93,7 +98,8 @@ reduce = do
               dup@(Duplicate (Primary node) _ _) →
                 True
                   <$ ( langToProperPort node >>= \case
-                         Nothing → error "nodes are undirected, precondition violated!"
+                         Nothing →
+                           error "nodes are undirected, precondition violated!"
                          Just d@Duplicate {} → annihilate n node dup d
                          Just Erase {} → erase n node dup
                          Just c@Construct {} → conDup node n c dup
