@@ -8,13 +8,13 @@ module Juvix.Core.EAC.Solve where
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import GHC.Base (String)
-import Juvix.Core.EAC.Types
+import qualified Juvix.Core.EAC.Types as EAC
 import Juvix.Library hiding (link, reduce)
 import qualified Z3.Monad as Z3
 
 -- TODO ∷ handle RPrim
 
-runMultipleConstraints ∷ ∀ a. Int → [Constraint] → RPT a → IO ()
+runMultipleConstraints ∷ ∀ a. Int → [EAC.Constraint] → EAC.RPT a → IO ()
 runMultipleConstraints numRepeat constraints syntax = do
   let numset = grabTermNumbers syntax mempty
 
@@ -31,9 +31,9 @@ runMultipleConstraints numRepeat constraints syntax = do
                 newCons =
                   bounds
                     >>| ( \(i, x) →
-                            Constraint
-                              [ConstraintVar 1 i]
-                              (Eq (fromInteger x))
+                            EAC.Constraint
+                              [EAC.ConstraintVar 1 i]
+                              (EAC.Eq (fromInteger x))
                         )
 
                 extraConstraint =
@@ -66,16 +66,16 @@ runMultipleConstraints numRepeat constraints syntax = do
   recFirst numRepeat
   where
     -- Could use a list, since this should be ascending, but I do not assume that
-    grabTermNumbers (RBang i (RLam _ t)) s =
+    grabTermNumbers (EAC.RBang i (EAC.RLam _ t)) s =
       grabTermNumbers t (Set.insert i s)
-    grabTermNumbers (RBang i (RVar _)) s =
+    grabTermNumbers (EAC.RBang i (EAC.RVar _)) s =
       Set.insert i s
-    grabTermNumbers (RBang i (RApp t1 t2)) s =
+    grabTermNumbers (EAC.RBang i (EAC.RApp t1 t2)) s =
       grabTermNumbers t1 (grabTermNumbers t2 (Set.insert i s))
-    grabTermNumbers (RBang _i (RPrim _)) s =
+    grabTermNumbers (EAC.RBang _i (EAC.RPrim _)) s =
       s
 
-getConstraints ∷ [Constraint] → IO (Maybe [Integer])
+getConstraints ∷ [EAC.Constraint] → IO (Maybe [Integer])
 getConstraints constraints = do
   (_r, _v, s) ← Z3.evalZ3 (constraintSystem constraints)
   --putStrLn v
@@ -83,50 +83,53 @@ getConstraints constraints = do
   --print (r, s)
   pure s
 
-runConstraints ∷ [Constraint] → IO ()
+runConstraints ∷ [EAC.Constraint] → IO ()
 runConstraints constraints = do
   (r, v, s) ← Z3.evalZ3 (constraintSystem constraints)
   putStrLn v
   putText "-->"
   print (r, s)
 
-collectVars ∷ [Constraint] → Set.Set Int
-collectVars = Set.unions . map Set.singleton . concatMap (map variable . vars)
+collectVars ∷ [EAC.Constraint] → Set.Set Int
+collectVars =
+  Set.unions . map Set.singleton . concatMap (map EAC.variable . EAC.vars)
 
-opToZ3 ∷ Op → Z3.AST → Z3.Z3 Z3.AST
-opToZ3 (Eq n) vs = do
+opToZ3 ∷ EAC.Op → Z3.AST → Z3.Z3 Z3.AST
+opToZ3 (EAC.Eq n) vs = do
   i ← Z3.mkInteger (fromIntegral n)
   Z3.mkEq vs i
-opToZ3 (Gte n) vs = do
+opToZ3 (EAC.Gte n) vs = do
   i ← Z3.mkInteger (fromIntegral n)
   Z3.mkGe vs i
 
-varToZ3 ∷ Map.Map Int Z3.AST → ConstraintVar → Z3.Z3 Z3.AST
-varToZ3 varMap (ConstraintVar coeff var) = do
+varToZ3 ∷ Map.Map Int Z3.AST → EAC.ConstraintVar → Z3.Z3 Z3.AST
+varToZ3 varMap (EAC.ConstraintVar coeff var) = do
   let z3Var = varMap Map.! var
   coeff ← Z3.mkInteger (fromIntegral coeff)
   Z3.mkMul [coeff, z3Var]
 
-varsToZ3 ∷ Map.Map Int Z3.AST → [ConstraintVar] → Z3.Z3 Z3.AST
+varsToZ3 ∷ Map.Map Int Z3.AST → [EAC.ConstraintVar] → Z3.Z3 Z3.AST
 varsToZ3 varMap vars = do
   vars ← traverse (varToZ3 varMap) vars
   case vars of
     [v] → pure v
     _ → Z3.mkAdd vars
 
-constraintToZ3 ∷ Map.Map Int Z3.AST → Constraint → Z3.Z3 Z3.AST
-constraintToZ3 varMap (Constraint vars op) = opToZ3 op =<< varsToZ3 varMap vars
+constraintToZ3 ∷ Map.Map Int Z3.AST → EAC.Constraint → Z3.Z3 Z3.AST
+constraintToZ3 varMap (EAC.Constraint vars op) =
+  opToZ3 op =<< varsToZ3 varMap vars
 
-constraintsToZ3 ∷ Map.Map Int Z3.AST → [Constraint] → Z3.Z3 Z3.AST
-constraintsToZ3 varMap constraints = Z3.mkAnd =<< traverse (constraintToZ3 varMap) constraints
+constraintsToZ3 ∷ Map.Map Int Z3.AST → [EAC.Constraint] → Z3.Z3 Z3.AST
+constraintsToZ3 varMap constraints =
+  Z3.mkAnd =<< traverse (constraintToZ3 varMap) constraints
 
-constraintsToZ3Extra ∷ [Z3.AST] → Map Int Z3.AST → [Constraint] → Z3.Z3 Z3.AST
+constraintsToZ3Extra ∷ [Z3.AST] → Map Int Z3.AST → [EAC.Constraint] → Z3.Z3 Z3.AST
 constraintsToZ3Extra extra varMap constraints = do
   cons ← traverse (constraintToZ3 varMap) constraints
   and ← Z3.mkAnd cons
   Z3.mkAnd (and : extra)
 
-makeVarMap ∷ Z3.MonadZ3 f ⇒ [Constraint] → f (Map Int Z3.AST)
+makeVarMap ∷ Z3.MonadZ3 f ⇒ [EAC.Constraint] → f (Map Int Z3.AST)
 makeVarMap constraints =
   let vars = Set.toList (collectVars constraints)
    in traverse
@@ -148,8 +151,8 @@ makeParams = do
 
 constraintSystemGen ∷
   Z3.MonadZ3 m ⇒
-  [Constraint] →
-  (Map Int Z3.AST → [Constraint] → m Z3.AST) →
+  [EAC.Constraint] →
+  (Map Int Z3.AST → [EAC.Constraint] → m Z3.AST) →
   m (Z3.Result, String, Maybe [Integer])
 constraintSystemGen constraints modifyAst = do
   varMap ← makeVarMap constraints
@@ -162,8 +165,11 @@ constraintSystemGen constraints modifyAst = do
     catMaybes <$> traverse (Z3.evalInt m) (Map.elems varMap)
   pure (res, model, sol)
 
-constraintSystemAnd ∷ [Constraint] → [Z3.AST] → Z3.Z3 (Z3.Result, GHC.Base.String, Maybe [Integer])
-constraintSystemAnd c z3Constraint = constraintSystemGen c (constraintsToZ3Extra z3Constraint)
+constraintSystemAnd ∷
+  [EAC.Constraint] → [Z3.AST] → Z3.Z3 (Z3.Result, String, Maybe [Integer])
+constraintSystemAnd c z3Constraint =
+  constraintSystemGen c (constraintsToZ3Extra z3Constraint)
 
-constraintSystem ∷ [Constraint] → Z3.Z3 (Z3.Result, GHC.Base.String, Maybe [Integer])
+constraintSystem ∷
+  [EAC.Constraint] → Z3.Z3 (Z3.Result, String, Maybe [Integer])
 constraintSystem constraints = constraintSystemGen constraints constraintsToZ3

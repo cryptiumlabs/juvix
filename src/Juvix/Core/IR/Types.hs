@@ -177,7 +177,8 @@ deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
-instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
+instance (Show primTy, Show primVal)
+       ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
   show x = show (fst (exec (quote0 x)))
 
 deriving instance
@@ -222,7 +223,8 @@ instance
       <> show (fst expectedT)
       <> " usage."
   show (UniverseMismatch t ty) =
-    show t <> " is of type * of a higher universe. But the expected type "
+    show t
+      <> " is of type * of a higher universe. But the expected type "
       <> show ty
       <> " is * of a equal or lower universe."
   show (CannotApply f x) =
@@ -238,9 +240,16 @@ instance
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
-    "The usage of " <> (show (fst gotU)) <> " is not compatible with " <> (show (fst expectedU))
+       "The usage of "
+    <> (show (fst gotU))
+    <> " is not compatible with "
+    <> (show (fst expectedU))
   show (UnboundBinder ii x) =
-    "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
+      "Cannot find the type of \n"
+    <> show x
+    <> "\n (binder number "
+    <> show ii
+    <> ") in the environment."
   show (MustBeFunction m ii n) =
     ( show m <> "\n (binder number " <> show ii
         <> ") is not a function type and thus \n"
@@ -307,14 +316,14 @@ quote ∷
   Natural →
   Value primTy primVal m →
   m (Term primTy primVal)
-quote _ii (VStar n) = pure (Star n)
-quote _ii (VPrimTy p) = pure (PrimTy p)
-quote ii (VPi pi v f) =
-  Pi pi <$> quote ii v <*> (quote (ii + 1) =<< f (vfree (Quote ii)))
-quote ii (VLam f) =
-  Lam <$> (quote (ii + 1) =<< f (vfree (Quote ii)))
-quote ii (VNeutral n) = Elim <$> neutralQuote ii n
-quote _ii (VPrim p) = pure (Elim (Prim p))
+quote ii p =
+  case p of
+    VStar nat → pure (Star nat)
+    VPrimTy p → pure (PrimTy p)
+    VPi pi v f → Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
+    VLam func → Lam <$> (quote (ii + 1) =<< func (vfree (Quote ii)))
+    VPrim pri → pure (Elim (Prim pri))
+    VNeutral n → Elim <$> neutralQuote ii n
 
 neutralQuote ∷
   ∀ primTy primVal m.

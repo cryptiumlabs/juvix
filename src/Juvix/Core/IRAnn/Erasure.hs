@@ -1,7 +1,7 @@
 module Juvix.Core.IRAnn.Erasure where
 
-import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.TransformExt
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IRAnn.Types
 
 eraseTerm ∷ ∀ primTy primVal. Term primTy primVal → IR.Term primTy primVal
