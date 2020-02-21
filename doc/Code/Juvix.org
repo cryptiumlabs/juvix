@@ -558,6 +558,7 @@ Utility functions used by the Michelson backend.
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** HRAnn
@@ -568,13 +569,17 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[HR/Types]]
   + [[HRAnn/Types]]
+  + [[TransformExt]]
+  + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Usage]]
   + [[Library]]
+  + [[IR/Types]]
+  + [[Usage]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[TransformExt]]
   + [[Typechecker]]
   + [[IR/Types]]
 **** Evaluator <<IR/Evaluator>>
@@ -585,6 +590,15 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types]]
   + [[Core/Types]]
   + [[Library]]
+**** Extension
+Extensions to the IR abstract syntax.
+- _Relies on_
+  + [[Library]]
+**** TransformExt
+Transformations between different extensions.
+- _Relies on_
+  + [[Library]]
+  + [[IR/Types]]
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
@@ -597,6 +611,7 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[Usage]]
+  + [[Extension]]
   + [[Library]]
 *** IRAnn
 - _Relies on_
@@ -604,13 +619,14 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Erasure <<IRAnn/Erasure>>
 - _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
+  + [[Library]]
   + [[IR/Types]]
   + [[Usage]]
-  + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_

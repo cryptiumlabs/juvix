@@ -8,6 +8,8 @@
   + [[HR]]
   + [[Library]]
 * Config
+- _Relies on_
+  + [[Library]]
 * Interactive
 - _Relies on_
   + [[Core]]

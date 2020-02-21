@@ -12,7 +12,7 @@ module Juvix.Interpreter.InteractionNet.Nets.Combinators where
 
 import Control.Lens
 import Data.Foldable (foldrM)
-import Juvix.Interpreter.InteractionNet.Backends.Env
+import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface
 import Juvix.Library hiding (reduce)
@@ -61,16 +61,16 @@ langToProperPort node = langToPort node f
     f Era = eraFromGraph node
 
 -- Graph manipulation ----------------------------------------------------------
-reduceAll ∷ InfoNetworkDiff net Lang m ⇒ Int → m ()
+reduceAll ∷ Env.InfoNetworkDiff net Lang m ⇒ Int → m ()
 reduceAll = untilNothingNTimesM reduce
 
-reduce ∷ InfoNetworkDiff net Lang m ⇒ m Bool
+reduce ∷ Env.InfoNetworkDiff net Lang m ⇒ m Bool
 reduce = do
   nodes' ← nodes
   isChanged ← foldrM update False nodes'
   if isChanged
     then do
-      modify @"info" (\c → c {parallelSteps = parallelSteps c + 1})
+      modify @"info" (\c → c {Env.parallelSteps = Env.parallelSteps c + 1})
       pure isChanged
     else pure isChanged
   where
@@ -111,31 +111,31 @@ reduce = do
 
 -- | Deals with the case when two nodes annihilate each other
 annihilate ∷
-  InfoNetwork net Lang m ⇒
+  Env.InfoNetwork net Lang m ⇒
   Node →
   Node →
   ProperPort →
   ProperPort →
   m ()
 annihilate conNum1 conNum2 (Construct {}) (Construct {}) = do
-  incGraphSizeStep (- 2)
+  Env.incGraphSizeStep (- 2)
   rewire (conNum1, Aux1) (conNum2, Aux2)
   rewire (conNum1, Aux2) (conNum2, Aux1)
   delNodes [conNum1, conNum2]
 annihilate conNum1 conNum2 (Duplicate {}) (Duplicate {}) = do
-  incGraphSizeStep (- 2)
+  Env.incGraphSizeStep (- 2)
   rewire (conNum1, Aux1) (conNum2, Aux1)
   rewire (conNum1, Aux2) (conNum2, Aux2)
   delNodes [conNum1, conNum2]
 annihilate _ _ _ _ = error "the other nodes do not annihilate eachother"
 
 -- | Deals with the case when an Erase Node hits any other node
-erase ∷ InfoNetwork net Lang m ⇒ Node → Node → ProperPort → m ()
+erase ∷ Env.InfoNetwork net Lang m ⇒ Node → Node → ProperPort → m ()
 erase conNum eraseNum port =
   case port of
-    Construct {} → sequentalStep *> rewire
-    Duplicate {} → sequentalStep *> rewire
-    Erase {} → incGraphSizeStep (- 2) *> delNodes [conNum, eraseNum]
+    Construct {} → Env.sequentalStep *> rewire
+    Duplicate {} → Env.sequentalStep *> rewire
+    Erase {} → Env.incGraphSizeStep (- 2) *> delNodes [conNum, eraseNum]
   where
     rewire = do
       eraA ← newNode Era
@@ -147,14 +147,14 @@ erase conNum eraseNum port =
 
 -- | conDup deals with the case when Constructor and Duplicate share a primary
 conDup ∷
-  InfoNetwork net Lang m ⇒
+  Env.InfoNetwork net Lang m ⇒
   Node →
   Node →
   ProperPort →
   ProperPort →
   m ()
 conDup conNum deconNum (Construct _ _auxA _auxB) (Duplicate _ _auxC _auxD) = do
-  incGraphSizeStep 2
+  Env.incGraphSizeStep 2
   dupA ← newNode Dup
   dupB ← newNode Dup
   conC ← newNode Con

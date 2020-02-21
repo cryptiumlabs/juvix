@@ -8,8 +8,10 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
-import Juvix.Core.Usage
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+
+-- TODO ∷ remove tuples!
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
@@ -25,7 +27,7 @@ typecheckAffineErase ∷
     Show primVal
   ) ⇒
   HR.Term primTy primVal →
-  Usage →
+  Usage.T →
   HR.Term primTy primVal →
   m (EC.Term primVal, EC.TypeAssignment primTy)
 typecheckAffineErase term usage ty = do
@@ -65,7 +67,7 @@ typecheckErase ∷
     Show primVal
   ) ⇒
   HR.Term primTy primVal →
-  Usage →
+  Usage.T →
   HR.Term primTy primVal →
   m ((EC.Term primVal, EC.Type primTy), EC.TypeAssignment primTy)
 typecheckErase term usage ty = do

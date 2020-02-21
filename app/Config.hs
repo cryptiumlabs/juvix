@@ -4,7 +4,7 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import Data.Char (isLower, toLower)
 import qualified Data.Yaml as Y
-import Protolude
+import Juvix.Library
 
 data Config
   = Config

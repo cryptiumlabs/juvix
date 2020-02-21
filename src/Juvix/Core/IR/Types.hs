@@ -33,11 +33,11 @@ data Term' ext primTy primVal
     TermX (TermX ext primTy primVal)
 
 deriving instance
-  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) =>
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
   Eq (Term' ext primTy primVal)
 
 deriving instance
-  (Show primTy, Show primVal, TEAll Show ext primTy primVal) =>
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
   Show (Term' ext primTy primVal)
 
 -- FIXME add pretty-printer
@@ -46,7 +46,7 @@ instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
   show (Star n ()) = "* " <> show n
   show (PrimTy p ()) = show p
   show (Pi _usage varTy resultTy ()) =
-    "[Π] " <> show varTy <> "-> " <> show resultTy
+    "[Π] " <> show varTy <> "→ " <> show resultTy
   show (Lam var ()) = "\\x. " <> show var
   -- Elim should be invisible to users.
   show (Elim term ()) = show term
@@ -71,30 +71,30 @@ data Elim' ext primTy primVal
     ElimX (ElimX ext primTy primVal)
 
 deriving instance
-  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) =>
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
   Eq (Elim' ext primTy primVal)
 
 deriving instance
-  (Show primTy, Show primVal, TEAll Show ext primTy primVal) =>
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
   Show (Elim' ext primTy primVal)
 
 
 type Term = Term' NoExt
 
-pattern Star :: Natural -> Term primTy primVal
+pattern Star ∷ Natural → Term primTy primVal
 pattern Star i = Star' i ()
 
-pattern PrimTy :: primTy -> Term primTy primVal
+pattern PrimTy ∷ primTy → Term primTy primVal
 pattern PrimTy t = PrimTy' t ()
 
-pattern Pi :: Usage -> Term primTy primVal -> Term primTy primVal
-           -> Term primTy primVal
+pattern Pi ∷ Usage → Term primTy primVal → Term primTy primVal
+           → Term primTy primVal
 pattern Pi π s t = Pi' π s t ()
 
-pattern Lam :: Term primTy primVal -> Term primTy primVal
+pattern Lam ∷ Term primTy primVal → Term primTy primVal
 pattern Lam t = Lam' t ()
 
-pattern Elim :: Elim primTy primVal -> Term primTy primVal
+pattern Elim ∷ Elim primTy primVal → Term primTy primVal
 pattern Elim e = Elim' e ()
 
 {-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
@@ -102,20 +102,20 @@ pattern Elim e = Elim' e ()
 
 type Elim = Elim' NoExt
 
-pattern Bound :: Natural -> Elim primTy primVal
+pattern Bound ∷ Natural → Elim primTy primVal
 pattern Bound x = Bound' x ()
 
-pattern Free :: Name -> Elim primTy primVal
+pattern Free ∷ Name → Elim primTy primVal
 pattern Free x = Free' x ()
 
-pattern Prim :: primVal -> Elim primTy primVal
+pattern Prim ∷ primVal → Elim primTy primVal
 pattern Prim x = Prim' x ()
 
-pattern App :: Elim primTy primVal -> Term primTy primVal -> Elim primTy primVal
+pattern App ∷ Elim primTy primVal → Term primTy primVal → Elim primTy primVal
 pattern App s t = App' s t ()
 
-pattern Ann :: Usage -> Term primTy primVal -> Term primTy primVal
-            -> Elim primTy primVal
+pattern Ann ∷ Usage → Term primTy primVal → Term primTy primVal
+            → Elim primTy primVal
 pattern Ann π s t = Ann' π s t ()
 
 {-# COMPLETE Bound, Free, Prim, App, Ann #-}
