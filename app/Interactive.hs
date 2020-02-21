@@ -1,6 +1,6 @@
 module Interactive where
 
-import Config
+import qualified Config as Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Juvix.Core as Core
@@ -21,7 +21,7 @@ import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Types
 import Prelude (String)
 
-interactive ∷ Context → Config → IO ()
+interactive ∷ Context → Config.T → IO ()
 interactive ctx _ = do
   func ← return $ \str → return str
   H.runInputT (settings ctx) (mainLoop func)
