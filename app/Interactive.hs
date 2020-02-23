@@ -1,13 +1,13 @@
 module Interactive where
 
-import Config
+import qualified Config as Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
-import Juvix.Core.Parameterisations.Naturals
+import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
@@ -21,7 +21,7 @@ import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Types
 import Prelude (String)
 
-interactive ∷ Context → Config → IO ()
+interactive ∷ Context → Config.T → IO ()
 interactive ctx _ = do
   func ← return $ \str → return str
   H.runInputT (settings ctx) (mainLoop func)
@@ -46,8 +46,8 @@ mainLoop func = do
           H.outputStrLn =<< liftIO (func inp)
           mainLoop func
 
-parseString ∷ String → Maybe (Core.Term NatTy NatVal)
-parseString = Core.generateParser nat
+parseString ∷ String → Maybe (Core.Term Nat.Ty Nat.Val)
+parseString = Core.generateParser Nat.t
 
 handleSpecial ∷ String → H.InputT IO () → H.InputT IO ()
 handleSpecial str cont = do
@@ -66,7 +66,7 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckErase term usage ty) nat)
+          erased ← liftIO (exec (Core.typecheckErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
@@ -75,17 +75,23 @@ handleSpecial str cont = do
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty)) → do
-          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty) nat)
+          erased ← liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
           case erased of
             (Right (term, _), _) → do
-              transformAndEvaluateErasedCore nat True term
+              transformAndEvaluateErasedCore Nat.t True term
             _ → return ()
         _ → H.outputStrLn "must enter a valid annotated core term"
       cont
     _ → H.outputStrLn "Unknown special command" >> cont
 
-transformAndEvaluateErasedCore ∷ ∀ primTy primVal. (Show primVal) ⇒ Core.Parameterisation primTy primVal → Bool → Erased.Term primVal → H.InputT IO ()
+transformAndEvaluateErasedCore ∷
+  ∀ primTy primVal.
+  (Show primVal) ⇒
+  Core.Parameterisation primTy primVal →
+  Bool →
+  Erased.Term primVal →
+  H.InputT IO ()
 transformAndEvaluateErasedCore parameterisation debug term = do
   let ast = INet.erasedCoreToInteractionNetAST term
   when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
@@ -118,7 +124,9 @@ specials =
     Special "ct [term}" "Parse, typecheck, & evaluate a core term",
     Special
       "cs [term"
-      "Parse a core term, erase it, translate it to EAC, solve constraints, evaluate & read-back",
+      ( "Parse a core term, erase it, "
+          <> "translate it to EAC, solve constraints, evaluate & read-back"
+      ),
     Special "tutorial" "Embark upon an interactive tutorial",
     Special "?" "Show this help message",
     Special "exit" "Quit interactive mode"

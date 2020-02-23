@@ -15,7 +15,8 @@ instance (Typeable dataTy, JSONSchemaGen dataTy) ⇒ JSONSchemaGen (Node dataTy)
 
 instance (Typeable opTy, JSONSchemaGen opTy) ⇒ JSONSchemaGen (BespokeFunction opTy)
 
-instance (Typeable dataTy, JSONSchemaGen dataTy, Typeable opTy, JSONSchemaGen opTy) ⇒ JSONSchemaGen (Net dataTy opTy)
+instance (Typeable dataTy, JSONSchemaGen dataTy, Typeable opTy, JSONSchemaGen opTy)
+  ⇒ JSONSchemaGen (Net dataTy opTy)
 -}
 
 generate ∷ JSONSchemaGen a ⇒ Proxy a → A.Value

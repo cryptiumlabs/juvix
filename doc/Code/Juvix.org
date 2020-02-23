@@ -42,7 +42,7 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
 - _Relies on_
   + [[JIT]]
   + [[MonadEnvironment]]
-  + [[Environment]]
+  + [[Net/Environment]]
   + [[Erased/Types]]
   + [[Core/Types]]
   + [[INetIR/Types]]
@@ -191,7 +191,7 @@ Functions that help with more complex Graph operations
   + [[Net/EAC]]
   + [[Net/EAC/Types]]
   + [[Library]]
-***** Environment
+***** Environment <<Net/Environment>>
 - Serves as the default environment for executing EAC code
 - _Relies on_
   + [[Codegen]]
@@ -266,6 +266,8 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
+**** Contract
+This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer
@@ -283,73 +285,131 @@ Serves as a module for various debugging functions
     some other gas-estimation preference function).
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
+  + [[Compilation/Environment]]
+  + [[Prim]]
+  + [[Michelson/Compilation/Types]]
+  + [[Contract]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Term]]
+  + [[Compilation/Environment]]
+  + [[Lambda]]
   + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
   + [[Optimisation]]
-  + [[Michelson/Parameterisation]]
   + [[Library]]
 ***** Checks
 - Sanity checks for Michelson compilation.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
-  + [[Michelson/Parameterisation]]
+  + [[VirtualStack]]
   + [[Library]]
 ***** Datatypes
-Datatypes & pattern matching.
+Datatypes and pattern matching.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[Library]]
+***** Environment <<Compilation/Environment>>
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Library]]
+***** Lambda
+- Compilation of core terms to Michelson instruction sequences.
+- _Relies on_
+  + [[Term]]
+  + [[Compilation/Type]]
+  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[ErasedAnn]]
   + [[Library]]
 ***** Prim
 - Compilation of primitive terms to Michelson instruction sequences.
 - _Relies on_
+  + [[Compilation/Environment]]
   + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
+  + [[VirtualStack]]
   + [[ErasedAnn]]
   + [[Library]]
 ***** Term
 - Compilation of core terms to Michelson instruction sequences.
 - _Relies on_
   + [[Checks]]
+  + [[Compilation/Environment]]
   + [[Prim]]
   + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
   + [[Compilation/Util]]
+  + [[VirtualStack]]
   + [[Michelson/Parameterisation]]
-  + [[Erased/Util]]
   + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
 ***** Type <<Compilation/Type>>
 - Functions for representation of types in the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
-  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Util <<Compilation/Util>>
 Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[VirtualStack]]
   + [[Library]]
+***** VirtualStack
+- Serves as a virtual stack over Michelson
+- This stack has a few properties
+  + The values on this stack may or may not be on the real
+    stack. However for convention this should be largely ignored,
+    except when you wish to do an operation like pair
+    * This can be fixed in the future
+    * Until then, one should filter out the virtual stack items
+- We keep virtual items on the ="stack"= as that makes the details
+  on whether something is constant propagation or not act
+  consistently with each other.
+  + After all, what may not be a constant now, may be in the
+    future, or vice versa!
+- Import with qualified and the name of =VStack=
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[HashMap]]
+**** DSL
+***** Instructions
+- This module serves as a lower layer DSL that is just a binding
+  over the untyped instruction bindings
+- _Relies on_
+  + [[Library]]
+***** InstructionsEff
+- This module includes a higher level DSL which each instruction
+  has a stack effect
+  + This is similar to the base LLVM bindings we have.
+  + So for example, emitting an =add=, eats two items from the
+    virtual stack, and adds an =Instr.Add= instruction to the
+    sequence of instructions to execute
+- For constant progoation, have a function say take-2 that looks at
+  the top two items in the stack and then returns back either if
+  they were constants or not and dispatches logic based on that
+- _Relies on_
+  + [[Instructions]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]
@@ -462,6 +522,7 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Erased/Types]]
   + [[ErasedAnn/Types]]
+  + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[Usage]]
@@ -497,6 +558,7 @@ Utility functions used by the Michelson backend.
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** HRAnn
@@ -507,13 +569,17 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[HR/Types]]
   + [[HRAnn/Types]]
+  + [[TransformExt]]
+  + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Usage]]
   + [[Library]]
+  + [[IR/Types]]
+  + [[Usage]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[TransformExt]]
   + [[Typechecker]]
   + [[IR/Types]]
 **** Evaluator <<IR/Evaluator>>
@@ -524,6 +590,15 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types]]
   + [[Core/Types]]
   + [[Library]]
+**** Extension
+Extensions to the IR abstract syntax.
+- _Relies on_
+  + [[Library]]
+**** TransformExt
+Transformations between different extensions.
+- _Relies on_
+  + [[Library]]
+  + [[IR/Types]]
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
@@ -536,6 +611,7 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[Usage]]
+  + [[Extension]]
   + [[Library]]
 *** IRAnn
 - _Relies on_
@@ -543,13 +619,14 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Erasure <<IRAnn/Erasure>>
 - _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
+  + [[Library]]
   + [[IR/Types]]
   + [[Usage]]
-  + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_

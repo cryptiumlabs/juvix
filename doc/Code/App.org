@@ -8,6 +8,8 @@
   + [[HR]]
   + [[Library]]
 * Config
+- _Relies on_
+  + [[Library]]
 * Interactive
 - _Relies on_
   + [[Core]]
@@ -23,8 +25,6 @@
   + [[Default]]
   + [[Library]]
 * Main
-- _Relies on_
-  + [[Environment]]
 * Options
 * Types
 - _Relies on_

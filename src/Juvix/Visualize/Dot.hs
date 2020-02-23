@@ -6,32 +6,39 @@
 --   is normalized
 module Juvix.Visualize.Dot where
 
-import Control.Exception hiding ()
+import Control.Exception
 import qualified Data.Text as T
-import Juvix.Interpreter.InteractionNet.Backends.Env
-import Juvix.Interpreter.InteractionNet.Backends.Graph
-import Juvix.Interpreter.InteractionNet.Nets.Default
+import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
+import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
+import qualified Juvix.Interpreter.InteractionNet.Nets.Default as Default
 import Juvix.Library hiding
   ( catch,
-    reduce,
     throwIO,
-    writeFile,
   )
 import Juvix.Visualize.Graph
 import System.Directory
 import System.IO.Error
 import Turtle hiding (FilePath, reduce)
 
-printTestn ∷ Show b ⇒ FilePath → Either a2 (InfoNet (FlipNet b)) → IO ()
-printTestn _ (Left _) = pure ()
-printTestn txt (Right (InfoNet {net = net})) = showNet txt (runFlip net)
+type RunningNet primVal =
+  FilePath →
+  Int →
+  Graph.FlipNet (Default.Lang primVal) →
+  IO (Env.InfoNet (Graph.FlipNet (Default.Lang primVal)))
 
-netToGif ∷ ∀ primVal. Show primVal ⇒ FilePath → FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
+printTestn ∷
+  Show b ⇒ FilePath → Either a2 (Env.InfoNet (Graph.FlipNet b)) → IO ()
+printTestn _ (Left _) = pure ()
+printTestn txt (Right (Env.InfoNet {Env.net = net})) = showNet txt (runFlip net)
+
+netToGif ∷ Show primVal ⇒ FilePath → RunningNet primVal
 netToGif dir name num net = do
   createDirectoryIfMissing True dir
   result ← runGraphNet (dir <> "/" <> name) num net
   dirs ← listDirectory dir
-  let imagesGen = T.pack <$> filter (\x → isPrefixOf name x ∧ not (T.isInfixOf "." (T.pack x))) dirs
+  let imagesGen =
+        T.pack
+          <$> filter (\x → isPrefixOf name x ∧ not (T.isInfixOf "." (T.pack x))) dirs
 
       appDir = ((T.pack dir <> "") <>)
 
@@ -45,16 +52,27 @@ netToGif dir name num net = do
     )
     imagesGen
   removeIfExists (T.unpack (appDir (packName <> ".gif")))
-  _ ← procStrict "ffmpeg" ["-f", "image2", "-framerate", "2", "-i", appDir packName <> "%d" <> ".png", appDir packName <> ".gif"] mempty
+  _ ←
+    procStrict
+      "ffmpeg"
+      [ "-f",
+        "image2",
+        "-framerate",
+        "2",
+        "-i",
+        appDir packName <> "%d" <> ".png",
+        appDir packName <> ".gif"
+      ]
+      mempty
   return result
 
-runGraphNet ∷ ∀ primVal. Show primVal ⇒ FilePath → Int → FlipNet (Lang primVal) → IO (InfoNet (FlipNet (Lang primVal)))
-runGraphNet name num = runFlipNetIO (reducePrint name num)
+runGraphNet ∷ Show primVal ⇒ RunningNet primVal
+runGraphNet name num = Graph.runFlipNetIO (reducePrint name num)
 
 reducePrint ∷
   ( MonadIO f,
     Show primVal,
-    InfoNetworkDiff FlipNet (Lang primVal) f
+    Env.InfoNetworkDiff Graph.FlipNet (Default.Lang primVal) f
   ) ⇒
   FilePath →
   Int →
@@ -62,8 +80,8 @@ reducePrint ∷
 reducePrint name num = flip untilNothingNTimesM num $ do
   info ← get @"info"
   ctxt ← get @"net"
-  liftIO (showNet (name <> show (parallelSteps info)) (runFlip ctxt))
-  reduce
+  liftIO (showNet (name <> show (Env.parallelSteps info)) (runFlip ctxt))
+  Default.reduce
 
 removeIfExists ∷ FilePath → IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists

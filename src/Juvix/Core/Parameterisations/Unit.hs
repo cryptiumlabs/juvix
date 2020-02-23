@@ -14,30 +14,30 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
 -- k: primitive type: unit
-data UnitTy
-  = TUnit
+data Ty
+  = Ty
   deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
-data UnitVal
-  = Unit
+data Val
+  = Val
   deriving (Show, Eq)
 
-typeOf ∷ UnitVal → NonEmpty UnitTy
-typeOf Unit = TUnit :| []
+typeOf ∷ Val → NonEmpty Ty
+typeOf Val = Ty :| []
 
-apply ∷ UnitVal → UnitVal → Maybe UnitVal
+apply ∷ Val → Val → Maybe Val
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser UnitTy
+parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Unit"
-  pure TUnit
+  pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser UnitVal
+parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
 parseVal lexer = do
   Token.reserved lexer "()"
-  pure Unit
+  pure Val
 
 reservedNames ∷ [String]
 reservedNames = ["Unit", "()"]
@@ -45,6 +45,6 @@ reservedNames = ["Unit", "()"]
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-unit ∷ Parameterisation UnitTy UnitVal
-unit =
+t ∷ Parameterisation Ty Val
+t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

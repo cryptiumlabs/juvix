@@ -3,9 +3,6 @@ module Backends.LLVM2 where
 import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT
 import qualified Juvix.Backends.LLVM.Net.EAC as EAC
-import qualified Juvix.Backends.LLVM.Net.EAC as EAC
-import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
-import qualified Juvix.Backends.LLVM.Net.EAC.Defs as EAC
 import qualified Juvix.Backends.LLVM.Net.EAC.MonadEnvironment as EAC
 import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment

@@ -18,19 +18,37 @@ data Env primTy primVal
       }
   deriving (Generic)
 
-newtype EnvExec primTy primVal a = EnvE (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO) a)
+newtype EnvExec primTy primVal a
+  = EnvE (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO) a)
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasStream "log" [Core.PipelineLog primTy primVal],
       HasWriter "log" [Core.PipelineLog primTy primVal]
     )
-    via WriterLog (Field "log" () (MonadState (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))))
+    via WriterLog
+          ( Field "log" ()
+              ( MonadState
+                  ( ExceptT (Core.PipelineError primTy primVal)
+                      (StateT (Env primTy primVal) IO)
+                  )
+              )
+          )
   deriving
     (HasReader "parameterisation" (Core.Parameterisation primTy primVal))
-    via Field "parameterisation" () (ReadStatePure (MonadState (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))))
+    via Field "parameterisation" ()
+          ( ReadStatePure
+              ( MonadState
+                  ( ExceptT (Core.PipelineError primTy primVal)
+                      (StateT (Env primTy primVal) IO)
+                  )
+              )
+          )
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal))
-    via MonadError (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO))
+    via MonadError
+          ( ExceptT (Core.PipelineError primTy primVal)
+              (StateT (Env primTy primVal) IO)
+          )
 
 data SomeBackend where
   SomeBackend ∷ ∀ primTy primVal. Core.Parameterisation primTy primVal → SomeBackend
