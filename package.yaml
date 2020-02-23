@@ -113,6 +113,10 @@ library:
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
+    - Juvix.Frontend
+    - Juvix.Frontend.AST
+    - Juvix.Frontend.Parser
+    - Juvix.Frontend.Pipeline
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default
