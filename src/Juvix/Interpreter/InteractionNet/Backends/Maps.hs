@@ -168,9 +168,11 @@ instance DifferentRep Net where
 
   aux3FromGraph con = auxFromGraph convAux3 (con Free FreeNode FreeNode FreeNode)
 
-  aux4FromGraph con = auxFromGraph convAux4 (con Free FreeNode FreeNode FreeNode FreeNode)
+  aux4FromGraph con =
+    auxFromGraph convAux4 (con Free FreeNode FreeNode FreeNode FreeNode)
 
-  aux5FromGraph con = auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
+  aux5FromGraph con =
+    auxFromGraph convAux5 (con Free FreeNode FreeNode FreeNode FreeNode FreeNode)
 
   langToPort n f = do
     Net net ← get @"net"

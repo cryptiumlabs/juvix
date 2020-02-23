@@ -738,7 +738,7 @@ To-do: Lay out syntax-directed typechecker following McBride's paper.
 
 ## Termination checking
 
-!include core/termination-checking.pdc
+!include core/termination-checking.md
 
 ## Examples
 

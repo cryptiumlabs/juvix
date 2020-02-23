@@ -3,10 +3,10 @@
 module Juvix.Core.EAC.Check where
 
 import qualified Data.Map.Strict as Map
-import Juvix.Core.EAC.ConstraintGen
-import Juvix.Core.EAC.Solve
-import Juvix.Core.EAC.Types
-import Juvix.Core.Erased.Types
+import qualified Juvix.Core.EAC.ConstraintGen as Constraint
+import qualified Juvix.Core.EAC.Solve as Solve
+import qualified Juvix.Core.EAC.Types as EAC
+import qualified Juvix.Core.Erased.Types as Types
 import Juvix.Core.Types
 import Juvix.Library hiding (link, reduce)
 
@@ -14,16 +14,20 @@ validEal ∷
   ∀ primTy primVal.
   (Eq primTy) ⇒
   Parameterisation primTy primVal →
-  Term primVal →
-  TypeAssignment primTy →
-  IO (Either (Errors primTy primVal) (RPT primVal, ParamTypeAssignment primTy))
-validEal parameterisation term typMap = do
+  Types.Term primVal →
+  Types.TypeAssignment primTy →
+  IO
+    ( Either
+        (EAC.Errors primTy primVal)
+        (EAC.RPT primVal, EAC.ParamTypeAssignment primTy)
+    )
+validEal param term typMap = do
   let ((rpt, typ), env) =
-        execWithAssignment typMap $
-          generateTypeAndConstraints parameterisation term
-      constraint = constraints env
+        Constraint.execWithAssignment typMap $
+          Constraint.generateTypeAndConstraints param term
+      constraint = EAC.constraints env
   -- Z3 constraint assignment
-  assignment ← getConstraints constraint
+  assignment ← Solve.getConstraints constraint
   pure $
     case assignment of
       Just x →
@@ -32,33 +36,36 @@ validEal parameterisation term typMap = do
          in -- TODO: If an assignment was generated, but either of these checks fails,
             -- we must have made a mistake in constraint generation.
             -- <|> doesn't work, find out why and refactor code later
-            case bracketCheckerErr valAssignment of
+            case Constraint.bracketCheckerErr valAssignment of
               Left e → Left e
               Right _ →
-                case typCheckerErr parameterisation valAssignment typAssignment of
+                case Constraint.typCheckerErr param valAssignment typAssignment of
                   Left e → Left e
                   Right _ → Right (valAssignment, typAssignment)
       Nothing →
-        Left (Brack InvalidAssignment)
+        Left (EAC.Brack EAC.InvalidAssignment)
 
-assignType ∷ [Integer] → ParamTypeAssignment primTy → ParamTypeAssignment primTy
+assignType ∷ [Integer] → EAC.ParamTypeAssignment primTy → EAC.ParamTypeAssignment primTy
 assignType assignment typ = typ >>| placeVals
   where
     conMap = Map.fromList (zip [0 ..] (fromInteger <$> assignment))
-    placeVals (PPrimT p) = PPrimT p
-    placeVals (PArrT p t1 t2) = PArrT (conMap Map.! p) (placeVals t1) (placeVals t2)
-    placeVals (PSymT p s) = PSymT (conMap Map.! p) s
+    placeVals (EAC.PPrimT p) =
+      EAC.PPrimT p
+    placeVals (EAC.PArrT p t1 t2) =
+      EAC.PArrT (conMap Map.! p) (placeVals t1) (placeVals t2)
+    placeVals (EAC.PSymT p s) =
+      EAC.PSymT (conMap Map.! p) s
 
-assignTerm ∷ [Integer] → RPT primVal → RPT primVal
+assignTerm ∷ [Integer] → EAC.RPT primVal → EAC.RPT primVal
 assignTerm assignment syn = placeVals syn
   where
     conMap = Map.fromList (zip [0 ..] (fromInteger <$> assignment))
-    placeVals (RBang i t) =
-      RBang
+    placeVals (EAC.RBang i t) =
+      EAC.RBang
         (conMap Map.! i)
         ( case t of
-            RPrim p → RPrim p
-            RLam s t → RLam s (placeVals t)
-            RApp t1 t2 → RApp (placeVals t1) (placeVals t2)
-            RVar s → RVar s
+            EAC.RPrim p → EAC.RPrim p
+            EAC.RLam s t → EAC.RLam s (placeVals t)
+            EAC.RApp t1 t2 → EAC.RApp (placeVals t1) (placeVals t2)
+            EAC.RVar s → EAC.RVar s
         )

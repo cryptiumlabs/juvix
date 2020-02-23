@@ -4,29 +4,29 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import Data.Char (isLower, toLower)
 import qualified Data.Yaml as Y
-import Protolude
+import Juvix.Library
 
-data Config
-  = Config
+data T
+  = T
       { configTezosNodeHost ∷ Text,
         configTezosNodePort ∷ Int
       }
   deriving (Generic)
 
-defaultConfig ∷ Config
-defaultConfig = Config
+defaultT ∷ T
+defaultT = T
   { configTezosNodeHost = "127.0.0.1",
     configTezosNodePort = 8732
   }
 
-loadConfig ∷ FilePath → IO (Maybe Config)
-loadConfig path = do
+loadT ∷ FilePath → IO (Maybe T)
+loadT path = do
   config ← Y.decodeFileEither path
   return $ case config of
     Right parsed → pure parsed
     Left _ → Nothing
 
-instance Y.FromJSON Config where
+instance Y.FromJSON T where
   parseJSON = customParseJSON
 
 jsonOptions ∷ A.Options

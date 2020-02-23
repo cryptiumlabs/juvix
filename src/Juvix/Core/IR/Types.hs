@@ -1,58 +1,139 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
-module Juvix.Core.IR.Types where
+module Juvix.Core.IR.Types
+  (module Juvix.Core.IR.Types,
+   module Juvix.Core.IR.Extension)
+where
 
 import Juvix.Core.Usage
+import Juvix.Core.IR.Extension
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
 
+
 -- | checkable terms
-data Term primTy primVal
+data Term' ext primTy primVal
   = -- | (sort i) i th ordering of (closed) universe.
-    Star Natural
+    Star' Natural (XStar ext primTy primVal)
   | -- | 'PrimTy' primitive type
-    PrimTy primTy
+    PrimTy' primTy (XPrimTy ext primTy primVal)
   | -- | formation rule of the dependent function type 'PI'.
     -- the Usage(π) tracks how many times x is used.
-    Pi Usage (Term primTy primVal) (Term primTy primVal)
+    Pi' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
+       (XPi ext primTy primVal)
   | -- | 'LAM' Introduction rule of PI.
     -- The abstracted variable's usage is tracked with the Usage(π).
-    Lam (Term primTy primVal)
+    Lam' (Term' ext primTy primVal) (XLam ext primTy primVal)
   | -- | 'CONV' conversion rule. TODO make sure 0Γ ⊢ S≡T
     -- 'Elim' is the constructor that embeds Elim to Term
-    Elim (Elim primTy primVal)
-  deriving (Eq)
+    Elim' (Elim' ext primTy primVal) (XElim ext primTy primVal)
+  | -- | Extension point for other construction forms
+    TermX (TermX ext primTy primVal)
 
+deriving instance
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
+  Eq (Term' ext primTy primVal)
+
+deriving instance
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
+  Show (Term' ext primTy primVal)
+
+-- FIXME add pretty-printer
+{-
 instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
-  show (Star n) = "* " <> show n
-  show (PrimTy p) = show p
-  show (Pi _usage varTy resultTy) =
-    "[Π] " <> show varTy <> "-> " <> show resultTy
-  show (Lam var) = "\\x. " <> show var
+  show (Star n ()) = "* " <> show n
+  show (PrimTy p ()) = show p
+  show (Pi _usage varTy resultTy ()) =
+    "[Π] " <> show varTy <> "→ " <> show resultTy
+  show (Lam var ()) = "\\x. " <> show var
   -- Elim should be invisible to users.
-  show (Elim term) = show term
+  show (Elim term ()) = show term
+  show (XTerm v) = case v of {}
+-}
 
 -- | inferable terms
-data Elim primTy primVal
+data Elim' ext primTy primVal
   = -- | Bound variables, in de Bruijn indices
-    Bound Natural
+    Bound' Natural (XBound ext primTy primVal)
   | -- | Free variables of type name (see below)
-    Free Name
+    Free' Name (XFree ext primTy primVal)
   | -- | primitive constant
-    Prim primVal
+    Prim' primVal (XPrim ext primTy primVal)
   | -- | elimination rule of PI (APP).
-    App (Elim primTy primVal) (Term primTy primVal)
+    App' (Elim' ext primTy primVal) (Term' ext primTy primVal)
+         (XApp ext primTy primVal)
   | -- | Annotation with usage.
-    Ann Usage (Term primTy primVal) (Term primTy primVal)
-  deriving (Eq)
+    Ann' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
+         (XAnn ext primTy primVal)
+  | -- | Extension point for other elimination forms
+    ElimX (ElimX ext primTy primVal)
 
+deriving instance
+  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
+  Eq (Elim' ext primTy primVal)
+
+deriving instance
+  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
+  Show (Elim' ext primTy primVal)
+
+
+type Term = Term' NoExt
+
+pattern Star ∷ Natural → Term primTy primVal
+pattern Star i = Star' i ()
+
+pattern PrimTy ∷ primTy → Term primTy primVal
+pattern PrimTy t = PrimTy' t ()
+
+pattern Pi ∷ Usage → Term primTy primVal → Term primTy primVal
+           → Term primTy primVal
+pattern Pi π s t = Pi' π s t ()
+
+pattern Lam ∷ Term primTy primVal → Term primTy primVal
+pattern Lam t = Lam' t ()
+
+pattern Elim ∷ Elim primTy primVal → Term primTy primVal
+pattern Elim e = Elim' e ()
+
+{-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
+
+
+type Elim = Elim' NoExt
+
+pattern Bound ∷ Natural → Elim primTy primVal
+pattern Bound x = Bound' x ()
+
+pattern Free ∷ Name → Elim primTy primVal
+pattern Free x = Free' x ()
+
+pattern Prim ∷ primVal → Elim primTy primVal
+pattern Prim x = Prim' x ()
+
+pattern App ∷ Elim primTy primVal → Term primTy primVal → Elim primTy primVal
+pattern App s t = App' s t ()
+
+pattern Ann ∷ Usage → Term primTy primVal → Term primTy primVal
+            → Elim primTy primVal
+pattern Ann π s t = Ann' π s t ()
+
+{-# COMPLETE Bound, Free, Prim, App, Ann #-}
+
+-- FIXME pretty-printer
+{-
 instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
-  show (Bound i) = "Bound " <> show i -- to be improved
-  show (Free name) = show name -- using derived show Name instance, to be improved
-  show (Prim p) = show p
-  show (App f x) = show f <> " " <> show x
-  show (Ann pi theTerm theType) =
+  show (Bound i ()) = "Bound " <> show i -- to be improved
+  show (Free name ()) = show name
+    -- using derived show Name instance, to be improved
+  show (Prim p ()) = show p
+  show (App f x ()) = show f <> " " <> show x
+  show (Ann pi theTerm theType ()) =
     show theTerm <> " : [" <> show pi <> "] " <> show theType
+  show (XElim v) = case v of {}
+-}
+
+
 
 data Name
   = -- | Global variables are represented by name thus type string
@@ -66,7 +147,8 @@ data Name
 data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
-  | VPi Usage (Value primTy primVal m) (Value primTy primVal m → m (Value primTy primVal m))
+  | VPi Usage (Value primTy primVal m)
+        (Value primTy primVal m → m (Value primTy primVal m))
   | VLam (Value primTy primVal m → m (Value primTy primVal m))
   | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
@@ -91,23 +173,17 @@ instance
   where
   x == y = fst (exec (quote0 x)) == fst (exec (quote0 y))
 
-instance
+deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
-  where
-  NFree x == NFree y = x == y
-  NApp a b == NApp c d = a == c && b == d
-  _ == _ = False
 
-instance (Show primTy, Show primVal) ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
+instance (Show primTy, Show primVal)
+       ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
   show x = show (fst (exec (quote0 x)))
 
-instance
+deriving instance
   (Show primTy, Show primVal) ⇒
   Show (Neutral primTy primVal (EnvTypecheck primTy primVal))
-  where
-  show (NFree n) = "NFree " <> show n
-  show (NApp n v) = "NApp " <> show n <> " " <> show v
 
 data TypecheckError primTy primVal m
   = TypeMismatch
@@ -127,11 +203,9 @@ data TypecheckError primTy primVal m
   | MustBeFunction (Elim primTy primVal) Natural (Term primTy primVal)
   | BoundVariableCannotBeInferred
 
-instance
+deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
-  where
-  _ == _ = False -- TODO
 
 instance
   (Show primTy, Show primVal) ⇒
@@ -149,7 +223,8 @@ instance
       <> show (fst expectedT)
       <> " usage."
   show (UniverseMismatch t ty) =
-    show t <> " is of type * of a higher universe. But the expected type "
+    show t
+      <> " is of type * of a higher universe. But the expected type "
       <> show ty
       <> " is * of a equal or lower universe."
   show (CannotApply f x) =
@@ -165,9 +240,16 @@ instance
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
-    "The usage of " <> (show (fst gotU)) <> " is not compatible with " <> (show (fst expectedU))
+       "The usage of "
+    <> (show (fst gotU))
+    <> " is not compatible with "
+    <> (show (fst expectedU))
   show (UnboundBinder ii x) =
-    "Cannot find the type of \n" <> show x <> "\n (binder number " <> show ii <> ") in the environment."
+      "Cannot find the type of \n"
+    <> show x
+    <> "\n (binder number "
+    <> show ii
+    <> ") in the environment."
   show (MustBeFunction m ii n) =
     ( show m <> "\n (binder number " <> show ii
         <> ") is not a function type and thus \n"
@@ -234,13 +316,14 @@ quote ∷
   Natural →
   Value primTy primVal m →
   m (Term primTy primVal)
-quote _ii (VStar n) = pure (Star n)
-quote _ii (VPrimTy p) = pure (PrimTy p)
-quote ii (VPi pi v f) =
-  Pi pi <$> quote ii v <*> (quote (ii + 1) =<< f (vfree (Quote ii)))
-quote ii (VLam f) = Lam <$> (quote (ii + 1) =<< f (vfree (Quote ii)))
-quote ii (VNeutral n) = Elim <$> neutralQuote ii n
-quote _ii (VPrim p) = pure (Elim (Prim p))
+quote ii p =
+  case p of
+    VStar nat → pure (Star nat)
+    VPrimTy p → pure (PrimTy p)
+    VPi pi v f → Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
+    VLam func → Lam <$> (quote (ii + 1) =<< func (vfree (Quote ii)))
+    VPrim pri → pure (Elim (Prim pri))
+    VNeutral n → Elim <$> neutralQuote ii n
 
 neutralQuote ∷
   ∀ primTy primVal m.

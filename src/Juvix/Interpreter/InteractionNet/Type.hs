@@ -38,7 +38,11 @@ data AST primVal
   | -- Not valid syntax but for read back of a graph
     Erase
   | -- Not valid syntax but for read back of a graph
-    Curried3 (Primitive → Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal) (AST primVal)
+    Curried3
+      (Primitive → Primitive → Primitive → Maybe Primitive)
+      (AST primVal)
+      (AST primVal)
+      (AST primVal)
   | Curried2 (Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal)
   | Curried1 (Primitive → Maybe Primitive) (AST primVal)
   | PrimCurried2 (primVal → primVal → Maybe primVal) (AST primVal) (AST primVal)

@@ -1,11 +1,10 @@
 module Compile where
 
-import Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
-import Juvix.Backends.Michelson.Parameterisation
+import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
@@ -14,13 +13,14 @@ import Juvix.Library
 import Options
 import Types
 
-typecheck ∷ FilePath → Backend → IO (Erased.Term PrimVal, Erased.Type PrimTy)
+typecheck ∷
+  FilePath → Backend → IO (Erased.Term Param.PrimVal, Erased.Type Param.PrimTy)
 typecheck fin Michelson = do
   source ← readFile fin
-  let parsed = Core.generateParser michelson (T.unpack source)
+  let parsed = Core.generateParser Param.michelson (T.unpack source)
   case parsed of
     Just (HR.Elim (HR.Ann usage term ty)) → do
-      erased ← liftIO (exec (Core.typecheckErase term usage ty) michelson)
+      erased ← liftIO (exec (Core.typecheckErase term usage ty) Param.michelson)
       case erased of
         (Right ((term, ty), typeAssignment), _) →
           pure (term, ty)

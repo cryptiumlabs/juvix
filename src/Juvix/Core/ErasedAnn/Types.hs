@@ -25,4 +25,5 @@ data Type primTy primVal
     Pi Usage.T (Type primTy primVal) (Type primTy primVal)
   deriving (Show, Eq, Generic)
 
+-- TODO ∷ replace with a proper type, and not a tuple!
 type AnnTerm primTy primVal = (Term primTy primVal, Usage.T, Type primTy primVal)
