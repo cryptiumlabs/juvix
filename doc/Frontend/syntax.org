@@ -1,0 +1,14 @@
+
+* Syntax
+#+BEGIN_SRC bnf
+  topLevel ::= <type>
+             | <module>
+             | <module-open>
+             ; These two last, due to lack of words before
+             | <signature>
+             | <function>
+
+  function ::=
+
+  type ::=
+#+END_SRC
