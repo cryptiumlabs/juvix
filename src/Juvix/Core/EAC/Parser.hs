@@ -10,7 +10,7 @@ where
 
 import Juvix.Core.EAC.Types hiding (PType, RPT, RPTI, RPTO)
 import qualified Juvix.Core.EAC.Types as EAC
-import Juvix.Core.Parameterisations.Unit
+import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library hiding
   ( (<|>),
     Type,
@@ -27,11 +27,11 @@ import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
 import Prelude (String, error)
 
-type PType = EAC.PType UnitTy
+type PType = EAC.PType Unit.Ty
 
-type RPTO = EAC.RPTO UnitVal
+type RPTO = EAC.RPTO Unit.Val
 
-type RPTI = EAC.RPTI UnitVal
+type RPTI = EAC.RPTI Unit.Val
 
 langaugeDef ∷ Stream s m Char ⇒ GenLanguageDef s u m
 langaugeDef = LanguageDef

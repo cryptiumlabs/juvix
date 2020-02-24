@@ -1,7 +1,7 @@
 module Juvix.Core.Types where
 
 import qualified Juvix.Core.EAC.Types as EAC
-import qualified Juvix.Core.Erasure.Types as ET
+import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
@@ -28,7 +28,7 @@ data PipelineError primTy primVal
   = InternalInconsistencyError Text
   | TypecheckerError Text
   | EACError (EAC.Errors primTy primVal)
-  | ErasureError ET.ErasureError
+  | ErasureError Erasure.Error
   deriving (Show, Generic)
 
 data PipelineLog primTy primVal

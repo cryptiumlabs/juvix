@@ -15,61 +15,61 @@ import Text.Show
 import Prelude (String)
 
 -- k: primitive type: naturals
-data NatTy
-  = Nat
+data Ty
+  = Ty
   deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
-data NatVal
-  = Natural Natural -- c
+data Val
+  = Val Natural -- c
   | Add -- f addition
   | Sub -- f subtraction
   | Mul -- f multiplication
-  | Curried NatVal Natural
+  | Curried Val Natural
   deriving (Eq)
 
-instance Show NatVal where
-  show (Natural x) = "Nat " <> Text.Show.show x
+instance Show Val where
+  show (Val x) = "Nat " <> Text.Show.show x
   show Add = "+"
   show Sub = "-"
   show Mul = "*"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
-typeOf ∷ NatVal → NonEmpty NatTy
-typeOf (Natural _) = Nat :| []
-typeOf (Curried _ _) = Nat :| [Nat]
-typeOf Add = Nat :| [Nat, Nat]
-typeOf Sub = Nat :| [Nat, Nat]
-typeOf Mul = Nat :| [Nat, Nat]
+typeOf ∷ Val → NonEmpty Ty
+typeOf (Val _) = Ty :| []
+typeOf (Curried _ _) = Ty :| [Ty]
+typeOf Add = Ty :| [Ty, Ty]
+typeOf Sub = Ty :| [Ty, Ty]
+typeOf Mul = Ty :| [Ty, Ty]
 
-apply ∷ NatVal → NatVal → Maybe NatVal
-apply Add (Natural x) = pure (Curried Add x)
-apply Sub (Natural x) = pure (Curried Sub x)
-apply Mul (Natural x) = pure (Curried Mul x)
-apply (Curried Add x) (Natural y) = pure (Natural (x + y))
-apply (Curried Sub x) (Natural y) = pure (Natural (x - y))
-apply (Curried Mul x) (Natural y) = pure (Natural (x * y))
+apply ∷ Val → Val → Maybe Val
+apply Add (Val x) = pure (Curried Add x)
+apply Sub (Val x) = pure (Curried Sub x)
+apply Mul (Val x) = pure (Curried Mul x)
+apply (Curried Add x) (Val y) = pure (Val (x + y))
+apply (Curried Sub x) (Val y) = pure (Val (x - y))
+apply (Curried Mul x) (Val y) = pure (Val (x * y))
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser NatTy
+parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Nat"
-  pure Nat
+  pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser NatVal
+parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
 parseVal lexer =
   parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
 
-parseNat ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseNat lexer = Natural . fromIntegral |<< Token.natural lexer
+parseNat ∷ Token.GenTokenParser String () Identity → Parser Val
+parseNat lexer = Val . fromIntegral |<< Token.natural lexer
 
-parseAdd ∷ Token.GenTokenParser String () Identity → Parser NatVal
+parseAdd ∷ Token.GenTokenParser String () Identity → Parser Val
 parseAdd lexer = Token.reserved lexer "+" >> pure Add
 
-parseSub ∷ Token.GenTokenParser String () Identity → Parser NatVal
+parseSub ∷ Token.GenTokenParser String () Identity → Parser Val
 parseSub lexer = Token.reserved lexer "-" >> pure Sub
 
-parseMul ∷ Token.GenTokenParser String () Identity → Parser NatVal
+parseMul ∷ Token.GenTokenParser String () Identity → Parser Val
 parseMul lexer = Token.reserved lexer "*" >> pure Mul
 
 reservedNames ∷ [String]
@@ -78,6 +78,6 @@ reservedNames = ["Nat", "+", "-", "*"]
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-nat ∷ Parameterisation NatTy NatVal
-nat =
+t ∷ Parameterisation Ty Val
+t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

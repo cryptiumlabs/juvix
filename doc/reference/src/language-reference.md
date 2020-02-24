@@ -34,109 +34,109 @@ abstract: Juvix synthesises a high-level frontend syntax, dependent-linearly-typ
 
 # Motivation
 
-!include src/motivation.pdc
+!include src/motivation.md
 
 # Typographical conventions
 
-!include src/typographical-conventions.pdc
+!include src/typographical-conventions.md
 
 # Prior work
 
-!include src/prior-work.pdc
+!include src/prior-work.md
 
 # Desiderata
 
-!include src/desiderata.pdc
+!include src/desiderata.md
 
 # Ingredients
 
-!include src/ingredients.pdc
+!include src/ingredients.md
 
 # Theoretical background
 
-!include src/theoretical-background.pdc
+!include src/theoretical-background.md
 
 ## Lambda calculus
 
-!include src/background/lambda-calculus.pdc
+!include src/background/lambda-calculus.md
 
 ## Sequent calculus
 
-!include src/background/sequent-calculus.pdc
+!include src/background/sequent-calculus.md
 
 ## Simply-typed lambda calculus
 
-!include src/background/simply-typed-lambda-calculus.pdc
+!include src/background/simply-typed-lambda-calculus.md
 
 ## Calculus of constructions
 
-!include src/background/calculus-of-constructions.pdc
+!include src/background/calculus-of-constructions.md
 
 ## Linear logic
 
-!include src/background/linear-logic.pdc
+!include src/background/linear-logic.md
 
 ## Interaction nets
 
-!include src/background/interaction-nets.pdc
+!include src/background/interaction-nets.md
 
 ## Elementary affine logic
 
-!include src/background/elementary-affine-logic.pdc
+!include src/background/elementary-affine-logic.md
 
 ## Optimal reduction
 
-!include src/background/optimal-reduction.pdc
+!include src/background/optimal-reduction.md
 
 \pagebreak
 
 # Architectural overview
 
-!include src/architecture.pdc
+!include src/architecture.md
 
 # Frontend language
 
-!include src/frontend-language.pdc
+!include src/frontend-language.md
 
 # Core language
 
-!include src/core-language.pdc
+!include src/core-language.md
 
 # Core optimisation
 
-!include src/core-optimisation.pdc
+!include src/core-optimisation.md
 
 # Erased core language
 
-!include src/erased-core-language.pdc
+!include src/erased-core-language.md
 
 # Elementary affine core
 
-!include src/elementary-affine-core.pdc
+!include src/elementary-affine-core.md
 
 # Low-level execution model
 
-!include src/low-level-execution-model.pdc
+!include src/low-level-execution-model.md
 
 # Cost accounting
 
-!include src/cost-accounting.pdc
+!include src/cost-accounting.md
 
 # Backends
 
-!include src/backends.pdc
+!include src/backends.md
 
 # Distributed ledger integration
 
-!include src/distributed-ledger-integration.pdc
+!include src/distributed-ledger-integration.md
 
 # Future directions
 
-!include src/future-directions.pdc
+!include src/future-directions.md
 
 # Examples
 
-!include src/examples.pdc
+!include src/examples.md
 
 \pagebreak
 

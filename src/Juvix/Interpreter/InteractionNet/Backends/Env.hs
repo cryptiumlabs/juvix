@@ -11,10 +11,11 @@
 --   + File will also be imported in [[Nets]] due to these two functions
 module Juvix.Interpreter.InteractionNet.Backends.Env where
 
-import Juvix.Interpreter.InteractionNet.Backends.Interface
+import qualified Juvix.Interpreter.InteractionNet.Backends.Interface as Interface
 import Juvix.Library
 
--- | Info Stores diagnostic data on how much memory a particular graph reduction uses
+-- | Info Stores diagnostic data on how much memory
+-- a particular graph reduction uses
 data Info
   = Info
       { memoryAllocated ∷ Integer,
@@ -36,13 +37,13 @@ data InfoNet net
 type InfoNetwork net a m =
   ( HasState "info" Info m,
     HasState "net" (net a) m,
-    Network net
+    Interface.Network net
   )
 
 type InfoNetworkDiff net a m =
   ( HasState "info" Info m,
     HasState "net" (net a) m,
-    DifferentRep net
+    Interface.DifferentRep net
   )
 
 newtype EnvNetInfo net a = EnvI (State (InfoNet net) a)

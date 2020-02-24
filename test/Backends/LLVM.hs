@@ -7,7 +7,7 @@ import Juvix.Backends.LLVM.Net.EAC.Types as Types
 import Juvix.Backends.LLVM.Net.Environment
 import Juvix.Backends.LLVM.Translation
 import qualified Juvix.Core.Erased as E
-import Juvix.Core.Parameterisations.Unit
+import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library
 import LLVM.AST
 import LLVM.AST.AddrSpace
@@ -63,9 +63,9 @@ test_init_module = T.testCase "init module should be created successfully" $ do
 
 test_eval_jit ∷ T.TestTree
 test_eval_jit = T.testCase "x should evaluate to x" $ do
-  let term ∷ E.Term UnitVal
+  let term ∷ E.Term Unit.Val
       term = E.Lam "x" (E.Var "x")
-  res ← evalErasedCoreInLLVM unit term
+  res ← evalErasedCoreInLLVM Unit.t term
   term T.@=? res
 
 test_create_net_kill ∷ T.TestTree

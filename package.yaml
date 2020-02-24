@@ -66,6 +66,10 @@ default-extensions:
   - TypeApplications
   - StandaloneDeriving
   - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
 
 ghc-options:
   - -ferror-spans
@@ -187,6 +191,8 @@ library:
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Typechecker
+    - Juvix.Core.IR.Extension
+    - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
     - Juvix.Core.HR.Types

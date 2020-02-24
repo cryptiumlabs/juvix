@@ -4,12 +4,12 @@ Juvix combines compiler-directed & user-directed optimising transformations into
 
 ## User-directed optimisations
 
-!include optimisation/user-directed-optimisations.pdc
+!include optimisation/user-directed-optimisations.md
 
 ## Optimisation by normalisation
 
-!include optimisation/optimisation-by-normalisation.pdc
+!include optimisation/optimisation-by-normalisation.md
 
 ## Graph transformations
 
-!include optimisation/graph-transformations.pdc
+!include optimisation/graph-transformations.md
