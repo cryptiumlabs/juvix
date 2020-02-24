@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions are welcome! Please consider the following guidelines.
+Contributions are welcome! Please follow the [style guide](https://github.com/cryptiumlabs/juvix/blob/develop/doc/STYLEGUIDE.md) and consider the following guidelines.
 
 ## Code formatting
 
