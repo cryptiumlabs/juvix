@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+
 -- |
 -- - Serves as a virtual stack over Michelson
 -- - This stack has a few properties
@@ -298,7 +299,7 @@ symbolsInT symbs (T stack' _) =
         ( concatMap
             ( \(x, _) →
                 case x of
-                  VarE s _u t → (, t) <$> Set.toList s
+                  VarE s _u t → (,t) <$> Set.toList s
                   _ → []
             )
             stack'

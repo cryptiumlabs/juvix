@@ -120,6 +120,7 @@ var symb = do
 
 -- Replaced to always just replace the top element
 -- it seems all forms place a lambda at the top!
+
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
 name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
@@ -516,5 +517,5 @@ eatType 0 t = t
 eatType x (Ann.Pi _ _ a) = eatType (pred x) a
 eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 
-
+promoteLambda ∷ Env.Curried → [Instr.ExpandedOp]
 promoteLambda = undefined
