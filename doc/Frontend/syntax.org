@@ -10,5 +10,52 @@
 
   function ::=
 
-  type ::=
+  ;;; Types --------------------------------------------------------
+
+  type ::= <data-declaration>
+         | <type-declaration>
+         | <alias-declaration>
+
+  type-declaration ::= data <name> <type-signature> = <adt>
+                     | data <name> = <adt>
+
+
+  adt ::= <sum>+
+        | <product>
+
+
+  ; | is special in bnf
+  sum ::= \| <name>
+        | \| <name> <product>
+
+  product ::= { <name-type-semi>+ <name-type>* }
+            | <order-product>*
+
+  order-product ::= <product-end>
+                  | <name> <type-signature> <arrow>
+                  | <type-name> <arrow>
+
+  product-end ::= <type>
+
+  name-type      ::= <name> <type-signature>
+  name-type-semi ::= <name-type> <semi>
+
+  type-alias ::= type
+
+  type-signature ::= : <type-name>
+
+  ;;; Arrows --------------------------------------------------------
+
+  arrow ::= -\>
+          | -o
+
+  ;;; Expressions ---------------------------------------------------
+  expression ::=
+
+
+  ;;; Misc ----------------------------------------------------------
+  ; ; is comment in bnf
+  semi      ::= \;
+  name      ::= ascii
+  type-name ::= <name>
 #+END_SRC
