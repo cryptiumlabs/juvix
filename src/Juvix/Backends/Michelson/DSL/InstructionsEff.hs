@@ -98,7 +98,7 @@ var symb = do
   stack ← get @"stack"
   let pushStack value =
         case VStack.lookupType symb stack of
-          Just t → do
+          Just t →
             modify @"stack" (VStack.cons (VStack.var1E symb (Just value), t))
           Nothing →
             throw @"compilationError" (Types.NotInStack symb)
@@ -118,19 +118,12 @@ var symb = do
       | otherwise →
         Env.Expanded <$> dupToFront index
 
+-- Replaced to always just replace the top element
+-- it seems all forms place a lambda at the top!
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
 name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
-name symb f@(form, _usage, _type') = do
-  result ← inst f
-  case form of
-    Ann.Var {} →
-      modify @"stack" (VStack.nameTop symb)
-    -- all prims shouldn't add their arguments to the vstack
-    Ann.Prim {} →
-      modify @"stack" (VStack.nameTop symb)
-  -- consVar symb result usage type'
-  pure result
+name symb f = inst f <* modify @"stack" (VStack.nameTop symb)
 
 -- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
 primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
@@ -180,8 +173,9 @@ applyExpanded expanded args = do
   modify @"stack" (VStack.drop 1)
   case expanded of
     Env.Curr c → apply c args []
-    -- these two cases would only be valid if we expanded into a Michelson
-    -- lambda, however would we ever do that?
+    -- We may get a Michelson lambda if we have one
+    -- in storage, make sure to handle this case!
+    Env.MichelsonLam → undefined
     Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ → throw @"compilationError" (Types.InternalFault "App on Michelson")
 
@@ -217,7 +211,7 @@ intGen ∷ OnTerm2 m Integer Integer
 intGen op f = onIntGen op (\x y → V.ValueInt (f x y))
 
 intGen1 ∷ OnTerm1 m Integer Integer
-intGen1 op f = onInt1 op (\x → V.ValueInt (f x))
+intGen1 op f = onInt1 op (V.ValueInt . f)
 
 onInt1 ∷ OnTerm1 m Integer (V.Value' Types.Op)
 onInt1 op f =
@@ -273,7 +267,7 @@ onOneArgs op f typ instrs = do
             addExpanded instr1
             addInstr op
             pure (Env.Expanded op)
-      modify @"stack" (VStack.drop 2)
+      modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
     _ → throw @"compilationError" Types.NotEnoughArguments
@@ -322,7 +316,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack ∷ Env.Instruction m ⇒ Env.Expanded → m Env.Expanded
 promoteTopStack x = do
   stack ← get @"stack"
-  let (insts, stack') = VStack.promote 1 stack
+  let (insts, stack') = VStack.promote 1 stack promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x
@@ -429,6 +423,9 @@ apply closure args remainingArgs = do
 
     recur (Env.Curr c) xs =
       apply c [] xs
+    -- TODO ∷ make exec case for Michelson lambdas
+    -- This would be possible if (storage = f) → g f = f 3!
+    recur Env.MichelsonLam _xs = undefined
     recur (Env.Constant _) _ =
       throw @"compilationError" (Types.InternalFault "apply to non lam")
     recur (Env.Expanded _) _ =
@@ -481,12 +478,14 @@ allConstants = all f
   where
     f (Env.Constant _) = True
     f (Env.Expanded _) = False
+    f Env.MichelsonLam = False
     f (Env.Curr {}) = True
 
 expandedToStack ∷ Env.Expanded → VStack.Val Env.Curried
 expandedToStack (Env.Constant v) = VStack.ConstE v
 expandedToStack (Env.Expanded _) = VStack.FuncResultE
 expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
+expandedToStack Env.MichelsonLam = VStack.MichelsonLambda
 
 consVal ∷ Env.Stack m ⇒ Env.Expanded → Types.Type → m ()
 consVal result type' =
@@ -516,3 +515,6 @@ eatType ∷ Natural → Types.Type → Types.Type
 eatType 0 t = t
 eatType x (Ann.Pi _ _ a) = eatType (pred x) a
 eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
+
+
+promoteLambda = undefined

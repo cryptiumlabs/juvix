@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 -- |
 -- - Serves as a virtual stack over Michelson
 -- - This stack has a few properties
@@ -43,10 +44,10 @@ data Elem lamType
   deriving (Show, Eq, Generic)
 
 varE ∷ Symbol → Maybe (Val lamType) → Elem lamType
-varE x t = VarE (Set.singleton x) Usage.Omega t
+varE x = VarE (Set.singleton x) Usage.Omega
 
 var1E ∷ Symbol → Maybe (Val lamType) → Elem lamType
-var1E x t = VarE (Set.singleton x) one t
+var1E x = VarE (Set.singleton x) one
 
 varNone ∷ Symbol → Elem lamType
 varNone x = VarE (Set.singleton x) Usage.Omega Nothing
@@ -64,6 +65,7 @@ data LamPartial
 data Val lamType
   = ConstE Types.Value
   | FuncResultE
+  | MichelsonLambda
   | LamPartialE lamType
   deriving (Show, Eq, Generic)
 
@@ -93,10 +95,12 @@ inT ∷ Elem lamType → Bool
 inT (VarE _ _ (Just FuncResultE)) = True
 inT (VarE _ _ (Just (ConstE _))) = False
 inT (VarE _ _ (Just (LamPartialE _))) = False
+inT (VarE _ _ (Just MichelsonLambda)) = True
 inT (VarE _ _ Nothing) = True
 inT (Val (ConstE _)) = False
 inT (Val FuncResultE) = True
 inT (Val (LamPartialE _)) = False
+inT (Val MichelsonLambda) = True
 
 -- invariant ¬ inT = valueOf is valid!
 notInStackOf ∷ Elem lamType → NotInStack lamType
@@ -104,9 +108,14 @@ notInStackOf (VarE _ _ (Just (LamPartialE l))) = Lam' l
 notInStackOf (Val (LamPartialE l)) = Lam' l
 notInStackOf (VarE _ _ (Just (ConstE i))) = Val' i
 notInStackOf (Val (ConstE i)) = Val' i
-notInStackOf (Val FuncResultE) = error "called valueOf with a stored value"
-notInStackOf (VarE _ _ Nothing) = error "called valueOf with a stored value"
-notInStackOf (VarE _ _ (Just FuncResultE)) = error "called valueOf with a stored value"
+notInStackOf (Val FuncResultE) = notInError
+notInStackOf (VarE _ _ Nothing) = notInError
+notInStackOf (Val MichelsonLambda) = notInError
+notInStackOf (VarE _ _ (Just FuncResultE)) = notInError
+notInStackOf (VarE _ _ (Just MichelsonLambda)) = notInError
+
+notInError ∷ a
+notInError = error "called valueOf with a stored value"
 
 -- | 'car' gets the first element off the stack
 -- may return an error
@@ -168,12 +177,13 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
-promote ∷ Int → T lamType → ([Instr.ExpandedOp], T lamType)
-promote _n stack
+promote ∷
+  Int → T lamType → (lamType → [Instr.ExpandedOp]) → ([Instr.ExpandedOp], T lamType)
+promote _n stack _
   | isNil stack = ([], stack)
-promote 0 stack = ([], stack)
-promote n stack =
-  let (insts, newStack) = promote (pred n) (cdr stack)
+promote 0 stack _ = ([], stack)
+promote n stack f =
+  let (insts, newStack) = promote (pred n) (cdr stack) f
    in let pushVal v t = Instructions.push t v : insts
        in case car stack of
             (Val (ConstE v), t) →
@@ -183,6 +193,8 @@ promote n stack =
             -- TODO ∷ add a case for lambda
             --        What do we dispatch to, to promote it?
             --        Maybe have to move this function into utils!?
+            (VarE x i (Just (LamPartialE lamType)), t) →
+              (f lamType, cons (VarE x i (Just MichelsonLambda), t) newStack)
             a →
               (insts, cons a newStack)
 
@@ -214,7 +226,7 @@ drop n xs
             drop (pred n) (cdr xs)
 
 updateUsageList ∷ Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
-updateUsageList symbs usage stack = f stack
+updateUsageList symbs usage = f
   where
     f ((VarE s i ele, ty) : xs)
       | not (Set.disjoint symbs s) = (VarE s (i <> usage) ele, ty) : xs
@@ -286,7 +298,7 @@ symbolsInT symbs (T stack' _) =
         ( concatMap
             ( \(x, _) →
                 case x of
-                  VarE s _u t → (\s → (s, t)) <$> Set.toList s
+                  VarE s _u t → (, t) <$> Set.toList s
                   _ → []
             )
             stack'
@@ -308,13 +320,13 @@ insertAt n xs stack =
 --------------------------------------------------------------------------------
 
 usageOf ∷ Elem lamType → Usage.T
-usageOf (Val {}) = Usage.Omega
+usageOf Val {} = Usage.Omega
 usageOf (VarE _ usage _) = usage
 
 predUsage ∷ Elem lamType → Elem lamType
-predUsage v@(Val {}) = v
+predUsage v@Val {} = v
 predUsage (VarE s usage val) = VarE s (Usage.pred usage) val
 
 usageOne ∷ Elem lamType → Elem lamType
-usageOne v@(Val {}) = v
+usageOne v@Val {} = v
 usageOne (VarE s _ val) = VarE s one val

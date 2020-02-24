@@ -37,7 +37,8 @@ type CompError = Types.CompilationError
 
 data Expanded
   = Constant (V.Value' Types.Op)
-  | Expanded (Instr.ExpandedOp)
+  | Expanded Instr.ExpandedOp
+  | MichelsonLam
   | -- | Curr is a stand in for lambda or curry
     Curr Curried
   deriving (Show)
