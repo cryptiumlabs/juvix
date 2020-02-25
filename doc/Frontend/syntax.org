@@ -1,26 +1,37 @@
-
 * Syntax
 #+BEGIN_SRC bnf
-  topLevel ::= <type>
-             | <module>
-             | <module-open>
-             ; These two last, due to lack of words before
-             | <signature>
-             | <function>
+  top-level ::= <type>
+              | <module-open>
+              | <type-class>
+              | <type-class-instance>
+              ; These four last, due to lack of words before
+              | <module-signature>
+              | <module>
+              | <signature>
+              | <function>
 
-  function ::=
+  ;;; Functions ======================================================
 
-  ;;; Types --------------------------------------------------------
+  function ::= <name> <name>+ = <expression>
+
+  ; if we only have usage in arrows, we should allow a way to have
+  ; usage information of variables as well!
+  signature ::= <name> <type-signature>
+              | <name> <usage> <type-signature>
+
+  ;;; Types ==========================================================
 
   type ::= <data-declaration>
          | <type-declaration>
          | <alias-declaration>
 
-  type-declaration ::= data <name> <type-signature> = <adt>
-                     | data <name> = <adt>
+  ; Should we let there be a refinement in adt type declaration?
+  data-declaration  ::= type <name-type> = <adt>
+                      | type <name>      = <adt>
+  type-declaration  ::= type <name>      = <name> <type-refine>
+  alias-declaration ::= type <name>      = <type-refine>
 
-
-  adt ::= <sum>+
+  adt ::= <sum>*
         | <product>
 
 
@@ -29,33 +40,69 @@
         | \| <name> <product>
 
   product ::= { <name-type-semi>+ <name-type>* }
-            | <order-product>*
-
-  order-product ::= <product-end>
-                  | <name> <type-signature> <arrow>
-                  | <type-name> <arrow>
-
-  product-end ::= <type>
+            | { <name-type-semi>* }
+            | <arrow-type>
 
   name-type      ::= <name> <type-signature>
   name-type-semi ::= <name-type> <semi>
 
-  type-alias ::= type
+  ; should we move ()'s somewhere else?
+  arrow-type ::= <type-refine>
+               | <name> : <type-refine> <arrow> <arrow-type>
+               | <type-refine>          <arrow> <arrow-type>
+               | ( <arrow-type> )
 
-  type-signature ::= : <type-name>
+  type-signature ::= : <arrow-type>
 
-  ;;; Arrows --------------------------------------------------------
+  ; { } here are a refinement type!
+  type-refine ::= <type-name> { <expression> }
+                | <type-name>
 
-  arrow ::= -\>
-          | -o
+  ;;; Arrows =========================================================
 
-  ;;; Expressions ---------------------------------------------------
+
+  arrow ::= -\> ; ω usage by default? This should be the most common arrow
+          | -o  ; linear usage
+          | -|  ; ??? some kind of usage
+          | -<usage>-\>
+          | --<usage>--\> ; maybe remove this one?
+
+  ;;; Modules ========================================================
+
+  ; This doubles as our import
+  module-open ::= open <module-name>
+
+  ; We are going to make modules a bit more interesting, syntax wise
+  ; imagine modules were functions with capital name to deliminate
+  ; thus module signatures have the same signature look as functions
+  ; however the end of this signature is quite a bit different than normal
+  ; functions, Maybe has { }, maybe has end? I'm not really sure yet
+
+  ; Don't need end if we are indent sensitive!
+  module ::= <module-name> <module-name>+ = <top-level>+ end
+
+  ;;; Types Classes ==================================================
+
+  ; Need end if we are indent sensitive!
+  type-class ::= class
+
+  ; Need end if we are indent sensitive!
+  type-class-instance ::= instance <..> where
+
+  ;;; Expressions ====================================================
   expression ::=
 
+  usage ::= <expression>
 
-  ;;; Misc ----------------------------------------------------------
+  ;;; Misc ===========================================================
   ; ; is comment in bnf
-  semi      ::= \;
-  name      ::= ascii
-  type-name ::= <name>
+  semi         ::= \;
+  name         ::= <ascii-non-reserved>
+  capital-name ::= <ascii-capital>
+  type-name    ::= <name>
+  module-name  ::= <capital-name> ; enforce capital names?
+
+  ascii-non-reserved ::=
+
+  ascii-capital ::=
 #+END_SRC
