@@ -51,7 +51,12 @@ are large.  Use your judgement.
 Surround binary operators with a single space on either side.  Use
 your better judgement for the insertion of spaces around arithmetic
 operators but always be consistent about whitespace on either side of
-a binary operator.  Don't insert a space after a lambda.
+a binary operator.  Don't insert a space after a lambda. For example:
+
+```haskell
+plus_4 n = n + 4  -- whitespace on either side of `+`
+
+(\x -> x + 4)  -- no space after the lambda 
 
 ### Data Declarations
 
@@ -248,76 +253,6 @@ Use singular when naming modules e.g. use `Data.Map` and
 `Data.ByteString.Internal` instead of `Data.Maps` and
 `Data.ByteString.Internals`.
 
-Dealing with laziness
----------------------
-
-By default, use strict data types and lazy functions.
-
-### Data types
-
-Constructor fields should be strict, unless there's an explicit reason
-to make them lazy.  This avoids many common pitfalls caused by too much
-laziness and reduces the number of brain cycles the programmer has to
-spend thinking about evaluation order.
-
-```haskell
--- Good
-data Point = Point
-    { pointX :: !Double  -- ^ X coordinate
-    , pointY :: !Double  -- ^ Y coordinate
-    }
-```
-
-```haskell
--- Bad
-data Point = Point
-    { pointX :: Double  -- ^ X coordinate
-    , pointY :: Double  -- ^ Y coordinate
-    }
-```
-
-Additionally, unpacking simple fields often improves performance and
-reduces memory usage:
-
-```haskell
-data Point = Point
-    { pointX :: {-# UNPACK #-} !Double  -- ^ X coordinate
-    , pointY :: {-# UNPACK #-} !Double  -- ^ Y coordinate
-    }
-```
-
-As an alternative to the `UNPACK` pragma, you can put
-
-```haskell
-{-# OPTIONS_GHC -funbox-strict-fields #-}
-```
-
-at the top of the file.  Including this flag in the file itself instead
-of e.g. in the Cabal file is preferable as the optimization will be
-applied even if someone compiles the file using other means (i.e. the
-optimization is attached to the source code it belongs to).
-
-Note that `-funbox-strict-fields` applies to all strict fields, not
-just small fields (e.g. `Double` or `Int`).  If you're using GHC 7.4 or
-later you can use `NOUNPACK` to selectively opt-out for the unpacking
-enabled by `-funbox-strict-fields`.
-
-### Functions
-
-Have function arguments be lazy unless you explicitly need them to be
-strict.
-
-The most common case when you need strict function arguments is in
-recursion with an accumulator:
-
-```haskell
-mysum :: [Int] -> Int
-mysum = go 0
-  where
-    go !acc []    = acc
-    go acc (x:xs) = go (acc + x) xs
-```
-
 Misc
 ----
 
@@ -332,5 +267,5 @@ f = (g .) . h
 
 ### Warnings ###
 
-Code should be compilable with `-Wall -Werror`.  There should be no
+Code should be compilable with `-Wall`.  There should be no
 warnings.
