@@ -459,7 +459,7 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 -- Misc
 --------------------------------------------------------------------------------
 
-constructPrim ∷ (Env.Stack m, Env.Count m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
+constructPrim ∷ (Env.Stack m, Env.Count m, Env.Error m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
 constructPrim prim ty = do
   let (f, lPrim) = primToFargs prim ty
   names ← reserveNames lPrim
@@ -488,29 +488,40 @@ expandedToStack (Env.Expanded _) = VStack.FuncResultE
 expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
 expandedToStack Env.MichelsonLam = VStack.MichelsonLambda
 
-consVal ∷ Env.Stack m ⇒ Env.Expanded → Types.Type → m ()
-consVal result type' =
+consVal ∷ (Env.Stack m, Env.Error m) ⇒ Env.Expanded → Types.Type → m ()
+consVal result ty = do
+  ty ← typeToPrimType ty
   modify @"stack" $
     VStack.cons
       ( VStack.Val
           (expandedToStack result),
-        typeToPrimType type'
+        ty
       )
 
 consVar ∷
-  Env.Stack m ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
-consVar symb result usage type' =
+  (Env.Stack m, Env.Error m) ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
+consVar symb result usage ty = do
+  ty ← typeToPrimType ty
   modify @"stack" $
     VStack.cons
       ( VStack.VarE
           (Set.singleton symb)
           usage
           (Just (expandedToStack result)),
-        typeToPrimType type'
+        ty
       )
 
-typeToPrimType ∷ Types.Type → Untyped.Type
-typeToPrimType = undefined
+typeToPrimType ∷ ∀ m. Env.Error m ⇒ Types.Type → m Untyped.Type
+typeToPrimType ty =
+  case ty of
+    Ann.SymT _ → throw @"compilationError" Types.InvalidInputType
+    Ann.Star _ → throw @"compilationError" Types.InvalidInputType
+    Ann.PrimTy (Types.PrimTy mTy) → pure mTy
+    -- TODO ∷ Integrate usage information into this
+    Ann.Pi _usages argTy retTy → do
+      argTy ← typeToPrimType argTy
+      retTy ← typeToPrimType retTy
+      pure (Untyped.Type (Untyped.TLambda argTy retTy) "")
 
 eatType ∷ Natural → Types.Type → Types.Type
 eatType 0 t = t
