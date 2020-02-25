@@ -88,6 +88,14 @@ instance Monoid (T lamType) where
 -- T operation functions
 --------------------------------------------------------------------------------
 
+realItems ∷ T lamType → Int
+realItems (T _ size) = size
+
+dropAllVirtual ∷ T lamType → T lamType
+dropAllVirtual (T stack _) = T allReal (fromIntegral $ length allReal)
+  where
+    allReal = filter (inT . fst) stack
+
 ins ∷ (Elem lamType, Untyped.Type) → (Int → Int) → T lamType → T lamType
 ins v f (T stack' size) = T (v : stack') (f size)
 

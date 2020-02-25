@@ -309,6 +309,20 @@ protect inst = do
   put @"ops" curr
   pure Protect {val = v, insts = after}
 
+data ProtectStack
+  = ProtectStack
+      { prot ∷ Protect,
+        stack ∷ VStack.T Env.Curried
+      }
+
+protectStack ∷ Env.Instruction m ⇒ m Env.Expanded → m ProtectStack
+protectStack inst = do
+  curr ← get @"stack"
+  prot ← protect inst
+  after ← get @"stack"
+  put @"stack" curr
+  pure ProtectStack {prot = prot, stack = after}
+
 -- Promoting types happen elsewhere
 -- so protect just serves to hold the ops effects
 addExpanded ∷ Env.Ops m ⇒ Protect → m ()
@@ -317,7 +331,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack ∷ Env.Instruction m ⇒ Env.Expanded → m Env.Expanded
 promoteTopStack x = do
   stack ← get @"stack"
-  let (insts, stack') = VStack.promote 1 stack promoteLambda
+  let (insts, stack') = VStack.promote 1 stack undefined -- promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x
@@ -528,5 +542,34 @@ eatType 0 t = t
 eatType x (Ann.Pi _ _ a) = eatType (pred x) a
 eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 
-promoteLambda ∷ Env.Curried → [Instr.ExpandedOp]
-promoteLambda = undefined
+--------------------------------------------------------------------------------
+-- Misc
+--------------------------------------------------------------------------------
+
+-- promoteLambda ∷ Env.Curried → [Instr.ExpandedOp]
+promoteLambda (Env.C fun argsLeft left captures ty) = do
+  -- Step 1: Copy the captures to the top of the stack.
+  let capturesList = Set.toList captures
+  capturesInsts ← traverse var capturesList
+  -- Step 2: Figure out what the stack will be in the body of the function.
+  protectedStack ← do
+    curr ← get @"stack"
+    let stackLeft = VStack.take (length captures) curr
+
+        noVirts = VStack.dropAllVirtual stackLeft
+
+        numberOfExtraArgs = VStack.realItems noVirts
+
+    listOfArgsType ← typesFromPi ty
+    put @"stack" stackLeft
+    -- the arguments go to the top of the stack, not back
+    -- traverse (consVar ${1:Symbol} ${2:Expanded} ${3:T} ${4:Type}  )
+    -- unpack goes here
+    undefined
+  undefined
+
+typesFromPi ∷
+  HasThrow "compilationError" Env.CompError f ⇒ Types.Type → f [Untyped.Type]
+typesFromPi (Ann.Pi _usage aType rest) =
+  (:) <$> typeToPrimType aType <*> typesFromPi rest
+typesFromPi _ = pure []

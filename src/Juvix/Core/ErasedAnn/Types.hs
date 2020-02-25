@@ -14,7 +14,7 @@ data Term primTy primVal
         body ∷ AnnTerm primTy primVal
       }
   | App (AnnTerm primTy primVal) (AnnTerm primTy primVal)
-  | AppM (AnnTerm primTy primVal) [(AnnTerm primTy primVal)]
+  | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
   deriving (Show, Eq, Generic)
 
 data Type primTy primVal
