@@ -159,7 +159,7 @@ Comments
 ### Punctuation
 
 Write proper sentences; start with a capital letter and use proper
-punctuation. Make sure there is no typos.
+punctuation. Make sure there are no typos.
 
 ### Top-Level Definitions
 
