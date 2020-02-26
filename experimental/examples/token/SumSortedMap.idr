@@ -1,72 +1,72 @@
 module SumSortedMap
 
 public export
-data Tree : Nat -> (k : Type) -> Type -> Ord k -> Type where
-  Leaf : k -> v -> Tree Z k v o
-  Branch2 : Tree n k v o -> k -> Tree n k v o -> Tree (S n) k v o
-  Branch3 : Tree n k v o -> k -> Tree n k v o -> k -> Tree n k v o -> Tree (S n) k v o
+data Tree : Nat -> (k : Type) -> Ord k -> Nat -> Type where
+  Leaf : k -> (v:Nat) -> Tree Z k o v --depth, type of keys, ordering, index (sum of accounts)
+  Branch2 : Tree n k o sum0 -> k -> Tree n k o sum1 -> Tree (S n) k o (sum0 + sum1)
+  Branch3 : Tree n k o sum0 -> k -> Tree n k o sum1 -> k -> Tree n k o sum2 -> Tree (S n) k o (sum0 + sum1 + sum2)
 
 branch4 :
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o ->
-  Tree (S (S n)) k v o
+  Tree n k o sum0 -> k ->
+  Tree n k o sum1 -> k ->
+  Tree n k o sum2 -> k ->
+  Tree n k o sum3 ->
+  Tree (S (S n)) k o (((sum0 + sum1) + sum2) + sum3)
 branch4 a b c d e f g =
   Branch2 (Branch2 a b c) d (Branch2 e f g)
 
 branch5 :
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o ->
-  Tree (S (S n)) k v o
+  Tree n k o sum0 -> k ->
+  Tree n k o sum1 -> k ->
+  Tree n k o sum2 -> k ->
+  Tree n k o sum3 -> k ->
+  Tree n k o sum4 ->
+  Tree (S (S n)) k o (sum0 + sum1 + sum2 + sum3 + sum4)
 branch5 a b c d e f g h i =
   Branch2 (Branch2 a b c) d (Branch3 e f g h i)
 
 branch6 :
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o ->
-  Tree (S (S n)) k v o
+  Tree n k o sum0 -> k ->
+  Tree n k o sum1 -> k ->
+  Tree n k o sum2 -> k ->
+  Tree n k o sum3 -> k ->
+  Tree n k o sum4 -> k ->
+  Tree n k o sum5 ->
+  Tree (S (S n)) k o (sum0 + sum1 + sum2 + sum3 + sum4 + sum5)
 branch6 a b c d e f g h i j k =
   Branch3 (Branch2 a b c) d (Branch2 e f g) h (Branch2 i j k)
 
 branch7 :
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o -> k ->
-  Tree n k v o ->
-  Tree (S (S n)) k v o
+  Tree n k o sum0 -> k ->
+  Tree n k o sum1 -> k ->
+  Tree n k o sum2 -> k ->
+  Tree n k o sum3 -> k ->
+  Tree n k o sum4 -> k ->
+  Tree n k o sum5 -> k ->
+  Tree n k o sum6 ->
+  Tree (S (S n)) k o (sum0 + sum1 + sum2 + sum3 + sum4 + sum5 + sum6)
 branch7 a b c d e f g h i j k l m =
   Branch3 (Branch3 a b c d e) f (Branch2 g h i) j (Branch2 k l m)
 
-merge1 : Tree n k v o -> k -> Tree (S n) k v o -> k -> Tree (S n) k v o -> Tree (S (S n)) k v o
+merge1 : Tree n k o sum0 -> k -> Tree (S n) k o sum1 -> k -> Tree (S n) k o sum2-> Tree (S (S n)) k o (sum0 + sum1 + sum2)
 merge1 a b (Branch2 c d e) f (Branch2 g h i) = branch5 a b c d e f g h i
 merge1 a b (Branch2 c d e) f (Branch3 g h i j k) = branch6 a b c d e f g h i j k
 merge1 a b (Branch3 c d e f g) h (Branch2 i j k) = branch6 a b c d e f g h i j k
 merge1 a b (Branch3 c d e f g) h (Branch3 i j k l m) = branch7 a b c d e f g h i j k l m
 
-merge2 : Tree (S n) k v o -> k -> Tree n k v o -> k -> Tree (S n) k v o -> Tree (S (S n)) k v o
+merge2 : Tree (S n) k o sum0 -> k -> Tree n k o sum1 -> k -> Tree (S n) k o sum2 -> Tree (S (S n)) k o (sum0 + sum1 + sum2)
 merge2 (Branch2 a b c) d e f (Branch2 g h i) = branch5 a b c d e f g h i
 merge2 (Branch2 a b c) d e f (Branch3 g h i j k) = branch6 a b c d e f g h i j k
 merge2 (Branch3 a b c d e) f g h (Branch2 i j k) = branch6 a b c d e f g h i j k
 merge2 (Branch3 a b c d e) f g h (Branch3 i j k l m) = branch7 a b c d e f g h i j k l m
 
-merge3 : Tree (S n) k v o -> k -> Tree (S n) k v o -> k -> Tree n k v o -> Tree (S (S n)) k v o
+merge3 : Tree (S n) k o sum0 -> k -> Tree (S n) k o sum1 -> k -> Tree n k o sum2 -> Tree (S (S n)) k o (sum0 + sum1 + sum2)
 merge3 (Branch2 a b c) d (Branch2 e f g) h i = branch5 a b c d e f g h i
 merge3 (Branch2 a b c) d (Branch3 e f g h i) j k = branch6 a b c d e f g h i j k
 merge3 (Branch3 a b c d e) f (Branch2 g h i) j k = branch6 a b c d e f g h i j k
 merge3 (Branch3 a b c d e) f (Branch3 g h i j k) l m = branch7 a b c d e f g h i j k l m
 
-treeLookup : k -> Tree n k v o -> Maybe v
+treeLookup : k -> Tree n k o sum -> Maybe v
 treeLookup k (Leaf k' v) =
   if k == k' then
     Just v
@@ -85,11 +85,11 @@ treeLookup k (Branch3 t1 k1 t2 k2 t3) =
   else
     treeLookup k t3
 
-treeInsert' : k -> v -> Tree n k v o -> Either (Tree n k v o) (Tree n k v o, k, Tree n k v o)
+treeInsert' : k -> v -> Tree n k o sum -> Either (Tree n k o sum + v) (Tree n k v o, k, Tree n k v o)
 treeInsert' k v (Leaf k' v') =
   case compare k k' of
     LT => Right (Leaf k v, k, Leaf k' v')
-    EQ => Left (Leaf k v)
+    EQ => Left (Leaf k v) --todo: need to figure out how to substract the old v
     GT => Right (Leaf k' v', k', Leaf k v)
 treeInsert' k v (Branch2 t1 k' t2) =
   if k <= k' then

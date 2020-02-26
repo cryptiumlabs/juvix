@@ -27,7 +27,7 @@ delete : (k : Address) -> (v : Account) -> FixedSortedMap t -> FixedSortedMap (t
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
-record Storage where
+record Storage (sumIsValid : sumOfAccounts accounts = totalSupply) where -- dependent record: Storage Refl means sum of account is proven to equal to totalSupply
     constructor MkStorage
     version : Nat --version of the token standard
     totalSupply : Nat
@@ -36,6 +36,9 @@ record Storage where
     symbol : String
     owner : Address
 --TODO fix the problem that there is no setter function for the dependent fields.
+
+data SumSortedMap : m:SortedMap k Nat o -> sum:Nat -> sumMap m = sum -> Type
+  SumSortedMap m sum e : SumSortedMap m sum e
 
 data Error = NotEnoughBalance
            | FailedToAuthenticate
