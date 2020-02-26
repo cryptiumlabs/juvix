@@ -12,11 +12,15 @@
 
   ;;; Functions ======================================================
 
-  function ::= <non-capital-name> <name>+ = <expression>
+  function ::= <non-capital-name> <args>+ = <expression>
+             | <non-capital-name> <args>+ <cond-logic>*
 
-  ; if we only have usage in arrows, we should allow a way to have
-  ; usage information of variables as well!
-  signature ::= <non-capital-name> <type-signature>
+  args ::= <name>
+         | <match-logic>
+
+  ;; if we only have usage in arrows, we should allow a way to have
+  ;; usage information of variables as well!
+  signature ::= <non-capital-name>         <type-signature>
               | <non-capital-name> <usage> <type-signature>
 
   ;;; Types ==========================================================
@@ -25,7 +29,7 @@
          | <type-declaration>
          | <alias-declaration>
 
-  ; Should we let there be a refinement in adt type declaration?
+  ;; Should we let there be a refinement in adt type declaration?
   data-declaration  ::= type <non-capital-name> : <arrow-type> = <adt>
                       | type <non-capital-name>                = <adt>
 
@@ -36,12 +40,12 @@
         | <product>
 
 
-  ; | is special in bnf
+  ;; | is special in bnf
   sum ::= \| <name>
         | \| <name> <product>
 
   product ::= { <name-type-semi>+ <name-type>* } <type-name>
-            | { <name-type-semi>* } <type-name>
+            | { <name-type-semi>* }              <type-name>
             | { <name-type-semi>+ <name-type>* }
             | { <name-type-semi>* }
             | <arrow-type>
@@ -49,7 +53,7 @@
   name-type      ::= <name> <type-signature>
   name-type-semi ::= <name-type> <semi>
 
-  ; should we move ()'s somewhere else?
+  ;; should we move ()'s somewhere else?
   arrow-type ::= <type-refine>
                | <name> : <type-refine> <arrow> <arrow-type>
                | <type-refine>          <arrow> <arrow-type>
@@ -57,7 +61,7 @@
 
   type-signature ::= : <arrow-type>
 
-  ; { } here are a refinement type!
+  ;; { } here are a refinement type!
   type-refine ::= <type-name> { <expression> }
                 | <type-name>
 
@@ -72,24 +76,24 @@
 
   ;;; Modules ========================================================
 
-  ; This doubles as our import
+  ;; This doubles as our import
   module-open ::= open <module-name>
 
-  ; We are going to make modules a bit more interesting, syntax wise
-  ; imagine modules were functions with capital name to deliminate
-  ; thus module signatures have the same signature look as functions
-  ; however the end of this signature is quite a bit different than normal
-  ; functions, Maybe has { }, maybe has end? I'm not really sure yet
+  ;; We are going to make modules a bit more interesting, syntax wise
+  ;; imagine modules were functions with capital name to delineate
+  ;; thus module signatures have the same signature look as functions
+  ;; however the end of this signature is quite a bit different than normal
+  ;; functions, Maybe has { }, maybe has end? I'm not really sure yet
 
-  ; Don't need end if we are indent sensitive!
+  ;; Don't need end if we are indent sensitive!
   module ::= <module-name> <module-name>+ = <top-level>+ end
 
   ;;; Types Classes ==================================================
 
-  ; Need end if we are indent sensitive!
-  type-class ::= class <..> where
+  ;; Need end if we are indent sensitive!
+  type-class ::= class <type-name> where
 
-  ; Need end if we are indent sensitive!
+  ;; Need end if we are indent sensitive!
   type-class-instance ::= instance <..> where
 
   ;;; Expressions ====================================================
@@ -102,24 +106,29 @@
 
   module-lookup ::= <module-name>.<name>
 
-  ; we should remove either if or cond!?
+
+  match ::= case <expression> of <match-logic>*
+
+  match-logic ::=
+
+  ;; we should remove either if or cond!?
   if   ::= if   <cond-logic>*
   cond ::= cond <cond-logic>*
 
 
-  ; note it's fine to use |, as matches have to be a pattern,
-  ; and thus not some expression
+  ;; note it's fine to use |, as matches have to be a pattern,
+  ;; and thus not some expression
   cond-logic ::= \| <expression> = <expression>
 
-  ; note in stdlib else and otherwise will both be true
+  ;; note in stdlib else and otherwise will both be true
 
   ;;; Misc ===========================================================
-  ; ; is comment in bnf
+  ;; ; is comment in bnf
   semi             ::= \;
   name             ::= <ascii-non-reserved>
   non-capital-name ::= <ascii-no-capital>
   capital-name     ::= <ascii-capital>
-  ; may want m e or Map.t int string?
+  ;; may want m e or Map.t int string?
   type-name        ::= <name>
                      | <name> <type-name>
   module-name      ::= <capital-name> ; enforce capital names?
