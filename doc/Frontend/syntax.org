@@ -40,7 +40,9 @@
   sum ::= \| <name>
         | \| <name> <product>
 
-  product ::= { <name-type-semi>+ <name-type>* }
+  product ::= { <name-type-semi>+ <name-type>* } <type-name>
+            | { <name-type-semi>* } <type-name>
+            | { <name-type-semi>+ <name-type>* }
             | { <name-type-semi>* }
             | <arrow-type>
 
@@ -85,7 +87,7 @@
   ;;; Types Classes ==================================================
 
   ; Need end if we are indent sensitive!
-  type-class ::= class
+  type-class ::= class <..> where
 
   ; Need end if we are indent sensitive!
   type-class-instance ::= instance <..> where
@@ -117,7 +119,9 @@
   name             ::= <ascii-non-reserved>
   non-capital-name ::= <ascii-no-capital>
   capital-name     ::= <ascii-capital>
+  ; may want m e or Map.t int string?
   type-name        ::= <name>
+                     | <name> <type-name>
   module-name      ::= <capital-name> ; enforce capital names?
 
   ascii-non-reserved ::=
