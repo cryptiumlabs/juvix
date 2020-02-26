@@ -265,7 +265,3 @@ Avoid over-using point-free style.  For example, this is hard to read:
 f = (g .) . h
 ```
 
-### Warnings ###
-
-Code should be compilable with `-Wall`.  There should be no
-warnings.
