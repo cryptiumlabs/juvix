@@ -57,6 +57,7 @@ a binary operator.  Don't insert a space after a lambda. For example:
 plus_4 n = n + 4  -- whitespace on either side of `+`
 
 (\x -> x + 4)  -- no space after the lambda 
+```
 
 ### Data Declarations
 
@@ -264,4 +265,3 @@ Avoid over-using point-free style.  For example, this is hard to read:
 -- Bad:
 f = (g .) . h
 ```
-
