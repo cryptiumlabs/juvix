@@ -84,6 +84,15 @@ syntax.
              natural to anyone who has been using the language but
              with functions only. There is no bifurcation of syntax,
              where modules look like this special thing (ala OCaml).
+
+- Point redacted :: it seems the first syntax does not require special
+                    casing.
+                    #+BEGIN_SRC haskell
+                    <name> =
+                      foo a = 3
+                    #+END_SRC
+                    in the above example, it's unambiguous what <name>
+                    is, as expression ≠ top level!
 ** Like Functions
 The like functions syntax would look something like this
 #+BEGIN_SRC idris
@@ -112,10 +121,6 @@ The like functions syntax would look something like this
   2. Modules look like functions and thus familiar
      - Lower barrier of entry and confusion and forgetting of syntax
 - _Cons_
-  1. We *may* have to reserve capitals for modules and type
-     constructors alone
-     - This *may* mean type names will have to be lower case like in
-       F^{★} or OCaml
   2. Module signature is special cased
   3. We may need an end for the =Module= keyword
      - This depends on how indent sensitive we wish to be
@@ -143,7 +148,6 @@ The Haskell/Idris like syntax would look like
 - The functor and signature syntax could use some refinement
 - _Pros_
   1. Looks Familiar to existing ML solutions
-  2. We have the freedom of using capital names for type names
 - _Cons_
   1. requires a lot of special casing
      - Higher barrier to entry, and forgetting of syntax

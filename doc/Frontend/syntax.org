@@ -7,23 +7,26 @@
               ; These four last, due to lack of words before
               | <module-signature>
               | <module>
+              | <module-open>
               | <signature>
               | <function>
 
-  ;;; Functions ======================================================
+  ;;;; Functions ======================================================
 
-  function ::= <non-capital-name> <args>+ = <expression>
-             | <non-capital-name> <args>+ <cond-logic>*
+  function ::= <name> <args>+ = <expression>
+             | <name> <args>+ <cond-logic>*
 
-  args ::= <name>
-         | <match-logic>
+  ;; Match-logic could just be a name, and so is thus fine
+  args ::= <match-logic>
 
   ;; if we only have usage in arrows, we should allow a way to have
   ;; usage information of variables as well!
-  signature ::= <non-capital-name>         <type-signature>
-              | <non-capital-name> <usage> <type-signature>
+  signature ::= <name>         :                 <arrow-type>
+              | <name>         : <type-name> =\> <arrow-type>
+              | <name> <usage> :                 <arrow-type>
+              | <name> <usage> : <type-name> =\> <arrow-type>
 
-  ;;; Types ==========================================================
+  ;;;; Types ==========================================================
 
   type ::= <data-declaration>
          | <type-declaration>
@@ -65,7 +68,7 @@
   type-refine ::= <type-name> { <expression> }
                 | <type-name>
 
-  ;;; Arrows =========================================================
+  ;;;; Arrows =========================================================
 
 
   arrow ::= -\> ; ω usage by default? This should be the most common arrow
@@ -76,53 +79,124 @@
 
   ;;; Modules ========================================================
 
+  ;; For all intensive purposes, modules are the same as values, just with
+  ;; top level expressions, and a minimal amount of sugar
+
   ;; This doubles as our import
   module-open ::= open <module-name>
+
+
+  module-open-expression ::= open <module-name> in
 
   ;; We are going to make modules a bit more interesting, syntax wise
   ;; imagine modules were functions with capital name to delineate
   ;; thus module signatures have the same signature look as functions
-  ;; however the end of this signature is quite a bit different than normal
-  ;; functions, Maybe has { }, maybe has end? I'm not really sure yet
 
-  ;; Don't need end if we are indent sensitive!
-  module ::= <module-name> <module-name>+ = <top-level>+ end
+  ;; Interestingly enough module "functors" can take more than just modules
+  ;; they can take any value, however for examples, we will encourage the use
+  ;; of taking (and thus parameterizing) modules
 
-  ;;; Types Classes ==================================================
+  module ::= <name> <args>+ = <top-level>
+           | <name> <args>+ <cond-top>*
+
+  cond-top ::= \| <expression> = <expression>
+  ;;;; Types Classes ==================================================
 
   ;; Need end if we are indent sensitive!
   type-class ::= class <type-name> where
+               | class <type-name> =\> <type-name> where
 
   ;; Need end if we are indent sensitive!
-  type-class-instance ::= instance <..> where
+  type-class-instance ::= instance <type-name> where
 
-  ;;; Expressions ====================================================
-  expression ::=
+  ;;;; Expressions ====================================================
+
+  ;; See comments about which to keep and which to maybe remove
+  expression ::= <match>
+               | <if>
+               | <cond>
+               | <record-access>
+               | <module-lookup>
+               | <let>
+               | <module-open-expression>
+               | <where>
+               | <string>
+               | <number>
 
   usage ::= <expression>
-
 
   record-access ::= <name>.<name>
 
   module-lookup ::= <module-name>.<name>
 
 
-  match ::= case <expression> of <match-logic>*
+  ;;; Matching ===================================
 
-  match-logic ::=
+  match ::= case <expression> of <match-l>*
+
+  match-l ::= \| <match-logic>
+
+  match-logic ::= <constructor-name>         <match-logic>+
+                | <name>                     <match-logic>+
+                | <name> @ <match-logic>     <match-logic>+
+                | <name> @ ( <match-logic> ) <match-logic>+
+                | <record-match>
+
+  record-match ::= { <name-set>* }
+
+
+  name-set ::= <name> = <name>
+             | <name>
 
   ;; we should remove either if or cond!?
   if   ::= if   <cond-logic>*
   cond ::= cond <cond-logic>*
 
 
-  ;; note it's fine to use |, as matches have to be a pattern,
+  ;;; Bindings ===================================
+
+  ;; Due to trying to be less indent sensitive,
+  ;; we only look for the in alternative,
+  ;; is that we only have a single binding per let.
+  let ::= let <binding>* in <expression>
+
+  ;; Does this even make sense to have?
+  ;; Juvix is not lazy, how is order determined?
+  ;; is it only for pure values???
+  where ::= <expression> where <bindings>*
+
+  binding ::= <match-logic> = <expression>
+
+
+  ;; note it's fine to use |,
+  ;; as matches have to be a pattern,
   ;; and thus not some expression
-  cond-logic ::= \| <expression> = <expression>
 
   ;; note in stdlib else and otherwise will both be true
 
-  ;;; Misc ===========================================================
+  cond-logic ::= \| <expression> = <expression>
+
+  ;;; Numbers ====================================
+
+  number ::= <digits>*.<digits>*
+           | <digits>*<exp>
+           | <digits>*.<digits>*<exp>
+
+
+  digits ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+
+  exp ::= e <digits>*
+  ;;; Strings ====================================
+
+  ;; Give nicer string syntax?
+  string ::= " <escaped-string>+ "
+
+  escaped-string ::= <ascii-no-quotes-no-backslash> <escaped-string>+
+                   | \" <escaped-string>+
+                   | \ <escaped-string>+
+
+  ;;;; Misc ===========================================================
   ;; ; is comment in bnf
   semi             ::= \;
   name             ::= <ascii-non-reserved>
@@ -131,7 +205,9 @@
   ;; may want m e or Map.t int string?
   type-name        ::= <name>
                      | <name> <type-name>
-  module-name      ::= <capital-name> ; enforce capital names?
+  module-name      ::= <name> ; enforce capital names?
+
+  constructor-name ::= <capital-name-and-symbols>
 
   ascii-non-reserved ::=
   ascii-no-capital   ::=
