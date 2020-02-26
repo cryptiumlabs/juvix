@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 -- |
 -- - This module includes a higher level DSL which each instruction
 --   has a stack effect
@@ -27,6 +29,9 @@ import Prelude (error)
 --------------------------------------------------------------------------------
 -- Main Functionality
 --------------------------------------------------------------------------------
+
+-- instOuter ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
+instOuter = undefined
 
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst (t, _usage, ty) =
@@ -512,18 +517,33 @@ consVal result ty = do
         ty
       )
 
-consVar ∷
-  (Env.Stack m, Env.Error m) ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
-consVar symb result usage ty = do
+consVarGen ∷
+  ( HasThrow "compilationError" Env.CompError m,
+    HasState "stack" (VStack.T lamType) m
+  ) ⇒
+  Symbol →
+  Maybe (VStack.Val lamType) →
+  Usage.T →
+  Types.Type →
+  m ()
+consVarGen symb result usage ty = do
   ty ← typeToPrimType ty
   modify @"stack" $
     VStack.cons
       ( VStack.VarE
           (Set.singleton symb)
           usage
-          (Just (expandedToStack result)),
+          result,
         ty
       )
+
+consVar ∷
+  (Env.Stack m, Env.Error m) ⇒ Symbol → Env.Expanded → Usage.T → Types.Type → m ()
+consVar symb result = consVarGen symb (Just (expandedToStack result))
+
+consVarNone ∷
+  (Env.Stack m, Env.Error m) ⇒ Symbol → Usage.T → Types.Type → m ()
+consVarNone symb = consVarGen symb Nothing
 
 typeToPrimType ∷ ∀ m. Env.Error m ⇒ Types.Type → m Untyped.Type
 typeToPrimType ty =
@@ -550,26 +570,64 @@ eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 promoteLambda (Env.C fun argsLeft left captures ty) = do
   -- Step 1: Copy the captures to the top of the stack.
   let capturesList = Set.toList captures
+  -- TODO ∷ put this in the stack
   capturesInsts ← traverse var capturesList
+  curr ← get @"stack"
   -- Step 2: Figure out what the stack will be in the body of the function.
-  protectedStack ← do
-    curr ← get @"stack"
-    let stackLeft = VStack.take (length captures) curr
+  -- these lets are dropping usages the lambda consumes
+  let listOfArgsType = piToList ty
+      termList = zip listOfArgsType argsLeft
+      stackLeft = VStack.take (length captures) curr
 
-        noVirts = VStack.dropAllVirtual stackLeft
+      noVirts = VStack.dropAllVirtual stackLeft
 
-        numberOfExtraArgs = VStack.realItems noVirts
+      numberOfExtraArgs = VStack.realItems noVirts
 
-    listOfArgsType ← typesFromPi ty
+      -- Make sure to run before insts!
+      unpackOps =
+          unpackTupleN (fromIntegral (left + fromIntegral numberOfExtraArgs - 1))
+
+
+  p ← protectStack $ do
     put @"stack" stackLeft
-    -- the arguments go to the top of the stack, not back
-    -- traverse (consVar ${1:Symbol} ${2:Expanded} ${3:T} ${4:Type}  )
-    -- unpack goes here
-    undefined
-  undefined
+    traverse_ (\((u, t), sym) → consVarNone sym u t)
+      $ reverse termList
+    -- Step 3: Compile the body of the lambda.
+    insts ←
+      Env.unFun fun (reverse (fmap (\ ((u, t), sym) → (Ann.Var sym, u, t)) termList))
+    insts ← instOuter insts
+    put @"ops" [unpackOps <> insts]
+    pure Env.MichelsonLam
+  case p of
+    ProtectStack (Protect _val insts) _stack → do
+      -- Step 4: Pack up the captures.
+      modify @"ops" (pairN (fromIntegral left + numberOfExtraArgs - 1) :)
+      -- TODO ∷ reduce usages of the vstack items, due to eating n from the lambda
+      -- TODO ∷ step 5
+      -- step 5: find the types of the captures, and generate the type for primArg
+      -- Step 6: generate the lambda
+      let Just returnType = snd <$> lastMay (piToList ty)
+      primReturn ← typeToPrimType returnType
+      primArg ← typeToPrimType undefined
+      let finalExpression =
+            Instructions.lambda primArg primReturn insts
+      -- TODO ∷ finish generation, similar to lambda
+      modify @"ops" (finalExpression :)
+      undefined
 
-typesFromPi ∷
-  HasThrow "compilationError" Env.CompError f ⇒ Types.Type → f [Untyped.Type]
-typesFromPi (Ann.Pi _usage aType rest) =
-  (:) <$> typeToPrimType aType <*> typesFromPi rest
-typesFromPi _ = pure []
+piToList ∷ Ann.Type primTy primVal → [(Usage.T, Ann.Type primTy primVal)]
+piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
+piToList _ = []
+
+unpackTuple ∷ Instr.ExpandedOp
+unpackTuple =
+  Instructions.dup
+    <> Instructions.car
+    <> Instructions.dip [Instructions.cdr]
+
+unpackTupleN ∷ Natural → Instr.ExpandedOp
+unpackTupleN 0 = mempty
+unpackTupleN n = unpackTuple <> Instructions.dip [unpackTupleN (pred n)]
+
+pairN :: Int → Instr.ExpandedOp
+pairN count = fold (replicate count Instructions.pair)
