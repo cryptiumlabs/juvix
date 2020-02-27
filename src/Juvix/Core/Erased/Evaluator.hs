@@ -3,37 +3,38 @@ module Juvix.Core.Erased.Evaluator
   )
 where
 
-import Juvix.Core.Erased.Types
+import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Map, evaluate)
 import qualified Juvix.Library.HashMap as Map
 
 evaluate ∷
   ∀ primVal m.
   ( HasReader "apply" (primVal → primVal → Maybe primVal) m,
-    HasState "env" (Map.T Symbol (Term primVal)) m,
-    HasThrow "evaluationError" (EvaluationError primVal) m
+    HasState "env" (Map.T Symbol (Erased.Term primVal)) m,
+    HasThrow "evaluationError" (Erased.EvaluationError primVal) m
   ) ⇒
-  Term primVal →
-  m (Term primVal)
+  Erased.Term primVal →
+  m (Erased.Term primVal)
 evaluate term =
   case term of
-    Var s → do
+    Erased.Var s → do
       env ← get @"env"
       case Map.lookup s env of
         Just v → pure v
-        Nothing → pure (Var s)
-    Prim p → pure (Prim p)
-    Lam s t → Lam s |<< evaluate t
-    App f x → do
+        Nothing → pure (Erased.Var s)
+    Erased.Prim p → pure (Erased.Prim p)
+    Erased.Lam s t → Erased.Lam s |<< evaluate t
+    Erased.App f x → do
       f ← evaluate f
       x ← evaluate x
       case (f, x) of
-        (Prim f', Prim x') → do
+        (Erased.Prim f', Erased.Prim x') → do
           apply ← ask @"apply"
           case apply f' x' of
-            Just r → pure (Prim r)
-            Nothing → throw @"evaluationError" (PrimitiveApplicationError f' x')
-        (Lam s t, v) → do
+            Just r → pure (Erased.Prim r)
+            Nothing →
+              throw @"evaluationError" (Erased.PrimitiveApplicationError f' x')
+        (Erased.Lam s t, v) → do
           modify @"env" (Map.insert s v)
           evaluate t
-        _ → pure (App f x)
+        _ → pure (Erased.App f x)

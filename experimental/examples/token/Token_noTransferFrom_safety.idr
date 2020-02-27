@@ -58,3 +58,26 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
+-- **********End of contract without safety checks**********
+
+-- Below code is optional,
+-- running above functions (e.g., performTransfer) via provenAction adds safety listed in invariants.
+||| invariants checks whether certain invariants hold and returns True if they do.
+||| @oldStorage the storage before running the function
+||| @newStorage the storage after running the function
+invariants : (oldStorage : Storage) -> (newStorage : Storage) -> Bool
+invariants oldS newS =
+ (totalSupply oldS == totalSupply newS) && --totalSupply conserved
+ (owner oldS == owner newS) --the owner of the token contract is unchanged
+
+||| provenTotalSupplyAction checks that totalSupply is conserved from running the input function.
+||| @fn the input function (e.g., performTransfer) and all its input arguments except the storage
+||| @storage the storage input to fn
+provenAction : (fn : (Storage -> Either Error Storage)) -> (storage : Storage) -> Either Error Storage
+provenAction fn storage =
+ let result = fn storage in
+ case result of
+   Left _ => result
+   Right newStorage =>
+     if invariants storage newStorage then result
+     else Left InvariantsDoNotHold

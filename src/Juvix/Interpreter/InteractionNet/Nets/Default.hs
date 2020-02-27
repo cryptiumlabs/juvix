@@ -8,10 +8,10 @@
 module Juvix.Interpreter.InteractionNet.Nets.Default where
 
 import Control.Lens
-import Juvix.Interpreter.InteractionNet.Backends.Env
-import Juvix.Interpreter.InteractionNet.Backends.Interface
-import Juvix.Interpreter.InteractionNet.NodeInterface
-import Juvix.Interpreter.InteractionNet.Shared
+import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
+import qualified Juvix.Interpreter.InteractionNet.Backends.Interface as Interface
+import Juvix.Interpreter.InteractionNet.NodeInterface as NInterface
+import qualified Juvix.Interpreter.InteractionNet.Shared as Shared
 import Juvix.Library hiding (curry3, link, reduce)
 import Prelude (Show (..))
 
@@ -21,6 +21,8 @@ data Lang primVal
   | Auxiliary1 (Auxiliary1 primVal)
   | Primar (Primar primVal)
   deriving (Show)
+
+type Primitive = Shared.Primitive
 
 -- the final argument for the curries is maybe, as if the nodes don't line up
 -- a final type can't be constructed. This is untyped
@@ -64,25 +66,25 @@ data Primar primVal
 data ProperPort primVal
   = IsAux3
       { _tag3 ∷ Auxiliary3 primVal,
-        _prim ∷ Primary,
-        _aux1 ∷ Auxiliary,
-        _aux2 ∷ Auxiliary,
-        _aux3 ∷ Auxiliary
+        _prim ∷ NInterface.Primary,
+        _aux1 ∷ NInterface.Auxiliary,
+        _aux2 ∷ NInterface.Auxiliary,
+        _aux3 ∷ NInterface.Auxiliary
       }
   | IsAux2
       { _tag2 ∷ Auxiliary2 primVal,
-        _prim ∷ Primary,
-        _aux1 ∷ Auxiliary,
-        _aux2 ∷ Auxiliary
+        _prim ∷ NInterface.Primary,
+        _aux1 ∷ NInterface.Auxiliary,
+        _aux2 ∷ NInterface.Auxiliary
       }
   | IsAux1
       { _tag1 ∷ Auxiliary1 primVal,
-        _prim ∷ Primary,
-        _aux1 ∷ Auxiliary
+        _prim ∷ NInterface.Primary,
+        _aux1 ∷ NInterface.Auxiliary
       }
   | IsPrim
       { _tag0 ∷ Primar primVal,
-        _prim ∷ Primary
+        _prim ∷ NInterface.Primary
       }
   deriving (Show)
 
@@ -92,39 +94,39 @@ makeFieldsNoPrefix ''ProperPort
 
 -- Find a way to fix the ugliness!
 langToProperPort ∷
-  (DifferentRep net, HasState "net" (net (Lang primVal)) m) ⇒
-  Node →
+  (Interface.DifferentRep net, HasState "net" (net (Lang primVal)) m) ⇒
+  Interface.Node →
   m (Maybe (ProperPort primVal))
-langToProperPort node = langToPort node (\l → f l node)
+langToProperPort node = Interface.langToPort node (\l → f l node)
   where
-    f (Auxiliary3 a) = aux3FromGraph (IsAux3 a)
-    f (Auxiliary2 a) = aux2FromGraph (IsAux2 a)
-    f (Auxiliary1 a) = aux1FromGraph (IsAux1 a)
-    f (Primar a) = aux0FromGraph (IsPrim a)
+    f (Auxiliary3 a) = Interface.aux3FromGraph (IsAux3 a)
+    f (Auxiliary2 a) = Interface.aux2FromGraph (IsAux2 a)
+    f (Auxiliary1 a) = Interface.aux1FromGraph (IsAux1 a)
+    f (Primar a) = Interface.aux0FromGraph (IsPrim a)
 
 -- Rewrite rules----------------------------------------------------------------
-reduceAll ∷ InfoNetworkDiff net (Lang primVal) m ⇒ Int → m ()
+reduceAll ∷ Env.InfoNetworkDiff net (Lang primVal) m ⇒ Int → m ()
 reduceAll = untilNothingNTimesM reduce
 
-reduce ∷ InfoNetworkDiff net (Lang primVal) m ⇒ m Bool
+reduce ∷ Env.InfoNetworkDiff net (Lang primVal) m ⇒ m Bool
 reduce = do
-  nodes' ← nodes
+  nodes' ← Interface.nodes
   isChanged ← foldrM update False nodes'
   if isChanged
     then do
-      modify @"info" (\c → c {parallelSteps = parallelSteps c + 1})
+      modify @"info" (\c → c {Env.parallelSteps = Env.parallelSteps c + 1})
       pure isChanged
     else pure isChanged
   where
     update n isChanged = do
-      both ← isBothPrimary n
+      both ← Interface.isBothPrimary n
       if not both
         then pure isChanged
         else langToProperPort n >>= \case
           Nothing → pure isChanged
           Just port → do
             case port of
-              IsAux3 tag (Primary node) _ _ _ →
+              IsAux3 tag (NInterface.Primary node) _ _ _ →
                 case tag of
                   IfElse →
                     langToProperPort node >>= \case
@@ -133,7 +135,7 @@ reduce = do
                       _ → pure isChanged
                   Curried3 f → do
                     curryMatch curry3 (f, n) node isChanged
-              IsAux2 tag (Primary node) _ _ →
+              IsAux2 tag (NInterface.Primary node) _ _ →
                 case tag of
                   And →
                     langToProperPort node >>= \case
@@ -168,7 +170,7 @@ reduce = do
                   -- Cases in which we fall through, and have the other node handle it
                   Mu → pure isChanged
                   Lambda → pure isChanged
-              IsAux1 tag (Primary node) _ →
+              IsAux1 tag (NInterface.Primary node) _ →
                 case tag of
                   Not →
                     langToProperPort node >>= \case
@@ -183,9 +185,12 @@ reduce = do
                   -- TODO :: Unify logic with other cases
                   Curried1 f →
                     langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Fals} → curry1 (f, n) (PBool False, node)
-                      Just IsPrim {_tag0 = Tru} → curry1 (f, n) (PBool True, node)
-                      Just IsPrim {_tag0 = IntLit i} → curry1 (f, n) (PInt i, node)
+                      Just IsPrim {_tag0 = Fals} →
+                        curry1 (f, n) (Shared.PBool False, node)
+                      Just IsPrim {_tag0 = Tru} →
+                        curry1 (f, n) (Shared.PBool True, node)
+                      Just IsPrim {_tag0 = IntLit i} →
+                        curry1 (f, n) (Shared.PInt i, node)
                       _ → pure isChanged
                   PrimCurried1 f →
                     langToProperPort node >>= \case
@@ -194,7 +199,7 @@ reduce = do
                   -- Fall through cases
                   Car → pure isChanged
                   TestNil → pure isChanged
-              IsPrim tag (Primary node) →
+              IsPrim tag (NInterface.Primary node) →
                 case tag of
                   Erase →
                     langToProperPort node >>= \case
@@ -208,30 +213,33 @@ reduce = do
                   Symbol _ → pure isChanged
                   PrimVal _ → pure isChanged
               -- Fall through cases
-              IsAux3 _ Free _ _ _ → pure isChanged
-              IsAux2 _ Free _ _ → pure isChanged
-              IsAux1 _ Free _ → pure isChanged
-              IsPrim _ Free → pure isChanged
+              IsAux3 _ NInterface.Free _ _ _ → pure isChanged
+              IsAux2 _ NInterface.Free _ _ → pure isChanged
+              IsAux1 _ NInterface.Free _ → pure isChanged
+              IsPrim _ NInterface.Free → pure isChanged
 
 curryMatch ∷
-  (InfoNetworkDiff net (Lang primVal) m) ⇒
-  (t → (Primitive, Node) → m b) →
+  (Env.InfoNetworkDiff net (Lang primVal) m) ⇒
+  (t → (Primitive, Interface.Node) → m b) →
   t →
-  Node →
+  Interface.Node →
   Bool →
   m Bool
 curryMatch curry currNodeInfo nodeConnected isChanged = do
   langToProperPort nodeConnected >>= \case
-    Just IsPrim {_tag0 = Fals} → True <$ curry currNodeInfo (PBool False, nodeConnected)
-    Just IsPrim {_tag0 = Tru} → True <$ curry currNodeInfo (PBool True, nodeConnected)
-    Just IsPrim {_tag0 = IntLit i} → True <$ curry currNodeInfo (PInt i, nodeConnected)
+    Just IsPrim {_tag0 = Fals} →
+      True <$ curry currNodeInfo (Shared.PBool False, nodeConnected)
+    Just IsPrim {_tag0 = Tru} →
+      True <$ curry currNodeInfo (Shared.PBool True, nodeConnected)
+    Just IsPrim {_tag0 = IntLit i} →
+      True <$ curry currNodeInfo (Shared.PInt i, nodeConnected)
     _ → pure isChanged
 
 curryMatchPrim ∷
-  (InfoNetworkDiff net (Lang primVal) m) ⇒
-  (t → (primVal, Node) → m b) →
+  (Env.InfoNetworkDiff net (Lang primVal) m) ⇒
+  (t → (primVal, Interface.Node) → m b) →
   t →
-  Node →
+  Interface.Node →
   Bool →
   m Bool
 curryMatchPrim curry currNodeInfo nodeConnected isChanged = do
@@ -240,251 +248,278 @@ curryMatchPrim curry currNodeInfo nodeConnected isChanged = do
     _ → pure isChanged
 
 propPrimary ∷
-  (Aux2 s, InfoNetwork net (Lang primVal) m) ⇒
-  (Node, s) →
-  Node →
+  (NInterface.Aux2 s, Env.InfoNetwork net (Lang primVal) m) ⇒
+  (Interface.Node, s) →
+  Interface.Node →
   m ()
 propPrimary (numDel, nodeDel) numProp = do
-  relink (numDel, Aux1) (numProp, Prim)
-  case auxToNode (nodeDel ^. aux2) of
+  Interface.relink (numDel, Interface.Aux1) (numProp, Interface.Prim)
+  case NInterface.auxToNode (nodeDel ^. NInterface.aux2) of
     Just _ → do
-      sequentalStep
-      eraseNum ← newNode (Primar Erase)
-      relink (numDel, Aux2) (eraseNum, Prim)
-      deleteRewire [numDel] [eraseNum]
+      Env.sequentalStep
+      eraseNum ← Interface.newNode (Primar Erase)
+      Interface.relink (numDel, Interface.Aux2) (eraseNum, Interface.Prim)
+      Interface.deleteRewire [numDel] [eraseNum]
     Nothing → do
-      incGraphSizeStep (- 1)
-      delNodes [numDel]
+      Env.incGraphSizeStep (- 1)
+      Interface.delNodes [numDel]
 
 ifElseRule ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  Node →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  Interface.Node →
   Bool →
   m ()
 ifElseRule numPrimOnly numAuxs pred = do
-  incGraphSizeStep (- 1)
-  numErase ← newNode (Primar Erase)
+  Env.incGraphSizeStep (- 1)
+  numErase ← Interface.newNode (Primar Erase)
   if pred
     then do
-      relink (numAuxs, Aux2) (numErase, Prim)
-      rewire (numAuxs, Aux1) (numAuxs, Aux3)
+      Interface.relink (numAuxs, Interface.Aux2) (numErase, Interface.Prim)
+      Interface.rewire (numAuxs, Interface.Aux1) (numAuxs, Interface.Aux3)
     else do
-      relink (numAuxs, Aux3) (numErase, Prim)
-      rewire (numAuxs, Aux1) (numAuxs, Aux2)
-  deleteRewire [numPrimOnly, numAuxs] [numErase]
+      Interface.relink (numAuxs, Interface.Aux3) (numErase, Interface.Prim)
+      Interface.rewire (numAuxs, Interface.Aux1) (numAuxs, Interface.Aux2)
+  Interface.deleteRewire [numPrimOnly, numAuxs] [numErase]
 
 anihilateRewireAux ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  Node →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 anihilateRewireAux numPrimOnly numAuxs = do
-  incGraphSizeStep (- 2)
-  rewire (numAuxs, Aux1) (numAuxs, Aux2)
-  delNodes [numPrimOnly, numAuxs]
+  Env.incGraphSizeStep (- 2)
+  Interface.rewire (numAuxs, Interface.Aux1) (numAuxs, Interface.Aux2)
+  Interface.delNodes [numPrimOnly, numAuxs]
 
 -- used for app lambda!
 anihilateRewireAuxTogether ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  Node →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 anihilateRewireAuxTogether numNode1 numNode2 = do
-  incGraphSizeStep (- 2)
-  rewire (numNode1, Aux1) (numNode2, Aux1)
-  rewire (numNode1, Aux2) (numNode2, Aux2)
-  delNodes [numNode1, numNode2]
+  Env.incGraphSizeStep (- 2)
+  Interface.rewire (numNode1, Interface.Aux1) (numNode2, Interface.Aux1)
+  Interface.rewire (numNode1, Interface.Aux2) (numNode2, Interface.Aux2)
+  Interface.delNodes [numNode1, numNode2]
 
 -- o is Aux1 * is Aux2
 muExpand ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
   m ()
 muExpand muNum = do
-  incGraphSizeStep 2
-  fanIn ← newNode (Auxiliary2 $ FanIn 0)
-  fanOut ← newNode (Auxiliary2 $ FanIn 0)
-  newMu ← newNode (Auxiliary2 $ FanIn 0)
-  let nodeFanIn = RELAuxiliary2
-        { node = fanIn,
-          primary = ReLink muNum Aux1,
-          auxiliary1 = Link (Port Aux1 newMu),
-          auxiliary2 = ReLink muNum Prim
+  Env.incGraphSizeStep 2
+  fanIn ← Interface.newNode (Auxiliary2 $ FanIn 0)
+  fanOut ← Interface.newNode (Auxiliary2 $ FanIn 0)
+  newMu ← Interface.newNode (Auxiliary2 $ FanIn 0)
+  let nodeFanIn = Interface.RELAuxiliary2
+        { Interface.node = fanIn,
+          Interface.primary = Interface.ReLink muNum Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 newMu),
+          Interface.auxiliary2 = Interface.ReLink muNum Interface.Prim
         }
-      nodeFanOut = RELAuxiliary2
-        { node = fanOut,
-          primary = ReLink muNum Aux2,
-          auxiliary1 = Link (Port Aux2 newMu),
-          auxiliary2 = Link (Port Prim newMu)
+      nodeFanOut = Interface.RELAuxiliary2
+        { Interface.node = fanOut,
+          Interface.primary = Interface.ReLink muNum Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 newMu),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Prim newMu)
         }
-  traverse_ linkAll [nodeFanIn, nodeFanOut]
-  deleteRewire [muNum] [fanIn, fanOut, newMu]
+  traverse_ Interface.linkAll [nodeFanIn, nodeFanOut]
+  Interface.deleteRewire [muNum] [fanIn, fanOut, newMu]
 
 fanInAux0 ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  (Node, Primar primVal) →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  (Interface.Node, Primar primVal) →
   m ()
 fanInAux0 numFan (numOther, otherLang) = do
-  sequentalStep
-  other1 ← newNode (Primar otherLang)
-  other2 ← newNode (Primar otherLang)
-  let nodeOther1 = RELAuxiliary0
-        { node = other1,
-          primary = ReLink numFan Aux1
+  Env.sequentalStep
+  other1 ← Interface.newNode (Primar otherLang)
+  other2 ← Interface.newNode (Primar otherLang)
+  let nodeOther1 = Interface.RELAuxiliary0
+        { Interface.node = other1,
+          Interface.primary = Interface.ReLink numFan Interface.Aux1
         }
-      nodeOther2 = RELAuxiliary0
-        { node = other2,
-          primary = ReLink numFan Aux2
+      nodeOther2 = Interface.RELAuxiliary0
+        { Interface.node = other2,
+          Interface.primary = Interface.ReLink numFan Interface.Aux2
         }
-  traverse_ linkAll [nodeOther1, nodeOther2]
-  deleteRewire [numFan, numOther] [other1, other2]
+  traverse_ Interface.linkAll [nodeOther1, nodeOther2]
+  Interface.deleteRewire [numFan, numOther] [other1, other2]
 
 fanInAux1 ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  (Node, Auxiliary1 primVal) →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  (Interface.Node, Auxiliary1 primVal) →
   Int →
   m ()
 fanInAux1 numFan (numOther, otherLang) level = do
-  incGraphSizeStep 1
-  other1 ← newNode (Auxiliary1 otherLang)
-  other2 ← newNode (Auxiliary1 otherLang)
-  fanIn1 ← newNode (Auxiliary2 (FanIn level))
-  let nodeOther1 = RELAuxiliary1
-        { node = other1,
-          primary = ReLink numFan Aux1,
-          auxiliary1 = Link (Port Aux1 fanIn1)
+  Env.incGraphSizeStep 1
+  other1 ← Interface.newNode (Auxiliary1 otherLang)
+  other2 ← Interface.newNode (Auxiliary1 otherLang)
+  fanIn1 ← Interface.newNode (Auxiliary2 (FanIn level))
+  let nodeOther1 = Interface.RELAuxiliary1
+        { Interface.node = other1,
+          Interface.primary = Interface.ReLink numFan Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn1)
         }
 
-      nodeOther2 = RELAuxiliary1
-        { node = other2,
-          primary = ReLink numFan Aux2,
-          auxiliary1 = Link (Port Aux2 fanIn1)
+      nodeOther2 = Interface.RELAuxiliary1
+        { Interface.node = other2,
+          Interface.primary = Interface.ReLink numFan Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn1)
         }
 
-      nodeFan1 = RELAuxiliary2
-        { node = fanIn1,
-          primary = ReLink numOther Aux1,
-          auxiliary1 = Link (Port Aux1 other1),
-          auxiliary2 = Link (Port Aux1 other2)
+      nodeFan1 = Interface.RELAuxiliary2
+        { Interface.node = fanIn1,
+          Interface.primary = Interface.ReLink numOther Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux1 other2)
         }
 
-  traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1]
-  deleteRewire [numFan, numOther] [other1, other2, fanIn1]
+  traverse_ Interface.linkAll [nodeOther1, nodeOther2, nodeFan1]
+  Interface.deleteRewire [numFan, numOther] [other1, other2, fanIn1]
 
 fanInAux2 ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  (Node, Auxiliary2 primVal) →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  (Interface.Node, Auxiliary2 primVal) →
   Int →
   m ()
 fanInAux2 numFan (numOther, otherLang) level = do
-  incGraphSizeStep 2
-  other1 ← newNode (Auxiliary2 otherLang)
-  other2 ← newNode (Auxiliary2 otherLang)
-  fanIn1 ← newNode (Auxiliary2 (FanIn level))
-  fanIn2 ← newNode (Auxiliary2 (FanIn level))
-  let nodeOther1 = RELAuxiliary2
-        { node = other1,
-          primary = ReLink numFan Aux1,
-          auxiliary1 = Link (Port Aux1 fanIn2),
-          auxiliary2 = Link (Port Aux1 fanIn1)
+  Env.incGraphSizeStep 2
+  other1 ← Interface.newNode (Auxiliary2 otherLang)
+  other2 ← Interface.newNode (Auxiliary2 otherLang)
+  fanIn1 ← Interface.newNode (Auxiliary2 (FanIn level))
+  fanIn2 ← Interface.newNode (Auxiliary2 (FanIn level))
+  let nodeOther1 = Interface.RELAuxiliary2
+        { Interface.node = other1,
+          Interface.primary = Interface.ReLink numFan Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn2),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn1)
         }
 
-      nodeOther2 = RELAuxiliary2
-        { node = other2,
-          primary = ReLink numFan Aux2,
-          auxiliary1 = Link (Port Aux2 fanIn2),
-          auxiliary2 = Link (Port Aux2 fanIn1)
+      nodeOther2 = Interface.RELAuxiliary2
+        { Interface.node = other2,
+          Interface.primary = Interface.ReLink numFan Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn2),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn1)
         }
 
-      nodeFan1 = RELAuxiliary2
-        { node = fanIn1,
-          primary = ReLink numOther Aux2,
-          auxiliary1 = Link (Port Aux2 other1),
-          auxiliary2 = Link (Port Aux2 other2)
+      nodeFan1 = Interface.RELAuxiliary2
+        { Interface.node = fanIn1,
+          Interface.primary = Interface.ReLink numOther Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux2 other2)
         }
 
-      nodeFan2 = RELAuxiliary2
-        { node = fanIn2,
-          primary = ReLink numOther Aux1,
-          auxiliary1 = Link (Port Aux1 other1),
-          auxiliary2 = Link (Port Aux1 other2)
+      nodeFan2 = Interface.RELAuxiliary2
+        { Interface.node = fanIn2,
+          Interface.primary = Interface.ReLink numOther Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux1 other2)
         }
 
-  traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2]
-  deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
+  traverse_ Interface.linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2]
+  Interface.deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2]
 
 fanInAux3 ∷
-  (InfoNetwork net (Lang primVal) m) ⇒
-  Node →
-  (Node, Auxiliary3 primVal) →
+  (Env.InfoNetwork net (Lang primVal) m) ⇒
+  Interface.Node →
+  (Interface.Node, Auxiliary3 primVal) →
   Int →
   m ()
 fanInAux3 numFan (numOther, otherLang) level = do
-  incGraphSizeStep 3
-  other1 ← newNode (Auxiliary3 otherLang)
-  other2 ← newNode (Auxiliary3 otherLang)
-  fanIn1 ← newNode (Auxiliary2 (FanIn level))
-  fanIn2 ← newNode (Auxiliary2 (FanIn level))
-  fanIn3 ← newNode (Auxiliary2 (FanIn level))
-  let nodeOther1 = RELAuxiliary3
-        { node = other1,
-          primary = ReLink numFan Aux1,
-          auxiliary1 = Link (Port Aux1 fanIn1),
-          auxiliary2 = Link (Port Aux1 fanIn2),
-          auxiliary3 = Link (Port Aux1 fanIn3)
+  Env.incGraphSizeStep 3
+  other1 ← Interface.newNode (Auxiliary3 otherLang)
+  other2 ← Interface.newNode (Auxiliary3 otherLang)
+  fanIn1 ← Interface.newNode (Auxiliary2 (FanIn level))
+  fanIn2 ← Interface.newNode (Auxiliary2 (FanIn level))
+  fanIn3 ← Interface.newNode (Auxiliary2 (FanIn level))
+  let nodeOther1 = Interface.RELAuxiliary3
+        { Interface.node = other1,
+          Interface.primary = Interface.ReLink numFan Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn2),
+          Interface.auxiliary3 =
+            Interface.Link (Interface.Port Interface.Aux1 fanIn3)
         }
 
-      nodeOther2 = RELAuxiliary3
-        { node = other2,
-          primary = ReLink numFan Aux2,
-          auxiliary1 = Link (Port Aux2 fanIn1),
-          auxiliary2 = Link (Port Aux2 fanIn2),
-          auxiliary3 = Link (Port Aux2 fanIn3)
+      nodeOther2 = Interface.RELAuxiliary3
+        { Interface.node = other2,
+          Interface.primary = Interface.ReLink numFan Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn2),
+          Interface.auxiliary3 =
+            Interface.Link (Interface.Port Interface.Aux2 fanIn3)
         }
 
-      nodeFan1 = RELAuxiliary2
-        { node = fanIn1,
-          primary = ReLink numOther Aux1,
-          auxiliary1 = Link (Port Aux1 other1),
-          auxiliary2 = Link (Port Aux1 other2)
+      nodeFan1 = Interface.RELAuxiliary2
+        { Interface.node = fanIn1,
+          Interface.primary = Interface.ReLink numOther Interface.Aux1,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux1 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux1 other2)
         }
 
-      nodeFan2 = RELAuxiliary2
-        { node = fanIn2,
-          primary = ReLink numOther Aux2,
-          auxiliary1 = Link (Port Aux2 other1),
-          auxiliary2 = Link (Port Aux2 other2)
+      nodeFan2 = Interface.RELAuxiliary2
+        { Interface.node = fanIn2,
+          Interface.primary = Interface.ReLink numOther Interface.Aux2,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux2 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux2 other2)
         }
 
-      nodeFan3 = RELAuxiliary2
-        { node = fanIn3,
-          primary = ReLink numOther Aux3,
-          auxiliary1 = Link (Port Aux3 other1),
-          auxiliary2 = Link (Port Aux3 other2)
+      nodeFan3 = Interface.RELAuxiliary2
+        { Interface.node = fanIn3,
+          Interface.primary = Interface.ReLink numOther Interface.Aux3,
+          Interface.auxiliary1 =
+            Interface.Link (Interface.Port Interface.Aux3 other1),
+          Interface.auxiliary2 =
+            Interface.Link (Interface.Port Interface.Aux3 other2)
         }
 
-  traverse_ linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2, nodeFan3]
-  deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2, fanIn3]
+  traverse_ Interface.linkAll [nodeOther1, nodeOther2, nodeFan1, nodeFan2, nodeFan3]
+  Interface.deleteRewire [numFan, numOther] [other1, other2, fanIn1, fanIn2, fanIn3]
 
 -- TODO :: delete node coming in!
 notExpand ∷
-  (Aux2 s, InfoNetwork net (Lang primVal) m) ⇒
-  (Node, ProperPort primVal) →
-  (Node, s) →
+  (NInterface.Aux2 s, Env.InfoNetwork net (Lang primVal) m) ⇒
+  (Interface.Node, ProperPort primVal) →
+  (Interface.Node, s) →
   Bool →
   m Bool
 notExpand (n, IsPrim {_tag0 = Tru}) (notNum, notPort) _ = do
-  numFals ← newNode (Primar Fals)
-  delNodes [n]
+  numFals ← Interface.newNode (Primar Fals)
+  Interface.delNodes [n]
   propPrimary (notNum, notPort) numFals
   pure True
 notExpand (n, IsPrim {_tag0 = Fals}) (notNum, notPort) _ = do
-  numFals ← newNode (Primar Tru)
-  delNodes [n]
+  numFals ← Interface.newNode (Primar Tru)
+  Interface.delNodes [n]
   propPrimary (notNum, notPort) numFals
   pure True
 notExpand _ _ updated = pure updated
@@ -492,180 +527,180 @@ notExpand _ _ updated = pure updated
 -- Erase should be connected to the main port atm, change this logic later
 -- when this isn't the case
 eraseAll ∷
-  (Aux3 s, InfoNetwork net (Lang primVal) m) ⇒
-  (s, Node) →
-  Node →
+  (NInterface.Aux3 s, Env.InfoNetwork net (Lang primVal) m) ⇒
+  (s, Interface.Node) →
+  Interface.Node →
   m ()
 eraseAll (node, numNode) nodeErase = do
-  (i, mE) ← auxDispatch (node ^. aux1) Aux1
-  (i2, mE2) ← auxDispatch (node ^. aux2) Aux2
-  (i3, mE3) ← auxDispatch (node ^. aux3) Aux3
-  incGraphSizeStep (i + i2 + i3 - 2)
-  deleteRewire [numNode, nodeErase] (catMaybes [mE, mE2, mE3])
+  (i, mE) ← auxDispatch (node ^. NInterface.aux1) Interface.Aux1
+  (i2, mE2) ← auxDispatch (node ^. NInterface.aux2) Interface.Aux2
+  (i3, mE3) ← auxDispatch (node ^. NInterface.aux3) Interface.Aux3
+  Env.incGraphSizeStep (i + i2 + i3 - 2)
+  Interface.deleteRewire [numNode, nodeErase] (catMaybes [mE, mE2, mE3])
   where
-    auxDispatch FreeNode _ = pure (0, Nothing)
-    auxDispatch (Auxiliary _) aux = (,) 1 <$> erase aux
+    auxDispatch NInterface.FreeNode _ = pure (0, Nothing)
+    auxDispatch (NInterface.Auxiliary _) aux = (,) 1 <$> erase aux
     erase port = do
-      numE ← newNode (Primar Erase)
-      relink (numNode, port) (numE, Prim)
+      numE ← Interface.newNode (Primar Erase)
+      Interface.relink (numNode, port) (numE, Interface.Prim)
       return (Just numE)
 
 consCar ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  Node →
-  Node →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 consCar numCons numCar = do
-  incGraphSizeStep (- 1)
-  erase ← newNode (Primar Erase)
-  relink (numCons, Aux1) (erase, Prim)
-  rewire (numCons, Aux2) (numCar, Aux1)
-  deleteRewire [numCons, numCar] [erase]
+  Env.incGraphSizeStep (- 1)
+  erase ← Interface.newNode (Primar Erase)
+  Interface.relink (numCons, Interface.Aux1) (erase, Interface.Prim)
+  Interface.rewire (numCons, Interface.Aux2) (numCar, Interface.Aux1)
+  Interface.deleteRewire [numCons, numCar] [erase]
 
 consCdr ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  Node →
-  Node →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 consCdr numCons numCdr = do
-  incGraphSizeStep (- 1)
-  erase ← newNode (Primar Erase)
-  relink (numCons, Aux2) (erase, Prim)
-  rewire (numCons, Aux1) (numCdr, Aux1)
-  deleteRewire [numCons, numCdr] [erase]
+  Env.incGraphSizeStep (- 1)
+  erase ← Interface.newNode (Primar Erase)
+  Interface.relink (numCons, Interface.Aux2) (erase, Interface.Prim)
+  Interface.rewire (numCons, Interface.Aux1) (numCdr, Interface.Aux1)
+  Interface.deleteRewire [numCons, numCdr] [erase]
 
 testNilNil ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  Node →
-  Node →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 testNilNil numTest numNil = do
-  incGraphSizeStep (- 1)
-  true ← newNode (Primar Tru)
-  relink (numTest, Aux1) (true, Prim)
-  deleteRewire [numTest, numNil] [true]
+  Env.incGraphSizeStep (- 1)
+  true ← Interface.newNode (Primar Tru)
+  Interface.relink (numTest, Interface.Aux1) (true, Interface.Prim)
+  Interface.deleteRewire [numTest, numNil] [true]
 
 testNilCons ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  Node →
-  Node →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  Interface.Node →
+  Interface.Node →
   m ()
 testNilCons numCons numTest = do
-  incGraphSizeStep 1
-  erase1 ← newNode (Primar Erase)
-  erase2 ← newNode (Primar Erase)
-  false ← newNode (Primar Fals)
+  Env.incGraphSizeStep 1
+  erase1 ← Interface.newNode (Primar Erase)
+  erase2 ← Interface.newNode (Primar Erase)
+  false ← Interface.newNode (Primar Fals)
   traverse_
-    (uncurry relink)
-    [ ((numCons, Aux1), (erase1, Prim)),
-      ((numCons, Aux2), (erase2, Prim)),
-      ((numTest, Aux1), (false, Prim))
+    (uncurry Interface.relink)
+    [ ((numCons, Interface.Aux1), (erase1, Interface.Prim)),
+      ((numCons, Interface.Aux2), (erase2, Interface.Prim)),
+      ((numTest, Interface.Aux1), (false, Interface.Prim))
     ]
-  deleteRewire [numCons, numTest] [erase1, erase2, false]
+  Interface.deleteRewire [numCons, numTest] [erase1, erase2, false]
 
 curry3 ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (Primitive → Primitive → Primitive → Maybe Primitive, Node) →
-  (Primitive, Node) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (Primitive → Primitive → Primitive → Maybe Primitive, Interface.Node) →
+  (Primitive, Interface.Node) →
   m ()
 curry3 (nodeF, numNode) (p, numPrim) = do
-  incGraphSizeStep (- 1)
-  curr ← newNode (Auxiliary2 $ Curried2 $ nodeF p)
-  let currNode = RELAuxiliary2
-        { node = curr,
-          primary = ReLink numNode Aux3,
-          auxiliary1 = ReLink numNode Aux1,
-          auxiliary2 = ReLink numNode Aux2
+  Env.incGraphSizeStep (- 1)
+  curr ← Interface.newNode (Auxiliary2 $ Curried2 $ nodeF p)
+  let currNode = Interface.RELAuxiliary2
+        { Interface.node = curr,
+          Interface.primary = Interface.ReLink numNode Interface.Aux3,
+          Interface.auxiliary1 = Interface.ReLink numNode Interface.Aux1,
+          Interface.auxiliary2 = Interface.ReLink numNode Interface.Aux2
         }
-  linkAll currNode
-  deleteRewire [numNode, numPrim] [curr]
+  Interface.linkAll currNode
+  Interface.deleteRewire [numNode, numPrim] [curr]
 
 curry2 ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (Primitive → Primitive → Maybe Primitive, Node) →
-  (Primitive, Node) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (Primitive → Primitive → Maybe Primitive, Interface.Node) →
+  (Primitive, Interface.Node) →
   m ()
 curry2 (nodeF, numNode) (p, numPrim) = do
-  incGraphSizeStep (- 1)
-  curr ← newNode (Auxiliary1 $ Curried1 $ nodeF p)
-  let currNode = RELAuxiliary1
-        { node = curr,
-          primary = ReLink numNode Aux2,
-          auxiliary1 = ReLink numNode Aux1
+  Env.incGraphSizeStep (- 1)
+  curr ← Interface.newNode (Auxiliary1 $ Curried1 $ nodeF p)
+  let currNode = Interface.RELAuxiliary1
+        { Interface.node = curr,
+          Interface.primary = Interface.ReLink numNode Interface.Aux2,
+          Interface.auxiliary1 = Interface.ReLink numNode Interface.Aux1
         }
-  linkAll currNode
-  deleteRewire [numNode, numPrim] [curr]
+  Interface.linkAll currNode
+  Interface.deleteRewire [numNode, numPrim] [curr]
 
 curryPrim2 ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (primVal → primVal → Maybe primVal, Node) →
-  (primVal, Node) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (primVal → primVal → Maybe primVal, Interface.Node) →
+  (primVal, Interface.Node) →
   m ()
 curryPrim2 (nodeF, numNode) (p, numPrim) = do
-  incGraphSizeStep (- 1)
-  curr ← newNode (Auxiliary1 $ PrimCurried1 $ nodeF p)
-  let currNode = RELAuxiliary1
-        { node = curr,
-          primary = ReLink numNode Aux2,
-          auxiliary1 = ReLink numNode Aux1
+  Env.incGraphSizeStep (- 1)
+  curr ← Interface.newNode (Auxiliary1 $ PrimCurried1 $ nodeF p)
+  let currNode = Interface.RELAuxiliary1
+        { Interface.node = curr,
+          Interface.primary = Interface.ReLink numNode Interface.Aux2,
+          Interface.auxiliary1 = Interface.ReLink numNode Interface.Aux1
         }
-  linkAll currNode
-  deleteRewire [numNode, numPrim] [curr]
+  Interface.linkAll currNode
+  Interface.deleteRewire [numNode, numPrim] [curr]
 
 -- The bool represents if the graph was updated
 curry1 ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (Primitive → Maybe Primitive, Node) →
-  (Primitive, Node) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (Primitive → Maybe Primitive, Interface.Node) →
+  (Primitive, Interface.Node) →
   m Bool
 curry1 (nodeF, numNode) (p, numPrim) =
   case nodeF p of
     Nothing → pure False
     Just x → do
       let node = case x of
-            PInt i → IntLit i
-            PBool True → Tru
-            PBool False → Fals
-      incGraphSizeStep (- 1)
-      curr ← newNode (Primar node)
-      let currNode = RELAuxiliary0
-            { node = curr,
-              primary = ReLink numNode Aux1
+            Shared.PInt i → IntLit i
+            Shared.PBool True → Tru
+            Shared.PBool False → Fals
+      Env.incGraphSizeStep (- 1)
+      curr ← Interface.newNode (Primar node)
+      let currNode = Interface.RELAuxiliary0
+            { Interface.node = curr,
+              Interface.primary = Interface.ReLink numNode Interface.Aux1
             }
-      linkAll currNode
-      deleteRewire [numNode, numPrim] [curr]
+      Interface.linkAll currNode
+      Interface.deleteRewire [numNode, numPrim] [curr]
       pure $ True
 
 curryPrim1 ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (primVal → Maybe primVal, Node) →
-  (primVal, Node) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (primVal → Maybe primVal, Interface.Node) →
+  (primVal, Interface.Node) →
   m Bool
 curryPrim1 (nodeF, numNode) (p, numPrim) =
   case nodeF p of
     Nothing → pure False
     Just x → do
       let node = PrimVal x
-      incGraphSizeStep (- 1)
-      curr ← newNode (Primar node)
-      let currNode = RELAuxiliary0
-            { node = curr,
-              primary = ReLink numNode Aux1
+      Env.incGraphSizeStep (- 1)
+      curr ← Interface.newNode (Primar node)
+      let currNode = Interface.RELAuxiliary0
+            { Interface.node = curr,
+              Interface.primary = Interface.ReLink numNode Interface.Aux1
             }
-      linkAll currNode
-      deleteRewire [numNode, numPrim] [curr]
+      Interface.linkAll currNode
+      Interface.deleteRewire [numNode, numPrim] [curr]
       pure $ True
 
 fanIns ∷
-  InfoNetwork net (Lang primVal) m ⇒
-  (Node, Int) →
-  (Node, Int) →
+  Env.InfoNetwork net (Lang primVal) m ⇒
+  (Interface.Node, Int) →
+  (Interface.Node, Int) →
   m ()
 fanIns (numf1, lab1) (numf2, lab2)
   | lab1 == lab2 = do
-    incGraphSizeStep (- 2)
-    rewire (numf1, Aux1) (numf2, Aux2)
-    rewire (numf1, Aux2) (numf2, Aux1)
-    delNodes [numf1, numf2]
+    Env.incGraphSizeStep (- 2)
+    Interface.rewire (numf1, Interface.Aux1) (numf2, Interface.Aux2)
+    Interface.rewire (numf1, Interface.Aux2) (numf2, Interface.Aux1)
+    Interface.delNodes [numf1, numf2]
   | otherwise =
     fanInAux2 numf1 (numf2, (FanIn lab2)) lab1

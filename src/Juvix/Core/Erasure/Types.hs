@@ -13,25 +13,26 @@ data Env primTy primVal
       }
   deriving (Show, Eq, Generic)
 
-newtype EnvErasure primTy primVal a = EnvEra (ExceptT ErasureError (State (Env primTy primVal)) a)
+newtype EnvT primTy primVal a
+  = EnvEra (ExceptT Error (State (Env primTy primVal)) a)
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "typeAssignment" (Erased.TypeAssignment primTy))
-    via Field "typeAssignment" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
+    via Field "typeAssignment" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
     (HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)))
-    via Field "context" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
+    via Field "context" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
     (HasState "nextName" Int)
-    via Field "nextName" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
+    via Field "nextName" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
     (HasState "nameStack" [Int])
-    via Field "nameStack" () (MonadState (ExceptT ErasureError (State (Env primTy primVal))))
+    via Field "nameStack" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    (HasThrow "erasureError" ErasureError)
-    via MonadError (ExceptT ErasureError (MonadState (State (Env primTy primVal))))
+    (HasThrow "erasureError" Error)
+    via MonadError (ExceptT Error (MonadState (State (Env primTy primVal))))
 
-data ErasureError
+data Error
   = Unsupported
   | CannotEraseZeroUsageTerm Text
   | InternalError Text

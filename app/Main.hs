@@ -2,11 +2,10 @@
 
 module Main where
 
-import Compile
-import Config
+import qualified Compile as Compile
+import qualified Config as Config
 import Development.GitRev
-import Interactive
-import Juvix.Backends.LLVM.Net.Environment
+import qualified Interactive as Interactive
 import Options
 import Options.Applicative
 import Protolude
@@ -33,15 +32,22 @@ disclaimerDoc =
       red "experimental",
       " software released for research purposes only – use at your own risk.",
       line,
-      "Juvix may diverge from canonical protocol implementations in unexpected ways."
+      "Juvix may diverge from canonical"
+        <> "protocol implementations in unexpected ways."
     ]
 
 aboutDoc ∷ Doc
 aboutDoc =
   mconcat
-    [ text "Juvix smart contract language compiler, debugging toolkit, & stateful deployment system",
+    [ text
+        ( "Juvix smart contract language compiler,"
+            <> "debugging toolkit, & stateful deployment system"
+        ),
       line,
-      text "(c) Christopher Goes 2018-2019, (c) Cryptium Labs 2019 • https://juvix.org",
+      text
+        ( "(c) Christopher Goes 2018-2019, "
+            <> "(c) Cryptium Labs 2019 • https://juvix.org"
+        ),
       line,
       disclaimerDoc
     ]
@@ -52,7 +58,16 @@ versionDoc =
     [ aboutDoc,
       line <> line,
       mconcat ["Prerelease version.", line],
-      mconcat ["Built from branch ", white $(gitBranch), " at commit ", magenta $(gitHash), " (commit date ", cyan $(gitCommitDate), ").", line]
+      mconcat
+        [ "Built from branch ",
+          white $(gitBranch),
+          " at commit ",
+          magenta $(gitHash),
+          " (commit date ",
+          cyan $(gitCommitDate),
+          ").",
+          line
+        ]
     ]
 
 interactiveDoc ∷ Doc
@@ -67,24 +82,35 @@ interactiveDoc =
  | |_| | \ V /   /  \| |
   \___/   \_/   /_/\_\_|
 |],
-      mconcat [line, "Juvix interactive alpha.", line, "Currently supported backends: in-process interpreter, in-process interaction net.", line, "Coming soon: Michelson, LLVM, WASM.", line, "Enter :? for help. Enter :tutorial for an interactive tutorial.", line]
+      mconcat
+        [ line,
+          "Juvix interactive alpha.",
+          line,
+          "Currently supported backends: "
+            <> "in-process interpreter, in-process interaction net.",
+          line,
+          "Coming soon: Michelson, LLVM, WASM.",
+          line,
+          "Enter :? for help. Enter :tutorial for an interactive tutorial.",
+          line
+        ]
     ]
 
 run ∷ Context → Options → IO ()
 run ctx (Options cmd configPath) = do
-  maybeConfig ← loadConfig configPath
-  let conf = fromMaybe defaultConfig maybeConfig
+  maybeConfig ← Config.loadT configPath
+  let conf = fromMaybe Config.defaultT maybeConfig
   case cmd of
     Typecheck fin backend → do
-      typecheck fin backend >> pure ()
+      Compile.typecheck fin backend >> pure ()
     Compile fin fout backend →
-      compile fin fout backend
+      Compile.compile fin fout backend
     Interactive → do
       putDoc interactiveDoc
       if isJust maybeConfig
         then putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
         else putStrLn ("Loaded default runtime configuration.\n" ∷ Text)
-      interactive ctx conf
+      Interactive.interactive ctx conf
       exitSuccess
     Version → do
       putDoc versionDoc

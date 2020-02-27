@@ -1,0 +1,47 @@
+* Proof Searching of Juvix
+- Data Structures in Juvix should provide complimentary proofs that
+  are relevant to the users.
+** The Argument for Implicit Refinements Over Indexed Types For Structures
+- The current thought on how to do that is as follows
+  1. Provide a base structure with no extra information as the main
+     module
+     + So
+       #+BEGIN_SRC haskell
+         module Data.Map where
+
+         type Map a b = ...
+       #+END_SRC
+  2. Provide various libraries that provides proofs over the structure
+     + an example would be
+       #+BEGIN_SRC haskell
+         module Data.Map.Proofs.Size
+       #+END_SRC
+       which would give all proofs about size that can be
+       automatically applied to a piece of code.
+  3. Provide a module
+     #+BEGIN_SRC haskell
+       module Data.Map.Proofs
+     #+END_SRC
+     which gives back all available refinements defined by the
+     library.
+
+     - This gives the programmer a heavy weight way of figuring out
+       what proofs/refinements are needed in order to allow your code
+       to verify
+
+     - This module is not intended to be left in final, code but in
+       process of developing a module
+
+       + Thus the environment itself should give back what refinements
+         were used in verifying said expression.
+
+- I believe this is superior to indexed types, as this would allow the
+  programmer to only add types *they* care about, and not be forced to
+  consider moving their list to vector if they care about length.
+
+  + This use of index types, would explode the number of variants of a
+    particular type.
+
+    * This also forces the programmer to have to understand that a
+      *vector* is a *list* and thus an UI on these variants should be
+      maintained.

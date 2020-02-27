@@ -1,9 +1,9 @@
 module Juvix.Core.EAC.ConstraintGen where
 
 import Control.Arrow (left)
-import Juvix.Core.EAC.Types
-import Juvix.Core.Erased.Types
-import Juvix.Core.Types
+import qualified Juvix.Core.EAC.Types as EAC
+import qualified Juvix.Core.Erased.Types as Erased
+import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (Type, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
@@ -13,88 +13,93 @@ import Prelude (error)
 {- Main functionality. -}
 
 -- Construct occurrence map.
-setOccurrenceMap ∷ ∀ m primVal. (HasState "occurrenceMap" OccurrenceMap m) ⇒ Term primVal → m ()
+setOccurrenceMap ∷
+  (HasState "occurrenceMap" EAC.OccurrenceMap m) ⇒ Erased.Term primVal → m ()
 setOccurrenceMap term = do
   case term of
-    Prim _ →
+    Erased.Prim _ →
       pure ()
-    Var sym →
+    Erased.Var sym →
       modify' @"occurrenceMap" (Map.insertWith (+) sym 1)
-    Lam _ b → do
+    Erased.Lam _ b → do
       setOccurrenceMap b
-    App a b → do
+    Erased.App a b → do
       setOccurrenceMap a
       setOccurrenceMap b
 
 -- Parameterize type.
 parameterizeType ∷
   ∀ m primTy.
-  ( HasState "nextParam" Param m,
-    HasWriter "constraints" [Constraint] m
+  ( HasState "nextParam" EAC.Param m,
+    HasWriter "constraints" [EAC.Constraint] m
   ) ⇒
-  Type primTy →
-  m (PType primTy)
+  Erased.Type primTy →
+  m (EAC.PType primTy)
 parameterizeType ty = do
   param ← freshParam
   -- Typing constraint: m >= 0
-  addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
+  addConstraint (EAC.Constraint [EAC.ConstraintVar 1 param] (EAC.Gte 0))
   case ty of
-    PrimTy p →
-      pure (PPrimT p)
-    SymT sym →
-      pure (PSymT param sym)
-    Pi _ arg body → do
+    Erased.PrimTy p →
+      pure (EAC.PPrimT p)
+    Erased.SymT sym →
+      pure (EAC.PSymT param sym)
+    Erased.Pi _ arg body → do
       arg ← parameterizeType arg
       body ← parameterizeType body
-      pure (PArrT param arg body)
+      pure (EAC.PArrT param arg body)
+    Erased.Star _ → undefined
 
 -- Parameterize type assignment.
 parameterizeTypeAssignment ∷
   ∀ m primTy.
-  ( HasState "nextParam" Param m,
-    HasWriter "constraints" [Constraint] m,
-    HasState "typeAssignment" (TypeAssignment primTy) m
+  ( HasState "nextParam" EAC.Param m,
+    HasWriter "constraints" [EAC.Constraint] m,
+    HasState "typeAssignment" (Erased.TypeAssignment primTy) m
   ) ⇒
-  m (ParamTypeAssignment primTy)
-parameterizeTypeAssignment = do
-  assignment ← get @"typeAssignment"
-  traverse parameterizeType assignment
+  m (EAC.ParamTypeAssignment primTy)
+parameterizeTypeAssignment =
+  get @"typeAssignment" >>= traverse parameterizeType
 
 -- Reparameterize.
 reparameterize ∷
   ∀ m primTy.
-  ( HasState "nextParam" Param m,
-    HasWriter "constraints" [Constraint] m
+  ( HasState "nextParam" EAC.Param m,
+    HasWriter "constraints" [EAC.Constraint] m
   ) ⇒
-  PType primTy →
-  m (PType primTy)
+  EAC.PType primTy →
+  m (EAC.PType primTy)
 reparameterize pty = do
   param ← freshParam
   -- Typing constraint: m >= 0
-  addConstraint (Constraint [ConstraintVar 1 param] (Gte 0))
+  addConstraint (EAC.Constraint [EAC.ConstraintVar 1 param] (EAC.Gte 0))
   case pty of
-    PPrimT p → pure (PPrimT p)
-    PSymT _ sym → pure (PSymT param sym)
-    PArrT _ a b → pure (PArrT param a b)
+    EAC.PPrimT p → pure (EAC.PPrimT p)
+    EAC.PSymT _ sym → pure (EAC.PSymT param sym)
+    EAC.PArrT _ a b → pure (EAC.PArrT param a b)
 
 unificationConstraints ∷
   ∀ m primTy.
-  (HasWriter "constraints" [Constraint] m) ⇒
-  PType primTy →
-  PType primTy →
+  (HasWriter "constraints" [EAC.Constraint] m) ⇒
+  EAC.PType primTy →
+  EAC.PType primTy →
   m ()
-unificationConstraints (PPrimT _) (PPrimT _) =
+unificationConstraints (EAC.PPrimT _) (EAC.PPrimT _) =
   -- TODO: Check p1 == p2 here?
   pure ()
-unificationConstraints (PSymT a _) (PSymT b _) =
-  addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
-unificationConstraints (PArrT a aArg aRes) (PArrT b bArg bRes) = do
-  addConstraint (Constraint [ConstraintVar 1 a, ConstraintVar (- 1) b] (Eq 0))
+unificationConstraints (EAC.PSymT a _) (EAC.PSymT b _) =
+  addConstraint (constraint a b)
+unificationConstraints (EAC.PArrT a aArg aRes) (EAC.PArrT b bArg bRes) = do
+  addConstraint (constraint a b)
   unificationConstraints aArg bArg
   unificationConstraints aRes bRes
 unificationConstraints _ _ =
   -- TODO: Throw an error here?
   pure mempty
+
+constraint ∷ EAC.Param → EAC.Param → EAC.Constraint
+constraint a b =
+  (EAC.Constraint [EAC.ConstraintVar 1 a, EAC.ConstraintVar (- 1) b] (EAC.Eq 0))
 
 --unificationConstraints x y = error ("cannot unify " <> show x <> " with " <> show y)
 
@@ -103,32 +108,40 @@ unificationConstraints _ _ =
 -- TODO ∷ Change occurrenceMap to a reader at this point in the code
 boxAndTypeConstraint ∷
   ∀ m primTy primVal.
-  ( HasState "path" Path m,
-    HasState "varPaths" VarPaths m,
-    HasState "nextParam" Param m,
-    HasWriter "constraints" [Constraint] m,
-    HasReader "occurrenceMap" OccurrenceMap m
+  ( HasState "path" EAC.Path m,
+    HasState "varPaths" EAC.VarPaths m,
+    HasState "nextParam" EAC.Param m,
+    HasWriter "constraints" [EAC.Constraint] m,
+    HasReader "occurrenceMap" EAC.OccurrenceMap m
   ) ⇒
-  Parameterisation primTy primVal →
-  ParamTypeAssignment primTy →
-  Term primVal →
-  m (RPT primVal, PType primTy)
+  Core.Parameterisation primTy primVal →
+  EAC.ParamTypeAssignment primTy →
+  Erased.Term primVal →
+  m (EAC.RPT primVal, EAC.PType primTy)
 boxAndTypeConstraint parameterisation parameterizedAssignment term = do
   let rec = boxAndTypeConstraint parameterisation parameterizedAssignment
-      arrow (x :| []) = PPrimT x
-      arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
+      arrow (x :| []) = EAC.PPrimT x
+      arrow (x :| (y : ys)) = EAC.PArrT 0 (EAC.PPrimT x) (arrow (y :| ys))
   varPaths ← get @"varPaths"
   param ← addPath
   path ← get @"path"
   -- Boxing constraint.
-  addConstraint (Constraint (ConstraintVar 1 <$> path) (Gte 0))
+  addConstraint (EAC.Constraint (EAC.ConstraintVar 1 <$> path) (EAC.Gte 0))
   case term of
-    Prim p → pure (RBang 0 (RPrim p), arrow (typeOf parameterisation p))
-    Var sym → do
+    Erased.Prim p →
+      pure (EAC.RBang 0 (EAC.RPrim p), arrow (Core.typeOf parameterisation p))
+    Erased.Var sym → do
       -- Boxing constraint.
       case varPaths Map.!? sym of
-        Just loc → addConstraint (Constraint (ConstraintVar 1 <$> dropWhile (< loc) path) (Eq 0))
-        Nothing → addConstraint (Constraint (ConstraintVar 1 <$> path) (Eq 0))
+        Just loc →
+          addConstraint
+            ( EAC.Constraint
+                (EAC.ConstraintVar 1 <$> dropWhile (< loc) path)
+                (EAC.Eq 0)
+            )
+        Nothing →
+          addConstraint
+            (EAC.Constraint (EAC.ConstraintVar 1 <$> path) (EAC.Eq 0))
       let origParamTy = parameterizedAssignment Map.! sym
       -- Typing constraint: variable occurrences.
       occurrenceMap ← ask @"occurrenceMap"
@@ -136,7 +149,8 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
           origBangParam = bangParam origParamTy
       -- If non-linear (>= 2 occurrences), original type must be of form !A.
       when (occurrences >= 2) $
-        addConstraint (Constraint [ConstraintVar 1 origBangParam] (Gte 1))
+        addConstraint
+          (EAC.Constraint [EAC.ConstraintVar 1 origBangParam] (EAC.Gte 1))
       -- Calculate parameterized type for subterm.
       paramTy ← reparameterize origParamTy
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
@@ -144,50 +158,52 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
       -- and   k = origBangParam
       -- and   m = bangParam paramTy
       addConstraint
-        ( Constraint
-            [ ConstraintVar (- 1) (bangParam paramTy),
-              ConstraintVar 1 origBangParam,
-              ConstraintVar 1 param
+        ( EAC.Constraint
+            [ EAC.ConstraintVar (- 1) (bangParam paramTy),
+              EAC.ConstraintVar 1 origBangParam,
+              EAC.ConstraintVar 1 param
             ]
-            (Eq 0)
+            (EAC.Eq 0)
         )
       -- Typing constraint: m >= 0
-      addConstraint (Constraint [ConstraintVar 1 (bangParam paramTy)] (Gte 0))
+      addConstraint
+        (EAC.Constraint [EAC.ConstraintVar 1 (bangParam paramTy)] (EAC.Gte 0))
       -- Return parameterized term.
-      pure (RBang param (RVar sym), paramTy)
-    Lam sym body → do
+      pure (EAC.RBang param (EAC.RVar sym), paramTy)
+    Erased.Lam sym body → do
       nextParam ← getNextParam
       modify' @"varPaths" (Map.insert sym nextParam)
       (body, bodyTy) ← rec body
       -- Calculate parameterized type for subterm.
       lamTyParam ← freshParam
       -- Typing constraint: m >= 0
-      addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Gte 0))
+      addConstraint (EAC.Constraint [EAC.ConstraintVar 1 lamTyParam] (EAC.Gte 0))
       let argTy = parameterizedAssignment Map.! sym
-          lamTy = PArrT lamTyParam argTy bodyTy
+          lamTy = EAC.PArrT lamTyParam argTy bodyTy
       -- Calculate final type.
       resTy ← reparameterize lamTy
       -- Typing constraint: m = 0
-      addConstraint (Constraint [ConstraintVar 1 lamTyParam] (Eq 0))
+      addConstraint (EAC.Constraint [EAC.ConstraintVar 1 lamTyParam] (EAC.Eq 0))
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
       -- where k = bangParam lamTy ∈ ℤ
       -- and   m = bangParam resTy ∈ ℤ
       -- and   n = param           ∈ ℤ
       addConstraint
-        ( Constraint
-            [ ConstraintVar (- 1) (bangParam resTy),
-              ConstraintVar 1 (bangParam lamTy),
-              ConstraintVar 1 param
+        ( EAC.Constraint
+            [ EAC.ConstraintVar (- 1) (bangParam resTy),
+              EAC.ConstraintVar 1 (bangParam lamTy),
+              EAC.ConstraintVar 1 param
             ]
-            (Eq 0)
+            (EAC.Eq 0)
         )
       -- Typing constraint: m >= 0
-      addConstraint (Constraint [ConstraintVar 1 (bangParam resTy)] (Gte 0))
+      addConstraint
+        (EAC.Constraint [EAC.ConstraintVar 1 (bangParam resTy)] (EAC.Gte 0))
       -- Return parameterized term.
-      pure (RBang param (RLam sym body), resTy)
-    App a b → do
+      pure (EAC.RBang param (EAC.RLam sym body), resTy)
+    Erased.App a b → do
       (a, aTy) ← rec a
-      let PArrT bangA argTy resTy = aTy
+      let EAC.PArrT bangA argTy resTy = aTy
       put @"path" path
       put @"varPaths" varPaths
       (b, bTy) ← rec b
@@ -198,38 +214,39 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
       -- aTy = !^m(A₁ ⊸ B₁)
       -- bTy = A₂
       unificationConstraints argTy bTy
-      addConstraint (Constraint [ConstraintVar 1 bangA] (Eq 0))
+      addConstraint (EAC.Constraint [EAC.ConstraintVar 1 bangA] (EAC.Eq 0))
       -- Typing constraint: m = k + n ⟹ k + n - m = 0
       -- where n = param
       -- and   k = bangParam resTy
       -- and   m = bangParam appTy
       addConstraint
-        ( Constraint
-            [ ConstraintVar (- 1) (bangParam appTy),
-              ConstraintVar 1 (bangParam resTy),
-              ConstraintVar 1 param
+        ( EAC.Constraint
+            [ EAC.ConstraintVar (- 1) (bangParam appTy),
+              EAC.ConstraintVar 1 (bangParam resTy),
+              EAC.ConstraintVar 1 param
             ]
-            (Eq 0)
+            (EAC.Eq 0)
         )
       -- Typing constraint: m >= 0
-      addConstraint (Constraint [ConstraintVar 1 (bangParam appTy)] (Gte 0))
+      addConstraint
+        (EAC.Constraint [EAC.ConstraintVar 1 (bangParam appTy)] (EAC.Gte 0))
       -- Return parameterized term.
-      pure (RBang param (RApp a b), appTy)
+      pure (EAC.RBang param (EAC.RApp a b), appTy)
 
 -- Generate constraints.
 generateTypeAndConstraints ∷
   ∀ m primTy primVal.
-  ( HasState "path" Path m,
-    HasState "varPaths" VarPaths m,
-    HasState "nextParam" Param m,
-    HasState "typeAssignment" (TypeAssignment primTy) m,
-    HasWriter "constraints" [Constraint] m,
-    HasState "occurrenceMap" OccurrenceMap m,
-    HasReader "occurrenceMap" OccurrenceMap m
+  ( HasState "path" EAC.Path m,
+    HasState "varPaths" EAC.VarPaths m,
+    HasState "nextParam" EAC.Param m,
+    HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
+    HasWriter "constraints" [EAC.Constraint] m,
+    HasState "occurrenceMap" EAC.OccurrenceMap m,
+    HasReader "occurrenceMap" EAC.OccurrenceMap m
   ) ⇒
-  Parameterisation primTy primVal →
-  Term primVal →
-  m (RPT primVal, ParamTypeAssignment primTy)
+  Core.Parameterisation primTy primVal →
+  Erased.Term primVal →
+  m (EAC.RPT primVal, EAC.ParamTypeAssignment primTy)
 generateTypeAndConstraints parameterisation term = do
   parameterizedAssignment ← parameterizeTypeAssignment
   setOccurrenceMap term
@@ -237,146 +254,148 @@ generateTypeAndConstraints parameterisation term = do
     >>| second (const parameterizedAssignment)
 
 generateConstraints ∷
-  ( HasState "path" Path m,
-    HasState "varPaths" VarPaths m,
-    HasState "nextParam" Param m,
-    HasState "typeAssignment" (TypeAssignment primTy) m,
-    HasWriter "constraints" [Constraint] m,
-    HasState "occurrenceMap" OccurrenceMap m,
-    HasReader "occurrenceMap" OccurrenceMap m
+  ( HasState "path" EAC.Path m,
+    HasState "varPaths" EAC.VarPaths m,
+    HasState "nextParam" EAC.Param m,
+    HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
+    HasWriter "constraints" [EAC.Constraint] m,
+    HasState "occurrenceMap" EAC.OccurrenceMap m,
+    HasReader "occurrenceMap" EAC.OccurrenceMap m
   ) ⇒
-  Parameterisation primTy primVal →
-  Term primVal →
-  m (RPT primVal)
+  Core.Parameterisation primTy primVal →
+  Erased.Term primVal →
+  m (EAC.RPT primVal)
 generateConstraints parameterisation term =
   generateTypeAndConstraints parameterisation term
     >>| fst
 
 {- Bracket Checker. -}
-bracketChecker ∷ RPTO primVal → Either BracketErrors ()
-bracketChecker t = runEither (rec' t 0 mempty)
+bracketChecker ∷ EAC.RPTO primVal → Either EAC.BracketErrors ()
+bracketChecker t = EAC.runEither (rec' t 0 mempty)
   where
-    rec' (RBang changeBy (RVar sym)) n map =
+    rec' (EAC.RBang changeBy (EAC.RVar sym)) n map =
       let f x
             | changeBy + n + x == 0 = pure ()
-            | changeBy + n + x > 0 = throw @"typ" TooManyOpenV
-            | otherwise = throw @"typ" TooManyClosingV
+            | changeBy + n + x > 0 = throw @"typ" EAC.TooManyOpenV
+            | otherwise = throw @"typ" EAC.TooManyClosingV
        in case map Map.!? sym of
             Just x → f x
             Nothing → f 0
-    rec' (RBang changeBy t) n map
-      | changeBy + n < 0 = throw @"typ" TooManyClosing
+    rec' (EAC.RBang changeBy t) n map
+      | changeBy + n < 0 = throw @"typ" EAC.TooManyClosing
       | otherwise =
         let n' = changeBy + n
          in case t of
-              RLam s t → rec' t n' (Map.insert s (negate n') map)
-              RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
-              RVar _ → error "already is matched"
-              RPrim _ → pure ()
+              EAC.RLam s t → rec' t n' (Map.insert s (negate n') map)
+              EAC.RApp t1 t2 → rec' t1 n' map >> rec' t2 n' map
+              EAC.RVar _ → error "already is matched"
+              EAC.RPrim _ → pure ()
 
-bracketCheckerErr ∷ RPTO primVal → Either (Errors primTy primVal) ()
-bracketCheckerErr t = left Brack (bracketChecker t)
+bracketCheckerErr ∷ EAC.RPTO primVal → Either (EAC.Errors primTy primVal) ()
+bracketCheckerErr t = left EAC.Brack (bracketChecker t)
 
 {- Type Checker. -}
 -- Precondition ∷ all terms inside of RPTO must be unique
 typChecker ∷
   ∀ primTy primVal.
   (Eq primTy) ⇒
-  Parameterisation primTy primVal →
-  RPTO primVal →
-  ParamTypeAssignment primTy →
-  Either (TypeErrors primTy primVal) ()
-typChecker parameterisation t typAssign = runEither (() <$ rec' t typAssign)
+  Core.Parameterisation primTy primVal →
+  EAC.RPTO primVal →
+  EAC.ParamTypeAssignment primTy →
+  Either (EAC.TypeErrors primTy primVal) ()
+typChecker parameterisation t typAssign = EAC.runEither (() <$ rec' t typAssign)
   where
-    arrow (x :| []) = PPrimT x
-    arrow (x :| (y : ys)) = PArrT 0 (PPrimT x) (arrow (y :| ys))
-    rec' (RBang bangVar (RVar s)) assign =
+    arrow (x :| []) = EAC.PPrimT x
+    arrow (x :| (y : ys)) = EAC.PArrT 0 (EAC.PPrimT x) (arrow (y :| ys))
+    rec' (EAC.RBang bangVar (EAC.RVar s)) assign =
       case assign Map.!? s of
-        Nothing → throw @"typ" MissingOverUse
+        Nothing → throw @"typ" EAC.MissingOverUse
         Just t → do
           newTyp ← addParamPos bangVar t
           if
             | bangParam t > 0 → pure (assign, newTyp)
             | otherwise → pure (Map.delete s assign, newTyp)
-    rec' (RBang bangApp term@(RApp t1 t2)) assign = do
+    rec' (EAC.RBang bangApp term@(EAC.RApp t1 t2)) assign = do
       (newAssign, type1) ← rec' t1 assign
       (newAssign', type2) ← rec' t2 newAssign
       case type1 of
-        PArrT _ arg result
+        EAC.PArrT _ arg result
           | arg == type2 → do
             newTyp ← addParamPos bangApp result
             pure (newAssign', newTyp)
-          | otherwise → throw @"typ" (MisMatchArguments arg type2 term)
-        t@_ → throw @"typ" (TypeIsNotFunction t)
-    rec' (RBang x (RLam s t)) assign = do
+          | otherwise → throw @"typ" (EAC.MisMatchArguments arg type2 term)
+        t@_ → throw @"typ" (EAC.TypeIsNotFunction t)
+    rec' (EAC.RBang x (EAC.RLam s t)) assign = do
       (newAssign, bodyType) ← rec' t assign
       case assign Map.!? s of
-        Just arg → pure (newAssign, PArrT x arg bodyType)
-        Nothing → throw @"typ" MissingOverUse
-    rec' (RBang _bangVar (RPrim _p)) _assign =
-      pure (_assign, (arrow (typeOf parameterisation _p)))
+        Just arg → pure (newAssign, EAC.PArrT x arg bodyType)
+        Nothing → throw @"typ" EAC.MissingOverUse
+    rec' (EAC.RBang _bangVar (EAC.RPrim _p)) _assign =
+      pure (_assign, (arrow (Core.typeOf parameterisation _p)))
 
 typCheckerErr ∷
   ∀ primTy primVal.
   (Eq primTy) ⇒
-  Parameterisation primTy primVal →
-  RPTO primVal →
-  ParamTypeAssignment primTy →
-  Either (Errors primTy primVal) ()
+  Core.Parameterisation primTy primVal →
+  EAC.RPTO primVal →
+  EAC.ParamTypeAssignment primTy →
+  Either (EAC.Errors primTy primVal) ()
 typCheckerErr parameterisation t typeAssign =
-  left Typ (typChecker parameterisation t typeAssign)
+  left EAC.Typ (typChecker parameterisation t typeAssign)
 
 {- Utility. -}
 
 -- The outer bang parameter.
-bangParam ∷ ∀ primTy. PType primTy → Param
-bangParam (PPrimT _) = 0
-bangParam (PSymT param _) = param
-bangParam (PArrT param _ _) = param
+bangParam ∷ ∀ primTy. EAC.PType primTy → EAC.Param
+bangParam (EAC.PPrimT _) = 0
+bangParam (EAC.PSymT param _) = param
+bangParam (EAC.PArrT param _ _) = param
 
-putParam ∷ ∀ primTy. Param → PType primTy → PType primTy
-putParam _ (PPrimT p) = PPrimT p
-putParam p (PSymT _ s) = PSymT p s
-putParam p (PArrT _ t1 t2) = PArrT p t1 t2
+putParam ∷ ∀ primTy. EAC.Param → EAC.PType primTy → EAC.PType primTy
+putParam _ (EAC.PPrimT p) = EAC.PPrimT p
+putParam p (EAC.PSymT _ s) = EAC.PSymT p s
+putParam p (EAC.PArrT _ t1 t2) = EAC.PArrT p t1 t2
 
 -- putParamPos ∷ Param → PType → PType
 addParamPos ∷
   ∀ m primTy primVal.
-  HasThrow "typ" (TypeErrors primTy primVal) m ⇒
-  Param →
-  PType primTy →
-  m (PType primTy)
-addParamPos _ (PPrimT p) = pure (PPrimT p)
-addParamPos toAdd (PSymT p s)
-  | toAdd + p < 0 = throw @"typ" TooManyHats
-  | otherwise = pure (PSymT (toAdd + p) s)
-addParamPos toAdd (PArrT p t1 t2)
-  | toAdd + p < 0 = throw @"typ" TooManyHats
-  | otherwise = pure (PArrT (toAdd + p) t1 t2)
+  HasThrow "typ" (EAC.TypeErrors primTy primVal) m ⇒
+  EAC.Param →
+  EAC.PType primTy →
+  m (EAC.PType primTy)
+addParamPos _ (EAC.PPrimT p) = pure (EAC.PPrimT p)
+addParamPos toAdd (EAC.PSymT p s)
+  | toAdd + p < 0 = throw @"typ" EAC.TooManyHats
+  | otherwise = pure (EAC.PSymT (toAdd + p) s)
+addParamPos toAdd (EAC.PArrT p t1 t2)
+  | toAdd + p < 0 = throw @"typ" EAC.TooManyHats
+  | otherwise = pure (EAC.PArrT (toAdd + p) t1 t2)
 
 -- | Get the next fresh parameter
 getNextParam ∷ ∀ b f. (HasState "nextParam" b f, Enum b) ⇒ f b
 getNextParam = get @"nextParam"
 
 -- | Generate fresh parameter.
-freshParam ∷ ∀ m. (HasState "nextParam" Param m) ⇒ m Param
+freshParam ∷ ∀ m. (HasState "nextParam" EAC.Param m) ⇒ m EAC.Param
 freshParam = do
   param ← get @"nextParam"
   put @"nextParam" (succ param)
   pure param
 
 -- Append to path.
-addPath ∷ ∀ m. (HasState "nextParam" Param m, HasState "path" Path m) ⇒ m Param
+addPath ∷
+  (HasState "nextParam" EAC.Param m, HasState "path" EAC.Path m) ⇒ m EAC.Param
 addPath = do
   param ← freshParam
   modify' @"path" (<> [param])
   pure param
 
 -- Add constraint.
-addConstraint ∷ ∀ m. HasWriter "constraints" [Constraint] m ⇒ Constraint → m ()
+addConstraint ∷ HasWriter "constraints" [EAC.Constraint] m ⇒ EAC.Constraint → m ()
 addConstraint con = tell @"constraints" [con]
 
 -- Execute with prior assignment.
-execWithAssignment ∷ ∀ primTy a. TypeAssignment primTy → EnvConstraint primTy a → (a, Env primTy)
-execWithAssignment assignment (EnvCon env) =
-  runState env (Env [] mempty assignment 0 [] mempty)
+execWithAssignment ∷
+  Erased.TypeAssignment primTy → EAC.EnvConstraint primTy a → (a, EAC.Env primTy)
+execWithAssignment assignment (EAC.EnvCon env) =
+  runState env (EAC.Env [] mempty assignment 0 [] mempty)
