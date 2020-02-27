@@ -1,8 +1,6 @@
 module Main
 
-import SumSortedMap
-import Data.Vect
-import Data.Fin
+import Data.SortedMap
 
 ||| Account contains the balance of the token.
 Account : Type
@@ -12,33 +10,16 @@ Account = Nat
 Address : Type
 Address = String
 
-sumOfAccounts : SortedMap Address Account -> Nat
-sumOfAccounts accounts = sum $ values accounts
-
---a sorted map (of accounts) indexed over the sum of all accounts
-data FixedSortedMap : (s : Nat) -> (k : Type) -> (v : Type) -> Type where
-  Empty : Ord k => FixedSortedMap Z k v
-  M : (o : Ord k) => (n:Nat) -> Tree n k v o -> FixedSortedMap ?canitakevsomehow k v
-
-add :  (k : Address) -> (v : Account) -> FixedSortedMap s Address Account -> FixedSortedMap (s + v) Address Account --TODO maybe wrong because insert could also update!
-add k v Empty = M 0 (Leaf k v)
-{-
-delete : (k : Address) -> (v : Account) -> FixedSortedMap t -> FixedSortedMap (t - v)
-
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
-record Storage (sumIsValid : sumOfAccounts accounts = totalSupply) where -- dependent record: Storage Refl means sum of account is proven to equal to totalSupply
+record Storage where
     constructor MkStorage
+    accounts : SortedMap Address Account
     version : Nat --version of the token standard
     totalSupply : Nat
-    accounts : FixedSortedMap totalSupply Address Account
     name : String
     symbol : String
     owner : Address
---TODO fix the problem that there is no setter function for the dependent fields.
-
-data SumSortedMap : m:SortedMap k Nat o -> sum:Nat -> sumMap m = sum -> Type
-  SumSortedMap m sum e : SumSortedMap m sum e
 
 data Error = NotEnoughBalance
            | FailedToAuthenticate
@@ -77,5 +58,3 @@ createAccount dest tokens storage =
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
-
--}
