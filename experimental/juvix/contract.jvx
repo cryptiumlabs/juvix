@@ -15,14 +15,14 @@ Accounts = Map.OrdMap Data.String MonoidMeasure
 -- we send in the string module, as it has a total order
 -- function named compare, that is also part of a general type class
 Token =
-  type Address  = s : string {String.length s == 36}
+  type Address  = s : String.T {String.length s == 36}
 
   type Storage = {
     total-supply : Nat.T;
     accounts     : Accounts.T { Accounts.measure-value == total-supply }
   }
 
-  empty-storage : storage
+  empty-storage : Storage
   empty-storage = {
     total-supply = 0;
     accounts     = Accounts.empty;
@@ -102,7 +102,7 @@ transfer-stor stor ~from:add_from ~to:add_to num =
 
 
 Validation : Module
-  T = Token.T -> Transaction.T -> Bool
+  type T = Token.T -> Transaction.T -> Bool
 
   transfer : T
   burn     : T
@@ -180,7 +180,7 @@ Operation =
     | NotOwnerToken
     | NotEnoughTokens
 
-  exec : Token.T -> Transaction.T -> Either Error Token.T
+  exec : Token.T -> Transaction.T -> Either.T Error Token.T
   exec token tx =
   case tx.data of
   | Transfer _ ->
