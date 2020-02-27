@@ -10,6 +10,7 @@ MonoidMeasure =
   measure = id
 
 
+-- need OrdMap, as modules that one goes to can't be modules?
 Accounts = Map.OrdMap Data.String MonoidMeasure
 
 -- we send in the string module, as it has a total order
