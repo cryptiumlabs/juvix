@@ -1,15 +1,13 @@
-
-
 Map = Data.Map
 
 -- common module interfaces for data structures in Common?
 MonoidMeasure : Common.MeasureTotal
 MonoidMeasure =
-  T = Nat
+  type T = Nat
 
   -- (<>) is normal semi-group  type class function
   (<>)    = (<>)
-  Measure = id
+  measure = id
 
 
 Accounts = Map.T Data.String MonoidMeasure
@@ -110,7 +108,7 @@ Validation : Module
   burn     : T
   mint     : T
 Validation =
-  T = Token.T -> Transaction.T -> Bool
+  type T = Token.T -> Transaction.T -> Bool
 
   mint token tx =
     case tx.data of
@@ -138,10 +136,10 @@ Validation =
 
 Operation =
 
-  type token-transaction f =
+  type TokenTransaction f =
     tok : Token.T -> tx : tx { f tok tx } -> Token.T
 
-  transfer : token-transaction Validation.transfer
+  transfer : TokenTransaction Validation.transfer
   transfer token transaction =
     case transaction.data of
     | Transfer {from-account; to-account; amount} ->
@@ -153,7 +151,7 @@ Operation =
                         transfer_ammount
       }
 
-  mint : token-transaction Validation.mint
+  mint : TokenTransaction Validation.mint
   mint token transaction =
     case transaction.data of
     | Mint {mint-amount; mint-to-account} ->
@@ -165,7 +163,7 @@ Operation =
         }}
 
 
-  burn : token-transaction Validation.mint
+  burn : TokenTransaction Validation.mint
   burn token transaction =
     case transaction.data of
     | Burn {burn-amount; burn-from-account} ->
