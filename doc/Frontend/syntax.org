@@ -17,7 +17,10 @@
              | <name> <args>+ <cond-logic>*
 
   ;; Match-logic could just be a name, and so is thus fine
+  ;; # is for implicit
+  ;; Should we have implicit pattern matching like here?
   args ::= <match-logic>
+         | #<match-logic>
 
   ;; if we only have usage in arrows, we should allow a way to have
   ;; usage information of variables as well!
@@ -54,12 +57,15 @@
             | <arrow-type>
 
   name-type      ::= <name> <type-signature>
+                   | #<name> <type-signature>
   name-type-semi ::= <name-type> <semi>
 
   ;; should we move ()'s somewhere else?
+  ;; # is implicit argument
   arrow-type ::= <type-refine>
-               | <name> : <type-refine> <arrow> <arrow-type>
-               | <type-refine>          <arrow> <arrow-type>
+               | <name>  : <type-refine> <arrow> <arrow-type>
+               | #<name> : <type-refine> <arrow> <arrow-type>
+               | <type-refine>           <arrow> <arrow-type>
                | ( <arrow-type> )
 
   type-signature ::= : <arrow-type>
@@ -196,6 +202,13 @@
                    | \" <escaped-string>+
                    | \ <escaped-string>+
 
+  ;;; Universe ====================================
+
+  ;; for now, set it up to what F* has, expand it later
+  universe-expression ::= u#<name>
+                       | u#<name> + u#<name>
+                       | max u#<name>*
+
   ;;;; Misc ===========================================================
   ;; ; is comment in bnf
   semi             ::= \;
@@ -205,6 +218,7 @@
   ;; may want m e or Map.t int string?
   type-name        ::= <name>
                      | <name> <type-name>
+                     | <universe-expression> <type-name>
   module-name      ::= <name> ; enforce capital names?
 
   constructor-name ::= <capital-name-and-symbols>
