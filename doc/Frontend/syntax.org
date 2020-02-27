@@ -140,7 +140,7 @@
 
   match ::= case <expression> of <match-l>*
 
-  match-l ::= \| <match-logic>
+  match-l ::= \| <match-logic> -\> <expression>
 
   match-logic ::= <constructor-name>         <match-logic>+
                 | <name>                     <match-logic>+
