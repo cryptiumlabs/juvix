@@ -40,21 +40,26 @@ getAccountBalance address accounts = case lookup address accounts of
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @tokens the amount of tokens to be transferred
-total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (SortedMap Address Account)
+total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 performTransfer from dest tokens storage =
   let fromBalance = getAccountBalance from (accounts storage)
       destBalance = getAccountBalance dest (accounts storage) in
         case lte tokens fromBalance of
              False => Left NotEnoughBalance
-             True => let accountsStored = insert from (MkAccount (minus fromBalance tokens) (allowance (accounts storage))) (accounts storage) in
-                       Right (insert dest (MkAccount (destBalance + tokens) (allowance (accounts storage))) accountsStored)
+             True =>
+               let accountsStored = insert from (MkAccount (minus fromBalance tokens) (allowance (getAccount from (accounts storage)))) (accounts storage) in
+                 Right
+                   (record
+                     {accounts =
+                       insert dest (MkAccount (destBalance + tokens) (allowance (getAccount dest (accounts storage)))) accountsStored
+                     } storage)
 
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
-total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Either Error (SortedMap Address Account))
+total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 createAccount dest tokens storage =
   let owner = owner storage in
       case owner == owner of --when sender can be detected, check sender == owner.
            False => Left FailedToAuthenticate
-           True => Right (performTransfer owner dest tokens storage)
+           True => performTransfer owner dest tokens storage
