@@ -10,7 +10,7 @@ MonoidMeasure =
   measure = id
 
 
-Accounts = Map.T Data.String MonoidMeasure
+Accounts = Map Data.String MonoidMeasure
 
 -- we send in the string module, as it has a total order
 -- function named compare, that is also part of a general type class
@@ -19,7 +19,7 @@ Token =
 
   type Storage = {
     total-supply : Nat.T;
-    accounts     : Accounts { Accounts.measure-value == total-supply }
+    accounts     : Accounts.T { Accounts.measure-value == total-supply }
   }
 
   empty-storage : storage
@@ -65,23 +65,23 @@ Transaction =
   }
 
 
-has-n : Accounts -> Token.Address -> Nat -> Bool
+has-n : Accounts.T -> Token.Address -> Nat -> Bool
 has-n accounts add to-transfer =
   case Accounts.select accounts add of
   | Just n  -> to-transfer <= n
   | Nothing -> False
 
 
-account-sub : acc : Accounts
+account-sub : acc : Accounts.T
            -> add : Token.Address
            -> num : Nat.T {has-n acc add num}
-           -> Accounts
+           -> Accounts.T
 account-sub accounts add number =
   case Accounts.select accounts add of
   | Just balance ->
      Accounts.put accounts ~key:add ~val:(balance - number)
 
-account-add : Accounts -> Token.Address -> Nat.T -> Account
+account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T
 account-add accounts add number =
   Accounts.update accounts ~f:(number +) ~key:add
 
