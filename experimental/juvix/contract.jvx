@@ -1,7 +1,7 @@
 Map = Data.Map
 
 -- common module interfaces for data structures in Common?
-MonoidMeasure : Common.MeasureTotal
+MonoidMeasure : Common.Measure
 MonoidMeasure =
   type T = Nat
 
@@ -10,7 +10,7 @@ MonoidMeasure =
   measure = id
 
 
-Accounts = Map Data.String MonoidMeasure
+Accounts = Map.OrdMap Data.String MonoidMeasure
 
 -- we send in the string module, as it has a total order
 -- function named compare, that is also part of a general type class
