@@ -10,7 +10,9 @@ import Juvix.Library
 import qualified Michelson.Untyped as M
 
 promoteInStack ∷ HasState "stack" Env.VStack f ⇒ Int → f [M.ExpandedOp]
-promoteInStack n = fst . VStack.promote n <$> get @"stack"
+promoteInStack n = do
+  stack <- get @"stack"
+  pure $ fst $ VStack.promote n stack undefined
 
 primToInstr ∷
   ∀ m.

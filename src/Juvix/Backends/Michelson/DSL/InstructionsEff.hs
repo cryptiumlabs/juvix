@@ -13,7 +13,9 @@
 module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
 import qualified Data.Set as Set
+import Data.Maybe (fromJust)
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+import qualified Juvix.Backends.Michelson.Compilation.Type as Type
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
@@ -601,19 +603,21 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
   case p of
     ProtectStack (Protect _val insts) _stack → do
       -- Step 4: Pack up the captures.
-      modify @"ops" (pairN (fromIntegral left + numberOfExtraArgs - 1) :)
+      capturesInsts <- mapM instOuter capturesInsts
       -- TODO ∷ reduce usages of the vstack items, due to eating n from the lambda
-      -- TODO ∷ step 5
-      -- step 5: find the types of the captures, and generate the type for primArg
+      -- Step 5: find the types of the captures, and generate the type for primArg
+      let capturesTypes = (\x -> (x, fromJust (VStack.lookupType x curr))) <$> VStack.symbolsInT capturesList curr
+          argTy = Type.lamType capturesTypes listOfArgsType
       -- Step 6: generate the lambda
       let Just returnType = snd <$> lastMay (piToList ty)
       primReturn ← typeToPrimType returnType
       primArg ← typeToPrimType undefined
-      let finalExpression =
-            Instructions.lambda primArg primReturn insts
-      -- TODO ∷ finish generation, similar to lambda
-      modify @"ops" (finalExpression :)
-      undefined
+      let lambda = Instructions.lambda primArg primReturn insts
+      -- Return all operations in order: push the lambda, evaluate captures, pair up captures, APPLY.
+      modify @"ops" (lambda :)
+      modify @"ops" (Instructions.dip capturesInsts :)
+      modify @"ops" (pairN (fromIntegral left + numberOfExtraArgs - 1) :)
+      modify @"ops" (Instructions.apply :)
 
 piToList ∷ Ann.Type primTy primVal → [(Usage.T, Ann.Type primTy primVal)]
 piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
