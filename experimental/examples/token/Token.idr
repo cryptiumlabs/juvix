@@ -48,6 +48,7 @@ getAccountAllowance address accounts = case lookup address accounts of
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @tokens the amount of tokens to be transferred
+||| @storage the current storage
 total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 performTransfer from dest tokens storage =
   let fromBalance = getAccountBalance from (accounts storage)
@@ -63,7 +64,12 @@ performTransfer from dest tokens storage =
                      } storage)
 
 -- Note: Nested record field update syntax(which is safer) doesn't seem to work
-total updateAllowance : (allower : Address) -> (allowee : Address) -> (tokens : Nat) -> Storage -> Storage
+||| updateAllowance updates the allowance map of the allower
+||| @allower the address of the owner of the allowance map that is to be updated
+||| @allowee the address of the allowance from the allower that is to be updated
+||| @tokens the amount of allowance approved by the allower to transfer to the allowee
+||| @storage the current storage
+total updateAllowance : (allower : Address) -> (allowee : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
 updateAllowance allower allowee tokens storage =
   case tokens of
     Z => record
@@ -86,19 +92,26 @@ updateAllowance allower allowee tokens storage =
               )
               (accounts storage) -- accounts map
            } storage
+
 ||| approve update the allowance map of the caller of the contract
 ||| @spender the address the caller approve the tokens to transfer to
 ||| @tokens the amount of tokens approved to be transferred
-total approve : (spender : Address) -> (tokens : Nat) -> Storage -> Storage
+||| @storage the current storage
+total approve : (spender : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
 approve spender tokens storage =
   let caller = owner storage in -- caller is the caller of the contract, it is set to be the owner for now.
     updateAllowance caller spender tokens storage
 
-total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> Storage -> Either Error Storage
+||| transferFrom can be called by anyone, transferring amount no larger than the approved amount
+||| @from the address the tokens to be transferred from
+||| @dest the address the tokens to transfer to
+||| @tokens the amount to be transferred
+||| @storage the current storage
+total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 transferFrom from dest tokens storage =
   case lookup dest (getAccountAllowance from (accounts storage)) of
     Nothing => Left NotAllowedToSpendFrom
-    (Just allowance) =>
+    (Just allowance) => --TODO fix error
       let allowedToken = lookup dest allowance in
         case lte tokens allowedToken of
           False => Left NotEnoughAllowance
@@ -108,6 +121,7 @@ transferFrom from dest tokens storage =
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
+||| @storage the current storage
 total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 createAccount dest tokens storage =
   let owner = owner storage in
