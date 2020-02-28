@@ -24,6 +24,8 @@ record Storage where
 
 data Error = NotEnoughBalance
            | FailedToAuthenticate
+           | NotAllowedToSpendFrom
+           | NotEnoughAllowance
 
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
@@ -92,6 +94,16 @@ approve spender tokens storage =
   let caller = owner storage in -- caller is the caller of the contract, it is set to be the owner for now.
     updateAllowance caller spender tokens storage
 
+total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> Storage -> Either Error Storage
+transferFrom from dest tokens storage =
+  case lookup dest (getAccountAllowance from (accounts storage)) of
+    Nothing => Left NotAllowedToSpendFrom
+    (Just allowance) =>
+      let allowedToken = lookup dest allowance in
+        case lte tokens allowedToken of
+          False => Left NotEnoughAllowance
+          True => let updatedStorage = updateAllowance from dest (allowedToken-tokens) storage in
+                    performTransfer from dest tokens updatedStorage
 
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
