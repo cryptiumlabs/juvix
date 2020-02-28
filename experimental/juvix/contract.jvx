@@ -183,16 +183,16 @@ Operation =
 
   exec : Token.T -> Transaction.T -> Either.T Error Token.T
   exec token tx =
-  case tx.data of
-  | Transfer _ ->
-    if | Validation.transfer token tx = Right (transfer token tx)
-       | else                         = Left NotEnoughFunds
-  | Mint _ ->
-    if | Validation.mint token tx = Right (mint  token tx)
-       | else                     = Left NotEnoughFunds
-  | Burn _ ->
-    if | Validation.burn token tx = Right (burn token tx)
-       | else                     = Left NotEnoughTokens
+    case tx.data of
+    | Transfer _ ->
+      if | Validation.transfer token tx = Right (transfer token tx)
+         | else                         = Left NotEnoughFunds
+    | Mint _ ->
+      if | Validation.mint token tx = Right (mint  token tx)
+         | else                     = Left NotEnoughFunds
+    | Burn _ ->
+      if | Validation.burn token tx = Right (burn token tx)
+         | else                     = Left NotEnoughTokens
 
 
 -- validation proofs given after figuring out syntax see F* for them
