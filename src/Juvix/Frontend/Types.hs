@@ -93,8 +93,17 @@ data Name
 
 type ArrowSymbol = Natural
 
+-- I think we can do
+-- Foo a u#b c ?
 data TypeName
-  = TypeName
+  = Final !Symbol
+  | Next Symbol TypeName
+  | Universe UniverseExpression TypeName
+  deriving (Show)
+
+
+data UniverseExpression
+  = UniverseExpression
   deriving (Show)
 
 --------------------------------------------------
@@ -136,7 +145,42 @@ data NameType
 -- Expression
 --------------------------------------------------------------------------------
 
-data Expression = Exp deriving (Show)
+data Expression
+  = Cond Cond
+  | Number Numb
+  | String String'
+  | Let Let
+  deriving (Show)
+
+newtype Cond
+  = C (NonEmpty CondLogic)
+  deriving (Show)
+
+data CondLogic
+  = CondExpression
+     { condLogicPred ∷ Expression,
+       condLogicExpr ∷ Expression
+     }
+  deriving (Show)
+
+data Numb
+  = Integer' Integer
+  | Double' Double
+  | ExponentD Double Integer
+  | Exponent Integer Integer
+  deriving (Show)
+
+data String' = Sho deriving (Show)
+
+
+data Let
+  = Let'
+     { letBindings ∷ NonEmpty Binding,
+       letBody ∷ Expression
+     }
+  deriving (Show)
+
+data Binding = Bind deriving (Show)
 
 --------------------------------------------------------------------------------
 -- Lens creation
@@ -151,5 +195,9 @@ makeLensesWith camelCaseFields ''NewType
 makeLensesWith camelCaseFields ''Sum
 
 makeLensesWith camelCaseFields ''Record
+
+makeLensesWith camelCaseFields ''CondLogic
+
+makeLensesWith camelCaseFields ''Let
 
 makePrisms ''TypeSum
