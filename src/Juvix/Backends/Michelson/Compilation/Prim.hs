@@ -5,14 +5,16 @@ module Juvix.Backends.Michelson.Compilation.Prim where
 import qualified Juvix.Backends.Michelson.Compilation.Environment as Env
 import qualified Juvix.Backends.Michelson.Compilation.Type as Type
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
+import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
+import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library
 import qualified Michelson.Untyped as M
 
-promoteInStack ∷ HasState "stack" Env.VStack f ⇒ Int → f [M.ExpandedOp]
+promoteInStack :: Env.Reduction m => Int -> m [M.ExpandedOp]
 promoteInStack n = do
   stack ← get @"stack"
-  pure $ fst $ VStack.promote n stack undefined
+  fst `fmap` VStack.promote n stack DSL.promoteLambda
 
 primToInstr ∷
   ∀ m.
