@@ -187,26 +187,25 @@ lookupType n (T stack' _) = go stack'
     go [] = Nothing
 
 promote ∷
-  forall m lamType . Monad m => Int → T lamType → (lamType → m [Instr.ExpandedOp]) → m ([Instr.ExpandedOp], T lamType)
+  Int → T lamType → (lamType → [Instr.ExpandedOp]) → ([Instr.ExpandedOp], T lamType)
 promote _n stack _
-  | isNil stack = pure ([], stack)
-promote 0 stack _ = pure ([], stack)
-promote n stack f = do
-  (insts, newStack) <- promote (pred n) (cdr stack) f
-  let pushVal v t = Instructions.push t v : insts
-  case car stack of
-    (Val (ConstE v), t) →
-      pure (pushVal v t, cons (Val FuncResultE, t) newStack)
-    (VarE x i (Just (ConstE v)), t) →
-      pure (pushVal v t, cons (VarE x i (Just FuncResultE), t) newStack)
-    -- TODO ∷ add a case for lambda
-    --        What do we dispatch to, to promote it?
-    --        Maybe have to move this function into utils!?
-    (VarE x i (Just (LamPartialE lamType)), t) → do
-      res <- f lamType
-      pure (res, cons (VarE x i (Just MichelsonLambda), t) newStack)
-    a →
-      pure (insts, cons a newStack)
+  | isNil stack = ([], stack)
+promote 0 stack _ = ([], stack)
+promote n stack f =
+  let (insts, newStack) = promote (pred n) (cdr stack) f
+   in let pushVal v t = Instructions.push t v : insts
+       in case car stack of
+            (Val (ConstE v), t) →
+              (pushVal v t, cons (Val FuncResultE, t) newStack)
+            (VarE x i (Just (ConstE v)), t) →
+              (pushVal v t, cons (VarE x i (Just FuncResultE), t) newStack)
+            -- TODO ∷ add a case for lambda
+            --        What do we dispatch to, to promote it?
+            --        Maybe have to move this function into utils!?
+            (VarE x i (Just (LamPartialE lamType)), t) →
+              (f lamType, cons (VarE x i (Just MichelsonLambda), t) newStack)
+            a →
+              (insts, cons a newStack)
 
 addName ∷ Symbol → Symbol → T lamType → T lamType
 addName toFind toAdd (T stack i) = T (f <$> stack) i

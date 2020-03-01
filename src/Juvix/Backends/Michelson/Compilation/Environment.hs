@@ -10,10 +10,9 @@ where
 
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import Juvix.Library
 
-type VStack = VStack.T Env.Curried
+type VStack = VStack.T VStack.LamPartial
 
 data Env
   = Env

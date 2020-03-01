@@ -142,7 +142,6 @@ library:
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
     - Juvix.Backends.Michelson.Compilation
-    - Juvix.Backends.Michelson.Compilation.Prim
     - Juvix.Backends.Michelson.Compilation.Term
     - Juvix.Backends.Michelson.Compilation.Lambda
     - Juvix.Backends.Michelson.Compilation.Type

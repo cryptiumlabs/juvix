@@ -338,7 +338,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack ∷ Env.Instruction m ⇒ Env.Expanded → m Env.Expanded
 promoteTopStack x = do
   stack ← get @"stack"
-  (insts, stack') <- VStack.promote 1 stack undefined -- promoteLambda
+  let (insts, stack') = VStack.promote 1 stack undefined -- promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x

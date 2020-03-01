@@ -5,7 +5,6 @@ module Juvix.Backends.Michelson.Compilation.Term where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Checks as Checks
 import qualified Juvix.Backends.Michelson.Compilation.Environment as Env
-import qualified Juvix.Backends.Michelson.Compilation.Prim as Prim
 import qualified Juvix.Backends.Michelson.Compilation.Type as Type
 import qualified Juvix.Backends.Michelson.Compilation.Util as Util
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
@@ -47,7 +46,7 @@ termToInstr ann@(term, _, ty) paramTy = Checks.stackGuard ann paramTy $ do
     -- :: a ~ s => (a, s)
     ErasedAnn.Var n → varCase n
     -- Primitive: adds one item to the stack.
-    ErasedAnn.Prim prim → pure <$> stackCheck term addsOne (Prim.primToInstr prim ty)
+    --ErasedAnn.Prim prim → pure <$> stackCheck term addsOne (Prim.primToInstr prim ty)
     -- :: \a -> b ~ s => (Lam a b, s)
     ErasedAnn.LamM capture args body → do
       -- ~~

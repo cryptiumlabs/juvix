@@ -7,7 +7,6 @@ where
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation.Environment as Env
-import qualified Juvix.Backends.Michelson.Compilation.Prim as Prim
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
@@ -46,7 +45,7 @@ apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
     runPrim = Env.execWithStack mempty $ do
-      Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+      --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
