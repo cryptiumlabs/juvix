@@ -11,7 +11,7 @@ import qualified Michelson.Untyped as M
 
 promoteInStack ∷ HasState "stack" Env.VStack f ⇒ Int → f [M.ExpandedOp]
 promoteInStack n = do
-  stack <- get @"stack"
+  stack ← get @"stack"
   pure $ fst $ VStack.promote n stack undefined
 
 primToInstr ∷
