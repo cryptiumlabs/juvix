@@ -36,11 +36,14 @@
          | <alias-declaration>
 
   ;; Should we let there be a refinement in adt type declaration?
-  data-declaration  ::= type <non-capital-name> : <arrow-type> = <adt>
-                      | type <non-capital-name>                = <adt>
+  ;; ? means it may or may not be there
+  ;; it makes sense to have the number here, as it can't be confused with an
+  ;; expression type
+  data-declaration ::= type <usage>? <non-capital-name> <symbols>+ : <arrow-type> = <adt>
+                     | type <usage>? <non-capital-name> <symbols>+                = <adt>
 
-  type-declaration  ::= type <non-capital-name> = <name> <type-refine>
-  alias-declaration ::= type <non-capital-name> = <type-refine>
+  type-declaration  ::= type <usage>? <non-capital-name> <symbols>+ = <name> <type-refine>
+  alias-declaration ::= type <usage>? <non-capital-name> <symbols>+ = <type-refine>
 
   adt ::= <sum>*
         | <product>
