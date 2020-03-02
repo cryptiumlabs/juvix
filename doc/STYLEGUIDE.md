@@ -54,7 +54,7 @@ operators but always be consistent about whitespace on either side of
 a binary operator.  Don't insert a space after a lambda. For example:
 
 ```haskell
-plus_4 n = n + 4  -- whitespace on either side of `+`
+plus4 n = n + 4  -- whitespace on either side of `+`
 
 (\x -> x + 4)  -- no space after the lambda 
 ```
