@@ -1,5 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- |
+-- - This file defines the main ADT for the Juvix front end language.
+-- - This ADT corresponds to the bnf laid out
+--   [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+-- - Later a trees that grow version of this will be implemented, so
+--   infix functions can better transition across syntax
 module Juvix.Frontend.Types where
 
 import Control.Lens
@@ -22,7 +28,9 @@ data TopLevel
 
 data Type
   = Typ
-      { typeName ∷ !Symbol,
+      { typeUsage ∷ Maybe Usage,
+        typeName ∷ !Symbol,
+        typeArgs ∷ [Symbol],
         typeForm ∷ TypeSum
       }
   deriving (Show)
@@ -91,7 +99,10 @@ data Name
   | Concrete !Symbol
   deriving (Show)
 
-type ArrowSymbol = Natural
+data ArrowSymbol
+  = ArrowNat Natural
+  | ArrowExp Usage
+  deriving (Show)
 
 -- I think we can do
 -- Foo a u#b c ?
@@ -196,6 +207,15 @@ data CondLogic a
 --------------------------------------------------------------------------------
 -- Signatures
 --------------------------------------------------------------------------------
+
+data Signautre
+  = Sig
+      { signatureName ∷ NameSymb,
+        signatureUsage ∷ Maybe Usage
+      }
+  deriving (Show)
+
+type Usage = Expression
 
 --------------------------------------------------------------------------------
 -- Type Classes
