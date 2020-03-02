@@ -71,7 +71,7 @@ newtype Alias
 
 data ArrowType
   = Refined TypeRefine
-  | Arrows ArrowData
+  | Arrows ArrowData ArrowType
   | Parens ArrowType
   deriving (Show)
 
@@ -83,16 +83,16 @@ data ArrowData
       }
   deriving (Show)
 
---------------------------------------------------
--- Types Misc
---------------------------------------------------
-
 data TypeRefine
   = TypeRefine
       { typeRefineName ∷ !TypeName,
         typeRefineRfeinement ∷ Maybe Expression
       }
   deriving (Show)
+
+--------------------------------------------------
+-- Types Misc
+--------------------------------------------------
 
 data Name
   = Implicit !Symbol
@@ -211,7 +211,9 @@ data CondLogic a
 data Signautre
   = Sig
       { signatureName ∷ NameSymb,
-        signatureUsage ∷ Maybe Usage
+        signatureUsage ∷ Maybe Usage,
+        signatureArrowType ∷ ArrowType,
+        signatureConstraints ∷ [TypeName]
       }
   deriving (Show)
 
