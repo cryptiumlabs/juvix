@@ -50,15 +50,15 @@
   sum ::= \| <name>
         | \| <name> <product>
 
-  product ::= { <name-type-semi>+ <name-type>* } <type-name>
-            | { <name-type-semi>* }              <type-name>
-            | { <name-type-semi>+ <name-type>* }
-            | { <name-type-semi>* }
+  product ::= { <name-type-comma>+ <name-type>* } <type-name>
+            | { <name-type-comma>* }              <type-name>
+            | { <name-type-comma>+ <name-type>* }
+            | { <name-type-comma>* }
             | <arrow-type>
 
   name-type      ::= <name> <type-signature>
                    | #<name> <type-signature>
-  name-type-semi ::= <name-type> <semi>
+  name-type-comma ::= <name-type> <comma>
 
   ;; should we move ()'s somewhere else?
   ;; # is implicit argument
@@ -128,6 +128,14 @@
                | <where>
                | <string>
                | <number>
+               ; TODO
+               | <symbol>
+               | <prefix>
+               | <infix>
+               | <do>
+               | <tuple>
+               | <comments>
+               | <parens>
 
   usage ::= <expression>
 
@@ -146,6 +154,7 @@
                 | <name>                     <match-logic>+
                 | <name> @ <match-logic>     <match-logic>+
                 | <name> @ ( <match-logic> ) <match-logic>+
+                | <name> @ <record-match>
                 | <record-match>
 
   record-match ::= { <name-set>* }
@@ -211,6 +220,7 @@
 
   ;;;; Misc ===========================================================
   ;; ; is comment in bnf
+  comma            ::= ,
   semi             ::= \;
   name             ::= <ascii-non-reserved>
   non-capital-name ::= <ascii-no-capital>
