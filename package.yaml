@@ -24,6 +24,7 @@ dependencies:
   - fgl
   - lens
   - parsec
+  - attoparsec
   - capability >= 0.2.0.0
   - fgl-visualize
   - enummapset
@@ -89,6 +90,7 @@ library:
   exposed-modules:
     - Juvix
     - Juvix.Frontend.Types
+    - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
