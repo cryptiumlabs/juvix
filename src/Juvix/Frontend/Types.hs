@@ -6,14 +6,14 @@ import Control.Lens
 import Juvix.Library hiding (Product, Sum, Type)
 
 data TopLevel
-  = Type
-  | ModuleOpen
+  = Type Type
+  | ModuleOpen ModuleOpen
   | TypeClass
   | TypeClassInstance
   | ModuleSignature
-  | Module
+  | Module Module
   | Signature
-  | Function
+  | Function Function
   deriving (Show)
 
 --------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ data TypeSum
   | Data Data
   deriving (Show)
 
--- | 'DataDeclar' is the data declaration in the Juvix language
+-- | 'Data' is the data declaration in the Juvix language
 data Data
   = Arrowed
       { dataArrow ∷ ArrowType,
@@ -141,27 +141,77 @@ data NameType
   deriving (Show)
 
 --------------------------------------------------------------------------------
+-- Functions And Modules
+--------------------------------------------------------------------------------
+
+-- | 'Function' is a normal signature with a name arguments and a body
+-- that may or may not have a guard before it
+newtype Function
+  = Func (FunctionLike TopLevel)
+  deriving (Show)
+
+-- | 'Module' is like function, however it allows multiple top levels
+newtype Module
+  = Mod (FunctionLike TopLevel)
+  deriving (Show)
+
+-- | 'FunctionLike' is the generic version for both modules and functions
+data FunctionLike a
+  = Like
+      { functionLikedName ∷ NameSymb,
+        functionLikeArgs ∷ [Args],
+        functionLikeBody ∷ GuardBody a
+      }
+  deriving (Show)
+
+-- | 'GuardBody' determines if a form is a guard or a body
+data GuardBody a
+  = Body a
+  | Guard (Cond a)
+  deriving (Show)
+
+newtype ModuleOpen
+  = Open ModuleName
+  deriving (Show)
+
+-- Very similar to name, but match instead of symbol
+data Args
+  = ImplicitA MatchLogic
+  | ConcreteA MatchLogic
+  deriving (Show)
+
+newtype ModuleName = ModuleName' Symbol deriving (Show)
+
+newtype Cond a
+  = C (NonEmpty (CondLogic a))
+  deriving (Show)
+
+data CondLogic a
+  = CondExpression
+      { condLogicPred ∷ Expression,
+        condLogicBody ∷ a
+      }
+  deriving (Show)
+
+--------------------------------------------------------------------------------
+-- Signatures
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Type Classes
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
 -- Expression
 --------------------------------------------------------------------------------
 
 data Expression
-  = Cond Cond
+  = Cond (Cond Expression)
   | Number Numb
   | String String'
   | Let Let
   | Match Match
   | Name NameSymb
-  deriving (Show)
-
-newtype Cond
-  = C (NonEmpty CondLogic)
-  deriving (Show)
-
-data CondLogic
-  = CondExpression
-      { condLogicPred ∷ Expression,
-        condLogicExpr ∷ Expression
-      }
   deriving (Show)
 
 data Numb
@@ -171,9 +221,13 @@ data Numb
   | Exponent Integer Integer
   deriving (Show)
 
-data String'
+newtype String'
   = Sho Text
   deriving (Show)
+
+--------------------------------------------------
+-- Symbol Binding
+--------------------------------------------------
 
 data Let
   = Let'
@@ -182,17 +236,21 @@ data Let
       }
   deriving (Show)
 
-data Match
-  = Match'
-      { matchOn ∷ Expression,
-        matchBindigns ∷ NonEmpty MatchL
-      }
-  deriving (Show)
-
 data Binding
   = Bind
       { bindingPattern ∷ MatchLogic,
         bindingBody ∷ Expression
+      }
+  deriving (Show)
+
+--------------------------------------------------
+-- Matching
+--------------------------------------------------
+
+data Match
+  = Match'
+      { matchOn ∷ Expression,
+        matchBindigns ∷ NonEmpty MatchL
       }
   deriving (Show)
 
@@ -211,10 +269,9 @@ data MatchLogic
   deriving (Show)
 
 data MatchLogicCont
-  = MatchCon
-      {matchLogicContConstructor ∷ ConstructorName}
-  | MatchRecord
-      {matchLogicContNames ∷ NameSet}
+  = MatchCon ConstructorName
+  | MatchName NameSymb
+  | MatchRecord NameSet
   deriving (Show)
 
 data NameSet
@@ -248,6 +305,14 @@ makeLensesWith camelCaseFields ''Match
 
 makeLensesWith camelCaseFields ''MatchL
 
+makeLensesWith camelCaseFields ''MatchLogic
+
 makeLensesWith camelCaseFields ''Binding
+
+makeLensesWith camelCaseFields ''FunctionLike
+
+makeLensesWith camelCaseFields ''Module
+
+makeLensesWith camelCaseFields ''Function
 
 makePrisms ''TypeSum
