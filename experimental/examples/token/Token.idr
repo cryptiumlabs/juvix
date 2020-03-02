@@ -111,11 +111,10 @@ total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (
 transferFrom from dest tokens storage =
   case lookup dest (getAccountAllowance from (accounts storage)) of
     Nothing => Left NotAllowedToSpendFrom
-    (Just allowance) => --TODO fix error
-      let allowedToken = lookup dest allowance in
-        case lte tokens allowedToken of
-          False => Left NotEnoughAllowance
-          True => let updatedStorage = updateAllowance from dest (allowedToken-tokens) storage in
+    (Just allowed) => --TODO fix error
+      case lte tokens allowed of
+        False => Left NotEnoughAllowance
+        True => let updatedStorage = updateAllowance from dest (minus allowed tokens) storage in
                     performTransfer from dest tokens updatedStorage
 
 ||| createAccount transfers tokens from the owner to an address
