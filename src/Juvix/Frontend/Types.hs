@@ -69,10 +69,10 @@ data ArrowType
 
 data ArrowData
   = Arr
-    { arrowDataName ∷ !(Maybe Name),
-      arrowDataRefine ∷ TypeRefine,
-      arrowDataArrow ∷ !ArrowSymbol
-    }
+      { arrowDataName ∷ !(Maybe Name),
+        arrowDataRefine ∷ TypeRefine,
+        arrowDataArrow ∷ !ArrowSymbol
+      }
   deriving (Show)
 
 --------------------------------------------------
@@ -81,9 +81,9 @@ data ArrowData
 
 data TypeRefine
   = TypeRefine
-    { typeRefineName ∷ !TypeName,
-      typeRefineRfeinement ∷ Maybe Expression
-    }
+      { typeRefineName ∷ !TypeName,
+        typeRefineRfeinement ∷ Maybe Expression
+      }
   deriving (Show)
 
 data Name
@@ -100,7 +100,6 @@ data TypeName
   | Next Symbol TypeName
   | Universe UniverseExpression TypeName
   deriving (Show)
-
 
 data UniverseExpression
   = UniverseExpression
@@ -150,6 +149,8 @@ data Expression
   | Number Numb
   | String String'
   | Let Let
+  | Match Match
+  | Name NameSymb
   deriving (Show)
 
 newtype Cond
@@ -158,9 +159,9 @@ newtype Cond
 
 data CondLogic
   = CondExpression
-     { condLogicPred ∷ Expression,
-       condLogicExpr ∷ Expression
-     }
+      { condLogicPred ∷ Expression,
+        condLogicExpr ∷ Expression
+      }
   deriving (Show)
 
 data Numb
@@ -170,17 +171,60 @@ data Numb
   | Exponent Integer Integer
   deriving (Show)
 
-data String' = Sho deriving (Show)
-
+data String'
+  = Sho Text
+  deriving (Show)
 
 data Let
   = Let'
-     { letBindings ∷ NonEmpty Binding,
-       letBody ∷ Expression
-     }
+      { letBindings ∷ NonEmpty Binding,
+        letBody ∷ Expression
+      }
   deriving (Show)
 
-data Binding = Bind deriving (Show)
+data Match
+  = Match'
+      { matchOn ∷ Expression,
+        matchBindigns ∷ NonEmpty MatchL
+      }
+  deriving (Show)
+
+data Binding
+  = Bind
+      { bindingPattern ∷ MatchLogic,
+        bindingBody ∷ Expression
+      }
+  deriving (Show)
+
+data MatchL
+  = MatchL
+      { matchLPattern ∷ MatchLogic,
+        matchLBody ∷ Expression
+      }
+  deriving (Show)
+
+data MatchLogic
+  = MatchLogic
+      { matchLogicContents ∷ MatchLogicCont,
+        matchLogicNamed ∷ Maybe NameSymb
+      }
+  deriving (Show)
+
+data MatchLogicCont
+  = MatchCon
+      {matchLogicContConstructor ∷ ConstructorName}
+  | MatchRecord
+      {matchLogicContNames ∷ NameSet}
+  deriving (Show)
+
+data NameSet
+  = Punned NameSymb
+  | NonPunned NameSymb NameSymb
+  deriving (Show)
+
+type ConstructorName = Symbol
+
+type NameSymb = Symbol
 
 --------------------------------------------------------------------------------
 -- Lens creation
@@ -199,5 +243,11 @@ makeLensesWith camelCaseFields ''Record
 makeLensesWith camelCaseFields ''CondLogic
 
 makeLensesWith camelCaseFields ''Let
+
+makeLensesWith camelCaseFields ''Match
+
+makeLensesWith camelCaseFields ''MatchL
+
+makeLensesWith camelCaseFields ''Binding
 
 makePrisms ''TypeSum
