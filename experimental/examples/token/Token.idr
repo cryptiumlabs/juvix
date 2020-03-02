@@ -27,6 +27,10 @@ data Error = NotEnoughBalance
            | NotAllowedToSpendFrom
            | NotEnoughAllowance
 
+initStorage : Storage
+initStorage =
+  MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
+
 ||| getAccount returns the balance of an associated key hash.
 ||| @address the key hash of the owner of the balance
 total getAccount : (address : Address) -> SortedMap Address Account -> Account
@@ -111,7 +115,7 @@ total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (
 transferFrom from dest tokens storage =
   case lookup dest (getAccountAllowance from (accounts storage)) of
     Nothing => Left NotAllowedToSpendFrom
-    (Just allowed) => --TODO fix error
+    (Just allowed) =>
       case lte tokens allowed of
         False => Left NotEnoughAllowance
         True => let updatedStorage = updateAllowance from dest (minus allowed tokens) storage in
