@@ -4,23 +4,24 @@
 -- - The front end parser for the Juvix Programming language
 --
 -- - Parsers with S at the end, eat the spaces at the end of the parse
+--
+-- - Parsers with SN at the end, eats the spaces and new lines at the
+--   end of the parse
 module Juvix.Frontend.Parser where
 
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString as ByteString
-import qualified Data.Char as Char
 import qualified Data.Text.Encoding as Encoding
-import qualified GHC.Unicode as Unicode
+import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library hiding (maybe, option, takeWhile)
+import Juvix.Library hiding (maybe, option, takeWhile, try)
+import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level
 --------------------------------------------------------------------------------
 
 topLevel = typeP <|> function
-
-expressionS = spacer expression
 
 expression = undefined
 
@@ -32,27 +33,36 @@ function = undefined
 -- Types
 --------------------------------------------------------------------------------
 
-typePS ∷ Parser Types.Type
-typePS = spacer typeP
-
 typeP ∷ Parser Types.Type
 typeP = do
-  string "type"
+  _ ← spaceLiner (string "type")
   usag ← maybe usage
-  name ← prefixSymbolS
-  args ← many prefixSymbolS
+  name ← prefixSymbolSN
+  args ← many prefixSymbolSN
   form ← typeSumParser
   pure (Types.Typ usag name args form)
 
+typeSumParser ∷ Parser Types.TypeSum
 typeSumParser =
-  aliasParser
-    <|> newTypeParser
-    <|> dataParser
+  Types.NewType <$> try newTypeParser
+    <|> Types.Alias <$> try aliasParser
+    <|> Types.Data <$> dataParser
 
-aliasParser = undefined
+newTypeParser ∷ Parser Types.NewType
+newTypeParser = do
+  spaceLiner (skip (== Lexer.equals))
+  spaceLiner (skip (== Lexer.pipe))
+  -- if we get a pipe at the end of this, then we need to go to the other case
+  -- Note that we may end up with a non boxed type, but that is fine
+  -- this is a subset of the ADT case for analysis
+  Types.Declare <$> prefixSymbolSN <*> typeRefineSN <* notWord8 Lexer.pipe
 
-newTypeParser = undefined
+aliasParser ∷ Parser Types.Alias
+aliasParser = do
+  spaceLiner (skip (== Lexer.equals))
+  Types.AliasDec <$> typeRefine
 
+dataParser ∷ Parser Types.Data
 dataParser = undefined
 
 --------------------------------------------------
@@ -61,12 +71,9 @@ dataParser = undefined
 
 typeRefine ∷ Parser Types.TypeRefine
 typeRefine = do
-  typeName ← typeNameParserS
-  refine ← maybe (curly expressionS)
+  typeName ← typeNameParserSN
+  refine ← maybe (curly expressionSN)
   pure (Types.TypeRefine typeName refine)
-
-typeNameParserS ∷ Parser Types.TypeName
-typeNameParserS = spacer typeNameParser
 
 typeNameParser ∷ Parser Types.TypeName
 typeNameParser = do
@@ -93,14 +100,10 @@ universeExpression =
 -- Symbol Handlers
 --------------------------------------------------------------------------------
 
-
-prefixSymbolS ∷ Parser Symbol
-prefixSymbolS = spacer prefixSymbol
-
 prefixSymbol ∷ Parser Symbol
 prefixSymbol = do
-  start ← satisfy validStartSymbol
-  rest ← takeWhile validMiddleSymbol
+  start ← satisfy Lexer.validStartSymbol
+  rest ← takeWhile Lexer.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
   pure (internText (Encoding.decodeUtf8 new))
@@ -113,53 +116,54 @@ maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
 
 spacer ∷ Parser p → Parser p
-spacer p = p <* takeWhile (space ==)
+spacer p = p <* takeWhile (Lexer.space ==)
+
+spaceLiner ∷ Parser p → Parser p
+spaceLiner p = p <* takeWhile (\x → Lexer.space == x || Lexer.endOfLine x)
 
 between ∷ Word8 → Parser p → Word8 → Parser p
 between fst p end = satisfy (== fst) *> p <* satisfy (== end)
 
 parens ∷ Parser p → Parser p
-parens p = between openParen p closeParen
+parens p = between Lexer.openParen p Lexer.closeParen
 
 curly ∷ Parser p → Parser p
-curly p = between openCurly  p closeCurly
+curly p = between Lexer.openCurly p Lexer.closeCurly
 
 --------------------------------------------------------------------------------
--- Lexer
+-- SN Derivatives
 --------------------------------------------------------------------------------
 
-wordToChr ∷ Integral a ⇒ a → Char
-wordToChr = Char.chr . fromIntegral
+expressionSN = spaceLiner expression
 
--- Hopefully this is fast!
-validStartSymbol ∷ Integral a ⇒ a → Bool
-validStartSymbol = Unicode.isAlpha . wordToChr
+expressionS = spacer expression
 
-dash ∷ Word8
-dash = 45
+typePSN ∷ Parser Types.Type
+typePSN = spaceLiner typeP
 
-under ∷ Word8
-under = 95
+typePS ∷ Parser Types.Type
+typePS = spacer typeP
 
-space ∷ Word8
-space = 32
+typeSumParserSN ∷ Parser Types.TypeSum
+typeSumParserSN = spaceLiner typeSumParser
 
-openParen ∷ Word8
-openParen = 40
+typeSumParserS ∷ Parser Types.TypeSum
+typeSumParserS = spacer typeSumParser
 
-closeParen ∷ Word8
-closeParen = 40
+typeRefineSN ∷ Parser Types.TypeRefine
+typeRefineSN = spaceLiner typeRefine
 
-openCurly ∷ Word8
-openCurly = 123
+typeRefineS ∷ Parser Types.TypeRefine
+typeRefineS = spacer typeRefine
 
-closeCurly ∷ Word8
-closeCurly = 125
+typeNameParserSN ∷ Parser Types.TypeName
+typeNameParserSN = spaceLiner typeNameParser
 
-validMiddleSymbol ∷ Word8 → Bool
-validMiddleSymbol w =
-  w == dash || Unicode.isAlphaNum (wordToChr w) || w == under
+typeNameParserS ∷ Parser Types.TypeName
+typeNameParserS = spacer typeNameParser
 
--- check for \r or \n
-endOfLine ∷ (Eq a, Num a) ⇒ a → Bool
-endOfLine w = w == 13 || w == 10
+prefixSymbolSN ∷ Parser Symbol
+prefixSymbolSN = spaceLiner prefixSymbol
+
+prefixSymbolS ∷ Parser Symbol
+prefixSymbolS = spacer prefixSymbol

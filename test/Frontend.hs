@@ -1,6 +1,7 @@
 module Frontend where
 
 import Data.Attoparsec.ByteString
+import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library
 

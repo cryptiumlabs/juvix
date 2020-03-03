@@ -90,6 +90,7 @@ library:
   exposed-modules:
     - Juvix
     - Juvix.Frontend.Types
+    - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.HR
