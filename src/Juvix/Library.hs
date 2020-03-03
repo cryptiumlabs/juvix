@@ -27,6 +27,7 @@ module Juvix.Library
     (...),
     traverseM,
     Symbol,
+    internText,
     intern,
     unintern,
     unixTime,
@@ -117,6 +118,9 @@ instance Show Symbol where
 
 instance IsString Symbol where
   fromString = intern
+
+internText ∷ Text → Symbol
+internText = Sym
 
 intern ∷ String → Symbol
 intern = Sym . T.pack

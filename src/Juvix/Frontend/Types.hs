@@ -112,8 +112,9 @@ data TypeName
   | Universe UniverseExpression TypeName
   deriving (Show)
 
+-- TODO ∷ finish this type!
 data UniverseExpression
-  = UniverseExpression
+  = UniverseExpression Symbol
   deriving (Show)
 
 --------------------------------------------------
