@@ -44,7 +44,7 @@
       | type u#<usage>? <non-capital-name> <symbols>+                = <adt>
 
   type-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ = <name> <type-refine>
+    ::= type u#<usage>? <non-capital-name> <symbols>+ = | <name> <type-refine>
   alias-declaration
     ::= type u#<usage>? <non-capital-name> <symbols>+ = <type-refine>
 
