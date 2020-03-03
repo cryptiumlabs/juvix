@@ -11,11 +11,13 @@ module Juvix.Frontend.Parser where
 
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString as ByteString
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library hiding (maybe, option, takeWhile, try)
-import Prelude (fail)
+import Juvix.Library hiding (maybe, option, product, sum, takeWhile, try)
+
+-- import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -52,10 +54,11 @@ newTypeParser ∷ Parser Types.NewType
 newTypeParser = do
   spaceLiner (skip (== Lexer.equals))
   spaceLiner (skip (== Lexer.pipe))
-  -- if we get a pipe at the end of this, then we need to go to the other case
+  -- if we get a | or a - at the end of this, then we need to go to the other case
   -- Note that we may end up with a non boxed type, but that is fine
   -- this is a subset of the ADT case for analysis
-  Types.Declare <$> prefixSymbolSN <*> typeRefineSN <* notWord8 Lexer.pipe
+  Types.Declare <$> prefixSymbolSN <*> typeRefineSN
+    <* (notWord8 Lexer.pipe <|> notWord8 Lexer.dash)
 
 aliasParser ∷ Parser Types.Alias
 aliasParser = do
@@ -63,7 +66,42 @@ aliasParser = do
   Types.AliasDec <$> typeRefine
 
 dataParser ∷ Parser Types.Data
-dataParser = undefined
+dataParser = do
+  arrow ← maybe (spaceLiner (skip (== Lexer.colon)) *> arrowTypeSN)
+  spaceLiner (skip (== Lexer.equals))
+  adt ← adt
+  case arrow of
+    Just arr → pure (Types.Arrowed arr adt)
+    Nothing → pure (Types.NonArrowed adt)
+
+--------------------------------------------------
+-- ADT parser
+--------------------------------------------------
+
+adt ∷ Parser Types.Adt
+adt =
+  Types.Sum <$> many1H sumSN
+    <|> Types.Product <$> product
+
+sum ∷ Parser Types.Sum
+sum = do
+  spaceLiner (skip (== Lexer.pipe))
+  Types.S <$> prefixSymbolSN <*> maybe product
+
+product ∷ Parser Types.Product
+product =
+  Types.Record <$> record
+    <|> Types.Arrow <$> arrowType
+
+record ∷ Parser Types.Record
+record = undefined
+
+--------------------------------------------------
+-- Arrow Type parser
+--------------------------------------------------
+
+arrowType ∷ Parser Types.ArrowType
+arrowType = undefined
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
@@ -79,8 +117,8 @@ typeNameParser ∷ Parser Types.TypeName
 typeNameParser = do
   let toType (Symb s) = Types.Next s
       toType (Universe u) = Types.Universe u
-  p ← prefixSymbolS
-  other ← many (spacer (universeSymbol <|> Symb <$> prefixSymbol))
+  p ← prefixSymbolSN
+  other ← many (spaceLiner (universeSymbol <|> Symb <$> prefixSymbolSN))
   pure (foldr toType (Types.Final p) other)
 
 data SymbOrUni = Symb Symbol | Universe Types.UniverseExpression
@@ -92,9 +130,9 @@ universeSymbol = do
 
 universeExpression ∷ Parser Types.UniverseExpression
 universeExpression =
-  Types.UniverseExpression <$> prefixSymbol
+  Types.UniverseExpression <$> prefixSymbolSN
     -- TODO ∷ make this proper do + and max!
-    <|> Types.UniverseExpression <$> parens prefixSymbol
+    <|> Types.UniverseExpression <$> parens prefixSymbolSN
 
 --------------------------------------------------------------------------------
 -- Symbol Handlers
@@ -130,6 +168,9 @@ parens p = between Lexer.openParen p Lexer.closeParen
 curly ∷ Parser p → Parser p
 curly p = between Lexer.openCurly p Lexer.closeCurly
 
+many1H ∷ Alternative f ⇒ f a → f (NonEmpty a)
+many1H = fmap NonEmpty.fromList . many1
+
 --------------------------------------------------------------------------------
 -- SN Derivatives
 --------------------------------------------------------------------------------
@@ -150,11 +191,23 @@ typeSumParserSN = spaceLiner typeSumParser
 typeSumParserS ∷ Parser Types.TypeSum
 typeSumParserS = spacer typeSumParser
 
+arrowTypeSN ∷ Parser Types.ArrowType
+arrowTypeSN = spaceLiner arrowType
+
+arrowTypeS ∷ Parser Types.ArrowType
+arrowTypeS = spacer arrowType
+
 typeRefineSN ∷ Parser Types.TypeRefine
 typeRefineSN = spaceLiner typeRefine
 
 typeRefineS ∷ Parser Types.TypeRefine
 typeRefineS = spacer typeRefine
+
+sumSN ∷ Parser Types.Sum
+sumSN = spaceLiner sum
+
+sumS ∷ Parser Types.Sum
+sumS = spaceLiner sum
 
 typeNameParserSN ∷ Parser Types.TypeName
 typeNameParserSN = spaceLiner typeNameParser

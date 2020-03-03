@@ -20,11 +20,14 @@ under = 95
 space ∷ Word8
 space = 32
 
+colon ∷ Word8
+colon = 58
+
 openParen ∷ Word8
 openParen = 40
 
 closeParen ∷ Word8
-closeParen = 40
+closeParen = 41
 
 openCurly ∷ Word8
 openCurly = 123
