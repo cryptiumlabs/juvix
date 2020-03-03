@@ -16,8 +16,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (maybe, option, product, sum, takeWhile, try)
-
--- import Prelude (fail)
+import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -25,7 +24,7 @@ import Juvix.Library hiding (maybe, option, product, sum, takeWhile, try)
 
 topLevel = typeP <|> function
 
-expression = undefined
+expression = fail "foo"
 
 usage = string "u#" *> expression
 
@@ -52,13 +51,17 @@ typeSumParser =
 
 newTypeParser ∷ Parser Types.NewType
 newTypeParser = do
+  let nonOverlappingCase =
+        notWord8 Lexer.pipe *> pure ()
+          <|> notWord8 Lexer.dash *> pure ()
+          <|> endOfInput
   spaceLiner (skip (== Lexer.equals))
   spaceLiner (skip (== Lexer.pipe))
   -- if we get a | or a - at the end of this, then we need to go to the other case
   -- Note that we may end up with a non boxed type, but that is fine
   -- this is a subset of the ADT case for analysis
   Types.Declare <$> prefixSymbolSN <*> typeRefineSN
-    <* (notWord8 Lexer.pipe <|> notWord8 Lexer.dash)
+    <* nonOverlappingCase
 
 aliasParser ∷ Parser Types.Alias
 aliasParser = do

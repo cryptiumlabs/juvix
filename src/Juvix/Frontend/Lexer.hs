@@ -33,7 +33,7 @@ openCurly ∷ Word8
 openCurly = 123
 
 pipe ∷ Word8
-pipe = 123
+pipe = 124
 
 closeCurly ∷ Word8
 closeCurly = 125
