@@ -69,6 +69,7 @@
   ;; should we move ()'s somewhere else?
   ;; # is implicit argument
   arrow-type ::= <type-refine>
+               | <name>  : <type-refine>
                | <name>  : <type-refine> <arrow> <arrow-type>
                | #<name> : <type-refine> <arrow> <arrow-type>
                | <type-refine>           <arrow> <arrow-type>
