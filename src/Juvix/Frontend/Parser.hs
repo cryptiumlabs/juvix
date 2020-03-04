@@ -129,7 +129,7 @@ nameParser =
 
 arrowType ∷ Parser Types.ArrowType
 arrowType = undefined
-         <|> Types.Refined <$> typeRefine
+         <|> Types.Refined <$> undefined typeRefine
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser

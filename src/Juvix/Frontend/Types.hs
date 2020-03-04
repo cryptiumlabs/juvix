@@ -70,9 +70,16 @@ newtype Alias
 --------------------------------------------------
 
 data ArrowType
-  = Refined TypeRefine
+  = Refined NamedRefine
   | Arrows ArrowData ArrowType
   | Parens ArrowType
+  deriving (Show)
+
+data NamedRefine
+  = NamedRefine
+     { nameRefineName ∷ !(Maybe Name),
+       namedRefineRefine ∷ TypeRefine
+     }
   deriving (Show)
 
 data ArrowData
@@ -319,6 +326,10 @@ makeLensesWith camelCaseFields ''NewType
 makeLensesWith camelCaseFields ''Sum
 
 makeLensesWith camelCaseFields ''Record
+
+makeLensesWith camelCaseFields ''NamedRefine
+
+makeLensesWith camelCaseFields ''TypeRefine
 
 makeLensesWith camelCaseFields ''CondLogic
 
