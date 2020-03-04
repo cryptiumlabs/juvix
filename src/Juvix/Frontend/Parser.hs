@@ -12,6 +12,7 @@ module Juvix.Frontend.Parser where
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
@@ -109,13 +110,18 @@ record = do
   familySignature ← maybe (spaceLiner (string "->") *> typeRefine)
   pure (Types.Record' names' familySignature)
 
-nameType = erasedName <|> nonErasedName
+nameType ∷ Parser Types.NameType
+nameType = do
+  name ← nameTypeParserSN
+  spaceLiner (skip (== Lexer.colon))
+  sig ← arrowType
+  pure (Types.NameType sig name)
 
-erasedName = do
-  skip (== Lexer.hash)
-  undefined
 
-nonErasedName = undefined
+nameParser :: Parser Types.Name
+nameParser =
+  (skip (== Lexer.hash) *> fmap Types.Implicit prefixSymbol)
+  <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
 -- Arrow Type parser
@@ -123,6 +129,7 @@ nonErasedName = undefined
 
 arrowType ∷ Parser Types.ArrowType
 arrowType = undefined
+         <|> Types.Refined <$> typeRefine
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
@@ -165,11 +172,17 @@ prefixSymbol = do
   rest ← takeWhile Lexer.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
-  pure (internText (Encoding.decodeUtf8 new))
+  if
+    | Set.member new reservedWords → pure (internText (Encoding.decodeUtf8 new))
+    | otherwise → fail "symbol is reserved word"
 
 --------------------------------------------------------------------------------
 -- Misc helpers
 --------------------------------------------------------------------------------
+
+reservedWords ∷ (Ord a, IsString a) ⇒ Set a
+reservedWords =
+  Set.fromList ["let", "val", "type", "match", "in", "open", "if", "cond"]
 
 maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
@@ -217,6 +230,9 @@ recordSN = spaceLiner record
 
 recordS ∷ Parser Types.Record
 recordS = spacer record
+
+nameTypeParserSN ∷ Parser Types.Name
+nameTypeParserSN = spaceLiner nameParser
 
 arrowTypeSN ∷ Parser Types.ArrowType
 arrowTypeSN = spaceLiner arrowType

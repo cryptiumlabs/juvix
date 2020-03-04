@@ -146,11 +146,7 @@ data Record
   deriving (Show)
 
 data NameType
-  = NonErased
-      { nameTypeSignature ∷ !ArrowType,
-        nameTypeName ∷ !Name
-      }
-  | Erased
+  = NameType
       { nameTypeSignature ∷ !ArrowType,
         nameTypeName ∷ !Name
       }

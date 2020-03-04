@@ -23,10 +23,10 @@ space = 32
 colon ∷ Word8
 colon = 58
 
-comma :: Word8
+comma ∷ Word8
 comma = 44
 
-hash :: Word8
+hash ∷ Word8
 hash = 35
 
 openParen ∷ Word8
