@@ -56,8 +56,8 @@
   sum ::= \| <name>
         | \| <name> <product>
 
-  product ::= { <name-type-comma>+ <name-type>* } <type-name>
-            | { <name-type-comma>* }              <type-name>
+  product ::= { <name-type-comma>+ <name-type>* } -\> <type-name>
+            | { <name-type-comma>* }              -\> <type-name>
             | { <name-type-comma>+ <name-type>* }
             | { <name-type-comma>* }
             | <arrow-type>
