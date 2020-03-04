@@ -66,7 +66,8 @@ data Curried
         captures ∷ Set.Set Symbol,
         -- | 'ty' is the type of the partial
         ty ∷ Types.Type
-      } deriving (Generic)
+      }
+  deriving (Generic)
 
 instance Show Curried where
   show (C _ al l c ty) =
@@ -103,6 +104,9 @@ newtype MichelsonCompilation a
   deriving
     (HasReader "debug" Int)
     via Field "debug" () (ReadStatePure (MonadState (ExceptT CompError (State Env))))
+
+execMichelson ∷ MichelsonCompilation a → (Either CompError a, Env)
+execMichelson (Compilation c) = runState (runExceptT c) (Env mempty mempty mempty 0 0)
 
 type Count m = HasState "count" Word m
 
