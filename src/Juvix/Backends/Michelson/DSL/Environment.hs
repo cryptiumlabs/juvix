@@ -66,7 +66,7 @@ data Curried
         captures ∷ Set.Set Symbol,
         -- | 'ty' is the type of the partial
         ty ∷ Types.Type
-      }
+      } deriving (Generic)
 
 instance Show Curried where
   show (C _ al l c ty) =
