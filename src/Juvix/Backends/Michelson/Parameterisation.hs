@@ -8,6 +8,7 @@ import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
+import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
@@ -39,16 +40,14 @@ arity = pred . length . typeOf
 
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
+-- We should finish this, then we can use it in the tests.
 apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
-
-{-
-runPrim = Env.execWithStack mempty $ do
-  --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
-  undefined
--}
+    runPrim = DSL.execMichelson $ do
+      --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+      undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
 parseTy lexer =
@@ -81,6 +80,7 @@ reservedNames = []
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
+-- TODO: Figure out what the parser ought to do.
 michelson ∷ Core.Parameterisation PrimTy PrimVal
 michelson =
   Core.Parameterisation

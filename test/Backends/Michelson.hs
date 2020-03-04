@@ -12,6 +12,7 @@ import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
+-- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
   T.testCase
