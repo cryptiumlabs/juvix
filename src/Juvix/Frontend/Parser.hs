@@ -97,7 +97,25 @@ product =
     <|> Types.Arrow <$> arrowType
 
 record ∷ Parser Types.Record
-record = undefined
+record = do
+  names ←
+    curly
+      $ many1H
+      $ spaceLiner nameType <* spaceLiner (skip (== Lexer.comma))
+  last ← option [] (pure <$> spaceLiner nameType)
+  --
+  let names' = NonEmpty.fromList (NonEmpty.toList names <> last)
+  --
+  familySignature ← maybe (spaceLiner (string "->") *> typeRefine)
+  pure (Types.Record' names' familySignature)
+
+nameType = erasedName <|> nonErasedName
+
+erasedName = do
+  skip (== Lexer.hash)
+  undefined
+
+nonErasedName = undefined
 
 --------------------------------------------------
 -- Arrow Type parser
@@ -193,6 +211,12 @@ typeSumParserSN = spaceLiner typeSumParser
 
 typeSumParserS ∷ Parser Types.TypeSum
 typeSumParserS = spacer typeSumParser
+
+recordSN ∷ Parser Types.Record
+recordSN = spaceLiner record
+
+recordS ∷ Parser Types.Record
+recordS = spacer record
 
 arrowTypeSN ∷ Parser Types.ArrowType
 arrowTypeSN = spaceLiner arrowType

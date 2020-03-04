@@ -141,12 +141,16 @@ data Product
 data Record
   = Record'
       { recordFields ∷ NonEmpty NameType,
-        recordFamilySignature ∷ !TypeName
+        recordFamilySignature ∷ Maybe TypeRefine
       }
   deriving (Show)
 
 data NameType
   = NonErased
+      { nameTypeSignature ∷ !ArrowType,
+        nameTypeName ∷ !Name
+      }
+  | Erased
       { nameTypeSignature ∷ !ArrowType,
         nameTypeName ∷ !Name
       }
