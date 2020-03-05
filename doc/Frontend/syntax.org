@@ -157,14 +157,17 @@
 
   match-l ::= \| <match-logic> -\> <expression>
 
-  match-logic ::= ( <match-logic'> )
+  match-logic ::= <name> @ <match-logic'>
+                | <match-logic'>
 
-  match-logic' ::= <constructor-name>         <match-logic>+
-                 | <name>                     <match-logic>+
-                 | <name> @ <match-logic>     <match-logic>+
-                 | <name> @ ( <match-logic> ) <match-logic>+
-                 | <name> @ <record-match>
-                 | <record-match>
+  match-logic' ::= ( <match-logic''> )
+                 | <match-logic''>
+
+  match-logic'' ::= <record-match>
+                  | <constructor-name> <match-args>+
+
+  match-args ::= <name>
+               | <match-logic>
 
   record-match ::= { <name-set>* }
 
