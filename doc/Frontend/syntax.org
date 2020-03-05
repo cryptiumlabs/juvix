@@ -233,9 +233,10 @@
   non-capital-name ::= <ascii-no-capital>
   capital-name     ::= <ascii-capital>
   ;; may want m e or Map.t int string?
-  type-name        ::= <name>
-                     | <name> <type-name>
-                     | <universe-expression> <type-name>
+  type-name   ::= <name> <others-names>+
+  other-names ::= <name>
+                | <universe-expression>
+                | ( <arrow-type> )
   module-name      ::= <name> ; enforce capital names?
 
   constructor-name ::= <capital-name-and-symbols>
