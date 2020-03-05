@@ -57,7 +57,32 @@ guard p = undefined
 --------------------------------------------------
 
 arg ∷ Parser Types.Arg
-arg = undefined
+arg =
+  Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
+    <|> Types.ConcreteA <$> matchLogic
+
+--------------------------------------------------------------------------------
+-- Match
+--------------------------------------------------------------------------------
+
+match ∷ Parser Types.Match
+match = do
+  string "case"
+  matchOn ← expression
+  string "of"
+  matchs ← many1H matchLSN
+  pure (Types.Match' matchOn matchs)
+
+matchL ∷ Parser Types.MatchL
+matchL = do
+  spaceLiner (skip (== Lexer.pipe))
+  match ← matchLogicSN
+  spaceLiner (string "->")
+  exp ← expression
+  pure (Types.MatchL match exp)
+
+matchLogic ∷ Parser Types.MatchLogic
+matchLogic = undefined
 
 --------------------------------------------------------------------------------
 -- Function
@@ -71,7 +96,7 @@ function = Types.Func <$> functionModGen expression
 --------------------------------------------------------------------------------
 
 module' ∷ Parser Types.Module
-module' = Types.Mod <$> functionModGen (many1H topLevelSN)
+module' = Types.Mod <$> functionModGen (many1H topLevelSN) <* string "end"
 
 moduleOpen ∷ Parser Types.ModuleOpen
 moduleOpen = do
@@ -299,7 +324,7 @@ prefixSymbol = do
 
 reservedWords ∷ (Ord a, IsString a) ⇒ Set a
 reservedWords =
-  Set.fromList ["let", "val", "type", "match", "in", "open", "if", "cond", "end"]
+  Set.fromList ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of"]
 
 maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
@@ -335,6 +360,12 @@ expressionS = spacer expression
 
 argSN ∷ Parser Types.Arg
 argSN = spaceLiner arg
+
+matchLSN ∷ Parser Types.MatchL
+matchLSN = spaceLiner matchL
+
+matchLogicSN ∷ Parser Types.MatchLogic
+matchLogicSN = spaceLiner matchLogic
 
 moduleNameSN ∷ Parser Types.ModuleName
 moduleNameSN = spaceLiner moduleName
