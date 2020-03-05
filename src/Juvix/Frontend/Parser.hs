@@ -17,20 +17,73 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library hiding (maybe, option, product, sum, takeWhile, try)
+import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level
 --------------------------------------------------------------------------------
 
-topLevel = typeP <|> function
+topLevel ∷ Parser Types.TopLevel
+topLevel = fail "top" -- typeP <|> function
 
+expression ∷ Parser Types.Expression
 expression = fail "foo"
 
 usage = string "u#" *> expression
 
-function = undefined
+--------------------------------------------------------------------------------
+-- Modules/ Function Gen
+--------------------------------------------------------------------------------
+
+functionModGen ∷ Parser a → Parser (Types.FunctionLike a)
+functionModGen p = do
+  -- for now
+  _ ← string "let"
+  name ← prefixSymbolSN
+  args ← many argSN
+  guard ← guard p
+  pure (Types.Like name args guard)
+
+--------------------------------------------------
+-- Guard
+--------------------------------------------------
+
+guard ∷ Parser a → Parser (Types.GuardBody a)
+guard p = undefined
+
+--------------------------------------------------
+-- Args
+--------------------------------------------------
+
+arg ∷ Parser Types.Arg
+arg = undefined
+
+--------------------------------------------------------------------------------
+-- Function
+--------------------------------------------------------------------------------
+
+function ∷ Parser Types.Function
+function = Types.Func <$> functionModGen expression
+
+--------------------------------------------------------------------------------
+-- Modules
+--------------------------------------------------------------------------------
+
+module' ∷ Parser Types.Module
+module' = Types.Mod <$> functionModGen (many1H topLevelSN)
+
+moduleOpen ∷ Parser Types.ModuleOpen
+moduleOpen = do
+  _ ← spaceLiner (string "open")
+  Types.Open <$> moduleName
+
+moduleName ∷ Parser Types.ModuleName
+moduleName =
+  Types.ModuleName' <$> prefixSymbol
+
+moduleOpenExpr ∷ Parser Types.ModuleName
+moduleOpenExpr = moduleNameSN <* string "in"
 
 --------------------------------------------------------------------------------
 -- Types
@@ -246,7 +299,7 @@ prefixSymbol = do
 
 reservedWords ∷ (Ord a, IsString a) ⇒ Set a
 reservedWords =
-  Set.fromList ["let", "val", "type", "match", "in", "open", "if", "cond"]
+  Set.fromList ["let", "val", "type", "match", "in", "open", "if", "cond", "end"]
 
 maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
@@ -273,9 +326,18 @@ many1H = fmap NonEmpty.fromList . many1
 -- SN Derivatives
 --------------------------------------------------------------------------------
 
+topLevelSN ∷ Parser Types.TopLevel
+topLevelSN = spaceLiner topLevel
+
 expressionSN = spaceLiner expression
 
 expressionS = spacer expression
+
+argSN ∷ Parser Types.Arg
+argSN = spaceLiner arg
+
+moduleNameSN ∷ Parser Types.ModuleName
+moduleNameSN = spaceLiner moduleName
 
 typePSN ∷ Parser Types.Type
 typePSN = spaceLiner typeP

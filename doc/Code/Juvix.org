@@ -685,6 +685,7 @@ Quantitative type implementation inspired by
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
+  + [[Usage]]
   + [[Lexer]]
   + [[Frontend/Types]]
   + [[Library]]
@@ -695,6 +696,7 @@ Quantitative type implementation inspired by
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
 - _Relies on_
+  + [[Usage]]
   + [[Library]]
 ** INetIR
 - _Relies on_

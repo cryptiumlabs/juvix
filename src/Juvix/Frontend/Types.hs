@@ -180,19 +180,19 @@ data NameType
 -- | 'Function' is a normal signature with a name arguments and a body
 -- that may or may not have a guard before it
 newtype Function
-  = Func (FunctionLike TopLevel)
+  = Func (FunctionLike Expression)
   deriving (Show)
 
 -- | 'Module' is like function, however it allows multiple top levels
 newtype Module
-  = Mod (FunctionLike TopLevel)
+  = Mod (FunctionLike (NonEmpty TopLevel))
   deriving (Show)
 
 -- | 'FunctionLike' is the generic version for both modules and functions
 data FunctionLike a
   = Like
       { functionLikedName ∷ NameSymb,
-        functionLikeArgs ∷ [Args],
+        functionLikeArgs ∷ [Arg],
         functionLikeBody ∷ GuardBody a
       }
   deriving (Show)
@@ -208,7 +208,7 @@ newtype ModuleOpen
   deriving (Show)
 
 -- Very similar to name, but match instead of symbol
-data Args
+data Arg
   = ImplicitA MatchLogic
   | ConcreteA MatchLogic
   deriving (Show)
@@ -256,6 +256,7 @@ data Expression
   | Let Let
   | Match Match
   | Name NameSymb
+  | OpenExpr ModuleOpen
   deriving (Show)
 
 data Numb

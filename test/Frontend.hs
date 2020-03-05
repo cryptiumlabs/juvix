@@ -14,12 +14,12 @@ import Juvix.Library
 --------------------------------------------------
 
 sumTypeTest =
-  parse
+  parseOnly
     Parser.typeP
     ( "type Foo a b c = | A b : a -> b -> c \n"
-        <> "               | B d \n"
-        <> "               | C { a : Int, #b : Int }"
-        <> "               | D { a : Int, #b : Int } : Foo Int"
+        <> "            | B d \n"
+        <> "            | C { a : Int, #b : Int } \n"
+        <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
 
 --------------------------------------------------
@@ -38,13 +38,12 @@ superArrowCase =
 typeTest =
   parseOnly Parser.typeP "type Foo a b c d = | Foo Bea"
 
-
 --------------------------------------------------
 -- typeName tests
 --------------------------------------------------
 
-typeNameNoUniverse
-  = parseOnly Parser.typeNameParser "Foo a b c (b -o d) a c u"
+typeNameNoUniverse =
+  parseOnly Parser.typeNameParser "Foo a b c (b -o d) a c u"
 
 --------------------------------------------------------------------------------
 -- Spacer tests
@@ -55,7 +54,6 @@ spacerSymb =
   case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
     Done f s → f == "f" && s == "Foo"
     _ → False
-
 
 --------------------------------------------------------------------------------
 -- validPrefixSymbols
