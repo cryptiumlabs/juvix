@@ -14,6 +14,7 @@ import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
+import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (maybe, option, product, sum, takeWhile, try)
@@ -112,24 +113,74 @@ record = do
 
 nameType ∷ Parser Types.NameType
 nameType = do
-  name ← nameTypeParserSN
+  name ← nameParserSN
   spaceLiner (skip (== Lexer.colon))
   sig ← arrowType
   pure (Types.NameType sig name)
 
+nameParserColon ∷ Parser Types.Name
+nameParserColon =
+  nameParserSN <* skip (== Lexer.colon)
 
-nameParser :: Parser Types.Name
+nameParser ∷ Parser Types.Name
 nameParser =
   (skip (== Lexer.hash) *> fmap Types.Implicit prefixSymbol)
-  <|> Types.Concrete <$> prefixSymbol
+    <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
 -- Arrow Type parser
 --------------------------------------------------
 
+-- This family of parsers are a bit complicated
+-- Though they work well!
+
 arrowType ∷ Parser Types.ArrowType
-arrowType = undefined
-         <|> Types.Refined <$> undefined typeRefine
+arrowType = do
+  let toType (Arrow a) = Types.Arrows a
+      toType (Parens p) = Types.Parens p
+  recursive ← arrowOrParens
+  end ← fmap Types.Refined (namedRefine <|> parens namedRefine) <|> endArrow
+  pure (foldr toType end recursive)
+
+data ArrowOrParens
+  = Arrow Types.ArrowData
+  | Parens Types.ArrowParen
+  deriving (Show)
+
+endArrow ∷ Parser Types.ArrowType
+endArrow = Types.End <$> parens arrowType
+
+arrowOrParens ∷ Parser [ArrowOrParens]
+arrowOrParens =
+  many (Arrow <$> arrowsSN <|> Parens <$> parendArrowSN)
+
+arrowGen ∷ Parser a → Parser (Types.ArrowGen a)
+arrowGen p =
+  Types.ArrGen <$> maybe nameParserColonSN <*> p <*> arrowSymbol
+
+arrows ∷ Parser Types.ArrowData
+arrows =
+  Types.Arr <$> arrowGen typeRefineSN
+
+parendArrow ∷ Parser Types.ArrowParen
+parendArrow =
+  Types.Paren <$> parens (arrowGen arrowTypeSN)
+
+namedRefine ∷ Parser Types.NamedRefine
+namedRefine =
+  Types.NamedRefine <$> maybe nameParserColonSN <*> typeRefine
+
+arrowSymbol ∷ Parser Types.ArrowSymbol
+arrowSymbol =
+  Types.ArrowUse Usage.Omega <$ string "->"
+    <|> Types.ArrowUse one <$ string "-o"
+    <|> Types.ArrowUse mempty <$ string "-|"
+    <|> ( do
+            spaceLiner (skip (== Lexer.dash))
+            exp ← expressionSN
+            string "->"
+            pure (Types.ArrowExp exp)
+        )
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
@@ -173,8 +224,8 @@ prefixSymbol = do
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
   if
-    | Set.member new reservedWords → pure (internText (Encoding.decodeUtf8 new))
-    | otherwise → fail "symbol is reserved word"
+    | Set.member new reservedWords → fail "symbol is reserved word"
+    | otherwise → pure (internText (Encoding.decodeUtf8 new))
 
 --------------------------------------------------------------------------------
 -- Misc helpers
@@ -194,7 +245,7 @@ spaceLiner ∷ Parser p → Parser p
 spaceLiner p = p <* takeWhile (\x → Lexer.space == x || Lexer.endOfLine x)
 
 between ∷ Word8 → Parser p → Word8 → Parser p
-between fst p end = satisfy (== fst) *> p <* satisfy (== end)
+between fst p end = spaceLiner (skip (== fst)) *> spaceLiner p <* satisfy (== end)
 
 parens ∷ Parser p → Parser p
 parens p = between Lexer.openParen p Lexer.closeParen
@@ -231,8 +282,11 @@ recordSN = spaceLiner record
 recordS ∷ Parser Types.Record
 recordS = spacer record
 
-nameTypeParserSN ∷ Parser Types.Name
-nameTypeParserSN = spaceLiner nameParser
+nameParserColonSN ∷ Parser Types.Name
+nameParserColonSN = spaceLiner nameParserColon
+
+nameParserSN ∷ Parser Types.Name
+nameParserSN = spaceLiner nameParser
 
 arrowTypeSN ∷ Parser Types.ArrowType
 arrowTypeSN = spaceLiner arrowType
@@ -251,6 +305,12 @@ sumSN = spaceLiner sum
 
 sumS ∷ Parser Types.Sum
 sumS = spaceLiner sum
+
+arrowsSN ∷ Parser Types.ArrowData
+arrowsSN = spaceLiner arrows
+
+parendArrowSN ∷ Parser Types.ArrowParen
+parendArrowSN = spaceLiner parendArrow
 
 typeNameParserSN ∷ Parser Types.TypeName
 typeNameParserSN = spaceLiner typeNameParser

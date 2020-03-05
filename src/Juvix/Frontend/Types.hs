@@ -9,6 +9,7 @@
 module Juvix.Frontend.Types where
 
 import Control.Lens
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Product, Sum, Type)
 
 data TopLevel
@@ -71,22 +72,31 @@ newtype Alias
 
 data ArrowType
   = Refined NamedRefine
+  | End ArrowType
   | Arrows ArrowData ArrowType
-  | Parens ArrowType
+  | Parens ArrowParen ArrowType
   deriving (Show)
 
 data NamedRefine
   = NamedRefine
-     { nameRefineName ∷ !(Maybe Name),
-       namedRefineRefine ∷ TypeRefine
-     }
+      { nameRefineName ∷ !(Maybe Name),
+        namedRefineRefine ∷ TypeRefine
+      }
   deriving (Show)
 
-data ArrowData
-  = Arr
-      { arrowDataName ∷ !(Maybe Name),
-        arrowDataRefine ∷ TypeRefine,
-        arrowDataArrow ∷ !ArrowSymbol
+newtype ArrowParen
+  = Paren (ArrowGen ArrowType)
+  deriving (Show)
+
+newtype ArrowData
+  = Arr (ArrowGen TypeRefine)
+  deriving (Show)
+
+data ArrowGen a
+  = ArrGen
+      { arrowGenName ∷ !(Maybe Name),
+        arrowGenData ∷ a,
+        arrowGenArrow ∷ !ArrowSymbol
       }
   deriving (Show)
 
@@ -107,7 +117,7 @@ data Name
   deriving (Show)
 
 data ArrowSymbol
-  = ArrowNat Natural
+  = ArrowUse Usage.T
   | ArrowExp Usage
   deriving (Show)
 
