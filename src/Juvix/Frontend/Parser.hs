@@ -82,7 +82,10 @@ matchL = do
   pure (Types.MatchL match exp)
 
 matchLogic ∷ Parser Types.MatchLogic
-matchLogic = undefined
+matchLogic = parens undefined
+
+
+mathcLogic' = undefined
 
 --------------------------------------------------------------------------------
 -- Function
@@ -308,15 +311,21 @@ universeExpression =
 -- Symbol Handlers
 --------------------------------------------------------------------------------
 
-prefixSymbol ∷ Parser Symbol
-prefixSymbol = do
-  start ← satisfy Lexer.validStartSymbol
+prefixSymbolGen ∷ Parser Word8 →  Parser Symbol
+prefixSymbolGen startParser = do
+  start ← startParser
   rest ← takeWhile Lexer.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
   if
     | Set.member new reservedWords → fail "symbol is reserved word"
     | otherwise → pure (internText (Encoding.decodeUtf8 new))
+
+prefixSymbol ∷ Parser Symbol
+prefixSymbol = prefixSymbolGen (satisfy Lexer.validStartSymbol)
+
+prefixCapital ∷ Parser Symbol
+prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 
 --------------------------------------------------------------------------------
 -- Misc helpers

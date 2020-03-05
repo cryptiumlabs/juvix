@@ -11,6 +11,10 @@ wordToChr = Char.chr . fromIntegral
 validStartSymbol ∷ Integral a ⇒ a → Bool
 validStartSymbol = Unicode.isAlpha . wordToChr
 
+-- Unicode.isUpper 'İ' = True!
+validUpperSymbol ∷ Integral a ⇒ a → Bool
+validUpperSymbol = Unicode.isUpper . wordToChr
+
 dash ∷ Word8
 dash = 45
 
