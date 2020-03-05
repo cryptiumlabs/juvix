@@ -53,10 +53,15 @@ typeSumParser =
 
 newTypeParser ∷ Parser Types.NewType
 newTypeParser = do
-  let nonOverlappingCase =
-        notWord8 Lexer.pipe *> pure ()
-          <|> notWord8 Lexer.dash *> pure ()
-          <|> endOfInput
+  let nonOverlappingCase = do
+        p ← peekWord8
+        case p of
+          Just p →
+            if
+              | p == Lexer.dash || p == Lexer.dash || p == Lexer.colon →
+                fail "overlapping"
+              | otherwise → pure ()
+          Nothing → pure ()
   spaceLiner (skip (== Lexer.equals))
   spaceLiner (skip (== Lexer.pipe))
   -- if we get a | or a - at the end of this, then we need to go to the other case
@@ -101,15 +106,22 @@ product =
 record ∷ Parser Types.Record
 record = do
   names ←
-    curly
-      $ many1H
-      $ spaceLiner nameType <* spaceLiner (skip (== Lexer.comma))
-  last ← option [] (pure <$> spaceLiner nameType)
-  --
-  let names' = NonEmpty.fromList (NonEmpty.toList names <> last)
-  --
-  familySignature ← maybe (spaceLiner (string "->") *> typeRefine)
-  pure (Types.Record' names' familySignature)
+    spaceLiner
+      $ curly
+      $ do
+        commas ←
+          many $
+            spaceLiner nameType <* spaceLiner (skip (== Lexer.comma))
+        last ← option [] (pure <$> spaceLiner nameType)
+        pure (commas <> last)
+  case names of
+    _ : _ → do
+      --
+      let names' = NonEmpty.fromList names
+      --
+      familySignature ← maybe (spaceLiner (string ":") *> typeRefine)
+      pure (Types.Record' names' familySignature)
+    [] → fail "must have at least one item in a record"
 
 nameType ∷ Parser Types.NameType
 nameType = do
@@ -194,18 +206,19 @@ typeRefine = do
 
 typeNameParser ∷ Parser Types.TypeName
 typeNameParser = do
-  let toType (Symb s) = Types.Next s
-      toType (Universe u) = Types.Universe u
-  p ← prefixSymbolSN
-  other ← many (spaceLiner (universeSymbol <|> Symb <$> prefixSymbolSN))
-  pure (foldr toType (Types.Final p) other)
+  pre ← prefixSymbolSN
+  body ←
+    many
+      $ spaceLiner
+      $ universeSymbol
+        <|> Types.SymbolName <$> prefixSymbolSN
+        <|> Types.ArrowName <$> parens arrowTypeSN
+  pure (Types.Start pre body)
 
-data SymbOrUni = Symb Symbol | Universe Types.UniverseExpression
-
-universeSymbol ∷ Parser SymbOrUni
+universeSymbol ∷ Parser Types.TypeNameValid
 universeSymbol = do
   _ ← string "u#"
-  Universe <$> universeExpression
+  Types.UniverseName <$> universeExpression
 
 universeExpression ∷ Parser Types.UniverseExpression
 universeExpression =

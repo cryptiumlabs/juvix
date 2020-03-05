@@ -6,22 +6,45 @@ import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library
 
 --------------------------------------------------------------------------------
--- Arrow Testing
+-- Type tests
 --------------------------------------------------------------------------------
+
+--------------------------------------------------
+-- adt testing
+--------------------------------------------------
+
+sumTypeTest =
+  parse
+    Parser.typeP
+    ( "type Foo a b c = | A b : a -> b -> c \n"
+        <> "               | B d \n"
+        <> "               | C { a : Int, #b : Int }"
+        <> "               | D { a : Int, #b : Int } : Foo Int"
+    )
+
+--------------------------------------------------
+-- Arrow Testing
+--------------------------------------------------
 
 superArrowCase =
   parse
     Parser.arrowType
     "( b : Bah -> \n c : B -o Foo) -> Foo a b -> #a : Bah a c -o ( HAHAHHA -> foo )"
 
---------------------------------------------------------------------------------
--- Type tests
---------------------------------------------------------------------------------
-
--- alias test
+--------------------------------------------------
+-- alias tests
+--------------------------------------------------
 
 typeTest =
   parseOnly Parser.typeP "type Foo a b c d = | Foo Bea"
+
+
+--------------------------------------------------
+-- typeName tests
+--------------------------------------------------
+
+typeNameNoUniverse
+  = parseOnly Parser.typeNameParser "Foo a b c (b -o d) a c u"
 
 --------------------------------------------------------------------------------
 -- Spacer tests
@@ -32,6 +55,7 @@ spacerSymb =
   case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
     Done f s → f == "f" && s == "Foo"
     _ → False
+
 
 --------------------------------------------------------------------------------
 -- validPrefixSymbols

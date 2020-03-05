@@ -124,9 +124,13 @@ data ArrowSymbol
 -- I think we can do
 -- Foo a u#b c ?
 data TypeName
-  = Final !Symbol
-  | Next Symbol TypeName
-  | Universe UniverseExpression TypeName
+  = Start !Symbol [TypeNameValid]
+  deriving (Show)
+
+data TypeNameValid
+  = ArrowName ArrowType
+  | SymbolName !Symbol
+  | UniverseName UniverseExpression
   deriving (Show)
 
 -- TODO ∷ finish this type!
