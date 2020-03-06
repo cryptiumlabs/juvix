@@ -30,6 +30,7 @@ topLevel = fail "top" -- typeP <|> function
 expression ∷ Parser Types.Expression
 expression = fail "foo"
 
+usage ∷ Parser Types.Expression
 usage = string "u#" *> expression
 
 --------------------------------------------------------------------------------
@@ -84,13 +85,13 @@ matchL = do
   pure (Types.MatchL match exp)
 
 matchLogic ∷ Parser Types.MatchLogic
-matchLogic = maybeParend (matchLogicNamed <|> matchLogicNotNamed)
+matchLogic = maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
 
 matchLogicNamed ∷ Parser Types.MatchLogic
 matchLogicNamed = do
   name ← prefixSymbol
   skipLiner Lexer.at
-  start ← maybeParend matchLogicStart
+  start ← maybeParend matchLogicStartSN
   pure (Types.MatchLogic start (Just name))
 
 matchLogicNotNamed ∷ Parser Types.MatchLogic
@@ -108,13 +109,23 @@ matchCon = do
   pure (Types.MatchCon con matchd)
 
 matchName ∷ Parser Types.MatchLogicStart
-matchName = Types.MatchName <$> prefixSymbolSN
+matchName = Types.MatchName <$> prefixSymbol
 
 matchRecord ∷ Parser Types.MatchLogicStart
-matchRecord = Types.MatchRecord <$> curly (many1H nameSetSN)
+matchRecord = Types.MatchRecord <$> curly (sepBy1HFinal nameSetSN (skipLiner Lexer.comma))
 
 nameSet ∷ Parser Types.NameSet
-nameSet = undefined
+nameSet = nameMatch <|> namePunned
+
+namePunned ∷ Parser Types.NameSet
+namePunned = Types.Punned <$> prefixSymbol
+
+nameMatch ∷ Parser Types.NameSet
+nameMatch = do
+  name ← prefixSymbolSN
+  skipLiner Lexer.equals
+  bound ← matchLogic
+  pure (Types.NonPunned name bound)
 
 --------------------------------------------------------------------------------
 -- Function
@@ -218,20 +229,9 @@ record = do
   names ←
     spaceLiner
       $ curly
-      $ do
-        commas ←
-          many $
-            spaceLiner nameType <* skipLiner Lexer.comma
-        last ← option [] (pure <$> spaceLiner nameType)
-        pure (commas <> last)
-  case names of
-    _ : _ → do
-      --
-      let names' = NonEmpty.fromList names
-      --
-      familySignature ← maybe (skipLiner Lexer.colon *> typeRefine)
-      pure (Types.Record' names' familySignature)
-    [] → fail "must have at least one item in a record"
+      $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
+  familySignature ← maybe (skipLiner Lexer.colon *> typeRefine)
+  pure (Types.Record' names familySignature)
 
 nameType ∷ Parser Types.NameType
 nameType = do
@@ -428,6 +428,13 @@ curly p = between Lexer.openCurly p Lexer.closeCurly
 many1H ∷ Alternative f ⇒ f a → f (NonEmpty a)
 many1H = fmap NonEmpty.fromList . many1
 
+-- | 'sepBy1HFinal' is like 'sepBy1H' but also tries to parse a last separator
+sepBy1HFinal ∷ Alternative f ⇒ f a → f s → f (NonEmpty a)
+sepBy1HFinal parse sep = sepBy1H parse sep <* maybe sep
+
+sepBy1H ∷ Alternative f ⇒ f a → f s → f (NonEmpty a)
+sepBy1H parse sep = NonEmpty.fromList <$> sepBy1 parse sep
+
 skipLiner ∷ Word8 → Parser ()
 skipLiner p = spaceLiner (skip (== p))
 
@@ -441,8 +448,10 @@ maybeParend p = p <|> parens p
 topLevelSN ∷ Parser Types.TopLevel
 topLevelSN = spaceLiner topLevel
 
+expressionSN ∷ Parser Types.Expression
 expressionSN = spaceLiner expression
 
+expressionS ∷ Parser Types.Expression
 expressionS = spacer expression
 
 argSN ∷ Parser Types.Arg
@@ -453,6 +462,15 @@ matchLSN = spaceLiner matchL
 
 matchLogicSN ∷ Parser Types.MatchLogic
 matchLogicSN = spaceLiner matchLogic
+
+matchLogicStartSN ∷ Parser Types.MatchLogicStart
+matchLogicStartSN = spaceLiner matchLogicStart
+
+matchLogicNamedSN ∷ Parser Types.MatchLogic
+matchLogicNamedSN = spaceLiner matchLogicNamed
+
+matchLogicNotNamedSN ∷ Parser Types.MatchLogic
+matchLogicNotNamedSN = spaceLiner matchLogicNotNamed
 
 nameSetSN ∷ Parser Types.NameSet
 nameSetSN = spaceLiner nameSet
@@ -480,6 +498,9 @@ recordSN = spaceLiner record
 
 recordS ∷ Parser Types.Record
 recordS = spacer record
+
+nameTypeSN ∷ Parser Types.NameType
+nameTypeSN = spaceLiner nameType
 
 nameParserColonSN ∷ Parser Types.Name
 nameParserColonSN = spaceLiner nameParserColon
