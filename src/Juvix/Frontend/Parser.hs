@@ -50,7 +50,9 @@ functionModGen p = do
 --------------------------------------------------
 
 guard ∷ Parser a → Parser (Types.GuardBody a)
-guard p = undefined
+guard p =
+  Types.Guard <$> condB p
+    <|> Types.Body <$> (skipLiner Lexer.equals *> p)
 
 --------------------------------------------------
 -- Args
@@ -75,7 +77,7 @@ match = do
 
 matchL ∷ Parser Types.MatchL
 matchL = do
-  spaceLiner (skip (== Lexer.pipe))
+  skipLiner Lexer.pipe
   match ← matchLogicSN
   spaceLiner (string "->")
   exp ← expression
@@ -83,7 +85,6 @@ matchL = do
 
 matchLogic ∷ Parser Types.MatchLogic
 matchLogic = parens undefined
-
 
 mathcLogic' = undefined
 
@@ -143,8 +144,8 @@ newTypeParser = do
                 fail "overlapping"
               | otherwise → pure ()
           Nothing → pure ()
-  spaceLiner (skip (== Lexer.equals))
-  spaceLiner (skip (== Lexer.pipe))
+  skipLiner Lexer.equals
+  skipLiner Lexer.pipe
   -- if we get a | or a - at the end of this, then we need to go to the other case
   -- Note that we may end up with a non boxed type, but that is fine
   -- this is a subset of the ADT case for analysis
@@ -153,13 +154,13 @@ newTypeParser = do
 
 aliasParser ∷ Parser Types.Alias
 aliasParser = do
-  spaceLiner (skip (== Lexer.equals))
+  skipLiner Lexer.equals
   Types.AliasDec <$> typeRefine
 
 dataParser ∷ Parser Types.Data
 dataParser = do
-  arrow ← maybe (spaceLiner (skip (== Lexer.colon)) *> arrowTypeSN)
-  spaceLiner (skip (== Lexer.equals))
+  arrow ← maybe (skipLiner Lexer.colon *> arrowTypeSN)
+  skipLiner Lexer.equals
   adt ← adt
   case arrow of
     Just arr → pure (Types.Arrowed arr adt)
@@ -176,7 +177,7 @@ adt =
 
 sum ∷ Parser Types.Sum
 sum = do
-  spaceLiner (skip (== Lexer.pipe))
+  skipLiner Lexer.pipe
   Types.S <$> prefixSymbolSN <*> maybe product
 
 product ∷ Parser Types.Product
@@ -192,7 +193,7 @@ record = do
       $ do
         commas ←
           many $
-            spaceLiner nameType <* spaceLiner (skip (== Lexer.comma))
+            spaceLiner nameType <* skipLiner Lexer.comma
         last ← option [] (pure <$> spaceLiner nameType)
         pure (commas <> last)
   case names of
@@ -200,14 +201,14 @@ record = do
       --
       let names' = NonEmpty.fromList names
       --
-      familySignature ← maybe (spaceLiner (string ":") *> typeRefine)
+      familySignature ← maybe (skipLiner Lexer.colon *> typeRefine)
       pure (Types.Record' names' familySignature)
     [] → fail "must have at least one item in a record"
 
 nameType ∷ Parser Types.NameType
 nameType = do
   name ← nameParserSN
-  spaceLiner (skip (== Lexer.colon))
+  skipLiner Lexer.colon
   sig ← arrowType
   pure (Types.NameType sig name)
 
@@ -269,7 +270,7 @@ arrowSymbol =
     <|> Types.ArrowUse one <$ string "-o"
     <|> Types.ArrowUse mempty <$ string "-|"
     <|> ( do
-            spaceLiner (skip (== Lexer.dash))
+            skipLiner Lexer.dash
             exp ← expressionSN
             string "->"
             pure (Types.ArrowExp exp)
@@ -308,10 +309,52 @@ universeExpression =
     <|> Types.UniverseExpression <$> parens prefixSymbolSN
 
 --------------------------------------------------------------------------------
+-- Expressions
+--------------------------------------------------------------------------------
+
+--------------------------------------------------
+-- Let
+--------------------------------------------------
+
+let' ∷ Parser Types.Let
+let' = do
+  spaceLiner (string "let")
+  binds ← many1H bindingSN
+  spaceLiner (string "in")
+  body ← expression
+  pure (Types.Let' binds body)
+
+binding ∷ Parser Types.Binding
+binding = do
+  pattern' ← matchLogicSN
+  skipLiner Lexer.equals
+  on ← expression
+  pure (Types.Bind pattern' on)
+
+--------------------------------------------------
+-- Cond
+--------------------------------------------------
+
+cond = do
+  spaceLiner (string "if")
+  condB expression
+
+condB ∷ Parser a → Parser (Types.Cond a)
+condB p = Types.C <$> many1H (condLogicSN p)
+
+condLogic ∷ Parser a → Parser (Types.CondLogic a)
+condLogic p = do
+  skipLiner Lexer.pipe
+  pred ← expression
+  skipLiner Lexer.equals
+  body ← p
+  pure (Types.CondExpression pred body)
+
+--------------------------------------------------------------------------------
 -- Symbol Handlers
 --------------------------------------------------------------------------------
 
-prefixSymbolGen ∷ Parser Word8 →  Parser Symbol
+prefixSymbolGen ∷ Parser Word8 → Parser Symbol
 prefixSymbolGen startParser = do
   start ← startParser
   rest ← takeWhile Lexer.validMiddleSymbol
@@ -345,7 +388,7 @@ spaceLiner ∷ Parser p → Parser p
 spaceLiner p = p <* takeWhile (\x → Lexer.space == x || Lexer.endOfLine x)
 
 between ∷ Word8 → Parser p → Word8 → Parser p
-between fst p end = spaceLiner (skip (== fst)) *> spaceLiner p <* satisfy (== end)
+between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
 
 parens ∷ Parser p → Parser p
 parens p = between Lexer.openParen p Lexer.closeParen
@@ -355,6 +398,9 @@ curly p = between Lexer.openCurly p Lexer.closeCurly
 
 many1H ∷ Alternative f ⇒ f a → f (NonEmpty a)
 many1H = fmap NonEmpty.fromList . many1
+
+skipLiner ∷ Word8 → Parser ()
+skipLiner p = spaceLiner (skip (== p))
 
 --------------------------------------------------------------------------------
 -- SN Derivatives
@@ -378,6 +424,9 @@ matchLogicSN = spaceLiner matchLogic
 
 moduleNameSN ∷ Parser Types.ModuleName
 moduleNameSN = spaceLiner moduleName
+
+condLogicSN ∷ Parser a → Parser (Types.CondLogic a)
+condLogicSN = spaceLiner . condLogic
 
 typePSN ∷ Parser Types.Type
 typePSN = spaceLiner typeP
@@ -408,6 +457,9 @@ arrowTypeSN = spaceLiner arrowType
 
 arrowTypeS ∷ Parser Types.ArrowType
 arrowTypeS = spacer arrowType
+
+bindingSN ∷ Parser Types.Binding
+bindingSN = spaceLiner binding
 
 typeRefineSN ∷ Parser Types.TypeRefine
 typeRefineSN = spaceLiner typeRefine
