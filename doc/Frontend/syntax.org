@@ -157,7 +157,7 @@
 
   match-l ::= \| <match-logic> -\> <expression>
 
-  match-logic ::= <name> @ <match-logic'>
+  match-logic ::= <name>@<match-logic'>
                 | <match-logic'>
 
   match-logic' ::= ( <match-logic''> )
@@ -172,7 +172,7 @@
   record-match ::= { <name-set>* }
 
 
-  name-set ::= <name> = <name>
+  name-set ::= <name> = <match-logic>
              | <name>
 
   ;; we should remove either if or cond!?
