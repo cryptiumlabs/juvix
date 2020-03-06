@@ -84,9 +84,37 @@ matchL = do
   pure (Types.MatchL match exp)
 
 matchLogic ∷ Parser Types.MatchLogic
-matchLogic = parens undefined
+matchLogic = maybeParend (matchLogicNamed <|> matchLogicNotNamed)
 
-mathcLogic' = undefined
+matchLogicNamed ∷ Parser Types.MatchLogic
+matchLogicNamed = do
+  name ← prefixSymbol
+  skipLiner Lexer.at
+  start ← maybeParend matchLogicStart
+  pure (Types.MatchLogic start (Just name))
+
+matchLogicNotNamed ∷ Parser Types.MatchLogic
+matchLogicNotNamed = do
+  start ← matchLogicStart
+  pure (Types.MatchLogic start Nothing)
+
+matchLogicStart ∷ Parser Types.MatchLogicStart
+matchLogicStart = matchRecord <|> matchCon <|> matchName
+
+matchCon ∷ Parser Types.MatchLogicStart
+matchCon = do
+  con ← prefixCapitalSN
+  matchd ← many matchLogicSN
+  pure (Types.MatchCon con matchd)
+
+matchName ∷ Parser Types.MatchLogicStart
+matchName = Types.MatchName <$> prefixSymbolSN
+
+matchRecord ∷ Parser Types.MatchLogicStart
+matchRecord = Types.MatchRecord <$> curly (many1H nameSetSN)
+
+nameSet ∷ Parser Types.NameSet
+nameSet = undefined
 
 --------------------------------------------------------------------------------
 -- Function
@@ -335,8 +363,9 @@ binding = do
 -- Cond
 --------------------------------------------------
 
+cond ∷ Parser (Types.Cond Types.Expression)
 cond = do
-  spaceLiner (string "if")
+  _ ← spaceLiner (string "if")
   condB expression
 
 condB ∷ Parser a → Parser (Types.Cond a)
@@ -402,6 +431,9 @@ many1H = fmap NonEmpty.fromList . many1
 skipLiner ∷ Word8 → Parser ()
 skipLiner p = spaceLiner (skip (== p))
 
+maybeParend ∷ Parser a → Parser a
+maybeParend p = p <|> parens p
+
 --------------------------------------------------------------------------------
 -- SN Derivatives
 --------------------------------------------------------------------------------
@@ -421,6 +453,9 @@ matchLSN = spaceLiner matchL
 
 matchLogicSN ∷ Parser Types.MatchLogic
 matchLogicSN = spaceLiner matchLogic
+
+nameSetSN ∷ Parser Types.NameSet
+nameSetSN = spaceLiner nameSet
 
 moduleNameSN ∷ Parser Types.ModuleName
 moduleNameSN = spaceLiner moduleName
@@ -484,6 +519,9 @@ typeNameParserSN = spaceLiner typeNameParser
 
 typeNameParserS ∷ Parser Types.TypeName
 typeNameParserS = spacer typeNameParser
+
+prefixCapitalSN ∷ Parser Symbol
+prefixCapitalSN = spaceLiner prefixCapital
 
 prefixSymbolSN ∷ Parser Symbol
 prefixSymbolSN = spaceLiner prefixSymbol

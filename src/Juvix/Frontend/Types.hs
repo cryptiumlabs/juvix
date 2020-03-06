@@ -308,20 +308,20 @@ data MatchL
 
 data MatchLogic
   = MatchLogic
-      { matchLogicContents ∷ MatchLogicCont,
+      { matchLogicContents ∷ MatchLogicStart,
         matchLogicNamed ∷ Maybe NameSymb
       }
   deriving (Show)
 
-data MatchLogicCont
-  = MatchCon ConstructorName
+data MatchLogicStart
+  = MatchCon ConstructorName [MatchLogic]
   | MatchName NameSymb
-  | MatchRecord NameSet
+  | MatchRecord (NonEmpty NameSet)
   deriving (Show)
 
 data NameSet
   = Punned NameSymb
-  | NonPunned NameSymb NameSymb
+  | NonPunned NameSymb MatchLogic
   deriving (Show)
 
 type ConstructorName = Symbol

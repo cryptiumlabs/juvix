@@ -51,6 +51,9 @@ closeCurly = 125
 equals ∷ Word8
 equals = 61
 
+at ∷ Word8
+at = 64
+
 validMiddleSymbol ∷ Word8 → Bool
 validMiddleSymbol w =
   w == dash || Unicode.isAlphaNum (wordToChr w) || w == under
