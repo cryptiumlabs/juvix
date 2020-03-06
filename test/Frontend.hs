@@ -46,6 +46,15 @@ typeNameNoUniverse =
   parseOnly Parser.typeNameParser "Foo a b c (b -o d) a c u"
 
 --------------------------------------------------------------------------------
+-- Match tests
+--------------------------------------------------------------------------------
+
+simpleNamedCon = parseOnly Parser.matchLogic "foo@( Hi a b c )"
+
+matchMoreComplex =
+  parseOnly Parser.matchLogic "foo@( Hi nah@{ a = nah , f } b c )"
+
+--------------------------------------------------------------------------------
 -- Spacer tests
 --------------------------------------------------------------------------------
 
