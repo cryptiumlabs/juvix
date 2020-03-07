@@ -257,6 +257,10 @@ data Expression
   | Match Match
   | Name NameSymb
   | OpenExpr ModuleOpen
+  | Lambda Lambda
+  | Application Application
+  | Block Block
+  | Do Do
   deriving (Show)
 
 data Numb
@@ -268,6 +272,33 @@ data Numb
 
 newtype String'
   = Sho Text
+  deriving (Show)
+
+newtype Block
+  = Bloc
+      {blockExpr ∷ Expression}
+  deriving (Show)
+
+data Lambda
+  = Lamb
+      { lambdaArgs ∷ NonEmpty MatchLogic,
+        lambdaBody ∷ Expression
+      }
+  deriving (Show)
+
+data Application
+  = App
+      { applicationName ∷ NameSymb,
+        applicationArgs ∷ NonEmpty Expression
+      }
+  deriving (Show)
+
+data Do
+  = Do'
+      { doName ∷ Maybe NameSymb,
+        doExpr ∷ Expression,
+        doBody ∷ Expression
+      }
   deriving (Show)
 
 --------------------------------------------------
@@ -364,5 +395,13 @@ makeLensesWith camelCaseFields ''FunctionLike
 makeLensesWith camelCaseFields ''Module
 
 makeLensesWith camelCaseFields ''Function
+
+makeLensesWith camelCaseFields ''Lambda
+
+makeLensesWith camelCaseFields ''Application
+
+makeLensesWith camelCaseFields ''Block
+
+makeLensesWith camelCaseFields ''Do
 
 makePrisms ''TypeSum

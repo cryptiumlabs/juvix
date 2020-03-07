@@ -112,7 +112,8 @@ matchName ∷ Parser Types.MatchLogicStart
 matchName = Types.MatchName <$> prefixSymbol
 
 matchRecord ∷ Parser Types.MatchLogicStart
-matchRecord = Types.MatchRecord <$> curly (sepBy1HFinal nameSetSN (skipLiner Lexer.comma))
+matchRecord =
+  Types.MatchRecord <$> curly (sepBy1HFinal nameSetSN (skipLiner Lexer.comma))
 
 nameSet ∷ Parser Types.NameSet
 nameSet = nameMatch <|> namePunned
