@@ -6,8 +6,8 @@ let MonoidMeasure =
   type T = Nat
 
   -- (<>) is normal semi-group type class function
-  sig (<>)    = (<>)
-  sig measure = id
+  let (<>)    = (<>)
+  let measure = id
 end
 
 -- need OrdMap, as modules that one goes to can't be modules?
