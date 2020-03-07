@@ -13,8 +13,9 @@
 
   ;;;; Functions ======================================================
 
-  function ::= <name> <args>+ = <expression>
-             | <name> <args>+ <cond-logic>*
+  ;; let until indent sensitivity is gone
+  function ::= let <name> <args>+ = <expression>
+             | let <name> <args>+ <cond-logic>*
 
   ;; Match-logic could just be a name, and so is thus fine
   ;; # is for implicit
@@ -22,12 +23,13 @@
   args ::= <match-logic>
          | #<match-logic>
 
+  ;; sig only here while indent sensitivity is not here
   ;; if we only have usage in arrows, we should allow a way to have
   ;; usage information of variables as well!
-  signature ::= <name>         :                 <arrow-type>
-              | <name>         : <type-name> =\> <arrow-type>
-              | <name> <usage> :                 <arrow-type>
-              | <name> <usage> : <type-name> =\> <arrow-type>
+  signature ::= sig <name>         :                 <arrow-type>
+              | sig <name>         : <type-name> =\> <arrow-type>
+              | sig <name> <usage> :                 <arrow-type>
+              | sig <name> <usage> : <type-name> =\> <arrow-type>
 
   ;;;; Types ==========================================================
 
@@ -109,10 +111,30 @@
   ;; they can take any value, however for examples, we will encourage the use
   ;; of taking (and thus parameterizing) modules
 
-  module ::= <name> <args>+ = <top-level>
-           | <name> <args>+ <cond-top>*
+  ;; let and end are there until indent sensitivity is in
+  module ::= let <name> <args>+ = <top-level>* end
+           | let <name> <args>+ <cond-top>* end
 
-  cond-top ::= \| <expression> = <expression>
+
+  ;; what should we allow in a module signature?
+  ;; begin and end are only here while we aren't indent sensitive
+
+
+
+  module-signature ::= <module-signature-helper> Module <sigs-and-types>+ end
+
+  sigs-and-types ::= <sig>
+                   | <module-signature>
+                   | <type>
+
+  module-signature-helper
+    ::= sig <name>         :                 <arrow-type>?
+      | sig <name>         : <type-name> =\> <arrow-type>?
+      | sig <name> <usage> :                 <arrow-type>?
+      | sig <name> <usage> : <type-name> =\> <arrow-type>?
+
+
+  cond-top ::= \| <expression> = <top-level>*
   ;;;; Types Classes ==================================================
 
   ;; Need end if we are indent sensitive!
@@ -135,14 +157,20 @@
                | <where>
                | <string>
                | <number>
-               ; TODO
+               | <lambda>
+               | <tuple>
+               | <parens>
+               | <application>
                | <symbol>
                | <prefix>
                | <infix>
+               ; This is useful for having nested do's or matchs
+               | <block>
                | <do>
-               | <tuple>
                | <comments>
-               | <parens>
+               ; TODO
+               | <record-update>
+               | <record-creation>
 
   usage ::= <expression>
 
@@ -150,6 +178,36 @@
 
   module-lookup ::= <module-name>.<name>
 
+  application ::= <name> <expressions>*
+
+  lambda ::= \\ <match-logic>* -\> <expression>
+
+  symbol ::= <name>
+
+  ;; useful for match, and nested do's!
+  block ::= begin <expression> end
+
+  infix ::= `<name>`
+
+  do ::= <do-body>*
+
+  do-body ::= <exprsesion> \; <expression>
+
+  prefix ::= (<infix-symbol>)
+
+  tuple ::= ( <command-tuple>* )
+
+  commad-tuple ::= <exprsesion> , <expression>
+
+  parens ::= ( <expression> )
+
+  comments ::= -- <any-text-not-new-line> \n
+             | <comments-rec>
+
+  comments-rec ::= <multi-comments>
+                 | {- <comments-rec> -}
+
+  multi-comments ::= {- <any-text-not-{-> -}
 
   ;;; Matching ===================================
 
@@ -234,19 +292,22 @@
   ;; ; is comment in bnf
   comma            ::= ,
   semi             ::= \;
-  name             ::= <ascii-non-reserved>
-  non-capital-name ::= <ascii-no-capital>
-  capital-name     ::= <ascii-capital>
+  name             ::= <utf8-non-reserved>
+  non-capital-name ::= <utf8-no-capital>
+  capital-name     ::= <utf8-capital>
   ;; may want m e or Map.t int string?
   type-name   ::= <name> <others-names>+
   other-names ::= <name>
                 | <universe-expression>
                 | ( <arrow-type> )
-  module-name      ::= <name> ; enforce capital names?
+
+  infix-symbol ::= <utf-infix-symbol>
+
+  module-name ::= <name> ; enforce capital names?
 
   constructor-name ::= <capital-name-and-symbols>
 
-  ascii-non-reserved ::=
-  ascii-no-capital   ::=
-  ascii-capital      ::=
+  utf8-non-reserved ::=
+  utf8-no-capital   ::=
+  utf8-capital      ::=
 #+END_SRC
