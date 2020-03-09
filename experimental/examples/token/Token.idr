@@ -9,7 +9,7 @@ Address = String
 record Account where
   constructor MkAccount
   balance : Nat
-  allowance : SortedMap Address Nat
+  allowances : SortedMap Address Nat
 
 ||| The storage has type Storage which is a record with fields accounts,
 ||| version number of the token standard, total supply, name, symbol, and owner of tokens.
@@ -17,7 +17,7 @@ record Storage where
     constructor MkStorage
     accounts : SortedMap Address Account
     version : Nat --version of the token standard
-    totalSupply : Nat
+    totalSup : Nat
     name : String
     symbol : String
     owner : Address
@@ -29,6 +29,10 @@ data Error = NotEnoughBalance
 
 initStorage : Storage
 initStorage =
+  MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
+
+currStorage : Storage
+currStorage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
 
 ||| getAccount returns the balance of an associated key hash.
@@ -47,7 +51,19 @@ total getAccountAllowance :
 (address : Address) -> SortedMap Address Account -> SortedMap Address Nat
 getAccountAllowance address accounts = case lookup address accounts of
                       Nothing => empty
-                      (Just account) => allowance account
+                      (Just account) => allowances account
+
+total totalSupply : Nat
+totalSupply = totalSup currStorage
+
+total balanceOf : Address -> Nat
+balanceOf owner = getAccountBalance owner (accounts currStorage)
+
+total allowance : (owner : Address) -> (spender : Address) -> Nat
+allowance owner spender =
+  case lookup spender (getAccountAllowance owner (accounts currStorage)) of
+    Nothing => Z
+    (Just n) => n
 
 total modifyBalance :
 (address : Address) -> (tokens : Nat) -> SortedMap Address Account ->
