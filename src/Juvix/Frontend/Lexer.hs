@@ -42,6 +42,9 @@ openParen = 40
 closeParen ∷ Word8
 closeParen = 41
 
+backSlash ∷ Word8
+backSlash = 92
+
 openCurly ∷ Word8
 openCurly = 123
 

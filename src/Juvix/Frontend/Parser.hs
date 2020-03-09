@@ -18,7 +18,7 @@ import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try)
-import Prelude (fail, read)
+import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -40,10 +40,10 @@ expression =
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
     <|> Types.Do <$> do'
-    -- <|> Types.Lambda      <$> lam
-    -- <|> Types.Number      <$> num
+    <|> Types.Lambda <$> lam
     -- <|> Types.Application <$> try application
     -- <|> Types.String      <$> string'
+    -- <|> Types.Number      <$> num
     <|> Types.Name <$> prefixSymbol
 
 usage ∷ Parser Types.Expression
@@ -421,6 +421,18 @@ condLogic p = do
   skipLiner Lexer.equals
   body ← p
   pure (Types.CondExpression pred body)
+
+--------------------------------------------------
+-- Lambda
+--------------------------------------------------
+
+lam ∷ Parser Types.Lambda
+lam = do
+  skipLiner Lexer.backSlash
+  args ← many1H matchLogicSN
+  _ ← spaceLiner (string "->")
+  body ← expression
+  pure (Types.Lamb args body)
 
 --------------------------------------------------
 -- Numbers
