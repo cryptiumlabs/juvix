@@ -9,7 +9,7 @@
 --   end of the parse
 module Juvix.Frontend.Parser where
 
-import Data.Attoparsec.ByteString
+import Data.Attoparsec.ByteString hiding (match)
 import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
@@ -25,10 +25,26 @@ import Prelude (fail)
 --------------------------------------------------------------------------------
 
 topLevel ∷ Parser Types.TopLevel
-topLevel = fail "top" -- typeP <|> function
+topLevel =
+  Types.Type <$> typeP
+    <|> Types.ModuleOpen <$> moduleOpen
+    <|> Types.Module <$> module'
+    <|> Types.Function <$> function
+    <|> Types.Signature <$> signature'
 
 expression ∷ Parser Types.Expression
-expression = fail "foo"
+expression =
+  Types.Cond <$> cond
+    <|> Types.Let <$> let'
+    <|> Types.Match <$> match
+    <|> Types.OpenExpr <$> moduleOpenExpr
+    <|> Types.Block <$> block
+    -- <|> Types.Lambda      <$> lam
+    -- <|> Types.Number      <$> num
+    -- <|> Types.Do          <$> try do'
+    -- <|> Types.Application <$> try application
+    -- <|> Types.String      <$> string'
+    <|> Types.Name <$> prefixSymbol
 
 usage ∷ Parser Types.Expression
 usage = string "u#" *> expression
@@ -63,6 +79,25 @@ arg ∷ Parser Types.Arg
 arg =
   Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
+
+--------------------------------------------------------------------------------
+-- Signature
+--------------------------------------------------------------------------------
+
+signature' ∷ Parser Types.Signature
+signature' = do
+  _ ← string "sig"
+  name ← prefixSymbol
+  maybeUsage ← maybe expressionSN
+  skipLiner Lexer.colon
+  typeclasses ← signatureConstraintSN
+  arrowType ← arrowType
+  pure (Types.Sig name maybeUsage arrowType typeclasses)
+
+signatureConstraint ∷ Parser [Types.TypeName]
+signatureConstraint =
+  pure <$> typeNameParserSN <* string "=>"
+    <|> parens (sepBy typeNameParserSN (skipLiner Lexer.comma)) <* string "=>"
 
 --------------------------------------------------------------------------------
 -- Match
@@ -151,8 +186,8 @@ moduleName ∷ Parser Types.ModuleName
 moduleName =
   Types.ModuleName' <$> prefixSymbol
 
-moduleOpenExpr ∷ Parser Types.ModuleName
-moduleOpenExpr = moduleNameSN <* string "in"
+moduleOpenExpr ∷ Parser Types.ModuleOpen
+moduleOpenExpr = moduleOpen <* string "in"
 
 --------------------------------------------------------------------------------
 -- Types
@@ -341,6 +376,13 @@ universeExpression =
 -- Expressions
 --------------------------------------------------------------------------------
 
+block ∷ Parser Types.Block
+block = do
+  _ ← spaceLiner (string "begin")
+  exp ← expressionSN
+  _ ← string "end"
+  pure (Types.Bloc exp)
+
 --------------------------------------------------
 -- Let
 --------------------------------------------------
@@ -406,7 +448,8 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 
 reservedWords ∷ (Ord a, IsString a) ⇒ Set a
 reservedWords =
-  Set.fromList ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of"]
+  Set.fromList
+    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin"]
 
 maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
@@ -454,6 +497,9 @@ expressionSN = spaceLiner expression
 
 expressionS ∷ Parser Types.Expression
 expressionS = spacer expression
+
+signatureConstraintSN ∷ Parser [Types.TypeName]
+signatureConstraintSN = spaceLiner signatureConstraint
 
 argSN ∷ Parser Types.Arg
 argSN = spaceLiner arg

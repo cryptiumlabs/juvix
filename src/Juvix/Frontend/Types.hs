@@ -15,12 +15,11 @@ import Juvix.Library hiding (Product, Sum, Type)
 data TopLevel
   = Type Type
   | ModuleOpen ModuleOpen
+  | Signature Signature
+  | Module Module
+  | Function Function
   | TypeClass
   | TypeClassInstance
-  | ModuleSignature
-  | Module Module
-  | Signature
-  | Function Function
   deriving (Show)
 
 --------------------------------------------------------------------------------
@@ -230,7 +229,7 @@ data CondLogic a
 -- Signatures
 --------------------------------------------------------------------------------
 
-data Signautre
+data Signature
   = Sig
       { signatureName ∷ NameSymb,
         signatureUsage ∷ Maybe Usage,
@@ -305,6 +304,7 @@ data Do
 -- Symbol Binding
 --------------------------------------------------
 
+-- TODO ∷ fix let
 data Let
   = Let'
       { letBindings ∷ NonEmpty Binding,
@@ -399,6 +399,8 @@ makeLensesWith camelCaseFields ''Function
 makeLensesWith camelCaseFields ''Lambda
 
 makeLensesWith camelCaseFields ''Application
+
+makeLensesWith camelCaseFields ''Signature
 
 makeLensesWith camelCaseFields ''Block
 
