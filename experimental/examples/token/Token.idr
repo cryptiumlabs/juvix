@@ -43,7 +43,8 @@ getAccountBalance address accounts = case lookup address accounts of
                       Nothing => 0
                       (Just account) => balance account
 
-total getAccountAllowance : (address : Address) -> SortedMap Address Account -> SortedMap Address Nat
+total getAccountAllowance :
+(address : Address) -> SortedMap Address Account -> SortedMap Address Nat
 getAccountAllowance address accounts = case lookup address accounts of
                       Nothing => empty
                       (Just account) => allowance account
@@ -53,14 +54,17 @@ getAccountAllowance address accounts = case lookup address accounts of
 ||| @dest the address the tokens to be transferred to
 ||| @tokens the amount of tokens to be transferred
 ||| @storage the current storage
-total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
+total performTransfer :
+(from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage)
+-> Either Error Storage
 performTransfer from dest tokens storage =
   let fromBalance = getAccountBalance from (accounts storage)
       destBalance = getAccountBalance dest (accounts storage) in
         case lte tokens fromBalance of
              False => Left NotEnoughBalance
              True =>
-               let accountsStored = insert from (MkAccount (minus fromBalance tokens) (getAccountAllowance from (accounts storage))) (accounts storage) in
+               let accountsStored =
+                 insert from (MkAccount (minus fromBalance tokens) (getAccountAllowance from (accounts storage))) (accounts storage) in
                  Right
                    (record
                      {accounts =
@@ -73,7 +77,9 @@ performTransfer from dest tokens storage =
 ||| @allowee the address of the allowance from the allower that is to be updated
 ||| @tokens the amount of allowance approved by the allower to transfer to the allowee
 ||| @storage the current storage
-total updateAllowance : (allower : Address) -> (allowee : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
+total updateAllowance :
+(allower : Address) -> (allowee : Address) -> (tokens : Nat)
+-> (storage : Storage) -> Storage
 updateAllowance allower allowee tokens storage =
   case tokens of
     Z => record
@@ -101,9 +107,10 @@ updateAllowance allower allowee tokens storage =
 ||| @spender the address the caller approve the tokens to transfer to
 ||| @tokens the amount of tokens approved to be transferred
 ||| @storage the current storage
-total approve : (spender : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
+total approve :
+(spender : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
 approve spender tokens storage =
-  let caller = owner storage in -- caller is the caller of the contract, it is set to be the owner for now.
+  let caller = owner storage in -- caller of the contract is set to be the owner for now.
     updateAllowance caller spender tokens storage
 
 ||| transferFrom can be called by anyone, transferring amount no larger than the approved amount
@@ -111,21 +118,25 @@ approve spender tokens storage =
 ||| @dest the address the tokens to transfer to
 ||| @tokens the amount to be transferred
 ||| @storage the current storage
-total transferFrom : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
+total transferFrom :
+(from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage)
+-> Either Error Storage
 transferFrom from dest tokens storage =
   case lookup dest (getAccountAllowance from (accounts storage)) of
     Nothing => Left NotAllowedToSpendFrom
     (Just allowed) =>
       case lte tokens allowed of
         False => Left NotEnoughAllowance
-        True => let updatedStorage = updateAllowance from dest (minus allowed tokens) storage in
+        True =>
+          let updatedStorage = updateAllowance from dest (minus allowed tokens) storage in
                     performTransfer from dest tokens updatedStorage
 
 ||| createAccount transfers tokens from the owner to an address
 ||| @dest the address of the account to be created
 ||| @tokens the amount of tokens in the new created account
 ||| @storage the current storage
-total createAccount : (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
+total createAccount :
+(dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 createAccount dest tokens storage =
   let owner = owner storage in
       case owner == owner of --when caller can be detected, check caller == owner.
