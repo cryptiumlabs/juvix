@@ -27,6 +27,9 @@ space = 32
 colon ∷ Word8
 colon = 58
 
+semi ∷ Word8
+semi = 59
+
 comma ∷ Word8
 comma = 44
 
@@ -54,6 +57,9 @@ equals = 61
 at ∷ Word8
 at = 64
 
+dot ∷ Word8
+dot = 46
+
 validMiddleSymbol ∷ Word8 → Bool
 validMiddleSymbol w =
   w == dash || Unicode.isAlphaNum (wordToChr w) || w == under
@@ -61,3 +67,6 @@ validMiddleSymbol w =
 -- check for \r or \n
 endOfLine ∷ (Eq a, Num a) ⇒ a → Bool
 endOfLine w = w == 13 || w == 10
+
+digit ∷ (Ord a, Num a) ⇒ a → Bool
+digit w = w <= 57 && w >= 48

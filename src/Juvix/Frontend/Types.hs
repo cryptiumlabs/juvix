@@ -265,8 +265,6 @@ data Expression
 data Numb
   = Integer' Integer
   | Double' Double
-  | ExponentD Double Integer
-  | Exponent Integer Integer
   deriving (Show)
 
 newtype String'
@@ -293,10 +291,13 @@ data Application
   deriving (Show)
 
 data Do
-  = Do'
-      { doName ∷ Maybe NameSymb,
-        doExpr ∷ Expression,
-        doBody ∷ Expression
+  = Do' (NonEmpty DoBody)
+  deriving (Show)
+
+data DoBody
+  = DoBody
+      { doBodyName ∷ Maybe NameSymb,
+        doBodyExpr ∷ Expression
       }
   deriving (Show)
 

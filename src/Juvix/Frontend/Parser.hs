@@ -18,7 +18,7 @@ import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try)
-import Prelude (fail)
+import Prelude (fail, read)
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -39,9 +39,9 @@ expression =
     <|> Types.Match <$> match
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
+    <|> Types.Do <$> do'
     -- <|> Types.Lambda      <$> lam
     -- <|> Types.Number      <$> num
-    -- <|> Types.Do          <$> try do'
     -- <|> Types.Application <$> try application
     -- <|> Types.String      <$> string'
     <|> Types.Name <$> prefixSymbol
@@ -422,6 +422,37 @@ condLogic p = do
   body ← p
   pure (Types.CondExpression pred body)
 
+--------------------------------------------------
+-- Numbers
+--------------------------------------------------
+
+number = undefined
+
+-- integer ∷ Parser Integer
+-- integer = ByteString.read <$> takeWhile Lexer.digit
+
+-- float ∷ Parser Float
+-- float = do
+--   s1 ← takeWhile Lexer.digit
+--   skip (== Lexer.dot)
+--   s2 ← takeWhile Lexer.digit
+--   pure (read (s1 <> "." <> s2))
+
+--------------------------------------------------
+-- Do
+--------------------------------------------------
+
+do' ∷ Parser Types.Do
+do' =
+  Types.Do' <$> sepBy1H doBody (skipLiner Lexer.semi)
+
+-- Maybe allow for usages in this reverse arrow?
+doBody ∷ Parser Types.DoBody
+doBody = do
+  name ← maybe (prefixSymbolSN <* spaceLiner (string "<-"))
+  body ← expression
+  pure (Types.DoBody name body)
+
 --------------------------------------------------------------------------------
 -- Symbol Handlers
 --------------------------------------------------------------------------------
@@ -539,6 +570,9 @@ typeSumParserSN = spaceLiner typeSumParser
 
 typeSumParserS ∷ Parser Types.TypeSum
 typeSumParserS = spacer typeSumParser
+
+doBodySN ∷ Parser Types.DoBody
+doBodySN = spaceLiner doBody
 
 recordSN ∷ Parser Types.Record
 recordSN = spaceLiner record
