@@ -49,6 +49,12 @@ getAccountAllowance address accounts = case lookup address accounts of
                       Nothing => empty
                       (Just account) => allowance account
 
+total modifyBalance :
+(address : Address) -> (tokens : Nat) -> SortedMap Address Account ->
+SortedMap Address Account
+modifyBalance address tokens accounts =
+  insert address (MkAccount tokens (getAccountAllowance address accounts)) accounts
+
 ||| performTransfer transfers tokens from the from address to the dest address.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
@@ -64,11 +70,11 @@ performTransfer from dest tokens storage =
              False => Left NotEnoughBalance
              True =>
                let accountsStored =
-                 insert from (MkAccount (minus fromBalance tokens) (getAccountAllowance from (accounts storage))) (accounts storage) in
+                 modifyBalance from (minus fromBalance tokens) (accounts storage) in
                  Right
                    (record
                      {accounts =
-                       insert dest (MkAccount (destBalance + tokens) (getAccountAllowance dest (accounts storage))) accountsStored
+                       modifyBalance dest (destBalance + tokens) accountsStored
                      } storage)
 
 -- Note: Nested record field update syntax(which is safer) doesn't seem to work
