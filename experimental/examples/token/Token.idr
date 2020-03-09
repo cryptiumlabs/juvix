@@ -121,7 +121,8 @@ approve spender tokens storage =
   let caller = owner storage in -- caller of the contract is set to be the owner for now.
     updateAllowance caller spender tokens storage
 
-||| transferFrom can be called by anyone, transferring amount no larger than the approved amount
+||| transferFrom can be called by anyone,
+||| transferring amount no larger than the approved amount
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to transfer to
 ||| @tokens the amount to be transferred
