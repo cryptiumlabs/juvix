@@ -87,14 +87,16 @@ total updateAllowance :
 (allower : Address) -> (allowee : Address) -> (tokens : Nat)
 -> (storage : Storage) -> Storage
 updateAllowance allower allowee tokens storage =
+  let allowerBal = getAccountBalance allower (accounts storage)
+      allowerMap = getAccountAllowance allower (accounts storage) in
   case tokens of
     Z => record
            {accounts =
               insert -- update allower's allowance map
               allower -- k
               (MkAccount -- v
-                (getAccountBalance allower (accounts storage)) -- balance of allower is unchanged
-                (delete allowee (getAccountAllowance allower (accounts storage))) -- delete allowee from allower's allowance map
+                allowerBal -- balance of allower is unchanged
+                (delete allowee allowerMap) -- delete allowee from allowance map
               )
               (accounts storage) -- update the accounts map
            } storage
@@ -103,8 +105,8 @@ updateAllowance allower allowee tokens storage =
               insert
               allower -- k
               (MkAccount -- v
-                (getAccountBalance allower (accounts storage)) -- balance
-                (insert allowee n (getAccountAllowance allower (accounts storage))) -- allowance map
+                allowerBal
+                (insert allowee n allowerMap)
               )
               (accounts storage) -- accounts map
            } storage
