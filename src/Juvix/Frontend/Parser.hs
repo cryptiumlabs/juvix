@@ -17,6 +17,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
+import qualified Data.Attoparsec.Expr as Expr
 import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try)
 import Prelude (fail)
 
@@ -32,19 +33,23 @@ topLevel =
     <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
-expression ∷ Parser Types.Expression
-expression =
+expression' ∷ Parser Types.Expression
+expression' =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
     <|> Types.Match <$> match
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
-    <|> Types.Do <$> do'
     <|> Types.Lambda <$> lam
-    -- <|> Types.Application <$> try application
-    -- <|> Types.String      <$> string'
-    -- <|> Types.Number      <$> num
+    <|> Types.Application <$> try application
+    -- <|> Types.Do     <$> do'
+    -- <|> Types.String <$> string'
+    -- <|> Types.Number <$> num
     <|> Types.Name <$> prefixSymbol
+
+expression ∷ Parser Types.Expression
+expression =
+  Types.Do <$> do' <|> expression'
 
 usage ∷ Parser Types.Expression
 usage = string "u#" *> expression
@@ -215,7 +220,7 @@ newTypeParser = do
         case p of
           Just p →
             if
-              | p == Lexer.dash || p == Lexer.dash || p == Lexer.colon →
+              | p == Lexer.dash || p == Lexer.colon →
                 fail "overlapping"
               | otherwise → pure ()
           Nothing → pure ()
@@ -417,7 +422,7 @@ condB p = Types.C <$> many1H (condLogicSN p)
 condLogic ∷ Parser a → Parser (Types.CondLogic a)
 condLogic p = do
   skipLiner Lexer.pipe
-  pred ← expression
+  pred ← expressionSN
   skipLiner Lexer.equals
   body ← p
   pure (Types.CondExpression pred body)
@@ -433,6 +438,16 @@ lam = do
   _ ← spaceLiner (string "->")
   body ← expression
   pure (Types.Lamb args body)
+
+--------------------------------------------------
+-- Application
+--------------------------------------------------
+
+application ∷ Parser Types.Application
+application = do
+  name ← prefixSymbolSN
+  args ← many1H expressionSN
+  pure (Types.App name args)
 
 --------------------------------------------------
 -- Numbers
@@ -456,14 +471,20 @@ number = undefined
 
 do' ∷ Parser Types.Do
 do' =
-  Types.Do' <$> sepBy1H doBody (skipLiner Lexer.semi)
+  Types.Do' . NonEmpty.fromList <$> do''
 
--- Maybe allow for usages in this reverse arrow?
-doBody ∷ Parser Types.DoBody
-doBody = do
-  name ← maybe (prefixSymbolSN <* spaceLiner (string "<-"))
-  body ← expression
-  pure (Types.DoBody name body)
+doBind ∷ Parser [Types.DoBody]
+doBind = do
+  name ← prefixSymbolSN
+  spaceLiner (string "<-")
+  body ← expression'SN
+  pure [Types.DoBody (Just name) body]
+
+doNotBind = do
+  body ← expression'SN
+  pure [Types.DoBody Nothing body]
+
+do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 
 --------------------------------------------------------------------------------
 -- Symbol Handlers
@@ -529,11 +550,26 @@ maybeParend ∷ Parser a → Parser a
 maybeParend p = p <|> parens p
 
 --------------------------------------------------------------------------------
+-- Expr Parser
+--------------------------------------------------------------------------------
+
+
+
+
+table = [ [binary ";" (<>)]]
+
+
+binary name fun = Expr.Infix (fun <$ spaceLiner (string name)) Expr.AssocLeft
+
+--------------------------------------------------------------------------------
 -- SN Derivatives
 --------------------------------------------------------------------------------
 
 topLevelSN ∷ Parser Types.TopLevel
 topLevelSN = spaceLiner topLevel
+
+expression'SN ∷ Parser Types.Expression
+expression'SN = spaceLiner expression'
 
 expressionSN ∷ Parser Types.Expression
 expressionSN = spaceLiner expression
@@ -582,9 +618,6 @@ typeSumParserSN = spaceLiner typeSumParser
 
 typeSumParserS ∷ Parser Types.TypeSum
 typeSumParserS = spacer typeSumParser
-
-doBodySN ∷ Parser Types.DoBody
-doBodySN = spaceLiner doBody
 
 recordSN ∷ Parser Types.Record
 recordSN = spaceLiner record

@@ -25,6 +25,7 @@ dependencies:
   - lens
   - parsec
   - attoparsec
+  - attoparsec-expr
   - capability >= 0.2.0.0
   - fgl-visualize
   - enummapset

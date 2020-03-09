@@ -133,7 +133,7 @@ data TypeNameValid
   deriving (Show)
 
 -- TODO ∷ finish this type!
-data UniverseExpression
+newtype UniverseExpression
   = UniverseExpression Symbol
   deriving (Show)
 
@@ -290,7 +290,7 @@ data Application
       }
   deriving (Show)
 
-data Do
+newtype Do
   = Do' (NonEmpty DoBody)
   deriving (Show)
 
