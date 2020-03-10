@@ -28,6 +28,8 @@ initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
 
+||| storage is the current storage
+||| (for the totalSupply, balanceOf and allowance functions).
 storage : Storage
 storage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
@@ -50,6 +52,48 @@ getAccountAllowance address accounts = case lookup address accounts of
                       Nothing => empty
                       (Just account) => allowances account
 
+total modifyBalance :
+(address : Address) -> (tokens : Nat) -> SortedMap Address Account ->
+SortedMap Address Account
+modifyBalance address tokens accounts =
+  insert address (MkAccount tokens (getAccountAllowance address accounts)) accounts
+
+-- Note: Nested record field update syntax(which is safer) doesn't seem to work
+||| updateAllowance updates the allowance map of the allower
+||| @allower the address of the owner of the allowance map that is to be updated
+||| @allowee the address of the allowance from the allower that is to be updated
+||| @tokens the amount of allowance approved by the allower to transfer to the allowee
+||| @storage the current storage
+total updateAllowance :
+(allower : Address) -> (allowee : Address) -> (tokens : Nat)
+-> (storage : Storage) -> Storage
+updateAllowance allower allowee tokens storage =
+  let allowerBal = getAccountBalance allower (accounts storage)
+      allowerMap = getAccountAllowance allower (accounts storage) in
+    case tokens of
+      Z => record
+             {accounts =
+                insert -- update allower's allowance map
+                allower -- k
+                (MkAccount -- v
+                  allowerBal -- balance of allower is unchanged
+                  (delete allowee allowerMap) -- delete allowee from allowance map
+                )
+                (accounts storage) -- update the accounts map
+             } storage
+      n => record
+             {accounts =
+                insert
+                allower -- k
+                (MkAccount -- v
+                  allowerBal
+                  (insert allowee n allowerMap)
+                )
+                (accounts storage) -- accounts map
+             } storage
+
+-- contract entry points/functions as per the ERC20 standard:
+
 total totalSupply : Nat
 totalSupply = totalSup storage
 
@@ -61,12 +105,6 @@ allowance owner spender =
   case lookup spender (getAccountAllowance owner (accounts storage)) of
     Nothing => Z
     (Just n) => n
-
-total modifyBalance :
-(address : Address) -> (tokens : Nat) -> SortedMap Address Account ->
-SortedMap Address Account
-modifyBalance address tokens accounts =
-  insert address (MkAccount tokens (getAccountAllowance address accounts)) accounts
 
 ||| performTransfer transfers tokens from the from address to the dest address.
 ||| @from the address the tokens to be transferred from
@@ -89,40 +127,6 @@ performTransfer from dest tokens storage =
                      {accounts =
                        modifyBalance dest (destBalance + tokens) accountsStored
                      } storage)
-
--- Note: Nested record field update syntax(which is safer) doesn't seem to work
-||| updateAllowance updates the allowance map of the allower
-||| @allower the address of the owner of the allowance map that is to be updated
-||| @allowee the address of the allowance from the allower that is to be updated
-||| @tokens the amount of allowance approved by the allower to transfer to the allowee
-||| @storage the current storage
-total updateAllowance :
-(allower : Address) -> (allowee : Address) -> (tokens : Nat)
--> (storage : Storage) -> Storage
-updateAllowance allower allowee tokens storage =
-  let allowerBal = getAccountBalance allower (accounts storage)
-      allowerMap = getAccountAllowance allower (accounts storage) in
-  case tokens of
-    Z => record
-           {accounts =
-              insert -- update allower's allowance map
-              allower -- k
-              (MkAccount -- v
-                allowerBal -- balance of allower is unchanged
-                (delete allowee allowerMap) -- delete allowee from allowance map
-              )
-              (accounts storage) -- update the accounts map
-           } storage
-    n => record
-           {accounts =
-              insert
-              allower -- k
-              (MkAccount -- v
-                allowerBal
-                (insert allowee n allowerMap)
-              )
-              (accounts storage) -- accounts map
-           } storage
 
 ||| approve update the allowance map of the caller of the contract
 ||| @spender the address the caller approve the tokens to transfer to
