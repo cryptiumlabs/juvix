@@ -233,8 +233,7 @@ newTypeParser = do
   let nonOverlappingCase = do
         p ← peekWord8
         case p of
-          Just p →
-            if
+          Just p
               | p == Lexer.dash || p == Lexer.colon →
                 fail "overlapping"
               | otherwise → pure ()
