@@ -172,7 +172,7 @@ createAccount dest tokens storage =
 total burn : (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 burn tokens storage =
   let burnerBal = getAccountBalance currentCaller (accounts storage)
-      updatedStorage = record {totalSup = minus tokens (totalSup storage)} storage in
+      updatedStorage = record {totalSup = minus (totalSup storage) tokens} storage in
       case lte tokens burnerBal of
         False => Left NotEnoughBalance
         True =>
@@ -181,7 +181,7 @@ burn tokens storage =
               {accounts =
                 modifyBalance
                   currentCaller
-                  (minus tokens burnerBal)
+                  (minus burnerBal tokens)
                   (accounts storage)
               } updatedStorage
             )
