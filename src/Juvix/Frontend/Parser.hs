@@ -10,6 +10,8 @@
 module Juvix.Frontend.Parser where
 
 import Data.Attoparsec.ByteString hiding (match)
+import qualified Data.ByteString.Char8 as Char8
+import qualified Data.Attoparsec.Expr as Expr
 import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
@@ -17,8 +19,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import qualified Data.Attoparsec.Expr as Expr
-import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try)
+import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try, take)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -33,8 +34,8 @@ topLevel =
     <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
-expression' ∷ Parser Types.Expression
-expression' =
+expressionGen ∷ Parser Types.Expression → Parser Types.Expression
+expressionGen p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
     <|> Types.Match <$> match
@@ -42,14 +43,18 @@ expression' =
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
     <|> Types.Application <$> try application
-    -- <|> Types.Do     <$> do'
+    <|> p
     -- <|> Types.String <$> string'
-    -- <|> Types.Number <$> num
+    -- unfinished
+    <|> Types.Number <$> number
     <|> Types.Name <$> prefixSymbol
+    <|> parens (expressionGen p)
+
+expression' ∷ Parser Types.Expression
+expression' = expressionGen (fail "")
 
 expression ∷ Parser Types.Expression
-expression =
-  Types.Do <$> do' <|> expression'
+expression = expressionGen (Types.Do <$> do')
 
 usage ∷ Parser Types.Expression
 usage = string "u#" *> expression
@@ -61,7 +66,7 @@ usage = string "u#" *> expression
 functionModGen ∷ Parser a → Parser (Types.FunctionLike a)
 functionModGen p = do
   -- for now
-  _ ← string "let"
+  _ ← spaceLiner (string "let")
   name ← prefixSymbolSN
   args ← many argSN
   guard ← guard p
@@ -110,9 +115,9 @@ signatureConstraint =
 
 match ∷ Parser Types.Match
 match = do
-  string "case"
-  matchOn ← expression
-  string "of"
+  _ ← spaceLiner (string "case")
+  matchOn ← expressionSN
+  _ ← spaceLiner (string "of")
   matchs ← many1H matchLSN
   pure (Types.Match' matchOn matchs)
 
@@ -191,8 +196,13 @@ moduleName ∷ Parser Types.ModuleName
 moduleName =
   Types.ModuleName' <$> prefixSymbol
 
-moduleOpenExpr ∷ Parser Types.ModuleOpen
-moduleOpenExpr = moduleOpen <* string "in"
+moduleOpenExpr ∷ Parser Types.ModuleOpenExpr
+moduleOpenExpr = do
+  _ ← spaceLiner (string "open")
+  name ← moduleNameSN
+  _ ← spaceLiner (string "in")
+  expr ← expression
+  pure (Types.OpenExpress name expr)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -453,10 +463,15 @@ application = do
 -- Numbers
 --------------------------------------------------
 
-number = undefined
+number ∷ Parser Types.Numb
+number = Types.Integer' <$> integer
 
--- integer ∷ Parser Integer
--- integer = ByteString.read <$> takeWhile Lexer.digit
+integer ∷ Parser Integer
+integer = do
+  digits ← takeWhile Lexer.digit
+  case Char8.readInteger digits of
+    Just (x,_) → pure x
+    Nothing → fail "didn't parse an int"
 
 -- float ∷ Parser Float
 -- float = do
@@ -470,8 +485,12 @@ number = undefined
 --------------------------------------------------
 
 do' ∷ Parser Types.Do
-do' =
-  Types.Do' . NonEmpty.fromList <$> do''
+do' = do
+  doExp ← do''
+  case length doExp of
+    1 → fail "do expression with only 1 value"
+    0 → fail "parser faled with empty list"
+    _ → pure (Types.Do' $ NonEmpty.fromList doExp)
 
 doBind ∷ Parser [Types.DoBody]
 doBind = do
@@ -480,10 +499,12 @@ doBind = do
   body ← expression'SN
   pure [Types.DoBody (Just name) body]
 
+doNotBind ∷ Parser [Types.DoBody]
 doNotBind = do
   body ← expression'SN
   pure [Types.DoBody Nothing body]
 
+do'' ∷ Parser [Types.DoBody]
 do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 
 --------------------------------------------------------------------------------
@@ -553,12 +574,10 @@ maybeParend p = p <|> parens p
 -- Expr Parser
 --------------------------------------------------------------------------------
 
+table ∷ Semigroup a ⇒ [[Expr.Operator ByteString a]]
+table = [[binary ";" (<>)]]
 
-
-
-table = [ [binary ";" (<>)]]
-
-
+binary ∷ ByteString → (a → a → a) → Expr.Operator ByteString a
 binary name fun = Expr.Infix (fun <$ spaceLiner (string name)) Expr.AssocLeft
 
 --------------------------------------------------------------------------------

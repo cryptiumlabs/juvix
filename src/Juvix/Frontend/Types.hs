@@ -206,6 +206,13 @@ newtype ModuleOpen
   = Open ModuleName
   deriving (Show)
 
+data ModuleOpenExpr
+  = OpenExpress
+    { moduleOpenExprModuleN ∷ ModuleName,
+      moduleOpenExprExpr ∷ Expression
+    }
+    deriving (Show)
+
 -- Very similar to name, but match instead of symbol
 data Arg
   = ImplicitA MatchLogic
@@ -255,7 +262,7 @@ data Expression
   | Let Let
   | Match Match
   | Name NameSymb
-  | OpenExpr ModuleOpen
+  | OpenExpr ModuleOpenExpr
   | Lambda Lambda
   | Application Application
   | Block Block
@@ -406,5 +413,7 @@ makeLensesWith camelCaseFields ''Signature
 makeLensesWith camelCaseFields ''Block
 
 makeLensesWith camelCaseFields ''Do
+
+makeLensesWith camelCaseFields ''ModuleOpenExpr
 
 makePrisms ''TypeSum
