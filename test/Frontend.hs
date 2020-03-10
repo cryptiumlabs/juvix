@@ -12,21 +12,20 @@ import Juvix.Library
 many1FunctionsParser =
   parseOnly
     (many Parser.topLevelSN)
-    ( "let foo a b c = plus (plus a b) c\n"
-      <> "let bah = foo 1 2 3\n"
-      <> "let nah \n"
-      <> "  | equals bah 5 = 7 \n"
-      <> "  | else         = 11"
-      <> "let test = \n"
-      <> "  let check = nah in \n"
-      <> "  case check of \n"
-      <> "  | seven -> 11 \n"
-      <> "  | eleven -> 7 \n"
-      <> "  | f  -> open Fails in \n"
-      <> "          print failed; \n"
-      <> "          fail"
+    ( "let foo a b c = (+) (a + b) c\n"
+        <> "let bah = foo 1 2 3\n"
+        <> "let nah \n"
+        <> "  | equals bah 5 = 7 \n"
+        <> "  | else         = 11"
+        <> "let test = \n"
+        <> "  let check = nah in \n"
+        <> "  case check of \n"
+        <> "  | seven -> 11 \n"
+        <> "  | eleven -> 7 \n"
+        <> "  | f  -> open Fails in \n"
+        <> "          print failed; \n"
+        <> "          fail"
     )
-
 
 --------------------------------------------------------------------------------
 -- Type tests

@@ -8,8 +8,8 @@ wordToChr ∷ Integral a ⇒ a → Char
 wordToChr = Char.chr . fromIntegral
 
 -- Hopefully this is fast!
-validStartSymbol ∷ Integral a ⇒ a → Bool
-validStartSymbol = Unicode.isAlpha . wordToChr
+validStartSymbol' ∷ Integral a ⇒ a → Bool
+validStartSymbol' = Unicode.isAlpha . wordToChr
 
 -- Unicode.isUpper 'İ' = True!
 validUpperSymbol ∷ Integral a ⇒ a → Bool
@@ -63,9 +63,20 @@ at = 64
 dot ∷ Word8
 dot = 46
 
+backtick ∷ Word8
+backtick = 96
+
+validStartSymbol ∷ Word8 → Bool
+validStartSymbol w =
+  validStartSymbol' w || w == under
+
+validInfixSymbol ∷ Word8 → Bool
+validInfixSymbol w =
+  Unicode.isSymbol (wordToChr w)
+
 validMiddleSymbol ∷ Word8 → Bool
 validMiddleSymbol w =
-  w == dash || Unicode.isAlphaNum (wordToChr w) || w == under
+  w == dash || validStartSymbol w
 
 -- check for \r or \n
 endOfLine ∷ (Eq a, Num a) ⇒ a → Bool

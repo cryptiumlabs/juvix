@@ -10,16 +10,16 @@
 module Juvix.Frontend.Parser where
 
 import Data.Attoparsec.ByteString hiding (match)
-import qualified Data.ByteString.Char8 as Char8
 import qualified Data.Attoparsec.Expr as Expr
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library hiding (guard, maybe, option, product, sum, takeWhile, try, take)
+import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -34,8 +34,8 @@ topLevel =
     <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
-expressionGen ∷ Parser Types.Expression → Parser Types.Expression
-expressionGen p =
+expressionGen' ∷ Parser Types.Expression → Parser Types.Expression
+expressionGen' p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
     <|> Types.Match <$> match
@@ -49,6 +49,10 @@ expressionGen p =
     <|> Types.Number <$> number
     <|> Types.Name <$> prefixSymbol
     <|> parens (expressionGen p)
+
+expressionGen ∷ Parser Types.Expression → Parser Types.Expression
+expressionGen p =
+  Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
 
 expression' ∷ Parser Types.Expression
 expression' = expressionGen (fail "")
@@ -470,7 +474,7 @@ integer ∷ Parser Integer
 integer = do
   digits ← takeWhile Lexer.digit
   case Char8.readInteger digits of
-    Just (x,_) → pure x
+    Just (x, _) → pure x
     Nothing → fail "didn't parse an int"
 
 -- float ∷ Parser Float
@@ -511,6 +515,23 @@ do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 -- Symbol Handlers
 --------------------------------------------------------------------------------
 
+infixSymbolGen ∷ Parser Symbol → Parser Symbol
+infixSymbolGen p = do
+  symb ← p
+  if
+    | Set.member symb reservedSymbols → fail "symbol is reserved word"
+    | otherwise → pure symb
+
+infixSymbol ∷ Parser Symbol
+infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
+
+infixSymbol' ∷ Parser Symbol
+infixSymbol' = internText . Encoding.decodeUtf8 <$> takeWhile Lexer.validInfixSymbol
+
+infixPrefix ∷ Parser Symbol
+infixPrefix = do
+  word8 Lexer.backtick *> prefixSymbol <* word8 Lexer.backtick
+
 prefixSymbolGen ∷ Parser Word8 → Parser Symbol
 prefixSymbolGen startParser = do
   start ← startParser
@@ -518,11 +539,13 @@ prefixSymbolGen startParser = do
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
   if
-    | Set.member new reservedWords → fail "symbol is reserved word"
+    | Set.member new reservedWords → fail "symbol is reserved operator"
     | otherwise → pure (internText (Encoding.decodeUtf8 new))
 
 prefixSymbol ∷ Parser Symbol
-prefixSymbol = prefixSymbolGen (satisfy Lexer.validStartSymbol)
+prefixSymbol =
+  prefixSymbolGen (satisfy Lexer.validStartSymbol)
+  <|> word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
 
 prefixCapital ∷ Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
@@ -535,6 +558,11 @@ reservedWords ∷ (Ord a, IsString a) ⇒ Set a
 reservedWords =
   Set.fromList
     ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin"]
+
+reservedSymbols ∷ (Ord a, IsString a) ⇒ Set a
+reservedSymbols =
+  Set.fromList
+    ["=", "|", ""]
 
 maybe ∷ Alternative f ⇒ f a → f (Maybe a)
 maybe = optional
@@ -574,6 +602,21 @@ maybeParend p = p <|> parens p
 -- Expr Parser
 --------------------------------------------------------------------------------
 
+-- For Expressions
+tableExp ∷ [[Expr.Operator ByteString Types.Expression]]
+tableExp = [[infixOp]]
+
+infixOp ∷ Expr.Operator ByteString Types.Expression
+infixOp =
+  Expr.Infix
+    ( do
+        inf ← spaceLiner infixSymbol
+        pure
+          (\l r → Types.Infix (Types.Inf l inf r))
+    )
+    Expr.AssocLeft
+
+-- For Do!
 table ∷ Semigroup a ⇒ [[Expr.Operator ByteString a]]
 table = [[binary ";" (<>)]]
 

@@ -208,10 +208,10 @@ newtype ModuleOpen
 
 data ModuleOpenExpr
   = OpenExpress
-    { moduleOpenExprModuleN ∷ ModuleName,
-      moduleOpenExprExpr ∷ Expression
-    }
-    deriving (Show)
+      { moduleOpenExprModuleN ∷ ModuleName,
+        moduleOpenExprExpr ∷ Expression
+      }
+  deriving (Show)
 
 -- Very similar to name, but match instead of symbol
 data Arg
@@ -266,6 +266,7 @@ data Expression
   | Lambda Lambda
   | Application Application
   | Block Block
+  | Infix Infix
   | Do Do
   deriving (Show)
 
@@ -324,6 +325,18 @@ data Binding
   = Bind
       { bindingPattern ∷ MatchLogic,
         bindingBody ∷ Expression
+      }
+  deriving (Show)
+
+--------------------------------------------------
+-- Symbol Binding
+--------------------------------------------------
+
+data Infix
+  = Inf
+      { infixLeft ∷ Expression,
+        infixOp ∷ NameSymb,
+        infixRight ∷ Expression
       }
   deriving (Show)
 
@@ -415,5 +428,7 @@ makeLensesWith camelCaseFields ''Block
 makeLensesWith camelCaseFields ''Do
 
 makeLensesWith camelCaseFields ''ModuleOpenExpr
+
+makeLensesWith camelCaseFields ''Infix
 
 makePrisms ''TypeSum
