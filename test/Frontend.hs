@@ -15,8 +15,8 @@ many1FunctionsParser =
     ( "let foo a b c = (+) (a + b) c\n"
         <> "let bah = foo 1 2 3\n"
         <> "let nah \n"
-        <> "  | equals bah 5 = 7 \n"
-        <> "  | else         = 11"
+        <> "  | bah == 5 = 7 \n"
+        <> "  | else     = 11"
         <> "let test = \n"
         <> "  let check = nah in \n"
         <> "  case check of \n"
@@ -26,6 +26,13 @@ many1FunctionsParser =
         <> "          print failed; \n"
         <> "          fail"
     )
+
+--------------------------------------------------------------------------------
+-- Sig Test
+--------------------------------------------------------------------------------
+
+sigTest1 = parseOnly Parser.topLevel "sig foo 0 : Int -> Int"
+
 
 --------------------------------------------------------------------------------
 -- Type tests

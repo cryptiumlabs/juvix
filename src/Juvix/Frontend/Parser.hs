@@ -112,6 +112,7 @@ signatureConstraint ∷ Parser [Types.TypeName]
 signatureConstraint =
   pure <$> typeNameParserSN <* string "=>"
     <|> parens (sepBy typeNameParserSN (skipLiner Lexer.comma)) <* string "=>"
+    <|> pure []
 
 --------------------------------------------------------------------------------
 -- Match
