@@ -1,6 +1,6 @@
 module FakeLib
 -- this lib provides some fake standard smart contract functions.
-%access public export
+%access public export --has to do public export otherwise missing Address instances 
 
 ||| Address is the key hash of the owner of the associated account.
 Address : Type
