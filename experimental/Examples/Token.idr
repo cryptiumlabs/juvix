@@ -1,9 +1,6 @@
 -- Example ERC20 token contract in Idris.
 import Data.SortedMap
-
-||| Address is the key hash of the owner of the associated account.
-Address : Type
-Address = String
+import FakeLib
 
 ||| Account contains the balance and allowance of an associated address.
 record Account where
@@ -31,8 +28,8 @@ initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
 
-currStorage : Storage
-currStorage =
+storage : Storage
+storage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
 
 ||| getAccount returns the balance of an associated key hash.
@@ -54,14 +51,14 @@ getAccountAllowance address accounts = case lookup address accounts of
                       (Just account) => allowances account
 
 total totalSupply : Nat
-totalSupply = totalSup currStorage
+totalSupply = totalSup storage
 
 total balanceOf : Address -> Nat
-balanceOf owner = getAccountBalance owner (accounts currStorage)
+balanceOf owner = getAccountBalance owner (accounts storage)
 
 total allowance : (owner : Address) -> (spender : Address) -> Nat
 allowance owner spender =
-  case lookup spender (getAccountAllowance owner (accounts currStorage)) of
+  case lookup spender (getAccountAllowance owner (accounts storage)) of
     Nothing => Z
     (Just n) => n
 
@@ -134,8 +131,7 @@ updateAllowance allower allowee tokens storage =
 total approve :
 (spender : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
 approve spender tokens storage =
-  let caller = owner storage in -- caller of the contract is set to be the owner for now.
-    updateAllowance caller spender tokens storage
+    updateAllowance currentCaller spender tokens storage
 
 ||| transferFrom can be called by anyone,
 ||| transferring amount no larger than the approved amount
@@ -164,6 +160,6 @@ total createAccount :
 (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 createAccount dest tokens storage =
   let owner = owner storage in
-      case owner == owner of --when caller can be detected, check caller == owner.
+      case currentCaller == owner of
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
