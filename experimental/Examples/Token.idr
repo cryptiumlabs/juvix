@@ -167,3 +167,21 @@ createAccount dest tokens storage =
       case currentCaller == owner of
            False => Left FailedToAuthenticate
            True => performTransfer owner dest tokens storage
+
+-- entry points/functions that are NOT in the ERC20 standard
+total burn : (tokens : Nat) -> (storage : Storage) -> Either Error Storage
+burn tokens storage =
+  let burnerBal = getAccountBalance currentCaller (accounts storage)
+      updatedStorage = record {totalSup = minus tokens (totalSup storage)} storage in
+      case lte tokens burnerBal of
+        False => Left NotEnoughBalance
+        True =>
+          Right
+            (record
+              {accounts =
+                modifyBalance
+                  currentCaller
+                  (minus tokens burnerBal)
+                  (accounts storage)
+              } updatedStorage
+            )
