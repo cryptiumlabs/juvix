@@ -169,6 +169,10 @@ createAccount dest tokens storage =
            True => performTransfer owner dest tokens storage
 
 -- entry points/functions that are NOT in the ERC20 standard
+
+||| burn the caller of this function destroys/burns their own tokens
+||| @tokens the amount of tokens to destory
+||| @storage the original storage
 total burn : (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 burn tokens storage =
   let burnerBal = getAccountBalance currentCaller (accounts storage)
@@ -182,6 +186,29 @@ burn tokens storage =
                 modifyBalance
                   currentCaller
                   (minus burnerBal tokens)
+                  (accounts storage)
+              } updatedStorage
+            )
+
+||| mint when the caller is the owner of the token contract,
+||| they can mint/add new tokens to the total supply
+||| @tokens the amount of tokens to add to the total supply
+||| @dest the address the new tokens to be added to
+||| @storage the original storage
+total mint :
+(tokens : Nat) -> (dest : Address) -> (storage : Storage) -> Either Error Storage
+mint tokens dest storage =
+  let destBal = getAccountBalance dest (accounts storage)
+      updatedStorage = record {totalSup = (totalSup storage) + tokens} storage in
+      case currentCaller == owner storage of
+        False => Left FailedToAuthenticate
+        True =>
+          Right
+            (record
+              {accounts =
+                modifyBalance
+                  dest
+                  (destBal + tokens)
                   (accounts storage)
               } updatedStorage
             )
