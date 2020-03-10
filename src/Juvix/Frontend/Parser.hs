@@ -100,8 +100,8 @@ arg =
 
 signature' ∷ Parser Types.Signature
 signature' = do
-  _ ← string "sig"
-  name ← prefixSymbol
+  _ ← spaceLiner (string "sig")
+  name ← prefixSymbolSN
   maybeUsage ← maybe expressionSN
   skipLiner Lexer.colon
   typeclasses ← signatureConstraintSN
