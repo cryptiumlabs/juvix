@@ -63,6 +63,9 @@ at = 64
 dot ∷ Word8
 dot = 46
 
+times ∷ Word8
+times = 42
+
 backtick ∷ Word8
 backtick = 96
 
@@ -72,7 +75,7 @@ validStartSymbol w =
 
 validInfixSymbol ∷ Word8 → Bool
 validInfixSymbol w =
-  Unicode.isSymbol (wordToChr w)
+  Unicode.isSymbol (wordToChr w) || w == times
 
 validMiddleSymbol ∷ Word8 → Bool
 validMiddleSymbol w =

@@ -123,12 +123,12 @@ data ArrowSymbol
 -- I think we can do
 -- Foo a u#b c ?
 data TypeName
-  = Start !Symbol [TypeNameValid]
+  = Start NameSymb [TypeNameValid]
   deriving (Show)
 
 data TypeNameValid
   = ArrowName ArrowType
-  | SymbolName !Symbol
+  | SymbolName NameSymb
   | UniverseName UniverseExpression
   deriving (Show)
 

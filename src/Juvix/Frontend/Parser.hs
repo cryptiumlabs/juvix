@@ -152,6 +152,7 @@ matchLogicNotNamed = do
 matchLogicStart ∷ Parser Types.MatchLogicStart
 matchLogicStart = matchRecord <|> matchCon <|> matchName <|> matchConstant
 
+matchConstant ∷ Parser Types.MatchLogicStart
 matchConstant = Types.MatchConst <$> constant
 
 matchCon ∷ Parser Types.MatchLogicStart
@@ -373,12 +374,12 @@ typeRefine = do
 
 typeNameParser ∷ Parser Types.TypeName
 typeNameParser = do
-  pre ← prefixSymbolSN
+  pre ← prefixSymbolDotSN
   body ←
     many
       $ spaceLiner
       $ universeSymbol
-        <|> Types.SymbolName <$> prefixSymbolSN
+        <|> Types.SymbolName <$> prefixSymbolDotSN
         <|> Types.ArrowName <$> parens arrowTypeSN
   pure (Types.Start pre body)
 
@@ -486,15 +487,15 @@ integer = do
 
 float ∷ Parser Double
 float = do
-  s1 ← takeWhile Lexer.digit
+  _s1 ← takeWhile Lexer.digit
   skip (== Lexer.dot)
-  s2 ← takeWhile Lexer.digit
+  _s2 ← takeWhile Lexer.digit
   fail "float not implemented"
 
 --   pure (read (s1 <> "." <> s2))
 
 string' ∷ Parser Types.String'
-string' = do
+string' =
   fail "not implemented"
 
 --------------------------------------------------
@@ -535,8 +536,12 @@ infixSymbolGen p = do
     | Set.member symb reservedSymbols → fail "symbol is reserved word"
     | otherwise → pure symb
 
-infixSymbolDot :: Parser (NonEmpty Symbol)
-infixSymbolDot = undefined
+infixSymbolDot ∷ Parser (NonEmpty Symbol)
+infixSymbolDot = do
+  qualified ← prefixSymbolDot
+  _ ← word8 Lexer.dot
+  infix' ← infixSymbol
+  pure (qualified <> pure infix')
 
 infixSymbol ∷ Parser Symbol
 infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
@@ -558,17 +563,24 @@ prefixSymbolGen startParser = do
     | Set.member new reservedWords → fail "symbol is reserved operator"
     | otherwise → pure (internText (Encoding.decodeUtf8 new))
 
+-- TODO ∷ this may be bad
+-- this allows "(*).Foo.(<*>)" to be accepted
+-- Though Should we allow this since, these are prefix if spelled this way
+-- we don't enforce capitalization, and thus it would be improper for to
+-- special case it out!
 prefixSymbolDot ∷ Parser (NonEmpty Symbol)
 prefixSymbolDot = sepBy1H prefixSymbol (word8 Lexer.dot)
+
+prefixCapitalDot ∷ Parser (NonEmpty Symbol)
+prefixCapitalDot = sepBy1H prefixCapital (word8 Lexer.dot)
 
 prefixSymbol ∷ Parser Symbol
 prefixSymbol =
   prefixSymbolGen (satisfy Lexer.validStartSymbol)
-    <|> word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
+    <|> parend
 
-
-prefixCapitalDot ∷ Parser (NonEmpty Symbol)
-prefixCapitalDot = undefined
+parend ∷ Parser Symbol
+parend = word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
 
 prefixCapital ∷ Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
