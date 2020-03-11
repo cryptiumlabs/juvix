@@ -167,13 +167,12 @@
                | <parens>
                | <application>
                | <symbol>
-               | <prefix>
-               | <infix>
                ; This is useful for having nested do's or matchs
                | <block>
                | <do>
                | <comments>
                | <arrow-type>
+               | <infix>
                ; TODO
                | <record-update>
                | <record-creation>
@@ -193,13 +192,9 @@
   ;; useful for match, and nested do's!
   block ::= begin <expression> end
 
-  infix ::= `<name>`
-
   do ::= <do-body>*
 
   do-body ::= <exprsesion> \; <expression>
-
-  prefix ::= (<infix-symbol>)
 
   tuple ::= ( <command-tuple>* )
 
@@ -214,6 +209,8 @@
                  | {- <comments-rec> -}
 
   multi-comments ::= {- <any-text-not-{-> -}
+
+  infix ::= <expression> <inifx-name> <expression>
 
   ;;; Matching ===================================
 
@@ -312,13 +309,16 @@
                 | <universe-expression>
                 | ( <arrow-type> )
 
-  infix-symbol ::= <utf-infix-symbol>
+  infix-symbol ::= <utf8-infix>
 
   module-name ::= <name> ; enforce capital names?
 
   constructor-name ::= <capital-name-and-symbols>
 
-  utf8-non-reserved ::=
+  utf8-infix        ::= `<utf-non-reserved>`
+                      | <UTF.Symbol>
+  utf8-non-reserved ::= <UTF.Alpha>
+                      | (<utf8-infix>)
   utf8-no-capital   ::=
   utf8-capital      ::=
 #+END_SRC
