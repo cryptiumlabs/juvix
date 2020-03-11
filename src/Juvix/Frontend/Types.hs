@@ -257,8 +257,7 @@ type Usage = Expression
 
 data Expression
   = Cond (Cond Expression)
-  | Number Numb
-  | String String'
+  | Constant Constant
   | Let Let
   | Match Match
   | Name NameSymb
@@ -268,6 +267,11 @@ data Expression
   | Block Block
   | Infix Infix
   | Do Do
+  deriving (Show)
+
+data Constant
+  = Number Numb
+  | String String'
   deriving (Show)
 
 data Numb
@@ -369,6 +373,7 @@ data MatchLogic
 data MatchLogicStart
   = MatchCon ConstructorName [MatchLogic]
   | MatchName NameSymb
+  | MatchConst Constant
   | MatchRecord (NonEmpty NameSet)
   deriving (Show)
 

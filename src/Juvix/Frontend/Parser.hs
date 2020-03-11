@@ -46,7 +46,7 @@ expressionGen' p =
     <|> p
     -- <|> Types.String <$> string'
     -- unfinished
-    <|> Types.Number <$> number
+    <|> Types.Constant <$> constant
     <|> Types.Name <$> prefixSymbol
     <|> parens (expressionGen p)
 
@@ -234,9 +234,9 @@ newTypeParser = do
         p ← peekWord8
         case p of
           Just p
-              | p == Lexer.dash || p == Lexer.colon →
-                fail "overlapping"
-              | otherwise → pure ()
+            | p == Lexer.dash || p == Lexer.colon →
+              fail "overlapping"
+            | otherwise → pure ()
           Nothing → pure ()
   skipLiner Lexer.equals
   skipLiner Lexer.pipe
@@ -464,11 +464,16 @@ application = do
   pure (Types.App name args)
 
 --------------------------------------------------
--- Numbers
+-- Constants
 --------------------------------------------------
 
+constant ∷ Parser Types.Constant
+constant = Types.Number <$> number <|> Types.String <$> string'
+
 number ∷ Parser Types.Numb
-number = Types.Integer' <$> integer
+number =
+  Types.Integer' <$> integer
+    <|> Types.Double' <$> float
 
 integer ∷ Parser Integer
 integer = do
@@ -477,12 +482,18 @@ integer = do
     Just (x, _) → pure x
     Nothing → fail "didn't parse an int"
 
--- float ∷ Parser Float
--- float = do
---   s1 ← takeWhile Lexer.digit
---   skip (== Lexer.dot)
---   s2 ← takeWhile Lexer.digit
+float ∷ Parser Double
+float = do
+  s1 ← takeWhile Lexer.digit
+  skip (== Lexer.dot)
+  s2 ← takeWhile Lexer.digit
+  fail "float not implemented"
+
 --   pure (read (s1 <> "." <> s2))
+
+string' ∷ Parser Types.String'
+string' = do
+  fail "not implemented"
 
 --------------------------------------------------
 -- Do
@@ -545,7 +556,7 @@ prefixSymbolGen startParser = do
 prefixSymbol ∷ Parser Symbol
 prefixSymbol =
   prefixSymbolGen (satisfy Lexer.validStartSymbol)
-  <|> word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
+    <|> word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
 
 prefixCapital ∷ Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
