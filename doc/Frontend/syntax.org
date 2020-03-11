@@ -107,6 +107,7 @@
 
 
   module-open-expression ::= open <module-name> in
+                           | <module-name>.( <expression> )
 
   ;; We are going to make modules a bit more interesting, syntax wise
   ;; imagine modules were functions with capital name to delineate
