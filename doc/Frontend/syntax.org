@@ -229,9 +229,11 @@
 
   match-logic'' ::= <record-match>
                   | <constructor-name> <match-args>+
+                  | <constant>
 
   match-args ::= <name>
                | <match-logic>
+               | <constant>
 
   record-match ::= { <name-set>* }
 
@@ -243,6 +245,9 @@
   if   ::= if   <cond-logic>*
   cond ::= cond <cond-logic>*
 
+  constant ::= <string>
+             | <number>
+             | <char>
 
   ;;; Bindings ===================================
 
