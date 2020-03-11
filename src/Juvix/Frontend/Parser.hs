@@ -205,7 +205,17 @@ moduleName =
   Types.ModuleName' <$> prefixSymbol
 
 moduleOpenExpr ∷ Parser Types.ModuleOpenExpr
-moduleOpenExpr = do
+moduleOpenExpr = moduleOpenExprNormal <|> moduleOpenExprParens
+
+moduleOpenExprParens ∷ Parser Types.ModuleOpenExpr
+moduleOpenExprParens = do
+  name ← moduleName
+  word8 Lexer.dot
+  expr ← parens expression
+  pure (Types.OpenExpress name expr)
+
+moduleOpenExprNormal ∷ Parser Types.ModuleOpenExpr
+moduleOpenExprNormal = do
   _ ← spaceLiner (string "open")
   name ← moduleNameSN
   _ ← spaceLiner (string "in")
@@ -549,7 +559,7 @@ infixSymbol' ∷ Parser Symbol
 infixSymbol' = internText . Encoding.decodeUtf8 <$> takeWhile Lexer.validInfixSymbol
 
 infixPrefix ∷ Parser Symbol
-infixPrefix = do
+infixPrefix =
   word8 Lexer.backtick *> prefixSymbol <* word8 Lexer.backtick
 
 prefixSymbolGen ∷ Parser Word8 → Parser Symbol
