@@ -47,7 +47,7 @@ expressionGen' p =
     -- <|> Types.String <$> string'
     -- unfinished
     <|> Types.Constant <$> constant
-    <|> Types.Name <$> prefixSymbol
+    <|> Types.Name <$> prefixSymbolDot
     <|> parens (expressionGen p)
 
 expressionGen ∷ Parser Types.Expression → Parser Types.Expression
@@ -139,7 +139,7 @@ matchLogic = maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
 
 matchLogicNamed ∷ Parser Types.MatchLogic
 matchLogicNamed = do
-  name ← prefixSymbol
+  name ← prefixSymbolDot
   skipLiner Lexer.at
   start ← maybeParend matchLogicStartSN
   pure (Types.MatchLogic start (Just name))
@@ -156,7 +156,7 @@ matchConstant = Types.MatchConst <$> constant
 
 matchCon ∷ Parser Types.MatchLogicStart
 matchCon = do
-  con ← prefixCapitalSN
+  con ← prefixCapitalDotSN
   matchd ← many matchLogicSN
   pure (Types.MatchCon con matchd)
 
@@ -171,11 +171,11 @@ nameSet ∷ Parser Types.NameSet
 nameSet = nameMatch <|> namePunned
 
 namePunned ∷ Parser Types.NameSet
-namePunned = Types.Punned <$> prefixSymbol
+namePunned = Types.Punned <$> prefixSymbolDot
 
 nameMatch ∷ Parser Types.NameSet
 nameMatch = do
-  name ← prefixSymbolSN
+  name ← prefixSymbolDotSN
   skipLiner Lexer.equals
   bound ← matchLogic
   pure (Types.NonPunned name bound)
@@ -461,7 +461,7 @@ lam = do
 
 application ∷ Parser Types.Application
 application = do
-  name ← prefixSymbolSN
+  name ← prefixSymbolDotSN
   args ← many1H expressionSN
   pure (Types.App name args)
 
@@ -511,7 +511,7 @@ do' = do
 
 doBind ∷ Parser [Types.DoBody]
 doBind = do
-  name ← prefixSymbolSN
+  name ← prefixSymbolDotSN
   spaceLiner (string "<-")
   body ← expression'SN
   pure [Types.DoBody (Just name) body]
@@ -535,6 +535,9 @@ infixSymbolGen p = do
     | Set.member symb reservedSymbols → fail "symbol is reserved word"
     | otherwise → pure symb
 
+infixSymbolDot :: Parser (NonEmpty Symbol)
+infixSymbolDot = undefined
+
 infixSymbol ∷ Parser Symbol
 infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
 
@@ -555,10 +558,17 @@ prefixSymbolGen startParser = do
     | Set.member new reservedWords → fail "symbol is reserved operator"
     | otherwise → pure (internText (Encoding.decodeUtf8 new))
 
+prefixSymbolDot ∷ Parser (NonEmpty Symbol)
+prefixSymbolDot = sepBy1H prefixSymbol (word8 Lexer.dot)
+
 prefixSymbol ∷ Parser Symbol
 prefixSymbol =
   prefixSymbolGen (satisfy Lexer.validStartSymbol)
     <|> word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
+
+
+prefixCapitalDot ∷ Parser (NonEmpty Symbol)
+prefixCapitalDot = undefined
 
 prefixCapital ∷ Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
@@ -623,7 +633,7 @@ infixOp ∷ Expr.Operator ByteString Types.Expression
 infixOp =
   Expr.Infix
     ( do
-        inf ← spaceLiner infixSymbol
+        inf ← spaceLiner infixSymbolDot
         pure
           (\l r → Types.Infix (Types.Inf l inf r))
     )
@@ -742,8 +752,14 @@ typeNameParserSN = spaceLiner typeNameParser
 typeNameParserS ∷ Parser Types.TypeName
 typeNameParserS = spacer typeNameParser
 
+prefixCapitalDotSN ∷ Parser (NonEmpty Symbol)
+prefixCapitalDotSN = spaceLiner prefixCapitalDot
+
 prefixCapitalSN ∷ Parser Symbol
 prefixCapitalSN = spaceLiner prefixCapital
+
+prefixSymbolDotSN ∷ Parser (NonEmpty Symbol)
+prefixSymbolDotSN = spaceLiner prefixSymbolDot
 
 prefixSymbolSN ∷ Parser Symbol
 prefixSymbolSN = spaceLiner prefixSymbol

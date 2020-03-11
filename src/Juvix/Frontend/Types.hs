@@ -190,7 +190,7 @@ newtype Module
 -- | 'FunctionLike' is the generic version for both modules and functions
 data FunctionLike a
   = Like
-      { functionLikedName ∷ NameSymb,
+      { functionLikedName ∷ Symbol,
         functionLikeArgs ∷ [Arg],
         functionLikeBody ∷ GuardBody a
       }
@@ -238,7 +238,7 @@ data CondLogic a
 
 data Signature
   = Sig
-      { signatureName ∷ NameSymb,
+      { signatureName ∷ Symbol,
         signatureUsage ∷ Maybe Usage,
         signatureArrowType ∷ ArrowType,
         signatureConstraints ∷ [TypeName]
@@ -372,7 +372,7 @@ data MatchLogic
 
 data MatchLogicStart
   = MatchCon ConstructorName [MatchLogic]
-  | MatchName NameSymb
+  | MatchName Symbol
   | MatchConst Constant
   | MatchRecord (NonEmpty NameSet)
   deriving (Show)
@@ -382,9 +382,9 @@ data NameSet
   | NonPunned NameSymb MatchLogic
   deriving (Show)
 
-type ConstructorName = Symbol
+type ConstructorName = NameSymb
 
-type NameSymb = Symbol
+type NameSymb = NonEmpty Symbol
 
 --------------------------------------------------------------------------------
 -- Lens creation
