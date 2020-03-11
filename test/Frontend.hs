@@ -66,6 +66,21 @@ superArrowCase =
 typeTest =
   parseOnly Parser.typeP "type Foo a b c d = | Foo Bea"
 
+--------------------------------------------------------------------------------
+-- Modules test
+--------------------------------------------------------------------------------
+
+moduleOpen =
+  parse
+    Parser.topLevel
+    (""
+    <> "let Foo Int = \n"
+    <> "  type T = Int \n"
+    <> "  sig bah : T -> T \n"
+    <> "  let bah t = t + 3 \n"
+    <> "end"
+    )
+
 --------------------------------------------------
 -- typeName tests
 --------------------------------------------------

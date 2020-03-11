@@ -570,7 +570,7 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 reservedWords ∷ (Ord a, IsString a) ⇒ Set a
 reservedWords =
   Set.fromList
-    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin"]
+    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin", "sig"]
 
 reservedSymbols ∷ (Ord a, IsString a) ⇒ Set a
 reservedSymbols =
