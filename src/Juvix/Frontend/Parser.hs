@@ -538,10 +538,9 @@ infixSymbolGen p = do
 
 infixSymbolDot ∷ Parser (NonEmpty Symbol)
 infixSymbolDot = do
-  qualified ← prefixSymbolDot
-  _ ← word8 Lexer.dot
+  qualified ← option [] (NonEmpty.toList <$> prefixSymbolDot <* word8 Lexer.dot)
   infix' ← infixSymbol
-  pure (qualified <> pure infix')
+  pure (NonEmpty.fromList (qualified <> [infix']))
 
 infixSymbol ∷ Parser Symbol
 infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)

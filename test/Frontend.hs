@@ -71,13 +71,13 @@ typeTest =
 --------------------------------------------------------------------------------
 
 moduleOpen =
-  parse
+  parseOnly
     Parser.topLevel
     ( ""
         <> "let Foo Int = \n"
         <> "  type T = Int.t \n"
         <> "  sig bah : T -> T \n"
-        <> "  let bah t = t + 3 \n"
+        <> "  let bah t = T.plus t 3 \n"
         <> "end"
     )
 
