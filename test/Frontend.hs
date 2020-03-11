@@ -80,7 +80,7 @@ typeNameNoUniverse =
 simpleNamedCon = parseOnly Parser.matchLogic "foo@( Hi a b c )"
 
 matchMoreComplex =
-  parseOnly Parser.matchLogic "foo@( Hi nah@{ a = nah , f } b c )"
+  parseOnly Parser.matchLogic "foo@( Hi nah@{ a = nah , f } b 5 )"
 
 --------------------------------------------------------------------------------
 -- Expression

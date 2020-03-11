@@ -150,7 +150,9 @@ matchLogicNotNamed = do
   pure (Types.MatchLogic start Nothing)
 
 matchLogicStart ∷ Parser Types.MatchLogicStart
-matchLogicStart = matchRecord <|> matchCon <|> matchName
+matchLogicStart = matchRecord <|> matchCon <|> matchName <|> matchConstant
+
+matchConstant = Types.MatchConst <$> constant
 
 matchCon ∷ Parser Types.MatchLogicStart
 matchCon = do
