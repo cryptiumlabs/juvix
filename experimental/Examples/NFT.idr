@@ -10,7 +10,7 @@ TokenId = Nat
 ||| Account is a dependent record on the balance (the number of NFT owned)
 ||| by an associated address. It contains
 ||| a vector of of tokenIds owned and a map of operators approved.
-record Account (bal : Nat) where
+record Account where
   constructor MkAccount
   ownedTokens : Vect bal TokenId --vect of tokenIds owned
   opApprovals : SortedMap Address Bool --operator approvals
@@ -24,7 +24,7 @@ record Token where
 ||| The storage has type Storage which is a record with accounts and tokens.
 record Storage where
     constructor MkStorage
-    accounts : SortedMap Address (Account bal)
+    accounts : SortedMap Address Account
     tokens : SortedMap TokenId Token
 
 data Error = FailedToAuthenticate
@@ -33,7 +33,7 @@ data Error = FailedToAuthenticate
 initStorage : Storage
 initStorage =
   MkStorage
-    (insert "qwer" (MkAccount ((++) Nil 1) empty) empty)
+    (insert "qwer" (MkAccount Nil empty) empty)
     (insert 1 (MkToken "qwer" Nil) empty)
 {-
 ||| getAccount returns the balance of an associated key hash.
