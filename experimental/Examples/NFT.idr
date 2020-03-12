@@ -33,8 +33,8 @@ data Error = FailedToAuthenticate
            | TokenAlreadyMinted
            | NotAllowedToSpendFrom
 
-initStorage : Storage
-initStorage =
+emptyStorage : Storage
+emptyStorage =
   MkStorage
     empty
     empty
@@ -79,6 +79,13 @@ mint token dest storage =
                          totalSup = (totalSup storage) + 1
                         } storage
                       )
+
+initStorage : Storage
+initStorage =
+  case mint 1 "qwer" emptyStorage of
+    Left _ => emptyStorage
+    Right s => s
+
 {-
 
 ||| performTransfer transfers tokens from the from address to the dest address.
