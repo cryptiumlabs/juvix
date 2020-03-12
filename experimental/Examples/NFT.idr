@@ -18,7 +18,7 @@ record Account where
 record Token where
   constructor MkToken
   tokenOwner : Address
-  approved : Vect n Address -- approved addresses
+  approved : Vect n Address -- approved address(es)
 
 ||| The storage has type Storage which is a record with accounts and tokens.
 record Storage where
@@ -94,12 +94,24 @@ total balanceOf : Address -> Nat
 balanceOf address =
   getAccountBal address (accounts storage)
 
-total ownerOf : TokenId -> Either Error Address
+-- abstract these two functions later
+ownerOf : TokenId -> Either Error Address
 ownerOf token =
   case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
+total getApproved : TokenId -> Either Error (Vect {n} Address)
+getApproved token =
+  case lookup token (tokens storage) of
+    Nothing => Left NonExistenceToken
+    Just t => Right (approved t)
+
+{-
+total approve : Address -> TokenId -> Either Error Storage
+approve address token =
+  case currentCaller == ownerOf token ||
+-}
 {-
 
 ||| performTransfer transfers tokens from the from address to the dest address.
