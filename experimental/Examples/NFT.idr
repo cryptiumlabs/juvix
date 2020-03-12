@@ -17,7 +17,7 @@ record Account where
 record Token where
   constructor MkToken
   tokenOwner : Address
-  approved : List Address -- approved address(es)
+  approved : List Address -- approved address(es) (TODO fig out how to use Vect)
 
 ||| The storage has type Storage which is a record with accounts and tokens.
 record Storage where
@@ -100,17 +100,29 @@ ownerOf token =
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
+rightOwnerOf : Either Error Address -> Address
+rightOwnerOf (Left _) = owner storage
+rightOwnerOf (Right owner) = owner
+
 total getApproved : TokenId -> Either Error (List Address)
 getApproved token =
   case Data.SortedMap.lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
-{-
 total approve : Address -> TokenId -> Either Error Storage
 approve address token =
-  case currentCaller == ownerOf token ||
--}
+  case getApproved token of
+    Left e => Left e
+    Right approvedAdd =>
+      let isApproved = elem currentCaller approvedAdd in
+        case currentCaller == rightOwnerOf (ownerOf token) || isApproved of
+          False => Left FailedToAuthenticate
+          True =>
+            Right
+              (record { tokens -> approved = address :: listApp} storage)
+
+
 {-
 
 ||| performTransfer transfers tokens from the from address to the dest address.
