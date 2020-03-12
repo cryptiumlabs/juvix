@@ -17,7 +17,7 @@ record Account where
 ||| Token contains the info of a specific token
 record Token where
   constructor MkToken
-  owner : Address
+  tokenOwner : Address
   approved : Vect n Address -- approved addresses
 
 ||| The storage has type Storage which is a record with accounts and tokens.
@@ -31,9 +31,9 @@ record Storage where
 
 data Error = FailedToAuthenticate
            | TokenAlreadyMinted
-           | NotAllowedToSpendFrom
+           | NonExistenceToken
 
-emptyStorage : Storage
+total emptyStorage : Storage
 emptyStorage =
   MkStorage
     empty
@@ -80,11 +80,25 @@ mint token dest storage =
                         } storage
                       )
 
-initStorage : Storage
+total initStorage : Storage
 initStorage =
   case mint 1 "qwer" emptyStorage of
     Left _ => emptyStorage
     Right s => s
+
+total storage : Storage
+storage =
+  initStorage
+
+total balanceOf : Address -> Nat
+balanceOf address =
+  getAccountBal address (accounts storage)
+
+total ownerOf : TokenId -> Either Error Address
+ownerOf token =
+  case lookup token (tokens storage) of
+    Nothing => Left NonExistenceToken
+    Just t => Right (tokenOwner t)
 
 {-
 
