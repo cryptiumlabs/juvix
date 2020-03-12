@@ -33,6 +33,15 @@ many1FunctionsParser =
 
 sigTest1 = parseOnly Parser.topLevel "sig foo 0 : Int -> Int"
 
+sigTest2 = parseOnly Parser.topLevel "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
+
+--------------------------------------------------------------------------------
+-- Function Testing
+--------------------------------------------------------------------------------
+
+fun1 = parseOnly Parser.topLevel "let f foo@(A b c d) = 3"
+
+fun2 = parseOnly Parser.topLevel "let f foo | foo = 2 | else = 3"
 --------------------------------------------------------------------------------
 -- Type tests
 --------------------------------------------------------------------------------
@@ -119,6 +128,18 @@ condTest1 =
     Parser.cond
     $ "if  | foo  = a\n"
       <> " | else = b "
+
+--------------------------------------------------
+-- Record
+--------------------------------------------------
+
+record1 = parseOnly Parser.expression "{a, b = 3+5}"
+
+--------------------------------------------------
+-- parens
+--------------------------------------------------
+
+parens1 = parseOnly Parser.expression "(       ( \n(({a, b = 3+5})))\n)"
 
 --------------------------------------------------------------------------------
 -- Spacer tests
