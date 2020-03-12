@@ -266,6 +266,7 @@ data Expression
   | Application Application
   | Block Block
   | Infix Infix
+  | ExpRecord ExpRecord
   | Do Do
   deriving (Show)
 
@@ -310,6 +311,12 @@ data DoBody
   = DoBody
       { doBodyName ∷ Maybe NameSymb,
         doBodyExpr ∷ Expression
+      }
+  deriving (Show)
+
+newtype ExpRecord
+  = ExpressionRecord
+      { expRecordFields ∷ NonEmpty (NameSet Expression)
       }
   deriving (Show)
 
@@ -374,12 +381,12 @@ data MatchLogicStart
   = MatchCon ConstructorName [MatchLogic]
   | MatchName Symbol
   | MatchConst Constant
-  | MatchRecord (NonEmpty NameSet)
+  | MatchRecord (NonEmpty (NameSet MatchLogic))
   deriving (Show)
 
-data NameSet
+data NameSet t
   = Punned NameSymb
-  | NonPunned NameSymb MatchLogic
+  | NonPunned NameSymb t
   deriving (Show)
 
 type ConstructorName = NameSymb
@@ -432,8 +439,12 @@ makeLensesWith camelCaseFields ''Block
 
 makeLensesWith camelCaseFields ''Do
 
+makeLensesWith camelCaseFields ''DoBody
+
 makeLensesWith camelCaseFields ''ModuleOpenExpr
 
 makeLensesWith camelCaseFields ''Infix
+
+makeLensesWith camelCaseFields ''ExpRecord
 
 makePrisms ''TypeSum

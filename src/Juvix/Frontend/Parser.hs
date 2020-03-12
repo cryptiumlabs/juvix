@@ -42,8 +42,9 @@ expressionGen' p =
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
+    <|> Types.ExpRecord <$> expRecord
     <|> Types.Application <$> try application
-    <|> p
+    <|> try p
     -- <|> Types.String <$> string'
     -- unfinished
     <|> Types.Constant <$> constant
@@ -166,19 +167,27 @@ matchName = Types.MatchName <$> prefixSymbol
 
 matchRecord ∷ Parser Types.MatchLogicStart
 matchRecord =
-  Types.MatchRecord <$> curly (sepBy1HFinal nameSetSN (skipLiner Lexer.comma))
+  Types.MatchRecord <$> nameSetMany matchLogic
 
-nameSet ∷ Parser Types.NameSet
-nameSet = nameMatch <|> namePunned
+--------------------------------------------------------------------------------
+-- NameSet
+--------------------------------------------------------------------------------
 
-namePunned ∷ Parser Types.NameSet
+nameSetMany ∷ Parser a → Parser (NonEmpty (Types.NameSet a))
+nameSetMany parser =
+  curly (sepBy1HFinal (nameSetSN parser) (skipLiner Lexer.comma))
+
+nameSet ∷ Parser a → Parser (Types.NameSet a)
+nameSet parser = nameMatch parser <|> namePunned
+
+namePunned ∷ Parser (Types.NameSet a)
 namePunned = Types.Punned <$> prefixSymbolDot
 
-nameMatch ∷ Parser Types.NameSet
-nameMatch = do
+nameMatch ∷ Parser a → Parser (Types.NameSet a)
+nameMatch parser = do
   name ← prefixSymbolDotSN
   skipLiner Lexer.equals
-  bound ← matchLogic
+  bound ← parser
   pure (Types.NonPunned name bound)
 
 --------------------------------------------------------------------------------
@@ -414,6 +423,13 @@ block = do
   exp ← expressionSN
   _ ← string "end"
   pure (Types.Bloc exp)
+
+--------------------------------------------------
+-- Records
+--------------------------------------------------
+
+expRecord ∷ Parser Types.ExpRecord
+expRecord = Types.ExpressionRecord <$> nameSetMany expression
 
 --------------------------------------------------
 -- Let
@@ -707,8 +723,8 @@ matchLogicNamedSN = spaceLiner matchLogicNamed
 matchLogicNotNamedSN ∷ Parser Types.MatchLogic
 matchLogicNotNamedSN = spaceLiner matchLogicNotNamed
 
-nameSetSN ∷ Parser Types.NameSet
-nameSetSN = spaceLiner nameSet
+nameSetSN ∷ Parser a → Parser (Types.NameSet a)
+nameSetSN = spaceLiner . nameSet
 
 moduleNameSN ∷ Parser Types.ModuleName
 moduleNameSN = spaceLiner moduleName
