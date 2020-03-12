@@ -45,8 +45,6 @@ expressionGen' p =
     <|> Types.ExpRecord <$> expRecord
     <|> Types.Application <$> try application
     <|> try p
-    -- <|> Types.String <$> string'
-    -- unfinished
     <|> Types.Constant <$> constant
     <|> Types.Name <$> prefixSymbolDot
     <|> parens (expressionGen p)
@@ -520,6 +518,7 @@ float = do
 
 --   pure (read (s1 <> "." <> s2))
 
+-- TODO ∷ no escape for strings yet
 string' ∷ Parser Types.String'
 string' = do
   word8 Lexer.quote
