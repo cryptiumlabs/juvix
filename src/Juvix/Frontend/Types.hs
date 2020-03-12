@@ -99,11 +99,17 @@ data ArrowGen a
       }
   deriving (Show)
 
+-- TODO ∷ change TypeName to TypeNameModule
 data TypeRefine
   = TypeRefine
       { typeRefineName ∷ !TypeName,
         typeRefineRfeinement ∷ Maybe Expression
       }
+  deriving (Show)
+
+data TypeNameModule
+  = TypedName !TypeName
+  | ModuleName
   deriving (Show)
 
 --------------------------------------------------
