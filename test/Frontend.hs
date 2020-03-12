@@ -85,10 +85,12 @@ moduleOpen' =
   parseOnly
     Parser.topLevel
     ( ""
-        <> "let Foo Int = \n"
-        <> "  type T = Int.t \n"
-        <> "  sig bah : T -> T \n"
-        <> "  let bah t = Int.(t + 3) \n"
+        <> "let Bah M = \n"
+        <> "  open M"
+        <> "  sig bah : Rec \n"
+        <> "  let bah t = \n"
+        <> "     { a = (t + 3)"
+        <> "     , b = expr M.N.t}"
         <> "end"
     )
 
