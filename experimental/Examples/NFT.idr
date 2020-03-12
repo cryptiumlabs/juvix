@@ -1,6 +1,5 @@
 -- Example non-fungible token contract (ERC721) in Idris.
 import Data.SortedMap
-import Data.Vect
 import FakeLib
 
 ||| TokenId is the unique identifier for each NFT
@@ -18,7 +17,7 @@ record Account where
 record Token where
   constructor MkToken
   tokenOwner : Address
-  approved : Vect n Address -- approved address(es)
+  approved : List Address -- approved address(es)
 
 ||| The storage has type Storage which is a record with accounts and tokens.
 record Storage where
@@ -101,9 +100,9 @@ ownerOf token =
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
-total getApproved : TokenId -> Either Error (Vect {n} Address)
+total getApproved : TokenId -> Either Error (List Address)
 getApproved token =
-  case lookup token (tokens storage) of
+  case Data.SortedMap.lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
