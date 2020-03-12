@@ -34,8 +34,8 @@ storage : Storage
 storage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
 
-||| getAccount returns the balance of an associated key hash.
-||| @address the key hash of the owner of the balance
+||| getAccount returns the account of an associated key hash.
+||| @address the key hash of the owner of the account
 total getAccount : (address : Address) -> SortedMap Address Account -> Account
 getAccount address accounts = case lookup address accounts of
                       Nothing => MkAccount 0 empty
