@@ -174,9 +174,10 @@
                | <comments>
                | <arrow-type>
                | <infix>
+               | <record-creation>
                ; TODO
                | <record-update>
-               | <record-creation>
+
 
   usage ::= <expression>
 
@@ -213,6 +214,16 @@
 
   infix ::= <expression> <inifx-name> <expression>
 
+  record-creation ::= { <name-set-comma>* }
+
+
+  name-set-comma ::= <name-set-creation> ,
+                   | <name-set-creation>
+
+  name-set-creation ::= <name> = <expression>
+                      | <name>
+
+
   ;;; Matching ===================================
 
   match ::= case <expression> of <match-l>*
@@ -233,7 +244,10 @@
                | <match-logic>
                | <constant>
 
-  record-match ::= { <name-set>* }
+  record-match ::= { <name-set-comma-match>* }
+
+  name-set-comma-match ::= <name-set> ,
+                         | <name-set>
 
 
   name-set ::= <name> = <match-logic>
