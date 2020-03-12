@@ -505,8 +505,11 @@ float = do
 --   pure (read (s1 <> "." <> s2))
 
 string' ∷ Parser Types.String'
-string' =
-  fail "not implemented"
+string' = do
+  word8 Lexer.quote
+  words ← takeWhile (/= Lexer.quote)
+  word8 Lexer.quote
+  pure (Types.Sho (Encoding.decodeUtf8 words))
 
 --------------------------------------------------
 -- Do
