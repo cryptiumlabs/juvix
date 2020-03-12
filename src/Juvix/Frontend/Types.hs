@@ -219,7 +219,7 @@ data Arg
   | ConcreteA MatchLogic
   deriving (Show)
 
-newtype ModuleName = ModuleName' Symbol deriving (Show)
+type ModuleName = NameSymb
 
 newtype Cond a
   = C (NonEmpty (CondLogic a))

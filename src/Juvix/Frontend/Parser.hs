@@ -202,7 +202,7 @@ moduleOpen = do
 
 moduleName ∷ Parser Types.ModuleName
 moduleName =
-  Types.ModuleName' <$> prefixSymbol
+  prefixSymbolDot
 
 moduleOpenExpr ∷ Parser Types.ModuleOpenExpr
 moduleOpenExpr = moduleOpenExprNormal <|> moduleOpenExprParens
