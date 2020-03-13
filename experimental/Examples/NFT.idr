@@ -17,7 +17,7 @@ record Account where
 record Token where
   constructor MkToken
   tokenOwner : Address
-  approved : List Address -- approved address(es) (TODO fig out how to use Vect)
+  approved : Maybe Address -- approved address (there can at most be one address)
 
 ||| The storage has type Storage which is a record with accounts and tokens.
 record Storage where
@@ -69,13 +69,13 @@ mint token dest storage =
           case currentCaller == owner storage of
             False => Left FailedToAuthenticate
             True =>
-              let newAcc = insert dest (record {ownedTokens = (1 + getAccountBal dest acc)} destAcc) acc
-                  newToken = insert token (MkToken dest Nil) (tokens storage) in
+              let newAcc = insert dest (record {ownedTokens $= (+ 1)} destAcc) acc
+                  newToken = insert token (MkToken dest Nothing) (tokens storage) in
                     Right
                       (record
                         {accounts = newAcc,
                          tokens = newToken,
-                         totalSup = (totalSup storage) + 1
+                         totalSup $= (+ 1)
                         } storage
                       )
 
@@ -100,27 +100,34 @@ ownerOf token =
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
+||| rightOwnerOf is intended for abstracting Right of ownerOf.
+||| Only use this when ownerOf cannot return Left.
 rightOwnerOf : Either Error Address -> Address
 rightOwnerOf (Left _) = owner storage
 rightOwnerOf (Right owner) = owner
 
-total getApproved : TokenId -> Either Error (List Address)
+total getApproved : TokenId -> Either Error (Maybe Address)
 getApproved token =
-  case Data.SortedMap.lookup token (tokens storage) of
+  case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
-total approve : Address -> TokenId -> Either Error Storage
-approve address token =
-  case getApproved token of
-    Left e => Left e
-    Right approvedAdd =>
-      let isApproved = elem currentCaller approvedAdd in
-        case currentCaller == rightOwnerOf (ownerOf token) || isApproved of
-          False => Left FailedToAuthenticate
-          True =>
-            Right
-              (record { tokens -> approved = address :: listApp} storage)
+-- total approve : Address -> TokenId -> Either Error Storage
+-- approve address token =
+--   case getApproved token of
+--     Left e => Left e
+--     Right approvedAdd =>
+--       let isApproved = currentCaller == (maybe (owner storage) id approvedAdd) in
+--         case currentCaller == rightOwnerOf (ownerOf token) || isApproved of
+--           False => Left FailedToAuthenticate
+--           True =>
+--             Right
+--               (record
+--                 (record
+--                   { approved -> tokens = Just address}
+--                   (lookup token (tokens storage))
+--                 )
+--               )
 
 
 {-
