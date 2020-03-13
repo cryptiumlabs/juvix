@@ -112,22 +112,28 @@ getApproved token =
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
--- total approve : Address -> TokenId -> Either Error Storage
--- approve address token =
---   case getApproved token of
---     Left e => Left e
---     Right approvedAdd =>
---       let isApproved = currentCaller == (maybe (owner storage) id approvedAdd) in
---         case currentCaller == rightOwnerOf (ownerOf token) || isApproved of
---           False => Left FailedToAuthenticate
---           True =>
---             Right
---               (record
---                 (record
---                   { approved -> tokens = Just address}
---                   (lookup token (tokens storage))
---                 )
---               )
+total approve : Address -> TokenId -> Either Error Storage
+approve address token =
+  case getApproved token of
+    Left e => Left e
+    Right approvedAdd =>
+      let isApproved = currentCaller == (maybe (owner storage) id approvedAdd)
+          tokenOwner = rightOwnerOf (ownerOf token) in
+        case currentCaller == tokenOwner || isApproved of
+          False => Left FailedToAuthenticate
+          True =>
+            Right
+              (record
+                {tokens =
+                  insert
+                  token
+                  (MkToken
+                    tokenOwner
+                    (Just address)
+                  )
+                  (tokens storage)
+                } storage
+              )
 
 
 {-
