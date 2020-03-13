@@ -118,11 +118,11 @@ getApproved token =
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
-||| approval set the approved address for an NFT.
+||| approve set the approved address for an NFT.
 ||| When a transfer executes, the approved
 ||| address for that NFT (if any) is reset to none.
-total approval : Address -> TokenId -> Either Error Storage
-approval address token =
+total approve : Address -> TokenId -> Either Error Storage
+approve address token =
   case getApproved token of
     Left e => Left e
     Right approvedAdd =>
@@ -151,10 +151,10 @@ approval address token =
 --         Jusy add
 --     } (tokens storage)
 
--- ||| approvalForAll let the owner enable or disable an operator.
+-- ||| setApprovalForAll let the owner enable or disable an operator.
 -- ||| The operator can manage all NFTs of the owner.
--- total approvalForAll : (operator : Address) -> Bool -> Storage
--- approvalForAll operator isSet =
+-- total setApprovalForAll : (operator : Address) -> Bool -> Storage
+-- setApprovalForAll operator isSet =
 --   record
 --     {accounts =
 --       insert
@@ -173,6 +173,10 @@ approval address token =
 --       (accounts storage)
 --     } storage
 
+total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
+isApprovedForAll owner operator =
+  
+
 ||| transfer transfers a NFT from the from address to the dest address.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
@@ -188,29 +192,9 @@ transfer from dest token =
         True =>
           case currentCaller == from ||
                currentCaller == getApproved token ||
-               currentCaller == ?operator of
+               currentCaller == isApprovedForAll of
             False => Left FailedToAuthenticate
             True =>
               --set dest ownedTokens to $= (+1)
               --set tokenOwner address to dest
               --set approved address to none
-{-
-||| transferFrom can be called by anyone,
-||| transferring amount no larger than the approved amount
-||| @from the address the tokens to be transferred from
-||| @dest the address the tokens to transfer to
-||| @tokens the amount to be transferred
-||| @storage the current storage
-total transferFrom :
-(from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage)
--> Either Error Storage
-transferFrom from dest tokens storage =
-  case lookup dest (getAccountAllowance from (accounts storage)) of
-    Nothing => Left NotAllowedToSpendFrom
-    (Just allowed) =>
-      case lte tokens allowed of
-        False => Left NotEnoughAllowance
-        True =>
-          let updatedStorage = updateAllowance from dest (minus allowed tokens) storage in
-                    performTransfer from dest tokens updatedStorage
--}
