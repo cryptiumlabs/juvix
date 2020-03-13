@@ -31,6 +31,7 @@ record Storage where
 data Error = FailedToAuthenticate
            | TokenAlreadyMinted
            | NonExistenceToken
+           | NotOwnedByFromAddress
 
 total emptyStorage : Storage
 emptyStorage =
@@ -142,6 +143,13 @@ approval address token =
                      (tokens storage)
                    } storage
                  )
+--figuring out nested record update, doesn't work atm
+-- newAcc : Address -> Token
+-- newAcc add =
+--   record
+--     {approved -> tokens =
+--         Jusy add
+--     } (tokens storage)
 
 -- ||| approvalForAll let the owner enable or disable an operator.
 -- ||| The operator can manage all NFTs of the owner.
@@ -165,32 +173,28 @@ approval address token =
 --       (accounts storage)
 --     } storage
 
-
-
-{-
-
-||| performTransfer transfers tokens from the from address to the dest address.
+||| transfer transfers a NFT from the from address to the dest address.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
-||| @tokens the amount of tokens to be transferred
-||| @storage the current storage
-total performTransfer :
-(from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage)
--> Either Error Storage
-performTransfer from dest tokens storage =
-  let fromBalance = getAccountBalance from (accounts storage)
-      destBalance = getAccountBalance dest (accounts storage) in
-        case lte tokens fromBalance of
-             False => Left NotEnoughBalance
-             True =>
-               let accountsStored =
-                 modifyBalance from (minus fromBalance tokens) (accounts storage) in
-                 Right
-                   (record
-                     {accounts =
-                       modifyBalance dest (destBalance + tokens) accountsStored
-                     } storage)
-
+||| @token the TokenId of the NFT to be transferred
+total transfer :
+(from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
+transfer from dest token =
+  case ownerOf token of
+    Left e => Left e
+    Right add =>
+      case add == from of
+        False => Left NotOwnedByFromAddress
+        True =>
+          case currentCaller == from ||
+               currentCaller == getApproved token ||
+               currentCaller == ?operator of
+            False => Left FailedToAuthenticate
+            True =>
+              --set dest ownedTokens to $= (+1)
+              --set tokenOwner address to dest
+              --set approved address to none
+{-
 ||| transferFrom can be called by anyone,
 ||| transferring amount no larger than the approved amount
 ||| @from the address the tokens to be transferred from
