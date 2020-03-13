@@ -93,7 +93,6 @@ total balanceOf : Address -> Nat
 balanceOf address =
   getAccountBal address (accounts storage)
 
--- abstract these two functions later
 ownerOf : TokenId -> Either Error Address
 ownerOf token =
   case lookup token (tokens storage) of
@@ -106,34 +105,66 @@ rightOwnerOf : Either Error Address -> Address
 rightOwnerOf (Left _) = owner storage
 rightOwnerOf (Right owner) = owner
 
+||| ownerOfToken uses rightOwnerOf to abstract Right of ownerOf.
+||| Only use this when ownerOf cannot return Left.
+total ownerOfToken : TokenId -> Address
+ownerOfToken =
+  rightOwnerOf . ownerOf
+
 total getApproved : TokenId -> Either Error (Maybe Address)
 getApproved token =
   case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
-total approve : Address -> TokenId -> Either Error Storage
-approve address token =
+||| approval set the approved address for an NFT.
+||| When a transfer executes, the approved
+||| address for that NFT (if any) is reset to none.
+total approval : Address -> TokenId -> Either Error Storage
+approval address token =
   case getApproved token of
     Left e => Left e
     Right approvedAdd =>
       let isApproved = currentCaller == (maybe (owner storage) id approvedAdd)
-          tokenOwner = rightOwnerOf (ownerOf token) in
-        case currentCaller == tokenOwner || isApproved of
-          False => Left FailedToAuthenticate
-          True =>
-            Right
-              (record
-                {tokens =
-                  insert
-                  token
-                  (MkToken
-                    tokenOwner
-                    (Just address)
-                  )
-                  (tokens storage)
-                } storage
-              )
+          owner = ownerOfToken token in
+          case currentCaller == owner || isApproved of
+            False => Left FailedToAuthenticate
+            True =>
+              Right
+                (record
+                   {tokens =
+                     insert
+                     token
+                     (MkToken
+                       owner
+                       (Just address)
+                     )
+                     (tokens storage)
+                   } storage
+                 )
+
+-- ||| approvalForAll let the owner enable or disable an operator.
+-- ||| The operator can manage all NFTs of the owner.
+-- total approvalForAll : (operator : Address) -> Bool -> Storage
+-- approvalForAll operator isSet =
+--   record
+--     {accounts =
+--       insert
+--       currentCaller
+--       (MkAccount
+--         (balanceOf currentCaller)
+--         (record
+--           {opApprovals -> accounts =
+--              insert
+--              operator
+--              isSet
+--              (opApprovals (accounts storage))
+--           } accounts storage
+--         )
+--       )
+--       (accounts storage)
+--     } storage
+
 
 
 {-
@@ -159,16 +190,6 @@ performTransfer from dest tokens storage =
                      {accounts =
                        modifyBalance dest (destBalance + tokens) accountsStored
                      } storage)
-
-||| approve update the allowance map of the caller of the contract
-||| @spender the address the caller approve the tokens to transfer to
-||| @tokens the amount of tokens approved to be transferred
-||| @storage the current storage
-total approve :
-(spender : Address) -> (tokens : Nat) -> (storage : Storage) -> Storage
-approve spender tokens storage =
-  let caller = owner storage in -- caller of the contract is set to be the owner for now.
-    updateAllowance caller spender tokens storage
 
 ||| transferFrom can be called by anyone,
 ||| transferring amount no larger than the approved amount
