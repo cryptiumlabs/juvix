@@ -4,7 +4,8 @@
 module Juvix.Core.IR.TransformExt where
 
 import Juvix.Library hiding (Coerce)
-import Juvix.Core.IR.Types
+import Juvix.Core.IR.Types.Base
+import Juvix.Core.IR.Types (NoExt, Term, Elim)
 import Data.Coerce
 
 

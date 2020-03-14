@@ -40,6 +40,7 @@ dependencies:
   - sonic
   - aeson
   - Cabal
+  - extensible-data
 
 default-extensions:
   - NoImplicitPrelude
@@ -70,12 +71,14 @@ default-extensions:
   - TypeFamilies
   - ConstraintKinds
   - EmptyDataDeriving
+  - TemplateHaskell
 
 ghc-options:
   - -ferror-spans
   - -Wall
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
 
@@ -189,8 +192,8 @@ library:
     - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
+    - Juvix.Core.IR.Types.Base
     - Juvix.Core.IR.Typechecker
-    - Juvix.Core.IR.Extension
     - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
