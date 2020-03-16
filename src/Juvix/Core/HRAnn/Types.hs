@@ -22,7 +22,7 @@ IR.extendTerm "Term" [t|T|] $ IR.defaultExtTerm {
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π x s t = Lam0 t (x, π, s)
-pattern Elim0 π s t = Elim0 s (π, t)
+pattern Elim π s t = Elim0 s (π, t)
 {-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
 
 IR.extendElim "Elim" [t|T|] $ IR.defaultExtElim {
