@@ -138,13 +138,6 @@ approve address token =
                      (tokens storage)
                    } storage
                  )
---figuring out nested record update, doesn't work atm
--- newAcc : Address -> Token
--- newAcc add =
---   record
---     {approved -> tokens =
---         Jusy add
---     } (tokens storage)
 
 total newOp : Address -> Bool -> SortedMap Address Bool
 newOp operator isSet =
@@ -167,10 +160,15 @@ setApprovalForAll operator isSet =
         (accounts storage)
       } storage
 
--- total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
--- isApprovedForAll owner operator =
+total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
+isApprovedForAll owner operator =
+  case lookup owner (accounts storage) of
+    Nothing => False
+    Just op =>
+      case lookup operator (opApprovals op) of
+        Nothing => False
+        Just bool => bool
 
---
 -- ||| transfer transfers a NFT from the from address to the dest address.
 -- ||| @from the address the tokens to be transferred from
 -- ||| @dest the address the tokens to be transferred to
