@@ -39,7 +39,8 @@ emptyStorage =
 
 ||| getAccount returns the account of an associated key hash.
 ||| @address the key hash of the owner of the account
-total getAccount : (address : Address) -> SortedMap Address Account -> Account
+total getAccount :
+(address : Address) -> SortedMap Address Account -> Account
 getAccount address accounts = case lookup address accounts of
                       Nothing => MkAccount 0 empty
                       (Just account) => account
@@ -95,23 +96,27 @@ ownerOf token =
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
-||| rightOwnerOf is intended for abstracting Right of ownerOf.
-||| Only use this when ownerOf cannot return Left.
-rightOwnerOf : Either Error Address -> Address
-rightOwnerOf (Left _) = owner storage
-rightOwnerOf (Right owner) = owner
-
-||| ownerOfToken uses rightOwnerOf to abstract Right of ownerOf.
+||| ownerOfToken abstracts Right of ownerOf.
 ||| Only use this when ownerOf cannot return Left.
 total ownerOfToken : TokenId -> Address
-ownerOfToken =
-  rightOwnerOf . ownerOf
+ownerOfToken token =
+  case ownerOf token of
+    Left e => owner storage
+    Right a => a
 
 total getApproved : TokenId -> Either Error (Maybe Address)
 getApproved token =
   case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
+
+||| approvedAdd abstracts Right of getApproved.
+||| Only use this when getApproved cannot return Left.
+total approvedAdd : TokenId -> Maybe Address
+approvedAdd token =
+  case getApproved token of
+    Left e => Just (owner storage)
+    Right a => a
 
 ||| approve set the approved address for an NFT.
 ||| When a transfer executes, the approved
@@ -169,24 +174,34 @@ isApprovedForAll owner operator =
         Nothing => False
         Just bool => bool
 
--- ||| transfer transfers a NFT from the from address to the dest address.
--- ||| @from the address the tokens to be transferred from
--- ||| @dest the address the tokens to be transferred to
--- ||| @token the TokenId of the NFT to be transferred
--- total transfer :
--- (from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
--- transfer from dest token =
---   case ownerOf token of
---     Left e => Left e
---     Right add =>
---       case add == from of
---         False => Left NotOwnedByFromAddress
---         True =>
---           case currentCaller == from ||
---                currentCaller == getApproved token ||
---                currentCaller == isApprovedForAll of
---             False => Left FailedToAuthenticate
---             True =>
---               --set dest ownedTokens to $= (+1)
---               --set tokenOwner address to dest
---               --set approved address to none
+total modifyAccBal :
+Address -> (Nat -> Nat) -> SortedMap Address Account -> SortedMap Address Account
+modifyAccBal add f acc =
+  let addAcc = getAccount add acc in
+    insert add (record {ownedTokens $= f} addAcc) acc
+
+||| transfer transfers a NFT from the from address to the dest address.
+||| @from the address the tokens to be transferred from
+||| @dest the address the tokens to be transferred to
+||| @token the TokenId of the NFT to be transferred
+total transfer :
+(from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
+transfer from dest token =
+  case ownerOf token of
+    Left e => Left e
+    Right add =>
+      case add == from of
+        False => Left NotOwnedByFromAddress
+        True =>
+          case currentCaller == from ||
+               currentCaller == maybe (owner storage) id (approvedAdd token) ||
+               isApprovedForAll add currentCaller of
+            False => Left FailedToAuthenticate
+            True =>
+              let newAcc = modifyAccBal from (minus 1) (modifyAccBal dest (+ 1) (accounts storage))
+                  newToken = insert token (MkToken dest Nothing) (tokens storage) in
+                Right
+                  (record
+                    {accounts = newAcc,
+                    tokens = newToken} storage
+                  )
