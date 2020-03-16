@@ -28,11 +28,6 @@ record Storage where
     totalSup : Nat
     owner : Address -- owner of this NFT contract
 
-data Error = FailedToAuthenticate
-           | TokenAlreadyMinted
-           | NonExistenceToken
-           | NotOwnedByFromAddress
-
 total emptyStorage : Storage
 emptyStorage =
   MkStorage
@@ -175,7 +170,7 @@ approve address token =
 
 total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
 isApprovedForAll owner operator =
-  
+
 
 ||| transfer transfers a NFT from the from address to the dest address.
 ||| @from the address the tokens to be transferred from

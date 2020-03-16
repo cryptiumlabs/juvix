@@ -19,11 +19,6 @@ record Storage where
     symbol : String
     owner : Address
 
-data Error = NotEnoughBalance
-           | FailedToAuthenticate
-           | NotAllowedToSpendFrom
-           | NotEnoughAllowance
-
 initStorage : Storage
 initStorage =
   MkStorage (insert "qwer" (MkAccount 1000 empty) empty) 1 1000 "Cool" "C" "qwer"
