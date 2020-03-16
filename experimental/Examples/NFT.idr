@@ -146,50 +146,49 @@ approve address token =
 --         Jusy add
 --     } (tokens storage)
 
--- ||| setApprovalForAll let the owner enable or disable an operator.
--- ||| The operator can manage all NFTs of the owner.
--- total setApprovalForAll : (operator : Address) -> Bool -> Storage
--- setApprovalForAll operator isSet =
---   record
---     {accounts =
---       insert
---       currentCaller
---       (MkAccount
---         (balanceOf currentCaller)
---         (record
---           {opApprovals -> accounts =
---              insert
---              operator
---              isSet
---              (opApprovals (accounts storage))
---           } accounts storage
---         )
---       )
---       (accounts storage)
---     } storage
+total newOp : Address -> Bool -> SortedMap Address Bool
+newOp operator isSet =
+  case lookup currentCaller (accounts storage) of
+    Nothing => insert operator isSet empty
+    Just op => insert operator isSet (opApprovals op)
 
-total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
-isApprovedForAll owner operator =
+||| setApprovalForAll let the owner enable or disable an operator.
+||| The operator can manage all NFTs of the owner.
+total setApprovalForAll : (operator : Address) -> Bool -> Storage
+setApprovalForAll operator isSet =
+    record
+      {accounts =
+        insert
+        currentCaller
+        (MkAccount
+          (balanceOf currentCaller)
+          (newOp operator isSet)
+        )
+        (accounts storage)
+      } storage
 
+-- total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
+-- isApprovedForAll owner operator =
 
-||| transfer transfers a NFT from the from address to the dest address.
-||| @from the address the tokens to be transferred from
-||| @dest the address the tokens to be transferred to
-||| @token the TokenId of the NFT to be transferred
-total transfer :
-(from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
-transfer from dest token =
-  case ownerOf token of
-    Left e => Left e
-    Right add =>
-      case add == from of
-        False => Left NotOwnedByFromAddress
-        True =>
-          case currentCaller == from ||
-               currentCaller == getApproved token ||
-               currentCaller == isApprovedForAll of
-            False => Left FailedToAuthenticate
-            True =>
-              --set dest ownedTokens to $= (+1)
-              --set tokenOwner address to dest
-              --set approved address to none
+--
+-- ||| transfer transfers a NFT from the from address to the dest address.
+-- ||| @from the address the tokens to be transferred from
+-- ||| @dest the address the tokens to be transferred to
+-- ||| @token the TokenId of the NFT to be transferred
+-- total transfer :
+-- (from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
+-- transfer from dest token =
+--   case ownerOf token of
+--     Left e => Left e
+--     Right add =>
+--       case add == from of
+--         False => Left NotOwnedByFromAddress
+--         True =>
+--           case currentCaller == from ||
+--                currentCaller == getApproved token ||
+--                currentCaller == isApprovedForAll of
+--             False => Left FailedToAuthenticate
+--             True =>
+--               --set dest ownedTokens to $= (+1)
+--               --set tokenOwner address to dest
+--               --set approved address to none
