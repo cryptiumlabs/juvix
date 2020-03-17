@@ -1,9 +1,13 @@
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
 module Juvix.Core.IR.Types
-  (module Juvix.Core.IR.Types,
-   Name (..), Term' (..), Elim' (..),
-   TermAll, ElimAll)
+  ( module Juvix.Core.IR.Types,
+    Name (..),
+    Term' (..),
+    Elim' (..),
+    TermAll,
+    ElimAll,
+  )
 where
 
 import Juvix.Core.IR.Types.Base
@@ -12,19 +16,20 @@ import Juvix.Core.Usage
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
 
-
 data NoExt
 
 extendTerm "Term" [t|NoExt|] defaultExtTerm
-extendElim "Elim" [t|NoExt|] defaultExtElim
 
+extendElim "Elim" [t|NoExt|] defaultExtElim
 
 -- | Values/types
 data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
-  | VPi Usage (Value primTy primVal m)
-        (Value primTy primVal m → m (Value primTy primVal m))
+  | VPi
+      Usage
+      (Value primTy primVal m)
+      (Value primTy primVal m → m (Value primTy primVal m))
   | VLam (Value primTy primVal m → m (Value primTy primVal m))
   | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
@@ -53,8 +58,10 @@ deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
-instance (Show primTy, Show primVal)
-       ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
+instance
+  (Show primTy, Show primVal) ⇒
+  Show (Value primTy primVal (EnvTypecheck primTy primVal))
+  where
   show x = show (fst (exec (quote0 x)))
 
 deriving instance
@@ -116,16 +123,16 @@ instance
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
-       "The usage of "
-    <> (show (fst gotU))
-    <> " is not compatible with "
-    <> (show (fst expectedU))
+    "The usage of "
+      <> (show (fst gotU))
+      <> " is not compatible with "
+      <> (show (fst expectedU))
   show (UnboundBinder ii x) =
-      "Cannot find the type of \n"
-    <> show x
-    <> "\n (binder number "
-    <> show ii
-    <> ") in the environment."
+    "Cannot find the type of \n"
+      <> show x
+      <> "\n (binder number "
+      <> show ii
+      <> ") in the environment."
   show (MustBeFunction m ii n) =
     ( show m <> "\n (binder number " <> show ii
         <> ") is not a function type and thus \n"

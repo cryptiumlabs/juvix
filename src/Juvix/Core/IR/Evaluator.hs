@@ -131,8 +131,8 @@ instance CanSubst ext primTy primVal () where subst _ _ = identity
 instance CanSubst ext primTy primVal Void where subst _ _ = absurd
 
 instance
-  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal
-  , IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
   ) ⇒
   CanSubst ext primTy primVal (IR.Term' ext primTy primVal)
   where
@@ -145,8 +145,8 @@ instance
   subst ii r (IR.TermX a) = IR.TermX (subst ii r a)
 
 instance
-  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal
-  , IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
   ) ⇒
   CanSubst ext primTy primVal (IR.Elim' ext primTy primVal)
   where
@@ -162,8 +162,8 @@ instance
   subst ii r (IR.ElimX a) = IR.ElimX (subst ii r a)
 
 substTerm ∷
-  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal
-  , IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
   ) ⇒
   Natural →
   IR.Elim' ext primTy primVal →
@@ -172,8 +172,8 @@ substTerm ∷
 substTerm = subst
 
 substElim ∷
-  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal
-  , IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
   ) ⇒
   Natural →
   IR.Elim' ext primTy primVal →

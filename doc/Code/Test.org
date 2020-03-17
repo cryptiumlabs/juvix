@@ -68,12 +68,6 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Graph]]
 * Main
 - _Relies on_
-  + [[IR]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Types]]
-  + [[Usage]]
   + [[Library]]
 * Backends
 ** ArithmeticCircuit

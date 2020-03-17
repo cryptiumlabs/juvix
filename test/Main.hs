@@ -1,20 +1,13 @@
 module Main where
 
-import Backends.ArithmeticCircuit
-import Backends.LLVM
-import Backends.Michelson
-import Control.Exception
-import CoreConv
-import CoreParser
-import CoreTypechecker
-import EAC2
-import Erasure
-import qualified Juvix.Core.IR as IR
-import Juvix.Core.Parameterisations.All as All
-import Juvix.Core.Parameterisations.Naturals as Nat
-import Juvix.Core.Parameterisations.Unit
-import Juvix.Core.Types
-import Juvix.Core.Usage
+import qualified Backends.ArithmeticCircuit as ArithmeticCircuit
+import qualified Backends.LLVM as LLVM
+import qualified Backends.Michelson as Michelson
+import qualified CoreConv
+import qualified CoreParser
+import qualified CoreTypechecker
+import qualified EAC2
+import qualified Erasure
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -24,18 +17,18 @@ coreTests ∷ T.TestTree
 coreTests =
   T.testGroup
     "Core tests"
-    [ coreCheckerEval,
-      coreConversions,
-      coreParser
+    [ CoreTypechecker.coreCheckerEval,
+      CoreConv.coreConversions,
+      CoreParser.coreParser
     ]
 
 backendTests ∷ T.TestTree
 backendTests =
   T.testGroup
     "Backend tests"
-    [ backendCircuit,
-      backendLLVM,
-      backendMichelson
+    [ ArithmeticCircuit.backendCircuit,
+      LLVM.backendLLVM,
+      Michelson.backendMichelson
     ]
 
 allCheckedTests ∷ T.TestTree
@@ -44,8 +37,8 @@ allCheckedTests =
     "All tests that are checked"
     [ coreTests,
       backendTests,
-      eac2Tests,
-      erasureTests
+      EAC2.eac2Tests,
+      Erasure.erasureTests
     ]
 
 main ∷ IO ()

@@ -2,12 +2,11 @@
 
 module Juvix.Core.IR.Types.Base where
 
+import Data.Kind (Constraint, Type)
+import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
-import Data.Kind (Type, Constraint)
-import Extensible
 import Prelude (String)
-
 
 data Name
   = -- | Global variables are represented by name thus type string
@@ -17,7 +16,8 @@ data Name
   | Quote Natural
   deriving (Show, Eq)
 
-extensible [d|
+extensible
+  [d|
   data Term primTy primVal
     = -- | (sort i) i th ordering of (closed) universe.
       Star Natural
@@ -47,7 +47,6 @@ extensible [d|
       Ann Usage (Term primTy primVal) (Term primTy primVal)
   |]
 
-
 -- FIXME generate these in @extensible-data@
 
 -- | A bundle constraint that requires each annotation type in 'Term' to have an
@@ -72,25 +71,36 @@ type ElimAll (c ∷ Type → Constraint) ext primTy primVal =
     c (ElimX ext primTy primVal)
   )
 
-
 -- FIXME support deriving in @extensible-data@
 
 deriving instance
-  (Eq primTy, Eq primVal,
-   TermAll Eq ext primTy primVal, ElimAll Eq ext primTy primVal) ⇒
+  ( Eq primTy,
+    Eq primVal,
+    TermAll Eq ext primTy primVal,
+    ElimAll Eq ext primTy primVal
+  ) ⇒
   Eq (Term' ext primTy primVal)
 
 deriving instance
-  (Show primTy, Show primVal,
-   TermAll Show ext primTy primVal, ElimAll Show ext primTy primVal) ⇒
+  ( Show primTy,
+    Show primVal,
+    TermAll Show ext primTy primVal,
+    ElimAll Show ext primTy primVal
+  ) ⇒
   Show (Term' ext primTy primVal)
 
 deriving instance
-  (Eq primTy, Eq primVal,
-   TermAll Eq ext primTy primVal, ElimAll Eq ext primTy primVal) ⇒
+  ( Eq primTy,
+    Eq primVal,
+    TermAll Eq ext primTy primVal,
+    ElimAll Eq ext primTy primVal
+  ) ⇒
   Eq (Elim' ext primTy primVal)
 
 deriving instance
-  (Show primTy, Show primVal,
-   TermAll Show ext primTy primVal, ElimAll Show ext primTy primVal) ⇒
+  ( Show primTy,
+    Show primVal,
+    TermAll Show ext primTy primVal,
+    ElimAll Show ext primTy primVal
+  ) ⇒
   Show (Elim' ext primTy primVal)
