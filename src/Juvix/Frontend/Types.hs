@@ -103,7 +103,7 @@ data ArrowGen a
 data TypeRefine
   = TypeRefine
       { typeRefineName ∷ !TypeName,
-        typeRefineRfeinement ∷ Maybe Expression
+        typeRefineRefinement ∷ Maybe Expression
       }
   deriving (Show)
 

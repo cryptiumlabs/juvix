@@ -351,17 +351,22 @@ arrowOrParens ∷ Parser [ArrowOrParens]
 arrowOrParens =
   many (Arrow <$> arrowsSN <|> Parens <$> parendArrowSN)
 
-arrowGen ∷ Parser a → Parser (Types.ArrowGen a)
-arrowGen p =
-  Types.ArrGen <$> maybe nameParserColonSN <*> p <*> arrowSymbol
+arrowGen ∷
+  Parser a
+  → (Parser (Maybe Types.Name, a)
+  → Parser (Maybe Types.Name, a))
+  → Parser (Types.ArrowGen a)
+arrowGen p overParser = do
+  (mName, parser) ← spaceLiner (overParser ((,) <$> maybe nameParserColonSN <*> p))
+  Types.ArrGen mName parser <$> arrowSymbol
 
 arrows ∷ Parser Types.ArrowData
 arrows =
-  Types.Arr <$> arrowGen typeRefineSN
+  Types.Arr <$> arrowGen typeRefineSN identity
 
 parendArrow ∷ Parser Types.ArrowParen
 parendArrow =
-  Types.Paren <$> parens (arrowGen arrowTypeSN)
+  Types.Paren <$> arrowGen arrowTypeSN parens
 
 namedRefine ∷ Parser Types.NamedRefine
 namedRefine =

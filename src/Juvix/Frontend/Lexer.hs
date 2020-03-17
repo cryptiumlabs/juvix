@@ -1,6 +1,5 @@
 module Juvix.Frontend.Lexer where
 
-import qualified Data.Char as Char
 import qualified GHC.Unicode as Unicode
 import Juvix.Library hiding (maybe, option, takeWhile)
 
@@ -9,7 +8,7 @@ charToWord8 = fromIntegral . ord
 {-# INLINE charToWord8 #-}
 
 wordToChr ∷ Integral a ⇒ a → Char
-wordToChr = Char.chr . fromIntegral
+wordToChr = chr . fromIntegral
 
 -- Hopefully this is fast!
 validStartSymbol' ∷ Integral a ⇒ a → Bool
