@@ -1,7 +1,4 @@
-
-
 * Usage Syntax
-
 ** Inside Arrows (Jeremy)
 *** Arrows
 **** Initial Idea
@@ -78,7 +75,85 @@
   + cons
     * A few extra characters for every signature
     * How does sugar get added from this system? (Jeremy)
+* Module Syntax
+Currently there are two roads we can go down in regards to module
+syntax.
 
+- mariari :: I personally prefer the "like functions" syntax as it
+             seems writing modules are encouraged, and feel very
+             natural to anyone who has been using the language but
+             with functions only. There is no bifurcation of syntax,
+             where modules look like this special thing (ala OCaml).
+
+- Point redacted :: it seems the first syntax does not require special
+                    casing.
+                    #+BEGIN_SRC haskell
+                    <name> =
+                      foo a = 3
+                    #+END_SRC
+                    in the above example, it's unambiguous what <name>
+                    is, as expression ≠ top level!
+** Like Functions
+The like functions syntax would look something like this
+#+BEGIN_SRC idris
+  Foo : Module
+    type a
+    foo : a -> a
+  Foo =
+    type a = int
+
+    foo : int -> int
+    foo c = c + 2
+
+  type sig = Module
+    type a
+    foo : a -> a
+    val : int -> a
+
+  Foo : sig -> Module
+  Foo A =
+    type t = A.t
+    val x = A.(foo (int x))
+#+END_SRC
+- _Pros_
+  1. Typing Modules is lightweight
+     - Thus encourages module use!
+  2. Modules look like functions and thus familiar
+     - Lower barrier of entry and confusion and forgetting of syntax
+- _Cons_
+  2. Module signature is special cased
+  3. We may need an end for the =Module= keyword
+     - This depends on how indent sensitive we wish to be
+** Haskell/Idris Like
+The Haskell/Idris like syntax would look like
+#+BEGIN_SRC idris
+  module Foo sig
+    type a
+    foo : a -> a
+  module Foo where
+    type a = int
+
+    foo : int -> int
+    foo c = c + 2
+
+  module t sig
+    type a
+    foo : a -> a
+    val : int -> a
+
+  module Foo (A : t) where
+    type t = A.t
+    val x = A.(foo (int x))
+#+END_SRC
+- The functor and signature syntax could use some refinement
+- _Pros_
+  1. Looks Familiar to existing ML solutions
+- _Cons_
+  1. requires a lot of special casing
+     - Higher barrier to entry, and forgetting of syntax
+  2. A lot more special casing in the implementation
+  3. Heavier syntax
+     - This means module usage is more discouraged
 * Additive conjunction
 ** Initial ideas (Jeremy)
 - The literature uses `&` for this, however to be less confusing for the user I suggest this
@@ -92,3 +167,4 @@
   + Note :: _1 is a placeholder for a better name of accessing the
             first variant without being able to inspect on the second
   + Note :: in the unicode extension ∨ can replace `\/`
+* If/Cond Syntax

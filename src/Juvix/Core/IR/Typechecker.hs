@@ -1,7 +1,8 @@
 module Juvix.Core.IR.Typechecker where
 
 import Juvix.Core.IR.Evaluator
-import Juvix.Core.IR.Types
+import Juvix.Core.IR.Types hiding (typeElim)
+-- FIXME add qualified imports to this module
 import Juvix.Core.Types
 import Juvix.Core.Usage
 import Juvix.Library hiding (show)

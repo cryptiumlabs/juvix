@@ -36,10 +36,6 @@ Formal verification of various properties of the Juvix language & compiler in Ag
 
 No warranty is provided or implied.
 
-Juvix is presently executed by a resource-tracing interpreter.
-
-Backends for the EVM, WASM, Michelson, and LLVM are planned but not yet implemented.
-
 ## Contributing
 
 See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).

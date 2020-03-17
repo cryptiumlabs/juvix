@@ -5,13 +5,13 @@ import qualified Juvix.Core.HRAnn.Types as HRAnn
 import Juvix.Core.IR.TransformExt
 import Juvix.Library
 
-hrForgetter ∷ ExtTransformTE HRAnn.T HR.HR primTy primVal
+hrForgetter ∷ ExtTransformTE HRAnn.T HR.T primTy primVal
 hrForgetter =
   ExtTransformTE
     { etStar = identity,
       etPrimTy = identity,
       etPi = identity,
-      etLam = fst,
+      etLam = \(var, _, _) → var,
       etElim = const (),
       etBound = absurd,
       etFree = absurd,

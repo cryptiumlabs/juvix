@@ -1,6 +1,5 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- - An evaluation for a simple combination calculus language, only has

@@ -26,6 +26,7 @@
   + [[Library]]
 * Main
 * Options
+* ReplDoc
 * Types
 - _Relies on_
   + [[Types]]
