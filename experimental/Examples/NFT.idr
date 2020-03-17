@@ -45,6 +45,8 @@ getAccount address accounts = case lookup address accounts of
                       Nothing => MkAccount 0 empty
                       (Just account) => account
 
+||| getAccountBal returns the balance of an associated key hash.
+||| @address the key hash of the owner of the account
 total getAccountBal : (address : Address) -> SortedMap Address Account -> Nat
 getAccountBal address accounts = case lookup address accounts of
                       Nothing => 0
@@ -86,10 +88,14 @@ total storage : Storage
 storage =
   initStorage
 
+||| balanceOf [standard function]
+||| returns the number of NFTs owned by the input address.
 total balanceOf : Address -> Nat
 balanceOf address =
   getAccountBal address (accounts storage)
 
+||| ownerOf [standard function]
+||| returns the address of the owner of the input NFT.
 ownerOf : TokenId -> Either Error Address
 ownerOf token =
   case lookup token (tokens storage) of
@@ -104,6 +110,8 @@ ownerOfToken token =
     Left e => owner storage
     Right a => a
 
+||| getApproved [standard function]
+||| get the approved address for the input NFT
 total getApproved : TokenId -> Either Error (Maybe Address)
 getApproved token =
   case lookup token (tokens storage) of
@@ -118,7 +126,7 @@ approvedAdd token =
     Left e => Just (owner storage)
     Right a => a
 
-||| approve set the approved address for an NFT.
+||| approve [standard function] set the approved address for an NFT.
 ||| When a transfer executes, the approved
 ||| address for that NFT (if any) is reset to none.
 total approve : Address -> TokenId -> Either Error Storage
@@ -144,13 +152,15 @@ approve address token =
                    } storage
                  )
 
+||| newOp function to update the operator list.
 total newOp : Address -> Bool -> SortedMap Address Bool
 newOp operator isSet =
   case lookup currentCaller (accounts storage) of
     Nothing => insert operator isSet empty
     Just op => insert operator isSet (opApprovals op)
 
-||| setApprovalForAll let the owner enable or disable an operator.
+||| setApprovalForAll [standard function]
+||| let the owner enable or disable an operator.
 ||| The operator can manage all NFTs of the owner.
 total setApprovalForAll : (operator : Address) -> Bool -> Storage
 setApprovalForAll operator isSet =
@@ -165,6 +175,10 @@ setApprovalForAll operator isSet =
         (accounts storage)
       } storage
 
+||| isApprovedForAll [standard function]
+||| returns whether an address is an authorized operator for another address.
+||| @owner the address that owns the NFTs.
+||| @operator the address that acts on behalf of the owner.
 total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
 isApprovedForAll owner operator =
   case lookup owner (accounts storage) of
@@ -174,13 +188,15 @@ isApprovedForAll owner operator =
         Nothing => False
         Just bool => bool
 
+||| modifyAccBal function to modify the account balance.
 total modifyAccBal :
 Address -> (Nat -> Nat) -> SortedMap Address Account -> SortedMap Address Account
 modifyAccBal add f acc =
   let addAcc = getAccount add acc in
     insert add (record {ownedTokens $= f} addAcc) acc
 
-||| transfer transfers a NFT from the from address to the dest address.
+||| transfer [standard function] 
+||| transfers the ownership of a NFT from one address to another.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @token the TokenId of the NFT to be transferred
