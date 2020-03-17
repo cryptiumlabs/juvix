@@ -9,6 +9,7 @@ import CoreParser
 import CoreTypechecker
 import EAC2
 import Erasure
+import qualified Frontend as Frontend
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Parameterisations.All as All
 import Juvix.Core.Parameterisations.Naturals as Nat
@@ -38,6 +39,12 @@ backendTests =
       backendMichelson
     ]
 
+frontEndTests ∷ T.TestTree
+frontEndTests =
+  T.testGroup
+    "frontend tests"
+    [ Frontend.allParserTests ]
+
 allCheckedTests ∷ T.TestTree
 allCheckedTests =
   T.testGroup
@@ -45,7 +52,8 @@ allCheckedTests =
     [ coreTests,
       backendTests,
       eac2Tests,
-      erasureTests
+      erasureTests,
+      frontEndTests
     ]
 
 main ∷ IO ()
