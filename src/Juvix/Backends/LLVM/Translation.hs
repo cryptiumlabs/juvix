@@ -105,7 +105,7 @@ nodeToIR (ind, (_, l, _edges)) =
         Auxiliary2 Lambda → 1
         Auxiliary2 App → 2
         Auxiliary2 (FanIn i) → i
-        _ -> undefined
+        _ → undefined
       --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
     }
 
