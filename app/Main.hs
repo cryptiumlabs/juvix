@@ -58,11 +58,11 @@ versionDoc =
       mconcat ["Prerelease version.", line],
       mconcat
         [ "Built from branch ",
-          white $ (gitBranch),
+          white $(gitBranch),
           " at commit ",
-          magenta $ (gitHash),
+          magenta $(gitHash),
           " (commit date ",
-          cyan $ (gitCommitDate),
+          cyan $(gitCommitDate),
           ").",
           line
         ]
