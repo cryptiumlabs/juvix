@@ -43,7 +43,7 @@ frontEndTests ∷ T.TestTree
 frontEndTests =
   T.testGroup
     "frontend tests"
-    [ Frontend.allParserTests ]
+    [Frontend.allParserTests]
 
 allCheckedTests ∷ T.TestTree
 allCheckedTests =

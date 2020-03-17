@@ -11,31 +11,30 @@ allParserTests ∷ T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
-    [ many1FunctionsParser
-    , sigTest1
-    , sigTest2
-    , fun1
-    , fun2
-    , sumTypeTest
-    , superArrowCase
-    , typeTest
-    , moduleOpen
-    , moduleOpen'
-    , typeNameNoUniverse
-    , simpleNamedCon
-    , matchMoreComplex
-    , condTest1
-    , record1
-    , parens1
+    [ many1FunctionsParser,
+      sigTest1,
+      sigTest2,
+      fun1,
+      fun2,
+      sumTypeTest,
+      superArrowCase,
+      typeTest,
+      moduleOpen,
+      moduleOpen',
+      typeNameNoUniverse,
+      simpleNamedCon,
+      matchMoreComplex,
+      condTest1,
+      record1,
+      parens1
     ]
-
 
 --------------------------------------------------------------------------------
 -- Parser Checker
 --------------------------------------------------------------------------------
 
-parseTasty
-  :: (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree
+parseTasty ∷
+  (Show a1, Show a2, Eq a1) ⇒ T.TestName → Either a1 a2 → String → T.TestTree
 parseTasty name x y =
   T.testGroup
     "parse Test"
@@ -45,8 +44,8 @@ parseTasty name x y =
         (fmap show x T.@=? Right y)
     ]
 
-shouldParseAs
-  :: Show a => T.TestName -> Parser a -> ByteString -> String -> T.TestTree
+shouldParseAs ∷
+  Show a ⇒ T.TestName → Parser a → ByteString → String → T.TestTree
 shouldParseAs name parser parseString =
   parseTasty name (parseOnly parser parseString)
 
@@ -334,6 +333,7 @@ typeNameNoUniverse =
     \1})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
     \{typeRefineName = Start (d :| []) [], typeRefineRefinement = Nothing}}))),SymbolName \
     \(a :| []),SymbolName (c :| []),SymbolName (u :| [])]"
+
 --------------------------------------------------------------------------------
 -- Match tests
 --------------------------------------------------------------------------------
@@ -371,9 +371,9 @@ condTest1 =
   shouldParseAs
     "condTest1"
     Parser.cond
-    (""
-      <> "if  | foo  = a\n"
-      <> "    | else = b "
+    ( ""
+        <> "if  | foo  = a\n"
+        <> "    | else = b "
     )
     "C (CondExpression {condLogicPred = Name (foo :| []), condLogicBody = Name (a \
     \:| [])} :| [CondExpression {condLogicPred = Name (else :| []), condLogicBody \

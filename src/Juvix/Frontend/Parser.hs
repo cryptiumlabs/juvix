@@ -352,10 +352,11 @@ arrowOrParens =
   many (Arrow <$> arrowsSN <|> Parens <$> parendArrowSN)
 
 arrowGen ∷
-  Parser a
-  → (Parser (Maybe Types.Name, a)
-  → Parser (Maybe Types.Name, a))
-  → Parser (Types.ArrowGen a)
+  Parser a →
+  ( Parser (Maybe Types.Name, a) →
+    Parser (Maybe Types.Name, a)
+  ) →
+  Parser (Types.ArrowGen a)
 arrowGen p overParser = do
   (mName, parser) ← spaceLiner (overParser ((,) <$> maybe nameParserColonSN <*> p))
   Types.ArrGen mName parser <$> arrowSymbol
