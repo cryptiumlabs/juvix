@@ -42,6 +42,7 @@ sigTest2 = parseOnly Parser.topLevel "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
 fun1 = parseOnly Parser.topLevel "let f foo@(A b c d) = 3"
 
 fun2 = parseOnly Parser.topLevel "let f foo | foo = 2 | else = 3"
+
 --------------------------------------------------------------------------------
 -- Type tests
 --------------------------------------------------------------------------------

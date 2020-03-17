@@ -4,6 +4,10 @@ import qualified Data.Char as Char
 import qualified GHC.Unicode as Unicode
 import Juvix.Library hiding (maybe, option, takeWhile)
 
+charToWord8 ∷ Char → Word8
+charToWord8 = fromIntegral . ord
+{-# INLINE charToWord8 #-}
+
 wordToChr ∷ Integral a ⇒ a → Char
 wordToChr = Char.chr . fromIntegral
 
@@ -16,61 +20,61 @@ validUpperSymbol ∷ Integral a ⇒ a → Bool
 validUpperSymbol = Unicode.isUpper . wordToChr
 
 dash ∷ Word8
-dash = 45
+dash = charToWord8 '-'
 
 under ∷ Word8
-under = 95
+under = charToWord8 '_'
 
 space ∷ Word8
-space = 32
+space = charToWord8 ' '
 
 colon ∷ Word8
-colon = 58
+colon = charToWord8 ':'
 
 semi ∷ Word8
-semi = 59
+semi = charToWord8 ';'
 
 comma ∷ Word8
-comma = 44
+comma = charToWord8 ','
 
 hash ∷ Word8
-hash = 35
+hash = charToWord8 '#'
 
 openParen ∷ Word8
-openParen = 40
+openParen = charToWord8 '('
 
 closeParen ∷ Word8
-closeParen = 41
+closeParen = charToWord8 ')'
 
 backSlash ∷ Word8
-backSlash = 92
+backSlash = charToWord8 '\\'
 
 quote ∷ Word8
-quote = 34
+quote = charToWord8 '\''
 
 openCurly ∷ Word8
-openCurly = 123
+openCurly = charToWord8 '{'
 
 pipe ∷ Word8
-pipe = 124
+pipe = charToWord8 '|'
 
 closeCurly ∷ Word8
-closeCurly = 125
+closeCurly = charToWord8 '}'
 
 equals ∷ Word8
-equals = 61
+equals = charToWord8 '='
 
 at ∷ Word8
-at = 64
+at = charToWord8 '@'
 
 dot ∷ Word8
-dot = 46
+dot = charToWord8 '.'
 
 times ∷ Word8
-times = 42
+times = charToWord8 '*'
 
 backtick ∷ Word8
-backtick = 96
+backtick = charToWord8 '`'
 
 validStartSymbol ∷ Word8 → Bool
 validStartSymbol w =
