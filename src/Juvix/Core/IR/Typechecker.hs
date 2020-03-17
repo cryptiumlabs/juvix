@@ -1,7 +1,7 @@
 module Juvix.Core.IR.Typechecker where
 
 import Juvix.Core.IR.Evaluator
-import Juvix.Core.IR.Types hiding (typeElim)
+import Juvix.Core.IR.Types
 -- FIXME add qualified imports to this module
 import Juvix.Core.Types
 import Juvix.Core.Usage
@@ -250,7 +250,7 @@ typeTerm _ ii g x@(PrimTy _) ann = do
       logOutput $ passed <> typechecked x ann
       pure ()
   where
-    checking = logOutput "Checking that input annotation is of type *0."
+    checking = logOutput "Checking that input annotation is of type *0. "
 -- Lam (introduction rule of dependent function type),
 -- requires Pi (formation rule of dependent function type)
 typeTerm p ii g t@(Lam m) ann = do

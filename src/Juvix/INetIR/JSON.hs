@@ -3,7 +3,6 @@ module Juvix.INetIR.JSON where
 import qualified Data.Aeson as A
 import Data.Char
 import Data.JSON.Schema.Generator hiding (generate)
-import Juvix.INetIR.Types
 import Juvix.Library
 
 {-
