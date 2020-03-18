@@ -4,11 +4,23 @@
 module Juvix.Backends.Michelson.DSL.Instructions where
 
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
+import Prelude (error)
 import Juvix.Library
 import qualified Michelson.Untyped.Contract as Contract
 import qualified Michelson.Untyped.Ext as Ext
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as Value
+import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+
+-- | 'toNewPrim' removes the implicit Instr.PrimEx from the instruction
+-- and adds Inst over it, making it a new primitive. useful for making tests
+toNewPrimErr ∷ Instr.ExpandedOp → Types.NewPrim
+toNewPrimErr (Instr.PrimEx x) =
+  Types.Inst x
+toNewPrimErr (Instr.SeqEx _) =
+  error "sent in a Sequence of Instructions, but wanted a single"
+toNewPrimErr (Instr.WithSrcEx _ _) =
+  error "sent in a withsrcEx of Instructions, but wanted a single instruction"
 
 ext ∷ Ext.ExtInstrAbstract Instr.ExpandedOp → Instr.ExpandedOp
 ext = Instr.PrimEx . Instr.EXT
