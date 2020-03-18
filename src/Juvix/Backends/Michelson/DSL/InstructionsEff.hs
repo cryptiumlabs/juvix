@@ -662,8 +662,7 @@ pairN count = fold (replicate count Instructions.pair)
 
 -- TODO: Make these prettier using the DSL later.
 closureType ∷ [(Symbol, Untyped.T)] → Untyped.T
-closureType [] = Untyped.unit
-closureType ((_, x) : xs) = Untyped.pair x (closureType xs)
+closureType = foldr (Untyped.pair . snd) Untyped.unit
 
 -- | 'lamType' takes Args+Closures and ExtraArgs, along with their return type
 -- and constructs a lambda type
