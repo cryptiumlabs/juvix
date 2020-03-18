@@ -9,7 +9,7 @@ type UnAnn = Untyped.T
 
 type CT = Untyped.CT
 
-type Compareable = Untyped.Comparable
+type Comparable = Untyped.Comparable
 
 --------------------------------------------------------------------------------
 -- Annotated promotion
@@ -18,7 +18,7 @@ type Compareable = Untyped.Comparable
 annotate ∷ UnAnn → T
 annotate = flip Untyped.Type ""
 
-annComp ∷ CT → Compareable
+annComp ∷ CT → Comparable
 annComp = flip Untyped.Comparable ""
 
 --------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ option = annotate . Untyped.TOption
 list ∷ T → T
 list = annotate . Untyped.TList
 
-set ∷ Compareable → T
+set ∷ Comparable → T
 set = annotate . Untyped.TSet
 
 operation ∷ T
@@ -61,10 +61,10 @@ or = annotate ... Untyped.TOr "" ""
 lambda ∷ T → T → T
 lambda = annotate ... Untyped.TLambda
 
-map ∷ Compareable → T → T
+map ∷ Comparable → T → T
 map = annotate ... Untyped.TMap
 
-bigMap ∷ Compareable → T → T
+bigMap ∷ Comparable → T → T
 bigMap = annotate ... Untyped.TBigMap
 
 --------------------------------------------------------------------------------

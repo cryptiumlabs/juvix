@@ -2,6 +2,8 @@ module Backends.Michelson where
 
 import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
@@ -49,10 +51,16 @@ backendMichelson =
     ]
 
 optimiseDupDrop ∷ T.TestTree
-optimiseDupDrop = shouldOptimise (M.SeqEx [M.PrimEx (M.DUP ""), M.PrimEx M.DROP]) (M.SeqEx [])
+optimiseDupDrop =
+  shouldOptimise
+    (Instructions.dup <> Instructions.drop)
+    (M.SeqEx [])
 
 optimiseLambdaExec ∷ T.TestTree
-optimiseLambdaExec = shouldOptimise (M.SeqEx [M.PrimEx (M.LAMBDA "" (M.Type M.TUnit "") (M.Type M.TUnit "") []), M.PrimEx (M.EXEC "")]) (M.SeqEx [])
+optimiseLambdaExec =
+  shouldOptimise
+    (Instructions.lambda Untyped.unit Untyped.unit [] <> Instructions.exec)
+    (M.SeqEx [])
 
 identityExpr ∷ T.TestTree
 identityExpr =
@@ -77,14 +85,32 @@ identityFn =
   shouldCompile
     identityTerm
     identityType
-    "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP {CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
+    "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) \
+    \unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) \
+    \unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair \
+    \unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP \
+    \{CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP \
+    \{CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) \
+    \unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; \
+    \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR \
+    \% %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
 
 identityApp ∷ T.TestTree
 identityApp =
   shouldCompile
     identityAppTerm
     identityType
-    "parameter unit;storage unit;code {{PUSH (lambda (pair (pair unit unit) unit) (pair (list operation) unit)) {{CAR}; {{PUSH (pair unit (lambda (pair (list operation) unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP {CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); NIL operation; DIP {{DUP; CAR; DIP {CDR}}}; PAIR % %; EXEC}; {PUSH (pair unit (lambda (pair (pair unit unit) unit) unit)) (Pair Unit {CAR; CAR}); {{DIP {SWAP}; SWAP}; DUP; DIP {{SWAP; DIP {SWAP}}}}; DIP {{DUP; CAR; DIP {CDR}}}; PAIR % %; EXEC}; DIP {{DUP; CAR; DIP {CDR}}}; PAIR % %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
+    "parameter unit;storage unit;code {{PUSH (lambda (pair (pair unit unit) unit) (pair \
+    \(list operation) unit)) {{CAR}; {{PUSH (pair unit (lambda (pair (list operation) \
+    \unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) \
+    \unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair \
+    \unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP \
+    \{CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); NIL operation; DIP {{DUP; CAR; DIP \
+    \{CDR}}}; PAIR % %; EXEC}; {PUSH (pair unit (lambda (pair (pair unit unit) unit) \
+    \unit)) (Pair Unit {CAR; CAR}); {{DIP {SWAP}; SWAP}; DUP; DIP {{SWAP; DIP {SWAP}}}}; \
+    \DIP {{DUP; CAR; DIP {CDR}}}; PAIR % %; EXEC}; DIP {{DUP; CAR; DIP {CDR}}}; PAIR \
+    \% %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; \
+    \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
 
 identityApp2 ∷ T.TestTree
 identityApp2 =

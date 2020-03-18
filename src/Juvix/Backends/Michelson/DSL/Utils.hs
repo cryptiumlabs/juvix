@@ -1,12 +1,11 @@
 module Juvix.Backends.Michelson.DSL.Utils where
 
-import Juvix.Library
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
-import qualified Michelson.Untyped.Instr as Instr
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
-import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
-
+import Juvix.Library
+import qualified Michelson.Untyped.Instr as Instr
 
 piToList ∷ Ann.Type primTy primVal → [(Usage.T, Ann.Type primTy primVal)]
 piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
@@ -26,9 +25,9 @@ unpackTupleN n = unpackTuple <> Instructions.dip [unpackTupleN (pred n)]
 unpackArgsCaptures ∷ Natural → Natural → Instr.ExpandedOp
 unpackArgsCaptures numArgs numCaptures =
   Instructions.dup
-    <> Instructions.dip [Instructions.car, unpackTupleN (numCaptures - 1)]
+    <> Instructions.dip [Instructions.car, unpackTupleN (pred numCaptures)]
     <> Instructions.cdr
-    <> unpackTupleN (numArgs - 1)
+    <> unpackTupleN (pred numArgs)
 
 pairN ∷ Int → Instr.ExpandedOp
 pairN count = fold (replicate count Instructions.pair)

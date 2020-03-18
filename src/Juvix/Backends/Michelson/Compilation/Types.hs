@@ -9,11 +9,10 @@ import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Instr as Instr
 
-data PrimTy
+newtype PrimTy
   = PrimTy M.Type
   deriving (Show, Eq, Generic)
 
--- TODO ∷ replace PrimVal with this eventually!
 data NewPrim
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)

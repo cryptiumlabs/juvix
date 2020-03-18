@@ -338,6 +338,7 @@ This module provides a default contract environment
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
 - _Relies on_
+  + [[Untyped]]
   + [[Library]]
 ***** InstructionsEff
 - This module includes a higher level DSL which each instruction
@@ -355,12 +356,20 @@ This module provides a default contract environment
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[Untyped]]
+  + [[Utils]]
   + [[ErasedAnn/Types]]
   + [[Usage]]
   + [[Library]]
   + [[Library]]
 ***** Untyped
 - _Relies on_
+  + [[Library]]
+***** Utils
+- _Relies on_
+  + [[Instructions]]
+  + [[Untyped]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ** Core
 - _Relies on_

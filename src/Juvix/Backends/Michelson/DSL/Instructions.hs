@@ -3,11 +3,11 @@
 --   over the untyped instruction bindings
 module Juvix.Backends.Michelson.DSL.Instructions where
 
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Library
 import qualified Michelson.Untyped.Contract as Contract
 import qualified Michelson.Untyped.Ext as Ext
 import qualified Michelson.Untyped.Instr as Instr
-import qualified Michelson.Untyped.Type as Type
 import qualified Michelson.Untyped.Value as Value
 
 ext ∷ Ext.ExtInstrAbstract Instr.ExpandedOp → Instr.ExpandedOp
@@ -37,13 +37,13 @@ dig = Instr.PrimEx . Instr.DIG
 dug ∷ Word → Instr.ExpandedOp
 dug = Instr.PrimEx . Instr.DUG
 
-push ∷ Type.Type → Value.Value' Instr.ExpandedOp → Instr.ExpandedOp
+push ∷ Untyped.T → Value.Value' Instr.ExpandedOp → Instr.ExpandedOp
 push = Instr.PrimEx ... Instr.PUSH ""
 
 some ∷ Instr.ExpandedOp
 some = Instr.PrimEx (Instr.SOME "" "")
 
-none ∷ Type.Type → Instr.ExpandedOp
+none ∷ Untyped.T → Instr.ExpandedOp
 none = Instr.PrimEx . Instr.NONE "" ""
 
 unit ∷ Instr.ExpandedOp
@@ -52,13 +52,13 @@ unit = Instr.PrimEx (Instr.UNIT "" "")
 pair ∷ Instr.ExpandedOp
 pair = Instr.PrimEx (Instr.PAIR "" "" "" "")
 
-left ∷ Type.Type → Instr.ExpandedOp
+left ∷ Untyped.T → Instr.ExpandedOp
 left = Instr.PrimEx . Instr.LEFT "" "" "" ""
 
-right ∷ Type.Type → Instr.ExpandedOp
+right ∷ Untyped.T → Instr.ExpandedOp
 right = Instr.PrimEx . Instr.RIGHT "" "" "" ""
 
-nil ∷ Type.Type → Instr.ExpandedOp
+nil ∷ Untyped.T → Instr.ExpandedOp
 nil = Instr.PrimEx . Instr.NIL "" ""
 
 cons ∷ Instr.ExpandedOp
@@ -67,13 +67,13 @@ cons = Instr.PrimEx (Instr.CONS "")
 size ∷ Instr.ExpandedOp
 size = Instr.PrimEx (Instr.SIZE "")
 
-emptySet ∷ Type.Comparable → Instr.ExpandedOp
+emptySet ∷ Untyped.Comparable → Instr.ExpandedOp
 emptySet = Instr.PrimEx . Instr.EMPTY_SET "" ""
 
-emptyMap ∷ Type.Comparable → Type.Type → Instr.ExpandedOp
+emptyMap ∷ Untyped.Comparable → Untyped.T → Instr.ExpandedOp
 emptyMap = Instr.PrimEx ... Instr.EMPTY_MAP "" ""
 
-emptyBigMap ∷ Type.Comparable → Type.Type → Instr.ExpandedOp
+emptyBigMap ∷ Untyped.Comparable → Untyped.T → Instr.ExpandedOp
 emptyBigMap = Instr.PrimEx ... Instr.EMPTY_BIG_MAP "" ""
 
 mem ∷ Instr.ExpandedOp
@@ -91,7 +91,7 @@ exec = Instr.PrimEx (Instr.EXEC "")
 apply ∷ Instr.ExpandedOp
 apply = Instr.PrimEx (Instr.APPLY "")
 
-cast ∷ Type.Type → Instr.ExpandedOp
+cast ∷ Untyped.T → Instr.ExpandedOp
 cast = Instr.PrimEx . Instr.CAST ""
 
 rename ∷ Instr.ExpandedOp
@@ -100,7 +100,7 @@ rename = Instr.PrimEx (Instr.RENAME "")
 pack ∷ Instr.ExpandedOp
 pack = Instr.PrimEx (Instr.PACK "")
 
-unpack ∷ Type.Type → Instr.ExpandedOp
+unpack ∷ Untyped.T → Instr.ExpandedOp
 unpack = Instr.PrimEx . Instr.UNPACK "" ""
 
 concat ∷ Instr.ExpandedOp
@@ -175,7 +175,7 @@ int = Instr.PrimEx (Instr.INT "")
 self ∷ Instr.ExpandedOp
 self = Instr.PrimEx (Instr.SELF "")
 
-contract ∷ Type.Type → Instr.ExpandedOp
+contract ∷ Untyped.T → Instr.ExpandedOp
 contract = Instr.PrimEx . Instr.CONTRACT "" ""
 
 transferTokens ∷ Instr.ExpandedOp
@@ -247,7 +247,7 @@ loop = Instr.PrimEx . Instr.LOOP
 loopLeft ∷ [Instr.ExpandedOp] → Instr.ExpandedOp
 loopLeft = Instr.PrimEx . Instr.LOOP_LEFT
 
-lambda ∷ Type.Type → Type.Type → [Instr.ExpandedOp] → Instr.ExpandedOp
+lambda ∷ Untyped.T → Untyped.T → [Instr.ExpandedOp] → Instr.ExpandedOp
 lambda = (Instr.PrimEx .) ... Instr.LAMBDA ""
 
 dip ∷ [Instr.ExpandedOp] → Instr.ExpandedOp

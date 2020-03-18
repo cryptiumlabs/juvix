@@ -17,11 +17,11 @@ import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
-import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
+import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
-import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
@@ -599,8 +599,10 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       -- Make sure to run before insts!
       -- Will end up with args ... : captures ... : [] on the stack.
       unpackOps
-        | numberOfExtraArgs > 0 = Utils.unpackArgsCaptures (fromIntegral left) (fromIntegral numberOfExtraArgs)
-        | otherwise = Utils.unpackTupleN (fromIntegral (left - 1))
+        | numberOfExtraArgs > 0 =
+          Utils.unpackArgsCaptures (fromIntegral left) (fromIntegral numberOfExtraArgs)
+        | otherwise =
+          Utils.unpackTupleN (fromIntegral (pred left))
 
   p ← protectStack $ do
     put @"stack" stackLeft
@@ -620,7 +622,9 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
       let Just returnType = snd <$> lastMay (Utils.piToList ty)
       primReturn ← typeToPrimType returnType
-      let capturesTypes = (\x → (x, fromJust (VStack.lookupType x curr))) <$> VStack.symbolsInT capturesList curr
+      let capturesTypes =
+            (\x → (x, fromJust (VStack.lookupType x curr)))
+              <$> VStack.symbolsInT capturesList curr
 
           argTy = Utils.lamType capturesTypes argsWithTypes primReturn
 
