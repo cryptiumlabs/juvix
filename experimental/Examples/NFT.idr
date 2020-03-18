@@ -84,58 +84,56 @@ initStorage =
     Left _ => emptyStorage
     Right s => s
 
-total storage : Storage
-storage =
-  initStorage
-
 ||| balanceOf [standard function]
 ||| returns the number of NFTs owned by the input address.
-total balanceOf : Address -> Nat
-balanceOf address =
+total balanceOf : Address -> (storage : Storage) -> Nat
+balanceOf address storage =
   getAccountBal address (accounts storage)
 
 ||| ownerOf [standard function]
 ||| returns the address of the owner of the input NFT.
-ownerOf : TokenId -> Either Error Address
-ownerOf token =
+ownerOf : TokenId -> (storage : Storage) -> Either Error Address
+ownerOf token storage =
   case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
 ||| ownerOfToken abstracts Right of ownerOf.
 ||| Only use this when ownerOf cannot return Left.
-total ownerOfToken : TokenId -> Address
-ownerOfToken token =
-  case ownerOf token of
+total ownerOfToken : TokenId -> (storage : Storage) -> Address
+ownerOfToken token storage =
+  case ownerOf token storage of
     Left e => owner storage
     Right a => a
 
 ||| getApproved [standard function]
 ||| get the approved address for the input NFT
-total getApproved : TokenId -> Either Error (Maybe Address)
-getApproved token =
+total getApproved :
+TokenId -> (storage : Storage) -> Either Error (Maybe Address)
+getApproved token storage =
   case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
 ||| approvedAdd abstracts Right of getApproved.
 ||| Only use this when getApproved cannot return Left.
-total approvedAdd : TokenId -> Maybe Address
-approvedAdd token =
-  case getApproved token of
+total approvedAdd : TokenId -> (storage : Storage) -> Maybe Address
+approvedAdd token storage =
+  case getApproved token storage of
     Left e => Just (owner storage)
     Right a => a
 
 ||| approve [standard function] set the approved address for an NFT.
 ||| When a transfer executes, the approved
 ||| address for that NFT (if any) is reset to none.
-total approve : Address -> TokenId -> Either Error Storage
-approve address token =
-  case getApproved token of
+total approve :
+Address -> TokenId -> (storage : Storage) -> Either Error Storage
+approve address token storage =
+  case getApproved token storage of
     Left e => Left e
-    Right approvedAdd =>
-      let isApproved = currentCaller == (maybe (owner storage) id approvedAdd)
-          owner = ownerOfToken token in
+    Right approvedAddress =>
+      let isApproved = currentCaller == (maybe (owner storage) id approvedAddress)
+          owner = ownerOfToken token storage in
           case currentCaller == owner || isApproved of
             False => Left FailedToAuthenticate
             True =>
@@ -153,8 +151,8 @@ approve address token =
                  )
 
 ||| newOp function to update the operator list.
-total newOp : Address -> Bool -> SortedMap Address Bool
-newOp operator isSet =
+total newOp : Address -> Bool -> (storage : Storage) -> SortedMap Address Bool
+newOp operator isSet storage =
   case lookup currentCaller (accounts storage) of
     Nothing => insert operator isSet empty
     Just op => insert operator isSet (opApprovals op)
@@ -162,8 +160,9 @@ newOp operator isSet =
 ||| setApprovalForAll [standard function]
 ||| let the owner enable or disable an operator.
 ||| The operator can manage all NFTs of the owner.
-total setApprovalForAll : (operator : Address) -> Bool -> Either Error Storage
-setApprovalForAll operator isSet =
+total setApprovalForAll :
+(operator : Address) -> Bool -> (storage : Storage) -> Either Error Storage
+setApprovalForAll operator isSet storage =
   case currentCaller == operator of
     True => Left OwnerCannotBeOperator
     False =>
@@ -173,10 +172,10 @@ setApprovalForAll operator isSet =
             insert
             currentCaller
             (MkAccount
-              (balanceOf currentCaller)
-              (newOp operator isSet)
+              (balanceOf currentCaller storage)
+              (newOp operator isSet storage)
             )
-            currentAcc
+            (accounts storage)
           } storage
          )
 
@@ -184,8 +183,9 @@ setApprovalForAll operator isSet =
 ||| returns whether an address is an authorized operator for another address.
 ||| @owner the address that owns the NFTs.
 ||| @operator the address that acts on behalf of the owner.
-total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
-isApprovedForAll owner operator =
+total isApprovedForAll :
+(owner : Address) -> (operator : Address) -> (storage : Storage) -> Bool
+isApprovedForAll owner operator storage =
   case lookup owner (accounts storage) of
     Nothing => False
     Just op =>
@@ -200,23 +200,24 @@ modifyAccBal add f acc =
   let addAcc = getAccount add acc in
     insert add (record {ownedTokens $= f} addAcc) acc
 
-||| transfer [standard function] 
+||| transfer [standard function]
 ||| transfers the ownership of a NFT from one address to another.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @token the TokenId of the NFT to be transferred
 total transfer :
-(from : Address) -> (dest : Address) -> (token : TokenId) -> Either Error Storage
-transfer from dest token =
-  case ownerOf token of
+(from : Address) -> (dest : Address) -> (token : TokenId) ->
+(storage : Storage) -> Either Error Storage
+transfer from dest token storage =
+  case ownerOf token storage of
     Left e => Left e
     Right add =>
       case add == from of
         False => Left NotOwnedByFromAddress
         True =>
           case currentCaller == from ||
-               currentCaller == maybe (owner storage) id (approvedAdd token) ||
-               isApprovedForAll add currentCaller of
+               currentCaller == maybe (owner storage) id (approvedAdd token storage) ||
+               isApprovedForAll add currentCaller storage of
             False => Left FailedToAuthenticate
             True =>
               let newAcc = modifyAccBal from (minus 1) (modifyAccBal dest (+ 1) (accounts storage))
