@@ -489,7 +489,9 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 -- Misc
 --------------------------------------------------------------------------------
 
-constructPrim ∷ (Env.Stack m, Env.Count m, Env.Error m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
+-- TODO ∷ determine if we'd ever call this on a constant like primitive
+constructPrim ∷
+  (Env.Stack m, Env.Count m, Env.Error m) ⇒ Types.NewPrim → Types.Type → m Env.Expanded
 constructPrim prim ty = do
   let (f, lPrim) = primToFargs prim ty
   names ← reserveNames lPrim

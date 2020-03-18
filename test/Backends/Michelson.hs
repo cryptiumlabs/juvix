@@ -45,7 +45,7 @@ backendMichelson =
     [ -- identityFn,
       -- identityApp,
       -- identityApp2,
-      -- identityExpr,
+      identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec
     ]
@@ -151,10 +151,11 @@ identityTerm =
 
 identityTerm2 ∷ Term
 identityTerm2 =
-  ( J.Lam
-      "x"
-      ( J.App
-          ( J.App
+  ( J.LamM
+      []
+      ["x"]
+      ( J.AppM
+          ( J.AppM
               ( J.Prim (Instructions.toNewPrimErr Instructions.pair),
                 SNat 1,
                 J.Pi
@@ -162,16 +163,19 @@ identityTerm2 =
                   (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) "")))
                   (J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) ""))))
               )
-              (J.Prim (Constant M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))),
+              [(J.Prim (Constant M.ValueNil), SNat 1, J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) "")))],
             SNat 1,
             J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) "")))
           )
-          ( J.App
-              (J.Prim (Instructions.toNewPrimErr Instructions.car), SNat 1, J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
-              (J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))),
+          [
+            ( J.AppM
+              (J.Prim (Instructions.toNewPrimErr Instructions.car)
+              , SNat 1
+              , J.Pi (SNat 1) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
+              [(J.Var "x", SNat 1, J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) "")))],
             SNat 1,
             J.PrimTy (PrimTy (M.Type M.TUnit ""))
-          ),
+          )],
         SNat 1,
         J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))
       ),
