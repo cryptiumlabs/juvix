@@ -14,6 +14,7 @@ data Error = NotEnoughBalance
            | TokenAlreadyMinted
            | NonExistenceToken
            | NotOwnedByFromAddress
+           | OwnerCannotBeOperator
 
 ||| currentCaller is the address of the caller of the current operation.
 currentCaller : Address

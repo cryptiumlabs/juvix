@@ -169,18 +169,23 @@ newOp operator isSet =
 ||| setApprovalForAll [standard function]
 ||| let the owner enable or disable an operator.
 ||| The operator can manage all NFTs of the owner.
-total setApprovalForAll : (operator : Address) -> Bool -> Storage
+total setApprovalForAll : (operator : Address) -> Bool -> Either Error Storage
 setApprovalForAll operator isSet =
-    record
-      {accounts =
-        insert
-        currentCaller
-        (MkAccount
-          (balanceOf currentCaller)
-          (newOp operator isSet)
-        )
-        currentAcc
-      } storage
+  case currentCaller == operator of
+    True => Left OwnerCannotBeOperator
+    False =>
+      Right
+        (record
+          {accounts =
+            insert
+            currentCaller
+            (MkAccount
+              (balanceOf currentCaller)
+              (newOp operator isSet)
+            )
+            currentAcc
+          } storage
+         )
 
 ||| isApprovedForAll [standard function]
 ||| returns whether an address is an authorized operator for another address.
