@@ -1,13 +1,16 @@
 Juvix's Haskell Style Guide
 ===========================
 
-This document describes the preferred coding style for Juvix. When something isn't covered by this guide you should stay
-consistent with the existing code. See also  [CONTRIBUTING.md](https://github.com/cryptiumlabs/juvix/blob/develop/doc/CONTRIBUTING.md).
+This document describes the preferred coding style for Juvix.
+When something isn't covered by this guide you should stay
+consistent with the existing code.
+See also [CONTRIBUTING.md](https://github.com/cryptiumlabs/juvix/blob/develop/doc/CONTRIBUTING.md).
 
 HLint
 -----
 
-Set up [HLint](https://github.com/ndmitchell/hlint) in your code environment and follow its code suggestions
+Set up [HLint](https://github.com/ndmitchell/hlint)
+in your code environment and follow its code suggestions
 as much as you can.
 
 Formatting
@@ -15,8 +18,8 @@ Formatting
 
 ### Line Length
 
-Maximum line length is *80 characters*. There should be no trailing whitespace anywhere in your
-code.
+Maximum line length is *80 characters*.
+There should be no trailing whitespace anywhere in your code.
 
 - In Emacs, you can add the following code to your `init.el` file to
 enforce this:
@@ -37,7 +40,7 @@ enforce this:
 ### Indentation
 
 Use spaces for indenting.  Indent your code blocks
-with *2 spaces*.  
+with *2 spaces*.
 
 ### Blank Lines
 
@@ -51,12 +54,12 @@ are large.  Use your judgement.
 Surround binary operators with a single space on either side.  Use
 your better judgement for the insertion of spaces around arithmetic
 operators but always be consistent about whitespace on either side of
-a binary operator.  Don't insert a space after a lambda. For example:
+a binary operator.  Don't insert a space after a lambda.  For example:
 
 ```haskell
 plus4 n = n + 4  -- whitespace on either side of `+`
 
-(\x -> x + 4)  -- no space after the lambda 
+(\x -> x + 4)  -- no space after the lambda
 ```
 
 ### Data Declarations
@@ -157,8 +160,49 @@ Put a blank line between each group of imports.  The imports in each
 group should be sorted alphabetically, by module name.
 
 Always use explicit import lists or `qualified` imports for standard
-and third party libraries. The *Prelude* is an exception.
+and third party libraries.  The *Juvix Standard Library* is an exception.
 
+Qualified imports help two fold:
+
+1. easily determine what code code comes from where and refactoring dependencies
+2. Enforce consistency between different Haskell modules. For example:
+
+Before:
+```haskell
+module Usage where
+
+data UsageType = ...
+
+usage = ...
+
+```
+```haskell
+module Nat where
+
+data NatType = ...
+
+nat = ...
+
+```
+After:
+
+```haskell
+module Usage where
+
+data Type = ...
+
+t = ...
+
+```
+
+```haskell
+module Nat where
+
+data Type = ...
+
+t = ...
+
+```
 Comments
 --------
 
@@ -215,7 +259,8 @@ Separate end-of-line comments from the code using 2 spaces.  Align
 comments for data type definitions.  Some examples:
 
 ```haskell
-data Parser = Parser
+data Parser =
+  Parser
     !Int         -- Current position
     !ByteString  -- Remaining input
 
