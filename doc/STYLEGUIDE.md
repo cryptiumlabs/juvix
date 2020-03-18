@@ -165,7 +165,7 @@ and third party libraries.  The *Juvix Standard Library* is an exception.
 Qualified imports help two fold:
 
 1. easily determine what code code comes from where and refactoring dependencies
-2. Enforce consistency between different Haskell Modules.  For example:
+2. Enforce consistency between different Haskell modules. For example:
 
 Before:
 ```haskell
