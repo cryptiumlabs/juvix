@@ -17,10 +17,11 @@ import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
-import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
+import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
@@ -585,7 +586,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
   curr ← get @"stack"
   -- Step 2: Figure out what the stack will be in the body of the function.
   -- Note: these lets are dropping usages the lambda consumes.
-  let listOfArgsType = piToList ty
+  let listOfArgsType = Utils.piToList ty
 
       termList = reverse $ zip listOfArgsType argsLeft
 
@@ -598,8 +599,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       -- Make sure to run before insts!
       -- Will end up with args ... : captures ... : [] on the stack.
       unpackOps
-        | numberOfExtraArgs > 0 = unpackArgsCaptures (fromIntegral left) (fromIntegral numberOfExtraArgs)
-        | otherwise = unpackTupleN (fromIntegral (left - 1))
+        | numberOfExtraArgs > 0 = Utils.unpackArgsCaptures (fromIntegral left) (fromIntegral numberOfExtraArgs)
+        | otherwise = Utils.unpackTupleN (fromIntegral (left - 1))
 
   p ← protectStack $ do
     put @"stack" stackLeft
@@ -617,57 +618,23 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       -- TODO ∷ Reduce usages of the vstack items, due to eating n from the lambda.
       -- Step 5: find the types of the captures, and generate the type for primArg
       argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
-      let Just returnType = snd <$> lastMay (piToList ty)
+      let Just returnType = snd <$> lastMay (Utils.piToList ty)
       primReturn ← typeToPrimType returnType
       let capturesTypes = (\x → (x, fromJust (VStack.lookupType x curr))) <$> VStack.symbolsInT capturesList curr
-          argTy = lamType capturesTypes argsWithTypes primReturn
-      -- Step 6: generate the lambda
-      let lambda = Instructions.lambda argTy primReturn insts
+
+          argTy = Utils.lamType capturesTypes argsWithTypes primReturn
+
+          -- Step 6: generate the lambda
+          lambda = Instructions.lambda argTy primReturn insts
+
       -- Return all operations in order: push the lambda, evaluate captures, pair up captures, APPLY.
       modify @"ops" (lambda :)
       when (numberOfExtraArgs > 0) $
         modify @"ops"
           ( [ Instructions.dip capturesInsts,
-              pairN (numberOfExtraArgs - 1),
+              Utils.pairN (numberOfExtraArgs - 1),
               Instructions.apply
             ]
               <>
           )
       get @"ops"
-
-piToList ∷ Ann.Type primTy primVal → [(Usage.T, Ann.Type primTy primVal)]
-piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
-piToList _ = []
-
-unpackTuple ∷ Instr.ExpandedOp
-unpackTuple =
-  Instructions.dup
-    <> Instructions.car
-    <> Instructions.dip [Instructions.cdr]
-
-unpackTupleN ∷ Natural → Instr.ExpandedOp
-unpackTupleN 0 = mempty
-unpackTupleN n = unpackTuple <> Instructions.dip [unpackTupleN (pred n)]
-
--- (captures, args) => args ... : captures ... : []
-unpackArgsCaptures ∷ Natural → Natural → Instr.ExpandedOp
-unpackArgsCaptures numArgs numCaptures =
-  Instructions.dup
-    <> Instructions.dip [Instructions.car, unpackTupleN (numCaptures - 1)]
-    <> Instructions.cdr
-    <> unpackTupleN (numArgs - 1)
-
-pairN ∷ Int → Instr.ExpandedOp
-pairN count = fold (replicate count Instructions.pair)
-
--- TODO: Make these prettier using the DSL later.
-closureType ∷ [(Symbol, Untyped.T)] → Untyped.T
-closureType = foldr (Untyped.pair . snd) Untyped.unit
-
--- | 'lamType' takes Args+Closures and ExtraArgs, along with their return type
--- and constructs a lambda type
-lamType ∷ [(Symbol, Untyped.T)] → [(Symbol, Untyped.T)] → Untyped.T → Untyped.T
-lamType argsPlusClosures =
-  Untyped.lambda
-    . Untyped.pair (closureType argsPlusClosures)
-    . closureType

@@ -148,6 +148,7 @@ library:
     - Juvix.Backends.Michelson.DSL.InstructionsEff
     - Juvix.Backends.Michelson.DSL.Environment
     - Juvix.Backends.Michelson.DSL.Untyped
+    - Juvix.Backends.Michelson.DSL.Utils
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
