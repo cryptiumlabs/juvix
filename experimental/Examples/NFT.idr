@@ -60,17 +60,16 @@ getAccountBal address accounts = case lookup address accounts of
 total mint :
 (token : TokenId) -> (dest : Address) -> (storage : Storage) -> Either Error Storage
 mint token dest storage =
-  let currentAcc = accounts storage
-      currentTok = tokens storage in
-    let destAcc = getAccount dest currentAcc in
-      case lookup token currentTok of
+  let acc = accounts storage in
+    let destAcc = getAccount dest acc in
+      case lookup token (tokens storage) of
         Just something => Left TokenAlreadyMinted
         Nothing =>
           case currentCaller == owner storage of
             False => Left FailedToAuthenticate
             True =>
-              let newAcc = insert dest (record {ownedTokens $= (+ 1)} destAcc) currentAcc
-                  newToken = insert token (MkToken dest Nothing) currentTok in
+              let newAcc = insert dest (record {ownedTokens $= (+ 1)} destAcc) acc
+                  newToken = insert token (MkToken dest Nothing) (tokens storage) in
                     Right
                       (record
                         {accounts = newAcc,
@@ -89,23 +88,17 @@ total storage : Storage
 storage =
   initStorage
 
-total currentAcc : SortedMap Address Account
-currentAcc = accounts storage
-
-total currentTok : SortedMap TokenId Token
-currentTok = tokens storage
-
 ||| balanceOf [standard function]
 ||| returns the number of NFTs owned by the input address.
 total balanceOf : Address -> Nat
 balanceOf address =
-  getAccountBal address currentAcc
+  getAccountBal address (accounts storage)
 
 ||| ownerOf [standard function]
 ||| returns the address of the owner of the input NFT.
 ownerOf : TokenId -> Either Error Address
 ownerOf token =
-  case lookup token currentTok of
+  case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (tokenOwner t)
 
@@ -121,7 +114,7 @@ ownerOfToken token =
 ||| get the approved address for the input NFT
 total getApproved : TokenId -> Either Error (Maybe Address)
 getApproved token =
-  case lookup token currentTok of
+  case lookup token (tokens storage) of
     Nothing => Left NonExistenceToken
     Just t => Right (approved t)
 
@@ -155,14 +148,14 @@ approve address token =
                        owner
                        (Just address)
                      )
-                     currentTok
+                     (tokens storage)
                    } storage
                  )
 
 ||| newOp function to update the operator list.
 total newOp : Address -> Bool -> SortedMap Address Bool
 newOp operator isSet =
-  case lookup currentCaller currentAcc of
+  case lookup currentCaller (accounts storage) of
     Nothing => insert operator isSet empty
     Just op => insert operator isSet (opApprovals op)
 
@@ -193,7 +186,7 @@ setApprovalForAll operator isSet =
 ||| @operator the address that acts on behalf of the owner.
 total isApprovedForAll : (owner : Address) -> (operator : Address) -> Bool
 isApprovedForAll owner operator =
-  case lookup owner currentAcc of
+  case lookup owner (accounts storage) of
     Nothing => False
     Just op =>
       case lookup operator (opApprovals op) of
@@ -207,7 +200,7 @@ modifyAccBal add f acc =
   let addAcc = getAccount add acc in
     insert add (record {ownedTokens $= f} addAcc) acc
 
-||| transfer [standard function]
+||| transfer [standard function] 
 ||| transfers the ownership of a NFT from one address to another.
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
@@ -226,8 +219,8 @@ transfer from dest token =
                isApprovedForAll add currentCaller of
             False => Left FailedToAuthenticate
             True =>
-              let newAcc = modifyAccBal from (minus 1) (modifyAccBal dest (+ 1) currentAcc)
-                  newToken = insert token (MkToken dest Nothing) currentTok in
+              let newAcc = modifyAccBal from (minus 1) (modifyAccBal dest (+ 1) (accounts storage))
+                  newToken = insert token (MkToken dest Nothing) (tokens storage) in
                 Right
                   (record
                     {accounts = newAcc,
