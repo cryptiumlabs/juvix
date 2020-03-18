@@ -11,10 +11,14 @@ module Juvix.Core.IR.Types
 where
 
 import Juvix.Core.IR.Types.Base
-import Juvix.Core.Usage
+import qualified Juvix.Core.Usage as Usage
 -- import Juvix.Core.IR.Extension
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
+
+--------------------------------------------------------------------------------
+-- Types
+--------------------------------------------------------------------------------
 
 data NoExt
 
@@ -27,7 +31,7 @@ data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
   | VPi
-      Usage
+      Usage.T
       (Value primTy primVal m)
       (Value primTy primVal m → m (Value primTy primVal m))
   | VLam (Value primTy primVal m → m (Value primTy primVal m))
@@ -40,13 +44,26 @@ data Neutral primTy primVal m
   | NApp (Neutral primTy primVal m) (Value primTy primVal m)
 
 -- | 'Annotations' include usage and type.
-type Annotation primTy primVal m = (Usage, Value primTy primVal m)
+data Annotation primTy primVal m
+  = Annotated
+      { usage ∷ Usage.T,
+        type' ∷ Value primTy primVal m
+      }
 
--- Contexts map variables to their types.
-type Context primTy primVal m = [(Name, Annotation primTy primVal m)]
+-- | 'Context's map variables to their types.
+type Context primTy primVal m =
+  [(Name, Annotation primTy primVal m)]
 
 -- Evaluation
 type Env primTy primVal m = [Value primTy primVal m]
+
+--------------------------------------------------------------------------------
+-- Deriving Instances
+--------------------------------------------------------------------------------
+
+deriving instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
 instance
   (Eq primTy, Eq primVal) ⇒
@@ -56,7 +73,7 @@ instance
 
 deriving instance
   (Eq primTy, Eq primVal) ⇒
-  Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
+  Eq (Annotation primTy primVal (EnvTypecheck primTy primVal))
 
 instance
   (Show primTy, Show primVal) ⇒
@@ -97,13 +114,13 @@ instance
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
-      <> show (snd gotT)
+      <> show (type' gotT)
       <> " , with "
-      <> show (fst gotT)
+      <> show (usage gotT)
       <> " usage.\n But the expected type is "
-      <> show (snd expectedT)
+      <> show (type' expectedT)
       <> " , with "
-      <> show (fst expectedT)
+      <> show (usage expectedT)
       <> " usage."
   show (UniverseMismatch t ty) =
     show t
@@ -124,9 +141,9 @@ instance
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
     "The usage of "
-      <> (show (fst gotU))
+      <> (show (usage gotU))
       <> " is not compatible with "
-      <> (show (fst expectedU))
+      <> (show (usage expectedU))
   show (UnboundBinder ii x) =
     "Cannot find the type of \n"
       <> show x
