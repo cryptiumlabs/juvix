@@ -288,90 +288,25 @@ This module provides a default contract environment
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[Compilation/Environment]]
-  + [[Prim]]
   + [[Michelson/Compilation/Types]]
   + [[Contract]]
+  + [[DSL/Environment]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Compilation/Environment]]
-  + [[Lambda]]
-  + [[Compilation/Type]]
-  + [[Compilation/Util]]
+  + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
+  + [[DSL/Environment]]
+  + [[InstructionsEff]]
   + [[Optimisation]]
-  + [[Library]]
-***** Checks
-- Sanity checks for Michelson compilation.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Datatypes
-Datatypes and pattern matching.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Environment <<Compilation/Environment>>
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Lambda
-- Compilation of core terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Term]]
-  + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[ErasedAnn]]
-  + [[Library]]
-***** Prim
-- Compilation of primitive terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Compilation/Environment]]
-  + [[Compilation/Type]]
-  + [[VirtualStack]]
-  + [[ErasedAnn]]
-  + [[Library]]
-***** Term
-- Compilation of core terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Checks]]
-  + [[Compilation/Environment]]
-  + [[Prim]]
-  + [[Compilation/Type]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Michelson/Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Usage]]
-  + [[Library]]
-***** Type <<Compilation/Type>>
-- Functions for representation of types in the Michelson backend.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
-  + [[Library]]
-***** Util <<Compilation/Util>>
-Utility functions used by the Michelson backend.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[VirtualStack]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson
@@ -419,9 +354,13 @@ Utility functions used by the Michelson backend.
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
+  + [[Untyped]]
   + [[ErasedAnn/Types]]
   + [[Usage]]
   + [[Library]]
+  + [[Library]]
+***** Untyped
+- _Relies on_
   + [[Library]]
 ** Core
 - _Relies on_
@@ -512,7 +451,7 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Erased/Evaluator]]
   + [[Erased/Types]]
-  + [[Erased/Util]]
+  + [[Util]]
 **** Evaluator <<Erased/Evaluator>>
 - _Relies on_
   + [[Erased/Types]]
@@ -523,7 +462,7 @@ Utility functions used by the Michelson backend.
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]
-**** Util <<Erased/Util>>
+**** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
@@ -709,13 +648,13 @@ Quantitative type implementation inspired by
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
   + [[InteractionNet/Translation]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
 **** Default <<InteractionNet/Default>>
 Gives the default execution environment for netToAst
 Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** NodeInterface
@@ -734,7 +673,7 @@ Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Default]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** Shared <<InteractionNet/Shared>>
@@ -749,10 +688,10 @@ Can be added to via core translation
   + [[Nets/Default]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
-**** Type <<InteractionNet/Type>>
+**** Type
 - Serves as the AST for all operations on [[Nets/Default]]
 - Resembles the =BOHM= syntax/operation set, however it alters the
   operation set quite a bit

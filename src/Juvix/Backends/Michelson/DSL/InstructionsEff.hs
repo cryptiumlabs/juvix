@@ -18,12 +18,12 @@ import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
-import qualified Michelson.Untyped.Type as Untyped
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
@@ -555,7 +555,7 @@ consVarNone ∷
   (Env.Stack m, Env.Error m) ⇒ Symbol → Usage.T → Types.Type → m ()
 consVarNone symb = consVarGen symb Nothing
 
-typeToPrimType ∷ ∀ m. Env.Error m ⇒ Types.Type → m Untyped.Type
+typeToPrimType ∷ ∀ m. Env.Error m ⇒ Types.Type → m Untyped.T
 typeToPrimType ty =
   case ty of
     Ann.SymT _ → throw @"compilationError" Types.InvalidInputType
@@ -565,7 +565,7 @@ typeToPrimType ty =
     Ann.Pi _usages argTy retTy → do
       argTy ← typeToPrimType argTy
       retTy ← typeToPrimType retTy
-      pure (Untyped.Type (Untyped.TLambda argTy retTy) "")
+      pure (Untyped.lambda argTy retTy)
 
 eatType ∷ Natural → Types.Type → Types.Type
 eatType 0 t = t
@@ -661,23 +661,14 @@ pairN ∷ Int → Instr.ExpandedOp
 pairN count = fold (replicate count Instructions.pair)
 
 -- TODO: Make these prettier using the DSL later.
-closureType ∷ [(Symbol, Untyped.Type)] → Untyped.Type
-closureType [] = Untyped.Type Untyped.TUnit ""
-closureType ((_, x) : xs) = Untyped.Type (Untyped.TPair "" "" x (closureType xs)) ""
+closureType ∷ [(Symbol, Untyped.T)] → Untyped.T
+closureType [] = Untyped.unit
+closureType ((_, x) : xs) = Untyped.pair x (closureType xs)
 
-lamType ∷ [(Symbol, Untyped.Type)] → [(Symbol, Untyped.Type)] → Untyped.Type → Untyped.Type
-lamType argsPlusClosures extraArgs retTy =
-  Untyped.Type
-    ( Untyped.TLambda
-        ( Untyped.Type
-            ( Untyped.TPair
-                ""
-                ""
-                (closureType argsPlusClosures)
-                (closureType extraArgs)
-            )
-            ""
-        )
-        retTy
-    )
-    ""
+-- | 'lamType' takes Args+Closures and ExtraArgs, along with their return type
+-- and constructs a lambda type
+lamType ∷ [(Symbol, Untyped.T)] → [(Symbol, Untyped.T)] → Untyped.T → Untyped.T
+lamType argsPlusClosures =
+  Untyped.lambda
+    . Untyped.pair (closureType argsPlusClosures)
+    . closureType
