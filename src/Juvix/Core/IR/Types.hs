@@ -50,9 +50,14 @@ data Annotation primTy primVal m
         type' ∷ Value primTy primVal m
       }
 
+data Context primTy primVal m
+  = Context
+    { ann ∷ Annotation primTy primVal m
+    , name ∷ Name
+    }
+
 -- | 'Context's map variables to their types.
-type Context primTy primVal m =
-  [(Name, Annotation primTy primVal m)]
+type Contexts primTy primVal m = [Context primTy primVal m]
 
 -- Evaluation
 type Env primTy primVal m = [Value primTy primVal m]
@@ -74,6 +79,18 @@ instance
 deriving instance
   (Eq primTy, Eq primVal) ⇒
   Eq (Annotation primTy primVal (EnvTypecheck primTy primVal))
+
+deriving instance
+  (Show primTy, Show primVal) ⇒
+  Show (Annotation primTy primVal (EnvTypecheck primTy primVal))
+
+deriving instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Context primTy primVal (EnvTypecheck primTy primVal))
+
+deriving instance
+  (Show primTy, Show primVal) ⇒
+  Show (Context primTy primVal (EnvTypecheck primTy primVal))
 
 instance
   (Show primTy, Show primVal) ⇒
