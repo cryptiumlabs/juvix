@@ -24,7 +24,6 @@ import Prelude (String)
 -- TODO: Add dependent functions for pair, fst, snd, etc.
 typeOf ∷ PrimVal → NonEmpty PrimTy
 typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
-typeOf _ = undefined
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
@@ -36,7 +35,6 @@ constType v =
     M.ValueUnit → M.TUnit
     M.ValueTrue → M.Tc M.CBool
     M.ValueFalse → M.Tc M.CBool
-    _ → undefined
 
 arity ∷ PrimVal → Int
 arity = pred . length . typeOf
@@ -47,8 +45,8 @@ apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
-    _runPrim = Env.execWithStack mempty $ do
-      _ ← Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+    runPrim = Env.execWithStack mempty $ do
+      Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
