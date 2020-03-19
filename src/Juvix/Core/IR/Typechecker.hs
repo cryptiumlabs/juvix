@@ -255,7 +255,7 @@ typeTerm _ ii g x@(IRTypes.PrimTy _) ann = do
       logOutput $ passed <> typechecked x ann
       pure ()
   where
-    checking = logOutput "Checking that input annotation is of type *0."
+    checking = logOutput "Checking that input annotation is of type *0. "
 -- Lam (introduction rule of dependent function type),
 -- requires Pi (formation rule of dependent function type)
 typeTerm p ii g t@(IRTypes.Lam m) ann = do

@@ -408,8 +408,6 @@ Utility functions used by the Michelson backend.
 - For constant progoation, have a function say take-2 that looks at
   the top two items in the stack and then returns back either if
   they were constants or not and dispatches logic based on that
-- _Relies on_
-  + [[Instructions]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]
@@ -707,7 +705,6 @@ Quantitative type implementation inspired by
   + [[INetIR/Types]]
 *** JSON
 - _Relies on_
-  + [[INetIR/Types]]
   + [[Library]]
 *** Types <<INetIR/Types>>
 - _Relies on_

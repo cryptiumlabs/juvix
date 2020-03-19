@@ -88,7 +88,7 @@ defineReadNet ∷ Codegen.Define m ⇒ m Operand.Operand
 defineReadNet =
   Codegen.defineFunction nodePointer "read_net" [(opaqueNetType, "net")] $ do
     netPtr ← Codegen.externf "net"
-    net ← Codegen.load eacListPointer netPtr
+    _net ← Codegen.load eacListPointer netPtr
     -- TODO: Walk the current net, return a list of nodes
     -- Can we do this? Need top node ptr & traversal.
     -- Maybe return duplicate nodes & de-duplicate in haskell.
@@ -136,7 +136,7 @@ defineAppendToNet' =
     Codegen.setBlock forLoop
     ind ← Codegen.load int32 counter
     -- Load node at index `ind`.
-    node ←
+    _node ←
       Codegen.loadElementPtr
         ( Codegen.Minimal
             { Codegen.address' = nodes,
@@ -169,7 +169,7 @@ defineAppendToNet' =
     Codegen.setBlock forLoop2
     ind ← Codegen.load int32 counter
     -- Load node at index `ind`.
-    node ←
+    _node ←
       Codegen.loadElementPtr
         ( Codegen.Minimal
             { Codegen.address' = nodes,
@@ -177,7 +177,7 @@ defineAppendToNet' =
               Codegen.indincies' = [ind]
             }
         )
-    ptr ←
+    _ptr ←
       Codegen.loadElementPtr
         ( Codegen.Minimal
             { Codegen.address' = nodes,

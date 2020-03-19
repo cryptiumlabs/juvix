@@ -33,13 +33,12 @@ typecheck _ _ = exitFailure
 
 compile ∷ FilePath → FilePath → Backend → IO ()
 compile fin fout backend = do
-  (term, ty) ← typecheck fin backend
+  (_term, _ty) ← typecheck fin backend
   -- TODO: Annotated version.
-  let (res, logs) = M.compileContract undefined undefined
+  let (res, _logs) = M.compileContract undefined undefined
   case res of
     Left err → do
       T.putStrLn (show err)
       exitFailure
     Right c → do
       T.writeFile fout (M.untypedContractToSource (fst c))
-compile _ _ _ = exitFailure
