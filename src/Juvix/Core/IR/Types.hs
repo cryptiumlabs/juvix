@@ -52,9 +52,9 @@ data Annotation primTy primVal m
 
 data Context primTy primVal m
   = Context
-    { ann ∷ Annotation primTy primVal m
-    , name ∷ Name
-    }
+      { ann ∷ Annotation primTy primVal m,
+        name ∷ Name
+      }
 
 -- | 'Context's map variables to their types.
 type Contexts primTy primVal m = [Context primTy primVal m]
