@@ -436,6 +436,7 @@ Utility functions used by the Michelson backend.
 *** Types <<Core/Types>>
 - _Relies on_
   + [[Core/EAC/Types]]
+  + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
   + [[IR/Types]]

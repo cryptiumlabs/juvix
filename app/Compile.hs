@@ -8,7 +8,6 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.HR as Core
 import Juvix.Library
 import Options
 import Types
@@ -17,12 +16,12 @@ typecheck ∷
   FilePath → Backend → IO (Erased.Term Param.PrimVal, Erased.Type Param.PrimTy)
 typecheck fin Michelson = do
   source ← readFile fin
-  let parsed = Core.generateParser Param.michelson (T.unpack source)
+  let parsed = HR.generateParser Param.michelson (T.unpack source)
   case parsed of
     Just (HR.Elim (HR.Ann usage term ty)) → do
       erased ← liftIO (exec (Core.typecheckErase term usage ty) Param.michelson)
       case erased of
-        (Right ((term, ty), typeAssignment), _) →
+        (Right (Core.WithType (Core.Assignment term _assign) ty), _) →
           pure (term, ty)
         other → do
           T.putStrLn (show other)

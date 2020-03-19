@@ -179,7 +179,7 @@ instance
 newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Show, Eq, Generic)
 
-data EnvCtx primTy primVal
+newtype EnvCtx primTy primVal
   = EnvCtx
       { typecheckerLog ∷ [TypecheckerLog]
       }
@@ -238,7 +238,7 @@ quote ii p =
     VStar nat → pure (Star nat)
     VPrimTy p → pure (PrimTy p)
     VPi pi v f → Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
-    VLam func → Lam <$> (quote (ii + 1) =<< func (vfree (Quote ii)))
+    VLam func → Lam <$> (quote (succ ii) =<< func (vfree (Quote ii)))
     VPrim pri → pure (Elim (Prim pri))
     VNeutral n → Elim <$> neutralQuote ii n
 

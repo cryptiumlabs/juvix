@@ -78,7 +78,7 @@ handleSpecial str cont = do
           erased ← liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
           case erased of
-            (Right (term, _), _) → do
+            (Right (Core.Assignment term _), _) → do
               transformAndEvaluateErasedCore Nat.t True term
             _ → return ()
         _ → H.outputStrLn "must enter a valid annotated core term"

@@ -24,12 +24,18 @@ erase ∷
   TermInfo primTy primVal
     ( Either
         Erasure.Error
-        ((Erased.Term primVal, Erased.Type primTy), Erased.TypeAssignment primTy)
+        (Core.AssignWithType primTy primVal)
     )
 erase parameterisation term usage ty =
   let (erased, env) = exec (eraseTerm parameterisation term usage ty)
-   in erased >>| \erased →
-        (erased, Erasure.typeAssignment env)
+   in erased >>| \(term, type') →
+        Core.WithType
+          { Core.termAssign = Core.Assignment
+              { Core.term = term,
+                Core.assignment = Erasure.typeAssignment env
+              },
+            Core.type' = type'
+          }
 
 exec ∷
   Erasure.EnvT ty primVal a → (Either Erasure.Error a, Erasure.Env ty primVal)
