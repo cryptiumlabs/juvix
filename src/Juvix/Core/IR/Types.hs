@@ -1,154 +1,39 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | Quantitative type implementation inspired by
 --   Atkey 2018 and McBride 2016.
 module Juvix.Core.IR.Types
-  (module Juvix.Core.IR.Types,
-   module Juvix.Core.IR.Extension)
+  ( module Juvix.Core.IR.Types,
+    Name (..),
+    Term' (..),
+    Elim' (..),
+    TermAll,
+    ElimAll,
+  )
 where
 
-import Juvix.Core.Usage
-import Juvix.Core.IR.Extension
+import Juvix.Core.IR.Types.Base
+import qualified Juvix.Core.Usage as Usage
+-- import Juvix.Core.IR.Extension
 import Juvix.Library hiding (show)
 import Prelude (Show (..), String)
 
+--------------------------------------------------------------------------------
+-- Types
+--------------------------------------------------------------------------------
 
--- | checkable terms
-data Term' ext primTy primVal
-  = -- | (sort i) i th ordering of (closed) universe.
-    Star' Natural (XStar ext primTy primVal)
-  | -- | 'PrimTy' primitive type
-    PrimTy' primTy (XPrimTy ext primTy primVal)
-  | -- | formation rule of the dependent function type 'PI'.
-    -- the Usage(π) tracks how many times x is used.
-    Pi' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
-       (XPi ext primTy primVal)
-  | -- | 'LAM' Introduction rule of PI.
-    -- The abstracted variable's usage is tracked with the Usage(π).
-    Lam' (Term' ext primTy primVal) (XLam ext primTy primVal)
-  | -- | 'CONV' conversion rule. TODO make sure 0Γ ⊢ S≡T
-    -- 'Elim' is the constructor that embeds Elim to Term
-    Elim' (Elim' ext primTy primVal) (XElim ext primTy primVal)
-  | -- | Extension point for other construction forms
-    TermX (TermX ext primTy primVal)
+data NoExt
 
-deriving instance
-  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
-  Eq (Term' ext primTy primVal)
+extendTerm "Term" [t|NoExt|] defaultExtTerm
 
-deriving instance
-  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
-  Show (Term' ext primTy primVal)
-
--- FIXME add pretty-printer
-{-
-instance (Show primTy, Show primVal) ⇒ Show (Term primTy primVal) where
-  show (Star n ()) = "* " <> show n
-  show (PrimTy p ()) = show p
-  show (Pi _usage varTy resultTy ()) =
-    "[Π] " <> show varTy <> "→ " <> show resultTy
-  show (Lam var ()) = "\\x. " <> show var
-  -- Elim should be invisible to users.
-  show (Elim term ()) = show term
-  show (XTerm v) = case v of {}
--}
-
--- | inferable terms
-data Elim' ext primTy primVal
-  = -- | Bound variables, in de Bruijn indices
-    Bound' Natural (XBound ext primTy primVal)
-  | -- | Free variables of type name (see below)
-    Free' Name (XFree ext primTy primVal)
-  | -- | primitive constant
-    Prim' primVal (XPrim ext primTy primVal)
-  | -- | elimination rule of PI (APP).
-    App' (Elim' ext primTy primVal) (Term' ext primTy primVal)
-         (XApp ext primTy primVal)
-  | -- | Annotation with usage.
-    Ann' Usage (Term' ext primTy primVal) (Term' ext primTy primVal)
-         (XAnn ext primTy primVal)
-  | -- | Extension point for other elimination forms
-    ElimX (ElimX ext primTy primVal)
-
-deriving instance
-  (Eq primTy, Eq primVal, TEAll Eq ext primTy primVal) ⇒
-  Eq (Elim' ext primTy primVal)
-
-deriving instance
-  (Show primTy, Show primVal, TEAll Show ext primTy primVal) ⇒
-  Show (Elim' ext primTy primVal)
-
-
-type Term = Term' NoExt
-
-pattern Star ∷ Natural → Term primTy primVal
-pattern Star i = Star' i ()
-
-pattern PrimTy ∷ primTy → Term primTy primVal
-pattern PrimTy t = PrimTy' t ()
-
-pattern Pi ∷ Usage → Term primTy primVal → Term primTy primVal
-           → Term primTy primVal
-pattern Pi π s t = Pi' π s t ()
-
-pattern Lam ∷ Term primTy primVal → Term primTy primVal
-pattern Lam t = Lam' t ()
-
-pattern Elim ∷ Elim primTy primVal → Term primTy primVal
-pattern Elim e = Elim' e ()
-
-{-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
-
-
-type Elim = Elim' NoExt
-
-pattern Bound ∷ Natural → Elim primTy primVal
-pattern Bound x = Bound' x ()
-
-pattern Free ∷ Name → Elim primTy primVal
-pattern Free x = Free' x ()
-
-pattern Prim ∷ primVal → Elim primTy primVal
-pattern Prim x = Prim' x ()
-
-pattern App ∷ Elim primTy primVal → Term primTy primVal → Elim primTy primVal
-pattern App s t = App' s t ()
-
-pattern Ann ∷ Usage → Term primTy primVal → Term primTy primVal
-            → Elim primTy primVal
-pattern Ann π s t = Ann' π s t ()
-
-{-# COMPLETE Bound, Free, Prim, App, Ann #-}
-
--- FIXME pretty-printer
-{-
-instance (Show primTy, Show primVal) ⇒ Show (Elim primVal primTy) where
-  show (Bound i ()) = "Bound " <> show i -- to be improved
-  show (Free name ()) = show name
-    -- using derived show Name instance, to be improved
-  show (Prim p ()) = show p
-  show (App f x ()) = show f <> " " <> show x
-  show (Ann pi theTerm theType ()) =
-    show theTerm <> " : [" <> show pi <> "] " <> show theType
-  show (XElim v) = case v of {}
--}
-
-
-
-data Name
-  = -- | Global variables are represented by name thus type string
-    Global String
-  | -- | to convert a bound variable into a free one
-    Local Natural
-  | Quote Natural
-  deriving (Show, Eq)
+extendElim "Elim" [t|NoExt|] defaultExtElim
 
 -- | Values/types
 data Value primTy primVal m
   = VStar Natural
   | VPrimTy primTy
-  | VPi Usage (Value primTy primVal m)
-        (Value primTy primVal m → m (Value primTy primVal m))
+  | VPi
+      Usage.T
+      (Value primTy primVal m)
+      (Value primTy primVal m → m (Value primTy primVal m))
   | VLam (Value primTy primVal m → m (Value primTy primVal m))
   | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
@@ -159,13 +44,31 @@ data Neutral primTy primVal m
   | NApp (Neutral primTy primVal m) (Value primTy primVal m)
 
 -- | 'Annotations' include usage and type.
-type Annotation primTy primVal m = (Usage, Value primTy primVal m)
+data Annotation primTy primVal m
+  = Annotated
+      { usage ∷ Usage.T,
+        type' ∷ Value primTy primVal m
+      }
 
--- Contexts map variables to their types.
-type Context primTy primVal m = [(Name, Annotation primTy primVal m)]
+data Context primTy primVal m
+  = Context
+      { ann ∷ Annotation primTy primVal m,
+        name ∷ Name
+      }
+
+-- | 'Context's map variables to their types.
+type Contexts primTy primVal m = [Context primTy primVal m]
 
 -- Evaluation
 type Env primTy primVal m = [Value primTy primVal m]
+
+--------------------------------------------------------------------------------
+-- Deriving Instances
+--------------------------------------------------------------------------------
+
+deriving instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
 instance
   (Eq primTy, Eq primVal) ⇒
@@ -175,10 +78,24 @@ instance
 
 deriving instance
   (Eq primTy, Eq primVal) ⇒
-  Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
+  Eq (Annotation primTy primVal (EnvTypecheck primTy primVal))
 
-instance (Show primTy, Show primVal)
-       ⇒ Show (Value primTy primVal (EnvTypecheck primTy primVal)) where
+deriving instance
+  (Show primTy, Show primVal) ⇒
+  Show (Annotation primTy primVal (EnvTypecheck primTy primVal))
+
+deriving instance
+  (Eq primTy, Eq primVal) ⇒
+  Eq (Context primTy primVal (EnvTypecheck primTy primVal))
+
+deriving instance
+  (Show primTy, Show primVal) ⇒
+  Show (Context primTy primVal (EnvTypecheck primTy primVal))
+
+instance
+  (Show primTy, Show primVal) ⇒
+  Show (Value primTy primVal (EnvTypecheck primTy primVal))
+  where
   show x = show (fst (exec (quote0 x)))
 
 deriving instance
@@ -214,13 +131,13 @@ instance
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
-      <> show (snd gotT)
+      <> show (type' gotT)
       <> " , with "
-      <> show (fst gotT)
+      <> show (usage gotT)
       <> " usage.\n But the expected type is "
-      <> show (snd expectedT)
+      <> show (type' expectedT)
       <> " , with "
-      <> show (fst expectedT)
+      <> show (usage expectedT)
       <> " usage."
   show (UniverseMismatch t ty) =
     show t
@@ -240,16 +157,16 @@ instance
   show (UsageMustBeZero) =
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
-       "The usage of "
-    <> (show (fst gotU))
-    <> " is not compatible with "
-    <> (show (fst expectedU))
+    "The usage of "
+      <> (show (usage gotU))
+      <> " is not compatible with "
+      <> (show (usage expectedU))
   show (UnboundBinder ii x) =
-      "Cannot find the type of \n"
-    <> show x
-    <> "\n (binder number "
-    <> show ii
-    <> ") in the environment."
+    "Cannot find the type of \n"
+      <> show x
+      <> "\n (binder number "
+      <> show ii
+      <> ") in the environment."
   show (MustBeFunction m ii n) =
     ( show m <> "\n (binder number " <> show ii
         <> ") is not a function type and thus \n"
@@ -262,7 +179,7 @@ instance
 newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Show, Eq, Generic)
 
-data EnvCtx primTy primVal
+newtype EnvCtx primTy primVal
   = EnvCtx
       { typecheckerLog ∷ [TypecheckerLog]
       }
@@ -321,7 +238,7 @@ quote ii p =
     VStar nat → pure (Star nat)
     VPrimTy p → pure (PrimTy p)
     VPi pi v f → Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
-    VLam func → Lam <$> (quote (ii + 1) =<< func (vfree (Quote ii)))
+    VLam func → Lam <$> (quote (succ ii) =<< func (vfree (Quote ii)))
     VPrim pri → pure (Elim (Prim pri))
     VNeutral n → Elim <$> neutralQuote ii n
 

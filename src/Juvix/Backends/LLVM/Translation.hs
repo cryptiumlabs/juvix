@@ -97,7 +97,7 @@ nodeFromIR = \node →
     n → Auxiliary2 (FanIn (fromIntegral n))
 
 nodeToIR ∷ ∀ k a primVal c (dataTy ∷ k). (INIR.Address, (a, Lang primVal, c)) → INIR.Node dataTy
-nodeToIR (ind, (_, l, edges)) =
+nodeToIR (ind, (_, l, _edges)) =
   INIR.Node
     { INIR.nodeAddress = ind,
       INIR.nodeKind = case l of
@@ -105,6 +105,7 @@ nodeToIR (ind, (_, l, edges)) =
         Auxiliary2 Lambda → 1
         Auxiliary2 App → 2
         Auxiliary2 (FanIn i) → i
+        _ → undefined
       --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
     }
 
@@ -123,3 +124,4 @@ indexToPortType 2 = Aux2
 indexToPortType 3 = Aux3
 indexToPortType 4 = Aux4
 indexToPortType 5 = Aux5
+indexToPortType _ = undefined

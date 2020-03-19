@@ -338,6 +338,7 @@ This module provides a default contract environment
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
   + [[Untyped]]
   + [[Library]]
 ***** InstructionsEff
@@ -376,11 +377,11 @@ This module provides a default contract environment
   + [[Core/Erasure]]
   + [[Pipeline]]
   + [[Translate]]
+  + [[Core/Types]]
   + [[Usage]]
 *** Pipeline
 - _Relies on_
   + [[Core/EAC]]
-  + [[Erased]]
   + [[Core/Erasure]]
   + [[HR]]
   + [[IR]]
@@ -397,6 +398,7 @@ This module provides a default contract environment
 *** Types <<Core/Types>>
 - _Relies on_
   + [[Core/EAC/Types]]
+  + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
@@ -423,7 +425,6 @@ This module provides a default contract environment
   + [[ConstraintGen]]
   + [[Solve]]
   + [[Core/EAC/Types]]
-  + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** ConstraintGen
@@ -519,8 +520,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
-  + [[IR/Types]]
-  + [[Usage]]
+  + [[Base]]
+  + [[Base]]
   + [[Library]]
 *** HRAnn
 - _Relies on_
@@ -534,13 +535,13 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Library]]
-  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
+  + [[Library]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]
-  + [[TransformExt]]
   + [[Typechecker]]
   + [[IR/Types]]
 **** Evaluator <<IR/Evaluator>>
@@ -549,16 +550,14 @@ the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
   + [[IR/Types]]
+  + [[Base]]
   + [[Core/Types]]
-  + [[Library]]
-**** Extension
-Extensions to the IR abstract syntax.
-- _Relies on_
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
   + [[Library]]
+  + [[Base]]
   + [[IR/Types]]
 **** Typechecker
 - _Relies on_
@@ -571,8 +570,12 @@ Transformations between different extensions.
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
+  + [[Base]]
   + [[Usage]]
-  + [[Extension]]
+  + [[Library]]
+***** Base
+- _Relies on_
+  + [[Usage]]
   + [[Library]]
 *** IRAnn
 - _Relies on_
@@ -585,9 +588,10 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
-  + [[Library]]
-  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
+  + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
@@ -636,13 +640,35 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** Frontend
+*** Lexer
+- _Relies on_
+  + [[Library]]
+*** Parser <<Frontend/Parser>>
+- The front end parser for the Juvix Programming language
+- Parsers with S at the end, eat the spaces at the end of the parse
+- Parsers with SN at the end, eats the spaces and new lines at the
+  end of the parse
+- _Relies on_
+  + [[Usage]]
+  + [[Lexer]]
+  + [[Frontend/Types]]
+  + [[Library]]
+*** Types <<Frontend/Types>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out
+  [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
 ** INetIR
 - _Relies on_
   + [[JSON]]
   + [[INetIR/Types]]
 *** JSON
 - _Relies on_
-  + [[INetIR/Types]]
   + [[Library]]
 *** Types <<INetIR/Types>>
 - _Relies on_

@@ -6,22 +6,20 @@ import qualified Data.Map.Strict as Map
 import qualified Juvix.Core.EAC.ConstraintGen as Constraint
 import qualified Juvix.Core.EAC.Solve as Solve
 import qualified Juvix.Core.EAC.Types as EAC
-import qualified Juvix.Core.Erased.Types as Types
-import Juvix.Core.Types
+import qualified Juvix.Core.Types as Types
 import Juvix.Library hiding (link, reduce)
 
 validEal ∷
   ∀ primTy primVal.
   (Eq primTy) ⇒
-  Parameterisation primTy primVal →
-  Types.Term primVal →
-  Types.TypeAssignment primTy →
+  Types.Parameterisation primTy primVal →
+  Types.TermAssignment primTy primVal →
   IO
     ( Either
         (EAC.Errors primTy primVal)
         (EAC.RPT primVal, EAC.ParamTypeAssignment primTy)
     )
-validEal param term typMap = do
+validEal param (Types.Assignment term typMap) = do
   let ((rpt, typ), env) =
         Constraint.execWithAssignment typMap $
           Constraint.generateTypeAndConstraints param term

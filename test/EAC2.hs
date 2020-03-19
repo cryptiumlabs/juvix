@@ -1,10 +1,11 @@
 module EAC2 where
 
+import qualified Juvix.Core.EAC as EAC
 import Juvix.Core.EAC.Check
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
-import Juvix.Core.Types
-import Juvix.Core.Usage
+import qualified Juvix.Core.Types as Types
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, exp, link, reduce)
 import qualified Juvix.Library.HashMap as Map
 import qualified Test.Tasty as T
@@ -16,22 +17,34 @@ type Type = ET.Type ()
 
 type TypeAssignment = ET.TypeAssignment ()
 
-unitParam ∷ Parameterisation () ()
-unitParam = Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
+unitParam ∷ Types.Parameterisation () ()
+unitParam =
+  Types.Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
 
-shouldBeTypeable ∷ Term → TypeAssignment → T.TestTree
-shouldBeTypeable term assignment =
-  T.testCase (show term <> " should be typeable in EAC") $ do
-    valid ← validEal unitParam term assignment
-    case valid of
-      Right _ → return ()
+shouldGen ∷
+  T.TestName →
+  ( Either
+      (EAC.Errors () ())
+      (EAC.RPT (), EAC.ParamTypeAssignment ()) →
+    IO ()
+  ) →
+  Types.TermAssignment () () →
+  T.TestTree
+shouldGen errorString case' termAssign =
+  T.testCase (show (Types.term termAssign) <> errorString) $
+    validEal unitParam termAssign >>= case'
+
+shouldBeTypeable ∷ Types.TermAssignment () () → T.TestTree
+shouldBeTypeable =
+  shouldGen " should be typeable in EAC" $ \v →
+    case v of
+      Right _ → pure ()
       Left er → T.assertFailure (show er)
 
-shouldNotBeTypeable ∷ Term → TypeAssignment → T.TestTree
-shouldNotBeTypeable term assignment =
-  T.testCase (show term <> " should not be typeable in EAC") $ do
-    valid ← validEal unitParam term assignment
-    case valid of
+shouldNotBeTypeable ∷ Types.TermAssignment () () → T.TestTree
+shouldNotBeTypeable =
+  shouldGen " should not be typeable in EAC" $ \v →
+    case v of
       Right _ → T.assertFailure "a satisfying assignment was found"
       Left _ → pure ()
 
@@ -89,7 +102,7 @@ churchThree =
 churchAssignment ∷ TypeAssignment
 churchAssignment =
   Map.fromList
-    [ (intern "s", Pi Omega (SymT (intern "a")) (SymT (intern "a"))),
+    [ (intern "s", Pi Usage.Omega (SymT (intern "a")) (SymT (intern "a"))),
       (intern "z", SymT (intern "a"))
     ]
 
@@ -130,14 +143,14 @@ arg0 = SymT (intern "a")
 arg1 ∷ Type
 arg1 =
   Pi
-    Omega
+    Usage.Omega
     (SymT (intern "a"))
     (SymT (intern "a"))
 
 counterexampleAssignment ∷ Map.Map Symbol Type
 counterexampleAssignment =
   Map.fromList
-    [ (intern "n", Pi Omega arg1 arg0),
+    [ (intern "n", Pi Usage.Omega arg1 arg0),
       (intern "y", arg0),
       (intern "z", arg0),
       (intern "x", arg1)
@@ -205,16 +218,16 @@ zTy ∷ Type
 zTy = SymT (intern "a")
 
 sTy ∷ Type
-sTy = Pi Omega zTy zTy
+sTy = Pi Usage.Omega zTy zTy
 
 nat ∷ Type
-nat = Pi Omega sTy sTy
+nat = Pi Usage.Omega sTy sTy
 
 churchExpAssignment ∷ TypeAssignment
 churchExpAssignment =
   Map.fromList
     [ (intern "n", nat),
-      (intern "m", Pi Omega nat nat),
+      (intern "m", Pi Usage.Omega nat nat),
       (intern "s", sTy),
       (intern "s'", sTy),
       (intern "z", zTy),

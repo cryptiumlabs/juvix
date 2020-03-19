@@ -58,6 +58,8 @@ extra-deps:
   commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
 - github: adjoint-io/poly
   commit: b75b853025ea75ba64f62f39d4524832f0117e36
+- github: cryptiumlabs/extensible-data
+  commit: da99f1318558dbf3eda9198f04aa95778ca4399e
 
 allow-newer: true
 

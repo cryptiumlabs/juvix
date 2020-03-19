@@ -2,7 +2,6 @@ module Juvix.Backends.LLVM.JIT.Execution where
 
 import Control.Concurrent
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.Short as BS
 import Data.IORef
 import qualified Data.Map.Strict as Map
 import Foreign.Ptr
@@ -14,9 +13,7 @@ import qualified LLVM.CodeModel as CodeModel
 import LLVM.Context
 import qualified LLVM.ExecutionEngine as EE
 import LLVM.Internal.OrcJIT.CompileLayer
-import LLVM.Linking
 import LLVM.Module as Mod
-import LLVM.Module
 import LLVM.OrcJIT
 import LLVM.PassManager
 import qualified LLVM.Relocation as Reloc
@@ -68,7 +65,7 @@ orcJitWith ∷
     IO ((a → IO b), IO ())
   ) →
   IO (a → IO b, IO ())
-orcJitWith config mod func = do
+orcJitWith _config mod func = do
   paramChan ← newChan
   resultChan ← newChan
   endChan ← newChan
@@ -126,7 +123,7 @@ mcJitWith config mod func = do
           -- optimise module
           _ ← runPassManager pm m
           -- convert to llvm assembly
-          s ← moduleLLVMAssembly m
+          _s ← moduleLLVMAssembly m
           B.putStrLn "getting execution engine"
           EE.withModuleInEngine executionEngine m $ \ee → do
             B.putStrLn "got execution engine"

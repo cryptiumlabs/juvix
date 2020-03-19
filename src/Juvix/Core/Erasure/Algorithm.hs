@@ -24,12 +24,18 @@ erase ∷
   TermInfo primTy primVal
     ( Either
         Erasure.Error
-        ((Erased.Term primVal, Erased.Type primTy), Erased.TypeAssignment primTy)
+        (Core.AssignWithType primTy primVal)
     )
 erase parameterisation term usage ty =
   let (erased, env) = exec (eraseTerm parameterisation term usage ty)
-   in erased >>| \erased →
-        (erased, Erasure.typeAssignment env)
+   in erased >>| \(term, type') →
+        Core.WithType
+          { Core.termAssign = Core.Assignment
+              { Core.term = term,
+                Core.assignment = Erasure.typeAssignment env
+              },
+            Core.type' = type'
+          }
 
 exec ∷
   Erasure.EnvT ty primVal a → (Either Erasure.Error a, Erasure.Env ty primVal)
@@ -41,7 +47,7 @@ eraseTerm ∷
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
-    HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
+    HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -70,7 +76,9 @@ eraseTerm parameterisation term usage ty =
         let (Right varTyIR, _) =
               IR.exec (IR.evalTerm parameterisation (hrToIR varTy) [])
         --
-        modify @"context" ((IR.Global (show name), (argUsage, varTyIR)) :)
+        modify
+          @"context"
+          (IR.Context (IR.Annotated argUsage varTyIR) (IR.Global (show name)) :)
         (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
@@ -93,7 +101,7 @@ eraseTerm parameterisation term usage ty =
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
-              Right (fUsage, fTy) → do
+              Right (IR.Annotated fUsage fTy) → do
                 let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
                 let fty@(HR.Pi argUsage fArgTy _) = irToHR qFTy
                 (f, _) ← eraseTerm parameterisation (HR.Elim f) fUsage fty

@@ -28,7 +28,7 @@ lint:
 	stack exec -- hlint app src test
 
 format:
-	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --mode inplace {} \;
+	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f \( -name "*.hs" ! -name "ReplDoc.hs" \) -exec ormolu --mode inplace {} \;
 
 test:
 	stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false"

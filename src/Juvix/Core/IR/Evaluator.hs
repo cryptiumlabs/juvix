@@ -10,6 +10,7 @@ module Juvix.Core.IR.Evaluator where
 
 import Control.Lens ((^?), ix)
 import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.Types
 import Juvix.Library hiding (show)
 
@@ -130,7 +131,9 @@ instance CanSubst ext primTy primVal () where subst _ _ = identity
 instance CanSubst ext primTy primVal Void where subst _ _ = absurd
 
 instance
-  IR.TEAll (CanSubst ext primTy primVal) ext primTy primVal ⇒
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ) ⇒
   CanSubst ext primTy primVal (IR.Term' ext primTy primVal)
   where
   subst ii r (IR.Star' i a) = IR.Star' i (subst ii r a)
@@ -142,7 +145,9 @@ instance
   subst ii r (IR.TermX a) = IR.TermX (subst ii r a)
 
 instance
-  IR.TEAll (CanSubst ext primTy primVal) ext primTy primVal ⇒
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ) ⇒
   CanSubst ext primTy primVal (IR.Elim' ext primTy primVal)
   where
   subst ii r (IR.Bound' j a)
@@ -157,7 +162,9 @@ instance
   subst ii r (IR.ElimX a) = IR.ElimX (subst ii r a)
 
 substTerm ∷
-  IR.TEAll (CanSubst ext primTy primVal) ext primTy primVal ⇒
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ) ⇒
   Natural →
   IR.Elim' ext primTy primVal →
   IR.Term' ext primTy primVal →
@@ -165,7 +172,9 @@ substTerm ∷
 substTerm = subst
 
 substElim ∷
-  IR.TEAll (CanSubst ext primTy primVal) ext primTy primVal ⇒
+  ( IR.TermAll (CanSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (CanSubst ext primTy primVal) ext primTy primVal
+  ) ⇒
   Natural →
   IR.Elim' ext primTy primVal →
   IR.Elim' ext primTy primVal →

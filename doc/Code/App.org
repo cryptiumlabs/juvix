@@ -5,7 +5,6 @@
   + [[Core]]
   + [[Erased]]
   + [[HR]]
-  + [[HR]]
   + [[Library]]
 * Config
 - _Relies on_
@@ -26,6 +25,7 @@
   + [[Library]]
 * Main
 * Options
+* ReplDoc
 * Types
 - _Relies on_
   + [[Types]]

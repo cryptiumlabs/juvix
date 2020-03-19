@@ -1,7 +1,6 @@
 module Main
 
 import Data.SortedMap
-import Data.Vect
 
 ||| Account contains the balance of the token.
 Account : Type
@@ -41,7 +40,7 @@ getAccount address accounts = case lookup address accounts of
 ||| @from the address the tokens to be transferred from
 ||| @dest the address the tokens to be transferred to
 ||| @tokens the amount of tokens to be transferred
-total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error (Storage)
+total performTransfer : (from : Address) -> (dest : Address) -> (tokens : Nat) -> (storage : Storage) -> Either Error Storage
 performTransfer from dest tokens storage =
   let fromBalance = getAccount from (accounts storage)
       destBalance = getAccount dest (accounts storage) in

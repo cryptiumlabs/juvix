@@ -3,14 +3,14 @@
 --   over the untyped instruction bindings
 module Juvix.Backends.Michelson.DSL.Instructions where
 
+import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
-import Prelude (error)
 import Juvix.Library
 import qualified Michelson.Untyped.Contract as Contract
 import qualified Michelson.Untyped.Ext as Ext
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as Value
-import qualified Juvix.Backends.Michelson.Compilation.Types as Types
+import Prelude (error)
 
 -- | 'toNewPrim' removes the implicit Instr.PrimEx from the instruction
 -- and adds Inst over it, making it a new primitive. useful for making tests

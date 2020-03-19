@@ -24,6 +24,8 @@ dependencies:
   - fgl
   - lens
   - parsec
+  - attoparsec
+  - attoparsec-expr
   - capability >= 0.2.0.0
   - fgl-visualize
   - enummapset
@@ -40,6 +42,7 @@ dependencies:
   - sonic
   - aeson
   - Cabal
+  - extensible-data
 
 default-extensions:
   - NoImplicitPrelude
@@ -70,12 +73,14 @@ default-extensions:
   - TypeFamilies
   - ConstraintKinds
   - EmptyDataDeriving
+  - TemplateHaskell
 
 ghc-options:
   - -ferror-spans
   - -Wall
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
 
@@ -88,6 +93,9 @@ library:
     - jsonschema-gen
   exposed-modules:
     - Juvix
+    - Juvix.Frontend.Types
+    - Juvix.Frontend.Lexer
+    - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
@@ -184,8 +192,8 @@ library:
     - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
+    - Juvix.Core.IR.Types.Base
     - Juvix.Core.IR.Typechecker
-    - Juvix.Core.IR.Extension
     - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
