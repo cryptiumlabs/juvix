@@ -415,11 +415,11 @@ Utility functions used by the Michelson backend.
   + [[Core/Erasure]]
   + [[Pipeline]]
   + [[Translate]]
+  + [[Core/Types]]
   + [[Usage]]
 *** Pipeline
 - _Relies on_
   + [[Core/EAC]]
-  + [[Erased]]
   + [[Core/Erasure]]
   + [[HR]]
   + [[IR]]
@@ -463,7 +463,6 @@ Utility functions used by the Michelson backend.
   + [[ConstraintGen]]
   + [[Solve]]
   + [[Core/EAC/Types]]
-  + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** ConstraintGen

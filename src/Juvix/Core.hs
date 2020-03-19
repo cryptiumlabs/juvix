@@ -10,5 +10,5 @@ where
 import Juvix.Core.Erasure
 import Juvix.Core.Pipeline
 import Juvix.Core.Translate
-import Juvix.Core.Usage
 import Juvix.Core.Types
+import Juvix.Core.Usage

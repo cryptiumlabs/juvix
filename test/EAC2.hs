@@ -1,9 +1,9 @@
 module EAC2 where
 
+import qualified Juvix.Core.EAC as EAC
 import Juvix.Core.EAC.Check
 import Juvix.Core.Erased.Types hiding (Term, Type, TypeAssignment)
 import qualified Juvix.Core.Erased.Types as ET
-import qualified Juvix.Core.EAC as EAC
 import qualified Juvix.Core.Types as Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, exp, link, reduce)
@@ -21,14 +21,15 @@ unitParam ∷ Types.Parameterisation () ()
 unitParam =
   Types.Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
 
-
-
-shouldGen :: T.TestName
-          -> (Either
-              (EAC.Errors () ())
-              (EAC.RPT (), EAC.ParamTypeAssignment ()) -> IO ())
-          -> Types.TermAssignment () ()
-          -> T.TestTree
+shouldGen ∷
+  T.TestName →
+  ( Either
+      (EAC.Errors () ())
+      (EAC.RPT (), EAC.ParamTypeAssignment ()) →
+    IO ()
+  ) →
+  Types.TermAssignment () () →
+  T.TestTree
 shouldGen errorString case' termAssign =
   T.testCase (show (Types.term termAssign) <> errorString) $
     validEal unitParam termAssign >>= case'
@@ -39,7 +40,6 @@ shouldBeTypeable =
     case v of
       Right _ → pure ()
       Left er → T.assertFailure (show er)
-
 
 shouldNotBeTypeable ∷ Types.TermAssignment () () → T.TestTree
 shouldNotBeTypeable =
