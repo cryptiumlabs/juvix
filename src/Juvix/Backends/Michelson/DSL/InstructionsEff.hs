@@ -45,7 +45,7 @@ expandedToInst exp =
     Env.Curr c → mconcat |<< promoteLambda c
 
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
-inst (t, _usage, ty) =
+inst (Types.Ann t _usage ty) =
   case t of
     Ann.Var symbol → var symbol
     Ann.LamM c a b → let v = lambda c a b ty in v <$ consVal v ty
@@ -169,7 +169,7 @@ primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 
 appM ∷ Env.Reduction m ⇒ Types.NewTerm → [Types.NewTerm] → m Env.Expanded
-appM form@(t, _u, ty) args =
+appM form@(Types.Ann t _u ty) args =
   let app = inst form >>= flip applyExpanded args
    in case t of
         -- We could remove this special logic, however it would
@@ -450,7 +450,7 @@ apply closure args remainingArgs = do
         (Env.fun closure)
         (makeVar <$> reverse (Env.argsLeft closure))
 
-    makeVar v = (Ann.Var v, one, Env.ty closure)
+    makeVar v = Types.Ann (Ann.Var v) one (Env.ty closure)
 
     recur (Env.Curr c) xs =
       apply c [] xs
@@ -611,7 +611,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     traverse_ (\((u, t), sym) → consVarNone sym u t) termList
     -- Step 3: Compile the body of the lambda.
     insts ←
-      Env.unFun fun (fmap (\((u, t), sym) → (Ann.Var sym, u, t)) termList)
+      Env.unFun fun (fmap (\((u, t), sym) → Types.Ann (Ann.Var sym) u t) termList)
     insts ← expandedToInst insts
     put @"ops" [unpackOps <> insts]
     pure Env.MichelsonLam

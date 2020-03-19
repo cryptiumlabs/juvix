@@ -1,6 +1,10 @@
 -- |
 -- - Types used internally by the Michelson backend.
-module Juvix.Backends.Michelson.Compilation.Types where
+module Juvix.Backends.Michelson.Compilation.Types
+  ( module Juvix.Backends.Michelson.Compilation.Types,
+    CoreErased.AnnTerm (..),
+  )
+where
 
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import Juvix.Library

@@ -484,6 +484,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Erased/Types]]
   + [[ErasedAnn/Types]]
+  + [[ErasedAnn/Types]]
   + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
