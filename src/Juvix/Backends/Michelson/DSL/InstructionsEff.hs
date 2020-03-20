@@ -72,7 +72,10 @@ add,
   neg,
   abs,
   isNat,
-  or ∷
+  or,
+  car,
+  cdr,
+  pair ∷
     Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
@@ -95,6 +98,9 @@ gt = onInt1 Instructions.ge (boolToVal . (>= 0))
 ge = onInt1 Instructions.gt (boolToVal . (> 0))
 neg = intGen1 Instructions.neg negate
 abs = intGen1 Instructions.abs Juvix.Library.abs
+car = onPairGen1 Instructions.car fst
+cdr = onPairGen1 Instructions.car snd
+pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
 isNat =
   onInt1
     Instructions.isNat
@@ -163,6 +169,9 @@ primToFargs (Types.Inst inst) ty =
     Instr.GT {} → (Env.Fun (gt ty), 1)
     Instr.NEG _ → (Env.Fun (neg ty), 1)
     Instr.ABS _ → (Env.Fun (abs ty), 1)
+    Instr.CAR {} → (Env.Fun (car ty), 1)
+    Instr.CDR {} → (Env.Fun (cdr ty), 1)
+    Instr.PAIR {} → (Env.Fun (pair ty), 2)
     Instr.EDIV _ → (Env.Fun (ediv ty), 2)
     Instr.ISNAT _ → (Env.Fun (isNat ty), 1)
 primToFargs (Types.Constant _) _ =
@@ -247,6 +256,15 @@ onIntGen op f =
         let V.ValueInt i1 = instr1
             V.ValueInt i2 = instr2
          in Env.Constant (f i1 i2)
+    )
+
+onPairGen1 ∷ OnTerm1 m (V.Value' Types.Op, V.Value' Types.Op) (V.Value' Types.Op)
+onPairGen1 op f =
+  onOneArgs
+    op
+    ( \instr1 →
+        let V.ValuePair car cdr = instr1
+         in Env.Constant (f (car, cdr))
     )
 
 onTwoArgs ∷ OnTerm2 m (V.Value' Types.Op) Env.Expanded

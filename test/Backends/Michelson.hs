@@ -5,11 +5,9 @@ import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
-import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
-import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -31,12 +29,7 @@ shouldCompileExpr ∷ Term → Type → T.TestTree
 shouldCompileExpr term ty =
   T.testCase
     (show term <> " should compile to an instruction sequence")
-    ( ( case fst (compileExpr term ty) of
-          Right _ → True
-          Left _ → False
-      )
-        T.@? "failed to compile"
-    )
+    (isRight (fst (compileExpr term ty)) T.@? "failed to compile")
 
 backendMichelson ∷ T.TestTree
 backendMichelson =
@@ -121,39 +114,37 @@ identityApp2 =
 
 identityTerm ∷ Term
 identityTerm =
-  ( Ann
-      ( J.LamM
-          []
-          ["x"]
-          ( Ann
-              ( J.AppM
-                  ( Ann
-                      (J.Prim (Instructions.toNewPrimErr Instructions.pair))
-                      one
-                      ( J.Pi
-                          one
-                          (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
-                          (J.Pi one (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
-                      )
-                  )
-                  [ Ann (J.Prim (Constant M.ValueNil)) one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))),
-                    ( Ann
-                        ( J.AppM
-                            (Ann (J.Prim (Instructions.toNewPrimErr Instructions.car)) one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))))
-                            [(Ann (J.Var "x") one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))))]
-                        )
+  Ann
+    ( J.LamM
+        []
+        ["x"]
+        ( Ann
+            ( J.AppM
+                ( Ann
+                    (J.Prim (Instructions.toNewPrimErr Instructions.pair))
+                    one
+                    ( J.Pi
                         one
-                        (J.PrimTy (PrimTy (M.Type M.TUnit "")))
+                        (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
+                        (J.Pi one (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
                     )
-                  ]
-              )
-              one
-              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-          )
-      )
-      one
-      identityType
-  )
+                )
+                [ Ann (J.Prim (Constant M.ValueNil)) one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))),
+                  Ann
+                    ( J.AppM
+                        (Ann (J.Prim (Instructions.toNewPrimErr Instructions.car)) one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))))
+                        [Ann (J.Var "x") one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) "")))]
+                    )
+                    one
+                    (J.PrimTy (PrimTy (M.Type M.TUnit "")))
+                ]
+            )
+            one
+            (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
+        )
+    )
+    one
+    identityType
 
 identityTerm2 ∷ Term
 identityTerm2 =
@@ -202,8 +193,8 @@ identityAppTerm ∷ Term
 identityAppTerm =
   ( Ann
       ( J.LamM
-          []
           ["y"]
+          []
           ( Ann
               ( J.AppM
                   ( Ann
