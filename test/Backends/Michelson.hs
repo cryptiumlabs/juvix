@@ -143,71 +143,64 @@ unitExpr1 =
 
 identityTerm ∷ Term
 identityTerm =
-  Ann
-    one
-    identityType
-    ( J.LamM
-        []
-        ["x"]
-        ( Ann
-            one
-            (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-            ( J.AppM
-                ( Ann
-                    one
-                    ( J.Pi
-                        one
-                        (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) "")))
-                        (J.Pi one (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TOperation "")) "") (M.Type M.TUnit "")) ""))))
-                    )
-                  (J.Prim (Instructions.toNewPrimErr Instructions.pair)))
-                [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))) (J.Prim (Constant M.ValueNil)),
-                  Ann
-                    one
-                    (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                    ( J.AppM
-                        (Ann one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))) (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                        [Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "x")]
-                    )
-                ]
-            ))
-    )
+  Ann one identityType
+    $ J.LamM [] ["x"]
+    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi
+              one
+              (primTy opl)
+              $ J.Pi one (primTy Untyped.unit)
+              $ primTy
+              $ Untyped.pair opl Untyped.unit
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      [ Ann one (primTy opl) (J.Prim (Constant M.ValueNil)),
+        Ann
+          one
+          (J.PrimTy (PrimTy (M.Type M.TUnit "")))
+          $ J.AppM
+            ( Ann
+                one
+                (J.Pi one (primTy unitPair) (primTy Untyped.unit))
+                $ J.Prim
+                $ Instructions.toNewPrimErr Instructions.car
+            )
+            [Ann one (primTy unitPair) (J.Var "x")]
+      ]
 
 identityTerm2 ∷ Term
 identityTerm2 =
-  ( Ann
-      one
-      identityType
-      ( J.LamM
-          []
-          ["x"]
-          ( Ann
+  Ann one identityType
+    $ J.LamM [] ["x"]
+    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi
               one
-              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-            ( J.AppM
-                  ( Ann
-
-                      one
-                      ( J.Pi
-                          one
-                          (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) "")))
-                          (J.Pi one (J.PrimTy (PrimTy (M.Type M.TUnit ""))) (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type (M.TList (M.Type M.TUnit "")) "") (M.Type M.TUnit "")) ""))))
-                      )
-                      (J.Prim (Instructions.toNewPrimErr Instructions.pair)))
-                  [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))) (J.Prim (Constant M.ValueNil)),
-                    Ann
-                      one
-                      (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                      ( J.AppM
-                          ( Ann
-                              one
-                              (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit ""))))
-                              (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                          [Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "x")]
-                      )
-                  ]
-              ))
-      ))
+              (primTy unitl)
+              (J.Pi one (primTy Untyped.unit) (primTy (Untyped.pair unitl Untyped.unit)))
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      [ Ann one (primTy unitl) (J.Prim (Constant M.ValueNil)),
+        Ann
+          one
+          (primTy Untyped.unit)
+          $ J.AppM
+            ( Ann
+                one
+                (J.Pi one (primTy unitPair) (primTy Untyped.unit))
+                (J.Prim (Instructions.toNewPrimErr Instructions.car))
+            )
+            [Ann one (primTy unitPair) (J.Var "x")]
+      ]
 
 primLam ∷ NonEmpty M.Type → Type
 primLam (ty :| []) = J.PrimTy (PrimTy ty)
@@ -215,193 +208,121 @@ primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
 identityAppTerm ∷ Term
 identityAppTerm =
-  ( Ann
-      one
-      identityType
-      ( J.LamM
-          ["y"]
-          []
-          ( Ann
-              one
-              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-              ( J.AppM
+  Ann one identityType
+    $ J.LamM [] ["y"]
+    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+    $ J.AppM
+      ( Ann one identityType
+          $ J.LamM [] ["x"]
+          $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+          $ J.AppM
+            ( Ann one primPairTy $
+                J.Prim (Instructions.toNewPrimErr Instructions.pair)
+            )
+            [ Ann one (primTy opl) (J.Prim (Constant M.ValueNil)),
+              Ann one (primTy Untyped.unit) $
+                J.AppM
                   ( Ann
                       one
-                      identityType
-                      ( J.LamM
-                          ["x"]
-                          []
-                          ( Ann
-                              one
-                              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-                              ( J.AppM
-                                  ( Ann
-                                      one
-                                      primPairTy
-                                      (J.Prim (Instructions.toNewPrimErr Instructions.pair)))
-                                  [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))) (J.Prim (Constant M.ValueNil)),
-                                    ( Ann
-                                        one
-                                        (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                                    ( J.AppM
-                                            ( Ann
-                                                one
-                                                (J.Pi one (J.PrimTy (PrimTy (Untyped.pair Untyped.unit Untyped.unit))) (J.PrimTy (PrimTy Untyped.unit)))
-                                                (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                                            [ Ann
-                                                one
-                                                (J.PrimTy
-                                                  $ PrimTy
-                                                  $ Untyped.pair Untyped.unit Untyped.unit)
-                                                (J.Var "x")
-                                            ]
-                                        ))
-                                  ]
-                              ))
-                      )
+                      (J.Pi one (primTy unitPair) (primTy Untyped.unit))
+                      (J.Prim (Instructions.toNewPrimErr Instructions.car))
                   )
-                  [(Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "y"))]
-              )
-          )
+                  [Ann one (primTy (Untyped.pair Untyped.unit Untyped.unit)) (J.Var "x")]
+            ]
       )
-  )
+      [Ann one (primTy unitPair) (J.Var "y")]
 
 identityAppExpr ∷ Term
 identityAppExpr =
-  Ann
-    one
-    identityType2
-    ( J.LamM
-        ["y"]
-        []
-        ( Ann
-            one
-            (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) "")))
-            ( J.AppM
-                ( Ann
-                    one
-                    identityType2
-                    ( J.LamM
-                        ["x"]
-                        []
-                        ( Ann
-                            one
-                            (J.PrimTy (PrimTy (M.Type (M.TPair "" "" unitl unit) "")))
-                            ( J.AppM
-                                ( Ann
-                                    one
-                                    primPairTy2
-                                    (J.Prim (Instructions.toNewPrimErr Instructions.pair))
-                                )
-                                [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))) (J.Prim (Constant M.ValueNil)),
-                                  Ann
-                                    one
-                                    (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                                    ( J.AppM
-                                        (Ann one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))) (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                                        [Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "x")]
-                                    )
-                                ]
-                            )
-                        )
-                    )
-                )
-                [Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "y")]
+  Ann one identityType2
+    $ J.LamM [] ["y"]
+    $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
+    $ J.AppM
+      ( Ann one identityType2
+          $ J.LamM [] ["x"]
+          $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
+          $ J.AppM
+            ( Ann one primPairTy2
+                $ J.Prim
+                $ Instructions.toNewPrimErr Instructions.pair
             )
-        )
-    )
+            [ Ann one (primTy unitl) (J.Prim (Constant M.ValueNil)),
+              Ann
+                one
+                (primTy Untyped.unit)
+                ( J.AppM
+                    ( Ann
+                        one
+                        (J.Pi one (primTy unitPair) (primTy unit))
+                        (J.Prim (Instructions.toNewPrimErr Instructions.car))
+                    )
+                    [ Ann
+                        one
+                        (primTy unitPair)
+                        (J.Var "x")
+                    ]
+                )
+            ]
+      )
+      [Ann one (primTy unitPair) (J.Var "y")]
 
 identityAppTerm2 ∷ Term
 identityAppTerm2 =
-  ( Ann
-      one
-      identityType
-      ( J.LamM
-          ["x"]
-          []
-          ( Ann
-              one
-              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-              ( J.AppM
+  Ann one identityType
+    $ J.LamM [] ["x"]
+    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          (J.Pi one primPairTy (primTy (Untyped.pair opl Untyped.unit)))
+          $ J.LamM ["x"] ["f"]
+          $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+          $ J.AppM
+            (Ann one primPairTy (J.Var "f"))
+            [ Ann one (primTy opl) (J.Prim (Constant M.ValueNil)),
+              Ann one (primTy Untyped.unit) $
+                J.AppM
                   ( Ann
                       one
-                      (J.Pi one primPairTy (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) ""))))
-                      ( J.LamM
-                          ["f"]
-                          ["x"]
-                          ( Ann
-                              one
-                              (J.PrimTy (PrimTy (M.Type (M.TPair "" "" opl unit) "")))
-                              ( J.AppM
-                                  ( Ann
-                                      one
-                                      primPairTy
-                                      (J.Var "f")
-                                  )
-                                  [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TOperation "")) ""))) (J.Prim (Constant M.ValueNil)),
-                                    Ann
-                                      one
-                                      (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                                      ( J.AppM
-                                          (Ann one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))) (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                                          [Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "x")]
-                                      )
-                                  ]
-                              )
-                          )
-                      )
+                      (J.Pi one (primTy unitPair) (primTy Untyped.unit))
+                      (J.Prim (Instructions.toNewPrimErr Instructions.car))
                   )
-                  [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
-              )
-          )
+                  [Ann one (primTy unitPair) (J.Var "x")]
+            ]
       )
-  )
+      [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
 identityAppExpr2 ∷ Term
 identityAppExpr2 =
   Ann
     one
     identityType2
-    ( J.LamM
-        ["x"]
-        []
-        ( Ann
-            one
-            (primTy (Untyped.pair unitl Untyped.unit))
-            ( J.AppM
-                ( Ann
-                    one
-                    (J.Pi one primPairTy2 (primTy (Untyped.pair unitl Untyped.unit)))
-                    ( J.LamM
-                        ["f"]
-                        ["x"]
-                        ( Ann
-                            one
-                            (primTy (Untyped.pair unitl Untyped.unit))
-                            ( J.AppM
-                                ( Ann
-                                    one
-                                    primPairTy2
-                                    (J.Var "f")
-                                )
-                                [ Ann one (J.PrimTy (PrimTy (M.Type (M.TList (M.Type M.TUnit "")) ""))) (J.Prim (Constant M.ValueNil)),
-                                  ( Ann
-                                      one
-                                      (J.PrimTy (PrimTy (M.Type M.TUnit "")))
-                                      ( J.AppM
-                                          (Ann one (J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))) (J.Prim (Instructions.toNewPrimErr Instructions.car)))
-                                          [(Ann one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.Var "x"))]
-                                      )
-                                  )
-                                ]
-                            )
-                        )
-                    )
-                )
-                [Ann one primPairTy2 (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
-            )
-        )
-    )
+    $ J.LamM [] ["x"]
+    $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          (J.Pi one primPairTy2 (primTy (Untyped.pair unitl Untyped.unit)))
+          $ J.LamM ["x"] ["f"]
+          $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
+          $ J.AppM
+            (Ann one primPairTy2 (J.Var "f"))
+            [ Ann one (primTy unitl) (J.Prim (Constant M.ValueNil)),
+              Ann one (primTy Untyped.unit) $
+                J.AppM
+                  ( Ann
+                      one
+                      (J.Pi one (primTy unitPair) (primTy Untyped.unit))
+                      (J.Prim (Instructions.toNewPrimErr Instructions.car))
+                  )
+                  [ Ann
+                      one
+                      (primTy unitPair)
+                      (J.Var "x")
+                  ]
+            ]
+      )
+      [Ann one primPairTy2 (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
 --------------------------------------------------------------------------------
 -- Type Abstractions
