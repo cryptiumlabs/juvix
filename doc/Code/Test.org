@@ -110,7 +110,6 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Instructions]]
   + [[Untyped]]
   + [[Optimisation]]
-  + [[Parameterisation]]
   + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]

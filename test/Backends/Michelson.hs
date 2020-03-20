@@ -12,6 +12,10 @@ import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
+--------------------------------------------------------------------------------
+-- Test Abstractions
+--------------------------------------------------------------------------------
+
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile ∷ Term → Type → Text → T.TestTree
 shouldCompile term ty contract =
@@ -31,6 +35,10 @@ shouldCompileExpr term ty =
     (show term <> " should compile to an instruction sequence")
     (isRight (fst (compileExpr term ty)) T.@? "failed to compile")
 
+--------------------------------------------------------------------------------
+-- Test Groups
+--------------------------------------------------------------------------------
+
 backendMichelson ∷ T.TestTree
 backendMichelson =
   T.testGroup
@@ -42,6 +50,10 @@ backendMichelson =
       optimiseDupDrop,
       optimiseLambdaExec
     ]
+
+--------------------------------------------------------------------------------
+-- Tests
+--------------------------------------------------------------------------------
 
 optimiseDupDrop ∷ T.TestTree
 optimiseDupDrop =
@@ -72,6 +84,19 @@ identityExpr3 =
   shouldCompileExpr
     identityAppExpr2
     identityType2
+
+identityApp2 ∷ T.TestTree
+identityApp2 =
+  shouldCompile
+    identityAppTerm2
+    identityType
+    ""
+
+unitTest ∷ T.TestTree
+unitTest =
+  shouldCompileExpr unitExpr1 (J.PrimTy (PrimTy unit))
+
+-- compileExpr unitExpr1 (J.PrimTy (PrimTy unit))
 
 identityFn ∷ T.TestTree
 identityFn =
@@ -105,12 +130,16 @@ identityApp =
     \% %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; \
     \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
 
-identityApp2 ∷ T.TestTree
-identityApp2 =
-  shouldCompile
-    identityAppTerm2
-    identityType
-    ""
+--------------------------------------------------------------------------------
+-- Terms to test against
+--------------------------------------------------------------------------------
+
+unitExpr1 ∷ Term
+unitExpr1 =
+  Ann
+    (J.Prim (Constant M.ValueUnit))
+    one
+    (J.PrimTy (PrimTy unit))
 
 identityTerm ∷ Term
 identityTerm =
@@ -373,6 +402,10 @@ identityAppExpr2 =
     )
     one
     identityType2
+
+--------------------------------------------------------------------------------
+-- Type Abstractions
+--------------------------------------------------------------------------------
 
 fstTy ∷ Type
 fstTy = J.Pi one (J.PrimTy (PrimTy (M.Type (M.TPair "" "" (M.Type M.TUnit "") (M.Type M.TUnit "")) ""))) (J.PrimTy (PrimTy (M.Type M.TUnit "")))
