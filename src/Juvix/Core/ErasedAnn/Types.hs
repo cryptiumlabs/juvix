@@ -25,8 +25,8 @@ data Type primTy primVal
 
 data AnnTerm primTy primVal
   = Ann
-      { term ∷ Term primTy primVal,
-        usage ∷ Usage.T,
-        type' ∷ Type primTy primVal
+      { usage ∷ Usage.T,
+        type' ∷ Type primTy primVal,
+        term ∷ Term primTy primVal
       }
   deriving (Show, Eq, Generic)
