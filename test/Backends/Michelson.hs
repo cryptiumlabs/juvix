@@ -147,16 +147,34 @@ unitExpr1 =
 
 symbIdent ∷ Term
 symbIdent =
-  Ann one (primTy Untyped.unit) $
-    J.AppM
+  Ann one (primTy Untyped.unit) (J.AppM lamxx [unitExpr1])
+
+const' ∷ Term
+const' =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM
       ( Ann
           one
-          (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit))
-          $ J.LamM [] ["x"]
-          $ Ann one (primTy Untyped.unit)
-          $ J.Var "x"
+          ( J.Pi one (primTy Untyped.unit)
+              $ J.Pi
+                one
+                (primTy (Untyped.tc Untyped.int))
+              $ primTy Untyped.unit
+          )
+          $ J.LamM [] ["x", "y"]
+          $ lookupX
       )
-      [unitExpr1]
+      [unitExpr1, Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt 3)))]
+
+lamxx ∷ Term
+lamxx =
+  Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit)) $
+    J.LamM [] ["x"] lookupX
+
+lookupX ∷ Term
+lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
 
 identityTerm ∷ Term
 identityTerm =

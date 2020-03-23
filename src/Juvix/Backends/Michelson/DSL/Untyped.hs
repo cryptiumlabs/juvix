@@ -67,6 +67,9 @@ map = annotate ... Untyped.TMap
 bigMap ∷ Comparable → T → T
 bigMap = annotate ... Untyped.TBigMap
 
+tc ∷ CT → T
+tc = annotate . Untyped.Tc
+
 --------------------------------------------------------------------------------
 -- Constants May have to promote with either
 --------------------------------------------------------------------------------
