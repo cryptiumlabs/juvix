@@ -2,6 +2,7 @@ module Backends.Michelson where
 
 import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
@@ -134,12 +135,28 @@ identityApp =
 -- Terms to test against
 --------------------------------------------------------------------------------
 
+-- TODO ∷ promote to a tasty test!
+testRun = DSL.execMichelson (runMichelsonExpr unitExpr1)
+
 unitExpr1 ∷ Term
 unitExpr1 =
   Ann
     one
-    (primTy unit)
+    (primTy Untyped.unit)
     (J.Prim (Constant M.ValueUnit))
+
+symbIdent ∷ Term
+symbIdent =
+  Ann one (primTy Untyped.unit) $
+    J.AppM
+      ( Ann
+          one
+          (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit))
+          $ J.LamM [] ["x"]
+          $ Ann one (primTy Untyped.unit)
+          $ J.Var "x"
+      )
+      [unitExpr1]
 
 identityTerm ∷ Term
 identityTerm =
@@ -250,18 +267,17 @@ identityAppExpr =
               Ann
                 one
                 (primTy Untyped.unit)
-                ( J.AppM
-                    ( Ann
-                        one
-                        (J.Pi one (primTy unitPair) (primTy unit))
-                        (J.Prim (Instructions.toNewPrimErr Instructions.car))
-                    )
-                    [ Ann
-                        one
-                        (primTy unitPair)
-                        (J.Var "x")
-                    ]
-                )
+                $ J.AppM
+                  ( Ann
+                      one
+                      (J.Pi one (primTy unitPair) (primTy unit))
+                      (J.Prim (Instructions.toNewPrimErr Instructions.car))
+                  )
+                  [ Ann
+                      one
+                      (primTy unitPair)
+                      (J.Var "x")
+                  ]
             ]
       )
       [Ann one (primTy unitPair) (J.Var "y")]

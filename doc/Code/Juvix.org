@@ -298,7 +298,6 @@ This module provides a default contract environment
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[InstructionsEff]]
   + [[Optimisation]]

@@ -5,7 +5,6 @@ module Juvix.Backends.Michelson.Compilation where
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy as L
 import Juvix.Backends.Michelson.Compilation.Types
-import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
@@ -62,7 +61,7 @@ compileToMichelsonExpr ∷
   DSL.Reduction m ⇒
   Term →
   Type →
-  m (SomeInstr)
+  m SomeInstr
 compileToMichelsonExpr term ty = do
   michelsonTy ← DSL.typeToPrimType ty
   case michelsonTy of
@@ -75,3 +74,9 @@ compileToMichelsonExpr term ty = do
           -- TODO ∷ Figure out what this case should be
           Right (_ M.:/ (M.AnyOutInstr _)) → undefined
           Left err → throw @"compilationError" (DidNotTypecheck err)
+    M.Type a _ → do
+      michelsonOp ← DSL.instOuter term
+      undefined
+
+runMichelsonExpr ∷ DSL.Reduction m ⇒ NewTerm → m M.ExpandedOp
+runMichelsonExpr term = DSL.instOuter term

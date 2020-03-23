@@ -55,7 +55,7 @@ data CompilationLog
 data SomeInstr where
   SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
 
-deriving instance Show (SomeInstr)
+deriving instance Show SomeInstr
 
 instance Eq SomeInstr where
   _ == _ = False

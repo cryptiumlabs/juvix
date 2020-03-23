@@ -33,15 +33,17 @@ import Prelude (error)
 --------------------------------------------------------------------------------
 
 instOuter ∷ Env.Reduction m ⇒ Types.NewTerm → m Instr.ExpandedOp
-instOuter = inst >=> expandedToInst
+instOuter a@(Types.Ann _ ty _) = inst a >>= expandedToInst ty
 
-expandedToInst ∷ Env.Reduction m ⇒ Env.Expanded → m Instr.ExpandedOp
-expandedToInst exp =
+expandedToInst ∷ Env.Reduction m ⇒ Types.Type → Env.Expanded → m Instr.ExpandedOp
+expandedToInst ty exp =
   case exp of
-    Env.Constant c → pure (Instructions.push undefined c)
+    Env.Constant c → do
+      t ← typeToPrimType ty
+      pure (Instructions.push t c)
     Env.Expanded op → pure op
     -- TODO
-    Env.MichelsonLam → undefined
+    Env.MichelsonLam → error "fails on michLambda"
     Env.Curr c → mconcat |<< promoteLambda c
 
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
@@ -630,13 +632,13 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     -- Step 3: Compile the body of the lambda.
     insts ←
       Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
-    insts ← expandedToInst insts
+    insts ← expandedToInst undefined insts
     put @"ops" [unpackOps <> insts]
     pure Env.MichelsonLam
   case p of
     ProtectStack (Protect _val insts) _stack → do
       -- Step 4: Pack up the captures.
-      capturesInsts ← mapM expandedToInst capturesInsts
+      capturesInsts ← mapM (expandedToInst undefined) capturesInsts
       -- TODO ∷ Reduce usages of the vstack items, due to eating n from the lambda.
       -- Step 5: find the types of the captures, and generate the type for primArg
       argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
