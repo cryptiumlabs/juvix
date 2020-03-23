@@ -136,7 +136,10 @@ identityApp =
 --------------------------------------------------------------------------------
 
 -- TODO ∷ promote to a tasty test!
-testRun = DSL.execMichelson (runMichelsonExpr unitExpr1)
+extractTest ∷ NewTerm → (Either DSL.CompError M.ExpandedOp, DSL.Env)
+extractTest = DSL.execMichelson . runMichelsonExpr
+
+testRun = extractTest unitExpr1
 
 unitExpr1 ∷ Term
 unitExpr1 =
@@ -149,24 +152,12 @@ symbIdent ∷ Term
 symbIdent =
   Ann one (primTy Untyped.unit) (J.AppM lamxx [unitExpr1])
 
-const' ∷ Term
-const' =
+constApp ∷ Term
+constApp =
   Ann
     one
     (primTy Untyped.unit)
-    $ J.AppM
-      ( Ann
-          one
-          ( J.Pi one (primTy Untyped.unit)
-              $ J.Pi
-                one
-                (primTy (Untyped.tc Untyped.int))
-              $ primTy Untyped.unit
-          )
-          $ J.LamM [] ["x", "y"]
-          $ lookupX
-      )
-      [unitExpr1, Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt 3)))]
+    $ J.AppM constUInt [unitExpr1, annIntOne 3]
 
 lamxx ∷ Term
 lamxx =
@@ -175,6 +166,68 @@ lamxx =
 
 lookupX ∷ Term
 lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
+
+constUInt ∷ Term
+constUInt =
+  Ann
+    one
+    ( J.Pi one (primTy Untyped.unit)
+        $ J.Pi
+          mempty
+          (primTy (Untyped.tc Untyped.int))
+        $ primTy Untyped.unit
+    )
+    $ J.LamM [] ["x", "y"]
+    $ lookupX
+
+pairConstant ∷ Term
+pairConstant =
+  Ann
+    one
+    (primTy (Untyped.pair Untyped.unit Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi one (primTy Untyped.unit)
+              $ J.Pi one (primTy Untyped.unit)
+              $ primTy
+              $ Untyped.pair Untyped.unit Untyped.unit
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      [unitExpr1, unitExpr1]
+
+-- not causing more noise in the output ☹
+pairNotConstant ∷ Term
+pairNotConstant =
+  Ann
+    one
+    (primTy (Untyped.pair Untyped.unit Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi one (primTy Untyped.unit)
+              $ J.Pi one (primTy Untyped.unit)
+              $ primTy
+              $ Untyped.pair Untyped.unit Untyped.unit
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      [ unitExpr1,
+        Ann
+          one
+          (primTy Untyped.unit)
+          ( J.AppM
+              ( Ann one undefined
+                  $ J.Prim
+                  $ Instructions.toNewPrimErr
+                  $ Instructions.push Untyped.unit undefined
+              )
+              [unitExpr1]
+          )
+      ]
 
 identityTerm ∷ Term
 identityTerm =
@@ -409,3 +462,7 @@ primPairTy2 =
 
 primTy ∷ M.Type → J.Type PrimTy primVal
 primTy = J.PrimTy . PrimTy
+
+annIntOne ∷ Integer → Term
+annIntOne i =
+  Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt i)))

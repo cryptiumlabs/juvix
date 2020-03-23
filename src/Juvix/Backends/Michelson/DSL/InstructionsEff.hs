@@ -150,32 +150,39 @@ var symb = do
 name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
 name symb f = inst f <* modify @"stack" (VStack.nameTop symb)
 
--- for constant we shouldn't be applying it unless it's a lambda Ι don't think!?
 primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
   case inst of
     -- Can't abstract out pattern due to bad forall resolution!
-    Instr.ADD _ → (Env.Fun (add ty), 2)
-    Instr.SUB _ → (Env.Fun (sub ty), 2)
-    Instr.MUL _ → (Env.Fun (mul ty), 2)
-    Instr.OR {} → (Env.Fun (or ty), 2)
-    Instr.AND _ → (Env.Fun (and ty), 2)
-    Instr.XOR _ → (Env.Fun (xor ty), 2)
-    Instr.EQ {} → (Env.Fun (eq ty), 1)
-    Instr.NEQ _ → (Env.Fun (neq ty), 1)
-    Instr.LT {} → (Env.Fun (lt ty), 1)
-    Instr.LE {} → (Env.Fun (le ty), 1)
-    Instr.GE {} → (Env.Fun (ge ty), 1)
-    Instr.GT {} → (Env.Fun (gt ty), 1)
-    Instr.NEG _ → (Env.Fun (neg ty), 1)
-    Instr.ABS _ → (Env.Fun (abs ty), 1)
-    Instr.CAR {} → (Env.Fun (car ty), 1)
-    Instr.CDR {} → (Env.Fun (cdr ty), 1)
-    Instr.PAIR {} → (Env.Fun (pair ty), 2)
-    Instr.EDIV _ → (Env.Fun (ediv ty), 2)
-    Instr.ISNAT _ → (Env.Fun (isNat ty), 1)
+    Instr.ADD _ → (Env.Fun (add newTy2), 2)
+    Instr.SUB _ → (Env.Fun (sub newTy2), 2)
+    Instr.MUL _ → (Env.Fun (mul newTy2), 2)
+    Instr.OR {} → (Env.Fun (or newTy2), 2)
+    Instr.AND _ → (Env.Fun (and newTy2), 2)
+    Instr.XOR _ → (Env.Fun (xor newTy2), 2)
+    Instr.EQ {} → (Env.Fun (eq newTy1), 1)
+    Instr.NEQ _ → (Env.Fun (neq newTy1), 1)
+    Instr.LT {} → (Env.Fun (lt newTy1), 1)
+    Instr.LE {} → (Env.Fun (le newTy1), 1)
+    Instr.GE {} → (Env.Fun (ge newTy1), 1)
+    Instr.GT {} → (Env.Fun (gt newTy1), 1)
+    Instr.NEG _ → (Env.Fun (neg newTy1), 1)
+    Instr.ABS _ → (Env.Fun (abs newTy1), 1)
+    Instr.CAR {} → (Env.Fun (car newTy1), 1)
+    Instr.CDR {} → (Env.Fun (cdr newTy1), 1)
+    Instr.PAIR {} → (Env.Fun (pair newTy2), 2)
+    Instr.EDIV _ → (Env.Fun (ediv newTy2), 2)
+    Instr.ISNAT _ → (Env.Fun (isNat newTy1), 1)
+    Instr.PUSH {} → (Env.Fun pushConstant, 1)
+  where
+    newTy i = eatType i ty
+
+    newTy2 = newTy 2
+
+    newTy1 = newTy 1
+
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 
@@ -307,6 +314,15 @@ onOneArgs op f typ instrs = do
       modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
+    _ → throw @"compilationError" Types.NotEnoughArguments
+
+-- todo remove repeat pattern
+pushConstant ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Env.Expanded
+pushConstant instrs = do
+  v ← traverse (protect . (inst >=> promoteTopStack)) instrs
+  case v of
+    instr1 : _ →
+      val instr1 <$ addExpanded instr1
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
