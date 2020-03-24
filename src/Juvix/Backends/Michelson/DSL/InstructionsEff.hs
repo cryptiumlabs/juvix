@@ -40,7 +40,7 @@ instOuter a@(Types.Ann _ ty _) = do
   ty ← typeToPrimType ty
   expandedToInst ty inst
 
-expandedToInst ∷ Env.Reduction m ⇒ MU.Type → Env.Expanded → m Instr.ExpandedOp
+expandedToInst ∷ Env.Reduction m ⇒ Untyped.T → Env.Expanded → m Instr.ExpandedOp
 expandedToInst ty exp =
   case exp of
     Env.Constant c → do
@@ -627,7 +627,7 @@ mustLookupType ∷
     HasThrow "compilationError" Types.CompilationError m
   ) ⇒
   Symbol →
-  m MU.Type
+  m Untyped.T
 mustLookupType sym = do
   stack ← get @"stack"
   case VStack.lookupType sym stack of
