@@ -235,6 +235,13 @@ identityTerm =
             [Ann one (primTy unitPair) (J.Var "x")]
       ]
 
+-- this should really be a pair we are sending in, but we can let it compile
+-- (wrongly typed of course), by instead sending in a non constant unit
+identityCall =
+  Ann one (primTy Untyped.unit)
+   $ J.AppM identityTerm2 [push1 Untyped.unit]
+
+
 identityTerm2 ∷ Term
 identityTerm2 =
   Ann one identityType
@@ -251,7 +258,9 @@ identityTerm2 =
           $ J.Prim
           $ Instructions.toNewPrimErr Instructions.pair
       )
-      [ Ann one (primTy unitl) (J.Prim (Constant M.ValueNil)),
+      -- Force the push to be a non constant. This should do nothing
+      -- as it's already forced by the second
+      [ push1 M.ValueNil unitl,
         Ann
           one
           (primTy Untyped.unit)
@@ -450,6 +459,6 @@ push1 const ty =
       ( Ann one (J.Pi one (primTy ty) (primTy ty))
           $ J.Prim
           $ Instructions.toNewPrimErr
-          $ Instructions.push ty undefined
+          $ Instructions.push ty undefined -- the undefined here is never used
       )
       [Ann one (primTy ty) (J.Prim (Constant const))]

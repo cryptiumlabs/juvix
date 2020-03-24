@@ -619,6 +619,7 @@ eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 -- Misc
 --------------------------------------------------------------------------------
 
+-- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda ∷ Env.Reduction m ⇒ Env.Curried → m [Instr.ExpandedOp]
 promoteLambda (Env.C fun argsLeft left captures ty) = do
   -- Step 1: Copy the captures to the top of the stack.
