@@ -26,7 +26,6 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
-import qualified Michelson.Untyped.Type as MU
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
