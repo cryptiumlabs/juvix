@@ -365,6 +365,8 @@ data Protect
 protect ∷ Env.Ops m ⇒ m Env.Expanded → m Protect
 protect inst = do
   curr ← get @"ops"
+  -- Clear the ops, so we only capture the new ops
+  put @"ops" []
   v ← inst
   after ← get @"ops"
   put @"ops" curr
@@ -557,7 +559,7 @@ allConstants = all f
     f (Env.Constant _) = True
     f (Env.Expanded _) = False
     f Env.MichelsonLam = False
-    f (Env.Curr {}) = True
+    f Env.Curr {} = True
     f Env.Nop = False
 
 expandedToStack ∷ Env.Expanded → VStack.Val Env.Curried
@@ -656,7 +658,6 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
   p ← protectStack $ do
     put @"stack" stackLeft
-    put @"ops" []
     traverse_ (\((u, t), sym) → consVarNone sym u t) termList
     -- Step 3: Compile the body of the lambda.
     insts ←

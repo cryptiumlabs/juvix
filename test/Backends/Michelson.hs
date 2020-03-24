@@ -342,17 +342,32 @@ identityTerm =
             [Ann one (primTy unitPair) (J.Var "x")]
       ]
 
--- [ PrimEx (PAIR : @ % %)
--- , PrimEx (CAR @ %)
--- , SeqEx [PrimEx (DIG 1)
---         , PrimEx (DUP @)
---         , PrimEx (DUG 2)
---         ]
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (PUSH @ (Type (TList (Type TUnit :)) :) ValueNil)
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+weirdCall1 ∷ Term
+weirdCall1 =
+  Ann one (primTy unitl)
+  $ J.AppM
+  ( Ann one identityType
+    $ J.LamM [] ["x"]
+    $ Ann (SNat 2) (primTy (Untyped.pair unitl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi
+              one
+              (primTy unitl)
+              (J.Pi one (primTy Untyped.unit) (primTy (Untyped.pair unitl Untyped.unit)))
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      -- Force the push to be a non constant. This should do nothing
+      -- as it's already forced by the second
+      [ push1 M.ValueUnit Untyped.unit
+      , unitExpr1
+      ]
+  )
+  [push1 M.ValueNil unitl]
+
 
 
 -- this should really be a pair we are sending in, but we can let it compile
