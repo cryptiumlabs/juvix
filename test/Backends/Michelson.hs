@@ -203,6 +203,25 @@ pairConstant = pairGen [unitExpr1, unitExpr1]
 pairNotConstant ∷ Term
 pairNotConstant = pairGen [ unitExpr1, push1 M.ValueUnit Untyped.unit]
 
+
+-- | 'underExact' tests for under application of a multi argument lambda
+-- then gives it the exact number of arguments
+underExact ∷ Term
+underExact =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM
+      ( Ann
+          one
+          (J.Pi one (primTy Untyped.unit)
+            $ J.Pi one (primTy Untyped.unit)
+            $ primTy Untyped.unit
+          )
+          undefined
+      )
+      []
+
 identityTerm ∷ Term
 identityTerm =
   Ann one identityType
@@ -239,7 +258,7 @@ identityTerm =
 -- (wrongly typed of course), by instead sending in a non constant unit
 identityCall =
   Ann one (primTy Untyped.unit)
-   $ J.AppM identityTerm2 [push1 Untyped.unit]
+   $ J.AppM identityTerm2 [push1 M.ValueUnit Untyped.unit]
 
 
 identityTerm2 ∷ Term
