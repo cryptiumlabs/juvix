@@ -238,9 +238,45 @@ underExactConst = underExactGen unitExpr1
 -- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 -- note the dup, this is because in the stack, we pushed it as omega
 -- if we did better constant propagation this would be free
--- we could probably turn the last (DIG 1) into (DIG 0)
 underExactNonConst ∷ Term
 underExactNonConst = underExactGen (push1 M.ValueUnit Untyped.unit)
+
+-- | 'overExactGen' tests for overapplication of a multi argument lambda
+-- then feeds the rest of the arguments into the inner lambda perfectly
+overExactGen ∷ Term → Term
+overExactGen x =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi one (primTy Untyped.unit)
+              $ J.Pi one (primTy Untyped.unit)
+              $ J.Pi one (primTy Untyped.unit)
+              $ primTy Untyped.unit
+          )
+          $ J.LamM [] ["y", "z"]
+          $ Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit))
+          $ J.LamM [] ["x"] lookupX
+      )
+      [x, x, x]
+
+-- Optimal code generation
+overExactConst ∷ Term
+overExactConst = overExactGen unitExpr1
+
+-- Code generation is as follow, remember to read backwards
+-- Seems fairly optimal
+-- [PrimEx (DIG 2)
+--   ,PrimEx (DUP @)
+--   ,PrimEx (DUG 2)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+
+overExactNonConst ∷ Term
+overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)
 
 identityTerm ∷ Term
 identityTerm =
