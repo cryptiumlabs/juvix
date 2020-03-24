@@ -177,8 +177,7 @@ constUInt =
           (primTy (Untyped.tc Untyped.int))
         $ primTy Untyped.unit
     )
-    $ J.LamM [] ["x", "y"]
-    $ lookupX
+    $ J.LamM [] ["x", "y"] lookupX
 
 pairGen ∷ [AnnTerm PrimTy NewPrim] → AnnTerm PrimTy NewPrim
 pairGen =
@@ -201,26 +200,47 @@ pairConstant ∷ Term
 pairConstant = pairGen [unitExpr1, unitExpr1]
 
 pairNotConstant ∷ Term
-pairNotConstant = pairGen [ unitExpr1, push1 M.ValueUnit Untyped.unit]
+pairNotConstant = pairGen [unitExpr1, push1 M.ValueUnit Untyped.unit]
 
-
--- | 'underExact' tests for under application of a multi argument lambda
+-- | 'underExactGen' tests for under application of a multi argument lambda
 -- then gives it the exact number of arguments
-underExact ∷ Term
-underExact =
+underExactGen ∷ Term → Term
+underExactGen x =
   Ann
     one
     (primTy Untyped.unit)
     $ J.AppM
       ( Ann
           one
-          (J.Pi one (primTy Untyped.unit)
-            $ J.Pi one (primTy Untyped.unit)
-            $ primTy Untyped.unit
+          ( J.Pi one (primTy Untyped.unit) $
+              primTy Untyped.unit
           )
-          undefined
+          $ J.AppM
+            ( Ann
+                one
+                ( J.Pi one (primTy Untyped.unit)
+                    $ J.Pi one (primTy Untyped.unit)
+                    $ primTy Untyped.unit
+                )
+                $ J.LamM [] ["x", "y"] lookupX
+            )
+            [x]
       )
-      []
+      [x]
+
+-- Generates optimal code!
+underExactConst ∷ Term
+underExactConst = underExactGen unitExpr1
+
+-- generates (read it in reverse!):
+-- [ PrimEx (DIG 1), PrimEx (DUP @), PrimEx (DUG 1)
+-- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+-- note the dup, this is because in the stack, we pushed it as omega
+-- if we did better constant propagation this would be free
+-- we could probably turn the last (DIG 1) into (DIG 0)
+underExactNonConst ∷ Term
+underExactNonConst = underExactGen (push1 M.ValueUnit Untyped.unit)
 
 identityTerm ∷ Term
 identityTerm =
@@ -257,9 +277,8 @@ identityTerm =
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit
 identityCall =
-  Ann one (primTy Untyped.unit)
-   $ J.AppM identityTerm2 [push1 M.ValueUnit Untyped.unit]
-
+  Ann one (primTy Untyped.unit) $
+    J.AppM identityTerm2 [push1 M.ValueUnit Untyped.unit]
 
 identityTerm2 ∷ Term
 identityTerm2 =
