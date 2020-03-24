@@ -649,6 +649,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
   -- Note: these lets are dropping usages the lambda consumes.
   let listOfArgsType = Utils.piToList ty
 
+      Just returnType = snd <$> lastMay listOfArgsType
+
       termList = reverse $ zip listOfArgsType argsLeft
 
       stackLeft = VStack.take (length captures) curr
@@ -671,7 +673,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     -- Step 3: Compile the body of the lambda.
     insts ←
       Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
-    insts ← expandedToInst undefined insts
+    returnTypePrim ← typeToPrimType returnType
+    insts ← expandedToInst returnTypePrim insts
     put @"ops" [unpackOps <> insts]
     pure Env.MichelsonLam
   case p of
@@ -681,7 +684,6 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       -- TODO ∷ Reduce usages of the vstack items, due to eating n from the lambda.
       -- Step 5: find the types of the captures, and generate the type for primArg
       argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
-      let Just returnType = snd <$> lastMay (Utils.piToList ty)
       primReturn ← typeToPrimType returnType
       let capturesTypes =
             (\x → (x, fromJust (VStack.lookupType x curr)))
