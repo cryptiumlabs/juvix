@@ -41,6 +41,8 @@ data Expanded
   | MichelsonLam
   | -- | Curr is a stand in for lambda or curry
     Curr Curried
+  -- | Nop is a non constant, that has already been added to the ops stack
+  | Nop
   deriving (Show)
 
 newtype Fun = Fun (∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded)
