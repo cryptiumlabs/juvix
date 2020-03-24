@@ -14,6 +14,7 @@ module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
+import qualified Debug.Trace as Trace
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
@@ -175,7 +176,7 @@ primToFargs (Types.Inst inst) ty =
     Instr.PAIR {} → (Env.Fun (pair newTy2), 2)
     Instr.EDIV _ → (Env.Fun (ediv newTy2), 2)
     Instr.ISNAT _ → (Env.Fun (isNat newTy1), 1)
-    Instr.PUSH {} → (Env.Fun pushConstant, 1)
+    Instr.PUSH {} → (Env.Fun (pushConstant newTy1), 1)
   where
     newTy i = eatType i ty
 
@@ -317,12 +318,14 @@ onOneArgs op f typ instrs = do
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -- todo remove repeat pattern
-pushConstant ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Env.Expanded
-pushConstant instrs = do
-  v ← traverse (protect . (inst >=> promoteTopStack)) instrs
+pushConstant ∷ Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
+pushConstant ty instrs = do
+  v ← traverse (inst >=> promoteTopStack) instrs
   case v of
-    instr1 : _ →
-      val instr1 <$ addExpanded instr1
+    Env.Constant v : _ → do
+      ty ← typeToPrimType ty
+      pure (Env.Expanded (Instructions.push ty v))
+    instr1 : _ → pure instr1
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
@@ -411,8 +414,7 @@ apply closure args remainingArgs = do
       app
     LT → do
       evalArgsAndName
-      -- make new closure, and apply args to the fun in the closure
-      -- allowing more arguments to come, in a cont style!
+      -- make new closure,
       let remaining = Env.left closure - totalLength
 
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)

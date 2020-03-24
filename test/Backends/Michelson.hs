@@ -220,7 +220,7 @@ pairNotConstant =
           one
           (primTy Untyped.unit)
           ( J.AppM
-              ( Ann one undefined
+              ( Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit))
                   $ J.Prim
                   $ Instructions.toNewPrimErr
                   $ Instructions.push Untyped.unit undefined
