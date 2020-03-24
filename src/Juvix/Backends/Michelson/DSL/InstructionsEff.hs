@@ -34,14 +34,16 @@ import Prelude (error)
 --------------------------------------------------------------------------------
 
 instOuter ∷ Env.Reduction m ⇒ Types.NewTerm → m Instr.ExpandedOp
-instOuter a@(Types.Ann _ ty _) = inst a >>= expandedToInst ty
+instOuter a@(Types.Ann _ ty _) = do
+  inst ← inst a
+  ty ← typeToPrimType ty
+  expandedToInst ty inst
 
-expandedToInst ∷ Env.Reduction m ⇒ Types.Type → Env.Expanded → m Instr.ExpandedOp
+expandedToInst ∷ Env.Reduction m ⇒ Untyped.T → Env.Expanded → m Instr.ExpandedOp
 expandedToInst ty exp =
   case exp of
     Env.Constant c → do
-      t ← typeToPrimType ty
-      let newInstr = Instructions.push t c
+      let newInstr = Instructions.push ty c
       addInstr newInstr
       pure newInstr
     Env.Expanded op → pure op
@@ -628,17 +630,34 @@ eatType _ _ = error "Only eat parts of a Pi types, not any other type!"
 -- Misc
 --------------------------------------------------------------------------------
 
+mustLookupType ∷
+  ( HasState "stack" (VStack.T lamType) m,
+    HasThrow "compilationError" Types.CompilationError m
+  ) ⇒
+  Symbol →
+  m Untyped.T
+mustLookupType sym = do
+  stack ← get @"stack"
+  case VStack.lookupType sym stack of
+    Just ty → pure ty
+    Nothing → throw @"compilationError" (Types.InternalFault "must be able to find type")
+
 -- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda ∷ Env.Reduction m ⇒ Env.Curried → m [Instr.ExpandedOp]
 promoteLambda (Env.C fun argsLeft left captures ty) = do
   -- Step 1: Copy the captures to the top of the stack.
   let capturesList = Set.toList captures
   -- TODO ∷ Figure out how to properly deal with usages here.
-  capturesInsts ← traverse var capturesList
+  capturesInsts ← flip traverse capturesList $ \c → do
+    ty ← mustLookupType c
+    instr ← var c
+    pure (ty, instr)
   curr ← get @"stack"
   -- Step 2: Figure out what the stack will be in the body of the function.
   -- Note: these lets are dropping usages the lambda consumes.
   let listOfArgsType = Utils.piToList ty
+
+      Just returnType = snd <$> lastMay listOfArgsType
 
       termList = reverse $ zip listOfArgsType argsLeft
 
@@ -662,17 +681,17 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     -- Step 3: Compile the body of the lambda.
     insts ←
       Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
-    insts ← expandedToInst undefined insts
+    returnTypePrim ← typeToPrimType returnType
+    insts ← expandedToInst returnTypePrim insts
     modify @"ops" ([unpackOps] <>)
     pure Env.MichelsonLam
   case p of
     ProtectStack (Protect _val insts) _stack → do
       -- Step 4: Pack up the captures.
-      capturesInsts ← mapM (expandedToInst undefined) capturesInsts
+      capturesInsts ← mapM (uncurry expandedToInst) capturesInsts
       -- TODO ∷ Reduce usages of the vstack items, due to eating n from the lambda.
       -- Step 5: find the types of the captures, and generate the type for primArg
       argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
-      let Just returnType = snd <$> lastMay (Utils.piToList ty)
       primReturn ← typeToPrimType returnType
       let capturesTypes =
             (\x → (x, fromJust (VStack.lookupType x curr)))
