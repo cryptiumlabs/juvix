@@ -8,7 +8,8 @@ import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
-import Juvix.Library hiding (Type)
+import Juvix.Library hiding (Type, show)
+import Prelude (show)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -152,12 +153,6 @@ symbIdent ∷ Term
 symbIdent =
   Ann one (primTy Untyped.unit) (J.AppM lamxx [unitExpr1])
 
-constApp ∷ Term
-constApp =
-  Ann
-    one
-    (primTy Untyped.unit)
-    $ J.AppM constUInt [unitExpr1, annIntOne 3]
 
 lamxx ∷ Term
 lamxx =
@@ -167,6 +162,11 @@ lamxx =
 lookupX ∷ Term
 lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
 
+-- [SeqEx [PrimEx (DUP @)
+--        ,PrimEx (CAR @ %)
+--        ,PrimEx (DIP [PrimEx (CDR @ %)])
+--        ,PrimEx (DIP [SeqEx []])
+--        ,PrimEx (DIG 0)]]
 constUInt ∷ Term
 constUInt =
   Ann
@@ -178,6 +178,32 @@ constUInt =
         $ primTy Untyped.unit
     )
     $ J.LamM [] ["x", "y"] lookupX
+
+-- generates: read backwords
+-- [ SeqEx [ PrimEx (DIG 0)
+--         , PrimEx (DUP @)
+--         , PrimEx (DUG 0)]
+-- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- , PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))]
+
+nonConstApp ∷ Term
+nonConstApp =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM
+        constUInt
+        [push1 M.ValueUnit Untyped.unit
+        , push1 (M.ValueInt 3) (Untyped.tc Untyped.int)
+        ]
+
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+constApp ∷ Term
+constApp =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM constUInt [unitExpr1, annIntOne 3]
 
 pairGen ∷ [AnnTerm PrimTy NewPrim] → AnnTerm PrimTy NewPrim
 pairGen =
@@ -198,6 +224,10 @@ pairGen =
 
 pairConstant ∷ Term
 pairConstant = pairGen [unitExpr1, unitExpr1]
+
+-- [PrimEx (PAIR : @ % %)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 
 pairNotConstant ∷ Term
 pairNotConstant = pairGen [unitExpr1, push1 M.ValueUnit Untyped.unit]
@@ -233,7 +263,9 @@ underExactConst ∷ Term
 underExactConst = underExactGen unitExpr1
 
 -- generates (read it in reverse!):
--- [ PrimEx (DIG 1), PrimEx (DUP @), PrimEx (DUG 1)
+-- [ SeqEx [PrimEx (DIG 1)
+--         ,PrimEx (DUP @)
+--         ,PrimEx (DUG 2)]
 -- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 -- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 -- note the dup, this is because in the stack, we pushed it as omega
@@ -268,9 +300,9 @@ overExactConst = overExactGen unitExpr1
 
 -- Code generation is as follow, remember to read backwards
 -- Seems fairly optimal
--- [PrimEx (DIG 2)
+-- [PrimEx (DUG 2)
 --   ,PrimEx (DUP @)
---   ,PrimEx (DUG 2)
+--   ,PrimEx (DIP 2)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
@@ -310,17 +342,45 @@ identityTerm =
             [Ann one (primTy unitPair) (J.Var "x")]
       ]
 
+weirdCall1 ∷ Term
+weirdCall1 =
+  Ann one (primTy unitl)
+  $ J.AppM
+  ( Ann one identityType
+    $ J.LamM [] ["x"]
+    $ Ann (SNat 2) (primTy (Untyped.pair unitl Untyped.unit))
+    $ J.AppM
+      ( Ann
+          one
+          ( J.Pi
+              one
+              (primTy unitl)
+              (J.Pi one (primTy Untyped.unit) (primTy (Untyped.pair unitl Untyped.unit)))
+          )
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      -- Force the push to be a non constant. This should do nothing
+      -- as it's already forced by the second
+      [ push1 M.ValueUnit Untyped.unit
+      , unitExpr1
+      ]
+  )
+  [push1 M.ValueNil unitl]
+
+
+
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit
 identityCall =
   Ann one (primTy Untyped.unit) $
-    J.AppM identityTerm2 [push1 M.ValueUnit Untyped.unit]
+    J.AppM identityTerm2 [push1 (M.ValueInt 3) (Untyped.tc Untyped.int)]
 
 identityTerm2 ∷ Term
 identityTerm2 =
   Ann one identityType
     $ J.LamM [] ["x"]
-    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
+    $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
     $ J.AppM
       ( Ann
           one
@@ -533,6 +593,6 @@ push1 const ty =
       ( Ann one (J.Pi one (primTy ty) (primTy ty))
           $ J.Prim
           $ Instructions.toNewPrimErr
-          $ Instructions.push ty undefined -- the undefined here is never used
+          $ Instructions.push ty (M.ValueNil) -- the undefined here is never used
       )
       [Ann one (primTy ty) (J.Prim (Constant const))]

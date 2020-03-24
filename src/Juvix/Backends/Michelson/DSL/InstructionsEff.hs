@@ -50,6 +50,7 @@ expandedToInst ty exp =
     -- TODO
     Env.MichelsonLam → error "fails on michLambda"
     Env.Curr c → mconcat |<< promoteLambda c
+    Env.Nop → pure (Instr.SeqEx [])
 
 inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst (Types.Ann _usage ty t) =
@@ -286,6 +287,7 @@ onTwoArgs op f typ instrs = do
   v ← traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
     instr2 : instr1 : _ → do
+      -- May be the wrong order?
       let instrs = [instr2, instr1]
       res ←
         if
@@ -296,7 +298,7 @@ onTwoArgs op f typ instrs = do
           | otherwise → do
             traverse_ addExpanded instrs
             addInstr op
-            pure (Env.Expanded op)
+            pure Env.Nop
       modify @"stack" (VStack.drop 2)
       consVal res typ
       pure res
@@ -315,7 +317,7 @@ onOneArgs op f typ instrs = do
           | otherwise → do
             addExpanded instr1
             addInstr op
-            pure (Env.Expanded op)
+            pure Env.Nop
       modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
@@ -328,7 +330,7 @@ pushConstant ty instrs = do
   case v of
     Env.Constant v : _ → do
       ty ← typeToPrimType ty
-      pure (Env.Expanded (Instructions.push ty v))
+      pure Env.Nop -- (Env.Expanded (Instructions.push ty v))
     instr1 : _ → pure instr1
     _ → throw @"compilationError" Types.NotEnoughArguments
 
@@ -346,23 +348,27 @@ moveToFront num = do
 dupToFront ∷ (Env.Instruction m, Integral a) ⇒ a → m Instr.ExpandedOp
 dupToFront num = do
   modify @"stack" (VStack.dupDig (fromIntegral num))
+  -- Since the instructions run in reverse if we add it this way
+  -- we put dug first
   let instrs =
-        [ Instructions.dig (fromIntegral num),
-          Instructions.dup,
-          Instructions.dug (fromIntegral num)
-        ]
-  addInstrs instrs
-  pure (fold instrs)
+        Instructions.dig (fromIntegral num)
+         <> Instructions.dup
+         <> Instructions.dug (succ (fromIntegral num))
+  addInstr instrs
+  pure instrs
 
 data Protect
   = Protect
       { val ∷ Env.Expanded,
         insts ∷ [Types.Op]
       }
+      deriving (Show)
 
 protect ∷ Env.Ops m ⇒ m Env.Expanded → m Protect
 protect inst = do
   curr ← get @"ops"
+  -- Clear the ops, so we only capture the new ops
+  put @"ops" []
   v ← inst
   after ← get @"ops"
   put @"ops" curr
@@ -373,6 +379,7 @@ data ProtectStack
       { prot ∷ Protect,
         stack ∷ VStack.T Env.Curried
       }
+  deriving (Show)
 
 protectStack ∷ Env.Instruction m ⇒ m Env.Expanded → m ProtectStack
 protectStack inst = do
@@ -554,13 +561,15 @@ allConstants = all f
     f (Env.Constant _) = True
     f (Env.Expanded _) = False
     f Env.MichelsonLam = False
-    f (Env.Curr {}) = True
+    f Env.Curr {} = True
+    f Env.Nop = False
 
 expandedToStack ∷ Env.Expanded → VStack.Val Env.Curried
 expandedToStack (Env.Constant v) = VStack.ConstE v
 expandedToStack (Env.Expanded _) = VStack.FuncResultE
 expandedToStack (Env.Curr curry) = VStack.LamPartialE curry
 expandedToStack Env.MichelsonLam = VStack.MichelsonLambda
+expandedToStack Env.Nop = VStack.FuncResultE
 
 consVal ∷ (Env.Stack m, Env.Error m) ⇒ Env.Expanded → Types.Type → m ()
 consVal result ty = do
@@ -674,7 +683,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
     returnTypePrim ← typeToPrimType returnType
     insts ← expandedToInst returnTypePrim insts
-    put @"ops" [unpackOps <> insts]
+    modify @"ops" ([unpackOps] <>)
     pure Env.MichelsonLam
   case p of
     ProtectStack (Protect _val insts) _stack → do
@@ -691,6 +700,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
           argTy = Utils.lamType capturesTypes argsWithTypes primReturn
 
           -- Step 6: generate the lambda
+          -- TODO ∷ maybe reverse the instrs to lambda that isn't the car cdr dip stuff?
           lambda = Instructions.lambda argTy primReturn insts
 
       -- Return all operations in order: push the lambda, evaluate captures, pair up captures, APPLY.
