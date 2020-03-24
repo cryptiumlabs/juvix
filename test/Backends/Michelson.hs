@@ -180,12 +180,12 @@ constUInt =
     $ J.LamM [] ["x", "y"]
     $ lookupX
 
-pairConstant ∷ Term
-pairConstant =
+pairGen ∷ [AnnTerm PrimTy NewPrim] → AnnTerm PrimTy NewPrim
+pairGen =
   Ann
     one
     (primTy (Untyped.pair Untyped.unit Untyped.unit))
-    $ J.AppM
+    . J.AppM
       ( Ann
           one
           ( J.Pi one (primTy Untyped.unit)
@@ -196,38 +196,12 @@ pairConstant =
           $ J.Prim
           $ Instructions.toNewPrimErr Instructions.pair
       )
-      [unitExpr1, unitExpr1]
 
--- not causing more noise in the output ☹
+pairConstant ∷ Term
+pairConstant = pairGen [unitExpr1, unitExpr1]
+
 pairNotConstant ∷ Term
-pairNotConstant =
-  Ann
-    one
-    (primTy (Untyped.pair Untyped.unit Untyped.unit))
-    $ J.AppM
-      ( Ann
-          one
-          ( J.Pi one (primTy Untyped.unit)
-              $ J.Pi one (primTy Untyped.unit)
-              $ primTy
-              $ Untyped.pair Untyped.unit Untyped.unit
-          )
-          $ J.Prim
-          $ Instructions.toNewPrimErr Instructions.pair
-      )
-      [ unitExpr1,
-        Ann
-          one
-          (primTy Untyped.unit)
-          ( J.AppM
-              ( Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit))
-                  $ J.Prim
-                  $ Instructions.toNewPrimErr
-                  $ Instructions.push Untyped.unit undefined
-              )
-              [unitExpr1]
-          )
-      ]
+pairNotConstant = pairGen [ unitExpr1, push1 M.ValueUnit Untyped.unit]
 
 identityTerm ∷ Term
 identityTerm =
@@ -466,3 +440,16 @@ primTy = J.PrimTy . PrimTy
 annIntOne ∷ Integer → Term
 annIntOne i =
   Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt i)))
+
+push1 ∷ M.Value' Op → M.Type → AnnTerm PrimTy NewPrim
+push1 const ty =
+  Ann
+    one
+    (primTy Untyped.unit)
+    $ J.AppM
+      ( Ann one (J.Pi one (primTy ty) (primTy ty))
+          $ J.Prim
+          $ Instructions.toNewPrimErr
+          $ Instructions.push ty undefined
+      )
+      [Ann one (primTy ty) (J.Prim (Constant const))]

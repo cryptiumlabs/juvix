@@ -41,7 +41,9 @@ expandedToInst ty exp =
   case exp of
     Env.Constant c → do
       t ← typeToPrimType ty
-      pure (Instructions.push t c)
+      let newInstr = Instructions.push t c
+      addInstr newInstr
+      pure newInstr
     Env.Expanded op → pure op
     -- TODO
     Env.MichelsonLam → error "fails on michLambda"
