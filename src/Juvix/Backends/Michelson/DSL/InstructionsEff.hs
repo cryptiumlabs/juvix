@@ -141,9 +141,13 @@ var symb = do
       pushStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
     Just (VStack.Position usage index)
-      | one == usage →
+      | one == usage → do
+        Trace.traceShowM (unintern symb <> " 1: usage is: ")
+        Trace.traceShowM usage
         Env.Expanded <$> moveToFront index
-      | otherwise →
+      | otherwise → do
+        Trace.traceShowM (unintern symb <> " m: usage is: ")
+        Trace.traceShowM usage
         Env.Expanded <$> dupToFront index
 
 -- Replaced to always just replace the top element

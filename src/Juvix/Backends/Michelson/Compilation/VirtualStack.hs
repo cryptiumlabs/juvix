@@ -292,7 +292,7 @@ dropFirst n (T stack' size) = go stack'
   where
     go ((v@(VarE n' usages _), _) : xs) acc
       | Set.member n n' && inT v && usages /= mempty =
-        T (reverse acc <> (updateUsageList n' (Usage.pred usages) xs)) (pred size)
+        T (reverse acc <> updateUsageList n' (Usage.pred usages) xs) (pred size)
       | Set.member n n' && inT v =
         T (reverse acc <> xs) (pred size)
       | Set.member n n' =
