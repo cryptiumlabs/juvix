@@ -22,26 +22,26 @@ import Prelude (String)
 
 -- TODO: Add rest of primitive values.
 -- TODO: Add dependent functions for pair, fst, snd, etc.
-typeOf ∷ PrimVal → NonEmpty PrimTy
+typeOf :: PrimVal -> NonEmpty PrimTy
 typeOf (PrimConst v) = PrimTy (M.Type (constType v) "") :| []
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
 
-constType ∷ M.Value' Op → M.T
+constType :: M.Value' Op -> M.T
 constType v =
   case v of
-    M.ValueInt _ → M.Tc M.CInt
-    M.ValueUnit → M.TUnit
-    M.ValueTrue → M.Tc M.CBool
-    M.ValueFalse → M.Tc M.CBool
+    M.ValueInt _ -> M.Tc M.CInt
+    M.ValueUnit -> M.TUnit
+    M.ValueTrue -> M.Tc M.CBool
+    M.ValueFalse -> M.Tc M.CBool
 
-arity ∷ PrimVal → Int
+arity :: PrimVal -> Int
 arity = pred . length . typeOf
 
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
-apply ∷ PrimVal → PrimVal → Maybe PrimVal
+apply :: PrimVal -> PrimVal -> Maybe PrimVal
 apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
@@ -49,38 +49,38 @@ apply t1 _t2 = Nothing
       Prim.primToInstr t1 (CoreErased.PrimTy primTy)
       undefined
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
+parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
   try
     ( do
-        ty ← wrapParser lexer M.type_
+        ty <- wrapParser lexer M.type_
         pure (PrimTy ty)
     )
 
 -- TODO: parse all values.
-parseVal ∷ Token.GenTokenParser String () Identity → Parser PrimVal
+parseVal :: Token.GenTokenParser String () Identity -> Parser PrimVal
 parseVal lexer =
   try
     ( do
-        val ← wrapParser lexer M.value
+        val <- wrapParser lexer M.value
         pure (PrimConst (M.expandValue val))
     )
 
-wrapParser ∷ Token.GenTokenParser String () Identity → M.Parser a → Parser a
+wrapParser :: Token.GenTokenParser String () Identity -> M.Parser a -> Parser a
 wrapParser lexer p = do
-  str ← many (anyChar)
+  str <- many (anyChar)
   Token.whiteSpace lexer
   case M.parseNoEnv p "" (Text.pack str) of
-    Right r → pure r
-    Left _ → fail ""
+    Right r -> pure r
+    Left _ -> fail ""
 
-reservedNames ∷ [String]
+reservedNames :: [String]
 reservedNames = []
 
-reservedOpNames ∷ [String]
+reservedOpNames :: [String]
 reservedOpNames = []
 
-michelson ∷ Core.Parameterisation PrimTy PrimVal
+michelson :: Core.Parameterisation PrimTy PrimVal
 michelson =
   Core.Parameterisation
     typeOf

@@ -13,30 +13,30 @@ import LLVM.AST as AST
 data EACState
   = EACState
       { -- | Name of the active block to append to
-        currentBlock ∷ Name,
+        currentBlock :: Name,
         -- | Blocks for function
-        blocks ∷ Map.T Name BlockState,
+        blocks :: Map.T Name BlockState,
         -- | Function scope symbol table
-        symTab ∷ SymbolTable,
+        symTab :: SymbolTable,
         -- | Mapping from symbol to Type
-        typTab ∷ TypeTable,
+        typTab :: TypeTable,
         -- | a mapping from the variants to the sum type
-        varTab ∷ VariantToType,
+        varTab :: VariantToType,
         -- | Count of basic blocks
-        blockCount ∷ Int,
+        blockCount :: Int,
         -- | Count of unnamed instructions
-        count ∷ Word,
+        count :: Word,
         -- | Name Supply
-        names ∷ Names,
-        moduleAST ∷ AST.Module,
+        names :: Names,
+        moduleAST :: AST.Module,
         -- | Debug level
-        debug ∷ Int
+        debug :: Int
         -- new data for EAC!
         --
       }
   deriving (Show, Generic)
 
-newtype EAC a = EACGen {runEAC ∷ ExceptT Errors (State EACState) a}
+newtype EAC a = EACGen {runEAC :: ExceptT Errors (State EACState) a}
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "currentBlock" Name)
@@ -73,51 +73,51 @@ newtype EAC a = EACGen {runEAC ∷ ExceptT Errors (State EACState) a}
     via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State EACState))))
 
 instance HasState "moduleDefinitions" [Definition] EAC where
-
-  get_ _ = moduleDefinitions <$> (get @"moduleAST")
+  get_ _ = moduleDefinitions <$> (get@"moduleAST")
 
   put_ _ x = do
-    c ← get @"moduleAST"
-    put @"moduleAST" (c {moduleDefinitions = x})
+    c <- get@"moduleAST"
+    put@"moduleAST" (c {moduleDefinitions = x})
 
   state_ _ state = do
-    c ← get @"moduleDefinitions"
+    c <- get@"moduleDefinitions"
     let (a, res) = state c
-    put @"moduleDefinitions" res
+    put@"moduleDefinitions" res
     pure a
 
 --------------------------------------------------------------------------------
 -- Functions
 --------------------------------------------------------------------------------
 
-emptyEAC ∷ EACState
-emptyEAC = EACState
-  { currentBlock = mkName entryBlockName,
-    blocks = Map.empty,
-    symTab = Map.empty,
-    typTab = Map.empty,
-    varTab = Map.empty,
-    count = 0,
-    names = Map.empty,
-    blockCount = 1,
-    moduleAST = emptyModule "EAC",
-    debug = 0
-  }
+emptyEAC :: EACState
+emptyEAC =
+  EACState
+    { currentBlock = mkName entryBlockName,
+      blocks = Map.empty,
+      symTab = Map.empty,
+      typTab = Map.empty,
+      varTab = Map.empty,
+      count = 0,
+      names = Map.empty,
+      blockCount = 1,
+      moduleAST = emptyModule "EAC",
+      debug = 0
+    }
 
-emptyEACL1 ∷ EACState
+emptyEACL1 :: EACState
 emptyEACL1 = emptyEAC {debug = 1}
 
-debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
-debugLevelOne = whenM ((1 <=) <$> ask @"debug")
+debugLevelOne :: HasReader "debug" Int m => m () -> m ()
+debugLevelOne = whenM ((1 <=) <$> ask@"debug")
 
-execEACState ∷ EAC a → SymbolTable → EACState
+execEACState :: EAC a -> SymbolTable -> EACState
 execEACState (EACGen m) a = execState (runExceptT m) (emptyEAC {symTab = a})
 
-evalEACState ∷ EAC a → SymbolTable → Either Errors a
+evalEACState :: EAC a -> SymbolTable -> Either Errors a
 evalEACState (EACGen m) a = evalState (runExceptT m) (emptyEAC {symTab = a})
 
-execEACStateLevel1 ∷ EAC a → SymbolTable → EACState
+execEACStateLevel1 :: EAC a -> SymbolTable -> EACState
 execEACStateLevel1 (EACGen m) a = execState (runExceptT m) (emptyEACL1 {symTab = a})
 
-evalEACStateLevel1 ∷ EAC a → SymbolTable → Either Errors a
+evalEACStateLevel1 :: EAC a -> SymbolTable -> Either Errors a
 evalEACStateLevel1 (EACGen m) a = evalState (runExceptT m) (emptyEACL1 {symTab = a})

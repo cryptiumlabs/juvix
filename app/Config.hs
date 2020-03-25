@@ -8,34 +8,35 @@ import Juvix.Library
 
 data T
   = T
-      { configTezosNodeHost ∷ Text,
-        configTezosNodePort ∷ Int
+      { configTezosNodeHost :: Text,
+        configTezosNodePort :: Int
       }
   deriving (Generic)
 
-defaultT ∷ T
-defaultT = T
-  { configTezosNodeHost = "127.0.0.1",
-    configTezosNodePort = 8732
-  }
+defaultT :: T
+defaultT =
+  T
+    { configTezosNodeHost = "127.0.0.1",
+      configTezosNodePort = 8732
+    }
 
-loadT ∷ FilePath → IO (Maybe T)
+loadT :: FilePath -> IO (Maybe T)
 loadT path = do
-  config ← Y.decodeFileEither path
+  config <- Y.decodeFileEither path
   return $ case config of
-    Right parsed → pure parsed
-    Left _ → Nothing
+    Right parsed -> pure parsed
+    Left _ -> Nothing
 
 instance Y.FromJSON T where
   parseJSON = customParseJSON
 
-jsonOptions ∷ A.Options
+jsonOptions :: A.Options
 jsonOptions =
   A.defaultOptions
-    { A.fieldLabelModifier = (\(h : t) → toLower h : t) . dropWhile isLower,
+    { A.fieldLabelModifier = (\(h : t) -> toLower h : t) . dropWhile isLower,
       A.omitNothingFields = True,
       A.sumEncoding = A.ObjectWithSingleField
     }
 
-customParseJSON ∷ (A.GFromJSON A.Zero (Rep a), Generic a) ⇒ A.Value → A.Parser a
+customParseJSON :: (A.GFromJSON A.Zero (Rep a), Generic a) => A.Value -> A.Parser a
 customParseJSON = A.genericParseJSON jsonOptions

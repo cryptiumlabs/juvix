@@ -39,14 +39,14 @@ data AST primVal
     Erase
   | -- Not valid syntax but for read back of a graph
     Curried3
-      (Primitive → Primitive → Primitive → Maybe Primitive)
+      (Primitive -> Primitive -> Primitive -> Maybe Primitive)
       (AST primVal)
       (AST primVal)
       (AST primVal)
-  | Curried2 (Primitive → Primitive → Maybe Primitive) (AST primVal) (AST primVal)
-  | Curried1 (Primitive → Maybe Primitive) (AST primVal)
-  | PrimCurried2 (primVal → primVal → Maybe primVal) (AST primVal) (AST primVal)
-  | PrimCurried1 (primVal → Maybe primVal) (AST primVal)
+  | Curried2 (Primitive -> Primitive -> Maybe Primitive) (AST primVal) (AST primVal)
+  | Curried1 (Primitive -> Maybe Primitive) (AST primVal)
+  | PrimCurried2 (primVal -> primVal -> Maybe primVal) (AST primVal) (AST primVal)
+  | PrimCurried1 (primVal -> Maybe primVal) (AST primVal)
   | Prim primVal
   deriving (Show)
 
@@ -56,7 +56,7 @@ data AST primVal
 -- so type check at a higher level
 data Fn primVal
   = Arg0 Primitive
-  | Arg1 (Primitive → Maybe Primitive)
-  | Arg2 (Primitive → Primitive → Maybe Primitive)
-  | Arg3 (Primitive → Primitive → Primitive → Maybe Primitive)
+  | Arg1 (Primitive -> Maybe Primitive)
+  | Arg2 (Primitive -> Primitive -> Maybe Primitive)
+  | Arg3 (Primitive -> Primitive -> Primitive -> Maybe Primitive)
   deriving (Show, Generic)
