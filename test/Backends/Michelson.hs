@@ -364,8 +364,8 @@ intPair x y =
       [push1Int x, push1Int y]
   where
     t =
-      J.Pi one (primTy (Untyped.tc Untyped.int))
-        $ J.Pi one (primTy (Untyped.tc Untyped.int))
+      J.Pi one (primTy int)
+        $ J.Pi one (primTy int)
         $ primTy pairInt
 
 -- intPairs1 generates:
@@ -412,11 +412,72 @@ addPairs =
       )
       [car int int xLook, cdr int int xLook]
   where
-    t = primTy (Untyped.tc Untyped.int)
+    t = primTy int
 
     t' = J.Pi (SNat 2) (primTy pairInt) t
 
     xLook = Ann one (primTy pairInt) (J.Var "x")
+
+
+-- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
+-- ,PrimEx (PAIR : @ % %)
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
+-- ,PrimEx (PAIR : @ % %)
+-- ,PrimEx (PAIR : @ % %) -- stack: [((3,4),(5,6))]
+-- ,SeqEx [PrimEx (DIG 0)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 1)]  -- stack: [((3,4),(5,6)) : ((3,4),(5,6))]
+-- ,PrimEx (CAR @ %)        -- stack: [(3,4) : ((3,4),(5,6))]
+-- ,SeqEx [PrimEx (DIG 0)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 1)] -- stack: [(3,4) : (3,4) : ((3,4),(5,6))]
+-- ,PrimEx (CAR @ %)       -- stack: [3 : (3,4) : ((3,4),(5,6))]
+-- ,SeqEx [PrimEx (DIG 1)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 2)] -- stack: [(3,4) : 3 : (3,4) : ((3,4),(5,6))]
+-- ,PrimEx (CDR @ %)       -- stack: [4 : 3 : (3,4) : ((3,4),(5,6))]
+-- ,PrimEx (ADD @) -- (3 + 4) stack: [7 : (3,4) : ((3,4),(5,6))]
+-- ,SeqEx [PrimEx (DIG 1)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 2)] -- stack: [(3,4) : 7 : (3,4) : ((3,4),(5,6))] WRONG
+--   -- IT seems that inconsistent usage causes an error
+-- ,PrimEx (CDR @ %)
+-- ,SeqEx [PrimEx (DIG 0),PrimEx (DUP @),PrimEx (DUG 1)]
+-- ,PrimEx (CAR @ %)
+-- ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
+-- ,PrimEx (CDR @ %)
+-- ,PrimEx (ADD @) -- (5 + 6)
+-- ,PrimEx (PAIR : @ % %)]
+
+addDoublePairs ∷ Term
+addDoublePairs =
+  Ann one t
+   $ J.AppM
+    (Ann one (J.Pi (SNat 2) (primTy (Untyped.pair pairInt pairInt)) t)
+     $ J.LamM [] ["x"]
+     $ Ann one t
+     $ J.AppM
+       (Ann one pairIntType
+        $ J.Prim
+        $ Instructions.toNewPrimErr Instructions.pair
+       )
+      [applyPlus (car pairInt pairInt xLook),
+       applyPlus (cdr pairInt pairInt xLook)
+      ]
+    )
+    [intPairs1]
+  where
+    t = primTy pairInt
+    pairIntType =
+      J.Pi one (primTy int)
+        $ J.Pi one (primTy int)
+        $ primTy pairInt
+    xLook =
+      Ann one (primTy (Untyped.pair pairInt pairInt)) (J.Var "x")
+    applyPlus term =
+      Ann one (primTy int) (J.AppM addPairs [term])
 
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit
