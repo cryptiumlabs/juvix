@@ -233,7 +233,7 @@ drop n xs
     let c = car xs
      in case c of
           (VarE x i _, _)
-            | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) xs)
+            | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) (cdr xs))
           _ →
             drop (pred n) (cdr xs)
 
