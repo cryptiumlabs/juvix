@@ -63,10 +63,10 @@ eraseTerm parameterisation term usage ty =
     else case term of
       HR.Star _ -> throw @"erasureError" Erasure.Unsupported
       HR.PrimTy _ -> throw @"erasureError" Erasure.Unsupported
-      HR.Pi _ _ _ -> throw @"erasureError" Erasure.Unsupported
+      HR.Pi _ _ _ _ -> throw @"erasureError" Erasure.Unsupported
       HR.Lam name body -> do
         -- The type must be a dependent function.
-        let HR.Pi argUsage varTy retTy = ty
+        let HR.Pi argUsage _ varTy retTy = ty
         funcTy <- eraseType parameterisation ty
         -- TODO: Is this correct?
         let bodyUsage = Core.SNat 1
@@ -104,7 +104,7 @@ eraseTerm parameterisation term usage ty =
                   $ show err <> " while attempting to erase " <> show f
               Right (IR.Annotated fUsage fTy) -> do
                 let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
-                let fty@(HR.Pi argUsage fArgTy _) = irToHR qFTy
+                let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
                 (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
                 if argUsage == mempty
                   then pure (f, elimTy)
@@ -127,10 +127,12 @@ eraseType parameterisation term = do
   case term of
     HR.Star n -> pure (Erased.Star n)
     HR.PrimTy p -> pure (Erased.PrimTy p)
-    HR.Pi argUsage argTy retTy -> do
+    HR.Pi argUsage _ argTy retTy -> do
       arg <- eraseType parameterisation argTy
       ret <- eraseType parameterisation retTy
       pure (Erased.Pi argUsage arg ret)
+        -- FIXME might need to check that the name doesn't occur
+        -- in @retTy@ anywhere
     HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
     HR.Elim elim ->
       case elim of

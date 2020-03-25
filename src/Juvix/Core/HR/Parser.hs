@@ -98,9 +98,10 @@ generateParser parameterisation =
       piTerm = do
         reserved "[Π]"
         pi <- usage
+        binder <- binder
         input <- term
         func <- term
-        return $ Pi pi input func
+        return $ Pi pi binder input func
       --
       lamTerm :: Parser (Term primTy primVal)
       lamTerm = do

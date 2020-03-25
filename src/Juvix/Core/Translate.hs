@@ -18,8 +18,9 @@ hrToIR' term =
   case term of
     HR.Star n -> pure (IR.Star n)
     HR.PrimTy p -> pure (IR.PrimTy p)
-    HR.Pi u a b -> do
+    HR.Pi u n a b -> do
       a <- hrToIR' a
+      pushName n
       b <- hrToIR' b
       pure (IR.Pi u a b)
     HR.Lam n b -> do
@@ -64,8 +65,9 @@ irToHR' term =
     IR.PrimTy p -> pure (HR.PrimTy p)
     IR.Pi u a b -> do
       a <- irToHR' a
+      n <- newName
       b <- irToHR' b
-      pure (HR.Pi u a b)
+      pure (HR.Pi u n a b)
     IR.Lam t -> do
       n <- newName
       t <- irToHR' t

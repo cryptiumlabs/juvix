@@ -14,8 +14,8 @@ IR.extendTerm "Term" [t|T|] $
     { IR.nameLam = "Lam0",
       IR.typeLam = Ext.Ann $ \primTy primVal ->
         [t|(Symbol, Usage.T, IR.Term' T $primTy $primVal)|],
-      -- IR.typePi = \primTy primVal ->
-      --   [t|(Symbol, Usage.T, Term' T $primTy $primVal)|],
+      IR.namePi = "Pi0",
+      IR.typePi = Ext.Ann $ \_primTy _primVal -> [t|Symbol|],
       IR.nameElim = "Elim0",
       IR.typeElim = Ext.Ann $ \primTy primVal ->
         [t|(Usage.T, IR.Term' T $primTy $primVal)|]
@@ -23,7 +23,7 @@ IR.extendTerm "Term" [t|T|] $
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π x s t = Lam0 t (x, π, s)
-
+pattern Pi π x s t = Pi0 π s t x
 pattern Elim π s t = Elim0 s (π, t)
 
 {-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}

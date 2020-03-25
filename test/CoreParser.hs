@@ -47,7 +47,7 @@ coreParser =
       shouldParsePrim Nat.t "Nat" (PrimTy Nat.Ty),
       shouldParsePrim Unit.t "Unit" (PrimTy Unit.Ty),
       shouldParsePrim Unit.t "()" (Elim (Prim Unit.Val)),
-      shouldParse "[Π] 1 * 0 * 0" (Pi one (Star 0) (Star 0)),
+      shouldParse "[Π] 1 A * 0 * 0" (Pi one "A" (Star 0) (Star 0)),
       shouldParse "\\x -> x" (Lam "x" (Elim (Var "x"))),
       shouldParse "\\x -> y" (Lam "x" (Elim (Var "y"))),
       shouldParse "\\x -> \\y -> x" (Lam "x" (Lam "y" (Elim (Var "x")))),
