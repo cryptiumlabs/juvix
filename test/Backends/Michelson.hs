@@ -227,13 +227,9 @@ pairGen =
 pairConstant ∷ Term
 pairConstant = pairGen [unitExpr1, unitExpr1]
 
--- [PrimEx (PAIR : @ % %)
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
---   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
-
-[PrimEx (PUSH @ (Type TUnit :) ValueUnit)
-  ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
-  ,PrimEx (PAIR : @ % %)]
+--   ,PrimEx (PAIR : @ % %)]
 
 pairNotConstant ∷ Term
 pairNotConstant = pairGen [unitExpr1, push1 M.ValueUnit Untyped.unit]
