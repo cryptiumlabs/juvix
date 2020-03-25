@@ -105,7 +105,7 @@ ge = onInt1 Instructions.gt (boolToVal . (> 0))
 neg = intGen1 Instructions.neg negate
 abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
-cdr = onPairGen1 Instructions.car snd
+cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
 isNat =
   onInt1

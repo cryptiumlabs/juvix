@@ -9,10 +9,10 @@ import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type, show)
-import Prelude (show)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import Prelude (show)
 
 --------------------------------------------------------------------------------
 -- Test Abstractions
@@ -153,7 +153,6 @@ symbIdent ∷ Term
 symbIdent =
   Ann one (primTy Untyped.unit) (J.AppM lamxx [unitExpr1])
 
-
 lamxx ∷ Term
 lamxx =
   Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit)) $
@@ -194,10 +193,10 @@ nonConstApp =
     one
     (primTy Untyped.unit)
     $ J.AppM
-        constUInt
-        [push1 M.ValueUnit Untyped.unit
-        , push1 (M.ValueInt 3) (Untyped.tc Untyped.int)
-        ]
+      constUInt
+      [ push1 M.ValueUnit Untyped.unit,
+        push1 (M.ValueInt 3) (Untyped.tc Untyped.int)
+      ]
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 constApp ∷ Term
@@ -315,15 +314,12 @@ overExactConst = overExactGen unitExpr1
 overExactNonConst ∷ Term
 overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)
 
-
-
 -- IdentityTerm generates
 -- [SeqEx []
 -- , PrimEx (PUSH @ (Type (TList (Type TOperation :)) :) ValueNil)
 -- , SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
 -- , PrimEx (CAR @ %)
 -- , PrimEx (PAIR : @ % %)]
-
 
 identityTerm ∷ Term
 identityTerm =
@@ -357,39 +353,76 @@ identityTerm =
             [Ann one (primTy unitPair) (J.Var "x")]
       ]
 
-weirdCall1 ∷ Term
-weirdCall1 =
-  Ann one (primTy unitl)
-  $ J.AppM
-  ( Ann one identityType
-    $ J.LamM [] ["x"]
-    $ Ann (SNat 2) (primTy (Untyped.pair unitl Untyped.unit))
-    $ J.AppM
-      ( Ann
-          one
-          ( J.Pi
-              one
-              (primTy unitl)
-              (J.Pi one (primTy Untyped.unit) (primTy (Untyped.pair unitl Untyped.unit)))
-          )
+intPair ∷ Integer → Integer → Term
+intPair x y =
+  Ann one t $
+    J.AppM
+      ( Ann one t
           $ J.Prim
           $ Instructions.toNewPrimErr Instructions.pair
       )
-      -- Force the push to be a non constant. This should do nothing
-      -- as it's already forced by the second
-      [ push1 M.ValueUnit Untyped.unit
-      , unitExpr1
-      ]
-  )
-  [push1 M.ValueNil unitl]
+      [push1Int x, push1Int y]
+  where
+    t =
+      J.Pi one (primTy (Untyped.tc Untyped.int))
+        $ J.Pi one (primTy (Untyped.tc Untyped.int))
+        $ primTy pairInt
 
+-- intPairs1 generates:
+-- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
+-- ,PrimEx (PAIR : @ % %)
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
+-- ,PrimEx (PAIR : @ % %)
+-- ,PrimEx (PAIR : @ % %)]
 
+intPairs1 ∷ Term
+intPairs1 =
+  Ann (SNat 2) (primTy (Untyped.pair pairInt pairInt)) $
+    J.AppM
+      ( Ann one t
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.pair
+      )
+      [intPair 3 4, intPair 5 6]
+  where
+    t =
+      J.Pi one (primTy pairInt)
+        $ J.Pi one (primTy pairInt)
+        $ primTy
+        $ Untyped.pair pairInt pairInt
+
+-- [SeqEx []
+-- ,SeqEx [PrimEx (DIG 0),PrimEx (DUP @),PrimEx (DUG 1)]
+-- ,PrimEx (CAR @ %)
+-- ,PrimEx (DIG 1)
+-- ,PrimEx (CDR @ %)
+-- ,PrimEx (ADD @)]
+
+addPairs ∷ Term
+addPairs =
+  Ann one t'
+    $ J.LamM [] ["x"]
+    $ Ann one t
+    $ J.AppM
+      ( Ann one (J.Pi one (primTy int) (J.Pi one (primTy int) t))
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.add
+      )
+      [car int int xLook, cdr int int xLook]
+  where
+    t = primTy (Untyped.tc Untyped.int)
+
+    t' = J.Pi (SNat 2) (primTy pairInt) t
+
+    xLook = Ann one (primTy pairInt) (J.Var "x")
 
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit
 identityCall =
   Ann one (primTy Untyped.unit) $
-    J.AppM identityTerm2 [push1 (M.ValueInt 3) (Untyped.tc Untyped.int)]
+    J.AppM identityTerm2 [push1Int 3]
 
 identityTerm2 ∷ Term
 identityTerm2 =
@@ -410,16 +443,9 @@ identityTerm2 =
       -- Force the push to be a non constant. This should do nothing
       -- as it's already forced by the second
       [ push1 M.ValueNil unitl,
-        Ann
-          one
-          (primTy Untyped.unit)
-          $ J.AppM
-            ( Ann
-                one
-                (J.Pi one (primTy unitPair) (primTy Untyped.unit))
-                (J.Prim (Instructions.toNewPrimErr Instructions.car))
-            )
-            [Ann one (primTy unitPair) (J.Var "x")]
+        car Untyped.unit Untyped.unit
+          $ Ann one (primTy (Untyped.pair Untyped.unit Untyped.unit))
+          $ J.Var "x"
       ]
 
 primLam ∷ NonEmpty M.Type → Type
@@ -440,14 +466,9 @@ identityAppTerm =
                 J.Prim (Instructions.toNewPrimErr Instructions.pair)
             )
             [ Ann one (primTy opl) (J.Prim (Constant M.ValueNil)),
-              Ann one (primTy Untyped.unit) $
-                J.AppM
-                  ( Ann
-                      one
-                      (J.Pi one (primTy unitPair) (primTy Untyped.unit))
-                      (J.Prim (Instructions.toNewPrimErr Instructions.car))
-                  )
-                  [Ann one (primTy (Untyped.pair Untyped.unit Untyped.unit)) (J.Var "x")]
+              car Untyped.unit Untyped.unit
+                $ Ann one (primTy (Untyped.pair Untyped.unit Untyped.unit))
+                $ J.Var "x"
             ]
       )
       [Ann one (primTy unitPair) (J.Var "y")]
@@ -588,6 +609,32 @@ primPairTy2 =
     $ primTy
     $ Untyped.pair unitl Untyped.unit
 
+int = Untyped.tc Untyped.int
+
+pairInt ∷ M.Type
+pairInt =
+  Untyped.pair int int
+
+car pairFst pairSnd pair =
+  Ann one (primTy pairFst) $
+    J.AppM
+      ( Ann
+          one
+          (J.Pi one (primTy (Untyped.pair pairFst pairSnd)) (primTy pairFst))
+          (J.Prim (Instructions.toNewPrimErr Instructions.car))
+      )
+      [pair]
+
+cdr pairFst pairSnd pair =
+  Ann one (primTy pairSnd) $
+    J.AppM
+      ( Ann
+          one
+          (J.Pi one (primTy (Untyped.pair pairFst pairSnd)) (primTy pairFst))
+          (J.Prim (Instructions.toNewPrimErr Instructions.cdr))
+      )
+      [pair]
+
 --------------------------------------------------------------------------------
 -- general abstractions
 --------------------------------------------------------------------------------
@@ -598,6 +645,9 @@ primTy = J.PrimTy . PrimTy
 annIntOne ∷ Integer → Term
 annIntOne i =
   Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt i)))
+
+push1Int ∷ Integer → AnnTerm PrimTy NewPrim
+push1Int i = push1 (M.ValueInt i) (Untyped.tc Untyped.int)
 
 push1 ∷ M.Value' Op → M.Type → AnnTerm PrimTy NewPrim
 push1 const ty =
