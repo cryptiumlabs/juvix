@@ -162,11 +162,13 @@ lamxx =
 lookupX ∷ Term
 lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
 
--- [SeqEx [PrimEx (DUP @)
---        ,PrimEx (CAR @ %)
---        ,PrimEx (DIP [PrimEx (CDR @ %)])
---        ,PrimEx (DIP [SeqEx []])
---        ,PrimEx (DIG 0)]]
+-- [SeqEx
+--  [PrimEx (DUP @)
+--  ,PrimEx (CAR @ %)
+--  ,PrimEx (DIP [PrimEx (CDR @ %)])
+--  ,PrimEx (DIP [SeqEx []])]
+--  ,PrimEx (DIG 0)]
+
 constUInt ∷ Term
 constUInt =
   Ann
@@ -179,12 +181,12 @@ constUInt =
     )
     $ J.LamM [] ["x", "y"] lookupX
 
--- generates: read backwords
--- [ SeqEx [ PrimEx (DIG 0)
---         , PrimEx (DUP @)
---         , PrimEx (DUG 0)]
--- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- , PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))]
+-- nonConstApp generates:
+-- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+-- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- ,SeqEx [PrimEx (DIG 0)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 1)]]
 
 nonConstApp ∷ Term
 nonConstApp =
@@ -229,6 +231,10 @@ pairConstant = pairGen [unitExpr1, unitExpr1]
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 
+[PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+  ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+  ,PrimEx (PAIR : @ % %)]
+
 pairNotConstant ∷ Term
 pairNotConstant = pairGen [unitExpr1, push1 M.ValueUnit Untyped.unit]
 
@@ -262,12 +268,14 @@ underExactGen x =
 underExactConst ∷ Term
 underExactConst = underExactGen unitExpr1
 
--- generates (read it in reverse!):
--- [ SeqEx [PrimEx (DIG 1)
---         ,PrimEx (DUP @)
---         ,PrimEx (DUG 2)]
--- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+-- underExactNonConst generates:
+
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- ,SeqEx [PrimEx (DIG 1)
+--        ,PrimEx (DUP @)
+--        ,PrimEx (DUG 2)]]
+
 -- note the dup, this is because in the stack, we pushed it as omega
 -- if we did better constant propagation this would be free
 underExactNonConst ∷ Term
@@ -295,20 +303,31 @@ overExactGen x =
       [x, x, x]
 
 -- Optimal code generation
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 overExactConst ∷ Term
 overExactConst = overExactGen unitExpr1
 
--- Code generation is as follow, remember to read backwards
+-- overExactNonConst generates:
 -- Seems fairly optimal
--- [PrimEx (DUG 2)
---   ,PrimEx (DUP @)
---   ,PrimEx (DIP 2)
---   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
---   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
---   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- , SeqEx [ PrimEx (DIG 2)
+--         , PrimEx (DUP @)
+--         , PrimEx (DUG 3)]]
 
 overExactNonConst ∷ Term
 overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)
+
+
+
+-- IdentityTerm generates
+-- [SeqEx []
+-- , PrimEx (PUSH @ (Type (TList (Type TOperation :)) :) ValueNil)
+-- , SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
+-- , PrimEx (CAR @ %)
+-- , PrimEx (PAIR : @ % %)]
+
 
 identityTerm ∷ Term
 identityTerm =

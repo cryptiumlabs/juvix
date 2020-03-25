@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 -- |
 -- - This module includes a higher level DSL which each instruction
 --   has a stack effect
@@ -181,7 +179,7 @@ primToFargs (Types.Inst inst) ty =
     Instr.PAIR {} → (Env.Fun (pair newTy2), 2)
     Instr.EDIV _ → (Env.Fun (ediv newTy2), 2)
     Instr.ISNAT _ → (Env.Fun (isNat newTy1), 1)
-    Instr.PUSH {} → (Env.Fun (pushConstant newTy1), 1)
+    Instr.PUSH {} → (Env.Fun pushConstant, 1)
   where
     newTy i = eatType i ty
 
@@ -219,6 +217,7 @@ applyExpanded expanded args = do
     Env.MichelsonLam → undefined
     Env.Constant _ → throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ → throw @"compilationError" (Types.InternalFault "App on Michelson")
+    Env.Nop → throw @"compilationError" (Types.InternalFault "App on NOP")
 
 --------------------------------------------------------------------------------
 -- Reduction Helpers for Main functionality
@@ -324,13 +323,12 @@ onOneArgs op f typ instrs = do
     _ → throw @"compilationError" Types.NotEnoughArguments
 
 -- todo remove repeat pattern
-pushConstant ∷ Env.Reduction m ⇒ Types.Type → [Types.NewTerm] → m Env.Expanded
-pushConstant ty instrs = do
+pushConstant ∷ Env.Reduction m ⇒ [Types.NewTerm] → m Env.Expanded
+pushConstant instrs = do
   v ← traverse (inst >=> promoteTopStack) instrs
   case v of
-    Env.Constant v : _ → do
-      ty ← typeToPrimType ty
-      pure Env.Nop -- (Env.Expanded (Instructions.push ty v))
+    Env.Constant _ : _ →
+      pure Env.Nop
     instr1 : _ → pure instr1
     _ → throw @"compilationError" Types.NotEnoughArguments
 
@@ -352,8 +350,8 @@ dupToFront num = do
   -- we put dug first
   let instrs =
         Instructions.dig (fromIntegral num)
-         <> Instructions.dup
-         <> Instructions.dug (succ (fromIntegral num))
+          <> Instructions.dup
+          <> Instructions.dug (succ (fromIntegral num))
   addInstr instrs
   pure instrs
 
@@ -362,7 +360,7 @@ data Protect
       { val ∷ Env.Expanded,
         insts ∷ [Types.Op]
       }
-      deriving (Show)
+  deriving (Show)
 
 protect ∷ Env.Ops m ⇒ m Env.Expanded → m Protect
 protect inst = do
@@ -516,10 +514,10 @@ apply closure args remainingArgs = do
 --------------------------------------------------------------------------------
 
 addInstrs ∷ Env.Ops m ⇒ [Instr.ExpandedOp] → m ()
-addInstrs x = modify @"ops" (x <>)
+addInstrs x = modify @"ops" (<> x)
 
 addInstr ∷ Env.Ops m ⇒ Instr.ExpandedOp → m ()
-addInstr x = modify @"ops" (x :)
+addInstr x = modify @"ops" (<> [x])
 
 --------------------------------------------------------------------------------
 -- Boolean Conversions
@@ -682,7 +680,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
     insts ←
       Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
     returnTypePrim ← typeToPrimType returnType
-    insts ← expandedToInst returnTypePrim insts
+    _insts ← expandedToInst returnTypePrim insts
     modify @"ops" ([unpackOps] <>)
     pure Env.MichelsonLam
   case p of
