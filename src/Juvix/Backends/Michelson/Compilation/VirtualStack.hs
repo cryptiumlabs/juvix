@@ -240,6 +240,17 @@ drop n xs
           _ →
             drop (pred n) (cdr xs)
 
+-- This does not propagate usages!
+dropPos ∷ Natural → T lamType → T lamType
+dropPos 0 xs
+  | not (isNil xs) && inT (fst (car xs)) = cdr xs
+  | not (isNil xs) = dropPos 0 (cdr xs)
+  | otherwise = xs
+dropPos n xs
+  | not (isNil xs) && inT (fst (car xs)) = cons (car xs) (dropPos (pred n) (cdr xs))
+  | not (isNil xs) = cons (car xs) (dropPos n (cdr xs))
+  | otherwise = xs
+
 updateUsageList ∷ Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
 updateUsageList symbs usage = f
   where
@@ -273,6 +284,18 @@ lookup n (T stack' _) = go stack' 0
       | otherwise = go vs acc
     go [] _ = Nothing
 
+-- TODO ∷ Turn into a filter map!
+lookupAllPos ∷ Symbol → T lamType → [Lookup lamType]
+lookupAllPos n (T stack' _) = go stack' 0
+  where
+    go ((v@(VarE n' usage _), _) : xs) acc
+      | Set.member n n' && inT v =
+        Position usage acc : go xs (succ acc)
+    go ((v, _) : vs) acc
+      | inT v = go vs (succ acc)
+      | otherwise = go vs acc
+    go [] _ = []
+
 -- | 'predValueUsage reduces usage of a constant by 1, and deletes said constant
 -- if it goes over its usage. This function does nothing to items in the stack
 predValueUsage ∷ Symbol → T lamType → T lamType
@@ -303,7 +326,7 @@ dupDig i (T stack' n) =
     (xs, []) →
       T xs n
     (xs, (y, ty) : ys) →
-      cons (predUsage y, ty) (T (xs <> ((usageOne y, ty) : ys)) n)
+      cons (predUsage y, ty) (T (xs <> ((usageOneOmega y, ty) : ys)) n)
 
 dropFirst ∷ Symbol → T lamType → [(Elem lamType, Untyped.Type)] → T lamType
 dropFirst n (T stack' size) = go stack'
@@ -357,6 +380,9 @@ predUsage ∷ Elem lamType → Elem lamType
 predUsage v@Val {} = v
 predUsage (VarE s usage val) = VarE s (Usage.pred usage) val
 
-usageOne ∷ Elem lamType → Elem lamType
-usageOne v@Val {} = v
-usageOne (VarE s _ val) = VarE s one val
+-- Sets the usage of a var to 1 unless it's omega
+-- in which case we keep it at omega!
+usageOneOmega ∷ Elem lamType → Elem lamType
+usageOneOmega v@Val {} = v
+usageOneOmega (VarE s Omega val) = VarE s Omega val
+usageOneOmega (VarE s _ val) = VarE s one val

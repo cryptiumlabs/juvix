@@ -509,6 +509,15 @@ primLam ∷ NonEmpty M.Type → Type
 primLam (ty :| []) = J.PrimTy (PrimTy ty)
 primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
+-- [SeqEx []
+--   ,SeqEx [PrimEx (DIG 0),PrimEx (DUP @),PrimEx (DUG 1)]
+--   ,PrimEx (PUSH @ (Type (TList (Type TOperation :)) :) ValueNil)
+--   ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
+--   ,PrimEx (CAR @ %)
+--   ,PrimEx (PAIR : @ % %)
+--   ,PrimEx (DIPN 1 [PrimEx DROP])
+--   ,PrimEx (DIPN 1 [PrimEx DROP])]
+
 identityAppTerm ∷ Term
 identityAppTerm =
   Ann one identityType
@@ -638,7 +647,7 @@ identityType =
 
 identityType2 ∷ Type
 identityType2 =
-  J.Pi Omega (primTy unitPair) (primTy unitPair)
+  J.Pi one (primTy unitPair) (primTy unitPair)
 
 unitl ∷ M.Type
 unitl = Untyped.list Untyped.unit
@@ -666,12 +675,14 @@ primPairTy2 =
     $ primTy
     $ Untyped.pair unitl Untyped.unit
 
+int ∷ M.Type
 int = Untyped.tc Untyped.int
 
 pairInt ∷ M.Type
 pairInt =
   Untyped.pair int int
 
+car ∷ M.Type → M.Type → Term → Term
 car pairFst pairSnd pair =
   Ann one (primTy pairFst) $
     J.AppM
@@ -682,6 +693,7 @@ car pairFst pairSnd pair =
       )
       [pair]
 
+cdr ∷ M.Type → M.Type → Term → Term
 cdr pairFst pairSnd pair =
   Ann one (primTy pairSnd) $
     J.AppM

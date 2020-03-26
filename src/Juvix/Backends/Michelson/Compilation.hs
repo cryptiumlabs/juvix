@@ -79,4 +79,4 @@ compileToMichelsonExpr term ty = do
       undefined
 
 runMichelsonExpr ∷ DSL.Reduction m ⇒ NewTerm → m M.ExpandedOp
-runMichelsonExpr term = DSL.instOuter term
+runMichelsonExpr = DSL.instOuter
