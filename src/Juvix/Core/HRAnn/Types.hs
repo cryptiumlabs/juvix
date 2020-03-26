@@ -15,7 +15,7 @@ data Annotation primTy primVal = Annotation
 
 data BindAnnotation primTy primVal = BindAnnotation
   { bindName :: Symbol
-  , bindAnn  :: Annotation primTy primVal
+  , bindAnn  :: {-# UNPACK #-} !(Annotation primTy primVal)
   }
 
 
@@ -42,8 +42,8 @@ pattern Elim π s t = Elim0 s (Annotation π t)
 
 
 data AppAnnotation primTy primVal = AppAnnotation
-  { funAnn :: Annotation primTy primVal
-  , argAnn :: Annotation primTy primVal
+  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  , argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
   }
 
 IR.extendElim "Elim" [t|T|] $

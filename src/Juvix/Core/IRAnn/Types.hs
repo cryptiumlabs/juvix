@@ -31,8 +31,8 @@ pattern Elim π s t = Elim0 s (Annotation π t)
 
 
 data AppAnnotation primTy primVal = AppAnnotation
-  { funAnn :: Annotation primTy primVal
-  , argAnn :: Annotation primTy primVal
+  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  , argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
   }
 
 IR.extendElim "Elim" [t|T|] $
