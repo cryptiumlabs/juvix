@@ -592,9 +592,9 @@ the substitution functions (substTerm and substElim).
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
-  + [[Library]]
-  + [[Base]]
   + [[IR/Types]]
+  + [[Base]]
+  + [[Library]]
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]

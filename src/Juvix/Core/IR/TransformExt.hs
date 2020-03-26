@@ -27,7 +27,8 @@ data ExtTransformTEF f ext1 ext2 primTy primVal
 type ExtTransformTE = ExtTransformTEF Identity
 
 pattern Coerce :: Coercible a b => a -> b
-pattern Coerce f <- (coerce -> f)
+pattern Coerce f <-
+  (coerce -> f)
   where
     Coerce f = coerce f
 
