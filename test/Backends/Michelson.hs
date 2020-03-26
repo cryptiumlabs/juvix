@@ -419,52 +419,34 @@ addPairs name =
 
     xLook = Ann one (primTy pairInt) (J.Var name)
 
--- ,SeqEx [PrimEx (DIG 5)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 6)] -- stack: [??? : 7 : (3,4) : ((3,4),(5,6))] WRONG
---   -- IT seems that inconsistent usage causes an error
--- ,PrimEx (CDR @ %)
--- ,SeqEx [PrimEx (DIG 0),PrimEx (DUP @),PrimEx (DUG 1)]
--- ,PrimEx (CAR @ %)
--- ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
--- ,PrimEx (CDR @ %)
--- ,PrimEx (ADD @) -- (5 + 6)
--- ,PrimEx (PAIR : @ % %)]
-
 -- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
--- ,PrimEx (PAIR : @ % %)
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
--- ,PrimEx (PAIR : @ % %)
--- ,PrimEx (PAIR : @ % %) -- stack: [((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 0)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 1)]  -- stack: [((3,4),(5,6)) : ((3,4),(5,6))]
--- ,PrimEx (CAR @ %)        -- stack: [(3,4) : ((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 0)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 1)] -- stack: [(3,4) : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (CAR @ %)       -- stack: [3 : (3,4) : ((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 1)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 2)] -- stack: [(3,4) : 3 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (CDR @ %)       -- stack: [4 : 3 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (ADD @) -- (3 + 4) stack: [7 : (3,4) : ((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 2)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 3)] -- stack: [((3,4),(5,6)) : 7 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (CDR @ %)       -- stack: [(5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 0)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 1)] -- stack: [(5,6) : (5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (CAR @ %)       -- stack: [5 : (5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,SeqEx [PrimEx (DIG 1)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 2)] -- stack: [(5,6) : 5 : (5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (CDR @ %)       -- stack: [6 : 5 : (5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (ADD @)         -- stack: [11 : (5,6) : 7 : (3,4) : ((3,4),(5,6))]
--- ,PrimEx (PAIR : @ % %)] -- Incorrect, however this is due to usage propagation
+--   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
+--   ,PrimEx (PAIR : @ % %)
+--   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
+--   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
+--   ,PrimEx (PAIR : @ % %)
+--   ,PrimEx (PAIR : @ % %)  -- stack: [((3,4),(5,6))]
+--   ,SeqEx [PrimEx (DIG 0)
+--          ,PrimEx (DUP @)
+--          ,PrimEx (DUG 1)] -- stack: [((3,4),(5,6)) : ((3,4),(5,6))]
+--   ,PrimEx (CAR @ %)       -- stack: [(3,4) : ((3,4),(5,6))]
+--   ,SeqEx [PrimEx (DIG 0)
+--          ,PrimEx (DUP @)
+--          ,PrimEx (DUG 1)] -- stack: [(3,4) : (3,4) : ((3,4),(5,6))]
+--   ,PrimEx (CAR @ %)       -- stack: [3 : (3,4) : ((3,4),(5,6))]
+--   ,PrimEx (DIG 1)         -- stack: [(3,4) : 3 : ((3,4),(5,6))]
+--   ,PrimEx (CDR @ %)       -- stack: [4 : 3 : ((3,4),(5,6))]
+--   ,PrimEx (ADD @)         -- stack: [7 : ((3,4),(5,6))]
+--   ,PrimEx (DIG 1)         -- stack: [((3,4),(5,6)) : 7]
+--   ,PrimEx (CDR @ %)       -- stack: [(5,6) : 7]
+--   ,SeqEx [PrimEx (DIG 0)
+--          ,PrimEx (DUP @)
+--          ,PrimEx (DUG 1)] -- stack: [(5,6) : (5,6) : 7]
+--   ,PrimEx (CAR @ %)       -- stack: [5 : (5,6) : 7]
+--   ,PrimEx (DIG 1)         -- stack: [(5,6) : 5 : 7]
+--   ,PrimEx (CDR @ %)       -- stack: [5 : 6 : 7]
+--   ,PrimEx (ADD @)         -- stack: [11 : 7]
+--   ,PrimEx (PAIR : @ % %)] -- stack: [(11,7)]
 
 addDoublePairs ∷ Term
 addDoublePairs =
