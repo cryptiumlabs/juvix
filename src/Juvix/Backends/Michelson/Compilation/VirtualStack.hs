@@ -384,5 +384,5 @@ predUsage (VarE s usage val) = VarE s (Usage.pred usage) val
 -- in which case we keep it at omega!
 usageOneOmega ∷ Elem lamType → Elem lamType
 usageOneOmega v@Val {} = v
-usageOneOmega (VarE s Omega val) = VarE s Omega val
+usageOneOmega (VarE s Usage.Omega val) = VarE s Usage.Omega val
 usageOneOmega (VarE s _ val) = VarE s one val
