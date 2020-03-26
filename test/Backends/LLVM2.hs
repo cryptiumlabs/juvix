@@ -19,7 +19,7 @@ import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type
 import LLVM.Pretty
 
-exampleModule2 ∷ AST.Module
+exampleModule2 :: AST.Module
 exampleModule2 =
   Module
     "runSomethingModule"
@@ -47,27 +47,29 @@ exampleModule2 =
             G.basicBlocks =
               [ BasicBlock
                   (UnName 0)
-                  [ UnName 1 := Call
-                      { tailCallKind = Nothing,
-                        I.function =
-                          Right
-                            ( ConstantOperand
-                                ( C.GlobalReference
-                                    ( ptr $ FunctionType
-                                        { resultType = voidStarTy,
-                                          argumentTypes = [IntegerType {typeBits = 64}],
-                                          isVarArg = False
-                                        }
-                                    )
-                                    (Name "malloc")
-                                )
-                            ),
-                        callingConvention = CC.C,
-                        returnAttributes = [],
-                        arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 32}), [])],
-                        functionAttributes = [],
-                        metadata = []
-                      },
+                  [ UnName 1
+                      := Call
+                        { tailCallKind = Nothing,
+                          I.function =
+                            Right
+                              ( ConstantOperand
+                                  ( C.GlobalReference
+                                      ( ptr $
+                                          FunctionType
+                                            { resultType = voidStarTy,
+                                              argumentTypes = [IntegerType {typeBits = 64}],
+                                              isVarArg = False
+                                            }
+                                      )
+                                      (Name "malloc")
+                                  )
+                              ),
+                          callingConvention = CC.C,
+                          returnAttributes = [],
+                          arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 32}), [])],
+                          functionAttributes = [],
+                          metadata = []
+                        },
                     UnName 2 := Alloca Types.testList Nothing 0 [],
                     -- UnName 3 := Call
                     --   { tailCallKind = Nothing,
@@ -87,22 +89,23 @@ exampleModule2 =
                     --     functionAttributes = [],
                     --     metadata = []
                     --   },
-                    Do $ Call
-                      { tailCallKind = Nothing,
-                        I.function =
-                          Right
-                            ( ConstantOperand
-                                ( C.GlobalReference
-                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [voidStarTy], isVarArg = False})
-                                    (Name "free")
-                                )
-                            ),
-                        callingConvention = CC.C,
-                        returnAttributes = [],
-                        arguments = [(LocalReference voidStarTy (UnName 1), [])],
-                        functionAttributes = [],
-                        metadata = []
-                      }
+                    Do $
+                      Call
+                        { tailCallKind = Nothing,
+                          I.function =
+                            Right
+                              ( ConstantOperand
+                                  ( C.GlobalReference
+                                      (ptr $ FunctionType {resultType = voidTy, argumentTypes = [voidStarTy], isVarArg = False})
+                                      (Name "free")
+                                  )
+                              ),
+                          callingConvention = CC.C,
+                          returnAttributes = [],
+                          arguments = [(LocalReference voidStarTy (UnName 1), [])],
+                          functionAttributes = [],
+                          metadata = []
+                        }
                   ]
                   ( Do $ Ret (Just (ConstantOperand (C.Int 32 43))) []
                   )
@@ -110,7 +113,7 @@ exampleModule2 =
           }
     ]
 
-test_example_jit' ∷ IO ()
+test_example_jit' :: IO ()
 test_example_jit' = do
   let module' = EAC.moduleAST runInitModule
   let newModule =
@@ -120,13 +123,13 @@ test_example_jit' = do
                 <> AST.moduleDefinitions exampleModule2
           }
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
-  (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
-  Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
-  res ← fn 7
+  (imp, kill) <- mcJitWith (Config None) newModule dynamicImport
+  Just fn <- importAs imp "test" (Proxy :: Proxy (Word32 -> IO Word32)) (Proxy :: Proxy Word32) (Proxy :: Proxy Word32)
+  res <- fn 7
   kill
 
 -- TODO ∷ figure out why this segfaults when added to the module!
-testLink ∷
+testLink ::
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.T Name.Name Codegen.BlockState) m,
@@ -138,36 +141,38 @@ testLink ∷
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasReader "debug" Int m
-  ) ⇒
+  ) =>
   m Operand.Operand
 testLink = Codegen.defineFunction Type.void "test_link" [] $ do
-  era ← EAC.mallocEra
-  app ← EAC.mallocApp
-  main ← Codegen.mainPort
+  era <- EAC.mallocEra
+  app <- EAC.mallocApp
+  main <- Codegen.mainPort
   Codegen.link [era, main, app, main]
   EAC.debugLevelOne $ do
-    portEra ← Codegen.getPort era main
-    hpefullyAppNode ← Codegen.loadElementPtr $
-      Codegen.Minimal
-        { Codegen.type' = Codegen.nodePointer,
-          Codegen.address' = portEra,
-          Codegen.indincies' = Codegen.constant32List [0, 0]
-        }
-    hopefullyMainPort ← Codegen.loadElementPtr $
-      Codegen.Minimal
-        { Codegen.type' = Codegen.numPortsNameRef,
-          Codegen.address' = portEra,
-          Codegen.indincies' = Codegen.constant32List [0, 1]
-        }
-    _ ← Codegen.printCString "appPointer %p \n" [app]
-    _ ← Codegen.printCString "mainPortEra: port %i, node %p \n" [hopefullyMainPort, hpefullyAppNode]
+    portEra <- Codegen.getPort era main
+    hpefullyAppNode <-
+      Codegen.loadElementPtr $
+        Codegen.Minimal
+          { Codegen.type' = Codegen.nodePointer,
+            Codegen.address' = portEra,
+            Codegen.indincies' = Codegen.constant32List [0, 0]
+          }
+    hopefullyMainPort <-
+      Codegen.loadElementPtr $
+        Codegen.Minimal
+          { Codegen.type' = Codegen.numPortsNameRef,
+            Codegen.address' = portEra,
+            Codegen.indincies' = Codegen.constant32List [0, 1]
+          }
+    _ <- Codegen.printCString "appPointer %p \n" [app]
+    _ <- Codegen.printCString "mainPortEra: port %i, node %p \n" [hopefullyMainPort, hpefullyAppNode]
     pure ()
-  _ ← Codegen.free app
-  _ ← Codegen.free era
+  _ <- Codegen.free app
+  _ <- Codegen.free era
   Codegen.retNull
 
 -- dumb define test
-defineTest ∷
+defineTest ::
   ( HasThrow "err" Codegen.Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.T Name.Name Codegen.BlockState) m,
@@ -179,36 +184,36 @@ defineTest ∷
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasReader "debug" Int m
-  ) ⇒
+  ) =>
   m Operand.Operand
 defineTest = Codegen.defineFunction Types.eacPointer "test_function" [] $ do
-  era ← EAC.mallocEra
-  app ← EAC.mallocApp
-  main ← Codegen.mainPort
+  era <- EAC.mallocEra
+  app <- EAC.mallocApp
+  main <- Codegen.mainPort
   EAC.debugLevelOne $ do
-    tag ← Types.tagOf era >>= Codegen.load Types.tag
-    _ ← Codegen.printCString "eraTag %i \n" [tag]
-    _ ← Codegen.printCString "eraPtr %p \n" [era]
+    tag <- Types.tagOf era >>= Codegen.load Types.tag
+    _ <- Codegen.printCString "eraTag %i \n" [tag]
+    _ <- Codegen.printCString "eraPtr %p \n" [era]
     pure ()
   Codegen.link [era, main, app, main]
-  _ ← Codegen.free app
+  _ <- Codegen.free app
   Codegen.ret era
 
-newInitModule ∷
+newInitModule ::
   ( Codegen.Define m,
     HasState "typTab" Codegen.TypeTable m,
     HasState "varTab" Codegen.VariantToType m,
     HasReader "debug" Int m
-  ) ⇒
+  ) =>
   m ()
 newInitModule = do
   initialModule
-  _ ← testLink
-  _ ← defineTest
+  _ <- testLink
+  _ <- defineTest
   pure ()
 
-test' ∷ MonadIO m ⇒ m ()
-test' = putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
+test' :: MonadIO m => m ()
+test' = putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" :: Text)
 
-test'' ∷ MonadIO m ⇒ m ()
-test'' = putStr (ppllvm (EAC.moduleAST (runModule newInitModule))) >> putStr ("\n" ∷ Text)
+test'' :: MonadIO m => m ()
+test'' = putStr (ppllvm (EAC.moduleAST (runModule newInitModule))) >> putStr ("\n" :: Text)

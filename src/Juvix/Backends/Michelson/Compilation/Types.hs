@@ -45,7 +45,7 @@ data CompilationLog
   deriving (Generic)
 
 data SomeInstr where
-  SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
+  SomeInstr :: forall a b. MT.Instr a b -> SomeInstr
 
 deriving instance Show (SomeInstr)
 

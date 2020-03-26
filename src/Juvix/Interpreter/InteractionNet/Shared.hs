@@ -15,8 +15,8 @@ deriving instance Show Assoc
 
 data Precedence
   = Precedence
-      { level ∷ Int,
-        symbol ∷ String,
-        assoc ∷ Assoc
+      { level :: Int,
+        symbol :: String,
+        assoc :: Assoc
       }
   deriving (Show)

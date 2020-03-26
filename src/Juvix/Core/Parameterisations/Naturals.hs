@@ -35,14 +35,14 @@ instance Show Val where
   show Mul = "*"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
-typeOf ∷ Val → NonEmpty Ty
+typeOf :: Val -> NonEmpty Ty
 typeOf (Val _) = Ty :| []
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Sub = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
 
-apply ∷ Val → Val → Maybe Val
+apply :: Val -> Val -> Maybe Val
 apply Add (Val x) = pure (Curried Add x)
 apply Sub (Val x) = pure (Curried Sub x)
 apply Mul (Val x) = pure (Curried Mul x)
@@ -51,33 +51,33 @@ apply (Curried Sub x) (Val y) = pure (Val (x - y))
 apply (Curried Mul x) (Val y) = pure (Val (x * y))
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
+parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Nat"
   pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
+parseVal :: Token.GenTokenParser String () Identity -> Parser Val
 parseVal lexer =
   parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
 
-parseNat ∷ Token.GenTokenParser String () Identity → Parser Val
+parseNat :: Token.GenTokenParser String () Identity -> Parser Val
 parseNat lexer = Val . fromIntegral |<< Token.natural lexer
 
-parseAdd ∷ Token.GenTokenParser String () Identity → Parser Val
+parseAdd :: Token.GenTokenParser String () Identity -> Parser Val
 parseAdd lexer = Token.reserved lexer "+" >> pure Add
 
-parseSub ∷ Token.GenTokenParser String () Identity → Parser Val
+parseSub :: Token.GenTokenParser String () Identity -> Parser Val
 parseSub lexer = Token.reserved lexer "-" >> pure Sub
 
-parseMul ∷ Token.GenTokenParser String () Identity → Parser Val
+parseMul :: Token.GenTokenParser String () Identity -> Parser Val
 parseMul lexer = Token.reserved lexer "*" >> pure Mul
 
-reservedNames ∷ [String]
+reservedNames :: [String]
 reservedNames = ["Nat", "+", "-", "*"]
 
-reservedOpNames ∷ [String]
+reservedOpNames :: [String]
 reservedOpNames = []
 
-t ∷ Parameterisation Ty Val
+t :: Parameterisation Ty Val
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

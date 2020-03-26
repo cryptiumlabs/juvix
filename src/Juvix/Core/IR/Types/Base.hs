@@ -51,7 +51,7 @@ extensible
 
 -- | A bundle constraint that requires each annotation type in 'Term' to have an
 -- instance of @c@.
-type TermAll (c ∷ Type → Constraint) ext primTy primVal =
+type TermAll (c :: Type -> Constraint) ext primTy primVal =
   ( c (XStar ext primTy primVal),
     c (XPrimTy ext primTy primVal),
     c (XPi ext primTy primVal),
@@ -62,7 +62,7 @@ type TermAll (c ∷ Type → Constraint) ext primTy primVal =
 
 -- | A bundle constraint that requires each annotation type in 'Elim' to have an
 -- instance of @c@.
-type ElimAll (c ∷ Type → Constraint) ext primTy primVal =
+type ElimAll (c :: Type -> Constraint) ext primTy primVal =
   ( c (XBound ext primTy primVal),
     c (XFree ext primTy primVal),
     c (XPrim ext primTy primVal),
@@ -78,7 +78,7 @@ deriving instance
     Eq primVal,
     TermAll Eq ext primTy primVal,
     ElimAll Eq ext primTy primVal
-  ) ⇒
+  ) =>
   Eq (Term' ext primTy primVal)
 
 deriving instance
@@ -86,7 +86,7 @@ deriving instance
     Show primVal,
     TermAll Show ext primTy primVal,
     ElimAll Show ext primTy primVal
-  ) ⇒
+  ) =>
   Show (Term' ext primTy primVal)
 
 deriving instance
@@ -94,7 +94,7 @@ deriving instance
     Eq primVal,
     TermAll Eq ext primTy primVal,
     ElimAll Eq ext primTy primVal
-  ) ⇒
+  ) =>
   Eq (Elim' ext primTy primVal)
 
 deriving instance
@@ -102,5 +102,5 @@ deriving instance
     Show primVal,
     TermAll Show ext primTy primVal,
     ElimAll Show ext primTy primVal
-  ) ⇒
+  ) =>
   Show (Elim' ext primTy primVal)

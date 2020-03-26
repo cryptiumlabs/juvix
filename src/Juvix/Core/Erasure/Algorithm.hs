@@ -12,15 +12,15 @@ import qualified Juvix.Library.HashMap as Map
 
 -- TODO ∷ find out if we can promote this somewhere else
 type TermInfo primTy primVal result =
-  Core.Parameterisation primTy primVal →
-  HR.Term primTy primVal →
-  Core.Usage →
-  HR.Term primTy primVal →
+  Core.Parameterisation primTy primVal ->
+  HR.Term primTy primVal ->
+  Core.Usage ->
+  HR.Term primTy primVal ->
   result
 
-erase ∷
-  ∀ primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) ⇒
+erase ::
+  forall primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   TermInfo primTy primVal
     ( Either
         Erasure.Error
@@ -28,21 +28,22 @@ erase ∷
     )
 erase parameterisation term usage ty =
   let (erased, env) = exec (eraseTerm parameterisation term usage ty)
-   in erased >>| \(term, type') →
+   in erased >>| \(term, type') ->
         Core.WithType
-          { Core.termAssign = Core.Assignment
-              { Core.term = term,
-                Core.assignment = Erasure.typeAssignment env
-              },
+          { Core.termAssign =
+              Core.Assignment
+                { Core.term = term,
+                  Core.assignment = Erasure.typeAssignment env
+                },
             Core.type' = type'
           }
 
-exec ∷
-  Erasure.EnvT ty primVal a → (Either Erasure.Error a, Erasure.Env ty primVal)
+exec ::
+  Erasure.EnvT ty primVal a -> (Either Erasure.Error a, Erasure.Env ty primVal)
 exec (Erasure.EnvEra env) = runState (runExceptT env) (Erasure.Env Map.empty [] 0 [])
 
-eraseTerm ∷
-  ∀ primTy primVal m.
+eraseTerm ::
+  forall primTy primVal m.
   ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
@@ -52,7 +53,7 @@ eraseTerm ∷
     Show primVal,
     Eq primTy,
     Eq primVal
-  ) ⇒
+  ) =>
   TermInfo primTy primVal (m (Erased.Term primVal, Erased.Type primTy))
 eraseTerm parameterisation term usage ty =
   if usage == Core.SNat 0
@@ -60,17 +61,17 @@ eraseTerm parameterisation term usage ty =
       throw @"erasureError"
         (Erasure.CannotEraseZeroUsageTerm (show (term, usage, ty)))
     else case term of
-      HR.Star _ → throw @"erasureError" Erasure.Unsupported
-      HR.PrimTy _ → throw @"erasureError" Erasure.Unsupported
-      HR.Pi _ _ _ → throw @"erasureError" Erasure.Unsupported
-      HR.Lam name body → do
+      HR.Star _ -> throw @"erasureError" Erasure.Unsupported
+      HR.PrimTy _ -> throw @"erasureError" Erasure.Unsupported
+      HR.Pi _ _ _ -> throw @"erasureError" Erasure.Unsupported
+      HR.Lam name body -> do
         -- The type must be a dependent function.
         let HR.Pi argUsage varTy retTy = ty
-        funcTy ← eraseType parameterisation ty
+        funcTy <- eraseType parameterisation ty
         -- TODO: Is this correct?
         let bodyUsage = Core.SNat 1
         --
-        ty ← eraseType parameterisation varTy
+        ty <- eraseType parameterisation varTy
         modify @"typeAssignment" (Map.insert name ty)
         --
         let (Right varTyIR, _) =
@@ -79,7 +80,7 @@ eraseTerm parameterisation term usage ty =
         modify
           @"context"
           (IR.Context (IR.Annotated argUsage varTyIR) (IR.Global (show name)) :)
-        (body, _) ← eraseTerm parameterisation body bodyUsage retTy
+        (body, _) <- eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
         pure
@@ -88,50 +89,50 @@ eraseTerm parameterisation term usage ty =
               else Erased.Lam name body,
             funcTy
           )
-      HR.Elim elim → do
-        elimTy ← eraseType parameterisation ty
+      HR.Elim elim -> do
+        elimTy <- eraseType parameterisation ty
         case elim of
-          HR.Var n → pure (Erased.Var n, elimTy)
-          HR.Prim p → pure (Erased.Prim p, elimTy)
-          HR.App f x → do
+          HR.Var n -> pure (Erased.Var n, elimTy)
+          HR.Prim p -> pure (Erased.Prim p, elimTy)
+          HR.App f x -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
-            context ← get @"context"
+            context <- get @"context"
             case fst (IR.exec (IR.typeElim0 parameterisation context fIR)) of
-              Left err →
+              Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
-              Right (IR.Annotated fUsage fTy) → do
+              Right (IR.Annotated fUsage fTy) -> do
                 let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
                 let fty@(HR.Pi argUsage fArgTy _) = irToHR qFTy
-                (f, _) ← eraseTerm parameterisation (HR.Elim f) fUsage fty
+                (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
                 if argUsage == mempty
                   then pure (f, elimTy)
                   else do
-                    (x, _) ← eraseTerm parameterisation x argUsage fArgTy
+                    (x, _) <- eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
-          HR.Ann usage term ty → do
-            (term, _) ← eraseTerm parameterisation term usage ty
+          HR.Ann usage term ty -> do
+            (term, _) <- eraseTerm parameterisation term usage ty
             pure (term, elimTy)
 
-eraseType ∷
-  ∀ primTy primVal m.
+eraseType ::
+  forall primTy primVal m.
   ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
     HasThrow "erasureError" Erasure.Error m
-  ) ⇒
-  Core.Parameterisation primTy primVal →
-  HR.Term primTy primVal →
+  ) =>
+  Core.Parameterisation primTy primVal ->
+  HR.Term primTy primVal ->
   m (Erased.Type primTy)
 eraseType parameterisation term = do
   case term of
-    HR.Star n → pure (Erased.Star n)
-    HR.PrimTy p → pure (Erased.PrimTy p)
-    HR.Pi argUsage argTy retTy → do
-      arg ← eraseType parameterisation argTy
-      ret ← eraseType parameterisation retTy
+    HR.Star n -> pure (Erased.Star n)
+    HR.PrimTy p -> pure (Erased.PrimTy p)
+    HR.Pi argUsage argTy retTy -> do
+      arg <- eraseType parameterisation argTy
+      ret <- eraseType parameterisation retTy
       pure (Erased.Pi argUsage arg ret)
-    HR.Lam _ _ → throw @"erasureError" Erasure.Unsupported
-    HR.Elim elim →
+    HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
+    HR.Elim elim ->
       case elim of
-        HR.Var s → pure (Erased.SymT s)
-        _ → throw @"erasureError" Erasure.Unsupported
+        HR.Var s -> pure (Erased.SymT s)
+        _ -> throw @"erasureError" Erasure.Unsupported

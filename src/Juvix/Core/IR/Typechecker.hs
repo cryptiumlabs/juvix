@@ -7,12 +7,12 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 import Prelude (String, show)
 
-logOutput ∷
-  ∀ m. HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m ⇒ String → m ()
+logOutput ::
+  forall m. HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m => String -> m ()
 logOutput s = tell @"typecheckerLog" [IRTypes.TypecheckerLog s]
 
-typeTermIntroLog ∷
-  ∀ primTy primVal m.
+typeTermIntroLog ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
@@ -20,11 +20,11 @@ typeTermIntroLog ∷
     (Show (IRTypes.Value primTy primVal m)),
     -- Dumb hack, please remove
     (Show (IRTypes.Contexts primTy primVal m))
-  ) ⇒
-  IRTypes.Term primTy primVal →
-  IRTypes.Annotation primTy primVal m →
-  Natural →
-  IRTypes.Contexts primTy primVal m →
+  ) =>
+  IRTypes.Term primTy primVal ->
+  IRTypes.Annotation primTy primVal m ->
+  Natural ->
+  IRTypes.Contexts primTy primVal m ->
   m ()
 typeTermIntroLog t ann ii g =
   logOutput
@@ -42,23 +42,23 @@ typeTermIntroLog t ann ii g =
         <> show t
     )
 
-failed ∷ String
+failed :: String
 failed = "Check failed. "
 
-passed ∷ String
+passed :: String
 passed = "Check passed. "
 
 -- TODO ∷ Term isn't used here?
-typechecked ∷
-  ∀ primTy primVal m.
+typechecked ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
     Show primVal,
     (Show (IRTypes.Value primTy primVal m))
-  ) ⇒
-  IRTypes.Term primTy primVal →
-  IRTypes.Annotation primTy primVal m →
+  ) =>
+  IRTypes.Term primTy primVal ->
+  IRTypes.Annotation primTy primVal m ->
   String
 typechecked _term ann =
   "The term is type checked successfully. It has usage of "
@@ -68,8 +68,8 @@ typechecked _term ann =
 
 -- | 'checker' for checkable terms checks the term
 -- against an annotation and returns ().
-typeTerm ∷
-  ∀ primTy primVal m.
+typeTerm ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
@@ -80,12 +80,12 @@ typeTerm ∷
     -- Dumb hack
     (Show (IRTypes.Contexts primTy primVal m)),
     (Show (IRTypes.Annotation primTy primVal m))
-  ) ⇒
-  Types.Parameterisation primTy primVal →
-  Natural →
-  IRTypes.Contexts primTy primVal m →
-  IRTypes.Term primTy primVal →
-  IRTypes.Annotation primTy primVal m →
+  ) =>
+  Types.Parameterisation primTy primVal ->
+  Natural ->
+  IRTypes.Contexts primTy primVal m ->
+  IRTypes.Term primTy primVal ->
+  IRTypes.Annotation primTy primVal m ->
   m ()
 -- ★ (Universe formation rule)
 typeTerm _ ii g t@(IRTypes.Star i) ann = do
@@ -114,7 +114,7 @@ typeTerm _ ii g t@(IRTypes.Star i) ann = do
       <> "is zero. "
   logOutput "Checking that the annotation is of type *j, and j>i. "
   case IRTypes.type' ann of
-    IRTypes.VStar j →
+    IRTypes.VStar j ->
       if i >= j
         then
           ( do
@@ -139,7 +139,7 @@ typeTerm _ ii g t@(IRTypes.Star i) ann = do
                   <> typechecked t ann
               return ()
           )
-    _ → do
+    _ -> do
       logOutput $
         failed
           <> " The input annotation "
@@ -177,7 +177,7 @@ typeTerm p ii g t@(IRTypes.Pi _pi varType resultType) ann = do
       <> show (IRTypes.type' ann)
       <> "is *i. "
   case IRTypes.type' ann of
-    IRTypes.VStar _ → do
+    IRTypes.VStar _ -> do
       logOutput $
         passed
           <> "The input type is "
@@ -200,7 +200,7 @@ typeTerm p ii g t@(IRTypes.Pi _pi varType resultType) ann = do
           <> show (IRTypes.type' ann)
           <> ", as required. Checking that the result (R), with x of "
           <> "type V in the context, type checked against the input annotation."
-      ty ← Evaluate.evalTerm p varType [] -- V
+      ty <- Evaluate.evalTerm p varType [] -- V
       typeTerm
         p -- param
         (succ ii)
@@ -216,7 +216,7 @@ typeTerm p ii g t@(IRTypes.Pi _pi varType resultType) ann = do
           <> passed
           <> "Result (R) has usage of is of type *i. "
           <> typechecked t ann
-    _ → do
+    _ -> do
       logOutput $
         " Current context is "
           <> show g
@@ -226,34 +226,33 @@ typeTerm p ii g t@(IRTypes.Pi _pi varType resultType) ann = do
       throw @"typecheckError" (IRTypes.ShouldBeStar (IRTypes.type' ann))
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii g x@(IRTypes.PrimTy _) ann = do
-  ty ← IRTypes.quote0 (IRTypes.type' ann)
+  ty <- IRTypes.quote0 (IRTypes.type' ann)
   typeTermIntroLog x ann ii g
   logOutput
     ( "patterned matched to be a primitive type term. "
         <> "Checking that input annotation is of zero usage. "
     )
-  if
-    | mempty /= IRTypes.usage ann → do
-      logOutput $
-        failed
-          <> "The input usage is "
-          <> show (IRTypes.usage ann)
-          <> ", which is not zero. "
-      throw @"typecheckError" IRTypes.UsageMustBeZero
-    | ty /= IRTypes.Star 0 → do
-      checking
-      logOutput $
-        failed
-          <> "The input type is "
-          <> show ty
-          <> ", which is not * 0."
-      throw
-        @"typecheckError"
-        (IRTypes.TypeMismatch ii x (IRTypes.Annotated mempty (IRTypes.VStar 0)) ann)
-    | otherwise → do
-      checking
-      logOutput $ passed <> typechecked x ann
-      pure ()
+  if  | mempty /= IRTypes.usage ann -> do
+        logOutput $
+          failed
+            <> "The input usage is "
+            <> show (IRTypes.usage ann)
+            <> ", which is not zero. "
+        throw @"typecheckError" IRTypes.UsageMustBeZero
+      | ty /= IRTypes.Star 0 -> do
+        checking
+        logOutput $
+          failed
+            <> "The input type is "
+            <> show ty
+            <> ", which is not * 0."
+        throw
+          @"typecheckError"
+          (IRTypes.TypeMismatch ii x (IRTypes.Annotated mempty (IRTypes.VStar 0)) ann)
+      | otherwise -> do
+        checking
+        logOutput $ passed <> typechecked x ann
+        pure ()
   where
     checking = logOutput "Checking that input annotation is of type *0. "
 -- Lam (introduction rule of dependent function type),
@@ -267,7 +266,7 @@ typeTerm p ii g t@(IRTypes.Lam m) ann = do
         ]
     )
   case ann of
-    IRTypes.Annotated sig (IRTypes.VPi pi ty ty') → do
+    IRTypes.Annotated sig (IRTypes.VPi pi ty ty') -> do
       -- Lam m should be of dependent function type (Pi) with sigma usage.
       logOutput $
         passed
@@ -280,7 +279,7 @@ typeTerm p ii g t@(IRTypes.Lam m) ann = do
           <> ") usage in the context, "
           <> "type checked against the input annotation."
       -- apply the function, result is of type T
-      ty' ← ty' (IRTypes.vfree (IRTypes.Local ii))
+      ty' <- ty' (IRTypes.vfree (IRTypes.Local ii))
       typeTerm
         p -- param
         (succ ii)
@@ -295,7 +294,7 @@ typeTerm p ii g t@(IRTypes.Lam m) ann = do
           <> show g
           <> passed
           <> typechecked t ann
-    _ →
+    _ ->
       throw
         @"typecheckError"
         (IRTypes.ShouldBeFunctionType (IRTypes.type' ann) (IRTypes.Lam m))
@@ -307,28 +306,27 @@ typeTerm p ii g t@(IRTypes.Elim e) ann = do
       <> show ann
       <> " is compatible with the term "
       <> show t
-  ann' ← typeElim p ii g e
-  annt ← IRTypes.quote0 (IRTypes.type' ann)
-  annt' ← IRTypes.quote0 (IRTypes.type' ann')
-  if
-    | not (IRTypes.usage ann' `Usage.allowsUsageOf` IRTypes.usage ann) → do
-      logOutput $
-        "Usages not compatible. The input usage is "
-          <> show (IRTypes.usage ann)
-          <> "but the term's usage is "
-          <> show (IRTypes.usage ann')
-      throw @"typecheckError" (IRTypes.UsageNotCompatible ann' ann)
-    | annt /= annt' → do
-      logOutput $
-        "The types are not the same. The input type is "
-          <> show annt
-          <> "but the term's type is "
-          <> show annt'
-      throw @"typecheckError" (IRTypes.TypeMismatch ii (IRTypes.Elim e) ann ann')
-    | otherwise → pure ()
+  ann' <- typeElim p ii g e
+  annt <- IRTypes.quote0 (IRTypes.type' ann)
+  annt' <- IRTypes.quote0 (IRTypes.type' ann')
+  if  | not (IRTypes.usage ann' `Usage.allowsUsageOf` IRTypes.usage ann) -> do
+        logOutput $
+          "Usages not compatible. The input usage is "
+            <> show (IRTypes.usage ann)
+            <> "but the term's usage is "
+            <> show (IRTypes.usage ann')
+        throw @"typecheckError" (IRTypes.UsageNotCompatible ann' ann)
+      | annt /= annt' -> do
+        logOutput $
+          "The types are not the same. The input type is "
+            <> show annt
+            <> "but the term's type is "
+            <> show annt'
+        throw @"typecheckError" (IRTypes.TypeMismatch ii (IRTypes.Elim e) ann ann')
+      | otherwise -> pure ()
 
-typeElimIntroLog ∷
-  ∀ primTy primVal m.
+typeElimIntroLog ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
@@ -336,9 +334,9 @@ typeElimIntroLog ∷
     (Show (IRTypes.Value primTy primVal m)),
     -- Hack, fix later
     (Show (IRTypes.Contexts primTy primVal m))
-  ) ⇒
-  IRTypes.Elim primTy primVal →
-  IRTypes.Contexts primTy primVal m →
+  ) =>
+  IRTypes.Elim primTy primVal ->
+  IRTypes.Contexts primTy primVal m ->
   m ()
 typeElimIntroLog elim g =
   logOutput
@@ -350,8 +348,8 @@ typeElimIntroLog elim g =
     )
 
 -- inferable terms have type as output.
-typeElim0 ∷
-  ∀ primTy primVal m.
+typeElim0 ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
@@ -362,15 +360,15 @@ typeElim0 ∷
     (Show (IRTypes.Annotation primTy primVal m)),
     (Show (IRTypes.Contexts primTy primVal m)),
     (Show (IRTypes.Value primTy primVal m))
-  ) ⇒
-  Types.Parameterisation primTy primVal →
-  IRTypes.Contexts primTy primVal m →
-  IRTypes.Elim primTy primVal →
+  ) =>
+  Types.Parameterisation primTy primVal ->
+  IRTypes.Contexts primTy primVal m ->
+  IRTypes.Elim primTy primVal ->
   m (IRTypes.Annotation primTy primVal m)
 typeElim0 p = typeElim p 0
 
-typeElim ∷
-  ∀ primTy primVal m.
+typeElim ::
+  forall primTy primVal m.
   ( HasThrow "typecheckError" (IRTypes.TypecheckError primTy primVal m) m,
     HasWriter "typecheckerLog" [IRTypes.TypecheckerLog] m,
     Show primTy,
@@ -381,11 +379,11 @@ typeElim ∷
     -- Dumb hack
     (Show (IRTypes.Contexts primTy primVal m)),
     (Show (IRTypes.Annotation primTy primVal m))
-  ) ⇒
-  Types.Parameterisation primTy primVal →
-  Natural →
-  IRTypes.Contexts primTy primVal m →
-  IRTypes.Elim primTy primVal →
+  ) =>
+  Types.Parameterisation primTy primVal ->
+  Natural ->
+  IRTypes.Contexts primTy primVal m ->
+  IRTypes.Elim primTy primVal ->
   m (IRTypes.Annotation primTy primVal m)
 -- the type checker should never encounter a
 -- bound variable (as in LambdaPi)? To be confirmed.
@@ -401,7 +399,7 @@ typeElim _ ii g e@(IRTypes.Free x) = do
       <> "Check that the free variable is in the context "
       <> show g
   case findName x g of
-    Just ann → do
+    Just ann -> do
       logOutput $
         passed
           <> "The variable is found in the context with annotation of usage "
@@ -409,7 +407,7 @@ typeElim _ ii g e@(IRTypes.Free x) = do
           <> "and type "
           <> show (IRTypes.type' ann)
       return ann
-    Nothing → do
+    Nothing -> do
       logOutput $
         failed
           <> "cannot find "
@@ -434,9 +432,9 @@ typeElim p ii g e@(IRTypes.App m n) = do
       [ "patterned matched to be an App term. Checking that M ",
         "has usage sigma and type dependent function (Pi)."
       ]
-  mTy ← typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
+  mTy <- typeElim p ii g m -- annotation of M is usage sig and Pi with pi usage.
   case mTy of
-    IRTypes.Annotated sig (IRTypes.VPi pi varTy resultTy) → do
+    IRTypes.Annotated sig (IRTypes.VPi pi varTy resultTy) -> do
       logOutput $
         passed
           <> "The function (M) "
@@ -464,7 +462,7 @@ typeElim p ii g e@(IRTypes.App m n) = do
           <> show (sig <.> pi)
           <> " and type "
           <> show varTy
-      res ← resultTy =<< Evaluate.evalTerm p n [] -- T[x:=N]
+      res <- resultTy =<< Evaluate.evalTerm p n [] -- T[x:=N]
       logOutput $
         show e
           <> "type checked to usage of "
@@ -472,7 +470,7 @@ typeElim p ii g e@(IRTypes.App m n) = do
           <> " and type of "
           <> show res
       return (IRTypes.Annotated sig res)
-    _ → do
+    _ -> do
       logOutput $
         failed
           <> "The function (M) "
@@ -492,7 +490,7 @@ typeElim p ii g e@(IRTypes.Ann pi theTerm theType) = do
         ]
     )
   -- the input type, T
-  ty ← Evaluate.evalTerm p theType []
+  ty <- Evaluate.evalTerm p theType []
   -- checks that M has usage sigma and type S == T
   typeTerm p ii g theTerm (IRTypes.Annotated pi ty)
   logOutput passed
@@ -503,8 +501,8 @@ typeElim p ii g e@(IRTypes.Ann pi theTerm theType) = do
 -- Misc
 --------------------------------------------------------------------------------
 
-findName ∷
-  IRTypes.Name → IRTypes.Contexts primTy primVal m → Maybe (IRTypes.Annotation primTy primVal m)
+findName ::
+  IRTypes.Name -> IRTypes.Contexts primTy primVal m -> Maybe (IRTypes.Annotation primTy primVal m)
 findName lookingFor (IRTypes.Context ann name : xs)
   | name == lookingFor =
     Just ann
