@@ -267,9 +267,7 @@ underExactConst = underExactGen unitExpr1
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 -- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,SeqEx [PrimEx (DIG 1)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 2)]]
+-- ,PrimEx (DIG 1)]
 
 -- note the dup, this is because in the stack, we pushed it as omega
 -- if we did better constant propagation this would be free
@@ -305,11 +303,9 @@ overExactConst = overExactGen unitExpr1
 -- overExactNonConst generates:
 -- Seems fairly optimal
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- , PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- , SeqEx [ PrimEx (DIG 2)
---         , PrimEx (DUP @)
---         , PrimEx (DUG 3)]]
+-- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+-- ,PrimEx (DIG 2)]
 
 overExactNonConst ∷ Term
 overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)

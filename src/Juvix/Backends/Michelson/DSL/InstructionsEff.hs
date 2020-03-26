@@ -56,9 +56,9 @@ inst (Types.Ann _usage ty t) =
     Ann.Var symbol → var symbol
     Ann.AppM fun a → appM fun a
     Ann.LamM c a b → do
-       v ← lambda c a b ty
-       consVal v ty
-       pure v
+      v ← lambda c a b ty
+      consVal v ty
+      pure v
     Ann.Prim prim' →
       case prim' of
         Types.Inst _ → constructPrim prim' ty
@@ -115,17 +115,18 @@ isNat =
     Instructions.isNat
     (\x → if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
-lambda ∷ Env.Error m ⇒ [Symbol] → [Symbol] → Types.Term → Types.Type →  m Env.Expanded
+lambda ∷ Env.Error m ⇒ [Symbol] → [Symbol] → Types.Term → Types.Type → m Env.Expanded
 lambda captures arguments body type'
-  | length usages == length arguments =
-    pure
-      $ Env.Curr Env.C
-      { Env.captures = Set.fromList captures,
-        Env.argsLeft = annotatedArgs,
-        Env.left = fromIntegral (length arguments),
-        Env.ty = type',
-        Env.fun = Env.Fun (const (inst body))
-      }
+  -- >= as we may return a lambda!
+  | length usages >= length arguments =
+    pure $
+      Env.Curr Env.C
+        { Env.captures = Set.fromList captures,
+          Env.argsLeft = annotatedArgs,
+          Env.left = fromIntegral (length arguments),
+          Env.ty = type',
+          Env.fun = Env.Fun (const (inst body))
+        }
   | otherwise =
     throw @"compilationError" Types.InvalidInputType
   where
@@ -140,13 +141,15 @@ var symb = do
   let pushStack value =
         case VStack.lookupType symb stack of
           Just t →
-            modify @"stack" (VStack.cons (VStack.var1E symb (Just value), t))
+            modify @"stack"
+              ( VStack.cons (VStack.var1E symb (Just value), t)
+                  . VStack.predValueUsage symb
+              )
           Nothing →
             throw @"compilationError" (Types.NotInStack symb)
   case VStack.lookup symb stack of
     Nothing →
       throw @"compilationError" (Types.NotInStack symb)
-    -- TODO ∷ reduce usage by 1
     Just (VStack.Value (VStack.Val' value)) → do
       pushStack (VStack.ConstE value)
       pure (Env.Constant value)
@@ -164,6 +167,7 @@ var symb = do
 
 -- We ignore the usage of the term coming in, however if it's already
 -- named, we don't actually change it's usage
+
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
 name ∷ Env.Reduction m ⇒ Env.ErasedTerm → Types.NewTerm → m Env.Expanded

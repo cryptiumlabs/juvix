@@ -5,8 +5,8 @@ module Juvix.Backends.Michelson.DSL.Environment where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import Juvix.Library hiding (show)
 import qualified Juvix.Core.Usage as Usage
+import Juvix.Library hiding (show)
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
 import Prelude (Show (..))
@@ -53,9 +53,9 @@ unFun (Fun f) = f
 
 data ErasedTerm
   = Term
-    { name ∷ Symbol,
-      usage ∷ Usage.T
-    }
+      { name ∷ Symbol,
+        usage ∷ Usage.T
+      }
   deriving (Show)
 
 data Curried

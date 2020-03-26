@@ -332,6 +332,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
+  + [[Usage]]
   + [[Library]]
 ***** Instructions
 - This module serves as a lower layer DSL that is just a binding

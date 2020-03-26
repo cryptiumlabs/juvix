@@ -7,7 +7,6 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Michelson.Untyped.Instr as Instr
 
-
 -- TODO ∷ make usageFromType Fold!
 
 usageFromType ∷ Ann.Type primTy primVal → [Usage.T]

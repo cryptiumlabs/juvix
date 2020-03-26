@@ -273,6 +273,21 @@ lookup n (T stack' _) = go stack' 0
       | otherwise = go vs acc
     go [] _ = Nothing
 
+-- | 'predValueUsage reduces usage of a constant by 1, and deletes said constant
+-- if it goes over its usage. This function does nothing to items in the stack
+predValueUsage ∷ Symbol → T lamType → T lamType
+predValueUsage n s@(T stack' i) = go stack' []
+  where
+    go ((v@(VarE n' usage val), ty) : xs) acc
+      | Set.member n n' && inT v =
+        s
+      | Set.member n n' && usage == one =
+        T (reverse acc <> xs) i
+      | otherwise =
+        T (reverse acc <> ((VarE n' (Usage.pred usage) val, ty) : xs)) i
+    go (x : xs) acc = go xs (x : acc)
+    go [] _ = T stack' i
+
 dig ∷ Int → T lamType → T lamType
 dig i (T stack' n) =
   case splitAt i stack' of
