@@ -27,43 +27,43 @@ data Val
   | UnitVal Unit.Val
   deriving (Show, Eq)
 
-natTyToAll :: Naturals.Ty -> Ty
+natTyToAll ∷ Naturals.Ty → Ty
 natTyToAll = NatTy
 
-natValToAll :: Naturals.Val -> Val
+natValToAll ∷ Naturals.Val → Val
 natValToAll = NatVal
 
-unitTyToAll :: Unit.Ty -> Ty
+unitTyToAll ∷ Unit.Ty → Ty
 unitTyToAll = UnitTy
 
-unitValToAll :: Unit.Val -> Val
+unitValToAll ∷ Unit.Val → Val
 unitValToAll = UnitVal
 
-typeOf :: Val -> NonEmpty Ty
+typeOf ∷ Val → NonEmpty Ty
 typeOf (NatVal nat) =
   fmap natTyToAll (Naturals.typeOf nat)
 typeOf (UnitVal unit) = fmap unitTyToAll (Unit.typeOf unit)
 
-apply :: Val -> Val -> Maybe Val
+apply ∷ Val → Val → Maybe Val
 apply (NatVal nat1) (NatVal nat2) =
   fmap natValToAll (Naturals.apply nat1 nat2)
 apply _ _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
+parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
 parseTy lexer =
   (natTyToAll <$> Naturals.parseTy lexer) <|> (unitTyToAll <$> Unit.parseTy lexer)
 
-parseVal :: Token.GenTokenParser String () Identity -> Parser Val
+parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
 parseVal lexer =
   (natValToAll <$> Naturals.parseVal lexer)
     <|> fmap unitValToAll (Unit.parseVal lexer)
 
-reservedNames :: [String]
+reservedNames ∷ [String]
 reservedNames = Naturals.reservedNames <> Unit.reservedNames
 
-reservedOpNames :: [String]
+reservedOpNames ∷ [String]
 reservedOpNames = Naturals.reservedOpNames <> Unit.reservedOpNames
 
-t :: Parameterisation Ty Val
+t ∷ Parameterisation Ty Val
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

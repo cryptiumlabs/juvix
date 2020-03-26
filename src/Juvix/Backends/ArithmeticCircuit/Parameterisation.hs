@@ -15,23 +15,23 @@ type PrimTy = ()
 
 type PrimVal = ()
 
-typeOf :: PrimVal -> NonEmpty PrimTy
+typeOf ∷ PrimVal → NonEmpty PrimTy
 typeOf () = () :| []
 
-apply :: PrimVal -> PrimVal -> Maybe PrimVal
+apply ∷ PrimVal → PrimVal → Maybe PrimVal
 apply _ _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
+parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
 parseTy _ = mempty
 
-parseVal :: Token.GenTokenParser String () Identity -> Parser PrimVal
+parseVal ∷ Token.GenTokenParser String () Identity → Parser PrimVal
 parseVal _ = mempty
 
-reservedNames :: [String]
+reservedNames ∷ [String]
 reservedNames = []
 
-reservedOpNames :: [String]
+reservedOpNames ∷ [String]
 reservedOpNames = []
 
-arithmeticCircuit :: J.Parameterisation PrimTy PrimVal
+arithmeticCircuit ∷ J.Parameterisation PrimTy PrimVal
 arithmeticCircuit = J.Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

@@ -33,8 +33,8 @@ data Value primTy primVal m
   | VPi
       Usage.T
       (Value primTy primVal m)
-      (Value primTy primVal m -> m (Value primTy primVal m))
-  | VLam (Value primTy primVal m -> m (Value primTy primVal m))
+      (Value primTy primVal m → m (Value primTy primVal m))
+  | VLam (Value primTy primVal m → m (Value primTy primVal m))
   | VNeutral (Neutral primTy primVal m)
   | VPrim primVal
 
@@ -46,14 +46,14 @@ data Neutral primTy primVal m
 -- | 'Annotations' include usage and type.
 data Annotation primTy primVal m
   = Annotated
-      { usage :: Usage.T,
-        type' :: Value primTy primVal m
+      { usage ∷ Usage.T,
+        type' ∷ Value primTy primVal m
       }
 
 data Context primTy primVal m
   = Context
-      { ann :: Annotation primTy primVal m,
-        name :: Name
+      { ann ∷ Annotation primTy primVal m,
+        name ∷ Name
       }
 
 -- | 'Context's map variables to their types.
@@ -67,39 +67,39 @@ type Env primTy primVal m = [Value primTy primVal m]
 --------------------------------------------------------------------------------
 
 deriving instance
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal) ⇒
   Eq (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
 instance
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal) ⇒
   Eq (Value primTy primVal (EnvTypecheck primTy primVal))
   where
   x == y = fst (exec (quote0 x)) == fst (exec (quote0 y))
 
 deriving instance
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal) ⇒
   Eq (Annotation primTy primVal (EnvTypecheck primTy primVal))
 
 deriving instance
-  (Show primTy, Show primVal) =>
+  (Show primTy, Show primVal) ⇒
   Show (Annotation primTy primVal (EnvTypecheck primTy primVal))
 
 deriving instance
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal) ⇒
   Eq (Context primTy primVal (EnvTypecheck primTy primVal))
 
 deriving instance
-  (Show primTy, Show primVal) =>
+  (Show primTy, Show primVal) ⇒
   Show (Context primTy primVal (EnvTypecheck primTy primVal))
 
 instance
-  (Show primTy, Show primVal) =>
+  (Show primTy, Show primVal) ⇒
   Show (Value primTy primVal (EnvTypecheck primTy primVal))
   where
   show x = show (fst (exec (quote0 x)))
 
 deriving instance
-  (Show primTy, Show primVal) =>
+  (Show primTy, Show primVal) ⇒
   Show (Neutral primTy primVal (EnvTypecheck primTy primVal))
 
 data TypecheckError primTy primVal m
@@ -121,11 +121,11 @@ data TypecheckError primTy primVal m
   | BoundVariableCannotBeInferred
 
 deriving instance
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal) ⇒
   Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
 
 instance
-  (Show primTy, Show primVal) =>
+  (Show primTy, Show primVal) ⇒
   Show (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
   where
   show (TypeMismatch binder term expectedT gotT) =
@@ -176,12 +176,12 @@ instance
   show (BoundVariableCannotBeInferred) =
     "Bound variable cannot be inferred"
 
-newtype TypecheckerLog = TypecheckerLog {msg :: String}
+newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
   deriving (Show, Eq, Generic)
 
 newtype EnvCtx primTy primVal
   = EnvCtx
-      { typecheckerLog :: [TypecheckerLog]
+      { typecheckerLog ∷ [TypecheckerLog]
       }
   deriving (Show, Eq, Generic)
 
@@ -212,55 +212,55 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
               )
           )
 
-exec ::
-  EnvTypecheck primTy primVal a ->
+exec ∷
+  EnvTypecheck primTy primVal a →
   ( Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a,
     EnvCtx primTy primVal
   )
 exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
 -- Quotation: takes a value back to a term
-quote0 ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Value primTy primVal m ->
+quote0 ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Value primTy primVal m →
   m (Term primTy primVal)
 quote0 = quote 0
 
-quote ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Natural ->
-  Value primTy primVal m ->
+quote ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Natural →
+  Value primTy primVal m →
   m (Term primTy primVal)
 quote ii p =
   case p of
-    VStar nat -> pure (Star nat)
-    VPrimTy p -> pure (PrimTy p)
-    VPi pi v f -> Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
-    VLam func -> Lam <$> (quote (succ ii) =<< func (vfree (Quote ii)))
-    VPrim pri -> pure (Elim (Prim pri))
-    VNeutral n -> Elim <$> neutralQuote ii n
+    VStar nat → pure (Star nat)
+    VPrimTy p → pure (PrimTy p)
+    VPi pi v f → Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
+    VLam func → Lam <$> (quote (succ ii) =<< func (vfree (Quote ii)))
+    VPrim pri → pure (Elim (Prim pri))
+    VNeutral n → Elim <$> neutralQuote ii n
 
-neutralQuote ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Natural ->
-  Neutral primTy primVal m ->
+neutralQuote ∷
+  ∀ primTy primVal m.
+  (Monad m) ⇒
+  Natural →
+  Neutral primTy primVal m →
   m (Elim primTy primVal)
 neutralQuote ii (NFree x) = pure (boundfree ii x)
 neutralQuote ii (NApp n v) = App <$> neutralQuote ii n <*> quote ii v
 
 -- | 'vfree' creates the value corresponding to a free variable
-vfree :: Name -> Value primTy primVal m
+vfree ∷ Name → Value primTy primVal m
 vfree n = VNeutral (NFree n)
 
 -- checks if the variable occurring at the head of
 -- the application is a bound variable or a free name
-boundfree :: Natural -> Name -> Elim primTy primVal
+boundfree ∷ Natural → Name → Elim primTy primVal
 boundfree ii (Quote k) = Bound (ii - k - 1)
 boundfree _ii x = Free x
 
 -- initial environment
-initEnv :: Env primTy primVal m
+initEnv ∷ Env primTy primVal m
 initEnv = []

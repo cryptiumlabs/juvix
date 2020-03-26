@@ -89,29 +89,29 @@ import qualified LLVM.AST.Type as Type
 -- Call Alias for Main Functions
 --------------------------------------------------------------------------------
 
-callGen ::
-  Types.Call m => Type.Type -> [Operand.Operand] -> Name.Name -> m Operand.Operand
+callGen ∷
+  Types.Call m ⇒ Type.Type → [Operand.Operand] → Name.Name → m Operand.Operand
 callGen typ' args fn = do
-  f <- Block.externf fn
+  f ← Block.externf fn
   Block.call typ' f (Block.emptyArgs args)
 
-callGenVoid ::
-  Types.Call m => [Operand.Operand] -> Name.Name -> m ()
+callGenVoid ∷
+  Types.Call m ⇒ [Operand.Operand] → Name.Name → m ()
 callGenVoid args fn = do
-  f <- Block.externf fn
+  f ← Block.externf fn
   Block.callVoid f (Block.emptyArgs args)
 
 link,
   linkConnectedPort,
-  rewire ::
-    Call m => [Operand.Operand] -> m ()
+  rewire ∷
+    Call m ⇒ [Operand.Operand] → m ()
 link args = callGenVoid args "link"
 rewire args = callGenVoid args "rewire"
 linkConnectedPort args = callGenVoid args "link_connected_port"
 
 isBothPrimary,
-  findEdge ::
-    Call m => [Operand.Operand] -> m Operand.Operand
+  findEdge ∷
+    Call m ⇒ [Operand.Operand] → m Operand.Operand
 isBothPrimary args = callGen (Types.pointerOf Types.bothPrimary) args "is_both_primary"
 findEdge args = callGen Types.portPointer args "find_edge"
 
@@ -123,21 +123,21 @@ findEdge args = callGen Types.portPointer args "find_edge"
 
 -- TODO ∷ abstract over the define pattern seen below?
 
-defineLink :: (Define m, Debug m) => m Operand.Operand
+defineLink ∷ (Define m, Debug m) ⇒ m Operand.Operand
 defineLink = Block.defineFunction Type.void "link" args $
   do
-    aux1 <- auxiliary1
-    aux2 <- auxiliary2
-    node1 <- Block.externf "node_1"
-    node2 <- Block.externf "node_1"
+    aux1 ← auxiliary1
+    aux2 ← auxiliary2
+    node1 ← Block.externf "node_1"
+    node2 ← Block.externf "node_1"
     Types.debugLevelOne $ do
-      _ <- Block.printCString "Executing Link rule \n" []
-      _ <- Block.printCString "Calling Link on \n" []
+      _ ← Block.printCString "Executing Link rule \n" []
+      _ ← Block.printCString "Calling Link on \n" []
       Debug.printNodePort node1 aux1
       Debug.printNodePort node2 aux2
     Ops.setPort ("node_1", "port_1") ("node_2", "port_2")
     Types.debugLevelOne $ do
-      _ <- Block.printCString "Calling Link on \n" []
+      _ ← Block.printCString "Calling Link on \n" []
       Debug.printNodePort node1 aux2
       Debug.printNodePort node2 aux1
     Ops.setPort ("node_2", "port_2") ("node_1", "port_1")
@@ -152,31 +152,30 @@ defineLink = Block.defineFunction Type.void "link" args $
 
 -- perform offsets
 
-defineIsBothPrimary :: (Define m, Debug m) => m Operand.Operand
+defineIsBothPrimary ∷ (Define m, Debug m) ⇒ m Operand.Operand
 defineIsBothPrimary =
   Block.defineFunction (Types.pointerOf Types.bothPrimary) "is_both_primary" args $
     do
       Types.debugLevelOne $
         Block.printCString "Executing is_both_primary rule \n" [] >> pure ()
-      return' <- Block.alloca Types.bothPrimary
+      return' ← Block.alloca Types.bothPrimary
       -- TODO ∷ should this call be abstracted somewhere?!
-      mainPort <- mainPort
-      nodePtr <- Block.externf "node_ptr"
-      portPtr <- findEdge [nodePtr, mainPort]
-      otherNodePtr <-
-        Block.loadElementPtr $
-          Types.Minimal
-            { Types.type' = Types.nodePointer,
-              Types.address' = portPtr,
-              Types.indincies' = Block.constant32List [0, 0]
-            }
+      mainPort ← mainPort
+      nodePtr ← Block.externf "node_ptr"
+      portPtr ← findEdge [nodePtr, mainPort]
+      otherNodePtr ← Block.loadElementPtr $
+        Types.Minimal
+          { Types.type' = Types.nodePointer,
+            Types.address' = portPtr,
+            Types.indincies' = Block.constant32List [0, 0]
+          }
       -- convert ptrs to ints
-      nodeInt <- Block.ptrToInt nodePtr pointerSize
-      otherNodeInt <- Block.ptrToInt otherNodePtr pointerSize
+      nodeInt ← Block.ptrToInt nodePtr pointerSize
+      otherNodeInt ← Block.ptrToInt otherNodePtr pointerSize
       -- compare the pointers to see if they are the same
-      cmp <- Block.icmp IntPred.EQ nodeInt otherNodeInt
-      tag <- Ops.getIsPrimaryEle return'
-      nod <- Ops.getPrimaryNode Types.nodePointer return'
+      cmp ← Block.icmp IntPred.EQ nodeInt otherNodeInt
+      tag ← Ops.getIsPrimaryEle return'
+      nod ← Ops.getPrimaryNode Types.nodePointer return'
       Block.store tag cmp
       Block.store nod otherNodePtr
       Block.ret return'
@@ -184,49 +183,49 @@ defineIsBothPrimary =
     args = [(Types.nodePointer, "node_ptr")]
 
 -- The logic assumes that the operation always succeeds
-defineFindEdge :: (Debug m, Define m) => m Operand.Operand
+defineFindEdge ∷ (Debug m, Define m) ⇒ m Operand.Operand
 defineFindEdge =
   Block.defineFunction Types.portPointer "find_edge" args $
     do
-      node <- Block.externf "node"
-      pNum <- Block.externf "port"
+      node ← Block.externf "node"
+      pNum ← Block.externf "port"
       -----------------------------------------------------------------
       Types.debugLevelOne $ do
-        _ <- Block.printCString "Executing find_edge rule \n" []
-        _ <- Block.printCString "Finding node and edge of %p \n" [node]
+        _ ← Block.printCString "Executing find_edge rule \n" []
+        _ ← Block.printCString "Finding node and edge of %p \n" [node]
         Debug.printNodePort node pNum
         pure ()
       -----------------------------------------------------------------
-      portPtr <- Ops.getPort node pNum
-      otherPortPtr <- Ops.portPointsTo portPtr
+      portPtr ← Ops.getPort node pNum
+      otherPortPtr ← Ops.portPointsTo portPtr
       Block.ret otherPortPtr
   where
     args = [(nodePointer, "node"), (numPortsPointer, "port")]
 
-mallocNode :: Call m => Integer -> m Operand.Operand
+mallocNode ∷ Call m ⇒ Integer → m Operand.Operand
 mallocNode size = Block.malloc size Types.nodePointer
 
 -- H variants below mean that we are able to allocate from Haskell and
 -- need not make a function
 
 -- TODO ∷ could be storing data wrong... find out
-mallocNodeH ::
+mallocNodeH ∷
   ( RetInstruction m,
     Debug m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     HasState "symTab" SymbolTable m
-  ) =>
-  [Maybe Operand.Operand] ->
-  [Maybe Operand.Operand] ->
-  Integer ->
+  ) ⇒
+  [Maybe Operand.Operand] →
+  [Maybe Operand.Operand] →
+  Integer →
   m Operand.Operand
 mallocNodeH mPorts mData extraData = do
   let anyThere xs =
         case length xs of
           -- 1 until it's safe to not to
-          0 -> 1
-          _ -> 1
+          0 → 1
+          _ → 1
       tagSize
         | Types.bitSizeEncodingPoint = 0
         | otherwise = Types.numPortsSize
@@ -236,109 +235,106 @@ mallocNodeH mPorts mData extraData = do
           + (anyThere mData * Types.pointerSizeInt)
           + extraData
   -- TODO ∷ see issue #262 on how to optimize out the loads and extra allocas
-  nodePtr <- mallocNode (fromIntegral totalSize)
+  nodePtr ← mallocNode (fromIntegral totalSize)
   -----------------------------------------------------------------
   Types.debugLevelOne $
     Block.printCString "Allocating node %p \n" [nodePtr] >> pure ()
   -- the bitCast is for turning the size of the array to 0
   -- for proper dynamically sized arrays
-  ports <- mallocPortsH mPorts >>= flip Block.bitCast Types.portData
-  portPtr <- Ops.getPortData nodePtr
+  ports ← mallocPortsH mPorts >>= flip Block.bitCast Types.portData
+  portPtr ← Ops.getPortData nodePtr
   Block.store portPtr ports
   unless Types.bitSizeEncodingPoint $
     do
-      portSizeP <- Ops.allocaNumPortNum (fromIntegral $ length mPorts)
-      tagPtr <-
-        Block.getElementPtr $
-          Types.Minimal
-            { Types.type' = Types.numPortsPointer,
-              Types.address' = nodePtr,
-              Types.indincies' = Block.constant32List [0, 0]
-            }
-      portSize <- Block.load numPortsNameRef portSizeP
+      portSizeP ← Ops.allocaNumPortNum (fromIntegral $ length mPorts)
+      tagPtr ← Block.getElementPtr $
+        Types.Minimal
+          { Types.type' = Types.numPortsPointer,
+            Types.address' = nodePtr,
+            Types.indincies' = Block.constant32List [0, 0]
+          }
+      portSize ← Block.load numPortsNameRef portSizeP
       Block.store tagPtr portSize
   -- let's not allocate data if we don't have to!
-  case anyThere mData :: Integer of
+  case anyThere mData ∷ Integer of
     -- do this when we pass more information to deAllocateNode
     -- Until then it's not safe
     -- 0 → pure ()
-    _ -> do
-      data' <- mallocDataH mData >>= flip Block.bitCast Types.dataArray
-      dataPtr <- Ops.getDataArray nodePtr
+    _ → do
+      data' ← mallocDataH mData >>= flip Block.bitCast Types.dataArray
+      dataPtr ← Ops.getDataArray nodePtr
       Block.store dataPtr data'
   pure nodePtr
 
 -- | used to create the malloc and alloca functions for ports and data
-createGenH ::
-  RetInstruction m =>
-  [Maybe Operand.Operand] ->
-  Type.Type ->
-  (Type.Type -> Integer -> m Operand.Operand) ->
+createGenH ∷
+  RetInstruction m ⇒
+  [Maybe Operand.Operand] →
+  Type.Type →
+  (Type.Type → Integer → m Operand.Operand) →
   m Operand.Operand
 createGenH mPortData type' alloc = do
-  ports <- alloc (Type.ArrayType len type') (fromIntegral len)
+  ports ← alloc (Type.ArrayType len type') (fromIntegral len)
   traverse_
-    ( \(p, i) ->
+    ( \(p, i) →
         case p of
-          Nothing -> pure ()
-          Just p -> do
-            ptr <-
-              Block.getElementPtr $
-                Types.Minimal
-                  { Types.type' = type',
-                    Types.address' = ports,
-                    Types.indincies' = Block.constant32List [0, i]
-                  }
+          Nothing → pure ()
+          Just p → do
+            ptr ← Block.getElementPtr $
+              Types.Minimal
+                { Types.type' = type',
+                  Types.address' = ports,
+                  Types.indincies' = Block.constant32List [0, i]
+                }
             Block.store ptr p
     )
     (zip mPortData [0 ..])
   pure ports
   where
-    len = fromIntegral (length mPortData :: Int)
+    len = fromIntegral (length mPortData ∷ Int)
 
-mallocGenH ::
-  Call m => [Maybe Operand.Operand] -> Type.Type -> Integer -> m Operand.Operand
+mallocGenH ∷
+  Call m ⇒ [Maybe Operand.Operand] → Type.Type → Integer → m Operand.Operand
 mallocGenH mPortData type' dataSize =
-  createGenH mPortData type' (\t len -> Block.malloc (len * dataSize) (Types.pointerOf t))
+  createGenH mPortData type' (\t len → Block.malloc (len * dataSize) (Types.pointerOf t))
 
-allocaGenH :: RetInstruction m => [Maybe Operand.Operand] -> Type.Type -> m Operand.Operand
+allocaGenH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → Type.Type → m Operand.Operand
 allocaGenH mPortData type' = createGenH mPortData type' (const . Block.alloca)
 
-mallocPortsH :: Call m => [Maybe Operand.Operand] -> m Operand.Operand
+mallocPortsH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocPortsH mPorts =
   mallocGenH mPorts Types.portTypeNameRef Types.portTypeSize
 
-allocaPortsH :: RetInstruction m => [Maybe Operand.Operand] -> m Operand.Operand
+allocaPortsH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 allocaPortsH mPorts = allocaGenH mPorts Types.portTypeNameRef
 
-allocaDataH :: RetInstruction m => [Maybe Operand.Operand] -> m Operand.Operand
+allocaDataH ∷ RetInstruction m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 allocaDataH mPorts = allocaGenH mPorts Types.dataType
 
-mallocDataH :: Call m => [Maybe Operand.Operand] -> m Operand.Operand
+mallocDataH ∷ Call m ⇒ [Maybe Operand.Operand] → m Operand.Operand
 mallocDataH mPorts =
   mallocGenH mPorts Types.dataType Types.dataTypeSize
 
 -- derived from the core functions
 
-defineLinkConnectedPort :: Define m => m Operand.Operand
+defineLinkConnectedPort ∷ Define m ⇒ m Operand.Operand
 defineLinkConnectedPort =
   Block.defineFunction Type.void "link_connected_port" args $
     do
       -- TODO ∷ Abstract out this bit ---------------------------------------------
-      (nOld, pOld) <- (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
-      (nNew, pNew) <- (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
-      oldPointsTo <- findEdge [nOld, pOld] -- portPtr
-      let intoGen typ num =
-            Block.getElementPtr $
-              Types.Minimal
-                { Types.type' = typ,
-                  Types.address' = oldPointsTo,
-                  Types.indincies' = Block.constant32List [0, num]
-                }
-      numPointsTo <- intoGen numPortsPointer 1
-      nodePointsToPtr <- intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
+      (nOld, pOld) ← (,) <$> Block.externf "node_old" <*> Block.externf "port_old"
+      (nNew, pNew) ← (,) <$> Block.externf "node_new" <*> Block.externf "port_new"
+      oldPointsTo ← findEdge [nOld, pOld] -- portPtr
+      let intoGen typ num = Block.getElementPtr $
+            Types.Minimal
+              { Types.type' = typ,
+                Types.address' = oldPointsTo,
+                Types.indincies' = Block.constant32List [0, num]
+              }
+      numPointsTo ← intoGen numPortsPointer 1
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
       -- End Abstracting out bits -------------------------------------------------
-      _ <- link [nNew, pNew, nodePointsToPtr, numPointsTo]
+      _ ← link [nNew, pNew, nodePointsToPtr, numPointsTo]
       Block.retNull
   where
     args =
@@ -348,25 +344,24 @@ defineLinkConnectedPort =
         (numPortsPointer, "port_new")
       ]
 
-defineRewire :: Define m => m Operand.Operand
+defineRewire ∷ Define m ⇒ m Operand.Operand
 defineRewire =
   Block.defineFunction Type.void "rewire" args $
     do
       -- TODO ∷ Abstract out this bit ---------------------------------------------
-      (n1, p1) <- (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
-      (n2, p2) <- (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
-      oldPointsTo <- findEdge [n1, p1] -- portPtr
-      let intoGen typ num =
-            Block.getElementPtr $
-              Types.Minimal
-                { Types.type' = typ,
-                  Types.address' = oldPointsTo,
-                  Types.indincies' = Block.constant32List [0, num]
-                }
-      numPointsTo <- intoGen numPortsPointer 1
-      nodePointsToPtr <- intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
+      (n1, p1) ← (,) <$> Block.externf "node_one" <*> Block.externf "port_one"
+      (n2, p2) ← (,) <$> Block.externf "node_two" <*> Block.externf "port_two"
+      oldPointsTo ← findEdge [n1, p1] -- portPtr
+      let intoGen typ num = Block.getElementPtr $
+            Types.Minimal
+              { Types.type' = typ,
+                Types.address' = oldPointsTo,
+                Types.indincies' = Block.constant32List [0, num]
+              }
+      numPointsTo ← intoGen numPortsPointer 1
+      nodePointsToPtr ← intoGen (Types.pointerOf nodePointer) 0 >>= Block.load nodePointer
       -- End Abstracting out bits -------------------------------------------------
-      _ <- linkConnectedPort [n2, p2, nodePointsToPtr, numPointsTo]
+      _ ← linkConnectedPort [n2, p2, nodePointsToPtr, numPointsTo]
       Block.retNull
   where
     args =
@@ -376,14 +371,14 @@ defineRewire =
         (numPortsPointer, "port_two")
       ]
 
-deAllocateNode :: (Debug m, Define m) => Operand.Operand -> m ()
+deAllocateNode ∷ (Debug m, Define m) ⇒ Operand.Operand → m ()
 deAllocateNode nodePtr = do
   Types.debugLevelOne $
     Block.printCString "De-allocating node %p \n" [nodePtr] >> pure ()
-  portPtr <- Ops.loadPortData nodePtr
-  dataPtr <- Ops.loadDataArray nodePtr
-  _ <- Block.free portPtr
-  _ <- Block.free dataPtr
+  portPtr ← Ops.loadPortData nodePtr
+  dataPtr ← Ops.loadDataArray nodePtr
+  _ ← Block.free portPtr
+  _ ← Block.free dataPtr
   Block.free nodePtr
 
 --------------------------------------------------------------------------------
@@ -396,10 +391,10 @@ defineMainPort,
   defineAuxiliary1,
   defineAuxiliary2,
   defineAuxiliary3,
-  defineAuxiliary4 ::
+  defineAuxiliary4 ∷
     ( HasState "moduleDefinitions" [Definition] m,
       HasState "symTab" SymbolTable m
-    ) =>
+    ) ⇒
     m ()
 defineMainPort = constantPort "main_port" 0
 defineAuxiliary1 = constantPort "auxiliary1" 1
@@ -408,12 +403,12 @@ defineAuxiliary3 = constantPort "auxiliary3" 3
 defineAuxiliary4 = constantPort "auxiliary4" 4
 
 -- TODO :: abstract out hardcoded value!
-constantPort ::
+constantPort ∷
   ( HasState "moduleDefinitions" [Definition] m,
     HasState "symTab" SymbolTable m
-  ) =>
-  Name ->
-  Integer ->
+  ) ⇒
+  Name →
+  Integer →
   m ()
 constantPort name v = do
   Block.addDefn
@@ -452,8 +447,8 @@ mainPort,
   auxiliary1,
   auxiliary2,
   auxiliary3,
-  auxiliary4 ::
-    Externf m => m Operand.Operand
+  auxiliary4 ∷
+    Externf m ⇒ m Operand.Operand
 mainPort = Block.externf "main_port"
 auxiliary1 = Block.externf "auxiliary1"
 auxiliary2 = Block.externf "auxiliary2"

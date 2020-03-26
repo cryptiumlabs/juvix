@@ -24,81 +24,80 @@ import Prelude (String)
 -- Codegen Operations
 --------------------------------------------------------------------------------
 
-fresh :: (HasState "count" b m, Enum b) => m b
+fresh ∷ (HasState "count" b m, Enum b) ⇒ m b
 fresh = do
-  i <- get@"count"
-  put@"count" (succ i)
+  i ← get @"count"
+  put @"count" (succ i)
   pure i
 
-resetCount :: (HasState "count" s m, Num s) => m ()
-resetCount = put@"count" 0
+resetCount ∷ (HasState "count" s m, Num s) ⇒ m ()
+resetCount = put @"count" 0
 
-emptyBlock :: Int -> BlockState
+emptyBlock ∷ Int → BlockState
 emptyBlock i = BlockState i [] Nothing
 
-createBlocks ::
+createBlocks ∷
   ( HasState "blocks" (Map.HashMap Name BlockState) m,
     HasThrow "err" Errors m
-  ) =>
+  ) ⇒
   m [BasicBlock]
 createBlocks = do
-  sortedBlocks <- sortBlocks . Map.toList <$> get@"blocks"
+  sortedBlocks ← sortBlocks . Map.toList <$> get @"blocks"
   traverse makeBlock sortedBlocks
 
-makeBlock :: HasThrow "err" Errors f => (Name, BlockState) -> f BasicBlock
+makeBlock ∷ HasThrow "err" Errors f ⇒ (Name, BlockState) → f BasicBlock
 makeBlock (l, BlockState i s t) = maketerm t >>| BasicBlock l (reverse s)
   where
     maketerm (Just x) = pure x
-    maketerm Nothing = throw@"err" (BlockLackingTerminator i)
+    maketerm Nothing = throw @"err" (BlockLackingTerminator i)
 
-sortBlocks :: [(a, BlockState)] -> [(a, BlockState)]
+sortBlocks ∷ [(a, BlockState)] → [(a, BlockState)]
 sortBlocks = sortBy (compare `on` (idx . snd))
 
-entryBlockName :: IsString p => p
+entryBlockName ∷ IsString p ⇒ p
 entryBlockName = "entry"
 
-emptyCodegen :: Types.CodegenState
-emptyCodegen =
-  Types.CodegenState
-    { Types.currentBlock = mkName entryBlockName,
-      Types.blocks = Map.empty,
-      Types.symTab = Map.empty,
-      Types.typTab = Map.empty,
-      Types.varTab = Map.empty,
-      Types.count = 0,
-      Types.names = Map.empty,
-      Types.blockCount = 1,
-      Types.moduleAST = emptyModule "EAC",
-      Types.debug = 0
-    }
+emptyCodegen ∷ Types.CodegenState
+emptyCodegen = Types.CodegenState
+  { Types.currentBlock = mkName entryBlockName,
+    Types.blocks = Map.empty,
+    Types.symTab = Map.empty,
+    Types.typTab = Map.empty,
+    Types.varTab = Map.empty,
+    Types.count = 0,
+    Types.names = Map.empty,
+    Types.blockCount = 1,
+    Types.moduleAST = emptyModule "EAC",
+    Types.debug = 0
+  }
 
-execEnvState :: Codegen a -> SymbolTable -> CodegenState
+execEnvState ∷ Codegen a → SymbolTable → CodegenState
 execEnvState (Types.CodeGen m) a = execState (runExceptT m) (emptyCodegen {Types.symTab = a})
 
-evalEnvState :: Codegen a -> SymbolTable -> Either Errors a
+evalEnvState ∷ Codegen a → SymbolTable → Either Errors a
 evalEnvState (Types.CodeGen m) a = evalState (runExceptT m) (emptyCodegen {Types.symTab = a})
 
 --------------------------------------------------------------------------------
 -- Module Level
 --------------------------------------------------------------------------------
 
-emptyModule :: ShortByteString -> Module
+emptyModule ∷ ShortByteString → Module
 emptyModule label = AST.defaultModule {moduleName = label}
 
-addDefn :: HasState "moduleDefinitions" [Definition] m => Definition -> m ()
-addDefn d = modify@"moduleDefinitions" (<> [d])
+addDefn ∷ HasState "moduleDefinitions" [Definition] m ⇒ Definition → m ()
+addDefn d = modify @"moduleDefinitions" (<> [d])
 
-addType :: HasState "moduleDefinitions" [Definition] m => Name -> Type -> m ()
+addType ∷ HasState "moduleDefinitions" [Definition] m ⇒ Name → Type → m ()
 addType name typ =
   addDefn (TypeDefinition name (Just typ))
 
-defineGen ::
-  HasState "moduleDefinitions" [Definition] m =>
-  Bool ->
-  Type ->
-  Symbol ->
-  [(Type, Name)] ->
-  [BasicBlock] ->
+defineGen ∷
+  HasState "moduleDefinitions" [Definition] m ⇒
+  Bool →
+  Type →
+  Symbol →
+  [(Type, Name)] →
+  [BasicBlock] →
   m Operand
 defineGen isVarArgs retty label argtys body = do
   addDefn
@@ -117,21 +116,21 @@ defineGen isVarArgs retty label argtys body = do
       (Types.pointerOf (FunctionType retty (fst <$> argtys) isVarArgs))
       (internName label)
   where
-    params = ((\(ty, nm) -> Parameter ty nm []) <$> argtys, isVarArgs)
+    params = ((\(ty, nm) → Parameter ty nm []) <$> argtys, isVarArgs)
 
 define,
-  defineVarArgs ::
-    HasState "moduleDefinitions" [Definition] m =>
-    Type ->
-    Symbol ->
-    [(Type, Name)] ->
-    [BasicBlock] ->
+  defineVarArgs ∷
+    HasState "moduleDefinitions" [Definition] m ⇒
+    Type →
+    Symbol →
+    [(Type, Name)] →
+    [BasicBlock] →
     m Operand
 define = defineGen False
 defineVarArgs = defineGen True
 
 -- | registerFunction is useful for making functions properly recursive
-registerFunction :: HasState "symTab" SymbolTable m => Type -> [(Type, b)] -> Name -> m ()
+registerFunction ∷ HasState "symTab" SymbolTable m ⇒ Type → [(Type, b)] → Name → m ()
 registerFunction retty argtys label =
   assign (nameToSymbol label)
     $ ConstantOperand
@@ -139,7 +138,7 @@ registerFunction retty argtys label =
       (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
       label
 
-makeFunction ::
+makeFunction ∷
   ( HasThrow "err" Errors m,
     HasState "blockCount" Int m,
     HasState "blocks" (Map.T Name.Name BlockState) m,
@@ -147,39 +146,39 @@ makeFunction ::
     HasState "currentBlock" Name.Name m,
     HasState "names" Names m,
     HasState "symTab" Types.SymbolTable m
-  ) =>
-  Symbol ->
-  [(Type.Type, Name.Name)] ->
+  ) ⇒
+  Symbol →
+  [(Type.Type, Name.Name)] →
   m ()
 makeFunction name args = do
-  entry <- addBlock name
-  _ <- setBlock entry
+  entry ← addBlock name
+  _ ← setBlock entry
   traverse_
-    (\(typ, nam) -> assign (nameToSymbol nam) (local typ nam))
+    (\(typ, nam) → assign (nameToSymbol nam) (local typ nam))
     args
 
-defineFunctionGen ::
-  Types.Define m => Bool -> Type -> Symbol -> [(Type, Name)] -> m a -> m Operand
+defineFunctionGen ∷
+  Types.Define m ⇒ Bool → Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunctionGen bool retty name args body = do
-  oldSymTab <- get@"symTab"
+  oldSymTab ← get @"symTab"
   -- flush the blocks so we can have clean block for functions
-  put@"blocks" Map.empty
+  put @"blocks" Map.empty
   resetCount
-  functionOperand <-
+  functionOperand ←
     (makeFunction name args >> registerFunction retty args (internName name) >> body >> createBlocks)
       >>= defineGen bool retty name args
   -- TODO ∷ figure out if LLVM functions can leak out of their local scope
-  put@"symTab" oldSymTab
+  put @"symTab" oldSymTab
   -- flush out blocks after functions
   -- comment for debugging!
-  put@"blocks" Map.empty
+  put @"blocks" Map.empty
   resetCount
   assign name functionOperand
   pure functionOperand
 
 defineFunction,
-  defineFunctionVarArgs ::
-    Define m => Type -> Symbol -> [(Type, Name)] -> m a -> m Operand
+  defineFunctionVarArgs ∷
+    Define m ⇒ Type → Symbol → [(Type, Name)] → m a → m Operand
 defineFunction = defineFunctionGen False
 defineFunctionVarArgs = defineFunctionGen True
 
@@ -187,103 +186,109 @@ defineFunctionVarArgs = defineFunctionGen True
 -- Block Stack
 --------------------------------------------------------------------------------
 
-entry :: (HasState "currentBlock" Name m) => m Name
-entry = get@"currentBlock"
+entry ∷ (HasState "currentBlock" Name m) ⇒ m Name
+entry = get @"currentBlock"
 
-getBlock :: (HasState "currentBlock" Name m) => m Name
+getBlock ∷ (HasState "currentBlock" Name m) ⇒ m Name
 getBlock = entry
 
 -- TODO ∷ hack make a proper algorithm later!
-addBlockNumber :: NewBlock m => Symbol -> Int -> m Name
+addBlockNumber ∷ NewBlock m ⇒ Symbol → Int → m Name
 addBlockNumber bname number = do
-  bls <- get@"blocks"
-  nms <- get@"names"
+  bls ← get @"blocks"
+  nms ← get @"names"
   let new = emptyBlock number
+
       (qname, supply) = uniqueName bname nms
+
       name = internName qname
-  put@"blocks" (Map.insert name new bls)
-  put@"names" supply
+
+  put @"blocks" (Map.insert name new bls)
+  put @"names" supply
   return name
 
-addBlock :: NewBlock m => Symbol -> m Name
+addBlock ∷ NewBlock m ⇒ Symbol → m Name
 addBlock bname = do
-  bls <- get@"blocks"
-  ix <- get@"blockCount"
-  nms <- get@"names"
+  bls ← get @"blocks"
+  ix ← get @"blockCount"
+  nms ← get @"names"
   let new = emptyBlock ix
+
       (qname, supply) = uniqueName bname nms
+
       name = internName qname
-  put@"blocks" (Map.insert name new bls)
-  put@"blockCount" (succ ix)
-  put@"names" supply
+
+  put @"blocks" (Map.insert name new bls)
+  put @"blockCount" (succ ix)
+  put @"names" supply
   return name
 
-setBlock :: HasState "currentBlock" Name m => Name -> m ()
-setBlock bName = put@"currentBlock" bName
+setBlock ∷ HasState "currentBlock" Name m ⇒ Name → m ()
+setBlock bName = put @"currentBlock" bName
 
-modifyBlock ::
+modifyBlock ∷
   ( HasState "blocks" (Map.T Name v) m,
     HasState "currentBlock" Name m
-  ) =>
-  v ->
+  ) ⇒
+  v →
   m ()
 modifyBlock new = do
-  active <- get@"currentBlock"
-  modify@"blocks" (Map.insert active new)
+  active ← get @"currentBlock"
+  modify @"blocks" (Map.insert active new)
 
-current ::
+current ∷
   ( HasState "blocks" (Map.T Name b) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
-  ) =>
+  ) ⇒
   m b
 current = do
-  c <- get@"currentBlock"
-  b <- get@"blocks"
+  c ← get @"currentBlock"
+  b ← get @"blocks"
   case Map.lookup c b of
-    Just x -> return x
-    Nothing -> throw@"err" (NoSuchBlock (show c))
+    Just x → return x
+    Nothing → throw @"err" (NoSuchBlock (show c))
 
-externf :: Externf m => Name -> m Operand
+externf ∷ Externf m ⇒ Name → m Operand
 externf name = getvar (nameToSymbol name)
 
-nameToSymbol :: Name -> Symbol
+nameToSymbol ∷ Name → Symbol
 nameToSymbol (UnName n) = (intern (filter (/= '\"') (show n)))
 nameToSymbol (Name n) = (intern (filter (/= '\"') (show n)))
 
-local :: Type -> Name -> Operand
+local ∷ Type → Name → Operand
 local = LocalReference
 
-instr :: RetInstruction m => Type -> Instruction -> m Operand
+instr ∷ RetInstruction m ⇒ Type → Instruction → m Operand
 instr typ ins = do
-  n <- fresh
+  n ← fresh
   let ref = UnName n
-  blk <- current
+  blk ← current
   let i = stack blk
   modifyBlock (blk {stack = (ref := ins) : i})
   pure (local typ ref)
 
-unnminstr ::
+unnminstr ∷
   ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
-  ) =>
-  Instruction ->
+  ) ⇒
+  Instruction →
   m ()
 unnminstr ins = do
-  blk <- current
+  blk ← current
   let i = stack blk
   modifyBlock (blk {stack = (Do ins) : i})
 
-terminator ::
+terminator ∷
   ( HasState "blocks" (Map.T Name BlockState) m,
     HasState "currentBlock" Name m,
     HasThrow "err" Errors m
-  ) =>
-  Named Terminator ->
+  ) ⇒
+  Named Terminator →
   m (Named Terminator)
 terminator trm = do
-  blk <- current
+  blk ← current
   modifyBlock (blk {term = Just trm})
   return trm
 
@@ -291,12 +296,12 @@ terminator trm = do
 -- External linking
 --------------------------------------------------------------------------------
 
-external :: (HasState "moduleDefinitions" [Definition] m) => Type -> String -> [(Type, Name)] -> m Operand
+external ∷ (HasState "moduleDefinitions" [Definition] m) ⇒ Type → String → [(Type, Name)] → m Operand
 external retty label argtys = do
   addDefn
     $ GlobalDefinition
     $ functionDefaults
-      { Global.parameters = ((\(ty, nm) -> Parameter ty nm []) <$> argtys, False),
+      { Global.parameters = ((\(ty, nm) → Parameter ty nm []) <$> argtys, False),
         Global.callingConvention = CC.Fast, -- TODO: Do we always want this?
         Global.returnType = retty,
         Global.basicBlocks = [],
@@ -309,13 +314,13 @@ external retty label argtys = do
       (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
       (mkName label)
 
-externalVar :: (HasState "moduleDefinitions" [Definition] m) => Type -> String -> [(Type, Name)] -> m Operand
+externalVar ∷ (HasState "moduleDefinitions" [Definition] m) ⇒ Type → String → [(Type, Name)] → m Operand
 externalVar retty label argtys = do
   addDefn
     $ GlobalDefinition
     $ functionDefaults
       { Global.parameters =
-          ( ( \(ty, nm) ->
+          ( ( \(ty, nm) →
                 Parameter
                   ty
                   nm
@@ -340,41 +345,40 @@ externalVar retty label argtys = do
 -- Printing facility
 --------------------------------------------------------------------------------
 
-definePrintf :: External m => m ()
+definePrintf ∷ External m ⇒ m ()
 definePrintf = do
   let name = "printf"
-  op <- externalVar Type.i32 name [(Types.pointerOf Type.i8, "n")]
+  op ← externalVar Type.i32 name [(Types.pointerOf Type.i8, "n")]
   assign name op
 
-printf :: Call m => [Operand] -> m Operand
+printf ∷ Call m ⇒ [Operand] → m Operand
 printf args = do
-  printf <- externf "printf"
+  printf ← externf "printf"
   instr Type.i32 $ callConvention CC.C printf (emptyArgs args)
 
-cString :: [Char] -> C.Constant
+cString ∷ [Char] → C.Constant
 cString str = C.Array Type.i8 (C.Int 8 . fromIntegral . ord <$> terminatedStr)
   where
     terminatedStr = str <> "\00"
 
-cStringPointer :: RetInstruction m => [Char] -> m Operand
+cStringPointer ∷ RetInstruction m ⇒ [Char] → m Operand
 cStringPointer str = do
-  t <- alloca (Type.ArrayType len Type.i8)
+  t ← alloca (Type.ArrayType len Type.i8)
   store t (Operand.ConstantOperand vec)
   pure t
   where
     vec = cString str
     len = fromIntegral (length str + 1)
 
-printCString :: Call m => [Char] -> [Operand] -> m Operand
+printCString ∷ Call m ⇒ [Char] → [Operand] → m Operand
 printCString str args = do
-  str <- cStringPointer str
-  ptrIn <-
-    getElementPtr $
-      Types.Minimal
-        { Types.type' = Types.pointerOf Type.i8,
-          Types.address' = str,
-          Types.indincies' = constant32List [0, 0]
-        }
+  str ← cStringPointer str
+  ptrIn ← getElementPtr $
+    Types.Minimal
+      { Types.type' = Types.pointerOf Type.i8,
+        Types.address' = str,
+        Types.indincies' = constant32List [0, 0]
+      }
   printf (ptrIn : args)
 
 --------------------------------------------------------------------------------
@@ -383,22 +387,22 @@ printCString str args = do
 
 -- malloc & free need to be defined once and then can be called normally with `externf`
 
-defineMalloc :: External m => m ()
+defineMalloc ∷ External m ⇒ m ()
 defineMalloc = do
   let name = "malloc"
-  op <- external (Types.pointerOf Type.i8) name [(Types.size_t, "size")]
+  op ← external (Types.pointerOf Type.i8) name [(Types.size_t, "size")]
   assign name op
 
-defineFree :: External m => m ()
+defineFree ∷ External m ⇒ m ()
 defineFree = do
   let name = "free"
-  op <- external voidTy name [(Types.pointerOf Type.i8, "type")]
+  op ← external voidTy name [(Types.pointerOf Type.i8, "type")]
   assign name op
 
-malloc :: Call m => Integer -> Type -> m Operand
+malloc ∷ Call m ⇒ Integer → Type → m Operand
 malloc size type' = do
-  malloc <- externf "malloc"
-  i8Ptr <-
+  malloc ← externf "malloc"
+  i8Ptr ←
     instr (Types.pointerOf Type.i8) $
       callConvention
         CC.Fast
@@ -406,10 +410,10 @@ malloc size type' = do
         (emptyArgs [Operand.ConstantOperand (C.Int Types.size_t_int size)])
   bitCast i8Ptr type'
 
-free :: Call m => Operand -> m ()
+free ∷ Call m ⇒ Operand → m ()
 free thing = do
-  free <- externf "free"
-  casted <- bitCast thing (Types.pointerOf Type.i8)
+  free ← externf "free"
+  casted ← bitCast thing (Types.pointerOf Type.i8)
   unnminstr (callConvention CC.Fast free (emptyArgs [casted]))
 
 --------------------------------------------------------------------------------
@@ -420,65 +424,50 @@ sdiv,
   udiv,
   add,
   sub,
-  mul ::
-    RetInstruction m => Type -> Operand -> Operand -> m Operand
-sdiv t a b =
-  instr
-    t
-    SDiv
-      { exact = False,
-        operand0 = a,
-        operand1 = b,
-        metadata = []
-      }
-udiv t a b =
-  instr
-    t
-    UDiv
-      { exact = False,
-        operand0 = a,
-        operand1 = b,
-        metadata = []
-      }
-add t a b =
-  instr
-    t
-    Add
-      { -- no signed warp
-        nsw = True,
-        -- no unSigned warp
-        nuw = True,
-        operand0 = a,
-        operand1 = b,
-        metadata = []
-      }
-sub t a b =
-  instr
-    t
-    Sub
-      { -- no signed warp
-        nsw = True,
-        -- no unSigned warp
-        nuw = True,
-        operand0 = a,
-        operand1 = b,
-        metadata = []
-      }
-mul t a b =
-  instr
-    t
-    Mul
-      { -- no signed warp
-        nsw = True,
-        -- no unSigned warp
-        nuw = True,
-        operand0 = a,
-        operand1 = b,
-        metadata = []
-      }
+  mul ∷
+    RetInstruction m ⇒ Type → Operand → Operand → m Operand
+sdiv t a b = instr t SDiv
+  { exact = False,
+    operand0 = a,
+    operand1 = b,
+    metadata = []
+  }
+udiv t a b = instr t UDiv
+  { exact = False,
+    operand0 = a,
+    operand1 = b,
+    metadata = []
+  }
+add t a b = instr t Add
+  { -- no signed warp
+    nsw = True,
+    -- no unSigned warp
+    nuw = True,
+    operand0 = a,
+    operand1 = b,
+    metadata = []
+  }
+sub t a b = instr t Sub
+  { -- no signed warp
+    nsw = True,
+    -- no unSigned warp
+    nuw = True,
+    operand0 = a,
+    operand1 = b,
+    metadata = []
+  }
+mul t a b = instr t Mul
+  { -- no signed warp
+    nsw = True,
+    -- no unSigned warp
+    nuw = True,
+    operand0 = a,
+    operand1 = b,
+    metadata = []
+  }
 
-icmp ::
-  RetInstruction m => IntPred.IntegerPredicate -> Operand -> Operand -> m Operand
+icmp ∷
+  RetInstruction m ⇒ IntPred.IntegerPredicate → Operand → Operand → m Operand
 icmp iPred op1 op2 = instr Type.i1 $ ICmp iPred op1 op2 []
 
 --------------------------------------------------------------------------------
@@ -490,8 +479,8 @@ icmp iPred op1 op2 = instr Type.i1 $ ICmp iPred op1 op2 []
 fdiv,
   fadd,
   fsub,
-  fmul ::
-    RetInstruction m => Type -> Operand -> Operand -> m Operand
+  fmul ∷
+    RetInstruction m ⇒ Type → Operand → Operand → m Operand
 fdiv t a b = instr t $ FDiv noFastMathFlags a b []
 fadd t a b = instr t $ FAdd noFastMathFlags a b []
 fsub t a b = instr t $ FSub noFastMathFlags a b []
@@ -501,54 +490,54 @@ fmul t a b = instr t $ FMul noFastMathFlags a b []
 -- Control Flow
 --------------------------------------------------------------------------------
 
-ret :: Instruct m => Operand -> m (Named Terminator)
+ret ∷ Instruct m ⇒ Operand → m (Named Terminator)
 ret val = terminator $ Do $ Ret (Just val) []
 
-retNull :: Instruct m => m (Named Terminator)
+retNull ∷ Instruct m ⇒ m (Named Terminator)
 retNull = terminator $ Do $ Ret Nothing []
 
-cbr :: Instruct m => Operand -> Name -> Name -> m (Named Terminator)
+cbr ∷ Instruct m ⇒ Operand → Name → Name → m (Named Terminator)
 cbr cond tr fl = terminator $ Do $ CondBr cond tr fl []
 
-br :: Instruct m => Name -> m (Named Terminator)
+br ∷ Instruct m ⇒ Name → m (Named Terminator)
 br val = terminator $ Do $ Br val []
 
-phi :: RetInstruction m => Type -> [(Operand, Name)] -> m Operand
+phi ∷ RetInstruction m ⇒ Type → [(Operand, Name)] → m Operand
 phi ty incoming = instr ty $ Phi ty incoming []
 
-switch :: Instruct m => Operand -> Name -> [(C.Constant, Name)] -> m (Named Terminator)
+switch ∷ Instruct m ⇒ Operand → Name → [(C.Constant, Name)] → m (Named Terminator)
 switch val default' dests = terminator $ Do $ Switch val default' dests []
 
-generateIf ::
+generateIf ∷
   ( RetInstruction m,
     HasState "blockCount" Int m,
     HasState "names" Names m
-  ) =>
-  Type ->
-  Operand ->
-  m Operand ->
-  m Operand ->
+  ) ⇒
+  Type →
+  Operand →
+  m Operand →
+  m Operand →
   m Operand
 generateIf ty cond tr fl = do
-  ifThen <- addBlock "if.then"
-  ifElse <- addBlock "if.else"
-  ifExit <- addBlock "if.exit"
+  ifThen ← addBlock "if.then"
+  ifElse ← addBlock "if.else"
+  ifExit ← addBlock "if.exit"
   -- %entry
   ------------------
-  test <- icmp IntPred.EQ cond (ConstantOperand (C.Int 1 1))
-  _ <- cbr test ifThen ifElse
+  test ← icmp IntPred.EQ cond (ConstantOperand (C.Int 1 1))
+  _ ← cbr test ifThen ifElse
   -- if.then
   ------------------
   setBlock ifThen
-  t <- tr
-  _ <- br ifExit
-  ifThen <- getBlock
+  t ← tr
+  _ ← br ifExit
+  ifThen ← getBlock
   -- if.else
   ------------------
   setBlock ifElse
-  f <- fl
-  _ <- br ifExit
-  ifElse <- getBlock
+  f ← fl
+  _ ← br ifExit
+  ifElse ← getBlock
   -- if.exit
   ------------------
   setBlock ifExit
@@ -558,83 +547,80 @@ generateIf ty cond tr fl = do
 -- Effects
 --------------------------------------------------------------------------------
 
-emptyArgs :: Functor f => f a1 -> f (a1, [a2])
-emptyArgs = fmap (\x -> (x, []))
+emptyArgs ∷ Functor f ⇒ f a1 → f (a1, [a2])
+emptyArgs = fmap (\x → (x, []))
 
-callConvention ::
-  CC.CallingConvention ->
-  Operand ->
-  [(Operand, [ParameterAttribute.ParameterAttribute])] ->
+callConvention ∷
+  CC.CallingConvention →
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
   Instruction
-callConvention convention fn args =
+callConvention convention fn args = Call
+  { functionAttributes = [],
+    tailCallKind = Nothing,
+    callingConvention = convention,
+    returnAttributes = [],
+    function = Right fn,
+    arguments = args,
+    metadata = []
+  }
+
+callVoid ∷
+  RetInstruction m ⇒
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
+  m ()
+callVoid fn args = unnminstr $
   Call
     { functionAttributes = [],
       tailCallKind = Nothing,
-      callingConvention = convention,
+      callingConvention = CC.Fast,
       returnAttributes = [],
       function = Right fn,
       arguments = args,
       metadata = []
     }
 
-callVoid ::
-  RetInstruction m =>
-  Operand ->
-  [(Operand, [ParameterAttribute.ParameterAttribute])] ->
-  m ()
-callVoid fn args =
-  unnminstr $
-    Call
-      { functionAttributes = [],
-        tailCallKind = Nothing,
-        callingConvention = CC.Fast,
-        returnAttributes = [],
-        function = Right fn,
-        arguments = args,
-        metadata = []
-      }
-
-call ::
-  RetInstruction m =>
-  Type ->
-  Operand ->
-  [(Operand, [ParameterAttribute.ParameterAttribute])] ->
+call ∷
+  RetInstruction m ⇒
+  Type →
+  Operand →
+  [(Operand, [ParameterAttribute.ParameterAttribute])] →
   m Operand
-call typ fn args =
-  instr typ $
-    Call
-      { functionAttributes = [],
-        tailCallKind = Nothing,
-        callingConvention = CC.Fast,
-        returnAttributes = [],
-        function = Right fn,
-        arguments = args,
-        metadata = []
-      }
+call typ fn args = instr typ $
+  Call
+    { functionAttributes = [],
+      tailCallKind = Nothing,
+      callingConvention = CC.Fast,
+      returnAttributes = [],
+      function = Right fn,
+      arguments = args,
+      metadata = []
+    }
 
 -- TODO :: is the pointerOf on the ty needed
 -- the LLVM8 testing on newKledi shows it being the same type back
 -- however that would be incorrect?!
-alloca :: RetInstruction m => Type -> m Operand
+alloca ∷ RetInstruction m ⇒ Type → m Operand
 alloca ty = instr (pointerOf ty) $ Alloca ty Nothing 0 []
 
-load :: RetInstruction m => Type -> Operand -> m Operand
+load ∷ RetInstruction m ⇒ Type → Operand → m Operand
 load typ ptr = instr typ $ Load False ptr Nothing 0 []
 
-store :: Instruct m => Operand -> Operand -> m ()
+store ∷ Instruct m ⇒ Operand → Operand → m ()
 store ptr val = unnminstr $ Store False ptr val Nothing 0 []
 
 --------------------------------------------------------------------------------
 -- Casting Operations
 --------------------------------------------------------------------------------
 
-bitCast :: RetInstruction m => Operand -> Type -> m Operand
+bitCast ∷ RetInstruction m ⇒ Operand → Type → m Operand
 bitCast op typ = instr typ $ BitCast op typ []
 
-ptrToInt :: RetInstruction m => Operand -> Type -> m Operand
+ptrToInt ∷ RetInstruction m ⇒ Operand → Type → m Operand
 ptrToInt op typ = instr typ $ AST.PtrToInt op typ []
 
-trunc :: RetInstruction m => Operand -> Type -> m Operand
+trunc ∷ RetInstruction m ⇒ Operand → Type → m Operand
 trunc op typ = instr typ $ Trunc op typ []
 
 --------------------------------------------------------------------------------
@@ -643,7 +629,7 @@ trunc op typ = instr typ $ Trunc op typ []
 
 -- | 'getElementPtr' gets an index of a struct or an array as a pointer
 -- Takes a minimal data type to emulate named arguments
-getElementPtr :: RetInstruction m => MinimalPtr -> m Operand
+getElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 getElementPtr (Minimal address indices type') =
   instr type' $
     GetElementPtr
@@ -653,60 +639,59 @@ getElementPtr (Minimal address indices type') =
         indices = indices
       }
 
-loadElementPtr :: RetInstruction m => MinimalPtr -> m Operand
+loadElementPtr ∷ RetInstruction m ⇒ MinimalPtr → m Operand
 loadElementPtr minimal = do
-  ptr <-
+  ptr ←
     getElementPtr
       (minimal {Types.type' = pointerOf (Types.type' minimal)})
   load (Types.type' minimal) ptr
 
-constant32List :: Functor f => f Integer -> f Operand
+constant32List ∷ Functor f ⇒ f Integer → f Operand
 constant32List = fmap (ConstantOperand . C.Int 32)
 
 --------------------------------------------------------------------------------
 -- Sum Type Declarations
 --------------------------------------------------------------------------------
-argsGen :: [Name.Name]
-argsGen = (mkName . ("_" <>) . show) <$> ([1 ..] :: [Integer])
+argsGen ∷ [Name.Name]
+argsGen = (mkName . ("_" <>) . show) <$> ([1 ..] ∷ [Integer])
 
-variantCreationName :: Symbol -> Symbol
+variantCreationName ∷ Symbol → Symbol
 variantCreationName = (<> "_%func")
 
 -- | Generic logic to create a variant, used in 'createVariantAllocaFunction'
 -- and 'createVariantGen'
-variantCreation ::
+variantCreation ∷
   ( RetInstruction m,
     HasState "typTab" TypeTable m,
     Integral a,
     Foldable t
-  ) =>
-  Type ->
-  Symbol ->
-  Word32 ->
-  t Operand ->
-  a ->
-  (Type -> m Operand) ->
+  ) ⇒
+  Type →
+  Symbol →
+  Word32 →
+  t Operand →
+  a →
+  (Type → m Operand) →
   m Operand
 variantCreation sumTyp variantName tag args offset allocFn = do
-  typTable <- get@"typTab"
-  sum <- allocFn sumTyp
-  getEle <-
-    getElementPtr $
-      -- The pointerOf is now correct!
-      Minimal
-        { Types.type' = Types.pointerOf (Type.IntegerType tag),
-          Types.address' = sum,
-          Types.indincies' = constant32List [0, 0]
-        }
+  typTable ← get @"typTab"
+  sum ← allocFn sumTyp
+  getEle ← getElementPtr $
+    -- The pointerOf is now correct!
+    Minimal
+      { Types.type' = Types.pointerOf (Type.IntegerType tag),
+        Types.address' = sum,
+        Types.indincies' = constant32List [0, 0]
+      }
   store
     getEle
     (ConstantOperand (C.Int tag (toInteger offset)))
   -- TODO ∷ remove the ! call here
   let varType = typTable Map.! variantName
-  casted <- bitCast sum (Types.pointerOf varType)
+  casted ← bitCast sum (Types.pointerOf varType)
   foldM_
-    ( \i inst -> do
-        ele <-
+    ( \i inst → do
+        ele ←
           getElementPtr $
             -- The pointerOf is now correct!
             Minimal
@@ -725,90 +710,90 @@ variantCreation sumTyp variantName tag args offset allocFn = do
 -- TODO ∷ use, so far the createVariant is only used
 
 -- | creates a variant creation definition function
-createVariantAllocaFunction ::
+createVariantAllocaFunction ∷
   ( Define m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m
-  ) =>
-  Symbol ->
-  [Type] ->
+  ) ⇒
+  Symbol →
+  [Type] →
   m Operand
 createVariantAllocaFunction variantName argTypes = do
-  varTable <- get@"varTab"
-  typTable <- get@"typTab"
+  varTable ← get @"varTab"
+  typTable ← get @"typTab"
   case Map.lookup variantName varTable of
-    Nothing ->
-      throw@"err" (NoSuchVariant (show variantName))
+    Nothing →
+      throw @"err" (NoSuchVariant (show variantName))
     Just
       ( S
           { sum' = sumName,
             offset = offset,
             tagSize' = tag
           }
-        ) ->
+        ) →
         case Map.lookup sumName typTable of
-          Nothing ->
-            throw@"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
-          Just sumTyp ->
+          Nothing →
+            throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
+          Just sumTyp →
             let varCName = variantCreationName variantName
                 args = zip argTypes argsGen
              in defineFunction sumTyp varCName args $ do
-                  argsName <- traverse (externf . snd) args
-                  casted <- variantCreation sumTyp variantName tag argsName offset alloca
-                  _ <- ret casted
+                  argsName ← traverse (externf . snd) args
+                  casted ← variantCreation sumTyp variantName tag argsName offset alloca
+                  _ ← ret casted
                   createBlocks
 
-createVariantGen ::
+createVariantGen ∷
   ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     Foldable t
-  ) =>
-  Symbol ->
-  t Operand ->
-  (Type -> m Operand) ->
+  ) ⇒
+  Symbol →
+  t Operand →
+  (Type → m Operand) →
   m Operand
 createVariantGen variantName args allocFn = do
-  varTable <- get@"varTab"
-  typTable <- get@"typTab"
+  varTable ← get @"varTab"
+  typTable ← get @"typTab"
   case Map.lookup variantName varTable of
-    Nothing ->
-      throw@"err" (NoSuchVariant (show variantName))
+    Nothing →
+      throw @"err" (NoSuchVariant (show variantName))
     Just
       ( S
           { sum' = sumName,
             offset = offset,
             tagSize' = tag
           }
-        ) ->
+        ) →
         case Map.lookup sumName typTable of
-          Nothing ->
-            throw@"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
-          Just sumTyp ->
+          Nothing →
+            throw @"err" (DoesNotHappen ("type " <> show sumName <> "does not exist"))
+          Just sumTyp →
             variantCreation sumTyp variantName tag args offset allocFn
 
 -- | Creates a variant by calling alloca
-allocaVariant ::
+allocaVariant ∷
   ( RetInstruction m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     Foldable t
-  ) =>
-  Symbol ->
-  t Operand ->
+  ) ⇒
+  Symbol →
+  t Operand →
   m Operand
 allocaVariant variantName args = createVariantGen variantName args alloca
 
 -- | Creates a variant by calling malloc
-mallocVariant ::
+mallocVariant ∷
   ( Call m,
     HasState "typTab" TypeTable m,
     HasState "varTab" VariantToType m,
     Foldable t
-  ) =>
-  Symbol ->
-  t Operand ->
-  Integer ->
+  ) ⇒
+  Symbol →
+  t Operand →
+  Integer →
   m Operand
 mallocVariant variantName args size = createVariantGen variantName args (malloc size)
 
@@ -816,23 +801,23 @@ mallocVariant variantName args size = createVariantGen variantName args (malloc 
 -- Symbol Table
 -------------------------------------------------------------------------------
 
-assign :: (HasState "symTab" SymbolTable m) => Symbol -> Operand -> m ()
+assign ∷ (HasState "symTab" SymbolTable m) ⇒ Symbol → Operand → m ()
 assign var x = do
-  modify@"symTab" (Map.insert var x)
+  modify @"symTab" (Map.insert var x)
 
-getvar ::
+getvar ∷
   ( HasState "symTab" SymbolTable m,
     HasThrow "err" Errors m
-  ) =>
-  Symbol ->
+  ) ⇒
+  Symbol →
   m Operand
 getvar var = do
-  syms <- get@"symTab"
+  syms ← get @"symTab"
   case Map.lookup var syms of
-    Just x ->
+    Just x →
       return x
-    Nothing ->
-      throw@"err"
+    Nothing →
+      throw @"err"
         ( VariableNotInScope $
             "Local variable not in scope:"
               <> "\n syms: "
@@ -841,5 +826,5 @@ getvar var = do
               <> show var
         )
 
-internName :: Symbol -> Name
+internName ∷ Symbol → Name
 internName = mkName . unintern

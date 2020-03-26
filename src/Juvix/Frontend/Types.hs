@@ -28,10 +28,10 @@ data TopLevel
 
 data Type
   = Typ
-      { typeUsage :: Maybe Usage,
-        typeName :: !Symbol,
-        typeArgs :: [Symbol],
-        typeForm :: TypeSum
+      { typeUsage ∷ Maybe Usage,
+        typeName ∷ !Symbol,
+        typeArgs ∷ [Symbol],
+        typeForm ∷ TypeSum
       }
   deriving (Show)
 
@@ -45,24 +45,24 @@ data TypeSum
 -- | 'Data' is the data declaration in the Juvix language
 data Data
   = Arrowed
-      { dataArrow :: ArrowType,
-        dataAdt :: Adt
+      { dataArrow ∷ ArrowType,
+        dataAdt ∷ Adt
       }
   | NonArrowed
-      { dataAdt :: Adt
+      { dataAdt ∷ Adt
       }
   deriving (Show)
 
 data NewType
   = Declare
-      { newTypeAlias :: !Symbol,
-        newTypeType' :: TypeRefine
+      { newTypeAlias ∷ !Symbol,
+        newTypeType' ∷ TypeRefine
       }
   deriving (Show)
 
 newtype Alias
   = AliasDec
-      {aliasType' :: TypeRefine}
+      {aliasType' ∷ TypeRefine}
   deriving (Show)
 
 --------------------------------------------------
@@ -78,8 +78,8 @@ data ArrowType
 
 data NamedRefine
   = NamedRefine
-      { nameRefineName :: !(Maybe Name),
-        namedRefineRefine :: TypeRefine
+      { nameRefineName ∷ !(Maybe Name),
+        namedRefineRefine ∷ TypeRefine
       }
   deriving (Show)
 
@@ -93,17 +93,17 @@ newtype ArrowData
 
 data ArrowGen a
   = ArrGen
-      { arrowGenName :: !(Maybe Name),
-        arrowGenData :: a,
-        arrowGenArrow :: !ArrowSymbol
+      { arrowGenName ∷ !(Maybe Name),
+        arrowGenData ∷ a,
+        arrowGenArrow ∷ !ArrowSymbol
       }
   deriving (Show)
 
 -- TODO ∷ change TypeName to TypeNameModule
 data TypeRefine
   = TypeRefine
-      { typeRefineName :: !TypeName,
-        typeRefineRefinement :: Maybe Expression
+      { typeRefineName ∷ !TypeName,
+        typeRefineRefinement ∷ Maybe Expression
       }
   deriving (Show)
 
@@ -154,8 +154,8 @@ data Adt
 
 data Sum
   = S
-      { sumConstructor :: !Symbol,
-        sumValue :: !(Maybe Product)
+      { sumConstructor ∷ !Symbol,
+        sumValue ∷ !(Maybe Product)
       }
   deriving (Show)
 
@@ -166,15 +166,15 @@ data Product
 
 data Record
   = Record'
-      { recordFields :: NonEmpty NameType,
-        recordFamilySignature :: Maybe TypeRefine
+      { recordFields ∷ NonEmpty NameType,
+        recordFamilySignature ∷ Maybe TypeRefine
       }
   deriving (Show)
 
 data NameType
   = NameType
-      { nameTypeSignature :: !ArrowType,
-        nameTypeName :: !Name
+      { nameTypeSignature ∷ !ArrowType,
+        nameTypeName ∷ !Name
       }
   deriving (Show)
 
@@ -196,9 +196,9 @@ newtype Module
 -- | 'FunctionLike' is the generic version for both modules and functions
 data FunctionLike a
   = Like
-      { functionLikedName :: Symbol,
-        functionLikeArgs :: [Arg],
-        functionLikeBody :: GuardBody a
+      { functionLikedName ∷ Symbol,
+        functionLikeArgs ∷ [Arg],
+        functionLikeBody ∷ GuardBody a
       }
   deriving (Show)
 
@@ -214,8 +214,8 @@ newtype ModuleOpen
 
 data ModuleOpenExpr
   = OpenExpress
-      { moduleOpenExprModuleN :: ModuleName,
-        moduleOpenExprExpr :: Expression
+      { moduleOpenExprModuleN ∷ ModuleName,
+        moduleOpenExprExpr ∷ Expression
       }
   deriving (Show)
 
@@ -233,8 +233,8 @@ newtype Cond a
 
 data CondLogic a
   = CondExpression
-      { condLogicPred :: Expression,
-        condLogicBody :: a
+      { condLogicPred ∷ Expression,
+        condLogicBody ∷ a
       }
   deriving (Show)
 
@@ -244,10 +244,10 @@ data CondLogic a
 
 data Signature
   = Sig
-      { signatureName :: Symbol,
-        signatureUsage :: Maybe Usage,
-        signatureArrowType :: ArrowType,
-        signatureConstraints :: [TypeName]
+      { signatureName ∷ Symbol,
+        signatureUsage ∷ Maybe Usage,
+        signatureArrowType ∷ ArrowType,
+        signatureConstraints ∷ [TypeName]
       }
   deriving (Show)
 
@@ -292,20 +292,20 @@ newtype String'
 
 newtype Block
   = Bloc
-      {blockExpr :: Expression}
+      {blockExpr ∷ Expression}
   deriving (Show)
 
 data Lambda
   = Lamb
-      { lambdaArgs :: NonEmpty MatchLogic,
-        lambdaBody :: Expression
+      { lambdaArgs ∷ NonEmpty MatchLogic,
+        lambdaBody ∷ Expression
       }
   deriving (Show)
 
 data Application
   = App
-      { applicationName :: NameSymb,
-        applicationArgs :: NonEmpty Expression
+      { applicationName ∷ NameSymb,
+        applicationArgs ∷ NonEmpty Expression
       }
   deriving (Show)
 
@@ -315,14 +315,14 @@ newtype Do
 
 data DoBody
   = DoBody
-      { doBodyName :: Maybe NameSymb,
-        doBodyExpr :: Expression
+      { doBodyName ∷ Maybe NameSymb,
+        doBodyExpr ∷ Expression
       }
   deriving (Show)
 
 newtype ExpRecord
   = ExpressionRecord
-      { expRecordFields :: NonEmpty (NameSet Expression)
+      { expRecordFields ∷ NonEmpty (NameSet Expression)
       }
   deriving (Show)
 
@@ -333,15 +333,15 @@ newtype ExpRecord
 -- TODO ∷ fix let
 data Let
   = Let'
-      { letBindings :: NonEmpty Binding,
-        letBody :: Expression
+      { letBindings ∷ NonEmpty Binding,
+        letBody ∷ Expression
       }
   deriving (Show)
 
 data Binding
   = Bind
-      { bindingPattern :: MatchLogic,
-        bindingBody :: Expression
+      { bindingPattern ∷ MatchLogic,
+        bindingBody ∷ Expression
       }
   deriving (Show)
 
@@ -351,9 +351,9 @@ data Binding
 
 data Infix
   = Inf
-      { infixLeft :: Expression,
-        infixOp :: NameSymb,
-        infixRight :: Expression
+      { infixLeft ∷ Expression,
+        infixOp ∷ NameSymb,
+        infixRight ∷ Expression
       }
   deriving (Show)
 
@@ -363,23 +363,23 @@ data Infix
 
 data Match
   = Match'
-      { matchOn :: Expression,
-        matchBindigns :: NonEmpty MatchL
+      { matchOn ∷ Expression,
+        matchBindigns ∷ NonEmpty MatchL
       }
   deriving (Show)
 
 data MatchL
   = MatchL
-      { matchLPattern :: MatchLogic,
-        matchLBody :: Expression
+      { matchLPattern ∷ MatchLogic,
+        matchLBody ∷ Expression
       }
   deriving (Show)
 
 -- TODO ∷ add literals to the match
 data MatchLogic
   = MatchLogic
-      { matchLogicContents :: MatchLogicStart,
-        matchLogicNamed :: Maybe NameSymb
+      { matchLogicContents ∷ MatchLogicStart,
+        matchLogicNamed ∷ Maybe NameSymb
       }
   deriving (Show)
 

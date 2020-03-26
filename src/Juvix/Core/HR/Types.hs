@@ -10,7 +10,7 @@ data T
 IR.extendTerm "Term" [t|T|] $
   IR.defaultExtTerm
     { IR.nameLam = "Lam0",
-      IR.typeLam = Ext.Ann $ \_primTy _primVal -> [t|Symbol|]
+      IR.typeLam = Ext.Ann $ \_primTy _primVal → [t|Symbol|]
       -- IR.typePi  = Ext.Ann $ \_primTy _primVal -> [t|Symbol|],
     }
 
@@ -23,5 +23,5 @@ IR.extendElim "Elim" [t|T|] $
   IR.defaultExtElim
     { IR.typeBound = Ext.Disabled,
       IR.typeFree = Ext.Disabled,
-      IR.typeElimX = [("Var", \_primTy _primVal -> [t|Symbol|])]
+      IR.typeElimX = [("Var", \_primTy _primVal → [t|Symbol|])]
     }

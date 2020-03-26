@@ -10,28 +10,27 @@ import Juvix.Library hiding (Type)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-shouldCompile :: Term -> Type -> C.ArithCircuit Fr -> T.TestTree
+shouldCompile ∷ Term → Type → C.ArithCircuit Fr → T.TestTree
 shouldCompile term ty circuit =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show circuit)
     (compile term ty T.@=? Just circuit)
 
-backendCircuit :: T.TestTree
+backendCircuit ∷ T.TestTree
 backendCircuit =
   T.testGroup
     "Backend arithmetic circuit"
     [shouldCompile equalTerm equalType equalCircuit]
 
-equalTerm :: Term
+equalTerm ∷ Term
 equalTerm = J.Lam "x" (J.Var "x")
 
-equalType :: Type
+equalType ∷ Type
 equalType = J.Pi Omega (J.PrimTy ()) (J.PrimTy ())
 
-equalCircuit :: C.ArithCircuit Fr
-equalCircuit =
-  C.ArithCircuit
-    { C.weights = C.GateWeights {C.wL = [], C.wR = [], C.wO = []},
-      C.commitmentWeights = [],
-      C.cs = []
-    }
+equalCircuit ∷ C.ArithCircuit Fr
+equalCircuit = C.ArithCircuit
+  { C.weights = C.GateWeights {C.wL = [], C.wR = [], C.wO = []},
+    C.commitmentWeights = [],
+    C.cs = []
+  }

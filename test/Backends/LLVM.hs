@@ -28,7 +28,7 @@ import LLVM.Pretty
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-backendLLVM :: T.TestTree
+backendLLVM ∷ T.TestTree
 backendLLVM =
   T.testGroup
     "Backend LLVM"
@@ -40,7 +40,7 @@ backendLLVM =
       test_init_module
     ]
 
-test_init_module_jit :: T.TestTree
+test_init_module_jit ∷ T.TestTree
 test_init_module_jit = T.testCase "init module should jit successfully" $ do
   let mod = EAC.moduleAST runInitModule
   let newModule =
@@ -49,40 +49,40 @@ test_init_module_jit = T.testCase "init module should jit successfully" $ do
               LLVM.AST.moduleDefinitions mod
                 <> LLVM.AST.moduleDefinitions exampleModule2
           }
-  putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" :: Text)
-  (imp, kill) <- mcJitWith (Config None) newModule dynamicImport
-  Just fn <- importAs imp "test" (Proxy :: Proxy (Word32 -> IO Word32)) (Proxy :: Proxy Word32) (Proxy :: Proxy Word32)
-  res <- fn 7
+  putStr (ppllvm (EAC.moduleAST runInitModule)) >> putStr ("\n" ∷ Text)
+  (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
+  Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
+  res ← fn 7
   kill
   43 T.@=? res
 
-test_init_module :: T.TestTree
+test_init_module ∷ T.TestTree
 test_init_module = T.testCase "init module should be created successfully" $ do
   let init = runInitModule'
   Right () T.@=? init
 
-test_eval_jit :: T.TestTree
+test_eval_jit ∷ T.TestTree
 test_eval_jit = T.testCase "x should evaluate to x" $ do
-  let term :: E.Term Unit.Val
+  let term ∷ E.Term Unit.Val
       term = E.Lam "x" (E.Var "x")
-  res <- evalErasedCoreInLLVM Unit.t term
+  res ← evalErasedCoreInLLVM Unit.t term
   term T.@=? res
 
-test_create_net_kill :: T.TestTree
+test_create_net_kill ∷ T.TestTree
 test_create_net_kill = T.testCase "create net & kill should work" $ do
-  (api, kill) <- jitInitialModule
-  _ <- createNet api
+  (api, kill) ← jitInitialModule
+  _ ← createNet api
   kill
 
-test_malloc_free_jit :: T.TestTree
+test_malloc_free_jit ∷ T.TestTree
 test_malloc_free_jit = T.testCase "malloc free module should jit" $ do
-  (imp, kill) <- mcJitWith (Config None) mallocFreeModule dynamicImport
-  Just fn <- importAs imp "test" (Proxy :: Proxy (Word32 -> IO Word32)) (Proxy :: Proxy Word32) (Proxy :: Proxy Word32)
-  res <- fn 7
+  (imp, kill) ← mcJitWith (Config None) mallocFreeModule dynamicImport
+  Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
+  res ← fn 7
   kill
   43 T.@=? res
 
-mallocFreeModule :: LLVM.AST.Module
+mallocFreeModule ∷ LLVM.AST.Module
 mallocFreeModule =
   Module
     "mallocFreeModule"
@@ -115,40 +115,38 @@ mallocFreeModule =
             G.basicBlocks =
               [ BasicBlock
                   (UnName 0)
-                  [ UnName 1
-                      := Call
-                        { tailCallKind = Nothing,
-                          I.function =
-                            Right
-                              ( ConstantOperand
-                                  ( C.GlobalReference
-                                      (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
-                                      (Name "malloc")
-                                  )
-                              ),
-                          callingConvention = CC.Fast,
-                          returnAttributes = [],
-                          arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 10}), [])],
-                          functionAttributes = [],
-                          metadata = []
-                        },
-                    Do $
-                      Call
-                        { tailCallKind = Nothing,
-                          I.function =
-                            Right
-                              ( ConstantOperand
-                                  ( C.GlobalReference
-                                      (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
-                                      (Name "free")
-                                  )
-                              ),
-                          callingConvention = CC.Fast,
-                          returnAttributes = [],
-                          arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
-                          functionAttributes = [],
-                          metadata = []
-                        }
+                  [ UnName 1 := Call
+                      { tailCallKind = Nothing,
+                        I.function =
+                          Right
+                            ( ConstantOperand
+                                ( C.GlobalReference
+                                    (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
+                                    (Name "malloc")
+                                )
+                            ),
+                        callingConvention = CC.Fast,
+                        returnAttributes = [],
+                        arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 10}), [])],
+                        functionAttributes = [],
+                        metadata = []
+                      },
+                    Do $ Call
+                      { tailCallKind = Nothing,
+                        I.function =
+                          Right
+                            ( ConstantOperand
+                                ( C.GlobalReference
+                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
+                                    (Name "free")
+                                )
+                            ),
+                        callingConvention = CC.Fast,
+                        returnAttributes = [],
+                        arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
+                        functionAttributes = [],
+                        metadata = []
+                      }
                   ]
                   ( Do $ Ret (Just (ConstantOperand (C.Int 32 43))) []
                   )
@@ -156,15 +154,15 @@ mallocFreeModule =
           }
     ]
 
-test_example_jit :: T.TestTree
+test_example_jit ∷ T.TestTree
 test_example_jit = T.testCase "example module should jit function" $ do
-  (imp, kill) <- mcJitWith (Config None) exampleModule dynamicImport
-  Just fn <- importAs imp "_foo" (Proxy :: Proxy (Word32 -> IO Word32)) (Proxy :: Proxy Word32) (Proxy :: Proxy Word32)
-  res <- fn 7
+  (imp, kill) ← mcJitWith (Config None) exampleModule dynamicImport
+  Just fn ← importAs imp "_foo" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
+  res ← fn 7
   kill
   42 T.@=? res
 
-exampleModule :: LLVM.AST.Module
+exampleModule ∷ LLVM.AST.Module
 exampleModule =
   Module
     "runSomethingModule"
@@ -186,7 +184,7 @@ exampleModule =
           }
     ]
 
-exampleModule2 :: LLVM.AST.Module
+exampleModule2 ∷ LLVM.AST.Module
 exampleModule2 =
   Module
     "runSomethingModule"
@@ -214,23 +212,22 @@ exampleModule2 =
             G.basicBlocks =
               [ BasicBlock
                   (UnName 0)
-                  [ UnName 1
-                      := Call
-                        { tailCallKind = Nothing,
-                          I.function =
-                            Right
-                              ( ConstantOperand
-                                  ( C.GlobalReference
-                                      (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
-                                      (Name "malloc")
-                                  )
-                              ),
-                          callingConvention = CC.Fast,
-                          returnAttributes = [],
-                          arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 32}), [])],
-                          functionAttributes = [],
-                          metadata = []
-                        },
+                  [ UnName 1 := Call
+                      { tailCallKind = Nothing,
+                        I.function =
+                          Right
+                            ( ConstantOperand
+                                ( C.GlobalReference
+                                    (ptr $ FunctionType {resultType = (Types.pointerOf Type.i8), argumentTypes = [IntegerType {typeBits = 64}], isVarArg = False})
+                                    (Name "malloc")
+                                )
+                            ),
+                        callingConvention = CC.Fast,
+                        returnAttributes = [],
+                        arguments = [(ConstantOperand (C.Int {C.integerBits = 64, C.integerValue = 32}), [])],
+                        functionAttributes = [],
+                        metadata = []
+                      },
                     UnName 2 := Alloca Types.testList Nothing 0 [],
                     -- UnName 3 := Call
                     --   { tailCallKind = Nothing,
@@ -250,23 +247,22 @@ exampleModule2 =
                     --     functionAttributes = [],
                     --     metadata = []
                     --   },
-                    Do $
-                      Call
-                        { tailCallKind = Nothing,
-                          I.function =
-                            Right
-                              ( ConstantOperand
-                                  ( C.GlobalReference
-                                      (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
-                                      (Name "free")
-                                  )
-                              ),
-                          callingConvention = CC.Fast,
-                          returnAttributes = [],
-                          arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
-                          functionAttributes = [],
-                          metadata = []
-                        }
+                    Do $ Call
+                      { tailCallKind = Nothing,
+                        I.function =
+                          Right
+                            ( ConstantOperand
+                                ( C.GlobalReference
+                                    (ptr $ FunctionType {resultType = voidTy, argumentTypes = [(Types.pointerOf Type.i8)], isVarArg = False})
+                                    (Name "free")
+                                )
+                            ),
+                        callingConvention = CC.Fast,
+                        returnAttributes = [],
+                        arguments = [(LocalReference (Types.pointerOf Type.i8) (UnName 1), [])],
+                        functionAttributes = [],
+                        metadata = []
+                      }
                   ]
                   ( Do $ Ret (Just (ConstantOperand (C.Int 32 43))) []
                   )
@@ -274,13 +270,13 @@ exampleModule2 =
           }
     ]
 
-test_example_jit' :: T.TestTree
+test_example_jit' ∷ T.TestTree
 test_example_jit' = T.testCase "example module should jit function" $ do
   let module' = EAC.moduleAST runInitModule
   let newModule = module' {LLVM.AST.moduleDefinitions = LLVM.AST.moduleDefinitions module' <> LLVM.AST.moduleDefinitions exampleModule2}
   -- (link :: Word32 -> IO Word32, kill) <- JIT.jit (JIT.Config JIT.None) newModule "malloc"
-  (imp, kill) <- mcJitWith (Config None) newModule dynamicImport
-  Just fn <- importAs imp "test" (Proxy :: Proxy (Word32 -> IO Word32)) (Proxy :: Proxy Word32) (Proxy :: Proxy Word32)
-  res <- fn 7
+  (imp, kill) ← mcJitWith (Config None) newModule dynamicImport
+  Just fn ← importAs imp "test" (Proxy ∷ Proxy (Word32 → IO Word32)) (Proxy ∷ Proxy Word32) (Proxy ∷ Proxy Word32)
+  res ← fn 7
   kill
   43 T.@=? res

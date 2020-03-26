@@ -7,7 +7,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String, show)
 
-allParserTests :: T.TestTree
+allParserTests ∷ T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
@@ -33,8 +33,8 @@ allParserTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
-parseTasty ::
-  (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree
+parseTasty ∷
+  (Show a1, Show a2, Eq a1) ⇒ T.TestName → Either a1 a2 → String → T.TestTree
 parseTasty name x y =
   T.testGroup
     "parse Test"
@@ -44,8 +44,8 @@ parseTasty name x y =
         (fmap show x T.@=? Right y)
     ]
 
-shouldParseAs ::
-  Show a => T.TestName -> Parser a -> ByteString -> String -> T.TestTree
+shouldParseAs ∷
+  Show a ⇒ T.TestName → Parser a → ByteString → String → T.TestTree
 shouldParseAs name parser parseString =
   parseTasty name (parseOnly parser parseString)
 
@@ -53,7 +53,7 @@ shouldParseAs name parser parseString =
 -- Parse Many at once
 --------------------------------------------------------------------------------
 
-many1FunctionsParser :: T.TestTree
+many1FunctionsParser ∷ T.TestTree
 many1FunctionsParser =
   shouldParseAs
     "many1FunctionsParser"
@@ -104,7 +104,7 @@ many1FunctionsParser =
 -- Sig Test
 --------------------------------------------------------------------------------
 
-sigTest1 :: T.TestTree
+sigTest1 ∷ T.TestTree
 sigTest1 =
   shouldParseAs
     "sigTest1"
@@ -119,7 +119,7 @@ sigTest1 =
     \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], \
     \typeRefineRefinement = Nothing}})), signatureConstraints = []})"
 
-sigTest2 :: T.TestTree
+sigTest2 ∷ T.TestTree
 sigTest2 =
   shouldParseAs
     "sigTest2"
@@ -141,7 +141,7 @@ sigTest2 =
 -- Function Testing
 --------------------------------------------------------------------------------
 
-fun1 :: T.TestTree
+fun1 ∷ T.TestTree
 fun1 =
   shouldParseAs
     "fun1"
@@ -155,7 +155,7 @@ fun1 =
     \matchLogicNamed = Just (foo :| [])})], \
     \functionLikeBody = Body (Constant (Number (Integer' 3)))}))"
 
-fun2 :: T.TestTree
+fun2 ∷ T.TestTree
 fun2 =
   shouldParseAs
     "fun2"
@@ -178,7 +178,7 @@ fun2 =
 -- adt testing
 --------------------------------------------------
 
-sumTypeTest :: T.TestTree
+sumTypeTest ∷ T.TestTree
 sumTypeTest =
   shouldParseAs
     "sumTypeTest"
@@ -222,7 +222,7 @@ sumTypeTest =
 -- Arrow Testing
 --------------------------------------------------
 
-superArrowCase :: T.TestTree
+superArrowCase ∷ T.TestTree
 superArrowCase =
   shouldParseAs
     "superArrowCase"
@@ -250,7 +250,7 @@ superArrowCase =
 -- alias tests
 --------------------------------------------------
 
-typeTest :: T.TestTree
+typeTest ∷ T.TestTree
 typeTest =
   shouldParseAs
     "typeTest"
@@ -264,7 +264,7 @@ typeTest =
 -- Modules test
 --------------------------------------------------------------------------------
 
-moduleOpen :: T.TestTree
+moduleOpen ∷ T.TestTree
 moduleOpen =
   shouldParseAs
     "moduleOpen"
@@ -291,7 +291,7 @@ moduleOpen =
     \{moduleOpenExprModuleN = Int :| [], moduleOpenExprExpr = Infix (Inf {infixLeft \
     \= Name (t :| []), infixOp = + :| [], infixRight = Constant (Number (Integer' 3))})}))}))])}))"
 
-moduleOpen' :: T.TestTree
+moduleOpen' ∷ T.TestTree
 moduleOpen' =
   shouldParseAs
     "moduleOpen'"
@@ -321,7 +321,7 @@ moduleOpen' =
 -- typeName tests
 --------------------------------------------------
 
-typeNameNoUniverse :: T.TestTree
+typeNameNoUniverse ∷ T.TestTree
 typeNameNoUniverse =
   shouldParseAs
     "typeNameNoUniverse"
@@ -338,7 +338,7 @@ typeNameNoUniverse =
 -- Match tests
 --------------------------------------------------------------------------------
 
-simpleNamedCon :: T.TestTree
+simpleNamedCon ∷ T.TestTree
 simpleNamedCon =
   shouldParseAs
     "simpleNamedCon"
@@ -349,7 +349,7 @@ simpleNamedCon =
     \b, matchLogicNamed = Nothing},MatchLogic {matchLogicContents = MatchName c, matchLogicNamed \
     \= Nothing}], matchLogicNamed = Just (foo :| [])}"
 
-matchMoreComplex :: T.TestTree
+matchMoreComplex ∷ T.TestTree
 matchMoreComplex =
   shouldParseAs
     "matchMoreComplex"
@@ -366,7 +366,7 @@ matchMoreComplex =
 -- Expression
 --------------------------------------------------------------------------------
 
-condTest1 :: T.TestTree
+condTest1 ∷ T.TestTree
 condTest1 =
   shouldParseAs
     "condTest1"
@@ -383,7 +383,7 @@ condTest1 =
 -- Record
 --------------------------------------------------
 
-record1 :: T.TestTree
+record1 ∷ T.TestTree
 record1 =
   shouldParseAs
     "record1"
@@ -397,7 +397,7 @@ record1 =
 -- parens
 --------------------------------------------------
 
-parens1 :: T.TestTree
+parens1 ∷ T.TestTree
 parens1 =
   shouldParseAs
     "parens1"
@@ -411,20 +411,20 @@ parens1 =
 -- Spacer tests
 --------------------------------------------------------------------------------
 
-spacerSymb :: Bool
+spacerSymb ∷ Bool
 spacerSymb =
   case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
-    Done f s -> f == "f" && s == "Foo"
-    _ -> False
+    Done f s → f == "f" && s == "Foo"
+    _ → False
 
 --------------------------------------------------------------------------------
 -- validPrefixSymbols
 --------------------------------------------------------------------------------
 
-vpsDashFrontFail :: Bool
+vpsDashFrontFail ∷ Bool
 vpsDashFrontFail =
   isLeft (parseOnly Parser.prefixSymbol "-Foo")
 
-vpsDashMiddle :: Bool
+vpsDashMiddle ∷ Bool
 vpsDashMiddle =
   isRight (parseOnly Parser.prefixSymbol "Foo-Foo")

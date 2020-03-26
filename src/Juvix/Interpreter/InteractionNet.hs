@@ -14,21 +14,21 @@ import Juvix.Interpreter.InteractionNet.Parser
 import Juvix.Interpreter.InteractionNet.Translation
 import Juvix.Interpreter.InteractionNet.Type
 
-erasedCoreToInteractionNetAST :: forall primVal. Erased.Term primVal -> AST primVal
+erasedCoreToInteractionNetAST ∷ ∀ primVal. Erased.Term primVal → AST primVal
 erasedCoreToInteractionNetAST term =
   case term of
-    Erased.Var s -> Symbol' s
-    Erased.Prim p -> Prim p
-    Erased.Lam s t -> Lambda s (erasedCoreToInteractionNetAST t)
-    Erased.App f x ->
+    Erased.Var s → Symbol' s
+    Erased.Prim p → Prim p
+    Erased.Lam s t → Lambda s (erasedCoreToInteractionNetAST t)
+    Erased.App f x →
       Application (erasedCoreToInteractionNetAST f) (erasedCoreToInteractionNetAST x)
 
-interactionNetASTToErasedCore :: forall primVal. AST primVal -> Erased.Term primVal
+interactionNetASTToErasedCore ∷ ∀ primVal. AST primVal → Erased.Term primVal
 interactionNetASTToErasedCore ast =
   case ast of
-    Symbol' s -> Erased.Var s
-    Prim p -> Erased.Prim p
-    Lambda s t ->
+    Symbol' s → Erased.Var s
+    Prim p → Erased.Prim p
+    Lambda s t →
       Erased.Lam s (interactionNetASTToErasedCore t)
-    Application f x ->
+    Application f x →
       Erased.App (interactionNetASTToErasedCore f) (interactionNetASTToErasedCore x)

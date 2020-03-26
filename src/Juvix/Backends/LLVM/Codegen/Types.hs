@@ -25,35 +25,35 @@ import Prelude ((!!))
 data CodegenState
   = CodegenState
       { -- | Name of the active block to append to
-        currentBlock :: Name,
+        currentBlock ∷ Name,
         -- | Blocks for function
-        blocks :: Map.T Name BlockState,
+        blocks ∷ Map.T Name BlockState,
         -- | Function scope symbol table
-        symTab :: SymbolTable,
+        symTab ∷ SymbolTable,
         -- | Mapping from symbol to Type
-        typTab :: TypeTable,
+        typTab ∷ TypeTable,
         -- | a mapping from the variants to the sum type
-        varTab :: VariantToType,
+        varTab ∷ VariantToType,
         -- | Count of basic blocks
-        blockCount :: Int,
+        blockCount ∷ Int,
         -- | Count of unnamed instructions
-        count :: Word,
+        count ∷ Word,
         -- | Name Supply
-        names :: Names,
-        moduleAST :: AST.Module,
+        names ∷ Names,
+        moduleAST ∷ AST.Module,
         -- | Debug level
-        debug :: Int
+        debug ∷ Int
       }
   deriving (Show, Generic)
 
 data BlockState
   = BlockState
       { -- | Block index
-        idx :: Int,
+        idx ∷ Int,
         -- | Stack of instructions
-        stack :: [Named Instruction],
+        stack ∷ [Named Instruction],
         -- | Block terminator
-        term :: Maybe (Named Terminator)
+        term ∷ Maybe (Named Terminator)
       }
   deriving (Show, Generic)
 
@@ -70,7 +70,7 @@ data Errors
     BlockLackingTerminator Int
   deriving (Show, Eq)
 
-newtype Codegen a = CodeGen {runCodegen :: ExceptT Errors (State CodegenState) a}
+newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) a}
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "currentBlock" Name)
@@ -107,20 +107,21 @@ newtype Codegen a = CodeGen {runCodegen :: ExceptT Errors (State CodegenState) a
     via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State CodegenState))))
 
 instance HasState "moduleDefinitions" [Definition] Codegen where
-  get_ _ = moduleDefinitions <$> (get@"moduleAST")
+
+  get_ _ = moduleDefinitions <$> (get @"moduleAST")
 
   put_ _ x = do
-    c <- get@"moduleAST"
-    put@"moduleAST" (c {moduleDefinitions = x})
+    c ← get @"moduleAST"
+    put @"moduleAST" (c {moduleDefinitions = x})
 
   state_ _ state = do
-    c <- get@"moduleDefinitions"
+    c ← get @"moduleDefinitions"
     let (a, res) = state c
-    put@"moduleDefinitions" res
+    put @"moduleDefinitions" res
     pure a
 
 -- TODO ∷ see if this is still useful
-newtype LLVM a = LLVM {runLLVM :: State AST.Module a}
+newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
   deriving (Functor, Applicative, Monad)
   deriving
     (HasState "moduleName" ShortByteString)
@@ -203,9 +204,9 @@ type Debug m = HasReader "debug" Int m
 
 data MinimalPtr
   = Minimal
-      { address' :: Operand,
-        indincies' :: [Operand],
-        type' :: Type
+      { address' ∷ Operand,
+        indincies' ∷ [Operand],
+        type' ∷ Type
       }
   deriving (Show)
 
@@ -214,7 +215,7 @@ data MinimalPtr
 --------------------------------------------------------------------------------
 
 -- TODO :: Replace with safe lens call instead!
-intoStructTypeErr :: Integral a => Type -> a -> Type
+intoStructTypeErr ∷ Integral a ⇒ Type → a → Type
 intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
 
 --------------------------------------------------------------------------------
@@ -228,55 +229,55 @@ intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
 -- however, on the off chance, we are forced into an 8 bit architecture, we have variants
 -- for port numbers, so we can support large number of arguments (is this even useful on small archs?)
 
-addressSpace :: Num p => p
+addressSpace ∷ Num p ⇒ p
 addressSpace =
   case System.buildArch of
-    System.X86_64 -> 64
-    System.I386 -> 32
-    System.Mips -> 32
-    System.PPC -> 32
-    System.PPC64 -> 64
-    System.Sparc -> 64
-    System.Arm -> 32
-    System.AArch64 -> 64
+    System.X86_64 → 64
+    System.I386 → 32
+    System.Mips → 32
+    System.PPC → 32
+    System.PPC64 → 64
+    System.Sparc → 64
+    System.Arm → 32
+    System.AArch64 → 64
     -- has 16 bit instructions
-    System.SH -> 32
-    System.IA64 -> 64
+    System.SH → 32
+    System.IA64 → 64
     -- These have 24/31 bit addressing
     -- may be more apt to return 24/31?
-    System.S390 -> 32
-    System.Alpha -> 64
+    System.S390 → 32
+    System.Alpha → 64
     -- seems to be 64?
-    System.Hppa -> 64
+    System.Hppa → 64
     -- seems to be PowerPC architecture!?!??
-    System.Rs6000 -> 32
+    System.Rs6000 → 32
     -- may have to lower to 24?
-    System.M68k -> 32
-    System.Vax -> 32
+    System.M68k → 32
+    System.Vax → 32
     -- 32 I guess?
-    System.JavaScript -> 32
+    System.JavaScript → 32
     -- otherwise assume it's a 32 bit architecture
-    System.OtherArch _ -> 32
+    System.OtherArch _ → 32
 
 -- | 'bitSizeEncodingPoint' is used to determine if we need a layer of indirection
 -- around all our number types to have a bigger argument list
-bitSizeEncodingPoint :: Bool
-bitSizeEncodingPoint = addressSpace >= (17 :: Int)
+bitSizeEncodingPoint ∷ Bool
+bitSizeEncodingPoint = addressSpace >= (17 ∷ Int)
 
-debugLevelOne :: HasReader "debug" Int m => m () -> m ()
-debugLevelOne = whenM ((1 <=) <$> ask@"debug")
+debugLevelOne ∷ HasReader "debug" Int m ⇒ m () → m ()
+debugLevelOne = whenM ((1 <=) <$> ask @"debug")
 
 --------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
 
 -- | 'varientToType' takes the type out of the variant
-varientToType :: VariantInfo -> Type
+varientToType ∷ VariantInfo → Type
 varientToType = typ'
 
 -- | 'numPortsSmall' is used for the number of ports that fit within 8/16 bits
 -- Only gets used when architectures have less than 17 bits of addressing
-numPortsSmall :: VariantInfo
+numPortsSmall ∷ VariantInfo
 numPortsSmall =
   updateVariant
     Type.i1
@@ -286,24 +287,24 @@ numPortsSmall =
         typ' = numPortsSmallValue
       }
 
-numPortsSmallType :: Type
+numPortsSmallType ∷ Type
 numPortsSmallType = typ' numPortsSmall
 
-pointerOf :: Type -> Type
+pointerOf ∷ Type → Type
 pointerOf typ = PointerType typ (AddrSpace 0)
 
-pointerSizeInt :: Num p => p
+pointerSizeInt ∷ Num p ⇒ p
 pointerSizeInt = addressSpace
 
-pointerSize :: Type
+pointerSize ∷ Type
 pointerSize = IntegerType addressSpace
 
-numPortsSmallValue :: Type
+numPortsSmallValue ∷ Type
 numPortsSmallValue = IntegerType addressSpace
 
 -- | 'numPortsLarge' is used for the number of ports that don't fit within 8/16 bits
 -- Only gets used when architectures have less than 17 bits of addressing
-numPortsLarge :: VariantInfo
+numPortsLarge ∷ VariantInfo
 numPortsLarge =
   updateVariant
     Type.i1
@@ -313,31 +314,31 @@ numPortsLarge =
         typ' = numPortsLargeValuePtr
       }
 
-numPortsLargeType :: Type
+numPortsLargeType ∷ Type
 numPortsLargeType = typ' numPortsLarge
 
-numPortsLargeValue :: Type
+numPortsLargeValue ∷ Type
 numPortsLargeValue = Type.i64
 
-numPortsLargeValueInt :: Num p => p
+numPortsLargeValueInt ∷ Num p ⇒ p
 numPortsLargeValueInt = addressSpace
 
-numPortsLargeValuePtr :: Type
+numPortsLargeValuePtr ∷ Type
 numPortsLargeValuePtr = pointerOf numPortsLargeValue
 
-numPortsPointer :: Type
+numPortsPointer ∷ Type
 numPortsPointer = pointerOf numPortsNameRef
 
-numPortsNameRef :: Type
+numPortsNameRef ∷ Type
 numPortsNameRef
   | bitSizeEncodingPoint = Type.IntegerType addressSpace
   | otherwise = Type.NamedTypeReference numPortsName
 
-numPortsName :: IsString p => p
+numPortsName ∷ IsString p ⇒ p
 numPortsName = "graph_num_ports"
 
 -- number of ports on a node or the port offset
-numPorts :: Type
+numPorts ∷ Type
 numPorts
   | bitSizeEncodingPoint = IntegerType addressSpace
   | otherwise =
@@ -349,55 +350,54 @@ numPorts
   where
     typ = createSum [numPortsLarge, numPortsSmall]
 
-numPortsSize :: Num p => p
+numPortsSize ∷ Num p ⇒ p
 numPortsSize
   | bitSizeEncodingPoint = addressSpace
   | otherwise = 1 + addressSpace
 
-nodePointerSize :: Num p => p
+nodePointerSize ∷ Num p ⇒ p
 nodePointerSize = addressSpace
 
-portTypeNameRef :: Type
+portTypeNameRef ∷ Type
 portTypeNameRef = Type.NamedTypeReference portTypeName
 
-portTypeName :: IsString p => p
+portTypeName ∷ IsString p ⇒ p
 portTypeName = "graph_port"
 
-portType :: Type -> Type
-portType nodePtr =
-  StructureType
-    { isPacked = True,
-      elementTypes =
-        [ nodePtr, -- the pointer to the other node
-          numPortsNameRef -- the offset from the base of the node where the port is
-        ]
-    }
+portType ∷ Type → Type
+portType nodePtr = StructureType
+  { isPacked = True,
+    elementTypes =
+      [ nodePtr, -- the pointer to the other node
+        numPortsNameRef -- the offset from the base of the node where the port is
+      ]
+  }
 
-portPointer :: Type
+portPointer ∷ Type
 portPointer = pointerOf portTypeNameRef
 
-portTypeSize :: Num p => p
+portTypeSize ∷ Num p ⇒ p
 portTypeSize = numPortsSize + pointerSizeInt
 
 -- TODO ∷ Figure out how to have an un-tagged union here for all baked in types
-dataType :: Type
+dataType ∷ Type
 dataType = IntegerType addressSpace
 
-dataTypeSize :: Num p => p
+dataTypeSize ∷ Num p ⇒ p
 dataTypeSize = addressSpace
 
 -- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
-nodePointer :: Type
+nodePointer ∷ Type
 nodePointer = pointerOf nodeTypeNameRef
 
-nodeTypeNameRef :: Type
+nodeTypeNameRef ∷ Type
 nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
 
-nodeTypeName :: IsString p => p
+nodeTypeName ∷ IsString p ⇒ p
 nodeTypeName = "graph_node"
 
-nodeType :: Type -> [Type] -> Type
+nodeType ∷ Type → [Type] → Type
 nodeType tag extraData
   | bitSizeEncodingPoint =
     abstracted
@@ -425,35 +425,33 @@ nodeType tag extraData
           elementTypes = []
         }
 
-dataArray :: Type
+dataArray ∷ Type
 dataArray = pointerOf (ArrayType 0 dataType)
 
-portData :: Type
+portData ∷ Type
 portData = pointerOf (ArrayType 0 portTypeNameRef)
 
 -- TODO ∷ This changes per platform
-vaList :: Type
-vaList =
-  StructureType
-    { isPacked = True,
-      elementTypes = [pointerOf Type.i8]
-    }
+vaList ∷ Type
+vaList = StructureType
+  { isPacked = True,
+    elementTypes = [pointerOf Type.i8]
+  }
 
-bothPrimary :: Type
-bothPrimary =
-  StructureType
-    { isPacked = False,
-      elementTypes = [Type.i1, nodePointer]
-    }
+bothPrimary ∷ Type
+bothPrimary = StructureType
+  { isPacked = False,
+    elementTypes = [Type.i1, nodePointer]
+  }
 
-voidStarTy :: Type
+voidStarTy ∷ Type
 voidStarTy = pointerOf VoidType
 
-voidTy :: Type
+voidTy ∷ Type
 voidTy = VoidType
 
-size_t :: Type
+size_t ∷ Type
 size_t = IntegerType addressSpace
 
-size_t_int :: Num p => p
+size_t_int ∷ Num p ⇒ p
 size_t_int = addressSpace

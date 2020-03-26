@@ -9,15 +9,15 @@ type Slot = Int
 data Port
   = -- Port, referencing another node at a particular address & slot.
     Port
-      { portAddress :: Address,
-        portSlot :: Slot
+      { portAddress ∷ Address,
+        portSlot ∷ Slot
       }
   deriving (Show, Eq, Generic, Typeable)
 
 type Kind dataTy = Int
 
 data Node dataTy
-  = Node {nodeAddress :: Address, nodeKind :: Kind dataTy}
+  = Node {nodeAddress ∷ Address, nodeKind ∷ Kind dataTy}
   deriving (Show, Eq, Generic, Typeable)
 
 {-
@@ -54,15 +54,15 @@ data Node dataTy
 data BespokeFunction opType
   = -- Bespoke function, with a unique number and an operation.
     BespokeFunction
-      { functionNumber :: Integer,
-        functionOp :: opType
+      { functionNumber ∷ Integer,
+        functionOp ∷ opType
       }
   deriving (Show, Eq, Generic, Typeable)
 
 data Net dataTy opType
   = -- Interaction net, with many nodes and definitions for all bespoke functions.
     Net
-      { netNodes :: [Node dataTy],
-        netBespokeFunctions :: [BespokeFunction opType]
+      { netNodes ∷ [Node dataTy],
+        netBespokeFunctions ∷ [BespokeFunction opType]
       }
   deriving (Show, Eq, Generic, Typeable)

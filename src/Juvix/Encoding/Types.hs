@@ -53,19 +53,19 @@ type Branches = [Symbol]
 
 data Bound
   = Bound
-      { lam :: Lambda,
+      { lam ∷ Lambda,
         -- This is to remember what ADΤ we belong to
-        adtName :: Symbol
+        adtName ∷ Symbol
       }
   deriving (Show, Generic)
 
 data Env
   = Env
-      { constructors :: Map.T Symbol Bound,
+      { constructors ∷ Map.T Symbol Bound,
         -- | adtMap is a mapping between the adt name and the ordered cases thereof
-        adtMap :: Map.T Symbol Branches,
+        adtMap ∷ Map.T Symbol Branches,
         -- | missingCases represent the missing cases of a match
-        missingCases :: [Symbol]
+        missingCases ∷ [Symbol]
       }
   deriving (Show, Generic)
 
@@ -95,5 +95,5 @@ newtype EnvS a = EnvS (StateT Env (Except Errors) a)
     )
     via WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
 
-runEnvsS :: EnvS a -> Either Errors (a, Env)
+runEnvsS ∷ EnvS a → Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env Map.empty mempty mempty))

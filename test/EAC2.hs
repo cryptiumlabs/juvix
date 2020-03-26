@@ -17,38 +17,38 @@ type Type = ET.Type ()
 
 type TypeAssignment = ET.TypeAssignment ()
 
-unitParam :: Types.Parameterisation () ()
+unitParam ∷ Types.Parameterisation () ()
 unitParam =
-  Types.Parameterisation (const (() :| [])) (\_ _ -> Nothing) undefined undefined [] []
+  Types.Parameterisation (const (() :| [])) (\_ _ → Nothing) undefined undefined [] []
 
-shouldGen ::
-  T.TestName ->
+shouldGen ∷
+  T.TestName →
   ( Either
       (EAC.Errors () ())
-      (EAC.RPT (), EAC.ParamTypeAssignment ()) ->
+      (EAC.RPT (), EAC.ParamTypeAssignment ()) →
     IO ()
-  ) ->
-  Types.TermAssignment () () ->
+  ) →
+  Types.TermAssignment () () →
   T.TestTree
 shouldGen errorString case' termAssign =
   T.testCase (show (Types.term termAssign) <> errorString) $
     validEal unitParam termAssign >>= case'
 
-shouldBeTypeable :: Types.TermAssignment () () -> T.TestTree
+shouldBeTypeable ∷ Types.TermAssignment () () → T.TestTree
 shouldBeTypeable =
-  shouldGen " should be typeable in EAC" $ \v ->
+  shouldGen " should be typeable in EAC" $ \v →
     case v of
-      Right _ -> pure ()
-      Left er -> T.assertFailure (show er)
+      Right _ → pure ()
+      Left er → T.assertFailure (show er)
 
-shouldNotBeTypeable :: Types.TermAssignment () () -> T.TestTree
+shouldNotBeTypeable ∷ Types.TermAssignment () () → T.TestTree
 shouldNotBeTypeable =
-  shouldGen " should not be typeable in EAC" $ \v ->
+  shouldGen " should not be typeable in EAC" $ \v →
     case v of
-      Right _ -> T.assertFailure "a satisfying assignment was found"
-      Left _ -> pure ()
+      Right _ → T.assertFailure "a satisfying assignment was found"
+      Left _ → pure ()
 
-eac2Tests :: T.TestTree
+eac2Tests ∷ T.TestTree
 eac2Tests =
   T.testGroup
     "EAC2"
@@ -60,13 +60,13 @@ eac2Tests =
 --shouldNotBeTypeable counterexample counterexampleAssignment,
 --shouldBeTypeable churchExp churchExpAssignment
 
-idTerm :: Term
+idTerm ∷ Term
 idTerm = Lam (intern "x") (Var (intern "x"))
 
-idAssignment :: TypeAssignment
+idAssignment ∷ TypeAssignment
 idAssignment = Map.fromList [(intern "x", SymT (intern "a"))]
 
-churchTwo :: Term
+churchTwo ∷ Term
 churchTwo =
   Lam
     (intern "s")
@@ -81,7 +81,7 @@ churchTwo =
         )
     )
 
-churchThree :: Term
+churchThree ∷ Term
 churchThree =
   Lam
     (intern "s")
@@ -99,7 +99,7 @@ churchThree =
         )
     )
 
-churchAssignment :: TypeAssignment
+churchAssignment ∷ TypeAssignment
 churchAssignment =
   Map.fromList
     [ (intern "s", Pi Usage.Omega (SymT (intern "a")) (SymT (intern "a"))),
@@ -107,7 +107,7 @@ churchAssignment =
     ]
 
 -- \y → ( (\n → n (\y → n (\_ → y))) (\x → (x (x y))) ) ∷ a → a
-counterexample :: Term
+counterexample ∷ Term
 counterexample =
   App
     ( Lam
@@ -137,17 +137,17 @@ counterexample =
         )
     )
 
-arg0 :: Type
+arg0 ∷ Type
 arg0 = SymT (intern "a")
 
-arg1 :: Type
+arg1 ∷ Type
 arg1 =
   Pi
     Usage.Omega
     (SymT (intern "a"))
     (SymT (intern "a"))
 
-counterexampleAssignment :: Map.Map Symbol Type
+counterexampleAssignment ∷ Map.Map Symbol Type
 counterexampleAssignment =
   Map.fromList
     [ (intern "n", Pi Usage.Omega arg1 arg0),
@@ -156,7 +156,7 @@ counterexampleAssignment =
       (intern "x", arg1)
     ]
 
-exp :: Term
+exp ∷ Term
 exp =
   Lam
     (intern "m")
@@ -180,20 +180,20 @@ exp =
         )
     )
 
-threeLam :: Term
+threeLam ∷ Term
 threeLam = Lam (intern "f") (Lam (intern "x") (nTimesApp 10 (Var (intern "f")) (Var (intern "x"))))
 
-threeLam2 :: Term
+threeLam2 ∷ Term
 threeLam2 = Lam (intern "f'") (Lam (intern "x'") (nTimesApp 20 (Var (intern "f'")) (Var (intern "x'"))))
 
-nTimesApp :: Int -> Term -> Term -> Term
+nTimesApp ∷ Int → Term → Term → Term
 nTimesApp 0 _ b = b
 nTimesApp n a b = App a (nTimesApp (n - 1) a b)
 
-churchExp2 :: Term
+churchExp2 ∷ Term
 churchExp2 = exp
 
-churchExp :: Term
+churchExp ∷ Term
 churchExp =
   Lam
     (intern "s'")
@@ -214,16 +214,16 @@ churchExp =
         )
     )
 
-zTy :: Type
+zTy ∷ Type
 zTy = SymT (intern "a")
 
-sTy :: Type
+sTy ∷ Type
 sTy = Pi Usage.Omega zTy zTy
 
-nat :: Type
+nat ∷ Type
 nat = Pi Usage.Omega sTy sTy
 
-churchExpAssignment :: TypeAssignment
+churchExpAssignment ∷ TypeAssignment
 churchExpAssignment =
   Map.fromList
     [ (intern "n", nat),

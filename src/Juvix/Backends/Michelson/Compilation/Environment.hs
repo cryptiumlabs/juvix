@@ -16,8 +16,8 @@ type VStack = VStack.T
 
 data Env
   = Env
-      { stack :: VStack.T,
-        compilationLog :: [CompilationLog]
+      { stack ∷ VStack.T,
+        compilationLog ∷ [CompilationLog]
       }
   deriving (Generic)
 
@@ -35,5 +35,5 @@ newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) 
     (HasThrow "compilationError" CompilationError)
     via MonadError (ExceptT CompilationError (State Env))
 
-execWithStack :: VStack.T -> EnvCompilation a -> (Either CompilationError a, Env)
+execWithStack ∷ VStack.T → EnvCompilation a → (Either CompilationError a, Env)
 execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])

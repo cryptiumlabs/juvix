@@ -7,7 +7,7 @@ import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.Nets.Default
 import Juvix.Library
 
-test2 :: InfoNet (FlipNet (Lang ()))
+test2 ∷ InfoNet (FlipNet (Lang ()))
 test2 =
   runFlipNet
     (reduceAll 10)

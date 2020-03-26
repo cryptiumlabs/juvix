@@ -6,10 +6,10 @@ import Juvix.Library hiding (empty)
 
 data Env primTy primVal
   = Env
-      { typeAssignment :: Erased.TypeAssignment primTy,
-        context :: IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal),
-        nextName :: Int,
-        nameStack :: [Int]
+      { typeAssignment ∷ Erased.TypeAssignment primTy,
+        context ∷ IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal),
+        nextName ∷ Int,
+        nameStack ∷ [Int]
       }
   deriving (Show, Eq, Generic)
 

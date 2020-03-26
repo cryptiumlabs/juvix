@@ -4,7 +4,7 @@ import Development.GitRev
 import Protolude
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 
-disclaimerDoc :: Doc
+disclaimerDoc ∷ Doc
 disclaimerDoc =
   mconcat
     [ "This is ",
@@ -15,7 +15,7 @@ disclaimerDoc =
         <> "protocol implementations in unexpected ways."
     ]
 
-aboutDoc :: Doc
+aboutDoc ∷ Doc
 aboutDoc =
   mconcat
     [ text
@@ -31,7 +31,7 @@ aboutDoc =
       disclaimerDoc
     ]
 
-versionDoc :: Doc
+versionDoc ∷ Doc
 versionDoc =
   mconcat
     [ aboutDoc,

@@ -23,28 +23,28 @@ data Val
   = Val
   deriving (Show, Eq)
 
-typeOf :: Val -> NonEmpty Ty
+typeOf ∷ Val → NonEmpty Ty
 typeOf Val = Ty :| []
 
-apply :: Val -> Val -> Maybe Val
+apply ∷ Val → Val → Maybe Val
 apply _ _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
+parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Unit"
   pure Ty
 
-parseVal :: Token.GenTokenParser String () Identity -> Parser Val
+parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
 parseVal lexer = do
   Token.reserved lexer "()"
   pure Val
 
-reservedNames :: [String]
+reservedNames ∷ [String]
 reservedNames = ["Unit", "()"]
 
-reservedOpNames :: [String]
+reservedOpNames ∷ [String]
 reservedOpNames = []
 
-t :: Parameterisation Ty Val
+t ∷ Parameterisation Ty Val
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

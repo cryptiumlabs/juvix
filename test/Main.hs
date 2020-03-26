@@ -14,7 +14,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Ingredients.Basic as T
 
-coreTests :: T.TestTree
+coreTests ∷ T.TestTree
 coreTests =
   T.testGroup
     "Core tests"
@@ -23,7 +23,7 @@ coreTests =
       CoreParser.coreParser
     ]
 
-backendTests :: T.TestTree
+backendTests ∷ T.TestTree
 backendTests =
   T.testGroup
     "Backend tests"
@@ -32,13 +32,13 @@ backendTests =
       Michelson.backendMichelson
     ]
 
-frontEndTests :: T.TestTree
+frontEndTests ∷ T.TestTree
 frontEndTests =
   T.testGroup
     "frontend tests"
     [Frontend.allParserTests]
 
-allCheckedTests :: T.TestTree
+allCheckedTests ∷ T.TestTree
 allCheckedTests =
   T.testGroup
     "All tests that are checked"
@@ -49,5 +49,5 @@ allCheckedTests =
       Erasure.erasureTests
     ]
 
-main :: IO ()
+main ∷ IO ()
 main = T.defaultMain allCheckedTests

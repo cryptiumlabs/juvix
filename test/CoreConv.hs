@@ -7,15 +7,15 @@ import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-shouldConvertHR :: HR.Term () () -> IR.Term () () -> T.TestTree
+shouldConvertHR ∷ HR.Term () () → IR.Term () () → T.TestTree
 shouldConvertHR hr ir =
   T.testCase (show hr <> " should convert to " <> show ir) (ir T.@=? hrToIR hr)
 
-shouldConvertIR :: IR.Term () () -> HR.Term () () -> T.TestTree
+shouldConvertIR ∷ IR.Term () () → HR.Term () () → T.TestTree
 shouldConvertIR ir hr =
   T.testCase (show ir <> " should convert to " <> show hr) (hr T.@=? irToHR ir)
 
-coreConversions :: T.TestTree
+coreConversions ∷ T.TestTree
 coreConversions =
   T.testGroup
     "Core Conversions"
@@ -23,7 +23,7 @@ coreConversions =
       irTohrConversion
     ]
 
-hrToirConversion :: T.TestTree
+hrToirConversion ∷ T.TestTree
 hrToirConversion =
   T.testGroup
     "Converting Human Readable form to Intermediate Readable form"
@@ -38,7 +38,7 @@ hrToirConversion =
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
     ]
 
-irTohrConversion :: T.TestTree
+irTohrConversion ∷ T.TestTree
 irTohrConversion =
   T.testGroup
     "Converting Intermediate Readable form to Human Readable form"
