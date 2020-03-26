@@ -54,8 +54,11 @@ inst ∷ Env.Reduction m ⇒ Types.NewTerm → m Env.Expanded
 inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol → var symbol
-    Ann.LamM c a b → let v = lambda c a b ty in v <$ consVal v ty
     Ann.AppM fun a → appM fun a
+    Ann.LamM c a b → do
+       v ← lambda c a b ty
+       consVal v ty
+       pure v
     Ann.Prim prim' →
       case prim' of
         Types.Inst _ → constructPrim prim' ty
@@ -112,14 +115,24 @@ isNat =
     Instructions.isNat
     (\x → if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
-lambda ∷ [Symbol] → [Symbol] → Types.Term → Types.Type → Env.Expanded
-lambda captures arguments body type' = Env.Curr Env.C
-  { Env.captures = Set.fromList captures,
-    Env.argsLeft = arguments,
-    Env.left = fromIntegral (length arguments),
-    Env.ty = type',
-    Env.fun = Env.Fun (const (inst body))
-  }
+lambda ∷ Env.Error m ⇒ [Symbol] → [Symbol] → Types.Term → Types.Type →  m Env.Expanded
+lambda captures arguments body type'
+  | length usages == length arguments =
+    pure
+      $ Env.Curr Env.C
+      { Env.captures = Set.fromList captures,
+        Env.argsLeft = annotatedArgs,
+        Env.left = fromIntegral (length arguments),
+        Env.ty = type',
+        Env.fun = Env.Fun (const (inst body))
+      }
+  | otherwise =
+    throw @"compilationError" Types.InvalidInputType
+  where
+    usages =
+      Utils.usageFromType type'
+    annotatedArgs =
+      zipWith Env.Term arguments usages
 
 var ∷ (Env.Instruction m, Env.Error m) ⇒ Symbol → m Env.Expanded
 var symb = do
@@ -149,10 +162,17 @@ var symb = do
 -- Replaced to always just replace the top element
 -- it seems all forms place a lambda at the top!
 
+-- We ignore the usage of the term coming in, however if it's already
+-- named, we don't actually change it's usage
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
-name ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
-name symb f = inst f <* modify @"stack" (VStack.nameTop symb)
+name ∷ Env.Reduction m ⇒ Env.ErasedTerm → Types.NewTerm → m Env.Expanded
+name (Env.Term symb usage) f =
+  inst f <* modify @"stack" (VStack.nameTop symb usage)
+
+nameSymb ∷ Env.Reduction m ⇒ Symbol → Types.NewTerm → m Env.Expanded
+nameSymb symb f@(Types.Ann usage _ _) =
+  inst f <* modify @"stack" (VStack.nameTop symb usage)
 
 primToFargs ∷ Num b ⇒ Types.NewPrim → Types.Type → (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
@@ -428,15 +448,19 @@ apply closure args remainingArgs = do
 
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
 
+          captureNames = fmap Env.name captured
+
+          tyList = take (length captured) (Utils.piToListTy (Env.ty closure))
+
           con = Env.C
             { Env.left = remaining,
               Env.argsLeft = left,
-              Env.captures = foldr Set.insert (Env.captures closure) captured,
+              Env.captures = foldr Set.insert (Env.captures closure) captureNames,
               Env.ty = eatType (fromIntegral totalLength) (Env.ty closure),
               Env.fun = Env.Fun $ \args →
                 Env.unFun
                   (Env.fun closure)
-                  (args <> fmap makeVar (reverse captured))
+                  (args <> zipWith makeVar (reverse captured) (reverse tyList))
             }
 
       consVal (Env.Curr con) (Env.ty con)
@@ -478,7 +502,7 @@ apply closure args remainingArgs = do
         GT → do
           let unNamed = drop (fromIntegral $ Env.left closure) args
           moreReserved ← reserveNames (fromIntegral (length unNamed))
-          traverseName (zip moreReserved unNamed)
+          traverseNameSymb (zip moreReserved unNamed)
           traverseName (zip (Env.argsLeft closure) args)
           expanded ← app
           recur expanded (moreReserved <> remainingArgs)
@@ -488,16 +512,21 @@ apply closure args remainingArgs = do
       traverseName (zip toEvalNames args)
       traverse_
         (modify @"stack" . uncurry VStack.addName)
-        (zip remainingArgs alreadyEvaledNames)
+        (zip remainingArgs (Env.name <$> alreadyEvaledNames))
 
     traverseName = traverse_ (uncurry name) . reverse
+
+    traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
 
     app =
       Env.unFun
         (Env.fun closure)
-        (makeVar <$> reverse (Env.argsLeft closure))
+        $ zipWith makeVar (reverse (Env.argsLeft closure))
+        $ reverse
+        $ Utils.piToListTy
+        $ Env.ty closure
 
-    makeVar v = Types.Ann one (Env.ty closure) (Ann.Var v)
+    makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
 
     recur (Env.Curr c) xs =
       apply c [] xs
@@ -507,6 +536,8 @@ apply closure args remainingArgs = do
     recur (Env.Constant _) _ =
       throw @"compilationError" (Types.InternalFault "apply to non lam")
     recur (Env.Expanded _) _ =
+      throw @"compilationError" (Types.InternalFault "apply to non lam")
+    recur Env.Nop _ =
       throw @"compilationError" (Types.InternalFault "apply to non lam")
 
 --------------------------------------------------------------------------------
@@ -545,7 +576,7 @@ constructPrim prim ty = do
   -- TODO ∷ set the usage of the arguments to 1
   let c = Env.Curr $ Env.C
         { Env.fun = f,
-          Env.argsLeft = names,
+          Env.argsLeft = zipWith Env.Term names (repeat one),
           Env.left = fromIntegral lPrim,
           Env.captures = Set.empty,
           Env.ty = ty
@@ -653,9 +684,9 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
   curr ← get @"stack"
   -- Step 2: Figure out what the stack will be in the body of the function.
   -- Note: these lets are dropping usages the lambda consumes.
-  let listOfArgsType = Utils.piToList ty
+  let listOfArgsType = Utils.piToListTy ty
 
-      Just returnType = snd <$> lastMay listOfArgsType
+      Just returnType = lastMay listOfArgsType
 
       termList = reverse $ zip listOfArgsType argsLeft
 
@@ -675,10 +706,11 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
   p ← protectStack $ do
     put @"stack" stackLeft
-    traverse_ (\((u, t), sym) → consVarNone sym u t) termList
+    traverse_ (\(t, Env.Term sym u) → consVarNone sym u t) termList
     -- Step 3: Compile the body of the lambda.
     insts ←
-      Env.unFun fun (fmap (\((u, t), sym) → Types.Ann u t (Ann.Var sym)) termList)
+      -- TODO Clean this up with a helper!
+      Env.unFun fun (fmap (\(t, Env.Term sym u) → Types.Ann u t (Ann.Var sym)) termList)
     returnTypePrim ← typeToPrimType returnType
     _insts ← expandedToInst returnTypePrim insts
     modify @"ops" ([unpackOps] <>)
@@ -689,7 +721,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       capturesInsts ← mapM (uncurry expandedToInst) capturesInsts
       -- TODO ∷ Reduce usages of the vstack items, due to eating n from the lambda.
       -- Step 5: find the types of the captures, and generate the type for primArg
-      argsWithTypes ← mapM (\((_, ty), sym) → typeToPrimType ty >>| (,) sym) termList
+      argsWithTypes ← mapM (\(ty, Env.Term sym _u) → typeToPrimType ty >>| (,) sym) termList
       primReturn ← typeToPrimType returnType
       let capturesTypes =
             (\x → (x, fromJust (VStack.lookupType x curr)))

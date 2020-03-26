@@ -7,9 +7,26 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Michelson.Untyped.Instr as Instr
 
+
+-- TODO ∷ make usageFromType Fold!
+
+usageFromType ∷ Ann.Type primTy primVal → [Usage.T]
+usageFromType (Ann.Pi useage _x xs) = useage : usageFromType xs
+usageFromType Ann.SymT {} = []
+usageFromType Ann.Star {} = []
+usageFromType Ann.PrimTy {} = []
+
 piToList ∷ Ann.Type primTy primVal → [(Usage.T, Ann.Type primTy primVal)]
 piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
-piToList _ = []
+piToList Ann.SymT {} = []
+piToList Ann.Star {} = []
+piToList Ann.PrimTy {} = []
+
+piToListTy ∷ Ann.Type primTy primVal → [Ann.Type primTy primVal]
+piToListTy (Ann.Pi _usage ty xs) = ty : piToListTy xs
+piToListTy Ann.SymT {} = []
+piToListTy Ann.Star {} = []
+piToListTy Ann.PrimTy {} = []
 
 unpackTuple ∷ Instr.ExpandedOp
 unpackTuple =

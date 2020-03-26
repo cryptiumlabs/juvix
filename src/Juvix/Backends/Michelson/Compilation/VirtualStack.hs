@@ -44,6 +44,9 @@ data Elem lamType
   | Val (Val lamType)
   deriving (Show, Eq, Generic)
 
+varEName ∷ Symbol → Usage.T → Maybe (Val lamType) → Elem lamType
+varEName x = VarE (Set.singleton x)
+
 varE ∷ Symbol → Maybe (Val lamType) → Elem lamType
 varE x = VarE (Set.singleton x) Usage.Omega
 
@@ -217,10 +220,10 @@ addName toFind toAdd (T stack i) = T (f <$> stack) i
       | Set.member toFind x = (VarE (Set.insert toAdd x) i t, type')
     f t = t
 
-nameTop ∷ Symbol → T lamType → T lamType
-nameTop sym t =
+nameTop ∷ Symbol → Usage.T → T lamType → T lamType
+nameTop sym usage t =
   case hd of
-    (Val i, ty) → cons (varE sym (Just i), ty) rest
+    (Val i, ty) → cons (varEName sym usage (Just i), ty) rest
     (VarE s u mb, ty) → cons (VarE (Set.insert sym s) u mb, ty) rest
   where
     hd = car t

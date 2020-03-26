@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library hiding (show)
+import qualified Juvix.Core.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
 import Prelude (Show (..))
@@ -50,8 +51,13 @@ newtype Fun = Fun (∀ m. Reduction m ⇒ [Types.NewTerm] → m Expanded)
 unFun ∷ Reduction m ⇒ Fun → [Types.NewTerm] → m Expanded
 unFun (Fun f) = f
 
--- TODO ∷ have usage information stored with the args?
--- May be fine without, as the terms we take ourselves should know their usage?
+data ErasedTerm
+  = Term
+    { name ∷ Symbol,
+      usage ∷ Usage.T
+    }
+  deriving (Show)
+
 data Curried
   = C
       { -- | The function itself that we will call when we have enough arguments
@@ -59,7 +65,7 @@ data Curried
         fun ∷ Fun,
         -- | 'argsLeft' are the arguments that are left on the stack
         -- This should also contain usage information!
-        argsLeft ∷ [Symbol],
+        argsLeft ∷ [ErasedTerm],
         -- | 'left' are the number of arguments left.
         --   This number should be (length 'argsLeft')
         left ∷ Integer,
