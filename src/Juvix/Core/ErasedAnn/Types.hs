@@ -6,14 +6,13 @@ import Juvix.Library hiding (Type)
 data Term primTy primVal
   = Var Symbol
   | Prim primVal
-  | Lam Symbol (AnnTerm primTy primVal)
   | LamM
       { capture :: [Symbol], -- Capture
         arguments :: [Symbol], -- Arguments
           -- the Term in AnnTerm is not lam!
         body :: AnnTerm primTy primVal
       }
-  | App (AnnTerm primTy primVal) (AnnTerm primTy primVal)
+  | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
   deriving (Show, Eq, Generic)
 
 data Type primTy primVal
@@ -24,5 +23,10 @@ data Type primTy primVal
     Pi Usage.T (Type primTy primVal) (Type primTy primVal)
   deriving (Show, Eq, Generic)
 
--- TODO ∷ replace with a proper type, and not a tuple!
-type AnnTerm primTy primVal = (Term primTy primVal, Usage.T, Type primTy primVal)
+data AnnTerm primTy primVal
+  = Ann
+      { usage ∷ Usage.T,
+        type' ∷ Type primTy primVal,
+        term ∷ Term primTy primVal
+      }
+  deriving (Show, Eq, Generic)

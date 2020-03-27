@@ -4,11 +4,9 @@ module Juvix.Backends.Michelson.Compilation where
 
 import qualified Data.Map as Map
 import qualified Data.Text.Lazy as L
-import Juvix.Backends.Michelson.Compilation.Environment
-import qualified Juvix.Backends.Michelson.Compilation.Lambda as Lambda
-import qualified Juvix.Backends.Michelson.Compilation.Type as Type
-import qualified Juvix.Backends.Michelson.Compilation.Util as Util
-import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
+import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
+import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
@@ -16,71 +14,69 @@ import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 
-typedContractToSource :: M.SomeContract -> Text
+typedContractToSource ∷ M.SomeContract → Text
 typedContractToSource (M.SomeContract (MT.FullContract instr _ _)) =
   L.toStrict (M.printTypedContract False instr)
 
-untypedContractToSource :: M.Contract' M.ExpandedOp -> Text
+untypedContractToSource ∷ M.Contract' M.ExpandedOp → Text
 untypedContractToSource c = L.toStrict (M.printUntypedContract False c)
 
-compileContract ::
-  Term ->
-  Type ->
-  (Either CompilationError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
+compileContract ∷
+  Term →
+  Type →
+  (Either DSL.CompError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term ty =
-  let (ret, env) = execWithStack VStack.nil (compileToMichelsonContract term ty)
-   in (ret, compilationLog env)
+  let (ret, env) = DSL.execMichelson (compileToMichelsonContract term ty)
+   in (ret, DSL.compilationLog env)
 
-compileExpr :: Term -> Type -> (Either CompilationError SomeInstr, [CompilationLog])
+compileExpr ∷ Term → Type → (Either DSL.CompError SomeInstr, [CompilationLog])
 compileExpr term ty =
-  let (ret, env) = execWithStack VStack.nil (compileToMichelsonExpr term ty)
-   in (ret, compilationLog env)
+  let (ret, env) = DSL.execMichelson (compileToMichelsonExpr term ty)
+   in (ret, DSL.compilationLog env)
 
-compileToMichelsonContract ::
-  forall m.
-  ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
-  ) =>
-  Term ->
-  Type ->
+compileToMichelsonContract ∷
+  DSL.Reduction m ⇒
+  Term →
+  Type →
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term ty = do
-  michelsonTy <- Type.typeToType ty
+  michelsonTy ← DSL.typeToPrimType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
-      michelsonOp' <- Lambda.termToMichelson term argTy
-      let michelsonOp = Util.leftSeq michelsonOp'
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
+      -- TODO: Figure out what happened to argTy.
+      michelsonOp ← DSL.instOuter term
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
-        Right _ -> do
-          optimised <- Optimisation.optimise michelsonOp
+        Right _ → do
+          optimised ← Optimisation.optimise michelsonOp
           let optimisedContract = M.Contract paramTy storageTy [optimised]
           case M.typeCheckContract Map.empty optimisedContract of
-            Right c -> pure (optimisedContract, c)
-            Left err -> throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
-        Left err -> throw @"compilationError" (DidNotTypecheck err)
-    _ -> throw @"compilationError" InvalidInputType
+            Right c → pure (optimisedContract, c)
+            Left err → throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
+        Left err → throw @"compilationError" (DidNotTypecheck err)
+    _ → throw @"compilationError" InvalidInputType
 
 -- TODO: This shouldn't require being a function.
-compileToMichelsonExpr ::
-  forall m.
-  ( HasState "stack" VStack.T m,
-    HasThrow "compilationError" CompilationError m,
-    HasWriter "compilationLog" [CompilationLog] m
-  ) =>
-  Term ->
-  Type ->
-  m (SomeInstr)
+compileToMichelsonExpr ∷
+  DSL.Reduction m ⇒
+  Term →
+  Type →
+  m SomeInstr
 compileToMichelsonExpr term ty = do
-  michelsonTy <- Type.typeToType ty
+  michelsonTy ← DSL.typeToPrimType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ -> do
-      michelsonOp' <- Lambda.termToMichelson term argTy
-      let michelsonOp = Util.leftSeq michelsonOp'
-      MT.withSomeSingT (MT.fromUType argTy) $ \sty ->
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ → do
+      -- TODO: Figure out what happened to argTy.
+      michelsonOp ← DSL.instOuter term
+      MT.withSomeSingT (MT.fromUType argTy) $ \sty →
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
-          Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
+          Right (_ M.:/ (s M.::: _)) → pure (SomeInstr s)
           -- TODO ∷ Figure out what this case should be
-          Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
-          Left err -> throw @"compilationError" (DidNotTypecheck err)
+          Right (_ M.:/ (M.AnyOutInstr _)) → undefined
+          Left err → throw @"compilationError" (DidNotTypecheck err)
+    M.Type a _ → do
+      michelsonOp ← DSL.instOuter term
+      undefined
+
+runMichelsonExpr ∷ DSL.Reduction m ⇒ NewTerm → m M.ExpandedOp
+runMichelsonExpr = DSL.instOuter
