@@ -696,15 +696,12 @@ overExactConstAns = [PrimEx (PUSH "" (M.Type TUnit "") ValueUnit)]
 
 overExactNonConstAns ∷ [Op]
 overExactNonConstAns =
-  [ SeqEx [],
-    PrimEx (PUSH "" (M.Type (TList (M.Type TOperation "")) "") ValueNil),
-    SeqEx
-      [ PrimEx (DIG 1),
-        PrimEx (DUP ""),
-        PrimEx (DUG 2)
-      ],
-    PrimEx (CAR "" ""),
-    PrimEx (PAIR "" "" "" "")
+  [ PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
+    PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
+    PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
+    PrimEx (DIPN 1 [PrimEx DROP]),
+    PrimEx (DIG 1),
+    PrimEx (DIPN 1 [PrimEx DROP])
   ]
 
 identityTermAns ∷ [Op]
