@@ -48,7 +48,7 @@ eraseTerm ::
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
-    HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)) m,
+    HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -77,10 +77,9 @@ eraseTerm parameterisation term usage ty =
         let (Right varTyIR, _) =
               IR.exec (IR.evalTerm parameterisation (hrToIR varTy) [])
         --
-        modify
-          @"context"
-          (IR.Context (IR.Annotated argUsage varTyIR) (IR.Global (show name)) :)
-        (body, _) <- eraseTerm parameterisation body bodyUsage retTy
+        modify @"context"
+          (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
+        (body, _) ← eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
         pure
@@ -102,7 +101,7 @@ eraseTerm parameterisation term usage ty =
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
-              Right (IR.Annotated fUsage fTy) -> do
+              Right (IR.Annotation fUsage fTy) → do
                 let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
                 let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
                 (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty

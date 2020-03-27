@@ -204,6 +204,8 @@ library:
     - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
     - Juvix.Core.ErasedAnn.Erasure
+    - Juvix.Core.IR.Typechecker.Types
+    - Juvix.Core.Parameterisation
 
 executables:
   juvix:

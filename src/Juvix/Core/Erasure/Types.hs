@@ -1,15 +1,15 @@
 module Juvix.Core.Erasure.Types where
 
 import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Library hiding (empty)
 
 data Env primTy primVal
   = Env
-      { typeAssignment :: Erased.TypeAssignment primTy,
-        context :: IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal),
-        nextName :: Int,
-        nameStack :: [Int]
+      { typeAssignment :: Erased.TypeAssignment primTy
+      , context :: TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)
+      , nextName :: Int
+      , nameStack :: [Int]
       }
   deriving (Show, Eq, Generic)
 
@@ -23,9 +23,9 @@ newtype EnvT primTy primVal a
     )
     via Field "typeAssignment" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    ( HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
-      HasSink "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
-      HasSource "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal))
+    ( HasState "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)),
+      HasSink "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)),
+      HasSource "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal))
     )
     via Field "context" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving

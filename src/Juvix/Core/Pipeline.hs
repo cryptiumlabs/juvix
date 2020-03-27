@@ -77,8 +77,9 @@ typecheckErase term usage ty = do
   tell @"log" [Types.LogHRtoIR ty irType]
   let (Right irTypeValue, _) = IR.exec (IR.evalTerm param irType IR.initEnv)
   -- Typecheck & return accordingly.
-  case fst (IR.exec (IR.typeTerm param 0 [] irTerm (IR.Annotated usage irTypeValue))) of
-    Right () ->
+  case IR.typeTerm param 0 [] irTerm (IR.Annotation usage irTypeValue)
+         |> IR.exec |> fst of
+    Right () → do
       case Erasure.erase param term usage ty of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)

@@ -6,19 +6,27 @@
 -- the substitution functions (substTerm and substElim).
 module Juvix.Core.IR.Evaluator where
 
--- for the 'CanSubst' instances
-
 import Control.Lens ((^?), ix)
+import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.Types
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Library hiding (show)
+import Prelude (Show (..))
+
+
+-- Evaluation environment, containing values for each bound variable
+type Env primTy primVal m = [IR.Value primTy primVal m]
+
+-- initial environment
+initEnv ∷ Env primTy primVal m
+initEnv = []
 
 -- Type for dealing with evaling terms
 type Eval termOrEval primTy primVal ext m =
-  Parameterisation primTy primVal ->
+  Param.Parameterisation primTy primVal ->
   termOrEval ext primTy primVal ->
-  IR.Env primTy primVal m ->
+  Env primTy primVal m ->
   m (IR.Value primTy primVal m)
 
 -- Type that deals with TermX conversions ontop of eval terms!
@@ -41,8 +49,7 @@ type EvalElimX primTy primVal ext m =
 
 -- evaluation of checkable terms
 evalTermWith ::
-  forall ext primTy primVal m.
-  ( HasThrow "typecheckError" (IR.TypecheckError primTy primVal m) m,
+  ( HasThrow "typecheckError" (TC.TypecheckError primTy primVal m) m,
     Show primTy,
     Show primVal
   ) =>
@@ -60,8 +67,7 @@ evalTermWith tx ex param p d =
       pure (IR.VLam (\x -> evalTermWith tx ex param e (x : d)))
 
 evalTerm ::
-  forall ext primTy primVal m.
-  ( HasThrow "typecheckError" (IR.TypecheckError primTy primVal m) m,
+  ( HasThrow "typecheckError" (TC.TypecheckError primTy primVal m) m,
     Show primTy,
     Show primVal,
     IR.TermX ext primTy primVal ~ Void,
@@ -72,8 +78,7 @@ evalTerm = evalTermWith absurd absurd
 
 -- evaluation of inferable terms
 evalElimWith ::
-  forall ext primTy primVal m.
-  ( HasThrow "typecheckError" (IR.TypecheckError primTy primVal m) m,
+  ( HasThrow "typecheckError" (TC.TypecheckError primTy primVal m) m,
     Show primTy,
     Show primVal
   ) =>
@@ -90,12 +95,11 @@ evalElimWith tx ex param p d =
       term <- evalTermWith tx ex param term d
       vapp param elim term
     IR.Bound' ii _ ->
-      fromMaybe (throw @"typecheckError" (IR.UnboundIndex ii)) $
-        pure |<< (d ^? ix (fromIntegral ii))
+      maybe (throw @"typecheckError" (TC.UnboundIndex ii)) pure $
+        d ^? ix (fromIntegral ii)
 
 evalElim ::
-  forall ext primTy primVal m.
-  ( HasThrow "typecheckError" (IR.TypecheckError primTy primVal m) m,
+  ( HasThrow "typecheckError" (TC.TypecheckError primTy primVal m) m,
     Show primTy,
     Show primVal,
     IR.TermX ext primTy primVal ~ Void,
@@ -106,22 +110,21 @@ evalElim = evalElimWith absurd absurd
 
 -- value application function
 vapp ::
-  forall primTy primVal m.
-  ( HasThrow "typecheckError" (IR.TypecheckError primTy primVal m) m,
+  ( HasThrow "typecheckError" (TC.TypecheckError primTy primVal m) m,
     Show primTy,
     Show primVal
   ) =>
-  Parameterisation primTy primVal ->
+  Param.Parameterisation primTy primVal ->
   IR.Value primTy primVal m ->
   IR.Value primTy primVal m ->
   m (IR.Value primTy primVal m)
 vapp _ (IR.VLam f) v = f v
 vapp _ (IR.VNeutral n) v = pure (IR.VNeutral (IR.NApp n v))
 vapp param (IR.VPrim x) (IR.VPrim y) =
-  case Juvix.Core.Types.apply param x y of
-    Just v -> pure (IR.VPrim v)
-    Nothing -> throw @"typecheckError" (IR.CannotApply (IR.VPrim x) (IR.VPrim y))
-vapp _ f x = throw @"typecheckError" (IR.CannotApply f x)
+  case Param.apply param x y of
+    Just v → pure (IR.VPrim v)
+    Nothing → throw @"typecheckError" (TC.CannotApply (IR.VPrim x) (IR.VPrim y))
+vapp _ f x = throw @"typecheckError" (TC.CannotApply f x)
 
 class CanSubst ext primTy primVal t where
   subst :: Natural -> IR.Elim' ext primTy primVal -> t -> t
