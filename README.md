@@ -101,11 +101,19 @@ juvix interactive
 
 ## Development
 
-[Ormolu](https://github.com/cryptiumlabs/ormolu) required for source formatting.
+### Formatter
+
+[Ormolu](https://github.com/tweag/ormolu) required for source formatting. Run
+`stack install ormolu` to get the latest version. Currently we are using version
+0.0.3.1.
+
+### Documentation Generator
 
 [Roswell](https://github.com/roswell/roswell) is required for automatic generation of documentation in [doc/Code](https://github.com/cryptiumlabs/juvix/tree/develop/doc/Code).
 
 Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install cryptiumlabs/org-generation`.
+
+### REPL
 
 To open a REPL with the library scoped:
 
