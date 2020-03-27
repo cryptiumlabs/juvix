@@ -547,19 +547,18 @@ apply closure args remainingArgs = do
 -- we can only delete things at position greater than 0.
 -- this is because if we were to delete 0, then (λx : ω i. x) would error
 deleteVar ∷ Env.Instruction m ⇒ Env.ErasedTerm → m ()
-deleteVar (Env.Term name usage)
-  | usage == Usage.Omega = do
-    stack ← get @"stack"
-    let pos = VStack.lookupAllPos name stack
-        f (VStack.Position _ 0) = pure ()
-        f (VStack.Position _ index) = do
-          addInstr (Instructions.dipN (fromIntegral index) [Instructions.drop])
-          modify @"stack" (VStack.dropPos index)
-    -- reverse is important here, as we don't decrease the pos of upcoming terms
-    -- note that this should only ever hit at most 2 elements, so the
-    -- cost of this slightly inefficient generation does not ever matter!
-    traverse_ f (reverse pos)
-  | otherwise = pure ()
+deleteVar (Env.Term name usage) = do
+  stack ← get @"stack"
+  let pos = VStack.lookupAllPos name stack
+      f (VStack.Value _) = pure ()
+      f (VStack.Position _ 0) = pure ()
+      f (VStack.Position _ index) = do
+        addInstr (Instructions.dipN (fromIntegral index) [Instructions.drop])
+        modify @"stack" (VStack.dropPos index)
+  -- reverse is important here, as we don't decrease the pos of upcoming terms
+  -- note that this should only ever hit at most 2 elements, so the
+  -- cost of this slightly inefficient generation does not ever matter!
+  traverse_ f (reverse pos)
 
 --------------------------------------------------------------------------------
 -- Effect Wrangling
@@ -656,8 +655,8 @@ consVar ∷
 consVar symb result = consVarGen symb (Just (expandedToStack result))
 
 consVarNone ∷
-  (Env.Stack m, Env.Error m) ⇒ Symbol → Usage.T → Types.Type → m ()
-consVarNone symb = consVarGen symb Nothing
+  (Env.Stack m, Env.Error m) ⇒ Env.ErasedTerm → Types.Type → m ()
+consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 
 typeToPrimType ∷ ∀ m. Env.Error m ⇒ Types.Type → m Untyped.T
 typeToPrimType ty =
@@ -727,14 +726,14 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
   p ← protectStack $ do
     put @"stack" stackLeft
-    traverse_ (\(t, Env.Term sym u) → consVarNone sym u t) termList
+    traverse_ (\(t, term) → consVarNone term t) termList
     -- Step 3: Compile the body of the lambda.
     insts ←
       -- TODO Clean this up with a helper!
       Env.unFun fun (fmap (\(t, Env.Term sym u) → Types.Ann u t (Ann.Var sym)) termList)
     returnTypePrim ← typeToPrimType returnType
     _insts ← expandedToInst returnTypePrim insts
-    modify @"ops" ([unpackOps] <>)
+    modify @"ops" (unpackOps :)
     pure Env.MichelsonLam
   case p of
     ProtectStack (Protect _val insts) _stack → do

@@ -236,19 +236,25 @@ drop n xs
     let c = car xs
      in case c of
           (VarE x i _, _)
-            | i /= mempty → drop (pred n) (updateUsage x (Usage.pred i) (cdr xs))
+            | i /= mempty →
+              drop (pred n) (updateUsage x (Usage.pred i) (cdr xs))
           _ →
             drop (pred n) (cdr xs)
 
--- This does not propagate usages!
+-- This propagates usages. This is safe, as if a var has multiple names, it thus
+-- must be the same exact var
 dropPos ∷ Natural → T lamType → T lamType
 dropPos 0 xs
-  | not (isNil xs) && inT (fst (car xs)) = cdr xs
-  | not (isNil xs) = dropPos 0 (cdr xs)
+  | not (isNil xs) && inT (fst (car xs)) =
+    updatUsageVar (car xs) (cdr xs)
+  | not (isNil xs) =
+    dropPos 0 (cdr xs)
   | otherwise = xs
 dropPos n xs
-  | not (isNil xs) && inT (fst (car xs)) = cons (car xs) (dropPos (pred n) (cdr xs))
-  | not (isNil xs) = cons (car xs) (dropPos n (cdr xs))
+  | not (isNil xs) && inT (fst (car xs)) =
+    cons (car xs) (dropPos (pred n) (cdr xs))
+  | not (isNil xs) =
+    cons (car xs) (dropPos n (cdr xs))
   | otherwise = xs
 
 updateUsageList ∷ Set Symbol → Usage.T → [(Elem lamType, b)] → [(Elem lamType, b)]
@@ -261,6 +267,10 @@ updateUsageList symbs usage = f
 
 updateUsage ∷ Set.Set Symbol → Usage.T → T lamType → T lamType
 updateUsage symbs usage (T stack i) = T (updateUsageList symbs usage stack) i
+
+updatUsageVar ∷ (Elem lamType, b) → T lamType → T lamType
+updatUsageVar (VarE syms usages _, _) t = updateUsage syms usages t
+updatUsageVar (Val _, _) t = t
 
 data Lookup lamType
   = Value (NotInStack lamType)
