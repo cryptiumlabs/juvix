@@ -1,37 +1,75 @@
 module Juvix.Backends.ArithmeticCircuit.Parameterisation where
 
-import qualified Juvix.Core.Erased.Types as J
-import qualified Juvix.Core.Types as J
-import Juvix.Library
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans as Booleans
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
+import Juvix.Core.Types hiding
+  ( apply,
+    parseTy,
+    parseVal,
+    reservedNames,
+    reservedOpNames,
+    typeOf,
+  )
+import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
-type Term = J.Term PrimVal
+-- all primitive types
+data Ty
+  = FETy FieldElements.Ty
+  | BoolTy Booleans.Ty
+  deriving (Show, Eq)
 
-type Type = J.Type PrimTy
+type BooleanVal = Booleans.Val FieldElements.F
 
-type PrimTy = ()
+-- c: primitive constant and f: functions
+data Val
+  = FEVal FieldElements.Val
+  | BoolVal BooleanVal
+  deriving (Show, Eq)
 
-type PrimVal = ()
+boolTyToAll ∷ Booleans.Ty → Ty
+boolTyToAll = BoolTy
 
-typeOf ∷ PrimVal → NonEmpty PrimTy
-typeOf () = () :| []
+boolValToAll ∷ BooleanVal → Val
+boolValToAll = BoolVal
 
-apply ∷ PrimVal → PrimVal → Maybe PrimVal
+feTyToAll ∷ FieldElements.Ty → Ty
+feTyToAll = FETy
+
+feValToAll ∷ FieldElements.Val → Val
+feValToAll = FEVal
+
+typeOf ∷ Val → NonEmpty Ty
+typeOf (BoolVal x) =
+  fmap boolTyToAll (Booleans.typeOf x)
+typeOf (FEVal x) =
+  fmap feTyToAll (FieldElements.typeOf x)
+
+apply ∷ Val → Val → Maybe Val
+apply (BoolVal x) (BoolVal y) =
+  boolValToAll <$> Booleans.apply x y
+apply (FEVal x) (FEVal y) =
+  feValToAll <$> FieldElements.apply x y
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser PrimTy
-parseTy _ = mempty
+parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
+parseTy lexer =
+  (boolTyToAll <$> Booleans.parseTy lexer) <|>
+  (feTyToAll <$> FieldElements.parseTy lexer)
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser PrimVal
-parseVal _ = mempty
+parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
+parseVal lexer =
+  (boolValToAll <$> Booleans.parseVal lexer) <|>
+  (feValToAll <$> FieldElements.parseVal lexer)
 
 reservedNames ∷ [String]
-reservedNames = []
+reservedNames = Booleans.reservedNames <> FieldElements.reservedNames
 
 reservedOpNames ∷ [String]
-reservedOpNames = []
+reservedOpNames = Booleans.reservedOpNames <> FieldElements.reservedOpNames
 
-arithmeticCircuit ∷ J.Parameterisation PrimTy PrimVal
-arithmeticCircuit = J.Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+t ∷ Parameterisation Ty Val
+t =
+  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
