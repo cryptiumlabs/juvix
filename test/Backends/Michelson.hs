@@ -10,6 +10,7 @@ import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type, show)
 import qualified Michelson.Untyped as M
+import Michelson.Untyped as M hiding (Type)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (show)
@@ -37,6 +38,13 @@ shouldCompileExpr term ty =
     (show term <> " should compile to an instruction sequence")
     (isRight (fst (compileExpr term ty)) T.@? "failed to compile")
 
+-- TODO replace this with semantic meaning not exact extraction meaning!
+shouldCompileTo ∷ Term → [Op] → T.TestTree
+shouldCompileTo term instrs =
+  T.testCase
+    ("term: " <> show term <> "\n should generate: " <> show instrs <> "\n")
+    (DSL.ops (snd (extractTest term)) T.@=? instrs)
+
 --------------------------------------------------------------------------------
 -- Test Groups
 --------------------------------------------------------------------------------
@@ -50,7 +58,12 @@ backendMichelson =
       -- identityApp2,
       -- identityExpr,
       optimiseDupDrop,
-      optimiseLambdaExec
+      optimiseLambdaExec,
+      addDoublePairTest,
+      constUIntTest,
+      overExactConstTest,
+      overExactNonConstTest,
+      identityTermTest
     ]
 
 --------------------------------------------------------------------------------
@@ -132,6 +145,21 @@ identityApp =
     \% %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; \
     \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
 
+addDoublePairTest ∷ T.TestTree
+addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
+
+constUIntTest ∷ T.TestTree
+constUIntTest = shouldCompileTo constUInt constUIntAns
+
+overExactConstTest ∷ T.TestTree
+overExactConstTest = shouldCompileTo overExactConst overExactConstAns
+
+overExactNonConstTest ∷ T.TestTree
+overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
+
+identityTermTest ∷ T.TestTree
+identityTermTest = shouldCompileTo identityTerm identityTermAns
+
 --------------------------------------------------------------------------------
 -- Terms to test against
 --------------------------------------------------------------------------------
@@ -160,13 +188,6 @@ lamxx =
 
 lookupX ∷ Term
 lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
-
--- [SeqEx
---  [PrimEx (DUP @)
---  ,PrimEx (CAR @ %)
---  ,PrimEx (DIP [PrimEx (CDR @ %)])
---  ,PrimEx (DIP [SeqEx []])]
---  ,PrimEx (DIG 0)]
 
 constUInt ∷ Term
 constUInt =
@@ -295,27 +316,13 @@ overExactGen x =
       )
       [x, x, x]
 
--- Optimal code generation
--- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
 overExactConst ∷ Term
 overExactConst = overExactGen unitExpr1
-
--- overExactNonConst generates:
--- Seems fairly optimal
--- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,PrimEx (DIG 2)]
 
 overExactNonConst ∷ Term
 overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)
 
 -- IdentityTerm generates
--- [SeqEx []
--- , PrimEx (PUSH @ (Type (TList (Type TOperation :)) :) ValueNil)
--- , SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
--- , PrimEx (CAR @ %)
--- , PrimEx (PAIR : @ % %)]
 
 identityTerm ∷ Term
 identityTerm =
@@ -414,35 +421,6 @@ addPairs name =
     t' = J.Pi (SNat 2) (primTy pairInt) t
 
     xLook = Ann one (primTy pairInt) (J.Var name)
-
--- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
---   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
---   ,PrimEx (PAIR : @ % %)
---   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
---   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
---   ,PrimEx (PAIR : @ % %)
---   ,PrimEx (PAIR : @ % %)  -- stack: [((3,4),(5,6))]
---   ,SeqEx [PrimEx (DIG 0)
---          ,PrimEx (DUP @)
---          ,PrimEx (DUG 1)] -- stack: [((3,4),(5,6)) : ((3,4),(5,6))]
---   ,PrimEx (CAR @ %)       -- stack: [(3,4) : ((3,4),(5,6))]
---   ,SeqEx [PrimEx (DIG 0)
---          ,PrimEx (DUP @)
---          ,PrimEx (DUG 1)] -- stack: [(3,4) : (3,4) : ((3,4),(5,6))]
---   ,PrimEx (CAR @ %)       -- stack: [3 : (3,4) : ((3,4),(5,6))]
---   ,PrimEx (DIG 1)         -- stack: [(3,4) : 3 : ((3,4),(5,6))]
---   ,PrimEx (CDR @ %)       -- stack: [4 : 3 : ((3,4),(5,6))]
---   ,PrimEx (ADD @)         -- stack: [7 : ((3,4),(5,6))]
---   ,PrimEx (DIG 1)         -- stack: [((3,4),(5,6)) : 7]
---   ,PrimEx (CDR @ %)       -- stack: [(5,6) : 7]
---   ,SeqEx [PrimEx (DIG 0)
---          ,PrimEx (DUP @)
---          ,PrimEx (DUG 1)] -- stack: [(5,6) : (5,6) : 7]
---   ,PrimEx (CAR @ %)       -- stack: [5 : (5,6) : 7]
---   ,PrimEx (DIG 1)         -- stack: [(5,6) : 5 : 7]
---   ,PrimEx (CDR @ %)       -- stack: [5 : 6 : 7]
---   ,PrimEx (ADD @)         -- stack: [11 : 7]
---   ,PrimEx (PAIR : @ % %)] -- stack: [(11,7)]
 
 addDoublePairs ∷ Term
 addDoublePairs =
@@ -629,6 +607,152 @@ identityAppExpr2 =
             ]
       )
       [Ann one primPairTy2 (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
+
+--------------------------------------------------------------------------------
+-- Answers to Tests
+--------------------------------------------------------------------------------
+
+constUIntAns ∷ [Op]
+constUIntAns =
+  [ PrimEx
+      ( LAMBDA
+          ""
+          ( M.Type
+              ( TLambda
+                  ( M.Type
+                      ( TPair
+                          ""
+                          ""
+                          (M.Type TUnit "")
+                          ( M.Type
+                              ( TPair
+                                  ""
+                                  ""
+                                  (M.Type (Tc CInt) "")
+                                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+                              )
+                              ""
+                          )
+                      )
+                      ""
+                  )
+                  (M.Type (Tc CInt) "")
+              )
+              ""
+          )
+          (M.Type (Tc CInt) "")
+          [ SeqEx
+              [ PrimEx (DUP ""),
+                PrimEx (CAR "" ""),
+                PrimEx (DIP [PrimEx (CDR "" "")]),
+                PrimEx (DIP [SeqEx []])
+              ],
+            PrimEx (DIG 0),
+            PrimEx (DIPN 1 [PrimEx DROP])
+          ]
+      )
+  ]
+
+addDoublePairsAns ∷ [Op]
+addDoublePairsAns =
+  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
+    PrimEx (PAIR "" "" "" ""),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 5)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 6)),
+    PrimEx (PAIR "" "" "" ""),
+    PrimEx (PAIR "" "" "" ""), -- stack: [((3,4),(5,6))]
+    SeqEx
+      [ PrimEx (DIG 0),
+        PrimEx (DUP ""),
+        PrimEx (DUG 1) --         stack: [((3,4),(5,6)) : ((3,4),(5,6))]
+      ],
+    PrimEx (CAR "" ""), --        stack: [(3,4) : ((3,4),(5,6))]
+    SeqEx
+      [ PrimEx (DIG 0),
+        PrimEx (DUP ""),
+        PrimEx (DUG 1) --         stack: [(3,4) : (3,4) : ((3,4),(5,6))]
+      ],
+    PrimEx (CAR "" ""), --        stack: [3 : (3,4) : ((3,4),(5,6))]
+    PrimEx (DIG 1), --            stack: [(3,4) : 3 : ((3,4),(5,6))]
+    PrimEx (CDR "" ""), --        stack: [4 : 3 : ((3,4),(5,6))]
+    PrimEx (ADD ""), --           stack: [7 : ((3,4),(5,6))]
+    PrimEx (DIG 1), --            stack: [((3,4),(5,6)) : 7]
+    PrimEx (CDR "" ""), --        stack: [(5,6) : 7]
+    SeqEx
+      [ PrimEx (DIG 0),
+        PrimEx (DUP ""),
+        PrimEx (DUG 1) --         stack: [(5,6) : (5,6) : 7]
+      ],
+    PrimEx (CAR "" ""), --        stack: [5 : (5,6) : 7]
+    PrimEx (DIG 1), --            stack: [(5,6) : 5 : 7]
+    PrimEx (CDR "" ""), --        stack: [5 : 6 : 7]
+    PrimEx (ADD ""), --           stack: [11 : 7]
+    PrimEx (PAIR "" "" "" "") --  stack: [(11,7)]
+  ]
+
+overExactConstAns ∷ [Op]
+overExactConstAns = [PrimEx (PUSH "" (M.Type TUnit "") ValueUnit)]
+
+overExactNonConstAns ∷ [Op]
+overExactNonConstAns =
+  [ SeqEx [],
+    PrimEx (PUSH "" (M.Type (TList (M.Type TOperation "")) "") ValueNil),
+    SeqEx
+      [ PrimEx (DIG 1),
+        PrimEx (DUP ""),
+        PrimEx (DUG 2)
+      ],
+    PrimEx (CAR "" ""),
+    PrimEx (PAIR "" "" "" "")
+  ]
+
+identityTermAns ∷ [Op]
+identityTermAns =
+  [ PrimEx
+      ( LAMBDA
+          ""
+          ( M.Type
+              ( TLambda
+                  ( M.Type
+                      ( TPair
+                          ""
+                          ""
+                          (M.Type TUnit "")
+                          ( M.Type
+                              ( TPair
+                                  ""
+                                  ""
+                                  ( M.Type
+                                      ( TPair
+                                          ""
+                                          ""
+                                          (M.Type TUnit "")
+                                          (M.Type TUnit "")
+                                      )
+                                      ""
+                                  )
+                                  (M.Type TUnit "")
+                              )
+                              ""
+                          )
+                      )
+                      ""
+                  )
+                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+              )
+              ""
+          )
+          (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+          [ SeqEx [],
+            PrimEx (PUSH "" (M.Type (TList (M.Type TOperation "")) "") ValueNil),
+            SeqEx [PrimEx (DIG 1), PrimEx (DUP ""), PrimEx (DUG 2)],
+            PrimEx (CAR "" ""),
+            PrimEx (PAIR "" "" "" ""),
+            PrimEx (DIPN 1 [PrimEx DROP])
+          ]
+      )
+  ]
 
 --------------------------------------------------------------------------------
 -- Type Abstractions

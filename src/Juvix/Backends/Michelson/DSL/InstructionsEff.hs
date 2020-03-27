@@ -547,7 +547,7 @@ apply closure args remainingArgs = do
 -- we can only delete things at position greater than 0.
 -- this is because if we were to delete 0, then (λx : ω i. x) would error
 deleteVar ∷ Env.Instruction m ⇒ Env.ErasedTerm → m ()
-deleteVar (Env.Term name usage) = do
+deleteVar (Env.Term name _usage) = do
   stack ← get @"stack"
   let pos = VStack.lookupAllPos name stack
       f (VStack.Value _) = pure ()
