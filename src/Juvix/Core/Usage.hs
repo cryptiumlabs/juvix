@@ -38,7 +38,7 @@ instance Semiring NatAndw where
   Omega <.> _ = Omega
   _ <.> Omega = Omega
 
-pred ∷ NatAndw → NatAndw
+pred :: NatAndw -> NatAndw
 pred (SNat x) = SNat (x - 1)
 pred Omega = Omega
 

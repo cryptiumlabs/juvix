@@ -14,69 +14,69 @@ import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 
-typedContractToSource ∷ M.SomeContract → Text
+typedContractToSource :: M.SomeContract -> Text
 typedContractToSource (M.SomeContract (MT.FullContract instr _ _)) =
   L.toStrict (M.printTypedContract False instr)
 
-untypedContractToSource ∷ M.Contract' M.ExpandedOp → Text
+untypedContractToSource :: M.Contract' M.ExpandedOp -> Text
 untypedContractToSource c = L.toStrict (M.printUntypedContract False c)
 
-compileContract ∷
-  Term →
-  Type →
+compileContract ::
+  Term ->
+  Type ->
   (Either DSL.CompError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
 compileContract term ty =
   let (ret, env) = DSL.execMichelson (compileToMichelsonContract term ty)
    in (ret, DSL.compilationLog env)
 
-compileExpr ∷ Term → Type → (Either DSL.CompError SomeInstr, [CompilationLog])
+compileExpr :: Term -> Type -> (Either DSL.CompError SomeInstr, [CompilationLog])
 compileExpr term ty =
   let (ret, env) = DSL.execMichelson (compileToMichelsonExpr term ty)
    in (ret, DSL.compilationLog env)
 
-compileToMichelsonContract ∷
-  DSL.Reduction m ⇒
-  Term →
-  Type →
+compileToMichelsonContract ::
+  DSL.Reduction m =>
+  Term ->
+  Type ->
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term ty = do
-  michelsonTy ← DSL.typeToPrimType ty
+  michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ → do
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
       -- TODO: Figure out what happened to argTy.
-      michelsonOp ← DSL.instOuter term
+      michelsonOp <- DSL.instOuter term
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
-        Right _ → do
-          optimised ← Optimisation.optimise michelsonOp
+        Right _ -> do
+          optimised <- Optimisation.optimise michelsonOp
           let optimisedContract = M.Contract paramTy storageTy [optimised]
           case M.typeCheckContract Map.empty optimisedContract of
-            Right c → pure (optimisedContract, c)
-            Left err → throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
-        Left err → throw @"compilationError" (DidNotTypecheck err)
-    _ → throw @"compilationError" InvalidInputType
+            Right c -> pure (optimisedContract, c)
+            Left err -> throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
+        Left err -> throw @"compilationError" (DidNotTypecheck err)
+    _ -> throw @"compilationError" InvalidInputType
 
 -- TODO: This shouldn't require being a function.
-compileToMichelsonExpr ∷
-  DSL.Reduction m ⇒
-  Term →
-  Type →
+compileToMichelsonExpr ::
+  DSL.Reduction m =>
+  Term ->
+  Type ->
   m SomeInstr
 compileToMichelsonExpr term ty = do
-  michelsonTy ← DSL.typeToPrimType ty
+  michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ → do
+    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ -> do
       -- TODO: Figure out what happened to argTy.
-      michelsonOp ← DSL.instOuter term
-      MT.withSomeSingT (MT.fromUType argTy) $ \sty →
+      michelsonOp <- DSL.instOuter term
+      MT.withSomeSingT (MT.fromUType argTy) $ \sty ->
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
-          Right (_ M.:/ (s M.::: _)) → pure (SomeInstr s)
+          Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
           -- TODO ∷ Figure out what this case should be
-          Right (_ M.:/ (M.AnyOutInstr _)) → undefined
-          Left err → throw @"compilationError" (DidNotTypecheck err)
-    M.Type a _ → do
-      michelsonOp ← DSL.instOuter term
+          Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
+          Left err -> throw @"compilationError" (DidNotTypecheck err)
+    M.Type a _ -> do
+      michelsonOp <- DSL.instOuter term
       undefined
 
-runMichelsonExpr ∷ DSL.Reduction m ⇒ NewTerm → m M.ExpandedOp
+runMichelsonExpr :: DSL.Reduction m => NewTerm -> m M.ExpandedOp
 runMichelsonExpr = DSL.instOuter

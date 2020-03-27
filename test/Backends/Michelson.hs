@@ -20,26 +20,26 @@ import Prelude (show)
 --------------------------------------------------------------------------------
 
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
-shouldCompile ∷ Term → Type → Text → T.TestTree
+shouldCompile :: Term -> Type -> Text -> T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
     (Right contract T.@=? ((untypedContractToSource . fst) |<< fst (compileContract term ty)))
 
-shouldOptimise ∷ Op → Op → T.TestTree
+shouldOptimise :: Op -> Op -> T.TestTree
 shouldOptimise instr opt =
   T.testCase
     (show instr <> " should optimise to " <> show opt)
     (opt T.@=? optimiseSingle instr)
 
-shouldCompileExpr ∷ Term → Type → T.TestTree
+shouldCompileExpr :: Term -> Type -> T.TestTree
 shouldCompileExpr term ty =
   T.testCase
     (show term <> " should compile to an instruction sequence")
     (isRight (fst (compileExpr term ty)) T.@? "failed to compile")
 
 -- TODO replace this with semantic meaning not exact extraction meaning!
-shouldCompileTo ∷ Term → [Op] → T.TestTree
+shouldCompileTo :: Term -> [Op] -> T.TestTree
 shouldCompileTo term instrs =
   T.testCase
     ("term: " <> show term <> "\n should generate: " <> show instrs <> "\n")
@@ -49,7 +49,7 @@ shouldCompileTo term instrs =
 -- Test Groups
 --------------------------------------------------------------------------------
 
-backendMichelson ∷ T.TestTree
+backendMichelson :: T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
@@ -70,50 +70,50 @@ backendMichelson =
 -- Tests
 --------------------------------------------------------------------------------
 
-optimiseDupDrop ∷ T.TestTree
+optimiseDupDrop :: T.TestTree
 optimiseDupDrop =
   shouldOptimise
     (Instructions.dup <> Instructions.drop)
     (M.SeqEx [])
 
-optimiseLambdaExec ∷ T.TestTree
+optimiseLambdaExec :: T.TestTree
 optimiseLambdaExec =
   shouldOptimise
     (Instructions.lambda Untyped.unit Untyped.unit [] <> Instructions.exec)
     (M.SeqEx [])
 
-identityExpr ∷ T.TestTree
+identityExpr :: T.TestTree
 identityExpr =
   shouldCompileExpr
     identityTerm2
     identityType2
 
-identityExpr2 ∷ T.TestTree
+identityExpr2 :: T.TestTree
 identityExpr2 =
   shouldCompileExpr
     identityAppExpr
     identityType2
 
-identityExpr3 ∷ T.TestTree
+identityExpr3 :: T.TestTree
 identityExpr3 =
   shouldCompileExpr
     identityAppExpr2
     identityType2
 
-identityApp2 ∷ T.TestTree
+identityApp2 :: T.TestTree
 identityApp2 =
   shouldCompile
     identityAppTerm2
     identityType
     ""
 
-unitTest ∷ T.TestTree
+unitTest :: T.TestTree
 unitTest =
   shouldCompileExpr unitExpr1 (J.PrimTy (PrimTy unit))
 
 -- compileExpr unitExpr1 (J.PrimTy (PrimTy unit))
 
-identityFn ∷ T.TestTree
+identityFn :: T.TestTree
 identityFn =
   shouldCompile
     identityTerm
@@ -128,7 +128,7 @@ identityFn =
     \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR \
     \% %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
 
-identityApp ∷ T.TestTree
+identityApp :: T.TestTree
 identityApp =
   shouldCompile
     identityAppTerm
@@ -145,19 +145,19 @@ identityApp =
     \% %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; \
     \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
 
-addDoublePairTest ∷ T.TestTree
+addDoublePairTest :: T.TestTree
 addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
 
-constUIntTest ∷ T.TestTree
+constUIntTest :: T.TestTree
 constUIntTest = shouldCompileTo constUInt constUIntAns
 
-overExactConstTest ∷ T.TestTree
+overExactConstTest :: T.TestTree
 overExactConstTest = shouldCompileTo overExactConst overExactConstAns
 
-overExactNonConstTest ∷ T.TestTree
+overExactNonConstTest :: T.TestTree
 overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
 
-identityTermTest ∷ T.TestTree
+identityTermTest :: T.TestTree
 identityTermTest = shouldCompileTo identityTerm identityTermAns
 
 --------------------------------------------------------------------------------
@@ -165,31 +165,31 @@ identityTermTest = shouldCompileTo identityTerm identityTermAns
 --------------------------------------------------------------------------------
 
 -- TODO ∷ promote to a tasty test!
-extractTest ∷ NewTerm → (Either DSL.CompError M.ExpandedOp, DSL.Env)
+extractTest :: NewTerm -> (Either DSL.CompError M.ExpandedOp, DSL.Env)
 extractTest = DSL.execMichelson . runMichelsonExpr
 
 testRun = extractTest unitExpr1
 
-unitExpr1 ∷ Term
+unitExpr1 :: Term
 unitExpr1 =
   Ann
     one
     (primTy Untyped.unit)
     (J.Prim (Constant M.ValueUnit))
 
-symbIdent ∷ Term
+symbIdent :: Term
 symbIdent =
   Ann one (primTy Untyped.unit) (J.AppM lamxx [unitExpr1])
 
-lamxx ∷ Term
+lamxx :: Term
 lamxx =
   Ann one (J.Pi one (primTy Untyped.unit) (primTy Untyped.unit)) $
     J.LamM [] ["x"] lookupX
 
-lookupX ∷ Term
+lookupX :: Term
 lookupX = Ann one (primTy Untyped.unit) (J.Var "x")
 
-constUInt ∷ Term
+constUInt :: Term
 constUInt =
   Ann
     one
@@ -208,7 +208,7 @@ constUInt =
 --        ,PrimEx (DUP @)
 --        ,PrimEx (DUG 1)]]
 
-nonConstApp ∷ Term
+nonConstApp :: Term
 nonConstApp =
   Ann
     one
@@ -220,14 +220,14 @@ nonConstApp =
       ]
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
-constApp ∷ Term
+constApp :: Term
 constApp =
   Ann
     one
     (primTy Untyped.unit)
     $ J.AppM constUInt [unitExpr1, annIntOne 3]
 
-pairGen ∷ [AnnTerm PrimTy NewPrim] → AnnTerm PrimTy NewPrim
+pairGen :: [AnnTerm PrimTy NewPrim] -> AnnTerm PrimTy NewPrim
 pairGen =
   Ann
     one
@@ -244,19 +244,19 @@ pairGen =
           $ Instructions.toNewPrimErr Instructions.pair
       )
 
-pairConstant ∷ Term
+pairConstant :: Term
 pairConstant = pairGen [unitExpr1, unitExpr1]
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (PAIR : @ % %)]
 
-pairNotConstant ∷ Term
+pairNotConstant :: Term
 pairNotConstant = pairGen [unitExpr1, push1 M.ValueUnit Untyped.unit]
 
 -- | 'underExactGen' tests for under application of a multi argument lambda
 -- then gives it the exact number of arguments
-underExactGen ∷ Term → Term
+underExactGen :: Term -> Term
 underExactGen x =
   Ann
     one
@@ -281,7 +281,7 @@ underExactGen x =
       [x]
 
 -- Generates optimal code!
-underExactConst ∷ Term
+underExactConst :: Term
 underExactConst = underExactGen unitExpr1
 
 -- underExactNonConst generates:
@@ -292,12 +292,12 @@ underExactConst = underExactGen unitExpr1
 
 -- note the dup, this is because in the stack, we pushed it as omega
 -- if we did better constant propagation this would be free
-underExactNonConst ∷ Term
+underExactNonConst :: Term
 underExactNonConst = underExactGen (push1 M.ValueUnit Untyped.unit)
 
 -- | 'overExactGen' tests for overapplication of a multi argument lambda
 -- then feeds the rest of the arguments into the inner lambda perfectly
-overExactGen ∷ Term → Term
+overExactGen :: Term -> Term
 overExactGen x =
   Ann
     one
@@ -316,15 +316,15 @@ overExactGen x =
       )
       [x, x, x]
 
-overExactConst ∷ Term
+overExactConst :: Term
 overExactConst = overExactGen unitExpr1
 
-overExactNonConst ∷ Term
+overExactNonConst :: Term
 overExactNonConst = overExactGen (push1 M.ValueUnit Untyped.unit)
 
 -- IdentityTerm generates
 
-identityTerm ∷ Term
+identityTerm :: Term
 identityTerm =
   Ann one identityType
     $ J.LamM [] ["x"]
@@ -356,7 +356,7 @@ identityTerm =
             [Ann one (primTy unitPair) (J.Var "x")]
       ]
 
-intPair ∷ Integer → Integer → Term
+intPair :: Integer -> Integer -> Term
 intPair x y =
   Ann one t $
     J.AppM
@@ -380,7 +380,7 @@ intPair x y =
 -- ,PrimEx (PAIR : @ % %)
 -- ,PrimEx (PAIR : @ % %)]
 
-intPairs1 ∷ Term
+intPairs1 :: Term
 intPairs1 =
   Ann (SNat 2) (primTy (Untyped.pair pairInt pairInt)) $
     J.AppM
@@ -404,7 +404,7 @@ intPairs1 =
 -- ,PrimEx (CDR @ %)
 -- ,PrimEx (ADD @)]
 
-addPairs ∷ Symbol → Term
+addPairs :: Symbol -> Term
 addPairs name =
   Ann one t'
     $ J.LamM [] [name]
@@ -417,12 +417,10 @@ addPairs name =
       [car int int xLook, cdr int int xLook]
   where
     t = primTy int
-
     t' = J.Pi (SNat 2) (primTy pairInt) t
-
     xLook = Ann one (primTy pairInt) (J.Var name)
 
-addDoublePairs ∷ Term
+addDoublePairs :: Term
 addDoublePairs =
   Ann one t $
     J.AppM
@@ -441,15 +439,12 @@ addDoublePairs =
       [intPairs1]
   where
     t = primTy pairInt
-
     pairIntType =
       J.Pi one (primTy int)
         $ J.Pi one (primTy int)
         $ primTy pairInt
-
     xLook =
       Ann one (primTy (Untyped.pair pairInt pairInt)) (J.Var "y")
-
     applyPlus term name =
       Ann one (primTy int) (J.AppM (addPairs name) [term])
 
@@ -459,7 +454,7 @@ identityCall =
   Ann one (primTy Untyped.unit) $
     J.AppM identityTerm2 [push1Int 3]
 
-identityTerm2 ∷ Term
+identityTerm2 :: Term
 identityTerm2 =
   Ann one identityType
     $ J.LamM [] ["x"]
@@ -483,7 +478,7 @@ identityTerm2 =
           $ J.Var "x"
       ]
 
-primLam ∷ NonEmpty M.Type → Type
+primLam :: NonEmpty M.Type -> Type
 primLam (ty :| []) = J.PrimTy (PrimTy ty)
 primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
@@ -496,7 +491,7 @@ primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 --   ,PrimEx (DIPN 1 [PrimEx DROP])
 --   ,PrimEx (DIPN 1 [PrimEx DROP])]
 
-identityAppTerm ∷ Term
+identityAppTerm :: Term
 identityAppTerm =
   Ann one identityType
     $ J.LamM [] ["y"]
@@ -517,7 +512,7 @@ identityAppTerm =
       )
       [Ann one (primTy unitPair) (J.Var "y")]
 
-identityAppExpr ∷ Term
+identityAppExpr :: Term
 identityAppExpr =
   Ann one identityType2
     $ J.LamM [] ["y"]
@@ -550,7 +545,7 @@ identityAppExpr =
       )
       [Ann one (primTy unitPair) (J.Var "y")]
 
-identityAppTerm2 ∷ Term
+identityAppTerm2 :: Term
 identityAppTerm2 =
   Ann one identityType
     $ J.LamM [] ["x"]
@@ -576,7 +571,7 @@ identityAppTerm2 =
       )
       [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
-identityAppExpr2 ∷ Term
+identityAppExpr2 :: Term
 identityAppExpr2 =
   Ann
     one
@@ -612,7 +607,7 @@ identityAppExpr2 =
 -- Answers to Tests
 --------------------------------------------------------------------------------
 
-constUIntAns ∷ [Op]
+constUIntAns :: [Op]
 constUIntAns =
   [ PrimEx
       ( LAMBDA
@@ -653,7 +648,7 @@ constUIntAns =
       )
   ]
 
-addDoublePairsAns ∷ [Op]
+addDoublePairsAns :: [Op]
 addDoublePairsAns =
   [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
     PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
@@ -691,10 +686,10 @@ addDoublePairsAns =
     PrimEx (PAIR "" "" "" "") --  stack: [(11,7)]
   ]
 
-overExactConstAns ∷ [Op]
+overExactConstAns :: [Op]
 overExactConstAns = [PrimEx (PUSH "" (M.Type TUnit "") ValueUnit)]
 
-overExactNonConstAns ∷ [Op]
+overExactNonConstAns :: [Op]
 overExactNonConstAns =
   [ PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
     PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
@@ -704,7 +699,7 @@ overExactNonConstAns =
     PrimEx (DIPN 1 [PrimEx DROP])
   ]
 
-identityTermAns ∷ [Op]
+identityTermAns :: [Op]
 identityTermAns =
   [ PrimEx
       ( LAMBDA
@@ -755,55 +750,55 @@ identityTermAns =
 -- Type Abstractions
 --------------------------------------------------------------------------------
 
-fstTy ∷ Type
+fstTy :: Type
 fstTy =
   J.Pi one (primTy unitPair) (primTy Untyped.unit)
 
-pairTy ∷ Type
+pairTy :: Type
 pairTy = primPairTy
 
-identityType ∷ Type
+identityType :: Type
 identityType =
   J.Pi Omega (primTy unitPair) (primTy (Untyped.pair opl unit))
 
-identityType2 ∷ Type
+identityType2 :: Type
 identityType2 =
   J.Pi one (primTy unitPair) (primTy unitPair)
 
-unitl ∷ M.Type
+unitl :: M.Type
 unitl = Untyped.list Untyped.unit
 
-unitPair ∷ M.Type
+unitPair :: M.Type
 unitPair = Untyped.pair unit unit
 
-opl ∷ M.Type
+opl :: M.Type
 opl = Untyped.list Untyped.operation
 
-unit ∷ M.Type
+unit :: M.Type
 unit = Untyped.unit
 
-primPairTy ∷ Type
+primPairTy :: Type
 primPairTy =
   J.Pi one (primTy opl)
     $ J.Pi one (primTy Untyped.unit)
     $ primTy
     $ Untyped.pair opl Untyped.unit
 
-primPairTy2 ∷ Type
+primPairTy2 :: Type
 primPairTy2 =
   J.Pi one (primTy unitl)
     $ J.Pi one (primTy Untyped.unit)
     $ primTy
     $ Untyped.pair unitl Untyped.unit
 
-int ∷ M.Type
+int :: M.Type
 int = Untyped.tc Untyped.int
 
-pairInt ∷ M.Type
+pairInt :: M.Type
 pairInt =
   Untyped.pair int int
 
-car ∷ M.Type → M.Type → Term → Term
+car :: M.Type -> M.Type -> Term -> Term
 car pairFst pairSnd pair =
   Ann one (primTy pairFst) $
     J.AppM
@@ -814,7 +809,7 @@ car pairFst pairSnd pair =
       )
       [pair]
 
-cdr ∷ M.Type → M.Type → Term → Term
+cdr :: M.Type -> M.Type -> Term -> Term
 cdr pairFst pairSnd pair =
   Ann one (primTy pairSnd) $
     J.AppM
@@ -829,17 +824,17 @@ cdr pairFst pairSnd pair =
 -- general abstractions
 --------------------------------------------------------------------------------
 
-primTy ∷ M.Type → J.Type PrimTy primVal
+primTy :: M.Type -> J.Type PrimTy primVal
 primTy = J.PrimTy . PrimTy
 
-annIntOne ∷ Integer → Term
+annIntOne :: Integer -> Term
 annIntOne i =
   Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt i)))
 
-push1Int ∷ Integer → AnnTerm PrimTy NewPrim
+push1Int :: Integer -> AnnTerm PrimTy NewPrim
 push1Int i = push1 (M.ValueInt i) (Untyped.tc Untyped.int)
 
-push1 ∷ M.Value' Op → M.Type → AnnTerm PrimTy NewPrim
+push1 :: M.Value' Op -> M.Type -> AnnTerm PrimTy NewPrim
 push1 const ty =
   Ann
     one
