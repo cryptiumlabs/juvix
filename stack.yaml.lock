@@ -236,6 +236,27 @@ packages:
   original:
     hackage: web-routes-th-0.22.6.5@sha256:bdbb13f1c2307ca8b27c45c6cfd03e5c9b014c096e9b661a672625d46e0f6bb2,1561
 - completed:
+    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+    pantry-tree:
+      size: 1229
+      sha256: 99ee4e8a10529dbd49ccb0f88a1b9b452c6b6a60971360983647ac1287d69ee9
+  original:
+    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+- completed:
+    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+    pantry-tree:
+      size: 472
+      sha256: 8bc255dfd2276220edb94f6c3139b204e66fe85d612e24f80ff63a757da64cc4
+  original:
+    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+- completed:
+    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+    pantry-tree:
+      size: 2191
+      sha256: 4337652dac76bfaea64e7d5498293df616055c89f67c18cdd0f182be98c9a355
+  original:
+    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+- completed:
     size: 24276
     url: https://github.com/acid-state/safecopy/archive/1be0894daeefff5126b25c9483ce2bf21845d05b.tar.gz
     cabal-file:

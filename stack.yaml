@@ -38,6 +38,9 @@ extra-deps:
 - userid-0.1.3.4@sha256:607890fb4363c1d63368a2e96920d3671955feae815d5e2622e35717badad6f6,1172
 - boomerang-1.4.5.7@sha256:67358e1ed44db2da2bf5ba8b5ccde4e3cd19adbc286c5308dba448f89fb03c4a,1979
 - web-routes-th-0.22.6.5@sha256:bdbb13f1c2307ca8b27c45c6cfd03e5c9b014c096e9b661a672625d46e0f6bb2,1561
+- arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+- galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+- bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 - github: acid-state/safecopy
   commit: 1be0894daeefff5126b25c9483ce2bf21845d05b
 - github: seereason/sr-extra
