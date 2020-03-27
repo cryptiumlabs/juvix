@@ -19,6 +19,11 @@ IR.extendTerm "Term" [t|T|] $
 IR.extendElim "Elim" [t|T|] $
   IR.defaultExtElim
     { IR.typeApp = Ex.Ann $ \primTy primVal ->
-        [t|(Usage.T, IR.Term' T $primTy $primVal,
-          Usage.T, IR.Term' T $primTy $primVal)|]
+        [t|
+          ( Usage.T,
+            IR.Term' T $primTy $primVal,
+            Usage.T,
+            IR.Term' T $primTy $primVal
+          )
+          |]
     }

@@ -34,8 +34,13 @@ IR.extendElim "Elim" [t|T|] $
       IR.typeFree = Ext.Disabled,
       IR.nameApp = "App0",
       IR.typeApp = Ext.Ann $ \primTy primVal ->
-        [t|(Usage.T, IR.Term' T $primTy $primVal,
-        Usage.T, IR.Term' T $primTy $primVal)|],
+        [t|
+          ( Usage.T,
+            IR.Term' T $primTy $primVal,
+            Usage.T,
+            IR.Term' T $primTy $primVal
+          )
+          |],
       IR.typeElimX = [("Var", \_primTy _primVal -> [t|Symbol|])]
     }
 
