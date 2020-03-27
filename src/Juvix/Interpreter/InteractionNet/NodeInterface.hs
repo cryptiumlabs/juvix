@@ -1,7 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- - Serves as a generic lens layer for various Node types in interaction nets
@@ -20,16 +19,16 @@ import Juvix.Library
 
 -- there is a probably better way of doing this, instead of writing the concrete terms
 data ShellNode a
-  = ShellAuxs {_prim ∷ a, _aux1 ∷ a, _aux2 ∷ a, _aux3 ∷ a, _aux4 ∷ a, _aux5 ∷ a}
+  = ShellAuxs {_prim :: a, _aux1 :: a, _aux2 :: a, _aux3 :: a, _aux4 :: a, _aux5 :: a}
   | -- Need this so aux1 and aux2 need applicative instead of functor
-    ShellPrim {_prim ∷ a}
+    ShellPrim {_prim :: a}
 
 makeFieldsNoPrefix ''ShellNode
 
 -- Leave these as GADTs for now!
 data Primary where
-  Primary ∷ Node → Primary
-  Free ∷ Primary
+  Primary :: Node -> Primary
+  Free :: Primary
 
 deriving instance Show Primary
 
@@ -60,10 +59,10 @@ type Aux4 a = (Aux3 a, HasAux4 a Auxiliary)
 
 type Aux5 a = (Aux4 a, HasAux5 a Auxiliary)
 
-auxToPrimary ∷ Auxiliary → Primary
+auxToPrimary :: Auxiliary -> Primary
 auxToPrimary (Auxiliary node) = Primary node
 auxToPrimary FreeNode = Free
 
-auxToNode ∷ Auxiliary → Maybe Node
+auxToNode :: Auxiliary -> Maybe Node
 auxToNode (Auxiliary node) = Just node
 auxToNode FreeNode = Nothing

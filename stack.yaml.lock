@@ -382,6 +382,20 @@ packages:
       sha256: 05ebc44a9cc5ecda047aa0179020615941ae5b698586854d121b4219ec3cc114
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
+- completed:
+    size: 8545
+    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
+    cabal-file:
+      size: 1489
+      sha256: ce21201c9e9e8880ce1aa901595b04cd334c9de5aac23f2ab888f879c9646e47
+    name: extensible-data
+    version: 0.1.0
+    sha256: f8717bbb697e4bfc1deb1b3c9ddffd04ce0061ef30b4f04d82fab47bb589b0b6
+    pantry-tree:
+      size: 632
+      sha256: a8e7d8fd475fa83e7806152b05ad617ade80262fae03fc40e37789c1197bab29
+  original:
+    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
 snapshots:
 - completed:
     size: 524155

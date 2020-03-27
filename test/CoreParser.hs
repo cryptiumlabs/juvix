@@ -11,34 +11,34 @@ import qualified Test.Tasty.HUnit as T
 import Prelude (String)
 
 -- | Term parser unit test generator. TODO: does it make sense for it to be Nat.Ty?
-shouldParse ∷ String → Term Nat.Ty Nat.Val → T.TestTree
+shouldParse :: String -> Term Nat.Ty Nat.Val -> T.TestTree
 shouldParse str parsed =
   T.testCase (show str <> " should parse as " <> show parsed) $
     Just parsed T.@=? parseString str
 
-parseString ∷ String → Maybe (Term Nat.Ty Nat.Val)
+parseString :: String -> Maybe (Term Nat.Ty Nat.Val)
 parseString = generateParser Nat.t
 
 -- | Primitive parser unit test generator.
-shouldParsePrim ∷
-  ∀ primTy primVal.
-  (Show primTy, Eq primTy, Show primVal, Eq primVal) ⇒
-  Parameterisation primTy primVal →
-  String →
-  Term primTy primVal →
+shouldParsePrim ::
+  forall primTy primVal.
+  (Show primTy, Eq primTy, Show primVal, Eq primVal) =>
+  Parameterisation primTy primVal ->
+  String ->
+  Term primTy primVal ->
   T.TestTree
 shouldParsePrim param str parsed =
   T.testCase (show str <> " should parse as " <> show parsed) $
     Just parsed T.@=? parseStringPrim param str
 
-parseStringPrim ∷
-  ∀ primTy primVal.
-  Parameterisation primTy primVal →
-  String →
+parseStringPrim ::
+  forall primTy primVal.
+  Parameterisation primTy primVal ->
+  String ->
   Maybe (Term primTy primVal)
 parseStringPrim = generateParser
 
-coreParser ∷ T.TestTree
+coreParser :: T.TestTree
 coreParser =
   T.testGroup
     "Core parser"

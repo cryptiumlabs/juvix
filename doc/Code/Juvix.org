@@ -288,90 +288,24 @@ This module provides a default contract environment
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[Compilation/Environment]]
-  + [[Prim]]
   + [[Michelson/Compilation/Types]]
   + [[Contract]]
+  + [[DSL/Environment]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Compilation/Environment]]
-  + [[Lambda]]
-  + [[Compilation/Type]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
+  + [[Michelson/Compilation/Types]]
+  + [[DSL/Environment]]
+  + [[InstructionsEff]]
   + [[Optimisation]]
-  + [[Library]]
-***** Checks
-- Sanity checks for Michelson compilation.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Datatypes
-Datatypes and pattern matching.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Environment <<Compilation/Environment>>
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[Library]]
-***** Lambda
-- Compilation of core terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Term]]
-  + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[ErasedAnn]]
-  + [[Library]]
-***** Prim
-- Compilation of primitive terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Compilation/Environment]]
-  + [[Compilation/Type]]
-  + [[VirtualStack]]
-  + [[ErasedAnn]]
-  + [[Library]]
-***** Term
-- Compilation of core terms to Michelson instruction sequences.
-- _Relies on_
-  + [[Checks]]
-  + [[Compilation/Environment]]
-  + [[Prim]]
-  + [[Compilation/Type]]
-  + [[Compilation/Util]]
-  + [[VirtualStack]]
-  + [[Michelson/Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Usage]]
-  + [[Library]]
-***** Type <<Compilation/Type>>
-- Functions for representation of types in the Michelson backend.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[ErasedAnn/Types]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
-  + [[Library]]
-***** Util <<Compilation/Util>>
-Utility functions used by the Michelson backend.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[VirtualStack]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson
@@ -389,14 +323,23 @@ Utility functions used by the Michelson backend.
 - Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[ErasedAnn]]
+  + [[Instructions]]
+  + [[Usage]]
   + [[Library]]
   + [[HashMap]]
 **** DSL
+***** Environment <<DSL/Environment>>
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Usage]]
+  + [[Library]]
 ***** Instructions
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[Untyped]]
   + [[Library]]
 ***** InstructionsEff
 - This module includes a higher level DSL which each instruction
@@ -409,17 +352,36 @@ Utility functions used by the Michelson backend.
   the top two items in the stack and then returns back either if
   they were constants or not and dispatches logic based on that
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[DSL/Environment]]
   + [[Instructions]]
+  + [[Untyped]]
+  + [[Utils]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[Library]]
+***** Untyped
+- _Relies on_
+  + [[Library]]
+***** Utils
+- _Relies on_
+  + [[Instructions]]
+  + [[Untyped]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
+  + [[Library]]
 ** Core
 - _Relies on_
   + [[Core/Erasure]]
   + [[Pipeline]]
   + [[Translate]]
+  + [[Core/Types]]
   + [[Usage]]
 *** Pipeline
 - _Relies on_
   + [[Core/EAC]]
-  + [[Erased]]
   + [[Core/Erasure]]
   + [[HR]]
   + [[IR]]
@@ -436,6 +398,7 @@ Utility functions used by the Michelson backend.
 *** Types <<Core/Types>>
 - _Relies on_
   + [[Core/EAC/Types]]
+  + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
@@ -462,7 +425,6 @@ Utility functions used by the Michelson backend.
   + [[ConstraintGen]]
   + [[Solve]]
   + [[Core/EAC/Types]]
-  + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** ConstraintGen
@@ -499,7 +461,7 @@ Utility functions used by the Michelson backend.
 - _Relies on_
   + [[Erased/Evaluator]]
   + [[Erased/Types]]
-  + [[Erased/Util]]
+  + [[Util]]
 **** Evaluator <<Erased/Evaluator>>
 - _Relies on_
   + [[Erased/Types]]
@@ -510,7 +472,7 @@ Utility functions used by the Michelson backend.
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]
-**** Util <<Erased/Util>>
+**** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
@@ -521,6 +483,7 @@ Utility functions used by the Michelson backend.
 **** Erasure <<ErasedAnn/Erasure>>
 - _Relies on_
   + [[Erased/Types]]
+  + [[ErasedAnn/Types]]
   + [[ErasedAnn/Types]]
   + [[Library]]
 **** Types <<ErasedAnn/Types>>
@@ -558,8 +521,8 @@ Utility functions used by the Michelson backend.
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
-  + [[IR/Types]]
-  + [[Usage]]
+  + [[Base]]
+  + [[Base]]
   + [[Library]]
 *** HRAnn
 - _Relies on_
@@ -573,13 +536,13 @@ Utility functions used by the Michelson backend.
   + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Library]]
-  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
+  + [[Library]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]
-  + [[TransformExt]]
   + [[Typechecker]]
   + [[IR/Types]]
 **** Evaluator <<IR/Evaluator>>
@@ -588,17 +551,15 @@ the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
   + [[IR/Types]]
+  + [[Base]]
   + [[Core/Types]]
-  + [[Library]]
-**** Extension
-Extensions to the IR abstract syntax.
-- _Relies on_
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
-  + [[Library]]
   + [[IR/Types]]
+  + [[Base]]
+  + [[Library]]
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
@@ -610,8 +571,12 @@ Transformations between different extensions.
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
+  + [[Base]]
   + [[Usage]]
-  + [[Extension]]
+  + [[Library]]
+***** Base
+- _Relies on_
+  + [[Usage]]
   + [[Library]]
 *** IRAnn
 - _Relies on_
@@ -624,9 +589,10 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
-  + [[Library]]
-  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
+  + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
@@ -675,13 +641,35 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** Frontend
+*** Lexer
+- _Relies on_
+  + [[Library]]
+*** Parser <<Frontend/Parser>>
+- The front end parser for the Juvix Programming language
+- Parsers with S at the end, eat the spaces at the end of the parse
+- Parsers with SN at the end, eats the spaces and new lines at the
+  end of the parse
+- _Relies on_
+  + [[Usage]]
+  + [[Lexer]]
+  + [[Frontend/Types]]
+  + [[Library]]
+*** Types <<Frontend/Types>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out
+  [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
 ** INetIR
 - _Relies on_
   + [[JSON]]
   + [[INetIR/Types]]
 *** JSON
 - _Relies on_
-  + [[INetIR/Types]]
   + [[Library]]
 *** Types <<INetIR/Types>>
 - _Relies on_
@@ -696,13 +684,13 @@ Quantitative type implementation inspired by
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
   + [[InteractionNet/Translation]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
 **** Default <<InteractionNet/Default>>
 Gives the default execution environment for netToAst
 Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** NodeInterface
@@ -721,7 +709,7 @@ Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Default]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** Shared <<InteractionNet/Shared>>
@@ -736,10 +724,10 @@ Can be added to via core translation
   + [[Nets/Default]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
-**** Type <<InteractionNet/Type>>
+**** Type
 - Serves as the AST for all operations on [[Nets/Default]]
 - Resembles the =BOHM= syntax/operation set, however it alters the
   operation set quite a bit

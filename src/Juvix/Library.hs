@@ -27,6 +27,7 @@ module Juvix.Library
     (...),
     traverseM,
     Symbol,
+    internText,
     intern,
     unintern,
     unixTime,
@@ -75,39 +76,39 @@ import Protolude hiding
   )
 import Prelude (Show (..), String)
 
-(∨) ∷ Bool → Bool → Bool
+(∨) :: Bool -> Bool -> Bool
 (∨) = (||)
 
 infixr 2 ∨
 
-(∧) ∷ Bool → Bool → Bool
+(∧) :: Bool -> Bool -> Bool
 (∧) = (&&)
 
 infixr 3 ∧
 
-(|<<) ∷ ∀ a b f. (Functor f) ⇒ (a → b) → f a → f b
+(|<<) :: forall a b f. (Functor f) => (a -> b) -> f a -> f b
 (|<<) = fmap
 
 infixr 1 |<<
 
-(>>|) ∷ ∀ a b f. (Functor f) ⇒ f a → (a → b) → f b
+(>>|) :: forall a b f. (Functor f) => f a -> (a -> b) -> f b
 (>>|) = flip fmap
 
 infixl 1 >>|
 
-(|>) ∷ a → (a → b) → b
+(|>) :: a -> (a -> b) -> b
 (|>) = (&)
 
 infixl 1 |>
 
-traverseM ∷
-  (Monad m, Traversable m, Applicative f) ⇒
-  (a1 → f (m a2)) →
-  m a1 →
+traverseM ::
+  (Monad m, Traversable m, Applicative f) =>
+  (a1 -> f (m a2)) ->
+  m a1 ->
   f (m a2)
 traverseM f = fmap join . traverse f
 
-instance Show (a → b) where
+instance Show (a -> b) where
   show _ = "fun"
 
 newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord)
@@ -118,47 +119,50 @@ instance Show Symbol where
 instance IsString Symbol where
   fromString = intern
 
-intern ∷ String → Symbol
+internText :: Text -> Symbol
+internText = Sym
+
+intern :: String -> Symbol
 intern = Sym . T.pack
 
-unintern ∷ Symbol → String
+unintern :: Symbol -> String
 unintern (Sym s) = T.unpack s
 
-unixTime ∷ IO Double
+unixTime :: IO Double
 unixTime = fromRational . realToFrac |<< getPOSIXTime
 
-newtype Flip p a b = Flip {runFlip ∷ p b a}
+newtype Flip p a b = Flip {runFlip :: p b a}
   deriving (Show, Generic, Eq, Ord, Typeable)
 
-untilNothingNTimesM ∷ (Num t, Ord t, Enum t, Monad f) ⇒ f Bool → t → f ()
+untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) => f Bool -> t -> f ()
 untilNothingNTimesM f n
   | n <= 0 = pure ()
   | otherwise = do
     f >>= \case
-      True → untilNothingNTimesM f (pred n)
-      False → pure ()
+      True -> untilNothingNTimesM f (pred n)
+      False -> pure ()
 
-untilNothing ∷ (t → Maybe t) → t → t
+untilNothing :: (t -> Maybe t) -> t -> t
 untilNothing f a = case f a of
-  Nothing → a
-  Just a → untilNothing f a
+  Nothing -> a
+  Just a -> untilNothing f a
 
 -- | like sortOn from the stdlib, is an optimized version of `sortBy (comparing f)`
 -- However instead of sorting from lowest to highest, this sorts from higher to lowest
-sortOnFlip ∷ Ord b ⇒ (a → b) → [a] → [a]
+sortOnFlip :: Ord b => (a -> b) -> [a] -> [a]
 sortOnFlip f =
   fmap snd . sortBy (flip (comparing fst))
     . fmap
-      ( \x →
+      ( \x ->
           let y = f x
            in y `seq` (y, x)
       )
 
-uncurry3 ∷ (a → b → c → d) → (a, b, c) → d
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 fn (a, b, c) = fn a b c
 
-curry3 ∷ ((a, b, c) → d) → a → b → c → d
+curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
 curry3 fn a b c = fn (a, b, c)
 
-(...) ∷ (b → c) → (a1 → a2 → b) → a1 → a2 → c
+(...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)

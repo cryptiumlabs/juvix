@@ -5,7 +5,6 @@
   + [[Core]]
   + [[Erased]]
   + [[HR]]
-  + [[HR]]
   + [[Library]]
 * Config
 - _Relies on_

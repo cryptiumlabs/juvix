@@ -1,6 +1,6 @@
-module Juvix.Core.Usage (Usage, NatAndw (..), numToNat, allowsUsageOf, T) where
+module Juvix.Core.Usage (Usage, NatAndw (..), numToNat, allowsUsageOf, T, pred) where
 
-import Juvix.Library hiding (show)
+import Juvix.Library hiding (pred, show)
 import Prelude (Show (..))
 
 -- | Usage is an alias for the semiring representation
@@ -32,22 +32,25 @@ instance Monoid NatAndw where
 
 -- Semiring instance is thus multiplication
 instance Semiring NatAndw where
-
   one = SNat 1
 
   SNat x <.> SNat y = SNat (x * y)
   Omega <.> _ = Omega
   _ <.> Omega = Omega
 
+pred :: NatAndw -> NatAndw
+pred (SNat x) = SNat (x - 1)
+pred Omega = Omega
+
 -- | numToNat is a helper function that converts an integer to NatAndW
-numToNat ∷ Integer → NatAndw
+numToNat :: Integer -> NatAndw
 numToNat = SNat . fromInteger
 
 -- variables annotated with n can be used n times.
 -- variables annotated with Omega can be used any times.
 
 -- | allowsUsageOf is the function that checks usage compatibility
-allowsUsageOf ∷ Usage → Usage → Bool
+allowsUsageOf :: Usage -> Usage -> Bool
 allowsUsageOf (SNat x) (SNat y) = x == y
 allowsUsageOf Omega (SNat _) = True
 allowsUsageOf Omega Omega = True

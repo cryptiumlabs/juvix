@@ -24,6 +24,8 @@ dependencies:
   - fgl
   - lens
   - parsec
+  - attoparsec
+  - attoparsec-expr
   - capability >= 0.2.0.0
   - fgl-visualize
   - enummapset
@@ -40,6 +42,7 @@ dependencies:
   - sonic
   - aeson
   - Cabal
+  - extensible-data
 
 default-extensions:
   - NoImplicitPrelude
@@ -70,12 +73,14 @@ default-extensions:
   - TypeFamilies
   - ConstraintKinds
   - EmptyDataDeriving
+  - TemplateHaskell
 
 ghc-options:
   - -ferror-spans
   - -Wall
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
 
@@ -88,6 +93,9 @@ library:
     - jsonschema-gen
   exposed-modules:
     - Juvix
+    - Juvix.Frontend.Types
+    - Juvix.Frontend.Lexer
+    - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
@@ -142,20 +150,15 @@ library:
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
     - Juvix.Backends.Michelson.Compilation
-    - Juvix.Backends.Michelson.Compilation.Prim
-    - Juvix.Backends.Michelson.Compilation.Term
-    - Juvix.Backends.Michelson.Compilation.Lambda
-    - Juvix.Backends.Michelson.Compilation.Type
-    - Juvix.Backends.Michelson.Compilation.Checks
     - Juvix.Backends.Michelson.Compilation.Types
-    - Juvix.Backends.Michelson.Compilation.Util
-    - Juvix.Backends.Michelson.Compilation.Datatypes
+    - Juvix.Backends.Michelson.Compilation.VirtualStack
     - Juvix.Backends.Michelson.DSL.Instructions
     - Juvix.Backends.Michelson.DSL.InstructionsEff
+    - Juvix.Backends.Michelson.DSL.Environment
+    - Juvix.Backends.Michelson.DSL.Untyped
+    - Juvix.Backends.Michelson.DSL.Utils
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
-    - Juvix.Backends.Michelson.Compilation.VirtualStack
-    - Juvix.Backends.Michelson.Compilation.Environment
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Compilation
@@ -189,8 +192,8 @@ library:
     - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
+    - Juvix.Core.IR.Types.Base
     - Juvix.Core.IR.Typechecker
-    - Juvix.Core.IR.Extension
     - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
