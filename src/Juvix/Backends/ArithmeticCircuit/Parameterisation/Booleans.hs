@@ -17,7 +17,7 @@ import Circuit.Arithmetic (Wire(..))
 import Circuit.Expr
 import Circuit.Lang
 
--- k: primitive type: naturals
+-- k: primitive type: boolean
 data Ty
   = Ty
   deriving (Show, Eq)
