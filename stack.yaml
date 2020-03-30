@@ -1,3 +1,4 @@
+# resolver:  lts-15.5
 resolver: lts-14.19
 
 packages:
@@ -7,12 +8,11 @@ extra-deps:
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - constraints-0.11
-- singletons-2.5.1
 - semirings-0.5.1
 - brick-0.46
-- capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62,2424
-- derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
-- derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
+- derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 - fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
 - ghci-pretty-0.0.2@sha256:5f6c2a9f1d391aa0ad3c3d0bfe1f39decfe94be50fbf5a5279e2dbc18f8b4c51,1409
 - llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670

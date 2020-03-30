@@ -26,13 +26,6 @@ packages:
   original:
     hackage: constraints-0.11
 - completed:
-    hackage: singletons-2.5.1@sha256:c1e95523813ecabb06c765180e200187287fc1b0e3cf710e913dac32c314dfab,6991
-    pantry-tree:
-      size: 23281
-      sha256: b0ebbc83146b196f7c41d8500544e40a734e29fb552e834800c63221302fb0e8
-  original:
-    hackage: singletons-2.5.1
-- completed:
     hackage: semirings-0.5.1@sha256:597e4070dcb75c3e347566114e140ba343843f80f3e16a456bb2e9e9d1d09430,3743
     pantry-tree:
       size: 610
@@ -54,19 +47,19 @@ packages:
   original:
     hackage: capability-0.2.0.0@sha256:7049527e0bede44f8aeabdd0f41c50ec78da5835796e6a477615502665127a62,2424
 - completed:
-    hackage: derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
+    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
     pantry-tree:
-      size: 1404
-      sha256: 6d598d44e8c13087a5fb334632d3e20a5a9e0026cd9ecdfba978c66c484ddbb5
+      size: 982
+      sha256: 7273803f80bf23fd4143430351d4fa6732df7c4f8e9df74a054ae25f572908ec
   original:
-    hackage: derive-storable-0.1.2.0@sha256:712726e685d88692524080843c9b802df898689fccf1556493ed0dbe6d5e7a09,2849
+    hackage: derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
 - completed:
-    hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
     pantry-tree:
-      size: 2321
-      sha256: 855bdb6f5c0a8b66a05be19524512fef45a47345d67051dbc2ff83a2e96abd93
+      size: 1408
+      sha256: 4af20d2207a60b331e04d94c5474da25aaf0118a0d217d57ac007c1e0a179eb7
   original:
-    hackage: derive-storable-plugin-0.2.2.0@sha256:b561f6762768034255e11974902bd1c84bc58cd283d0362979ae08a3fcdaef5e,4291
+    hackage: derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 - completed:
     hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
     pantry-tree:
