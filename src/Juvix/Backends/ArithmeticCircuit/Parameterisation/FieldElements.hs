@@ -42,7 +42,7 @@ apply ∷ Val → Val → Maybe Val
 apply Add (Val x) = pure (Curried Add x)
 apply Mul (Val x) = pure (Curried Mul x)
 apply (Curried Add x) (Val y) = pure (Val (add x y))
-apply (Curried Mul x) (Val y) = pure (Val (add x y))
+apply (Curried Mul x) (Val y) = pure (Val (mul x y))
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
