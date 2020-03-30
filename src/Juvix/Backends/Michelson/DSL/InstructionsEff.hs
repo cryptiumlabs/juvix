@@ -24,6 +24,7 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
+import qualified Michelson.Untyped.Type as MT
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
@@ -231,12 +232,16 @@ appM form@(Types.Ann _u ty t) args =
 
 applyExpanded :: Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
 applyExpanded expanded args = do
-  modify @"stack" (VStack.drop 1)
+  (elem, ty) <- VStack.car |<< get @"stack"
   case expanded of
-    Env.Curr c -> apply c args []
+    Env.Curr c -> do
+      modify @"stack" (VStack.drop 1)
+      apply c args []
     -- We may get a Michelson lambda if we have one
     -- in storage, make sure to handle this case!
-    Env.MichelsonLam -> undefined
+    Env.MichelsonLam -> do
+      let VStack.VarE sym _ (Just VStack.MichelsonLambda) = elem
+      applyLambdaFromStorageNArgs (Set.findMin sym) ty args
     Env.Constant _ -> throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ -> throw @"compilationError" (Types.InternalFault "App on Michelson")
     Env.Nop -> throw @"compilationError" (Types.InternalFault "App on NOP")
@@ -521,9 +526,9 @@ apply closure args remainingArgs = do
     makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
     recur (Env.Curr c) xs =
       apply c [] xs
-    -- TODO ∷ make exec case for Michelson lambdas
-    -- This would be possible if (storage = f) → g f = f 3!
-    recur Env.MichelsonLam _xs = undefined
+    -- Exec case for Michelson lambdas, e.g. if (storage = f) → g f = f 3!
+    recur Env.MichelsonLam _xs =
+      applyLambdaFromStorageNArgs undefined undefined args
     recur (Env.Constant _) _ =
       throw @"compilationError" (Types.InternalFault "apply to non lam")
     recur (Env.Expanded _) _ =
@@ -743,3 +748,16 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
               <>
           )
       get @"ops"
+
+-- Assume lambdas from storage are curried.
+applyLambdaFromStorage :: Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
+applyLambdaFromStorage sym ty arg = do
+  lam <- expandedToInst =<< var sym
+  arg <- instOuter arg
+  ty <- typeToPrimType (eatType 1 ty)
+  modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
+  pure [lam, arg, Instructions.exec]
+
+applyLambdaFromStorageNArgs :: Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
+applyLambdaFromStorageNArgs sym ty args = Env.Expanded . mconcat |<< do
+  undefined
