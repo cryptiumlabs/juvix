@@ -14,6 +14,9 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
+import Circuit.Arithmetic (Wire(..))
+import Circuit.Expr
+import Circuit.Lang
 
 -- all primitive types
 data Ty
@@ -24,9 +27,11 @@ data Ty
 type BooleanVal = Booleans.Val FieldElements.F
 
 -- c: primitive constant and f: functions
-data Val
+data Val a
   = FEVal FieldElements.Val
   | BoolVal BooleanVal
+  | Eq
+  | Curried Val (Expr Wire F a)
   deriving (Show, Eq)
 
 boolTyToAll ∷ Booleans.Ty → Ty
@@ -41,17 +46,22 @@ feTyToAll = FETy
 feValToAll ∷ FieldElements.Val → Val
 feValToAll = FEVal
 
-typeOf ∷ Val → NonEmpty Ty
+typeOf ∷ Val a → NonEmpty Ty
 typeOf (BoolVal x) =
   fmap boolTyToAll (Booleans.typeOf x)
 typeOf (FEVal x) =
   fmap feTyToAll (FieldElements.typeOf x)
+typeOf (Curried _ _) = Ty :| [Ty]
+typeOf Eq = Ty :| [Ty, Ty]
 
-apply ∷ Val → Val → Maybe Val
+
+apply ∷ Val a → Val a → Maybe Val
 apply (BoolVal x) (BoolVal y) =
   boolValToAll <$> Booleans.apply x y
 apply (FEVal x) (FEVal y) =
   feValToAll <$> FieldElements.apply x y
+apply Eq (FEVal x) = pure (Curried Eq x)
+apply (Curried Eq x) (FEVal y) = pure (BoolVal (x == y))
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
@@ -65,10 +75,10 @@ parseVal lexer =
   (feValToAll <$> FieldElements.parseVal lexer)
 
 reservedNames ∷ [String]
-reservedNames = Booleans.reservedNames <> FieldElements.reservedNames
+reservedNames = Booleans.reservedNames <> FieldElements.reservedNames <> ["=="]
 
 reservedOpNames ∷ [String]
-reservedOpNames = Booleans.reservedOpNames <> FieldElements.reservedOpNames
+reservedOpNames = Booleans.reservedOpNames <> FieldElements.reservedOpNames <> ["=="]
 
 t ∷ Parameterisation Ty Val
 t =
