@@ -263,13 +263,13 @@ newTypeParser = do
   -- if we get a | or a - at the end of this, then we need to go to the other case
   -- Note that we may end up with a non boxed type, but that is fine
   -- this is a subset of the ADT case for analysis
-  Types.Declare <$> prefixSymbolSN <*> typeRefineSN
+  Types.Declare <$> prefixSymbolSN <*> namedRefineSN
     <* nonOverlappingCase
 
 aliasParser :: Parser Types.Alias
 aliasParser = do
   skipLiner Lexer.equals
-  Types.AliasDec <$> typeRefine
+  Types.AliasDec <$> namedRefineSN
 
 dataParser :: Parser Types.Data
 dataParser = do
@@ -305,7 +305,7 @@ record = do
     spaceLiner
       $ curly
       $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
-  familySignature <- maybe (skipLiner Lexer.colon *> typeRefine)
+  familySignature <- maybe (skipLiner Lexer.colon *> namedRefine)
   pure (Types.Record' names familySignature)
 
 nameType :: Parser Types.NameType
@@ -363,7 +363,7 @@ arrowGen p overParser = do
 
 arrows :: Parser Types.ArrowData
 arrows =
-  Types.Arr <$> arrowGen typeRefineSN identity
+  Types.Arr <$> arrowGen namedRefineSN identity
 
 parendArrow :: Parser Types.ArrowParen
 parendArrow =
@@ -770,6 +770,9 @@ arrowTypeS = spacer arrowType
 
 bindingSN :: Parser Types.Binding
 bindingSN = spaceLiner binding
+
+namedRefineSN :: Parser Types.NamedRefine
+namedRefineSN = spaceLiner namedRefine
 
 typeRefineSN :: Parser Types.TypeRefine
 typeRefineSN = spaceLiner typeRefine

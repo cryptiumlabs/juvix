@@ -2,10 +2,11 @@
 
 -- |
 -- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out
---   [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+-- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 -- - Later a trees that grow version of this will be implemented, so
 --   infix functions can better transition across syntax
+-- - Note :: The names for the types in =ArrowData= are stored in the
+--           =ArrowGen= and not in =NamedRefine=
 module Juvix.Frontend.Types where
 
 import Control.Lens
@@ -56,13 +57,13 @@ data Data
 data NewType
   = Declare
       { newTypeAlias :: !Symbol,
-        newTypeType' :: TypeRefine
+        newTypeType' :: NamedRefine
       }
   deriving (Show)
 
 newtype Alias
   = AliasDec
-      {aliasType' :: TypeRefine}
+      {aliasType' :: NamedRefine}
   deriving (Show)
 
 --------------------------------------------------
@@ -79,7 +80,7 @@ data ArrowType
 data NamedRefine
   = NamedRefine
       { nameRefineName :: !(Maybe Name),
-        namedRefineRefine :: TypeRefine
+        namedRefineRefine :: {-# UNPACK #-} !TypeRefine
       }
   deriving (Show)
 
@@ -87,8 +88,10 @@ newtype ArrowParen
   = Paren (ArrowGen ArrowType)
   deriving (Show)
 
+-- Hold up the arrowGen name with the namedRefine name.
+-- they are the same, but will only be in the arrowgen
 newtype ArrowData
-  = Arr (ArrowGen TypeRefine)
+  = Arr (ArrowGen NamedRefine)
   deriving (Show)
 
 data ArrowGen a
@@ -167,7 +170,7 @@ data Product
 data Record
   = Record'
       { recordFields :: NonEmpty NameType,
-        recordFamilySignature :: Maybe TypeRefine
+        recordFamilySignature :: Maybe NamedRefine
       }
   deriving (Show)
 

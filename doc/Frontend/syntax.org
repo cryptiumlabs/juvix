@@ -51,7 +51,8 @@
       | type u#<usage>? <non-capital-name> <symbols>+                = <adt>
 
   type-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ = | <name> <type-refine>
+    ::= type u#<usage>? <non-capital-name> <symbols>+ =
+      | <name> <type-refine>
   alias-declaration
     ::= type u#<usage>? <non-capital-name> <symbols>+ = <type-refine>
 
@@ -76,10 +77,7 @@
   ;; should we move ()'s somewhere else?
   ;; # is implicit argument
   arrow-type ::= <type-refine>
-               | <name>  : <type-refine>
-               | <name>  : <type-refine> <arrow> <arrow-type>
-               | #<name> : <type-refine> <arrow> <arrow-type>
-               | <type-refine>           <arrow> <arrow-type>
+               | <type-refine> <arrow> <arrow-type>
                | ( <arrow-type> )
 
   type-signature ::= : <arrow-type>
@@ -87,6 +85,8 @@
   ;; { } here are a refinement type!
   type-refine ::= <type-name> { <expression> }
                 | <type-name>
+                | <name> : <type-refine>
+                | #<name> : <type-refine>
 
   ;;;; Arrows =========================================================
 
