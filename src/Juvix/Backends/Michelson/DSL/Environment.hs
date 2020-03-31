@@ -93,24 +93,35 @@ newtype MichelsonCompilation a
   = Compilation (ExceptT CompError (State Env) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasStream "compilationLog" [Types.CompilationLog],
+    ( HasSink "compilationLog" [Types.CompilationLog],
       HasWriter "compilationLog" [Types.CompilationLog]
     )
     via WriterLog (Field "compilationLog" () (MonadState (ExceptT CompError (State Env))))
   deriving
-    (HasState "stack" (VStack.T Curried))
+    ( HasState "stack" (VStack.T Curried),
+      HasSink "stack" (VStack.T Curried),
+      HasSource "stack" (VStack.T Curried)
+    )
     via Field "stack" () (MonadState (ExceptT CompError (State Env)))
   deriving
-    (HasState "ops" [Types.Op])
+    ( HasState "ops" [Types.Op],
+      HasSink "ops" [Types.Op],
+      HasSource "ops" [Types.Op]
+    )
     via Field "ops" () (MonadState (ExceptT CompError (State Env)))
   deriving
-    (HasState "count" Word)
+    ( HasState "count" Word,
+      HasSink "count" Word,
+      HasSource "count" Word
+    )
     via Field "count" () (MonadState (ExceptT CompError (State Env)))
   deriving
     (HasThrow "compilationError" CompError)
     via MonadError (ExceptT CompError (State Env))
   deriving
-    (HasReader "debug" Int)
+    ( HasReader "debug" Int,
+      HasSource "debug" Int
+    )
     via Field "debug" () (ReadStatePure (MonadState (ExceptT CompError (State Env))))
 
 execMichelson :: MichelsonCompilation a -> (Either CompError a, Env)

@@ -32,13 +32,22 @@ data Env net primVal
 newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "level" Int)
+    ( HasState "level" Int,
+      HasSink "level" Int,
+      HasSource "level" Int
+    )
     via Rename "level" (Field "level" () (MonadState (State (Env net primVal))))
   deriving
-    (HasState "free" (Map.T Symbol (Node, PortType)))
+    ( HasState "free" (Map.T Symbol (Node, PortType)),
+      HasSink "free" (Map.T Symbol (Node, PortType)),
+      HasSource "free" (Map.T Symbol (Node, PortType))
+    )
     via (Field "free" () (MonadState (State (Env net primVal))))
   deriving
-    (HasState "net" (net (AST.Lang primVal)))
+    ( HasState "net" (net (AST.Lang primVal)),
+      HasSink "net" (net (AST.Lang primVal)),
+      HasSource "net" (net (AST.Lang primVal))
+    )
     via Rename "net'" (Field "net'" () (MonadState (State (Env net primVal))))
 
 execEnvState :: Network net => EnvState net primVal a -> Env net primVal -> Env net primVal
@@ -90,36 +99,51 @@ astToNet parameterisation bohm customSymMap = net'
         _ -> undefined
     recursive (Type.IntLit x) _context =
       (,) <$> newNode (AST.Primar $ AST.IntLit x) <*> pure Prim
+    --
     recursive Type.False' _context =
       (,) <$> newNode (AST.Primar AST.Fals) <*> pure Prim
+    --
     recursive Type.True' _context =
       (,) <$> newNode (AST.Primar AST.Tru) <*> pure Prim
+    --
     recursive Type.Nil _context =
       (,) <$> newNode (AST.Primar AST.Nil) <*> pure Prim
+    --
     recursive (Type.Erase) _context =
       (,) <$> newNode (AST.Primar AST.Erase) <*> pure Prim
+    --
     recursive (Type.Car b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Car) context
     recursive (Type.Cdr b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Cdr) context
     recursive (Type.Not b) context = genericAux1PrimArg b (AST.Auxiliary1 AST.Not) context
     recursive (Type.IsNil b) conte = genericAux1PrimArg b (AST.Auxiliary1 AST.TestNil) conte
+    --
     recursive (Type.PrimCurried1 f b) context =
       genericAux1PrimArg b (AST.Auxiliary1 $ AST.PrimCurried1 f) context
+    --
     recursive (Type.PrimCurried2 f b1 b2) c =
       genericAux2PrimArg b1 b2 (AST.Auxiliary2 $ AST.PrimCurried2 f) c
+    --
     recursive (Type.Curried1 f b) context =
       genericAux1PrimArg b (AST.Auxiliary1 $ AST.Curried1 f) context
+    --
     recursive (Type.Curried2 f b1 b2) c =
       genericAux2PrimArg b1 b2 (AST.Auxiliary2 $ AST.Curried2 f) c
+    --
     recursive (Type.Curried3 f b1 b2 b3) c =
       genericAux3PrimArg b1 b2 b3 (AST.Auxiliary3 $ AST.Curried3 f) c
+    --
     recursive (Type.Application b1 b2) c =
       genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.App) c
+    --
     recursive (Type.Cons b1 b2) c =
       genericAux2 (b1, Aux2) (b2, Aux1) (AST.Auxiliary2 AST.Cons, Prim) c
+    --
     recursive (Type.Or b1 b2) c =
       genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.Or) c
+    --
     recursive (Type.And b1 b2) c =
       genericAux2PrimArg b1 b2 (AST.Auxiliary2 AST.And) c
+    --
     recursive (Type.Symbol' s) context = do
       frees <- get @"free"
       case (context Map.!? s, frees Map.!? s) of

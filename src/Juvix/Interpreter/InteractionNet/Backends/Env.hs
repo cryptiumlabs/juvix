@@ -49,19 +49,31 @@ type InfoNetworkDiff net a m =
 newtype EnvNetInfo net a = EnvI (State (InfoNet net) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "info" Info)
+    ( HasSink "info" Info,
+      HasSource "info" Info,
+      HasState "info" Info
+    )
     via Field "info" () (MonadState (State (InfoNet net)))
   deriving
-    (HasState "net" net)
+    ( HasSink "net" net,
+      HasSource "net" net,
+      HasState "net" net
+    )
     via Field "net" () (MonadState (State (InfoNet net)))
 
 newtype EnvNetInfoIO net a = EnvIO (StateT (InfoNet net) IO a)
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
-    (HasState "info" Info)
+    ( HasSink "info" Info,
+      HasSource "info" Info,
+      HasState "info" Info
+    )
     via Field "info" () (MonadState (StateT (InfoNet net) IO))
   deriving
-    (HasState "net" net)
+    ( HasSink "net" net,
+      HasSource "net" net,
+      HasState "net" net
+    )
     via Field "net" () (MonadState (StateT (InfoNet net) IO))
 
 execInfoNet :: EnvNetInfo net a -> InfoNet net -> InfoNet net

@@ -107,7 +107,10 @@ newtype EnvError primTy primVal a
   = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (Map.T Symbol (Erased.Type primTy)))
+    ( HasState "ctxt" (Map.T Symbol (Erased.Type primTy)),
+      HasSink "ctxt" (Map.T Symbol (Erased.Type primTy)),
+      HasSource "ctxt" (Map.T Symbol (Erased.Type primTy))
+    )
     via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
@@ -130,25 +133,40 @@ data Env primTy
 newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "path" Path)
+    ( HasState "path" Path,
+      HasSink "path" Path,
+      HasSource "path" Path
+    )
     via Field "path" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "varPaths" VarPaths)
+    ( HasState "varPaths" VarPaths,
+      HasSink "varPaths" VarPaths,
+      HasSource "varPaths" VarPaths
+    )
     via Field "varPaths" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "typeAssignment" (Erased.TypeAssignment primTy))
+    ( HasState "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSink "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSource "typeAssignment" (Erased.TypeAssignment primTy)
+    )
     via Field "typeAssignment" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "nextParam" Param)
+    ( HasState "nextParam" Param,
+      HasSink "nextParam" Param,
+      HasSource "nextParam" Param
+    )
     via Field "nextParam" () (MonadState (State (Env primTy)))
   deriving
-    (HasState "occurrenceMap" OccurrenceMap)
+    ( HasState "occurrenceMap" OccurrenceMap,
+      HasSink "occurrenceMap" OccurrenceMap,
+      HasSource "occurrenceMap" OccurrenceMap
+    )
     via Field "occurrenceMap" () (MonadState (State (Env primTy)))
   deriving
     (HasReader "occurrenceMap" OccurrenceMap)
     via Field "occurrenceMap" () (ReadStatePure (MonadState (State (Env primTy))))
   deriving
-    ( HasStream "constraints" [Constraint],
+    ( HasSink "constraints" [Constraint],
       HasWriter "constraints" [Constraint]
     )
     via WriterLog (Field "constraints" () (MonadState (State (Env primTy))))

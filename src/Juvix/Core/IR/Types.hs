@@ -200,7 +200,7 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
               (MonadState (State (EnvCtx primTy primVal)))
           )
   deriving
-    ( HasStream "typecheckerLog" [TypecheckerLog],
+    ( HasSink "typecheckerLog" [TypecheckerLog],
       HasWriter "typecheckerLog" [TypecheckerLog]
     )
     via WriterLog
