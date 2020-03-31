@@ -30,11 +30,11 @@ let Token =
   }
 
   type T = {
-    storage = Storage,
-    version = Nat.T,
-    name    = String.T,
-    symbol  = Char.T,
-    owner   = Address,
+    storage : Storage,
+    version : Nat.T,
+    name    : String.T,
+    symbol  : Char.T,
+    owner   : Address,
   }
 end
 
@@ -46,13 +46,13 @@ let Transaction =
   }
 
   type Mint = {
-    mint-amount     = Nat.T,
-    mint-to-account = Token.Address,
+    mint-amount     : Nat.T,
+    mint-to-account : Token.Address,
   }
 
   type Burn = {
-    burn-amount       = Nat.T,
-    burn-from-account = Token.Address,
+    burn-amount       : Nat.T,
+    burn-from-account : Token.Address,
   }
 
   type Data =
@@ -109,7 +109,7 @@ sig Validation : Module
   burn     : T
   mint     : T
 end
-Validation =
+let Validation =
   type T = Token.T -> Transaction.T -> Bool
 
   let mint token tx =
@@ -130,7 +130,7 @@ Validation =
   let Burn token tx =
     case tx.data of
     | Transaction.Burn {burn-from-account, burn-ammount} ->
-      has_n token.storage.accounts burn-from-account burn-amount
+      has-n token.storage.accounts burn-from-account burn-amount
       && tx.authroized-account == burn-from-account
     | Transaction.Mint _ | Transaction.Transfer _ ->
       false
@@ -194,5 +194,5 @@ let Operation =
     | Burn _ ->
       if | Validation.burn token tx = Right (burn token tx)
          | else                     = Left NotEnoughTokens
-
+end
 -- validation proofs given after figuring out syntax see F* for them
