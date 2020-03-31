@@ -310,41 +310,48 @@ sumTypeTest =
   shouldParseAs
     "sumTypeTest"
     Parser.typeP
-    ( "type Foo a b c = | A b : a -> b -> c \n"
-        <> "            | B d \n"
+    ( "type Foo a b c = | A : b : a -> b -> c \n"
+        <> "            | B : d -> Foo \n"
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm = Data \
-    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (Arrows \
-    \(Arr (ArrGen {arrowGenName = Just (Concrete b), arrowGenData = NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (a :| []) [], typeRefineRefinement \
-    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen {arrowGenName \
+    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm \
+    \= Data (NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just \
+    \(Arrow (Arrows (Arr (ArrGen {arrowGenName = Just (Concrete b), arrowGenData \
+    \= NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
+    \{typeRefineName = Start (a :| []) [], typeRefineRefinement = Nothing}}, \
+    \arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen {arrowGenName = Nothing, \
+    \arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
+    \= TypeRefine {typeRefineName = Start (b :| []) [], typeRefineRefinement \
+    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
+    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (c :| \
+    \[]) [], typeRefineRefinement = Nothing}})))))} :| [S {sumConstructor = B, \
+    \sumValue = Just (Arrow (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData \
+    \= NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
+    \{typeRefineName = Start (d :| []) [], typeRefineRefinement = Nothing}}, \
+    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, \
+    \namedRefineRefine = TypeRefine {typeRefineName = Start (Foo :| []) [], typeRefineRefinement \
+    \= Nothing}}))))},S {sumConstructor = C, sumValue = Just (Record (Record' \
+    \{recordFields = NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName \
+    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| \
+    \[]) [], typeRefineRefinement = Nothing}}), nameTypeName = Concrete a} :| \
+    \[NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, \
+    \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement \
+    \= Nothing}}), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S \
+    \{sumConstructor = D, sumValue = Just (Record (Record' {recordFields = NameType \
+    \{nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
+    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement \
+    \= Nothing}}), nameTypeName = Concrete a} :| [NameType {nameTypeSignature \
+    \= Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
+    \{typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}), \
+    \nameTypeName = Implicit b}], recordFamilySignature = Just (NamedRefine {nameRefineName \
+    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Foo :| \
+    \[]) [SymbolName (Int :| []),ArrowName (Arrows (Arr (ArrGen {arrowGenName \
     \= Nothing, arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (b :| []) [], typeRefineRefinement = Nothing}\
-    \}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (c :| []) [], typeRefineRefinement = Nothing}})))))} \
-    \:| [S {sumConstructor = B, sumValue = Just (Arrow (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (d :| []) [], typeRefineRefinement \
-    \= Nothing}})))},S {sumConstructor = C, sumValue = Just (Record (Record' {recordFields \
-    \= NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}), \
-    \nameTypeName = Concrete a} :| [NameType {nameTypeSignature = Refined (NamedRefine \
-    \{nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start \
-    \(Int :| []) [], typeRefineRefinement = Nothing}}), nameTypeName = Implicit b}], recordFamilySignature \
-    \= Nothing}))},S {sumConstructor = D, sumValue = Just (Record (Record' {recordFields \
-    \= NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}), \
-    \nameTypeName = Concrete a} :| [NameType {nameTypeSignature = Refined (NamedRefine \
-    \{nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start \
-    \(Int :| []) [], typeRefineRefinement = Nothing}}), nameTypeName = Implicit b}], recordFamilySignature \
-    \= Just (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName \
-    \= Start (Foo :| []) [SymbolName (Int :| []),ArrowName (Arrows (Arr (ArrGen {arrowGenName \
-    \= Nothing, arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Fooy :| []) [], typeRefineRefinement = Nothing}}, \
-    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Nada :| []) [], typeRefineRefinement = Nothing}})))], \
-    \typeRefineRefinement = Nothing}})}))}])})}"
+    \= TypeRefine {typeRefineName = Start (Fooy :| []) [], typeRefineRefinement \
+    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
+    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Nada \
+    \:| []) [], typeRefineRefinement = Nothing}})))], typeRefineRefinement = Nothing}})}))}])})}"
 
 --------------------------------------------------
 -- Arrow Testing
