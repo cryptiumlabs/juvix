@@ -254,7 +254,7 @@ newTypeParser = do
         p <- peekWord8
         case p of
           Just p
-            | p == Lexer.dash || p == Lexer.colon ->
+            | p == Lexer.dash || p == Lexer.colon || Lexer.pipe == p ->
               fail "overlapping"
             | otherwise -> pure ()
           Nothing -> pure ()
@@ -297,7 +297,7 @@ sum = do
 product :: Parser Types.Product
 product =
   Types.Record <$> record
-    <|> Types.Arrow <$> arrowType
+    <|> skipLiner Lexer.colon *> fmap Types.Arrow arrowType
 
 record :: Parser Types.Record
 record = do

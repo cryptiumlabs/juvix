@@ -69,6 +69,9 @@ at = charToWord8 '@'
 dot :: Word8
 dot = charToWord8 '.'
 
+amper :: Word8
+amper = charToWord8 '&'
+
 times :: Word8
 times = charToWord8 '*'
 
@@ -81,7 +84,7 @@ validStartSymbol w =
 
 validInfixSymbol :: Word8 -> Bool
 validInfixSymbol w =
-  Unicode.isSymbol (wordToChr w) || w == times
+  Unicode.isSymbol (wordToChr w) || w == times || w == dash || w == amper
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =
