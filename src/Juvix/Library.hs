@@ -16,7 +16,8 @@ module Juvix.Library
     module Capability.Reader,
     module Capability.Error,
     module Capability.Writer,
-    module Capability.Stream,
+    module Capability.Sink,
+    module Capability.Source,
     module Numeric.Natural,
     module Juvix.Library.PrettyPrint,
     (∨),
@@ -42,8 +43,9 @@ where
 
 import Capability.Error
 import Capability.Reader
+import Capability.Sink
+import Capability.Source
 import Capability.State
-import Capability.Stream
 import Capability.Writer
 import Data.Hashable (Hashable)
 import Data.String (fromString)

@@ -108,11 +108,20 @@ data Env
 newtype EnvElim a = EnvCon (State Env a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "nextName" Int)
+    ( HasState "nextName" Int,
+      HasSink "nextName" Int,
+      HasSource "nextName" Int
+    )
     via Field "nextName" () (MonadState (State Env))
   deriving
-    (HasState "nameStack" [Int])
+    ( HasState "nameStack" [Int],
+      HasSink "nameStack" [Int],
+      HasSource "nameStack" [Int]
+    )
     via Field "nameStack" () (MonadState (State Env))
   deriving
-    (HasState "symbolStack" [Symbol])
+    ( HasState "symbolStack" [Symbol],
+      HasSink "symbolStack" [Symbol],
+      HasSource "symbolStack" [Symbol]
+    )
     via Field "symbolStack" () (MonadState (State Env))

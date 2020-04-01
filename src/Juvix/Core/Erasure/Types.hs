@@ -17,16 +17,28 @@ newtype EnvT primTy primVal a
   = EnvEra (ExceptT Error (State (Env primTy primVal)) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "typeAssignment" (Erased.TypeAssignment primTy))
+    ( HasState "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSink "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSource "typeAssignment" (Erased.TypeAssignment primTy)
+    )
     via Field "typeAssignment" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    (HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)))
+    ( HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
+      HasSink "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
+      HasSource "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal))
+    )
     via Field "context" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    (HasState "nextName" Int)
+    ( HasState "nextName" Int,
+      HasSink "nextName" Int,
+      HasSource "nextName" Int
+    )
     via Field "nextName" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    (HasState "nameStack" [Int])
+    ( HasState "nameStack" [Int],
+      HasSink "nameStack" [Int],
+      HasSource "nameStack" [Int]
+    )
     via Field "nameStack" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
     (HasThrow "erasureError" Error)
