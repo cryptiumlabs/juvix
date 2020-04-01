@@ -20,26 +20,10 @@ import Juvix.Library hiding (show)
 
 data NoExt
 
-extendTerm "Term" [t|NoExt|] defaultExtTerm
-
-extendElim "Elim" [t|NoExt|] defaultExtElim
-
--- | Values/types
-data Value primTy primVal m
-  = VStar Natural
-  | VPrimTy primTy
-  | VPi
-      Usage.T
-      (Value primTy primVal m)
-      (Value primTy primVal m -> m (Value primTy primVal m))
-  | VLam (Value primTy primVal m -> m (Value primTy primVal m))
-  | VNeutral (Neutral primTy primVal m)
-  | VPrim primVal
-
--- | A neutral term is either a variable or an application of a neutral term to a value
-data Neutral primTy primVal m
-  = NFree Name
-  | NApp (Neutral primTy primVal m) (Value primTy primVal m)
+extendTerm    "Term"    [] [t|NoExt|] defaultExtTerm
+extendElim    "Elim"    [] [t|NoExt|] defaultExtElim
+extendValue   "Value"   [] [t|NoExt|] defaultExtValue
+extendNeutral "Neutral" [] [t|NoExt|] defaultExtNeutral
 
 
 -- Quotation: takes a value back to a term

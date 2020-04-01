@@ -104,3 +104,28 @@ deriving instance
     ElimAll Show ext primTy primVal
   ) =>
   Show (Elim' ext primTy primVal)
+
+
+
+-- the kind signatures on @m@ are needed for e.g.
+-- @type family VStarX primTy primVal (m ∷ Type → Type)@
+-- otherwise it defaults to @Type@ and breaks
+
+extensible [d|
+  -- | Values/types
+  data Value primTy primVal (m ∷ Type → Type)
+    = VStar Natural
+    | VPrimTy primTy
+    | VPi
+        Usage
+        (Value primTy primVal m)
+        (Value primTy primVal m → m (Value primTy primVal m))
+    | VLam (Value primTy primVal m → m (Value primTy primVal m))
+    | VNeutral (Neutral primTy primVal m)
+    | VPrim primVal
+
+  -- | A neutral term is either a variable or an application of a neutral term to a value
+  data Neutral primTy primVal (m ∷ Type → Type)
+    = NFree Name
+    | NApp (Neutral primTy primVal m) (Value primTy primVal m)
+  |]
