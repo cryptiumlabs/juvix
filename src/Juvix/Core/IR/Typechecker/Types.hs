@@ -186,8 +186,10 @@ exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
 
 do
-  let typed = Ext.Ann $ \primTy primVal -> [t|IR.Term $primTy $primVal|]
-  extT <- IR.extendTerm "Term" [t|T|] $
+  mn <- Ext.newName "m"
+  let m     = Ext.varT mn
+      typed = Ext.Ann $ \primTy primVal -> [t|Annotation $primTy $primVal $m|]
+  extT <- IR.extendTerm "Term" [mn] [t|T $m|] $
     IR.defaultExtTerm
       { IR.typeStar   = typed
       , IR.typePrimTy = typed
@@ -195,7 +197,7 @@ do
       , IR.typeLam    = typed
       , IR.typeElim   = typed
       }
-  extE <- IR.extendElim "Elim" [t|T|] $
+  extE <- IR.extendElim "Elim" [mn] [t|T $m|] $
     IR.defaultExtElim
       { IR.typeBound = typed
       , IR.typeFree  = typed
@@ -205,3 +207,16 @@ do
       }
   pure $ extT ++ extE
 
+getTermAnn :: Term m primTy primVal -> Annotation primTy primVal m
+getTermAnn (Star _ ann)   = ann
+getTermAnn (PrimTy _ ann) = ann
+getTermAnn (Pi _ _ _ ann) = ann
+getTermAnn (Lam _ ann)    = ann
+getTermAnn (Elim _ ann)   = ann
+
+getElimAnn :: Elim m primTy primVal -> Annotation primTy primVal m
+getElimAnn (Bound _ ann)   = ann
+getElimAnn (Free _ ann)    = ann
+getElimAnn (Prim _ ann)    = ann
+getElimAnn (App _ _ ann)   = ann
+getElimAnn (Ann _ _ _ ann) = ann

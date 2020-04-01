@@ -20,7 +20,7 @@ data BindAnnotation primTy primVal = BindAnnotation
 
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
-IR.extendTerm "Term" [t|T|] $
+IR.extendTerm "Term" [] [t|T|] $
   IR.defaultExtTerm
     { IR.nameLam = "Lam0"
     , IR.typeLam = Ext.Ann $ \primTy primVal ->
@@ -46,7 +46,7 @@ data AppAnnotation primTy primVal = AppAnnotation
   , argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
   }
 
-IR.extendElim "Elim" [t|T|] $
+IR.extendElim "Elim" [] [t|T|] $
   IR.defaultExtElim
     { IR.typeBound = Ext.Disabled
     , IR.typeFree = Ext.Disabled

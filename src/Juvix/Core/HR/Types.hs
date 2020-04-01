@@ -7,7 +7,7 @@ import Juvix.Library
 
 data T
 
-IR.extendTerm "Term" [t|T|] $
+IR.extendTerm "Term" [] [t|T|] $
   IR.defaultExtTerm
     { IR.nameLam = "Lam0"
     , IR.typeLam = Ext.Ann $ \_primTy _primVal -> [t|Symbol|]
@@ -22,7 +22,7 @@ pattern Pi π x s t = Pi0 π s t x
 
 {-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
 
-IR.extendElim "Elim" [t|T|] $
+IR.extendElim "Elim" [] [t|T|] $
   IR.defaultExtElim
     { IR.typeBound = Ext.Disabled
     , IR.typeFree = Ext.Disabled

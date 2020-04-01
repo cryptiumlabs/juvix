@@ -13,7 +13,7 @@ data Annotation primTy primVal = Annotation
   , typeAnn  :: IR.Term' T primTy primVal
   }
 
-IR.extendTerm "Term" [t|T|] $
+IR.extendTerm "Term" [] [t|T|] $
   IR.defaultExtTerm
     { IR.nameLam = "Lam0"
     , IR.typeLam = Ext.Ann $ \primTy primVal ->
@@ -35,7 +35,7 @@ data AppAnnotation primTy primVal = AppAnnotation
   , argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
   }
 
-IR.extendElim "Elim" [t|T|] $
+IR.extendElim "Elim" [] [t|T|] $
   IR.defaultExtElim
     { IR.nameApp = "App0"
     , IR.typeApp = Ext.Ann $ \primTy primVal ->
