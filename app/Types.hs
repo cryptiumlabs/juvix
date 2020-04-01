@@ -22,7 +22,7 @@ newtype EnvExec primTy primVal a
   = EnvE (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO) a)
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
-    ( HasStream "log" [Core.PipelineLog primTy primVal],
+    ( HasSink "log" [Core.PipelineLog primTy primVal],
       HasWriter "log" [Core.PipelineLog primTy primVal]
     )
     via WriterLog
@@ -34,7 +34,9 @@ newtype EnvExec primTy primVal a
               )
           )
   deriving
-    (HasReader "parameterisation" (Core.Parameterisation primTy primVal))
+    ( HasReader "parameterisation" (Core.Parameterisation primTy primVal),
+      HasSource "parameterisation" (Core.Parameterisation primTy primVal)
+    )
     via Field "parameterisation" ()
           ( ReadStatePure
               ( MonadState

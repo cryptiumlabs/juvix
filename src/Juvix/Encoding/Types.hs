@@ -81,16 +81,22 @@ data Errors
 newtype EnvS a = EnvS (StateT Env (Except Errors) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "constructors" (Map.T Symbol Bound))
+    ( HasState "constructors" (Map.T Symbol Bound),
+      HasSink "constructors" (Map.T Symbol Bound),
+      HasSource "constructors" (Map.T Symbol Bound)
+    )
     via Field "constructors" () (MonadState (StateT Env (Except Errors)))
   deriving
-    (HasState "adtMap" (Map.T Symbol Branches))
+    ( HasState "adtMap" (Map.T Symbol Branches),
+      HasSink "adtMap" (Map.T Symbol Branches),
+      HasSource "adtMap" (Map.T Symbol Branches)
+    )
     via Field "adtMap" () (MonadState (StateT Env (Except Errors)))
   deriving
     (HasThrow "err" Errors)
     via MonadError (StateT Env (Except Errors))
   deriving
-    ( HasStream "missingCases" [Symbol],
+    ( HasSink "missingCases" [Symbol],
       HasWriter "missingCases" [Symbol]
     )
     via WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
