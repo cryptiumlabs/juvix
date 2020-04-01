@@ -752,7 +752,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 -- Assume lambdas from storage are curried.
 applyLambdaFromStorage :: Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
-  lam <- expandedToInst =<< var sym
+  ty' <- typeToPrimType ty
+  lam <- expandedToInst ty' =<< var sym
   arg <- instOuter arg
   ty <- typeToPrimType (eatType 1 ty)
   modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
