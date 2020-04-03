@@ -3,6 +3,7 @@
 module Juvix.Backends.Michelson.Compilation where
 
 import qualified Data.Map as Map
+import Juvix.Core.Usage
 import qualified Juvix.Core.Usage as U
 import qualified Data.Set as Set
 import qualified Data.Text.Lazy as L
@@ -49,7 +50,7 @@ compileToMichelsonContract term ty = do
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
       -- TODO: Figure out what happened to argTy.
       let Ann.Ann _ _ (Ann.LamM _ [name] body) = term
-      modify @"stack" (VStack.cons (VStack.VarE (Set.singleton name) one Nothing, argTy))
+      modify @"stack" (VStack.cons (VStack.VarE (Set.singleton name) Omega Nothing, argTy))
       michelsonOp <- DSL.instOuter body
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of

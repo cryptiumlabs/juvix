@@ -575,7 +575,7 @@ identityAppExpr2 =
     one
     identityType2
     $ J.LamM [] ["x"]
-    $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
+    $ Ann one (primTy (Untyped.pair opl Untyped.unit))
     $ J.AppM
       ( Ann
           one
@@ -761,7 +761,7 @@ identityType =
 
 identityType2 :: Type
 identityType2 =
-  J.Pi one (primTy unitPair) (primTy unitPair)
+  J.Pi one (primTy unitPair) (primTy (Untyped.pair opl unit))
 
 unitl :: M.Type
 unitl = Untyped.list Untyped.unit
