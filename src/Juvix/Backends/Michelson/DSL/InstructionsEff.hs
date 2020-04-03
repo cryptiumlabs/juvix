@@ -519,6 +519,8 @@ apply closure args remainingArgs = do
     app =
       Env.unFun
         (Env.fun closure)
+        -- Undo our last flip, and put the list in the proper place
+        $ reverse
         $ zipWith makeVar (reverse (Env.argsLeft closure))
         $ reverse
         $ Utils.piToListTy

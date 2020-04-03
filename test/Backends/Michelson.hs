@@ -551,6 +551,16 @@ identityAppTerm2 =
       )
       [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
+-- [SeqEx []
+--   ,SeqEx [PrimEx (DIG 0),PrimEx (DUP @),PrimEx (DUG 1)]
+--   ,PrimEx (CAR @ %)
+--   ,PrimEx (NIL : @ (Type TOperation :))
+--   ,PrimEx (DIG 1)
+--   ,PrimEx (PAIR : @ % %)
+--   ,PrimEx (DIPN 1 [PrimEx DROP])]
+
+
+
 identityAppExpr2 :: Term
 identityAppExpr2 =
   Ann

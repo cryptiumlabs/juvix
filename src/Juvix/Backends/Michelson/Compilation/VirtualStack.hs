@@ -329,6 +329,10 @@ predValueUsage n s@(T stack' i) = go stack' []
     go (x : xs) acc = go xs (x : acc)
     go [] _ = T stack' i
 
+-- TODO ∷ change dig and digDup to properly account for items not on the stack
+--        this can be done if we make our own splitAt that properly grabs item 0
+--        on the stack
+
 dig :: Int -> T lamType -> T lamType
 dig i (T stack' n) =
   case splitAt i stack' of
