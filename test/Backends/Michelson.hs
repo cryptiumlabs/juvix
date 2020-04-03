@@ -53,17 +53,17 @@ backendMichelson :: T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
-    [ identityFn
+    [ identityFn,
       --identityApp,
       --identityApp2,
       --identityExpr,
-      --optimiseDupDrop,
-      --optimiseLambdaExec,
-      --addDoublePairTest,
-      --constUIntTest,
-      --overExactConstTest,
-      --overExactNonConstTest,
-      --identityTermTest
+      optimiseDupDrop,
+      optimiseLambdaExec,
+      addDoublePairTest,
+      constUIntTest,
+      overExactConstTest,
+      overExactNonConstTest,
+      identityTermTest
     ]
 
 --------------------------------------------------------------------------------
@@ -727,8 +727,8 @@ identityTermAns =
           )
           (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
           [ SeqEx [],
-            PrimEx (NIL "" "" (M.Type TOperation "")),
             SeqEx [PrimEx (DIG 1), PrimEx (DUP ""), PrimEx (DUG 2)],
+            PrimEx (NIL "" "" (M.Type TOperation "")),
             PrimEx (CAR "" ""),
             PrimEx (PAIR "" "" "" ""),
             PrimEx (DIPN 1 [PrimEx DROP])
