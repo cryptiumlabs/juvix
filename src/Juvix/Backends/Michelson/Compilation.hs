@@ -6,6 +6,7 @@ import qualified Data.Map as Map
 import qualified Data.Text.Lazy as L
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
+import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import Juvix.Library hiding (Type)
@@ -44,6 +45,7 @@ compileToMichelsonContract term ty = do
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
       -- TODO: Figure out what happened to argTy.
+      modify @"stack" (VStack.cons (VStack.Val VStack.FuncResultE, argTy))
       michelsonOp <- DSL.instOuter term
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
@@ -67,6 +69,7 @@ compileToMichelsonExpr term ty = do
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ -> do
       -- TODO: Figure out what happened to argTy.
+      modify @"stack" (VStack.cons (VStack.Val VStack.FuncResultE, argTy))
       michelsonOp <- DSL.instOuter term
       MT.withSomeSingT (MT.fromUType argTy) $ \sty ->
         case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
