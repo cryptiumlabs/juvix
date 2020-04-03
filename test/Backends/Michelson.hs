@@ -54,7 +54,7 @@ backendMichelson =
   T.testGroup
     "Backend Michelson"
     [ identityFn,
-      --identityApp,
+      identityApp,
       --identityApp2,
       --identityExpr,
       optimiseDupDrop,
@@ -123,17 +123,7 @@ identityApp =
   shouldCompile
     identityAppTerm
     identityType
-    "parameter unit;storage unit;code {{PUSH (lambda (pair (pair unit unit) unit) (pair \
-    \(list operation) unit)) {{CAR}; {{PUSH (pair unit (lambda (pair (list operation) \
-    \unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) \
-    \unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair \
-    \unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP \
-    \{CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); NIL operation; DIP {{DUP; CAR; DIP \
-    \{CDR}}}; PAIR % %; EXEC}; {PUSH (pair unit (lambda (pair (pair unit unit) unit) \
-    \unit)) (Pair Unit {CAR; CAR}); {{DIP {SWAP}; SWAP}; DUP; DIP {{SWAP; DIP {SWAP}}}}; \
-    \DIP {{DUP; CAR; DIP {CDR}}}; PAIR % %; EXEC}; DIP {{DUP; CAR; DIP {CDR}}}; PAIR \
-    \% %; EXEC}; DIP {DROP}}; {PUSH unit Unit; {PAIR % %; {SWAP; {DUP; {DIP {SWAP}; \
-    \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}};"
+    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP 1 { DROP };DIP { DROP } } };"
 
 addDoublePairTest :: T.TestTree
 addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
@@ -378,7 +368,7 @@ intPairs1 =
           $ J.Prim
           $ Instructions.toNewPrimErr Instructions.pair
       )
-      [intPair 3 4, intPair 5 6]
+      [intPair 6 5, intPair 4 3]
   where
     t =
       J.Pi one (primTy pairInt)
@@ -512,7 +502,7 @@ identityAppExpr =
           $ J.LamM [] ["x"]
           $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
           $ J.AppM
-            ( Ann one primPairTy2
+            ( Ann one primPairTy
                 $ J.Prim
                 $ Instructions.toNewPrimErr Instructions.pair
             )
@@ -571,11 +561,11 @@ identityAppExpr2 =
     $ J.AppM
       ( Ann
           one
-          (J.Pi one primPairTy2 (primTy (Untyped.pair unitl Untyped.unit)))
+          (J.Pi one primPairTy (primTy (Untyped.pair unitl Untyped.unit)))
           $ J.LamM ["x"] ["f"]
           $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
           $ J.AppM
-            (Ann one primPairTy2 (J.Var "f"))
+            (Ann one primPairTy (J.Var "f"))
             [ Ann one (primTy unitl) (J.Prim (Constant M.ValueNil)),
               Ann one (primTy Untyped.unit) $
                 J.AppM
@@ -591,7 +581,7 @@ identityAppExpr2 =
                   ]
             ]
       )
-      [Ann one primPairTy2 (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
+      [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
 --------------------------------------------------------------------------------
 -- Answers to Tests
@@ -773,13 +763,6 @@ primPairTy =
     $ J.Pi one (primTy Untyped.unit)
     $ primTy
     $ Untyped.pair opl Untyped.unit
-
-primPairTy2 :: Type
-primPairTy2 =
-  J.Pi one (primTy unitl)
-    $ J.Pi one (primTy Untyped.unit)
-    $ primTy
-    $ Untyped.pair unitl Untyped.unit
 
 int :: M.Type
 int = Untyped.tc Untyped.int
