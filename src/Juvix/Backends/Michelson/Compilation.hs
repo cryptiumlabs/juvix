@@ -10,6 +10,7 @@ import qualified Data.Text.Lazy as L
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
+import qualified Juvix.Backends.Michelson.DSL.Instructions as DSL
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
@@ -51,7 +52,9 @@ compileToMichelsonContract term ty = do
       -- TODO: Figure out what happened to argTy.
       let Ann.Ann _ _ (Ann.LamM _ [name] body) = term
       modify @"stack" (VStack.cons (VStack.VarE (Set.singleton name) Omega Nothing, argTy))
-      michelsonOp <- DSL.instOuter body
+      _ <- DSL.instOuter body
+      michelsonOp' <- mconcat |<< get @"ops"
+      let michelsonOp = michelsonOp' <> DSL.dip [DSL.drop]
       let contract = M.Contract paramTy storageTy [michelsonOp]
       case M.typeCheckContract Map.empty contract of
         Right _ -> do
