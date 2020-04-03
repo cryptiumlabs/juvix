@@ -727,9 +727,9 @@ identityTermAns =
           )
           (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
           [ SeqEx [],
-            SeqEx [PrimEx (DIG 1), PrimEx (DUP ""), PrimEx (DUG 2)],
-            PrimEx (NIL "" "" (M.Type TOperation "")),
+            SeqEx [PrimEx (DIG 0), PrimEx (DUP ""), PrimEx (DUG 1)],
             PrimEx (CAR "" ""),
+            PrimEx (NIL "" "" (M.Type TOperation "")),
             PrimEx (PAIR "" "" "" ""),
             PrimEx (DIPN 1 [PrimEx DROP])
           ]
