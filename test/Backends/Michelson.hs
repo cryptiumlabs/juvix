@@ -559,8 +559,6 @@ identityAppTerm2 =
 --   ,PrimEx (PAIR : @ % %)
 --   ,PrimEx (DIPN 1 [PrimEx DROP])]
 
-
-
 identityAppExpr2 :: Term
 identityAppExpr2 =
   Ann

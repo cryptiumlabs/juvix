@@ -335,7 +335,7 @@ predValueUsage n s@(T stack' i) = go stack' []
 
 dig :: Int -> T lamType -> T lamType
 dig i (T stack' n) =
-  case splitAt i stack' of
+  case splitAtReal i stack' of
     (xs, []) -> T xs n
     (xs, y : ys) -> T (y : xs <> ys) n
 
@@ -344,7 +344,7 @@ dig i (T stack' n) =
 -- A Precondition is that at position n the 'usageOf y' >= 1
 dupDig :: Int -> T lamType -> T lamType
 dupDig i (T stack' n) =
-  case splitAt i stack' of
+  case splitAtReal i stack' of
     (xs, []) ->
       T xs n
     (xs, (y, ty) : ys) ->
@@ -389,6 +389,16 @@ insertAt n xs stack =
   where
     postDrop = drop n stack
     dropped = take n stack
+
+splitAtReal ::
+  Int -> [(Elem lamType, b)] -> ([(Elem lamType, b)], [(Elem lamType, b)])
+splitAtReal i xs = splitAt (go xs 0 + i) xs
+  where
+    go ((v, _) : vs) realStackNum
+      | realStackNum == i && inT v = 0
+      | inT v = go vs (succ i)
+      | otherwise = succ (go vs i)
+    go [] _ = 0
 
 --------------------------------------------------------------------------------
 -- Usage Manipulation
