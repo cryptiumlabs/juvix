@@ -687,6 +687,12 @@ overExactNonConstAns =
     PrimEx (DIPN 1 [PrimEx DROP])
   ]
 
+-- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (DIPN 1 [PrimEx DROP])
+--   ,PrimEx (DIG 1)]
+
 identityTermAns :: [Op]
 identityTermAns =
   [ PrimEx

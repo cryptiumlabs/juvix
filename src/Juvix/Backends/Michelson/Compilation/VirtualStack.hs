@@ -78,6 +78,7 @@ data Val lamType
 data NotInStack lamType
   = Val' Untyped.Value
   | Lam' lamType
+  deriving (Show, Eq, Generic)
 
 --------------------------------------------------------------------------------
 -- T Instances
@@ -283,6 +284,7 @@ updatUsageVar (Val _, _) t = t
 data Lookup lamType
   = Value (NotInStack lamType)
   | Position Usage.T Natural
+  deriving (Show)
 
 -- | 'lookup' looks up a symbol from the stack
 -- May return None if the symbol does not exist at all on the stack
@@ -328,10 +330,6 @@ predValueUsage n s@(T stack' i) = go stack' []
         T (reverse acc <> ((VarE n' (Usage.pred usage) val, ty) : xs)) i
     go (x : xs) acc = go xs (x : acc)
     go [] _ = T stack' i
-
--- TODO ∷ change dig and digDup to properly account for items not on the stack
---        this can be done if we make our own splitAt that properly grabs item 0
---        on the stack
 
 dig :: Int -> T lamType -> T lamType
 dig i (T stack' n) =
@@ -399,6 +397,10 @@ splitAtReal i xs = splitAt (go xs 0 + i) xs
       | inT v = go vs (succ i)
       | otherwise = succ (go vs i)
     go [] _ = 0
+
+constantOnTOp (T [] _) = False
+
+constantOnTop (T ((v, _) : _) _) = not (inT v)
 
 --------------------------------------------------------------------------------
 -- Usage Manipulation

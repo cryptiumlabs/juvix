@@ -526,6 +526,7 @@ apply closure args remainingArgs = do
         $ Utils.piToListTy
         $ Env.ty closure
     makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
+    -- TODO ∷ see if we have to drop the top of the stack? It seems to be handled?
     recur (Env.Curr c) xs =
       apply c [] xs
     -- Exec case for Michelson lambdas, e.g. if (storage = f) → g f = f 3!
@@ -544,11 +545,17 @@ deleteVar :: Env.Instruction m => Env.ErasedTerm -> m ()
 deleteVar (Env.Term name _usage) = do
   stack <- get @"stack"
   let pos = VStack.lookupAllPos name stack
-      f (VStack.Value _) = pure ()
-      f (VStack.Position _ 0) = pure ()
-      f (VStack.Position _ index) = do
-        addInstr (Instructions.dipN (fromIntegral index) [Instructions.drop])
-        modify @"stack" (VStack.dropPos index)
+      op i = do
+        addInstr (Instructions.dipN (fromIntegral i) [Instructions.drop])
+        modify @"stack" (VStack.dropPos i)
+      f (VStack.Value _) = do
+        stack <- get @"stack"
+        if  | VStack.constantOnTop stack ->
+              op 0
+            | otherwise ->
+              pure ()
+      f (VStack.Position _ index) =
+        op index
   -- reverse is important here, as we don't decrease the pos of upcoming terms
   -- note that this should only ever hit at most 2 elements, so the
   -- cost of this slightly inefficient generation does not ever matter!
