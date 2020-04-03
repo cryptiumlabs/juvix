@@ -53,17 +53,17 @@ backendMichelson :: T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
-    [ identityFn,
+    [ identityFn
       --identityApp,
       --identityApp2,
       --identityExpr,
-      optimiseDupDrop,
-      optimiseLambdaExec,
-      addDoublePairTest,
-      constUIntTest,
-      overExactConstTest,
-      overExactNonConstTest,
-      identityTermTest
+      --optimiseDupDrop,
+      --optimiseLambdaExec,
+      --addDoublePairTest,
+      --constUIntTest,
+      --overExactConstTest,
+      --overExactNonConstTest,
+      --identityTermTest
     ]
 
 --------------------------------------------------------------------------------

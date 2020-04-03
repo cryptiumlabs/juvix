@@ -314,7 +314,7 @@ onTwoArgs op f typ instrs = do
   case v of
     instr2 : instr1 : _ -> do
       -- May be the wrong order?
-      let instrs = [instr2, instr1]
+      let instrs = [instr1, instr2]
       res <-
         if  | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
