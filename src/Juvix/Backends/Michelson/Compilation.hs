@@ -69,7 +69,6 @@ compileToMichelsonContract term ty = do
         Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
     _ -> throw @"compilationError" InvalidInputType
 
--- TODO: This shouldn't require being a function.
 compileToMichelsonExpr ::
   DSL.Reduction m =>
   Term ->
@@ -77,20 +76,13 @@ compileToMichelsonExpr ::
   m SomeInstr
 compileToMichelsonExpr term ty = do
   michelsonTy <- DSL.typeToPrimType ty
-  case michelsonTy of
-    M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ _paramTy _storageTy) _) _) _ -> do
-      -- TODO: Figure out what happened to argTy.
-      modify @"stack" (VStack.cons (VStack.Val VStack.FuncResultE, argTy))
-      michelsonOp <- DSL.instOuter term
-      MT.withSomeSingT (MT.fromUType argTy) $ \sty ->
-        case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] (sty M.-:& M.SNil)) of
-          Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
-          -- TODO ∷ Figure out what this case should be
-          Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
-          Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
-    M.Type a _ -> do
-      michelsonOp <- DSL.instOuter term
-      undefined
+  _ <- DSL.instOuter term
+  michelsonOp <- mconcat |<< get @"ops"
+  case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] M.SNil) of
+    Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
+    -- TODO ∷ Figure out what this case should be
+    Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
+    Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
 
 runMichelsonExpr :: DSL.Reduction m => NewTerm -> m M.ExpandedOp
 runMichelsonExpr = DSL.instOuter
