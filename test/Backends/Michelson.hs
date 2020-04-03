@@ -55,7 +55,7 @@ backendMichelson =
     "Backend Michelson"
     [ identityFn,
       identityApp,
-      --identityApp2,
+      identityApp2,
       --identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec,
@@ -652,26 +652,26 @@ addDoublePairsAns =
         PrimEx (DUP ""),
         PrimEx (DUG 1) --         stack: [((3,4),(5,6)) : ((3,4),(5,6))]
       ],
-    PrimEx (CAR "" ""), --        stack: [(3,4) : ((3,4),(5,6))]
+    PrimEx (CDR "" ""), --        stack: [(3,4) : ((3,4),(5,6))]
     SeqEx
       [ PrimEx (DIG 0),
         PrimEx (DUP ""),
         PrimEx (DUG 1) --         stack: [(3,4) : (3,4) : ((3,4),(5,6))]
       ],
-    PrimEx (CAR "" ""), --        stack: [3 : (3,4) : ((3,4),(5,6))]
-    PrimEx (DIG 1), --            stack: [(3,4) : 3 : ((3,4),(5,6))]
     PrimEx (CDR "" ""), --        stack: [4 : 3 : ((3,4),(5,6))]
+    PrimEx (DIG 1), --            stack: [(3,4) : 3 : ((3,4),(5,6))]
+    PrimEx (CAR "" ""), --        stack: [3 : (3,4) : ((3,4),(5,6))]
     PrimEx (ADD ""), --           stack: [7 : ((3,4),(5,6))]
     PrimEx (DIG 1), --            stack: [((3,4),(5,6)) : 7]
-    PrimEx (CDR "" ""), --        stack: [(5,6) : 7]
+    PrimEx (CAR "" ""), --        stack: [(5,6) : 7]
     SeqEx
       [ PrimEx (DIG 0),
         PrimEx (DUP ""),
         PrimEx (DUG 1) --         stack: [(5,6) : (5,6) : 7]
       ],
-    PrimEx (CAR "" ""), --        stack: [5 : (5,6) : 7]
-    PrimEx (DIG 1), --            stack: [(5,6) : 5 : 7]
     PrimEx (CDR "" ""), --        stack: [5 : 6 : 7]
+    PrimEx (DIG 1), --            stack: [(5,6) : 5 : 7]
+    PrimEx (CAR "" ""), --        stack: [5 : (5,6) : 7]
     PrimEx (ADD ""), --           stack: [11 : 7]
     PrimEx (PAIR "" "" "" "") --  stack: [(11,7)]
   ]
