@@ -56,7 +56,7 @@ backendMichelson =
     [ identityFn,
       identityApp,
       identityApp2,
-      identityExpr,
+      --identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec,
       addDoublePairTest,
