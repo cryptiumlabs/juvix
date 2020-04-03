@@ -42,7 +42,7 @@ expandedToInst :: Env.Reduction m => Untyped.T -> Env.Expanded -> m Instr.Expand
 expandedToInst ty exp =
   case exp of
     Env.Constant c -> do
-      let newInstr = Instructions.push ty c
+      let newInstr = VStack.constToInstr ty c
       addInstr newInstr
       pure newInstr
     Env.Expanded op -> pure op

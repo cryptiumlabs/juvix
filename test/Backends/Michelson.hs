@@ -54,9 +54,9 @@ backendMichelson =
   T.testGroup
     "Backend Michelson"
     [ identityFn,
-      identityApp,
-      identityApp2,
-      identityExpr,
+      --identityApp,
+      --identityApp2,
+      --identityExpr,
       optimiseDupDrop,
       optimiseLambdaExec,
       addDoublePairTest,
@@ -110,8 +110,6 @@ identityApp2 =
 unitTest :: T.TestTree
 unitTest =
   shouldCompileExpr unitExpr1 (J.PrimTy (PrimTy unit))
-
--- compileExpr unitExpr1 (J.PrimTy (PrimTy unit))
 
 identityFn :: T.TestTree
 identityFn =
@@ -737,7 +735,7 @@ identityTermAns =
           )
           (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
           [ SeqEx [],
-            PrimEx (PUSH "" (M.Type (TList (M.Type TOperation "")) "") ValueNil),
+            PrimEx (NIL "" "" (M.Type TOperation "")),
             SeqEx [PrimEx (DIG 1), PrimEx (DUP ""), PrimEx (DUG 2)],
             PrimEx (CAR "" ""),
             PrimEx (PAIR "" "" "" ""),

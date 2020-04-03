@@ -24,6 +24,8 @@ import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Untyped as Untyped
 import qualified Michelson.Untyped.Instr as Instr
+import qualified Michelson.Untyped.Type as T
+import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
 -- TODO ∷ consolidate the various recursions into a generic combinator
@@ -189,6 +191,12 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
+constToInstr ty c =
+  case c of
+    V.ValueNil ->
+      let T.Type (T.TList t) _ = ty in Instructions.nil t
+    _ -> Instructions.push ty c
+
 promote ::
   forall m lamType.
   Monad m =>
@@ -201,7 +209,7 @@ promote _n stack _
 promote 0 stack _ = pure ([], stack)
 promote n stack f = do
   (insts, newStack) <- promote (pred n) (cdr stack) f
-  let pushVal v t = Instructions.push t v : insts
+  let pushVal v t = constToInstr t v : insts
   case car stack of
     (Val (ConstE v), t) ->
       pure (pushVal v t, cons (Val FuncResultE, t) newStack)
