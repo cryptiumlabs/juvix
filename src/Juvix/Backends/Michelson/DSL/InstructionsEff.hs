@@ -310,11 +310,11 @@ onPairGen1 op f =
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
-  v <- traverse (protect . (inst >=> promoteTopStack)) instrs
+  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
   case v of
     instr2 : instr1 : _ -> do
       -- May be the wrong order?
-      let instrs = [instr1, instr2]
+      let instrs = [instr2, instr1]
       res <-
         if  | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
