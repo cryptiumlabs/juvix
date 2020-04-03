@@ -54,8 +54,8 @@ compileToMichelsonContract term ty = do
           let optimisedContract = M.Contract paramTy storageTy [optimised]
           case M.typeCheckContract Map.empty optimisedContract of
             Right c -> pure (optimisedContract, c)
-            Left err -> throw @"compilationError" (DidNotTypecheckAfterOptimisation err)
-        Left err -> throw @"compilationError" (DidNotTypecheck err)
+            Left err -> throw @"compilationError" (DidNotTypecheckAfterOptimisation optimised err)
+        Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
     _ -> throw @"compilationError" InvalidInputType
 
 -- TODO: This shouldn't require being a function.
@@ -76,7 +76,7 @@ compileToMichelsonExpr term ty = do
           Right (_ M.:/ (s M.::: _)) -> pure (SomeInstr s)
           -- TODO ∷ Figure out what this case should be
           Right (_ M.:/ (M.AnyOutInstr _)) -> undefined
-          Left err -> throw @"compilationError" (DidNotTypecheck err)
+          Left err -> throw @"compilationError" (DidNotTypecheck michelsonOp err)
     M.Type a _ -> do
       michelsonOp <- DSL.instOuter term
       undefined

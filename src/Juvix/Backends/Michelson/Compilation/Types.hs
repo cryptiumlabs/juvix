@@ -38,8 +38,8 @@ data CompilationError
   = NotYetImplemented Text
   | InvalidInputType
   | InternalFault Text
-  | DidNotTypecheck M.TCError
-  | DidNotTypecheckAfterOptimisation M.TCError
+  | DidNotTypecheck Instr.ExpandedOp M.TCError
+  | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError
   | NotEnoughArguments
   | NotInStack Symbol
   | -- Should never happen!
