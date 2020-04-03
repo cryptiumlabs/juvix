@@ -27,6 +27,9 @@ typedContractToSource (M.SomeContract (MT.FullContract instr _ _)) =
 untypedContractToSource :: M.Contract' M.ExpandedOp -> Text
 untypedContractToSource c = L.toStrict (M.printUntypedContract False c)
 
+untypedContractToSourceLine :: M.Contract' M.ExpandedOp -> Text
+untypedContractToSourceLine c = L.toStrict (M.printUntypedContract True c)
+
 compileContract ::
   Term ->
   Type ->

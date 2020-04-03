@@ -24,7 +24,7 @@ shouldCompile :: Term -> Type -> Text -> T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    (Right contract T.@=? ((untypedContractToSource . fst) |<< fst (compileContract term ty)))
+    (Right contract T.@=? ((untypedContractToSourceLine . fst) |<< fst (compileContract term ty)))
 
 shouldOptimise :: Op -> Op -> T.TestTree
 shouldOptimise instr opt =
@@ -116,15 +116,7 @@ identityFn =
   shouldCompile
     identityTerm
     identityType
-    "parameter unit;storage unit;code {{PUSH (pair unit (lambda (pair (list operation) \
-    \unit) (pair (pair (list operation) unit) (lambda (pair unit (pair (list operation) \
-    \unit)) (pair (list operation) unit))))) (Pair Unit {{DIP {PUSH (lambda (pair \
-    \unit (pair (list operation) unit)) (pair (list operation) unit)) {{DUP; CAR; DIP \
-    \{CDR; CAR}; SWAP; PAIR % %}}}; PAIR % %}}); {NIL operation; {DIP {{DUP; CAR; DIP \
-    \{CDR}}}; {PAIR % %; {EXEC; {PUSH (pair unit (lambda (pair (pair unit unit) unit) \
-    \unit)) (Pair Unit {CAR; CAR}); {DIP {SWAP}; {SWAP; {DUP; {DIP {{SWAP; DIP {SWAP}}}; \
-    \{DIP {{DUP; CAR; DIP {CDR}}}; {PAIR % %; {EXEC; {DIP {{DUP; CAR; DIP {CDR}}}; {PAIR \
-    \% %; {EXEC; {DIP {DROP}; {}}}}}}}}}}}}}}}}}}};"
+    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP { DROP } } };"
 
 identityApp :: T.TestTree
 identityApp =
