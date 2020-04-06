@@ -548,7 +548,8 @@ deleteVar (Env.Term name _usage) = do
       op i = do
         addInstr (Instructions.dipN (fromIntegral i) [Instructions.drop])
         modify @"stack" (VStack.dropPos i)
-      f (VStack.Value _) = pure ()
+      f (VStack.Value _) =
+        pure ()
       f (VStack.Position _ 0) = do
         stack <- get @"stack"
         if  | VStack.constantOnTop stack ->

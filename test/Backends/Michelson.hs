@@ -636,6 +636,13 @@ constUIntAns =
       )
   ]
 
+-- [SeqEx [PrimEx (DUP @)
+--        ,PrimEx (CAR @ %),PrimEx (DIP [PrimEx (CDR @ %)])
+--        ,PrimEx (DIP [SeqEx []])]
+--   ,PrimEx (DIG 0)
+--   ,PrimEx (DIPN 0 [PrimEx DROP])
+--   ,PrimEx (DIPN 0 [PrimEx DROP])]
+
 addDoublePairsAns :: [Op]
 addDoublePairsAns =
   [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
@@ -682,9 +689,9 @@ overExactNonConstAns =
   [ PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
     PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
     PrimEx (PUSH "" (M.Type TUnit "") ValueUnit),
-    PrimEx (DIPN 1 [PrimEx DROP]),
-    PrimEx (DIG 1),
-    PrimEx (DIPN 1 [PrimEx DROP])
+    PrimEx (DIPN 0 [PrimEx DROP]),
+    PrimEx (DIPN 0 [PrimEx DROP]),
+    PrimEx (DIG 0)
   ]
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)

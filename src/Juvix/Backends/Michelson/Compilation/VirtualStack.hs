@@ -257,7 +257,7 @@ dropPos 0 xs
   | not (isNil xs) && inT (fst (car xs)) =
     updatUsageVar (car xs) (cdr xs)
   | not (isNil xs) =
-    dropPos 0 (cdr xs)
+    cons (car xs) (dropPos 0 (cdr xs))
   | otherwise = xs
 dropPos n xs
   | not (isNil xs) && inT (fst (car xs)) =
