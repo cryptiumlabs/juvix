@@ -105,7 +105,7 @@ identityApp2 =
   shouldCompile
     identityAppTerm2
     identityType
-    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;CAR;DIG 0;NIL operation;DIG 0;PAIR;DIP { DROP } } };"
+    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;CAR;DIG 0;NIL operation;PAIR;DIP { DROP } } };"
 
 unitTest :: T.TestTree
 unitTest =
