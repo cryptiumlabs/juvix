@@ -2,7 +2,6 @@
 
 module Juvix.Core.IR.Types.Base where
 
-import Data.Kind (Constraint, Type)
 import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
@@ -32,12 +31,13 @@ extensible
       | -- | CONV conversion rule. TODO make sure 0Γ ⊢ S≡T
         -- Elim is the constructor that embeds Elim to Term
         Elim (Elim primTy primVal)
+      deriving (Eq, Show)
 
     -- | inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
         Bound Natural
-      | -- | Free variables of type name (see below)
+      | -- | Free variables of type name (see above)
         Free Name
       | -- | primitive constant
         Prim primVal
@@ -45,66 +45,8 @@ extensible
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
         Ann Usage (Term primTy primVal) (Term primTy primVal)
-    |]
-
--- FIXME generate these in @extensible-data@
-
--- | A bundle constraint that requires each annotation type in 'Term' to have an
--- instance of @c@.
-type TermAll (c :: Type -> Constraint) ext primTy primVal =
-  ( c (XStar ext primTy primVal),
-    c (XPrimTy ext primTy primVal),
-    c (XPi ext primTy primVal),
-    c (XLam ext primTy primVal),
-    c (XElim ext primTy primVal),
-    c (TermX ext primTy primVal)
-  )
-
--- | A bundle constraint that requires each annotation type in 'Elim' to have an
--- instance of @c@.
-type ElimAll (c :: Type -> Constraint) ext primTy primVal =
-  ( c (XBound ext primTy primVal),
-    c (XFree ext primTy primVal),
-    c (XPrim ext primTy primVal),
-    c (XApp ext primTy primVal),
-    c (XAnn ext primTy primVal),
-    c (ElimX ext primTy primVal)
-  )
-
--- FIXME support deriving in @extensible-data@
-
-deriving instance
-  ( Eq primTy,
-    Eq primVal,
-    TermAll Eq ext primTy primVal,
-    ElimAll Eq ext primTy primVal
-  ) =>
-  Eq (Term' ext primTy primVal)
-
-deriving instance
-  ( Show primTy,
-    Show primVal,
-    TermAll Show ext primTy primVal,
-    ElimAll Show ext primTy primVal
-  ) =>
-  Show (Term' ext primTy primVal)
-
-deriving instance
-  ( Eq primTy,
-    Eq primVal,
-    TermAll Eq ext primTy primVal,
-    ElimAll Eq ext primTy primVal
-  ) =>
-  Eq (Elim' ext primTy primVal)
-
-deriving instance
-  ( Show primTy,
-    Show primVal,
-    TermAll Show ext primTy primVal,
-    ElimAll Show ext primTy primVal
-  ) =>
-  Show (Elim' ext primTy primVal)
-
+      deriving (Eq, Show)
+  |]
 
 
 -- the kind signatures on @m@ are needed for e.g.

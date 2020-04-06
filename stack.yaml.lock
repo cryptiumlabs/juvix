@@ -376,19 +376,19 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 9023
-    url: https://github.com/cryptiumlabs/extensible-data/archive/074766218e24fcdbe9cea725cf2d6238227bc1fe.tar.gz
+    size: 10483
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
     cabal-file:
-      size: 1611
-      sha256: f556103f7f239ac8176d666caa8ceec94bedf509fc80426da779156784088d34
+      size: 2058
+      sha256: a457da0b5a07a04710a1f68c633feefa6f999cdc2e624687a3781f6087aeaa19
     name: extensible-data
     version: 0.1.0
-    sha256: b64b94e98e4df66f8ac7ef4f0e73f6949b25de9d99083cb1f59b4c8fc3489020
+    sha256: 72a1c07313350e423c2a56beac41bddfc4b9b32f7e4a478313455d7e14796a4e
     pantry-tree:
-      size: 761
-      sha256: f0bca4002bcbcf6e37f386f72d0f13baecaccc4d20ddb45b42593af98c78a9e2
+      size: 891
+      sha256: dbbdaeb19d5b03d600910099204032bf30fad7a0889c6f68e697539bf30ebcf2
   original:
-    url: https://github.com/cryptiumlabs/extensible-data/archive/074766218e24fcdbe9cea725cf2d6238227bc1fe.tar.gz
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
 snapshots:
 - completed:
     size: 524155

@@ -8,9 +8,10 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Base
 import Prelude (Show (..), String)
+import Data.Kind (Type)
 
 
-data T
+data T (m :: Type -> Type)
 
 data Annotation primTy primVal m =
   Annotation
@@ -182,8 +183,6 @@ exec ∷
     EnvCtx primTy primVal
   )
 exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
-
-
 
 do
   mn <- Ext.newName "m"
