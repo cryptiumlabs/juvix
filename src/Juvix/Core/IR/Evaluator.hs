@@ -171,8 +171,9 @@ type AllSubstV ext primTy primVal =
 
 instance (AllSubstV ext primTy primVal,
           Monoid (IR.XVNeutral ext primTy primVal),
+          Monoid (IR.XVLam ext primTy primVal),
           Monoid (IR.XVPrim ext primTy primVal)) =>
-         HasSubstV ext primTy primVal (IR.Value' ext primTy primVal)
+  HasSubstV ext primTy primVal (IR.Value' ext primTy primVal)
  where
   substV' param i e (IR.VStar' n a) =
     IR.VStar' n <$> substV' param i e a
@@ -193,6 +194,7 @@ instance (AllSubstV ext primTy primVal,
 substValue' ::
   (AllSubstV ext primTy primVal,
    Monoid (IR.XVNeutral ext primTy primVal),
+   Monoid (IR.XVLam ext primTy primVal),
    Monoid (IR.XVPrim ext primTy primVal),
    HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
   => Param.Parameterisation primTy primVal
@@ -205,6 +207,7 @@ substValue' = substV'
 substValue ::
   (AllSubstV ext primTy primVal,
    Monoid (IR.XVNeutral ext primTy primVal),
+   Monoid (IR.XVLam ext primTy primVal),
    Monoid (IR.XVPrim ext primTy primVal),
    HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
   => Param.Parameterisation primTy primVal
@@ -216,6 +219,7 @@ substValue param = substValue' param 0
 substNeutral' ::
   (AllSubstV ext primTy primVal,
    Monoid (IR.XVNeutral ext primTy primVal),
+   Monoid (IR.XVLam ext primTy primVal),
    Monoid (IR.XVPrim ext primTy primVal),
    HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
   => Param.Parameterisation primTy primVal
@@ -242,6 +246,7 @@ substNeutral' param i e (IR.NApp' f s a) _ =
 substNeutral ::
   (AllSubstV ext primTy primVal,
    Monoid (IR.XVNeutral ext primTy primVal),
+   Monoid (IR.XVLam ext primTy primVal),
    Monoid (IR.XVPrim ext primTy primVal),
    HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
   => Param.Parameterisation primTy primVal
@@ -254,6 +259,7 @@ substNeutral param = substNeutral' param 0
 vapp ::
   (AllSubstV ext primTy primVal,
    Monoid (IR.XVNeutral ext primTy primVal),
+   Monoid (IR.XVLam ext primTy primVal),
    Monoid (IR.XVPrim ext primTy primVal),
    HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
   => Param.Parameterisation primTy primVal
@@ -267,7 +273,7 @@ vapp param (IR.VLam' t _) s _ =
   substValue param s t
 vapp _ (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
-vapp param f@(IR.VPrim' p a) s@(IR.VPrim' q b) c
+vapp param f@(IR.VPrim' p _) s@(IR.VPrim' q _) _
     | Just v <- Param.apply param p q =
   pure $ IR.VPrim' v mempty
 vapp _ f s _ =
