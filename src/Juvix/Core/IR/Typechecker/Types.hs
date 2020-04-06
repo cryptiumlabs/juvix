@@ -11,69 +11,90 @@ import Prelude (Show (..), String)
 import Data.Kind (Type)
 
 
-data T (m :: Type -> Type)
-
-data Annotation primTy primVal m =
+data Annotation' ext primTy primVal =
   Annotation
     { annUsage :: Usage.T
-    , annType  :: IR.Value primTy primVal m
+    , annType  :: IR.Value' ext primTy primVal
     }
 
-deriving instance (Eq (IR.Value primTy primVal m)) =>
-  Eq (Annotation primTy primVal m)
+type Annotation = Annotation' IR.NoExt
 
-deriving instance (Show (IR.Value primTy primVal m)) =>
-  Show (Annotation primTy primVal m)
+deriving instance (Eq (IR.Value' ext primTy primVal)) =>
+  Eq (Annotation' ext primTy primVal)
 
-data ContextElement primTy primVal m =
+deriving instance (Show (IR.Value' ext primTy primVal)) =>
+  Show (Annotation' ext primTy primVal)
+
+data ContextElement' ext primTy primVal =
   ContextElement
     { ctxName :: IR.Name
-    , ctxAnn  :: {-# UNPACK #-} !(Annotation primTy primVal m)
+    , ctxAnn  :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
     }
 
-contextElement :: IR.Name -> Usage.T -> IR.Value primTy primVal m
-               -> ContextElement primTy primVal m
+type ContextElement = ContextElement' IR.NoExt
+
+contextElement :: IR.Name -> Usage.T -> IR.Value' ext primTy primVal
+               -> ContextElement' ext primTy primVal
 contextElement n π t = ContextElement n (Annotation π t)
 
-deriving instance (Eq (IR.Value primTy primVal m)) =>
-  Eq (ContextElement primTy primVal m)
+deriving instance (Eq (IR.Value' ext primTy primVal)) =>
+  Eq (ContextElement' ext primTy primVal)
 
-deriving instance (Show (IR.Value primTy primVal m)) =>
-  Show (ContextElement primTy primVal m)
+deriving instance (Show (IR.Value' ext primTy primVal)) =>
+  Show (ContextElement' ext primTy primVal)
 
-type Context primTy primVal m = [ContextElement primTy primVal m]
+type Context' ext primTy primVal = [ContextElement' ext primTy primVal]
 
-lookupCtx :: IR.Name -> Context primTy primVal m
-          -> Maybe (Annotation primTy primVal m)
+type Context primTy primVal = Context' IR.NoExt primTy primVal
+
+lookupCtx :: IR.Name -> Context' ext primTy primVal
+          -> Maybe (Annotation' ext primTy primVal)
 lookupCtx x = fmap ctxAnn . find (\e -> ctxName e == x)
 
 
-data TypecheckError primTy primVal m
+data TypecheckError' ext primTy primVal
   = TypeMismatch
       Natural
-      (IR.Term primTy primVal)
-      (Annotation primTy primVal m)
-      (Annotation primTy primVal m)
-  | UniverseMismatch (IR.Term primTy primVal) (IR.Value primTy primVal m)
-  | CannotApply (IR.Value primTy primVal m) (IR.Value primTy primVal m)
-  | ShouldBeStar (IR.Value primTy primVal m)
-  | ShouldBeFunctionType (IR.Value primTy primVal m) (IR.Term primTy primVal)
+      (IR.Term' ext primTy primVal)
+      (Annotation' ext primTy primVal)
+      (Annotation' ext primTy primVal)
+  | UniverseMismatch
+      (IR.Term' ext primTy primVal)
+      (IR.Value' ext primTy primVal)
+  | CannotApply (IR.Value' ext primTy primVal) (IR.Value' ext primTy primVal)
+  | ShouldBeStar (IR.Value' ext primTy primVal)
+  | ShouldBeFunctionType
+      (IR.Value' ext primTy primVal)
+      (IR.Term' ext primTy primVal)
   | UnboundIndex Natural
   | SigmaMustBeZero
   | UsageMustBeZero
-  | UsageNotCompatible (Annotation primTy primVal m) (Annotation primTy primVal m)
+  | UsageNotCompatible
+      (Annotation' ext primTy primVal)
+      (Annotation' ext primTy primVal)
   | UnboundBinder Natural IR.Name
-  | MustBeFunction (IR.Elim primTy primVal) Natural (IR.Term primTy primVal)
+  | MustBeFunction
+      (IR.Elim' ext primTy primVal)
+      Natural
+      (IR.Term' ext primTy primVal)
   | BoundVariableCannotBeInferred
 
-deriving instance
-  (Eq primTy, Eq primVal) ⇒
-  Eq (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+type TypecheckError = TypecheckError' IR.NoExt
 
-instance
-  (Show primTy, Show primVal) ⇒
-  Show (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
-  where
+deriving instance
+  (Eq primTy, Eq primVal,
+   IR.ValueAll Eq ext primTy primVal,
+   IR.NeutralAll Eq ext primTy primVal,
+   IR.TermAll Eq ext primTy primVal,
+   IR.ElimAll Eq ext primTy primVal) ⇒
+  Eq (TypecheckError' ext primTy primVal)
+
+instance (Show primTy, Show primVal,
+          IR.ValueAll Show ext primTy primVal,
+          IR.NeutralAll Show ext primTy primVal,
+          IR.TermAll Show ext primTy primVal,
+          IR.ElimAll Show ext primTy primVal)
+        ⇒ Show (TypecheckError' ext primTy primVal) where
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
@@ -132,15 +153,15 @@ data EnvCtx primTy primVal
   deriving (Show, Eq, Generic)
 
 type EnvAlias primTy primVal =
-  ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+  ExceptT (TypecheckError primTy primVal)
     (State (EnvCtx primTy primVal))
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasThrow "typecheckError" (TypecheckError primTy primVal (EnvTypecheck primTy primVal)))
+    (HasThrow "typecheckError" (TypecheckError primTy primVal))
     via MonadError
-          ( ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+          ( ExceptT (TypecheckError primTy primVal)
               (MonadState (State (EnvCtx primTy primVal)))
           )
   deriving
@@ -150,45 +171,23 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
     via WriterLog
           ( Field "typecheckerLog" ()
               ( MonadState
-                  ( ExceptT (TypecheckError primTy primVal (EnvTypecheck primTy primVal))
+                  ( ExceptT (TypecheckError primTy primVal)
                       (State (EnvCtx primTy primVal))
                   )
               )
           )
 
-instance
-  (Eq primTy, Eq primVal) ⇒
-  Eq (IR.Value primTy primVal (EnvTypecheck primTy primVal))
-  where
-  x == y = fst (exec (IR.quote0 x)) == fst (exec (IR.quote0 y))
 
-deriving instance
-  (Eq primTy, Eq primVal) ⇒
-  Eq (IR.Neutral primTy primVal (EnvTypecheck primTy primVal))
-
-instance
-  (Show primTy, Show primVal) ⇒
-  Show (IR.Value primTy primVal (EnvTypecheck primTy primVal))
-  where
-  show x = show (fst (exec (IR.quote0 x)))
-
-deriving instance
-  (Show primTy, Show primVal) ⇒
-  Show (IR.Neutral primTy primVal (EnvTypecheck primTy primVal))
-
-
-exec ∷
-  EnvTypecheck primTy primVal a →
-  ( Either (TypecheckError primTy primVal (EnvTypecheck primTy primVal)) a,
-    EnvCtx primTy primVal
-  )
+exec ∷ EnvTypecheck primTy primVal a
+     → (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
 exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
 
+
+data T
+
 do
-  mn <- Ext.newName "m"
-  let m     = Ext.varT mn
-      typed = Ext.Ann $ \primTy primVal -> [t|Annotation $primTy $primVal $m|]
-  extT <- IR.extendTerm "Term" [mn] [t|T $m|] $
+  let typed = Ext.Ann $ \primTy primVal -> [t|Annotation $primTy $primVal|]
+  extT <- IR.extendTerm "Term" [] [t|T|] $
     IR.defaultExtTerm
       { IR.typeStar   = typed
       , IR.typePrimTy = typed
@@ -196,7 +195,7 @@ do
       , IR.typeLam    = typed
       , IR.typeElim   = typed
       }
-  extE <- IR.extendElim "Elim" [mn] [t|T $m|] $
+  extE <- IR.extendElim "Elim" [] [t|T|] $
     IR.defaultExtElim
       { IR.typeBound = typed
       , IR.typeFree  = typed
@@ -206,16 +205,41 @@ do
       }
   pure $ extT ++ extE
 
-getTermAnn :: Term m primTy primVal -> Annotation primTy primVal m
+getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann)   = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
 getTermAnn (Lam _ ann)    = ann
 getTermAnn (Elim _ ann)   = ann
 
-getElimAnn :: Elim m primTy primVal -> Annotation primTy primVal m
+getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
 getElimAnn (Bound _ ann)   = ann
 getElimAnn (Free _ ann)    = ann
 getElimAnn (Prim _ ann)    = ann
 getElimAnn (App _ _ ann)   = ann
 getElimAnn (Ann _ _ _ ann) = ann
+
+
+-- | A \"flexible\" type is one where some of the universe levels might be
+-- unknown. The constructor @VStar Natural@ is replaced with
+-- @VStar (Maybe Natural)@.
+data Flex
+
+IR.extendValue "FlexValue" [] [t|Flex|] $ IR.defaultExtValue
+  { IR.typeVStar  = Ext.Disabled
+  , IR.typeValueX = [("VStar", \_ _ -> [t|Maybe Natural|])]
+  }
+IR.extendNeutral "FlexNeutral" [] [t|Flex|] IR.defaultExtNeutral
+
+makeFlexValue :: IR.Value primTy primVal -> FlexValue primTy primVal
+makeFlexValue (IR.VStar x) = VStar (Just x)
+makeFlexValue (IR.VPrimTy t) = VPrimTy t
+makeFlexValue (IR.VPi π s t) = VPi π (makeFlexValue s) (makeFlexValue t)
+makeFlexValue (IR.VLam t) = VLam (makeFlexValue t)
+makeFlexValue (IR.VNeutral n) = VNeutral (makeFlexNeutral n)
+makeFlexValue (IR.VPrim p) = VPrim p
+
+makeFlexNeutral :: IR.Neutral primTy primVal -> FlexNeutral primTy primVal
+makeFlexNeutral (IR.NBound x) = NBound x
+makeFlexNeutral (IR.NFree x) = NFree x
+makeFlexNeutral (IR.NApp n v) = NApp (makeFlexNeutral n) (makeFlexValue v)

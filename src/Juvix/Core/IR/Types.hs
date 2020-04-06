@@ -14,9 +14,6 @@ import Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 
---------------------------------------------------------------------------------
--- Types
---------------------------------------------------------------------------------
 
 data NoExt
 
@@ -27,43 +24,22 @@ extendNeutral "Neutral" [] [t|NoExt|] defaultExtNeutral
 
 
 -- Quotation: takes a value back to a term
-quote0 ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Value primTy primVal m ->
-  m (Term primTy primVal)
+quote0 :: Value primTy primVal -> Term primTy primVal
 quote0 = quote 0
 
-quote ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Natural ->
-  Value primTy primVal m ->
-  m (Term primTy primVal)
-quote ii p =
-  case p of
-    VStar nat -> pure (Star nat)
-    VPrimTy p -> pure (PrimTy p)
-    VPi pi v f -> Pi pi <$> quote ii v <*> (quote (succ ii) =<< f (vfree (Quote ii)))
-    VLam func -> Lam <$> (quote (succ ii) =<< func (vfree (Quote ii)))
-    VPrim pri -> pure (Elim (Prim pri))
-    VNeutral n -> Elim <$> neutralQuote ii n
+quote :: Natural -> Value primTy primVal -> Term primTy primVal
+quote _  (VStar nat)  = Star nat
+quote _  (VPrimTy p)  = PrimTy p
+quote ii (VPi π s t)  = Pi π (quote ii s) (quote (ii + 1) t)
+quote ii (VLam s)     = Lam (quote (ii + 1) s)
+quote _  (VPrim pri)  = Elim (Prim pri)
+quote ii (VNeutral n) = Elim $ neutralQuote ii n
 
-neutralQuote ::
-  forall primTy primVal m.
-  (Monad m) =>
-  Natural ->
-  Neutral primTy primVal m ->
-  m (Elim primTy primVal)
-neutralQuote ii (NFree x) = pure (boundfree ii x)
-neutralQuote ii (NApp n v) = App <$> neutralQuote ii n <*> quote ii v
+neutralQuote :: Natural -> Neutral primTy primVal -> Elim primTy primVal
+neutralQuote _  (NBound x) = Bound x
+neutralQuote _  (NFree x)  = Free x
+neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
 
--- | 'vfree' creates the value corresponding to a free variable
-vfree :: Name -> Value primTy primVal m
-vfree n = VNeutral (NFree n)
-
--- checks if the variable occurring at the head of
--- the application is a bound variable or a free name
-boundfree :: Natural -> Name -> Elim primTy primVal
-boundfree ii (Quote k) = Bound (ii - k - 1)
-boundfree _ii x = Free x
+-- | 'VFree' creates the value corresponding to a free variable
+pattern VFree :: Name -> Value primTy primVal
+pattern VFree n = VNeutral (NFree n)

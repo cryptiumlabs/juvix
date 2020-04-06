@@ -12,7 +12,6 @@ data Name
     Global String -- FIXME Text???
   | -- | to convert a bound variable into a free one
     Local Natural
-  | Quote Natural
   deriving (Show, Eq)
 
 extensible
@@ -49,25 +48,22 @@ extensible
   |]
 
 
--- the kind signatures on @m@ are needed for e.g.
--- @type family VStarX primTy primVal (m ∷ Type → Type)@
--- otherwise it defaults to @Type@ and breaks
-
 extensible [d|
   -- | Values/types
-  data Value primTy primVal (m ∷ Type → Type)
+  data Value primTy primVal
     = VStar Natural
     | VPrimTy primTy
-    | VPi
-        Usage
-        (Value primTy primVal m)
-        (Value primTy primVal m → m (Value primTy primVal m))
-    | VLam (Value primTy primVal m → m (Value primTy primVal m))
-    | VNeutral (Neutral primTy primVal m)
+    | VPi Usage (Value primTy primVal) (Value primTy primVal)
+    | VLam (Value primTy primVal)
+    | VNeutral (Neutral primTy primVal)
     | VPrim primVal
+    deriving (Eq, Show)
 
-  -- | A neutral term is either a variable or an application of a neutral term to a value
-  data Neutral primTy primVal (m ∷ Type → Type)
-    = NFree Name
-    | NApp (Neutral primTy primVal m) (Value primTy primVal m)
+  -- | A neutral term is either a variable or an application of a neutral term
+  -- to a value
+  data Neutral primTy primVal
+    = NBound Natural
+    | NFree Name
+    | NApp (Neutral primTy primVal) (Value primTy primVal)
+    deriving (Eq, Show)
   |]

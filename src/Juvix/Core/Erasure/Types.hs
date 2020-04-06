@@ -7,7 +7,7 @@ import Juvix.Library hiding (empty)
 data Env primTy primVal
   = Env
       { typeAssignment :: Erased.TypeAssignment primTy
-      , context :: TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)
+      , context :: TC.Context primTy primVal
       , nextName :: Int
       , nameStack :: [Int]
       }
