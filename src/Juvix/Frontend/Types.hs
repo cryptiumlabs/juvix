@@ -46,7 +46,7 @@ data TypeSum
 -- | 'Data' is the data declaration in the Juvix language
 data Data
   = Arrowed
-      { dataArrow :: ArrowType,
+      { dataArrow :: Expression,
         dataAdt :: Adt
       }
   | NonArrowed
@@ -69,14 +69,6 @@ newtype Alias
 --------------------------------------------------
 -- Arrows
 --------------------------------------------------
-
-data ArrowType
-  = Refined NamedRefine
-  | End ArrowType
-  | Arrows ArrowData ArrowType
-  | Parens ArrowParen ArrowType
-  deriving (Show)
-
 data NamedRefine
   = NamedRefine
       { nameRefineName :: !(Maybe Name),
@@ -84,35 +76,12 @@ data NamedRefine
       }
   deriving (Show)
 
-newtype ArrowParen
-  = Paren (ArrowGen ArrowType)
-  deriving (Show)
-
--- Hold up the arrowGen name with the namedRefine name.
--- they are the same, but will only be in the arrowgen
-newtype ArrowData
-  = Arr (ArrowGen NamedRefine)
-  deriving (Show)
-
-data ArrowGen a
-  = ArrGen
-      { arrowGenName :: !(Maybe Name),
-        arrowGenData :: a,
-        arrowGenArrow :: !ArrowSymbol
-      }
-  deriving (Show)
-
 -- TODO ∷ change TypeName to TypeNameModule
 data TypeRefine
   = TypeRefine
-      { typeRefineName :: !TypeName,
-        typeRefineRefinement :: Maybe Expression
+      { typeRefineName :: Expression,
+        typeRefineRefinement :: Expression
       }
-  deriving (Show)
-
-data TypeNameModule
-  = TypedName !TypeName
-  | ModuleName
   deriving (Show)
 
 --------------------------------------------------
@@ -127,18 +96,6 @@ data Name
 data ArrowSymbol
   = ArrowUse Usage.T
   | ArrowExp Usage
-  deriving (Show)
-
--- I think we can do
--- Foo a u#b c ?
-data TypeName
-  = Start NameSymb [TypeNameValid]
-  deriving (Show)
-
-data TypeNameValid
-  = ArrowName ArrowType
-  | SymbolName NameSymb
-  | UniverseName UniverseExpression
   deriving (Show)
 
 -- TODO ∷ finish this type!
@@ -164,7 +121,7 @@ data Sum
 
 data Product
   = Record !Record
-  | Arrow !ArrowType
+  | Arrow !Expression
   deriving (Show)
 
 data Record
@@ -176,7 +133,7 @@ data Record
 
 data NameType
   = NameType
-      { nameTypeSignature :: !ArrowType,
+      { nameTypeSignature :: Expression,
         nameTypeName :: !Name
       }
   deriving (Show)
@@ -249,8 +206,8 @@ data Signature
   = Sig
       { signatureName :: Symbol,
         signatureUsage :: Maybe Usage,
-        signatureArrowType :: ArrowType,
-        signatureConstraints :: [TypeName]
+        signatureArrowType :: Expression,
+        signatureConstraints :: [Expression]
       }
   deriving (Show)
 
@@ -277,6 +234,18 @@ data Expression
   | Infix Infix
   | ExpRecord ExpRecord
   | Do Do
+  -- Added due to merge
+  | ArrowE ArrowExp
+  | NamedRefineE NamedRefine
+  | RefinedE TypeRefine
+  | UniverseName UniverseExpression
+  deriving (Show)
+
+data ArrowExp = Arr'
+  { arrowExpLeft :: Expression,
+    arrowExpUsage :: Usage,
+    arrowExpRight :: Expression
+  }
   deriving (Show)
 
 data Constant

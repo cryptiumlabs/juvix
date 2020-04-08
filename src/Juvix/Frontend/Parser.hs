@@ -46,6 +46,8 @@ expressionGen' p =
     <|> Types.Application <$> try application
     <|> try p
     <|> Types.Constant <$> constant
+    <|> try (Types.NamedRefineE <$> namedRefine)
+    <|> try (Types.RefinedE <$> typeRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> parens (expressionGen p)
 
@@ -104,13 +106,13 @@ signature' = do
   maybeUsage <- maybe expressionSN
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
-  arrowType <- arrowType
-  pure (Types.Sig name maybeUsage arrowType typeclasses)
+  exp <- expression
+  pure (Types.Sig name maybeUsage exp typeclasses)
 
-signatureConstraint :: Parser [Types.TypeName]
+signatureConstraint :: Parser [Types.Expression]
 signatureConstraint =
-  pure <$> typeNameParserSN <* string "=>"
-    <|> parens (sepBy typeNameParserSN (skipLiner Lexer.comma)) <* string "=>"
+  pure <$> expression <* string "=>"
+    <|> parens (sepBy expression (skipLiner Lexer.comma)) <* string "=>"
     <|> pure []
 
 --------------------------------------------------------------------------------
@@ -273,7 +275,7 @@ aliasParser = do
 
 dataParser :: Parser Types.Data
 dataParser = do
-  arrow <- maybe (skipLiner Lexer.colon *> arrowTypeSN)
+  arrow <- maybe (skipLiner Lexer.colon *> expression)
   skipLiner Lexer.equals
   adt <- adt
   case arrow of
@@ -297,7 +299,7 @@ sum = do
 product :: Parser Types.Product
 product =
   Types.Record <$> record
-    <|> skipLiner Lexer.colon *> fmap Types.Arrow arrowType
+    <|> skipLiner Lexer.colon *> fmap Types.Arrow expression
 
 record :: Parser Types.Record
 record = do
@@ -312,7 +314,7 @@ nameType :: Parser Types.NameType
 nameType = do
   name <- nameParserSN
   skipLiner Lexer.colon
-  sig <- arrowType
+  sig <- expression
   pure (Types.NameType sig name)
 
 nameParserColon :: Parser Types.Name
@@ -327,47 +329,6 @@ nameParser =
 --------------------------------------------------
 -- Arrow Type parser
 --------------------------------------------------
-
--- This family of parsers are a bit complicated
--- Though they work well!
-
-arrowType :: Parser Types.ArrowType
-arrowType = do
-  let toType (Arrow a) = Types.Arrows a
-      toType (Parens p) = Types.Parens p
-  recursive <- arrowOrParens
-  end <- fmap Types.Refined (namedRefine <|> parens namedRefine) <|> endArrow
-  pure (foldr toType end recursive)
-
-data ArrowOrParens
-  = Arrow Types.ArrowData
-  | Parens Types.ArrowParen
-  deriving (Show)
-
-endArrow :: Parser Types.ArrowType
-endArrow = Types.End <$> parens arrowType
-
-arrowOrParens :: Parser [ArrowOrParens]
-arrowOrParens =
-  many (Arrow <$> arrowsSN <|> Parens <$> parendArrowSN)
-
-arrowGen ::
-  Parser a ->
-  ( Parser (Maybe Types.Name, a) ->
-    Parser (Maybe Types.Name, a)
-  ) ->
-  Parser (Types.ArrowGen a)
-arrowGen p overParser = do
-  (mName, parser) <- spaceLiner (overParser ((,) <$> maybe nameParserColonSN <*> p))
-  Types.ArrGen mName parser <$> arrowSymbol
-
-arrows :: Parser Types.ArrowData
-arrows =
-  Types.Arr <$> arrowGen namedRefineSN identity
-
-parendArrow :: Parser Types.ArrowParen
-parendArrow =
-  Types.Paren <$> arrowGen arrowTypeSN parens
 
 namedRefine :: Parser Types.NamedRefine
 namedRefine =
@@ -391,22 +352,11 @@ arrowSymbol =
 
 typeRefine :: Parser Types.TypeRefine
 typeRefine = do
-  typeName <- typeNameParserSN
-  refine <- maybe (curly expressionSN)
+  typeName <- expressionSN
+  refine <- curly expressionSN
   pure (Types.TypeRefine typeName refine)
 
-typeNameParser :: Parser Types.TypeName
-typeNameParser = do
-  pre <- prefixSymbolDotSN
-  body <-
-    many
-      $ spaceLiner
-      $ universeSymbol
-        <|> Types.SymbolName <$> prefixSymbolDotSN
-        <|> Types.ArrowName <$> parens arrowTypeSN
-  pure (Types.Start pre body)
-
-universeSymbol :: Parser Types.TypeNameValid
+universeSymbol :: Parser Types.Expression
 universeSymbol = do
   _ <- string "u#"
   Types.UniverseName <$> universeExpression
@@ -682,6 +632,19 @@ infixOp =
     )
     Expr.AssocLeft
 
+arrowExp :: Expr.Operator ByteString Types.Expression
+arrowExp =
+  Expr.Infix
+    ( do
+        skipLiner Lexer.dash
+        exp <- expressionSN
+        _ <- spaceLiner (string "->")
+        pure
+          (\l r -> Types.ArrowE (Types.Arr' l exp r))
+    )
+    Expr.AssocLeft
+
+
 -- For Do!
 table :: Semigroup a => [[Expr.Operator ByteString a]]
 table = [[binary ";" (<>)]]
@@ -705,7 +668,7 @@ expressionSN = spaceLiner expression
 expressionS :: Parser Types.Expression
 expressionS = spacer expression
 
-signatureConstraintSN :: Parser [Types.TypeName]
+signatureConstraintSN :: Parser [Types.Expression]
 signatureConstraintSN = spaceLiner signatureConstraint
 
 argSN :: Parser Types.Arg
@@ -762,12 +725,6 @@ nameParserColonSN = spaceLiner nameParserColon
 nameParserSN :: Parser Types.Name
 nameParserSN = spaceLiner nameParser
 
-arrowTypeSN :: Parser Types.ArrowType
-arrowTypeSN = spaceLiner arrowType
-
-arrowTypeS :: Parser Types.ArrowType
-arrowTypeS = spacer arrowType
-
 bindingSN :: Parser Types.Binding
 bindingSN = spaceLiner binding
 
@@ -785,18 +742,6 @@ sumSN = spaceLiner sum
 
 sumS :: Parser Types.Sum
 sumS = spaceLiner sum
-
-arrowsSN :: Parser Types.ArrowData
-arrowsSN = spaceLiner arrows
-
-parendArrowSN :: Parser Types.ArrowParen
-parendArrowSN = spaceLiner parendArrow
-
-typeNameParserSN :: Parser Types.TypeName
-typeNameParserSN = spaceLiner typeNameParser
-
-typeNameParserS :: Parser Types.TypeName
-typeNameParserS = spacer typeNameParser
 
 prefixCapitalDotSN :: Parser (NonEmpty Symbol)
 prefixCapitalDotSN = spaceLiner prefixCapitalDot
