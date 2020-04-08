@@ -38,6 +38,8 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal)
     IR.Lam' (weak' (succ i) t) (weak' i a)
   weak' i (IR.Elim' f a) =
     IR.Elim' (weak' i f) (weak' i a)
+  weak' i (IR.TermX a) =
+    IR.TermX (weak' i a)
 
 weakTerm' :: AllWeak ext primTy primVal
           => Natural
@@ -59,8 +61,12 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal)
     IR.Free' x (weak' i a)
   weak' i (IR.Prim' p a) =
     IR.Prim' p (weak' i a)
+  weak' i (IR.App' s t a) =
+    IR.App' (weak' i s) (weak' i t) (weak' i a)
   weak' i (IR.Ann' π s t a) =
     IR.Ann' π (weak' i s) (weak' i t) (weak' i a)
+  weak' i (IR.ElimX a) =
+    IR.ElimX (weak' i a)
 
 weakElim' :: AllWeak ext primTy primVal
           => Natural
@@ -99,6 +105,21 @@ instance AllSubst ext primTy primVal =>
     IR.Lam' (subst' (succ i) (weak e) t) (subst' i e a)
   subst' i e (IR.Elim' t a) =
     IR.Elim' (subst' i e t) (subst' i e a)
+  subst' i e (IR.TermX a) =
+    IR.TermX (subst' i e a)
+
+substTerm' :: AllSubst ext primTy primVal
+           => Natural
+           -> IR.Elim' ext primTy primVal
+           -> IR.Term' ext primTy primVal
+           -> IR.Term' ext primTy primVal
+substTerm' = subst'
+
+substTerm :: AllSubst ext primTy primVal
+          => IR.Elim' ext primTy primVal
+          -> IR.Term' ext primTy primVal
+          -> IR.Term' ext primTy primVal
+substTerm = subst
 
 instance AllSubst ext primTy primVal =>
          HasSubst ext primTy primVal (IR.Elim' ext primTy primVal)
@@ -117,6 +138,21 @@ instance AllSubst ext primTy primVal =>
     IR.App' (subst' i e f) (subst' i e s) (subst' i e a)
   subst' i e (IR.Ann' π s t a) =
     IR.Ann' π (subst' i e s) (subst' i e t) (subst' i e a)
+  subst' i e (IR.ElimX a) =
+    IR.ElimX (subst' i e a)
+
+substElim' :: AllSubst ext primTy primVal
+           => Natural
+           -> IR.Elim' ext primTy primVal
+           -> IR.Elim' ext primTy primVal
+           -> IR.Elim' ext primTy primVal
+substElim' = subst'
+
+substElim :: AllSubst ext primTy primVal
+          => IR.Elim' ext primTy primVal
+          -> IR.Elim' ext primTy primVal
+          -> IR.Elim' ext primTy primVal
+substElim = subst
 
 
 type AllWeakV ext primTy primVal =
@@ -138,6 +174,8 @@ instance AllWeakV ext primTy primVal =>
     IR.VNeutral' (weak' i n) (weak' i a)
   weak' i (IR.VPrim' p a) =
     IR.VPrim' p (weak' i a)
+  weak' i (IR.ValueX a) =
+    IR.ValueX (weak' i a)
 
 instance AllWeakV ext primTy primVal =>
          HasWeak (IR.Neutral' ext primTy primVal)
@@ -150,6 +188,8 @@ instance AllWeakV ext primTy primVal =>
     IR.NFree' x (weak' i a)
   weak' i (IR.NApp' f s a) =
     IR.NApp' (weak' i f) (weak' i s) (weak' i a)
+  weak' i (IR.NeutralX a) =
+    IR.NeutralX (weak' i a)
 
 class HasWeak a => HasSubstV ext primTy primVal a where
   substV' :: HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m
@@ -168,6 +208,10 @@ substV param = substV' param 0
 type AllSubstV ext primTy primVal =
   (IR.ValueAll   (HasSubstV ext primTy primVal) ext primTy primVal,
    IR.NeutralAll (HasSubstV ext primTy primVal) ext primTy primVal)
+
+instance HasSubstV ext primTy primVal () where substV' _ _ _ = pure
+
+instance HasSubstV ext primTy primVal Void where substV' _ _ _ = absurd
 
 instance (AllSubstV ext primTy primVal,
           Monoid (IR.XVNeutral ext primTy primVal),
@@ -190,6 +234,8 @@ instance (AllSubstV ext primTy primVal,
     substNeutral' param i e n a
   substV' param i e (IR.VPrim' p a) =
     IR.VPrim' p <$> substV' param i e a
+  substV' param i e (IR.ValueX a) =
+    IR.ValueX <$> substV' param i e a
 
 substValue' ::
   (AllSubstV ext primTy primVal,
@@ -242,6 +288,9 @@ substNeutral' param i e (IR.NApp' f s a) _ =
   join $ vapp param <$> substNeutral' param i e f mempty
                     <*> substV' param i e s
                     <*> substV' param i e a
+substNeutral' param i e (IR.NeutralX a) b =
+  IR.VNeutral' <$> (IR.NeutralX <$> substV' param i e a)
+               <*> substV' param i e b
 
 substNeutral ::
   (AllSubstV ext primTy primVal,
@@ -273,7 +322,7 @@ vapp param (IR.VLam' t _) s _ =
   substValue param s t
 vapp _ (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
-vapp param f@(IR.VPrim' p _) s@(IR.VPrim' q _) _
+vapp param (IR.VPrim' p _) (IR.VPrim' q _) _
     | Just v <- Param.apply param p q =
   pure $ IR.VPrim' v mempty
 vapp _ f s _ =
