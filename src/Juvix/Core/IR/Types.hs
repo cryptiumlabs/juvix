@@ -43,3 +43,7 @@ neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
 -- | 'VFree' creates the value corresponding to a free variable
 pattern VFree :: Name -> Value primTy primVal
 pattern VFree n = VNeutral (NFree n)
+
+-- | 'VBound' creates the value corresponding to a bound variable
+pattern VBound ∷ Natural → Value primTy primVal
+pattern VBound n = VNeutral (NBound n)

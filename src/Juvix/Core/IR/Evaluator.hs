@@ -327,3 +327,64 @@ vapp param (IR.VPrim' p _) (IR.VPrim' q _) _
   pure $ IR.VPrim' v mempty
 vapp _ f s _ =
   throw @"typecheckError" (TC.CannotApply f s)
+
+
+type TermExtFun ext primTy primVal =
+  IR.TermX ext primTy primVal -> IR.Value primTy primVal
+
+type ElimExtFun ext primTy primVal =
+  IR.ElimX ext primTy primVal -> IR.Value primTy primVal
+
+type ExtFuns ext primTy primVal =
+  (TermExtFun ext primTy primVal, ElimExtFun ext primTy primVal)
+
+-- annotations are discarded
+evalTermWith :: HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m
+             => ExtFuns ext primTy primVal
+             -> Param.Parameterisation primTy primVal
+             -> IR.Term' ext primTy primVal -> m (IR.Value primTy primVal)
+evalTermWith _ _ (IR.Star' u _) =
+  pure $ IR.VStar u
+evalTermWith _ _ (IR.PrimTy' p _) =
+  pure $ IR.VPrimTy p
+evalTermWith exts param (IR.Pi' π s t _) =
+  IR.VPi π <$> evalTermWith exts param s <*> evalTermWith exts param t
+evalTermWith exts param (IR.Lam' t _) =
+  IR.VLam <$> evalTermWith exts param t
+evalTermWith exts param (IR.Elim' e _) =
+  evalElimWith exts param e
+evalTermWith (tExt, _) _ (IR.TermX a) =
+  pure $ tExt a
+
+evalElimWith :: HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m
+             => ExtFuns ext primTy primVal
+             -> Param.Parameterisation primTy primVal
+             -> IR.Elim' ext primTy primVal -> m (IR.Value primTy primVal)
+evalElimWith _ _ (IR.Bound' i _) =
+  pure $ IR.VBound i
+evalElimWith _ _ (IR.Free' x _) =
+  pure $ IR.VFree x
+evalElimWith _ _ (IR.Prim' p _) =
+  pure $ IR.VPrim p
+evalElimWith exts param (IR.App' s t _) =
+  join $ vapp param <$> evalElimWith exts param s
+                    <*> evalTermWith exts param t
+                    <*> pure ()
+evalElimWith exts param (IR.Ann' _ s _ _) =
+  evalTermWith exts param s
+evalElimWith (_, eExt) _ (IR.ElimX a) =
+  pure $ eExt a
+
+evalTerm :: (HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m,
+             IR.TermX ext primTy primVal ~ Void,
+             IR.ElimX ext primTy primVal ~ Void)
+         => Param.Parameterisation primTy primVal
+         -> IR.Term' ext primTy primVal -> m (IR.Value primTy primVal)
+evalTerm = evalTermWith (absurd, absurd)
+
+evalElim :: (HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m,
+             IR.TermX ext primTy primVal ~ Void,
+             IR.ElimX ext primTy primVal ~ Void)
+         => Param.Parameterisation primTy primVal
+         -> IR.Elim' ext primTy primVal -> m (IR.Value primTy primVal)
+evalElim = evalElimWith (absurd, absurd)
