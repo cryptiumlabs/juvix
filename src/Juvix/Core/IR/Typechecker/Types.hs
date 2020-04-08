@@ -8,7 +8,6 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Base
 import Prelude (Show (..), String)
-import Data.Kind (Type)
 
 
 data Annotation' ext primTy primVal =

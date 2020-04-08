@@ -11,7 +11,6 @@ module Juvix.Core.IR.Types
 where
 
 import Juvix.Core.IR.Types.Base
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 
 
