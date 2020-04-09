@@ -6,7 +6,7 @@
 -- - Later a trees that grow version of this will be implemented, so
 --   infix functions can better transition across syntax
 -- - Note :: The names for the types in =ArrowData= are stored in the
---           =ArrowGen= and not in =NamedRefine=
+--           =ArrowGen= and not in =NamedType=
 module Juvix.Frontend.Types where
 
 import Control.Lens
@@ -57,22 +57,22 @@ data Data
 data NewType
   = Declare
       { newTypeAlias :: !Symbol,
-        newTypeType' :: NamedRefine
+        newTypeType' :: Expression
       }
   deriving (Show)
 
 newtype Alias
   = AliasDec
-      {aliasType' :: NamedRefine}
+      {aliasType' :: Expression}
   deriving (Show)
 
 --------------------------------------------------
 -- Arrows
 --------------------------------------------------
-data NamedRefine
-  = NamedRefine
-      { nameRefineName :: !(Maybe Name),
-        namedRefineRefine :: {-# UNPACK #-} !TypeRefine
+data NamedType
+  = NamedType
+      { nameRefineName :: !Name,
+        namedRefineRefine :: Expression
       }
   deriving (Show)
 
@@ -127,7 +127,7 @@ data Product
 data Record
   = Record'
       { recordFields :: NonEmpty NameType,
-        recordFamilySignature :: Maybe NamedRefine
+        recordFamilySignature :: Maybe Expression
       }
   deriving (Show)
 
@@ -234,18 +234,19 @@ data Expression
   | Infix Infix
   | ExpRecord ExpRecord
   | Do Do
-  -- Added due to merge
-  | ArrowE ArrowExp
-  | NamedRefineE NamedRefine
+  | -- Added due to merge
+    ArrowE ArrowExp
+  | NamedTypeE NamedType
   | RefinedE TypeRefine
   | UniverseName UniverseExpression
   deriving (Show)
 
-data ArrowExp = Arr'
-  { arrowExpLeft :: Expression,
-    arrowExpUsage :: Usage,
-    arrowExpRight :: Expression
-  }
+data ArrowExp
+  = Arr'
+      { arrowExpLeft :: Expression,
+        arrowExpUsage :: Usage,
+        arrowExpRight :: Expression
+      }
   deriving (Show)
 
 data Constant
@@ -385,7 +386,7 @@ makeLensesWith camelCaseFields ''Sum
 
 makeLensesWith camelCaseFields ''Record
 
-makeLensesWith camelCaseFields ''NamedRefine
+makeLensesWith camelCaseFields ''NamedType
 
 makeLensesWith camelCaseFields ''TypeRefine
 

@@ -661,7 +661,7 @@ Quantitative type implementation inspired by
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
 - Note :: The names for the types in =ArrowData= are stored in the
-          =ArrowGen= and not in =NamedRefine=
+          =ArrowGen= and not in =NamedType=
 - _Relies on_
   + [[Usage]]
   + [[Library]]

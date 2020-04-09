@@ -46,8 +46,7 @@ expressionGen' p =
     <|> Types.Application <$> try application
     <|> try p
     <|> Types.Constant <$> constant
-    <|> try (Types.NamedRefineE <$> namedRefine)
-    <|> try (Types.RefinedE <$> typeRefine)
+    <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> parens (expressionGen p)
 
@@ -265,13 +264,13 @@ newTypeParser = do
   -- if we get a | or a - at the end of this, then we need to go to the other case
   -- Note that we may end up with a non boxed type, but that is fine
   -- this is a subset of the ADT case for analysis
-  Types.Declare <$> prefixSymbolSN <*> namedRefineSN
+  Types.Declare <$> prefixSymbolSN <*> expressionSN
     <* nonOverlappingCase
 
 aliasParser :: Parser Types.Alias
 aliasParser = do
   skipLiner Lexer.equals
-  Types.AliasDec <$> namedRefineSN
+  Types.AliasDec <$> expressionSN
 
 dataParser :: Parser Types.Data
 dataParser = do
@@ -307,7 +306,7 @@ record = do
     spaceLiner
       $ curly
       $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
-  familySignature <- maybe (skipLiner Lexer.colon *> namedRefine)
+  familySignature <- maybe (skipLiner Lexer.colon *> expression)
   pure (Types.Record' names familySignature)
 
 nameType :: Parser Types.NameType
@@ -330,9 +329,9 @@ nameParser =
 -- Arrow Type parser
 --------------------------------------------------
 
-namedRefine :: Parser Types.NamedRefine
+namedRefine :: Parser Types.NamedType
 namedRefine =
-  Types.NamedRefine <$> maybe nameParserColonSN <*> typeRefine
+  Types.NamedType <$> nameParserColonSN <*> expression
 
 arrowSymbol :: Parser Types.ArrowSymbol
 arrowSymbol =
@@ -620,7 +619,18 @@ maybeParend p = p <|> parens p
 
 -- For Expressions
 tableExp :: [[Expr.Operator ByteString Types.Expression]]
-tableExp = [[infixOp]]
+tableExp =
+  [ [refine],
+    [infixOp],
+    [arrowExp]
+  ]
+
+-- typeOf =
+--   Expr.Infix
+--   ( do
+--       skipLiner Lexer.colon
+--       pure (\ l r -> )
+--   )
 
 infixOp :: Expr.Operator ByteString Types.Expression
 infixOp =
@@ -644,6 +654,12 @@ arrowExp =
     )
     Expr.AssocLeft
 
+refine :: Expr.Operator ByteString Types.Expression
+refine =
+  Expr.Postfix $
+    do
+      refine <- curly expressionSN
+      pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
 
 -- For Do!
 table :: Semigroup a => [[Expr.Operator ByteString a]]
@@ -728,7 +744,7 @@ nameParserSN = spaceLiner nameParser
 bindingSN :: Parser Types.Binding
 bindingSN = spaceLiner binding
 
-namedRefineSN :: Parser Types.NamedRefine
+namedRefineSN :: Parser Types.NamedType
 namedRefineSN = spaceLiner namedRefine
 
 typeRefineSN :: Parser Types.TypeRefine

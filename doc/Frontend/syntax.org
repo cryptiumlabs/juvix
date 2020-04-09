@@ -26,10 +26,10 @@
   ;; sig only here while indent sensitivity is not here
   ;; if we only have usage in arrows, we should allow a way to have
   ;; usage information of variables as well!
-  signature ::= sig <name>         :                  <arrow-type>
-              | sig <name>         : <constraint> =\> <arrow-type>
-              | sig <name> <usage> :                  <arrow-type>
-              | sig <name> <usage> : <constraint> =\> <arrow-type>
+  signature ::= sig <name>         :                  <expression>
+              | sig <name>         : <constraint> =\> <expression>
+              | sig <name> <usage> :                  <expression>
+              | sig <name> <usage> : <constraint> =\> <expression>
 
   constraint ::= <type-name>
                | ( <constBody>* )
