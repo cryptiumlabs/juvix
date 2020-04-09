@@ -259,27 +259,8 @@ typeP = do
 
 typeSumParser :: Parser Types.TypeSum
 typeSumParser =
-  Types.NewType <$> try newTypeParser
-    <|> Types.Alias <$> try aliasParser
+        Types.Alias <$> try aliasParser
     <|> Types.Data <$> dataParser
-
-newTypeParser :: Parser Types.NewType
-newTypeParser = do
-  let nonOverlappingCase = do
-        p <- peekWord8
-        case p of
-          Just p
-            | p == Lexer.dash || p == Lexer.colon || Lexer.pipe == p ->
-              fail "overlapping"
-            | otherwise -> pure ()
-          Nothing -> pure ()
-  skipLiner Lexer.equals
-  skipLiner Lexer.pipe
-  -- if we get a | or a - at the end of this, then we need to go to the other case
-  -- Note that we may end up with a non boxed type, but that is fine
-  -- this is a subset of the ADT case for analysis
-  Types.Declare <$> prefixSymbolSN <*> expressionSN
-    <* nonOverlappingCase
 
 aliasParser :: Parser Types.Alias
 aliasParser = do
@@ -313,6 +294,7 @@ product :: Parser Types.Product
 product =
   Types.Record <$> record
     <|> skipLiner Lexer.colon *> fmap Types.Arrow expression
+    <|> fmap Types.ADTLike (many expression''SN)
 
 record :: Parser Types.Record
 record = do

@@ -38,8 +38,6 @@ data Type
 
 data TypeSum
   = Alias Alias
-  | -- Maybe not needed!?
-    NewType NewType
   | Data Data
   deriving (Show)
 
@@ -51,13 +49,6 @@ data Data
       }
   | NonArrowed
       { dataAdt :: Adt
-      }
-  deriving (Show)
-
-data NewType
-  = Declare
-      { newTypeAlias :: !Symbol,
-        newTypeType' :: Expression
       }
   deriving (Show)
 
@@ -121,7 +112,8 @@ data Sum
 
 data Product
   = Record !Record
-  | Arrow !Expression
+  | Arrow Expression
+  | ADTLike [Expression]
   deriving (Show)
 
 data Record
@@ -379,8 +371,6 @@ type NameSymb = NonEmpty Symbol
 makeLensesWith camelCaseFields ''Data
 
 makeLensesWith camelCaseFields ''Type
-
-makeLensesWith camelCaseFields ''NewType
 
 makeLensesWith camelCaseFields ''Sum
 
