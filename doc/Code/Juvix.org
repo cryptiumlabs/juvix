@@ -651,7 +651,6 @@ Quantitative type implementation inspired by
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
-  + [[Usage]]
   + [[Lexer]]
   + [[Frontend/Types]]
   + [[Library]]

@@ -241,12 +241,9 @@ sigTest1 =
     Parser.topLevel
     "sig foo 0 : Int -> Int"
     "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
-    \(Integer' 0))), signatureArrowType = Arrows (Arr (ArrGen {arrowGenName = Nothing, \
-    \arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}, arrowGenArrow \
-    \= ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}})), \
-    \signatureConstraints = []})"
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (Int :| []), \
+    \infixOp = -> :| [], infixRight = Name (Int :| [])}), signatureConstraints = \
+    \[]})"
 
 sigTest2 :: T.TestTree
 sigTest2 =
@@ -255,14 +252,14 @@ sigTest2 =
     Parser.topLevel
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
     "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
-    \(Integer' 0))), signatureArrowType = Arrows (Arr (ArrGen {arrowGenName = Just (Concrete \
-    \i), arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (Int :| []) [], typeRefineRefinement = Just (Infix (Inf {infixLeft \
-    \= Name (i :| []), infixOp = > :| [], infixRight = Constant (Number (Integer' 0))}))}}, \
-    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement = Just \
-    \(Infix (Inf {infixLeft = Name (i :| []), infixOp = > :| [], infixRight = Constant \
-    \(Number (Integer' 1))}))}})), signatureConstraints = []})"
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = NamedTypeE (NamedType \
+    \{nameRefineName = Concrete i, namedRefineRefine = RefinedE (TypeRefine {typeRefineName \
+    \= Name (Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| \
+    \[]), infixOp = > :| [], infixRight = Constant (Number (Integer' 0))})})}), infixOp \
+    \= -> :| [], infixRight = RefinedE (TypeRefine {typeRefineName = Name (Int :| \
+    \[]), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= > :| [], infixRight = Constant (Number (Integer' 1))})})}), signatureConstraints \
+    \= []})"
 
 --------------------------------------------------------------------------------
 -- Function Testing
@@ -315,43 +312,22 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm \
-    \= Data (NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just \
-    \(Arrow (Arrows (Arr (ArrGen {arrowGenName = Just (Concrete b), arrowGenData \
-    \= NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (a :| []) [], typeRefineRefinement = Nothing}}, \
-    \arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen {arrowGenName = Nothing, \
-    \arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (b :| []) [], typeRefineRefinement \
-    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (c :| \
-    \[]) [], typeRefineRefinement = Nothing}})))))} :| [S {sumConstructor = B, \
-    \sumValue = Just (Arrow (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData \
-    \= NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (d :| []) [], typeRefineRefinement = Nothing}}, \
-    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Foo :| []) [], typeRefineRefinement \
-    \= Nothing}}))))},S {sumConstructor = C, sumValue = Just (Record (Record' \
-    \{recordFields = NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| \
-    \[]) [], typeRefineRefinement = Nothing}}), nameTypeName = Concrete a} :| \
-    \[NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement \
-    \= Nothing}}), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S \
-    \{sumConstructor = D, sumValue = Just (Record (Record' {recordFields = NameType \
-    \{nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement \
-    \= Nothing}}), nameTypeName = Concrete a} :| [NameType {nameTypeSignature \
-    \= Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}), \
-    \nameTypeName = Implicit b}], recordFamilySignature = Just (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Foo :| \
-    \[]) [SymbolName (Int :| []),ArrowName (Arrows (Arr (ArrGen {arrowGenName \
-    \= Nothing, arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Fooy :| []) [], typeRefineRefinement \
-    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Nada \
-    \:| []) [], typeRefineRefinement = Nothing}})))], typeRefineRefinement = Nothing}})}))}])})}"
+    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm = Data \
+    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (NamedTypeE \
+    \(NamedType {nameRefineName = Concrete b, namedRefineRefine = Infix (Inf {infixLeft \
+    \= Infix (Inf {infixLeft = Name (a :| []), infixOp = -> :| [], infixRight = Name \
+    \(b :| [])}), infixOp = -> :| [], infixRight = Name (c :| [])})})))} :| [S {sumConstructor \
+    \= B, sumValue = Just (Arrow (Infix (Inf {infixLeft = Name (d :| []), infixOp \
+    \= -> :| [], infixRight = Name (Foo :| [])})))},S {sumConstructor = C, sumValue \
+    \= Just (Record (Record' {recordFields = NameType {nameTypeSignature = Name (Int \
+    \:| []), nameTypeName = Concrete a} :| [NameType {nameTypeSignature = Name (Int \
+    \:| []), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S {sumConstructor \
+    \= D, sumValue = Just (Record (Record' {recordFields = NameType {nameTypeSignature \
+    \= Name (Int :| []), nameTypeName = Concrete a} :| [NameType {nameTypeSignature \
+    \= Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature = Just \
+    \(Application (App {applicationName = Foo :| [], applicationArgs = Name (Int \
+    \:| []) :| [Infix (Inf {infixLeft = Name (Fooy :| []), infixOp = -> :| [], infixRight \
+    \= Name (Nada :| [])})]}))}))}])})}"
 
 --------------------------------------------------
 -- Arrow Testing
@@ -363,26 +339,17 @@ superArrowCase =
     "superArrowCase"
     Parser.expression
     "( b : Bah -> \n c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
-    "Parens (Paren (ArrGen {arrowGenName = Just (Concrete b), arrowGenData = Arrows \
-    \(Arr (ArrGen {arrowGenName = Nothing, arrowGenData = NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Bah :| []) [], \
-    \typeRefineRefinement = Nothing}}, arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen \
-    \{arrowGenName = Just (Concrete c), arrowGenData = NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (B :| []) [], typeRefineRefinement \
-    \= Nothing}}, arrowGenArrow = ArrowUse 1})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Foo :| []) [], \
-    \typeRefineRefinement = Nothing}}))), arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen \
-    \{arrowGenName = Nothing, arrowGenData = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Foo :| []) [SymbolName (a :| []),SymbolName \
-    \(b :| [])], typeRefineRefinement = Nothing}}, arrowGenArrow = ArrowUse w})) (Arrows \
-    \(Arr (ArrGen {arrowGenName = Just (Concrete a), arrowGenData = NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (Bah :| []) [SymbolName \
-    \(a :| []),SymbolName (c :| [])], typeRefineRefinement = Nothing}}, arrowGenArrow \
-    \= ArrowUse 1})) (End (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = \
-    \NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName \
-    \= Start (HAHAHHA :| []) [], typeRefineRefinement = Nothing}}, arrowGenArrow = ArrowUse \
-    \w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (foo :| []) [], typeRefineRefinement = Nothing}}))))))"
+    "Infix (Inf {infixLeft = NamedTypeE (NamedType {nameRefineName = Concrete b, \
+    \namedRefineRefine = Infix (Inf {infixLeft = Name (Bah :| []), infixOp = -> :| \
+    \[], infixRight = NamedTypeE (NamedType {nameRefineName = Concrete c, namedRefineRefine \
+    \= Infix (Inf {infixLeft = Name (B :| []), infixOp = -o :| [], infixRight = Name \
+    \(Foo :| [])})})})}), infixOp = -> :| [], infixRight = Application (App {applicationName \
+    \= Foo :| [], applicationArgs = Name (a :| []) :| [Infix (Inf {infixLeft = Name \
+    \(b :| []), infixOp = -> :| [], infixRight = NamedTypeE (NamedType {nameRefineName \
+    \= Concrete a, namedRefineRefine = Application (App {applicationName = Bah :| \
+    \[], applicationArgs = Name (a :| []) :| [Infix (Inf {infixLeft = Name (c :| \
+    \[]), infixOp = -o :| [], infixRight = Infix (Inf {infixLeft = Name (HAHAHHA \
+    \:| []), infixOp = -> :| [], infixRight = Name (foo :| [])})})]})})})]})})"
 
 --------------------------------------------------
 -- alias tests
@@ -392,12 +359,11 @@ typeTest :: T.TestTree
 typeTest =
   shouldParseAs
     "typeTest"
-    Parser.typeP
-    "type Foo a b c d = | Foo Bea"
-    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c,d], typeForm = NewType \
-    \(Declare {newTypeAlias = Foo, newTypeType' = NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Bea :| []) [], typeRefineRefinement \
-    \= Nothing}}})}"
+    Parser.topLevel
+    "type Foo a b c d = | Foo nah bah sad"
+    "Type (Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c,d], typeForm \
+    \= Data (NonArrowed {dataAdt = Sum (S {sumConstructor = Foo, sumValue = Just \
+    \(ADTLike [Name (nah :| []),Name (bah :| []),Name (sad :| [])])} :| [])})})"
 
 --------------------------------------------------------------------------------
 -- Modules test
@@ -416,20 +382,17 @@ moduleOpen =
         <> "end"
     )
     "Module (Mod (Like {functionLikedName = Foo, functionLikeArgs = [ConcreteA (MatchLogic \
-    \{matchLogicContents = MatchCon (Int :| []) [], matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (Type (Typ {typeUsage = Nothing, typeName = T, typeArgs = [], typeForm = Alias \
-    \(AliasDec {aliasType' = NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| [t]) [], typeRefineRefinement = Nothing}}})}) \
-    \:| [Signature (Sig {signatureName = bah, signatureUsage = Nothing, signatureArrowType \
-    \= Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (T :| []) [], typeRefineRefinement \
-    \= Nothing}}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (T :| []) [], typeRefineRefinement \
-    \= Nothing}})), signatureConstraints = []}),Function (Func (Like {functionLikedName \
-    \= bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
-    \t, matchLogicNamed = Nothing})], functionLikeBody = Body (OpenExpr (OpenExpress {moduleOpenExprModuleN \
-    \= Int :| [], moduleOpenExprExpr = Infix (Inf {infixLeft = Name (t :| []), infixOp \
-    \= + :| [], infixRight = Constant (Number (Integer' 3))})}))}))])}))"
+    \{matchLogicContents = MatchCon (Int :| []) [], matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (Type (Typ {typeUsage = Nothing, typeName = T, typeArgs \
+    \= [], typeForm = Alias (AliasDec {aliasType' = Name (Int :| [t])})}) :| [Signature \
+    \(Sig {signatureName = bah, signatureUsage = Nothing, signatureArrowType = Infix \
+    \(Inf {infixLeft = Name (T :| []), infixOp = -> :| [], infixRight = Name (T :| \
+    \[])}), signatureConstraints = []}),Function (Func (Like {functionLikedName = \
+    \bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
+    \t, matchLogicNamed = Nothing})], functionLikeBody = Body (OpenExpr (OpenExpress \
+    \{moduleOpenExprModuleN = Int :| [], moduleOpenExprExpr = Infix (Inf {infixLeft \
+    \= Name (t :| []), infixOp = + :| [], infixRight = Constant (Number (Integer' \
+    \3))})}))}))])}))"
 
 moduleOpen' :: T.TestTree
 moduleOpen' =
@@ -447,15 +410,14 @@ moduleOpen' =
     )
     "Module (Mod (Like {functionLikedName = Bah, functionLikeArgs = [ConcreteA (MatchLogic \
     \{matchLogicContents = MatchCon (M :| []) [], matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (ModuleOpen (Open (M :| [])) :| [Signature (Sig {signatureName = bah, signatureUsage \
-    \= Nothing, signatureArrowType = Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Rec :| []) [], typeRefineRefinement \
-    \= Nothing}}), signatureConstraints = []}),Function (Func (Like {functionLikedName \
-    \= bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
-    \t, matchLogicNamed = Nothing})], functionLikeBody = Body (ExpRecord (ExpressionRecord \
-    \{expRecordFields = NonPunned (a :| []) (Infix (Inf {infixLeft = Name (t :| []), infixOp \
-    \= + :| [], infixRight = Constant (Number (Integer' 3))})) :| [NonPunned (b :| []) (Application \
-    \(App {applicationName = expr :| [], applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
+    \= Body (ModuleOpen (Open (M :| [])) :| [Signature (Sig {signatureName = bah, \
+    \signatureUsage = Nothing, signatureArrowType = Name (Rec :| []), signatureConstraints \
+    \= []}),Function (Func (Like {functionLikedName = bah, functionLikeArgs = [ConcreteA \
+    \(MatchLogic {matchLogicContents = MatchName t, matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (ExpRecord (ExpressionRecord {expRecordFields = NonPunned \
+    \(a :| []) (Infix (Inf {infixLeft = Name (t :| []), infixOp = + :| [], infixRight \
+    \= Constant (Number (Integer' 3))})) :| [NonPunned (b :| []) (Application (App \
+    \{applicationName = expr :| [], applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
 
 --------------------------------------------------
 -- typeName tests
@@ -467,13 +429,10 @@ typeNameNoUniverse =
     "typeNameNoUniverse"
     Parser.expression
     "Foo a b c (b -o d) a c u"
-    "Start (Foo :| []) [SymbolName (a :| []),SymbolName (b :| []),SymbolName (c :| \
-    \[]),ArrowName (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = NamedRefine \
-    \{nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start \
-    \(b :| []) [], typeRefineRefinement = Nothing}}, arrowGenArrow = ArrowUse 1})) (Refined \
-    \(NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName \
-    \= Start (d :| []) [], typeRefineRefinement = Nothing}}))),SymbolName (a :| []),SymbolName \
-    \(c :| []),SymbolName (u :| [])]"
+    "Application (App {applicationName = Foo :| [], applicationArgs = Name (a :| \
+    \[]) :| [Name (b :| []),Name (c :| []),Infix (Inf {infixLeft = Name (b :| []), \
+    \infixOp = -o :| [], infixRight = Name (d :| [])}),Name (a :| []),Name (c :| \
+    \[]),Name (u :| [])]})"
 
 --------------------------------------------------------------------------------
 -- Match tests

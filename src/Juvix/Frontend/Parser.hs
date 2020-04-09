@@ -49,7 +49,6 @@ expressionGen' p =
     <|> Types.Name <$> prefixSymbolDot
     <|> parens (expressionGen all'')
 
-
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
 
@@ -259,7 +258,7 @@ typeP = do
 
 typeSumParser :: Parser Types.TypeSum
 typeSumParser =
-        Types.Alias <$> try aliasParser
+  Types.Alias <$> try aliasParser
     <|> Types.Data <$> dataParser
 
 aliasParser :: Parser Types.Alias
@@ -328,6 +327,7 @@ nameParser =
 namedRefine :: Parser Types.NamedType
 namedRefine =
   Types.NamedType <$> nameParserColonSN <*> expression
+
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
 --------------------------------------------------
