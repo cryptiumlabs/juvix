@@ -16,7 +16,6 @@ import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
-import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try)
@@ -34,7 +33,8 @@ topLevel =
     <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
-expressionGen' :: Parser Types.Expression -> Parser Types.Expression
+expressionGen' ::
+  Parser Types.Expression -> Parser Types.Expression
 expressionGen' p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
@@ -42,23 +42,37 @@ expressionGen' p =
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
-    <|> Types.ExpRecord <$> expRecord
-    <|> Types.Application <$> try application
     <|> try p
+    <|> Types.ExpRecord <$> expRecord
     <|> Types.Constant <$> constant
     <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
-    <|> parens (expressionGen p)
+    <|> parens (expressionGen all'')
+
+
+do''' :: Parser Types.Expression
+do''' = Types.Do <$> do'
+
+app'' :: Parser Types.Expression
+app'' = Types.Application <$> try application
+
+all'' :: Parser Types.Expression
+all'' = app'' <|> do'''
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p =
   Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
 
+-- used to remove do from parsing
 expression' :: Parser Types.Expression
-expression' = expressionGen (fail "")
+expression' = expressionGen app''
+
+-- used to remove app from parsing
+expression'' :: Parser Types.Expression
+expression'' = expressionGen do'''
 
 expression :: Parser Types.Expression
-expression = expressionGen (Types.Do <$> do')
+expression = expressionGen all''
 
 usage :: Parser Types.Expression
 usage = string "u#" *> expression
@@ -332,19 +346,6 @@ nameParser =
 namedRefine :: Parser Types.NamedType
 namedRefine =
   Types.NamedType <$> nameParserColonSN <*> expression
-
-arrowSymbol :: Parser Types.ArrowSymbol
-arrowSymbol =
-  Types.ArrowUse Usage.Omega <$ string "->"
-    <|> Types.ArrowUse one <$ string "-o"
-    <|> Types.ArrowUse mempty <$ string "-|"
-    <|> ( do
-            skipLiner Lexer.dash
-            exp <- expressionSN
-            string "->"
-            pure (Types.ArrowExp exp)
-        )
-
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
 --------------------------------------------------
@@ -442,7 +443,7 @@ lam = do
 application :: Parser Types.Application
 application = do
   name <- prefixSymbolDotSN
-  args <- many1H expressionSN
+  args <- many1H expression''SN
   pure (Types.App name args)
 
 --------------------------------------------------
@@ -521,7 +522,9 @@ infixSymbolGen p = do
 infixSymbolDot :: Parser (NonEmpty Symbol)
 infixSymbolDot = do
   qualified <- option [] (NonEmpty.toList <$> prefixSymbolDot <* word8 Lexer.dot)
-  infix' <- infixSymbol
+  -- -o is a bit special since it's a normal letter
+  -- this is a bit of a hack
+  infix' <- ("-o" <$ string "-o") <|> infixSymbol
   pure (NonEmpty.fromList (qualified <> [infix']))
 
 infixSymbol :: Parser Symbol
@@ -677,6 +680,9 @@ topLevelSN = spaceLiner topLevel
 
 expression'SN :: Parser Types.Expression
 expression'SN = spaceLiner expression'
+
+expression''SN :: Parser Types.Expression
+expression''SN = spaceLiner expression''
 
 expressionSN :: Parser Types.Expression
 expressionSN = spaceLiner expression
