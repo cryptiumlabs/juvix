@@ -184,6 +184,17 @@ matchRecord =
 --------------------------------------------------------------------------------
 -- NameSet
 --------------------------------------------------------------------------------
+nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
+nameSetMany' parser =
+  curly $ do
+    x <- sepBy1H (nameSetSN parser) (skipLiner Lexer.comma)
+    if  | length x == 1 && punned x ->
+          x <$ skipLiner Lexer.comma
+        | otherwise ->
+          x <$ maybe (skipLiner (Lexer.comma))
+
+punned (Types.Punned {} :| _) = True
+punned (Types.NonPunned {} :| _) = False
 
 nameSetMany :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany parser =
@@ -365,7 +376,7 @@ block = do
 --------------------------------------------------
 
 expRecord :: Parser Types.ExpRecord
-expRecord = Types.ExpressionRecord <$> nameSetMany expression
+expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 
 --------------------------------------------------
 -- Let
