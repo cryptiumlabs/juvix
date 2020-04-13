@@ -193,6 +193,7 @@ nameSetMany' parser =
         | otherwise ->
           x <$ maybe (skipLiner (Lexer.comma))
 
+punned :: NonEmpty (Types.NameSet t) -> Bool
 punned (Types.Punned {} :| _) = True
 punned (Types.NonPunned {} :| _) = False
 
