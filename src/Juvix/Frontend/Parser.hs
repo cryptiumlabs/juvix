@@ -552,7 +552,7 @@ prefixSymbol =
     <|> parend
 
 parend :: Parser Symbol
-parend = word8 Lexer.openParen *> infixSymbolGen infixSymbol' <* word8 Lexer.closeParen
+parend = skipLiner Lexer.openParen *> spaceLiner (infixSymbolGen infixSymbol') <* word8 Lexer.closeParen
 
 prefixCapital :: Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
