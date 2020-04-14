@@ -47,6 +47,7 @@ expressionGen' p =
     <|> Types.Constant <$> constant
     <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
+    <|> universeSymbol
     <|> parens (expressionGen all'')
 
 do''' :: Parser Types.Expression
@@ -188,14 +189,14 @@ nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany' parser =
   curly $ do
     x <- sepBy1H (nameSetSN parser) (skipLiner Lexer.comma)
-    if  | length x == 1 && punned x ->
+    if  | length x == 1 && isPunned x ->
           x <$ skipLiner Lexer.comma
         | otherwise ->
-          x <$ maybe (skipLiner (Lexer.comma))
+          x <$ maybe (skipLiner Lexer.comma)
 
-punned :: NonEmpty (Types.NameSet t) -> Bool
-punned (Types.Punned {} :| _) = True
-punned (Types.NonPunned {} :| _) = False
+isPunned :: NonEmpty (Types.NameSet t) -> Bool
+isPunned (Types.Punned {} :| _) = True
+isPunned (Types.NonPunned {} :| _) = False
 
 nameSetMany :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany parser =
@@ -343,12 +344,6 @@ namedRefine =
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
 --------------------------------------------------
-
-typeRefine :: Parser Types.TypeRefine
-typeRefine = do
-  typeName <- expressionSN
-  refine <- curly expressionSN
-  pure (Types.TypeRefine typeName refine)
 
 universeSymbol :: Parser Types.Expression
 universeSymbol = do
@@ -621,14 +616,6 @@ tableExp =
     [infixOp],
     [arrowExp]
   ]
-
--- typeOf =
---   Expr.Infix
---   ( do
---       skipLiner Lexer.colon
---       pure (\ l r -> )
---   )
-
 infixOp :: Expr.Operator ByteString Types.Expression
 infixOp =
   Expr.Infix
@@ -746,12 +733,6 @@ bindingSN = spaceLiner binding
 
 namedRefineSN :: Parser Types.NamedType
 namedRefineSN = spaceLiner namedRefine
-
-typeRefineSN :: Parser Types.TypeRefine
-typeRefineSN = spaceLiner typeRefine
-
-typeRefineS :: Parser Types.TypeRefine
-typeRefineS = spacer typeRefine
 
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
