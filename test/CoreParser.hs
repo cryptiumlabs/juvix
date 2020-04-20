@@ -58,16 +58,16 @@ coreParser =
       shouldParse "xyz" (Elim (Var "xyz")),
       shouldParse "fun var" (Elim (App (Var "fun") (Elim (Var "var")))),
       shouldParse "(fun var)" (Elim (App (Var "fun") (Elim (Var "var")))),
-      shouldParse "@ (* 0) : w (* 0)" (Elim (Ann Usage.Omega (Star 0) (Star 0))),
+      shouldParse "@ (* 0) : w (* 0) | 0" (Elim (Ann Usage.Omega (Star 0) (Star 0) 0)),
       shouldParse
-        "@ (\\x -> x) : w (* 0)"
-        (Elim (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0))),
+        "@ (\\x -> x) : w (* 0) | 0"
+        (Elim (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0)),
       shouldParse
-        "(@ (\\x -> x) : w (* 0))"
-        (Elim (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0))),
+        "(@ (\\x -> x) : w (* 0) | 0)"
+        (Elim (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0)),
       shouldParse
-        "(@ (\\x -> x) : w (* 0)) y"
-        (Elim (App (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0)) (Elim (Var "y")))),
+        "(@ (\\x -> x) : w (* 0) | 0) y"
+        (Elim (App (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0) (Elim (Var "y")))),
       shouldParse "(2)" (Elim (Prim (Nat.Val 2))),
       shouldParse
         "(+ 3 4)"

@@ -8,9 +8,9 @@ module Juvix.Core.IR.Evaluator where
 
 import Juvix.Library
 import qualified Juvix.Core.Parameterisation as Param
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Typechecker.Types as TC
 
 
 class HasWeak a where
@@ -63,8 +63,8 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal)
     IR.Prim' p (weak' i a)
   weak' i (IR.App' s t a) =
     IR.App' (weak' i s) (weak' i t) (weak' i a)
-  weak' i (IR.Ann' π s t a) =
-    IR.Ann' π (weak' i s) (weak' i t) (weak' i a)
+  weak' i (IR.Ann' π s t l a) =
+    IR.Ann' π (weak' i s) (weak' i t) l (weak' i a)
   weak' i (IR.ElimX a) =
     IR.ElimX (weak' i a)
 
@@ -136,8 +136,8 @@ instance AllSubst ext primTy primVal =>
     IR.Prim' p (subst' i e a)
   subst' i e (IR.App' f s a) =
     IR.App' (subst' i e f) (subst' i e s) (subst' i e a)
-  subst' i e (IR.Ann' π s t a) =
-    IR.Ann' π (subst' i e s) (subst' i e t) (subst' i e a)
+  subst' i e (IR.Ann' π s t l a) =
+    IR.Ann' π (subst' i e s) (subst' i e t) l (subst' i e a)
   subst' i e (IR.ElimX a) =
     IR.ElimX (subst' i e a)
 
@@ -192,14 +192,14 @@ instance AllWeakV ext primTy primVal =>
     IR.NeutralX (weak' i a)
 
 class HasWeak a => HasSubstV ext primTy primVal a where
-  substV' :: HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m
+  substV' :: TC.HasThrowTC' ext primTy primVal m
           => Param.Parameterisation primTy primVal
           -> Natural
           -> IR.Value' ext primTy primVal
           -> a -> m a
 
 substV :: (HasSubstV ext primTy primVal a,
-           HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+           TC.HasThrowTC' ext primTy primVal m)
        => Param.Parameterisation primTy primVal
        -> IR.Value' ext primTy primVal
        -> a -> m a
@@ -239,10 +239,10 @@ instance (AllSubstV ext primTy primVal,
 
 substValue' ::
   (AllSubstV ext primTy primVal,
+   TC.HasThrowTC' ext primTy primVal m,
    Monoid (IR.XVNeutral ext primTy primVal),
    Monoid (IR.XVLam ext primTy primVal),
-   Monoid (IR.XVPrim ext primTy primVal),
-   HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+   Monoid (IR.XVPrim ext primTy primVal))
   => Param.Parameterisation primTy primVal
   -> Natural
   -> IR.Value' ext primTy primVal
@@ -252,10 +252,10 @@ substValue' = substV'
 
 substValue ::
   (AllSubstV ext primTy primVal,
+   TC.HasThrowTC' ext primTy primVal m,
    Monoid (IR.XVNeutral ext primTy primVal),
    Monoid (IR.XVLam ext primTy primVal),
-   Monoid (IR.XVPrim ext primTy primVal),
-   HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+   Monoid (IR.XVPrim ext primTy primVal))
   => Param.Parameterisation primTy primVal
   -> IR.Value' ext primTy primVal
   -> IR.Value' ext primTy primVal
@@ -264,10 +264,10 @@ substValue param = substValue' param 0
 
 substNeutral' ::
   (AllSubstV ext primTy primVal,
+   TC.HasThrowTC' ext primTy primVal m,
    Monoid (IR.XVNeutral ext primTy primVal),
    Monoid (IR.XVLam ext primTy primVal),
-   Monoid (IR.XVPrim ext primTy primVal),
-   HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+   Monoid (IR.XVPrim ext primTy primVal))
   => Param.Parameterisation primTy primVal
   -> Natural
   -> IR.Value' ext primTy primVal
@@ -294,10 +294,10 @@ substNeutral' param i e (IR.NeutralX a) b =
 
 substNeutral ::
   (AllSubstV ext primTy primVal,
+   TC.HasThrowTC' ext primTy primVal m,
    Monoid (IR.XVNeutral ext primTy primVal),
    Monoid (IR.XVLam ext primTy primVal),
-   Monoid (IR.XVPrim ext primTy primVal),
-   HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+   Monoid (IR.XVPrim ext primTy primVal))
   => Param.Parameterisation primTy primVal
   -> IR.Value' ext primTy primVal
   -> IR.Neutral' ext primTy primVal
@@ -307,10 +307,10 @@ substNeutral param = substNeutral' param 0
 
 vapp ::
   (AllSubstV ext primTy primVal,
+   TC.HasThrowTC' ext primTy primVal m,
    Monoid (IR.XVNeutral ext primTy primVal),
    Monoid (IR.XVLam ext primTy primVal),
-   Monoid (IR.XVPrim ext primTy primVal),
-   HasThrow "typecheckError" (TC.TypecheckError' ext primTy primVal) m)
+   Monoid (IR.XVPrim ext primTy primVal))
   => Param.Parameterisation primTy primVal
   -> IR.Value' ext primTy primVal
   -> IR.Value' ext primTy primVal
@@ -325,8 +325,8 @@ vapp _ (IR.VNeutral' f _) s b =
 vapp param (IR.VPrim' p _) (IR.VPrim' q _) _
     | Just v <- Param.apply param p q =
   pure $ IR.VPrim' v mempty
-vapp _ f s _ =
-  throw @"typecheckError" (TC.CannotApply f s)
+vapp _ f x _ =
+  TC.throwTC $ TC.CannotApply f x
 
 
 type TermExtFun ext primTy primVal =
@@ -339,10 +339,11 @@ type ExtFuns ext primTy primVal =
   (TermExtFun ext primTy primVal, ElimExtFun ext primTy primVal)
 
 -- annotations are discarded
-evalTermWith :: HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m
+evalTermWith :: TC.HasThrowTC primTy primVal m
              => ExtFuns ext primTy primVal
              -> Param.Parameterisation primTy primVal
-             -> IR.Term' ext primTy primVal -> m (IR.Value primTy primVal)
+             -> IR.Term' ext primTy primVal
+             -> m (IR.Value primTy primVal)
 evalTermWith _ _ (IR.Star' u _) =
   pure $ IR.VStar u
 evalTermWith _ _ (IR.PrimTy' p _) =
@@ -356,10 +357,11 @@ evalTermWith exts param (IR.Elim' e _) =
 evalTermWith (tExt, _) _ (IR.TermX a) =
   pure $ tExt a
 
-evalElimWith :: HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m
+evalElimWith :: TC.HasThrowTC primTy primVal m
              => ExtFuns ext primTy primVal
              -> Param.Parameterisation primTy primVal
-             -> IR.Elim' ext primTy primVal -> m (IR.Value primTy primVal)
+             -> IR.Elim' ext primTy primVal
+             -> m (IR.Value primTy primVal)
 evalElimWith _ _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith _ _ (IR.Free' x _) =
@@ -370,21 +372,23 @@ evalElimWith exts param (IR.App' s t _) =
   join $ vapp param <$> evalElimWith exts param s
                     <*> evalTermWith exts param t
                     <*> pure ()
-evalElimWith exts param (IR.Ann' _ s _ _) =
+evalElimWith exts param (IR.Ann' _ s _ _ _) =
   evalTermWith exts param s
 evalElimWith (_, eExt) _ (IR.ElimX a) =
   pure $ eExt a
 
-evalTerm :: (HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m,
+evalTerm :: (TC.HasThrowTC primTy primVal m,
              IR.TermX ext primTy primVal ~ Void,
              IR.ElimX ext primTy primVal ~ Void)
          => Param.Parameterisation primTy primVal
-         -> IR.Term' ext primTy primVal -> m (IR.Value primTy primVal)
+         -> IR.Term' ext primTy primVal
+         -> m (IR.Value primTy primVal)
 evalTerm = evalTermWith (absurd, absurd)
 
-evalElim :: (HasThrow "typecheckError" (TC.TypecheckError primTy primVal) m,
+evalElim :: (TC.HasThrowTC primTy primVal m,
              IR.TermX ext primTy primVal ~ Void,
              IR.ElimX ext primTy primVal ~ Void)
          => Param.Parameterisation primTy primVal
-         -> IR.Elim' ext primTy primVal -> m (IR.Value primTy primVal)
+         -> IR.Elim' ext primTy primVal
+         -> m (IR.Value primTy primVal)
 evalElim = evalElimWith (absurd, absurd)

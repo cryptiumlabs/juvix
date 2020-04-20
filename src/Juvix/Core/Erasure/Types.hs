@@ -23,9 +23,9 @@ newtype EnvT primTy primVal a
     )
     via Field "typeAssignment" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving
-    ( HasState "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)),
-      HasSink "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal)),
-      HasSource "context" (TC.Context primTy primVal (TC.EnvTypecheck primTy primVal))
+    (HasState "context" (TC.Context primTy primVal),
+      HasSink "context" (TC.Context primTy primVal),
+      HasSource "context" (TC.Context primTy primVal)
     )
     via Field "context" () (MonadState (ExceptT Error (State (Env primTy primVal))))
   deriving

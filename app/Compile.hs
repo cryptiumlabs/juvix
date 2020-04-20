@@ -18,7 +18,7 @@ typecheck fin Michelson = do
   source <- readFile fin
   let parsed = HR.generateParser Param.michelson (T.unpack source)
   case parsed of
-    Just (HR.Elim (HR.Ann usage term ty)) -> do
+    Just (HR.Elim (HR.Ann usage term ty _)) → do
       erased <- liftIO (exec (Core.typecheckErase term usage ty) Param.michelson)
       case erased of
         (Right (Core.WithType (Core.Assignment term _assign) ty), _) ->

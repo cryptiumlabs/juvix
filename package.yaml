@@ -206,6 +206,7 @@ library:
     - Juvix.Core.ErasedAnn.Erasure
     - Juvix.Core.IR.Typechecker.Types
     - Juvix.Core.IR.Typechecker.Log
+    - Juvix.Core.IR.Typechecker.Env
     - Juvix.Core.Parameterisation
 
 executables:

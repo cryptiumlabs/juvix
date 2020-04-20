@@ -65,7 +65,7 @@ handleSpecial str cont = do
       let parsed = parseString rest
       H.outputStrLn (show parsed)
       case parsed of
-        Just (HR.Elim (HR.Ann usage term ty)) -> do
+        Just (HR.Elim (HR.Ann usage term ty _)) → do
           erased <- liftIO (exec (Core.typecheckErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
@@ -74,7 +74,7 @@ handleSpecial str cont = do
       let parsed = parseString rest
       H.outputStrLn (show parsed)
       case parsed of
-        Just (HR.Elim (HR.Ann usage term ty)) -> do
+        Just (HR.Elim (HR.Ann usage term ty _)) → do
           erased <- liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
           case erased of

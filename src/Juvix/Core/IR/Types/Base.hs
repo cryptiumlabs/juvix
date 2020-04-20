@@ -43,7 +43,7 @@ extensible
       | -- | elimination rule of PI (APP).
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
-        Ann Usage (Term primTy primVal) (Term primTy primVal)
+        Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
       deriving (Eq, Show)
   |]
 

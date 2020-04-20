@@ -7,7 +7,7 @@ import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Base
-import Prelude (Show (..), String)
+import Prelude (Show (..))
 
 
 data Annotation' ext primTy primVal =
@@ -54,23 +54,21 @@ lookupCtx x = fmap ctxAnn . find (\e -> ctxName e == x)
 data TypecheckError' ext primTy primVal
   = TypeMismatch
       Natural
-      (IR.Term' ext primTy primVal)
-      (Annotation' ext primTy primVal)
-      (Annotation' ext primTy primVal)
-  | UniverseMismatch
-      (IR.Term' ext primTy primVal)
+      (IR.Term'  ext primTy primVal)
       (IR.Value' ext primTy primVal)
-  | CannotApply (IR.Value' ext primTy primVal) (IR.Value' ext primTy primVal)
+      (IR.Value' ext primTy primVal)
+  | UniverseMismatch Natural Natural
+  | CannotApply
+      (IR.Value' ext primTy primVal)
+      (IR.Value' ext primTy primVal)
   | ShouldBeStar (IR.Value' ext primTy primVal)
   | ShouldBeFunctionType
       (IR.Value' ext primTy primVal)
-      (IR.Term' ext primTy primVal)
+      (IR.Term'  ext primTy primVal)
   | UnboundIndex Natural
   | SigmaMustBeZero
   | UsageMustBeZero
-  | UsageNotCompatible
-      (Annotation' ext primTy primVal)
-      (Annotation' ext primTy primVal)
+  | UsageNotCompatible Usage.T Usage.T
   | UnboundBinder Natural IR.Name
   | MustBeFunction
       (IR.Elim' ext primTy primVal)
@@ -82,34 +80,28 @@ type TypecheckError = TypecheckError' IR.NoExt
 
 deriving instance
   (Eq primTy, Eq primVal,
-   IR.ValueAll Eq ext primTy primVal,
-   IR.NeutralAll Eq ext primTy primVal,
-   IR.TermAll Eq ext primTy primVal,
-   IR.ElimAll Eq ext primTy primVal) ⇒
+   IR.TermAll    Eq ext primTy primVal,
+   IR.ElimAll    Eq ext primTy primVal,
+   IR.ValueAll   Eq ext primTy primVal,
+   IR.NeutralAll Eq ext primTy primVal) ⇒
   Eq (TypecheckError' ext primTy primVal)
 
 instance (Show primTy, Show primVal,
-          IR.ValueAll Show ext primTy primVal,
-          IR.NeutralAll Show ext primTy primVal,
-          IR.TermAll Show ext primTy primVal,
-          IR.ElimAll Show ext primTy primVal)
-        ⇒ Show (TypecheckError' ext primTy primVal) where
+          IR.TermAll    Show ext primTy primVal,
+          IR.ElimAll    Show ext primTy primVal,
+          IR.ValueAll   Show ext primTy primVal,
+          IR.NeutralAll Show ext primTy primVal) ⇒
+  Show (TypecheckError' ext primTy primVal)
+ where
   show (TypeMismatch binder term expectedT gotT) =
     "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
       <> ") is of type \n"
-      <> show (annType gotT)
-      <> " , with "
-      <> show (annUsage gotT)
-      <> " usage.\n But the expected type is "
-      <> show (annType expectedT)
-      <> " , with "
-      <> show (annUsage expectedT)
-      <> " usage."
-  show (UniverseMismatch t ty) =
-    show t
-      <> " is of type * of a higher universe. But the expected type "
-      <> show ty
-      <> " is * of a equal or lower universe."
+      <> show gotT
+      <> ".\nBut the expected type is "
+      <> show expectedT <> "."
+  show (UniverseMismatch i j) =
+    "The universe " <> show i <>
+    " should be strictly less than " <> show j <> "."
   show (CannotApply f x) =
     "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
   show (ShouldBeStar ty) =
@@ -124,9 +116,9 @@ instance (Show primTy, Show primVal,
     "Usage has to be 0."
   show (UsageNotCompatible expectedU gotU) =
     "The usage of "
-      <> (show (annUsage gotU))
+      <> (show gotU)
       <> " is not compatible with "
-      <> (show (annUsage expectedU))
+      <> (show expectedU)
   show (UnboundBinder ii x) =
     "Cannot find the type of \n"
       <> show x
@@ -142,44 +134,15 @@ instance (Show primTy, Show primVal,
   show (BoundVariableCannotBeInferred) =
     "Bound variable cannot be inferred"
 
-newtype TypecheckerLog = TypecheckerLog {msg ∷ String}
-  deriving (Show, Eq, Generic)
+type HasThrowTC' ext primTy primVal m =
+  HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m
 
-data EnvCtx primTy primVal
-  = EnvCtx
-      { typecheckerLog ∷ [TypecheckerLog]
-      }
-  deriving (Show, Eq, Generic)
+type HasThrowTC primTy primVal m =
+    HasThrowTC' IR.NoExt primTy primVal m
 
-type EnvAlias primTy primVal =
-  ExceptT (TypecheckError primTy primVal)
-    (State (EnvCtx primTy primVal))
-
-newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
-  deriving (Functor, Applicative, Monad)
-  deriving
-    (HasThrow "typecheckError" (TypecheckError primTy primVal))
-    via MonadError
-          ( ExceptT (TypecheckError primTy primVal)
-              (MonadState (State (EnvCtx primTy primVal)))
-          )
-  deriving
-    ( HasSink "typecheckerLog" [TypecheckerLog],
-      HasWriter "typecheckerLog" [TypecheckerLog]
-    )
-    via WriterLog
-          ( Field "typecheckerLog" ()
-              ( MonadState
-                  ( ExceptT (TypecheckError primTy primVal)
-                      (State (EnvCtx primTy primVal))
-                  )
-              )
-          )
-
-
-exec ∷ EnvTypecheck primTy primVal a
-     → (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
-exec (EnvTyp env) = runState (runExceptT env) (EnvCtx [])
+throwTC :: HasThrowTC' ext primTy primVal m
+        => TypecheckError' ext primTy primVal -> m z
+throwTC = throw @"typecheckError"
 
 
 data T
@@ -212,33 +175,8 @@ getTermAnn (Lam _ ann)    = ann
 getTermAnn (Elim _ ann)   = ann
 
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
-getElimAnn (Bound _ ann)   = ann
-getElimAnn (Free _ ann)    = ann
-getElimAnn (Prim _ ann)    = ann
-getElimAnn (App _ _ ann)   = ann
-getElimAnn (Ann _ _ _ ann) = ann
-
-
--- | A \"flexible\" type is one where some of the universe levels might be
--- unknown. The constructor @VStar Natural@ is replaced with
--- @VStar (Maybe Natural)@.
-data Flex
-
-IR.extendValue "FlexValue" [] [t|Flex|] $ IR.defaultExtValue
-  { IR.typeVStar  = Ext.Disabled
-  , IR.typeValueX = [("VStar", \_ _ -> [t|Maybe Natural|])]
-  }
-IR.extendNeutral "FlexNeutral" [] [t|Flex|] IR.defaultExtNeutral
-
-makeFlexValue :: IR.Value primTy primVal -> FlexValue primTy primVal
-makeFlexValue (IR.VStar x) = VStar (Just x)
-makeFlexValue (IR.VPrimTy t) = VPrimTy t
-makeFlexValue (IR.VPi π s t) = VPi π (makeFlexValue s) (makeFlexValue t)
-makeFlexValue (IR.VLam t) = VLam (makeFlexValue t)
-makeFlexValue (IR.VNeutral n) = VNeutral (makeFlexNeutral n)
-makeFlexValue (IR.VPrim p) = VPrim p
-
-makeFlexNeutral :: IR.Neutral primTy primVal -> FlexNeutral primTy primVal
-makeFlexNeutral (IR.NBound x) = NBound x
-makeFlexNeutral (IR.NFree x) = NFree x
-makeFlexNeutral (IR.NApp n v) = NApp (makeFlexNeutral n) (makeFlexValue v)
+getElimAnn (Bound _ ann)     = ann
+getElimAnn (Free _ ann)      = ann
+getElimAnn (Prim _ ann)      = ann
+getElimAnn (App _ _ ann)     = ann
+getElimAnn (Ann _ _ _ _ ann) = ann

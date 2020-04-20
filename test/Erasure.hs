@@ -48,7 +48,7 @@ appUnusedArg =
     Unit.t
     ( HR.Elim
         ( HR.App
-            (HR.Ann one constTerm constTy)
+            (HR.Ann one constTerm constTy 0)
             (HR.Elim (HR.Prim Unit.Val))
         ),
       one,
@@ -60,7 +60,7 @@ unusedFunction :: T.TestTree
 unusedFunction =
   shouldEraseTo
     Unit.t
-    (HR.Elim (HR.App (HR.Ann one constTerm constTy2) identityTerm), one, identityTy)
+    (HR.Elim (HR.App (HR.Ann one constTerm constTy2 0) identityTerm), one, identityTy)
     (Erased.Lam "y" (Erased.Var "y"))
 
 identityTerm :: HR.Term Unit.Ty Unit.Val

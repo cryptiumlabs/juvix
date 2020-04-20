@@ -45,10 +45,10 @@ hrElimToIR' elim =
       f <- hrElimToIR' f
       x <- hrToIR' x
       pure (IR.App f x)
-    HR.Ann u t x -> do
+    HR.Ann u t x l → do
       t <- hrToIR' t
       x <- hrToIR' x
-      pure (IR.Ann u t x)
+      pure (IR.Ann u t x l)
 
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
 irToHR = fst . exec . irToHR'
@@ -91,10 +91,10 @@ irElimToHR' elim =
       f <- irElimToHR' f
       x <- irToHR' x
       pure (HR.App f x)
-    IR.Ann u t x -> do
+    IR.Ann u t x l → do
       t <- irToHR' t
       x <- irToHR' x
-      pure (HR.Ann u t x)
+      pure (HR.Ann u t x l)
 
 exec :: EnvElim a -> (a, Env)
 exec (EnvCon env) = runState env (Env 0 [] [])

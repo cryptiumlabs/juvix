@@ -48,7 +48,7 @@ eraseTerm ::
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
-    HasState "context" (IR.Context primTy primVal (IR.EnvTypecheck primTy primVal)) m,
+    HasState "context" (IR.Context primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -75,7 +75,7 @@ eraseTerm parameterisation term usage ty =
         modify @"typeAssignment" (Map.insert name ty)
         --
         let (Right varTyIR, _) =
-              IR.exec (IR.evalTerm parameterisation (hrToIR varTy) [])
+              IR.exec (IR.evalTerm parameterisation (hrToIR varTy))
         --
         modify @"context"
           (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
@@ -95,14 +95,15 @@ eraseTerm parameterisation term usage ty =
           HR.Prim p -> pure (Erased.Prim p, elimTy)
           HR.App f x -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
-            context <- get @"context"
-            case fst (IR.exec (IR.typeElim0 parameterisation context fIR)) of
-              Left err ->
+            context ← get @"context"
+            case IR.typeElim0 parameterisation context fIR
+                   |> fmap IR.getElimAnn |> IR.exec |> fst of
+              Left err →
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
               Right (IR.Annotation fUsage fTy) → do
-                let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
+                let qFTy = IR.quote0 fTy
                 let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
                 (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
                 if argUsage == mempty
@@ -110,8 +111,8 @@ eraseTerm parameterisation term usage ty =
                   else do
                     (x, _) <- eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
-          HR.Ann usage term ty -> do
-            (term, _) <- eraseTerm parameterisation term usage ty
+          HR.Ann usage term ty _ → do
+            (term, _) ← eraseTerm parameterisation term usage ty
             pure (term, elimTy)
 
 eraseType ::

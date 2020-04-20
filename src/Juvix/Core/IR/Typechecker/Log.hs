@@ -7,11 +7,14 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Data.Text as T
 
 
-type HasLogTc primTy primVal m =
+type HasLogTC primTy primVal m =
   HasWriter "typecheckerLog" [Log primTy primVal] m
 
-tellLog :: HasLogTc primTy primVal m => Log primTy primVal -> m ()
-tellLog msg = tell @"typecheckerLog" [msg]
+tellLogs :: HasLogTC primTy primVal m => [Log primTy primVal] -> m ()
+tellLogs = tell @"typecheckerLog"
+
+tellLog :: HasLogTC primTy primVal m => Log primTy primVal -> m ()
+tellLog msg = tellLogs [msg]
 
 
 data Log primTy primVal
@@ -20,7 +23,7 @@ data Log primTy primVal
       (IR.Term primTy primVal)
       (Annotation primTy primVal)
   | ElimIntro (Context primTy primVal) (IR.Elim primTy primVal)
-  | Typechecked (IR.Term primTy primVal) (Annotation primTy primVal)
+  | Typechecked (IR.Term primTy primVal) (Typed.Annotation primTy primVal)
   | TcError (TypecheckError primTy primVal)
 
   | CheckingStar
@@ -44,7 +47,7 @@ data Log primTy primVal
   | CheckingElim
 
   | InferringFree
-  | FoundFree (Annotation primTy primVal)
+  | FoundFree (Typed.Annotation primTy primVal)
 
   | InferringPrim
 

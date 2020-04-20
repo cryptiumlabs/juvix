@@ -27,7 +27,8 @@ baseReservedOpNames =
   [ "\\", -- lambda
     "@", -- TODO: remove me, necessary for annotation parsing at the moment
     ":", -- type & usage annotation
-    "->" -- arrow
+    "->", -- arrow
+    "|" -- before the universe level in annotations
   ]
 
 generateParser ::
@@ -136,7 +137,9 @@ generateParser parameterisation =
         reservedOp ":"
         pi <- usage
         theType <- term
-        pure (Ann pi theTerm theType)
+        reservedOp "|"
+        level <- natural
+        pure (Ann pi theTerm theType (fromIntegral level))
       --
       varElim :: Parser (Elim primTy primVal)
       varElim = Var |<< binder
