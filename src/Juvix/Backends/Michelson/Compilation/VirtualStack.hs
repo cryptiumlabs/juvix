@@ -309,35 +309,61 @@ data Lookup lamType
   | Position Usage Natural
   deriving (Show)
 
+lookupGen ::
+  (Maybe (Lookup lamType) -> Maybe a -> a) -> (Usage -> Bool) -> Symbol -> T lamType -> a
+lookupGen gotoF extraPred n (T stack' _) = go stack' 0
+  where
+    go ((v@(VarE n' usage _), _) : vs) acc
+      | Set.member n n' && inT v && extraPred usage =
+        gotoF (Just (Position usage acc)) (Just (go vs (succ acc)))
+      | Set.member n n' && inT v =
+        go vs (succ acc)
+      | Set.member n n' =
+        gotoF (Just (Value (notInStackOf v))) (Just (go vs acc))
+    go ((v, _) : vs) acc
+      | inT v = go vs (succ acc)
+      | otherwise = go vs acc
+    go [] _ = gotoF Nothing Nothing
+
+-- Not used but may in the future
+
 -- | 'lookup' looks up a symbol from the stack
 -- May return None if the symbol does not exist at all on the stack
 -- Otherwise, the function returns Either
 -- a Value if the symbol is not stored on the stack
 -- or the position, if the value is stored on the stack
 lookup :: Symbol -> T lamType -> Maybe (Lookup lamType)
-lookup n (T stack' _) = go stack' 0
+lookup = lookupGen f (const True)
   where
-    go ((v@(VarE n' usage _), _) : _) acc
-      | Set.member n n' && inT v =
-        Just (Position usage acc)
-      | Set.member n n' =
-        Just (Value (notInStackOf v))
-    go ((v, _) : vs) acc
-      | inT v = go vs (succ acc)
-      | otherwise = go vs acc
-    go [] _ = Nothing
+    f (Just x) _ = Just x
+    f Nothing _ = Nothing
+
+-- | 'lookupFree' looks up a symbol from the stack
+-- May return None if the symbol does not exist at all on the stack
+-- Otherwise, the function returns Either
+-- a Value if the symbol is not stored on the stack
+-- or the position, if the value is stored on the stack and has enough
+-- usages to move forward
+lookupFree :: Symbol -> T lamType -> Maybe (Lookup lamType)
+lookupFree = lookupGen f isUsageFree
+  where
+    f (Just x) _ = Just x
+    f Nothing _ = Nothing
+
+isUsageFree (Usage x saved)
+  | x == mempty
+      || x == one && saved =
+    False
+  | otherwise = True
 
 -- TODO ∷ Turn into a filter map!
 lookupAllPos :: Symbol -> T lamType -> [Lookup lamType]
-lookupAllPos n (T stack' _) = go stack' 0
+lookupAllPos = lookupGen f (const True)
   where
-    go ((v@(VarE n' usage _), _) : xs) acc
-      | Set.member n n' && inT v =
-        Position usage acc : go xs (succ acc)
-    go ((v, _) : vs) acc
-      | inT v = go vs (succ acc)
-      | otherwise = go vs acc
-    go [] _ = []
+    f (Just x) (Just xs) = x : xs
+    f (Just x) Nothing = [x]
+    f Nothing (Just xs) = xs
+    f Nothing Nothing = []
 
 -- | 'predValueUsage reduces usage of a constant by 1, and deletes said constant
 -- if it goes over its usage. This function does nothing to items in the stack
