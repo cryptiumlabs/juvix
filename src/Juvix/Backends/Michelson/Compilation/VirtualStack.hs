@@ -41,22 +41,44 @@ data T lamType
       }
   deriving (Show, Eq)
 
+--------------------------------------------------------------------------------
+-- Usage Information
+--------------------------------------------------------------------------------
+
+type Saved = Bool
+
+notSaved :: Saved
+notSaved = False
+
+saved :: Saved
+saved = True
+
+data Usage = Usage Usage.T Saved
+  deriving (Show, Eq, Generic)
+
+defUsage :: Usage.T -> Usage
+defUsage usage = Usage usage False
+
+--------------------------------------------------------------------------------
+-- Content Types
+--------------------------------------------------------------------------------
+
 data Elem lamType
-  = VarE (Set.Set Symbol) Usage.T (Maybe (Val lamType))
+  = VarE (Set.Set Symbol) Usage (Maybe (Val lamType))
   | Val (Val lamType)
   deriving (Show, Eq, Generic)
 
-varEName :: Symbol -> Usage.T -> Maybe (Val lamType) -> Elem lamType
+varEName :: Symbol -> Usage -> Maybe (Val lamType) -> Elem lamType
 varEName x = VarE (Set.singleton x)
 
 varE :: Symbol -> Maybe (Val lamType) -> Elem lamType
-varE x = VarE (Set.singleton x) Usage.Omega
+varE x = VarE (Set.singleton x) (defUsage Usage.Omega)
 
 var1E :: Symbol -> Maybe (Val lamType) -> Elem lamType
-var1E x = VarE (Set.singleton x) one
+var1E x = VarE (Set.singleton x) (defUsage one)
 
 varNone :: Symbol -> Elem lamType
-varNone x = VarE (Set.singleton x) Usage.Omega Nothing
+varNone x = VarE (Set.singleton x) (defUsage Usage.Omega) Nothing
 
 data LamPartial
   = LamPartial
@@ -232,19 +254,20 @@ addName toFind toAdd (T stack i) = T (f <$> stack) i
 nameTop :: Symbol -> Usage.T -> T lamType -> T lamType
 nameTop sym usage t =
   case hd of
-    (Val i, ty) -> cons (varEName sym usage (Just i), ty) rest
+    (Val i, ty) -> cons (varEName sym (defUsage usage) (Just i), ty) rest
     (VarE s u mb, ty) -> cons (VarE (Set.insert sym s) u mb, ty) rest
   where
     hd = car t
     rest = cdr t
 
+-- TODO ∷ properly progate changes with new model
 drop :: Int -> T lamType -> T lamType
 drop n xs
   | n <= 0 = xs
   | otherwise =
     let c = car xs
      in case c of
-          (VarE x i _, _)
+          (VarE x (Usage i _) _, _)
             | i /= mempty ->
               drop (pred n) (updateUsage x (Usage.pred i) (cdr xs))
           _ ->
@@ -255,7 +278,7 @@ drop n xs
 dropPos :: Natural -> T lamType -> T lamType
 dropPos 0 xs
   | not (isNil xs) && inT (fst (car xs)) =
-    updatUsageVar (car xs) (cdr xs)
+    updateUsageVar (car xs) (cdr xs)
   | not (isNil xs) =
     cons (car xs) (dropPos 0 (cdr xs))
   | otherwise = xs
@@ -269,21 +292,21 @@ dropPos n xs
 updateUsageList :: Set Symbol -> Usage.T -> [(Elem lamType, b)] -> [(Elem lamType, b)]
 updateUsageList symbs usage = f
   where
-    f ((VarE s i ele, ty) : xs)
-      | not (Set.disjoint symbs s) = (VarE s (i <> usage) ele, ty) : xs
+    f ((VarE s (Usage i saved) ele, ty) : xs)
+      | not (Set.disjoint symbs s) = (VarE s (Usage (i <> usage) saved) ele, ty) : xs
     f (x : xs) = x : f xs
     f [] = []
 
 updateUsage :: Set.Set Symbol -> Usage.T -> T lamType -> T lamType
 updateUsage symbs usage (T stack i) = T (updateUsageList symbs usage stack) i
 
-updatUsageVar :: (Elem lamType, b) -> T lamType -> T lamType
-updatUsageVar (VarE syms usages _, _) t = updateUsage syms usages t
-updatUsageVar (Val _, _) t = t
+updateUsageVar :: (Elem lamType, b) -> T lamType -> T lamType
+updateUsageVar (VarE syms (Usage usages _) _, _) t = updateUsage syms usages t
+updateUsageVar (Val _, _) t = t
 
 data Lookup lamType
   = Value (NotInStack lamType)
-  | Position Usage.T Natural
+  | Position Usage Natural
   deriving (Show)
 
 -- | 'lookup' looks up a symbol from the stack
@@ -321,13 +344,17 @@ lookupAllPos n (T stack' _) = go stack' 0
 predValueUsage :: Symbol -> T lamType -> T lamType
 predValueUsage n s@(T stack' i) = go stack' []
   where
-    go ((v@(VarE n' usage val), ty) : xs) acc
+    go ((v@(VarE n' (Usage usage saved) val), ty) : xs) acc
       | Set.member n n' && inT v =
         s
       | Set.member n n' && usage == one =
         T (reverse acc <> xs) i
       | otherwise =
-        T (reverse acc <> ((VarE n' (Usage.pred usage) val, ty) : xs)) i
+        T
+          ( reverse acc
+              <> ((VarE n' (Usage (Usage.pred usage) saved) val, ty) : xs)
+          )
+          i
     go (x : xs) acc = go xs (x : acc)
     go [] _ = T stack' i
 
@@ -351,7 +378,7 @@ dupDig i (T stack' n) =
 dropFirst :: Symbol -> T lamType -> [(Elem lamType, Untyped.Type)] -> T lamType
 dropFirst n (T stack' size) = go stack'
   where
-    go ((v@(VarE n' usages _), _) : xs) acc
+    go ((v@(VarE n' (Usage usages _saved) _), _) : xs) acc
       | Set.member n n' && inT v && usages /= mempty =
         T (reverse acc <> updateUsageList n' (Usage.pred usages) xs) (pred size)
       | Set.member n n' && inT v =
@@ -406,17 +433,16 @@ constantOnTop (T ((v, _) : _) _) = not (inT v)
 -- Usage Manipulation
 --------------------------------------------------------------------------------
 
-usageOf :: Elem lamType -> Usage.T
-usageOf Val {} = Usage.Omega
-usageOf (VarE _ usage _) = usage
-
 predUsage :: Elem lamType -> Elem lamType
 predUsage v@Val {} = v
-predUsage (VarE s usage val) = VarE s (Usage.pred usage) val
+predUsage (VarE s (Usage usage saved) val) =
+  VarE s (Usage (Usage.pred usage) saved) val
 
 -- Sets the usage of a var to 1 unless it's omega
 -- in which case we keep it at omega!
 usageOneOmega :: Elem lamType -> Elem lamType
 usageOneOmega v@Val {} = v
-usageOneOmega (VarE s Usage.Omega val) = VarE s Usage.Omega val
-usageOneOmega (VarE s _ val) = VarE s one val
+usageOneOmega (VarE s usage@(Usage Usage.Omega _) val) =
+  VarE s usage val
+usageOneOmega (VarE s (Usage _ saved) val) =
+  VarE s (Usage one saved) val

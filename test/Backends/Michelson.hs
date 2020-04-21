@@ -428,43 +428,41 @@ addDoublePairs =
     applyPlus term name =
       Ann one (primTy int) (J.AppM (addPairs name) [term])
 
-
-  -- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
-  -- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
-  -- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 2))
-  -- ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
-  -- ,PrimEx (DIG 0)
-  -- ,PrimEx (MUL @)
-  -- ,PrimEx (DIPN 1 [PrimEx DROP])
-  -- ,PrimEx (DIPN 1 [PrimEx DROP])]
+-- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+-- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 2))
+-- ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
+-- ,PrimEx (DIG 0)
+-- ,PrimEx (MUL @)
+-- ,PrimEx (DIPN 1 [PrimEx DROP])
+-- ,PrimEx (DIPN 1 [PrimEx DROP])]
 xtwice =
-  Ann one (primTy int)
-  $ J.AppM
-    (Ann
-       one
-       ( J.Pi mempty (primTy int)
-       $ J.Pi (SNat 2) (primTy int)
-       $ J.Pi mempty (primTy int)
-       $ primTy int
-       )
-      $ J.LamM [] ["y", "x", "z"]
-      $ Ann one (primTy int)
-      $ J.AppM
-        ( Ann
-            one
-            ( J.Pi one (primTy int)
-            $ J.Pi one (primTy int)
-            $ primTy int
+  Ann one (primTy int) $
+    J.AppM
+      ( Ann
+          one
+          ( J.Pi mempty (primTy int)
+              $ J.Pi (SNat 2) (primTy int)
+              $ J.Pi mempty (primTy int)
+              $ primTy int
+          )
+          $ J.LamM [] ["y", "x", "z"]
+          $ Ann one (primTy int)
+          $ J.AppM
+            ( Ann
+                one
+                ( J.Pi one (primTy int)
+                    $ J.Pi one (primTy int)
+                    $ primTy int
+                )
+                $ J.Prim
+                $ Instructions.toNewPrimErr Instructions.mul
             )
-         $ J.Prim
-         $ Instructions.toNewPrimErr Instructions.mul
-        )
-        [Ann one (primTy int) (J.Var "x")
-        , Ann one (primTy int) (J.Var "x")]
-    )
-    [push1Int 2, push1Int 3, push1Int 4]
-
-
+            [ Ann one (primTy int) (J.Var "x"),
+              Ann one (primTy int) (J.Var "x")
+            ]
+      )
+      [push1Int 2, push1Int 3, push1Int 4]
 
 -- Also broken could fix
 
@@ -478,41 +476,39 @@ xtwice =
 --   ,PrimEx (DIPN 1 [PrimEx DROP])
 --   ,PrimEx (DIPN 1 [PrimEx DROP])]
 
-
-
 oddApp =
-  Ann one (primTy int)
-  $ J.AppM
-    (Ann
-       one
-       ( J.Pi mempty (primTy int)
-       $ J.Pi (SNat 2) (primTy int)
-       $ J.Pi mempty (primTy int)
-       $ primTy int
-       )
-      $ J.LamM [] ["y", "x", "z"]
-      $ Ann one (primTy int)
-      $ J.AppM
-        (Ann one (J.Pi one (primTy int) (primTy int))
-        $ J.LamM ["x"] ["a"]
-        $ Ann one (primTy int)
-        $ J.AppM
-          ( Ann
-               one
-              ( J.Pi one (primTy int)
-              $ J.Pi one (primTy int)
+  Ann one (primTy int) $
+    J.AppM
+      ( Ann
+          one
+          ( J.Pi mempty (primTy int)
+              $ J.Pi (SNat 2) (primTy int)
+              $ J.Pi mempty (primTy int)
               $ primTy int
-              )
-           $ J.Prim
-           $ Instructions.toNewPrimErr Instructions.mul
           )
-          [Ann one (primTy int) (J.Var "x")
-          , Ann one (primTy int) (J.Var "a")]
+          $ J.LamM [] ["y", "x", "z"]
+          $ Ann one (primTy int)
+          $ J.AppM
+            ( Ann one (J.Pi one (primTy int) (primTy int))
+                $ J.LamM ["x"] ["a"]
+                $ Ann one (primTy int)
+                $ J.AppM
+                  ( Ann
+                      one
+                      ( J.Pi one (primTy int)
+                          $ J.Pi one (primTy int)
+                          $ primTy int
+                      )
+                      $ J.Prim
+                      $ Instructions.toNewPrimErr Instructions.mul
+                  )
+                  [ Ann one (primTy int) (J.Var "x"),
+                    Ann one (primTy int) (J.Var "a")
+                  ]
+            )
+            [Ann one (primTy int) (J.Var "x")]
       )
-      [Ann one (primTy int) (J.Var "x")]
-    )
-    [push1Int 2, push1Int 3, push1Int 4]
-
+      [push1Int 2, push1Int 3, push1Int 4]
 
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit

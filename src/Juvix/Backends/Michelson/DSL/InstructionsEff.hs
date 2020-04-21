@@ -322,9 +322,9 @@ onTwoArgs op f typ instrs = do
                in pure (f i1 i2)
             | otherwise -> do
               traverse_ addExpanded instrs
+              copyAndDrop 2
               addInstr op
               pure Env.Nop
-      modify @"stack" (VStack.drop 2)
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
@@ -340,9 +340,9 @@ onOneArgs op f typ instrs = do
                in pure (f i1)
             | otherwise -> do
               addExpanded instr1
+              copyAndDrop 1
               addInstr op
               pure Env.Nop
-      modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
@@ -379,6 +379,9 @@ dupToFront num = do
           <> Instructions.dug (succ (fromIntegral num))
   addInstr instrs
   pure instrs
+
+copyAndDrop i = do
+  pure ()
 
 data Protect
   = Protect
