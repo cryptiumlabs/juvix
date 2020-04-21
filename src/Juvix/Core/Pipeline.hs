@@ -79,7 +79,7 @@ typecheckErase term usage ty = do
   -- Typecheck & return accordingly.
   case IR.typeTerm param 0 [] irTerm (IR.Annotation usage irTypeValue)
          |> IR.exec |> fst of
-    Right _ → do
+    Right _ -> do
       case Erasure.erase param term usage ty of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)

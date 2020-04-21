@@ -83,14 +83,14 @@ deriving instance
    IR.TermAll    Eq ext primTy primVal,
    IR.ElimAll    Eq ext primTy primVal,
    IR.ValueAll   Eq ext primTy primVal,
-   IR.NeutralAll Eq ext primTy primVal) ⇒
+   IR.NeutralAll Eq ext primTy primVal) =>
   Eq (TypecheckError' ext primTy primVal)
 
 instance (Show primTy, Show primVal,
           IR.TermAll    Show ext primTy primVal,
           IR.ElimAll    Show ext primTy primVal,
           IR.ValueAll   Show ext primTy primVal,
-          IR.NeutralAll Show ext primTy primVal) ⇒
+          IR.NeutralAll Show ext primTy primVal) =>
   Show (TypecheckError' ext primTy primVal)
  where
   show (TypeMismatch binder term expectedT gotT) =

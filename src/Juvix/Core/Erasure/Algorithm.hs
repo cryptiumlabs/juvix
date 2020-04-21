@@ -79,7 +79,7 @@ eraseTerm parameterisation term usage ty =
         --
         modify @"context"
           (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
-        (body, _) ← eraseTerm parameterisation body bodyUsage retTy
+        (body, _) <- eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
         pure
@@ -95,14 +95,14 @@ eraseTerm parameterisation term usage ty =
           HR.Prim p -> pure (Erased.Prim p, elimTy)
           HR.App f x -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
-            context ← get @"context"
+            context <- get @"context"
             case IR.typeElim0 parameterisation context fIR
                    |> fmap IR.getElimAnn |> IR.exec |> fst of
-              Left err →
+              Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
-              Right (IR.Annotation fUsage fTy) → do
+              Right (IR.Annotation fUsage fTy) -> do
                 let qFTy = IR.quote0 fTy
                 let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
                 (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
@@ -111,8 +111,8 @@ eraseTerm parameterisation term usage ty =
                   else do
                     (x, _) <- eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
-          HR.Ann usage term ty _ → do
-            (term, _) ← eraseTerm parameterisation term usage ty
+          HR.Ann usage term ty _ -> do
+            (term, _) <- eraseTerm parameterisation term usage ty
             pure (term, elimTy)
 
 eraseType ::
