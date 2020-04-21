@@ -350,6 +350,7 @@ lookupFree = lookupGen f isUsageFree
     f (Just x) _ = Just x
     f Nothing _ = Nothing
 
+isUsageFree :: Usage -> Bool
 isUsageFree (Usage x saved)
   | x == mempty
       || x == one && saved =

@@ -149,7 +149,7 @@ var symb = do
               )
           Nothing ->
             throw @"compilationError" (Types.NotInStack symb)
-  case VStack.lookup symb stack of
+  case VStack.lookupFree symb stack of
     Nothing ->
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) -> do
@@ -158,8 +158,8 @@ var symb = do
     Just (VStack.Value (VStack.Lam' lamPartial)) -> do
       pushStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
-    Just (VStack.Position usage index)
-      | one == usage ->
+    Just (VStack.Position (VStack.Usage usage _saved) index)
+      | usage == one ->
         Env.Expanded <$> moveToFront index
       | otherwise ->
         Env.Expanded <$> dupToFront index
@@ -310,6 +310,7 @@ onPairGen1 op f =
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
+  -- TODO make promote promoteAndSave
   v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
   case v of
     instr2 : instr1 : _ -> do
@@ -322,15 +323,19 @@ onTwoArgs op f typ instrs = do
                in pure (f i1 i2)
             | otherwise -> do
               traverse_ addExpanded instrs
-              copyAndDrop 2
+              -- add when we normalize
+              -- copyAndDrop 2
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
+      modify @"stack" (VStack.drop 2)
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
 onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
 onOneArgs op f typ instrs = do
+  -- TODO make promote promoteAndSave
   v <- traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
     instr1 : _ -> do
@@ -340,9 +345,11 @@ onOneArgs op f typ instrs = do
                in pure (f i1)
             | otherwise -> do
               addExpanded instr1
-              copyAndDrop 1
+              -- copyAndDrop 1
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
+      modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
@@ -368,6 +375,7 @@ moveToFront num = do
   modify @"stack" (VStack.dig (fromIntegral num))
   pure inst
 
+-- Now unused
 dupToFront :: (Env.Instruction m, Integral a) => a -> m Instr.ExpandedOp
 dupToFront num = do
   modify @"stack" (VStack.dupDig (fromIntegral num))
@@ -380,7 +388,8 @@ dupToFront num = do
   addInstr instrs
   pure instrs
 
-copyAndDrop i = do
+-- Unsafe to implmeent until we normalize core
+copyAndDrop i =
   pure ()
 
 data Protect
@@ -653,7 +662,7 @@ consVarGen symb result usage ty = do
     VStack.cons
       ( VStack.VarE
           (Set.singleton symb)
-          usage
+          (VStack.Usage usage VStack.notSaved)
           result,
         ty
       )
