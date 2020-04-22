@@ -12,33 +12,32 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import Data.Curve.Weierstrass.BN254 (Fr)
-import Circuit.Arithmetic (Wire(..))
-import Circuit.Expr
-import Circuit.Lang
 
--- k: primitive type: unit
 data Ty
   = Ty
   deriving (Show, Eq)
 
-type F = Fr
+class FieldElement f where
+  add :: f -> f -> f
+  mul :: f -> f -> f
+  sub :: f -> f -> f
+  neg :: f -> f
+  intExp :: f -> f -> f
+  eq :: f -> f -> f
 
--- c: primitive constant and f: functions
-data Val
-  = Val (Expr Wire F F)
-  | Add
-  | Mul
-  | Curried Val (Expr Wire F F)
-  deriving (Show)
+data Val f where
+  Val :: FieldElement f => f -> Val f
+  Add :: Val f
+  Mul :: Val f
+  Curried :: FieldElement f => Val f -> f -> Val f
 
-typeOf ∷ Val → NonEmpty Ty
+typeOf ∷ Val a → NonEmpty Ty
 typeOf (Val _) = Ty :| []
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
 
-apply ∷ Val → Val → Maybe Val
+apply ∷ FieldElement f => Val f → Val f → Maybe (Val f)
 apply Add (Val x) = pure (Curried Add x)
 apply Mul (Val x) = pure (Curried Mul x)
 apply (Curried Add x) (Val y) = pure (Val (add x y))
@@ -50,7 +49,7 @@ parseTy lexer = do
   Token.reserved lexer "FieldElements"
   pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
+parseVal ∷ Token.GenTokenParser String () Identity → Parser (Val a)
 parseVal lexer = undefined -- idk yet how to parse it, hexadecimal?
 
 reservedNames ∷ [String]
@@ -59,6 +58,6 @@ reservedNames = ["FieldElements", "F", "add", "mul"]
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-t ∷ Parameterisation Ty Val
+t ∷ FieldElement f => Parameterisation Ty (Val f)
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

@@ -1,19 +1,16 @@
 module Juvix.Backends.ArithmeticCircuit.Compilation.Types where
 
-import qualified Data.Graph.Inductive as G
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import Juvix.Library
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Parameterisation
 
-type Circuit = G.Gr NodeType WireType
+data Val
+  = FEVal FieldElements.Val
+  | BoolVal Parameterisation.BooleanVal
+  | Eq Term Term
+  deriving Show
 
-data NodeType
-  = -- Addition gate.
-    Add
-  | -- Multiplication gate.
-    Mul
-  | -- Input value (by vector index).
-    InputValue Natural
-  | -- Output value (by vector index).
-    OutputValue Natural
-  deriving (Show, Eq, Generic)
 
-type WireType = ()
+type Term = CoreErased.AnnTerm Parameterisation.Ty Val
+type Type = CoreErased.Type Parameterisation.Ty Val
