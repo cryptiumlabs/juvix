@@ -43,6 +43,7 @@ dependencies:
   - aeson
   - Cabal
   - extensible-data
+  - arithmetic-circuits
 
 default-extensions:
   - NoImplicitPrelude
