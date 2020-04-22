@@ -310,7 +310,6 @@ onPairGen1 op f =
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
-  -- TODO make promote promoteAndSave
   v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
   case v of
     instr2 : instr1 : _ -> do
@@ -335,7 +334,6 @@ onTwoArgs op f typ instrs = do
 
 onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
 onOneArgs op f typ instrs = do
-  -- TODO make promote promoteAndSave
   v <- traverse (protect . (inst >=> promoteTopStack)) instrs
   case v of
     instr1 : _ -> do
@@ -432,7 +430,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack :: Env.Reduction m => Env.Expanded -> m Env.Expanded
 promoteTopStack x = do
   stack <- get @"stack"
-  (insts, stack') <- VStack.promote 1 stack promoteLambda
+  (insts, stack') <- VStack.promoteSave 1 stack promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x

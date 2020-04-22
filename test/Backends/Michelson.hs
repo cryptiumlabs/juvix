@@ -63,7 +63,9 @@ backendMichelson =
       constUIntTest,
       overExactConstTest,
       overExactNonConstTest,
-      identityTermTest
+      identityTermTest,
+      xtwiceTest,
+      oddAppTest
     ]
 
 --------------------------------------------------------------------------------
@@ -140,6 +142,12 @@ overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
 identityTermTest :: T.TestTree
 identityTermTest = shouldCompileTo identityTerm identityTermAns
 
+xtwiceTest :: T.TestTree
+xtwiceTest = shouldCompileTo xtwice xtwiceAns
+
+oddAppTest :: T.TestTree
+oddAppTest = shouldCompileTo oddApp oddAppAns
+
 --------------------------------------------------------------------------------
 -- Terms to test against
 --------------------------------------------------------------------------------
@@ -182,11 +190,10 @@ constUInt =
     $ J.LamM [] ["x", "y"] lookupX
 
 -- nonConstApp generates:
--- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
--- ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
--- ,SeqEx [PrimEx (DIG 0)
---        ,PrimEx (DUP @)
---        ,PrimEx (DUG 1)]]
+--   [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+--   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
+--   ,PrimEx (DIG 0)
+--   ,PrimEx (DIPN 1 [PrimEx DROP])]
 
 nonConstApp :: Term
 nonConstApp =
@@ -428,14 +435,7 @@ addDoublePairs =
     applyPlus term name =
       Ann one (primTy int) (J.AppM (addPairs name) [term])
 
--- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 2))
--- ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
--- ,PrimEx (DIG 0)
--- ,PrimEx (MUL @)
--- ,PrimEx (DIPN 1 [PrimEx DROP])
--- ,PrimEx (DIPN 1 [PrimEx DROP])]
+xtwice :: Term
 xtwice =
   Ann one (primTy int) $
     J.AppM
@@ -464,18 +464,7 @@ xtwice =
       )
       [push1Int 2, push1Int 3, push1Int 4]
 
--- Also broken could fix
-
--- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
---   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
---   ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 2))
---   ,SeqEx [PrimEx (DIG 1),PrimEx (DUP @),PrimEx (DUG 2)]
---   ,PrimEx (DIG 0)
---   ,PrimEx (DIG 0)
---   ,PrimEx (MUL @)
---   ,PrimEx (DIPN 1 [PrimEx DROP])
---   ,PrimEx (DIPN 1 [PrimEx DROP])]
-
+oddApp :: Term
 oddApp =
   Ann one (primTy int) $
     J.AppM
@@ -724,6 +713,39 @@ constUIntAns =
 --   ,PrimEx (DIG 0)
 --   ,PrimEx (DIPN 0 [PrimEx DROP])
 --   ,PrimEx (DIPN 0 [PrimEx DROP])]
+
+xtwiceAns :: [Op]
+xtwiceAns =
+  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 2)),
+    SeqEx
+      [ PrimEx (DIG 1),
+        PrimEx (DUP ""),
+        PrimEx (DUG 2)
+      ],
+    PrimEx (DIG 2),
+    PrimEx (MUL ""),
+    PrimEx (DIPN 1 [PrimEx DROP]),
+    PrimEx (DIPN 1 [PrimEx DROP])
+  ]
+
+oddAppAns :: [Op]
+oddAppAns =
+  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 2)),
+    SeqEx
+      [ PrimEx (DIG 1),
+        PrimEx (DUP ""),
+        PrimEx (DUG 2)
+      ],
+    PrimEx (DIG 0),
+    PrimEx (DIG 2),
+    PrimEx (MUL ""),
+    PrimEx (DIPN 1 [PrimEx DROP]),
+    PrimEx (DIPN 1 [PrimEx DROP])
+  ]
 
 addDoublePairsAns :: [Op]
 addDoublePairsAns =

@@ -214,11 +214,39 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
+constToInstr :: T.Type -> V.Value' Instr.ExpandedOp -> Instr.ExpandedOp
 constToInstr ty c =
   case c of
     V.ValueNil ->
       let T.Type (T.TList t) _ = ty in Instructions.nil t
     _ -> Instructions.push ty c
+
+promoteGen ::
+  Monad f =>
+  (Usage -> Usage) ->
+  Int ->
+  T lamType ->
+  (lamType -> f [Instr.ExpandedOp]) ->
+  f ([Instr.ExpandedOp], T lamType)
+promoteGen _contF _n stack _
+  | isNil stack = pure ([], stack)
+promoteGen _contF 0 stack _ =
+  pure ([], stack)
+promoteGen contF n stack f = do
+  (insts, newStack) <- promoteGen contF (pred n) (cdr stack) f
+  let pushVal v t = constToInstr t v : insts
+  case car stack of
+    (Val (ConstE v), t) ->
+      pure (pushVal v t, cons (Val FuncResultE, t) newStack)
+    (VarE x i (Just (ConstE v)), t) ->
+      pure (pushVal v t, cons (VarE x (contF i) (Just FuncResultE), t) newStack)
+    (VarE x i (Just (LamPartialE lamType)), t) -> do
+      insts <- f lamType
+      pure (insts, cons (VarE x (contF i) (Just MichelsonLambda), t) newStack)
+    (VarE x i res, t) ->
+      pure (insts, cons (VarE x (contF i) res, t) newStack)
+    a ->
+      pure (insts, cons a newStack)
 
 promote ::
   forall m lamType.
@@ -227,22 +255,30 @@ promote ::
   T lamType ->
   (lamType -> m [Instr.ExpandedOp]) ->
   m ([Instr.ExpandedOp], T lamType)
-promote _n stack _
-  | isNil stack = pure ([], stack)
-promote 0 stack _ = pure ([], stack)
-promote n stack f = do
-  (insts, newStack) <- promote (pred n) (cdr stack) f
-  let pushVal v t = constToInstr t v : insts
-  case car stack of
-    (Val (ConstE v), t) ->
-      pure (pushVal v t, cons (Val FuncResultE, t) newStack)
-    (VarE x i (Just (ConstE v)), t) ->
-      pure (pushVal v t, cons (VarE x i (Just FuncResultE), t) newStack)
-    (VarE x i (Just (LamPartialE lamType)), t) -> do
-      insts <- f lamType
-      pure (insts, cons (VarE x i (Just MichelsonLambda), t) newStack)
-    a ->
-      pure (insts, cons a newStack)
+promote = promoteGen identity
+
+promoteSave ::
+  forall m lamType.
+  Monad m =>
+  Int ->
+  T lamType ->
+  (lamType -> m [Instr.ExpandedOp]) ->
+  m ([Instr.ExpandedOp], T lamType)
+promoteSave = promoteGen f
+  where
+    f (Usage i _) = Usage i saved
+
+unSave :: Natural -> T lamType -> T lamType
+unSave num (T stack i) = T (go num stack) i
+  where
+    go 0 xs = xs
+    go i (x : xs) =
+      case x of
+        (Val iv, ty) ->
+          (Val iv, ty) : go (pred i) xs
+        (VarE s (Usage usage _) mb, ty) ->
+          (VarE s (Usage usage notSaved) mb, ty) : go (pred i) xs
+    go _ [] = []
 
 addName :: Symbol -> Symbol -> T lamType -> T lamType
 addName toFind toAdd (T stack i) = T (f <$> stack) i
@@ -452,8 +488,8 @@ splitAtReal i xs = splitAt (go xs 0 + i) xs
       | otherwise = succ (go vs i)
     go [] _ = 0
 
-constantOnTOp (T [] _) = False
-
+constantOnTop :: T lamType -> Bool
+constantOnTop (T [] _) = False
 constantOnTop (T ((v, _) : _) _) = not (inT v)
 
 --------------------------------------------------------------------------------
