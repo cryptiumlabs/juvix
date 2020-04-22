@@ -128,7 +128,7 @@ typeTerm p ii ctx tm@(IR.Elim e) ann@(Annotation σ ty) = do
   let Annotation σ' ty' = getElimAnn e'
   unless (σ' `Usage.allowsUsageOf` σ) $ do
     throwLog $ UsageNotCompatible σ' σ
-  unless (ty == ty') $ do -- TODO subtyping
+  unless (ty' <: ty) $ do
     throwLog $ TypeMismatch ii tm ty ty'
   pure $ Typed.Elim e' ann
 
@@ -214,3 +214,26 @@ typeElim p ii ctx elim@(IR.Ann π theTerm theType level) = do
   let ann = Annotation π ty
   theTerm' <- typeTerm p ii ctx theTerm ann
   pure $ Typed.Ann π theTerm' theType' level ann
+
+
+-- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
+-- type @s@ can also be checked against type @t@.
+--
+-- Currently subtyping consists of the following:
+--
+-- * Consistency of universe levels (@*ᵢ <: *ⱼ@ if @i ≤ j@)
+-- * Usage compatibility (@(π x: A) → B <: (ω x: A) → B@ for finite @π@)
+-- * Contravariant domain & covariant codomain
+--   (@(π x: A₁) → B₁ <: (π x: A₂) → B₂@ if
+--    @A₂ <: A₁@ and @B₁ <: B₂@)
+-- * It doesn't descend into any other structures
+--   (TODO: which ones are safe to do so?)
+infix 4 <: -- same as (<), etc
+(<:) :: (Eq primTy, Eq primVal)
+     => IR.Value primTy primVal -> IR.Value primTy primVal -> Bool
+IR.VStar i <: IR.VStar j = i <= j
+IR.VPi π1 s1 t1 <: IR.VPi π2 s2 t2 =
+  π2 `Usage.allowsUsageOf` π1 && s2 <: s1 && t1 <: t2
+s1 <: s2 = s1 == s2
+-- TODO: if PrimTys can ever be subtypes of each other the parameterisation will
+-- need to know about that
