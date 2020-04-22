@@ -1,12 +1,19 @@
 module Juvix.Core.Utility where
 
-import Data.List (findIndex)
+import Data.List (findIndex, tail, (!!))
 import Juvix.Library
-import Prelude ((!!))
 
 pushName ::
   HasState "symbolStack" [Symbol] m => Symbol -> m ()
 pushName name = modify @"symbolStack" (name :)
+
+popName :: HasState "symbolStack" [Symbol] m => m ()
+popName = modify @"symbolStack" tail
+  -- FIXME some error message if the stack is empty?
+
+withName ::
+  HasState "symbolStack" [Symbol] m => Symbol -> m a -> m a
+withName n act = pushName n *> act <* popName
 
 lookupName ::
   HasState "symbolStack" [Symbol] m => Symbol -> m (Maybe Int)

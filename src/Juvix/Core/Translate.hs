@@ -20,12 +20,10 @@ hrToIR' term =
     HR.PrimTy p -> pure (IR.PrimTy p)
     HR.Pi u n a b -> do
       a <- hrToIR' a
-      pushName n
-      b <- hrToIR' b
+      b <- withName n $ hrToIR' b
       pure (IR.Pi u a b)
     HR.Lam n b -> do
-      pushName n
-      b <- hrToIR' b
+      b <- withName n $ hrToIR' b
       pure (IR.Lam b)
     HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
