@@ -114,6 +114,7 @@ shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
     fst (IR.exec (IR.evalTerm param term)) T.@=? Right res
 
+infix 1 `ann`
 ann :: Usage.T -> IR.Value primTy primVal -> IR.Annotation primTy primVal
 ann = IR.Annotation
 
