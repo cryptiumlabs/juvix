@@ -114,6 +114,9 @@ shouldEval param term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
     fst (IR.exec (IR.evalTerm param term)) T.@=? Right res
 
+ann :: Usage.T -> IR.Value primTy primVal -> IR.Annotation primTy primVal
+ann = IR.Annotation
+
 coreCheckerEval :: T.TestTree
 coreCheckerEval =
   T.testGroup
@@ -150,9 +153,6 @@ skiComp =
           scombinator
           scombinatorCompNat.Ty -}
     ]
-
-ann :: Usage.T -> IR.Value primTy primVal -> IR.Annotation primTy primVal
-ann = IR.Annotation
 
 natComp :: T.TestTree
 natComp =
