@@ -44,6 +44,30 @@ assertIsRight (Left  l) = T.assertFailure $
   "Left (" ++ show l ++ ")"
 
 -- unit test generator for typeTerm
+shouldCheckWith ::
+  forall primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  Parameterisation primTy primVal ->
+  IR.Context primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.Annotation primTy primVal ->
+  T.TestTree
+shouldCheckWith param ctx term ann =
+  -- TODO: take out the logs and put them in an IO monad.
+  let (res, logs') = IR.exec $ IR.typeTerm param 0 ctx term ann
+      logs =
+        Text.intercalate "\n"
+          $ map IR.describe
+          $ IR.typecheckerLog
+          $ logs'
+   in T.testCase
+        ( show term
+            <> " should check as type "
+            <> show ann
+            <> show logs
+        )
+        $ assertIsRight res
+
 shouldCheck ::
   forall primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
@@ -51,24 +75,24 @@ shouldCheck ::
   IR.Term primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldCheck param term ann =
-  -- TODO: take out the logs and put them in an IO monad.
-  let logs =
-        Text.intercalate "\n"
-          $ map IR.describe
-          $ IR.typecheckerLog
-          $ snd
-          $ IR.exec
-          $ IR.typeTerm param 0 [] term ann
-   in T.testCase
-        ( show term
-            <> " should check as type "
-            <> show ann
-            <> show logs
-        )
-        $ assertIsRight $ fst (IR.exec (IR.typeTerm param 0 [] term ann))
+shouldCheck param = shouldCheckWith param []
 
 -- unit test generator for typeElim
+shouldInferWith ::
+  forall primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  Parameterisation primTy primVal ->
+  IR.Context primTy primVal ->
+  IR.Elim primTy primVal ->
+  IR.Annotation primTy primVal ->
+  T.TestTree
+shouldInferWith param ctx term ann =
+  let (res', logs') = IR.exec $ IR.typeElim0 param ctx term
+      res  = IR.getElimAnn <$> res'
+      logs = show $ IR.typecheckerLog logs'
+   in T.testCase (show term <> " should infer to type " <> show ann <> logs) $
+        res T.@=? Right ann
+
 shouldInfer ::
   forall primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
@@ -76,11 +100,7 @@ shouldInfer ::
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldInfer param term ann =
-  let logs = IR.typecheckerLog $ snd (IR.exec (IR.typeElim0 param [] term))
-   in T.testCase (show term <> " should infer to type " <> show ann <> show logs) $
-        (IR.typeElim0 param [] term |> IR.exec |> fst |> fmap IR.getElimAnn)
-        T.@=? Right ann
+shouldInfer param = shouldInferWith param []
 
 -- unit test generator for evalTerm
 shouldEval ::
@@ -102,7 +122,8 @@ coreCheckerEval =
       natComp,
       dependentFunctionComp,
       evaluations,
-      skiCont
+      skiCont,
+      subtype
     ]
 
 skiComp :: T.TestTree
@@ -174,6 +195,19 @@ skiCont =
     "SKI combinators contemplational typing"
     [ shouldCheck Nat.t identity identityNatContTy
     ]
+
+subtype :: T.TestTree
+subtype =
+  T.testGroup
+    "Subtyping"
+    [ shouldCheckWith Unit.t typContext aTerm  $ mempty `ann` IR.VStar 0
+    , shouldCheckWith Unit.t typContext aTerm  $ mempty `ann` IR.VStar 1
+    , shouldCheckWith Unit.t typContext fTerm  $ mempty `ann` typ2typ 1 1
+    , shouldCheckWith Unit.t typContext fTerm  $ mempty `ann` typ2typ 0 1
+    , shouldCheckWith Unit.t typContext fTerm  $ mempty `ann` typ2typ 1 2
+    , shouldInferWith Unit.t typContext faElim $ mempty `ann` IR.VStar 1
+    ]
+  where typ2typ i j = IR.VPi mempty (IR.VStar i) (IR.VStar j)
 
 -- \x. x
 identity :: forall primTy primVal. IR.Term primTy primVal
@@ -693,3 +727,27 @@ twoCompTy =
     (Usage.SNat 2)
     (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
     (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
+
+typContext :: IR.Context primTy primVal
+typContext =
+  [IR.contextElement (IR.Global "A") mempty (IR.VStar 0),
+   IR.contextElement (IR.Global "F") mempty
+     (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))]
+
+aTerm :: IR.Term primTy primVal
+aTerm = IR.Elim aElim
+
+aElim :: IR.Elim primTy primVal
+aElim = IR.Free (IR.Global "A")
+
+fTerm :: IR.Term primTy primVal
+fTerm = IR.Elim fElim
+
+fElim :: IR.Elim primTy primVal
+fElim = IR.Free (IR.Global "F")
+
+faTerm :: IR.Term primTy primVal
+faTerm = IR.Elim faElim
+
+faElim :: IR.Elim primTy primVal
+faElim = fElim `IR.App` aTerm
