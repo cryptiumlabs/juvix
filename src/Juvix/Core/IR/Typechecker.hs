@@ -29,6 +29,10 @@ isStar :: IR.Value primTy primVal -> Bool
 isStar (IR.VStar _) = True
 isStar _            = False
 
+ensure :: (HasLogTC primTy primVal m, HasThrowTC primTy primVal m)
+       => Bool -> Log primTy primVal -> TypecheckError primTy primVal -> m ()
+ensure cond msg err = if cond then tellLog msg else throwLog err
+
 -- | 'checker' for checkable terms checks the term
 -- against an annotation and returns ().
 typeTerm ::
@@ -61,15 +65,9 @@ typeTerm _ _ii ctx tm@(IR.Star i) ann@(Annotation σ ty) = do
 -- ★- Pi (Universe introduction rule)
 typeTerm p ii ctx tm@(IR.Pi pi varType resultType) ann@(Annotation σ ty) = do
   tellLogs [TermIntro ctx tm ann, CheckingPi, CheckingSigmaZero]
-  if σ == Usage.SNat 0 then -- checks sigma = 0.
-    tellLog SigmaIsZero
-  else
-    throwLog SigmaMustBeZero
+  ensure (σ == mempty) SigmaIsZero SigmaMustBeZero
   tellLog $ CheckingPiAnnIsStar ty
-  if isStar ty then
-    tellLog $ PiAnnIsStar ty
-  else
-    throwLog $ ShouldBeStar ty
+  ensure (isStar ty) (PiAnnIsStar ty) (ShouldBeStar ty)
   tellLog CheckingPiArg
   varType' <- typeTerm p ii ctx varType ann
   let varUniv = annType $ getTermAnn varType'
@@ -98,10 +96,7 @@ typeTerm p ii ctx tm@(IR.Pi pi varType resultType) ann@(Annotation σ ty) = do
 -- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
 typeTerm _ ii ctx tm@(IR.PrimTy pty) ann@(Annotation σ ty) = do
   tellLogs [TermIntro ctx tm ann, CheckingPrimTy, CheckingSigmaZero]
-  if σ == Usage.SNat 0 then
-    tellLog SigmaIsZero
-  else
-    throwLog UsageMustBeZero
+  ensure (σ == mempty) SigmaIsZero UsageMustBeZero
   unless (isStar ty) $
     throwLog $ TypeMismatch ii tm (IR.VStar 0) ty
   tellLog $ Typechecked tm ann
