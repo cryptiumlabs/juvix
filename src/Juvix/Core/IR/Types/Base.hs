@@ -5,11 +5,12 @@ module Juvix.Core.IR.Types.Base where
 import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
-import Prelude (String)
+
+type GlobalName = Text
 
 data Name
   = -- | Global variables are represented by name thus type string
-    Global String -- FIXME Text???
+    Global GlobalName
   | -- | to convert a bound variable into a free one
     Local Natural
   deriving (Show, Eq)
