@@ -38,6 +38,9 @@ module Juvix.Library
     sortOnFlip,
     uncurry3,
     curry3,
+    StateField,
+    ReaderField,
+    WriterField,
   )
 where
 
@@ -168,3 +171,19 @@ curry3 fn a b c = fn (a, b, c)
 
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
+
+
+-- | Select a field in a state monad, for example:
+--
+-- @
+-- data Foo = Foo {x, y :: 'Int'}
+-- newtype M a = M ('State' 'Foo' a)
+--   deriving ('HasState' \"x\" 'Int') via StateField "x" ('State' 'Foo')
+-- @
+type StateField fld m = Field fld () (MonadState m)
+
+-- | Reader version of 'StateField'.
+type ReaderField fld m = ReadStatePure (StateField fld m)
+
+-- | Writer version of 'StateField'.
+type WriterField fld m = WriterLog (StateField fld m)

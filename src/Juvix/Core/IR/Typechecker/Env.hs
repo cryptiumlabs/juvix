@@ -15,19 +15,12 @@ type EnvAlias primTy primVal =
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
-  deriving (HasThrow "typecheckError" (TypecheckError primTy primVal)) via
-    MonadError
-      (ExceptT (TypecheckError primTy primVal)
-        (MonadState (State (EnvCtx primTy primVal))))
+  deriving (HasThrow "typecheckError" (TypecheckError primTy primVal))
+    via MonadError (EnvAlias primTy primVal)
   deriving
     (HasSink "typecheckerLog" [Log primTy primVal],
      HasWriter "typecheckerLog" [Log primTy primVal])
-  via
-    WriterLog
-      (Field "typecheckerLog" ()
-        (MonadState
-          (ExceptT (TypecheckError primTy primVal)
-            (State (EnvCtx primTy primVal)))))
+  via WriterField "typecheckerLog" (EnvAlias primTy primVal)
 
 exec :: EnvTypecheck primTy primVal a
      -> (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)

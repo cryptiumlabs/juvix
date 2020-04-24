@@ -18,39 +18,23 @@ data Env primTy primVal
       }
   deriving (Generic)
 
+type EnvExecAlias primTy primVal =
+  ExceptT (Core.PipelineError primTy primVal)
+    (StateT (Env primTy primVal) IO)
+
 newtype EnvExec primTy primVal a
-  = EnvE (ExceptT (Core.PipelineError primTy primVal) (StateT (Env primTy primVal) IO) a)
+  = EnvE (EnvExecAlias primTy primVal a)
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
-    ( HasSink "log" [Core.PipelineLog primTy primVal],
-      HasWriter "log" [Core.PipelineLog primTy primVal]
-    )
-    via WriterLog
-          ( Field "log" ()
-              ( MonadState
-                  ( ExceptT (Core.PipelineError primTy primVal)
-                      (StateT (Env primTy primVal) IO)
-                  )
-              )
-          )
+    (HasSink "log" [Core.PipelineLog primTy primVal],
+     HasWriter "log" [Core.PipelineLog primTy primVal])
+  via WriterField "log" (EnvExecAlias primTy primVal)
   deriving
-    ( HasReader "parameterisation" (Core.Parameterisation primTy primVal),
-      HasSource "parameterisation" (Core.Parameterisation primTy primVal)
-    )
-    via Field "parameterisation" ()
-          ( ReadStatePure
-              ( MonadState
-                  ( ExceptT (Core.PipelineError primTy primVal)
-                      (StateT (Env primTy primVal) IO)
-                  )
-              )
-          )
-  deriving
-    (HasThrow "error" (Core.PipelineError primTy primVal))
-    via MonadError
-          ( ExceptT (Core.PipelineError primTy primVal)
-              (StateT (Env primTy primVal) IO)
-          )
+    (HasReader "parameterisation" (Core.Parameterisation primTy primVal),
+     HasSource "parameterisation" (Core.Parameterisation primTy primVal))
+  via ReaderField "parameterisation" (EnvExecAlias primTy primVal)
+  deriving (HasThrow "error" (Core.PipelineError primTy primVal))
+  via MonadError (EnvExecAlias primTy primVal)
 
 data SomeBackend where
   SomeBackend :: forall primTy primVal. Core.Parameterisation primTy primVal -> SomeBackend
