@@ -39,3 +39,107 @@ Also note that it would be nice to avoid evaluating the scrutinee multiple times
 (to encode the OR in the circuit - `or x y -> x + y - (x * y) = 1`)
 
 Maybe we could also try an evaluation monad which keeps intermediary results (basically 'allocating memory' as necessary) and can output a circuit representation. Might be convenient for avoiding duplication of intermediary evaluations. Advantages: structurally simpler and captures the idiomatic flow better.
+
+**Example high-level usage example (approximate)**
+
+```
+contractFunction :: [Input] -> [Output] -> m Result
+contractFunction inputs outputs = do
+  let verifier = inSnark $ \inp out -> sumAll inp == sumAll out
+  unless (verifier inputs outputs) (throw UnequalSum)
+  sub inputs
+  add outputs
+  pure Success
+```
+
+Note in particular that - subject to [backend abstraction](https://github.com/cryptiumlabs/juvix/issues/157) - code should be reusable, e.g. `sumAll` should be callable in both circuits & regular (e.g. Michelson) backends, assuming that the functions called therein (addition, equality) are supported on the backends in question
+
+**Compilation questions**
+
+We can assume that the compiler will operate on a closed term `rel :: x -> y -> Bool` (a relation) where `x` and `y` are either primitive types or ADTs (possibly inductive) composed of primitive types, and that all lambda functions will be inlined & fully evaluated at compile-time, so `rel` will necessarily be a two-argument function returning a boolean (with arbitrarily nested pattern-matching & fully applied primitive functions, e.g. and, or, add, mul, etc.). Calls to other functions - recursive functions must have compile-time fixed depth (e.g. folding for Merkle path verification) - will be fully inlined (at least for the initial version, later, e.g. with custom gate compilation or AIR, this might change, but it's easiest for now).
+
+*Compiling ADTs*
+
+At this level, inductive families should desugar/erase to simple algebraic datatypes.
+
+Product types:
+- Associated field elements (association tracked at compile-time)
+- Figure out when sums (e.g. `(int, int)`) can be packed in one field element
+
+Sum types:
+- Tagged union (again, figure out how to pack this efficiently)
+
+*Pattern matching*
+
+Tagged equality matching (how to make this more efficient?) under an `OR` (note: need to be careful that this preserves the pattern-ordering semantics of the high level language, possibly this target may have some extra warnings or limitations here).
+
+*Custom gate generation*
+
+Investigate PLONK-style custom gates & compile-time generation. Needs more research.
+
+*Workflow*
+
+Proving/verifying keys generated separately? Prover code? Easy to solve later, I expect.
+
+Captures will work only for values known at compile-time, otherwise they must be in inputs/outputs (unless we want to do some sort of "implicit output" thing, which is possible, could also be interesting - maybe we should go all the way and have only the private witness data be the input).
+
+Datatype encoding
+- Sum types
+  - left | right
+  - Size = `sizeof(tag) + max(sizeof(left), sizeof(right))`
+    - tracked by the compiler
+    - keep it in # of bits
+    - this is just to determine how many field elements we need to use to represent
+  - Pack tag & (left | right) into field elements
+- Product types
+  - `(fst, snd)`
+  - Size = `sizeof(fst) + sizeof(snd)`
+  - Pack (fst, snd) into field element
+- Whether we can pack / how we pack depends on the actual types
+- so e.g. (int, int, int) => packed into one field element
+- e.g. (field, field) => needs two field elements (we have to track this through compilation)
+  - compiler has to track where variables are in the circuit while compiling
+- if x is (field, field), gets two input wires, compiler must track which is fst and which is snd, then when something is asserted e.g. `(fst x == 2) && (snd x == 3)` the compiler looks up which is fst and which is snd and hooks up the right wires to check this
+
+pattern matching
+
+```
+  \x . \w . 
+    case x of (xfst, xsnd) =>
+      case w of (wfst, wnd) =>
+        xfst == wsnd && xsnd == wfst
+```
+
+more complex pattern matching
+
+```
+  \x . \w .
+    case x of
+      L xi -> xi == 3
+      R (xfst, xsnd) =>
+        case w of
+          (wfst, wnd) => xfst == wsnd && xsnd == wfst
+```
+
+This needs to turn into checking that either the tag of x is L and that `xi == 3`, or that the tag of `x` is `R` and that `xfst == wsnd && xsnd == wfst`.
+
+packing things
+
+- field element is in a group of some order (255 bit or something)
+- uint64
+- first 64 bits of the field element are first uint, second 64 bits are second uint, third 64 bits are third uint
+- let's say we pack like this and then we want to "extract"
+
+- `fst == 3 && snd == 4 && thd == 6`
+- then we can just compose the other packed element = `(3, 4, 6)` and check equality directly
+
+- `fst > 3 && snd < 4 && thd == 6`
+- more complicated
+- either we can extract, where we turn the packed field element into three field elements
+  - assert that the bits are correct, basically
+  - and then we can do the comparisons and and/or operations on the unpacked field elements
+  - if we are doing a lot of extracting, it may not make sense to pack anymore, tbd
+  - packing saves space in inputs & witness, but if we unpack a lot it costs constraints
+  - whether this makes sense depends on how much unpacking we're doing and on the costs of the proof system (prover time, verifier time, proof size) w.r.t. input, witness size & constraints
+  - we can worry about proof system specific optimisations later
+- or we can try to compose some custom gate
