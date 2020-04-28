@@ -74,15 +74,9 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
      HasReader "globals" (Globals primTy primVal))
   via ReaderField "globals" (EnvAlias primTy primVal)
 
-
 exec ::
+  Globals primTy primVal ->
   EnvTypecheck primTy primVal a ->
   (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
-exec (EnvTyp env) =
-  runState (runExceptT env) $ EnvCtx [] mempty
-
--- exec :: Globals primTy primVal
---      -> EnvTypecheck primTy primVal a
---      -> (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
--- exec globals (EnvTypecheck env) =
---   runState (runExceptT env) $ EnvCtx [] globals
+exec globals (EnvTyp env) =
+  runState (runExceptT env) $ EnvCtx [] globals

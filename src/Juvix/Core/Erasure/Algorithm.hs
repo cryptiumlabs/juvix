@@ -20,13 +20,11 @@ type TermInfo primTy primVal result =
 
 erase ::
   (Show primTy, Show primVal, Eq primTy, Eq primVal, Show compErr) =>
+  IR.Globals primTy primVal ->
   TermInfo primTy primVal
-    ( Either
-        Erasure.Error
-        (Core.AssignWithType primTy primVal compErr)
-    )
-erase parameterisation term usage ty =
-  let (erased, env) = exec (eraseTerm parameterisation term usage ty)
+    (Either Erasure.Error (Core.AssignWithType primTy primVal compErr))
+erase globals parameterisation term usage ty =
+  let (erased, env) = exec globals (eraseTerm parameterisation term usage ty)
    in erased >>| \(term, type') ->
         Core.WithType
           { Core.termAssign =
@@ -37,24 +35,27 @@ erase parameterisation term usage ty =
             Core.type' = type'
           }
 
-exec ::
-  Erasure.EnvT ty primVal a -> (Either Erasure.Error a, Erasure.Env ty primVal)
-exec (Erasure.EnvEra env) = runState (runExceptT env) (Erasure.Env Map.empty [] 0 [])
+exec :: IR.Globals primTy primVal
+     -> Erasure.EnvT primTy primVal a
+     -> (Either Erasure.Error a, Erasure.Env primTy primVal)
+exec globals (Erasure.EnvEra env) =
+  runState (runExceptT env) (Erasure.Env Map.empty [] 0 [] globals)
 
 eraseTerm ::
-  forall primTy primVal m.
   ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
     HasState "context" (IR.Context primTy primVal) m,
+    HasReader "globals" (IR.Globals primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
     Eq primVal
   ) =>
   TermInfo primTy primVal (m (Erased.Term primVal, Erased.Type primTy))
-eraseTerm parameterisation term usage ty =
+eraseTerm parameterisation term usage ty = do
+  globals <- ask @"globals"
   if usage == Core.SNat 0
     then
       throw @"erasureError"
@@ -74,7 +75,7 @@ eraseTerm parameterisation term usage ty =
         modify @"typeAssignment" (Map.insert name ty)
         --
         let (Right varTyIR, _) =
-              IR.exec (IR.evalTerm parameterisation (hrToIR varTy))
+              IR.exec globals (IR.evalTerm parameterisation (hrToIR varTy))
         --
         modify @"context"
           (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
@@ -96,9 +97,7 @@ eraseTerm parameterisation term usage ty =
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
             case IR.typeElim0 parameterisation context fIR
-              |> fmap IR.getElimAnn
-              |> IR.exec
-              |> fst of
+                   |> fmap IR.getElimAnn |> IR.exec globals |> fst of
               Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError

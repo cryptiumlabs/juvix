@@ -50,13 +50,14 @@ shouldCheckWith ::
   forall primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
+  IR.Globals primTy primVal ->
   IR.Context primTy primVal ->
   IR.Term primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldCheckWith param ctx term ann =
+shouldCheckWith param globals ctx term ann =
   -- TODO: take out the logs and put them in an IO monad.
-  let (res, logs') = IR.exec $ IR.typeTerm param 0 ctx term ann
+  let (res, logs') = IR.exec globals $ IR.typeTerm param 0 ctx term ann
       logs =
         Text.intercalate "\n"
           $ map IR.describe
@@ -77,19 +78,20 @@ shouldCheck ::
   IR.Term primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldCheck param = shouldCheckWith param []
+shouldCheck param = shouldCheckWith param mempty []
 
 -- unit test generator for typeElim
 shouldInferWith ::
   forall primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
+  IR.Globals primTy primVal ->
   IR.Context primTy primVal ->
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldInferWith param ctx term ann =
-  let (res', logs') = IR.exec $ IR.typeElim0 param ctx term
+shouldInferWith param globals ctx term ann =
+  let (res', logs') = IR.exec globals $ IR.typeElim0 param ctx term
       res = IR.getElimAnn <$> res'
       logs = show $ IR.typecheckerLog logs'
    in T.testCase (show term <> " should infer to type " <> show ann <> logs) $
@@ -102,9 +104,21 @@ shouldInfer ::
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldInfer param = shouldInferWith param []
+shouldInfer param = shouldInferWith param mempty []
 
 -- unit test generator for evalTerm
+shouldEvalWith ::
+  forall primTy primVal.
+  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  Parameterisation primTy primVal ->
+  IR.Globals primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.Value primTy primVal ->
+  T.TestTree
+shouldEvalWith param globals term res =
+  T.testCase (show term <> " should evaluate to " <> show res) $
+    fst (IR.exec globals (IR.evalTerm param term)) T.@=? Right res
+
 shouldEval ::
   forall primTy primVal.
   (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
@@ -112,9 +126,7 @@ shouldEval ::
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
   T.TestTree
-shouldEval param term res =
-  T.testCase (show term <> " should evaluate to " <> show res) $
-    fst (IR.exec (IR.evalTerm param term)) T.@=? Right res
+shouldEval param = shouldEvalWith param mempty
 
 infix 1 `ann`
 
@@ -204,12 +216,12 @@ subtype :: T.TestTree
 subtype =
   T.testGroup
     "Subtyping"
-    [ shouldCheckWith Unit.t typContext aTerm $ mempty `ann` IR.VStar 0,
-      shouldCheckWith Unit.t typContext aTerm $ mempty `ann` IR.VStar 1,
-      shouldCheckWith Unit.t typContext fTerm $ mempty `ann` typ2typ 1 1,
-      shouldCheckWith Unit.t typContext fTerm $ mempty `ann` typ2typ 0 1,
-      shouldCheckWith Unit.t typContext fTerm $ mempty `ann` typ2typ 1 2,
-      shouldInferWith Unit.t typContext faElim $ mempty `ann` IR.VStar 1
+    [ shouldCheckWith Unit.t mempty typContext aTerm  $ mempty `ann` IR.VStar 0
+    , shouldCheckWith Unit.t mempty typContext aTerm  $ mempty `ann` IR.VStar 1
+    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 1 1
+    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 0 1
+    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 1 2
+    , shouldInferWith Unit.t mempty typContext faElim $ mempty `ann` IR.VStar 1
     ]
   where
     typ2typ i j = IR.VPi mempty (IR.VStar i) (IR.VStar j)

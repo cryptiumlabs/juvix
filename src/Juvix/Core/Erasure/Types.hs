@@ -1,7 +1,7 @@
 module Juvix.Core.Erasure.Types where
 
 import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.IR.Typechecker.Types as TC
+import qualified Juvix.Core.IR.Typechecker as TC
 import Juvix.Library hiding (empty)
 
 data Env primTy primVal
@@ -9,7 +9,8 @@ data Env primTy primVal
       { typeAssignment :: Erased.TypeAssignment primTy,
         context :: TC.Context primTy primVal,
         nextName :: Int,
-        nameStack :: [Int]
+        nameStack :: [Int],
+        globals :: TC.Globals primTy primVal
       }
   deriving (Show, Eq, Generic)
 
@@ -44,7 +45,14 @@ newtype EnvT primTy primVal a
     )
     via StateField "nameStack" (EnvEraAlias primTy primVal)
   deriving
-    (HasThrow "erasureError" Error)
+    ( HasState "globals" (TC.Globals primTy primVal),
+      HasSink "globals" (TC.Globals primTy primVal),
+      HasSource "globals" (TC.Globals primTy primVal)
+    )
+    via StateField "globals" (EnvEraAlias primTy primVal)
+  deriving (HasReader "globals" (TC.Globals primTy primVal))
+    via ReaderField "globals" (EnvEraAlias primTy primVal)
+  deriving (HasThrow "erasureError" Error)
     via MonadError (EnvEraAlias primTy primVal)
 
 data Error
