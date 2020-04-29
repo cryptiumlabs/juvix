@@ -105,14 +105,14 @@ extTransformEF fs (Bound' x e) = Bound' x <$> etfBound fs e
 extTransformEF fs (Free' x e) = Free' x <$> etfFree fs e
 extTransformEF fs (Prim' k e) = Prim' k <$> etfPrim fs e
 extTransformEF fs (App' f s e) =
-    App' <$> extTransformEF fs f
-         <*> extTransformTF fs s
-         <*> etfApp fs e
+  App' <$> extTransformEF fs f
+    <*> extTransformTF fs s
+    <*> etfApp fs e
 extTransformEF fs (Ann' π s t l e) =
-    Ann' π <$> extTransformTF fs s
-           <*> extTransformTF fs t
-           <*> pure l
-           <*> etfAnn fs e
+  Ann' π <$> extTransformTF fs s
+    <*> extTransformTF fs t
+    <*> pure l
+    <*> etfAnn fs e
 extTransformEF fs (ElimX e) = ElimX <$> etfElimX fs e
 
 extTransformE ::

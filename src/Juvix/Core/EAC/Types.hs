@@ -115,7 +115,8 @@ newtype EnvError primTy primVal a
       HasSource "ctxt" (Map.T Symbol (Erased.Type primTy))
     )
     via StateField "ctxt" (EnvErrorAlias primTy primVal)
-  deriving (HasThrow "typ" (TypeErrors primTy primVal))
+  deriving
+    (HasThrow "typ" (TypeErrors primTy primVal))
     via MonadError (EnvErrorAlias primTy primVal)
 
 data Info primTy = I {ctxt :: Map.T Symbol (Erased.Type primTy)} deriving (Show, Generic)

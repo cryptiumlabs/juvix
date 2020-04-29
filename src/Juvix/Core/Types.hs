@@ -1,6 +1,7 @@
 module Juvix.Core.Types
-  (module Juvix.Core.Types,
-   module Juvix.Core.Parameterisation)
+  ( module Juvix.Core.Types,
+    module Juvix.Core.Parameterisation,
+  )
 where
 
 import qualified Juvix.Core.EAC.Types as EAC
@@ -10,7 +11,6 @@ import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Parameterisation
 import Juvix.Library
-
 
 data PipelineError primTy primVal
   = InternalInconsistencyError Text

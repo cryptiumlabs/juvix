@@ -172,7 +172,6 @@ curry3 fn a b c = fn (a, b, c)
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
 
-
 -- | Select a field in a state monad, for example:
 --
 -- @
