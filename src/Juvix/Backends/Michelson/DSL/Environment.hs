@@ -89,40 +89,42 @@ instance Show Curried where
       <> " ty: "
       <> show ty
 
+type MichelsonCompilationAlias = ExceptT CompError (State Env)
+
 newtype MichelsonCompilation a
-  = Compilation (ExceptT CompError (State Env) a)
+  = Compilation (MichelsonCompilationAlias a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasSink "compilationLog" [Types.CompilationLog],
       HasWriter "compilationLog" [Types.CompilationLog]
     )
-    via WriterLog (Field "compilationLog" () (MonadState (ExceptT CompError (State Env))))
+    via WriterField "compilationLog" MichelsonCompilationAlias
   deriving
     ( HasState "stack" (VStack.T Curried),
       HasSink "stack" (VStack.T Curried),
       HasSource "stack" (VStack.T Curried)
     )
-    via Field "stack" () (MonadState (ExceptT CompError (State Env)))
+    via StateField "stack" MichelsonCompilationAlias
   deriving
     ( HasState "ops" [Types.Op],
       HasSink "ops" [Types.Op],
       HasSource "ops" [Types.Op]
     )
-    via Field "ops" () (MonadState (ExceptT CompError (State Env)))
+    via StateField "ops" MichelsonCompilationAlias
   deriving
     ( HasState "count" Word,
       HasSink "count" Word,
       HasSource "count" Word
     )
-    via Field "count" () (MonadState (ExceptT CompError (State Env)))
-  deriving
-    (HasThrow "compilationError" CompError)
-    via MonadError (ExceptT CompError (State Env))
+    via StateField "count" MichelsonCompilationAlias
   deriving
     ( HasReader "debug" Int,
       HasSource "debug" Int
     )
-    via Field "debug" () (ReadStatePure (MonadState (ExceptT CompError (State Env))))
+    via ReaderField "debug" MichelsonCompilationAlias
+  deriving
+    (HasThrow "compilationError" CompError)
+    via MonadError MichelsonCompilationAlias
 
 execMichelson :: MichelsonCompilation a -> (Either CompError a, Env)
 execMichelson (Compilation c) = runState (runExceptT c) (Env mempty mempty mempty 0 0)

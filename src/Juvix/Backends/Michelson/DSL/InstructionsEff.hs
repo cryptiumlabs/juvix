@@ -149,7 +149,7 @@ var symb = do
               )
           Nothing ->
             throw @"compilationError" (Types.NotInStack symb)
-  case VStack.lookup symb stack of
+  case VStack.lookupFree symb stack of
     Nothing ->
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) -> do
@@ -158,8 +158,8 @@ var symb = do
     Just (VStack.Value (VStack.Lam' lamPartial)) -> do
       pushStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
-    Just (VStack.Position usage index)
-      | one == usage ->
+    Just (VStack.Position (VStack.Usage usage _saved) index)
+      | usage == one ->
         Env.Expanded <$> moveToFront index
       | otherwise ->
         Env.Expanded <$> dupToFront index
@@ -322,8 +322,11 @@ onTwoArgs op f typ instrs = do
                in pure (f i1 i2)
             | otherwise -> do
               traverse_ addExpanded instrs
+              -- add when we normalize
+              -- copyAndDrop 2
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
       modify @"stack" (VStack.drop 2)
       consVal res typ
       pure res
@@ -340,8 +343,10 @@ onOneArgs op f typ instrs = do
                in pure (f i1)
             | otherwise -> do
               addExpanded instr1
+              -- copyAndDrop 1
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
       modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
@@ -368,6 +373,7 @@ moveToFront num = do
   modify @"stack" (VStack.dig (fromIntegral num))
   pure inst
 
+-- Now unused
 dupToFront :: (Env.Instruction m, Integral a) => a -> m Instr.ExpandedOp
 dupToFront num = do
   modify @"stack" (VStack.dupDig (fromIntegral num))
@@ -379,6 +385,10 @@ dupToFront num = do
           <> Instructions.dug (succ (fromIntegral num))
   addInstr instrs
   pure instrs
+
+-- Unsafe to implmeent until we normalize core
+copyAndDrop i =
+  pure ()
 
 data Protect
   = Protect
@@ -420,7 +430,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack :: Env.Reduction m => Env.Expanded -> m Env.Expanded
 promoteTopStack x = do
   stack <- get @"stack"
-  (insts, stack') <- VStack.promote 1 stack promoteLambda
+  (insts, stack') <- VStack.promoteSave 1 stack promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x
@@ -650,7 +660,7 @@ consVarGen symb result usage ty = do
     VStack.cons
       ( VStack.VarE
           (Set.singleton symb)
-          usage
+          (VStack.Usage usage VStack.notSaved)
           result,
         ty
       )

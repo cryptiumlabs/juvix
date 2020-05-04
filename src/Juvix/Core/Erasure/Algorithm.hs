@@ -48,7 +48,7 @@ eraseTerm ::
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
-    HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)) m,
+    HasState "context" (IR.Context primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -63,10 +63,10 @@ eraseTerm parameterisation term usage ty =
     else case term of
       HR.Star _ -> throw @"erasureError" Erasure.Unsupported
       HR.PrimTy _ -> throw @"erasureError" Erasure.Unsupported
-      HR.Pi _ _ _ -> throw @"erasureError" Erasure.Unsupported
+      HR.Pi _ _ _ _ -> throw @"erasureError" Erasure.Unsupported
       HR.Lam name body -> do
         -- The type must be a dependent function.
-        let HR.Pi argUsage varTy retTy = ty
+        let HR.Pi argUsage _ varTy retTy = ty
         funcTy <- eraseType parameterisation ty
         -- TODO: Is this correct?
         let bodyUsage = Core.SNat 1
@@ -75,11 +75,10 @@ eraseTerm parameterisation term usage ty =
         modify @"typeAssignment" (Map.insert name ty)
         --
         let (Right varTyIR, _) =
-              IR.exec (IR.evalTerm parameterisation (hrToIR varTy) [])
+              IR.exec (IR.evalTerm parameterisation (hrToIR varTy))
         --
-        modify
-          @"context"
-          (IR.Context (IR.Annotated argUsage varTyIR) (IR.Global (show name)) :)
+        modify @"context"
+          (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
         (body, _) <- eraseTerm parameterisation body bodyUsage retTy
         -- If argument is not used, just return the erased body.
         -- Otherwise, if argument is used, return a lambda function.
@@ -97,21 +96,24 @@ eraseTerm parameterisation term usage ty =
           HR.App f x -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
-            case fst (IR.exec (IR.typeElim0 parameterisation context fIR)) of
+            case IR.typeElim0 parameterisation context fIR
+              |> fmap IR.getElimAnn
+              |> IR.exec
+              |> fst of
               Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError
                   $ show err <> " while attempting to erase " <> show f
-              Right (IR.Annotated fUsage fTy) -> do
-                let (Right qFTy, _) = IR.exec (IR.quote0 fTy)
-                let fty@(HR.Pi argUsage fArgTy _) = irToHR qFTy
+              Right (IR.Annotation fUsage fTy) -> do
+                let qFTy = IR.quote0 fTy
+                let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
                 (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
                 if argUsage == mempty
                   then pure (f, elimTy)
                   else do
                     (x, _) <- eraseTerm parameterisation x argUsage fArgTy
                     pure (Erased.App f x, elimTy)
-          HR.Ann usage term ty -> do
+          HR.Ann usage term ty _ -> do
             (term, _) <- eraseTerm parameterisation term usage ty
             pure (term, elimTy)
 
@@ -127,10 +129,12 @@ eraseType parameterisation term = do
   case term of
     HR.Star n -> pure (Erased.Star n)
     HR.PrimTy p -> pure (Erased.PrimTy p)
-    HR.Pi argUsage argTy retTy -> do
+    HR.Pi argUsage _ argTy retTy -> do
       arg <- eraseType parameterisation argTy
       ret <- eraseType parameterisation retTy
       pure (Erased.Pi argUsage arg ret)
+    -- FIXME might need to check that the name doesn't occur
+    -- in @retTy@ anywhere
     HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
     HR.Elim elim ->
       case elim of

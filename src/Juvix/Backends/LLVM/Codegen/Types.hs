@@ -70,70 +70,70 @@ data Errors
     BlockLackingTerminator Int
   deriving (Show, Eq)
 
-newtype Codegen a = CodeGen {runCodegen :: ExceptT Errors (State CodegenState) a}
+type CodegenAlias = ExceptT Errors (State CodegenState)
+
+newtype Codegen a = CodeGen {runCodegen :: CodegenAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "currentBlock" Name,
       HasSink "currentBlock" Name,
       HasSource "currentBlock" Name
     )
-    via Field "currentBlock" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "currentBlock" CodegenAlias
   deriving
     ( HasState "blocks" (Map.T Name BlockState),
       HasSink "blocks" (Map.T Name BlockState),
       HasSource "blocks" (Map.T Name BlockState)
     )
-    via Field "blocks" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "blocks" CodegenAlias
   deriving
     ( HasState "symTab" SymbolTable,
       HasSink "symTab" SymbolTable,
       HasSource "symTab" SymbolTable
     )
-    via Field "symTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "symTab" CodegenAlias
   deriving
     ( HasState "varTab" VariantToType,
       HasSink "varTab" VariantToType,
       HasSource "varTab" VariantToType
     )
-    via Field "varTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "varTab" CodegenAlias
   deriving
     ( HasState "typTab" TypeTable,
       HasSink "typTab" TypeTable,
       HasSource "typTab" TypeTable
     )
-    via Field "typTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "typTab" CodegenAlias
   deriving
     ( HasState "blockCount" Int,
       HasSink "blockCount" Int,
       HasSource "blockCount" Int
     )
-    via Field "blockCount" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "blockCount" CodegenAlias
   deriving
     ( HasState "count" Word,
       HasSink "count" Word,
       HasSource "count" Word
     )
-    via Field "count" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "count" CodegenAlias
   deriving
     ( HasState "names" Names,
       HasSink "names" Names,
       HasSource "names" Names
     )
-    via Field "names" () (MonadState (ExceptT Errors (State CodegenState)))
-  deriving
-    (HasThrow "err" Errors)
-    via MonadError (ExceptT Errors (State CodegenState))
+    via StateField "names" CodegenAlias
   deriving
     ( HasState "moduleAST" AST.Module,
       HasSink "moduleAST" AST.Module,
       HasSource "moduleAST" AST.Module
     )
-    via Field "moduleAST" () (MonadState (ExceptT Errors (State CodegenState)))
+    via StateField "moduleAST" CodegenAlias
   deriving
     ( HasReader "debug" Int,
       HasSource "debug" Int
     )
-    via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State CodegenState))))
+    via ReaderField "debug" CodegenAlias
+  deriving (HasThrow "err" Errors) via MonadError CodegenAlias
 
 instance HasState "moduleDefinitions" [Definition] Codegen where
   state_ _ state = do
@@ -158,31 +158,31 @@ newtype LLVM a = LLVM {runLLVM :: State AST.Module a}
       HasSink "moduleName" ShortByteString,
       HasSource "moduleName" ShortByteString
     )
-    via Field "moduleName" () (MonadState (State AST.Module))
+    via StateField "moduleName" (State AST.Module)
   deriving
     ( HasState "moduleSourceFileName" ShortByteString,
       HasSink "moduleSourceFileName" ShortByteString,
       HasSource "moduleSourceFileName" ShortByteString
     )
-    via Field "moduleSourceFileName" () (MonadState (State AST.Module))
+    via StateField "moduleSourceFileName" (State AST.Module)
   deriving
     ( HasState "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout),
       HasSink "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout),
       HasSource "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout)
     )
-    via Field "moduleDataLayout" () (MonadState (State AST.Module))
+    via StateField "moduleDataLayout" (State AST.Module)
   deriving
     ( HasState "moduleTargetTriple" (Maybe ShortByteString),
       HasSink "moduleTargetTriple" (Maybe ShortByteString),
       HasSource "moduleTargetTriple" (Maybe ShortByteString)
     )
-    via Field "moduleTargetTriple" () (MonadState (State AST.Module))
+    via StateField "moduleTargetTriple" (State AST.Module)
   deriving
     ( HasState "moduleDefinitions" [Definition],
       HasSink "moduleDefinitions" [Definition],
       HasSource "moduleDefinitions" [Definition]
     )
-    via Field "moduleDefinitions" () (MonadState (State AST.Module))
+    via StateField "moduleDefinitions" (State AST.Module)
 
 --------------------------------------------------------------------------------
 -- Effect Aliases

@@ -78,28 +78,30 @@ data Errors
   | InvalidAdt
   deriving (Show)
 
-newtype EnvS a = EnvS (StateT Env (Except Errors) a)
+type EnvSAlias = StateT Env (Except Errors)
+
+newtype EnvS a = EnvS (EnvSAlias a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "constructors" (Map.T Symbol Bound),
       HasSink "constructors" (Map.T Symbol Bound),
       HasSource "constructors" (Map.T Symbol Bound)
     )
-    via Field "constructors" () (MonadState (StateT Env (Except Errors)))
+    via StateField "constructors" EnvSAlias
   deriving
     ( HasState "adtMap" (Map.T Symbol Branches),
       HasSink "adtMap" (Map.T Symbol Branches),
       HasSource "adtMap" (Map.T Symbol Branches)
     )
-    via Field "adtMap" () (MonadState (StateT Env (Except Errors)))
+    via StateField "adtMap" EnvSAlias
   deriving
     (HasThrow "err" Errors)
-    via MonadError (StateT Env (Except Errors))
+    via MonadError EnvSAlias
   deriving
     ( HasSink "missingCases" [Symbol],
       HasWriter "missingCases" [Symbol]
     )
-    via WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
+    via WriterField "missingCases" EnvSAlias
 
 runEnvsS :: EnvS a -> Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env Map.empty mempty mempty))

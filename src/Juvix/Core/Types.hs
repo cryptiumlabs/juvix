@@ -1,29 +1,16 @@
-module Juvix.Core.Types where
+module Juvix.Core.Types
+  ( module Juvix.Core.Types,
+    module Juvix.Core.Parameterisation,
+  )
+where
 
 import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Erased as EC
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Core.Parameterisation
 import Juvix.Library
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
-
-data Parameterisation primTy primVal
-  = Parameterisation
-      { -- Returns an arrow.
-        typeOf :: primVal -> NonEmpty primTy,
-        apply :: primVal -> primVal -> Maybe primVal,
-        parseTy :: Token.GenTokenParser String () Identity -> Parser primTy,
-        parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
-        reservedNames :: [String],
-        reservedOpNames :: [String]
-      }
-  deriving (Generic)
-
-arity :: forall primTy primVal. Parameterisation primTy primVal -> primVal -> Int
-arity param = length . typeOf param
 
 data PipelineError primTy primVal
   = InternalInconsistencyError Text

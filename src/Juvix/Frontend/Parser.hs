@@ -616,6 +616,7 @@ tableExp =
     [infixOp],
     [arrowExp]
   ]
+
 infixOp :: Expr.Operator ByteString Types.Expression
 infixOp =
   Expr.Infix

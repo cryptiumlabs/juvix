@@ -404,19 +404,19 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 8545
-    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
+    size: 10483
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
     cabal-file:
-      size: 1489
-      sha256: ce21201c9e9e8880ce1aa901595b04cd334c9de5aac23f2ab888f879c9646e47
+      size: 2058
+      sha256: a457da0b5a07a04710a1f68c633feefa6f999cdc2e624687a3781f6087aeaa19
     name: extensible-data
     version: 0.1.0
-    sha256: f8717bbb697e4bfc1deb1b3c9ddffd04ce0061ef30b4f04d82fab47bb589b0b6
+    sha256: 72a1c07313350e423c2a56beac41bddfc4b9b32f7e4a478313455d7e14796a4e
     pantry-tree:
-      size: 632
-      sha256: a8e7d8fd475fa83e7806152b05ad617ade80262fae03fc40e37789c1197bab29
+      size: 891
+      sha256: dbbdaeb19d5b03d600910099204032bf30fad7a0889c6f68e697539bf30ebcf2
   original:
-    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
 - completed:
     hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:

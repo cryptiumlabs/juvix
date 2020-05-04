@@ -53,13 +53,13 @@ newtype EnvNetInfo net a = EnvI (State (InfoNet net) a)
       HasSource "info" Info,
       HasState "info" Info
     )
-    via Field "info" () (MonadState (State (InfoNet net)))
+    via StateField "info" (State (InfoNet net))
   deriving
     ( HasSink "net" net,
       HasSource "net" net,
       HasState "net" net
     )
-    via Field "net" () (MonadState (State (InfoNet net)))
+    via StateField "net" (State (InfoNet net))
 
 newtype EnvNetInfoIO net a = EnvIO (StateT (InfoNet net) IO a)
   deriving (Functor, Applicative, Monad, MonadIO)
@@ -68,13 +68,13 @@ newtype EnvNetInfoIO net a = EnvIO (StateT (InfoNet net) IO a)
       HasSource "info" Info,
       HasState "info" Info
     )
-    via Field "info" () (MonadState (StateT (InfoNet net) IO))
+    via StateField "info" (StateT (InfoNet net) IO)
   deriving
     ( HasSink "net" net,
       HasSource "net" net,
       HasState "net" net
     )
-    via Field "net" () (MonadState (StateT (InfoNet net) IO))
+    via StateField "net" (StateT (InfoNet net) IO)
 
 execInfoNet :: EnvNetInfo net a -> InfoNet net -> InfoNet net
 execInfoNet (EnvI m) = execState m
