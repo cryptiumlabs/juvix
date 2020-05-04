@@ -71,7 +71,7 @@ extra-deps:
 # morley deps
 ################################################################################
 
-- morley-1.1.0
+- morley-1.2.0
 - morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
 
 - git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git

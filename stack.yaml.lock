@@ -418,12 +418,12 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
 - completed:
-    hackage: morley-1.1.0@sha256:70696efc29973bd4e16ee2a9c67dd10644f2bb71b0385cf21f186f3c7a3033fe,11503
+    hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:
-      size: 10981
-      sha256: b556de55285f21c8152cff0df12eee603eee322436c7e9c52d3728d8844866f2
+      size: 10983
+      sha256: 94aaca1080f3195d057274f65dbfdf0035468b459052d88f970ca1d462b44b07
   original:
-    hackage: morley-1.1.0
+    hackage: morley-1.2.0
 - completed:
     hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
     pantry-tree:
@@ -431,13 +431,6 @@ packages:
       sha256: 402cd467a690373ca891fa31650376312be351244c6d7e187ca9961d3708de0a
   original:
     hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
-- completed:
-    hackage: singletons-2.6@sha256:e8e9cea442e37f565fab8604fe54f78c776421e54ed67ac6b4c454e11991db0b,7167
-    pantry-tree:
-      size: 23889
-      sha256: 0b51b772102a36eca4522cbcf564e8966a8756ca2cd51cc377a9771dbc9f88c6
-  original:
-    hackage: singletons-2.6
 - completed:
     subdir: tezos-bake-monitor-lib
     cabal-file:

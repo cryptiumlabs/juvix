@@ -104,8 +104,7 @@ juvix interactive
 ### Formatter
 
 [Ormolu](https://github.com/tweag/ormolu) required for source formatting. Run
-`stack install ormolu --resolver nightly` to get the latest version (0.0.3.1).
-We are using the nightly resolver, as ormolu fails to compile on 8.6
+`stack install ormolu` to get the latest version (0.0.3.1).
 
 ### Documentation Generator
 
