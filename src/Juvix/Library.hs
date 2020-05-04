@@ -47,7 +47,6 @@ import Capability.Sink
 import Capability.Source
 import Capability.State
 import Capability.Writer
-import Data.Hashable (Hashable)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
