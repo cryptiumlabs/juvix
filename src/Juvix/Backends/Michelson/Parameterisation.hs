@@ -15,6 +15,7 @@ import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Untyped as M
+import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -30,10 +31,10 @@ typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
 constType :: M.Value' Op -> M.T
 constType v =
   case v of
-    M.ValueInt _ -> M.Tc M.CInt
-    M.ValueUnit -> M.TUnit
-    M.ValueTrue -> M.Tc M.CBool
-    M.ValueFalse -> M.Tc M.CBool
+    M.ValueInt _ -> Untyped.tint
+    M.ValueUnit -> Untyped.TUnit
+    M.ValueTrue -> Untyped.tbool
+    M.ValueFalse -> Untyped.tbool
 
 arity :: PrimVal -> Int
 arity = pred . length . typeOf
