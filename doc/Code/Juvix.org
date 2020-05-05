@@ -266,7 +266,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
-**** Contract
+**** Contract <<Michelson/Contract>>
 This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
@@ -289,7 +289,7 @@ This module provides a default contract environment
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Contract]]
+  + [[Michelson/Contract]]
   + [[DSL/Environment]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]
@@ -333,6 +333,9 @@ This module provides a default contract environment
   + [[Library]]
   + [[HashMap]]
 **** DSL
+***** Contract <<DSL/Contract>>
+- _Relies on_
+  + [[Library]]
 ***** Environment <<DSL/Environment>>
 - _Relies on_
   + [[Michelson/Compilation/Types]]
@@ -367,6 +370,7 @@ This module provides a default contract environment
   + [[Usage]]
   + [[Library]]
   + [[Library]]
+***** Interpret
 ***** Untyped
 - _Relies on_
   + [[Library]]

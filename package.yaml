@@ -83,6 +83,7 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
+  - -Wunused-packages
 
 library:
   source-dirs: src
@@ -156,6 +157,8 @@ library:
     - Juvix.Backends.Michelson.DSL.InstructionsEff
     - Juvix.Backends.Michelson.DSL.Environment
     - Juvix.Backends.Michelson.DSL.Untyped
+    - Juvix.Backends.Michelson.DSL.Contract
+    - Juvix.Backends.Michelson.DSL.Interpret
     - Juvix.Backends.Michelson.DSL.Utils
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
