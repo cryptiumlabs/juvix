@@ -184,13 +184,13 @@ constUInt =
     ( J.Pi one (primTy Untyped.unit)
         $ J.Pi
           mempty
-          (primTy (Untyped.tc Untyped.int))
+          (primTy Untyped.int)
         $ primTy Untyped.unit
     )
     $ J.LamM [] ["x", "y"] lookupX
 
 -- nonConstApp generates:
---   [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
+--   [PrimEx (PUSH @ (Type TInt :) (ValueInt 3))
 --   ,PrimEx (PUSH @ (Type TUnit :) ValueUnit)
 --   ,PrimEx (DIG 0)
 --   ,PrimEx (DIPN 1 [PrimEx DROP])]
@@ -203,7 +203,7 @@ nonConstApp =
     $ J.AppM
       constUInt
       [ push1 M.ValueUnit Untyped.unit,
-        push1 (M.ValueInt 3) (Untyped.tc Untyped.int)
+        push1 (M.ValueInt 3) Untyped.int
       ]
 
 -- [PrimEx (PUSH @ (Type TUnit :) ValueUnit)]
@@ -359,11 +359,11 @@ intPair x y =
         $ primTy pairInt
 
 -- intPairs1 generates:
--- [PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 3))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 4))
+-- [PrimEx (PUSH @ (Type TInt :) (ValueInt 3))
+-- ,PrimEx (PUSH @ (Type TInt :) (ValueInt 4))
 -- ,PrimEx (PAIR : @ % %)
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 5))
--- ,PrimEx (PUSH @ (Type (Tc CInt) :) (ValueInt 6))
+-- ,PrimEx (PUSH @ (Type TInt :) (ValueInt 5))
+-- ,PrimEx (PUSH @ (Type TInt :) (ValueInt 6))
 -- ,PrimEx (PAIR : @ % %)
 -- ,PrimEx (PAIR : @ % %)]
 
@@ -682,7 +682,7 @@ constUIntAns =
                               ( TPair
                                   ""
                                   ""
-                                  (M.Type (Tc CInt) "")
+                                  (M.Type TInt "")
                                   (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
                               )
                               ""
@@ -690,11 +690,11 @@ constUIntAns =
                       )
                       ""
                   )
-                  (M.Type (Tc CInt) "")
+                  (M.Type TInt "")
               )
               ""
           )
-          (M.Type (Tc CInt) "")
+          (M.Type TInt "")
           [ SeqEx
               [ PrimEx (DUP ""),
                 PrimEx (CAR "" ""),
@@ -716,9 +716,9 @@ constUIntAns =
 
 xtwiceAns :: [Op]
 xtwiceAns =
-  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 2)),
+  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 2)),
     SeqEx
       [ PrimEx (DIG 1),
         PrimEx (DUP ""),
@@ -732,9 +732,9 @@ xtwiceAns =
 
 oddAppAns :: [Op]
 oddAppAns =
-  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 2)),
+  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 2)),
     SeqEx
       [ PrimEx (DIG 1),
         PrimEx (DUP ""),
@@ -749,11 +749,11 @@ oddAppAns =
 
 addDoublePairsAns :: [Op]
 addDoublePairsAns =
-  [ PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 3)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 4)),
+  [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 4)),
     PrimEx (PAIR "" "" "" ""),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 5)),
-    PrimEx (PUSH "" (M.Type (Tc CInt) "") (ValueInt 6)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 5)),
+    PrimEx (PUSH "" (M.Type TInt "") (ValueInt 6)),
     PrimEx (PAIR "" "" "" ""),
     PrimEx (PAIR "" "" "" ""), -- stack: [((3,4),(5,6))]
     SeqEx
@@ -890,7 +890,7 @@ primPairTy =
     $ Untyped.pair opl Untyped.unit
 
 int :: M.Type
-int = Untyped.tc Untyped.int
+int = Untyped.int
 
 pairInt :: M.Type
 pairInt =
@@ -927,10 +927,10 @@ primTy = J.PrimTy . PrimTy
 
 annIntOne :: Integer -> Term
 annIntOne i =
-  Ann one (primTy (Untyped.tc Untyped.int)) (J.Prim (Constant (M.ValueInt i)))
+  Ann one (primTy Untyped.int) (J.Prim (Constant (M.ValueInt i)))
 
 push1Int :: Integer -> AnnTerm PrimTy NewPrim
-push1Int i = push1 (M.ValueInt i) (Untyped.tc Untyped.int)
+push1Int i = push1 (M.ValueInt i) Untyped.int
 
 push1 :: M.Value' Op -> M.Type -> AnnTerm PrimTy NewPrim
 push1 const ty =
