@@ -315,16 +315,17 @@ onTwoArgs op f typ instrs = do
       -- May be the wrong order?
       let instrs = [instr2, instr1]
       res <-
-        if  | allConstants (val <$> instrs) ->
-              let Env.Constant i1 = val instr1
-                  Env.Constant i2 = val instr2
-               in pure (f i1 i2)
-            | otherwise -> do
-              traverse_ addExpanded instrs
-              -- add when we normalize
-              -- copyAndDrop 2
-              addInstr op
-              pure Env.Nop
+        if allConstants (val <$> instrs)
+          then
+            let Env.Constant i1 = val instr1
+                Env.Constant i2 = val instr2
+             in pure (f i1 i2)
+          else do
+            traverse_ addExpanded instrs
+            -- add when we normalize
+            -- copyAndDrop 2
+            addInstr op
+            pure Env.Nop
       -- remove when we normalize
       modify @"stack" (VStack.drop 2)
       consVal res typ

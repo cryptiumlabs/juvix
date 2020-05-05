@@ -825,6 +825,6 @@ push1 const ty =
       ( Ann one (J.Pi one (primTy ty) (primTy ty))
           $ J.Prim
           $ Instructions.toNewPrimErr
-          $ Instructions.push ty (M.ValueNil) -- the undefined here is never used
+          $ Instructions.push ty M.ValueNil -- the undefined here is never used
       )
       [Ann one (primTy ty) (J.Prim (Constant const))]

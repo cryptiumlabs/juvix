@@ -68,7 +68,7 @@ parseVal lexer =
 
 wrapParser :: Token.GenTokenParser String () Identity -> M.Parser a -> Parser a
 wrapParser lexer p = do
-  str <- many (anyChar)
+  str <- many anyChar
   Token.whiteSpace lexer
   case M.parseNoEnv p "" (Text.pack str) of
     Right r -> pure r
