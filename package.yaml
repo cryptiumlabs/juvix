@@ -83,6 +83,7 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
+  - -fwrite-ide-info
 
 library:
   source-dirs: src
@@ -240,7 +241,6 @@ tests:
       - tasty
       - tasty-hunit
       - tasty-quickcheck
-      - QuickCheck
       - temporary
       - raw-strings-qq
       - process

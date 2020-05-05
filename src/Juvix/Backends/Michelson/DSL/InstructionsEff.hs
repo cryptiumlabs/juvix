@@ -12,7 +12,6 @@ module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
-import qualified Debug.Trace as Trace
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
@@ -387,7 +386,8 @@ dupToFront num = do
   pure instrs
 
 -- Unsafe to implmeent until we normalize core
-copyAndDrop i =
+copyAndDrop :: Applicative f => p -> f ()
+copyAndDrop _i =
   pure ()
 
 data Protect

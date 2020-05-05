@@ -4,7 +4,7 @@
 
 module Juvix.Backends.LLVM.JIT.Types where
 
-import Foreign.Ptr (FunPtr, castFunPtr)
+import Foreign.Ptr (castFunPtr)
 import Foreign.Storable.Generic
 import qualified Juvix.INetIR.Types as IR
 import Juvix.Library

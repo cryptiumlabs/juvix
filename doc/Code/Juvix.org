@@ -291,7 +291,6 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[Contract]]
   + [[DSL/Environment]]
-  + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
@@ -304,7 +303,6 @@ This module provides a default contract environment
   + [[InstructionsEff]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
-  + [[Usage]]
   + [[Usage]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>

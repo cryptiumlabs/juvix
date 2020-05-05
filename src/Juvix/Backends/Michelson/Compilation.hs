@@ -13,7 +13,6 @@ import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Core.Usage
-import qualified Juvix.Core.Usage as U
 import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
@@ -92,7 +91,6 @@ compileToMichelsonExpr ::
   Type ->
   m SomeInstr
 compileToMichelsonExpr term ty = do
-  michelsonTy <- DSL.typeToPrimType ty
   _ <- DSL.instOuter term
   michelsonOp <- mconcat |<< get @"ops"
   case M.runTypeCheckIsolated (M.typeCheckList [michelsonOp] M.SNil) of

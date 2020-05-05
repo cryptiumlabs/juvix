@@ -8,7 +8,6 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
-import qualified Juvix.Core.Types as Core
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
