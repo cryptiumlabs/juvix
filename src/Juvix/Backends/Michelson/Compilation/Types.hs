@@ -52,6 +52,9 @@ data CompilationLog
   | OptimisedByMorley SomeInstr SomeInstr
   deriving (Generic, Show)
 
+data EmptyInstr where
+  EmptyInstr :: forall b. MT.Instr '[] b -> EmptyInstr
+
 data SomeInstr where
   SomeInstr :: forall a b. MT.Instr a b -> SomeInstr
 

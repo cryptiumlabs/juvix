@@ -369,6 +369,9 @@ This module provides a default contract environment
   + [[Library]]
   + [[Library]]
 ***** Interpret
+- _Relies on_
+  + [[DSL/Contract]]
+  + [[Library]]
 ***** Untyped
 - _Relies on_
   + [[Library]]

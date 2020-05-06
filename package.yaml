@@ -16,21 +16,41 @@ extra-source-files:
 dependencies:
   - base >= 4.11 && < 5
   - protolude
+  - directory
+  - lens
+  - Cabal
+  - extensible-data
+  - capability >= 0.2.0.0
+  ###########################
+  # Depedency for OS
+  ###########################
+  - turtle
+  - time
+  ###########################
+  # Depedency for Arithmetic
+  ###########################
+  - bulletproofs
+  - elliptic-curve
+  - sonic
+  ###########################
+  # Depedency for Structs
+  ###########################
   - text
   - mtl
   - containers
   - unordered-containers
   - hashable
   - fgl
-  - lens
+  - fgl-visualize
+  - bytestring
+  - enummapset
+  ###########################
+  # Depedency for Parsers
+  ###########################
   - parsec
   - attoparsec
   - attoparsec-expr
-  - capability >= 0.2.0.0
-  - fgl-visualize
-  - enummapset
-  - turtle
-  - directory
+  - aeson
   ###########################
   # Depedency for LLVM
   ###########################
@@ -38,24 +58,10 @@ dependencies:
   - llvm-hs-pure
   - llvm-hs-pretty
   ###########################
-  # Depedency for LLVM Over
-  ###########################
-  - bytestring
-  - time
-  ###########################
   # Depedency for Morley
   ###########################
   - morley
   - vinyl
-  ###########################
-  # Depedency for Morley Over
-  ###########################
-  - bulletproofs
-  - elliptic-curve
-  - sonic
-  - aeson
-  - Cabal
-  - extensible-data
 
 default-extensions:
   - NoImplicitPrelude

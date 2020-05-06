@@ -4,6 +4,7 @@ import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpret
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
@@ -19,12 +20,16 @@ import Prelude (show)
 -- Test Abstractions
 --------------------------------------------------------------------------------
 
+runContract :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
+runContract term ty =
+  fst (compileContract term ty) >>| fst
+
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile :: Term -> Type -> Text -> T.TestTree
 shouldCompile term ty contract =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show contract)
-    (Right contract T.@=? ((untypedContractToSourceLine . fst) |<< fst (compileContract term ty)))
+    (Right contract T.@=? (untypedContractToSourceLine |<< runContract term ty))
 
 shouldOptimise :: Op -> Op -> T.TestTree
 shouldOptimise instr opt =
@@ -147,6 +152,10 @@ xtwiceTest = shouldCompileTo xtwice xtwiceAns
 
 oddAppTest :: T.TestTree
 oddAppTest = shouldCompileTo oddApp oddAppAns
+
+dummyTest =
+  runContract identityAppTerm2 identityType
+    >>| Interpret.dummyInterpretContract
 
 --------------------------------------------------------------------------------
 -- Terms to test against
