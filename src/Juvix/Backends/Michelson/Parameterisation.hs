@@ -9,7 +9,6 @@ import qualified Data.Text as Text
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
@@ -27,7 +26,6 @@ typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
-
 constType :: M.Value' Op -> M.T
 constType v =
   case v of
@@ -46,9 +44,10 @@ apply :: PrimVal -> PrimVal -> Maybe PrimVal
 apply t1 _t2 = Nothing
   where
     primTy :| _ = typeOf t1
-    runPrim = DSL.execMichelson $ do
-      --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
-      undefined
+    runPrim =
+      DSL.execMichelson $
+        --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
+        do undefined
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
@@ -69,7 +68,7 @@ parseVal lexer =
 
 wrapParser :: Token.GenTokenParser String () Identity -> M.Parser a -> Parser a
 wrapParser lexer p = do
-  str <- many (anyChar)
+  str <- many anyChar
   Token.whiteSpace lexer
   case M.parseNoEnv p "" (Text.pack str) of
     Right r -> pure r

@@ -243,7 +243,3 @@ tests:
       - tasty
       - tasty-hunit
       - tasty-quickcheck
-      - QuickCheck
-      - temporary
-      - raw-strings-qq
-      - process
