@@ -156,6 +156,7 @@ oddAppTest = shouldCompileTo oddApp oddAppAns
 extractTest :: NewTerm -> (Either DSL.CompError M.ExpandedOp, DSL.Env)
 extractTest = DSL.execMichelson . runMichelsonExpr
 
+testRun :: (Either DSL.CompError ExpandedOp, DSL.Env)
 testRun = extractTest unitExpr1
 
 unitExpr1 :: Term
