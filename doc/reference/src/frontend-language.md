@@ -2,6 +2,10 @@ This chapter defines the high-level dependently-typed frontend syntax in which d
 and how that syntax is elaborated to core. Juvix aims to keep the core language as simple as possible to minimise the chance of mistakes in the type theory or type-checker implementation and
 faciliate easy optimisation, so most high-level frontend features such as data-types, pattern matching, and type-classes are elaborated into plain core terms in the transformation from the frontend language.
 
+## Example
+
+!include frontend/example.md
+
 ## Syntax
 
 !include frontend/syntax.md

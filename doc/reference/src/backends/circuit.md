@@ -143,3 +143,8 @@ packing things
   - whether this makes sense depends on how much unpacking we're doing and on the costs of the proof system (prover time, verifier time, proof size) w.r.t. input, witness size & constraints
   - we can worry about proof system specific optimisations later
 - or we can try to compose some custom gate
+
+- Context in the compilation pipeline for circuits to track datatype encodings
+  - so that we are packing or unpacking variables we know how to do it
+
+- plookup custom gate compilation
