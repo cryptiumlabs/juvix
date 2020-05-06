@@ -31,12 +31,25 @@ dependencies:
   - enummapset
   - turtle
   - directory
+  ###########################
+  # Depedency for LLVM
+  ###########################
   - llvm-hs
   - llvm-hs-pure
   - llvm-hs-pretty
+  ###########################
+  # Depedency for LLVM Over
+  ###########################
   - bytestring
   - time
+  ###########################
+  # Depedency for Morley
+  ###########################
   - morley
+  - vinyl
+  ###########################
+  # Depedency for Morley Over
+  ###########################
   - bulletproofs
   - elliptic-curve
   - sonic
@@ -83,7 +96,6 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
-  - -Wunused-packages
 
 library:
   source-dirs: src

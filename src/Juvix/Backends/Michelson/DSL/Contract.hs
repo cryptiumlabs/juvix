@@ -1,4 +1,4 @@
-module Juvix.Backends.Michelson.Contract where
+module Juvix.Backends.Michelson.DSL.Contract where
 
 import Juvix.Library
 import qualified Michelson.Interpret as Interpret
