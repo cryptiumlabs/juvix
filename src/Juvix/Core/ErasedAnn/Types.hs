@@ -10,15 +10,7 @@ data Term primTy primVal
       { capture :: [Symbol], -- Capture
         arguments :: [Symbol], -- Arguments
           -- the Term in AnnTerm is not lam!
-        body :: AnnTerm primTy primVal
-      }
-  | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
-  deriving (Show, Eq, Generic)
 
-data Type primTy primVal
-  = SymT Symbol
-  | Star Natural
-  | PrimTy primTy
   | -- TODO: How to deal with dependency?
     Pi Usage.T (Type primTy primVal) (Type primTy primVal)
   deriving (Show, Eq, Generic)

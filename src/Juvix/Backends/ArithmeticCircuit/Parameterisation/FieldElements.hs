@@ -17,19 +17,23 @@ data Ty
   = Ty
   deriving (Show, Eq)
 
-class FieldElement f where
-  add :: f -> f -> f
-  mul :: f -> f -> f
-  sub :: f -> f -> f
-  neg :: f -> f
-  intExp :: f -> f -> f
-  eq :: f -> f -> f
+class FieldElement (e :: * → * → *) where
+  prim :: e f f
+  add :: e f f → e f f → e f f
+  mul :: e f f → e f f → e f f
+  sub :: e f f → e f f → e f f
+  neg :: e f f → e f f
+  intExp :: e f f → e f g → e f f
+  eq :: e f f → e f f → e f g
 
 data Val f where
-  Val :: FieldElement f => f -> Val f
-  Add :: Val f
-  Mul :: Val f
-  Curried :: FieldElement f => Val f -> f -> Val f
+  Val :: FieldElement e => e f g → Val (e f g)
+  Add :: FieldElement e => Val (e f g)
+  Mul :: FieldElement e => Val (e f g)
+  Neg :: FieldElement e => Val (e f g)
+  IntExp :: FieldElement e => Val (e f g)
+  Eq :: FieldElement e => Val (e f g)
+  Curried :: FieldElement e => Val (e f g) → e f g → Val (e f g)
 
 typeOf ∷ Val a → NonEmpty Ty
 typeOf (Val _) = Ty :| []
@@ -37,7 +41,7 @@ typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
 
-apply ∷ FieldElement f => Val f → Val f → Maybe (Val f)
+apply ∷ FieldElement e => Val (e f f) → Val (e f f) → Maybe (Val (e f f))
 apply Add (Val x) = pure (Curried Add x)
 apply Mul (Val x) = pure (Curried Mul x)
 apply (Curried Add x) (Val y) = pure (Val (add x y))
@@ -50,7 +54,7 @@ parseTy lexer = do
   pure Ty
 
 parseVal ∷ Token.GenTokenParser String () Identity → Parser (Val a)
-parseVal lexer = undefined -- idk yet how to parse it, hexadecimal?
+parseVal lexer = undefined
 
 reservedNames ∷ [String]
 reservedNames = ["FieldElements", "F", "add", "mul"]
@@ -58,6 +62,6 @@ reservedNames = ["FieldElements", "F", "add", "mul"]
 reservedOpNames ∷ [String]
 reservedOpNames = []
 
-t ∷ FieldElement f => Parameterisation Ty (Val f)
+t ∷ FieldElement e => Parameterisation Ty (Val (e f f))
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
