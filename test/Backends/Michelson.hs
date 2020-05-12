@@ -24,6 +24,16 @@ runContract :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
 runContract term ty =
   fst (compileContract term ty) >>| fst
 
+runExpr :: Term -> Type -> Either DSL.CompError EmptyInstr
+runExpr term ty =
+  fst (compileExpr term ty)
+
+runContractWrap :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
+runContractWrap term ty =
+  runContract (Ann zero newTy (J.LamM [] ["gen%%%"] term)) newTy
+  where
+    newTy = J.Pi zero (primTy unitPair) ty
+
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile :: Term -> Type -> Text -> T.TestTree
 shouldCompile term ty contract =
@@ -156,6 +166,11 @@ oddAppTest = shouldCompileTo oddApp oddAppAns
 dummyTest =
   runContract identityAppTerm2 identityType
     >>| Interpret.dummyInterpretContract
+
+dummyTest2 =
+  runExpr xtwice (primTy int)
+
+-- >>| Interpret.dummyInterpret
 
 --------------------------------------------------------------------------------
 -- Terms to test against

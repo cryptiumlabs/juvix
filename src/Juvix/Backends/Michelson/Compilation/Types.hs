@@ -60,5 +60,7 @@ data SomeInstr where
 
 deriving instance Show SomeInstr
 
+deriving instance Show EmptyInstr
+
 instance Eq SomeInstr where
   _ == _ = False

@@ -370,6 +370,7 @@ This module provides a default contract environment
   + [[Library]]
 ***** Interpret
 - _Relies on_
+  + [[Michelson/Compilation/Types]]
   + [[DSL/Contract]]
   + [[Library]]
 ***** Untyped
