@@ -1,6 +1,6 @@
 module Juvix.Core.Utility where
 
-import Data.List (findIndex, tail, (!!))
+import Data.List ((!!), findIndex, tail)
 import Juvix.Library
 
 pushName ::
@@ -9,7 +9,8 @@ pushName name = modify @"symbolStack" (name :)
 
 popName :: HasState "symbolStack" [Symbol] m => m ()
 popName = modify @"symbolStack" tail
-  -- FIXME some error message if the stack is empty?
+
+-- FIXME some error message if the stack is empty?
 
 withName ::
   HasState "symbolStack" [Symbol] m => Symbol -> m a -> m a

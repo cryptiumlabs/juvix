@@ -122,7 +122,8 @@ newtype MichelsonCompilation a
       HasSource "debug" Int
     )
     via ReaderField "debug" MichelsonCompilationAlias
-  deriving (HasThrow "compilationError" CompError)
+  deriving
+    (HasThrow "compilationError" CompError)
     via MonadError MichelsonCompilationAlias
 
 execMichelson :: MichelsonCompilation a -> (Either CompError a, Env)

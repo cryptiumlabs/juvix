@@ -50,7 +50,6 @@ import Capability.Sink
 import Capability.Source
 import Capability.State
 import Capability.Writer
-import Data.Hashable (Hashable)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
@@ -171,7 +170,6 @@ curry3 fn a b c = fn (a, b, c)
 
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
-
 
 -- | Select a field in a state monad, for example:
 --

@@ -97,7 +97,9 @@ eraseTerm parameterisation term usage ty =
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
             case IR.typeElim0 parameterisation context fIR
-                   |> fmap IR.getElimAnn |> IR.exec |> fst of
+              |> fmap IR.getElimAnn
+              |> IR.exec
+              |> fst of
               Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError
@@ -131,8 +133,8 @@ eraseType parameterisation term = do
       arg <- eraseType parameterisation argTy
       ret <- eraseType parameterisation retTy
       pure (Erased.Pi argUsage arg ret)
-        -- FIXME might need to check that the name doesn't occur
-        -- in @retTy@ anywhere
+    -- FIXME might need to check that the name doesn't occur
+    -- in @retTy@ anywhere
     HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
     HR.Elim elim ->
       case elim of

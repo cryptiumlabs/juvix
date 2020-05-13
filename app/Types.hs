@@ -26,15 +26,18 @@ newtype EnvExec primTy primVal a
   = EnvE (EnvExecAlias primTy primVal a)
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
-    (HasSink "log" [Core.PipelineLog primTy primVal],
-     HasWriter "log" [Core.PipelineLog primTy primVal])
-  via WriterField "log" (EnvExecAlias primTy primVal)
+    ( HasSink "log" [Core.PipelineLog primTy primVal],
+      HasWriter "log" [Core.PipelineLog primTy primVal]
+    )
+    via WriterField "log" (EnvExecAlias primTy primVal)
   deriving
-    (HasReader "parameterisation" (Core.Parameterisation primTy primVal),
-     HasSource "parameterisation" (Core.Parameterisation primTy primVal))
-  via ReaderField "parameterisation" (EnvExecAlias primTy primVal)
-  deriving (HasThrow "error" (Core.PipelineError primTy primVal))
-  via MonadError (EnvExecAlias primTy primVal)
+    ( HasReader "parameterisation" (Core.Parameterisation primTy primVal),
+      HasSource "parameterisation" (Core.Parameterisation primTy primVal)
+    )
+    via ReaderField "parameterisation" (EnvExecAlias primTy primVal)
+  deriving
+    (HasThrow "error" (Core.PipelineError primTy primVal))
+    via MonadError (EnvExecAlias primTy primVal)
 
 data SomeBackend where
   SomeBackend :: forall primTy primVal. Core.Parameterisation primTy primVal -> SomeBackend

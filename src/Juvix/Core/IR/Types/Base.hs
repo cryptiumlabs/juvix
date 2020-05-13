@@ -45,25 +45,25 @@ extensible
       | -- | Annotation with usage.
         Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
       deriving (Eq, Show)
-  |]
+    |]
 
+extensible
+  [d|
+    -- | Values/types
+    data Value primTy primVal
+      = VStar Natural
+      | VPrimTy primTy
+      | VPi Usage (Value primTy primVal) (Value primTy primVal)
+      | VLam (Value primTy primVal)
+      | VNeutral (Neutral primTy primVal)
+      | VPrim primVal
+      deriving (Eq, Show)
 
-extensible [d|
-  -- | Values/types
-  data Value primTy primVal
-    = VStar Natural
-    | VPrimTy primTy
-    | VPi Usage (Value primTy primVal) (Value primTy primVal)
-    | VLam (Value primTy primVal)
-    | VNeutral (Neutral primTy primVal)
-    | VPrim primVal
-    deriving (Eq, Show)
-
-  -- | A neutral term is either a variable or an application of a neutral term
-  -- to a value
-  data Neutral primTy primVal
-    = NBound Natural
-    | NFree Name
-    | NApp (Neutral primTy primVal) (Value primTy primVal)
-    deriving (Eq, Show)
-  |]
+    -- | A neutral term is either a variable or an application of a neutral term
+    -- to a value
+    data Neutral primTy primVal
+      = NBound Natural
+      | NFree Name
+      | NApp (Neutral primTy primVal) (Value primTy primVal)
+      deriving (Eq, Show)
+    |]

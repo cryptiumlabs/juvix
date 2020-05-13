@@ -16,7 +16,6 @@
   + [[HR]]
   + [[HR]]
   + [[Naturals]]
-  + [[Types]]
   + [[InteractionNet]]
   + [[Env]]
   + [[Graph]]

@@ -1,6 +1,6 @@
 module Interactive where
 
-import qualified Config as Config
+import qualified Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Juvix.Core as Core
@@ -8,7 +8,6 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.HR as Core
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
-import qualified Juvix.Core.Types as Core
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
@@ -23,7 +22,7 @@ import Prelude (String)
 
 interactive :: Context -> Config.T -> IO ()
 interactive ctx _ = do
-  func <- return $ \str -> return str
+  let func = return
   H.runInputT (settings ctx) (mainLoop func)
 
 settings :: Context -> H.Settings IO
@@ -39,7 +38,7 @@ mainLoop func = do
   input <- H.getInputLine "jvxi >> "
   case input of
     Nothing -> return ()
-    Just i -> do
+    Just i ->
       case i of
         (':' : special) -> handleSpecial special (mainLoop func)
         inp -> do
@@ -50,7 +49,7 @@ parseString :: String -> Maybe (Core.Term Nat.Ty Nat.Val)
 parseString = Core.generateParser Nat.t
 
 handleSpecial :: String -> H.InputT IO () -> H.InputT IO ()
-handleSpecial str cont = do
+handleSpecial str cont =
   case str of
     "?" -> liftIO (putDoc specialsDoc) >> cont
     "exit" -> return ()
@@ -65,7 +64,7 @@ handleSpecial str cont = do
       let parsed = parseString rest
       H.outputStrLn (show parsed)
       case parsed of
-        Just (HR.Elim (HR.Ann usage term ty _)) → do
+        Just (HR.Elim (HR.Ann usage term ty _)) -> do
           erased <- liftIO (exec (Core.typecheckErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
@@ -74,11 +73,11 @@ handleSpecial str cont = do
       let parsed = parseString rest
       H.outputStrLn (show parsed)
       case parsed of
-        Just (HR.Elim (HR.Ann usage term ty _)) → do
+        Just (HR.Elim (HR.Ann usage term ty _)) -> do
           erased <- liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t)
           H.outputStrLn (show erased)
           case erased of
-            (Right (Core.Assignment term _), _) -> do
+            (Right (Core.Assignment term _), _) ->
               transformAndEvaluateErasedCore Nat.t True term
             _ -> return ()
         _ -> H.outputStrLn "must enter a valid annotated core term"

@@ -291,16 +291,19 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[Contract]]
   + [[DSL/Environment]]
-  + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
   + [[DSL/Environment]]
+  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
@@ -379,6 +382,9 @@ This module provides a default contract environment
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+*** Parameterisation <<Core/Parameterisation>>
+- _Relies on_
+  + [[Library]]
 *** Pipeline
 - _Relies on_
   + [[Core/EAC]]
@@ -402,6 +408,7 @@ This module provides a default contract environment
   + [[Erasure/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 *** Usage
 - _Relies on_
@@ -507,7 +514,7 @@ This module provides a default contract environment
 **** Types <<Erasure/Types>>
 - _Relies on_
   + [[Erased]]
-  + [[IR/Types]]
+  + [[Typechecker/Types]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -550,9 +557,10 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Base]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
@@ -563,8 +571,29 @@ Transformations between different extensions.
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
+  + [[Log]]
+  + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
+  + [[Usage]]
+  + [[Library]]
+***** Env <<Typechecker/Env>>
+- _Relies on_
+  + [[Log]]
+  + [[Typechecker/Types]]
+  + [[Library]]
+***** Log
+- _Relies on_
+  + [[Library]]
+  + [[Usage]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+***** Types <<Typechecker/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
@@ -572,7 +601,6 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[Base]]
-  + [[Usage]]
   + [[Library]]
 ***** Base
 - _Relies on_
@@ -745,7 +773,7 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** Backends
-***** Env
+***** Env <<Backends/Env>>
 - Env serves as the environment for running the back-ends
   + This includes the diagnostic information about how the code is ran
   + Also includes the effect handler types and the runner functions
@@ -762,7 +790,7 @@ Can be added to via core translation
   + This back-end is more useful than [[Maps]] as it can produce
     graphical outputs, see [[Visualize]]
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -779,7 +807,7 @@ Can be added to via core translation
 - this is an implementation of said interface using the =EnumMap= data structure
 - This code will be imported in Tests as a possible back-end for testing
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -791,7 +819,7 @@ Can be added to via core translation
   2. Dup
   3. Era
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -799,7 +827,7 @@ Can be added to via core translation
 - An evaluator for the Default Language
 - Serves as a reference way of creating interaction nets
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
@@ -833,7 +861,7 @@ Can be added to via core translation
   generate said gif), displaying every reduction step until the term
   is normalized
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Backends/Graph]]
   + [[Nets/Default]]
   + [[Library]]

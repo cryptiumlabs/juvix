@@ -79,13 +79,13 @@ cons = Instr.PrimEx (Instr.CONS "")
 size :: Instr.ExpandedOp
 size = Instr.PrimEx (Instr.SIZE "")
 
-emptySet :: Untyped.Comparable -> Instr.ExpandedOp
+emptySet :: Untyped.T -> Instr.ExpandedOp
 emptySet = Instr.PrimEx . Instr.EMPTY_SET "" ""
 
-emptyMap :: Untyped.Comparable -> Untyped.T -> Instr.ExpandedOp
+emptyMap :: Untyped.T -> Untyped.T -> Instr.ExpandedOp
 emptyMap = Instr.PrimEx ... Instr.EMPTY_MAP "" ""
 
-emptyBigMap :: Untyped.Comparable -> Untyped.T -> Instr.ExpandedOp
+emptyBigMap :: Untyped.T -> Untyped.T -> Instr.ExpandedOp
 emptyBigMap = Instr.PrimEx ... Instr.EMPTY_BIG_MAP "" ""
 
 mem :: Instr.ExpandedOp
@@ -185,7 +185,7 @@ int :: Instr.ExpandedOp
 int = Instr.PrimEx (Instr.INT "")
 
 self :: Instr.ExpandedOp
-self = Instr.PrimEx (Instr.SELF "")
+self = Instr.PrimEx (Instr.SELF "" "")
 
 contract :: Untyped.T -> Instr.ExpandedOp
 contract = Instr.PrimEx . Instr.CONTRACT "" ""
@@ -225,9 +225,6 @@ blake2b = Instr.PrimEx (Instr.BLAKE2B "")
 
 hashKey :: Instr.ExpandedOp
 hashKey = Instr.PrimEx (Instr.HASH_KEY "")
-
-stepsToQuota :: Instr.ExpandedOp
-stepsToQuota = Instr.PrimEx (Instr.STEPS_TO_QUOTA "")
 
 source :: Instr.ExpandedOp
 source = Instr.PrimEx (Instr.SOURCE "")
