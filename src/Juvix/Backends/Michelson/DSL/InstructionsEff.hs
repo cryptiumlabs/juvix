@@ -527,14 +527,13 @@ apply closure args remainingArgs = do
     traverseName = traverse_ (uncurry name) . reverse
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
     app =
-      Env.unFun
-        (Env.fun closure)
-        -- Undo our last flip, and put the list in the proper place
-        $ reverse
-        $ zipWith makeVar (reverse (Env.argsLeft closure))
-        $ reverse
-        $ Utils.piToListTy
-        $ Env.ty closure
+      Env.ty closure
+      |> Utils.piToListTy
+      |> reverse
+      |> zipWith makeVar (reverse (Env.argsLeft closure))
+      -- Undo our last flip, and put the list in the proper place
+      |> reverse
+      |> Env.unFun (Env.fun closure)
     makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
     -- TODO ∷ see if we have to drop the top of the stack? It seems to be handled?
     recur (Env.Curr c) xs =

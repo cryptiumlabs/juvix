@@ -9,6 +9,11 @@ import qualified Michelson.Typed.Aliases as TAlias
 import qualified Michelson.Typed.Instr as Instr
 import qualified Michelson.Untyped.Aliases as Alias
 import qualified Michelson.Untyped.Value as Value
+import qualified Michelson.Typed.Convert as Convert
+import qualified Michelson.Typed.Scope as Scope
+import qualified Data.Singletons as Single
+import qualified Michelson.Typed.Sing as Sing
+import qualified Michelson.Typed.Value as Value
 
 dummyInterpretContract ::
   Alias.Contract -> Either Interpret.InterpretError Interpret.InterpretResult
@@ -25,5 +30,12 @@ dummyInterpretContract contract =
 dummyInterpret (Types.EmptyInstr inst) =
   case Interpret.interpretInstr Contract.dummyContractEnv inst Vinyl.RNil of
     Left _ -> undefined
-    Right (x Vinyl.:& _) -> undefined
+    Right (x Vinyl.:& _) ->
+        -- let test = Value.SomeValue x in
+        case Single.toSing x of
+          Single.SomeSing x ->
+            case Scope.checkOpPresence x of
+              Scope.OpPresent -> undefined
+              Scope.OpAbsent ->
+                undefined --  Convert.untypeValue x
     Right _ -> undefined

@@ -62,6 +62,7 @@ dependencies:
   ###########################
   - morley
   - vinyl
+  - singletons
 
 default-extensions:
   - NoImplicitPrelude
