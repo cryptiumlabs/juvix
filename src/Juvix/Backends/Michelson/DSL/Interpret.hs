@@ -24,18 +24,14 @@ dummyInterpretContract contract =
     Value.ValueUnit
     Contract.dummyContractEnv
 
--- dummyInterpret ::
---   Types.EmptyInstr
---   -> Either Interpret.MichelsonFailed (Vinyl.Rec TAlias.Value out)
-dummyInterpret (Types.EmptyInstr inst) =
+dummyInterpret ::
+  Types.EmptyInstr2
+  -> Either Interpret.MichelsonFailed Alias.Value
+dummyInterpret (Types.EmptyInstr2 inst) =
   case Interpret.interpretInstr Contract.dummyContractEnv inst Vinyl.RNil of
     Left _ -> undefined
-    Right (x Vinyl.:& _) ->
-        -- let test = Value.SomeValue x in
-        case Single.toSing x of
-          Single.SomeSing x ->
-            case Scope.checkOpPresence x of
-              Scope.OpPresent -> undefined
-              Scope.OpAbsent ->
-                undefined --  Convert.untypeValue x
+    Right ((x :: TAlias.Value t) Vinyl.:& _) ->
+       case Scope.checkOpPresence (Single.sing @t) of
+         Scope.OpPresent -> undefined
+         Scope.OpAbsent -> pure (Convert.untypeValue x)
     Right _ -> undefined
