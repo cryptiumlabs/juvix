@@ -1,3 +1,7 @@
+### Basic passes
+
+!include elaboration/basic-passes.md
+
 ### Tactics
 
 !include elaboration/tactics.md
