@@ -274,3 +274,28 @@ instance Semigroup Instr.ExpandedOp where
 
 instance Monoid Instr.ExpandedOp where
   mempty = Instr.SeqEx []
+
+instrToNumArgs :: Instr.InstrAbstract op -> Natural
+instrToNumArgs x =
+  case x of
+    Instr.ADD _ -> 2
+    Instr.SUB _ -> 2
+    Instr.MUL _ -> 2
+    Instr.OR {} -> 2
+    Instr.AND _ -> 2
+    Instr.XOR _ -> 2
+    Instr.EQ {} -> 1
+    Instr.NEQ _ -> 1
+    Instr.LT {} -> 1
+    Instr.LE {} -> 1
+    Instr.GE {} -> 1
+    Instr.GT {} -> 1
+    Instr.NEG _ -> 1
+    Instr.ABS _ -> 1
+    Instr.CAR {} -> 1
+    Instr.CDR {} -> 1
+    Instr.PAIR {} -> 2
+    Instr.EDIV _ -> 2
+    Instr.ISNAT _ -> 1
+    Instr.PUSH {} -> 1
+-- _ -> error "function not implemented yet"

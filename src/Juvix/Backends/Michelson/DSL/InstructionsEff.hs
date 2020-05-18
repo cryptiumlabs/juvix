@@ -179,36 +179,46 @@ nameSymb :: Env.Reduction m => Symbol -> Types.NewTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
+type RunInstr = (forall m. Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded)
+
 primToFargs :: Num b => Types.NewPrim -> Types.Type -> (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
-  case inst of
-    -- Can't abstract out pattern due to bad forall resolution!
-    Instr.ADD _ -> (Env.Fun (add newTy2), 2)
-    Instr.SUB _ -> (Env.Fun (sub newTy2), 2)
-    Instr.MUL _ -> (Env.Fun (mul newTy2), 2)
-    Instr.OR {} -> (Env.Fun (or newTy2), 2)
-    Instr.AND _ -> (Env.Fun (and newTy2), 2)
-    Instr.XOR _ -> (Env.Fun (xor newTy2), 2)
-    Instr.EQ {} -> (Env.Fun (eq newTy1), 1)
-    Instr.NEQ _ -> (Env.Fun (neq newTy1), 1)
-    Instr.LT {} -> (Env.Fun (lt newTy1), 1)
-    Instr.LE {} -> (Env.Fun (le newTy1), 1)
-    Instr.GE {} -> (Env.Fun (ge newTy1), 1)
-    Instr.GT {} -> (Env.Fun (gt newTy1), 1)
-    Instr.NEG _ -> (Env.Fun (neg newTy1), 1)
-    Instr.ABS _ -> (Env.Fun (abs newTy1), 1)
-    Instr.CAR {} -> (Env.Fun (car newTy1), 1)
-    Instr.CDR {} -> (Env.Fun (cdr newTy1), 1)
-    Instr.PAIR {} -> (Env.Fun (pair newTy2), 2)
-    Instr.EDIV _ -> (Env.Fun (ediv newTy2), 2)
-    Instr.ISNAT _ -> (Env.Fun (isNat newTy1), 1)
-    Instr.PUSH {} -> (Env.Fun pushConstant, 1)
+  abs' f (Instructions.instrToNumArgs inst)
   where
     newTy i = eatType i ty
     newTy2 = newTy 2
     newTy1 = newTy 1
+    --
+    abs' :: Num b => RunInstr -> Natural -> (Env.Fun, b)
+    abs' f 1 = (Env.Fun (f newTy1), 1)
+    abs' f 2 = (Env.Fun (f newTy2), 2)
+    abs' f _ = error "wrong number of args"
+    --
+    f :: RunInstr
+    f =
+      case inst of
+        Instr.ADD _ -> add
+        Instr.SUB _ -> sub
+        Instr.MUL _ -> mul
+        Instr.OR {} -> or
+        Instr.AND _ -> and
+        Instr.XOR _ -> xor
+        Instr.EQ {} -> eq
+        Instr.NEQ _ -> neq
+        Instr.LT {} -> lt
+        Instr.LE {} -> le
+        Instr.GE {} -> ge
+        Instr.GT {} -> gt
+        Instr.NEG _ -> neg
+        Instr.ABS _ -> abs
+        Instr.CAR {} -> car
+        Instr.CDR {} -> cdr
+        Instr.PAIR {} -> pair
+        Instr.EDIV _ -> ediv
+        Instr.ISNAT _ -> isNat
+        Instr.PUSH {} -> const pushConstant
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 
@@ -528,12 +538,12 @@ apply closure args remainingArgs = do
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
     app =
       Env.ty closure
-      |> Utils.piToListTy
-      |> reverse
-      |> zipWith makeVar (reverse (Env.argsLeft closure))
-      -- Undo our last flip, and put the list in the proper place
-      |> reverse
-      |> Env.unFun (Env.fun closure)
+        |> Utils.piToListTy
+        |> reverse
+        |> zipWith makeVar (reverse (Env.argsLeft closure))
+        -- Undo our last flip, and put the list in the proper place
+        |> reverse
+        |> Env.unFun (Env.fun closure)
     makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
     -- TODO ∷ see if we have to drop the top of the stack? It seems to be handled?
     recur (Env.Curr c) xs =
