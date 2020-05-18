@@ -179,22 +179,17 @@ nameSymb :: Env.Reduction m => Symbol -> Types.NewTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
-type RunInstr = (forall m. Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded)
+type RunInstr =
+  (forall m. Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded)
 
 primToFargs :: Num b => Types.NewPrim -> Types.Type -> (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
-  abs' f (Instructions.instrToNumArgs inst)
+  (Env.Fun (f (newTy numArgs)), fromIntegral numArgs)
   where
     newTy i = eatType i ty
-    newTy2 = newTy 2
-    newTy1 = newTy 1
-    --
-    abs' :: Num b => RunInstr -> Natural -> (Env.Fun, b)
-    abs' f 1 = (Env.Fun (f newTy1), 1)
-    abs' f 2 = (Env.Fun (f newTy2), 2)
-    abs' f _ = error "wrong number of args"
+    numArgs = Instructions.toNumArgs inst
     --
     f :: RunInstr
     f =

@@ -275,8 +275,8 @@ instance Semigroup Instr.ExpandedOp where
 instance Monoid Instr.ExpandedOp where
   mempty = Instr.SeqEx []
 
-instrToNumArgs :: Instr.InstrAbstract op -> Natural
-instrToNumArgs x =
+toNumArgs :: Instr.InstrAbstract op -> Natural
+toNumArgs x =
   case x of
     Instr.ADD _ -> 2
     Instr.SUB _ -> 2
