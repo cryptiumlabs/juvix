@@ -97,6 +97,7 @@ library:
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
+    - Juvix.Core.Common.Context
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR

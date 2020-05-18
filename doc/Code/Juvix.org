@@ -416,6 +416,16 @@ This module provides a default contract environment
 *** Utility
 - _Relies on_
   + [[Library]]
+*** Common
+**** Context
+- Serves as the context for lower level programs of the =Juvix=
+  Programming Language
+- This is parameterized per phase which may store the type and
+  term in slightly different ways
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 *** EAC <<Core/EAC>>
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
