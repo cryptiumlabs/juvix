@@ -31,6 +31,7 @@ module Juvix.Library
     internText,
     intern,
     unintern,
+    textify,
     unixTime,
     Flip (..),
     untilNothingNTimesM,
@@ -132,6 +133,9 @@ intern = Sym . T.pack
 unintern :: Symbol -> String
 unintern (Sym s) = T.unpack s
 
+textify :: Symbol -> Text
+textify (Sym s) = s
+
 unixTime :: IO Double
 unixTime = fromRational . realToFrac |<< getPOSIXTime
 
@@ -141,7 +145,7 @@ newtype Flip p a b = Flip {runFlip :: p b a}
 untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) => f Bool -> t -> f ()
 untilNothingNTimesM f n
   | n <= 0 = pure ()
-  | otherwise = do
+  | otherwise =
     f >>= \case
       True -> untilNothingNTimesM f (pred n)
       False -> pure ()
