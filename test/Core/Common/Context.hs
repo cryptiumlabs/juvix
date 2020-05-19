@@ -10,8 +10,7 @@ nestedRecord =
   Context.fromList
     [ ( "foo",
         Context.Record
-          ( Context.fromList [("a", Context.Record (Context.T mempty) Nothing)]
-          )
+          (Context.fromList [("a", Context.Record (Context.T mempty) Nothing)])
           Nothing
       )
     ]

@@ -90,3 +90,12 @@ mapWithKey ::
   T term ty sumRep ->
   T term ty sumRep
 mapWithKey f (T map) = T (HashMap.mapWithKey f map)
+
+open :: Symbol -> T term ty sumRep -> T term ty sumRep
+open key (T map) =
+  case lookup key (T map) of
+    Just (Record (T contents) _) ->
+      -- Union takes the first if there is a conflict
+      T (HashMap.union contents map)
+    Just _ -> T map
+    Nothing -> T map
