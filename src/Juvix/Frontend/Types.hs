@@ -213,10 +213,13 @@ type Usage = Expression
 -- Expression
 --------------------------------------------------------------------------------
 
+-- TODO ∷ add <expression> : <expression> <refine>?
+-- to the parser
 data Expression
   = Cond (Cond Expression)
   | Constant Constant
   | Let Let
+  | LetType LetType
   | Match Match
   | Name NameSymb
   | OpenExpr ModuleOpenExpr
@@ -295,19 +298,12 @@ newtype ExpRecord
 -- Symbol Binding
 --------------------------------------------------
 
--- TODO ∷ fix let
-data Let
-  = Let'
-      { letBindings :: NonEmpty Binding,
-        letBody :: Expression
-      }
+newtype Let
+  = Let' (FunctionLike Expression)
   deriving (Show)
 
-data Binding
-  = Bind
-      { bindingPattern :: MatchLogic,
-        bindingBody :: Expression
-      }
+newtype LetType
+  = LetType' Type
   deriving (Show)
 
 --------------------------------------------------
@@ -389,8 +385,6 @@ makeLensesWith camelCaseFields ''Match
 makeLensesWith camelCaseFields ''MatchL
 
 makeLensesWith camelCaseFields ''MatchLogic
-
-makeLensesWith camelCaseFields ''Binding
 
 makeLensesWith camelCaseFields ''FunctionLike
 
