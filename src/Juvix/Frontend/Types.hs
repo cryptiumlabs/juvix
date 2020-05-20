@@ -269,7 +269,7 @@ data Lambda
 
 data Application
   = App
-      { applicationName :: NameSymb,
+      { applicationName :: Expression,
         applicationArgs :: NonEmpty Expression
       }
   deriving (Show)
