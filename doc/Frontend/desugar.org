@@ -170,7 +170,6 @@
     | Lambda Lambda
     | Application Application
     | Block Block
-    | Infix Infix
     | ExpRecord ExpRecord
     | -- Added due to merge
       ArrowE ArrowExp
@@ -242,14 +241,6 @@
   --------------------------------------------------
   -- Symbol Binding
   --------------------------------------------------
-
-  data Infix
-    = Inf
-        { infixLeft :: Expression,
-          infixOp :: NameSymb,
-          infixRight :: Expression
-        }
-    deriving (Show)
 
   --------------------------------------------------
   -- Matching
