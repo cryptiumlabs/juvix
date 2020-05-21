@@ -230,17 +230,19 @@
   --------------------------------------------------
 
 
-  newtype Let
-    = Let' (FunctionLike Expression)
+  data Let
+    = Let'
+      { letBindings :: FunctionLike Expression,
+        letBody :: Expression
+      }
     deriving (Show)
 
-  newtype LetType
-    = LetType' Type
+  data LetType
+    = LetType'
+      { letTypeBindings :: Type,
+        letTypeBody :: Expression
+      }
     deriving (Show)
-
-  --------------------------------------------------
-  -- Symbol Binding
-  --------------------------------------------------
 
   --------------------------------------------------
   -- Matching
@@ -277,8 +279,8 @@
 
   data NameSet t
     = Bind
+    -- Type will be in the bound itself!
     { nameSetName :: NameSymb,
-      nameSetType ∷ Maybe Expression,
       nameSetUsage :: Maybe Usage,
       bound :: t
     } deriving (Show)

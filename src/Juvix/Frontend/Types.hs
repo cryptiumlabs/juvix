@@ -301,16 +301,16 @@ newtype ExpRecord
 
 data Let
   = Let'
-    { letBindings :: FunctionLike Expression,
-      letBody :: Expression
-    }
+      { letBindings :: FunctionLike Expression,
+        letBody :: Expression
+      }
   deriving (Show)
 
 data LetType
   = LetType'
-    { letTypeBindings :: Type,
-      letTypeBody :: Expression
-    }
+      { letTypeBindings :: Type,
+        letTypeBody :: Expression
+      }
   deriving (Show)
 
 --------------------------------------------------
