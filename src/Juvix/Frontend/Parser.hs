@@ -45,10 +45,12 @@ expressionGen' p =
     <|> try p
     <|> Types.ExpRecord <$> expRecord
     <|> Types.Constant <$> constant
-    <|> try (Types.NamedTypeE <$> namedRefine)
+    -- <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> universeSymbol
-    <|> parens (expressionGen all'')
+    -- We wrap this in a paren to avoid conflict
+    -- with infixity that we don't know about at this phase!
+    <|> Types.Parened <$> parens (expressionGen all'')
 
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
@@ -70,6 +72,10 @@ expression' = expressionGen app''
 -- used to remove app from parsing
 expression'' :: Parser Types.Expression
 expression'' = expressionGen do'''
+
+-- used to remove both from parsing
+expression''' :: Parser Types.Expression
+expression''' = expressionGen (fail "")
 
 expression :: Parser Types.Expression
 expression = expressionGen all''
@@ -116,7 +122,7 @@ signature' :: Parser Types.Signature
 signature' = do
   _ <- spaceLiner (string "sig")
   name <- prefixSymbolSN
-  maybeUsage <- maybe expressionSN
+  maybeUsage <- maybe (fmap Types.Constant constantSN <|> parens expressionSN)
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
   exp <- expression
@@ -306,7 +312,7 @@ product :: Parser Types.Product
 product =
   Types.Record <$> record
     <|> skipLiner Lexer.colon *> fmap Types.Arrow expression
-    <|> fmap Types.ADTLike (many expression''SN)
+    <|> fmap Types.ADTLike (many expression'''SN)
 
 record :: Parser Types.Record
 record = do
@@ -324,9 +330,9 @@ nameType = do
   sig <- expression
   pure (Types.NameType sig name)
 
-nameParserColon :: Parser Types.Name
-nameParserColon =
-  nameParserSN <* skip (== Lexer.colon)
+-- nameParserColon :: Parser Types.Name
+-- nameParserColon =
+--   nameParserSN <* skip (== Lexer.colon)
 
 nameParser :: Parser Types.Name
 nameParser =
@@ -337,9 +343,9 @@ nameParser =
 -- Arrow Type parser
 --------------------------------------------------
 
-namedRefine :: Parser Types.NamedType
-namedRefine =
-  Types.NamedType <$> nameParserColonSN <*> expression
+-- namedRefine :: Parser Types.NamedType
+-- namedRefine =
+--   Types.NamedType <$> nameParserColonSN <*> expression
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
@@ -431,8 +437,8 @@ lam = do
 
 application :: Parser Types.Application
 application = do
-  name <- prefixSymbolDotSN
-  args <- many1H expression''SN
+  name <- spaceLiner (expressionGen' (fail ""))
+  args <- many1H (spaceLiner (expressionGen' (fail "")))
   pure (Types.App name args)
 
 --------------------------------------------------
@@ -625,7 +631,7 @@ infixOp =
         pure
           (\l r -> Types.Infix (Types.Inf l inf r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 arrowExp :: Expr.Operator ByteString Types.Expression
 arrowExp =
@@ -637,7 +643,7 @@ arrowExp =
         pure
           (\l r -> Types.ArrowE (Types.Arr' l exp r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 refine :: Expr.Operator ByteString Types.Expression
 refine =
@@ -665,6 +671,9 @@ expression'SN = spaceLiner expression'
 
 expression''SN :: Parser Types.Expression
 expression''SN = spaceLiner expression''
+
+expression'''SN :: Parser Types.Expression
+expression'''SN = spaceLiner expression'''
 
 expressionSN :: Parser Types.Expression
 expressionSN = spaceLiner expression
@@ -723,8 +732,8 @@ recordS = spacer record
 nameTypeSN :: Parser Types.NameType
 nameTypeSN = spaceLiner nameType
 
-nameParserColonSN :: Parser Types.Name
-nameParserColonSN = spaceLiner nameParserColon
+-- nameParserColonSN :: Parser Types.Name
+-- nameParserColonSN = spaceLiner nameParserColon
 
 nameParserSN :: Parser Types.Name
 nameParserSN = spaceLiner nameParser
@@ -732,8 +741,8 @@ nameParserSN = spaceLiner nameParser
 bindingSN :: Parser Types.Binding
 bindingSN = spaceLiner binding
 
-namedRefineSN :: Parser Types.NamedType
-namedRefineSN = spaceLiner namedRefine
+-- namedRefineSN :: Parser Types.NamedType
+-- namedRefineSN = spaceLiner namedRefine
 
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
@@ -755,3 +764,6 @@ prefixSymbolSN = spaceLiner prefixSymbol
 
 prefixSymbolS :: Parser Symbol
 prefixSymbolS = spacer prefixSymbol
+
+constantSN :: Parser Types.Constant
+constantSN = spaceLiner constant
