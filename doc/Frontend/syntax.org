@@ -120,10 +120,10 @@
                    | <type>
 
   module-signature-helper
-    ::= sig <name>         :                 <expression>
-      | sig <name>         : <type-name> =\> <expression>
-      | sig <name> <usage> :                 <expression>
-      | sig <name> <usage> : <type-name> =\> <expression>
+    ::= sig <name>           :                 <expression>
+      | sig <name>           : <type-name> =\> <expression>
+      | sig <name> <usage-f> :                 <expression>
+      | sig <name> <usage-f> : <type-name> =\> <expression>
 
 
   cond-top ::= \| <expression> = <top-level>*
@@ -168,6 +168,8 @@
               | <expression''>
 
   usage ::= <expression>
+
+  usage-f ::= <constant> | ( <expression> )
 
   record-access ::= <name>.<name>
 

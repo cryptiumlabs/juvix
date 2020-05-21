@@ -48,7 +48,9 @@ expressionGen' p =
     -- <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> universeSymbol
-    <|> parens (expressionGen all'')
+    -- We wrap this in a paren to avoid conflict
+    -- with infixity that we don't know about at this phase!
+    <|> Types.Parened <$> parens (expressionGen all'')
 
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
@@ -120,7 +122,7 @@ signature' :: Parser Types.Signature
 signature' = do
   _ <- spaceLiner (string "sig")
   name <- prefixSymbolSN
-  maybeUsage <- maybe expressionSN
+  maybeUsage <- maybe (fmap Types.Constant constantSN <|> parens expressionSN)
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
   exp <- expression
@@ -629,7 +631,7 @@ infixOp =
         pure
           (\l r -> Types.Infix (Types.Inf l inf r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 arrowExp :: Expr.Operator ByteString Types.Expression
 arrowExp =
@@ -641,7 +643,7 @@ arrowExp =
         pure
           (\l r -> Types.ArrowE (Types.Arr' l exp r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 refine :: Expr.Operator ByteString Types.Expression
 refine =
@@ -762,3 +764,6 @@ prefixSymbolSN = spaceLiner prefixSymbol
 
 prefixSymbolS :: Parser Symbol
 prefixSymbolS = spacer prefixSymbol
+
+constantSN :: Parser Types.Constant
+constantSN = spaceLiner constant

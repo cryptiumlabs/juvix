@@ -231,6 +231,7 @@ data Expression
   | NamedTypeE NamedType
   | RefinedE TypeRefine
   | UniverseName UniverseExpression
+  | Parened Expression
   deriving (Show)
 
 data ArrowExp
