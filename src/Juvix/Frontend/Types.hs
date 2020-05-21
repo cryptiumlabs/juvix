@@ -299,12 +299,18 @@ newtype ExpRecord
 -- Symbol Binding
 --------------------------------------------------
 
-newtype Let
-  = Let' (FunctionLike Expression)
+data Let
+  = Let'
+    { letBindings :: FunctionLike Expression,
+      letBody :: Expression
+    }
   deriving (Show)
 
-newtype LetType
-  = LetType' Type
+data LetType
+  = LetType'
+    { letTypeBindings :: Type,
+      letTypeBody :: Expression
+    }
   deriving (Show)
 
 --------------------------------------------------
