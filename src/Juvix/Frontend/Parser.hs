@@ -60,7 +60,7 @@ app'' :: Parser Types.Expression
 app'' = Types.Application <$> try application
 
 all'' :: Parser Types.Expression
-all'' = app'' <|> do'''
+all'' = do''' <|> app''
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p =
@@ -387,7 +387,6 @@ expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 
 let' :: Parser Types.Let
 let' = do
-  spaceLiner (string "let")
   binds <- functionModGen expression
   spaceLiner (string "in")
   body <- expression

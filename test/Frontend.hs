@@ -205,29 +205,31 @@ many1FunctionsParser =
     "[Function (Func (Like {functionLikedName = foo, functionLikeArgs = [ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName a, matchLogicNamed = Nothing}),ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName b, matchLogicNamed = Nothing}),ConcreteA \
-    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (Application (App {applicationName = Name (+ :| []), applicationArgs = \
-    \Parened (Infix (Inf {infixLeft = Name (a :| []), infixOp = + :| [], infixRight \
-    \= Name (b :| [])})) :| [Name (c :| [])]}))})),Function (Func (Like {functionLikedName \
-    \= bah, functionLikeArgs = [], functionLikeBody = Body (Application (App {applicationName \
-    \= Name (foo :| []), applicationArgs = Constant (Number (Integer' 1)) :| [Constant \
-    \(Number (Integer' 2)),Constant (Number (Integer' 3))]}))})),Function (Func (Like \
-    \{functionLikedName = nah, functionLikeArgs = [], functionLikeBody = Guard (C (CondExpression \
-    \{condLogicPred = Infix (Inf {infixLeft = Name (bah :| []), infixOp = == :| [], \
-    \infixRight = Constant (Number (Integer' 5))}), condLogicBody = Constant (Number \
-    \(Integer' 7))} :| [CondExpression {condLogicPred = Name (else :| []), condLogicBody \
-    \= Constant (Number (Integer' 11))}]))})),Function (Func (Like {functionLikedName \
-    \= test, functionLikeArgs = [], functionLikeBody = Body (Let (Let' {letBindings \
-    \= Bind {bindingPattern = MatchLogic {matchLogicContents = MatchName check, matchLogicNamed \
-    \= Nothing}, bindingBody = Name (nah :| [])} :| [], letBody = Match (Match' {matchOn \
-    \= Name (check :| []), matchBindigns = MatchL {matchLPattern = MatchLogic {matchLogicContents \
-    \= MatchName seven, matchLogicNamed = Nothing}, matchLBody = Constant (Number (Integer' \
-    \11))} :| [MatchL {matchLPattern = MatchLogic {matchLogicContents = MatchName eleven, \
-    \matchLogicNamed = Nothing}, matchLBody = Constant (Number (Integer' 7))},MatchL \
-    \{matchLPattern = MatchLogic {matchLogicContents = MatchName f, matchLogicNamed \
-    \= Nothing}, matchLBody = OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails \
-    \:| [], moduleOpenExprExpr = Application (App {applicationName = Name (print :| \
-    \[]), applicationArgs = Name (failed :| []) :| []})})}]})}))}))]"
+    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (Application (App {applicationName = Name (+ :| []), \
+    \applicationArgs = Parened (Infix (Inf {infixLeft = Name (a :| []), infixOp = \
+    \+ :| [], infixRight = Name (b :| [])})) :| [Name (c :| [])]}))})),Function (Func \
+    \(Like {functionLikedName = bah, functionLikeArgs = [], functionLikeBody = Body \
+    \(Application (App {applicationName = Name (foo :| []), applicationArgs = Constant \
+    \(Number (Integer' 1)) :| [Constant (Number (Integer' 2)),Constant (Number (Integer' \
+    \3))]}))})),Function (Func (Like {functionLikedName = nah, functionLikeArgs = \
+    \[], functionLikeBody = Guard (C (CondExpression {condLogicPred = Infix (Inf \
+    \{infixLeft = Name (bah :| []), infixOp = == :| [], infixRight = Constant (Number \
+    \(Integer' 5))}), condLogicBody = Constant (Number (Integer' 7))} :| [CondExpression \
+    \{condLogicPred = Name (else :| []), condLogicBody = Constant (Number (Integer' \
+    \11))}]))})),Function (Func (Like {functionLikedName = test, functionLikeArgs \
+    \= [], functionLikeBody = Body (Let (Let' {letBindings = Like {functionLikedName \
+    \= check, functionLikeArgs = [], functionLikeBody = Body (Name (nah :| []))}, \
+    \letBody = Match (Match' {matchOn = Name (check :| []), matchBindigns = MatchL \
+    \{matchLPattern = MatchLogic {matchLogicContents = MatchName seven, matchLogicNamed \
+    \= Nothing}, matchLBody = Constant (Number (Integer' 11))} :| [MatchL {matchLPattern \
+    \= MatchLogic {matchLogicContents = MatchName eleven, matchLogicNamed = Nothing}, \
+    \matchLBody = Constant (Number (Integer' 7))},MatchL {matchLPattern = MatchLogic \
+    \{matchLogicContents = MatchName f, matchLogicNamed = Nothing}, matchLBody = \
+    \OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails :| [], moduleOpenExprExpr \
+    \= Do (Do' (DoBody {doBodyName = Nothing, doBodyExpr = Application (App {applicationName \
+    \= Name (print :| []), applicationArgs = Name (failed :| []) :| []})} :| [DoBody \
+    \{doBodyName = Nothing, doBodyExpr = Name (fail :| [])}]))})}]})}))}))]"
 
 --------------------------------------------------------------------------------
 -- Sig Test
