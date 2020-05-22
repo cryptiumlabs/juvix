@@ -28,9 +28,8 @@ import Prelude (fail)
 topLevel :: Parser Types.TopLevel
 topLevel =
   Types.Type <$> typeP
+    <|> modFunc
     <|> Types.ModuleOpen <$> moduleOpen
-    <|> Types.Module <$> module'
-    <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
 expressionGen' ::
@@ -87,6 +86,12 @@ usage = string "u#" *> expression
 --------------------------------------------------------------------------------
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
+
+functionModStart f = do
+  _ <- spaceLiner (string "let")
+  name <- prefixSymbolSN
+  args <- many argSN
+  f name args
 
 functionModGen :: Parser a -> Parser (Types.FunctionLike a)
 functionModGen p = do
@@ -222,19 +227,23 @@ nameMatch parser = do
   bound <- parser
   pure (Types.NonPunned name bound)
 
---------------------------------------------------------------------------------
--- Function
---------------------------------------------------------------------------------
-
-function :: Parser Types.Function
-function = Types.Func <$> functionModGen expression
 
 --------------------------------------------------------------------------------
--- Modules
+-- Modules and Functions
 --------------------------------------------------------------------------------
 
-module' :: Parser Types.Module
-module' = Types.Mod <$> functionModGen (many1H topLevelSN) <* string "end"
+modFunc :: Parser Types.TopLevel
+modFunc =
+  functionModStart (\n a -> func n a <|> mod n a)
+  where
+    func n a =
+      gen n a expression
+      >>| Types.Function . Types.Func
+    mod n a =
+      (gen n a (many1H topLevelSN)
+        >>| Types.Module . Types.Mod)
+      <* string "end"
+    gen n a p = guard p >>| Types.Like n a
 
 moduleOpen :: Parser Types.ModuleOpen
 moduleOpen = do
@@ -650,7 +659,7 @@ refine :: Expr.Operator ByteString Types.Expression
 refine =
   Expr.Postfix $
     do
-      refine <- curly expressionSN
+      refine <- spaceLiner (curly expressionSN)
       pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
 
 -- For Do!
