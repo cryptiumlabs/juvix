@@ -52,6 +52,18 @@ expressionGen' p =
     -- with infixity that we don't know about at this phase!
     <|> Types.Parened <$> parens (expressionGen all'')
 
+expressionArguments :: Parser Types.Expression
+expressionArguments =
+    Types.Block <$> block
+    <|> Types.ExpRecord <$> expRecord
+    <|> Types.Constant <$> constant
+    -- <|> try (Types.NamedTypeE <$> namedRefine)
+    <|> Types.Name <$> prefixSymbolDot
+    <|> universeSymbol
+    -- We wrap this in a paren to avoid conflict
+    -- with infixity that we don't know about at this phase!
+    <|> Types.Parened <$> parens (expressionGen all'')
+
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
 
@@ -119,7 +131,6 @@ arg :: Parser Types.Arg
 arg =
   Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
-
 --------------------------------------------------------------------------------
 -- Signature
 --------------------------------------------------------------------------------
@@ -448,7 +459,7 @@ lam = do
 application :: Parser Types.Application
 application = do
   name <- spaceLiner (expressionGen' (fail ""))
-  args <- many1H (spaceLiner (expressionGen' (fail "")))
+  args <- many1H (spaceLiner expressionArguments)
   pure (Types.App name args)
 
 --------------------------------------------------
@@ -592,6 +603,8 @@ maybe = optional
 
 spacer :: Parser p -> Parser p
 spacer p = p <* takeWhile (Lexer.space ==)
+
+
 
 spaceLiner :: Parser p -> Parser p
 spaceLiner p = p <* takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x)

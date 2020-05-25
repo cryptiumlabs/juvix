@@ -46,4 +46,4 @@ allCheckedTests =
     ]
 
 main :: IO ()
-main = print (seq Frontend.test 3) -- T.defaultMain allCheckedTests
+main = print (Frontend.test) -- T.defaultMain allCheckedTests
