@@ -1,11 +1,11 @@
 module Frontend where
 
 import Data.Attoparsec.ByteString
+import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import Prelude (String, show)
 
 allParserTests :: T.TestTree
@@ -36,9 +36,12 @@ allParserTests =
 
 space = Char8.char8 ' '
 
-test = parseOnly
-  (many' (Parser.spaceLiner (Parser.spaceLiner (string "let") *> Parser.prefixSymbolSN *> many Parser.argSN *> Parser.guard Parser.expression *> pure ())))
-  "let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 "
+test =
+  parseOnly
+    (many' Parser.expressionSN)
+    "let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo \
+    \= 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let \
+    \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
 
 parseTasty ::
   (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree
@@ -156,38 +159,38 @@ contractTest =
         <> "    | _ -> \n"
         <> "      false \n"
         <> " \n"
-        -- <> "  let transfer token tx = \n"
-        -- <> "    case tx.data of \n"
-        -- <> "    | Transaction.Transfer {from-account, amount} -> \n"
-        -- <> "      has-n token.storage.accounts from-account amount \n"
-        -- <> "      && tx.authroized-account == from-account \n"
-        -- <> "    | _ -> \n"
-        -- <> "      false \n"
-        -- <> " \n"
-        -- <> "  let Burn token tx = \n"
-        -- <> "    case tx.data of \n"
-        -- <> "    | Transaction.Burn {burn-from-account, burn-ammount} -> \n"
-        -- <> "      has-n token.storage.accounts burn-from-account burn-amount \n"
-        -- <> "      && tx.authroized-account == burn-from-account \n"
-        -- <> "    | _ -> \n"
-        -- <> "      false \n"
+        <> "  let transfer token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Transfer {from-account, amount} -> \n"
+        <> "      has-n token.storage.accounts from-account amount \n"
+        <> "      && tx.authroized-account == from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let Burn token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Burn {burn-from-account, burn-ammount} -> \n"
+        <> "      has-n token.storage.accounts burn-from-account burn-amount \n"
+        <> "      && tx.authroized-account == burn-from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
         <> "end \n"
-        -- <> " \n"
-        -- <> "  type Error = \n"
-        -- <> "    | NotEnoughFunds \n"
-        -- <> "    | NotSameAccount \n"
-        -- <> "    | NotOwnerToken  \n"
-        -- <> "    | NotEnoughTokens \n"
-        -- <> " \n"
-        -- <> "  sig exec : Token.T -> Transaction.T -> Either.T Error Token.T \n"
-        -- <> "  let exec token tx = \n"
-        -- <> "    case tx.data of \n"
-        -- <> "    | Transfer _ -> \n"
-        -- <> "      if | Validation.transfer token tx = Right (transfer token tx) \n"
-        -- <> "         | else                         = Left NotEnoughFunds \n"
-        -- <> "    | Mint _ -> \n"
-        -- <> "      if | Validation.mint token tx = Right (mint token tx) \n"
-        -- <> "         | else                     = Left NotEnoughFunds \n"
+        <> " \n"
+        <> "  type Error = \n"
+        <> "    | NotEnoughFunds \n"
+        <> "    | NotSameAccount \n"
+        <> "    | NotOwnerToken  \n"
+        <> "    | NotEnoughTokens \n"
+        <> " \n"
+        <> "  sig exec : Token.T -> Transaction.T -> Either.T Error Token.T \n"
+        <> "  let exec token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transfer _ -> \n"
+        <> "      if | Validation.transfer token tx = Right (transfer token tx) \n"
+        <> "         | else                         = Left NotEnoughFunds \n"
+        <> "    | Mint _ -> \n"
+        <> "      if | Validation.mint token tx = Right (mint token tx) \n"
+        <> "         | else                     = Left NotEnoughFunds \n"
     )
 
 many1FunctionsParser :: T.TestTree

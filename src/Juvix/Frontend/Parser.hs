@@ -54,7 +54,7 @@ expressionGen' p =
 
 expressionArguments :: Parser Types.Expression
 expressionArguments =
-    Types.Block <$> block
+  Types.Block <$> block
     <|> Types.ExpRecord <$> expRecord
     <|> Types.Constant <$> constant
     -- <|> try (Types.NamedTypeE <$> namedRefine)
@@ -131,6 +131,7 @@ arg :: Parser Types.Arg
 arg =
   Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
+
 --------------------------------------------------------------------------------
 -- Signature
 --------------------------------------------------------------------------------
@@ -238,7 +239,6 @@ nameMatch parser = do
   bound <- parser
   pure (Types.NonPunned name bound)
 
-
 --------------------------------------------------------------------------------
 -- Modules and Functions
 --------------------------------------------------------------------------------
@@ -249,11 +249,12 @@ modFunc =
   where
     func n a =
       gen n a expression
-      >>| Types.Function . Types.Func
+        >>| Types.Function . Types.Func
     mod n a =
-      (gen n a (many1H topLevelSN)
-        >>| Types.Module . Types.Mod)
-      <* string "end"
+      ( gen n a (many1H topLevelSN)
+          >>| Types.Module . Types.Mod
+      )
+        <* string "end"
     gen n a p = guard p >>| Types.Like n a
 
 moduleOpen :: Parser Types.ModuleOpen
@@ -603,8 +604,6 @@ maybe = optional
 
 spacer :: Parser p -> Parser p
 spacer p = p <* takeWhile (Lexer.space ==)
-
-
 
 spaceLiner :: Parser p -> Parser p
 spaceLiner p = p <* takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x)
