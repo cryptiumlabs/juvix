@@ -92,6 +92,7 @@ usage = string "u#" *> expression
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
 
+functionModStart :: (Symbol -> [Types.Arg] -> Parser a) -> Parser a
 functionModStart f = do
   _ <- spaceLiner (string "let")
   name <- prefixSymbolSN
@@ -99,13 +100,12 @@ functionModStart f = do
   f name args
 
 functionModGen :: Parser a -> Parser (Types.FunctionLike a)
-functionModGen p = do
-  -- for now
-  _ <- spaceLiner (string "let")
-  name <- prefixSymbolSN
-  args <- many argSN
-  guard <- guard p
-  pure (Types.Like name args guard)
+functionModGen p =
+  functionModStart
+    ( \name args -> do
+        guard <- guard p
+        pure (Types.Like name args guard)
+    )
 
 --------------------------------------------------
 -- Guard
