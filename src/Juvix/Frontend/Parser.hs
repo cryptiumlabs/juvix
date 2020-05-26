@@ -43,14 +43,7 @@ expressionGen' p =
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
     <|> try p
-    <|> Types.ExpRecord <$> expRecord
-    <|> Types.Constant <$> constant
-    -- <|> try (Types.NamedTypeE <$> namedRefine)
-    <|> Types.Name <$> prefixSymbolDot
-    <|> universeSymbol
-    -- We wrap this in a paren to avoid conflict
-    -- with infixity that we don't know about at this phase!
-    <|> Types.Parened <$> parens (expressionGen all'')
+    <|> expressionArguments
 
 expressionArguments :: Parser Types.Expression
 expressionArguments =
