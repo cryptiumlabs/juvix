@@ -6,3 +6,5 @@ cradle:
       component: "juvix:lib"
     - path: ./app
       component: "juvix:exe:juvix"
+    - path: ./bench
+      component: "juvix:bench:juvix-bench"
