@@ -1,13 +1,11 @@
 module Main where
 
-import qualified Criterion.Main as Main
+import qualified Criterion.Main as Criterion
+import qualified Frontend.Parser as Parser
 import Juvix.Library
 
 main :: IO ()
 main =
-  Main.defaultMain
-    [ Main.bgroup
-        "test"
-        [ Main.bench "length" $ Main.whnf length [1 .. 10]
-        ]
+  Criterion.defaultMain
+    [ Parser.bench
     ]
