@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- - This file defines the main ADT for the Juvix front end language.
@@ -57,7 +57,7 @@ newtype Alias
   = AliasDec
       {aliasType' :: Expression}
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 --------------------------------------------------
 -- Arrows
@@ -95,7 +95,7 @@ data ArrowSymbol
 newtype UniverseExpression
   = UniverseExpression Symbol
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 --------------------------------------------------
 -- ADTs
@@ -142,7 +142,7 @@ data NameType
 newtype Function
   = Func (FunctionLike Expression)
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 -- | 'Module' is like function, however it allows multiple top levels
 newtype Module
@@ -168,7 +168,7 @@ data GuardBody a
 newtype ModuleOpen
   = Open ModuleName
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 data ModuleOpenExpr
   = OpenExpress
@@ -188,7 +188,7 @@ type ModuleName = NameSymb
 newtype Cond a
   = C (NonEmpty (CondLogic a))
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 data CondLogic a
   = CondExpression
@@ -265,13 +265,13 @@ data Numb
 newtype String'
   = Sho Text
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 newtype Block
   = Bloc
       {blockExpr :: Expression}
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 data Lambda
   = Lamb
@@ -290,7 +290,7 @@ data Application
 newtype Do
   = Do' (NonEmpty DoBody)
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 data DoBody
   = DoBody
@@ -304,7 +304,7 @@ newtype ExpRecord
       { expRecordFields :: NonEmpty (NameSet Expression)
       }
   deriving (Show, Generic)
-  deriving newtype NFData
+  deriving newtype (NFData)
 
 --------------------------------------------------
 -- Symbol Binding

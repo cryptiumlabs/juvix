@@ -1,6 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Juvix.Core.Usage (Usage, NatAndw (..), numToNat, allowsUsageOf, T, pred) where
+module Juvix.Core.Usage
+  ( Usage,
+    NatAndw (..),
+    numToNat,
+    allowsUsageOf,
+    T,
+    pred,
+  )
+where
 
 import Juvix.Library hiding (pred, show)
 import Prelude (Show (..))
