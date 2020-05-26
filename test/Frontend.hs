@@ -263,11 +263,13 @@ sigTest2 =
     Parser.topLevel
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
     "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
-    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (i :| []), \
-    \infixOp = : :| [], infixRight = RefinedE (TypeRefine {typeRefineName = Name \
-    \(Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), \
-    \infixOp = > :| [], infixRight = Constant (Number (Integer' 0))})})}), signatureConstraints \
-    \= []})"
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= : :| [], infixRight = Infix (Inf {infixLeft = RefinedE (TypeRefine {typeRefineName \
+    \= Name (Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= > :| [], infixRight = Constant (Number (Integer' 0))})}), infixOp = -> :| [], infixRight \
+    \= RefinedE (TypeRefine {typeRefineName = Name (Int :| []), typeRefineRefinement \
+    \= Infix (Inf {infixLeft = Name (i :| []), infixOp = > :| [], infixRight = Constant \
+    \(Number (Integer' 1))})})})}), signatureConstraints = []})"
 
 --------------------------------------------------------------------------------
 -- Function Testing
