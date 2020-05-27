@@ -117,6 +117,7 @@ library:
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
+    - Juvix.Core.Common.Context
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
@@ -262,3 +263,15 @@ tests:
       - tasty
       - tasty-hunit
       - tasty-quickcheck
+
+benchmarks:
+  juvix-bench:
+    main:         Main.hs
+    source-dirs:  bench
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - juvix
+      - criterion

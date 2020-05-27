@@ -84,7 +84,7 @@ validStartSymbol w =
 
 validInfixSymbol :: Word8 -> Bool
 validInfixSymbol w =
-  Unicode.isSymbol (wordToChr w) || w == times || w == dash || w == amper
+  Unicode.isSymbol (wordToChr w) || w == times || w == dash || w == amper || w == colon
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =

@@ -1,6 +1,7 @@
 module Frontend where
 
 import Data.Attoparsec.ByteString
+import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
@@ -32,6 +33,15 @@ allParserTests =
 --------------------------------------------------------------------------------
 -- Parser Checker
 --------------------------------------------------------------------------------
+
+space = Char8.char8 ' '
+
+test =
+  parseOnly
+    (many' Parser.expressionSN)
+    "let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo \
+    \= 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let \
+    \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
 
 parseTasty ::
   (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree
@@ -205,30 +215,31 @@ many1FunctionsParser =
     "[Function (Func (Like {functionLikedName = foo, functionLikeArgs = [ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName a, matchLogicNamed = Nothing}),ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName b, matchLogicNamed = Nothing}),ConcreteA \
-    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (Application (App {applicationName = + :| [], applicationArgs = Infix \
-    \(Inf {infixLeft = Name (a :| []), infixOp = + :| [], infixRight = Name (b :| [])}) :| [Name \
-    \(c :| [])]}))})),Function (Func (Like {functionLikedName = bah, functionLikeArgs \
-    \= [], functionLikeBody = Body (Application (App {applicationName = foo :| [], applicationArgs \
-    \= Constant (Number (Integer' 1)) :| [Constant (Number (Integer' 2)),Constant \
-    \(Number (Integer' 3))]}))})),Function (Func (Like {functionLikedName = nah, functionLikeArgs \
-    \= [], functionLikeBody = Guard (C (CondExpression {condLogicPred = Infix (Inf \
+    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (Application (App {applicationName = Name (+ :| []), \
+    \applicationArgs = Parened (Infix (Inf {infixLeft = Name (a :| []), infixOp = \
+    \+ :| [], infixRight = Name (b :| [])})) :| [Name (c :| [])]}))})),Function (Func \
+    \(Like {functionLikedName = bah, functionLikeArgs = [], functionLikeBody = Body \
+    \(Application (App {applicationName = Name (foo :| []), applicationArgs = Constant \
+    \(Number (Integer' 1)) :| [Constant (Number (Integer' 2)),Constant (Number (Integer' \
+    \3))]}))})),Function (Func (Like {functionLikedName = nah, functionLikeArgs = \
+    \[], functionLikeBody = Guard (C (CondExpression {condLogicPred = Infix (Inf \
     \{infixLeft = Name (bah :| []), infixOp = == :| [], infixRight = Constant (Number \
     \(Integer' 5))}), condLogicBody = Constant (Number (Integer' 7))} :| [CondExpression \
     \{condLogicPred = Name (else :| []), condLogicBody = Constant (Number (Integer' \
     \11))}]))})),Function (Func (Like {functionLikedName = test, functionLikeArgs \
-    \= [], functionLikeBody = Body (Let (Let' {letBindings = Bind {bindingPattern \
-    \= MatchLogic {matchLogicContents = MatchName check, matchLogicNamed = Nothing}, \
-    \bindingBody = Name (nah :| [])} :| [], letBody = Match (Match' {matchOn = Name \
-    \(check :| []), matchBindigns = MatchL {matchLPattern = MatchLogic {matchLogicContents \
-    \= MatchName seven, matchLogicNamed = Nothing}, matchLBody = Constant (Number \
-    \(Integer' 11))} :| [MatchL {matchLPattern = MatchLogic {matchLogicContents = MatchName \
-    \eleven, matchLogicNamed = Nothing}, matchLBody = Constant (Number (Integer' 7))},MatchL \
-    \{matchLPattern = MatchLogic {matchLogicContents = MatchName f, matchLogicNamed \
-    \= Nothing}, matchLBody = OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails \
-    \:| [], moduleOpenExprExpr = Application (App {applicationName = print :| [], applicationArgs \
-    \= Do (Do' (DoBody {doBodyName = Nothing, doBodyExpr = Name (failed :| [])} :| [DoBody \
-    \{doBodyName = Nothing, doBodyExpr = Name (fail :| [])}])) :| []})})}]})}))}))]"
+    \= [], functionLikeBody = Body (Let (Let' {letBindings = Like {functionLikedName \
+    \= check, functionLikeArgs = [], functionLikeBody = Body (Name (nah :| []))}, \
+    \letBody = Match (Match' {matchOn = Name (check :| []), matchBindigns = MatchL \
+    \{matchLPattern = MatchLogic {matchLogicContents = MatchName seven, matchLogicNamed \
+    \= Nothing}, matchLBody = Constant (Number (Integer' 11))} :| [MatchL {matchLPattern \
+    \= MatchLogic {matchLogicContents = MatchName eleven, matchLogicNamed = Nothing}, \
+    \matchLBody = Constant (Number (Integer' 7))},MatchL {matchLPattern = MatchLogic \
+    \{matchLogicContents = MatchName f, matchLogicNamed = Nothing}, matchLBody = \
+    \OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails :| [], moduleOpenExprExpr \
+    \= Do (Do' (DoBody {doBodyName = Nothing, doBodyExpr = Application (App {applicationName \
+    \= Name (print :| []), applicationArgs = Name (failed :| []) :| []})} :| [DoBody \
+    \{doBodyName = Nothing, doBodyExpr = Name (fail :| [])}]))})}]})}))}))]"
 
 --------------------------------------------------------------------------------
 -- Sig Test
@@ -252,14 +263,13 @@ sigTest2 =
     Parser.topLevel
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
     "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
-    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = NamedTypeE (NamedType \
-    \{nameRefineName = Concrete i, namedRefineRefine = RefinedE (TypeRefine {typeRefineName \
-    \= Name (Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| \
-    \[]), infixOp = > :| [], infixRight = Constant (Number (Integer' 0))})})}), infixOp \
-    \= -> :| [], infixRight = RefinedE (TypeRefine {typeRefineName = Name (Int :| \
-    \[]), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), infixOp \
-    \= > :| [], infixRight = Constant (Number (Integer' 1))})})}), signatureConstraints \
-    \= []})"
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= : :| [], infixRight = Infix (Inf {infixLeft = RefinedE (TypeRefine {typeRefineName \
+    \= Name (Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= > :| [], infixRight = Constant (Number (Integer' 0))})}), infixOp = -> :| [], infixRight \
+    \= RefinedE (TypeRefine {typeRefineName = Name (Int :| []), typeRefineRefinement \
+    \= Infix (Inf {infixLeft = Name (i :| []), infixOp = > :| [], infixRight = Constant \
+    \(Number (Integer' 1))})})})}), signatureConstraints = []})"
 
 --------------------------------------------------------------------------------
 -- Function Testing
@@ -313,21 +323,21 @@ sumTypeTest =
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
     "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm = Data \
-    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (NamedTypeE \
-    \(NamedType {nameRefineName = Concrete b, namedRefineRefine = Infix (Inf {infixLeft \
-    \= Infix (Inf {infixLeft = Name (a :| []), infixOp = -> :| [], infixRight = Name \
-    \(b :| [])}), infixOp = -> :| [], infixRight = Name (c :| [])})})))} :| [S {sumConstructor \
-    \= B, sumValue = Just (Arrow (Infix (Inf {infixLeft = Name (d :| []), infixOp \
-    \= -> :| [], infixRight = Name (Foo :| [])})))},S {sumConstructor = C, sumValue \
-    \= Just (Record (Record' {recordFields = NameType {nameTypeSignature = Name (Int \
-    \:| []), nameTypeName = Concrete a} :| [NameType {nameTypeSignature = Name (Int \
-    \:| []), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S {sumConstructor \
-    \= D, sumValue = Just (Record (Record' {recordFields = NameType {nameTypeSignature \
+    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (Infix \
+    \(Inf {infixLeft = Name (b :| []), infixOp = : :| [], infixRight = Infix (Inf \
+    \{infixLeft = Name (a :| []), infixOp = -> :| [], infixRight = Infix (Inf {infixLeft \
+    \= Name (b :| []), infixOp = -> :| [], infixRight = Name (c :| [])})})})))} :| \
+    \[S {sumConstructor = B, sumValue = Just (Arrow (Infix (Inf {infixLeft = Name \
+    \(d :| []), infixOp = -> :| [], infixRight = Name (Foo :| [])})))},S {sumConstructor \
+    \= C, sumValue = Just (Record (Record' {recordFields = NameType {nameTypeSignature \
     \= Name (Int :| []), nameTypeName = Concrete a} :| [NameType {nameTypeSignature \
-    \= Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature = Just \
-    \(Application (App {applicationName = Foo :| [], applicationArgs = Name (Int \
-    \:| []) :| [Infix (Inf {infixLeft = Name (Fooy :| []), infixOp = -> :| [], infixRight \
-    \= Name (Nada :| [])})]}))}))}])})}"
+    \= Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S \
+    \{sumConstructor = D, sumValue = Just (Record (Record' {recordFields = NameType \
+    \{nameTypeSignature = Name (Int :| []), nameTypeName = Concrete a} :| [NameType \
+    \{nameTypeSignature = Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature \
+    \= Just (Application (App {applicationName = Name (Foo :| []), applicationArgs \
+    \= Name (Int :| []) :| [Parened (Infix (Inf {infixLeft = Name (Fooy :| []), infixOp \
+    \= -> :| [], infixRight = Name (Nada :| [])}))]}))}))}])})}"
 
 --------------------------------------------------
 -- Arrow Testing
@@ -339,17 +349,18 @@ superArrowCase =
     "superArrowCase"
     Parser.expression
     "( b : Bah -> \n c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
-    "Infix (Inf {infixLeft = NamedTypeE (NamedType {nameRefineName = Concrete b, \
-    \namedRefineRefine = Infix (Inf {infixLeft = Name (Bah :| []), infixOp = -> :| \
-    \[], infixRight = NamedTypeE (NamedType {nameRefineName = Concrete c, namedRefineRefine \
-    \= Infix (Inf {infixLeft = Name (B :| []), infixOp = -o :| [], infixRight = Name \
-    \(Foo :| [])})})})}), infixOp = -> :| [], infixRight = Application (App {applicationName \
-    \= Foo :| [], applicationArgs = Name (a :| []) :| [Infix (Inf {infixLeft = Name \
-    \(b :| []), infixOp = -> :| [], infixRight = NamedTypeE (NamedType {nameRefineName \
-    \= Concrete a, namedRefineRefine = Application (App {applicationName = Bah :| \
-    \[], applicationArgs = Name (a :| []) :| [Infix (Inf {infixLeft = Name (c :| \
-    \[]), infixOp = -o :| [], infixRight = Infix (Inf {infixLeft = Name (HAHAHHA \
-    \:| []), infixOp = -> :| [], infixRight = Name (foo :| [])})})]})})})]})})"
+    "Infix (Inf {infixLeft = Parened (Infix (Inf {infixLeft = Name (b :| []), infixOp \
+    \= : :| [], infixRight = Infix (Inf {infixLeft = Name (Bah :| []), infixOp = \
+    \-> :| [], infixRight = Infix (Inf {infixLeft = Name (c :| []), infixOp = : :| \
+    \[], infixRight = Infix (Inf {infixLeft = Name (B :| []), infixOp = -o :| [], \
+    \infixRight = Name (Foo :| [])})})})})), infixOp = -> :| [], infixRight = Infix \
+    \(Inf {infixLeft = Application (App {applicationName = Name (Foo :| []), applicationArgs \
+    \= Name (a :| []) :| [Name (b :| [])]}), infixOp = -> :| [], infixRight = Infix \
+    \(Inf {infixLeft = Name (a :| []), infixOp = : :| [], infixRight = Infix (Inf \
+    \{infixLeft = Application (App {applicationName = Name (Bah :| []), applicationArgs \
+    \= Name (a :| []) :| [Name (c :| [])]}), infixOp = -o :| [], infixRight = Parened \
+    \(Infix (Inf {infixLeft = Name (HAHAHHA :| []), infixOp = -> :| [], infixRight \
+    \= Name (foo :| [])}))})})})})"
 
 --------------------------------------------------
 -- alias tests
@@ -404,7 +415,7 @@ moduleOpen' =
         <> "  open M"
         <> "  sig bah : Rec \n"
         <> "  let bah t = \n"
-        <> "     { a = (t + 3)"
+        <> "     { a = t + 3"
         <> "     , b = expr M.N.t}"
         <> "end"
     )
@@ -417,7 +428,7 @@ moduleOpen' =
     \functionLikeBody = Body (ExpRecord (ExpressionRecord {expRecordFields = NonPunned \
     \(a :| []) (Infix (Inf {infixLeft = Name (t :| []), infixOp = + :| [], infixRight \
     \= Constant (Number (Integer' 3))})) :| [NonPunned (b :| []) (Application (App \
-    \{applicationName = expr :| [], applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
+    \{applicationName = Name (expr :| []), applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
 
 --------------------------------------------------
 -- typeName tests
@@ -429,10 +440,10 @@ typeNameNoUniverse =
     "typeNameNoUniverse"
     Parser.expression
     "Foo a b c (b -o d) a c u"
-    "Application (App {applicationName = Foo :| [], applicationArgs = Name (a :| \
-    \[]) :| [Name (b :| []),Name (c :| []),Infix (Inf {infixLeft = Name (b :| []), \
-    \infixOp = -o :| [], infixRight = Name (d :| [])}),Name (a :| []),Name (c :| \
-    \[]),Name (u :| [])]})"
+    "Application (App {applicationName = Name (Foo :| []), applicationArgs = Name \
+    \(a :| []) :| [Name (b :| []),Name (c :| []),Parened (Infix (Inf {infixLeft = \
+    \Name (b :| []), infixOp = -o :| [], infixRight = Name (d :| [])})),Name (a :| \
+    \[]),Name (c :| []),Name (u :| [])]})"
 
 --------------------------------------------------------------------------------
 -- Match tests
@@ -503,9 +514,10 @@ parens1 =
     "parens1"
     Parser.expression
     "(       ( \n(({a, b = 3+5})))\n)"
-    "ExpRecord (ExpressionRecord {expRecordFields = Punned (a :| []) :| [NonPunned \
-    \(b :| []) (Infix (Inf {infixLeft = Constant (Number (Integer' 3)), \
-    \infixOp = + :| [], infixRight = Constant (Number (Integer' 5))}))]})"
+    "Parened (Parened (Parened (Parened (ExpRecord (ExpressionRecord {expRecordFields \
+    \= Punned (a :| []) :| [NonPunned (b :| []) (Infix (Inf {infixLeft = Constant \
+    \(Number (Integer' 3)), infixOp = + :| [], infixRight = Constant (Number (Integer' \
+    \5))}))]})))))"
 
 --------------------------------------------------------------------------------
 -- Spacer tests

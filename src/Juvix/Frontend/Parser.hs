@@ -28,9 +28,8 @@ import Prelude (fail)
 topLevel :: Parser Types.TopLevel
 topLevel =
   Types.Type <$> typeP
+    <|> modFunc
     <|> Types.ModuleOpen <$> moduleOpen
-    <|> Types.Module <$> module'
-    <|> Types.Function <$> function
     <|> Types.Signature <$> signature'
 
 expressionGen' ::
@@ -38,17 +37,25 @@ expressionGen' ::
 expressionGen' p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
+    <|> Types.LetType <$> letType
     <|> Types.Match <$> match
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
     <|> try p
+    <|> expressionArguments
+
+expressionArguments :: Parser Types.Expression
+expressionArguments =
+  Types.Block <$> block
     <|> Types.ExpRecord <$> expRecord
     <|> Types.Constant <$> constant
-    <|> try (Types.NamedTypeE <$> namedRefine)
+    -- <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> universeSymbol
-    <|> parens (expressionGen all'')
+    -- We wrap this in a paren to avoid conflict
+    -- with infixity that we don't know about at this phase!
+    <|> Types.Parened <$> parens (expressionGen all'')
 
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
@@ -57,7 +64,7 @@ app'' :: Parser Types.Expression
 app'' = Types.Application <$> try application
 
 all'' :: Parser Types.Expression
-all'' = app'' <|> do'''
+all'' = do''' <|> app''
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p =
@@ -71,6 +78,10 @@ expression' = expressionGen app''
 expression'' :: Parser Types.Expression
 expression'' = expressionGen do'''
 
+-- used to remove both from parsing
+expression''' :: Parser Types.Expression
+expression''' = expressionGen (fail "")
+
 expression :: Parser Types.Expression
 expression = expressionGen all''
 
@@ -81,14 +92,20 @@ usage = string "u#" *> expression
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
 
-functionModGen :: Parser a -> Parser (Types.FunctionLike a)
-functionModGen p = do
-  -- for now
+functionModStart :: (Symbol -> [Types.Arg] -> Parser a) -> Parser a
+functionModStart f = do
   _ <- spaceLiner (string "let")
   name <- prefixSymbolSN
   args <- many argSN
-  guard <- guard p
-  pure (Types.Like name args guard)
+  f name args
+
+functionModGen :: Parser a -> Parser (Types.FunctionLike a)
+functionModGen p =
+  functionModStart
+    ( \name args -> do
+        guard <- guard p
+        pure (Types.Like name args guard)
+    )
 
 --------------------------------------------------
 -- Guard
@@ -116,7 +133,7 @@ signature' :: Parser Types.Signature
 signature' = do
   _ <- spaceLiner (string "sig")
   name <- prefixSymbolSN
-  maybeUsage <- maybe expressionSN
+  maybeUsage <- maybe (fmap Types.Constant constantSN <|> parens expressionSN)
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
   exp <- expression
@@ -216,18 +233,22 @@ nameMatch parser = do
   pure (Types.NonPunned name bound)
 
 --------------------------------------------------------------------------------
--- Function
+-- Modules and Functions
 --------------------------------------------------------------------------------
 
-function :: Parser Types.Function
-function = Types.Func <$> functionModGen expression
-
---------------------------------------------------------------------------------
--- Modules
---------------------------------------------------------------------------------
-
-module' :: Parser Types.Module
-module' = Types.Mod <$> functionModGen (many1H topLevelSN) <* string "end"
+modFunc :: Parser Types.TopLevel
+modFunc =
+  functionModStart (\n a -> func n a <|> mod n a)
+  where
+    func n a =
+      gen n a expression
+        >>| Types.Function . Types.Func
+    mod n a =
+      ( gen n a (many1H topLevelSN)
+          >>| Types.Module . Types.Mod
+      )
+        <* string "end"
+    gen n a p = guard p >>| Types.Like n a
 
 moduleOpen :: Parser Types.ModuleOpen
 moduleOpen = do
@@ -306,7 +327,7 @@ product :: Parser Types.Product
 product =
   Types.Record <$> record
     <|> skipLiner Lexer.colon *> fmap Types.Arrow expression
-    <|> fmap Types.ADTLike (many expression''SN)
+    <|> fmap Types.ADTLike (many expression'''SN)
 
 record :: Parser Types.Record
 record = do
@@ -324,9 +345,9 @@ nameType = do
   sig <- expression
   pure (Types.NameType sig name)
 
-nameParserColon :: Parser Types.Name
-nameParserColon =
-  nameParserSN <* skip (== Lexer.colon)
+-- nameParserColon :: Parser Types.Name
+-- nameParserColon =
+--   nameParserSN <* skip (== Lexer.colon)
 
 nameParser :: Parser Types.Name
 nameParser =
@@ -337,9 +358,9 @@ nameParser =
 -- Arrow Type parser
 --------------------------------------------------
 
-namedRefine :: Parser Types.NamedType
-namedRefine =
-  Types.NamedType <$> nameParserColonSN <*> expression
+-- namedRefine :: Parser Types.NamedType
+-- namedRefine =
+--   Types.NamedType <$> nameParserColonSN <*> expression
 
 --------------------------------------------------
 -- TypeNameParser and typeRefine Parser
@@ -380,18 +401,18 @@ expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 
 let' :: Parser Types.Let
 let' = do
-  spaceLiner (string "let")
-  binds <- many1H bindingSN
+  binds <- functionModGen expression
   spaceLiner (string "in")
   body <- expression
   pure (Types.Let' binds body)
 
-binding :: Parser Types.Binding
-binding = do
-  pattern' <- matchLogicSN
-  skipLiner Lexer.equals
-  on <- expression
-  pure (Types.Bind pattern' on)
+letType :: Parser Types.LetType
+letType = do
+  spaceLiner (string "let")
+  typ <- typePSN
+  spaceLiner (string "in")
+  body <- expression
+  pure (Types.LetType' typ body)
 
 --------------------------------------------------
 -- Cond
@@ -431,8 +452,8 @@ lam = do
 
 application :: Parser Types.Application
 application = do
-  name <- prefixSymbolDotSN
-  args <- many1H expression''SN
+  name <- spaceLiner (expressionGen' (fail ""))
+  args <- many1H (spaceLiner expressionArguments)
   pure (Types.App name args)
 
 --------------------------------------------------
@@ -625,7 +646,7 @@ infixOp =
         pure
           (\l r -> Types.Infix (Types.Inf l inf r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 arrowExp :: Expr.Operator ByteString Types.Expression
 arrowExp =
@@ -637,13 +658,13 @@ arrowExp =
         pure
           (\l r -> Types.ArrowE (Types.Arr' l exp r))
     )
-    Expr.AssocLeft
+    Expr.AssocRight
 
 refine :: Expr.Operator ByteString Types.Expression
 refine =
   Expr.Postfix $
     do
-      refine <- curly expressionSN
+      refine <- spaceLiner (curly expressionSN)
       pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
 
 -- For Do!
@@ -665,6 +686,9 @@ expression'SN = spaceLiner expression'
 
 expression''SN :: Parser Types.Expression
 expression''SN = spaceLiner expression''
+
+expression'''SN :: Parser Types.Expression
+expression'''SN = spaceLiner expression'''
 
 expressionSN :: Parser Types.Expression
 expressionSN = spaceLiner expression
@@ -723,17 +747,14 @@ recordS = spacer record
 nameTypeSN :: Parser Types.NameType
 nameTypeSN = spaceLiner nameType
 
-nameParserColonSN :: Parser Types.Name
-nameParserColonSN = spaceLiner nameParserColon
+-- nameParserColonSN :: Parser Types.Name
+-- nameParserColonSN = spaceLiner nameParserColon
 
 nameParserSN :: Parser Types.Name
 nameParserSN = spaceLiner nameParser
 
-bindingSN :: Parser Types.Binding
-bindingSN = spaceLiner binding
-
-namedRefineSN :: Parser Types.NamedType
-namedRefineSN = spaceLiner namedRefine
+-- namedRefineSN :: Parser Types.NamedType
+-- namedRefineSN = spaceLiner namedRefine
 
 sumSN :: Parser Types.Sum
 sumSN = spaceLiner sum
@@ -755,3 +776,6 @@ prefixSymbolSN = spaceLiner prefixSymbol
 
 prefixSymbolS :: Parser Symbol
 prefixSymbolS = spacer prefixSymbol
+
+constantSN :: Parser Types.Constant
+constantSN = spaceLiner constant

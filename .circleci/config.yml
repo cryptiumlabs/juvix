@@ -12,7 +12,7 @@ jobs:
             - juvix-cache-v2-{{ checksum "package.yaml" }}
       - run:
           name: Build dependencies
-          command: stack build -j2 --only-dependencies +RTS -N2 -qg
+          command: stack build -j1 --only-dependencies +RTS -N1 -qg
           no_output_timeout: 1200
       - run:
           name: Build Juvix

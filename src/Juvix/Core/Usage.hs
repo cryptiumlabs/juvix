@@ -1,4 +1,14 @@
-module Juvix.Core.Usage (Usage, NatAndw (..), numToNat, allowsUsageOf, T, pred) where
+{-# LANGUAGE DeriveAnyClass #-}
+
+module Juvix.Core.Usage
+  ( Usage,
+    NatAndw (..),
+    numToNat,
+    allowsUsageOf,
+    T,
+    pred,
+  )
+where
 
 import Juvix.Library hiding (pred, show)
 import Prelude (Show (..))
@@ -15,7 +25,7 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
-  deriving (Eq)
+  deriving (Eq, Generic, NFData)
 
 instance Show NatAndw where
   show (SNat n) = show n

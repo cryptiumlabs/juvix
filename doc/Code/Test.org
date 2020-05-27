@@ -115,6 +115,12 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
+* Core
+** Common
+*** Context
+- _Relies on_
+  + [[Context]]
+  + [[Library]]
 * Nets
 ** Combinators
 - _Relies on_

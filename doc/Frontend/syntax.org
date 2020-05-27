@@ -14,8 +14,10 @@
   ;;;; Functions ======================================================
 
   ;; let until indent sensitivity is gone
-  function ::= let <name> <args>+ = <expression>
-             | let <name> <args>+ <cond-logic>*
+  function ::= let  <function-body>
+
+  function-body ::= <name> <args>+ = <expression>
+                  | <name> <args>+ <cond-logic>*
 
   ;; Match-logic could just be a name, and so is thus fine
   ;; # is for implicit
@@ -120,10 +122,10 @@
                    | <type>
 
   module-signature-helper
-    ::= sig <name>         :                 <expression>
-      | sig <name>         : <type-name> =\> <expression>
-      | sig <name> <usage> :                 <expression>
-      | sig <name> <usage> : <type-name> =\> <expression>
+    ::= sig <name>           :                 <expression>
+      | sig <name>           : <type-name> =\> <expression>
+      | sig <name> <usage-f> :                 <expression>
+      | sig <name> <usage-f> : <type-name> =\> <expression>
 
 
   cond-top ::= \| <expression> = <top-level>*
@@ -145,6 +147,7 @@
                  | <record-access>
                  | <module-lookup>
                  | <let>
+                 | <let-type>
                  | <module-open-expression>
                  | <where>
                  | <string>
@@ -168,6 +171,8 @@
               | <expression''>
 
   usage ::= <expression>
+
+  usage-f ::= <constant> | ( <expression> )
 
   record-access ::= <name>.<name>
 
@@ -254,7 +259,9 @@
   ;; Due to trying to be less indent sensitive,
   ;; we only look for the in alternative,
   ;; is that we only have a single binding per let.
-  let ::= let <binding>* in <expression>
+  let ::= let <function-body> in <expression>
+
+  type-let ::= let <type> in <expression>
 
   ;; Does this even make sense to have?
   ;; Juvix is not lazy, how is order determined?
