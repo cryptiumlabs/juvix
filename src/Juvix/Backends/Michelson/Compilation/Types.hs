@@ -44,6 +44,7 @@ data CompilationError
   | NotInStack Symbol
   | -- Should never happen!
     NotEnoughStackSpace
+  | OpInMichelsonValue
   deriving (Show, Eq, Generic)
 
 data CompilationLog
