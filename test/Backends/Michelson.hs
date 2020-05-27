@@ -34,6 +34,12 @@ runContractWrap term ty =
   where
     newTy = J.Pi zero (primTy unitPair) ty
 
+shouldCompExp :: AnnTerm PrimTy NewPrim -> J.Type PrimTy NewPrim -> M.Value -> T.TestTree
+shouldCompExp term ty equal =
+  T.testCase
+    (show term <> " :: " <> show ty <> " should compile to value " <> show equal)
+    (Right (Right equal) T.@=? (runExpr term ty >>| Interpret.dummyInterpret))
+
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile :: Term -> Type -> Text -> T.TestTree
 shouldCompile term ty contract =
@@ -68,7 +74,12 @@ backendMichelson :: T.TestTree
 backendMichelson =
   T.testGroup
     "Backend Michelson"
-    [ identityFn,
+    [ constAppTest,
+      pairConstantTest,
+      pairNotConstantTest,
+      underExactConstTest,
+      underExactNonConstTest,
+      identityFn,
       identityApp,
       identityApp2,
       --identityExpr,
@@ -79,13 +90,31 @@ backendMichelson =
       overExactConstTest,
       overExactNonConstTest,
       identityTermTest,
-      xtwiceTest,
+      xtwiceTest1,
+      xtwiceTest2,
       oddAppTest
     ]
 
 --------------------------------------------------------------------------------
 -- Tests
 --------------------------------------------------------------------------------
+
+constAppTest :: T.TestTree
+constAppTest = shouldCompExp constApp (primTy Untyped.unit) M.ValueUnit
+
+pairNotConstantTest :: T.TestTree
+pairNotConstantTest =
+  shouldCompExp
+    pairNotConstant
+    (primTy (Untyped.pair Untyped.unit Untyped.unit))
+    (M.ValuePair M.ValueUnit M.ValueUnit)
+
+pairConstantTest :: T.TestTree
+pairConstantTest =
+  shouldCompExp
+    pairConstant
+    (primTy (Untyped.pair Untyped.unit Untyped.unit))
+    (M.ValuePair M.ValueUnit M.ValueUnit)
 
 optimiseDupDrop :: T.TestTree
 optimiseDupDrop =
@@ -142,6 +171,12 @@ identityApp =
     identityType
     "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP 1 { DROP };DIP { DROP } } };"
 
+underExactConstTest :: T.TestTree
+underExactConstTest = shouldCompExp underExactConst (primTy unit) M.ValueUnit
+
+underExactNonConstTest :: T.TestTree
+underExactNonConstTest = shouldCompExp underExactNonConst (primTy unit) M.ValueUnit
+
 addDoublePairTest :: T.TestTree
 addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
 
@@ -157,8 +192,12 @@ overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
 identityTermTest :: T.TestTree
 identityTermTest = shouldCompileTo identityTerm identityTermAns
 
-xtwiceTest :: T.TestTree
-xtwiceTest = shouldCompileTo xtwice xtwiceAns
+xtwiceTest2 :: T.TestTree
+xtwiceTest2 =
+  shouldCompExp xtwice (primTy int) (M.ValueInt 9)
+
+xtwiceTest1 :: T.TestTree
+xtwiceTest1 = shouldCompileTo xtwice xtwiceAns
 
 oddAppTest :: T.TestTree
 oddAppTest = shouldCompileTo oddApp oddAppAns
@@ -166,9 +205,6 @@ oddAppTest = shouldCompileTo oddApp oddAppAns
 dummyTest =
   runContract identityAppTerm2 identityType
     >>| Interpret.dummyInterpretContract
-
-dummyTest2 =
-  runExpr xtwice (primTy int)
 
 -- >>| Interpret.dummyInterpret
 

@@ -55,9 +55,9 @@ untypeValue val =
     TValue.VMutez m ->
       Right (Value.ValueInt (toInteger (Core.unMutez m)))
     TValue.VBool True ->
-      Right (Value.ValueTrue)
+      Right Value.ValueTrue
     TValue.VBool False ->
-      Right (Value.ValueFalse)
+      Right Value.ValueFalse
     TValue.VKeyHash h ->
       Right (Value.ValueString (Crypto.mformatKeyHash h))
     TValue.VTimestamp t ->
