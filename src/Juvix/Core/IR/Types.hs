@@ -15,13 +15,13 @@ import Juvix.Library hiding (show)
 
 data NoExt
 
-extendTerm "Term" [] [t|NoExt|] defaultExtTerm
+extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
 
-extendElim "Elim" [] [t|NoExt|] defaultExtElim
+extendElim "Elim" [] [t|NoExt|] $ \_ _ -> defaultExtElim
 
-extendValue "Value" [] [t|NoExt|] defaultExtValue
+extendValue "Value" [] [t|NoExt|] $ \_ _ -> defaultExtValue
 
-extendNeutral "Neutral" [] [t|NoExt|] defaultExtNeutral
+extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal
