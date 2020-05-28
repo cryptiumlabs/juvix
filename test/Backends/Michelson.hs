@@ -88,7 +88,9 @@ backendMichelson =
       addDoublePairTest,
       constUIntTest,
       overExactConstTest,
+      overExactConstTest2,
       overExactNonConstTest,
+      overExactNonConstTest2,
       identityTermTest,
       xtwiceTest1,
       xtwiceTest2,
@@ -185,6 +187,12 @@ constUIntTest = shouldCompileTo constUInt constUIntAns
 
 overExactConstTest :: T.TestTree
 overExactConstTest = shouldCompileTo overExactConst overExactConstAns
+
+overExactConstTest2 :: T.TestTree
+overExactConstTest2 = shouldCompExp overExactConst (primTy unit) ValueUnit
+
+overExactNonConstTest2 :: T.TestTree
+overExactNonConstTest2 = shouldCompExp overExactNonConst (primTy unit) ValueUnit
 
 overExactNonConstTest :: T.TestTree
 overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
