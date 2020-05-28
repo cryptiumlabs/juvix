@@ -22,6 +22,7 @@ type Globals primTy primVal =
 data Global primTy primVal
   = GDatatype (Datatype primTy primVal)
   | GDataCon  (DataCon  primTy primVal)
+  | GFunction (Function primTy primVal)
   deriving (Show, Eq, Generic)
 
 data Datatype primTy primVal
@@ -49,6 +50,25 @@ data DataCon primTy primVal
     { conName :: IR.GlobalName
     , conType :: IR.Value primTy primVal
     }
+  deriving (Show, Eq, Generic)
+
+data Function primTy primVal
+  = Function
+    { funName    :: IR.GlobalName
+    , funType    :: IR.Value primTy primVal
+    , funClauses :: [FunClause primTy primVal]
+    }
+  deriving (Show, Eq, Generic)
+
+data FunClause primTy primVal
+  = FunClause [Pattern primTy primVal] (IR.Term primTy primVal)
+  deriving (Show, Eq, Generic)
+
+data Pattern primTy primVal
+  = PCon IR.GlobalName [Pattern primTy primVal]
+  | PVar IR.PatternVar
+  | PDot (IR.Term primTy primVal)
+  | PPrim primVal
   deriving (Show, Eq, Generic)
 
 

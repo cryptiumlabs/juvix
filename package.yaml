@@ -95,6 +95,7 @@ default-extensions:
   - ConstraintKinds
   - EmptyDataDeriving
   - TemplateHaskell
+  - NamedFieldPuns
 
 ghc-options:
   - -ferror-spans

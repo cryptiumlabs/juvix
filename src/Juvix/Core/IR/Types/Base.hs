@@ -7,12 +7,15 @@ import Juvix.Core.Usage
 import Juvix.Library
 
 type GlobalName = Text
+type PatternVar = Int
 
 data Name
   = -- | Global variables are represented by name thus type string
     Global GlobalName
   | -- | to convert a bound variable into a free one
     Local Natural
+  | -- | Pattern variable, unique within a scope
+    Pattern PatternVar
   deriving (Show, Eq)
 
 extensible
