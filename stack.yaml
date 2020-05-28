@@ -65,7 +65,7 @@ extra-deps:
 - github: adjoint-io/poly
   commit: b75b853025ea75ba64f62f39d4524832f0117e36
 - github: cryptiumlabs/extensible-data
-  commit: fa102a8b82756da94b7227373869b0e953458230
+  commit: f49d0fe791d3479b01e4b0b80aeaf35203b1e0cf
 
 ################################################################################
 # morley deps

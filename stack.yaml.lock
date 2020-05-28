@@ -266,9 +266,6 @@ packages:
 - completed:
     size: 24276
     url: https://github.com/acid-state/safecopy/archive/1be0894daeefff5126b25c9483ce2bf21845d05b.tar.gz
-    cabal-file:
-      size: 2660
-      sha256: 3e501301303a82d9e4bc9e24b96b9a5ce60d0dc0859b59872fe72616d95e28e0
     name: safecopy
     version: 0.10.2
     sha256: 136545d2093536735d9e285e7d2f12db127da821413b3b79dfdddbcbbbb60f57
@@ -280,9 +277,6 @@ packages:
 - completed:
     size: 51947
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
-    cabal-file:
-      size: 3146
-      sha256: f7e1e4edbe53a5b982e4ccf6a796881a61df4e959bd372659e6958e5c381c9ca
     name: sr-extra
     version: '1.65'
     sha256: e82c3443094ace54328f1380df201ea54a7a40b893ebe82dabc9d51120ef8ff4
@@ -294,9 +288,6 @@ packages:
 - completed:
     size: 66205
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-    cabal-file:
-      size: 4116
-      sha256: 980e6e2d63104c25a8660c2f50c6dda760a9c600cc001c9179d618ceb1cf7850
     name: z3
     version: '408.0'
     sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
@@ -308,9 +299,6 @@ packages:
 - completed:
     size: 2258
     url: https://github.com/cwgoes/uuid-orphans/archive/e23b58b46affb978c17a0eb3e760d28b058658ce.tar.gz
-    cabal-file:
-      size: 1063
-      sha256: 1358ab8f2415363e279b00736fc3e0ef10006a555b7dcbb35f2f271a2fb88e20
     name: uuid-orphans
     version: 1.4.4
     sha256: c5d4e6de0e3d5538ce4ac493ef7213bf9b689ddff45d45457ca91b09834462f0
@@ -322,9 +310,6 @@ packages:
 - completed:
     size: 13404
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
-    cabal-file:
-      size: 2263
-      sha256: b62cbe842800d5f07ee3c9ed3600bf7eb17dab2380ddcd2471ff83a19b459185
     name: jsonschema-gen
     version: 0.4.1.0
     sha256: fe5cab6b471e30feff3708a780d287357ccc80ae7278ea663bb3b99254a4ef4d
@@ -336,9 +321,6 @@ packages:
 - completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
-    cabal-file:
-      size: 3498
-      sha256: 86b5ab4efb4cb0367aebc7b25237f1066aec701cd2c292597d70a3ae4c9bc39a
     name: pairing
     version: 1.0.0
     sha256: 39b4fd7914c53bdad59ba03d9060f13d926599641b5b67363f47a6f1b3a31db7
@@ -350,9 +332,6 @@ packages:
 - completed:
     size: 77092
     url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
-    cabal-file:
-      size: 7856
-      sha256: fb8fa2120b0330bf4cb07c8511ab7fe6d046ac508440b326db2a7314dd49c5d9
     name: elliptic-curve
     version: 0.3.1
     sha256: bf05e963f92daf3b88f32e756ab1bfa0b8fa9683ac9b30bf202aca3228e9acf1
@@ -364,9 +343,6 @@ packages:
 - completed:
     size: 20311
     url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
-    cabal-file:
-      size: 3581
-      sha256: 0ff6cf1c79f37639c71148f3213599ae310abc4e8519970b2ca587293e0d3fbd
     name: galois-field
     version: 1.0.1
     sha256: a67df5de45445ec454d93c6c94f8e24327a6b6a8471bdf3c1f9ebb43ca9dbddb
@@ -378,9 +354,6 @@ packages:
 - completed:
     size: 16425
     url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
-    cabal-file:
-      size: 4250
-      sha256: d08dc4255ec4164d8f1f54c70b29997dd67a7bc1ce547ff89efa16be19f8a48d
     name: sonic
     version: 0.3.0
     sha256: a2004eb9ea30eba13294c768106847aa6cb1e5cdddfb763cd397ceb6da5c04b9
@@ -392,9 +365,6 @@ packages:
 - completed:
     size: 24372
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
-    cabal-file:
-      size: 2085
-      sha256: d4bef2a796a5567b888e568e8c3117e4c2f5d1108b803ec46bd7804d593ab869
     name: poly
     version: 0.3.2.0
     sha256: 6940270f46bc6b54c52397e837b9bcee87c90002665cc2a1302964494153d461
@@ -404,19 +374,16 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 10483
-    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
-    cabal-file:
-      size: 2058
-      sha256: a457da0b5a07a04710a1f68c633feefa6f999cdc2e624687a3781f6087aeaa19
+    size: 13483
+    url: https://github.com/cryptiumlabs/extensible-data/archive/f49d0fe791d3479b01e4b0b80aeaf35203b1e0cf.tar.gz
     name: extensible-data
     version: 0.1.0
-    sha256: 72a1c07313350e423c2a56beac41bddfc4b9b32f7e4a478313455d7e14796a4e
+    sha256: 4a34dd0d91e59eef476c5036d30af6896f740580e8ebee0aaa51454d645726eb
     pantry-tree:
-      size: 891
-      sha256: dbbdaeb19d5b03d600910099204032bf30fad7a0889c6f68e697539bf30ebcf2
+      size: 1420
+      sha256: 868947941dfaee5fdd97e3cbcb675026e0dad864ed02f42253914ced6a77ce02
   original:
-    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
+    url: https://github.com/cryptiumlabs/extensible-data/archive/f49d0fe791d3479b01e4b0b80aeaf35203b1e0cf.tar.gz
 - completed:
     hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:
@@ -433,9 +400,6 @@ packages:
     hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
 - completed:
     subdir: tezos-bake-monitor-lib
-    cabal-file:
-      size: 4115
-      sha256: e56a10ede88e495c1a37d3601591ebd18bbccfa3a702ab67822751b8f44cff29
     name: tezos-bake-monitor-lib
     version: 0.1.0.0
     git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
