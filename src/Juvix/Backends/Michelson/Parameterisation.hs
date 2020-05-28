@@ -9,7 +9,11 @@ import qualified Data.Text as Text
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
+import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Core.Types as CoreTypes
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
@@ -17,8 +21,6 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
-import qualified Juvix.Core.Types as CoreTypes
 import Prelude (String)
 
 -- TODO: Add rest of primitive values.
@@ -39,23 +41,39 @@ constType v =
 arity :: PrimVal -> Int
 arity = pred . length . typeOf
 
-applyProper
-  :: PrimVal
-  -> [PrimVal]
-  -> Either
-       (CoreTypes.PipelineError PrimTy PrimVal)
-       (ErasedCoreTypes.Term PrimTy PrimVal)
+applyProper ::
+  PrimVal ->
+  [PrimVal] ->
+  Either
+    (CoreTypes.PipelineError PrimTy PrimVal)
+    (ErasedCoreTypes.PrimRetrun PrimVal)
 applyProper fun args =
   case fun of
     Constant _i ->
       case length args of
         0 ->
-          Right (ErasedCoreTypes.Prim fun)
+          Right (ErasedCoreTypes.PrimRet fun)
         _x ->
           Left (CoreTypes.TypecheckerError "Applied a constant to argument")
-    Inst instruction -> undefined
-    
+    Inst instruction ->
+      let inst = Instructions.toNumArgs instruction
+       in case inst `compare` fromIntegral (length args) of
+            -- we should never take more arguments than primitve could handle
+            GT ->
+              "applied too many arguments to a Michelson Primitive"
+                |> CoreTypes.TypecheckerError
+                |> Left
+            LT ->
+              inst - fromIntegral (length args)
+                |> ErasedCoreTypes.Cont fun args
+                |> Right
+            -- we have exactly the right number of arguments, call the interpreter!
+            EQ ->
+              undefined
 
+-- can't call it this way need to go through the top level :(
+-- let (f, _) = Run.primToFargs fun undefined in
+--   undefined (DSL.unFun f (undefined args))
 
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.

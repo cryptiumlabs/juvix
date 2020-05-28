@@ -30,3 +30,13 @@ data AnnTerm primTy primVal
         term :: Term primTy primVal
       }
   deriving (Show, Eq, Generic)
+
+data PrimRetrun primVal
+  = -- arguments left
+    Cont
+      { fun :: primVal,
+        args :: [primVal],
+        numLeft :: Natural
+      }
+  | PrimRet primVal
+  deriving (Show, Eq, Generic)
