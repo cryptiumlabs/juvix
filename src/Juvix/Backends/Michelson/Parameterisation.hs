@@ -17,6 +17,8 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
+import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
+import qualified Juvix.Core.Types as CoreTypes
 import Prelude (String)
 
 -- TODO: Add rest of primitive values.
@@ -36,6 +38,24 @@ constType v =
 
 arity :: PrimVal -> Int
 arity = pred . length . typeOf
+
+applyProper
+  :: PrimVal
+  -> [PrimVal]
+  -> Either
+       (CoreTypes.PipelineError PrimTy PrimVal)
+       (ErasedCoreTypes.Term PrimTy PrimVal)
+applyProper fun args =
+  case fun of
+    Constant _i ->
+      case length args of
+        0 ->
+          Right (ErasedCoreTypes.Prim fun)
+        _x ->
+          Left (CoreTypes.TypecheckerError "Applied a constant to argument")
+    Inst instruction -> undefined
+    
+
 
 -- TODO: Use interpreter for this, or just write it (simple enough).
 -- Might need to add curried versions of built-in functions.
