@@ -22,7 +22,7 @@ dependencies:
   - extensible-data
   - capability >= 0.2.0.0
   ###########################
-  # Depedency for OS
+  # Dependency for OS
   ###########################
   - turtle
   - time
