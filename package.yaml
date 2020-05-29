@@ -33,7 +33,7 @@ dependencies:
   - elliptic-curve
   - sonic
   ###########################
-  # Depedency for Structs
+  # Dependency for Structs
   ###########################
   - text
   - mtl
