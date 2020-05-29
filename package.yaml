@@ -58,7 +58,7 @@ dependencies:
   - llvm-hs-pure
   - llvm-hs-pretty
   ###########################
-  # Depedency for Morley
+  # Dependency for Morley
   ###########################
   - morley
   - vinyl
