@@ -45,7 +45,7 @@ dependencies:
   - bytestring
   - enummapset
   ###########################
-  # Depedency for Parsers
+  # Dependency for Parsers
   ###########################
   - parsec
   - attoparsec
