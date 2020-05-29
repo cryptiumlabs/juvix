@@ -11,6 +11,7 @@ import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
+import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Types as CoreTypes
@@ -42,17 +43,17 @@ arity :: PrimVal -> Int
 arity = pred . length . typeOf
 
 applyProper ::
-  PrimVal ->
-  [PrimVal] ->
+  Prim.Take PrimTy PrimVal ->
+  [Prim.Take PrimTy PrimVal] ->
   Either
     (CoreTypes.PipelineError PrimTy PrimVal)
-    (ErasedCoreTypes.PrimRetrun PrimVal)
+    (Prim.Return PrimTy PrimVal)
 applyProper fun args =
-  case fun of
+  case Prim.term fun of
     Constant _i ->
       case length args of
         0 ->
-          Right (ErasedCoreTypes.PrimRet fun)
+          Right (Prim.Return (Prim.term fun))
         _x ->
           Left (CoreTypes.TypecheckerError "Applied a constant to argument")
     Inst instruction ->
@@ -65,7 +66,7 @@ applyProper fun args =
                 |> Left
             LT ->
               inst - fromIntegral (length args)
-                |> ErasedCoreTypes.Cont fun args
+                |> Prim.Cont fun args
                 |> Right
             -- we have exactly the right number of arguments, call the interpreter!
             EQ ->
