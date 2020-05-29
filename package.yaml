@@ -27,7 +27,7 @@ dependencies:
   - turtle
   - time
   ###########################
-  # Depedency for Arithmetic
+  # Dependency for Arithmetic
   ###########################
   - bulletproofs
   - elliptic-curve
