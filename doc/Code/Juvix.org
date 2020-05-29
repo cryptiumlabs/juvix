@@ -288,11 +288,13 @@ This module provides a default contract environment
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
+  + [[Michelson/Compilation]]
   + [[Michelson/Compilation/Types]]
   + [[Michelson/Contract]]
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[InstructionsEff]]
+  + [[Interpret]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[Core/Types]]

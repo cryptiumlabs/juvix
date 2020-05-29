@@ -6,11 +6,13 @@ where
 
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
+import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
+import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
 import qualified Juvix.Core.Types as Core
@@ -70,7 +72,19 @@ applyProper fun args =
                 |> Right
             -- we have exactly the right number of arguments, call the interpreter!
             EQ ->
-              undefined
+              let newTerm =
+                    Run.applyPrimOnArgs (Prim.toAnn fun) (Prim.toAnn <$> args)
+                  -- TODO ∷ do something with the logs!?
+                  (compd, _log) = Compilation.compileExpr newTerm
+               in case compd >>= Interpreter.dummyInterpret of
+                    Right x ->
+                      Constant x
+                        |> Prim.Return
+                        |> Right
+                    -- TODO :: promote this error
+                    Left err -> undefined
+
+-- translate our code into a valid form
 
 -- can't call it this way need to go through the top level :(
 -- let (f, _) = Run.primToFargs fun undefined in

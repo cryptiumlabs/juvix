@@ -24,9 +24,9 @@ runContract :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
 runContract term ty =
   fst (compileContract term ty) >>| fst
 
-runExpr :: Term -> Type -> Either DSL.CompError EmptyInstr
-runExpr term ty =
-  fst (compileExpr term ty)
+runExpr :: Term -> Either DSL.CompError EmptyInstr
+runExpr term =
+  fst (compileExpr term)
 
 runContractWrap :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
 runContractWrap term ty =
@@ -34,11 +34,11 @@ runContractWrap term ty =
   where
     newTy = J.Pi zero (primTy unitPair) ty
 
-shouldCompExp :: AnnTerm PrimTy NewPrim -> J.Type PrimTy NewPrim -> M.Value -> T.TestTree
-shouldCompExp term ty equal =
+shouldCompExp :: AnnTerm PrimTy NewPrim -> M.Value -> T.TestTree
+shouldCompExp term equal =
   T.testCase
-    (show term <> " :: " <> show ty <> " should compile to value " <> show equal)
-    (Right (Right equal) T.@=? (runExpr term ty >>| Interpret.dummyInterpret))
+    (show term <> " :: " <> " should compile to value " <> show equal)
+    (Right equal T.@=? (runExpr term >>= Interpret.dummyInterpret))
 
 -- TODO: Switch these tests to use the interpreter (ideally through the parameterisation :) ).
 shouldCompile :: Term -> Type -> Text -> T.TestTree
@@ -53,11 +53,11 @@ shouldOptimise instr opt =
     (show instr <> " should optimise to " <> show opt)
     (opt T.@=? optimiseSingle instr)
 
-shouldCompileExpr :: Term -> Type -> T.TestTree
-shouldCompileExpr term ty =
+shouldCompileExpr :: Term -> T.TestTree
+shouldCompileExpr term =
   T.testCase
     (show term <> " should compile to an instruction sequence")
-    (isRight (fst (compileExpr term ty)) T.@? "failed to compile")
+    (isRight (fst (compileExpr term)) T.@? "failed to compile")
 
 -- TODO replace this with semantic meaning not exact extraction meaning!
 shouldCompileTo :: Term -> [Op] -> T.TestTree
@@ -102,20 +102,18 @@ backendMichelson =
 --------------------------------------------------------------------------------
 
 constAppTest :: T.TestTree
-constAppTest = shouldCompExp constApp (primTy Untyped.unit) M.ValueUnit
+constAppTest = shouldCompExp constApp M.ValueUnit
 
 pairNotConstantTest :: T.TestTree
 pairNotConstantTest =
   shouldCompExp
     pairNotConstant
-    (primTy (Untyped.pair Untyped.unit Untyped.unit))
     (M.ValuePair M.ValueUnit M.ValueUnit)
 
 pairConstantTest :: T.TestTree
 pairConstantTest =
   shouldCompExp
     pairConstant
-    (primTy (Untyped.pair Untyped.unit Untyped.unit))
     (M.ValuePair M.ValueUnit M.ValueUnit)
 
 optimiseDupDrop :: T.TestTree
@@ -134,19 +132,16 @@ identityExpr :: T.TestTree
 identityExpr =
   shouldCompileExpr
     identityTerm2
-    identityType2
 
 identityExpr2 :: T.TestTree
 identityExpr2 =
   shouldCompileExpr
     identityAppExpr
-    identityType2
 
 identityExpr3 :: T.TestTree
 identityExpr3 =
   shouldCompileExpr
     identityAppExpr2
-    identityType2
 
 identityApp2 :: T.TestTree
 identityApp2 =
@@ -157,7 +152,7 @@ identityApp2 =
 
 unitTest :: T.TestTree
 unitTest =
-  shouldCompileExpr unitExpr1 (J.PrimTy (PrimTy unit))
+  shouldCompileExpr unitExpr1
 
 identityFn :: T.TestTree
 identityFn =
@@ -174,10 +169,10 @@ identityApp =
     "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP 1 { DROP };DIP { DROP } } };"
 
 underExactConstTest :: T.TestTree
-underExactConstTest = shouldCompExp underExactConst (primTy unit) M.ValueUnit
+underExactConstTest = shouldCompExp underExactConst M.ValueUnit
 
 underExactNonConstTest :: T.TestTree
-underExactNonConstTest = shouldCompExp underExactNonConst (primTy unit) M.ValueUnit
+underExactNonConstTest = shouldCompExp underExactNonConst M.ValueUnit
 
 addDoublePairTest :: T.TestTree
 addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
@@ -189,10 +184,10 @@ overExactConstTest :: T.TestTree
 overExactConstTest = shouldCompileTo overExactConst overExactConstAns
 
 overExactConstTest2 :: T.TestTree
-overExactConstTest2 = shouldCompExp overExactConst (primTy unit) ValueUnit
+overExactConstTest2 = shouldCompExp overExactConst ValueUnit
 
 overExactNonConstTest2 :: T.TestTree
-overExactNonConstTest2 = shouldCompExp overExactNonConst (primTy unit) ValueUnit
+overExactNonConstTest2 = shouldCompExp overExactNonConst ValueUnit
 
 overExactNonConstTest :: T.TestTree
 overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
@@ -202,7 +197,7 @@ identityTermTest = shouldCompileTo identityTerm identityTermAns
 
 xtwiceTest2 :: T.TestTree
 xtwiceTest2 =
-  shouldCompExp xtwice (primTy int) (M.ValueInt 9)
+  shouldCompExp xtwice (M.ValueInt 9)
 
 xtwiceTest1 :: T.TestTree
 xtwiceTest1 = shouldCompileTo xtwice xtwiceAns
@@ -210,11 +205,9 @@ xtwiceTest1 = shouldCompileTo xtwice xtwiceAns
 oddAppTest :: T.TestTree
 oddAppTest = shouldCompileTo oddApp oddAppAns
 
-dummyTest =
-  runContract identityAppTerm2 identityType
-    >>| Interpret.dummyInterpretContract
-
--- >>| Interpret.dummyInterpret
+-- dummyTest =
+--   runContract identityAppTerm2 identityType
+--     >>| Interpret.dummyInterpretContract
 
 --------------------------------------------------------------------------------
 -- Terms to test against
@@ -570,6 +563,7 @@ oddApp =
 
 -- this should really be a pair we are sending in, but we can let it compile
 -- (wrongly typed of course), by instead sending in a non constant unit
+identityCall :: AnnTerm PrimTy NewPrim
 identityCall =
   Ann one (primTy Untyped.unit) $
     J.AppM identityTerm2 [push1Int 3]

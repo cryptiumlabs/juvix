@@ -66,6 +66,12 @@ inst (Types.Ann _usage ty t) =
           consVal (Env.Constant m) ty
           pure (Env.Constant m)
 
+applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
+applyPrimOnArgs prim arguments =
+  let newTerm = Ann.AppM prim arguments
+      retType = Utils.piToReturnType (Ann.type' prim)
+   in Ann.Ann one retType newTerm
+
 add,
   mul,
   sub,
