@@ -52,7 +52,7 @@ dependencies:
   - attoparsec-expr
   - aeson
   ###########################
-  # Depedency for LLVM
+  # Dependency for LLVM
   ###########################
   - llvm-hs
   - llvm-hs-pure
