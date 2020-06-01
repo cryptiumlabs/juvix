@@ -56,12 +56,6 @@ data CompilationLog
 data EmptyInstr where
   EmptyInstr :: forall b. MT.Instr '[] b -> EmptyInstr
 
-data EmptyInstr3 where
-  EmptyInstr3 :: forall b. (MT.SingI b) => MT.Instr '[] b -> EmptyInstr3
-
-data EmptyInstr2 where
-  EmptyInstr2 :: forall b c. (MT.SingI b) => MT.Instr '[] (b ': c) -> EmptyInstr2
-
 data SomeInstr where
   SomeInstr :: forall a b. MT.Instr a b -> SomeInstr
 
