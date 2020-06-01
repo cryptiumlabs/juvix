@@ -34,8 +34,8 @@ runContractWrap term ty =
   where
     newTy = J.Pi zero (primTy unitPair) ty
 
-shouldCompExp :: AnnTerm PrimTy NewPrim -> M.Value -> T.TestTree
-shouldCompExp term equal =
+interpretExpression :: AnnTerm PrimTy NewPrim -> M.Value -> T.TestTree
+interpretExpression term equal =
   T.testCase
     (show term <> " :: " <> " should compile to value " <> show equal)
     (Right equal T.@=? (runExpr term >>= Interpret.dummyInterpret))
@@ -102,17 +102,17 @@ backendMichelson =
 --------------------------------------------------------------------------------
 
 constAppTest :: T.TestTree
-constAppTest = shouldCompExp constApp M.ValueUnit
+constAppTest = interpretExpression constApp M.ValueUnit
 
 pairNotConstantTest :: T.TestTree
 pairNotConstantTest =
-  shouldCompExp
+  interpretExpression
     pairNotConstant
     (M.ValuePair M.ValueUnit M.ValueUnit)
 
 pairConstantTest :: T.TestTree
 pairConstantTest =
-  shouldCompExp
+  interpretExpression
     pairConstant
     (M.ValuePair M.ValueUnit M.ValueUnit)
 
@@ -169,10 +169,10 @@ identityApp =
     "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP 1 { DROP };DIP { DROP } } };"
 
 underExactConstTest :: T.TestTree
-underExactConstTest = shouldCompExp underExactConst M.ValueUnit
+underExactConstTest = interpretExpression underExactConst M.ValueUnit
 
 underExactNonConstTest :: T.TestTree
-underExactNonConstTest = shouldCompExp underExactNonConst M.ValueUnit
+underExactNonConstTest = interpretExpression underExactNonConst M.ValueUnit
 
 addDoublePairTest :: T.TestTree
 addDoublePairTest = shouldCompileTo addDoublePairs addDoublePairsAns
@@ -184,10 +184,10 @@ overExactConstTest :: T.TestTree
 overExactConstTest = shouldCompileTo overExactConst overExactConstAns
 
 overExactConstTest2 :: T.TestTree
-overExactConstTest2 = shouldCompExp overExactConst ValueUnit
+overExactConstTest2 = interpretExpression overExactConst ValueUnit
 
 overExactNonConstTest2 :: T.TestTree
-overExactNonConstTest2 = shouldCompExp overExactNonConst ValueUnit
+overExactNonConstTest2 = interpretExpression overExactNonConst ValueUnit
 
 overExactNonConstTest :: T.TestTree
 overExactNonConstTest = shouldCompileTo overExactNonConst overExactNonConstAns
@@ -197,7 +197,7 @@ identityTermTest = shouldCompileTo identityTerm identityTermAns
 
 xtwiceTest2 :: T.TestTree
 xtwiceTest2 =
-  shouldCompExp xtwice (M.ValueInt 9)
+  interpretExpression xtwice (M.ValueInt 9)
 
 xtwiceTest1 :: T.TestTree
 xtwiceTest1 = shouldCompileTo xtwice xtwiceAns
