@@ -297,7 +297,6 @@ This module provides a default contract environment
   + [[InstructionsEff]]
   + [[Interpret]]
   + [[Prim]]
-  + [[ErasedAnn/Types]]
   + [[Core/Types]]
   + [[Core/Types]]
   + [[Library]]

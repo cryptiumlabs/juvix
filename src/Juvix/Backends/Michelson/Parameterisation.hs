@@ -15,7 +15,6 @@ import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.ErasedAnn.Types as ErasedCoreTypes
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Types as CoreTypes
 import Juvix.Library hiding (many, try)
@@ -84,6 +83,8 @@ applyProper fun args =
                         |> Right
                     -- TODO :: promote this error
                     Left err -> CoreTypes.PrimError err |> Left
+    x ->
+      applyProper (fun {Prim.term = Run.newPrimToInstrErr x}) args
 
 -- translate our code into a valid form
 

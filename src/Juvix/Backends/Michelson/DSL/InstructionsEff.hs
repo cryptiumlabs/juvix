@@ -222,6 +222,58 @@ primToFargs (Types.Inst inst) ty =
         Instr.PUSH {} -> const pushConstant
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
+primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
+
+newPrimToInstrErr :: Types.NewPrim -> Types.NewPrim
+newPrimToInstrErr x =
+  let inst =
+        case x of
+          Types.AddN -> Instructions.add
+          Types.AddI -> Instructions.add
+          Types.AddTimeStamp -> Instructions.add
+          Types.AddMutez -> Instructions.add
+          Types.NegN -> Instructions.neg
+          Types.NegI -> Instructions.neg
+          Types.SubN -> Instructions.sub
+          Types.SubI -> Instructions.sub
+          Types.SubMutez -> Instructions.sub
+          Types.SubTimeStamp -> Instructions.sub
+          Types.MulI -> Instructions.mul
+          Types.MulN -> Instructions.mul
+          Types.MulMutez -> Instructions.mul
+          Types.EDivI -> Instructions.ediv
+          Types.EDivN -> Instructions.ediv
+          Types.EDivMutez -> Instructions.ediv
+          Types.OrB -> Instructions.or
+          Types.ORI -> Instructions.or
+          Types.AndI -> Instructions.and
+          Types.AndB -> Instructions.and
+          Types.XorI -> Instructions.xor
+          Types.XorB -> Instructions.xor
+          Types.NotI -> Instructions.not
+          Types.NotB -> Instructions.not
+          Types.CompareI -> Instructions.compare
+          Types.CompareS -> Instructions.compare
+          Types.CompareP -> Instructions.compare
+          Types.CompareTimeStamp -> Instructions.compare
+          Types.CompareMutez -> Instructions.compare
+          Types.CompareBytes -> Instructions.compare
+          Types.CompareHash -> Instructions.compare
+          Types.SizeMap -> Instructions.size
+          Types.SizeSet -> Instructions.size
+          Types.SizeList -> Instructions.size
+          Types.SizeBytes -> Instructions.size
+          Types.SizeS -> Instructions.size
+          Types.MemSet -> Instructions.mem
+          Types.MemMap -> Instructions.mem
+          Types.UpdateSet -> Instructions.update
+          Types.UpdateMap -> Instructions.update
+          Types.UpdateBMap -> Instructions.update
+          Types.GetMap -> Instructions.get
+          Types.GetBMap -> Instructions.get
+          Types.Constant _ -> error "tried to convert a to prim"
+          Types.Inst _ -> error "tried to convert an inst to an inst!"
+   in Instructions.toNewPrimErr inst
 
 appM :: Env.Reduction m => Types.NewTerm -> [Types.NewTerm] -> m Env.Expanded
 appM form@(Types.Ann _u ty t) args =

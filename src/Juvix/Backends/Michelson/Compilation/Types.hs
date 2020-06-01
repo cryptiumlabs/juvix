@@ -21,6 +21,49 @@ newtype PrimTy
 data NewPrim
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
+  | AddN
+  | AddI
+  | AddTimeStamp
+  | AddMutez
+  | NegN
+  | NegI
+  | SubN
+  | SubI
+  | SubMutez
+  | SubTimeStamp
+  | MulI
+  | MulN
+  | MulMutez
+  | EDivI
+  | EDivN
+  | EDivMutez
+  | OrB
+  | ORI
+  | AndI
+  | AndB
+  | XorI
+  | XorB
+  | NotI
+  | NotB
+  | CompareI
+  | CompareS
+  | CompareP
+  | CompareTimeStamp
+  | CompareMutez
+  | CompareBytes
+  | CompareHash
+  | SizeMap
+  | SizeSet
+  | SizeList
+  | SizeBytes
+  | SizeS
+  | MemSet
+  | MemMap
+  | UpdateSet
+  | UpdateMap
+  | UpdateBMap
+  | GetMap
+  | GetBMap
   deriving (Show, Eq, Generic)
 
 type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
