@@ -290,6 +290,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Michelson/Contract]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -316,6 +317,7 @@ This module provides a default contract environment
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
+  + [[Core/Types]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson

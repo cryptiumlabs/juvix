@@ -12,11 +12,12 @@ import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Parameterisation
 import Juvix.Library
 
-data PipelineError primTy primVal
+data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
   | TypecheckerError Text
   | EACError (EAC.Errors primTy primVal)
   | ErasureError Erasure.Error
+  | PrimError compErr
   deriving (Show, Generic)
 
 data PipelineLog primTy primVal
@@ -24,16 +25,18 @@ data PipelineLog primTy primVal
   | LogRanZ3 Double
   deriving (Show, Generic)
 
-data TermAssignment primTy primVal
+-- compErr serves to resolve the compilation error type
+-- needed to promote a backend specific compilation error
+data TermAssignment primTy primVal compErr
   = Assignment
       { term :: EC.Term primVal,
         assignment :: EC.TypeAssignment primTy
       }
   deriving (Show, Generic)
 
-data AssignWithType primTy primVal
+data AssignWithType primTy primVal compErr
   = WithType
-      { termAssign :: TermAssignment primTy primVal,
+      { termAssign :: TermAssignment primTy primVal compErr,
         type' :: EC.Type primTy
       }
   deriving (Show, Generic)

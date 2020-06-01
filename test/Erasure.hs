@@ -2,6 +2,7 @@ module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Types as Core
@@ -9,6 +10,9 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+
+type EraseureType primTy primVal =
+  Either Erasure.Error (Core.AssignWithType primTy primVal ())
 
 shouldEraseTo ::
   forall primTy primVal.
@@ -21,7 +25,11 @@ shouldEraseTo parameterisation (term, usage, ty) erased =
   T.testCase
     (show (term, usage, ty) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? ((Core.term . Core.termAssign) |<< Erasure.erase parameterisation term usage ty)
+        T.@=? ( (Core.term . Core.termAssign)
+                  |<< ( Erasure.erase parameterisation term usage ty ::
+                          EraseureType primTy primVal
+                      )
+              )
     )
 
 erasureTests :: T.TestTree

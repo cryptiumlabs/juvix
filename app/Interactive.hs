@@ -65,7 +65,7 @@ handleSpecial str cont =
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty _)) -> do
-          erased <- liftIO (exec (Core.typecheckErase term usage ty) Nat.t)
+          erased <- liftIO (exec (Core.typecheckErase term usage ty) Nat.t :: Exec Nat.Ty Nat.Val ())
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
       cont
@@ -74,7 +74,7 @@ handleSpecial str cont =
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty _)) -> do
-          erased <- liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t)
+          erased <- liftIO (exec (Core.typecheckAffineErase term usage ty) Nat.t :: ExecTerm Nat.Ty Nat.Val ())
           H.outputStrLn (show erased)
           case erased of
             (Right (Core.Assignment term _), _) ->

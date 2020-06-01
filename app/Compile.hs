@@ -12,6 +12,14 @@ import Juvix.Library
 import Options
 import Types
 
+execMichelson ::
+  Core.T ->
+  HR.Term Param.PrimTy Param.PrimVal ->
+  HR.Term Param.PrimTy Param.PrimVal ->
+  Exec Param.PrimTy Param.PrimVal Param.CompErr
+execMichelson usage term ty =
+  liftIO (exec (Core.typecheckErase term usage ty) Param.michelson)
+
 typecheck ::
   FilePath -> Backend -> IO (Erased.Term Param.PrimVal, Erased.Type Param.PrimTy)
 typecheck fin Michelson = do
@@ -19,7 +27,7 @@ typecheck fin Michelson = do
   let parsed = HR.generateParser Param.michelson (T.unpack source)
   case parsed of
     Just (HR.Elim (HR.Ann usage term ty _)) -> do
-      erased <- liftIO (exec (Core.typecheckErase term usage ty) Param.michelson)
+      erased <- execMichelson usage term ty
       case erased of
         (Right (Core.WithType (Core.Assignment term _assign) ty), _) ->
           pure (term, ty)

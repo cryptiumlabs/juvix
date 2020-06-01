@@ -7,6 +7,7 @@ where
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
+import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
@@ -48,7 +49,7 @@ applyProper ::
   Prim.Take PrimTy PrimVal ->
   [Prim.Take PrimTy PrimVal] ->
   Either
-    (CoreTypes.PipelineError PrimTy PrimVal)
+    (CoreTypes.PipelineError PrimTy PrimVal CompilationError)
     (Prim.Return PrimTy PrimVal)
 applyProper fun args =
   case Prim.term fun of
@@ -82,7 +83,7 @@ applyProper fun args =
                         |> Prim.Return
                         |> Right
                     -- TODO :: promote this error
-                    Left err -> undefined
+                    Left err -> CoreTypes.PrimError err |> Left
 
 -- translate our code into a valid form
 
@@ -143,3 +144,5 @@ michelson =
     parseVal
     reservedNames
     reservedOpNames
+
+type CompErr = CompTypes.CompilationError

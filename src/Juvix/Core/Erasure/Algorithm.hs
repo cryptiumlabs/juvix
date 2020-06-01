@@ -19,12 +19,11 @@ type TermInfo primTy primVal result =
   result
 
 erase ::
-  forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (Show primTy, Show primVal, Eq primTy, Eq primVal, Show compErr) =>
   TermInfo primTy primVal
     ( Either
         Erasure.Error
-        (Core.AssignWithType primTy primVal)
+        (Core.AssignWithType primTy primVal compErr)
     )
 erase parameterisation term usage ty =
   let (erased, env) = exec (eraseTerm parameterisation term usage ty)
