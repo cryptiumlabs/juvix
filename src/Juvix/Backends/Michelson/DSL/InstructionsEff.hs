@@ -65,6 +65,10 @@ inst (Types.Ann _usage ty t) =
         Types.Constant m -> do
           consVal (Env.Constant m) ty
           pure (Env.Constant m)
+        -- We lose exhasution but it's a big match :(
+        x ->
+          constructPrim (newPrimToInstrErr x) ty
+
 
 applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
 applyPrimOnArgs prim arguments =
