@@ -22,18 +22,18 @@ dependencies:
   - extensible-data
   - capability >= 0.2.0.0
   ###########################
-  # Depedency for OS
+  # Dependency for OS
   ###########################
   - turtle
   - time
   ###########################
-  # Depedency for Arithmetic
+  # Dependency for Arithmetic
   ###########################
   - bulletproofs
   - elliptic-curve
   - sonic
   ###########################
-  # Depedency for Structs
+  # Dependency for Structs
   ###########################
   - text
   - mtl
@@ -45,20 +45,20 @@ dependencies:
   - bytestring
   - enummapset
   ###########################
-  # Depedency for Parsers
+  # Dependency for Parsers
   ###########################
   - parsec
   - attoparsec
   - attoparsec-expr
   - aeson
   ###########################
-  # Depedency for LLVM
+  # Dependency for LLVM
   ###########################
   - llvm-hs
   - llvm-hs-pure
   - llvm-hs-pretty
   ###########################
-  # Depedency for Morley
+  # Dependency for Morley
   ###########################
   - morley
   - vinyl
