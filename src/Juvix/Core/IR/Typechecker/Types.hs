@@ -165,25 +165,25 @@ data T
 
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->
-  let typed = Just [[t|Annotation $primTy $primVal|]] in
-  IR.defaultExtTerm
-    { IR.typeStar = typed,
-      IR.typePrimTy = typed,
-      IR.typePi = typed,
-      IR.typeLam = typed,
-      IR.typeElim = typed
-    }
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+     in IR.defaultExtTerm
+          { IR.typeStar = typed,
+            IR.typePrimTy = typed,
+            IR.typePi = typed,
+            IR.typeLam = typed,
+            IR.typeElim = typed
+          }
 
 IR.extendElim "Elim" [] [t|T|] $
   \primTy primVal ->
-  let typed = Just [[t|Annotation $primTy $primVal|]] in
-  IR.defaultExtElim
-    { IR.typeBound = typed,
-      IR.typeFree = typed,
-      IR.typePrim = typed,
-      IR.typeApp = typed,
-      IR.typeAnn = typed
-    }
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+     in IR.defaultExtElim
+          { IR.typeBound = typed,
+            IR.typeFree = typed,
+            IR.typePrim = typed,
+            IR.typeApp = typed,
+            IR.typeAnn = typed
+          }
 
 getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann

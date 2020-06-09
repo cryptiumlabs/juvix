@@ -538,8 +538,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
 *** HRAnn
 - _Relies on_
@@ -553,8 +553,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** IR
@@ -569,14 +569,14 @@ the substitution functions (substTerm and substElim).
 - _Relies on_
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
   + [[IR/Types]]
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
 **** Typechecker
 - _Relies on_
@@ -602,17 +602,17 @@ Transformations between different extensions.
 ***** Types <<Typechecker/Types>>
 - _Relies on_
   + [[IR/Types]]
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
-***** Base
+***** Base <<IR/Types/Base>>
 - _Relies on_
   + [[Usage]]
   + [[Library]]
@@ -627,8 +627,8 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
@@ -691,6 +691,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Lexer]]
   + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
   + [[Library]]
 *** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
@@ -700,7 +701,40 @@ Quantitative type implementation inspired by
 - Note :: The names for the types in =ArrowData= are stored in the
           =ArrowGen= and not in =NamedType=
 - _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+**** Base <<Frontend/Types/Base>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
   + [[Usage]]
+  + [[Library]]
+** FrontendDesugar
+*** Abstractions
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+*** RemoveCond
+**** Transform <<RemoveCond/Transform>>
+- _Relies on_
+  + [[RemoveCond/Types]]
+  + [[RemoveGuard/Types]]
+  + [[Library]]
+**** Types <<RemoveCond/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[Library]]
+*** RemoveGuard
+**** Transform <<RemoveGuard/Transform>>
+**** Types <<RemoveGuard/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
   + [[Library]]
 ** INetIR
 - _Relies on_

@@ -95,6 +95,11 @@ library:
     - Juvix
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
+    - Juvix.FrontendDesugar.RemoveGuard.Transform
+    - Juvix.FrontendDesugar.RemoveGuard.Types
+    - Juvix.FrontendDesugar.Abstractions
+    - Juvix.FrontendDesugar.RemoveCond.Types
+    - Juvix.FrontendDesugar.RemoveCond.Transform
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core

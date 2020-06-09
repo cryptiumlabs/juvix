@@ -16,12 +16,12 @@ data Annotation primTy primVal
 
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->
-  IR.defaultExtTerm
-    { IR.nameLam = "Lam0",
-      IR.typeLam = Just [[t|Annotation $primTy $primVal|]],
-      IR.nameElim = "Elim0",
-      IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
-    }
+    IR.defaultExtTerm
+      { IR.nameLam = "Lam0",
+        IR.typeLam = Just [[t|Annotation $primTy $primVal|]],
+        IR.nameElim = "Elim0",
+        IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
+      }
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π s t = Lam0 t (Annotation π s)
@@ -38,10 +38,10 @@ data AppAnnotation primTy primVal
 
 IR.extendElim "Elim" [] [t|T|] $
   \primTy primVal ->
-  IR.defaultExtElim
-    { IR.nameApp = "App0",
-      IR.typeApp = Just [[t|AppAnnotation $primTy $primVal|]]
-    }
+    IR.defaultExtElim
+      { IR.nameApp = "App0",
+        IR.typeApp = Just [[t|AppAnnotation $primTy $primVal|]]
+      }
 
 pattern App π s ts ρ t tt =
   App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))

@@ -1,24 +1,14 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-
--- |
--- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
--- - Later a trees that grow version of this will be implemented, so
---   infix functions can better transition across syntax
--- - Note :: The names for the types in =ArrowData= are stored in the
---           =ArrowGen= and not in =NamedType=
-module Juvix.Frontend.Types where
+module Juvix.FrontendDesugar.RemoveGuard.Types where
 
 import Juvix.Frontend.Types.Base
+import qualified Juvix.FrontendDesugar.Abstractions as Abstract
 import Juvix.Library hiding (Product, Sum)
 
 data T
 
 extendType "Type" [] [t|T|] defaultExtType
 
-extendTopLevel "TopLevel" [] [t|T|] defaultExtTopLevel
+extendTopLevel "TopLevel" [] [t|T|] defaultExtTopLevel {typeModule = Nothing}
 
 extendTypeSum "TypeSum" [] [t|T|] defaultExtTypeSum
 
@@ -50,15 +40,13 @@ extendFunction "Function" [] [t|T|] defaultExtFunction
 
 extendModule "Module" [] [t|T|] defaultExtModule
 
-extendFunctionLike "FunctionLike" [] [t|T|] $ const defaultExtFunctionLike
+extendArg "Arg" [] [t|T|] defaultExtArg
 
-extendGuardBody "GuardBody" [] [t|T|] $ const defaultExtGuardBody
+extendFunctionLike "FunctionLike" [] [t|T|] $ Abstract.functionLikeNoCond [t|T|]
 
 extendModuleOpen "ModuleOpen" [] [t|T|] defaultExtModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] defaultExtModuleOpenExpr
-
-extendArg "Arg" [] [t|T|] defaultExtArg
 
 extendCond "Cond" [] [t|T|] $ const defaultExtCond
 
