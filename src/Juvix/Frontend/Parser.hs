@@ -18,6 +18,7 @@ import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
+import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try)
 import Prelude (fail)
 
@@ -155,7 +156,7 @@ match = do
   matchOn <- expressionSN
   _ <- spaceLiner (string "of")
   matchs <- many1H matchLSN
-  pure (Types.Match' matchOn matchs)
+  pure (Types.Match'' matchOn matchs)
 
 matchL :: Parser Types.MatchL
 matchL = do
@@ -336,14 +337,14 @@ record = do
       $ curly
       $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
   familySignature <- maybe (skipLiner Lexer.colon *> expression)
-  pure (Types.Record' names familySignature)
+  pure (Types.Record'' names familySignature)
 
 nameType :: Parser Types.NameType
 nameType = do
   name <- nameParserSN
   skipLiner Lexer.colon
   sig <- expression
-  pure (Types.NameType sig name)
+  pure (Types.NameType' sig name)
 
 -- nameParserColon :: Parser Types.Name
 -- nameParserColon =
@@ -404,7 +405,7 @@ let' = do
   binds <- functionModGen expression
   spaceLiner (string "in")
   body <- expression
-  pure (Types.Let' binds body)
+  pure (Types.Let'' binds body)
 
 letType :: Parser Types.LetType
 letType = do
@@ -412,7 +413,7 @@ letType = do
   typ <- typePSN
   spaceLiner (string "in")
   body <- expression
-  pure (Types.LetType' typ body)
+  pure (Types.LetType'' typ body)
 
 --------------------------------------------------
 -- Cond
@@ -502,7 +503,7 @@ do' = do
   case length doExp of
     1 -> fail "do expression with only 1 value"
     0 -> fail "parser faled with empty list"
-    _ -> pure (Types.Do' $ NonEmpty.fromList doExp)
+    _ -> pure (Types.Do'' $ NonEmpty.fromList doExp)
 
 doBind :: Parser [Types.DoBody]
 doBind = do
