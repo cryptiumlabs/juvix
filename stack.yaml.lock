@@ -374,16 +374,16 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 15188
-    url: https://github.com/metastatedev/extensible-data/archive/787579346db9997f10f4f0537518a5746b0b5bc1.tar.gz
+    size: 15194
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
     name: extensible-data
     version: 0.1.0
-    sha256: 2ad96fa6a312729a5d50317e00189febd2cb24a6f716ce1621670dfd4e9a0a30
+    sha256: f287dc29b4de5c3d1794ff1579b970a8e5dcaff43f38cc5657f32abde84c08a5
     pantry-tree:
       size: 1863
-      sha256: c90a241320c779ccc89955d9ffa0d996804956cd857f4d90fc900b8008910df9
+      sha256: 34243f0bdef6974ebc26748aa0ba6cfbd3343233e477d7750653b52a3626f9bf
   original:
-    url: https://github.com/metastatedev/extensible-data/archive/787579346db9997f10f4f0537518a5746b0b5bc1.tar.gz
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
 - completed:
     hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:

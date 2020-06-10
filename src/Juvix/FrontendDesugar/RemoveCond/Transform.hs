@@ -133,5 +133,83 @@ transformFunctionLike (Old.Like name args body) =
 transformModuleOpen :: Old.ModuleOpen -> New.ModuleOpen
 transformModuleOpen (Old.Open mod) = New.Open mod
 
+transformMoudleOpenExpr :: Old.ModuleOpenExpr -> New.ModuleOpenExpr
+transformMoudleOpenExpr (Old.OpenExpress modName expr) =
+  New.OpenExpress modName (transformExpression expr)
+
 transformArg :: Old.Arg -> New.Arg
-transformArg = undefined
+transformArg (Old.ImplicitA ml) = New.ImplicitA (transformMatchLogic ml)
+transformArg (Old.ConcreteA ml) = New.ConcreteA (transformMatchLogic ml)
+
+--------------------------------------------------------------------------------
+-- Signatures
+--------------------------------------------------------------------------------
+
+transformSignature :: Old.Signature -> New.Signature
+transformSignature (Old.Sig name usage arrow constraints) =
+  New.Sig
+    name
+    (transformExpression <$> usage)
+    (transformExpression arrow)
+    (transformExpression <$> constraints)
+
+--------------------------------------------------------------------------------
+-- Expression
+--------------------------------------------------------------------------------
+
+transformArrowExp :: Old.ArrowExp -> New.ArrowExp
+transformArrowExp (Old.Arr' left usage right) =
+  New.Arr'
+    (transformExpression left)
+    (transformExpression usage)
+    (transformExpression right)
+
+transformConst :: Old.Constant -> New.Constant
+transformConst (Old.Number numb) = New.Number (transformNumb numb)
+transformConst (Old.String str) = New.String  (transformString str)
+
+transformNumb :: Old.Numb -> New.Numb
+transformNumb (Old.Integer' i) = New.Integer' i
+transformNumb (Old.Double' d) = New.Double' d
+
+transformString :: Old.String' -> New.String'
+transformString (Old.Sho t) = New.Sho t
+
+transformBlock :: Old.Block -> New.Block
+transformBlock (Old.Bloc expr) = New.Bloc (transformExpression expr)
+
+transfromLambda :: Old.Lambda -> New.Lambda
+transfromLambda (Old.Lamb args body) =
+  New.Lamb (transformMatchLogic <$> args) (transformExpression body)
+
+transformApplication :: Old.Application -> New.Application
+transformApplication (Old.App fun args) =
+  New.App (transformExpression fun) (transformExpression <$> args)
+
+transformDo :: Old.Do -> New.Do
+transformDo (Old.Do'' dos) = New.Do'' (transformDoBody <$> dos)
+
+transformDoBody :: Old.DoBody -> New.DoBody
+transformDoBody (Old.DoBody name expr) =
+  New.DoBody name (transformExpression expr)
+
+transformExpRecord (Old.ExpressionRecord fields) =
+  New.ExpressionRecord (transformNameSet <$> fields)
+
+--------------------------------------------------
+-- Symbol Binding
+--------------------------------------------------
+
+transformLet :: Old.Let -> New.Let
+transformLet (Old.Let'' bindings body) =
+  New.Let'' (transformFunctionLike bindings) (transformExpression body)
+
+transformLetType :: Old.LetType -> New.LetType
+transformLetType (Old.LetType'' typ expr) =
+  New.LetType'' (transformType typ) (transformExpression expr)
+
+transformNameSet :: Old.NameSet Old.Expression -> New.NameSet New.Expression
+transformNameSet = undefined
+
+transformMatchLogic :: Old.MatchLogic -> New.MatchLogic
+transformMatchLogic = undefined
