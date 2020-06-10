@@ -11,7 +11,6 @@ import Juvix.Core.Types hiding
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Text.Show
 import Prelude (String)
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
 
@@ -49,7 +48,7 @@ apply ∷ (FieldElements.FieldElement e, FInteger e i) => Val (e f i) i → Val 
 apply Add (Val x) = pure (Curried Add x)
 apply Mul (Val x) = pure (Curried Mul x)
 apply (Curried Add x) (Val y) = pure (Val (add x y))
-apply (Curried Mul x) (Val y) = pure (Val (mul * y))
+apply (Curried Mul x) (Val y) = pure (Val (mul x y))
 apply _ _ = Nothing
 
 parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
@@ -62,7 +61,7 @@ parseVal lexer =
   parseNat lexer <|> parseAdd lexer <|> parseMul lexer
 
 parseNat ∷ (FieldElements.FieldElement e, FInteger e i) => Token.GenTokenParser String () Identity → Parser (Val (e f i) i)
-parseNat lexer = Val . prim . fromPrim |<< Token.integer lexer
+parseNat lexer = Val . fromPrim |<< Token.integer lexer
   where fromPrim = undefined
 
 parseAdd ∷ (FieldElements.FieldElement e, FInteger e i) => Token.GenTokenParser String () Identity → Parser (Val (e f i) i)

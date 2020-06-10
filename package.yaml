@@ -44,6 +44,11 @@ dependencies:
   - Cabal
   - extensible-data
   - arithmetic-circuits
+  - galois-field
+  - crypto-numbers
+  - zkp
+  - pairing
+  - MonadRandom
 
 default-extensions:
   - NoImplicitPrelude
@@ -75,6 +80,8 @@ default-extensions:
   - ConstraintKinds
   - EmptyDataDeriving
   - TemplateHaskell
+  - NamedFieldPuns
+  - TupleSections
 
 ghc-options:
   - -ferror-spans
@@ -161,7 +168,11 @@ library:
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
+    - Juvix.Backends.ArithmeticCircuit.ZKP
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.LLVM

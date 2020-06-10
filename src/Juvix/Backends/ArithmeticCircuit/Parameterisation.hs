@@ -2,6 +2,7 @@ module Juvix.Backends.ArithmeticCircuit.Parameterisation where
 
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans as Booleans
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers as FEInteger
 import Juvix.Core.Types hiding
   ( apply,
     parseTy,
@@ -14,7 +15,7 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import Data.Curve.Weierstrass.BN254 (Fr)
+import Data.Pairing.BN254 (Fr)
 import qualified Circuit.Arithmetic as Arith
 import qualified Circuit.Expr as Expr
 import qualified Circuit.Lang as Lang
@@ -23,19 +24,23 @@ import qualified Circuit.Lang as Lang
 data Ty
   = FETy FieldElements.Ty
   | BoolTy Booleans.Ty
+  | FEIntTy FEInteger.Ty
   | Ty
   deriving (Show, Eq)
 
 type F = Fr
 type BooleanVal = Booleans.Val (Expr.Expr Arith.Wire F Bool) Bool
 type FEVal = FieldElements.Val (Expr.Expr Arith.Wire F F)
+type FEInteger = FEInteger.Val (Expr.Expr Arith.Wire F Int) Int
 
 instance FieldElements.FieldElement (Expr.Expr Arith.Wire) where
+  prim = Lang.c
   add = Lang.add
   mul = Lang.mul
   sub = Lang.sub
   neg = Expr.EUnOp Expr.UNeg
   eq  = Lang.eq
+  size _ = 254
 
 instance Booleans.Boolean (Expr.Expr Arith.Wire) Bool where
   and' = Lang.and_
@@ -44,9 +49,21 @@ instance Booleans.Boolean (Expr.Expr Arith.Wire) Bool where
   true = Expr.EConstBool True
   false = Expr.EConstBool False
 
+-- instance FEInteger.FInteger (Expr.Expr Arith.Wire) Int where
+--   prim = Lang.c . toF
+--   add x y = Lang.add (toF x) (toF y)
+--   mul x y= Lang.mul (toF x) (toF y)
+--   sub x y = Lang.sub (toF x) (toF y)
+--   neg x y = (Expr.EUnOp Expr.UNeg) . toF
+--   eq  x y = Lang.eq (toF x) (toF y)
+
+toF :: Int -> F
+toF = undefined
+
 data Val where
   FEVal :: FEVal -> Val
   BoolVal :: BooleanVal -> Val
+  IntegerVal :: FEInteger -> Val
   Eq :: Val
   Curried :: Val -> FEVal -> Val
 

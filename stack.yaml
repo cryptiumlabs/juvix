@@ -41,6 +41,8 @@ extra-deps:
 - arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
 - galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
 - bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+- github: adjoint-io/zkp
+  commit: 2004a19bb097f34a23cb01d6927965b23c9f0f12
 - github: acid-state/safecopy
   commit: 1be0894daeefff5126b25c9483ce2bf21845d05b
 - github: seereason/sr-extra
