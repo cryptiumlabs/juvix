@@ -18,13 +18,14 @@ data Ty
   deriving (Show, Eq)
 
 class FieldElement (e :: * → * → *) where
-  prim :: e f f
+  size :: e f g -> Integer
+  prim :: f -> e f f
   add :: e f f → e f f → e f f
   mul :: e f f → e f f → e f f
   sub :: e f f → e f f → e f f
   neg :: e f f → e f f
   intExp :: e f f → e f g → e f f
-  eq :: e f f → e f f → e f g
+  eq :: e f f → e f f → e f Bool
 
 data Val f where
   Val :: FieldElement e => e f g → Val (e f g)

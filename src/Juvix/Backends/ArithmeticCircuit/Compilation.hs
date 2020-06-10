@@ -1,13 +1,16 @@
-module Juvix.Backends.ArithmeticCircuit.Compilation (compile, eval, add, mul, sub, neg, eq) where
+module Juvix.Backends.ArithmeticCircuit.Compilation (compile, runCirc, add, mul, sub, neg, eq, exp, int, c, and', or', Term, Type, lambda, var, input, cond) where
 
-import Juvix.Library hiding (Type)
+import Juvix.Library hiding (Type, exp)
 import Juvix.Backends.ArithmeticCircuit.Compilation.Types
 import qualified Circuit
 import qualified Circuit.Expr as Expr
-import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans as Booleans
-import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
-import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Parameterisation
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 
-compile :: Term -> Type -> Either () (Circuit.ArithCircuit FieldElements.F)
-compile term _ = Right $ -- #FIXME bogus handling for now
-  Expr.execCircuitBuilder (Expr.compile (eval term))
+compile :: Term -> Type -> Circuit.ArithCircuit Par.F
+compile term _ =
+  let (_, circ) = transTerm mempty term
+  in case circ of
+    BoolExp exp -> Expr.execCircuitBuilder (Expr.compile exp)
+    FExp exp -> Expr.execCircuitBuilder (Expr.compile exp)
+
+runCirc = Expr.execCircuitBuilder . Expr.compile

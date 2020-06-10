@@ -257,6 +257,20 @@ packages:
   original:
     hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 - completed:
+    size: 247501
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+    cabal-file:
+      size: 5402
+      sha256: 80069a54b754a2fdbb831c5f9a09f00fee2cf7cb565a1fcabaad8b6ce9f270bf
+    name: zkp
+    version: 0.1.0
+    sha256: dc79c6efe06bb03ad071f157622146e7ea69f5f049c09ae352eca166832dabf8
+    pantry-tree:
+      size: 3659
+      sha256: db88c47fbe996afa764bc4a398668427cdee4b6872ad4f33a226e5fcad7e2f7c
+  original:
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+- completed:
     size: 24276
     url: https://github.com/acid-state/safecopy/archive/1be0894daeefff5126b25c9483ce2bf21845d05b.tar.gz
     cabal-file:
