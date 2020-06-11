@@ -66,7 +66,6 @@ transformTypeRefine :: Old.TypeRefine -> New.TypeRefine
 transformTypeRefine (Old.TypeRefine name refine) =
   New.TypeRefine (transformExpression name) (transformExpression refine)
 
-
 --------------------------------------------------
 -- Types Misc
 --------------------------------------------------
@@ -81,8 +80,8 @@ transformArrowSymbol (Old.ArrowUse usage) =
 transformArrowSymbol (Old.ArrowExp e) =
   New.ArrowExp (transformExpression e)
 
-transformUniverseExpression
-  :: Old.UniverseExpression -> New.UniverseExpression
+transformUniverseExpression ::
+  Old.UniverseExpression -> New.UniverseExpression
 transformUniverseExpression (Old.UniverseExpression s) =
   New.UniverseExpression s
 
@@ -109,7 +108,6 @@ transformProduct (Old.Record rec') = New.Record (transformRecord rec')
 transformProduct (Old.Arrow arrow) = New.Arrow (transformExpression arrow)
 transformProduct (Old.ADTLike adt) = New.ADTLike (transformExpression <$> adt)
 
-
 transformRecord :: Old.Record -> New.Record
 transformRecord (Old.Record'' fields sig) =
   New.Record'' (transformNameType <$> fields) (transformExpression <$> sig)
@@ -125,8 +123,8 @@ transformNameType (Old.NameType' sig name) =
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func f) = New.Func (transformFunctionLike f)
 
-transformFunctionLike
-  :: Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
+transformFunctionLike ::
+  Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
 transformFunctionLike (Old.Like name args body) =
   New.Like name (transformArg <$> args) (transformExpression body)
 
@@ -166,7 +164,7 @@ transformArrowExp (Old.Arr' left usage right) =
 
 transformConst :: Old.Constant -> New.Constant
 transformConst (Old.Number numb) = New.Number (transformNumb numb)
-transformConst (Old.String str) = New.String  (transformString str)
+transformConst (Old.String str) = New.String (transformString str)
 
 transformNumb :: Old.Numb -> New.Numb
 transformNumb (Old.Integer' i) = New.Integer' i
@@ -193,8 +191,9 @@ transformDoBody :: Old.DoBody -> New.DoBody
 transformDoBody (Old.DoBody name expr) =
   New.DoBody name (transformExpression expr)
 
+transformExpRecord :: Old.ExpRecord -> New.ExpRecord
 transformExpRecord (Old.ExpressionRecord fields) =
-  New.ExpressionRecord (transformNameSet <$> fields)
+  New.ExpressionRecord (transformNameSet transformExpression <$> fields)
 
 --------------------------------------------------
 -- Symbol Binding
@@ -208,8 +207,42 @@ transformLetType :: Old.LetType -> New.LetType
 transformLetType (Old.LetType'' typ expr) =
   New.LetType'' (transformType typ) (transformExpression expr)
 
-transformNameSet :: Old.NameSet Old.Expression -> New.NameSet New.Expression
-transformNameSet = undefined
+--------------------------------------------------
+-- Symbol Binding
+--------------------------------------------------
+
+transformInfix :: Old.Infix -> New.Infix
+transformInfix (Old.Inf l o r) =
+  New.Inf (transformExpression l) o (transformExpression r)
+
+--------------------------------------------------
+-- Matching
+--------------------------------------------------
+
+transformMatch :: Old.Match -> New.Match
+transformMatch (Old.Match'' on bindings) =
+  New.Match'' (transformExpression on) (transformMatchL <$> bindings)
+
+transformMatchL :: Old.MatchL -> New.MatchL
+transformMatchL (Old.MatchL pat body) =
+  New.MatchL (transformMatchLogic pat) (transformExpression body)
 
 transformMatchLogic :: Old.MatchLogic -> New.MatchLogic
-transformMatchLogic = undefined
+transformMatchLogic (Old.MatchLogic start name) =
+  New.MatchLogic (tranformMatchLogicStart start) name
+
+tranformMatchLogicStart :: Old.MatchLogicStart -> New.MatchLogicStart
+tranformMatchLogicStart (Old.MatchCon conName logic) =
+  Old.MatchCon conName (transformMatchLogic <$> logic)
+tranformMatchLogicStart (Old.MatchName s) =
+  New.MatchName s
+tranformMatchLogicStart (Old.MatchConst c) =
+  New.MatchConst (transformConst c)
+tranformMatchLogicStart (Old.MatchRecord r) =
+  New.MatchRecord (transformNameSet transformMatchLogic <$> r)
+
+transformNameSet :: (t -> t1) -> Old.NameSet t -> New.NameSet t1
+transformNameSet _ (Old.Punned s) =
+  New.Punned s
+transformNameSet p (Old.NonPunned s e) =
+  New.NonPunned s (p e)
