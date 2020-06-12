@@ -1,4 +1,4 @@
-module Juvix.FrontendDesugar.RemoveDo.Types where
+module Juvix.FrontendDesugar.RemovePunned.Types where
 
 import Juvix.Frontend.Types.Base
 import qualified Juvix.FrontendDesugar.Abstractions as Abstract
@@ -54,7 +54,7 @@ extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] defaultExtModuleOpenExpr
 
 extendSignature "Signature" [] [t|T|] defaultExtSignature
 
-extendExpression "Expression" [] [t|T|] defaultExtExpression {typeCond = Nothing, typeDo = Nothing}
+extendExpression "Expression" [] [t|T|] defaultExtExpression {typeCond = Nothing}
 
 extendArrowExp "ArrowExp" [] [t|T|] defaultExtArrowExp
 
@@ -69,6 +69,10 @@ extendBlock "Block" [] [t|T|] defaultExtBlock
 extendLambda "Lambda" [] [t|T|] defaultExtLambda
 
 extendApplication "Application" [] [t|T|] defaultExtApplication
+
+extendDo "Do" [] [t|T|] defaultExtDo
+
+extendDoBody "DoBody" [] [t|T|] defaultExtDoBody
 
 extendExpRecord "ExpRecord" [] [t|T|] defaultExtExpRecord
 

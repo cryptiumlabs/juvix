@@ -298,6 +298,7 @@ extensible
       = Do'' (NonEmpty DoBody)
       deriving (Show, Generic, NFData)
 
+    -- promote this to a match!!!
     data DoBody
       = DoBody
           { doBodyName :: Maybe NameSymb,

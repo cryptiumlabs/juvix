@@ -101,6 +101,8 @@ library:
     - Juvix.FrontendDesugar.RemoveCond.Types
     - Juvix.FrontendDesugar.RemoveCond.Transform
     - Juvix.FrontendDesugar.RemoveDo.Types
+    - Juvix.FrontendDesugar.RemoveDo.Transform
+    - Juvix.FrontendDesugar.RemovePunned.Types
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
