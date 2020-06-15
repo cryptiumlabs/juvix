@@ -36,9 +36,6 @@ extra-deps:
 - userid-0.1.3.4@sha256:607890fb4363c1d63368a2e96920d3671955feae815d5e2622e35717badad6f6,1172
 - boomerang-1.4.5.7@sha256:67358e1ed44db2da2bf5ba8b5ccde4e3cd19adbc286c5308dba448f89fb03c4a,1979
 - web-routes-th-0.22.6.5@sha256:bdbb13f1c2307ca8b27c45c6cfd03e5c9b014c096e9b661a672625d46e0f6bb2,1561
-- arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
-- galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
-- bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 - base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
 - fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
 - named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
@@ -54,6 +51,19 @@ extra-deps:
   commit: e23b58b46affb978c17a0eb3e760d28b058658ce
 - github: cryptiumlabs/jsonschema-gen
   commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
+- github: adjoint-io/poly
+  commit: b75b853025ea75ba64f62f39d4524832f0117e36
+- github: cryptiumlabs/extensible-data
+  commit: fa102a8b82756da94b7227373869b0e953458230
+
+################################################################################
+# arithmetic circuits deps
+################################################################################
+
+- arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+- galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+- bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+
 - github: adjoint-io/pairing
   commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
 - github: adjoint-io/elliptic-curve
@@ -62,12 +72,9 @@ extra-deps:
   commit: 95fc86b61c573518ff6a1ab1b9f23301482b2577
 - github: adjoint-io/sonic
   commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
-- github: adjoint-io/poly
-  commit: b75b853025ea75ba64f62f39d4524832f0117e36
-- github: cryptiumlabs/extensible-data
-  commit: fa102a8b82756da94b7227373869b0e953458230
 - github: adjoint-io/zkp
   commit: 2004a19bb097f34a23cb01d6927965b23c9f0f12
+
 
 ################################################################################
 # morley deps
