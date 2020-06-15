@@ -162,9 +162,6 @@ transformNameType :: Old.NameType -> New.NameType
 transformNameType (Old.NameType' sig name) =
   New.NameType' (transformExpression sig) (transformName name)
 
---------------------------------------------------------------------------------
--- Functions And Modules
---------------------------------------------------------------------------------
 
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func f) = New.Func (transformFunctionLike f)

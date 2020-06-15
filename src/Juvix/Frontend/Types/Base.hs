@@ -162,6 +162,13 @@ extensible
       = Mod (FunctionLike (NonEmpty TopLevel))
       deriving (Show, Generic, NFData)
 
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel),
+            moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+
     -- | 'FunctionLike' is the generic version for both modules and functions
     data FunctionLike a
       = Like
@@ -233,6 +240,7 @@ extensible
       = Cond (Cond Expression)
       | Constant Constant
       | Let Let
+      | ModuleE ModuleE
       | LetType LetType
       | Match Match
       | Name NameSymb

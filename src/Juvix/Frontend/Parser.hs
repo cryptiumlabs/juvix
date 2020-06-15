@@ -19,7 +19,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
-import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try)
+import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try, mod)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -39,6 +39,7 @@ expressionGen' p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
     <|> Types.LetType <$> letType
+    <|> Types.ModuleE <$> mod
     <|> Types.Match <$> match
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
@@ -399,6 +400,17 @@ expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 --------------------------------------------------
 -- Let
 --------------------------------------------------
+
+mod :: Parser Types.ModuleE
+mod = do
+  _ <- spaceLiner (string "mod")
+  name <- prefixSymbolSN
+  args <- many argSN
+  guarded <- guard (many1H topLevelSN)
+  _ <- spaceLiner (string "end")
+  _ <- spaceLiner (string "in")
+  body <- expression
+  pure (Types.ModE (Types.Like name args guarded) body)
 
 let' :: Parser Types.Let
 let' = do

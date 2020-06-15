@@ -110,6 +110,10 @@
            | let <name> <args>+ <cond-top>* end
 
 
+  ;; we use mod here to disambiguate it for parsing speed
+  moduleE ::= mod <name> <args>+ = <top-level>* end in <expression>
+            | mod <name> <args>+ <cond-top>* end in <expression>
+
   ;; what should we allow in a module signature?
   ;; begin and end are only here while we aren't indent sensitive
 
@@ -147,6 +151,7 @@
                  | <record-access>
                  | <module-lookup>
                  | <let>
+                 | <moduleE>
                  | <let-type>
                  | <module-open-expression>
                  | <where>

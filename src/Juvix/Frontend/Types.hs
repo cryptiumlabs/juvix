@@ -50,6 +50,8 @@ extendFunction "Function" [] [t|T|] defaultExtFunction
 
 extendModule "Module" [] [t|T|] defaultExtModule
 
+extendModuleE "ModuleE" [] [t|T|] defaultExtModuleE
+
 extendFunctionLike "FunctionLike" [] [t|T|] $ const defaultExtFunctionLike
 
 extendGuardBody "GuardBody" [] [t|T|] $ const defaultExtGuardBody
