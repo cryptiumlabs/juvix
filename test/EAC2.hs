@@ -28,20 +28,20 @@ shouldGen ::
       (EAC.RPT (), EAC.ParamTypeAssignment ()) ->
     IO ()
   ) ->
-  Types.TermAssignment () () ->
+  Types.TermAssignment () () () ->
   T.TestTree
 shouldGen errorString case' termAssign =
   T.testCase (show (Types.term termAssign) <> errorString) $
     validEal unitParam termAssign >>= case'
 
-shouldBeTypeable :: Types.TermAssignment () () -> T.TestTree
+shouldBeTypeable :: Types.TermAssignment () () () -> T.TestTree
 shouldBeTypeable =
   shouldGen " should be typeable in EAC" $ \v ->
     case v of
       Right _ -> pure ()
       Left er -> T.assertFailure (show er)
 
-shouldNotBeTypeable :: Types.TermAssignment () () -> T.TestTree
+shouldNotBeTypeable :: Types.TermAssignment () () () -> T.TestTree
 shouldNotBeTypeable =
   shouldGen " should not be typeable in EAC" $ \v ->
     case v of

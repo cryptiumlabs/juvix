@@ -1,6 +1,7 @@
 ### Layout
 
 - The [language reference](./reference) section holds the offical language reference.
+  Please note that the language reference is still a work in progress.
 
 - The [contribute](./CONTRIBUTING.md) file holds all information needed to contribute
   to Juvix.

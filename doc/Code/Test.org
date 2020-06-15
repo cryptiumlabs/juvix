@@ -48,6 +48,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Erased]]
   + [[Erasure]]
+  + [[Types]]
   + [[HR]]
   + [[Unit]]
   + [[Types]]
@@ -109,10 +110,17 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Types]]
   + [[Environment]]
   + [[Instructions]]
+  + [[Interpret]]
   + [[Untyped]]
   + [[Optimisation]]
   + [[ErasedAnn]]
   + [[Usage]]
+  + [[Library]]
+* Core
+** Common
+*** Context
+- _Relies on_
+  + [[Context]]
   + [[Library]]
 * Nets
 ** Combinators

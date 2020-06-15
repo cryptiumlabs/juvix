@@ -1,6 +1,7 @@
 module Frontend where
 
 import Data.Attoparsec.ByteString
+import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
@@ -33,6 +34,15 @@ allParserTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
+space = Char8.char8 ' '
+
+test =
+  parseOnly
+    (many' Parser.expressionSN)
+    "let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo \
+    \= 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let \
+    \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
+
 parseTasty ::
   (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree
 parseTasty name x y =
@@ -52,6 +62,136 @@ shouldParseAs name parser parseString =
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
+
+contractTest =
+  parseOnly
+    (many Parser.topLevelSN)
+    ( ""
+        <> "let Token = "
+        <> "  type Address = s : String.T {String.length s == 36} \n"
+        <> "\n"
+        <> "  type Storage = { \n"
+        <> "    total-supply : Nat.T, \n"
+        <> "    accounts     : Accounts.T { Accounts.measure-value == total-supply } \n"
+        <> "  }"
+        <> "  sig empty-storage : Storage \n"
+        <> "  let empty-storage = { \n"
+        <> "    total-supply = 0, \n"
+        <> "    accounts     = Accounts.empty, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    storage : Storage, \n"
+        <> "    version : Nat.T, \n"
+        <> "    name    : String.T, \n"
+        <> "    symbol  : Char.T, \n"
+        <> "    owner   : Address, \n"
+        <> "  } \n"
+        <> "end"
+        <> " \n"
+        <> "let Transaction = \n"
+        <> "  type Transfer = { \n"
+        <> "    from-account : Token.Address, \n"
+        <> "    to-account   : Token.Address, \n"
+        <> "    ammount      : Nat.T, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Mint = { \n"
+        <> "    mint-amount     : Nat.T, \n"
+        <> "    mint-to-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Burn = { \n"
+        <> "    burn-amount       : Nat.T, \n"
+        <> "    burn-from-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Data = \n"
+        <> "    | Transfer : Transfer -> Data \n"
+        <> "    | Mint     : Mint     -> Data \n"
+        <> "    | Burn     : Burn     -> Data \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    data               : Data, \n"
+        <> "    authorized-account : Token.Address, \n"
+        <> "  } \n"
+        <> "end \n"
+        <> " \n"
+        <> "sig has-n : Accounts.T -> Token.Address -> Nat -> Bool \n"
+        <> "let has-n accounts add to-transfer = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just n  -> to-transfer <= n \n"
+        <> "  | Nothing -> False \n"
+        <> " \n"
+        <> " \n"
+        <> "sig account-sub : acc : Accounts.T \n"
+        <> "               -> add : Token.Address \n"
+        <> "               -> num : Nat.T {has-n acc add num} \n"
+        <> "               -> Accounts.T \n"
+        <> "let account-sub accounts add number = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just balance -> \n"
+        <> "     Accounts.put accounts add (balance - number) \n"
+        <> " \n"
+        <> "sig account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T \n"
+        <> "let account-add accounts add number = \n"
+        <> "  Accounts.update accounts ((+) number) add \n"
+        <> " \n"
+        <> " \n"
+        <> " \n"
+        <> "sig transfer-stor : stor  : Token.Storage \n"
+        <> "                 -> from  : Token.Address \n"
+        <> "                 -> to    : Token.Address \n"
+        <> "                 -> num   : Nat.T {has-n stor.accounts from num} \n"
+        <> "                 -> Token.Storage \n"
+        <> "let transfer-stor stor add_from add_to num = \n"
+        <> "  let new-acc = account-add (account-sub stor.accounts add_from) add-to num in \n"
+        <> "  { total-supply = stor.total-supply \n"
+        <> "  , accounts     = new-acc \n"
+        <> "  } \n"
+        <> "let Validation = \n"
+        <> "  let T = Token.T -> Transaction.T -> Bool \n"
+        <> " \n"
+        <> "  let mint token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Mint -> \n"
+        <> "      token.owner == tx-tx-authorized-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let transfer token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Transfer {from-account, amount} -> \n"
+        <> "      has-n token.storage.accounts from-account amount \n"
+        <> "      && tx.authroized-account == from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let Burn token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Burn {burn-from-account, burn-ammount} -> \n"
+        <> "      has-n token.storage.accounts burn-from-account burn-amount \n"
+        <> "      && tx.authroized-account == burn-from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> "end \n"
+        <> " \n"
+        <> "  type Error = \n"
+        <> "    | NotEnoughFunds \n"
+        <> "    | NotSameAccount \n"
+        <> "    | NotOwnerToken  \n"
+        <> "    | NotEnoughTokens \n"
+        <> " \n"
+        <> "  sig exec : Token.T -> Transaction.T -> Either.T Error Token.T \n"
+        <> "  let exec token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transfer _ -> \n"
+        <> "      if | Validation.transfer token tx = Right (transfer token tx) \n"
+        <> "         | else                         = Left NotEnoughFunds \n"
+        <> "    | Mint _ -> \n"
+        <> "      if | Validation.mint token tx = Right (mint token tx) \n"
+        <> "         | else                     = Left NotEnoughFunds \n"
+    )
 
 many1FunctionsParser :: T.TestTree
 many1FunctionsParser =
@@ -75,30 +215,31 @@ many1FunctionsParser =
     "[Function (Func (Like {functionLikedName = foo, functionLikeArgs = [ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName a, matchLogicNamed = Nothing}),ConcreteA \
     \(MatchLogic {matchLogicContents = MatchName b, matchLogicNamed = Nothing}),ConcreteA \
-    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (Application (App {applicationName = + :| [], applicationArgs = Infix \
-    \(Inf {infixLeft = Name (a :| []), infixOp = + :| [], infixRight = Name (b :| [])}) :| [Name \
-    \(c :| [])]}))})),Function (Func (Like {functionLikedName = bah, functionLikeArgs \
-    \= [], functionLikeBody = Body (Application (App {applicationName = foo :| [], applicationArgs \
-    \= Constant (Number (Integer' 1)) :| [Constant (Number (Integer' 2)),Constant \
-    \(Number (Integer' 3))]}))})),Function (Func (Like {functionLikedName = nah, functionLikeArgs \
-    \= [], functionLikeBody = Guard (C (CondExpression {condLogicPred = Infix (Inf \
+    \(MatchLogic {matchLogicContents = MatchName c, matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (Application (App {applicationName = Name (+ :| []), \
+    \applicationArgs = Parened (Infix (Inf {infixLeft = Name (a :| []), infixOp = \
+    \+ :| [], infixRight = Name (b :| [])})) :| [Name (c :| [])]}))})),Function (Func \
+    \(Like {functionLikedName = bah, functionLikeArgs = [], functionLikeBody = Body \
+    \(Application (App {applicationName = Name (foo :| []), applicationArgs = Constant \
+    \(Number (Integer' 1)) :| [Constant (Number (Integer' 2)),Constant (Number (Integer' \
+    \3))]}))})),Function (Func (Like {functionLikedName = nah, functionLikeArgs = \
+    \[], functionLikeBody = Guard (C (CondExpression {condLogicPred = Infix (Inf \
     \{infixLeft = Name (bah :| []), infixOp = == :| [], infixRight = Constant (Number \
     \(Integer' 5))}), condLogicBody = Constant (Number (Integer' 7))} :| [CondExpression \
     \{condLogicPred = Name (else :| []), condLogicBody = Constant (Number (Integer' \
     \11))}]))})),Function (Func (Like {functionLikedName = test, functionLikeArgs \
-    \= [], functionLikeBody = Body (Let (Let' {letBindings = Bind {bindingPattern \
-    \= MatchLogic {matchLogicContents = MatchName check, matchLogicNamed = Nothing}, \
-    \bindingBody = Name (nah :| [])} :| [], letBody = Match (Match' {matchOn = Name \
-    \(check :| []), matchBindigns = MatchL {matchLPattern = MatchLogic {matchLogicContents \
-    \= MatchName seven, matchLogicNamed = Nothing}, matchLBody = Constant (Number \
-    \(Integer' 11))} :| [MatchL {matchLPattern = MatchLogic {matchLogicContents = MatchName \
-    \eleven, matchLogicNamed = Nothing}, matchLBody = Constant (Number (Integer' 7))},MatchL \
-    \{matchLPattern = MatchLogic {matchLogicContents = MatchName f, matchLogicNamed \
-    \= Nothing}, matchLBody = OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails \
-    \:| [], moduleOpenExprExpr = Application (App {applicationName = print :| [], applicationArgs \
-    \= Do (Do' (DoBody {doBodyName = Nothing, doBodyExpr = Name (failed :| [])} :| [DoBody \
-    \{doBodyName = Nothing, doBodyExpr = Name (fail :| [])}])) :| []})})}]})}))}))]"
+    \= [], functionLikeBody = Body (Let (Let' {letBindings = Like {functionLikedName \
+    \= check, functionLikeArgs = [], functionLikeBody = Body (Name (nah :| []))}, \
+    \letBody = Match (Match' {matchOn = Name (check :| []), matchBindigns = MatchL \
+    \{matchLPattern = MatchLogic {matchLogicContents = MatchName seven, matchLogicNamed \
+    \= Nothing}, matchLBody = Constant (Number (Integer' 11))} :| [MatchL {matchLPattern \
+    \= MatchLogic {matchLogicContents = MatchName eleven, matchLogicNamed = Nothing}, \
+    \matchLBody = Constant (Number (Integer' 7))},MatchL {matchLPattern = MatchLogic \
+    \{matchLogicContents = MatchName f, matchLogicNamed = Nothing}, matchLBody = \
+    \OpenExpr (OpenExpress {moduleOpenExprModuleN = Fails :| [], moduleOpenExprExpr \
+    \= Do (Do' (DoBody {doBodyName = Nothing, doBodyExpr = Application (App {applicationName \
+    \= Name (print :| []), applicationArgs = Name (failed :| []) :| []})} :| [DoBody \
+    \{doBodyName = Nothing, doBodyExpr = Name (fail :| [])}]))})}]})}))}))]"
 
 --------------------------------------------------------------------------------
 -- Sig Test
@@ -110,14 +251,10 @@ sigTest1 =
     "sigTest1"
     Parser.topLevel
     "sig foo 0 : Int -> Int"
-    "Signature (Sig {signatureName = foo, signatureUsage = \
-    \Just (Constant (Number (Integer' 0))), signatureArrowType = \
-    \Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = \
-    \TypeRefine {typeRefineName = Start (Int :| []) [], \
-    \typeRefineRefinement = Nothing}, arrowGenArrow = ArrowUse w})) \
-    \(Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], \
-    \typeRefineRefinement = Nothing}})), signatureConstraints = []})"
+    "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (Int :| []), \
+    \infixOp = -> :| [], infixRight = Name (Int :| [])}), signatureConstraints = \
+    \[]})"
 
 sigTest2 :: T.TestTree
 sigTest2 =
@@ -125,17 +262,14 @@ sigTest2 =
     "sigTest2"
     Parser.topLevel
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
-    "Signature (Sig {signatureName = foo, signatureUsage = \
-    \Just (Constant (Number (Integer' 0))), \
-    \signatureArrowType = Arrows (Arr (ArrGen {arrowGenName = Just (Concrete i), \
-    \arrowGenData = TypeRefine {typeRefineName = Start (Int :| []) [], \
-    \typeRefineRefinement = Just (Infix (Inf {infixLeft = Name (i :| []), \
-    \infixOp = > :| [], infixRight = Constant (Number (Integer' 0))}))}, \
-    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], \
-    \typeRefineRefinement = Just (Infix (Inf {infixLeft = Name (i :| []), \
-    \infixOp = > :| [], infixRight = Constant (Number (Integer' 1))}))}})), \
-    \signatureConstraints = []})"
+    "Signature (Sig {signatureName = foo, signatureUsage = Just (Constant (Number \
+    \(Integer' 0))), signatureArrowType = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= : :| [], infixRight = Infix (Inf {infixLeft = RefinedE (TypeRefine {typeRefineName \
+    \= Name (Int :| []), typeRefineRefinement = Infix (Inf {infixLeft = Name (i :| []), infixOp \
+    \= > :| [], infixRight = Constant (Number (Integer' 0))})}), infixOp = -> :| [], infixRight \
+    \= RefinedE (TypeRefine {typeRefineName = Name (Int :| []), typeRefineRefinement \
+    \= Infix (Inf {infixLeft = Name (i :| []), infixOp = > :| [], infixRight = Constant \
+    \(Number (Integer' 1))})})})}), signatureConstraints = []})"
 
 --------------------------------------------------------------------------------
 -- Function Testing
@@ -183,40 +317,27 @@ sumTypeTest =
   shouldParseAs
     "sumTypeTest"
     Parser.typeP
-    ( "type Foo a b c = | A b : a -> b -> c \n"
-        <> "            | B d \n"
+    ( "type Foo a b c = | A : b : a -> b -> c \n"
+        <> "            | B : d -> Foo \n"
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
     "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c], typeForm = Data \
-    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (Arrows \
-    \(Arr (ArrGen {arrowGenName = Just (Concrete b), arrowGenData = TypeRefine {typeRefineName \
-    \= Start (a :| []) [], typeRefineRefinement = Nothing}, arrowGenArrow = ArrowUse \
-    \w})) (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = TypeRefine \
-    \{typeRefineName = Start (b :| []) [], typeRefineRefinement = Nothing}, arrowGenArrow \
-    \= ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (c :| []) [], typeRefineRefinement = Nothing}\
-    \})))))} :| [S {sumConstructor = B, sumValue = Just (Arrow (Refined (NamedRefine \
-    \{nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start \
-    \(d :| []) [], typeRefineRefinement = Nothing}})))},S {sumConstructor = C, sumValue \
-    \= Just (Record (Record' {recordFields = NameType {nameTypeSignature = Refined \
-    \(NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName \
-    \= Start (Int :| []) [], typeRefineRefinement = Nothing}}), nameTypeName = Concrete \
-    \a} :| [NameType {nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement \
-    \= Nothing}}), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S \
+    \(NonArrowed {dataAdt = Sum (S {sumConstructor = A, sumValue = Just (Arrow (Infix \
+    \(Inf {infixLeft = Name (b :| []), infixOp = : :| [], infixRight = Infix (Inf \
+    \{infixLeft = Name (a :| []), infixOp = -> :| [], infixRight = Infix (Inf {infixLeft \
+    \= Name (b :| []), infixOp = -> :| [], infixRight = Name (c :| [])})})})))} :| \
+    \[S {sumConstructor = B, sumValue = Just (Arrow (Infix (Inf {infixLeft = Name \
+    \(d :| []), infixOp = -> :| [], infixRight = Name (Foo :| [])})))},S {sumConstructor \
+    \= C, sumValue = Just (Record (Record' {recordFields = NameType {nameTypeSignature \
+    \= Name (Int :| []), nameTypeName = Concrete a} :| [NameType {nameTypeSignature \
+    \= Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature = Nothing}))},S \
     \{sumConstructor = D, sumValue = Just (Record (Record' {recordFields = NameType \
-    \{nameTypeSignature = Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Int :| []) [], typeRefineRefinement = Nothing}}), \
-    \nameTypeName = Concrete a} :| [NameType {nameTypeSignature = Refined (NamedRefine \
-    \{nameRefineName = Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start \
-    \(Int :| []) [], typeRefineRefinement = Nothing}}), nameTypeName = Implicit b}], \
-    \recordFamilySignature = Just (TypeRefine {typeRefineName = Start (Foo :| []) [SymbolName \
-    \(Int :| []),ArrowName (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData \
-    \= TypeRefine {typeRefineName = Start (Fooy :| []) [], typeRefineRefinement = Nothing}, \
-    \arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Nada :| []) [], typeRefineRefinement \
-    \= Nothing}})))], typeRefineRefinement = Nothing})}))}])})}"
+    \{nameTypeSignature = Name (Int :| []), nameTypeName = Concrete a} :| [NameType \
+    \{nameTypeSignature = Name (Int :| []), nameTypeName = Implicit b}], recordFamilySignature \
+    \= Just (Application (App {applicationName = Name (Foo :| []), applicationArgs \
+    \= Name (Int :| []) :| [Parened (Infix (Inf {infixLeft = Name (Fooy :| []), infixOp \
+    \= -> :| [], infixRight = Name (Nada :| [])}))]}))}))}])})}"
 
 --------------------------------------------------
 -- Arrow Testing
@@ -226,25 +347,20 @@ superArrowCase :: T.TestTree
 superArrowCase =
   shouldParseAs
     "superArrowCase"
-    Parser.arrowType
+    Parser.expression
     "( b : Bah -> \n c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
-    "Parens (Paren (ArrGen {arrowGenName = Just (Concrete b), arrowGenData = Arrows \
-    \(Arr (ArrGen {arrowGenName = Nothing, arrowGenData = TypeRefine {typeRefineName \
-    \= Start (Bah :| []) [], typeRefineRefinement = Nothing}, arrowGenArrow = ArrowUse \
-    \w})) (Arrows (Arr (ArrGen {arrowGenName = Just (Concrete c), arrowGenData = TypeRefine \
-    \{typeRefineName = Start (B :| []) [], typeRefineRefinement = Nothing}, arrowGenArrow \
-    \= ArrowUse 1})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine \
-    \= TypeRefine {typeRefineName = Start (Foo :| []) [], typeRefineRefinement = Nothing}}))), \
-    \arrowGenArrow = ArrowUse w})) (Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData \
-    \= TypeRefine {typeRefineName = Start (Foo :| []) [SymbolName (a :| []),SymbolName \
-    \(b :| [])], typeRefineRefinement = Nothing}, arrowGenArrow = ArrowUse w})) (Arrows \
-    \(Arr (ArrGen {arrowGenName = Just (Concrete a), arrowGenData = TypeRefine {typeRefineName \
-    \= Start (Bah :| []) [SymbolName (a :| []),SymbolName (c :| [])], typeRefineRefinement \
-    \= Nothing}, arrowGenArrow = ArrowUse 1})) (End (Arrows (Arr (ArrGen {arrowGenName \
-    \= Nothing, arrowGenData = TypeRefine {typeRefineName = Start (HAHAHHA :| []) [], typeRefineRefinement \
-    \= Nothing}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (foo :| []) [], typeRefineRefinement \
-    \= Nothing}}))))))"
+    "Infix (Inf {infixLeft = Parened (Infix (Inf {infixLeft = Name (b :| []), infixOp \
+    \= : :| [], infixRight = Infix (Inf {infixLeft = Name (Bah :| []), infixOp = \
+    \-> :| [], infixRight = Infix (Inf {infixLeft = Name (c :| []), infixOp = : :| \
+    \[], infixRight = Infix (Inf {infixLeft = Name (B :| []), infixOp = -o :| [], \
+    \infixRight = Name (Foo :| [])})})})})), infixOp = -> :| [], infixRight = Infix \
+    \(Inf {infixLeft = Application (App {applicationName = Name (Foo :| []), applicationArgs \
+    \= Name (a :| []) :| [Name (b :| [])]}), infixOp = -> :| [], infixRight = Infix \
+    \(Inf {infixLeft = Name (a :| []), infixOp = : :| [], infixRight = Infix (Inf \
+    \{infixLeft = Application (App {applicationName = Name (Bah :| []), applicationArgs \
+    \= Name (a :| []) :| [Name (c :| [])]}), infixOp = -o :| [], infixRight = Parened \
+    \(Infix (Inf {infixLeft = Name (HAHAHHA :| []), infixOp = -> :| [], infixRight \
+    \= Name (foo :| [])}))})})})})"
 
 --------------------------------------------------
 -- alias tests
@@ -254,11 +370,11 @@ typeTest :: T.TestTree
 typeTest =
   shouldParseAs
     "typeTest"
-    Parser.typeP
-    "type Foo a b c d = | Foo Bea"
-    "Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c,d], typeForm = NewType \
-    \(Declare {newTypeAlias = Foo, newTypeType' = TypeRefine {typeRefineName = Start \
-    \(Bea :| []) [], typeRefineRefinement = Nothing}})}"
+    Parser.topLevel
+    "type Foo a b c d = | Foo nah bah sad"
+    "Type (Typ {typeUsage = Nothing, typeName = Foo, typeArgs = [a,b,c,d], typeForm \
+    \= Data (NonArrowed {dataAdt = Sum (S {sumConstructor = Foo, sumValue = Just \
+    \(ADTLike [Name (nah :| []),Name (bah :| []),Name (sad :| [])])} :| [])})})"
 
 --------------------------------------------------------------------------------
 -- Modules test
@@ -277,19 +393,17 @@ moduleOpen =
         <> "end"
     )
     "Module (Mod (Like {functionLikedName = Foo, functionLikeArgs = [ConcreteA (MatchLogic \
-    \{matchLogicContents = MatchCon (Int :| []) [], matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (Type (Typ {typeUsage = Nothing, typeName = T, typeArgs = [], typeForm \
-    \= Alias (AliasDec {aliasType' = TypeRefine {typeRefineName = Start (Int :| [t]) \
-    \[], typeRefineRefinement = Nothing}})}) :| [Signature (Sig {signatureName = bah, \
-    \signatureUsage = Nothing, signatureArrowType = Arrows (Arr (ArrGen {arrowGenName \
-    \= Nothing, arrowGenData = TypeRefine {typeRefineName = Start (T :| []) [], typeRefineRefinement \
-    \= Nothing}, arrowGenArrow = ArrowUse w})) (Refined (NamedRefine {nameRefineName \
-    \= Nothing, namedRefineRefine = TypeRefine {typeRefineName = Start (T :| []) [], typeRefineRefinement \
-    \= Nothing}})), signatureConstraints = []}),Function (Func (Like {functionLikedName \
-    \= bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
+    \{matchLogicContents = MatchCon (Int :| []) [], matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (Type (Typ {typeUsage = Nothing, typeName = T, typeArgs \
+    \= [], typeForm = Alias (AliasDec {aliasType' = Name (Int :| [t])})}) :| [Signature \
+    \(Sig {signatureName = bah, signatureUsage = Nothing, signatureArrowType = Infix \
+    \(Inf {infixLeft = Name (T :| []), infixOp = -> :| [], infixRight = Name (T :| \
+    \[])}), signatureConstraints = []}),Function (Func (Like {functionLikedName = \
+    \bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
     \t, matchLogicNamed = Nothing})], functionLikeBody = Body (OpenExpr (OpenExpress \
     \{moduleOpenExprModuleN = Int :| [], moduleOpenExprExpr = Infix (Inf {infixLeft \
-    \= Name (t :| []), infixOp = + :| [], infixRight = Constant (Number (Integer' 3))})}))}))])}))"
+    \= Name (t :| []), infixOp = + :| [], infixRight = Constant (Number (Integer' \
+    \3))})}))}))])}))"
 
 moduleOpen' :: T.TestTree
 moduleOpen' =
@@ -301,21 +415,20 @@ moduleOpen' =
         <> "  open M"
         <> "  sig bah : Rec \n"
         <> "  let bah t = \n"
-        <> "     { a = (t + 3)"
+        <> "     { a = t + 3"
         <> "     , b = expr M.N.t}"
         <> "end"
     )
     "Module (Mod (Like {functionLikedName = Bah, functionLikeArgs = [ConcreteA (MatchLogic \
     \{matchLogicContents = MatchCon (M :| []) [], matchLogicNamed = Nothing})], functionLikeBody \
-    \= Body (ModuleOpen (Open (M :| [])) :| [Signature (Sig {signatureName = bah, signatureUsage \
-    \= Nothing, signatureArrowType = Refined (NamedRefine {nameRefineName = Nothing, \
-    \namedRefineRefine = TypeRefine {typeRefineName = Start (Rec :| []) [], typeRefineRefinement \
-    \= Nothing}}), signatureConstraints = []}),Function (Func (Like {functionLikedName \
-    \= bah, functionLikeArgs = [ConcreteA (MatchLogic {matchLogicContents = MatchName \
-    \t, matchLogicNamed = Nothing})], functionLikeBody = Body (ExpRecord (ExpressionRecord \
-    \{expRecordFields = NonPunned (a :| []) (Infix (Inf {infixLeft = Name (t :| []), infixOp \
-    \= + :| [], infixRight = Constant (Number (Integer' 3))})) :| [NonPunned (b :| []) (Application \
-    \(App {applicationName = expr :| [], applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
+    \= Body (ModuleOpen (Open (M :| [])) :| [Signature (Sig {signatureName = bah, \
+    \signatureUsage = Nothing, signatureArrowType = Name (Rec :| []), signatureConstraints \
+    \= []}),Function (Func (Like {functionLikedName = bah, functionLikeArgs = [ConcreteA \
+    \(MatchLogic {matchLogicContents = MatchName t, matchLogicNamed = Nothing})], \
+    \functionLikeBody = Body (ExpRecord (ExpressionRecord {expRecordFields = NonPunned \
+    \(a :| []) (Infix (Inf {infixLeft = Name (t :| []), infixOp = + :| [], infixRight \
+    \= Constant (Number (Integer' 3))})) :| [NonPunned (b :| []) (Application (App \
+    \{applicationName = Name (expr :| []), applicationArgs = Name (M :| [N,t]) :| []}))]}))}))])}))"
 
 --------------------------------------------------
 -- typeName tests
@@ -325,14 +438,12 @@ typeNameNoUniverse :: T.TestTree
 typeNameNoUniverse =
   shouldParseAs
     "typeNameNoUniverse"
-    Parser.typeNameParser
+    Parser.expression
     "Foo a b c (b -o d) a c u"
-    "Start (Foo :| []) [SymbolName (a :| []),SymbolName (b :| []),SymbolName (c :| []),ArrowName \
-    \(Arrows (Arr (ArrGen {arrowGenName = Nothing, arrowGenData = TypeRefine {typeRefineName \
-    \= Start (b :| []) [], typeRefineRefinement = Nothing}, arrowGenArrow = ArrowUse \
-    \1})) (Refined (NamedRefine {nameRefineName = Nothing, namedRefineRefine = TypeRefine \
-    \{typeRefineName = Start (d :| []) [], typeRefineRefinement = Nothing}}))),SymbolName \
-    \(a :| []),SymbolName (c :| []),SymbolName (u :| [])]"
+    "Application (App {applicationName = Name (Foo :| []), applicationArgs = Name \
+    \(a :| []) :| [Name (b :| []),Name (c :| []),Parened (Infix (Inf {infixLeft = \
+    \Name (b :| []), infixOp = -o :| [], infixRight = Name (d :| [])})),Name (a :| \
+    \[]),Name (c :| []),Name (u :| [])]})"
 
 --------------------------------------------------------------------------------
 -- Match tests
@@ -403,9 +514,10 @@ parens1 =
     "parens1"
     Parser.expression
     "(       ( \n(({a, b = 3+5})))\n)"
-    "ExpRecord (ExpressionRecord {expRecordFields = Punned (a :| []) :| [NonPunned \
-    \(b :| []) (Infix (Inf {infixLeft = Constant (Number (Integer' 3)), \
-    \infixOp = + :| [], infixRight = Constant (Number (Integer' 5))}))]})"
+    "Parened (Parened (Parened (Parened (ExpRecord (ExpressionRecord {expRecordFields \
+    \= Punned (a :| []) :| [NonPunned (b :| []) (Infix (Inf {infixLeft = Constant \
+    \(Number (Integer' 3)), infixOp = + :| [], infixRight = Constant (Number (Integer' \
+    \5))}))]})))))"
 
 --------------------------------------------------------------------------------
 -- Spacer tests

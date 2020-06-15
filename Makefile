@@ -33,6 +33,10 @@ format:
 test:
 	stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false"
 
+bench:
+	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
+
+
 repl-lib:
 	stack ghci juvix:lib
 
@@ -45,4 +49,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full
+.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full bench

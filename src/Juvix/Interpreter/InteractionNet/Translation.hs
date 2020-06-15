@@ -36,19 +36,19 @@ newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
       HasSink "level" Int,
       HasSource "level" Int
     )
-    via Rename "level" (Field "level" () (MonadState (State (Env net primVal))))
+    via StateField "level" (State (Env net primVal))
   deriving
     ( HasState "free" (Map.T Symbol (Node, PortType)),
       HasSink "free" (Map.T Symbol (Node, PortType)),
       HasSource "free" (Map.T Symbol (Node, PortType))
     )
-    via (Field "free" () (MonadState (State (Env net primVal))))
+    via StateField "free" (State (Env net primVal))
   deriving
     ( HasState "net" (net (AST.Lang primVal)),
       HasSink "net" (net (AST.Lang primVal)),
       HasSource "net" (net (AST.Lang primVal))
     )
-    via Rename "net'" (Field "net'" () (MonadState (State (Env net primVal))))
+    via Rename "net'" (StateField "net'" (State (Env net primVal)))
 
 execEnvState :: Network net => EnvState net primVal a -> Env net primVal -> Env net primVal
 execEnvState (EnvS m) = execState m

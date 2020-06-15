@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Juvix.Backends.ArithmeticCircuit.Compilation.Types where
 
 import qualified Juvix.Core.ErasedAnn as CoreErased

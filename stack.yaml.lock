@@ -89,13 +89,6 @@ packages:
   original:
     hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
 - completed:
-    hackage: morley-0.5.0@sha256:9e76a5bdaff0e769d75f88d1a85b021f35aa25bd322d08b1714ccf823a2f5bc9,11430
-    pantry-tree:
-      size: 14496
-      sha256: 45754c950052e6bec59ebe89512c25aee7975eb13b0d8b7ebf92380de9603739
-  original:
-    hackage: morley-0.5.0@sha256:9e76a5bdaff0e769d75f88d1a85b021f35aa25bd322d08b1714ccf823a2f5bc9,11430
-- completed:
     hackage: restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
     pantry-tree:
       size: 269
@@ -165,13 +158,6 @@ packages:
       sha256: c23445b7f035386d53b3046694672d165a5dfc9f20061c6ed5d3cd29ff0ef655
   original:
     hackage: ipprint-0.6@sha256:48ffe7c5acab06fbd70a68aa12bc980cc33dcf8f41bd76d692e3dee8805584c7,1417
-- completed:
-    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
-    pantry-tree:
-      size: 270
-      sha256: 402cd467a690373ca891fa31650376312be351244c6d7e187ca9961d3708de0a
-  original:
-    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
 - completed:
     hackage: pretty-terminal-0.1.0.0@sha256:e9135d86ebb2a8e3aaf5a79088de4628dbd49988388e0fbfc26c5ecb3c399ad9,1638
     pantry-tree:
@@ -257,25 +243,43 @@ packages:
   original:
     hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 - completed:
-    size: 247501
-    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
-    cabal-file:
-      size: 5402
-      sha256: 80069a54b754a2fdbb831c5f9a09f00fee2cf7cb565a1fcabaad8b6ce9f270bf
-    name: zkp
-    version: 0.1.0
-    sha256: dc79c6efe06bb03ad071f157622146e7ea69f5f049c09ae352eca166832dabf8
+    hackage: base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
     pantry-tree:
-      size: 3659
-      sha256: db88c47fbe996afa764bc4a398668427cdee4b6872ad4f33a226e5fcad7e2f7c
+      size: 112
+      sha256: 90db92c8401880187ce642c5345407bcbd9546ea235524dd445cab2566ee3db1
   original:
-    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+    hackage: base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
+- completed:
+    hackage: fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
+    pantry-tree:
+      size: 1004
+      sha256: 45fad678e9b54ef4d7872ff052a4cfe6d49912b9c7fb9fc4af881587f0713f6b
+  original:
+    hackage: fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
+- completed:
+    hackage: named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
+    pantry-tree:
+      size: 426
+      sha256: 4f9aaa00a4fac7404da5b5ea175cbb71142b5a47921ac0521f3836cc75681d9f
+  original:
+    hackage: named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
+- completed:
+    hackage: vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
+    pantry-tree:
+      size: 1857
+      sha256: 09713e6b691cb2a713104301079c692e72d8bdcbde23f90d510ba3f606263044
+  original:
+    hackage: vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
+- completed:
+    hackage: tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
+    pantry-tree:
+      size: 229
+      sha256: ef4e8284433af224f89a1dfd2968ea79de3570cef6e81b10187aca5d1fae6f76
+  original:
+    hackage: tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
 - completed:
     size: 24276
     url: https://github.com/acid-state/safecopy/archive/1be0894daeefff5126b25c9483ce2bf21845d05b.tar.gz
-    cabal-file:
-      size: 2660
-      sha256: 3e501301303a82d9e4bc9e24b96b9a5ce60d0dc0859b59872fe72616d95e28e0
     name: safecopy
     version: 0.10.2
     sha256: 136545d2093536735d9e285e7d2f12db127da821413b3b79dfdddbcbbbb60f57
@@ -287,9 +291,6 @@ packages:
 - completed:
     size: 51947
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
-    cabal-file:
-      size: 3146
-      sha256: f7e1e4edbe53a5b982e4ccf6a796881a61df4e959bd372659e6958e5c381c9ca
     name: sr-extra
     version: '1.65'
     sha256: e82c3443094ace54328f1380df201ea54a7a40b893ebe82dabc9d51120ef8ff4
@@ -301,9 +302,6 @@ packages:
 - completed:
     size: 66205
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-    cabal-file:
-      size: 4116
-      sha256: 980e6e2d63104c25a8660c2f50c6dda760a9c600cc001c9179d618ceb1cf7850
     name: z3
     version: '408.0'
     sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
@@ -315,9 +313,6 @@ packages:
 - completed:
     size: 2258
     url: https://github.com/cwgoes/uuid-orphans/archive/e23b58b46affb978c17a0eb3e760d28b058658ce.tar.gz
-    cabal-file:
-      size: 1063
-      sha256: 1358ab8f2415363e279b00736fc3e0ef10006a555b7dcbb35f2f271a2fb88e20
     name: uuid-orphans
     version: 1.4.4
     sha256: c5d4e6de0e3d5538ce4ac493ef7213bf9b689ddff45d45457ca91b09834462f0
@@ -329,9 +324,6 @@ packages:
 - completed:
     size: 13404
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
-    cabal-file:
-      size: 2263
-      sha256: b62cbe842800d5f07ee3c9ed3600bf7eb17dab2380ddcd2471ff83a19b459185
     name: jsonschema-gen
     version: 0.4.1.0
     sha256: fe5cab6b471e30feff3708a780d287357ccc80ae7278ea663bb3b99254a4ef4d
@@ -341,67 +333,8 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
-    size: 36625
-    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
-    cabal-file:
-      size: 3498
-      sha256: 86b5ab4efb4cb0367aebc7b25237f1066aec701cd2c292597d70a3ae4c9bc39a
-    name: pairing
-    version: 1.0.0
-    sha256: 39b4fd7914c53bdad59ba03d9060f13d926599641b5b67363f47a6f1b3a31db7
-    pantry-tree:
-      size: 2067
-      sha256: 3fb7682cd0321c4ef8b547f343cfee4ad3457514a8305458a948463eb6220590
-  original:
-    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
-- completed:
-    size: 77092
-    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
-    cabal-file:
-      size: 7856
-      sha256: fb8fa2120b0330bf4cb07c8511ab7fe6d046ac508440b326db2a7314dd49c5d9
-    name: elliptic-curve
-    version: 0.3.1
-    sha256: bf05e963f92daf3b88f32e756ab1bfa0b8fa9683ac9b30bf202aca3228e9acf1
-    pantry-tree:
-      size: 9970
-      sha256: 4c3c18badc18db9effd416ea73615371f927fc97ddbcb0c564f6cc77fd4efff1
-  original:
-    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
-- completed:
-    size: 20311
-    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
-    cabal-file:
-      size: 3581
-      sha256: 0ff6cf1c79f37639c71148f3213599ae310abc4e8519970b2ca587293e0d3fbd
-    name: galois-field
-    version: 1.0.1
-    sha256: a67df5de45445ec454d93c6c94f8e24327a6b6a8471bdf3c1f9ebb43ca9dbddb
-    pantry-tree:
-      size: 1785
-      sha256: 5d1fbed6827618a1b4718afc571b727c31ea5ad97d9ca39d72c8b77c72ab2376
-  original:
-    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
-- completed:
-    size: 16425
-    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
-    cabal-file:
-      size: 4250
-      sha256: d08dc4255ec4164d8f1f54c70b29997dd67a7bc1ce547ff89efa16be19f8a48d
-    name: sonic
-    version: 0.3.0
-    sha256: a2004eb9ea30eba13294c768106847aa6cb1e5cdddfb763cd397ceb6da5c04b9
-    pantry-tree:
-      size: 1385
-      sha256: 144ced136259458ad7a3fc5d7684ec7244dd80afb950041ff34cbf76d6d5e2f5
-  original:
-    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
-- completed:
     size: 24372
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
-    cabal-file:
-      size: 2085
-      sha256: d4bef2a796a5567b888e568e8c3117e4c2f5d1108b803ec46bd7804d593ab869
     name: poly
     version: 0.3.2.0
     sha256: 6940270f46bc6b54c52397e837b9bcee87c90002665cc2a1302964494153d461
@@ -411,22 +344,92 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 8545
-    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
-    cabal-file:
-      size: 1489
-      sha256: ce21201c9e9e8880ce1aa901595b04cd334c9de5aac23f2ab888f879c9646e47
+    size: 10483
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
     name: extensible-data
     version: 0.1.0
-    sha256: f8717bbb697e4bfc1deb1b3c9ddffd04ce0061ef30b4f04d82fab47bb589b0b6
+    sha256: 72a1c07313350e423c2a56beac41bddfc4b9b32f7e4a478313455d7e14796a4e
     pantry-tree:
-      size: 632
-      sha256: a8e7d8fd475fa83e7806152b05ad617ade80262fae03fc40e37789c1197bab29
+      size: 891
+      sha256: dbbdaeb19d5b03d600910099204032bf30fad7a0889c6f68e697539bf30ebcf2
   original:
-    url: https://github.com/cryptiumlabs/extensible-data/archive/da99f1318558dbf3eda9198f04aa95778ca4399e.tar.gz
+    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
+- completed:
+    size: 247501
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+    name: zkp
+    version: 0.1.0
+    sha256: dc79c6efe06bb03ad071f157622146e7ea69f5f049c09ae352eca166832dabf8
+    pantry-tree:
+      size: 3659
+      sha256: db88c47fbe996afa764bc4a398668427cdee4b6872ad4f33a226e5fcad7e2f7c
+  original:
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+- completed:
+    hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
+    pantry-tree:
+      size: 10983
+      sha256: 94aaca1080f3195d057274f65dbfdf0035468b459052d88f970ca1d462b44b07
+  original:
+    hackage: morley-1.2.0
+- completed:
+    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+    pantry-tree:
+      size: 270
+      sha256: 402cd467a690373ca891fa31650376312be351244c6d7e187ca9961d3708de0a
+  original:
+    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+- completed:
+    subdir: tezos-bake-monitor-lib
+    name: tezos-bake-monitor-lib
+    version: 0.1.0.0
+    git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+    pantry-tree:
+      size: 8709
+      sha256: 1ccdb32989e9a6eec693bcb3b4af2c5e29f4f5805e876545679a3612a3e578fb
+    commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+  original:
+    subdir: tezos-bake-monitor-lib
+    git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+    commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+- completed:
+    hackage: constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+    pantry-tree:
+      size: 594
+      sha256: b0bcc96d375ee11b1972a2e9e8e42039b3f420b0e1c46e9c70652470445a6505
+  original:
+    hackage: constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+- completed:
+    hackage: dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
+    pantry-tree:
+      size: 290
+      sha256: 9cbfb32b5a8a782b7a1c941803fd517633cb699159b851c1d82267a9e9391b50
+  original:
+    hackage: dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
+- completed:
+    hackage: dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
+    pantry-tree:
+      size: 436
+      sha256: 32eeadeb991a290a1da41ce7e995dee7d38ebba3bd3e53ea8074c32c086701fd
+  original:
+    hackage: dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
+- completed:
+    hackage: hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
+    pantry-tree:
+      size: 704
+      sha256: a204259113ac5761ded1dac7e37a9d54245f84c8adaeec452346fe3256337d83
+  original:
+    hackage: hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
+- completed:
+    hackage: monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
+    pantry-tree:
+      size: 569
+      sha256: c354e916cb3aa9a0728a60f08440dc589a9e6d8275f047dbe9ab73f168247561
+  original:
+    hackage: monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
 snapshots:
 - completed:
-    size: 524155
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/19.yaml
-    sha256: 9f79f6494473c9b46911364b94c4b5ef19ca8d35ebf62e46697cf651f198ee19
-  original: lts-14.19
+    size: 494638
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/11.yaml
+    sha256: 5747328cdcbb8fe9c96fc048b5566167c80dd176a41b52d3b363058e3cc1dc5d
+  original: lts-15.11

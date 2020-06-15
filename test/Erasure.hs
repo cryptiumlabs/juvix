@@ -2,6 +2,7 @@ module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Types as Core
@@ -9,6 +10,9 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+
+type EraseureType primTy primVal =
+  Either Erasure.Error (Core.AssignWithType primTy primVal ())
 
 shouldEraseTo ::
   forall primTy primVal.
@@ -21,7 +25,11 @@ shouldEraseTo parameterisation (term, usage, ty) erased =
   T.testCase
     (show (term, usage, ty) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? ((Core.term . Core.termAssign) |<< Erasure.erase parameterisation term usage ty)
+        T.@=? ( (Core.term . Core.termAssign)
+                  |<< ( Erasure.erase parameterisation term usage ty ::
+                          EraseureType primTy primVal
+                      )
+              )
     )
 
 erasureTests :: T.TestTree
@@ -48,7 +56,7 @@ appUnusedArg =
     Unit.t
     ( HR.Elim
         ( HR.App
-            (HR.Ann one constTerm constTy)
+            (HR.Ann one constTerm constTy 0)
             (HR.Elim (HR.Prim Unit.Val))
         ),
       one,
@@ -60,29 +68,29 @@ unusedFunction :: T.TestTree
 unusedFunction =
   shouldEraseTo
     Unit.t
-    (HR.Elim (HR.App (HR.Ann one constTerm constTy2) identityTerm), one, identityTy)
+    (HR.Elim (HR.App (HR.Ann one constTerm constTy2 0) identityTerm), one, identityTy)
     (Erased.Lam "y" (Erased.Var "y"))
 
 identityTerm :: HR.Term Unit.Ty Unit.Val
 identityTerm = HR.Lam "y" (HR.Elim (HR.Var "y"))
 
 identityTy :: HR.Term Unit.Ty Unit.Val
-identityTy = HR.Pi one unitTy unitTy
+identityTy = HR.Pi one "x" unitTy unitTy
 
 appTerm :: HR.Term Unit.Ty Unit.Val
 appTerm = HR.Lam "f" (HR.Lam "x" (HR.Elim (HR.App (HR.Var "f") (HR.Elim (HR.Var "x")))))
 
 appTy :: HR.Term Unit.Ty Unit.Val
-appTy = HR.Pi one identityTy (HR.Pi one unitTy unitTy)
+appTy = HR.Pi one "f" identityTy identityTy
 
 constTerm :: HR.Term Unit.Ty Unit.Val
 constTerm = HR.Lam "x" identityTerm
 
 constTy :: HR.Term Unit.Ty Unit.Val
-constTy = HR.Pi mempty unitTy identityTy
+constTy = HR.Pi mempty "x" unitTy identityTy
 
 constTy2 :: HR.Term Unit.Ty Unit.Val
-constTy2 = HR.Pi mempty identityTy identityTy
+constTy2 = HR.Pi mempty "A" identityTy identityTy
 
 unitTerm :: HR.Term Unit.Ty Unit.Val
 unitTerm = HR.Elim (HR.Prim Unit.Val)

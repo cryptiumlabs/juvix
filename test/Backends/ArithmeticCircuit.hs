@@ -48,6 +48,9 @@ backendCircuit =
     -- , shouldProve preimage equalTypes preimageCircuit
     ]
 
+runCirc :: Num f => Circ.Expr Circ.Wire f ty -> Circ.ArithCircuit f
+runCirc = Circ.execCircuitBuilder . Circ.compile
+
 equalTerm :: Term
 equalTerm = Base.lambda ["x"] (Base.var "x")
 

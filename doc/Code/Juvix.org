@@ -266,7 +266,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
-**** Contract
+**** Contract <<Michelson/Contract>>
 This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
@@ -288,24 +288,35 @@ This module provides a default contract environment
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
+  + [[Michelson/Compilation]]
   + [[Michelson/Compilation/Types]]
-  + [[Contract]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Contract]]
   + [[DSL/Environment]]
-  + [[ErasedAnn/Types]]
+  + [[Instructions]]
+  + [[InstructionsEff]]
+  + [[Interpret]]
+  + [[Prim]]
+  + [[Core/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
   + [[DSL/Environment]]
+  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
+  + [[Core/Types]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson
@@ -328,6 +339,9 @@ This module provides a default contract environment
   + [[Library]]
   + [[HashMap]]
 **** DSL
+***** Contract <<DSL/Contract>>
+- _Relies on_
+  + [[Library]]
 ***** Environment <<DSL/Environment>>
 - _Relies on_
   + [[Michelson/Compilation/Types]]
@@ -362,6 +376,11 @@ This module provides a default contract environment
   + [[Usage]]
   + [[Library]]
   + [[Library]]
+***** Interpret
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[DSL/Contract]]
+  + [[Library]]
 ***** Untyped
 - _Relies on_
   + [[Library]]
@@ -379,6 +398,9 @@ This module provides a default contract environment
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+*** Parameterisation <<Core/Parameterisation>>
+- _Relies on_
+  + [[Library]]
 *** Pipeline
 - _Relies on_
   + [[Core/EAC]]
@@ -402,6 +424,7 @@ This module provides a default contract environment
   + [[Erasure/Types]]
   + [[HR/Types]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 *** Usage
 - _Relies on_
@@ -409,6 +432,16 @@ This module provides a default contract environment
 *** Utility
 - _Relies on_
   + [[Library]]
+*** Common
+**** Context
+- Serves as the context for lower level programs of the =Juvix=
+  Programming Language
+- This is parameterized per phase which may store the type and
+  term in slightly different ways
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 *** EAC <<Core/EAC>>
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
@@ -486,6 +519,17 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+**** Prim
+- This module represents the type which will be sent to the
+  paramiterization
+- the =Take= type is what a paramiterization will take coming in
+- the =Return= type is what will be handed back to Core to evaluate
+  and decide on the next steps. If this is a =Left= type checking
+  has failed, if it's a =Right= then type checking will continue
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
+  + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[Usage]]
@@ -507,7 +551,7 @@ This module provides a default contract environment
 **** Types <<Erasure/Types>>
 - _Relies on_
   + [[Erased]]
-  + [[IR/Types]]
+  + [[Typechecker/Types]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -550,9 +594,10 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Base]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
@@ -563,8 +608,29 @@ Transformations between different extensions.
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
+  + [[Log]]
+  + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
+  + [[Usage]]
+  + [[Library]]
+***** Env <<Typechecker/Env>>
+- _Relies on_
+  + [[Log]]
+  + [[Typechecker/Types]]
+  + [[Library]]
+***** Log
+- _Relies on_
+  + [[Library]]
+  + [[Usage]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+***** Types <<Typechecker/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Base]]
+  + [[Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
@@ -572,7 +638,6 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[Base]]
-  + [[Usage]]
   + [[Library]]
 ***** Base
 - _Relies on_
@@ -651,16 +716,16 @@ Quantitative type implementation inspired by
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
-  + [[Usage]]
   + [[Lexer]]
   + [[Frontend/Types]]
   + [[Library]]
 *** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out
-  [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
 - _Relies on_
   + [[Usage]]
   + [[Library]]
@@ -745,7 +810,7 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** Backends
-***** Env
+***** Env <<Backends/Env>>
 - Env serves as the environment for running the back-ends
   + This includes the diagnostic information about how the code is ran
   + Also includes the effect handler types and the runner functions
@@ -762,7 +827,7 @@ Can be added to via core translation
   + This back-end is more useful than [[Maps]] as it can produce
     graphical outputs, see [[Visualize]]
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -779,7 +844,7 @@ Can be added to via core translation
 - this is an implementation of said interface using the =EnumMap= data structure
 - This code will be imported in Tests as a possible back-end for testing
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -791,7 +856,7 @@ Can be added to via core translation
   2. Dup
   3. Era
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -799,7 +864,7 @@ Can be added to via core translation
 - An evaluator for the Default Language
 - Serves as a reference way of creating interaction nets
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
@@ -833,7 +898,7 @@ Can be added to via core translation
   generate said gif), displaying every reduction step until the term
   is normalized
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Backends/Graph]]
   + [[Nets/Default]]
   + [[Library]]

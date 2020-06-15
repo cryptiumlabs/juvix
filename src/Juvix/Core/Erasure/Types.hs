@@ -1,48 +1,51 @@
 module Juvix.Core.Erasure.Types where
 
 import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Library hiding (empty)
 
 data Env primTy primVal
   = Env
       { typeAssignment :: Erased.TypeAssignment primTy,
-        context :: IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal),
+        context :: TC.Context primTy primVal,
         nextName :: Int,
         nameStack :: [Int]
       }
   deriving (Show, Eq, Generic)
 
+type EnvEraAlias primTy primVal =
+  ExceptT Error (State (Env primTy primVal))
+
 newtype EnvT primTy primVal a
-  = EnvEra (ExceptT Error (State (Env primTy primVal)) a)
+  = EnvEra (EnvEraAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "typeAssignment" (Erased.TypeAssignment primTy),
       HasSink "typeAssignment" (Erased.TypeAssignment primTy),
       HasSource "typeAssignment" (Erased.TypeAssignment primTy)
     )
-    via Field "typeAssignment" () (MonadState (ExceptT Error (State (Env primTy primVal))))
+    via StateField "typeAssignment" (EnvEraAlias primTy primVal)
   deriving
-    ( HasState "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
-      HasSink "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal)),
-      HasSource "context" (IR.Contexts primTy primVal (IR.EnvTypecheck primTy primVal))
+    ( HasState "context" (TC.Context primTy primVal),
+      HasSink "context" (TC.Context primTy primVal),
+      HasSource "context" (TC.Context primTy primVal)
     )
-    via Field "context" () (MonadState (ExceptT Error (State (Env primTy primVal))))
+    via StateField "context" (EnvEraAlias primTy primVal)
   deriving
     ( HasState "nextName" Int,
       HasSink "nextName" Int,
       HasSource "nextName" Int
     )
-    via Field "nextName" () (MonadState (ExceptT Error (State (Env primTy primVal))))
+    via StateField "nextName" (EnvEraAlias primTy primVal)
   deriving
     ( HasState "nameStack" [Int],
       HasSink "nameStack" [Int],
       HasSource "nameStack" [Int]
     )
-    via Field "nameStack" () (MonadState (ExceptT Error (State (Env primTy primVal))))
+    via StateField "nameStack" (EnvEraAlias primTy primVal)
   deriving
     (HasThrow "erasureError" Error)
-    via MonadError (ExceptT Error (MonadState (State (Env primTy primVal))))
+    via MonadError (EnvEraAlias primTy primVal)
 
 data Error
   = Unsupported

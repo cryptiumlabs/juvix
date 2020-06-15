@@ -15,6 +15,10 @@ usageFromType Ann.SymT {} = []
 usageFromType Ann.Star {} = []
 usageFromType Ann.PrimTy {} = []
 
+piToReturnType :: Ann.Type primTy primVal -> Ann.Type primTy primVal
+piToReturnType (Ann.Pi _ _ rest) = piToReturnType rest
+piToReturnType last = last
+
 piToList :: Ann.Type primTy primVal -> [(Usage.T, Ann.Type primTy primVal)]
 piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
 piToList Ann.SymT {} = []

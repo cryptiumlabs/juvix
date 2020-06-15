@@ -16,39 +16,61 @@ extra-source-files:
 dependencies:
   - base >= 4.11 && < 5
   - protolude
-  - text
-  - mtl
-  - containers
-  - unordered-containers
-  - hashable
-  - fgl
-  - lens
-  - parsec
-  - attoparsec
-  - attoparsec-expr
-  - capability >= 0.2.0.0
-  - fgl-visualize
-  - enummapset
-  - turtle
   - directory
-  - llvm-hs
-  - llvm-hs-pure
-  - llvm-hs-pretty
-  - bytestring
+  - lens
+  - Cabal
+  - extensible-data
+  - capability >= 0.2.0.0
+  ###########################
+  # Dependency for OS
+  ###########################
+  - turtle
   - time
-  - morley
+  ###########################
+  # Dependency for Arithmetic
+  ###########################
   - bulletproofs
   - elliptic-curve
   - sonic
-  - aeson
-  - Cabal
-  - extensible-data
   - arithmetic-circuits
   - galois-field
   - crypto-numbers
   - zkp
   - pairing
   - MonadRandom
+  ###########################
+  # Dependency for Structs
+  ###########################
+  - text
+  - mtl
+  - containers
+  - unordered-containers
+  - hashable
+  - fgl
+  - fgl-visualize
+  - bytestring
+  - enummapset
+  ###########################
+  # Dependency for Parsers
+  ###########################
+  - parsec
+  - attoparsec
+  - attoparsec-expr
+  - aeson
+  ###########################
+  # Dependency for LLVM
+  ###########################
+  - llvm-hs
+  - llvm-hs-pure
+  - llvm-hs-pretty
+  ###########################
+  # Dependency for Morley
+  ###########################
+  - morley
+  
+  - vinyl
+  - singletons
+  - fmt
 
 default-extensions:
   - NoImplicitPrelude
@@ -105,6 +127,7 @@ library:
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
+    - Juvix.Core.Common.Context
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
@@ -164,6 +187,8 @@ library:
     - Juvix.Backends.Michelson.DSL.InstructionsEff
     - Juvix.Backends.Michelson.DSL.Environment
     - Juvix.Backends.Michelson.DSL.Untyped
+    - Juvix.Backends.Michelson.DSL.Contract
+    - Juvix.Backends.Michelson.DSL.Interpret
     - Juvix.Backends.Michelson.DSL.Utils
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
@@ -216,6 +241,11 @@ library:
     - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
     - Juvix.Core.ErasedAnn.Erasure
+    - Juvix.Core.ErasedAnn.Prim
+    - Juvix.Core.IR.Typechecker.Types
+    - Juvix.Core.IR.Typechecker.Log
+    - Juvix.Core.IR.Typechecker.Env
+    - Juvix.Core.Parameterisation
 
 executables:
   juvix:
@@ -248,7 +278,15 @@ tests:
       - tasty
       - tasty-hunit
       - tasty-quickcheck
-      - QuickCheck
-      - temporary
-      - raw-strings-qq
-      - process
+
+benchmarks:
+  juvix-bench:
+    main:         Main.hs
+    source-dirs:  bench
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - juvix
+      - criterion

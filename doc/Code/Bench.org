@@ -1,0 +1,12 @@
+* Main
+- _Relies on_
+  + [[Library]]
+* Frontend
+** Parser
+- _Relies on_
+  + [[Parser]]
+  + [[Types]]
+  + [[Library]]
+* ghc
+** Church
+** Map

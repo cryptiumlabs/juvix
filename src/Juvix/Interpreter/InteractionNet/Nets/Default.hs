@@ -12,7 +12,6 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Interface as Interfac
 import Juvix.Interpreter.InteractionNet.NodeInterface as NInterface
 import qualified Juvix.Interpreter.InteractionNet.Shared as Shared
 import Juvix.Library hiding (curry3, link, reduce)
-import Prelude (Show (..))
 
 data Lang primVal
   = Auxiliary3 (Auxiliary3 primVal)

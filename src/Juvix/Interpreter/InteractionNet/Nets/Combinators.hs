@@ -10,7 +10,6 @@
 module Juvix.Interpreter.InteractionNet.Nets.Combinators where
 
 import Control.Lens
-import Data.Foldable (foldrM)
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
 import Juvix.Interpreter.InteractionNet.Backends.Interface
 import Juvix.Interpreter.InteractionNet.NodeInterface

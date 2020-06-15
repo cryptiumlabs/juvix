@@ -1,12 +1,9 @@
 module Juvix.Backends.ArithmeticCircuit.ZKP where
 
-import Circuit.Arithmetic (generateRoots)
-import Crypto.Number.Serialize
-import Data.Aeson
 import Data.Pairing.BN254 (BN254, Fr, Pairing (..))
 import qualified Data.Curve.Weierstrass.BN254 as G1
 import qualified Data.Curve.Weierstrass.BN254T as G2
-import Data.Field.Galois (Extension, rnd, toP)
+import Data.Field.Galois (rnd)
 import qualified Protocol.Groth as Groth
 import QAP
 import qualified Data.Map as Map
@@ -14,7 +11,7 @@ import Fresh (evalFresh, fresh)
 import Juvix.Backends.ArithmeticCircuit.Compilation as Base
 import Circuit
 import Protolude
-import Control.Monad.Random
+import Control.Monad.Random()
 
 data SetupOutput = Setup { randsetup :: Groth.RandomSetup Fr
                    , qap :: QAP Fr

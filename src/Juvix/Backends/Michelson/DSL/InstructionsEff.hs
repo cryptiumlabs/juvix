@@ -12,7 +12,6 @@ module Juvix.Backends.Michelson.DSL.InstructionsEff where
 
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
-import qualified Debug.Trace as Trace
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as Env
@@ -24,6 +23,7 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
 import qualified Michelson.Untyped.Instr as Instr
+import qualified Michelson.Untyped.Type as MT
 import qualified Michelson.Untyped.Value as V
 import Prelude (error)
 
@@ -41,7 +41,7 @@ expandedToInst :: Env.Reduction m => Untyped.T -> Env.Expanded -> m Instr.Expand
 expandedToInst ty exp =
   case exp of
     Env.Constant c -> do
-      let newInstr = Instructions.push ty c
+      let newInstr = VStack.constToInstr ty c
       addInstr newInstr
       pure newInstr
     Env.Expanded op -> pure op
@@ -65,6 +65,16 @@ inst (Types.Ann _usage ty t) =
         Types.Constant m -> do
           consVal (Env.Constant m) ty
           pure (Env.Constant m)
+        -- We lose exhasution but it's a big match :(
+        x ->
+          constructPrim (newPrimToInstrErr x) ty
+
+
+applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
+applyPrimOnArgs prim arguments =
+  let newTerm = Ann.AppM prim arguments
+      retType = Utils.piToReturnType (Ann.type' prim)
+   in Ann.Ann one retType newTerm
 
 add,
   mul,
@@ -148,7 +158,7 @@ var symb = do
               )
           Nothing ->
             throw @"compilationError" (Types.NotInStack symb)
-  case VStack.lookup symb stack of
+  case VStack.lookupFree symb stack of
     Nothing ->
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) -> do
@@ -157,8 +167,8 @@ var symb = do
     Just (VStack.Value (VStack.Lam' lamPartial)) -> do
       pushStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
-    Just (VStack.Position usage index)
-      | one == usage ->
+    Just (VStack.Position (VStack.Usage usage _saved) index)
+      | usage == one ->
         Env.Expanded <$> moveToFront index
       | otherwise ->
         Env.Expanded <$> dupToFront index
@@ -179,38 +189,95 @@ nameSymb :: Env.Reduction m => Symbol -> Types.NewTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
+type RunInstr =
+  (forall m. Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded)
+
 primToFargs :: Num b => Types.NewPrim -> Types.Type -> (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
-  case inst of
-    -- Can't abstract out pattern due to bad forall resolution!
-    Instr.ADD _ -> (Env.Fun (add newTy2), 2)
-    Instr.SUB _ -> (Env.Fun (sub newTy2), 2)
-    Instr.MUL _ -> (Env.Fun (mul newTy2), 2)
-    Instr.OR {} -> (Env.Fun (or newTy2), 2)
-    Instr.AND _ -> (Env.Fun (and newTy2), 2)
-    Instr.XOR _ -> (Env.Fun (xor newTy2), 2)
-    Instr.EQ {} -> (Env.Fun (eq newTy1), 1)
-    Instr.NEQ _ -> (Env.Fun (neq newTy1), 1)
-    Instr.LT {} -> (Env.Fun (lt newTy1), 1)
-    Instr.LE {} -> (Env.Fun (le newTy1), 1)
-    Instr.GE {} -> (Env.Fun (ge newTy1), 1)
-    Instr.GT {} -> (Env.Fun (gt newTy1), 1)
-    Instr.NEG _ -> (Env.Fun (neg newTy1), 1)
-    Instr.ABS _ -> (Env.Fun (abs newTy1), 1)
-    Instr.CAR {} -> (Env.Fun (car newTy1), 1)
-    Instr.CDR {} -> (Env.Fun (cdr newTy1), 1)
-    Instr.PAIR {} -> (Env.Fun (pair newTy2), 2)
-    Instr.EDIV _ -> (Env.Fun (ediv newTy2), 2)
-    Instr.ISNAT _ -> (Env.Fun (isNat newTy1), 1)
-    Instr.PUSH {} -> (Env.Fun pushConstant, 1)
+  (Env.Fun (f (newTy numArgs)), fromIntegral numArgs)
   where
     newTy i = eatType i ty
-    newTy2 = newTy 2
-    newTy1 = newTy 1
+    numArgs = Instructions.toNumArgs inst
+    --
+    f :: RunInstr
+    f =
+      case inst of
+        Instr.ADD _ -> add
+        Instr.SUB _ -> sub
+        Instr.MUL _ -> mul
+        Instr.OR {} -> or
+        Instr.AND _ -> and
+        Instr.XOR _ -> xor
+        Instr.EQ {} -> eq
+        Instr.NEQ _ -> neq
+        Instr.LT {} -> lt
+        Instr.LE {} -> le
+        Instr.GE {} -> ge
+        Instr.GT {} -> gt
+        Instr.NEG _ -> neg
+        Instr.ABS _ -> abs
+        Instr.CAR {} -> car
+        Instr.CDR {} -> cdr
+        Instr.PAIR {} -> pair
+        Instr.EDIV _ -> ediv
+        Instr.ISNAT _ -> isNat
+        Instr.PUSH {} -> const pushConstant
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
+primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
+
+newPrimToInstrErr :: Types.NewPrim -> Types.NewPrim
+newPrimToInstrErr x =
+  let inst =
+        case x of
+          Types.AddN -> Instructions.add
+          Types.AddI -> Instructions.add
+          Types.AddTimeStamp -> Instructions.add
+          Types.AddMutez -> Instructions.add
+          Types.NegN -> Instructions.neg
+          Types.NegI -> Instructions.neg
+          Types.SubN -> Instructions.sub
+          Types.SubI -> Instructions.sub
+          Types.SubMutez -> Instructions.sub
+          Types.SubTimeStamp -> Instructions.sub
+          Types.MulI -> Instructions.mul
+          Types.MulN -> Instructions.mul
+          Types.MulMutez -> Instructions.mul
+          Types.EDivI -> Instructions.ediv
+          Types.EDivN -> Instructions.ediv
+          Types.EDivMutez -> Instructions.ediv
+          Types.OrB -> Instructions.or
+          Types.ORI -> Instructions.or
+          Types.AndI -> Instructions.and
+          Types.AndB -> Instructions.and
+          Types.XorI -> Instructions.xor
+          Types.XorB -> Instructions.xor
+          Types.NotI -> Instructions.not
+          Types.NotB -> Instructions.not
+          Types.CompareI -> Instructions.compare
+          Types.CompareS -> Instructions.compare
+          Types.CompareP -> Instructions.compare
+          Types.CompareTimeStamp -> Instructions.compare
+          Types.CompareMutez -> Instructions.compare
+          Types.CompareBytes -> Instructions.compare
+          Types.CompareHash -> Instructions.compare
+          Types.SizeMap -> Instructions.size
+          Types.SizeSet -> Instructions.size
+          Types.SizeList -> Instructions.size
+          Types.SizeBytes -> Instructions.size
+          Types.SizeS -> Instructions.size
+          Types.MemSet -> Instructions.mem
+          Types.MemMap -> Instructions.mem
+          Types.UpdateSet -> Instructions.update
+          Types.UpdateMap -> Instructions.update
+          Types.UpdateBMap -> Instructions.update
+          Types.GetMap -> Instructions.get
+          Types.GetBMap -> Instructions.get
+          Types.Constant _ -> error "tried to convert a to prim"
+          Types.Inst _ -> error "tried to convert an inst to an inst!"
+   in Instructions.toNewPrimErr inst
 
 appM :: Env.Reduction m => Types.NewTerm -> [Types.NewTerm] -> m Env.Expanded
 appM form@(Types.Ann _u ty t) args =
@@ -231,12 +298,16 @@ appM form@(Types.Ann _u ty t) args =
 
 applyExpanded :: Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
 applyExpanded expanded args = do
-  modify @"stack" (VStack.drop 1)
+  (elem, ty) <- VStack.car |<< get @"stack"
   case expanded of
-    Env.Curr c -> apply c args []
+    Env.Curr c -> do
+      modify @"stack" (VStack.drop 1)
+      apply c args []
     -- We may get a Michelson lambda if we have one
     -- in storage, make sure to handle this case!
-    Env.MichelsonLam -> undefined
+    Env.MichelsonLam -> do
+      let VStack.VarE sym _ (Just VStack.MichelsonLambda) = elem
+      applyLambdaFromStorageNArgs (Set.findMin sym) ty args
     Env.Constant _ -> throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ -> throw @"compilationError" (Types.InternalFault "App on Michelson")
     Env.Nop -> throw @"compilationError" (Types.InternalFault "App on NOP")
@@ -305,7 +376,7 @@ onPairGen1 op f =
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
-  v <- traverse (protect . (inst >=> promoteTopStack)) instrs
+  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
   case v of
     instr2 : instr1 : _ -> do
       -- May be the wrong order?
@@ -317,8 +388,11 @@ onTwoArgs op f typ instrs = do
                in pure (f i1 i2)
             | otherwise -> do
               traverse_ addExpanded instrs
+              -- add when we normalize
+              -- copyAndDrop 2
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
       modify @"stack" (VStack.drop 2)
       consVal res typ
       pure res
@@ -335,8 +409,10 @@ onOneArgs op f typ instrs = do
                in pure (f i1)
             | otherwise -> do
               addExpanded instr1
+              -- copyAndDrop 1
               addInstr op
               pure Env.Nop
+      -- remove when we normalize
       modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
@@ -363,6 +439,7 @@ moveToFront num = do
   modify @"stack" (VStack.dig (fromIntegral num))
   pure inst
 
+-- Now unused
 dupToFront :: (Env.Instruction m, Integral a) => a -> m Instr.ExpandedOp
 dupToFront num = do
   modify @"stack" (VStack.dupDig (fromIntegral num))
@@ -374,6 +451,11 @@ dupToFront num = do
           <> Instructions.dug (succ (fromIntegral num))
   addInstr instrs
   pure instrs
+
+-- Unsafe to implmeent until we normalize core
+copyAndDrop :: Applicative f => p -> f ()
+copyAndDrop _i =
+  pure ()
 
 data Protect
   = Protect
@@ -415,7 +497,7 @@ addExpanded (Protect _ i) = addInstrs i
 promoteTopStack :: Env.Reduction m => Env.Expanded -> m Env.Expanded
 promoteTopStack x = do
   stack <- get @"stack"
-  (insts, stack') <- VStack.promote 1 stack promoteLambda
+  (insts, stack') <- VStack.promoteSave 1 stack promoteLambda
   put @"stack" stack'
   addInstrs insts
   pure x
@@ -512,18 +594,20 @@ apply closure args remainingArgs = do
     traverseName = traverse_ (uncurry name) . reverse
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
     app =
-      Env.unFun
-        (Env.fun closure)
-        $ zipWith makeVar (reverse (Env.argsLeft closure))
-        $ reverse
-        $ Utils.piToListTy
-        $ Env.ty closure
+      Env.ty closure
+        |> Utils.piToListTy
+        |> reverse
+        |> zipWith makeVar (reverse (Env.argsLeft closure))
+        -- Undo our last flip, and put the list in the proper place
+        |> reverse
+        |> Env.unFun (Env.fun closure)
     makeVar (Env.Term name usage) ty = Types.Ann usage ty (Ann.Var name)
+    -- TODO ∷ see if we have to drop the top of the stack? It seems to be handled?
     recur (Env.Curr c) xs =
       apply c [] xs
-    -- TODO ∷ make exec case for Michelson lambdas
-    -- This would be possible if (storage = f) → g f = f 3!
-    recur Env.MichelsonLam _xs = undefined
+    -- Exec case for Michelson lambdas, e.g. if (storage = f) → g f = f 3!
+    recur Env.MichelsonLam _xs =
+      applyLambdaFromStorageNArgs undefined undefined args
     recur (Env.Constant _) _ =
       throw @"compilationError" (Types.InternalFault "apply to non lam")
     recur (Env.Expanded _) _ =
@@ -537,11 +621,19 @@ deleteVar :: Env.Instruction m => Env.ErasedTerm -> m ()
 deleteVar (Env.Term name _usage) = do
   stack <- get @"stack"
   let pos = VStack.lookupAllPos name stack
-      f (VStack.Value _) = pure ()
-      f (VStack.Position _ 0) = pure ()
-      f (VStack.Position _ index) = do
-        addInstr (Instructions.dipN (fromIntegral index) [Instructions.drop])
-        modify @"stack" (VStack.dropPos index)
+      op i = do
+        addInstr (Instructions.dipN (fromIntegral i) [Instructions.drop])
+        modify @"stack" (VStack.dropPos i)
+      f (VStack.Value _) =
+        pure ()
+      f (VStack.Position _ 0) = do
+        stack <- get @"stack"
+        if  | VStack.constantOnTop stack ->
+              op 0
+            | otherwise ->
+              pure ()
+      f (VStack.Position _ index) =
+        op index
   -- reverse is important here, as we don't decrease the pos of upcoming terms
   -- note that this should only ever hit at most 2 elements, so the
   -- cost of this slightly inefficient generation does not ever matter!
@@ -634,7 +726,7 @@ consVarGen symb result usage ty = do
     VStack.cons
       ( VStack.VarE
           (Set.singleton symb)
-          usage
+          (VStack.Usage usage VStack.notSaved)
           result,
         ty
       )
@@ -743,3 +835,17 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
               <>
           )
       get @"ops"
+
+-- Assume lambdas from storage are curried.
+applyLambdaFromStorage :: Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
+applyLambdaFromStorage sym ty arg = do
+  ty' <- typeToPrimType ty
+  lam <- expandedToInst ty' =<< var sym
+  arg <- instOuter arg
+  ty <- typeToPrimType (eatType 1 ty)
+  modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
+  pure [lam, arg, Instructions.exec]
+
+applyLambdaFromStorageNArgs :: Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
+applyLambdaFromStorageNArgs sym ty args = Env.Expanded . mconcat |<< do
+  undefined

@@ -10,10 +10,9 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Library hiding (link, reduce)
 
 validEal ::
-  forall primTy primVal.
   (Eq primTy) =>
   Types.Parameterisation primTy primVal ->
-  Types.TermAssignment primTy primVal ->
+  Types.TermAssignment primTy primVal compErr ->
   IO
     ( Either
         (EAC.Errors primTy primVal)

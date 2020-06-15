@@ -13,20 +13,20 @@ import Juvix.Library
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
 typecheckAffineErase ::
-  forall primTy primVal m.
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
-    HasThrow "error" (Types.PipelineError primTy primVal) m,
+    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
     MonadIO m,
     Eq primTy,
     Eq primVal,
     Show primTy,
-    Show primVal
+    Show primVal,
+    Show compErr
   ) =>
   HR.Term primTy primVal ->
   Usage.T ->
   HR.Term primTy primVal ->
-  m (Types.TermAssignment primTy primVal)
+  m (Types.TermAssignment primTy primVal compErr)
 typecheckAffineErase term usage ty = do
   -- First typecheck & generate erased core.
   (Types.WithType termAssign _type') <- typecheckErase term usage ty
@@ -54,19 +54,19 @@ typecheckAffineErase term usage ty = do
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase ::
-  forall primTy primVal m.
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
-    HasThrow "error" (Types.PipelineError primTy primVal) m,
+    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
     Eq primTy,
     Eq primVal,
     Show primTy,
-    Show primVal
+    Show primVal,
+    Show compErr
   ) =>
   HR.Term primTy primVal ->
   Usage.T ->
   HR.Term primTy primVal ->
-  m (Types.AssignWithType primTy primVal)
+  m (Types.AssignWithType primTy primVal compErr)
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
@@ -75,10 +75,12 @@ typecheckErase term usage ty = do
   let irType = Translate.hrToIR ty
   tell @"log" [Types.LogHRtoIR term irTerm]
   tell @"log" [Types.LogHRtoIR ty irType]
-  let (Right irTypeValue, _) = IR.exec (IR.evalTerm param irType IR.initEnv)
+  let (Right irTypeValue, _) = IR.exec (IR.evalTerm param irType)
   -- Typecheck & return accordingly.
-  case fst (IR.exec (IR.typeTerm param 0 [] irTerm (IR.Annotated usage irTypeValue))) of
-    Right () ->
+  case IR.typeTerm param 0 [] irTerm (IR.Annotation usage irTypeValue)
+    |> IR.exec
+    |> fst of
+    Right _ ->
       case Erasure.erase param term usage ty of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)

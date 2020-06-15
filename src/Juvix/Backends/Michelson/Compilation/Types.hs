@@ -7,6 +7,7 @@ module Juvix.Backends.Michelson.Compilation.Types
 where
 
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Types as CoreErr
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
@@ -20,6 +21,49 @@ newtype PrimTy
 data NewPrim
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
+  | AddN
+  | AddI
+  | AddTimeStamp
+  | AddMutez
+  | NegN
+  | NegI
+  | SubN
+  | SubI
+  | SubMutez
+  | SubTimeStamp
+  | MulI
+  | MulN
+  | MulMutez
+  | EDivI
+  | EDivN
+  | EDivMutez
+  | OrB
+  | ORI
+  | AndI
+  | AndB
+  | XorI
+  | XorB
+  | NotI
+  | NotB
+  | CompareI
+  | CompareS
+  | CompareP
+  | CompareTimeStamp
+  | CompareMutez
+  | CompareBytes
+  | CompareHash
+  | SizeMap
+  | SizeSet
+  | SizeList
+  | SizeBytes
+  | SizeS
+  | MemSet
+  | MemMap
+  | UpdateSet
+  | UpdateMap
+  | UpdateBMap
+  | GetMap
+  | GetBMap
   deriving (Show, Eq, Generic)
 
 type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
@@ -38,13 +82,16 @@ data CompilationError
   = NotYetImplemented Text
   | InvalidInputType
   | InternalFault Text
-  | DidNotTypecheck M.TCError
-  | DidNotTypecheckAfterOptimisation M.TCError
+  | DidNotTypecheck Instr.ExpandedOp M.TCError
+  | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError
   | NotEnoughArguments
   | NotInStack Symbol
   | -- Should never happen!
     NotEnoughStackSpace
+  | OpInMichelsonValue
   deriving (Show, Eq, Generic)
+
+-- compToPipeLineErr
 
 data CompilationLog
   = TermToInstr Term Op
@@ -52,10 +99,15 @@ data CompilationLog
   | OptimisedByMorley SomeInstr SomeInstr
   deriving (Generic, Show)
 
+data EmptyInstr where
+  EmptyInstr :: forall b. MT.Instr '[] b -> EmptyInstr
+
 data SomeInstr where
   SomeInstr :: forall a b. MT.Instr a b -> SomeInstr
 
 deriving instance Show SomeInstr
+
+deriving instance Show EmptyInstr
 
 instance Eq SomeInstr where
   _ == _ = False

@@ -31,6 +31,7 @@ module Juvix.Library
     internText,
     intern,
     unintern,
+    textify,
     unixTime,
     Flip (..),
     untilNothingNTimesM,
@@ -38,6 +39,9 @@ module Juvix.Library
     sortOnFlip,
     uncurry3,
     curry3,
+    StateField,
+    ReaderField,
+    WriterField,
   )
 where
 
@@ -47,7 +51,6 @@ import Capability.Sink
 import Capability.Source
 import Capability.State
 import Capability.Writer
-import Data.Hashable (Hashable)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
@@ -113,7 +116,7 @@ traverseM f = fmap join . traverse f
 instance Show (a -> b) where
   show _ = "fun"
 
-newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord)
+newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord, NFData)
 
 instance Show Symbol where
   show (Sym t) = T.unpack t
@@ -130,6 +133,9 @@ intern = Sym . T.pack
 unintern :: Symbol -> String
 unintern (Sym s) = T.unpack s
 
+textify :: Symbol -> Text
+textify (Sym s) = s
+
 unixTime :: IO Double
 unixTime = fromRational . realToFrac |<< getPOSIXTime
 
@@ -139,7 +145,7 @@ newtype Flip p a b = Flip {runFlip :: p b a}
 untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) => f Bool -> t -> f ()
 untilNothingNTimesM f n
   | n <= 0 = pure ()
-  | otherwise = do
+  | otherwise =
     f >>= \case
       True -> untilNothingNTimesM f (pred n)
       False -> pure ()
@@ -168,3 +174,18 @@ curry3 fn a b c = fn (a, b, c)
 
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
+
+-- | Select a field in a state monad, for example:
+--
+-- @
+-- data Foo = Foo {x, y :: 'Int'}
+-- newtype M a = M ('State' 'Foo' a)
+--   deriving ('HasState' \"x\" 'Int') via StateField "x" ('State' 'Foo')
+-- @
+type StateField fld m = Field fld () (MonadState m)
+
+-- | Reader version of 'StateField'.
+type ReaderField fld m = ReadStatePure (StateField fld m)
+
+-- | Writer version of 'StateField'.
+type WriterField fld m = WriterLog (StateField fld m)

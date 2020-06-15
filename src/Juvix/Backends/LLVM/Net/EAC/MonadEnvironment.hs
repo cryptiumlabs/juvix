@@ -36,70 +36,72 @@ data EACState
       }
   deriving (Show, Generic)
 
-newtype EAC a = EACGen {runEAC :: ExceptT Errors (State EACState) a}
+type EACAlias = ExceptT Errors (State EACState)
+
+newtype EAC a = EACGen {runEAC :: EACAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "currentBlock" Name,
       HasSink "currentBlock" Name,
       HasSource "currentBlock" Name
     )
-    via Field "currentBlock" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "currentBlock" EACAlias
   deriving
     ( HasState "blocks" (Map.T Name BlockState),
       HasSink "blocks" (Map.T Name BlockState),
       HasSource "blocks" (Map.T Name BlockState)
     )
-    via Field "blocks" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "blocks" EACAlias
   deriving
     ( HasState "symTab" SymbolTable,
       HasSink "symTab" SymbolTable,
       HasSource "symTab" SymbolTable
     )
-    via Field "symTab" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "symTab" EACAlias
   deriving
     ( HasState "varTab" VariantToType,
       HasSink "varTab" VariantToType,
       HasSource "varTab" VariantToType
     )
-    via Field "varTab" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "varTab" EACAlias
   deriving
     ( HasState "typTab" TypeTable,
       HasSink "typTab" TypeTable,
       HasSource "typTab" TypeTable
     )
-    via Field "typTab" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "typTab" EACAlias
   deriving
     ( HasState "blockCount" Int,
       HasSink "blockCount" Int,
       HasSource "blockCount" Int
     )
-    via Field "blockCount" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "blockCount" EACAlias
   deriving
     ( HasState "count" Word,
       HasSink "count" Word,
       HasSource "count" Word
     )
-    via Field "count" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "count" EACAlias
   deriving
     ( HasState "names" Names,
       HasSink "names" Names,
       HasSource "names" Names
     )
-    via Field "names" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "names" EACAlias
   deriving
     (HasThrow "err" Errors)
-    via MonadError (ExceptT Errors (State EACState))
+    via MonadError EACAlias
   deriving
     ( HasState "moduleAST" AST.Module,
       HasSink "moduleAST" AST.Module,
       HasSource "moduleAST" AST.Module
     )
-    via Field "moduleAST" () (MonadState (ExceptT Errors (State EACState)))
+    via StateField "moduleAST" EACAlias
   deriving
     ( HasReader "debug" Int,
       HasSource "debug" Int
     )
-    via Field "debug" () (ReadStatePure (MonadState (ExceptT Errors (State EACState))))
+    via ReaderField "debug" EACAlias
 
 instance HasState "moduleDefinitions" [Definition] EAC where
   state_ _ state = do

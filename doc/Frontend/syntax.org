@@ -14,8 +14,10 @@
   ;;;; Functions ======================================================
 
   ;; let until indent sensitivity is gone
-  function ::= let <name> <args>+ = <expression>
-             | let <name> <args>+ <cond-logic>*
+  function ::= let  <function-body>
+
+  function-body ::= <name> <args>+ = <expression>
+                  | <name> <args>+ <cond-logic>*
 
   ;; Match-logic could just be a name, and so is thus fine
   ;; # is for implicit
@@ -26,10 +28,10 @@
   ;; sig only here while indent sensitivity is not here
   ;; if we only have usage in arrows, we should allow a way to have
   ;; usage information of variables as well!
-  signature ::= sig <name>         :                  <arrow-type>
-              | sig <name>         : <constraint> =\> <arrow-type>
-              | sig <name> <usage> :                  <arrow-type>
-              | sig <name> <usage> : <constraint> =\> <arrow-type>
+  signature ::= sig <name>         :                  <expression>
+              | sig <name>         : <constraint> =\> <expression>
+              | sig <name> <usage> :                  <expression>
+              | sig <name> <usage> : <constraint> =\> <expression>
 
   constraint ::= <type-name>
                | ( <constBody>* )
@@ -39,7 +41,6 @@
   ;;;; Types ==========================================================
 
   type ::= <data-declaration>
-         | <type-declaration>
          | <alias-declaration>
 
   ;; Should we let there be a refinement in adt type declaration?
@@ -47,16 +48,13 @@
   ;; it makes sense to have the number here, as it can't be confused with an
   ;; expression type
   data-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ : <arrow-type> = <adt>
+    ::= type u#<usage>? <non-capital-name> <symbols>+ : <expression> = <adt>
       | type u#<usage>? <non-capital-name> <symbols>+                = <adt>
 
-  type-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ = | <name> <type-refine>
   alias-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ = <type-refine>
+    ::= type u#<usage>? <non-capital-name> <symbols>+ = <expression>
 
   adt ::= <sum>*
-        | <product>
 
 
   ;; | is special in bnf
@@ -67,35 +65,25 @@
             | { <name-type-comma>* }              -\> <type-name>
             | { <name-type-comma>+ <name-type>* }
             | { <name-type-comma>* }
-            | <arrow-type>
+            | : <expression>
+            | <expression''>*
 
   name-type      ::= <name> <type-signature>
                    | #<name> <type-signature>
   name-type-comma ::= <name-type> <comma>
 
-  ;; should we move ()'s somewhere else?
-  ;; # is implicit argument
-  arrow-type ::= <type-refine>
-               | <name>  : <type-refine>
-               | <name>  : <type-refine> <arrow> <arrow-type>
-               | #<name> : <type-refine> <arrow> <arrow-type>
-               | <type-refine>           <arrow> <arrow-type>
-               | ( <arrow-type> )
-
-  type-signature ::= : <arrow-type>
 
   ;; { } here are a refinement type!
-  type-refine ::= <type-name> { <expression> }
-                | <type-name>
+  type-refine ::= <expression> { <expression> }
+                | <expression>
+                | <name> : <expression>
+                | #<name> : <expression>
+                | <name> : <expression> { <expression> }
+                | #<name> : <expression> { <expression> }
 
   ;;;; Arrows =========================================================
 
-
-  arrow ::= -\> ; ω usage by default? This should be the most common arrow
-          | -o  ; linear usage
-          | -|  ; ??? some kind of usage
-          | -<usage>-\>
-          | --<usage>--\> ; maybe remove this one?
+  arrow ::= -<usage>-\>
 
   ;;; Modules ========================================================
 
@@ -134,10 +122,10 @@
                    | <type>
 
   module-signature-helper
-    ::= sig <name>         :                 <arrow-type>?
-      | sig <name>         : <type-name> =\> <arrow-type>?
-      | sig <name> <usage> :                 <arrow-type>?
-      | sig <name> <usage> : <type-name> =\> <arrow-type>?
+    ::= sig <name>           :                 <expression>
+      | sig <name>           : <type-name> =\> <expression>
+      | sig <name> <usage-f> :                 <expression>
+      | sig <name> <usage-f> : <type-name> =\> <expression>
 
 
   cond-top ::= \| <expression> = <top-level>*
@@ -153,33 +141,38 @@
   ;;;; Expressions ====================================================
 
   ;; See comments about which to keep and which to maybe remove
-  expression ::= <match>
-               | <if>
-               | <cond>
-               | <record-access>
-               | <module-lookup>
-               | <let>
-               | <module-open-expression>
-               | <where>
-               | <string>
-               | <number>
-               | <lambda>
-               | <tuple>
-               | <parens>
-               | <application>
-               | <symbol>
-               ; This is useful for having nested do's or matchs
-               | <block>
-               | <do>
-               | <comments>
-               | <arrow-type>
-               | <infix>
-               | <record-creation>
-               ; TODO
-               | <record-update>
+  expression'' ::= <match>
+                 | <if>
+                 | <cond>
+                 | <record-access>
+                 | <module-lookup>
+                 | <let>
+                 | <let-type>
+                 | <module-open-expression>
+                 | <where>
+                 | <string>
+                 | <number>
+                 | <lambda>
+                 | <tuple>
+                 | <parens>
+                 | <symbol>
+                 ; This is useful for having nested do's or matchs
+                 | <block>
+                 | <do>
+                 | <comments>
+                 | <arrow>
+                 | <infix>
+                 | <record-creation>
+                 | <type-refine>
+                 ; TODO
+                 | <record-update>
 
+  expression ::= <application>
+              | <expression''>
 
   usage ::= <expression>
+
+  usage-f ::= <constant> | ( <expression> )
 
   record-access ::= <name>.<name>
 
@@ -266,7 +259,9 @@
   ;; Due to trying to be less indent sensitive,
   ;; we only look for the in alternative,
   ;; is that we only have a single binding per let.
-  let ::= let <binding>* in <expression>
+  let ::= let <function-body> in <expression>
+
+  type-let ::= let <type> in <expression>
 
   ;; Does this even make sense to have?
   ;; Juvix is not lazy, how is order determined?
@@ -320,10 +315,6 @@
   capital-name     ::= <utf8-capital>
   ;; may want m e or Map.t int string?
   type-name   ::= <name> <others-names>+
-  other-names ::= <name>
-                | <universe-expression>
-                | ( <arrow-type> )
-
   infix-symbol ::= <utf8-infix>
 
   module-name ::= <name> ; enforce capital names?

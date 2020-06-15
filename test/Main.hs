@@ -8,11 +8,10 @@ import qualified CoreParser
 import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
-import qualified Frontend as Frontend
+import qualified Frontend
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
-import qualified Test.Tasty.HUnit as T
-import qualified Test.Tasty.Ingredients.Basic as T
+import qualified Test.Tasty.QuickCheck as T
 
 coreTests :: T.TestTree
 coreTests =
@@ -33,10 +32,7 @@ backendTests =
     ]
 
 frontEndTests :: T.TestTree
-frontEndTests =
-  T.testGroup
-    "frontend tests"
-    [Frontend.allParserTests]
+frontEndTests = T.testGroup "frontend tests" [Frontend.allParserTests]
 
 allCheckedTests :: T.TestTree
 allCheckedTests =
