@@ -67,7 +67,6 @@ dependencies:
   # Dependency for Morley
   ###########################
   - morley
-  
   - vinyl
   - singletons
   - fmt
@@ -102,8 +101,6 @@ default-extensions:
   - ConstraintKinds
   - EmptyDataDeriving
   - TemplateHaskell
-  - NamedFieldPuns
-  - TupleSections
 
 ghc-options:
   - -ferror-spans
@@ -200,6 +197,7 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.JIT
     - Juvix.Backends.LLVM.JIT.Types
