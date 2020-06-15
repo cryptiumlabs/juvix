@@ -13,12 +13,12 @@ transformDo (Old.Do'' body) = foldr f (transformLast last) body
     f (Old.DoBody (Just name) expr) acc =
       -- we shouldn't have a prefixed name her :(
       New.MatchLogic (New.MatchName (NonEmpty.head name)) Nothing :| []
-      |> flip New.Lamb (transformExpression expr)
-      |> New.Lambda
-      |> formApplication ">>=" acc
+        |> flip New.Lamb (transformExpression expr)
+        |> New.Lambda
+        |> formApplication ">>=" acc
     f (Old.DoBody Nothing expr) acc =
       transformExpression expr
-      |> formApplication ">>" acc
+        |> formApplication ">>" acc
     formApplication name arg2 arg1 =
       New.App (New.Name (name :| [])) (arg1 :| [arg2]) |> New.Application
     --
@@ -31,7 +31,6 @@ transformDo (Old.Do'' body) = foldr f (transformLast last) body
     -- as this is part of expression
     transformLast (Old.DoBody (Just _) expr) =
       transformExpression expr
-
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -161,7 +160,6 @@ transformRecord (Old.Record'' fields sig) =
 transformNameType :: Old.NameType -> New.NameType
 transformNameType (Old.NameType' sig name) =
   New.NameType' (transformExpression sig) (transformName name)
-
 
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func f) = New.Func (transformFunctionLike f)

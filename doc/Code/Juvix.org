@@ -714,6 +714,14 @@ Quantitative type implementation inspired by
   + [[Usage]]
   + [[Library]]
 ** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. ???
+  5. =RemovePunned=
+  6. =RemoveDo=
+  7. =RemoveMatchArgs=
 *** Abstractions
 - _Relies on_
   + [[Frontend/Types/Base]]
@@ -729,9 +737,32 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
   + [[Abstractions]]
   + [[Library]]
+*** RemoveDo
+**** Transform <<RemoveDo/Transform>>
+- _Relies on_
+  + [[RemoveDo/Types]]
+  + [[RemovePunned/Types]]
+  + [[Library]]
+**** Types <<RemoveDo/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[Library]]
 *** RemoveGuard
 **** Transform <<RemoveGuard/Transform>>
 **** Types <<RemoveGuard/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[Library]]
+*** RemoveModules
+**** Extend
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+**** Types <<RemoveModules/Types>>
+*** RemovePunned
+**** Types <<RemovePunned/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Abstractions]]

@@ -95,6 +95,8 @@ library:
     - Juvix
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
+    - Juvix.FrontendDesugar.RemoveModules.Types
+    - Juvix.FrontendDesugar.RemoveModules.Extend
     - Juvix.FrontendDesugar.RemoveGuard.Transform
     - Juvix.FrontendDesugar.RemoveGuard.Types
     - Juvix.FrontendDesugar.Abstractions

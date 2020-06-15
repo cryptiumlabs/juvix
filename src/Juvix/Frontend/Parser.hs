@@ -19,7 +19,7 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
-import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try, mod)
+import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, takeWhile, try)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
