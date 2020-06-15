@@ -1,7 +1,7 @@
 module Juvix.FrontendDesugar.RemoveModules.Types where
 
-import qualified Juvix.FrontendDesugar.RemoveModules.Extend as Ext
 import Juvix.Frontend.Types.Base
+import qualified Juvix.FrontendDesugar.RemoveModules.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T

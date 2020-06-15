@@ -761,6 +761,10 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
   + [[Library]]
 **** Types <<RemoveModules/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Extend]]
+  + [[Library]]
 *** RemovePunned
 **** Types <<RemovePunned/Types>>
 - _Relies on_

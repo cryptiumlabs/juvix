@@ -106,8 +106,8 @@
   ;; of taking (and thus parameterizing) modules
 
   ;; let and end are there until indent sensitivity is in
-  module ::= let <name> <args>+ = <top-level>* end
-           | let <name> <args>+ <cond-top>* end
+  module ::= mod <name> <args>+ = <top-level>* end
+           | mod <name> <args>+ <cond-top>* end
 
 
   ;; we use mod here to disambiguate it for parsing speed

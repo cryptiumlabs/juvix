@@ -67,7 +67,7 @@ contractTest =
   parseOnly
     (many Parser.topLevelSN)
     ( ""
-        <> "let Token = "
+        <> "mod Token = "
         <> "  type Address = s : String.T {String.length s == 36} \n"
         <> "\n"
         <> "  type Storage = { \n"
@@ -89,7 +89,7 @@ contractTest =
         <> "  } \n"
         <> "end"
         <> " \n"
-        <> "let Transaction = \n"
+        <> "mod Transaction = \n"
         <> "  type Transfer = { \n"
         <> "    from-account : Token.Address, \n"
         <> "    to-account   : Token.Address, \n"
@@ -149,7 +149,7 @@ contractTest =
         <> "  { total-supply = stor.total-supply \n"
         <> "  , accounts     = new-acc \n"
         <> "  } \n"
-        <> "let Validation = \n"
+        <> "mod Validation = \n"
         <> "  let T = Token.T -> Transaction.T -> Bool \n"
         <> " \n"
         <> "  let mint token tx = \n"
@@ -408,7 +408,7 @@ moduleOpen =
     "moduleOpen"
     Parser.topLevel
     ( ""
-        <> "let Foo Int = \n"
+        <> "mod Foo Int = \n"
         <> "  type T = Int.t \n"
         <> "  sig bah : T -> T \n"
         <> "  let bah t = Int.(t + 3) \n"
@@ -436,7 +436,7 @@ moduleOpen' =
     "moduleOpen'"
     Parser.topLevel
     ( ""
-        <> "let Bah M = \n"
+        <> "mod Bah M = \n"
         <> "  open M"
         <> "  sig bah : Rec \n"
         <> "  let bah t = \n"

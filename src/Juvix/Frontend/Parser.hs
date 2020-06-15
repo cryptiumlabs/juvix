@@ -29,7 +29,8 @@ import Prelude (fail)
 topLevel :: Parser Types.TopLevel
 topLevel =
   Types.Type <$> typeP
-    <|> modFunc
+    <|> fun
+    <|> modT
     <|> Types.ModuleOpen <$> moduleOpen
     <|> Types.Signature <$> signature'
 
@@ -94,16 +95,18 @@ usage = string "u#" *> expression
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
 
-functionModStart :: (Symbol -> [Types.Arg] -> Parser a) -> Parser a
-functionModStart f = do
-  _ <- spaceLiner (string "let")
+functionModStartReserved ::
+  ByteString -> (Symbol -> [Types.Arg] -> Parser a) -> Parser a
+functionModStartReserved str f = do
+  _ <- spaceLiner (string str)
   name <- prefixSymbolSN
   args <- many argSN
   f name args
 
 functionModGen :: Parser a -> Parser (Types.FunctionLike a)
 functionModGen p =
-  functionModStart
+  functionModStartReserved
+    "let"
     ( \name args -> do
         guard <- guard p
         pure (Types.Like name args guard)
@@ -238,19 +241,25 @@ nameMatch parser = do
 -- Modules and Functions
 --------------------------------------------------------------------------------
 
-modFunc :: Parser Types.TopLevel
-modFunc =
-  functionModStart (\n a -> func n a <|> mod n a)
+genGuard :: Symbol -> [Types.Arg] -> Parser a -> Parser (Types.FunctionLike a)
+genGuard n a p =
+  guard p >>| Types.Like n a
+
+fun :: Parser Types.TopLevel
+fun = functionModStartReserved "let" func
   where
     func n a =
-      gen n a expression
+      genGuard n a expression
         >>| Types.Function . Types.Func
+
+modT :: Parser Types.TopLevel
+modT = functionModStartReserved "mod" mod
+  where
     mod n a =
-      ( gen n a (many1H topLevelSN)
+      ( genGuard n a (many1H topLevelSN)
           >>| Types.Module . Types.Mod
       )
         <* string "end"
-    gen n a p = guard p >>| Types.Like n a
 
 moduleOpen :: Parser Types.ModuleOpen
 moduleOpen = do
