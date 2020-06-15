@@ -3,8 +3,6 @@ module Juvix.FrontendDesugar.RemoveModules.Extend where
 import Juvix.Frontend.Types.Base
 import Juvix.Library hiding (Product, Sum)
 
-data T
-
 extendType :: ExtType
 extendType = defaultExtType
 
@@ -19,6 +17,9 @@ extendData = defaultExtData
 
 extendAlias :: ExtAlias
 extendAlias = defaultExtAlias
+
+extendName :: ExtName
+extendName = defaultExtName
 
 extendNamedType :: ExtNamedType
 extendNamedType = defaultExtNamedType
