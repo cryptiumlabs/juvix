@@ -72,6 +72,9 @@ extendExpression = defaultExtExpression {typeModuleE = Nothing}
 extendArrowExp :: ExtArrowExp
 extendArrowExp = defaultExtArrowExp
 
+extendGuardBody :: ExtGuardBody
+extendGuardBody = defaultExtGuardBody
+
 extendCond :: ExtCond
 extendCond = defaultExtCond
 

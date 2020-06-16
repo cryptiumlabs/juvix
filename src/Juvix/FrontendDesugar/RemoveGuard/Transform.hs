@@ -8,7 +8,11 @@ import Juvix.Library
 transformFunctionLike ::
   Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
 transformFunctionLike (Old.Like name args body) =
-  New.Like name (transformArg <$> args) (undefined body)
+  let newBody =
+        case body of
+          Old.Body exp -> transformExpression exp
+          Old.Guard cond -> New.Cond (transformCond transformExpression cond)
+   in New.Like name (transformArg <$> args) newBody
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms

@@ -60,6 +60,8 @@ extendConstant "Constant" [] [t|T|] Ext.extendConstant
 
 extendNumb "Numb" [] [t|T|] Ext.extendNumb
 
+extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
+
 extendString' "String'" [] [t|T|] Ext.extendString'
 
 extendBlock "Block" [] [t|T|] Ext.extendBlock
