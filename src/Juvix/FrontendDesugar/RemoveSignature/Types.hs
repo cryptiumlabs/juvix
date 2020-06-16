@@ -1,8 +1,7 @@
-module Juvix.FrontendDesugar.RemoveDo.Types where
+module Juvix.FrontendDesugar.RemoveSignature.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.Abstractions as Abstract
-import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext
+import qualified Juvix.FrontendDesugar.RemoveSignature.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
@@ -39,11 +38,9 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
-extendModule "Module" [] [t|T|] Ext.extendModule
-
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
-extendFunctionLike "FunctionLike" [] [t|T|] $ Abstract.functionLikeNoCond [t|T|]
+extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
@@ -66,6 +63,10 @@ extendBlock "Block" [] [t|T|] Ext.extendBlock
 extendLambda "Lambda" [] [t|T|] Ext.extendLambda
 
 extendApplication "Application" [] [t|T|] Ext.extendApplication
+
+extendDo "Do" [] [t|T|] Ext.extendDo
+
+extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 

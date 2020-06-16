@@ -744,13 +744,12 @@ Quantitative type implementation inspired by
 **** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Library]]
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
   2. =RemoveGuard=
   3. =RemoveCond=
-  4. ???
+  4. =RemoveSignature=
   5. =RemovePunned=
   6. =RemoveDo=
 *** Abstractions
@@ -775,6 +774,12 @@ Quantitative type implementation inspired by
   + [[RemoveCond/Extend]]
   + [[Library]]
 *** RemoveDo
+**** Extend <<RemoveDo/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
 **** Transform <<RemoveDo/Transform>>
 - _Relies on_
   + [[RemoveDo/Types]]
@@ -784,6 +789,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Abstractions]]
+  + [[RemoveDo/Extend]]
   + [[Library]]
 *** RemoveGuard
 **** Extend <<RemoveGuard/Extend>>
@@ -805,17 +811,40 @@ Quantitative type implementation inspired by
 **** Extend <<RemoveModules/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Types/Extend]]
   + [[Library]]
+**** Transform <<RemoveModules/Transform>>
 **** Types <<RemoveModules/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveModules/Extend]]
   + [[Library]]
 *** RemovePunned
+**** Extend <<RemovePunned/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
 **** Types <<RemovePunned/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Abstractions]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+*** RemoveSignature
+**** Extend <<RemoveSignature/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+**** Transform <<RemoveSignature/Transform>>
+**** Types <<RemoveSignature/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
   + [[Library]]
 ** INetIR
 - _Relies on_

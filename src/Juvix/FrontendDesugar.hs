@@ -3,7 +3,7 @@
 --   1. =RemoveModule=
 --   2. =RemoveGuard=
 --   3. =RemoveCond=
---   4. ???
+--   4. =RemoveSignature=
 --   5. =RemovePunned=
 --   6. =RemoveDo=
 module Juvix.FrontendDesugar where
