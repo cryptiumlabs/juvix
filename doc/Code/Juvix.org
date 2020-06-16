@@ -788,6 +788,10 @@ Quantitative type implementation inspired by
   + [[Abstractions]]
   + [[RemoveModules/Extend]]
 **** Transform <<RemoveGuard/Transform>>
+- _Relies on_
+  + [[RemoveGuard/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
 **** Types <<RemoveGuard/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
