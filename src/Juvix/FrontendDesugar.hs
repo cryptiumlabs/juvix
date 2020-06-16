@@ -6,5 +6,4 @@
 --   4. ???
 --   5. =RemovePunned=
 --   6. =RemoveDo=
---   7. =RemoveMatchArgs=
 module Juvix.FrontendDesugar where

@@ -729,6 +729,7 @@ Quantitative type implementation inspired by
           =ArrowGen= and not in =NamedType=
 - _Relies on_
   + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
   + [[Library]]
 **** Base <<Frontend/Types/Base>>
 - This file defines the main ADT for the Juvix front end language.
@@ -740,6 +741,10 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Usage]]
   + [[Library]]
+**** Extend <<Types/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
@@ -748,7 +753,6 @@ Quantitative type implementation inspired by
   4. ???
   5. =RemovePunned=
   6. =RemoveDo=
-  7. =RemoveMatchArgs=
 *** Abstractions
 - _Relies on_
   + [[Frontend/Types/Base]]
