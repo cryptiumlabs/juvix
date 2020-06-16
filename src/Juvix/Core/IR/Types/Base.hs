@@ -49,10 +49,7 @@ extensible
       | -- | Annotation with usage.
         Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
       deriving (Eq, Show)
-    |]
 
-extensible
-  [d|
     -- | Values/types
     data Value primTy primVal
       = VStar Natural
