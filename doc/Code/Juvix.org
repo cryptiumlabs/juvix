@@ -754,6 +754,12 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
   + [[Library]]
 *** RemoveCond
+**** Extend <<RemoveCond/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
 **** Transform <<RemoveCond/Transform>>
 - _Relies on_
   + [[RemoveCond/Types]]
@@ -762,7 +768,7 @@ Quantitative type implementation inspired by
 **** Types <<RemoveCond/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Abstractions]]
+  + [[RemoveCond/Extend]]
   + [[Library]]
 *** RemoveDo
 **** Transform <<RemoveDo/Transform>>
@@ -776,21 +782,26 @@ Quantitative type implementation inspired by
   + [[Abstractions]]
   + [[Library]]
 *** RemoveGuard
+**** Extend <<RemoveGuard/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[RemoveModules/Extend]]
 **** Transform <<RemoveGuard/Transform>>
 **** Types <<RemoveGuard/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Abstractions]]
+  + [[RemoveGuard/Extend]]
   + [[Library]]
 *** RemoveModules
-**** Extend
+**** Extend <<RemoveModules/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Library]]
 **** Types <<RemoveModules/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Extend]]
+  + [[RemoveModules/Extend]]
   + [[Library]]
 *** RemovePunned
 **** Types <<RemovePunned/Types>>

@@ -119,10 +119,12 @@ library:
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
     - Juvix.FrontendDesugar.RemoveGuard.Transform
+    - Juvix.FrontendDesugar.RemoveGuard.Extend
     - Juvix.FrontendDesugar.RemoveGuard.Types
     - Juvix.FrontendDesugar.Abstractions
     - Juvix.FrontendDesugar.RemoveCond.Types
     - Juvix.FrontendDesugar.RemoveCond.Transform
+    - Juvix.FrontendDesugar.RemoveCond.Extend
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemovePunned.Types

@@ -51,9 +51,6 @@ extendNameType = defaultExtNameType
 extendFunction :: ExtFunction
 extendFunction = defaultExtFunction
 
-extendModule :: ExtModule
-extendModule = defaultExtModule
-
 extendArg :: ExtArg
 extendArg = defaultExtArg
 
@@ -70,10 +67,16 @@ extendSignature :: ExtSignature
 extendSignature = defaultExtSignature
 
 extendExpression :: ExtExpression
-extendExpression = defaultExtExpression
+extendExpression = defaultExtExpression {typeModuleE = Nothing}
 
 extendArrowExp :: ExtArrowExp
 extendArrowExp = defaultExtArrowExp
+
+extendCond :: ExtCond
+extendCond = defaultExtCond
+
+extendCondLogic :: ExtCondLogic
+extendCondLogic = defaultExtCondLogic
 
 extendConstant :: ExtConstant
 extendConstant = defaultExtConstant

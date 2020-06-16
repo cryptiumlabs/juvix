@@ -26,6 +26,10 @@ extendArrowSymbol "ArrowSymbol" [] [t|T|] Ext.extendArrowSymbol
 
 extendUniverseExpression "UniverseExpression" [] [t|T|] Ext.extendUniverseExpression
 
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
+
 extendAdt "Adt" [] [t|T|] Ext.extendAdt
 
 extendSum "Sum" [] [t|T|] Ext.extendSum
@@ -37,8 +41,6 @@ extendRecord "Record" [] [t|T|] Ext.extendRecord
 extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] Ext.extendFunction
-
-extendModule "Module" [] [t|T|] Ext.extendModule
 
 extendArg "Arg" [] [t|T|] Ext.extendArg
 

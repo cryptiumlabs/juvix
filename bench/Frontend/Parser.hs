@@ -54,7 +54,7 @@ mod =
     ]
   where
     example1 =
-      "let Validation = \n"
+      "mod Validation = \n"
         <> "  let T = Token.T -> Transaction.T -> Bool \n"
         <> " \n"
         <> "  let mint token tx = \n"

@@ -1,89 +1,87 @@
 module Juvix.FrontendDesugar.RemoveCond.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.Abstractions as Abstract
+import qualified Juvix.FrontendDesugar.RemoveCond.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
 
-extendType "Type" [] [t|T|] defaultExtType
+extendType "Type" [] [t|T|] Ext.extendType
 
-extendTopLevel "TopLevel" [] [t|T|] defaultExtTopLevel {typeModule = Nothing}
+extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
-extendTypeSum "TypeSum" [] [t|T|] defaultExtTypeSum
+extendTypeSum "TypeSum" [] [t|T|] Ext.extendTypeSum
 
-extendData "Data" [] [t|T|] defaultExtData
+extendData "Data" [] [t|T|] Ext.extendData
 
-extendAlias "Alias" [] [t|T|] defaultExtAlias
+extendAlias "Alias" [] [t|T|] Ext.extendAlias
 
-extendNamedType "NamedType" [] [t|T|] defaultExtNamedType
+extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 
-extendTypeRefine "TypeRefine" [] [t|T|] defaultExtTypeRefine
+extendTypeRefine "TypeRefine" [] [t|T|] Ext.extendTypeRefine
 
-extendName "Name" [] [t|T|] defaultExtName
+extendName "Name" [] [t|T|] Ext.extendName
 
-extendArrowSymbol "ArrowSymbol" [] [t|T|] defaultExtArrowSymbol
+extendArrowSymbol "ArrowSymbol" [] [t|T|] Ext.extendArrowSymbol
 
-extendUniverseExpression "UniverseExpression" [] [t|T|] defaultExtUniverseExpression
+extendUniverseExpression "UniverseExpression" [] [t|T|] Ext.extendUniverseExpression
 
-extendAdt "Adt" [] [t|T|] defaultExtAdt
+extendAdt "Adt" [] [t|T|] Ext.extendAdt
 
-extendSum "Sum" [] [t|T|] defaultExtSum
+extendSum "Sum" [] [t|T|] Ext.extendSum
 
-extendProduct "Product" [] [t|T|] defaultExtProduct
+extendProduct "Product" [] [t|T|] Ext.extendProduct
 
-extendRecord "Record" [] [t|T|] defaultExtRecord
+extendRecord "Record" [] [t|T|] Ext.extendRecord
 
-extendNameType "NameType" [] [t|T|] defaultExtNameType
+extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
-extendFunction "Function" [] [t|T|] defaultExtFunction
+extendFunction "Function" [] [t|T|] Ext.extendFunction
 
-extendModule "Module" [] [t|T|] defaultExtModule
+extendArg "Arg" [] [t|T|] Ext.extendArg
 
-extendArg "Arg" [] [t|T|] defaultExtArg
+extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 
-extendFunctionLike "FunctionLike" [] [t|T|] $ Abstract.functionLikeNoCond [t|T|]
+extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
-extendModuleOpen "ModuleOpen" [] [t|T|] defaultExtModuleOpen
+extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
 
-extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] defaultExtModuleOpenExpr
+extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
-extendSignature "Signature" [] [t|T|] defaultExtSignature
+extendExpression "Expression" [] [t|T|] Ext.extendExpression
 
-extendExpression "Expression" [] [t|T|] defaultExtExpression {typeCond = Nothing}
+extendArrowExp "ArrowExp" [] [t|T|] Ext.extendArrowExp
 
-extendArrowExp "ArrowExp" [] [t|T|] defaultExtArrowExp
+extendConstant "Constant" [] [t|T|] Ext.extendConstant
 
-extendConstant "Constant" [] [t|T|] defaultExtConstant
+extendNumb "Numb" [] [t|T|] Ext.extendNumb
 
-extendNumb "Numb" [] [t|T|] defaultExtNumb
+extendString' "String'" [] [t|T|] Ext.extendString'
 
-extendString' "String'" [] [t|T|] defaultExtString'
+extendBlock "Block" [] [t|T|] Ext.extendBlock
 
-extendBlock "Block" [] [t|T|] defaultExtBlock
+extendLambda "Lambda" [] [t|T|] Ext.extendLambda
 
-extendLambda "Lambda" [] [t|T|] defaultExtLambda
+extendApplication "Application" [] [t|T|] Ext.extendApplication
 
-extendApplication "Application" [] [t|T|] defaultExtApplication
+extendDo "Do" [] [t|T|] Ext.extendDo
 
-extendDo "Do" [] [t|T|] defaultExtDo
+extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
-extendDoBody "DoBody" [] [t|T|] defaultExtDoBody
+extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
-extendExpRecord "ExpRecord" [] [t|T|] defaultExtExpRecord
+extendLet "Let" [] [t|T|] Ext.extendLet
 
-extendLet "Let" [] [t|T|] defaultExtLet
+extendLetType "LetType" [] [t|T|] Ext.extendLetType
 
-extendLetType "LetType" [] [t|T|] defaultExtLetType
+extendInfix "Infix" [] [t|T|] Ext.extendInfix
 
-extendInfix "Infix" [] [t|T|] defaultExtInfix
+extendMatch "Match" [] [t|T|] Ext.extendMatch
 
-extendMatch "Match" [] [t|T|] defaultExtMatch
+extendMatchL "MatchL" [] [t|T|] Ext.extendMatchL
 
-extendMatchL "MatchL" [] [t|T|] defaultExtMatchL
+extendMatchLogic "MatchLogic" [] [t|T|] Ext.extendMatchLogic
 
-extendMatchLogic "MatchLogic" [] [t|T|] defaultExtMatchLogic
+extendMatchLogicStart "MatchLogicStart" [] [t|T|] Ext.extendMatchLogicStart
 
-extendMatchLogicStart "MatchLogicStart" [] [t|T|] defaultExtMatchLogicStart
-
-extendNameSet "NameSet" [] [t|T|] $ const defaultExtNameSet
+extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
