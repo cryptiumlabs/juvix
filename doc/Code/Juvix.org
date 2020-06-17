@@ -749,12 +749,30 @@ Quantitative type implementation inspired by
   1. =RemoveModule=
   2. =RemoveGuard=
   3. =RemoveCond=
-  4. =RemoveSignature=
-  5. =RemovePunned=
-  6. =RemoveDo=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
 *** Abstractions
 - _Relies on_
   + [[Frontend/Types/Base]]
+  + [[Library]]
+*** CombineMultiple
+**** Extend <<CombineMultiple/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+**** Transform <<CombineMultiple/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveCond/Types]]
+  + [[Library]]
+**** Types <<CombineMultiple/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
   + [[Library]]
 *** RemoveCond
 **** Extend <<RemoveCond/Extend>>
@@ -837,8 +855,8 @@ Quantitative type implementation inspired by
 **** Extend <<RemoveSignature/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveCond/Extend]]
-  + [[RemoveCond/Extend]]
+  + [[CombineMultiple/Extend]]
+  + [[CombineMultiple/Extend]]
   + [[Library]]
 **** Transform <<RemoveSignature/Transform>>
 **** Types <<RemoveSignature/Types>>

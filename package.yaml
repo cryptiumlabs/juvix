@@ -126,6 +126,9 @@ library:
     - Juvix.FrontendDesugar.RemoveCond.Types
     - Juvix.FrontendDesugar.RemoveCond.Transform
     - Juvix.FrontendDesugar.RemoveCond.Extend
+    - Juvix.FrontendDesugar.CombineMultiple.Types
+    - Juvix.FrontendDesugar.CombineMultiple.Extend
+    - Juvix.FrontendDesugar.CombineMultiple.Transform
     - Juvix.FrontendDesugar.RemoveSignature.Transform
     - Juvix.FrontendDesugar.RemoveSignature.Types
     - Juvix.FrontendDesugar.RemoveSignature.Extend

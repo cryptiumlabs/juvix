@@ -70,7 +70,7 @@ extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
-extendLet "Let" [] [t|T|] Ext.extendLet
+extendLet "Let" [] [t|T|] $ Ext.extendLet [t|T|]
 
 extendLetType "LetType" [] [t|T|] Ext.extendLetType
 

@@ -69,7 +69,7 @@ extendApplication "Application" [] [t|T|] Ext.extendApplication
 
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
-extendLet "Let" [] [t|T|] Ext.extendLet
+extendLet "Let" [] [t|T|] $ Ext.extendLet [t|T|]
 
 extendLetType "LetType" [] [t|T|] Ext.extendLetType
 
