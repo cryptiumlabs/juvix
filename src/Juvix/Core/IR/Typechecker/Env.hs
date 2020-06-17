@@ -2,11 +2,9 @@ module Juvix.Core.IR.Typechecker.Env where
 
 import Juvix.Library hiding (Datatype)
 import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Core.IR.Typechecker.Types
 import Juvix.Core.IR.Typechecker.Log
 import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HashMap
 
 
 data EnvCtx primTy primVal
@@ -20,55 +18,9 @@ type Globals primTy primVal =
   HashMap IR.GlobalName (Global primTy primVal)
 
 data Global primTy primVal
-  = GDatatype (Datatype primTy primVal)
-  | GDataCon  (DataCon  primTy primVal)
-  | GFunction (Function primTy primVal)
-  deriving (Show, Eq, Generic)
-
-data Datatype primTy primVal
-  = Datatype
-    { dataName  :: IR.GlobalName
-      -- | the type constructor's arguments
-    , dataArgs  :: [DataArg primTy primVal]
-      -- | the type constructor's target universe level
-    , dataLevel :: Natural
-    , dataCons  :: [DataCon primTy primVal]
-    }
-  deriving (Show, Eq, Generic)
-
-data DataArg primTy primVal
-  = DataArg
-    { argName    :: IR.GlobalName
-    , argUsage   :: Usage.T
-    , argType    :: IR.Value primTy primVal
-    , argIsParam :: Bool
-    }
-  deriving (Show, Eq, Generic)
-
-data DataCon primTy primVal
-  = DataCon
-    { conName :: IR.GlobalName
-    , conType :: IR.Value primTy primVal
-    }
-  deriving (Show, Eq, Generic)
-
-data Function primTy primVal
-  = Function
-    { funName    :: IR.GlobalName
-    , funType    :: IR.Value primTy primVal
-    , funClauses :: [FunClause primTy primVal]
-    }
-  deriving (Show, Eq, Generic)
-
-data FunClause primTy primVal
-  = FunClause [Pattern primTy primVal] (IR.Term primTy primVal)
-  deriving (Show, Eq, Generic)
-
-data Pattern primTy primVal
-  = PCon IR.GlobalName [Pattern primTy primVal]
-  | PVar IR.PatternVar
-  | PDot (IR.Term primTy primVal)
-  | PPrim primVal
+  = GDatatype (IR.Datatype primTy primVal)
+  | GDataCon  (IR.DataCon  primTy primVal)
+  | GFunction (IR.Function primTy primVal)
   deriving (Show, Eq, Generic)
 
 

@@ -3,10 +3,6 @@
 module Juvix.Core.IR.Types
   ( module Juvix.Core.IR.Types,
     Name (..), GlobalName, PatternVar,
-    Term' (..),
-    Elim' (..),
-    TermAll,
-    ElimAll,
   )
 where
 
@@ -15,13 +11,16 @@ import Juvix.Library hiding (show)
 
 data NoExt
 
-extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
-
-extendElim "Elim" [] [t|NoExt|] $ \_ _ -> defaultExtElim
-
-extendValue "Value" [] [t|NoExt|] $ \_ _ -> defaultExtValue
-
-extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
+extendTerm      "Term"      [] [t|NoExt|] $ \_ _ -> defaultExtTerm
+extendElim      "Elim"      [] [t|NoExt|] $ \_ _ -> defaultExtElim
+extendValue     "Value"     [] [t|NoExt|] $ \_ _ -> defaultExtValue
+extendNeutral   "Neutral"   [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
+extendDatatype  "Datatype"  [] [t|NoExt|] $ \_ _ -> defaultExtDatatype
+extendDataArg   "DataArg"   [] [t|NoExt|] $ \_ _ -> defaultExtDataArg
+extendDataCon   "DataCon"   [] [t|NoExt|] $ \_ _ -> defaultExtDataCon
+extendFunction  "Function"  [] [t|NoExt|] $ \_ _ -> defaultExtFunction
+extendFunClause "FunClause" [] [t|NoExt|] $ \_ _ -> defaultExtFunClause
+extendPattern   "Pattern"   [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal

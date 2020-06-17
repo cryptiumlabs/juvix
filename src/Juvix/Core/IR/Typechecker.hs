@@ -21,9 +21,6 @@ module Juvix.Core.IR.Typechecker
     exec,
     Globals,
     Global (..),
-    Datatype (..),
-    DataArg (..),
-    DataCon (..)
   )
 where
 
@@ -255,16 +252,16 @@ lookupGlobal (IR.Local _) _ = Nothing
 lookupGlobal (IR.Global x) globals =
   makeAnn <$> HashMap.lookup x globals
  where
-  makeAnn (GDatatype (Datatype {dataArgs, dataLevel})) =
+  makeAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
     Annotation {
       annUsage = Usage.Omega,
       annType  = foldr makePi (IR.VStar dataLevel) dataArgs
     }
    where
-    makePi (DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
-  makeAnn (GDataCon (DataCon {conType})) =
+    makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
+  makeAnn (GDataCon (IR.DataCon {conType})) =
     Annotation {annUsage = Usage.Omega, annType = conType}
-  makeAnn (GFunction (Function {funType})) =
+  makeAnn (GFunction (IR.Function {funType})) =
     Annotation {annUsage = Usage.Omega, annType = funType}
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of

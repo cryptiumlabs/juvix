@@ -96,6 +96,7 @@ default-extensions:
   - EmptyDataDeriving
   - TemplateHaskell
   - NamedFieldPuns
+  - DisambiguateRecordFields
 
 ghc-options:
   - -ferror-spans
