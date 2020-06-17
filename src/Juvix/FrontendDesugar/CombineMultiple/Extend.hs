@@ -29,8 +29,7 @@ extendFunction arg =
     { typeFunc = Nothing,
       typeFunctionX =
         [ ( "Func",
-            [ [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|],
-              [t|Signature' $arg|]
+            [ [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|]
             ]
           )
         ]
