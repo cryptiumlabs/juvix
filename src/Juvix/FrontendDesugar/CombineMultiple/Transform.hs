@@ -8,7 +8,7 @@ transformLet :: Old.Let -> New.Let
 transformLet (Old.Let'' b@(Old.Like name _ _) body) =
   let (shareName, body') = grabSimilar body
       newBindings = transformFunctionLike <$> (b :| shareName)
-   in New.LetGroup newBindings (transformExpression body')
+   in New.LetGroup name newBindings (transformExpression body')
   where
     grabSimilar l@(Old.Let (Old.Let'' n@(Old.Like name' _ _) body))
       | name == name' =
@@ -25,7 +25,7 @@ transformTopLevel = search
     search (Old.Function (Old.Func f@(Old.Like name _ _)) : xs) =
       let (shareName, toSearch) = grabSimilar name xs
           newFunc = transformFunctionLike <$> (f :| shareName)
-       in New.Function (New.Func newFunc) : search toSearch
+       in New.Function (New.Func name newFunc) : search toSearch
     search (Old.Signature t : xs) =
       New.Signature (transformSignature t) : search xs
     search (Old.Type t : xs) =
@@ -168,8 +168,8 @@ transformNameType (Old.NameType' sig name) =
 
 transformFunctionLike ::
   Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
-transformFunctionLike (Old.Like name args body) =
-  New.Like name (transformArg <$> args) (transformExpression body)
+transformFunctionLike (Old.Like _name args body) =
+  New.Like (transformArg <$> args) (transformExpression body)
 
 transformModuleOpen :: Old.ModuleOpen -> New.ModuleOpen
 transformModuleOpen (Old.Open mod) = New.Open mod

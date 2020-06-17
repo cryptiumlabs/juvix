@@ -162,8 +162,8 @@ transformNameType (Old.NameType' sig name) =
   New.NameType' (transformExpression sig) (transformName name)
 
 transformFunction :: Old.Function -> New.Function
-transformFunction (Old.Func f sig) =
-  New.Func (transformFunctionLike <$> f) (transformSignature sig)
+transformFunction (Old.Func name f sig) =
+  New.Func name (transformFunctionLike <$> f) (transformSignature <$> sig)
 
 transformFunctionLike ::
   Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
@@ -235,8 +235,8 @@ transformExpRecord (Old.ExpressionRecord fields) =
 --------------------------------------------------
 
 transformLet :: Old.Let -> New.Let
-transformLet (Old.LetGroup bindings body) =
-  New.LetGroup (fmap transformFunctionLike bindings) (transformExpression body)
+transformLet (Old.LetGroup name bindings body) =
+  New.LetGroup name (fmap transformFunctionLike bindings) (transformExpression body)
 
 transformLetType :: Old.LetType -> New.LetType
 transformLetType (Old.LetType'' typ expr) =

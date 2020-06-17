@@ -6,7 +6,7 @@ where
 
 import qualified Extensible as Extension
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemoveCond.Extend hiding (extendFunction, extendLet)
+import Juvix.FrontendDesugar.RemoveCond.Extend hiding (extendFunction, extendFunctionLike, extendLet)
 import qualified Juvix.FrontendDesugar.RemoveCond.Extend as Ext
 import Juvix.Library
 
@@ -16,7 +16,8 @@ extendLet arg =
     { typeLet'' = Nothing,
       typeLetX =
         [ ( "LetGroup",
-            [ ("letBindings", [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|]),
+            [ ("letName", [t|Symbol|]),
+              ("letBindings", [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|]),
               ("letBody", [t|Expression' $arg|])
             ]
           )
@@ -29,7 +30,22 @@ extendFunction arg =
     { typeFunc = Nothing,
       typeFunctionX =
         [ ( "Func",
-            [ [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|]
+            [ [t|Symbol|],
+              [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|]
+            ]
+          )
+        ]
+    }
+
+-- sadly have to modify on the default :(
+extendFunctionLike :: Extension.TypeQ -> Extension.TypeQ -> ExtFunctionLike
+extendFunctionLike arg a =
+  defaultExtFunctionLike
+    { typeLike = Nothing,
+      typeFunctionLikeX =
+        [ ( "Like",
+            [ ("functionLikeArgs", [t|[Arg' $arg]|]),
+              ("functionLikeBody", a)
             ]
           )
         ]

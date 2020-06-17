@@ -859,6 +859,10 @@ Quantitative type implementation inspired by
   + [[CombineMultiple/Extend]]
   + [[Library]]
 **** Transform <<RemoveSignature/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
 **** Types <<RemoveSignature/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]

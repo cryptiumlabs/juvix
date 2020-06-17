@@ -20,9 +20,11 @@ extendFunction arg =
     { typeFunc = Nothing,
       typeFunctionX =
         [ ( "Func",
-            [ [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|],
-              [t|Signature' $arg|]
+            [ [t|Symbol|],
+              [t|NonEmpty (FunctionLike' $arg (Expression' $arg))|],
+              [t|Maybe (Signature' $arg)|]
             ]
           )
         ]
     }
+-- TODO ∷ once we get a signature for let add that here too
