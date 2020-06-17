@@ -50,9 +50,11 @@ newtype EnvT primTy primVal a
       HasSource "globals" (TC.Globals primTy primVal)
     )
     via StateField "globals" (EnvEraAlias primTy primVal)
-  deriving (HasReader "globals" (TC.Globals primTy primVal))
+  deriving
+    (HasReader "globals" (TC.Globals primTy primVal))
     via ReaderField "globals" (EnvEraAlias primTy primVal)
-  deriving (HasThrow "erasureError" Error)
+  deriving
+    (HasThrow "erasureError" Error)
     via MonadError (EnvEraAlias primTy primVal)
 
 data Error

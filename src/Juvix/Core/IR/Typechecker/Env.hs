@@ -1,17 +1,16 @@
 module Juvix.Core.IR.Typechecker.Env where
 
-import Juvix.Library hiding (Datatype)
-import qualified Juvix.Core.IR.Types as IR
-import Juvix.Core.IR.Typechecker.Types
-import Juvix.Core.IR.Typechecker.Log
 import Data.HashMap.Strict (HashMap)
-
+import Juvix.Core.IR.Typechecker.Log
+import Juvix.Core.IR.Typechecker.Types
+import qualified Juvix.Core.IR.Types as IR
+import Juvix.Library hiding (Datatype)
 
 data EnvCtx primTy primVal
   = EnvCtx
-    { typecheckerLog :: [Log primTy primVal]
-    , globals :: Globals primTy primVal
-    }
+      { typecheckerLog :: [Log primTy primVal],
+        globals :: Globals primTy primVal
+      }
   deriving (Show, Eq, Generic)
 
 type Globals primTy primVal =
@@ -19,10 +18,9 @@ type Globals primTy primVal =
 
 data Global primTy primVal
   = GDatatype (IR.Datatype primTy primVal)
-  | GDataCon  (IR.DataCon  primTy primVal)
+  | GDataCon (IR.DataCon primTy primVal)
   | GFunction (IR.Function primTy primVal)
   deriving (Show, Eq, Generic)
-
 
 type EnvAlias primTy primVal =
   ExceptT (TypecheckError primTy primVal)
@@ -34,17 +32,20 @@ newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
     (HasThrow "typecheckError" (TypecheckError primTy primVal))
     via MonadError (EnvAlias primTy primVal)
   deriving
-    (HasSink "typecheckerLog" [Log primTy primVal],
-     HasWriter "typecheckerLog" [Log primTy primVal])
-  via WriterField "typecheckerLog" (EnvAlias primTy primVal)
+    ( HasSink "typecheckerLog" [Log primTy primVal],
+      HasWriter "typecheckerLog" [Log primTy primVal]
+    )
+    via WriterField "typecheckerLog" (EnvAlias primTy primVal)
   deriving
-    (HasSink   "globals" (Globals primTy primVal),
-     HasState  "globals" (Globals primTy primVal))
-  via StateField "globals" (EnvAlias primTy primVal)
+    ( HasSink "globals" (Globals primTy primVal),
+      HasState "globals" (Globals primTy primVal)
+    )
+    via StateField "globals" (EnvAlias primTy primVal)
   deriving
-    (HasSource "globals" (Globals primTy primVal),
-     HasReader "globals" (Globals primTy primVal))
-  via ReaderField "globals" (EnvAlias primTy primVal)
+    ( HasSource "globals" (Globals primTy primVal),
+      HasReader "globals" (Globals primTy primVal)
+    )
+    via ReaderField "globals" (EnvAlias primTy primVal)
 
 exec ::
   Globals primTy primVal ->

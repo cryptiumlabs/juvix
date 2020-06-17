@@ -216,12 +216,12 @@ subtype :: T.TestTree
 subtype =
   T.testGroup
     "Subtyping"
-    [ shouldCheckWith Unit.t mempty typContext aTerm  $ mempty `ann` IR.VStar 0
-    , shouldCheckWith Unit.t mempty typContext aTerm  $ mempty `ann` IR.VStar 1
-    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 1 1
-    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 0 1
-    , shouldCheckWith Unit.t mempty typContext fTerm  $ mempty `ann` typ2typ 1 2
-    , shouldInferWith Unit.t mempty typContext faElim $ mempty `ann` IR.VStar 1
+    [ shouldCheckWith Unit.t mempty typContext aTerm $ mempty `ann` IR.VStar 0,
+      shouldCheckWith Unit.t mempty typContext aTerm $ mempty `ann` IR.VStar 1,
+      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 1 1,
+      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 0 1,
+      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 1 2,
+      shouldInferWith Unit.t mempty typContext faElim $ mempty `ann` IR.VStar 1
     ]
   where
     typ2typ i j = IR.VPi mempty (IR.VStar i) (IR.VStar j)

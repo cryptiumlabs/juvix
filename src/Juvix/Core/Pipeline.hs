@@ -81,7 +81,8 @@ typecheckErase term usage ty = do
   let (Right irTypeValue, _) = IR.exec globals (IR.evalTerm param irType)
   -- Typecheck & return accordingly.
   case IR.typeTerm param 0 [] irTerm (IR.Annotation usage irTypeValue)
-         |> IR.exec globals |> fst of
+    |> IR.exec globals
+    |> fst of
     Right _ -> do
       case Erasure.erase globals param term usage ty of
         Right res -> pure res

@@ -18,8 +18,8 @@ execMichelson ::
   HR.Term Param.PrimTy Param.PrimVal ->
   Exec Param.PrimTy Param.PrimVal Param.CompErr
 execMichelson usage term ty =
+  -- TODO add globals (from builtins, etc)                         ↓
   liftIO (exec (Core.typecheckErase term usage ty) Param.michelson mempty)
-  -- TODO add globals (from builtins, etc)                         ↑
 
 typecheck ::
   FilePath -> Backend -> IO (Erased.Term Param.PrimVal, Erased.Type Param.PrimTy)

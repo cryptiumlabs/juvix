@@ -56,18 +56,22 @@ newtype EnvExec primTy primVal compErr a
     )
     via WriterField "log" (EnvExecAlias primTy primVal compErr)
   deriving
-    (HasReader "parameterisation" (Core.Parameterisation primTy primVal),
-     HasSource "parameterisation" (Core.Parameterisation primTy primVal))
-  via ReaderField "parameterisation" (EnvExecAlias primTy primVal compErr)
+    ( HasReader "parameterisation" (Core.Parameterisation primTy primVal),
+      HasSource "parameterisation" (Core.Parameterisation primTy primVal)
+    )
+    via ReaderField "parameterisation" (EnvExecAlias primTy primVal compErr)
   deriving
-    (HasState "globals" (IR.Globals primTy primVal),
-     HasSource "globals" (IR.Globals primTy primVal),
-     HasSink "globals" (IR.Globals primTy primVal))
-  via StateField "globals" (EnvExecAlias primTy primVal compErr)
-  deriving (HasReader "globals" (IR.Globals primTy primVal))
-  via ReaderField "globals" (EnvExecAlias primTy primVal compErr)
-  deriving (HasThrow "error" (Core.PipelineError primTy primVal compErr))
-  via MonadError (EnvExecAlias primTy primVal compErr)
+    ( HasState "globals" (IR.Globals primTy primVal),
+      HasSource "globals" (IR.Globals primTy primVal),
+      HasSink "globals" (IR.Globals primTy primVal)
+    )
+    via StateField "globals" (EnvExecAlias primTy primVal compErr)
+  deriving
+    (HasReader "globals" (IR.Globals primTy primVal))
+    via ReaderField "globals" (EnvExecAlias primTy primVal compErr)
+  deriving
+    (HasThrow "error" (Core.PipelineError primTy primVal compErr))
+    via MonadError (EnvExecAlias primTy primVal compErr)
 
 data SomeBackend where
   SomeBackend :: forall primTy primVal. Core.Parameterisation primTy primVal -> SomeBackend

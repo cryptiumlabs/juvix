@@ -35,9 +35,10 @@ erase globals parameterisation term usage ty =
             Core.type' = type'
           }
 
-exec :: IR.Globals primTy primVal
-     -> Erasure.EnvT primTy primVal a
-     -> (Either Erasure.Error a, Erasure.Env primTy primVal)
+exec ::
+  IR.Globals primTy primVal ->
+  Erasure.EnvT primTy primVal a ->
+  (Either Erasure.Error a, Erasure.Env primTy primVal)
 exec globals (Erasure.EnvEra env) =
   runState (runExceptT env) (Erasure.Env Map.empty [] 0 [] globals)
 
@@ -97,7 +98,9 @@ eraseTerm parameterisation term usage ty = do
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
             case IR.typeElim0 parameterisation context fIR
-                   |> fmap IR.getElimAnn |> IR.exec globals |> fst of
+              |> fmap IR.getElimAnn
+              |> IR.exec globals
+              |> fst of
               Left err ->
                 throw @"erasureError"
                   $ Erasure.InternalError

@@ -69,7 +69,6 @@ inst (Types.Ann _usage ty t) =
         x ->
           constructPrim (newPrimToInstrErr x) ty
 
-
 applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
 applyPrimOnArgs prim arguments =
   let newTerm = Ann.AppM prim arguments
