@@ -24,6 +24,7 @@ type ModuleName = NameSymb
 
 extensible
   [d|
+    -- we will want an include... but this will have to be deferred to a context phase
     data TopLevel
       = Type Type
       | ModuleOpen ModuleOpen
@@ -314,6 +315,7 @@ extensible
           }
       deriving (Show, Generic, NFData)
 
+    -- TODO ∷ we need includes in here as well!
     -- Was a newtype but extensible adds fields
     data ExpRecord
       = ExpressionRecord
@@ -338,6 +340,8 @@ extensible
             letTypeBody :: Expression
           }
       deriving (Show, Generic, NFData)
+
+    -- TODO ∷ have letSig
 
     --------------------------------------------------
     -- Symbol Binding

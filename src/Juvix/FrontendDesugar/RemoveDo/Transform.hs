@@ -35,16 +35,16 @@ transformDo (Old.Do'' body) = foldr f (transformLast last) body
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
-transformtTopLevel :: Old.TopLevel -> New.TopLevel
-transformtTopLevel (Old.Type t) =
+transformTopLevel :: Old.TopLevel -> New.TopLevel
+transformTopLevel (Old.Type t) =
   New.Type (transformType t)
-transformtTopLevel (Old.ModuleOpen t) =
+transformTopLevel (Old.ModuleOpen t) =
   New.ModuleOpen (transformModuleOpen t)
-transformtTopLevel (Old.Function t) =
+transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
-transformtTopLevel Old.TypeClass =
+transformTopLevel Old.TypeClass =
   New.TypeClass
-transformtTopLevel Old.TypeClassInstance =
+transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
 transformExpression :: Old.Expression -> New.Expression

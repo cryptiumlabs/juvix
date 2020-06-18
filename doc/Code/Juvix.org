@@ -832,6 +832,10 @@ Quantitative type implementation inspired by
   + [[Types/Extend]]
   + [[Library]]
 **** Transform <<RemoveModules/Transform>>
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
 **** Types <<RemoveModules/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]

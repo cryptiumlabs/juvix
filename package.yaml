@@ -119,6 +119,7 @@ library:
     - Juvix.Frontend.Types.Extend
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
+    - Juvix.FrontendDesugar.RemoveModules.Transform
     - Juvix.FrontendDesugar.RemoveGuard.Transform
     - Juvix.FrontendDesugar.RemoveGuard.Extend
     - Juvix.FrontendDesugar.RemoveGuard.Types
