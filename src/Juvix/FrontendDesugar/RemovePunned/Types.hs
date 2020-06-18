@@ -1,7 +1,6 @@
 module Juvix.FrontendDesugar.RemovePunned.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.Abstractions as Abstract
 import qualified Juvix.FrontendDesugar.RemovePunned.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
@@ -43,7 +42,7 @@ extendModule "Module" [] [t|T|] Ext.extendModule
 
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
-extendFunctionLike "FunctionLike" [] [t|T|] $ Abstract.functionLikeNoCond [t|T|]
+extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 

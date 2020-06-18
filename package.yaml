@@ -134,6 +134,7 @@ library:
     - Juvix.FrontendDesugar.RemoveSignature.Extend
     - Juvix.FrontendDesugar.RemovePunned.Types
     - Juvix.FrontendDesugar.RemovePunned.Extend
+    - Juvix.FrontendDesugar.RemovePunned.Transform
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend

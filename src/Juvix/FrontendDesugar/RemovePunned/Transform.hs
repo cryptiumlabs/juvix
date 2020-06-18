@@ -1,36 +1,21 @@
-module Juvix.FrontendDesugar.RemoveDo.Transform where
+module Juvix.FrontendDesugar.RemovePunned.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as New
-import qualified Juvix.FrontendDesugar.RemovePunned.Types as Old
+import qualified Juvix.FrontendDesugar.RemovePunned.Types as New
+import qualified Juvix.FrontendDesugar.RemoveSignature.Types as Old
 import Juvix.Library
 
--- The actual transform we are doing
+transformNameSetE :: Old.NameSet Old.Expression -> New.NameSet New.Expression
+transformNameSetE (Old.Punned s) =
+  New.NonPunned s (New.Name s)
+transformNameSetE (Old.NonPunned s e) =
+  New.NonPunned s (transformExpression e)
 
-transformDo :: Old.Do -> New.Expression
-transformDo (Old.Do'' body) = foldr f (transformLast last) body
-  where
-    f (Old.DoBody (Just name) expr) acc =
-      -- we shouldn't have a prefixed name her :(
-      New.MatchLogic (New.MatchName (NonEmpty.head name)) Nothing :| []
-        |> flip New.Lamb (transformExpression expr)
-        |> New.Lambda
-        |> formApplication ">>=" acc
-    f (Old.DoBody Nothing expr) acc =
-      transformExpression expr
-        |> formApplication ">>" acc
-    formApplication name arg2 arg1 =
-      New.App (New.Name (name :| [])) (arg1 :| [arg2]) |> New.Application
-    --
-    last =
-      NonEmpty.last body
-    transformLast (Old.DoBody Nothing expr) =
-      transformExpression expr
-    -- should we throw a warning for this
-    -- issue is we have to lift every function below
-    -- as this is part of expression
-    transformLast (Old.DoBody (Just _) expr) =
-      transformExpression expr
+transformNameSetL :: Old.NameSet Old.MatchLogic -> New.NameSet New.MatchLogic
+transformNameSetL (Old.Punned s) =
+  New.NonPunned s (New.MatchLogic (New.MatchName (NonEmpty.head s)) Nothing)
+transformNameSetL (Old.NonPunned s e) =
+  New.NonPunned s (transformMatchLogic e)
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -71,7 +56,7 @@ transformExpression (Old.Infix i) =
 transformExpression (Old.ExpRecord i) =
   New.ExpRecord (transformExpRecord i)
 transformExpression (Old.Do i) =
-  transformDo i
+  New.Do (transformDo i)
 transformExpression (Old.ArrowE i) =
   New.ArrowE (transformArrowExp i)
 transformExpression (Old.NamedTypeE i) =
@@ -161,6 +146,10 @@ transformNameType :: Old.NameType -> New.NameType
 transformNameType (Old.NameType' sig name) =
   New.NameType' (transformExpression sig) (transformName name)
 
+--------------------------------------------------------------------------------
+-- Functions And Modules
+--------------------------------------------------------------------------------
+
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func name f sig) =
   New.Func name (transformFunctionLike <$> f) (transformSignature <$> sig)
@@ -226,17 +215,24 @@ transformApplication :: Old.Application -> New.Application
 transformApplication (Old.App fun args) =
   New.App (transformExpression fun) (transformExpression <$> args)
 
+transformDo :: Old.Do -> New.Do
+transformDo (Old.Do'' dos) = New.Do'' (transformDoBody <$> dos)
+
+transformDoBody :: Old.DoBody -> New.DoBody
+transformDoBody (Old.DoBody name expr) =
+  New.DoBody name (transformExpression expr)
+
 transformExpRecord :: Old.ExpRecord -> New.ExpRecord
 transformExpRecord (Old.ExpressionRecord fields) =
-  New.ExpressionRecord (transformNameSet transformExpression <$> fields)
+  New.ExpressionRecord (transformNameSetE <$> fields)
 
 --------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
 
 transformLet :: Old.Let -> New.Let
-transformLet (Old.LetGroup name bindings body) =
-  New.LetGroup name (fmap transformFunctionLike bindings) (transformExpression body)
+transformLet (Old.LetGroup name' bindings body) =
+  New.LetGroup name' (fmap transformFunctionLike bindings) (transformExpression body)
 
 transformLetType :: Old.LetType -> New.LetType
 transformLetType (Old.LetType'' typ expr) =
@@ -274,8 +270,4 @@ tranformMatchLogicStart (Old.MatchName s) =
 tranformMatchLogicStart (Old.MatchConst c) =
   New.MatchConst (transformConst c)
 tranformMatchLogicStart (Old.MatchRecord r) =
-  New.MatchRecord (transformNameSet transformMatchLogic <$> r)
-
-transformNameSet :: (t -> t1) -> Old.NameSet t -> New.NameSet t1
-transformNameSet p (Old.NonPunned s e) =
-  New.NonPunned s (p e)
+  New.MatchRecord (transformNameSetL <$> r)

@@ -806,7 +806,6 @@ Quantitative type implementation inspired by
 **** Types <<RemoveDo/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Abstractions]]
   + [[RemoveDo/Extend]]
   + [[Library]]
 *** RemoveGuard
@@ -845,10 +844,14 @@ Quantitative type implementation inspired by
   + [[RemoveSignature/Extend]]
   + [[RemoveSignature/Extend]]
   + [[Library]]
+**** Transform <<RemovePunned/Transform>>
+- _Relies on_
+  + [[RemovePunned/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
 **** Types <<RemovePunned/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Abstractions]]
   + [[RemovePunned/Extend]]
   + [[Library]]
 *** RemoveSignature
