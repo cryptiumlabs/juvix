@@ -753,6 +753,17 @@ Quantitative type implementation inspired by
   5. =RemoveSignature=
   6. =RemovePunned=
   7. =RemoveDo=
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[CombineMultiple/Transform]]
+  + [[RemoveCond/Transform]]
+  + [[RemoveDo/Transform]]
+  + [[RemoveDo/Types]]
+  + [[RemoveGuard/Transform]]
+  + [[RemoveModules/Transform]]
+  + [[RemovePunned/Transform]]
+  + [[RemoveSignature/Transform]]
+  + [[Library]]
 *** Abstractions
 - _Relies on_
   + [[Frontend/Types/Base]]
