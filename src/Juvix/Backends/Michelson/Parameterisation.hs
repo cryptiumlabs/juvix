@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
     module Juvix.Backends.Michelson.Compilation.Types,

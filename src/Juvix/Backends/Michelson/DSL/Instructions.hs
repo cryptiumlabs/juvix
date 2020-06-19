@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 -- |
 -- - This module serves as a lower layer DSL that is just a binding
 --   over the untyped instruction bindings

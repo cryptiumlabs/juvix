@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 -- |
 -- - This module includes a higher level DSL which each instruction
 --   has a stack effect
