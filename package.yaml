@@ -163,13 +163,13 @@ library:
     - Juvix.Core.Parameterisations.Naturals
     - Juvix.Core.Parameterisations.Unit
     - Juvix.Core.Parameterisations.All
-    - Juvix.Core.EAC
-    - Juvix.Core.EAC.Check
-    - Juvix.Core.EAC.ConstraintGen
-    - Juvix.Core.EAC.Solve
-    - Juvix.Core.EAC.Types
-    - Juvix.Core.EAC.Parser
-    - Juvix.Core.EAC.Erasure
+#    - Juvix.Core.EAC
+#    - Juvix.Core.EAC.Check
+#    - Juvix.Core.EAC.ConstraintGen
+#    - Juvix.Core.EAC.Solve
+#    - Juvix.Core.EAC.Types
+#    - Juvix.Core.EAC.Parser
+#    - Juvix.Core.EAC.Erasure
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default
@@ -214,29 +214,29 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
-    - Juvix.Backends.LLVM
-    - Juvix.Backends.LLVM.JIT
-    - Juvix.Backends.LLVM.JIT.Types
-    - Juvix.Backends.LLVM.JIT.Execution
-    - Juvix.Backends.LLVM.Translation
-    - Juvix.Backends.LLVM.Codegen.Constants
-    - Juvix.Backends.LLVM.Codegen.Sum
-    - Juvix.Backends.LLVM.Codegen.Types
-    - Juvix.Backends.LLVM.Codegen.Shared
-    - Juvix.Backends.LLVM.Codegen.Block
-    - Juvix.Backends.LLVM.Codegen.Graph
-    - Juvix.Backends.LLVM.Codegen.Graph.Debug
-    - Juvix.Backends.LLVM.Codegen.Graph.Operations
-    - Juvix.Backends.LLVM.Codegen.Graph.Definitions
-    - Juvix.Backends.LLVM.Codegen
-    - Juvix.Backends.LLVM.Net.API
-    - Juvix.Backends.LLVM.Net.EAC
-    - Juvix.Backends.LLVM.Net.EAC.Types
-    - Juvix.Backends.LLVM.Net.EAC.Defs
-    - Juvix.Backends.LLVM.Net.EAC.Debug
-    - Juvix.Backends.LLVM.Net.Environment
-    - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
-    - Juvix.Backends.LLVM.DSL
+#    - Juvix.Backends.LLVM
+#    - Juvix.Backends.LLVM.JIT
+#    - Juvix.Backends.LLVM.JIT.Types
+#    - Juvix.Backends.LLVM.JIT.Execution
+#    - Juvix.Backends.LLVM.Translation
+#    - Juvix.Backends.LLVM.Codegen.Constants
+#    - Juvix.Backends.LLVM.Codegen.Sum
+#    - Juvix.Backends.LLVM.Codegen.Types
+#    - Juvix.Backends.LLVM.Codegen.Shared
+#    - Juvix.Backends.LLVM.Codegen.Block
+#    - Juvix.Backends.LLVM.Codegen.Graph
+#    - Juvix.Backends.LLVM.Codegen.Graph.Debug
+#    - Juvix.Backends.LLVM.Codegen.Graph.Operations
+#    - Juvix.Backends.LLVM.Codegen.Graph.Definitions
+#    - Juvix.Backends.LLVM.Codegen
+#    - Juvix.Backends.LLVM.Net.API
+#    - Juvix.Backends.LLVM.Net.EAC
+#    - Juvix.Backends.LLVM.Net.EAC.Types
+#    - Juvix.Backends.LLVM.Net.EAC.Defs
+#    - Juvix.Backends.LLVM.Net.EAC.Debug
+#    - Juvix.Backends.LLVM.Net.Environment
+#    - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
+#    - Juvix.Backends.LLVM.DSL
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate

@@ -1,7 +1,7 @@
 module Juvix.Core.Pipeline where
 
 import qualified Data.Text as Text
-import qualified Juvix.Core.EAC as EAC
+--import qualified Juvix.Core.EAC as EAC
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -12,6 +12,7 @@ import Juvix.Library
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
+{-
 typecheckAffineErase ::
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
@@ -52,6 +53,7 @@ typecheckAffineErase term usage ty = do
         )
       pure termAssign
     Left err -> throw @"error" (Types.EACError err)
+-}
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase ::

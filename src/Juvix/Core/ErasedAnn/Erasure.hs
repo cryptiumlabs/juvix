@@ -5,6 +5,7 @@ import qualified Juvix.Core.ErasedAnn.Types as Types
 import Juvix.Core.ErasedAnn.Types (AnnTerm (..))
 import Juvix.Library
 
+{-
 eraseTerm :: Types.Term primTy primVal -> E.Term primVal
 eraseTerm term =
   case term of
@@ -14,3 +15,4 @@ eraseTerm term =
       foldr E.Lam (eraseTerm bod) args
     Types.AppM (Ann _ _ f) xs ->
       foldl (\apps (Ann _ _ x) -> E.App apps (eraseTerm x)) (eraseTerm f) xs
+-}
