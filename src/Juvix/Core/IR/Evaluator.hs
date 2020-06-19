@@ -114,7 +114,7 @@ instance
   subst' i e (IR.PrimTy' t a) =
     IR.PrimTy' t (subst' i e a)
   subst' i e (IR.Pi' π s t a) =
-    IR.Pi' π (subst' i e s) (subst' (succ i) (weak e) t) (subst' i e a)
+    IR.Pi' π (subst' i e s) (subst' (succ i) (weak' i e) t) (subst' i e a)
   subst' i e (IR.Lam' t a) =
     IR.Lam' (subst' (succ i) (weak e) t) (subst' i e a)
   subst' i e (IR.Let' l b a) =
