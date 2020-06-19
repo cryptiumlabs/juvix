@@ -113,6 +113,9 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j6
   - -static
+  - -Werror=incomplete-patterns
+  - -Werror=missing-fields
+  - -Werror=missing-methods
 
 library:
   source-dirs: src
