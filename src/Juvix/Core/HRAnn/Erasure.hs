@@ -12,6 +12,7 @@ hrForgetter =
       etPrimTy = identity,
       etPi = identity,
       etLam = HRAnn.bindName,
+      etLet = HRAnn.bindName,
       etElim = const (),
       etBound = absurd,
       etFree = absurd,

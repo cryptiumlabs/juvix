@@ -169,6 +169,7 @@ IR.extendTerm "Term" [] [t|T|] $
             IR.typePrimTy = typed,
             IR.typePi = typed,
             IR.typeLam = typed,
+            IR.typeLet = typed,
             IR.typeElim = typed
           }
 
@@ -188,6 +189,7 @@ getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
 getTermAnn (Lam _ ann) = ann
+getTermAnn (Let _ _ ann) = ann
 getTermAnn (Elim _ ann) = ann
 
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal

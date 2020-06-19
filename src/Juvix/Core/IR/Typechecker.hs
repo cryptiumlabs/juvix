@@ -149,6 +149,13 @@ typeTerm p ii ctx tm@(IR.Lam m) ann@(Annotation σ ty) = do
       tellLog $ Typechecked tm ann
       pure $ Typed.Lam mAnn ann
     _ -> throwLog $ ShouldBeFunctionType ty tm
+-- let case
+typeTerm p ii ctx (IR.Let l b) ann = do
+  tellLog CheckingLet
+  l' <- typeElim p ii ctx l
+  let ctx' = ContextElement (IR.Local ii) (getElimAnn l') : ctx
+  b' <- typeTerm p (succ ii) ctx' b ann
+  pure $ Typed.Let l' b' (getTermAnn b')
 -- elim case
 typeTerm p ii ctx tm@(IR.Elim e) ann@(Annotation σ ty) = do
   tellLogs [TermIntro ctx tm ann, CheckingElim]

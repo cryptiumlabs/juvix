@@ -37,6 +37,7 @@ data Log primTy primVal
   | CheckingLam
   | LamAnnIsPi
   | LamBodyWith Usage.T Usage.T
+  | CheckingLet
   | CheckingElim
   | InferringFree
   | FoundFree (Typed.Annotation primTy primVal)
@@ -139,19 +140,14 @@ describe CheckingLam =
     ]
 describe LamAnnIsPi =
   "- Input annotation is a function type.\n"
-describe (LamBodyWith σ π) =
-  mconcat
-    [ "- Checking the body with the argument at usage σ·π, i.e.\n\t",
-      show σ,
-      " *\n\t",
-      show π,
-      ".\n"
-    ]
-describe CheckingElim =
-  mconcat
-    [ "- Matched an elimination term.\n",
-      "  Checking the input type is compatible with the inferred type.\n"
-    ]
+describe (LamBodyWith σ π) = mconcat
+  ["- Checking the body with the argument at usage σ·π, i.e.\n\t",
+   show σ, " *\n\t", show π, ".\n"]
+describe CheckingLet =
+  "- Matched a let expression."
+describe CheckingElim = mconcat
+  ["- Matched an elimination term.\n",
+   "  Checking the input type is compatible with the inferred type.\n"]
 describe InferringFree =
   "- Matched a free variable. Checking it is in the context.\n"
 describe (FoundFree (Annotation π ty)) =
@@ -238,6 +234,7 @@ logType (CheckingPiArg {}) = Info
 logType (CheckingPiRes {}) = Info
 logType (CheckingPrimTy {}) = Info
 logType (CheckingLam {}) = Info
+logType (CheckingLet {}) = Info
 logType (LamAnnIsPi {}) = Pass
 logType (LamBodyWith {}) = Info
 logType (CheckingElim {}) = Info
