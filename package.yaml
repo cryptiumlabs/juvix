@@ -255,7 +255,7 @@ library:
     - Juvix.Core.IRAnn.Types
     - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
-    - Juvix.Core.ErasedAnn.Erasure
+    - Juvix.Core.ErasedAnn.Conversion
     - Juvix.Core.ErasedAnn.Prim
     - Juvix.Core.IR.Typechecker.Types
     - Juvix.Core.IR.Typechecker.Log
