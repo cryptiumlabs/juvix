@@ -1,11 +1,10 @@
-module Juvix.Core.Erased.Evaluator
-  ( evaluate,
-  )
-where
+module Juvix.Core.Erased.Evaluator where
 
 import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Map, evaluate)
 import qualified Juvix.Library.HashMap as Map
+
+{-
 
 evaluate ::
   forall primVal m.
@@ -38,3 +37,5 @@ evaluate term =
           modify @"env" (Map.insert s v)
           evaluate t
         _ -> pure (Erased.App f x)
+
+-}
