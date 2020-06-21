@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Juvix.Backends.ArithmeticCircuit.Compilation.Types where
 
 import qualified Juvix.Core.ErasedAnn as CoreErased
@@ -7,8 +5,7 @@ import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Circuit.Expr as Expr
 import qualified Circuit
 import Numeric.Natural()
-
-import Protolude
+import Juvix.Library
 
 data PrimVal
   = Element Par.F
@@ -39,13 +36,12 @@ data CompilationError
   = NotYetImplemented
   | SomethingWentWrongSorry
   | VariableOutOfScope
-  deriving (Eq, Show)
+  | PrimTypeError
+  | TypeErrorApplicationNonFunction
+  deriving (Eq, Show, Generic)
 
-data ArithExpression f
-  = BoolExp (Expr.Expr Circuit.Wire f Bool)
-  | FExp (Expr.Expr Circuit.Wire f f)
+data ArithExpression
+  = BoolExp (Expr.Expr Circuit.Wire Par.F Bool)
+  | FExp (Expr.Expr Circuit.Wire Par.F Par.F)
   | NoExp
-
-
-
-
+  deriving (Generic)

@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Juvix.Backends.ArithmeticCircuit.ZKP where
 
 import Data.Pairing.BN254 (BN254, Fr, Pairing (..))
@@ -43,6 +45,7 @@ verify :: [(Int, Fr)] -> SetupOutput -> Groth.Proof (G1 BN254) (G2 BN254) -> Boo
 verify = runVerify
 
 prove :: Base.Term -> Base.Type -> [(Int, Fr)] -> SetupOutput -> IO (Groth.Proof (G1 BN254) (G2 BN254))
-prove term ty params stp = do
-  let program = Base.compile term ty
-  runProve program params stp
+prove term ty params stp =
+  case Base.compile term ty of
+    (Right _, program) -> runProve program params stp
+    (Left error, _) -> panic $ show error

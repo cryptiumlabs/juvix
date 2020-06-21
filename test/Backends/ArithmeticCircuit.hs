@@ -1,7 +1,6 @@
 module Backends.ArithmeticCircuit where
 
 import Juvix.Backends.ArithmeticCircuit.Compilation as Base
-import Juvix.Backends.ArithmeticCircuit.Parameterisation
 import Juvix.Backends.ArithmeticCircuit.ZKP as Zkp
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as J
@@ -15,7 +14,7 @@ shouldCompile :: Term → Type → Circ.ArithCircuit Par.F → T.TestTree
 shouldCompile term ty circuit =
   T.testCase
     (show term <> " :: " <> show ty <> " should compile to " <> show circuit)
-    (Base.compile term ty T.@=? circuit)
+    (snd (Base.compile term ty) T.@=? circuit)
 
 shouldProve :: Term → Type → Circ.ArithCircuit Par.F → [(Int, Par.F)] → T.TestTree
 shouldProve term ty circuit params =

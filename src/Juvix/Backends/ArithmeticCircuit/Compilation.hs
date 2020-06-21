@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Juvix.Backends.ArithmeticCircuit.Compilation
   ( compile
   , add
@@ -18,85 +16,144 @@ module Juvix.Backends.ArithmeticCircuit.Compilation
   , var
   , input
   , cond
+  , true
+  , false
+  , runCirc
   ) where
 
 import Juvix.Library hiding (Type, exp)
 import Juvix.Backends.ArithmeticCircuit.Compilation.Types
-import Juvix.Backends.ArithmeticCircuit.Compilation.Memory
+import Juvix.Backends.ArithmeticCircuit.Compilation.Environment
 import qualified Circuit
 import qualified Circuit.Expr as Expr
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Circuit.Lang as Lang
 import qualified Juvix.Core.ErasedAnn as CoreErased
 import qualified Juvix.Core.Usage as Usage
-import qualified Data.Map as Map
+import qualified Data.Map()
 import Numeric.Natural()
 import qualified Juvix.Library as J
 
+compile :: Term -> Type -> (Either CompilationError ArithExpression, Circuit.ArithCircuit Par.F)
+compile term _ = toArithCircuit <$> runState (runExceptT (antiAlias $ transTerm term)) (Env mempty NoExp)
+  where
+    toArithCircuit env =
+      case compilation env of
+        BoolExp exp -> runCirc exp
+        FExp exp -> runCirc exp
+        NoExp -> panic "Tried to compile an empty circuit"
 
-compile :: Term -> Type -> Either CompilationError (Circuit.ArithCircuit Par.F)
-compile term _ = runState (runExceptT c) (Env mempty mempty mempty 0 0) >>= (Expr.execCircuitBuilder . Expr.compile)
-  -- let (_, circ) = transTerm mempty term
-  -- in case circ of
-  --   BoolExp exp -> Expr.execCircuitBuilder (Expr.compile exp)
-  --   FExp exp -> Expr.execCircuitBuilder (Expr.compile exp)
+runCirc :: Num f => Expr.Expr Circuit.Wire f ty -> Circuit.ArithCircuit f
+runCirc = Expr.execCircuitBuilder . Expr.compile
 
-transTerm :: Term -> ArithmeticCircuitCompilation
+transTerm :: Term -> ArithmeticCircuitCompilation ArithExpression
 transTerm CoreErased.Ann{ CoreErased.term = CoreErased.Prim term } =
-  (mem, transPrim term mem)
-transTerm mem CoreErased.Ann{ CoreErased.term = CoreErased.Var var } =
-  case lookup var mem of
-    Just (n, NoExp) -> (mem, FExp $ input n)
-    Just (_, res) -> (mem, res)
-    Nothing -> panic $ show VariableOutOfScope
-transTerm mem CoreErased.Ann{ CoreErased.term = CoreErased.LamM{ CoreErased.body = body
-                                                          , CoreErased.arguments = arguments}} =
-  let mem' = freshVars mem arguments
-  in transTerm mem' body
-transTerm mem CoreErased.Ann{ CoreErased.term = CoreErased.AppM f params } =
+  transPrim term
+
+transTerm CoreErased.Ann{ CoreErased.term = CoreErased.Var var } =
+  do
+    (n, exp) <- lookup var
+    case exp of
+      NoExp -> do
+        _ <- insert var (FExp $ input n)
+        write (FExp $ input n)
+      _     -> write exp
+
+transTerm CoreErased.Ann{ CoreErased.term = CoreErased.LamM { CoreErased.body = body
+                                                            , CoreErased.arguments = arguments}} =
+  do
+    freshVars arguments
+    transTerm body
+
+
+transTerm CoreErased.Ann{ CoreErased.term = CoreErased.AppM f params } =
   case f of
-    CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreErased.body =  body
-                                                       , CoreErased.arguments = arguments
-                                                       }
-                   } -> let transTermParams = snd . sequenceA $ map (transTerm mem) params
-                            matchedArgParams = zip arguments transTermParams
-                            mem' = foldr (\(sy, val) m -> insert sy val m) mem matchedArgParams
-                         in transTerm mem' body
-    _ -> panic $ show SomethingWentWrongSorry
+    (CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreErased.body =  body
+                                                        , CoreErased.arguments = arguments
+                                                        }
+                    }) ->
+      do
+        mapM_ execParams (zip arguments params)
+        term <- transTerm body
 
-translation exp fn prim prim' = exp . fn <$> transTerm prim <*> transTerm prim'
+        -- We must remove variables introduced by current function
+        mapM_ remove arguments
 
-transPrim :: PrimVal -> ACMemory -> ArithExpression Par.F
-transPrim (Element f) _ = FExp $ Lang.c f
-transPrim (Boolean b) _ = BoolExp $ Circuit.EConstBool b
-transPrim (FEInteger i) _ = FExp $ Lang.c (fromIntegral i)
-transPrim (BinOp Add prim prim') mem =
-  FExp . Lang.add <$> transTerm prim <*> transTerm prim'
-transPrim (BinOp Mul prim prim') mem = let (_, FExp prim1) = transTerm mem prim
-                                           (_, FExp prim2) = transTerm mem prim'
-                                           in FExp $ Lang.mul prim1 prim2
-transPrim (BinOp Sub prim prim') mem = let (_, FExp prim1) = transTerm mem prim
-                                           (_, FExp prim2) = transTerm mem prim'
-                                           in FExp $ Lang.sub prim1 prim2
-transPrim (BinOp Eq prim prim') mem = let (_, FExp prim1) = transTerm mem prim
-                                          (_, FExp prim2) = transTerm mem prim'
-                                          in BoolExp $ Lang.eq prim1 prim2
-transPrim (BinOp And prim prim') mem = let (_, BoolExp prim1) = transTerm mem prim
-                                           (_, BoolExp prim2) = transTerm mem prim'
-                                           in BoolExp $ Lang.and_ prim1 prim2
-transPrim (BinOp Or prim prim') mem = let (_, BoolExp prim1) = transTerm mem prim
-                                          (_, BoolExp prim2) = transTerm mem prim'
-                                          in BoolExp $ Lang.or_ prim1 prim2
--- implements exponentiation by hand
-transPrim (BinOp Exp prim CoreErased.Ann { CoreErased.term = CoreErased.Prim (FEInteger i)}) mem
-    | i == 1 = snd $ transTerm mem prim
-    | otherwise = transPrim (BinOp Mul prim (wrap $ BinOp Exp prim (wrap $ FEInteger (i - 1)))) mem
-transPrim (Op Neg prim) mem = let (_, BoolExp prim') = transTerm mem prim
-                                  in BoolExp $ Lang.not_ prim'
-transPrim (If prim prim' prim'') mem = let (_, BoolExp prim1) = transTerm mem prim
-                                           (_, FExp prim2) = transTerm mem prim'
-                                           (_, FExp prim3) = transTerm mem prim''
-                                  in FExp $ Lang.cond prim1 prim2 prim3
+        return term
+
+     where
+       execParams :: (Symbol, Term) -> ArithmeticCircuitCompilation ArithExpression
+       execParams (sy, term) =
+         do
+           term' <- transTerm term
+           insert sy term'
+
+    _ -> throw @"compilationError" TypeErrorApplicationNonFunction
+
+transPrim :: PrimVal -> ArithmeticCircuitCompilation ArithExpression
+transPrim (Element f) = write . FExp $ Lang.c f
+transPrim (Boolean b) = write . BoolExp $ Circuit.EConstBool b
+transPrim (FEInteger i) = write . FExp $ Lang.c (fromIntegral i)
+
+
+-- ArithExpression cannot be made a Functor since the structure inside it is not a Functor
+-- It is a Bifunctor where I need to fix the last variant, making it a Contravariant Functor
+-- Therefore, we are sticking to manual Applicative until we move away from `arithmetic-circuits`
+transPrim (BinOp Add prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.add prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+transPrim (BinOp Mul prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.mul prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+transPrim (BinOp Sub prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.sub prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+
+-- It implements exponentiation by hand since `arithmetic-circuits` does not support it
+transPrim (BinOp Exp prim CoreErased.Ann { CoreErased.term = CoreErased.Prim (FEInteger i)})
+    | i == 1 = transTerm prim
+    | otherwise = transPrim (BinOp Mul prim (wrap $ BinOp Exp prim (wrap $ FEInteger (i - 1))))
+
+transPrim (BinOp Eq prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (FExp prim1', FExp prim2') -> (write . BoolExp) $ Lang.eq prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+transPrim (BinOp And prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (BoolExp prim1', BoolExp prim2') -> (write . BoolExp) $ Lang.and_ prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+transPrim (BinOp Or prim prim') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  case (prim1, prim2) of
+    (BoolExp prim1', BoolExp prim2') -> (write . BoolExp) $ Lang.or_ prim1' prim2'
+    (_, _) -> throw @"compilationError" PrimTypeError
+transPrim (Op Neg prim) = do
+  prim1 <- transTerm prim
+  case prim1 of
+    BoolExp prim1' -> (write . BoolExp) $ Lang.not_ prim1'
+    _ -> throw @"compilationError" PrimTypeError
+transPrim (If prim prim' prim'') = do
+  prim1 <- transTerm prim
+  prim2 <- transTerm prim'
+  prim3 <- transTerm prim''
+  case (prim1, prim2, prim3) of
+    (BoolExp prim1', FExp prim2', FExp prim3') -> (write . FExp) $ Lang.cond prim1' prim2' prim3'
+    (_, _, _) -> throw @"compilationError" PrimTypeError
+transPrim _ = throw @"compilationError" PrimTypeError
 
 add, mul, sub, eq, and', or', exp :: Term -> Term -> Term
 add term term' = wrap (BinOp Add term term')
@@ -129,9 +186,6 @@ wrap prim = CoreErased.Ann { CoreErased.term = CoreErased.Prim prim
                            , CoreErased.type' = CoreErased.PrimTy ()
                            }
 
-extractPrim :: Term -> PrimVal
-extractPrim CoreErased.Ann { CoreErased.term = CoreErased.Prim prim } = prim
-
 var :: J.Symbol -> Term
 var x = CoreErased.Ann { CoreErased.term = CoreErased.Var x
                        , CoreErased.usage = Usage.Omega
@@ -148,8 +202,3 @@ lambda args body = CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreEras
 
 input :: Int -> Circuit.Expr Circuit.Wire f f
 input = Circuit.EVar . Circuit.InputWire
-
-freshVars :: Memory -> [J.Symbol] -> Memory
-freshVars (Mem map_ n) vars = Mem (map_ <> Map.fromList (zip vars (slots n))) (n + 1)
-  where slots :: Int -> [(Int, ArithExpression Par.F)]
-        slots n = map (, NoExp) [n ..]
