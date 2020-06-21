@@ -16,6 +16,7 @@ typecheckAffineErase ::
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
     HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
+    HasReader "globals" (IR.Globals primTy primVal) m,
     MonadIO m,
     Eq primTy,
     Eq primVal,
@@ -57,6 +58,7 @@ typecheckErase ::
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
     HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
+    HasReader "globals" (IR.Globals primTy primVal) m,
     Eq primTy,
     Eq primVal,
     Show primTy,
@@ -70,18 +72,19 @@ typecheckErase ::
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
+  globals <- ask @"globals"
   -- First convert HR to IR.
   let irTerm = Translate.hrToIR term
   let irType = Translate.hrToIR ty
   tell @"log" [Types.LogHRtoIR term irTerm]
   tell @"log" [Types.LogHRtoIR ty irType]
-  let (Right irTypeValue, _) = IR.exec (IR.evalTerm param irType)
+  let (Right irTypeValue, _) = IR.exec globals (IR.evalTerm param irType)
   -- Typecheck & return accordingly.
   case IR.typeTerm param 0 [] irTerm (IR.Annotation usage irTypeValue)
-    |> IR.exec
+    |> IR.exec globals
     |> fst of
-    Right _ ->
-      case Erasure.erase param term usage ty of
+    Right _ -> do
+      case Erasure.erase globals param term usage ty of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)
     Left err -> throw @"error" (Types.TypecheckerError (Text.pack (show err)))

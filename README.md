@@ -1,11 +1,10 @@
 # Juvix
 
-![Tardigrade](https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Water_bear.jpg/279px-Water_bear.jpg)
-<br /><sub><sup>([Aditya via Wikimedia Commons, CC-BY-SA 3.0](https://commons.wikimedia.org/wiki/File:Water_bear.jpg))</sup></sub>
+![Mascot](https://juvix.org/img/mascot.jpg)
 
-![GitHub](https://img.shields.io/github/license/cryptiumlabs/juvix)
-![Build status](https://img.shields.io/circleci/build/github/cryptiumlabs/juvix?token=abc123def456)
-![GitHub issues](https://img.shields.io/github/issues/cryptiumlabs/juvix)
+![GitHub](https://img.shields.io/github/license/metastatedev/juvix)
+![Build status](https://img.shields.io/circleci/build/github/metastatedev/juvix?token=abc123def456)
+![GitHub issues](https://img.shields.io/github/issues/metastatedev/juvix)
 
 ## Overview
 
@@ -108,9 +107,9 @@ juvix interactive
 
 ### Documentation Generator
 
-[Roswell](https://github.com/roswell/roswell) is required for automatic generation of documentation in [doc/Code](https://github.com/cryptiumlabs/juvix/tree/develop/doc/Code).
+[Roswell](https://github.com/roswell/roswell) is required for automatic generation of documentation in [doc/Code](https://github.com/metastatedev/juvix/tree/develop/doc/Code).
 
-Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install cryptiumlabs/org-generation`.
+Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install metastatedev/org-generation`.
 
 ### REPL
 

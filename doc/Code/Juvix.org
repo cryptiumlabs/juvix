@@ -565,8 +565,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
 *** HRAnn
 - _Relies on_
@@ -580,8 +580,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** IR
@@ -596,14 +596,14 @@ the substitution functions (substTerm and substElim).
 - _Relies on_
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
   + [[IR/Types]]
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
 **** Typechecker
 - _Relies on_
@@ -629,17 +629,17 @@ Transformations between different extensions.
 ***** Types <<Typechecker/Types>>
 - _Relies on_
   + [[IR/Types]]
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
-  + [[Base]]
+  + [[IR/Types/Base]]
   + [[Library]]
-***** Base
+***** Base <<IR/Types/Base>>
 - _Relies on_
   + [[Usage]]
   + [[Library]]
@@ -654,8 +654,8 @@ Quantitative type implementation inspired by
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
-  + [[Base]]
-  + [[Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
@@ -718,6 +718,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Lexer]]
   + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
   + [[Library]]
 *** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
@@ -727,7 +728,163 @@ Quantitative type implementation inspired by
 - Note :: The names for the types in =ArrowData= are stored in the
           =ArrowGen= and not in =NamedType=
 - _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Library]]
+**** Base <<Frontend/Types/Base>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
   + [[Usage]]
+  + [[Library]]
+**** Extend <<Types/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[CombineMultiple/Transform]]
+  + [[RemoveCond/Transform]]
+  + [[RemoveDo/Transform]]
+  + [[RemoveDo/Types]]
+  + [[RemoveGuard/Transform]]
+  + [[RemoveModules/Transform]]
+  + [[RemovePunned/Transform]]
+  + [[RemoveSignature/Transform]]
+  + [[Library]]
+*** Abstractions
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+*** CombineMultiple
+**** Extend <<CombineMultiple/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+**** Transform <<CombineMultiple/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveCond/Types]]
+  + [[Library]]
+**** Types <<CombineMultiple/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+*** RemoveCond
+**** Extend <<RemoveCond/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+**** Transform <<RemoveCond/Transform>>
+- _Relies on_
+  + [[RemoveCond/Types]]
+  + [[RemoveGuard/Types]]
+  + [[Library]]
+**** Types <<RemoveCond/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+*** RemoveDo
+**** Extend <<RemoveDo/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+**** Transform <<RemoveDo/Transform>>
+- _Relies on_
+  + [[RemoveDo/Types]]
+  + [[RemovePunned/Types]]
+  + [[Library]]
+**** Types <<RemoveDo/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+*** RemoveGuard
+**** Extend <<RemoveGuard/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[RemoveModules/Extend]]
+**** Transform <<RemoveGuard/Transform>>
+- _Relies on_
+  + [[RemoveGuard/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+**** Types <<RemoveGuard/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+*** RemoveModules
+**** Extend <<RemoveModules/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Types/Extend]]
+  + [[Library]]
+**** Transform <<RemoveModules/Transform>>
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+**** Types <<RemoveModules/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveModules/Extend]]
+  + [[Library]]
+*** RemovePunned
+**** Extend <<RemovePunned/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
+**** Transform <<RemovePunned/Transform>>
+- _Relies on_
+  + [[RemovePunned/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+**** Types <<RemovePunned/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+*** RemoveSignature
+**** Extend <<RemoveSignature/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+**** Transform <<RemoveSignature/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+**** Types <<RemoveSignature/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
   + [[Library]]
 ** INetIR
 - _Relies on_

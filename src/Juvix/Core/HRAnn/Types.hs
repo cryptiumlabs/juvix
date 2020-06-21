@@ -22,16 +22,15 @@ data BindAnnotation primTy primVal
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
 IR.extendTerm "Term" [] [t|T|] $
-  IR.defaultExtTerm
-    { IR.nameLam = "Lam0",
-      IR.typeLam = Ext.Ann $ \primTy primVal ->
-        [t|BindAnnotation $primTy $primVal|],
-      IR.namePi = "Pi0",
-      IR.typePi = Ext.Ann $ \_primTy _primVal -> [t|Symbol|],
-      IR.nameElim = "Elim0",
-      IR.typeElim = Ext.Ann $ \primTy primVal ->
-        [t|Annotation $primTy $primVal|]
-    }
+  \primTy primVal ->
+    IR.defaultExtTerm
+      { IR.nameLam = "Lam0",
+        IR.typeLam = Just [[t|BindAnnotation $primTy $primVal|]],
+        IR.namePi = "Pi0",
+        IR.typePi = Just [[t|Symbol|]],
+        IR.nameElim = "Elim0",
+        IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
+      }
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π x s t = Lam0 t (BindAnnotation x (Annotation π s))
@@ -49,15 +48,14 @@ data AppAnnotation primTy primVal
       }
 
 IR.extendElim "Elim" [] [t|T|] $
-  IR.defaultExtElim
-    { IR.typeBound = Ext.Disabled,
-      IR.typeFree = Ext.Disabled,
-      IR.typeElimX =
-        [("Var", \_primTy _primVal -> [t|Symbol|])],
-      IR.nameApp = "App0",
-      IR.typeApp = Ext.Ann $ \primTy primVal ->
-        [t|AppAnnotation $primTy $primVal|]
-    }
+  \primTy primVal ->
+    IR.defaultExtElim
+      { IR.typeBound = Nothing,
+        IR.typeFree = Nothing,
+        IR.typeElimX = [("Var", [[t|Symbol|]])],
+        IR.nameApp = "App0",
+        IR.typeApp = Just [[t|AppAnnotation $primTy $primVal|]]
+      }
 
 pattern App π s ts ρ t tt =
   App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))

@@ -1,18 +1,7 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-
--- |
--- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
--- - Later a trees that grow version of this will be implemented, so
---   infix functions can better transition across syntax
--- - Note :: The names for the types in =ArrowData= are stored in the
---           =ArrowGen= and not in =NamedType=
-module Juvix.Frontend.Types where
+module Juvix.FrontendDesugar.RemoveModules.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.Frontend.Types.Extend as Ext
+import qualified Juvix.FrontendDesugar.RemoveModules.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
@@ -37,6 +26,10 @@ extendArrowSymbol "ArrowSymbol" [] [t|T|] Ext.extendArrowSymbol
 
 extendUniverseExpression "UniverseExpression" [] [t|T|] Ext.extendUniverseExpression
 
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
+
 extendAdt "Adt" [] [t|T|] Ext.extendAdt
 
 extendSum "Sum" [] [t|T|] Ext.extendSum
@@ -49,23 +42,13 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] Ext.extendFunction
 
-extendModule "Module" [] [t|T|] Ext.extendModule
-
-extendModuleE "ModuleE" [] [t|T|] Ext.extendModuleE
+extendArg "Arg" [] [t|T|] Ext.extendArg
 
 extendFunctionLike "FunctionLike" [] [t|T|] $ const Ext.extendFunctionLike
-
-extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
-
-extendArg "Arg" [] [t|T|] Ext.extendArg
-
-extendCond "Cond" [] [t|T|] $ const Ext.extendCond
-
-extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
@@ -76,6 +59,8 @@ extendArrowExp "ArrowExp" [] [t|T|] Ext.extendArrowExp
 extendConstant "Constant" [] [t|T|] Ext.extendConstant
 
 extendNumb "Numb" [] [t|T|] Ext.extendNumb
+
+extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendString' "String'" [] [t|T|] Ext.extendString'
 

@@ -2,7 +2,6 @@
 
 module Juvix.Core.IR.Typechecker.Types where
 
-import qualified Extensible as Ext
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Base
@@ -164,27 +163,27 @@ throwTC = throw @"typecheckError"
 
 data T
 
-do
-  let typed = Ext.Ann $ \primTy primVal -> [t|Annotation $primTy $primVal|]
-  extT <-
-    IR.extendTerm "Term" [] [t|T|] $
-      IR.defaultExtTerm
-        { IR.typeStar = typed,
-          IR.typePrimTy = typed,
-          IR.typePi = typed,
-          IR.typeLam = typed,
-          IR.typeElim = typed
-        }
-  extE <-
-    IR.extendElim "Elim" [] [t|T|] $
-      IR.defaultExtElim
-        { IR.typeBound = typed,
-          IR.typeFree = typed,
-          IR.typePrim = typed,
-          IR.typeApp = typed,
-          IR.typeAnn = typed
-        }
-  pure $ extT ++ extE
+IR.extendTerm "Term" [] [t|T|] $
+  \primTy primVal ->
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+     in IR.defaultExtTerm
+          { IR.typeStar = typed,
+            IR.typePrimTy = typed,
+            IR.typePi = typed,
+            IR.typeLam = typed,
+            IR.typeElim = typed
+          }
+
+IR.extendElim "Elim" [] [t|T|] $
+  \primTy primVal ->
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+     in IR.defaultExtElim
+          { IR.typeBound = typed,
+            IR.typeFree = typed,
+            IR.typePrim = typed,
+            IR.typeApp = typed,
+            IR.typeAnn = typed
+          }
 
 getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann

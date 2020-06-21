@@ -5,13 +5,18 @@ module Juvix.Core.IR.Types.Base where
 import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
-import Prelude (String)
+
+type GlobalName = Text
+
+type PatternVar = Int
 
 data Name
   = -- | Global variables are represented by name thus type string
-    Global String -- FIXME Text???
+    Global GlobalName
   | -- | to convert a bound variable into a free one
     Local Natural
+  | -- | Pattern variable, unique within a scope
+    Pattern PatternVar
   deriving (Show, Eq)
 
 extensible
@@ -45,10 +50,7 @@ extensible
       | -- | Annotation with usage.
         Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
       deriving (Eq, Show)
-    |]
 
-extensible
-  [d|
     -- | Values/types
     data Value primTy primVal
       = VStar Natural
@@ -66,4 +68,50 @@ extensible
       | NFree Name
       | NApp (Neutral primTy primVal) (Value primTy primVal)
       deriving (Eq, Show)
+
+    data Datatype primTy primVal
+      = Datatype
+          { dataName :: GlobalName,
+            -- | the type constructor's arguments
+            dataArgs :: [DataArg primTy primVal],
+            -- | the type constructor's target universe level
+            dataLevel :: Natural,
+            dataCons :: [DataCon primTy primVal]
+          }
+      deriving (Show, Eq, Generic)
+
+    data DataArg primTy primVal
+      = DataArg
+          { argName :: GlobalName,
+            argUsage :: Usage,
+            argType :: Value primTy primVal,
+            argIsParam :: Bool
+          }
+      deriving (Show, Eq, Generic)
+
+    data DataCon primTy primVal
+      = DataCon
+          { conName :: GlobalName,
+            conType :: Value primTy primVal
+          }
+      deriving (Show, Eq, Generic)
+
+    data Function primTy primVal
+      = Function
+          { funName :: GlobalName,
+            funType :: Value primTy primVal,
+            funClauses :: NonEmpty (FunClause primTy primVal)
+          }
+      deriving (Show, Eq, Generic)
+
+    data FunClause primTy primVal
+      = FunClause [Pattern primTy primVal] (Term primTy primVal)
+      deriving (Show, Eq, Generic)
+
+    data Pattern primTy primVal
+      = PCon GlobalName [Pattern primTy primVal]
+      | PVar PatternVar
+      | PDot (Term primTy primVal)
+      | PPrim primVal
+      deriving (Show, Eq, Generic)
     |]

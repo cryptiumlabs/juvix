@@ -53,8 +53,8 @@ extra-deps:
   commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
 - github: adjoint-io/poly
   commit: b75b853025ea75ba64f62f39d4524832f0117e36
-- github: cryptiumlabs/extensible-data
-  commit: fa102a8b82756da94b7227373869b0e953458230
+- github: metastatedev/extensible-data
+  commit: f1a95de10775b449ee6b8b943cc5207449f35808
 
 ################################################################################
 # arithmetic circuits deps
@@ -74,7 +74,6 @@ extra-deps:
   commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
 - github: adjoint-io/zkp
   commit: 2004a19bb097f34a23cb01d6927965b23c9f0f12
-
 
 ################################################################################
 # morley deps

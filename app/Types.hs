@@ -1,5 +1,6 @@
 module Types where
 
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (log)
 
@@ -25,18 +26,20 @@ exec ::
   Show compErr =>
   EnvExec primTy primVal compErr a ->
   Core.Parameterisation primTy primVal ->
+  IR.Globals primTy primVal ->
   IO
     ( Either (Core.PipelineError primTy primVal compErr) a,
       [Core.PipelineLog primTy primVal]
     )
-exec (EnvE env) param = do
-  (ret, env) <- runStateT (runExceptT env) (Env param [])
+exec (EnvE env) param globals = do
+  (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
 data Env primTy primVal
   = Env
       { parameterisation :: Core.Parameterisation primTy primVal,
-        log :: [Core.PipelineLog primTy primVal]
+        log :: [Core.PipelineLog primTy primVal],
+        globals :: IR.Globals primTy primVal
       }
   deriving (Generic)
 
@@ -57,6 +60,15 @@ newtype EnvExec primTy primVal compErr a
       HasSource "parameterisation" (Core.Parameterisation primTy primVal)
     )
     via ReaderField "parameterisation" (EnvExecAlias primTy primVal compErr)
+  deriving
+    ( HasState "globals" (IR.Globals primTy primVal),
+      HasSource "globals" (IR.Globals primTy primVal),
+      HasSink "globals" (IR.Globals primTy primVal)
+    )
+    via StateField "globals" (EnvExecAlias primTy primVal compErr)
+  deriving
+    (HasReader "globals" (IR.Globals primTy primVal))
+    via ReaderField "globals" (EnvExecAlias primTy primVal compErr)
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal compErr))
     via MonadError (EnvExecAlias primTy primVal compErr)

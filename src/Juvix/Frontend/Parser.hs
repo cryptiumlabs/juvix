@@ -18,7 +18,8 @@ import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
-import Juvix.Library hiding (guard, maybe, option, product, sum, take, takeWhile, try)
+import qualified Juvix.Frontend.Types.Base as Types
+import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, takeWhile, try)
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -28,7 +29,8 @@ import Prelude (fail)
 topLevel :: Parser Types.TopLevel
 topLevel =
   Types.Type <$> typeP
-    <|> modFunc
+    <|> fun
+    <|> modT
     <|> Types.ModuleOpen <$> moduleOpen
     <|> Types.Signature <$> signature'
 
@@ -38,6 +40,7 @@ expressionGen' p =
   Types.Cond <$> cond
     <|> Types.Let <$> let'
     <|> Types.LetType <$> letType
+    <|> Types.ModuleE <$> mod
     <|> Types.Match <$> match
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
@@ -92,16 +95,18 @@ usage = string "u#" *> expression
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
 
-functionModStart :: (Symbol -> [Types.Arg] -> Parser a) -> Parser a
-functionModStart f = do
-  _ <- spaceLiner (string "let")
+functionModStartReserved ::
+  ByteString -> (Symbol -> [Types.Arg] -> Parser a) -> Parser a
+functionModStartReserved str f = do
+  _ <- spaceLiner (string str)
   name <- prefixSymbolSN
   args <- many argSN
   f name args
 
 functionModGen :: Parser a -> Parser (Types.FunctionLike a)
 functionModGen p =
-  functionModStart
+  functionModStartReserved
+    "let"
     ( \name args -> do
         guard <- guard p
         pure (Types.Like name args guard)
@@ -155,7 +160,7 @@ match = do
   matchOn <- expressionSN
   _ <- spaceLiner (string "of")
   matchs <- many1H matchLSN
-  pure (Types.Match' matchOn matchs)
+  pure (Types.Match'' matchOn matchs)
 
 matchL :: Parser Types.MatchL
 matchL = do
@@ -236,19 +241,25 @@ nameMatch parser = do
 -- Modules and Functions
 --------------------------------------------------------------------------------
 
-modFunc :: Parser Types.TopLevel
-modFunc =
-  functionModStart (\n a -> func n a <|> mod n a)
+genGuard :: Symbol -> [Types.Arg] -> Parser a -> Parser (Types.FunctionLike a)
+genGuard n a p =
+  guard p >>| Types.Like n a
+
+fun :: Parser Types.TopLevel
+fun = functionModStartReserved "let" func
   where
     func n a =
-      gen n a expression
+      genGuard n a expression
         >>| Types.Function . Types.Func
+
+modT :: Parser Types.TopLevel
+modT = functionModStartReserved "mod" mod
+  where
     mod n a =
-      ( gen n a (many1H topLevelSN)
+      ( genGuard n a (many1H topLevelSN)
           >>| Types.Module . Types.Mod
       )
         <* string "end"
-    gen n a p = guard p >>| Types.Like n a
 
 moduleOpen :: Parser Types.ModuleOpen
 moduleOpen = do
@@ -336,14 +347,14 @@ record = do
       $ curly
       $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
   familySignature <- maybe (skipLiner Lexer.colon *> expression)
-  pure (Types.Record' names familySignature)
+  pure (Types.Record'' names familySignature)
 
 nameType :: Parser Types.NameType
 nameType = do
   name <- nameParserSN
   skipLiner Lexer.colon
   sig <- expression
-  pure (Types.NameType sig name)
+  pure (Types.NameType' sig name)
 
 -- nameParserColon :: Parser Types.Name
 -- nameParserColon =
@@ -399,12 +410,23 @@ expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 -- Let
 --------------------------------------------------
 
+mod :: Parser Types.ModuleE
+mod = do
+  _ <- spaceLiner (string "mod")
+  name <- prefixSymbolSN
+  args <- many argSN
+  guarded <- guard (many1H topLevelSN)
+  _ <- spaceLiner (string "end")
+  _ <- spaceLiner (string "in")
+  body <- expression
+  pure (Types.ModE (Types.Like name args guarded) body)
+
 let' :: Parser Types.Let
 let' = do
   binds <- functionModGen expression
   spaceLiner (string "in")
   body <- expression
-  pure (Types.Let' binds body)
+  pure (Types.Let'' binds body)
 
 letType :: Parser Types.LetType
 letType = do
@@ -412,7 +434,7 @@ letType = do
   typ <- typePSN
   spaceLiner (string "in")
   body <- expression
-  pure (Types.LetType' typ body)
+  pure (Types.LetType'' typ body)
 
 --------------------------------------------------
 -- Cond
@@ -502,7 +524,7 @@ do' = do
   case length doExp of
     1 -> fail "do expression with only 1 value"
     0 -> fail "parser faled with empty list"
-    _ -> pure (Types.Do' $ NonEmpty.fromList doExp)
+    _ -> pure (Types.Do'' $ NonEmpty.fromList doExp)
 
 doBind :: Parser [Types.DoBody]
 doBind = do

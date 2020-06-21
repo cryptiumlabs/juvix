@@ -312,6 +312,50 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
+    size: 36625
+    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
+    name: pairing
+    version: 1.0.0
+    sha256: 39b4fd7914c53bdad59ba03d9060f13d926599641b5b67363f47a6f1b3a31db7
+    pantry-tree:
+      size: 2067
+      sha256: 3fb7682cd0321c4ef8b547f343cfee4ad3457514a8305458a948463eb6220590
+  original:
+    url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
+- completed:
+    size: 77092
+    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
+    name: elliptic-curve
+    version: 0.3.1
+    sha256: bf05e963f92daf3b88f32e756ab1bfa0b8fa9683ac9b30bf202aca3228e9acf1
+    pantry-tree:
+      size: 9970
+      sha256: 4c3c18badc18db9effd416ea73615371f927fc97ddbcb0c564f6cc77fd4efff1
+  original:
+    url: https://github.com/adjoint-io/elliptic-curve/archive/52b7eba38db0b3aa3619f2916c518f8f3ee63aaf.tar.gz
+- completed:
+    size: 20311
+    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
+    name: galois-field
+    version: 1.0.1
+    sha256: a67df5de45445ec454d93c6c94f8e24327a6b6a8471bdf3c1f9ebb43ca9dbddb
+    pantry-tree:
+      size: 1785
+      sha256: 5d1fbed6827618a1b4718afc571b727c31ea5ad97d9ca39d72c8b77c72ab2376
+  original:
+    url: https://github.com/adjoint-io/galois-field/archive/95fc86b61c573518ff6a1ab1b9f23301482b2577.tar.gz
+- completed:
+    size: 16425
+    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
+    name: sonic
+    version: 0.3.0
+    sha256: a2004eb9ea30eba13294c768106847aa6cb1e5cdddfb763cd397ceb6da5c04b9
+    pantry-tree:
+      size: 1385
+      sha256: 144ced136259458ad7a3fc5d7684ec7244dd80afb950041ff34cbf76d6d5e2f5
+  original:
+    url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
+- completed:
     size: 24372
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
     name: poly
@@ -323,16 +367,16 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 10483
-    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
+    size: 15194
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
     name: extensible-data
     version: 0.1.0
-    sha256: 72a1c07313350e423c2a56beac41bddfc4b9b32f7e4a478313455d7e14796a4e
+    sha256: f287dc29b4de5c3d1794ff1579b970a8e5dcaff43f38cc5657f32abde84c08a5
     pantry-tree:
-      size: 891
-      sha256: dbbdaeb19d5b03d600910099204032bf30fad7a0889c6f68e697539bf30ebcf2
+      size: 1863
+      sha256: 34243f0bdef6974ebc26748aa0ba6cfbd3343233e477d7750653b52a3626f9bf
   original:
-    url: https://github.com/cryptiumlabs/extensible-data/archive/fa102a8b82756da94b7227373869b0e953458230.tar.gz
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
 - completed:
     hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
     pantry-tree:

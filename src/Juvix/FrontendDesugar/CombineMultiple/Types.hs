@@ -1,18 +1,7 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-
--- |
--- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
--- - Later a trees that grow version of this will be implemented, so
---   infix functions can better transition across syntax
--- - Note :: The names for the types in =ArrowData= are stored in the
---           =ArrowGen= and not in =NamedType=
-module Juvix.Frontend.Types where
+module Juvix.FrontendDesugar.CombineMultiple.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.Frontend.Types.Extend as Ext
+import qualified Juvix.FrontendDesugar.CombineMultiple.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
@@ -47,25 +36,15 @@ extendRecord "Record" [] [t|T|] Ext.extendRecord
 
 extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
-extendFunction "Function" [] [t|T|] Ext.extendFunction
+extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
-extendModule "Module" [] [t|T|] Ext.extendModule
+extendArg "Arg" [] [t|T|] Ext.extendArg
 
-extendModuleE "ModuleE" [] [t|T|] Ext.extendModuleE
-
-extendFunctionLike "FunctionLike" [] [t|T|] $ const Ext.extendFunctionLike
-
-extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
+extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
-
-extendArg "Arg" [] [t|T|] Ext.extendArg
-
-extendCond "Cond" [] [t|T|] $ const Ext.extendCond
-
-extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
@@ -91,7 +70,7 @@ extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
-extendLet "Let" [] [t|T|] Ext.extendLet
+extendLet "Let" [] [t|T|] $ Ext.extendLet [t|T|]
 
 extendLetType "LetType" [] [t|T|] Ext.extendLetType
 

@@ -26,7 +26,7 @@ shouldEraseTo parameterisation (term, usage, ty) erased =
     (show (term, usage, ty) <> " should erase to " <> show erased)
     ( Right erased
         T.@=? ( (Core.term . Core.termAssign)
-                  |<< ( Erasure.erase parameterisation term usage ty ::
+                  |<< ( Erasure.erase mempty parameterisation term usage ty ::
                           EraseureType primTy primVal
                       )
               )

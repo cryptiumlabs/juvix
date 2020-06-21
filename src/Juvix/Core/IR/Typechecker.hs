@@ -19,9 +19,12 @@ module Juvix.Core.IR.Typechecker
     EnvAlias,
     EnvTypecheck (..),
     exec,
+    Globals,
+    Global (..),
   )
 where
 
+import qualified Data.HashMap.Strict as HashMap
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env
 import Juvix.Core.IR.Typechecker.Log
@@ -29,7 +32,7 @@ import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library
+import Juvix.Library hiding (Datatype)
 
 throwLog ::
   (HasLogTC primTy primVal m, HasThrowTC primTy primVal m) =>
@@ -55,6 +58,7 @@ typeTerm ::
   forall primTy primVal m.
   ( HasThrowTC primTy primVal m,
     HasLogTC primTy primVal m,
+    HasReader "globals" (Globals primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -160,6 +164,7 @@ typeElim0 ::
   forall primTy primVal m.
   ( HasThrowTC primTy primVal m,
     HasLogTC primTy primVal m,
+    HasReader "globals" (Globals primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -175,6 +180,7 @@ typeElim ::
   forall primTy primVal m.
   ( HasThrowTC primTy primVal m,
     HasLogTC primTy primVal m,
+    HasReader "globals" (Globals primTy primVal) m,
     Show primTy,
     Show primVal,
     Eq primTy,
@@ -191,8 +197,9 @@ typeElim _ _ii ctx elim@(IR.Bound _) = do
   tellLog $ ElimIntro ctx elim
   throwLog BoundVariableCannotBeInferred
 typeElim _ ii ctx elim@(IR.Free x) = do
+  globals <- ask @"globals"
   tellLogs [ElimIntro ctx elim, InferringFree]
-  case lookupCtx x ctx of
+  case lookupCtx x ctx <|> lookupGlobal x globals of
     Just ann -> do
       tellLog $ FoundFree ann
       pure $ Typed.Free x ann
@@ -237,6 +244,26 @@ typeElim p ii ctx elim@(IR.Ann π theTerm theType level) = do
   let ann = Annotation π ty
   theTerm' <- typeTerm p ii ctx theTerm ann
   pure $ Typed.Ann π theTerm' theType' level ann
+
+lookupGlobal ::
+  IR.Name ->
+  Globals primTy primVal ->
+  Maybe (Annotation primTy primVal)
+lookupGlobal (IR.Local _) _ = Nothing
+lookupGlobal (IR.Global x) globals =
+  makeAnn <$> HashMap.lookup x globals
+  where
+    makeAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
+      Annotation
+        { annUsage = Usage.Omega,
+          annType = foldr makePi (IR.VStar dataLevel) dataArgs
+        }
+      where
+        makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
+    makeAnn (GDataCon (IR.DataCon {conType})) =
+      Annotation {annUsage = Usage.Omega, annType = conType}
+    makeAnn (GFunction (IR.Function {funType})) =
+      Annotation {annUsage = Usage.Omega, annType = funType}
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.
