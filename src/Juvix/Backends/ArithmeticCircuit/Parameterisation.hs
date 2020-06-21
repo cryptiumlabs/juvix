@@ -1,5 +1,9 @@
 module Juvix.Backends.ArithmeticCircuit.Parameterisation where
 
+import qualified Circuit.Arithmetic as Arith
+import qualified Circuit.Expr as Expr
+import qualified Circuit.Lang as Lang
+import Data.Pairing.BN254 (Fr)
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans as Booleans
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers as FEInteger
@@ -15,10 +19,6 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import Data.Pairing.BN254 (Fr)
-import qualified Circuit.Arithmetic as Arith
-import qualified Circuit.Expr as Expr
-import qualified Circuit.Lang as Lang
 
 -- all primitive types
 data Ty
@@ -29,8 +29,11 @@ data Ty
   deriving (Show, Eq)
 
 type F = Fr
+
 type BooleanVal = Booleans.Val (Expr.Expr Arith.Wire F Bool) Bool
+
 type FEVal = FieldElements.Val (Expr.Expr Arith.Wire F F)
+
 type FEInteger = FEInteger.Val (Expr.Expr Arith.Wire F Int) Int
 
 instance FieldElements.FieldElement (Expr.Expr Arith.Wire) where
@@ -39,7 +42,7 @@ instance FieldElements.FieldElement (Expr.Expr Arith.Wire) where
   mul = Lang.mul
   sub = Lang.sub
   neg = Expr.EUnOp Expr.UNeg
-  eq  = Lang.eq
+  eq = Lang.eq
   size _ = 254
 
 instance Booleans.Boolean (Expr.Expr Arith.Wire) Bool where
@@ -67,19 +70,19 @@ data Val where
   Eq :: Val
   Curried :: Val -> FEVal -> Val
 
-boolTyToAll ∷ Booleans.Ty → Ty
+boolTyToAll :: Booleans.Ty -> Ty
 boolTyToAll = BoolTy
 
-boolValToAll ∷ BooleanVal → Val
+boolValToAll :: BooleanVal -> Val
 boolValToAll = BoolVal
 
-feTyToAll ∷ FieldElements.Ty → Ty
+feTyToAll :: FieldElements.Ty -> Ty
 feTyToAll = FETy
 
-feValToAll ∷ FEVal → Val
+feValToAll :: FEVal -> Val
 feValToAll = FEVal
 
-typeOf ∷ Val → NonEmpty Ty
+typeOf :: Val -> NonEmpty Ty
 typeOf (BoolVal x) =
   fmap boolTyToAll (Booleans.typeOf x)
 typeOf (FEVal x) =
@@ -87,8 +90,7 @@ typeOf (FEVal x) =
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Eq = BoolTy Booleans.Ty :| [FETy FieldElements.Ty, FETy FieldElements.Ty]
 
-
-apply ∷ Val → Val → Maybe Val
+apply :: Val -> Val -> Maybe Val
 apply (BoolVal x) (BoolVal y) =
   boolValToAll <$> Booleans.apply x y
 apply (FEVal x) (FEVal y) =
@@ -98,22 +100,22 @@ apply (Curried Eq (FieldElements.Val x)) (FEVal (FieldElements.Val y)) =
   pure (BoolVal (Booleans.Val (FieldElements.eq x y)))
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser Ty
+parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer =
-  (boolTyToAll <$> Booleans.parseTy lexer) <|>
-  (feTyToAll <$> FieldElements.parseTy lexer)
+  (boolTyToAll <$> Booleans.parseTy lexer)
+    <|> (feTyToAll <$> FieldElements.parseTy lexer)
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser Val
+parseVal :: Token.GenTokenParser String () Identity -> Parser Val
 parseVal lexer =
-  (boolValToAll <$> Booleans.parseVal lexer) <|>
-  (feValToAll <$> FieldElements.parseVal lexer)
+  (boolValToAll <$> Booleans.parseVal lexer)
+    <|> (feValToAll <$> FieldElements.parseVal lexer)
 
-reservedNames ∷ [String]
+reservedNames :: [String]
 reservedNames = Booleans.reservedNames <> FieldElements.reservedNames <> ["=="]
 
-reservedOpNames ∷ [String]
+reservedOpNames :: [String]
 reservedOpNames = Booleans.reservedOpNames <> FieldElements.reservedOpNames <> ["=="]
 
-t ∷ Parameterisation Ty Val
+t :: Parameterisation Ty Val
 t =
   Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

@@ -7,9 +7,9 @@ import Juvix.Library
 -- TODO ∷ best to turn this into an either function
 transformTopLevel :: [Old.TopLevel] -> [New.TopLevel]
 transformTopLevel
-  ( Old.Signature s@(Old.Sig name _ _ _) :
-      Old.Function (Old.Func name' likes) :
-      xs
+  ( Old.Signature s@(Old.Sig name _ _ _)
+      : Old.Function (Old.Func name' likes)
+      : xs
     )
     | name == name' =
       New.Function

@@ -9,11 +9,10 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 import Prelude (Show (..))
 
-data Annotation' ext primTy primVal
-  = Annotation
-      { annUsage :: Usage.T,
-        annType :: IR.Value' ext primTy primVal
-      }
+data Annotation' ext primTy primVal = Annotation
+  { annUsage :: Usage.T,
+    annType :: IR.Value' ext primTy primVal
+  }
 
 type Annotation = Annotation' IR.NoExt
 
@@ -25,11 +24,10 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
-data ContextElement' ext primTy primVal
-  = ContextElement
-      { ctxName :: IR.Name,
-        ctxAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
-      }
+data ContextElement' ext primTy primVal = ContextElement
+  { ctxName :: IR.Name,
+    ctxAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
+  }
 
 type ContextElement = ContextElement' IR.NoExt
 

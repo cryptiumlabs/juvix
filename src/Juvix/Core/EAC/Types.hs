@@ -38,19 +38,17 @@ data PType primTy
 type ParamTypeAssignment primTy = Map.T Symbol (PType primTy)
 
 -- Linear (in)equality constraint on parameters.
-data Constraint
-  = Constraint
-      { vars :: [ConstraintVar],
-        op :: Op
-      }
+data Constraint = Constraint
+  { vars :: [ConstraintVar],
+    op :: Op
+  }
   deriving (Show, Eq)
 
 -- Variable in constraint.
-data ConstraintVar
-  = ConstraintVar
-      { coefficient :: Int,
-        variable :: Param
-      }
+data ConstraintVar = ConstraintVar
+  { coefficient :: Int,
+    variable :: Param
+  }
   deriving (Show, Eq)
 
 -- Operation for constraint.
@@ -78,8 +76,7 @@ data BracketErrors
   deriving (Show)
 
 -- | Runner Type for Bracket and TypeError
-newtype EitherTyp b a
-  = EitherBracket {runEither :: (Either b a)}
+newtype EitherTyp b a = EitherBracket {runEither :: (Either b a)}
   deriving
     (Functor, Applicative, Monad)
     via Except b
@@ -122,15 +119,14 @@ newtype EnvError primTy primVal a
 data Info primTy = I {ctxt :: Map.T Symbol (Erased.Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
-data Env primTy
-  = Env
-      { path :: Path,
-        varPaths :: VarPaths,
-        typeAssignment :: Erased.TypeAssignment primTy,
-        nextParam :: Param,
-        constraints :: [Constraint],
-        occurrenceMap :: OccurrenceMap
-      }
+data Env primTy = Env
+  { path :: Path,
+    varPaths :: VarPaths,
+    typeAssignment :: Erased.TypeAssignment primTy,
+    nextParam :: Param,
+    constraints :: [Constraint],
+    occurrenceMap :: OccurrenceMap
+  }
   deriving (Show, Eq, Generic)
 
 newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)

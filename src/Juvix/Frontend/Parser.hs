@@ -211,7 +211,8 @@ nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany' parser =
   curly $ do
     x <- sepBy1H (nameSetSN parser) (skipLiner Lexer.comma)
-    if  | length x == 1 && isPunned x ->
+    if
+        | length x == 1 && isPunned x ->
           x <$ skipLiner Lexer.comma
         | otherwise ->
           x <$ maybe (skipLiner Lexer.comma)
@@ -548,7 +549,8 @@ do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 infixSymbolGen :: Parser Symbol -> Parser Symbol
 infixSymbolGen p = do
   symb <- p
-  if  | Set.member symb reservedSymbols -> fail "symbol is reserved word"
+  if
+      | Set.member symb reservedSymbols -> fail "symbol is reserved word"
       | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
@@ -575,7 +577,8 @@ prefixSymbolGen startParser = do
   rest <- takeWhile Lexer.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
-  if  | Set.member new reservedWords -> fail "symbol is reserved operator"
+  if
+      | Set.member new reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText (Encoding.decodeUtf8 new))
 
 -- TODO ∷ this may be bad

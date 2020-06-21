@@ -74,7 +74,8 @@ test7 :: Maybe (AST PrimVal)
 test7 =
   testAst $
     runFlipNet (reduceAll 10)
-      . astToNetDefault <$> (ealToINet <$> parseEal "lambda x. (lambda y. (lambda z. z))")
+      . astToNetDefault
+      <$> (ealToINet <$> parseEal "lambda x. (lambda y. (lambda z. z))")
 
 test7' :: Maybe (AST PrimVal)
 test7' =

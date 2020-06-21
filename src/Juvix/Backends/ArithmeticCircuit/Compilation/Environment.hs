@@ -1,43 +1,47 @@
-{-# LANGUAGE ConstraintKinds, TupleSections #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TupleSections #-}
 
 module Juvix.Backends.ArithmeticCircuit.Compilation.Environment where
 
-import Juvix.Library
-import Juvix.Backends.ArithmeticCircuit.Compilation.Types
-import qualified Data.Map as Map
 import qualified Control.Monad.Fail as Fail
-
+import qualified Data.Map as Map
+import Juvix.Backends.ArithmeticCircuit.Compilation.Types
+import Juvix.Library
 
 data Memory = Mem (Map.Map Symbol (Int, ArithExpression)) Int
   deriving (Generic)
 
 instance Semigroup Memory where
   (Mem map_ n) <> (Mem map__ m) = Mem (map_ <> Map.map (shift n) map__) (n + m)
-    where shift n (m, exp) = (n + m, exp)
+    where
+      shift n (m, exp) = (n + m, exp)
 
 instance Monoid Memory where
   mempty = Mem Map.empty 0
   mappend = (<>)
 
-data Env = Env { memory :: Memory
-               , compilation :: ArithExpression
-               }
+data Env = Env
+  { memory :: Memory,
+    compilation :: ArithExpression
+  }
   deriving (Generic)
 
 type ArithmeticCircuitCompilationAlias = ExceptT CompilationError (State Env)
 
-newtype ArithmeticCircuitCompilation a = Compilation { antiAlias :: (ArithmeticCircuitCompilationAlias a) }
+newtype ArithmeticCircuitCompilation a = Compilation {antiAlias :: (ArithmeticCircuitCompilationAlias a)}
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "memory" Memory
-    , HasSink "memory" Memory
-    , HasSource "memory" Memory
-    ) via StateField "memory" ArithmeticCircuitCompilationAlias
+    ( HasState "memory" Memory,
+      HasSink "memory" Memory,
+      HasSource "memory" Memory
+    )
+    via StateField "memory" ArithmeticCircuitCompilationAlias
   deriving
-    (HasState "compilation" ArithExpression
-    , HasSink "compilation" ArithExpression
-    , HasSource "compilation" ArithExpression
-    ) via StateField "compilation" ArithmeticCircuitCompilationAlias
+    ( HasState "compilation" ArithExpression,
+      HasSink "compilation" ArithExpression,
+      HasSource "compilation" ArithExpression
+    )
+    via StateField "compilation" ArithmeticCircuitCompilationAlias
   deriving
     (HasThrow "compilationError" CompilationError)
     via MonadError ArithmeticCircuitCompilationAlias
@@ -73,8 +77,9 @@ lookup sy =
 
 write :: HasState "compilation" s m => s -> m s
 write exp =
-  do put @"compilation" exp
-     return exp
+  do
+    put @"compilation" exp
+    return exp
 
 read :: HasState "compilation" s m => m s
 read = get @"compilation"
@@ -84,6 +89,5 @@ freshVars sys = modify @"memory" (freshVars' sys)
   where
     freshVars' :: [Symbol] -> Memory -> Memory
     freshVars' vars (Mem map_ n) = Mem (map_ <> Map.fromList (zip vars (slots n))) (n + 1)
-
     slots :: Int -> [(Int, ArithExpression)]
-    slots n = map (, NoExp) [n ..]
+    slots n = map (,NoExp) [n ..]

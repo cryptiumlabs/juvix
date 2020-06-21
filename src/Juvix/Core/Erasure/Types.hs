@@ -4,14 +4,13 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
 import Juvix.Library hiding (empty)
 
-data Env primTy primVal
-  = Env
-      { typeAssignment :: Erased.TypeAssignment primTy,
-        context :: TC.Context primTy primVal,
-        nextName :: Int,
-        nameStack :: [Int],
-        globals :: TC.Globals primTy primVal
-      }
+data Env primTy primVal = Env
+  { typeAssignment :: Erased.TypeAssignment primTy,
+    context :: TC.Context primTy primVal,
+    nextName :: Int,
+    nameStack :: [Int],
+    globals :: TC.Globals primTy primVal
+  }
   deriving (Show, Eq, Generic)
 
 type EnvEraAlias primTy primVal =

@@ -21,12 +21,11 @@ data Return primTy primVal
   | Return primVal
   deriving (Show, Eq, Generic)
 
-data Take primTy primVal
-  = Take
-      { usage :: Usage.T,
-        type' :: Types.Type primTy primVal,
-        term :: primVal
-      }
+data Take primTy primVal = Take
+  { usage :: Usage.T,
+    type' :: Types.Type primTy primVal,
+    term :: primVal
+  }
   deriving (Show, Eq, Generic)
 
 fromAnn :: Types.AnnTerm primTy primVal -> Maybe (Take primTy primVal)

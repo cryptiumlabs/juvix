@@ -27,8 +27,8 @@ backendTests =
   T.testGroup
     "Backend tests"
     [ ArithmeticCircuit.backendCircuit
-      -- LLVM.backendLLVM,
-      -- Michelson.backendMichelson
+    -- LLVM.backendLLVM,
+    -- Michelson.backendMichelson
     ]
 
 frontEndTests :: T.TestTree

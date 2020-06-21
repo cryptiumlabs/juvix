@@ -1,38 +1,39 @@
 module Juvix.Backends.ArithmeticCircuit.Compilation
-  ( compile
-  , add
-  , mul
-  , sub
-  , neg
-  , eq
-  , exp
-  , int
-  , c
-  , and'
-  , or'
-  , Term
-  , Type
-  , lambda
-  , var
-  , input
-  , cond
-  , true
-  , false
-  , runCirc
-  ) where
+  ( compile,
+    add,
+    mul,
+    sub,
+    neg,
+    eq,
+    exp,
+    int,
+    c,
+    and',
+    or',
+    Term,
+    Type,
+    lambda,
+    var,
+    input,
+    cond,
+    true,
+    false,
+    runCirc,
+  )
+where
 
-import Juvix.Library hiding (Type, exp)
-import Juvix.Backends.ArithmeticCircuit.Compilation.Types
-import Juvix.Backends.ArithmeticCircuit.Compilation.Environment
 import qualified Circuit
 import qualified Circuit.Expr as Expr
-import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Circuit.Lang as Lang
+import qualified Data.Map ()
+import Juvix.Backends.ArithmeticCircuit.Compilation.Environment
+import Juvix.Backends.ArithmeticCircuit.Compilation.Types
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
 import qualified Juvix.Core.Usage as Usage
-import qualified Data.Map()
-import Numeric.Natural()
+import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library as J
+import Numeric.Natural ()
 
 compile :: Term -> Type -> (Either CompilationError ArithExpression, Circuit.ArithCircuit Par.F)
 compile term _ = toArithCircuit <$> runState (runExceptT (antiAlias $ transTerm term)) (Env mempty NoExp)
@@ -47,54 +48,57 @@ runCirc :: Num f => Expr.Expr Circuit.Wire f ty -> Circuit.ArithCircuit f
 runCirc = Expr.execCircuitBuilder . Expr.compile
 
 transTerm :: Term -> ArithmeticCircuitCompilation ArithExpression
-transTerm CoreErased.Ann{ CoreErased.term = CoreErased.Prim term } =
+transTerm CoreErased.Ann {CoreErased.term = CoreErased.Prim term} =
   transPrim term
-
-transTerm CoreErased.Ann{ CoreErased.term = CoreErased.Var var } =
+transTerm CoreErased.Ann {CoreErased.term = CoreErased.Var var} =
   do
     (n, exp) <- lookup var
     case exp of
       NoExp -> do
         _ <- insert var (FExp $ input n)
         write (FExp $ input n)
-      _     -> write exp
-
-transTerm CoreErased.Ann{ CoreErased.term = CoreErased.LamM { CoreErased.body = body
-                                                            , CoreErased.arguments = arguments}} =
-  do
-    freshVars arguments
-    transTerm body
-
-transTerm CoreErased.Ann{ CoreErased.term = CoreErased.AppM f params } =
+      _ -> write exp
+transTerm
+  CoreErased.Ann
+    { CoreErased.term =
+        CoreErased.LamM
+          { CoreErased.body = body,
+            CoreErased.arguments = arguments
+          }
+    } =
+    do
+      freshVars arguments
+      transTerm body
+transTerm CoreErased.Ann {CoreErased.term = CoreErased.AppM f params} =
   case f of
-    (CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreErased.body =  body
-                                                        , CoreErased.arguments = arguments
-                                                        }
-                    }) ->
-      do
-        mapM_ execParams (zip arguments params)
-        term <- transTerm body
+    ( CoreErased.Ann
+        { CoreErased.term =
+            CoreErased.LamM
+              { CoreErased.body = body,
+                CoreErased.arguments = arguments
+              }
+        }
+      ) ->
+        do
+          mapM_ execParams (zip arguments params)
+          term <- transTerm body
 
-        -- We must remove variables introduced by current function
-        mapM_ remove arguments
+          -- We must remove variables introduced by current function
+          mapM_ remove arguments
 
-        return term
-
-     where
-       execParams :: (Symbol, Term) -> ArithmeticCircuitCompilation ArithExpression
-       execParams (sy, term) =
-         do
-           term' <- transTerm term
-           insert sy term'
-
+          return term
+        where
+          execParams :: (Symbol, Term) -> ArithmeticCircuitCompilation ArithExpression
+          execParams (sy, term) =
+            do
+              term' <- transTerm term
+              insert sy term'
     _ -> throw @"compilationError" TypeErrorApplicationNonFunction
 
 transPrim :: PrimVal -> ArithmeticCircuitCompilation ArithExpression
 transPrim (Element f) = write . FExp $ Lang.c f
 transPrim (Boolean b) = write . BoolExp $ Circuit.EConstBool b
 transPrim (FEInteger i) = write . FExp $ Lang.c (fromIntegral i)
-
-
 -- ArithExpression cannot be made a Functor since the structure inside it is not a Functor
 -- It is a Bifunctor where I need to fix the last variant, making it a Contravariant Functor
 -- Therefore, we are sticking to manual Applicative until we move away from `arithmetic-circuits`
@@ -118,10 +122,9 @@ transPrim (BinOp Sub prim prim') = do
     (_, _) -> throw @"compilationError" PrimTypeError
 
 -- It implements exponentiation by hand since `arithmetic-circuits` does not support it
-transPrim (BinOp Exp prim CoreErased.Ann { CoreErased.term = CoreErased.Prim (FEInteger i)})
-    | i == 1 = transTerm prim
-    | otherwise = transPrim (BinOp Mul prim (wrap $ BinOp Exp prim (wrap $ FEInteger (i - 1))))
-
+transPrim (BinOp Exp prim CoreErased.Ann {CoreErased.term = CoreErased.Prim (FEInteger i)})
+  | i == 1 = transTerm prim
+  | otherwise = transPrim (BinOp Mul prim (wrap $ BinOp Exp prim (wrap $ FEInteger (i - 1))))
 transPrim (BinOp Eq prim prim') = do
   prim1 <- transTerm prim
   prim2 <- transTerm prim'
@@ -180,24 +183,33 @@ cond :: Term -> Term -> Term -> Term
 cond term term' term'' = wrap (If term term' term'')
 
 wrap :: PrimVal -> Term
-wrap prim = CoreErased.Ann { CoreErased.term = CoreErased.Prim prim
-                           , CoreErased.usage = Usage.Omega
-                           , CoreErased.type' = CoreErased.PrimTy ()
-                           }
+wrap prim =
+  CoreErased.Ann
+    { CoreErased.term = CoreErased.Prim prim,
+      CoreErased.usage = Usage.Omega,
+      CoreErased.type' = CoreErased.PrimTy ()
+    }
 
 var :: J.Symbol -> Term
-var x = CoreErased.Ann { CoreErased.term = CoreErased.Var x
-                       , CoreErased.usage = Usage.Omega
-                       , CoreErased.type' = CoreErased.PrimTy ()
-                       }
+var x =
+  CoreErased.Ann
+    { CoreErased.term = CoreErased.Var x,
+      CoreErased.usage = Usage.Omega,
+      CoreErased.type' = CoreErased.PrimTy ()
+    }
 
 lambda :: [J.Symbol] -> Term -> Term
-lambda args body = CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreErased.arguments = args
-                                                                      , CoreErased.body = body
-                                                                      , CoreErased.capture = [] }
-                                    , CoreErased.usage = Usage.Omega
-                                    , CoreErased.type' = CoreErased.Star (toEnum . length $ args)
-                                    }
+lambda args body =
+  CoreErased.Ann
+    { CoreErased.term =
+        CoreErased.LamM
+          { CoreErased.arguments = args,
+            CoreErased.body = body,
+            CoreErased.capture = []
+          },
+      CoreErased.usage = Usage.Omega,
+      CoreErased.type' = CoreErased.Star (toEnum . length $ args)
+    }
 
 input :: Int -> Circuit.Expr Circuit.Wire f f
 input = Circuit.EVar . Circuit.InputWire

@@ -1,11 +1,11 @@
 module Juvix.Backends.ArithmeticCircuit.Compilation.Types where
 
-import qualified Juvix.Core.ErasedAnn as CoreErased
-import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
-import qualified Circuit.Expr as Expr
 import qualified Circuit
-import Numeric.Natural()
+import qualified Circuit.Expr as Expr
+import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
+import qualified Juvix.Core.ErasedAnn as CoreErased
 import Juvix.Library
+import Numeric.Natural ()
 
 data PrimVal
   = Element Par.F
@@ -30,6 +30,7 @@ data UnaryOp = Neg
   deriving (Show, Eq)
 
 type Term = CoreErased.AnnTerm () PrimVal
+
 type Type = CoreErased.Type () PrimVal
 
 data CompilationError

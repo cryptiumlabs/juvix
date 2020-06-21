@@ -21,7 +21,9 @@ type TermInfo primTy primVal result =
 erase ::
   (Show primTy, Show primVal, Eq primTy, Eq primVal, Show compErr) =>
   IR.Globals primTy primVal ->
-  TermInfo primTy primVal
+  TermInfo
+    primTy
+    primVal
     (Either Erasure.Error (Core.AssignWithType primTy primVal compErr))
 erase globals parameterisation term usage ty =
   let (erased, env) = exec globals (eraseTerm parameterisation term usage ty)

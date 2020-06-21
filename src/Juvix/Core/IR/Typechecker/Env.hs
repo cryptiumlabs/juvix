@@ -6,11 +6,10 @@ import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library hiding (Datatype)
 
-data EnvCtx primTy primVal
-  = EnvCtx
-      { typecheckerLog :: [Log primTy primVal],
-        globals :: Globals primTy primVal
-      }
+data EnvCtx primTy primVal = EnvCtx
+  { typecheckerLog :: [Log primTy primVal],
+    globals :: Globals primTy primVal
+  }
   deriving (Show, Eq, Generic)
 
 type Globals primTy primVal =
@@ -23,7 +22,8 @@ data Global primTy primVal
   deriving (Show, Eq, Generic)
 
 type EnvAlias primTy primVal =
-  ExceptT (TypecheckError primTy primVal)
+  ExceptT
+    (TypecheckError primTy primVal)
     (State (EnvCtx primTy primVal))
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
