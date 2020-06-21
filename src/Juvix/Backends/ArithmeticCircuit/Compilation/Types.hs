@@ -12,7 +12,7 @@ data PrimVal
   | Boolean Bool
   | FEInteger Int
   | BinOp BinOp Term Term
-  | Op Op Term
+  | UnaryOp UnaryOp Term
   | If Term Term Term
   deriving (Show, Eq)
 
@@ -26,7 +26,7 @@ data BinOp
   | Or
   deriving (Show, Eq)
 
-data Op = Neg
+data UnaryOp = Neg
   deriving (Show, Eq)
 
 type Term = CoreErased.AnnTerm () PrimVal

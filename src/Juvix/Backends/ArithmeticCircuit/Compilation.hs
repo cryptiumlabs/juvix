@@ -65,7 +65,6 @@ transTerm CoreErased.Ann{ CoreErased.term = CoreErased.LamM { CoreErased.body = 
     freshVars arguments
     transTerm body
 
-
 transTerm CoreErased.Ann{ CoreErased.term = CoreErased.AppM f params } =
   case f of
     (CoreErased.Ann { CoreErased.term = CoreErased.LamM { CoreErased.body =  body
@@ -141,7 +140,7 @@ transPrim (BinOp Or prim prim') = do
   case (prim1, prim2) of
     (BoolExp prim1', BoolExp prim2') -> (write . BoolExp) $ Lang.or_ prim1' prim2'
     (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (Op Neg prim) = do
+transPrim (UnaryOp Neg prim) = do
   prim1 <- transTerm prim
   case prim1 of
     BoolExp prim1' -> (write . BoolExp) $ Lang.not_ prim1'
@@ -165,7 +164,7 @@ or' term term' = wrap (BinOp Or term term')
 exp term term' = wrap (BinOp Exp term term')
 
 neg :: Term -> Term
-neg = wrap . Op Neg
+neg = wrap . UnaryOp Neg
 
 c :: Par.F -> Term
 c = wrap . Element
