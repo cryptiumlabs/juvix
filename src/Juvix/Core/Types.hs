@@ -29,14 +29,14 @@ data PipelineLog primTy primVal
 -- needed to promote a backend specific compilation error
 data TermAssignment primTy primVal compErr
   = Assignment
-      { term :: EC.Term primVal,
-        assignment :: EC.TypeAssignment primTy
+      { term :: EC.Term primTy primVal,
+        assignment :: EC.TypeAssignment primTy primVal
       }
   deriving (Show, Generic)
 
 data AssignWithType primTy primVal compErr
   = WithType
       { termAssign :: TermAssignment primTy primVal compErr,
-        type' :: EC.Type primTy
+        type' :: EC.Term primTy primVal
       }
   deriving (Show, Generic)

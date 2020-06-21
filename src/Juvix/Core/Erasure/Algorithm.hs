@@ -42,6 +42,17 @@ exec ::
 exec globals (Erasure.EnvEra env) =
   runState (runExceptT env) (Erasure.Env Map.empty [] 0 [] globals)
 
+-- Used for data constructor erasure.
+eraseValue value = do
+  case value of
+    v@(VStar _) -> pure v
+    v@(VPrimTy _) -> pure v
+    VPi usage arg res ->
+      case usage of
+        Core.SNat 0 -> eraseValue res
+        _ -> VPi usage <$> eraseValue arg <*> eraseValue res
+    _ -> throw @"erasureError" Erasure.Unsupported
+
 eraseTerm ::
   ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
     HasState "nextName" Int m,

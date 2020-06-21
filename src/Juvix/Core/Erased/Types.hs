@@ -32,6 +32,8 @@ IR.extendFunClause "FunClause" [] [t|T|] extFunClause
 
 IR.extendPattern "Pattern" [] [t|T|] extPattern
 
+type TypeAssignment primTy primVal = Map.T Symbol (Term primTy primVal)
+
 {-
 data Term primVal
   = Var Symbol
@@ -49,7 +51,6 @@ data Type primTy
     Pi Usage.T (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
 
-type TypeAssignment primTy = Map.T Symbol (Type primTy)
 
 data EvaluationError primVal
   = PrimitiveApplicationError primVal primVal
