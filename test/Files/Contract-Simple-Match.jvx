@@ -1,0 +1,19 @@
+let nat = "%prim.nat"
+
+let add = "%prim.add"
+
+type Storage  = {
+  value  : nat,
+  value2 : nat
+}
+
+sig foo : nat -> storage -> storage
+let foo val {value, value2} =
+  {value = add value val, add value2 val}
+
+sig foo : storage -> nat
+let add-storage {value, value2} =
+  add value value2
+
+
+let main (input, storage) = (add-storage storage, foo input storage)

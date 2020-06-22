@@ -1,0 +1,3 @@
+let add = "%prim.add"
+
+let main (_, ()) = (add 2 3, ())
