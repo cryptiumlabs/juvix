@@ -111,7 +111,7 @@ ghc-options:
   - -fno-warn-orphans
   - -fno-warn-name-shadowing
   - -fno-warn-missing-pattern-synonym-signatures
-  - -j6
+  - -j
   - -static
 
 when:
