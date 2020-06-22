@@ -26,9 +26,9 @@ backendTests :: T.TestTree
 backendTests =
   T.testGroup
     "Backend tests"
-    [ ArithmeticCircuit.backendCircuit
-    -- LLVM.backendLLVM,
-    -- Michelson.backendMichelson
+    [ ArithmeticCircuit.backendCircuit,
+    LLVM.backendLLVM,
+    Michelson.backendMichelson
     ]
 
 frontEndTests :: T.TestTree
@@ -38,11 +38,11 @@ allCheckedTests :: T.TestTree
 allCheckedTests =
   T.testGroup
     "All tests that are checked"
-    [ --coreTests,
+    [ coreTests,
       backendTests
-      -- frontEndTests,
-      -- EAC2.eac2Tests,
-      -- Erasure.erasureTests
+      frontEndTests,
+      EAC2.eac2Tests,
+      Erasure.erasureTests
     ]
 
 main :: IO ()
