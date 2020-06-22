@@ -22,37 +22,39 @@ import Prelude ((!!))
 -- Codegen State
 --------------------------------------------------------------------------------
 
-data CodegenState = CodegenState
-  { -- | Name of the active block to append to
-    currentBlock :: Name,
-    -- | Blocks for function
-    blocks :: Map.T Name BlockState,
-    -- | Function scope symbol table
-    symTab :: SymbolTable,
-    -- | Mapping from symbol to Type
-    typTab :: TypeTable,
-    -- | a mapping from the variants to the sum type
-    varTab :: VariantToType,
-    -- | Count of basic blocks
-    blockCount :: Int,
-    -- | Count of unnamed instructions
-    count :: Word,
-    -- | Name Supply
-    names :: Names,
-    moduleAST :: AST.Module,
-    -- | Debug level
-    debug :: Int
-  }
+data CodegenState
+  = CodegenState
+      { -- | Name of the active block to append to
+        currentBlock :: Name,
+        -- | Blocks for function
+        blocks :: Map.T Name BlockState,
+        -- | Function scope symbol table
+        symTab :: SymbolTable,
+        -- | Mapping from symbol to Type
+        typTab :: TypeTable,
+        -- | a mapping from the variants to the sum type
+        varTab :: VariantToType,
+        -- | Count of basic blocks
+        blockCount :: Int,
+        -- | Count of unnamed instructions
+        count :: Word,
+        -- | Name Supply
+        names :: Names,
+        moduleAST :: AST.Module,
+        -- | Debug level
+        debug :: Int
+      }
   deriving (Show, Generic)
 
-data BlockState = BlockState
-  { -- | Block index
-    idx :: Int,
-    -- | Stack of instructions
-    stack :: [Named Instruction],
-    -- | Block terminator
-    term :: Maybe (Named Terminator)
-  }
+data BlockState
+  = BlockState
+      { -- | Block index
+        idx :: Int,
+        -- | Stack of instructions
+        stack :: [Named Instruction],
+        -- | Block terminator
+        term :: Maybe (Named Terminator)
+      }
   deriving (Show, Generic)
 
 data Errors
@@ -245,11 +247,12 @@ type Debug m = HasReader "debug" Int m
 -- Haskell Types
 --------------------------------------------------------------------------------
 
-data MinimalPtr = Minimal
-  { address' :: Operand,
-    indincies' :: [Operand],
-    type' :: Type
-  }
+data MinimalPtr
+  = Minimal
+      { address' :: Operand,
+        indincies' :: [Operand],
+        type' :: Type
+      }
   deriving (Show)
 
 --------------------------------------------------------------------------------

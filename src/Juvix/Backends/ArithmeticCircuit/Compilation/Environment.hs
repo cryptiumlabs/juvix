@@ -20,10 +20,11 @@ instance Monoid Memory where
   mempty = Mem Map.empty 0
   mappend = (<>)
 
-data Env = Env
-  { memory :: Memory,
-    compilation :: ArithExpression
-  }
+data Env
+  = Env
+      { memory :: Memory,
+        compilation :: ArithExpression
+      }
   deriving (Generic)
 
 type ArithmeticCircuitCompilationAlias = ExceptT CompilationError (State Env)

@@ -12,18 +12,47 @@
   4. Various Arithmetic Circuits
      - For use in ZKP's
 *** ArithmeticCircuit
-**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+**** ZKP
 - _Relies on_
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
+  + [[ArithmeticCircuit/Compilation]]
 **** Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
+  + [[Compilation/Environment]]
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Usage]]
+  + [[Library]]
+  + [[Library]]
+***** Environment <<Compilation/Environment>>
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation/Types]]
   + [[Library]]
 ***** Types <<ArithmeticCircuit/Compilation/Types>>
 - _Relies on_
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Library]]
+**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Booleans]]
+  + [[FieldElements]]
+  + [[Integers]]
+  + [[Core/Types]]
+  + [[Library]]
+***** Booleans
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Types]]
+  + [[Library]]
+***** FieldElements
+- _Relies on_
+  + [[Core/Types]]
+  + [[Library]]
+***** Integers
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Types]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -551,7 +580,7 @@ This module provides a default contract environment
 **** Types <<Erasure/Types>>
 - _Relies on_
   + [[Erased]]
-  + [[Typechecker/Types]]
+  + [[Typechecker]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -619,13 +648,14 @@ Transformations between different extensions.
 - _Relies on_
   + [[Log]]
   + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[Library]]
 ***** Log
 - _Relies on_
-  + [[Library]]
-  + [[Usage]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
+  + [[Usage]]
+  + [[Library]]
 ***** Types <<Typechecker/Types>>
 - _Relies on_
   + [[IR/Types]]

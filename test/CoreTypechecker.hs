@@ -164,10 +164,10 @@ skiComp =
         Nat.t
         kFunApp1
         kFunApp1CompTy {- ,
-                       shouldCheck
-                         nat
-                         scombinator
-                         scombinatorCompNat.Ty -}
+        shouldCheck
+          nat
+          scombinator
+          scombinatorCompNat.Ty -}
     ]
 
 natComp :: T.TestTree
@@ -277,7 +277,7 @@ depIdentityCompTy =
           (IR.VNeutral (IR.NFree (IR.Local 0)))
           -- Local 0 is the first input, i.e. t. x is of type t
           (IR.VNeutral (IR.NFree (IR.Local 0)))
-          -- the return type is t
+        -- the return type is t
       )
 
 -- computation dependent identity annotation (1, 0 * -> w t -> t)
@@ -293,7 +293,7 @@ depIdentityCompTyOmega =
           (IR.VNeutral (IR.NFree (IR.Local 0)))
           -- Local 0 is the first input, i.e. t. x is of type t
           (IR.VNeutral (IR.NFree (IR.Local 0)))
-          -- the return type is t
+        -- the return type is t
       )
 
 -- \x.x 1
@@ -329,7 +329,7 @@ identityAppINat1 =
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
                 -- the third 1 in the annotation, (1 Nat -> Nat)
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- the forth 1 in the annotation, (1 Nat -> Nat)
+              -- the forth 1 in the annotation, (1 Nat -> Nat)
             )
             0
         )
@@ -361,7 +361,7 @@ identityAppI =
             (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
             -- the third 1 in the annotation 1 Nat -> Nat
             (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-            -- the forth 1 in the annotation 1 Nat -> Nat
+          -- the forth 1 in the annotation 1 Nat -> Nat
         )
         0
     )
@@ -404,7 +404,7 @@ kCompTyWithUnit =
           mempty -- is not used in the output
           (IR.VPrimTy (All.UnitTy Unit.Ty)) -- of type Unit
           (IR.VPrimTy (All.NatTy Nat.Ty))
-          -- the output is of type Nat
+        -- the output is of type Nat
       )
 
 -- I K computation annotation
@@ -422,7 +422,7 @@ identityAppK =
                 one -- the second 1 in the annotation
                 (IR.PrimTy Nat.Ty) -- (1 Nat ->
                 (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
-                -- ->
+                    -- ->
             )
             ( IR.Pi
                 one
@@ -490,7 +490,7 @@ kFunApp1 =
         0
     )
     (IR.Elim (IR.Prim (Nat.Val 1))) -- 1
-    -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
+          -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
 kFunApp1CompTy =
@@ -516,7 +516,7 @@ kAppI =
                 mempty
                 (IR.PrimTy Nat.Ty) -- 0 Nat ->
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0
@@ -546,7 +546,7 @@ kAppINotAnnotated =
                 mempty
                 (IR.PrimTy Nat.Ty) -- 0 Nat ->
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0

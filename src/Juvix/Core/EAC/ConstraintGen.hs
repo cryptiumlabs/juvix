@@ -312,8 +312,7 @@ typChecker parameterisation t typAssign = EAC.runEither (() <$ rec' t typAssign)
         Nothing -> throw @"typ" EAC.MissingOverUse
         Just t -> do
           newTyp <- addParamPos bangVar t
-          if
-              | bangParam t > 0 -> pure (assign, newTyp)
+          if  | bangParam t > 0 -> pure (assign, newTyp)
               | otherwise -> pure (Map.delete s assign, newTyp)
     rec' (EAC.RBang bangApp term@(EAC.RApp t1 t2)) assign = do
       (newAssign, type1) <- rec' t1 assign

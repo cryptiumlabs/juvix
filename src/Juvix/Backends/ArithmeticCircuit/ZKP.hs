@@ -15,12 +15,13 @@ import qualified Protocol.Groth as Groth
 import Protolude
 import QAP
 
-data SetupOutput = Setup
-  { randsetup :: Groth.RandomSetup Fr,
-    qap :: QAP Fr,
-    ref :: Groth.Reference (G1 BN254) (G2 BN254),
-    roots :: [[Fr]]
-  }
+data SetupOutput
+  = Setup
+      { randsetup :: Groth.RandomSetup Fr,
+        qap :: QAP Fr,
+        ref :: Groth.Reference (G1 BN254) (G2 BN254),
+        roots :: [[Fr]]
+      }
 
 runSetup :: ArithCircuit Fr -> IO SetupOutput
 runSetup program = do

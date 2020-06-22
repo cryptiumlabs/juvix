@@ -69,35 +69,39 @@ extensible
       | NApp (Neutral primTy primVal) (Value primTy primVal)
       deriving (Eq, Show)
 
-    data Datatype primTy primVal = Datatype
-      { dataName :: GlobalName,
-        -- | the type constructor's arguments
-        dataArgs :: [DataArg primTy primVal],
-        -- | the type constructor's target universe level
-        dataLevel :: Natural,
-        dataCons :: [DataCon primTy primVal]
-      }
+    data Datatype primTy primVal
+      = Datatype
+          { dataName :: GlobalName,
+            -- | the type constructor's arguments
+            dataArgs :: [DataArg primTy primVal],
+            -- | the type constructor's target universe level
+            dataLevel :: Natural,
+            dataCons :: [DataCon primTy primVal]
+          }
       deriving (Show, Eq, Generic)
 
-    data DataArg primTy primVal = DataArg
-      { argName :: GlobalName,
-        argUsage :: Usage,
-        argType :: Value primTy primVal,
-        argIsParam :: Bool
-      }
+    data DataArg primTy primVal
+      = DataArg
+          { argName :: GlobalName,
+            argUsage :: Usage,
+            argType :: Value primTy primVal,
+            argIsParam :: Bool
+          }
       deriving (Show, Eq, Generic)
 
-    data DataCon primTy primVal = DataCon
-      { conName :: GlobalName,
-        conType :: Value primTy primVal
-      }
+    data DataCon primTy primVal
+      = DataCon
+          { conName :: GlobalName,
+            conType :: Value primTy primVal
+          }
       deriving (Show, Eq, Generic)
 
-    data Function primTy primVal = Function
-      { funName :: GlobalName,
-        funType :: Value primTy primVal,
-        funClauses :: NonEmpty (FunClause primTy primVal)
-      }
+    data Function primTy primVal
+      = Function
+          { funName :: GlobalName,
+            funType :: Value primTy primVal,
+            funClauses :: NonEmpty (FunClause primTy primVal)
+          }
       deriving (Show, Eq, Generic)
 
     data FunClause primTy primVal
