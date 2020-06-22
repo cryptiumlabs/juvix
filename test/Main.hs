@@ -39,7 +39,7 @@ allCheckedTests =
   T.testGroup
     "All tests that are checked"
     [ coreTests,
-      backendTests
+      backendTests,
       frontEndTests,
       EAC2.eac2Tests,
       Erasure.erasureTests
