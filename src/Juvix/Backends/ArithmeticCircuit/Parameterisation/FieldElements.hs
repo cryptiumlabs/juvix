@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements where
 
 import Juvix.Core.Types hiding

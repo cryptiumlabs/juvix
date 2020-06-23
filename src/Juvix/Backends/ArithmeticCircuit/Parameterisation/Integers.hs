@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers where
 
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements

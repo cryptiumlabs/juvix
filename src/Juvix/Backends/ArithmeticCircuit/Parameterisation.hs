@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns -Wwarn=missing-methods #-}
 module Juvix.Backends.ArithmeticCircuit.Parameterisation where
 
 import qualified Circuit.Arithmetic as Arith
