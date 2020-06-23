@@ -9,6 +9,7 @@ data Term primVal
   | Prim primVal
   | -- TODO ∷ add proper lam with capture and arguments here!
     Lam Symbol (Term primVal)
+  | Let Symbol (Term primVal) (Term primVal)
   | App (Term primVal) (Term primVal)
   deriving (Show, Eq, Generic)
 

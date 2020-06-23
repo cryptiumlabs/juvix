@@ -91,6 +91,25 @@ eraseTerm parameterisation term usage ty = do
               else Erased.Lam name body,
             funcTy
           )
+      HR.Let name bind body -> do
+        let IR.Elim bindIR = hrToIR (IR.Elim bind)
+        context <- get @"context"
+        case IR.typeElim0 parameterisation context bindIR
+          |> fmap IR.getElimAnn
+          |> IR.exec globals
+          |> fst of
+          Left err ->
+            throw @"erasureError"
+              $ Erasure.InternalError
+              $ show err <> " while attempting to erase " <> show bind
+          Right (IR.Annotation bUsage bTyIR)
+            | bUsage == mempty -> do
+                eraseTerm parameterisation body usage ty
+            | otherwise -> do
+                let bTy = irToHR $ IR.quote0 bTyIR
+                (bind', _) <- eraseTerm parameterisation (IR.Elim bind) bUsage bTy
+                (body', ty') <- eraseTerm parameterisation body usage ty
+                pure (Erased.Let name bind' body', ty')
       HR.Elim elim -> do
         elimTy <- eraseType parameterisation ty
         case elim of
@@ -139,6 +158,7 @@ eraseType parameterisation term = do
     -- FIXME might need to check that the name doesn't occur
     -- in @retTy@ anywhere
     HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
+    HR.Let _ _ _ -> throw @"erasureError" Erasure.Unsupported -- TODO
     HR.Elim elim ->
       case elim of
         HR.Var s -> pure (Erased.SymT s)
