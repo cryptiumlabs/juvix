@@ -1,9 +1,9 @@
 module Juvix.Core.HR.Types where
 
-import Juvix.Library
-import Juvix.Core.IR.Types.Base
 import Juvix.Core.HR.Extend
+import Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
+import Juvix.Library
 
 data T
 
@@ -14,6 +14,8 @@ pattern Lam x t = Lam0 t x
 
 pattern Pi π x s t = Pi0 π s t x
 
-{-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
+pattern Let x l b = Let0 l b x
+
+{-# COMPLETE Star, PrimTy, Pi, Lam, Let, Elim #-}
 
 IR.extendElim "Elim" [] [t|T|] extElim

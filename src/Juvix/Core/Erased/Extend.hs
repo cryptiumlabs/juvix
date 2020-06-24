@@ -6,9 +6,9 @@ import Juvix.Core.IR.Types.Base
 import Juvix.Library
 
 extTerm = \_primTy _primVal ->
-  (HR.extTerm _primTy _primVal) {
-    typeStar = Nothing
-  }
+  (HR.extTerm _primTy _primVal)
+    { typeStar = Nothing
+    }
 
 extElim = HR.extElim
 

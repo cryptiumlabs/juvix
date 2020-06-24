@@ -229,13 +229,6 @@ packages:
   original:
     hackage: base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
 - completed:
-    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
-    pantry-tree:
-      size: 2191
-      sha256: 4337652dac76bfaea64e7d5498293df616055c89f67c18cdd0f182be98c9a355
-  original:
-    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
-- completed:
     hackage: fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
     pantry-tree:
       size: 1004
@@ -319,6 +312,49 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
+    size: 24372
+    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
+    name: poly
+    version: 0.3.2.0
+    sha256: 6940270f46bc6b54c52397e837b9bcee87c90002665cc2a1302964494153d461
+    pantry-tree:
+      size: 2109
+      sha256: 05ebc44a9cc5ecda047aa0179020615941ae5b698586854d121b4219ec3cc114
+  original:
+    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
+- completed:
+    size: 15194
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
+    name: extensible-data
+    version: 0.1.0
+    sha256: f287dc29b4de5c3d1794ff1579b970a8e5dcaff43f38cc5657f32abde84c08a5
+    pantry-tree:
+      size: 1863
+      sha256: 34243f0bdef6974ebc26748aa0ba6cfbd3343233e477d7750653b52a3626f9bf
+  original:
+    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
+- completed:
+    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+    pantry-tree:
+      size: 1229
+      sha256: 99ee4e8a10529dbd49ccb0f88a1b9b452c6b6a60971360983647ac1287d69ee9
+  original:
+    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+- completed:
+    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+    pantry-tree:
+      size: 472
+      sha256: 8bc255dfd2276220edb94f6c3139b204e66fe85d612e24f80ff63a757da64cc4
+  original:
+    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+- completed:
+    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+    pantry-tree:
+      size: 2191
+      sha256: 4337652dac76bfaea64e7d5498293df616055c89f67c18cdd0f182be98c9a355
+  original:
+    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+- completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
     name: pairing
@@ -363,27 +399,16 @@ packages:
   original:
     url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
 - completed:
-    size: 24372
-    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
-    name: poly
-    version: 0.3.2.0
-    sha256: 6940270f46bc6b54c52397e837b9bcee87c90002665cc2a1302964494153d461
-    pantry-tree:
-      size: 2109
-      sha256: 05ebc44a9cc5ecda047aa0179020615941ae5b698586854d121b4219ec3cc114
-  original:
-    url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
-- completed:
-    size: 15194
-    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
-    name: extensible-data
+    size: 247501
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
+    name: zkp
     version: 0.1.0
-    sha256: f287dc29b4de5c3d1794ff1579b970a8e5dcaff43f38cc5657f32abde84c08a5
+    sha256: dc79c6efe06bb03ad071f157622146e7ea69f5f049c09ae352eca166832dabf8
     pantry-tree:
-      size: 1863
-      sha256: 34243f0bdef6974ebc26748aa0ba6cfbd3343233e477d7750653b52a3626f9bf
+      size: 3659
+      sha256: db88c47fbe996afa764bc4a398668427cdee4b6872ad4f33a226e5fcad7e2f7c
   original:
-    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
+    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
 - completed:
     hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:

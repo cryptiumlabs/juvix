@@ -140,6 +140,7 @@ coreCheckerEval =
     [ skiComp,
       natComp,
       dependentFunctionComp,
+      letComp,
       evaluations,
       skiCont,
       subtype
@@ -196,6 +197,29 @@ dependentFunctionComp =
         depK
         depKCompTy
     ]
+
+letComp :: T.TestTree
+letComp =
+  T.testGroup
+    "'let' Computational typing"
+    [ -- let x = 0 in 0
+      shouldCheck
+        Nat.t
+        (IR.Let nzero (IR.Elim nzero))
+        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+      -- let x = 0 in x
+      shouldCheck
+        Nat.t
+        (IR.Let nzero (IR.Elim (IR.Bound 0)))
+        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+      -- λx. let y = 0 in x
+      shouldCheck
+        Nat.t
+        (IR.Lam (IR.Let nzero (IR.Elim (IR.Bound 1))))
+        (natToNatTy' one)
+    ]
+  where
+    nzero = (IR.Prim (Nat.Val 0))
 
 evaluations :: T.TestTree
 evaluations =
@@ -461,11 +485,14 @@ kApp1 =
     ) -- 1
     (IR.Elim (IR.Prim (Nat.Val 1)))
 
--- computation annotation (0 Nat -> Nat)
-natToNatTy :: NatAnnotation
-natToNatTy =
+-- computation annotation (π Nat -> Nat)
+natToNatTy' :: Usage.T -> NatAnnotation
+natToNatTy' π =
   one
-    `ann` IR.VPi mempty (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty) -- sig usage
+    `ann` IR.VPi π (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty) -- sig usage
+
+natToNatTy :: NatAnnotation
+natToNatTy = natToNatTy' mempty
 
 -- 0 Nat -> Nat
 

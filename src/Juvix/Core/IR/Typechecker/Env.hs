@@ -23,7 +23,8 @@ data Global primTy primVal
   deriving (Show, Eq, Generic)
 
 type EnvAlias primTy primVal =
-  ExceptT (TypecheckError primTy primVal)
+  ExceptT
+    (TypecheckError primTy primVal)
     (State (EnvCtx primTy primVal))
 
 newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)

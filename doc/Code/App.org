@@ -26,5 +26,6 @@
 * Options
 * Types
 - _Relies on_
+  + [[IR]]
   + [[Types]]
   + [[Library]]

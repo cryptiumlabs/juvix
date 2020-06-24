@@ -10,7 +10,9 @@ extTerm =
       { IR.nameLam = "Lam0",
         IR.typeLam = Just [[t|Symbol|]],
         IR.namePi = "Pi0",
-        IR.typePi = Just [[t|Symbol|]]
+        IR.typePi = Just [[t|Symbol|]],
+        IR.nameLet = "Let0",
+        IR.typeLet = Just [[t|Symbol|]]
       }
 
 extElim =

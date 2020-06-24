@@ -78,8 +78,7 @@ data BracketErrors
   deriving (Show)
 
 -- | Runner Type for Bracket and TypeError
-newtype EitherTyp b a
-  = EitherBracket {runEither :: (Either b a)}
+newtype EitherTyp b a = EitherBracket {runEither :: (Either b a)}
   deriving
     (Functor, Applicative, Monad)
     via Except b

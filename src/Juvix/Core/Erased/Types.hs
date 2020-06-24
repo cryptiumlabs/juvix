@@ -1,12 +1,18 @@
 module Juvix.Core.Erased.Types where
 
+import Juvix.Core.Erased.Extend
+import qualified Juvix.Core.IR.Types.Base as IR
+import Juvix.Core.IR.Types.Base hiding
+  ( extDataArg,
+    extDataCon,
+    extDatatype,
+    extFunClause,
+    extFunction,
+    extPattern,
+  )
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
-import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.IR.Types.Base hiding (extDatatype,
- extDataArg, extDataCon, extFunction, extFunClause, extPattern)
-import Juvix.Core.Erased.Extend
 
 data T
 
@@ -33,7 +39,6 @@ IR.extendFunClause "FunClause" [] [t|T|] extFunClause
 IR.extendPattern "Pattern" [] [t|T|] extPattern
 
 type TypeAssignment primTy primVal = Map.T Symbol (Term primTy primVal)
-
 {-
 data Term primVal
   = Var Symbol

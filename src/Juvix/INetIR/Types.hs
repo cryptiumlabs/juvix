@@ -16,8 +16,7 @@ data Port
 
 type Kind dataTy = Int
 
-data Node dataTy
-  = Node {nodeAddress :: Address, nodeKind :: Kind dataTy}
+data Node dataTy = Node {nodeAddress :: Address, nodeKind :: Kind dataTy}
   deriving (Show, Eq, Generic, Typeable)
 
 {-

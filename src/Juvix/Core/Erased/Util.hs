@@ -21,4 +21,4 @@ freeElim elim =
           Prim _ -> Set.empty
           Var s -> if Set.member s used then Set.empty else Set.singleton s
           App a b -> used `Set.union` freeElim a `Set.union` freeTerm b
-  in go Set.empty elim
+   in go Set.empty elim

@@ -44,7 +44,8 @@ data Env primTy primVal
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =
-  ExceptT (Core.PipelineError primTy primVal compErr)
+  ExceptT
+    (Core.PipelineError primTy primVal compErr)
     (StateT (Env primTy primVal) IO)
 
 newtype EnvExec primTy primVal compErr a

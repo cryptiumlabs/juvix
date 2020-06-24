@@ -15,8 +15,8 @@ import Juvix.Library
 data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
   | TypecheckerError Text
---  | EACError (EAC.Errors primTy primVal)
-  | ErasureError Erasure.Error
+  | --  | EACError (EAC.Errors primTy primVal)
+    ErasureError Erasure.Error
   | PrimError compErr
   deriving (Show, Generic)
 

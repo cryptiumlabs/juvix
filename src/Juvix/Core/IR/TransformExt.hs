@@ -14,6 +14,7 @@ data ExtTransformTEF f ext1 ext2 primTy primVal
         etfPrimTy :: XPrimTy ext1 primTy primVal -> f (XPrimTy ext2 primTy primVal),
         etfPi :: XPi ext1 primTy primVal -> f (XPi ext2 primTy primVal),
         etfLam :: XLam ext1 primTy primVal -> f (XLam ext2 primTy primVal),
+        etfLet :: XLet ext1 primTy primVal -> f (XLet ext2 primTy primVal),
         etfElim :: XElim ext1 primTy primVal -> f (XElim ext2 primTy primVal),
         etfBound :: XBound ext1 primTy primVal -> f (XBound ext2 primTy primVal),
         etfFree :: XFree ext1 primTy primVal -> f (XFree ext2 primTy primVal),
@@ -37,6 +38,7 @@ pattern ExtTransformTE ::
   (XPrimTy ext1 primTy primVal -> XPrimTy ext2 primTy primVal) ->
   (XPi ext1 primTy primVal -> XPi ext2 primTy primVal) ->
   (XLam ext1 primTy primVal -> XLam ext2 primTy primVal) ->
+  (XLet ext1 primTy primVal -> XLet ext2 primTy primVal) ->
   (XElim ext1 primTy primVal -> XElim ext2 primTy primVal) ->
   (XBound ext1 primTy primVal -> XBound ext2 primTy primVal) ->
   (XFree ext1 primTy primVal -> XFree ext2 primTy primVal) ->
@@ -51,6 +53,7 @@ pattern ExtTransformTE
     etPrimTy,
     etPi,
     etLam,
+    etLet,
     etElim,
     etBound,
     etFree,
@@ -65,6 +68,7 @@ pattern ExtTransformTE
       etfPrimTy = Coerce etPrimTy,
       etfPi = Coerce etPi,
       etfLam = Coerce etLam,
+      etfLet = Coerce etLet,
       etfElim = Coerce etElim,
       etfBound = Coerce etBound,
       etfFree = Coerce etFree,
@@ -83,10 +87,10 @@ extTransformTF ::
 extTransformTF fs (Star' i e) = Star' i <$> etfStar fs e
 extTransformTF fs (PrimTy' k e) = PrimTy' k <$> etfPrimTy fs e
 extTransformTF fs (Pi' π s t e) =
-  Pi' π <$> extTransformTF fs s
-    <*> extTransformTF fs t
-    <*> etfPi fs e
+  Pi' π <$> extTransformTF fs s <*> extTransformTF fs t <*> etfPi fs e
 extTransformTF fs (Lam' t e) = Lam' <$> extTransformTF fs t <*> etfLam fs e
+extTransformTF fs (Let' l b e) =
+  Let' <$> extTransformEF fs l <*> extTransformTF fs b <*> etfLet fs e
 extTransformTF fs (Elim' f e) = Elim' <$> extTransformEF fs f <*> etfElim fs e
 extTransformTF fs (TermX e) = TermX <$> etfTermX fs e
 
@@ -132,6 +136,7 @@ forgetter =
       etPrimTy = const (),
       etPi = const (),
       etLam = const (),
+      etLet = const (),
       etElim = const (),
       etBound = const (),
       etFree = const (),

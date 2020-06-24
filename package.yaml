@@ -32,6 +32,12 @@ dependencies:
   - bulletproofs
   - elliptic-curve
   - sonic
+  - arithmetic-circuits
+  - galois-field
+  - crypto-numbers
+  - zkp
+  - pairing
+  - MonadRandom
   ###########################
   # Dependency for Structs
   ###########################
@@ -212,9 +218,14 @@ library:
     - Juvix.Backends.Michelson.Optimisation
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
+    - Juvix.Backends.ArithmeticCircuit.ZKP
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
+    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
 #    - Juvix.Backends.LLVM
 #    - Juvix.Backends.LLVM.JIT
 #    - Juvix.Backends.LLVM.JIT.Types
