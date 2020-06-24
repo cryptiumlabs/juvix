@@ -177,19 +177,19 @@ library:
 #    - Juvix.Core.EAC.Types
 #    - Juvix.Core.EAC.Parser
 #    - Juvix.Core.EAC.Erasure
-    - Juvix.Interpreter
-    - Juvix.Interpreter.InteractionNet
-    - Juvix.Interpreter.InteractionNet.Nets.Default
-    - Juvix.Interpreter.InteractionNet.Nets.Combinators
-    - Juvix.Interpreter.InteractionNet.Backends.Interface
-    - Juvix.Interpreter.InteractionNet.Backends.Env
-    - Juvix.Interpreter.InteractionNet.Backends.Graph
-    - Juvix.Interpreter.InteractionNet.Backends.Maps
-    - Juvix.Interpreter.InteractionNet.Parser
-    - Juvix.Interpreter.InteractionNet.Translation
-    - Juvix.Interpreter.InteractionNet.Type
-    - Juvix.Interpreter.InteractionNet.Shared
-    - Juvix.Interpreter.InteractionNet.Default
+#    - Juvix.Interpreter
+#    - Juvix.Interpreter.InteractionNet
+#    - Juvix.Interpreter.InteractionNet.Nets.Default
+#    - Juvix.Interpreter.InteractionNet.Nets.Combinators
+#    - Juvix.Interpreter.InteractionNet.Backends.Interface
+#    - Juvix.Interpreter.InteractionNet.Backends.Env
+#    - Juvix.Interpreter.InteractionNet.Backends.Graph
+#    - Juvix.Interpreter.InteractionNet.Backends.Maps
+#    - Juvix.Interpreter.InteractionNet.Parser
+#    - Juvix.Interpreter.InteractionNet.Translation
+#    - Juvix.Interpreter.InteractionNet.Type
+#    - Juvix.Interpreter.InteractionNet.Shared
+#    - Juvix.Interpreter.InteractionNet.Default
     - Juvix.Library
     - Juvix.Library.HashMap
     - Juvix.Library.PrettyPrint

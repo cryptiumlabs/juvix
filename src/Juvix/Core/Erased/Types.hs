@@ -26,6 +26,10 @@ pattern Pi π x s t = Pi0 π s t x
 
 IR.extendElim "Elim" [] [t|T|] extElim
 
+IR.extendValue "Value" [] [t|T|] extValue
+
+IR.extendNeutral "Neutral" [] [t|T|] extNeutral
+
 IR.extendDatatype "Datatype" [] [t|T|] extDatatype
 
 IR.extendDataArg "DataArg" [] [t|T|] extDataArg
@@ -39,25 +43,3 @@ IR.extendFunClause "FunClause" [] [t|T|] extFunClause
 IR.extendPattern "Pattern" [] [t|T|] extPattern
 
 type TypeAssignment primTy primVal = Map.T Symbol (Term primTy primVal)
-{-
-data Term primVal
-  = Var Symbol
-  | Prim primVal
-  | -- TODO ∷ add proper lam with capture and arguments here!
-    Lam Symbol (Term primVal)
-  | App (Term primVal) (Term primVal)
-  deriving (Show, Eq, Generic)
-
-data Type primTy
-  = SymT Symbol
-  | Star Natural
-  | PrimTy primTy
-  | -- TODO: How to deal with dependency?
-    Pi Usage.T (Type primTy) (Type primTy)
-  deriving (Show, Eq, Generic)
-
-
-data EvaluationError primVal
-  = PrimitiveApplicationError primVal primVal
-  deriving (Show, Eq, Generic)
--}

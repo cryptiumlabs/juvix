@@ -47,16 +47,16 @@ exec globals (Erasure.EnvEra env) =
 -- Used for data constructor erasure.
 eraseValue value = do
   case value of
-    v@(VStar _) -> pure v
-    v@(VPrimTy _) -> pure v
-    VPi usage arg res ->
+    v@(IR.VStar _) -> pure v
+    v@(IR.VPrimTy _) -> pure v
+    IR.VPi usage arg res ->
       case usage of
         Core.SNat 0 -> eraseValue res
-        _ -> VPi usage <$> eraseValue arg <*> eraseValue res
+        _ -> Erased.VPi usage <$> eraseValue arg <*> eraseValue res
     _ -> throw @"erasureError" Erasure.Unsupported
 
 eraseTerm ::
-  ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
+  ( HasState "typeAssignment" (Erased.TypeAssignment primTy primVal) m,
     HasState "nextName" Int m,
     HasState "nameStack" [Int] m,
     HasThrow "erasureError" Erasure.Error m,
@@ -67,7 +67,7 @@ eraseTerm ::
     Eq primTy,
     Eq primVal
   ) =>
-  TermInfo primTy primVal (m (Erased.Term primVal, Erased.Type primTy))
+  TermInfo primTy primVal (m (Erased.Term primTy primVal, Erased.Term primTy primVal))
 eraseTerm parameterisation term usage ty = do
   globals <- ask @"globals"
   if usage == Core.SNat 0
@@ -105,8 +105,8 @@ eraseTerm parameterisation term usage ty = do
       HR.Elim elim -> do
         elimTy <- eraseType parameterisation ty
         case elim of
-          HR.Var n -> pure (Erased.Var n, elimTy)
-          HR.Prim p -> pure (Erased.Prim p, elimTy)
+          HR.Var n -> pure (Erased.Elim (Erased.Var n), elimTy)
+          HR.Prim p -> pure (Erased.Elim (Erased.Prim p), elimTy)
           HR.App f x -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
@@ -121,36 +121,38 @@ eraseTerm parameterisation term usage ty = do
               Right (IR.Annotation fUsage fTy) -> do
                 let qFTy = IR.quote0 fTy
                 let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
-                (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
+                (f', _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
+                -- TODO FIXME separate out into eraseElim
+                let Erased.Elim f = f'
                 if argUsage == mempty
-                  then pure (f, elimTy)
+                  then pure (Erased.Elim f, elimTy)
                   else do
                     (x, _) <- eraseTerm parameterisation x argUsage fArgTy
-                    pure (Erased.App f x, elimTy)
+                    pure (Erased.Elim (Erased.App f x), elimTy)
           HR.Ann usage term ty _ -> do
             (term, _) <- eraseTerm parameterisation term usage ty
             pure (term, elimTy)
 
 eraseType ::
   forall primTy primVal m.
-  ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
+  ( HasState "typeAssignment" (Erased.TypeAssignment primTy primVal) m,
     HasThrow "erasureError" Erasure.Error m
   ) =>
   Core.Parameterisation primTy primVal ->
   HR.Term primTy primVal ->
-  m (Erased.Type primTy)
+  m (Erased.Term primTy primVal)
 eraseType parameterisation term = do
   case term of
     HR.Star n -> pure (Erased.Star n)
     HR.PrimTy p -> pure (Erased.PrimTy p)
-    HR.Pi argUsage _ argTy retTy -> do
+    HR.Pi argUsage name argTy retTy -> do
       arg <- eraseType parameterisation argTy
       ret <- eraseType parameterisation retTy
-      pure (Erased.Pi argUsage arg ret)
+      pure (Erased.Pi argUsage name arg ret)
     -- FIXME might need to check that the name doesn't occur
     -- in @retTy@ anywhere
     HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
     HR.Elim elim ->
       case elim of
-        HR.Var s -> pure (Erased.SymT s)
+        HR.Var s -> pure (Erased.Elim (Erased.Var s))
         _ -> throw @"erasureError" Erasure.Unsupported

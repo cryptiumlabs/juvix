@@ -5,12 +5,13 @@ import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types.Base
 import Juvix.Library
 
-extTerm = \_primTy _primVal ->
-  (HR.extTerm _primTy _primVal)
-    { typeStar = Nothing
-    }
+extTerm = HR.extTerm
 
 extElim = HR.extElim
+
+extValue = \_ _ -> defaultExtValue
+
+extNeutral = \_ _ -> defaultExtNeutral
 
 extDatatype = \_ _ -> defaultExtDatatype
 
