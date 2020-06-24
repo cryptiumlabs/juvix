@@ -148,10 +148,15 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendDesugar.ContextPasses.Environment
+    - Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Types
+    - Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Transform
+    - Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Extend
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.Common.Context
+    - Juvix.Core.Common.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR

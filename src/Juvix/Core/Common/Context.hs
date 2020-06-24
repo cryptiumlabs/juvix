@@ -14,12 +14,14 @@ import qualified Data.Text as Text
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
+import Juvix.Core.Common.Precedence
 
 newtype Cont b
   = T (HashMap.T Symbol b)
   deriving (Show, Traversable)
   deriving (Functor) via HashMap.T Symbol
   deriving (Foldable) via HashMap.T Symbol
+  deriving (Generic)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
@@ -27,7 +29,8 @@ data Definition term ty sumRep
   = Def
       { definitionUsage :: Usage.T,
         definitionTy :: ty,
-        definitionTerm :: term
+        definitionTerm :: term,
+        precedence :: Precedence
       }
   | Record
       { definitionContents :: T term ty sumRep,
@@ -37,8 +40,9 @@ data Definition term ty sumRep
   | TypeDeclar
       { definitionRepr :: sumRep
       }
-  deriving (Show)
+  deriving (Show, Generic)
 
+-- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
 
 -- couldn't figure out how to fold lenses
@@ -66,6 +70,10 @@ lookup key (T map) =
 
 (!?) :: T term ty sumRep -> Symbol -> Maybe (Definition term ty sumRep)
 (!?) = flip lookup
+
+add :: Symbol -> Definition term ty sumRep -> T term ty sumRep ->
+    T term ty sumRep
+add sy term (T map) = T $ HashMap.insert sy term map
 
 modify,
   update ::
