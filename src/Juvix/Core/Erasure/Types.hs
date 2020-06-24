@@ -12,7 +12,8 @@ data Env primTy primVal
         nameStack :: [Int],
         globals :: TC.Globals primTy primVal
       }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+  --deriving (Show, Eq, Generic)
 
 type EnvEraAlias primTy primVal =
   ExceptT Error (State (Env primTy primVal))

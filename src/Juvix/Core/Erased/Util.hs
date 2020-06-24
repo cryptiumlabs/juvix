@@ -9,8 +9,8 @@ freeTerm term =
   let go :: Set.Set Symbol -> Term primTy primVal -> Set.Set Symbol
       go used t =
         case t of
-          Lam v b -> go (Set.insert v used) b
-          Elim e -> used `Set.union` freeElim e
+          Lam _ v _ b -> go (Set.insert v used) b
+          Elim _ e _ -> used `Set.union` freeElim e
    in go Set.empty term
 
 freeElim :: forall primTy primVal. Elim primTy primVal -> Set.Set Symbol
@@ -20,5 +20,5 @@ freeElim elim =
         case e of
           Prim _ -> Set.empty
           Var s -> if Set.member s used then Set.empty else Set.singleton s
-          App a b -> used `Set.union` freeElim a `Set.union` freeTerm b
+          App _ a _ _ b _ -> used `Set.union` freeElim a `Set.union` freeTerm b
    in go Set.empty elim

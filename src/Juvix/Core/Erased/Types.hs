@@ -13,18 +13,26 @@ import Juvix.Core.IR.Types.Base hiding
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
+import Juvix.Core.HRAnn.Types (BindAnnotation(..), Annotation(..), AppAnnotation(..))
 
 data T
 
 IR.extendTerm "Term" [] [t|T|] extTerm
 
-pattern Lam x t = Lam0 t x
+pattern Lam π x s t = Lam0 t (BindAnnotation x (Annotation π s))
 
 pattern Pi π x s t = Pi0 π s t x
+
+pattern Elim π s t = Elim0 s (Annotation π t)
 
 {-# COMPLETE PrimTy, Pi, Lam, Elim #-}
 
 IR.extendElim "Elim" [] [t|T|] extElim
+
+pattern App π s ts ρ t tt =
+  App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))
+
+{-# COMPLETE Var, Prim, App, Ann #-}
 
 IR.extendValue "Value" [] [t|T|] extValue
 

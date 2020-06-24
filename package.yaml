@@ -154,6 +154,7 @@ library:
     - Juvix.Core.Common.Context
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
+    - Juvix.Core.HRAnn.Extend
     - Juvix.Core.IR
     - Juvix.Core.IRAnn
     - Juvix.Core.Erased

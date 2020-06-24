@@ -1,6 +1,6 @@
 module Juvix.Core.Erased.Extend where
 
-import qualified Juvix.Core.HR.Extend as HR
+import qualified Juvix.Core.HRAnn.Extend as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types.Base
 import Juvix.Library
