@@ -1,14 +1,13 @@
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 -- The actual transform we are doing: erase type alias
-transformAlias :: Old.Alias -> New.Expression
-transformAlias (Old.AliasDec exp) = 
-  New.Expression (transformExpression exp) 
+-- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -25,7 +24,16 @@ transformTopLevel Old.TypeClass =
 transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
-transformExpression :: Old.Expression -> New.Expression
+mTransformTopLevel :: (HasState "old" (Context.T term0 ty0 sumRep0) m, 
+  HasReader "new" (Context.T termN tyN sumRepN) m 
+  --HasState  "aliases" Map Name Expression
+  ) => m Old.TopLevel -> m New.TopLevel  
+mTransformTopLevel = fmap transformTopLevel
+
+transformExpression :: (HasState "old" (Context.T term0 ty0 sumRep0) m, 
+  HasReader "new" (Context.T termN tyN sumRepN) m 
+  --HasState  "aliases" Map Name Expression
+  ) => m Old.Expression -> m New.Expression
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =
@@ -48,8 +56,6 @@ transformExpression (Old.Infix i) =
   New.Infix (transformInfix i)
 transformExpression (Old.ExpRecord i) =
   New.ExpRecord (transformExpRecord i)
-transformExpression (Old.Do i) =
-  transformDo i
 transformExpression (Old.ArrowE i) =
   New.ArrowE (transformArrowExp i)
 transformExpression (Old.NamedTypeE i) =

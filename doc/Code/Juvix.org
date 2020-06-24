@@ -774,6 +774,24 @@ Quantitative type implementation inspired by
 **** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+** FrontendContextualise
+*** EraseTypeAliases
+**** Extend <<EraseTypeAliases/Extend>>
+- _Relies on_
+  + [[Extend]]
+  + [[Frontend/Types/Base]]
+  + [[Extend]]
+  + [[Library]]
+**** Transform <<EraseTypeAliases/Transform>>
+- _Relies on_
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<EraseTypeAliases/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[EraseTypeAliases/Extend]]
+  + [[Library]]
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=

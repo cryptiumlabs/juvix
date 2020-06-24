@@ -148,6 +148,9 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendContextualise.EraseTypeAliases.Types
+    - Juvix.FrontendContextualise.EraseTypeAliases.Transform
+    - Juvix.FrontendContextualise.EraseTypeAliases.Extend
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core

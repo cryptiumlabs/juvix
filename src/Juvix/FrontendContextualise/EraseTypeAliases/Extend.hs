@@ -1,13 +1,14 @@
 module Juvix.FrontendContextualise.EraseTypeAliases.Extend
   ( module Juvix.FrontendContextualise.EraseTypeAliases.Extend,
-    module Juvix.FrontendDesugar.RemoveDo.Extend,
+    module Juvix.FrontendDesugar.RemoveDo.Extend, 
+    --FIXME:change to the module of the last pass
   )
 where
 
 import Juvix.Frontend.Types.Base
-import Juvix.Frontend.FrontendContextualise.EraseTypeAliases.Extend hiding (extendDo, extendExpression)
-import qualified Juvix.FrontendDesugar.RemovePDo.Extend as Ext
+import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendExpression) --FIXME
+import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext --FIXME
 import Juvix.Library
-
+-- TODO fill this out for real
 extendExpression :: ExtExpression
 extendExpression = Ext.extendExpression {typeDo = Nothing}
