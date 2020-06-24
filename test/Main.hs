@@ -50,7 +50,7 @@ allCheckedTests =
 translationPasses :: T.TestTree
 translationPasses =
   T.testGroup
-    "tranlsation passes from Frontend to Core"
+    "translation passes from Frontend to Core"
     [ FrontendDesugar.allDesugar
     ]
 
