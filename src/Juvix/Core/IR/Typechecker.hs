@@ -296,6 +296,5 @@ IR.VStar i <: IR.VStar j = i <= j
 IR.VPi π1 s1 t1 <: IR.VPi π2 s2 t2 =
   π2 `Usage.allowsUsageOf` π1 && s2 <: s1 && t1 <: t2
 s1 <: s2 = s1 == s2
-
 -- TODO: if PrimTys can ever be subtypes of each other the parameterisation will
 -- need to know about that

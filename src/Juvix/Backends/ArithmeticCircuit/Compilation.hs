@@ -82,10 +82,8 @@ transTerm CoreErased.Ann {CoreErased.term = CoreErased.AppM f params} =
         do
           mapM_ execParams (zip arguments params)
           term <- transTerm body
-
           -- We must remove variables introduced by current function
           mapM_ remove arguments
-
           return term
         where
           execParams :: (Symbol, Term) -> ArithmeticCircuitCompilation ArithExpression
@@ -120,7 +118,6 @@ transPrim (BinOp Sub prim prim') = do
   case (prim1, prim2) of
     (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.sub prim1' prim2'
     (_, _) -> throw @"compilationError" PrimTypeError
-
 -- It implements exponentiation by hand since `arithmetic-circuits` does not support it
 transPrim (BinOp Exp prim CoreErased.Ann {CoreErased.term = CoreErased.Prim (FEInteger i)})
   | i == 1 = transTerm prim

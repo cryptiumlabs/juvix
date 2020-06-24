@@ -5,7 +5,7 @@ module Juvix.FrontendDesugar.RemoveDo.Extend
 where
 
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemovePunned.Extend hiding (extendDo, extendExpression)
+import Juvix.FrontendDesugar.RemovePunned.Extend hiding (extendExpression)
 import qualified Juvix.FrontendDesugar.RemovePunned.Extend as Ext
 import Juvix.Library
 

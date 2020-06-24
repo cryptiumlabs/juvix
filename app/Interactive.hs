@@ -136,7 +136,8 @@ specials =
     Special "exit" "Quit interactive mode"
   ]
 
-data Special = Special
-  { specialCommand :: Text,
-    specialHelpDesc :: Text
-  }
+data Special
+  = Special
+      { specialCommand :: Text,
+        specialHelpDesc :: Text
+      }

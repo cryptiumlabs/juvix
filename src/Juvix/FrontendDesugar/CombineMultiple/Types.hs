@@ -85,3 +85,17 @@ extendMatchLogic "MatchLogic" [] [t|T|] Ext.extendMatchLogic
 extendMatchLogicStart "MatchLogicStart" [] [t|T|] Ext.extendMatchLogicStart
 
 extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
+
+--------------------------------------------------------------------------------
+-- Instantiating for show derivation
+--------------------------------------------------------------------------------
+
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
+
+extendModule "Module" [] [t|T|] Ext.extendModule
+
+extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
+
+extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE

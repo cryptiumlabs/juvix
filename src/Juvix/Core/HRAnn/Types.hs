@@ -8,15 +8,17 @@ import Juvix.Library
 
 data T
 
-data Annotation primTy primVal = Annotation
-  { usageAnn :: Usage.T,
-    typeAnn :: IR.Term' T primTy primVal
-  }
+data Annotation primTy primVal
+  = Annotation
+      { usageAnn :: Usage.T,
+        typeAnn :: IR.Term' T primTy primVal
+      }
 
-data BindAnnotation primTy primVal = BindAnnotation
-  { bindName :: Symbol,
-    bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-  }
+data BindAnnotation primTy primVal
+  = BindAnnotation
+      { bindName :: Symbol,
+        bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
 IR.extendTerm "Term" [] [t|T|] $
@@ -43,10 +45,11 @@ pattern Elim π s t = Elim0 s (Annotation π t)
 
 {-# COMPLETE Star, PrimTy, Pi, Lam, Let, Elim #-}
 
-data AppAnnotation primTy primVal = AppAnnotation
-  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
-    argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-  }
+data AppAnnotation primTy primVal
+  = AppAnnotation
+      { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
+        argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
 
 IR.extendElim "Elim" [] [t|T|] $
   \primTy primVal ->

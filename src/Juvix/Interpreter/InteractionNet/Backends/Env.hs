@@ -16,19 +16,21 @@ import Juvix.Library
 
 -- | Info Stores diagnostic data on how much memory
 -- a particular graph reduction uses
-data Info = Info
-  { memoryAllocated :: Integer,
-    sequentalSteps :: Integer,
-    parallelSteps :: Integer,
-    biggestGraphSize :: Integer,
-    currentGraphSize :: Integer
-  }
+data Info
+  = Info
+      { memoryAllocated :: Integer,
+        sequentalSteps :: Integer,
+        parallelSteps :: Integer,
+        biggestGraphSize :: Integer,
+        currentGraphSize :: Integer
+      }
   deriving (Show)
 
-data InfoNet net = InfoNet
-  { net :: net,
-    info :: Info
-  }
+data InfoNet net
+  = InfoNet
+      { net :: net,
+        info :: Info
+      }
   deriving (Show, Generic)
 
 -- TODO ∷ make generic type to remove repeat here!

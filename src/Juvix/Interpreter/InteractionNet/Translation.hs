@@ -21,11 +21,12 @@ import Juvix.Library hiding (empty, link)
 import qualified Juvix.Library.HashMap as Map
 import Prelude (error)
 
-data Env net primVal = Env
-  { level :: Int,
-    net' :: net (AST.Lang primVal),
-    free :: Map.T Symbol (Node, PortType)
-  }
+data Env net primVal
+  = Env
+      { level :: Int,
+        net' :: net (AST.Lang primVal),
+        free :: Map.T Symbol (Node, PortType)
+      }
   deriving (Generic)
 
 newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
@@ -424,9 +425,9 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                                            in case aux port of
                                                 Auxiliary aux -> rec' aux cameFrom newFanMap nodeVarInfo
                                                 FreeNode -> pure Nothing -- doesn't happen
-                                                -- We have already completed a port,
-                                                -- but have not yet gone through another
-                                                -- so go through the other port
+                                                    -- We have already completed a port,
+                                                    -- but have not yet gone through another
+                                                    -- so go through the other port
                                         [Completed port] -> do
                                           let newFanMap Star =
                                                 Map.insert i ([In Circle, Completed port]) fanMap

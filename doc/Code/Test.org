@@ -80,7 +80,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Compilation]]
   + [[Parameterisation]]
-  + [[Types]]
+  + [[ZKP]]
+  + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
 ** LLVM
