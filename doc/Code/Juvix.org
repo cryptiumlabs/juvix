@@ -803,6 +803,7 @@ Quantitative type implementation inspired by
 **** Transform <<EraseTypeAliases/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[FrontendContextualise/Environment]]
   + [[EraseTypeAliases/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]

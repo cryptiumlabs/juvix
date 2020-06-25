@@ -7,67 +7,64 @@ import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
+type WorkingMaps m =  
+  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
+    HasReader "new" (Context.T termN tyN sumRepN) m,
+    HasState  "aliases" (Map Name Expression) m
+  ) 
+
 -- The actual transform we are doing: erase type alias
 -- TODO: write the actual transform function
-{-
-TransformTopLevel ::
-  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
-    HasReader "new" (Context.T termN tyN sumRepN) m
-    --HasState  "aliases" Map Name Expression
-  ) =>
-  m Old.TopLevel ->
-  m New.TopLevel
--}
+
+transformLet :: WorkingMaps m => m Old.Let -> m New.Let
+transformLet mOld = do
+  (Old.LetGroup name bindings body) <- mOld
+  undefined
+transformLetType :: WorkingMaps m => m Old.LetType -> m New.LetType
+transformLetType mOld = do
+  (Old.LetGroup name bindings body) <- mOld
+  undefined
+transformName :: WorkingMaps m => m Old.Name -> m New.Name
+transformName mOld = do
+  oldName <- mOld
+  case oldName of
+    (Old.Implicit s) -> undefined
+    (Old.Concrete s) -> undefined
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
-transformTopLevel :: Old.TopLevel -> New.TopLevel
-transformTopLevel (Old.Type t) =
-  New.Type (transformType t)
-transformTopLevel (Old.ModuleOpen t) =
-  New.ModuleOpen (transformModuleOpen t)
-transformTopLevel (Old.Function t) =
-  New.Function (transformFunction t)
-transformTopLevel Old.TypeClass =
-  New.TypeClass
-transformTopLevel Old.TypeClassInstance =
-  New.TypeClassInstance
+transformTopLevel :: WorkingMaps m => m Old.TopLevel -> m New.TopLevel
+transformTopLevel mOld = do
+  oldTopLevel <- mOld
+  case oldTopLevel of
+    (Old.Type t) -> pure $ New.Type (transformType t)
+    (Old.ModuleOpen t) -> pure $ New.ModuleOpen (transformModuleOpen t)
+    (Old.Function t) -> pure $ New.Function (transformFunction t)
+    Old.TypeClass -> pure New.TypeClass
+    Old.TypeClassInstance -> pure New.TypeClassInstance
 
-transformExpression :: Old.Expression -> New.Expression
-transformExpression (Old.Constant c) =
-  New.Constant (transformConst c)
-transformExpression (Old.Let l) =
-  New.Let (transformLet l)
-transformExpression (Old.LetType l) =
-  New.LetType (transformLetType l)
-transformExpression (Old.Match m) =
-  New.Match (transformMatch m)
-transformExpression (Old.Name n) =
-  New.Name n
-transformExpression (Old.OpenExpr n) =
-  New.OpenExpr (transformModuleOpenExpr n)
-transformExpression (Old.Lambda l) =
-  New.Lambda (transformLambda l)
-transformExpression (Old.Application a) =
-  New.Application (transformApplication a)
-transformExpression (Old.Block b) =
-  New.Block (transformBlock b)
-transformExpression (Old.Infix i) =
-  New.Infix (transformInfix i)
-transformExpression (Old.ExpRecord i) =
-  New.ExpRecord (transformExpRecord i)
-transformExpression (Old.ArrowE i) =
-  New.ArrowE (transformArrowExp i)
-transformExpression (Old.NamedTypeE i) =
-  New.NamedTypeE (transformNamedType i)
-transformExpression (Old.RefinedE i) =
-  New.RefinedE (transformTypeRefine i)
-transformExpression (Old.UniverseName i) =
-  New.UniverseName (transformUniverseExpression i)
-transformExpression (Old.Parened e) =
-  New.Parened (transformExpression e)
-
+transformExpression :: WorkingMaps m => m Old.Expression -> m New.Expression
+transformExpression mOld = do
+  oldExpression <- mOld
+  case oldExpression of 
+    (Old.Constant c) -> pure $ New.Constant (transformConst c)
+    (Old.Let l) -> pure $ New.Let (transformLet l)
+    (Old.LetType l) -> pure $ New.LetType (transformLetType l)
+    (Old.Match m) -> pure $ New.Match (transformMatch m)
+    (Old.Name n) -> pure $ New.Name n
+    (Old.OpenExpr n) -> pure $ New.OpenExpr (transformModuleOpenExpr n)
+    (Old.Lambda l) -> pure $ New.Lambda (transformLambda l)
+    (Old.Application a) -> pure $ New.Application (transformApplication a)
+    (Old.Block b) -> pure $ New.Block (transformBlock b)
+    (Old.Infix i) -> pure $ New.Infix (transformInfix i)
+    (Old.ExpRecord i) -> pure $ New.ExpRecord (transformExpRecord i)
+    (Old.ArrowE i) -> pure $ New.ArrowE (transformArrowExp i)
+    (Old.NamedTypeE i) -> pure $ New.NamedTypeE (transformNamedType i)
+    (Old.RefinedE i) -> pure $ New.RefinedE (transformTypeRefine i)
+    (Old.UniverseName i) -> pure $ New.UniverseName (transformUniverseExpression i)
+    (Old.Parened e) -> pure $ New.Parened (transformExpression e)
+-- TODO
 --------------------------------------------------------------------------------
 -- Types
 --------------------------------------------------------------------------------
@@ -99,10 +96,6 @@ transformTypeRefine (Old.TypeRefine name refine) =
 --------------------------------------------------
 -- Types Misc
 --------------------------------------------------
-
-transformName :: Old.Name -> New.Name
-transformName (Old.Implicit s) = New.Implicit s
-transformName (Old.Concrete s) = New.Concrete s
 
 transformArrowSymbol :: Old.ArrowSymbol -> New.ArrowSymbol
 transformArrowSymbol (Old.ArrowUse usage) =
@@ -214,18 +207,6 @@ transformApplication (Old.App fun args) =
 transformExpRecord :: Old.ExpRecord -> New.ExpRecord
 transformExpRecord (Old.ExpressionRecord fields) =
   New.ExpressionRecord (transformNameSet transformExpression <$> fields)
-
---------------------------------------------------
--- Symbol Binding
---------------------------------------------------
-
-transformLet :: Old.Let -> New.Let
-transformLet (Old.LetGroup name bindings body) =
-  New.LetGroup name (fmap transformFunctionLike bindings) (transformExpression body)
-
-transformLetType :: Old.LetType -> New.LetType
-transformLetType (Old.LetType'' typ expr) =
-  New.LetType'' (transformType typ) (transformExpression expr)
 
 --------------------------------------------------
 -- Symbol Binding
