@@ -13,14 +13,21 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
 class HasWeak a where
-  weak' :: Natural -> a -> a
+  weakBy' :: Natural -> Natural -> a -> a
+
+weakBy :: HasWeak a => Natural -> a -> a
+weakBy b = weakBy' b 0
+
+weak' :: HasWeak a => Natural -> a -> a
+weak' = weakBy' 1
 
 weak :: HasWeak a => a -> a
 weak = weak' 0
 
-instance HasWeak () where weak' _ () = ()
 
-instance HasWeak Void where weak' _ v = absurd v
+instance HasWeak () where weakBy' _ _ () = ()
+
+instance HasWeak Void where weakBy' _ _ v = absurd v
 
 type AllWeak ext primTy primVal =
   ( IR.TermAll HasWeak ext primTy primVal,
@@ -28,20 +35,35 @@ type AllWeak ext primTy primVal =
   )
 
 instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) where
-  weak' i (IR.Star' u a) =
-    IR.Star' u (weak' i a)
-  weak' i (IR.PrimTy' p a) =
-    IR.PrimTy' p (weak' i a)
-  weak' i (IR.Pi' π s t a) =
-    IR.Pi' π (weak' i s) (weak' (succ i) t) (weak' i a)
-  weak' i (IR.Lam' t a) =
-    IR.Lam' (weak' (succ i) t) (weak' i a)
-  weak' i (IR.Let' l b a) =
-    IR.Let' (weak' i l) (weak' (succ i) b) (weak' i a)
-  weak' i (IR.Elim' f a) =
-    IR.Elim' (weak' i f) (weak' i a)
-  weak' i (IR.TermX a) =
-    IR.TermX (weak' i a)
+  weakBy' b i (IR.Star' u a) =
+    IR.Star' u (weakBy' b i a)
+  weakBy' b i (IR.PrimTy' p a) =
+    IR.PrimTy' p (weakBy' b i a)
+  weakBy' b i (IR.Pi' π s t a) =
+    IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.Lam' t a) =
+    IR.Lam' (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.Let' s t a) =
+    IR.Let' (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.Elim' f a) =
+    IR.Elim' (weakBy' b i f) (weakBy' b i a)
+  weakBy' b i (IR.TermX a) =
+    IR.TermX (weakBy' b i a)
+
+weakTermBy' ::
+  AllWeak ext primTy primVal =>
+  Natural ->
+  Natural ->
+  IR.Term' ext primTy primVal ->
+  IR.Term' ext primTy primVal
+weakTermBy' = weakBy'
+
+weakTermBy ::
+  AllWeak ext primTy primVal =>
+  Natural ->
+  IR.Term' ext primTy primVal ->
+  IR.Term' ext primTy primVal
+weakTermBy = weakBy
 
 weakTerm' ::
   AllWeak ext primTy primVal =>
@@ -57,21 +79,36 @@ weakTerm ::
 weakTerm = weak
 
 instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) where
-  weak' i (IR.Bound' j a)
-    | j >= i = IR.Bound' (succ j) a'
+  weakBy' b i (IR.Bound' j a)
+    | j >= i = IR.Bound' (j + b) a'
     | otherwise = IR.Bound' j a'
     where
-      a' = weak' i a
-  weak' i (IR.Free' x a) =
-    IR.Free' x (weak' i a)
-  weak' i (IR.Prim' p a) =
-    IR.Prim' p (weak' i a)
-  weak' i (IR.App' s t a) =
-    IR.App' (weak' i s) (weak' i t) (weak' i a)
-  weak' i (IR.Ann' π s t l a) =
-    IR.Ann' π (weak' i s) (weak' i t) l (weak' i a)
-  weak' i (IR.ElimX a) =
-    IR.ElimX (weak' i a)
+      a' = weakBy' b i a
+  weakBy' b i (IR.Free' x a) =
+    IR.Free' x (weakBy' b i a)
+  weakBy' b i (IR.Prim' p a) =
+    IR.Prim' p (weakBy' b i a)
+  weakBy' b i (IR.App' s t a) =
+    IR.App' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
+  weakBy' b i (IR.Ann' π s t l a) =
+    IR.Ann' π (weakBy' b i s) (weakBy' b i t) l (weakBy' b i a)
+  weakBy' b i (IR.ElimX a) =
+    IR.ElimX (weakBy' b i a)
+
+weakElimBy' ::
+  AllWeak ext primTy primVal =>
+  Natural ->
+  Natural ->
+  IR.Elim' ext primTy primVal ->
+  IR.Elim' ext primTy primVal
+weakElimBy' = weakBy'
+
+weakElimBy ::
+  AllWeak ext primTy primVal =>
+  Natural ->
+  IR.Elim' ext primTy primVal ->
+  IR.Elim' ext primTy primVal
+weakElimBy = weakBy
 
 weakElim' ::
   AllWeak ext primTy primVal =>
@@ -185,36 +222,93 @@ instance
   AllWeakV ext primTy primVal =>
   HasWeak (IR.Value' ext primTy primVal)
   where
-  weak' i (IR.VStar' n a) =
-    IR.VStar' n (weak' i a)
-  weak' i (IR.VPrimTy' p a) =
-    IR.VPrimTy' p (weak' i a)
-  weak' i (IR.VPi' π s t a) =
-    IR.VPi' π (weak' i s) (weak' (succ i) t) (weak' i a)
-  weak' i (IR.VLam' t a) =
-    IR.VLam' (weak' (succ i) t) (weak' i a)
-  weak' i (IR.VNeutral' n a) =
-    IR.VNeutral' (weak' i n) (weak' i a)
-  weak' i (IR.VPrim' p a) =
-    IR.VPrim' p (weak' i a)
-  weak' i (IR.ValueX a) =
-    IR.ValueX (weak' i a)
+  weakBy' b i (IR.VStar' n a) =
+    IR.VStar' n (weakBy' b i a)
+  weakBy' b i (IR.VPrimTy' p a) =
+    IR.VPrimTy' p (weakBy' b i a)
+  weakBy' b i (IR.VPi' π s t a) =
+    IR.VPi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.VLam' t a) =
+    IR.VLam' (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.VNeutral' n a) =
+    IR.VNeutral' (weakBy' b i n) (weakBy' b i a)
+  weakBy' b i (IR.VPrim' p a) =
+    IR.VPrim' p (weakBy' b i a)
+  weakBy' b i (IR.ValueX a) =
+    IR.ValueX (weakBy' b i a)
+
+
+weakValueBy' ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  Natural ->
+  IR.Value' ext primTy primVal ->
+  IR.Value' ext primTy primVal
+weakValueBy' = weakBy'
+
+weakValueBy ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  IR.Value' ext primTy primVal ->
+  IR.Value' ext primTy primVal
+weakValueBy = weakBy
+
+weakValue' ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  IR.Value' ext primTy primVal ->
+  IR.Value' ext primTy primVal
+weakValue' = weak'
+
+weakValue ::
+  AllWeakV ext primTy primVal =>
+  IR.Value' ext primTy primVal ->
+  IR.Value' ext primTy primVal
+weakValue = weak
 
 instance
   AllWeakV ext primTy primVal =>
   HasWeak (IR.Neutral' ext primTy primVal)
   where
-  weak' i (IR.NBound' j a)
-    | j >= i = IR.NBound' (succ j) a'
+  weakBy' b i (IR.NBound' j a)
+    | j >= i = IR.NBound' (j + b) a'
     | otherwise = IR.NBound' j a'
     where
-      a' = weak' i a
-  weak' i (IR.NFree' x a) =
-    IR.NFree' x (weak' i a)
-  weak' i (IR.NApp' f s a) =
-    IR.NApp' (weak' i f) (weak' i s) (weak' i a)
-  weak' i (IR.NeutralX a) =
-    IR.NeutralX (weak' i a)
+      a' = weakBy' b i a
+  weakBy' b i (IR.NFree' x a) =
+    IR.NFree' x (weakBy' b i a)
+  weakBy' b i (IR.NApp' f s a) =
+    IR.NApp' (weakBy' b i f) (weakBy' b i s) (weakBy' b i a)
+  weakBy' b i (IR.NeutralX a) =
+    IR.NeutralX (weakBy' b i a)
+
+weakNeutralBy' ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  Natural ->
+  IR.Neutral' ext primTy primVal ->
+  IR.Neutral' ext primTy primVal
+weakNeutralBy' = weakBy'
+
+weakNeutralBy ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  IR.Neutral' ext primTy primVal ->
+  IR.Neutral' ext primTy primVal
+weakNeutralBy = weakBy
+
+weakNeutral' ::
+  AllWeakV ext primTy primVal =>
+  Natural ->
+  IR.Neutral' ext primTy primVal ->
+  IR.Neutral' ext primTy primVal
+weakNeutral' = weak'
+
+weakNeutral ::
+  AllWeakV ext primTy primVal =>
+  IR.Neutral' ext primTy primVal ->
+  IR.Neutral' ext primTy primVal
+weakNeutral = weak
 
 class HasWeak a => HasSubstV ext primTy primVal a where
   substV' ::
