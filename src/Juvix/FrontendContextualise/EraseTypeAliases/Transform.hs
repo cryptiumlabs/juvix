@@ -2,12 +2,22 @@ module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.FrontendContextualise.Environment as Env
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 -- The actual transform we are doing: erase type alias
 -- TODO: write the actual transform function
+{-
+TransformTopLevel ::
+  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
+    HasReader "new" (Context.T termN tyN sumRepN) m
+    --HasState  "aliases" Map Name Expression
+  ) =>
+  m Old.TopLevel ->
+  m New.TopLevel
+-}
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -24,22 +34,7 @@ transformTopLevel Old.TypeClass =
 transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
-mTransformTopLevel ::
-  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
-    HasReader "new" (Context.T termN tyN sumRepN) m
-    --HasState  "aliases" Map Name Expression
-  ) =>
-  m Old.TopLevel ->
-  m New.TopLevel
-mTransformTopLevel = fmap transformTopLevel
-
-transformExpression ::
-  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
-    HasReader "new" (Context.T termN tyN sumRepN) m
-    --HasState  "aliases" Map Name Expression
-  ) =>
-  m Old.Expression ->
-  m New.Expression
+transformExpression :: Old.Expression -> New.Expression
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =
