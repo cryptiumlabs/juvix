@@ -8,6 +8,7 @@ module Juvix.Core.Usage
     allowsUsageOf,
     allows,
     pred,
+    minus,
   )
 where
 
@@ -52,6 +53,12 @@ instance Semiring NatAndw where
 pred :: NatAndw -> NatAndw
 pred (SNat x) = SNat (x - 1)
 pred Omega = Omega
+
+minus :: Usage -> Usage -> Maybe Usage
+minus Omega _ = Just Omega
+minus (SNat i) (SNat j) | i >= j = Just $ SNat $ i - j
+minus _ _ = Nothing
+infixl 6 `minus` -- same as -
 
 -- | numToNat is a helper function that converts an integer to NatAndW
 numToNat :: Integer -> NatAndw
