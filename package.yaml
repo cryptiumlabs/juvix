@@ -151,10 +151,15 @@ library:
     - Juvix.FrontendContextualise.EraseTypeAliases.Types
     - Juvix.FrontendContextualise.EraseTypeAliases.Transform
     - Juvix.FrontendContextualise.EraseTypeAliases.Extend
+    - Juvix.FrontendContextualise.Environment
+    - Juvix.FrontendContextualise.InfixPrecedence.Types
+    - Juvix.FrontendContextualise.InfixPrecedence.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.Extend
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.Common.Context
+    - Juvix.Core.Common.Context.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
