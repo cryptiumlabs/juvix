@@ -24,16 +24,22 @@ transformTopLevel Old.TypeClass =
 transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
-mTransformTopLevel :: (HasState "old" (Context.T term0 ty0 sumRep0) m, 
-  HasReader "new" (Context.T termN tyN sumRepN) m 
-  --HasState  "aliases" Map Name Expression
-  ) => m Old.TopLevel -> m New.TopLevel  
+mTransformTopLevel ::
+  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
+    HasReader "new" (Context.T termN tyN sumRepN) m
+    --HasState  "aliases" Map Name Expression
+  ) =>
+  m Old.TopLevel ->
+  m New.TopLevel
 mTransformTopLevel = fmap transformTopLevel
 
-transformExpression :: (HasState "old" (Context.T term0 ty0 sumRep0) m, 
-  HasReader "new" (Context.T termN tyN sumRepN) m 
-  --HasState  "aliases" Map Name Expression
-  ) => m Old.Expression -> m New.Expression
+transformExpression ::
+  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
+    HasReader "new" (Context.T termN tyN sumRepN) m
+    --HasState  "aliases" Map Name Expression
+  ) =>
+  m Old.Expression ->
+  m New.Expression
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =

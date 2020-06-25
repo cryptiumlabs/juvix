@@ -7,17 +7,29 @@
 -- - This is parameterized per phase which may store the type and
 --   term in slightly different ways
 module Juvix.Core.Common.Context
-( module Juvix.Core.Common.Context.Precedence, T, Definition(..), lookup, (!?), add, modify, update, names, fromList, Juvix.Core.Common.Context.toList, mapWithKey, open )
-
+  ( module Juvix.Core.Common.Context.Precedence,
+    T,
+    Definition (..),
+    lookup,
+    (!?),
+    add,
+    modify,
+    update,
+    names,
+    fromList,
+    Juvix.Core.Common.Context.toList,
+    mapWithKey,
+    open,
+  )
 where
 
 import Control.Lens
 import qualified Data.HashSet as Set
 import qualified Data.Text as Text
+import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
-import Juvix.Core.Common.Context.Precedence
 
 newtype Cont b
   = T (HashMap.T Symbol b)
@@ -74,8 +86,11 @@ lookup key (T map) =
 (!?) :: T term ty sumRep -> Symbol -> Maybe (Definition term ty sumRep)
 (!?) = flip lookup
 
-add :: Symbol -> Definition term ty sumRep -> T term ty sumRep ->
-    T term ty sumRep
+add ::
+  Symbol ->
+  Definition term ty sumRep ->
+  T term ty sumRep ->
+  T term ty sumRep
 add sy term (T map) = T $ HashMap.insert sy term map
 
 modify,

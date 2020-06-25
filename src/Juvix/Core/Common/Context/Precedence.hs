@@ -1,16 +1,24 @@
 module Juvix.Core.Common.Context.Precedence
-(default', left, right, application, Precedence, nonAssoc, fixity)
-  where
+  ( default',
+    left,
+    right,
+    application,
+    Precedence,
+    nonAssoc,
+    fixity,
+  )
+where
 
-import Juvix.Library (Eq, Show, Int, Symbol)
+import Juvix.Library (Eq, Int, Show, Symbol)
 
-data Associativity = Left
-    | Right
-    | NonAssoc
-    deriving (Eq, Show)
+data Associativity
+  = Left
+  | Right
+  | NonAssoc
+  deriving (Eq, Show)
 
 data Precedence = Pred Associativity Int
-    deriving (Eq, Show)
+  deriving (Eq, Show)
 
 default' :: Precedence
 default' = Pred Left 9

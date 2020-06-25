@@ -9,10 +9,10 @@ import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
+import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
-import qualified FrontendDesugar
 
 coreTests :: T.TestTree
 coreTests =
@@ -53,7 +53,6 @@ translationPasses =
     "translation passes from Frontend to Core"
     [ FrontendDesugar.allDesugar
     ]
-
 
 main :: IO ()
 main = T.defaultMain allCheckedTests

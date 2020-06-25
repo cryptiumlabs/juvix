@@ -1,28 +1,35 @@
 module Juvix.FrontendContextualise.Environment where
 
-import Juvix.Library
 import qualified Juvix.Core.Common.Context as Context
+import Juvix.Library
 
-data Environment term0 ty0 sumRep0 termN tyN sumRepN =
-  Env { old :: Context.T term0 ty0 sumRep0
-      , new :: Context.T termN tyN sumRepN
+data Environment term0 ty0 sumRep0 termN tyN sumRepN
+  = Env
+      { old :: Context.T term0 ty0 sumRep0,
+        new :: Context.T termN tyN sumRepN
       }
   deriving (Generic)
 
 type ContextAlias term0 ty0 sumRep0 termN tyN sumRepN = State (Environment term0 ty0 sumRep0 termN tyN sumRepN)
 
-newtype Context term0 ty0 sumRep0 termN tyN sumRepN a = Ctx { antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a }
+newtype Context term0 ty0 sumRep0 termN tyN sumRepN a = Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
   deriving (Functor, Applicative, Monad)
-  deriving (HasReader "old" (Context.T term0 ty0 sumRep0),
-            HasSource "old" (Context.T term0 ty0 sumRep0))
+  deriving
+    ( HasReader "old" (Context.T term0 ty0 sumRep0),
+      HasSource "old" (Context.T term0 ty0 sumRep0)
+    )
     via ReaderField "old" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
-  deriving (HasState "new" (Context.T termN tyN sumRepN),
-            HasSink "new" (Context.T termN tyN sumRepN),
-            HasSource "new" (Context.T termN tyN sumRepN))
+  deriving
+    ( HasState "new" (Context.T termN tyN sumRepN),
+      HasSink "new" (Context.T termN tyN sumRepN),
+      HasSource "new" (Context.T termN tyN sumRepN)
+    )
     via StateField "new" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
 
-modify :: (Context.Definition termN tyN sumRepN -> Maybe (Context.Definition termN tyN sumRepN)) ->
-    Symbol -> Context term0 ty0 sumRep0 termN tyN sumRepN ()
+modify ::
+  (Context.Definition termN tyN sumRepN -> Maybe (Context.Definition termN tyN sumRepN)) ->
+  Symbol ->
+  Context term0 ty0 sumRep0 termN tyN sumRepN ()
 modify f sy = Juvix.Library.modify @"new" (Context.modify f sy)
 
 lookup :: Symbol -> Context term0 ty0 sumRep0 termN tyN sumRepN (Maybe (Context.Definition termN tyN sumRepN))

@@ -58,6 +58,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Parser]]
   + [[Library]]
+* FrontendDesugar
+- _Relies on_
+  + [[Parser]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 * INet
 - _Relies on_
   + [[EAC]]

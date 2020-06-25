@@ -468,9 +468,13 @@ This module provides a default contract environment
 - This is parameterized per phase which may store the type and
   term in slightly different ways
 - _Relies on_
+  + [[Precedence]]
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]
+***** Precedence
+- _Relies on_
+  + [[Library]]
 *** EAC <<Core/EAC>>
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
@@ -775,15 +779,30 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Frontend/Types/Base]]
 ** FrontendContextualise
+*** Environment <<FrontendContextualise/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[Library]]
+*** FrontendContextualise
+- _Relies on_
+  + [[FrontendContextualise/Environment]]
+  + [[InfixPrecedence/Transform]]
+  + [[FrontendContextualise/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** Types <<FrontendContextualise/Types>>
+- _Relies on_
+  + [[InfixPrecedence/Types]]
 *** EraseTypeAliases
 **** Extend <<EraseTypeAliases/Extend>>
 - _Relies on_
-  + [[Extend]]
   + [[Frontend/Types/Base]]
-  + [[Extend]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
   + [[Library]]
 **** Transform <<EraseTypeAliases/Transform>>
 - _Relies on_
+  + [[Context]]
   + [[EraseTypeAliases/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
@@ -791,6 +810,25 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[EraseTypeAliases/Extend]]
+  + [[Library]]
+*** InfixPrecedence
+**** Extend <<InfixPrecedence/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+**** Transform <<InfixPrecedence/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[InfixPrecedence/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[InfixPrecedence/Extend]]
   + [[Library]]
 ** FrontendDesugar
 - Order of Passes

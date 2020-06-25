@@ -1,5 +1,6 @@
 module Juvix.FrontendContextualise.Types
-  (module Juvix.FrontendContextualise.InfixPrecedence.Types)
+  ( module Juvix.FrontendContextualise.InfixPrecedence.Types,
+  )
 where
 
 -- just import the last contextual pass here and export it
