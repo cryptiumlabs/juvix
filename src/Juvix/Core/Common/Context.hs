@@ -6,7 +6,10 @@
 --   Programming Language
 -- - This is parameterized per phase which may store the type and
 --   term in slightly different ways
-module Juvix.Core.Common.Context where
+module Juvix.Core.Common.Context
+( module Juvix.Core.Common.Context.Precedence, T, Definition(..), lookup, (!?), add, modify, update, names, fromList, Juvix.Core.Common.Context.toList, mapWithKey, open )
+
+where
 
 import Control.Lens
 import qualified Data.HashSet as Set
@@ -14,7 +17,7 @@ import qualified Data.Text as Text
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
-import Juvix.Core.Common.Precedence
+import Juvix.Core.Common.Context.Precedence
 
 newtype Cont b
   = T (HashMap.T Symbol b)

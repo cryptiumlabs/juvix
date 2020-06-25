@@ -1,6 +1,6 @@
-module Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Extend
+module Juvix.FrontendContextualise.InfixPrecedence.Extend
   ( module Juvix.FrontendDesugar.RemoveDo.Extend,
-    module Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Extend,
+    module Juvix.FrontendContextualise.InfixPrecedence.Extend,
   )
 where
 

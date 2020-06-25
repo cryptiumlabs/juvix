@@ -1,7 +1,7 @@
-module Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Types where
+module Juvix.FrontendContextualise.InfixPrecedence.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Extend as Ext
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T

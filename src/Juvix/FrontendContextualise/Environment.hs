@@ -1,4 +1,4 @@
-module Juvix.FrontendDesugar.ContextPasses.Environment where
+module Juvix.FrontendContextualise.Environment where
 
 import Juvix.Library
 import qualified Juvix.Core.Common.Context as Context

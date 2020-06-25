@@ -1,21 +1,19 @@
-module Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Transform where
+module Juvix.FrontendContextualise.InfixPrecedence.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
-import qualified Juvix.FrontendDesugar.ContextPasses.InfixPrecedence.Types as New
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import Juvix.Library
-import qualified Juvix.FrontendDesugar.ContextPasses.Environment as Env
+import qualified Juvix.FrontendContextualise.Environment as Env
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.Precedence as Pred
 
 -- The actual transform we are doing
 
 transformInfix :: Old.Infix -> Env.Context term0 ty0 sumRep0 termN tyN sumRepN New.Application
 transformInfix inf@Old.Inf { infixLeft, infixOp, infixRight } =
   do
-    Env.add infixOp (Context.Def { 
-                         definitionTerm = formApplication infixOp (transformExpression infixLeft) (transformExpression infixRight)
-                         , precedence = Pred.defaultPred infixOp})
+    Env.add infixOp (Context.Def  { definitionTerm = formApplication infixOp (transformExpression infixLeft) (transformExpression infixRight)
+                                  , precedence = Context.fixity infixOp})
   where
     formApplication name arg2 arg1 =
       New.App (New.Name (name :| [])) (arg1 :| [arg2]) |> New.Application
