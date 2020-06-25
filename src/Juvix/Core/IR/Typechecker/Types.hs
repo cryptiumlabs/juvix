@@ -64,7 +64,7 @@ data TypecheckError' ext primTy primVal
       (IR.Term' ext primTy primVal)
       (IR.Value' ext primTy primVal)
       (IR.Value' ext primTy primVal)
-  | UniverseMismatch Natural Natural
+  | UniverseMismatch IR.Universe IR.Universe
   | CannotApply
       (IR.Value' ext primTy primVal)
       (IR.Value' ext primTy primVal)

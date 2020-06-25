@@ -6,6 +6,8 @@ import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
 
+type Universe = Natural
+
 type GlobalName = Text
 
 type PatternVar = Int
@@ -23,7 +25,7 @@ extensible
   [d|
     data Term primTy primVal
       = -- | (sort i) i th ordering of (closed) universe.
-        Star Natural
+        Star Universe
       | -- | PrimTy primitive type
         PrimTy primTy
       | -- | formation rule of the dependent function type PI.
@@ -51,12 +53,12 @@ extensible
       | -- | elimination rule of PI (APP).
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
-        Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
+        Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show)
 
     -- | Values/types
     data Value primTy primVal
-      = VStar Natural
+      = VStar Universe
       | VPrimTy primTy
       | VPi Usage (Value primTy primVal) (Value primTy primVal)
       | VLam (Value primTy primVal)

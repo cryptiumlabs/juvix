@@ -5,6 +5,7 @@ module Juvix.Core.IR.Types
     Name (..),
     GlobalName,
     PatternVar,
+    Universe,
   )
 where
 

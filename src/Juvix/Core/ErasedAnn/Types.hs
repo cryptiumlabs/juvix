@@ -1,5 +1,6 @@
 module Juvix.Core.ErasedAnn.Types where
 
+import Juvix.Core.IR.Types (Universe)
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
@@ -17,7 +18,7 @@ data Term primTy primVal
 
 data Type primTy primVal
   = SymT Symbol
-  | Star Natural
+  | Star Universe
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
     Pi Usage.T (Type primTy primVal) (Type primTy primVal)
