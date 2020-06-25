@@ -25,43 +25,10 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
-data ContextElement' ext primTy primVal
-  = ContextElement
-      { ctxName :: IR.Name,
-        ctxAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
-      }
-
-type ContextElement = ContextElement' IR.NoExt
-
-contextElement ::
-  IR.Name ->
-  Usage.T ->
-  IR.Value' ext primTy primVal ->
-  ContextElement' ext primTy primVal
-contextElement n π t = ContextElement n (Annotation π t)
-
-deriving instance
-  (Eq (IR.Value' ext primTy primVal)) =>
-  Eq (ContextElement' ext primTy primVal)
-
-deriving instance
-  (Show (IR.Value' ext primTy primVal)) =>
-  Show (ContextElement' ext primTy primVal)
-
-type Context' ext primTy primVal = [ContextElement' ext primTy primVal]
-
-type Context primTy primVal = Context' IR.NoExt primTy primVal
-
-lookupCtx ::
-  IR.Name ->
-  Context' ext primTy primVal ->
-  Maybe (Annotation' ext primTy primVal)
-lookupCtx x = fmap ctxAnn . find (\e -> ctxName e == x)
 
 data TypecheckError' ext primTy primVal
   = TypeMismatch
-      BoundVar
-      (IR.Term' ext primTy primVal)
+      (IR.Elim' ext primTy primVal)
       (IR.Value' ext primTy primVal)
       (IR.Value' ext primTy primVal)
   | UniverseMismatch IR.Universe IR.Universe
@@ -71,7 +38,6 @@ data TypecheckError' ext primTy primVal
   | ShouldBeStar (IR.Value' ext primTy primVal)
   | ShouldBeFunctionType
       (IR.Value' ext primTy primVal)
-      (IR.Term' ext primTy primVal)
   | UnboundIndex IR.BoundVar
   | SigmaMustBeZero
   | UsageMustBeZero
@@ -82,6 +48,7 @@ data TypecheckError' ext primTy primVal
       IR.BoundVar
       (IR.Term' ext primTy primVal)
   | BoundVariableCannotBeInferred
+  | GlobalNotInScope IR.GlobalName
 
 type TypecheckError = TypecheckError' IR.NoExt
 
@@ -105,11 +72,11 @@ instance
   ) =>
   Show (TypecheckError' ext primTy primVal)
   where
-  show (TypeMismatch binder term expectedT gotT) =
-    "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
-      <> ") is of type \n"
+  show (TypeMismatch term expectedT gotT) =
+    "Type mismatched.\n" <> show term <> "\n"
+      <> "is of type\n"
       <> show gotT
-      <> ".\nBut the expected type is "
+      <> ".\nBut the expected type is\n"
       <> show expectedT
       <> "."
   show (UniverseMismatch i j) =
@@ -121,8 +88,8 @@ instance
     "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
   show (ShouldBeStar ty) =
     "* n is of type * but " <> show ty <> " is not *."
-  show (ShouldBeFunctionType ty f) =
-    show ty <> " is not a function type but should be - while checking " <> show f
+  show (ShouldBeFunctionType ty) =
+    show ty <> " is not a function type but should be"
   show (UnboundIndex n) =
     "unbound index " <> show n
   show (SigmaMustBeZero) =
@@ -148,6 +115,8 @@ instance
     )
   show (BoundVariableCannotBeInferred) =
     "Bound variable cannot be inferred"
+  show (GlobalNotInScope x) =
+    "Global name " <> show x <> " not in scope"
 
 type HasThrowTC' ext primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m

@@ -17,8 +17,6 @@ type BoundVar = Natural
 data Name
   = -- | Global variables are represented by name thus type string
     Global GlobalName
-  | -- | to convert a bound variable into a free one
-    Local BoundVar
   | -- | Pattern variable, unique within a scope
     Pattern PatternVar
   deriving (Show, Eq)

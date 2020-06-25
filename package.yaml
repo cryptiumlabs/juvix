@@ -268,7 +268,6 @@ library:
     - Juvix.Core.ErasedAnn.Erasure
     - Juvix.Core.ErasedAnn.Prim
     - Juvix.Core.IR.Typechecker.Types
-    - Juvix.Core.IR.Typechecker.Log
     - Juvix.Core.IR.Typechecker.Env
     - Juvix.Core.Parameterisation
 
