@@ -3,9 +3,10 @@
 module Juvix.Core.Usage
   ( Usage,
     NatAndw (..),
+    T,
     numToNat,
     allowsUsageOf,
-    T,
+    allows,
     pred,
   )
 where
@@ -65,3 +66,7 @@ allowsUsageOf (SNat x) (SNat y) = x == y
 allowsUsageOf Omega (SNat _) = True
 allowsUsageOf Omega Omega = True
 allowsUsageOf (SNat _) Omega = False
+
+allows :: Usage -> Usage -> Bool
+allows = allowsUsageOf
+infix 4 `allowsUsageOf`, `allows` -- same as <=
