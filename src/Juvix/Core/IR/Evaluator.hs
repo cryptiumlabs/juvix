@@ -43,8 +43,8 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
     IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Lam' t a) =
     IR.Lam' (weakBy' b (succ i) t) (weakBy' b i a)
-  weakBy' b i (IR.Let' s t a) =
-    IR.Let' (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.Let' π s t a) =
+    IR.Let' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Elim' f a) =
     IR.Elim' (weakBy' b i f) (weakBy' b i a)
   weakBy' b i (IR.TermX a) =
@@ -154,8 +154,8 @@ instance
     IR.Pi' π (subst' i e s) (subst' (succ i) (weak' i e) t) (subst' i e a)
   subst' i e (IR.Lam' t a) =
     IR.Lam' (subst' (succ i) (weak' i e) t) (subst' i e a)
-  subst' i e (IR.Let' l b a) =
-    IR.Let' (subst' i e l) (subst' (succ i) (weak' i e) b) (subst' i e a)
+  subst' i e (IR.Let' π l b a) =
+    IR.Let' π (subst' i e l) (subst' (succ i) (weak' i e) b) (subst' i e a)
   subst' i e (IR.Elim' t a) =
     IR.Elim' (subst' i e t) (subst' i e a)
   subst' i e (IR.TermX a) =
@@ -485,7 +485,7 @@ evalTermWith exts param (IR.Pi' π s t _) =
   IR.VPi π <$> evalTermWith exts param s <*> evalTermWith exts param t
 evalTermWith exts param (IR.Lam' t _) =
   IR.VLam <$> evalTermWith exts param t
-evalTermWith exts param (IR.Let' l b _) = do
+evalTermWith exts param (IR.Let' _ l b _) = do
   l' <- evalElimWith exts param l
   b' <- evalTermWith exts param b
   substValue param l' b'

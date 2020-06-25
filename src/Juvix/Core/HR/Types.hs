@@ -22,7 +22,7 @@ pattern Lam x t = Lam0 t x
 
 pattern Pi π x s t = Pi0 π s t x
 
-pattern Let x l b = Let0 l b x
+pattern Let π x l b = Let0 π l b x
 
 {-# COMPLETE Star, PrimTy, Pi, Lam, Let, Elim #-}
 
