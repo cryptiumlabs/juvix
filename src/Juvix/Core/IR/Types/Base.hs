@@ -12,11 +12,13 @@ type GlobalName = Text
 
 type PatternVar = Int
 
+type BoundVar = Natural
+
 data Name
   = -- | Global variables are represented by name thus type string
     Global GlobalName
   | -- | to convert a bound variable into a free one
-    Local Natural
+    Local BoundVar
   | -- | Pattern variable, unique within a scope
     Pattern PatternVar
   deriving (Show, Eq)
@@ -45,7 +47,7 @@ extensible
     -- | inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
-        Bound Natural
+        Bound BoundVar
       | -- | Free variables of type name (see above)
         Free Name
       | -- | primitive constant
@@ -69,7 +71,7 @@ extensible
     -- | A neutral term is either a variable or an application of a neutral term
     -- to a value
     data Neutral primTy primVal
-      = NBound Natural
+      = NBound BoundVar
       | NFree Name
       | NApp (Neutral primTy primVal) (Value primTy primVal)
       deriving (Eq, Show)

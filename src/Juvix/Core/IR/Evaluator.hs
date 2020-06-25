@@ -13,12 +13,12 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 
 class HasWeak a where
-  weakBy' :: Natural -> Natural -> a -> a
+  weakBy' :: Natural -> IR.BoundVar -> a -> a
 
 weakBy :: HasWeak a => Natural -> a -> a
 weakBy b = weakBy' b 0
 
-weak' :: HasWeak a => Natural -> a -> a
+weak' :: HasWeak a => IR.BoundVar -> a -> a
 weak' = weakBy' 1
 
 weak :: HasWeak a => a -> a
@@ -53,7 +53,7 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
 weakTermBy' ::
   AllWeak ext primTy primVal =>
   Natural ->
-  Natural ->
+  IR.BoundVar ->
   IR.Term' ext primTy primVal ->
   IR.Term' ext primTy primVal
 weakTermBy' = weakBy'
@@ -67,7 +67,7 @@ weakTermBy = weakBy
 
 weakTerm' ::
   AllWeak ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Term' ext primTy primVal ->
   IR.Term' ext primTy primVal
 weakTerm' = weak'
@@ -98,7 +98,7 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) whe
 weakElimBy' ::
   AllWeak ext primTy primVal =>
   Natural ->
-  Natural ->
+  IR.BoundVar ->
   IR.Elim' ext primTy primVal ->
   IR.Elim' ext primTy primVal
 weakElimBy' = weakBy'
@@ -112,7 +112,7 @@ weakElimBy = weakBy
 
 weakElim' ::
   AllWeak ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Elim' ext primTy primVal ->
   IR.Elim' ext primTy primVal
 weakElim' = weak'
@@ -124,7 +124,7 @@ weakElim ::
 weakElim = weak
 
 class HasWeak a => HasSubst ext primTy primVal a where
-  subst' :: Natural -> IR.Elim' ext primTy primVal -> a -> a
+  subst' :: IR.BoundVar -> IR.Elim' ext primTy primVal -> a -> a
 
 subst ::
   HasSubst ext primTy primVal a =>
@@ -163,7 +163,7 @@ instance
 
 substTerm' ::
   AllSubst ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Elim' ext primTy primVal ->
   IR.Term' ext primTy primVal ->
   IR.Term' ext primTy primVal
@@ -200,7 +200,7 @@ instance
 
 substElim' ::
   AllSubst ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Elim' ext primTy primVal ->
   IR.Elim' ext primTy primVal ->
   IR.Elim' ext primTy primVal
@@ -241,7 +241,7 @@ instance
 weakValueBy' ::
   AllWeakV ext primTy primVal =>
   Natural ->
-  Natural ->
+  IR.BoundVar ->
   IR.Value' ext primTy primVal ->
   IR.Value' ext primTy primVal
 weakValueBy' = weakBy'
@@ -255,7 +255,7 @@ weakValueBy = weakBy
 
 weakValue' ::
   AllWeakV ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Value' ext primTy primVal ->
   IR.Value' ext primTy primVal
 weakValue' = weak'
@@ -285,7 +285,7 @@ instance
 weakNeutralBy' ::
   AllWeakV ext primTy primVal =>
   Natural ->
-  Natural ->
+  IR.BoundVar ->
   IR.Neutral' ext primTy primVal ->
   IR.Neutral' ext primTy primVal
 weakNeutralBy' = weakBy'
@@ -299,7 +299,7 @@ weakNeutralBy = weakBy
 
 weakNeutral' ::
   AllWeakV ext primTy primVal =>
-  Natural ->
+  IR.BoundVar ->
   IR.Neutral' ext primTy primVal ->
   IR.Neutral' ext primTy primVal
 weakNeutral' = weak'
@@ -314,7 +314,7 @@ class HasWeak a => HasSubstV ext primTy primVal a where
   substV' ::
     TC.HasThrowTC' ext primTy primVal m =>
     Param.Parameterisation primTy primVal ->
-    Natural ->
+    IR.BoundVar ->
     IR.Value' ext primTy primVal ->
     a ->
     m a
@@ -372,7 +372,7 @@ substValue' ::
     Monoid (IR.XVPrim ext primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
-  Natural ->
+  IR.BoundVar ->
   IR.Value' ext primTy primVal ->
   IR.Value' ext primTy primVal ->
   m (IR.Value' ext primTy primVal)
@@ -399,7 +399,7 @@ substNeutral' ::
     Monoid (IR.XVPrim ext primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
-  Natural ->
+  IR.BoundVar ->
   IR.Value' ext primTy primVal ->
   IR.Neutral' ext primTy primVal ->
   IR.XVNeutral ext primTy primVal ->

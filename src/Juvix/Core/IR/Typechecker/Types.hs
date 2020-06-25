@@ -60,7 +60,7 @@ lookupCtx x = fmap ctxAnn . find (\e -> ctxName e == x)
 
 data TypecheckError' ext primTy primVal
   = TypeMismatch
-      Natural
+      BoundVar
       (IR.Term' ext primTy primVal)
       (IR.Value' ext primTy primVal)
       (IR.Value' ext primTy primVal)
@@ -72,14 +72,14 @@ data TypecheckError' ext primTy primVal
   | ShouldBeFunctionType
       (IR.Value' ext primTy primVal)
       (IR.Term' ext primTy primVal)
-  | UnboundIndex Natural
+  | UnboundIndex IR.BoundVar
   | SigmaMustBeZero
   | UsageMustBeZero
   | UsageNotCompatible Usage.T Usage.T
-  | UnboundBinder Natural IR.Name
+  | UnboundBinder IR.BoundVar IR.Name
   | MustBeFunction
       (IR.Elim' ext primTy primVal)
-      Natural
+      IR.BoundVar
       (IR.Term' ext primTy primVal)
   | BoundVariableCannotBeInferred
 
