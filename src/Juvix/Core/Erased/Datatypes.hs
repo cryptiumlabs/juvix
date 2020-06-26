@@ -23,15 +23,42 @@ data ADT
   | Sum ADT ADT
   | Product ADT ADT
 
+type PatternAndTerm = (Pattern, Term)
+
 data Cases
-  = OneCase Pattern
-  | TwoCase Pattern Pattern
+  = OneCase PatternAndTerm
+  | TwoCase PatternAndTerm PatternAndTerm
+  | NestCase PatternAndTerm Cases
 
 data Match
   = Match
       { scrutinee :: Term,
         cases :: Cases
       }
+
+-- need to alter term to add match, cases, adts
+-- need to re-order patterns to match one argument at once
+
+patternToMichelson :: PatternAndTerm -> Term
+patternToMichelson (patt, term) =
+  case patt of
+    E.PCon _ patts ->
+      -- turn into de-construction followed by application
+      undefined
+    E.PVar v ->
+      -- turn into application of function (\v -> term)
+      undefined
+    E.PDot _ ->
+      -- what is PDot
+      undefined
+    E.PPrim _ ->
+      -- not supporting this for now, later turn into EQ but we need a default case
+      undefined
+
+patternsToCases :: [PatternAndTerm] -> Cases
+patternsToCases [only] = OneCase only
+patternsToCases [first, second] = TwoCase first second
+patternsToCases (x : xs) = NestCase x (patternsToCases xs)
 
 datatypeToADT :: Datatype -> ADT
 datatypeToADT (E.Datatype _ _ _ cons) = dataconsToADT cons
