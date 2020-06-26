@@ -320,6 +320,6 @@ evalTC t = do
   Bool
 IR.VStar i <: IR.VStar j = i <= j
 IR.VPi π1 s1 t1 <: IR.VPi π2 s2 t2 =
-  π2 `Usage.allowsUsageOf` π1 && s2 <: s1 && t1 <: t2
+  π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
 s1 <: s2 = s1 == s2
 infix 4 <: -- same as (<), etc
