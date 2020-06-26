@@ -10,8 +10,6 @@ import qualified Juvix.Core.Usage as Core
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.HashMap as Map
 
-{-
- 
 -- TODO ∷ find out if we can promote this somewhere else
 type TermInfo primTy primVal result =
   Core.Parameterisation primTy primVal ->
@@ -27,6 +25,8 @@ erase ::
     primTy
     primVal
     (Either Erasure.Error (Core.AssignWithType primTy primVal compErr))
+erase = undefined
+{-
 erase globals parameterisation term usage ty =
   let (erased, env) = exec globals (eraseTerm parameterisation term usage ty)
    in erased >>| \(term, type') ->

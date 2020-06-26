@@ -13,7 +13,8 @@ data Env primTy primVal
         globals :: TC.Globals primTy primVal
       }
   deriving (Generic)
-  --deriving (Show, Eq, Generic)
+
+--deriving (Show, Eq, Generic)
 
 type EnvEraAlias primTy primVal =
   ExceptT Error (State (Env primTy primVal))

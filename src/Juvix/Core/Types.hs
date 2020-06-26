@@ -24,7 +24,8 @@ data PipelineLog primTy primVal
   = LogHRtoIR (HR.Term primTy primVal) (IR.Term primTy primVal)
   | LogRanZ3 Double
   deriving (Generic)
-  --deriving (Show, Generic)
+
+--deriving (Show, Generic)
 
 -- compErr serves to resolve the compilation error type
 -- needed to promote a backend specific compilation error
@@ -34,7 +35,8 @@ data TermAssignment primTy primVal compErr
         assignment :: EC.TypeAssignment primTy primVal
       }
   deriving (Generic)
-  --deriving (Show, Generic)
+
+--deriving (Show, Generic)
 
 data AssignWithType primTy primVal compErr
   = WithType
@@ -42,4 +44,4 @@ data AssignWithType primTy primVal compErr
         type' :: EC.Term primTy primVal
       }
   deriving (Generic)
-  --deriving (Show, Generic)
+--deriving (Show, Generic)

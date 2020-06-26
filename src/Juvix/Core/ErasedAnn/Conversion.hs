@@ -1,11 +1,11 @@
 module Juvix.Core.ErasedAnn.Conversion where
 
 import qualified Juvix.Core.Erased.Types as E
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Core.ErasedAnn.Types
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
-convertTerm :: forall primTy primVal m . (Monad m) => E.Term primTy primVal -> Usage.T -> E.Term primTy primVal -> m (AnnTerm primTy primVal)
+convertTerm :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> Usage.T -> E.Term primTy primVal -> m (AnnTerm primTy primVal)
 convertTerm term usage ty = do
   ty' <- convertType ty
   case term of
@@ -16,21 +16,21 @@ convertTerm term usage ty = do
       pure (Ann usage ty' (LamM [] [arg] body))
     E.Elim elimUsage elim elimTy ->
       case elim of
-        E.Var v -> 
+        E.Var v ->
           pure (Ann usage ty' (Var v))
         E.Prim p ->
           pure (Ann usage ty' (Prim p))
         E.App fUsage f fTy xUsage x xTy -> do
           undefined
-          -- TODO fixme T mismatches
-          -- f <- convertTerm (E.Elim fUsage f fTy) fUsage fTy
-          -- x <- convertTerm x xUsage xTy
-          -- TODO: convert
-          -- pure (Ann usage ty' (AppM f [x]))
+    -- TODO fixme T mismatches
+    -- f <- convertTerm (E.Elim fUsage f fTy) fUsage fTy
+    -- x <- convertTerm x xUsage xTy
+    -- TODO: convert
+    -- pure (Ann usage ty' (AppM f [x]))
     -- TODO let
-    _ -> undefined 
+    _ -> undefined
 
-convertType :: forall primTy primVal m . (Monad m) => E.Term primTy primVal -> m (Type primTy primVal)
+convertType :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> m (Type primTy primVal)
 convertType term =
   case term of
     E.Elim _ elim _ ->

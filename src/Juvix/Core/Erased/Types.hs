@@ -1,6 +1,7 @@
 module Juvix.Core.Erased.Types where
 
 import Juvix.Core.Erased.Extend
+import Juvix.Core.HRAnn.Types (Annotation (..), AppAnnotation (..), BindAnnotation (..))
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Base hiding
   ( extDataArg,
@@ -13,7 +14,6 @@ import Juvix.Core.IR.Types.Base hiding
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
-import Juvix.Core.HRAnn.Types (BindAnnotation(..), Annotation(..), AppAnnotation(..))
 
 data T
 

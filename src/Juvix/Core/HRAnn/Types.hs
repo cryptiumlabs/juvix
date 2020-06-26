@@ -1,16 +1,17 @@
-module Juvix.Core.HRAnn.Types (
-  module Juvix.Core.HRAnn.Types,
-  module Juvix.Core.HRAnn.Extend
-) where
+module Juvix.Core.HRAnn.Types
+  ( module Juvix.Core.HRAnn.Types,
+    module Juvix.Core.HRAnn.Extend,
+  )
+where
 
 import qualified Extensible as Ext
+import Juvix.Core.HRAnn.Extend
 import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Core.HRAnn.Extend
 import Juvix.Library
 
-IR.extendTerm "Term" [] [t|T|] extTerm 
+IR.extendTerm "Term" [] [t|T|] extTerm
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π x s t = Lam0 t (BindAnnotation x (Annotation π s))

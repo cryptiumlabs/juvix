@@ -2,6 +2,10 @@ module Juvix.Core.Pipeline where
 
 import qualified Data.Text as Text
 --import qualified Juvix.Core.EAC as EAC
+
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Core.Erased.Datatypes as Datatypes
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -55,6 +59,24 @@ typecheckAffineErase term usage ty = do
     Left err -> throw @"error" (Types.EACError err)
 -}
 
+coreToMichelson ::
+  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
+    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
+    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
+    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+  ) =>
+  HR.Term Michelson.PrimTy Michelson.PrimVal ->
+  Usage.T ->
+  HR.Term Michelson.PrimTy Michelson.PrimVal ->
+  m (Either Michelson.CompErr Michelson.EmptyInstr)
+coreToMichelson term usage ty = do
+  Types.WithType (Types.Assignment term _) ty <- typecheckErase term usage ty
+  globals <- ask @"globals"
+  converted <- pure (Datatypes.datatypesToMichelson globals term)
+  ann <- ErasedAnn.convertTerm converted usage ty
+  let (res, _) = Michelson.compileExpr ann
+  pure res
+
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase ::
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
@@ -86,7 +108,9 @@ typecheckErase term usage ty = do
     |> IR.exec globals
     |> fst of
     Right _ -> do
-      case Erasure.erase globals param term usage ty of
+      -- TODO convert to HRAnn
+      --case Erasure.erase globals param term usage ty of
+      case Erasure.erase globals param undefined usage undefined of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)
     Left err -> throw @"error" (Types.TypecheckerError (Text.pack (show err)))
