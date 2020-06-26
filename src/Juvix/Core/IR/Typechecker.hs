@@ -151,9 +151,9 @@ typeElim' elim σ =
       ty <- useLocal σ i
       pure $ Typed.Bound i $ Annotation σ ty
 
-    IR.Free (IR.Pattern x) -> do
-      _
-      -- TODO what to do about usages of pat vars
+    IR.Free px@(IR.Pattern x) -> do
+      ty <- usePatVar σ x
+      pure $ Typed.Free px $ Annotation σ ty
 
     IR.Free gx@(IR.Global x) -> do
       (ty, π') <- lookupGlobal x
@@ -241,6 +241,21 @@ useLocal π var = do
       Just ρ' -> pure (annType ann, ann {annUsage = ρ'} : ctx)
       Nothing -> throwTC _
   go i (b : ctx) = second (b :) <$> go (i - 1) ctx
+
+usePatVar :: Usage.T -> IR.PatternVar
+          -> InnerTC primTy primVal (IR.Value primTy primVal)
+usePatVar π var = do
+  -- TODO a single traversal with alterF or something
+  mAnn <- gets @"patBinds" $ IntMap.lookup var
+  case mAnn of
+    Just ann
+      | Just ρ' <- annUsage ann `Usage.minus` π -> do
+          modify @"patBinds" $ IntMap.insert var $ ann {annUsage = ρ'}
+          pure $ annType ann
+      | otherwise -> do
+          throwTC _
+    Nothing -> do
+      throwTC _
 
 
 data GlobalUsage = GZero | GOmega deriving (Eq, Ord, Show, Bounded, Enum)
