@@ -41,6 +41,14 @@ data Leftovers primTy primVal a =
   }
   deriving (Eq, Show, Generic)
 
+leftoversOk :: Leftovers primTy primVal a -> Bool
+leftoversOk (Leftovers {loLocals, loPatVars}) =
+  all leftoverOk loLocals && all leftoverOk loPatVars
+
+leftoverOk :: Usage.T -> Bool
+leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
+
+
 -- | Checks a 'Term' against an annotation and returns a decorated term if
 -- successful.
 typeTerm ::
@@ -179,7 +187,6 @@ typeElim' elim σ =
       pure $ Typed.Ann π s' a' ℓ ann
 
 
-
 pushLocal :: Annotation primTy primVal -> InnerTC primTy primVal ()
 pushLocal ann = modify @"bound" (ann :)
 
@@ -187,8 +194,8 @@ popLocal :: InnerTC primTy primVal ()
 popLocal = do
   ctx <- get @"bound"
   case ctx of
-    Annotation π _ : ctx -> do
-      unless (π == mempty || π == Usage.Omega) $
+    Annotation ρ _ : ctx -> do
+      unless (leftoverOk ρ) $
         throwTC $ LeftoverUsage ρ
       put @"bound" ctx
     [] -> do
