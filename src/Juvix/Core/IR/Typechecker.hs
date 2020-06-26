@@ -134,7 +134,7 @@ typeTerm' term ann@(Annotation σ ty) =
     IR.Let σb b t -> do
       b' <- typeElim' b σb
       let bAnn = getElimAnn b'
-          tAnn = Annotation σ (Eval.weakValue ty)
+          tAnn = Annotation σ (Eval.weak ty)
       t' <- withLocal bAnn $ typeTerm' t tAnn
       let anns = BindAnnotation {baBindAnn = bAnn, baResAnn = ann}
       pure $ Typed.Let σb b' t' anns
@@ -292,7 +292,7 @@ substApp ::
 substApp ty arg = do
   arg' <- evalTC arg
   param <- ask @"param"
-  Eval.substValue param ty arg'
+  Eval.substV param ty arg'
 
 evalTC ::
   IR.Term primTy primVal ->
