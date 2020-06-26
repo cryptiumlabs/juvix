@@ -38,8 +38,6 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
-extendModule "Module" [] [t|T|] Ext.extendModule
-
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
 extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
@@ -47,8 +45,6 @@ extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
-
-extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
 extendExpression "Expression" [] [t|T|] Ext.extendExpression
 
@@ -87,3 +83,17 @@ extendMatchLogic "MatchLogic" [] [t|T|] Ext.extendMatchLogic
 extendMatchLogicStart "MatchLogicStart" [] [t|T|] Ext.extendMatchLogicStart
 
 extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
+
+--------------------------------------------------------------------------------
+-- Instantiating for show derivation
+--------------------------------------------------------------------------------
+
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
+
+extendModule "Module" [] [t|T|] Ext.extendModule
+
+extendSignature "Signature" [] [t|T|] Ext.extendSignature
+
+extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
