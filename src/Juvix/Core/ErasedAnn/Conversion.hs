@@ -1,33 +1,44 @@
 module Juvix.Core.ErasedAnn.Conversion where
 
 import qualified Juvix.Core.Erased.Types as E
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Core.ErasedAnn.Types
 import Juvix.Library hiding (Type)
 
-convertTerm :: forall primTy primVal m . (Monad m) => E.Term primTy primVal -> m (Term primTy primVal)
-convertTerm term =
+convertTerm :: forall primTy primVal m . (Monad m) => E.Term primTy primVal -> Usage.T -> E.Term primTy primVal -> m (AnnTerm primTy primVal)
+convertTerm term usage ty = do
+  ty' <- convertType ty
   case term of
-    E.Lam arg body -> do
+    E.Lam argUsage arg argType body -> do
+      let E.Pi _ _ _ resTy = ty
       -- TODO captures
-      body <- convertTerm body
-      pure (LamM [] [arg] body)
-    E.Elim elim ->
+      body <- convertTerm body usage resTy
+      pure (Ann usage ty' (LamM [] [arg] body))
+    E.Elim elimUsage elim elimTy ->
       case elim of
-        E.Var v -> pure (Var v)
-        E.Prim p -> pure (Prim p)
-        E.App f x -> do
-          f <- convertTerm f
-          x <- convertTerm x
+        E.Var v -> 
+          pure (Ann usage ty' (Var v))
+        E.Prim p ->
+          pure (Ann usage ty' (Prim p))
+        E.App fUsage f fTy xUsage x xTy -> do
+          undefined
+          -- TODO fixme T mismatches
+          -- f <- convertTerm (E.Elim fUsage f fTy) fUsage fTy
+          -- x <- convertTerm x xUsage xTy
           -- TODO: convert
-          pure (AppM f [x])
+          -- pure (Ann usage ty' (AppM f [x]))
     -- TODO let
     _ -> undefined 
 
 convertType :: forall primTy primVal m . (Monad m) => E.Term primTy primVal -> m (Type primTy primVal)
 convertType term =
   case term of
-    E.Var s -> pure (SymT s)
+    E.Elim _ elim _ ->
+      case elim of
+        E.Var s -> pure (SymT s)
     E.Star n -> pure (Star n)
     E.PrimTy p -> pure (PrimTy p)
     -- TODO: Deal with argument name.
-    E.Pi usage _ arg res -> pure (Pi usage arg res)
+    E.Pi argUsage arg argType res -> do
+      res <- convertType res
+      pure (Pi argUsage (SymT arg) res)

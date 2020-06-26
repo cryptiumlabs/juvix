@@ -1,8 +1,8 @@
-module Juvix.Core.Erasure.Algorithm (erase) where
+module Juvix.Core.Erasure.Algorithm where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure.Types as Erasure
-import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.HRAnn.Types as HR
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.Translate (hrToIR, irToHR)
 import qualified Juvix.Core.Types as Core
@@ -10,6 +10,8 @@ import qualified Juvix.Core.Usage as Core
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.HashMap as Map
 
+{-
+ 
 -- TODO ∷ find out if we can promote this somewhere else
 type TermInfo primTy primVal result =
   Core.Parameterisation primTy primVal ->
@@ -78,7 +80,7 @@ eraseTerm parameterisation term usage ty = do
       HR.Star _ -> throw @"erasureError" Erasure.Unsupported
       HR.PrimTy _ -> throw @"erasureError" Erasure.Unsupported
       HR.Pi _ _ _ _ -> throw @"erasureError" Erasure.Unsupported
-      HR.Lam name body -> do
+      HR.Lam argUsage name argType body -> do
         -- The type must be a dependent function.
         let HR.Pi argUsage _ varTy retTy = ty
         funcTy <- eraseType parameterisation ty
@@ -102,12 +104,12 @@ eraseTerm parameterisation term usage ty = do
               else Erased.Lam name body,
             funcTy
           )
-      HR.Elim elim -> do
+      HR.Elim elim usageAnn typeAnn -> do
         elimTy <- eraseType parameterisation ty
         case elim of
           HR.Var n -> pure (Erased.Elim (Erased.Var n), elimTy)
           HR.Prim p -> pure (Erased.Elim (Erased.Prim p), elimTy)
-          HR.App f x -> do
+          HR.App fUsage f fType xUsage x xType -> do
             let IR.Elim fIR = hrToIR (HR.Elim f)
             context <- get @"context"
             case IR.typeElim0 parameterisation context fIR
@@ -151,8 +153,10 @@ eraseType parameterisation term = do
       pure (Erased.Pi argUsage name arg ret)
     -- FIXME might need to check that the name doesn't occur
     -- in @retTy@ anywhere
-    HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
-    HR.Elim elim ->
+    HR.Lam _ _ _ _ -> throw @"erasureError" Erasure.Unsupported
+    HR.Elim elim _ _ ->
       case elim of
         HR.Var s -> pure (Erased.Elim (Erased.Var s))
         _ -> throw @"erasureError" Erasure.Unsupported
+
+-}
