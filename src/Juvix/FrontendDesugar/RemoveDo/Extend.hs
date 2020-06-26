@@ -1,3 +1,19 @@
+-- |
+-- - This pass removes =Do= form in =Expression=
+-- - Thus one does not have to ever deal with
+--   #+begin_src haskell
+--     data Do
+--       = Do'' (NonEmpty DoBody)
+--       deriving (Show, Generic, NFData)
+--
+--     data DoBody
+--       = DoBody
+--         { doBodyName :: Maybe NameSymb,
+--           doBodyExpr :: Expression
+--         }
+--       deriving (Show, Generic, NFData)
+--   #+end_src
+--   after this pass
 module Juvix.FrontendDesugar.RemoveDo.Extend
   ( module Juvix.FrontendDesugar.RemoveDo.Extend,
     module Juvix.FrontendDesugar.RemovePunned.Extend,

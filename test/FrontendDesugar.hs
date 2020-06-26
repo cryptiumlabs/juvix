@@ -3,12 +3,11 @@ module FrontendDesugar where
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import qualified Juvix.Frontend.Parser as Parser
+import Juvix.FrontendDesugar
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String, show)
-import Juvix.FrontendDesugar
-
 
 allDesugar :: T.TestTree
 allDesugar =
@@ -16,7 +15,6 @@ allDesugar =
     "desugar Tests"
     [ guardTest
     ]
-
 
 desugarTasty ::
   (Show a1, Show a2, Eq a1) => T.TestName -> Either a1 a2 -> String -> T.TestTree

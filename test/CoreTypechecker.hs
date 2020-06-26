@@ -200,17 +200,24 @@ dependentFunctionComp =
 
 letComp :: T.TestTree
 letComp =
-  T.testGroup "'let' Computational typing"
-  [ -- let x = 0 in 0
-    shouldCheck Nat.t (IR.Let nzero (IR.Elim nzero))
-      (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
-    -- let x = 0 in x
-    shouldCheck Nat.t (IR.Let nzero (IR.Elim (IR.Bound 0)))
-      (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
-    -- λx. let y = 0 in x
-    shouldCheck Nat.t (IR.Lam (IR.Let nzero (IR.Elim (IR.Bound 1))))
-      (natToNatTy' one)
-  ]
+  T.testGroup
+    "'let' Computational typing"
+    [ -- let x = 0 in 0
+      shouldCheck
+        Nat.t
+        (IR.Let nzero (IR.Elim nzero))
+        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+      -- let x = 0 in x
+      shouldCheck
+        Nat.t
+        (IR.Let nzero (IR.Elim (IR.Bound 0)))
+        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+      -- λx. let y = 0 in x
+      shouldCheck
+        Nat.t
+        (IR.Lam (IR.Let nzero (IR.Elim (IR.Bound 1))))
+        (natToNatTy' one)
+    ]
   where
     nzero = (IR.Prim (Nat.Val 0))
 

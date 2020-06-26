@@ -154,7 +154,7 @@ typeTerm p ii ctx (IR.Let l b) ann = do
   tellLog CheckingLet
   l' <- typeElim p ii ctx l
   let ctx' = ContextElement (IR.Local ii) (getElimAnn l') : ctx
-      b'   = Eval.substTerm (IR.Free (IR.Local ii)) b
+      b' = Eval.substTerm (IR.Free (IR.Local ii)) b
   bAnn <- typeTerm p (succ ii) ctx' b' ann
   pure $ Typed.Let l' bAnn ann
 -- elim case
