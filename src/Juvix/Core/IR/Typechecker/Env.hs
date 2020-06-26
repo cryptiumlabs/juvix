@@ -52,39 +52,29 @@ exec globals (EnvTyp env) =
   runState (runExceptT env) $ EnvCtx globals
 
 
+type Context primTy primVal = [Annotation primTy primVal]
 
-type TContext primTy primVal = [IR.Value primTy primVal]
-
-lookupT :: TContext primTy primVal
-        -> IR.BoundVar
-        -> Maybe (IR.Value primTy primVal)
-lookupT gam x = Eval.weakBy (x + 1) <$> atMay gam (fromIntegral x)
+lookupCtx :: Context primTy primVal
+          -> IR.BoundVar
+          -> Maybe (Annotation primTy primVal)
+lookupCtx gam x = do
+  Annotation π ty <- atMay gam (fromIntegral x)
+  pure $ Annotation π (Eval.weakBy (x + 1) ty)
 
 
 type UContext primTy primVal = [Usage.T]
 
-lookupU :: UContext primTy primVal -> IR.BoundVar -> Maybe Usage.T
-lookupU psi x = atMay psi (fromIntegral x)
 
+type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
 
-type Context primTy primVal = [(IR.Value primTy primVal, Usage.T)]
+type PatUsages primTy primVal = IntMap Usage.T
 
-
-type PatBinds primTy primVal =
-  IntMap (IR.Value primTy primVal)
-
-
-type IsTC primTy primVal m =
-  ( HasThrowTC primTy primVal m,
-    HasReader "globals" (Globals primTy primVal) m
-  )
 
 data InnerState primTy primVal =
   InnerState {
     param :: Param.Parameterisation primTy primVal,
     patBinds :: PatBinds primTy primVal,
-    boundTypes :: TContext primTy primVal,
-    boundUsages :: UContext primTy primVal
+    bound :: Context primTy primVal
   }
   deriving Generic
 
@@ -109,21 +99,16 @@ newtype InnerTC primTy primVal a =
     via ReaderField "param" (InnerTCAlias primTy primVal)
   deriving
     ( HasSource "patBinds" (PatBinds primTy primVal),
-      HasReader "patBinds" (PatBinds primTy primVal)
+      HasSink "patBinds" (PatBinds primTy primVal),
+      HasState "patBinds" (PatBinds primTy primVal)
     )
-    via ReaderField "patBinds" (InnerTCAlias primTy primVal)
+    via StateField "patBinds" (InnerTCAlias primTy primVal)
   deriving
-    ( HasSource "boundTypes" (TContext primTy primVal),
-      HasSink "boundTypes" (TContext primTy primVal),
-      HasState "boundTypes" (TContext primTy primVal)
+    ( HasSource "bound" (Context primTy primVal),
+      HasSink "bound" (Context primTy primVal),
+      HasState "bound" (Context primTy primVal)
     )
-    via StateField "boundTypes" (InnerTCAlias primTy primVal)
-  deriving
-    ( HasSource "boundUsages" (UContext primTy primVal),
-      HasSink "boundUsages" (UContext primTy primVal),
-      HasState "boundUsages" (UContext primTy primVal)
-    )
-    via StateField "boundUsages" (InnerTCAlias primTy primVal)
+    via StateField "bound" (InnerTCAlias primTy primVal)
 
 
 execInner :: InnerTC primTy primVal a

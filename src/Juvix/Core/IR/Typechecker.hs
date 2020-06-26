@@ -17,10 +17,8 @@ module Juvix.Core.IR.Typechecker
     Globals,
     Global (..),
     Context,
-    TContext,
-    lookupT,
     UContext,
-    lookupU,
+    lookupCtx,
   )
 where
 
@@ -32,9 +30,17 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap.Strict as IntMap
 import Data.Foldable (foldr1)
 
+
+data Leftovers primTy primVal a =
+  Leftovers {
+    loValue :: a,
+    loLocals :: UContext primTy primVal,
+    loPatVars :: PatUsages primTy primVal
+  }
+  deriving (Eq, Show, Generic)
 
 -- | Checks a 'Term' against an annotation and returns a decorated term if
 -- successful.
@@ -44,9 +50,19 @@ typeTerm ::
   IR.Term primTy primVal ->
   Annotation primTy primVal ->
   EnvTypecheck primTy primVal (Typed.Term primTy primVal)
-typeTerm param t ann =
-  execInner (typeTerm' t ann) (InnerState param mempty [] [])
-  -- FIXME: pattern vars                        ↑
+typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
+
+typeTermWith ::
+  (Eq primTy, Eq primVal) =>
+  Param.Parameterisation primTy primVal ->
+  PatBinds primTy primVal ->
+  Context primTy primVal ->
+  IR.Term primTy primVal ->
+  Annotation primTy primVal ->
+  EnvTypecheck primTy primVal
+    (Leftovers primTy primVal (Typed.Term primTy primVal))
+typeTermWith param pats ctx t ann =
+  execInner (withLeftovers $ typeTerm' t ann) (InnerState param pats ctx)
 
 -- | Infers the type and usage for an 'Elim' and returns it decorated with this
 -- information.
@@ -57,8 +73,26 @@ typeElim ::
   Usage.T ->
   EnvTypecheck primTy primVal (Typed.Elim primTy primVal)
 typeElim param e σ =
-  execInner (typeElim' e σ) (InnerState param mempty [] [])
-  -- FIXME: pattern vars                    ↑
+  loValue <$> typeElimWith param IntMap.empty [] e σ
+
+typeElimWith ::
+  (Eq primTy, Eq primVal) =>
+  Param.Parameterisation primTy primVal ->
+  PatBinds primTy primVal ->
+  Context primTy primVal ->
+  IR.Elim primTy primVal ->
+  Usage.T ->
+  EnvTypecheck primTy primVal
+    (Leftovers primTy primVal (Typed.Elim primTy primVal))
+typeElimWith param pats ctx e σ =
+  execInner (withLeftovers $ typeElim' e σ) (InnerState param pats ctx)
+
+withLeftovers :: InnerTC primTy primVal a
+              -> InnerTC primTy primVal (Leftovers primTy primVal a)
+withLeftovers m =
+  Leftovers <$> m
+            <*> fmap (fmap annUsage) (get @"bound")
+            <*> fmap (fmap annUsage) (get @"patBinds")
 
 
 typeTerm' ::
@@ -114,8 +148,7 @@ typeElim' ::
 typeElim' elim σ =
   case elim of
     IR.Bound i -> do
-      useLocal σ i
-      ty <- localType i
+      ty <- useLocal σ i
       pure $ Typed.Bound i $ Annotation σ ty
 
     IR.Free (IR.Pattern x) -> do
@@ -149,21 +182,17 @@ typeElim' elim σ =
 
 
 pushLocal :: Annotation primTy primVal -> InnerTC primTy primVal ()
-pushLocal (Annotation π ty) = do
-  modify @"boundTypes" (ty :)
-  modify @"boundUsages" (π :)
+pushLocal ann = modify @"bound" (ann :)
 
 popLocal :: InnerTC primTy primVal ()
 popLocal = do
-  tctx <- get @"boundTypes"
-  uctx <- get @"boundUsages"
-  case (tctx, uctx) of
-    (_:tctx, π:uctx) -> do
+  ctx <- get @"bound"
+  case ctx of
+    Annotation π _ : ctx -> do
       unless (π == mempty || π == Usage.Omega) $
         throwTC _
-      put @"boundTypes" tctx
-      put @"boundUsages" uctx
-    _ ->
+      put @"bound" ctx
+    [] -> do
       throwTC _
 
 withLocal :: Annotation primTy primVal
@@ -198,25 +227,20 @@ requireSubtype :: (Eq primTy, Eq primVal)
 requireSubtype e s t = unless (s <: t) $ throwTC $ TypeMismatch e s t
 
 
-useLocal :: Usage.T -> IR.BoundVar -> InnerTC primTy primVal ()
+useLocal :: Usage.T -> IR.BoundVar
+         -> InnerTC primTy primVal (IR.Value primTy primVal)
 useLocal π var = do
-  uctx <- get @"boundUsages"
-  uctx' <- go var uctx
-  put @"boundUsages" uctx'
+  ctx <- get @"bound"
+  (ty, ctx) <- go var ctx
+  put @"bound" ctx
+  pure ty
  where
   go _ [] = throwTC $ UnboundIndex var
-  go 0 (ρ:ρs) = do
-    case ρ `Usage.minus` π of
-      Just ρ' -> pure $ ρ' : ρs
+  go 0 (ann : ctx) = do
+    case annUsage ann `Usage.minus` π of
+      Just ρ' -> pure (annType ann, ann {annUsage = ρ'} : ctx)
       Nothing -> throwTC _
-  go i (ρ:ρs) = (ρ:) <$> go (i - 1) ρs
-
-localType :: IR.BoundVar -> InnerTC primTy primVal (IR.Value primTy primVal)
-localType var = do
-  tctx <- get @"boundTypes"
-  case lookupT tctx var of
-    Just ty -> pure ty
-    Nothing -> throwTC $ UnboundIndex var
+  go i (b : ctx) = second (b :) <$> go (i - 1) ctx
 
 
 data GlobalUsage = GZero | GOmega deriving (Eq, Ord, Show, Bounded, Enum)
