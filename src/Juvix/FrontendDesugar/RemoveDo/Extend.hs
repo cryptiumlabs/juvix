@@ -1,5 +1,9 @@
 -- |
--- - This pass removes =Do= form in =Expression=
+-- - This pass removes the =Do= form
+--  + Belongs to Table
+--    | Changed | Is a Sum Type of |
+--    |---------+------------------|
+--    | Do      | Expression       |
 -- - Thus one does not have to ever deal with
 --   #+begin_src haskell
 --     data Do
