@@ -27,28 +27,43 @@ deriving instance
 
 
 data TypecheckError' ext primTy primVal
-  = TypeMismatch
-      (IR.Elim' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-  | UniverseMismatch IR.Universe IR.Universe
-  | CannotApply
-      (IR.Value' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-  | ShouldBeStar (IR.Value' ext primTy primVal)
-  | ShouldBeFunctionType
-      (IR.Value' ext primTy primVal)
-  | UnboundIndex IR.BoundVar
-  | SigmaMustBeZero
-  | UsageMustBeZero
-  | UsageNotCompatible Usage.T Usage.T
-  | UnboundBinder IR.BoundVar IR.Name
-  | MustBeFunction
-      (IR.Elim' ext primTy primVal)
-      IR.BoundVar
-      (IR.Term' ext primTy primVal)
-  | BoundVariableCannotBeInferred
-  | GlobalNotInScope IR.GlobalName
+  = TypeMismatch {
+      typeSubject :: IR.Elim' ext primTy primVal,
+      typeExpected, typeGot :: IR.Value' ext primTy primVal
+    }
+  | UniverseMismatch {
+      universeLower, universeHigher :: IR.Universe
+    }
+  | CannotApply {
+      applyFun, applyArg :: IR.Value' ext primTy primVal
+    }
+  | ShouldBeStar {
+      typeActual :: IR.Value' ext primTy primVal
+    }
+  | ShouldBeFunctionType {
+      typeActual :: IR.Value' ext primTy primVal
+    }
+  | UnboundIndex {
+      unboundIndex :: IR.BoundVar
+    }
+  | UsageMustBeZero {
+      usageActual :: Usage.T
+    }
+  | LeftoverUsage {
+      usageLeftover :: Usage.T
+    }
+  | InsufficientUsage {
+      usageNeeded, usageActual :: Usage.T
+    }
+  | UnboundLocal {
+      unboundIndex :: IR.BoundVar
+    }
+  | UnboundGlobal {
+      unboundGlobal :: IR.GlobalName
+    }
+  | UnboundPatVar {
+      unboundPatVar :: IR.PatternVar
+    }
 
 type TypecheckError = TypecheckError' IR.NoExt
 
@@ -92,31 +107,20 @@ instance
     show ty <> " is not a function type but should be"
   show (UnboundIndex n) =
     "unbound index " <> show n
-  show (SigmaMustBeZero) =
-    "Sigma has to be 0."
-  show (UsageMustBeZero) =
-    "Usage has to be 0."
-  show (UsageNotCompatible expectedU gotU) =
-    "The usage of "
-      <> (show gotU)
-      <> " is not compatible with "
-      <> (show expectedU)
-  show (UnboundBinder ii x) =
-    "Cannot find the type of \n"
-      <> show x
-      <> "\n (binder number "
+  show (UsageMustBeZero π) =
+    "The usage " <> show π <> " has to be 0."
+  show (LeftoverUsage π) =
+    "Leftover usage of " <> show π
+  show (InsufficientUsage needed left) =
+    "Needed " <> show needed <> " usages but only " <> show left <> " remain"
+  show (UnboundLocal ii) =
+    "Cannot find the type of binder number "
       <> show ii
-      <> ") in the environment."
-  show (MustBeFunction m ii n) =
-    ( show m <> "\n (binder number " <> show ii
-        <> ") is not a function type and thus \n"
-        <> show n
-        <> "\n cannot be applied to it."
-    )
-  show (BoundVariableCannotBeInferred) =
-    "Bound variable cannot be inferred"
-  show (GlobalNotInScope x) =
+      <> " in the context."
+  show (UnboundGlobal x) =
     "Global name " <> show x <> " not in scope"
+  show (UnboundPatVar x) =
+    "Pattern variable " <> show x <> " not in scope"
 
 type HasThrowTC' ext primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
     -- * reexports from ….Types
@@ -190,10 +189,10 @@ popLocal = do
   case ctx of
     Annotation π _ : ctx -> do
       unless (π == mempty || π == Usage.Omega) $
-        throwTC _
+        throwTC $ LeftoverUsage ρ
       put @"bound" ctx
     [] -> do
-      throwTC _
+      throwTC $ UnboundIndex 0
 
 withLocal :: Annotation primTy primVal
           -> InnerTC primTy primVal a
@@ -202,7 +201,7 @@ withLocal ann m = pushLocal ann *> m <* popLocal
 
 
 requireZero :: Usage.T -> InnerTC primTy primVal ()
-requireZero π = unless (π == mempty) $ throwTC SigmaMustBeZero
+requireZero π = unless (π == mempty) $ throwTC $ UsageMustBeZero π
 
 requireStar :: IR.Value primTy primVal -> InnerTC primTy primVal IR.Universe
 requireStar (IR.VStar j) = pure j
@@ -224,7 +223,8 @@ requireSubtype :: (Eq primTy, Eq primVal)
                -> IR.Value primTy primVal
                -> IR.Value primTy primVal
                -> InnerTC primTy primVal ()
-requireSubtype e s t = unless (s <: t) $ throwTC $ TypeMismatch e s t
+requireSubtype subj exp got =
+  unless (got <: exp) $ throwTC $ TypeMismatch subj exp got
 
 
 useLocal :: Usage.T -> IR.BoundVar
@@ -236,10 +236,10 @@ useLocal π var = do
   pure ty
  where
   go _ [] = throwTC $ UnboundIndex var
-  go 0 (ann : ctx) = do
-    case annUsage ann `Usage.minus` π of
-      Just ρ' -> pure (annType ann, ann {annUsage = ρ'} : ctx)
-      Nothing -> throwTC _
+  go 0 (Annotation ρ ty : ctx) = do
+    case ρ `Usage.minus` π of
+      Just ρ' -> pure (ty, Annotation ρ' ty : ctx)
+      Nothing -> throwTC $ InsufficientUsage π ρ
   go i (b : ctx) = second (b :) <$> go (i - 1) ctx
 
 usePatVar :: Usage.T -> IR.PatternVar
@@ -248,14 +248,14 @@ usePatVar π var = do
   -- TODO a single traversal with alterF or something
   mAnn <- gets @"patBinds" $ IntMap.lookup var
   case mAnn of
-    Just ann
-      | Just ρ' <- annUsage ann `Usage.minus` π -> do
-          modify @"patBinds" $ IntMap.insert var $ ann {annUsage = ρ'}
-          pure $ annType ann
+    Just (Annotation ρ ty)
+      | Just ρ' <- ρ `Usage.minus` π -> do
+          modify @"patBinds" $ IntMap.insert var $ Annotation ρ' ty
+          pure ty
       | otherwise -> do
-          throwTC _
+          throwTC $ InsufficientUsage π ρ
     Nothing -> do
-      throwTC _
+      throwTC $ UnboundPatVar var
 
 
 data GlobalUsage = GZero | GOmega deriving (Eq, Ord, Show, Bounded, Enum)
@@ -266,7 +266,7 @@ lookupGlobal x = do
   mdefn <- asks @"globals" $ HashMap.lookup x
   case mdefn of
     Just defn -> pure $ makeGAnn defn
-    Nothing   -> throwTC $ GlobalNotInScope x
+    Nothing   -> throwTC $ UnboundGlobal x
   where
     makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
       (foldr makePi (IR.VStar dataLevel) dataArgs, GZero)
