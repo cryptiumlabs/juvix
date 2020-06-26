@@ -58,6 +58,7 @@ minus :: Usage -> Usage -> Maybe Usage
 minus Omega _ = Just Omega
 minus (SNat i) (SNat j) | i >= j = Just $ SNat $ i - j
 minus _ _ = Nothing
+
 infixl 6 `minus` -- same as -
 
 -- | numToNat is a helper function that converts an integer to NatAndW
@@ -76,4 +77,5 @@ allowsUsageOf (SNat _) Omega = False
 
 allows :: Usage -> Usage -> Bool
 allows = allowsUsageOf
+
 infix 4 `allowsUsageOf`, `allows` -- same as <=

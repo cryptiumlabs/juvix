@@ -24,7 +24,6 @@ weak' = weakBy' 1
 weak :: HasWeak a => a -> a
 weak = weak' 0
 
-
 instance HasWeak () where weakBy' _ _ () = ()
 
 instance HasWeak Void where weakBy' _ _ v = absurd v
@@ -236,7 +235,6 @@ instance
     IR.VPrim' p (weakBy' b i a)
   weakBy' b i (IR.ValueX a) =
     IR.ValueX (weakBy' b i a)
-
 
 weakValueBy' ::
   AllWeakV ext primTy primVal =>

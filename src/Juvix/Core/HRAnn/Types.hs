@@ -20,10 +20,11 @@ data BindAnnotation primTy primVal
         bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
       }
 
-data LetAnnotation primTy primVal = LetAnnotation
-  { letName :: Symbol,
-    letType :: IR.Term' T primTy primVal
-  }
+data LetAnnotation primTy primVal
+  = LetAnnotation
+      { letName :: Symbol,
+        letType :: IR.Term' T primTy primVal
+      }
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
 IR.extendTerm "Term" [] [t|T|] $

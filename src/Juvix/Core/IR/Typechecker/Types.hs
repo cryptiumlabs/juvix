@@ -25,45 +25,44 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
-
 data TypecheckError' ext primTy primVal
-  = TypeMismatch {
-      typeSubject :: IR.Elim' ext primTy primVal,
-      typeExpected, typeGot :: IR.Value' ext primTy primVal
-    }
-  | UniverseMismatch {
-      universeLower, universeHigher :: IR.Universe
-    }
-  | CannotApply {
-      applyFun, applyArg :: IR.Value' ext primTy primVal
-    }
-  | ShouldBeStar {
-      typeActual :: IR.Value' ext primTy primVal
-    }
-  | ShouldBeFunctionType {
-      typeActual :: IR.Value' ext primTy primVal
-    }
-  | UnboundIndex {
-      unboundIndex :: IR.BoundVar
-    }
-  | UsageMustBeZero {
-      usageActual :: Usage.T
-    }
-  | LeftoverUsage {
-      usageLeftover :: Usage.T
-    }
-  | InsufficientUsage {
-      usageNeeded, usageActual :: Usage.T
-    }
-  | UnboundLocal {
-      unboundIndex :: IR.BoundVar
-    }
-  | UnboundGlobal {
-      unboundGlobal :: IR.GlobalName
-    }
-  | UnboundPatVar {
-      unboundPatVar :: IR.PatternVar
-    }
+  = TypeMismatch
+      { typeSubject :: IR.Elim' ext primTy primVal,
+        typeExpected, typeGot :: IR.Value' ext primTy primVal
+      }
+  | UniverseMismatch
+      { universeLower, universeHigher :: IR.Universe
+      }
+  | CannotApply
+      { applyFun, applyArg :: IR.Value' ext primTy primVal
+      }
+  | ShouldBeStar
+      { typeActual :: IR.Value' ext primTy primVal
+      }
+  | ShouldBeFunctionType
+      { typeActual :: IR.Value' ext primTy primVal
+      }
+  | UnboundIndex
+      { unboundIndex :: IR.BoundVar
+      }
+  | UsageMustBeZero
+      { usageActual :: Usage.T
+      }
+  | LeftoverUsage
+      { usageLeftover :: Usage.T
+      }
+  | InsufficientUsage
+      { usageNeeded, usageActual :: Usage.T
+      }
+  | UnboundLocal
+      { unboundIndex :: IR.BoundVar
+      }
+  | UnboundGlobal
+      { unboundGlobal :: IR.GlobalName
+      }
+  | UnboundPatVar
+      { unboundPatVar :: IR.PatternVar
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt
 
@@ -136,10 +135,10 @@ throwTC = throw @"typecheckError"
 
 data T
 
-data BindAnnotation primTy primVal =
-  BindAnnotation {
-    baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-  }
+data BindAnnotation primTy primVal
+  = BindAnnotation
+      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
   deriving (Eq, Show, Generic)
 
 IR.extendTerm "Term" [] [t|T|] $
