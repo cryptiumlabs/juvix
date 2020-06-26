@@ -132,14 +132,16 @@ typeTerm' term ann@(Annotation σ ty) =
       let varAnn = Annotation (σ <.> π) a
           tAnn   = Annotation σ b
       t' <- withLocal varAnn $ typeTerm' t tAnn
-      pure $ Typed.Lam t' ann
+      let anns = BindAnnotation {baBindAnn = varAnn, baResAnn = ann}
+      pure $ Typed.Lam t' anns
 
     IR.Let σb b t -> do
       b' <- typeElim' b σb
       let bAnn = getElimAnn b'
           tAnn = Annotation σ (Eval.weakValue ty)
       t' <- withLocal bAnn $ typeTerm' t tAnn
-      pure $ Typed.Let σb b' t' ann
+      let anns = BindAnnotation {baBindAnn = bAnn, baResAnn = ann}
+      pure $ Typed.Let σb b' t' anns
 
     IR.Elim e -> do
       e' <- typeElim' e σ

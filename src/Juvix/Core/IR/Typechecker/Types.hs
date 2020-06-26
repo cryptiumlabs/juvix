@@ -136,15 +136,22 @@ throwTC = throw @"typecheckError"
 
 data T
 
+data BindAnnotation primTy primVal =
+  BindAnnotation {
+    baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  }
+  deriving (Eq, Show, Generic)
+
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->
     let typed = Just [[t|Annotation $primTy $primVal|]]
+        bindTyped = Just [[t|BindAnnotation $primTy $primVal|]]
      in IR.defaultExtTerm
           { IR.typeStar = typed,
             IR.typePrimTy = typed,
             IR.typePi = typed,
-            IR.typeLam = typed,
-            IR.typeLet = typed,
+            IR.typeLam = bindTyped,
+            IR.typeLet = bindTyped,
             IR.typeElim = typed
           }
 
@@ -163,8 +170,8 @@ getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
-getTermAnn (Lam _ ann) = ann
-getTermAnn (Let _ _ _ ann) = ann
+getTermAnn (Lam _ anns) = baResAnn anns
+getTermAnn (Let _ _ _ anns) = baResAnn anns
 getTermAnn (Elim _ ann) = ann
 
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
