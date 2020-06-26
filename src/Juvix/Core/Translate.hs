@@ -41,7 +41,7 @@ hrElimToIR' elim =
       maybeIndex <- lookupName n
       pure $ case maybeIndex of
         Just ind -> IR.Bound (fromIntegral ind)
-        Nothing -> IR.Free (IR.Global (show n))
+        Nothing -> IR.Free (IR.Global n)
     HR.Prim p -> pure (IR.Prim p)
     HR.App f x -> do
       f <- hrElimToIR' f

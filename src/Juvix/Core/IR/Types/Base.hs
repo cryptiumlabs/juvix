@@ -8,7 +8,7 @@ import Juvix.Library
 
 type Universe = Natural
 
-type GlobalName = Text
+type GlobalName = Symbol
 
 type PatternVar = Int
 
