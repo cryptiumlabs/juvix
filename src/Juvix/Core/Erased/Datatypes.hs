@@ -38,6 +38,8 @@ data Match
 
 -- need to alter term to add match, cases, adts
 -- need to re-order patterns to match one argument at once
+-- is this going to be cleaner or less clean that doing it in the michelson backend itself?
+-- at least we could separate out the adt/case/match transform though
 
 patternToMichelson :: PatternAndTerm -> Term
 patternToMichelson (patt, term) =
