@@ -8,14 +8,14 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 type WorkingMaps m =
-  ( HasState "old" Int m, --FIXME put in the actual state
+  ( HasState "old" Int m, --FIXME put in the actual state sig
     HasReader "new" Int m,
     HasState "aliases" Int m
   )
 
 -- The actual transform we are doing: erase type alias
 -- TODO: write the actual transform function
-
+{-
 transformLet :: WorkingMaps m => Old.Let -> m New.Let
 transformLet (Old.LetGroup name bindings body) = do
   undefined
@@ -29,7 +29,7 @@ transformName old = do
   case old of
     (Old.Implicit s) -> undefined
     (Old.Concrete s) -> undefined
-
+-}
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
@@ -64,8 +64,8 @@ transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
 --------------------------------------------------------------------------------
 
 transformType :: WorkingMaps m => Old.Type -> m New.Type
-transformType (Old.Typ usage name' args form) = undefined
-  --New.Typ <$> (transformExpression <$> usage) <*> pure name' <*> pure args <*> transformTypeSum form
+transformType (Old.Typ usage name' args form) = 
+  New.Typ <$> traverse transformExpression usage <*> pure name' <*> pure args <*> transformTypeSum form
 
 transformTypeSum :: WorkingMaps m => Old.TypeSum -> m New.TypeSum
 transformTypeSum (Old.Alias a) = New.Alias <$> transformAlias a
@@ -90,6 +90,10 @@ transformTypeRefine (Old.TypeRefine name refine) =
 --------------------------------------------------
 -- Types Misc
 --------------------------------------------------
+
+transformName :: WorkingMaps m => Old.Name -> m New.Name
+transformName (Old.Implicit s) = pure $ New.Implicit s
+transformName (Old.Concrete s) = pure $ New.Concrete s
 
 transformArrowSymbol :: WorkingMaps m => Old.ArrowSymbol -> m New.ArrowSymbol
 transformArrowSymbol (Old.ArrowUse usage) =
@@ -120,7 +124,7 @@ transformAdt (Old.Product p) = New.Product <$> transformProduct p
 
 transformSum :: WorkingMaps m => Old.Sum -> m New.Sum
 transformSum (Old.S sym prod) =
-  New.S <$> sym <*> traverse transformProduct prod
+  New.S <$> pure sym <*> traverse transformProduct prod
 
 transformProduct :: WorkingMaps m => Old.Product -> m New.Product
 transformProduct (Old.Record rec') = New.Record <$> transformRecord rec'
@@ -129,7 +133,7 @@ transformProduct (Old.ADTLike adt) = New.ADTLike <$> traverse transformExpressio
 
 transformRecord :: WorkingMaps m => Old.Record -> m New.Record
 transformRecord (Old.Record'' fields sig) =
-  New.Record'' <$> (transformNameType <$> fields) <*> traverse transformExpression sig
+  New.Record'' <$> traverse transformNameType fields <*> traverse transformExpression sig
 
 transformNameType :: WorkingMaps m => Old.NameType -> m New.NameType
 transformNameType (Old.NameType' sig name) =
@@ -137,21 +141,21 @@ transformNameType (Old.NameType' sig name) =
 
 transformFunction :: WorkingMaps m => Old.Function -> m New.Function
 transformFunction (Old.Func name f sig) =
-  New.Func <$> name <*> (transformFunctionLike <$> f) <*> (transformSignature <$> sig)
+  New.Func <$> pure name <*> traverse transformFunctionLike f <*> traverse transformSignature sig
 
 transformFunctionLike ::
   WorkingMaps m =>
   Old.FunctionLike Old.Expression ->
   m (New.FunctionLike New.Expression)
 transformFunctionLike (Old.Like args body) =
-  New.Like <$> (transformArg <$> args) <*> transformExpression body
+  New.Like <$> traverse transformArg args <*> transformExpression body
 
 transformModuleOpen :: WorkingMaps m => Old.ModuleOpen -> m New.ModuleOpen
 transformModuleOpen (Old.Open mod) = pure $ New.Open mod
 
 transformModuleOpenExpr :: WorkingMaps m => Old.ModuleOpenExpr -> m New.ModuleOpenExpr
 transformModuleOpenExpr (Old.OpenExpress modName expr) =
-  New.OpenExpress <$> modName <*> transformExpression expr
+  New.OpenExpress <$> pure modName <*> transformExpression expr
 
 transformArg :: WorkingMaps m => Old.Arg -> m New.Arg
 transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
@@ -164,8 +168,8 @@ transformArg (Old.ConcreteA ml) = New.ConcreteA <$> transformMatchLogic ml
 transformSignature :: WorkingMaps m => Old.Signature -> m New.Signature
 transformSignature (Old.Sig name usage arrow constraints) =
   New.Sig
-    <$> name
-    <*> (transformExpression <$> usage)
+    <$> pure name
+    <*> traverse transformExpression usage
     <*> transformExpression arrow
     <*> traverse transformExpression constraints
 
@@ -210,9 +214,24 @@ transformExpRecord (Old.ExpressionRecord fields) =
 -- Symbol Binding
 --------------------------------------------------
 
+transformLet :: WorkingMaps m => Old.Let -> m New.Let
+transformLet (Old.LetGroup name bindings body) =
+  New.LetGroup 
+    <$> pure name 
+    <*> traverse transformFunctionLike bindings
+    <*> transformExpression body
+
+transformLetType :: WorkingMaps m => Old.LetType -> m New.LetType
+transformLetType (Old.LetType'' typ expr) =
+  New.LetType'' <$> transformType typ <*> transformExpression expr
+
+--------------------------------------------------
+-- Symbol Binding
+--------------------------------------------------
+
 transformInfix :: WorkingMaps m => Old.Infix -> m New.Infix
 transformInfix (Old.Inf l o r) =
-  New.Inf <$> transformExpression l <*> o <*> transformExpression r
+  New.Inf <$> transformExpression l <*> pure o <*> transformExpression r
 
 --------------------------------------------------
 -- Matching
@@ -228,18 +247,22 @@ transformMatchL (Old.MatchL pat body) =
 
 transformMatchLogic :: WorkingMaps m => Old.MatchLogic -> m New.MatchLogic
 transformMatchLogic (Old.MatchLogic start name) =
-  New.MatchLogic <$> tranformMatchLogicStart start <*> name
+  New.MatchLogic <$> tranformMatchLogicStart start <*> pure name
 
 tranformMatchLogicStart :: WorkingMaps m => Old.MatchLogicStart -> m New.MatchLogicStart
 tranformMatchLogicStart (Old.MatchCon conName logic) =
-  Old.MatchCon <$> conName <*> traverse transformMatchLogic logic
+  Old.MatchCon <$> pure conName <*> traverse transformMatchLogic logic
 tranformMatchLogicStart (Old.MatchName s) =
   New.MatchName s
 tranformMatchLogicStart (Old.MatchConst c) =
   New.MatchConst <$> transformConst c
 tranformMatchLogicStart (Old.MatchRecord r) =
-  New.MatchRecord <$> (transformNameSet transformMatchLogic <$> r)
+  --New.MatchRecord <$> (transformNameSet transformMatchLogic <$> r)
+  New.MatchRecord 
+    <$> transformNameSet 
+      (New.matchLogicContents (traverse transformMatchLogic r)) 
+      (New.matchLogicNamed (traverse transformMatchLogic r))
 
 transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
-  New.NonPunned <$> s <*> p e
+  New.NonPunned <$> pure s <*> pure (p e)
