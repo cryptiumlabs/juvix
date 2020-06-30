@@ -64,7 +64,7 @@ transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
 --------------------------------------------------------------------------------
 
 transformType :: WorkingMaps m => Old.Type -> m New.Type
-transformType (Old.Typ usage name' args form) = 
+transformType (Old.Typ usage name' args form) =
   New.Typ <$> traverse transformExpression usage <*> pure name' <*> pure args <*> transformTypeSum form
 
 transformTypeSum :: WorkingMaps m => Old.TypeSum -> m New.TypeSum
@@ -207,17 +207,22 @@ transformApplication (Old.App fun args) =
   New.App <$> transformExpression fun <*> traverse transformExpression args
 
 transformExpRecord :: WorkingMaps m => Old.ExpRecord -> m New.ExpRecord
-transformExpRecord (Old.ExpressionRecord fields) =
-  New.ExpressionRecord <$> (transformNameSet transformExpression <$> fields)
-
+transformExpRecord (Old.ExpressionRecord fields) = do
+  nameExpr <- mapM (transformNameSet transformExpression) (NonEmpty.toList fields)
+  return $ New.ExpressionRecord (NonEmpty.fromList nameExpr)
+  {-let ans = transformNameSet transformExpression <$> fields
+  in
+    New.ExpressionRecord <$> _ -- pure ans 
+  --(transformNameSet (traverse transformExpression fields))
+-}
 --------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
 
 transformLet :: WorkingMaps m => Old.Let -> m New.Let
 transformLet (Old.LetGroup name bindings body) =
-  New.LetGroup 
-    <$> pure name 
+  New.LetGroup
+    <$> pure name
     <*> traverse transformFunctionLike bindings
     <*> transformExpression body
 
@@ -251,18 +256,17 @@ transformMatchLogic (Old.MatchLogic start name) =
 
 tranformMatchLogicStart :: WorkingMaps m => Old.MatchLogicStart -> m New.MatchLogicStart
 tranformMatchLogicStart (Old.MatchCon conName logic) =
-  Old.MatchCon <$> pure conName <*> traverse transformMatchLogic logic
+  New.MatchCon <$> pure conName <*> traverse transformMatchLogic logic
 tranformMatchLogicStart (Old.MatchName s) =
-  New.MatchName s
+  pure $ New.MatchName s
 tranformMatchLogicStart (Old.MatchConst c) =
   New.MatchConst <$> transformConst c
 tranformMatchLogicStart (Old.MatchRecord r) =
-  --New.MatchRecord <$> (transformNameSet transformMatchLogic <$> r)
-  New.MatchRecord 
-    <$> transformNameSet 
-      (New.matchLogicContents (traverse transformMatchLogic r)) 
-      (New.matchLogicNamed (traverse transformMatchLogic r))
-
+  let matchLog = undefined --traverse transformMatchLogic r
+      nameSet = undefined --transformNameSet 
+  in
+    New.MatchRecord <$> pure (nameSet matchLog)  
+  
 transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned <$> pure s <*> pure (p e)
