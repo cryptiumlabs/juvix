@@ -14,6 +14,7 @@ data Annotation' ext primTy primVal
       { annUsage :: Usage.T,
         annType :: IR.Value' ext primTy primVal
       }
+  deriving Generic
 
 type Annotation = Annotation' IR.NoExt
 
@@ -135,11 +136,21 @@ throwTC = throw @"typecheckError"
 
 data T
 
-data BindAnnotation primTy primVal
+data BindAnnotation' ext primTy primVal
   = BindAnnotation
-      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
       }
-  deriving (Eq, Show, Generic)
+  deriving Generic
+
+deriving instance
+  (Eq (IR.Value' ext primTy primVal)) =>
+  Eq (BindAnnotation' ext primTy primVal)
+
+deriving instance
+  (Show (IR.Value' ext primTy primVal)) =>
+  Show (BindAnnotation' ext primTy primVal)
+
+type BindAnnotation = BindAnnotation' IR.NoExt
 
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->

@@ -5,6 +5,8 @@ module Juvix.Core.IR.Typechecker
     T,
     Annotation' (..),
     Annotation,
+    BindAnnotation' (..),
+    BindAnnotation,
     TypecheckError' (..),
     TypecheckError,
     getTermAnn,
