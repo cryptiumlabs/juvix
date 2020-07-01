@@ -20,9 +20,9 @@ eraseTerm :: ( HasState "nextName" Int m,
              )
           => Typed.Term primTy primVal
           -> m (Erasure.Term primTy primVal)
-eraseTerm (Typed.Star _ _) = throwEra Erasure.Unsupported
-eraseTerm (Typed.PrimTy _ _) = throwEra Erasure.Unsupported
-eraseTerm (Typed.Pi _ _ _ _) = throwEra Erasure.Unsupported
+eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm t@(Typed.PrimTy _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm t@(Typed.Pi _ _ _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm (Typed.Lam t anns) = do
   let ty@(IR.VPi π _ _) = IR.annType $ IR.baResAnn anns
   (x, t) <- withName \x -> (x,) <$> eraseTerm t
@@ -51,9 +51,9 @@ eraseElim (Typed.Bound x ann) = do
               <*> eraseType (IR.annType ann)
 eraseElim (Typed.Free (IR.Global x) ann) = do
   Erasure.Var x <$> eraseType (IR.annType ann)
-eraseElim (Typed.Free (IR.Pattern _) _) = do
+eraseElim e@(Typed.Free (IR.Pattern _) _) = do
   -- FIXME ??????
-  throwEra Erasure.Unsupported
+  throwEra $ Erasure.UnsupportedTermE e
 eraseElim (Typed.Prim p ann) = do
   Erasure.Prim p <$> eraseType (IR.annType ann)
 eraseElim (Typed.App e s ann) = do
@@ -83,12 +83,12 @@ eraseType (IR.VPi π a b) = do
   -- FIXME dependency
   Erasure.Pi π <$> eraseType a
                <*> withName \_ -> eraseType b
-eraseType (IR.VLam _) = do
-  throwEra Erasure.Unsupported
+eraseType v@(IR.VLam _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
 eraseType (IR.VNeutral n) = do
   eraseTypeN n
-eraseType (IR.VPrim _) = do
-  throwEra Erasure.Unsupported
+eraseType v@(IR.VPrim _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
 
 eraseTypeN ::
   forall primTy primVal m.
@@ -101,12 +101,12 @@ eraseTypeN (IR.NBound x) = do
   Erasure.SymT <$> lookupBound x
 eraseTypeN (IR.NFree (IR.Global x)) = do
   pure $ Erasure.SymT x
-eraseTypeN (IR.NFree (IR.Pattern _)) = do
+eraseTypeN n@(IR.NFree (IR.Pattern _)) = do
   -- FIXME ??????
-  throwEra Erasure.Unsupported
-eraseTypeN (IR.NApp _ _) = do
+  throwEra $ Erasure.UnsupportedTypeN n
+eraseTypeN n@(IR.NApp _ _) = do
   -- FIXME add AppT and fill this in
-  throwEra Erasure.Unsupported
+  throwEra $ Erasure.UnsupportedTypeN n
 
 
 pushName :: (HasState "nextName" Int m, HasState "nameStack" [Symbol] m)

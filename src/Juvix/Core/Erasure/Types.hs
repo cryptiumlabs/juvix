@@ -10,6 +10,7 @@ import qualified Juvix.Core.Erased.Types.Base as Erased
 import Juvix.Core.Erased.Types as Type
   (Type, pattern SymT, pattern Star, pattern PrimTy, pattern Pi)
 import qualified Juvix.Core.Parameterisation as Param
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding (empty, Type)
@@ -44,7 +45,10 @@ exec :: EnvT primTy primVal a
 exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
 
 data Error primTy primVal
-  = Unsupported
+  = UnsupportedTermT (Typed.Term primTy primVal)
+  | UnsupportedTermE (Typed.Elim primTy primVal)
+  | UnsupportedTypeV (IR.Value primTy primVal)
+  | UnsupportedTypeN (IR.Neutral primTy primVal)
   | CannotEraseZeroUsageTerm (Typed.Term primTy primVal)
   | TypeError (TC.TypecheckError primTy primVal)
   | InternalError Text
