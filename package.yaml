@@ -157,6 +157,7 @@ library:
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
+    - Juvix.Core.IR.Typechecker
     - Juvix.Core.IRAnn
     - Juvix.Core.Erased
     - Juvix.Core.ErasedAnn
@@ -257,7 +258,6 @@ library:
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Types.Base
-    - Juvix.Core.IR.Typechecker
     - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
