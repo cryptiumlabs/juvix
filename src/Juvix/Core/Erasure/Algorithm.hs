@@ -12,43 +12,7 @@ erase :: Typed.Term primTy primVal -> Usage.T ->
   Either (Erasure.Error primTy primVal) (Erasure.Term primTy primVal)
 erase t π
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
-  | otherwise   = exec $ eraseTerm t
-
-exec :: Erasure.EnvT primTy primVal a
-     -> Either (Erasure.Error primTy primVal) a
-exec (Erasure.EnvEra m) = evalState (runExceptT m) (Erasure.Env 0 [])
-
-pushName :: (HasState "nextName" Int m, HasState "nameStack" [Symbol] m)
-         => m Symbol
-pushName = do
-  x <- gets @"nextName" $ internText . show
-  modify @"nextName" succ
-  modify @"nameStack" (x :)
-  pure $ x
-
-popName :: (HasState "nameStack" [a] m,
-            HasThrow "erasureError" (Erasure.Error primTy primVal) m)
-        => m ()
-popName = do
-  ns <- get @"nameStack"
-  case ns of
-    []   -> throw @"erasureError" $ Erasure.InternalError "name stack ran out"
-    _:ns -> put @"nameStack" ns
-
-withName :: ( HasState "nextName" Int m,
-              HasState "nameStack" [Symbol] m,
-              HasThrow "erasureError" (Erasure.Error primTy primVal) m)
-         => (Symbol -> m a) -> m a
-withName f = do x <- pushName; f x <* popName
-
-lookupBound :: HasState "nameStack" [Symbol] m
-            => IR.BoundVar -> m Symbol
-lookupBound x = gets @"nameStack" (`genericIndex` x)
-
-
-throwEra :: HasThrow "erasureError" (Erasure.Error primTy primVal) m
-         => Erasure.Error primTy primVal -> m a
-throwEra = throw @"erasureError"
+  | otherwise   = Erasure.exec $ eraseTerm t
 
 eraseTerm :: ( HasState "nextName" Int m,
                HasState "nameStack" [Symbol] m,
@@ -143,3 +107,36 @@ eraseTypeN (IR.NFree (IR.Pattern _)) = do
 eraseTypeN (IR.NApp _ _) = do
   -- FIXME add AppT and fill this in
   throwEra Erasure.Unsupported
+
+
+pushName :: (HasState "nextName" Int m, HasState "nameStack" [Symbol] m)
+         => m Symbol
+pushName = do
+  x <- gets @"nextName" $ internText . show
+  modify @"nextName" succ
+  modify @"nameStack" (x :)
+  pure $ x
+
+popName :: (HasState "nameStack" [a] m,
+            HasThrow "erasureError" (Erasure.Error primTy primVal) m)
+        => m ()
+popName = do
+  ns <- get @"nameStack"
+  case ns of
+    []   -> throw @"erasureError" $ Erasure.InternalError "name stack ran out"
+    _:ns -> put @"nameStack" ns
+
+withName :: ( HasState "nextName" Int m,
+              HasState "nameStack" [Symbol] m,
+              HasThrow "erasureError" (Erasure.Error primTy primVal) m)
+         => (Symbol -> m a) -> m a
+withName f = do x <- pushName; f x <* popName
+
+lookupBound :: HasState "nameStack" [Symbol] m
+            => IR.BoundVar -> m Symbol
+lookupBound x = gets @"nameStack" (`genericIndex` x)
+
+
+throwEra :: HasThrow "erasureError" (Erasure.Error primTy primVal) m
+         => Erasure.Error primTy primVal -> m a
+throwEra = throw @"erasureError"

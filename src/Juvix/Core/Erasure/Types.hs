@@ -14,11 +14,7 @@ import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding (empty, Type)
 
-data Env primTy primVal
-  = Env
-      { nextName :: Int,
-        nameStack :: [Symbol]
-      }
+data Env primTy primVal = Env { nextName :: Int, nameStack :: [Symbol] }
   deriving Generic
 
 type EnvEraAlias primTy primVal =
@@ -42,6 +38,10 @@ newtype EnvT primTy primVal a
   deriving
     (HasThrow "erasureError" (Error primTy primVal))
     via MonadError (EnvEraAlias primTy primVal)
+
+exec :: EnvT primTy primVal a
+     -> Either (Error primTy primVal) a
+exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
 
 data Error primTy primVal
   = Unsupported
