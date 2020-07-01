@@ -53,46 +53,31 @@ runCirc :: Num f => Expr.Expr Circuit.Wire f ty -> Circuit.ArithCircuit f
 runCirc = Expr.execCircuitBuilder . Expr.compile
 
 transTerm :: Env.HasCompErr m => Types.Term -> m Types.Expression
-transTerm CoreErased.Ann {CoreErased.term = CoreErased.Prim term} =
-  transPrim term
-transTerm CoreErased.Ann {CoreErased.term = CoreErased.Var var} = do
-  (n, exp) <- Env.lookup var
-  case exp of
-    Types.NoExp -> do
-      _ <- Env.insert var (Types.FExp $ input n)
-      Env.write (Types.FExp $ input n)
-    _ ->
-      Env.write exp
-transTerm
-  CoreErased.Ann
-    { CoreErased.term =
-        CoreErased.LamM
-          { CoreErased.body = body,
-            CoreErased.arguments = arguments
-          }
-    } = do
-    Env.freshVars arguments
-    transTerm body
-transTerm CoreErased.Ann {CoreErased.term = CoreErased.AppM f params} =
-  case f of
-    ( CoreErased.Ann
-        { CoreErased.term =
-            CoreErased.LamM
-              { CoreErased.body = body,
-                CoreErased.arguments = arguments
-              }
-        }
-      ) -> do
-        traverse_ execParams (zip arguments params)
-        term <- transTerm body
-        -- We must remove variables introduced by current function
-        traverse_ Env.remove arguments
-        return term
-        where
-          execParams (sy, term) = do
-            term' <- transTerm term
-            Env.insert sy term'
-    _ -> throw @"compilationError" Types.TypeErrorApplicationNonFunction
+transTerm erased =
+  case CoreErased.term erased of
+    CoreErased.Prim term -> transPrim term
+    CoreErased.Var var -> do
+      (n, exp) <- Env.lookup var
+      case exp of
+        Types.NoExp -> do
+          _ <- Env.insert var (Types.FExp $ input n)
+          Env.write (Types.FExp $ input n)
+        _ ->
+          Env.write exp
+    CoreErased.LamM {body, arguments} -> do
+      Env.freshVars arguments
+      transTerm body
+    CoreErased.AppM f params -> do
+      case f of
+        CoreErased.Ann {CoreErased.term = CoreErased.LamM {body, arguments}} -> do
+          let execParams (sy, term) = transTerm term >>= Env.insert sy
+          --
+          traverse_ execParams (zip arguments params)
+          term <- transTerm body
+          -- We must remove variables introduced by current function
+          traverse_ Env.remove arguments
+          return term
+        _ -> throw @"compilationError" Types.TypeErrorApplicationNonFunction
 
 -- - _for the calls below FEInteger_
 --   + Types.Expression cannot be made a Functor since the structure

@@ -50,23 +50,25 @@ type HasMemory m = HasState "memory" Memory m
 
 type HasComp m = (HasMemory m, HasState "compilation" Types.Expression m)
 
-type HasMemoryErr m = (HasMemory m, HasThrow "compilationError" Types.CompilationError m)
+type HasMemoryErr m =
+  (HasMemory m, HasThrow "compilationError" Types.CompilationError m)
 
-type HasCompErr m = (HasComp m, HasThrow "compilationError" Types.CompilationError m)
+type HasCompErr m =
+  (HasComp m, HasThrow "compilationError" Types.CompilationError m)
 
 insert :: HasMemory m => Symbol -> Types.Expression -> m Types.Expression
 insert sy exp =
   modify @"memory" (insert' sy exp) *> return exp
   where
     insert' :: Symbol -> Types.Expression -> Memory -> Memory
-    insert' sy x (Mem map_ n) = Mem (Map.insert sy (n, x) map_) (n + 1)
+    insert' sy x (Mem map n) = Mem (Map.insert sy (n, x) map) (succ n)
 
 remove :: HasMemory m => Symbol -> m ()
 remove sy =
   modify @"memory" (remove' sy)
   where
     remove' :: Symbol -> Memory -> Memory
-    remove' sy (Mem map_ n) = Mem (Map.delete sy map_) (n - 1)
+    remove' sy (Mem map n) = Mem (Map.delete sy map) (pred n)
 
 lookup :: HasMemoryErr m => Symbol -> m (Int, Types.Expression)
 lookup sy = do
@@ -88,7 +90,7 @@ freshVars sys = modify @"memory" (freshVars' sys)
   where
     freshVars' :: [Symbol] -> Memory -> Memory
     freshVars' vars (Mem map' n) =
-      Mem (map' <> Map.fromList (zip vars (slots n))) (n + 1)
+      Mem (map' <> Map.fromList (zip vars (slots n))) (succ n)
     --
     slots :: Int -> [(Int, Types.Expression)]
     slots n = fmap (,Types.NoExp) [n ..]
