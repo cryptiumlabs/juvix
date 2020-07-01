@@ -15,6 +15,7 @@
 **** ZKP
 - _Relies on_
   + [[ArithmeticCircuit/Compilation]]
+  + [[Library]]
 **** Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
   + [[Compilation/Environment]]
@@ -23,12 +24,14 @@
   + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
-  + [[Library]]
 ***** Environment <<Compilation/Environment>>
 - _Relies on_
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[Library]]
 ***** Types <<ArithmeticCircuit/Compilation/Types>>
+Provides the various types needed for the arithmetic circuit
+backend
+- Expression covers the gambit of arithmetic circuit expressions
 - _Relies on_
   + [[ArithmeticCircuit/Parameterisation]]
   + [[ErasedAnn]]

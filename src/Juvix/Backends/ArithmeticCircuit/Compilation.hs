@@ -10,8 +10,8 @@ module Juvix.Backends.ArithmeticCircuit.Compilation
     c,
     and',
     or',
-    Term,
-    Type,
+    Types.Term,
+    Types.Type,
     lambda,
     var,
     input,
@@ -26,38 +26,43 @@ import qualified Circuit
 import qualified Circuit.Expr as Expr
 import qualified Circuit.Lang as Lang
 import qualified Data.Map ()
-import Juvix.Backends.ArithmeticCircuit.Compilation.Environment
-import Juvix.Backends.ArithmeticCircuit.Compilation.Types
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Environment as Env
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, exp)
-import qualified Juvix.Library as J
 import Numeric.Natural ()
 
-compile :: Term -> Type -> (Either CompilationError ArithExpression, Circuit.ArithCircuit Par.F)
-compile term _ = toArithCircuit <$> runState (runExceptT (antiAlias $ transTerm term)) (Env mempty NoExp)
+compile ::
+  Types.Term ->
+  Types.Type ->
+  (Either Types.CompilationError Types.Expression, Circuit.ArithCircuit Par.F)
+compile term _ =
+  Env.Env mempty Types.NoExp
+    |> runState (runExceptT (Env.antiAlias $ transTerm term))
+    |> fmap toArithCircuit
   where
     toArithCircuit env =
-      case compilation env of
-        BoolExp exp -> runCirc exp
-        FExp exp -> runCirc exp
-        NoExp -> panic "Tried to compile an empty circuit"
+      case Env.compilation env of
+        Types.BoolExp exp -> runCirc exp
+        Types.FExp exp -> runCirc exp
+        Types.NoExp -> panic "Tried to compile an empty circuit"
 
 runCirc :: Num f => Expr.Expr Circuit.Wire f ty -> Circuit.ArithCircuit f
 runCirc = Expr.execCircuitBuilder . Expr.compile
 
-transTerm :: Term -> ArithmeticCircuitCompilation ArithExpression
+transTerm :: Env.HasCompErr m => Types.Term -> m Types.Expression
 transTerm CoreErased.Ann {CoreErased.term = CoreErased.Prim term} =
   transPrim term
-transTerm CoreErased.Ann {CoreErased.term = CoreErased.Var var} =
-  do
-    (n, exp) <- lookup var
-    case exp of
-      NoExp -> do
-        _ <- insert var (FExp $ input n)
-        write (FExp $ input n)
-      _ -> write exp
+transTerm CoreErased.Ann {CoreErased.term = CoreErased.Var var} = do
+  (n, exp) <- Env.lookup var
+  case exp of
+    Types.NoExp -> do
+      _ <- Env.insert var (Types.FExp $ input n)
+      Env.write (Types.FExp $ input n)
+    _ ->
+      Env.write exp
 transTerm
   CoreErased.Ann
     { CoreErased.term =
@@ -65,10 +70,9 @@ transTerm
           { CoreErased.body = body,
             CoreErased.arguments = arguments
           }
-    } =
-    do
-      freshVars arguments
-      transTerm body
+    } = do
+    Env.freshVars arguments
+    transTerm body
 transTerm CoreErased.Ann {CoreErased.term = CoreErased.AppM f params} =
   case f of
     ( CoreErased.Ann
@@ -78,108 +82,144 @@ transTerm CoreErased.Ann {CoreErased.term = CoreErased.AppM f params} =
                 CoreErased.arguments = arguments
               }
         }
-      ) ->
-        do
-          mapM_ execParams (zip arguments params)
-          term <- transTerm body
-          -- We must remove variables introduced by current function
-          mapM_ remove arguments
-          return term
+      ) -> do
+        traverse_ execParams (zip arguments params)
+        term <- transTerm body
+        -- We must remove variables introduced by current function
+        traverse_ Env.remove arguments
+        return term
         where
-          execParams :: (Symbol, Term) -> ArithmeticCircuitCompilation ArithExpression
-          execParams (sy, term) =
-            do
-              term' <- transTerm term
-              insert sy term'
-    _ -> throw @"compilationError" TypeErrorApplicationNonFunction
+          execParams (sy, term) = do
+            term' <- transTerm term
+            Env.insert sy term'
+    _ -> throw @"compilationError" Types.TypeErrorApplicationNonFunction
 
-transPrim :: PrimVal -> ArithmeticCircuitCompilation ArithExpression
-transPrim (Element f) = write . FExp $ Lang.c f
-transPrim (Boolean b) = write . BoolExp $ Circuit.EConstBool b
-transPrim (FEInteger i) = write . FExp $ Lang.c (fromIntegral i)
--- ArithExpression cannot be made a Functor since the structure inside it is not a Functor
--- It is a Bifunctor where I need to fix the last variant, making it a Contravariant Functor
--- Therefore, we are sticking to manual Applicative until we move away from `arithmetic-circuits`
-transPrim (BinOp Add prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.add prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (BinOp Mul prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.mul prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (BinOp Sub prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (FExp prim1', FExp prim2') -> (write . FExp) $ Lang.sub prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
--- It implements exponentiation by hand since `arithmetic-circuits` does not support it
-transPrim (BinOp Exp prim CoreErased.Ann {CoreErased.term = CoreErased.Prim (FEInteger i)})
-  | i == 1 = transTerm prim
-  | otherwise = transPrim (BinOp Mul prim (wrap $ BinOp Exp prim (wrap $ FEInteger (i - 1))))
-transPrim (BinOp Eq prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (FExp prim1', FExp prim2') -> (write . BoolExp) $ Lang.eq prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (BinOp And prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (BoolExp prim1', BoolExp prim2') -> (write . BoolExp) $ Lang.and_ prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (BinOp Or prim prim') = do
-  prim1 <- transTerm prim
-  prim2 <- transTerm prim'
-  case (prim1, prim2) of
-    (BoolExp prim1', BoolExp prim2') -> (write . BoolExp) $ Lang.or_ prim1' prim2'
-    (_, _) -> throw @"compilationError" PrimTypeError
-transPrim (UnaryOp Neg prim) = do
+-- - _for the calls below FEInteger_
+--   + Types.Expression cannot be made a Functor since the structure
+--     inside it is not a Functor It is a Bifunctor where I need to fix
+--     the last variant, making it a Contravariant Functor Therefore, we
+--     are sticking to manual Applicative until we move away from
+--     `arithmetic-circuits`
+-- - _for the Types.BinOp Types.Exp_
+--   + we implement exponentiation by hand
+--     since `arithmetic-circuits` does not support it
+
+transPrim :: Env.HasCompErr m => Types.PrimVal -> m Types.Expression
+transPrim (Types.Element f) = Env.write . Types.FExp $ Lang.c f
+transPrim (Types.Boolean b) = Env.write . Types.BoolExp $ Circuit.EConstBool b
+transPrim (Types.FEInteger i) = Env.write . Types.FExp $ Lang.c (fromIntegral i)
+--
+transPrim (Types.BinOp Types.Add prim prim') = onTwoPrimF Lang.add prim prim'
+transPrim (Types.BinOp Types.Mul prim prim') = onTwoPrimF Lang.mul prim prim'
+transPrim (Types.BinOp Types.Sub prim prim') = onTwoPrimF Lang.sub prim prim'
+transPrim (Types.BinOp Types.And prim prim') = onTwoPrimBool Lang.and_ prim prim'
+transPrim (Types.BinOp Types.Eq prim prim') = onTwoPrimFEq Lang.eq prim prim'
+transPrim (Types.BinOp Types.Or prim prim') = onTwoPrimBool Lang.or_ prim prim'
+transPrim (Types.UnaryOp Types.Neg prim) = do
   prim1 <- transTerm prim
   case prim1 of
-    BoolExp prim1' -> (write . BoolExp) $ Lang.not_ prim1'
-    _ -> throw @"compilationError" PrimTypeError
-transPrim (If prim prim' prim'') = do
+    Types.BoolExp prim1' ->
+      Lang.not_ prim1'
+        |> Types.BoolExp
+        |> Env.write
+    _ -> throw @"compilationError" Types.PrimTypeError
+transPrim (Types.If prim prim' prim'') = do
   prim1 <- transTerm prim
   prim2 <- transTerm prim'
   prim3 <- transTerm prim''
   case (prim1, prim2, prim3) of
-    (BoolExp prim1', FExp prim2', FExp prim3') -> (write . FExp) $ Lang.cond prim1' prim2' prim3'
-    (_, _, _) -> throw @"compilationError" PrimTypeError
-transPrim _ = throw @"compilationError" PrimTypeError
+    (Types.BoolExp prim1', Types.FExp prim2', Types.FExp prim3') ->
+      (Env.write . Types.FExp) $ Lang.cond prim1' prim2' prim3'
+    (_, _, _) -> throw @"compilationError" Types.PrimTypeError
+transPrim
+  ( Types.BinOp
+      Types.Exp
+      prim
+      CoreErased.Ann
+        { CoreErased.term = CoreErased.Prim (Types.FEInteger i)
+        }
+    )
+    | i == 1 =
+      transTerm prim
+    | otherwise =
+      Types.FEInteger (i - 1)
+        |> wrap
+        |> Types.BinOp Types.Exp prim
+        |> wrap
+        |> Types.BinOp Types.Mul prim
+        |> transPrim
+transPrim (Types.BinOp Types.Exp _ _) =
+  throw @"compilationError" Types.PrimTypeError
 
-add, mul, sub, eq, and', or', exp :: Term -> Term -> Term
-add term term' = wrap (BinOp Add term term')
-mul term term' = wrap (BinOp Mul term term')
-sub term term' = wrap (BinOp Sub term term')
-eq term term' = wrap (BinOp Eq term term')
-and' term term' = wrap (BinOp And term term')
-or' term term' = wrap (BinOp Or term term')
-exp term term' = wrap (BinOp Exp term term')
+type CircuitExp t =
+  Expr.Expr Circuit.Wire Par.F t
 
-neg :: Term -> Term
-neg = wrap . UnaryOp Neg
+type TwoPrimExpression input res m =
+  Env.HasCompErr m =>
+  (input -> input -> res) ->
+  Types.Term ->
+  Types.Term ->
+  m Types.Expression
 
-c :: Par.F -> Term
-c = wrap . Element
+onTwoPrim :: TwoPrimExpression Types.Expression (m Types.Expression) m
+onTwoPrim f prim1 prim2 = do
+  prim1 <- transTerm prim1
+  prim2 <- transTerm prim2
+  f prim1 prim2
 
-int :: Int -> Term
-int = wrap . FEInteger
+onTwoPrimBool :: TwoPrimExpression (CircuitExp Bool) (CircuitExp Bool) m
+onTwoPrimBool f =
+  onTwoPrim g
+  where
+    g (Types.BoolExp prim1) (Types.BoolExp prim2) =
+      f prim1 prim2
+        |> Types.BoolExp
+        |> Env.write
+    g _ _ = throw @"compilationError" Types.PrimTypeError
 
-true, false :: Term
-true = wrap $ Boolean True
-false = wrap $ Boolean False
+onTwoPrimFGen ::
+  (a -> Types.Expression) -> TwoPrimExpression (CircuitExp Par.F) a m
+onTwoPrimFGen ret f =
+  onTwoPrim g
+  where
+    g (Types.FExp prim1) (Types.FExp prim2) =
+      f prim1 prim2
+        |> ret
+        |> Env.write
+    g _ _ = throw @"compilationError" Types.PrimTypeError
 
-cond :: Term -> Term -> Term -> Term
-cond term term' term'' = wrap (If term term' term'')
+onTwoPrimF :: TwoPrimExpression (CircuitExp Par.F) (CircuitExp Par.F) m
+onTwoPrimF = onTwoPrimFGen Types.FExp
 
-wrap :: PrimVal -> Term
+onTwoPrimFEq :: TwoPrimExpression (CircuitExp Par.F) (CircuitExp Bool) m
+onTwoPrimFEq = onTwoPrimFGen Types.BoolExp
+
+add, mul, sub, eq, and', or', exp :: Types.Term -> Types.Term -> Types.Term
+add term term' = wrap (Types.BinOp Types.Add term term')
+mul term term' = wrap (Types.BinOp Types.Mul term term')
+sub term term' = wrap (Types.BinOp Types.Sub term term')
+eq term term' = wrap (Types.BinOp Types.Eq term term')
+and' term term' = wrap (Types.BinOp Types.And term term')
+or' term term' = wrap (Types.BinOp Types.Or term term')
+exp term term' = wrap (Types.BinOp Types.Exp term term')
+
+neg :: Types.Term -> Types.Term
+neg = wrap . Types.UnaryOp Types.Neg
+
+c :: Par.F -> Types.Term
+c = wrap . Types.Element
+
+int :: Int -> Types.Term
+int = wrap . Types.FEInteger
+
+true, false :: Types.Term
+true = wrap $ Types.Boolean True
+false = wrap $ Types.Boolean False
+
+cond :: Types.Term -> Types.Term -> Types.Term -> Types.Term
+cond term term' term'' = wrap (Types.If term term' term'')
+
+wrap :: Types.PrimVal -> Types.Term
 wrap prim =
   CoreErased.Ann
     { CoreErased.term = CoreErased.Prim prim,
@@ -187,7 +227,7 @@ wrap prim =
       CoreErased.type' = CoreErased.PrimTy ()
     }
 
-var :: J.Symbol -> Term
+var :: Symbol -> Types.Term
 var x =
   CoreErased.Ann
     { CoreErased.term = CoreErased.Var x,
@@ -195,7 +235,7 @@ var x =
       CoreErased.type' = CoreErased.PrimTy ()
     }
 
-lambda :: [J.Symbol] -> Term -> Term
+lambda :: [Symbol] -> Types.Term -> Types.Term
 lambda args body =
   CoreErased.Ann
     { CoreErased.term =

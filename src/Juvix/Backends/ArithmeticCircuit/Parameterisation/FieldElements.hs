@@ -41,6 +41,9 @@ typeOf (Val _) = Ty :| []
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
+typeOf Neg = undefined
+typeOf IntExp = undefined
+typeOf Eq = undefined
 
 apply :: FieldElement e => Val (e f f) -> Val (e f f) -> Maybe (Val (e f f))
 apply Add (Val x) = pure (Curried Add x)
@@ -49,12 +52,12 @@ apply (Curried Add x) (Val y) = pure (Val (add x y))
 apply (Curried Mul x) (Val y) = pure (Val (mul x y))
 apply _ _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
+parseTy :: Token.TokenParser () -> Parser Ty
 parseTy lexer = do
   Token.reserved lexer "FieldElements"
   pure Ty
 
-parseVal :: Token.GenTokenParser String () Identity -> Parser (Val a)
+parseVal :: Token.TokenParser () -> Parser (Val a)
 parseVal lexer = undefined
 
 reservedNames :: [String]

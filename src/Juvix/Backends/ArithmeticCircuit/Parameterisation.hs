@@ -44,6 +44,7 @@ instance FieldElements.FieldElement (Expr.Expr Arith.Wire) where
   neg = Expr.EUnOp Expr.UNeg
   eq = Lang.eq
   size _ = 254
+  intExp = undefined
 
 instance Booleans.Boolean (Expr.Expr Arith.Wire) Bool where
   and' = Lang.and_
@@ -87,8 +88,11 @@ typeOf (BoolVal x) =
   fmap boolTyToAll (Booleans.typeOf x)
 typeOf (FEVal x) =
   fmap feTyToAll (FieldElements.typeOf x)
-typeOf (Curried _ _) = Ty :| [Ty]
-typeOf Eq = BoolTy Booleans.Ty :| [FETy FieldElements.Ty, FETy FieldElements.Ty]
+typeOf (Curried _ _) =
+  Ty :| [Ty]
+typeOf Eq =
+  BoolTy Booleans.Ty :| [FETy FieldElements.Ty, FETy FieldElements.Ty]
+typeOf (IntegerVal _) = undefined
 
 apply :: Val -> Val -> Maybe Val
 apply (BoolVal x) (BoolVal y) =
@@ -111,10 +115,12 @@ parseVal lexer =
     <|> (feValToAll <$> FieldElements.parseVal lexer)
 
 reservedNames :: [String]
-reservedNames = Booleans.reservedNames <> FieldElements.reservedNames <> ["=="]
+reservedNames =
+  Booleans.reservedNames <> FieldElements.reservedNames <> ["=="]
 
 reservedOpNames :: [String]
-reservedOpNames = Booleans.reservedOpNames <> FieldElements.reservedOpNames <> ["=="]
+reservedOpNames =
+  Booleans.reservedOpNames <> FieldElements.reservedOpNames <> ["=="]
 
 t :: Parameterisation Ty Val
 t =
