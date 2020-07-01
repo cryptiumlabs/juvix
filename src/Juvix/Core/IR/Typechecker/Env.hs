@@ -21,6 +21,7 @@ data Global primTy primVal
   = GDatatype (IR.Datatype primTy primVal)
   | GDataCon (IR.DataCon primTy primVal)
   | GFunction (IR.Function primTy primVal)
+  | GAbstract IR.GlobalUsage (IR.Value primTy primVal)
   deriving (Show, Eq, Generic)
 
 type EnvAlias primTy primVal =

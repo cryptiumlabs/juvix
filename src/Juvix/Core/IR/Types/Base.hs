@@ -1,5 +1,4 @@
 {-# LANGUAGE UndecidableInstances #-}
-
 module Juvix.Core.IR.Types.Base where
 
 import Extensible
@@ -20,6 +19,9 @@ data Name
   | -- | Pattern variable, unique within a scope
     Pattern PatternVar
   deriving (Show, Eq)
+
+data GlobalUsage = GZero | GOmega
+  deriving (Show, Eq, Generic, Bounded, Enum)
 
 extensible
   [d|
@@ -104,6 +106,7 @@ extensible
     data Function primTy primVal
       = Function
           { funName :: GlobalName,
+            funUsage :: GlobalUsage,
             funType :: Value primTy primVal,
             funClauses :: NonEmpty (FunClause primTy primVal)
           }

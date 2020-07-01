@@ -3,6 +3,7 @@
 module Juvix.Core.IR.Types
   ( module Juvix.Core.IR.Types,
     Name (..),
+    GlobalUsage (..),
     GlobalName,
     PatternVar,
     BoundVar,

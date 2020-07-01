@@ -161,7 +161,7 @@ typeElim' elim σ =
       pure $ Typed.Free px $ Annotation σ ty
     IR.Free gx@(IR.Global x) -> do
       (ty, π') <- lookupGlobal x
-      when (π' == GZero) $ requireZero σ
+      when (π' == IR.GZero) $ requireZero σ
       pure $ Typed.Free gx $ Annotation σ ty
     IR.Prim p -> do
       ty <- primType p
@@ -261,11 +261,9 @@ usePatVar π var = do
     Nothing -> do
       throwTC (UnboundPatVar var)
 
-data GlobalUsage = GZero | GOmega deriving (Eq, Ord, Show, Bounded, Enum)
-
 lookupGlobal ::
   IR.GlobalName ->
-  InnerTC primTy primVal (IR.Value primTy primVal, GlobalUsage)
+  InnerTC primTy primVal (IR.Value primTy primVal, IR.GlobalUsage)
 lookupGlobal x = do
   mdefn <- asks @"globals" $ HashMap.lookup x
   case mdefn of
@@ -273,11 +271,13 @@ lookupGlobal x = do
     Nothing -> throwTC (UnboundGlobal x)
   where
     makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
-      (foldr makePi (IR.VStar dataLevel) dataArgs, GZero)
+      (foldr makePi (IR.VStar dataLevel) dataArgs, IR.GZero)
     makeGAnn (GDataCon (IR.DataCon {conType})) =
-      (conType, GOmega)
-    makeGAnn (GFunction (IR.Function {funType})) =
-      (funType, GOmega)
+      (conType, IR.GOmega)
+    makeGAnn (GFunction (IR.Function {funType, funUsage})) =
+      (funType, funUsage)
+    makeGAnn (GAbstract absUsage absType) =
+      (absType, absUsage)
     makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
 
 primType :: primVal -> InnerTC primTy primVal (IR.Value primTy primVal)
