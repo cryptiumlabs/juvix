@@ -7,7 +7,7 @@ module Juvix.Core.Erased.Types
   )
   where
 
-import Juvix.Library hiding (Type)
+import Juvix.Library
 import Juvix.Core.Erased.Types.Base
 import Juvix.Core.IR.Types (NoExt)
 

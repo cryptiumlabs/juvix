@@ -2,6 +2,7 @@ module Types where
 
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Core.Erasure.Types as Erasure
 import Juvix.Library hiding (log)
 
 -- type of the exec result
@@ -9,7 +10,7 @@ type Exec primTy primVal compErr =
   IO
     ( Either
         (Core.PipelineError primTy primVal compErr)
-        (Core.AssignWithType primTy primVal compErr),
+        (Erasure.Term primTy primVal),
       [Core.PipelineLog primTy primVal]
     )
 

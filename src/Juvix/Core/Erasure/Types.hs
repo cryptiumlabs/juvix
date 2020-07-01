@@ -9,7 +9,6 @@ import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import Juvix.Core.Erased.Types as Type
   (Type, pattern SymT, pattern Star, pattern PrimTy, pattern Pi)
-import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
