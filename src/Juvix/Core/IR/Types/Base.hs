@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Core.IR.Types.Base where
 
 import Extensible

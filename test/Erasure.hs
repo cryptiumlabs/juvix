@@ -1,10 +1,11 @@
 {-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
-import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Usage as Usage
@@ -32,11 +33,14 @@ shouldEraseTo name _ (term, usage) erased =
     )
 
 infix 0 `ann`
+
 ann :: Usage.T -> IR.Value primTy primVal -> Typed.Annotation primTy primVal
 ann = Typed.Annotation
 
-bann :: Typed.Annotation primTy primVal -> Typed.Annotation primTy primVal
-     -> Typed.BindAnnotation primTy primVal
+bann ::
+  Typed.Annotation primTy primVal ->
+  Typed.Annotation primTy primVal ->
+  Typed.BindAnnotation primTy primVal
 bann = Typed.BindAnnotation
 
 omega :: Usage.T
@@ -73,65 +77,77 @@ erasureTests =
 
 identityUnit :: T.TestTree
 identityUnit =
-  shouldEraseTo "identityUnit"
+  shouldEraseTo
+    "identityUnit"
     Unit.t
     (Typed.Elim (Typed.Prim Unit.Val unitAnn) unitAnn, one)
     (Erased.Prim Unit.Val)
 
 constUnit :: T.TestTree
 constUnit =
-  shouldEraseTo "constUnit"
+  shouldEraseTo
+    "constUnit"
     Unit.t
-    (Typed.Lam
-      (Typed.Lam
-        (Typed.Elim (Typed.Bound 0 unitAnn) unitAnn)
-      (bann unitAnn identityAnn))
-    (bann unitAnn0 (omegaAnn constTy)),
-    one)
-  (Erased.Lam "1" (Erased.Var "1"))
+    ( Typed.Lam
+        ( Typed.Lam
+            (Typed.Elim (Typed.Bound 0 unitAnn) unitAnn)
+            (bann unitAnn identityAnn)
+        )
+        (bann unitAnn0 (omegaAnn constTy)),
+      one
+    )
+    (Erased.Lam "1" (Erased.Var "1"))
 
 usedArg :: T.TestTree
 usedArg =
-  shouldEraseTo "usedArg"
+  shouldEraseTo
+    "usedArg"
     Unit.t
     (appTerm, one)
     (Erased.Lam "0" (Erased.Lam "1" (Erased.App (Erased.Var "0") (Erased.Var "1"))))
 
 appUnusedArg :: T.TestTree
 appUnusedArg =
-  shouldEraseTo "appUnusedArg"
+  shouldEraseTo
+    "appUnusedArg"
     Unit.t
-    (Typed.Elim
-      (Typed.App
-        (Typed.Ann
-          one
-          constTerm
-          constTyT
-          0
-          (omegaAnn constTy))
-        unitTerm
-        identityAnn)
-      identityAnn,
+    ( Typed.Elim
+        ( Typed.App
+            ( Typed.Ann
+                one
+                constTerm
+                constTyT
+                0
+                (omegaAnn constTy)
+            )
+            unitTerm
+            identityAnn
+        )
+        identityAnn,
       one
     )
     (Erased.Lam "1" (Erased.Var "1"))
 
 unusedFunction :: T.TestTree
 unusedFunction =
-  shouldEraseTo "unusedFunction"
+  shouldEraseTo
+    "unusedFunction"
     Unit.t
-    (Typed.Elim
-      (Typed.App
-        (Typed.Ann
-          one
-          constTerm
-          constTy2T
-          0
-          (omegaAnn constTy2))
-        identityTerm
-        identityAnn)
-      identityAnn,
-    one)
+    ( Typed.Elim
+        ( Typed.App
+            ( Typed.Ann
+                one
+                constTerm
+                constTy2T
+                0
+                (omegaAnn constTy2)
+            )
+            identityTerm
+            identityAnn
+        )
+        identityAnn,
+      one
+    )
     (Erased.Lam "1" (Erased.Var "1"))
 
 identityTerm :: Typed.Term Unit.Ty Unit.Val
@@ -158,21 +174,27 @@ identityAnn2 = omegaAnn identityTy2
 appTerm :: Typed.Term Unit.Ty Unit.Val
 appTerm =
   Typed.Lam
-    (Typed.Lam
-      (Typed.Elim
-        (Typed.App
-          (Typed.Bound 1 identityAnn)
-          (Typed.Elim
-            (Typed.Bound 0 unitAnn)
-            unitAnn)
-          unitAnn)
-        unitAnn)
-      (bann
+    ( Typed.Lam
+        ( Typed.Elim
+            ( Typed.App
+                (Typed.Bound 1 identityAnn)
+                ( Typed.Elim
+                    (Typed.Bound 0 unitAnn)
+                    unitAnn
+                )
+                unitAnn
+            )
+            unitAnn
+        )
+        ( bann
+            unitAnn
+            identityAnn
+        )
+    )
+    ( bann
         unitAnn
-        identityAnn))
-    (bann
-      unitAnn
-      identityAnn2)
+        identityAnn2
+    )
 
 appTy :: IR.Value Unit.Ty Unit.Val
 appTy = IR.VPi one identityTy identityTy
@@ -181,9 +203,10 @@ constTerm :: Typed.Term Unit.Ty Unit.Val
 constTerm =
   Typed.Lam
     identityTerm
-    (bann
-      unitAnn0
-      (omegaAnn constTy))
+    ( bann
+        unitAnn0
+        (omegaAnn constTy)
+    )
 
 constTy :: IR.Value Unit.Ty Unit.Val
 constTy = IR.VPi mempty unitTy identityTy

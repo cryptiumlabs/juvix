@@ -5,11 +5,11 @@ module Juvix.Core.Erased.Types
     TypeAssignment',
     NoExt,
   )
-  where
+where
 
-import Juvix.Library
 import Juvix.Core.Erased.Types.Base
 import Juvix.Core.IR.Types (NoExt)
+import Juvix.Library
 
 extendTerm "Term" [] [t|NoExt|] $ \_ -> defaultExtTerm
 

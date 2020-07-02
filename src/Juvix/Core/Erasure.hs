@@ -6,16 +6,16 @@ where
 
 import Juvix.Core.Erasure.Algorithm
 import Juvix.Core.Erasure.Types
-  (Error (..),
-   Term,
-   pattern Var,
-   pattern Prim,
-   pattern Lam,
-   pattern Let,
-   pattern App,
-   Type,
-   pattern SymT,
-   pattern Star,
-   pattern PrimTy,
-   pattern Pi
+  ( Error (..),
+    Term,
+    Type,
+    pattern App,
+    pattern Lam,
+    pattern Let,
+    pattern Pi,
+    pattern Prim,
+    pattern PrimTy,
+    pattern Star,
+    pattern SymT,
+    pattern Var,
   )

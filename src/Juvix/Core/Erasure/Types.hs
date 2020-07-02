@@ -2,20 +2,25 @@ module Juvix.Core.Erasure.Types
   ( module Juvix.Core.Erasure.Types,
     module Type,
   )
-  where
+where
 
 import qualified Extensible as Ext
+import Juvix.Core.Erased.Types as Type
+  ( Type,
+    pattern Pi,
+    pattern PrimTy,
+    pattern Star,
+    pattern SymT,
+  )
 import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
-import Juvix.Core.Erased.Types as Type
-  (Type, pattern SymT, pattern Star, pattern PrimTy, pattern Pi)
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import Juvix.Library hiding (empty, Type)
+import qualified Juvix.Core.IR.Types as IR
+import Juvix.Library hiding (Type, empty)
 
-data Env primTy primVal = Env { nextName :: Int, nameStack :: [Symbol] }
-  deriving Generic
+data Env primTy primVal = Env {nextName :: Int, nameStack :: [Symbol]}
+  deriving (Generic)
 
 type EnvEraAlias primTy primVal =
   ExceptT (Error primTy primVal) (State (Env primTy primVal))
@@ -39,8 +44,9 @@ newtype EnvT primTy primVal a
     (HasThrow "erasureError" (Error primTy primVal))
     via MonadError (EnvEraAlias primTy primVal)
 
-exec :: EnvT primTy primVal a
-     -> Either (Error primTy primVal) a
+exec ::
+  EnvT primTy primVal a ->
+  Either (Error primTy primVal) a
 exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
 
 data Error primTy primVal
@@ -53,7 +59,6 @@ data Error primTy primVal
   | InternalError Text
   deriving (Show, Eq, Generic)
 
-
 data T primTy
 
 do
@@ -61,13 +66,14 @@ do
   let primTy = Ext.varT primTy'
   let typed = Just [[t|Type $primTy|]]
   Erased.extendTerm "Term" [primTy'] [t|T $primTy|] $
-    \_ -> Erased.defaultExtTerm {
-      Erased.typeVar = typed,
-      Erased.typePrim = typed,
-      Erased.typeLam = typed,
-      Erased.typeLet = typed,
-      Erased.typeApp = typed
-    }
+    \_ ->
+      Erased.defaultExtTerm
+        { Erased.typeVar = typed,
+          Erased.typePrim = typed,
+          Erased.typeLam = typed,
+          Erased.typeLet = typed,
+          Erased.typeApp = typed
+        }
 
 getType :: Term primTy primVal -> Type primTy
 getType (Var _ ty) = ty

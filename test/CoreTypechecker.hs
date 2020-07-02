@@ -85,7 +85,7 @@ shouldInferWith ::
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldInferWith param globals ctx elim ann@(IR.Annotation {annUsage=σ}) =
+shouldInferWith param globals ctx elim ann@(IR.Annotation {annUsage = σ}) =
   let (res, _) = TC.exec globals $ TC.typeElimWith param mempty ctx elim σ
       resTy = TC.getElimAnn . TC.loValue <$> res
    in T.testCase (show term <> " should infer to type " <> show ann) $
@@ -281,20 +281,20 @@ depIdentity =
 -- computation dependent identity annotation (1, 0 * -> 1 t -> t)
 depIdentityCompTy :: AllAnnotation
 depIdentityCompTy =
-  one `ann`
-  IR.VPi
-    mempty
-    (IR.VStar 0)
-    (IR.VPi one (IR.VBound 0) (IR.VBound 1))
+  one
+    `ann` IR.VPi
+      mempty
+      (IR.VStar 0)
+      (IR.VPi one (IR.VBound 0) (IR.VBound 1))
 
 -- computation dependent identity annotation (1, 0 * -> w t -> t)
 depIdentityCompTyOmega :: AllAnnotation
 depIdentityCompTyOmega =
-  one `ann`
-  IR.VPi
-    mempty
-    (IR.VStar 0)
-    (IR.VPi Usage.Omega (IR.VBound 0) (IR.VBound 1))
+  one
+    `ann` IR.VPi
+      mempty
+      (IR.VStar 0)
+      (IR.VPi Usage.Omega (IR.VBound 0) (IR.VBound 1))
 
 -- \x.x 1
 identityApplication :: NatTerm
@@ -575,7 +575,7 @@ depK =
         ( IR.Lam -- third input x, Bound 1 counting from output
             ( IR.Lam -- forth input y, Bound 0 counting from output
                 ( IR.Elim -- output
-                    ( IR.Bound 1 )
+                    (IR.Bound 1)
                 )
             )
         )
@@ -585,16 +585,23 @@ depK =
 -- \t1.\t2.\x.\y.x 1: (t1 0: *0) -> (t2 0: *0) -> (x 1: t1) -> (y 0: t2) -> t1
 depKCompTy :: AllAnnotation
 depKCompTy =
-  one `ann`
-    IR.VPi mempty
+  one
+    `ann` IR.VPi
+      mempty
       (IR.VStar 0)
-      (IR.VPi mempty
-        (IR.VStar 0)
-        (IR.VPi one
-          (IR.VBound 1)
-          (IR.VPi mempty
-            (IR.VBound 1)
-            (IR.VBound 3))))
+      ( IR.VPi
+          mempty
+          (IR.VStar 0)
+          ( IR.VPi
+              one
+              (IR.VBound 1)
+              ( IR.VPi
+                  mempty
+                  (IR.VBound 1)
+                  (IR.VBound 3)
+              )
+          )
+      )
 
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
@@ -744,10 +751,11 @@ twoCompTy =
       (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
 
 typGlobals :: IR.Globals primTy primVal
-typGlobals = Map.fromList
-  [ ("A", IR.GAbstract IR.GZero (IR.VStar 0)),
-    ("F", IR.GAbstract IR.GZero (IR.VPi mempty (IR.VStar 1) (IR.VStar 1)))
-  ]
+typGlobals =
+  Map.fromList
+    [ ("A", IR.GAbstract IR.GZero (IR.VStar 0)),
+      ("F", IR.GAbstract IR.GZero (IR.VPi mempty (IR.VStar 1) (IR.VStar 1)))
+    ]
 
 aTerm :: IR.Term primTy primVal
 aTerm = IR.Elim aElim

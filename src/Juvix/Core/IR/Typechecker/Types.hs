@@ -14,7 +14,7 @@ data Annotation' ext primTy primVal
       { annUsage :: Usage.T,
         annType :: IR.Value' ext primTy primVal
       }
-  deriving Generic
+  deriving (Generic)
 
 type Annotation = Annotation' IR.NoExt
 
@@ -140,7 +140,7 @@ data BindAnnotation' ext primTy primVal
   = BindAnnotation
       { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
       }
-  deriving Generic
+  deriving (Generic)
 
 deriving instance
   (Eq (IR.Value' ext primTy primVal)) =>
