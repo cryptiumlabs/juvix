@@ -1,27 +1,7 @@
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
-
-    -- * reexports from ….Types
-    T,
-    Annotation' (..),
-    Annotation,
-    BindAnnotation' (..),
-    BindAnnotation,
-    TypecheckError' (..),
-    TypecheckError,
-    getTermAnn,
-    getElimAnn,
-
-    -- * reexports from ….Env
-    EnvCtx (..),
-    EnvAlias,
-    EnvTypecheck (..),
-    exec,
-    Globals,
-    Global (..),
-    Context,
-    UContext,
-    lookupCtx,
+    module Typed,
+    module Env,
   )
 where
 
@@ -29,7 +9,7 @@ import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap.Strict as IntMap
 import qualified Juvix.Core.IR.Evaluator as Eval
-import Juvix.Core.IR.Typechecker.Env
+import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param

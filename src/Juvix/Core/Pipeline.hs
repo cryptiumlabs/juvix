@@ -80,10 +80,10 @@ typecheckErase term usage ty = do
   let irType = Translate.hrToIR ty
   tell @"log" [Types.LogHRtoIR term irTerm]
   tell @"log" [Types.LogHRtoIR ty irType]
-  let (Right irTypeValue, _) = IR.exec globals (IR.evalTerm param irType)
+  let (Right irTypeValue, _) = IR.execTC globals (IR.evalTerm param irType)
   -- Typecheck & return accordingly.
   case IR.typeTerm param irTerm (IR.Annotation usage irTypeValue)
-    |> IR.exec globals
+    |> IR.execTC globals
     |> fst of
     Right tyTerm -> do
       case Erasure.erase tyTerm usage of
