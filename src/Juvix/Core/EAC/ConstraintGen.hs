@@ -205,7 +205,7 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
       -- Return parameterized term.
       pure (EAC.RBang param (EAC.RLam sym body), resTy)
     Erased.Let s t b -> do
-      _ -- ?????????????????
+      error "TODO"
     Erased.App a b -> do
       (a, aTy) <- rec a
       let EAC.PArrT bangA argTy resTy = aTy
