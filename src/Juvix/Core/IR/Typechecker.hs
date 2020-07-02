@@ -213,16 +213,16 @@ useLocal ::
   InnerTC primTy primVal (IR.Value primTy primVal)
 useLocal π var = do
   ctx <- get @"bound"
-  (ty, ctx) <- go var ctx
+  (ty, ctx) <- go 1 var ctx
   put @"bound" ctx
   pure ty
   where
-    go _ [] = throwTC (UnboundIndex var)
-    go 0 (Annotation ρ ty : ctx) = do
+    go _ _ [] = throwTC (UnboundIndex var)
+    go w 0 (Annotation ρ ty : ctx) = do
       case ρ `Usage.minus` π of
-        Just ρ' -> pure (ty, Annotation ρ' ty : ctx)
+        Just ρ' -> pure (Eval.weakBy w ty, Annotation ρ' ty : ctx)
         Nothing -> throwTC (InsufficientUsage π ρ)
-    go i (b : ctx) = second (b :) <$> go (i - 1) ctx
+    go w i (b : ctx) = second (b :) <$> go (w + 1) (i - 1) ctx
 
 usePatVar ::
   Usage.T ->
@@ -274,7 +274,7 @@ substApp ::
 substApp ty arg = do
   arg' <- evalTC arg
   param <- ask @"param"
-  Eval.substV param ty arg'
+  Eval.substV param arg' ty
 
 evalTC ::
   IR.Term primTy primVal ->

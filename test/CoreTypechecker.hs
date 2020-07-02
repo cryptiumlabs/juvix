@@ -1,14 +1,15 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
-import qualified Data.Text as Text
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Core.Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (identity)
+import Juvix.Library.HashMap as Map
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -36,7 +37,7 @@ type AllValue = IR.Value All.Ty All.Val
 
 type AllAnnotation = IR.Annotation All.Ty All.Val
 
-assertIsRight :: Show a => Either a b -> T.Assertion
+assertIsRight :: (HasCallStack, Show a) => Either a b -> T.Assertion
 assertIsRight (Right _) = pure ()
 assertIsRight (Left l) =
   T.assertFailure $
@@ -48,7 +49,7 @@ assertIsRight (Left l) =
 -- unit test generator for typeTerm
 shouldCheckWith ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Globals primTy primVal ->
   IR.Context primTy primVal ->
@@ -57,23 +58,17 @@ shouldCheckWith ::
   T.TestTree
 shouldCheckWith param globals ctx term ann =
   -- TODO: take out the logs and put them in an IO monad.
-  let (res, logs') = IR.exec globals $ IR.typeTerm param 0 ctx term ann
-      logs =
-        Text.intercalate "\n"
-          $ map IR.describe
-          $ IR.typecheckerLog
-          $ logs'
+  let (res, _) = TC.exec globals $ TC.typeTermWith param mempty ctx term ann
    in T.testCase
         ( show term
             <> " should check as type "
             <> show ann
-            <> show logs
         )
         $ assertIsRight res
 
 shouldCheck ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Term primTy primVal ->
   IR.Annotation primTy primVal ->
@@ -83,23 +78,22 @@ shouldCheck param = shouldCheckWith param mempty []
 -- unit test generator for typeElim
 shouldInferWith ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Globals primTy primVal ->
   IR.Context primTy primVal ->
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
   T.TestTree
-shouldInferWith param globals ctx term ann =
-  let (res', logs') = IR.exec globals $ IR.typeElim0 param ctx term
-      res = IR.getElimAnn <$> res'
-      logs = show $ IR.typecheckerLog logs'
-   in T.testCase (show term <> " should infer to type " <> show ann <> logs) $
-        res T.@=? Right ann
+shouldInferWith param globals ctx elim ann@(IR.Annotation {annUsage=σ}) =
+  let (res, _) = TC.exec globals $ TC.typeElimWith param mempty ctx elim σ
+      resTy = TC.getElimAnn . TC.loValue <$> res
+   in T.testCase (show term <> " should infer to type " <> show ann) $
+        resTy T.@?= Right ann
 
 shouldInfer ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Elim primTy primVal ->
   IR.Annotation primTy primVal ->
@@ -109,7 +103,7 @@ shouldInfer param = shouldInferWith param mempty []
 -- unit test generator for evalTerm
 shouldEvalWith ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Globals primTy primVal ->
   IR.Term primTy primVal ->
@@ -117,11 +111,11 @@ shouldEvalWith ::
   T.TestTree
 shouldEvalWith param globals term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    fst (IR.exec globals (IR.evalTerm param term)) T.@=? Right res
+    fst (TC.exec globals (IR.evalTerm param term)) T.@=? Right res
 
 shouldEval ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  (HasCallStack, Show primTy, Show primVal, Eq primTy, Eq primVal) =>
   Parameterisation primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
@@ -164,11 +158,7 @@ skiComp =
       shouldInfer
         Nat.t
         kFunApp1
-        kFunApp1CompTy {- ,
-        shouldCheck
-          nat
-          scombinator
-          scombinatorCompNat.Ty -}
+        kFunApp1CompTy
     ]
 
 natComp :: T.TestTree
@@ -202,20 +192,20 @@ letComp :: T.TestTree
 letComp =
   T.testGroup
     "'let' Computational typing"
-    [ -- let x = 0 in 0
+    [ -- let 0 x = 0 in 0
       shouldCheck
         Nat.t
-        (IR.Let nzero (IR.Elim nzero))
+        (IR.Let mempty nzero (IR.Elim nzero))
         (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
-      -- let x = 0 in x
+      -- let ω x = 0 in x
       shouldCheck
         Nat.t
-        (IR.Let nzero (IR.Elim (IR.Bound 0)))
+        (IR.Let Usage.Omega nzero (IR.Elim (IR.Bound 0)))
         (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
-      -- λx. let y = 0 in x
+      -- λx. let 0 y = 0 in x
       shouldCheck
         Nat.t
-        (IR.Lam (IR.Let nzero (IR.Elim (IR.Bound 1))))
+        (IR.Lam (IR.Let mempty nzero (IR.Elim (IR.Bound 1))))
         (natToNatTy' one)
     ]
   where
@@ -240,12 +230,12 @@ subtype :: T.TestTree
 subtype =
   T.testGroup
     "Subtyping"
-    [ shouldCheckWith Unit.t mempty typContext aTerm $ mempty `ann` IR.VStar 0,
-      shouldCheckWith Unit.t mempty typContext aTerm $ mempty `ann` IR.VStar 1,
-      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 1 1,
-      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 0 1,
-      shouldCheckWith Unit.t mempty typContext fTerm $ mempty `ann` typ2typ 1 2,
-      shouldInferWith Unit.t mempty typContext faElim $ mempty `ann` IR.VStar 1
+    [ shouldCheckWith Unit.t typGlobals [] aTerm $ mempty `ann` IR.VStar 0,
+      shouldCheckWith Unit.t typGlobals [] aTerm $ mempty `ann` IR.VStar 1,
+      shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 1 1,
+      shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 0 1,
+      shouldCheckWith Unit.t typGlobals [] fTerm $ mempty `ann` typ2typ 1 2,
+      shouldInferWith Unit.t typGlobals [] faElim $ mempty `ann` IR.VStar 1
     ]
   where
     typ2typ i j = IR.VPi mempty (IR.VStar i) (IR.VStar j)
@@ -291,34 +281,20 @@ depIdentity =
 -- computation dependent identity annotation (1, 0 * -> 1 t -> t)
 depIdentityCompTy :: AllAnnotation
 depIdentityCompTy =
-  one
-    `ann` IR.VPi -- the sig usage of the dependent identity function
-    -- the first input, t
-      mempty -- t's usage
-      (IR.VStar 0) -- first input's type, is type
-      ( IR.VPi -- the second input, x
-          one -- x's usage
-          (IR.VNeutral (IR.NFree (IR.Local 0)))
-          -- Local 0 is the first input, i.e. t. x is of type t
-          (IR.VNeutral (IR.NFree (IR.Local 0)))
-        -- the return type is t
-      )
+  one `ann`
+  IR.VPi
+    mempty
+    (IR.VStar 0)
+    (IR.VPi one (IR.VBound 0) (IR.VBound 1))
 
 -- computation dependent identity annotation (1, 0 * -> w t -> t)
 depIdentityCompTyOmega :: AllAnnotation
 depIdentityCompTyOmega =
-  one
-    `ann` IR.VPi -- the sig usage of the dependent identity function
-    -- the first input, t
-      mempty -- t's usage
-      (IR.VStar 0) -- first input's type, is type
-      ( IR.VPi -- the second input, x
-          Usage.Omega -- x's usage
-          (IR.VNeutral (IR.NFree (IR.Local 0)))
-          -- Local 0 is the first input, i.e. t. x is of type t
-          (IR.VNeutral (IR.NFree (IR.Local 0)))
-        -- the return type is t
-      )
+  one `ann`
+  IR.VPi
+    mempty
+    (IR.VStar 0)
+    (IR.VPi Usage.Omega (IR.VBound 0) (IR.VBound 1))
 
 -- \x.x 1
 identityApplication :: NatTerm
@@ -599,13 +575,7 @@ depK =
         ( IR.Lam -- third input x, Bound 1 counting from output
             ( IR.Lam -- forth input y, Bound 0 counting from output
                 ( IR.Elim -- output
-                    ( IR.Ann -- annotation is of
-                        one -- 1 usage
-                        (IR.Elim (IR.Bound 1))
-                        -- x is the output, which has annotation (1, t)
-                        (IR.Elim (IR.Bound 3)) -- of type t1
-                        0
-                    )
+                    ( IR.Bound 1 )
                 )
             )
         )
@@ -615,24 +585,16 @@ depK =
 -- \t1.\t2.\x.\y.x 1: (t1 0: *0) -> (t2 0: *0) -> (x 1: t1) -> (y 0: t2) -> t1
 depKCompTy :: AllAnnotation
 depKCompTy =
-  one
-    `ann` IR.VPi -- the sig usage of the dependent identity function
-    -- the first input, t1
-      mempty -- t1's usage
-      (IR.VStar 0) -- t1's type
-      ( IR.VPi -- the second input, t2
-          mempty -- t2's usage
-          (IR.VStar 0) -- t2's type
-          ( IR.VPi -- the third input, x
-              one -- x's usage
-              (IR.VNeutral (IR.NFree (IR.Local 0))) -- x's type, Local 0 is the first input (t1)
-              ( IR.VPi -- the forth input, y
-                  mempty -- y's usage
-                  (IR.VNeutral (IR.NFree (IR.Local 1))) -- y's type, Local 1 is the second input (t2)
-                  (IR.VNeutral (IR.NFree (IR.Local 0))) -- output type is t1
-              )
-          )
-      )
+  one `ann`
+    IR.VPi mempty
+      (IR.VStar 0)
+      (IR.VPi mempty
+        (IR.VStar 0)
+        (IR.VPi one
+          (IR.VBound 1)
+          (IR.VPi mempty
+            (IR.VBound 1)
+            (IR.VBound 3))))
 
 -- S combinator: Sxyz = xz(yz)
 -- Because S returns functions, it's not general because of the annotations.
@@ -781,13 +743,10 @@ twoCompTy =
       (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
       (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
 
-typContext :: IR.Context primTy primVal
-typContext =
-  [ IR.contextElement (IR.Global "A") mempty (IR.VStar 0),
-    IR.contextElement
-      (IR.Global "F")
-      mempty
-      (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))
+typGlobals :: IR.Globals primTy primVal
+typGlobals = Map.fromList
+  [ ("A", IR.GAbstract IR.GZero (IR.VStar 0)),
+    ("F", IR.GAbstract IR.GZero (IR.VPi mempty (IR.VStar 1) (IR.VStar 1)))
   ]
 
 aTerm :: IR.Term primTy primVal
