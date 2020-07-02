@@ -7,7 +7,7 @@ module Juvix.Core
   )
 where
 
-import Juvix.Core.Erasure (erase)
+import Juvix.Core.Erasure (erase, eraseAnn)
 import Juvix.Core.Pipeline
 import Juvix.Core.Translate
 import Juvix.Core.Types
