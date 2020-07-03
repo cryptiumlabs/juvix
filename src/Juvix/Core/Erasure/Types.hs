@@ -6,7 +6,7 @@ import Juvix.Library hiding (empty)
 
 data Env primTy primVal
   = Env
-      { typeAssignment :: Erased.TypeAssignment primTy primVal,
+      { typeAssignment :: Erased.TypeAssignment primTy,
         context :: TC.Context primTy primVal,
         nextName :: Int,
         nameStack :: [Int],
@@ -23,9 +23,9 @@ newtype EnvT primTy primVal a
   = EnvEra (EnvEraAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasState "typeAssignment" (Erased.TypeAssignment primTy primVal),
-      HasSink "typeAssignment" (Erased.TypeAssignment primTy primVal),
-      HasSource "typeAssignment" (Erased.TypeAssignment primTy primVal)
+    ( HasState "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSink "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSource "typeAssignment" (Erased.TypeAssignment primTy)
     )
     via StateField "typeAssignment" (EnvEraAlias primTy primVal)
   deriving

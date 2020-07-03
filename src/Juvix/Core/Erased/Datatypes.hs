@@ -8,7 +8,7 @@ import qualified Michelson.Untyped as MU
 
 type Globals = IR.Globals M.PrimTy M.PrimVal
 
-type Term = E.Term M.PrimTy M.PrimVal
+type Term = E.Term M.PrimTy
 
 type Value = E.Value M.PrimTy M.PrimVal
 
@@ -101,5 +101,7 @@ datatypeToMichelsonType :: Datatype -> M.PrimTy
 datatypeToMichelsonType = M.PrimTy . adtToMichelsonType . datatypeToADT
 
 -- will need context of what the encapsulating datatype is to choose the right sum part
-dataconToMichelson :: DataCon -> M.PrimVal
-dataconToMichelson = undefined
+dataconToMichelson :: E.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> M.PrimVal
+dataconToMichelson ty@(E.Datatype _ _ _ cons) name =
+  let [con] = filter ((==) name . conName) cons
+  in undefined
