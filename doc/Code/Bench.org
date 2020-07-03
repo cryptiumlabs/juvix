@@ -1,3 +1,8 @@
+* FrontendDesugar
+- _Relies on_
+  + [[Parser]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 * Main
 - _Relies on_
   + [[Library]]
