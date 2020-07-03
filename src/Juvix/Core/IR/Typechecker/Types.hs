@@ -14,6 +14,7 @@ data Annotation' ext primTy primVal
       { annUsage :: Usage.T,
         annType :: IR.Value' ext primTy primVal
       }
+  deriving (Generic)
 
 type Annotation = Annotation' IR.NoExt
 
@@ -25,63 +26,44 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
-data ContextElement' ext primTy primVal
-  = ContextElement
-      { ctxName :: IR.Name,
-        ctxAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
-      }
-
-type ContextElement = ContextElement' IR.NoExt
-
-contextElement ::
-  IR.Name ->
-  Usage.T ->
-  IR.Value' ext primTy primVal ->
-  ContextElement' ext primTy primVal
-contextElement n π t = ContextElement n (Annotation π t)
-
-deriving instance
-  (Eq (IR.Value' ext primTy primVal)) =>
-  Eq (ContextElement' ext primTy primVal)
-
-deriving instance
-  (Show (IR.Value' ext primTy primVal)) =>
-  Show (ContextElement' ext primTy primVal)
-
-type Context' ext primTy primVal = [ContextElement' ext primTy primVal]
-
-type Context primTy primVal = Context' IR.NoExt primTy primVal
-
-lookupCtx ::
-  IR.Name ->
-  Context' ext primTy primVal ->
-  Maybe (Annotation' ext primTy primVal)
-lookupCtx x = fmap ctxAnn . find (\e -> ctxName e == x)
-
 data TypecheckError' ext primTy primVal
   = TypeMismatch
-      Natural
-      (IR.Term' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-  | UniverseMismatch Natural Natural
+      { typeSubject :: IR.Elim' ext primTy primVal,
+        typeExpected, typeGot :: IR.Value' ext primTy primVal
+      }
+  | UniverseMismatch
+      { universeLower, universeHigher :: IR.Universe
+      }
   | CannotApply
-      (IR.Value' ext primTy primVal)
-      (IR.Value' ext primTy primVal)
-  | ShouldBeStar (IR.Value' ext primTy primVal)
+      { applyFun, applyArg :: IR.Value' ext primTy primVal
+      }
+  | ShouldBeStar
+      { typeActual :: IR.Value' ext primTy primVal
+      }
   | ShouldBeFunctionType
-      (IR.Value' ext primTy primVal)
-      (IR.Term' ext primTy primVal)
-  | UnboundIndex Natural
-  | SigmaMustBeZero
+      { typeActual :: IR.Value' ext primTy primVal
+      }
+  | UnboundIndex
+      { unboundIndex :: IR.BoundVar
+      }
   | UsageMustBeZero
-  | UsageNotCompatible Usage.T Usage.T
-  | UnboundBinder Natural IR.Name
-  | MustBeFunction
-      (IR.Elim' ext primTy primVal)
-      Natural
-      (IR.Term' ext primTy primVal)
-  | BoundVariableCannotBeInferred
+      { usageActual :: Usage.T
+      }
+  | LeftoverUsage
+      { usageLeftover :: Usage.T
+      }
+  | InsufficientUsage
+      { usageNeeded, usageActual :: Usage.T
+      }
+  | UnboundLocal
+      { unboundIndex :: IR.BoundVar
+      }
+  | UnboundGlobal
+      { unboundGlobal :: IR.GlobalName
+      }
+  | UnboundPatVar
+      { unboundPatVar :: IR.PatternVar
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt
 
@@ -105,11 +87,11 @@ instance
   ) =>
   Show (TypecheckError' ext primTy primVal)
   where
-  show (TypeMismatch binder term expectedT gotT) =
-    "Type mismatched. \n" <> show term <> " \n (binder number " <> show binder
-      <> ") is of type \n"
+  show (TypeMismatch term expectedT gotT) =
+    "Type mismatched.\n" <> show term <> "\n"
+      <> "is of type\n"
       <> show gotT
-      <> ".\nBut the expected type is "
+      <> ".\nBut the expected type is\n"
       <> show expectedT
       <> "."
   show (UniverseMismatch i j) =
@@ -121,33 +103,24 @@ instance
     "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
   show (ShouldBeStar ty) =
     "* n is of type * but " <> show ty <> " is not *."
-  show (ShouldBeFunctionType ty f) =
-    show ty <> " is not a function type but should be - while checking " <> show f
+  show (ShouldBeFunctionType ty) =
+    show ty <> " is not a function type but should be"
   show (UnboundIndex n) =
     "unbound index " <> show n
-  show (SigmaMustBeZero) =
-    "Sigma has to be 0."
-  show (UsageMustBeZero) =
-    "Usage has to be 0."
-  show (UsageNotCompatible expectedU gotU) =
-    "The usage of "
-      <> (show gotU)
-      <> " is not compatible with "
-      <> (show expectedU)
-  show (UnboundBinder ii x) =
-    "Cannot find the type of \n"
-      <> show x
-      <> "\n (binder number "
+  show (UsageMustBeZero π) =
+    "The usage " <> show π <> " has to be 0."
+  show (LeftoverUsage π) =
+    "Leftover usage of " <> show π
+  show (InsufficientUsage needed left) =
+    "Needed " <> show needed <> " usages but only " <> show left <> " remain"
+  show (UnboundLocal ii) =
+    "Cannot find the type of binder number "
       <> show ii
-      <> ") in the environment."
-  show (MustBeFunction m ii n) =
-    ( show m <> "\n (binder number " <> show ii
-        <> ") is not a function type and thus \n"
-        <> show n
-        <> "\n cannot be applied to it."
-    )
-  show (BoundVariableCannotBeInferred) =
-    "Bound variable cannot be inferred"
+      <> " in the context."
+  show (UnboundGlobal x) =
+    "Global name " <> show x <> " not in scope"
+  show (UnboundPatVar x) =
+    "Pattern variable " <> show x <> " not in scope"
 
 type HasThrowTC' ext primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m
@@ -163,15 +136,32 @@ throwTC = throw @"typecheckError"
 
 data T
 
+data BindAnnotation' ext primTy primVal
+  = BindAnnotation
+      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
+      }
+  deriving (Generic)
+
+deriving instance
+  (Eq (IR.Value' ext primTy primVal)) =>
+  Eq (BindAnnotation' ext primTy primVal)
+
+deriving instance
+  (Show (IR.Value' ext primTy primVal)) =>
+  Show (BindAnnotation' ext primTy primVal)
+
+type BindAnnotation = BindAnnotation' IR.NoExt
+
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->
     let typed = Just [[t|Annotation $primTy $primVal|]]
+        bindTyped = Just [[t|BindAnnotation $primTy $primVal|]]
      in IR.defaultExtTerm
           { IR.typeStar = typed,
             IR.typePrimTy = typed,
             IR.typePi = typed,
-            IR.typeLam = typed,
-            IR.typeLet = typed,
+            IR.typeLam = bindTyped,
+            IR.typeLet = bindTyped,
             IR.typeElim = typed
           }
 
@@ -190,8 +180,8 @@ getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
-getTermAnn (Lam _ ann) = ann
-getTermAnn (Let _ _ ann) = ann
+getTermAnn (Lam _ anns) = baResAnn anns
+getTermAnn (Let _ _ _ anns) = baResAnn anns
 getTermAnn (Elim _ ann) = ann
 
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal

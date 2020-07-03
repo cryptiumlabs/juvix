@@ -11,14 +11,46 @@ import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 
-IR.extendTerm "Term" [] [t|T|] extTerm
+data T
+
+data Annotation primTy primVal
+  = Annotation
+      { usageAnn :: Usage.T,
+        typeAnn :: IR.Term' T primTy primVal
+      }
+
+data BindAnnotation primTy primVal
+  = BindAnnotation
+      { bindName :: Symbol,
+        bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
+
+data LetAnnotation primTy primVal
+  = LetAnnotation
+      { letName :: Symbol,
+        letType :: IR.Term' T primTy primVal
+      }
+
+-- TODO: add combinators to @extensible-data@ for pairing like this
+IR.extendTerm "Term" [] [t|T|] $
+  \primTy primVal ->
+    IR.defaultExtTerm
+      { IR.nameLam = "Lam0",
+        IR.typeLam = Just [[t|BindAnnotation $primTy $primVal|]],
+        IR.namePi = "Pi0",
+        IR.typePi = Just [[t|Symbol|]],
+        IR.nameLet = "Let0",
+        IR.typeLet = Just [[t|LetAnnotation $primTy $primVal|]],
+        IR.nameElim = "Elim0",
+        IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
+      }
 
 -- TODO allow extendTerm to reorder fields?
 pattern Lam π x s t = Lam0 t (BindAnnotation x (Annotation π s))
 
 pattern Pi π x s t = Pi0 π s t x
 
-pattern Let π x s l b = Let0 l b (BindAnnotation x (Annotation π s))
+pattern Let π x s l b = Let0 π l b (LetAnnotation x s)
 
 pattern Elim π s t = Elim0 s (Annotation π t)
 

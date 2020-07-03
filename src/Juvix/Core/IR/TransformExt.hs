@@ -89,8 +89,8 @@ extTransformTF fs (PrimTy' k e) = PrimTy' k <$> etfPrimTy fs e
 extTransformTF fs (Pi' π s t e) =
   Pi' π <$> extTransformTF fs s <*> extTransformTF fs t <*> etfPi fs e
 extTransformTF fs (Lam' t e) = Lam' <$> extTransformTF fs t <*> etfLam fs e
-extTransformTF fs (Let' l b e) =
-  Let' <$> extTransformEF fs l <*> extTransformTF fs b <*> etfLet fs e
+extTransformTF fs (Let' π l b e) =
+  Let' π <$> extTransformEF fs l <*> extTransformTF fs b <*> etfLet fs e
 extTransformTF fs (Elim' f e) = Elim' <$> extTransformEF fs f <*> etfElim fs e
 extTransformTF fs (TermX e) = TermX <$> etfTermX fs e
 

@@ -89,6 +89,8 @@ data CompilationError
   | -- Should never happen!
     NotEnoughStackSpace
   | OpInMichelsonValue
+  | AppliedConstantToArgument
+  | TooManyArguments
   deriving (Show, Eq, Generic)
 
 -- compToPipeLineErr
