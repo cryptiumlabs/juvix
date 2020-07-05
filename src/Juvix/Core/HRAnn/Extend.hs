@@ -20,6 +20,12 @@ data BindAnnotation primTy primVal
         bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
       }
 
+data LetAnnotation primTy primVal
+  = LetAnnotation
+      { letName :: Symbol,
+        letType :: IR.Term' T primTy primVal
+      }
+
 -- TODO: add combinators to @extensible-data@ for pairing like this
 extTerm =
   \primTy primVal ->
@@ -29,11 +35,11 @@ extTerm =
         IR.namePi = "Pi0",
         IR.typePi = Just [[t|Symbol|]],
         IR.nameLet = "Let0",
-        IR.typeLet = Just [[t|BindAnnotation $primTy $primVal|]],
+        IR.typeLet = Just [[t|LetAnnotation $primTy $primVal|]],
         IR.nameElim = "Elim0",
         IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
       }
-
+      
 data AppAnnotation primTy primVal
   = AppAnnotation
       { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),

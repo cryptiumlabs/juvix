@@ -7,6 +7,7 @@ module Juvix.Core.Erased.Types
   )
 where
 
+import Juvix.Core.Erased.Types.Base 
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
@@ -20,13 +21,20 @@ import Juvix.Core.IR.Types.Base hiding
     extFunClause,
     extFunction,
     extPattern,
+    extTerm,
+    extendTerm,
+    defaultExtTerm
   )
 
 data T
 
-IR.extendTerm "Term" [] [t|T|] extTerm
+extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
-IR.extendType "Type" [] [t|T|] extType
+extendType "Type" [] [t|T|] (\_ -> defaultExtType)
+
+-- IR.extendTerm "Term" [] [t|T|] extTerm
+
+-- IR.extendElim "Elim" [] [t|T|] extElim
 
 IR.extendValue "Value" [] [t|T|] extValue
 
@@ -44,7 +52,7 @@ IR.extendFunClause "FunClause" [] [t|T|] extFunClause
 
 IR.extendPattern "Pattern" [] [t|T|] extPattern
 
-type TypeAssignment primTy = TypeAssignment' NoExt primTy
+type TypeAssignment primTy = TypeAssignment' T primTy
 
 data EvaluationError primVal
   = PrimitiveApplicationError primVal primVal
