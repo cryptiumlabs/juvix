@@ -100,3 +100,6 @@ toMichelson term usage ty globals = do
         Right e -> Right e
         Left err -> Left (show err)
     Left err -> Left (show err)
+
+tests :: [T.TestTree]
+tests = []

@@ -9,6 +9,7 @@ import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
+import qualified Datatypes
 import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
@@ -32,6 +33,12 @@ backendTests =
       Michelson.backendMichelson
     ]
 
+datatypeTests :: T.TestTree
+datatypeTests =
+  T.testGroup
+    "Datatype tests"
+    Datatypes.tests
+
 frontEndTests :: T.TestTree
 frontEndTests = T.testGroup "frontend tests" [Frontend.allParserTests]
 
@@ -44,7 +51,8 @@ allCheckedTests =
       frontEndTests,
       translationPasses,
       EAC2.eac2Tests,
-      Erasure.erasureTests
+      Erasure.erasureTests,
+      datatypeTests
     ]
 
 translationPasses :: T.TestTree

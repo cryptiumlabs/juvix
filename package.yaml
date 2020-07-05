@@ -155,6 +155,7 @@ library:
     - Juvix.Core
     - Juvix.Core.Common.Context
     - Juvix.Core.HR
+    - Juvix.Core.HR.Extend
     - Juvix.Core.HRAnn
     - Juvix.Core.HRAnn.Extend
     - Juvix.Core.IR
@@ -254,10 +255,10 @@ library:
     - Juvix.Backends.LLVM.Net.Environment
     - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
     - Juvix.Backends.LLVM.DSL
+    - Juvix.Core.Pipeline
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate
-    - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Types.Base
