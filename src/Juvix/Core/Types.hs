@@ -4,7 +4,7 @@ module Juvix.Core.Types
   )
 where
 
---import qualified Juvix.Core.EAC.Types as EAC
+import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Erased as EC
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
@@ -24,25 +24,20 @@ data PipelineError primTy primVal compErr
 data PipelineLog primTy primVal
   = LogHRtoIR (HR.Term primTy primVal) (IR.Term primTy primVal)
   | LogRanZ3 Double
-  deriving (Generic)
-
---deriving (Show, Generic)
+  deriving (Show, Generic)
 
 -- compErr serves to resolve the compilation error type
 -- needed to promote a backend specific compilation error
 data TermAssignment primTy primVal compErr
   = Assignment
-      { term :: EC.Term primTy,
+      { term :: EC.Term primVal,
         assignment :: EC.TypeAssignment primTy
       }
-  deriving (Generic)
-
---deriving (Show, Generic)
+  deriving (Show, Generic)
 
 data AssignWithType primTy primVal compErr
   = WithType
       { termAssign :: TermAssignment primTy primVal compErr,
-        type' :: EC.Term primTy
+        type' :: EC.Type primTy
       }
-  deriving (Generic)
---deriving (Show, Generic)
+  deriving (Show, Generic)

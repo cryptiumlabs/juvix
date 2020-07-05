@@ -3,19 +3,17 @@ module Juvix.Core.Erased.Types
     Term' (..),
     Type' (..),
     TypeAssignment',
-    NoExt,
   )
 where
 
-import Juvix.Core.Erased.Types.Base 
-import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (Type)
-import qualified Juvix.Library.HashMap as Map
 import Juvix.Core.Erased.Extend
+import Juvix.Core.Erased.Types.Base
 import Juvix.Core.HRAnn.Types (Annotation (..), AppAnnotation (..), BindAnnotation (..))
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Base hiding
-  ( extDataArg,
+  ( Term' (..),
+    defaultExtTerm,
+    extDataArg,
     extDataCon,
     extDatatype,
     extFunClause,
@@ -23,8 +21,10 @@ import Juvix.Core.IR.Types.Base hiding
     extPattern,
     extTerm,
     extendTerm,
-    defaultExtTerm
   )
+import qualified Juvix.Core.Usage as Usage
+import Juvix.Library hiding (Type)
+import qualified Juvix.Library.HashMap as Map
 
 data T
 

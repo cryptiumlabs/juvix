@@ -39,7 +39,7 @@ extTerm =
         IR.nameElim = "Elim0",
         IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
       }
-      
+
 data AppAnnotation primTy primVal
   = AppAnnotation
       { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),

@@ -5,9 +5,10 @@ import Juvix.Core.ErasedAnn.Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
+convertTerm :: forall primTy primVal m. (Monad m) => E.Term primVal -> Usage.T -> E.Type primTy -> m (AnnTerm primTy primVal)
+convertTerm = undefined
 {-
 
-convertTerm :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> Usage.T -> E.Term primTy primVal -> m (AnnTerm primTy primVal)
 convertTerm term usage ty = do
   ty' <- convertType ty
   case term of

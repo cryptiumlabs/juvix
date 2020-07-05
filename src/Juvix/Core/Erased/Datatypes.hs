@@ -103,5 +103,6 @@ datatypeToMichelsonType = M.PrimTy . adtToMichelsonType . datatypeToADT
 -- will need context of what the encapsulating datatype is to choose the right sum part
 dataconToMichelson :: E.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> M.PrimVal
 dataconToMichelson ty@(E.Datatype _ _ _ cons) name =
-  let [con] = filter ((==) name . conName) cons
-  in undefined
+  let con :: DataCon
+      Just con = head $ filter ((==) name . E.conName) cons
+   in (undefined :: M.PrimVal)

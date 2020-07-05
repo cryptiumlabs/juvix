@@ -25,10 +25,11 @@ coreToMichelson ::
   HR.Term Michelson.PrimTy Michelson.PrimVal ->
   m (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
-  Types.WithType (Types.Assignment term _) ty <- typecheckErase term usage ty
+  term <- typecheckErase term usage ty
   globals <- ask @"globals"
-  converted <- pure (Datatypes.datatypesToMichelson globals term)
-  ann <- ErasedAnn.convertTerm converted usage ty
+  --converted <- pure (Datatypes.datatypesToMichelson globals term)
+  --ann <- ErasedAnn.convertTerm converted usage ty
+  let ann = undefined
   let (res, _) = Michelson.compileExpr ann
   pure res
 
