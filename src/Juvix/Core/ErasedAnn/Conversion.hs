@@ -1,11 +1,11 @@
 module Juvix.Core.ErasedAnn.Conversion where
 
-import qualified Juvix.Core.Erased.Types as E
 import Juvix.Core.ErasedAnn.Types
+import qualified Juvix.Core.Erasure.Types as E
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
-convertTerm :: forall primTy primVal m. (Monad m) => E.Term primVal -> Usage.T -> E.Type primTy -> m (AnnTerm primTy primVal)
+convertTerm :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> Usage.T -> m (AnnTerm primTy primVal)
 convertTerm = undefined
 {-
 

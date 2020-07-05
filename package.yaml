@@ -166,7 +166,6 @@ library:
     - Juvix.Core.Erased.Extend
     - Juvix.Core.Erased.Util
     - Juvix.Core.Erased.Types
-    - Juvix.Core.Erased.Datatypes
     - Juvix.Core.Erasure
     - Juvix.Core.Erasure.Algorithm
     - Juvix.Core.Erasure.Types
@@ -210,6 +209,7 @@ library:
     - Juvix.Backends
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
+    - Juvix.Backends.Michelson.Datatypes
     - Juvix.Backends.Michelson.Compilation
     - Juvix.Backends.Michelson.Compilation.Types
     - Juvix.Backends.Michelson.Compilation.VirtualStack
@@ -270,6 +270,7 @@ library:
     - Juvix.Core.IRAnn.Types
     - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
+    - Juvix.Core.ErasedAnn.Erasure
     - Juvix.Core.ErasedAnn.Conversion
     - Juvix.Core.ErasedAnn.Prim
     - Juvix.Core.Erased.Types.Base

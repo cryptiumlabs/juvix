@@ -1,14 +1,14 @@
-module Juvix.Core.Erased.Datatypes where
+module Juvix.Backends.Michelson.Datatypes where
 
 import qualified Juvix.Backends.Michelson.Parameterisation as M
-import qualified Juvix.Core.Erased.Types as E
+import qualified Juvix.Core.Erasure.Types as E
 import qualified Juvix.Core.IR as IR
 import Juvix.Library hiding (Datatype, Product, Sum, Type)
 import qualified Michelson.Untyped as MU
 
 type Globals = IR.Globals M.PrimTy M.PrimVal
 
-type Term = E.Term M.PrimTy
+type Term = E.Term M.PrimTy M.PrimVal
 
 type Value = E.Value M.PrimTy M.PrimVal
 

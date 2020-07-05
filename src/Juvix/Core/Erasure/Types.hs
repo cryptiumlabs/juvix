@@ -5,13 +5,7 @@ module Juvix.Core.Erasure.Types
 where
 
 import qualified Extensible as Ext
-import Juvix.Core.Erased.Types as Type
-  ( Type,
-    pattern Pi,
-    pattern PrimTy,
-    pattern Star,
-    pattern SymT,
-  )
+import Juvix.Core.Erased.Types as Type hiding (App, Lam, Let, Prim, T, Term, Var)
 import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC

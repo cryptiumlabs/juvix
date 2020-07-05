@@ -1,10 +1,9 @@
 module Juvix.Core.Pipeline where
 
 import qualified Data.Text as Text
---import qualified Juvix.Core.EAC as EAC
-
 import qualified Juvix.Backends.Michelson as Michelson
-import qualified Juvix.Core.Erased.Datatypes as Datatypes
+import qualified Juvix.Backends.Michelson.Datatypes as Datatypes
+import qualified Juvix.Core.EAC as EAC
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
@@ -27,9 +26,8 @@ coreToMichelson ::
 coreToMichelson term usage ty = do
   term <- typecheckErase term usage ty
   globals <- ask @"globals"
-  --converted <- pure (Datatypes.datatypesToMichelson globals term)
-  --ann <- ErasedAnn.convertTerm converted usage ty
-  let ann = undefined
+  converted <- pure (Datatypes.datatypesToMichelson globals term)
+  ann <- ErasedAnn.convertTerm converted usage
   let (res, _) = Michelson.compileExpr ann
   pure res
 
