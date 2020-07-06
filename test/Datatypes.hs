@@ -98,7 +98,10 @@ tests =
   [ test_constant,
     test_tuple,
     test_left,
-    test_right
+    test_right,
+    test_complex_a,
+    test_complex_b,
+    test_complex_c
   ]
 
 test_constant :: T.TestTree
@@ -129,12 +132,39 @@ test_right :: T.TestTree
 test_right =
   shouldCompileTo
     "right constructor"
-    (HR.Elim (HR.App (HR.Var "MkRight") twoTerm), Usage.Omega, HR.Elim (HR.Var "either"))
+    (HR.Elim (HR.App (HR.Var "MkRight") boolTerm), Usage.Omega, HR.Elim (HR.Var "either"))
     (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_complex_a :: T.TestTree
+test_complex_a =
+  shouldCompileTo
+    "complex constructor a"
+    (HR.Elim (HR.App (HR.App (HR.Var "MkComplexA") twoTerm) twoTerm), Usage.Omega, HR.Elim (HR.Var "complex"))
+    (HM.insert "complex" (IR.GDatatype complexTy) $ HM.insert "MkComplexA" (IR.GDataCon complexConA) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_complex_b :: T.TestTree
+test_complex_b =
+  shouldCompileTo
+    "complex constructor b"
+    (HR.Elim (HR.App (HR.Var "MkComplexB") boolTerm), Usage.Omega, HR.Elim (HR.Var "complex"))
+    (HM.insert "complex" (IR.GDatatype complexTy) $ HM.insert "MkComplexB" (IR.GDataCon complexConB) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_complex_c :: T.TestTree
+test_complex_c =
+  shouldCompileTo
+    "complex constructor c"
+    (HR.Elim (HR.App (HR.Var "MkComplexC") (HR.Elim (HR.App (HR.Var "MkRight") boolTerm))), Usage.Omega, HR.Elim (HR.Var "complex"))
+    (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) $ HM.insert "complex" (IR.GDatatype complexTy) $ HM.insert "MkComplexC" (IR.GDataCon complexConC) emptyGlobals)
     (EmptyInstr (MT.PUSH (MT.VInt 2)))
 
 twoTerm :: HR.Term PrimTy PrimVal
 twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
+
+boolTerm :: HR.Term PrimTy PrimVal
+boolTerm = HR.Elim (HR.Prim (Constant (M.ValueFalse)))
 
 intTy :: HR.Term PrimTy PrimVal
 intTy = HR.PrimTy int
@@ -172,3 +202,20 @@ rightCon = IR.DataCon "MkRight" (IR.VPi (Usage.SNat 1) (IR.VPrimTy bool) (IR.VNe
 
 bool :: PrimTy
 bool = PrimTy (M.Type M.TBool "")
+
+complexTy :: IR.Datatype PrimTy PrimVal
+complexTy =
+  IR.Datatype
+    "complex"
+    []
+    0
+    [complexConA, complexConB, complexConC]
+
+complexConA :: IR.DataCon PrimTy PrimVal
+complexConA = IR.DataCon "MkComplexA" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "complex")))))
+
+complexConB :: IR.DataCon PrimTy PrimVal
+complexConB = IR.DataCon "MkComplexB" (IR.VPi (Usage.SNat 1) (IR.VPrimTy bool) (IR.VNeutral (IR.NFree (IR.Global "complex"))))
+
+complexConC :: IR.DataCon PrimTy PrimVal
+complexConC = IR.DataCon "MkComplexC" (IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "either"))) (IR.VNeutral (IR.NFree (IR.Global "complex"))))
