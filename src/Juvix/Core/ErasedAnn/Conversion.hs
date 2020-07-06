@@ -26,6 +26,7 @@ convertTerm term usage = do
 convertType :: forall primTy primVal m. (Monad m) => E.Type primTy -> m (Type primTy primVal)
 convertType ty =
   case ty of
+    E.SymT s -> pure (SymT s)
     E.PrimTy p -> pure (PrimTy p)
     E.Pi u a r -> do
       a <- convertType a

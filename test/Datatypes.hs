@@ -1,5 +1,6 @@
 module Datatypes where
 
+import qualified Data.HashMap.Strict as HM
 import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
@@ -109,12 +110,36 @@ test_constant :: T.TestTree
 test_constant =
   shouldCompileTo
     "constant"
-    (HR.Elim (HR.Prim (Constant (M.ValueInt 2))), Usage.Omega, intTy)
+    (twoTerm, Usage.Omega, intTy)
     emptyGlobals
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 2))) MT.Nop))
 
+test_tuple :: T.TestTree
+test_tuple =
+  shouldCompileTo
+    "tuple constructor"
+    (HR.Elim (HR.App (HR.App (HR.Var "MkTuple") twoTerm) twoTerm), Usage.Omega, HR.Elim (HR.Var "tuple"))
+    (HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VPair (MT.VInt 2, MT.VInt 2))))
+
+twoTerm :: HR.Term PrimTy PrimVal
+twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
+
 intTy :: HR.Term PrimTy PrimVal
-intTy = HR.PrimTy (PrimTy (M.Type M.TInt ""))
+intTy = HR.PrimTy int
+
+int :: PrimTy
+int = PrimTy (M.Type M.TInt "")
 
 emptyGlobals :: Typed.Globals PrimTy PrimVal
 emptyGlobals = mempty
+
+tupleTy :: IR.Datatype PrimTy PrimVal
+tupleTy = IR.Datatype
+  "tuple"
+  []
+  0
+  [tupleCon]
+
+tupleCon :: IR.DataCon PrimTy PrimVal
+tupleCon = IR.DataCon "MkTuple" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "tuple")))))
