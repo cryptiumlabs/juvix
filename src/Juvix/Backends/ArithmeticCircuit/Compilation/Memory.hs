@@ -37,7 +37,7 @@ instance Monoid (T a) where
   mempty = initial
 
 initial :: T a
-initial = T mempty (1 :| []) 0
+initial = T mempty (0 :| []) 0
 
 -- alloc
 allocExternal :: Symbol -> a -> T a -> T a
