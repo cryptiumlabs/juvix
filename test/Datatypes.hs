@@ -1,23 +1,15 @@
 module Datatypes where
 
 import qualified Data.HashMap.Strict as HM
-import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
-import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
-import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
-import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpret
-import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.Erased as Erased
-import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
-import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (identity, log)
+import Juvix.Library hiding (bool, identity, log)
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
@@ -103,7 +95,10 @@ toMichelson term usage ty globals = do
 
 tests :: [T.TestTree]
 tests =
-  [ test_constant
+  [ test_constant,
+    test_tuple,
+    test_left,
+    test_right
   ]
 
 test_constant :: T.TestTree
@@ -122,6 +117,22 @@ test_tuple =
     (HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
     (EmptyInstr (MT.PUSH (MT.VPair (MT.VInt 2, MT.VInt 2))))
 
+test_left :: T.TestTree
+test_left =
+  shouldCompileTo
+    "left constructor"
+    (HR.Elim (HR.App (HR.Var "MkLeft") twoTerm), Usage.Omega, HR.Elim (HR.Var "either"))
+    (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkLeft" (IR.GDataCon leftCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_right :: T.TestTree
+test_right =
+  shouldCompileTo
+    "right constructor"
+    (HR.Elim (HR.App (HR.Var "MkRight") twoTerm), Usage.Omega, HR.Elim (HR.Var "either"))
+    (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
 twoTerm :: HR.Term PrimTy PrimVal
 twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
 
@@ -135,11 +146,29 @@ emptyGlobals :: Typed.Globals PrimTy PrimVal
 emptyGlobals = mempty
 
 tupleTy :: IR.Datatype PrimTy PrimVal
-tupleTy = IR.Datatype
-  "tuple"
-  []
-  0
-  [tupleCon]
+tupleTy =
+  IR.Datatype
+    "tuple"
+    []
+    0
+    [tupleCon]
 
 tupleCon :: IR.DataCon PrimTy PrimVal
 tupleCon = IR.DataCon "MkTuple" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "tuple")))))
+
+eitherTy :: IR.Datatype PrimTy PrimVal
+eitherTy =
+  IR.Datatype
+    "either"
+    []
+    0
+    [leftCon, rightCon]
+
+leftCon :: IR.DataCon PrimTy PrimVal
+leftCon = IR.DataCon "MkLeft" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+
+rightCon :: IR.DataCon PrimTy PrimVal
+rightCon = IR.DataCon "MkRight" (IR.VPi (Usage.SNat 1) (IR.VPrimTy bool) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+
+bool :: PrimTy
+bool = PrimTy (M.Type M.TBool "")
