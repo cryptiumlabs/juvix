@@ -1,10 +1,9 @@
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.Environment as Env
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old --FIXME put in the last stage
 import Juvix.Library
 
 type WorkingMaps m =
@@ -13,20 +12,6 @@ type WorkingMaps m =
     HasState "aliases" Int m
   )
 
--- The actual transform we are doing: erase type alias
--- TODO: write the actual transform function
-{-
-transformLet :: WorkingMaps m => Old.Let -> m New.Let
-transformLet (Old.LetGroup name bindings body) = do
-  undefined
-
-transformLetType :: WorkingMaps m => Old.LetType -> m New.LetType
-transformLetType (Old.LetType'' typ expr) = undefined
-
-transformName :: WorkingMaps m => Old.Name -> m New.Name
-transformName (Old.Implicit s) = undefined
-transformName (Old.Concrete s) = undefined
--}
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
@@ -204,17 +189,9 @@ transformApplication (Old.App fun args) =
   New.App <$> transformExpression fun <*> traverse transformExpression args
 
 transformExpRecord :: WorkingMaps m => Old.ExpRecord -> m New.ExpRecord
-transformExpRecord (Old.ExpressionRecord fields) = undefined
-  
-{-do
-  nameExpr <- mapM (transformNameSet transformExpression) (NonEmpty.toList fields)
-  return $ New.ExpressionRecord (NonEmpty.fromList nameExpr)
-  -}
-  {-let ans = transformNameSet transformExpression <$> fields
-  in
-    New.ExpressionRecord <$> _ -- pure ans 
-  --(transformNameSet (traverse transformExpression fields))
--}
+transformExpRecord (Old.ExpressionRecord fields) = 
+  New.ExpressionRecord <$> traverse (transformNameSet transformExpression) fields
+
 --------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
@@ -263,7 +240,11 @@ tranformMatchLogicStart (Old.MatchConst c) =
   New.MatchConst <$> transformConst c
 tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
-  
-transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
+
+--transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
+transformNameSet :: WorkingMaps m =>
+                          (t1 -> m t2)
+                          -> Old.NameSet t1
+                          -> m (New.NameSet t2)
 transformNameSet p (Old.NonPunned s e) =
-  New.NonPunned <$> pure s <*> pure (p e)
+  New.NonPunned s <$> p e
