@@ -108,7 +108,7 @@ transformAdt (Old.Product p) = New.Product <$> transformProduct p
 
 transformSum :: WorkingMaps m => Old.Sum -> m New.Sum
 transformSum (Old.S sym prod) =
-  New.S <$> pure sym <*> traverse transformProduct prod
+  New.S sym <$> traverse transformProduct prod
 
 transformProduct :: WorkingMaps m => Old.Product -> m New.Product
 transformProduct (Old.Record rec') = New.Record <$> transformRecord rec'
@@ -125,7 +125,7 @@ transformNameType (Old.NameType' sig name) =
 
 transformFunction :: WorkingMaps m => Old.Function -> m New.Function
 transformFunction (Old.Func name f sig) =
-  New.Func <$> pure name <*> traverse transformFunctionLike f <*> traverse transformSignature sig
+  New.Func name <$> traverse transformFunctionLike f <*> traverse transformSignature sig
 
 transformFunctionLike ::
   WorkingMaps m =>
@@ -139,7 +139,7 @@ transformModuleOpen (Old.Open mod) = pure $ New.Open mod
 
 transformModuleOpenExpr :: WorkingMaps m => Old.ModuleOpenExpr -> m New.ModuleOpenExpr
 transformModuleOpenExpr (Old.OpenExpress modName expr) =
-  New.OpenExpress <$> pure modName <*> transformExpression expr
+  New.OpenExpress modName <$> transformExpression expr
 
 transformArg :: WorkingMaps m => Old.Arg -> m New.Arg
 transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
@@ -231,11 +231,11 @@ transformMatchL (Old.MatchL pat body) =
 
 transformMatchLogic :: WorkingMaps m => Old.MatchLogic -> m New.MatchLogic
 transformMatchLogic (Old.MatchLogic start name) =
-  New.MatchLogic <$> tranformMatchLogicStart start <*> pure name
+  New.MatchLogic <$> (tranformMatchLogicStart start) <*> pure name
 
 tranformMatchLogicStart :: WorkingMaps m => Old.MatchLogicStart -> m New.MatchLogicStart
 tranformMatchLogicStart (Old.MatchCon conName logic) =
-  New.MatchCon <$> pure conName <*> traverse transformMatchLogic logic
+  New.MatchCon conName <$> traverse transformMatchLogic logic
 tranformMatchLogicStart (Old.MatchName s) =
   pure $ New.MatchName s
 tranformMatchLogicStart (Old.MatchConst c) =
@@ -244,9 +244,6 @@ tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
 
 transformNameSet ::
-  WorkingMaps m =>
-  (t1 -> m t2) ->
-  Old.NameSet t1 ->
-  m (New.NameSet t2)
+  WorkingMaps m => (t1 -> m t2) -> Old.NameSet t1 -> m (New.NameSet t2)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned s <$> p e
