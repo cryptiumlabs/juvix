@@ -225,6 +225,7 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Memory
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.JIT
     - Juvix.Backends.LLVM.JIT.Types

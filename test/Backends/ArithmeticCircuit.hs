@@ -44,10 +44,10 @@ backendCircuit =
       shouldCompile disjointKnowledge equalType disjointKnowledgeCircuit,
       shouldProve disjointKnowledge equalType disjointKnowledgeCircuit [(0, 1), (1, 1)],
       shouldCompile disjointKnowledge' equalType disjointKnowledgeCircuit',
-      shouldProve disjointKnowledge' equalType disjointKnowledgeCircuit' [(0, 1), (1, 1)],
+      shouldProve disjointKnowledge' equalType disjointKnowledgeCircuit' [(0, 1), (1, 1)]
       -- , shouldCompile preimage equalTypes preimageCircuit
       -- , shouldProve preimage equalTypes preimageCircuit
-      testFresh
+      -- testFresh
     ]
 
 equalTerm :: Term
@@ -150,26 +150,27 @@ disjointKnowledgeCircuit' =
           r4 = Circ.eq r2 r3
        in Circ.or_ r1 r4
     )
-
 --------------------------------------------------------------------------------
 -- Misc tests
 --------------------------------------------------------------------------------
 
--- TODO ∷ generate lists and test lengths!
-testFresh :: T.TestTree
-testFresh =
-  let (_, Env.Env {memory = m}) =
-        (runState . runExceptT)
-          ( Env.antiAlias
-              ( Env.freshVars ["a", "b", "f"]
-                  >> Env.freshVars ["c", "d", "e"]
-                  >> Env.freshVars ["fsdf"]
-              )
-          )
-          (Env.Env mempty Types.NoExp)
-   in T.testCase
-        ("test testFresh: numbers in memory should be unique")
-        ( (show m :: Text)
-            T.@=? "Mem (fromList [(a,(0,NoExp)),(b,(1,NoExp)),(c,(3,NoExp)),(d,\
-                  \(4,NoExp)),(e,(5,NoExp)),(f,(2,NoExp)),(fsdf,(6,NoExp))]) 7"
-        )
+-- TODO ∷ refactor test into testing insertions
+
+-- -- TODO ∷ generate lists and test lengths!
+-- testFresh :: T.TestTree
+-- testFresh =
+--   let (_, Env.Env {memory = m}) =
+--         (runState . runExceptT)
+--           ( Env.antiAlias
+--               ( Env.freshVars ["a", "b", "f"]
+--                   >> Env.freshVars ["c", "d", "e"]
+--                   >> Env.freshVars ["fsdf"]
+--               )
+--           )
+--           (Env.Env mempty Types.NoExp)
+--    in T.testCase
+--         ("test testFresh: numbers in memory should be unique")
+--         ( (show m :: Text)
+--             T.@=? "Mem (fromList [(a,(0,NoExp)),(b,(1,NoExp)),(c,(3,NoExp)),(d,\
+--                   \(4,NoExp)),(e,(5,NoExp)),(f,(2,NoExp)),(fsdf,(6,NoExp))]) 7"
+--         )
