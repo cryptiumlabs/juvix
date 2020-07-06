@@ -21,14 +21,11 @@ transformLet (Old.LetGroup name bindings body) = do
   undefined
 
 transformLetType :: WorkingMaps m => Old.LetType -> m New.LetType
-transformLetType old = do
-  undefined
+transformLetType (Old.LetType'' typ expr) = undefined
 
 transformName :: WorkingMaps m => Old.Name -> m New.Name
-transformName old = do
-  case old of
-    (Old.Implicit s) -> undefined
-    (Old.Concrete s) -> undefined
+transformName (Old.Implicit s) = undefined
+transformName (Old.Concrete s) = undefined
 -}
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -207,9 +204,12 @@ transformApplication (Old.App fun args) =
   New.App <$> transformExpression fun <*> traverse transformExpression args
 
 transformExpRecord :: WorkingMaps m => Old.ExpRecord -> m New.ExpRecord
-transformExpRecord (Old.ExpressionRecord fields) = do
+transformExpRecord (Old.ExpressionRecord fields) = undefined
+  
+{-do
   nameExpr <- mapM (transformNameSet transformExpression) (NonEmpty.toList fields)
   return $ New.ExpressionRecord (NonEmpty.fromList nameExpr)
+  -}
   {-let ans = transformNameSet transformExpression <$> fields
   in
     New.ExpressionRecord <$> _ -- pure ans 
@@ -262,10 +262,7 @@ tranformMatchLogicStart (Old.MatchName s) =
 tranformMatchLogicStart (Old.MatchConst c) =
   New.MatchConst <$> transformConst c
 tranformMatchLogicStart (Old.MatchRecord r) =
-  let matchLog = undefined --traverse transformMatchLogic r
-      nameSet = undefined --transformNameSet 
-  in
-    New.MatchRecord <$> pure (nameSet matchLog)  
+  New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
   
 transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
