@@ -95,7 +95,7 @@ adtToMichelsonType adt =
     Product x y -> MU.Type (MU.TPair "" "" (adtToMichelsonType x) (adtToMichelsonType y)) ""
 
 datatypesToMichelson :: Globals -> Term -> Term
-datatypesToMichelson globals term = undefined
+datatypesToMichelson globals term = term --undefined
 
 datatypeToMichelsonType :: Datatype -> M.PrimTy
 datatypeToMichelsonType = M.PrimTy . adtToMichelsonType . datatypeToADT

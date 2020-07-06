@@ -6,44 +6,28 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
 convertTerm :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> Usage.T -> m (AnnTerm primTy primVal)
-convertTerm = undefined
-{-
-
-convertTerm term usage ty = do
+convertTerm term usage = do
+  let ty = E.getType term
   ty' <- convertType ty
   case term of
-    E.Lam argUsage arg argType body -> do
-      let E.Pi _ _ _ resTy = ty
-      -- TODO captures
-      body <- convertTerm body usage resTy
-      pure (Ann usage ty' (LamM [] [arg] body))
-    E.Elim elimUsage elim elimTy ->
-      case elim of
-        E.Var v ->
-          pure (Ann usage ty' (Var v))
-        E.Prim p ->
-          pure (Ann usage ty' (Prim p))
-        E.App fUsage f fTy xUsage x xTy -> do
-          undefined
-    -- TODO fixme T mismatches
-    -- f <- convertTerm (E.Elim fUsage f fTy) fUsage fTy
-    -- x <- convertTerm x xUsage xTy
-    -- TODO: convert
-    -- pure (Ann usage ty' (AppM f [x]))
-    -- TODO let
-    _ -> undefined
+    E.Var sym _ -> pure (Ann usage ty' (Var sym))
+    E.Prim p _ -> pure (Ann usage ty' (Prim p))
+    E.Lam sym body _ -> do
+      -- TODO: Is this the right usage?
+      -- TODO: Deal with arguments, captures.
+      body <- convertTerm body usage
+      pure (Ann usage ty' (LamM [] [sym] body))
+    E.App f a _ -> do
+      f <- convertTerm f usage
+      a <- convertTerm a usage
+      -- TODO: Deal with multi-arg application.
+      pure (Ann usage ty' (AppM f [a]))
 
-convertType :: forall primTy primVal m. (Monad m) => E.Term primTy primVal -> m (Type primTy primVal)
-convertType term =
-  case term of
-    E.Elim _ elim _ ->
-      case elim of
-        E.Var s -> pure (SymT s)
-    E.Star n -> pure (Star n)
+convertType :: forall primTy primVal m. (Monad m) => E.Type primTy -> m (Type primTy primVal)
+convertType ty =
+  case ty of
     E.PrimTy p -> pure (PrimTy p)
-    -- TODO: Deal with argument name.
-    E.Pi argUsage arg argType res -> do
-      res <- convertType res
-      pure (Pi argUsage (SymT arg) res)
-
--}
+    E.Pi u a r -> do
+      a <- convertType a
+      r <- convertType r
+      pure (Pi u a r)

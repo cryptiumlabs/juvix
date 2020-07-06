@@ -6,10 +6,10 @@ import qualified Backends.Michelson as Michelson
 import qualified CoreConv
 import qualified CoreParser
 import qualified CoreTypechecker
+import qualified Datatypes
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
-import qualified Datatypes
 import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
