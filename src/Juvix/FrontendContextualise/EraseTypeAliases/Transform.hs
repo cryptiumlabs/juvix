@@ -189,7 +189,7 @@ transformApplication (Old.App fun args) =
   New.App <$> transformExpression fun <*> traverse transformExpression args
 
 transformExpRecord :: WorkingMaps m => Old.ExpRecord -> m New.ExpRecord
-transformExpRecord (Old.ExpressionRecord fields) = 
+transformExpRecord (Old.ExpressionRecord fields) =
   New.ExpressionRecord <$> traverse (transformNameSet transformExpression) fields
 
 --------------------------------------------------
@@ -241,10 +241,10 @@ tranformMatchLogicStart (Old.MatchConst c) =
 tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
 
---transformNameSet :: WorkingMaps m => (t -> t1) -> Old.NameSet t -> m (New.NameSet t1)
-transformNameSet :: WorkingMaps m =>
-                          (t1 -> m t2)
-                          -> Old.NameSet t1
-                          -> m (New.NameSet t2)
+transformNameSet ::
+  WorkingMaps m =>
+  (t1 -> m t2) ->
+  Old.NameSet t1 ->
+  m (New.NameSet t2)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned s <$> p e
