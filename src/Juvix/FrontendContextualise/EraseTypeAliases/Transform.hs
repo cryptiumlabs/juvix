@@ -11,7 +11,8 @@ type WorkingMaps m =
     HasReader "new" Int m,
     HasState "aliases" Int m
   )
--- The actual transform we are doing: 
+
+-- The actual transform we are doing:
 -- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
