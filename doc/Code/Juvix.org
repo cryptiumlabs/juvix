@@ -330,7 +330,6 @@ This module provides a default contract environment
   + [[Interpret]]
   + [[Prim]]
   + [[Core/Types]]
-  + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
@@ -455,6 +454,7 @@ This module provides a default contract environment
   + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
+  + [[Typechecker]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -532,15 +532,21 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
-**** Types <<Erased/Types>>
-- _Relies on_
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
 **** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+**** Types <<Erased/Types>>
+- _Relies on_
+  + [[Erased/Types/Base]]
+  + [[IR/Types]]
+  + [[Library]]
+***** Base <<Erased/Types/Base>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 *** ErasedAnn
 - _Relies on_
   + [[ErasedAnn/Erasure]]
@@ -564,26 +570,29 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** Erasure <<Core/Erasure>>
 - _Relies on_
   + [[Algorithm]]
+  + [[Erasure/Types]]
 **** Algorithm
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
   + [[Erasure/Types]]
-  + [[HR/Types]]
   + [[IR]]
-  + [[Translate]]
-  + [[Core/Types]]
+  + [[Typechecker/Types]]
   + [[Usage]]
   + [[Library]]
-  + [[HashMap]]
 **** Types <<Erasure/Types>>
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
+  + [[Erased/Types/Base]]
+  + [[Erased/Types/Base]]
   + [[Typechecker]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -620,7 +629,9 @@ This module provides a default contract environment
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker]]
+  + [[Typechecker]]
   + [[IR/Types]]
+  + [[Library]]
 **** Evaluator <<IR/Evaluator>>
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
@@ -641,7 +652,6 @@ Transformations between different extensions.
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
-  + [[Log]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -649,14 +659,10 @@ Transformations between different extensions.
   + [[Library]]
 ***** Env <<Typechecker/Env>>
 - _Relies on_
-  + [[Log]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Library]]
-***** Log
-- _Relies on_
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Usage]]
   + [[Library]]
 ***** Types <<Typechecker/Types>>
