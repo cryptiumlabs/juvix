@@ -76,12 +76,3 @@ write exp = do
 
 read :: HasState "compilation" s m => m s
 read = get @"compilation"
--- freshVars :: HasMemory m => [Symbol] -> m ()
--- freshVars sys = modify @"memory" (freshVars' sys)
---   where
---     freshVars' :: [Symbol] -> Memory -> Memory
---     freshVars' vars (Mem map' n) =
---       Mem (map' <> Map.fromList (zip vars (slots n))) (n + length vars)
---     --
---     slots :: Int -> [(Int, Types.Expression)]
---     slots n = fmap (,Types.NoExp) [n ..]
