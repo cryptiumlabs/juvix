@@ -11,6 +11,8 @@ type WorkingMaps m =
     HasReader "new" Int m,
     HasState "aliases" Int m
   )
+-- The actual transform we are doing: 
+-- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -40,7 +42,6 @@ transformExpression (Old.RefinedE i) = New.RefinedE <$> transformTypeRefine i
 transformExpression (Old.UniverseName i) = New.UniverseName <$> transformUniverseExpression i
 transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
 
--- TODO
 --------------------------------------------------------------------------------
 -- Types
 --------------------------------------------------------------------------------
