@@ -8,15 +8,16 @@ import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Erased as EC
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Parameterisation
 import Juvix.Library
 
 data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
-  | TypecheckerError Text
+  | TypecheckerError (TC.TypecheckError primTy primVal)
   | EACError (EAC.Errors primTy primVal)
-  | ErasureError Erasure.Error
+  | ErasureError (Erasure.Error primTy primVal)
   | PrimError compErr
   deriving (Show, Generic)
 

@@ -28,13 +28,15 @@ class FieldElements.FieldElement e => Boolean (e :: * -> * -> *) b | b -> e wher
   or' :: e f b -> e f b -> e f b
   not' :: e f b -> e f b
 
+type FieldT e b = (FieldElements.FieldElement e, Boolean e b)
+
 -- c: primitive constant and f: functions
 data Val f b where
-  Val :: (FieldElements.FieldElement e, Boolean e b) => e f b -> Val (e f b) b
-  Or :: (FieldElements.FieldElement e, Boolean e b) => Val (e f b) b
-  And :: (FieldElements.FieldElement e, Boolean e b) => Val (e f b) b
-  Not :: (FieldElements.FieldElement e, Boolean e b) => Val (e f b) b
-  Curried :: (FieldElements.FieldElement e, Boolean e b) => Val (e f b) b -> e f b -> Val (e f b) b
+  Val :: FieldT e b => e f b -> Val (e f b) b
+  Or :: FieldT e b => Val (e f b) b
+  And :: FieldT e b => Val (e f b) b
+  Not :: FieldT e b => Val (e f b) b
+  Curried :: FieldT e b => Val (e f b) b -> e f b -> Val (e f b) b
 
 typeOf :: Val f b -> NonEmpty Ty
 typeOf (Val _) = Ty :| []
@@ -43,7 +45,7 @@ typeOf And = Ty :| [Ty, Ty]
 typeOf Not = Ty :| [Ty, Ty]
 typeOf (Curried _ _) = Ty :| [Ty]
 
-apply :: (FieldElements.FieldElement e, Boolean e b) => Val (e f b) b -> Val (e f b) b -> Maybe (Val (e f b) b)
+apply :: FieldT e b => Val (e f b) b -> Val (e f b) b -> Maybe (Val (e f b) b)
 apply Or (Val x) = pure $ Curried Or x
 apply And (Val x) = pure $ Curried And x
 apply Not (Val x) = pure $ Val (not' x)
@@ -56,23 +58,23 @@ parseTy lexer = do
   Token.reserved lexer "Bool"
   pure Ty
 
-parseVal :: (FieldElements.FieldElement e, Boolean e b) => Token.GenTokenParser String () Identity -> Parser (Val (e f b) b)
+parseVal :: FieldT e b => Token.TokenParser () -> Parser (Val (e f b) b)
 parseVal lexer =
   parseTrue lexer
     <|> parseFalse lexer
     <|> parseOr lexer
     <|> parseAnd lexer
 
-parseTrue :: (FieldElements.FieldElement e, Boolean e b) => Token.GenTokenParser String () Identity -> Parser (Val (e f b) b)
+parseTrue :: FieldT e b => Token.TokenParser () -> Parser (Val (e f b) b)
 parseTrue lexer = Token.reserved lexer "T" >> pure (Val true)
 
-parseFalse :: (FieldElements.FieldElement e, Boolean e b) => Token.GenTokenParser String () Identity -> Parser (Val (e f b) b)
+parseFalse :: FieldT e b => Token.TokenParser () -> Parser (Val (e f b) b)
 parseFalse lexer = Token.reserved lexer "F" >> pure (Val false)
 
-parseOr :: (FieldElements.FieldElement e, Boolean e b) => Token.GenTokenParser String () Identity -> Parser (Val (e f b) b)
+parseOr :: FieldT e b => Token.TokenParser () -> Parser (Val (e f b) b)
 parseOr lexer = Token.reserved lexer "||" >> pure Or
 
-parseAnd :: (FieldElements.FieldElement e, Boolean e b) => Token.GenTokenParser String () Identity -> Parser (Val (e f b) b)
+parseAnd :: FieldT e b => Token.TokenParser () -> Parser (Val (e f b) b)
 parseAnd lexer = Token.reserved lexer "&&" >> pure And
 
 reservedNames :: [String]
@@ -81,6 +83,5 @@ reservedNames = ["Bool", "T", "F", "||", "&&"]
 reservedOpNames :: [String]
 reservedOpNames = []
 
-t :: (FieldElements.FieldElement e, Boolean e b) => Parameterisation Ty (Val (e f b) b)
-t =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+t :: FieldT e b => Parameterisation Ty (Val (e f b) b)
+t = Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames

@@ -1,3 +1,24 @@
+-- |
+-- - This pass removes the =Module= and =ModuleE= form
+--  + Belongs to Table
+--    | Changed | Is a Sum Type of |
+--    |---------+------------------|
+--    | Module  | TopLevel         |
+--    | ModuleE | Expression       |
+-- - Thus one does not have to ever deal with
+--   #+begin_src haskell
+--     data Module
+--       = Mod (FunctionLike (NonEmpty TopLevel))
+--       deriving (Show, Generic, NFData)
+--
+--     data ModuleE
+--       = ModE
+--           { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+--           , moduleEBody :: Expression
+--           }
+--       deriving (Show, Generic, NFData)
+--   #+end_src
+--   after this pass
 module Juvix.FrontendDesugar.RemoveModules.Extend
   ( module Juvix.Frontend.Types.Extend,
     module Juvix.FrontendDesugar.RemoveModules.Extend,

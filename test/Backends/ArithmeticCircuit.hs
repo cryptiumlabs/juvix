@@ -2,6 +2,8 @@ module Backends.ArithmeticCircuit where
 
 import qualified Circuit as Circ
 import Juvix.Backends.ArithmeticCircuit.Compilation as Base
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Environment as Env
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import Juvix.Backends.ArithmeticCircuit.ZKP as Zkp
 import qualified Juvix.Core.ErasedAnn as J
@@ -20,14 +22,16 @@ shouldProve :: Term -> Type -> Circ.ArithCircuit Par.F -> [(Int, Par.F)] -> T.Te
 shouldProve term ty circuit params =
   T.testCase
     (show term <> " :: " <> show ty <> " should verify proof for " <> show circuit)
-    ( do
-        setup <- Zkp.runSetup circuit
-        proof <- Zkp.prove term ty params setup
-        proof' <- Zkp.runProve circuit params setup
-        let ver = Zkp.verify params setup proof
-            ver' = Zkp.runVerify params setup proof'
-        ver T.@=? ver'
-    )
+    undefined
+
+-- ( do
+--     setup <- Zkp.runSetup circuit
+--     proof <- Zkp.prove term ty params setup
+--     proof' <- Zkp.runProve circuit params setup
+--     let ver = Zkp.verify params setup proof
+--         ver' = Zkp.runVerify params setup proof'
+--     ver T.@=? ver'
+-- )
 
 backendCircuit :: T.TestTree
 backendCircuit =
@@ -45,6 +49,7 @@ backendCircuit =
       shouldProve disjointKnowledge' equalType disjointKnowledgeCircuit' [(0, 1), (1, 1)]
       -- , shouldCompile preimage equalTypes preimageCircuit
       -- , shouldProve preimage equalTypes preimageCircuit
+      -- testFresh
     ]
 
 equalTerm :: Term
@@ -147,3 +152,27 @@ disjointKnowledgeCircuit' =
           r4 = Circ.eq r2 r3
        in Circ.or_ r1 r4
     )
+--------------------------------------------------------------------------------
+-- Misc tests
+--------------------------------------------------------------------------------
+
+-- TODO ∷ refactor test into testing insertions
+
+-- -- TODO ∷ generate lists and test lengths!
+-- testFresh :: T.TestTree
+-- testFresh =
+--   let (_, Env.Env {memory = m}) =
+--         (runState . runExceptT)
+--           ( Env.antiAlias
+--               ( Env.freshVars ["a", "b", "f"]
+--                   >> Env.freshVars ["c", "d", "e"]
+--                   >> Env.freshVars ["fsdf"]
+--               )
+--           )
+--           (Env.Env mempty Types.NoExp)
+--    in T.testCase
+--         ("test testFresh: numbers in memory should be unique")
+--         ( (show m :: Text)
+--             T.@=? "Mem (fromList [(a,(0,NoExp)),(b,(1,NoExp)),(c,(3,NoExp)),(d,\
+--                   \(4,NoExp)),(e,(5,NoExp)),(f,(2,NoExp)),(fsdf,(6,NoExp))]) 7"
+--         )

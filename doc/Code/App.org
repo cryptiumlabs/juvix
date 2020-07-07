@@ -4,6 +4,7 @@
   + [[Parameterisation]]
   + [[Core]]
   + [[Erased]]
+  + [[Erasure]]
   + [[HR]]
   + [[Library]]
 * Config
@@ -13,7 +14,6 @@
 - _Relies on_
   + [[Core]]
   + [[Erased]]
-  + [[HR]]
   + [[HR]]
   + [[Naturals]]
   + [[InteractionNet]]
@@ -26,6 +26,7 @@
 * Options
 * Types
 - _Relies on_
+  + [[Types]]
   + [[IR]]
   + [[Types]]
   + [[Library]]

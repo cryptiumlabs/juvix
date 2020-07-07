@@ -1,277 +1,287 @@
 module Juvix.Core.IR.Typechecker
   ( module Juvix.Core.IR.Typechecker,
-    module Juvix.Core.IR.Typechecker.Log,
-    -- reexports from ….Types
-    T,
-    Annotation' (..),
-    Annotation,
-    ContextElement' (..),
-    ContextElement,
-    contextElement,
-    Context,
-    lookupCtx,
-    TypecheckError' (..),
-    TypecheckError,
-    getTermAnn,
-    getElimAnn,
-    -- reexports from ….Env
-    EnvCtx (..),
-    EnvAlias,
-    EnvTypecheck (..),
-    exec,
-    Globals,
-    Global (..),
+    module Typed,
+    module Env,
   )
 where
 
+import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.IntMap.Strict as IntMap
 import qualified Juvix.Core.IR.Evaluator as Eval
-import Juvix.Core.IR.Typechecker.Env
-import Juvix.Core.IR.Typechecker.Log
+import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
 
-throwLog ::
-  (HasLogTC primTy primVal m, HasThrowTC primTy primVal m) =>
-  TypecheckError primTy primVal ->
-  m z
-throwLog err = do tellLog $ TcError err; throwTC err
+data Leftovers primTy primVal a
+  = Leftovers
+      { loValue :: a,
+        loLocals :: UContext primTy primVal,
+        loPatVars :: PatUsages primTy primVal
+      }
+  deriving (Eq, Show, Generic)
 
-isStar :: IR.Value primTy primVal -> Bool
-isStar (IR.VStar _) = True
-isStar _ = False
+leftoversOk :: Leftovers primTy primVal a -> Bool
+leftoversOk (Leftovers {loLocals, loPatVars}) =
+  all leftoverOk loLocals && all leftoverOk loPatVars
 
-ensure ::
-  (HasLogTC primTy primVal m, HasThrowTC primTy primVal m) =>
-  Bool ->
-  Log primTy primVal ->
-  TypecheckError primTy primVal ->
-  m ()
-ensure cond msg err = if cond then tellLog msg else throwLog err
+leftoverOk :: Usage.T -> Bool
+leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 
--- | 'checker' for checkable terms checks the term
--- against an annotation and returns ().
+-- | Checks a 'Term' against an annotation and returns a decorated term if
+-- successful.
 typeTerm ::
-  forall primTy primVal m.
-  ( HasThrowTC primTy primVal m,
-    HasLogTC primTy primVal m,
-    HasReader "globals" (Globals primTy primVal) m,
-    Show primTy,
-    Show primVal,
-    Eq primTy,
-    Eq primVal
-  ) =>
+  (Eq primTy, Eq primVal) =>
   Param.Parameterisation primTy primVal ->
-  Natural ->
+  IR.Term primTy primVal ->
+  Annotation primTy primVal ->
+  EnvTypecheck primTy primVal (Typed.Term primTy primVal)
+typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
+
+typeTermWith ::
+  (Eq primTy, Eq primVal) =>
+  Param.Parameterisation primTy primVal ->
+  PatBinds primTy primVal ->
   Context primTy primVal ->
   IR.Term primTy primVal ->
   Annotation primTy primVal ->
-  m (Typed.Term primTy primVal)
--- ★ (Universe formation rule)
-typeTerm _ _ii ctx tm@(IR.Star i) ann@(Annotation σ ty) = do
-  tellLogs [TermIntro ctx tm ann, CheckingStar, CheckingSigmaZero]
-  unless (σ == Usage.SNat 0) $ do
-    -- checks sigma = 0.
-    throwLog SigmaMustBeZero
-  tellLogs [SigmaIsZero, CheckingLevels]
-  case ty of
-    IR.VStar j
-      | i < j -> tellLog $ LevelOK i j
-      | otherwise -> throwLog $ UniverseMismatch i j
-    _ -> throwLog $ ShouldBeStar ty
-  tellLog $ Typechecked tm ann
-  pure $ Typed.Star i ann
--- ★- Pi (Universe introduction rule)
-typeTerm p ii ctx tm@(IR.Pi pi varType resultType) ann@(Annotation σ ty) = do
-  tellLogs [TermIntro ctx tm ann, CheckingPi, CheckingSigmaZero]
-  ensure (σ == mempty) SigmaIsZero SigmaMustBeZero
-  tellLog $ CheckingPiAnnIsStar ty
-  ensure (isStar ty) (PiAnnIsStar ty) (ShouldBeStar ty)
-  tellLog CheckingPiArg
-  varType' <- typeTerm p ii ctx varType ann
-  let varUniv = annType $ getTermAnn varType'
-  tellLog CheckingPiRes
-  ty <- Eval.evalTerm p varType
-  resultType' <-
-    typeTerm
-      p
-      (succ ii)
-      -- add x of type V, with zero usage to the context
-      (contextElement (IR.Local ii) (Usage.SNat 0) ty : ctx)
-      -- R, with x in the context
-      (Eval.substTerm (IR.Free (IR.Local ii)) resultType)
-      -- is of 0 usage and type *i
-      ann
-  let resUniv = annType $ getTermAnn resultType'
-  univ <- mergeStar varUniv resUniv
-  let ann' = ann {annType = univ}
-  tellLog $ Typechecked tm ann'
-  pure $ Typed.Pi pi varType' resultType' ann'
-  where
-    mergeStar ::
-      IR.Value primTy primVal ->
-      IR.Value primTy primVal ->
-      m (IR.Value primTy primVal)
-    mergeStar (IR.VStar i) (IR.VStar j) = pure $ IR.VStar $ i `max` j
-    mergeStar (IR.VStar _) ty = throwTC $ ShouldBeStar ty
-    mergeStar ty _ = throwTC $ ShouldBeStar ty
--- ↑ we checked it was VStar on line 96
---   we just care about any unknown levels being filled in
--- primitive types are of type *0 with 0 usage (typing rule missing from lang ref?)
-typeTerm _ ii ctx tm@(IR.PrimTy pty) ann@(Annotation σ ty) = do
-  tellLogs [TermIntro ctx tm ann, CheckingPrimTy, CheckingSigmaZero]
-  ensure (σ == mempty) SigmaIsZero UsageMustBeZero
-  unless (isStar ty)
-    $ throwLog
-    $ TypeMismatch ii tm (IR.VStar 0) ty
-  tellLog $ Typechecked tm ann
-  pure $ Typed.PrimTy pty ann
--- Lam (introduction rule of dependent function type),
--- requires Pi (formation rule of dependent function type)
-typeTerm p ii ctx tm@(IR.Lam m) ann@(Annotation σ ty) = do
-  tellLogs [TermIntro ctx tm ann, CheckingLam]
-  case ty of
-    IR.VPi π ty1 ty2 -> do
-      -- Lam m should be of dependent function type (Pi) with sigma usage.
-      tellLogs [LamAnnIsPi, LamBodyWith σ π]
-      -- apply the function, result is of type T
-      ty2' <- Eval.substValue p (IR.VFree (IR.Local ii)) ty2
-      let ctx' = contextElement (IR.Local ii) (σ <.> π) ty1 : ctx
-          -- put x in the context with usage σπ and type ty1
-          m' = Eval.substTerm (IR.Free (IR.Local ii)) m
-          -- m, with x in the context
-          ann' = Annotation σ ty2'
-      -- is of type ty2 with usage σ
-      mAnn <- typeTerm p (succ ii) ctx' m' ann'
-      tellLog $ Typechecked tm ann
-      pure $ Typed.Lam mAnn ann
-    _ -> throwLog $ ShouldBeFunctionType ty tm
--- let case
-typeTerm p ii ctx (IR.Let l b) ann = do
-  tellLog CheckingLet
-  l' <- typeElim p ii ctx l
-  let ctx' = ContextElement (IR.Local ii) (getElimAnn l') : ctx
-      b' = Eval.substTerm (IR.Free (IR.Local ii)) b
-  bAnn <- typeTerm p (succ ii) ctx' b' ann
-  pure $ Typed.Let l' bAnn ann
--- elim case
-typeTerm p ii ctx tm@(IR.Elim e) ann@(Annotation σ ty) = do
-  tellLogs [TermIntro ctx tm ann, CheckingElim]
-  e' <- typeElim p ii ctx e
-  let Annotation σ' ty' = getElimAnn e'
-  unless (σ' `Usage.allowsUsageOf` σ) $ do
-    throwLog $ UsageNotCompatible σ' σ
-  unless (ty' <: ty) $ do
-    throwLog $ TypeMismatch ii tm ty ty'
-  pure $ Typed.Elim e' ann
+  EnvTypecheck primTy primVal
+    (Leftovers primTy primVal (Typed.Term primTy primVal))
+typeTermWith param pats ctx t ann =
+  execInner (withLeftovers $ typeTerm' t ann) (InnerState param pats ctx)
 
-typeElim0 ::
-  forall primTy primVal m.
-  ( HasThrowTC primTy primVal m,
-    HasLogTC primTy primVal m,
-    HasReader "globals" (Globals primTy primVal) m,
-    Show primTy,
-    Show primVal,
-    Eq primTy,
-    Eq primVal
-  ) =>
-  Param.Parameterisation primTy primVal ->
-  Context primTy primVal ->
-  IR.Elim primTy primVal ->
-  m (Typed.Elim primTy primVal)
-typeElim0 p = typeElim p 0
-
+-- | Infers the type and usage for an 'Elim' and returns it decorated with this
+-- information.
 typeElim ::
-  forall primTy primVal m.
-  ( HasThrowTC primTy primVal m,
-    HasLogTC primTy primVal m,
-    HasReader "globals" (Globals primTy primVal) m,
-    Show primTy,
-    Show primVal,
-    Eq primTy,
-    Eq primVal
-  ) =>
+  (Eq primTy, Eq primVal) =>
   Param.Parameterisation primTy primVal ->
-  Natural ->
+  IR.Elim primTy primVal ->
+  Usage.T ->
+  EnvTypecheck primTy primVal (Typed.Elim primTy primVal)
+typeElim param e σ =
+  loValue <$> typeElimWith param IntMap.empty [] e σ
+
+typeElimWith ::
+  (Eq primTy, Eq primVal) =>
+  Param.Parameterisation primTy primVal ->
+  PatBinds primTy primVal ->
   Context primTy primVal ->
   IR.Elim primTy primVal ->
-  m (Typed.Elim primTy primVal)
--- the type checker should never encounter a
--- bound variable (as in LambdaPi)? To be confirmed.
-typeElim _ _ii ctx elim@(IR.Bound _) = do
-  tellLog $ ElimIntro ctx elim
-  throwLog BoundVariableCannotBeInferred
-typeElim _ ii ctx elim@(IR.Free x) = do
-  globals <- ask @"globals"
-  tellLogs [ElimIntro ctx elim, InferringFree]
-  case lookupCtx x ctx <|> lookupGlobal x globals of
-    Just ann -> do
-      tellLog $ FoundFree ann
-      pure $ Typed.Free x ann
-    Nothing -> do
-      throwLog $ UnboundBinder ii x
--- Prim-Const and Prim-Fn, pi = omega
-typeElim p _ii ctx elim@(IR.Prim prim) = do
-  tellLog $ ElimIntro ctx elim
-  tellLog InferringPrim
-  let ann = Annotation Usage.Omega (arrow (Param.typeOf p prim))
-  pure $ Typed.Prim prim ann
+  Usage.T ->
+  EnvTypecheck primTy primVal
+    (Leftovers primTy primVal (Typed.Elim primTy primVal))
+typeElimWith param pats ctx e σ =
+  execInner (withLeftovers $ typeElim' e σ) (InnerState param pats ctx)
+
+withLeftovers ::
+  InnerTC primTy primVal a ->
+  InnerTC primTy primVal (Leftovers primTy primVal a)
+withLeftovers m =
+  Leftovers <$> m
+    <*> fmap (fmap annUsage) (get @"bound")
+    <*> fmap (fmap annUsage) (get @"patBinds")
+
+typeTerm' ::
+  (Eq primTy, Eq primVal) =>
+  IR.Term primTy primVal ->
+  Annotation primTy primVal ->
+  InnerTC primTy primVal (Typed.Term primTy primVal)
+typeTerm' term ann@(Annotation σ ty) =
+  case term of
+    IR.Star i -> do
+      requireZero σ
+      j <- requireStar ty
+      requireUniverseLT i j
+      pure $ Typed.Star i ann
+    IR.PrimTy t -> do
+      requireZero σ
+      void $ requireStar ty
+      pure $ Typed.PrimTy t ann
+    IR.Pi π a b -> do
+      requireZero σ
+      void $ requireStar ty
+      a' <- typeTerm' a ann
+      b' <- typeTerm' b ann
+      pure $ Typed.Pi π a' b' ann
+    IR.Lam t -> do
+      (π, a, b) <- requirePi ty
+      let varAnn = Annotation (σ <.> π) a
+          tAnn = Annotation σ b
+      t' <- withLocal varAnn $ typeTerm' t tAnn
+      let anns = BindAnnotation {baBindAnn = varAnn, baResAnn = ann}
+      pure $ Typed.Lam t' anns
+    IR.Let σb b t -> do
+      b' <- typeElim' b σb
+      let bAnn = getElimAnn b'
+          tAnn = Annotation σ (Eval.weak ty)
+      t' <- withLocal bAnn $ typeTerm' t tAnn
+      let anns = BindAnnotation {baBindAnn = bAnn, baResAnn = ann}
+      pure $ Typed.Let σb b' t' anns
+    IR.Elim e -> do
+      e' <- typeElim' e σ
+      let ty' = annType $ getElimAnn e'
+      requireSubtype e ty ty'
+      pure $ Typed.Elim e' ann
+
+typeElim' ::
+  (Eq primTy, Eq primVal) =>
+  IR.Elim primTy primVal ->
+  Usage.T ->
+  InnerTC primTy primVal (Typed.Elim primTy primVal)
+typeElim' elim σ =
+  case elim of
+    IR.Bound i -> do
+      ty <- useLocal σ i
+      pure $ Typed.Bound i $ Annotation σ ty
+    IR.Free px@(IR.Pattern x) -> do
+      ty <- usePatVar σ x
+      pure $ Typed.Free px $ Annotation σ ty
+    IR.Free gx@(IR.Global x) -> do
+      (ty, π') <- lookupGlobal x
+      when (π' == IR.GZero) $ requireZero σ
+      pure $ Typed.Free gx $ Annotation σ ty
+    IR.Prim p -> do
+      ty <- primType p
+      pure $ Typed.Prim p $ Annotation σ ty
+    IR.App s t -> do
+      s' <- typeElim' s σ
+      (π, a, b) <- requirePi $ annType $ getElimAnn s'
+      let tAnn = Annotation (σ <.> π) a
+      t' <- typeTerm' t tAnn
+      ty <- substApp b t
+      pure $ Typed.App s' t' $ Annotation σ ty
+    IR.Ann π s a ℓ -> do
+      a' <- typeTerm' a $ Annotation mempty (IR.VStar ℓ)
+      ty <- evalTC a
+      let ann = Annotation σ ty
+      s' <- typeTerm' s ann
+      pure $ Typed.Ann π s' a' ℓ ann
+
+pushLocal :: Annotation primTy primVal -> InnerTC primTy primVal ()
+pushLocal ann = modify @"bound" (ann :)
+
+popLocal :: InnerTC primTy primVal ()
+popLocal = do
+  ctx <- get @"bound"
+  case ctx of
+    Annotation ρ _ : ctx -> do
+      unless (leftoverOk ρ) $ throwTC (LeftoverUsage ρ)
+      put @"bound" ctx
+    [] -> do
+      throwTC (UnboundIndex 0)
+
+withLocal ::
+  Annotation primTy primVal ->
+  InnerTC primTy primVal a ->
+  InnerTC primTy primVal a
+withLocal ann m = pushLocal ann *> m <* popLocal
+
+requireZero :: Usage.T -> InnerTC primTy primVal ()
+requireZero π = unless (π == mempty) $ throwTC (UsageMustBeZero π)
+
+requireStar :: IR.Value primTy primVal -> InnerTC primTy primVal IR.Universe
+requireStar (IR.VStar j) = pure j
+requireStar ty = throwTC (ShouldBeStar ty)
+
+requireUniverseLT :: IR.Universe -> IR.Universe -> InnerTC primTy primVal ()
+requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
+
+type PiParts primTy primVal =
+  (Usage.T, IR.Value primTy primVal, IR.Value primTy primVal)
+
+requirePi ::
+  IR.Value primTy primVal ->
+  InnerTC primTy primVal (PiParts primTy primVal)
+requirePi (IR.VPi π a b) = pure (π, a, b)
+requirePi ty = throwTC (ShouldBeFunctionType ty)
+
+requireSubtype ::
+  (Eq primTy, Eq primVal) =>
+  IR.Elim primTy primVal ->
+  IR.Value primTy primVal ->
+  IR.Value primTy primVal ->
+  InnerTC primTy primVal ()
+requireSubtype subj exp got =
+  unless (got <: exp) $ throwTC (TypeMismatch subj exp got)
+
+useLocal ::
+  Usage.T ->
+  IR.BoundVar ->
+  InnerTC primTy primVal (IR.Value primTy primVal)
+useLocal π var = do
+  ctx <- get @"bound"
+  (ty, ctx) <- go 1 var ctx
+  put @"bound" ctx
+  pure ty
   where
-    arrow (x :| []) = IR.VPrimTy x
-    arrow (x :| (y : ys)) =
-      IR.VPi Usage.Omega (IR.VPrimTy x) (arrow $ y :| ys)
--- App, function M applies to N (Elimination rule of dependent function types)
-typeElim p ii ctx elim@(IR.App m n) = do
-  tellLog $ ElimIntro ctx elim
-  tellLog InferringApp
-  mAnn <- typeElim p ii ctx m
-  let Annotation σ mTy = getElimAnn mAnn
-  -- annotation of M is usage sig and Pi with pi usage.
-  case mTy of
-    IR.VPi π varTy resultTy -> do
-      tellLog $ AppFunIsPi m σ mTy n
-      nAnn <- typeTerm p ii ctx n $ Annotation (σ <.> π) varTy
-      n' <- Eval.evalTerm p n
-      res <- Eval.substValue p n' resultTy -- T[x:=N]
-      tellLog $ AppInferredAs σ res
-      pure $ Typed.App mAnn nAnn $ Annotation σ res
-    _ -> do
-      throwLog $ MustBeFunction m ii n
--- Conv
-typeElim p ii ctx elim@(IR.Ann π theTerm theType level) = do
-  tellLog $ ElimIntro ctx elim
-  tellLog InferringAnn
-  tellLog $ CheckingAnnIsType theType
-  let tyAnn = Annotation (Usage.SNat 0) (IR.VStar level)
-  theType' <- typeTerm p ii ctx theType tyAnn
-  tellLog $ CheckingAnnTerm theTerm π theType
-  ty <- Eval.evalTerm p theType -- the input type, T
-  let ann = Annotation π ty
-  theTerm' <- typeTerm p ii ctx theTerm ann
-  pure $ Typed.Ann π theTerm' theType' level ann
+    go _ _ [] = throwTC (UnboundIndex var)
+    go w 0 (Annotation ρ ty : ctx) = do
+      case ρ `Usage.minus` π of
+        Just ρ' -> pure (Eval.weakBy w ty, Annotation ρ' ty : ctx)
+        Nothing -> throwTC (InsufficientUsage π ρ)
+    go w i (b : ctx) = second (b :) <$> go (w + 1) (i - 1) ctx
+
+usePatVar ::
+  Usage.T ->
+  IR.PatternVar ->
+  InnerTC primTy primVal (IR.Value primTy primVal)
+usePatVar π var = do
+  -- TODO a single traversal with alterF or something
+  mAnn <- gets @"patBinds" $ IntMap.lookup var
+  case mAnn of
+    Just (Annotation ρ ty)
+      | Just ρ' <- ρ `Usage.minus` π -> do
+        modify @"patBinds" $ IntMap.insert var $ Annotation ρ' ty
+        pure ty
+      | otherwise -> do
+        throwTC (InsufficientUsage π ρ)
+    Nothing -> do
+      throwTC (UnboundPatVar var)
 
 lookupGlobal ::
-  IR.Name ->
-  Globals primTy primVal ->
-  Maybe (Annotation primTy primVal)
-lookupGlobal (IR.Local _) _ = Nothing
-lookupGlobal (IR.Global x) globals =
-  makeAnn <$> HashMap.lookup x globals
+  IR.GlobalName ->
+  InnerTC primTy primVal (IR.Value primTy primVal, IR.GlobalUsage)
+lookupGlobal x = do
+  mdefn <- asks @"globals" $ HashMap.lookup x
+  case mdefn of
+    Just defn -> pure $ makeGAnn defn
+    Nothing -> throwTC (UnboundGlobal x)
   where
-    makeAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
-      Annotation
-        { annUsage = Usage.Omega,
-          annType = foldr makePi (IR.VStar dataLevel) dataArgs
-        }
-      where
-        makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
-    makeAnn (GDataCon (IR.DataCon {conType})) =
-      Annotation {annUsage = Usage.Omega, annType = conType}
-    makeAnn (GFunction (IR.Function {funType})) =
-      Annotation {annUsage = Usage.Omega, annType = funType}
+    makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
+      (foldr makePi (IR.VStar dataLevel) dataArgs, IR.GZero)
+    makeGAnn (GDataCon (IR.DataCon {conType})) =
+      (conType, IR.GOmega)
+    makeGAnn (GFunction (IR.Function {funType, funUsage})) =
+      (funType, funUsage)
+    makeGAnn (GAbstract absUsage absType) =
+      (absType, absUsage)
+    makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
+
+primType :: primVal -> InnerTC primTy primVal (IR.Value primTy primVal)
+primType v = do
+  asks @"param" $ \param ->
+    Param.typeOf param v
+      |> fmap IR.VPrimTy
+      |> foldr1 (\s t -> IR.VPi Usage.Omega s t)
+
+substApp ::
+  IR.Value primTy primVal ->
+  IR.Term primTy primVal ->
+  InnerTC primTy primVal (IR.Value primTy primVal)
+substApp ty arg = do
+  arg' <- evalTC arg
+  param <- ask @"param"
+  Eval.substV param arg' ty
+
+evalTC ::
+  IR.Term primTy primVal ->
+  InnerTC primTy primVal (IR.Value primTy primVal)
+evalTC t = do
+  param <- ask @"param"
+  Eval.evalTerm param t
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.
@@ -285,8 +295,6 @@ lookupGlobal (IR.Global x) globals =
 --    @A₂ <: A₁@ and @B₁ <: B₂@)
 -- * It doesn't descend into any other structures
 --   (TODO: which ones are safe to do so?)
-infix 4 <: -- same as (<), etc
-
 (<:) ::
   (Eq primTy, Eq primVal) =>
   IR.Value primTy primVal ->
@@ -294,7 +302,7 @@ infix 4 <: -- same as (<), etc
   Bool
 IR.VStar i <: IR.VStar j = i <= j
 IR.VPi π1 s1 t1 <: IR.VPi π2 s2 t2 =
-  π2 `Usage.allowsUsageOf` π1 && s2 <: s1 && t1 <: t2
+  π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
 s1 <: s2 = s1 == s2
--- TODO: if PrimTys can ever be subtypes of each other the parameterisation will
--- need to know about that
+
+infix 4 <: -- same as (<), etc

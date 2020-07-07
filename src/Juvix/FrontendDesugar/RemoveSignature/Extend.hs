@@ -1,3 +1,30 @@
+-- |
+-- - This pass changes =Signature=, and =Function=
+--   + Belongs to Table
+--     | Changed   | Is a Sum Type of      |
+--     |-----------+-----------------------|
+--     | Function  | TopLevel              |
+--     | Signature | +TopLevel+ ∧ Function |
+-- - _Signature changes_
+--   + We move Signature from TopLevel to Function
+--     #+begin_src haskell
+--       data Signature
+--         = Sig
+--             { signatureName :: Symbol
+--               -- Was a usage but can't alias for now
+--             , signatureUsage :: Maybe Expression
+--             , signatureArrowType :: Expression
+--             , signatureConstraints :: [Expression]
+--             }
+--         deriving (Show, Generic, NFData)
+--     #+end_src
+-- - _Function changes_
+--   + Function now looks like
+--     #+begin_src haskell
+--       data Function
+--         = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+--     #+end_src
+--     * Namely this version adds a signature to upon the previous pass
 module Juvix.FrontendDesugar.RemoveSignature.Extend
   ( module Juvix.FrontendDesugar.RemoveSignature.Extend,
     module Juvix.FrontendDesugar.CombineMultiple.Extend,

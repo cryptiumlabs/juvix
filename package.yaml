@@ -35,7 +35,6 @@ dependencies:
   - arithmetic-circuits
   - galois-field
   - crypto-numbers
-  - zkp
   - pairing
   - MonadRandom
   ###########################
@@ -103,6 +102,8 @@ default-extensions:
   - TemplateHaskell
   - NamedFieldPuns
   - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
 
 ghc-options:
   - -ferror-spans
@@ -163,6 +164,7 @@ library:
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
+    - Juvix.Core.IR.Typechecker
     - Juvix.Core.IRAnn
     - Juvix.Core.Erased
     - Juvix.Core.ErasedAnn
@@ -226,6 +228,7 @@ library:
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
+    - Juvix.Backends.ArithmeticCircuit.Groth 
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
@@ -233,6 +236,7 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Memory
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.JIT
     - Juvix.Backends.LLVM.JIT.Types
@@ -263,7 +267,6 @@ library:
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Types.Base
-    - Juvix.Core.IR.Typechecker
     - Juvix.Core.IR.TransformExt
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
@@ -275,8 +278,8 @@ library:
     - Juvix.Core.ErasedAnn.Types
     - Juvix.Core.ErasedAnn.Erasure
     - Juvix.Core.ErasedAnn.Prim
+    - Juvix.Core.Erased.Types.Base
     - Juvix.Core.IR.Typechecker.Types
-    - Juvix.Core.IR.Typechecker.Log
     - Juvix.Core.IR.Typechecker.Env
     - Juvix.Core.Parameterisation
 

@@ -10,7 +10,7 @@ import qualified Juvix.Library.HashMap as Map
 evaluate ::
   forall primVal m.
   ( HasReader "apply" (primVal -> primVal -> Maybe primVal) m,
-    HasState "env" (Map.T Symbol (Erased.Term primVal)) m,
+    HasReader "env" (Map.T Symbol (Erased.Term primVal)) m,
     HasThrow "evaluationError" (Erased.EvaluationError primVal) m
   ) =>
   Erased.Term primVal ->
@@ -18,12 +18,15 @@ evaluate ::
 evaluate term =
   case term of
     Erased.Var s -> do
-      env <- get @"env"
+      env <- ask @"env"
       case Map.lookup s env of
         Just v -> pure v
         Nothing -> pure (Erased.Var s)
     Erased.Prim p -> pure (Erased.Prim p)
     Erased.Lam s t -> Erased.Lam s |<< evaluate t
+    Erased.Let s b t -> do
+      b <- evaluate b
+      local @"env" (Map.insert s b) $ evaluate t
     Erased.App f x -> do
       f <- evaluate f
       x <- evaluate x
@@ -35,6 +38,5 @@ evaluate term =
             Nothing ->
               throw @"evaluationError" (Erased.PrimitiveApplicationError f' x')
         (Erased.Lam s t, v) -> do
-          modify @"env" (Map.insert s v)
-          evaluate t
+          local @"env" (Map.insert s v) $ evaluate t
         _ -> pure (Erased.App f x)

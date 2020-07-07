@@ -1,3 +1,17 @@
+-- |
+-- - This pass removes the =Punned= form
+--  + Belongs to Table
+--    | Removed | Is a Sum Type of |
+--    |---------+------------------|
+--    | Punned  | NameSet          |
+-- - Thus one does not have to ever deal with the =Punned= variant in
+--   #+begin_src haskell
+--     data NameSet t
+--       = Punned NameSymb
+--       | NonPunned NameSymb t
+--       deriving (Show, Generic, NFData)
+--   #+end_src
+--   after this pass
 module Juvix.FrontendDesugar.RemovePunned.Extend
   ( module Juvix.FrontendDesugar.RemoveSignature.Extend,
     module Juvix.FrontendDesugar.RemovePunned.Extend,

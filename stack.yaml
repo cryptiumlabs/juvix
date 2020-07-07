@@ -72,8 +72,6 @@ extra-deps:
   commit: 95fc86b61c573518ff6a1ab1b9f23301482b2577
 - github: adjoint-io/sonic
   commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
-- github: adjoint-io/zkp
-  commit: 2004a19bb097f34a23cb01d6927965b23c9f0f12
 
 ################################################################################
 # morley deps

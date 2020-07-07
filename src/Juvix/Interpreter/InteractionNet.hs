@@ -20,6 +20,7 @@ erasedCoreToInteractionNetAST term =
     Erased.Var s -> Symbol' s
     Erased.Prim p -> Prim p
     Erased.Lam s t -> Lambda s (erasedCoreToInteractionNetAST t)
+    Erased.Let s b t -> Let s (erasedCoreToInteractionNetAST b) (erasedCoreToInteractionNetAST t)
     Erased.App f x ->
       Application (erasedCoreToInteractionNetAST f) (erasedCoreToInteractionNetAST x)
 

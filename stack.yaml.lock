@@ -399,17 +399,6 @@ packages:
   original:
     url: https://github.com/adjoint-io/sonic/archive/77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d.tar.gz
 - completed:
-    size: 247501
-    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
-    name: zkp
-    version: 0.1.0
-    sha256: dc79c6efe06bb03ad071f157622146e7ea69f5f049c09ae352eca166832dabf8
-    pantry-tree:
-      size: 3659
-      sha256: db88c47fbe996afa764bc4a398668427cdee4b6872ad4f33a226e5fcad7e2f7c
-  original:
-    url: https://github.com/adjoint-io/zkp/archive/2004a19bb097f34a23cb01d6927965b23c9f0f12.tar.gz
-- completed:
     hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
     pantry-tree:
       size: 10983

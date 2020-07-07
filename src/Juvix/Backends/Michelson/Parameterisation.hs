@@ -16,7 +16,6 @@ import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Types as Core
-import qualified Juvix.Core.Types as CoreTypes
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
@@ -48,7 +47,7 @@ applyProper ::
   Prim.Take PrimTy PrimVal ->
   [Prim.Take PrimTy PrimVal] ->
   Either
-    (CoreTypes.PipelineError PrimTy PrimVal CompilationError)
+    (Core.PipelineError PrimTy PrimVal CompilationError)
     (Prim.Return PrimTy PrimVal)
 applyProper fun args =
   case Prim.term fun of
@@ -57,15 +56,13 @@ applyProper fun args =
         0 ->
           Right (Prim.Return (Prim.term fun))
         _x ->
-          Left (CoreTypes.TypecheckerError "Applied a constant to argument")
+          Left (Core.PrimError AppliedConstantToArgument)
     Inst instruction ->
       let inst = Instructions.toNumArgs instruction
        in case inst `compare` fromIntegral (length args) of
             -- we should never take more arguments than primitve could handle
             GT ->
-              "applied too many arguments to a Michelson Primitive"
-                |> CoreTypes.TypecheckerError
-                |> Left
+              Left (Core.PrimError TooManyArguments)
             LT ->
               inst - fromIntegral (length args)
                 |> Prim.Cont fun args
@@ -82,7 +79,7 @@ applyProper fun args =
                         |> Prim.Return
                         |> Right
                     -- TODO :: promote this error
-                    Left err -> CoreTypes.PrimError err |> Left
+                    Left err -> Core.PrimError err |> Left
     x ->
       applyProper (fun {Prim.term = Run.newPrimToInstrErr x}) args
 
