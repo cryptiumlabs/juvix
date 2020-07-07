@@ -27,7 +27,7 @@ backendTests :: T.TestTree
 backendTests =
   T.testGroup
     "Backend tests"
-    [ ArithmeticCircuit.backendCircuit,
+    [ -- ArithmeticCircuit.backendCircuit,
       LLVM.backendLLVM,
       Michelson.backendMichelson
     ]

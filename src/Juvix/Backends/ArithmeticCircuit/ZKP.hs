@@ -9,7 +9,8 @@ import qualified Data.Pairing.BN254 as BN254
 import qualified Fresh
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation as Base
 import Juvix.Library
-import qualified Protocol.Groth as Groth
+-- import qualified Protocol.Groth as Groth
+import qualified Juvix.Backends.ArithmeticCircuit.Groth as Groth
 import qualified QAP
 
 data SetupOutput
