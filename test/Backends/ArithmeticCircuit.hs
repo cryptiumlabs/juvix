@@ -23,14 +23,15 @@ shouldProve term ty circuit params =
   T.testCase
     (show term <> " :: " <> show ty <> " should verify proof for " <> show circuit)
     undefined
-    -- ( do
-    --     setup <- Zkp.runSetup circuit
-    --     proof <- Zkp.prove term ty params setup
-    --     proof' <- Zkp.runProve circuit params setup
-    --     let ver = Zkp.verify params setup proof
-    --         ver' = Zkp.runVerify params setup proof'
-    --     ver T.@=? ver'
-    -- )
+
+-- ( do
+--     setup <- Zkp.runSetup circuit
+--     proof <- Zkp.prove term ty params setup
+--     proof' <- Zkp.runProve circuit params setup
+--     let ver = Zkp.verify params setup proof
+--         ver' = Zkp.runVerify params setup proof'
+--     ver T.@=? ver'
+-- )
 
 backendCircuit :: T.TestTree
 backendCircuit =

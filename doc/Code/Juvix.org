@@ -12,9 +12,15 @@
   4. Various Arithmetic Circuits
      - For use in ZKP's
 *** ArithmeticCircuit
+**** Groth
+- place holder module until we have our groth
+  setup done
+- _Relies on_
+  + [[Library]]
 **** ZKP
 - _Relies on_
   + [[ArithmeticCircuit/Compilation]]
+  + [[Groth]]
   + [[Library]]
 **** Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
