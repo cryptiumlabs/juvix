@@ -16,12 +16,14 @@
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[Typechecker]]
   + [[All]]
   + [[Naturals]]
   + [[Unit]]
   + [[Types]]
   + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 * EAC
 - _Relies on_
   + [[EAC]]
@@ -48,8 +50,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Erased]]
   + [[Erasure]]
-  + [[Types]]
-  + [[HR]]
+  + [[IR]]
+  + [[Typechecker]]
   + [[Unit]]
   + [[Types]]
   + [[Usage]]

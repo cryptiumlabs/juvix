@@ -35,7 +35,6 @@ dependencies:
   - arithmetic-circuits
   - galois-field
   - crypto-numbers
-  - zkp
   - pairing
   - MonadRandom
   ###########################
@@ -225,6 +224,7 @@ library:
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
+    - Juvix.Backends.ArithmeticCircuit.Groth 
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
@@ -232,6 +232,7 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Compilation
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
+    - Juvix.Backends.ArithmeticCircuit.Compilation.Memory
     - Juvix.Backends.LLVM
     - Juvix.Backends.LLVM.JIT
     - Juvix.Backends.LLVM.JIT.Types

@@ -27,6 +27,7 @@ import qualified Circuit.Expr as Expr
 import qualified Circuit.Lang as Lang
 import qualified Data.Map ()
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Environment as Env
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Memory as Memory
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
@@ -57,20 +58,23 @@ transTerm erased =
   case CoreErased.term erased of
     CoreErased.Prim term -> transPrim term
     CoreErased.Var var -> do
-      (n, exp) <- Env.lookup var
-      case exp of
-        Types.NoExp -> do
-          _ <- Env.insert var (Types.FExp $ input n)
-          Env.write (Types.FExp $ input n)
-        _ ->
+      Memory.Ele externalNumber exp <- Env.lookupErr var
+      case externalNumber of
+        Just i -> do
+          _ <- Env.alloc var (Types.FExp $ input i)
+          Env.write (Types.FExp $ input i)
+        Nothing ->
           Env.write exp
+    -- TODO ∷
+    -- We will assume for now this only happens at the top level
+    -- This isn't the case so this has to be refactored later
     CoreErased.LamM {body, arguments} -> do
-      Env.freshVars arguments
+      traverse_ Env.allocExternal arguments
       transTerm body
     CoreErased.AppM f params -> do
       case f of
         CoreErased.Ann {CoreErased.term = CoreErased.LamM {body, arguments}} -> do
-          let execParams (sy, term) = transTerm term >>= Env.insert sy
+          let execParams (sy, term) = transTerm term >>= Env.alloc sy
           --
           traverse_ execParams (zip arguments params)
           term <- transTerm body

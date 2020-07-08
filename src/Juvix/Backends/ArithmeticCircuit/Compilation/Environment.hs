@@ -2,25 +2,15 @@
 
 module Juvix.Backends.ArithmeticCircuit.Compilation.Environment where
 
-import qualified Data.Map as Map
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Memory as Memory
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import Juvix.Library
 
-data Memory = Mem (Map.Map Symbol (Int, Types.Expression)) Int
-  deriving (Generic, Show)
-
-instance Semigroup Memory where
-  (Mem map' n) <> (Mem map'' m) = Mem (map' <> fmap (shift n) map'') (n + m)
-    where
-      shift n (m, exp) = (n + m, exp)
-
-instance Monoid Memory where
-  mempty = Mem Map.empty 0
-  mappend = (<>)
+type Memory = Memory.T Types.Expression
 
 data Env
   = Env
-      { memory :: Memory,
+      { memory :: Memory.T Types.Expression,
         compilation :: Types.Expression
       }
   deriving (Generic, Show)
@@ -56,25 +46,27 @@ type HasMemoryErr m =
 type HasCompErr m =
   (HasComp m, HasThrow "compilationError" Types.CompilationError m)
 
-insert :: HasMemory m => Symbol -> Types.Expression -> m Types.Expression
+insert, alloc :: HasMemory m => Symbol -> Types.Expression -> m Types.Expression
 insert sy exp =
-  modify @"memory" (insert' sy exp) *> return exp
-  where
-    insert' :: Symbol -> Types.Expression -> Memory -> Memory
-    insert' sy x (Mem map n) = Mem (Map.insert sy (n, x) map) (succ n)
+  modify @"memory" (Memory.alloc sy exp) *> return exp
+alloc = insert
 
-remove :: HasMemory m => Symbol -> m ()
+insertExternal, allocExternal :: HasMemory m => Symbol -> m ()
+insertExternal sy =
+  modify @"memory" (Memory.allocExternal sy Types.NoExp)
+allocExternal = insertExternal
+
+remove, free :: HasMemory m => Symbol -> m ()
 remove sy =
-  modify @"memory" (remove' sy)
-  where
-    remove' :: Symbol -> Memory -> Memory
-    remove' sy (Mem map n) = Mem (Map.delete sy map) (pred n)
+  modify @"memory" (Memory.free sy)
+--
+free = remove
 
-lookup :: HasMemoryErr m => Symbol -> m (Int, Types.Expression)
-lookup sy = do
-  Mem map _ <- get @"memory"
-  case Map.lookup sy map of
-    Just res -> return res
+lookupErr :: HasMemoryErr m => Symbol -> m (Memory.Ele Types.Expression)
+lookupErr sy = do
+  mem <- get @"memory"
+  case Memory.lookup sy mem of
+    Just res -> pure res
     Nothing -> throw @"compilationError" Types.VariableOutOfScope
 
 write :: HasState "compilation" s m => s -> m s
@@ -84,13 +76,3 @@ write exp = do
 
 read :: HasState "compilation" s m => m s
 read = get @"compilation"
-
-freshVars :: HasMemory m => [Symbol] -> m ()
-freshVars sys = modify @"memory" (freshVars' sys)
-  where
-    freshVars' :: [Symbol] -> Memory -> Memory
-    freshVars' vars (Mem map' n) =
-      Mem (map' <> Map.fromList (zip vars (slots n))) (n + length vars)
-    --
-    slots :: Int -> [(Int, Types.Expression)]
-    slots n = fmap (,Types.NoExp) [n ..]
