@@ -104,6 +104,7 @@ default-extensions:
   - DisambiguateRecordFields
   - TupleSections
   - BlockArguments
+  - AllowAmbiguousTypes
 
 ghc-options:
   - -ferror-spans
