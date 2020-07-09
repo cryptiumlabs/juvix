@@ -80,7 +80,7 @@ type Op = M.ExpandedOp
 
 data CompilationError
   = NotYetImplemented Text
-  | InvalidInputType
+  | InvalidInputType Text
   | InternalFault Text
   | DidNotTypecheck Instr.ExpandedOp M.TCError
   | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError

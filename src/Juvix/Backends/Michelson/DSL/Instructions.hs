@@ -298,4 +298,6 @@ toNumArgs x =
     Instr.EDIV _ -> 2
     Instr.ISNAT _ -> 1
     Instr.PUSH {} -> 1
+    Instr.LEFT {} -> 1
+    Instr.RIGHT {} -> 1
 -- _ -> error "function not implemented yet"

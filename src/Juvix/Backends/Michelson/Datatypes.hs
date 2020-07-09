@@ -1,5 +1,7 @@
 module Juvix.Backends.Michelson.Datatypes where
 
+import qualified Data.HashMap.Strict as HM
+import qualified Michelson.Untyped.Instr as Instr
 import qualified Juvix.Backends.Michelson.Parameterisation as M
 import qualified Juvix.Core.Erasure.Types as E
 import qualified Juvix.Core.IR as IR
@@ -10,13 +12,13 @@ type Globals = IR.Globals M.PrimTy M.PrimVal
 
 type Term = E.Term M.PrimTy M.PrimVal
 
-type Value = E.Value M.PrimTy M.PrimVal
+type Value = IR.Value M.PrimTy M.PrimVal
 
-type Datatype = E.Datatype M.PrimTy M.PrimVal
+type Datatype = IR.Datatype M.PrimTy M.PrimVal
 
-type DataCon = E.DataCon M.PrimTy M.PrimVal
+type DataCon = IR.DataCon M.PrimTy M.PrimVal
 
-type Pattern = E.Pattern M.PrimTy M.PrimVal
+type Pattern = IR.Pattern M.PrimTy M.PrimVal
 
 data ADT
   = Prim MU.Type
@@ -95,14 +97,44 @@ adtToMichelsonType adt =
     Product x y -> MU.Type (MU.TPair "" "" (adtToMichelsonType x) (adtToMichelsonType y)) ""
 
 datatypesToMichelson :: Globals -> Term -> Term
-datatypesToMichelson globals term = term --undefined
+datatypesToMichelson globals term = rec term
+  where rec term =
+          case term of
+            E.Var sym vty ->
+              case HM.lookup sym globals of
+                Just (IR.GDataCon con) ->
+                  let tyName = dataConTypeName con
+                      Just (IR.GDatatype ty) = HM.lookup tyName globals
+                  in E.Prim (dataconToMichelson ty (IR.conName con)) vty
+                _ -> term
+            E.Prim _ _ -> term
+            E.Lam sym body ty -> E.Lam sym (rec body) ty
+            E.Let sym bind body ty -> E.Let sym (rec bind) (rec body) ty
+            E.App f x ty -> E.App (rec f) (rec x) ty
+            _ -> term
+
+dataConTypeName :: DataCon -> IR.GlobalName
+dataConTypeName (IR.DataCon _ ty) = ret ty
+  where ret (IR.VNeutral (IR.NFree (IR.Global n))) = n
+        ret (IR.VPi _ _ r) = ret r
 
 datatypeToMichelsonType :: Datatype -> M.PrimTy
 datatypeToMichelsonType = M.PrimTy . adtToMichelsonType . datatypeToADT
 
+indexToLeftRight :: Int -> MU.Type -> MU.ExpandedOp
+indexToLeftRight 0 _ = Instr.SeqEx []
+indexToLeftRight 1 t = Instr.SeqEx [Instr.PrimEx (Instr.LEFT "" "" "" "" t)]
+indexToLeftRight 2 t = Instr.SeqEx [Instr.PrimEx (Instr.RIGHT "" "" "" "" t)]
+indexToLeftRight n t = Instr.SeqEx [indexToLeftRight (n - 1) t, Instr.PrimEx (Instr.RIGHT "" "" "" "" t)]
+
 -- will need context of what the encapsulating datatype is to choose the right sum part
-dataconToMichelson :: E.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> M.PrimVal
-dataconToMichelson ty@(E.Datatype _ _ _ cons) name =
+dataconToMichelson :: IR.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> M.PrimVal
+dataconToMichelson ty@(IR.Datatype _ _ _ cons) name =
   let con :: DataCon
-      Just con = head $ filter ((==) name . E.conName) cons
-   in (undefined :: M.PrimVal)
+      Just (con, index) = head $ filter ((==) name . IR.conName . fst) $ zip cons [0..]
+      adt = dataconsToADT cons
+      -- ty = adtToMichelsonType adt
+      ty = MU.Type MU.TInt ""
+      Instr.SeqEx [Instr.PrimEx lr] = indexToLeftRight index ty
+   -- TODO: Need to fix this type.
+   in M.Inst lr
