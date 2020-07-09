@@ -379,7 +379,7 @@ onPairGen1 op f =
          in Env.Constant (f (car, cdr))
     )
 
-onOneArgTy :: 
+onOneArgTy ::
   Env.Reduction m =>
   (Untyped.T -> Instr.ExpandedOp) ->
   (V.Value' Types.Op -> Env.Expanded) ->
@@ -388,7 +388,7 @@ onOneArgTy ::
   m Env.Expanded
 onOneArgTy opFunc f typ instrs = do
   stk <- get @"stack"
-  let VStack.T ((_, ty):_) _ = stk
+  let VStack.T ((_, ty) : _) _ = stk
   onOneArgs (opFunc ty) f typ instrs
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
