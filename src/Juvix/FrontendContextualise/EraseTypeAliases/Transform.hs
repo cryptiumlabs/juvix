@@ -4,13 +4,13 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.Environment as Env
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old --FIXME put in the last stage
-import qualified Juvix.Library.HashMap as Map
 import Juvix.Library
+import qualified Juvix.Library.HashMap as Map
 
 type WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =
-  ( HasState "old" (Context.T term0 ty0 sumRep0) m,
-    HasReader "new" (Context.T termN tyN sumRepN) m,
-    HasState "aliases" (Map.T Symbol New.Expression) m
+  ( HasState "old" (Context.T term0 ty0 sumRep0) m, -- old context
+    HasReader "new" (Context.T termN tyN sumRepN) m, -- new context
+    HasState "aliases" (Map.T Symbol New.Expression) m -- a map of aliases
   )
 
 -- The actual transform we are doing:
@@ -20,9 +20,9 @@ type WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 -- transformTopLevel ::
-  -- WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =>
-  -- Old.TopLevel ->
-  -- m New.TopLevel
+-- WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =>
+-- Old.TopLevel ->
+-- m New.TopLevel
 transformTopLevel (Old.Type t) = New.Type <$> transformType t
 transformTopLevel (Old.ModuleOpen t) = New.ModuleOpen <$> transformModuleOpen t
 transformTopLevel (Old.Function t) = New.Function <$> transformFunction t
@@ -262,6 +262,7 @@ transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 --   WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =>
 --   Old.Lambda ->
 --   m New.Lambda
+-- TODO update context
 transformLambda (Old.Lamb args body) =
   New.Lamb <$> traverse transformMatchLogic args <*> transformExpression body
 
@@ -288,14 +289,17 @@ transformExpRecord (Old.ExpressionRecord fields) =
 --   Env.Context term0 ty0 sumRep0 termN tyN sumRepN Old.Let ->
 --   Env.Context term0 ty0 sumRep0 termN tyN sumRepN New.Let
 transformLet (Old.LetGroup name bindings body) = do
-  oldContext <- Env.lookup name
+  oldContext <- Env.ask name -- look up in "old" state
   case oldContext of
     Just oldC -> do
-      newContext <- Env.modify bindings name
-      New.LetGroup
-        <$> pure name
-        <*> traverse transformFunctionLike bindings
-        <*> transformExpression body
+      Env.add name oldC
+      res <- -- do the transformation and store it
+        New.LetGroup
+          <$> pure name
+          <*> traverse transformFunctionLike bindings
+          <*> transformExpression body
+      --put @"new" oldC -- restore context
+      return res
     Nothing -> do
       newContext <- Env.add name bindings
       New.LetGroup
@@ -329,6 +333,7 @@ transformInfix (Old.Inf l o r) =
 --   WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =>
 --   Old.Match ->
 --   m New.Match
+-- TODO update context
 transformMatch (Old.Match'' on bindings) =
   New.Match'' <$> transformExpression on <*> traverse transformMatchL bindings
 

@@ -828,6 +828,7 @@ Quantitative type implementation inspired by
   + [[EraseTypeAliases/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Types <<EraseTypeAliases/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
