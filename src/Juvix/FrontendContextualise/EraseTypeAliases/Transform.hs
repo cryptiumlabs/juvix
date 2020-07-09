@@ -7,10 +7,13 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old --FIXME put in the 
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
-type WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =
-  ( HasState "old" (Context.T term0 ty0 sumRep0) m, -- old context
-    HasReader "new" (Context.T termN tyN sumRepN) m, -- new context
-    HasState "aliases" (Map.T Symbol New.Expression) m -- a map of aliases
+type Old f = f (NonEmpty Old.FunctionLike) Old.Signature Old.Type
+type New f = f (NonEmpty New.FunctionLike) New.Signature New.Type
+
+type WorkingMaps m =
+  ( HasState "old" (Old Context.T)  m, -- old context
+    HasReader "new" (New Context.T) m, -- new context
+    HasState "aliases" (Map.T Symbol (New Context.Definition)) m -- a map of aliases
   )
 
 -- The actual transform we are doing:
@@ -289,23 +292,21 @@ transformExpRecord (Old.ExpressionRecord fields) =
 --   Env.Context term0 ty0 sumRep0 termN tyN sumRepN Old.Let ->
 --   Env.Context term0 ty0 sumRep0 termN tyN sumRepN New.Let
 transformLet (Old.LetGroup name bindings body) = do
-  oldContext <- Env.ask name -- look up in "old" state
-  case oldContext of
-    Just oldC -> do
-      Env.add name oldC
-      res <- -- do the transformation and store it
-        New.LetGroup
-          <$> pure name
-          <*> traverse transformFunctionLike bindings
-          <*> transformExpression body
-      --put @"new" oldC -- restore context
+  originalVal <- Env.lookup name -- look up in "new" state
+  let transform = do
+    transformedBindings <- traverse transformFunctionLike bindings
+    let def = Env.transLike transformedBindings Nothing Nothing
+    Env.add name def -- add to new context
+    New.LetGroup name transformedBindings <$> transformExpression body
+  case originalVal of
+    Just originalV -> do
+      res <- transform
+      Env.add name originalV
       return res
     Nothing -> do
-      newContext <- Env.add name bindings
-      New.LetGroup
-        <$> pure name
-        <*> traverse transformFunctionLike bindings
-        <*> transformExpression body
+      res <- transform
+      Env.remove name
+      return res
 
 -- transformLetType ::
 --   WorkingMaps m term0 ty0 sumRep0 termN tyN sumRepN =>

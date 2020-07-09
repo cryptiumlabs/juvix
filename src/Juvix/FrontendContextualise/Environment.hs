@@ -48,5 +48,12 @@ mapWithKey f = Juvix.Library.modify @"new" (Context.mapWithKey f)
 add :: Symbol -> Context.Definition termN tyN sumRepN -> Context term0 ty0 sumRep0 termN tyN sumRepN ()
 add sy def = Juvix.Library.modify @"new" (Context.add sy def)
 
+remove :: Symbol -> Context term0 ty0 sumRep0 termN tyN sumRepN ()
+remove sy = Juvix.Library.modify @"new" (Context.remove sy)
+
 forKey :: Context term0 ty0 sumRep0 termN tyN sumRepN () -> [Symbol -> Context.Definition term0 ty0 sumRep0 -> Context term0 ty0 sumRep0 termM tyM sumRepM a] -> Context term0 ty0 sumRep termM tyM sumRepM a
 forKey = undefined
+
+--TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
+transLike = undefined
+

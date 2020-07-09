@@ -93,6 +93,10 @@ add ::
   T term ty sumRep
 add sy term (T map) = T $ HashMap.insert sy term map
 
+remove ::
+  Symbol -> T term ty sumRep -> T term ty sumRep
+remove sy (T map) = T $ HashMap.remove sy map
+
 modify,
   update ::
     (Definition term ty sumRep -> Maybe (Definition term ty sumRep)) ->
