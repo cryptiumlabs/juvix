@@ -1,3 +1,5 @@
+{-# LANGUAGE LiberalTypeSynonyms #-}
+
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
 import qualified Juvix.Core.Common.Context as Context
@@ -7,11 +9,12 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old --FIXME put in the 
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
-type Old f = f (NonEmpty Old.FunctionLike) Old.Signature Old.Type
-type New f = f (NonEmpty New.FunctionLike) New.Signature New.Type
+type Old f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
+
+type New f = f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
 
 type WorkingMaps m =
-  ( HasState "old" (Old Context.T)  m, -- old context
+  ( HasState "old" (Old Context.T) m, -- old context
     HasReader "new" (New Context.T) m, -- new context
     HasState "aliases" (Map.T Symbol (New Context.Definition)) m -- a map of aliases
   )
@@ -294,10 +297,10 @@ transformExpRecord (Old.ExpressionRecord fields) =
 transformLet (Old.LetGroup name bindings body) = do
   originalVal <- Env.lookup name -- look up in "new" state
   let transform = do
-    transformedBindings <- traverse transformFunctionLike bindings
-    let def = Env.transLike transformedBindings Nothing Nothing
-    Env.add name def -- add to new context
-    New.LetGroup name transformedBindings <$> transformExpression body
+        transformedBindings <- traverse transformFunctionLike bindings
+        let def = Env.transLike transformedBindings Nothing Nothing
+         in Env.add name def -- add to new context
+        New.LetGroup name transformedBindings <$> transformExpression body
   case originalVal of
     Just originalV -> do
       res <- transform

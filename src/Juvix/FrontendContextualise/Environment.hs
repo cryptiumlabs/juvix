@@ -56,4 +56,3 @@ forKey = undefined
 
 --TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
 transLike = undefined
-

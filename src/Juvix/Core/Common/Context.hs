@@ -13,6 +13,7 @@ module Juvix.Core.Common.Context
     lookup,
     (!?),
     add,
+    remove,
     modify,
     update,
     names,
@@ -95,7 +96,7 @@ add sy term (T map) = T $ HashMap.insert sy term map
 
 remove ::
   Symbol -> T term ty sumRep -> T term ty sumRep
-remove sy (T map) = T $ HashMap.remove sy map
+remove sy (T map) = T $ HashMap.delete sy map
 
 modify,
   update ::
