@@ -134,7 +134,7 @@ test_right =
     "right constructor"
     (HR.Elim (HR.App (HR.Var "MkRight") boolTerm), Usage.Omega, HR.Elim (HR.Var "either"))
     (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) emptyGlobals)
-    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VOr (Right (MT.VBool False)) :: (MT.Value (MT.TOr MT.TBool MT.TBool))))) MT.Nop))
 
 test_complex_a :: T.TestTree
 test_complex_a =

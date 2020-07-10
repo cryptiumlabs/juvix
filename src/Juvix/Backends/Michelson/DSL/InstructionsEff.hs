@@ -759,7 +759,7 @@ consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 typeToPrimType :: forall m. Env.Error m => Types.Type -> m Untyped.T
 typeToPrimType ty =
   case ty of
-    Ann.SymT _ -> throw @"compilationError" (Types.InvalidInputType "unexpected symt")
+    Ann.SymT s -> throw @"compilationError" (Types.InvalidInputType ("unexpected symt: " <> show s))
     Ann.Star _ -> throw @"compilationError" (Types.InvalidInputType "unexpected start")
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
     -- TODO ∷ Integrate usage information into this

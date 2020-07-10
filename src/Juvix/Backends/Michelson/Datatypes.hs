@@ -89,12 +89,35 @@ valueToADT v =
     E.VPi _ arg res ->
       Product (valueToADT arg) (valueToADT res)
 
+-- need to do chain-replace of types here?
+
 adtToMichelsonType :: ADT -> MU.Type
 adtToMichelsonType adt =
   case adt of
     Prim p -> p
     Sum x y -> MU.Type (MU.TOr "" "" (adtToMichelsonType x) (adtToMichelsonType y)) ""
     Product x y -> MU.Type (MU.TPair "" "" (adtToMichelsonType x) (adtToMichelsonType y)) ""
+
+replaceLast :: E.Type M.PrimTy -> E.Type M.PrimTy -> E.Type M.PrimTy
+replaceLast t l =
+  case t of
+    E.Pi u a r -> E.Pi u a (replaceLast r l)
+    _ -> l
+
+typeToMichelson :: Globals -> E.Type M.PrimTy -> E.Type M.PrimTy
+typeToMichelson globals ty = rec ty
+  where
+    rec ty =
+      case ty of
+        E.SymT sym ->
+          case HM.lookup sym globals of
+            Just (IR.GDatatype ty) ->
+              let adt = datatypeToADT ty
+                  mty = adtToMichelsonType adt
+               in E.PrimTy (M.PrimTy mty)
+            Nothing -> ty
+        E.Pi u a r -> E.Pi u (typeToMichelson globals a) (typeToMichelson globals r)
+        _ -> ty
 
 datatypesToMichelson :: Globals -> Term -> Term
 datatypesToMichelson globals term = rec term
@@ -106,12 +129,13 @@ datatypesToMichelson globals term = rec term
             Just (IR.GDataCon con) ->
               let tyName = dataConTypeName con
                   Just (IR.GDatatype ty) = HM.lookup tyName globals
-               in E.Prim (dataconToMichelson ty (IR.conName con)) vty
+                  (val, pty) = dataconToMichelson ty (IR.conName con)
+               in E.Prim val (typeToMichelson globals vty)
             _ -> term
         E.Prim _ _ -> term
-        E.Lam sym body ty -> E.Lam sym (rec body) ty
-        E.Let sym bind body ty -> E.Let sym (rec bind) (rec body) ty
-        E.App f x ty -> E.App (rec f) (rec x) ty
+        E.Lam sym body ty -> E.Lam sym (rec body) (typeToMichelson globals ty)
+        E.Let sym bind body ty -> E.Let sym (rec bind) (rec body) (typeToMichelson globals ty)
+        E.App f x ty -> E.App (rec f) (rec x) (typeToMichelson globals ty)
         _ -> term
 
 dataConTypeName :: DataCon -> IR.GlobalName
@@ -125,18 +149,19 @@ datatypeToMichelsonType = M.PrimTy . adtToMichelsonType . datatypeToADT
 
 indexToLeftRight :: Int -> MU.Type -> MU.ExpandedOp
 indexToLeftRight 0 _ = Instr.SeqEx []
-indexToLeftRight 1 t = Instr.SeqEx [Instr.PrimEx (Instr.LEFT "" "" "" "" t)]
-indexToLeftRight 2 t = Instr.SeqEx [Instr.PrimEx (Instr.RIGHT "" "" "" "" t)]
-indexToLeftRight n t = Instr.SeqEx [indexToLeftRight (n - 1) t, Instr.PrimEx (Instr.RIGHT "" "" "" "" t)]
+indexToLeftRight 1 t = Instr.SeqEx [Instr.PrimEx (Instr.RIGHT "" "" "" "" t)]
+indexToLeftRight 2 t = Instr.SeqEx [Instr.PrimEx (Instr.LEFT "" "" "" "" t)]
+indexToLeftRight n t = Instr.SeqEx [indexToLeftRight (n - 1) t, Instr.PrimEx (Instr.LEFT "" "" "" "" t)]
 
 -- will need context of what the encapsulating datatype is to choose the right sum part
-dataconToMichelson :: IR.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> M.PrimVal
+dataconToMichelson :: IR.Datatype M.PrimTy M.PrimVal -> IR.GlobalName -> (M.PrimVal, M.PrimTy)
 dataconToMichelson ty@(IR.Datatype _ _ _ cons) name =
   let con :: DataCon
       Just (con, index) = head $ filter ((==) name . IR.conName . fst) $ zip cons [0 ..]
       adt = dataconsToADT cons
+      pty = adtToMichelsonType adt
       -- ty = adtToMichelsonType adt
       ty = MU.Type MU.TInt ""
       Instr.SeqEx [Instr.PrimEx lr] = indexToLeftRight index ty
    in -- TODO: Need to fix this type.
-      M.Inst lr
+      (M.Inst lr, M.PrimTy pty)
