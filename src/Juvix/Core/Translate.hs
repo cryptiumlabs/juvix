@@ -25,10 +25,10 @@ hrToIR' term =
     HR.Lam n b -> do
       b <- withName n $ hrToIR' b
       pure (IR.Lam b)
-    HR.Let n l b -> do
+    HR.Let π n l b -> do
       l <- hrElimToIR' l
       b <- withName n $ hrToIR' b
-      pure (IR.Let l b)
+      pure (IR.Let π l b)
     HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
 hrElimToIR' ::
@@ -41,7 +41,7 @@ hrElimToIR' elim =
       maybeIndex <- lookupName n
       pure $ case maybeIndex of
         Just ind -> IR.Bound (fromIntegral ind)
-        Nothing -> IR.Free (IR.Global (show n))
+        Nothing -> IR.Free (IR.Global n)
     HR.Prim p -> pure (IR.Prim p)
     HR.App f x -> do
       f <- hrElimToIR' f
@@ -74,11 +74,11 @@ irToHR' term =
       n <- newName
       t <- irToHR' t
       pure (HR.Lam n t)
-    IR.Let l b -> do
+    IR.Let π l b -> do
       l <- irElimToHR' l
       n <- newName
       b <- irToHR' b
-      pure (HR.Let n l b)
+      pure (HR.Let π n l b)
     IR.Elim e -> HR.Elim |<< irElimToHR' e
 
 irElimToHR' ::
@@ -106,11 +106,12 @@ irElimToHR' elim =
 exec :: EnvElim a -> (a, Env)
 exec (EnvCon env) = runState env (Env 0 [] [])
 
-data Env = Env
-  { nextName :: Int,
-    nameStack :: [Int],
-    symbolStack :: [Symbol]
-  }
+data Env
+  = Env
+      { nextName :: Int,
+        nameStack :: [Int],
+        symbolStack :: [Symbol]
+      }
   deriving (Show, Eq, Generic)
 
 newtype EnvElim a = EnvCon (State Env a)

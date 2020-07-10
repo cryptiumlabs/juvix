@@ -6,24 +6,29 @@ import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
 
-type GlobalName = Text
+type Universe = Natural
+
+type GlobalName = Symbol
 
 type PatternVar = Int
+
+type BoundVar = Natural
 
 data Name
   = -- | Global variables are represented by name thus type string
     Global GlobalName
-  | -- | to convert a bound variable into a free one
-    Local Natural
   | -- | Pattern variable, unique within a scope
     Pattern PatternVar
   deriving (Show, Eq)
+
+data GlobalUsage = GZero | GOmega
+  deriving (Show, Eq, Generic, Bounded, Enum)
 
 extensible
   [d|
     data Term primTy primVal
       = -- | (sort i) i th ordering of (closed) universe.
-        Star Natural
+        Star Universe
       | -- | PrimTy primitive type
         PrimTy primTy
       | -- | formation rule of the dependent function type PI.
@@ -34,7 +39,7 @@ extensible
         Lam (Term primTy primVal)
       | -- | Let binder.
         -- the local definition is bound to de Bruijn index 0.
-        Let (Elim primTy primVal) (Term primTy primVal)
+        Let Usage (Elim primTy primVal) (Term primTy primVal)
       | -- | CONV conversion rule. TODO make sure 0Γ ⊢ S≡T
         -- Elim is the constructor that embeds Elim to Term
         Elim (Elim primTy primVal)
@@ -43,7 +48,7 @@ extensible
     -- | inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
-        Bound Natural
+        Bound BoundVar
       | -- | Free variables of type name (see above)
         Free Name
       | -- | primitive constant
@@ -51,12 +56,12 @@ extensible
       | -- | elimination rule of PI (APP).
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
-        Ann Usage (Term primTy primVal) (Term primTy primVal) Natural
+        Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show)
 
     -- | Values/types
     data Value primTy primVal
-      = VStar Natural
+      = VStar Universe
       | VPrimTy primTy
       | VPi Usage (Value primTy primVal) (Value primTy primVal)
       | VLam (Value primTy primVal)
@@ -67,40 +72,45 @@ extensible
     -- | A neutral term is either a variable or an application of a neutral term
     -- to a value
     data Neutral primTy primVal
-      = NBound Natural
+      = NBound BoundVar
       | NFree Name
       | NApp (Neutral primTy primVal) (Value primTy primVal)
       deriving (Eq, Show)
 
-    data Datatype primTy primVal = Datatype
-      { dataName :: GlobalName,
-        -- | the type constructor's arguments
-        dataArgs :: [DataArg primTy primVal],
-        -- | the type constructor's target universe level
-        dataLevel :: Natural,
-        dataCons :: [DataCon primTy primVal]
-      }
+    data Datatype primTy primVal
+      = Datatype
+          { dataName :: GlobalName,
+            -- | the type constructor's arguments
+            dataArgs :: [DataArg primTy primVal],
+            -- | the type constructor's target universe level
+            dataLevel :: Natural,
+            dataCons :: [DataCon primTy primVal]
+          }
       deriving (Show, Eq, Generic)
 
-    data DataArg primTy primVal = DataArg
-      { argName :: GlobalName,
-        argUsage :: Usage,
-        argType :: Value primTy primVal,
-        argIsParam :: Bool
-      }
+    data DataArg primTy primVal
+      = DataArg
+          { argName :: GlobalName,
+            argUsage :: Usage,
+            argType :: Value primTy primVal,
+            argIsParam :: Bool
+          }
       deriving (Show, Eq, Generic)
 
-    data DataCon primTy primVal = DataCon
-      { conName :: GlobalName,
-        conType :: Value primTy primVal
-      }
+    data DataCon primTy primVal
+      = DataCon
+          { conName :: GlobalName,
+            conType :: Value primTy primVal
+          }
       deriving (Show, Eq, Generic)
 
-    data Function primTy primVal = Function
-      { funName :: GlobalName,
-        funType :: Value primTy primVal,
-        funClauses :: NonEmpty (FunClause primTy primVal)
-      }
+    data Function primTy primVal
+      = Function
+          { funName :: GlobalName,
+            funUsage :: GlobalUsage,
+            funType :: Value primTy primVal,
+            funClauses :: NonEmpty (FunClause primTy primVal)
+          }
       deriving (Show, Eq, Generic)
 
     data FunClause primTy primVal

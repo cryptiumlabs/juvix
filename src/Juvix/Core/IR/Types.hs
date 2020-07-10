@@ -3,8 +3,11 @@
 module Juvix.Core.IR.Types
   ( module Juvix.Core.IR.Types,
     Name (..),
+    GlobalUsage (..),
     GlobalName,
     PatternVar,
+    BoundVar,
+    Universe,
   )
 where
 
@@ -37,7 +40,7 @@ extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 quote0 :: Value primTy primVal -> Term primTy primVal
 quote0 = quote 0
 
-quote :: Natural -> Value primTy primVal -> Term primTy primVal
+quote :: BoundVar -> Value primTy primVal -> Term primTy primVal
 quote _ (VStar nat) = Star nat
 quote _ (VPrimTy p) = PrimTy p
 quote ii (VPi π s t) = Pi π (quote ii s) (quote (ii + 1) t)
@@ -45,7 +48,7 @@ quote ii (VLam s) = Lam (quote (ii + 1) s)
 quote _ (VPrim pri) = Elim (Prim pri)
 quote ii (VNeutral n) = Elim $ neutralQuote ii n
 
-neutralQuote :: Natural -> Neutral primTy primVal -> Elim primTy primVal
+neutralQuote :: BoundVar -> Neutral primTy primVal -> Elim primTy primVal
 neutralQuote _ (NBound x) = Bound x
 neutralQuote _ (NFree x) = Free x
 neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
@@ -64,6 +67,6 @@ pattern VBound ::
   ( XNBound ext primTy primVal ~ (),
     XVNeutral ext primTy primVal ~ ()
   ) =>
-  Natural ->
+  BoundVar ->
   Value' ext primTy primVal
 pattern VBound n = VNeutral' (NBound' n ()) ()

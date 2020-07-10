@@ -1,145 +1,160 @@
-module Juvix.Core.Erasure.Algorithm (erase) where
+module Juvix.Core.Erasure.Algorithm (erase, eraseAnn) where
 
-import qualified Juvix.Core.Erased as Erased
+import Data.List (genericIndex)
+import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erasure.Types as Erasure
-import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR as IR
-import Juvix.Core.Translate (hrToIR, irToHR)
-import qualified Juvix.Core.Types as Core
-import qualified Juvix.Core.Usage as Core
+import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (empty)
-import qualified Juvix.Library.HashMap as Map
 
--- TODO ∷ find out if we can promote this somewhere else
-type TermInfo primTy primVal result =
-  Core.Parameterisation primTy primVal ->
-  HR.Term primTy primVal ->
-  Core.Usage ->
-  HR.Term primTy primVal ->
-  result
+eraseAnn :: Erasure.Term primTy primVal -> Erased.Term primVal
+eraseAnn (Erasure.Var x _) = Erased.Var x
+eraseAnn (Erasure.Prim p _) = Erased.Prim p
+eraseAnn (Erasure.Lam x t _) = Erased.Lam x (eraseAnn t)
+eraseAnn (Erasure.Let x b t _) = Erased.Let x (eraseAnn b) (eraseAnn t)
+eraseAnn (Erasure.App s t _) = Erased.App (eraseAnn s) (eraseAnn t)
 
 erase ::
-  (Show primTy, Show primVal, Eq primTy, Eq primVal, Show compErr) =>
-  IR.Globals primTy primVal ->
-  TermInfo
-    primTy
-    primVal
-    (Either Erasure.Error (Core.AssignWithType primTy primVal compErr))
-erase globals parameterisation term usage ty =
-  let (erased, env) = exec globals (eraseTerm parameterisation term usage ty)
-   in erased >>| \(term, type') ->
-        Core.WithType
-          { Core.termAssign =
-              Core.Assignment
-                { Core.term = term,
-                  Core.assignment = Erasure.typeAssignment env
-                },
-            Core.type' = type'
-          }
-
-exec ::
-  IR.Globals primTy primVal ->
-  Erasure.EnvT primTy primVal a ->
-  (Either Erasure.Error a, Erasure.Env primTy primVal)
-exec globals (Erasure.EnvEra env) =
-  runState (runExceptT env) (Erasure.Env Map.empty [] 0 [] globals)
+  Typed.Term primTy primVal ->
+  Usage.T ->
+  Either (Erasure.Error primTy primVal) (Erasure.Term primTy primVal)
+erase t π
+  | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
+  | otherwise = Erasure.exec $ eraseTerm t
 
 eraseTerm ::
-  ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
-    HasState "nextName" Int m,
-    HasState "nameStack" [Int] m,
-    HasThrow "erasureError" Erasure.Error m,
-    HasState "context" (IR.Context primTy primVal) m,
-    HasReader "globals" (IR.Globals primTy primVal) m,
-    Show primTy,
-    Show primVal,
-    Eq primTy,
-    Eq primVal
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Symbol] m,
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m
   ) =>
-  TermInfo primTy primVal (m (Erased.Term primVal, Erased.Type primTy))
-eraseTerm parameterisation term usage ty = do
-  globals <- ask @"globals"
-  if usage == Core.SNat 0
-    then
-      throw @"erasureError"
-        (Erasure.CannotEraseZeroUsageTerm (show (term, usage, ty)))
-    else case term of
-      HR.Star _ -> throw @"erasureError" Erasure.Unsupported
-      HR.PrimTy _ -> throw @"erasureError" Erasure.Unsupported
-      HR.Pi _ _ _ _ -> throw @"erasureError" Erasure.Unsupported
-      HR.Lam name body -> do
-        -- The type must be a dependent function.
-        let HR.Pi argUsage _ varTy retTy = ty
-        funcTy <- eraseType parameterisation ty
-        -- TODO: Is this correct?
-        let bodyUsage = Core.SNat 1
-        --
-        ty <- eraseType parameterisation varTy
-        modify @"typeAssignment" (Map.insert name ty)
-        --
-        let (Right varTyIR, _) =
-              IR.exec globals (IR.evalTerm parameterisation (hrToIR varTy))
-        --
-        modify @"context"
-          (IR.contextElement (IR.Global $ show name) argUsage varTyIR :)
-        (body, _) <- eraseTerm parameterisation body bodyUsage retTy
-        -- If argument is not used, just return the erased body.
-        -- Otherwise, if argument is used, return a lambda function.
-        pure
-          ( if usage <.> argUsage == mempty
-              then body
-              else Erased.Lam name body,
-            funcTy
-          )
-      HR.Elim elim -> do
-        elimTy <- eraseType parameterisation ty
-        case elim of
-          HR.Var n -> pure (Erased.Var n, elimTy)
-          HR.Prim p -> pure (Erased.Prim p, elimTy)
-          HR.App f x -> do
-            let IR.Elim fIR = hrToIR (HR.Elim f)
-            context <- get @"context"
-            case IR.typeElim0 parameterisation context fIR
-              |> fmap IR.getElimAnn
-              |> IR.exec globals
-              |> fst of
-              Left err ->
-                throw @"erasureError"
-                  $ Erasure.InternalError
-                  $ show err <> " while attempting to erase " <> show f
-              Right (IR.Annotation fUsage fTy) -> do
-                let qFTy = IR.quote0 fTy
-                let fty@(HR.Pi argUsage _ fArgTy _) = irToHR qFTy
-                (f, _) <- eraseTerm parameterisation (HR.Elim f) fUsage fty
-                if argUsage == mempty
-                  then pure (f, elimTy)
-                  else do
-                    (x, _) <- eraseTerm parameterisation x argUsage fArgTy
-                    pure (Erased.App f x, elimTy)
-          HR.Ann usage term ty _ -> do
-            (term, _) <- eraseTerm parameterisation term usage ty
-            pure (term, elimTy)
+  Typed.Term primTy primVal ->
+  m (Erasure.Term primTy primVal)
+eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm t@(Typed.PrimTy _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm t@(Typed.Pi _ _ _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm (Typed.Lam t anns) = do
+  let ty@(IR.VPi π _ _) = IR.annType $ IR.baResAnn anns
+  (x, t) <- withName \x -> (x,) <$> eraseTerm t
+  if π == mempty
+    then pure t
+    else Erasure.Lam x t <$> eraseType ty
+eraseTerm (Typed.Let π b t anns) = do
+  (x, t) <- withName \x -> (x,) <$> eraseTerm t
+  if π == mempty
+    then pure t
+    else do
+      let ty = IR.annType $ IR.baResAnn anns
+      b <- eraseElim b
+      Erasure.Let x b t <$> eraseType ty
+eraseTerm (Typed.Elim e _) = eraseElim e
+
+eraseElim ::
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Symbol] m,
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m
+  ) =>
+  Typed.Elim primTy primVal ->
+  m (Erasure.Term primTy primVal)
+eraseElim (Typed.Bound x ann) = do
+  Erasure.Var <$> lookupBound x
+    <*> eraseType (IR.annType ann)
+eraseElim (Typed.Free (IR.Global x) ann) = do
+  Erasure.Var x <$> eraseType (IR.annType ann)
+eraseElim e@(Typed.Free (IR.Pattern _) _) = do
+  -- FIXME ??????
+  throwEra $ Erasure.UnsupportedTermE e
+eraseElim (Typed.Prim p ann) = do
+  Erasure.Prim p <$> eraseType (IR.annType ann)
+eraseElim (Typed.App e s ann) = do
+  let IR.VPi π _ _ = IR.annType $ IR.getElimAnn e
+  e <- eraseElim e
+  if π == mempty
+    then pure e
+    else do
+      s <- eraseTerm s
+      Erasure.App e s <$> eraseType (IR.annType ann)
+eraseElim (Typed.Ann _ s _ _ _) = do
+  eraseTerm s
 
 eraseType ::
   forall primTy primVal m.
-  ( HasState "typeAssignment" (Erased.TypeAssignment primTy) m,
-    HasThrow "erasureError" Erasure.Error m
+  ( HasThrow "erasureError" (Erasure.Error primTy primVal) m,
+    HasState "nameStack" [Symbol] m,
+    HasState "nextName" Int m
   ) =>
-  Core.Parameterisation primTy primVal ->
-  HR.Term primTy primVal ->
-  m (Erased.Type primTy)
-eraseType parameterisation term = do
-  case term of
-    HR.Star n -> pure (Erased.Star n)
-    HR.PrimTy p -> pure (Erased.PrimTy p)
-    HR.Pi argUsage _ argTy retTy -> do
-      arg <- eraseType parameterisation argTy
-      ret <- eraseType parameterisation retTy
-      pure (Erased.Pi argUsage arg ret)
-    -- FIXME might need to check that the name doesn't occur
-    -- in @retTy@ anywhere
-    HR.Lam _ _ -> throw @"erasureError" Erasure.Unsupported
-    HR.Elim elim ->
-      case elim of
-        HR.Var s -> pure (Erased.SymT s)
-        _ -> throw @"erasureError" Erasure.Unsupported
+  IR.Value primTy primVal ->
+  m (Erasure.Type primTy)
+eraseType (IR.VStar i) = do
+  pure $ Erasure.Star i
+eraseType (IR.VPrimTy t) = do
+  pure $ Erasure.PrimTy t
+eraseType (IR.VPi π a b) = do
+  -- FIXME dependency
+  Erasure.Pi π <$> eraseType a
+    <*> withName \_ -> eraseType b
+eraseType v@(IR.VLam _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
+eraseType (IR.VNeutral n) = do
+  eraseTypeN n
+eraseType v@(IR.VPrim _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
+
+eraseTypeN ::
+  forall primTy primVal m.
+  ( HasThrow "erasureError" (Erasure.Error primTy primVal) m,
+    HasState "nameStack" [Symbol] m
+  ) =>
+  IR.Neutral primTy primVal ->
+  m (Erasure.Type primTy)
+eraseTypeN (IR.NBound x) = do
+  Erasure.SymT <$> lookupBound x
+eraseTypeN (IR.NFree (IR.Global x)) = do
+  pure $ Erasure.SymT x
+eraseTypeN n@(IR.NFree (IR.Pattern _)) = do
+  -- FIXME ??????
+  throwEra $ Erasure.UnsupportedTypeN n
+eraseTypeN n@(IR.NApp _ _) = do
+  -- FIXME add AppT and fill this in
+  throwEra $ Erasure.UnsupportedTypeN n
+
+pushName ::
+  (HasState "nextName" Int m, HasState "nameStack" [Symbol] m) =>
+  m Symbol
+pushName = do
+  x <- gets @"nextName" $ internText . show
+  modify @"nextName" succ
+  modify @"nameStack" (x :)
+  pure $ x
+
+popName ::
+  ( HasState "nameStack" [a] m,
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m
+  ) =>
+  m ()
+popName = do
+  ns <- get @"nameStack"
+  case ns of
+    [] -> throw @"erasureError" $ Erasure.InternalError "name stack ran out"
+    _ : ns -> put @"nameStack" ns
+
+withName ::
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Symbol] m,
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m
+  ) =>
+  (Symbol -> m a) ->
+  m a
+withName f = do x <- pushName; f x <* popName
+
+lookupBound ::
+  HasState "nameStack" [Symbol] m =>
+  IR.BoundVar ->
+  m Symbol
+lookupBound x = gets @"nameStack" (`genericIndex` x)
+
+throwEra ::
+  HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
+  Erasure.Error primTy primVal ->
+  m a
+throwEra = throw @"erasureError"

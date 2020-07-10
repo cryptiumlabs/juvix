@@ -1,3 +1,7 @@
+-- |
+-- Provides the various types needed for the arithmetic circuit
+-- backend
+-- - Expression covers the gambit of arithmetic circuit expressions
 module Juvix.Backends.ArithmeticCircuit.Compilation.Types where
 
 import qualified Circuit
@@ -5,7 +9,6 @@ import qualified Circuit.Expr as Expr
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
 import Juvix.Library
-import Numeric.Natural ()
 
 data PrimVal
   = Element Par.F
@@ -41,8 +44,8 @@ data CompilationError
   | TypeErrorApplicationNonFunction
   deriving (Eq, Show, Generic)
 
-data ArithExpression
+data Expression
   = BoolExp (Expr.Expr Circuit.Wire Par.F Bool)
   | FExp (Expr.Expr Circuit.Wire Par.F Par.F)
   | NoExp
-  deriving (Generic)
+  deriving (Generic, Show)

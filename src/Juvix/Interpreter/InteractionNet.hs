@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 module Juvix.Interpreter.InteractionNet
   ( module Juvix.Interpreter.InteractionNet.Parser,
     module Juvix.Interpreter.InteractionNet.Translation,
@@ -20,6 +21,7 @@ erasedCoreToInteractionNetAST term =
     Erased.Var s -> Symbol' s
     Erased.Prim p -> Prim p
     Erased.Lam s t -> Lambda s (erasedCoreToInteractionNetAST t)
+    Erased.Let s b t -> Let s (erasedCoreToInteractionNetAST b) (erasedCoreToInteractionNetAST t)
     Erased.App f x ->
       Application (erasedCoreToInteractionNetAST f) (erasedCoreToInteractionNetAST x)
 

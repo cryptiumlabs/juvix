@@ -1,3 +1,41 @@
+-- |
+-- - This pass changes =FunctionLike=, =Function=, and =Let=
+--   + Belongs to Table
+--     | Changed      | Is a Sum Type of |
+--     |--------------+------------------|
+--     | Function     | TopLevel         |
+--     | Let          | Expression       |
+--     | FunctionLike | Function ∧ Let   |
+-- - _Function Like changes_
+--   + Function Like now looks like
+--     #+begin_src haskell
+--       data FunctionLike a
+--         = Like
+--           { functionLikeArgs :: [Arg]
+--           , functionLikeBody :: a
+--           }
+--         deriving (Show, Generic, NFData)
+--     #+end_src
+--     * This pass removes the =Name= from the previous transform
+-- - _Let changes_
+--   + Let now looks like
+--     #+begin_src haskell
+--       data Let
+--         = LetGroup
+--           { letName :: Symbol
+--           , letBindings :: NonEmpty (FunctionLike Expression)
+--           , letBody :: Expression
+--           }
+--         deriving (Show, Generic, NFData)
+--     #+end_src
+--     * In this pass we add =Name= from the previous Let type
+-- - _Function changes_
+--   + Function now looks like
+--     #+begin_src haskell
+--       data Function
+--         = Func Symbol (NonEmpty (FunctionLike Expression))
+--     #+end_src
+--     * Namely this version adds symbol to the previous pass
 module Juvix.FrontendDesugar.CombineMultiple.Extend
   ( module Juvix.FrontendDesugar.CombineMultiple.Extend,
     module Juvix.FrontendDesugar.RemoveCond.Extend,

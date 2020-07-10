@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 -- |
 -- - This module serves as a lower layer DSL that is just a binding
 --   over the untyped instruction bindings
@@ -298,5 +299,4 @@ toNumArgs x =
     Instr.EDIV _ -> 2
     Instr.ISNAT _ -> 1
     Instr.PUSH {} -> 1
-
 -- _ -> error "function not implemented yet"

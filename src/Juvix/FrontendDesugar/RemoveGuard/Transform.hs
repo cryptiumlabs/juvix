@@ -266,7 +266,7 @@ transformMatchLogic (Old.MatchLogic start name) =
 
 tranformMatchLogicStart :: Old.MatchLogicStart -> New.MatchLogicStart
 tranformMatchLogicStart (Old.MatchCon conName logic) =
-  Old.MatchCon conName (transformMatchLogic <$> logic)
+  New.MatchCon conName (transformMatchLogic <$> logic)
 tranformMatchLogicStart (Old.MatchName s) =
   New.MatchName s
 tranformMatchLogicStart (Old.MatchConst c) =

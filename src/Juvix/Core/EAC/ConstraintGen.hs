@@ -23,6 +23,9 @@ setOccurrenceMap term = do
       modify' @"occurrenceMap" (Map.insertWith (+) sym 1)
     Erased.Lam _ b -> do
       setOccurrenceMap b
+    Erased.Let _ b t -> do
+      setOccurrenceMap b
+      setOccurrenceMap t
     Erased.App a b -> do
       setOccurrenceMap a
       setOccurrenceMap b
@@ -201,6 +204,8 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
         (EAC.Constraint [EAC.ConstraintVar 1 (bangParam resTy)] (EAC.Gte 0))
       -- Return parameterized term.
       pure (EAC.RBang param (EAC.RLam sym body), resTy)
+    Erased.Let s t b -> do
+      error "TODO"
     Erased.App a b -> do
       (a, aTy) <- rec a
       let EAC.PArrT bangA argTy resTy = aTy
@@ -312,8 +317,7 @@ typChecker parameterisation t typAssign = EAC.runEither (() <$ rec' t typAssign)
         Nothing -> throw @"typ" EAC.MissingOverUse
         Just t -> do
           newTyp <- addParamPos bangVar t
-          if
-              | bangParam t > 0 -> pure (assign, newTyp)
+          if  | bangParam t > 0 -> pure (assign, newTyp)
               | otherwise -> pure (Map.delete s assign, newTyp)
     rec' (EAC.RBang bangApp term@(EAC.RApp t1 t2)) assign = do
       (newAssign, type1) <- rec' t1 assign

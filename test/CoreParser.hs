@@ -79,6 +79,5 @@ coreParser =
         "(* 4 3)"
         (Elim (App (App (Prim Nat.Mul) (Elim (Prim (Nat.Val 4)))) (Elim (Prim (Nat.Val 3)))))
     ]
-
 -- TODO: Fix this; currently only applications of eliminations can be parsed.
 -- shouldParse "(\\x -> x) y" (Elim (App (Lam "x" (Elim (Var "x"))) (Elim (Var "y"))))

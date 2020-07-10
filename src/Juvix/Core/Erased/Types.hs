@@ -1,26 +1,21 @@
-module Juvix.Core.Erased.Types where
+module Juvix.Core.Erased.Types
+  ( module Juvix.Core.Erased.Types,
+    Term' (..),
+    Type' (..),
+    TypeAssignment',
+    NoExt,
+  )
+where
 
-import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (Type)
-import qualified Juvix.Library.HashMap as Map
+import Juvix.Core.Erased.Types.Base
+import Juvix.Core.IR.Types (NoExt)
+import Juvix.Library
 
-data Term primVal
-  = Var Symbol
-  | Prim primVal
-  | -- TODO ∷ add proper lam with capture and arguments here!
-    Lam Symbol (Term primVal)
-  | App (Term primVal) (Term primVal)
-  deriving (Show, Eq, Generic)
+extendTerm "Term" [] [t|NoExt|] $ \_ -> defaultExtTerm
 
-data Type primTy
-  = SymT Symbol
-  | Star Natural
-  | PrimTy primTy
-  | -- TODO: How to deal with dependency?
-    Pi Usage.T (Type primTy) (Type primTy)
-  deriving (Show, Eq, Generic)
+extendType "Type" [] [t|NoExt|] $ \_ -> defaultExtType
 
-type TypeAssignment primTy = Map.T Symbol (Type primTy)
+type TypeAssignment primTy = TypeAssignment' NoExt primTy
 
 data EvaluationError primVal
   = PrimitiveApplicationError primVal primVal

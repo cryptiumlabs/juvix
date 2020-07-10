@@ -13,20 +13,22 @@ import Prelude (error)
 
 -- | Type for specifying how one wants to link nodes
 -- inspired from the interpreter version.
-data Relink node' node port = RelAuxiliary
-  -- hack fix later!
-  { node :: node',
-    primary :: REL node port,
-    auxiliary1 :: REL node port,
-    auxiliary2 :: REL node port,
-    auxiliary3 :: REL node port,
-    auxiliary4 :: REL node port
-  }
+data Relink node' node port
+  = RelAuxiliary
+      -- hack fix later!
+      { node :: node',
+        primary :: REL node port,
+        auxiliary1 :: REL node port,
+        auxiliary2 :: REL node port,
+        auxiliary3 :: REL node port,
+        auxiliary4 :: REL node port
+      }
 
-data Node t n = Node
-  { tagNode :: t,
-    node' :: n
-  }
+data Node t n
+  = Node
+      { tagNode :: t,
+        node' :: n
+      }
 
 defRel :: Relink node' node port
 defRel =

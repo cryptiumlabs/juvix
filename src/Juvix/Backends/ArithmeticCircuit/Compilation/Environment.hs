@@ -1,93 +1,78 @@
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TupleSections #-}
 
 module Juvix.Backends.ArithmeticCircuit.Compilation.Environment where
 
-import qualified Control.Monad.Fail as Fail
-import qualified Data.Map as Map
-import Juvix.Backends.ArithmeticCircuit.Compilation.Types
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Memory as Memory
+import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import Juvix.Library
 
-data Memory = Mem (Map.Map Symbol (Int, ArithExpression)) Int
-  deriving (Generic)
+type Memory = Memory.T Types.Expression
 
-instance Semigroup Memory where
-  (Mem map_ n) <> (Mem map__ m) = Mem (map_ <> Map.map (shift n) map__) (n + m)
-    where
-      shift n (m, exp) = (n + m, exp)
+data Env
+  = Env
+      { memory :: Memory.T Types.Expression,
+        compilation :: Types.Expression
+      }
+  deriving (Generic, Show)
 
-instance Monoid Memory where
-  mempty = Mem Map.empty 0
-  mappend = (<>)
+type CompilationAlias = ExceptT Types.CompilationError (State Env)
 
-data Env = Env
-  { memory :: Memory,
-    compilation :: ArithExpression
-  }
-  deriving (Generic)
-
-type ArithmeticCircuitCompilationAlias = ExceptT CompilationError (State Env)
-
-newtype ArithmeticCircuitCompilation a = Compilation {antiAlias :: (ArithmeticCircuitCompilationAlias a)}
+newtype Compilation a
+  = Compilation {antiAlias :: (CompilationAlias a)}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "memory" Memory,
       HasSink "memory" Memory,
       HasSource "memory" Memory
     )
-    via StateField "memory" ArithmeticCircuitCompilationAlias
+    via StateField "memory" CompilationAlias
   deriving
-    ( HasState "compilation" ArithExpression,
-      HasSink "compilation" ArithExpression,
-      HasSource "compilation" ArithExpression
+    ( HasState "compilation" Types.Expression,
+      HasSink "compilation" Types.Expression,
+      HasSource "compilation" Types.Expression
     )
-    via StateField "compilation" ArithmeticCircuitCompilationAlias
+    via StateField "compilation" CompilationAlias
   deriving
-    (HasThrow "compilationError" CompilationError)
-    via MonadError ArithmeticCircuitCompilationAlias
+    (HasThrow "compilationError" Types.CompilationError)
+    via MonadError CompilationAlias
 
-insert :: Symbol -> ArithExpression -> ArithmeticCircuitCompilation ArithExpression
+type HasMemory m = HasState "memory" Memory m
+
+type HasComp m = (HasMemory m, HasState "compilation" Types.Expression m)
+
+type HasMemoryErr m =
+  (HasMemory m, HasThrow "compilationError" Types.CompilationError m)
+
+type HasCompErr m =
+  (HasComp m, HasThrow "compilationError" Types.CompilationError m)
+
+insert, alloc :: HasMemory m => Symbol -> Types.Expression -> m Types.Expression
 insert sy exp =
-  do
-    modify @"memory" (insert' sy exp)
-    return exp
-  where
-    insert' :: Symbol -> ArithExpression -> Memory -> Memory
-    insert' sy x (Mem map_ n) = Mem (Map.insert sy (n, x) map_) (n + 1)
+  modify @"memory" (Memory.alloc sy exp) *> return exp
+alloc = insert
 
-remove :: Symbol -> ArithmeticCircuitCompilation ()
+insertExternal, allocExternal :: HasMemory m => Symbol -> m ()
+insertExternal sy =
+  modify @"memory" (Memory.allocExternal sy Types.NoExp)
+allocExternal = insertExternal
+
+remove, free :: HasMemory m => Symbol -> m ()
 remove sy =
-  do
-    modify @"memory" (remove' sy)
-  where
-    remove' :: Symbol -> Memory -> Memory
-    remove' sy (Mem map_ n) = Mem (Map.delete sy map_) (n - 1)
+  modify @"memory" (Memory.free sy)
+--
+free = remove
 
-lookup :: Symbol -> ArithmeticCircuitCompilation (Int, ArithExpression)
-lookup sy =
-  do
-    mem <- get @"memory"
-    lookup' sy mem
-  where
-    lookup' :: Symbol -> Memory -> ArithmeticCircuitCompilation (Int, ArithExpression)
-    lookup' sy (Mem map_ _) =
-      case Map.lookup sy map_ of
-        Just res -> return res
-        Nothing -> throw @"compilationError" VariableOutOfScope
+lookupErr :: HasMemoryErr m => Symbol -> m (Memory.Ele Types.Expression)
+lookupErr sy = do
+  mem <- get @"memory"
+  case Memory.lookup sy mem of
+    Just res -> pure res
+    Nothing -> throw @"compilationError" Types.VariableOutOfScope
 
 write :: HasState "compilation" s m => s -> m s
-write exp =
-  do
-    put @"compilation" exp
-    return exp
+write exp = do
+  put @"compilation" exp
+  return exp
 
 read :: HasState "compilation" s m => m s
 read = get @"compilation"
-
-freshVars :: [Symbol] -> ArithmeticCircuitCompilation ()
-freshVars sys = modify @"memory" (freshVars' sys)
-  where
-    freshVars' :: [Symbol] -> Memory -> Memory
-    freshVars' vars (Mem map_ n) = Mem (map_ <> Map.fromList (zip vars (slots n))) (n + 1)
-    slots :: Int -> [(Int, ArithExpression)]
-    slots n = map (,NoExp) [n ..]

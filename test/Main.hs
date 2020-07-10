@@ -9,6 +9,7 @@ import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
+import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
@@ -26,9 +27,9 @@ backendTests :: T.TestTree
 backendTests =
   T.testGroup
     "Backend tests"
-    [ ArithmeticCircuit.backendCircuit,
-    LLVM.backendLLVM,
-    Michelson.backendMichelson
+    [ -- ArithmeticCircuit.backendCircuit,
+      LLVM.backendLLVM,
+      Michelson.backendMichelson
     ]
 
 frontEndTests :: T.TestTree
@@ -41,8 +42,16 @@ allCheckedTests =
     [ coreTests,
       backendTests,
       frontEndTests,
+      translationPasses,
       EAC2.eac2Tests,
       Erasure.erasureTests
+    ]
+
+translationPasses :: T.TestTree
+translationPasses =
+  T.testGroup
+    "translation passes from Frontend to Core"
+    [ FrontendDesugar.allDesugar
     ]
 
 main :: IO ()

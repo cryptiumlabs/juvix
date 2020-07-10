@@ -19,11 +19,12 @@ import qualified Prelude as Prelude (error)
 type Size = Int
 
 -- | Data needed to make a Variant
-data VariantInfo = Variant
-  { size :: Size,
-    name :: Symbol,
-    typ' :: Type
-  }
+data VariantInfo
+  = Variant
+      { size :: Size,
+        name :: Symbol,
+        typ' :: Type
+      }
 
 -----------------------------------------------------------------------------------------
 -- Helper functions
