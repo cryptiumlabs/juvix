@@ -16,7 +16,7 @@ jobs:
           no_output_timeout: 1200
       - run:
           name: Build Juvix
-          command: stack build --copy-bins --fast
+          command: stack build --copy-bins --fast --flag juvix:incomplete-error
       - persist_to_workspace:
           root: /root
           paths:
@@ -36,7 +36,7 @@ jobs:
           at: /root
       - run:
           name: Run tests
-          command: stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false" +RTS -N4
+          command: stack test --fast --flag juvix:incomplete-error --jobs=1 --test-arguments "--hide-successes --ansi-tricks false" +RTS -N4
           no_output_timeout: 1200
 
 workflows:

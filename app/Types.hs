@@ -1,5 +1,6 @@
 module Types where
 
+import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (log)
@@ -9,7 +10,7 @@ type Exec primTy primVal compErr =
   IO
     ( Either
         (Core.PipelineError primTy primVal compErr)
-        (Core.AssignWithType primTy primVal compErr),
+        (Erasure.Term primTy primVal),
       [Core.PipelineLog primTy primVal]
     )
 
@@ -35,11 +36,12 @@ exec (EnvE env) param globals = do
   (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
-data Env primTy primVal = Env
-  { parameterisation :: Core.Parameterisation primTy primVal,
-    log :: [Core.PipelineLog primTy primVal],
-    globals :: IR.Globals primTy primVal
-  }
+data Env primTy primVal
+  = Env
+      { parameterisation :: Core.Parameterisation primTy primVal,
+        log :: [Core.PipelineLog primTy primVal],
+        globals :: IR.Globals primTy primVal
+      }
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =

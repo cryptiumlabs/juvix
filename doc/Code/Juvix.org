@@ -12,18 +12,62 @@
   4. Various Arithmetic Circuits
      - For use in ZKP's
 *** ArithmeticCircuit
-**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+**** Groth
+- place holder module until we have our groth
+  setup done
 - _Relies on_
-  + [[Erased/Types]]
-  + [[Core/Types]]
+  + [[Library]]
+**** ZKP
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation]]
+  + [[Groth]]
   + [[Library]]
 **** Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
+  + [[Compilation/Environment]]
+  + [[Memory]]
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
-***** Types <<ArithmeticCircuit/Compilation/Types>>
+***** Environment <<Compilation/Environment>>
 - _Relies on_
+  + [[Memory]]
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[Library]]
+***** Memory
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+***** Types <<ArithmeticCircuit/Compilation/Types>>
+Provides the various types needed for the arithmetic circuit
+backend
+- Expression covers the gambit of arithmetic circuit expressions
+- _Relies on_
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Library]]
+**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Booleans]]
+  + [[FieldElements]]
+  + [[Integers]]
+  + [[Core/Types]]
+  + [[Library]]
+***** Booleans
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Types]]
+  + [[Library]]
+***** FieldElements
+- _Relies on_
+  + [[Core/Types]]
+  + [[Library]]
+***** Integers
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Types]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -298,7 +342,6 @@ This module provides a default contract environment
   + [[Interpret]]
   + [[Prim]]
   + [[Core/Types]]
-  + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
@@ -423,6 +466,7 @@ This module provides a default contract environment
   + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
+  + [[Typechecker]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -500,15 +544,21 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
-**** Types <<Erased/Types>>
-- _Relies on_
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
 **** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+**** Types <<Erased/Types>>
+- _Relies on_
+  + [[Erased/Types/Base]]
+  + [[IR/Types]]
+  + [[Library]]
+***** Base <<Erased/Types/Base>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 *** ErasedAnn
 - _Relies on_
   + [[ErasedAnn/Erasure]]
@@ -532,26 +582,29 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** Erasure <<Core/Erasure>>
 - _Relies on_
   + [[Algorithm]]
+  + [[Erasure/Types]]
 **** Algorithm
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
   + [[Erasure/Types]]
-  + [[HR/Types]]
   + [[IR]]
-  + [[Translate]]
-  + [[Core/Types]]
+  + [[Typechecker/Types]]
   + [[Usage]]
   + [[Library]]
-  + [[HashMap]]
 **** Types <<Erasure/Types>>
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
+  + [[Erased/Types/Base]]
+  + [[Erased/Types/Base]]
+  + [[Typechecker]]
   + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -588,7 +641,9 @@ This module provides a default contract environment
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker]]
+  + [[Typechecker]]
   + [[IR/Types]]
+  + [[Library]]
 **** Evaluator <<IR/Evaluator>>
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
@@ -609,7 +664,6 @@ Transformations between different extensions.
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
-  + [[Log]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -617,15 +671,12 @@ Transformations between different extensions.
   + [[Library]]
 ***** Env <<Typechecker/Env>>
 - _Relies on_
-  + [[Log]]
-  + [[Typechecker/Types]]
-  + [[Library]]
-***** Log
-- _Relies on_
-  + [[Library]]
-  + [[Usage]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Usage]]
+  + [[Library]]
 ***** Types <<Typechecker/Types>>
 - _Relies on_
   + [[IR/Types]]
@@ -770,6 +821,43 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** CombineMultiple
 **** Extend <<CombineMultiple/Extend>>
+- This pass changes =FunctionLike=, =Function=, and =Let=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | Function     | TopLevel         |
+    | Let          | Expression       |
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =Name= from the previous transform
+- _Let changes_
+  + Let now looks like
+    #+begin_src haskell
+      data Let
+        = LetGroup
+          { letName :: Symbol
+          , letBindings :: NonEmpty (FunctionLike Expression)
+          , letBody :: Expression
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * In this pass we add =Name= from the previous Let type
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression))
+    #+end_src
+    * Namely this version adds symbol to the previous pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveCond/Extend]]
@@ -787,6 +875,24 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemoveCond
 **** Extend <<RemoveCond/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Cond    | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Cond a
+      = C (NonEmpty (CondLogic a))
+      deriving (Show, Generic, NFData)
+    data CondLogic a
+      = CondExpression
+          { condLogicPred :: Expression
+          , condLogicBody :: a
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveGuard/Extend]]
@@ -804,6 +910,24 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemoveDo
 **** Extend <<RemoveDo/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Do      | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Do
+      = Do'' (NonEmpty DoBody)
+      deriving (Show, Generic, NFData)
+    data DoBody
+      = DoBody
+        { doBodyName :: Maybe NameSymb,
+          doBodyExpr :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemovePunned/Extend]]
@@ -821,6 +945,23 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemoveGuard
 **** Extend <<RemoveGuard/Extend>>
+- This pass changes =FunctionLike=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeName :: Symbol
+          , functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =GuardBody= from the body.
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Abstractions]]
@@ -837,6 +978,25 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemoveModules
 **** Extend <<RemoveModules/Extend>>
+- This pass removes the =Module= and =ModuleE= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Module  | TopLevel         |
+   | ModuleE | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Module
+      = Mod (FunctionLike (NonEmpty TopLevel))
+      deriving (Show, Generic, NFData)
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+          , moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[Types/Extend]]
@@ -854,6 +1014,19 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemovePunned
 **** Extend <<RemovePunned/Extend>>
+- This pass removes the =Punned= form
+ + Belongs to Table
+   | Removed | Is a Sum Type of |
+   |---------+------------------|
+   | Punned  | NameSet          |
+- Thus one does not have to ever deal with the =Punned= variant in
+  #+begin_src haskell
+    data NameSet t
+      = Punned NameSymb
+      | NonPunned NameSymb t
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveSignature/Extend]]
@@ -871,6 +1044,32 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** RemoveSignature
 **** Extend <<RemoveSignature/Extend>>
+- This pass changes =Signature=, and =Function=
+  + Belongs to Table
+    | Changed   | Is a Sum Type of      |
+    |-----------+-----------------------|
+    | Function  | TopLevel              |
+    | Signature | +TopLevel+ ∧ Function |
+- _Signature changes_
+  + We move Signature from TopLevel to Function
+    #+begin_src haskell
+      data Signature
+        = Sig
+            { signatureName :: Symbol
+              -- Was a usage but can't alias for now
+            , signatureUsage :: Maybe Expression
+            , signatureArrowType :: Expression
+            , signatureConstraints :: [Expression]
+            }
+        deriving (Show, Generic, NFData)
+    #+end_src
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+    #+end_src
+    * Namely this version adds a signature to upon the previous pass
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[CombineMultiple/Extend]]

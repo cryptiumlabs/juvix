@@ -6,7 +6,6 @@ import qualified Data.Text as T
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.HR as Core
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
@@ -45,8 +44,8 @@ mainLoop func = do
           H.outputStrLn =<< liftIO (func inp)
           mainLoop func
 
-parseString :: String -> Maybe (Core.Term Nat.Ty Nat.Val)
-parseString = Core.generateParser Nat.t
+parseString :: String -> Maybe (HR.Term Nat.Ty Nat.Val)
+parseString = HR.generateParser Nat.t
 
 handleSpecial :: String -> H.InputT IO () -> H.InputT IO ()
 handleSpecial str cont =
@@ -73,22 +72,23 @@ handleSpecial str cont =
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
       cont
-    'c' : 't' : ' ' : rest -> do
-      let parsed = parseString rest
-      H.outputStrLn (show parsed)
-      case parsed of
-        Just (HR.Elim (HR.Ann usage term ty _)) -> do
-          erased <-
-            liftIO
-              ( exec (Core.typecheckAffineErase term usage ty) Nat.t mempty ::
-                  ExecTerm Nat.Ty Nat.Val ()
-              )
-          H.outputStrLn (show erased)
-          case erased of
-            (Right (Core.Assignment term _), _) ->
-              transformAndEvaluateErasedCore Nat.t True term
-            _ -> return ()
-        _ -> H.outputStrLn "must enter a valid annotated core term"
+    'c' : 't' : ' ' : _rest -> do
+      H.outputStrLn "TODO fix typecheckAffineErase"
+      -- let parsed = parseString rest
+      -- H.outputStrLn (show parsed)
+      -- case parsed of
+      --   Just (HR.Elim (HR.Ann usage term ty _)) -> do
+      --     erased <-
+      --       liftIO
+      --         ( exec (Core.typecheckAffineErase term usage ty) Nat.t mempty ::
+      --             ExecTerm Nat.Ty Nat.Val ()
+      --         )
+      --     H.outputStrLn (show erased)
+      --     case erased of
+      --       (Right (Core.Assignment term _), _) ->
+      --         transformAndEvaluateErasedCore Nat.t True term
+      --       _ -> return ()
+      --   _ -> H.outputStrLn "must enter a valid annotated core term"
       cont
     _ -> H.outputStrLn "Unknown special command" >> cont
 
@@ -136,7 +136,8 @@ specials =
     Special "exit" "Quit interactive mode"
   ]
 
-data Special = Special
-  { specialCommand :: Text,
-    specialHelpDesc :: Text
-  }
+data Special
+  = Special
+      { specialCommand :: Text,
+        specialHelpDesc :: Text
+      }

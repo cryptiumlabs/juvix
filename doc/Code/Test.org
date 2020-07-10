@@ -16,12 +16,14 @@
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[Typechecker]]
   + [[All]]
   + [[Naturals]]
   + [[Unit]]
   + [[Types]]
   + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 * EAC
 - _Relies on_
   + [[EAC]]
@@ -48,8 +50,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Erased]]
   + [[Erasure]]
-  + [[Types]]
-  + [[HR]]
+  + [[IR]]
+  + [[Typechecker]]
   + [[Unit]]
   + [[Types]]
   + [[Usage]]
@@ -57,6 +59,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 * Frontend
 - _Relies on_
   + [[Parser]]
+  + [[Library]]
+* FrontendDesugar
+- _Relies on_
+  + [[Parser]]
+  + [[FrontendDesugar]]
   + [[Library]]
 * INet
 - _Relies on_
@@ -79,8 +86,11 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 ** ArithmeticCircuit
 - _Relies on_
   + [[Compilation]]
-  + [[Parameterisation]]
+  + [[Environment]]
   + [[Types]]
+  + [[Parameterisation]]
+  + [[ZKP]]
+  + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
 ** LLVM
@@ -122,6 +132,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Context]]
   + [[Library]]
+* Files
 * Nets
 ** Combinators
 - _Relies on_

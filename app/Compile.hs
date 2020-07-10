@@ -7,6 +7,7 @@ import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
+import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import Juvix.Library
 import Options
@@ -22,7 +23,7 @@ execMichelson usage term ty =
   liftIO (exec (Core.typecheckErase term usage ty) Param.michelson mempty)
 
 typecheck ::
-  FilePath -> Backend -> IO (Erased.Term Param.PrimVal, Erased.Type Param.PrimTy)
+  FilePath -> Backend -> IO (Erasure.Term Param.PrimTy Param.PrimVal)
 typecheck fin Michelson = do
   source <- readFile fin
   let parsed = HR.generateParser Param.michelson (T.unpack source)
@@ -30,8 +31,8 @@ typecheck fin Michelson = do
     Just (HR.Elim (HR.Ann usage term ty _)) -> do
       erased <- execMichelson usage term ty
       case erased of
-        (Right (Core.WithType (Core.Assignment term _assign) ty), _) ->
-          pure (term, ty)
+        (Right term, _) ->
+          pure term
         other -> do
           T.putStrLn (show other)
           exitFailure
@@ -42,7 +43,7 @@ typecheck _ _ = exitFailure
 
 compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do
-  (_term, _ty) <- typecheck fin backend
+  _term <- typecheck fin backend
   -- TODO: Annotated version.
   let (res, _logs) = M.compileContract undefined undefined
   case res of

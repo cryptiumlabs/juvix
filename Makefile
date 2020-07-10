@@ -24,6 +24,9 @@ build-watch:
 build-opt: clean
 	stack build --copy-bins --ghc-options "-O3 -fllvm"
 
+build-format:
+	stack install ormolu
+
 lint:
 	stack exec -- hlint app src test
 
@@ -49,4 +52,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full bench
+.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full bench build-format
