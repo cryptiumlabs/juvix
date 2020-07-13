@@ -32,10 +32,6 @@ extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
--- IR.extendTerm "Term" [] [t|T|] extTerm
-
--- IR.extendElim "Elim" [] [t|T|] extElim
-
 IR.extendValue "Value" [] [t|T|] extValue
 
 IR.extendNeutral "Neutral" [] [t|T|] extNeutral

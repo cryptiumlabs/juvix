@@ -5,13 +5,13 @@ import qualified Backends.LLVM as LLVM
 import qualified Backends.Michelson as Michelson
 import qualified CoreConv
 import qualified CoreParser
-import qualified Pipeline
 import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
 import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
+import qualified Pipeline
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
 

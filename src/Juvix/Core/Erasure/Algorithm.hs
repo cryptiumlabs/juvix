@@ -44,9 +44,12 @@ eraseTerm (Typed.Let π b t anns) = do
   if π == mempty
     then pure t
     else do
-      let ty = IR.annType $ IR.baResAnn anns
+      let exprTy = IR.annType $ IR.baResAnn anns
+          bindTy = IR.annType $ IR.baBindAnn anns
       b <- eraseElim b
-      Erasure.Let x b t <$> eraseType ty
+      bindTy <- eraseType bindTy
+      exprTy <- eraseType exprTy
+      pure (Erasure.Let x b t (bindTy, exprTy))
 eraseTerm (Typed.Elim e _) = eraseElim e
 
 eraseElim ::

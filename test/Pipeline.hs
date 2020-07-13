@@ -94,7 +94,7 @@ toMichelson term usage ty globals = do
 
 tests :: [T.TestTree]
 tests =
-  [ test_constant ]
+  [test_constant]
 
 test_constant :: T.TestTree
 test_constant =

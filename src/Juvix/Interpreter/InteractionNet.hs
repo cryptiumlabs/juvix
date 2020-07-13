@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
+
 module Juvix.Interpreter.InteractionNet
   ( module Juvix.Interpreter.InteractionNet.Parser,
     module Juvix.Interpreter.InteractionNet.Translation,

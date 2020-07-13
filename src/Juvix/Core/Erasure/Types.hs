@@ -12,6 +12,7 @@ import Juvix.Core.Erased.Types as Type
     pattern Star,
     pattern SymT,
   )
+import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
@@ -65,13 +66,14 @@ do
   primTy' <- Ext.newName "primTy"
   let primTy = Ext.varT primTy'
   let typed = Just [[t|Type $primTy|]]
+  let typedTuple = Just [[t|(Type $primTy, Type $primTy)|]]
   Erased.extendTerm "Term" [primTy'] [t|T $primTy|] $
     \_ ->
       Erased.defaultExtTerm
         { Erased.typeVar = typed,
           Erased.typePrim = typed,
           Erased.typeLam = typed,
-          Erased.typeLet = typed,
+          Erased.typeLet = typedTuple,
           Erased.typeApp = typed
         }
 
@@ -79,5 +81,12 @@ getType :: Term primTy primVal -> Type primTy
 getType (Var _ ty) = ty
 getType (Prim _ ty) = ty
 getType (Lam _ _ ty) = ty
-getType (Let _ _ _ ty) = ty
+getType (Let _ _ _ (_, ty)) = ty
 getType (App _ _ ty) = ty
+
+eraseAnn :: Term primTy primVal -> Erased.Term primVal
+eraseAnn (Var sym _) = Erased.Var sym
+eraseAnn (Prim p _) = Erased.Prim p
+eraseAnn (Lam s b _) = Erased.Lam s (eraseAnn b)
+eraseAnn (Let s a b _) = Erased.Let s (eraseAnn a) (eraseAnn b)
+eraseAnn (App a b _) = Erased.App (eraseAnn a) (eraseAnn b)
