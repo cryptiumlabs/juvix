@@ -12,6 +12,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Data.IntMap as IntMap
 
 class HasWeak a where
   weakBy' :: Natural -> IR.BoundVar -> a -> a
@@ -149,6 +150,83 @@ instance
     IR.Ann' π (substWith w i e s) (substWith w i e t) l (substWith w i e a)
   substWith w i e (IR.ElimX a) =
     IR.ElimX (substWith w i e a)
+
+class HasWeak a => HasPatSubst extT primTy primVal a where
+  patSubst' ::
+    TC.HasThrowTC' extV extT primTy primVal m =>
+    -- | How many bindings have been traversed so far
+    Natural ->
+    -- | Mapping of pattern variables to matched subterms
+    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    a ->
+    m a
+  default patSubst' ::
+    (Generic a, GHasPatSubst extT primTy primVal (Rep a),
+     TC.HasThrowTC' extV extT primTy primVal m) =>
+    Natural ->
+    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    a ->
+    m a
+  patSubst' b m = fmap to . gpatSubst' b m . from
+
+patSubst ::
+  (HasPatSubst extT primTy primVal a,
+   TC.HasThrowTC' extV extT primTy primVal m) =>
+  IR.PatternMap (IR.Elim' extT primTy primVal) -> a -> m a
+patSubst = patSubst' 0
+
+type AllPatSubst ext primTy primVal =
+  (IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+   IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal)
+
+instance AllPatSubst ext primTy primVal =>
+    HasPatSubst ext primTy primVal (IR.Term' ext primTy primVal)
+  where
+    patSubst' b m (IR.Star' u a) =
+      IR.Star' u <$> patSubst' b m a
+    patSubst' b m (IR.PrimTy' t a) =
+      IR.PrimTy' t <$> patSubst' b m a
+    patSubst' b m (IR.Prim' p a) =
+      IR.Prim' p <$> patSubst' b m a
+    patSubst' b m (IR.Pi' π s t a) =
+      IR.Pi' π <$> patSubst' b m s
+               <*> patSubst' (succ b) m t
+               <*> patSubst' b m a
+    patSubst' b m (IR.Lam' t a) =
+      IR.Lam' <$> patSubst' (succ b) m t
+              <*> patSubst' b m a
+    patSubst' b m (IR.Let' π l t a) =
+      IR.Let' π <$> patSubst' b m l
+                <*> patSubst' (succ b) m t
+                <*> patSubst' b m a
+    patSubst' b m (IR.Elim' e a) =
+      IR.Elim' <$> patSubst' b m e
+               <*> patSubst' b m a
+    patSubst' b m (IR.TermX a) =
+      IR.TermX <$> patSubst' b m a
+
+instance AllPatSubst ext primTy primVal =>
+    HasPatSubst ext primTy primVal (IR.Elim' ext primTy primVal)
+  where
+    patSubst' b m (IR.Bound' j a) =
+      IR.Bound' j <$> patSubst' b m a
+    patSubst' b m (IR.Free' (IR.Pattern x) _) =
+      case IntMap.lookup x m of
+        Nothing -> TC.throwTC $ TC.UnboundPatVar x
+        Just e  -> pure $ weakBy b e
+    patSubst' b m (IR.Free' x a) =
+      IR.Free' x <$> patSubst' b m a
+    patSubst' b m (IR.App' f e a) =
+      IR.App' <$> patSubst' b m f
+              <*> patSubst' b m e
+              <*> patSubst' b m a
+    patSubst' b m (IR.Ann' π s t ℓ a) =
+      IR.Ann' π <$> patSubst' b m s
+                <*> patSubst' b m t
+                <*> pure ℓ
+                <*> patSubst' b m a
+    patSubst' b m (IR.ElimX a) =
+      IR.ElimX <$> patSubst' b m a
 
 type AllWeakV ext primTy primVal =
   ( IR.ValueAll HasWeak ext primTy primVal,
@@ -593,3 +671,80 @@ instance
 
 instance HasSubstV ext primTy primVal Symbol where
   substVWith _ _ _ _ x = pure x
+
+class GHasWeak f => GHasPatSubst extT primTy primVal f where
+  gpatSubst' ::
+    TC.HasThrowTC' extV extT primTy primVal m =>
+    -- | How many bindings have been traversed so far
+    Natural ->
+    -- | Mapping of pattern variables to matched subterms
+    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    f t ->
+    m (f t)
+
+instance GHasPatSubst ext primTy primVal U1 where gpatSubst' _ _ U1 = pure U1
+
+instance GHasPatSubst ext primTy primVal V1 where
+  gpatSubst' _ _ v = case v of
+
+instance
+  ( GHasPatSubst ext primTy primVal f,
+    GHasPatSubst ext primTy primVal g
+  ) =>
+  GHasPatSubst ext primTy primVal (f :*: g)
+  where
+  gpatSubst' b m (x :*: y) =
+    (:*:) <$> gpatSubst' b m x
+      <*> gpatSubst' b m y
+
+instance
+  ( GHasPatSubst ext primTy primVal f,
+    GHasPatSubst ext primTy primVal g
+  ) =>
+  GHasPatSubst ext primTy primVal (f :+: g)
+  where
+  gpatSubst' b m (L1 x) = L1 <$> gpatSubst' b m x
+  gpatSubst' b m (R1 x) = R1 <$> gpatSubst' b m x
+
+instance
+  GHasPatSubst ext primTy primVal f =>
+  GHasPatSubst ext primTy primVal (M1 i t f)
+  where
+  gpatSubst' b m (M1 x) = M1 <$> gpatSubst' b m x
+
+instance
+  HasPatSubst ext primTy primVal f =>
+  GHasPatSubst ext primTy primVal (K1 k f)
+  where
+  gpatSubst' b m (K1 x) = K1 <$> patSubst' b m x
+
+instance HasPatSubst ext primTy primVal ()
+
+instance HasPatSubst ext primTy primVal Void
+
+instance
+  ( HasPatSubst ext primTy primVal a,
+    HasPatSubst ext primTy primVal b
+  ) =>
+  HasPatSubst ext primTy primVal (a, b)
+
+instance
+  ( HasPatSubst ext primTy primVal a,
+    HasPatSubst ext primTy primVal b,
+    HasPatSubst ext primTy primVal c
+  ) =>
+  HasPatSubst ext primTy primVal (a, b, c)
+
+instance
+  ( HasPatSubst ext primTy primVal a,
+    HasPatSubst ext primTy primVal b
+  ) =>
+  HasPatSubst ext primTy primVal (Either a b)
+
+instance
+  HasPatSubst ext primTy primVal a =>
+  HasPatSubst ext primTy primVal (Maybe a)
+
+instance
+  HasPatSubst ext primTy primVal a =>
+  HasPatSubst ext primTy primVal [a]

@@ -15,6 +15,9 @@ type GlobalName = Symbol
 
 type PatternVar = Int
 
+-- | map from pattern variables to e.g. their types
+type PatternMap = IntMap
+
 type BoundVar = Natural
 
 data Name
