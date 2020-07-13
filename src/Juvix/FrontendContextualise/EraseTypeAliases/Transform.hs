@@ -8,6 +8,10 @@ import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old --FIXME put in the last stage
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified Data.List.NonEmpty as NonEmpty
+
+-- TODO remove this
+type NameSymb = NonEmpty Symbol
 
 type Old f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
@@ -182,7 +186,22 @@ transformFunction (Old.Func name f sig) =
 --   WorkingMaps m =>
 --   Old.FunctionLike Old.Expression ->
 --   m (New.FunctionLike New.Expression)
-transformFunctionLike (Old.Like args body) =
+transformFunctionLike (Old.Like args body) = do
+  -- originalVal <- Env.lookup name -- look up in "new" state
+  -- let transform = do
+  --       transformedBindings <- traverse transformFunctionLike bindings
+  --       let def = Env.transLike transformedBindings Nothing Nothing
+  --       Env.add name def -- add to new context
+  --       New.LetGroup name transformedBindings <$> transformExpression body
+  -- case originalVal of
+  --   Just originalV -> do
+  --     res <- transform
+  --     Env.add name originalV
+  --     return res
+  --   Nothing -> do
+  --     res <- transform
+  --     Env.remove name
+  --     return res
   New.Like <$> traverse transformArg args <*> transformExpression body
 
 -- transformModuleOpen ::
@@ -344,20 +363,53 @@ transformInfix (Old.Inf l o r) =
 -- Matching
 --------------------------------------------------
 
+findBindings :: Old.MatchLogic -> [NameSymb]
+findBindings matchLogic = findBindingsAcc matchLogic []
+
+findBindingsAcc :: Old.MatchLogic -> [NameSymb] -> [NameSymb]
+findBindingsAcc (Old.MatchLogic contents name) xs =
+  let startList = 
+        case name of
+          Just name -> name : xs
+          Nothing -> xs
+      findNameSet (Old.NonPunned _ p) =
+        findBindingsAcc p 
+      findMatchLogicSym (Old.MatchCon _name xs) acc = 
+        foldr findBindingsAcc acc xs
+      findMatchLogicSym (Old.MatchRecord names) acc = 
+        foldr findNameSet acc names
+      findMatchLogicSym (Old.MatchName name) acc = 
+        pure name : acc
+      findMatchLogicSym (Old.MatchConst _const) acc = 
+        acc
+  in
+    findMatchLogicSym contents startList
+      
 -- transformMatch ::
 --   WorkingMaps m =>
 --   Old.Match ->
 --   m New.Match
--- TODO update context
 transformMatch (Old.Match'' on bindings) =
   New.Match'' <$> transformExpression on <*> traverse transformMatchL bindings
-
+  
 -- transformMatchL ::
 --   WorkingMaps m =>
 --   Old.MatchL ->
 --   m New.MatchL
-transformMatchL (Old.MatchL pat body) =
-  New.MatchL <$> transformMatchLogic pat <*> transformExpression body
+transformMatchL (Old.MatchL pat body) = do
+  let bindings = findBindings pat
+      saveOld sym = 
+        flip (,) (NonEmpty.head sym) <$> Env.lookup (NonEmpty.head sym)
+      restoreName (Just def, sym) = Env.add sym def
+      restoreName (Nothing, sym) = Env.remove sym
+  originalBindings <- traverse saveOld bindings
+  pat <- transformMatchLogic pat
+  --
+  traverse_ Env.addUnknown bindings
+  --
+  res <- New.MatchL pat <$> transformExpression body
+  traverse_ restoreName originalBindings
+  pure res 
 
 -- transformMatchLogic ::
 --   WorkingMaps m =>

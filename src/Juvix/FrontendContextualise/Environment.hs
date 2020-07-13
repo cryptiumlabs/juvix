@@ -2,6 +2,7 @@ module Juvix.FrontendContextualise.Environment where
 
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
+import qualified Data.List.NonEmpty as NonEmpty
 
 data Environment term0 ty0 sumRep0 termN tyN sumRepN
   = Env
@@ -56,3 +57,9 @@ forKey = undefined
 
 --TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
 transLike = undefined
+
+addUnknown :: 
+  HasState "new" (Context.T term ty sumRep) m => NonEmpty Symbol -> m ()
+addUnknown sym = 
+  Juvix.Library.modify @"new" 
+    (Context.add (NonEmpty.head sym) (Context.Unknown Nothing))  

@@ -56,6 +56,9 @@ data Definition term ty sumRep
   | TypeDeclar
       { definitionRepr :: sumRep
       }
+  | Unknown 
+      { definitionMTy :: Maybe ty
+      }
   deriving (Show, Generic)
 
 -- not using lenses anymore but leaving this here anyway
