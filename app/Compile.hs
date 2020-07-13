@@ -45,7 +45,7 @@ compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do
   _term <- typecheck fin backend
   -- TODO: Annotated version.
-  let (res, _logs) = M.compileContract undefined undefined
+  let (res, _logs) = M.compileContract undefined
   case res of
     Left err -> do
       T.putStrLn (show err)

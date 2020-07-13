@@ -1,5 +1,6 @@
 module Juvix.Core.ErasedAnn.Conversion where
 
+import Data.List ((\\))
 import qualified Juvix.Core.Erased as Erased
 import Juvix.Core.ErasedAnn.Types
 import qualified Juvix.Core.Erasure.Types as E
@@ -19,7 +20,7 @@ convertTerm term usage = do
     E.Prim p _ -> pure (Ann usage ty' (Prim p))
     E.Let sym bind body (bindTy, _) -> do
       -- Calculate captures.
-      let captures = free (E.Lam sym body undefined)
+      let captures = Erased.free (Erased.Lam sym (E.eraseAnn body))
       -- TODO: Is this the right usage?
       bind <- convertTerm bind usage
       body <- convertTerm body usage
@@ -34,7 +35,7 @@ convertTerm term usage = do
       case body of
         -- Combine nested lambdas into multi-argument function.
         Ann _ _ (LamM cap' arg' body') ->
-          pure (Ann usage ty' (LamM cap' (sym : arg') body'))
+          pure (Ann usage ty' (LamM (cap' \\ [sym]) (sym : arg') body'))
         _ ->
           pure (Ann usage ty' (LamM (free term) [sym] body))
     E.App f a _ -> do

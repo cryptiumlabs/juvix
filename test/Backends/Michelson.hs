@@ -22,7 +22,7 @@ import Prelude (show)
 
 runContract :: Term -> Type -> Either DSL.CompError (Contract' ExpandedOp)
 runContract term ty =
-  fst (compileContract term ty) >>| fst
+  fst (compileContract term) >>| fst
 
 runExpr :: Term -> Either DSL.CompError EmptyInstr
 runExpr term =

@@ -93,9 +93,11 @@ eraseType (IR.VStar i) = do
 eraseType (IR.VPrimTy t) = do
   pure $ Erasure.PrimTy t
 eraseType (IR.VPi π a b) = do
-  -- FIXME dependency
-  Erasure.Pi π <$> eraseType a
-    <*> withName \_ -> eraseType b
+  if π == mempty
+    then eraseType b
+    else-- FIXME dependency
+    Erasure.Pi π <$> eraseType a
+      <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do
   throwEra $ Erasure.UnsupportedTypeV v
 eraseType (IR.VNeutral n) = do

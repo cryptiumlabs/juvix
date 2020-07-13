@@ -31,10 +31,9 @@ untypedContractToSourceLine c = L.toStrict (M.printUntypedContract True c)
 
 compileContract ::
   Term ->
-  Type ->
   (Either DSL.CompError (M.Contract' M.ExpandedOp, M.SomeContract), [CompilationLog])
-compileContract term ty =
-  let (ret, env) = DSL.execMichelson (compileToMichelsonContract term ty)
+compileContract term =
+  let (ret, env) = DSL.execMichelson (compileToMichelsonContract term)
    in (ret, DSL.compilationLog env)
 
 compileExpr :: Term -> (Either DSL.CompError EmptyInstr, [CompilationLog])
@@ -45,9 +44,9 @@ compileExpr term =
 compileToMichelsonContract ::
   DSL.Reduction m =>
   Term ->
-  Type ->
   m (M.Contract' M.ExpandedOp, M.SomeContract)
-compileToMichelsonContract term ty = do
+compileToMichelsonContract term = do
+  let Ann.Ann _ ty _ = term
   michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do

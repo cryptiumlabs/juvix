@@ -9,6 +9,9 @@ import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+import qualified Michelson.Printer as Michelson
+import qualified Michelson.TypeCheck as Michelson
+import qualified Michelson.Untyped as Michelson
 
 coreToMichelson ::
   ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
@@ -25,6 +28,23 @@ coreToMichelson term usage ty = do
   ann <- ErasedAnn.convertTerm term usage
   -- TODO: Datatype & pattern matching compilation step will happen here.
   let (res, _) = Michelson.compileExpr ann
+  pure res
+
+coreToMichelsonContract ::
+  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
+    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
+    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
+    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+  ) =>
+  HR.Term Michelson.PrimTy Michelson.PrimVal ->
+  Usage.T ->
+  HR.Term Michelson.PrimTy Michelson.PrimVal ->
+  m (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
+coreToMichelsonContract term usage ty = do
+  term <- typecheckErase term usage ty
+  ann <- ErasedAnn.convertTerm term usage
+  -- TODO: Datatype & pattern matching compilation step will happen here.
+  let (res, _) = Michelson.compileContract ann
   pure res
 
 -- For interaction net evaluation, includes elementary affine check

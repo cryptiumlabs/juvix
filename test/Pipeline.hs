@@ -1,5 +1,6 @@
 module Pipeline where
 
+import qualified Juvix.Backends.Michelson.Compilation as M
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.HR as HR
@@ -77,6 +78,17 @@ shouldCompileTo name (term, usage, ty) globals instr =
     res <- toMichelson term usage ty globals
     show res T.@=? (show (Right instr :: Either String EmptyInstr) :: String)
 
+shouldCompileToContract ::
+  String ->
+  (HR.Term PrimTy PrimVal, Usage.T, HR.Term PrimTy PrimVal) ->
+  Typed.Globals PrimTy PrimVal ->
+  Text ->
+  T.TestTree
+shouldCompileToContract name (term, usage, ty) globals contract =
+  T.testCase name $ do
+    res <- toMichelsonContract term usage ty globals
+    res T.@=? Right contract
+
 toMichelson ::
   HR.Term PrimTy PrimVal ->
   Usage.T ->
@@ -92,9 +104,28 @@ toMichelson term usage ty globals = do
         Left err -> Left (show err)
     Left err -> Left (show err)
 
+toMichelsonContract ::
+  HR.Term PrimTy PrimVal ->
+  Usage.T ->
+  HR.Term PrimTy PrimVal ->
+  Typed.Globals PrimTy PrimVal ->
+  IO (Either String Text)
+toMichelsonContract term usage ty globals = do
+  (res, _) <- exec (P.coreToMichelsonContract term usage ty) michelson globals
+  pure $ case res of
+    Right r ->
+      case r of
+        Right e -> Right (M.typedContractToSource $ snd e)
+        Left err -> Left (show err)
+    Left err -> Left (show err)
+
 tests :: [T.TestTree]
 tests =
-  [test_constant]
+  [ test_constant,
+    test_erased_function,
+    test_real_function_apply,
+    test_partial_erase
+  ]
 
 test_constant :: T.TestTree
 test_constant =
@@ -104,8 +135,56 @@ test_constant =
     emptyGlobals
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 2))) MT.Nop))
 
+test_erased_function :: T.TestTree
+test_erased_function =
+  shouldCompileTo
+    "erased function"
+    (erasedLamTerm, Usage.Omega, erasedLamTy)
+    emptyGlobals
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 2))) MT.Nop))
+
+test_real_function_apply :: T.TestTree
+test_real_function_apply =
+  shouldCompileTo
+    "real function with application"
+    (appLam, Usage.Omega, intTy)
+    emptyGlobals
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 5))) MT.Nop))
+
+test_partial_erase :: T.TestTree
+test_partial_erase =
+  shouldCompileTo
+    "real function with partial erase"
+    (appLam2, Usage.Omega, intTy)
+    emptyGlobals
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 12))) MT.Nop))
+
 twoTerm :: HR.Term PrimTy PrimVal
 twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
+
+erasedLamTerm :: HR.Term PrimTy PrimVal
+erasedLamTerm = HR.Lam "x" (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))
+
+erasedLamTy :: HR.Term PrimTy PrimVal
+erasedLamTy = HR.Pi (Usage.SNat 0) "x" intTy intTy
+
+appLam :: HR.Term PrimTy PrimVal
+appLam = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm lamTy 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+
+lamTerm :: HR.Term PrimTy PrimVal
+lamTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Var "y")))))
+
+appLam2 :: HR.Term PrimTy PrimVal
+appLam2 = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm2 lamTy2 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+
+lamTerm2 :: HR.Term PrimTy PrimVal
+lamTerm2 = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Prim (Constant (M.ValueInt 10)))))))
+
+lamTy :: HR.Term PrimTy PrimVal
+lamTy = HR.Pi (Usage.SNat 1) "x" intTy (HR.Pi (Usage.SNat 1) "y" intTy intTy)
+
+lamTy2 :: HR.Term PrimTy PrimVal
+lamTy2 = HR.Pi (Usage.SNat 1) "x" intTy (HR.Pi (Usage.SNat 0) "y" intTy intTy)
 
 emptyGlobals :: Typed.Globals PrimTy PrimVal
 emptyGlobals = mempty
