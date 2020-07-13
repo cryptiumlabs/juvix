@@ -5,6 +5,7 @@ import qualified Backends.LLVM as LLVM
 import qualified Backends.Michelson as Michelson
 import qualified CoreConv
 import qualified CoreParser
+import qualified Pipeline
 import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
@@ -23,6 +24,12 @@ coreTests =
       CoreParser.coreParser
     ]
 
+pipelineTests :: T.TestTree
+pipelineTests =
+  T.testGroup
+    "Pipeline tests"
+    Pipeline.tests
+
 backendTests :: T.TestTree
 backendTests =
   T.testGroup
@@ -40,6 +47,7 @@ allCheckedTests =
   T.testGroup
     "All tests that are checked"
     [ coreTests,
+      pipelineTests,
       backendTests,
       frontEndTests,
       translationPasses,

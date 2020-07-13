@@ -167,6 +167,7 @@ library:
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
+    - Juvix.Core.Pipeline
     - Juvix.Core.Common.Context
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
@@ -270,7 +271,6 @@ library:
   other-modules:
     - Juvix.Interpreter.InteractionNet.NodeInterface
     - Juvix.Core.Translate
-    - Juvix.Core.Pipeline
     - Juvix.Core.Utility
     - Juvix.Core.IR.Types
     - Juvix.Core.IR.Types.Base
@@ -278,14 +278,18 @@ library:
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.HR.Parser
     - Juvix.Core.HR.Types
+    - Juvix.Core.HR.Extend
     - Juvix.Core.HRAnn.Types
     - Juvix.Core.HRAnn.Erasure
+    - Juvix.Core.HRAnn.Extend
     - Juvix.Core.IRAnn.Types
     - Juvix.Core.IRAnn.Erasure
     - Juvix.Core.ErasedAnn.Types
     - Juvix.Core.ErasedAnn.Erasure
     - Juvix.Core.ErasedAnn.Prim
+    - Juvix.Core.ErasedAnn.Conversion
     - Juvix.Core.Erased.Types.Base
+    - Juvix.Core.Erased.Extend
     - Juvix.Core.IR.Typechecker.Types
     - Juvix.Core.IR.Typechecker.Env
     - Juvix.Core.Parameterisation
