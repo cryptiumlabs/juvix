@@ -36,8 +36,8 @@ dummyInterpret (Types.EmptyInstr inst) =
   case Interpret.interpretInstr Contract.dummyContractEnv inst Vinyl.RNil of
     Right ((x :: TAlias.Value t) Vinyl.:& _) ->
       untypeValue x
-    Left _ -> Left Types.InvalidInputType
-    Right _ -> Left Types.InvalidInputType
+    Left _ -> Left (Types.InvalidInputType "interpret failed")
+    Right _ -> Left (Types.InvalidInputType "interpret failed")
 
 -- copied over from Convert!
 untypeValue ::

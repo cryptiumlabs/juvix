@@ -95,7 +95,9 @@ add,
   or,
   car,
   cdr,
-  pair ::
+  pair,
+  left,
+  right ::
     Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
@@ -121,6 +123,8 @@ abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
 cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
+left = onOneArgTy Instructions.left (Env.Constant . V.ValueLeft)
+right = onOneArgTy Instructions.right (Env.Constant . V.ValueRight)
 isNat =
   onInt1
     Instructions.isNat
@@ -140,7 +144,7 @@ lambda captures arguments body type'
             Env.fun = Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
           }
   | otherwise =
-    throw @"compilationError" Types.InvalidInputType
+    throw @"compilationError" (Types.InvalidInputType "not enough usages")
   where
     usages =
       Utils.usageFromType type'
@@ -224,6 +228,8 @@ primToFargs (Types.Inst inst) ty =
         Instr.PAIR {} -> pair
         Instr.EDIV _ -> ediv
         Instr.ISNAT _ -> isNat
+        Instr.RIGHT {} -> right
+        Instr.LEFT {} -> left
         Instr.PUSH {} -> const pushConstant
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
@@ -374,6 +380,18 @@ onPairGen1 op f =
         let V.ValuePair car cdr = instr1
          in Env.Constant (f (car, cdr))
     )
+
+onOneArgTy ::
+  Env.Reduction m =>
+  (Untyped.T -> Instr.ExpandedOp) ->
+  (V.Value' Types.Op -> Env.Expanded) ->
+  Types.Type ->
+  [Types.NewTerm] ->
+  m Env.Expanded
+onOneArgTy opFunc f typ instrs = do
+  stk <- get @"stack"
+  let VStack.T ((_, ty) : _) _ = stk
+  onOneArgs (opFunc ty) f typ instrs
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
@@ -743,8 +761,8 @@ consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 typeToPrimType :: forall m. Env.Error m => Types.Type -> m Untyped.T
 typeToPrimType ty =
   case ty of
-    Ann.SymT _ -> throw @"compilationError" Types.InvalidInputType
-    Ann.Star _ -> throw @"compilationError" Types.InvalidInputType
+    Ann.SymT s -> throw @"compilationError" (Types.InvalidInputType ("unexpected symt: " <> show s))
+    Ann.Star _ -> throw @"compilationError" (Types.InvalidInputType "unexpected start")
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
@@ -771,7 +789,7 @@ mustLookupType sym = do
   stack <- get @"stack"
   case VStack.lookupType sym stack of
     Just ty -> pure ty
-    Nothing -> throw @"compilationError" (Types.InternalFault ("must be able to find type for symbol: " <> show sym))
+    Nothing -> throw @"compilationError" (Types.InternalFault "must be able to find type")
 
 -- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda :: Env.Reduction m => Env.Curried -> m [Instr.ExpandedOp]

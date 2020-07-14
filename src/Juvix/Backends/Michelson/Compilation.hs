@@ -82,7 +82,7 @@ compileToMichelsonContract term = do
         Left err ->
           throw @"compilationError" (DidNotTypecheck michelsonOp err)
     _ ->
-      throw @"compilationError" InvalidInputType
+      throw @"compilationError" (InvalidInputType "not a lambda function")
 
 compileToMichelsonExpr ::
   DSL.Reduction m =>
