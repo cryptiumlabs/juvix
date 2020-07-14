@@ -5,7 +5,6 @@ module Juvix.Core.HRAnn.Types
 where
 
 import Juvix.Core.HRAnn.Extend
-import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 
 -- TODO: add combinators to @extensible-data@ for pairing like this

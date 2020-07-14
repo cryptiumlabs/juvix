@@ -54,7 +54,7 @@ extra-deps:
 - github: adjoint-io/poly
   commit: b75b853025ea75ba64f62f39d4524832f0117e36
 - github: metastatedev/extensible-data
-  commit: f1a95de10775b449ee6b8b943cc5207449f35808
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
 
 ################################################################################
 # arithmetic circuits deps
