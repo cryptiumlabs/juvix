@@ -67,10 +67,14 @@ exec (EnvE env) param globals = do
   (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
+type AnnTuple = (HR.Term PrimTy PrimVal, Usage.T, HR.Term PrimTy PrimVal)
+
+type Globals = Typed.Globals PrimTy PrimVal
+
 shouldCompileTo ::
   String ->
-  (HR.Term PrimTy PrimVal, Usage.T, HR.Term PrimTy PrimVal) ->
-  Typed.Globals PrimTy PrimVal ->
+  AnnTuple ->
+  Globals ->
   EmptyInstr ->
   T.TestTree
 shouldCompileTo name (term, usage, ty) globals instr =
@@ -80,8 +84,8 @@ shouldCompileTo name (term, usage, ty) globals instr =
 
 shouldCompileToContract ::
   String ->
-  (HR.Term PrimTy PrimVal, Usage.T, HR.Term PrimTy PrimVal) ->
-  Typed.Globals PrimTy PrimVal ->
+  AnnTuple ->
+  Globals ->
   Text ->
   T.TestTree
 shouldCompileToContract name (term, usage, ty) globals contract =
