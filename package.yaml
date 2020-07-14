@@ -222,6 +222,9 @@ library:
     - Juvix.Backends
     - Juvix.Backends.Michelson
     - Juvix.Backends.Michelson.Parameterisation
+    - Juvix.Backends.Michelson.Datatypes
+    - Juvix.Backends.Michelson.Datatypes.Types
+    - Juvix.Backends.Michelson.Datatypes.Compilation
     - Juvix.Backends.Michelson.Compilation
     - Juvix.Backends.Michelson.Compilation.Types
     - Juvix.Backends.Michelson.Compilation.VirtualStack

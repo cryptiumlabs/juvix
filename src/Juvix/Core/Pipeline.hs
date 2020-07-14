@@ -1,6 +1,7 @@
 module Juvix.Core.Pipeline where
 
 import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Backends.Michelson.Datatypes as Datatypes
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
@@ -29,16 +30,18 @@ type MichelsonComp res =
 coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
   term <- typecheckErase term usage ty
-  ann <- ErasedAnn.convertTerm term usage
-  -- TODO: Datatype & pattern matching compilation step will happen here.
+  globals <- ask @"globals"
+  let cmp = Datatypes.datatypesToMichelson globals term
+  ann <- ErasedAnn.convertTerm cmp usage
   let (res, _) = Michelson.compileExpr ann
   pure res
 
 coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
   term <- typecheckErase term usage ty
-  ann <- ErasedAnn.convertTerm term usage
-  -- TODO: Datatype & pattern matching compilation step will happen here.
+  globals <- ask @"globals"
+  let cmp = Datatypes.datatypesToMichelson globals term
+  ann <- ErasedAnn.convertTerm cmp usage
   let (res, _) = Michelson.compileContract ann
   pure res
 

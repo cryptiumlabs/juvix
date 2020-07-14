@@ -126,7 +126,7 @@ test_left =
     "left constructor"
     (HR.Elim (HR.App (HR.Var "MkLeft") twoTerm), Usage.Omega, HR.Elim (HR.Var "either"))
     (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkLeft" (IR.GDataCon leftCon) emptyGlobals)
-    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VOr (Left (MT.VInt 2)) :: (MT.Value (MT.TOr MT.TInt MT.TBool))))) MT.Nop))
 
 test_right :: T.TestTree
 test_right =
