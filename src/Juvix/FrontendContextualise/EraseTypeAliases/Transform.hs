@@ -189,21 +189,6 @@ transformFunction (Old.Func name f sig) =
 --   Old.FunctionLike Old.Expression ->
 --   m (New.FunctionLike New.Expression)
 transformFunctionLike (Old.Like args body) = do
-  -- originalVal <- Env.lookup name -- look up in "new" state
-  -- let transform = do
-  --       transformedBindings <- traverse transformFunctionLike bindings
-  --       let def = Env.transLike transformedBindings Nothing Nothing
-  --       Env.add name def -- add to new context
-  --       New.LetGroup name transformedBindings <$> transformExpression body
-  -- case originalVal of
-  --   Just originalV -> do
-  --     res <- transform
-  --     Env.add name originalV
-  --     return res
-  --   Nothing -> do
-  --     res <- transform
-  --     Env.remove name
-  --     return res
   New.Like <$> traverse transformArg args <*> transformExpression body
 
 -- transformModuleOpen ::
@@ -281,13 +266,32 @@ transformString (Old.Sho t) = pure $ New.Sho t
 --   m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
+saveOld ::
+  NonEmpty Symbol ->
+  OldNew Env.Context (Maybe (New Context.Definition), Symbol)
+saveOld sym =
+  flip (,) (NonEmpty.head sym) <$> Env.lookup (NonEmpty.head sym)
+
+restoreName ::
+  (Maybe (New Context.Definition), Symbol) ->
+  (OldNew Env.Context) ()
+restoreName (Just def, sym) = Env.add sym def
+restoreName (Nothing, sym) = Env.remove sym
+
 -- transformLambda ::
 --   WorkingMaps m =>
 --   Old.Lambda ->
 --   m New.Lambda
--- TODO update context
-transformLambda (Old.Lamb args body) =
-  New.Lamb <$> traverse transformMatchLogic args <*> transformExpression body
+transformLambda (Old.Lamb args body) = do
+  let bindings = findBindings (NonEmpty.head args)
+  originalBindings <- traverse saveOld bindings
+  transArgs <- transformMatchLogic (NonEmpty.head args)
+  --
+  traverse_ Env.addUnknown bindings
+  --
+  res <- New.Lamb (pure transArgs) <$> transformExpression body
+  traverse_ restoreName originalBindings
+  pure res
 
 -- transformApplication ::
 --   WorkingMaps m =>
@@ -399,10 +403,6 @@ transformMatch (Old.Match'' on bindings) =
 --   m New.MatchL
 transformMatchL (Old.MatchL pat body) = do
   let bindings = findBindings pat
-      saveOld sym =
-        flip (,) (NonEmpty.head sym) <$> Env.lookup (NonEmpty.head sym)
-      restoreName (Just def, sym) = Env.add sym def
-      restoreName (Nothing, sym) = Env.remove sym
   originalBindings <- traverse saveOld bindings
   pat <- transformMatchLogic pat
   --
