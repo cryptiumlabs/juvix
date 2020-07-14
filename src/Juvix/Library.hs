@@ -20,6 +20,7 @@ module Juvix.Library
     module Capability.Source,
     module Numeric.Natural,
     module Juvix.Library.PrettyPrint,
+    Data,
     (∨),
     (∧),
     (|<<),
@@ -80,6 +81,8 @@ import Protolude hiding
     state,
   )
 import Prelude (Show (..), String)
+import Data.Data (Data)
+
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)
@@ -116,7 +119,9 @@ traverseM f = fmap join . traverse f
 instance Show (a -> b) where
   show _ = "fun"
 
-newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord, NFData)
+newtype Symbol = Sym Text
+  deriving newtype (Eq, Hashable, Semigroup, Ord, NFData)
+  deriving stock Data
 
 instance Show Symbol where
   show (Sym t) = T.unpack t

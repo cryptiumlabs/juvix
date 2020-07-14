@@ -80,6 +80,7 @@ default-extensions:
   - UnicodeSyntax
   - GADTs
   - ScopedTypeVariables
+  - DeriveDataTypeable
   - DeriveGeneric
   - DerivingStrategies
   - FlexibleContexts
