@@ -310,7 +310,7 @@ extensible
     -- promote this to a match!!!
     data DoBody
       = DoBody
-          { doBodyName :: Maybe NameSymb,
+          { doBodyName :: Maybe Symbol,
             doBodyExpr :: Expression
           }
       deriving (Show, Generic, NFData)
@@ -377,7 +377,7 @@ extensible
     data MatchLogic
       = MatchLogic
           { matchLogicContents :: MatchLogicStart,
-            matchLogicNamed :: Maybe NameSymb
+            matchLogicNamed :: Maybe Symbol
           }
       deriving (Show, Generic, NFData)
 

@@ -175,7 +175,7 @@ matchLogic = maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
 
 matchLogicNamed :: Parser Types.MatchLogic
 matchLogicNamed = do
-  name <- prefixSymbolDot
+  name <- prefixSymbol
   skipLiner Lexer.at
   start <- maybeParend matchLogicStartSN
   pure (Types.MatchLogic start (Just name))
@@ -528,7 +528,7 @@ do' = do
 
 doBind :: Parser [Types.DoBody]
 doBind = do
-  name <- prefixSymbolDotSN
+  name <- prefixSymbolSN
   spaceLiner (string "<-")
   body <- expression'SN
   pure [Types.DoBody (Just name) body]
