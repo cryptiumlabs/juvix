@@ -612,7 +612,7 @@ reservedWords =
 reservedSymbols :: (Ord a, IsString a) => Set a
 reservedSymbols =
   Set.fromList
-    ["=", "|", ""]
+    ["=", "|", "", "--"]
 
 maybe :: Alternative f => f a -> f (Maybe a)
 maybe = optional
@@ -688,6 +688,13 @@ refine =
     do
       refine <- spaceLiner (curly expressionSN)
       pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
+
+-- TODO finish
+comment :: Parser p -> Parser p
+comment p = do
+  _ <- string "--"
+  spaceLiner (takeWhile (\x -> not (Lexer.endOfLine x)))
+  undefined
 
 -- For Do!
 table :: Semigroup a => [[Expr.Operator ByteString a]]
