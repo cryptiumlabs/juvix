@@ -82,6 +82,18 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 * Main
 - _Relies on_
   + [[Library]]
+* Pipeline
+- _Relies on_
+  + [[Compilation]]
+  + [[Types]]
+  + [[Parameterisation]]
+  + [[HR]]
+  + [[IR]]
+  + [[Typechecker]]
+  + [[Pipeline]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
 * Backends
 ** ArithmeticCircuit
 - _Relies on_
