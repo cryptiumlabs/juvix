@@ -184,12 +184,26 @@ transformNameType (Old.NameType' sig name) =
 transformFunction (Old.Func name f sig) =
   New.Func name <$> traverse transformFunctionLike f <*> traverse transformSignature sig
 
+argLogic :: Old.Arg -> Old.MatchLogic
+argLogic (Old.ConcreteA x) = x
+
+accBindings :: [Old.Arg] -> [NameSymb]
+accBindings = concatMap (findBindings . argLogic)
+
 -- transformFunctionLike ::
 --   WorkingMaps m =>
 --   Old.FunctionLike Old.Expression ->
 --   m (New.FunctionLike New.Expression)
 transformFunctionLike (Old.Like args body) = do
-  New.Like <$> traverse transformArg args <*> transformExpression body
+  let bindings = accBindings args  
+  originalBindings <- traverse saveOld bindings
+  transArgs <- traverse transformArg args
+  --
+  traverse_ Env.addUnknown bindings
+  --
+  res <- New.Like transArgs <$> transformExpression body
+  traverse_ restoreName originalBindings
+  pure res
 
 -- transformModuleOpen ::
 --   WorkingMaps m =>
@@ -208,7 +222,6 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) =
 --   WorkingMaps m =>
 --   Old.Arg ->
 --   m New.Arg
-transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
 transformArg (Old.ConcreteA ml) = New.ConcreteA <$> transformMatchLogic ml
 
 --------------------------------------------------------------------------------
