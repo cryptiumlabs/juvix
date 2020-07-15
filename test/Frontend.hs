@@ -298,7 +298,7 @@ fun1 =
     \= MatchName' b (), matchLogicNamed = Nothing, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' c (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchName' d (), matchLogicNamed = Nothing, \
-    \annMatchLogic = ()}] (), matchLogicNamed = Just (foo :| []), annMatchLogic = \
+    \annMatchLogic = ()}] (), matchLogicNamed = Just foo, annMatchLogic = \
     \()}) ()], functionLikeBody = Body' (Constant' (Number' (Integer'' 3 ()) ()) \
     \()) (), annLike = ()}) ()) ()"
 
@@ -489,7 +489,7 @@ simpleNamedCon =
     \= MatchName' a (), matchLogicNamed = Nothing, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' b (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchName' c (), matchLogicNamed = Nothing, \
-    \annMatchLogic = ()}] (), matchLogicNamed = Just (foo :| []), annMatchLogic = \
+    \annMatchLogic = ()}] (), matchLogicNamed = Just foo, annMatchLogic = \
     \()}"
 
 matchMoreComplex :: T.TestTree
@@ -501,11 +501,11 @@ matchMoreComplex =
     "MatchLogic' {matchLogicContents = MatchCon' (Hi :| []) [MatchLogic' {matchLogicContents \
     \= MatchRecord' (NonPunned' (a :| []) (MatchLogic' {matchLogicContents = MatchName' \
     \nah (), matchLogicNamed = Nothing, annMatchLogic = ()}) () :| [Punned' (f :| \
-    \[]) ()]) (), matchLogicNamed = Just (nah :| []), annMatchLogic = ()},MatchLogic' \
+    \[]) ()]) (), matchLogicNamed = Just nah, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' b (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchConst' (Number' (Integer'' 5 ()) \
     \()) (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed \
-    \= Just (foo :| []), annMatchLogic = ()}"
+    \= Just foo, annMatchLogic = ()}"
 
 --------------------------------------------------------------------------------
 -- Expression
