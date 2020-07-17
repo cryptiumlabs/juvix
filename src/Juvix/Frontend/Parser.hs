@@ -27,19 +27,24 @@ import Prelude (fail)
 --------------------------------------------------------------------------------
 
 removeComments :: ByteString -> ByteString
-removeComments xs = undefined
+removeComments = ByteString.concat . grabCommentsFirst
   where
-    grabCommentsFirst "" = []
+    grabCommentsFirst "" =
+      []
     grabCommentsFirst str =
-      let (notIn, in') = breakComment str in
-        grabCommentsSecond notIn <> ByteString.dropWhile (not . (== Lexer.newLine))
+      let (notIn, in') = breakComment str
+       in grabCommentsSecond notIn <> grabCommentsFirst (dropNewLine in')
+    grabCommentsSecond "" =
+      []
     grabCommentsSecond str =
-
-
-
--- ByteString.dropWhile
--- (not . (== Lexer.newLine))
--- $ ByteString.drop 3 (snd (ByteString.breakSubstring "\n-- " "let foo = 3 \n + \n-- \n 4"))
+      let (notIn, in') = breakNewLineComment str
+       in -- Preserver the Number of new lines
+          if  | in' == "" ->
+                [notIn]
+              | otherwise ->
+                notIn : "\n" : grabCommentsSecond (dropNewLine (ByteString.drop 1 in'))
+    dropNewLine =
+      ByteString.dropWhile (not . (== Lexer.newLine))
 
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
