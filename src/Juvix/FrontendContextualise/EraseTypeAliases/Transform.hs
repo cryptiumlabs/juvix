@@ -1,4 +1,5 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE AllowAmbiguousTypes #-} --TODO Remove
 
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
@@ -33,8 +34,8 @@ type WorkingMaps m =
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
--- transformTopLevel ::
---   WorkingMaps m => Old.TopLevel -> OldNew Env.Context New.TopLevel
+transformTopLevel ::
+  WorkingMaps m => Old.TopLevel -> OldNew Env.Context New.TopLevel
 transformTopLevel (Old.Type t) = New.Type <$> transformType t
 transformTopLevel (Old.ModuleOpen t) = New.ModuleOpen <$> transformModuleOpen t
 transformTopLevel (Old.Function t) = New.Function <$> transformFunction t
@@ -42,7 +43,7 @@ transformTopLevel Old.TypeClass = pure New.TypeClass
 transformTopLevel Old.TypeClassInstance = pure New.TypeClassInstance
 
 -- transformExpression ::
---   WorkingMaps m => OldNew Env.Context Old.Expression -> OldNew Env.Context New.Expression
+--   WorkingMaps m => Old.Expression -> OldNew Env.Context New.Expression
 transformExpression (Old.Constant c) = New.Constant <$> transformConst c
 transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
@@ -195,7 +196,7 @@ accBindings = concatMap (findBindings . argLogic)
 --   Old.FunctionLike Old.Expression ->
 --   m (New.FunctionLike New.Expression)
 transformFunctionLike (Old.Like args body) = do
-  let bindings = accBindings args  
+  let bindings = accBindings args
   originalBindings <- traverse saveOld bindings
   transArgs <- traverse transformArg args
   --
@@ -446,9 +447,7 @@ tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
 
 -- transformNameSet ::
---   WorkingMaps m =>
---   (t1 -> m t2) ->
---   Old.NameSet t1 ->
---   m (New.NameSet t2)
+--   WorkingMaps m => (t -> m t1) -> Old.NameSet t 
+--   -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned s <$> p e
