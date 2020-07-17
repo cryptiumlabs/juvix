@@ -1,5 +1,8 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
-{-# LANGUAGE AllowAmbiguousTypes #-} --TODO Remove
+
+-- {-# LANGUAGE AllowAmbiguousTypes #-}
+
+--TODO Remove
 
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
@@ -20,7 +23,13 @@ type Old f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Ty
 
 type New f = f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
 
-type OldNew f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
+type OldNew f =
+  f (NonEmpty (Old.FunctionLike Old.Expression))
+    Old.Signature
+    Old.Type
+    (NonEmpty (New.FunctionLike New.Expression))
+    New.Signature
+    New.Type
 
 type WorkingMaps m =
   ( HasState "old" (Old Context.T) m, -- old context
@@ -35,7 +44,7 @@ type WorkingMaps m =
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 transformTopLevel ::
-  WorkingMaps m => Old.TopLevel -> OldNew Env.Context New.TopLevel
+  WorkingMaps m => Old.TopLevel -> (OldNew Env.Context) New.TopLevel
 transformTopLevel (Old.Type t) = New.Type <$> transformType t
 transformTopLevel (Old.ModuleOpen t) = New.ModuleOpen <$> transformModuleOpen t
 transformTopLevel (Old.Function t) = New.Function <$> transformFunction t
@@ -447,7 +456,7 @@ tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
 
 -- transformNameSet ::
---   WorkingMaps m => (t -> m t1) -> Old.NameSet t 
+--   WorkingMaps m => (t -> m t1) -> Old.NameSet t
 --   -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned s <$> p e
