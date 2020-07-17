@@ -20,7 +20,13 @@ import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, takeWhile, try)
-import Prelude (fail)
+import Prelude (String, fail)
+
+--------------------------------------------------------------------------------
+-- Top Level Runner
+--------------------------------------------------------------------------------
+parse :: ByteString -> Either String [Types.TopLevel]
+parse = parseOnly (many topLevelSN) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process

@@ -27,7 +27,11 @@ allParserTests =
       matchMoreComplex,
       condTest1,
       record1,
-      parens1
+      parens1,
+      -- pre-processor tests
+      removeNoComment,
+      removeNewLineBefore,
+      removeSpaceBefore
     ]
 
 --------------------------------------------------------------------------------
@@ -58,6 +62,31 @@ shouldParseAs ::
   Show a => T.TestName -> Parser a -> ByteString -> String -> T.TestTree
 shouldParseAs name parser parseString =
   parseTasty name (parseOnly parser parseString)
+
+--------------------------------------------------------------------------------
+-- Pre-processor test
+--------------------------------------------------------------------------------
+
+removeSpaceBefore :: T.TestTree
+removeSpaceBefore =
+  Parser.removeComments "let foo = 3 \n + \n -- foo foo foo \n 4"
+    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> T.testCase "test remove comments: let foo = 3 \n + \n -- foo foo foo \n 4"
+
+removeNewLineBefore :: T.TestTree
+removeNewLineBefore =
+  Parser.removeComments "let foo = 3 \n + \n-- foo foo foo \n 4"
+    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> T.testCase "test remove comments: let foo = 3 \n + \n-- foo foo foo \n 4"
+
+-- TODO :: use quick check!
+
+removeNoComment :: T.TestTree
+removeNoComment =
+  let str = "let foo = 3 \n + \n \n 4"
+   in Parser.removeComments str
+        |> (T.@=? str)
+        |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
