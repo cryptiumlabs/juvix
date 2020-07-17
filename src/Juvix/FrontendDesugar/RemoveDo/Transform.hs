@@ -12,7 +12,7 @@ transformDo (Old.Do'' body) = foldr f (transformLast last) body
   where
     f (Old.DoBody (Just name) expr) acc =
       -- we shouldn't have a prefixed name her :(
-      New.MatchLogic (New.MatchName (NonEmpty.head name)) Nothing :| []
+      New.MatchLogic (New.MatchName name) Nothing :| []
         |> flip New.Lamb (transformExpression expr)
         |> New.Lambda
         |> formApplication ">>=" acc

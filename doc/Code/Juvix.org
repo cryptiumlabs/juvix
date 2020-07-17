@@ -446,7 +446,8 @@ This module provides a default contract environment
   + [[Library]]
 *** Pipeline
 - _Relies on_
-  + [[Core/EAC]]
+  + [[Michelson]]
+  + [[ErasedAnn]]
   + [[Core/Erasure]]
   + [[HR]]
   + [[IR]]
@@ -548,15 +549,26 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
+**** Extend <<Erased/Extend>>
+- _Relies on_
+  + [[HRAnn/Extend]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
 **** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
 **** Types <<Erased/Types>>
 - _Relies on_
+  + [[Erased/Extend]]
   + [[Erased/Types/Base]]
-  + [[IR/Types]]
+  + [[HRAnn/Types]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 ***** Base <<Erased/Types/Base>>
 - _Relies on_
   + [[IR/Types]]
@@ -565,8 +577,16 @@ This module provides a default contract environment
   + [[HashMap]]
 *** ErasedAnn
 - _Relies on_
-  + [[ErasedAnn/Erasure]]
+  + [[Conversion]]
   + [[ErasedAnn/Types]]
+**** Conversion
+- _Relies on_
+  + [[Erased]]
+  + [[ErasedAnn/Types]]
+  + [[Erasure/Types]]
+  + [[Core/Types]]
+  + [[Usage]]
+  + [[Library]]
 **** Erasure <<ErasedAnn/Erasure>>
 - _Relies on_
   + [[Erased/Types]]
@@ -575,8 +595,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Prim
 - This module represents the type which will be sent to the
-  paramiterization
-- the =Take= type is what a paramiterization will take coming in
+  parameterisation
+- the =Take= type is what a parameterisation will take coming in
 - the =Return= type is what will be handed back to Core to evaluate
   and decide on the next steps. If this is a =Left= type checking
   has failed, if it's a =Right= then type checking will continue
@@ -604,6 +624,7 @@ This module provides a default contract environment
 **** Types <<Erasure/Types>>
 - _Relies on_
   + [[Erased/Types]]
+  + [[Erased/Types]]
   + [[Erased/Types/Base]]
   + [[Erased/Types/Base]]
   + [[Typechecker]]
@@ -614,6 +635,11 @@ This module provides a default contract environment
 - _Relies on_
   + [[HR/Parser]]
   + [[HR/Types]]
+**** Extend <<HR/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[Library]]
 **** Parser <<HR/Parser>>
 - _Relies on_
   + [[HR/Types]]
@@ -622,6 +648,7 @@ This module provides a default contract environment
   + [[Library]]
 **** Types <<HR/Types>>
 - _Relies on_
+  + [[HR/Extend]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
   + [[Library]]
@@ -635,8 +662,15 @@ This module provides a default contract environment
   + [[HRAnn/Types]]
   + [[TransformExt]]
   + [[Library]]
+**** Extend <<HRAnn/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[Usage]]
+  + [[Library]]
 **** Types <<HRAnn/Types>>
 - _Relies on_
+  + [[HRAnn/Extend]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
   + [[Usage]]
@@ -901,9 +935,9 @@ Quantitative type implementation inspired by
   + Let now looks like
     #+begin_src haskell
       data Let
-        = Let''
+        = LetGroup
           { letName :: Symbol
-          , letBindings :: FunctionLike Expression
+          , letBindings :: NonEmpty (FunctionLike Expression)
           , letBody :: Expression
           }
         deriving (Show, Generic, NFData)

@@ -1,7 +1,7 @@
 module Juvix.Core.Pipeline where
 
-import qualified Data.Text as Text
-import qualified Juvix.Core.EAC as EAC
+import qualified Juvix.Backends.Michelson as Michelson
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -9,10 +9,41 @@ import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+import qualified Michelson.TypeCheck as Michelson
+import qualified Michelson.Untyped as Michelson
+
+type MichelsonTerm = HR.Term Michelson.PrimTy Michelson.PrimVal
+
+type MichelsonComp res =
+  forall m.
+  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
+    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
+    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
+    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+  ) =>
+  MichelsonTerm ->
+  Usage.T ->
+  MichelsonTerm ->
+  m (res)
+
+coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
+coreToMichelson term usage ty = do
+  term <- typecheckErase term usage ty
+  ann <- ErasedAnn.convertTerm term usage
+  -- TODO: Datatype & pattern matching compilation step will happen here.
+  let (res, _) = Michelson.compileExpr ann
+  pure res
+
+coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
+coreToMichelsonContract term usage ty = do
+  term <- typecheckErase term usage ty
+  ann <- ErasedAnn.convertTerm term usage
+  -- TODO: Datatype & pattern matching compilation step will happen here.
+  let (res, _) = Michelson.compileContract ann
+  pure res
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
-
 -- FIXME
 -- typecheckAffineErase ::
 --   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,

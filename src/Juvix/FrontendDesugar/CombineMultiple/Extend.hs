@@ -21,9 +21,9 @@
 --   + Let now looks like
 --     #+begin_src haskell
 --       data Let
---         = Let''
+--         = LetGroup
 --           { letName :: Symbol
---           , letBindings :: FunctionLike Expression
+--           , letBindings :: NonEmpty (FunctionLike Expression)
 --           , letBody :: Expression
 --           }
 --         deriving (Show, Generic, NFData)

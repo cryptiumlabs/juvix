@@ -44,9 +44,12 @@ eraseTerm (Typed.Let π b t anns) = do
   if π == mempty
     then pure t
     else do
-      let ty = IR.annType $ IR.baResAnn anns
+      let exprTy = IR.annType $ IR.baResAnn anns
+          bindTy = IR.annType $ IR.baBindAnn anns
       b <- eraseElim b
-      Erasure.Let x b t <$> eraseType ty
+      bindTy <- eraseType bindTy
+      exprTy <- eraseType exprTy
+      pure (Erasure.Let x b t (bindTy, exprTy))
 eraseTerm (Typed.Elim e _) = eraseElim e
 
 eraseElim ::
@@ -90,9 +93,11 @@ eraseType (IR.VStar i) = do
 eraseType (IR.VPrimTy t) = do
   pure $ Erasure.PrimTy t
 eraseType (IR.VPi π a b) = do
-  -- FIXME dependency
-  Erasure.Pi π <$> eraseType a
-    <*> withName \_ -> eraseType b
+  if π == mempty
+    then eraseType b
+    else-- FIXME dependency
+    Erasure.Pi π <$> eraseType a
+      <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do
   throwEra $ Erasure.UnsupportedTypeV v
 eraseType (IR.VNeutral n) = do

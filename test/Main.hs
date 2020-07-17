@@ -11,6 +11,7 @@ import qualified Erasure
 import qualified Frontend
 import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
+import qualified Pipeline
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
 
@@ -22,6 +23,12 @@ coreTests =
       CoreConv.coreConversions,
       CoreParser.coreParser
     ]
+
+pipelineTests :: T.TestTree
+pipelineTests =
+  T.testGroup
+    "Pipeline tests"
+    Pipeline.tests
 
 backendTests :: T.TestTree
 backendTests =
@@ -40,6 +47,7 @@ allCheckedTests =
   T.testGroup
     "All tests that are checked"
     [ coreTests,
+      pipelineTests,
       backendTests,
       frontEndTests,
       translationPasses,

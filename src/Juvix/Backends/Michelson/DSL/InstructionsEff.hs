@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
+
 -- |
 -- - This module includes a higher level DSL which each instruction
 --   has a stack effect
@@ -769,7 +771,7 @@ mustLookupType sym = do
   stack <- get @"stack"
   case VStack.lookupType sym stack of
     Just ty -> pure ty
-    Nothing -> throw @"compilationError" (Types.InternalFault "must be able to find type")
+    Nothing -> throw @"compilationError" (Types.InternalFault ("must be able to find type for symbol: " <> show sym))
 
 -- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda :: Env.Reduction m => Env.Curried -> m [Instr.ExpandedOp]

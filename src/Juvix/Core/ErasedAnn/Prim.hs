@@ -1,7 +1,7 @@
 -- |
 -- - This module represents the type which will be sent to the
---   paramiterization
--- - the =Take= type is what a paramiterization will take coming in
+--   parameterisation
+-- - the =Take= type is what a parameterisation will take coming in
 -- - the =Return= type is what will be handed back to Core to evaluate
 --   and decide on the next steps. If this is a =Left= type checking
 --   has failed, if it's a =Right= then type checking will continue

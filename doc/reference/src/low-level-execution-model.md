@@ -1065,3 +1065,46 @@ Third version: start putting metadata on nodes (e.g. associated with linear logi
 #### Safety under concurrency
 
 1. How to avoid locks in rewriting?
+
+### Compilation to a stack machine
+
+Basic concept:
+
+- Target a four-stack one-heap machine: code stack, node stack, possible-regex stack, working stack, heap (possibly this can be simplified later). The code stack contains instructions, the node stack contains addresses & ports of nodes as they are constructed or destroyed, the possible-regex stack contains a path back of nodes from the head of the term, updated during reduction, the working stack contains node information & data loaded from the heap, and the heap is a key-value mapping (memory) associating node addresses with data (including pointers to other nodes).
+- Compile interaction nets (graphs, assembled from terms) into a sequence of instructions that will create that graph & subsequently reduce it. As these instructions are all then present at compile-time and the order of reduction is known at compile-time, optimisations which require knowledge of the order of reduction should be possible. This compilation can be done recursively while traversing a graph; note that special care will have to be taken to avoid cyclical repetition and allocate memory prior to setting node data so that node addresses are available for back-pointers.
+- Compilation should guarantee that the result of executing all instructions produced by compiling an interaction net is an empty code stack, an empty possible-regex stack, an empty working stack, and a node stack with exactly one pointer to a node on the heap, which then can be traversed to reconstruct the graph, which must be fully-evaluated (no primary pairs). To be determined whether Asperti's WHNF-reduction algorithm is sufficient to ensure this (when applied as an instruction after *every* part of the sub-graph) or whether another `REDUCE` algorithm is needed. Given this, an ideal optimiser should be able to evaluate the entire reduction at compile-time for a graph constructed from a closed term, and should be able to evaluate all parts of a term which can be evaluated at compile-time for a graph constructed from an open term (this is possibly redundant with compile-time evaluation at a prior step, but it's a good test for an optimiser).
+- More importantly, a good optimiser should be able to eliminate a lot of intermediate graph construction & destruction code since the access patterns are known at compile time. Consider a simple graph (where `<=>` is a primary pair):
+
+```
+(1) <=> (+) --- (2)
+```
+
+This should compile to something like the following instruction sequence:
+
+```
+ALLOC_NODE (+)
+ALLOC_NODE Int
+SET_NODE_DATA Int 1 {1}
+REDUCE
+ALLOC_NODE Int
+SET_NODE_DATA Int 2 {2}
+REDUCE
+SET_NODE_DATA (+) {2} {0} {1}
+REDUCE
+```
+
+As `REDUCE` will read the pointers that have just been allocated, this should all be possible to simplify at compile time to at minimum:
+
+```
+ALLOC_NODE Int
+SET_NODE_DATA Int 3 {1}
+```
+
+And even in the case of a free variable instead of `1` or `2` the optimiser should be able to perform this simplification by inlining the call to `+`, still avoiding the intermediate allocation/deallocation.
+
+Open questions:
+- Is Asperti's WHNF reduction algorithm sufficient for our purposes (we want "total" evaluation) when applied after each subgraph's compiled instruction sequence, or will we need to adjust it?
+- How easy is it to write this optimiser? Can we delegate most of the work to an existing optimiser if we translate the abstract machine instructions into e.g. LLVM operations? Will the LLVM optimiser be able to remove unnecessary allocation/deallocation correctly?
+- Should `REDUCE` be turned into a larger set of more primitive operations (probably)? What is the most efficient way to do this? Do we need to worry about caching (e.g. keeping data on the working stack) in the abstract machine layer, or can we safely assume lower layers of optimisation will handle that?
+- Can we write this in an elegant way that parameterises over node types & rewrite rules (so that e.g. bespoke encoding at higher levels is possible as well)? Shouldn't be too hard I think.
+- Can we still get certain kinds of parallelism (will require alterations to the reduction algorithm)? Maybe compile-time analysis (e.g. of which subgraphs are known to be unconnected, which means we can avoid locks) can be helpful here.

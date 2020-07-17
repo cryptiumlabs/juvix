@@ -1,8 +1,8 @@
 module Juvix.Core.ErasedAnn
   ( module Juvix.Core.ErasedAnn.Types,
-    module Juvix.Core.ErasedAnn.Erasure,
+    module Juvix.Core.ErasedAnn.Conversion,
   )
 where
 
-import Juvix.Core.ErasedAnn.Erasure
+import Juvix.Core.ErasedAnn.Conversion
 import Juvix.Core.ErasedAnn.Types

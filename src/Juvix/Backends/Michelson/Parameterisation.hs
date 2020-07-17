@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
+
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
     module Juvix.Backends.Michelson.Compilation.Types,
@@ -29,6 +31,7 @@ import Prelude (String)
 -- TODO: Add dependent functions for pair, fst, snd, etc.
 typeOf :: PrimVal -> NonEmpty PrimTy
 typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
+typeOf AddI = PrimTy (M.Type M.TInt "") :| [PrimTy (M.Type M.TInt ""), PrimTy (M.Type M.TInt "")]
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))

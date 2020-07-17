@@ -8,23 +8,29 @@
 
 ## Currently supported backends
 
-### LLVM
-
-!include backends/llvm.md
-
 ### Michelson
 
 !include backends/michelson.md
+
+### Arithmetic circuit
+
+!include backends/circuit.md
+
+## Likely future backends
+
+### LLVM
+
+!include backends/llvm.md
 
 ### WASM
 
 !include backends/wasm.md
 
-## Planned backends
-
 ### EVM
 
 !include backends/evm.md
+
+## Possible future backends
 
 ### Berkeley Packet Filter
 
@@ -37,11 +43,3 @@
 ### FPGA
 
 !include backends/fpga.md
-
-### Rank-1 constraint systems (SNARKs)
-
-!include backends/r1cs.md
-
-### Algebraic intermediate representation (STARKs)
-
-!include backends/air.md
