@@ -27,8 +27,10 @@ newtype Context term0 ty0 sumRep0 termN tyN sumRepN a = Ctx {antiAlias :: Contex
     )
     via StateField "new" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
 
+type HasNew t ty s m = HasState "new" (Context.T t ty s) m
+
 modify ::
-  HasState "new" (Context.T term ty sumRep) m =>
+  HasNew term ty sumRep m =>
   ( Context.Definition term ty sumRep ->
     Maybe (Context.Definition term ty sumRep)
   ) ->
@@ -36,16 +38,14 @@ modify ::
   m ()
 modify f sy = Juvix.Library.modify @"new" (Context.modify f sy)
 
--- lookup :: Symbol -> Context term0 ty0 sumRep0 termN tyN sumRepN (Maybe (Context.Definition termN tyN sumRepN))
 lookup ::
-  HasState "new" (Context.T term ty sumRep) m =>
+  HasNew term ty sumRep m =>
   Symbol ->
   m (Maybe (Context.Definition term ty sumRep))
 lookup sy = do
   ctx <- get @"new"
   return $ Context.lookup sy ctx
 
--- ask :: Symbol -> Context term0 ty0 sumRep0 termN tyN sumRepN (Maybe (Context.Definition term0 ty0 sumRep0))
 ask ::
   HasReader "old" (Context.T term ty sumRep) m =>
   Symbol ->
@@ -54,9 +54,8 @@ ask sy = do
   ctx <- Juvix.Library.ask @"old"
   return $ Context.lookup sy ctx
 
--- mapWithKey :: (Symbol -> Context.Definition termN tyN sumRepN -> Context.Definition termN tyN sumRepN) -> Context term0 ty0 sumRep0 termN tyN sumRepN ()
 mapWithKey ::
-  HasState "new" (Context.T term ty sumRep) m =>
+  HasNew term ty sumRep m =>
   ( Symbol ->
     Context.Definition term ty sumRep ->
     Context.Definition term ty sumRep
@@ -65,11 +64,11 @@ mapWithKey ::
 mapWithKey f = Juvix.Library.modify @"new" (Context.mapWithKey f)
 
 add ::
-  HasState "new" (Context.T term ty sumRep) m => Symbol -> Context.Definition term ty sumRep -> m ()
+  HasNew term ty sumRep m => Symbol -> Context.Definition term ty sumRep -> m ()
 add sy def = Juvix.Library.modify @"new" (Context.add sy def)
 
 remove ::
-  HasState "new" (Context.T term ty sumRep) m => Symbol -> m ()
+  HasNew term ty sumRep m => Symbol -> m ()
 remove sy = Juvix.Library.modify @"new" (Context.remove sy)
 
 -- forKey :: Context term0 ty0 sumRep0 termN tyN sumRepN () -> [Symbol -> Context.Definition term0 ty0 sumRep0 -> Context term0 ty0 sumRep0 termM tyM sumRepM a] -> Context term0 ty0 sumRep termM tyM sumRepM a
@@ -79,7 +78,7 @@ forKey = undefined
 transLike = undefined
 
 addUnknown ::
-  HasState "new" (Context.T term ty sumRep) m => NonEmpty Symbol -> m ()
+  HasState "new" (Context.T term ty sumRep) m => Symbol -> m ()
 addUnknown sym =
   Juvix.Library.modify @"new"
-    (Context.add (NonEmpty.head sym) (Context.Unknown Nothing))
+    (Context.add sym (Context.Unknown Nothing))

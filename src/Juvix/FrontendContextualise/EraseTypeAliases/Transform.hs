@@ -1,9 +1,5 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
--- {-# LANGUAGE AllowAmbiguousTypes #-}
-
---TODO Remove
-
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
 --FIXME put in the last stage
@@ -14,10 +10,6 @@ import qualified Juvix.FrontendContextualise.Environment as Env
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
-import qualified Juvix.Library.HashMap as Map
-
--- TODO remove this
-type NameSymb = NonEmpty Symbol
 
 type Old f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
@@ -25,16 +17,21 @@ type New f = f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Ty
 
 type WorkingMaps m =
   ( HasState "old" (Old Context.T) m, -- old context
-    HasState "new" (New Context.T) m, -- new context
-    HasState "aliases" (Map.T Symbol (New Context.Definition)) m -- a map of aliases
+    HasState "new" (New Context.T) m
   )
 
--- The actual transform we are doing:
+--------------------------------------------------------------------------------
+-- Actual Transforms
+--------------------------------------------------------------------------------
+
 -- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
+
+-- transformProgram :: WorkingMaps m => Old Context -> New Context
+
 transformTopLevel ::
   WorkingMaps m => Old.TopLevel -> m New.TopLevel
 transformTopLevel (Old.Type t) = New.Type <$> transformType t
@@ -162,7 +159,7 @@ argLogic :: Old.Arg -> Old.MatchLogic
 argLogic (Old.ConcreteA x) = x
 argLogic (Old.ImplicitA x) = x
 
-accBindings :: [Old.Arg] -> [NameSymb]
+accBindings :: [Old.Arg] -> [Symbol]
 accBindings = concatMap (findBindings . argLogic)
 
 transformFunctionLike ::
@@ -199,9 +196,8 @@ transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
 transformSignature ::
   WorkingMaps m => Old.Signature -> m New.Signature
 transformSignature (Old.Sig name usage arrow constraints) =
-  New.Sig
-    <$> pure name
-    <*> traverse transformExpression usage
+  New.Sig name
+    <$> traverse transformExpression usage
     <*> transformExpression arrow
     <*> traverse transformExpression constraints
 
@@ -237,10 +233,10 @@ transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
 saveOld ::
   HasState "new" (Context.T term ty sumRep) f =>
-  NonEmpty Symbol ->
+  Symbol ->
   f (Maybe (Context.Definition term ty sumRep), Symbol)
 saveOld sym =
-  flip (,) (NonEmpty.head sym) <$> Env.lookup (NonEmpty.head sym)
+  flip (,) sym <$> Env.lookup sym
 
 restoreName ::
   HasState "new" (Context.T term ty sumRep) m =>
@@ -327,10 +323,10 @@ transformInfix (Old.Inf l o r) =
 -- Matching
 --------------------------------------------------
 
-findBindings :: Old.MatchLogic -> [NameSymb]
+findBindings :: Old.MatchLogic -> [Symbol]
 findBindings matchLogic = findBindingsAcc matchLogic []
 
-findBindingsAcc :: Old.MatchLogic -> [NameSymb] -> [NameSymb]
+findBindingsAcc :: Old.MatchLogic -> [Symbol] -> [Symbol]
 findBindingsAcc (Old.MatchLogic contents name) xs =
   let startList =
         case name of
@@ -343,7 +339,7 @@ findBindingsAcc (Old.MatchLogic contents name) xs =
       findMatchLogicSym (Old.MatchRecord names) acc =
         foldr findNameSet acc names
       findMatchLogicSym (Old.MatchName name) acc =
-        pure name : acc
+        name : acc
       findMatchLogicSym (Old.MatchConst _const) acc =
         acc
    in findMatchLogicSym contents startList
