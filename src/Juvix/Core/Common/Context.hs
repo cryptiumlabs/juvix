@@ -8,19 +8,8 @@
 --   term in slightly different ways
 module Juvix.Core.Common.Context
   ( module Juvix.Core.Common.Context.Precedence,
-    T,
-    Definition (..),
-    lookup,
-    (!?),
-    add,
-    remove,
-    modify,
-    update,
-    names,
-    fromList,
-    Juvix.Core.Common.Context.toList,
-    mapWithKey,
-    open,
+    -- leave the entire module for now, so lenses can be exported
+    module Juvix.Core.Common.Context,
   )
 where
 
