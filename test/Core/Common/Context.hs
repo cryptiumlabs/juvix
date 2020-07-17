@@ -17,7 +17,7 @@ nestedRecord =
 
 memptyTest :: Context.Definition Natural Natural Natural
 memptyTest =
-  foldr const (Context.Def mempty 1 1) (fmap identity (Context.fromList []))
+  foldr const (Context.Def mempty 1 1 Context.default') (fmap identity (Context.fromList []))
 
 lookupTest :: Maybe (Context.Definition term ty sumRep)
 lookupTest = Context.lookup "foo.a" nestedRecord
