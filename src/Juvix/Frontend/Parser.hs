@@ -27,10 +27,17 @@ import Prelude (fail)
 --------------------------------------------------------------------------------
 
 removeComments :: ByteString -> ByteString
-removeComments = undefined
+removeComments xs = undefined
+  where
+    grabCommentsFirst "" = []
+    grabCommentsFirst str =
+      let (notIn, in') = breakComment str in
+        grabCommentsSecond notIn <> ByteString.dropWhile (not . (== Lexer.newLine))
+    grabCommentsSecond str =
 
 
--- ByteString.drop 1 $ ByteString.dropWhile
+
+-- ByteString.dropWhile
 -- (not . (== Lexer.newLine))
 -- $ ByteString.drop 3 (snd (ByteString.breakSubstring "\n-- " "let foo = 3 \n + \n-- \n 4"))
 
