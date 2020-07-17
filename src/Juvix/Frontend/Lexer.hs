@@ -78,6 +78,9 @@ times = charToWord8 '*'
 backtick :: Word8
 backtick = charToWord8 '`'
 
+newLine :: Word8
+newLine = charToWord8 '\n'
+
 validStartSymbol :: Word8 -> Bool
 validStartSymbol w =
   validStartSymbol' w || w == under

@@ -23,6 +23,26 @@ import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, take
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
+-- Pre-Process
+--------------------------------------------------------------------------------
+
+removeComments :: ByteString -> ByteString
+removeComments = undefined
+
+
+-- ByteString.drop 1 $ ByteString.dropWhile
+-- (not . (== Lexer.newLine))
+-- $ ByteString.drop 3 (snd (ByteString.breakSubstring "\n-- " "let foo = 3 \n + \n-- \n 4"))
+
+-- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
+-- thus this compiles to a shift
+breakNewLineComment :: ByteString -> (ByteString, ByteString)
+breakNewLineComment = ByteString.breakSubstring "\n-- "
+
+breakComment :: ByteString -> (ByteString, ByteString)
+breakComment = ByteString.breakSubstring " -- "
+
+--------------------------------------------------------------------------------
 -- Top Level
 --------------------------------------------------------------------------------
 
@@ -688,13 +708,6 @@ refine =
     do
       refine <- spaceLiner (curly expressionSN)
       pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
-
--- TODO finish
-comment :: Parser p -> Parser p
-comment p = do
-  _ <- string "--"
-  spaceLiner (takeWhile (\x -> not (Lexer.endOfLine x)))
-  undefined
 
 -- For Do!
 table :: Semigroup a => [[Expr.Operator ByteString a]]
