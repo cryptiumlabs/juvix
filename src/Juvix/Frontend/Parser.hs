@@ -35,20 +35,21 @@ parse = parseOnly (many topLevelSN) . removeComments
 removeComments :: ByteString -> ByteString
 removeComments = ByteString.concat . grabCommentsFirst
   where
-    grabCommentsFirst "" =
-      []
-    grabCommentsFirst str =
-      let (notIn, in') = breakComment str
-       in grabCommentsSecond notIn <> grabCommentsFirst (dropNewLine in')
-    grabCommentsSecond "" =
-      []
-    grabCommentsSecond str =
-      let (notIn, in') = breakNewLineComment str
-       in -- Preserver the Number of new lines
-          if  | in' == "" ->
-                [notIn]
-              | otherwise ->
-                notIn : "\n" : grabCommentsSecond (dropNewLine (ByteString.drop 1 in'))
+    onBreakDo _break _con "" = []
+    onBreakDo break cont str = break str |> cont
+    --
+    grabCommentsFirst = breakComment `onBreakDo` f
+      where
+        f (notIn, in') =
+          grabCommentsSecond notIn <> grabCommentsFirst (dropNewLine in')
+    --
+    grabCommentsSecond = breakNewLineComment `onBreakDo` f
+      where
+        -- Preserve the Number of new lines
+        f (notIn, "") =
+          [notIn]
+        f (notIn, in') =
+          notIn : "\n" : grabCommentsSecond (dropNewLine (ByteString.drop 1 in'))
     dropNewLine =
       ByteString.dropWhile (not . (== Lexer.newLine))
 
