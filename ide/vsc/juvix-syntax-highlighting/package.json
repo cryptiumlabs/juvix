@@ -1,0 +1,20 @@
+{
+    "name": "juvix-syntax-highlighting",
+    "displayName": "Juvix.Syntax-Highlighting",
+    "description": "Syntax Highlighting for the Juvix programming language",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.47.0"
+    },
+    "categories": [
+        "Snippets"
+    ],
+    "contributes": {
+        "snippets": [
+            {
+                "language": "juvix",
+                "path": "./snippets/snippets.code-snippets"
+            }
+        ]
+    }
+}
