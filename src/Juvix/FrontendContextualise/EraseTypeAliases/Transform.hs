@@ -11,9 +11,12 @@ import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
-type Old f = f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
+type Old f = 
+  f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
-type New f = f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
+type New f = 
+  f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
+
 
 type WorkingMaps m =
   ( HasState "old" (Old Context.T) m, -- old context
@@ -30,7 +33,28 @@ type WorkingMaps m =
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
--- transformProgram :: WorkingMaps m => Old Context -> New Context
+transformContext :: Old Context.T ->  New Context.T
+transformContext oldMap =  
+  let oldSymList = fst $ unzip $ Context.toList oldMap
+  in
+    transformContextAcc oldMap oldSymList
+  
+transformContextAcc :: Old Context.T -> [Symbol] -> New Context.T
+transformContextAcc oldMap symList =
+  let removeOldfillNew sym = 
+    case Env.ask sym of
+      Just def -> do
+        Env.add sym def
+        Env.removeOld sym
+      Nothing -> do
+        Env.remove sym
+        Env.removeOld sym
+  case symList of
+      hd : tl -> do
+        removeOldfillNew hd
+        transformContextAcc oldMap tl
+      [] -> undefined
+
 
 transformTopLevel ::
   WorkingMaps m => Old.TopLevel -> m New.TopLevel
@@ -47,16 +71,20 @@ transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
 transformExpression (Old.Match m) = New.Match <$> transformMatch m
 transformExpression (Old.Name n) = pure $ New.Name n
-transformExpression (Old.OpenExpr n) = New.OpenExpr <$> transformModuleOpenExpr n
+transformExpression (Old.OpenExpr n) = 
+  New.OpenExpr <$> transformModuleOpenExpr n
 transformExpression (Old.Lambda l) = New.Lambda <$> transformLambda l
-transformExpression (Old.Application a) = New.Application <$> transformApplication a
+transformExpression (Old.Application a) = 
+  New.Application <$> transformApplication a
 transformExpression (Old.Block b) = New.Block <$> transformBlock b
 transformExpression (Old.Infix i) = New.Infix <$> transformInfix i
 transformExpression (Old.ExpRecord i) = New.ExpRecord <$> transformExpRecord i
 transformExpression (Old.ArrowE i) = New.ArrowE <$> transformArrowExp i
-transformExpression (Old.NamedTypeE i) = New.NamedTypeE <$> transformNamedType i
+transformExpression (Old.NamedTypeE i) = 
+  New.NamedTypeE <$> transformNamedType i
 transformExpression (Old.RefinedE i) = New.RefinedE <$> transformTypeRefine i
-transformExpression (Old.UniverseName i) = New.UniverseName <$> transformUniverseExpression i
+transformExpression (Old.UniverseName i) = 
+  New.UniverseName <$> transformUniverseExpression i
 transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
 
 --------------------------------------------------------------------------------
@@ -66,7 +94,11 @@ transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
 transformType ::
   WorkingMaps m => Old.Type -> m New.Type
 transformType (Old.Typ usage name' args form) =
-  New.Typ <$> traverse transformExpression usage <*> pure name' <*> pure args <*> transformTypeSum form
+  New.Typ 
+    <$> traverse transformExpression usage 
+    <*> pure name' 
+    <*> pure args 
+    <*> transformTypeSum form
 
 transformTypeSum ::
   WorkingMaps m => Old.TypeSum -> m New.TypeSum
