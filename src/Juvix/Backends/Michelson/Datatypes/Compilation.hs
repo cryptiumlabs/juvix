@@ -1,28 +1,24 @@
 module Juvix.Backends.Michelson.Datatypes.Compilation where
 
 import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Backends.Michelson.Compilation.Types as M
 import Juvix.Backends.Michelson.Datatypes.Types
 import qualified Juvix.Backends.Michelson.Parameterisation as M
 import qualified Juvix.Core.Erasure.Types as E
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype, Product, Sum, Type)
 import qualified Michelson.Untyped as MU
 import qualified Michelson.Untyped.Instr as Instr
 
-{-
- - 1. Transform globals.
- - 2. Transform pattern matches.
- - 3. Substitute.
- -}
-
 transformGlobals :: PreGlobals -> PostGlobals
 transformGlobals globals =
-  flip HM.mapWithKey globals $ \key val ->
+  flip HM.mapMaybeWithKey globals $ \key val ->
     case val of
-      IR.GDatatype d -> transformDatatype globals d
-      IR.GDataCon c -> transformDataCon globals c
+      IR.GDatatype d -> pure (transformDatatype globals d)
+      IR.GDataCon c -> pure (transformDataCon globals c)
       IR.GFunction f -> undefined
-      IR.GAbstract _ _ -> undefined
+      IR.GAbstract _ _ -> Nothing
 
 transformDatatype :: PreGlobals -> Datatype -> Global
 transformDatatype globals (IR.Datatype name _ _ cons) =
@@ -32,7 +28,7 @@ transformDatatype globals (IR.Datatype name _ _ cons) =
           IR.VNeutral (IR.NFree (IR.Global g)) ->
             let Just v = HM.lookup g globals
              in case v of
-                  -- Note that this will break on mutual recursive definitions.
+                  -- Note that this will break on mutually recursive definitions.
                   IR.GDatatype d -> let GDatatype _ t = transformDatatype globals d in t
           IR.VPi _ arg res ->
             Product (valueToADT arg) (valueToADT res)
@@ -53,7 +49,7 @@ transformDataCon :: PreGlobals -> DataCon -> Global
 transformDataCon globals (IR.DataCon name ty) =
   let datatypeName = dataConTypeName ty
       Just (IR.GDatatype (IR.Datatype _ _ _ cons)) = HM.lookup datatypeName globals
-      [(_, index)] = if length cons == 1 then [(undefined, -1)] else filter ((==) name . IR.conName . fst) $ zip cons [0 ..]
+      [(_, index)] = filter ((==) name . IR.conName . fst) $ zip cons [0 ..]
       valueToTy v =
         case v of
           IR.VPrimTy (M.PrimTy t) -> E.PrimTy (M.PrimTy t)
@@ -108,33 +104,38 @@ typeToMichelson globals ty = rec ty
         E.Pi u a r -> E.Pi u (typeToMichelson globals a) (typeToMichelson globals r)
         _ -> ty
 
-indexToLeftRight :: Int -> MU.Type -> [MU.InstrAbstract M.Op]
-indexToLeftRight (-1) _ = []
-indexToLeftRight 0 t = [Instr.LEFT "" "" "" "" t]
-indexToLeftRight 1 t = [Instr.RIGHT "" "" "" "" t]
-indexToLeftRight n t = indexToLeftRight (n - 1) t <> [Instr.RIGHT "" "" "" "" t]
+indexToCons :: Int -> ADT -> [Con]
+indexToCons index adt =
+  case adt of
+    Prim _ -> []
+    Sum a b ->
+      case index of
+        0 -> indexToCons index a <> [LeftCon]
+        n -> indexToCons (index - 1) b <> [RightCon]
+    Product a b ->
+      -- TODO Check this for complex nested types, will the stack operations be correct?
+      indexToCons index b <> indexToCons index a <> [PairCon]
 
--- TODO:
--- Should find n args, then take n args as variables, then apply pair(s), then left/right as appropriate.
-opSequenceToApply :: Type -> [MU.InstrAbstract M.Op] -> Term
-opSequenceToApply ty [] = E.Lam "0" (E.Var "0" ty) ty
-opSequenceToApply ty@(E.Pi _ arg res) (op : []) = E.Lam "0" (E.App (E.Prim (M.Inst op) ty) (E.Var "0" arg) res) ty
-opSequenceToApply ty@(E.Pi _ arg1 ty1@(E.Pi _ arg2 res)) (op1 : op2 : []) = E.Lam "0" (E.App (E.App (E.Prim (M.Inst op1) undefined) (E.Var "0" arg1) undefined) (E.Var "1" arg2) res) ty
+-- Note: must reverse `cons` beforehand.
+consToTerm :: Int -> Type -> MU.Type -> [Con] -> Term
+consToTerm n ty mty cs =
+  let argName = intern ("arg_" <> show n)
+   in case cs of
+        [] ->
+          E.Lam argName (E.Var argName ty) (E.Pi (Usage.SNat 1) ty ty)
+        c : cs ->
+          let E.Lam name body _ = consToTerm (n + 1) ty mty cs
+           in case c of
+                LeftCon -> E.Lam name (E.App (E.Prim M.Left undefined) body undefined) undefined
+                RightCon -> E.Lam name (E.App (E.Prim M.Right undefined) body undefined) undefined
+                PairCon -> E.Lam name (E.Lam argName (E.App (E.App (E.Prim M.Pair undefined) body undefined) (E.Var argName undefined) undefined) undefined) undefined
 
 dataconToMichelson :: Type -> ADT -> Int -> Term
 dataconToMichelson ty adt index =
   let pty = adtToMichelsonType adt
-      insts = indexToLeftRight index pty
-   in opSequenceToApply ty (tuplify (nargs ty) <> insts)
-
-tuplify :: Int -> [MU.InstrAbstract M.Op]
-tuplify 0 = []
-tuplify 1 = []
-tuplify n = (Instr.PAIR "" "" "" "") : tuplify (n - 1)
-
-nargs :: Type -> Int
-nargs (E.Pi _ _ res) = 1 + nargs res
-nargs _ = 0
+      cons = indexToCons index adt
+      term = consToTerm 0 ty pty (reverse cons)
+   in term
 {-
  -
 patternToMichelson :: PatternAndTerm -> Term

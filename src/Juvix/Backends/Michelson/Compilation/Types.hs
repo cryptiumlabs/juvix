@@ -64,6 +64,9 @@ data NewPrim
   | UpdateBMap
   | GetMap
   | GetBMap
+  | Left
+  | Right
+  | Pair
   deriving (Show, Eq, Generic)
 
 type NewTerm = CoreErased.AnnTerm PrimTy NewPrim

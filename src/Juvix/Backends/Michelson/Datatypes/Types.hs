@@ -29,15 +29,16 @@ data Global
       { funType :: Type,
         funCase :: Cases
       }
-  | GAbstract
-      { -- Can we / do we need to track the usage here?
-        abstractTerm :: Term
-      }
 
 data ADT
   = Prim MU.Type
   | Sum ADT ADT
   | Product ADT ADT
+
+data Con
+  = LeftCon
+  | RightCon
+  | PairCon
 
 data Bind
   = ConBind GlobalName [GlobalName]

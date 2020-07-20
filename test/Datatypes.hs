@@ -1,7 +1,7 @@
 module Datatypes where
 
 import qualified Data.HashMap.Strict as HM
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types hiding (Left, Pair, Right)
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
