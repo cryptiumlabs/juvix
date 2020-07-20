@@ -14,8 +14,8 @@ data Environment term0 ty0 sumRep0 termN tyN sumRepN
 type ContextAlias term0 ty0 sumRep0 termN tyN sumRepN =
   State (Environment term0 ty0 sumRep0 termN tyN sumRepN)
 
-newtype Context term0 ty0 sumRep0 termN tyN sumRepN a =
-  Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
+newtype Context term0 ty0 sumRep0 termN tyN sumRepN a
+  = Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "old" (Context.T term0 ty0 sumRep0),
@@ -31,6 +31,8 @@ newtype Context term0 ty0 sumRep0 termN tyN sumRepN a =
     via StateField "new" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
+
+type HasOld t ty s m = HasState "old" (Context.T t ty s) m
 
 modify ::
   HasNew term ty sumRep m =>
@@ -67,15 +69,17 @@ mapWithKey ::
 mapWithKey f = Juvix.Library.modify @"new" (Context.mapWithKey f)
 
 add ::
-  HasNew term ty sumRep m => 
-  Symbol -> Context.Definition term ty sumRep -> m ()
+  HasNew term ty sumRep m =>
+  Symbol ->
+  Context.Definition term ty sumRep ->
+  m ()
 add sy def = Juvix.Library.modify @"new" (Context.add sy def)
 
 remove ::
   HasNew term ty sumRep m => Symbol -> m ()
 remove sy = Juvix.Library.modify @"new" (Context.remove sy)
 
-removeOld :: HasNew term ty sumRep m => Symbol -> m ()
+removeOld :: HasOld term ty sumRep m => Symbol -> m ()
 removeOld sy = Juvix.Library.modify @"old" (Context.remove sy)
 
 -- forKey :: Context term0 ty0 sumRep0 termN tyN sumRepN () -> [Symbol -> Context.Definition term0 ty0 sumRep0 -> Context term0 ty0 sumRep0 termM tyM sumRepM a] -> Context term0 ty0 sumRep termM tyM sumRepM a

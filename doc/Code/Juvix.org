@@ -848,6 +848,12 @@ Quantitative type implementation inspired by
 *** Types <<FrontendContextualise/Types>>
 - _Relies on_
   + [[InfixPrecedence/Types]]
+*** Contextify
+**** Transform <<Contextify/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
 *** EraseTypeAliases
 **** Extend <<EraseTypeAliases/Extend>>
 - _Relies on_
