@@ -11,15 +11,18 @@ data Environment term0 ty0 sumRep0 termN tyN sumRepN
       }
   deriving (Generic)
 
-type ContextAlias term0 ty0 sumRep0 termN tyN sumRepN = State (Environment term0 ty0 sumRep0 termN tyN sumRepN)
+type ContextAlias term0 ty0 sumRep0 termN tyN sumRepN =
+  State (Environment term0 ty0 sumRep0 termN tyN sumRepN)
 
-newtype Context term0 ty0 sumRep0 termN tyN sumRepN a = Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
+newtype Context term0 ty0 sumRep0 termN tyN sumRepN a =
+  Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasReader "old" (Context.T term0 ty0 sumRep0),
+    ( HasState "old" (Context.T term0 ty0 sumRep0),
+      HasSink "old" (Context.T term0 ty0 sumRep0),
       HasSource "old" (Context.T term0 ty0 sumRep0)
     )
-    via ReaderField "old" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
+    via StateField "old" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
   deriving
     ( HasState "new" (Context.T termN tyN sumRepN),
       HasSink "new" (Context.T termN tyN sumRepN),
@@ -70,9 +73,6 @@ add sy def = Juvix.Library.modify @"new" (Context.add sy def)
 remove ::
   HasNew term ty sumRep m => Symbol -> m ()
 remove sy = Juvix.Library.modify @"new" (Context.remove sy)
-
--- forKey :: Context term0 ty0 sumRep0 termN tyN sumRepN () -> [Symbol -> Context.Definition term0 ty0 sumRep0 -> Context term0 ty0 sumRep0 termM tyM sumRepM a] -> Context term0 ty0 sumRep termM tyM sumRepM a
-forKey = undefined
 
 --TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
 transLike = undefined

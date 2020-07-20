@@ -32,8 +32,8 @@ type T term ty sumRep = Cont (Definition term ty sumRep)
 
 data Definition term ty sumRep
   = Def
-      { definitionUsage :: Usage.T,
-        definitionTy :: ty,
+      { definitionUsage :: Maybe Usage.T,
+        definitionMTy :: Maybe ty,
         definitionTerm :: term,
         precedence :: Precedence
       }

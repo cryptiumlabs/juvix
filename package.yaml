@@ -114,6 +114,7 @@ ghc-options:
   - -j
   - -static
 
+
 when:
   condition: flag(incomplete-error)
   ghc-options:
@@ -164,6 +165,7 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendContextualise.Contextify.Transform
     - Juvix.FrontendContextualise.EraseTypeAliases.Types
     - Juvix.FrontendContextualise.EraseTypeAliases.Transform
     - Juvix.FrontendContextualise.EraseTypeAliases.Extend
@@ -244,7 +246,7 @@ library:
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
-    - Juvix.Backends.ArithmeticCircuit.Groth 
+    - Juvix.Backends.ArithmeticCircuit.Groth
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
