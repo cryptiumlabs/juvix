@@ -27,3 +27,12 @@ tmp/
 # LLVM temporary
 *.ll
 *.s
+
+# JavaScript-related stuff
+node_modules/
+logs
+*.log
+npm-debug.log*
+.npm
+build/Release
+.vscode-test
