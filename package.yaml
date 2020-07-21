@@ -164,6 +164,7 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendContextualise.Contextify.Transform
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
