@@ -840,8 +840,12 @@ Quantitative type implementation inspired by
   + [[Context]]
   + [[RemoveDo/Types]]
   + [[Library]]
-*** EraseTypeAliases
 *** InfixPrecedence
+**** ShuntYard
+- This implements the Shunt Yard algorithm for determining the
+  precedence of operations
+- _Relies on_
+  + [[Library]]
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
