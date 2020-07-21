@@ -145,6 +145,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Context]]
   + [[Library]]
 * Files
+* FrontendContextualise
+** Infix
 * Nets
 ** Combinators
 - _Relies on_

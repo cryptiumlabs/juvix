@@ -484,9 +484,13 @@ This module provides a default contract environment
 - This is parameterized per phase which may store the type and
   term in slightly different ways
 - _Relies on_
+  + [[Precedence]]
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]
+***** Precedence
+- _Relies on_
+  + [[Library]]
 *** EAC <<Core/EAC>>
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
@@ -829,6 +833,15 @@ Quantitative type implementation inspired by
 **** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+** FrontendContextualise
+*** Contextify
+**** Transform <<Contextify/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** EraseTypeAliases
+*** InfixPrecedence
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
