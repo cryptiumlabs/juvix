@@ -829,6 +829,33 @@ Quantitative type implementation inspired by
 **** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+** FrontendContextualise
+*** Contextify
+*** EraseTypeAliases
+*** InfixPrecedence
+**** Extend <<InfixPrecedence/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+**** ShuntYard
+- This implements the Shunt Yard algorithm for determining the
+  precedence of operations
+- _Relies on_
+  + [[Library]]
+**** Transform <<InfixPrecedence/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[Environment]]
+  + [[InfixPrecedence/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[InfixPrecedence/Extend]]
+  + [[Library]]
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
