@@ -3,22 +3,35 @@
 --   precedence of operations
 module Juvix.FrontendContextualise.InfixPrecedence.ShuntYard where
 
-import Juvix.Library hiding (Associativity, Left, Right, div)
+import Juvix.Library hiding (Associativity, div)
 import Prelude (error)
 
 data Associativity
-  = Left
-  | Right
+  = Left'
+  | Right'
   | NonAssoc
   deriving (Eq, Show)
 
 data Precedence = Pred Symbol Associativity Int
   deriving (Show, Eq)
 
+data Error = Clash Precedence Precedence
+           | MoreEles
+           deriving (Show)
+
 -- Not a real ordering, hence not an ord instance
-predOrd :: Precedence -> Precedence -> Bool
-predOrd (Pred _ Left i) (Pred _ _ iOld) = i <= iOld
-predOrd (Pred _ _ iNew) (Pred _ _ iOld) = iNew < iOld
+predOrd :: Precedence -> Precedence -> Either Error Bool
+predOrd p1@(Pred _ fix iNew) p2@(Pred _ fix' iOld)
+  | iNew == iOld && fix /= fix' =
+    Left (Clash p1 p2)
+  | iNew == iOld && NonAssoc == fix && NonAssoc == fix' =
+    Left (Clash p1 p2)
+  | otherwise =
+    case fix of
+      Left' ->
+        Right (iNew <= iOld)
+      _ ->
+        Right (iNew < iOld)
 
 data PredOrEle a
   = Precedence Precedence
@@ -30,26 +43,31 @@ data Application a
   | Single a
   deriving (Eq, Show)
 
-shunt :: NonEmpty (PredOrEle a) -> Application a
-shunt = combine . popAll . foldl' shuntAcc ([], [])
+shunt :: NonEmpty (PredOrEle a) -> Either Error (Application a)
+shunt = fmap (combine . popAll) . foldM shuntAcc ([], [])
 
 shuntAcc ::
-  ([Application a], [Precedence]) -> PredOrEle a -> ([Application a], [Precedence])
+  ([Application a], [Precedence]) ->
+  PredOrEle a ->
+  Either Error ([Application a], [Precedence])
 shuntAcc (aps, prec) (Ele a) =
-  (Single a : aps, prec)
+  Right (Single a : aps, prec)
 shuntAcc (aps, []) (Precedence p) =
-  (aps, [p])
-shuntAcc (aps, (pred : preds)) (Precedence p)
-  | p `predOrd` pred =
-    case aps of
-      x1 : x2 : xs ->
-        (App (predSymbol pred) x2 x1 : xs, p : preds)
-      [_] ->
-        error "More applications than elements!"
-      [] ->
-        error "More applications than elements!"
-  | otherwise =
-    (aps, p : pred : preds)
+  Right (aps, [p])
+shuntAcc (aps, (pred : preds)) (Precedence p) =
+  case p `predOrd` pred of
+    Right True ->
+      case aps of
+        x1 : x2 : xs ->
+          Right (App (predSymbol pred) x2 x1 : xs, p : preds)
+        [_] ->
+          Left MoreEles
+        [] ->
+          Left MoreEles
+    Right False ->
+      Right (aps, p : pred : preds)
+    Left err ->
+      Left err
 
 popAll :: ([Application a], [Precedence]) -> [Application a]
 popAll (xs, []) =
