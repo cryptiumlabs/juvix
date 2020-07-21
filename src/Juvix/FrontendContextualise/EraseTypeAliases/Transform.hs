@@ -32,21 +32,23 @@ type WorkingMaps m =
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
--- transformContext :: New Context.T -> New Context.T
-transformContext = execState f
+transformContext ::
+  ( HasState "new" (Context.T term ty sumRep) (StateT s Identity),
+    HasState "old" (Context.T term ty sumRep) (StateT s Identity)
+  ) =>
+  s ->
+  s
+transformContext = execState transformC
 
---f :: m ()
-f = do
+transformC ::
+  (Env.HasNew term ty sumRep m, Env.HasOld term ty sumRep m) => m ()
+transformC = do
   old <- get @"old"
-  let oldSyms = Context.toList old
-  case fst $ unzip oldSyms of
-    sym : _ -> case Env.ask sym of
-      Just def -> do
-        Env.add sym (pure def)
-        Env.removeOld sym
-      Nothing -> do
-        Env.remove sym
-        Env.removeOld sym
+  let oldC = Context.toList old
+  case oldC of
+    (sym, def) : _ -> do
+      Env.add sym def
+      Env.removeOld sym
     [] -> pure ()
 
 -- transformContext :: Old Context.T ->  New Context.T
