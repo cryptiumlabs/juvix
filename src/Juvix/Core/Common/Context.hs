@@ -6,11 +6,17 @@
 --   Programming Language
 -- - This is parameterized per phase which may store the type and
 --   term in slightly different ways
-module Juvix.Core.Common.Context where
+module Juvix.Core.Common.Context
+  ( module Juvix.Core.Common.Context.Precedence,
+    -- leave the entire module for now, so lenses can be exported
+    module Juvix.Core.Common.Context,
+  )
+where
 
 import Control.Lens
 import qualified Data.HashSet as Set
 import qualified Data.Text as Text
+import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
@@ -20,14 +26,16 @@ newtype Cont b
   deriving (Show, Traversable)
   deriving (Functor) via HashMap.T Symbol
   deriving (Foldable) via HashMap.T Symbol
+  deriving (Generic)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
 data Definition term ty sumRep
   = Def
-      { definitionUsage :: Usage.T,
-        definitionTy :: ty,
-        definitionTerm :: term
+      { definitionUsage :: Maybe Usage.T,
+        definitionMTy :: Maybe ty,
+        definitionTerm :: term,
+        precedence :: Precedence
       }
   | Record
       { definitionContents :: T term ty sumRep,
@@ -37,9 +45,16 @@ data Definition term ty sumRep
   | TypeDeclar
       { definitionRepr :: sumRep
       }
-  deriving (Show)
+  | Unknown
+      { definitionMTy :: Maybe ty
+      }
+  deriving (Show, Generic)
 
+-- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
+
+empty :: Cont b
+empty = T (HashMap.empty)
 
 -- couldn't figure out how to fold lenses
 -- once we figure out how to do a fold like
@@ -66,6 +81,17 @@ lookup key (T map) =
 
 (!?) :: T term ty sumRep -> Symbol -> Maybe (Definition term ty sumRep)
 (!?) = flip lookup
+
+add ::
+  Symbol ->
+  Definition term ty sumRep ->
+  T term ty sumRep ->
+  T term ty sumRep
+add sy term (T map) = T $ HashMap.insert sy term map
+
+remove ::
+  Symbol -> T term ty sumRep -> T term ty sumRep
+remove sy (T map) = T $ HashMap.delete sy map
 
 modify,
   update ::
