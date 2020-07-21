@@ -1,15 +1,15 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.FrontendContextualise.EraseTypeAliases.Environment 
-  (
-    module Juvix.FrontendContextualise.EraseTypeAliases.Environment,
-    module Juvix.FrontendContextualise.Environment
-  ) where
-    
-import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+module Juvix.FrontendContextualise.EraseTypeAliases.Environment
+  ( module Juvix.FrontendContextualise.EraseTypeAliases.Environment,
+    module Juvix.FrontendContextualise.Environment,
+  )
+where
+
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.Environment
+import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 type Old f =

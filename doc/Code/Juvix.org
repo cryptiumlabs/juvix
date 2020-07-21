@@ -855,6 +855,13 @@ Quantitative type implementation inspired by
   + [[RemoveDo/Types]]
   + [[Library]]
 *** EraseTypeAliases
+**** Environment <<EraseTypeAliases/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
 **** Extend <<EraseTypeAliases/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
