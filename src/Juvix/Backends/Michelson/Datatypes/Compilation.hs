@@ -17,8 +17,15 @@ transformGlobals globals =
     case val of
       IR.GDatatype d -> pure (transformDatatype globals d)
       IR.GDataCon c -> pure (transformDataCon globals c)
-      IR.GFunction f -> undefined
+      IR.GFunction f -> pure (transformFunction globals f)
       IR.GAbstract _ _ -> Nothing
+
+transformFunction :: PreGlobals -> IR.Function M.PrimTy M.PrimVal -> Global
+transformFunction globals (IR.Function name _ ty clauses) =
+  let ty' = undefined in
+  -- clause each [pattern] [term]
+  -- convert to nested case statements
+  GFunction ty' undefined 
 
 transformDatatype :: PreGlobals -> Datatype -> Global
 transformDatatype globals (IR.Datatype name _ _ cons) =
@@ -136,27 +143,26 @@ dataconToMichelson ty adt index =
       cons = indexToCons index adt
       term = consToTerm 0 ty pty (reverse cons)
    in term
-{-
- -
-patternToMichelson :: PatternAndTerm -> Term
-patternToMichelson (patt, term) =
+
+patternToCases :: Pattern -> Cases
+patternToCases patt =
   case patt of
-    E.PCon _ patts ->
+    IR.PCon _ patts ->
       -- turn into de-construction followed by application
       undefined
-    E.PVar v ->
+    IR.PVar v ->
       -- turn into application of function (\v -> term)
       undefined
-    E.PDot _ ->
-      -- what is PDot
+    IR.PDot _ ->
+      -- can safely be ignored
       undefined
-    E.PPrim _ ->
+    IR.PPrim _ ->
       -- not supporting this for now, later turn into EQ but we need a default case
       undefined
 
-patternsToCases :: [PatternAndTerm] -> Cases
+{-
+patternsToCases :: [Pattern] -> Cases
 patternsToCases [only] = OneCase only
 patternsToCases [first, second] = TwoCase first second
 patternsToCases (x : xs) = NestCase x (patternsToCases xs)
-
 -}
