@@ -1,6 +1,5 @@
 module Juvix.FrontendContextualise.Environment where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
 
@@ -79,11 +78,8 @@ remove ::
   HasNew term ty sumRep m => Symbol -> m ()
 remove sy = Juvix.Library.modify @"new" (Context.remove sy)
 
-removeOld :: HasOld term ty sumRep m => Symbol -> m ()
+removeOld :: HasState "old" (Context.T term ty sumRep) m => Symbol -> m ()
 removeOld sy = Juvix.Library.modify @"old" (Context.remove sy)
-
--- forKey :: Context term0 ty0 sumRep0 termN tyN sumRepN () -> [Symbol -> Context.Definition term0 ty0 sumRep0 -> Context term0 ty0 sumRep0 termM tyM sumRepM a] -> Context term0 ty0 sumRep termM tyM sumRepM a
-forKey = undefined
 
 --TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
 transLike = undefined
