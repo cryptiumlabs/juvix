@@ -855,6 +855,21 @@ Quantitative type implementation inspired by
   + [[RemoveDo/Types]]
   + [[Library]]
 **** Extend <<InfixPrecedence/Extend>>
+- This pass removes the =Infix= form
+  + Belongs to Table
+    | Changed | Is a Sum Type of |
+    |---------+------------------|
+    | Infix   | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Infix
+      = Inf
+        { infixLeft  :: Expression
+        , infixOp    :: NameSymb
+        , infixRight :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveDo/Extend]]

@@ -1,3 +1,19 @@
+-- |
+-- - This pass removes the =Infix= form
+--   + Belongs to Table
+--     | Changed | Is a Sum Type of |
+--     |---------+------------------|
+--     | Infix   | Expression       |
+-- - Thus one does not have to ever deal with
+--   #+begin_src haskell
+--     data Infix
+--       = Inf
+--         { infixLeft  :: Expression
+--         , infixOp    :: NameSymb
+--         , infixRight :: Expression
+--         }
+--       deriving (Show, Generic, NFData)
+--   #+end_src
 module Juvix.FrontendContextualise.InfixPrecedence.Extend
   ( module Juvix.FrontendDesugar.RemoveDo.Extend,
     module Juvix.FrontendContextualise.InfixPrecedence.Extend,
