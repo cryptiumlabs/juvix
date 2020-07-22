@@ -1,8 +1,8 @@
 module Juvix.FrontendContextualise.Environment where
 
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
-import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m

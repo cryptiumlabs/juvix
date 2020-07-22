@@ -7,7 +7,7 @@ module Juvix.FrontendContextualise.EraseTypeAliases.Environment
 where
 
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.FrontendContextualise.Environment
+import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
@@ -49,5 +49,5 @@ newtype Context a
     )
     via StateField "new" ContextAlias
 
--- runEnv ::
-runEnv (Ctx c) old = execState c (Env old Context.mempty)
+runEnv :: Context a -> Old Context.T -> Environment
+runEnv (Ctx c) old = execState c (Env old Context.empty)

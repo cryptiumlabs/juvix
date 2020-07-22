@@ -837,6 +837,8 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
 *** FrontendContextualise
 - _Relies on_
@@ -871,7 +873,7 @@ Quantitative type implementation inspired by
 **** Transform <<EraseTypeAliases/Transform>>
 - _Relies on_
   + [[Context]]
-  + [[FrontendContextualise/Environment]]
+  + [[EraseTypeAliases/Environment]]
   + [[EraseTypeAliases/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
