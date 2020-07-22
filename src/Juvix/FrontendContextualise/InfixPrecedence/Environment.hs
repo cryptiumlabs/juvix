@@ -21,7 +21,8 @@ type New f =
 
 type WorkingMaps m =
   ( HasState "old" (Old Context.T) m,
-    HasState "new" (New Context.T) m
+    HasState "new" (New Context.T) m,
+    HasThrow "error" Error m
   )
 
 data Environment
