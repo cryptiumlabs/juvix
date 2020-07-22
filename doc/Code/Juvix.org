@@ -834,17 +834,29 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Frontend/Types/Base]]
 ** FrontendContextualise
+*** Environment <<FrontendContextualise/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[Library]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Context]]
   + [[RemoveDo/Types]]
   + [[Library]]
+*** EraseTypeAliases
 *** InfixPrecedence
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the
   precedence of operations
 - _Relies on_
+  + [[Library]]
+**** Transform <<InfixPrecedence/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
 ** FrontendDesugar
 - Order of Passes
