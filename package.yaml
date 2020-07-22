@@ -113,6 +113,7 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j
   - -static
+  - -fwrite-ide-info
 
 when:
   condition: flag(incomplete-error)
@@ -167,6 +168,8 @@ library:
     - Juvix.FrontendContextualise.Contextify.Transform
     - Juvix.FrontendContextualise.Environment
     - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
+    - Juvix.FrontendContextualise.InfixPrecedence.Environment
+    - Juvix.FrontendContextualise.InfixPrecedence.Types
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
@@ -240,7 +243,7 @@ library:
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
-    - Juvix.Backends.ArithmeticCircuit.Groth 
+    - Juvix.Backends.ArithmeticCircuit.Groth
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
@@ -306,6 +309,7 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -fwrite-ide-info
     dependencies:
       - juvix
       - optparse-applicative

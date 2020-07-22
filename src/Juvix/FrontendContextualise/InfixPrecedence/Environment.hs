@@ -1,15 +1,16 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
 module Juvix.FrontendContextualise.InfixPrecedence.Environment
-  ( module Juvix.FrontendContextualise.EraseTypeAliases.Environment,
+  ( module Juvix.FrontendContextualise.InfixPrecedence.Environment,
     module Juvix.FrontendContextualise.Environment,
   )
 where
 
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.FrontendContextualise.Environment
+import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard  as Shunt
 import Juvix.Library
 
 type Old f =
@@ -19,7 +20,7 @@ type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
 
 type WorkingMaps m =
-  ( HasState "old" (Old Context.T) m, -- old context
+  ( HasState "old" (Old Context.T) m,
     HasState "new" (New Context.T) m
   )
 
@@ -30,8 +31,12 @@ data Environment
       }
   deriving (Generic)
 
+data Error = UnknownSymbol Symbol
+           | Clash Shunt.Precedence Shunt.Precedence
+           | ImpossibleMoreEles
+
 type ContextAlias =
-  State Environment
+  ExceptT Error (State Environment)
 
 newtype Context a
   = Ctx {antiAlias :: ContextAlias a}
@@ -48,6 +53,9 @@ newtype Context a
       HasSource "new" (New Context.T)
     )
     via StateField "new" ContextAlias
+  deriving
+     (HasThrow "error" Error)
+     via MonadError ContextAlias
 
--- runEnv ::
-runEnv (Ctx c) old = execState c (Env old Context.mempty)
+runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
+runEnv (Ctx c) old = runState (runExceptT c) (Env old Context.empty)
