@@ -846,6 +846,20 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** EraseTypeAliases
 *** InfixPrecedence
+**** Environment <<InfixPrecedence/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Extend <<InfixPrecedence/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the
   precedence of operations
@@ -854,9 +868,15 @@ Quantitative type implementation inspired by
 **** Transform <<InfixPrecedence/Transform>>
 - _Relies on_
   + [[Context]]
-  + [[FrontendContextualise/Environment]]
-  + [[Types]]
+  + [[InfixPrecedence/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
   + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
   + [[Library]]
 ** FrontendDesugar
 - Order of Passes

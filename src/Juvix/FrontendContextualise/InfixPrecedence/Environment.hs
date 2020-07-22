@@ -8,9 +8,9 @@ where
 
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.FrontendContextualise.Environment
+import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
-import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard  as Shunt
 import Juvix.Library
 
 type Old f =
@@ -32,9 +32,10 @@ data Environment
       }
   deriving (Generic)
 
-data Error = UnknownSymbol Symbol
-           | Clash Shunt.Precedence Shunt.Precedence
-           | ImpossibleMoreEles
+data Error
+  = UnknownSymbol Symbol
+  | Clash Shunt.Precedence Shunt.Precedence
+  | ImpossibleMoreEles
 
 type ContextAlias =
   ExceptT Error (State Environment)
@@ -55,8 +56,8 @@ newtype Context a
     )
     via StateField "new" ContextAlias
   deriving
-     (HasThrow "error" Error)
-     via MonadError ContextAlias
+    (HasThrow "error" Error)
+    via MonadError ContextAlias
 
 runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
 runEnv (Ctx c) old = runState (runExceptT c) (Env old Context.empty)

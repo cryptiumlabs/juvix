@@ -113,7 +113,6 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j
   - -static
-  - -fwrite-ide-info
 
 when:
   condition: flag(incomplete-error)
@@ -309,7 +308,6 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-      - -fwrite-ide-info
     dependencies:
       - juvix
       - optparse-applicative
