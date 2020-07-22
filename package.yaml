@@ -164,11 +164,14 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendContextualise.Contextify.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.Common.Context
+    - Juvix.Core.Common.Context.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR

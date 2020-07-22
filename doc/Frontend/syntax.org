@@ -203,6 +203,7 @@
   parens ::= ( <expression> )
 
   comments ::= -- <any-text-not-new-line> \n
+             | \n-- <any-text-not-new-line> \n
              | <comments-rec>
 
   comments-rec ::= <multi-comments>

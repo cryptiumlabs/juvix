@@ -20,7 +20,46 @@ import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, takeWhile, try)
-import Prelude (fail)
+import Prelude (String, fail)
+
+--------------------------------------------------------------------------------
+-- Top Level Runner
+--------------------------------------------------------------------------------
+parse :: ByteString -> Either String [Types.TopLevel]
+parse = parseOnly (many topLevelSN) . removeComments
+
+--------------------------------------------------------------------------------
+-- Pre-Process
+--------------------------------------------------------------------------------
+
+removeComments :: ByteString -> ByteString
+removeComments = ByteString.concat . grabCommentsFirst
+  where
+    onBreakDo _break _con "" = []
+    onBreakDo break cont str = break str |> cont
+    --
+    grabCommentsFirst = breakComment `onBreakDo` f
+      where
+        f (notIn, in') =
+          grabCommentsSecond notIn <> grabCommentsFirst (dropNewLine in')
+    --
+    grabCommentsSecond = breakNewLineComment `onBreakDo` f
+      where
+        -- Preserve the Number of new lines
+        f (notIn, "") =
+          [notIn]
+        f (notIn, in') =
+          notIn : "\n" : grabCommentsSecond (dropNewLine (ByteString.drop 1 in'))
+    dropNewLine =
+      ByteString.dropWhile (not . (== Lexer.newLine))
+
+-- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
+-- thus this compiles to a shift
+breakNewLineComment :: ByteString -> (ByteString, ByteString)
+breakNewLineComment = ByteString.breakSubstring "\n-- "
+
+breakComment :: ByteString -> (ByteString, ByteString)
+breakComment = ByteString.breakSubstring " -- "
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -175,7 +214,7 @@ matchLogic = maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
 
 matchLogicNamed :: Parser Types.MatchLogic
 matchLogicNamed = do
-  name <- prefixSymbolDot
+  name <- prefixSymbol
   skipLiner Lexer.at
   start <- maybeParend matchLogicStartSN
   pure (Types.MatchLogic start (Just name))
@@ -528,7 +567,7 @@ do' = do
 
 doBind :: Parser [Types.DoBody]
 doBind = do
-  name <- prefixSymbolDotSN
+  name <- prefixSymbolSN
   spaceLiner (string "<-")
   body <- expression'SN
   pure [Types.DoBody (Just name) body]
@@ -612,7 +651,7 @@ reservedWords =
 reservedSymbols :: (Ord a, IsString a) => Set a
 reservedSymbols =
   Set.fromList
-    ["=", "|", ""]
+    ["=", "|", "", "--"]
 
 maybe :: Alternative f => f a -> f (Maybe a)
 maybe = optional

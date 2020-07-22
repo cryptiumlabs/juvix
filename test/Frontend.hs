@@ -27,7 +27,11 @@ allParserTests =
       matchMoreComplex,
       condTest1,
       record1,
-      parens1
+      parens1,
+      -- pre-processor tests
+      removeNoComment,
+      removeNewLineBefore,
+      removeSpaceBefore
     ]
 
 --------------------------------------------------------------------------------
@@ -58,6 +62,31 @@ shouldParseAs ::
   Show a => T.TestName -> Parser a -> ByteString -> String -> T.TestTree
 shouldParseAs name parser parseString =
   parseTasty name (parseOnly parser parseString)
+
+--------------------------------------------------------------------------------
+-- Pre-processor test
+--------------------------------------------------------------------------------
+
+removeSpaceBefore :: T.TestTree
+removeSpaceBefore =
+  Parser.removeComments "let foo = 3 \n + \n -- foo foo foo \n 4"
+    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> T.testCase "test remove comments: let foo = 3 \n + \n -- foo foo foo \n 4"
+
+removeNewLineBefore :: T.TestTree
+removeNewLineBefore =
+  Parser.removeComments "let foo = 3 \n + \n-- foo foo foo \n 4"
+    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> T.testCase "test remove comments: let foo = 3 \n + \n-- foo foo foo \n 4"
+
+-- TODO :: use quick check!
+
+removeNoComment :: T.TestTree
+removeNoComment =
+  let str = "let foo = 3 \n + \n \n 4"
+   in Parser.removeComments str
+        |> (T.@=? str)
+        |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
@@ -298,7 +327,7 @@ fun1 =
     \= MatchName' b (), matchLogicNamed = Nothing, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' c (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchName' d (), matchLogicNamed = Nothing, \
-    \annMatchLogic = ()}] (), matchLogicNamed = Just (foo :| []), annMatchLogic = \
+    \annMatchLogic = ()}] (), matchLogicNamed = Just foo, annMatchLogic = \
     \()}) ()], functionLikeBody = Body' (Constant' (Number' (Integer'' 3 ()) ()) \
     \()) (), annLike = ()}) ()) ()"
 
@@ -489,7 +518,7 @@ simpleNamedCon =
     \= MatchName' a (), matchLogicNamed = Nothing, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' b (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchName' c (), matchLogicNamed = Nothing, \
-    \annMatchLogic = ()}] (), matchLogicNamed = Just (foo :| []), annMatchLogic = \
+    \annMatchLogic = ()}] (), matchLogicNamed = Just foo, annMatchLogic = \
     \()}"
 
 matchMoreComplex :: T.TestTree
@@ -501,11 +530,11 @@ matchMoreComplex =
     "MatchLogic' {matchLogicContents = MatchCon' (Hi :| []) [MatchLogic' {matchLogicContents \
     \= MatchRecord' (NonPunned' (a :| []) (MatchLogic' {matchLogicContents = MatchName' \
     \nah (), matchLogicNamed = Nothing, annMatchLogic = ()}) () :| [Punned' (f :| \
-    \[]) ()]) (), matchLogicNamed = Just (nah :| []), annMatchLogic = ()},MatchLogic' \
+    \[]) ()]) (), matchLogicNamed = Just nah, annMatchLogic = ()},MatchLogic' \
     \{matchLogicContents = MatchName' b (), matchLogicNamed = Nothing, annMatchLogic \
     \= ()},MatchLogic' {matchLogicContents = MatchConst' (Number' (Integer'' 5 ()) \
     \()) (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed \
-    \= Just (foo :| []), annMatchLogic = ()}"
+    \= Just foo, annMatchLogic = ()}"
 
 --------------------------------------------------------------------------------
 -- Expression

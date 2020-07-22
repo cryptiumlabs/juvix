@@ -9,6 +9,7 @@ import qualified CoreTypechecker
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
+import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Pipeline
@@ -52,7 +53,8 @@ allCheckedTests =
       frontEndTests,
       translationPasses,
       EAC2.eac2Tests,
-      Erasure.erasureTests
+      Erasure.erasureTests,
+      Shunt.allInfixTests
     ]
 
 translationPasses :: T.TestTree
