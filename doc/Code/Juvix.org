@@ -837,7 +837,19 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
+*** FrontendContextualise
+- _Relies on_
+  + [[FrontendContextualise/Environment]]
+  + [[InfixPrecedence/Transform]]
+  + [[FrontendContextualise/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** Types <<FrontendContextualise/Types>>
+- _Relies on_
+  + [[InfixPrecedence/Types]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
 - _Relies on_
@@ -845,7 +857,38 @@ Quantitative type implementation inspired by
   + [[RemoveDo/Types]]
   + [[Library]]
 *** EraseTypeAliases
+**** Environment <<EraseTypeAliases/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Extend <<EraseTypeAliases/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+**** Transform <<EraseTypeAliases/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[EraseTypeAliases/Environment]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<EraseTypeAliases/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[EraseTypeAliases/Extend]]
+  + [[Library]]
 *** InfixPrecedence
+**** Extend <<InfixPrecedence/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the
   precedence of operations
@@ -855,8 +898,13 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[FrontendContextualise/Environment]]
-  + [[Types]]
+  + [[InfixPrecedence/Types]]
   + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[InfixPrecedence/Extend]]
   + [[Library]]
 ** FrontendDesugar
 - Order of Passes
