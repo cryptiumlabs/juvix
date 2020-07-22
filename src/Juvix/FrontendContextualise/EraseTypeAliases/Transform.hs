@@ -24,15 +24,15 @@ import Juvix.Library
 transformContext :: Env.Old Context.T -> Env.New Context.T
 transformContext = Env.new . Env.runEnv transformC
 
--- transformDef ::
--- Env.WorkingMaps m => Env.Old Context.Definition -> Env.New Context.Definition
+transformDef ::
+  Env.WorkingMaps m => Env.Old Context.Definition -> m (Env.New Context.Definition)
 transformDef (Context.Def usage mTy term prec) =
   Context.Def usage
     <$> traverse transformSignature mTy
     <*> traverse transformFunctionLike term
     <*> pure prec
--- transformDef (Context.Record contents mTy) =
--- Context.Record contents <$> traverse transformSignature mTy
+transformDef (Context.Record contents mTy) =
+  Context.Record (transformContext contents) <$> traverse transformSignature mTy
 transformDef (Context.TypeDeclar repr) =
   Context.TypeDeclar <$> transformType repr
 transformDef (Context.Unknown mTy) =
