@@ -1,33 +1,9 @@
 module Juvix.FrontendContextualise.Environment where
 
+import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Library
-
-data Environment term0 ty0 sumRep0 termN tyN sumRepN
-  = Env
-      { old :: Context.T term0 ty0 sumRep0,
-        new :: Context.T termN tyN sumRepN
-      }
-  deriving (Generic)
-
-type ContextAlias term0 ty0 sumRep0 termN tyN sumRepN =
-  State (Environment term0 ty0 sumRep0 termN tyN sumRepN)
-
-newtype Context term0 ty0 sumRep0 termN tyN sumRepN a
-  = Ctx {antiAlias :: ContextAlias term0 ty0 sumRep0 termN tyN sumRepN a}
-  deriving (Functor, Applicative, Monad)
-  deriving
-    ( HasState "old" (Context.T term0 ty0 sumRep0),
-      HasSink "old" (Context.T term0 ty0 sumRep0),
-      HasSource "old" (Context.T term0 ty0 sumRep0)
-    )
-    via StateField "old" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
-  deriving
-    ( HasState "new" (Context.T termN tyN sumRepN),
-      HasSink "new" (Context.T termN tyN sumRepN),
-      HasSource "new" (Context.T termN tyN sumRepN)
-    )
-    via StateField "new" (ContextAlias term0 ty0 sumRep0 termN tyN sumRepN)
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 

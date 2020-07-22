@@ -1,26 +1,14 @@
-{-# LANGUAGE LiberalTypeSynonyms #-}
-
 module Juvix.FrontendContextualise.EraseTypeAliases.Transform where
 
 --FIXME put in the last stage
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.FrontendContextualise.Environment as Env
+import qualified Juvix.FrontendContextualise.EraseTypeAliases.Environment as Env
 import qualified Juvix.FrontendContextualise.EraseTypeAliases.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
-type Old f =
-  f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
-
-type New f =
-  f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
-
-type WorkingMaps m =
-  ( HasState "old" (Old Context.T) m, -- old context
-    HasState "new" (New Context.T) m
-  )
 
 --------------------------------------------------------------------------------
 -- Actual Transforms
@@ -32,38 +20,28 @@ type WorkingMaps m =
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
-transformContext ::
-  ( HasState "new" (Context.T term ty sumRep) (StateT s Identity),
-    HasState "old" (Context.T term ty sumRep) (StateT s Identity)
-  ) =>
-  s ->
-  s
+transformContext :: Old Context.T -> New Context.T 
 transformContext = execState transformC
 
+--transformDef ::
+transformDef (Context.Def usage mTy term prec) = 
+  Context.Def usage 
+    <$> traverse transformSignature mTy
+    <*> transformFunctionLike term
+    <*> pure prec 
+
 transformC ::
-  (Env.HasNew term ty sumRep m, Env.HasOld term ty sumRep m) => m ()
+  WorkingMaps m => m ()
 transformC = do
   old <- get @"old"
   let oldC = Context.toList old
   case oldC of
     (sym, def) : _ -> do
-      Env.add sym def
+      newDef <- transformDef def
+      Env.add sym newDef
       Env.removeOld sym
+      transformC
     [] -> pure ()
-
--- transformContext :: Old Context.T ->  New Context.T
--- transformContext oldMap =
---   let oldSymList = fst $ unzip $ Context.toList oldMap
---   in
---     transformContextAcc oldMap oldSymList
-
--- transformContextAcc :: Old Context.T -> [Symbol] -> New Context.T
--- transformContextAcc oldMap symList =
---     case symList of
---         hd : tl -> do
---           removeOldFillNew hd
---           transformContextAcc oldMap tl
---         [] -> undefined
 
 transformTopLevel ::
   WorkingMaps m => Old.TopLevel -> m New.TopLevel
