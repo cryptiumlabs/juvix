@@ -16,22 +16,19 @@ modify ::
   ) ->
   Symbol ->
   m ()
-modify f sy = Juvix.Library.modify @"new" (Context.modify f sy)
+modify f sy =
+  Juvix.Library.modify @"new" (Context.modify f sy)
 
 lookup ::
-  HasNew term ty sumRep m =>
-  Symbol ->
-  m (Maybe (Context.Definition term ty sumRep))
+  HasNew term ty sumRep m => Symbol -> m (Maybe (Context.Definition term ty sumRep))
 lookup sy = do
   ctx <- get @"new"
   return $ Context.lookup sy ctx
 
 ask ::
-  HasReader "old" (Context.T term ty sumRep) m =>
-  Symbol ->
-  m (Maybe (Context.Definition term ty sumRep))
+  HasOld term ty sumRep m => Symbol -> m (Maybe (Context.Definition term ty sumRep))
 ask sy = do
-  ctx <- Juvix.Library.ask @"old"
+  ctx <- get @"old"
   return $ Context.lookup sy ctx
 
 mapWithKey ::
@@ -50,18 +47,16 @@ add ::
   m ()
 add sy def = Juvix.Library.modify @"new" (Context.add sy def)
 
-remove ::
-  HasNew term ty sumRep m => Symbol -> m ()
+remove :: HasNew term ty sumRep m => Symbol -> m ()
 remove sy = Juvix.Library.modify @"new" (Context.remove sy)
 
-removeOld :: HasState "old" (Context.T term ty sumRep) m => Symbol -> m ()
+removeOld :: HasOld term ty sumRep m => Symbol -> m ()
 removeOld sy = Juvix.Library.modify @"old" (Context.remove sy)
 
 --TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
 transLike = undefined
 
-addUnknown ::
-  HasState "new" (Context.T term ty sumRep) m => Symbol -> m ()
+addUnknown :: HasNew term ty sumRep m => Symbol -> m ()
 addUnknown sym =
   Juvix.Library.modify @"new"
     (Context.add sym (Context.Unknown Nothing))

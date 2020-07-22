@@ -39,7 +39,6 @@ test:
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
 
-
 repl-lib:
 	stack ghci juvix:lib
 
