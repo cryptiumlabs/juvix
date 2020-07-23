@@ -1,7 +1,7 @@
 module Juvix.FrontendContextualise.ModuleOpen.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.ModuleOpen.Extend as Ext
+import qualified Juvix.FrontendContextualise.ModuleOpen.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T

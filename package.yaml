@@ -167,6 +167,9 @@ library:
     - Juvix.FrontendContextualise.Contextify.Transform
     - Juvix.FrontendContextualise.Environment
     - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
+    - Juvix.FrontendContextualise.ModuleOpen.Environment
+    - Juvix.FrontendContextualise.ModuleOpen.Extend
+    - Juvix.FrontendContextualise.ModuleOpen.Types
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core

@@ -37,7 +37,7 @@ module Juvix.FrontendContextualise.ModuleOpen.Extend
 where
 
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendTopLevel, extendExpression)
+import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendExpression, extendTopLevel)
 import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext
 import Juvix.Library
 
