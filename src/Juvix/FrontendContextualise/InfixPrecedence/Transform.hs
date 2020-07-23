@@ -402,6 +402,7 @@ transformLetType (Old.LetType'' typ expr) = do
   let typeName = Old.typeName' typ
   originalVal <- Env.lookup typeName
   let transform = do
+        Env.addUnknown typeName
         transformedType <- transformType typ
         let def = Env.transLike transformedType Nothing Nothing
         Env.add typeName def -- add to new context
