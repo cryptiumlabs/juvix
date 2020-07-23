@@ -6,11 +6,13 @@
 
 # Emacs Temporary
 *.*~
+*.*#
 
 # Haskell temporary
 .ghci
 .stack-work/
 juvix.cabal
+*.hie
 
 # Juvix temporary
 juvix.yaml
