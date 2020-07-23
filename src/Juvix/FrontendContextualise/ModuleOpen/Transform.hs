@@ -24,26 +24,26 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
   fullQualified <- Env.qualifyName modName
   let reconstructed = reconstructSymbol fullQualified
       err = throw @"error" (Env.UnknownModule reconstructed)
-  looked <- Env.lookup (reconstructSymbol fullQualified)
+  looked <- Env.lookup reconstructed
   case looked of
     Just Context.Def {} -> err
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
     Nothing -> err
     Just (Context.Record innerC _mTy) -> do
-      let newSymb = fmap fst $ Context.toList innerC
+      let newSymb = fst <$> Context.toList innerC
       savedDef <- traverse saveOldOpen newSymb
       --
-      traverse_ (flip Env.addModMap fullQualified) newSymb
+      traverse_ (`Env.addModMap` fullQualified) newSymb
       res <- transformExpression expr
       --
-      _ <- traverse restoreNameOpen savedDef
+      traverse_ restoreNameOpen savedDef
       pure res
 
 saveOldOpen ::
   HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
 saveOldOpen sym =
-  flip (,) sym <$> Env.lookupModMap sym
+  (, sym) <$> Env.lookupModMap sym
 
 restoreNameOpen ::
   HasState "modMap" Env.ModuleMap m => (Maybe (NonEmpty Symbol), Symbol) -> m ()
@@ -121,6 +121,22 @@ transformMatchL (Old.MatchL pat body) = do
   traverse_ restoreNameOpen originalQualified
   pure res
 
+transformLambda ::
+  Env.WorkingMaps m => Old.Lambda -> m New.Lambda
+transformLambda (Old.Lamb args body) = do
+  let bindings = findBindings (NonEmpty.head args)
+  originalBindings <- traverse saveOld bindings
+  originalQualified <- traverse saveOldOpen bindings
+  transArgs <- transformMatchLogic (NonEmpty.head args)
+  --
+  traverse_ Env.addUnknown bindings
+  traverse_ Env.removeModMap bindings
+  --
+  res <- New.Lamb (pure transArgs) <$> transformExpression body
+  traverse_ restoreName originalBindings
+  traverse_ restoreNameOpen originalQualified
+  pure res
+
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
@@ -145,7 +161,7 @@ transformDef (Context.Def usage mTy term prec) =
     <*> traverse transformFunctionLike term
     <*> pure prec
 transformDef (Context.Record contents mTy) =
-  Context.Record <$> (transformContextInner contents) <*> traverse transformSignature mTy
+  Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
 transformDef (Context.TypeDeclar repr) =
   Context.TypeDeclar <$> transformType repr
 transformDef (Context.Unknown mTy) =
@@ -351,7 +367,7 @@ saveOld ::
   Symbol ->
   f (Maybe (Context.Definition term ty sumRep), Symbol)
 saveOld sym =
-  flip (,) sym <$> Env.lookup sym
+  (, sym) <$> Env.lookup sym
 
 restoreName ::
   HasState "new" (Context.T term ty sumRep) m =>
@@ -359,19 +375,6 @@ restoreName ::
   m ()
 restoreName (Just def, sym) = Env.add sym def
 restoreName (Nothing, sym) = Env.remove sym
-
-transformLambda ::
-  Env.WorkingMaps m => Old.Lambda -> m New.Lambda
-transformLambda (Old.Lamb args body) = do
-  let bindings = findBindings (NonEmpty.head args)
-  originalBindings <- traverse saveOld bindings
-  transArgs <- transformMatchLogic (NonEmpty.head args)
-  --
-  traverse_ Env.addUnknown bindings
-  --
-  res <- New.Lamb (pure transArgs) <$> transformExpression body
-  traverse_ restoreName originalBindings
-  pure res
 
 transformApplication ::
   Env.WorkingMaps m => Old.Application -> m New.Application
