@@ -171,10 +171,15 @@ library:
     - Juvix.FrontendContextualise.EraseTypeAliases.Extend
     - Juvix.FrontendContextualise.EraseTypeAliases.Environment
     - Juvix.FrontendContextualise.Environment
-    - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
     - Juvix.FrontendContextualise.ModuleOpen.Environment
     - Juvix.FrontendContextualise.ModuleOpen.Extend
     - Juvix.FrontendContextualise.ModuleOpen.Types
+    - Juvix.FrontendContextualise.ModuleOpen.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
+    - Juvix.FrontendContextualise.InfixPrecedence.Extend
+    - Juvix.FrontendContextualise.InfixPrecedence.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.Environment
+    - Juvix.FrontendContextualise.InfixPrecedence.Types
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
