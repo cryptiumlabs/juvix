@@ -43,7 +43,7 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
 saveOldOpen ::
   HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
 saveOldOpen sym =
-  (, sym) <$> Env.lookupModMap sym
+  (,sym) <$> Env.lookupModMap sym
 
 restoreNameOpen ::
   HasState "modMap" Env.ModuleMap m => (Maybe (NonEmpty Symbol), Symbol) -> m ()
@@ -367,7 +367,7 @@ saveOld ::
   Symbol ->
   f (Maybe (Context.Definition term ty sumRep), Symbol)
 saveOld sym =
-  (, sym) <$> Env.lookup sym
+  (,sym) <$> Env.lookup sym
 
 restoreName ::
   HasState "new" (Context.T term ty sumRep) m =>
