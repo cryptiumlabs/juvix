@@ -837,6 +837,8 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
@@ -845,6 +847,31 @@ Quantitative type implementation inspired by
   + [[RemoveDo/Types]]
   + [[Library]]
 *** EraseTypeAliases
+**** Environment <<EraseTypeAliases/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Extend <<EraseTypeAliases/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+**** Transform <<EraseTypeAliases/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[EraseTypeAliases/Environment]]
+  + [[EraseTypeAliases/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<EraseTypeAliases/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[EraseTypeAliases/Extend]]
+  + [[Library]]
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -891,8 +918,9 @@ Quantitative type implementation inspired by
 **** Types <<InfixPrecedence/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
+  + [[InfixPrecedence/Extend]]
   + [[Library]]
+*** ModuleOpen
 ** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=

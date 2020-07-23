@@ -114,6 +114,7 @@ ghc-options:
   - -j
   - -static
 
+
 when:
   condition: flag(incomplete-error)
   ghc-options:
@@ -165,6 +166,10 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
     - Juvix.FrontendContextualise.Contextify.Transform
+    - Juvix.FrontendContextualise.EraseTypeAliases.Types
+    - Juvix.FrontendContextualise.EraseTypeAliases.Transform
+    - Juvix.FrontendContextualise.EraseTypeAliases.Extend
+    - Juvix.FrontendContextualise.EraseTypeAliases.Environment
     - Juvix.FrontendContextualise.Environment
     - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
     - Juvix.FrontendContextualise.InfixPrecedence.Environment
