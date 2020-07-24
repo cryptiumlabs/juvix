@@ -18,6 +18,42 @@ import Juvix.Library
 -- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
+-- Record/Def Decision function... update when contextify version updates
+--------------------------------------------------------------------------------
+
+-- | decideRecordOrDef tries to figure out
+-- if a given defintiion is a record or a definition
+decideRecordOrDef ::
+  NonEmpty (New.FunctionLike New.Expression) ->
+  Maybe New.Signature ->
+  Env.New Context.Definition
+decideRecordOrDef xs ty
+  | len == 1 && emptyArgs args =
+    -- For the two matched cases eventually
+    -- turn these into record expressions
+    case body of
+      New.ExpRecord (New.ExpressionRecord i) ->
+        -- the type here can eventually give us arguments though looking at the
+        -- lambda for e, and our type can be found out similarly by looking at types
+        let f (New.NonPunned s e) =
+              Context.add
+                (NonEmpty.head s)
+                (decideRecordOrDef (New.Like [] e :| []) Nothing)
+         in Context.Record (foldr f Context.empty i) ty
+      New.Let _l ->
+        def
+      _ -> def
+  | otherwise = def
+  where
+    len = length xs
+    New.Like args body = NonEmpty.head xs
+    def = Context.Def Nothing ty xs Context.default'
+
+emptyArgs :: [a] -> Bool
+emptyArgs [] = True
+emptyArgs (_ : _) = False
+
+--------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
@@ -327,7 +363,7 @@ transformLet (Old.LetGroup name bindings body) = do
   let transform = do
         Env.addUnknown name
         transformedBindings <- traverse transformFunctionLike bindings
-        let def = Env.transLike transformedBindings Nothing Nothing
+        let def = decideRecordOrDef transformedBindings Nothing
         Env.add name def -- add to new context
         New.LetGroup name transformedBindings <$> transformExpression body
   case originalVal of
@@ -347,7 +383,7 @@ transformLetType (Old.LetType'' typ expr) = do
   originalVal <- Env.lookup typeName
   let transform = do
         transformedType <- transformType typ
-        let def = Env.transLike transformedType Nothing Nothing
+        let def = Context.TypeDeclar transformedType
         Env.add typeName def -- add to new context
         New.LetType'' transformedType <$> transformExpression expr
   case originalVal of
