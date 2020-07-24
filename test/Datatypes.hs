@@ -7,6 +7,7 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Pipeline as P
+import Juvix.Core.Translate (hrToIR, irToHR)
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (bool, identity, log)
@@ -101,7 +102,9 @@ tests =
     test_right,
     test_complex_a,
     test_complex_b,
-    test_complex_c
+    test_complex_c,
+    test_tuple_swap_func,
+    test_switch_case_func
   ]
 
 test_constant :: T.TestTree
@@ -159,6 +162,43 @@ test_complex_c =
     (HR.Elim (HR.App (HR.Var "MkComplexC") (HR.Elim (HR.App (HR.Var "MkRight") boolTerm))), Usage.Omega, HR.Elim (HR.Var "complex"))
     (HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) $ HM.insert "complex" (IR.GDatatype complexTy) $ HM.insert "MkComplexC" (IR.GDataCon complexConC) emptyGlobals)
     (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_tuple_swap_func :: T.TestTree
+test_tuple_swap_func =
+  shouldCompileTo
+    "tuple swap func"
+    (HR.Elim (HR.Var "tuple_swap"), Usage.Omega, HR.Pi (Usage.SNat 1) "_" (HR.Elim (HR.Var "tuple")) (HR.Elim (HR.Var "tuple")))
+    (HM.insert "tuple_swap" (IR.GFunction tuple_swap_func) $ HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+test_switch_case_func :: T.TestTree
+test_switch_case_func =
+  shouldCompileTo
+    "switch case func"
+    (HR.Elim (HR.Var "switch_case"), Usage.Omega, HR.Pi (Usage.SNat 1) "_" (HR.Elim (HR.Var "either")) (HR.Elim (HR.Var "either")))
+    (HM.insert "switch_case" (IR.GFunction switch_case_func) $ HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) $ HM.insert "MkLeft" (IR.GDataCon leftCon) emptyGlobals)
+    (EmptyInstr (MT.PUSH (MT.VInt 2)))
+
+tuple_swap_func :: IR.Function PrimTy PrimVal
+tuple_swap_func =
+  IR.Function
+    "tuple_swap"
+    IR.GOmega
+    (IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "tuple"))) (IR.VNeutral (IR.NFree (IR.Global "tuple"))))
+    ( IR.FunClause [IR.PCon "MkTuple" [IR.PVar 0, IR.PVar 1]] (IR.Elim (IR.App (IR.App (IR.Free (IR.Global "MkTuple")) (IR.Elim (IR.Free (IR.Pattern 1)))) (IR.Elim (IR.Free (IR.Pattern 0)))))
+        :| []
+    )
+
+switch_case_func :: IR.Function PrimTy PrimVal
+switch_case_func =
+  IR.Function
+    "switch_case"
+    IR.GOmega
+    (IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "either"))) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+    ( IR.FunClause [IR.PCon "MkLeft" [IR.PVar 0]] (IR.Elim (IR.App (IR.Free (IR.Global "MkRight")) (hrToIR boolTerm)))
+        :| [ IR.FunClause [IR.PCon "MkRight" [IR.PVar 0]] (IR.Elim (IR.App (IR.Free (IR.Global "MkLeft")) (hrToIR twoTerm)))
+           ]
+    )
 
 twoTerm :: HR.Term PrimTy PrimVal
 twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
