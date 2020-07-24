@@ -153,17 +153,7 @@ transformType (Old.Typ usage name' args form) =
     <$> traverse transformExpression usage
     <*> pure name'
     <*> pure args
-    <*> transformTypeSum form
-
-transformTypeSum ::
-  Env.WorkingMaps m => Old.TypeSum -> m New.TypeSum
-transformTypeSum (Old.Alias a) = New.Alias <$> transformAlias a
-transformTypeSum (Old.Data da) = New.Data <$> transformData da
-
-transformAlias ::
-  Env.WorkingMaps m => Old.Alias -> m New.Alias
-transformAlias (Old.AliasDec exp) =
-  New.AliasDec <$> transformExpression exp
+    <*> transformData form
 
 --------------------------------------------------
 -- Arrows

@@ -837,8 +837,6 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
-  + [[EraseTypeAliases/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
