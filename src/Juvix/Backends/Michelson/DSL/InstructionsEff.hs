@@ -282,6 +282,12 @@ newPrimToInstrErr x =
           Types.UpdateBMap -> Instructions.update
           Types.GetMap -> Instructions.get
           Types.GetBMap -> Instructions.get
+          Types.Pair -> Instructions.pair
+          --Types.IfLeft -> Instructions.ifLeft
+          Types.Fst -> Instructions.car
+          Types.Snd -> Instructions.cdr
+          Types.Left t -> Instructions.left t
+          Types.Right t -> Instructions.right t
           Types.Constant _ -> error "tried to convert a to prim"
           Types.Inst _ -> error "tried to convert an inst to an inst!"
    in Instructions.toNewPrimErr inst
@@ -627,12 +633,12 @@ apply closure args remainingArgs = do
     -- Exec case for Michelson lambdas, e.g. if (storage = f) → g f = f 3!
     recur Env.MichelsonLam _xs =
       applyLambdaFromStorageNArgs undefined undefined args
-    recur (Env.Constant _) _ =
-      throw @"compilationError" (Types.InternalFault "apply to non lam")
-    recur (Env.Expanded _) _ =
-      throw @"compilationError" (Types.InternalFault "apply to non lam")
+    recur (Env.Constant c) _ =
+      throw @"compilationError" (Types.InternalFault ("apply to non lam: " <> show c))
+    recur (Env.Expanded e) _ =
+      throw @"compilationError" (Types.InternalFault ("apply to non lam: " <> show e))
     recur Env.Nop _ =
-      throw @"compilationError" (Types.InternalFault "apply to non lam")
+      throw @"compilationError" (Types.InternalFault ("apply to non lam: " <> show Env.Nop))
 
 -- we can only delete things at position greater than 0.
 -- this is because if we were to delete 0, then (λx : ω i. x) would error

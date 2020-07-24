@@ -121,7 +121,7 @@ test_tuple =
     "tuple constructor"
     (HR.Elim (HR.App (HR.App (HR.Var "MkTuple") twoTerm) twoTerm), Usage.Omega, HR.Elim (HR.Var "tuple"))
     (HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
-    (EmptyInstr (MT.PUSH (MT.VPair (MT.VInt 2, MT.VInt 2))))
+    (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VPair (MT.VInt 2, MT.VInt 2)))) MT.Nop))
 
 test_left :: T.TestTree
 test_left =

@@ -64,8 +64,8 @@ data NewPrim
   | UpdateBMap
   | GetMap
   | GetBMap
-  | Left
-  | Right
+  | Left M.Type
+  | Right M.Type
   | Pair
   | IfLeft
   | Fst

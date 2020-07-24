@@ -100,10 +100,7 @@ transformDatatype globals name cons =
                   EGDatatype n cs -> let GDatatype _ t = transformDatatype globals n cs in t
           IR.VPi _ arg res ->
             Product (valueToADT arg) (valueToADT res)
-      dataconToADT (EDataCon _ ty) =
-        case ty of
-          -- TODO: Is this what we should expect? We just want the args of the constructor.
-          IR.VPi _ arg res -> valueToADT arg
+      dataconToADT (EDataCon _ ty) = valueToADT (dropLast ty)
       dataconsToADT cons =
         case cons of
           x : [] -> dataconToADT x
@@ -112,6 +109,11 @@ transformDatatype globals name cons =
                 xs' = dataconsToADT xs
              in Sum x' xs'
    in GDatatype name (dataconsToADT cons)
+
+dropLast (IR.VPi u a r) =
+  case r of
+    IR.VPi _ _ _ -> IR.VPi u a (dropLast r)
+    _ -> a
 
 transformDataCon :: PreGlobals -> EDataCon -> Global
 transformDataCon globals (EDataCon name ty) =
@@ -198,10 +200,10 @@ consToTerm n ty mty cs =
            in case c of
                 LeftCon ->
                   let MU.Type (MU.TOr _ _ l _) _ = t in
-                  E.Lam name (E.App (E.Prim M.Left (E.Pi usage (E.PrimTy (M.PrimTy l)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
+                  E.Lam name (E.App (E.Prim (M.Left t) (E.Pi usage (E.PrimTy (M.PrimTy l)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
                 RightCon ->
                   let MU.Type (MU.TOr _ _ _ r) _ = t in
-                  E.Lam name (E.App (E.Prim M.Right (E.Pi usage (E.PrimTy (M.PrimTy r)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
+                  E.Lam name (E.App (E.Prim (M.Right t) (E.Pi usage (E.PrimTy (M.PrimTy r)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
                 PairCon ->
                 -- TODO clean this up, probably wrong
                   let MU.Type (MU.TPair _ _ l r) _ = t in
