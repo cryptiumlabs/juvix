@@ -337,18 +337,8 @@ typeP = do
   usag <- maybe usage
   name <- prefixSymbolSN
   args <- many prefixSymbolSN
-  form <- typeSumParser
+  form <- dataParser
   pure (Types.Typ usag name args form)
-
-typeSumParser :: Parser Types.TypeSum
-typeSumParser =
-  Types.Alias <$> try aliasParser
-    <|> Types.Data <$> dataParser
-
-aliasParser :: Parser Types.Alias
-aliasParser = do
-  skipLiner Lexer.equals
-  Types.AliasDec <$> expressionSN
 
 dataParser :: Parser Types.Data
 dataParser = do
@@ -365,13 +355,16 @@ dataParser = do
 
 adt :: Parser Types.Adt
 adt =
-  Types.Sum <$> many1H sumSN
-    <|> Types.Product <$> product
+  Types.Sum
+    <$> (maybe (skipLiner Lexer.pipe) *> sepBy1H sumSN (skipLiner Lexer.pipe))
+    <|> Types.Product <$> standAloneProduct
 
 sum :: Parser Types.Sum
-sum = do
-  skipLiner Lexer.pipe
-  Types.S <$> prefixSymbolSN <*> maybe product
+sum = Types.S <$> prefixSymbolSN <*> maybe product
+
+standAloneProduct :: Parser Types.Product
+standAloneProduct =
+  Types.Record <$> record
 
 product :: Parser Types.Product
 product =
@@ -792,12 +785,6 @@ typePSN = spaceLiner typeP
 
 typePS :: Parser Types.Type
 typePS = spacer typeP
-
-typeSumParserSN :: Parser Types.TypeSum
-typeSumParserSN = spaceLiner typeSumParser
-
-typeSumParserS :: Parser Types.TypeSum
-typeSumParserS = spacer typeSumParser
 
 recordSN :: Parser Types.Record
 recordSN = spaceLiner record

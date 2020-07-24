@@ -4,8 +4,6 @@ module Juvix.FrontendContextualise.EraseTypeAliases.Extend
   )
 where
 
---FIXME:change to the module of the last pass
-
 import Juvix.Frontend.Types.Base
 import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendExpression) --FIXME
 import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext --FIXME

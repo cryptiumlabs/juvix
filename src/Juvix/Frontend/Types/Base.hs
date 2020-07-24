@@ -45,13 +45,8 @@ extensible
           { typeUsage :: Maybe Expression,
             typeName' :: !Symbol,
             typeArgs :: [Symbol],
-            typeForm :: TypeSum
+            typeForm :: Data
           }
-      deriving (Show, Generic, NFData)
-
-    data TypeSum
-      = Alias Alias
-      | Data Data
       deriving (Show, Generic, NFData)
 
     -- | 'Data' is the data declaration in the Juvix language
@@ -63,12 +58,6 @@ extensible
       | NonArrowed
           { dataAdt :: Adt
           }
-      deriving (Show, Generic, NFData)
-
-    -- was newtype
-    data Alias
-      = AliasDec
-          {aliasType' :: Expression}
       deriving (Show, Generic, NFData)
 
     --------------------------------------------------
@@ -114,10 +103,22 @@ extensible
     -- ADTs
     --------------------------------------------------
 
+    -- The types for ADT are not the most
+    -- constraining, however are setup to have the
+    -- least amount of boilerplate in the latter
+    -- stages as possible
+
+    -- a Sum of length one should not have a record
+    -- [type Address = Foo {abc : Int}]
+    -- this form should be considered illegal unless we wish to permit
+    -- named records along with unnamed records.
+    -- Ι suspect in the future this will instead be used for Enum
+    -- Subsets with refined information
     data Adt
       = Sum (NonEmpty Sum)
       | Product Product
       deriving (Show, Generic, NFData)
+
 
     data Sum
       = S
@@ -126,6 +127,9 @@ extensible
           }
       deriving (Show, Generic, NFData)
 
+    -- for when a product is without a sum
+    -- only a record can apply
+    -- a sum of only one is a named product
     data Product
       = Record !Record
       | Arrow Expression
@@ -443,5 +447,3 @@ makeLensesWith camelCaseFields ''ModuleOpenExpr'
 makeLensesWith camelCaseFields ''Infix'
 
 makeLensesWith camelCaseFields ''ExpRecord'
-
-makePrisms ''TypeSum'

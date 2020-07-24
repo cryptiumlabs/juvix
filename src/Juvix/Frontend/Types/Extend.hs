@@ -8,14 +8,8 @@ extendType = defaultExtType
 extendTopLevel :: ExtTopLevel
 extendTopLevel = defaultExtTopLevel
 
-extendTypeSum :: ExtTypeSum
-extendTypeSum = defaultExtTypeSum
-
 extendData :: ExtData
 extendData = defaultExtData
-
-extendAlias :: ExtAlias
-extendAlias = defaultExtAlias
 
 extendName :: ExtName
 extendName = defaultExtName
