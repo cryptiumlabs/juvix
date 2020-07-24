@@ -67,6 +67,7 @@ data NewPrim
   | Left
   | Right
   | Pair
+  | IfLeft
   deriving (Show, Eq, Generic)
 
 type NewTerm = CoreErased.AnnTerm PrimTy NewPrim

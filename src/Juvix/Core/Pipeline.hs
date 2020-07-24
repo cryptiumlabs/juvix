@@ -1,6 +1,7 @@
 module Juvix.Core.Pipeline where
 
 import qualified Juvix.Backends.Michelson as Michelson
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson.Datatypes as Datatypes
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
@@ -25,12 +26,35 @@ type MichelsonComp res =
   MichelsonTerm ->
   Usage.T ->
   MichelsonTerm ->
-  m (res)
+  m res
+
+eraseGlobals ::
+  forall m .
+  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
+    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
+    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
+    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+  ) =>
+  m (Datatypes.PreGlobals)
+eraseGlobals = do
+  globals <- ask @"globals"
+  res <- flip mapM (HM.toList globals) $ \(key, value) ->
+    case value of
+      IR.GDatatype (IR.Datatype n _ _ cons) -> pure (key, Datatypes.EGDatatype n (map (\(IR.DataCon n t) -> Datatypes.EDataCon n t) cons))
+      IR.GFunction (IR.Function n _ t clauses) -> do
+        clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
+          term <- typecheckErase (Translate.irToHR term) undefined undefined
+          pure $ Datatypes.EFunClause patts term
+        pure (key, Datatypes.EGFunction n t clauses)
+      IR.GDataCon (IR.DataCon n t) -> pure (key, Datatypes.EGDataCon (Datatypes.EDataCon n t))
+      IR.GAbstract _ _ -> pure (key, Datatypes.EGAbstract)
+  pure (HM.fromList res)
+-- TODO
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
   term <- typecheckErase term usage ty
-  globals <- ask @"globals"
+  globals <- eraseGlobals
   let cmp = Datatypes.datatypesToMichelson globals term
   ann <- ErasedAnn.convertTerm cmp usage
   let (res, _) = Michelson.compileExpr ann
@@ -39,7 +63,7 @@ coreToMichelson term usage ty = do
 coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
   term <- typecheckErase term usage ty
-  globals <- ask @"globals"
+  globals <- eraseGlobals
   let cmp = Datatypes.datatypesToMichelson globals term
   ann <- ErasedAnn.convertTerm cmp usage
   let (res, _) = Michelson.compileContract ann

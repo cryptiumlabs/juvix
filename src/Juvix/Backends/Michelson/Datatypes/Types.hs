@@ -10,7 +10,22 @@ import qualified Michelson.Untyped.Instr as Instr
 
 type GlobalName = IR.GlobalName
 
-type PreGlobals = IR.Globals M.PrimTy M.PrimVal
+type PreGlobals = HM.HashMap IR.GlobalName ErasedGlobal
+
+data ErasedGlobal
+  = EGDatatype GlobalName [EDataCon]
+  | EGDataCon EDataCon
+  | EGFunction GlobalName Value (NonEmpty EFunClause)
+  | EGAbstract
+
+data EDataCon
+  = EDataCon {
+      eDataConName :: GlobalName,
+      eDataConType :: Value
+    }
+
+data EFunClause
+  = EFunClause [Pattern] Term
 
 type PostGlobals = HM.HashMap IR.GlobalName Global
 
@@ -27,7 +42,7 @@ data Global
       }
   | GFunction
       { funType :: Type,
-        funCase :: Cases
+        funTerm :: Term
       }
 
 data ADT
@@ -45,12 +60,16 @@ data Bind
   | VarBind GlobalName
   | NoBind
 
-type BindAndTerm = (Bind, Term)
+type BindAndTerm = (Bind, Type, Term)
 
 data Cases
   = OneCase BindAndTerm
   | TwoCase BindAndTerm BindAndTerm
   | NestCase BindAndTerm Cases
+
+data PatternOrTerm
+  = Final [(Pattern, IR.Term M.PrimTy M.PrimVal)]
+  | Inter [(Pattern, PatternOrTerm)]
 
 {- Aliases. -}
 

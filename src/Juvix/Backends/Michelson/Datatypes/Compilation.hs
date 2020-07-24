@@ -15,20 +15,68 @@ transformGlobals :: PreGlobals -> PostGlobals
 transformGlobals globals =
   flip HM.mapMaybeWithKey globals $ \key val ->
     case val of
-      IR.GDatatype d -> pure (transformDatatype globals d)
-      IR.GDataCon c -> pure (transformDataCon globals c)
-      IR.GFunction f -> pure (transformFunction globals f)
-      IR.GAbstract _ _ -> Nothing
+      EGDatatype n cs -> pure (transformDatatype globals n cs)
+      EGDataCon c -> pure (transformDataCon globals c)
+      EGFunction n t c -> pure (transformFunction globals n t c)
 
-transformFunction :: PreGlobals -> IR.Function M.PrimTy M.PrimVal -> Global
-transformFunction globals (IR.Function name _ ty clauses) =
-  let ty' = undefined in
-  -- clause each [pattern] [term]
-  -- convert to nested case statements
-  GFunction ty' undefined 
+transformFunction :: PreGlobals -> GlobalName -> Value -> NonEmpty EFunClause -> Global
+transformFunction globals name ty clauses =
+  -- Calculate ADT for argument.
+  let IR.VPi _ (IR.VNeutral (IR.NFree (IR.Global g))) _ = ty
+      Just (EGDatatype n cs) = HM.lookup g globals
+      GDatatype _ adt = transformDatatype globals n cs in
+  case clauses of
+    -- Product type.
+    (EFunClause [patt] term) :| [] ->
+      case patt of
+        -- extract types
+        -- fst/snd
+        IR.PCon n [a, b] -> undefined
+    -- Sum type.
+    (EFunClause [pattA] termA) :| [EFunClause [pattB] termB] ->
+      -- figure out which constructor is first
+      --
+      -- IF_LEFT {a} {b} as appropriate
+      undefined
+{-
+  let ty' = undefined
+      folded = foldClauses clauses    
+      cases = toCases folded
+  in GFunction ty' cases
+-}
 
-transformDatatype :: PreGlobals -> Datatype -> Global
-transformDatatype globals (IR.Datatype name _ _ cons) =
+{-
+foldClauses :: NonEmpty EFunClause -> PatternOrTerm
+foldClauses cs = undefined
+
+toCases :: PatternOrTerm -> Cases
+toCases = undefined
+
+casesToTerm :: Cases -> Term
+casesToTerm cases =
+  case cases of
+    -- Single case, not a sum type.
+    OneCase (b, ty, t) ->
+      case b of
+        NoBind -> E.Lam "_" t (E.Pi mempty ty (E.getType t))
+        VarBind n -> E.Lam n t (E.Pi (Usage.SNat 1) ty (E.getType t))
+        -- Simple pair.
+        -- TODO extract types
+        -- TODO apply fst/snd
+        ConBind n [x, y] ->
+          E.Lam n (E.App (
+            E.Lam x (
+              E.Lam y t (E.Pi (Usage.SNat 1) undefined (E.getType t))
+            ) (E.Pi (Usage.SNat 1) undefined undefined)  
+          ) undefined undefined) (E.Pi (Usage.SNat 2) ty (E.getType t))
+    -- Two cases, sum type.
+    TwoCase a b ->
+      -- switch on constructor?
+      undefined
+-}
+
+transformDatatype :: PreGlobals -> GlobalName -> [EDataCon] -> Global
+transformDatatype globals name cons =
   let valueToADT v =
         case v of
           IR.VPrimTy (M.PrimTy t) -> Prim t
@@ -36,10 +84,10 @@ transformDatatype globals (IR.Datatype name _ _ cons) =
             let Just v = HM.lookup g globals
              in case v of
                   -- Note that this will break on mutually recursive definitions.
-                  IR.GDatatype d -> let GDatatype _ t = transformDatatype globals d in t
+                  EGDatatype n cs -> let GDatatype _ t = transformDatatype globals n cs in t
           IR.VPi _ arg res ->
             Product (valueToADT arg) (valueToADT res)
-      dataconToADT (IR.DataCon _ ty) =
+      dataconToADT (EDataCon _ ty) =
         case ty of
           -- TODO: Is this what we should expect? We just want the args of the constructor.
           IR.VPi _ arg res -> valueToADT arg
@@ -52,19 +100,19 @@ transformDatatype globals (IR.Datatype name _ _ cons) =
              in Sum x' xs'
    in GDatatype name (dataconsToADT cons)
 
-transformDataCon :: PreGlobals -> DataCon -> Global
-transformDataCon globals (IR.DataCon name ty) =
+transformDataCon :: PreGlobals -> EDataCon -> Global
+transformDataCon globals (EDataCon name ty) =
   let datatypeName = dataConTypeName ty
-      Just (IR.GDatatype (IR.Datatype _ _ _ cons)) = HM.lookup datatypeName globals
-      [(_, index)] = filter ((==) name . IR.conName . fst) $ zip cons [0 ..]
+      Just (EGDatatype _ cons) = HM.lookup datatypeName globals
+      [(_, index)] = filter ((==) name . eDataConName . fst) $ zip cons [0 ..]
       valueToTy v =
         case v of
           IR.VPrimTy (M.PrimTy t) -> E.PrimTy (M.PrimTy t)
           IR.VNeutral (IR.NFree (IR.Global g)) ->
             let Just v = HM.lookup g globals
              in case v of
-                  IR.GDatatype d ->
-                    let GDatatype _ adt = transformDatatype globals d
+                  EGDatatype d cs ->
+                    let GDatatype _ adt = transformDatatype globals d cs
                      in E.PrimTy (M.PrimTy (adtToMichelsonType adt))
           IR.VPi usage arg res ->
             E.Pi usage (valueToTy arg) (valueToTy res)
@@ -92,6 +140,7 @@ datatypesToMichelson globals term = rec term
             Just (GDataCon name datatypeName index ty) ->
               let Just (GDatatype _ adt) = HM.lookup datatypeName postGlobals
                in dataconToMichelson ty adt index
+            Just (GFunction name term) -> rec term
             _ -> term
         E.Prim _ _ -> term
         E.Lam sym body ty -> E.Lam sym (rec body) (typeToMichelson postGlobals ty)
@@ -159,10 +208,3 @@ patternToCases patt =
     IR.PPrim _ ->
       -- not supporting this for now, later turn into EQ but we need a default case
       undefined
-
-{-
-patternsToCases :: [Pattern] -> Cases
-patternsToCases [only] = OneCase only
-patternsToCases [first, second] = TwoCase first second
-patternsToCases (x : xs) = NestCase x (patternsToCases xs)
--}
