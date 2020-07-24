@@ -3,7 +3,8 @@ module Juvix.Core.Common.Context.Precedence
     left,
     right,
     application,
-    Precedence,
+    Precedence (..),
+    Associativity (..),
     nonAssoc,
     fixity,
   )
