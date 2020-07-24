@@ -95,10 +95,9 @@ removeNoComment =
 -- Parse Many at once
 --------------------------------------------------------------------------------
 
-contractTestIdString :: Either String [Juvix.Frontend.Types.TopLevel]
-contractTestIdString =
-  parseOnly
-    (many Parser.topLevelSN)
+parsedIdString :: Either String [Juvix.Frontend.Types.TopLevel]
+parsedIdString =
+  Parser.parse
     (encodeUtf32BE $ unsafePerformIO . readFile $ "/test/Id-Strings.jvx")
 
 contractTest =
