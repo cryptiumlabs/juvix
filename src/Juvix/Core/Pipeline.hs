@@ -1,7 +1,7 @@
 module Juvix.Core.Pipeline where
 
-import qualified Juvix.Backends.Michelson as Michelson
 import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Michelson.Datatypes as Datatypes
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
@@ -29,7 +29,7 @@ type MichelsonComp res =
   m res
 
 eraseGlobals ::
-  forall m .
+  forall m.
   ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
     HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
     HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
@@ -42,14 +42,27 @@ eraseGlobals = do
     case value of
       IR.GDatatype (IR.Datatype n _ _ cons) -> pure (key, Datatypes.EGDatatype n (map (\(IR.DataCon n t) -> Datatypes.EDataCon n t) cons))
       IR.GFunction (IR.Function n _ t clauses) -> do
+        let (tys, ret) = piTypeToList (IR.quote0 t)
         clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
-          term <- typecheckErase (Translate.irToHR term) undefined undefined
+          -- TODO: Deal with zero-usage arguments correctly (i.e., erase them).
+          let ty = listToPiType (drop (length patts) tys, ret)
+          term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty)
           pure $ Datatypes.EFunClause patts term
         pure (key, Datatypes.EGFunction n t clauses)
       IR.GDataCon (IR.DataCon n t) -> pure (key, Datatypes.EGDataCon (Datatypes.EDataCon n t))
       IR.GAbstract _ _ -> pure (key, Datatypes.EGAbstract)
   pure (HM.fromList res)
--- TODO
+
+piTypeToList :: IR.Term primTy primVal -> ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
+piTypeToList ty =
+  case ty of
+    IR.Pi usage arg ret ->
+      let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
+    _ -> ([], ty)
+
+listToPiType :: ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) -> IR.Term primTy primVal
+listToPiType ([], ret) = ret
+listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do

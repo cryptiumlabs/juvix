@@ -1,6 +1,6 @@
 module Juvix.Backends.Michelson.Datatypes
   ( module Juvix.Backends.Michelson.Datatypes.Compilation,
-  module Juvix.Backends.Michelson.Datatypes.Types,
+    module Juvix.Backends.Michelson.Datatypes.Types,
   )
 where
 

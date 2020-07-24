@@ -24,56 +24,60 @@ transformFunction globals name ty clauses =
   -- Calculate ADT for argument.
   let IR.VPi _ (IR.VNeutral (IR.NFree (IR.Global g))) _ = ty
       Just (EGDatatype n cs) = HM.lookup g globals
-      GDatatype _ adt = transformDatatype globals n cs in
-  case clauses of
-    -- Product type.
-    (EFunClause [patt] term) :| [] ->
-      case patt of
-        -- extract types
-        -- fst/snd
-        IR.PCon n [a, b] -> undefined
-    -- Sum type.
-    (EFunClause [pattA] termA) :| [EFunClause [pattB] termB] ->
-      -- figure out which constructor is first
-      --
-      -- IF_LEFT {a} {b} as appropriate
-      undefined
-{-
-  let ty' = undefined
-      folded = foldClauses clauses    
-      cases = toCases folded
-  in GFunction ty' cases
--}
+      GDatatype _ adt = transformDatatype globals n cs
+      cases = clausesToCases clauses
+   in GFunction undefined cases
 
-{-
-foldClauses :: NonEmpty EFunClause -> PatternOrTerm
-foldClauses cs = undefined
+clausesToCases :: NonEmpty EFunClause -> Cases
+clausesToCases clauses = case clauses of
+  -- Single variable.
+  (EFunClause [IR.PVar v] term) :| [] ->
+    BindVar (varToSym v) (Terminal term)
+  -- Product type.
+  (EFunClause [IR.PCon n [IR.PVar a, IR.PVar b]] term) :| [] ->
+    BindPair (varToSym a) (varToSym b) (Terminal term)
+  -- Sum type.
+  (EFunClause [IR.PCon a pattA] termA) :| [EFunClause [IR.PCon b pattB] termB] ->
+    let bindA = "bind_a"
+        bindB = "bind_b"
+        caseA = clausesToCases ((EFunClause pattA termA) :| [])
+        caseB = clausesToCases ((EFunClause pattB termB) :| [])
+     in -- TODO figure out ordering
+        -- TODO carry bind names
+        LeftRight bindA caseA bindB caseB
 
-toCases :: PatternOrTerm -> Cases
-toCases = undefined
+varToSym :: IR.PatternVar -> Symbol
+varToSym = intern . show
 
 casesToTerm :: Cases -> Term
-casesToTerm cases =
-  case cases of
-    -- Single case, not a sum type.
-    OneCase (b, ty, t) ->
-      case b of
-        NoBind -> E.Lam "_" t (E.Pi mempty ty (E.getType t))
-        VarBind n -> E.Lam n t (E.Pi (Usage.SNat 1) ty (E.getType t))
-        -- Simple pair.
-        -- TODO extract types
-        -- TODO apply fst/snd
-        ConBind n [x, y] ->
-          E.Lam n (E.App (
-            E.Lam x (
-              E.Lam y t (E.Pi (Usage.SNat 1) undefined (E.getType t))
-            ) (E.Pi (Usage.SNat 1) undefined undefined)  
-          ) undefined undefined) (E.Pi (Usage.SNat 2) ty (E.getType t))
-    -- Two cases, sum type.
-    TwoCase a b ->
-      -- switch on constructor?
+casesToTerm cases = case cases of
+  Terminal t -> t
+  BindVar n cases ->
+    let body = casesToTerm cases
+     in E.Lam n body undefined
+  LeftRight lbind lcase rbind rcase ->
+    E.App
+      ( E.App
+          (E.Prim M.IfLeft undefined)
+          (E.Lam lbind (casesToTerm lcase) undefined)
+          undefined
+      )
+      (E.Lam rbind (casesToTerm rcase) undefined)
       undefined
--}
+  BindPair a b cases ->
+    let body = casesToTerm cases
+     in E.Lam
+          "pair"
+          ( E.App
+              ( E.App
+                  (E.Lam a (E.Lam b body undefined) undefined)
+                  (E.App (E.Prim M.Fst undefined) (E.Var "pair" undefined) undefined)
+                  undefined
+              )
+              (E.App (E.Prim M.Snd undefined) (E.Var "pair" undefined) undefined)
+              undefined
+          )
+          undefined
 
 transformDatatype :: PreGlobals -> GlobalName -> [EDataCon] -> Global
 transformDatatype globals name cons =
@@ -140,7 +144,7 @@ datatypesToMichelson globals term = rec term
             Just (GDataCon name datatypeName index ty) ->
               let Just (GDatatype _ adt) = HM.lookup datatypeName postGlobals
                in dataconToMichelson ty adt index
-            Just (GFunction name term) -> rec term
+            Just (GFunction name term) -> rec (casesToTerm term)
             _ -> term
         E.Prim _ _ -> term
         E.Lam sym body ty -> E.Lam sym (rec body) (typeToMichelson postGlobals ty)
@@ -192,19 +196,3 @@ dataconToMichelson ty adt index =
       cons = indexToCons index adt
       term = consToTerm 0 ty pty (reverse cons)
    in term
-
-patternToCases :: Pattern -> Cases
-patternToCases patt =
-  case patt of
-    IR.PCon _ patts ->
-      -- turn into de-construction followed by application
-      undefined
-    IR.PVar v ->
-      -- turn into application of function (\v -> term)
-      undefined
-    IR.PDot _ ->
-      -- can safely be ignored
-      undefined
-    IR.PPrim _ ->
-      -- not supporting this for now, later turn into EQ but we need a default case
-      undefined

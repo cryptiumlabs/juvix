@@ -19,10 +19,10 @@ data ErasedGlobal
   | EGAbstract
 
 data EDataCon
-  = EDataCon {
-      eDataConName :: GlobalName,
-      eDataConType :: Value
-    }
+  = EDataCon
+      { eDataConName :: GlobalName,
+        eDataConType :: Value
+      }
 
 data EFunClause
   = EFunClause [Pattern] Term
@@ -42,7 +42,7 @@ data Global
       }
   | GFunction
       { funType :: Type,
-        funTerm :: Term
+        funCases :: Cases
       }
 
 data ADT
@@ -55,17 +55,11 @@ data Con
   | RightCon
   | PairCon
 
-data Bind
-  = ConBind GlobalName [GlobalName]
-  | VarBind GlobalName
-  | NoBind
-
-type BindAndTerm = (Bind, Type, Term)
-
 data Cases
-  = OneCase BindAndTerm
-  | TwoCase BindAndTerm BindAndTerm
-  | NestCase BindAndTerm Cases
+  = Terminal Term
+  | BindVar GlobalName Cases
+  | BindPair GlobalName GlobalName Cases
+  | LeftRight GlobalName Cases GlobalName Cases
 
 data PatternOrTerm
   = Final [(Pattern, IR.Term M.PrimTy M.PrimVal)]
