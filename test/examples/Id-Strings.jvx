@@ -1,0 +1,17 @@
+-- standard library functions
+
+let string = "%prim.string"
+
+let pair = "%pair"
+
+-- Identity contract for strings. 
+
+type storage = unit 
+
+-- Default entry point
+sig default : string -> storage -> storage
+￼let default para storage = Pair [] storage
+
+-- Initialize storage to ().
+sig initStorage : storage
+let initStorage = ()

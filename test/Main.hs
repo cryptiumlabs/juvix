@@ -20,7 +20,6 @@ coreTests :: T.TestTree
 coreTests =
   T.testGroup
     "Core tests"
-    [ CoreTypechecker.coreCheckerEval,
       CoreConv.coreConversions,
       CoreParser.coreParser
     ]
