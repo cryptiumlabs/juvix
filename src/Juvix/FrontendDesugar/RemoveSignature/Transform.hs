@@ -81,15 +81,7 @@ transformExpression (Old.Parened e) =
 
 transformType :: Old.Type -> New.Type
 transformType (Old.Typ usage name' args form) =
-  New.Typ (transformExpression <$> usage) name' args (transformTypeSum form)
-
-transformTypeSum :: Old.TypeSum -> New.TypeSum
-transformTypeSum (Old.Alias a) = New.Alias (transformAlias a)
-transformTypeSum (Old.Data da) = New.Data (transformData da)
-
-transformAlias :: Old.Alias -> New.Alias
-transformAlias (Old.AliasDec exp) =
-  New.AliasDec (transformExpression exp)
+  New.Typ (transformExpression <$> usage) name' args (transformData form)
 
 --------------------------------------------------
 -- Arrows
