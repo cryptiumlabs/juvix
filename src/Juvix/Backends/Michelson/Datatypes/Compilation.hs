@@ -21,13 +21,10 @@ transformGlobals globals =
 
 transformFunction :: PreGlobals -> GlobalName -> Value -> NonEmpty EFunClause -> Global
 transformFunction globals name ty clauses =
-  -- Calculate ADT for argument.
-  let IR.VPi _ (IR.VNeutral (IR.NFree (IR.Global g))) _ = ty
-      Just (EGDatatype n cs) = HM.lookup g globals
-      GDatatype _ adt = transformDatatype globals n cs
-      cases = clausesToCases clauses
-   in GFunction undefined cases
+  let cases = clausesToCases (recase clauses)
+  in GFunction undefined cases
 
+-- TODO: Pass along type metadata correctly.
 clausesToCases :: NonEmpty EFunClause -> Cases
 clausesToCases clauses = case clauses of
   -- Single variable.
@@ -46,6 +43,16 @@ clausesToCases clauses = case clauses of
         -- TODO carry bind names
         LeftRight bindA caseA bindB caseB
 
+recase :: NonEmpty EFunClause -> NonEmpty EFunClause
+recase clauses = case clauses of
+  clause :| [] -> clauses
+  clauseA :| [clauseB] -> clauses
+  clauseA :| moreClauses ->
+    clauseA :| [
+      -- TODO need to extend term
+      EFunClause [IR.PVar 0] undefined 
+    ] 
+
 varToSym :: IR.PatternVar -> Symbol
 varToSym = intern . show
 
@@ -54,15 +61,17 @@ casesToTerm cases = case cases of
   Terminal t -> t
   BindVar n cases ->
     let body = casesToTerm cases
-     in E.Lam n body undefined
+     in E.Lam n body (E.Pi (Usage.SNat 1) undefined (E.getType body))
   LeftRight lbind lcase rbind rcase ->
+    let lbody = casesToTerm lcase
+        rbody = casesToTerm rcase in
     E.App
       ( E.App
           (E.Prim M.IfLeft undefined)
-          (E.Lam lbind (casesToTerm lcase) undefined)
+          (E.Lam lbind lbody (E.Pi (Usage.SNat 1) undefined (E.getType lbody)))
           undefined
       )
-      (E.Lam rbind (casesToTerm rcase) undefined)
+      (E.Lam rbind rbody (E.Pi (Usage.SNat 1) undefined (E.getType rbody)))
       undefined
   BindPair a b cases ->
     let body = casesToTerm cases
@@ -164,31 +173,42 @@ typeToMichelson globals ty = rec ty
         E.Pi u a r -> E.Pi u (typeToMichelson globals a) (typeToMichelson globals r)
         _ -> ty
 
-indexToCons :: Int -> ADT -> [Con]
+indexToCons :: Int -> ADT -> [(Con, MU.Type)]
 indexToCons index adt =
   case adt of
     Prim _ -> []
     Sum a b ->
       case index of
-        0 -> indexToCons index a <> [LeftCon]
-        n -> indexToCons (index - 1) b <> [RightCon]
+        0 -> indexToCons index a <> [(LeftCon, adtToMichelsonType adt)]
+        n -> indexToCons (index - 1) b <> [(RightCon, adtToMichelsonType adt)]
     Product a b ->
       -- TODO Check this for complex nested types, will the stack operations be correct?
-      indexToCons index b <> indexToCons index a <> [PairCon]
+      indexToCons index b <> indexToCons index a <> [(PairCon, adtToMichelsonType adt)]
 
 -- Note: must reverse `cons` beforehand.
-consToTerm :: Int -> Type -> MU.Type -> [Con] -> Term
+consToTerm :: Int -> Type -> MU.Type -> [(Con, MU.Type)] -> Term
 consToTerm n ty mty cs =
   let argName = intern ("arg_" <> show n)
    in case cs of
         [] ->
           E.Lam argName (E.Var argName ty) (E.Pi (Usage.SNat 1) ty ty)
-        c : cs ->
+        (c, t) : cs ->
           let E.Lam name body _ = consToTerm (n + 1) ty mty cs
+              E.Pi usage argTy retTy = ty
            in case c of
-                LeftCon -> E.Lam name (E.App (E.Prim M.Left undefined) body undefined) undefined
-                RightCon -> E.Lam name (E.App (E.Prim M.Right undefined) body undefined) undefined
-                PairCon -> E.Lam name (E.Lam argName (E.App (E.App (E.Prim M.Pair undefined) body undefined) (E.Var argName undefined) undefined) undefined) undefined
+                LeftCon ->
+                  let MU.Type (MU.TOr _ _ l _) _ = t in
+                  E.Lam name (E.App (E.Prim M.Left (E.Pi usage (E.PrimTy (M.PrimTy l)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
+                RightCon ->
+                  let MU.Type (MU.TOr _ _ _ r) _ = t in
+                  E.Lam name (E.App (E.Prim M.Right (E.Pi usage (E.PrimTy (M.PrimTy r)) (E.PrimTy (M.PrimTy t)))) body (E.PrimTy (M.PrimTy t))) ty
+                PairCon ->
+                -- TODO clean this up, probably wrong
+                  let MU.Type (MU.TPair _ _ l r) _ = t in
+                  E.Lam name (E.Lam argName (E.App (E.App (E.Prim M.Pair (E.Pi usage (E.PrimTy (M.PrimTy l)) (E.Pi usage (E.PrimTy (M.PrimTy r)) (E.PrimTy (M.PrimTy t))))) body (
+                    E.Pi usage (E.PrimTy (M.PrimTy r)) (E.PrimTy (M.PrimTy t))
+                    )) (E.Var argName argTy) (E.PrimTy (M.PrimTy t))) (E.Pi usage (E.PrimTy (M.PrimTy l)) (E.PrimTy (M.PrimTy t))))
+                    ty
 
 dataconToMichelson :: Type -> ADT -> Int -> Term
 dataconToMichelson ty adt index =

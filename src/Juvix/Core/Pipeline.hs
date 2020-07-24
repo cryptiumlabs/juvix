@@ -28,6 +28,10 @@ type MichelsonComp res =
   MichelsonTerm ->
   m res
 
+{-
+ - Erases zero-usage arguments to pattern matching in functions, alters the type accordingly, and erases the body of the function.
+ - Note: this currently *does not* erase datatypes with e.g. zero-usage arguments. This should be done in the future.
+ -}
 eraseGlobals ::
   forall m.
   ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
@@ -44,14 +48,24 @@ eraseGlobals = do
       IR.GFunction (IR.Function n _ t clauses) -> do
         let (tys, ret) = piTypeToList (IR.quote0 t)
         clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
-          -- TODO: Deal with zero-usage arguments correctly (i.e., erase them).
-          let ty = listToPiType (drop (length patts) tys, ret)
-          term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty)
+          let ty_ret = listToPiType (drop (length patts) tys, ret)
+          (patts, ty) <- erasePattern (patts, (tys, ret))
+          term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
           pure $ Datatypes.EFunClause patts term
         pure (key, Datatypes.EGFunction n t clauses)
       IR.GDataCon (IR.DataCon n t) -> pure (key, Datatypes.EGDataCon (Datatypes.EDataCon n t))
       IR.GAbstract _ _ -> pure (key, Datatypes.EGAbstract)
   pure (HM.fromList res)
+
+erasePattern :: HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m =>
+  ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
+  m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
+erasePattern ([], ([], ret)) = pure ([], ([], ret))
+erasePattern (p:ps, ((Usage.SNat 0, _):args, ret)) = erasePattern (ps, (args, ret))
+erasePattern (p:ps, (arg:args, ret)) = do
+  (ps', (args', ret')) <- erasePattern (ps, (args, ret))
+  pure (p : ps', (arg : args', ret'))
+erasePattern _ = throw @"error" (Types.ErasureError (Erasure.InternalError "invalid type & pattern match combination"))
 
 piTypeToList :: IR.Term primTy primVal -> ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
 piTypeToList ty =

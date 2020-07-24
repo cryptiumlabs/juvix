@@ -77,7 +77,7 @@ shouldCompileTo ::
 shouldCompileTo name (term, usage, ty) globals instr =
   T.testCase name $ do
     res <- toMichelson term usage ty globals
-    show res T.@=? (show (Right instr :: Either String EmptyInstr) :: String)
+    (show (Right instr :: Either String EmptyInstr) :: String) T.@=? show res
 
 toMichelson ::
   HR.Term PrimTy PrimVal ->
