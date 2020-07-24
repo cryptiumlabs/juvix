@@ -357,7 +357,8 @@ adt :: Parser Types.Adt
 adt =
   Types.Sum
     <$> (maybe (skipLiner Lexer.pipe) *> sepBy1H sumSN (skipLiner Lexer.pipe))
-    <|> Types.Product <$> standAloneProduct
+    <|> Types.Product
+    <$> standAloneProduct
 
 sum :: Parser Types.Sum
 sum = Types.S <$> prefixSymbolSN <*> maybe product

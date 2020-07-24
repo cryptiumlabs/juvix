@@ -119,7 +119,6 @@ extensible
       | Product Product
       deriving (Show, Generic, NFData)
 
-
     data Sum
       = S
           { sumConstructor :: !Symbol,

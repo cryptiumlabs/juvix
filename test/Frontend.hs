@@ -363,26 +363,26 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-  "Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c], typeForm = NonArrowed' \
-  \{dataAdt = Sum' (S' {sumConstructor = A, sumValue = Just (Arrow' (Infix' (Inf' \
-  \{infixLeft = Name' (b :| []) (), infixOp = : :| [], infixRight = Infix' (Inf' {infixLeft \
-  \= Name' (a :| []) (), infixOp = -> :| [], infixRight = Infix' (Inf' {infixLeft = \
-  \Name' (b :| []) (), infixOp = -> :| [], infixRight = Name' (c :| []) (), annInf = \
-  \()}) (), annInf = ()}) (), annInf = ()}) ()) ()), annS = ()} :| [S' {sumConstructor \
-  \= B, sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (d :| []) (), infixOp \
-  \= -> :| [], infixRight = Name' (Foo :| []) (), annInf = ()}) ()) ()), annS = ()},S' \
-  \{sumConstructor = C, sumValue = Just (Record' (Record''' {recordFields = NameType'' \
-  \{nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' a (), annNameType' \
-  \= ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Implicit' \
-  \b (), annNameType' = ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), \
-  \annS = ()},S' {sumConstructor = D, sumValue = Just (Record' (Record''' {recordFields \
-  \= NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' \
-  \a (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), \
-  \nameTypeName = Implicit' b (), annNameType' = ()}], recordFamilySignature = Just \
-  \(Application' (App' {applicationName = Name' (Foo :| []) (), applicationArgs = Name' \
-  \(Int :| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Fooy :| []) (), infixOp \
-  \= -> :| [], infixRight = Name' (Nada :| []) (), annInf = ()}) ()) ()], annApp = ()}) \
-  \()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}, annTyp = ()}"
+    "Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c], typeForm = NonArrowed' \
+    \{dataAdt = Sum' (S' {sumConstructor = A, sumValue = Just (Arrow' (Infix' (Inf' \
+    \{infixLeft = Name' (b :| []) (), infixOp = : :| [], infixRight = Infix' (Inf' {infixLeft \
+    \= Name' (a :| []) (), infixOp = -> :| [], infixRight = Infix' (Inf' {infixLeft = \
+    \Name' (b :| []) (), infixOp = -> :| [], infixRight = Name' (c :| []) (), annInf = \
+    \()}) (), annInf = ()}) (), annInf = ()}) ()) ()), annS = ()} :| [S' {sumConstructor \
+    \= B, sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (d :| []) (), infixOp \
+    \= -> :| [], infixRight = Name' (Foo :| []) (), annInf = ()}) ()) ()), annS = ()},S' \
+    \{sumConstructor = C, sumValue = Just (Record' (Record''' {recordFields = NameType'' \
+    \{nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' a (), annNameType' \
+    \= ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Implicit' \
+    \b (), annNameType' = ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), \
+    \annS = ()},S' {sumConstructor = D, sumValue = Just (Record' (Record''' {recordFields \
+    \= NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' \
+    \a (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), \
+    \nameTypeName = Implicit' b (), annNameType' = ()}], recordFamilySignature = Just \
+    \(Application' (App' {applicationName = Name' (Foo :| []) (), applicationArgs = Name' \
+    \(Int :| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Fooy :| []) (), infixOp \
+    \= -> :| [], infixRight = Name' (Nada :| []) (), annInf = ()}) ()) ()], annApp = ()}) \
+    \()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}, annTyp = ()}"
 
 --------------------------------------------------
 -- Arrow Testing
