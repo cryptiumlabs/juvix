@@ -1,13 +1,14 @@
+
 import * as vscode from 'vscode';
 
 const MATCH_NOTHING_RE = /$^/;
 
 export function activate(context: vscode.ExtensionContext) {
 
-    vscode.languages.setLanguageConfiguration('haskell', {
+    vscode.languages.setLanguageConfiguration('juvix', {
         onEnterRules: [
             {
-                beforeText: vscode.workspace.getConfiguration('haskell').indentationRules.enabled
+                beforeText: vscode.workspace.getConfiguration('juvix').indentationRules.enabled
                 ? /(\bif\b(?!')(.(?!then))*|\b(then|else|m?do|of|let|in|where)\b(?!')|=|->|>>=|>=>|=<<|(^(data)( |\t)+(\w|')+( |\t)*))( |\t)*$/
                 : MATCH_NOTHING_RE,
                 action: { indentAction: vscode.IndentAction.Indent }
