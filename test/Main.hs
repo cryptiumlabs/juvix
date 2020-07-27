@@ -14,7 +14,8 @@ import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
-import qualified Test.Tasty.QuickCheck as T
+
+-- import qualified Test.Tasty.QuickCheck as T
 
 coreTests :: T.TestTree
 coreTests =
