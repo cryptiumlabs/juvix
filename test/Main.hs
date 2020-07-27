@@ -1,6 +1,5 @@
 module Main where
 
-import qualified Backends.ArithmeticCircuit as ArithmeticCircuit
 import qualified Backends.LLVM as LLVM
 import qualified Backends.Michelson as Michelson
 import qualified CoreConv
@@ -14,7 +13,6 @@ import qualified FrontendDesugar
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
-import qualified Test.Tasty.QuickCheck as T
 
 coreTests :: T.TestTree
 coreTests =
