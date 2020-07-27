@@ -14,6 +14,12 @@ extendData "Data" [] [t|T|] Ext.extendData
 
 extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 
+extendList "List" [] [t|T|] Ext.extendList
+
+extendTuple "Tuple" [] [t|T|] Ext.extendTuple
+
+extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
+
 extendTypeRefine "TypeRefine" [] [t|T|] Ext.extendTypeRefine
 
 extendName "Name" [] [t|T|] Ext.extendName

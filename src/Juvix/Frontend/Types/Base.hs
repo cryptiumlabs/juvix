@@ -251,6 +251,9 @@ extensible
       | OpenExpr ModuleOpenExpr
       | Lambda Lambda
       | Application Application
+      | Primitive Primitive
+      | List List
+      | Tuple Tuple
       | Block Block
       | Infix Infix
       | ExpRecord ExpRecord
@@ -261,6 +264,18 @@ extensible
       | RefinedE TypeRefine
       | UniverseName UniverseExpression
       | Parened Expression
+      deriving (Show, Generic, NFData)
+
+    data Primitive
+      = Prim NameSymb
+      deriving (Show, Generic, NFData)
+
+    data List
+      = ListLit [Expression]
+      deriving (Show, Generic, NFData)
+
+    data Tuple
+      = TupleLit [Expression]
       deriving (Show, Generic, NFData)
 
     data ArrowExp

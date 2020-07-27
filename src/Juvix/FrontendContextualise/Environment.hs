@@ -51,9 +51,6 @@ remove sy = Juvix.Library.modify @"new" (Context.remove sy)
 removeOld :: HasOld term ty sumRep m => Symbol -> m ()
 removeOld sy = Juvix.Library.modify @"old" (Context.remove sy)
 
---TODO transLike :: NonEmpty functionLike -> Maybe Signature -> Maybe Usage -> Definition
-transLike = undefined
-
 addUnknown :: HasNew term ty sumRep m => Symbol -> m ()
 addUnknown sym =
   Juvix.Library.modify @"new"

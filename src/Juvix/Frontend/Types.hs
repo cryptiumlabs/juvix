@@ -69,6 +69,12 @@ extendExpression "Expression" [] [t|T|] Ext.extendExpression
 
 extendArrowExp "ArrowExp" [] [t|T|] Ext.extendArrowExp
 
+extendList "List" [] [t|T|] Ext.extendList
+
+extendTuple "Tuple" [] [t|T|] Ext.extendTuple
+
+extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
+
 extendConstant "Constant" [] [t|T|] Ext.extendConstant
 
 extendNumb "Numb" [] [t|T|] Ext.extendNumb

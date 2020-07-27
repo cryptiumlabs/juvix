@@ -8,8 +8,8 @@ where
 
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.FrontendContextualise.Environment
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as Old
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
@@ -33,6 +33,8 @@ data Environment
         modMap :: ModuleMap
       }
   deriving (Generic)
+
+type FinalContext = New Context.T
 
 data Error
   = UnknownModule Symbol

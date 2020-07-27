@@ -834,6 +834,18 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Frontend/Types/Base]]
 ** FrontendContextualise
+- order of Passes
+  1. =InfixPrecedence=
+  2. =ModuleOpen=
+- _Relies on_
+  + [[Contextify/Transform]]
+  + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Transform]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Transform]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
@@ -923,8 +935,8 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[FrontendContextualise/Environment]]
+  + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
 **** Extend <<ModuleOpen/Extend>>
@@ -957,15 +969,15 @@ Quantitative type implementation inspired by
 - for modules we can infer.
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
+  + [[InfixPrecedence/Extend]]
+  + [[InfixPrecedence/Extend]]
   + [[Library]]
 **** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
 **** Types <<ModuleOpen/Types>>
 - _Relies on_

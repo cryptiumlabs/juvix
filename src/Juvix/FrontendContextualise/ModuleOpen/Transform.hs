@@ -4,9 +4,9 @@ module Juvix.FrontendContextualise.ModuleOpen.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as Old
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 -- Sadly for this pass we have to change every symbol affecting function
@@ -62,7 +62,7 @@ transformLet (Old.LetGroup name bindings body) = do
         Env.addUnknown name
         Env.removeModMap name
         transformedBindings <- traverse transformFunctionLike bindings
-        let def = Env.transLike transformedBindings Nothing Nothing
+        let def = decideRecordOrDef transformedBindings Nothing
         Env.add name def -- add to new context
         New.LetGroup name transformedBindings <$> transformExpression body
   res <- transform
@@ -80,7 +80,7 @@ transformLetType (Old.LetType'' typ expr) = do
         Env.addUnknown typeName
         Env.removeModMap typeName
         transformedType <- transformType typ
-        let def = Env.transLike transformedType Nothing Nothing
+        let def = Context.TypeDeclar transformedType
         Env.add typeName def -- add to new context
         New.LetType'' transformedType <$> transformExpression expr
   res <- transform
@@ -138,6 +138,42 @@ transformLambda (Old.Lamb args body) = do
   pure res
 
 --------------------------------------------------------------------------------
+-- Record/Def Decision function... update when contextify version updates
+--------------------------------------------------------------------------------
+
+-- | decideRecordOrDef tries to figure out
+-- if a given defintiion is a record or a definition
+decideRecordOrDef ::
+  NonEmpty (New.FunctionLike New.Expression) ->
+  Maybe New.Signature ->
+  Env.New Context.Definition
+decideRecordOrDef xs ty
+  | len == 1 && emptyArgs args =
+    -- For the two matched cases eventually
+    -- turn these into record expressions
+    case body of
+      New.ExpRecord (New.ExpressionRecord i) ->
+        -- the type here can eventually give us arguments though looking at the
+        -- lambda for e, and our type can be found out similarly by looking at types
+        let f (New.NonPunned s e) =
+              Context.add
+                (NonEmpty.head s)
+                (decideRecordOrDef (New.Like [] e :| []) Nothing)
+         in Context.Record (foldr f Context.empty i) ty
+      New.Let _l ->
+        def
+      _ -> def
+  | otherwise = def
+  where
+    len = length xs
+    New.Like args body = NonEmpty.head xs
+    def = Context.Def Nothing ty xs Context.default'
+
+emptyArgs :: [a] -> Bool
+emptyArgs [] = True
+emptyArgs (_ : _) = False
+
+--------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
@@ -182,6 +218,9 @@ transformC = do
 
 transformExpression ::
   Env.WorkingMaps m => Old.Expression -> m New.Expression
+transformExpression (Old.Tuple t) = New.Tuple <$> transformTuple t
+transformExpression (Old.List t) = New.List <$> transformList t
+transformExpression (Old.Primitive t) = New.Primitive <$> transformPrim t
 transformExpression (Old.Constant c) = New.Constant <$> transformConst c
 transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
@@ -194,7 +233,6 @@ transformExpression (Old.Lambda l) = New.Lambda <$> transformLambda l
 transformExpression (Old.Application a) =
   New.Application <$> transformApplication a
 transformExpression (Old.Block b) = New.Block <$> transformBlock b
-transformExpression (Old.Infix i) = New.Infix <$> transformInfix i
 transformExpression (Old.ExpRecord i) = New.ExpRecord <$> transformExpRecord i
 transformExpression (Old.ArrowE i) = New.ArrowE <$> transformArrowExp i
 transformExpression (Old.NamedTypeE i) =
@@ -333,6 +371,18 @@ transformArrowExp (Old.Arr' left usage right) =
     <$> transformExpression left
     <*> transformExpression usage
     <*> transformExpression right
+
+transformPrim :: Env.WorkingMaps m => Old.Primitive -> m New.Primitive
+transformPrim (Old.Prim p) =
+  pure (New.Prim p)
+
+transformTuple :: Env.WorkingMaps m => Old.Tuple -> m New.Tuple
+transformTuple (Old.TupleLit t) =
+  New.TupleLit <$> traverse transformExpression t
+
+transformList :: Env.WorkingMaps m => Old.List -> m New.List
+transformList (Old.ListLit t) =
+  New.ListLit <$> traverse transformExpression t
 
 transformConst ::
   Env.WorkingMaps m => Old.Constant -> m New.Constant

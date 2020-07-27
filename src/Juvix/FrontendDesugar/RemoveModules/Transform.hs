@@ -101,6 +101,12 @@ transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
 transformExpression :: Old.Expression -> New.Expression
+transformExpression (Old.Tuple t) =
+  New.Tuple (transformTuple t)
+transformExpression (Old.List t) =
+  New.List (transformList t)
+transformExpression (Old.Primitive t) =
+  New.Primitive (transformPrim t)
 transformExpression (Old.Cond c) =
   New.Cond (transformCond transformExpression c)
 transformExpression (Old.ModuleE m) =
@@ -257,6 +263,15 @@ transformArrowExp (Old.Arr' left usage right) =
     (transformExpression left)
     (transformExpression usage)
     (transformExpression right)
+
+transformPrim :: Old.Primitive -> New.Primitive
+transformPrim (Old.Prim p) = New.Prim p
+
+transformTuple :: Old.Tuple -> New.Tuple
+transformTuple (Old.TupleLit t) = New.TupleLit (transformExpression <$> t)
+
+transformList :: Old.List -> New.List
+transformList (Old.ListLit t) = New.ListLit (transformExpression <$> t)
 
 transformConst :: Old.Constant -> New.Constant
 transformConst (Old.Number numb) = New.Number (transformNumb numb)

@@ -18,6 +18,42 @@ import Juvix.Library
 -- TODO: write the actual transform function
 
 --------------------------------------------------------------------------------
+-- Record/Def Decision function... update when contextify version updates
+--------------------------------------------------------------------------------
+
+-- | decideRecordOrDef tries to figure out
+-- if a given defintiion is a record or a definition
+decideRecordOrDef ::
+  NonEmpty (New.FunctionLike New.Expression) ->
+  Maybe New.Signature ->
+  Env.New Context.Definition
+decideRecordOrDef xs ty
+  | len == 1 && emptyArgs args =
+    -- For the two matched cases eventually
+    -- turn these into record expressions
+    case body of
+      New.ExpRecord (New.ExpressionRecord i) ->
+        -- the type here can eventually give us arguments though looking at the
+        -- lambda for e, and our type can be found out similarly by looking at types
+        let f (New.NonPunned s e) =
+              Context.add
+                (NonEmpty.head s)
+                (decideRecordOrDef (New.Like [] e :| []) Nothing)
+         in Context.Record (foldr f Context.empty i) ty
+      New.Let _l ->
+        def
+      _ -> def
+  | otherwise = def
+  where
+    len = length xs
+    New.Like args body = NonEmpty.head xs
+    def = Context.Def Nothing ty xs Context.default'
+
+emptyArgs :: [a] -> Bool
+emptyArgs [] = True
+emptyArgs (_ : _) = False
+
+--------------------------------------------------------------------------------
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
@@ -61,6 +97,9 @@ transformTopLevel Old.TypeClassInstance = pure New.TypeClassInstance
 
 transformExpression ::
   Env.WorkingMaps m => Old.Expression -> m New.Expression
+transformExpression (Old.Tuple t) = New.Tuple <$> transformTuple t
+transformExpression (Old.List t) = New.List <$> transformList t
+transformExpression (Old.Primitive t) = New.Primitive <$> transformPrim t
 transformExpression (Old.Constant c) = New.Constant <$> transformConst c
 transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
@@ -252,6 +291,18 @@ transformArrowExp (Old.Arr' left usage right) =
     <*> transformExpression usage
     <*> transformExpression right
 
+transformPrim :: Env.WorkingMaps m => Old.Primitive -> m New.Primitive
+transformPrim (Old.Prim p) =
+  pure (New.Prim p)
+
+transformTuple :: Env.WorkingMaps m => Old.Tuple -> m New.Tuple
+transformTuple (Old.TupleLit t) =
+  New.TupleLit <$> traverse transformExpression t
+
+transformList :: Env.WorkingMaps m => Old.List -> m New.List
+transformList (Old.ListLit t) =
+  New.ListLit <$> traverse transformExpression t
+
 transformConst ::
   Env.WorkingMaps m => Old.Constant -> m New.Constant
 transformConst (Old.Number numb) = New.Number <$> transformNumb numb
@@ -317,7 +368,7 @@ transformLet (Old.LetGroup name bindings body) = do
   let transform = do
         Env.addUnknown name
         transformedBindings <- traverse transformFunctionLike bindings
-        let def = Env.transLike transformedBindings Nothing Nothing
+        let def = decideRecordOrDef transformedBindings Nothing
         Env.add name def -- add to new context
         New.LetGroup name transformedBindings <$> transformExpression body
   case originalVal of
@@ -337,7 +388,7 @@ transformLetType (Old.LetType'' typ expr) = do
   originalVal <- Env.lookup typeName
   let transform = do
         transformedType <- transformType typ
-        let def = Env.transLike transformedType Nothing Nothing
+        let def = Context.TypeDeclar transformedType
         Env.add typeName def -- add to new context
         New.LetType'' transformedType <$> transformExpression expr
   case originalVal of
