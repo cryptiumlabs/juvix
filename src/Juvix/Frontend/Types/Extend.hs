@@ -86,6 +86,9 @@ extendList = defaultExtList
 extendTuple :: ExtTuple
 extendTuple = defaultExtTuple
 
+extendPrimitive :: ExtPrimitive
+extendPrimitive = defaultExtPrimitive
+
 extendConstant :: ExtConstant
 extendConstant = defaultExtConstant
 

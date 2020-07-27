@@ -1,7 +1,7 @@
 module Juvix.Frontend.Lexer where
 
 import qualified GHC.Unicode as Unicode
-import Juvix.Library hiding (maybe, option, takeWhile, div)
+import Juvix.Library hiding (div, maybe, option, takeWhile)
 
 charToWord8 :: Char -> Word8
 charToWord8 = fromIntegral . ord
@@ -100,12 +100,12 @@ validStartSymbol w =
 validInfixSymbol :: Word8 -> Bool
 validInfixSymbol w =
   Unicode.isSymbol (wordToChr w)
-  || w == times
-  || w == dash
-  || w == amper
-  || w == colon
-  || w == div
-  || w == percent
+    || w == times
+    || w == dash
+    || w == amper
+    || w == colon
+    || w == div
+    || w == percent
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =
