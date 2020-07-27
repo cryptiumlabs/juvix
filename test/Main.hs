@@ -67,9 +67,9 @@ translationPasses =
     [ FrontendDesugar.allDesugar
     ]
 
-contractIdTests :: IO ()
-contractIdTests = do
-  parsed <- readFile $ "test/examples/Id-Strings.jvx"
+contractTests :: FilePath -> IO ()
+contractTests file = do
+  parsed <- readFile $ file
   let parsedIdString = Parser.parse (encodeUtf32BE parsed)
   case parsedIdString of
     Left s -> putStrLn s
@@ -78,4 +78,5 @@ contractIdTests = do
 main :: IO ()
 main = do
   T.defaultMain allCheckedTests
-  contractIdTests
+  contractTests "test/examples/Id-Strings.jvx"
+  contractTests "experimental/juvix/contract.jvx"
