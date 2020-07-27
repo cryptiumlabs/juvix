@@ -268,12 +268,15 @@ extensible
 
     data Primitive
       = Prim NameSymb
+      deriving (Show, Generic, NFData)
 
     data List
       = ListLit [Expression]
+      deriving (Show, Generic, NFData)
 
     data Tuple
       = TupleLit [Expression]
+      deriving (Show, Generic, NFData)
 
     data ArrowExp
       = Arr'
