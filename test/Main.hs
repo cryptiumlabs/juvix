@@ -6,11 +6,13 @@ import qualified Backends.Michelson as Michelson
 import qualified CoreConv
 import qualified CoreParser
 import qualified CoreTypechecker
+import Data.Text.Encoding (encodeUtf32BE)
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendDesugar
+import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
@@ -65,5 +67,15 @@ translationPasses =
     [ FrontendDesugar.allDesugar
     ]
 
+contractIdTests :: IO ()
+contractIdTests = do
+  parsed <- readFile $ "test/examples/Id-Strings.jvx"
+  let parsedIdString = Parser.parse (encodeUtf32BE parsed)
+  case parsedIdString of
+    Left s -> putStrLn s
+    Right _t -> return () -- if it's a top level then the test passes
+
 main :: IO ()
-main = T.defaultMain allCheckedTests
+main = do
+  T.defaultMain allCheckedTests
+  contractIdTests
