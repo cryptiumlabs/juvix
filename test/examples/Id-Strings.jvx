@@ -10,7 +10,7 @@ type storage = unit
 
 -- Default entry point
 sig default : string -> storage -> storage
-￼let default para storage = Pair [] storage
+￼let default para storage = pair [] storage
 
 -- Initialize storage to ().
 sig initStorage : storage
