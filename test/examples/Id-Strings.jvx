@@ -2,7 +2,7 @@
 
 let string = "%prim.string"
 
-let pair = "%pair"
+let pair = "%Michelson.pair"
 
 -- Identity contract for strings. 
 
@@ -13,5 +13,5 @@ sig default : string -> storage -> storage
 ￼let default para storage = pair [] storage
 
 -- Initialize storage to ().
-sig initStorage : storage
-let initStorage = ()
+sig init-storage : storage
+let init-storage = ()
