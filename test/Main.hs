@@ -73,7 +73,9 @@ contractTests file = do
   let parsedIdString = Parser.parse (encodeUtf32BE parsed)
   case parsedIdString of
     Left s -> putStrLn s
-    Right _t -> return () -- if it's a top level then the test passes
+    Right _t -> putStrLn $ "parsed " <> file
+
+-- putStr (show t) TODO make it show t
 
 main :: IO ()
 main = do
