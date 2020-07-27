@@ -128,7 +128,7 @@ transformDef (Context.Def usage mTy term prec) =
     <*> traverse transformFunctionLike term
     <*> pure prec
 transformDef (Context.Record contents mTy) =
-  Context.Record <$> (transformContextInner contents) <*> traverse transformSignature mTy
+  Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
 transformDef (Context.TypeDeclar repr) =
   Context.TypeDeclar <$> transformType repr
 transformDef (Context.Unknown mTy) =

@@ -4,9 +4,9 @@ module Juvix.FrontendContextualise.ModuleOpen.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as Old
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 
 -- Sadly for this pass we have to change every symbol affecting function
@@ -230,7 +230,6 @@ transformExpression (Old.Lambda l) = New.Lambda <$> transformLambda l
 transformExpression (Old.Application a) =
   New.Application <$> transformApplication a
 transformExpression (Old.Block b) = New.Block <$> transformBlock b
-transformExpression (Old.Infix i) = New.Infix <$> transformInfix i
 transformExpression (Old.ExpRecord i) = New.ExpRecord <$> transformExpRecord i
 transformExpression (Old.ArrowE i) = New.ArrowE <$> transformArrowExp i
 transformExpression (Old.NamedTypeE i) =
