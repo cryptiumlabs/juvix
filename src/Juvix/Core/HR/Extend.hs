@@ -1,9 +1,9 @@
 module Juvix.Core.HR.Extend where
 
-import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 
+extTerm :: p1 -> p2 -> IR.ExtTerm
 extTerm =
   \_primTy _primVal ->
     IR.defaultExtTerm
@@ -15,6 +15,7 @@ extTerm =
         IR.typeLet = Just [[t|Symbol|]]
       }
 
+extElim :: p1 -> p2 -> IR.ExtElim
 extElim =
   \_primTy _primVal ->
     IR.defaultExtElim

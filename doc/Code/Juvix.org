@@ -359,7 +359,6 @@ This module provides a default contract environment
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
-  + [[Core/Types]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson
@@ -552,9 +551,7 @@ This module provides a default contract environment
 **** Extend <<Erased/Extend>>
 - _Relies on_
   + [[HRAnn/Extend]]
-  + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Library]]
 **** Util
 - _Relies on_
   + [[Erased/Types]]
@@ -563,12 +560,9 @@ This module provides a default contract environment
 - _Relies on_
   + [[Erased/Extend]]
   + [[Erased/Types/Base]]
-  + [[HRAnn/Types]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
-  + [[Usage]]
   + [[Library]]
-  + [[HashMap]]
 ***** Base <<Erased/Types/Base>>
 - _Relies on_
   + [[IR/Types]]
@@ -638,7 +632,6 @@ This module provides a default contract environment
 **** Extend <<HR/Extend>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
   + [[Library]]
 **** Parser <<HR/Parser>>
 - _Relies on_
@@ -651,7 +644,6 @@ This module provides a default contract environment
   + [[HR/Extend]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
-  + [[Library]]
 *** HRAnn
 - _Relies on_
   + [[HRAnn/Erasure]]
@@ -665,7 +657,6 @@ This module provides a default contract environment
 **** Extend <<HRAnn/Extend>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<HRAnn/Types>>
@@ -673,8 +664,6 @@ This module provides a default contract environment
   + [[HRAnn/Extend]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
-  + [[Usage]]
-  + [[Library]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]

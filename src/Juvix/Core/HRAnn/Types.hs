@@ -4,12 +4,9 @@ module Juvix.Core.HRAnn.Types
   )
 where
 
-import qualified Extensible as Ext
 import Juvix.Core.HRAnn.Extend
 import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.Usage as Usage
-import Juvix.Library
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
 IR.extendTerm "Term" [] [t|T|] extTerm
