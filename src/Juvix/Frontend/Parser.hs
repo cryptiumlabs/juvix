@@ -97,7 +97,7 @@ expressionArguments =
     <|> universeSymbol
     -- We wrap this in a paren to avoid conflict
     -- with infixity that we don't know about at this phase!
-    <|> Types.Parened <$> parens (expressionGen all'')
+    <|> tupleParen
 
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
@@ -512,8 +512,20 @@ application = do
   pure (Types.App name args)
 
 --------------------------------------------------
--- Constants
+-- Literals
 --------------------------------------------------
+
+list :: Parser Types.List
+list = Types.ListLit <$> brackets (sepBy expression (skipLiner Lexer.comma))
+
+
+tupleParen :: Parser Types.Expression
+tupleParen = do
+  p <- parens (sepBy1 (expressionGen all'') (skipLiner Lexer.comma))
+  case p of
+    [] -> fail "doesn't happen"
+    [x] -> pure (Types.Parened x)
+    _ : _ -> pure (Types.Tuple (Types.TupleLit p))
 
 constant :: Parser Types.Constant
 constant = Types.Number <$> number <|> Types.String <$> string'
@@ -661,6 +673,9 @@ between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
 
 parens :: Parser p -> Parser p
 parens p = between Lexer.openParen p Lexer.closeParen
+
+brackets :: Parser p -> Parser p
+brackets p = between Lexer.openBracket p Lexer.closeBracket
 
 curly :: Parser p -> Parser p
 curly p = between Lexer.openCurly p Lexer.closeCurly

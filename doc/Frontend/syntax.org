@@ -165,6 +165,7 @@
                  | <number>
                  | <lambda>
                  | <tuple>
+                 | <list>
                  | <parens>
                  | <symbol>
                  ; This is useful for having nested do's or matchs
@@ -201,6 +202,11 @@
   do ::= <do-body>*
 
   do-body ::= <exprsesion> \; <expression>
+
+  list ::= [ <command-list>* ]
+
+  commad-list ::= <exprsesion> , <expression>
+
 
   tuple ::= ( <command-tuple>* )
 

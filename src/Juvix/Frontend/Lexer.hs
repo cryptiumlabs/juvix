@@ -1,7 +1,7 @@
 module Juvix.Frontend.Lexer where
 
 import qualified GHC.Unicode as Unicode
-import Juvix.Library hiding (maybe, option, takeWhile)
+import Juvix.Library hiding (maybe, option, takeWhile, div)
 
 charToWord8 :: Char -> Word8
 charToWord8 = fromIntegral . ord
@@ -45,20 +45,26 @@ openParen = charToWord8 '('
 closeParen :: Word8
 closeParen = charToWord8 ')'
 
+openCurly :: Word8
+openCurly = charToWord8 '{'
+
+closeCurly :: Word8
+closeCurly = charToWord8 '}'
+
+openBracket :: Word8
+openBracket = charToWord8 '['
+
+closeBracket :: Word8
+closeBracket = charToWord8 ']'
+
 backSlash :: Word8
 backSlash = charToWord8 '\\'
 
 quote :: Word8
 quote = charToWord8 '\''
 
-openCurly :: Word8
-openCurly = charToWord8 '{'
-
 pipe :: Word8
 pipe = charToWord8 '|'
-
-closeCurly :: Word8
-closeCurly = charToWord8 '}'
 
 equals :: Word8
 equals = charToWord8 '='
@@ -81,13 +87,25 @@ backtick = charToWord8 '`'
 newLine :: Word8
 newLine = charToWord8 '\n'
 
+div :: Word8
+div = charToWord8 '/'
+
+percent :: Word8
+percent = charToWord8 '%'
+
 validStartSymbol :: Word8 -> Bool
 validStartSymbol w =
   validStartSymbol' w || w == under
 
 validInfixSymbol :: Word8 -> Bool
 validInfixSymbol w =
-  Unicode.isSymbol (wordToChr w) || w == times || w == dash || w == amper || w == colon
+  Unicode.isSymbol (wordToChr w)
+  || w == times
+  || w == dash
+  || w == amper
+  || w == colon
+  || w == div
+  || w == percent
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =

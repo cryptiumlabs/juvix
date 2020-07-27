@@ -80,6 +80,12 @@ extendCond = defaultExtCond
 extendCondLogic :: ExtCondLogic
 extendCondLogic = defaultExtCondLogic
 
+extendList :: ExtList
+extendList = defaultExtList
+
+extendTuple :: ExtTuple
+extendTuple = defaultExtTuple
+
 extendConstant :: ExtConstant
 extendConstant = defaultExtConstant
 
