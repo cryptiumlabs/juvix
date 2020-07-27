@@ -10,6 +10,12 @@ extendType "Type" [] [t|T|] Ext.extendType
 
 extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
+extendList "List" [] [t|T|] Ext.extendList
+
+extendTuple "Tuple" [] [t|T|] Ext.extendTuple
+
+extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
+
 extendData "Data" [] [t|T|] Ext.extendData
 
 extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType

@@ -97,6 +97,9 @@ transformTopLevel Old.TypeClassInstance = pure New.TypeClassInstance
 
 transformExpression ::
   Env.WorkingMaps m => Old.Expression -> m New.Expression
+transformExpression (Old.Tuple t) = New.Tuple <$> transformTuple t
+transformExpression (Old.List t) = New.List <$> transformList t
+transformExpression (Old.Primitive t) = New.Primitive <$> transformPrim t
 transformExpression (Old.Constant c) = New.Constant <$> transformConst c
 transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
@@ -287,6 +290,18 @@ transformArrowExp (Old.Arr' left usage right) =
     <$> transformExpression left
     <*> transformExpression usage
     <*> transformExpression right
+
+transformPrim :: Env.WorkingMaps m => Old.Primitive -> m New.Primitive
+transformPrim (Old.Prim p) =
+  pure (New.Prim p)
+
+transformTuple :: Env.WorkingMaps m => Old.Tuple -> m New.Tuple
+transformTuple (Old.TupleLit t) =
+  New.TupleLit <$> traverse transformExpression t
+
+transformList :: Env.WorkingMaps m => Old.List -> m New.List
+transformList (Old.ListLit t) =
+  New.ListLit <$> traverse transformExpression t
 
 transformConst ::
   Env.WorkingMaps m => Old.Constant -> m New.Constant
