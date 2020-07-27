@@ -246,9 +246,10 @@ lookupGlobal ::
   InnerTC primTy primVal (IR.Value primTy primVal, IR.GlobalUsage)
 lookupGlobal x = do
   mdefn <- asks @"globals" $ HashMap.lookup x
+  globals <- ask @"globals"
   case mdefn of
     Just defn -> pure $ makeGAnn defn
-    Nothing -> throwTC (UnboundGlobal x)
+    Nothing -> throwTC (UnboundGlobal (intern $ show (x, HashMap.keys globals)))
   where
     makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
       (foldr makePi (IR.VStar dataLevel) dataArgs, IR.GZero)

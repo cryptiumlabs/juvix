@@ -168,7 +168,7 @@ test_tuple_swap_func =
   shouldCompileTo
     "tuple swap func"
     (HR.Elim (HR.Var "tuple_swap"), Usage.Omega, HR.Pi (Usage.SNat 1) "_" (HR.Elim (HR.Var "tuple")) (HR.Elim (HR.Var "tuple")))
-    (HM.insert "tuple_swap" (IR.GFunction tuple_swap_func) $ HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
+    (HM.insert "tuple_swap" (IR.GFunction tuple_swap_func) $ HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "Global MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
     (EmptyInstr (MT.PUSH (MT.VInt 2)))
 
 test_switch_case_func :: T.TestTree
@@ -176,7 +176,7 @@ test_switch_case_func =
   shouldCompileTo
     "switch case func"
     (HR.Elim (HR.Var "switch_case"), Usage.Omega, HR.Pi (Usage.SNat 1) "_" (HR.Elim (HR.Var "either")) (HR.Elim (HR.Var "either")))
-    (HM.insert "switch_case" (IR.GFunction switch_case_func) $ HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "MkRight" (IR.GDataCon rightCon) $ HM.insert "MkLeft" (IR.GDataCon leftCon) emptyGlobals)
+    (HM.insert "switch_case" (IR.GFunction switch_case_func) $ HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "Global MkRight" (IR.GDataCon rightCon) $ HM.insert "Global MkLeft" (IR.GDataCon leftCon) emptyGlobals)
     (EmptyInstr (MT.PUSH (MT.VInt 2)))
 
 tuple_swap_func :: IR.Function PrimTy PrimVal
