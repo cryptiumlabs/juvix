@@ -1,12 +1,4 @@
--- standard library functions
-
-let string = "%prim.string"
-
-let pair = "%Michelson.pair"
-
--- Identity contract for strings. 
-
-type storage = unit 
+let storage = storage 
 
 -- Default entry point
 sig default : string -> storage -> storage
@@ -14,4 +6,4 @@ sig default : string -> storage -> storage
 
 -- Initialize storage to ().
 sig init-storage : storage
-let init-storage = ()
+let init-storage = unit

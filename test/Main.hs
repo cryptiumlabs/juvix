@@ -7,14 +7,17 @@ import qualified CoreParser
 import qualified CoreTypechecker
 -- import qualified Juvix.Frontend.Parser as Parser
 
-import Data.Attoparsec.ByteString (IResult (..), many1, parse)
+import Data.Attoparsec.ByteString (IResult (..), Result, many1, parse)
+import Data.ByteString (pack, unpack)
 import Data.Text.Encoding (encodeUtf32BE)
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendDesugar
+import qualified Juvix.Frontend.Lexer as Lexer
 import Juvix.Frontend.Parser (removeComments, topLevelSN)
+import Juvix.Frontend.Types (TopLevel)
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
@@ -67,26 +70,24 @@ translationPasses =
     [ FrontendDesugar.allDesugar
     ]
 
+parseContract :: [Word8] -> Result [TopLevel]
+parseContract raw =
+  (parse (many1 topLevelSN) . removeComments) (pack (takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x) raw))
+
 contractTests :: FilePath -> IO ()
 contractTests file = do
   parsed <- readFile file
-  let parsedIdString = (parse (many1 topLevelSN) . removeComments) (encodeUtf32BE parsed)
-  case parsedIdString of
+  let rawContract = unpack $ encodeUtf32BE parsed
+  case parseContract rawContract of
     Fail i context error -> putStrLn $ "Fail" <> i <> show context <> show error
-    -- "Fail at input parameter right before "
-    -- show i
-    -- <> ". In the list of context "
-    -- <> context
-    -- <> ". With the error message of "
-    -- <> error
     Done _i r ->
       putStrLn $
         ("Success" :: ByteString)
           <> show r
-    _ -> putStrLn ("partial" :: ByteString)
+    Partial _i -> putStrLn ("partial" :: ByteString) -- TODO <> (i "")
 
 main :: IO ()
 main = do
   --T.defaultMain allCheckedTests
   contractTests "test/examples/Id-Strings.jvx"
-  contractTests "experimental/juvix/contract.jvx"
+-- contractTests "experimental/juvix/contract.jvx"
