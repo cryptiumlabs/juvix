@@ -5,8 +5,6 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
-import Data.Foldable (foldr1)
-import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap.Strict as IntMap
 import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.IR.Evaluator as Eval
@@ -86,10 +84,10 @@ withLeftovers m =
     <*> fmap (fmap annUsage) (get @"patBinds")
 
 typeTerm' ::
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal, CanInnerTC primTy primVal m) =>
   IR.Term primTy primVal ->
   Annotation primTy primVal ->
-  InnerTC primTy primVal (Typed.Term primTy primVal)
+  m (Typed.Term primTy primVal)
 typeTerm' term ann@(Annotation σ ty) =
   case term of
     IR.Star i -> do
@@ -131,10 +129,10 @@ typeTerm' term ann@(Annotation σ ty) =
       pure $ Typed.Elim e' ann
 
 typeElim' ::
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal, CanInnerTC primTy primVal m) =>
   IR.Elim primTy primVal ->
   Usage.T ->
-  InnerTC primTy primVal (Typed.Elim primTy primVal)
+  m (Typed.Elim primTy primVal)
 typeElim' elim σ =
   case elim of
     IR.Bound i -> do
@@ -161,10 +159,10 @@ typeElim' elim σ =
       s' <- typeTerm' s ann
       pure $ Typed.Ann π s' a' ℓ ann
 
-pushLocal :: Annotation primTy primVal -> InnerTC primTy primVal ()
+pushLocal :: HasBound primTy primVal m => Annotation primTy primVal -> m ()
 pushLocal ann = modify @"bound" (ann :)
 
-popLocal :: InnerTC primTy primVal ()
+popLocal :: (HasBound primTy primVal m, HasThrowTC primTy primVal m) => m ()
 popLocal = do
   ctx <- get @"bound"
   case ctx of
@@ -175,19 +173,22 @@ popLocal = do
       throwTC (UnboundIndex 0)
 
 withLocal ::
+  (HasBound primTy primVal m, HasThrowTC primTy primVal m) =>
   Annotation primTy primVal ->
-  InnerTC primTy primVal a ->
-  InnerTC primTy primVal a
+  m a -> m a
 withLocal ann m = pushLocal ann *> m <* popLocal
 
-requireZero :: Usage.T -> InnerTC primTy primVal ()
+requireZero :: HasThrowTC primTy primVal m
+            => Usage.T -> m ()
 requireZero π = unless (π == mempty) $ throwTC (UsageMustBeZero π)
 
-requireStar :: IR.Value primTy primVal -> InnerTC primTy primVal IR.Universe
+requireStar :: HasThrowTC primTy primVal m
+            => IR.Value primTy primVal -> m IR.Universe
 requireStar (IR.VStar j) = pure j
 requireStar ty = throwTC (ShouldBeStar ty)
 
-requireUniverseLT :: IR.Universe -> IR.Universe -> InnerTC primTy primVal ()
+requireUniverseLT :: HasThrowTC primTy primVal m
+                  => IR.Universe -> IR.Universe -> m ()
 requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
 
 requirePrimType ::
@@ -211,24 +212,26 @@ type PiParts primTy primVal =
   (Usage.T, IR.Value primTy primVal, IR.Value primTy primVal)
 
 requirePi ::
+  HasThrowTC primTy primVal m =>
   IR.Value primTy primVal ->
-  InnerTC primTy primVal (PiParts primTy primVal)
+  m (PiParts primTy primVal)
 requirePi (IR.VPi π a b) = pure (π, a, b)
 requirePi ty = throwTC (ShouldBeFunctionType ty)
 
 requireSubtype ::
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal, HasThrowTC primTy primVal m) =>
   IR.Elim primTy primVal ->
   IR.Value primTy primVal ->
   IR.Value primTy primVal ->
-  InnerTC primTy primVal ()
+  m ()
 requireSubtype subj exp got =
   unless (got <: exp) $ throwTC (TypeMismatch subj exp got)
 
 useLocal ::
+  (HasBound primTy primVal m, HasThrowTC primTy primVal m) =>
   Usage.T ->
   IR.BoundVar ->
-  InnerTC primTy primVal (IR.Value primTy primVal)
+  m (IR.Value primTy primVal)
 useLocal π var = do
   ctx <- get @"bound"
   (ty, ctx) <- go 1 var ctx
@@ -243,9 +246,10 @@ useLocal π var = do
     go w i (b : ctx) = second (b :) <$> go (w + 1) (i - 1) ctx
 
 usePatVar ::
+  (HasPatBinds primTy primVal m, HasThrowTC primTy primVal m) =>
   Usage.T ->
   IR.PatternVar ->
-  InnerTC primTy primVal (IR.Value primTy primVal)
+  m (IR.Value primTy primVal)
 usePatVar π var = do
   -- TODO a single traversal with alterF or something
   mAnn <- gets @"patBinds" $ IntMap.lookup var
@@ -259,37 +263,20 @@ usePatVar π var = do
     Nothing -> do
       throwTC (UnboundPatVar var)
 
-lookupGlobal ::
-  IR.GlobalName ->
-  InnerTC primTy primVal (IR.Value primTy primVal, IR.GlobalUsage)
-lookupGlobal x = do
-  mdefn <- asks @"globals" $ HashMap.lookup x
-  case mdefn of
-    Just defn -> pure $ makeGAnn defn
-    Nothing -> throwTC (UnboundGlobal x)
-  where
-    makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
-      (foldr makePi (IR.VStar dataLevel) dataArgs, IR.GZero)
-    makeGAnn (GDataCon (IR.DataCon {conType})) =
-      (conType, IR.GOmega)
-    makeGAnn (GFunction (IR.Function {funType, funUsage})) =
-      (funType, funUsage)
-    makeGAnn (GAbstract absUsage absType) =
-      (absType, absUsage)
-    makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
-
 substApp ::
+  (HasParam primTy primVal m, HasThrowTC primTy primVal m) =>
   IR.Value primTy primVal ->
   IR.Term primTy primVal ->
-  InnerTC primTy primVal (IR.Value primTy primVal)
+  m (IR.Value primTy primVal)
 substApp ty arg = do
   arg' <- evalTC arg
   param <- ask @"param"
   Eval.substV param arg' ty
 
 evalTC ::
+  (HasParam primTy primVal m, HasThrowTC primTy primVal m) =>
   IR.Term primTy primVal ->
-  InnerTC primTy primVal (IR.Value primTy primVal)
+  m (IR.Value primTy primVal)
 evalTC t = do
   param <- ask @"param"
   Eval.evalTerm param t

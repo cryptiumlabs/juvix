@@ -1,50 +1,68 @@
 module Juvix.Core.IR.Typechecker.Env where
 
+import Data.Foldable (foldr1) -- (on a NonEmpty)
 import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
 
-data EnvCtx primTy primVal
+data EnvCtx' ext primTy primVal
   = EnvCtx
-      { globals :: Globals primTy primVal
+      { globals :: Globals' ext primTy primVal
       }
-  deriving (Show, Eq, Generic)
+  deriving Generic
 
-type Globals primTy primVal =
-  HashMap IR.GlobalName (Global primTy primVal)
+type EnvCtx = EnvCtx' IR.NoExt
 
-data Global primTy primVal
-  = GDatatype (IR.Datatype primTy primVal)
-  | GDataCon (IR.DataCon primTy primVal)
-  | GFunction (IR.Function primTy primVal)
-  | GAbstract IR.GlobalUsage (IR.Value primTy primVal)
-  deriving (Show, Eq, Generic)
+type Globals' ext primTy primVal =
+  HashMap IR.GlobalName (Global' ext primTy primVal)
 
-type EnvAlias primTy primVal =
+type Globals primTy primVal = Globals' IR.NoExt primTy primVal
+
+data Global' ext primTy primVal
+  = GDatatype (IR.Datatype' ext primTy primVal)
+  | GDataCon (IR.DataCon' ext primTy primVal)
+  | GFunction (IR.Function' ext primTy primVal)
+  | GAbstract IR.GlobalUsage (IR.Value' ext primTy primVal)
+  deriving ({-Show, Eq,-} Generic)
+
+type Global = Global' IR.NoExt
+
+type EnvAlias' ext primTy primVal =
   ExceptT
-    (TypecheckError primTy primVal)
-    (State (EnvCtx primTy primVal))
+    (TypecheckError' ext primTy primVal)
+    (State (EnvCtx' ext primTy primVal))
 
-newtype EnvTypecheck primTy primVal a = EnvTyp (EnvAlias primTy primVal a)
+newtype EnvTypecheck' ext primTy primVal a =
+    EnvTyp (EnvAlias' ext primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasThrow "typecheckError" (TypecheckError primTy primVal)
+    ( HasThrow "typecheckError" (TypecheckError' ext primTy primVal)
     )
-    via MonadError (EnvAlias primTy primVal)
+    via MonadError (EnvAlias' ext primTy primVal)
   deriving
-    ( HasSink "globals" (Globals primTy primVal),
-      HasState "globals" (Globals primTy primVal)
+    ( HasSource "globals" (Globals' ext primTy primVal),
+      HasReader "globals" (Globals' ext primTy primVal)
     )
-    via StateField "globals" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "globals" (Globals primTy primVal),
-      HasReader "globals" (Globals primTy primVal)
-    )
-    via ReaderField "globals" (EnvAlias primTy primVal)
+    via ReaderField "globals" (EnvAlias' ext primTy primVal)
+
+type EnvTypecheck = EnvTypecheck' IR.NoExt
+
+type HasGlobals' ext primTy primVal =
+  HasReader "globals" (Globals' ext primTy primVal)
+
+type HasGlobals primTy primVal = HasGlobals' IR.NoExt primTy primVal
+
+type CanTC' ext primTy primVal m =
+  (HasThrowTC' ext primTy primVal m,
+   HasGlobals' ext primTy primVal m)
+
+type CanTC primTy primVal m = CanTC' IR.NoExt primTy primVal m
 
 exec ::
   Globals primTy primVal ->
@@ -53,70 +71,126 @@ exec ::
 exec globals (EnvTyp env) =
   runState (runExceptT env) $ EnvCtx globals
 
-type Context primTy primVal = [Annotation primTy primVal]
+type Context' ext primTy primVal = [Annotation' ext primTy primVal]
+type Context primTy primVal = Context' IR.NoExt primTy primVal
 
 lookupCtx ::
-  Context primTy primVal ->
+  (IR.ValueAll Eval.HasWeak ext primTy primVal,
+   IR.NeutralAll Eval.HasWeak ext primTy primVal) =>
+  Context' ext primTy primVal ->
   IR.BoundVar ->
-  Maybe (Annotation primTy primVal)
+  Maybe (Annotation' ext primTy primVal)
 lookupCtx gam x = do
   Annotation π ty <- atMay gam (fromIntegral x)
   pure $ Annotation π (Eval.weakBy (x + 1) ty)
 
+lookupGlobal ::
+  (HasGlobals primTy primVal m, HasThrowTC primTy primVal m) =>
+  IR.GlobalName ->
+  m (IR.Value primTy primVal, IR.GlobalUsage)
+lookupGlobal x = do
+  mdefn <- asks @"globals" $ HashMap.lookup x
+  case mdefn of
+    Just defn -> pure $ makeGAnn defn
+    Nothing -> throwTC (UnboundGlobal x)
+  where
+    makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
+      (foldr makePi (IR.VStar' dataLevel mempty) dataArgs, IR.GZero)
+    makeGAnn (GDataCon (IR.DataCon {conType})) =
+      (conType, IR.GOmega)
+    makeGAnn (GFunction (IR.Function {funType, funUsage})) =
+      (funType, funUsage)
+    makeGAnn (GAbstract absUsage absType) =
+      (absType, absUsage)
+    makePi (IR.DataArg {argUsage, argType}) res =
+      IR.VPi' argUsage argType res mempty
+
+primType :: HasReader "param" (Param.Parameterisation primTy primVal) m
+         => primVal -> m (IR.Value primTy primVal)
+primType v = do
+  asks @"param" \param ->
+    Param.typeOf param v
+      |> fmap IR.VPrimTy
+      |> foldr1 (IR.VPi Usage.Omega)
+
 type UContext primTy primVal = [Usage.T]
 
-type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
+type PatBinds' ext primTy primVal = IntMap (Annotation' ext primTy primVal)
+type PatBinds primTy primVal = PatBinds' IR.NoExt primTy primVal
 
 type PatUsages primTy primVal = IntMap Usage.T
 
-data InnerState primTy primVal
+data InnerState' ext primTy primVal
   = InnerState
       { param :: Param.Parameterisation primTy primVal,
-        patBinds :: PatBinds primTy primVal,
-        bound :: Context primTy primVal
+        patBinds :: PatBinds' ext primTy primVal,
+        bound :: Context' ext primTy primVal
       }
   deriving (Generic)
 
-type InnerTCAlias primTy primVal =
-  StateT (InnerState primTy primVal) (EnvTypecheck primTy primVal)
+type InnerState = InnerState' IR.NoExt
 
-newtype InnerTC primTy primVal a
-  = InnerTC {unInnerTC :: InnerTCAlias primTy primVal a}
+type InnerTCAlias' ext primTy primVal =
+  StateT (InnerState' ext primTy primVal) (EnvTypecheck' ext primTy primVal)
+
+newtype InnerTC' ext primTy primVal a =
+    InnerTC (InnerTCAlias' ext primTy primVal a)
   deriving newtype (Functor, Applicative, Monad)
   deriving
-    ( HasThrow "typecheckError" (TypecheckError primTy primVal),
-      HasSink "globals" (Globals primTy primVal),
-      HasState "globals" (Globals primTy primVal),
-      HasSource "globals" (Globals primTy primVal),
-      HasReader "globals" (Globals primTy primVal)
+    ( HasThrow "typecheckError" (TypecheckError' ext primTy primVal),
+      HasSource "globals" (Globals' ext primTy primVal),
+      HasReader "globals" (Globals' ext primTy primVal)
     )
-    via Lift (InnerTCAlias primTy primVal)
+    via Lift (InnerTCAlias' ext primTy primVal)
   deriving
     ( HasSource "param" (Param.Parameterisation primTy primVal),
       HasReader "param" (Param.Parameterisation primTy primVal)
     )
-    via ReaderField "param" (InnerTCAlias primTy primVal)
+    via ReaderField "param" (InnerTCAlias' ext primTy primVal)
   deriving
-    ( HasSource "patBinds" (PatBinds primTy primVal),
-      HasSink "patBinds" (PatBinds primTy primVal),
-      HasState "patBinds" (PatBinds primTy primVal)
+    ( HasSource "patBinds" (PatBinds' ext primTy primVal),
+      HasSink "patBinds" (PatBinds' ext primTy primVal),
+      HasState "patBinds" (PatBinds' ext primTy primVal)
     )
-    via StateField "patBinds" (InnerTCAlias primTy primVal)
+    via StateField "patBinds" (InnerTCAlias' ext primTy primVal)
   deriving
-    ( HasSource "bound" (Context primTy primVal),
-      HasSink "bound" (Context primTy primVal),
-      HasState "bound" (Context primTy primVal)
+    ( HasSource "bound" (Context' ext primTy primVal),
+      HasSink "bound" (Context' ext primTy primVal),
+      HasState "bound" (Context' ext primTy primVal)
     )
-    via StateField "bound" (InnerTCAlias primTy primVal)
+    via StateField "bound" (InnerTCAlias' ext primTy primVal)
+
+type InnerTC = InnerTC' IR.NoExt
+
+type HasParam primTy primVal =
+  HasReader "param" (Param.Parameterisation primTy primVal)
+
+type HasPatBinds' ext primTy primVal =
+  HasState "patBinds" (PatBinds' ext primTy primVal)
+
+type HasPatBinds primTy primVal = HasPatBinds' IR.NoExt primTy primVal
+
+type HasBound' ext primTy primVal =
+  HasState "bound" (Context' ext primTy primVal)
+
+type HasBound primTy primVal = HasBound' IR.NoExt primTy primVal
+
+type CanInnerTC' ext primTy primVal m =
+  (CanTC' ext primTy primVal m,
+   HasParam primTy primVal m,
+   HasPatBinds' ext primTy primVal m,
+   HasBound' ext primTy primVal m)
+
+type CanInnerTC primTy primVal m = CanInnerTC' IR.NoExt primTy primVal m
 
 execInner ::
-  InnerTC primTy primVal a ->
-  InnerState primTy primVal ->
-  EnvTypecheck primTy primVal a
+  InnerTC' ext primTy primVal a ->
+  InnerState' ext primTy primVal ->
+  EnvTypecheck' ext primTy primVal a
 execInner (InnerTC m) = evalStateT m
 
 execInner' ::
-  InnerTC primTy primVal a ->
-  InnerState primTy primVal ->
-  EnvTypecheck primTy primVal (a, InnerState primTy primVal)
+  InnerTC' ext primTy primVal a ->
+  InnerState' ext primTy primVal ->
+  EnvTypecheck' ext primTy primVal (a, InnerState' ext primTy primVal)
 execInner' (InnerTC m) = runStateT m
