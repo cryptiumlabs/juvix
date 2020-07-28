@@ -1,15 +1,21 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module CoreTypechecker where
 
+import qualified Data.HashMap.Strict as HM
+import qualified Juvix.Backends.Michelson.Parameterisation as Michelson
+import Juvix.Backends.Michelson.Parameterisation (PrimTy (..), PrimVal (..))
+import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
+import Juvix.Core.Translate
 import Juvix.Core.Types
 import qualified Juvix.Core.Usage as Usage
-import Juvix.Library hiding (identity)
+import Juvix.Library hiding (bool, identity)
 import Juvix.Library.HashMap as Map
+import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -137,7 +143,8 @@ coreCheckerEval =
       letComp,
       evaluations,
       skiCont,
-      subtype
+      subtype,
+      patternMatches
     ]
 
 skiComp :: T.TestTree
@@ -239,6 +246,96 @@ subtype =
     ]
   where
     typ2typ i j = IR.VPi mempty (IR.VStar i) (IR.VStar j)
+
+patternMatches :: T.TestTree
+patternMatches =
+  T.testGroup
+    "Pattern matches"
+    [ test_tuple_swap_func,
+      test_switch_case_func
+    ]
+
+test_tuple_swap_func :: T.TestTree
+test_tuple_swap_func =
+  shouldCheckWith
+    Michelson.michelson
+    (HM.insert "tuple_swap" (IR.GFunction tuple_swap_func) $ HM.insert "tuple" (IR.GDatatype tupleTy) $ HM.insert "Global MkTuple" (IR.GDataCon tupleCon) emptyGlobals)
+    []
+    (IR.Elim (IR.Free (IR.Global "tuple_swap")))
+    (Usage.Omega `ann` IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "tuple"))) (IR.VNeutral (IR.NFree (IR.Global "tuple"))))
+
+test_switch_case_func :: T.TestTree
+test_switch_case_func =
+  shouldCheckWith
+    Michelson.michelson
+    (HM.insert "switch_case" (IR.GFunction switch_case_func) $ HM.insert "either" (IR.GDatatype eitherTy) $ HM.insert "Global MkRight" (IR.GDataCon rightCon) $ HM.insert "Global MkLeft" (IR.GDataCon leftCon) emptyGlobals)
+    []
+    (IR.Elim (IR.Free (IR.Global "switch_case")))
+    (Usage.Omega `ann` IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "either"))) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+
+tuple_swap_func :: IR.Function PrimTy PrimVal
+tuple_swap_func =
+  IR.Function
+    "tuple_swap"
+    IR.GOmega
+    (IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "tuple"))) (IR.VNeutral (IR.NFree (IR.Global "tuple"))))
+    ( IR.FunClause [IR.PCon "MkTuple" [IR.PVar 0, IR.PVar 1]] (IR.Elim (IR.App (IR.App (IR.Free (IR.Global "MkTuple")) (IR.Elim (IR.Free (IR.Pattern 1)))) (IR.Elim (IR.Free (IR.Pattern 0)))))
+        :| []
+    )
+
+switch_case_func :: IR.Function PrimTy PrimVal
+switch_case_func =
+  IR.Function
+    "switch_case"
+    IR.GOmega
+    (IR.VPi (Usage.SNat 1) (IR.VNeutral (IR.NFree (IR.Global "either"))) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+    ( IR.FunClause [IR.PCon "MkLeft" [IR.PVar 0]] (IR.Elim (IR.App (IR.Free (IR.Global "MkRight")) (hrToIR boolTerm)))
+        :| [ IR.FunClause [IR.PCon "MkRight" [IR.PVar 0]] (IR.Elim (IR.App (IR.Free (IR.Global "MkLeft")) (hrToIR twoTerm)))
+           ]
+    )
+
+twoTerm :: HR.Term PrimTy PrimVal
+twoTerm = HR.Elim (HR.Prim (Michelson.Constant (M.ValueInt 2)))
+
+boolTerm :: HR.Term PrimTy PrimVal
+boolTerm = HR.Elim (HR.Prim (Michelson.Constant (M.ValueFalse)))
+
+intTy :: HR.Term PrimTy PrimVal
+intTy = HR.PrimTy int
+
+int :: PrimTy
+int = PrimTy (M.Type M.TInt "")
+
+emptyGlobals :: TC.Globals PrimTy PrimVal
+emptyGlobals = mempty
+
+tupleTy :: IR.Datatype PrimTy PrimVal
+tupleTy =
+  IR.Datatype
+    "tuple"
+    []
+    0
+    [tupleCon]
+
+tupleCon :: IR.DataCon PrimTy PrimVal
+tupleCon = IR.DataCon "MkTuple" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "tuple")))))
+
+eitherTy :: IR.Datatype PrimTy PrimVal
+eitherTy =
+  IR.Datatype
+    "either"
+    []
+    0
+    [leftCon, rightCon]
+
+leftCon :: IR.DataCon PrimTy PrimVal
+leftCon = IR.DataCon "MkLeft" (IR.VPi (Usage.SNat 1) (IR.VPrimTy int) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+
+rightCon :: IR.DataCon PrimTy PrimVal
+rightCon = IR.DataCon "MkRight" (IR.VPi (Usage.SNat 1) (IR.VPrimTy bool) (IR.VNeutral (IR.NFree (IR.Global "either"))))
+
+bool :: PrimTy
+bool = PrimTy (M.Type M.TBool "")
 
 -- \x. x
 identity :: forall primTy primVal. IR.Term primTy primVal
