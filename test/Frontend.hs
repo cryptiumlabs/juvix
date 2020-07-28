@@ -2,11 +2,8 @@ module Frontend where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
-import Data.Text.Encoding (encodeUtf32BE)
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types
 import Juvix.Library hiding (show)
-import System.IO.Unsafe (unsafePerformIO)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String, show)
