@@ -79,12 +79,24 @@ contractTests file = do
   parsed <- readFile file
   let rawContract = unpack $ encodeUtf32BE parsed
   case parseContract rawContract of
-    Fail i context error -> putStrLn $ "Fail" <> i <> show context <> show error
-    Done _i r ->
+    Fail i context error ->
+      putStrLn $ "Fail" <> i <> show context <> show error
+    Done i r ->
       putStrLn $
         ("Success" :: ByteString)
+          <> i
           <> show r
-    Partial _i -> putStrLn ("partial" :: ByteString) -- TODO <> (i "")
+    Partial cont -> do
+      putStrLn ("partial" :: ByteString)
+      case (cont "") of
+        Done i r ->
+          putStrLn $
+            ("Success (after partial) " :: ByteString)
+              <> i
+              <> show r
+        Fail i context error ->
+          putStrLn $ "Fail (after partial) " <> i <> show context <> show error
+        Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
 
 main :: IO ()
 main = do

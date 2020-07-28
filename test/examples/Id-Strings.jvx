@@ -1,4 +1,13 @@
-let storage = storage 
+-- standard library functions
+
+let string = %Michelson.string
+
+let pair = %Michelson.pair
+
+let unit = %Param.unit
+
+-- Identity contract for strings. 
+let storage = unit
 
 -- Default entry point
 sig default : string -> storage -> storage
