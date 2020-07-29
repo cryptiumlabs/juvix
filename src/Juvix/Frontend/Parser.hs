@@ -26,7 +26,7 @@ import Prelude (String, fail)
 -- Top Level Runner
 --------------------------------------------------------------------------------
 parse :: ByteString -> Either String [Types.TopLevel]
-parse = parseOnly (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
+parse = parseOnly (eatSpaces (many topLevelSN <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
