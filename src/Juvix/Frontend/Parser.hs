@@ -26,7 +26,7 @@ import Prelude (String, fail)
 -- Top Level Runner
 --------------------------------------------------------------------------------
 parse :: ByteString -> Either String [Types.TopLevel]
-parse = parseOnly (many topLevelSN) . removeComments
+parse = parseOnly (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -670,6 +670,9 @@ maybe = optional
 
 spacer :: Parser p -> Parser p
 spacer p = p <* takeWhile (Lexer.space ==)
+
+eatSpaces :: Parser p -> Parser p
+eatSpaces p = takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x) *> p
 
 spaceLiner :: Parser p -> Parser p
 spaceLiner p = p <* takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x)
