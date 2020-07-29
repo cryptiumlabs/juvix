@@ -7,17 +7,14 @@ import qualified CoreParser
 import qualified CoreTypechecker
 -- import qualified Juvix.Frontend.Parser as Parser
 
-import Data.Attoparsec.ByteString (IResult (..), Result, many1, parse)
-import Data.ByteString (pack, unpack)
+import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
 import Data.Text.Encoding (encodeUtf32BE)
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendDesugar
-import qualified Juvix.Frontend.Lexer as Lexer
-import Juvix.Frontend.Parser (removeComments, topLevelSN)
-import Juvix.Frontend.Types (TopLevel)
+import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
@@ -70,15 +67,11 @@ translationPasses =
     [ FrontendDesugar.allDesugar
     ]
 
-parseContract :: [Word8] -> Result [TopLevel]
-parseContract raw =
-  (parse (many1 topLevelSN) . removeComments) (pack (takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x) raw))
-
 contractTests :: FilePath -> IO ()
 contractTests file = do
   parsed <- readFile file
-  let rawContract = unpack $ encodeUtf32BE parsed
-  case parseContract rawContract of
+  let rawContract = "let string = %Michelson.string" --encodeUtf32BE parsed
+  case Parser.parse rawContract of
     Fail i context error ->
       putStrLn $ "Fail" <> i <> show context <> show error
     Done i r ->
@@ -88,7 +81,7 @@ contractTests file = do
           <> show r
     Partial cont -> do
       putStrLn ("partial" :: ByteString)
-      case (cont "") of
+      case cont "" of
         Done i r ->
           putStrLn $
             ("Success (after partial) " :: ByteString)
@@ -98,6 +91,8 @@ contractTests file = do
           putStrLn $ "Fail (after partial) " <> i <> show context <> show error
         Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
 
+-- Left s -> putStrLn $ "Failed " <> s
+-- Right t -> putStrLn $ "parsed " <> file <> show t
 main :: IO ()
 main = do
   --T.defaultMain allCheckedTests

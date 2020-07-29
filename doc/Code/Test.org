@@ -81,9 +81,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Graph]]
 * Main
 - _Relies on_
-  + [[Lexer]]
   + [[Parser]]
-  + [[Types]]
   + [[Library]]
 * Pipeline
 - _Relies on_

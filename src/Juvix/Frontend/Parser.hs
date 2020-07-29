@@ -25,8 +25,11 @@ import Prelude (String, fail)
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
-parse :: ByteString -> Either String [Types.TopLevel]
-parse = parseOnly (eatSpaces (many topLevelSN <* endOfInput)) . removeComments
+parse :: ByteString -> Result [Types.TopLevel]
+parse =
+  Data.Attoparsec.ByteString.parse
+    (eatSpaces (many1 topLevelSN <* endOfInput))
+    . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
