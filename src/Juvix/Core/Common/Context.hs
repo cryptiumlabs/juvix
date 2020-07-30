@@ -17,22 +17,14 @@ import Control.Lens
 import qualified Data.HashSet as Set
 import qualified Data.Text as Text
 import Juvix.Core.Common.Context.Precedence
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
 
--- TODO :: Put protected here
-data NameSapce b
-  = NameSpace
-    { public :: HashMap.T Symbol b
-    , private :: HashMap.T Symbol b
-    }
-  deriving (Show)
-
-
 data Cont b
   = T
-    { currentNameSpace :: NameSapce b
+    { currentNameSpace :: NameSpace.T b
     , currentName :: Symbol
     , topLevelMap :: HashMap.T Symbol b
     }
@@ -51,7 +43,7 @@ data Definition term ty sumRep
         precedence :: Precedence
       }
   | Record
-      { definitionContents :: NameSapce (Definition term ty sumRep),
+      { definitionContents :: NameSpace.T (Definition term ty sumRep),
         -- Maybe as I'm not sure what to put here for now
         definitionMTy :: Maybe ty
       }
@@ -67,7 +59,7 @@ data Definition term ty sumRep
 makeLensesWith camelCaseFields ''Definition
 
 empty :: Symbol -> Cont b
-empty sym = T { currentNameSpace = NameSpace HashMap.empty HashMap.empty
+empty sym = T { currentNameSpace = NameSpace.empty
           , currentName = sym
           , topLevelMap = HashMap.empty
           }
@@ -77,7 +69,7 @@ empty sym = T { currentNameSpace = NameSpace HashMap.empty HashMap.empty
 -- foldr (\x y -> x . contents . T  . y) identity brokenKey
 -- replace the recursive function with that
 lookup :: Symbol -> T term ty sumRep -> Maybe (Definition term ty sumRep)
-lookup key (T map) =
+lookup key T {currentNameSpace, topLevelMap} =
   let textKey = textify key
       brokenKey = Text.splitOn "." textKey
       --
@@ -85,29 +77,34 @@ lookup key (T map) =
         Nothing
       recurse [] x =
         x
-      recurse (x : xs) (Just (Record (T contents) _)) =
-        recurse xs (HashMap.lookup x contents)
+      recurse (x : xs) (Just (Record namespace _)) =
+        recurse xs (NameSpace.lookup x namespace)
       recurse (_ : _) _ =
         Nothing
    in case brokenKey >>| internText of
         x : xs ->
-          recurse xs (HashMap.lookup x map)
+          recurse
+            xs
+            (NameSpace.lookup x currentNameSpace <|> HashMap.lookup x topLevelMap)
         [] ->
           Nothing -- this case never happens
 
 (!?) :: T term ty sumRep -> Symbol -> Maybe (Definition term ty sumRep)
 (!?) = flip lookup
 
+-- TODO ∷ Maybe change
+-- By default add adds it to the public map by default!
 add ::
   Symbol ->
   Definition term ty sumRep ->
   T term ty sumRep ->
   T term ty sumRep
-add sy term (T map) = T $ HashMap.insert sy term map
+add sy term t =
+  t { currentNameSpace = NameSpace.insPublic sy term (currentNameSpace t)}
 
 remove ::
   Symbol -> T term ty sumRep -> T term ty sumRep
-remove sy (T map) = T $ HashMap.delete sy map
+remove sy t = t { currentNameSpace = NameSpace.remove sy (currentNameSpace t) }
 
 modify,
   update ::

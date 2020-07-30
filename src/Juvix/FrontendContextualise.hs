@@ -22,8 +22,8 @@ data Error
 contextualize :: [Initial.TopLevel] -> Either Error Target.FinalContext
 contextualize arg =
   case Module.transformContext (Contextify.contextify arg) of
-    Left err -> Left (InfixErr err)
+    Left err -> Left (ModuleErr err)
     Right xs ->
       case Infix.transformContext xs of
-        Left err -> Left (ModuleErr err)
+        Left err -> Left (InfixErr err)
         Right xs -> Right xs
