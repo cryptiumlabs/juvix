@@ -21,15 +21,27 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
 
-newtype Cont b
-  = T (HashMap.T Symbol b)
-  deriving (Show, Traversable)
-  deriving (Functor) via HashMap.T Symbol
-  deriving (Foldable) via HashMap.T Symbol
-  deriving (Generic)
+-- TODO :: Put protected here
+data NameSapce b
+  = NameSpace
+    { public :: HashMap.T Symbol b
+    , private :: HashMap.T Symbol b
+    }
+
+
+data Cont b
+  = T
+    { currentNameSpace :: NameSapce b
+    , currentName :: Symbol
+    , topLevelMap :: HashMap.T Symbol b
+    }
+  deriving (Show)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
+-- TODO :: make known records that are already turned into core
+-- this will just emit the proper names we need, not any terms to translate
+-- once we hit core, we can then populate it with the actual forms
 data Definition term ty sumRep
   = Def
       { definitionUsage :: Maybe Usage.T,
@@ -38,7 +50,7 @@ data Definition term ty sumRep
         precedence :: Precedence
       }
   | Record
-      { definitionContents :: T term ty sumRep,
+      { definitionContents :: NameSpace (Definition term ty sumRep,)
         -- Maybe as I'm not sure what to put here for now
         definitionMTy :: Maybe ty
       }
