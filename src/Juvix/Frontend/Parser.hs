@@ -33,10 +33,15 @@ parse = parseOnly (eatSpaces (many topLevelSN <* endOfInput)) . removeComments
 --------------------------------------------------------------------------------
 
 removeComments :: ByteString -> ByteString
-removeComments = ByteString.concat . grabCommentsFirst
+removeComments = ByteString.concat . grabCommentsFirst . removeStart
   where
     onBreakDo _break _con "" = []
     onBreakDo break cont str = break str |> cont
+    -- TODO ∷ Make faster
+    removeStart str = f (breakCommentStart str)
+      where
+        f ("", comment) = dropNewLine comment
+        f _ = str
     --
     grabCommentsFirst = breakComment `onBreakDo` f
       where
@@ -60,6 +65,9 @@ breakNewLineComment = ByteString.breakSubstring "\n-- "
 
 breakComment :: ByteString -> (ByteString, ByteString)
 breakComment = ByteString.breakSubstring " -- "
+
+breakCommentStart :: ByteString -> (ByteString, ByteString)
+breakCommentStart = ByteString.breakSubstring "-- "
 
 --------------------------------------------------------------------------------
 -- Top Level
