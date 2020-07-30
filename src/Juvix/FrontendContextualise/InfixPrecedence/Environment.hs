@@ -10,7 +10,7 @@ import qualified Juvix.Core.Common.Context as Context
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
 import Juvix.Library
 
 type Old f =

@@ -835,8 +835,8 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
 ** FrontendContextualise
 - order of Passes
-  1. =InfixPrecedence=
-  2. =ModuleOpen=
+  1. =ModuleOpen=
+  2. =InfixPrecedence=
 - _Relies on_
   + [[Contextify/Transform]]
   + [[InfixPrecedence/Environment]]
@@ -857,31 +857,6 @@ Quantitative type implementation inspired by
   + [[RemoveDo/Types]]
   + [[Library]]
 *** EraseTypeAliases
-**** Environment <<EraseTypeAliases/Environment>>
-- _Relies on_
-  + [[Context]]
-  + [[FrontendContextualise/Environment]]
-  + [[EraseTypeAliases/Types]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-**** Extend <<EraseTypeAliases/Extend>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
-  + [[Library]]
-**** Transform <<EraseTypeAliases/Transform>>
-- _Relies on_
-  + [[Context]]
-  + [[EraseTypeAliases/Environment]]
-  + [[EraseTypeAliases/Types]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-**** Types <<EraseTypeAliases/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[EraseTypeAliases/Extend]]
-  + [[Library]]
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -889,7 +864,7 @@ Quantitative type implementation inspired by
   + [[FrontendContextualise/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
-  + [[RemoveDo/Types]]
+  + [[ModuleOpen/Types]]
   + [[Library]]
 **** Extend <<InfixPrecedence/Extend>>
 - This pass removes the =Infix= form
@@ -909,8 +884,8 @@ Quantitative type implementation inspired by
   #+end_src
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
+  + [[ModuleOpen/Extend]]
+  + [[ModuleOpen/Extend]]
   + [[Library]]
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the
@@ -923,7 +898,7 @@ Quantitative type implementation inspired by
   + [[InfixPrecedence/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
-  + [[RemoveDo/Types]]
+  + [[ModuleOpen/Types]]
   + [[Library]]
 **** Types <<InfixPrecedence/Types>>
 - _Relies on_
@@ -935,8 +910,8 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[FrontendContextualise/Environment]]
-  + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
 **** Extend <<ModuleOpen/Extend>>
@@ -969,15 +944,15 @@ Quantitative type implementation inspired by
 - for modules we can infer.
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[InfixPrecedence/Extend]]
-  + [[InfixPrecedence/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
   + [[Library]]
 **** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Context]]
-  + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
 **** Types <<ModuleOpen/Types>>
 - _Relies on_

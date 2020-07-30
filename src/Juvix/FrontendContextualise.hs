@@ -2,8 +2,8 @@
 
 -- |
 -- - order of Passes
---   1. =InfixPrecedence=
---   2. =ModuleOpen=
+--   1. =ModuleOpen=
+--   2. =InfixPrecedence=
 module Juvix.FrontendContextualise where
 
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
@@ -21,9 +21,9 @@ data Error
 
 contextualize :: [Initial.TopLevel] -> Either Error Target.FinalContext
 contextualize arg =
-  case Infix.transformContext (Contextify.contextify arg) of
+  case Module.transformContext (Contextify.contextify arg) of
     Left err -> Left (InfixErr err)
     Right xs ->
-      case Module.transformContext xs of
+      case Infix.transformContext xs of
         Left err -> Left (ModuleErr err)
         Right xs -> Right xs

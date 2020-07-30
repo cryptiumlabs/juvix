@@ -8,7 +8,7 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Env
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
 import Juvix.Library
 
 -- Pass we care about
@@ -150,7 +150,6 @@ transformC = do
 transformTopLevel ::
   Env.WorkingMaps m => Old.TopLevel -> m New.TopLevel
 transformTopLevel (Old.Type t) = New.Type <$> transformType t
-transformTopLevel (Old.ModuleOpen t) = New.ModuleOpen <$> transformModuleOpen t
 transformTopLevel (Old.Function t) = New.Function <$> transformFunction t
 transformTopLevel Old.TypeClass = pure New.TypeClass
 transformTopLevel Old.TypeClassInstance = pure New.TypeClassInstance
@@ -165,8 +164,6 @@ transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
 transformExpression (Old.Match m) = New.Match <$> transformMatch m
 transformExpression (Old.Name n) = pure $ New.Name n
-transformExpression (Old.OpenExpr n) =
-  New.OpenExpr <$> transformModuleOpenExpr n
 transformExpression (Old.Lambda l) = New.Lambda <$> transformLambda l
 transformExpression (Old.Application a) =
   New.Application <$> transformApplication a
@@ -290,33 +287,6 @@ transformFunctionLike (Old.Like args body) = do
   res <- New.Like transArgs <$> transformExpression body
   traverse_ restoreName originalBindings
   pure res
-
-transformModuleOpen ::
-  Env.WorkingMaps m => Old.ModuleOpen -> m New.ModuleOpen
-transformModuleOpen (Old.Open mod) = do
-  modify @"new" (Context.open (reconstructSymbol mod))
-  pure $ New.Open mod
-
-transformModuleOpenExpr ::
-  Env.WorkingMaps m => Old.ModuleOpenExpr -> m New.ModuleOpenExpr
-transformModuleOpenExpr (Old.OpenExpress modName expr) = do
-  looked <- Env.lookup (reconstructSymbol modName)
-  case looked of
-    Just Context.Def {} -> res
-    Just Context.TypeDeclar {} -> res
-    Just Context.Unknown {} -> res
-    Nothing -> res
-    Just (Context.Record innerC _mTy) -> do
-      let newSymb = fmap fst $ Context.toList innerC
-      savedDef <- traverse saveOld newSymb
-      --
-      modify @"new" (Context.open (reconstructSymbol modName))
-      res <- res
-      --
-      _ <- traverse restoreName savedDef
-      pure res
-  where
-    res = New.OpenExpress modName <$> transformExpression expr
 
 transformArg ::
   Env.WorkingMaps m => Old.Arg -> m New.Arg
