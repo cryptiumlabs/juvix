@@ -27,6 +27,7 @@ data NameSapce b
     { public :: HashMap.T Symbol b
     , private :: HashMap.T Symbol b
     }
+  deriving (Show)
 
 
 data Cont b
@@ -50,7 +51,7 @@ data Definition term ty sumRep
         precedence :: Precedence
       }
   | Record
-      { definitionContents :: NameSpace (Definition term ty sumRep,)
+      { definitionContents :: NameSapce (Definition term ty sumRep),
         -- Maybe as I'm not sure what to put here for now
         definitionMTy :: Maybe ty
       }
@@ -65,8 +66,11 @@ data Definition term ty sumRep
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
 
-empty :: Cont b
-empty = T (HashMap.empty)
+empty :: Symbol -> Cont b
+empty sym = T { currentNameSpace = NameSpace HashMap.empty HashMap.empty
+          , currentName = sym
+          , topLevelMap = HashMap.empty
+          }
 
 -- couldn't figure out how to fold lenses
 -- once we figure out how to do a fold like
