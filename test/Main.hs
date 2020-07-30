@@ -8,7 +8,6 @@ import qualified CoreTypechecker
 -- import qualified Juvix.Frontend.Parser as Parser
 
 import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
-import Data.Text.Encoding (encodeUtf32BE)
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
@@ -70,7 +69,7 @@ translationPasses =
 contractTests :: FilePath -> IO ()
 contractTests file = do
   parsed <- readFile file
-  let rawContract = "let string = %Michelson.string" --encodeUtf32BE parsed
+  let rawContract = encodeUtf8 parsed
   case Parser.parse rawContract of
     Fail i context error ->
       putStrLn $ "Fail" <> i <> show context <> show error
