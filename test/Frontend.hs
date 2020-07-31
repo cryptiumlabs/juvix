@@ -2,6 +2,7 @@ module Frontend where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
+import Data.ByteString.Char8 (pack)
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
@@ -12,7 +13,8 @@ allParserTests :: T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
-    [ many1FunctionsParser,
+    [ contractFiles,
+      many1FunctionsParser,
       sigTest1,
       sigTest2,
       fun1,
@@ -38,6 +40,7 @@ allParserTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
+space :: Parser Word8
 space = Char8.char8 ' '
 
 test =
@@ -87,6 +90,48 @@ removeNoComment =
    in Parser.removeComments str
         |> (T.@=? str)
         |> T.testCase ("test remove comments: " <> str)
+
+--------------------------------------------------------------------------------
+-- Contracts (as a file)
+--------------------------------------------------------------------------------
+
+contractTests :: FilePath -> IO ()
+contractTests file = do
+  parsed <- readFile file
+  let rawContract = encodeUtf8 parsed
+  case Parser.parse rawContract of
+    Fail i context error ->
+      putStrLn $ "Fail" <> i <> pack (show context) <> pack (show error)
+    Done i r ->
+      putStrLn $
+        ("Success" :: ByteString)
+          <> i
+          <> pack (show r)
+    Partial cont -> do
+      putStrLn ("partial" :: ByteString)
+      case cont "" of
+        Done i r ->
+          putStrLn $
+            ("Success (after partial) " :: ByteString)
+              <> i
+              <> pack (show r)
+        Fail i context error ->
+          putStrLn $
+            "Fail (after partial) "
+              <> i
+              <> pack (show context)
+              <> pack (show error)
+        Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
+
+contractFiles :: T.TestTree
+contractFiles =
+  T.testGroup
+    "Contract Files Tests"
+    [idString]
+
+idString :: T.TestTree
+idString =
+  T.testCase "Id-String" (contractTests "test/examples/Id-Strings.jvx")
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
