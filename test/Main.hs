@@ -5,15 +5,11 @@ import qualified Backends.Michelson as Michelson
 import qualified CoreConv
 import qualified CoreParser
 import qualified CoreTypechecker
--- import qualified Juvix.Frontend.Parser as Parser
-
-import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
 import qualified EAC2
 import qualified Erasure
 import qualified Frontend
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendDesugar
-import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
@@ -66,34 +62,5 @@ translationPasses =
     [ FrontendDesugar.allDesugar
     ]
 
-contractTests :: FilePath -> IO ()
-contractTests file = do
-  parsed <- readFile file
-  let rawContract = encodeUtf8 parsed
-  case Parser.parse rawContract of
-    Fail i context error ->
-      putStrLn $ "Fail" <> i <> show context <> show error
-    Done i r ->
-      putStrLn $
-        ("Success" :: ByteString)
-          <> i
-          <> show r
-    Partial cont -> do
-      putStrLn ("partial" :: ByteString)
-      case cont "" of
-        Done i r ->
-          putStrLn $
-            ("Success (after partial) " :: ByteString)
-              <> i
-              <> show r
-        Fail i context error ->
-          putStrLn $ "Fail (after partial) " <> i <> show context <> show error
-        Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
-
--- Left s -> putStrLn $ "Failed " <> s
--- Right t -> putStrLn $ "parsed " <> file <> show t
 main :: IO ()
-main = do
-  --T.defaultMain allCheckedTests
-  contractTests "test/examples/Id-Strings.jvx"
--- contractTests "experimental/juvix/contract.jvx"
+main = T.defaultMain allCheckedTests
