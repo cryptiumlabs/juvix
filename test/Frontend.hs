@@ -131,7 +131,7 @@ contractFiles =
 
 idString :: T.TestTree
 idString =
-  T.testCase "Id-String" (contractTests "test/examples/Id-Strings.jvx")
+  T.testCase "Id-String" (contractTests "test/examples/Id-Strings.ju")
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
