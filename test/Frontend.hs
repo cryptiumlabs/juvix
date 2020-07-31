@@ -99,39 +99,44 @@ contractTests :: FilePath -> IO ()
 contractTests file = do
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
+  let iInfo i = " The following input has not been consumed: " <> i
+  let contextInfo context = 
+        " The list of context in which the error occurs is "
+        <> pack (show context)
+  let errorInfo error = " The error message is " <> pack (show error)
+  let rInfo r = " The result of the parse is " <> pack (show r)
+  let parseFileInfo = " Parsing the file with path " <> pack file <> ": "
+  let printFail msg i context error = 
+        putStrLn $
+          parseFileInfo 
+          <> msg 
+          <> iInfo i <> contextInfo context <> errorInfo error
+  let printDone msg i r = 
+        putStrLn $ parseFileInfo <> msg <> iInfo i <> rInfo r
   case Parser.parse rawContract of
     Fail i context error ->
-      putStrLn $ "Fail" <> i <> pack (show context) <> pack (show error)
-    Done i r ->
-      putStrLn $
-        ("Success" :: ByteString)
-          <> i
-          <> pack (show r)
-    Partial cont -> do
-      putStrLn ("partial" :: ByteString)
+      printFail "Fail! " i context error
+    Done i r -> printDone ("Success! " :: ByteString) i r
+    Partial cont -> 
       case cont "" of
         Done i r ->
-          putStrLn $
-            ("Success (after partial) " :: ByteString)
-              <> i
-              <> pack (show r)
+            printDone ("Success (after partial) " :: ByteString) i r
         Fail i context error ->
-          putStrLn $
-            "Fail (after partial) "
-              <> i
-              <> pack (show context)
-              <> pack (show error)
+            printFail "Fail (after partial) " i context error
         Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
 
 contractFiles :: T.TestTree
 contractFiles =
   T.testGroup
     "Contract Files Tests"
-    [idString]
+    [
+      idString
+    ]
 
 idString :: T.TestTree
 idString =
-  T.testCase "Id-String" (contractTests "test/examples/Id-Strings.ju")
+  T.testCase 
+    "Id-String" (contractTests "test/examples/Id-Strings.ju")
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
