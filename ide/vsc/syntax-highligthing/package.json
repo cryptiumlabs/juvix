@@ -1,0 +1,25 @@
+{
+    "name": "language-juvix",
+    "displayName": "Language Juvix",
+    "description": "Syntax Highlighting for Juvix",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.47.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "juvix",
+            "aliases": ["Juvix", "juvix"],
+            "extensions": ["ju"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "juvix",
+            "scopeName": "source.juvix",
+            "path": "./syntaxes/juvix.tmLanguage.json"
+        }]
+    }
+}

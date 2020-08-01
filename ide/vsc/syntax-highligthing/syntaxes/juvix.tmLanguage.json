@@ -1,0 +1,370 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Juvix",
+	"scopeName": "source.juvix",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#modules"
+		},
+		{
+			"include": "#options"
+		},
+		{
+			"include": "#expr"
+		}
+	],
+	"repository": {
+		"expr": {
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"name": "variable.other.generic-type.juvix",
+					"match": "\\b[A-Z][a-zA-Z0-9]\\b"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"match": "(/\\\\|\\\\/|<:|<@|[(][|]|[|][)]|u#|~>|->|<--|<-|<==>|==>|[?][.]|[.]\\[|[.]\\(|[{][:]pattern|::|:=|;;|[!][{]|\\[[|]|[|]>|[|]\\]|[~+^&?$|#,.:;=\\[\\-](){}])",
+					"name": "support.class.base.juvix"
+				},
+				{
+					"match": "\\b(\\w-)\\b",
+					"name": "constant.language.juvix"
+				},
+				{
+					"match": "\\b(let|let-type|in|type|if|then|else|cond|do|return|where|with|sig|end)\\b",
+					"name": "keyword.other.juvix"
+				},
+				{
+					"match": "\\b([tT]rue|[fF]alse)\\b",
+					"name": "constant.language.boolean.juvix"
+				},
+				{
+					"match": "\\b[0-9]+[uU]?[zyslL]?\\b",
+					"name": "constant.numeric.decimal.juvix"
+				},
+				{
+					"match": "(?x)\n(?:\n  (?:\\b[0-9]+(\\.)[0-9]+[eE][+-]?[0-9]+\\b)| # 1.1E+3\n  (?:\\b[0-9]+(\\.)[eE][+-]?[0-9]+\\b)|       # 1.E+3\n  (?:\\B(\\.)[0-9]+[eE][+-]?[0-9]+\\b)|       # .1E+3\n  (?:\\b[0-9]+[eE][+-]?[0-9]+\\b)|            # 1E+3\n  (?:\\b[0-9]+(\\.)[0-9]+\\b)|                # 1.1\n  (?:\\b[0-9]+(\\.)\\B)|                      # 1.\n  (?:\\B(\\.)[0-9]+\\b)|                      # .1\n  (?:\\b[0-9]+\\b(?!\\.))                     # 1\n)[L]?[fF]?",
+					"captures": {
+						"0": {
+							"name": "constant.numeric.decimal.juvix"
+						},
+						"1": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						},
+						"2": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						},
+						"3": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						},
+						"4": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						},
+						"5": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						},
+						"6": {
+							"name": "meta.delimiter.decimal.period.juvix"
+						}
+					}
+				},
+				{
+					"begin": "([(])",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.clause.begin.bracket.round.juvix"
+						}
+					},
+					"end": "([)])",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.clause.end.bracket.round.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expr"
+						}
+					]
+				},
+				{
+					"begin": "([%]\\[)",
+					"beginCaptures": {
+						"1": {
+							"name": "constant.language.termorder.begin.juvix"
+						}
+					},
+					"end": "(\\])",
+					"endCaptures": {
+						"1": {
+							"name": "constant.language.termorder.end.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expr"
+						}
+					]
+				},
+				{
+					"begin": "(\\[[@])",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.modifier.attributes.begin.juvix"
+						}
+					},
+					"end": "(\\])",
+					"endCaptures": {
+						"1": {
+							"name": "storage.modifier.attributes.end.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expr"
+						}
+					]
+				},
+				{
+					"begin": "\\b(case)\\b",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.case.juvix"
+						}
+					},
+					"end": "\\b(of)\\b",
+					"endCaptures": {
+						"1": {
+							"name": "keyword.control.of.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expr"
+						}
+					]
+				},
+				{
+					"begin": "\\b(begin)\\b",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.begin.juvix"
+						}
+					},
+					"end": "\\b(end)\\b",
+					"endCaptures": {
+						"1": {
+							"name": "keyword.control.end.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expr"
+						}
+					]
+				},
+				{
+					"match": "\\b([\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'_]*)\\b(?!\\s*[.])",
+					"captures": {
+						"1": {
+							"name": "support.function.constructor.juvix"
+						}
+					}
+				},
+				{
+					"match": "\\b((?:[\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'_]*[.])+)",
+					"captures": {
+						"1": {
+							"name": "variable.other.module.juvix"
+						}
+					}
+				},
+				{
+					"match": "\\b([\\p{Ll}_][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-]*)",
+					"captures": {
+						"1": {
+							"name": "entity.name.function.juvix"
+						},
+						"2": {
+							"name": "entity.name.juvix"
+						}
+					}
+				}
+			]
+		},
+		"modules": {
+			"patterns": [
+				{
+					"begin": "\\b(mod)\\s+([\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-]*)\\s*(=)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.module.juvix"
+						},
+						"2": {
+							"name": "variable.other.module-alias.juvix"
+						},
+						"3": {
+							"name": "keyword.operator.assignment.juvix"
+						}
+					},
+					"end": "\\b((?<name>[\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-]*)(?:[.]\\g<name>)*)\\b",
+					"endCaptures": {
+						"1": {
+							"name": "variable.other.module.juvix"
+						}
+					}
+				},
+				{
+					"begin": "\\b(mod|open)\\b",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.module.juvix"
+						}
+					},
+					"end": "\\b((?<name>[\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-]*)(?:[.]\\g<name>)*)\\b",
+					"endCaptures": {
+						"1": {
+							"name": "variable.other.module.juvix"
+						}
+					}
+				}
+			]
+		},
+		"commentblock": {
+			"patterns": [
+				{
+					"name": "comment.block.juvix",
+					"begin": "\\{\\-",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.begin.juvix"
+						}
+					},
+					"end": "\\-\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.end.juvix"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#commentblock"
+						}
+					]
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.juvix",
+					"match": "--.*"
+				},
+				{
+					"include": "#commentblock"
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"begin": "\"",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.juvix"
+						}
+					},
+					"end": "\"",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.juvix"
+						}
+					},
+					"name": "string.quoted.double.juvix",
+					"patterns": [
+						{
+							"include": "#string_escapes"
+						}
+					]
+				},
+				{
+					"begin": "'",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.char.begin.juvix"
+						}
+					},
+					"end": "'",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.char.end.juvix"
+						}
+					},
+					"name": "string.quoted.single.juvix",
+					"patterns": [
+						{
+							"include": "#string_escapes"
+						},
+						{
+							"match": ".{2,}",
+							"name": "invalid.illegal.string.juvix"
+						}
+					]
+				},
+				{
+					"begin": "`",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.operator.begin.juvix"
+						}
+					},
+					"end": "`",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.operator.end.juvix"
+						}
+					}
+				}
+			]
+		},
+		"string_escapes": {
+			"patterns": [
+				{
+					"match": "\\\\u(?![A-Fa-f0-9]{4}|{[A-Fa-f0-9]+})[^'\"]*",
+					"name": "invalid.illegal.unicode-escape.juvix"
+				},
+				{
+					"match": "\\\\u(?:[A-Fa-f0-9]{4}|({)([A-Fa-f0-9]+)(}))",
+					"name": "constant.character.escape.juvix",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.unicode-escape.begin.bracket.curly.juvix"
+						},
+						"2": {
+							"patterns": [
+								{
+									"match": "[A-Fa-f\\d]{7,}|(?!10)[A-Fa-f\\d]{6}",
+									"name": "invalid.illegal.unicode-escape.juvix"
+								}
+							]
+						},
+						"3": {
+							"name": "punctuation.definition.unicode-escape.end.bracket.curly.juvix"
+						}
+					}
+				},
+				{
+					"match": "\\\\(x[0-9A-Fa-f]{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)",
+					"name": "constant.character.escape.juvix"
+				}
+			]
+		}
+	}
+}
