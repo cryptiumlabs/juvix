@@ -1,0 +1,14 @@
+{
+  "name": "language-juvix",
+  "version": "0.0.1",
+  "description": "Atom mode for the Juvix language",
+  "keywords": [
+    "language",
+    "grammar"
+  ],
+  "repository": "https://github.com/metastate/juvix",
+  "license": "GPL-3",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  }
+}
