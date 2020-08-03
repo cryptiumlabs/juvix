@@ -13,24 +13,35 @@ module Juvix.Core.Common.Context
   )
 where
 
-import Control.Lens
+import Control.Lens hiding ((|>))
 import qualified Data.HashSet as Set
 import qualified Data.Text as Text
 import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
+import Prelude (error)
+
+--------------------------------------------------------------------------------
+-- Types
+--------------------------------------------------------------------------------
 
 data Cont b
   = T
-    { currentNameSpace :: NameSpace.T b
-    , currentName :: Symbol
-    , topLevelMap :: HashMap.T Symbol b
-    }
+      { currentNameSpace :: NameSpace.T b,
+        currentName :: NameSymbol.T,
+        topLevelMap :: HashMap.T Symbol b
+      }
   deriving (Show)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
+
+data From b
+  = Current (NameSpace.From b)
+  | Outside b
+  deriving (Show, Functor, Traversable, Foldable)
 
 -- TODO :: make known records that are already turned into core
 -- this will just emit the proper names we need, not any terms to translate
@@ -58,22 +69,35 @@ data Definition term ty sumRep
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
 
-empty :: Symbol -> Cont b
-empty sym = T { currentNameSpace = NameSpace.empty
-          , currentName = sym
-          , topLevelMap = HashMap.empty
-          }
+--------------------------------------------------------------------------------
+-- In Lu of not being able to export namespaces
+--------------------------------------------------------------------------------
+type NameSymbol = NameSymbol.T
+
+nameSymbolToSymbol :: NameSymbol.T -> Symbol
+nameSymbolToSymbol = NameSymbol.toSymbol
+
+nameSymbolFromSymbol :: Symbol -> NameSymbol.T
+nameSymbolFromSymbol = NameSymbol.fromSymbol
+
+--------------------------------------------------------------------------------
+-- Body
+--------------------------------------------------------------------------------
+
+empty :: NameSymbol.T -> Cont b
+empty sym =
+  T
+    { currentNameSpace = NameSpace.empty,
+      currentName = sym,
+      topLevelMap = HashMap.empty
+    }
 
 -- couldn't figure out how to fold lenses
 -- once we figure out how to do a fold like
 -- foldr (\x y -> x . contents . T  . y) identity brokenKey
 -- replace the recursive function with that
-lookup :: Symbol -> T term ty sumRep -> Maybe (Definition term ty sumRep)
-lookup key T {currentNameSpace, topLevelMap} =
-  let textKey = textify key
-      brokenKey = Text.splitOn "." textKey
-      --
-      recurse _ Nothing =
+lookupGen extraLookup key T {currentNameSpace, topLevelMap} =
+  let recurse _ Nothing =
         Nothing
       recurse [] x =
         x
@@ -81,42 +105,46 @@ lookup key T {currentNameSpace, topLevelMap} =
         recurse xs (NameSpace.lookup x namespace)
       recurse (_ : _) _ =
         Nothing
-   in case brokenKey >>| internText of
-        x : xs ->
-          recurse
-            xs
-            (NameSpace.lookup x currentNameSpace <|> HashMap.lookup x topLevelMap)
-        [] ->
-          Nothing -- this case never happens
+   in case NameSymbol.fromSymbol key of
+        x :| xs ->
+          NameSpace.lookupInternal x currentNameSpace
+            |> extraLookup x
+            |> \case
+              Just x -> traverse (recurse xs . Just) x
+              Nothing -> Nothing
 
-(!?) :: T term ty sumRep -> Symbol -> Maybe (Definition term ty sumRep)
+lookup ::
+  Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
+lookup key t@(T {topLevelMap}) =
+  let f x currentLookup =
+        fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
+   in lookupGen f key t
+
+lookupCurrent ::
+  Symbol -> T term ty sumRep -> Maybe (NameSpace.From (Definition term ty sumRep))
+lookupCurrent =
+  lookupGen (\_ currentLookup -> currentLookup)
+
+(!?) ::
+  T term ty sumRep -> Symbol -> Maybe (From (Definition term ty sumRep))
 (!?) = flip lookup
 
 -- TODO ∷ Maybe change
 -- By default add adds it to the public map by default!
 add ::
-  Symbol ->
+  NameSpace.From Symbol ->
   Definition term ty sumRep ->
   T term ty sumRep ->
   T term ty sumRep
 add sy term t =
-  t { currentNameSpace = NameSpace.insPublic sy term (currentNameSpace t)}
+  t {currentNameSpace = NameSpace.insert sy term (currentNameSpace t)}
 
 remove ::
-  Symbol -> T term ty sumRep -> T term ty sumRep
-remove sy t = t { currentNameSpace = NameSpace.remove sy (currentNameSpace t) }
+  NameSpace.From Symbol -> T term ty sumRep -> T term ty sumRep
+remove sy t = t {currentNameSpace = NameSpace.remove sy (currentNameSpace t)}
 
-modify,
-  update ::
-    (Definition term ty sumRep -> Maybe (Definition term ty sumRep)) ->
-    Symbol ->
-    T term ty sumRep ->
-    T term ty sumRep
-modify f k (T map) = T (HashMap.update f k map)
-update = modify
-
-names :: T term ty sumRep -> Set.HashSet Symbol
-names (T map) = HashMap.keysSet map
+currentNames :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
+currentNames T {currentNameSpace} = HashMap.keysSet map
 
 fromList :: [(Symbol, Definition term ty sumRep)] -> T term ty sumRep
 fromList = T . HashMap.fromList
@@ -129,12 +157,12 @@ mapWithKey ::
   T term ty sumRep ->
   T term ty sumRep
 mapWithKey f (T map) = T (HashMap.mapWithKey f map)
-
-open :: Symbol -> T term ty sumRep -> T term ty sumRep
-open key (T map) =
-  case lookup key (T map) of
-    Just (Record (T contents) _) ->
-      -- Union takes the first if there is a conflict
-      T (HashMap.union contents map)
-    Just _ -> T map
-    Nothing -> T map
+-- TODO :: change this to an include
+-- open :: Symbol -> T term ty sumRep -> T term ty sumRep
+-- open key (T map) =
+--   case lookup key (T map) of
+--     Just (Record (T contents) _) ->
+--       -- Union takes the first if there is a conflict
+--       T (HashMap.union contents map)
+--     Just _ -> T map
+--     Nothing -> T map

@@ -478,6 +478,13 @@ This module provides a default contract environment
 - _Relies on_
   + [[Library]]
 *** Common
+**** NameSpace
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+**** NameSymbol
+- _Relies on_
+  + [[Library]]
 **** Context
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -485,6 +492,8 @@ This module provides a default contract environment
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[Usage]]
   + [[Library]]
   + [[HashMap]]

@@ -182,6 +182,7 @@ library:
     - Juvix.Core.Pipeline
     - Juvix.Core.Common.Context
     - Juvix.Core.Common.NameSpace
+    - Juvix.Core.Common.NameSymbol
     - Juvix.Core.Common.Context.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
