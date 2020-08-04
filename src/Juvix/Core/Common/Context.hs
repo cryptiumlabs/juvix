@@ -14,15 +14,12 @@ module Juvix.Core.Common.Context
 where
 
 import Control.Lens hiding ((|>))
-import qualified Data.HashSet as Set
-import qualified Data.Text as Text
 import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library.HashMap as HashMap
-import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -96,7 +93,16 @@ empty sym =
 -- once we figure out how to do a fold like
 -- foldr (\x y -> x . contents . T  . y) identity brokenKey
 -- replace the recursive function with that
-lookupGen extraLookup key T {currentNameSpace, topLevelMap} =
+lookupGen ::
+  Traversable t =>
+  ( Symbol ->
+    Maybe (NameSpace.From v) ->
+    Maybe (t (Definition term ty sumRep))
+  ) ->
+  Symbol ->
+  Cont v ->
+  Maybe (t (Definition term ty sumRep))
+lookupGen extraLookup key T {currentNameSpace} =
   let recurse _ Nothing =
         Nothing
       recurse [] x =
@@ -115,7 +121,7 @@ lookupGen extraLookup key T {currentNameSpace, topLevelMap} =
 
 lookup ::
   Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
-lookup key t@(T {topLevelMap}) =
+lookup key t@T {topLevelMap} =
   let f x currentLookup =
         fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
    in lookupGen f key t
@@ -143,20 +149,18 @@ remove ::
   NameSpace.From Symbol -> T term ty sumRep -> T term ty sumRep
 remove sy t = t {currentNameSpace = NameSpace.remove sy (currentNameSpace t)}
 
-currentNames :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
-currentNames T {currentNameSpace} = HashMap.keysSet map
+publicNames :: T term ty sumRep -> [Symbol]
+publicNames T {currentNameSpace} =
+  let NameSpace.List {publicL, privateL} = NameSpace.toList currentNameSpace
+   in fst <$> publicL
 
-fromList :: [(Symbol, Definition term ty sumRep)] -> T term ty sumRep
-fromList = T . HashMap.fromList
-
-toList :: T term ty sumRep -> [(Symbol, Definition term ty sumRep)]
-toList (T map) = HashMap.toList map
-
-mapWithKey ::
-  (Symbol -> Definition term ty sumRep -> Definition term ty sumRep) ->
-  T term ty sumRep ->
-  T term ty sumRep
-mapWithKey f (T map) = T (HashMap.mapWithKey f map)
+toList :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
+toList T {currentNameSpace} = NameSpace.toList currentNameSpace
+-- mapWithKey ::
+--   (Symbol -> Definition term ty sumRep -> Definition term ty sumRep) ->
+--   T term ty sumRep ->
+--   T term ty sumRep
+-- mapWithKey f (T map) = T (HashMap.mapWithKey f map)
 -- TODO :: change this to an include
 -- open :: Symbol -> T term ty sumRep -> T term ty sumRep
 -- open key (T map) =

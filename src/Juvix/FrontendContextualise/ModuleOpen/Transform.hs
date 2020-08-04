@@ -31,6 +31,9 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
     Just Context.Unknown {} -> err
     Nothing -> err
     Just (Context.Record innerC _mTy) -> do
+      -- Fine to just have the public names
+      -- we are only tracking what this can use, not doing
+      -- replacements
       let newSymb = fst <$> Context.toList innerC
       savedDef <- traverse saveOldOpen newSymb
       --
