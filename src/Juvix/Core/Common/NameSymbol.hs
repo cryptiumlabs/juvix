@@ -14,14 +14,26 @@ fromSymbol :: Symbol -> T
 fromSymbol =
   NonEmpty.fromList . fmap internText . Text.splitOn "." . textify
 
-
 subsetOf :: T -> T -> Bool
-subsetOf (s :| smaller) (b :| bigger)
+subsetOf smaller larger =
+  case takeSubSetOfInternal smaller larger of
+    Just _ -> True
+    Nothing -> False
+
+takeSubSetOf :: T -> T -> Maybe T
+takeSubSetOf smaller larger =
+  case takeSubSetOfInternal smaller larger of
+    Just [] -> Nothing
+    Nothing -> Nothing
+    Just (x : xs) -> Just (x :| xs)
+
+takeSubSetOfInternal :: T -> T -> Maybe [Symbol]
+takeSubSetOfInternal  (s :| smaller) (b :| bigger)
   | b == s = recurse smaller bigger
-  | otherwise = False
+  | otherwise = Nothing
   where
-    recurse [] _ = True
-    recurse _ [] = False
+    recurse [] ys = Just ys
+    recurse _ [] = Nothing
     recurse (x : xs) (y : ys)
       | x == y = recurse xs ys
-      | otherwise = False
+      | otherwise = Nothing

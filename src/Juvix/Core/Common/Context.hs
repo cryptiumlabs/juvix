@@ -61,10 +61,16 @@ data Definition term ty sumRep
   | Unknown
       { definitionMTy :: Maybe ty
       }
+  -- Signifies that this path is the current module, and that
+  -- we should search the currentNameSpace from here
+  | CurrentNameSpace
   deriving (Show, Generic)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
+
+data PathError
+  = VariableShared NameSymbol.T
 
 --------------------------------------------------------------------------------
 -- In Lu of not being able to export namespaces
@@ -101,10 +107,6 @@ lookupCurrent ::
 lookupCurrent =
   lookupGen (\_ currentLookup -> currentLookup)
 
-(!?) ::
-  T term ty sumRep -> Symbol -> Maybe (From (Definition term ty sumRep))
-(!?) = flip lookup
-
 -- TODO ∷ Maybe change
 -- By default add adds it to the public map by default!
 add ::
@@ -138,11 +140,35 @@ lookup key t@T {topLevelMap} =
         fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
    in lookupGen f key t
 
+(!?) ::
+  T term ty sumRep -> Symbol -> Maybe (From (Definition term ty sumRep))
+(!?) = flip lookup
+
+-- Used for add namespace adding and various other purposes
+addGlobal ::
+  NameSymbol.T ->
+  Definition term ty sumRep ->
+  T term ty sumRep ->
+  T term ty sumRep
+addGlobal = undefined
+
+addPathWithValue ::
+  NameSymbol.T ->
+  Definition term ty sumRep ->
+  T term ty sumRep ->
+  Either PathError (T term ty sumRep)
+addPathWithValue path placeholder t@T {currentNameSpace, currentName, topLevelMap} =
+  let createPath (x : xs) = undefined
+  in case NameSymbol.takeSubSetOf currentName path of
+    Just path ->
+      undefined
+    Nothing ->
+      undefined
+
 -- this function does not remove the current name space from the toplevel map
 -- as we may be able to reference it from the top
-switchNameSpace :: T term ty sumRep -> NameSymbol.T -> T term ty sumRep
-switchNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
-
+switchNameSpace :: NameSymbol.T -> T term ty sumRep -> T term ty sumRep
+switchNameSpace newNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
 
 --------------------------------------------------------------------------------
 -- Generalized Helpers
@@ -152,24 +178,35 @@ switchNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
 -- once we figure out how to do a fold like
 -- foldr (\x y -> x . contents . T  . y) identity brokenKey
 -- replace the recursive function with that
+
 -- TODO ∷ add something like
 -- checkGlobal
 --   | NameSymbol.subsetOf currentName nameSymb
+
 -- eventually to check if we are referncing an inner module via the top
+-- This will break code where you've added local
 
 lookupGen ::
   Traversable t =>
-  (Symbol -> Maybe (NameSpace.From v) -> Maybe (t (Definition term ty sumRep))) ->
+  ( Symbol ->
+    Maybe (NameSpace.From (Definition term ty sumRep)) ->
+    Maybe (t (Definition term ty sumRep))
+  ) ->
   Symbol ->
-  Cont v ->
+  Cont (Definition term ty sumRep) ->
   Maybe (t (Definition term ty sumRep))
-lookupGen extraLookup key T {currentNameSpace, topLevelMap, currentName} =
+lookupGen extraLookup key T {currentNameSpace} =
   let recurse _ Nothing =
         Nothing
       recurse [] x =
         x
       recurse (x : xs) (Just (Record namespace _)) =
         recurse xs (NameSpace.lookup x namespace)
+      -- This can only happen when we hit from the global
+      -- a precondition is that the current module
+      -- will never have a currentNamespace inside
+      recurse (x : xs) (Just CurrentNameSpace) =
+        recurse xs (NameSpace.lookup x currentNameSpace)
       recurse (_ : _) _ =
         Nothing
       nameSymb = NameSymbol.fromSymbol key
