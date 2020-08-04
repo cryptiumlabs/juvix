@@ -13,3 +13,15 @@ toSymbol =
 fromSymbol :: Symbol -> T
 fromSymbol =
   NonEmpty.fromList . fmap internText . Text.splitOn "." . textify
+
+
+subsetOf :: T -> T -> Bool
+subsetOf (s :| smaller) (b :| bigger)
+  | b == s = recurse smaller bigger
+  | otherwise = False
+  where
+    recurse [] _ = True
+    recurse _ [] = False
+    recurse (x : xs) (y : ys)
+      | x == y = recurse xs ys
+      | otherwise = False

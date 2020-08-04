@@ -89,42 +89,12 @@ empty sym =
       topLevelMap = HashMap.empty
     }
 
--- couldn't figure out how to fold lenses
--- once we figure out how to do a fold like
--- foldr (\x y -> x . contents . T  . y) identity brokenKey
--- replace the recursive function with that
-lookupGen ::
-  Traversable t =>
-  ( Symbol ->
-    Maybe (NameSpace.From v) ->
-    Maybe (t (Definition term ty sumRep))
-  ) ->
-  Symbol ->
-  Cont v ->
-  Maybe (t (Definition term ty sumRep))
-lookupGen extraLookup key T {currentNameSpace} =
-  let recurse _ Nothing =
-        Nothing
-      recurse [] x =
-        x
-      recurse (x : xs) (Just (Record namespace _)) =
-        recurse xs (NameSpace.lookup x namespace)
-      recurse (_ : _) _ =
-        Nothing
-   in case NameSymbol.fromSymbol key of
-        x :| xs ->
-          NameSpace.lookupInternal x currentNameSpace
-            |> extraLookup x
-            |> \case
-              Just x -> traverse (recurse xs . Just) x
-              Nothing -> Nothing
+qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
+qualifyName sym T {currentName} = currentName <> sym
 
-lookup ::
-  Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
-lookup key t@T {topLevelMap} =
-  let f x currentLookup =
-        fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
-   in lookupGen f key t
+--------------------------------------------------------------------------------
+-- Functions on the Current NameSpace
+--------------------------------------------------------------------------------
 
 lookupCurrent ::
   Symbol -> T term ty sumRep -> Maybe (NameSpace.From (Definition term ty sumRep))
@@ -151,16 +121,66 @@ remove sy t = t {currentNameSpace = NameSpace.remove sy (currentNameSpace t)}
 
 publicNames :: T term ty sumRep -> [Symbol]
 publicNames T {currentNameSpace} =
-  let NameSpace.List {publicL, privateL} = NameSpace.toList currentNameSpace
+  let NameSpace.List {publicL} = NameSpace.toList currentNameSpace
    in fst <$> publicL
 
 toList :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
 toList T {currentNameSpace} = NameSpace.toList currentNameSpace
--- mapWithKey ::
---   (Symbol -> Definition term ty sumRep -> Definition term ty sumRep) ->
---   T term ty sumRep ->
---   T term ty sumRep
--- mapWithKey f (T map) = T (HashMap.mapWithKey f map)
+
+--------------------------------------------------------------------------------
+-- Global Functions
+--------------------------------------------------------------------------------
+
+lookup ::
+  Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
+lookup key t@T {topLevelMap} =
+  let f x currentLookup =
+        fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
+   in lookupGen f key t
+
+-- this function does not remove the current name space from the toplevel map
+-- as we may be able to reference it from the top
+switchNameSpace :: T term ty sumRep -> NameSymbol.T -> T term ty sumRep
+switchNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
+
+
+--------------------------------------------------------------------------------
+-- Generalized Helpers
+--------------------------------------------------------------------------------
+
+-- couldn't figure out how to fold lenses
+-- once we figure out how to do a fold like
+-- foldr (\x y -> x . contents . T  . y) identity brokenKey
+-- replace the recursive function with that
+-- TODO ∷ add something like
+-- checkGlobal
+--   | NameSymbol.subsetOf currentName nameSymb
+-- eventually to check if we are referncing an inner module via the top
+
+lookupGen ::
+  Traversable t =>
+  (Symbol -> Maybe (NameSpace.From v) -> Maybe (t (Definition term ty sumRep))) ->
+  Symbol ->
+  Cont v ->
+  Maybe (t (Definition term ty sumRep))
+lookupGen extraLookup key T {currentNameSpace, topLevelMap, currentName} =
+  let recurse _ Nothing =
+        Nothing
+      recurse [] x =
+        x
+      recurse (x : xs) (Just (Record namespace _)) =
+        recurse xs (NameSpace.lookup x namespace)
+      recurse (_ : _) _ =
+        Nothing
+      nameSymb = NameSymbol.fromSymbol key
+   in case nameSymb of
+        x :| xs ->
+          NameSpace.lookupInternal x currentNameSpace
+            |> extraLookup x
+            |> \case
+              Just x -> traverse (recurse xs . Just) x
+              Nothing -> Nothing
+
 -- TODO :: change this to an include
 -- open :: Symbol -> T term ty sumRep -> T term ty sumRep
 -- open key (T map) =
