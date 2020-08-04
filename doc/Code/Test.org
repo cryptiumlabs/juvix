@@ -81,7 +81,6 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Graph]]
 * Main
 - _Relies on_
-  + [[Parser]]
   + [[Library]]
 * Pipeline
 - _Relies on_
@@ -145,6 +144,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Context]]
   + [[Library]]
+* Files
 * FrontendContextualise
 ** Infix
 *** ShuntYard

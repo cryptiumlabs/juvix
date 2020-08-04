@@ -100,47 +100,183 @@ contractTests file = do
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
   let iInfo i = " The following input has not been consumed: " <> i
-  let contextInfo context = 
+  let contextInfo context =
         " The list of context in which the error occurs is "
-        <> pack (show context)
+          <> pack (show context)
   let errorInfo error = " The error message is " <> pack (show error)
   let rInfo r = " The result of the parse is " <> pack (show r)
   let parseFileInfo = " Parsing the file with path " <> pack file <> ": "
-  let printFail msg i context error = 
+  let printFail msg i context error =
         putStrLn $
-          parseFileInfo 
-          <> msg 
-          <> iInfo i <> contextInfo context <> errorInfo error
-  let printDone msg i r = 
+          parseFileInfo
+            <> msg
+            <> iInfo i
+            <> contextInfo context
+            <> errorInfo error
+  let printDone msg i r =
         putStrLn $ parseFileInfo <> msg <> iInfo i <> rInfo r
   case Parser.parse rawContract of
     Fail i context error ->
       printFail "Fail! " i context error
     Done i r -> printDone ("Success! " :: ByteString) i r
-    Partial cont -> 
+    Partial cont ->
       case cont "" of
         Done i r ->
-            printDone ("Success (after partial) " :: ByteString) i r
+          printDone ("Success (after partial) " :: ByteString) i r
         Fail i context error ->
-            printFail "Fail (after partial) " i context error
+          printFail "Fail (after partial) " i context error
         Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
 
 contractFiles :: T.TestTree
 contractFiles =
   T.testGroup
     "Contract Files Tests"
-    [
-      idString
+    [ idString
     ]
 
 idString :: T.TestTree
 idString =
-  T.testCase 
-    "Id-String" (contractTests "test/examples/Id-Strings.ju")
+  T.testCase
+    "Id-String"
+    (contractTests "test/examples/Id-Strings.ju")
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Parse Many at once
+--------------------------------------------------------------------------------
+
+contractTest =
+  parseOnly
+    (many Parser.topLevelSN)
+    ( ""
+        <> "mod Token = "
+        <> "  let Address = s : String.T {String.length s == 36} \n"
+        <> "\n"
+        <> "  type Storage = { \n"
+        <> "    total-supply : Nat.T, \n"
+        <> "    accounts     : Accounts.T { Accounts.measure-value == total-supply } \n"
+        <> "  }"
+        <> "  sig empty-storage : Storage \n"
+        <> "  let empty-storage = { \n"
+        <> "    total-supply = 0, \n"
+        <> "    accounts     = Accounts.empty, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    storage : Storage, \n"
+        <> "    version : Nat.T, \n"
+        <> "    name    : String.T, \n"
+        <> "    symbol  : Char.T, \n"
+        <> "    owner   : Address, \n"
+        <> "  } \n"
+        <> "end"
+        <> " \n"
+        <> "mod Transaction = \n"
+        <> "  type Transfer = { \n"
+        <> "    from-account : Token.Address, \n"
+        <> "    to-account   : Token.Address, \n"
+        <> "    ammount      : Nat.T, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Mint = { \n"
+        <> "    mint-amount     : Nat.T, \n"
+        <> "    mint-to-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Burn = { \n"
+        <> "    burn-amount       : Nat.T, \n"
+        <> "    burn-from-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Data = \n"
+        <> "    | Transfer : Transfer -> Data \n"
+        <> "    | Mint     : Mint     -> Data \n"
+        <> "    | Burn     : Burn     -> Data \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    data               : Data, \n"
+        <> "    authorized-account : Token.Address, \n"
+        <> "  } \n"
+        <> "end \n"
+        <> " \n"
+        <> "sig has-n : Accounts.T -> Token.Address -> Nat -> Bool \n"
+        <> "let has-n accounts add to-transfer = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just n  -> to-transfer <= n \n"
+        <> "  | Nothing -> False \n"
+        <> " \n"
+        <> " \n"
+        <> "sig account-sub : acc : Accounts.T \n"
+        <> "               -> add : Token.Address \n"
+        <> "               -> num : Nat.T {has-n acc add num} \n"
+        <> "               -> Accounts.T \n"
+        <> "let account-sub accounts add number = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just balance -> \n"
+        <> "     Accounts.put accounts add (balance - number) \n"
+        <> " \n"
+        <> "sig account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T \n"
+        <> "let account-add accounts add number = \n"
+        <> "  Accounts.update accounts ((+) number) add \n"
+        <> " \n"
+        <> " \n"
+        <> " \n"
+        <> "sig transfer-stor : stor  : Token.Storage \n"
+        <> "                 -> from  : Token.Address \n"
+        <> "                 -> to    : Token.Address \n"
+        <> "                 -> num   : Nat.T {has-n stor.accounts from num} \n"
+        <> "                 -> Token.Storage \n"
+        <> "let transfer-stor stor add_from add_to num = \n"
+        <> "  let new-acc = account-add (account-sub stor.accounts add_from) add-to num in \n"
+        <> "  { total-supply = stor.total-supply \n"
+        <> "  , accounts     = new-acc \n"
+        <> "  } \n"
+        <> "mod Validation = \n"
+        <> "  let T = Token.T -> Transaction.T -> Bool \n"
+        <> " \n"
+        <> "  let mint token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Mint -> \n"
+        <> "      token.owner == tx-tx-authorized-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let transfer token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Transfer {from-account, amount} -> \n"
+        <> "      has-n token.storage.accounts from-account amount \n"
+        <> "      && tx.authroized-account == from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let Burn token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Burn {burn-from-account, burn-ammount} -> \n"
+        <> "      has-n token.storage.accounts burn-from-account burn-amount \n"
+        <> "      && tx.authroized-account == burn-from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> "end \n"
+        <> " \n"
+        <> "  type Error \n"
+        <> "    = NotEnoughFunds \n"
+        <> "    | NotSameAccount \n"
+        <> "    | NotOwnerToken  \n"
+        <> "    | NotEnoughTokens \n"
+        <> " \n"
+        <> "  sig exec : Token.T -> Transaction.T -> Either.T Error Token.T \n"
+        <> "  let exec token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transfer _ -> \n"
+        <> "      if | Validation.transfer token tx = Right (transfer token tx) \n"
+        <> "         | else                         = Left NotEnoughFunds \n"
+        <> "    | Mint _ -> \n"
+        <> "      if | Validation.mint token tx = Right (mint token tx) \n"
+        <> "         | else                     = Left NotEnoughFunds \n"
+    )
 
 many1FunctionsParser :: T.TestTree
 many1FunctionsParser =
