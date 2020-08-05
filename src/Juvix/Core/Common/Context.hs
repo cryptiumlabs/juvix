@@ -159,27 +159,19 @@ addPathWithValue ::
   T term ty sumRep ->
   Either PathError (T term ty sumRep)
 addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap} =
+  -- check if the new path is inside the currentNameSpace
   case NameSymbol.takeSubSetOf currentName path of
-    Just (p :| path) ->
-      createPath (p : path) currentNameSpace placeholder
+    Just (p :| pathAfterCurr) ->
+      createPath (p : pathAfterCurr) currentNameSpace placeholder
         |> handleMaybe (`create` topLevelMap)
     Nothing ->
-      -- same logic as createPath, but due to types have to duplicate
-      let (p :| path') = path
-          --
-          insertRecordTopLevel typ ins =
-            HashMap.insert p (Record ins typ) topLevelMap
-          --
-          continuePath next typ =
-            createPath path' next placeholder
-              |> fmap (insertRecordTopLevel typ)
-              |> handleMaybe (create currentNameSpace)
-       in case HashMap.lookup p topLevelMap of
-            Just (Record def ty) ->
-              continuePath def ty
-            Nothing -> continuePath NameSpace.empty Nothing
-            Just __ -> Lib.Left (VariableShared path)
+      case HashMap.lookup p topLevelMap of
+        Just (Record def ty) ->
+          continuePathTopLevel def ty
+        Nothing -> continuePathTopLevel NameSpace.empty Nothing
+        Just __ -> Lib.Left (VariableShared path)
   where
+    (p :| path') = path
     create curr top =
       T {currentNameSpace = curr, currentName, topLevelMap = top}
     --
@@ -188,6 +180,14 @@ addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap}
       Lib.Left (VariableShared path)
     handleMaybe f (Just x) =
       Lib.Right (f x)
+    --
+    insertRecordTopLevel typ ins =
+      HashMap.insert p (Record ins typ) topLevelMap
+    --
+    continuePathTopLevel next typ =
+      createPath path' next placeholder
+        |> fmap (insertRecordTopLevel typ)
+        |> handleMaybe (create currentNameSpace)
 
 -- this function does not remove the current name space from the toplevel map
 -- as we may be able to reference it from the top
@@ -197,13 +197,18 @@ switchNameSpace newNameSpace T {currentNameSpace, currentName, topLevelMap} = un
 ------------------------------------------------------------
 -- Helpers for create path
 ------------------------------------------------------------
+
+-- this code duplicates some logic with addPathWithValue due
+-- to signature annoyances between hashtables and NameSpaces
 createPath ::
   [Symbol] ->
   NameSpace.T (Definition term ty sumRep) ->
   Definition term ty sumRep ->
   Maybe (NameSpace.T (Definition term ty sumRep))
 createPath [x] cont placeholder =
-  Just (NameSpace.insert (NameSpace.Pub x) placeholder cont)
+  case NameSpace.lookup x cont of
+    Just __ -> Nothing
+    Nothing -> Just (NameSpace.insert (NameSpace.Pub x) placeholder cont)
 createPath [] cont _placeholder =
   Just cont
 createPath (x : xs) cont placeholder =
