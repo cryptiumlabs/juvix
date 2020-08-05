@@ -1,0 +1,22 @@
+let nat = %Micheslon.nat
+
+let add = %Michelson.add
+
+let pair = %Michelson.pair
+
+type Storage  = {
+  value  : nat,
+  valu : nat
+}
+
+sig foo : nat -> storage -> storage
+let foo va {value, valu} =
+  {value = add valu va, valu = add value va}
+
+sig add-storage : storage -> nat
+let add-storage {value, valu} =
+  add value valu
+
+-- Default entry point
+sig default : nat -> storage -> storage
+let default addnat storage = pair (add-storage storage) (foo input storage)

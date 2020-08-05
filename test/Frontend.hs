@@ -99,13 +99,13 @@ contractTests :: FilePath -> IO ()
 contractTests file = do
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
-  let iInfo i = " The following input has not been consumed: " <> i
+  let iInfo i = "\nThe following input has not been consumed: \n" <> i
   let contextInfo context =
-        " The list of context in which the error occurs is "
+        "\nThe list of context in which the error occurs is \n"
           <> pack (show context)
-  let errorInfo error = " The error message is " <> pack (show error)
-  let rInfo r = " The result of the parse is " <> pack (show r)
-  let parseFileInfo = " Parsing the file with path " <> pack file <> ": "
+  let errorInfo error = "\nThe error message is \n" <> pack (show error)
+  let rInfo r = "\nThe result of the parse is \n" <> pack (show r)
+  let parseFileInfo = "\nParsing the file with path \n" <> pack file <> ": "
   let printFail msg i context error =
         putStrLn $
           parseFileInfo
@@ -131,14 +131,21 @@ contractFiles :: T.TestTree
 contractFiles =
   T.testGroup
     "Contract Files Tests"
-    [ idString
+    [ idString,
+      addition
     ]
 
-idString :: T.TestTree
-idString =
+parseFileTests :: String -> FilePath -> T.TestTree
+parseFileTests name path =
   T.testCase
-    "Id-String"
-    (contractTests "test/examples/Id-Strings.ju")
+    name
+    (contractTests path)
+
+idString :: T.TestTree
+idString = parseFileTests "Id-String" "test/examples/Id-Strings.ju"
+
+addition :: T.TestTree
+addition = parseFileTests "Addition" "test/examples/Addition.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
