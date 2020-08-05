@@ -151,7 +151,37 @@ addGlobal ::
   Definition term ty sumRep ->
   T term ty sumRep ->
   T term ty sumRep
-addGlobal = undefined
+addGlobal path@(p :| path') def T {currentNameSpace, currentName, topLevelMap} =
+  case NameSymbol.takeSubSetOf currentName path of
+    Just (path :| afterCurr) ->
+      T
+        { topLevelMap,
+          currentName,
+          currentNameSpace = recurse (path : afterCurr) currentNameSpace
+        }
+    Nothing ->
+      -- dumb repeat logic
+      case HashMap.lookup p topLevelMap of
+        Just (Record def ty) ->
+          T
+            { currentName,
+              currentNameSpace,
+              topLevelMap =
+                HashMap.insert p (Record (recurse path' def) ty) topLevelMap
+            }
+        Nothing -> T {topLevelMap, currentName, currentNameSpace}
+        Just __ -> T {topLevelMap, currentName, currentNameSpace}
+  where
+    recurse [] cont =
+      cont
+    recurse [x] cont =
+      NameSpace.insert (NameSpace.Pub x) def cont
+    recurse (x : xs) cont =
+      case NameSpace.lookup x cont of
+        Just (Record def ty) ->
+          NameSpace.insert (NameSpace.Pub x) (Record (recurse xs def) ty) cont
+        Nothing -> cont
+        Just __ -> cont
 
 addPathWithValue ::
   NameSymbol.T ->
