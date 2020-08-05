@@ -496,6 +496,7 @@ This module provides a default contract environment
   + [[NameSymbol]]
   + [[Usage]]
   + [[Library]]
+  + [[Library]]
   + [[HashMap]]
 ***** Precedence
 - _Relies on_

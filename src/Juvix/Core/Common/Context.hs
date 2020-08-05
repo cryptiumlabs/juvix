@@ -19,6 +19,7 @@ import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
+import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 
 --------------------------------------------------------------------------------
@@ -61,9 +62,9 @@ data Definition term ty sumRep
   | Unknown
       { definitionMTy :: Maybe ty
       }
-  -- Signifies that this path is the current module, and that
-  -- we should search the currentNameSpace from here
-  | CurrentNameSpace
+  | -- Signifies that this path is the current module, and that
+    -- we should search the currentNameSpace from here
+    CurrentNameSpace
   deriving (Show, Generic)
 
 -- not using lenses anymore but leaving this here anyway
@@ -157,20 +158,68 @@ addPathWithValue ::
   Definition term ty sumRep ->
   T term ty sumRep ->
   Either PathError (T term ty sumRep)
-addPathWithValue path placeholder t@T {currentNameSpace, currentName, topLevelMap} =
-  let createPath (x : xs) = undefined
-  in case NameSymbol.takeSubSetOf currentName path of
-    Just path ->
-      undefined
+addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap} =
+  case NameSymbol.takeSubSetOf currentName path of
+    Just (p :| path) ->
+      createPath (p : path) currentNameSpace placeholder
+        |> handleMaybe (`create` topLevelMap)
     Nothing ->
-      undefined
+      -- same logic as createPath, but due to types have to duplicate
+      let (p :| path') = path
+          --
+          insertRecordTopLevel typ ins =
+            HashMap.insert p (Record ins typ) topLevelMap
+          --
+          continuePath next typ =
+            createPath path' next placeholder
+              |> fmap (insertRecordTopLevel typ)
+              |> handleMaybe (create currentNameSpace)
+       in case HashMap.lookup p topLevelMap of
+            Just (Record def ty) ->
+              continuePath def ty
+            Nothing -> continuePath NameSpace.empty Nothing
+            Just __ -> Lib.Left (VariableShared path)
+  where
+    create curr top =
+      T {currentNameSpace = curr, currentName, topLevelMap = top}
+    --
+    handleMaybe :: (x -> y) -> Maybe x -> Either PathError y
+    handleMaybe _ Nothing =
+      Lib.Left (VariableShared path)
+    handleMaybe f (Just x) =
+      Lib.Right (f x)
 
 -- this function does not remove the current name space from the toplevel map
 -- as we may be able to reference it from the top
 switchNameSpace :: NameSymbol.T -> T term ty sumRep -> T term ty sumRep
 switchNameSpace newNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
 
---------------------------------------------------------------------------------
+------------------------------------------------------------
+-- Helpers for create path
+------------------------------------------------------------
+createPath ::
+  [Symbol] ->
+  NameSpace.T (Definition term ty sumRep) ->
+  Definition term ty sumRep ->
+  Maybe (NameSpace.T (Definition term ty sumRep))
+createPath [x] cont placeholder =
+  Just (NameSpace.insert (NameSpace.Pub x) placeholder cont)
+createPath [] cont _placeholder =
+  Just cont
+createPath (x : xs) cont placeholder =
+  case NameSpace.lookup x cont of
+    Just (Record def ty) ->
+      continuePath def ty
+    Nothing -> continuePath NameSpace.empty Nothing
+    Just __ -> Nothing
+  where
+    continuePath next typ =
+      createPath xs next placeholder
+        |> fmap (insertRecordCont typ)
+    insertRecordCont typ ins =
+      NameSpace.insertPublic x (Record ins typ) cont
+
+-------------------------------------------------------------------------------
 -- Generalized Helpers
 --------------------------------------------------------------------------------
 
@@ -217,7 +266,6 @@ lookupGen extraLookup key T {currentNameSpace} =
             |> \case
               Just x -> traverse (recurse xs . Just) x
               Nothing -> Nothing
-
 -- TODO :: change this to an include
 -- open :: Symbol -> T term ty sumRep -> T term ty sumRep
 -- open key (T map) =

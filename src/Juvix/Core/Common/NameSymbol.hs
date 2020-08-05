@@ -28,7 +28,7 @@ takeSubSetOf smaller larger =
     Just (x : xs) -> Just (x :| xs)
 
 takeSubSetOfInternal :: T -> T -> Maybe [Symbol]
-takeSubSetOfInternal  (s :| smaller) (b :| bigger)
+takeSubSetOfInternal (s :| smaller) (b :| bigger)
   | b == s = recurse smaller bigger
   | otherwise = Nothing
   where
