@@ -21,6 +21,7 @@ import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
+import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -72,6 +73,7 @@ makeLensesWith camelCaseFields ''Definition
 
 data PathError
   = VariableShared NameSymbol.T
+  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 -- In Lu of not being able to export namespaces
@@ -88,13 +90,19 @@ nameSymbolFromSymbol = NameSymbol.fromSymbol
 -- Body
 --------------------------------------------------------------------------------
 
-empty :: NameSymbol.T -> Cont b
+empty :: NameSymbol.T -> T term ty sumRep
 empty sym =
-  T
-    { currentNameSpace = NameSpace.empty,
-      currentName = sym,
-      topLevelMap = HashMap.empty
-    }
+  case addPathWithValue sym CurrentNameSpace fullyEmpty of
+    Lib.Left _ -> error "impossible"
+    Lib.Right x -> x
+  where
+    fullyEmpty =
+      ( T
+          { currentNameSpace = NameSpace.empty,
+            currentName = sym,
+            topLevelMap = HashMap.empty
+          }
+      )
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
@@ -133,6 +141,30 @@ toList T {currentNameSpace} = NameSpace.toList currentNameSpace
 --------------------------------------------------------------------------------
 -- Global Functions
 --------------------------------------------------------------------------------
+
+-- we lose some type information here... we should probably reserve it somehow
+switchNameSpace ::
+  NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
+switchNameSpace newNameSpace t@T {currentName} =
+  let addCurrentName t@T {currentNameSpace} startingContents =
+        (addGlobal currentName (Record currentNameSpace Nothing) t)
+          { currentName = newNameSpace,
+            currentNameSpace = startingContents
+          }
+   in case addPathWithValue newNameSpace CurrentNameSpace t of
+        Lib.Right t ->
+          Lib.Right (addCurrentName t NameSpace.empty)
+        -- the namespace may already exist
+        Lib.Left er ->
+          case t !? (NameSymbol.toSymbol newNameSpace) of
+            Just (Current (NameSpace.Pub (Record def _))) ->
+              Lib.Right (addCurrentName t def)
+            Just (Current (NameSpace.Priv (Record def _))) ->
+              Lib.Right (addCurrentName t def)
+            Just (Outside (Record def _)) ->
+              Lib.Right (addCurrentName t def)
+            Nothing -> Lib.Left er
+            Just __ -> Lib.Left er
 
 lookup ::
   Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
@@ -218,11 +250,6 @@ addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap}
       createPath path' next placeholder
         |> fmap (insertRecordTopLevel typ)
         |> handleMaybe (create currentNameSpace)
-
--- this function does not remove the current name space from the toplevel map
--- as we may be able to reference it from the top
-switchNameSpace :: NameSymbol.T -> T term ty sumRep -> T term ty sumRep
-switchNameSpace newNameSpace T {currentNameSpace, currentName, topLevelMap} = undefined
 
 ------------------------------------------------------------
 -- Helpers for create path

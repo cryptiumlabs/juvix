@@ -24,3 +24,13 @@ memptyTest =
 
 lookupTest :: Maybe (Context.Definition term ty sumRep)
 lookupTest = Context.lookup "foo.a" nestedRecord
+
+foo = Juvix.Core.Common.Context.empty ("Foo" :| ["Bar", "Baz"])
+
+foo' = addPathWithValue ("Foo" :| ["Bar", "Baz", "Barry"]) (Unknown Nothing) foo
+
+foo'' = switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
+
+foo''' = switchNameSpace ("Foo" :| ["Bar", "Min"]) foo
+
+foo'''' = switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
