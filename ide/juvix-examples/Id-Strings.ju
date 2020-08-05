@@ -1,0 +1,16 @@
+let string = %Michelson.string
+
+let pair = %Michelson.pair
+
+let unit = %Param.unit
+
+-- Identity contract for strings. 
+let storage = unit
+
+-- Default entry point
+sig default : string -> storage -> storage
+let default para storage = pair [] storage
+
+-- Initialize storage to ().
+sig init-storage : storage
+let init-storage = unit
