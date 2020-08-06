@@ -1,4 +1,4 @@
-let nat = %Micheslon.nat
+let nat = %Michelson.nat
 
 let add = %Michelson.add
 
