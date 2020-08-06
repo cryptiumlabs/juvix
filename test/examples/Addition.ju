@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 let nat = %Micheslon.nat
+=======
+let nat = %Michelson.nat
+>>>>>>> develop
 
 let add = %Michelson.add
 
@@ -19,4 +23,8 @@ let add-storage {value, valu} =
 
 -- Default entry point
 sig default : nat -> storage -> storage
+<<<<<<< HEAD
 let default addnat storage = pair (add-storage storage) (foo input storage)
+=======
+let default addnat storage = pair (add-storage storage) (foo input storage)
+>>>>>>> develop
