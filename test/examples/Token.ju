@@ -105,47 +105,6 @@ mod Validation =
       false 
 end 
 
--- operation is ether a transfer, or mint or burn tokens.
-mod Operation =
-
-  let TokenTransaction f =
-    tok : Token.T -> tx : tx { f tok tx } -> Token.T
-
-  sig transfer : TokenTransaction Validation.transfer
-  let transfer token transaction =
-    case transaction.data of
-    | Transfer {from-account, to-account, amount} ->
-      { token
-        with storage =
-          transfer-stor token.storage
-                        ~from:from_account
-                        ~to:to_account
-                        transfer_ammount
-      }
-
-  sig mint : TokenTransaction Validation.mint
-  let mint token transaction =
-    case transaction.data of
-    | Mint {mint-amount, mint-to-account} ->
-      { token
-        -- again safe to do because of tree structure
-        with storage = {
-          total-suply = token.storage.total_supply + mint-amount,
-          accounts    = account-add token.storage.accounts mint-to-account mint-amount,
-        }}
-
-  sig burn : TokenTransaction Validation.mint
-  let burn token transaction =
-    case transaction.data of
-    | Burn {burn-amount, burn-from-account} ->
-      { token
-        -- again safe to do because of tree structure
-        with storage = {
-          total-suply = token.storage.total_supply - burn-amount,
-          accounts    = account-sub token.storage.accounts burn-from-account burn-amount,
-        }}
-end
-
 type Error 
   = NotEnoughFunds 
   | NotSameAccount 
