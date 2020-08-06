@@ -157,84 +157,86 @@ data OnlyRecord b ty
   = OnlyRecord (NameSpace.T b) (Maybe ty)
 
 modifySpace ::
-  (Stage (Maybe (Definition term ty sumRep)) -> Return (Definition term ty sumRep) ty) ->
+  ( Stage (Maybe (Definition term ty sumRep)) ->
+    Return (Definition term ty sumRep) ty
+  ) ->
   NameSymbol.T ->
   T term ty sumRep ->
-  T term ty sumRep
+  Maybe (T term ty sumRep)
 modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
   case NameSpace.lookupInternal s currentNameSpace of
     Just (NameSpace.Pub _) ->
-      t {currentNameSpace = recurse (s :| ymbol) currentNameSpace}
+      updateCurr t <$> recurse (s :| ymbol) currentNameSpace
     Just (NameSpace.Priv _) ->
-      t {currentNameSpace = recursePriv (s :| ymbol) currentNameSpace}
+      updateCurr t <$> recursePriv (s :| ymbol) currentNameSpace
     Nothing ->
       case NameSymbol.takeSubSetOf currentName (s :| ymbol) of
         Just subPath ->
-          t {currentNameSpace = recurse subPath currentNameSpace}
+          updateCurr t <$>recurse subPath currentNameSpace
         Nothing ->
-          t {topLevelMap = hashRecurse (s :| ymbol)}
+          updateTopLevel t <$> hashRecurse (s :| ymbol)
   where
+    updateCurr t newCurrent =
+      t {currentNameSpace = newCurrent}
+    updateTopLevel t newTop =
+      t {topLevelMap = newTop}
     recurse (x :| y : xs) cont =
       case f (Continue (NameSpace.lookup x cont)) of
         GoOn (OnlyRecord nameSpace ty) ->
-          NameSpace.insert
-            (NameSpace.Pub x)
-            (Record (recurse (y :| xs) nameSpace) ty)
-            cont
+          let f newRecord =
+                NameSpace.insert (NameSpace.Pub x) (Record newRecord ty) cont
+          in fmap f (recurse (y :| xs) nameSpace)
         Abort ->
-          cont
+          Nothing
         UpdateNow newRecord ->
-          NameSpace.insert (NameSpace.Pub x) newRecord cont
+          Just (NameSpace.insert (NameSpace.Pub x) newRecord cont)
     recurse (x :| []) cont =
       case f (Final (NameSpace.lookup x cont)) of
         UpdateNow return ->
-          NameSpace.insert (NameSpace.Pub x) return cont
+          Just (NameSpace.insert (NameSpace.Pub x) return cont)
         -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> cont
-        Abort -> cont
+        GoOn {} -> Nothing
+        Abort -> Nothing
     -- this function is the same copy and pasted, but deals with hash insert and
     -- lookup instead... figure out how to make it infer the type better later
     -- 2 variables vs 1 is annoying!
     hashRecurse (x :| y : xs) =
       case f (Continue (HashMap.lookup x topLevelMap)) of
         GoOn (OnlyRecord nameSpace ty) ->
-          HashMap.insert
-            x
-            (Record (recurse (y :| xs) nameSpace) ty)
-            topLevelMap
+          let f newRecord =
+                HashMap.insert x (Record newRecord ty) topLevelMap
+          in fmap f (recurse (y :| xs) nameSpace)
         Abort ->
-          topLevelMap
+          Nothing
         UpdateNow newRecord ->
-          HashMap.insert x newRecord topLevelMap
+          Just (HashMap.insert x newRecord topLevelMap)
     hashRecurse (x :| []) =
       case f (Final (HashMap.lookup x topLevelMap)) of
         UpdateNow return ->
-          HashMap.insert x return topLevelMap
+          Just (HashMap.insert x return topLevelMap)
         -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> topLevelMap
-        Abort -> topLevelMap
+        GoOn {} -> Nothing
+        Abort -> Nothing
     -- More repeat code, but this time we do it on the private
     -- we don't abstract it, as Ι think it'll subtract readability
     -- from the public one
     recursePriv (x :| y : xs) cont =
       case f (Continue (NameSpace.lookupPrivate x cont)) of
         GoOn (OnlyRecord nameSpace ty) ->
-          NameSpace.insert
-            (NameSpace.Priv x)
-            (Record (recurse (y :| xs) nameSpace) ty)
-            cont
+          let f newRecord =
+                NameSpace.insert (NameSpace.Priv x) (Record newRecord ty) cont
+          in fmap f (recurse (y :| xs) nameSpace)
         Abort ->
-          cont
+          Nothing
         UpdateNow newRecord ->
-          NameSpace.insert (NameSpace.Priv x) newRecord cont
+          Just (NameSpace.insert (NameSpace.Priv x) newRecord cont)
     recursePriv (x :| []) cont =
       case f (Final (NameSpace.lookupPrivate x cont)) of
         UpdateNow return ->
-          NameSpace.insert (NameSpace.Priv x) return cont
+          Just (NameSpace.insert (NameSpace.Priv x) return cont)
         -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> cont
-        Abort -> cont
-
+        GoOn {} -> Nothing
+        Abort -> Nothing
 
 -- we lose some type information here... we should probably reserve it somehow
 switchNameSpace ::
@@ -271,6 +273,13 @@ lookup key t@T {topLevelMap} =
 (!?) ::
   T term ty sumRep -> Symbol -> Maybe (From (Definition term ty sumRep))
 (!?) = flip lookup
+
+addGlobal' ::
+  NameSymbol.T ->
+  Definition term ty sumRep ->
+  T term ty sumRep ->
+  T term ty sumRep
+addGlobal' = undefined
 
 -- Used for add namespace adding and various other purposes
 addGlobal ::
@@ -347,7 +356,6 @@ addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap}
         |> fmap (insertRecordTopLevel typ)
         |> handleMaybe (create currentNameSpace)
 
-
 removeNameSpace :: NameSymbol -> T term ty sumRep -> T term ty sumRep
 removeNameSpace path t@T {currentNameSpace, currentName, topLevelMap}
   -- if we want to delete the current namespace, just don't
@@ -361,30 +369,31 @@ removeNameSpace path t@T {currentNameSpace, currentName, topLevelMap}
       Nothing ->
         case path of
           path :| [] ->
-            t { topLevelMap = HashMap.delete path topLevelMap }
+            t {topLevelMap = HashMap.delete path topLevelMap}
           path :| p : paths ->
             case HashMap.lookup path topLevelMap of
               Just (Record def ty) ->
-                t {topLevelMap =
-                   HashMap.insert
-                     path
-                     (Record (recurse (p :| paths) def) ty)
-                     topLevelMap
+                t
+                  { topLevelMap =
+                      HashMap.insert
+                        path
+                        (Record (recurse (p :| paths) def) ty)
+                        topLevelMap
                   }
               Just __ -> t
               Nothing -> t
-    where
-      recurse (x :| []) cont =
-        NameSpace.remove (NameSpace.Pub x) cont
-      recurse (x :| y : xs) cont =
-        case NameSpace.lookup x cont of
-          Just (Record def ty) ->
-            NameSpace.insert
-              (NameSpace.Pub x)
-              (Record (recurse (y :| xs) def) ty)
-              cont
-          Just __ -> cont
-          Nothing -> cont
+  where
+    recurse (x :| []) cont =
+      NameSpace.remove (NameSpace.Pub x) cont
+    recurse (x :| y : xs) cont =
+      case NameSpace.lookup x cont of
+        Just (Record def ty) ->
+          NameSpace.insert
+            (NameSpace.Pub x)
+            (Record (recurse (y :| xs) def) ty)
+            cont
+        Just __ -> cont
+        Nothing -> cont
 
 ------------------------------------------------------------
 -- Helpers for create path

@@ -7,7 +7,6 @@ type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 
 type HasOld t ty s m = HasState "old" (Context.T t ty s) m
 
-
 lookup ::
   HasNew term ty sumRep m => Symbol -> m (Maybe (Context.Definition term ty sumRep))
 lookup sy = do
