@@ -78,6 +78,74 @@ let new-acc = account-add (account-sub stor.accounts add_from) add-to num in
 , accounts     = new-acc 
 } 
 
+mod Validation = 
+  let T = Token.T -> Transaction.T -> Bool 
+
+  let mint token tx = 
+    case tx.data of 
+    | Transaction.Mint -> 
+      token.owner == tx-tx-authorized-account 
+    | _ -> 
+      false 
+
+  let transfer token tx = 
+    case tx.data of 
+    | Transaction.Transfer {from-account, amount} -> 
+      has-n token.storage.accounts from-account amount 
+      && tx.authroized-account == from-account 
+    | _ -> 
+      false 
+
+  let Burn token tx = 
+    case tx.data of 
+    | Transaction.Burn {burn-from-account, burn-ammount} -> 
+      has-n token.storage.accounts burn-from-account burn-amount 
+      && tx.authroized-account == burn-from-account 
+    | _ -> 
+      false 
+end 
+
+-- operation is ether a transfer, or mint or burn tokens.
+mod Operation =
+
+  let TokenTransaction f =
+    tok : Token.T -> tx : tx { f tok tx } -> Token.T
+
+  sig transfer : TokenTransaction Validation.transfer
+  let transfer token transaction =
+    case transaction.data of
+    | Transfer {from-account, to-account, amount} ->
+      { token
+        with storage =
+          transfer-stor token.storage
+                        ~from:from_account
+                        ~to:to_account
+                        transfer_ammount
+      }
+
+  sig mint : TokenTransaction Validation.mint
+  let mint token transaction =
+    case transaction.data of
+    | Mint {mint-amount, mint-to-account} ->
+      { token
+        -- again safe to do because of tree structure
+        with storage = {
+          total-suply = token.storage.total_supply + mint-amount,
+          accounts    = account-add token.storage.accounts mint-to-account mint-amount,
+        }}
+
+  sig burn : TokenTransaction Validation.mint
+  let burn token transaction =
+    case transaction.data of
+    | Burn {burn-amount, burn-from-account} ->
+      { token
+        -- again safe to do because of tree structure
+        with storage = {
+          total-suply = token.storage.total_supply - burn-amount,
+          accounts    = account-sub token.storage.accounts burn-from-account burn-amount,
+        }}
+end
+
 type Error 
   = NotEnoughFunds 
   | NotSameAccount 
