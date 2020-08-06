@@ -235,14 +235,26 @@ removeNameSpace sym t =
 --------------------------------------------------------------------------------
 
 data Stage b
-  = Final b
-  | Continue b
+  = -- | 'Final' signifies the last symbol that we
+    -- pursue in updating a structure
+    Final b
+  | -- | 'Continue' signifies that there are parts of
+    -- the namespace that we can still continue down
+    Continue b
 
 data Return b ty
-  = GoOn (OnRecord b ty)
-  | Abort
-  | UpdateNow b
-  | RemoveNow
+  = -- | 'GoOn' signifies that we should continue
+    -- going down records
+    GoOn (OnRecord b ty)
+  | -- | 'Abort' signifies that we should cancel
+    -- the changes on the map and
+    Abort
+  | -- | 'UpdateNow' signifies that we should
+    -- update the context with the current value
+    UpdateNow b
+  | -- | 'RemoveNow' signifies that we show remove
+    -- the definition at this level
+    RemoveNow
 
 data OnRecord b ty
   = OnRecord (NameSpace.T b) (Maybe ty)
