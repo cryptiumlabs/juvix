@@ -50,9 +50,9 @@ end
 
 sig has-n : Accounts.T -> Token.Address -> Nat -> Bool 
 let has-n accounts add to-transfer = 
-case Accounts.select accounts add of 
-| Just n  -> to-transfer <= n 
-| Nothing -> False 
+  case Accounts.select accounts add of 
+    | Just n  -> to-transfer <= n 
+    | Nothing -> False 
 
 sig account-sub : acc : Accounts.T 
               -> add : Token.Address 
@@ -60,12 +60,12 @@ sig account-sub : acc : Accounts.T
               -> Accounts.T 
 let account-sub accounts add number = 
 case Accounts.select accounts add of 
-| Just balance -> 
-    Accounts.put accounts add (balance - number) 
+  | Just balance -> 
+      Accounts.put accounts add (balance - number) 
 
 sig account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T 
 let account-add accounts add number = 
-Accounts.update accounts ((+) number) add 
+  Accounts.update accounts ((+) number) add 
 
 sig transfer-stor : stor  : Token.Storage 
                 -> from  : Token.Address 
@@ -73,36 +73,36 @@ sig transfer-stor : stor  : Token.Storage
                 -> num   : Nat.T {has-n stor.accounts from num} 
                 -> Token.Storage 
 let transfer-stor stor add_from add_to num = 
-let new-acc = account-add (account-sub stor.accounts add_from) add-to num in 
-{ total-supply = stor.total-supply 
-, accounts     = new-acc 
-} 
+  let new-acc = account-add (account-sub stor.accounts add_from) add-to num in 
+    { total-supply = stor.total-supply 
+      , accounts     = new-acc 
+    } 
 
 mod Validation = 
   let T = Token.T -> Transaction.T -> Bool 
 
   let mint token tx = 
     case tx.data of 
-    | Transaction.Mint -> 
-      token.owner == tx-tx-authorized-account 
-    | _ -> 
-      false 
+      | Transaction.Mint -> 
+        token.owner == tx-tx-authorized-account 
+      | _ -> 
+        false 
 
   let transfer token tx = 
     case tx.data of 
-    | Transaction.Transfer {from-account, amount} -> 
-      has-n token.storage.accounts from-account amount 
-      && tx.authroized-account == from-account 
-    | _ -> 
-      false 
+      | Transaction.Transfer {from-account, amount} -> 
+        has-n token.storage.accounts from-account amount 
+        && tx.authroized-account == from-account 
+      | _ -> 
+        false 
 
   let Burn token tx = 
     case tx.data of 
-    | Transaction.Burn {burn-from-account, burn-ammount} -> 
-      has-n token.storage.accounts burn-from-account burn-amount 
-      && tx.authroized-account == burn-from-account 
-    | _ -> 
-      false 
+      | Transaction.Burn {burn-from-account, burn-ammount} -> 
+        has-n token.storage.accounts burn-from-account burn-amount 
+        && tx.authroized-account == burn-from-account 
+      | _ -> 
+        false 
 end 
 
 type Error 
@@ -114,9 +114,9 @@ type Error
 sig exec : Token.T -> Transaction.T -> Either.T Error Token.T 
 let exec token tx = 
   case tx.data of 
-  | Transfer _ -> 
-    if | Validation.transfer token tx = Right (transfer token tx) 
-        | else                         = Left NotEnoughFunds 
+    | Transfer _ -> 
+      if | Validation.transfer token tx = Right (transfer token tx) 
+         | else                         = Left NotEnoughFunds 
   | Mint _ -> 
-    if | Validation.mint token tx = Right (mint token tx) 
-        | else                     = Left NotEnoughFunds
+      if | Validation.mint token tx = Right (mint token tx) 
+         | else                     = Left NotEnoughFunds
