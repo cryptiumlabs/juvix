@@ -141,6 +141,8 @@ toList T {currentNameSpace} = NameSpace.toList currentNameSpace
 --------------------------------------------------------------------------------
 -- Global Functions
 --------------------------------------------------------------------------------
+-- All these functions modulo lookup\ need to be changed for 465
+-- Make a continuation version that handles the maybe cases for us
 
 -- we lose some type information here... we should probably reserve it somehow
 switchNameSpace ::
@@ -156,7 +158,8 @@ switchNameSpace newNameSpace t@T {currentName} =
           Lib.Right (addCurrentName t NameSpace.empty)
         -- the namespace may already exist
         Lib.Left er ->
-          case t !? (NameSymbol.toSymbol newNameSpace) of
+          -- how do we add the namespace back to the private area!?
+          case t !? NameSymbol.toSymbol newNameSpace of
             Just (Current (NameSpace.Pub (Record def _))) ->
               Lib.Right (addCurrentName t def)
             Just (Current (NameSpace.Priv (Record def _))) ->
@@ -202,6 +205,7 @@ addGlobal path@(p :| path') def T {currentNameSpace, currentName, topLevelMap} =
                 HashMap.insert p (Record (recurse path' def) ty) topLevelMap
             }
         Nothing -> T {topLevelMap, currentName, currentNameSpace}
+        -- what if path' is [], then should we update to be consistent!?
         Just __ -> T {topLevelMap, currentName, currentNameSpace}
   where
     recurse [] cont =
@@ -250,6 +254,45 @@ addPathWithValue path placeholder T {currentNameSpace, currentName, topLevelMap}
       createPath path' next placeholder
         |> fmap (insertRecordTopLevel typ)
         |> handleMaybe (create currentNameSpace)
+
+
+removeNameSpace :: NameSymbol -> T term ty sumRep -> T term ty sumRep
+removeNameSpace path t@T {currentNameSpace, currentName, topLevelMap}
+  -- if we want to delete the current namespace, just don't
+  -- probably should either
+  | path == currentName =
+    t
+  | otherwise =
+    case NameSymbol.takeSubSetOf currentName path of
+      Just pathAfterCurrent ->
+        t {currentNameSpace = recurse pathAfterCurrent currentNameSpace}
+      Nothing ->
+        case path of
+          path :| [] ->
+            t { topLevelMap = HashMap.delete path topLevelMap }
+          path :| p : paths ->
+            case HashMap.lookup path topLevelMap of
+              Just (Record def ty) ->
+                t {topLevelMap =
+                   HashMap.insert
+                     path
+                     (Record (recurse (p :| paths) def) ty)
+                     topLevelMap
+                  }
+              Just __ -> t
+              Nothing -> t
+    where
+      recurse (x :| []) cont =
+        NameSpace.remove (NameSpace.Pub x) cont
+      recurse (x :| y : xs) cont =
+        case NameSpace.lookup x cont of
+          Just (Record def ty) ->
+            NameSpace.insert
+              (NameSpace.Pub x)
+              (Record (recurse (y :| xs) def) ty)
+              cont
+          Just __ -> cont
+          Nothing -> cont
 
 ------------------------------------------------------------
 -- Helpers for create path

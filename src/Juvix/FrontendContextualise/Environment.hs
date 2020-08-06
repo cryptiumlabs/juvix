@@ -7,15 +7,6 @@ type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 
 type HasOld t ty s m = HasState "old" (Context.T t ty s) m
 
-modify ::
-  HasNew term ty sumRep m =>
-  ( Context.Definition term ty sumRep ->
-    Maybe (Context.Definition term ty sumRep)
-  ) ->
-  Symbol ->
-  m ()
-modify f sy =
-  Juvix.Library.modify @"new" (Context.modify f sy)
 
 lookup ::
   HasNew term ty sumRep m => Symbol -> m (Maybe (Context.Definition term ty sumRep))
@@ -28,15 +19,6 @@ ask ::
 ask sy = do
   ctx <- get @"old"
   return $ Context.lookup sy ctx
-
-mapWithKey ::
-  HasNew term ty sumRep m =>
-  ( Symbol ->
-    Context.Definition term ty sumRep ->
-    Context.Definition term ty sumRep
-  ) ->
-  m ()
-mapWithKey f = Juvix.Library.modify @"new" (Context.mapWithKey f)
 
 add ::
   HasNew term ty sumRep m =>
