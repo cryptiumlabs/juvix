@@ -34,3 +34,7 @@ foo'' = switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
 foo''' = switchNameSpace ("Foo" :| ["Bar", "Min"]) foo
 
 foo'''' = switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
+
+barTest = switchNameSpace ("Foo" :| ["Bar", "Baz", "Barr"]) foo'
+
+barTest' = removeNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) barTest
