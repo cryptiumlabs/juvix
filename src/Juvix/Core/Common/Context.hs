@@ -144,6 +144,98 @@ toList T {currentNameSpace} = NameSpace.toList currentNameSpace
 -- All these functions modulo lookup\ need to be changed for 465
 -- Make a continuation version that handles the maybe cases for us
 
+data Stage b
+  = Final b
+  | Continue b
+
+data Return b ty
+  = GoOn (OnlyRecord b ty)
+  | Abort
+  | UpdateNow b
+
+data OnlyRecord b ty
+  = OnlyRecord (NameSpace.T b) (Maybe ty)
+
+modifySpace ::
+  (Stage (Maybe (Definition term ty sumRep)) -> Return (Definition term ty sumRep) ty) ->
+  NameSymbol.T ->
+  T term ty sumRep ->
+  T term ty sumRep
+modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
+  case NameSpace.lookupInternal s currentNameSpace of
+    Just (NameSpace.Pub _) ->
+      t {currentNameSpace = recurse (s :| ymbol) currentNameSpace}
+    Just (NameSpace.Priv _) ->
+      t {currentNameSpace = recursePriv (s :| ymbol) currentNameSpace}
+    Nothing ->
+      case NameSymbol.takeSubSetOf currentName (s :| ymbol) of
+        Just subPath ->
+          t {currentNameSpace = recurse subPath currentNameSpace}
+        Nothing ->
+          t {topLevelMap = hashRecurse (s :| ymbol)}
+  where
+    recurse (x :| y : xs) cont =
+      case f (Continue (NameSpace.lookup x cont)) of
+        GoOn (OnlyRecord nameSpace ty) ->
+          NameSpace.insert
+            (NameSpace.Pub x)
+            (Record (recurse (y :| xs) nameSpace) ty)
+            cont
+        Abort ->
+          cont
+        UpdateNow newRecord ->
+          NameSpace.insert (NameSpace.Pub x) newRecord cont
+    recurse (x :| []) cont =
+      case f (Final (NameSpace.lookup x cont)) of
+        UpdateNow return ->
+          NameSpace.insert (NameSpace.Pub x) return cont
+        -- GoOn makes no sense here, so act as an Abort
+        GoOn {} -> cont
+        Abort -> cont
+    -- this function is the same copy and pasted, but deals with hash insert and
+    -- lookup instead... figure out how to make it infer the type better later
+    -- 2 variables vs 1 is annoying!
+    hashRecurse (x :| y : xs) =
+      case f (Continue (HashMap.lookup x topLevelMap)) of
+        GoOn (OnlyRecord nameSpace ty) ->
+          HashMap.insert
+            x
+            (Record (recurse (y :| xs) nameSpace) ty)
+            topLevelMap
+        Abort ->
+          topLevelMap
+        UpdateNow newRecord ->
+          HashMap.insert x newRecord topLevelMap
+    hashRecurse (x :| []) =
+      case f (Final (HashMap.lookup x topLevelMap)) of
+        UpdateNow return ->
+          HashMap.insert x return topLevelMap
+        -- GoOn makes no sense here, so act as an Abort
+        GoOn {} -> topLevelMap
+        Abort -> topLevelMap
+    -- More repeat code, but this time we do it on the private
+    -- we don't abstract it, as Ι think it'll subtract readability
+    -- from the public one
+    recursePriv (x :| y : xs) cont =
+      case f (Continue (NameSpace.lookupPrivate x cont)) of
+        GoOn (OnlyRecord nameSpace ty) ->
+          NameSpace.insert
+            (NameSpace.Priv x)
+            (Record (recurse (y :| xs) nameSpace) ty)
+            cont
+        Abort ->
+          cont
+        UpdateNow newRecord ->
+          NameSpace.insert (NameSpace.Priv x) newRecord cont
+    recursePriv (x :| []) cont =
+      case f (Final (NameSpace.lookupPrivate x cont)) of
+        UpdateNow return ->
+          NameSpace.insert (NameSpace.Priv x) return cont
+        -- GoOn makes no sense here, so act as an Abort
+        GoOn {} -> cont
+        Abort -> cont
+
+
 -- we lose some type information here... we should probably reserve it somehow
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)

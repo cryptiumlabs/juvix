@@ -32,6 +32,10 @@ lookup :: Symbol -> T v -> Maybe v
 lookup s T {public} =
   HashMap.lookup s public
 
+lookupPrivate :: Symbol -> T v -> Maybe v
+lookupPrivate s T {private} =
+  HashMap.lookup s private
+
 -- [lookupInternal] looksup the symbol from the private
 -- namespace first, as although variables can't be in
 -- both namespaces at once, there could exist an inner module
