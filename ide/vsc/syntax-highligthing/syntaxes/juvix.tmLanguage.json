@@ -23,8 +23,8 @@
 					"include": "#comments"
 				},
 				{
-					"name": "variable.other.generic-type.juvix",
-					"match": "\\b[A-Z][a-zA-Z0-9]\\b"
+					"name": "entity.name.type.juvix",
+					"match": "[a-z0-9]\\b"
 				},
 				{
 					"include": "#strings"
@@ -48,6 +48,10 @@
 				{
 					"match": "\\b[0-9]+[uU]?[zyslL]?\\b",
 					"name": "constant.numeric.decimal.juvix"
+				},
+				{
+					"match": "\\%[A-Za-z.]+\\b",
+					"name": "variable.other.constant.juvix fs"
 				},
 				{
 					"match": "(?x)\n(?:\n  (?:\\b[0-9]+(\\.)[0-9]+[eE][+-]?[0-9]+\\b)| # 1.1E+3\n  (?:\\b[0-9]+(\\.)[eE][+-]?[0-9]+\\b)|       # 1.E+3\n  (?:\\B(\\.)[0-9]+[eE][+-]?[0-9]+\\b)|       # .1E+3\n  (?:\\b[0-9]+[eE][+-]?[0-9]+\\b)|            # 1E+3\n  (?:\\b[0-9]+(\\.)[0-9]+\\b)|                # 1.1\n  (?:\\b[0-9]+(\\.)\\B)|                      # 1.\n  (?:\\B(\\.)[0-9]+\\b)|                      # .1\n  (?:\\b[0-9]+\\b(?!\\.))                     # 1\n)[L]?[fF]?",

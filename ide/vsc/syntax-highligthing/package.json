@@ -10,16 +10,25 @@
         "Programming Languages"
     ],
     "contributes": {
-        "languages": [{
-            "id": "juvix",
-            "aliases": ["Juvix", "juvix"],
-            "extensions": ["ju"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "juvix",
-            "scopeName": "source.juvix",
-            "path": "./syntaxes/juvix.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "juvix",
+                "aliases": [
+                    "Juvix",
+                    "juvix"
+                ],
+                "extensions": [
+                    "ju"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "juvix",
+                "scopeName": "source.juvix",
+                "path": "./syntaxes/juvix.tmLanguage.json"
+            }
+        ]
     }
 }
