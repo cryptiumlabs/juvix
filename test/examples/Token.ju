@@ -118,6 +118,6 @@ let exec token tx =
     | Transfer _ -> 
       if | Validation.transfer token tx = Right (transfer token tx) 
          | else                         = Left NotEnoughFunds 
-   | Mint _ -> 
+    | Mint _ -> 
       if | Validation.mint token tx = Right (mint token tx) 
          | else                     = Left NotEnoughFunds
