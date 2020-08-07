@@ -5,6 +5,7 @@ module Juvix.FrontendContextualise.Contextify.Transform where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 
 type Repr f =
@@ -16,28 +17,28 @@ type Context =
 type Definition =
   Repr Context.Definition
 
-contextify :: [Repr.TopLevel] -> Context
-contextify = foldr updateTopLevel Context.empty
+contextify :: Context.NameSymbol -> [Repr.TopLevel] -> Context
+contextify nameSymb = foldr updateTopLevel (Context.empty nameSymb)
 
 -- TODO ∷ bad hack I'll have to change
 reconstructSymbol :: NonEmpty Symbol -> Symbol
 reconstructSymbol =
   intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
 
--- for now we'll drop typeclass and it's instance
--- for function top level we have to determine if it's a record
--- for ModuleOpen should we see if the definition comes after this point?!
--- if we get nothing we just stop, but I think
+-- TODO ∷ We should return a tuple of opens and the contex
 updateTopLevel :: Repr.TopLevel -> Context -> Context
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
-  Context.add name (Context.TypeDeclar t) ctx
+  Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
-  Context.add name (decideRecordOrDef f sig) ctx
-updateTopLevel (Repr.ModuleOpen (Repr.Open mod)) ctx =
-  Context.open (reconstructSymbol mod) ctx
+  Context.add (NameSpace.Pub name) (decideRecordOrDef f sig) ctx
+updateTopLevel (Repr.ModuleOpen (Repr.Open _mod)) ctx =
+  -- TODO ∷ Update this case!
+  ctx
 updateTopLevel Repr.TypeClass ctx = ctx
 updateTopLevel Repr.TypeClassInstance ctx = ctx
 
+-- TODO ∷ why is the context empty?
+-- we should somehow note what lists are in scope
 -- | decideRecordOrDef tries to figure out
 -- if a given defintiion is a record or a definition
 decideRecordOrDef ::
@@ -51,10 +52,10 @@ decideRecordOrDef xs ty
         -- the type here can eventually give us arguments though looking at the
         -- lambda for e, and our type can be found out similarly by looking at types
         let f (Repr.NonPunned s e) =
-              Context.add
-                (NonEmpty.head s)
+              NameSpace.insert
+                (NameSpace.Pub (NonEmpty.head s))
                 (decideRecordOrDef (Repr.Like [] e :| []) Nothing)
-         in Context.Record (foldr f Context.empty i) ty
+         in Context.Record (foldr f NameSpace.empty i) ty
       Repr.Let _l ->
         def
       _ -> def

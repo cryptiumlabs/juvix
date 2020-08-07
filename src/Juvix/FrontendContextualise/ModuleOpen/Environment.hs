@@ -69,8 +69,11 @@ newtype Context a
     (HasThrow "error" Error)
     via MonadError ContextAlias
 
-runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
-runEnv (Ctx c) old = runState (runExceptT c) (Env old Context.empty mempty)
+runEnv ::
+  Context a -> Old Context.T -> (Either Error a, Environment)
+runEnv (Ctx c) old =
+  Env old (Context.empty (Context.currentName old)) mempty
+  |> runState (runExceptT c)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
