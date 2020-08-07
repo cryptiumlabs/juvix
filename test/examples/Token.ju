@@ -22,6 +22,7 @@ mod Token =
 end
 
 mod Transaction = 
+
   type Transfer = { 
     from-account : Token.Address, 
     to-account   : Token.Address, 
@@ -73,8 +74,8 @@ sig transfer-stor : stor  : Token.Storage
                 -> to    : Token.Address 
                 -> num   : Nat.T {has-n stor.accounts from num} 
                 -> Token.Storage 
-let transfer-stor stor add_from add_to num = 
-  let new-acc = account-add (account-sub stor.accounts add_from) add-to num in 
+let transfer-stor stor add-from add-to num = 
+  let new-acc = account-add (account-sub stor.accounts add-from) add-to num in 
     { total-supply = stor.total-supply 
       , accounts     = new-acc 
     } 
