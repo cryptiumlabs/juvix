@@ -164,11 +164,28 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Types
     - Juvix.FrontendDesugar.RemoveDo.Transform
     - Juvix.FrontendDesugar.RemoveDo.Extend
+    - Juvix.FrontendContextualise
+    - Juvix.FrontendContextualise.Contextify.Transform
+    - Juvix.FrontendContextualise.EraseTypeAliases.Types
+    - Juvix.FrontendContextualise.EraseTypeAliases.Transform
+    - Juvix.FrontendContextualise.EraseTypeAliases.Extend
+    - Juvix.FrontendContextualise.EraseTypeAliases.Environment
+    - Juvix.FrontendContextualise.Environment
+    - Juvix.FrontendContextualise.ModuleOpen.Environment
+    - Juvix.FrontendContextualise.ModuleOpen.Extend
+    - Juvix.FrontendContextualise.ModuleOpen.Types
+    - Juvix.FrontendContextualise.ModuleOpen.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
+    - Juvix.FrontendContextualise.InfixPrecedence.Extend
+    - Juvix.FrontendContextualise.InfixPrecedence.Transform
+    - Juvix.FrontendContextualise.InfixPrecedence.Environment
+    - Juvix.FrontendContextualise.InfixPrecedence.Types
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.Common.Context
+    - Juvix.Core.Common.Context.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
@@ -236,7 +253,7 @@ library:
     - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
-    - Juvix.Backends.ArithmeticCircuit.Groth 
+    - Juvix.Backends.ArithmeticCircuit.Groth
     - Juvix.Backends.ArithmeticCircuit.Parameterisation
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
     - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
@@ -324,7 +341,6 @@ tests:
       - juvix
       - tasty
       - tasty-hunit
-      - tasty-quickcheck
 
 benchmarks:
   juvix-bench:

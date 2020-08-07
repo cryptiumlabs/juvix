@@ -41,7 +41,6 @@
   ;;;; Types ==========================================================
 
   type ::= <data-declaration>
-         | <alias-declaration>
 
   ;; Should we let there be a refinement in adt type declaration?
   ;; ? means it may or may not be there
@@ -51,15 +50,22 @@
     ::= type u#<usage>? <non-capital-name> <symbols>+ : <expression> = <adt>
       | type u#<usage>? <non-capital-name> <symbols>+                = <adt>
 
-  alias-declaration
-    ::= type u#<usage>? <non-capital-name> <symbols>+ = <expression>
+  adt ::= <sum1> <sum>*
+        | <product1>
 
-  adt ::= <sum>*
 
+  sum1 ::= <name>
+         | <name> <product>
 
   ;; | is special in bnf
   sum ::= \| <name>
         | \| <name> <product>
+
+  product1 ::= { <name-type-comma>+ <name-type>* } -\> <type-name>
+             | { <name-type-comma>* }              -\> <type-name>
+             | { <name-type-comma>+ <name-type>* }
+             | { <name-type-comma>* }
+
 
   product ::= { <name-type-comma>+ <name-type>* } -\> <type-name>
             | { <name-type-comma>* }              -\> <type-name>
@@ -159,6 +165,7 @@
                  | <number>
                  | <lambda>
                  | <tuple>
+                 | <list>
                  | <parens>
                  | <symbol>
                  ; This is useful for having nested do's or matchs
@@ -195,6 +202,11 @@
   do ::= <do-body>*
 
   do-body ::= <exprsesion> \; <expression>
+
+  list ::= [ <command-list>* ]
+
+  commad-list ::= <exprsesion> , <expression>
+
 
   tuple ::= ( <command-tuple>* )
 

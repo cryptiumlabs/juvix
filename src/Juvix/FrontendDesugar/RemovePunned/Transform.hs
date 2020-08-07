@@ -33,6 +33,12 @@ transformTopLevel Old.TypeClassInstance =
   New.TypeClassInstance
 
 transformExpression :: Old.Expression -> New.Expression
+transformExpression (Old.Tuple t) =
+  New.Tuple (transformTuple t)
+transformExpression (Old.List t) =
+  New.List (transformList t)
+transformExpression (Old.Primitive t) =
+  New.Primitive (transformPrim t)
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =
@@ -74,15 +80,7 @@ transformExpression (Old.Parened e) =
 
 transformType :: Old.Type -> New.Type
 transformType (Old.Typ usage name' args form) =
-  New.Typ (transformExpression <$> usage) name' args (transformTypeSum form)
-
-transformTypeSum :: Old.TypeSum -> New.TypeSum
-transformTypeSum (Old.Alias a) = New.Alias (transformAlias a)
-transformTypeSum (Old.Data da) = New.Data (transformData da)
-
-transformAlias :: Old.Alias -> New.Alias
-transformAlias (Old.AliasDec exp) =
-  New.AliasDec (transformExpression exp)
+  New.Typ (transformExpression <$> usage) name' args (transformData form)
 
 --------------------------------------------------
 -- Arrows
@@ -192,6 +190,15 @@ transformArrowExp (Old.Arr' left usage right) =
     (transformExpression left)
     (transformExpression usage)
     (transformExpression right)
+
+transformPrim :: Old.Primitive -> New.Primitive
+transformPrim (Old.Prim p) = New.Prim p
+
+transformTuple :: Old.Tuple -> New.Tuple
+transformTuple (Old.TupleLit t) = New.TupleLit (transformExpression <$> t)
+
+transformList :: Old.List -> New.List
+transformList (Old.ListLit t) = New.ListLit (transformExpression <$> t)
 
 transformConst :: Old.Constant -> New.Constant
 transformConst (Old.Number numb) = New.Number (transformNumb numb)

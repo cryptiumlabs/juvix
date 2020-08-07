@@ -8,7 +8,6 @@ where
 
 import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
-import Juvix.Core.HRAnn.Types (Annotation (..), AppAnnotation (..), BindAnnotation (..))
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Base hiding
   ( Term' (..),
@@ -16,15 +15,10 @@ import Juvix.Core.IR.Types.Base hiding
     extDataArg,
     extDataCon,
     extDatatype,
-    extFunClause,
     extFunction,
-    extPattern,
-    extTerm,
     extendTerm,
   )
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
-import qualified Juvix.Library.HashMap as Map
 
 data T
 

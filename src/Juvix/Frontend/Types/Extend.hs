@@ -8,14 +8,8 @@ extendType = defaultExtType
 extendTopLevel :: ExtTopLevel
 extendTopLevel = defaultExtTopLevel
 
-extendTypeSum :: ExtTypeSum
-extendTypeSum = defaultExtTypeSum
-
 extendData :: ExtData
 extendData = defaultExtData
-
-extendAlias :: ExtAlias
-extendAlias = defaultExtAlias
 
 extendName :: ExtName
 extendName = defaultExtName
@@ -85,6 +79,15 @@ extendCond = defaultExtCond
 
 extendCondLogic :: ExtCondLogic
 extendCondLogic = defaultExtCondLogic
+
+extendList :: ExtList
+extendList = defaultExtList
+
+extendTuple :: ExtTuple
+extendTuple = defaultExtTuple
+
+extendPrimitive :: ExtPrimitive
+extendPrimitive = defaultExtPrimitive
 
 extendConstant :: ExtConstant
 extendConstant = defaultExtConstant

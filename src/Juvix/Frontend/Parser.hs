@@ -19,24 +19,32 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
-import Juvix.Library hiding (guard, maybe, mod, option, product, sum, take, takeWhile, try)
+import Juvix.Library hiding (guard, list, maybe, mod, option, product, sum, take, takeWhile, try)
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
-parse :: ByteString -> Either String [Types.TopLevel]
-parse = parseOnly (many topLevelSN) . removeComments
+parse :: ByteString -> Result [Types.TopLevel]
+parse =
+  Data.Attoparsec.ByteString.parse
+    (eatSpaces (many1 topLevelSN <* endOfInput))
+    . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
 --------------------------------------------------------------------------------
 
 removeComments :: ByteString -> ByteString
-removeComments = ByteString.concat . grabCommentsFirst
+removeComments = ByteString.concat . grabCommentsFirst . removeStart
   where
     onBreakDo _break _con "" = []
     onBreakDo break cont str = break str |> cont
+    -- TODO ∷ Make faster
+    removeStart str = f (breakCommentStart str)
+      where
+        f ("", comment) = dropNewLine comment
+        f _ = str
     --
     grabCommentsFirst = breakComment `onBreakDo` f
       where
@@ -61,6 +69,9 @@ breakNewLineComment = ByteString.breakSubstring "\n-- "
 breakComment :: ByteString -> (ByteString, ByteString)
 breakComment = ByteString.breakSubstring " -- "
 
+breakCommentStart :: ByteString -> (ByteString, ByteString)
+breakCommentStart = ByteString.breakSubstring "-- "
+
 --------------------------------------------------------------------------------
 -- Top Level
 --------------------------------------------------------------------------------
@@ -84,6 +95,7 @@ expressionGen' p =
     <|> Types.OpenExpr <$> moduleOpenExpr
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
+    <|> Types.Primitive <$> primitives
     <|> try p
     <|> expressionArguments
 
@@ -95,9 +107,10 @@ expressionArguments =
     -- <|> try (Types.NamedTypeE <$> namedRefine)
     <|> Types.Name <$> prefixSymbolDot
     <|> universeSymbol
+    <|> Types.List <$> list
     -- We wrap this in a paren to avoid conflict
     -- with infixity that we don't know about at this phase!
-    <|> Types.Parened <$> parens (expressionGen all'')
+    <|> tupleParen
 
 do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
@@ -337,18 +350,8 @@ typeP = do
   usag <- maybe usage
   name <- prefixSymbolSN
   args <- many prefixSymbolSN
-  form <- typeSumParser
+  form <- dataParser
   pure (Types.Typ usag name args form)
-
-typeSumParser :: Parser Types.TypeSum
-typeSumParser =
-  Types.Alias <$> try aliasParser
-    <|> Types.Data <$> dataParser
-
-aliasParser :: Parser Types.Alias
-aliasParser = do
-  skipLiner Lexer.equals
-  Types.AliasDec <$> expressionSN
 
 dataParser :: Parser Types.Data
 dataParser = do
@@ -365,13 +368,17 @@ dataParser = do
 
 adt :: Parser Types.Adt
 adt =
-  Types.Sum <$> many1H sumSN
-    <|> Types.Product <$> product
+  Types.Sum
+    <$> (maybe (skipLiner Lexer.pipe) *> sepBy1H sumSN (skipLiner Lexer.pipe))
+    <|> Types.Product
+    <$> standAloneProduct
 
 sum :: Parser Types.Sum
-sum = do
-  skipLiner Lexer.pipe
-  Types.S <$> prefixSymbolSN <*> maybe product
+sum = Types.S <$> prefixSymbolSN <*> maybe product
+
+standAloneProduct :: Parser Types.Product
+standAloneProduct =
+  Types.Record <$> record
 
 product :: Parser Types.Product
 product =
@@ -518,8 +525,24 @@ application = do
   pure (Types.App name args)
 
 --------------------------------------------------
--- Constants
+-- Literals
 --------------------------------------------------
+
+primitives :: Parser Types.Primitive
+primitives = do
+  _ <- word8 Lexer.percent
+  Types.Prim <$> prefixSymbolDot
+
+list :: Parser Types.List
+list = Types.ListLit <$> brackets (sepBy expression (skipLiner Lexer.comma))
+
+tupleParen :: Parser Types.Expression
+tupleParen = do
+  p <- parens (sepBy1 (expressionGen all'') (skipLiner Lexer.comma))
+  case p of
+    [] -> fail "doesn't happen"
+    [x] -> pure (Types.Parened x)
+    _ : _ -> pure (Types.Tuple (Types.TupleLit p))
 
 constant :: Parser Types.Constant
 constant = Types.Number <$> number <|> Types.String <$> string'
@@ -646,7 +669,7 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 reservedWords :: (Ord a, IsString a) => Set a
 reservedWords =
   Set.fromList
-    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin", "sig"]
+    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin", "sig", "mod"]
 
 reservedSymbols :: (Ord a, IsString a) => Set a
 reservedSymbols =
@@ -659,6 +682,9 @@ maybe = optional
 spacer :: Parser p -> Parser p
 spacer p = p <* takeWhile (Lexer.space ==)
 
+eatSpaces :: Parser p -> Parser p
+eatSpaces p = takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x) *> p
+
 spaceLiner :: Parser p -> Parser p
 spaceLiner p = p <* takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x)
 
@@ -667,6 +693,9 @@ between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
 
 parens :: Parser p -> Parser p
 parens p = between Lexer.openParen p Lexer.closeParen
+
+brackets :: Parser p -> Parser p
+brackets p = between Lexer.openBracket p Lexer.closeBracket
 
 curly :: Parser p -> Parser p
 curly p = between Lexer.openCurly p Lexer.closeCurly
@@ -792,12 +821,6 @@ typePSN = spaceLiner typeP
 
 typePS :: Parser Types.Type
 typePS = spacer typeP
-
-typeSumParserSN :: Parser Types.TypeSum
-typeSumParserSN = spaceLiner typeSumParser
-
-typeSumParserS :: Parser Types.TypeSum
-typeSumParserS = spacer typeSumParser
 
 recordSN :: Parser Types.Record
 recordSN = spaceLiner record

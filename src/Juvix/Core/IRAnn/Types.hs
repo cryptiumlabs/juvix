@@ -1,6 +1,5 @@
 module Juvix.Core.IRAnn.Types where
 
-import qualified Extensible as Ext
 import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage

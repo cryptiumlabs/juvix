@@ -1,26 +1,35 @@
 module Juvix.Core.Erased.Extend where
 
+import Extensible (TypeQ)
 import qualified Juvix.Core.HRAnn.Extend as HR
-import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types.Base
-import Juvix.Library
 
+extTerm :: TypeQ -> TypeQ -> ExtTerm
 extTerm = HR.extTerm
 
+extElim :: TypeQ -> TypeQ -> ExtElim
 extElim = HR.extElim
 
-extValue = \_ _ -> defaultExtValue
+extValue :: p1 -> p2 -> ExtValue
+extValue _ _ = defaultExtValue
 
-extNeutral = \_ _ -> defaultExtNeutral
+extNeutral :: p1 -> p2 -> ExtNeutral
+extNeutral _ _ = defaultExtNeutral
 
-extDatatype = \_ _ -> defaultExtDatatype
+extDatatype :: p1 -> p2 -> ExtDatatype
+extDatatype _ _ = defaultExtDatatype
 
-extDataArg = \_ _ -> defaultExtDataArg
+extDataArg :: p1 -> p2 -> ExtDataArg
+extDataArg _ _ = defaultExtDataArg
 
-extDataCon = \_ _ -> defaultExtDataCon
+extDataCon :: p1 -> p2 -> ExtDataCon
+extDataCon _ _ = defaultExtDataCon
 
-extFunction = \_ _ -> defaultExtFunction
+extFunction :: p1 -> p2 -> ExtFunction
+extFunction _ _ = defaultExtFunction
 
-extFunClause = \_ _ -> defaultExtFunClause
+extFunClause :: p1 -> p2 -> ExtFunClause
+extFunClause _ _ = defaultExtFunClause
 
-extPattern = \_ _ -> defaultExtPattern
+extPattern :: p1 -> p2 -> ExtPattern
+extPattern _ _ = defaultExtPattern

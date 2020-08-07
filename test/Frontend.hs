@@ -2,6 +2,7 @@ module Frontend where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
+import Data.ByteString.Char8 (pack)
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
@@ -12,7 +13,8 @@ allParserTests :: T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
-    [ many1FunctionsParser,
+    [ contractFiles,
+      many1FunctionsParser,
       sigTest1,
       sigTest2,
       fun1,
@@ -38,6 +40,7 @@ allParserTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
+space :: Parser Word8
 space = Char8.char8 ' '
 
 test =
@@ -89,6 +92,70 @@ removeNoComment =
         |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
+-- Contracts (as a file)
+--------------------------------------------------------------------------------
+
+contractTests :: FilePath -> IO ()
+contractTests file = do
+  parsed <- readFile file
+  let rawContract = encodeUtf8 parsed
+  let iInfo i = "\nThe following input has not been consumed: \n" <> i
+  let contextInfo context =
+        "\nThe list of context in which the error occurs is \n"
+          <> pack (show context)
+  let errorInfo error = "\nThe error message is \n" <> pack (show error)
+  let rInfo r = "\nThe result of the parse is \n" <> pack (show r)
+  let parseFileInfo = "\nParsing the file with path \n" <> pack file <> ": "
+  let printFail msg i context error =
+        putStrLn $
+          parseFileInfo
+            <> msg
+            <> iInfo i
+            <> contextInfo context
+            <> errorInfo error
+  let printDone msg i r =
+        putStrLn $ parseFileInfo <> msg <> iInfo i <> rInfo r
+  case Parser.parse rawContract of
+    Fail i context error ->
+      printFail "Fail! " i context error
+    Done i r -> printDone ("Success! " :: ByteString) i r
+    Partial cont ->
+      case cont "" of
+        Done i r ->
+          printDone ("Success (after partial) " :: ByteString) i r
+        Fail i context error ->
+          printFail "Fail (after partial) " i context error
+        Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
+
+contractFiles :: T.TestTree
+contractFiles =
+  T.testGroup
+    "Contract Files Tests"
+    [ idString,
+      addition,
+      token
+    ]
+
+parseFileTests :: String -> FilePath -> T.TestTree
+parseFileTests name path =
+  T.testCase
+    name
+    (contractTests path)
+
+idString :: T.TestTree
+idString = parseFileTests "Id-String" "test/examples/Id-Strings.ju"
+
+addition :: T.TestTree
+addition = parseFileTests "Addition" "test/examples/Addition.ju"
+
+token :: T.TestTree
+token = parseFileTests "Token" "test/examples/Token.ju"
+
+--------------------------------------------------------------------------------
+-- Parse Many at once
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
 
@@ -97,7 +164,7 @@ contractTest =
     (many Parser.topLevelSN)
     ( ""
         <> "mod Token = "
-        <> "  type Address = s : String.T {String.length s == 36} \n"
+        <> "  let Address = s : String.T {String.length s == 36} \n"
         <> "\n"
         <> "  type Storage = { \n"
         <> "    total-supply : Nat.T, \n"
@@ -205,8 +272,8 @@ contractTest =
         <> "      false \n"
         <> "end \n"
         <> " \n"
-        <> "  type Error = \n"
-        <> "    | NotEnoughFunds \n"
+        <> "  type Error \n"
+        <> "    = NotEnoughFunds \n"
         <> "    | NotSameAccount \n"
         <> "    | NotOwnerToken  \n"
         <> "    | NotEnoughTokens \n"
@@ -363,28 +430,26 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    "Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c], typeForm = Data' \
-    \(NonArrowed' {dataAdt = Sum' (S' {sumConstructor = A, sumValue = Just (Arrow' \
-    \(Infix' (Inf' {infixLeft = Name' (b :| []) (), infixOp = : :| [], infixRight \
-    \= Infix' (Inf' {infixLeft = Name' (a :| []) (), infixOp = -> :| [], infixRight \
-    \= Infix' (Inf' {infixLeft = Name' (b :| []) (), infixOp = -> :| [], infixRight \
-    \= Name' (c :| []) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ()) \
-    \()), annS = ()} :| [S' {sumConstructor = B, sumValue = Just (Arrow' (Infix' \
-    \(Inf' {infixLeft = Name' (d :| []) (), infixOp = -> :| [], infixRight = Name' \
-    \(Foo :| []) (), annInf = ()}) ()) ()), annS = ()},S' {sumConstructor = C, sumValue \
-    \= Just (Record' (Record''' {recordFields = NameType'' {nameTypeSignature = Name' \
-    \(Int :| []) (), nameTypeName = Concrete' a (), annNameType' = ()} :| [NameType'' \
-    \{nameTypeSignature = Name' (Int :| []) (), nameTypeName = Implicit' b (), annNameType' \
-    \= ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), annS = ()},S' \
-    \{sumConstructor = D, sumValue = Just (Record' (Record''' {recordFields = NameType'' \
+    "Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c], typeForm = NonArrowed' \
+    \{dataAdt = Sum' (S' {sumConstructor = A, sumValue = Just (Arrow' (Infix' (Inf' \
+    \{infixLeft = Name' (b :| []) (), infixOp = : :| [], infixRight = Infix' (Inf' {infixLeft \
+    \= Name' (a :| []) (), infixOp = -> :| [], infixRight = Infix' (Inf' {infixLeft = \
+    \Name' (b :| []) (), infixOp = -> :| [], infixRight = Name' (c :| []) (), annInf = \
+    \()}) (), annInf = ()}) (), annInf = ()}) ()) ()), annS = ()} :| [S' {sumConstructor \
+    \= B, sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (d :| []) (), infixOp \
+    \= -> :| [], infixRight = Name' (Foo :| []) (), annInf = ()}) ()) ()), annS = ()},S' \
+    \{sumConstructor = C, sumValue = Just (Record' (Record''' {recordFields = NameType'' \
     \{nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' a (), annNameType' \
-    \= ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName \
-    \= Implicit' b (), annNameType' = ()}], recordFamilySignature = Just (Application' \
-    \(App' {applicationName = Name' (Foo :| []) (), applicationArgs = Name' (Int \
-    \:| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Fooy :| []) (), infixOp \
-    \= -> :| [], infixRight = Name' (Nada :| []) (), annInf = ()}) ()) ()], annApp \
-    \= ()}) ()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}) (), \
-    \annTyp = ()}"
+    \= ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Implicit' \
+    \b (), annNameType' = ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), \
+    \annS = ()},S' {sumConstructor = D, sumValue = Just (Record' (Record''' {recordFields \
+    \= NameType'' {nameTypeSignature = Name' (Int :| []) (), nameTypeName = Concrete' \
+    \a (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Int :| []) (), \
+    \nameTypeName = Implicit' b (), annNameType' = ()}], recordFamilySignature = Just \
+    \(Application' (App' {applicationName = Name' (Foo :| []) (), applicationArgs = Name' \
+    \(Int :| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Fooy :| []) (), infixOp \
+    \= -> :| [], infixRight = Name' (Nada :| []) (), annInf = ()}) ()) ()], annApp = ()}) \
+    \()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}, annTyp = ()}"
 
 --------------------------------------------------
 -- Arrow Testing
@@ -423,9 +488,9 @@ typeTest =
     Parser.topLevel
     "type Foo a b c d = | Foo nah bah sad"
     "Type' (Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c,d], typeForm \
-    \= Data' (NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Foo, sumValue = Just \
-    \(ADTLike' [Name' (nah :| []) (),Name' (bah :| []) (),Name' (sad :| []) ()] ()), \
-    \annS = ()} :| []) (), annNonArrowed = ()}) (), annTyp = ()}) ()"
+    \= NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Foo, sumValue = Just (ADTLike' \
+    \[Name' (nah :| []) (),Name' (bah :| []) (),Name' (sad :| []) ()] ()), annS = ()} \
+    \:| []) (), annNonArrowed = ()}, annTyp = ()}) ()"
 
 --------------------------------------------------------------------------------
 -- Modules test
@@ -438,26 +503,25 @@ moduleOpen =
     Parser.topLevel
     ( ""
         <> "mod Foo Int = \n"
-        <> "  type T = Int.t \n"
+        <> "  let T = Int.t \n"
         <> "  sig bah : T -> T \n"
         <> "  let bah t = Int.(t + 3) \n"
         <> "end"
     )
     "Module' (Mod' (Like' {functionLikedName = Foo, functionLikeArgs = [ConcreteA' \
-    \(MatchLogic' {matchLogicContents = MatchCon' (Int :| []) [] (), matchLogicNamed \
-    \= Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Type' (Typ' {typeUsage \
-    \= Nothing, typeName' = T, typeArgs = [], typeForm = Alias' (AliasDec' {aliasType' \
-    \= Name' (Int :| [t]) (), annAliasDec = ()}) (), annTyp = ()}) () :| [Signature' \
-    \(Sig' {signatureName = bah, signatureUsage = Nothing, signatureArrowType = Infix' \
-    \(Inf' {infixLeft = Name' (T :| []) (), infixOp = -> :| [], infixRight = Name' \
-    \(T :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (),Function' \
-    \(Func' (Like' {functionLikedName = bah, functionLikeArgs = [ConcreteA' (MatchLogic' \
-    \{matchLogicContents = MatchName' t (), matchLogicNamed = Nothing, annMatchLogic \
-    \= ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN \
-    \= Int :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (t :| []) \
-    \(), infixOp = + :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) \
-    \(), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]) \
-    \(), annLike = ()}) ()) ()"
+    \(MatchLogic' {matchLogicContents = MatchCon' (Int :| []) [] (), matchLogicNamed = \
+    \Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like' \
+    \{functionLikedName = T, functionLikeArgs = [], functionLikeBody = Body' (Name' (Int \
+    \:| [t]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = bah, \
+    \signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (T \
+    \:| []) (), infixOp = -> :| [], infixRight = Name' (T :| []) (), annInf = ()}) (), \
+    \signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName \
+    \= bah, functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' \
+    \t (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' \
+    \(OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Int :| [], moduleOpenExprExpr = \
+    \Infix' (Inf' {infixLeft = Name' (t :| []) (), infixOp = + :| [], infixRight = Constant' \
+    \(Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), \
+    \annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()"
 
 moduleOpen' :: T.TestTree
 moduleOpen' =

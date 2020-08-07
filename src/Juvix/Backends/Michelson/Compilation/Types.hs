@@ -7,7 +7,6 @@ module Juvix.Backends.Michelson.Compilation.Types
 where
 
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
-import qualified Juvix.Core.Types as CoreErr
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT

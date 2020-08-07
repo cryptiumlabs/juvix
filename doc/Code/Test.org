@@ -144,7 +144,12 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[Context]]
   + [[Library]]
-* Files
+* FrontendContextualise
+** Infix
+*** ShuntYard
+- _Relies on_
+  + [[ShuntYard]]
+  + [[Library]]
 * Nets
 ** Combinators
 - _Relies on_
@@ -160,3 +165,4 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Interface]]
   + [[Default]]
   + [[Library]]
+* examples

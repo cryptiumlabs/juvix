@@ -10,11 +10,13 @@ extendType "Type" [] [t|T|] Ext.extendType
 
 extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
-extendTypeSum "TypeSum" [] [t|T|] Ext.extendTypeSum
-
 extendData "Data" [] [t|T|] Ext.extendData
 
-extendAlias "Alias" [] [t|T|] Ext.extendAlias
+extendList "List" [] [t|T|] Ext.extendList
+
+extendTuple "Tuple" [] [t|T|] Ext.extendTuple
+
+extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
 
 extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 

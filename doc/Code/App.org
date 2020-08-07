@@ -3,7 +3,6 @@
   + [[Compilation]]
   + [[Parameterisation]]
   + [[Core]]
-  + [[Erased]]
   + [[Erasure]]
   + [[HR]]
   + [[Library]]

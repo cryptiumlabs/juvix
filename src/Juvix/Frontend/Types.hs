@@ -21,11 +21,7 @@ extendType "Type" [] [t|T|] Ext.extendType
 
 extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
-extendTypeSum "TypeSum" [] [t|T|] Ext.extendTypeSum
-
 extendData "Data" [] [t|T|] Ext.extendData
-
-extendAlias "Alias" [] [t|T|] Ext.extendAlias
 
 extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 
@@ -72,6 +68,12 @@ extendSignature "Signature" [] [t|T|] Ext.extendSignature
 extendExpression "Expression" [] [t|T|] Ext.extendExpression
 
 extendArrowExp "ArrowExp" [] [t|T|] Ext.extendArrowExp
+
+extendList "List" [] [t|T|] Ext.extendList
+
+extendTuple "Tuple" [] [t|T|] Ext.extendTuple
+
+extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
 
 extendConstant "Constant" [] [t|T|] Ext.extendConstant
 

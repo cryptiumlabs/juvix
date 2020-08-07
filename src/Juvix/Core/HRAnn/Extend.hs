@@ -1,7 +1,6 @@
 module Juvix.Core.HRAnn.Extend where
 
 import qualified Extensible as Ext
-import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
@@ -27,6 +26,7 @@ data LetAnnotation primTy primVal
       }
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
+extTerm :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtTerm
 extTerm =
   \primTy primVal ->
     IR.defaultExtTerm
@@ -46,6 +46,7 @@ data AppAnnotation primTy primVal
         argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
       }
 
+extElim :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtElim
 extElim =
   \primTy primVal ->
     IR.defaultExtElim
