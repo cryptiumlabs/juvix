@@ -3,10 +3,13 @@ module Frontend where
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import Data.ByteString.Char8 (pack)
+import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
+import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Test.Tasty.Silver as T
 import Prelude (String, show)
 
 allParserTests :: T.TestTree
@@ -43,6 +46,7 @@ allParserTests =
 space :: Parser Word8
 space = Char8.char8 ' '
 
+test :: Either String [Expression]
 test =
   parseOnly
     (many' Parser.expressionSN)
@@ -92,55 +96,72 @@ removeNoComment =
         |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
--- Contracts (as a file)
+-- Contracts (as a file) stdout
+--------------------------------------------------------------------------------
+contractFiles :: T.TestTree
+contractFiles =
+  T.testGroup
+    "Contract Files"
+    [ T.testGroup
+        "Contract Files Tests - Stdout"
+        [idString, addition, token],
+      T.testGroup
+        "Contract Files Tests - Golden"
+        [goldenId]
+    ]
+
+-- functions for both stdout and golden tests
+iInfo :: ByteString -> ByteString
+iInfo i = "\nThe following input has not been consumed: \n" <> i
+
+contextInfo :: Show a => a -> ByteString
+contextInfo context =
+  "\nThe list of context in which the error occurs is \n"
+    <> pack (show context)
+
+errorInfo :: Show a => a -> ByteString
+errorInfo error = "\nThe error message is \n" <> pack (show error)
+
+rInfo :: Show a => a -> ByteString
+rInfo r = "\nThe result of the parse is \n" <> pack (show r)
+
+failMsg ::
+  (Show a1, Show a2) =>
+  ByteString ->
+  ByteString ->
+  a1 ->
+  a2 ->
+  ByteString
+failMsg msg i context error = msg <> iInfo i <> contextInfo context <> errorInfo error
+
+--------------------------------------------------------------------------------
+-- Contracts (as a file) stdout
 --------------------------------------------------------------------------------
 
-contractTests :: FilePath -> IO ()
-contractTests file = do
+contractStd :: FilePath -> IO ()
+contractStd file = do
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
-  let iInfo i = "\nThe following input has not been consumed: \n" <> i
-  let contextInfo context =
-        "\nThe list of context in which the error occurs is \n"
-          <> pack (show context)
-  let errorInfo error = "\nThe error message is \n" <> pack (show error)
-  let rInfo r = "\nThe result of the parse is \n" <> pack (show r)
   let parseFileInfo = "\nParsing the file with path \n" <> pack file <> ": "
-  let printFail msg i context error =
-        putStrLn $
-          parseFileInfo
-            <> msg
-            <> iInfo i
-            <> contextInfo context
-            <> errorInfo error
   let printDone msg i r =
         putStrLn $ parseFileInfo <> msg <> iInfo i <> rInfo r
   case Parser.parse rawContract of
     Fail i context error ->
-      printFail "Fail! " i context error
+      putStrLn $ parseFileInfo <> failMsg "Fail! " i context error
     Done i r -> printDone ("Success! " :: ByteString) i r
     Partial cont ->
       case cont "" of
         Done i r ->
           printDone ("Success (after partial) " :: ByteString) i r
         Fail i context error ->
-          printFail "Fail (after partial) " i context error
+          putStrLn $ parseFileInfo <> failMsg "Fail (after partial) " i context error
         Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
-
-contractFiles :: T.TestTree
-contractFiles =
-  T.testGroup
-    "Contract Files Tests"
-    [ idString,
-      addition,
-      token
-    ]
 
 parseFileTests :: String -> FilePath -> T.TestTree
 parseFileTests name path =
   T.testCase
     name
-    (contractTests path)
+    (contractStd path)
 
 idString :: T.TestTree
 idString = parseFileTests "Id-String" "test/examples/Id-Strings.ju"
@@ -152,13 +173,39 @@ token :: T.TestTree
 token = parseFileTests "Token" "test/examples/Token.ju"
 
 --------------------------------------------------------------------------------
--- Parse Many at once
+-- Contracts (as a file) golden tests
 --------------------------------------------------------------------------------
+
+parsedContract :: FilePath -> IO ()
+parsedContract file = do
+  let outputFile = writeFile (file <> ".parsed")
+  let failOutput i context error =
+        outputFile
+          $ decodeUtf8
+          $ failMsg "Failed to parse!" i context error
+  let resultToText = Text.pack . show
+  parsed <- readFile file
+  let rawContract = encodeUtf8 parsed
+  case Parser.parse rawContract of
+    Fail i context error -> failOutput i context error
+    Done _i r -> outputFile (resultToText r)
+    Partial cont ->
+      case cont "" of
+        Done _i r -> outputFile (resultToText r)
+        Fail i context error -> failOutput i context error
+        Partial _cont' -> outputFile "Partial after Partial"
+
+goldenTest :: T.TestName -> FilePath -> T.TestTree
+goldenTest name file =
+  T.goldenVsFile name (file <> ".golden") (file <> ".parsed") (parsedContract file)
+
+goldenId :: T.TestTree
+goldenId = goldenTest "Id-String, Golden" "test/examples/Id-Strings.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
-
+contractTest :: Either String [TopLevel]
 contractTest =
   parseOnly
     (many Parser.topLevelSN)

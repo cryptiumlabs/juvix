@@ -59,6 +59,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 * Frontend
 - _Relies on_
   + [[Parser]]
+  + [[Types]]
   + [[Library]]
 * FrontendDesugar
 - _Relies on_
