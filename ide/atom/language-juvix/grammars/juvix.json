@@ -24,19 +24,15 @@
 					"include": "#comments"
 				},
 				{
-					"name": "variable.other.generic-type.juvix",
-					"match": "\\b[A-Z][a-zA-Z0-9]\\b"
+					"name": "entity.name.type.juvix",
+					"match": "[a-z0-9]\\b"
 				},
 				{
 					"include": "#strings"
 				},
 				{
-					"match": "(/\\\\|\\\\/|<:|<@|[(][|]|[|][)]|u#|~>|->|<--|<-|<==>|==>|[?][.]|[.]\\[|[.]\\(|[{][:]pattern|::|:=|;;|[!][{]|\\[[|]|[|]>|[|]\\]|[~+^&?$|#,.:;=\\[\\-](){}])",
+					"match": "(/\\\\|\\\\/|<:|<@|[(][|]|[|][)]|u#|~>|->|<--|<-|<==>|==>|[?][.]|[.]\\[|[.]\\(|[{][:]pattern|:|:=|;|[!][{]|\\[[|]|[|]>|[|]\\]|[~+^&?$|#,.:;=\\[\\-](){}])",
 					"name": "support.class.base.juvix"
-				},
-				{
-					"match": "\\b(\\w-)\\b",
-					"name": "constant.language.juvix"
 				},
 				{
 					"match": "\\b(let|let-type|in|type|if|then|else|cond|do|return|where|with|sig|end)\\b",
@@ -49,6 +45,10 @@
 				{
 					"match": "\\b[0-9]+[uU]?[zyslL]?\\b",
 					"name": "constant.numeric.decimal.juvix"
+				},
+				{
+					"match": "\\%[A-Za-z.]+\\b",
+					"name": "variable.other.constant.juvix"
 				},
 				{
 					"match": "(?x)\n(?:\n  (?:\\b[0-9]+(\\.)[0-9]+[eE][+-]?[0-9]+\\b)| # 1.1E+3\n  (?:\\b[0-9]+(\\.)[eE][+-]?[0-9]+\\b)|       # 1.E+3\n  (?:\\B(\\.)[0-9]+[eE][+-]?[0-9]+\\b)|       # .1E+3\n  (?:\\b[0-9]+[eE][+-]?[0-9]+\\b)|            # 1E+3\n  (?:\\b[0-9]+(\\.)[0-9]+\\b)|                # 1.1\n  (?:\\b[0-9]+(\\.)\\B)|                      # 1.\n  (?:\\B(\\.)[0-9]+\\b)|                      # .1\n  (?:\\b[0-9]+\\b(?!\\.))                     # 1\n)[L]?[fF]?",
@@ -172,7 +172,7 @@
 					]
 				},
 				{
-					"match": "\\b([\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'_]*)\\b(?!\\s*[.])",
+					"match": "\\b([\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-_]*)\\b(?!\\s*[.])",
 					"captures": {
 						"1": {
 							"name": "support.function.constructor.juvix"
@@ -180,7 +180,7 @@
 					}
 				},
 				{
-					"match": "\\b((?:[\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'_]*[.])+)",
+					"match": "\\b((?:[\\p{Lu}\\p{Lt}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-_]*[.])+)",
 					"captures": {
 						"1": {
 							"name": "variable.other.module.juvix"
@@ -188,7 +188,7 @@
 					}
 				},
 				{
-					"match": "\\b([\\p{Ll}_][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-]*)",
+					"match": "\\b([\\p{Ll}][\\p{Lu}\\p{Lt}\\p{Ll}\\p{Lo}\\p{Lm}\\d'\\-_]*)",
 					"captures": {
 						"1": {
 							"name": "entity.name.function.juvix"
