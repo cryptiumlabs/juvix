@@ -96,7 +96,7 @@ removeNoComment =
         |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
--- Contracts (as a file) stdout
+-- Contracts (as a file) Stdout/Golden
 --------------------------------------------------------------------------------
 contractFiles :: T.TestTree
 contractFiles =
