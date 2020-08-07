@@ -5,6 +5,7 @@ mod Token =
     total-supply : Nat.T, 
     accounts     : Accounts.T { Accounts.measure-value == total-supply } 
   }
+  
   sig empty-storage : Storage 
   let empty-storage = { 
     total-supply = 0, 
@@ -84,7 +85,7 @@ mod Validation =
   let mint token tx = 
     case tx.data of 
       | Transaction.Mint -> 
-        token.owner == tx-tx-authorized-account 
+        token.owner == tx.authorized-account 
       | _ -> 
         false 
 
@@ -92,15 +93,15 @@ mod Validation =
     case tx.data of 
       | Transaction.Transfer {from-account, amount} -> 
         has-n token.storage.accounts from-account amount 
-        && tx.authroized-account == from-account 
+        && tx.authorized-account == from-account 
       | _ -> 
         false 
 
   let Burn token tx = 
     case tx.data of 
-      | Transaction.Burn {burn-from-account, burn-ammount} -> 
+      | Transaction.Burn {burn-from-account, burn-amount} -> 
         has-n token.storage.accounts burn-from-account burn-amount 
-        && tx.authroized-account == burn-from-account 
+        && tx.authorized-account == burn-from-account 
       | _ -> 
         false 
 end 
@@ -117,6 +118,6 @@ let exec token tx =
     | Transfer _ -> 
       if | Validation.transfer token tx = Right (transfer token tx) 
          | else                         = Left NotEnoughFunds 
-  | Mint _ -> 
+   | Mint _ -> 
       if | Validation.mint token tx = Right (mint token tx) 
          | else                     = Left NotEnoughFunds
