@@ -4,6 +4,7 @@ module Juvix.FrontendContextualise.ModuleOpen.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
@@ -22,9 +23,8 @@ transformModuleOpenExpr ::
   Env.WorkingMaps m => Old.ModuleOpenExpr -> m New.Expression
 transformModuleOpenExpr (Old.OpenExpress modName expr) = do
   fullQualified <- Env.qualifyName modName
-  let reconstructed = reconstructSymbol fullQualified
-      err = throw @"error" (Env.UnknownModule reconstructed)
-  looked <- Env.lookup reconstructed
+  let err = throw @"error" (Env.UnknownModule reconstructed)
+  looked <- Env.lookup fullQualified
   case looked of
     Just Context.Def {} -> err
     Just Context.TypeDeclar {} -> err
@@ -343,10 +343,6 @@ argLogic (Old.ImplicitA x) = x
 accBindings :: [Old.Arg] -> [Symbol]
 accBindings = concatMap (findBindings . argLogic)
 
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
-
 transformArg ::
   Env.WorkingMaps m => Old.Arg -> m New.Arg
 transformArg (Old.ConcreteA ml) = New.ConcreteA <$> transformMatchLogic ml
@@ -406,19 +402,48 @@ transformBlock ::
   Env.WorkingMaps m => Old.Block -> m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
+protectSymbols syms op = do
+  originalBindings <- traverse saveOld syms
+  traverse_ Env.addUnknownGlobal (fmap snd originalBindings)
+  res <- op
+  traverse restoreName originalBindings
+  pure res
+
 saveOld ::
   HasState "new" (Context.T term ty sumRep) f =>
   Symbol ->
-  f (Maybe (Context.Definition term ty sumRep), Symbol)
-saveOld sym =
-  (,sym) <$> Env.lookup sym
+  f (Maybe (Context.Definition term ty sumRep), Context.From Symbol)
+saveOld sym = do
+  looked <- Env.lookup sym
+  case looked of
+    Nothing ->
+      pure (Nothing, Context.Current (NameSpace.Pub sym))
+    Just (Context.Outside def) ->
+      pure (Just def, Context.Outside sym)
+    Just (Context.Current (NameSpace.Pub def)) ->
+      pure (Just def, Context.Current (NameSpace.Pub sym))
+    Just (Context.Current (NameSpace.Priv def)) ->
+      pure (Just def, Context.Current (NameSpace.Priv sym))
 
 restoreName ::
   HasState "new" (Context.T term ty sumRep) m =>
-  (Maybe (Context.Definition term ty sumRep), Symbol) ->
+  (Maybe (Context.Definition term ty sumRep), Context.From Symbol) ->
   m ()
-restoreName (Just def, sym) = Env.add sym def
-restoreName (Nothing, sym) = Env.remove sym
+restoreName (def, Context.Current sym) =
+  case def of
+    Just def ->
+      Env.add sym def
+    Nothing ->
+      Env.remove sym
+restoreName (def, Context.Outside sym) =
+  -- we have to turn a symbol into a NameSymbol.T
+  -- we just have to pure it, the symbol we get
+  -- should not have any .'s inside of it
+  case def of
+    Just def ->
+      Env.addGlobal (sym :| []) def
+    Nothing ->
+      Env.removeGlobal (sym :| [])
 
 transformApplication ::
   Env.WorkingMaps m => Old.Application -> m New.Application
