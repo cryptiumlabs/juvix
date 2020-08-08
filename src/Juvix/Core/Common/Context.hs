@@ -112,7 +112,7 @@ qualifyName sym T {currentName} = currentName <> sym
 --------------------------------------------------------------------------------
 
 lookupCurrent ::
-  Symbol -> T term ty sumRep -> Maybe (NameSpace.From (Definition term ty sumRep))
+  NameSymbol.T -> T term ty sumRep -> Maybe (NameSpace.From (Definition term ty sumRep))
 lookupCurrent =
   lookupGen (\_ currentLookup -> currentLookup)
 
@@ -156,7 +156,7 @@ switchNameSpace newNameSpace t@T {currentName} =
         -- the namespace may already exist
         Lib.Left er ->
           -- how do we add the namespace back to the private area!?
-          case t !? NameSymbol.toSymbol newNameSpace of
+          case t !? newNameSpace of
             Just (Current (NameSpace.Pub (Record def _))) ->
               Lib.Right (addCurrentName t def)
             Just (Current (NameSpace.Priv (Record def _))) ->
@@ -167,14 +167,14 @@ switchNameSpace newNameSpace t@T {currentName} =
             Just __ -> Lib.Left er
 
 lookup ::
-  Symbol -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
+  NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
 lookup key t@T {topLevelMap} =
   let f x currentLookup =
         fmap Current currentLookup <|> fmap Outside (HashMap.lookup x topLevelMap)
    in lookupGen f key t
 
 (!?) ::
-  T term ty sumRep -> Symbol -> Maybe (From (Definition term ty sumRep))
+  T term ty sumRep -> NameSymbol.T -> Maybe (From (Definition term ty sumRep))
 (!?) = flip lookup
 
 addGlobal ::
@@ -371,10 +371,10 @@ lookupGen ::
     Maybe (NameSpace.From (Definition term ty sumRep)) ->
     Maybe (t (Definition term ty sumRep))
   ) ->
-  Symbol ->
+  NameSymbol.T ->
   Cont (Definition term ty sumRep) ->
   Maybe (t (Definition term ty sumRep))
-lookupGen extraLookup key T {currentNameSpace} =
+lookupGen extraLookup nameSymb T {currentNameSpace} =
   let recurse _ Nothing =
         Nothing
       recurse [] x =
@@ -388,7 +388,6 @@ lookupGen extraLookup key T {currentNameSpace} =
         recurse xs (NameSpace.lookup x currentNameSpace)
       recurse (_ : _) _ =
         Nothing
-      nameSymb = NameSymbol.fromSymbol key
    in case nameSymb of
         x :| xs ->
           NameSpace.lookupInternal x currentNameSpace
