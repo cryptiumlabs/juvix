@@ -37,7 +37,7 @@ data Environment
 type FinalContext = New Context.T
 
 data Error
-  = UnknownModule Symbol
+  = UnknownModule Context.NameSymbol
 
 type ContextAlias =
   ExceptT Error (State Environment)

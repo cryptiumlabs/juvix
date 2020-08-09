@@ -23,25 +23,23 @@ transformModuleOpenExpr ::
   Env.WorkingMaps m => Old.ModuleOpenExpr -> m New.Expression
 transformModuleOpenExpr (Old.OpenExpress modName expr) = do
   fullQualified <- Env.qualifyName modName
-  let err = throw @"error" (Env.UnknownModule reconstructed)
+  let err = throw @"error" (Env.UnknownModule fullQualified)
   looked <- Env.lookup fullQualified
-  case looked of
+  case Context.extractValue <$> looked of
     Just Context.Def {} -> err
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
     Nothing -> err
-    Just (Context.Record innerC _mTy) -> do
+    Just (Context.Record innerC _mTy) ->
       -- Fine to just have the public names
       -- we are only tracking what this can use, not doing
       -- replacements
-      let newSymb = fst <$> Context.toList innerC
-      savedDef <- traverse saveOldOpen newSymb
-      --
-      traverse_ (`Env.addModMap` fullQualified) newSymb
-      res <- transformExpression expr
-      --
-      traverse_ restoreNameOpen savedDef
-      pure res
+      let NameSpace.List {publicL, privateL} = NameSpace.toList innerC
+          newSymbs = fst <$> (publicL <> privateL)
+      in protectOpenPrim newSymbs $ do
+        -- our protected removes it, but we just add it back
+        traverse_ (`Env.addModMap` fullQualified) newSymbs
+        transformExpression expr
 
 saveOldOpen ::
   HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
@@ -56,13 +54,16 @@ restoreNameOpen (Nothing, sym) = Env.removeModMap sym
 --------------------------------------------------
 -- Protection extension
 --------------------------------------------------
-protectOpen syms op =
-  protectSymbols syms $ do
+protectOpenPrim syms op = do
     originalQualified <- traverse saveOldOpen syms
     traverse_ Env.removeModMap syms
     res <- op
     traverse restoreNameOpen originalQualified
     pure res
+
+protectOpen :: Env.WorkingMaps m => [Symbol] -> m a -> m a
+protectOpen syms =
+  protectSymbols syms . protectOpenPrim syms
 --------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
@@ -98,8 +99,8 @@ transformFunctionLike (Old.Like args body) =
 transformMatchL ::
   Env.WorkingMaps m => Old.MatchL -> m New.MatchL
 transformMatchL (Old.MatchL pat body) =
-  protectOpen (findBindings pat) $
-    New.MatchL <$> transformMatchLogic pat <*> transformExpression body
+  protectOpen (findBindings pat)
+    (New.MatchL <$> transformMatchLogic pat <*> transformExpression body)
 
 transformLambda ::
   Env.WorkingMaps m => Old.Lambda -> m New.Lambda
@@ -371,6 +372,7 @@ transformBlock ::
   Env.WorkingMaps m => Old.Block -> m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
+protectSymbols :: Env.WorkingMaps m => [Symbol] -> m a -> m a
 protectSymbols syms op = do
   originalBindings <- traverse saveOld syms
   traverse_ Env.addUnknownGlobal (fmap snd originalBindings)

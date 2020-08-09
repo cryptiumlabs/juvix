@@ -231,6 +231,17 @@ removeNameSpace sym t =
       Abort
 
 -------------------------------------------------------------------------------
+-- Functions on From
+--------------------------------------------------------------------------------
+
+extractValue :: From a -> a
+extractValue (Outside a) =
+  a
+extractValue (Current (NameSpace.Priv a)) =
+  a
+extractValue (Current (NameSpace.Pub a)) =
+  a
+-------------------------------------------------------------------------------
 -- Generalized Helpers
 --------------------------------------------------------------------------------
 
