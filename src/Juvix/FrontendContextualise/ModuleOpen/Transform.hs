@@ -54,91 +54,60 @@ restoreNameOpen (Just def, sym) = Env.addModMap sym def
 restoreNameOpen (Nothing, sym) = Env.removeModMap sym
 
 --------------------------------------------------
+-- Protection extension
+--------------------------------------------------
+protectOpen syms op =
+  protectSymbols syms $ do
+    originalQualified <- traverse saveOldOpen syms
+    traverse_ Env.removeModMap syms
+    res <- op
+    traverse restoreNameOpen originalQualified
+    pure res
+--------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
 
 transformLet :: Env.WorkingMaps m => Old.Let -> m New.Let
 transformLet (Old.LetGroup name bindings body) = do
-  originalVal <- Env.lookup name
-  qualifiedName <- Env.lookupModMap name
-  let transform = do
-        Env.addUnknown name
-        Env.removeModMap name
-        transformedBindings <- traverse transformFunctionLike bindings
-        let def = decideRecordOrDef transformedBindings Nothing
-        Env.add name def -- add to new context
-        New.LetGroup name transformedBindings <$> transformExpression body
-  res <- transform
-  restoreName (originalVal, name)
-  restoreNameOpen (qualifiedName, name)
-  pure res
+  protectOpen [name] $ do
+    transformedBindings <- traverse transformFunctionLike bindings
+    --
+    Env.add (NameSpace.Pub name) (decideRecordOrDef transformedBindings Nothing)
+    --
+    New.LetGroup name transformedBindings <$> transformExpression body
 
 transformLetType ::
   Env.WorkingMaps m => Old.LetType -> m New.LetType
 transformLetType (Old.LetType'' typ expr) = do
   let typeName = Old.typeName' typ
-  originalVal <- Env.lookup typeName
-  qualifiedName <- Env.lookupModMap typeName
-  let transform = do
-        Env.addUnknown typeName
-        Env.removeModMap typeName
-        transformedType <- transformType typ
-        let def = Context.TypeDeclar transformedType
-        Env.add typeName def -- add to new context
-        New.LetType'' transformedType <$> transformExpression expr
-  res <- transform
-  restoreName (originalVal, typeName)
-  restoreNameOpen (qualifiedName, typeName)
-  pure res
+  protectOpen [typeName] $ do
+    transformedType <- transformType typ
+    --
+    Env.add (NameSpace.Pub typeName) (Context.TypeDeclar transformedType)
+    --
+    New.LetType'' transformedType <$> transformExpression expr
 
 transformFunctionLike ::
-  Env.WorkingMaps m => Old.FunctionLike Old.Expression -> m (New.FunctionLike New.Expression)
-transformFunctionLike (Old.Like args body) = do
-  let bindings = accBindings args
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  transArgs <- traverse transformArg args
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.Like transArgs <$> transformExpression body
-  --
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+  Env.WorkingMaps m =>
+  Old.FunctionLike Old.Expression ->
+  m (New.FunctionLike New.Expression)
+transformFunctionLike (Old.Like args body) =
+  protectOpen (accBindings args) $
+    New.Like <$> traverse transformArg args <*> transformExpression body
 
 transformMatchL ::
   Env.WorkingMaps m => Old.MatchL -> m New.MatchL
-transformMatchL (Old.MatchL pat body) = do
-  let bindings = findBindings pat
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  pat <- transformMatchLogic pat
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.MatchL pat <$> transformExpression body
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+transformMatchL (Old.MatchL pat body) =
+  protectOpen (findBindings pat) $
+    New.MatchL <$> transformMatchLogic pat <*> transformExpression body
 
 transformLambda ::
   Env.WorkingMaps m => Old.Lambda -> m New.Lambda
-transformLambda (Old.Lamb args body) = do
-  let bindings = findBindings (NonEmpty.head args)
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  transArgs <- transformMatchLogic (NonEmpty.head args)
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.Lamb (pure transArgs) <$> transformExpression body
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+transformLambda (Old.Lamb args body) =
+  protectOpen bindings $
+    New.Lamb <$> traverse transformMatchLogic args <*> transformExpression body
+  where
+    bindings = foldr (\x acc -> findBindings x <> acc) [] args
 
 --------------------------------------------------------------------------------
 -- Record/Def Decision function... update when contextify version updates
