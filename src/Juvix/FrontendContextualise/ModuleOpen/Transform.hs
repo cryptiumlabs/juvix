@@ -130,10 +130,10 @@ decideRecordOrDef xs ty
         -- the type here can eventually give us arguments though looking at the
         -- lambda for e, and our type can be found out similarly by looking at types
         let f (New.NonPunned s e) =
-              Context.add
-                (NonEmpty.head s)
+              NameSpace.insert
+                (NameSpace.Pub (NonEmpty.head s))
                 (decideRecordOrDef (New.Like [] e :| []) Nothing)
-         in Context.Record (foldr f Context.empty i) ty
+         in Context.Record (foldr f NameSpace.empty i) ty
       New.Let _l ->
         def
       _ -> def
@@ -171,7 +171,8 @@ transformDef (Context.Def usage mTy term prec) =
     <*> traverse transformFunctionLike term
     <*> pure prec
 transformDef (Context.Record contents mTy) =
-  Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
+  undefined
+  -- Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
 transformDef (Context.TypeDeclar repr) =
   Context.TypeDeclar <$> transformType repr
 transformDef (Context.Unknown mTy) =
@@ -182,14 +183,30 @@ transformC ::
   Env.WorkingMaps m => m ()
 transformC = do
   old <- get @"old"
+  let oldC = Context.topList old
+  case oldC of
+    (sym, _) : _ -> do
+      modify @"old" switch 
+    [] -> pure ()
+
+transformInner ::
+  Env.WorkingMaps m => m ()
+transformInner = do
+  old <- get @"old"
   let oldC = Context.toList old
   case oldC of
-    (sym, def) : _ -> do
+    NameSpace.List { publicL = [], privateL = []} ->
+      pure ()
+    NameSpace.List { publicL = ((sym, def) : _), privateL = _} -> do
       newDef <- transformDef def
-      Env.add sym newDef
-      Env.removeOld sym
-      transformC
-    [] -> pure ()
+      Env.add (NameSpace.Pub sym) newDef
+      Env.removeOld (NameSpace.Pub sym)
+      transformInner
+    NameSpace.List { publicL = [], privateL = ((sym,def) : _)} -> do
+      newDef <- transformDef def
+      Env.add (NameSpace.Priv sym) newDef
+      Env.removeOld (NameSpace.Priv sym)
+      transformInner
 
 transformExpression ::
   Env.WorkingMaps m => Old.Expression -> m New.Expression

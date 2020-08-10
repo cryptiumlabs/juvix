@@ -232,6 +232,10 @@ removeNameSpace sym t =
     f (Continue (Just _)) =
       Abort
 
+removeTop :: Symbol -> T term ty sumRep -> T term ty sumRep
+removeTop sym t@T {topLevelMap} =
+  t {topLevelMap = HashMap.delete sym topLevelMap}
+
 -------------------------------------------------------------------------------
 -- Functions on From
 --------------------------------------------------------------------------------
@@ -326,8 +330,12 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
           case ymbol of
             [] ->
               updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
-            (_ : _) ->
-              updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
+            (newS : newYmbol) ->
+              case s of
+                "TopLevel" ->
+                  updateTopLevel t <$> recurse f (newS :| newYmbol) topLevelMap
+                _ ->
+                  updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
   where
     updateCurr t newCurrent =
       t {currentNameSpace = newCurrent}
@@ -399,10 +407,13 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
         recurse xs (NameSpace.lookup x currentNameSpace)
       recurse (_ : _) _ =
         Nothing
-   in case nameSymb of
-        x :| xs ->
-          NameSpace.lookupInternal x currentNameSpace
+      first (x :| xs) =
+        NameSpace.lookupInternal x currentNameSpace
             |> extraLookup x
             |> \case
               Just x -> traverse (recurse xs . Just) x
               Nothing -> Nothing
+   in case nameSymb of
+    "TopLevel" :| x : xs -> first (x :| xs)
+    "TopLevel" :| []     -> Nothing
+    x          :| xs     -> first (x :| xs)
