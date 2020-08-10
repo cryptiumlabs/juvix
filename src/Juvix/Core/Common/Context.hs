@@ -147,11 +147,14 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
 switchNameSpace newNameSpace t@T {currentName} =
-  let addCurrentName t@T {currentNameSpace} startingContents =
-        (addGlobal currentName (Record currentNameSpace Nothing) t)
+  let addCurrentName t startingContents =
+        (addGlobal' t)
           { currentName = newNameSpace,
             currentNameSpace = startingContents
           }
+      addGlobal' t@T {currentNameSpace} =
+        addGlobal currentName (Record currentNameSpace Nothing) t
+      addCurrent t = addGlobal newNameSpace CurrentNameSpace t
    in case addPathWithValue newNameSpace CurrentNameSpace t of
         Lib.Right t ->
           Lib.Right (addCurrentName t NameSpace.empty)
@@ -160,13 +163,25 @@ switchNameSpace newNameSpace t@T {currentName} =
           -- how do we add the namespace back to the private area!?
           case t !? newNameSpace of
             Just (Current (NameSpace.Pub (Record def _))) ->
-              Lib.Right (addCurrentName t def)
+              Lib.Right (addCurrent (addCurrentName t def))
             Just (Current (NameSpace.Priv (Record def _))) ->
-              Lib.Right (addCurrentName t def)
-            Just (Outside (Record def _)) ->
-              Lib.Right (addCurrentName t def)
+              Lib.Right (addCurrent (addCurrentName t def))
+            Just (Outside (Record def _))
+              -- figure out if we contain what we are looking for!
+              | NameSymbol.subsetOf (removeTopName newNameSpace) currentName ->
+                -- if so update it!
+                case addGlobal' t !? newNameSpace of
+                  Just (Outside (Record def _)) ->
+                    Lib.Right (addCurrent (addCurrentName t def))
+                  _ -> error "doesn't happen"
+              | otherwise ->
+                Lib.Right (addCurrent (addCurrentName t def))
             Nothing -> Lib.Left er
             Just __ -> Lib.Left er
+
+removeTopName ("TopLevel" :| x : xs) = x :| xs
+removeTopName ("TopLevel" :| []) = "" :| []
+removeTopName xs = xs
 
 lookup ::
   NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
