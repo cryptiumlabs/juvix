@@ -2,14 +2,17 @@ module Frontend where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
+import Data.ByteString (writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Library hiding (show)
+import System.IO.Unsafe (unsafePerformIO)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import qualified Test.Tasty.Silver as T
+import qualified Test.Tasty.Silver.Advanced as T
+import Text.Show.Pretty (ppShow)
 import Prelude (String, show)
 
 allParserTests :: T.TestTree
@@ -107,48 +110,48 @@ contractFiles =
         [idString]
     ]
 
-iInfo :: ByteString -> ByteString
-iInfo i = "\nThe following input has not been consumed: \n" <> i
-
-contextInfo :: Show a => a -> ByteString
-contextInfo context =
-  "\nThe list of context in which the error occurs is \n"
-    <> pack (show context)
-
-errorInfo :: Show a => a -> ByteString
-errorInfo error = "\nThe error message is \n" <> pack (show error)
-
-failMsg ::
-  (Show a1, Show a2) =>
-  ByteString ->
-  ByteString ->
-  a1 ->
-  a2 ->
-  ByteString
-failMsg msg i context error = msg <> iInfo i <> contextInfo context <> errorInfo error
-
-parsedContract :: FilePath -> IO ()
+parsedContract :: FilePath -> IO ByteString
 parsedContract file = do
-  let outputFile = writeFile (file <> ".parsed")
+  let toByteString = pack . show
   let failOutput i context error =
-        outputFile
-          $ decodeUtf8
-          $ failMsg "Failed to parse!" i context error
+        "Failed to parse!"
+          <> "\nThe following input has not been consumed: \n"
+          <> i
+          <> "\nThe list of context in which the error occurs is \n"
+          <> toByteString context
+          <> "\nThe error message is \n"
+          <> toByteString error
   let resultToText = Text.pack . show
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
   case Parser.parse rawContract of
-    Fail i context error -> failOutput i context error
-    Done _i r -> outputFile (resultToText r)
+    Fail i context error -> return $ failOutput i context error
+    Done _i r -> return $ toByteString r
     Partial cont ->
       case cont "" of
-        Done _i r -> outputFile (resultToText r)
-        Fail i context error -> failOutput i context error
-        Partial _cont' -> outputFile "Partial after Partial"
+        Done _i r -> return $ toByteString r
+        Fail i context error -> return $ failOutput i context error
+        Partial _cont' -> return "Partial after Partial"
 
 goldenTest :: T.TestName -> FilePath -> T.TestTree
 goldenTest name file =
-  T.goldenVsFile name (file <> ".golden") (file <> ".parsed") (parsedContract file)
+  let goldenFileName = file <> ".golden"
+      compareParsedGolden parsed golden =
+        if parsed == golden
+          then T.Equal
+          else
+            T.DiffText
+              { T.gReason = Just "Parsed output doesn't match golden file.",
+                T.gActual = decodeUtf8 parsed,
+                T.gExpected = decodeUtf8 golden
+              }
+   in T.goldenTest1
+        name
+        (T.readFileMaybe goldenFileName)
+        (parsedContract file)
+        compareParsedGolden
+        (\g -> T.ShowText $ Text.pack $ ppShow g)
+        (Data.ByteString.writeFile goldenFileName)
 
 idString :: T.TestTree
 idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"
