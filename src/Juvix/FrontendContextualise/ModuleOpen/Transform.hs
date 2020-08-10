@@ -74,9 +74,12 @@ transformLet (Old.LetGroup name bindings body) = do
   protectOpen [name] $ do
     transformedBindings <- traverse transformFunctionLike bindings
     --
-    Env.add (NameSpace.Pub name) (decideRecordOrDef transformedBindings Nothing)
+    Env.add (NameSpace.Priv name) (decideRecordOrDef transformedBindings Nothing)
     --
-    New.LetGroup name transformedBindings <$> transformExpression body
+    res <- New.LetGroup name transformedBindings <$> transformExpression body
+    -- don't know where we came from!
+    Env.remove (NameSpace.Priv name)
+    pure res
 
 transformLetType ::
   Env.WorkingMaps m => Old.LetType -> m New.LetType
@@ -85,9 +88,12 @@ transformLetType (Old.LetType'' typ expr) = do
   protectOpen [typeName] $ do
     transformedType <- transformType typ
     --
-    Env.add (NameSpace.Pub typeName) (Context.TypeDeclar transformedType)
+    Env.add (NameSpace.Priv typeName) (Context.TypeDeclar transformedType)
     --
-    New.LetType'' transformedType <$> transformExpression expr
+    res <- New.LetType'' transformedType <$> transformExpression expr
+    -- don't know where we came from!
+    Env.remove (NameSpace.Priv typeName)
+    pure res
 
 transformFunctionLike ::
   Env.WorkingMaps m =>
@@ -170,7 +176,7 @@ transformDef (Context.Def usage mTy term prec) =
     <$> traverse transformSignature mTy
     <*> traverse transformFunctionLike term
     <*> pure prec
-transformDef (Context.Record contents mTy) =
+transformDef (Context.Record contents mTy) = do
   undefined
   -- Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
 transformDef (Context.TypeDeclar repr) =
