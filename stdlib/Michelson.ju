@@ -1,0 +1,58 @@
+mod Michelson =
+
+    -- datatypes
+    type key	 
+    type unit	 
+    type signature	 
+    type chainId	 
+    type option a	 
+    type list a	 
+    type set a	 
+    type operation	 
+    type contract a
+    type pair a b 
+    type either a b	 
+    type lambda a b	 
+    type map a b	 
+    type big-map a b
+
+    -- primitive types
+    type int	 
+    type nat	 
+    type string	 
+    type bytes	 
+    type mutez	 
+    type bool	 
+    type hash-key	 
+    type timestamp	 
+    type address
+
+    -- instructions
+    -- not clear what the types are from documentation (more research needed)
+    -- `words` are typed as `bytes`
+    -- otherwise `a` 
+    sig ext : a -- ???
+    sig dropn : int -> bytes -- return type???
+    sig drop : bytes -- return type???
+    sig dup : bytes
+    sig swap : bytes 
+    sig dig : bytes -> bytes	 
+    sig dug : bytes -> bytes	 
+    sig push : bytes -> (a -> b)
+    sig some : a -> either () a
+    sig none : either () a
+    sig () : unit
+    sig if-none : lambda a b -> lambda a b -> a -> b 
+    sig mkpair : a -> b -> pair a b	 
+    sig car : list a -> a
+    sig cdr : list a -> list a
+    sig left : a -> either a b	 
+    sig right : b -> either a b	 
+    sig if-left : lambda a b -> lambda a b -> a -> b  
+    sig nil : list a
+    sig cons : a -> list a
+    sig if-cons : lambda a b -> lambda a b -> a -> b
+    size : list a -> int
+    sig empty-set : set a	 
+    sig empty-map : map a	 
+    sig empty-big-map : big-map a
