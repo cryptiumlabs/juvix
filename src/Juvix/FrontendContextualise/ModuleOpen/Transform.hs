@@ -178,15 +178,24 @@ transformDef (Context.TypeDeclar repr) =
 transformDef (Context.Unknown mTy) =
   Context.Unknown <$> traverse transformSignature mTy
 
--- we work on the topMap 
+-- we work on the topMap
 transformC ::
   Env.WorkingMaps m => m ()
 transformC = do
   old <- get @"old"
+  new <- get @"new"
   let oldC = Context.topList old
   case oldC of
     (sym, _) : _ -> do
-      modify @"old" switch 
+      case Context.switchNameSpace ("TopLevel" :| [sym]) old of
+        -- bad Error for now
+        Left ____ -> throw @"error" (Env.UnknownModule (pure sym))
+        Right map -> put @"old" map
+          -- have to do this again sadly
+      case Context.switchNameSpace ("TopLevel" :| [sym]) new of
+        Left ____ -> throw @"error" (Env.UnknownModule (pure sym))
+        Right map -> put @"new" map
+      transformInner
     [] -> pure ()
 
 transformInner ::

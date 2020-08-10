@@ -179,6 +179,7 @@ switchNameSpace newNameSpace t@T {currentName} =
             Nothing -> Lib.Left er
             Just __ -> Lib.Left er
 
+removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
 removeTopName ("TopLevel" :| x : xs) = x :| xs
 removeTopName ("TopLevel" :| []) = "" :| []
 removeTopName xs = xs

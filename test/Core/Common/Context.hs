@@ -38,3 +38,10 @@ foo'''' = switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
 barTest = switchNameSpace ("Foo" :| ["Bar", "Baz", "Barr"]) foo'
 
 barTest' = removeNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) barTest
+
+
+testInner = switchNameSpace ("TopLevel" :| ["Foo"]) foo'
+
+switchTest =
+  let Right foo'' = switchNameSpace ("TopLevel" :| ["Bar"]) foo'
+  in switchNameSpace ("TopLevel" :| ["Foo"]) foo''
