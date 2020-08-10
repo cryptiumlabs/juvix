@@ -848,10 +848,11 @@ Quantitative type implementation inspired by
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
+  + [[NameSymbol]]
   + [[Contextify/Transform]]
   + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/Transform]]
-  + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Transform]]
   + [[RemoveDo/Types]]

@@ -32,6 +32,8 @@ data Environment
       }
   deriving (Generic)
 
+type FinalContext = New Context.T
+
 data Error
   = UnknownSymbol Symbol
   | Clash Shunt.Precedence Shunt.Precedence
