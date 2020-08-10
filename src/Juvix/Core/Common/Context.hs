@@ -257,12 +257,8 @@ removeTop sym t@T {topLevelMap} =
 --------------------------------------------------------------------------------
 
 extractValue :: From a -> a
-extractValue (Outside a) =
-  a
-extractValue (Current (NameSpace.Priv a)) =
-  a
-extractValue (Current (NameSpace.Pub a)) =
-  a
+extractValue (Outside a) = a
+extractValue (Current c) = NameSpace.extractValue c
 -------------------------------------------------------------------------------
 -- Generalized Helpers
 --------------------------------------------------------------------------------

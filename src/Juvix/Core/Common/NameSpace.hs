@@ -77,3 +77,10 @@ toList T {public, private} =
 fromList :: List v -> T v
 fromList List {publicL, privateL} =
   T {public = HashMap.fromList publicL, private = HashMap.fromList privateL}
+
+
+extractValue :: From a -> a
+extractValue (Pub a) =
+  a
+extractValue (Priv a) =
+  a

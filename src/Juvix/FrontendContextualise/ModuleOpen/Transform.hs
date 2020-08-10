@@ -8,6 +8,7 @@ import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import Prelude (error)
 import Juvix.Library
 
 -- Sadly for this pass we have to change every symbol affecting function
@@ -29,6 +30,7 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
     Just Context.Def {} -> err
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
+    Just Context.CurrentNameSpace {} -> err
     Nothing -> err
     Just (Context.Record innerC _mTy) ->
       -- Fine to just have the public names
@@ -59,7 +61,7 @@ protectOpenPrim syms op = do
     originalQualified <- traverse saveOldOpen syms
     traverse_ Env.removeModMap syms
     res <- op
-    traverse restoreNameOpen originalQualified
+    traverse_ restoreNameOpen originalQualified
     pure res
 
 protectOpen :: Env.WorkingMaps m => [Symbol] -> m a -> m a
@@ -170,38 +172,78 @@ transformContextInner ctx =
     (Left e, _) -> throw @"error" e
 
 transformDef ::
-  Env.WorkingMaps m => Env.Old Context.Definition -> m (Env.New Context.Definition)
-transformDef (Context.Def usage mTy term prec) =
+  Env.WorkingMaps m =>
+  Env.Old Context.Definition ->
+  NameSpace.From Symbol ->
+  m (Env.New Context.Definition)
+transformDef (Context.Def usage mTy term prec) _ =
   Context.Def usage
     <$> traverse transformSignature mTy
     <*> traverse transformFunctionLike term
     <*> pure prec
-transformDef (Context.Record contents mTy) = do
-  undefined
-  -- Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
-transformDef (Context.TypeDeclar repr) =
+--
+transformDef (Context.TypeDeclar repr) _ =
   Context.TypeDeclar <$> transformType repr
-transformDef (Context.Unknown mTy) =
+--
+transformDef (Context.Unknown mTy) _ =
   Context.Unknown <$> traverse transformSignature mTy
+--
+transformDef Context.CurrentNameSpace _ =
+  pure Context.CurrentNameSpace
+--
+transformDef (Context.Record _contents mTy) name' = do
+  sig <- traverse transformSignature mTy
+  old <- get @"old"
+  let name = NameSpace.extractValue name'
+      newMod = Context.currentName old <> pure name
+  -- switch to the new namespace
+  updateSym newMod
+  -- do our transform
+  transformInner
+  -- transform back
+  updateSym (Context.currentName old)
+  -- sadly this currently only adds it to the public, so we have to remove it
+  looked <- fmap NameSpace.extractValue <$> Env.lookupCurrent name
+  Env.remove name'
+  case looked of
+    Just (Context.Record record _) ->
+      pure (Context.Record record sig)
+    Nothing -> error "Does not happen: record lookup is nothing"
+    Just __ -> error "Does not happen: record lookup is Just not a record!"
 
--- we work on the topMap
-transformC ::
-  Env.WorkingMaps m => m ()
-transformC = do
+updateSym :: Env.WorkingMaps m => Context.NameSymbol -> m ()
+updateSym sym = do
   old <- get @"old"
   new <- get @"new"
+  case Context.switchNameSpace sym old of
+    -- bad Error for now
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"old" map
+  -- have to do this again sadly
+  case Context.switchNameSpace sym new of
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"new" map
+
+-- we work on the topMap
+transformC :: Env.WorkingMaps m => m ()
+transformC = do
+  old <- get @"old"
   let oldC = Context.topList old
+      --
+      updateSym' sym = updateSym ("TopLevel" :| [sym])
   case oldC of
-    (sym, _) : _ -> do
-      case Context.switchNameSpace ("TopLevel" :| [sym]) old of
-        -- bad Error for now
-        Left ____ -> throw @"error" (Env.UnknownModule (pure sym))
-        Right map -> put @"old" map
-          -- have to do this again sadly
-      case Context.switchNameSpace ("TopLevel" :| [sym]) new of
-        Left ____ -> throw @"error" (Env.UnknownModule (pure sym))
-        Right map -> put @"new" map
+    [(sym, _)] -> do
+      updateSym' sym
       transformInner
+    (sym, _) : (sym2, _) : _ -> do
+      updateSym' sym
+      transformInner
+      -- this way we update our namespace before
+      -- removing from top
+      -- likely the next way around we work on sym2
+      updateSym' sym2
+      modify @"old" (Context.removeTop sym)
+      transformC
     [] -> pure ()
 
 transformInner ::
@@ -213,12 +255,12 @@ transformInner = do
     NameSpace.List { publicL = [], privateL = []} ->
       pure ()
     NameSpace.List { publicL = ((sym, def) : _), privateL = _} -> do
-      newDef <- transformDef def
+      newDef <- transformDef def (NameSpace.Pub sym)
       Env.add (NameSpace.Pub sym) newDef
       Env.removeOld (NameSpace.Pub sym)
       transformInner
     NameSpace.List { publicL = [], privateL = ((sym,def) : _)} -> do
-      newDef <- transformDef def
+      newDef <- transformDef def (NameSpace.Priv sym)
       Env.add (NameSpace.Priv sym) newDef
       Env.removeOld (NameSpace.Priv sym)
       transformInner
@@ -411,7 +453,7 @@ protectSymbols syms op = do
   originalBindings <- traverse saveOld syms
   traverse_ Env.addUnknownGlobal (fmap snd originalBindings)
   res <- op
-  traverse restoreName originalBindings
+  traverse_ restoreName originalBindings
   pure res
 
 saveOld ::
