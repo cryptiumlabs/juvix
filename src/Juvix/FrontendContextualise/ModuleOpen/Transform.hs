@@ -54,6 +54,7 @@ restoreNameOpen (Nothing, sym) = Env.removeModMap sym
 --------------------------------------------------
 -- Protection extension
 --------------------------------------------------
+protectOpenPrim :: Env.WorkingMaps m => [Symbol] -> m a -> m a
 protectOpenPrim syms op = do
     originalQualified <- traverse saveOldOpen syms
     traverse_ Env.removeModMap syms
@@ -176,6 +177,7 @@ transformDef (Context.TypeDeclar repr) =
 transformDef (Context.Unknown mTy) =
   Context.Unknown <$> traverse transformSignature mTy
 
+-- we work on the topMap 
 transformC ::
   Env.WorkingMaps m => m ()
 transformC = do

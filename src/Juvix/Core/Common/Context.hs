@@ -138,6 +138,8 @@ publicNames T {currentNameSpace} =
 toList :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
 toList T {currentNameSpace} = NameSpace.toList currentNameSpace
 
+topList :: T term ty sumRep -> [(Symbol, Definition term ty sumRep)]
+topList T {topLevelMap} = HashMap.toList topLevelMap
 --------------------------------------------------------------------------------
 -- Global Functions
 --------------------------------------------------------------------------------
@@ -245,6 +247,10 @@ extractValue (Current (NameSpace.Pub a)) =
 -- Generalized Helpers
 --------------------------------------------------------------------------------
 
+----------------------------------------
+-- Types for Genralized Helpers
+----------------------------------------
+
 data Stage b
   = -- | 'Final' signifies the last symbol that we
     -- pursue in updating a structure
@@ -270,6 +276,33 @@ data Return b ty
 data OnRecord b ty
   = OnRecord (NameSpace.T b) (Maybe ty)
 
+----------------------------------------
+-- Type Class for Genralized Helpers
+----------------------------------------
+
+-- Type class for removing repeat code
+class MapSym m where
+  lookup' :: Symbol -> m a -> Maybe a
+  remove' :: Symbol -> m a -> m a
+  insert' :: Symbol -> a -> m a -> m a
+
+instance MapSym (HashMap.T Symbol) where
+  lookup' = HashMap.lookup
+  remove' = HashMap.delete
+  insert' = HashMap.insert
+
+instance MapSym NameSpace.T where
+  lookup' = NameSpace.lookup
+  remove' = NameSpace.removePublic
+  insert' x = NameSpace.insert (NameSpace.Pub x)
+
+newtype PrivNameSpace v = Priv {unPriv :: NameSpace.T v}
+
+instance MapSym PrivNameSpace where
+  lookup' sym = NameSpace.lookup sym . unPriv
+  remove' sym = Priv . NameSpace.removePrivate sym . unPriv
+  insert' sym def = Priv . NameSpace.insert (NameSpace.Priv sym) def . unPriv
+
 modifySpace ::
   ( Stage (Maybe (Definition term ty sumRep)) ->
     Return (Definition term ty sumRep) ty
@@ -280,89 +313,50 @@ modifySpace ::
 modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
   case NameSpace.lookupInternal s currentNameSpace of
     Just (NameSpace.Pub _) ->
-      updateCurr t <$> recurse (s :| ymbol) currentNameSpace
+      updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
     Just (NameSpace.Priv _) ->
-      updateCurr t <$> recursePriv (s :| ymbol) currentNameSpace
+      updateCurr t . unPriv <$> recurse f (s :| ymbol) (Priv currentNameSpace)
     Nothing ->
       case NameSymbol.takeSubSetOf currentName (s :| ymbol) of
         Just subPath ->
-          updateCurr t <$> recurse subPath currentNameSpace
+          updateCurr t <$> recurse f subPath currentNameSpace
         Nothing ->
-          updateTopLevel t <$> hashRecurse (s :| ymbol)
+          updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
   where
     updateCurr t newCurrent =
       t {currentNameSpace = newCurrent}
     updateTopLevel t newTop =
       t {topLevelMap = newTop}
-    recurse (x :| y : xs) cont =
-      case f (Continue (NameSpace.lookup x cont)) of
-        GoOn (OnRecord nameSpace ty) ->
-          let f newRecord =
-                NameSpace.insert (NameSpace.Pub x) (Record newRecord ty) cont
-           in fmap f (recurse (y :| xs) nameSpace)
-        Abort ->
-          Nothing
-        RemoveNow ->
-          Just (NameSpace.remove (NameSpace.Pub x) cont)
-        UpdateNow newRecord ->
-          Just (NameSpace.insert (NameSpace.Pub x) newRecord cont)
-    recurse (x :| []) cont =
-      case f (Final (NameSpace.lookup x cont)) of
-        UpdateNow return ->
-          Just (NameSpace.insert (NameSpace.Pub x) return cont)
-        RemoveNow ->
-          Just (NameSpace.remove (NameSpace.Pub x) cont)
-        -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> Nothing
-        Abort -> Nothing
-    -- this function is the same copy and pasted, but deals with hash insert and
-    -- lookup instead... figure out how to make it infer the type better later
-    -- 2 variables vs 1 is annoying!
-    hashRecurse (x :| y : xs) =
-      case f (Continue (HashMap.lookup x topLevelMap)) of
-        GoOn (OnRecord nameSpace ty) ->
-          let f newRecord =
-                HashMap.insert x (Record newRecord ty) topLevelMap
-           in fmap f (recurse (y :| xs) nameSpace)
-        Abort ->
-          Nothing
-        RemoveNow ->
-          Just (HashMap.delete x topLevelMap)
-        UpdateNow newRecord ->
-          Just (HashMap.insert x newRecord topLevelMap)
-    hashRecurse (x :| []) =
-      case f (Final (HashMap.lookup x topLevelMap)) of
-        UpdateNow return ->
-          Just (HashMap.insert x return topLevelMap)
-        RemoveNow ->
-          Just (HashMap.delete x topLevelMap)
-        -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> Nothing
-        Abort -> Nothing
-    -- More repeat code, but this time we do it on the private
-    -- we don't abstract it, as Ι think it'll subtract readability
-    -- from the public one
-    recursePriv (x :| y : xs) cont =
-      case f (Continue (NameSpace.lookupPrivate x cont)) of
-        GoOn (OnRecord nameSpace ty) ->
-          let f newRecord =
-                NameSpace.insert (NameSpace.Priv x) (Record newRecord ty) cont
-           in fmap f (recurse (y :| xs) nameSpace)
-        RemoveNow ->
-          Just (NameSpace.remove (NameSpace.Priv x) cont)
-        Abort ->
-          Nothing
-        UpdateNow newRecord ->
-          Just (NameSpace.insert (NameSpace.Priv x) newRecord cont)
-    recursePriv (x :| []) cont =
-      case f (Final (NameSpace.lookupPrivate x cont)) of
-        UpdateNow return ->
-          Just (NameSpace.insert (NameSpace.Priv x) return cont)
-        RemoveNow ->
-          Just (NameSpace.remove (NameSpace.Priv x) cont)
-        -- GoOn makes no sense here, so act as an Abort
-        GoOn {} -> Nothing
-        Abort -> Nothing
+
+recurse ::
+  MapSym m =>
+  ( Stage (Maybe (Definition term ty sumRep)) ->
+    Return (Definition term ty sumRep) ty
+  ) ->
+  (NonEmpty Symbol) ->
+  m (Definition term ty sumRep) ->
+  Maybe (m (Definition term ty sumRep))
+recurse f (x :| y : xs) cont =
+  case f (Continue (lookup' x cont)) of
+    GoOn (OnRecord nameSpace ty) ->
+      let g newRecord =
+            insert' x (Record newRecord ty) cont
+      in fmap g (recurse f (y :| xs) nameSpace)
+    Abort ->
+      Nothing
+    RemoveNow ->
+      Just (remove' x cont)
+    UpdateNow newRecord ->
+      Just (insert' x newRecord cont)
+recurse f (x :| []) cont =
+  case f (Final (lookup' x cont)) of
+    UpdateNow return ->
+      Just (insert' x return cont)
+    RemoveNow ->
+      Just (remove' x cont)
+    -- GoOn makes no sense here, so act as an Abort
+    GoOn {} -> Nothing
+    Abort -> Nothing
 
 -- couldn't figure out how to fold lenses
 -- once we figure out how to do a fold like
@@ -406,12 +400,3 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
             |> \case
               Just x -> traverse (recurse xs . Just) x
               Nothing -> Nothing
--- TODO :: change this to an include
--- open :: Symbol -> T term ty sumRep -> T term ty sumRep
--- open key (T map) =
---   case lookup key (T map) of
---     Just (Record (T contents) _) ->
---       -- Union takes the first if there is a conflict
---       T (HashMap.union contents map)
---     Just _ -> T map
---     Nothing -> T map
