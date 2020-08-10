@@ -96,21 +96,17 @@ removeNoComment =
         |> T.testCase ("test remove comments: " <> str)
 
 --------------------------------------------------------------------------------
--- Contracts (as a file) Stdout/Golden
+-- Contracts as a file (Golden tests)
 --------------------------------------------------------------------------------
 contractFiles :: T.TestTree
 contractFiles =
   T.testGroup
     "Contract Files"
     [ T.testGroup
-        "Contract Files Tests - Stdout"
-        [idString, addition, token],
-      T.testGroup
         "Contract Files Tests - Golden"
-        [goldenId]
+        [idString]
     ]
 
--- functions for both stdout and golden tests
 iInfo :: ByteString -> ByteString
 iInfo i = "\nThe following input has not been consumed: \n" <> i
 
@@ -122,9 +118,6 @@ contextInfo context =
 errorInfo :: Show a => a -> ByteString
 errorInfo error = "\nThe error message is \n" <> pack (show error)
 
-rInfo :: Show a => a -> ByteString
-rInfo r = "\nThe result of the parse is \n" <> pack (show r)
-
 failMsg ::
   (Show a1, Show a2) =>
   ByteString ->
@@ -133,48 +126,6 @@ failMsg ::
   a2 ->
   ByteString
 failMsg msg i context error = msg <> iInfo i <> contextInfo context <> errorInfo error
-
---------------------------------------------------------------------------------
--- Contracts (as a file) stdout
---------------------------------------------------------------------------------
-
-contractStd :: FilePath -> IO ()
-contractStd file = do
-  parsed <- readFile file
-  let rawContract = encodeUtf8 parsed
-  let parseFileInfo = "\nParsing the file with path \n" <> pack file <> ": "
-  let printDone msg i r =
-        putStrLn $ parseFileInfo <> msg <> iInfo i <> rInfo r
-  case Parser.parse rawContract of
-    Fail i context error ->
-      putStrLn $ parseFileInfo <> failMsg "Fail! " i context error
-    Done i r -> printDone ("Success! " :: ByteString) i r
-    Partial cont ->
-      case cont "" of
-        Done i r ->
-          printDone ("Success (after partial) " :: ByteString) i r
-        Fail i context error ->
-          putStrLn $ parseFileInfo <> failMsg "Fail (after partial) " i context error
-        Partial _cont' -> putStrLn ("Partial after Partial" :: ByteString)
-
-parseFileTests :: String -> FilePath -> T.TestTree
-parseFileTests name path =
-  T.testCase
-    name
-    (contractStd path)
-
-idString :: T.TestTree
-idString = parseFileTests "Id-String" "test/examples/Id-Strings.ju"
-
-addition :: T.TestTree
-addition = parseFileTests "Addition" "test/examples/Addition.ju"
-
-token :: T.TestTree
-token = parseFileTests "Token" "test/examples/Token.ju"
-
---------------------------------------------------------------------------------
--- Contracts (as a file) golden tests
---------------------------------------------------------------------------------
 
 parsedContract :: FilePath -> IO ()
 parsedContract file = do
@@ -199,8 +150,14 @@ goldenTest :: T.TestName -> FilePath -> T.TestTree
 goldenTest name file =
   T.goldenVsFile name (file <> ".golden") (file <> ".parsed") (parsedContract file)
 
-goldenId :: T.TestTree
-goldenId = goldenTest "Id-String, Golden" "test/examples/Id-Strings.ju"
+idString :: T.TestTree
+idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"
+
+addition :: T.TestTree
+addition = goldenTest "Addition" "test/examples/Addition.ju"
+
+token :: T.TestTree
+token = goldenTest "Token" "test/examples/Token.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once

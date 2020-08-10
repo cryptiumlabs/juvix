@@ -29,3 +29,6 @@ tmp/
 # LLVM temporary
 *.ll
 *.s
+
+# Testing temporary
+*.parsed
