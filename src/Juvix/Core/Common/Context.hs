@@ -321,7 +321,13 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
         Just subPath ->
           updateCurr t <$> recurse f subPath currentNameSpace
         Nothing ->
-          updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
+          -- we do one more match as we have to make sure
+          -- if we are adding foo we add it to the right place
+          case ymbol of
+            [] ->
+              updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
+            (_ : _) ->
+              updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
   where
     updateCurr t newCurrent =
       t {currentNameSpace = newCurrent}
