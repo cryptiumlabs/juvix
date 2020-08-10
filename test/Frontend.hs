@@ -13,7 +13,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Show.Pretty (ppShow)
-import Prelude (String, show)
+import Prelude (String, read, show)
 
 allParserTests :: T.TestTree
 allParserTests =
@@ -110,7 +110,9 @@ contractFiles =
         [idString]
     ]
 
-parsedContract :: FilePath -> IO ByteString
+resultToText = Text.pack . show
+
+parsedContract :: FilePath -> IO [TopLevel]
 parsedContract file = do
   let toByteString = pack . show
   let failOutput i context error =
@@ -121,17 +123,22 @@ parsedContract file = do
           <> toByteString context
           <> "\nThe error message is \n"
           <> toByteString error
-  let resultToText = Text.pack . show
+  let failIO i context error = do
+        _ <-
+          Juvix.Library.writeFile
+            (file <> "parsed")
+            (decodeUtf8 $ failOutput i context error)
+        return []
   parsed <- readFile file
   let rawContract = encodeUtf8 parsed
   case Parser.parse rawContract of
-    Fail i context error -> return $ failOutput i context error
-    Done _i r -> return $ toByteString r
+    Fail i context error -> failIO i context error
+    Done _i r -> return r
     Partial cont ->
       case cont "" of
-        Done _i r -> return $ toByteString r
-        Fail i context error -> return $ failOutput i context error
-        Partial _cont' -> return "Partial after Partial"
+        Done _i r -> return r
+        Fail i context error -> failIO i context error
+        Partial _cont' -> return []
 
 goldenTest :: T.TestName -> FilePath -> T.TestTree
 goldenTest name file =
@@ -142,16 +149,16 @@ goldenTest name file =
           else
             T.DiffText
               { T.gReason = Just "Parsed output doesn't match golden file.",
-                T.gActual = decodeUtf8 parsed,
-                T.gExpected = decodeUtf8 golden
+                T.gActual = resultToText parsed,
+                T.gExpected = resultToText golden
               }
    in T.goldenTest1
         name
-        (T.readFileMaybe goldenFileName)
+        undefined --(read . Text.unpack . decodeUtf8 . T.readFileMaybe goldenFileName)
         (parsedContract file)
-        compareParsedGolden
+        undefined --compareParsedGolden
         (\g -> T.ShowText $ Text.pack $ ppShow g)
-        (Data.ByteString.writeFile goldenFileName)
+        undefined --(Data.ByteString.writeFile goldenFileName)
 
 idString :: T.TestTree
 idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"

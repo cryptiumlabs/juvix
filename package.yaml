@@ -342,6 +342,7 @@ tests:
       - tasty
       - tasty-hunit
       - tasty-silver
+      - pretty-show
 
 benchmarks:
   juvix-bench:
