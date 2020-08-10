@@ -167,12 +167,6 @@ transformContext ctx =
     (Right _, env) -> Right (Env.new env)
     (Left e, _) -> Left e
 
-transformContextInner :: Env.WorkingMaps m => Env.Old Context.T -> m (Env.New Context.T)
-transformContextInner ctx =
-  case Env.runEnv transformC ctx of
-    (Right _, env) -> pure (Env.new env)
-    (Left e, _) -> throw @"error" e
-
 transformDef ::
   Env.WorkingMaps m =>
   Env.Old Context.Definition ->
@@ -212,19 +206,6 @@ transformDef (Context.Record _contents mTy) name' = do
       pure (Context.Record record sig)
     Nothing -> error "Does not happen: record lookup is nothing"
     Just __ -> error "Does not happen: record lookup is Just not a record!"
-
-updateSym :: Env.WorkingMaps m => Context.NameSymbol -> m ()
-updateSym sym = do
-  old <- get @"old"
-  new <- get @"new"
-  case Context.switchNameSpace sym old of
-    -- bad Error for now
-    Left ____ -> throw @"error" (Env.UnknownModule sym)
-    Right map -> put @"old" map
-  -- have to do this again sadly
-  case Context.switchNameSpace sym new of
-    Left ____ -> throw @"error" (Env.UnknownModule sym)
-    Right map -> put @"new" map
 
 -- we work on the topMap
 transformC :: Env.WorkingMaps m => m ()
@@ -450,50 +431,6 @@ transformBlock ::
   Env.WorkingMaps m => Old.Block -> m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
-protectSymbols :: Env.WorkingMaps m => [Symbol] -> m a -> m a
-protectSymbols syms op = do
-  originalBindings <- traverse saveOld syms
-  traverse_ Env.addUnknownGlobal (fmap snd originalBindings)
-  res <- op
-  traverse_ restoreName originalBindings
-  pure res
-
-saveOld ::
-  HasState "new" (Context.T term ty sumRep) f =>
-  Symbol ->
-  f (Maybe (Context.Definition term ty sumRep), Context.From Symbol)
-saveOld sym = do
-  looked <- Env.lookup sym
-  case looked of
-    Nothing ->
-      pure (Nothing, Context.Current (NameSpace.Pub sym))
-    Just (Context.Outside def) ->
-      pure (Just def, Context.Outside sym)
-    Just (Context.Current (NameSpace.Pub def)) ->
-      pure (Just def, Context.Current (NameSpace.Pub sym))
-    Just (Context.Current (NameSpace.Priv def)) ->
-      pure (Just def, Context.Current (NameSpace.Priv sym))
-
-restoreName ::
-  HasState "new" (Context.T term ty sumRep) m =>
-  (Maybe (Context.Definition term ty sumRep), Context.From Symbol) ->
-  m ()
-restoreName (def, Context.Current sym) =
-  case def of
-    Just def ->
-      Env.add sym def
-    Nothing ->
-      Env.remove sym
-restoreName (def, Context.Outside sym) =
-  -- we have to turn a symbol into a NameSymbol.T
-  -- we just have to pure it, the symbol we get
-  -- should not have any .'s inside of it
-  case def of
-    Just def ->
-      Env.addGlobal (sym :| []) def
-    Nothing ->
-      Env.removeGlobal (sym :| [])
-
 transformApplication ::
   Env.WorkingMaps m => Old.Application -> m New.Application
 transformApplication (Old.App fun args) =
@@ -563,3 +500,64 @@ transformNameSet ::
   Env.WorkingMaps m => (t -> m t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned <$> transformSymbol s <*> p e
+
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
+
+protectSymbols :: Env.WorkingMaps m => [Symbol] -> m a -> m a
+protectSymbols syms op = do
+  originalBindings <- traverse saveOld syms
+  traverse_ Env.addUnknownGlobal (fmap snd originalBindings)
+  res <- op
+  traverse_ restoreName originalBindings
+  pure res
+
+saveOld ::
+  HasState "new" (Context.T term ty sumRep) f =>
+  Symbol ->
+  f (Maybe (Context.Definition term ty sumRep), Context.From Symbol)
+saveOld sym = do
+  looked <- Env.lookup sym
+  case looked of
+    Nothing ->
+      pure (Nothing, Context.Current (NameSpace.Pub sym))
+    Just (Context.Outside def) ->
+      pure (Just def, Context.Outside sym)
+    Just (Context.Current (NameSpace.Pub def)) ->
+      pure (Just def, Context.Current (NameSpace.Pub sym))
+    Just (Context.Current (NameSpace.Priv def)) ->
+      pure (Just def, Context.Current (NameSpace.Priv sym))
+
+restoreName ::
+  HasState "new" (Context.T term ty sumRep) m =>
+  (Maybe (Context.Definition term ty sumRep), Context.From Symbol) ->
+  m ()
+restoreName (def, Context.Current sym) =
+  case def of
+    Just def ->
+      Env.add sym def
+    Nothing ->
+      Env.remove sym
+restoreName (def, Context.Outside sym) =
+  -- we have to turn a symbol into a NameSymbol.T
+  -- we just have to pure it, the symbol we get
+  -- should not have any .'s inside of it
+  case def of
+    Just def ->
+      Env.addGlobal (sym :| []) def
+    Nothing ->
+      Env.removeGlobal (sym :| [])
+
+updateSym :: Env.WorkingMaps m => Context.NameSymbol -> m ()
+updateSym sym = do
+  old <- get @"old"
+  new <- get @"new"
+  case Context.switchNameSpace sym old of
+    -- bad Error for now
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"old" map
+  -- have to do this again sadly
+  case Context.switchNameSpace sym new of
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"new" map

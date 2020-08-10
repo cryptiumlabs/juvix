@@ -869,7 +869,6 @@ Quantitative type implementation inspired by
   + [[NameSpace]]
   + [[RemoveDo/Types]]
   + [[Library]]
-*** EraseTypeAliases
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -908,6 +907,7 @@ Quantitative type implementation inspired by
 **** Transform <<InfixPrecedence/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
   + [[InfixPrecedence/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]

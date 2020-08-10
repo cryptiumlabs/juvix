@@ -36,6 +36,7 @@ data Error
   = UnknownSymbol Symbol
   | Clash Shunt.Precedence Shunt.Precedence
   | ImpossibleMoreEles
+  | PathError Context.NameSymbol
 
 type ContextAlias =
   ExceptT Error (State Environment)
@@ -60,4 +61,6 @@ newtype Context a
     via MonadError ContextAlias
 
 runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
-runEnv (Ctx c) old = runState (runExceptT c) (Env old Context.empty)
+runEnv (Ctx c) old =
+  Env old (Context.empty (Context.currentName old))
+    |> runState (runExceptT c)
