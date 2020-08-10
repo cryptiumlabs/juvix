@@ -33,7 +33,7 @@ extensible
       | Function Function
       | TypeClass
       | TypeClassInstance
-      deriving (Show, Generic, NFData)
+      deriving (Show, Read, Generic, NFData)
 
     --------------------------------------------------------------------------------
     -- Types
