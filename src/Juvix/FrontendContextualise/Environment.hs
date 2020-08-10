@@ -1,8 +1,8 @@
 module Juvix.FrontendContextualise.Environment where
 
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.Library
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
@@ -24,6 +24,7 @@ class SymbLookup a where
 
 instance SymbLookup Symbol where
   look sym cont = Context.lookup (NameSymbol.fromSymbol sym) cont
+
   --
   lookCurr sym cont = Context.lookupCurrent (NameSymbol.fromSymbol sym) cont
 

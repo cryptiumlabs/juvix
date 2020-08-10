@@ -4,8 +4,8 @@ module Juvix.FrontendContextualise.Contextify.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 
 type Repr f =
@@ -39,6 +39,7 @@ updateTopLevel Repr.TypeClassInstance ctx = ctx
 
 -- TODO ∷ why is the context empty?
 -- we should somehow note what lists are in scope
+
 -- | decideRecordOrDef tries to figure out
 -- if a given defintiion is a record or a definition
 decideRecordOrDef ::

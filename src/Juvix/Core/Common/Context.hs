@@ -140,6 +140,7 @@ toList T {currentNameSpace} = NameSpace.toList currentNameSpace
 
 topList :: T term ty sumRep -> [(Symbol, Definition term ty sumRep)]
 topList T {topLevelMap} = HashMap.toList topLevelMap
+
 --------------------------------------------------------------------------------
 -- Global Functions
 --------------------------------------------------------------------------------
@@ -259,6 +260,7 @@ removeTop sym t@T {topLevelMap} =
 extractValue :: From a -> a
 extractValue (Outside a) = a
 extractValue (Current c) = NameSpace.extractValue c
+
 -------------------------------------------------------------------------------
 -- Generalized Helpers
 --------------------------------------------------------------------------------
@@ -367,7 +369,7 @@ recurse f (x :| y : xs) cont =
     GoOn (OnRecord nameSpace ty) ->
       let g newRecord =
             insert' x (Record newRecord ty) cont
-      in fmap g (recurse f (y :| xs) nameSpace)
+       in fmap g (recurse f (y :| xs) nameSpace)
     Abort ->
       Nothing
     RemoveNow ->
@@ -421,11 +423,11 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
         Nothing
       first (x :| xs) =
         NameSpace.lookupInternal x currentNameSpace
-            |> extraLookup x
-            |> \case
-              Just x -> traverse (recurse xs . Just) x
-              Nothing -> Nothing
+          |> extraLookup x
+          |> \case
+            Just x -> traverse (recurse xs . Just) x
+            Nothing -> Nothing
    in case nameSymb of
-    "TopLevel" :| x : xs -> first (x :| xs)
-    "TopLevel" :| []     -> Nothing
-    x          :| xs     -> first (x :| xs)
+        "TopLevel" :| x : xs -> first (x :| xs)
+        "TopLevel" :| [] -> Nothing
+        x :| xs -> first (x :| xs)

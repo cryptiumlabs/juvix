@@ -8,8 +8,8 @@ import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
-import Prelude (error)
 import Juvix.Library
+import Prelude (error)
 
 -- Sadly for this pass we have to change every symbol affecting function
 
@@ -38,10 +38,10 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
       -- replacements
       let NameSpace.List {publicL, privateL} = NameSpace.toList innerC
           newSymbs = fst <$> (publicL <> privateL)
-      in protectOpenPrim newSymbs $ do
-        -- our protected removes it, but we just add it back
-        traverse_ (`Env.addModMap` fullQualified) newSymbs
-        transformExpression expr
+       in protectOpenPrim newSymbs $ do
+            -- our protected removes it, but we just add it back
+            traverse_ (`Env.addModMap` fullQualified) newSymbs
+            transformExpression expr
 
 saveOldOpen ::
   HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
@@ -58,15 +58,16 @@ restoreNameOpen (Nothing, sym) = Env.removeModMap sym
 --------------------------------------------------
 protectOpenPrim :: Env.WorkingMaps m => [Symbol] -> m a -> m a
 protectOpenPrim syms op = do
-    originalQualified <- traverse saveOldOpen syms
-    traverse_ Env.removeModMap syms
-    res <- op
-    traverse_ restoreNameOpen originalQualified
-    pure res
+  originalQualified <- traverse saveOldOpen syms
+  traverse_ Env.removeModMap syms
+  res <- op
+  traverse_ restoreNameOpen originalQualified
+  pure res
 
 protectOpen :: Env.WorkingMaps m => [Symbol] -> m a -> m a
 protectOpen syms =
   protectSymbols syms . protectOpenPrim syms
+
 --------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
@@ -108,7 +109,8 @@ transformFunctionLike (Old.Like args body) =
 transformMatchL ::
   Env.WorkingMaps m => Old.MatchL -> m New.MatchL
 transformMatchL (Old.MatchL pat body) =
-  protectOpen (findBindings pat)
+  protectOpen
+    (findBindings pat)
     (New.MatchL <$> transformMatchLogic pat <*> transformExpression body)
 
 transformLambda ::
@@ -252,14 +254,14 @@ transformInner = do
   old <- get @"old"
   let oldC = Context.toList old
   case oldC of
-    NameSpace.List { publicL = [], privateL = []} ->
+    NameSpace.List {publicL = [], privateL = []} ->
       pure ()
-    NameSpace.List { publicL = ((sym, def) : _), privateL = _} -> do
+    NameSpace.List {publicL = ((sym, def) : _), privateL = _} -> do
       newDef <- transformDef def (NameSpace.Pub sym)
       Env.add (NameSpace.Pub sym) newDef
       Env.removeOld (NameSpace.Pub sym)
       transformInner
-    NameSpace.List { publicL = [], privateL = ((sym,def) : _)} -> do
+    NameSpace.List {publicL = [], privateL = ((sym, def) : _)} -> do
       newDef <- transformDef def (NameSpace.Priv sym)
       Env.add (NameSpace.Priv sym) newDef
       Env.removeOld (NameSpace.Priv sym)

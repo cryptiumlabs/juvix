@@ -859,11 +859,14 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[Library]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
   + [[RemoveDo/Types]]
   + [[Library]]
 *** EraseTypeAliases
@@ -960,6 +963,7 @@ Quantitative type implementation inspired by
 **** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]

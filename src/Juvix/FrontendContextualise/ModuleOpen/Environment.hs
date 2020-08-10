@@ -73,7 +73,7 @@ runEnv ::
   Context a -> Old Context.T -> (Either Error a, Environment)
 runEnv (Ctx c) old =
   Env old (Context.empty (Context.currentName old)) mempty
-  |> runState (runExceptT c)
+    |> runState (runExceptT c)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
