@@ -213,7 +213,7 @@ transformC = do
   old <- get @"old"
   let oldC = Context.topList old
       --
-      updateSym' sym = updateSym ("TopLevel" :| [sym])
+      updateSym' sym = updateSym (Context.topLevelName :| [sym])
   case oldC of
     [(sym, _)] -> do
       updateSym' sym

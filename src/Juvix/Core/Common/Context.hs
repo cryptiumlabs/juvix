@@ -87,6 +87,13 @@ nameSymbolFromSymbol :: Symbol -> NameSymbol.T
 nameSymbolFromSymbol = NameSymbol.fromSymbol
 
 --------------------------------------------------------------------------------
+-- Special Names
+--------------------------------------------------------------------------------
+
+topLevelName :: IsString p => p
+topLevelName = "TopLevel"
+
+--------------------------------------------------------------------------------
 -- Body
 --------------------------------------------------------------------------------
 
@@ -181,8 +188,10 @@ switchNameSpace newNameSpace t@T {currentName} =
             Just __ -> Lib.Left er
 
 removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
-removeTopName ("TopLevel" :| x : xs) = x :| xs
-removeTopName ("TopLevel" :| []) = "" :| []
+removeTopName (top :| x : xs)
+  | topLevelName == top = x :| xs
+removeTopName (top :| [])
+  | top == topLevelName = "" :| []
 removeTopName xs = xs
 
 lookup ::
@@ -345,11 +354,10 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
             [] ->
               updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
             (newS : newYmbol) ->
-              case s of
-                "TopLevel" ->
-                  updateTopLevel t <$> recurse f (newS :| newYmbol) topLevelMap
-                _ ->
-                  updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
+              if  | s == topLevelName ->
+                    updateTopLevel t <$> recurse f (newS :| newYmbol) topLevelMap
+                  | otherwise ->
+                    updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
   where
     updateCurr t newCurrent =
       t {currentNameSpace = newCurrent}
@@ -428,6 +436,8 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
             Just x -> traverse (recurse xs . Just) x
             Nothing -> Nothing
    in case nameSymb of
-        "TopLevel" :| x : xs -> first (x :| xs)
-        "TopLevel" :| [] -> Nothing
+        top :| x : xs
+          | topLevelName == top -> first (x :| xs)
+        top :| []
+          | topLevelName == top -> Nothing
         x :| xs -> first (x :| xs)
