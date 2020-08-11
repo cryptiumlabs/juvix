@@ -109,7 +109,7 @@ validInfixSymbol w =
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =
-  w == dash || validStartSymbol w
+  w == dash || validStartSymbol w || digit w
 
 -- check for \r or \n
 endOfLine :: (Eq a, Num a) => a -> Bool
