@@ -144,24 +144,35 @@ parsedContract file = do
         Fail i context error -> failIO i context error
         Partial _cont' -> return []
 
+getGolden :: FilePath -> IO (Maybe [TopLevel])
+getGolden file = do
+  maybeBS <- T.readFileMaybe file
+  return
+    ( do
+        bs <- maybeBS
+        readMaybe $ Text.unpack $ decodeUtf8 bs
+    )
+
+compareParsedGolden :: (Eq a, Show a) => a -> a -> T.GDiff
+compareParsedGolden parsed golden =
+  if parsed == golden
+    then T.Equal
+    else
+      T.DiffText
+        { T.gReason = Just "Parsed output doesn't match golden file.",
+          T.gActual = resultToText parsed,
+          T.gExpected = resultToText golden
+        }
+
 goldenTest :: T.TestName -> FilePath -> T.TestTree
 goldenTest name file =
   let goldenFileName = file <> ".golden"
-      compareParsedGolden parsed golden =
-        if parsed == golden
-          then T.Equal
-          else
-            T.DiffText
-              { T.gReason = Just "Parsed output doesn't match golden file.",
-                T.gActual = resultToText parsed,
-                T.gExpected = resultToText golden
-              }
    in T.goldenTest1
         name
-        (read . Text.unpack <$> readFile goldenFileName)
+        (getGolden goldenFileName)
         (parsedContract file)
         compareParsedGolden
-        (\g -> T.ShowText $ Text.pack $ ppShow g)
+        (T.ShowText . Text.pack . ppShow)
         (Data.ByteString.writeFile goldenFileName . toByteString)
 
 idString :: T.TestTree
