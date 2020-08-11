@@ -33,7 +33,7 @@ data Cont b
         currentName :: NameSymbol.T,
         topLevelMap :: HashMap.T Symbol b
       }
-  deriving (Show)
+  deriving (Show, Eq)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
@@ -43,7 +43,7 @@ type T term ty sumRep = Cont (Definition term ty sumRep)
 data From b
   = Current (NameSpace.From b)
   | Outside b
-  deriving (Show, Functor, Traversable, Foldable)
+  deriving (Show, Functor, Traversable, Foldable, Eq)
 
 -- TODO :: make known records that are already turned into core
 -- this will just emit the proper names we need, not any terms to translate
@@ -69,7 +69,7 @@ data Definition term ty sumRep
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
-  deriving (Show, Generic)
+  deriving (Show, Generic, Eq)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
@@ -158,35 +158,42 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
 switchNameSpace newNameSpace t@T {currentName} =
-  let addCurrentName t startingContents =
+  let addCurrentName t startingContents newCurrName =
         (addGlobal' t)
-          { currentName = newNameSpace,
+          { currentName = newCurrName,
             currentNameSpace = startingContents
           }
       addGlobal' t@T {currentNameSpace} =
         addGlobal currentName (Record currentNameSpace Nothing) t
       addCurrent t = addGlobal newNameSpace CurrentNameSpace t
+      qualifyName =
+        currentName <> newNameSpace
    in case addPathWithValue newNameSpace CurrentNameSpace t of
         Lib.Right t ->
-          Lib.Right (addCurrentName t NameSpace.empty)
+          -- check if we have to qualify Name
+          case t !? newNameSpace of
+            Just (Current _) ->
+              Lib.Right (addCurrentName t NameSpace.empty qualifyName)
+            _ ->
+              Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
         -- the namespace may already exist
         Lib.Left er ->
           -- how do we add the namespace back to the private area!?
           case t !? newNameSpace of
             Just (Current (NameSpace.Pub (Record def _))) ->
-              Lib.Right (addCurrent (addCurrentName t def))
+              Lib.Right (addCurrent (addCurrentName t def qualifyName))
             Just (Current (NameSpace.Priv (Record def _))) ->
-              Lib.Right (addCurrent (addCurrentName t def))
+              Lib.Right (addCurrent (addCurrentName t def qualifyName))
             Just (Outside (Record def _))
               -- figure out if we contain what we are looking for!
               | NameSymbol.subsetOf (removeTopName newNameSpace) currentName ->
                 -- if so update it!
                 case addGlobal' t !? newNameSpace of
                   Just (Outside (Record def _)) ->
-                    Lib.Right (addCurrent (addCurrentName t def))
+                    Lib.Right (addCurrent (addCurrentName t def newNameSpace))
                   _ -> error "doesn't happen"
               | otherwise ->
-                Lib.Right (addCurrent (addCurrentName t def))
+                Lib.Right (addCurrent (addCurrentName t def newNameSpace))
             Nothing -> Lib.Left er
             Just __ -> Lib.Left er
 

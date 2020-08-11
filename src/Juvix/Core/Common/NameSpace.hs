@@ -12,7 +12,7 @@ data T b
       { public :: HashMap.T Symbol b,
         private :: HashMap.T Symbol b
       }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data List b
   = List
@@ -27,7 +27,7 @@ data List b
 data From b
   = Pub b
   | Priv b
-  deriving (Show, Functor, Traversable, Foldable)
+  deriving (Show, Functor, Traversable, Foldable, Eq)
 
 empty :: T b
 empty = T {public = HashMap.empty, private = HashMap.empty}

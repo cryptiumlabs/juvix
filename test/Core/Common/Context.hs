@@ -1,6 +1,7 @@
 module Core.Common.Context where
 
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -25,6 +26,7 @@ import qualified Test.Tasty.HUnit as T
 -- lookupTest :: Maybe (Context.Definition term ty sumRep)
 -- lookupTest = Context.lookup "foo.a" nestedRecord
 
+foo :: Context.T Int Int Int
 foo = Context.empty ("Foo" :| ["Bar", "Baz"])
 
 foo' =
@@ -55,3 +57,26 @@ switchTest =
   let Right foo = foo'
       Right foo'' = Context.switchNameSpace ("TopLevel" :| ["Bar"]) foo
    in Context.switchNameSpace ("TopLevel" :| ["Foo"]) foo''
+
+switchAboveLookupCheck :: Bool
+switchAboveLookupCheck =
+  let added = Context.add (NameSpace.Pub "a") (Context.TypeDeclar 3) foo
+      looked = Context.lookup (pure "a") added
+      Right switched = Context.switchNameSpace ("Foo" :| ["Bar"]) added
+      looked' = Context.lookup ("Baz" :| ["a"]) switched
+   in looked == looked'
+
+-- should we allow a switch to itself... should we just make it ID?
+switchSelf :: Bool
+switchSelf =
+  Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
+    == Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
+
+checkFullyResolvedName =
+  let Right relative = Context.switchNameSpace (pure "Barry") foo
+      Right fullQual = Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
+   in Context.currentName relative == Context.currentName fullQual
+
+-- this test checks that the local variable is added and the global
+checkCorrectResolution =
+  let Right inner = Context.switchNameSpace (pure "Barry") foo in undefined
