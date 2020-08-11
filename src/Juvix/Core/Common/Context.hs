@@ -37,6 +37,9 @@ data Cont b
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
+-- | From constitutes where the value we are looking up comes from
+-- Does it come from the Current name space, or does it come from some
+-- name space from the global map
 data From b
   = Current (NameSpace.From b)
   | Outside b

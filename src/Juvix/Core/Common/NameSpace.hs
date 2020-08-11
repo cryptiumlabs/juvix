@@ -20,6 +20,10 @@ data List b
         privateL :: [(Symbol, b)]
       }
 
+-- | From represents whether the variable came from
+-- the public names below us, or the private names below us
+-- Also used in insertion in determining whether we should
+-- place a value in the private or public map
 data From b
   = Pub b
   | Priv b
