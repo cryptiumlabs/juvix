@@ -115,7 +115,7 @@ checkCorrectResolution =
             (isOutside outside T.@=? True),
           T.testCase
             "current is local: "
-            (isCurrent current T.@=? False)
+            (isCurrent current T.@=? True)
         ]
   where
     isOutside (Context.Outside _) = True
