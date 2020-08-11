@@ -76,7 +76,7 @@ data PathError
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
--- In Lu of not being able to export namespaces
+-- In lieu of not being able to export namespaces
 --------------------------------------------------------------------------------
 type NameSymbol = NameSymbol.T
 
@@ -275,7 +275,7 @@ extractValue (Current c) = NameSpace.extractValue c
 --------------------------------------------------------------------------------
 
 ----------------------------------------
--- Types for Genralized Helpers
+-- Types for Generalized Helpers
 ----------------------------------------
 
 data Stage b
