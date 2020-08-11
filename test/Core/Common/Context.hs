@@ -72,11 +72,27 @@ switchSelf =
   Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
     == Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
 
+checkFullyResolvedName :: Bool
 checkFullyResolvedName =
   let Right relative = Context.switchNameSpace (pure "Barry") foo
       Right fullQual = Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
    in Context.currentName relative == Context.currentName fullQual
 
 -- this test checks that the local variable is added and the global
+checkCorrectResolution :: Bool
 checkCorrectResolution =
-  let Right inner = Context.switchNameSpace (pure "Barry") foo in undefined
+  let Right inner = Context.switchNameSpace (pure "Gkar") foo
+      added = Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
+      Right topGkar = Context.switchNameSpace (Context.topLevelName :| ["Gkar"]) added
+      addedTop = Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) topGkar
+      Right switchBack = Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
+      Just outside = switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
+      Just current = switchBack Context.!? ("Gkar" :| ["londo"])
+   in Context.extractValue outside == Context.extractValue current
+        && isOutside outside
+        && isCurrent current
+  where
+    isOutside (Context.Outside _) = True
+    isOutside (Context.Current _) = False
+    isCurrent (Context.Outside _) = False
+    isCurrent (Context.Current _) = True

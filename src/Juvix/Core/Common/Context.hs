@@ -160,11 +160,13 @@ switchNameSpace ::
 switchNameSpace newNameSpace t@T {currentName} =
   let addCurrentName t startingContents newCurrName =
         (addGlobal' t)
-          { currentName = newCurrName,
+          { currentName = removeTopName newCurrName,
             currentNameSpace = startingContents
           }
       addGlobal' t@T {currentNameSpace} =
-        addGlobal currentName (Record currentNameSpace Nothing) t
+        -- we have to add top to it, or else if it's a single symbol, then
+        -- it'll be added to itself, which is bad!
+        addGlobal (addTopNameToSngle currentName) (Record currentNameSpace Nothing) t
       addCurrent t = addGlobal newNameSpace CurrentNameSpace t
       qualifyName =
         currentName <> newNameSpace
@@ -196,6 +198,10 @@ switchNameSpace newNameSpace t@T {currentName} =
                 Lib.Right (addCurrent (addCurrentName t def newNameSpace))
             Nothing -> Lib.Left er
             Just __ -> Lib.Left er
+
+addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
+addTopNameToSngle (x :| []) = topLevelName :| [x]
+addTopNameToSngle xs = xs
 
 removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
 removeTopName (top :| x : xs)
@@ -441,13 +447,16 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
         Nothing
       first (x :| xs) =
         NameSpace.lookupInternal x currentNameSpace
-          |> extraLookup x
+          |> second (x :| xs)
+      second (x :| xs) looked =
+        extraLookup x looked
           |> \case
             Just x -> traverse (recurse xs . Just) x
             Nothing -> Nothing
    in case nameSymb of
+        -- we skip the local lookup if we get a top level
         top :| x : xs
-          | topLevelName == top -> first (x :| xs)
+          | topLevelName == top -> second (x :| xs) Nothing
         top :| []
           | topLevelName == top -> Nothing
         x :| xs -> first (x :| xs)
