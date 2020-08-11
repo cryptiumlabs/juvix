@@ -8,7 +8,6 @@ import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Library hiding (show)
-import System.IO.Unsafe (unsafePerformIO)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
@@ -107,14 +106,19 @@ contractFiles =
     "Contract Files"
     [ T.testGroup
         "Contract Files Tests - Golden"
-        [idString]
+        [ idString,
+          addition
+        ]
     ]
 
+resultToText :: Show a => a -> Text
 resultToText = Text.pack . show
+
+toByteString :: Show a => a -> ByteString
+toByteString = pack . show
 
 parsedContract :: FilePath -> IO [TopLevel]
 parsedContract file = do
-  let toByteString = pack . show
   let failOutput i context error =
         "Failed to parse!"
           <> "\nThe following input has not been consumed: \n"
@@ -126,7 +130,7 @@ parsedContract file = do
   let failIO i context error = do
         _ <-
           Juvix.Library.writeFile
-            (file <> "parsed")
+            (file <> ".parsed")
             (decodeUtf8 $ failOutput i context error)
         return []
   parsed <- readFile file
@@ -154,11 +158,11 @@ goldenTest name file =
               }
    in T.goldenTest1
         name
-        undefined --(read . Text.unpack . decodeUtf8 . T.readFileMaybe goldenFileName)
+        (read . Text.unpack <$> readFile goldenFileName)
         (parsedContract file)
-        undefined --compareParsedGolden
+        compareParsedGolden
         (\g -> T.ShowText $ Text.pack $ ppShow g)
-        undefined --(Data.ByteString.writeFile goldenFileName)
+        (Data.ByteString.writeFile goldenFileName . toByteString)
 
 idString :: T.TestTree
 idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"
