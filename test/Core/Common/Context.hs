@@ -58,28 +58,45 @@ switchTest =
       Right foo'' = Context.switchNameSpace ("TopLevel" :| ["Bar"]) foo
    in Context.switchNameSpace ("TopLevel" :| ["Foo"]) foo''
 
-switchAboveLookupCheck :: Bool
+contextTests :: T.TestTree
+contextTests =
+  T.testGroup
+    "Context tests:"
+    [ switchAboveLookupCheck,
+      switchSelf,
+      checkFullyResolvedName,
+      checkCorrectResolution
+    ]
+
+switchAboveLookupCheck :: T.TestTree
 switchAboveLookupCheck =
   let added = Context.add (NameSpace.Pub "a") (Context.TypeDeclar 3) foo
       looked = Context.lookup (pure "a") added
       Right switched = Context.switchNameSpace ("Foo" :| ["Bar"]) added
       looked' = Context.lookup ("Baz" :| ["a"]) switched
-   in looked == looked'
+   in T.testCase
+        "switch to module above and lookup value from below"
+        (looked T.@=? looked')
 
 -- should we allow a switch to itself... should we just make it ID?
-switchSelf :: Bool
+switchSelf :: T.TestTree
 switchSelf =
-  Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
-    == Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
+  T.testCase
+    "switching namespace to self is left"
+    ( Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
+        T.@=? Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
+    )
 
-checkFullyResolvedName :: Bool
+checkFullyResolvedName :: T.TestTree
 checkFullyResolvedName =
   let Right relative = Context.switchNameSpace (pure "Barry") foo
       Right fullQual = Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
-   in Context.currentName relative == Context.currentName fullQual
+   in T.testCase
+        "relative lookup is the same as fully qualified"
+        (Context.currentName relative T.@=? Context.currentName fullQual)
 
 -- this test checks that the local variable is added and the global
-checkCorrectResolution :: Bool
+checkCorrectResolution :: T.TestTree
 checkCorrectResolution =
   let Right inner = Context.switchNameSpace (pure "Gkar") foo
       added = Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
@@ -88,9 +105,18 @@ checkCorrectResolution =
       Right switchBack = Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
       Just outside = switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
       Just current = switchBack Context.!? ("Gkar" :| ["londo"])
-   in Context.extractValue outside == Context.extractValue current
-        && isOutside outside
-        && isCurrent current
+   in T.testGroup
+        "correct resolution test"
+        [ T.testCase
+            "topLevel value same as local: "
+            (Context.extractValue outside T.@=? Context.extractValue current),
+          T.testCase
+            "topLevel is outside: "
+            (isOutside outside T.@=? True),
+          T.testCase
+            "current is local: "
+            (isCurrent current T.@=? False)
+        ]
   where
     isOutside (Context.Outside _) = True
     isOutside (Context.Current _) = False
