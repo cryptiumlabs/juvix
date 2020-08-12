@@ -154,7 +154,15 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 --------------------------------------------------------------------------------
 -- Global Functions
 --------------------------------------------------------------------------------
+
 -- we lose some type information here... we should probably reserve it somehow
+
+-- | switchNameSpace works like a mixture of defpackage and in-package from CL
+-- creating a namespace if not currently there, and switching to it
+-- this function may fail if a path is given like `Foo.Bar.x.f` where x
+-- is a non record.
+-- This function also keeps the invariant that there is only one CurrentNameSpace
+-- tag
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
 switchNameSpace newNameSpace t@T {currentName} =
@@ -188,7 +196,7 @@ switchNameSpace newNameSpace t@T {currentName} =
               Lib.Right (addCurrent (addCurrentName t def qualifyName))
             Just (Outside (Record def _))
               -- figure out if we contain what we are looking for!
-              | NameSymbol.subsetOf (removeTopName newNameSpace) currentName ->
+              | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
                 -- if so update it!
                 case addGlobal' t !? newNameSpace of
                   Just (Outside (Record def _)) ->
@@ -360,7 +368,7 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
     Just (NameSpace.Priv _) ->
       updateCurr t . unPriv <$> recurse f (s :| ymbol) (Priv currentNameSpace)
     Nothing ->
-      case NameSymbol.takeSubSetOf currentName (s :| ymbol) of
+      case NameSymbol.takePrefixOf currentName (s :| ymbol) of
         Just subPath ->
           updateCurr t <$> recurse f subPath currentNameSpace
         Nothing ->
