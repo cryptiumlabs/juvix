@@ -1,5 +1,6 @@
 module Core.Common.Context where
 
+import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
@@ -65,7 +66,8 @@ contextTests =
     [ switchAboveLookupCheck,
       switchSelf,
       checkFullyResolvedName,
-      checkCorrectResolution
+      checkCorrectResolution,
+      privateFromAbove
     ]
 
 switchAboveLookupCheck :: T.TestTree
@@ -139,3 +141,22 @@ checkCorrectResolution =
     isOutside (Context.Current _) = False
     isCurrent (Context.Outside _) = False
     isCurrent (Context.Current _) = True
+
+privateFromAbove :: T.TestTree
+privateFromAbove =
+  let empt :: Context.T Text.Text Text.Text Text.Text
+      empt = Context.empty ("Ambassador" :| ["Kosh", "Vorlons"])
+      --
+      added =
+        Context.add
+          (NameSpace.Priv "too-late")
+          ( Context.TypeDeclar
+              "The avalanche has already started; It is too late for the pebbles to vote."
+          )
+          empt
+      Right switched =
+        Context.switchNameSpace ("Ambassador" :| ["Kosh"]) added
+      looked = switched Context.!? ("Vorlons" :| ["too-late"])
+   in T.testCase
+        "Can't access private var from above"
+        (looked T.@=? Nothing)
