@@ -12,17 +12,16 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Show.Pretty (ppShow)
-import Prelude (String, read, show)
+import Prelude (String, show)
 
 allParserTests :: T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
-    [ contractFiles
-      -- many1FunctionsParser,
-      -- sigTest1,
+    [ -- many1FunctionsParser,
+      -- sigTest1
       -- sigTest2,
-      -- fun1,
+      fun1,
       -- fun2,
       -- sumTypeTest,
       -- superArrowCase,
@@ -39,6 +38,7 @@ allParserTests =
       -- removeNoComment,
       -- removeNewLineBefore,
       -- removeSpaceBefore
+      contractFiles
     ]
 
 --------------------------------------------------------------------------------
@@ -106,8 +106,9 @@ contractFiles =
     "Contract Files"
     [ T.testGroup
         "Contract Files Tests - Golden"
-        [ idString,
-          addition
+        [ -- idString,
+          -- addition,
+          simple
         ]
     ]
 
@@ -133,15 +134,15 @@ parsedContract file = do
             (file <> ".parsed")
             (decodeUtf8 $ failOutput i context error)
         return []
-  parsed <- readFile file
-  let rawContract = encodeUtf8 parsed
+  readString <- readFile file
+  let rawContract = encodeUtf8 readString
   case Parser.parse rawContract of
-    Fail i context error -> failIO i context error
+    Fail i context err -> failIO i context err
     Done _i r -> return r
     Partial cont ->
       case cont "" of
         Done _i r -> return r
-        Fail i context error -> failIO i context error
+        Fail i context err -> failIO i context err
         Partial _cont' -> return []
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
@@ -154,12 +155,18 @@ getGolden file = do
     )
 
 compareParsedGolden :: (Eq a, Show a) => a -> a -> T.GDiff
-compareParsedGolden parsed golden =
+compareParsedGolden golden parsed =
   if parsed == golden
     then T.Equal
     else
       T.DiffText
-        { T.gReason = Just "Parsed output doesn't match golden file.",
+        { T.gReason =
+            Just $
+              "Parsed output doesn't match golden file.\n"
+                <> "The parsed result is\n"
+                <> show parsed
+                <> ", but the expected result is\n"
+                <> show golden,
           T.gActual = resultToText parsed,
           T.gExpected = resultToText golden
         }
@@ -183,6 +190,9 @@ addition = goldenTest "Addition" "test/examples/Addition.ju"
 
 token :: T.TestTree
 token = goldenTest "Token" "test/examples/Token.ju"
+
+simple :: T.TestTree
+simple = goldenTest "Testing" "test/examples/Simple.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once

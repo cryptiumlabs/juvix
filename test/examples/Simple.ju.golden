@@ -1,0 +1,1 @@
+[Function' (Func' (Like' {functionLikedName = Sym "pair", functionLikeArgs = [], functionLikeBody = Body' (Primitive' (Prim' (Sym "Michelson" :| [Sym "pair"]) ()) ()) (), annLike = ()}) ()) ()]
