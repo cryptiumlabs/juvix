@@ -419,7 +419,7 @@ recurse f (x :| []) cont =
 -- checkGlobal
 --   | NameSymbol.subsetOf currentName nameSymb
 
--- eventually to check if we are referncing an inner module via the top
+-- eventually to check if we are referencing an inner module via the top
 -- This will break code where you've added local
 
 lookupGen ::
