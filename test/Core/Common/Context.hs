@@ -71,8 +71,11 @@ contextTests =
 switchAboveLookupCheck :: T.TestTree
 switchAboveLookupCheck =
   let added = Context.add (NameSpace.Pub "a") (Context.TypeDeclar 3) foo
+      --
       looked = Context.lookup (pure "a") added
+      --
       Right switched = Context.switchNameSpace ("Foo" :| ["Bar"]) added
+      --
       looked' = Context.lookup ("Baz" :| ["a"]) switched
    in T.testCase
         "switch to module above and lookup value from below"
@@ -89,8 +92,11 @@ switchSelf =
 
 checkFullyResolvedName :: T.TestTree
 checkFullyResolvedName =
-  let Right relative = Context.switchNameSpace (pure "Barry") foo
-      Right fullQual = Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
+  let Right relative =
+        Context.switchNameSpace (pure "Barry") foo
+      --
+      Right fullQual =
+        Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
    in T.testCase
         "relative lookup is the same as fully qualified"
         (Context.currentName relative T.@=? Context.currentName fullQual)
@@ -99,11 +105,22 @@ checkFullyResolvedName =
 checkCorrectResolution :: T.TestTree
 checkCorrectResolution =
   let Right inner = Context.switchNameSpace (pure "Gkar") foo
-      added = Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
-      Right topGkar = Context.switchNameSpace (Context.topLevelName :| ["Gkar"]) added
-      addedTop = Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) topGkar
-      Right switchBack = Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
-      Just outside = switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
+      --
+      added =
+        Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
+      --
+      Right topGkar =
+        Context.switchNameSpace (Context.topLevelName :| ["Gkar"]) added
+      --
+      addedTop =
+        Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) topGkar
+      --
+      Right switchBack =
+        Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
+      --
+      Just outside =
+        switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
+      --
       Just current = switchBack Context.!? ("Gkar" :| ["londo"])
    in T.testGroup
         "correct resolution test"

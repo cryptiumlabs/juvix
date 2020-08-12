@@ -174,7 +174,10 @@ switchNameSpace newNameSpace t@T {currentName} =
       addGlobal' t@T {currentNameSpace} =
         -- we have to add top to it, or else if it's a single symbol, then
         -- it'll be added to itself, which is bad!
-        addGlobal (addTopNameToSngle currentName) (Record currentNameSpace Nothing) t
+        addGlobal
+          (addTopNameToSngle currentName)
+          (Record currentNameSpace Nothing)
+          t
       addCurrent t = addGlobal newNameSpace CurrentNameSpace t
       qualifyName =
         currentName <> newNameSpace
