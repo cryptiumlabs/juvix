@@ -160,3 +160,33 @@ privateFromAbove =
    in T.testCase
         "Can't access private var from above"
         (looked T.@=? Nothing)
+
+privateBeatsPublic :: T.TestTree
+privateBeatsPublic =
+  let empt :: Context.T Text.Text Text.Text Text.Text
+      empt = Context.empty ("Londo" :| ["Mollari", "Centauri"])
+      --
+      added =
+        Context.add
+          (NameSpace.Priv "joy")
+          ( Context.TypeDeclar
+              "What do you want, you moon-faced assassin of joy?"
+          )
+          empt
+      added2 =
+        Context.add
+          (NameSpace.Pub "joy")
+          ( Context.TypeDeclar
+              "Now, I go to spread happiness to the rest of the station. \
+              \ It is a terrible responsibility but I have learned to live with it."
+          )
+          added
+      looked = added2 Context.!? (pure "joy")
+   in
+    "What do you want, you moon-faced assassin of joy?"
+    |> Context.TypeDeclar
+    |> NameSpace.Priv
+    |> Context.Current
+    |> Just
+    |> (looked T.@=?)
+    |> T.testCase "Can't access private var from above"
