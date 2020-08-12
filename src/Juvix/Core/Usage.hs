@@ -13,6 +13,7 @@ module Juvix.Core.Usage
 where
 
 import Juvix.Library hiding (pred, show)
+import qualified Text.Read as R
 import Prelude (Show (..))
 
 -- | Usage is an alias for the semiring representation
@@ -27,11 +28,21 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
-  deriving (Eq, Read, Generic, NFData)
+  deriving (Eq, Generic, NFData)
 
 instance Show NatAndw where
   show (SNat n) = show n
   show Omega = "w"
+
+instance Read NatAndw where
+  readPrec =
+    R.parens $
+      ( R.prec 10 $ do
+          R.Symbol "w" <- R.lexP
+          return Omega
+      )
+        R.+++ (R.prec 10 $ SNat <$> R.readPrec)
+  readListPrec = R.readListPrecDefault
 
 -- Addition is the semi-Ring/Monoid instance
 instance Semigroup NatAndw where
