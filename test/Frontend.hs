@@ -18,27 +18,27 @@ allParserTests :: T.TestTree
 allParserTests =
   T.testGroup
     "Parser Tests"
-    [ contractFiles,
-      many1FunctionsParser,
-      sigTest1,
-      sigTest2,
-      fun1,
-      fun2,
-      sumTypeTest,
-      superArrowCase,
-      typeTest,
-      moduleOpen,
-      moduleOpen',
-      typeNameNoUniverse,
-      simpleNamedCon,
-      matchMoreComplex,
-      condTest1,
-      record1,
-      parens1,
-      -- pre-processor tests
-      removeNoComment,
-      removeNewLineBefore,
-      removeSpaceBefore
+    [ contractFiles
+      -- many1FunctionsParser,
+      -- sigTest1,
+      -- sigTest2,
+      -- fun1,
+      -- fun2,
+      -- sumTypeTest,
+      -- superArrowCase,
+      -- typeTest,
+      -- moduleOpen,
+      -- moduleOpen',
+      -- typeNameNoUniverse,
+      -- simpleNamedCon,
+      -- matchMoreComplex,
+      -- condTest1,
+      -- record1,
+      -- parens1,
+      -- -- pre-processor tests
+      -- removeNoComment,
+      -- removeNewLineBefore,
+      -- removeSpaceBefore
     ]
 
 --------------------------------------------------------------------------------

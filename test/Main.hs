@@ -46,13 +46,13 @@ allCheckedTests =
   T.testGroup
     "All tests that are checked"
     [ coreTests,
-      pipelineTests,
-      backendTests,
-      frontEndTests,
-      translationPasses,
-      EAC2.eac2Tests,
-      Erasure.erasureTests,
-      Shunt.allInfixTests
+      -- pipelineTests,
+      -- backendTests,
+      frontEndTests
+      -- translationPasses,
+      -- EAC2.eac2Tests,
+      -- Erasure.erasureTests,
+      -- Shunt.allInfixTests
     ]
 
 translationPasses :: T.TestTree

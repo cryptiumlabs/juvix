@@ -117,14 +117,14 @@ traverseM f = fmap join . traverse f
 instance Show (a -> b) where
   show _ = "fun"
 
-newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord, NFData)
+newtype Symbol = Sym Text deriving (Eq, Show, Read, Hashable, Semigroup, Ord, NFData)
 
-instance Show Symbol where
-  show (Sym t) = T.unpack t
+-- instance Show Symbol where
+--   show (Sym t) = T.unpack t
 
-instance Read Symbol where
-  readPrec = R.parens (R.prec 10 $ Sym <$> R.readPrec)
-  readListPrec = R.readListPrecDefault
+-- instance Read Symbol where
+--   readPrec = R.parens (R.prec 10 $ Sym <$> R.readPrec)
+--   readListPrec = R.readListPrecDefault
 
 instance IsString Symbol where
   fromString = intern
