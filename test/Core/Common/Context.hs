@@ -67,7 +67,9 @@ contextTests =
       switchSelf,
       checkFullyResolvedName,
       checkCorrectResolution,
-      privateFromAbove
+      privateFromAbove,
+      privateBeatsPublic,
+      localBeatsGlobal
     ]
 
 switchAboveLookupCheck :: T.TestTree
@@ -182,11 +184,42 @@ privateBeatsPublic =
           )
           added
       looked = added2 Context.!? (pure "joy")
-   in
-    "What do you want, you moon-faced assassin of joy?"
-    |> Context.TypeDeclar
-    |> NameSpace.Priv
-    |> Context.Current
-    |> Just
-    |> (looked T.@=?)
-    |> T.testCase "Can't access private var from above"
+   in "What do you want, you moon-faced assassin of joy?"
+        |> Context.TypeDeclar
+        |> NameSpace.Priv
+        |> Context.Current
+        |> Just
+        |> (looked T.@=?)
+        |> T.testCase "Can't access private var from above"
+
+localBeatsGlobal :: T.TestTree
+localBeatsGlobal =
+  let empt :: Context.T Text.Text Text.Text Text.Text
+      empt = Context.empty ("GKar" :| ["Narn"])
+      --
+      added =
+        Context.add
+          (NameSpace.Priv "cost")
+          ( Context.TypeDeclar
+              "I have seen what power does, and I have seen what power costs. \
+              \ The one is never equal to the other."
+          )
+          empt
+      added2 =
+        Context.addGlobal
+          (Context.topLevelName :| ["cost"])
+          ( Context.TypeDeclar
+              "I'm delirious with joy. It proves that if you confront the universe \
+              \ with good intentions in your heart, it will reflect that and reward \
+              \ your intent. Usually. It just doesn't always do it in the way you expect."
+          )
+          added
+      looked = added2 Context.!? (pure "cost")
+   in "I have seen what power does, and I have seen what power costs. \
+      \ The one is never equal to the other."
+        |> Context.TypeDeclar
+        |> NameSpace.Priv
+        |> Context.Current
+        |> Just
+        |> (looked T.@=?)
+        |> T.testCase "public beats global"
