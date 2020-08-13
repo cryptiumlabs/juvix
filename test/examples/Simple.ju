@@ -1,1 +1,1 @@
-sig foo 0 : Int -> Int
+sig foo w : Int -> Int
