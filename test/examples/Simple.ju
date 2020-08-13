@@ -1,1 +1,1 @@
-let pair = %Michelson.pair
+sig foo 0 : Int -> Int

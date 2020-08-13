@@ -106,7 +106,7 @@ contractFiles =
     "Contract Files"
     [ T.testGroup
         "Contract Files Tests - Golden"
-        [ -- idString,
+        [ idString,
           -- addition,
           simple
         ]
