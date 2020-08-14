@@ -13,8 +13,6 @@ module Juvix.Core.Usage
 where
 
 import Juvix.Library hiding (pred, show)
-import qualified Text.Read as R
-import Prelude (Show (..))
 
 -- | Usage is an alias for the semiring representation
 type T = NatAndw

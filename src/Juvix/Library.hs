@@ -79,7 +79,6 @@ import Protolude hiding
     reader,
     state,
   )
-import qualified Text.Read as R
 import Prelude (Show (..), String)
 
 (∨) :: Bool -> Bool -> Bool
