@@ -22,9 +22,13 @@ data Error
   | InfixErr Infix.Error
   | PathErr Context.PathError
 
+f ::
+  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
+f = contextualize
+
 contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-contextualize t@((sym, arg) :| _) =
+contextualize t@((sym, _) :| _) =
   case foldM Contextify.contextify (Context.empty sym) t of
     Left err -> Left (PathErr err)
     Right context ->
