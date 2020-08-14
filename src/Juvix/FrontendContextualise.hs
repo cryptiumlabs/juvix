@@ -21,6 +21,7 @@ data Error
   = ModuleErr Module.Error
   | InfixErr Infix.Error
   | PathErr Context.PathError
+  deriving (Show)
 
 f ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
@@ -28,8 +29,12 @@ f = contextualize
 
 contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-contextualize t@((sym, _) :| _) =
-  case foldM Contextify.contextify (Context.empty sym) t of
+contextualize ((sym, xs) :| t) =
+  case foldM
+         Contextify.contextify
+         (foldr Contextify.updateTopLevel (Context.empty sym) xs)
+         t
+  of
     Left err -> Left (PathErr err)
     Right context ->
       case Module.transformContext context of

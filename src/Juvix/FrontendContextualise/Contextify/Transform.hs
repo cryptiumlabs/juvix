@@ -24,11 +24,6 @@ contextify cont (nameSymb, xs) =
     Left errrr -> Left errrr
     Right cont -> Right (foldr updateTopLevel cont xs)
 
--- TODO ∷ bad hack I'll have to change
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
-
 -- TODO ∷ We should return a tuple of opens and the contex
 updateTopLevel :: Repr.TopLevel -> Context -> Context
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =

@@ -39,6 +39,7 @@ data Error
   | Clash Shunt.Precedence Shunt.Precedence
   | ImpossibleMoreEles
   | PathError Context.NameSymbol
+  deriving (Show)
 
 type ContextAlias =
   ExceptT Error (State Environment)
