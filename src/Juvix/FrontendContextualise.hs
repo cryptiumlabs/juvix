@@ -6,6 +6,7 @@
 --   2. =InfixPrecedence=
 module Juvix.FrontendContextualise where
 
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
@@ -19,12 +20,17 @@ import Juvix.Library
 data Error
   = ModuleErr Module.Error
   | InfixErr Infix.Error
+  | PathErr Context.PathError
 
-contextualize :: [Initial.TopLevel] -> NameSymbol.T -> Either Error Target.FinalContext
-contextualize arg sym =
-  case Module.transformContext (Contextify.contextify sym arg) of
-    Left err -> Left (ModuleErr err)
-    Right xs ->
-      case Infix.transformContext xs of
-        Left err -> Left (InfixErr err)
-        Right xs -> Right xs
+contextualize ::
+  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
+contextualize t@((sym, arg) :| _) =
+  case foldM Contextify.contextify (Context.empty sym) t of
+    Left err -> Left (PathErr err)
+    Right context ->
+      case Module.transformContext context of
+        Left err -> Left (ModuleErr err)
+        Right xs ->
+          case Infix.transformContext xs of
+            Left err -> Left (InfixErr err)
+            Right xs -> Right xs

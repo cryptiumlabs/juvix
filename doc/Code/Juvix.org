@@ -837,6 +837,7 @@ Quantitative type implementation inspired by
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
+  + [[Context]]
   + [[NameSymbol]]
   + [[Contextify/Transform]]
   + [[InfixPrecedence/Environment]]
