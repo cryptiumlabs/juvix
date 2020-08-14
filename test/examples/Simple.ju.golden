@@ -1,1 +1,0 @@
-[Signature' (Sig' {signatureName = Sym "foo", signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()), signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "Int" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Int" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) ()]
