@@ -107,8 +107,8 @@ contractFiles =
     [ T.testGroup
         "Contract Files Tests - Golden"
         [ idString,
-          -- addition,
-          simple
+          addition,
+          token
         ]
     ]
 
@@ -190,9 +190,6 @@ addition = goldenTest "Addition" "test/examples/Addition.ju"
 
 token :: T.TestTree
 token = goldenTest "Token" "test/examples/Token.ju"
-
-simple :: T.TestTree
-simple = goldenTest "Testing" "test/examples/Simple.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once

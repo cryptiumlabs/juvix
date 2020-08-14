@@ -1,1 +1,1 @@
-sig foo w : Int -> Int
+sig foo (Omega) : Int -> Int
