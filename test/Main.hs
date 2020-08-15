@@ -2,6 +2,7 @@ module Main where
 
 import qualified Backends.LLVM as LLVM
 import qualified Backends.Michelson as Michelson
+import qualified Core.Common.Context as Context
 import qualified CoreConv
 import qualified CoreParser
 import qualified CoreTypechecker
@@ -52,7 +53,8 @@ allCheckedTests =
       translationPasses,
       EAC2.eac2Tests,
       Erasure.erasureTests,
-      Shunt.allInfixTests
+      Shunt.allInfixTests,
+      Context.contextTests
     ]
 
 translationPasses :: T.TestTree

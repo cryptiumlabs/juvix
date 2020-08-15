@@ -190,7 +190,8 @@ signature' :: Parser Types.Signature
 signature' = do
   _ <- spaceLiner (string "sig")
   name <- prefixSymbolSN
-  maybeUsage <- maybe (fmap Types.Constant constantSN <|> parens expressionSN)
+  maybeUsage <-
+    maybe (fmap Types.Constant constantSN <|> spaceLiner (parens expressionSN))
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
   exp <- expression
