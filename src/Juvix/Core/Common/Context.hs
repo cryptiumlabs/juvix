@@ -102,7 +102,7 @@ topLevelName = "TopLevel"
 
 empty :: NameSymbol.T -> T term ty sumRep
 empty sym =
-  case addPathWithValue sym CurrentNameSpace fullyEmpty of
+  case addPathWithValue (pure topLevelName <> sym) CurrentNameSpace fullyEmpty of
     Lib.Left _ -> error "impossible"
     Lib.Right x -> x
   where

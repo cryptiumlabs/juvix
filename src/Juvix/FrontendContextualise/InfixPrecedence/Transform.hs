@@ -3,7 +3,6 @@
 module Juvix.FrontendContextualise.InfixPrecedence.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
