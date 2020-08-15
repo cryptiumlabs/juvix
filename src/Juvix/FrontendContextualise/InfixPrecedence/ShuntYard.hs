@@ -12,16 +12,16 @@ data Associativity
   | NonAssoc
   deriving (Eq, Show)
 
-data Precedence = Pred Symbol Associativity Int
+data Precedence sym = Pred sym Associativity Int
   deriving (Show, Eq)
 
-data Error
-  = Clash Precedence Precedence
+data Error sym
+  = Clash (Precedence sym) (Precedence sym)
   | MoreEles
   deriving (Show)
 
 -- Not a real ordering, hence not an ord instance
-predOrd :: Precedence -> Precedence -> Either Error Bool
+predOrd :: Precedence sym -> Precedence sym -> Either (Error sym) Bool
 predOrd p1@(Pred _ fix iNew) p2@(Pred _ fix' iOld)
   | iNew == iOld && fix /= fix' =
     Left (Clash p1 p2)
@@ -34,23 +34,23 @@ predOrd p1@(Pred _ fix iNew) p2@(Pred _ fix' iOld)
       _ ->
         Right (iNew < iOld)
 
-data PredOrEle a
-  = Precedence Precedence
+data PredOrEle sym a
+  = Precedence (Precedence sym)
   | Ele a
   deriving (Eq, Show)
 
-data Application a
-  = App Symbol (Application a) (Application a)
+data Application sym a
+  = App sym (Application sym a) (Application sym a)
   | Single a
   deriving (Eq, Show)
 
-shunt :: NonEmpty (PredOrEle a) -> Either Error (Application a)
+shunt :: NonEmpty (PredOrEle sym a) -> Either (Error sym) (Application sym a)
 shunt = fmap (combine . popAll) . foldM shuntAcc ([], [])
 
 shuntAcc ::
-  ([Application a], [Precedence]) ->
-  PredOrEle a ->
-  Either Error ([Application a], [Precedence])
+  ([Application sym a], [Precedence sym]) ->
+  PredOrEle sym a ->
+  Either (Error sym) ([Application sym a], [Precedence sym])
 shuntAcc (aps, prec) (Ele a) =
   Right (Single a : aps, prec)
 shuntAcc (aps, []) (Precedence p) =
@@ -70,7 +70,7 @@ shuntAcc (aps, (pred : preds)) (Precedence p) =
     Left err ->
       Left err
 
-popAll :: ([Application a], [Precedence]) -> [Application a]
+popAll :: ([Application sym a], [Precedence sym]) -> [Application sym a]
 popAll (xs, []) =
   xs
 popAll (x1 : x2 : xs, op : ops) =
@@ -82,10 +82,10 @@ popAll ([_], (_ : _)) =
 
 -- This list should be of length 1 after all is said and done, and an
 -- application given by shunt
-combine :: [Application a] -> Application a
+combine :: [Application sym a] -> Application sym a
 combine (x : _) = x
 combine [] =
   error "precondition failed: Shunt.combine was given an empty list"
 
-predSymbol :: Precedence -> Symbol
+predSymbol :: Precedence sym -> sym
 predSymbol (Pred s _ _) = s

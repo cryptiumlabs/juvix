@@ -31,10 +31,9 @@ contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
 contextualize ((sym, xs) :| t) =
   case foldM
-         Contextify.contextify
-         (foldr Contextify.updateTopLevel (Context.empty sym) xs)
-         t
-  of
+    Contextify.contextify
+    (foldr Contextify.updateTopLevel (Context.empty sym) xs)
+    t of
     Left err -> Left (PathErr err)
     Right context ->
       case Module.transformContext context of

@@ -191,13 +191,13 @@ transformDef (Context.Record _contents mTy) name' = do
   sig <- traverse transformSignature mTy
   old <- get @"old"
   let name = NameSpace.extractValue name'
-      newMod = Context.currentName old <> pure name
+      newMod = pure Context.topLevelName <> Context.currentName old <> pure name
   -- switch to the new namespace
   updateSym newMod
   -- do our transform
   transformInner
   -- transform back
-  updateSym (Context.currentName old)
+  updateSym (pure Context.topLevelName <> Context.currentName old)
   -- sadly this currently only adds it to the public, so we have to remove it
   looked <- fmap NameSpace.extractValue <$> Env.lookupCurrent name
   Env.remove name'

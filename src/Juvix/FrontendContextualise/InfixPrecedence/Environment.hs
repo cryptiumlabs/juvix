@@ -35,8 +35,10 @@ data Environment
 type FinalContext = New Context.T
 
 data Error
-  = UnknownSymbol Symbol
-  | Clash Shunt.Precedence Shunt.Precedence
+  = UnknownSymbol Context.NameSymbol
+  | Clash
+      (Shunt.Precedence Context.NameSymbol)
+      (Shunt.Precedence Context.NameSymbol)
   | ImpossibleMoreEles
   | PathError Context.NameSymbol
   deriving (Show)

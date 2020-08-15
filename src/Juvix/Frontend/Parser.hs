@@ -28,8 +28,8 @@ import Prelude (String, fail)
 parseOnly :: ByteString -> Either String [Types.TopLevel]
 parseOnly =
   Data.Attoparsec.ByteString.parseOnly
-     (eatSpaces (many1 topLevelSN <* endOfInput))
-     . removeComments
+    (eatSpaces (many1 topLevelSN <* endOfInput))
+    . removeComments
 
 parse :: ByteString -> Result [Types.TopLevel]
 parse =

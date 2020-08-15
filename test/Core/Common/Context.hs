@@ -43,7 +43,7 @@ switchSelf =
   T.testCase
     "switching namespace to self is left"
     ( Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
-        T.@=? Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
+        T.@=? Right foo
     )
 
 checkFullyResolvedName :: T.TestTree
