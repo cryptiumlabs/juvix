@@ -32,11 +32,10 @@ data Error
 ofFrontend ::
   [(NameSymbol.T, [Initial.TopLevel])] -> Either Error Target.FinalContext
 ofFrontend syn =
-  let newSyn = fmap (\(name, syntax) -> (name, Desugar.f syntax)) syn
-   in case newSyn of
-        [] ->
-          Left NoInput
-        x : xs ->
-          case Contextualise.f (x :| xs) of
-            Left errr -> Left (ContextErr errr)
-            Right con -> Right con
+  case fmap (second Desugar.f) syn of
+    [] ->
+      Left NoInput
+    x : xs ->
+      case Contextualise.f (x :| xs) of
+        Left errr -> Left (ContextErr errr)
+        Right con -> Right con

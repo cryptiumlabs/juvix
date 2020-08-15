@@ -27,7 +27,7 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
-  deriving (Eq, Generic, NFData, Read)
+  deriving (Eq, Generic, NFData)
 
 instance Show NatAndw where
   show (SNat n) = show n
