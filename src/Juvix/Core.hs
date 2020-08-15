@@ -20,7 +20,6 @@ import qualified Juvix.Frontend.Types as Initial
 import qualified Juvix.FrontendContextualise as Contextualise
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import qualified Juvix.FrontendDesugar as Desugar
-import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Library
 
 data Error

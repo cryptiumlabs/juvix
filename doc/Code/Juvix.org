@@ -441,6 +441,7 @@ This module provides a default contract environment
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+  + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[FrontendContextualise]]
   + [[InfixPrecedence/Environment]]

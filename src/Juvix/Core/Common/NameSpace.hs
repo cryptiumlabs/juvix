@@ -19,7 +19,7 @@ data List b
       { publicL :: [(Symbol, b)],
         privateL :: [(Symbol, b)]
       }
-      deriving (Show)
+  deriving (Show)
 
 -- | From represents whether the variable came from
 -- the public names below us, or the private names below us
