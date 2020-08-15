@@ -166,7 +166,8 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
 switchNameSpace newNameSpace t@T {currentName}
-  | removeTopName newNameSpace == removeTopName currentName = Lib.Right t
+  | removeTopName newNameSpace == removeTopName currentName =
+    Lib.Right t
   | otherwise =
     let addCurrentName t startingContents newCurrName =
           (addGlobal' t)
@@ -180,7 +181,7 @@ switchNameSpace newNameSpace t@T {currentName}
             (addTopNameToSngle currentName)
             (Record currentNameSpace Nothing)
             t
-        addCurrent t = addGlobal newNameSpace CurrentNameSpace t
+        addCurrent = addGlobal newNameSpace CurrentNameSpace
         qualifyName =
           currentName <> newNameSpace
      in case addPathWithValue newNameSpace CurrentNameSpace t of
@@ -373,7 +374,7 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
     Just (NameSpace.Priv _) ->
       updateCurr t . unPriv <$> recurse f (s :| ymbol) (Priv currentNameSpace)
     Nothing ->
-      case NameSymbol.takePrefixOf currentName (s :| ymbol) of
+      case NameSymbol.takePrefixOf currentName (removeTopName (s :| ymbol)) of
         Just subPath ->
           updateCurr t <$> recurse f subPath currentNameSpace
         Nothing ->
