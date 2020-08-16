@@ -207,7 +207,14 @@ topLevelDoesNotMessWithInnerRes :: T.TestTree
 topLevelDoesNotMessWithInnerRes =
   let created :: Context.T Int Int Int
       created = Context.empty (pure "Shadows")
-      inner = Context.switchNameSpace (Context.topLevelName :| ["Shadows", "Mr-Morden"]) created
+      inner =
+        Context.switchNameSpace
+          (Context.topLevelName :| ["Shadows", "Mr-Morden"])
+          created
+      inner2 =
+        Context.switchNameSpace
+          ("Shadows" :| ["Mr-Morden"])
+          created
       empt =
         NameSpace.empty
           |> NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace
@@ -216,4 +223,4 @@ topLevelDoesNotMessWithInnerRes =
           |> Context.T NameSpace.empty ("Shadows" :| ["Mr-Morden"])
    in T.testCase
         "TopLevelname does not prohbit inner module change"
-        (inner T.@=? Right empt)
+        (inner == Right empt && inner == inner2 T.@=? True)
