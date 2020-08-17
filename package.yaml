@@ -113,6 +113,7 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j
   - -static
+  - -fwrite-ide-info
 
 when:
   condition: flag(incomplete-error)
@@ -187,6 +188,7 @@ library:
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
     - Juvix.Core.IR
+    - Juvix.Core.IR.Subst
     - Juvix.Core.IR.Typechecker
     - Juvix.Core.IRAnn
     - Juvix.Core.Erased
@@ -317,6 +319,7 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -fwrite-ide-info
     dependencies:
       - juvix
       - optparse-applicative
