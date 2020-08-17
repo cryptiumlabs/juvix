@@ -801,6 +801,11 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
 ** Frontend
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]

@@ -177,6 +177,7 @@ library:
     - Juvix.FrontendContextualise.InfixPrecedence.Transform
     - Juvix.FrontendContextualise.InfixPrecedence.Environment
     - Juvix.FrontendContextualise.InfixPrecedence.Types
+    - Juvix.Frontend
     - Juvix.Frontend.Lexer
     - Juvix.Frontend.Parser
     - Juvix.Core
