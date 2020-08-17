@@ -17,13 +17,12 @@ type Context =
 type Definition =
   Repr Context.Definition
 
-contextify :: Context.NameSymbol -> [Repr.TopLevel] -> Context
-contextify nameSymb = foldr updateTopLevel (Context.empty nameSymb)
-
--- TODO ∷ bad hack I'll have to change
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
+contextify ::
+  Context -> (Context.NameSymbol, [Repr.TopLevel]) -> Either Context.PathError Context
+contextify cont (nameSymb, xs) =
+  case Context.switchNameSpace nameSymb cont of
+    Left errrr -> Left errrr
+    Right cont -> Right (foldr updateTopLevel cont xs)
 
 -- TODO ∷ We should return a tuple of opens and the contex
 updateTopLevel :: Repr.TopLevel -> Context -> Context

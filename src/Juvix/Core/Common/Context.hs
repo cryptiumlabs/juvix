@@ -102,7 +102,7 @@ topLevelName = "TopLevel"
 
 empty :: NameSymbol.T -> T term ty sumRep
 empty sym =
-  case addPathWithValue sym CurrentNameSpace fullyEmpty of
+  case addPathWithValue (pure topLevelName <> sym) CurrentNameSpace fullyEmpty of
     Lib.Left _ -> error "impossible"
     Lib.Right x -> x
   where
@@ -165,50 +165,53 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 -- tag
 switchNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
-switchNameSpace newNameSpace t@T {currentName} =
-  let addCurrentName t startingContents newCurrName =
-        (addGlobal' t)
-          { currentName = removeTopName newCurrName,
-            currentNameSpace = startingContents
-          }
-      addGlobal' t@T {currentNameSpace} =
-        -- we have to add top to it, or else if it's a single symbol, then
-        -- it'll be added to itself, which is bad!
-        addGlobal
-          (addTopNameToSngle currentName)
-          (Record currentNameSpace Nothing)
-          t
-      addCurrent t = addGlobal newNameSpace CurrentNameSpace t
-      qualifyName =
-        currentName <> newNameSpace
-   in case addPathWithValue newNameSpace CurrentNameSpace t of
-        Lib.Right t ->
-          -- check if we have to qualify Name
-          case t !? newNameSpace of
-            Just (Current _) ->
-              Lib.Right (addCurrentName t NameSpace.empty qualifyName)
-            _ ->
-              Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
-        -- the namespace may already exist
-        Lib.Left er ->
-          -- how do we add the namespace back to the private area!?
-          case t !? newNameSpace of
-            Just (Current (NameSpace.Pub (Record def _))) ->
-              Lib.Right (addCurrent (addCurrentName t def qualifyName))
-            Just (Current (NameSpace.Priv (Record def _))) ->
-              Lib.Right (addCurrent (addCurrentName t def qualifyName))
-            Just (Outside (Record def _))
-              -- figure out if we contain what we are looking for!
-              | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-                -- if so update it!
-                case addGlobal' t !? newNameSpace of
-                  Just (Outside (Record def _)) ->
-                    Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-                  _ -> error "doesn't happen"
-              | otherwise ->
-                Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-            Nothing -> Lib.Left er
-            Just __ -> Lib.Left er
+switchNameSpace newNameSpace t@T {currentName}
+  | removeTopName newNameSpace == removeTopName currentName =
+    Lib.Right t
+  | otherwise =
+    let addCurrentName t startingContents newCurrName =
+          (addGlobal' t)
+            { currentName = removeTopName newCurrName,
+              currentNameSpace = startingContents
+            }
+        addGlobal' t@T {currentNameSpace} =
+          -- we have to add top to it, or else if it's a single symbol, then
+          -- it'll be added to itself, which is bad!
+          addGlobal
+            (addTopNameToSngle currentName)
+            (Record currentNameSpace Nothing)
+            t
+        addCurrent = addGlobal newNameSpace CurrentNameSpace
+        qualifyName =
+          currentName <> newNameSpace
+     in case addPathWithValue newNameSpace CurrentNameSpace t of
+          Lib.Right t ->
+            -- check if we have to qualify Name
+            case t !? newNameSpace of
+              Just (Current _) ->
+                Lib.Right (addCurrentName t NameSpace.empty qualifyName)
+              _ ->
+                Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
+          -- the namespace may already exist
+          Lib.Left er ->
+            -- how do we add the namespace back to the private area!?
+            case t !? newNameSpace of
+              Just (Current (NameSpace.Pub (Record def _))) ->
+                Lib.Right (addCurrent (addCurrentName t def qualifyName))
+              Just (Current (NameSpace.Priv (Record def _))) ->
+                Lib.Right (addCurrent (addCurrentName t def qualifyName))
+              Just (Outside (Record def _))
+                -- figure out if we contain what we are looking for!
+                | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
+                  -- if so update it!
+                  case addGlobal' t !? newNameSpace of
+                    Just (Outside (Record def _)) ->
+                      Lib.Right (addCurrent (addCurrentName t def newNameSpace))
+                    _ -> error "doesn't happen"
+                | otherwise ->
+                  Lib.Right (addCurrent (addCurrentName t def newNameSpace))
+              Nothing -> Lib.Left er
+              Just __ -> Lib.Left er
 
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
@@ -371,7 +374,7 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
     Just (NameSpace.Priv _) ->
       updateCurr t . unPriv <$> recurse f (s :| ymbol) (Priv currentNameSpace)
     Nothing ->
-      case NameSymbol.takePrefixOf currentName (s :| ymbol) of
+      case NameSymbol.takePrefixOf currentName (removeTopName (s :| ymbol)) of
         Just subPath ->
           updateCurr t <$> recurse f subPath currentNameSpace
         Nothing ->

@@ -435,11 +435,17 @@ This module provides a default contract environment
   + [[Library]]
 ** Core
 - _Relies on_
+  + [[NameSymbol]]
   + [[Core/Erasure]]
   + [[Pipeline]]
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+  + [[Frontend/Types]]
+  + [[FrontendContextualise]]
+  + [[InfixPrecedence/Environment]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Library]]
@@ -837,6 +843,7 @@ Quantitative type implementation inspired by
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
+  + [[Context]]
   + [[NameSymbol]]
   + [[Contextify/Transform]]
   + [[InfixPrecedence/Environment]]
@@ -898,6 +905,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[NameSpace]]
+  + [[NameSymbol]]
   + [[InfixPrecedence/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]

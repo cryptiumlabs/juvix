@@ -145,6 +145,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Context]]
   + [[NameSpace]]
   + [[Library]]
+  + [[HashMap]]
+* Files
 * FrontendContextualise
 ** Infix
 *** ShuntYard
