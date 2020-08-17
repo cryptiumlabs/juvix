@@ -139,6 +139,7 @@ library:
     - jsonschema-gen
   exposed-modules:
     - Juvix
+    - Juvix.Pipeline
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
     - Juvix.Frontend.Types.Extend

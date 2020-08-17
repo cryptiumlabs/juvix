@@ -10,8 +10,8 @@ import Juvix.Library
 import qualified System.FilePath as FilePath
 import Prelude (String)
 
-toFrontEnd :: [FilePath] -> IO (Either String [(NameSymbol.T, [Types.TopLevel])])
-toFrontEnd files = do
+ofPath :: [FilePath] -> IO (Either String [(NameSymbol.T, [Types.TopLevel])])
+ofPath files = do
   read <- ByteString.readFile `traverse` files
   case traverse Parser.parseOnly read of
     Left x ->
