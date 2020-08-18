@@ -55,26 +55,23 @@
   let not = %Michelson.not
 
   -- other functions
-  sig () : unit
-  let () = %Michelson.unit
-
   sig now : timestamp
   let now = %Michelson.now
 
-  sig amount : (x : let) -> x -> ()
+  sig amount : (x : let) -> x -> unit
   let amount = %Michelson.amount
 
   sig balance : (x : let) -> address -> x
   let balance = %Michelson.balance
 
-  sig sha256 : (x: type) -> x -> hash-key
+  sig sha256 : bytes -> bytes
   let sha256 = %Michelson.sha256
 
-  sig sha512 :
+  sig sha512 : bytes -> bytes
   let sha512 = %Michelson.sha512
 
-  sig blake2b :
-  let blake2b = %Michelson.
+  sig blake2b : bytes -> bytes
+  let blake2b = %Michelson.blake2b
 
   sig source : address
   let source = %Michelson.source
@@ -82,19 +79,19 @@
   sig sender : address
   let sender = %Michelson.sender
 
-  sig implicit-account : address
+  sig implicit-account : operation
   let implicit-account = %Michelson.implicit-account
 
-  sig create-contract : () -> signature
+  sig create-contract : operation
   let create-contract = %Michelson.create-contract
 
   sig transfer-tokens : (x: let) -> address -> x -> hash-key
   let transfer-token = %Michelson.transfer-tokens
 
-  sig set-delegate : address -> ()
+  sig set-delegate : address -> unit
   let set-delegate = %Michelson.set-delegate
 
-  sig none : either () a
+  sig none : either unit a
   let none = %Michelson.none
 
   sig some : b -> either a b
@@ -133,10 +130,10 @@
   sig map : (x: type) -> lambda a b -> x a -> x b
   let map = %Michelson.map
 
-  sig update : (x: type) -> key -> a -> x a -> ()
+  sig update : (x: type) -> key -> a -> x a -> unit
   let update = %Michelson.update
 
-  sig iter : (x: type) -> lambda a b -> lambda b ()
+  sig iter : (x: type) -> lambda a b -> lambda b unit
   let iter = %Michelson.iter
 
   sig get : (x: type) -> key -> x a -> a
