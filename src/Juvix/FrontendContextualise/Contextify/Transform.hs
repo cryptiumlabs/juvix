@@ -39,6 +39,12 @@ updateTopLevel Repr.TypeClassInstance ctx = ctx
 -- TODO ∷ why is the context empty?
 -- we should somehow note what lists are in scope
 
+-- TODO ∷
+-- - once we have type checking, rely on that
+-- - for dep types where inference is undecidable, force signature
+-- - for functions like (f x) where that evals to a module, where it
+--   is dependent but decidable, force signature?
+
 -- | decideRecordOrDef tries to figure out
 -- if a given defintiion is a record or a definition
 decideRecordOrDef ::

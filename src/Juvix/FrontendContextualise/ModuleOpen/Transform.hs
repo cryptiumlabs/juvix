@@ -36,8 +36,8 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
       -- Fine to just have the public names
       -- we are only tracking what this can use, not doing
       -- replacements
-      let NameSpace.List {publicL, privateL} = NameSpace.toList innerC
-          newSymbs = fst <$> (publicL <> privateL)
+      let NameSpace.List {publicL} = NameSpace.toList innerC
+          newSymbs = fst <$> publicL
        in protectOpenPrim newSymbs $ do
             -- our protected removes it, but we just add it back
             traverse_ (`Env.addModMap` fullQualified) newSymbs
