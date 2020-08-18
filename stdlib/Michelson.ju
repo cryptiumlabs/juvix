@@ -6,7 +6,6 @@
   let contract  = %Michelson.contract
   let pair      = %Michelson.pair
   let either    = %Michelson.either
-  let lambda    = %Michelson.lambda
   let map       = %Michelson.map
   let big-map   = %Michelson.big-map
 
@@ -127,13 +126,13 @@
   sig empty-big-map : big-map a
   let empty-big-map = %Michelson.empty-big-map
 
-  sig map : (x: type) -> lambda a b -> x a -> x b
+  sig map : (x: type) -> (a -> b) -> x a -> x b
   let map = %Michelson.map
 
   sig update : (x: type) -> key -> a -> x a -> unit
   let update = %Michelson.update
 
-  sig iter : (x: type) -> lambda a b -> lambda b unit
+  sig iter : (x: type) -> (a -> b) -> (b -> unit)
   let iter = %Michelson.iter
 
   sig get : (x: type) -> key -> x a -> a
