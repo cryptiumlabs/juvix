@@ -11,6 +11,7 @@ import Prelude (String)
 data Error
   = PipeLine Core.Error
   | ParseErr String
+  deriving (Show)
 
 toCore :: [FilePath] -> IO (Either Error Target.FinalContext)
 toCore paths = do
@@ -19,5 +20,5 @@ toCore paths = do
     Left er -> pure (Left (ParseErr er))
     Right x ->
       case Core.ofFrontend x of
-        Left err -> pure (Left (PipeLine err))
-        Right succ -> pure (Right succ)
+        Left errr -> pure (Left (PipeLine errr))
+        Right con -> pure (Right con)
