@@ -16,9 +16,10 @@ data Error
 toCore :: [FilePath] -> IO (Either Error Target.FinalContext)
 toCore paths = do
   x <- Frontend.ofPath paths
-  case x of
-    Left er -> pure (Left (ParseErr er))
-    Right x ->
-      case Core.ofFrontend x of
-        Left errr -> pure (Left (PipeLine errr))
-        Right con -> pure (Right con)
+  pure $
+    case x of
+      Left er -> Left (ParseErr er)
+      Right x ->
+        case Core.ofFrontend x of
+          Left errr -> Left (PipeLine errr)
+          Right con -> Right con
