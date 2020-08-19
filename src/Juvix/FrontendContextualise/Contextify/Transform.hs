@@ -24,7 +24,7 @@ contextify cont (nameSymb, xs) =
     Left errrr -> Left errrr
     Right cont -> Right (foldr updateTopLevel cont xs)
 
--- TODO ∷ We should return a tuple of opens and the contex
+-- TODO ∷ We should return a tuple of opens and the context
 updateTopLevel :: Repr.TopLevel -> Context -> Context
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
   Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx
