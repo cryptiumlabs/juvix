@@ -528,6 +528,8 @@ apply closure args remainingArgs = do
       evalArgsAndName
       -- make new closure,
       let remaining = Env.left closure - totalLength
+          -- reamining ≡ | left |
+          -- caputred  ≡ totalLength ≡ | caputreNames | ≡ | tyList |
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
           captureNames = fmap Env.name captured
           tyList = take (length captured) (Utils.piToListTy (Env.ty closure))
@@ -537,6 +539,7 @@ apply closure args remainingArgs = do
                 Env.argsLeft = left,
                 Env.captures = foldr Set.insert (Env.captures closure) captureNames,
                 Env.ty = eatType (fromIntegral totalLength) (Env.ty closure),
+                -- we feed in the arguments backwards so we need
                 Env.fun = Env.Fun $ \args ->
                   Env.unFun
                     (Env.fun closure)
@@ -594,9 +597,13 @@ apply closure args remainingArgs = do
         (zip remainingArgs (Env.name <$> alreadyEvaledNames))
     traverseName = traverse_ (uncurry name) . reverse
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
+    -- this entire function should be moved to Curried
+    -- as this exclusive works on the Curreid type
     app =
       Env.ty closure
         |> Utils.piToListTy
+        -- we do a reversing ritual as we wish to type the
+        -- remaining argument after
         |> reverse
         |> zipWith makeVar (reverse (Env.argsLeft closure))
         -- Undo our last flip, and put the list in the proper place
@@ -771,7 +778,11 @@ mustLookupType sym = do
   stack <- get @"stack"
   case VStack.lookupType sym stack of
     Just ty -> pure ty
-    Nothing -> throw @"compilationError" (Types.InternalFault ("must be able to find type for symbol: " <> show sym))
+    Nothing ->
+      "must be able to find type for symbol: "
+        |> (<> show sym)
+        |> Types.InternalFault
+        |> throw @"compilationError"
 
 -- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda :: Env.Reduction m => Env.Curried -> m [Instr.ExpandedOp]
