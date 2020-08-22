@@ -126,7 +126,8 @@ isNat =
     Instructions.isNat
     (\x -> if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
-lambda :: Env.Error m => [Symbol] -> [Symbol] -> Types.Term -> Types.Type -> m Env.Expanded
+lambda ::
+  Env.Error m => [Symbol] -> [Symbol] -> Types.Term -> Types.Type -> m Env.Expanded
 lambda captures arguments body type'
   -- >= as we may return a lambda!
   | length usages >= length arguments =
@@ -137,7 +138,8 @@ lambda captures arguments body type'
             Env.argsLeft = annotatedArgs,
             Env.left = fromIntegral (length arguments),
             Env.ty = type',
-            Env.fun = Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
+            Env.fun =
+              Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
           }
   | otherwise =
     throw @"compilationError" Types.InvalidInputType
@@ -150,7 +152,7 @@ lambda captures arguments body type'
 var :: (Env.Instruction m, Env.Error m) => Symbol -> m Env.Expanded
 var symb = do
   stack <- get @"stack"
-  let pushStack value =
+  let pushValueStack value =
         case VStack.lookupType symb stack of
           Just t ->
             modify @"stack"
@@ -163,10 +165,10 @@ var symb = do
     Nothing ->
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) -> do
-      pushStack (VStack.ConstE value)
+      pushValueStack (VStack.ConstE value)
       pure (Env.Constant value)
     Just (VStack.Value (VStack.Lam' lamPartial)) -> do
-      pushStack (VStack.LamPartialE lamPartial)
+      pushValueStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
     Just (VStack.Position (VStack.Usage usage _saved) index)
       | usage == one ->
@@ -297,9 +299,9 @@ appM form@(Types.Ann _u ty t) args =
                     (Types.InternalFault "Michelson call with too many args")
         _ -> app
 
-applyExpanded :: Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
-applyExpanded expanded args = do
-  (elem, ty) <- VStack.car |<< get @"stack"
+applyExpanded ::
+  Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
+applyExpanded expanded args =
   case expanded of
     Env.Curr c -> do
       modify @"stack" (VStack.drop 1)
@@ -307,7 +309,10 @@ applyExpanded expanded args = do
     -- We may get a Michelson lambda if we have one
     -- in storage, make sure to handle this case!
     Env.MichelsonLam -> do
+      (elem, ty) <- VStack.car |<< get @"stack"
+      --
       let VStack.VarE sym _ (Just VStack.MichelsonLambda) = elem
+      --
       applyLambdaFromStorageNArgs (Set.findMin sym) ty args
     Env.Constant _ -> throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ -> throw @"compilationError" (Types.InternalFault "App on Michelson")
@@ -366,7 +371,8 @@ onIntGen op f =
          in Env.Constant (f i1 i2)
     )
 
-onPairGen1 :: OnTerm1 m (V.Value' Types.Op, V.Value' Types.Op) (V.Value' Types.Op)
+onPairGen1 ::
+  OnTerm1 m (V.Value' Types.Op, V.Value' Types.Op) (V.Value' Types.Op)
 onPairGen1 op f =
   onOneArgs
     op
@@ -849,7 +855,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       get @"ops"
 
 -- Assume lambdas from storage are curried.
-applyLambdaFromStorage :: Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
+applyLambdaFromStorage ::
+  Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
   ty' <- typeToPrimType ty
   lam <- expandedToInst ty' =<< var sym
@@ -858,6 +865,7 @@ applyLambdaFromStorage sym ty arg = do
   modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
   pure [lam, arg, Instructions.exec]
 
-applyLambdaFromStorageNArgs :: Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
+applyLambdaFromStorageNArgs ::
+  Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args = Env.Expanded . mconcat |<< do
   undefined
