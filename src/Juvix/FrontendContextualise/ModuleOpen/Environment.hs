@@ -10,6 +10,8 @@ import qualified Juvix.Core.Common.Context as Context
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
+import Juvix.FrontendContextualise.Contextify.Types as ContextTypes
+
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
@@ -36,7 +38,7 @@ data Environment
 
 type FinalContext = New Context.T
 
-data Error
+newtype Error
   = UnknownModule Context.NameSymbol
   deriving (Show)
 
@@ -44,6 +46,8 @@ type ContextAlias =
   ExceptT Error (State Environment)
 
 type ModuleMap = Map.T Symbol (NonEmpty Symbol)
+
+type OpenMap = Map.T Context.NameSymbol [ContextTypes.Open Context.NameSymbol]
 
 newtype Context a
   = Ctx {antiAlias :: ContextAlias a}

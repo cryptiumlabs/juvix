@@ -5,6 +5,7 @@ module Juvix.FrontendContextualise.Contextify.Transform where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 
@@ -17,24 +18,32 @@ type Context =
 type Definition =
   Repr Context.Definition
 
+-- the name symbols are the modules we are opening
+-- TODO ∷ parallize this
 contextify ::
-  Context -> (Context.NameSymbol, [Repr.TopLevel]) -> Either Context.PathError Context
+  Context ->
+  (Context.NameSymbol, [Repr.TopLevel]) ->
+  Either Context.PathError (Context, [NameSymbol.T])
 contextify cont (nameSymb, xs) =
   case Context.switchNameSpace nameSymb cont of
     Left errrr -> Left errrr
-    Right cont -> Right (foldr updateTopLevel cont xs)
+    Right cont -> Right (foldr f (cont, []) xs)
+  where
+    f top (ctx, names) =
+      second (<> names) (updateTopLevel top ctx)
 
--- TODO ∷ We should return a tuple of opens and the context
-updateTopLevel :: Repr.TopLevel -> Context -> Context
+-- we can't just have a list, we need to have a map with implicit opens as
+-- well...
+updateTopLevel :: Repr.TopLevel -> Context -> (Context, [NameSymbol.T])
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
-  Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx
+  (Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx, [])
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
-  Context.add (NameSpace.Pub name) (decideRecordOrDef f sig) ctx
-updateTopLevel (Repr.ModuleOpen (Repr.Open _mod)) ctx =
-  -- TODO ∷ Update this case!
-  ctx
-updateTopLevel Repr.TypeClass ctx = ctx
-updateTopLevel Repr.TypeClassInstance ctx = ctx
+  -- TODO ∷ update this case
+  (Context.add (NameSpace.Pub name) (decideRecordOrDef f sig) ctx, [])
+updateTopLevel (Repr.ModuleOpen (Repr.Open mod)) ctx =
+  (ctx, [mod])
+updateTopLevel Repr.TypeClass ctx = (ctx, [])
+updateTopLevel Repr.TypeClassInstance ctx = (ctx, [])
 
 -- TODO ∷ why is the context empty?
 -- we should somehow note what lists are in scope

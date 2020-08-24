@@ -169,6 +169,7 @@ library:
     - Juvix.FrontendDesugar.RemoveDo.Extend
     - Juvix.FrontendContextualise
     - Juvix.FrontendContextualise.Contextify.Transform
+    - Juvix.FrontendContextualise.Contextify.Types
     - Juvix.FrontendContextualise.Environment
     - Juvix.FrontendContextualise.ModuleOpen.Environment
     - Juvix.FrontendContextualise.ModuleOpen.Extend

@@ -875,8 +875,12 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[NameSpace]]
+  + [[NameSymbol]]
   + [[RemoveDo/Types]]
   + [[Library]]
+**** Types <<Contextify/Types>>
+- _Relies on_
+  + [[Library0]]
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
