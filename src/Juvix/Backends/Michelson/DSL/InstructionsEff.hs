@@ -534,7 +534,7 @@ apply closure args remainingArgs = do
       evalArgsAndName
       -- make new closure,
       let remaining = Env.left closure - totalLength
-          -- reamining ≡ | left |
+          -- remaining ≡ | left |
           -- caputred  ≡ totalLength ≡ | caputreNames | ≡ | tyList |
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
           captureNames = fmap Env.name captured
@@ -604,7 +604,7 @@ apply closure args remainingArgs = do
     traverseName = traverse_ (uncurry name) . reverse
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
     -- this entire function should be moved to Curried
-    -- as this exclusive works on the Curreid type
+    -- as this exclusive works on the Curried type
     app =
       Env.ty closure
         |> Utils.piToListTy
