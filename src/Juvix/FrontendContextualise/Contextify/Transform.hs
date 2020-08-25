@@ -78,7 +78,7 @@ decideRecordOrDef ::
   NonEmpty (Repr.FunctionLike Repr.Expression) ->
   Maybe Repr.Signature ->
   (Type.Definition, [NameSymbol.T])
-decideRecordOrDef currExpressionName currModName xs ty
+decideRecordOrDef recordName currModName xs ty
   | len == 1 && emptyArgs args =
     -- For the two matched cases eventually
     -- turn these into record expressions
@@ -87,19 +87,17 @@ decideRecordOrDef currExpressionName currModName xs ty
         -- the type here can eventually give us arguments though looking at the
         -- lambda for e, and our type can be found out similarly by looking at
         -- types
-        (Context.Record nameSpace ty, newCurrentContext : innerMods)
+        (Context.Record nameSpace ty, newRecordName : innerMods)
         where
-          newCurrentContext =
-            currModName <> pure currExpressionName
+          newRecordName = currModName <> pure recordName
           --
-          (nameSpace, innerMods) =
-            foldr f (NameSpace.empty, []) i
+          (nameSpace, innerMods) = foldr f (NameSpace.empty, []) i
           --
           f (Repr.NonPunned s e) (nameSpace, prevModNames) =
             let fieldN = NonEmpty.last s
-                like = (Repr.Like [] e :| [])
+                like = Repr.Like [] e :| []
              in Nothing
-                  |> decideRecordOrDef fieldN newCurrentContext like
+                  |> decideRecordOrDef fieldN newRecordName like
                   |> bimap
                     (\d -> NameSpace.insert (NameSpace.Pub fieldN) d nameSpace)
                     (\inNames -> inNames <> prevModNames)
