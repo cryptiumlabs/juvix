@@ -102,17 +102,18 @@ topLevelName = "TopLevel"
 
 empty :: NameSymbol.T -> T term ty sumRep
 empty sym =
-  case addPathWithValue (pure topLevelName <> sym) CurrentNameSpace fullyEmpty of
+  case addPathWithValue (pure topLevelName <> sym') CurrentNameSpace fullyEmpty of
     Lib.Left _ -> error "impossible"
     Lib.Right x -> x
   where
     fullyEmpty =
       ( T
           { currentNameSpace = NameSpace.empty,
-            currentName = sym,
+            currentName = sym',
             topLevelMap = HashMap.empty
           }
       )
+    sym' = removeTopName sym
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
