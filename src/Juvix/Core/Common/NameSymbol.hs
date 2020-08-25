@@ -37,3 +37,6 @@ takePrefixOfInternal (s :| smaller) (b :| bigger)
     recurse (x : xs) (y : ys)
       | x == y = recurse xs ys
       | otherwise = Nothing
+
+cons :: Symbol -> T -> T
+cons = NonEmpty.cons

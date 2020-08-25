@@ -10,9 +10,10 @@ import qualified Juvix.FrontendContextualise.Contextify.Types as Type
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 
+
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallize this
-contextify ::
+f, contextify ::
   Type.Context ->
   (Context.NameSymbol, [Repr.TopLevel]) ->
   Either Context.PathError Type.Pass
@@ -29,6 +30,7 @@ contextify cont (nameSymb, xs) =
               opens = opens <> opens',
               modsDefined = modsDefined <> modsDefined'
             }
+f = contextify
 
 -- we can't just have a list, we need to have a map with implicit opens as
 -- well...
@@ -48,6 +50,7 @@ updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
           modsDefined
         }
 updateTopLevel (Repr.ModuleOpen (Repr.Open mod)) ctx =
+  -- Mod isn't good enough, have to resolve it to the full symbol
   Type.P
     { ctx = ctx,
       opens = [mod],

@@ -7,7 +7,6 @@ module Juvix.FrontendContextualise.ModuleOpen.Environment
 where
 
 import qualified Juvix.Core.Common.Context as Context
-import Juvix.FrontendContextualise.Contextify.Types as ContextTypes
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
@@ -41,12 +40,17 @@ newtype Error
   = UnknownModule Context.NameSymbol
   deriving (Show)
 
+data Open a
+  = Implicit a
+  | Explicit a
+  deriving (Show, Eq, Ord)
+
 type ContextAlias =
   ExceptT Error (State Environment)
 
 type ModuleMap = Map.T Symbol (NonEmpty Symbol)
 
-type OpenMap = Map.T Context.NameSymbol [ContextTypes.Open Context.NameSymbol]
+type OpenMap = Map.T Context.NameSymbol [Open Context.NameSymbol]
 
 newtype Context a
   = Ctx {antiAlias :: ContextAlias a}

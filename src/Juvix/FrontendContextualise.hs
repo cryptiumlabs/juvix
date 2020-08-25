@@ -9,12 +9,14 @@ module Juvix.FrontendContextualise where
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
+import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Infix
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Transform as Infix
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Initial
+import qualified Juvix.Library.HashMap as Map
 import Juvix.Library
 
 data Error
@@ -42,3 +44,11 @@ contextualize ((sym, xs) :| t) =
           case Infix.transformContext xs of
             Left err -> Left (InfixErr err)
             Right xs -> Right xs
+
+
+addTop = first (NameSymbol.cons Context.topLevelName)
+
+-- we get the opens 
+resolveOpens (sym, xs) (accCtx, depMap) =
+  let Contextify.P {ctx, opens, modsDefined} = Contextify.f undefined undefined undefined undefined in
+    undefined
