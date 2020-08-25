@@ -876,11 +876,15 @@ Quantitative type implementation inspired by
   + [[Context]]
   + [[NameSpace]]
   + [[NameSymbol]]
+  + [[Contextify/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
 **** Types <<Contextify/Types>>
 - _Relies on_
-  + [[Library0]]
+  + [[Context]]
+  + [[NameSymbol]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -935,6 +939,7 @@ Quantitative type implementation inspired by
 **** Environment <<ModuleOpen/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[Contextify/Types]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]

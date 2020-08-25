@@ -7,11 +7,10 @@ module Juvix.FrontendContextualise.ModuleOpen.Environment
 where
 
 import qualified Juvix.Core.Common.Context as Context
+import Juvix.FrontendContextualise.Contextify.Types as ContextTypes
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
-import Juvix.FrontendContextualise.Contextify.Types as ContextTypes
-
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
