@@ -77,6 +77,26 @@ newtype Context a
     (HasThrow "error" Error)
     via MonadError ContextAlias
 
+-- - before we are able to qaulify all symbols, we need the context at
+--   a fully realized state.
+-- - This hosts
+--   1. the module
+--   2. the inner modules (which thus have implciit opens of all
+--      opens)
+--   3. All opens
+-- - Since we desugar all modules to records, we can't have opens over
+--   them, hence no need to store it separately
+-- - Any resolution will thus happen at the explicit module itself, as
+--   trying to do so in the inner modules would lead to a path error
+
+data PreQualified
+  = Pre
+    { opens :: [Context.NameSymbol],
+      implicitInner :: [Context.NameSymbol],
+      explicitModule :: Context.NameSymbol
+    }
+  deriving (Show, Eq)
+
 runEnv ::
   Context a -> Old Context.T -> (Either Error a, Environment)
 runEnv (Ctx c) old =
