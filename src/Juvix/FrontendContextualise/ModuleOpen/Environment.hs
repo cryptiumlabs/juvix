@@ -50,8 +50,6 @@ type ContextAlias =
 
 type ModuleMap = Map.T Symbol (NonEmpty Symbol)
 
-type OpenMap = Map.T Context.NameSymbol [Open Context.NameSymbol]
-
 newtype Context a
   = Ctx {antiAlias :: ContextAlias a}
   deriving (Functor, Applicative, Monad)
@@ -77,6 +75,9 @@ newtype Context a
     (HasThrow "error" Error)
     via MonadError ContextAlias
 
+--------------------------------------------------------------------------------
+-- Types for resolving opens
+--------------------------------------------------------------------------------
 -- - before we are able to qaulify all symbols, we need the context at
 --   a fully realized state.
 -- - This hosts
@@ -91,11 +92,17 @@ newtype Context a
 
 data PreQualified
   = Pre
-    { opens :: [Context.NameSymbol],
-      implicitInner :: [Context.NameSymbol],
-      explicitModule :: Context.NameSymbol
-    }
+      { opens :: [Context.NameSymbol],
+        implicitInner :: [Context.NameSymbol],
+        explicitModule :: Context.NameSymbol
+      }
   deriving (Show, Eq)
+
+type OpenMap = Map.T Context.NameSymbol [Open Context.NameSymbol]
+
+--------------------------------------------------------------------------------
+-- Running functions
+--------------------------------------------------------------------------------
 
 runEnv ::
   Context a -> Old Context.T -> (Either Error a, Environment)
@@ -127,3 +134,10 @@ lookupModMap s =
 removeModMap ::
   HasState "modMap" ModuleMap m => Symbol -> m ()
 removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
+
+--------------------------------------------------------------------------------
+-- fully resolve module opens
+--------------------------------------------------------------------------------
+
+resolve :: Context a -> [PreQualified] -> OpenMap
+resolve ctx preQual = undefined

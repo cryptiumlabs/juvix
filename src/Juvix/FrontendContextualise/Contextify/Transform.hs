@@ -10,13 +10,13 @@ import qualified Juvix.FrontendContextualise.Contextify.Types as Type
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 
-
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallize this
-f, contextify ::
-  Type.Context ->
-  (Context.NameSymbol, [Repr.TopLevel]) ->
-  Either Context.PathError Type.Pass
+f ,
+  contextify ::
+    Type.Context ->
+    (Context.NameSymbol, [Repr.TopLevel]) ->
+    Either Context.PathError Type.Pass
 contextify cont (nameSymb, xs) =
   case Context.switchNameSpace nameSymb cont of
     Left errr -> Left errr

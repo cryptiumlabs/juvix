@@ -16,8 +16,8 @@ import qualified Juvix.FrontendContextualise.InfixPrecedence.Transform as Infix
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Initial
-import qualified Juvix.Library.HashMap as Map
 import Juvix.Library
+import qualified Juvix.Library.HashMap as Map
 
 data Error
   = ModuleErr Module.Error
@@ -45,10 +45,9 @@ contextualize ((sym, xs) :| t) =
             Left err -> Left (InfixErr err)
             Right xs -> Right xs
 
-
 addTop = first (NameSymbol.cons Context.topLevelName)
 
--- we get the opens 
+-- we get the opens
 resolveOpens (sym, xs) (accCtx, depMap) =
-  let Contextify.P {ctx, opens, modsDefined} = Contextify.f undefined undefined undefined undefined in
-    undefined
+  let Contextify.P {ctx, opens, modsDefined} = Contextify.f undefined undefined undefined undefined
+   in undefined
