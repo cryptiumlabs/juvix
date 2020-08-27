@@ -8,6 +8,7 @@ where
 
 import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
@@ -39,10 +40,12 @@ data Environment
 type FinalContext = New Context.T
 
 data Error
-  = UnknownModule Context.NameSymbol
+  = UnknownModule NameSymbol.T
+  | AmbigiousSymbol Symbol
   | OpenNonModule (Set.HashSet Context.NameSymbol)
   | IllegalModuleSwitch Context.NameSymbol
   | ConflictingSymbols Context.NameSymbol
+  | CantResolveModules [NameSymbol.T]
   deriving (Show)
 
 data Open a
@@ -151,19 +154,24 @@ removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
 -- fully resolve module opens
 --------------------------------------------------------------------------------
 
-resolve :: Context.T a b c -> [PreQualified] -> ModuleMap -> Either Error OpenMap
-resolve ctx preQual nameMap = undefined
+-- we don't take a module mapping as all symbols at the point of
+-- resolve can't be anything else, thus we don't have to pre-pend any
+-- qualification at this point... we add qualification later as we add
+-- things, as we have to figure out the full resolution of all opens
+
+resolve :: Context.T a b c -> [PreQualified] -> Either Error OpenMap
+resolve ctx = foldM (resolveSingle ctx) mempty
 
 resolveSingle ::
-  Context.T a b c -> PreQualified -> ModuleMap -> Either Error OpenMap
-resolveSingle ctx Pre {opens, implicitInner, explicitModule} nameMap =
+  Context.T a b c -> OpenMap -> PreQualified -> Either Error OpenMap
+resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} =
   case Context.switchNameSpace explicitModule ctx of
     Left (Context.VariableShared err) ->
       Left (IllegalModuleSwitch err)
     Right ctx -> do
       resolved <- pathsCanBeResolved ctx opens
       qualifiedNames <- resolveLoop ctx mempty resolved
-      mempty
+      openMap
         |> Map.insert explicitModule (fmap Explicit qualifiedNames)
         |> ( \map ->
                foldr
@@ -178,13 +186,41 @@ resolveSingle ctx Pre {opens, implicitInner, explicitModule} nameMap =
 resolveLoop ::
   Context.T a b c -> ModuleMap -> Resolve a b c -> Either Error [NameSymbol.T]
 resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
-  map <- foldM undefined map fullyQualifyRes
-  resolveLoop ctx map undefined
+  map <- foldM addToModMap map fullyQualifyRes
+  --
+  let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
+  --
+  if  | length (notResolved newResolve) == length cantResolveNow ->
+        Left (CantResolveModules cantResolveNow)
+      | otherwise ->
+        (qualifedAns <>) <$> resolveLoop ctx map newResolve
   where
     fullyQualifyRes =
       Context.resolveName ctx <$> resolved
     qualifedAns =
       fmap snd fullyQualifyRes
+    addToModMap map (def, sym) =
+      case def of
+        Context.Record cont _ ->
+          let NameSpace.List {publicL} = NameSpace.toList cont
+           in foldlM
+                ( \map (x, _) ->
+                    case map Map.!? x of
+                      -- this means we already have opened this in another
+                      -- module
+                      Just _ -> Left (AmbigiousSymbol x)
+                      -- if it's already in scope from below or above us
+                      -- don't add to the remapping
+                      Nothing ->
+                        case Context.lookup (pure x) ctx of
+                          Just _ -> Right map
+                          Nothing -> Right (Map.insert x sym map)
+                )
+                map
+                publicL
+        -- should be updated when we can open expressions
+        _ ->
+          Left (UnknownModule sym)
     qualifyCant newMap term =
       case newMap Map.!? NameSymbol.hd term of
         Nothing ->

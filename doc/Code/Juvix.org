@@ -941,6 +941,7 @@ Quantitative type implementation inspired by
 **** Environment <<ModuleOpen/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
   + [[NameSymbol]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
