@@ -4,6 +4,7 @@ import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
+import qualified Juvix.Library.HashMap as HashMap
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -21,7 +22,9 @@ contextTests =
       privateFromAbove,
       privateBeatsPublic,
       localBeatsGlobal,
-      nonRelatedModuleStillPersists
+      nonRelatedModuleStillPersists,
+      emptyWorksAsExpectedSingle,
+      topLevelDoesNotMessWithInnerRes
     ]
 
 switchAboveLookupCheck :: T.TestTree
@@ -43,7 +46,7 @@ switchSelf =
   T.testCase
     "switching namespace to self is left"
     ( Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
-        T.@=? Left (Context.VariableShared ("Foo" :| ["Bar", "Baz"]))
+        T.@=? Right foo
     )
 
 checkFullyResolvedName :: T.TestTree
@@ -188,3 +191,36 @@ nonRelatedModuleStillPersists =
    in T.testCase
         "differnet module persists through switch"
         (isOutSideRec looked T.@=? True)
+
+emptyWorksAsExpectedSingle :: T.TestTree
+emptyWorksAsExpectedSingle =
+  let created :: Context.T Int Int Int
+      created = Context.empty (pure "Mr-Morden")
+      empt =
+        HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)]
+          |> Context.T NameSpace.empty (pure "Mr-Morden")
+   in T.testCase
+        "empty properly adds a top level module as expected:"
+        (created T.@=? empt)
+
+topLevelDoesNotMessWithInnerRes :: T.TestTree
+topLevelDoesNotMessWithInnerRes =
+  let created :: Context.T Int Int Int
+      created = Context.empty (pure "Shadows")
+      inner =
+        Context.switchNameSpace
+          (Context.topLevelName :| ["Shadows", "Mr-Morden"])
+          created
+      inner2 =
+        Context.switchNameSpace
+          ("Shadows" :| ["Mr-Morden"])
+          created
+      empt =
+        NameSpace.empty
+          |> NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace
+          |> flip Context.Record Nothing
+          |> (\record -> HashMap.fromList [("Shadows", record)])
+          |> Context.T NameSpace.empty ("Shadows" :| ["Mr-Morden"])
+   in T.testCase
+        "TopLevelname does not prohbit inner module change"
+        (inner == Right empt && inner == inner2 T.@=? True)

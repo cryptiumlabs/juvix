@@ -3,9 +3,9 @@
 module Juvix.FrontendContextualise.InfixPrecedence.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Env
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
@@ -29,7 +29,8 @@ transformInfix inf = do
 ----------------------------------------
 -- Helpers for transformInfix
 ----------------------------------------
-precedenceConversion :: Symbol -> Context.Precedence -> Shunt.Precedence
+precedenceConversion ::
+  NameSymbol.T -> Context.Precedence -> Shunt.Precedence NameSymbol.T
 precedenceConversion s (Context.Pred Context.Left i) =
   Shunt.Pred s Shunt.Left' i
 precedenceConversion s (Context.Pred Context.Right i) =
@@ -38,37 +39,43 @@ precedenceConversion s (Context.Pred Context.NonAssoc i) =
   Shunt.Pred s Shunt.NonAssoc i
 
 groupInfixs ::
-  Env.WorkingMaps m => Old.Expression -> m (NonEmpty (Shunt.PredOrEle Old.Expression))
+  Env.WorkingMaps m =>
+  Old.Expression ->
+  m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
 groupInfixs (Old.Infix (Old.Inf l s r)) = do
-  let reconstructedSymbol = reconstructSymbol s
-  looked <- Env.lookup reconstructedSymbol
-  case Context.extractValue <$> looked of
-    Just Context.Def {precedence} ->
-      let f xs =
-            precedenceConversion reconstructedSymbol precedence
-              |> Shunt.Precedence
-              |> flip NonEmpty.cons xs
-              |> NonEmpty.cons (Shunt.Ele l)
-       in fmap f (groupInfixs r)
-    _ -> throw @"error" (Env.UnknownSymbol reconstructedSymbol)
+  looked <- Env.lookup s
+  let f precedence xs =
+        precedenceConversion s precedence
+          |> Shunt.Precedence
+          |> flip NonEmpty.cons xs
+          |> NonEmpty.cons (Shunt.Ele l)
+      --
+      continuePref ::
+        Env.WorkingMaps m =>
+        Maybe (Context.Definition term ty sumRep) ->
+        m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression)) ->
+        m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
+      continuePref (Just Context.Def {precedence}) _maybeF =
+        fmap (f precedence) (groupInfixs r)
+      continuePref (Just _) _maybeF =
+        throw @"error" (Env.UnknownSymbol s)
+      continuePref Nothing maybeF =
+        maybeF
+  continuePref (Context.extractValue <$> looked) $ do
+    oldLook <- Env.ask s
+    -- not in the new map, checkout the old
+    continuePref (Context.extractValue <$> oldLook) $
+      throw @"error" (Env.UnknownSymbol s)
 groupInfixs e = pure (Shunt.Ele e :| [])
 
-convertOldApplication :: Shunt.Application Old.Expression -> Old.Expression
+convertOldApplication ::
+  Shunt.Application NameSymbol.T Old.Expression -> Old.Expression
 convertOldApplication (Shunt.Single e) =
   e
 convertOldApplication (Shunt.App s app1 app2) =
   fmap convertOldApplication (app1 :| [app2])
-    |> Old.App (Old.Name (deconstructSymbol s))
+    |> Old.App (Old.Name s)
     |> Old.Application
-
--- TODO ∷ bad hack I'll have to change
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
-
-deconstructSymbol :: Symbol -> NonEmpty Symbol
-deconstructSymbol =
-  NonEmpty.fromList . fmap internText . Text.split (== '.') . textify
 
 --------------------------------------------------------------------------------
 -- Record/Def Decision function... update when contextify version updates
@@ -140,13 +147,13 @@ transformDef (Context.Record _contents mTy) name' = do
   sig <- traverse transformSignature mTy
   old <- get @"old"
   let name = NameSpace.extractValue name'
-      newMod = Context.currentName old <> pure name
+      newMod = pure Context.topLevelName <> Context.currentName old <> pure name
   -- switch to the new namespace
   updateSym newMod
   -- do our transform
   transformInner
   -- transform back
-  updateSym (Context.currentName old)
+  updateSym (pure Context.topLevelName <> Context.currentName old)
   -- sadly this currently only adds it to the public, so we have to remove it
   looked <- fmap NameSpace.extractValue <$> Env.lookupCurrent name
   Env.remove name'

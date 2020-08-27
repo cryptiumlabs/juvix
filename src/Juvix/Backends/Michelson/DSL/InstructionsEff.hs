@@ -126,7 +126,8 @@ isNat =
     Instructions.isNat
     (\x -> if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
-lambda :: Env.Error m => [Symbol] -> [Symbol] -> Types.Term -> Types.Type -> m Env.Expanded
+lambda ::
+  Env.Error m => [Symbol] -> [Symbol] -> Types.Term -> Types.Type -> m Env.Expanded
 lambda captures arguments body type'
   -- >= as we may return a lambda!
   | length usages >= length arguments =
@@ -137,7 +138,8 @@ lambda captures arguments body type'
             Env.argsLeft = annotatedArgs,
             Env.left = fromIntegral (length arguments),
             Env.ty = type',
-            Env.fun = Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
+            Env.fun =
+              Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
           }
   | otherwise =
     throw @"compilationError" Types.InvalidInputType
@@ -150,7 +152,7 @@ lambda captures arguments body type'
 var :: (Env.Instruction m, Env.Error m) => Symbol -> m Env.Expanded
 var symb = do
   stack <- get @"stack"
-  let pushStack value =
+  let pushValueStack value =
         case VStack.lookupType symb stack of
           Just t ->
             modify @"stack"
@@ -163,10 +165,10 @@ var symb = do
     Nothing ->
       throw @"compilationError" (Types.NotInStack symb)
     Just (VStack.Value (VStack.Val' value)) -> do
-      pushStack (VStack.ConstE value)
+      pushValueStack (VStack.ConstE value)
       pure (Env.Constant value)
     Just (VStack.Value (VStack.Lam' lamPartial)) -> do
-      pushStack (VStack.LamPartialE lamPartial)
+      pushValueStack (VStack.LamPartialE lamPartial)
       pure (Env.Curr lamPartial)
     Just (VStack.Position (VStack.Usage usage _saved) index)
       | usage == one ->
@@ -297,9 +299,9 @@ appM form@(Types.Ann _u ty t) args =
                     (Types.InternalFault "Michelson call with too many args")
         _ -> app
 
-applyExpanded :: Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
-applyExpanded expanded args = do
-  (elem, ty) <- VStack.car |<< get @"stack"
+applyExpanded ::
+  Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
+applyExpanded expanded args =
   case expanded of
     Env.Curr c -> do
       modify @"stack" (VStack.drop 1)
@@ -307,7 +309,10 @@ applyExpanded expanded args = do
     -- We may get a Michelson lambda if we have one
     -- in storage, make sure to handle this case!
     Env.MichelsonLam -> do
+      (elem, ty) <- VStack.car |<< get @"stack"
+      --
       let VStack.VarE sym _ (Just VStack.MichelsonLambda) = elem
+      --
       applyLambdaFromStorageNArgs (Set.findMin sym) ty args
     Env.Constant _ -> throw @"compilationError" (Types.InternalFault "App on Constant")
     Env.Expanded _ -> throw @"compilationError" (Types.InternalFault "App on Michelson")
@@ -366,7 +371,8 @@ onIntGen op f =
          in Env.Constant (f i1 i2)
     )
 
-onPairGen1 :: OnTerm1 m (V.Value' Types.Op, V.Value' Types.Op) (V.Value' Types.Op)
+onPairGen1 ::
+  OnTerm1 m (V.Value' Types.Op, V.Value' Types.Op) (V.Value' Types.Op)
 onPairGen1 op f =
   onOneArgs
     op
@@ -528,6 +534,8 @@ apply closure args remainingArgs = do
       evalArgsAndName
       -- make new closure,
       let remaining = Env.left closure - totalLength
+          -- remaining ≡ | left |
+          -- caputred  ≡ totalLength ≡ | caputreNames | ≡ | tyList |
           (captured, left) = splitAt (fromIntegral totalLength) (Env.argsLeft closure)
           captureNames = fmap Env.name captured
           tyList = take (length captured) (Utils.piToListTy (Env.ty closure))
@@ -537,6 +545,7 @@ apply closure args remainingArgs = do
                 Env.argsLeft = left,
                 Env.captures = foldr Set.insert (Env.captures closure) captureNames,
                 Env.ty = eatType (fromIntegral totalLength) (Env.ty closure),
+                -- we feed in the arguments backwards so we need
                 Env.fun = Env.Fun $ \args ->
                   Env.unFun
                     (Env.fun closure)
@@ -594,9 +603,13 @@ apply closure args remainingArgs = do
         (zip remainingArgs (Env.name <$> alreadyEvaledNames))
     traverseName = traverse_ (uncurry name) . reverse
     traverseNameSymb = traverse_ (uncurry nameSymb) . reverse
+    -- this entire function should be moved to Curried
+    -- as this exclusive works on the Curried type
     app =
       Env.ty closure
         |> Utils.piToListTy
+        -- we do a reversing ritual as we wish to type the
+        -- remaining argument after
         |> reverse
         |> zipWith makeVar (reverse (Env.argsLeft closure))
         -- Undo our last flip, and put the list in the proper place
@@ -771,7 +784,11 @@ mustLookupType sym = do
   stack <- get @"stack"
   case VStack.lookupType sym stack of
     Just ty -> pure ty
-    Nothing -> throw @"compilationError" (Types.InternalFault ("must be able to find type for symbol: " <> show sym))
+    Nothing ->
+      "must be able to find type for symbol: "
+        |> (<> show sym)
+        |> Types.InternalFault
+        |> throw @"compilationError"
 
 -- TODO ∷ figure out why we remove some of the bodies effects
 promoteLambda :: Env.Reduction m => Env.Curried -> m [Instr.ExpandedOp]
@@ -838,7 +855,8 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
       get @"ops"
 
 -- Assume lambdas from storage are curried.
-applyLambdaFromStorage :: Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
+applyLambdaFromStorage ::
+  Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
   ty' <- typeToPrimType ty
   lam <- expandedToInst ty' =<< var sym
@@ -847,6 +865,7 @@ applyLambdaFromStorage sym ty arg = do
   modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
   pure [lam, arg, Instructions.exec]
 
-applyLambdaFromStorageNArgs :: Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
+applyLambdaFromStorageNArgs ::
+  Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args = Env.Expanded . mconcat |<< do
   undefined

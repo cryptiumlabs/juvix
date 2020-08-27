@@ -17,15 +17,14 @@ type Context =
 type Definition =
   Repr Context.Definition
 
-contextify :: Context.NameSymbol -> [Repr.TopLevel] -> Context
-contextify nameSymb = foldr updateTopLevel (Context.empty nameSymb)
+contextify ::
+  Context -> (Context.NameSymbol, [Repr.TopLevel]) -> Either Context.PathError Context
+contextify cont (nameSymb, xs) =
+  case Context.switchNameSpace nameSymb cont of
+    Left errrr -> Left errrr
+    Right cont -> Right (foldr updateTopLevel cont xs)
 
--- TODO ∷ bad hack I'll have to change
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
-
--- TODO ∷ We should return a tuple of opens and the contex
+-- TODO ∷ We should return a tuple of opens and the context
 updateTopLevel :: Repr.TopLevel -> Context -> Context
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
   Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx
@@ -39,6 +38,12 @@ updateTopLevel Repr.TypeClassInstance ctx = ctx
 
 -- TODO ∷ why is the context empty?
 -- we should somehow note what lists are in scope
+
+-- TODO ∷
+-- - once we have type checking, rely on that
+-- - for dep types where inference is undecidable, force signature
+-- - for functions like (f x) where that evals to a module, where it
+--   is dependent but decidable, force signature?
 
 -- | decideRecordOrDef tries to figure out
 -- if a given defintiion is a record or a definition

@@ -45,6 +45,16 @@ data T lamType
 -- Usage Information
 --------------------------------------------------------------------------------
 
+-- - Saved declares if a variable is saved this is done because when we
+--   move a var to the front we have to note that one of the uses will
+--   be consumed
+-- - the current technique moves all usages to the front except for
+--   one, meaning if the usage is 2 in some expression
+--   =x + x=, then we dup one x to the front, then have to go all the
+--   way back to grab the last x
+-- - In the ANF version of the code, this won't matter, as we can
+--   always move back the usage later, meaning we can move all usages now.
+--   + This also means saved can be removed, as our IR will never have conflicts
 type Saved = Bool
 
 notSaved :: Saved

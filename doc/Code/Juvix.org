@@ -1,4 +1,10 @@
 * Juvix
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Frontend]]
+  + [[InfixPrecedence/Environment]]
+  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -435,15 +441,21 @@ This module provides a default contract environment
   + [[Library]]
 ** Core
 - _Relies on_
+  + [[NameSymbol]]
   + [[Core/Erasure]]
-  + [[Pipeline]]
+  + [[Core/Pipeline]]
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+  + [[Frontend/Types]]
+  + [[FrontendContextualise]]
+  + [[InfixPrecedence/Environment]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Library]]
-*** Pipeline
+*** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
   + [[ErasedAnn]]
@@ -795,6 +807,11 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
 ** Frontend
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]
@@ -837,6 +854,7 @@ Quantitative type implementation inspired by
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
+  + [[Context]]
   + [[NameSymbol]]
   + [[Contextify/Transform]]
   + [[InfixPrecedence/Environment]]
@@ -898,6 +916,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[NameSpace]]
+  + [[NameSymbol]]
   + [[InfixPrecedence/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
