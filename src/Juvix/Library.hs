@@ -39,6 +39,7 @@ module Juvix.Library
     sortOnFlip,
     uncurry3,
     curry3,
+    dup,
     StateField,
     ReaderField,
     WriterField,
@@ -174,6 +175,9 @@ curry3 fn a b c = fn (a, b, c)
 
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
+
+dup :: a -> (a, a)
+dup x = (x, x)
 
 -- | Select a field in a state monad, for example:
 --

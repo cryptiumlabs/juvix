@@ -139,5 +139,25 @@ removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
 -- fully resolve module opens
 --------------------------------------------------------------------------------
 
-resolve :: Context a -> [PreQualified] -> OpenMap
-resolve ctx preQual = undefined
+resolve :: Context.T a b c -> [PreQualified] -> ModuleMap -> OpenMap
+resolve ctx preQual nameMap = undefined
+
+resolveSingle :: Context.T a b c -> PreQualified -> ModuleMap -> OpenMap
+resolveSingle ctx Pre {opens, implicitInner, explicitModule} nameMap =
+  case Context.switchNameSpace explicitModule ctx of
+    Left err -> undefined
+    Right ctx ->
+      -- run another validation function to make sure we don't do bad resolve
+      undefined
+      where
+        firstLook ctx' =
+          fmap (\openMod -> (Context.lookup openMod ctx', openMod))
+        --
+        (canResolveNow, cantResolveNow) =
+          splitMaybes (firstLook ctx opens)
+
+splitMaybes :: [(Maybe a, b)] -> ([(a, b)], [b])
+splitMaybes = foldr f ([], [])
+  where
+    f (Just a, b) = first ((a, b) :)
+    f (Nothing, b) = second (b :)
