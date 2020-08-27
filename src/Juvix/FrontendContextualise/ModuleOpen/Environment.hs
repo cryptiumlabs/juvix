@@ -7,6 +7,7 @@ module Juvix.FrontendContextualise.ModuleOpen.Environment
 where
 
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
@@ -36,8 +37,9 @@ data Environment
 
 type FinalContext = New Context.T
 
-newtype Error
+data Error
   = UnknownModule Context.NameSymbol
+  | OpenNonModule Context.NameSymbol
   deriving (Show)
 
 data Open a
@@ -92,13 +94,20 @@ newtype Context a
 
 data PreQualified
   = Pre
-      { opens :: [Context.NameSymbol],
-        implicitInner :: [Context.NameSymbol],
-        explicitModule :: Context.NameSymbol
+      { opens :: [NameSymbol.T],
+        implicitInner :: [NameSymbol.T],
+        explicitModule :: NameSymbol.T
       }
   deriving (Show, Eq)
 
-type OpenMap = Map.T Context.NameSymbol [Open Context.NameSymbol]
+type OpenMap = Map.T Context.NameSymbol [Open NameSymbol.T]
+
+data Resolve a b c
+  = Res
+      { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
+        notResolved :: [NameSymbol.T]
+      }
+  deriving (Show)
 
 --------------------------------------------------------------------------------
 -- Running functions
@@ -147,17 +156,48 @@ resolveSingle ctx Pre {opens, implicitInner, explicitModule} nameMap =
   case Context.switchNameSpace explicitModule ctx of
     Left err -> undefined
     Right ctx ->
-      -- run another validation function to make sure we don't do bad resolve
-      undefined
+      -- This Behavior
+      if  | fmap firstName cantResolveNow /= checkCantsAreSame ->
+            undefined
+          | otherwise ->
+            undefined
+        -- run another validation function to make sure we don't do bad resolve
+        undefined
       where
         firstLook ctx' =
           fmap (\openMod -> (Context.lookup openMod ctx', openMod))
         --
         (canResolveNow, cantResolveNow) =
           splitMaybes (firstLook ctx opens)
+        (_, checkCantsAreSame) =
+          fmap firstName opens
+            |> firstLook ctx
+            |> splitMaybes
+
+-- Since Locals and top level beats opens, we can determine from the
+-- start that any module which tries to open a nested path fails,
+-- yet any previous part succeeds, that an illegal open is happening,
+-- and we can error out immediately
+
+-- | @pathsCanBeResolved@ takes a context and a list of opens,
+-- we then try to resolve if the opens are legal, if so we return
+-- a list of ones that can be determined now, and a list to be resolved
+pathsCanBeResolved ::
+  Context.T a b c -> [NameSymbol.T] -> Either Error (Resolve a b c)
+pathsCanBeResolved = undefined
+
+resolveWhatWeCan :: Context.T a b c -> [NameSymbol.T] -> (Resolve a b c)
+resolveWhatWeCan ctx opens = undefined
+
+----------------------------------------
+-- Helpers for resolve
+----------------------------------------
 
 splitMaybes :: [(Maybe a, b)] -> ([(a, b)], [b])
 splitMaybes = foldr f ([], [])
   where
     f (Just a, b) = first ((a, b) :)
     f (Nothing, b) = second (b :)
+
+firstName :: NameSymbol.T -> NameSymbol.T
+firstName = NameSymbol.fromSymbol . NameSymbol.hd

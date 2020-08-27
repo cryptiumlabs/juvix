@@ -41,3 +41,6 @@ takePrefixOfInternal (s :| smaller) (b :| bigger)
 
 cons :: Symbol -> T -> T
 cons = NonEmpty.cons
+
+hd :: T -> Symbol
+hd = NonEmpty.head
