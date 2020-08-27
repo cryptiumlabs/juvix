@@ -42,6 +42,7 @@ data Error
   = UnknownModule Context.NameSymbol
   | OpenNonModule (Set.HashSet Context.NameSymbol)
   | IllegalModuleSwitch Context.NameSymbol
+  | ConflictingSymbols Context.NameSymbol
   deriving (Show)
 
 data Open a
@@ -52,7 +53,7 @@ data Open a
 type ContextAlias =
   ExceptT Error (State Environment)
 
-type ModuleMap = Map.T Symbol (NonEmpty Symbol)
+type ModuleMap = Map.T Symbol NameSymbol.T
 
 newtype Context a
   = Ctx {antiAlias :: ContextAlias a}
@@ -159,12 +160,37 @@ resolveSingle ctx Pre {opens, implicitInner, explicitModule} nameMap =
   case Context.switchNameSpace explicitModule ctx of
     Left (Context.VariableShared err) ->
       Left (IllegalModuleSwitch err)
-    Right ctx ->
-      case pathsCanBeResolved ctx opens of
-        Left err ->
-          Left err
-        Right Res {resolved = canResolveNow, notResolved = cantResolveNow} ->
-          undefined
+    Right ctx -> do
+      resolved <- pathsCanBeResolved ctx opens
+      qualifiedNames <- resolveLoop ctx mempty resolved
+      mempty
+        |> Map.insert explicitModule (fmap Explicit qualifiedNames)
+        |> ( \map ->
+               foldr
+                 (\mod -> Map.insert mod (fmap Implicit qualifiedNames))
+                 map
+                 implicitInner
+           )
+        |> Right
+
+-- this goes off after the checks have passed regarding if the paths
+-- are even possible to resolve
+resolveLoop ::
+  Context.T a b c -> ModuleMap -> Resolve a b c -> Either Error [NameSymbol.T]
+resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
+  map <- foldM undefined map fullyQualifyRes
+  resolveLoop ctx map undefined
+  where
+    fullyQualifyRes =
+      Context.resolveName ctx <$> resolved
+    qualifedAns =
+      fmap snd fullyQualifyRes
+    qualifyCant newMap term =
+      case newMap Map.!? NameSymbol.hd term of
+        Nothing ->
+          term
+        Just x ->
+          x <> term
 
 -- Since Locals and top level beats opens, we can determine from the
 -- start that any module which tries to open a nested path fails,
