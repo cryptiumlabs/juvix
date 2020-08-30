@@ -27,10 +27,6 @@ type MichelsonComp res =
   MichelsonTerm ->
   m res
 
-{-
- - Erases zero-usage arguments to pattern matching in functions, alters the type accordingly, and erases the body of the function.
- - Note: this currently *does not* erase datatypes with e.g. zero-usage arguments. This should be done in the future.
- -}
 eraseGlobals ::
   forall m.
   ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
@@ -52,9 +48,6 @@ eraseGlobals = do
 coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
 coreToAnn term usage ty = do
   term <- typecheckErase term usage ty
-  globals <- eraseGlobals
-  -- put @"globals" globals
-  --let cmp = ErasedAnn.datatypesToMichelson globals term
   ann <- ErasedAnn.convertTerm term usage
   pure ann
 
