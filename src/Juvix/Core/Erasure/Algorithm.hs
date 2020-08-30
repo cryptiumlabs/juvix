@@ -31,23 +31,13 @@ erase t π
 eraseGlobal ::
   ErasureM primTy primVal m =>
   IR.Global primTy primVal ->
-  m (IR.Global primTy primVal)
+  m (Erased.Global primTy primVal)
 eraseGlobal g =
   case g of
-    IR.GFunction (IR.Function n x t clauses) -> do
-      let (tys, ret) = piTypeToList (IR.quote0 t)
-      clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
-        let ty_ret = listToPiType (drop (length patts) tys, ret)
-        (patts, ty) <- erasePatterns (patts, (tys, ret))
-        -- TODO: Need to bind pattern variables here.
-        -- TODO: Need to erase body of term here.
-        --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
-        --pure $ ErasedAnn.EFunClause patts term
-        pure $ IR.FunClause patts term
-      pure (IR.GFunction $ IR.Function n x t clauses)
-      -- TODO: Erase data constructors, datatypes.
-      -- IR.GDatatype g -> pure (key, IR.GDatatype g)
-      -- IR.GDataCon (IR.DataCon n t) -> pure (key, ErasedAnn.EGDataCon (ErasedAnn.EDataCon n t))
+    IR.GDatatype g -> Erased.GDatatype |<< eraseDatatype g
+    IR.GDataCon c -> Erased.GDataCon |<< eraseDataCon c
+    IR.GFunction f -> Erased.GFunction |<< eraseFunction f
+    -- TODO: Deal with GAbstract.
 
 eraseDatatype ::
   ErasureM primTy primVal m =>
@@ -79,8 +69,16 @@ eraseFunction ::
   IR.Function primTy primVal ->
   m (Erased.Function primTy primVal)
 eraseFunction (IR.Function name usage ty clauses) = do
+  let (tys, ret) = piTypeToList (IR.quote0 ty)
+  clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
+    let ty_ret = listToPiType (drop (length patts) tys, ret)
+    (patts, ty) <- erasePatterns (patts, (tys, ret))
+    patts <- mapM erasePattern patts
+    -- TODO: Need to bind pattern variables here.
+    -- TODO: Need to erase body of term here.
+    --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
+    pure (Erased.FunClause patts undefined)
   ty <- eraseType ty
-  clauses <- mapM eraseFunClause clauses
   pure (Erased.Function name usage ty clauses)
 
 eraseFunClause ::

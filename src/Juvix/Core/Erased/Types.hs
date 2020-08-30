@@ -7,6 +7,7 @@ module Juvix.Core.Erased.Types
 where
 
 import Juvix.Core.Erased.Extend
+import qualified Data.HashMap.Strict as HM
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Base hiding
@@ -19,7 +20,7 @@ import Juvix.Core.IR.Types.Base hiding
     extendTerm,
   )
 import Juvix.Core.Usage (Usage)
-import Juvix.Library hiding (Type)
+import Juvix.Library hiding (Type, Datatype)
 
 data T
 
@@ -89,6 +90,15 @@ data Pattern primVal
   | PDot (Term primVal)
   | PPrim primVal
   deriving (Show, Eq, Generic)
+
+data Global primTy primVal
+  = GDatatype (Datatype primTy)
+  | GDataCon (DataCon primTy)
+  | GFunction (Function primTy primVal)
+  | GAbstract GlobalUsage (Term primVal)
+  deriving (Show, Eq, Generic)
+
+type Globals primTy primVal = HM.HashMap GlobalName (Global primTy primVal)
 
 type TypeAssignment primTy = TypeAssignment' T primTy
 
