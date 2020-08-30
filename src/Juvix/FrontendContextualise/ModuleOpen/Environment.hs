@@ -26,14 +26,16 @@ type WorkingMaps m =
   ( HasState "old" (Old Context.T) m,
     HasState "new" (New Context.T) m,
     HasThrow "error" Error m,
-    HasState "modMap" ModuleMap m
+    HasState "modMap" ModuleMap m,
+    HasReader "openMap" OpenMap m
   )
 
 data Environment
   = Env
       { old :: Old Context.T,
         new :: New Context.T,
-        modMap :: ModuleMap
+        modMap :: ModuleMap,
+        openMap :: OpenMap
       }
   deriving (Generic)
 
@@ -82,6 +84,11 @@ newtype Context a
   deriving
     (HasThrow "error" Error)
     via MonadError ContextAlias
+  deriving
+    ( HasReader "openMap" OpenMap,
+      HasSource "openMap" OpenMap
+    )
+    via ReaderField "openMap" ContextAlias
 
 --------------------------------------------------------------------------------
 -- Types for resolving opens
@@ -122,7 +129,7 @@ data Resolve a b c
 runEnv ::
   Context a -> Old Context.T -> (Either Error a, Environment)
 runEnv (Ctx c) old =
-  Env old (Context.empty (Context.currentName old)) mempty
+  Env old (Context.empty (Context.currentName old)) mempty mempty
     |> runState (runExceptT c)
 
 -- for this function just the first part of the symbol is enough
@@ -153,6 +160,66 @@ removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
 --------------------------------------------------------------------------------
 -- fully resolve module opens
 --------------------------------------------------------------------------------
+
+-- Precondition ∷ old and new context must be in the same context
+-- also terms must be in either the old map or the new map
+-- any place where this is inconsistent will break resolution
+-- | @populateModMap@ populates the modMap with all the global opens
+-- in the module
+populateModMap ::
+  WorkingMaps m => m ()
+populateModMap = do
+  old <- get @"old"
+  new <- get @"new"
+  open <- Juvix.Library.ask @"openMap"
+  modM <- get @"modMap"
+  let curr = pure Context.topLevelName <> Context.currentName old
+  case open Map.!? curr of
+    Nothing ->
+      pure ()
+    Just opens ->
+      -- TODO ∷
+      -- explicts and implicits for now work the same
+      put @"modMap" (foldr f modM opens)
+      where
+        f y modMap = foldr addNewSymbol modMap openList
+          where
+            nameSpace =
+              case y of
+                Implicit x -> x
+                Explicit x -> x
+            unpopulate = (() <$)
+            --
+            addNewSymbol x modMap =
+              case unpopulate (Context.lookup (NameSymbol.fromSymbol x) old)
+                <|> unpopulate (Context.lookup (NameSymbol.fromSymbol x) new) of
+                Just () ->
+                  -- if the symbol is in the map, then
+                  -- we don't shadow it....
+                  -- TODO ∷ later throw an error for
+                  --        explicit opens that do this
+                  modMap
+                Nothing ->
+                  Map.insert x nameSpace modMap
+            --
+            openList =
+              -- haskell gives type error if grabList is not typed
+              let grabList ::
+                    Context.T a b c ->
+                    NameSpace.List (Context.Definition a b c)
+                  grabList ctx =
+                    case Context.extractValue <$> Context.lookup nameSpace ctx of
+                      Just (Context.Record nameSpace _) ->
+                        NameSpace.toList nameSpace
+                      Just _ ->
+                        NameSpace.List [] []
+                      Nothing ->
+                        NameSpace.List [] []
+                  NameSpace.List {publicL = pubN} =
+                    grabList new
+                  NameSpace.List {publicL = pubO} =
+                    grabList old
+               in fmap fst pubN <> fmap fst pubO
 
 -- we don't take a module mapping as all symbols at the point of
 -- resolve can't be anything else, thus we don't have to pre-pend any
