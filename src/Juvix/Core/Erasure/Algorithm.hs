@@ -1,4 +1,4 @@
-module Juvix.Core.Erasure.Algorithm (erase, eraseAnn) where
+module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, Erasure.exec) where
 
 import Data.List (genericIndex)
 import qualified Juvix.Core.Erased.Types as Erased
@@ -22,6 +22,49 @@ erase ::
 erase t π
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
   | otherwise = Erasure.exec $ eraseTerm t
+
+eraseGlobal ::
+  HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
+  IR.Global primTy primVal ->
+  m (IR.Global primTy primVal)
+eraseGlobal g =
+  case g of
+    IR.GFunction (IR.Function n x t clauses) -> do
+      let (tys, ret) = piTypeToList (IR.quote0 t)
+      clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
+        let ty_ret = listToPiType (drop (length patts) tys, ret)
+        (patts, ty) <- erasePattern (patts, (tys, ret))
+        -- TODO: Need to bind pattern variables here.
+        -- TODO: Need to erase body of term here.
+        --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
+        --pure $ ErasedAnn.EFunClause patts term
+        pure $ IR.FunClause patts term
+      pure (IR.GFunction $ IR.Function n x t clauses)
+      -- TODO: Erase data constructors, datatypes.
+      -- IR.GDatatype g -> pure (key, IR.GDatatype g)
+      -- IR.GDataCon (IR.DataCon n t) -> pure (key, ErasedAnn.EGDataCon (ErasedAnn.EDataCon n t))
+
+erasePattern ::
+  HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
+  ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
+  m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
+erasePattern ([], ([], ret)) = pure ([], ([], ret))
+erasePattern (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePattern (ps, (args, ret))
+erasePattern (p : ps, (arg : args, ret)) = do
+  (ps', (args', ret')) <- erasePattern (ps, (args, ret))
+  pure (p : ps', (arg : args', ret'))
+erasePattern _ = throw @"erasureError" (Erasure.InternalError "invalid type & pattern match combination")
+
+piTypeToList :: IR.Term primTy primVal -> ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
+piTypeToList ty =
+  case ty of
+    IR.Pi usage arg ret ->
+      let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
+    _ -> ([], ty)
+
+listToPiType :: ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) -> IR.Term primTy primVal
+listToPiType ([], ret) = ret
+listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 eraseTerm ::
   ( HasState "nextName" Int m,

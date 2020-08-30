@@ -41,46 +41,13 @@ eraseGlobals ::
   m (IR.Globals Michelson.PrimTy Michelson.PrimVal)
 eraseGlobals = do
   globals <- ask @"globals"
-  res <- flip mapM (HM.toList globals) $ \(key, value) ->
-    case value of
-      IR.GFunction (IR.Function n x t clauses) -> do
-        let (tys, ret) = piTypeToList (IR.quote0 t)
-        clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
-          let ty_ret = listToPiType (drop (length patts) tys, ret)
-          (patts, ty) <- erasePattern (patts, (tys, ret))
-          -- TODO: Need to bind pattern variables here.
-          -- TODO: Need to erase body of term here.
-          --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
-          --pure $ ErasedAnn.EFunClause patts term
-          pure $ IR.FunClause patts term
-        pure (key, IR.GFunction $ IR.Function n x t clauses)
-      -- TODO: Erase data constructors, datatypes.
-      -- IR.GDatatype g -> pure (key, IR.GDatatype g)
-      -- IR.GDataCon (IR.DataCon n t) -> pure (key, ErasedAnn.EGDataCon (ErasedAnn.EDataCon n t))
-      x@_ -> pure (key, x)
+  res <- flip mapM (HM.toList globals) $ \(key, value) -> do
+    val <-
+      case Erasure.exec $ Erasure.eraseGlobal value of
+        Right r -> pure r
+        Left e -> throw @"error" (Types.ErasureError e)
+    pure (key, val)
   pure (HM.fromList res)
-
-erasePattern ::
-  HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m =>
-  ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
-  m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
-erasePattern ([], ([], ret)) = pure ([], ([], ret))
-erasePattern (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePattern (ps, (args, ret))
-erasePattern (p : ps, (arg : args, ret)) = do
-  (ps', (args', ret')) <- erasePattern (ps, (args, ret))
-  pure (p : ps', (arg : args', ret'))
-erasePattern _ = throw @"error" (Types.ErasureError (Erasure.InternalError "invalid type & pattern match combination"))
-
-piTypeToList :: IR.Term primTy primVal -> ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
-piTypeToList ty =
-  case ty of
-    IR.Pi usage arg ret ->
-      let (rest, res) = piTypeToList ret in ((usage, arg) : rest, res)
-    _ -> ([], ty)
-
-listToPiType :: ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal) -> IR.Term primTy primVal
-listToPiType ([], ret) = ret
-listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
 coreToAnn term usage ty = do
