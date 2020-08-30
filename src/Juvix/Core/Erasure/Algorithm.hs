@@ -8,6 +8,11 @@ import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (empty)
 
+type ErasureM primTy primVal m =
+  ( HasState "nextName" Int m,
+    HasState "nameStack" [Symbol] m,
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m )
+
 eraseAnn :: Erasure.Term primTy primVal -> Erased.Term primVal
 eraseAnn (Erasure.Var x _) = Erased.Var x
 eraseAnn (Erasure.Prim p _) = Erased.Prim p
@@ -24,7 +29,7 @@ erase t π
   | otherwise = Erasure.exec $ eraseTerm t
 
 eraseGlobal ::
-  HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
+  ErasureM primTy primVal m =>
   IR.Global primTy primVal ->
   m (IR.Global primTy primVal)
 eraseGlobal g =
@@ -33,7 +38,7 @@ eraseGlobal g =
       let (tys, ret) = piTypeToList (IR.quote0 t)
       clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
         let ty_ret = listToPiType (drop (length patts) tys, ret)
-        (patts, ty) <- erasePattern (patts, (tys, ret))
+        (patts, ty) <- erasePatterns (patts, (tys, ret))
         -- TODO: Need to bind pattern variables here.
         -- TODO: Need to erase body of term here.
         --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
@@ -44,16 +49,78 @@ eraseGlobal g =
       -- IR.GDatatype g -> pure (key, IR.GDatatype g)
       -- IR.GDataCon (IR.DataCon n t) -> pure (key, ErasedAnn.EGDataCon (ErasedAnn.EDataCon n t))
 
+eraseDatatype ::
+  ErasureM primTy primVal m =>
+  IR.Datatype primTy primVal ->
+  m (Erased.Datatype primTy)
+eraseDatatype (IR.Datatype name args level cons) = do
+  args <- mapM eraseDataArg args
+  cons <- mapM eraseDataCon cons
+  pure (Erased.Datatype name args level cons)
+
+eraseDataArg ::
+  ErasureM primTy primVal m =>
+  IR.DataArg primTy primVal ->
+  m (Erased.DataArg primTy)
+eraseDataArg (IR.DataArg name usage ty isParam) = do
+  ty <- eraseType ty
+  pure (Erased.DataArg name usage ty isParam)
+
+eraseDataCon ::
+  ErasureM primTy primVal m =>
+  IR.DataCon primTy primVal ->
+  m (Erased.DataCon primTy)
+eraseDataCon (IR.DataCon name ty) = do
+  ty <- eraseType ty
+  pure (Erased.DataCon name ty)
+
+eraseFunction ::
+  ErasureM primTy primVal m =>
+  IR.Function primTy primVal ->
+  m (Erased.Function primTy primVal)
+eraseFunction (IR.Function name usage ty clauses) = do
+  ty <- eraseType ty
+  clauses <- mapM eraseFunClause clauses
+  pure (Erased.Function name usage ty clauses)
+
+eraseFunClause ::
+  ErasureM primTy primVal m =>
+  IR.FunClause primTy primVal ->
+  m (Erased.FunClause primVal)
+eraseFunClause (IR.FunClause patts term) = do
+  patts <- mapM erasePattern patts
+  -- term <- eraseTerm term
+  -- pure (Erased.FunClause patts term)
+  -- TODO Clean these types up.
+  undefined
+
 erasePattern ::
-  HasThrow "erasureError" (Erasure.Error primTy primVal) m =>
+  ErasureM primTy primVal m =>
+  IR.Pattern primTy primVal ->
+  m (Erased.Pattern primVal)
+erasePattern patt =
+  case patt of
+    IR.PCon name patts -> do
+      patts <- mapM erasePattern patts
+      pure (Erased.PCon name patts)
+    IR.PVar v -> pure (Erased.PVar v)
+    IR.PDot t -> do
+      -- TODO Clean these types up.
+      -- t <- eraseTerm t
+      -- pure (Erased.PDot t) 
+      undefined
+    IR.PPrim p -> pure (Erased.PPrim p)
+
+erasePatterns ::
+  ErasureM primTy primVal m =>
   ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
   m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
-erasePattern ([], ([], ret)) = pure ([], ([], ret))
-erasePattern (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePattern (ps, (args, ret))
-erasePattern (p : ps, (arg : args, ret)) = do
-  (ps', (args', ret')) <- erasePattern (ps, (args, ret))
+erasePatterns ([], ([], ret)) = pure ([], ([], ret))
+erasePatterns (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePatterns (ps, (args, ret))
+erasePatterns (p : ps, (arg : args, ret)) = do
+  (ps', (args', ret')) <- erasePatterns (ps, (args, ret))
   pure (p : ps', (arg : args', ret'))
-erasePattern _ = throw @"erasureError" (Erasure.InternalError "invalid type & pattern match combination")
+erasePatterns _ = throw @"erasureError" (Erasure.InternalError "invalid type & pattern match combination")
 
 piTypeToList :: IR.Term primTy primVal -> ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)
 piTypeToList ty =
@@ -67,10 +134,7 @@ listToPiType ([], ret) = ret
 listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
 eraseTerm ::
-  ( HasState "nextName" Int m,
-    HasState "nameStack" [Symbol] m,
-    HasThrow "erasureError" (Erasure.Error primTy primVal) m
-  ) =>
+  ErasureM primTy primVal m =>
   Typed.Term primTy primVal ->
   m (Erasure.Term primTy primVal)
 eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
@@ -96,10 +160,7 @@ eraseTerm (Typed.Let π b t anns) = do
 eraseTerm (Typed.Elim e _) = eraseElim e
 
 eraseElim ::
-  ( HasState "nextName" Int m,
-    HasState "nameStack" [Symbol] m,
-    HasThrow "erasureError" (Erasure.Error primTy primVal) m
-  ) =>
+  ErasureM primTy primVal m =>
   Typed.Elim primTy primVal ->
   m (Erasure.Term primTy primVal)
 eraseElim (Typed.Bound x ann) = do
@@ -125,10 +186,7 @@ eraseElim (Typed.Ann _ s _ _ _) = do
 
 eraseType ::
   forall primTy primVal m.
-  ( HasThrow "erasureError" (Erasure.Error primTy primVal) m,
-    HasState "nameStack" [Symbol] m,
-    HasState "nextName" Int m
-  ) =>
+  ErasureM primTy primVal m =>
   IR.Value primTy primVal ->
   m (Erasure.Type primTy)
 eraseType (IR.VStar i) = do
@@ -150,9 +208,7 @@ eraseType v@(IR.VPrim _) = do
 
 eraseTypeN ::
   forall primTy primVal m.
-  ( HasThrow "erasureError" (Erasure.Error primTy primVal) m,
-    HasState "nameStack" [Symbol] m
-  ) =>
+  ErasureM primTy primVal m =>
   IR.Neutral primTy primVal ->
   m (Erasure.Type primTy)
 eraseTypeN (IR.NBound x) = do
