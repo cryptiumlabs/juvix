@@ -6,7 +6,6 @@ module Juvix.Core.Erased.Types
   )
 where
 
-import qualified Data.HashMap.Strict as HM
 import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR

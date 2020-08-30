@@ -1,7 +1,6 @@
 module Juvix.Core.ErasedAnn.Types where
 
-import qualified Data.HashMap.Strict as HM
-import Juvix.Core.IR.Types (GlobalName, Universe)
+import Juvix.Core.IR.Types (Universe)
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
