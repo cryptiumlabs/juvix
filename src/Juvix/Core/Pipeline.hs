@@ -2,7 +2,6 @@ module Juvix.Core.Pipeline where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson as Michelson
-import qualified Juvix.Backends.Michelson.Datatypes as Datatypes
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
@@ -39,32 +38,35 @@ eraseGlobals ::
     HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
     HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
   ) =>
-  m (Datatypes.PreGlobals)
+  m (IR.Globals Michelson.PrimTy Michelson.PrimVal)
 eraseGlobals = do
   globals <- ask @"globals"
   res <- flip mapM (HM.toList globals) $ \(key, value) ->
     case value of
-      IR.GDatatype (IR.Datatype n _ _ cons) -> pure (key, Datatypes.EGDatatype n (map (\(IR.DataCon n t) -> Datatypes.EDataCon n t) cons))
-      IR.GFunction (IR.Function n _ t clauses) -> do
+      IR.GFunction (IR.Function n x t clauses) -> do
         let (tys, ret) = piTypeToList (IR.quote0 t)
         clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
           let ty_ret = listToPiType (drop (length patts) tys, ret)
           (patts, ty) <- erasePattern (patts, (tys, ret))
           -- TODO: Need to bind pattern variables here.
+          -- TODO: Need to erase body of term here.
           --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
-          --pure $ Datatypes.EFunClause patts term
-          pure $ Datatypes.EFunClause patts undefined
-        pure (key, Datatypes.EGFunction n t clauses)
-      IR.GDataCon (IR.DataCon n t) -> pure (key, Datatypes.EGDataCon (Datatypes.EDataCon n t))
-      IR.GAbstract _ _ -> pure (key, Datatypes.EGAbstract)
+          --pure $ ErasedAnn.EFunClause patts term
+          pure $ IR.FunClause patts term
+        pure (key, IR.GFunction $ IR.Function n x t clauses)
+      -- TODO: Erase data constructors, datatypes.
+      -- IR.GDatatype g -> pure (key, IR.GDatatype g)
+      -- IR.GDataCon (IR.DataCon n t) -> pure (key, ErasedAnn.EGDataCon (ErasedAnn.EDataCon n t))
+      x@_ -> pure (key, x)
   pure (HM.fromList res)
 
-erasePattern :: HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m =>
+erasePattern ::
+  HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m =>
   ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
   m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
 erasePattern ([], ([], ret)) = pure ([], ([], ret))
-erasePattern (p:ps, ((Usage.SNat 0, _):args, ret)) = erasePattern (ps, (args, ret))
-erasePattern (p:ps, (arg:args, ret)) = do
+erasePattern (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePattern (ps, (args, ret))
+erasePattern (p : ps, (arg : args, ret)) = do
   (ps', (args', ret')) <- erasePattern (ps, (args, ret))
   pure (p : ps', (arg : args', ret'))
 erasePattern _ = throw @"error" (Types.ErasureError (Erasure.InternalError "invalid type & pattern match combination"))
@@ -80,21 +82,24 @@ listToPiType :: ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal
 listToPiType ([], ret) = ret
 listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 
-coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
-coreToMichelson term usage ty = do
+coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
+coreToAnn term usage ty = do
   term <- typecheckErase term usage ty
   globals <- eraseGlobals
-  let cmp = Datatypes.datatypesToMichelson globals term
-  ann <- ErasedAnn.convertTerm cmp usage
+  -- put @"globals" globals
+  --let cmp = ErasedAnn.datatypesToMichelson globals term
+  ann <- ErasedAnn.convertTerm term usage
+  pure ann
+
+coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
+coreToMichelson term usage ty = do
+  ann <- coreToAnn term usage ty
   let (res, _) = Michelson.compileExpr ann
   pure res
 
 coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
-  term <- typecheckErase term usage ty
-  globals <- eraseGlobals
-  let cmp = Datatypes.datatypesToMichelson globals term
-  ann <- ErasedAnn.convertTerm cmp usage
+  ann <- coreToAnn term usage ty
   let (res, _) = Michelson.compileContract ann
   pure res
 

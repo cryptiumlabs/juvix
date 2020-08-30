@@ -1,6 +1,7 @@
 module Juvix.Core.ErasedAnn.Types where
 
-import Juvix.Core.IR.Types (Universe)
+import qualified Data.HashMap.Strict as HM
+import Juvix.Core.IR.Types (GlobalName, Universe)
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
 
@@ -31,3 +32,55 @@ data AnnTerm primTy primVal
         term :: Term primTy primVal
       }
   deriving (Show, Eq, Generic)
+{-
+
+type PreGlobals = HM.HashMap GlobalName ErasedGlobal
+
+data ErasedGlobal
+  = EGDatatype GlobalName [EDataCon]
+  | EGDataCon EDataCon
+  | EGFunction GlobalName Value (NonEmpty EFunClause)
+  | EGAbstract
+
+data EDataCon
+  = EDataCon
+      { eDataConName :: GlobalName,
+        eDataConType :: Value
+      }
+
+data EFunClause
+  = EFunClause [Pattern] Term
+
+data Global
+  = GDatatype
+      { datatypeName :: GlobalName,
+        datatypeADT :: ADT
+      }
+  | GDataCon
+      { dataconName :: GlobalName,
+        dataconDatatype :: GlobalName,
+        dataconIndex :: Int,
+        dataconType :: Type
+      }
+  | GFunction
+      { funType :: Type,
+        funCases :: Cases
+      }
+
+data ADT
+  = Prm MU.Type
+  | Sum ADT ADT
+  | Product ADT ADT
+
+data Con
+  = LeftCon
+  | RightCon
+  | PairCon
+
+data Cases
+  = Terminal Term
+  | BindVar GlobalName Cases
+  | BindPair GlobalName GlobalName Cases
+  | LeftRight GlobalName Cases GlobalName Cases
+
+-}

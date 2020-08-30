@@ -28,7 +28,7 @@ extDataCon _ _ = defaultExtDataCon
 extFunction :: p1 -> p2 -> ExtFunction
 extFunction _ _ = defaultExtFunction
 
-extFunClause :: p1 -> p2 -> ExtFunClause
+extFunClause :: TypeQ -> TypeQ -> ExtFunClause
 extFunClause _ _ = defaultExtFunClause
 
 extPattern :: p1 -> p2 -> ExtPattern

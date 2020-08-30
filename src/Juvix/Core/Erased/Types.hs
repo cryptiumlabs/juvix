@@ -18,6 +18,7 @@ import Juvix.Core.IR.Types.Base hiding
     extFunction,
     extendTerm,
   )
+import Juvix.Core.Usage (Usage)
 import Juvix.Library hiding (Type)
 
 data T
@@ -26,21 +27,68 @@ extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
-IR.extendValue "Value" [] [t|T|] extValue
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
 
-IR.extendNeutral "Neutral" [] [t|T|] extNeutral
+data Datatype primTy
+  = Datatype
+      { dataName :: GlobalName,
+        dataArgs :: [DataArg primTy],
+        dataLevel :: Natural,
+        dataCons :: [DataCon primTy]
+      }
+  deriving (Show, Eq, Generic)
 
-IR.extendDatatype "Datatype" [] [t|T|] extDatatype
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDataArg "DataArg" [] [t|T|] extDataArg
 
-IR.extendDataArg "DataArg" [] [t|T|] extDataArg
+data DataArg primTy
+  = DataArg
+      { argName :: GlobalName,
+        argUsage :: Usage,
+        argType :: Type primTy,
+        argIsParam :: Bool
+      }
+  deriving (Show, Eq, Generic)
 
-IR.extendDataCon "DataCon" [] [t|T|] extDataCon
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDataCon "DataCon" [] [t|T|] extDataCon
 
-IR.extendFunction "Function" [] [t|T|] extFunction
+data DataCon primTy
+  = DataCon
+      { conName :: GlobalName,
+        conType :: Type primTy
+      }
+  deriving (Show, Eq, Generic)
 
-IR.extendFunClause "FunClause" [] [t|T|] extFunClause
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendFunction "Function" [] [t|T|] extFunction
 
-IR.extendPattern "Pattern" [] [t|T|] extPattern
+data Function primTy primVal
+  = Function
+      { funName :: GlobalName,
+        funUsage :: GlobalUsage,
+        funType :: Type primTy,
+        funClauses :: NonEmpty (FunClause primVal)
+      }
+  deriving (Show, Eq, Generic)
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendFunClause "FunClause" [] [t|T|] extFunClause
+
+data FunClause primVal
+  = FunClause [Pattern primVal] (Term primVal)
+  deriving (Show, Eq, Generic)
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendPattern "Pattern" [] [t|T|] extPattern
+
+data Pattern primVal
+  = PCon GlobalName [Pattern primVal]
+  | PVar PatternVar
+  | PDot (Term primVal)
+  | PPrim primVal
+  deriving (Show, Eq, Generic)
 
 type TypeAssignment primTy = TypeAssignment' T primTy
 
