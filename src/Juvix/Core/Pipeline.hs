@@ -4,7 +4,6 @@ import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
-import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Translate as Translate
@@ -39,7 +38,7 @@ eraseGlobals ::
     HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
     HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
   ) =>
-  m (Erased.Globals Michelson.PrimTy Michelson.PrimVal)
+  m (Erasure.Globals Michelson.PrimTy Michelson.PrimVal)
 eraseGlobals = do
   globals <- ask @"globals"
   res <- flip mapM (HM.toList globals) $ \(key, value) -> do

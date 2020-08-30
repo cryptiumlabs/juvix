@@ -11,7 +11,8 @@ import Juvix.Library hiding (empty)
 type ErasureM primTy primVal m =
   ( HasState "nextName" Int m,
     HasState "nameStack" [Symbol] m,
-    HasThrow "erasureError" (Erasure.Error primTy primVal) m )
+    HasThrow "erasureError" (Erasure.Error primTy primVal) m
+  )
 
 eraseAnn :: Erasure.Term primTy primVal -> Erased.Term primVal
 eraseAnn (Erasure.Var x _) = Erased.Var x
@@ -31,83 +32,83 @@ erase t π
 eraseGlobal ::
   ErasureM primTy primVal m =>
   IR.Global primTy primVal ->
-  m (Erased.Global primTy primVal)
+  m (Erasure.Global primTy primVal)
 eraseGlobal g =
   case g of
-    IR.GDatatype g -> Erased.GDatatype |<< eraseDatatype g
-    IR.GDataCon c -> Erased.GDataCon |<< eraseDataCon c
-    IR.GFunction f -> Erased.GFunction |<< eraseFunction f
-    -- TODO: Deal with GAbstract.
+    IR.GDatatype g -> Erasure.GDatatype |<< eraseDatatype g
+    IR.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
+    IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
+
+-- TODO: Deal with GAbstract.
 
 eraseDatatype ::
   ErasureM primTy primVal m =>
   IR.Datatype primTy primVal ->
-  m (Erased.Datatype primTy)
+  m (Erasure.Datatype primTy)
 eraseDatatype (IR.Datatype name args level cons) = do
   args <- mapM eraseDataArg args
   cons <- mapM eraseDataCon cons
-  pure (Erased.Datatype name args level cons)
+  pure (Erasure.Datatype name args level cons)
 
 eraseDataArg ::
   ErasureM primTy primVal m =>
   IR.DataArg primTy primVal ->
-  m (Erased.DataArg primTy)
+  m (Erasure.DataArg primTy)
 eraseDataArg (IR.DataArg name usage ty isParam) = do
   ty <- eraseType ty
-  pure (Erased.DataArg name usage ty isParam)
+  pure (Erasure.DataArg name usage ty isParam)
 
 eraseDataCon ::
   ErasureM primTy primVal m =>
   IR.DataCon primTy primVal ->
-  m (Erased.DataCon primTy)
+  m (Erasure.DataCon primTy)
 eraseDataCon (IR.DataCon name ty) = do
   ty <- eraseType ty
-  pure (Erased.DataCon name ty)
+  pure (Erasure.DataCon name ty)
 
 eraseFunction ::
   ErasureM primTy primVal m =>
   IR.Function primTy primVal ->
-  m (Erased.Function primTy primVal)
+  m (Erasure.Function primTy primVal)
 eraseFunction (IR.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (IR.quote0 ty)
   clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
     let ty_ret = listToPiType (drop (length patts) tys, ret)
     (patts, ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
-    -- TODO: Need to bind pattern variables here.
-    -- TODO: Need to erase body of term here.
-    --term <- typecheckErase (Translate.irToHR term) (Usage.SNat 1) (Translate.irToHR ty_ret)
-    pure (Erased.FunClause patts undefined)
+    -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
+    -- term <- eraseTerm term
+    pure (Erasure.FunClause patts undefined)
   ty <- eraseType ty
-  pure (Erased.Function name usage ty clauses)
+  pure (Erasure.Function name usage ty clauses)
 
 eraseFunClause ::
   ErasureM primTy primVal m =>
   IR.FunClause primTy primVal ->
-  m (Erased.FunClause primVal)
+  m (Erasure.FunClause primTy primVal)
 eraseFunClause (IR.FunClause patts term) = do
   patts <- mapM erasePattern patts
+  -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
   -- term <- eraseTerm term
-  -- pure (Erased.FunClause patts term)
-  -- TODO Clean these types up.
+  pure (Erasure.FunClause patts undefined)
   undefined
 
 erasePattern ::
   ErasureM primTy primVal m =>
   IR.Pattern primTy primVal ->
-  m (Erased.Pattern primVal)
+  m (Erasure.Pattern primTy primVal)
 erasePattern patt =
   case patt of
     IR.PCon name patts -> do
       patts <- mapM erasePattern patts
-      pure (Erased.PCon name patts)
-    IR.PVar v -> pure (Erased.PVar v)
+      pure (Erasure.PCon name patts)
+    IR.PVar v -> pure (Erasure.PVar v)
     IR.PDot t -> do
-      -- TODO Clean these types up.
+      -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
       -- t <- eraseTerm t
-      -- pure (Erased.PDot t) 
-      undefined
-    IR.PPrim p -> pure (Erased.PPrim p)
+      -- pure (Erasure.PDot t)
+      pure (Erasure.PDot undefined)
+    IR.PPrim p -> pure (Erasure.PPrim p)
 
 erasePatterns ::
   ErasureM primTy primVal m =>
