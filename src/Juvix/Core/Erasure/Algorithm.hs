@@ -38,8 +38,8 @@ eraseGlobal g =
     IR.GDatatype g -> Erasure.GDatatype |<< eraseDatatype g
     IR.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
     IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
-
--- TODO: Deal with GAbstract.
+    -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
+    IR.GAbstract u t -> Erasure.GAbstract u |<< eraseTerm undefined
 
 eraseDatatype ::
   ErasureM primTy primVal m =>
