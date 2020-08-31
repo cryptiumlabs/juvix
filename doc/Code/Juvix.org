@@ -865,7 +865,6 @@ Quantitative type implementation inspired by
   + [[ModuleOpen/Transform]]
   + [[RemoveDo/Types]]
   + [[Library]]
-  + [[HashMap]]
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]

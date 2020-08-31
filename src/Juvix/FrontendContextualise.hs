@@ -17,7 +17,6 @@ import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Initial
 import Juvix.Library
-import qualified Juvix.Library.HashMap as Map
 
 data Error
   = ModuleErr Module.Error
@@ -31,23 +30,37 @@ f = contextualize
 
 contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-contextualize ((sym, xs) :| t) =
-  case foldM
-    Contextify.contextify
-    (foldr Contextify.updateTopLevel (Context.empty sym) xs)
-    t of
+contextualize t@((sym, _) :| _) =
+  case foldM resolveOpens (Context.empty sym, []) (addTop <$> t) of
     Left err -> Left (PathErr err)
-    Right context ->
-      case Module.transformContext context of
+    Right (context, openList) ->
+      case Module.transformContext context openList of
         Left err -> Left (ModuleErr err)
         Right xs ->
           case Infix.transformContext xs of
             Left err -> Left (InfixErr err)
             Right xs -> Right xs
 
+addTop :: Bifunctor p => p NameSymbol.T c -> p NameSymbol.T c
 addTop = first (NameSymbol.cons Context.topLevelName)
 
 -- we get the opens
-resolveOpens (sym, xs) (accCtx, depMap) =
-  let Contextify.P {ctx, opens, modsDefined} = Contextify.f undefined undefined undefined undefined
-   in undefined
+resolveOpens ::
+  (Contextify.Context, [Module.PreQualified]) ->
+  (Context.NameSymbol, [Initial.TopLevel]) ->
+  Either
+    Context.PathError
+    (Contextify.Context, [Module.PreQualified])
+resolveOpens (ctx', openList) (sym, xs) =
+  case Contextify.f ctx' (sym, xs) of
+    Right Contextify.P {ctx, opens, modsDefined} ->
+      Right
+        ( ctx,
+          Module.Pre
+            { opens,
+              explicitModule = sym,
+              implicitInner = modsDefined
+            }
+            : openList
+        )
+    Left err -> Left err

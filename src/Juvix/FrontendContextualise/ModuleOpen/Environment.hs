@@ -127,10 +127,13 @@ data Resolve a b c
 --------------------------------------------------------------------------------
 
 runEnv ::
-  Context a -> Old Context.T -> (Either Error a, Environment)
-runEnv (Ctx c) old =
-  Env old (Context.empty (Context.currentName old)) mempty mempty
-    |> runState (runExceptT c)
+  Context a -> Old Context.T -> [PreQualified] -> (Either Error a, Environment)
+runEnv (Ctx c) old pres =
+  case resolve old pres of
+    Right opens ->
+      Env old (Context.empty (Context.currentName old)) mempty opens
+        |> runState (runExceptT c)
+    Left err -> (Left err, undefined)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
@@ -164,6 +167,7 @@ removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
 -- Precondition ∷ old and new context must be in the same context
 -- also terms must be in either the old map or the new map
 -- any place where this is inconsistent will break resolution
+
 -- | @populateModMap@ populates the modMap with all the global opens
 -- in the module
 populateModMap ::

@@ -162,9 +162,10 @@ emptyArgs (_ : _) = False
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
-transformContext :: Env.Old Context.T -> Either Env.Error (Env.New Context.T)
-transformContext ctx =
-  case Env.runEnv transformC ctx of
+transformContext ::
+  Env.Old Context.T -> [Env.PreQualified] -> Either Env.Error (Env.New Context.T)
+transformContext ctx pres =
+  case Env.runEnv transformC ctx pres of
     (Right _, env) -> Right (Env.new env)
     (Left e, _) -> Left e
 
