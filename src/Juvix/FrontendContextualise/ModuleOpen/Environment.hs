@@ -261,7 +261,9 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
   --
   let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
   --
-  if  | length (notResolved newResolve) == length cantResolveNow ->
+  if  | length cantResolveNow == 0 ->
+        Right qualifedAns
+      | length (notResolved newResolve) == length cantResolveNow ->
         Left (CantResolveModules cantResolveNow)
       | otherwise ->
         (qualifedAns <>) <$> resolveLoop ctx map newResolve
