@@ -23,7 +23,8 @@ openTests =
       topLevelToImportDoesntMatter,
       ambiSymbolInOpen,
       notAmbiIfLocalF,
-      notAmbiIfTopLevel
+      notAmbiIfTopLevel,
+      onlyOpenProperSymbols
     ]
 
 --------------------------------------------------------------------------------
@@ -96,7 +97,7 @@ preludeAdded =
         Context.switchNameSpace (Context.topLevelName :| ["Max"]) added'
       added'' =
         Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched'
-  in added''
+   in added''
 
 resolvePreludeAdded :: Either Env.Error Env.OpenMap
 resolvePreludeAdded =
@@ -179,3 +180,16 @@ notAmbiIfTopLevel =
         |> (T.@=? Right opens)
         |> T.testCase
           "opening same symbol with it being in the module is not ambi"
+
+onlyOpenProperSymbols :: T.TestTree
+onlyOpenProperSymbols =
+  let Right opens = resolvePreludeAdded
+      (_, Env.Env {modMap}) =
+        Env.bareRun
+          Env.populateModMap
+          (Context.empty (pure "Max"))
+          preludeAdded
+          opens
+   in (modMap T.@=? mempty)
+        |> T.testCase
+          "explicit symbols don't get added to the symbol mapping"
