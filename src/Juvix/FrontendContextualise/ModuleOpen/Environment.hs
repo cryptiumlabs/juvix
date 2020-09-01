@@ -37,7 +37,7 @@ data Environment
         modMap :: ModuleMap,
         openMap :: OpenMap
       }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 type FinalContext = New Context.T
 
@@ -125,6 +125,16 @@ data Resolve a b c
 --------------------------------------------------------------------------------
 -- Running functions
 --------------------------------------------------------------------------------
+
+bareRun ::
+  Context a ->
+  Old Context.T ->
+  New Context.T ->
+  OpenMap ->
+  (Either Error a, Environment)
+bareRun (Ctx c) old new opens =
+  Env old new mempty opens
+    |> runState (runExceptT c)
 
 runEnv ::
   Context a -> Old Context.T -> [PreQualified] -> (Either Error a, Environment)
@@ -267,7 +277,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
   --
   let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
   --
-  if  | length cantResolveNow == 0 ->
+  if  | null cantResolveNow ->
         Right qualifedAns
       | length (notResolved newResolve) == length cantResolveNow ->
         Left (CantResolveModules cantResolveNow)
