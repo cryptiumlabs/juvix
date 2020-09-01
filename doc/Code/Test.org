@@ -153,6 +153,14 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[ShuntYard]]
   + [[Library]]
+** Module
+*** Open
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[Environment]]
+  + [[Library]]
+  + [[HashMap]]
 * Nets
 ** Combinators
 - _Relies on_

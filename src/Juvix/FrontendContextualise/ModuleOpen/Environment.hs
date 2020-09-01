@@ -324,6 +324,9 @@ pathsCanBeResolved ctx opens
       Set.difference
         (Set.fromList (notResolved resFull))
         (Set.fromList (notResolved resFirst))
+        <> Set.difference
+          (Set.fromList (notResolved resFirst))
+          (Set.fromList (notResolved resFull))
 
 resolveWhatWeCan :: Context.T a b c -> [NameSymbol.T] -> Resolve a b c
 resolveWhatWeCan ctx opens = Res {resolved, notResolved}
