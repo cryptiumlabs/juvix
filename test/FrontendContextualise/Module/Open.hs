@@ -21,7 +21,9 @@ openTests =
     "Open Resolve Tests:"
     [ openPreludeActsProperly,
       topLevelToImportDoesntMatter,
-      ambiSymbolInOpen
+      ambiSymbolInOpen,
+      notAmbiIfLocalF,
+      notAmbiIfTopLevel
     ]
 
 --------------------------------------------------------------------------------
@@ -54,8 +56,8 @@ ourModule =
     Right ctx -> ctx
     Left ____ -> prelude
 
-firstOpen :: Either Env.Error Env.OpenMap
-firstOpen =
+resolveOurModule :: Either Env.Error Env.OpenMap
+resolveOurModule =
   Env.resolve
     ourModule
     [ Env.Pre
@@ -64,23 +66,42 @@ firstOpen =
         (Context.topLevelName :| ["Londo"])
     ]
 
-
 sameSymbolModule :: Env.New Context.T
 sameSymbolModule =
-  let added = Context.add (NameSpace.Pub "phantasm") (defaultDef "phantasm") ourModule
-      Right switched = Context.switchNameSpace (Context.topLevelName :| ["Stirner"]) added
-      added2 = Context.add (NameSpace.Pub "phantasm") (defaultDef "of-the-mind") switched
-  in added2
-
+  let added =
+        Context.add (NameSpace.Pub "phantasm") (defaultDef "phantasm") ourModule
+      Right switched =
+        Context.switchNameSpace (Context.topLevelName :| ["Stirner"]) added
+      added2 =
+        Context.add (NameSpace.Pub "phantasm") (defaultDef "of-the-mind") switched
+   in added2
 
 defaultDef :: Symbol -> Env.New Context.Definition
 defaultDef symb =
-  ( Context.Def
-          Nothing
-          Nothing
-          (Types.Like [] (Types.Primitive (Types.Prim (pure symb))) :| [])
-          (Context.Pred Context.Right 10)
-  )
+  Context.Def
+    Nothing
+    Nothing
+    (Types.Like [] (Types.Primitive (Types.Prim (pure symb))) :| [])
+    (Context.Pred Context.Right 10)
+
+preludeAdded :: Env.New Context.T
+preludeAdded =
+  let added =
+        Context.add (NameSpace.Pub "Prelude") (defaultDef "") sameSymbolModule
+      Right switched =
+        Context.switchNameSpace (Context.topLevelName :| ["Londo"]) added
+      added' =
+        Context.add (NameSpace.Pub "Prelude") (defaultDef "") switched
+      Right switched' =
+        Context.switchNameSpace (Context.topLevelName :| ["Max"]) added'
+      added'' =
+        Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched'
+  in added''
+
+resolvePreludeAdded :: Either Env.Error Env.OpenMap
+resolvePreludeAdded =
+  [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
+    |> Env.resolve preludeAdded
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -95,13 +116,13 @@ topLevelToImportDoesntMatter =
         []
         (Context.topLevelName :| ["Londo"])
     ]
-    |> (firstOpen T.@=?)
+    |> (resolveOurModule T.@=?)
     |> T.testCase
       "adding top level to module open does not matter if there is no lower module"
 
 openPreludeActsProperly :: T.TestTree
 openPreludeActsProperly =
-  let Right opens = firstOpen
+  let Right opens = resolveOurModule
       (_, Env.Env {modMap}) =
         Env.bareRun
           Env.populateModMap
@@ -115,14 +136,46 @@ openPreludeActsProperly =
           ]
    in T.testCase "-> and : should fully qualify" (modMap T.@=? openMap)
 
-
 ambiSymbolInOpen :: T.TestTree
 ambiSymbolInOpen =
   let Right switched =
         Context.switchNameSpace (Context.topLevelName :| ["Max"]) sameSymbolModule
-  in
-    [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
-     |> Env.resolve switched
-     |> (T.@=? Left (Env.AmbiguousSymbol "phantasm"))
-     |> T.testCase
-        "opening same symbol with it not being in the module def should be ambi"
+   in [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
+        |> Env.resolve switched
+        |> (T.@=? Left (Env.AmbiguousSymbol "phantasm"))
+        |> T.testCase
+          "opening same symbol with it not being in the module def should be ambi"
+
+notAmbiIfLocalF :: T.TestTree
+notAmbiIfLocalF =
+  let Right switched =
+        Context.switchNameSpace (Context.topLevelName :| ["Max"]) sameSymbolModule
+      added = Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched
+      opens =
+        Map.fromList
+          [ ( Context.topLevelName :| ["Max"],
+              [ Env.Explicit (Context.topLevelName :| ["Stirner"]),
+                Env.Explicit (Context.topLevelName :| ["Londo"])
+              ]
+            )
+          ]
+   in [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
+        |> Env.resolve added
+        |> (T.@=? Right opens)
+        |> T.testCase
+          "opening same symbol with it being in the module is not ambi"
+
+notAmbiIfTopLevel :: T.TestTree
+notAmbiIfTopLevel =
+  let opens =
+        Map.fromList
+          [ ( Context.topLevelName :| ["Max"],
+              [ Env.Explicit (Context.topLevelName :| ["Stirner"]),
+                Env.Explicit (Context.topLevelName :| ["Londo"])
+              ]
+            )
+          ]
+   in resolvePreludeAdded
+        |> (T.@=? Right opens)
+        |> T.testCase
+          "opening same symbol with it being in the module is not ambi"
