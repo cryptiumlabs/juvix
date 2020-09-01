@@ -19,7 +19,9 @@ openTests :: T.TestTree
 openTests =
   T.testGroup
     "Open Resolve Tests:"
-    [openPreludeActsProperly]
+    [ openPreludeActsProperly,
+      topLevelToImportDoesntMatter
+    ]
 
 --------------------------------------------------------------------------------
 -- Setup Modules
@@ -64,6 +66,19 @@ firstOpen =
 --------------------------------------------------------------------------------
 -- Tests
 --------------------------------------------------------------------------------
+
+topLevelToImportDoesntMatter :: T.TestTree
+topLevelToImportDoesntMatter =
+  Env.resolve
+    ourModule
+    [ Env.Pre
+        [pure "Prelude"]
+        []
+        (Context.topLevelName :| ["Londo"])
+    ]
+    |> (firstOpen T.@=?)
+    |> T.testCase
+      "adding top level to module open does not matter if there is no lower module"
 
 openPreludeActsProperly :: T.TestTree
 openPreludeActsProperly =

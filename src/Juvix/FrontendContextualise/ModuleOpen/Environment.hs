@@ -48,7 +48,7 @@ data Error
   | IllegalModuleSwitch Context.NameSymbol
   | ConflictingSymbols Context.NameSymbol
   | CantResolveModules [NameSymbol.T]
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Open a
   = Implicit a
