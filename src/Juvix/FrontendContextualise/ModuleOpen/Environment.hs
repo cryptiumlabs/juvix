@@ -230,6 +230,12 @@ populateModMap = do
 -- qualification at this point... we add qualification later as we add
 -- things, as we have to figure out the full resolution of all opens
 
+-- | @resolve@ takes a context and a list of open modules and the modules
+-- they are open in (the module itself, and sub modules, which the opens are
+-- implicit), and fully resolves the opens to their full name.
+-- for example @open Prelude@ in the module Londo translates to
+-- @resolve ctx PreQualified {opens = [Prelude]}@
+-- == @Right (fromList [(TopLevel :| [Londo],[Explicit (TopLevel :| [Prelude])])])@
 resolve :: Context.T a b c -> [PreQualified] -> Either Error OpenMap
 resolve ctx = foldM (resolveSingle ctx) mempty
 

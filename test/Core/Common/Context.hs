@@ -138,7 +138,7 @@ privateBeatsPublic =
               \ It is a terrible responsibility but I have learned to live with it."
           )
           added
-      looked = added2 Context.!? (pure "joy")
+      looked = added2 Context.!? pure "joy"
    in "What do you want, you moon-faced assassin of joy?"
         |> Context.TypeDeclar
         |> NameSpace.Priv
