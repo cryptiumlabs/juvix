@@ -39,7 +39,7 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
       let NameSpace.List {publicL} = NameSpace.toList innerC
           newSymbs = fst <$> publicL
        in protectOpenPrim newSymbs $ do
-            -- TODO ∷ should we update this to not shad
+            -- TODO ∷ should we update this to not shadow
             -- our protected removes it, but we just add it back
             traverse_ (`Env.addModMap` fullQualified) newSymbs
             transformExpression expr

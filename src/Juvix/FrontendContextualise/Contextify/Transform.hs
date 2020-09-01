@@ -11,7 +11,7 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 
 -- the name symbols are the modules we are opening
--- TODO ∷ parallize this
+-- TODO ∷ parallelize this
 f ,
   contextify ::
     Type.Context ->

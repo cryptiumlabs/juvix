@@ -43,7 +43,7 @@ type FinalContext = New Context.T
 
 data Error
   = UnknownModule NameSymbol.T
-  | AmbigiousSymbol Symbol
+  | AmbiguousSymbol Symbol
   | OpenNonModule (Set.HashSet Context.NameSymbol)
   | IllegalModuleSwitch Context.NameSymbol
   | ConflictingSymbols Context.NameSymbol
@@ -287,7 +287,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
                     case map Map.!? x of
                       -- this means we already have opened this in another
                       -- module
-                      Just _ -> Left (AmbigiousSymbol x)
+                      Just _ -> Left (AmbiguousSymbol x)
                       -- if it's already in scope from below or above us
                       -- don't add to the remapping
                       Nothing ->
