@@ -164,8 +164,8 @@ michelson =
     stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
     intTy = checkIntType,
     intVal = integerToPrimVal,
-    floatTy = \_ _ -> False, -- TODO
-    floatVal = const Nothing -- TODO
+    floatTy = \_ _ -> False, -- Michelson does not support floats
+    floatVal = const Nothing
   }
 
 type CompErr = CompTypes.CompilationError
