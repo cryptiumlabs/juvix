@@ -344,4 +344,11 @@ splitMaybes = foldr f ([], [])
     f (Nothing, b) = second (b :)
 
 firstName :: NameSymbol.T -> NameSymbol.T
-firstName = NameSymbol.fromSymbol . NameSymbol.hd
+firstName (x :| y : _)
+  | Context.topLevelName == x =
+    x :| [y]
+  | otherwise =
+    NameSymbol.fromSymbol y
+firstName xs =
+  NameSymbol.hd xs
+    |> NameSymbol.fromSymbol

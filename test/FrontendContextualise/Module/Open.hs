@@ -27,4 +27,4 @@ ourModule =
     Left _ -> prelude
 
 firstOpen =
-  Env.resolve ourModule [Env.Pre [pure "Prelude"] [] (Context.topLevelName :| ["Londo"])]
+  Env.resolve ourModule [Env.Pre [(Context.topLevelName :| ["Prelude"])] [] (Context.topLevelName :| ["Londo"])]
