@@ -24,17 +24,14 @@ extendValue "Value" [] [t|NoExt|] $ \_ _ -> defaultExtValue
 
 extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 
-extendDatatype "Datatype" [] [t|NoExt|] $ \_ _ -> defaultExtDatatype
-
-extendDataArg "DataArg" [] [t|NoExt|] $ \_ _ -> defaultExtDataArg
-
-extendDataCon "DataCon" [] [t|NoExt|] $ \_ _ -> defaultExtDataCon
-
-extendFunction "Function" [] [t|NoExt|] $ \_ _ -> defaultExtFunction
-
-extendFunClause "FunClause" [] [t|NoExt|] $ \_ _ -> defaultExtFunClause
-
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
+
+type Datatype = Datatype' NoExt
+type DataArg = DataArg' NoExt
+type DataCon = DataCon' NoExt
+type Function = Function' NoExt
+type FunClause = FunClause' NoExt
+
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal
