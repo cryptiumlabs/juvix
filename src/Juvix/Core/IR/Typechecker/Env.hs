@@ -1,7 +1,8 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Core.IR.Typechecker.Env where
 
 import Data.Foldable (foldr1) -- (on a NonEmpty)
-import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Types
@@ -13,21 +14,12 @@ import Juvix.Library hiding (Datatype)
 
 data EnvCtx' ext primTy primVal
   = EnvCtx
-      { globals :: Globals primTy primVal
+      { globals :: IR.Globals primTy primVal
       }
   deriving Generic
 
 type EnvCtx = EnvCtx' IR.NoExt
 
-type Globals primTy primVal =
-  HashMap IR.GlobalName (Global primTy primVal)
-
-data Global primTy primVal
-  = GDatatype (IR.Datatype primTy primVal)
-  | GDataCon (IR.DataCon primTy primVal)
-  | GFunction (IR.Function primTy primVal)
-  | GAbstract IR.GlobalUsage (IR.Value primTy primVal)
-  deriving (Show, Eq, Generic)
 
 type EnvAlias ext primTy primVal =
   ExceptT
@@ -42,14 +34,14 @@ newtype EnvTypecheck' ext primTy primVal a =
     )
     via MonadError (EnvAlias ext primTy primVal)
   deriving
-    ( HasSource "globals" (Globals primTy primVal),
-      HasReader "globals" (Globals primTy primVal)
+    ( HasSource "globals" (IR.Globals primTy primVal),
+      HasReader "globals" (IR.Globals primTy primVal)
     )
     via ReaderField "globals" (EnvAlias ext primTy primVal)
 
 type EnvTypecheck = EnvTypecheck' IR.NoExt
 
-type HasGlobals primTy primVal = HasReader "globals" (Globals primTy primVal)
+type HasGlobals primTy primVal = HasReader "globals" (IR.Globals primTy primVal)
 
 type CanTC' ext primTy primVal m =
   (HasThrowTC' IR.NoExt ext primTy primVal m,
@@ -58,7 +50,7 @@ type CanTC' ext primTy primVal m =
 type CanTC primTy primVal m = CanTC' IR.NoExt primTy primVal m
 
 exec ::
-  Globals primTy primVal ->
+  IR.Globals primTy primVal ->
   EnvTypecheck primTy primVal a ->
   (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
 exec globals (EnvTyp env) =
@@ -84,13 +76,13 @@ lookupGlobal x = do
     Just defn -> pure $ makeGAnn defn
     Nothing -> throwTC (UnboundGlobal x)
   where
-    makeGAnn (GDatatype (IR.Datatype {dataArgs, dataLevel})) =
+    makeGAnn (IR.GDatatype (IR.Datatype {dataArgs, dataLevel})) =
       (foldr makePi (IR.VStar' dataLevel mempty) dataArgs, IR.GZero)
-    makeGAnn (GDataCon (IR.DataCon {conType})) =
+    makeGAnn (IR.GDataCon (IR.DataCon {conType})) =
       (conType, IR.GOmega)
-    makeGAnn (GFunction (IR.Function {funType, funUsage})) =
+    makeGAnn (IR.GFunction (IR.Function {funType, funUsage})) =
       (funType, funUsage)
-    makeGAnn (GAbstract absUsage absType) =
+    makeGAnn (IR.GAbstract absUsage absType) =
       (absType, absUsage)
     makePi (IR.DataArg {argUsage, argType}) res =
       IR.VPi' argUsage argType res mempty
@@ -149,13 +141,13 @@ deriving via Lift (InnerTCAlias ext primTy primVal m) instance
     (InnerTCT ext primTy primVal m)
 
 deriving via Lift (InnerTCAlias ext primTy primVal m) instance
-  HasSource "globals" (Globals primTy primVal) m =>
-  HasSource "globals" (Globals primTy primVal)
+  HasSource "globals" (IR.Globals primTy primVal) m =>
+  HasSource "globals" (IR.Globals primTy primVal)
     (InnerTCT ext primTy primVal m)
 
 deriving via Lift (InnerTCAlias ext primTy primVal m) instance
-  HasReader "globals" (Globals primTy primVal) m =>
-  HasReader "globals" (Globals primTy primVal)
+  HasReader "globals" (IR.Globals primTy primVal) m =>
+  HasReader "globals" (IR.Globals primTy primVal)
     (InnerTCT ext primTy primVal m)
 
 

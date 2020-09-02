@@ -32,6 +32,8 @@ type DataCon = DataCon' NoExt
 type Function = Function' NoExt
 type FunClause = FunClause' NoExt
 
+type Global = Global' NoExt
+type Globals primTy primVal = Globals' NoExt primTy primVal
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal

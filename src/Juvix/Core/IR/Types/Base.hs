@@ -6,6 +6,8 @@ module Juvix.Core.IR.Types.Base where
 import Extensible
 import Juvix.Core.Usage
 import Juvix.Library
+import Juvix.Library.HashMap
+import Data.Kind (Constraint)
 
 type Universe = Natural
 
@@ -199,3 +201,27 @@ deriving instance (Data ext, GlobalAll Data ext primTy primVal) =>
 
 deriving instance GlobalAll NFData ext primTy primVal =>
   NFData (FunClause' ext primTy primVal)
+
+
+data Global' ext primTy primVal
+  = GDatatype (Datatype' ext primTy primVal)
+  | GDataCon (DataCon' ext primTy primVal)
+  | GFunction (Function' ext primTy primVal)
+  | GAbstract GlobalUsage (Value' ext primTy primVal)
+  deriving Generic
+
+deriving instance GlobalAll Eq ext primTy primVal =>
+  Eq (Global' ext primTy primVal)
+
+deriving instance GlobalAll Show ext primTy primVal =>
+  Show (Global' ext primTy primVal)
+
+deriving instance (Data ext, GlobalAll Data ext primTy primVal) =>
+  Data (Global' ext primTy primVal)
+
+deriving instance GlobalAll NFData ext primTy primVal =>
+  NFData (Global' ext primTy primVal)
+
+
+type Globals' ext primTy primVal =
+  HashMap GlobalName (Global' ext primTy primVal)
