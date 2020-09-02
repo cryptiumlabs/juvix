@@ -21,7 +21,7 @@ where
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
 
-data NoExt
+data NoExt deriving Data
 
 extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
 
