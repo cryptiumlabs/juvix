@@ -194,6 +194,11 @@ populateModMap = do
     Just opens ->
       -- TODO ∷
       -- explicts and implicits for now work the same
+      -- later they should work as follows
+      -- Implicit opens should be superseded by explict
+      -- thus our map should have implciit explicit on
+      -- each symbol. Later when we are done, we remove
+      -- these markings as they are no longer useful
       put @"modMap" (foldr f modM opens)
       where
         f y modMap = foldr addNewSymbol modMap openList
