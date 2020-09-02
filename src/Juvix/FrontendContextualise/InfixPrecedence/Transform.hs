@@ -29,7 +29,8 @@ transformInfix inf = do
 ----------------------------------------
 -- Helpers for transformInfix
 ----------------------------------------
-precedenceConversion :: NameSymbol.T -> Context.Precedence -> Shunt.Precedence NameSymbol.T
+precedenceConversion ::
+  NameSymbol.T -> Context.Precedence -> Shunt.Precedence NameSymbol.T
 precedenceConversion s (Context.Pred Context.Left i) =
   Shunt.Pred s Shunt.Left' i
 precedenceConversion s (Context.Pred Context.Right i) =
@@ -38,21 +39,37 @@ precedenceConversion s (Context.Pred Context.NonAssoc i) =
   Shunt.Pred s Shunt.NonAssoc i
 
 groupInfixs ::
-  Env.WorkingMaps m => Old.Expression -> m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
+  Env.WorkingMaps m =>
+  Old.Expression ->
+  m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
 groupInfixs (Old.Infix (Old.Inf l s r)) = do
   looked <- Env.lookup s
-  case Context.extractValue <$> looked of
-    Just Context.Def {precedence} ->
-      let f xs =
-            precedenceConversion s precedence
-              |> Shunt.Precedence
-              |> flip NonEmpty.cons xs
-              |> NonEmpty.cons (Shunt.Ele l)
-       in fmap f (groupInfixs r)
-    _ -> throw @"error" (Env.UnknownSymbol s)
+  let f precedence xs =
+        precedenceConversion s precedence
+          |> Shunt.Precedence
+          |> flip NonEmpty.cons xs
+          |> NonEmpty.cons (Shunt.Ele l)
+      --
+      continuePref ::
+        Env.WorkingMaps m =>
+        Maybe (Context.Definition term ty sumRep) ->
+        m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression)) ->
+        m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
+      continuePref (Just Context.Def {precedence}) _maybeF =
+        fmap (f precedence) (groupInfixs r)
+      continuePref (Just _) _maybeF =
+        throw @"error" (Env.UnknownSymbol s)
+      continuePref Nothing maybeF =
+        maybeF
+  continuePref (Context.extractValue <$> looked) $ do
+    oldLook <- Env.ask s
+    -- not in the new map, checkout the old
+    continuePref (Context.extractValue <$> oldLook) $
+      throw @"error" (Env.UnknownSymbol s)
 groupInfixs e = pure (Shunt.Ele e :| [])
 
-convertOldApplication :: Shunt.Application NameSymbol.T Old.Expression -> Old.Expression
+convertOldApplication ::
+  Shunt.Application NameSymbol.T Old.Expression -> Old.Expression
 convertOldApplication (Shunt.Single e) =
   e
 convertOldApplication (Shunt.App s app1 app2) =

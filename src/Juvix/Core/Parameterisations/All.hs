@@ -10,6 +10,7 @@ import Juvix.Core.Types hiding
     reservedOpNames,
     typeOf,
   )
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -66,4 +67,12 @@ reservedOpNames = Naturals.reservedOpNames <> Unit.reservedOpNames
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+  Parameterisation {
+    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \i _ -> Naturals.isNat i,
+    intVal = fmap NatVal . Naturals.natVal,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

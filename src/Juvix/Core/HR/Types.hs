@@ -1,7 +1,6 @@
 module Juvix.Core.HR.Types where
 
 import Juvix.Core.HR.Extend
-import Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 
 data T

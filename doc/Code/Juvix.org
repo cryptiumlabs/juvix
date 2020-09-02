@@ -1,4 +1,10 @@
 * Juvix
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Frontend]]
+  + [[InfixPrecedence/Environment]]
+  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -437,7 +443,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[NameSymbol]]
   + [[Core/Erasure]]
-  + [[Pipeline]]
+  + [[Core/Pipeline]]
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
@@ -449,7 +455,7 @@ This module provides a default contract environment
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Library]]
-*** Pipeline
+*** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
   + [[ErasedAnn]]
@@ -801,6 +807,11 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
 ** Frontend
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]
@@ -846,6 +857,7 @@ Quantitative type implementation inspired by
   + [[Context]]
   + [[NameSymbol]]
   + [[Contextify/Transform]]
+  + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/Transform]]
@@ -864,6 +876,14 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Context]]
   + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[Contextify/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<Contextify/Types>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSymbol]]
   + [[RemoveDo/Types]]
   + [[Library]]
 *** InfixPrecedence
@@ -920,6 +940,8 @@ Quantitative type implementation inspired by
 **** Environment <<ModuleOpen/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]

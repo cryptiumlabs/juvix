@@ -36,9 +36,10 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
       -- Fine to just have the public names
       -- we are only tracking what this can use, not doing
       -- replacements
-      let NameSpace.List {publicL, privateL} = NameSpace.toList innerC
-          newSymbs = fst <$> (publicL <> privateL)
+      let NameSpace.List {publicL} = NameSpace.toList innerC
+          newSymbs = fst <$> publicL
        in protectOpenPrim newSymbs $ do
+            -- TODO ∷ should we update this to not shadow
             -- our protected removes it, but we just add it back
             traverse_ (`Env.addModMap` fullQualified) newSymbs
             transformExpression expr
@@ -161,9 +162,10 @@ emptyArgs (_ : _) = False
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
-transformContext :: Env.Old Context.T -> Either Env.Error (Env.New Context.T)
-transformContext ctx =
-  case Env.runEnv transformC ctx of
+transformContext ::
+  Env.Old Context.T -> [Env.PreQualified] -> Either Env.Error (Env.New Context.T)
+transformContext ctx pres =
+  case Env.runEnv transformC ctx pres of
     (Right _, env) -> Right (Env.new env)
     (Left e, _) -> Left e
 
@@ -561,3 +563,5 @@ updateSym sym = do
   case Context.switchNameSpace sym new of
     Left ____ -> throw @"error" (Env.UnknownModule sym)
     Right map -> put @"new" map
+  -- we now also have to populate the modmap
+  Env.populateModMap

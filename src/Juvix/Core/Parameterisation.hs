@@ -13,7 +13,16 @@ data Parameterisation primTy primVal
         parseTy :: Token.GenTokenParser String () Identity -> Parser primTy,
         parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
         reservedNames :: [String],
-        reservedOpNames :: [String]
+        reservedOpNames :: [String],
+
+        stringTy :: Text -> primTy -> Bool,
+        stringVal :: Text -> Maybe primVal,
+
+        intTy :: Integer -> primTy -> Bool,
+        intVal :: Integer -> Maybe primVal,
+
+        floatTy :: Double -> primTy -> Bool,
+        floatVal :: Double -> Maybe primVal
       }
   deriving (Generic)
 

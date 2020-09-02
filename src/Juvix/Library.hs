@@ -20,6 +20,7 @@ module Juvix.Library
     module Capability.Source,
     module Numeric.Natural,
     module Juvix.Library.PrettyPrint,
+    Data,
     (∨),
     (∧),
     (|<<),
@@ -39,6 +40,7 @@ module Juvix.Library
     sortOnFlip,
     uncurry3,
     curry3,
+    dup,
     StateField,
     ReaderField,
     WriterField,
@@ -80,6 +82,8 @@ import Protolude hiding
     state,
   )
 import Prelude (Show (..), String)
+import Data.Data (Data)
+
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)
@@ -116,7 +120,9 @@ traverseM f = fmap join . traverse f
 instance Show (a -> b) where
   show _ = "fun"
 
-newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord, NFData)
+newtype Symbol = Sym Text
+  deriving newtype (Eq, Hashable, Semigroup, Ord, NFData)
+  deriving stock Data
 
 instance Show Symbol where
   show (Sym t) = T.unpack t
@@ -174,6 +180,9 @@ curry3 fn a b c = fn (a, b, c)
 
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (...) = (.) . (.)
+
+dup :: a -> (a, a)
+dup x = (x, x)
 
 -- | Select a field in a state monad, for example:
 --
