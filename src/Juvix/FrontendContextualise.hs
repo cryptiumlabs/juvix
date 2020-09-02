@@ -4,7 +4,10 @@
 -- - order of Passes
 --   1. =ModuleOpen=
 --   2. =InfixPrecedence=
-module Juvix.FrontendContextualise where
+module Juvix.FrontendContextualise
+  (module Juvix.FrontendContextualise,
+   Target.FinalContext)
+where
 
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
@@ -23,6 +26,8 @@ data Error
   | InfixErr Infix.Error
   | PathErr Context.PathError
   deriving (Show)
+
+type Final f = Target.New f
 
 op ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext

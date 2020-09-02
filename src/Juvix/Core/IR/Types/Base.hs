@@ -27,6 +27,7 @@ data Name
     Pattern PatternVar
   deriving (Show, Eq, Generic, Data, NFData)
 
+-- TODO: maybe global functions can have any usage? (for private defs)
 data GlobalUsage = GZero | GOmega
   deriving (Show, Eq, Generic, Data, Bounded, Enum, NFData)
 
@@ -83,6 +84,7 @@ extensible
       | NApp (Neutral primTy primVal) (Value primTy primVal)
       deriving (Eq, Show, Generic, Data, NFData)
 
+    -- TODO absurd pattern
     data Pattern primTy primVal
       = PCon GlobalName [Pattern primTy primVal]
       | PVar PatternVar

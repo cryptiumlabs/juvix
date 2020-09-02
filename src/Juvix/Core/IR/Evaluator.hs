@@ -15,6 +15,7 @@ import Juvix.Library
 import qualified Data.IntMap as IntMap
 
 class HasWeak a where
+    --
   weakBy' :: Natural -> IR.BoundVar -> a -> a
   default weakBy' ::
     (Generic a, GHasWeak (Rep a)) =>
@@ -74,7 +75,7 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) whe
 class HasWeak a => HasSubst ext primTy primVal a where
   substWith ::
     -- | How many bindings have been traversed so far
-    Natural ->
+    IR.BoundVar ->
     -- | Variable to substitute
     IR.BoundVar ->
     -- | Expression to substitute with
