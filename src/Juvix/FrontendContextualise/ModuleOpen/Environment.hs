@@ -203,10 +203,11 @@ populateModMap = do
                 Implicit x -> x
                 Explicit x -> x
             unpopulate = (() <$)
+            unpopulateLookup x =
+              unpopulate . Context.lookup (NameSymbol.fromSymbol x)
             --
             addNewSymbol x modMap =
-              case unpopulate (Context.lookup (NameSymbol.fromSymbol x) old)
-                <|> unpopulate (Context.lookup (NameSymbol.fromSymbol x) new) of
+              case unpopulateLookup x old <|> unpopulateLookup x new of
                 Just () ->
                   -- if the symbol is in the map, then
                   -- we don't shadow it....
