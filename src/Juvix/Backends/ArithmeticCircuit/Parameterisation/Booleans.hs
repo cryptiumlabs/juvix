@@ -10,7 +10,8 @@ import Juvix.Core.Types hiding
     parseVal,
     reservedNames,
     reservedOpNames,
-    typeOf,
+    hasType,
+    arity,
   )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
@@ -47,6 +48,12 @@ typeOf Or = Ty :| [Ty, Ty]
 typeOf And = Ty :| [Ty, Ty]
 typeOf Not = Ty :| [Ty, Ty]
 typeOf (Curried _ _) = Ty :| [Ty]
+
+hasType :: Val f b -> PrimType Ty -> Bool
+hasType x ty = ty == typeOf x
+
+arity :: Val f b -> Int
+arity = length . typeOf
 
 apply :: FieldT e b => Val (e f b) b -> Val (e f b) b -> Maybe (Val (e f b) b)
 apply Or (Val x) = pure $ Curried Or x
@@ -88,17 +95,12 @@ reservedOpNames = []
 
 t :: FieldT e b => Parameterisation Ty (Val (e f b) b)
 t =
-  Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
-      stringVal = const Nothing,
-      intTy = \_ _ -> False,
-      intVal = const Nothing,
-      floatTy = \_ _ -> False,
-      floatVal = const Nothing
-    }
+  Parameterisation {
+    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \_ _ -> False,
+    intVal = const Nothing,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

@@ -45,7 +45,7 @@ quote _ (VStar nat) = Star nat
 quote _ (VPrimTy p) = PrimTy p
 quote ii (VPi π s t) = Pi π (quote ii s) (quote (ii + 1) t)
 quote ii (VLam s) = Lam (quote (ii + 1) s)
-quote _ (VPrim pri) = Elim (Prim pri)
+quote _ (VPrim pri) = Prim pri
 quote ii (VNeutral n) = Elim $ neutralQuote ii n
 
 neutralQuote :: BoundVar -> Neutral primTy primVal -> Elim primTy primVal

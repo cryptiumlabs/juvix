@@ -15,6 +15,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
+import Data.List.NonEmpty ((<|))
 
 data Leftovers primTy primVal a
   = Leftovers
@@ -100,6 +101,9 @@ typeTerm' term ann@(Annotation σ ty) =
       requireZero σ
       void $ requireStar ty
       pure $ Typed.PrimTy t ann
+    IR.Prim p -> do
+      requirePrimType p ty
+      pure $ Typed.Prim p $ Annotation σ ty
     IR.Pi π a b -> do
       requireZero σ
       void $ requireStar ty
@@ -143,9 +147,6 @@ typeElim' elim σ =
       (ty, π') <- lookupGlobal x
       when (π' == IR.GZero) $ requireZero σ
       pure $ Typed.Free gx $ Annotation σ ty
-    IR.Prim p -> do
-      ty <- primType p
-      pure $ Typed.Prim p $ Annotation σ ty
     IR.App s t -> do
       s' <- typeElim' s σ
       (π, a, b) <- requirePi $ annType $ getElimAnn s'
@@ -188,6 +189,21 @@ requireStar ty = throwTC (ShouldBeStar ty)
 
 requireUniverseLT :: IR.Universe -> IR.Universe -> InnerTC primTy primVal ()
 requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
+
+requirePrimType :: primVal
+                -> IR.Value primTy primVal
+                -> InnerTC primTy primVal ()
+requirePrimType p ty = do
+  param <- ask @"param"
+  ty' <- toPrimTy ty
+  unless (Param.hasType param p ty') $
+    throwTC (WrongPrimTy p ty')
+
+toPrimTy :: IR.Value primTy primVal -> InnerTC primTy primVal (NonEmpty primTy)
+toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty where
+  go (IR.VPrimTy t)              = pure $ t :| []
+  go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t
+  go _                           = empty
 
 type PiParts primTy primVal =
   (Usage.T, IR.Value primTy primVal, IR.Value primTy primVal)
@@ -259,13 +275,6 @@ lookupGlobal x = do
     makeGAnn (GAbstract absUsage absType) =
       (absType, absUsage)
     makePi (IR.DataArg {argUsage, argType}) res = IR.VPi argUsage argType res
-
-primType :: primVal -> InnerTC primTy primVal (IR.Value primTy primVal)
-primType v = do
-  asks @"param" $ \param ->
-    Param.typeOf param v
-      |> fmap IR.VPrimTy
-      |> foldr1 (\s t -> IR.VPi Usage.Omega s t)
 
 substApp ::
   IR.Value primTy primVal ->

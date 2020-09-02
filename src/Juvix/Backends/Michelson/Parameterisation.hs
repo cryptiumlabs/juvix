@@ -34,6 +34,12 @@ typeOf :: PrimVal -> NonEmpty PrimTy
 typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
 typeOf AddI = PrimTy (M.Type M.TInt "") :| [PrimTy (M.Type M.TInt ""), PrimTy (M.Type M.TInt "")]
 
+hasType :: PrimVal -> Core.PrimType PrimTy -> Bool
+hasType x ty = ty == typeOf x
+
+arity' :: PrimVal -> Int
+arity' = length . typeOf
+
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
 constType :: M.Value' Op -> M.T
@@ -44,6 +50,7 @@ constType v =
     M.ValueTrue -> Untyped.tbool
     M.ValueFalse -> Untyped.tbool
 
+-- the arity elsewhere lacks this 'pred'?
 arity :: PrimVal -> Int
 arity = pred . length . typeOf
 
@@ -158,19 +165,15 @@ checkIntType val (PrimTy (M.Type ty _)) = case ty of
 -- TODO: Figure out what the parser ought to do.
 michelson :: Core.Parameterisation PrimTy PrimVal
 michelson =
-  Core.Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = checkStringType,
-      stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-      intTy = checkIntType,
-      intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Michelson does not support floats
-      floatVal = const Nothing
-    }
+  Core.Parameterisation {
+    hasType, arity=arity', apply, parseTy, parseVal, reservedNames,
+    reservedOpNames,
+    stringTy = checkStringType,
+    stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
+    intTy = checkIntType,
+    intVal = integerToPrimVal,
+    floatTy = \_ _ -> False, -- Michelson does not support floats
+    floatVal = const Nothing
+  }
 
 type CompErr = CompTypes.CompilationError

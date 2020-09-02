@@ -5,6 +5,7 @@ module Juvix.Core.IR.Typechecker.Types where
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import Prelude (Show (..))
 
@@ -63,6 +64,13 @@ data TypecheckError' ext primTy primVal
   | UnboundPatVar
       { unboundPatVar :: IR.PatternVar
       }
+  | NotPrimTy
+      { typeActual :: IR.Value' ext primTy primVal
+      }
+  | WrongPrimTy
+      { primVal :: primVal,
+        primTy  :: P.PrimType primTy
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt
 
@@ -120,6 +128,10 @@ instance
     "Global name " <> show x <> " not in scope"
   show (UnboundPatVar x) =
     "Pattern variable " <> show x <> " not in scope"
+  show (NotPrimTy x) =
+    "Not a valid primitive type: " <> show x
+  show (WrongPrimTy x ty) =
+    "Primitive value " <> show x <> " cannot have type " <> show ty
 
 type HasThrowTC' ext primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m
@@ -158,6 +170,7 @@ IR.extendTerm "Term" [] [t|T|] $
      in IR.defaultExtTerm
           { IR.typeStar = typed,
             IR.typePrimTy = typed,
+            IR.typePrim = typed,
             IR.typePi = typed,
             IR.typeLam = bindTyped,
             IR.typeLet = bindTyped,
@@ -170,7 +183,6 @@ IR.extendElim "Elim" [] [t|T|] $
      in IR.defaultExtElim
           { IR.typeBound = typed,
             IR.typeFree = typed,
-            IR.typePrim = typed,
             IR.typeApp = typed,
             IR.typeAnn = typed
           }
@@ -178,6 +190,7 @@ IR.extendElim "Elim" [] [t|T|] $
 getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
+getTermAnn (Prim _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
 getTermAnn (Lam _ anns) = baResAnn anns
 getTermAnn (Let _ _ _ anns) = baResAnn anns
@@ -186,6 +199,5 @@ getTermAnn (Elim _ ann) = ann
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
 getElimAnn (Bound _ ann) = ann
 getElimAnn (Free _ ann) = ann
-getElimAnn (Prim _ ann) = ann
 getElimAnn (App _ _ ann) = ann
 getElimAnn (Ann _ _ _ _ ann) = ann

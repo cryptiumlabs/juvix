@@ -16,7 +16,8 @@ import Juvix.Core.Types hiding
     parseVal,
     reservedNames,
     reservedOpNames,
-    typeOf,
+    hasType,
+    arity,
   )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
@@ -97,6 +98,13 @@ typeOf Eq =
   BoolTy Booleans.Ty :| [FETy FieldElements.Ty, FETy FieldElements.Ty]
 typeOf (IntegerVal _) = undefined
 
+hasType :: Val -> PrimType Ty -> Bool
+hasType x ty = ty == typeOf x
+
+arity :: Val -> Int
+arity = length . typeOf
+
+
 apply :: Val -> Val -> Maybe Val
 apply (BoolVal x) (BoolVal y) =
   boolValToAll <$> Booleans.apply x y
@@ -127,17 +135,12 @@ reservedOpNames =
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
-      stringVal = const Nothing,
-      intTy = \i _ -> False, -- TODO
-      intVal = const Nothing, -- TODO
-      floatTy = \_ _ -> False,
-      floatVal = const Nothing
-    }
+  Parameterisation {
+    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \i _ -> False, -- TODO
+    intVal = const Nothing, -- TODO
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

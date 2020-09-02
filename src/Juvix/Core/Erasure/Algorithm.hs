@@ -138,6 +138,8 @@ eraseTerm ::
   m (Erasure.Term primTy primVal)
 eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm t@(Typed.PrimTy _ _) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm (Typed.Prim p ann) = do
+  Erasure.Prim p <$> eraseType (IR.annType ann)
 eraseTerm t@(Typed.Pi _ _ _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm (Typed.Lam t anns) = do
   let ty@(IR.VPi π _ _) = IR.annType $ IR.baResAnn anns
@@ -170,8 +172,6 @@ eraseElim (Typed.Free (IR.Global x) ann) = do
 eraseElim e@(Typed.Free (IR.Pattern _) _) = do
   -- FIXME ??????
   throwEra $ Erasure.UnsupportedTermE e
-eraseElim (Typed.Prim p ann) = do
-  Erasure.Prim p <$> eraseType (IR.annType ann)
 eraseElim (Typed.App e s ann) = do
   let IR.VPi π _ _ = IR.annType $ IR.getElimAnn e
   e <- eraseElim e

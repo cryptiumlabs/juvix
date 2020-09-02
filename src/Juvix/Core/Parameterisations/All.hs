@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 module Juvix.Core.Parameterisations.All where
 
 import qualified Juvix.Core.Parameterisation as P
@@ -9,7 +10,8 @@ import Juvix.Core.Types hiding
     parseVal,
     reservedNames,
     reservedOpNames,
-    typeOf,
+    hasType,
+    arity,
   )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
@@ -40,10 +42,22 @@ unitTyToAll = UnitTy
 unitValToAll :: Unit.Val -> Val
 unitValToAll = UnitVal
 
-typeOf :: Val -> NonEmpty Ty
-typeOf (NatVal nat) =
-  fmap natTyToAll (Naturals.typeOf nat)
-typeOf (UnitVal unit) = fmap unitTyToAll (Unit.typeOf unit)
+unNatTy :: Ty -> Maybe Naturals.Ty
+unNatTy (NatTy t) = pure t
+unNatTy _         = empty
+
+unUnitTy :: Ty -> Maybe Unit.Ty
+unUnitTy (UnitTy t) = pure t
+unUnitTy _         = empty
+
+hasType :: Val -> PrimType Ty -> Bool
+hasType (NatVal x)  (traverse unNatTy  -> Just tys) = Naturals.hasType x tys
+hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
+hasType _           _                               = False
+
+arity :: Val -> Int
+arity (NatVal x)  = Naturals.arity x
+arity (UnitVal x) = Unit.arity x
 
 apply :: Val -> Val -> Maybe Val
 apply (NatVal nat1) (NatVal nat2) =
@@ -67,17 +81,12 @@ reservedOpNames = Naturals.reservedOpNames <> Unit.reservedOpNames
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
-      stringVal = const Nothing,
-      intTy = \i _ -> Naturals.isNat i,
-      intVal = fmap NatVal . Naturals.natVal,
-      floatTy = \_ _ -> False,
-      floatVal = const Nothing
-    }
+  Parameterisation {
+    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \i _ -> Naturals.isNat i,
+    intVal = fmap NatVal . Naturals.natVal,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

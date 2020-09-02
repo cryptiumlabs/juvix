@@ -42,6 +42,8 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
     IR.Star' u (weakBy' b i a)
   weakBy' b i (IR.PrimTy' p a) =
     IR.PrimTy' p (weakBy' b i a)
+  weakBy' b i (IR.Prim' p a) =
+    IR.Prim' p (weakBy' b i a)
   weakBy' b i (IR.Pi' π s t a) =
     IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Lam' t a) =
@@ -61,8 +63,6 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) whe
       a' = weakBy' b i a
   weakBy' b i (IR.Free' x a) =
     IR.Free' x (weakBy' b i a)
-  weakBy' b i (IR.Prim' p a) =
-    IR.Prim' p (weakBy' b i a)
   weakBy' b i (IR.App' s t a) =
     IR.App' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
   weakBy' b i (IR.Ann' π s t l a) =
@@ -117,6 +117,8 @@ instance
     IR.Star' u (substWith w i e a)
   substWith w i e (IR.PrimTy' t a) =
     IR.PrimTy' t (substWith w i e a)
+  substWith w i e (IR.Prim' p a) =
+    IR.Prim' p (substWith w i e a)
   substWith w i e (IR.Pi' π s t a) =
     IR.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
   substWith w i e (IR.Lam' t a) =
@@ -141,8 +143,6 @@ instance
       a' = substWith w i e a
   substWith w i e (IR.Free' x a) =
     IR.Free' x (substWith w i e a)
-  substWith w i e (IR.Prim' p a) =
-    IR.Prim' p (substWith w i e a)
   substWith w i e (IR.App' f s a) =
     IR.App' (substWith w i e f) (substWith w i e s) (substWith w i e a)
   substWith w i e (IR.Ann' π s t l a) =
@@ -339,6 +339,8 @@ evalTermWith _ _ (IR.Star' u _) =
   pure $ IR.VStar u
 evalTermWith _ _ (IR.PrimTy' p _) =
   pure $ IR.VPrimTy p
+evalTermWith _ _ (IR.Prim' p _) =
+  pure $ IR.VPrim p
 evalTermWith exts param (IR.Pi' π s t _) =
   IR.VPi π <$> evalTermWith exts param s <*> evalTermWith exts param t
 evalTermWith exts param (IR.Lam' t _) =
@@ -362,8 +364,6 @@ evalElimWith _ _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith _ _ (IR.Free' x _) =
   pure $ IR.VFree x
-evalElimWith _ _ (IR.Prim' p _) =
-  pure $ IR.VPrim p
 evalElimWith exts param (IR.App' s t _) =
   join $
     vapp param <$> evalElimWith exts param s

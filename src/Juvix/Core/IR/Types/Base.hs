@@ -32,6 +32,8 @@ extensible
         Star Universe
       | -- | PrimTy primitive type
         PrimTy primTy
+      | -- | primitive constant
+        Prim primVal
       | -- | formation rule of the dependent function type PI.
         -- the Usage(π) tracks how many times x is used.
         Pi Usage (Term primTy primVal) (Term primTy primVal)
@@ -52,8 +54,6 @@ extensible
         Bound BoundVar
       | -- | Free variables of type name (see above)
         Free Name
-      | -- | primitive constant
-        Prim primVal
       | -- | elimination rule of PI (APP).
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.

@@ -89,6 +89,9 @@ generateParser parameterisation =
       primTyTerm :: Parser (Term primTy primVal)
       primTyTerm = PrimTy |<< parseTy parameterisation lexer
       --
+      primTerm :: Parser (Term primTy primVal)
+      primTerm = Prim |<< parseVal parameterisation lexer
+      --
       sortTerm :: Parser (Term primTy primVal)
       sortTerm = do
         reserved "*"
@@ -120,15 +123,13 @@ generateParser parameterisation =
       --
       termOnly :: Parser (Term primTy primVal)
       termOnly =
-        parens termOnly <|> primTyTerm <|> sortTerm <|> piTerm <|> lamTerm
+        parens termOnly <|> primTyTerm <|> try primTerm
+          <|> sortTerm <|> piTerm <|> lamTerm
       --
       elimTerm :: Parser (Term primTy primVal)
       elimTerm = do
         elim <- elim
         pure (Elim elim)
-      --
-      primElim :: Parser (Elim primTy primVal)
-      primElim = Prim |<< parseVal parameterisation lexer
       --
       annElim :: Parser (Elim primTy primVal)
       annElim = do
@@ -148,7 +149,7 @@ generateParser parameterisation =
       elim = buildExpressionParser ops elim'
       --
       elim' :: Parser (Elim primTy primVal)
-      elim' = try primElim <|> annElim <|> varElim <|> parens elim
+      elim' = annElim <|> varElim <|> parens elim
       --
       parseWhole :: Parser a -> Parser a
       parseWhole p = do

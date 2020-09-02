@@ -132,7 +132,8 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
   addConstraint (EAC.Constraint (EAC.ConstraintVar 1 <$> path) (EAC.Gte 0))
   case term of
     Erased.Prim p ->
-      pure (EAC.RBang 0 (EAC.RPrim p), arrow (Core.typeOf parameterisation p))
+      pure (EAC.RBang 0 (EAC.RPrim p),
+            undefined {-arrow (Core.typeOf parameterisation p)-})
     Erased.Var sym -> do
       -- Boxing constraint.
       case varPaths Map.!? sym of
@@ -334,8 +335,9 @@ typChecker parameterisation t typAssign = EAC.runEither (() <$ rec' t typAssign)
       case assign Map.!? s of
         Just arg -> pure (newAssign, EAC.PArrT x arg bodyType)
         Nothing -> throw @"typ" EAC.MissingOverUse
-    rec' (EAC.RBang _bangVar (EAC.RPrim _p)) _assign =
-      pure (_assign, (arrow (Core.typeOf parameterisation _p)))
+    rec' (EAC.RBang _bangVar (EAC.RPrim _p)) assign =
+      pure (assign,
+            undefined {-arrow (Core.typeOf parameterisation _p)-})
 
 typCheckerErr ::
   forall primTy primVal.

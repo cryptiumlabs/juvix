@@ -19,11 +19,11 @@ pattern Let π x s l b = Let0 π l b (LetAnnotation x s)
 
 pattern Elim π s t = Elim0 s (Annotation π t)
 
-{-# COMPLETE Star, PrimTy, Pi, Lam, Let, Elim #-}
+{-# COMPLETE Star, PrimTy, Prim, Pi, Lam, Let, Elim #-}
 
 IR.extendElim "Elim" [] [t|T|] extElim
 
 pattern App π s ts ρ t tt =
   App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))
 
-{-# COMPLETE Var, Prim, App, Ann #-}
+{-# COMPLETE Var, App, Ann #-}

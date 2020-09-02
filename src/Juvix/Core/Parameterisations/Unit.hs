@@ -7,7 +7,8 @@ import Juvix.Core.Types hiding
     parseVal,
     reservedNames,
     reservedOpNames,
-    typeOf,
+    hasType,
+    arity,
   )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
@@ -24,8 +25,12 @@ data Val
   = Val
   deriving (Show, Eq)
 
-typeOf :: Val -> NonEmpty Ty
-typeOf Val = Ty :| []
+hasType :: Val -> PrimType Ty -> Bool
+hasType Val (Ty :| []) = True
+hasType _ _ = False
+
+arity :: Val -> Int
+arity Val = 1
 
 apply :: Val -> Val -> Maybe Val
 apply _ _ = Nothing
@@ -48,17 +53,12 @@ reservedOpNames = []
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
-      stringVal = const Nothing,
-      intTy = \_ _ -> False,
-      intVal = const Nothing,
-      floatTy = \_ _ -> False,
-      floatVal = const Nothing
-    }
+  Parameterisation {
+    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \_ _ -> False,
+    intVal = const Nothing,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

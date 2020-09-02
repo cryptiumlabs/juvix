@@ -7,7 +7,8 @@ import Juvix.Core.Types hiding
     parseVal,
     reservedNames,
     reservedOpNames,
-    typeOf,
+    hasType,
+    arity,
   )
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
@@ -36,12 +37,18 @@ instance Show Val where
   show Mul = "*"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
-typeOf :: Val -> NonEmpty Ty
+typeOf :: Val -> PrimType Ty
 typeOf (Val _) = Ty :| []
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Sub = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
+
+hasType :: Val -> PrimType Ty -> Bool
+hasType x ty = ty == typeOf x where
+
+arity :: Val -> Int
+arity = length . typeOf
 
 apply :: Val -> Val -> Maybe Val
 apply Add (Val x) = pure (Curried Add x)
@@ -87,17 +94,12 @@ natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation
-    { typeOf,
-      apply,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = \_ _ -> False,
-      stringVal = const Nothing,
-      intTy = \i _ -> isNat i,
-      intVal = natVal,
-      floatTy = \_ _ -> False,
-      floatVal = const Nothing
-    }
+  Parameterisation {
+    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \i _ -> isNat i,
+    intVal = natVal,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }
