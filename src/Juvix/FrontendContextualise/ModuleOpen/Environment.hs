@@ -335,14 +335,12 @@ pathsCanBeResolved ctx opens
   where
     resFull = resolveWhatWeCan ctx opens
     resFirst = resolveWhatWeCan ctx (firstName <$> opens)
+    setRes l = Set.fromList (notResolved l)
     -- O(n log₁₆(n))
     diff =
-      Set.difference
-        (Set.fromList (notResolved resFull))
-        (Set.fromList (notResolved resFirst))
-        <> Set.difference
-          (Set.fromList (notResolved resFirst))
-          (Set.fromList (notResolved resFull))
+      mappend
+        (Set.difference (setRes resFull) (setRes resFirst))
+        (Set.difference (setRes resFirst) (setRes resFull))
 
 resolveWhatWeCan :: Context.T a b c -> [NameSymbol.T] -> Resolve a b c
 resolveWhatWeCan ctx opens = Res {resolved, notResolved}
