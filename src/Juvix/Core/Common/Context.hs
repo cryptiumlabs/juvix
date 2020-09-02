@@ -33,7 +33,7 @@ data Cont b
         currentName :: NameSymbol.T,
         topLevelMap :: HashMap.T Symbol b
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, Data)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
@@ -69,7 +69,7 @@ data Definition term ty sumRep
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Data)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
