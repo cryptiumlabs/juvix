@@ -8,11 +8,12 @@ import Juvix.Core.Types hiding
     reservedOpNames,
     typeOf,
   )
-import Juvix.Library hiding ((<|>))
+import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
 import Prelude (String)
+import qualified Juvix.Core.Parameterisation as P
 
 -- k: primitive type: naturals
 data Ty
@@ -78,6 +79,20 @@ reservedNames = ["Nat", "+", "-", "*"]
 reservedOpNames :: [String]
 reservedOpNames = []
 
+isNat :: Integer -> Bool
+isNat i = i >= 0
+
+natVal :: Integer -> Maybe Val
+natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
+
 t :: Parameterisation Ty Val
 t =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+  Parameterisation {
+    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+    stringTy = \_ _ -> False,
+    stringVal = const Nothing,
+    intTy = \i _ -> isNat i,
+    intVal = natVal,
+    floatTy = \_ _ -> False,
+    floatVal = const Nothing
+  }

@@ -3,12 +3,13 @@ module Juvix.Core.Common.NameSymbol where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Juvix.Library
+import qualified Prelude (foldr1)
 
 type T = NonEmpty Symbol
 
 toSymbol :: T -> Symbol
 toSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
+  Prelude.foldr1 (\x acc -> x <> "." <> acc)
 
 fromSymbol :: Symbol -> T
 fromSymbol =
@@ -37,3 +38,9 @@ takePrefixOfInternal (s :| smaller) (b :| bigger)
     recurse (x : xs) (y : ys)
       | x == y = recurse xs ys
       | otherwise = Nothing
+
+cons :: Symbol -> T -> T
+cons = NonEmpty.cons
+
+hd :: T -> Symbol
+hd = NonEmpty.head

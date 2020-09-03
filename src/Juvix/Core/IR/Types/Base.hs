@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.IR.Types.Base where
@@ -19,10 +20,10 @@ data Name
     Global GlobalName
   | -- | Pattern variable, unique within a scope
     Pattern PatternVar
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, Data, NFData)
 
 data GlobalUsage = GZero | GOmega
-  deriving (Show, Eq, Generic, Bounded, Enum)
+  deriving (Show, Eq, Generic, Data, Bounded, Enum, NFData)
 
 extensible
   [d|
@@ -43,7 +44,7 @@ extensible
       | -- | CONV conversion rule. TODO make sure 0Γ ⊢ S≡T
         -- Elim is the constructor that embeds Elim to Term
         Elim (Elim primTy primVal)
-      deriving (Eq, Show)
+      deriving (Eq, Show, Generic, Data, NFData)
 
     -- | inferable terms
     data Elim primTy primVal
@@ -57,7 +58,7 @@ extensible
         App (Elim primTy primVal) (Term primTy primVal)
       | -- | Annotation with usage.
         Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
-      deriving (Eq, Show)
+      deriving (Eq, Show, Generic, Data, NFData)
 
     -- | Values/types
     data Value primTy primVal
@@ -67,7 +68,7 @@ extensible
       | VLam (Value primTy primVal)
       | VNeutral (Neutral primTy primVal)
       | VPrim primVal
-      deriving (Eq, Show)
+      deriving (Eq, Show, Generic, Data, NFData)
 
     -- | A neutral term is either a variable or an application of a neutral term
     -- to a value
@@ -75,7 +76,7 @@ extensible
       = NBound BoundVar
       | NFree Name
       | NApp (Neutral primTy primVal) (Value primTy primVal)
-      deriving (Eq, Show)
+      deriving (Eq, Show, Generic, Data, NFData)
 
     data Datatype primTy primVal
       = Datatype
@@ -86,7 +87,7 @@ extensible
             dataLevel :: Natural,
             dataCons :: [DataCon primTy primVal]
           }
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
 
     data DataArg primTy primVal
       = DataArg
@@ -95,14 +96,14 @@ extensible
             argType :: Value primTy primVal,
             argIsParam :: Bool
           }
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
 
     data DataCon primTy primVal
       = DataCon
           { conName :: GlobalName,
             conType :: Value primTy primVal
           }
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
 
     data Function primTy primVal
       = Function
@@ -111,16 +112,16 @@ extensible
             funType :: Value primTy primVal,
             funClauses :: NonEmpty (FunClause primTy primVal)
           }
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
 
     data FunClause primTy primVal
       = FunClause [Pattern primTy primVal] (Term primTy primVal)
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
 
     data Pattern primTy primVal
       = PCon GlobalName [Pattern primTy primVal]
       | PVar PatternVar
       | PDot (Term primTy primVal)
       | PPrim primVal
-      deriving (Show, Eq, Generic)
+      deriving (Show, Eq, Generic, Data, NFData)
     |]

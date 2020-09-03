@@ -102,17 +102,18 @@ topLevelName = "TopLevel"
 
 empty :: NameSymbol.T -> T term ty sumRep
 empty sym =
-  case addPathWithValue (pure topLevelName <> sym) CurrentNameSpace fullyEmpty of
+  case addPathWithValue (pure topLevelName <> sym') CurrentNameSpace fullyEmpty of
     Lib.Left _ -> error "impossible"
     Lib.Right x -> x
   where
     fullyEmpty =
       ( T
           { currentNameSpace = NameSpace.empty,
-            currentName = sym,
+            currentName = sym',
             topLevelMap = HashMap.empty
           }
       )
+    sym' = removeTopName sym
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
@@ -194,6 +195,7 @@ switchNameSpace newNameSpace t@T {currentName}
                 Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
           -- the namespace may already exist
           Lib.Left er ->
+            -- TODO ∷ refactor with resolveName
             -- how do we add the namespace back to the private area!?
             case t !? newNameSpace of
               Just (Current (NameSpace.Pub (Record def _))) ->
@@ -234,6 +236,23 @@ lookup key t@T {topLevelMap} =
 (!?) ::
   T term ty sumRep -> NameSymbol.T -> Maybe (From (Definition term ty sumRep))
 (!?) = flip lookup
+
+modifyGlobal ::
+  NameSymbol.T ->
+  (Maybe (Definition term ty sumRep) -> Definition term ty sumRep) ->
+  T term ty sumRep ->
+  T term ty sumRep
+modifyGlobal sym g t =
+  case modifySpace f sym t of
+    Just tt -> tt
+    Nothing -> t
+  where
+    f (Final x) =
+      UpdateNow (g x)
+    f (Continue (Just (Record def ty))) =
+      GoOn (OnRecord def ty)
+    f (Continue _) =
+      Abort
 
 addGlobal ::
   NameSymbol.T ->
@@ -474,3 +493,27 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
         top :| []
           | topLevelName == top -> Nothing
         x :| xs -> first (x :| xs)
+
+-- TODO/ISSUE ∷ what if we resolve a private module
+-- the path and lookup doesn't make sense much
+-- we need to change namesymbol to something along
+-- the lines of every symbol saying if it's public
+-- or private
+resolveName ::
+  T a b c ->
+  (From (Definition a b c), NameSymbol.T) ->
+  (Definition a b c, NameSymbol.T)
+resolveName ctx (def, name) =
+  case def of
+    -- TODO ∷ update this case
+    Current (NameSpace.Priv x) ->
+      (x, fullyQualified)
+    Current (NameSpace.Pub x) ->
+      (x, fullyQualified)
+    Outside x ->
+      (x, nameAlreadyFully)
+  where
+    nameAlreadyFully =
+      pure topLevelName <> removeTopName name
+    fullyQualified =
+      pure topLevelName <> currentName ctx <> name

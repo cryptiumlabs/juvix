@@ -10,6 +10,8 @@ import Juvix.Library
 import qualified System.FilePath as FilePath
 import Prelude (String)
 
+-- TODO ∷ add directory option
+-- this will add top level to the thing, and properly handle paths
 ofPath :: [FilePath] -> IO (Either String [(NameSymbol.T, [Types.TopLevel])])
 ofPath files = do
   read <- ByteString.readFile `traverse` files

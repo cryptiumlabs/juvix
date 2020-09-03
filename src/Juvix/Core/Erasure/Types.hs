@@ -14,7 +14,6 @@ import Juvix.Core.Erased.Types as Type
     pattern SymT,
   )
 import qualified Juvix.Core.Erased.Types as Erased
-import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed

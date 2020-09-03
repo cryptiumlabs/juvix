@@ -323,16 +323,16 @@ packages:
   original:
     url: https://github.com/adjoint-io/poly/archive/b75b853025ea75ba64f62f39d4524832f0117e36.tar.gz
 - completed:
-    size: 15194
-    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
+    size: 15444
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
     name: extensible-data
     version: 0.1.0
-    sha256: f287dc29b4de5c3d1794ff1579b970a8e5dcaff43f38cc5657f32abde84c08a5
+    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
     pantry-tree:
       size: 1863
-      sha256: 34243f0bdef6974ebc26748aa0ba6cfbd3343233e477d7750653b52a3626f9bf
+      sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
   original:
-    url: https://github.com/metastatedev/extensible-data/archive/f1a95de10775b449ee6b8b943cc5207449f35808.tar.gz
+    url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
 - completed:
     hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
     pantry-tree:
