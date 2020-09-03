@@ -1,5 +1,6 @@
 module Juvix.Core.Pipeline where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
@@ -24,21 +25,41 @@ type MichelsonComp res =
   MichelsonTerm ->
   Usage.T ->
   MichelsonTerm ->
-  m (res)
+  m res
+
+eraseGlobals ::
+  forall m.
+  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.PrimVal] m,
+    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.PrimVal) m,
+    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.PrimVal Michelson.CompErr) m,
+    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+  ) =>
+  m (Erasure.Globals Michelson.PrimTy Michelson.PrimVal)
+eraseGlobals = do
+  globals <- ask @"globals"
+  res <- flip mapM (HM.toList globals) $ \(key, value) -> do
+    val <-
+      case Erasure.exec $ Erasure.eraseGlobal value of
+        Right r -> pure r
+        Left e -> throw @"error" (Types.ErasureError e)
+    pure (key, val)
+  pure (HM.fromList res)
+
+coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
+coreToAnn term usage ty = do
+  term <- typecheckErase term usage ty
+  ann <- ErasedAnn.convertTerm term usage
+  pure ann
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
-  term <- typecheckErase term usage ty
-  ann <- ErasedAnn.convertTerm term usage
-  -- TODO: Datatype & pattern matching compilation step will happen here.
+  ann <- coreToAnn term usage ty
   let (res, _) = Michelson.compileExpr ann
   pure res
 
 coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
-  term <- typecheckErase term usage ty
-  ann <- ErasedAnn.convertTerm term usage
-  -- TODO: Datatype & pattern matching compilation step will happen here.
+  ann <- coreToAnn term usage ty
   let (res, _) = Michelson.compileContract ann
   pure res
 
