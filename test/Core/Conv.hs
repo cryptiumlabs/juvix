@@ -1,4 +1,4 @@
-module CoreConv where
+module Core.Conv where
 
 import Juvix.Core
 import qualified Juvix.Core.HR as HR

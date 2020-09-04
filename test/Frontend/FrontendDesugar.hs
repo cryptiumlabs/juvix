@@ -1,4 +1,4 @@
-module FrontendDesugar where
+module Frontend.Desugar where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
