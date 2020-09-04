@@ -1,5 +1,6 @@
 module Juvix.Core.Parameterisations.Unit where
 
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Types hiding
   ( apply,
     parseTy,
@@ -12,7 +13,6 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import qualified Juvix.Core.Parameterisation as P
 
 -- k: primitive type: unit
 data Ty
@@ -48,12 +48,17 @@ reservedOpNames = []
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation {
-    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \_ _ -> False,
-    intVal = const Nothing,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  Parameterisation
+    { typeOf,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

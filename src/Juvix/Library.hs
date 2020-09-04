@@ -53,6 +53,7 @@ import Capability.Sink
 import Capability.Source
 import Capability.State
 import Capability.Writer
+import Data.Data (Data)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
@@ -82,8 +83,6 @@ import Protolude hiding
     state,
   )
 import Prelude (Show (..), String)
-import Data.Data (Data)
-
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)
@@ -122,7 +121,7 @@ instance Show (a -> b) where
 
 newtype Symbol = Sym Text
   deriving newtype (Eq, Hashable, Semigroup, Ord, NFData)
-  deriving stock Data
+  deriving stock (Data)
 
 instance Show Symbol where
   show (Sym t) = T.unpack t

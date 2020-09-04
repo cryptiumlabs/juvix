@@ -14,13 +14,10 @@ data Parameterisation primTy primVal
         parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
         reservedNames :: [String],
         reservedOpNames :: [String],
-
         stringTy :: Text -> primTy -> Bool,
         stringVal :: Text -> Maybe primVal,
-
         intTy :: Integer -> primTy -> Bool,
         intVal :: Integer -> Maybe primVal,
-
         floatTy :: Double -> primTy -> Bool,
         floatVal :: Double -> Maybe primVal
       }

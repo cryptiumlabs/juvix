@@ -19,20 +19,20 @@ type TypeAssignment = ET.TypeAssignment ()
 
 unitParam :: Types.Parameterisation () ()
 unitParam =
-  Types.Parameterisation {
-    typeOf = const $ () :| [],
-    apply = \_ _ -> Nothing,
-    parseTy = const empty,
-    parseVal = const empty,
-    reservedNames = [],
-    reservedOpNames = [],
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \_ _ -> False,
-    intVal = const Nothing,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  Types.Parameterisation
+    { typeOf = const $ () :| [],
+      apply = \_ _ -> Nothing,
+      parseTy = const empty,
+      parseVal = const empty,
+      reservedNames = [],
+      reservedOpNames = [],
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }
 
 shouldGen ::
   T.TestName ->

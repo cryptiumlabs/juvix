@@ -1,69 +1,9 @@
-* CoreConv
-- _Relies on_
-  + [[Core]]
-  + [[HR]]
-  + [[IR]]
-  + [[Library]]
-* CoreParser
-- _Relies on_
-  + [[HR]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-* CoreTypechecker
-Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-- _Relies on_
-  + [[IR]]
-  + [[Typechecker]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-* EAC
-- _Relies on_
-  + [[EAC]]
-  + [[Unit]]
-  + [[Library]]
-* EAC2
-- _Relies on_
-  + [[EAC]]
-  + [[Check]]
-  + [[Types]]
-  + [[Types]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
 * Encoding
 - _Relies on_
   + [[Encoding]]
   + [[Mendler]]
   + [[Scott]]
   + [[Types]]
-  + [[Library]]
-* Erasure
-- _Relies on_
-  + [[Erased]]
-  + [[Erasure]]
-  + [[IR]]
-  + [[Typechecker]]
-  + [[Unit]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-* Frontend
-- _Relies on_
-  + [[Parser]]
-  + [[Library]]
-* FrontendDesugar
-- _Relies on_
-  + [[Parser]]
-  + [[FrontendDesugar]]
   + [[Library]]
 * INet
 - _Relies on_
@@ -139,6 +79,57 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Usage]]
   + [[Library]]
 * Core
+** Conv
+- _Relies on_
+  + [[Core]]
+  + [[HR]]
+  + [[IR]]
+  + [[Library]]
+** EAC
+- _Relies on_
+  + [[EAC]]
+  + [[Unit]]
+  + [[Library]]
+** EAC2
+- _Relies on_
+  + [[EAC]]
+  + [[Check]]
+  + [[Types]]
+  + [[Types]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
+** Erasure
+- _Relies on_
+  + [[Erased]]
+  + [[Erasure]]
+  + [[IR]]
+  + [[Typechecker]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+** Parser <<Core/Parser>>
+- _Relies on_
+  + [[HR]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+** Typechecker
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[IR]]
+  + [[Typechecker]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 ** Common
 *** Context
 - _Relies on_
@@ -147,6 +138,16 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
 * Files
+* Frontend
+** FrontendDesugar
+- _Relies on_
+  + [[Parser]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+** Parser <<Frontend/Parser>>
+- _Relies on_
+  + [[Parser]]
+  + [[Library]]
 * FrontendContextualise
 ** Infix
 *** ShuntYard

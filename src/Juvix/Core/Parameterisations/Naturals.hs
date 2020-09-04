@@ -1,5 +1,6 @@
 module Juvix.Core.Parameterisations.Naturals where
 
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Types hiding
   ( apply,
     parseTy,
@@ -13,7 +14,6 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
 import Prelude (String)
-import qualified Juvix.Core.Parameterisation as P
 
 -- k: primitive type: naturals
 data Ty
@@ -87,12 +87,17 @@ natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
 
 t :: Parameterisation Ty Val
 t =
-  Parameterisation {
-    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \i _ -> isNat i,
-    intVal = natVal,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  Parameterisation
+    { typeOf,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> isNat i,
+      intVal = natVal,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }
