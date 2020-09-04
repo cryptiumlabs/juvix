@@ -164,25 +164,33 @@ test_partial_erase =
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 12))) MT.Nop))
 
 twoTerm :: HR.Term PrimTy PrimVal
-twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
+twoTerm = HR.Prim (Constant (M.ValueInt 2))
 
 erasedLamTerm :: HR.Term PrimTy PrimVal
-erasedLamTerm = HR.Lam "x" (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))
+erasedLamTerm = HR.Lam "x" (HR.Prim (Constant (M.ValueInt 2)))
 
 erasedLamTy :: HR.Term PrimTy PrimVal
 erasedLamTy = HR.Pi (Usage.SNat 0) "x" intTy intTy
 
 appLam :: HR.Term PrimTy PrimVal
-appLam = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm lamTy 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+appLam = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm lamTy 0) (HR.Prim (Constant (M.ValueInt 2)))) (HR.Prim (Constant (M.ValueInt 3))))
+
+addTyT :: HR.Term PrimTy PrimVal
+addTyT = HR.Pi one "x" int $ HR.Pi one "y" int $ int where
+  one = Usage.SNat 1
+  int = HR.PrimTy $ PrimTy $ M.Type M.TInt M.noAnn
+
+addElim :: HR.Elim PrimTy PrimVal
+addElim = HR.Ann Usage.Omega (HR.Prim AddI) addTyT 0
 
 lamTerm :: HR.Term PrimTy PrimVal
-lamTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Var "y")))))
+lamTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App addElim (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Var "y")))))
 
 appLam2 :: HR.Term PrimTy PrimVal
-appLam2 = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm2 lamTy2 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+appLam2 = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm2 lamTy2 0) (HR.Prim (Constant (M.ValueInt 2)))) (HR.Prim (Constant (M.ValueInt 3))))
 
 lamTerm2 :: HR.Term PrimTy PrimVal
-lamTerm2 = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Prim (Constant (M.ValueInt 10)))))))
+lamTerm2 = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App addElim (HR.Elim (HR.Var "x"))) (HR.Prim (Constant (M.ValueInt 10))))))
 
 lamTy :: HR.Term PrimTy PrimVal
 lamTy = HR.Pi (Usage.SNat 1) "x" intTy (HR.Pi (Usage.SNat 1) "y" intTy intTy)

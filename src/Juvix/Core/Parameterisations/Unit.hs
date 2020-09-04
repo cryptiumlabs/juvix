@@ -42,11 +42,11 @@ parseTy lexer = do
 
 parseVal :: Token.GenTokenParser String () Identity -> Parser Val
 parseVal lexer = do
-  Token.reserved lexer "()"
+  Token.reserved lexer "tt"
   pure Val
 
 reservedNames :: [String]
-reservedNames = ["Unit", "()"]
+reservedNames = ["Unit", "tt"]
 
 reservedOpNames :: [String]
 reservedOpNames = []

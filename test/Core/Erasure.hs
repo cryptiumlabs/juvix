@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 module Core.Erasure where
 
 import qualified Juvix.Core.Erased as Erased
@@ -80,7 +78,7 @@ identityUnit =
   shouldEraseTo
     "identityUnit"
     Unit.t
-    (Typed.Elim (Typed.Prim Unit.Val unitAnn) unitAnn, one)
+    (Typed.Prim Unit.Val unitAnn, one)
     (Erased.Prim Unit.Val)
 
 constUnit :: T.TestTree
@@ -221,7 +219,7 @@ constTy2T :: Typed.Term Unit.Ty Unit.Val
 constTy2T = Typed.Pi mempty identityTyT identityTyT (zeroAnn $ IR.VStar 0)
 
 unitTerm :: Typed.Term Unit.Ty Unit.Val
-unitTerm = Typed.Elim unitElim unitAnn
+unitTerm = Typed.Prim Unit.Val unitAnn
 
 unitElim :: Typed.Elim Unit.Ty Unit.Val
-unitElim = Typed.Prim Unit.Val unitAnn
+unitElim = Typed.Ann Usage.Omega unitTerm unitTyT 0 unitAnn

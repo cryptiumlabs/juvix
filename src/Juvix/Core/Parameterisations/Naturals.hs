@@ -32,9 +32,9 @@ data Val
 
 instance Show Val where
   show (Val x) = "Nat " <> Text.Show.show x
-  show Add = "+"
-  show Sub = "-"
-  show Mul = "*"
+  show Add = "add"
+  show Sub = "sub"
+  show Mul = "mul"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
 typeOf :: Val -> PrimType Ty
@@ -72,16 +72,16 @@ parseNat :: Token.GenTokenParser String () Identity -> Parser Val
 parseNat lexer = Val . fromIntegral |<< Token.natural lexer
 
 parseAdd :: Token.GenTokenParser String () Identity -> Parser Val
-parseAdd lexer = Token.reserved lexer "+" >> pure Add
+parseAdd lexer = Token.reserved lexer "add" >> pure Add
 
 parseSub :: Token.GenTokenParser String () Identity -> Parser Val
-parseSub lexer = Token.reserved lexer "-" >> pure Sub
+parseSub lexer = Token.reserved lexer "sub" >> pure Sub
 
 parseMul :: Token.GenTokenParser String () Identity -> Parser Val
-parseMul lexer = Token.reserved lexer "*" >> pure Mul
+parseMul lexer = Token.reserved lexer "mul" >> pure Mul
 
 reservedNames :: [String]
-reservedNames = ["Nat", "+", "-", "*"]
+reservedNames = ["Nat", "add", "sub", "mul"]
 
 reservedOpNames :: [String]
 reservedOpNames = []
