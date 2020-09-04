@@ -1,15 +1,8 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    hasType,
-    arity,
-  )
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -37,15 +30,15 @@ instance Show Val where
   show Mul = "mul"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
-typeOf :: Val -> PrimType Ty
+typeOf :: Val -> P.PrimType Ty
 typeOf (Val _) = Ty :| []
 typeOf (Curried _ _) = Ty :| [Ty]
 typeOf Add = Ty :| [Ty, Ty]
 typeOf Sub = Ty :| [Ty, Ty]
 typeOf Mul = Ty :| [Ty, Ty]
 
-hasType :: Val -> PrimType Ty -> Bool
-hasType x ty = ty == typeOf x where
+hasType :: Val -> P.PrimType Ty -> Bool
+hasType x ty = ty == typeOf x
 
 arity :: Val -> Int
 arity = pred . length . typeOf
@@ -92,10 +85,17 @@ isNat i = i >= 0
 natVal :: Integer -> Maybe Val
 natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
 
-t :: Parameterisation Ty Val
+builtinTypes :: P.Builtins Ty
+builtinTypes = [(["Nat"], Ty)]
+
+builtinValues :: P.Builtins Val
+builtinValues = [(["add"], Add), (["sub"], Sub), (["mul"], Mul)]
+
+t :: P.Parameterisation Ty Val
 t =
-  Parameterisation {
-    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+  P.Parameterisation {
+    hasType, builtinTypes, builtinValues, arity, apply,
+    parseTy, parseVal, reservedNames, reservedOpNames,
     stringTy = \_ _ -> False,
     stringVal = const Nothing,
     intTy = \i _ -> isNat i,

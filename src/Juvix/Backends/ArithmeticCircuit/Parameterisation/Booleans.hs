@@ -1,18 +1,10 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans where
 
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    hasType,
-    arity,
-  )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -42,14 +34,14 @@ data Val f b where
   Not :: FieldT e b => Val (e f b) b
   Curried :: FieldT e b => Val (e f b) b -> e f b -> Val (e f b) b
 
-typeOf :: Val f b -> NonEmpty Ty
+typeOf :: Val f b -> P.PrimType Ty
 typeOf (Val _) = Ty :| []
 typeOf Or = Ty :| [Ty, Ty]
 typeOf And = Ty :| [Ty, Ty]
 typeOf Not = Ty :| [Ty, Ty]
 typeOf (Curried _ _) = Ty :| [Ty]
 
-hasType :: Val f b -> PrimType Ty -> Bool
+hasType :: Val f b -> P.PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
 arity :: Val f b -> Int
@@ -93,10 +85,17 @@ reservedNames = ["Bool", "T", "F", "||", "&&"]
 reservedOpNames :: [String]
 reservedOpNames = []
 
-t :: FieldT e b => Parameterisation Ty (Val (e f b) b)
+builtinTypes :: P.Builtins Ty
+builtinTypes = [] -- FIXME
+
+builtinValues :: FieldT e b => P.Builtins (Val (e f b) b)
+builtinValues = [] -- FIXME
+
+t :: FieldT e b => P.Parameterisation Ty (Val (e f b) b)
 t =
-  Parameterisation {
-    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+  P.Parameterisation {
+    hasType, builtinTypes, builtinValues, arity, apply,
+    parseTy, parseVal, reservedNames, reservedOpNames,
     stringTy = \_ _ -> False,
     stringVal = const Nothing,
     intTy = \_ _ -> False,

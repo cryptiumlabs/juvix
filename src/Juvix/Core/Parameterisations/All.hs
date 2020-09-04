@@ -4,15 +4,6 @@ module Juvix.Core.Parameterisations.All where
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    hasType,
-    arity,
-  )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -50,7 +41,7 @@ unUnitTy :: Ty -> Maybe Unit.Ty
 unUnitTy (UnitTy t) = pure t
 unUnitTy _         = empty
 
-hasType :: Val -> PrimType Ty -> Bool
+hasType :: Val -> P.PrimType Ty -> Bool
 hasType (NatVal x)  (traverse unNatTy  -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _           _                               = False
@@ -79,10 +70,21 @@ reservedNames = Naturals.reservedNames <> Unit.reservedNames
 reservedOpNames :: [String]
 reservedOpNames = Naturals.reservedOpNames <> Unit.reservedOpNames
 
-t :: Parameterisation Ty Val
+builtinTypes :: P.Builtins Ty
+builtinTypes =
+  fmap NatTy Naturals.builtinTypes <>
+  fmap UnitTy Unit.builtinTypes
+
+builtinValues :: P.Builtins Val
+builtinValues =
+  fmap NatVal Naturals.builtinValues <>
+  fmap UnitVal Unit.builtinValues
+
+t :: P.Parameterisation Ty Val
 t =
-  Parameterisation {
-    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+  P.Parameterisation {
+    hasType, builtinTypes, builtinValues, arity, apply,
+    parseTy, parseVal, reservedNames, reservedOpNames,
     stringTy = \_ _ -> False,
     stringVal = const Nothing,
     intTy = \i _ -> Naturals.isNat i,

@@ -1,15 +1,7 @@
+{-# LANGUAGE DisambiguateRecordFields, OverloadedLists #-}
 module Juvix.Core.Parameterisations.Unit where
 
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    hasType,
-    arity,
-  )
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -25,7 +17,7 @@ data Val
   = Val
   deriving (Show, Eq)
 
-hasType :: Val -> PrimType Ty -> Bool
+hasType :: Val -> P.PrimType Ty -> Bool
 hasType Val (Ty :| []) = True
 hasType _ _ = False
 
@@ -51,10 +43,17 @@ reservedNames = ["Unit", "tt"]
 reservedOpNames :: [String]
 reservedOpNames = []
 
-t :: Parameterisation Ty Val
+builtinTypes :: P.Builtins Ty
+builtinTypes = [(["Unit"], Ty)]
+
+builtinValues :: P.Builtins Val
+builtinValues = [(["tt"], Val)]
+
+t :: P.Parameterisation Ty Val
 t =
-  Parameterisation {
-    hasType, arity, apply, parseTy, parseVal, reservedNames, reservedOpNames,
+  P.Parameterisation {
+    hasType, arity, builtinTypes, builtinValues, apply,
+    parseTy, parseVal, reservedNames, reservedOpNames,
     stringTy = \_ _ -> False,
     stringVal = const Nothing,
     intTy = \_ _ -> False,

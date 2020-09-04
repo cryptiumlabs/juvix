@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
@@ -18,6 +19,7 @@ import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
@@ -34,11 +36,8 @@ typeOf :: PrimVal -> NonEmpty PrimTy
 typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
 typeOf AddI = PrimTy (M.Type M.TInt "") :| [PrimTy (M.Type M.TInt ""), PrimTy (M.Type M.TInt "")]
 
-hasType :: PrimVal -> Core.PrimType PrimTy -> Bool
+hasType :: PrimVal -> P.PrimType PrimTy -> Bool
 hasType x ty = ty == typeOf x
-
-arity' :: PrimVal -> Int
-arity' = pred . length . typeOf
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
@@ -162,12 +161,18 @@ checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TInt -> True -- TODO bounds?
   _ -> False
 
+builtinTypes :: P.Builtins PrimTy
+builtinTypes = [] -- FIXME
+
+builtinValues :: P.Builtins PrimVal
+builtinValues = [] -- FIXME
+
 -- TODO: Figure out what the parser ought to do.
-michelson :: Core.Parameterisation PrimTy PrimVal
+michelson :: P.Parameterisation PrimTy PrimVal
 michelson =
-  Core.Parameterisation {
-    hasType, arity=arity', apply, parseTy, parseVal, reservedNames,
-    reservedOpNames,
+  P.Parameterisation {
+    hasType, builtinTypes, builtinValues, arity, apply,
+    parseTy, parseVal, reservedNames, reservedOpNames,
     stringTy = checkStringType,
     stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
     intTy = checkIntType,
