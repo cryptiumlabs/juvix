@@ -30,7 +30,7 @@ hasType Val (Ty :| []) = True
 hasType _ _ = False
 
 arity :: Val -> Int
-arity Val = 1
+arity Val = 0
 
 apply :: Val -> Val -> Maybe Val
 apply _ _ = Nothing

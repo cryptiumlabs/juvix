@@ -48,7 +48,7 @@ hasType :: Val -> PrimType Ty -> Bool
 hasType x ty = ty == typeOf x where
 
 arity :: Val -> Int
-arity = length . typeOf
+arity = pred . length . typeOf
 
 apply :: Val -> Val -> Maybe Val
 apply Add (Val x) = pure (Curried Add x)

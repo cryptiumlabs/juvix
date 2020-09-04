@@ -38,7 +38,7 @@ hasType :: PrimVal -> Core.PrimType PrimTy -> Bool
 hasType x ty = ty == typeOf x
 
 arity' :: PrimVal -> Int
-arity' = length . typeOf
+arity' = pred . length . typeOf
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))

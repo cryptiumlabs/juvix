@@ -53,7 +53,7 @@ hasType :: Val f b -> PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
 arity :: Val f b -> Int
-arity = length . typeOf
+arity = pred . length . typeOf
 
 apply :: FieldT e b => Val (e f b) b -> Val (e f b) b -> Maybe (Val (e f b) b)
 apply Or (Val x) = pure $ Curried Or x

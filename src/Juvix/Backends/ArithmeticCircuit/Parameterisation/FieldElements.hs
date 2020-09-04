@@ -53,7 +53,7 @@ hasType :: Val a -> PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
 arity :: Val a -> Int
-arity = length . typeOf
+arity = pred . length . typeOf
 
 apply :: FieldElement e => Val (e f f) -> Val (e f f) -> Maybe (Val (e f f))
 apply Add (Val x) = pure (Curried Add x)

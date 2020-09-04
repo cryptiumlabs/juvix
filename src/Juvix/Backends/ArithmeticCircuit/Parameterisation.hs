@@ -102,7 +102,7 @@ hasType :: Val -> PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
 arity :: Val -> Int
-arity = length . typeOf
+arity = pred . length . typeOf
 
 
 apply :: Val -> Val -> Maybe Val
