@@ -1,4 +1,4 @@
-module Frontend where
+module Frontend.Parser where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
@@ -143,13 +143,13 @@ parseFileTests name path =
     (contractTests path)
 
 idString :: T.TestTree
-idString = parseFileTests "Id-String" "../test/examples/Id-Strings.ju"
+idString = parseFileTests "Id-String" "test/examples/Id-Strings.ju"
 
 addition :: T.TestTree
-addition = parseFileTests "Addition" "../test/examples/Addition.ju"
+addition = parseFileTests "Addition" "test/examples/Addition.ju"
 
 token :: T.TestTree
-token = parseFileTests "Token" "../test/examples/Token.ju"
+token = parseFileTests "Token" "test/examples/Token.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once

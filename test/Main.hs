@@ -7,7 +7,7 @@ import qualified Core.Conv as Conv
 import qualified Core.EAC2 as EAC2
 import qualified Core.Erasure as Erasure
 import qualified Core.Parser as Parser
-import qualified Core.Typechecker as TypeChecker
+import qualified Core.Typechecker as Typechecker
 import qualified Frontend.Desugar as Desugar
 import qualified Frontend.Parser as Parser
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
