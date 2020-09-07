@@ -23,6 +23,8 @@ unitParam =
     hasType = \_ ty -> ty == () :| [],
     arity = const 0,
     apply = \_ _ -> Nothing,
+    builtinTypes = mempty,
+    builtinValues = mempty,
     parseTy = const empty,
     parseVal = const empty,
     reservedNames = [],
