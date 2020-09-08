@@ -18,7 +18,8 @@ top =
     "Weakening tests:"
     [ weakensFree,
       weaken1DoesNotEffect0,
-      letsNonRecursive
+      letsNonRecursive,
+      weakOnlyShiftsFree
     ]
 
 --------------------------------------------------------------------------------
@@ -27,6 +28,10 @@ top =
 ident :: IR.Term a b
 ident =
   IR.Lam (IR.Elim (IR.Bound 0))
+
+dollarSign :: Natural -> IR.Term a b
+dollarSign x =
+  IR.Lam (IR.Elim (IR.App (IR.Bound 0) (IR.Elim (IR.Bound x))))
 
 freeVal :: Natural -> IR.Term a b
 freeVal x =
@@ -56,11 +61,23 @@ letsNonRecursive :: T.TestTree
 letsNonRecursive =
   let body = IR.Elim (IR.Bound 0)
       bound = IR.Bound 0
+      --
       t :: IR.Term Int Int
       t = IR.Let one bound body
-   in (\x -> Eval.weakBy x t T.=== IR.Let one (Eval.weakBy x bound) body)
-        |> forAllNats
+      --
+      relation x =
+        Eval.weakBy x t
+          T.=== IR.Let one (Eval.weakBy x bound) (Eval.weakBy' x 1 body)
+   in forAllNats relation
         |> T.testProperty "lets are non recursive, and bind in the body"
+
+weakOnlyShiftsFree :: T.TestTree
+weakOnlyShiftsFree =
+  let t :: IR.Term Int Int
+      t = dollarSign 1
+   in (\x -> Eval.weakBy x t T.=== dollarSign (succ x))
+        |> forAllNats
+        |> T.testProperty "weakby only weakens the free variables"
 
 --------------------------------------------------------------------------------
 -- property Helpers
