@@ -345,6 +345,7 @@ tests:
       - juvix
       - tasty
       - tasty-hunit
+      - tasty-quickcheck
 
 benchmarks:
   juvix-bench:
