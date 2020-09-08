@@ -1,9 +1,9 @@
 -- | Tests that weak works as expected
 module Core.IR.Weak where
 
-import Juvix.Library
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.QuickCheck as T
@@ -28,12 +28,10 @@ ident :: IR.Term a b
 ident =
   IR.Lam (IR.Elim (IR.Bound 0))
 
-
 freeVal :: Natural -> IR.Term a b
 freeVal x =
   IR.Bound x
     |> IR.Elim
-
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -51,8 +49,8 @@ weaken1DoesNotEffect0 =
       t = freeVal 0
       f x y =
         Eval.weakBy' x (succ y) t T.=== t
-  in forAllNats (forAllNats . f)
-      |> T.testProperty "promoting terms greater than 0 does not change the value"
+   in forAllNats (forAllNats . f)
+        |> T.testProperty "promoting terms greater than 0 does not change the value"
 
 letsNonRecursive :: T.TestTree
 letsNonRecursive =
@@ -60,10 +58,10 @@ letsNonRecursive =
       bound = IR.Bound 0
       t :: IR.Term Int Int
       t = IR.Let one bound body
-  in
-    (\x -> Eval.weakBy x t T.=== IR.Let one (Eval.weakBy x bound) body)
-    |> forAllNats
-    |> T.testProperty "lets are non recursive, and bind in the body"
+   in (\x -> Eval.weakBy x t T.=== IR.Let one (Eval.weakBy x bound) body)
+        |> forAllNats
+        |> T.testProperty "lets are non recursive, and bind in the body"
+
 --------------------------------------------------------------------------------
 -- property Helpers
 --------------------------------------------------------------------------------

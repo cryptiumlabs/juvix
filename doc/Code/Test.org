@@ -137,9 +137,16 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[NameSpace]]
   + [[Library]]
   + [[HashMap]]
+** IR
+*** Weak
+Tests that weak works as expected
+- _Relies on_
+  + [[Evaluator]]
+  + [[Types]]
+  + [[Library]]
 * Files
 * Frontend
-** FrontendDesugar
+** Desugar
 - _Relies on_
   + [[Parser]]
   + [[FrontendDesugar]]

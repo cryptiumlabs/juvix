@@ -6,13 +6,13 @@ import qualified Core.Common.Context as Context
 import qualified Core.Conv as Conv
 import qualified Core.EAC2 as EAC2
 import qualified Core.Erasure as Erasure
+import qualified Core.IR.Weak as Weak
 import qualified Core.Parser as Parser
 import qualified Core.Typechecker as Typechecker
 import qualified Frontend.Desugar as Desugar
 import qualified Frontend.Parser as Parser
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendContextualise.Module.Open as Open
-import qualified Core.IR.Weak as Weak
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
