@@ -17,7 +17,8 @@ top =
   T.testGroup
     "Weakening tests:"
     [ weakensFree,
-      weaken1DoesNotEffect0
+      weaken1DoesNotEffect0,
+      letsNonRecursive
     ]
 
 --------------------------------------------------------------------------------
@@ -44,18 +45,25 @@ weakensFree =
     |> forAllNats
     |> T.testProperty "Promoting a bound at 0 by x is the same as having bound x"
 
-
 weaken1DoesNotEffect0 :: T.TestTree
 weaken1DoesNotEffect0 =
   let t :: IR.Term Int Int
       t = freeVal 0
       f x y =
         Eval.weakBy' x (succ y) t T.=== t
-  in
-      forAllNats (forAllNats . f)
+  in forAllNats (forAllNats . f)
       |> T.testProperty "promoting terms greater than 0 does not change the value"
 
-
+letsNonRecursive :: T.TestTree
+letsNonRecursive =
+  let body = IR.Elim (IR.Bound 0)
+      bound = IR.Bound 0
+      t :: IR.Term Int Int
+      t = IR.Let one bound body
+  in
+    (\x -> Eval.weakBy x t T.=== IR.Let one (Eval.weakBy x bound) body)
+    |> forAllNats
+    |> T.testProperty "lets are non recursive, and bind in the body"
 --------------------------------------------------------------------------------
 -- property Helpers
 --------------------------------------------------------------------------------
