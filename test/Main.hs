@@ -12,6 +12,7 @@ import qualified Frontend.Desugar as Desugar
 import qualified Frontend.Parser as Parser
 import qualified FrontendContextualise.Infix.ShuntYard as Shunt
 import qualified FrontendContextualise.Module.Open as Open
+import qualified Core.IR.Weak as Weak
 import Juvix.Library hiding (identity)
 import qualified Pipeline
 import qualified Test.Tasty as T
@@ -56,7 +57,8 @@ allCheckedTests =
       Erasure.erasureTests,
       Shunt.allInfixTests,
       Context.contextTests,
-      Open.openTests
+      Open.openTests,
+      Weak.top
     ]
 
 translationPasses :: T.TestTree
