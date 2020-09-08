@@ -5,7 +5,6 @@ import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 import qualified Test.Tasty as T
-import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.QuickCheck as T
 
 --------------------------------------------------------------------------------
@@ -19,7 +18,8 @@ top =
     [ weakensFree,
       weaken1DoesNotEffect0,
       letsNonRecursive,
-      weakOnlyShiftsFree
+      weakOnlyShiftsFree,
+      piBindsItself
     ]
 
 --------------------------------------------------------------------------------
@@ -78,6 +78,19 @@ weakOnlyShiftsFree =
    in (\x -> Eval.weakBy x t T.=== dollarSign (succ x))
         |> forAllNats
         |> T.testProperty "weakby only weakens the free variables"
+
+piBindsItself :: T.TestTree
+piBindsItself =
+  let body = IR.Elim (IR.Bound 0)
+      --
+      t :: IR.Term Int Int
+      t = IR.Pi one (freeVal 0) body
+      --
+      relation x =
+        let IR.Pi _ _ newBody = Eval.weakBy x t
+         in newBody T.=== Eval.weakBy' x 1 body
+   in forAllNats relation
+        |> T.testProperty "pi binds itself in the body"
 
 --------------------------------------------------------------------------------
 -- property Helpers
