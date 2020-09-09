@@ -137,6 +137,10 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[NameSpace]]
   + [[Library]]
   + [[HashMap]]
+*** NameSymb
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Library]]
 ** IR
 *** Weak
 Tests that weak works as expected

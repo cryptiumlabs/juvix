@@ -3,6 +3,7 @@ module Main where
 import qualified Backends.LLVM as LLVM
 import qualified Backends.Michelson as Michelson
 import qualified Core.Common.Context as Context
+import qualified Core.Common.NameSymb as NameSymb
 import qualified Core.Conv as Conv
 import qualified Core.EAC2 as EAC2
 import qualified Core.Erasure as Erasure
@@ -58,7 +59,8 @@ allCheckedTests =
       Shunt.allInfixTests,
       Context.contextTests,
       Open.openTests,
-      Weak.top
+      Weak.top,
+      NameSymb.top
     ]
 
 translationPasses :: T.TestTree
