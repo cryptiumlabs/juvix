@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fdefer-typed-holes #-}
 
-module Erasure where
+module Core.Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure

@@ -1,4 +1,4 @@
-module Frontend where
+module Frontend.Parser where
 
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString.Char8 as Char8

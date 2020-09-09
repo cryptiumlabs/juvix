@@ -1,5 +1,5 @@
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-module CoreTypechecker where
+module Core.Typechecker where
 
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC

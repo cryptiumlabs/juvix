@@ -21,8 +21,8 @@ import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
-import qualified Michelson.Untyped as M
 import qualified Michelson.Text as M
+import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -139,33 +139,38 @@ reservedOpNames = []
 integerToPrimVal :: Integer -> Maybe PrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
-    x <= toInteger (maxBound @Int)
-  = Just $ Constant $ M.ValueInt $ fromInteger x
-  | otherwise
-  = Nothing
+    x <= toInteger (maxBound @Int) =
+    Just $ Constant $ M.ValueInt $ fromInteger x
+  | otherwise =
+    Nothing
 
 checkStringType :: Text -> PrimTy -> Bool
 checkStringType val (PrimTy (M.Type ty _)) = case ty of
   M.TString -> Text.all M.isMChar val
-  _         -> False
+  _ -> False
 
 checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
   M.TInt -> True -- TODO bounds?
-  _      -> False
+  _ -> False
 
 -- TODO: Figure out what the parser ought to do.
 michelson :: Core.Parameterisation PrimTy PrimVal
 michelson =
-  Core.Parameterisation {
-    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = checkStringType,
-    stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-    intTy = checkIntType,
-    intVal = integerToPrimVal,
-    floatTy = \_ _ -> False, -- Michelson does not support floats
-    floatVal = const Nothing
-  }
+  Core.Parameterisation
+    { typeOf,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = checkStringType,
+      stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
+      intTy = checkIntType,
+      intVal = integerToPrimVal,
+      floatTy = \_ _ -> False, -- Michelson does not support floats
+      floatVal = const Nothing
+    }
 
 type CompErr = CompTypes.CompilationError

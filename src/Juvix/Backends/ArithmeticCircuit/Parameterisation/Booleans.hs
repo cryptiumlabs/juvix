@@ -3,6 +3,7 @@
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans where
 
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Types hiding
   ( apply,
     parseTy,
@@ -11,7 +12,6 @@ import Juvix.Core.Types hiding
     reservedOpNames,
     typeOf,
   )
-import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -88,12 +88,17 @@ reservedOpNames = []
 
 t :: FieldT e b => Parameterisation Ty (Val (e f b) b)
 t =
-  Parameterisation {
-    typeOf, apply, parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \_ _ -> False,
-    intVal = const Nothing,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  Parameterisation
+    { typeOf,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

@@ -59,20 +59,24 @@ backend
   + [[Booleans]]
   + [[FieldElements]]
   + [[Integers]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 ***** Booleans
 - _Relies on_
   + [[FieldElements]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 ***** FieldElements
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 ***** Integers
 - _Relies on_
   + [[FieldElements]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 *** LLVM
@@ -584,6 +588,7 @@ This module provides a default contract environment
   + [[Erased/Types/Base]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
+  + [[Usage]]
   + [[Library]]
 ***** Base <<Erased/Types/Base>>
 - _Relies on_
@@ -642,10 +647,11 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[Erased/Types/Base]]
   + [[Typechecker]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
+  + [[IR/Types]]
+  + [[Usage]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -665,7 +671,6 @@ This module provides a default contract environment
 - _Relies on_
   + [[HR/Extend]]
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
 *** HRAnn
 - _Relies on_
   + [[HRAnn/Erasure]]
@@ -684,7 +689,6 @@ This module provides a default contract environment
 **** Types <<HRAnn/Types>>
 - _Relies on_
   + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
   + [[IR/Types/Base]]
 *** IR
 - _Relies on_
@@ -730,7 +734,6 @@ Transformations between different extensions.
 - _Relies on_
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
@@ -755,22 +758,24 @@ Quantitative type implementation inspired by
 **** Types <<IRAnn/Types>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
   + [[Core/Types]]
   + [[Library]]
 **** Naturals
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 **** Unit
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 ** Encoding
