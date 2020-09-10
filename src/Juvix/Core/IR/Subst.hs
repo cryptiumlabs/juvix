@@ -105,3 +105,6 @@ inlineP usage _
 --   case Map.lookup subt name of
 --     Just term -> term
 --     Nothing -> Types.Elim (Types.)
+
+empty :: T primTy primVal
+empty = T 0 mempty
