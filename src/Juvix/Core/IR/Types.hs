@@ -8,6 +8,13 @@ module Juvix.Core.IR.Types
     PatternVar,
     BoundVar,
     Universe,
+    Datatype' (..),
+    DataArg' (..),
+    DataCon' (..),
+    Function' (..),
+    FunClause' (..),
+    Global' (..),
+    Globals',
   )
 where
 
