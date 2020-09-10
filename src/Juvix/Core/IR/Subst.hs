@@ -39,17 +39,15 @@ type InScopeSet = Set.HashSet Types.Name
 -- - when seeing a new binding determine if we should add that to the Τ type
 --   + For now we just ignore extra values to inline, and continue on our way
 f ::
-  T primTy primVal ->
-  Types.Term primTy primVal ->
-  Types.Term primTy primVal
-f subst (Types.PrimTy ty) =
-  undefined
-f subst (Types.Star uni) =
-  undefined
+  T primTy primVal -> Types.Term primTy primVal -> Types.Term primTy primVal
+f _ (Types.PrimTy ty) =
+  Types.PrimTy ty
+f _ (Types.Star uni) =
+  Types.Star uni
 f subst (Types.Pi usage typ body) =
-  undefined
+  Types.Pi usage (f subst typ) (f (over depth succ subst) body)
 f subst (Types.Lam body) =
-  undefined
+  Types.Lam (f (over depth succ subst) body)
 f subst (Types.Let usage bound body)
   | inlineP usage bound =
     let depthPlus = subst ^. depth + 1
@@ -62,7 +60,11 @@ f subst (Types.Let usage bound body)
   | otherwise =
     Types.Let usage bound (f (over depth succ subst) body)
 f subst (Types.Elim elim) =
-  undefined
+  Types.Elim (substElim subst elim)
+
+substElim ::
+  T primTy primVal -> Types.Elim primTy primVal -> Types.Elim primTy primVal
+substElim = undefined
 
 -- TODO ∷
 -- - take an environment of some kind
