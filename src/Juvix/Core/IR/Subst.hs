@@ -64,7 +64,27 @@ f subst (Types.Elim elim) =
 
 substElim ::
   T primTy primVal -> Types.Elim primTy primVal -> Types.Elim primTy primVal
-substElim = undefined
+substElim subst (Types.Bound var)
+  | term >= 0 =
+    case (subst ^. sub) Map.!? Bound term of
+      Just el -> el
+      Nothing -> Types.Bound var
+  -- The term is free from our context
+  | otherwise = Types.Bound var
+  where
+    term = subst ^. depth - var
+substElim subst (Types.Free (Types.Global name)) =
+  case (subst ^. sub) Map.!? Global (NameSymbol.fromSymbol name) of
+    Just el -> el
+    Nothing -> Types.Free (Types.Global name)
+substElim _ (Types.Free (Types.Pattern p)) =
+  Types.Free (Types.Pattern p)
+substElim _ (Types.Prim prim) =
+  Types.Prim prim
+substElim subst (Types.App fun arg) =
+  Types.App (substElim subst fun) (f subst arg)
+substElim subst (Types.Ann usage ann term uni) =
+  Types.Ann usage (f subst ann) (f subst term) uni
 
 -- TODO ∷
 -- - take an environment of some kind
