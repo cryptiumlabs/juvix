@@ -707,6 +707,14 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+**** Subst
+- Runs a substitution algorithm over core
+- _Relies on_
+  + [[NameSymbol]]
+  + [[IR/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 **** TransformExt
 Transformations between different extensions.
 - _Relies on_
