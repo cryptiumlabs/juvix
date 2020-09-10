@@ -100,11 +100,6 @@ inlineP :: Usage.T -> Types.Elim primTy primVal -> Bool
 inlineP usage _
   | usage == one = True
   | otherwise = False
--- replace :: T primTy primVal -> Types.Name -> Types.Term primTy primVal
--- replace subst name =
---   case Map.lookup subt name of
---     Just term -> term
---     Nothing -> Types.Elim (Types.)
 
 empty :: T primTy primVal
 empty = T 0 mempty
