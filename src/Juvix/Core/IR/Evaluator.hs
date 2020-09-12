@@ -428,6 +428,9 @@ instance HasWeak a => HasWeak (Maybe a)
 
 instance HasWeak a => HasWeak [a]
 
+instance HasWeak Symbol where
+  weakBy' _ _ x = x
+
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
     -- | How many bindings have been traversed so far
@@ -503,6 +506,9 @@ instance
 instance
   HasSubst ext primTy primVal a =>
   HasSubst ext primTy primVal [a]
+
+instance HasSubst ext primTy primVal Symbol where
+  substWith _ _ _ x = x
 
 class GHasWeak f => GHasSubstV ext primTy primVal f where
   gsubstVWith ::
@@ -580,3 +586,6 @@ instance
 instance
   HasSubstV ext primTy primVal a =>
   HasSubstV ext primTy primVal [a]
+
+instance HasSubstV ext primTy primVal Symbol where
+  substVWith _ _ _ _ x = pure x

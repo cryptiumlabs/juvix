@@ -121,7 +121,7 @@ instance Show (a -> b) where
 
 newtype Symbol = Sym Text
   deriving newtype (Eq, Hashable, Semigroup, Ord, NFData)
-  deriving stock (Data)
+  deriving stock (Data, Generic)
 
 instance Show Symbol where
   show (Sym t) = T.unpack t
