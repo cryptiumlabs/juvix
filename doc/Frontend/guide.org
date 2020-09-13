@@ -1,0 +1,51 @@
+* Syntax Guide
+This document is heavily inspired by the [[http://docs.idris-lang.org/en/latest/reference/syntax-guide.html][Idris syntax guide]].
+** File Organization
+A file contains zero or more [[Top Level Declarations]]
+
+For example
+#+BEGIN_SRC ocaml
+  -- this is a function with a signature!
+  sig foo : Natural
+  let foo = 3
+
+  -- this is a data type declaration
+  type List a = Cons a (List a)
+              | Nil
+
+  -- this is a module declaration!
+  mod boo =
+    let fi = 10
+  end
+#+END_SRC
+** Comments
+Comments are denoted by two dashes, =--=, and it and all characters up
+until the end of the line are discarded
+
+Example:
+#+BEGIN_SRC ocaml
+  -- This is a comment!
+#+END_SRC
+** Symbols
+
+** Top Level Declarations
+*** Imports
+*** Functions
+**** Implicit Arguments
+*** Types
+*** Modules
+** Expressions
+*** Conditionals
+**** If
+**** Case
+*** Definitions
+**** Let
+**** Modules
+**** Signatures
+**** Types
+*** String Literals
+*** Tuples
+*** Lists
+*** Do Notation
+*** Constants
+*** Local opens
