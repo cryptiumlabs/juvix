@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
@@ -17,9 +17,10 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
@@ -165,20 +166,34 @@ builtinTypes :: P.Builtins PrimTy
 builtinTypes = [] -- FIXME
 
 builtinValues :: P.Builtins PrimVal
-builtinValues = [] -- FIXME
+builtinValues =
+  [ (NameSymbol.fromSymbol "Michelson.add", AddI),
+    (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
+    (NameSymbol.fromSymbol "Michelson.cons", Inst (M.CONS "")),
+    (NameSymbol.fromSymbol "Michelson.car", Inst (M.CAR "" "")),
+    (NameSymbol.fromSymbol "Michelson.cdr", Inst (M.CDR "" "")),
+    (NameSymbol.fromSymbol "Michelson.some", Inst (M.SOME "" ""))
+  ] -- FIXME
 
 -- TODO: Figure out what the parser ought to do.
 michelson :: P.Parameterisation PrimTy PrimVal
 michelson =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = checkStringType,
-    stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-    intTy = checkIntType,
-    intVal = integerToPrimVal,
-    floatTy = \_ _ -> False, -- Michelson does not support floats
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = checkStringType,
+      stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
+      intTy = checkIntType,
+      intVal = integerToPrimVal,
+      floatTy = \_ _ -> False, -- Michelson does not support floats
+      floatVal = const Nothing
+    }
 
 type CompErr = CompTypes.CompilationError
