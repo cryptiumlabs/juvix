@@ -51,10 +51,12 @@ f subst (Types.Lam body) =
 f subst (Types.Let usage bound body)
   | inlineP usage bound =
     let depthPlus = subst ^. depth + 1
+        -- we run a pre-inline for now, however this won't always happen
+        newBound = substElim subst bound
         updated =
           T
             { _depth = depthPlus,
-              _sub = Map.insert (Bound depthPlus) bound (subst ^. sub)
+              _sub = Map.insert (Bound depthPlus) newBound (subst ^. sub)
             }
      in f updated body
   | otherwise =
@@ -67,6 +69,8 @@ substElim ::
 substElim subst (Types.Bound var)
   | term >= 0 =
     case (subst ^. sub) Map.!? Bound term of
+      -- we only do pre-inlining currently...
+      -- need to think how to do post inline techniques
       Just el -> el
       Nothing -> Types.Bound var
   -- The term is free from our context
