@@ -27,7 +27,8 @@ Example:
   -- This is a comment!
 #+END_SRC
 ** Symbols
-Symbols are
+Symbols are used for any name declared in the Juvix programming
+language. Symbols are broken into two categories, infix and prefix
 ** Top Level Declarations
 *** Imports
 Imports
@@ -48,7 +49,6 @@ Example:
      | else   -> 6
   -- ^ test      ^ consequence
 
-
   -- this is also a valid a valid if expression
   if | x == 10     -> 25
      | positive? x -> x
@@ -58,6 +58,61 @@ Example:
 
 The =else= name is just an alias for =False=.
 **** Case
+Case expressions have a non zero number of clauses. Each clause
+consists of a pattern, followed by a consequence.
+
+A pattern works much like Haskell or Idris, in that one can
+deconstruct on a record or a constructor. We also allow record punning
+on matches.
+
+Example:
+#+BEGIN_SRC ocaml
+  type Tree a = Branch (Tree a) a (Tree a)
+              | Leaf a
+              | Empty
+
+
+  -- an example with match!
+  let func foo =
+    case foo of
+    | Branch left ele right ->
+      func left + ele + func right
+    | Leaf ele ->
+      ele
+    | Empty ->
+      0
+
+
+  -- This is the same function!
+  let func (Branch left ele right) =
+    func left + ele + func right
+  let func (Leaf ele) =
+    ele
+  let func Empty =
+    0
+
+
+  type Cords = {
+    x : int,
+    y : int
+  }
+
+  -- match on record
+
+  sig origin? : Cords -> Boolean
+  let origin? {x, y}
+    | x == y && x == 0 = True
+    | else             = False
+
+  -- same function as origin
+  sig origin2? : Cords -> Boolean
+  let origin2? {x = origX, y = origY}
+    | origX == origY && origX == 0 =
+      True
+    | else = False
+#+END_SR
+***** Dependent matching
+
 *** Definitions
 **** Let
 **** Modules
