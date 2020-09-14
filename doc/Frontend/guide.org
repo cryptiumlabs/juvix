@@ -29,6 +29,51 @@ Example:
 ** Symbols
 Symbols are used for any name declared in the Juvix programming
 language. Symbols are broken into two categories, infix and prefix
+
+Prefix symbols start with either an alpha character or an underscore,
+which can be followed up by any alphanumeric character, underscores,
+punctuation(?, !), or dashes.
+
+#+BEGIN_SRC haskell
+
+
+  -- a valid symbol
+  hello-there
+
+  -- another valid symbol
+  _unused-symbol
+
+  -- a valid predicate
+  even?
+
+  -- An important action
+  foo!
+
+  -- not a valid prefix symbol
+  -foo
+#+END_SRC
+
+An infix symbol starts with all other symbols including punctuation
+and dashes
+
+#+BEGIN_SRC haskell
+  -- This is a valid infix symbol
+
+  !!
+
+  -- this is also another valid infix symbol
+
+  -<++
+
+  -- this is not a valid infix symbol, but instead a comment of a -
+
+  ---
+
+  -- here is an arrow infix symbol
+
+  ->
+#+END_SRC
+
 ** Top Level Declarations
 *** Imports
 Imports
@@ -110,7 +155,7 @@ Example:
     | origX == origY && origX == 0 =
       True
     | else = False
-#+END_SR
+#+END_SRC
 ***** Dependent matching
 
 *** Definitions
