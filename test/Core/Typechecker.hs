@@ -219,11 +219,11 @@ evaluations =
       shouldEval Nat.t sub52 (natV 3)
     ]
   where
-    nat   = IR.Prim  . Nat.Val
-    natV  = IR.VPrim . Nat.Val
+    nat = IR.Prim . Nat.Val
+    natV = IR.VPrim . Nat.Val
     add12 = IR.Elim $ add `IR.App` nat 1 `IR.App` nat 2
     sub52 = IR.Elim $ sub `IR.App` nat 5 `IR.App` nat 2
-    sub   = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
+    sub = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
 
 skiCont :: T.TestTree
 skiCont =
@@ -499,7 +499,7 @@ kFunApp1 =
         0
     )
     (IR.Prim (Nat.Val 1)) -- 1
-          -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
+        -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
 kFunApp1CompTy =
@@ -721,15 +721,15 @@ add = IR.Ann Usage.Omega (IR.Prim Nat.Add) addTyT 0
 
 addTyT :: NatTerm
 addTyT =
-  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty) $
-  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty) $
-  IR.PrimTy Nat.Ty
+  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
+    $ IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
+    $ IR.PrimTy Nat.Ty
 
 addTy :: NatValue
 addTy =
-  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty) $
-  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty) $
-  IR.VPrimTy Nat.Ty
+  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
+    $ IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
+    $ IR.VPrimTy Nat.Ty
 
 one' :: forall primTy primVal. IR.Term primTy primVal
 one' = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))

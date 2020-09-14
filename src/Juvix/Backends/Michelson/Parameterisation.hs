@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
@@ -18,8 +18,8 @@ import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
@@ -170,15 +170,22 @@ builtinValues = [] -- FIXME
 -- TODO: Figure out what the parser ought to do.
 michelson :: P.Parameterisation PrimTy PrimVal
 michelson =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = checkStringType,
-    stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-    intTy = checkIntType,
-    intVal = integerToPrimVal,
-    floatTy = \_ _ -> False, -- Michelson does not support floats
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = checkStringType,
+      stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
+      intTy = checkIntType,
+      intVal = integerToPrimVal,
+      floatTy = \_ _ -> False, -- Michelson does not support floats
+      floatVal = const Nothing
+    }
 
 type CompErr = CompTypes.CompilationError

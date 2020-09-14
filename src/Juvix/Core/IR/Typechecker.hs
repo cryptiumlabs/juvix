@@ -8,6 +8,7 @@ where
 import Data.Foldable (foldr1)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap.Strict as IntMap
+import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
@@ -15,7 +16,6 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
-import Data.List.NonEmpty ((<|))
 
 data Leftovers primTy primVal a
   = Leftovers
@@ -190,9 +190,10 @@ requireStar ty = throwTC (ShouldBeStar ty)
 requireUniverseLT :: IR.Universe -> IR.Universe -> InnerTC primTy primVal ()
 requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
 
-requirePrimType :: primVal
-                -> IR.Value primTy primVal
-                -> InnerTC primTy primVal ()
+requirePrimType ::
+  primVal ->
+  IR.Value primTy primVal ->
+  InnerTC primTy primVal ()
 requirePrimType p ty = do
   param <- ask @"param"
   ty' <- toPrimTy ty
@@ -200,10 +201,11 @@ requirePrimType p ty = do
     throwTC (WrongPrimTy p ty')
 
 toPrimTy :: IR.Value primTy primVal -> InnerTC primTy primVal (NonEmpty primTy)
-toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty where
-  go (IR.VPrimTy t)              = pure $ t :| []
-  go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t
-  go _                           = empty
+toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty
+  where
+    go (IR.VPrimTy t) = pure $ t :| []
+    go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t
+    go _ = empty
 
 type PiParts primTy primVal =
   (Usage.T, IR.Value primTy primVal, IR.Value primTy primVal)

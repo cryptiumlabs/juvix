@@ -4,8 +4,8 @@ module Juvix.Core.IR.Typechecker.Types where
 
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 import Prelude (Show (..))
 
@@ -69,7 +69,7 @@ data TypecheckError' ext primTy primVal
       }
   | WrongPrimTy
       { primVal :: primVal,
-        primTy  :: P.PrimType primTy
+        primTy :: P.PrimType primTy
       }
 
 type TypecheckError = TypecheckError' IR.NoExt

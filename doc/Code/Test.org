@@ -29,7 +29,6 @@
   + [[Parameterisation]]
   + [[HR]]
   + [[IR]]
-  + [[Typechecker]]
   + [[Pipeline]]
   + [[Types]]
   + [[Usage]]

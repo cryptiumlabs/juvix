@@ -93,13 +93,20 @@ builtinValues = [(["add"], Add), (["sub"], Sub), (["mul"], Mul)]
 
 t :: P.Parameterisation Ty Val
 t =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \i _ -> isNat i,
-    intVal = natVal,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> isNat i,
+      intVal = natVal,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }
