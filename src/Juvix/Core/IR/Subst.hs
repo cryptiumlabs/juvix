@@ -100,6 +100,7 @@ substElim subst (Types.Ann usage ann term uni) =
 --     this is bad, as we could move the evaluation in the middle of
 --     some computation that degrades performance.
 
+-- | 'inlineP' determines if a function should be inlined
 inlineP :: Usage.T -> Types.Elim primTy primVal -> Bool
 inlineP usage _
   | usage == one = True
