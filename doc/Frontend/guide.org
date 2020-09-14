@@ -27,9 +27,10 @@ Example:
   -- This is a comment!
 #+END_SRC
 ** Symbols
-
+Symbols are
 ** Top Level Declarations
 *** Imports
+Imports
 *** Functions
 **** Implicit Arguments
 *** Types
@@ -37,6 +38,25 @@ Example:
 ** Expressions
 *** Conditionals
 **** If
+If expressions have a non zero number of clauses. Each clause consists
+of a boolean test, followed by a consequence.
+
+Example:
+#+BEGIN_SRC haskell
+  -- this is a valid if expression!
+  if | x == 3 -> 5
+     | else   -> 6
+  -- ^ test      ^ consequence
+
+
+  -- this is also a valid a valid if expression
+  if | x == 10     -> 25
+     | positive? x -> x
+     | negative? x -> abs x
+     | else        -> 0
+#+END_SRC
+
+The =else= name is just an alias for =False=.
 **** Case
 *** Definitions
 **** Let
