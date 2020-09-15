@@ -346,6 +346,7 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[NameSymbol]]
   + [[Prim]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]

@@ -169,6 +169,8 @@ builtinValues :: P.Builtins PrimVal
 builtinValues =
   [ (NameSymbol.fromSymbol "Michelson.add", AddI),
     (NameSymbol.fromSymbol "Michelson.sub", SubI),
+    (NameSymbol.fromSymbol "Michelson.mul", MulI),
+    (NameSymbol.fromSymbol "Michelson.div", EDivI),
     (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
     (NameSymbol.fromSymbol "Michelson.cons", Inst (M.CONS "")),
     (NameSymbol.fromSymbol "Michelson.car", Inst (M.CAR "" "")),
@@ -190,7 +192,18 @@ builtinValues =
     (NameSymbol.fromSymbol "Michelson.compare", CompareI),
     (NameSymbol.fromSymbol "Michelson.amount", Inst (M.AMOUNT "")),
     (NameSymbol.fromSymbol "Michelson.balance", Inst (M.BALANCE "")),
-    (NameSymbol.fromSymbol "Michelson.hash-key", Inst (M.HASH_KEY ""))
+    (NameSymbol.fromSymbol "Michelson.hash-key", Inst (M.HASH_KEY "")),
+    (NameSymbol.fromSymbol "Michelson.and", AndI),
+    (NameSymbol.fromSymbol "Michelson.xor", XorI),
+    (NameSymbol.fromSymbol "Michelson.or", OrB),
+    (NameSymbol.fromSymbol "Michelson.mem", MemMap),
+    (NameSymbol.fromSymbol "Michelson.concat", Inst (M.CONCAT "")),
+    (NameSymbol.fromSymbol "Michelson.slice", Inst (M.SLICE "")),
+    (NameSymbol.fromSymbol "Michelson.lsl", Inst (M.LSL "")),
+    (NameSymbol.fromSymbol "Michelson.lsr", Inst (M.LSR "")),
+    (NameSymbol.fromSymbol "Michelson.fail-with", Inst M.FAILWITH),
+    (NameSymbol.fromSymbol "Michelson.self", Inst (M.SELF "" "")),
+    (NameSymbol.fromSymbol "Michelson.self", Inst (M.UNIT "" ""))
   ] -- FIXME
 
 -- TODO: Figure out what the parser ought to do.
