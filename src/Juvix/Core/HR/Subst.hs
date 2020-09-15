@@ -30,7 +30,7 @@ data T primTy primVal
 
 makeLenses ''T
 
--- useless with debrunj indincies ☹
+-- useless with de bruijn indices ☹
 type InScopeSet = Set.HashSet Types.Name
 
 -- TODO ∷
