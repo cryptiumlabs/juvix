@@ -1,6 +1,6 @@
 -- |
 -- - Runs a substitution algorithm over core
-module Juvix.Core.IR.Subst where
+module Juvix.Core.HR.Subst where
 
 import Control.Lens
 import qualified Data.HashSet as Set

@@ -192,8 +192,8 @@ library:
     - Juvix.Core.Common.Context.Precedence
     - Juvix.Core.HR
     - Juvix.Core.HRAnn
+    - Juvix.Core.HR.Subst
     - Juvix.Core.IR
-    - Juvix.Core.IR.Subst
     - Juvix.Core.IR.Typechecker
     - Juvix.Core.IR.Evaluator
     - Juvix.Core.IR.Types
