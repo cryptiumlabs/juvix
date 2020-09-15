@@ -27,7 +27,7 @@ module Juvix.Library
     (|>),
     (...),
     traverseM,
-    Symbol,
+    Symbol (..),
     internText,
     intern,
     unintern,
