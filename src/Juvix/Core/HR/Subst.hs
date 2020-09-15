@@ -24,14 +24,14 @@ instance Hashable Key
 data T primTy primVal
   = T
       { _depth :: Natural,
-        _sub :: Map.T Key (Types.Elim primTy primVal)
+        _seenSet :: InScopeSet,
+        _sub :: Map.T Symbol (Types.Elim primTy primVal)
       }
   deriving (Show)
 
-makeLenses ''T
+type InScopeSet = Set.HashSet Symbol
 
--- useless with de bruijn indices ☹
-type InScopeSet = Set.HashSet NameSymbol.T
+makeLenses ''T
 
 -- TODO ∷
 -- - add a context for this to run with
@@ -87,8 +87,12 @@ substElim ::
 --     Nothing -> Types.Free (Types.Global name)
 -- substElim _ (Types.Free (Types.Pattern p)) =
 --   Types.Free (Types.Pattern p)
-substElim _ (Types.Var v) =
-  undefined
+substElim subst (Types.Var v) =
+  case (subst ^. sub) Map.!? v of
+    -- we only do pre-inlining currently...
+    -- need to think how to do post inline techniques
+    Just el -> el
+    Nothing -> Types.Var v
 substElim _ (Types.Prim prim) =
   Types.Prim prim
 substElim subst (Types.App fun arg) =
@@ -113,4 +117,17 @@ inlineP usage _
   | otherwise = False
 
 empty :: T primTy primVal
-empty = T 0 mempty
+empty = T 0 mempty mempty
+
+
+-- TODO ∷ make a unique name when the hash value is the same name
+-- as a value in the hash itself... this shouldn't happen, but
+-- we need the linear add one strategy when this does occur
+-- | 'uniqueName' generates a unique name based off the symbol
+-- and the set
+uniqueName :: Symbol -> InScopeSet -> InScopeSet
+uniqueName sym set
+  | Set.member sym set =
+    Set.insert (intern (show (hash set)) <> sym) set
+  | otherwise =
+    Set.insert sym set
