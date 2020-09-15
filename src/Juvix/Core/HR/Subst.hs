@@ -5,7 +5,7 @@ module Juvix.Core.HR.Subst where
 import Control.Lens
 import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
-import qualified Juvix.Core.IR.Types as Types
+import qualified Juvix.Core.HR.Types as Types
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
@@ -31,7 +31,7 @@ data T primTy primVal
 makeLenses ''T
 
 -- useless with de bruijn indices ☹
-type InScopeSet = Set.HashSet Types.Name
+type InScopeSet = Set.HashSet NameSymbol.T
 
 -- TODO ∷
 -- - add a context for this to run with
@@ -44,45 +44,51 @@ f _ (Types.PrimTy ty) =
   Types.PrimTy ty
 f _ (Types.Star uni) =
   Types.Star uni
-f subst (Types.Pi usage typ body) =
-  Types.Pi usage (f subst typ) (f (over depth succ subst) body)
-f subst (Types.Lam body) =
-  Types.Lam (f (over depth succ subst) body)
-f subst (Types.Let usage bound body)
+f subst (Types.Pi usage name typ body) =
+  undefined
+  -- Types.Pi usage (f subst typ) (f (over depth succ subst) body)
+f subst (Types.Lam x body) =
+  undefined
+  -- Types.Lam (f (over depth succ subst) body)
+f subst (Types.Let usage name bound body)
   | inlineP usage bound =
-    let depthPlus = subst ^. depth + 1
-        -- we run a pre-inline for now, however this won't always happen
-        newBound = substElim subst bound
-        updated =
-          T
-            { _depth = depthPlus,
-              _sub = Map.insert (Bound depthPlus) newBound (subst ^. sub)
-            }
-     in f updated body
+    -- let depthPlus = subst ^. depth + 1
+    --     -- we run a pre-inline for now, however this won't always happen
+    --     newBound = substElim subst bound
+    --     updated =
+    --       T
+    --         { _depth = depthPlus,
+    --           _sub = Map.insert (Bound depthPlus) newBound (subst ^. sub)
+    --         }
+    --  in f updated body
+    undefined
   | otherwise =
-    Types.Let usage bound (f (over depth succ subst) body)
+    undefined
+    -- Types.Let usage bound (f (over depth succ subst) body)
 f subst (Types.Elim elim) =
   Types.Elim (substElim subst elim)
 
 substElim ::
   T primTy primVal -> Types.Elim primTy primVal -> Types.Elim primTy primVal
-substElim subst (Types.Bound var)
-  | term >= 0 =
-    case (subst ^. sub) Map.!? Bound term of
-      -- we only do pre-inlining currently...
-      -- need to think how to do post inline techniques
-      Just el -> el
-      Nothing -> Types.Bound var
-  -- The term is free from our context
-  | otherwise = Types.Bound var
-  where
-    term = subst ^. depth - var
-substElim subst (Types.Free (Types.Global name)) =
-  case (subst ^. sub) Map.!? Global (NameSymbol.fromSymbol name) of
-    Just el -> el
-    Nothing -> Types.Free (Types.Global name)
-substElim _ (Types.Free (Types.Pattern p)) =
-  Types.Free (Types.Pattern p)
+-- substElim subst (Types.Bound var)
+--   | term >= 0 =
+--     case (subst ^. sub) Map.!? Bound term of
+--       -- we only do pre-inlining currently...
+--       -- need to think how to do post inline techniques
+--       Just el -> el
+--       Nothing -> Types.Bound var
+--   -- The term is free from our context
+--   | otherwise = Types.Bound var
+--   where
+--     term = subst ^. depth - var
+-- substElim subst (Types.Free (Types.Global name)) =
+--   case (subst ^. sub) Map.!? Global (NameSymbol.fromSymbol name) of
+--     Just el -> el
+--     Nothing -> Types.Free (Types.Global name)
+-- substElim _ (Types.Free (Types.Pattern p)) =
+--   Types.Free (Types.Pattern p)
+substElim _ (Types.Var v) =
+  undefined
 substElim _ (Types.Prim prim) =
   Types.Prim prim
 substElim subst (Types.App fun arg) =
