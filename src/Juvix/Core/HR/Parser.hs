@@ -124,7 +124,9 @@ generateParser parameterisation =
       termOnly :: Parser (Term primTy primVal)
       termOnly =
         parens termOnly <|> primTyTerm <|> try primTerm
-          <|> sortTerm <|> piTerm <|> lamTerm
+          <|> sortTerm
+          <|> piTerm
+          <|> lamTerm
       --
       elimTerm :: Parser (Term primTy primVal)
       elimTerm = do

@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans where
 
@@ -93,13 +93,20 @@ builtinValues = [] -- FIXME
 
 t :: FieldT e b => P.Parameterisation Ty (Val (e f b) b)
 t =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \_ _ -> False,
-    intVal = const Nothing,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

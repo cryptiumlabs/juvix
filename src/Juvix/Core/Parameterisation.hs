@@ -1,8 +1,8 @@
 module Juvix.Core.Parameterisation where
 
+import Juvix.Frontend.Types.Base (NameSymb)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
-import Juvix.Frontend.Types.Base (NameSymb)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -18,10 +18,8 @@ data Parameterisation primTy primVal
       { hasType :: primVal -> PrimType primTy -> Bool,
         arity :: primVal -> Int,
         apply :: primVal -> primVal -> Maybe primVal,
-
         builtinTypes :: Builtins primTy,
         builtinValues :: Builtins primVal,
-
         parseTy :: Token.GenTokenParser String () Identity -> Parser primTy,
         parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
         reservedNames :: [String],

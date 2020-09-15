@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns -Wwarn=missing-methods #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns -Wwarn=missing-methods #-}
 
 module Juvix.Backends.ArithmeticCircuit.Parameterisation where
 
@@ -96,7 +96,6 @@ hasType x ty = ty == typeOf x
 arity :: Val -> Int
 arity = pred . length . typeOf
 
-
 apply :: Val -> Val -> Maybe Val
 apply (BoolVal x) (BoolVal y) =
   boolValToAll <$> Booleans.apply x y
@@ -133,13 +132,20 @@ builtinValues = [] -- FIXME
 
 t :: P.Parameterisation Ty Val
 t =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \i _ -> False, -- TODO
-    intVal = const Nothing, -- TODO
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> False, -- TODO
+      intVal = const Nothing, -- TODO
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

@@ -1,4 +1,6 @@
-{-# LANGUAGE DisambiguateRecordFields, OverloadedLists #-}
+{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE OverloadedLists #-}
+
 module Juvix.Core.Parameterisations.Unit where
 
 import qualified Juvix.Core.Parameterisation as P
@@ -51,13 +53,20 @@ builtinValues = [(["tt"], Val)]
 
 t :: P.Parameterisation Ty Val
 t =
-  P.Parameterisation {
-    hasType, arity, builtinTypes, builtinValues, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \_ _ -> False,
-    intVal = const Nothing,
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      arity,
+      builtinTypes,
+      builtinValues,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

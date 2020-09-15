@@ -60,24 +60,20 @@ backend
   + [[FieldElements]]
   + [[Integers]]
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 ***** Booleans
 - _Relies on_
   + [[FieldElements]]
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 ***** FieldElements
 - _Relies on_
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 ***** Integers
 - _Relies on_
   + [[FieldElements]]
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -351,6 +347,7 @@ This module provides a default contract environment
   + [[InstructionsEff]]
   + [[Interpret]]
   + [[Prim]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
 **** Compilation <<Michelson/Compilation>>
@@ -458,7 +455,9 @@ This module provides a default contract environment
   + [[Library]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
+  + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[HashMap]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
@@ -734,6 +733,7 @@ Transformations between different extensions.
 - _Relies on_
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
@@ -766,17 +766,14 @@ Quantitative type implementation inspired by
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
-  + [[Core/Types]]
   + [[Library]]
 **** Naturals
 - _Relies on_
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 **** Unit
 - _Relies on_
   + [[Core/Parameterisation]]
-  + [[Core/Types]]
   + [[Library]]
 ** Encoding
 *** Encoding

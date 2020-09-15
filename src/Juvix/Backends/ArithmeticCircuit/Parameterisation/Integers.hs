@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers where
 
@@ -90,16 +90,22 @@ builtinTypes = [] -- FIXME
 builtinValues :: FieldT e i => P.Builtins (Val (e f i) i)
 builtinValues = [] -- FIXME
 
-
 t :: FieldT e i => P.Parameterisation Ty (Val (e f i) i)
 t =
-  P.Parameterisation {
-    hasType, builtinTypes, builtinValues, arity, apply,
-    parseTy, parseVal, reservedNames, reservedOpNames,
-    stringTy = \_ _ -> False,
-    stringVal = const Nothing,
-    intTy = \i _ -> False, -- TODO
-    intVal = const Nothing, -- TODO
-    floatTy = \_ _ -> False,
-    floatVal = const Nothing
-  }
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> False, -- TODO
+      intVal = const Nothing, -- TODO
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

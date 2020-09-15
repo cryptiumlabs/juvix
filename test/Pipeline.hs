@@ -179,9 +179,10 @@ addElim = HR.Ann Usage.Omega (HR.Prim AddI) addTyT 0
 
 lamTerm :: HR.Term PrimTy PrimVal
 lamTerm =
-  HR.Lam "x" $
-  HR.Lam "y" $
-  HR.Elim $ addElim `HR.App` varT "x" `HR.App` varT "y"
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` varT "y"
 
 lamElim :: HR.Elim PrimTy PrimVal
 lamElim = HR.Ann one lamTerm lamTy 0
@@ -191,9 +192,10 @@ appLam2 = HR.Elim $ lamElim2 `HR.App` int 2 `HR.App` int 3
 
 lamTerm2 :: HR.Term PrimTy PrimVal
 lamTerm2 =
-  HR.Lam "x" $
-  HR.Lam "y" $
-  HR.Elim $ addElim `HR.App` varT "x" `HR.App` int 10
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` int 10
 
 varT :: Symbol -> HR.Term PrimTy PrimVal
 varT = HR.Elim . HR.Var
@@ -222,16 +224,25 @@ int = HR.Prim . Constant . M.ValueInt
 intE :: Integer -> HR.Elim PrimTy PrimVal
 intE x = HR.Ann Usage.Omega (int x) intTy 0
 
-arr :: Usage.T -> HR.Term PrimTy PrimVal -> HR.Term PrimTy PrimVal
-    -> HR.Term PrimTy PrimVal
+arr ::
+  Usage.T ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
 arr π s t = HR.Pi π "" s (IR.weak t)
 
 infixr 0 ~~>
-(~~>) :: HR.Term PrimTy PrimVal -> HR.Term PrimTy PrimVal
-     -> HR.Term PrimTy PrimVal
+
+(~~>) ::
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
 (~~>) = arr one
 
 infixr 0 ~@>
-(~@>) :: HR.Term PrimTy PrimVal -> HR.Term PrimTy PrimVal
-     -> HR.Term PrimTy PrimVal
+
+(~@>) ::
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
 (~@>) = arr zero
