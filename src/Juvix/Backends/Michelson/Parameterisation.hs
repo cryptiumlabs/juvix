@@ -162,8 +162,25 @@ checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TInt -> True -- TODO bounds?
   _ -> False
 
+primify :: Untyped.T -> PrimTy
+primify t = PrimTy (Untyped.Type t "")
+
 builtinTypes :: P.Builtins PrimTy
-builtinTypes = [] -- FIXME
+builtinTypes =
+  [ (NameSymbol.fromSymbol "Michelson.unit-t", primify Untyped.TUnit),
+    (NameSymbol.fromSymbol "Michelson.key", primify Untyped.TKey),
+    (NameSymbol.fromSymbol "Michelson.signature", primify Untyped.TSignature),
+    (NameSymbol.fromSymbol "Michelson.chain-id", primify Untyped.TChainId),
+    (NameSymbol.fromSymbol "Michelson.int", primify Untyped.TInt),
+    (NameSymbol.fromSymbol "Michelson.nat", primify Untyped.TNat),
+    (NameSymbol.fromSymbol "Michelson.string", primify Untyped.TString),
+    (NameSymbol.fromSymbol "Michelson.string", primify Untyped.TBytes),
+    (NameSymbol.fromSymbol "Michelson.mutez", primify Untyped.TMutez),
+    (NameSymbol.fromSymbol "Michelson.bool", primify Untyped.TBool),
+    (NameSymbol.fromSymbol "Michelson.key-hash", primify Untyped.TKeyHash),
+    (NameSymbol.fromSymbol "Michelson.timestamp", primify Untyped.TTimestamp),
+    (NameSymbol.fromSymbol "Michelson.address", primify Untyped.TAddress)
+  ]
 
 builtinValues :: P.Builtins PrimVal
 builtinValues =
@@ -204,7 +221,7 @@ builtinValues =
     (NameSymbol.fromSymbol "Michelson.fail-with", Inst M.FAILWITH),
     (NameSymbol.fromSymbol "Michelson.self", Inst (M.SELF "" "")),
     (NameSymbol.fromSymbol "Michelson.self", Inst (M.UNIT "" ""))
-  ] -- FIXME
+  ]
 
 -- TODO: Figure out what the parser ought to do.
 michelson :: P.Parameterisation PrimTy PrimVal
