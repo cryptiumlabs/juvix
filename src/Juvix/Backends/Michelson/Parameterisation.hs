@@ -168,11 +168,29 @@ builtinTypes = [] -- FIXME
 builtinValues :: P.Builtins PrimVal
 builtinValues =
   [ (NameSymbol.fromSymbol "Michelson.add", AddI),
+    (NameSymbol.fromSymbol "Michelson.sub", SubI),
     (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
     (NameSymbol.fromSymbol "Michelson.cons", Inst (M.CONS "")),
     (NameSymbol.fromSymbol "Michelson.car", Inst (M.CAR "" "")),
     (NameSymbol.fromSymbol "Michelson.cdr", Inst (M.CDR "" "")),
-    (NameSymbol.fromSymbol "Michelson.some", Inst (M.SOME "" ""))
+    (NameSymbol.fromSymbol "Michelson.some", Inst (M.SOME "" "")),
+    (NameSymbol.fromSymbol "Michelson.sha256", Inst (M.SHA256 "")),
+    (NameSymbol.fromSymbol "Michelson.sha512", Inst (M.SHA512 "")),
+    (NameSymbol.fromSymbol "Michelson.source", Inst (M.SOURCE "")),
+    (NameSymbol.fromSymbol "Michelson.get", Inst (M.GET "")),
+    (NameSymbol.fromSymbol "Michelson.update", Inst (M.UPDATE "")),
+    (NameSymbol.fromSymbol "Michelson.size", SizeS),
+    (NameSymbol.fromSymbol "Michelson.blake2b", Inst (M.BLAKE2B "")),
+    (NameSymbol.fromSymbol "Michelson.abs", Inst (M.ABS "")),
+    (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
+    (NameSymbol.fromSymbol "Michelson.source", Inst (M.SOURCE "")),
+    (NameSymbol.fromSymbol "Michelson.sender", Inst (M.SENDER "")),
+    (NameSymbol.fromSymbol "Michelson.set-delegate", Inst (M.SET_DELEGATE "")),
+    (NameSymbol.fromSymbol "Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
+    (NameSymbol.fromSymbol "Michelson.compare", CompareI),
+    (NameSymbol.fromSymbol "Michelson.amount", Inst (M.AMOUNT "")),
+    (NameSymbol.fromSymbol "Michelson.balance", Inst (M.BALANCE "")),
+    (NameSymbol.fromSymbol "Michelson.hash-key", Inst (M.HASH_KEY ""))
   ] -- FIXME
 
 -- TODO: Figure out what the parser ought to do.
