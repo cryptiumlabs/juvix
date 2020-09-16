@@ -199,16 +199,20 @@ requireUniverseLT :: HasThrowTC' IR.NoExt ext primTy primVal m
 requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
 
 requirePrimType ::
+  CanInnerTC' ext primTy primVal m =>
   primVal ->
   IR.Value primTy primVal ->
-  InnerTC primTy primVal ()
+  m ()
 requirePrimType p ty = do
   param <- ask @"param"
   ty' <- toPrimTy ty
   unless (Param.hasType param p ty') $
     throwTC (WrongPrimTy p ty')
 
-toPrimTy :: IR.Value primTy primVal -> InnerTC primTy primVal (NonEmpty primTy)
+toPrimTy ::
+  CanInnerTC' ext primTy primVal m =>
+  IR.Value primTy primVal ->
+  m (NonEmpty primTy)
 toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty
   where
     go (IR.VPrimTy t) = pure $ t :| []

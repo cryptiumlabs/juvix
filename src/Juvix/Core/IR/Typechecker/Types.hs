@@ -65,7 +65,7 @@ data TypecheckError' extV extT primTy primVal
       { unboundPatVar :: IR.PatternVar
       }
   | NotPrimTy
-      { typeActual :: IR.Value' ext primTy primVal
+      { typeActual :: IR.Value' extV primTy primVal
       }
   | WrongPrimTy
       { primVal :: primVal,

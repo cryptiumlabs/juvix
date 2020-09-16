@@ -87,14 +87,6 @@ lookupGlobal x = do
     makePi (IR.DataArg {argUsage, argType}) res =
       IR.VPi' argUsage argType res mempty
 
-primType :: HasReader "param" (Param.Parameterisation primTy primVal) m
-         => primVal -> m (IR.Value primTy primVal)
-primType v = do
-  asks @"param" \param ->
-    Param.typeOf param v
-      |> fmap IR.VPrimTy
-      |> foldr1 (IR.VPi Usage.Omega)
-
 type UContext = [Usage.T]
 
 type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
