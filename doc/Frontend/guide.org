@@ -10,11 +10,11 @@ For example
   let foo = 3
 
   -- this is a data type declaration
-  type List a = Cons a (List a)
+  type list a = Cons a (List a)
               | Nil
 
   -- this is a module declaration!
-  mod boo =
+  mod Boo =
     let fi = 10
   end
 #+END_SRC
@@ -35,7 +35,6 @@ which can be followed up by any alphanumeric character, underscores,
 punctuation(?, !), or dashes.
 
 #+BEGIN_SRC haskell
-
 
   -- a valid symbol
   hello-there
@@ -75,12 +74,31 @@ and dashes
 #+END_SRC
 
 ** Top Level Declarations
-*** Imports
-Imports
 *** Functions
+
+**** Signatures
 **** Implicit Arguments
 *** Types
 *** Modules
+*** Imports
+one can import a module in two ways.
+
+Either by opening them
+
+#+BEGIN_SRC ocaml
+  -- A valid open
+  open Foo
+
+
+  open Foo.Bar.Baz
+#+END_SRC
+
+or aliasing them with a let
+#+BEGIN_SRC ocaml
+  -- a valid module alias
+  let F = Foo
+#+END_SRC
+
 ** Expressions
 *** Conditionals
 **** If
@@ -112,7 +130,7 @@ on matches.
 
 Example:
 #+BEGIN_SRC ocaml
-  type Tree a = Branch (Tree a) a (Tree a)
+  type tree a = Branch (tree a) a (tree a)
               | Leaf a
               | Empty
 
@@ -137,20 +155,20 @@ Example:
     0
 
 
-  type Cords = {
+  type cords = {
     x : int,
     y : int
   }
 
   -- match on record
 
-  sig origin? : Cords -> Boolean
+  sig origin? : cords -> boolean
   let origin? {x, y}
     | x == y && x == 0 = True
     | else             = False
 
   -- same function as origin
-  sig origin2? : Cords -> Boolean
+  sig origin2? : cords -> boolean
   let origin2? {x = origX, y = origY}
     | origX == origY && origX == 0 =
       True
@@ -166,6 +184,17 @@ Example:
 *** String Literals
 *** Tuples
 *** Lists
+List literals are started by the open bracket character (=[=). Within,
+elements are separated by commas (=,=) before ending with a closing
+bracket (=]=)
+
+#+BEGIN_SRC haskell
+  -- this is a valid list
+  [1]
+
+  -- another valid list
+  [1,2,3]
+#+END_SRC
 *** Do Notation
 *** Constants
 *** Local opens
