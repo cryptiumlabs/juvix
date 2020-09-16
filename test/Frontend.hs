@@ -13,7 +13,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Show.Pretty (ppShowList)
-import Prelude (String, error, show, unlines)
+import Prelude (error, String, show, unlines)
 
 allParserTests :: T.TestTree
 allParserTests =
@@ -175,8 +175,9 @@ parsedContractExp file = do
         Done _i r -> return r
         Fail i context err -> undefined
         Partial _cont' -> undefined
+        
 
-getGolden :: FilePath -> IO (Maybe [TopLevel])
+getGolden :: FilePath -> IO (Maybe Expression)
 getGolden file = do
   maybeBS <- T.readFileMaybe file
   return
@@ -208,7 +209,7 @@ goldenTest name file =
    in T.goldenTest1
         name
         (getGolden goldenFileName)
-        (parsedContract file)
+        (parsedContractExp file)
         compareParsedGolden
         -- show the golden/actual value, not working atm
         ( T.ShowText . Text.pack
@@ -222,11 +223,11 @@ goldenTest name file =
 idString :: T.TestTree
 idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"
 
-addition :: T.TestTree
-addition = goldenTest "Addition" "test/examples/Addition.ju"
+-- addition :: T.TestTree
+-- addition = goldenTest "Addition" "test/examples/Addition.ju"
 
-token :: T.TestTree
-token = goldenTest "Token" "test/examples/Token.ju"
+-- token :: T.TestTree
+-- token = goldenTest "Token" "test/examples/Token.ju"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
@@ -384,8 +385,7 @@ typeTest =
   shouldParseAs
     "typeTest"
     "type Foo a b c d = | Foo nah bah sad"
-    [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a", Sym "b", Sym "c", Sym "d"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "Foo", sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (), Name' (Sym "bah" :| []) (), Name' (Sym "sad" :| []) ()] ()), annS = ()} :| []) (), annNonArrowed = ()}, annTyp = ()}) ()]
-
+    [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a",Sym "b",Sym "c",Sym "d"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "Foo", sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (),Name' (Sym "bah" :| []) (),Name' (Sym "sad" :| []) ()] ()), annS = ()} :| []) (), annNonArrowed = ()}, annTyp = ()}) ()]
 --------------------------------------------------------------------------------
 -- Modules test
 --------------------------------------------------------------------------------
@@ -401,7 +401,7 @@ moduleOpen =
         <> "  let bah t = Int.(t + 3) "
         <> "end"
     )
-    [Module' (Mod' (Like' {functionLikedName = Sym "Foo", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "Int" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
+    [Module' (Mod' (Like' {functionLikedName = Sym "Foo", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "Int" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
 
 moduleOpen' :: T.TestTree
 moduleOpen' =
@@ -416,7 +416,8 @@ moduleOpen' =
         <> "     , b = expr M.N.t}"
         <> "end"
     )
-    [Module' (Mod' (Like' {functionLikedName = Sym "Bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ModuleOpen' (Open' (Sym "M" :| []) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N", Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
+    [Module' (Mod' (Like' {functionLikedName = Sym "Bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ModuleOpen' (Open' (Sym "M" :| []) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N",Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
+
 -- --------------------------------------------------
 -- -- typeName tests
 -- --------------------------------------------------
