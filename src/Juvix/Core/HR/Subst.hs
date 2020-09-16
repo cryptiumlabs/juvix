@@ -2,7 +2,7 @@
 -- - Runs a substitution algorithm over core
 module Juvix.Core.HR.Subst where
 
-import Control.Lens
+import Control.Lens hiding ((|>))
 import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.HR.Types as Types
@@ -23,8 +23,7 @@ instance Hashable Key
 
 data T primTy primVal
   = T
-      { _depth :: Natural,
-        _seenSet :: InScopeSet,
+      { _seenSet :: InScopeSet,
         _sub :: Map.T Symbol (Types.Elim primTy primVal)
       }
   deriving (Show)
@@ -45,48 +44,29 @@ f _ (Types.PrimTy ty) =
 f _ (Types.Star uni) =
   Types.Star uni
 f subst (Types.Pi usage name typ body) =
-  undefined
-  -- Types.Pi usage (f subst typ) (f (over depth succ subst) body)
-f subst (Types.Lam x body) =
-  undefined
-  -- Types.Lam (f (over depth succ subst) body)
+  let (newSubst, newName) = uniqueNameAndUpdateMap subst name
+   in Types.Pi usage newName typ (f newSubst body)
+f subst (Types.Lam name body) =
+  let (newSubst, newName) = uniqueNameAndUpdateMap subst name
+   in Types.Lam newName (f newSubst body)
 f subst (Types.Let usage name bound body)
+  -- lets are non recrusive!
   | inlineP usage bound =
-    -- let depthPlus = subst ^. depth + 1
-    --     -- we run a pre-inline for now, however this won't always happen
-    --     newBound = substElim subst bound
-    --     updated =
-    --       T
-    --         { _depth = depthPlus,
-    --           _sub = Map.insert (Bound depthPlus) newBound (subst ^. sub)
-    --         }
-    --  in f updated body
-    undefined
+    let newBound =
+          substElim subst bound
+        newSubst =
+          subst
+            |> over sub (Map.insert name newBound)
+            |> over seenSet (Set.insert name)
+     in f newSubst body
   | otherwise =
-    undefined
-    -- Types.Let usage bound (f (over depth succ subst) body)
+    let (newSubst, newName) = uniqueNameAndUpdateMap subst name
+     in Types.Let usage newName (substElim subst bound) (f newSubst body)
 f subst (Types.Elim elim) =
   Types.Elim (substElim subst elim)
 
 substElim ::
   T primTy primVal -> Types.Elim primTy primVal -> Types.Elim primTy primVal
--- substElim subst (Types.Bound var)
---   | term >= 0 =
---     case (subst ^. sub) Map.!? Bound term of
---       -- we only do pre-inlining currently...
---       -- need to think how to do post inline techniques
---       Just el -> el
---       Nothing -> Types.Bound var
---   -- The term is free from our context
---   | otherwise = Types.Bound var
---   where
---     term = subst ^. depth - var
--- substElim subst (Types.Free (Types.Global name)) =
---   case (subst ^. sub) Map.!? Global (NameSymbol.fromSymbol name) of
---     Just el -> el
---     Nothing -> Types.Free (Types.Global name)
--- substElim _ (Types.Free (Types.Pattern p)) =
---   Types.Free (Types.Pattern p)
 substElim subst (Types.Var v) =
   case (subst ^. sub) Map.!? v of
     -- we only do pre-inlining currently...
@@ -117,17 +97,33 @@ inlineP usage _
   | otherwise = False
 
 empty :: T primTy primVal
-empty = T 0 mempty mempty
+empty = T mempty mempty
 
+-- | 'uniqueNameAndUpdateMap' takes a Subst data structure and a symbol
+-- and updates the map to redirect symbols labeled x if it already seen
+uniqueNameAndUpdateMap :: T primTy primVal -> Symbol -> (T primTy primVal, Symbol)
+uniqueNameAndUpdateMap subst sym
+  | sym == newSym =
+    (newSubst |> over sub (Map.delete sym), newSym)
+  | otherwise =
+    (newSubst |> over sub (Map.insert sym (Types.Var newSym)), newSym)
+  where
+    (newSet, newSym) =
+      uniqueName sym (subst ^. seenSet)
+    newSubst =
+      subst |> set seenSet newSet
 
 -- TODO ∷ make a unique name when the hash value is the same name
 -- as a value in the hash itself... this shouldn't happen, but
 -- we need the linear add one strategy when this does occur
+
 -- | 'uniqueName' generates a unique name based off the symbol
 -- and the set
-uniqueName :: Symbol -> InScopeSet -> InScopeSet
+uniqueName :: Symbol -> InScopeSet -> (InScopeSet, Symbol)
 uniqueName sym set
   | Set.member sym set =
-    Set.insert (intern (show (hash set)) <> sym) set
+    (Set.insert newSym set, newSym)
   | otherwise =
-    Set.insert sym set
+    (Set.insert sym set, sym)
+  where
+    newSym = intern (show (hash set)) <> sym
