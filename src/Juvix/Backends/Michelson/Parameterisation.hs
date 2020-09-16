@@ -7,6 +7,7 @@ module Juvix.Backends.Michelson.Parameterisation
   )
 where
 
+import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
@@ -22,6 +23,7 @@ import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
+import qualified Juvix.Library.HashMap as Map
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
@@ -167,61 +169,65 @@ primify t = PrimTy (Untyped.Type t "")
 
 builtinTypes :: P.Builtins PrimTy
 builtinTypes =
-  [ (NameSymbol.fromSymbol "Michelson.unit-t", primify Untyped.TUnit),
-    (NameSymbol.fromSymbol "Michelson.key", primify Untyped.TKey),
-    (NameSymbol.fromSymbol "Michelson.signature", primify Untyped.TSignature),
-    (NameSymbol.fromSymbol "Michelson.chain-id", primify Untyped.TChainId),
-    (NameSymbol.fromSymbol "Michelson.int", primify Untyped.TInt),
-    (NameSymbol.fromSymbol "Michelson.nat", primify Untyped.TNat),
-    (NameSymbol.fromSymbol "Michelson.string", primify Untyped.TString),
-    (NameSymbol.fromSymbol "Michelson.string", primify Untyped.TBytes),
-    (NameSymbol.fromSymbol "Michelson.mutez", primify Untyped.TMutez),
-    (NameSymbol.fromSymbol "Michelson.bool", primify Untyped.TBool),
-    (NameSymbol.fromSymbol "Michelson.key-hash", primify Untyped.TKeyHash),
-    (NameSymbol.fromSymbol "Michelson.timestamp", primify Untyped.TTimestamp),
-    (NameSymbol.fromSymbol "Michelson.address", primify Untyped.TAddress)
+  [ ("Michelson.unit-t", Untyped.TUnit),
+    ("Michelson.key", Untyped.TKey),
+    ("Michelson.signature", Untyped.TSignature),
+    ("Michelson.chain-id", Untyped.TChainId),
+    ("Michelson.int", Untyped.TInt),
+    ("Michelson.nat", Untyped.TNat),
+    ("Michelson.string", Untyped.TString),
+    ("Michelson.string", Untyped.TBytes),
+    ("Michelson.mutez", Untyped.TMutez),
+    ("Michelson.bool", Untyped.TBool),
+    ("Michelson.key-hash", Untyped.TKeyHash),
+    ("Michelson.timestamp", Untyped.TTimestamp),
+    ("Michelson.address", Untyped.TAddress)
   ]
+    |> fmap (NameSymbol.fromSymbol Arr.*** primify)
+    |> Map.fromList
 
 builtinValues :: P.Builtins PrimVal
 builtinValues =
-  [ (NameSymbol.fromSymbol "Michelson.add", AddI),
-    (NameSymbol.fromSymbol "Michelson.sub", SubI),
-    (NameSymbol.fromSymbol "Michelson.mul", MulI),
-    (NameSymbol.fromSymbol "Michelson.div", EDivI),
-    (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
-    (NameSymbol.fromSymbol "Michelson.cons", Inst (M.CONS "")),
-    (NameSymbol.fromSymbol "Michelson.car", Inst (M.CAR "" "")),
-    (NameSymbol.fromSymbol "Michelson.cdr", Inst (M.CDR "" "")),
-    (NameSymbol.fromSymbol "Michelson.some", Inst (M.SOME "" "")),
-    (NameSymbol.fromSymbol "Michelson.sha256", Inst (M.SHA256 "")),
-    (NameSymbol.fromSymbol "Michelson.sha512", Inst (M.SHA512 "")),
-    (NameSymbol.fromSymbol "Michelson.source", Inst (M.SOURCE "")),
-    (NameSymbol.fromSymbol "Michelson.get", Inst (M.GET "")),
-    (NameSymbol.fromSymbol "Michelson.update", Inst (M.UPDATE "")),
-    (NameSymbol.fromSymbol "Michelson.size", SizeS),
-    (NameSymbol.fromSymbol "Michelson.blake2b", Inst (M.BLAKE2B "")),
-    (NameSymbol.fromSymbol "Michelson.abs", Inst (M.ABS "")),
-    (NameSymbol.fromSymbol "Michelson.now", Inst (M.NOW "")),
-    (NameSymbol.fromSymbol "Michelson.source", Inst (M.SOURCE "")),
-    (NameSymbol.fromSymbol "Michelson.sender", Inst (M.SENDER "")),
-    (NameSymbol.fromSymbol "Michelson.set-delegate", Inst (M.SET_DELEGATE "")),
-    (NameSymbol.fromSymbol "Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
-    (NameSymbol.fromSymbol "Michelson.compare", CompareI),
-    (NameSymbol.fromSymbol "Michelson.amount", Inst (M.AMOUNT "")),
-    (NameSymbol.fromSymbol "Michelson.balance", Inst (M.BALANCE "")),
-    (NameSymbol.fromSymbol "Michelson.hash-key", Inst (M.HASH_KEY "")),
-    (NameSymbol.fromSymbol "Michelson.and", AndI),
-    (NameSymbol.fromSymbol "Michelson.xor", XorI),
-    (NameSymbol.fromSymbol "Michelson.or", OrB),
-    (NameSymbol.fromSymbol "Michelson.mem", MemMap),
-    (NameSymbol.fromSymbol "Michelson.concat", Inst (M.CONCAT "")),
-    (NameSymbol.fromSymbol "Michelson.slice", Inst (M.SLICE "")),
-    (NameSymbol.fromSymbol "Michelson.lsl", Inst (M.LSL "")),
-    (NameSymbol.fromSymbol "Michelson.lsr", Inst (M.LSR "")),
-    (NameSymbol.fromSymbol "Michelson.fail-with", Inst M.FAILWITH),
-    (NameSymbol.fromSymbol "Michelson.self", Inst (M.SELF "" "")),
-    (NameSymbol.fromSymbol "Michelson.self", Inst (M.UNIT "" ""))
+  [ ("Michelson.add", AddI),
+    ("Michelson.sub", SubI),
+    ("Michelson.mul", MulI),
+    ("Michelson.div", EDivI),
+    ("Michelson.now", Inst (M.NOW "")),
+    ("Michelson.cons", Inst (M.CONS "")),
+    ("Michelson.car", Inst (M.CAR "" "")),
+    ("Michelson.cdr", Inst (M.CDR "" "")),
+    ("Michelson.some", Inst (M.SOME "" "")),
+    ("Michelson.sha256", Inst (M.SHA256 "")),
+    ("Michelson.sha512", Inst (M.SHA512 "")),
+    ("Michelson.source", Inst (M.SOURCE "")),
+    ("Michelson.get", Inst (M.GET "")),
+    ("Michelson.update", Inst (M.UPDATE "")),
+    ("Michelson.size", SizeS),
+    ("Michelson.blake2b", Inst (M.BLAKE2B "")),
+    ("Michelson.abs", Inst (M.ABS "")),
+    ("Michelson.now", Inst (M.NOW "")),
+    ("Michelson.source", Inst (M.SOURCE "")),
+    ("Michelson.sender", Inst (M.SENDER "")),
+    ("Michelson.set-delegate", Inst (M.SET_DELEGATE "")),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
+    ("Michelson.compare", CompareI),
+    ("Michelson.amount", Inst (M.AMOUNT "")),
+    ("Michelson.balance", Inst (M.BALANCE "")),
+    ("Michelson.hash-key", Inst (M.HASH_KEY "")),
+    ("Michelson.and", AndI),
+    ("Michelson.xor", XorI),
+    ("Michelson.or", OrB),
+    ("Michelson.mem", MemMap),
+    ("Michelson.concat", Inst (M.CONCAT "")),
+    ("Michelson.slice", Inst (M.SLICE "")),
+    ("Michelson.lsl", Inst (M.LSL "")),
+    ("Michelson.lsr", Inst (M.LSR "")),
+    ("Michelson.fail-with", Inst M.FAILWITH),
+    ("Michelson.self", Inst (M.SELF "" "")),
+    ("Michelson.self", Inst (M.UNIT "" ""))
   ]
+    |> fmap (first NameSymbol.fromSymbol)
+    |> Map.fromList
 
 -- TODO: Figure out what the parser ought to do.
 michelson :: P.Parameterisation PrimTy PrimVal
