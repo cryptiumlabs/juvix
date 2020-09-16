@@ -13,7 +13,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Show.Pretty (ppShowList)
-import Prelude (String, show, unlines)
+import Prelude (String, error, show, unlines)
 
 allParserTests :: T.TestTree
 allParserTests =
@@ -24,11 +24,11 @@ allParserTests =
       sigTest2,
       fun1,
       fun2,
-      -- sumTypeTest,
+      sumTypeTest,
       -- superArrowCase,
-      -- typeTest,
-      -- moduleOpen,
-      -- moduleOpen',
+      typeTest,
+      moduleOpen,
+      moduleOpen',
       -- typeNameNoUniverse,
       -- simpleNamedCon,
       -- matchMoreComplex,
@@ -61,20 +61,20 @@ isFail :: Result a -> Bool
 isFail (Done _ _) = False
 isFail _ = True
 
-takeResult :: Result [TopLevel] -> [TopLevel]
+takeResult :: Result s -> s
 takeResult (Done _ x) = x
 takeResult (Partial y) = takeResult (y "")
-takeResult (Fail _ _ _) = []
+takeResult (Fail _ _ errorMsg) = error errorMsg
 
 shouldParseAs ::
-  T.TestName -> ByteString -> [TopLevel] -> T.TestTree
-shouldParseAs name x y =
+  Show a => T.TestName -> (ByteString -> Result a) -> ByteString -> a -> T.TestTree
+shouldParseAs name parses x y =
   T.testGroup
     "parse Test"
-    [ T.testCase (name <> " parser failed") (isFail (Parser.parse x) T.@=? True),
+    [ T.testCase (name <> " parser failed") (isFail (parses x) T.@=? True),
       T.testCase
         ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
-        (takeResult (Parser.parse x) T.@=? y)
+        (takeResult (parses x) T.@=? y)
     ]
 
 --------------------------------------------------------------------------------
@@ -148,6 +148,33 @@ parsedContract file = do
         Done _i r -> return r
         Fail i context err -> failIO i context err
         Partial _cont' -> return []
+
+parsedContractExp :: FilePath -> IO Expression
+parsedContractExp file = do
+  let failOutput i context error =
+        "Failed to parse!"
+          <> "The following input has not been consumed: "
+          <> i
+          <> "The list of context in which the error occurs is "
+          <> toByteString context
+          <> "The error message is "
+          <> toByteString error
+  let failIO i context error = do
+        _ <-
+          Juvix.Library.writeFile
+            (file <> ".parsed")
+            (decodeUtf8 $ failOutput i context error)
+        return []
+  readString <- readFile file
+  let rawContract = encodeUtf8 readString
+  case (parse Parser.expression) rawContract of
+    Fail i context err -> undefined
+    Done _i r -> return r
+    Partial cont ->
+      case cont "" of
+        Done _i r -> return r
+        Fail i context err -> undefined
+        Partial _cont' -> undefined
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do
@@ -270,6 +297,7 @@ sigTest1 :: T.TestTree
 sigTest1 =
   shouldParseAs
     "sigTest1"
+    Parser.parse
     "sig foo 0 : Int -> Int"
     [Signature' (Sig' {signatureName = Sym "foo", signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()), signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "Int" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Int" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) ()]
 
@@ -277,6 +305,7 @@ sigTest2 :: T.TestTree
 sigTest2 =
   shouldParseAs
     "sigTest2"
+    Parser.parse
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
     [Signature' (Sig' {signatureName = Sym "foo", signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()), signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = RefinedE' (TypeRefine' {typeRefineName = Name' (Sym "Int" :| []) (), typeRefineRefinement = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ">" :| [], infixRight = Constant' (Number' (Integer'' 0 ()) ()) (), annInf = ()}) (), annTypeRefine = ()}) (), infixOp = Sym "->" :| [], infixRight = RefinedE' (TypeRefine' {typeRefineName = Name' (Sym "Int" :| []) (), typeRefineRefinement = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ">" :| [], infixRight = Constant' (Number' (Integer'' 1 ()) ()) (), annInf = ()}) (), annTypeRefine = ()}) (), annInf = ()}) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) ()]
 
@@ -288,6 +317,7 @@ fun1 :: T.TestTree
 fun1 =
   shouldParseAs
     "fun1"
+    Parser.parse
     "let f foo@(A b c d) = 3"
     [Function' (Func' (Like' {functionLikedName = Sym "f", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "A" :| []) [MatchLogic' {matchLogicContents = MatchName' (Sym "b") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "c") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "d") (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed = Just (Sym "foo"), annMatchLogic = ()}) ()], functionLikeBody = Body' (Constant' (Number' (Integer'' 3 ()) ()) ()) (), annLike = ()}) ()) ()]
 
@@ -295,6 +325,7 @@ fun2 :: T.TestTree
 fun2 =
   shouldParseAs
     "fun2"
+    Parser.parse
     "let f foo | foo = 2 | else = 3"
     [Function' (Func' (Like' {functionLikedName = Sym "f", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "foo") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Guard' (C' (CondExpression' {condLogicPred = Name' (Sym "foo" :| []) (), condLogicBody = Constant' (Number' (Integer'' 2 ()) ()) (), annCondExpression = ()} :| [CondExpression' {condLogicPred = Name' (Sym "else" :| []) (), condLogicBody = Constant' (Number' (Integer'' 3 ()) ()) (), annCondExpression = ()}]) ()) (), annLike = ()}) ()) ()]
 
@@ -310,12 +341,14 @@ sumTypeTest :: T.TestTree
 sumTypeTest =
   shouldParseAs
     "sumTypeTest"
+    Parser.parse
     ( "type Foo a b c = | A : b : a -> b -> c "
         <> "            | B : d -> Foo "
         <> "            | C { a : Int, #b : Int } "
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
     [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a", Sym "b", Sym "c"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "A", sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "a" :| []) (), infixOp = Sym "->" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "c" :| []) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ()) ()), annS = ()} :| [S' {sumConstructor = Sym "B", sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (Sym "d" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Foo" :| []) (), annInf = ()}) ()) ()), annS = ()}, S' {sumConstructor = Sym "C", sumValue = Just (Record' (Record''' {recordFields = NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Concrete' (Sym "a") (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Implicit' (Sym "b") (), annNameType' = ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), annS = ()}, S' {sumConstructor = Sym "D", sumValue = Just (Record' (Record''' {recordFields = NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Concrete' (Sym "a") (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Implicit' (Sym "b") (), annNameType' = ()}], recordFamilySignature = Just (Application' (App' {applicationName = Name' (Sym "Foo" :| []) (), applicationArgs = Name' (Sym "Int" :| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Sym "Fooy" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Nada" :| []) (), annInf = ()}) ()) ()], annApp = ()}) ()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}, annTyp = ()}) ()]
+
 --------------------------------------------------
 -- Arrow Testing
 --------------------------------------------------
@@ -324,7 +357,7 @@ sumTypeTest =
 -- superArrowCase =
 --   shouldParseAs
 --     "superArrowCase"
---     Parser.expression
+--     (parse Parser.expression)
 --     "( b : Bah ->  c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
 --     "Infix' (Inf' {infixLeft = Parened' (Infix' (Inf' {infixLeft = Name' (b :| [])
 --     (), infixOp = : :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Bah :|
@@ -342,81 +375,48 @@ sumTypeTest =
 --     (), infixOp = -> :| [], infixRight = Name' (foo :| []) (), annInf = ()}) ())
 --     (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ()"
 
--- --------------------------------------------------
--- -- alias tests
--- --------------------------------------------------
+--------------------------------------------------
+-- alias tests
+--------------------------------------------------
 
--- typeTest :: T.TestTree
--- typeTest =
---   shouldParseAs
---     "typeTest"
---     Parser.topLevel
---     "type Foo a b c d = | Foo nah bah sad"
---     "Type' (Typ' {typeUsage = Nothing, typeName' = Foo, typeArgs = [a,b,c,d], typeForm
---     = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Foo, sumValue = Just (ADTLike'
---     [Name' (nah :| []) (),Name' (bah :| []) (),Name' (sad :| []) ()] ()), annS = ()}
---     :| []) (), annNonArrowed = ()}, annTyp = ()}) ()"
+typeTest :: T.TestTree
+typeTest =
+  shouldParseAs
+    "typeTest"
+    "type Foo a b c d = | Foo nah bah sad"
+    [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a", Sym "b", Sym "c", Sym "d"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "Foo", sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (), Name' (Sym "bah" :| []) (), Name' (Sym "sad" :| []) ()] ()), annS = ()} :| []) (), annNonArrowed = ()}, annTyp = ()}) ()]
 
--- --------------------------------------------------------------------------------
--- -- Modules test
--- --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Modules test
+--------------------------------------------------------------------------------
 
--- moduleOpen :: T.TestTree
--- moduleOpen =
---   shouldParseAs
---     "moduleOpen"
---     Parser.topLevel
---     ( ""
---         <> "mod Foo Int = "
---         <> "  let T = Int.t "
---         <> "  sig bah : T -> T "
---         <> "  let bah t = Int.(t + 3) "
---         <> "end"
---     )
---     "Module' (Mod' (Like' {functionLikedName = Foo, functionLikeArgs = [ConcreteA'
---     (MatchLogic' {matchLogicContents = MatchCon' (Int :| []) [] (), matchLogicNamed =
---     Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like'
---     {functionLikedName = T, functionLikeArgs = [], functionLikeBody = Body' (Name' (Int
---     :| [t]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = bah,
---     signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (T
---     :| []) (), infixOp = -> :| [], infixRight = Name' (T :| []) (), annInf = ()}) (),
---     signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName
---     = bah, functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName'
---     t (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body'
---     (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Int :| [], moduleOpenExprExpr =
---     Infix' (Inf' {infixLeft = Name' (t :| []) (), infixOp = + :| [], infixRight = Constant'
---     (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (),
---     annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()"
+moduleOpen :: T.TestTree
+moduleOpen =
+  shouldParseAs
+    "moduleOpen"
+    ( ""
+        <> "mod Foo Int = "
+        <> "  let T = Int.t "
+        <> "  sig bah : T -> T "
+        <> "  let bah t = Int.(t + 3) "
+        <> "end"
+    )
+    [Module' (Mod' (Like' {functionLikedName = Sym "Foo", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "Int" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
 
--- moduleOpen' :: T.TestTree
--- moduleOpen' =
---   shouldParseAs
---     "moduleOpen'"
---     Parser.topLevel
---     ( ""
---         <> "mod Bah M = "
---         <> "  open M"
---         <> "  sig bah : Rec "
---         <> "  let bah t = "
---         <> "     { a = t + 3"
---         <> "     , b = expr M.N.t}"
---         <> "end"
---     )
---     "Module' (Mod' (Like' {functionLikedName = Bah, functionLikeArgs = [ConcreteA'
---     (MatchLogic' {matchLogicContents = MatchCon' (M :| []) [] (), matchLogicNamed
---     = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ModuleOpen' (Open'
---     (M :| []) ()) () :| [Signature' (Sig' {signatureName = bah, signatureUsage =
---     Nothing, signatureArrowType = Name' (Rec :| []) (), signatureConstraints = [],
---     annSig = ()}) (),Function' (Func' (Like' {functionLikedName = bah, functionLikeArgs
---     = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' t (), matchLogicNamed
---     = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord'
---     {expRecordFields = NonPunned' (a :| []) (Infix' (Inf' {infixLeft = Name' (t
---     :| []) (), infixOp = + :| [], infixRight = Constant' (Number' (Integer'' 3 ())
---     ()) (), annInf = ()}) ()) () :| [NonPunned' (b :| []) (Application' (App' {applicationName
---     = Name' (expr :| []) (), applicationArgs = Name' (M :| [N,t]) () :| [], annApp
---     = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]) (),
---     annLike = ()}) ()) ()"
-
+moduleOpen' :: T.TestTree
+moduleOpen' =
+  shouldParseAs
+    "moduleOpen'"
+    ( ""
+        <> "mod Bah M = "
+        <> "  open M"
+        <> "  sig bah : Rec "
+        <> "  let bah t = "
+        <> "     { a = t + 3"
+        <> "     , b = expr M.N.t}"
+        <> "end"
+    )
+    [Module' (Mod' (Like' {functionLikedName = Sym "Bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ModuleOpen' (Open' (Sym "M" :| []) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N", Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
 -- --------------------------------------------------
 -- -- typeName tests
 -- --------------------------------------------------
