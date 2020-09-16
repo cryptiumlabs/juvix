@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
