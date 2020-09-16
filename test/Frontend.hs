@@ -219,7 +219,70 @@ many1FunctionsParser =
         <> "          print failed; "
         <> "          fail"
     )
-    [Function' (Func' (Like' {functionLikedName = Sym "foo", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "a") (), matchLogicNamed = Nothing, annMatchLogic = ()}) (), ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "b") (), matchLogicNamed = Nothing, annMatchLogic = ()}) (), ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "c") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Application' (App' {applicationName = Name' (Sym "+" :| []) (), applicationArgs = Parened' (Infix' (Inf' {infixLeft = Name' (Sym "a" :| []) (), infixOp = Sym "+" :| [], infixRight = Name' (Sym "b" :| []) (), annInf = ()}) ()) () :| [Name' (Sym "clet" :| []) (), Name' (Sym "bah" :| []) ()], annApp = ()}) ()) (), annLike = ()}) ()) ()]
+    [ Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = Sym "foo",
+                  functionLikeArgs =
+                    [ ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents = MatchName' (Sym "a") (),
+                              matchLogicNamed = Nothing,
+                              annMatchLogic = ()
+                            }
+                        )
+                        (),
+                      ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents = MatchName' (Sym "b") (),
+                              matchLogicNamed = Nothing,
+                              annMatchLogic = ()
+                            }
+                        )
+                        (),
+                      ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents = MatchName' (Sym "c") (),
+                              matchLogicNamed = Nothing,
+                              annMatchLogic = ()
+                            }
+                        )
+                        ()
+                    ],
+                  functionLikeBody =
+                    Body'
+                      ( Application'
+                          ( App'
+                              { applicationName = Name' (Sym "+" :| []) (),
+                                applicationArgs =
+                                  Parened'
+                                    ( Infix'
+                                        ( Inf'
+                                            { infixLeft = Name' (Sym "a" :| []) (),
+                                              infixOp = Sym "+" :| [],
+                                              infixRight = Name' (Sym "b" :| []) (),
+                                              annInf = ()
+                                            }
+                                        )
+                                        ()
+                                    )
+                                    ()
+                                    :| [ Name' (Sym "clet" :| []) (),
+                                         Name' (Sym "bah" :| []) ()
+                                       ],
+                                annApp = ()
+                              }
+                          )
+                          ()
+                      )
+                      (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        ()
+    ]
 
 --------------------------------------------------------------------------------
 -- Sig Test
@@ -231,7 +294,26 @@ sigTest1 =
     "sigTest1"
     Parser.parse
     "sig foo 0 : Int -> Int"
-    [Signature' (Sig' {signatureName = Sym "foo", signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()), signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "Int" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Int" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) ()]
+    [ Signature'
+        ( Sig'
+            { signatureName = Sym "foo",
+              signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()),
+              signatureArrowType =
+                Infix'
+                  ( Inf'
+                      { infixLeft = Name' (Sym "Int" :| []) (),
+                        infixOp = Sym "->" :| [],
+                        infixRight = Name' (Sym "Int" :| []) (),
+                        annInf = ()
+                      }
+                  )
+                  (),
+              signatureConstraints = [],
+              annSig = ()
+            }
+        )
+        ()
+    ]
 
 sigTest2 :: T.TestTree
 sigTest2 =
@@ -239,7 +321,75 @@ sigTest2 =
     "sigTest2"
     Parser.parse
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
-    [Signature' (Sig' {signatureName = Sym "foo", signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()), signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = RefinedE' (TypeRefine' {typeRefineName = Name' (Sym "Int" :| []) (), typeRefineRefinement = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ">" :| [], infixRight = Constant' (Number' (Integer'' 0 ()) ()) (), annInf = ()}) (), annTypeRefine = ()}) (), infixOp = Sym "->" :| [], infixRight = RefinedE' (TypeRefine' {typeRefineName = Name' (Sym "Int" :| []) (), typeRefineRefinement = Infix' (Inf' {infixLeft = Name' (Sym "i" :| []) (), infixOp = Sym ">" :| [], infixRight = Constant' (Number' (Integer'' 1 ()) ()) (), annInf = ()}) (), annTypeRefine = ()}) (), annInf = ()}) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) ()]
+    [ Signature'
+        ( Sig'
+            { signatureName = Sym "foo",
+              signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()),
+              signatureArrowType =
+                Infix'
+                  ( Inf'
+                      { infixLeft = Name' (Sym "i" :| []) (),
+                        infixOp = Sym ":" :| [],
+                        infixRight =
+                          Infix'
+                            ( Inf'
+                                { infixLeft =
+                                    RefinedE'
+                                      ( TypeRefine'
+                                          { typeRefineName = Name' (Sym "Int" :| []) (),
+                                            typeRefineRefinement =
+                                              Infix'
+                                                ( Inf'
+                                                    { infixLeft = Name' (Sym "i" :| []) (),
+                                                      infixOp = Sym ">" :| [],
+                                                      infixRight = Constant' (Number' (Integer'' 0 ()) ()) (),
+                                                      annInf = ()
+                                                    }
+                                                )
+                                                (),
+                                            annTypeRefine = ()
+                                          }
+                                      )
+                                      (),
+                                  infixOp = Sym "->" :| [],
+                                  infixRight =
+                                    RefinedE'
+                                      ( TypeRefine'
+                                          { typeRefineName = Name' (Sym "Int" :| []) (),
+                                            typeRefineRefinement =
+                                              Infix'
+                                                ( Inf'
+                                                    { infixLeft = Name' (Sym "i" :| []) (),
+                                                      infixOp = Sym ">" :| [],
+                                                      infixRight =
+                                                        Constant'
+                                                          ( Number'
+                                                              (Integer'' 1 ())
+                                                              ()
+                                                          )
+                                                          (),
+                                                      annInf = ()
+                                                    }
+                                                )
+                                                (),
+                                            annTypeRefine = ()
+                                          }
+                                      )
+                                      (),
+                                  annInf = ()
+                                }
+                            )
+                            (),
+                        annInf = ()
+                      }
+                  )
+                  (),
+              signatureConstraints = [],
+              annSig = ()
+            }
+        )
+        ()
+    ]
 
 -- --------------------------------------------------------------------------------
 -- -- Function Testing
@@ -251,7 +401,53 @@ fun1 =
     "fun1"
     Parser.parse
     "let f foo@(A b c d) = 3"
-    [Function' (Func' (Like' {functionLikedName = Sym "f", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "A" :| []) [MatchLogic' {matchLogicContents = MatchName' (Sym "b") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "c") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "d") (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed = Just (Sym "foo"), annMatchLogic = ()}) ()], functionLikeBody = Body' (Constant' (Number' (Integer'' 3 ()) ()) ()) (), annLike = ()}) ()) ()]
+    [ Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = Sym "f",
+                  functionLikeArgs =
+                    [ ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents =
+                                MatchCon'
+                                  (Sym "A" :| [])
+                                  [ MatchLogic'
+                                      { matchLogicContents = MatchName' (Sym "b") (),
+                                        matchLogicNamed = Nothing,
+                                        annMatchLogic = ()
+                                      },
+                                    MatchLogic'
+                                      { matchLogicContents = MatchName' (Sym "c") (),
+                                        matchLogicNamed = Nothing,
+                                        annMatchLogic = ()
+                                      },
+                                    MatchLogic'
+                                      { matchLogicContents = MatchName' (Sym "d") (),
+                                        matchLogicNamed = Nothing,
+                                        annMatchLogic = ()
+                                      }
+                                  ]
+                                  (),
+                              matchLogicNamed = Just (Sym "foo"),
+                              annMatchLogic = ()
+                            }
+                        )
+                        ()
+                    ],
+                  functionLikeBody =
+                    Body'
+                      ( Constant'
+                          (Number' (Integer'' 3 ()) ())
+                          ()
+                      )
+                      (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        ()
+    ]
 
 fun2 :: T.TestTree
 fun2 =
@@ -259,7 +455,45 @@ fun2 =
     "fun2"
     Parser.parse
     "let f foo | foo = 2 | else = 3"
-    [Function' (Func' (Like' {functionLikedName = Sym "f", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "foo") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Guard' (C' (CondExpression' {condLogicPred = Name' (Sym "foo" :| []) (), condLogicBody = Constant' (Number' (Integer'' 2 ()) ()) (), annCondExpression = ()} :| [CondExpression' {condLogicPred = Name' (Sym "else" :| []) (), condLogicBody = Constant' (Number' (Integer'' 3 ()) ()) (), annCondExpression = ()}]) ()) (), annLike = ()}) ()) ()]
+    [ Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = Sym "f",
+                  functionLikeArgs =
+                    [ ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents = MatchName' (Sym "foo") (),
+                              matchLogicNamed = Nothing,
+                              annMatchLogic = ()
+                            }
+                        )
+                        ()
+                    ],
+                  functionLikeBody =
+                    Guard'
+                      ( C'
+                          ( CondExpression'
+                              { condLogicPred = Name' (Sym "foo" :| []) (),
+                                condLogicBody = Constant' (Number' (Integer'' 2 ()) ()) (),
+                                annCondExpression = ()
+                              }
+                              :| [ CondExpression'
+                                     { condLogicPred = Name' (Sym "else" :| []) (),
+                                       condLogicBody = Constant' (Number' (Integer'' 3 ()) ()) (),
+                                       annCondExpression = ()
+                                     }
+                                 ]
+                          )
+                          ()
+                      )
+                      (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        ()
+    ]
 
 --------------------------------------------------------------------------------
 -- Type tests
@@ -279,7 +513,162 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } "
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a", Sym "b", Sym "c"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "A", sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "a" :| []) (), infixOp = Sym "->" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "c" :| []) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ()) ()), annS = ()} :| [S' {sumConstructor = Sym "B", sumValue = Just (Arrow' (Infix' (Inf' {infixLeft = Name' (Sym "d" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Foo" :| []) (), annInf = ()}) ()) ()), annS = ()}, S' {sumConstructor = Sym "C", sumValue = Just (Record' (Record''' {recordFields = NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Concrete' (Sym "a") (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Implicit' (Sym "b") (), annNameType' = ()}], recordFamilySignature = Nothing, annRecord'' = ()}) ()), annS = ()}, S' {sumConstructor = Sym "D", sumValue = Just (Record' (Record''' {recordFields = NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Concrete' (Sym "a") (), annNameType' = ()} :| [NameType'' {nameTypeSignature = Name' (Sym "Int" :| []) (), nameTypeName = Implicit' (Sym "b") (), annNameType' = ()}], recordFamilySignature = Just (Application' (App' {applicationName = Name' (Sym "Foo" :| []) (), applicationArgs = Name' (Sym "Int" :| []) () :| [Parened' (Infix' (Inf' {infixLeft = Name' (Sym "Fooy" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "Nada" :| []) (), annInf = ()}) ()) ()], annApp = ()}) ()), annRecord'' = ()}) ()), annS = ()}]) (), annNonArrowed = ()}, annTyp = ()}) ()]
+    [ Type'
+        ( Typ'
+            { typeUsage = Nothing,
+              typeName' = Sym "Foo",
+              typeArgs =
+                [Sym "a", Sym "b", Sym "c"],
+              typeForm =
+                NonArrowed'
+                  { dataAdt =
+                      Sum'
+                        ( S'
+                            { sumConstructor = Sym "A",
+                              sumValue =
+                                Just
+                                  ( Arrow'
+                                      ( Infix'
+                                          ( Inf'
+                                              { infixLeft = Name' (Sym "b" :| []) (),
+                                                infixOp = Sym ":" :| [],
+                                                infixRight =
+                                                  Infix'
+                                                    ( Inf'
+                                                        { infixLeft = Name' (Sym "a" :| []) (),
+                                                          infixOp = Sym "->" :| [],
+                                                          infixRight =
+                                                            Infix'
+                                                              ( Inf'
+                                                                  { infixLeft =
+                                                                      Name'
+                                                                        (Sym "b" :| [])
+                                                                        (),
+                                                                    infixOp = Sym "->" :| [],
+                                                                    infixRight = Name' (Sym "c" :| []) (),
+                                                                    annInf = ()
+                                                                  }
+                                                              )
+                                                              (),
+                                                          annInf = ()
+                                                        }
+                                                    )
+                                                    (),
+                                                annInf = ()
+                                              }
+                                          )
+                                          ()
+                                      )
+                                      ()
+                                  ),
+                              annS = ()
+                            }
+                            :| [ S'
+                                   { sumConstructor = Sym "B",
+                                     sumValue =
+                                       Just
+                                         ( Arrow'
+                                             ( Infix'
+                                                 ( Inf'
+                                                     { infixLeft = Name' (Sym "d" :| []) (),
+                                                       infixOp = Sym "->" :| [],
+                                                       infixRight = Name' (Sym "Foo" :| []) (),
+                                                       annInf = ()
+                                                     }
+                                                 )
+                                                 ()
+                                             )
+                                             ()
+                                         ),
+                                     annS = ()
+                                   },
+                                 S'
+                                   { sumConstructor = Sym "C",
+                                     sumValue =
+                                       Just
+                                         ( Record'
+                                             ( Record'''
+                                                 { recordFields =
+                                                     NameType''
+                                                       { nameTypeSignature = Name' (Sym "Int" :| []) (),
+                                                         nameTypeName = Concrete' (Sym "a") (),
+                                                         annNameType' = ()
+                                                       }
+                                                       :| [ NameType''
+                                                              { nameTypeSignature = Name' (Sym "Int" :| []) (),
+                                                                nameTypeName = Implicit' (Sym "b") (),
+                                                                annNameType' = ()
+                                                              }
+                                                          ],
+                                                   recordFamilySignature = Nothing,
+                                                   annRecord'' = ()
+                                                 }
+                                             )
+                                             ()
+                                         ),
+                                     annS = ()
+                                   },
+                                 S'
+                                   { sumConstructor = Sym "D",
+                                     sumValue =
+                                       Just
+                                         ( Record'
+                                             ( Record'''
+                                                 { recordFields =
+                                                     NameType''
+                                                       { nameTypeSignature = Name' (Sym "Int" :| []) (),
+                                                         nameTypeName = Concrete' (Sym "a") (),
+                                                         annNameType' = ()
+                                                       }
+                                                       :| [ NameType''
+                                                              { nameTypeSignature =
+                                                                  Name' (Sym "Int" :| []) (),
+                                                                nameTypeName = Implicit' (Sym "b") (),
+                                                                annNameType' = ()
+                                                              }
+                                                          ],
+                                                   recordFamilySignature =
+                                                     Just
+                                                       ( Application'
+                                                           ( App'
+                                                               { applicationName = Name' (Sym "Foo" :| []) (),
+                                                                 applicationArgs =
+                                                                   Name' (Sym "Int" :| []) ()
+                                                                     :| [ Parened'
+                                                                            ( Infix'
+                                                                                ( Inf'
+                                                                                    { infixLeft = Name' (Sym "Fooy" :| []) (),
+                                                                                      infixOp = Sym "->" :| [],
+                                                                                      infixRight = Name' (Sym "Nada" :| []) (),
+                                                                                      annInf = ()
+                                                                                    }
+                                                                                )
+                                                                                ()
+                                                                            )
+                                                                            ()
+                                                                        ],
+                                                                 annApp = ()
+                                                               }
+                                                           )
+                                                           ()
+                                                       ),
+                                                   annRecord'' = ()
+                                                 }
+                                             )
+                                             ()
+                                         ),
+                                     annS = ()
+                                   }
+                               ]
+                        )
+                        (),
+                    annNonArrowed = ()
+                  },
+              annTyp = ()
+            }
+        )
+        ()
+    ]
 
 --------------------------------------------------
 -- Arrow Testing
@@ -291,7 +680,102 @@ superArrowCase =
     "superArrowCase"
     (parse Parser.expression)
     "( b : Bah ->  c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
-    (Infix' (Inf' {infixLeft = Parened' (Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "Bah" :| []) (), infixOp = Sym "->" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "c" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "B" :| []) (), infixOp = Sym "-o" :| [], infixRight = Name' (Sym "Foo" :| []) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ()) (), infixOp = Sym "->" :| [], infixRight = Infix' (Inf' {infixLeft = Application' (App' {applicationName = Name' (Sym "Foo" :| []) (), applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "b" :| []) ()], annApp = ()}) (), infixOp = Sym "->" :| [], infixRight = Infix' (Inf' {infixLeft = Name' (Sym "a" :| []) (), infixOp = Sym ":" :| [], infixRight = Infix' (Inf' {infixLeft = Application' (App' {applicationName = Name' (Sym "Bah" :| []) (), applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "c" :| []) ()], annApp = ()}) (), infixOp = Sym "-o" :| [], infixRight = Parened' (Infix' (Inf' {infixLeft = Name' (Sym "HAHAHHA" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "foo" :| []) (), annInf = ()}) ()) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) (), annInf = ()}) ())
+    ( Infix'
+        ( Inf'
+            { infixLeft =
+                Parened'
+                  ( Infix'
+                      ( Inf'
+                          { infixLeft = Name' (Sym "b" :| []) (),
+                            infixOp = Sym ":" :| [],
+                            infixRight =
+                              Infix'
+                                ( Inf'
+                                    { infixLeft = Name' (Sym "Bah" :| []) (),
+                                      infixOp = Sym "->" :| [],
+                                      infixRight =
+                                        Infix'
+                                          ( Inf'
+                                              { infixLeft = Name' (Sym "c" :| []) (),
+                                                infixOp = Sym ":" :| [],
+                                                infixRight =
+                                                  Infix'
+                                                    ( Inf'
+                                                        { infixLeft = Name' (Sym "B" :| []) (),
+                                                          infixOp = Sym "-o" :| [],
+                                                          infixRight = Name' (Sym "Foo" :| []) (),
+                                                          annInf = ()
+                                                        }
+                                                    )
+                                                    (),
+                                                annInf = ()
+                                              }
+                                          )
+                                          (),
+                                      annInf = ()
+                                    }
+                                )
+                                (),
+                            annInf = ()
+                          }
+                      )
+                      ()
+                  )
+                  (),
+              infixOp = Sym "->" :| [],
+              infixRight =
+                Infix'
+                  ( Inf'
+                      { infixLeft =
+                          Application'
+                            ( App'
+                                { applicationName = Name' (Sym "Foo" :| []) (),
+                                  applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "b" :| []) ()],
+                                  annApp = ()
+                                }
+                            )
+                            (),
+                        infixOp = Sym "->" :| [],
+                        infixRight =
+                          Infix'
+                            ( Inf'
+                                { infixLeft = Name' (Sym "a" :| []) (),
+                                  infixOp = Sym ":" :| [],
+                                  infixRight =
+                                    Infix'
+                                      ( Inf'
+                                          { infixLeft = Application' (App' {applicationName = Name' (Sym "Bah" :| []) (), applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "c" :| []) ()], annApp = ()}) (),
+                                            infixOp = Sym "-o" :| [],
+                                            infixRight =
+                                              Parened'
+                                                ( Infix'
+                                                    ( Inf'
+                                                        { infixLeft = Name' (Sym "HAHAHHA" :| []) (),
+                                                          infixOp = Sym "->" :| [],
+                                                          infixRight = Name' (Sym "foo" :| []) (),
+                                                          annInf = ()
+                                                        }
+                                                    )
+                                                    ()
+                                                )
+                                                (),
+                                            annInf = ()
+                                          }
+                                      )
+                                      (),
+                                  annInf = ()
+                                }
+                            )
+                            (),
+                        annInf = ()
+                      }
+                  )
+                  (),
+              annInf = ()
+            }
+        )
+        ()
+    )
 
 --------------------------------------------------
 -- alias tests
@@ -303,7 +787,30 @@ typeTest =
     "typeTest"
     Parser.parse
     "type Foo a b c d = | Foo nah bah sad"
-    [Type' (Typ' {typeUsage = Nothing, typeName' = Sym "Foo", typeArgs = [Sym "a", Sym "b", Sym "c", Sym "d"], typeForm = NonArrowed' {dataAdt = Sum' (S' {sumConstructor = Sym "Foo", sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (), Name' (Sym "bah" :| []) (), Name' (Sym "sad" :| []) ()] ()), annS = ()} :| []) (), annNonArrowed = ()}, annTyp = ()}) ()]
+    [ Type'
+        ( Typ'
+            { typeUsage = Nothing,
+              typeName' = Sym "Foo",
+              typeArgs = [Sym "a", Sym "b", Sym "c", Sym "d"],
+              typeForm =
+                NonArrowed'
+                  { dataAdt =
+                      Sum'
+                        ( S'
+                            { sumConstructor = Sym "Foo",
+                              sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (), Name' (Sym "bah" :| []) (), Name' (Sym "sad" :| []) ()] ()),
+                              annS = ()
+                            }
+                            :| []
+                        )
+                        (),
+                    annNonArrowed = ()
+                  },
+              annTyp = ()
+            }
+        )
+        ()
+    ]
 
 --------------------------------------------------------------------------------
 -- Modules test
@@ -321,7 +828,38 @@ moduleOpen =
         <> "  let bah t = Int.(t + 3) "
         <> "end"
     )
-    [Module' (Mod' (Like' {functionLikedName = Sym "Foo", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "Int" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Function' (Func' (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()}) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
+    [ Module'
+        ( Mod'
+            ( Like'
+                { functionLikedName = Sym "Foo",
+                  functionLikeArgs =
+                    [ ConcreteA'
+                        ( MatchLogic'
+                            { matchLogicContents = MatchCon' (Sym "Int" :| []) [] (),
+                              matchLogicNamed = Nothing,
+                              annMatchLogic = ()
+                            }
+                        )
+                        ()
+                    ],
+                  functionLikeBody =
+                    Body'
+                      ( Function'
+                          ( Func'
+                              (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()})
+                              ()
+                          )
+                          ()
+                          :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]
+                      )
+                      (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        ()
+    ]
 
 moduleOpen' :: T.TestTree
 moduleOpen' =
@@ -337,7 +875,29 @@ moduleOpen' =
         <> "     , b = expr M.N.t}"
         <> "end"
     )
-    [Module' (Mod' (Like' {functionLikedName = Sym "Bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ModuleOpen' (Open' (Sym "M" :| []) ()) () :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N", Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]) (), annLike = ()}) ()) ()]
+    [ Module'
+        ( Mod'
+            ( Like'
+                { functionLikedName = Sym "Bah",
+                  functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()],
+                  functionLikeBody =
+                    Body'
+                      ( ModuleOpen'
+                          ( Open'
+                              (Sym "M" :| [])
+                              ()
+                          )
+                          ()
+                          :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N", Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]
+                      )
+                      (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        ()
+    ]
 
 --------------------------------------------------
 -- typeName tests
@@ -349,7 +909,36 @@ typeNameNoUniverse =
     "typeNameNoUniverse"
     (parse Parser.expression)
     "Foo a b c (b -o d) a c u"
-    (Application' (App' {applicationName = Name' (Sym "Foo" :| []) (), applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "b" :| []) (), Name' (Sym "c" :| []) (), Parened' (Infix' (Inf' {infixLeft = Name' (Sym "b" :| []) (), infixOp = Sym "-o" :| [], infixRight = Name' (Sym "d" :| []) (), annInf = ()}) ()) (), Name' (Sym "a" :| []) (), Name' (Sym "c" :| []) (), Name' (Sym "u" :| []) ()], annApp = ()}) ())
+    ( Application'
+        ( App'
+            { applicationName = Name' (Sym "Foo" :| []) (),
+              applicationArgs =
+                Name'
+                  (Sym "a" :| [])
+                  ()
+                  :| [ Name' (Sym "b" :| []) (),
+                       Name' (Sym "c" :| []) (),
+                       Parened'
+                         ( Infix'
+                             ( Inf'
+                                 { infixLeft = Name' (Sym "b" :| []) (),
+                                   infixOp = Sym "-o" :| [],
+                                   infixRight = Name' (Sym "d" :| []) (),
+                                   annInf = ()
+                                 }
+                             )
+                             ()
+                         )
+                         (),
+                       Name' (Sym "a" :| []) (),
+                       Name' (Sym "c" :| []) (),
+                       Name' (Sym "u" :| []) ()
+                     ],
+              annApp = ()
+            }
+        )
+        ()
+    )
 
 -- --------------------------------------------------------------------------------
 -- -- Match tests
@@ -361,7 +950,31 @@ simpleNamedCon =
     "simpleNamedCon"
     (parse Parser.matchLogic)
     "foo@( Hi a b c )"
-    (MatchLogic' {matchLogicContents = MatchCon' (Sym "Hi" :| []) [MatchLogic' {matchLogicContents = MatchName' (Sym "a") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "b") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "c") (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed = Just (Sym "foo"), annMatchLogic = ()})
+    ( MatchLogic'
+        { matchLogicContents =
+            MatchCon'
+              (Sym "Hi" :| [])
+              [ MatchLogic'
+                  { matchLogicContents = MatchName' (Sym "a") (),
+                    matchLogicNamed = Nothing,
+                    annMatchLogic = ()
+                  },
+                MatchLogic'
+                  { matchLogicContents = MatchName' (Sym "b") (),
+                    matchLogicNamed = Nothing,
+                    annMatchLogic = ()
+                  },
+                MatchLogic'
+                  { matchLogicContents = MatchName' (Sym "c") (),
+                    matchLogicNamed = Nothing,
+                    annMatchLogic = ()
+                  }
+              ]
+              (),
+          matchLogicNamed = Just (Sym "foo"),
+          annMatchLogic = ()
+        }
+    )
 
 matchMoreComplex :: T.TestTree
 matchMoreComplex =
@@ -369,7 +982,50 @@ matchMoreComplex =
     "matchMoreComplex"
     (parse Parser.matchLogic)
     "foo@( Hi nah@{ a = nah , f } b 5 )"
-    (MatchLogic' {matchLogicContents = MatchCon' (Sym "Hi" :| []) [MatchLogic' {matchLogicContents = MatchRecord' (NonPunned' (Sym "a" :| []) (MatchLogic' {matchLogicContents = MatchName' (Sym "nah") (), matchLogicNamed = Nothing, annMatchLogic = ()}) () :| [Punned' (Sym "f" :| []) ()]) (), matchLogicNamed = Just (Sym "nah"), annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchName' (Sym "b") (), matchLogicNamed = Nothing, annMatchLogic = ()}, MatchLogic' {matchLogicContents = MatchConst' (Number' (Integer'' 5 ()) ()) (), matchLogicNamed = Nothing, annMatchLogic = ()}] (), matchLogicNamed = Just (Sym "foo"), annMatchLogic = ()})
+    ( MatchLogic'
+        { matchLogicContents =
+            MatchCon'
+              (Sym "Hi" :| [])
+              [ MatchLogic'
+                  { matchLogicContents =
+                      MatchRecord'
+                        ( NonPunned'
+                            (Sym "a" :| [])
+                            ( MatchLogic'
+                                { matchLogicContents = MatchName' (Sym "nah") (),
+                                  matchLogicNamed = Nothing,
+                                  annMatchLogic = ()
+                                }
+                            )
+                            ()
+                            :| [Punned' (Sym "f" :| []) ()]
+                        )
+                        (),
+                    matchLogicNamed = Just (Sym "nah"),
+                    annMatchLogic = ()
+                  },
+                MatchLogic'
+                  { matchLogicContents = MatchName' (Sym "b") (),
+                    matchLogicNamed = Nothing,
+                    annMatchLogic = ()
+                  },
+                MatchLogic'
+                  { matchLogicContents =
+                      MatchConst'
+                        ( Number'
+                            (Integer'' 5 ())
+                            ()
+                        )
+                        (),
+                    matchLogicNamed = Nothing,
+                    annMatchLogic = ()
+                  }
+              ]
+              (),
+          matchLogicNamed = Just (Sym "foo"),
+          annMatchLogic = ()
+        }
+    )
 
 --------------------------------------------------------------------------------
 -- Expression
@@ -384,7 +1040,21 @@ condTest1 =
         <> "if  | foo  = a"
         <> "    | else = b "
     )
-    (C' (CondExpression' {condLogicPred = Name' (Sym "foo" :| []) (), condLogicBody = Name' (Sym "a" :| []) (), annCondExpression = ()} :| [CondExpression' {condLogicPred = Name' (Sym "else" :| []) (), condLogicBody = Name' (Sym "b" :| []) (), annCondExpression = ()}]) ())
+    ( C'
+        ( CondExpression'
+            { condLogicPred = Name' (Sym "foo" :| []) (),
+              condLogicBody = Name' (Sym "a" :| []) (),
+              annCondExpression = ()
+            }
+            :| [ CondExpression'
+                   { condLogicPred = Name' (Sym "else" :| []) (),
+                     condLogicBody = Name' (Sym "b" :| []) (),
+                     annCondExpression = ()
+                   }
+               ]
+        )
+        ()
+    )
 
 -- --------------------------------------------------
 -- -- Record
@@ -396,7 +1066,29 @@ record1 =
     "record1"
     (parse Parser.expression)
     "{a, b = 3+5}"
-    (ExpRecord' (ExpressionRecord' {expRecordFields = Punned' (Sym "a" :| []) () :| [NonPunned' (Sym "b" :| []) (Infix' (Inf' {infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 5 ()) ()) (), annInf = ()}) ()) ()], annExpressionRecord = ()}) ())
+    ( ExpRecord'
+        ( ExpressionRecord'
+            { expRecordFields =
+                Punned' (Sym "a" :| []) ()
+                  :| [ NonPunned'
+                         (Sym "b" :| [])
+                         ( Infix'
+                             ( Inf'
+                                 { infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (),
+                                   infixOp = Sym "+" :| [],
+                                   infixRight = Constant' (Number' (Integer'' 5 ()) ()) (),
+                                   annInf = ()
+                                 }
+                             )
+                             ()
+                         )
+                         ()
+                     ],
+              annExpressionRecord = ()
+            }
+        )
+        ()
+    )
 
 -- --------------------------------------------------
 -- -- parens
@@ -408,7 +1100,41 @@ parens1 =
     "parens1"
     (parse Parser.expression)
     "(       ( (({a, b = 3+5}))))"
-    (Parened' (Parened' (Parened' (Parened' (ExpRecord' (ExpressionRecord' {expRecordFields = Punned' (Sym "a" :| []) () :| [NonPunned' (Sym "b" :| []) (Infix' (Inf' {infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 5 ()) ()) (), annInf = ()}) ()) ()], annExpressionRecord = ()}) ()) ()) ()) ()) ())
+    ( Parened'
+        ( Parened'
+            ( Parened'
+                ( Parened'
+                    ( ExpRecord'
+                        ( ExpressionRecord'
+                            { expRecordFields =
+                                Punned' (Sym "a" :| []) ()
+                                  :| [ NonPunned'
+                                         (Sym "b" :| [])
+                                         ( Infix'
+                                             ( Inf'
+                                                 { infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (),
+                                                   infixOp = Sym "+" :| [],
+                                                   infixRight = Constant' (Number' (Integer'' 5 ()) ()) (),
+                                                   annInf = ()
+                                                 }
+                                             )
+                                             ()
+                                         )
+                                         ()
+                                     ],
+                              annExpressionRecord = ()
+                            }
+                        )
+                        ()
+                    )
+                    ()
+                )
+                ()
+            )
+            ()
+        )
+        ()
+    )
 
 --------------------------------------------------------------------------------
 -- Spacer tests
