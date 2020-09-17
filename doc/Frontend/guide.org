@@ -76,8 +76,51 @@ and dashes
 ** Top Level Declarations
 *** Functions
 
-**** Signatures
-**** Implicit Arguments
+Functions are started by writing =let= which is followed by any valid
+prefix symbol or an infix symbol surrounded by parenthesis which shall
+be refereed to as the function name. Then, there are zero or more
+arguments, implicit arguments are surrounded in curly braces
+(={}=). The arguments are ended when an equal sign (===) is placed,
+which denotes the start of the body.
+
+#+BEGIN_SRC ocaml
+  -- this is a valid function
+
+  let f x = x + 3
+
+  -- this is another valid variable/function
+
+  let y = 5
+
+  -- this is a valid infix symbol
+
+  let (+) = plus
+
+
+  -- a function with an implicit argument
+  let foo {prf} x = x
+#+END_SRC
+
+Another important part of a function is the signature.
+
+A signature is denoted first by sig, then the function name. From here
+colon (=:=) denotes the start of the type of the function name. From
+here any valid type can be written.
+
+#+BEGIN_SRC ocaml
+  -- a valid signature and function
+  sig foo : int -> int
+  let foo x = x + 3
+
+
+  -- an example of a dependent signature
+  sig add
+      :  x : nat
+      -> y : int
+      -> if | x > y -> nat
+            | else  -> int
+  let add = (+)
+#+END_SRC
 *** Types
 *** Modules
 *** Imports
@@ -182,7 +225,6 @@ Example:
 **** Signatures
 **** Types
 *** String Literals
-*** Tuples
 *** Lists
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
@@ -195,6 +237,23 @@ bracket (=]=)
   -- another valid list
   [1,2,3]
 #+END_SRC
+*** Tuples
+Tuples are formatted like lists, however instead of using brackets,
+parenthesis are used instead ( =(= =)= ).
+
+#+BEGIN_SRC haskell
+  -- this is a tuple
+  (1, 2)
+
+  -- this is not a tuple
+  (1)
+
+  -- this is a 5 tuple!
+  (1,2,3,4,5)
+#+END_SRC
 *** Do Notation
 *** Constants
 *** Local opens
+
+Local opens work just like global open, however one has to write =in=
+then a body like expression definitions.
