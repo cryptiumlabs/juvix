@@ -83,6 +83,7 @@ arguments, implicit arguments are surrounded in curly braces
 (={}=). The arguments are ended when an equal sign (===) is placed,
 which denotes the start of the body.
 
+Example:
 #+BEGIN_SRC ocaml
   -- this is a valid function
 
@@ -107,6 +108,7 @@ A signature is denoted first by sig, then the function name. From here
 colon (=:=) denotes the start of the type of the function name. From
 here any valid type can be written.
 
+Example:
 #+BEGIN_SRC ocaml
   -- a valid signature and function
   sig foo : int -> int
@@ -128,15 +130,17 @@ one can import a module in two ways.
 
 Either by opening them
 
+Example:
 #+BEGIN_SRC ocaml
   -- A valid open
   open Foo
-
 
   open Foo.Bar.Baz
 #+END_SRC
 
 or aliasing them with a let
+
+Example:
 #+BEGIN_SRC ocaml
   -- a valid module alias
   let F = Foo
@@ -230,6 +234,7 @@ List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
 bracket (=]=)
 
+Example:?
 #+BEGIN_SRC haskell
   -- this is a valid list
   [1]
@@ -241,6 +246,7 @@ bracket (=]=)
 Tuples are formatted like lists, however instead of using brackets,
 parenthesis are used instead ( =(= =)= ).
 
+Example:
 #+BEGIN_SRC haskell
   -- this is a tuple
   (1, 2)
@@ -256,4 +262,20 @@ parenthesis are used instead ( =(= =)= ).
 *** Local opens
 
 Local opens work just like global open, however one has to write =in=
-then a body like expression definitions.
+then a body like other defining expressions.
+
+Example:
+#+BEGIN_SRC ocaml
+  let foo xs ys zs =
+    open List in
+    append xs (append ys zs)
+#+END_SRC
+
+There is also a more brief syntax where the module is then following
+by =.( ... code here ... )=
+
+Example:
+#+BEGIN_SRC ocaml
+  let foo xs ys zs =
+    List.(append xs (append ys zs))
+#+END_SRC
