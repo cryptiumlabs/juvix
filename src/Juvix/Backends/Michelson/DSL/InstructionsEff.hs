@@ -57,6 +57,8 @@ inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol -> var symbol
     Ann.AppM fun a -> appM fun a
+    Ann.Con c -> con c ty
+    Ann.Case sym ty tree -> caseTree sym ty tree
     Ann.LamM c a b -> do
       v <- lambda c a b ty
       consVal v ty
@@ -70,6 +72,47 @@ inst (Types.Ann _usage ty t) =
         -- We lose exhasution but it's a big match :(
         x ->
           constructPrim (newPrimToInstrErr x) ty
+
+con :: Env.Reduction m => Ann.Con -> Types.Type -> m Env.Expanded
+con c ty = do
+  cty <- typeToPrimType ty
+  case c of
+    Ann.ConLeft -> constructPrim (Types.Inst (Instr.LEFT "" "" "" "" cty)) ty
+    Ann.ConRight -> constructPrim (Types.Inst (Instr.RIGHT "" "" "" "" cty)) ty
+    Ann.ConPair -> constructPrim (Types.Inst (Instr.PAIR "" "" "" "")) ty
+
+caseTree :: Env.Reduction m => Symbol -> Ann.Type Types.PrimTy Types.PrimVal -> Ann.CaseTree Types.PrimTy Types.PrimVal -> m Env.Expanded
+caseTree sym ty tree = do
+  ty <- typeToPrimType ty
+  case tree of
+    Ann.Ignore body -> do
+      -- Just compile the body.
+      -- TODO: Do we need to do anything with usage accounting here?
+      inst body
+    Ann.BindVar n body -> do
+      -- Add name to refer to pattern-matched variable.
+      modify @"stack" (VStack.addName sym n)
+      inst body
+    Ann.BindPair fstSym sndSym body -> do
+      -- Unpack pair, bind elements to names.
+      _ <- var sym
+      addInstrs [Instructions.dup, Instructions.car, Instructions.dip [Instructions.cdr]]
+      let MT.Type (MT.TPair _ _ leftTy rightTy) _ = ty
+      VStack.consT (VStack.VarE (Set.singleton sndSym) (VStack.Usage Usage.Omega False) Nothing, rightTy)
+      VStack.consT (VStack.VarE (Set.singleton fstSym) (VStack.Usage Usage.Omega False) Nothing, leftTy)
+      inst body
+    Ann.SplitLeftRight (leftSym, leftBody) (rightSym, rightBody) -> do
+      let MT.Type (MT.TOr _ _ leftTy rightTy) _ = ty
+      -- Compile left & right cases.
+      (ProtectStack (Protect leftCase _) _) <- protectStack $ do
+        VStack.consT (VStack.VarE (Set.singleton leftSym) (VStack.Usage Usage.Omega False) Nothing, leftTy)
+        inst leftBody
+      rightCase <- inst rightBody
+      VStack.consT (VStack.VarE (Set.singleton rightSym) (VStack.Usage Usage.Omega False) Nothing, rightTy)
+      case (leftCase, rightCase) of
+        (Env.Expanded leftCase, Env.Expanded rightCase) ->
+          pure (Env.Expanded (Instructions.ifLeft [leftCase] [rightCase]))
+        _ -> throw @"compilationError" (Types.InternalFault "invalid case entry")
 
 applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
 applyPrimOnArgs prim arguments =
@@ -764,6 +807,16 @@ typeToPrimType ty =
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
+    Ann.ADT adt -> adtToPrimType adt
+
+adtToPrimType :: forall m. Env.Error m => Ann.ADT Types.PrimTy -> m Untyped.T
+adtToPrimType adt =
+  case adt of
+    Ann.PrimA (Types.PrimTy primTy) -> pure primTy
+    -- left / right
+    Ann.SumA l r -> undefined
+    -- pair
+    Ann.ProductA f s -> undefined
 
 eatType :: Natural -> Types.Type -> Types.Type
 eatType 0 t = t

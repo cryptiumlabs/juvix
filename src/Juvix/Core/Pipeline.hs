@@ -4,6 +4,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.Erasure.Datatypes as Datatypes
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Translate as Translate
@@ -48,8 +49,10 @@ eraseGlobals = do
 coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
 coreToAnn term usage ty = do
   term <- typecheckErase term usage ty
-  ann <- ErasedAnn.convertTerm term usage
-  pure ann
+  let ann = ErasedAnn.convertTerm term usage
+  globals <- eraseGlobals
+  let conv = Datatypes.inlineDatatypes globals ann
+  pure conv
 
 coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
 coreToMichelson term usage ty = do
