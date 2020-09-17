@@ -15,92 +15,6 @@ import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Frontend.Types.Base
-  ( Adt' (Sum'),
-    Application' (App', annApp, applicationArgs, applicationName),
-    Arg' (ConcreteA'),
-    Cond' (C'),
-    CondLogic'
-      ( CondExpression',
-        annCondExpression,
-        condLogicBody,
-        condLogicPred
-      ),
-    Constant' (Number'),
-    Data' (NonArrowed', annNonArrowed, dataAdt),
-    ExpRecord'
-      ( ExpressionRecord',
-        annExpressionRecord,
-        expRecordFields
-      ),
-    Expression'
-      ( Application',
-        Constant',
-        ExpRecord',
-        Infix',
-        Name',
-        OpenExpr',
-        Parened',
-        RefinedE'
-      ),
-    Function' (Func'),
-    FunctionLike'
-      ( Like',
-        annLike,
-        functionLikeArgs,
-        functionLikeBody,
-        functionLikedName
-      ),
-    GuardBody' (Body', Guard'),
-    Infix' (Inf', annInf, infixLeft, infixOp, infixRight),
-    MatchLogic'
-      ( MatchLogic',
-        annMatchLogic,
-        matchLogicContents,
-        matchLogicNamed
-      ),
-    MatchLogicStart' (MatchCon', MatchConst', MatchName', MatchRecord'),
-    Module' (Mod'),
-    ModuleOpen' (Open'),
-    ModuleOpenExpr'
-      ( OpenExpress',
-        annOpenExpress,
-        moduleOpenExprExpr,
-        moduleOpenExprModuleN
-      ),
-    Name' (Concrete', Implicit'),
-    NameSet' (NonPunned', Punned'),
-    NameType'
-      ( NameType'',
-        annNameType',
-        nameTypeName,
-        nameTypeSignature
-      ),
-    Numb' (Integer''),
-    Product' (ADTLike', Arrow', Record'),
-    Record'
-      ( Record''',
-        annRecord'',
-        recordFamilySignature,
-        recordFields
-      ),
-    Signature'
-      ( Sig',
-        annSig,
-        signatureArrowType,
-        signatureConstraints,
-        signatureName,
-        signatureUsage
-      ),
-    Sum' (S', annS, sumConstructor, sumValue),
-    TopLevel' (Function', Module', ModuleOpen', Signature', Type'),
-    Type' (Typ', annTyp, typeArgs, typeForm, typeName', typeUsage),
-    TypeRefine'
-      ( TypeRefine',
-        annTypeRefine,
-        typeRefineName,
-        typeRefineRefinement
-      ),
-  )
 import Juvix.Library
   ( ($),
     (&&),
@@ -329,7 +243,7 @@ many1FunctionsParser =
         <> "let bah = foo 1 2 3\n"
         <> "let nah \n"
         <> "  | bah == 5 = 7 \n"
-        <> "  | else     = 11\n"
+        <> "  | else     = 11"
         <> "let test = \n"
         <> "  let check = nah in \n"
         <> "  case check of \n"
@@ -339,14 +253,15 @@ many1FunctionsParser =
         <> "          print failed; \n"
         <> "          fail"
     )
+    -- to avoid having too many lines some of these lines go over 80
     [ Function'
         ( Func'
             ( Like'
-                { functionLikedName = Sym "foo",
+                { functionLikedName = "foo",
                   functionLikeArgs =
                     [ ConcreteA'
                         ( MatchLogic'
-                            { matchLogicContents = MatchName' (Sym "a") (),
+                            { matchLogicContents = MatchName' "a" (),
                               matchLogicNamed = Nothing,
                               annMatchLogic = ()
                             }
@@ -354,7 +269,7 @@ many1FunctionsParser =
                         (),
                       ConcreteA'
                         ( MatchLogic'
-                            { matchLogicContents = MatchName' (Sym "b") (),
+                            { matchLogicContents = MatchName' "b" (),
                               matchLogicNamed = Nothing,
                               annMatchLogic = ()
                             }
@@ -362,7 +277,7 @@ many1FunctionsParser =
                         (),
                       ConcreteA'
                         ( MatchLogic'
-                            { matchLogicContents = MatchName' (Sym "c") (),
+                            { matchLogicContents = MatchName' "c" (),
                               matchLogicNamed = Nothing,
                               annMatchLogic = ()
                             }
@@ -373,29 +288,63 @@ many1FunctionsParser =
                     Body'
                       ( Application'
                           ( App'
-                              { applicationName = Name' (Sym "+" :| []) (),
+                              { applicationName = Name' ("+" :| []) (),
                                 applicationArgs =
                                   Parened'
                                     ( Infix'
                                         ( Inf'
-                                            { infixLeft = Name' (Sym "a" :| []) (),
-                                              infixOp = Sym "+" :| [],
-                                              infixRight = Name' (Sym "b" :| []) (),
+                                            { infixLeft = Name' ("a" :| []) (),
+                                              infixOp = "+" :| [],
+                                              infixRight = Name' ("b" :| []) (),
                                               annInf = ()
                                             }
                                         )
                                         ()
                                     )
                                     ()
-                                    :| [ Name' (Sym "clet" :| []) (),
-                                         Name' (Sym "bah" :| []) ()
-                                       ],
+                                    :| [Name' ("c" :| []) ()],
                                 annApp = ()
                               }
                           )
                           ()
                       )
                       (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        (),
+      Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = "bah",
+                  functionLikeArgs = [],
+                  functionLikeBody = Body' (Application' (App' {applicationName = Name' ("foo" :| []) (), applicationArgs = Constant' (Number' (Integer'' 1 ()) ()) () :| [Constant' (Number' (Integer'' 2 ()) ()) (), Constant' (Number' (Integer'' 3 ()) ()) ()], annApp = ()}) ()) (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        (),
+      Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = "nah",
+                  functionLikeArgs = [],
+                  functionLikeBody = Guard' (C' (CondExpression' {condLogicPred = Infix' (Inf' {infixLeft = Name' ("bah" :| []) (), infixOp = "==" :| [], infixRight = Constant' (Number' (Integer'' 5 ()) ()) (), annInf = ()}) (), condLogicBody = Constant' (Number' (Integer'' 7 ()) ()) (), annCondExpression = ()} :| [CondExpression' {condLogicPred = Name' ("else" :| []) (), condLogicBody = Constant' (Number' (Integer'' 11 ()) ()) (), annCondExpression = ()}]) ()) (),
+                  annLike = ()
+                }
+            )
+            ()
+        )
+        (),
+      Function'
+        ( Func'
+            ( Like'
+                { functionLikedName = "test",
+                  functionLikeArgs = [],
+                  functionLikeBody = Body' (Let' (Let''' {letBindings = Like' {functionLikedName = "check", functionLikeArgs = [], functionLikeBody = Body' (Name' ("nah" :| []) ()) (), annLike = ()}, letBody = Match' (Match''' {matchOn = Name' ("check" :| []) (), matchBindigns = MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "seven" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 11 ()) ()) (), annMatchL = ()} :| [MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "eleven" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 7 ()) ()) (), annMatchL = ()}, MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "f" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = OpenExpr' (OpenExpress' {moduleOpenExprModuleN = "Fails" :| [], moduleOpenExprExpr = Do' (Do''' (DoBody' {doBodyName = Nothing, doBodyExpr = Application' (App' {applicationName = Name' ("print" :| []) (), applicationArgs = Name' ("failed" :| []) () :| [], annApp = ()}) (), annDoBody = ()} :| [DoBody' {doBodyName = Nothing, doBodyExpr = Name' ("fail" :| []) (), annDoBody = ()}]) ()) (), annOpenExpress = ()}) (), annMatchL = ()}], annMatch'' = ()}) (), annLet'' = ()}) ()) (),
                   annLike = ()
                 }
             )
