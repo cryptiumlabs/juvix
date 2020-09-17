@@ -167,14 +167,17 @@ parsedContract file = do
             (file <> ".parsed")
             (decodeUtf8 $ failOutput i context error)
         return []
+  let doneIO result = do
+        Juvix.Library.writeFile (file <> ".parsed") (resultToText result)
+        return result
   readString <- readFile file
   let rawContract = encodeUtf8 readString
   case Parser.parse rawContract of
     Fail i context err -> failIO i context err
-    Done _i r -> return r
+    Done _i r -> doneIO r
     Partial cont ->
       case cont "" of
-        Done _i r -> return r
+        Done _i r -> doneIO r
         Fail i context err -> failIO i context err
         Partial _cont' -> return []
 
