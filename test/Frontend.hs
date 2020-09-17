@@ -1,6 +1,13 @@
 module Frontend where
 
 import Data.Attoparsec.ByteString
+  ( IResult (Done, Fail, Partial),
+    Parser,
+    Result,
+    many',
+    parse,
+    parseOnly,
+  )
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import Data.ByteString (writeFile)
 import Data.ByteString.Char8 (pack)
@@ -8,12 +15,125 @@ import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Frontend.Types.Base
-import Juvix.Library hiding (show)
+  ( Adt' (Sum'),
+    Application' (App', annApp, applicationArgs, applicationName),
+    Arg' (ConcreteA'),
+    Cond' (C'),
+    CondLogic'
+      ( CondExpression',
+        annCondExpression,
+        condLogicBody,
+        condLogicPred
+      ),
+    Constant' (Number'),
+    Data' (NonArrowed', annNonArrowed, dataAdt),
+    ExpRecord'
+      ( ExpressionRecord',
+        annExpressionRecord,
+        expRecordFields
+      ),
+    Expression'
+      ( Application',
+        Constant',
+        ExpRecord',
+        Infix',
+        Name',
+        OpenExpr',
+        Parened',
+        RefinedE'
+      ),
+    Function' (Func'),
+    FunctionLike'
+      ( Like',
+        annLike,
+        functionLikeArgs,
+        functionLikeBody,
+        functionLikedName
+      ),
+    GuardBody' (Body', Guard'),
+    Infix' (Inf', annInf, infixLeft, infixOp, infixRight),
+    MatchLogic'
+      ( MatchLogic',
+        annMatchLogic,
+        matchLogicContents,
+        matchLogicNamed
+      ),
+    MatchLogicStart' (MatchCon', MatchConst', MatchName', MatchRecord'),
+    Module' (Mod'),
+    ModuleOpen' (Open'),
+    ModuleOpenExpr'
+      ( OpenExpress',
+        annOpenExpress,
+        moduleOpenExprExpr,
+        moduleOpenExprModuleN
+      ),
+    Name' (Concrete', Implicit'),
+    NameSet' (NonPunned', Punned'),
+    NameType'
+      ( NameType'',
+        annNameType',
+        nameTypeName,
+        nameTypeSignature
+      ),
+    Numb' (Integer''),
+    Product' (ADTLike', Arrow', Record'),
+    Record'
+      ( Record''',
+        annRecord'',
+        recordFamilySignature,
+        recordFields
+      ),
+    Signature'
+      ( Sig',
+        annSig,
+        signatureArrowType,
+        signatureConstraints,
+        signatureName,
+        signatureUsage
+      ),
+    Sum' (S', annS, sumConstructor, sumValue),
+    TopLevel' (Function', Module', ModuleOpen', Signature', Type'),
+    Type' (Typ', annTyp, typeArgs, typeForm, typeName', typeUsage),
+    TypeRefine'
+      ( TypeRefine',
+        annTypeRefine,
+        typeRefineName,
+        typeRefineRefinement
+      ),
+  )
+import Juvix.Library
+  ( ($),
+    (&&),
+    (.),
+    Alternative (many),
+    Bool (False),
+    ByteString,
+    Either,
+    Eq ((==)),
+    FilePath,
+    IO,
+    Maybe (..),
+    Monad (return),
+    NonEmpty ((:|)),
+    Semigroup ((<>)),
+    Show,
+    Symbol (Sym),
+    Text,
+    Word8,
+    const,
+    decodeUtf8,
+    encodeUtf8,
+    isLeft,
+    isRight,
+    readFile,
+    readMaybe,
+    writeFile,
+    (|>),
+  )
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.Silver.Advanced as T
-import Text.Show.Pretty (ppShowList)
-import Prelude (String, error, show, unlines)
+import Prelude (String, error, show)
 
 allParserTests :: T.TestTree
 allParserTests =

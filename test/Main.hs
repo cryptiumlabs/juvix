@@ -49,7 +49,7 @@ allCheckedTests =
       pipelineTests,
       backendTests,
       frontEndTests,
-      -- translationPasses,
+      translationPasses,
       EAC2.eac2Tests,
       Erasure.erasureTests
       -- Shunt.allInfixTests

@@ -65,7 +65,8 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 * FrontendDesugar
 - _Relies on_
   + [[Parser]]
-  + [[FrontendDesugar]]
+  + [[Types]]
+  + [[Base]]
   + [[Library]]
 * INet
 - _Relies on_
@@ -168,3 +169,4 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Default]]
   + [[Library]]
 * examples
+** Token.ju.golden
