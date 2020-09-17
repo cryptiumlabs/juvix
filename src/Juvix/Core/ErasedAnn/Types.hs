@@ -42,6 +42,8 @@ data ADT primTy
   deriving (Show, Eq, Generic)
 
 -- where should we deal with partial constructor application
+-- maybe n-ary products & sums are better, second pass to nest them for Michelson, clearer separation
+-- include names for LLVM
 data Con
   = ConLeft
   | ConRight

@@ -270,6 +270,7 @@ primToFargs (Types.Inst inst) ty =
         Instr.EDIV _ -> ediv
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> const pushConstant
+        -- this is partial, TODO need to deal with left/right here
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
