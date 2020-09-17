@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns -Wwarn=missing-methods #-}
 
 module Juvix.Backends.ArithmeticCircuit.Parameterisation where
@@ -9,14 +10,7 @@ import Data.Pairing.BN254 (Fr)
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans as Booleans
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements as FieldElements
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers as FEInteger
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    typeOf,
-  )
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -85,7 +79,7 @@ feTyToAll = FETy
 feValToAll :: FEVal -> Val
 feValToAll = FEVal
 
-typeOf :: Val -> NonEmpty Ty
+typeOf :: Val -> P.PrimType Ty
 typeOf (BoolVal x) =
   fmap boolTyToAll (Booleans.typeOf x)
 typeOf (FEVal x) =
@@ -95,6 +89,12 @@ typeOf (Curried _ _) =
 typeOf Eq =
   BoolTy Booleans.Ty :| [FETy FieldElements.Ty, FETy FieldElements.Ty]
 typeOf (IntegerVal _) = undefined
+
+hasType :: Val -> P.PrimType Ty -> Bool
+hasType x ty = ty == typeOf x
+
+arity :: Val -> Int
+arity = pred . length . typeOf
 
 apply :: Val -> Val -> Maybe Val
 apply (BoolVal x) (BoolVal y) =
@@ -124,6 +124,28 @@ reservedOpNames :: [String]
 reservedOpNames =
   Booleans.reservedOpNames <> FieldElements.reservedOpNames <> ["=="]
 
-t :: Parameterisation Ty Val
+builtinTypes :: P.Builtins Ty
+builtinTypes = [] -- FIXME
+
+builtinValues :: P.Builtins Val
+builtinValues = [] -- FIXME
+
+t :: P.Parameterisation Ty Val
 t =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> False, -- TODO
+      intVal = const Nothing, -- TODO
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

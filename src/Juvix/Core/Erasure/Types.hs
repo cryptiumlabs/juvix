@@ -4,6 +4,7 @@ module Juvix.Core.Erasure.Types
   )
 where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Extensible as Ext
 import Juvix.Core.Erased.Types as Type
   ( Type,
@@ -13,12 +14,13 @@ import Juvix.Core.Erased.Types as Type
     pattern SymT,
   )
 import qualified Juvix.Core.Erased.Types as Erased
-import qualified Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
-import Juvix.Library hiding (Type, empty)
+import Juvix.Core.Usage (Usage)
+import Juvix.Library hiding (Datatype, Type, empty)
 
 data Env primTy primVal = Env {nextName :: Int, nameStack :: [Symbol]}
   deriving (Generic)
@@ -76,6 +78,71 @@ do
           Erased.typeLet = typedTuple,
           Erased.typeApp = typed
         }
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
+
+data Datatype primTy
+  = Datatype
+      { dataName :: GlobalName,
+        dataArgs :: [DataArg primTy],
+        dataLevel :: Natural,
+        dataCons :: [DataCon primTy]
+      }
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDataArg "DataArg" [] [t|T|] extDataArg
+
+data DataArg primTy
+  = DataArg
+      { argName :: GlobalName,
+        argUsage :: Usage,
+        argType :: Type primTy,
+        argIsParam :: Bool
+      }
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendDataCon "DataCon" [] [t|T|] extDataCon
+
+data DataCon primTy
+  = DataCon
+      { conName :: GlobalName,
+        conType :: Type primTy
+      }
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendFunction "Function" [] [t|T|] extFunction
+
+data Function primTy primVal
+  = Function
+      { funName :: GlobalName,
+        funUsage :: GlobalUsage,
+        funType :: Type primTy,
+        funClauses :: NonEmpty (FunClause primTy primVal)
+      }
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendFunClause "FunClause" [] [t|T|] extFunClause
+
+data FunClause primTy primVal
+  = FunClause [Pattern primTy primVal] (Term primTy primVal)
+
+-- TODO: Figure out how to do this with extensible.
+-- IR.extendPattern "Pattern" [] [t|T|] extPattern
+
+data Pattern primTy primVal
+  = PCon GlobalName [Pattern primTy primVal]
+  | PVar PatternVar
+  | PDot (Term primTy primVal)
+  | PPrim primVal
+
+data Global primTy primVal
+  = GDatatype (Datatype primTy)
+  | GDataCon (DataCon primTy)
+  | GFunction (Function primTy primVal)
+  | GAbstract GlobalUsage (Term primTy primVal)
+
+type Globals primTy primVal = HM.HashMap GlobalName (Global primTy primVal)
 
 getType :: Term primTy primVal -> Type primTy
 getType (Var _ ty) = ty

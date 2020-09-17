@@ -13,8 +13,6 @@ import Juvix.Core.IR.Typechecker as IR
     Context,
     EnvCtx,
     EnvTypecheck (..),
-    Global (..),
-    Globals,
     Leftovers (..),
     TypecheckError,
     TypecheckError' (..),

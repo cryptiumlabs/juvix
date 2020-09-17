@@ -15,14 +15,14 @@
 --       deriving (Show, Generic, NFData)
 --   #+end_src
 module Juvix.FrontendContextualise.InfixPrecedence.Extend
-  ( module Juvix.FrontendDesugar.RemoveDo.Extend,
+  ( module Juvix.FrontendContextualise.ModuleOpen.Extend,
     module Juvix.FrontendContextualise.InfixPrecedence.Extend,
   )
 where
 
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendExpression)
-import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext
+import Juvix.FrontendContextualise.ModuleOpen.Extend hiding (extendExpression)
+import qualified Juvix.FrontendContextualise.ModuleOpen.Extend as Ext
 import Juvix.Library
 
 extendExpression :: ExtExpression

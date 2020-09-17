@@ -1,4 +1,4 @@
-module FrontendDesugar where
+module Frontend.Desugar where
 
 import Data.Attoparsec.ByteString (parse)
 import Frontend (shouldParseAs)

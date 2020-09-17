@@ -4,10 +4,12 @@ module Juvix.FrontendContextualise.ModuleOpen.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as Old
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
+import Prelude (error)
 
 -- Sadly for this pass we have to change every symbol affecting function
 
@@ -22,23 +24,25 @@ transformModuleOpenExpr ::
   Env.WorkingMaps m => Old.ModuleOpenExpr -> m New.Expression
 transformModuleOpenExpr (Old.OpenExpress modName expr) = do
   fullQualified <- Env.qualifyName modName
-  let reconstructed = reconstructSymbol fullQualified
-      err = throw @"error" (Env.UnknownModule reconstructed)
-  looked <- Env.lookup reconstructed
-  case looked of
+  let err = throw @"error" (Env.UnknownModule fullQualified)
+  looked <- Env.lookup fullQualified
+  case Context.extractValue <$> looked of
     Just Context.Def {} -> err
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
+    Just Context.CurrentNameSpace {} -> err
     Nothing -> err
-    Just (Context.Record innerC _mTy) -> do
-      let newSymb = fst <$> Context.toList innerC
-      savedDef <- traverse saveOldOpen newSymb
-      --
-      traverse_ (`Env.addModMap` fullQualified) newSymb
-      res <- transformExpression expr
-      --
-      traverse_ restoreNameOpen savedDef
-      pure res
+    Just (Context.Record innerC _mTy) ->
+      -- Fine to just have the public names
+      -- we are only tracking what this can use, not doing
+      -- replacements
+      let NameSpace.List {publicL} = NameSpace.toList innerC
+          newSymbs = fst <$> publicL
+       in protectOpenPrim newSymbs $ do
+            -- TODO ∷ should we update this to not shadow
+            -- our protected removes it, but we just add it back
+            traverse_ (`Env.addModMap` fullQualified) newSymbs
+            transformExpression expr
 
 saveOldOpen ::
   HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
@@ -51,91 +55,72 @@ restoreNameOpen (Just def, sym) = Env.addModMap sym def
 restoreNameOpen (Nothing, sym) = Env.removeModMap sym
 
 --------------------------------------------------
+-- Protection extension
+--------------------------------------------------
+protectOpenPrim :: Env.WorkingMaps m => [Symbol] -> m a -> m a
+protectOpenPrim syms op = do
+  originalQualified <- traverse saveOldOpen syms
+  traverse_ Env.removeModMap syms
+  res <- op
+  traverse_ restoreNameOpen originalQualified
+  pure res
+
+protectOpen :: Env.WorkingMaps m => [Symbol] -> m a -> m a
+protectOpen syms =
+  protectSymbols syms . protectOpenPrim syms
+
+--------------------------------------------------
 -- Symbol Binding
 --------------------------------------------------
 
 transformLet :: Env.WorkingMaps m => Old.Let -> m New.Let
 transformLet (Old.LetGroup name bindings body) = do
-  originalVal <- Env.lookup name
-  qualifiedName <- Env.lookupModMap name
-  let transform = do
-        Env.addUnknown name
-        Env.removeModMap name
-        transformedBindings <- traverse transformFunctionLike bindings
-        let def = decideRecordOrDef transformedBindings Nothing
-        Env.add name def -- add to new context
-        New.LetGroup name transformedBindings <$> transformExpression body
-  res <- transform
-  restoreName (originalVal, name)
-  restoreNameOpen (qualifiedName, name)
-  pure res
+  protectOpen [name] $ do
+    transformedBindings <- traverse transformFunctionLike bindings
+    --
+    Env.add (NameSpace.Priv name) (decideRecordOrDef transformedBindings Nothing)
+    --
+    res <- New.LetGroup name transformedBindings <$> transformExpression body
+    -- don't know where we came from!
+    Env.remove (NameSpace.Priv name)
+    pure res
 
 transformLetType ::
   Env.WorkingMaps m => Old.LetType -> m New.LetType
 transformLetType (Old.LetType'' typ expr) = do
   let typeName = Old.typeName' typ
-  originalVal <- Env.lookup typeName
-  qualifiedName <- Env.lookupModMap typeName
-  let transform = do
-        Env.addUnknown typeName
-        Env.removeModMap typeName
-        transformedType <- transformType typ
-        let def = Context.TypeDeclar transformedType
-        Env.add typeName def -- add to new context
-        New.LetType'' transformedType <$> transformExpression expr
-  res <- transform
-  restoreName (originalVal, typeName)
-  restoreNameOpen (qualifiedName, typeName)
-  pure res
+  protectOpen [typeName] $ do
+    transformedType <- transformType typ
+    --
+    Env.add (NameSpace.Priv typeName) (Context.TypeDeclar transformedType)
+    --
+    res <- New.LetType'' transformedType <$> transformExpression expr
+    -- don't know where we came from!
+    Env.remove (NameSpace.Priv typeName)
+    pure res
 
 transformFunctionLike ::
-  Env.WorkingMaps m => Old.FunctionLike Old.Expression -> m (New.FunctionLike New.Expression)
-transformFunctionLike (Old.Like args body) = do
-  let bindings = accBindings args
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  transArgs <- traverse transformArg args
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.Like transArgs <$> transformExpression body
-  --
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+  Env.WorkingMaps m =>
+  Old.FunctionLike Old.Expression ->
+  m (New.FunctionLike New.Expression)
+transformFunctionLike (Old.Like args body) =
+  protectOpen (accBindings args) $
+    New.Like <$> traverse transformArg args <*> transformExpression body
 
 transformMatchL ::
   Env.WorkingMaps m => Old.MatchL -> m New.MatchL
-transformMatchL (Old.MatchL pat body) = do
-  let bindings = findBindings pat
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  pat <- transformMatchLogic pat
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.MatchL pat <$> transformExpression body
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+transformMatchL (Old.MatchL pat body) =
+  protectOpen
+    (findBindings pat)
+    (New.MatchL <$> transformMatchLogic pat <*> transformExpression body)
 
 transformLambda ::
   Env.WorkingMaps m => Old.Lambda -> m New.Lambda
-transformLambda (Old.Lamb args body) = do
-  let bindings = findBindings (NonEmpty.head args)
-  originalBindings <- traverse saveOld bindings
-  originalQualified <- traverse saveOldOpen bindings
-  transArgs <- transformMatchLogic (NonEmpty.head args)
-  --
-  traverse_ Env.addUnknown bindings
-  traverse_ Env.removeModMap bindings
-  --
-  res <- New.Lamb (pure transArgs) <$> transformExpression body
-  traverse_ restoreName originalBindings
-  traverse_ restoreNameOpen originalQualified
-  pure res
+transformLambda (Old.Lamb args body) =
+  protectOpen bindings $
+    New.Lamb <$> traverse transformMatchLogic args <*> transformExpression body
+  where
+    bindings = foldr (\x acc -> findBindings x <> acc) [] args
 
 --------------------------------------------------------------------------------
 -- Record/Def Decision function... update when contextify version updates
@@ -156,10 +141,10 @@ decideRecordOrDef xs ty
         -- the type here can eventually give us arguments though looking at the
         -- lambda for e, and our type can be found out similarly by looking at types
         let f (New.NonPunned s e) =
-              Context.add
-                (NonEmpty.head s)
+              NameSpace.insert
+                (NameSpace.Pub (NonEmpty.head s))
                 (decideRecordOrDef (New.Like [] e :| []) Nothing)
-         in Context.Record (foldr f Context.empty i) ty
+         in Context.Record (foldr f NameSpace.empty i) ty
       New.Let _l ->
         def
       _ -> def
@@ -177,44 +162,93 @@ emptyArgs (_ : _) = False
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
-transformContext :: Env.Old Context.T -> Either Env.Error (Env.New Context.T)
-transformContext ctx =
-  case Env.runEnv transformC ctx of
+transformContext ::
+  Env.Old Context.T -> [Env.PreQualified] -> Either Env.Error (Env.New Context.T)
+transformContext ctx pres =
+  case Env.runEnv transformC ctx pres of
     (Right _, env) -> Right (Env.new env)
     (Left e, _) -> Left e
 
-transformContextInner :: Env.WorkingMaps m => Env.Old Context.T -> m (Env.New Context.T)
-transformContextInner ctx =
-  case Env.runEnv transformC ctx of
-    (Right _, env) -> pure (Env.new env)
-    (Left e, _) -> throw @"error" e
-
 transformDef ::
-  Env.WorkingMaps m => Env.Old Context.Definition -> m (Env.New Context.Definition)
-transformDef (Context.Def usage mTy term prec) =
+  Env.WorkingMaps m =>
+  Env.Old Context.Definition ->
+  NameSpace.From Symbol ->
+  m (Env.New Context.Definition)
+transformDef (Context.Def usage mTy term prec) _ =
   Context.Def usage
     <$> traverse transformSignature mTy
     <*> traverse transformFunctionLike term
     <*> pure prec
-transformDef (Context.Record contents mTy) =
-  Context.Record <$> transformContextInner contents <*> traverse transformSignature mTy
-transformDef (Context.TypeDeclar repr) =
+--
+transformDef (Context.TypeDeclar repr) _ =
   Context.TypeDeclar <$> transformType repr
-transformDef (Context.Unknown mTy) =
+--
+transformDef (Context.Unknown mTy) _ =
   Context.Unknown <$> traverse transformSignature mTy
+--
+transformDef Context.CurrentNameSpace _ =
+  pure Context.CurrentNameSpace
+--
+transformDef (Context.Record _contents mTy) name' = do
+  sig <- traverse transformSignature mTy
+  old <- get @"old"
+  let name = NameSpace.extractValue name'
+      newMod = pure Context.topLevelName <> Context.currentName old <> pure name
+  -- switch to the new namespace
+  updateSym newMod
+  -- do our transform
+  transformInner
+  -- transform back
+  updateSym (pure Context.topLevelName <> Context.currentName old)
+  -- sadly this currently only adds it to the public, so we have to remove it
+  looked <- fmap NameSpace.extractValue <$> Env.lookupCurrent name
+  Env.remove name'
+  case looked of
+    Just (Context.Record record _) ->
+      pure (Context.Record record sig)
+    Nothing -> error "Does not happen: record lookup is nothing"
+    Just __ -> error "Does not happen: record lookup is Just not a record!"
 
-transformC ::
-  Env.WorkingMaps m => m ()
+-- we work on the topMap
+transformC :: Env.WorkingMaps m => m ()
 transformC = do
+  old <- get @"old"
+  let oldC = Context.topList old
+      --
+      updateSym' sym = updateSym (Context.topLevelName :| [sym])
+  case oldC of
+    [(sym, _)] -> do
+      updateSym' sym
+      transformInner
+    (sym, _) : (sym2, _) : _ -> do
+      updateSym' sym
+      transformInner
+      -- this way we update our namespace before
+      -- removing from top
+      -- likely the next way around we work on sym2
+      updateSym' sym2
+      modify @"old" (Context.removeTop sym)
+      transformC
+    [] -> pure ()
+
+transformInner ::
+  Env.WorkingMaps m => m ()
+transformInner = do
   old <- get @"old"
   let oldC = Context.toList old
   case oldC of
-    (sym, def) : _ -> do
-      newDef <- transformDef def
-      Env.add sym newDef
-      Env.removeOld sym
-      transformC
-    [] -> pure ()
+    NameSpace.List {publicL = [], privateL = []} ->
+      pure ()
+    NameSpace.List {publicL = ((sym, def) : _), privateL = _} -> do
+      newDef <- transformDef def (NameSpace.Pub sym)
+      Env.add (NameSpace.Pub sym) newDef
+      Env.removeOld (NameSpace.Pub sym)
+      transformInner
+    NameSpace.List {publicL = [], privateL = ((sym, def) : _)} -> do
+      newDef <- transformDef def (NameSpace.Priv sym)
+      Env.add (NameSpace.Priv sym) newDef
+      Env.removeOld (NameSpace.Priv sym)
+      transformInner
 
 transformExpression ::
   Env.WorkingMaps m => Old.Expression -> m New.Expression
@@ -225,6 +259,7 @@ transformExpression (Old.Constant c) = New.Constant <$> transformConst c
 transformExpression (Old.Let l) = New.Let <$> transformLet l
 transformExpression (Old.LetType l) = New.LetType <$> transformLetType l
 transformExpression (Old.Match m) = New.Match <$> transformMatch m
+transformExpression (Old.Infix i) = New.Infix <$> transformInfix i
 transformExpression (Old.Name n) =
   New.Name <$> transformSymbol n
 transformExpression (Old.OpenExpr n) =
@@ -339,10 +374,6 @@ argLogic (Old.ImplicitA x) = x
 accBindings :: [Old.Arg] -> [Symbol]
 accBindings = concatMap (findBindings . argLogic)
 
-reconstructSymbol :: NonEmpty Symbol -> Symbol
-reconstructSymbol =
-  intern . foldr (\x acc -> unintern x <> "." <> acc) mempty
-
 transformArg ::
   Env.WorkingMaps m => Old.Arg -> m New.Arg
 transformArg (Old.ConcreteA ml) = New.ConcreteA <$> transformMatchLogic ml
@@ -401,20 +432,6 @@ transformString (Old.Sho t) = pure $ New.Sho t
 transformBlock ::
   Env.WorkingMaps m => Old.Block -> m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
-
-saveOld ::
-  HasState "new" (Context.T term ty sumRep) f =>
-  Symbol ->
-  f (Maybe (Context.Definition term ty sumRep), Symbol)
-saveOld sym =
-  (,sym) <$> Env.lookup sym
-
-restoreName ::
-  HasState "new" (Context.T term ty sumRep) m =>
-  (Maybe (Context.Definition term ty sumRep), Symbol) ->
-  m ()
-restoreName (Just def, sym) = Env.add sym def
-restoreName (Nothing, sym) = Env.remove sym
 
 transformApplication ::
   Env.WorkingMaps m => Old.Application -> m New.Application
@@ -485,3 +502,66 @@ transformNameSet ::
   Env.WorkingMaps m => (t -> m t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned <$> transformSymbol s <*> p e
+
+--------------------------------------------------------------------------------
+-- Helpers
+--------------------------------------------------------------------------------
+
+protectSymbols :: Env.WorkingMaps m => [Symbol] -> m a -> m a
+protectSymbols syms op = do
+  originalBindings <- traverse saveOld syms
+  traverse_ Env.addUnknownGlobal (fmap snd originalBindings)
+  res <- op
+  traverse_ restoreName originalBindings
+  pure res
+
+saveOld ::
+  HasState "new" (Context.T term ty sumRep) f =>
+  Symbol ->
+  f (Maybe (Context.Definition term ty sumRep), Context.From Symbol)
+saveOld sym = do
+  looked <- Env.lookup sym
+  case looked of
+    Nothing ->
+      pure (Nothing, Context.Current (NameSpace.Pub sym))
+    Just (Context.Outside def) ->
+      pure (Just def, Context.Outside sym)
+    Just (Context.Current (NameSpace.Pub def)) ->
+      pure (Just def, Context.Current (NameSpace.Pub sym))
+    Just (Context.Current (NameSpace.Priv def)) ->
+      pure (Just def, Context.Current (NameSpace.Priv sym))
+
+restoreName ::
+  HasState "new" (Context.T term ty sumRep) m =>
+  (Maybe (Context.Definition term ty sumRep), Context.From Symbol) ->
+  m ()
+restoreName (def, Context.Current sym) =
+  case def of
+    Just def ->
+      Env.add sym def
+    Nothing ->
+      Env.remove sym
+restoreName (def, Context.Outside sym) =
+  -- we have to turn a symbol into a NameSymbol.T
+  -- we just have to pure it, the symbol we get
+  -- should not have any .'s inside of it
+  case def of
+    Just def ->
+      Env.addGlobal (sym :| []) def
+    Nothing ->
+      Env.removeGlobal (sym :| [])
+
+updateSym :: Env.WorkingMaps m => Context.NameSymbol -> m ()
+updateSym sym = do
+  old <- get @"old"
+  new <- get @"new"
+  case Context.switchNameSpace sym old of
+    -- bad Error for now
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"old" map
+  -- have to do this again sadly
+  case Context.switchNameSpace sym new of
+    Left ____ -> throw @"error" (Env.UnknownModule sym)
+    Right map -> put @"new" map
+  -- we now also have to populate the modmap
+  Env.populateModMap

@@ -25,6 +25,12 @@ import Prelude (String, fail)
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
+parseOnly :: ByteString -> Either String [Types.TopLevel]
+parseOnly =
+  Data.Attoparsec.ByteString.parseOnly
+    (eatSpaces (many1 topLevelSN <* endOfInput))
+    . removeComments
+
 parse :: ByteString -> Result [Types.TopLevel]
 parse =
   Data.Attoparsec.ByteString.parse
@@ -190,7 +196,8 @@ signature' :: Parser Types.Signature
 signature' = do
   _ <- spaceLiner (string "sig")
   name <- prefixSymbolSN
-  maybeUsage <- maybe (fmap Types.Constant constantSN <|> parens expressionSN)
+  maybeUsage <-
+    maybe (fmap Types.Constant constantSN <|> spaceLiner (parens expressionSN))
   skipLiner Lexer.colon
   typeclasses <- signatureConstraintSN
   exp <- expression

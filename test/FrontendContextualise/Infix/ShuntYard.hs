@@ -6,7 +6,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
 
-times, div, add, carrot, carrotL, equality :: Shunt.PredOrEle a
+times, div, add, carrot, carrotL, equality :: Shunt.PredOrEle Symbol a
 div = Shunt.Precedence (Shunt.Pred "/" Shunt.Left' 7)
 add = Shunt.Precedence (Shunt.Pred "+" Shunt.Left' 6)
 times = Shunt.Precedence (Shunt.Pred "*" Shunt.Left' 7)
@@ -31,7 +31,7 @@ infixlTest =
   )
     |> T.testCase ("test infixl: 3 + 4 * 5 * 6 ≡ 3 + ((4 * 5) * 6)")
   where
-    app :: Shunt.Application Integer
+    app :: Shunt.Application Symbol Integer
     Right app =
       Shunt.shunt $
         Shunt.Ele 3
@@ -44,7 +44,7 @@ infixrTest =
   )
     |> T.testCase ("test infixr: 3 + 4 ^ 5 ^ 6 ≡ 3 + (4 ^ (5 ^ 6))")
   where
-    app :: Shunt.Application Integer
+    app :: Shunt.Application Symbol Integer
     Right app =
       Shunt.shunt $
         Shunt.Ele 3
@@ -57,7 +57,7 @@ mixFailTest =
   )
     |> T.testCase ("test infixFail: 3 + 4 ^ 5 ^l 6 ≡ Error l ^l: mixing precedents")
   where
-    app :: Either Shunt.Error (Shunt.Application Integer)
+    app :: Either (Shunt.Error Symbol) (Shunt.Application Symbol Integer)
     app =
       Shunt.shunt $
         Shunt.Ele 3
@@ -70,7 +70,7 @@ nonAssocFailTest =
   )
     |> T.testCase ("test infixr: 3 + 4 == 5 == 6 ≡ Error: making non assocs assoc")
   where
-    app :: Either Shunt.Error (Shunt.Application Integer)
+    app :: Either (Shunt.Error Symbol) (Shunt.Application Symbol Integer)
     app =
       Shunt.shunt $
         Shunt.Ele 3

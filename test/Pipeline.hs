@@ -5,7 +5,6 @@ import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.Usage as Usage
@@ -69,7 +68,7 @@ exec (EnvE env) param globals = do
 
 type AnnTuple = (HR.Term PrimTy PrimVal, Usage.T, HR.Term PrimTy PrimVal)
 
-type Globals = Typed.Globals PrimTy PrimVal
+type Globals = IR.Globals PrimTy PrimVal
 
 shouldCompileTo ::
   String ->
@@ -97,7 +96,7 @@ toMichelson ::
   HR.Term PrimTy PrimVal ->
   Usage.T ->
   HR.Term PrimTy PrimVal ->
-  Typed.Globals PrimTy PrimVal ->
+  IR.Globals PrimTy PrimVal ->
   IO (Either String EmptyInstr)
 toMichelson term usage ty globals = do
   (res, _) <- exec (P.coreToMichelson term usage ty) michelson globals
@@ -112,7 +111,7 @@ toMichelsonContract ::
   HR.Term PrimTy PrimVal ->
   Usage.T ->
   HR.Term PrimTy PrimVal ->
-  Typed.Globals PrimTy PrimVal ->
+  IR.Globals PrimTy PrimVal ->
   IO (Either String Text)
 toMichelsonContract term usage ty globals = do
   (res, _) <- exec (P.coreToMichelsonContract term usage ty) michelson globals
@@ -135,7 +134,7 @@ test_constant :: T.TestTree
 test_constant =
   shouldCompileTo
     "constant"
-    (twoTerm, Usage.Omega, intTy)
+    (int 2, Usage.Omega, intTy)
     emptyGlobals
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 2))) MT.Nop))
 
@@ -163,38 +162,87 @@ test_partial_erase =
     emptyGlobals
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 12))) MT.Nop))
 
-twoTerm :: HR.Term PrimTy PrimVal
-twoTerm = HR.Elim (HR.Prim (Constant (M.ValueInt 2)))
-
 erasedLamTerm :: HR.Term PrimTy PrimVal
-erasedLamTerm = HR.Lam "x" (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))
+erasedLamTerm = HR.Lam "x" $ int 2
 
 erasedLamTy :: HR.Term PrimTy PrimVal
-erasedLamTy = HR.Pi (Usage.SNat 0) "x" intTy intTy
+erasedLamTy = HR.Pi zero "x" intTy intTy
 
 appLam :: HR.Term PrimTy PrimVal
-appLam = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm lamTy 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+appLam = HR.Elim $ lamElim `HR.App` int 2 `HR.App` int 3
+
+addTyT :: HR.Term PrimTy PrimVal
+addTyT = HR.Pi one "x" intTy $ HR.Pi one "y" intTy intTy
+
+addElim :: HR.Elim PrimTy PrimVal
+addElim = HR.Ann Usage.Omega (HR.Prim AddI) addTyT 0
 
 lamTerm :: HR.Term PrimTy PrimVal
-lamTerm = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Var "y")))))
+lamTerm =
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` varT "y"
+
+lamElim :: HR.Elim PrimTy PrimVal
+lamElim = HR.Ann one lamTerm lamTy 0
 
 appLam2 :: HR.Term PrimTy PrimVal
-appLam2 = HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) lamTerm2 lamTy2 0) (HR.Elim (HR.Prim (Constant (M.ValueInt 2))))) (HR.Elim (HR.Prim (Constant (M.ValueInt 3)))))
+appLam2 = HR.Elim $ lamElim2 `HR.App` int 2 `HR.App` int 3
 
 lamTerm2 :: HR.Term PrimTy PrimVal
-lamTerm2 = HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.App (HR.App (HR.Prim AddI) (HR.Elim (HR.Var "x"))) (HR.Elim (HR.Prim (Constant (M.ValueInt 10)))))))
+lamTerm2 =
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` int 10
+
+varT :: Symbol -> HR.Term PrimTy PrimVal
+varT = HR.Elim . HR.Var
 
 lamTy :: HR.Term PrimTy PrimVal
-lamTy = HR.Pi (Usage.SNat 1) "x" intTy (HR.Pi (Usage.SNat 1) "y" intTy intTy)
+lamTy = intTy ~~> intTy ~~> intTy
 
 lamTy2 :: HR.Term PrimTy PrimVal
-lamTy2 = HR.Pi (Usage.SNat 1) "x" intTy (HR.Pi (Usage.SNat 0) "y" intTy intTy)
+lamTy2 = intTy ~~> intTy ~@> intTy
 
-emptyGlobals :: Typed.Globals PrimTy PrimVal
+lamElim2 :: HR.Elim PrimTy PrimVal
+lamElim2 = HR.Ann one lamTerm2 lamTy2 0
+
+emptyGlobals :: IR.Globals PrimTy PrimVal
 emptyGlobals = mempty
 
-intTy :: HR.Term PrimTy PrimVal
-intTy = HR.PrimTy int
+michelsonTy :: M.T -> HR.Term PrimTy PrimVal
+michelsonTy t = HR.PrimTy $ PrimTy $ M.Type t M.noAnn
 
-int :: PrimTy
-int = PrimTy (M.Type M.TInt "")
+intTy :: HR.Term PrimTy PrimVal
+intTy = michelsonTy M.TInt
+
+int :: Integer -> HR.Term PrimTy PrimVal
+int = HR.Prim . Constant . M.ValueInt
+
+intE :: Integer -> HR.Elim PrimTy PrimVal
+intE x = HR.Ann Usage.Omega (int x) intTy 0
+
+arr ::
+  Usage.T ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
+arr π s t = HR.Pi π "" s (IR.weak t)
+
+infixr 0 ~~>
+
+(~~>) ::
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
+(~~>) = arr one
+
+infixr 0 ~@>
+
+(~@>) ::
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal ->
+  HR.Term PrimTy PrimVal
+(~@>) = arr zero

@@ -1,21 +1,34 @@
 module Juvix.Core.Parameterisation where
 
+import Juvix.Frontend.Types.Base (NameSymb)
 import Juvix.Library
+import Juvix.Library.HashMap (HashMap)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
+-- | @[A, B, ..., Z]@ represents the type
+-- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
+type PrimType primTy = NonEmpty primTy
+
+type Builtins p = HashMap NameSymb p
+
 data Parameterisation primTy primVal
   = Parameterisation
-      { -- Returns an arrow.
-        typeOf :: primVal -> NonEmpty primTy,
+      { hasType :: primVal -> PrimType primTy -> Bool,
+        arity :: primVal -> Int,
         apply :: primVal -> primVal -> Maybe primVal,
+        builtinTypes :: Builtins primTy,
+        builtinValues :: Builtins primVal,
         parseTy :: Token.GenTokenParser String () Identity -> Parser primTy,
         parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
         reservedNames :: [String],
-        reservedOpNames :: [String]
+        reservedOpNames :: [String],
+        stringTy :: Text -> primTy -> Bool,
+        stringVal :: Text -> Maybe primVal,
+        intTy :: Integer -> primTy -> Bool,
+        intVal :: Integer -> Maybe primVal,
+        floatTy :: Double -> primTy -> Bool,
+        floatVal :: Double -> Maybe primVal
       }
   deriving (Generic)
-
-arity :: Parameterisation primTy primVal -> primVal -> Int
-arity param = length . typeOf param

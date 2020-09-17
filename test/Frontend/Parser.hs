@@ -1,4 +1,4 @@
-module Frontend where
+module Frontend.Parser where
 
 import Data.Attoparsec.ByteString
   ( IResult (Done, Fail, Partial),

@@ -1,4 +1,4 @@
-module CoreParser where
+module Core.Parser where
 
 import Juvix.Core.HR
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
@@ -46,7 +46,7 @@ coreParser =
       shouldParse "(* 1)" (Star 1),
       shouldParsePrim Nat.t "Nat" (PrimTy Nat.Ty),
       shouldParsePrim Unit.t "Unit" (PrimTy Unit.Ty),
-      shouldParsePrim Unit.t "()" (Elim (Prim Unit.Val)),
+      shouldParsePrim Unit.t "tt" (Prim Unit.Val),
       shouldParse "[Π] 1 A * 0 * 0" (Pi one "A" (Star 0) (Star 0)),
       shouldParse "\\x -> x" (Lam "x" (Elim (Var "x"))),
       shouldParse "\\x -> y" (Lam "x" (Elim (Var "y"))),
@@ -54,7 +54,7 @@ coreParser =
       shouldParse
         "\\x -> \\y -> x y"
         (Lam "x" (Lam "y" (Elim (App (Var "x") (Elim (Var "y")))))),
-      shouldParse "3" (Elim (Prim (Nat.Val 3))),
+      shouldParse "3" (Prim (Nat.Val 3)),
       shouldParse "xyz" (Elim (Var "xyz")),
       shouldParse "fun var" (Elim (App (Var "fun") (Elim (Var "var")))),
       shouldParse "(fun var)" (Elim (App (Var "fun") (Elim (Var "var")))),
@@ -68,7 +68,11 @@ coreParser =
       shouldParse
         "(@ (\\x -> x) : w (* 0) | 0) y"
         (Elim (App (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0) (Elim (Var "y")))),
-      shouldParse "(2)" (Elim (Prim (Nat.Val 2))),
+      shouldParse "(2)" (Prim (Nat.Val 2)),
+      shouldParse "add" (Prim (Nat.Add))
+      {-,
+      -- these tests no longer work now primitives are terms
+      -- they'd have to be something like ((@ + : w ([Π] ...)) 3 4)
       shouldParse
         "(+ 3 4)"
         (Elim (App (App (Prim Nat.Add) (Elim (Prim (Nat.Val 3)))) (Elim (Prim (Nat.Val 4))))),
@@ -78,6 +82,7 @@ coreParser =
       shouldParse
         "(* 4 3)"
         (Elim (App (App (Prim Nat.Mul) (Elim (Prim (Nat.Val 4)))) (Elim (Prim (Nat.Val 3)))))
+      -}
     ]
 -- TODO: Fix this; currently only applications of eliminations can be parsed.
 -- shouldParse "(\\x -> x) y" (Elim (App (Lam "x" (Elim (Var "x"))) (Elim (Var "y"))))

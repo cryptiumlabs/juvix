@@ -4,7 +4,7 @@ module Juvix.Core.IR.Typechecker.Types where
 
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Types.Base
+import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
 import Prelude (Show (..))
@@ -26,22 +26,22 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
-data TypecheckError' ext primTy primVal
+data TypecheckError' extV extT primTy primVal
   = TypeMismatch
-      { typeSubject :: IR.Elim' ext primTy primVal,
-        typeExpected, typeGot :: IR.Value' ext primTy primVal
+      { typeSubject :: IR.Elim' extT primTy primVal,
+        typeExpected, typeGot :: IR.Value' extV primTy primVal
       }
   | UniverseMismatch
       { universeLower, universeHigher :: IR.Universe
       }
   | CannotApply
-      { applyFun, applyArg :: IR.Value' ext primTy primVal
+      { applyFun, applyArg :: IR.Value' extV primTy primVal
       }
   | ShouldBeStar
-      { typeActual :: IR.Value' ext primTy primVal
+      { typeActual :: IR.Value' extV primTy primVal
       }
   | ShouldBeFunctionType
-      { typeActual :: IR.Value' ext primTy primVal
+      { typeActual :: IR.Value' extV primTy primVal
       }
   | UnboundIndex
       { unboundIndex :: IR.BoundVar
@@ -64,28 +64,54 @@ data TypecheckError' ext primTy primVal
   | UnboundPatVar
       { unboundPatVar :: IR.PatternVar
       }
+  | NotPrimTy
+      { typeActual :: IR.Value' extV primTy primVal
+      }
+  | WrongPrimTy
+      { primVal :: primVal,
+        primTy :: P.PrimType primTy
+      }
+  | UnsupportedTermExt
+      { termExt :: IR.TermX extT primTy primVal
+      }
+  | UnsupportedElimExt
+      { elimExt :: IR.ElimX extT primTy primVal
+      }
+  | PartiallyAppliedConstructor
+      { pattern_ :: IR.Pattern' extT primTy primVal
+      }
 
-type TypecheckError = TypecheckError' IR.NoExt
+type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    IR.TermAll Eq ext primTy primVal,
-    IR.ElimAll Eq ext primTy primVal,
-    IR.ValueAll Eq ext primTy primVal,
-    IR.NeutralAll Eq ext primTy primVal
+    IR.TermAll Eq extV primTy primVal,
+    IR.ElimAll Eq extV primTy primVal,
+    IR.ValueAll Eq extV primTy primVal,
+    IR.NeutralAll Eq extV primTy primVal,
+    IR.TermAll Eq extT primTy primVal,
+    IR.ElimAll Eq extT primTy primVal,
+    IR.ValueAll Eq extT primTy primVal,
+    IR.NeutralAll Eq extT primTy primVal,
+    IR.PatternAll Eq extT primTy primVal
   ) =>
-  Eq (TypecheckError' ext primTy primVal)
+  Eq (TypecheckError' extV extT primTy primVal)
 
 instance
   ( Show primTy,
     Show primVal,
-    IR.TermAll Show ext primTy primVal,
-    IR.ElimAll Show ext primTy primVal,
-    IR.ValueAll Show ext primTy primVal,
-    IR.NeutralAll Show ext primTy primVal
+    IR.TermAll Show extV primTy primVal,
+    IR.ElimAll Show extV primTy primVal,
+    IR.ValueAll Show extV primTy primVal,
+    IR.NeutralAll Show extV primTy primVal,
+    IR.TermAll Show extT primTy primVal,
+    IR.ElimAll Show extT primTy primVal,
+    IR.ValueAll Show extT primTy primVal,
+    IR.NeutralAll Show extT primTy primVal,
+    IR.PatternAll Show extT primTy primVal
   ) =>
-  Show (TypecheckError' ext primTy primVal)
+  Show (TypecheckError' extV extT primTy primVal)
   where
   show (TypeMismatch term expectedT gotT) =
     "Type mismatched.\n" <> show term <> "\n"
@@ -121,16 +147,26 @@ instance
     "Global name " <> show x <> " not in scope"
   show (UnboundPatVar x) =
     "Pattern variable " <> show x <> " not in scope"
+  show (NotPrimTy x) =
+    "Not a valid primitive type: " <> show x
+  show (WrongPrimTy x ty) =
+    "Primitive value " <> show x <> " cannot have type " <> show ty
+  show (UnsupportedTermExt x) =
+    "Unsupported syntax form " <> show x
+  show (UnsupportedElimExt x) =
+    "Unsupported syntax form " <> show x
+  show (PartiallyAppliedConstructor pat) =
+    "Partially-applied constructor in pattern " <> show pat
 
-type HasThrowTC' ext primTy primVal m =
-  HasThrow "typecheckError" (TypecheckError' ext primTy primVal) m
+type HasThrowTC' extV extT primTy primVal m =
+  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
 
 type HasThrowTC primTy primVal m =
-  HasThrowTC' IR.NoExt primTy primVal m
+  HasThrowTC' IR.NoExt IR.NoExt primTy primVal m
 
 throwTC ::
-  HasThrowTC' ext primTy primVal m =>
-  TypecheckError' ext primTy primVal ->
+  HasThrowTC' extV extT primTy primVal m =>
+  TypecheckError' extV extT primTy primVal ->
   m z
 throwTC = throw @"typecheckError"
 
@@ -159,6 +195,7 @@ IR.extendTerm "Term" [] [t|T|] $
      in IR.defaultExtTerm
           { IR.typeStar = typed,
             IR.typePrimTy = typed,
+            IR.typePrim = typed,
             IR.typePi = typed,
             IR.typeLam = bindTyped,
             IR.typeLet = bindTyped,
@@ -171,7 +208,6 @@ IR.extendElim "Elim" [] [t|T|] $
      in IR.defaultExtElim
           { IR.typeBound = typed,
             IR.typeFree = typed,
-            IR.typePrim = typed,
             IR.typeApp = typed,
             IR.typeAnn = typed
           }
@@ -179,6 +215,7 @@ IR.extendElim "Elim" [] [t|T|] $
 getTermAnn :: Term primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
+getTermAnn (Prim _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
 getTermAnn (Lam _ anns) = baResAnn anns
 getTermAnn (Let _ _ _ anns) = baResAnn anns
@@ -187,6 +224,5 @@ getTermAnn (Elim _ ann) = ann
 getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
 getElimAnn (Bound _ ann) = ann
 getElimAnn (Free _ ann) = ann
-getElimAnn (Prim _ ann) = ann
 getElimAnn (App _ _ ann) = ann
 getElimAnn (Ann _ _ _ _ ann) = ann

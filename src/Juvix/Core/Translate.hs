@@ -18,6 +18,7 @@ hrToIR' term =
   case term of
     HR.Star n -> pure (IR.Star n)
     HR.PrimTy p -> pure (IR.PrimTy p)
+    HR.Prim p -> pure (IR.Prim p)
     HR.Pi u n a b -> do
       a <- hrToIR' a
       b <- withName n $ hrToIR' b
@@ -42,7 +43,6 @@ hrElimToIR' elim =
       pure $ case maybeIndex of
         Just ind -> IR.Bound (fromIntegral ind)
         Nothing -> IR.Free (IR.Global n)
-    HR.Prim p -> pure (IR.Prim p)
     HR.App f x -> do
       f <- hrElimToIR' f
       x <- hrToIR' x
@@ -65,6 +65,7 @@ irToHR' term =
   case term of
     IR.Star n -> pure (HR.Star n)
     IR.PrimTy p -> pure (HR.PrimTy p)
+    IR.Prim p -> pure (HR.Prim p)
     IR.Pi u a b -> do
       a <- irToHR' a
       n <- newName
@@ -93,7 +94,6 @@ irElimToHR' elim =
     IR.Bound i -> do
       v <- unDeBruijin (fromIntegral i)
       pure (HR.Var v)
-    IR.Prim p -> pure (HR.Prim p)
     IR.App f x -> do
       f <- irElimToHR' f
       x <- irToHR' x

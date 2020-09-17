@@ -7,6 +7,7 @@ where
 import Juvix.Core.Erasure.Algorithm
 import Juvix.Core.Erasure.Types
   ( Error (..),
+    Globals,
     Term,
     Type,
     pattern App,

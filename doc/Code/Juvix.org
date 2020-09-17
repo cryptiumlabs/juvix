@@ -1,4 +1,10 @@
 * Juvix
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Frontend]]
+  + [[InfixPrecedence/Environment]]
+  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -53,21 +59,21 @@ backend
   + [[Booleans]]
   + [[FieldElements]]
   + [[Integers]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ***** Booleans
 - _Relies on_
   + [[FieldElements]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ***** FieldElements
 - _Relies on_
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ***** Integers
 - _Relies on_
   + [[FieldElements]]
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -340,9 +346,12 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[NameSymbol]]
   + [[Prim]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -435,15 +444,23 @@ This module provides a default contract environment
   + [[Library]]
 ** Core
 - _Relies on_
+  + [[NameSymbol]]
   + [[Core/Erasure]]
-  + [[Pipeline]]
+  + [[Core/Pipeline]]
   + [[Translate]]
   + [[Core/Types]]
   + [[Usage]]
+  + [[Frontend/Types]]
+  + [[FrontendContextualise]]
+  + [[InfixPrecedence/Environment]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
+  + [[Frontend/Types/Base]]
   + [[Library]]
-*** Pipeline
+  + [[HashMap]]
+*** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
   + [[ErasedAnn]]
@@ -477,6 +494,13 @@ This module provides a default contract environment
 - _Relies on_
   + [[Library]]
 *** Common
+**** NameSpace
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+**** NameSymbol
+- _Relies on_
+  + [[Library]]
 **** Context
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -484,7 +508,10 @@ This module provides a default contract environment
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[Usage]]
+  + [[Library]]
   + [[Library]]
   + [[HashMap]]
 ***** Precedence
@@ -562,6 +589,7 @@ This module provides a default contract environment
   + [[Erased/Types/Base]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
+  + [[Usage]]
   + [[Library]]
 ***** Base <<Erased/Types/Base>>
 - _Relies on_
@@ -620,10 +648,11 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[Erased/Types/Base]]
   + [[Typechecker]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
+  + [[IR/Types]]
+  + [[Usage]]
   + [[Library]]
 *** HR
 - _Relies on_
@@ -643,7 +672,6 @@ This module provides a default contract environment
 - _Relies on_
   + [[HR/Extend]]
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
 *** HRAnn
 - _Relies on_
   + [[HRAnn/Erasure]]
@@ -662,7 +690,6 @@ This module provides a default contract environment
 **** Types <<HRAnn/Types>>
 - _Relies on_
   + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
   + [[IR/Types/Base]]
 *** IR
 - _Relies on_
@@ -708,7 +735,7 @@ Transformations between different extensions.
 - _Relies on_
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
@@ -733,23 +760,22 @@ Quantitative type implementation inspired by
 **** Types <<IRAnn/Types>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
-  + [[Core/Types]]
   + [[Library]]
 **** Naturals
 - _Relies on_
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 **** Unit
 - _Relies on_
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ** Encoding
 *** Encoding
@@ -785,6 +811,11 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
 ** Frontend
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]
@@ -824,13 +855,16 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
 ** FrontendContextualise
 - order of Passes
-  1. =InfixPrecedence=
-  2. =ModuleOpen=
+  1. =ModuleOpen=
+  2. =InfixPrecedence=
 - _Relies on_
+  + [[Context]]
+  + [[NameSymbol]]
   + [[Contextify/Transform]]
+  + [[Contextify/Types]]
+  + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/Transform]]
-  + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Transform]]
   + [[RemoveDo/Types]]
@@ -838,38 +872,23 @@ Quantitative type implementation inspired by
 *** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[Library]]
 *** Contextify
 **** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[Contextify/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
-*** EraseTypeAliases
-**** Environment <<EraseTypeAliases/Environment>>
+**** Types <<Contextify/Types>>
 - _Relies on_
   + [[Context]]
-  + [[FrontendContextualise/Environment]]
-  + [[EraseTypeAliases/Types]]
+  + [[NameSymbol]]
   + [[RemoveDo/Types]]
-  + [[Library]]
-**** Extend <<EraseTypeAliases/Extend>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
-  + [[Library]]
-**** Transform <<EraseTypeAliases/Transform>>
-- _Relies on_
-  + [[Context]]
-  + [[EraseTypeAliases/Environment]]
-  + [[EraseTypeAliases/Types]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-**** Types <<EraseTypeAliases/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[EraseTypeAliases/Extend]]
   + [[Library]]
 *** InfixPrecedence
 **** Environment <<InfixPrecedence/Environment>>
@@ -878,7 +897,7 @@ Quantitative type implementation inspired by
   + [[FrontendContextualise/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
-  + [[RemoveDo/Types]]
+  + [[ModuleOpen/Types]]
   + [[Library]]
 **** Extend <<InfixPrecedence/Extend>>
 - This pass removes the =Infix= form
@@ -898,8 +917,8 @@ Quantitative type implementation inspired by
   #+end_src
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
+  + [[ModuleOpen/Extend]]
+  + [[ModuleOpen/Extend]]
   + [[Library]]
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the
@@ -909,10 +928,12 @@ Quantitative type implementation inspired by
 **** Transform <<InfixPrecedence/Transform>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[InfixPrecedence/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
-  + [[RemoveDo/Types]]
+  + [[ModuleOpen/Types]]
   + [[Library]]
 **** Types <<InfixPrecedence/Types>>
 - _Relies on_
@@ -923,9 +944,11 @@ Quantitative type implementation inspired by
 **** Environment <<ModuleOpen/Environment>>
 - _Relies on_
   + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
   + [[FrontendContextualise/Environment]]
-  + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
 **** Extend <<ModuleOpen/Extend>>
@@ -958,15 +981,16 @@ Quantitative type implementation inspired by
 - for modules we can infer.
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[InfixPrecedence/Extend]]
-  + [[InfixPrecedence/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
   + [[Library]]
 **** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Context]]
-  + [[InfixPrecedence/Types]]
+  + [[NameSpace]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
   + [[Library]]
 **** Types <<ModuleOpen/Types>>
 - _Relies on_

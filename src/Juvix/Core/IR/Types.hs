@@ -8,6 +8,13 @@ module Juvix.Core.IR.Types
     PatternVar,
     BoundVar,
     Universe,
+    Datatype' (..),
+    DataArg' (..),
+    DataCon' (..),
+    Function' (..),
+    FunClause' (..),
+    Global' (..),
+    Globals',
   )
 where
 
@@ -24,17 +31,16 @@ extendValue "Value" [] [t|NoExt|] $ \_ _ -> defaultExtValue
 
 extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 
-extendDatatype "Datatype" [] [t|NoExt|] $ \_ _ -> defaultExtDatatype
-
-extendDataArg "DataArg" [] [t|NoExt|] $ \_ _ -> defaultExtDataArg
-
-extendDataCon "DataCon" [] [t|NoExt|] $ \_ _ -> defaultExtDataCon
-
-extendFunction "Function" [] [t|NoExt|] $ \_ _ -> defaultExtFunction
-
-extendFunClause "FunClause" [] [t|NoExt|] $ \_ _ -> defaultExtFunClause
-
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
+
+type Datatype = Datatype' NoExt
+type DataArg = DataArg' NoExt
+type DataCon = DataCon' NoExt
+type Function = Function' NoExt
+type FunClause = FunClause' NoExt
+
+type Global = Global' NoExt
+type Globals primTy primVal = Globals' NoExt primTy primVal
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal
@@ -45,7 +51,7 @@ quote _ (VStar nat) = Star nat
 quote _ (VPrimTy p) = PrimTy p
 quote ii (VPi π s t) = Pi π (quote ii s) (quote (ii + 1) t)
 quote ii (VLam s) = Lam (quote (ii + 1) s)
-quote _ (VPrim pri) = Elim (Prim pri)
+quote _ (VPrim pri) = Prim pri
 quote ii (VNeutral n) = Elim $ neutralQuote ii n
 
 neutralQuote :: BoundVar -> Neutral primTy primVal -> Elim primTy primVal

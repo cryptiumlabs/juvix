@@ -1,6 +1,5 @@
 module Juvix.Core.IRAnn.Types where
 
-import qualified Juvix.Core.IR.Types.Base
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
@@ -27,7 +26,7 @@ pattern Lam π s t = Lam0 t (Annotation π s)
 
 pattern Elim π s t = Elim0 s (Annotation π t)
 
-{-# COMPLETE Star, PrimTy, Pi, Lam, Elim #-}
+{-# COMPLETE Star, PrimTy, Prim, Pi, Lam, Elim #-}
 
 data AppAnnotation primTy primVal
   = AppAnnotation
@@ -45,4 +44,4 @@ IR.extendElim "Elim" [] [t|T|] $
 pattern App π s ts ρ t tt =
   App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))
 
-{-# COMPLETE Bound, Free, Prim, App, Ann #-}
+{-# COMPLETE Bound, Free, App, Ann #-}

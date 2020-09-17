@@ -12,13 +12,13 @@ data ExtTransformTEF f ext1 ext2 primTy primVal
   = ExtTransformTEF
       { etfStar :: XStar ext1 primTy primVal -> f (XStar ext2 primTy primVal),
         etfPrimTy :: XPrimTy ext1 primTy primVal -> f (XPrimTy ext2 primTy primVal),
+        etfPrim :: XPrim ext1 primTy primVal -> f (XPrim ext2 primTy primVal),
         etfPi :: XPi ext1 primTy primVal -> f (XPi ext2 primTy primVal),
         etfLam :: XLam ext1 primTy primVal -> f (XLam ext2 primTy primVal),
         etfLet :: XLet ext1 primTy primVal -> f (XLet ext2 primTy primVal),
         etfElim :: XElim ext1 primTy primVal -> f (XElim ext2 primTy primVal),
         etfBound :: XBound ext1 primTy primVal -> f (XBound ext2 primTy primVal),
         etfFree :: XFree ext1 primTy primVal -> f (XFree ext2 primTy primVal),
-        etfPrim :: XPrim ext1 primTy primVal -> f (XPrim ext2 primTy primVal),
         etfApp :: XApp ext1 primTy primVal -> f (XApp ext2 primTy primVal),
         etfAnn :: XAnn ext1 primTy primVal -> f (XAnn ext2 primTy primVal),
         etfTermX :: TermX ext1 primTy primVal -> f (TermX ext2 primTy primVal),
@@ -36,13 +36,13 @@ pattern Coerce f <-
 pattern ExtTransformTE ::
   (XStar ext1 primTy primVal -> XStar ext2 primTy primVal) ->
   (XPrimTy ext1 primTy primVal -> XPrimTy ext2 primTy primVal) ->
+  (XPrim ext1 primTy primVal -> XPrim ext2 primTy primVal) ->
   (XPi ext1 primTy primVal -> XPi ext2 primTy primVal) ->
   (XLam ext1 primTy primVal -> XLam ext2 primTy primVal) ->
   (XLet ext1 primTy primVal -> XLet ext2 primTy primVal) ->
   (XElim ext1 primTy primVal -> XElim ext2 primTy primVal) ->
   (XBound ext1 primTy primVal -> XBound ext2 primTy primVal) ->
   (XFree ext1 primTy primVal -> XFree ext2 primTy primVal) ->
-  (XPrim ext1 primTy primVal -> XPrim ext2 primTy primVal) ->
   (XApp ext1 primTy primVal -> XApp ext2 primTy primVal) ->
   (XAnn ext1 primTy primVal -> XAnn ext2 primTy primVal) ->
   (TermX ext1 primTy primVal -> TermX ext2 primTy primVal) ->
@@ -51,13 +51,13 @@ pattern ExtTransformTE ::
 pattern ExtTransformTE
   { etStar,
     etPrimTy,
+    etPrim,
     etPi,
     etLam,
     etLet,
     etElim,
     etBound,
     etFree,
-    etPrim,
     etApp,
     etAnn,
     etTermX,
@@ -66,13 +66,13 @@ pattern ExtTransformTE
   ExtTransformTEF
     { etfStar = Coerce etStar,
       etfPrimTy = Coerce etPrimTy,
+      etfPrim = Coerce etPrim,
       etfPi = Coerce etPi,
       etfLam = Coerce etLam,
       etfLet = Coerce etLet,
       etfElim = Coerce etElim,
       etfBound = Coerce etBound,
       etfFree = Coerce etFree,
-      etfPrim = Coerce etPrim,
       etfApp = Coerce etApp,
       etfAnn = Coerce etAnn,
       etfTermX = Coerce etTermX,
@@ -86,6 +86,7 @@ extTransformTF ::
   f (Term' ext2 primTy primVal)
 extTransformTF fs (Star' i e) = Star' i <$> etfStar fs e
 extTransformTF fs (PrimTy' k e) = PrimTy' k <$> etfPrimTy fs e
+extTransformTF fs (Prim' k e) = Prim' k <$> etfPrim fs e
 extTransformTF fs (Pi' π s t e) =
   Pi' π <$> extTransformTF fs s <*> extTransformTF fs t <*> etfPi fs e
 extTransformTF fs (Lam' t e) = Lam' <$> extTransformTF fs t <*> etfLam fs e
@@ -107,7 +108,6 @@ extTransformEF ::
   f (Elim' ext2 primTy primVal)
 extTransformEF fs (Bound' x e) = Bound' x <$> etfBound fs e
 extTransformEF fs (Free' x e) = Free' x <$> etfFree fs e
-extTransformEF fs (Prim' k e) = Prim' k <$> etfPrim fs e
 extTransformEF fs (App' f s e) =
   App' <$> extTransformEF fs f
     <*> extTransformTF fs s
@@ -134,13 +134,13 @@ forgetter =
   ExtTransformTE
     { etStar = const (),
       etPrimTy = const (),
+      etPrim = const (),
       etPi = const (),
       etLam = const (),
       etLet = const (),
       etElim = const (),
       etBound = const (),
       etFree = const (),
-      etPrim = const (),
       etApp = const (),
       etAnn = const (),
       etTermX = absurd,
