@@ -346,10 +346,12 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[NameSymbol]]
   + [[Prim]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_

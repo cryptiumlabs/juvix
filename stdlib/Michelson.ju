@@ -1,139 +1,169 @@
-  -- datatypes
-  let option    = %Michelson.option
-  let list      = %Michelson.list
-  let set       = %Michelson.set
-  let operation = %Michelson.operation
-  let contract  = %Michelson.contract
-  let pair      = %Michelson.pair
-  let either    = %Michelson.either
-  let map       = %Michelson.map
-  let big-map   = %Michelson.big-map
+-- datatypes
+let option    = %Michelson.option
+let list      = %Michelson.list
+let set       = %Michelson.set
+let operation = %Michelson.operation
+let contract  = %Michelson.contract
+let pair      = %Michelson.pair
+let either    = %Michelson.either
+let map       = %Michelson.map
+let big-map   = %Michelson.big-map
 
-  -- primitive types
-  let key       = %Michelson.key
-  let unit      = %Michelson.unit
-  let signature = %Michelson.signature
-  let chain-id  = %Michelson.chain-id
-  let int       = %Michelson.int
-  let nat       = %Michelson.nat
-  let string    = %Michelson.string
-  let bytes     = %Michelson.bytes
-  let mutez     = %Michelson.mutez
-  let bool      = %Michelson.bool
-  let hash-key  = %Michelson.hash-key
-  let timestamp = %Michelson.timestamp
-  let address   = %Michelson.address
+-- primitive types
+let key       = %Michelson.key
+let unit-t    = %Michelson.unit-t
+let signature = %Michelson.signature
+let chain-id  = %Michelson.chain-id
+let int       = %Michelson.int
+let nat       = %Michelson.nat
+let string    = %Michelson.string
+let bytes     = %Michelson.bytes
+let mutez     = %Michelson.mutez
+let bool      = %Michelson.bool
+let key-hash  = %Michelson.key-hash
+let timestamp = %Michelson.timestamp
+let address   = %Michelson.address
 
-  -- arithmetic functions
-  sig add : (x: type) -> x -> x -> x
-  let add = %Michelson.add
+-- arithmetic functions
+sig add : (x : type) -> x -> x -> x
+let add = %Michelson.add
 
-  sig mul : (x: type) -> x -> x -> x
-  let mul = %Michelson.mul
+sig mul : (x : type) -> x -> x -> x
+let mul = %Michelson.mul
 
-  sig sub : (x: type) -> x -> x -> x
-  let sub = %Michelson.sub
+sig sub : (x : type) -> x -> x -> x
+let sub = %Michelson.sub
 
-  sig div : (x: type) -> x -> x -> x
-  let div = %Michelson.div
+sig div : (x : type) -> x -> x -> x
+let div = %Michelson.div
 
-  sig abs : (x: type) -> x -> x -> x
-  let abs = %Michelson.abs
+sig abs : (x : type) -> x -> x -> x
+let abs = %Michelson.abs
 
-  -- boolean functions
-  sig and' : (x: type) -> x -> x -> x
-  let and' = %Michelson.and
+-- boolean functions
+sig and' : (x : type) -> x -> x -> x
+let and' = %Michelson.and
 
-  sig or  : (x: type) -> x -> x -> x
-  let or = %Michelson.or
+sig or : (x : type) -> x -> x -> x
+let or = %Michelson.or
 
-  sig xor : (x: type) -> x -> x -> x
-  let xor = %Michelson.xor
+sig xor : (x : type) -> x -> x -> x
+let xor = %Michelson.xor
 
-  sig not : (x: type) -> x -> x -> x
-  let not = %Michelson.not
+sig not : (x : type) -> x -> x -> x
+let not = %Michelson.not
 
-  -- other functions
-  sig now : timestamp
-  let now = %Michelson.now
+sig compare : (x : type) -> x -> x -> int
+let compare = %Michelson.compare
 
-  sig amount : (x : let) -> x -> unit
-  let amount = %Michelson.amount
+-- other functions
+sig now : timestamp
+let now = %Michelson.now
 
-  sig balance : (x : let) -> address -> x
-  let balance = %Michelson.balance
+sig amount : (x : type) -> x -> unit-t
+let amount = %Michelson.amount
 
-  sig sha256 : bytes -> bytes
-  let sha256 = %Michelson.sha256
+sig balance : (x : type) -> address -> x
+let balance = %Michelson.balance
 
-  sig sha512 : bytes -> bytes
-  let sha512 = %Michelson.sha512
+sig sha256 : bytes -> bytes
+let sha256 = %Michelson.sha256
 
-  sig blake2b : bytes -> bytes
-  let blake2b = %Michelson.blake2b
+sig sha512 : bytes -> bytes
+let sha512 = %Michelson.sha512
 
-  sig source : address
-  let source = %Michelson.source
+sig blake2b : bytes -> bytes
+let blake2b = %Michelson.blake2b
 
-  sig sender : address
-  let sender = %Michelson.sender
+sig source : address
+let source = %Michelson.source
 
-  sig implicit-account : operation
-  let implicit-account = %Michelson.implicit-account
+sig sender : address
+let sender = %Michelson.sender
 
-  sig create-contract : operation
-  let create-contract = %Michelson.create-contract
+sig implicit-account : operation
+let implicit-account = %Michelson.implicit-account
 
-  sig transfer-tokens : (x: let) -> address -> x -> hash-key
-  let transfer-token = %Michelson.transfer-tokens
+sig create-contract : operation
+let create-contract = %Michelson.create-contract
 
-  sig set-delegate : address -> unit
-  let set-delegate = %Michelson.set-delegate
+sig transfer-tokens : (x : let) -> address -> x -> hash-key
+let transfer-tokens = %Michelson.transfer-tokens
 
-  sig none : either unit a
-  let none = %Michelson.none
+sig set-delegate : address -> unit-t
+let set-delegate = %Michelson.set-delegate
 
-  sig some : b -> either a b
-  let some = %Michelson.some
+sig none : either unit-t a
+let none = %Michelson.none
 
-  sig left : a -> either a b
-  let left = %Michelson.left
+sig some : b -> either a b
+let some = %Michelson.some
 
-  sig right : b -> either a b
-  let right = %Michelson.right
+sig left : a -> either a b
+let left = %Michelson.left
 
-  sig nil : list a
-  let nil = %Michelson.nil
+sig right : b -> either a b
+let right = %Michelson.right
 
-  sig cons : a -> list a
-  let cons = %Michelson.cons
+sig nil : list a
+let nil = %Michelson.nil
 
-  sig car : list a -> a
-  let car = %Michelson.car
+sig cons : a -> list a
+let cons = %Michelson.cons
 
-  sig cdr : list a -> list a
-  let cdr = %Michelson.cdr
+sig car : list a -> a
+let car = %Michelson.car
 
-  sig size : list a -> int
-  let size = %Michelson.size
+sig cdr : list a -> list a
+let cdr = %Michelson.cdr
 
-  sig empty-set : set a
-  let empty-set = %Michelson.empty-set
+sig size : list a -> int
+let size = %Michelson.size
 
-  sig empty-map : map a
-  let empty-map = %Michelson.empty-map
+sig empty-set : set a
+let empty-set = %Michelson.empty-set
 
-  sig empty-big-map : big-map a
-  let empty-big-map = %Michelson.empty-big-map
+sig empty-map : map a
+let empty-map = %Michelson.empty-map
 
-  sig map : (x: type) -> (a -> b) -> x a -> x b
-  let map = %Michelson.map
+sig empty-big-map : big-map a
+let empty-big-map = %Michelson.empty-big-map
 
-  sig update : (x: type) -> key -> a -> x a -> unit
-  let update = %Michelson.update
+sig map : (x : type) -> (a -> b) -> x a -> x b
+let map = %Michelson.map
 
-  sig iter : (x: type) -> (a -> b) -> (b -> unit)
-  let iter = %Michelson.iter
+sig update : (x : type) -> key -> a -> x a -> unit-t
+let update = %Michelson.update
 
-  sig get : (x: type) -> key -> x a -> a
-  let get = %Michelson.get
+sig iter : (x : type) -> (a -> b) -> (b -> unit-t)
+let iter = %Michelson.iter
+
+sig get : (x: type) -> key -> x a -> a
+let get = %Michelson.get
+
+sig hash-key : key -> key-hash
+let hash-key = %Michelson.hash-key
+
+sig mem : (x : type) -> x -> bool
+let mem = %Michelson.mem
+
+sig concat (x : type) -> x -> x -> x
+let concat = %Michelson.concat
+
+sig slice : nat -> string -> option string
+let slice = %Michelson.slice
+
+sig lsl : nat -> nat -> nat
+let lsl = %Michelson.lsl
+
+sig lsr : nat -> nat -> nat
+let lsr = %Michelson.lsl
+
+sig fail-with : (x : type) -> x -> x
+let fail-with = %Michelson.fail-with
+
+sig self : (type : x) -> x
+let self = %Michelson.self
+
+sig unit : unit-t
+let unit = %Michelson.unit

@@ -12,10 +12,6 @@ import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Base hiding
   ( Term' (..),
     defaultExtTerm,
-    extDataArg,
-    extDataCon,
-    extDatatype,
-    extFunction,
     extendTerm,
   )
 import Juvix.Core.Usage (Usage)
@@ -27,6 +23,12 @@ extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
+
+type Datatype = Datatype' T
+type DataArg = DataArg' T
+type DataCon = DataCon' T
+type Function = Function' T
+type FunClause = FunClause' T
 type TypeAssignment primTy = TypeAssignment' T primTy
 
 data EvaluationError primVal
