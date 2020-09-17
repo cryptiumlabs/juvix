@@ -200,8 +200,10 @@ class HasWeak a => HasSubstV extV primTy primVal a where
     a ->
     m a
   default substVWith ::
-    (Generic a, GHasSubstV extV primTy primVal (Rep a),
-     TC.HasThrowTC' extV extT primTy primVal m) =>
+    ( Generic a,
+      GHasSubstV extV primTy primVal (Rep a),
+      TC.HasThrowTC' extV extT primTy primVal m
+    ) =>
     Param.Parameterisation primTy primVal ->
     Natural ->
     IR.BoundVar ->
@@ -332,8 +334,9 @@ rejectExts ::
   TC.HasThrowTC' IR.NoExt ext primTy primVal m =>
   ExtFuns m ext primTy primVal
 rejectExts =
-  (TC.throwTC . TC.UnsupportedTermExt,
-   TC.throwTC . TC.UnsupportedElimExt)
+  ( TC.throwTC . TC.UnsupportedTermExt,
+    TC.throwTC . TC.UnsupportedElimExt
+  )
 
 -- annotations are discarded
 evalTermWith ::

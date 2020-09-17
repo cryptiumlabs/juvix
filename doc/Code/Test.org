@@ -147,16 +147,18 @@ Tests that weak works as expected
   + [[Evaluator]]
   + [[Types]]
   + [[Library]]
-* Files
 * Frontend
 ** Desugar
 - _Relies on_
   + [[Parser]]
-  + [[FrontendDesugar]]
+  + [[Types]]
+  + [[Base]]
   + [[Library]]
 ** Parser <<Frontend/Parser>>
 - _Relies on_
   + [[Parser]]
+  + [[Types]]
+  + [[Base]]
   + [[Library]]
 * FrontendContextualise
 ** Infix
@@ -189,3 +191,4 @@ Tests that weak works as expected
   + [[Default]]
   + [[Library]]
 * examples
+** Token.ju.golden

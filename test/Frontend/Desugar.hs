@@ -1,7 +1,7 @@
 module Frontend.Desugar where
 
 import Data.Attoparsec.ByteString (parse)
-import Frontend (shouldParseAs)
+import Frontend.Parser (shouldParseAs)
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (TopLevel)
 import Juvix.Frontend.Types.Base

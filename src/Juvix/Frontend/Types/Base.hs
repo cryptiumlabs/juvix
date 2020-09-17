@@ -12,7 +12,6 @@
 module Juvix.Frontend.Types.Base where
 
 import Control.Lens
-import qualified Data.Data as D
 import Extensible
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Product, Sum, Type)

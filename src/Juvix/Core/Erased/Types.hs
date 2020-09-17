@@ -23,12 +23,16 @@ extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
-
 type Datatype = Datatype' T
+
 type DataArg = DataArg' T
+
 type DataCon = DataCon' T
+
 type Function = Function' T
+
 type FunClause = FunClause' T
+
 type TypeAssignment primTy = TypeAssignment' T primTy
 
 data EvaluationError primVal

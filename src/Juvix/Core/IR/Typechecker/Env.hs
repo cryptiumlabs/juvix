@@ -16,18 +16,17 @@ data EnvCtx' ext primTy primVal
   = EnvCtx
       { globals :: IR.Globals primTy primVal
       }
-  deriving Generic
+  deriving (Generic)
 
 type EnvCtx = EnvCtx' IR.NoExt
-
 
 type EnvAlias ext primTy primVal =
   ExceptT
     (TypecheckError' IR.NoExt ext primTy primVal)
     (State (EnvCtx' ext primTy primVal))
 
-newtype EnvTypecheck' ext primTy primVal a =
-    EnvTyp (EnvAlias ext primTy primVal a)
+newtype EnvTypecheck' ext primTy primVal a
+  = EnvTyp (EnvAlias ext primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
@@ -44,8 +43,9 @@ type EnvTypecheck = EnvTypecheck' IR.NoExt
 type HasGlobals primTy primVal = HasReader "globals" (IR.Globals primTy primVal)
 
 type CanTC' ext primTy primVal m =
-  (HasThrowTC' IR.NoExt ext primTy primVal m,
-   HasGlobals primTy primVal m)
+  ( HasThrowTC' IR.NoExt ext primTy primVal m,
+    HasGlobals primTy primVal m
+  )
 
 type CanTC primTy primVal m = CanTC' IR.NoExt primTy primVal m
 
@@ -106,8 +106,8 @@ type InnerState = InnerState' IR.NoExt
 type InnerTCAlias ext primTy primVal =
   StateT (InnerState' ext primTy primVal)
 
-newtype InnerTCT ext primTy primVal m a =
-    InnerTC (InnerTCAlias ext primTy primVal m a)
+newtype InnerTCT ext primTy primVal m a
+  = InnerTC (InnerTCAlias ext primTy primVal m a)
   deriving newtype (Functor, Applicative, Monad)
   deriving
     ( HasSource "param" (Param.Parameterisation primTy primVal),
@@ -127,21 +127,26 @@ newtype InnerTCT ext primTy primVal m a =
     )
     via StateField "bound" (InnerTCAlias ext primTy primVal m)
 
-deriving via Lift (InnerTCAlias ext primTy primVal m) instance
-  HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal) m =>
-  HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
-    (InnerTCT ext primTy primVal m)
+deriving via
+  Lift (InnerTCAlias ext primTy primVal m)
+  instance
+    HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal) m =>
+    HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
+      (InnerTCT ext primTy primVal m)
 
-deriving via Lift (InnerTCAlias ext primTy primVal m) instance
-  HasSource "globals" (IR.Globals primTy primVal) m =>
-  HasSource "globals" (IR.Globals primTy primVal)
-    (InnerTCT ext primTy primVal m)
+deriving via
+  Lift (InnerTCAlias ext primTy primVal m)
+  instance
+    HasSource "globals" (IR.Globals primTy primVal) m =>
+    HasSource "globals" (IR.Globals primTy primVal)
+      (InnerTCT ext primTy primVal m)
 
-deriving via Lift (InnerTCAlias ext primTy primVal m) instance
-  HasReader "globals" (IR.Globals primTy primVal) m =>
-  HasReader "globals" (IR.Globals primTy primVal)
-    (InnerTCT ext primTy primVal m)
-
+deriving via
+  Lift (InnerTCAlias ext primTy primVal m)
+  instance
+    HasReader "globals" (IR.Globals primTy primVal) m =>
+    HasReader "globals" (IR.Globals primTy primVal)
+      (InnerTCT ext primTy primVal m)
 
 type InnerTC' ext primTy primVal =
   InnerTCT ext primTy primVal (EnvTypecheck' ext primTy primVal)
@@ -156,10 +161,11 @@ type HasPatBinds primTy primVal = HasState "patBinds" (PatBinds primTy primVal)
 type HasBound primTy primVal = HasState "bound" (Context primTy primVal)
 
 type CanInnerTC' ext primTy primVal m =
-  (CanTC' ext primTy primVal m,
-   HasParam primTy primVal m,
-   HasPatBinds primTy primVal m,
-   HasBound primTy primVal m)
+  ( CanTC' ext primTy primVal m,
+    HasParam primTy primVal m,
+    HasPatBinds primTy primVal m,
+    HasBound primTy primVal m
+  )
 
 type CanInnerTC primTy primVal m = CanInnerTC' IR.NoExt primTy primVal m
 

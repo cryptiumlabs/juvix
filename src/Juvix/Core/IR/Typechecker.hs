@@ -76,7 +76,8 @@ typeElimWith param pats ctx e σ =
 
 withLeftovers ::
   (HasBound primTy primVal m, HasPatBinds primTy primVal m) =>
-  m a -> m (Leftovers a)
+  m a ->
+  m (Leftovers a)
 withLeftovers m =
   Leftovers <$> m
     <*> fmap (fmap annUsage) (get @"bound")
@@ -162,13 +163,17 @@ typeElim' elim σ =
     IR.ElimX x ->
       throwTC $ UnsupportedElimExt x
 
-pushLocal :: HasBound primTy primVal m
-          => Annotation primTy primVal -> m ()
+pushLocal ::
+  HasBound primTy primVal m =>
+  Annotation primTy primVal ->
+  m ()
 pushLocal ann = modify @"bound" (ann :)
 
-popLocal :: (HasBound primTy primVal m,
-             HasThrowTC' IR.NoExt ext primTy primVal m)
-         => m ()
+popLocal ::
+  ( HasBound primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
+  m ()
 popLocal = do
   ctx <- get @"bound"
   case ctx of
@@ -179,23 +184,32 @@ popLocal = do
       throwTC (UnboundIndex 0)
 
 withLocal ::
-  (HasBound primTy primVal m,
-   HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  ( HasBound primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
   Annotation primTy primVal ->
-  m a -> m a
+  m a ->
+  m a
 withLocal ann m = pushLocal ann *> m <* popLocal
 
-requireZero :: HasThrowTC' IR.NoExt ext primTy primVal m
-            => Usage.T -> m ()
+requireZero ::
+  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  Usage.T ->
+  m ()
 requireZero π = unless (π == mempty) $ throwTC (UsageMustBeZero π)
 
-requireStar :: HasThrowTC' IR.NoExt ext primTy primVal m
-            => IR.Value primTy primVal -> m IR.Universe
+requireStar ::
+  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  IR.Value primTy primVal ->
+  m IR.Universe
 requireStar (IR.VStar j) = pure j
 requireStar ty = throwTC (ShouldBeStar ty)
 
-requireUniverseLT :: HasThrowTC' IR.NoExt ext primTy primVal m
-                  => IR.Universe -> IR.Universe -> m ()
+requireUniverseLT ::
+  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  IR.Universe ->
+  IR.Universe ->
+  m ()
 requireUniverseLT i j = unless (i < j) $ throwTC (UniverseMismatch i j)
 
 requirePrimType ::
@@ -239,8 +253,9 @@ requireSubtype subj exp got =
   unless (got <: exp) $ throwTC (TypeMismatch subj exp got)
 
 useLocal ::
-  (HasBound primTy primVal m,
-   HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  ( HasBound primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
   Usage.T ->
   IR.BoundVar ->
   m (IR.Value primTy primVal)
@@ -258,8 +273,9 @@ useLocal π var = do
     go w i (b : ctx) = second (b :) <$> go (w + 1) (i - 1) ctx
 
 usePatVar ::
-  (HasPatBinds primTy primVal m,
-   HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  ( HasPatBinds primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
   Usage.T ->
   IR.PatternVar ->
   m (IR.Value primTy primVal)
@@ -277,8 +293,9 @@ usePatVar π var = do
       throwTC (UnboundPatVar var)
 
 substApp ::
-  (HasParam primTy primVal m,
-   HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  ( HasParam primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
   IR.Value primTy primVal ->
   IR.Term' ext primTy primVal ->
   m (IR.Value primTy primVal)
@@ -288,8 +305,9 @@ substApp ty arg = do
   Eval.substV param arg' ty
 
 evalTC ::
-  (HasParam primTy primVal m,
-   HasThrowTC' IR.NoExt ext primTy primVal m) =>
+  ( HasParam primTy primVal m,
+    HasThrowTC' IR.NoExt ext primTy primVal m
+  ) =>
   IR.Term' ext primTy primVal ->
   m (IR.Value primTy primVal)
 evalTC t = do
@@ -309,7 +327,8 @@ evalTC t = do
 -- * It doesn't descend into any other structures
 --   (TODO: which ones are safe to do so?)
 (<:) ::
-  ( Eq primTy, Eq primVal,
+  ( Eq primTy,
+    Eq primVal,
     IR.ValueAll Eq ext primTy primVal,
     IR.NeutralAll Eq ext primTy primVal
   ) =>

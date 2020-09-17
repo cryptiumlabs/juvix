@@ -325,18 +325,18 @@ many1FunctionsParser =
   shouldParseAs
     "many1FunctionsParser"
     (parse $ many Parser.topLevelSN)
-    ( "let foo a b c = (+) (a + b) c"
-        <> "let bah = foo 1 2 3"
-        <> "let nah "
-        <> "  | bah == 5 = 7 "
-        <> "  | else     = 11"
-        <> "let test = "
-        <> "  let check = nah in "
-        <> "  case check of "
-        <> "  | seven -> 11 "
-        <> "  | eleven -> 7 "
-        <> "  | f  -> open Fails in "
-        <> "          print failed; "
+    ( "let foo a b c = (+) (a + b) c\n"
+        <> "let bah = foo 1 2 3\n"
+        <> "let nah \n"
+        <> "  | bah == 5 = 7 \n"
+        <> "  | else     = 11\n"
+        <> "let test = \n"
+        <> "  let check = nah in \n"
+        <> "  case check of \n"
+        <> "  | seven -> 11 \n"
+        <> "  | eleven -> 7 \n"
+        <> "  | f  -> open Fails in \n"
+        <> "          print failed; \n"
         <> "          fail"
     )
     [ Function'
@@ -628,9 +628,9 @@ sumTypeTest =
   shouldParseAs
     "sumTypeTest"
     Parser.parse
-    ( "type Foo a b c = | A : b : a -> b -> c "
-        <> "            | B : d -> Foo "
-        <> "            | C { a : Int, #b : Int } "
+    ( "type Foo a b c = | A : b : a -> b -> c \n"
+        <> "            | B : d -> Foo \n"
+        <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
     [ Type'
@@ -942,10 +942,10 @@ moduleOpen =
     "moduleOpen"
     Parser.parse
     ( ""
-        <> "mod Foo Int = "
-        <> "  let T = Int.t "
-        <> "  sig bah : T -> T "
-        <> "  let bah t = Int.(t + 3) "
+        <> "mod Foo Int = \n"
+        <> "  let T = Int.t \n"
+        <> "  sig bah : T -> T \n"
+        <> "  let bah t = Int.(t + 3) \n"
         <> "end"
     )
     [ Module'
@@ -987,10 +987,10 @@ moduleOpen' =
     "moduleOpen'"
     Parser.parse
     ( ""
-        <> "mod Bah M = "
+        <> "mod Bah M = \n"
         <> "  open M"
-        <> "  sig bah : Rec "
-        <> "  let bah t = "
+        <> "  sig bah : Rec \n"
+        <> "  let bah t = \n"
         <> "     { a = t + 3"
         <> "     , b = expr M.N.t}"
         <> "end"
@@ -1060,9 +1060,9 @@ typeNameNoUniverse =
         ()
     )
 
--- --------------------------------------------------------------------------------
--- -- Match tests
--- --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Match tests
+--------------------------------------------------------------------------------
 
 simpleNamedCon :: T.TestTree
 simpleNamedCon =
@@ -1157,7 +1157,7 @@ condTest1 =
     "condTest1"
     (parse Parser.cond)
     ( ""
-        <> "if  | foo  = a"
+        <> "if  | foo  = a\n"
         <> "    | else = b "
     )
     ( C'
@@ -1176,9 +1176,9 @@ condTest1 =
         ()
     )
 
--- --------------------------------------------------
--- -- Record
--- --------------------------------------------------
+--------------------------------------------------
+-- Record
+--------------------------------------------------
 
 record1 :: T.TestTree
 record1 =
@@ -1210,9 +1210,9 @@ record1 =
         ()
     )
 
--- --------------------------------------------------
--- -- parens
--- --------------------------------------------------
+--------------------------------------------------
+-- parens
+--------------------------------------------------
 
 parens1 :: T.TestTree
 parens1 =

@@ -26,7 +26,7 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
-  deriving (Eq, Show, Read, Generic, NFData)
+  deriving (Eq, Show, Read, Generic, Data, NFData)
 
 -- Addition is the semi-Ring/Monoid instance
 instance Semigroup NatAndw where

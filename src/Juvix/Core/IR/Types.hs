@@ -34,12 +34,17 @@ extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 
 type Datatype = Datatype' NoExt
+
 type DataArg = DataArg' NoExt
+
 type DataCon = DataCon' NoExt
+
 type Function = Function' NoExt
+
 type FunClause = FunClause' NoExt
 
 type Global = Global' NoExt
+
 type Globals primTy primVal = Globals' NoExt primTy primVal
 
 -- Quotation: takes a value back to a term
