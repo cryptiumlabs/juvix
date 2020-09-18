@@ -125,6 +125,28 @@ Example:
 #+END_SRC
 *** Types
 *** Modules
+modules are denoted similarly to modules except that instead of using
+=let=, =mod= is used instead.
+
+And instead of the body being an expression, the body is zero or more
+top level declarations before =end= is found
+
+#+BEGIN_SRC haskell
+
+  -- example defining a module
+
+  mod Foo =
+    sig bar : nat
+    let bar = 3
+
+    let baz = 5
+
+  -- end ends the module definition
+  end
+
+  -- example using a module
+  let test = Foo.bar + Foo.baz
+#+END_SRC
 *** Imports
 one can import a module in two ways.
 
@@ -224,11 +246,37 @@ Example:
 ***** Dependent matching
 
 *** Definitions
+All definitions are like their top level counter part, except that =in=
+followed by an expression is written afterwords
 **** Let
+# Add and example of and once and is in
+
+#+BEGIN_SRC ocaml
+  let foo =
+    let bar = 3 in
+    bar + 10
+#+END_SRC
 **** Modules
+#+BEGIN_SRC ocaml
+  let foo =
+    mod Bar =
+      let foo = 3
+      let bat = 10
+    end in
+    Bar.foo + Bar.bat
+#+END_SRC
 **** Signatures
 **** Types
+#+BEGIN_SRC ocaml
+  let foo =
+    type bar = Foo int
+             | Bar nat
+    in [Foo 3, Bar 10]
+#+END_SRC
 *** String Literals
+Strings are enclosed by double quotes (="=)
+# add escape characters once they are in
+
 *** Lists
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
