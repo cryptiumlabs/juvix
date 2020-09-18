@@ -154,6 +154,11 @@ Tests that weak works as expected
   + [[Types]]
   + [[Base]]
   + [[Library]]
+** Golden
+- _Relies on_
+  + [[Parser]]
+  + [[Types]]
+  + [[Library]]
 ** Parser <<Frontend/Parser>>
 - _Relies on_
   + [[Parser]]
