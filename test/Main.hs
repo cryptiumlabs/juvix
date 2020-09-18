@@ -7,16 +7,16 @@ import Core.Common.NameSymb (top)
 import Core.Conv (coreConversions)
 import Core.EAC2 (eac2Tests)
 import Core.Erasure (erasureTests)
-import qualified Core.IR.Weak as Weak
+import qualified Core.IR.Weak as Weak (top)
 import Core.Parser (coreParser)
 import Core.Typechecker (coreCheckerEval)
 import Frontend.Desugar (allDesugar)
 import Frontend.Golden (contractFiles)
 import Frontend.Parser (allParserTests)
-import qualified FrontendContextualise.Infix.ShuntYard as Shunt
+import FrontendContextualise.Infix.ShuntYard (allInfixTests)
 import FrontendContextualise.Module.Open (openTests)
 import Juvix.Library (IO)
-import qualified Pipeline
+import Pipeline ( tests )
 import qualified Test.Tasty as T
 
 coreTests :: T.TestTree
@@ -32,7 +32,7 @@ pipelineTests :: T.TestTree
 pipelineTests =
   T.testGroup
     "Pipeline tests"
-    Pipeline.tests
+    tests
 
 backendTests :: T.TestTree
 backendTests =
@@ -66,7 +66,7 @@ allCheckedTests =
       translationPasses,
       eac2Tests,
       erasureTests,
-      Shunt.allInfixTests,
+      allInfixTests,
       contextTests,
       openTests,
       Weak.top,

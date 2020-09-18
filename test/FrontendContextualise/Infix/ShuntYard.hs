@@ -1,7 +1,15 @@
 module FrontendContextualise.Infix.ShuntYard where
 
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
-import Juvix.Library hiding ((^^))
+import Juvix.Library
+  ( ($),
+    Either (Right),
+    Integer,
+    NonEmpty ((:|)),
+    Symbol,
+    show,
+    (|>),
+  )
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
@@ -26,7 +34,7 @@ allInfixTests =
 
 infixlTest :: T.TestTree
 infixlTest =
-  ( "App + (Single 3) (App * (App * (Single 4) (Single 5)) (Single 6))"
+  ( "App \"+\" (Single 3) (App \"*\" (App \"*\" (Single 4) (Single 5)) (Single 6))"
       T.@=? (show app :: String)
   )
     |> T.testCase ("test infixl: 3 + 4 * 5 * 6 ≡ 3 + ((4 * 5) * 6)")
@@ -39,7 +47,7 @@ infixlTest =
 
 infixrTest :: T.TestTree
 infixrTest =
-  ( "App + (Single 3) (App ^ (Single 4) (App ^ (Single 5) (Single 6)))"
+  ( "App \"+\" (Single 3) (App \"^\" (Single 4) (App \"^\" (Single 5) (Single 6)))"
       T.@=? (show app :: String)
   )
     |> T.testCase ("test infixr: 3 + 4 ^ 5 ^ 6 ≡ 3 + (4 ^ (5 ^ 6))")
@@ -52,7 +60,7 @@ infixrTest =
 
 mixFailTest :: T.TestTree
 mixFailTest =
-  ( "Left (Clash (Pred ^l Left' 8) (Pred ^ Right' 8))"
+  ( "Left (Clash (Pred \"^l\" Left' 8) (Pred \"^\" Right' 8))"
       T.@=? (show app :: String)
   )
     |> T.testCase ("test infixFail: 3 + 4 ^ 5 ^l 6 ≡ Error l ^l: mixing precedents")
@@ -65,7 +73,7 @@ mixFailTest =
 
 nonAssocFailTest :: T.TestTree
 nonAssocFailTest =
-  ( "Left (Clash (Pred == NonAssoc 4) (Pred == NonAssoc 4))"
+  ( "Left (Clash (Pred \"==\" NonAssoc 4) (Pred \"==\" NonAssoc 4))"
       T.@=? (show app :: String)
   )
     |> T.testCase ("test infixr: 3 + 4 == 5 == 6 ≡ Error: making non assocs assoc")
