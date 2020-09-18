@@ -16,7 +16,7 @@ import Frontend.Parser (allParserTests)
 import FrontendContextualise.Infix.ShuntYard (allInfixTests)
 import FrontendContextualise.Module.Open (openTests)
 import Juvix.Library (IO)
-import Pipeline ( tests )
+import Pipeline (tests)
 import qualified Test.Tasty as T
 
 coreTests :: T.TestTree
