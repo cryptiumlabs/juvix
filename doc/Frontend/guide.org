@@ -124,6 +124,67 @@ Example:
   let add = (+)
 #+END_SRC
 *** Types
+Types are very similar to Haskell and Idris =ADT= and =GADT=
+declarations.
+
+Types are declared by writing =type= following by the name of the type
+and arguments much like function syntax. optionally a type signature
+can be given at this point, by writing colon (=:=) then the type.
+
+From here the equal sign (===) denotes the start of the body of the
+type declaration.
+
+From here a declaration can take a few forms.
+
+1. zero or more sums which is started with pipe (=|=) and then
+   contains a tagged product.
+2. A tagged product which starts with the new constructor name and
+   either the arguments separated by spaces, a colon (=:=) followed
+   by the arguments separated by arrows, or a base record.
+3. A base record which is denoted by curly braces (={}=). inside the
+   curly braces, a name is given to every argument, which type is
+   started via colon and terminated by a comma (=,=).
+
+#+BEGIN_SRC haskell
+
+  -- This is a valid type
+  -- the a is a generic type
+  type list a
+    -- Cons is the constructor
+    -- Cons takes an item of type a and a List of a
+    = Cons a (list a)
+    -- Nil is another constructor taking no arguments
+    | Nil
+
+
+  -- this is the same type, but GADT style arrow syntax
+  -- is given to the constructor
+  type list a : a -> list a
+  -- Curly braces can be used here to name the arguments
+    = Cons { car : a,
+             cdr : list a }
+    | Nil
+
+  -- Same type again but using GADT syntax in the constructors
+  -- The first product can have a pipe!
+  type list a =
+    | Cons : a -> list a -> list a
+    | Nil  : list a
+
+  -- an example of a base record!
+  type cords a = {
+    x : a,
+    y : a
+  }
+
+  -- Same example but we have a trailing comma
+  type cords a = {
+    x : a,
+    y : a,
+  }
+#+END_SRC
+
+
 *** Modules
 modules are denoted similarly to modules except that instead of using
 =let=, =mod= is used instead.
@@ -273,10 +334,6 @@ followed by an expression is written afterwords
              | Bar nat
     in [Foo 3, Bar 10]
 #+END_SRC
-*** String Literals
-Strings are enclosed by double quotes (="=)
-# add escape characters once they are in
-
 *** Lists
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
@@ -305,8 +362,59 @@ Example:
   -- this is a 5 tuple!
   (1,2,3,4,5)
 #+END_SRC
-*** Do Notation
 *** Constants
+**** String Literals
+Strings are enclosed by double quotes (="=)
+# add escape characters once they are in
+
+Example:
+#+BEGIN_SRC haskell
+  let foo =
+    "this is a string!"
+#+END_SRC
+**** Integers/Naturals
+# Update when we get floats and rationals
+numbers are denoted by the characters 123456789.
+
+Examples:
+#+BEGIN_SRC haskell
+  -- a valid number literal
+  let foo = 123
+
+
+  -- another valid number
+  let number-one = 1
+#+END_SRC
+*** Do Notation
+
+Do notation works similarly as it does in Haskell with changes to make
+it indent insensitive. namely this means that after every binding a
+semicolon (=;=) is needed to start the next expression. Further, no do
+is needed, the semicolon is enough to determine if an expression is in
+do syntax or not
+
+Thus like Haskell to bind terms, one states the name, then a left
+arrow (=<-=), then the monadic expression terminated by a semicolon.
+
+For non bindings, just the monadic expression with a semicolon is
+needed.
+
+the last expression in do notation does not need a semicolon.
+
+Example:
+#+BEGIN_SRC haskell
+  let foo my =
+    x <- Just 5;
+    y <- my;
+    pure (x + y)
+
+
+  let bar =
+    Out.print "hello";
+    name <- In.prompt "What is your name";
+    Out.print ("hello" <> name)
+#+END_SRC
+
 *** Local opens
 
 Local opens work just like global open, however one has to write =in=
