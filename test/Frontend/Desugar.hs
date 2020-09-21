@@ -1,39 +1,22 @@
 module Frontend.Desugar where
 
-import Data.Attoparsec.ByteString (parse)
-import Frontend.Parser (shouldParseAs)
+import Data.Attoparsec.ByteString (parseOnly)
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types (TopLevel)
 import Juvix.Frontend.Types.Base
-  ( Cond' (C'),
-    CondLogic'
-      ( CondExpression',
-        annCondExpression,
-        condLogicBody,
-        condLogicPred
-      ),
-    Constant' (Number'),
-    Expression' (Constant', Infix', Name'),
-    Function' (Func'),
-    FunctionLike'
-      ( Like',
-        annLike,
-        functionLikeArgs,
-        functionLikeBody,
-        functionLikedName
-      ),
-    GuardBody' (Guard'),
-    Infix' (Inf', annInf, infixLeft, infixOp, infixRight),
-    Numb' (Integer''),
-    TopLevel' (Function'),
-  )
+import Juvix.FrontendDesugar (desugar)
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Desugared
 import Juvix.Library
-  ( Alternative (many),
+  ( (<>),
     ByteString,
-    NonEmpty ((:|)),
-    Symbol (Sym),
+    Either (Right),
+    Maybe (..),
+    NonEmpty (..),
+    fmap,
+    many,
+    show,
   )
 import qualified Test.Tasty as T
+import qualified Test.Tasty.HUnit as T
 
 allDesugar :: T.TestTree
 allDesugar =
@@ -42,9 +25,14 @@ allDesugar =
     [guardTest]
 
 shouldDesugar ::
-  T.TestName -> ByteString -> [TopLevel] -> T.TestTree
-shouldDesugar name =
-  shouldParseAs name (parse (many Parser.topLevelSN))
+  T.TestName -> ByteString -> [Desugared.TopLevel] -> T.TestTree
+shouldDesugar name x y =
+  T.testGroup
+    "Desugar tests"
+    [ T.testCase
+        ("desugar: " <> name <> " " <> show x <> " should desugar to " <> show y)
+        (fmap desugar (parseOnly (many Parser.topLevelSN) x) T.@=? Right y)
+    ]
 
 guardTest :: T.TestTree
 guardTest =
@@ -52,50 +40,62 @@ guardTest =
     "guardTest"
     "let foo | x == 3 = 3 | else = 2"
     [ Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = Sym "foo",
-                  functionLikeArgs = [],
-                  functionLikeBody =
-                    Guard'
-                      ( C'
-                          ( CondExpression'
-                              { condLogicPred =
-                                  Infix'
-                                    ( Inf'
-                                        { infixLeft = Name' (Sym "x" :| []) (),
-                                          infixOp = Sym "==" :| [],
-                                          infixRight =
-                                            Constant'
-                                              (Number' (Integer'' 3 ()) ())
-                                              (),
-                                          annInf = ()
-                                        }
-                                    )
-                                    (),
-                                condLogicBody = Constant' (Number' (Integer'' 3 ()) ()) (),
-                                annCondExpression = ()
-                              }
-                              :| [ CondExpression'
-                                     { condLogicPred = Name' (Sym "else" :| []) (),
-                                       condLogicBody =
-                                         Constant'
-                                           ( Number'
-                                               (Integer'' 2 ())
-                                               ()
-                                           )
-                                           (),
-                                       annCondExpression = ()
-                                     }
-                                 ]
-                          )
-                          ()
-                      )
-                      (),
-                  annLike = ()
+        ( FunctionX
+            ( "foo",
+              FunctionLikeX
+                { extFunctionLike =
+                    ( [],
+                      Match'
+                        ( Match'''
+                            { matchOn =
+                                Infix'
+                                  ( Inf'
+                                      { infixLeft = Name' ("x" :| []) (),
+                                        infixOp = "==" :| [],
+                                        infixRight = Constant' (Number' (Integer'' 3 ()) ()) (),
+                                        annInf = ()
+                                      }
+                                  )
+                                  (),
+                              matchBindigns =
+                                MatchL'
+                                  { matchLPattern =
+                                      MatchLogic'
+                                        { matchLogicContents = MatchCon' ("True" :| []) [] (),
+                                          matchLogicNamed = Nothing,
+                                          annMatchLogic = ()
+                                        },
+                                    matchLBody = Constant' (Number' (Integer'' 3 ()) ()) (),
+                                    annMatchL = ()
+                                  }
+                                  :| [ MatchL'
+                                         { matchLPattern =
+                                             MatchLogic'
+                                               { matchLogicContents = MatchCon' ("False" :| []) [] (),
+                                                 matchLogicNamed = Nothing,
+                                                 annMatchLogic = ()
+                                               },
+                                           matchLBody =
+                                             Match'
+                                               ( Match'''
+                                                   { matchOn = Name' ("else" :| []) (),
+                                                     matchBindigns = MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchCon' ("True" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 2 ()) ()) (), annMatchL = ()} :| [MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchCon' ("False" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Match' (Match''' {matchOn = Name' ("else" :| []) (), matchBindigns = MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchCon' ("True" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 2 ()) ()) (), annMatchL = ()} :| [], annMatch'' = ()}) (), annMatchL = ()}],
+                                                     annMatch'' = ()
+                                                   }
+                                               )
+                                               (),
+                                           annMatchL = ()
+                                         }
+                                     ],
+                              annMatch'' = ()
+                            }
+                        )
+                        ()
+                    )
                 }
+                :| [],
+              Nothing
             )
-            ()
         )
         ()
     ]

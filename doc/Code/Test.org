@@ -151,8 +151,9 @@ Tests that weak works as expected
 ** Desugar
 - _Relies on_
   + [[Parser]]
-  + [[Types]]
   + [[Base]]
+  + [[FrontendDesugar]]
+  + [[Types]]
   + [[Library]]
 ** Golden
 - _Relies on_

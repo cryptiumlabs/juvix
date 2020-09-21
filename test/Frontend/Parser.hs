@@ -10,7 +10,7 @@ import Data.Attoparsec.ByteString
   )
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types (Expression)
+import Juvix.Frontend.Types (Expression, TopLevel)
 import Juvix.Frontend.Types.Base
 import Juvix.Library
   ( ($),
@@ -75,7 +75,7 @@ test =
     \= 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let \
     \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
 
-takeResult :: Result s -> s
+takeResult :: Result a -> a
 takeResult (Done _ x) = x
 takeResult (Partial y) = takeResult (y "")
 takeResult (Fail _ _ errorMsg) = error errorMsg
@@ -84,7 +84,7 @@ shouldParseAs ::
   (Show a, Eq a) => T.TestName -> (ByteString -> Result a) -> ByteString -> a -> T.TestTree
 shouldParseAs name parses x y =
   T.testGroup
-    "parse Test"
+    "Parse tests"
     [ T.testCase
         ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
         (takeResult (parses x) T.@=? y)
@@ -1110,3 +1110,138 @@ vpsDashFrontFail =
 vpsDashMiddle :: Bool
 vpsDashMiddle =
   isRight (parseOnly Parser.prefixSymbol "Foo-Foo")
+
+--------------------------------------------------------------------------------
+-- Example(s) for REPL testing
+--------------------------------------------------------------------------------
+
+contractTest :: Either String [TopLevel]
+contractTest =
+  parseOnly
+    (many Parser.topLevelSN)
+    ( ""
+        <> "mod Token = "
+        <> "  let Address = s : String.T {String.length s == 36} \n"
+        <> "\n"
+        <> "  type Storage = { \n"
+        <> "    total-supply : Nat.T, \n"
+        <> "    accounts     : Accounts.T { Accounts.measure-value == total-supply } \n"
+        <> "  }"
+        <> "  sig empty-storage : Storage \n"
+        <> "  let empty-storage = { \n"
+        <> "    total-supply = 0, \n"
+        <> "    accounts     = Accounts.empty, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    storage : Storage, \n"
+        <> "    version : Nat.T, \n"
+        <> "    name    : String.T, \n"
+        <> "    symbol  : Char.T, \n"
+        <> "    owner   : Address, \n"
+        <> "  } \n"
+        <> "end"
+        <> " \n"
+        <> "mod Transaction = \n"
+        <> "  type Transfer = { \n"
+        <> "    from-account : Token.Address, \n"
+        <> "    to-account   : Token.Address, \n"
+        <> "    ammount      : Nat.T, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Mint = { \n"
+        <> "    mint-amount     : Nat.T, \n"
+        <> "    mint-to-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Burn = { \n"
+        <> "    burn-amount       : Nat.T, \n"
+        <> "    burn-from-account : Token.Address, \n"
+        <> "  } \n"
+        <> " \n"
+        <> "  type Data = \n"
+        <> "    | Transfer : Transfer -> Data \n"
+        <> "    | Mint     : Mint     -> Data \n"
+        <> "    | Burn     : Burn     -> Data \n"
+        <> " \n"
+        <> "  type T = { \n"
+        <> "    data               : Data, \n"
+        <> "    authorized-account : Token.Address, \n"
+        <> "  } \n"
+        <> "end \n"
+        <> " \n"
+        <> "sig has-n : Accounts.T -> Token.Address -> Nat -> Bool \n"
+        <> "let has-n accounts add to-transfer = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just n  -> to-transfer <= n \n"
+        <> "  | Nothing -> False \n"
+        <> " \n"
+        <> " \n"
+        <> "sig account-sub : acc : Accounts.T \n"
+        <> "               -> add : Token.Address \n"
+        <> "               -> num : Nat.T {has-n acc add num} \n"
+        <> "               -> Accounts.T \n"
+        <> "let account-sub accounts add number = \n"
+        <> "  case Accounts.select accounts add of \n"
+        <> "  | Just balance -> \n"
+        <> "     Accounts.put accounts add (balance - number) \n"
+        <> " \n"
+        <> "sig account-add : Accounts.T -> Token.Address -> Nat.T -> Accounts.T \n"
+        <> "let account-add accounts add number = \n"
+        <> "  Accounts.update accounts ((+) number) add \n"
+        <> " \n"
+        <> " \n"
+        <> " \n"
+        <> "sig transfer-stor : stor  : Token.Storage \n"
+        <> "                 -> from  : Token.Address \n"
+        <> "                 -> to    : Token.Address \n"
+        <> "                 -> num   : Nat.T {has-n stor.accounts from num} \n"
+        <> "                 -> Token.Storage \n"
+        <> "let transfer-stor stor add_from add_to num = \n"
+        <> "  let new-acc = account-add (account-sub stor.accounts add_from) add-to num in \n"
+        <> "  { total-supply = stor.total-supply \n"
+        <> "  , accounts     = new-acc \n"
+        <> "  } \n"
+        <> "mod Validation = \n"
+        <> "  let T = Token.T -> Transaction.T -> Bool \n"
+        <> " \n"
+        <> "  let mint token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Mint -> \n"
+        <> "      token.owner == tx-tx-authorized-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let transfer token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Transfer {from-account, amount} -> \n"
+        <> "      has-n token.storage.accounts from-account amount \n"
+        <> "      && tx.authroized-account == from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> " \n"
+        <> "  let Burn token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transaction.Burn {burn-from-account, burn-ammount} -> \n"
+        <> "      has-n token.storage.accounts burn-from-account burn-amount \n"
+        <> "      && tx.authroized-account == burn-from-account \n"
+        <> "    | _ -> \n"
+        <> "      false \n"
+        <> "end \n"
+        <> " \n"
+        <> "  type Error \n"
+        <> "    = NotEnoughFunds \n"
+        <> "    | NotSameAccount \n"
+        <> "    | NotOwnerToken  \n"
+        <> "    | NotEnoughTokens \n"
+        <> " \n"
+        <> "  sig exec : Token.T -> Transaction.T -> Either.T Error Token.T \n"
+        <> "  let exec token tx = \n"
+        <> "    case tx.data of \n"
+        <> "    | Transfer _ -> \n"
+        <> "      if | Validation.transfer token tx = Right (transfer token tx) \n"
+        <> "         | else                         = Left NotEnoughFunds \n"
+        <> "    | Mint _ -> \n"
+        <> "      if | Validation.mint token tx = Right (mint token tx) \n"
+        <> "         | else                     = Left NotEnoughFunds \n"
+    )
