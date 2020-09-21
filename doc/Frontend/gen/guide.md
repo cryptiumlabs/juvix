@@ -29,8 +29,8 @@ end
 Comments
 --------
 
-Comments are denoted by two dashes, `--`, and it and all characters up
-until the end of the line are discarded
+Comments are denoted by two dashes, `--`. The two dashes and all
+characters up until the end of the line are discarded.
 
 Example:
 
@@ -42,10 +42,10 @@ Symbols
 -------
 
 Symbols are used for any name declared in the Juvix programming
-language. Symbols are broken into two categories, infix and prefix
+language. Symbols are broken into two categories, infix and prefix.
 
-Prefix symbols start with either an alpha character or an underscore,
-which can be followed up by any alphanumeric character, underscores,
+Prefix symbols start with either an letter or an underscore, which can
+be followed up by any alphanumeric character, underscores,
 punctuation(?, !), or dashes.
 
 ``` {.haskell}
@@ -65,8 +65,8 @@ foo!
 -foo
 ```
 
-An infix symbol starts with all other symbols including punctuation and
-dashes
+An infix symbol starts with any character other than a letter or an
+underscore.
 
 ``` {.haskell}
 -- This is a valid infix symbol
@@ -92,25 +92,22 @@ Top Level Declarations
 ### Functions
 
 Functions are started by writing `let` which is followed by any valid
-prefix symbol or an infix symbol surrounded by parenthesis which shall
-be refereed to as the function name. Then, there are zero or more
-arguments, implicit arguments are surrounded in curly braces (`{}`). The
-arguments are ended when an equal sign (`=`) is placed, which denotes
+prefix symbol or an infix symbol surrounded by parentheses which shall
+be referred to as the function name. Then, there are zero or more
+arguments, with implicit arguments surrounded by curly braces (`{}`).
+The argument list ends when an equal sign (`=`) is placed, which denotes
 the start of the body.
 
 Example:
 
 ``` {.ocaml}
 -- this is a valid function
-
 let f x = x + 3
 
 -- this is another valid variable/function
-
 let y = 5
 
 -- this is a valid infix symbol
-
 let (+) = plus
 
 
@@ -120,9 +117,9 @@ let foo {prf} x = x
 
 Another important part of a function is the signature.
 
-A signature is denoted first by sig, then the function name. From here
-colon (`:`) denotes the start of the type of the function name. From
-here any valid type can be written.
+A signature is denoted first by `sig`, then the function name. From here
+colon (`:`) denotes the start of the type of the function name.
+Subsequently, any valid type can be written.
 
 Example:
 
@@ -133,12 +130,12 @@ let foo x = x + 3
 
 
 -- an example of a dependent signature
-sig add
+sig add-nat-int
     :  x : nat
     -> y : int
     -> if | x > y -> nat
           | else  -> int
-let add = (+)
+let add-nat-int = (+)
 ```
 
 ### Types
@@ -147,15 +144,15 @@ Types are very similar to Haskell and Idris `ADT` and `GADT`
 declarations.
 
 Types are declared by writing `type` following by the name of the type
-and arguments much like function syntax. optionally a type signature can
-be given at this point, by writing colon (`:`) then the type.
+and arguments much like function syntax. Optionally a type signature can
+be given at this point, by writing colon (`:`) followed by the type.
 
-From here the equal sign (`=`) denotes the start of the body of the type
+An equals sign (`=`) denotes the start of the body of the type
 declaration.
 
 From here a declaration can take a few forms.
 
-1.  zero or more sums which is started with pipe (`|`) and then contains
+1.  Zero or more sums, each of which starts with pipe (`|`) and contains
     a tagged product.
 2.  A tagged product which starts with the new constructor name and
     either the arguments separated by spaces, a colon (`:`) followed by
@@ -166,7 +163,7 @@ From here a declaration can take a few forms.
 
 ``` {.haskell}
 -- This is a valid type
--- the a is a generic type
+-- the a is a type argument
 type list a
   -- Cons is the constructor
   -- Cons takes an item of type a and a List of a
@@ -190,7 +187,7 @@ type list a =
   | Nil  : list a
 
 -- an example of a base record!
-type cords a = {
+type coords a = {
   x : a,
   y : a
 }
@@ -204,11 +201,11 @@ type cords a = {
 
 ### Modules
 
-modules are denoted similarly to modules except that instead of using
+modules are denoted similarly to functions except that instead of using
 `let`, `mod` is used instead.
 
-And instead of the body being an expression, the body is zero or more
-top level declarations before `end` is found
+Instead of an expression, the body consists of zero or more top-level
+declarations followed by `end`.
 
 ``` {.haskell}
 -- example defining a module
@@ -217,6 +214,7 @@ mod Foo =
   sig bar : nat
   let bar = 3
 
+  -- The type is inferred here
   let baz = 5
 
 -- end ends the module definition
@@ -228,9 +226,9 @@ let test = Foo.bar + Foo.baz
 
 ### Imports
 
-one can import a module in two ways.
+A module can be imported in two ways.
 
-Either by opening them
+A module can be `open`-ed:
 
 Example:
 
@@ -241,7 +239,7 @@ open Foo
 open Foo.Bar.Baz
 ```
 
-or aliasing them with a let
+A module can also be aliased with a `let`:
 
 Example:
 
@@ -257,8 +255,8 @@ Expressions
 
 1.  If
 
-    If expressions have a non zero number of clauses. Each clause
-    consists of a boolean test, followed by a consequence.
+    If expressions have a non-zero number of clauses. Each clause
+    consists of a boolean test, followed by a body term.
 
     Example:
 
@@ -275,11 +273,11 @@ Expressions
        | else        -> 0
     ```
 
-    The `else` name is just an alias for `False`.
+    The `else` name is just an alias for `True`.
 
 2.  Case
 
-    Case expressions have a non zero number of clauses. Each clause
+    Case expressions have a non-zero number of clauses. Each clause
     consists of a pattern, followed by a consequence.
 
     A pattern works much like Haskell or Idris, in that one can
@@ -295,6 +293,7 @@ Expressions
 
 
     -- an example with match!
+    sig func : Tree nat -> nat
     let func foo =
       case foo of
       | Branch left ele right ->
@@ -306,28 +305,28 @@ Expressions
 
 
     -- This is the same function!
-    let func (Branch left ele right) =
-      func left + ele + func right
-    let func (Leaf ele) =
+    let func2 (Branch left ele right) =
+      func2 left + ele + func2 right
+    let func2 (Leaf ele) =
       ele
-    let func Empty =
+    let func2 Empty =
       0
 
 
-    type cords = {
+    type coords = {
       x : int,
       y : int
     }
 
     -- match on record
 
-    sig origin? : cords -> boolean
+    sig origin? : coords -> boolean
     let origin? {x, y}
       | x == y && x == 0 = True
       | else             = False
 
     -- same function as origin
-    sig origin2? : cords -> boolean
+    sig origin2? : coords -> boolean
     let origin2? {x = origX, y = origY}
       | origX == origY && origX == 0 =
         True
@@ -338,8 +337,9 @@ Expressions
 
 ### Definitions
 
-All definitions are like their top level counter part, except that `in`
-followed by an expression is written afterwords
+Definitions within an expression are like their top level counterparts,
+except that `in` followed by an expression must be written after the
+definition.
 
 1.  Let
 
@@ -375,9 +375,11 @@ followed by an expression is written afterwords
 
 List literals are started by the open bracket character (`[`). Within,
 elements are separated by commas (`,`) before ending with a closing
-bracket (`]`)
+bracket (`]`).
 
-Example:?
+List literal syntax is just sugar for the `Cons` and `Nil` constructors.
+
+Example:
 
 ``` {.haskell}
 -- this is a valid list
@@ -385,6 +387,9 @@ Example:?
 
 -- another valid list
 [1,2,3]
+
+-- the same list without sugar
+Cons 1 (Cons 2 (Cons 3 Nil))
 ```
 
 ### Tuples
@@ -404,6 +409,36 @@ Example:
 -- this is a 5 tuple!
 (1,2,3,4,5)
 ```
+
+### Records
+
+Record literals are started by an open curly brace (`{`). Within,
+elements are bound to the corresponding name of the record via the
+equals sign (`=`), or punned by the name directly. Elements, like lists,
+are separated by commas (`,`) before ending with a closing brace (`}`).
+
+Example:
+
+``` {.ocaml}
+type coords = {
+  x : int,
+  y : int
+}
+
+-- a new construct called foo for coords
+sig create-cords : int -> int -> coords
+let create-cords x-dir y-dir = {
+  x = x-dir,
+  y = y-dir
+}
+
+
+-- same function with punning
+sig create-cords : int -> int -> coords
+let create-cords x y = {x, y}
+```
+
+1.  Record updating syntax
 
 ### Constants
 
@@ -436,10 +471,10 @@ Example:
 ### Do Notation
 
 Do notation works similarly as it does in Haskell with changes to make
-it indent insensitive. namely this means that after every binding a
-semicolon (`;`) is needed to start the next expression. Further, no do
+it indent insensitive. Namely, this means that after every binding a
+semicolon (`;`) is needed to start the next expression. Further, no `do`
 is needed, the semicolon is enough to determine if an expression is in
-do syntax or not
+do syntax or not.
 
 Thus like Haskell to bind terms, one states the name, then a left arrow
 (`<-`), then the monadic expression terminated by a semicolon.
@@ -447,7 +482,7 @@ Thus like Haskell to bind terms, one states the name, then a left arrow
 For non bindings, just the monadic expression with a semicolon is
 needed.
 
-the last expression in do notation does not need a semicolon.
+The last expression in do notation does not need a semicolon.
 
 Example:
 
@@ -466,8 +501,8 @@ let bar =
 
 ### Local opens
 
-Local opens work just like global open, however one has to write `in`
-then a body like other defining expressions.
+Local opens work just like global opens, however one has to write `in`
+then a body like other inner definitions.
 
 Example:
 
