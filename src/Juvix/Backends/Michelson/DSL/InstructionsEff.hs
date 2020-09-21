@@ -77,6 +77,7 @@ con :: Env.Reduction m => Ann.Con -> Types.Type -> m Env.Expanded
 con c ty = do
   cty <- typeToPrimType ty
   case c of
+    -- this should be compiling to NewPrim instead of using constructPrim
     Ann.ConLeft -> constructPrim (Types.Inst (Instr.LEFT "" "" "" "" cty)) ty
     Ann.ConRight -> constructPrim (Types.Inst (Instr.RIGHT "" "" "" "" cty)) ty
     Ann.ConPair -> constructPrim (Types.Inst (Instr.PAIR "" "" "" "")) ty
@@ -98,6 +99,7 @@ caseTree sym ty tree = do
       _ <- var sym
       addInstrs [Instructions.dup, Instructions.car, Instructions.dip [Instructions.cdr]]
       let MT.Type (MT.TPair _ _ leftTy rightTy) _ = ty
+      -- TODO maybe simplify with nameTop
       VStack.consT (VStack.VarE (Set.singleton sndSym) (VStack.Usage Usage.Omega False) Nothing, rightTy)
       VStack.consT (VStack.VarE (Set.singleton fstSym) (VStack.Usage Usage.Omega False) Nothing, leftTy)
       inst body

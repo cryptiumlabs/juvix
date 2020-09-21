@@ -19,6 +19,7 @@ newtype PrimTy
 
 data NewPrim
   = Constant (M.Value' Op)
+  -- left/right coming courtesy of Jeremy
   | Inst (Instr.InstrAbstract Op)
   | AddN
   | AddI

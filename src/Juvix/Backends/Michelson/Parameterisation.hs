@@ -175,7 +175,7 @@ builtinTypes =
     ("Michelson.int", Untyped.TInt),
     ("Michelson.nat", Untyped.TNat),
     ("Michelson.string", Untyped.TString),
-    ("Michelson.string", Untyped.TBytes),
+    ("Michelson.bytes", Untyped.TBytes),
     ("Michelson.mutez", Untyped.TMutez),
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
@@ -223,7 +223,7 @@ builtinValues =
     ("Michelson.lsr", Inst (M.LSR "")),
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
-    ("Michelson.self", Inst (M.UNIT "" ""))
+    ("Michelson.unit", Inst (M.UNIT "" ""))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
