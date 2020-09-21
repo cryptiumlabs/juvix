@@ -1,0 +1,488 @@
+Syntax Guide
+============
+
+This document is heavily inspired by the [Idris syntax
+guide](http://docs.idris-lang.org/en/latest/reference/syntax-guide.html).
+
+File Organization
+-----------------
+
+A file contains zero or more *Top Level Declarations*
+
+For example
+
+``` {.ocaml}
+-- this is a function with a signature!
+sig foo : Natural
+let foo = 3
+
+-- this is a data type declaration
+type list a = Cons a (List a)
+            | Nil
+
+-- this is a module declaration!
+mod Boo =
+  let fi = 10
+end
+```
+
+Comments
+--------
+
+Comments are denoted by two dashes, `--`, and it and all characters up
+until the end of the line are discarded
+
+Example:
+
+``` {.ocaml}
+-- This is a comment!
+```
+
+Symbols
+-------
+
+Symbols are used for any name declared in the Juvix programming
+language. Symbols are broken into two categories, infix and prefix
+
+Prefix symbols start with either an alpha character or an underscore,
+which can be followed up by any alphanumeric character, underscores,
+punctuation(?, !), or dashes.
+
+``` {.haskell}
+-- a valid symbol
+hello-there
+
+-- another valid symbol
+_unused-symbol
+
+-- a valid predicate
+even?
+
+-- An important action
+foo!
+
+-- not a valid prefix symbol
+-foo
+```
+
+An infix symbol starts with all other symbols including punctuation and
+dashes
+
+``` {.haskell}
+-- This is a valid infix symbol
+
+!!
+
+-- this is also another valid infix symbol
+
+-<++
+
+-- this is not a valid infix symbol, but instead a comment of a -
+
+---
+
+-- here is an arrow infix symbol
+
+->
+```
+
+Top Level Declarations
+----------------------
+
+### Functions
+
+Functions are started by writing `let` which is followed by any valid
+prefix symbol or an infix symbol surrounded by parenthesis which shall
+be refereed to as the function name. Then, there are zero or more
+arguments, implicit arguments are surrounded in curly braces (`{}`). The
+arguments are ended when an equal sign (`=`) is placed, which denotes
+the start of the body.
+
+Example:
+
+``` {.ocaml}
+-- this is a valid function
+
+let f x = x + 3
+
+-- this is another valid variable/function
+
+let y = 5
+
+-- this is a valid infix symbol
+
+let (+) = plus
+
+
+-- a function with an implicit argument
+let foo {prf} x = x
+```
+
+Another important part of a function is the signature.
+
+A signature is denoted first by sig, then the function name. From here
+colon (`:`) denotes the start of the type of the function name. From
+here any valid type can be written.
+
+Example:
+
+``` {.ocaml}
+-- a valid signature and function
+sig foo : int -> int
+let foo x = x + 3
+
+
+-- an example of a dependent signature
+sig add
+    :  x : nat
+    -> y : int
+    -> if | x > y -> nat
+          | else  -> int
+let add = (+)
+```
+
+### Types
+
+Types are very similar to Haskell and Idris `ADT` and `GADT`
+declarations.
+
+Types are declared by writing `type` following by the name of the type
+and arguments much like function syntax. optionally a type signature can
+be given at this point, by writing colon (`:`) then the type.
+
+From here the equal sign (`=`) denotes the start of the body of the type
+declaration.
+
+From here a declaration can take a few forms.
+
+1.  zero or more sums which is started with pipe (`|`) and then contains
+    a tagged product.
+2.  A tagged product which starts with the new constructor name and
+    either the arguments separated by spaces, a colon (`:`) followed by
+    the arguments separated by arrows, or a base record.
+3.  A base record which is denoted by curly braces (`{}`). inside the
+    curly braces, a name is given to every argument, which type is
+    started via colon and terminated by a comma (`,`).
+
+``` {.haskell}
+-- This is a valid type
+-- the a is a generic type
+type list a
+  -- Cons is the constructor
+  -- Cons takes an item of type a and a List of a
+  = Cons a (list a)
+  -- Nil is another constructor taking no arguments
+  | Nil
+
+
+-- this is the same type, but GADT style arrow syntax
+-- is given to the constructor
+type list a : a -> list a
+-- Curly braces can be used here to name the arguments
+  = Cons { car : a,
+           cdr : list a }
+  | Nil
+
+-- Same type again but using GADT syntax in the constructors
+-- The first product can have a pipe!
+type list a =
+  | Cons : a -> list a -> list a
+  | Nil  : list a
+
+-- an example of a base record!
+type cords a = {
+  x : a,
+  y : a
+}
+
+-- Same example but we have a trailing comma
+type cords a = {
+  x : a,
+  y : a,
+}
+```
+
+### Modules
+
+modules are denoted similarly to modules except that instead of using
+`let`, `mod` is used instead.
+
+And instead of the body being an expression, the body is zero or more
+top level declarations before `end` is found
+
+``` {.haskell}
+-- example defining a module
+
+mod Foo =
+  sig bar : nat
+  let bar = 3
+
+  let baz = 5
+
+-- end ends the module definition
+end
+
+-- example using a module
+let test = Foo.bar + Foo.baz
+```
+
+### Imports
+
+one can import a module in two ways.
+
+Either by opening them
+
+Example:
+
+``` {.ocaml}
+-- A valid open
+open Foo
+
+open Foo.Bar.Baz
+```
+
+or aliasing them with a let
+
+Example:
+
+``` {.ocaml}
+-- a valid module alias
+let F = Foo
+```
+
+Expressions
+-----------
+
+### Conditionals
+
+1.  If
+
+    If expressions have a non zero number of clauses. Each clause
+    consists of a boolean test, followed by a consequence.
+
+    Example:
+
+    ``` {.haskell}
+    -- this is a valid if expression!
+    if | x == 3 -> 5
+       | else   -> 6
+    -- ^ test      ^ consequence
+
+    -- this is also a valid a valid if expression
+    if | x == 10     -> 25
+       | positive? x -> x
+       | negative? x -> abs x
+       | else        -> 0
+    ```
+
+    The `else` name is just an alias for `False`.
+
+2.  Case
+
+    Case expressions have a non zero number of clauses. Each clause
+    consists of a pattern, followed by a consequence.
+
+    A pattern works much like Haskell or Idris, in that one can
+    deconstruct on a record or a constructor. We also allow record
+    punning on matches.
+
+    Example:
+
+    ``` {.ocaml}
+    type tree a = Branch (tree a) a (tree a)
+                | Leaf a
+                | Empty
+
+
+    -- an example with match!
+    let func foo =
+      case foo of
+      | Branch left ele right ->
+        func left + ele + func right
+      | Leaf ele ->
+        ele
+      | Empty ->
+        0
+
+
+    -- This is the same function!
+    let func (Branch left ele right) =
+      func left + ele + func right
+    let func (Leaf ele) =
+      ele
+    let func Empty =
+      0
+
+
+    type cords = {
+      x : int,
+      y : int
+    }
+
+    -- match on record
+
+    sig origin? : cords -> boolean
+    let origin? {x, y}
+      | x == y && x == 0 = True
+      | else             = False
+
+    -- same function as origin
+    sig origin2? : cords -> boolean
+    let origin2? {x = origX, y = origY}
+      | origX == origY && origX == 0 =
+        True
+      | else = False
+    ```
+
+    1.  Dependent matching
+
+### Definitions
+
+All definitions are like their top level counter part, except that `in`
+followed by an expression is written afterwords
+
+1.  Let
+
+    ``` {.ocaml}
+    let foo =
+      let bar = 3 in
+      bar + 10
+    ```
+
+2.  Modules
+
+    ``` {.ocaml}
+    let foo =
+      mod Bar =
+        let foo = 3
+        let bat = 10
+      end in
+      Bar.foo + Bar.bat
+    ```
+
+3.  Signatures
+
+4.  Types
+
+    ``` {.ocaml}
+    let foo =
+      type bar = Foo int
+               | Bar nat
+      in [Foo 3, Bar 10]
+    ```
+
+### Lists
+
+List literals are started by the open bracket character (`[`). Within,
+elements are separated by commas (`,`) before ending with a closing
+bracket (`]`)
+
+Example:?
+
+``` {.haskell}
+-- this is a valid list
+[1]
+
+-- another valid list
+[1,2,3]
+```
+
+### Tuples
+
+Tuples are formatted like lists, however instead of using brackets,
+parenthesis are used instead ( `(` `)` ).
+
+Example:
+
+``` {.haskell}
+-- this is a tuple
+(1, 2)
+
+-- this is not a tuple
+(1)
+
+-- this is a 5 tuple!
+(1,2,3,4,5)
+```
+
+### Constants
+
+1.  String Literals
+
+    Strings are enclosed by double quotes (`"`)
+
+    Example:
+
+    ``` {.haskell}
+    let foo =
+      "this is a string!"
+    ```
+
+2.  Integers/Naturals
+
+    numbers are denoted by the characters 123456789.
+
+    Examples:
+
+    ``` {.haskell}
+    -- a valid number literal
+    let foo = 123
+
+
+    -- another valid number
+    let number-one = 1
+    ```
+
+### Do Notation
+
+Do notation works similarly as it does in Haskell with changes to make
+it indent insensitive. namely this means that after every binding a
+semicolon (`;`) is needed to start the next expression. Further, no do
+is needed, the semicolon is enough to determine if an expression is in
+do syntax or not
+
+Thus like Haskell to bind terms, one states the name, then a left arrow
+(`<-`), then the monadic expression terminated by a semicolon.
+
+For non bindings, just the monadic expression with a semicolon is
+needed.
+
+the last expression in do notation does not need a semicolon.
+
+Example:
+
+``` {.haskell}
+let foo my =
+  x <- Just 5;
+  y <- my;
+  pure (x + y)
+
+
+let bar =
+  Out.print "hello";
+  name <- In.prompt "What is your name";
+  Out.print ("hello" <> name)
+```
+
+### Local opens
+
+Local opens work just like global open, however one has to write `in`
+then a body like other defining expressions.
+
+Example:
+
+``` {.ocaml}
+let foo xs ys zs =
+  open List in
+  append xs (append ys zs)
+```
+
+There is also a more brief syntax where the module is then following by
+`.( ... code here ... )`
+
+Example:
+
+``` {.ocaml}
+let foo xs ys zs =
+  List.(append xs (append ys zs))
+```
