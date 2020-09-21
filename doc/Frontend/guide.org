@@ -19,8 +19,7 @@ For example
   end
 #+END_SRC
 ** Comments
-Comments are denoted by two dashes, =--=, and it and all characters up
-until the end of the line are discarded
+Comments are denoted by two dashes, =--=. The two dashes and all characters up until the end of the line are discarded.
 
 Example:
 #+BEGIN_SRC ocaml
@@ -28,9 +27,9 @@ Example:
 #+END_SRC
 ** Symbols
 Symbols are used for any name declared in the Juvix programming
-language. Symbols are broken into two categories, infix and prefix
+language. Symbols are broken into two categories, infix and prefix.
 
-Prefix symbols start with either an alpha character or an underscore,
+Prefix symbols start with either an letter or an underscore,
 which can be followed up by any alphanumeric character, underscores,
 punctuation(?, !), or dashes.
 
@@ -52,8 +51,7 @@ punctuation(?, !), or dashes.
   -foo
 #+END_SRC
 
-An infix symbol starts with all other symbols including punctuation
-and dashes
+An infix symbol starts with any character other than a letter or an underscore.
 
 #+BEGIN_SRC haskell
   -- This is a valid infix symbol
@@ -77,10 +75,10 @@ and dashes
 *** Functions
 
 Functions are started by writing =let= which is followed by any valid
-prefix symbol or an infix symbol surrounded by parenthesis which shall
-be refereed to as the function name. Then, there are zero or more
-arguments, implicit arguments are surrounded in curly braces
-(={}=). The arguments are ended when an equal sign (===) is placed,
+prefix symbol or an infix symbol surrounded by parentheses which shall
+be referred to as the function name. Then, there are zero or more
+arguments, with implicit arguments surrounded by curly braces
+(={}=). The argument list ends when an equal sign (===) is placed,
 which denotes the start of the body.
 
 Example:
@@ -104,9 +102,9 @@ Example:
 
 Another important part of a function is the signature.
 
-A signature is denoted first by sig, then the function name. From here
-colon (=:=) denotes the start of the type of the function name. From
-here any valid type can be written.
+A signature is denoted first by =sig=, then the function name.
+From here colon (=:=) denotes the start of the type of the function name.
+Subsequently, any valid type can be written.
 
 Example:
 #+BEGIN_SRC ocaml
@@ -128,15 +126,15 @@ Types are very similar to Haskell and Idris =ADT= and =GADT=
 declarations.
 
 Types are declared by writing =type= following by the name of the type
-and arguments much like function syntax. optionally a type signature
-can be given at this point, by writing colon (=:=) then the type.
+and arguments much like function syntax. Optionally a type signature
+can be given at this point, by writing colon (=:=) followed by the type.
 
-From here the equal sign (===) denotes the start of the body of the
+An equals sign (===) denotes the start of the body of the
 type declaration.
 
 From here a declaration can take a few forms.
 
-1. zero or more sums which is started with pipe (=|=) and then
+1. Zero or more sums, each of which starts with pipe (=|=) and
    contains a tagged product.
 2. A tagged product which starts with the new constructor name and
    either the arguments separated by spaces, a colon (=:=) followed
@@ -148,7 +146,7 @@ From here a declaration can take a few forms.
 #+BEGIN_SRC haskell
 
   -- This is a valid type
-  -- the a is a generic type
+  -- the a is a type argument
   type list a
     -- Cons is the constructor
     -- Cons takes an item of type a and a List of a
@@ -172,7 +170,7 @@ From here a declaration can take a few forms.
     | Nil  : list a
 
   -- an example of a base record!
-  type cords a = {
+  type coords a = {
     x : a,
     y : a
   }
@@ -189,8 +187,7 @@ From here a declaration can take a few forms.
 modules are denoted similarly to modules except that instead of using
 =let=, =mod= is used instead.
 
-And instead of the body being an expression, the body is zero or more
-top level declarations before =end= is found
+Instead of an expression, the body consists of zero or more top-level declarations followed by =end=.
 
 #+BEGIN_SRC haskell
 
@@ -209,9 +206,9 @@ top level declarations before =end= is found
   let test = Foo.bar + Foo.baz
 #+END_SRC
 *** Imports
-one can import a module in two ways.
+A module can be imported in two ways.
 
-Either by opening them
+A module can be =open=-ed:
 
 Example:
 #+BEGIN_SRC ocaml
@@ -221,7 +218,7 @@ Example:
   open Foo.Bar.Baz
 #+END_SRC
 
-or aliasing them with a let
+A module can also be aliased with a =let=:
 
 Example:
 #+BEGIN_SRC ocaml
@@ -232,8 +229,8 @@ Example:
 ** Expressions
 *** Conditionals
 **** If
-If expressions have a non zero number of clauses. Each clause consists
-of a boolean test, followed by a consequence.
+If expressions have a non-zero number of clauses. Each clause consists
+of a boolean test, followed by a body term.
 
 Example:
 #+BEGIN_SRC haskell
@@ -249,9 +246,9 @@ Example:
      | else        -> 0
 #+END_SRC
 
-The =else= name is just an alias for =False=.
+The =else= name is just an alias for =True=.
 **** Case
-Case expressions have a non zero number of clauses. Each clause
+Case expressions have a non-zero number of clauses. Each clause
 consists of a pattern, followed by a consequence.
 
 A pattern works much like Haskell or Idris, in that one can
@@ -337,7 +334,7 @@ followed by an expression is written afterwords
 *** Lists
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
-bracket (=]=)
+bracket (=]=).
 
 Example:?
 #+BEGIN_SRC haskell
@@ -388,10 +385,10 @@ Examples:
 *** Do Notation
 
 Do notation works similarly as it does in Haskell with changes to make
-it indent insensitive. namely this means that after every binding a
-semicolon (=;=) is needed to start the next expression. Further, no do
+it indent insensitive. Namely, this means that after every binding a
+semicolon (=;=) is needed to start the next expression. Further, no =do=
 is needed, the semicolon is enough to determine if an expression is in
-do syntax or not
+do syntax or not.
 
 Thus like Haskell to bind terms, one states the name, then a left
 arrow (=<-=), then the monadic expression terminated by a semicolon.
@@ -399,7 +396,7 @@ arrow (=<-=), then the monadic expression terminated by a semicolon.
 For non bindings, just the monadic expression with a semicolon is
 needed.
 
-the last expression in do notation does not need a semicolon.
+The last expression in do notation does not need a semicolon.
 
 Example:
 #+BEGIN_SRC haskell
@@ -417,8 +414,8 @@ Example:
 
 *** Local opens
 
-Local opens work just like global open, however one has to write =in=
-then a body like other defining expressions.
+Local opens work just like global opens, however one has to write =in=
+then a body like other inner definitions.
 
 Example:
 #+BEGIN_SRC ocaml
