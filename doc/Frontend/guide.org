@@ -86,15 +86,12 @@ which denotes the start of the body.
 Example:
 #+BEGIN_SRC ocaml
   -- this is a valid function
-
   let f x = x + 3
 
   -- this is another valid variable/function
-
   let y = 5
 
   -- this is a valid infix symbol
-
   let (+) = plus
 
 
@@ -116,12 +113,12 @@ Example:
 
 
   -- an example of a dependent signature
-  sig add
+  sig add-nat-int
       :  x : nat
       -> y : int
       -> if | x > y -> nat
             | else  -> int
-  let add = (+)
+  let add-nat-int = (+)
 #+END_SRC
 *** Types
 Types are very similar to Haskell and Idris =ADT= and =GADT=
@@ -186,7 +183,7 @@ From here a declaration can take a few forms.
 
 
 *** Modules
-modules are denoted similarly to modules except that instead of using
+modules are denoted similarly to functions except that instead of using
 =let=, =mod= is used instead.
 
 And instead of the body being an expression, the body is zero or more
@@ -200,6 +197,7 @@ top level declarations before =end= is found
     sig bar : nat
     let bar = 3
 
+    -- The type is inferred here
     let baz = 5
 
   -- end ends the module definition
@@ -210,6 +208,8 @@ top level declarations before =end= is found
 #+END_SRC
 *** Imports
 one can import a module in two ways.
+
+# add more dscriptions on what to do
 
 Either by opening them
 
@@ -266,6 +266,7 @@ Example:
 
 
   -- an example with match!
+  sig func : Tree nat -> nat
   let func foo =
     case foo of
     | Branch left ele right ->
@@ -277,28 +278,28 @@ Example:
 
 
   -- This is the same function!
-  let func (Branch left ele right) =
-    func left + ele + func right
-  let func (Leaf ele) =
+  let func2 (Branch left ele right) =
+    func2 left + ele + func2 right
+  let func2 (Leaf ele) =
     ele
-  let func Empty =
+  let func2 Empty =
     0
 
 
-  type cords = {
+  type coords = {
     x : int,
     y : int
   }
 
   -- match on record
 
-  sig origin? : cords -> boolean
+  sig origin? : coords -> boolean
   let origin? {x, y}
     | x == y && x == 0 = True
     | else             = False
 
   -- same function as origin
-  sig origin2? : cords -> boolean
+  sig origin2? : coords -> boolean
   let origin2? {x = origX, y = origY}
     | origX == origY && origX == 0 =
       True
@@ -307,8 +308,9 @@ Example:
 ***** Dependent matching
 
 *** Definitions
-All definitions are like their top level counter part, except that =in=
-followed by an expression is written afterwords
+Definitions within an expression are like their top level
+counterparts, except that =in= followed by an expression must be
+written after the definition.
 **** Let
 # Add and example of and once and is in
 
@@ -335,6 +337,7 @@ followed by an expression is written afterwords
     in [Foo 3, Bar 10]
 #+END_SRC
 *** Lists
+# TODO ∷ explain how they are just sugar
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
 bracket (=]=)
