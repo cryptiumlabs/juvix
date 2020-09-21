@@ -333,18 +333,23 @@ written after the definition.
     in [Foo 3, Bar 10]
 #+END_SRC
 *** Lists
-# TODO ∷ explain how they are just sugar
 List literals are started by the open bracket character (=[=). Within,
 elements are separated by commas (=,=) before ending with a closing
 bracket (=]=).
 
-Example:?
+List literal syntax is just sugar for the =Cons= and =Nil=
+constructors.
+
+Example:
 #+BEGIN_SRC haskell
   -- this is a valid list
   [1]
 
   -- another valid list
   [1,2,3]
+
+  -- the same list without sugar
+  Cons 1 (Cons 2 (Cons 3 Nil))
 #+END_SRC
 *** Tuples
 Tuples are formatted like lists, however instead of using brackets,
@@ -361,6 +366,35 @@ Example:
   -- this is a 5 tuple!
   (1,2,3,4,5)
 #+END_SRC
+*** Records
+Record literals are started by an open curly brace (={=). Within,
+elements are bound to the corresponding name of the record via the
+equals sign (===), or punned by the name directly. Elements, like
+lists, are separated by commas (=,=) before ending with a closing
+brace (=}=).
+
+Example:
+#+BEGIN_SRC ocaml
+
+  type coords = {
+    x : int,
+    y : int
+  }
+
+  -- a new construct called foo for coords
+  sig create-cords : int -> int -> coords
+  let create-cords x-dir y-dir = {
+    x = x-dir,
+    y = y-dir
+  }
+
+
+  -- same function with punning
+  sig create-cords : int -> int -> coords
+  let create-cords x y = {x, y}
+#+END_SRC
+**** Record updating syntax
+# add when it is in?
 *** Constants
 **** String Literals
 Strings are enclosed by double quotes (="=)
@@ -388,9 +422,9 @@ Examples:
 
 Do notation works similarly as it does in Haskell with changes to make
 it indent insensitive. Namely, this means that after every binding a
-semicolon (=;=) is needed to start the next expression. Further, no =do=
-is needed, the semicolon is enough to determine if an expression is in
-do syntax or not.
+semicolon (=;=) is needed to start the next expression. Further, no
+=do= is needed, the semicolon is enough to determine if an expression
+is in do syntax or not.
 
 Thus like Haskell to bind terms, one states the name, then a left
 arrow (=<-=), then the monadic expression terminated by a semicolon.
