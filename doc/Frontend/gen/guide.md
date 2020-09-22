@@ -55,7 +55,7 @@ hello-there
 -- another valid symbol
 _unused-symbol
 
--- a valid predicate
+-- another valid symbol. Typically ? denotes the symbol is a predicate
 even?
 
 -- An important action
@@ -197,6 +197,11 @@ type cords a = {
   x : a,
   y : a,
 }
+
+-- An example of a dependent type
+type vect : (len : nat) -> (elem : set) -> set =
+  | Nil  : vect 0 elem
+  | Cons : elem -> vect len elem -> vect (succ len) elem
 ```
 
 ### Modules
@@ -228,6 +233,9 @@ let test = Foo.bar + Foo.baz
 
 A module can be imported in two ways.
 
+Importing a module unqualified via =open=ing them means that every
+symbol in the module becomes unqualified
+
 A module can be `open`-ed:
 
 Example:
@@ -236,7 +244,31 @@ Example:
 -- A valid open
 open Foo
 
+-- opening the module Baz in the moudle Bar in the moudle Bar
 open Foo.Bar.Baz
+
+-- This is the same statmenet as above.
+open Foo
+open Bar.Baz
+
+
+-- let us define a module
+mod IntMod =
+  let t = int
+
+  sig of-nat : int -> t
+  let of-nat x = x
+
+  sig add : t -> t -> t
+  let add = (+)
+end
+
+-- now we shall open it into our scope
+open IntMod
+
+-- we can now use it unqualified
+sig use-int-mod : nat -> nat -> t
+let use-int-mod x y = add (of-nat x) (of-nat y)
 ```
 
 A module can also be aliased with a `let`:
@@ -303,7 +335,6 @@ Expressions
       | Empty ->
         0
 
-
     -- This is the same function!
     let func2 (Branch left ele right) =
       func2 left + ele + func2 right
@@ -311,7 +342,6 @@ Expressions
       ele
     let func2 Empty =
       0
-
 
     type coords = {
       x : int,
