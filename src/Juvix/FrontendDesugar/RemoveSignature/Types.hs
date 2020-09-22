@@ -10,6 +10,8 @@ extendType "Type" [] [t|T|] Ext.extendType
 
 extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
+extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
+
 extendData "Data" [] [t|T|] Ext.extendData
 
 extendList "List" [] [t|T|] Ext.extendList

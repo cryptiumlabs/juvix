@@ -36,6 +36,8 @@ transformTopLevel (Old.Signature t) =
   New.Signature (transformSignature t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
+transformTopLevel (Old.InfixDeclar i) =
+  New.InfixDeclar (transformInfixDeclar i)
 transformTopLevel Old.TypeClass =
   New.TypeClass
 transformTopLevel Old.TypeClassInstance =
@@ -84,6 +86,14 @@ transformExpression (Old.UniverseName i) =
   New.UniverseName (transformUniverseExpression i)
 transformExpression (Old.Parened e) =
   New.Parened (transformExpression e)
+
+--------------------------------------------------------------------------------
+-- Infix Declaration
+--------------------------------------------------------------------------------
+transformInfixDeclar :: Old.InfixDeclar -> New.InfixDeclar
+transformInfixDeclar (Old.AssocL i) = New.AssocL i
+transformInfixDeclar (Old.AssocR i) = New.AssocR i
+transformInfixDeclar (Old.NonAssoc i) = New.NonAssoc i
 
 --------------------------------------------------------------------------------
 -- Types

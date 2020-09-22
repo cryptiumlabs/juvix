@@ -36,6 +36,8 @@ transformTopLevel = search
       New.TypeClass : search xs
     search (Old.TypeClassInstance : xs) =
       New.TypeClassInstance : search xs
+    search (Old.InfixDeclar i : xs) =
+      New.InfixDeclar (transformInfixDeclar i) : search xs
     search [] =
       []
     grabSimilar sym (Old.Function (Old.Func f@(Old.Like name _ _)) : xs)
@@ -89,6 +91,14 @@ transformExpression (Old.UniverseName i) =
   New.UniverseName (transformUniverseExpression i)
 transformExpression (Old.Parened e) =
   New.Parened (transformExpression e)
+
+--------------------------------------------------------------------------------
+-- Infix Declaration
+--------------------------------------------------------------------------------
+transformInfixDeclar :: Old.InfixDeclar -> New.InfixDeclar
+transformInfixDeclar (Old.AssocL i) = New.AssocL i
+transformInfixDeclar (Old.AssocR i) = New.AssocR i
+transformInfixDeclar (Old.NonAssoc i) = New.NonAssoc i
 
 --------------------------------------------------------------------------------
 -- Types

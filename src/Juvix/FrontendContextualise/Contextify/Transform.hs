@@ -42,13 +42,34 @@ updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
       modsDefined = []
     }
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
-  let (def, modsDefined) =
-        decideRecordOrDef name (Context.currentName ctx) f sig
+  let precendent =
+        case Context.extractValue <$> Context.lookup (pure name) ctx of
+          Just (Context.Def {precedence}) ->
+            precedence
+          _ -> Context.default'
+      (def, modsDefined) =
+        decideRecordOrDef name (Context.currentName ctx) f precendent sig
    in Type.P
         { ctx = Context.add (NameSpace.Pub name) def ctx,
           opens = [],
           modsDefined
         }
+updateTopLevel (Repr.InfixDeclar dec) ctx =
+  let name = undefined
+   in case Context.extractValue <$> Context.lookup (pure name) ctx of
+        Just def@(Context.Def {}) ->
+          Type.P
+            { ctx = (Context.add (NameSpace.Pub name) def {Context.precedence = undefined}) ctx,
+              opens = [],
+              modsDefined = []
+            }
+        _ ->
+          let absurd = undefined
+           in Type.P
+                { ctx = (Context.add (NameSpace.Pub name) absurd) ctx,
+                  opens = [],
+                  modsDefined = []
+                }
 updateTopLevel (Repr.ModuleOpen (Repr.Open mod)) ctx =
   -- Mod isn't good enough, have to resolve it to the full symbol
   Type.P
@@ -79,9 +100,10 @@ decideRecordOrDef ::
   Symbol ->
   NameSymbol.T ->
   NonEmpty (Repr.FunctionLike Repr.Expression) ->
+  Context.Precedence ->
   Maybe Repr.Signature ->
   (Type.Definition, [NameSymbol.T])
-decideRecordOrDef recordName currModName xs ty
+decideRecordOrDef recordName currModName xs pres ty
   | len == 1 && emptyArgs args =
     -- For the two matched cases eventually
     -- turn these into record expressions
@@ -100,7 +122,7 @@ decideRecordOrDef recordName currModName xs ty
             let fieldN = NonEmpty.last s
                 like = Repr.Like [] e :| []
              in Nothing
-                  |> decideRecordOrDef fieldN newRecordName like
+                  |> decideRecordOrDef fieldN newRecordName like Context.default'
                   |> bimap
                     (\d -> NameSpace.insert (NameSpace.Pub fieldN) d nameSpace)
                     (\inNames -> inNames <> prevModNames)
@@ -111,7 +133,7 @@ decideRecordOrDef recordName currModName xs ty
   where
     len = length xs
     Repr.Like args body = NonEmpty.head xs
-    def = (Context.Def Nothing ty xs Context.default', [])
+    def = (Context.Def Nothing ty xs pres, [])
 
 ----------------------------------------
 -- Helpers
