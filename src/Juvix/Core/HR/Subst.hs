@@ -62,6 +62,8 @@ f subst (Types.Let usage name bound body)
   | otherwise =
     let (newSubst, newName) = uniqueNameAndUpdateMap subst name
      in Types.Let usage newName (substElim subst bound) (f newSubst body)
+f _ (Types.Prim prim) =
+  Types.Prim prim
 f subst (Types.Elim elim) =
   Types.Elim (substElim subst elim)
 
@@ -73,8 +75,6 @@ substElim subst (Types.Var v) =
     -- need to think how to do post inline techniques
     Just el -> el
     Nothing -> Types.Var v
-substElim _ (Types.Prim prim) =
-  Types.Prim prim
 substElim subst (Types.App fun arg) =
   Types.App (substElim subst fun) (f subst arg)
 substElim subst (Types.Ann usage ann term uni) =
