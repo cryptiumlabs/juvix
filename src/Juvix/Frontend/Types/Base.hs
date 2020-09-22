@@ -44,7 +44,7 @@ extensible
       = NonAssoc Natural
       | AssocL Natural
       | AssocR Natural
-      deriving (Show, Generic, NFData, D.Data, Eq)
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     --------------------------------------------------------------------------------
     -- Types
