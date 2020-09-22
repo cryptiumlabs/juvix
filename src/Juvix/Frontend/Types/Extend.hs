@@ -11,6 +11,9 @@ extendTopLevel = defaultExtTopLevel
 extendData :: ExtData
 extendData = defaultExtData
 
+extendInfixDeclar :: ExtInfixDeclar
+extendInfixDeclar = defaultExtInfixDeclar
+
 extendName :: ExtName
 extendName = defaultExtName
 

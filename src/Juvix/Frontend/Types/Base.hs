@@ -32,9 +32,19 @@ extensible
       | Signature Signature
       | Module Module
       | Function Function
+      | InfixDeclar InfixDeclar
       | TypeClass
       | TypeClassInstance
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
+
+    --------------------------------------------------------------------------------
+    -- Infix
+    --------------------------------------------------------------------------------
+    data InfixDeclar
+      = NonAssoc Natural
+      | AssocL Natural
+      | AssocR Natural
+      deriving (Show, Generic, NFData, D.Data, Eq)
 
     --------------------------------------------------------------------------------
     -- Types

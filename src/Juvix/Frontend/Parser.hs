@@ -19,7 +19,18 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
-import Juvix.Library hiding (guard, list, maybe, mod, option, product, sum, take, takeWhile, try)
+import Juvix.Library hiding
+  ( guard,
+    list,
+    maybe,
+    mod,
+    option,
+    product,
+    sum,
+    take,
+    takeWhile,
+    try,
+  )
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
@@ -89,6 +100,7 @@ topLevel =
     <|> modT
     <|> Types.ModuleOpen <$> moduleOpen
     <|> Types.Signature <$> signature'
+    <|> Types.InfixDeclar <$> infixDeclar
 
 expressionGen' ::
   Parser Types.Expression -> Parser Types.Expression
@@ -148,6 +160,19 @@ expression = expressionGen all''
 
 usage :: Parser Types.Expression
 usage = string "u#" *> expression
+
+--------------------------------------------------------------------------------
+-- Infix Declar
+--------------------------------------------------------------------------------
+
+infixDeclar :: Parser Types.InfixDeclar
+infixDeclar = do
+  _ <- string "infix"
+  f <-
+    (Types.AssocL <$ string "l")
+      <|> (Types.AssocR <$ string "r")
+      <|> pure Types.NonAssoc
+  f . fromInteger <$> integer
 
 --------------------------------------------------------------------------------
 -- Modules/ Function Gen
@@ -632,7 +657,8 @@ infixSymbol :: Parser Symbol
 infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
 
 infixSymbol' :: Parser Symbol
-infixSymbol' = internText . Encoding.decodeUtf8 <$> takeWhile Lexer.validInfixSymbol
+infixSymbol' =
+  internText . Encoding.decodeUtf8 <$> takeWhile Lexer.validInfixSymbol
 
 infixPrefix :: Parser Symbol
 infixPrefix =
@@ -664,7 +690,9 @@ prefixSymbol =
     <|> parend
 
 parend :: Parser Symbol
-parend = skipLiner Lexer.openParen *> spaceLiner (infixSymbolGen infixSymbol') <* word8 Lexer.closeParen
+parend =
+  skipLiner Lexer.openParen
+    *> spaceLiner (infixSymbolGen infixSymbol') <* word8 Lexer.closeParen
 
 prefixCapital :: Parser Symbol
 prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
@@ -676,7 +704,23 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 reservedWords :: (Ord a, IsString a) => Set a
 reservedWords =
   Set.fromList
-    ["let", "val", "type", "case", "in", "open", "if", "cond", "end", "of", "begin", "sig", "mod"]
+    [ "let",
+      "val",
+      "type",
+      "case",
+      "in",
+      "open",
+      "if",
+      "cond",
+      "end",
+      "of",
+      "begin",
+      "sig",
+      "mod",
+      "infixl",
+      "infix",
+      "infixr"
+    ]
 
 reservedSymbols :: (Ord a, IsString a) => Set a
 reservedSymbols =

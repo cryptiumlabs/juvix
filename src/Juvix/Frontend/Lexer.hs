@@ -75,6 +75,12 @@ at = charToWord8 '@'
 dot :: Word8
 dot = charToWord8 '.'
 
+question :: Word8
+question = charToWord8 '?'
+
+bang :: Word8
+bang = charToWord8 '!'
+
 amper :: Word8
 amper = charToWord8 '&'
 
@@ -109,7 +115,13 @@ validInfixSymbol w =
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =
-  w == dash || validStartSymbol w || digit w
+  validStartSymbol w
+    || digit w
+    || w == dash
+    || w == bang
+    || w == question
+    || w == dot
+    || w == percent
 
 -- check for \r or \n
 endOfLine :: (Eq a, Num a) => a -> Bool
