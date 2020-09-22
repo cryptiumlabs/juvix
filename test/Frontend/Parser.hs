@@ -9,27 +9,12 @@ import Data.Attoparsec.ByteString
     parseOnly,
   )
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
+import qualified Juvix.Frontend.Types as AST
 import Juvix.Frontend.Types.Base
-import Juvix.Library
-  ( ($),
-    (&&),
-    Alternative (many),
-    Bool (False),
-    ByteString,
-    Either,
-    Eq ((==)),
-    Maybe (Just, Nothing),
-    NonEmpty ((:|)),
-    Semigroup ((<>)),
-    Show,
-    Symbol (Sym),
-    Word8,
-    isLeft,
-    isRight,
-    (|>),
-  )
+import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String, error, show)
@@ -828,28 +813,40 @@ moduleOpen' =
         <> "     , b = expr M.N.t}"
         <> "end"
     )
-    [ Module'
-        ( Mod'
-            ( Like'
-                { functionLikedName = Sym "Bah",
-                  functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchCon' (Sym "M" :| []) [] (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()],
-                  functionLikeBody =
-                    Body'
-                      ( ModuleOpen'
-                          ( Open'
-                              (Sym "M" :| [])
-                              ()
-                          )
-                          ()
-                          :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Name' (Sym "Rec" :| []) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (ExpRecord' (ExpressionRecord' {expRecordFields = NonPunned' (Sym "a" :| []) (Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) ()) () :| [NonPunned' (Sym "b" :| []) (Application' (App' {applicationName = Name' (Sym "expr" :| []) (), applicationArgs = Name' (Sym "M" :| [Sym "N", Sym "t"]) () :| [], annApp = ()}) ()) ()], annExpressionRecord = ()}) ()) (), annLike = ()}) ()) ()]
-                      )
-                      (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        ()
+    [ AST.ModuleOpen (AST.Open (NameSymbol.fromSymbol "M"))
+        :| [ AST.Sig "bah" Nothing (AST.Name (NameSymbol.fromSymbol "Rec")) []
+               |> AST.Signature,
+             AST.NonPunned
+               (NameSymbol.fromSymbol "a")
+               ( AST.Inf
+                   (AST.Name (NameSymbol.fromSymbol "t"))
+                   (NameSymbol.fromSymbol "+")
+                   (AST.Constant (AST.Number (AST.Integer' 3)))
+                   |> AST.Infix
+               )
+               :| [ AST.Name (NameSymbol.fromSymbol "M.N.t") :| []
+                      |> AST.App (AST.Name (NameSymbol.fromSymbol "expr"))
+                      |> AST.Application
+                      |> AST.NonPunned (NameSymbol.fromSymbol "b")
+                  ]
+                 |> AST.ExpressionRecord
+                 |> AST.ExpRecord
+                 |> AST.Body
+                 |> AST.Like
+                   "bah"
+                   [AST.ConcreteA (AST.MatchLogic (AST.MatchName "t") Nothing)]
+                 |> AST.Func
+                 |> AST.Function
+           ]
+        |> AST.Body
+        |> AST.Like
+          "Bah"
+          -- this shouldn't be a matchCon but a match argument
+          [ AST.MatchLogic (AST.MatchCon (NameSymbol.fromSymbol "M") []) Nothing
+              |> AST.ConcreteA
+          ]
+        |> AST.Mod
+        |> AST.Module
     ]
 
 --------------------------------------------------
@@ -858,40 +855,23 @@ moduleOpen' =
 
 typeNameNoUniverse :: T.TestTree
 typeNameNoUniverse =
-  shouldParseAs
-    "typeNameNoUniverse"
-    (parse Parser.expression)
-    "Foo a b c (b -o d) a c u"
-    ( Application'
-        ( App'
-            { applicationName = Name' (Sym "Foo" :| []) (),
-              applicationArgs =
-                Name'
-                  (Sym "a" :| [])
-                  ()
-                  :| [ Name' (Sym "b" :| []) (),
-                       Name' (Sym "c" :| []) (),
-                       Parened'
-                         ( Infix'
-                             ( Inf'
-                                 { infixLeft = Name' (Sym "b" :| []) (),
-                                   infixOp = Sym "-o" :| [],
-                                   infixRight = Name' (Sym "d" :| []) (),
-                                   annInf = ()
-                                 }
-                             )
-                             ()
-                         )
-                         (),
-                       Name' (Sym "a" :| []) (),
-                       Name' (Sym "c" :| []) (),
-                       Name' (Sym "u" :| []) ()
-                     ],
-              annApp = ()
-            }
-        )
-        ()
-    )
+  AST.Name (NameSymbol.fromSymbol "a")
+    :| [ AST.Name (NameSymbol.fromSymbol "b"),
+         AST.Name (NameSymbol.fromSymbol "c"),
+         AST.Name (NameSymbol.fromSymbol "d")
+           |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol "-o")
+           |> AST.Infix
+           |> AST.Parened,
+         AST.Name (NameSymbol.fromSymbol "a"),
+         AST.Name (NameSymbol.fromSymbol "c"),
+         AST.Name (NameSymbol.fromSymbol "u")
+       ]
+    |> AST.App (AST.Name (intern "Foo" :| []))
+    |> AST.Application
+    |> shouldParseAs
+      "typeNameNoUniverse"
+      (parse Parser.expression)
+      "Foo a b c (b -o d) a c u"
 
 --------------------------------------------------------------------------------
 -- Match tests
@@ -899,86 +879,36 @@ typeNameNoUniverse =
 
 simpleNamedCon :: T.TestTree
 simpleNamedCon =
-  shouldParseAs
-    "simpleNamedCon"
-    (parse Parser.matchLogic)
-    "foo@( Hi a b c )"
-    ( MatchLogic'
-        { matchLogicContents =
-            MatchCon'
-              (Sym "Hi" :| [])
-              [ MatchLogic'
-                  { matchLogicContents = MatchName' (Sym "a") (),
-                    matchLogicNamed = Nothing,
-                    annMatchLogic = ()
-                  },
-                MatchLogic'
-                  { matchLogicContents = MatchName' (Sym "b") (),
-                    matchLogicNamed = Nothing,
-                    annMatchLogic = ()
-                  },
-                MatchLogic'
-                  { matchLogicContents = MatchName' (Sym "c") (),
-                    matchLogicNamed = Nothing,
-                    annMatchLogic = ()
-                  }
-              ]
-              (),
-          matchLogicNamed = Just (Sym "foo"),
-          annMatchLogic = ()
-        }
-    )
+  [ AST.MatchLogic (AST.MatchName (intern "a")) Nothing,
+    AST.MatchLogic (AST.MatchName (intern "b")) Nothing,
+    AST.MatchLogic (AST.MatchName (intern "c")) Nothing
+  ]
+    |> AST.MatchCon (NameSymbol.fromSymbol "Hi")
+    |> flip AST.MatchLogic (Just (intern "foo"))
+    |> shouldParseAs
+      "simpleNamedCon"
+      (parse Parser.matchLogic)
+      "foo@( Hi a b c )"
 
 matchMoreComplex :: T.TestTree
 matchMoreComplex =
-  shouldParseAs
-    "matchMoreComplex"
-    (parse Parser.matchLogic)
-    "foo@( Hi nah@{ a = nah , f } b 5 )"
-    ( MatchLogic'
-        { matchLogicContents =
-            MatchCon'
-              (Sym "Hi" :| [])
-              [ MatchLogic'
-                  { matchLogicContents =
-                      MatchRecord'
-                        ( NonPunned'
-                            (Sym "a" :| [])
-                            ( MatchLogic'
-                                { matchLogicContents = MatchName' (Sym "nah") (),
-                                  matchLogicNamed = Nothing,
-                                  annMatchLogic = ()
-                                }
-                            )
-                            ()
-                            :| [Punned' (Sym "f" :| []) ()]
-                        )
-                        (),
-                    matchLogicNamed = Just (Sym "nah"),
-                    annMatchLogic = ()
-                  },
-                MatchLogic'
-                  { matchLogicContents = MatchName' (Sym "b") (),
-                    matchLogicNamed = Nothing,
-                    annMatchLogic = ()
-                  },
-                MatchLogic'
-                  { matchLogicContents =
-                      MatchConst'
-                        ( Number'
-                            (Integer'' 5 ())
-                            ()
-                        )
-                        (),
-                    matchLogicNamed = Nothing,
-                    annMatchLogic = ()
-                  }
-              ]
-              (),
-          matchLogicNamed = Just (Sym "foo"),
-          annMatchLogic = ()
-        }
-    )
+  [ Nothing
+      |> AST.MatchLogic (AST.MatchName (intern "nah"))
+      |> AST.NonPunned (intern "a" :| [])
+      |> (:| [AST.Punned (intern "f" :| [])])
+      |> AST.MatchRecord
+      |> flip AST.MatchLogic (Just (intern "nah")),
+    --
+    AST.MatchLogic (AST.MatchName (intern "b")) Nothing,
+    --
+    AST.MatchLogic (AST.MatchConst (AST.Number (AST.Integer' 5))) Nothing
+  ]
+    |> AST.MatchCon (intern "Hi" :| [])
+    |> flip AST.MatchLogic (Just (intern "foo"))
+    |> shouldParseAs
+      "matchMoreComplex"
+      (parse Parser.matchLogic)
+      "foo@( Hi nah@{ a = nah , f } b 5 )"
 
 --------------------------------------------------------------------------------
 -- Expression
@@ -986,28 +916,23 @@ matchMoreComplex =
 
 condTest1 :: T.TestTree
 condTest1 =
-  shouldParseAs
-    "condTest1"
-    (parse Parser.cond)
-    ( ""
-        <> "if  | foo  = a\n"
-        <> "    | else = b "
-    )
-    ( C'
-        ( CondExpression'
-            { condLogicPred = Name' (Sym "foo" :| []) (),
-              condLogicBody = Name' (Sym "a" :| []) (),
-              annCondExpression = ()
-            }
-            :| [ CondExpression'
-                   { condLogicPred = Name' (Sym "else" :| []) (),
-                     condLogicBody = Name' (Sym "b" :| []) (),
-                     annCondExpression = ()
-                   }
-               ]
-        )
-        ()
-    )
+  AST.CondExpression
+    { condLogicPred = AST.Name (intern "foo" :| []),
+      condLogicBody = AST.Name (intern "a" :| [])
+    }
+    :| [ AST.CondExpression
+           { condLogicPred = AST.Name (intern "else" :| []),
+             condLogicBody = AST.Name (intern "b" :| [])
+           }
+       ]
+    |> AST.C
+    |> shouldParseAs
+      "condTest1"
+      (parse Parser.cond)
+      ( ""
+          <> "if  | foo  = a\n"
+          <> "    | else = b "
+      )
 
 --------------------------------------------------
 -- Record
@@ -1015,33 +940,21 @@ condTest1 =
 
 record1 :: T.TestTree
 record1 =
-  shouldParseAs
-    "record1"
-    (parse Parser.expression)
-    "{a, b = 3+5}"
-    ( ExpRecord'
-        ( ExpressionRecord'
-            { expRecordFields =
-                Punned' (Sym "a" :| []) ()
-                  :| [ NonPunned'
-                         (Sym "b" :| [])
-                         ( Infix'
-                             ( Inf'
-                                 { infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (),
-                                   infixOp = Sym "+" :| [],
-                                   infixRight = Constant' (Number' (Integer'' 5 ()) ()) (),
-                                   annInf = ()
-                                 }
-                             )
-                             ()
-                         )
-                         ()
-                     ],
-              annExpressionRecord = ()
-            }
-        )
-        ()
-    )
+  AST.Punned (intern "a" :| [])
+    :| [ AST.Inf
+           { infixLeft = AST.Constant (AST.Number (AST.Integer' 3)),
+             infixOp = intern "+" :| [],
+             infixRight = AST.Constant (AST.Number (AST.Integer' 5))
+           }
+           |> AST.Infix
+           |> AST.NonPunned (intern "b" :| [])
+       ]
+    |> AST.ExpressionRecord
+    |> AST.ExpRecord
+    |> shouldParseAs
+      "record1"
+      (parse Parser.expression)
+      "{a, b = 3+5}"
 
 --------------------------------------------------
 -- parens
@@ -1049,45 +962,25 @@ record1 =
 
 parens1 :: T.TestTree
 parens1 =
-  shouldParseAs
-    "parens1"
-    (parse Parser.expression)
-    "(       ( (({a, b = 3+5}))))"
-    ( Parened'
-        ( Parened'
-            ( Parened'
-                ( Parened'
-                    ( ExpRecord'
-                        ( ExpressionRecord'
-                            { expRecordFields =
-                                Punned' (Sym "a" :| []) ()
-                                  :| [ NonPunned'
-                                         (Sym "b" :| [])
-                                         ( Infix'
-                                             ( Inf'
-                                                 { infixLeft = Constant' (Number' (Integer'' 3 ()) ()) (),
-                                                   infixOp = Sym "+" :| [],
-                                                   infixRight = Constant' (Number' (Integer'' 5 ()) ()) (),
-                                                   annInf = ()
-                                                 }
-                                             )
-                                             ()
-                                         )
-                                         ()
-                                     ],
-                              annExpressionRecord = ()
-                            }
-                        )
-                        ()
-                    )
-                    ()
-                )
-                ()
-            )
-            ()
-        )
-        ()
-    )
+  AST.Punned (intern "a" :| [])
+    :| [ AST.Inf
+           { infixLeft = AST.Constant (AST.Number (AST.Integer' 3)),
+             infixOp = intern "+" :| [],
+             infixRight = AST.Constant (AST.Number (AST.Integer' 5))
+           }
+           |> AST.Infix
+           |> AST.NonPunned (intern "b" :| [])
+       ]
+    |> AST.ExpressionRecord
+    |> AST.ExpRecord
+    |> AST.Parened
+    |> AST.Parened
+    |> AST.Parened
+    |> AST.Parened
+    |> shouldParseAs
+      "parens1"
+      (parse Parser.expression)
+      "(       ( (({a, b = 3+5}))))"
 
 --------------------------------------------------------------------------------
 -- Spacer tests

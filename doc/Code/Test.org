@@ -147,6 +147,7 @@ Tests that weak works as expected
   + [[Evaluator]]
   + [[Types]]
   + [[Library]]
+* Files
 * Frontend
 ** Desugar
 - _Relies on_
@@ -162,7 +163,9 @@ Tests that weak works as expected
   + [[Library]]
 ** Parser <<Frontend/Parser>>
 - _Relies on_
+  + [[NameSymbol]]
   + [[Parser]]
+  + [[Types]]
   + [[Types]]
   + [[Base]]
   + [[Library]]
