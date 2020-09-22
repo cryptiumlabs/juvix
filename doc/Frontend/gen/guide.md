@@ -55,7 +55,7 @@ hello-there
 -- another valid symbol
 _unused-symbol
 
--- another valid symbol. Typically ? denotes the symbol is a predicate
+-- another valid symbol. Typically '?' denotes that the symbol is a predicate
 even?
 
 -- An important action
@@ -234,7 +234,7 @@ let test = Foo.bar + Foo.baz
 A module can be imported in two ways.
 
 Importing a module unqualified via =open=ing them means that every
-symbol in the module becomes unqualified
+symbol in the module becomes unqualified.
 
 A module can be `open`-ed:
 
@@ -247,7 +247,7 @@ open Foo
 -- opening the module Baz in the moudle Bar in the moudle Bar
 open Foo.Bar.Baz
 
--- This is the same statmenet as above.
+-- This is the same statement as above.
 open Foo
 open Bar.Baz
 
