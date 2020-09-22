@@ -6,10 +6,15 @@
               | <type-class-instance>
               ; These four last, due to lack of words before
               | <module-signature>
+              | <infix-declare>
               | <module>
               | <module-open>
               | <signature>
               | <function>
+
+  infix-declare ::= infix <number>
+                  | infixl <number>
+                  | infixr <number>
 
   ;;;; Functions ======================================================
 
