@@ -13,7 +13,6 @@ import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import qualified Juvix.Frontend.Types as AST
-import Juvix.Frontend.Types.Base
 import Juvix.Library hiding (show)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
