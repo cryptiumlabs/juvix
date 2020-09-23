@@ -122,7 +122,6 @@ many1FunctionsParser =
         <> "          print failed; \n"
         <> "          fail"
     )
-    -- to avoid having too many lines some of these lines go over 80
     [ Function'
         ( Func'
             ( Like'
@@ -393,44 +392,23 @@ fun2 =
     "fun2"
     Parser.parse
     "let f foo | foo = 2 | else = 3"
-    [ Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = Sym "f",
-                  functionLikeArgs =
-                    [ ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents = MatchName' (Sym "foo") (),
-                              matchLogicNamed = Nothing,
-                              annMatchLogic = ()
-                            }
-                        )
-                        ()
-                    ],
-                  functionLikeBody =
-                    Guard'
-                      ( C'
-                          ( CondExpression'
-                              { condLogicPred = Name' (Sym "foo" :| []) (),
-                                condLogicBody = Constant' (Number' (Integer'' 2 ()) ()) (),
-                                annCondExpression = ()
-                              }
-                              :| [ CondExpression'
-                                     { condLogicPred = Name' (Sym "else" :| []) (),
-                                       condLogicBody = Constant' (Number' (Integer'' 3 ()) ()) (),
-                                       annCondExpression = ()
-                                     }
-                                 ]
-                          )
-                          ()
-                      )
-                      (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        ()
+    [ ( AST.Integer' 2
+          |> AST.Number
+          |> AST.Constant
+          |> AST.CondExpression (AST.Name (NameSymbol.fromSymbol "foo"))
+      )
+        :| [ AST.Integer' 3
+               |> AST.Number
+               |> AST.Constant
+               |> AST.CondExpression (AST.Name (NameSymbol.fromSymbol "else"))
+           ]
+        |> AST.C
+        |> AST.Guard
+        |> AST.Like
+          "f"
+          [AST.ConcreteA (AST.MatchLogic (AST.MatchName "foo") Nothing)]
+        |> AST.Func
+        |> AST.Function
     ]
 
 --------------------------------------------------------------------------------
