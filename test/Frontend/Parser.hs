@@ -766,37 +766,42 @@ moduleOpen =
         <> "  let bah t = Int.(t + 3) \n"
         <> "end"
     )
-    [ Module'
-        ( Mod'
-            ( Like'
-                { functionLikedName = Sym "Foo",
-                  functionLikeArgs =
-                    [ ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents = MatchCon' (Sym "Int" :| []) [] (),
-                              matchLogicNamed = Nothing,
-                              annMatchLogic = ()
-                            }
-                        )
-                        ()
-                    ],
-                  functionLikeBody =
-                    Body'
-                      ( Function'
-                          ( Func'
-                              (Like' {functionLikedName = Sym "T", functionLikeArgs = [], functionLikeBody = Body' (Name' (Sym "Int" :| [Sym "t"]) ()) (), annLike = ()})
-                              ()
-                          )
-                          ()
-                          :| [Signature' (Sig' {signatureName = Sym "bah", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' (Sym "T" :| []) (), infixOp = Sym "->" :| [], infixRight = Name' (Sym "T" :| []) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (), Function' (Func' (Like' {functionLikedName = Sym "bah", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' (Sym "t") (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (OpenExpr' (OpenExpress' {moduleOpenExprModuleN = Sym "Int" :| [], moduleOpenExprExpr = Infix' (Inf' {infixLeft = Name' (Sym "t" :| []) (), infixOp = Sym "+" :| [], infixRight = Constant' (Number' (Integer'' 3 ()) ()) (), annInf = ()}) (), annOpenExpress = ()}) ()) (), annLike = ()}) ()) ()]
-                      )
-                      (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        ()
+    [ ( AST.Name (NameSymbol.fromSymbol "Int.t")
+          |> AST.Body
+          |> AST.Like "T" []
+          |> AST.Func
+          |> AST.Function
+      )
+        :| [ AST.Inf
+               (AST.Name (NameSymbol.fromSymbol "T"))
+               (NameSymbol.fromSymbol "->")
+               (AST.Name (NameSymbol.fromSymbol "T"))
+               |> AST.Infix
+               |> flip (AST.Sig "bah" Nothing) []
+               |> AST.Signature,
+             --
+             AST.Inf
+               (AST.Name (NameSymbol.fromSymbol "t"))
+               (NameSymbol.fromSymbol "+")
+               (AST.Constant (AST.Number (AST.Integer' 3)))
+               |> AST.Infix
+               |> AST.OpenExpress (NameSymbol.fromSymbol "Int")
+               |> AST.OpenExpr
+               |> AST.Body
+               |> AST.Like
+                 "bah"
+                 [AST.ConcreteA (AST.MatchLogic (AST.MatchName "t") Nothing)]
+               |> AST.Func
+               |> AST.Function
+           ]
+        |> AST.Body
+        |> AST.Like
+          "Foo"
+          [ AST.MatchLogic (AST.MatchCon (NameSymbol.fromSymbol "Int") []) Nothing
+              |> AST.ConcreteA
+          ]
+        |> AST.Mod
+        |> AST.Module
     ]
 
 moduleOpen' :: T.TestTree
@@ -879,12 +884,12 @@ typeNameNoUniverse =
 
 simpleNamedCon :: T.TestTree
 simpleNamedCon =
-  [ AST.MatchLogic (AST.MatchName (intern "a")) Nothing,
-    AST.MatchLogic (AST.MatchName (intern "b")) Nothing,
-    AST.MatchLogic (AST.MatchName (intern "c")) Nothing
+  [ AST.MatchLogic (AST.MatchName "a") Nothing,
+    AST.MatchLogic (AST.MatchName "b") Nothing,
+    AST.MatchLogic (AST.MatchName "c") Nothing
   ]
     |> AST.MatchCon (NameSymbol.fromSymbol "Hi")
-    |> flip AST.MatchLogic (Just (intern "foo"))
+    |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "simpleNamedCon"
       (parse Parser.matchLogic)
@@ -893,18 +898,18 @@ simpleNamedCon =
 matchMoreComplex :: T.TestTree
 matchMoreComplex =
   [ Nothing
-      |> AST.MatchLogic (AST.MatchName (intern "nah"))
-      |> AST.NonPunned (intern "a" :| [])
-      |> (:| [AST.Punned (intern "f" :| [])])
+      |> AST.MatchLogic (AST.MatchName "nah")
+      |> AST.NonPunned (NameSymbol.fromSymbol "a")
+      |> (:| [AST.Punned (NameSymbol.fromSymbol "f")])
       |> AST.MatchRecord
-      |> flip AST.MatchLogic (Just (intern "nah")),
+      |> flip AST.MatchLogic (Just "nah"),
     --
-    AST.MatchLogic (AST.MatchName (intern "b")) Nothing,
+    AST.MatchLogic (AST.MatchName "b") Nothing,
     --
     AST.MatchLogic (AST.MatchConst (AST.Number (AST.Integer' 5))) Nothing
   ]
-    |> AST.MatchCon (intern "Hi" :| [])
-    |> flip AST.MatchLogic (Just (intern "foo"))
+    |> AST.MatchCon (NameSymbol.fromSymbol "Hi")
+    |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "matchMoreComplex"
       (parse Parser.matchLogic)
