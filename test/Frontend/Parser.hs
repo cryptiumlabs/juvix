@@ -258,74 +258,28 @@ sigTest2 =
     "sigTest2"
     Parser.parse
     "sig foo 0 : i : Int{i > 0} -> Int{i > 1}"
-    [ Signature'
-        ( Sig'
-            { signatureName = Sym "foo",
-              signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()),
-              signatureArrowType =
-                Infix'
-                  ( Inf'
-                      { infixLeft = Name' (Sym "i" :| []) (),
-                        infixOp = Sym ":" :| [],
-                        infixRight =
-                          Infix'
-                            ( Inf'
-                                { infixLeft =
-                                    RefinedE'
-                                      ( TypeRefine'
-                                          { typeRefineName = Name' (Sym "Int" :| []) (),
-                                            typeRefineRefinement =
-                                              Infix'
-                                                ( Inf'
-                                                    { infixLeft = Name' (Sym "i" :| []) (),
-                                                      infixOp = Sym ">" :| [],
-                                                      infixRight = Constant' (Number' (Integer'' 0 ()) ()) (),
-                                                      annInf = ()
-                                                    }
-                                                )
-                                                (),
-                                            annTypeRefine = ()
-                                          }
-                                      )
-                                      (),
-                                  infixOp = Sym "->" :| [],
-                                  infixRight =
-                                    RefinedE'
-                                      ( TypeRefine'
-                                          { typeRefineName = Name' (Sym "Int" :| []) (),
-                                            typeRefineRefinement =
-                                              Infix'
-                                                ( Inf'
-                                                    { infixLeft = Name' (Sym "i" :| []) (),
-                                                      infixOp = Sym ">" :| [],
-                                                      infixRight =
-                                                        Constant'
-                                                          ( Number'
-                                                              (Integer'' 1 ())
-                                                              ()
-                                                          )
-                                                          (),
-                                                      annInf = ()
-                                                    }
-                                                )
-                                                (),
-                                            annTypeRefine = ()
-                                          }
-                                      )
-                                      (),
-                                  annInf = ()
-                                }
-                            )
-                            (),
-                        annInf = ()
-                      }
-                  )
-                  (),
-              signatureConstraints = [],
-              annSig = ()
-            }
-        )
-        ()
+    [ AST.Integer' 1
+        |> AST.Number
+        |> AST.Constant
+        |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ">")
+        |> AST.Infix
+        |> AST.TypeRefine (AST.Name (NameSymbol.fromSymbol "Int"))
+        |> AST.RefinedE
+        |> AST.Inf
+          ( AST.Integer' 0
+              |> AST.Number
+              |> AST.Constant
+              |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ">")
+              |> AST.Infix
+              |> AST.TypeRefine (AST.Name (NameSymbol.fromSymbol "Int"))
+              |> AST.RefinedE
+          )
+          (NameSymbol.fromSymbol "->")
+        |> AST.Infix
+        |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ":")
+        |> AST.Infix
+        |> flip (AST.Sig "foo" (Just (AST.Constant (AST.Number (AST.Integer' 0))))) []
+        |> AST.Signature
     ]
 
 -- --------------------------------------------------------------------------------
