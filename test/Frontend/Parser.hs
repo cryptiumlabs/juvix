@@ -451,161 +451,54 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    [ Type'
-        ( Typ'
-            { typeUsage = Nothing,
-              typeName' = Sym "Foo",
-              typeArgs =
-                [Sym "a", Sym "b", Sym "c"],
-              typeForm =
-                NonArrowed'
-                  { dataAdt =
-                      Sum'
-                        ( S'
-                            { sumConstructor = Sym "A",
-                              sumValue =
-                                Just
-                                  ( Arrow'
-                                      ( Infix'
-                                          ( Inf'
-                                              { infixLeft = Name' (Sym "b" :| []) (),
-                                                infixOp = Sym ":" :| [],
-                                                infixRight =
-                                                  Infix'
-                                                    ( Inf'
-                                                        { infixLeft = Name' (Sym "a" :| []) (),
-                                                          infixOp = Sym "->" :| [],
-                                                          infixRight =
-                                                            Infix'
-                                                              ( Inf'
-                                                                  { infixLeft =
-                                                                      Name'
-                                                                        (Sym "b" :| [])
-                                                                        (),
-                                                                    infixOp = Sym "->" :| [],
-                                                                    infixRight = Name' (Sym "c" :| []) (),
-                                                                    annInf = ()
-                                                                  }
-                                                              )
-                                                              (),
-                                                          annInf = ()
-                                                        }
-                                                    )
-                                                    (),
-                                                annInf = ()
-                                              }
-                                          )
-                                          ()
-                                      )
-                                      ()
-                                  ),
-                              annS = ()
-                            }
-                            :| [ S'
-                                   { sumConstructor = Sym "B",
-                                     sumValue =
-                                       Just
-                                         ( Arrow'
-                                             ( Infix'
-                                                 ( Inf'
-                                                     { infixLeft = Name' (Sym "d" :| []) (),
-                                                       infixOp = Sym "->" :| [],
-                                                       infixRight = Name' (Sym "Foo" :| []) (),
-                                                       annInf = ()
-                                                     }
-                                                 )
-                                                 ()
-                                             )
-                                             ()
-                                         ),
-                                     annS = ()
-                                   },
-                                 S'
-                                   { sumConstructor = Sym "C",
-                                     sumValue =
-                                       Just
-                                         ( Record'
-                                             ( Record'''
-                                                 { recordFields =
-                                                     NameType''
-                                                       { nameTypeSignature = Name' (Sym "Int" :| []) (),
-                                                         nameTypeName = Concrete' (Sym "a") (),
-                                                         annNameType' = ()
-                                                       }
-                                                       :| [ NameType''
-                                                              { nameTypeSignature = Name' (Sym "Int" :| []) (),
-                                                                nameTypeName = Implicit' (Sym "b") (),
-                                                                annNameType' = ()
-                                                              }
-                                                          ],
-                                                   recordFamilySignature = Nothing,
-                                                   annRecord'' = ()
-                                                 }
-                                             )
-                                             ()
-                                         ),
-                                     annS = ()
-                                   },
-                                 S'
-                                   { sumConstructor = Sym "D",
-                                     sumValue =
-                                       Just
-                                         ( Record'
-                                             ( Record'''
-                                                 { recordFields =
-                                                     NameType''
-                                                       { nameTypeSignature = Name' (Sym "Int" :| []) (),
-                                                         nameTypeName = Concrete' (Sym "a") (),
-                                                         annNameType' = ()
-                                                       }
-                                                       :| [ NameType''
-                                                              { nameTypeSignature =
-                                                                  Name' (Sym "Int" :| []) (),
-                                                                nameTypeName = Implicit' (Sym "b") (),
-                                                                annNameType' = ()
-                                                              }
-                                                          ],
-                                                   recordFamilySignature =
-                                                     Just
-                                                       ( Application'
-                                                           ( App'
-                                                               { applicationName = Name' (Sym "Foo" :| []) (),
-                                                                 applicationArgs =
-                                                                   Name' (Sym "Int" :| []) ()
-                                                                     :| [ Parened'
-                                                                            ( Infix'
-                                                                                ( Inf'
-                                                                                    { infixLeft = Name' (Sym "Fooy" :| []) (),
-                                                                                      infixOp = Sym "->" :| [],
-                                                                                      infixRight = Name' (Sym "Nada" :| []) (),
-                                                                                      annInf = ()
-                                                                                    }
-                                                                                )
-                                                                                ()
-                                                                            )
-                                                                            ()
-                                                                        ],
-                                                                 annApp = ()
-                                                               }
-                                                           )
-                                                           ()
-                                                       ),
-                                                   annRecord'' = ()
-                                                 }
-                                             )
-                                             ()
-                                         ),
-                                     annS = ()
-                                   }
-                               ]
-                        )
-                        (),
-                    annNonArrowed = ()
-                  },
-              annTyp = ()
-            }
-        )
-        ()
+    [ ( AST.Name (NameSymbol.fromSymbol "c")
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol "->")
+          |> AST.Infix
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "a")) (NameSymbol.fromSymbol "->")
+          |> AST.Infix
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol ":")
+          |> AST.Infix
+          |> AST.Arrow
+          |> Just
+          |> AST.S "A"
+      )
+        :| [ AST.Name (NameSymbol.fromSymbol "Foo")
+               |> AST.Inf (AST.Name (NameSymbol.fromSymbol "d")) (NameSymbol.fromSymbol "->")
+               |> AST.Infix
+               |> AST.Arrow
+               |> Just
+               |> AST.S "B",
+             --
+             AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Concrete "a")
+               :| [AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Implicit "b")]
+               |> flip AST.Record'' Nothing
+               |> AST.Record
+               |> Just
+               |> AST.S "C",
+             --
+             (AST.Name (NameSymbol.fromSymbol "Int"))
+               :| [ (AST.Name (NameSymbol.fromSymbol "Nada"))
+                      |> AST.Inf
+                        (AST.Name (NameSymbol.fromSymbol "Fooy"))
+                        (NameSymbol.fromSymbol "->")
+                      |> AST.Infix
+                      |> AST.Parened
+                  ]
+               |> AST.App (AST.Name (NameSymbol.fromSymbol "Foo"))
+               |> AST.Application
+               |> Just
+               |> AST.Record''
+                 ( AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Concrete "a")
+                     :| [AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Implicit "b")]
+                 )
+               |> AST.Record
+               |> Just
+               |> AST.S "D"
+           ]
+        |> AST.Sum
+        |> AST.NonArrowed
+        |> AST.Typ Nothing "Foo" ["a", "b", "c"]
+        |> AST.Type
     ]
 
 --------------------------------------------------
@@ -939,7 +832,7 @@ vpsDashMiddle =
   isRight (parseOnly Parser.prefixSymbol "Foo-Foo")
 
 --------------------------------------------------------------------------------
--- Example(s) for REPL testing
+-- Examples for testing
 --------------------------------------------------------------------------------
 
 contractTest :: Either String [TopLevel]
