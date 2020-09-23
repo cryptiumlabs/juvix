@@ -108,7 +108,8 @@ many1FunctionsParser =
   shouldParseAs
     "many1FunctionsParser"
     (parse $ many Parser.topLevelSN)
-    ( "let foo a b c = (+) (a + b) c\n"
+    ( ""
+        <> "let foo a b c = (+) (a + b) c\n"
         <> "let bah = foo 1 2 3\n"
         <> "let nah \n"
         <> "  | bah == 5 = 7 \n"
@@ -122,103 +123,101 @@ many1FunctionsParser =
         <> "          print failed; \n"
         <> "          fail"
     )
-    [ Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = "foo",
-                  functionLikeArgs =
-                    [ ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents = MatchName' "a" (),
-                              matchLogicNamed = Nothing,
-                              annMatchLogic = ()
-                            }
-                        )
-                        (),
-                      ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents = MatchName' "b" (),
-                              matchLogicNamed = Nothing,
-                              annMatchLogic = ()
-                            }
-                        )
-                        (),
-                      ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents = MatchName' "c" (),
-                              matchLogicNamed = Nothing,
-                              annMatchLogic = ()
-                            }
-                        )
-                        ()
-                    ],
-                  functionLikeBody =
-                    Body'
-                      ( Application'
-                          ( App'
-                              { applicationName = Name' ("+" :| []) (),
-                                applicationArgs =
-                                  Parened'
-                                    ( Infix'
-                                        ( Inf'
-                                            { infixLeft = Name' ("a" :| []) (),
-                                              infixOp = "+" :| [],
-                                              infixRight = Name' ("b" :| []) (),
-                                              annInf = ()
-                                            }
-                                        )
-                                        ()
-                                    )
-                                    ()
-                                    :| [Name' ("c" :| []) ()],
-                                annApp = ()
-                              }
-                          )
-                          ()
-                      )
-                      (),
-                  annLike = ()
+    [ ( AST.Inf
+          (AST.Name (NameSym.fromSymbol "a"))
+          (NameSym.fromSymbol "+")
+          (AST.Name (NameSym.fromSymbol "b"))
+          |> AST.Infix
+          |> AST.Parened
+      )
+        :| [AST.Name (NameSym.fromSymbol "c")]
+        |> AST.App
+          (AST.Name (NameSym.fromSymbol "+"))
+        |> AST.Application
+        |> AST.Body
+        |> AST.Like
+          "foo"
+          [ AST.ConcreteA (AST.MatchLogic (AST.MatchName "a") Nothing),
+            AST.ConcreteA (AST.MatchLogic (AST.MatchName "b") Nothing),
+            AST.ConcreteA (AST.MatchLogic (AST.MatchName "c") Nothing)
+          ]
+        |> AST.Func
+        |> AST.Function,
+      --
+      ( AST.Constant (AST.Number (AST.Integer' 1))
+          :| [ AST.Constant (AST.Number (AST.Integer' 2)),
+               AST.Constant (AST.Number (AST.Integer' 3))
+             ]
+      )
+        |> AST.App
+          (AST.Name (NameSym.fromSymbol "foo"))
+        |> AST.Application
+        |> AST.Body
+        |> AST.Like "bah" []
+        |> AST.Func
+        |> AST.Function,
+      --
+      ( AST.CondExpression
+          { condLogicPred =
+              AST.Integer' 5
+                |> AST.Number
+                |> AST.Constant
+                |> AST.Inf (AST.Name (NameSym.fromSymbol "bah")) (NameSym.fromSymbol "==")
+                |> AST.Infix,
+            condLogicBody =
+              AST.Constant (AST.Number (AST.Integer' 7))
+          }
+          :| [ AST.Integer' 11
+                 |> AST.Number
+                 |> AST.Constant
+                 |> AST.CondExpression (AST.Name (NameSym.fromSymbol "else"))
+             ]
+      )
+        |> AST.C
+        |> AST.Guard
+        |> AST.Like "nah" []
+        |> AST.Func
+        |> AST.Function,
+      --
+
+      AST.Let''
+        { letBindings =
+            AST.Name (NameSym.fromSymbol "nah")
+              |> AST.Body
+              |> AST.Like "check" [],
+          letBody =
+            ( AST.MatchL
+                { matchLPattern =
+                    AST.MatchLogic (AST.MatchName "seven") Nothing,
+                  matchLBody =
+                    AST.Constant (AST.Number (AST.Integer' 11))
                 }
+                :| [ AST.Integer' 7
+                       |> AST.Number
+                       |> AST.Constant
+                       |> AST.MatchL (AST.MatchLogic (AST.MatchName "eleven") Nothing),
+                     --
+
+                     (AST.Name (NameSym.fromSymbol "failed") :| [])
+                       |> AST.App (AST.Name (NameSym.fromSymbol "print"))
+                       |> AST.Application
+                       |> AST.DoBody Nothing
+                       |> (:| [AST.DoBody Nothing (AST.Name (NameSym.fromSymbol "fail"))])
+                       |> AST.Do''
+                       |> AST.Do
+                       |> AST.OpenExpress (NameSym.fromSymbol "Fails")
+                       |> AST.OpenExpr
+                       |> AST.MatchL (AST.MatchLogic (AST.MatchName "f") Nothing)
+                   ]
             )
-            ()
-        )
-        (),
-      Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = "bah",
-                  functionLikeArgs = [],
-                  functionLikeBody = Body' (Application' (App' {applicationName = Name' ("foo" :| []) (), applicationArgs = Constant' (Number' (Integer'' 1 ()) ()) () :| [Constant' (Number' (Integer'' 2 ()) ()) (), Constant' (Number' (Integer'' 3 ()) ()) ()], annApp = ()}) ()) (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        (),
-      Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = "nah",
-                  functionLikeArgs = [],
-                  functionLikeBody = Guard' (C' (CondExpression' {condLogicPred = Infix' (Inf' {infixLeft = Name' ("bah" :| []) (), infixOp = "==" :| [], infixRight = Constant' (Number' (Integer'' 5 ()) ()) (), annInf = ()}) (), condLogicBody = Constant' (Number' (Integer'' 7 ()) ()) (), annCondExpression = ()} :| [CondExpression' {condLogicPred = Name' ("else" :| []) (), condLogicBody = Constant' (Number' (Integer'' 11 ()) ()) (), annCondExpression = ()}]) ()) (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        (),
-      Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = "test",
-                  functionLikeArgs = [],
-                  functionLikeBody = Body' (Let' (Let''' {letBindings = Like' {functionLikedName = "check", functionLikeArgs = [], functionLikeBody = Body' (Name' ("nah" :| []) ()) (), annLike = ()}, letBody = Match' (Match''' {matchOn = Name' ("check" :| []) (), matchBindigns = MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "seven" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 11 ()) ()) (), annMatchL = ()} :| [MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "eleven" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = Constant' (Number' (Integer'' 7 ()) ()) (), annMatchL = ()}, MatchL' {matchLPattern = MatchLogic' {matchLogicContents = MatchName' "f" (), matchLogicNamed = Nothing, annMatchLogic = ()}, matchLBody = OpenExpr' (OpenExpress' {moduleOpenExprModuleN = "Fails" :| [], moduleOpenExprExpr = Do' (Do''' (DoBody' {doBodyName = Nothing, doBodyExpr = Application' (App' {applicationName = Name' ("print" :| []) (), applicationArgs = Name' ("failed" :| []) () :| [], annApp = ()}) (), annDoBody = ()} :| [DoBody' {doBodyName = Nothing, doBodyExpr = Name' ("fail" :| []) (), annDoBody = ()}]) ()) (), annOpenExpress = ()}) (), annMatchL = ()}], annMatch'' = ()}) (), annLet'' = ()}) ()) (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        ()
+              |> AST.Match'' (AST.Name (NameSym.fromSymbol "check"))
+              |> AST.Match
+        }
+        |> AST.Let
+        |> AST.Body
+        |> AST.Like "test" []
+        |> AST.Func
+        |> AST.Function
     ]
 
 --------------------------------------------------------------------------------
