@@ -632,12 +632,12 @@ matchMoreComplex =
 condTest1 :: T.TestTree
 condTest1 =
   AST.CondExpression
-    { condLogicPred = AST.Name (intern "foo" :| []),
-      condLogicBody = AST.Name (intern "a" :| [])
+    { condLogicPred = AST.Name (NameSym.fromSymbol "foo"),
+      condLogicBody = AST.Name (NameSym.fromSymbol "a")
     }
     :| [ AST.CondExpression
-           { condLogicPred = AST.Name (intern "else" :| []),
-             condLogicBody = AST.Name (intern "b" :| [])
+           { condLogicPred = AST.Name (NameSym.fromSymbol "else"),
+             condLogicBody = AST.Name (NameSym.fromSymbol "b")
            }
        ]
     |> AST.C
@@ -655,14 +655,14 @@ condTest1 =
 
 record1 :: T.TestTree
 record1 =
-  AST.Punned (intern "a" :| [])
+  AST.Punned (NameSym.fromSymbol "a")
     :| [ AST.Inf
            { infixLeft = AST.Constant (AST.Number (AST.Integer' 3)),
-             infixOp = intern "+" :| [],
+             infixOp = NameSym.fromSymbol "+",
              infixRight = AST.Constant (AST.Number (AST.Integer' 5))
            }
            |> AST.Infix
-           |> AST.NonPunned (intern "b" :| [])
+           |> AST.NonPunned (NameSym.fromSymbol "b")
        ]
     |> AST.ExpressionRecord
     |> AST.ExpRecord
@@ -677,14 +677,15 @@ record1 =
 
 parens1 :: T.TestTree
 parens1 =
-  AST.Punned (intern "a" :| [])
-    :| [ AST.Inf
-           { infixLeft = AST.Constant (AST.Number (AST.Integer' 3)),
-             infixOp = intern "+" :| [],
-             infixRight = AST.Constant (AST.Number (AST.Integer' 5))
-           }
+  AST.Punned (NameSym.fromSymbol "a")
+    :| [ AST.Integer' 5
+           |> AST.Number
+           |> AST.Constant
+           |> AST.Inf
+             (AST.Constant (AST.Number (AST.Integer' 3)))
+             (NameSym.fromSymbol "+")
            |> AST.Infix
-           |> AST.NonPunned (intern "b" :| [])
+           |> AST.NonPunned (NameSym.fromSymbol "b")
        ]
     |> AST.ExpressionRecord
     |> AST.ExpRecord
