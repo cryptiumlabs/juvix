@@ -338,52 +338,22 @@ fun1 =
     "fun1"
     Parser.parse
     "let f foo@(A b c d) = 3"
-    [ Function'
-        ( Func'
-            ( Like'
-                { functionLikedName = Sym "f",
-                  functionLikeArgs =
-                    [ ConcreteA'
-                        ( MatchLogic'
-                            { matchLogicContents =
-                                MatchCon'
-                                  (Sym "A" :| [])
-                                  [ MatchLogic'
-                                      { matchLogicContents = MatchName' (Sym "b") (),
-                                        matchLogicNamed = Nothing,
-                                        annMatchLogic = ()
-                                      },
-                                    MatchLogic'
-                                      { matchLogicContents = MatchName' (Sym "c") (),
-                                        matchLogicNamed = Nothing,
-                                        annMatchLogic = ()
-                                      },
-                                    MatchLogic'
-                                      { matchLogicContents = MatchName' (Sym "d") (),
-                                        matchLogicNamed = Nothing,
-                                        annMatchLogic = ()
-                                      }
-                                  ]
-                                  (),
-                              matchLogicNamed = Just (Sym "foo"),
-                              annMatchLogic = ()
-                            }
-                        )
-                        ()
-                    ],
-                  functionLikeBody =
-                    Body'
-                      ( Constant'
-                          (Number' (Integer'' 3 ()) ())
-                          ()
-                      )
-                      (),
-                  annLike = ()
-                }
-            )
-            ()
-        )
-        ()
+    [ AST.Integer' 3
+        |> AST.Number
+        |> AST.Constant
+        |> AST.Body
+        |> AST.Like
+          "f"
+          [ [ AST.MatchLogic (AST.MatchName "b") Nothing,
+              AST.MatchLogic (AST.MatchName "c") Nothing,
+              AST.MatchLogic (AST.MatchName "d") Nothing
+            ]
+              |> AST.MatchCon (NameSymbol.fromSymbol "A")
+              |> flip AST.MatchLogic (Just "foo")
+              |> AST.ConcreteA
+          ]
+        |> AST.Func
+        |> AST.Function
     ]
 
 fun2 :: T.TestTree
