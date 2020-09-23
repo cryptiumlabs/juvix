@@ -9,7 +9,7 @@ import Data.Attoparsec.ByteString
     parseOnly,
   )
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
+import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import qualified Juvix.Frontend.Types as AST
@@ -231,25 +231,11 @@ sigTest1 =
     "sigTest1"
     Parser.parse
     "sig foo 0 : Int -> Int"
-    [ Signature'
-        ( Sig'
-            { signatureName = Sym "foo",
-              signatureUsage = Just (Constant' (Number' (Integer'' 0 ()) ()) ()),
-              signatureArrowType =
-                Infix'
-                  ( Inf'
-                      { infixLeft = Name' (Sym "Int" :| []) (),
-                        infixOp = Sym "->" :| [],
-                        infixRight = Name' (Sym "Int" :| []) (),
-                        annInf = ()
-                      }
-                  )
-                  (),
-              signatureConstraints = [],
-              annSig = ()
-            }
-        )
-        ()
+    [ AST.Name (NameSym.fromSymbol "Int")
+        |> AST.Inf (AST.Name (NameSym.fromSymbol "Int")) (NameSym.fromSymbol "->")
+        |> AST.Infix
+        |> flip (AST.Sig "foo" (Just (AST.Constant (AST.Number (AST.Integer' 0))))) []
+        |> AST.Signature
     ]
 
 sigTest2 :: T.TestTree
@@ -261,22 +247,22 @@ sigTest2 =
     [ AST.Integer' 1
         |> AST.Number
         |> AST.Constant
-        |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ">")
+        |> AST.Inf (AST.Name (NameSym.fromSymbol "i")) (NameSym.fromSymbol ">")
         |> AST.Infix
-        |> AST.TypeRefine (AST.Name (NameSymbol.fromSymbol "Int"))
+        |> AST.TypeRefine (AST.Name (NameSym.fromSymbol "Int"))
         |> AST.RefinedE
         |> AST.Inf
           ( AST.Integer' 0
               |> AST.Number
               |> AST.Constant
-              |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ">")
+              |> AST.Inf (AST.Name (NameSym.fromSymbol "i")) (NameSym.fromSymbol ">")
               |> AST.Infix
-              |> AST.TypeRefine (AST.Name (NameSymbol.fromSymbol "Int"))
+              |> AST.TypeRefine (AST.Name (NameSym.fromSymbol "Int"))
               |> AST.RefinedE
           )
-          (NameSymbol.fromSymbol "->")
+          (NameSym.fromSymbol "->")
         |> AST.Infix
-        |> AST.Inf (AST.Name (NameSymbol.fromSymbol "i")) (NameSymbol.fromSymbol ":")
+        |> AST.Inf (AST.Name (NameSym.fromSymbol "i")) (NameSym.fromSymbol ":")
         |> AST.Infix
         |> flip (AST.Sig "foo" (Just (AST.Constant (AST.Number (AST.Integer' 0))))) []
         |> AST.Signature
@@ -302,7 +288,7 @@ fun1 =
               AST.MatchLogic (AST.MatchName "c") Nothing,
               AST.MatchLogic (AST.MatchName "d") Nothing
             ]
-              |> AST.MatchCon (NameSymbol.fromSymbol "A")
+              |> AST.MatchCon (NameSym.fromSymbol "A")
               |> flip AST.MatchLogic (Just "foo")
               |> AST.ConcreteA
           ]
@@ -319,12 +305,12 @@ fun2 =
     [ ( AST.Integer' 2
           |> AST.Number
           |> AST.Constant
-          |> AST.CondExpression (AST.Name (NameSymbol.fromSymbol "foo"))
+          |> AST.CondExpression (AST.Name (NameSym.fromSymbol "foo"))
       )
         :| [ AST.Integer' 3
                |> AST.Number
                |> AST.Constant
-               |> AST.CondExpression (AST.Name (NameSymbol.fromSymbol "else"))
+               |> AST.CondExpression (AST.Name (NameSym.fromSymbol "else"))
            ]
         |> AST.C
         |> AST.Guard
@@ -353,45 +339,45 @@ sumTypeTest =
         <> "            | C { a : Int, #b : Int } \n"
         <> "            | D { a : Int, #b : Int } : Foo Int (Fooy -> Nada)"
     )
-    [ ( AST.Name (NameSymbol.fromSymbol "c")
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol "->")
+    [ ( AST.Name (NameSym.fromSymbol "c")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "b")) (NameSym.fromSymbol "->")
           |> AST.Infix
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "a")) (NameSymbol.fromSymbol "->")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "a")) (NameSym.fromSymbol "->")
           |> AST.Infix
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol ":")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "b")) (NameSym.fromSymbol ":")
           |> AST.Infix
           |> AST.Arrow
           |> Just
           |> AST.S "A"
       )
-        :| [ AST.Name (NameSymbol.fromSymbol "Foo")
-               |> AST.Inf (AST.Name (NameSymbol.fromSymbol "d")) (NameSymbol.fromSymbol "->")
+        :| [ AST.Name (NameSym.fromSymbol "Foo")
+               |> AST.Inf (AST.Name (NameSym.fromSymbol "d")) (NameSym.fromSymbol "->")
                |> AST.Infix
                |> AST.Arrow
                |> Just
                |> AST.S "B",
              --
-             AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Concrete "a")
-               :| [AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Implicit "b")]
+             AST.NameType' (AST.Name (NameSym.fromSymbol "Int")) (AST.Concrete "a")
+               :| [AST.NameType' (AST.Name (NameSym.fromSymbol "Int")) (AST.Implicit "b")]
                |> flip AST.Record'' Nothing
                |> AST.Record
                |> Just
                |> AST.S "C",
              --
-             (AST.Name (NameSymbol.fromSymbol "Int"))
-               :| [ (AST.Name (NameSymbol.fromSymbol "Nada"))
+             (AST.Name (NameSym.fromSymbol "Int"))
+               :| [ (AST.Name (NameSym.fromSymbol "Nada"))
                       |> AST.Inf
-                        (AST.Name (NameSymbol.fromSymbol "Fooy"))
-                        (NameSymbol.fromSymbol "->")
+                        (AST.Name (NameSym.fromSymbol "Fooy"))
+                        (NameSym.fromSymbol "->")
                       |> AST.Infix
                       |> AST.Parened
                   ]
-               |> AST.App (AST.Name (NameSymbol.fromSymbol "Foo"))
+               |> AST.App (AST.Name (NameSym.fromSymbol "Foo"))
                |> AST.Application
                |> Just
                |> AST.Record''
-                 ( AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Concrete "a")
-                     :| [AST.NameType' (AST.Name (NameSymbol.fromSymbol "Int")) (AST.Implicit "b")]
+                 ( AST.NameType' (AST.Name (NameSym.fromSymbol "Int")) (AST.Concrete "a")
+                     :| [AST.NameType' (AST.Name (NameSym.fromSymbol "Int")) (AST.Implicit "b")]
                  )
                |> AST.Record
                |> Just
@@ -409,41 +395,41 @@ sumTypeTest =
 
 superArrowCase :: T.TestTree
 superArrowCase =
-  AST.Name (NameSymbol.fromSymbol "foo")
-    |> AST.Inf (AST.Name (NameSymbol.fromSymbol "HAHAHHA")) (NameSymbol.fromSymbol "->")
+  AST.Name (NameSym.fromSymbol "foo")
+    |> AST.Inf (AST.Name (NameSym.fromSymbol "HAHAHHA")) (NameSym.fromSymbol "->")
     |> AST.Infix
     |> AST.Parened
     |> AST.Inf
       ( AST.App
-          (AST.Name (NameSymbol.fromSymbol "Bah"))
-          (AST.Name (NameSymbol.fromSymbol "a") :| [(AST.Name (NameSymbol.fromSymbol "c"))])
+          (AST.Name (NameSym.fromSymbol "Bah"))
+          (AST.Name (NameSym.fromSymbol "a") :| [(AST.Name (NameSym.fromSymbol "c"))])
           |> AST.Application
       )
-      (NameSymbol.fromSymbol "-o")
+      (NameSym.fromSymbol "-o")
     |> AST.Infix
-    |> AST.Inf (AST.Name (NameSymbol.fromSymbol "a")) (NameSymbol.fromSymbol ":")
+    |> AST.Inf (AST.Name (NameSym.fromSymbol "a")) (NameSym.fromSymbol ":")
     |> AST.Infix
     |> AST.Inf
       ( AST.App
-          (AST.Name (NameSymbol.fromSymbol "Foo"))
-          (AST.Name (NameSymbol.fromSymbol "a") :| [(AST.Name (NameSymbol.fromSymbol "b"))])
+          (AST.Name (NameSym.fromSymbol "Foo"))
+          (AST.Name (NameSym.fromSymbol "a") :| [(AST.Name (NameSym.fromSymbol "b"))])
           |> AST.Application
       )
-      (NameSymbol.fromSymbol "->")
+      (NameSym.fromSymbol "->")
     |> AST.Infix
     |> AST.Inf
-      ( AST.Name (NameSymbol.fromSymbol "Foo")
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "B")) (NameSymbol.fromSymbol "-o")
+      ( AST.Name (NameSym.fromSymbol "Foo")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "B")) (NameSym.fromSymbol "-o")
           |> AST.Infix
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "c")) (NameSymbol.fromSymbol ":")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "c")) (NameSym.fromSymbol ":")
           |> AST.Infix
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "Bah")) (NameSymbol.fromSymbol "->")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "Bah")) (NameSym.fromSymbol "->")
           |> AST.Infix
-          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol ":")
+          |> AST.Inf (AST.Name (NameSym.fromSymbol "b")) (NameSym.fromSymbol ":")
           |> AST.Infix
           |> AST.Parened
       )
-      (NameSymbol.fromSymbol "->")
+      (NameSym.fromSymbol "->")
     |> AST.Infix
     |> shouldParseAs
       "superArrowCase"
@@ -460,9 +446,9 @@ typeTest =
     "typeTest"
     Parser.parse
     "type Foo a b c d = | Foo nah bah sad"
-    [ [ AST.Name (NameSymbol.fromSymbol "nah"),
-        AST.Name (NameSymbol.fromSymbol "bah"),
-        AST.Name (NameSymbol.fromSymbol "sad")
+    [ [ AST.Name (NameSym.fromSymbol "nah"),
+        AST.Name (NameSym.fromSymbol "bah"),
+        AST.Name (NameSym.fromSymbol "sad")
       ]
         |> AST.ADTLike
         |> Just
@@ -490,26 +476,26 @@ moduleOpen =
         <> "  let bah t = Int.(t + 3) \n"
         <> "end"
     )
-    [ ( AST.Name (NameSymbol.fromSymbol "Int.t")
+    [ ( AST.Name (NameSym.fromSymbol "Int.t")
           |> AST.Body
           |> AST.Like "T" []
           |> AST.Func
           |> AST.Function
       )
         :| [ AST.Inf
-               (AST.Name (NameSymbol.fromSymbol "T"))
-               (NameSymbol.fromSymbol "->")
-               (AST.Name (NameSymbol.fromSymbol "T"))
+               (AST.Name (NameSym.fromSymbol "T"))
+               (NameSym.fromSymbol "->")
+               (AST.Name (NameSym.fromSymbol "T"))
                |> AST.Infix
                |> flip (AST.Sig "bah" Nothing) []
                |> AST.Signature,
              --
              AST.Inf
-               (AST.Name (NameSymbol.fromSymbol "t"))
-               (NameSymbol.fromSymbol "+")
+               (AST.Name (NameSym.fromSymbol "t"))
+               (NameSym.fromSymbol "+")
                (AST.Constant (AST.Number (AST.Integer' 3)))
                |> AST.Infix
-               |> AST.OpenExpress (NameSymbol.fromSymbol "Int")
+               |> AST.OpenExpress (NameSym.fromSymbol "Int")
                |> AST.OpenExpr
                |> AST.Body
                |> AST.Like
@@ -521,7 +507,7 @@ moduleOpen =
         |> AST.Body
         |> AST.Like
           "Foo"
-          [ AST.MatchLogic (AST.MatchCon (NameSymbol.fromSymbol "Int") []) Nothing
+          [ AST.MatchLogic (AST.MatchCon (NameSym.fromSymbol "Int") []) Nothing
               |> AST.ConcreteA
           ]
         |> AST.Mod
@@ -542,21 +528,21 @@ moduleOpen' =
         <> "     , b = expr M.N.t}"
         <> "end"
     )
-    [ AST.ModuleOpen (AST.Open (NameSymbol.fromSymbol "M"))
-        :| [ AST.Sig "bah" Nothing (AST.Name (NameSymbol.fromSymbol "Rec")) []
+    [ AST.ModuleOpen (AST.Open (NameSym.fromSymbol "M"))
+        :| [ AST.Sig "bah" Nothing (AST.Name (NameSym.fromSymbol "Rec")) []
                |> AST.Signature,
              AST.NonPunned
-               (NameSymbol.fromSymbol "a")
+               (NameSym.fromSymbol "a")
                ( AST.Inf
-                   (AST.Name (NameSymbol.fromSymbol "t"))
-                   (NameSymbol.fromSymbol "+")
+                   (AST.Name (NameSym.fromSymbol "t"))
+                   (NameSym.fromSymbol "+")
                    (AST.Constant (AST.Number (AST.Integer' 3)))
                    |> AST.Infix
                )
-               :| [ AST.Name (NameSymbol.fromSymbol "M.N.t") :| []
-                      |> AST.App (AST.Name (NameSymbol.fromSymbol "expr"))
+               :| [ AST.Name (NameSym.fromSymbol "M.N.t") :| []
+                      |> AST.App (AST.Name (NameSym.fromSymbol "expr"))
                       |> AST.Application
-                      |> AST.NonPunned (NameSymbol.fromSymbol "b")
+                      |> AST.NonPunned (NameSym.fromSymbol "b")
                   ]
                  |> AST.ExpressionRecord
                  |> AST.ExpRecord
@@ -571,7 +557,7 @@ moduleOpen' =
         |> AST.Like
           "Bah"
           -- this shouldn't be a matchCon but a match argument
-          [ AST.MatchLogic (AST.MatchCon (NameSymbol.fromSymbol "M") []) Nothing
+          [ AST.MatchLogic (AST.MatchCon (NameSym.fromSymbol "M") []) Nothing
               |> AST.ConcreteA
           ]
         |> AST.Mod
@@ -584,16 +570,16 @@ moduleOpen' =
 
 typeNameNoUniverse :: T.TestTree
 typeNameNoUniverse =
-  AST.Name (NameSymbol.fromSymbol "a")
-    :| [ AST.Name (NameSymbol.fromSymbol "b"),
-         AST.Name (NameSymbol.fromSymbol "c"),
-         AST.Name (NameSymbol.fromSymbol "d")
-           |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol "-o")
+  AST.Name (NameSym.fromSymbol "a")
+    :| [ AST.Name (NameSym.fromSymbol "b"),
+         AST.Name (NameSym.fromSymbol "c"),
+         AST.Name (NameSym.fromSymbol "d")
+           |> AST.Inf (AST.Name (NameSym.fromSymbol "b")) (NameSym.fromSymbol "-o")
            |> AST.Infix
            |> AST.Parened,
-         AST.Name (NameSymbol.fromSymbol "a"),
-         AST.Name (NameSymbol.fromSymbol "c"),
-         AST.Name (NameSymbol.fromSymbol "u")
+         AST.Name (NameSym.fromSymbol "a"),
+         AST.Name (NameSym.fromSymbol "c"),
+         AST.Name (NameSym.fromSymbol "u")
        ]
     |> AST.App (AST.Name (intern "Foo" :| []))
     |> AST.Application
@@ -612,7 +598,7 @@ simpleNamedCon =
     AST.MatchLogic (AST.MatchName "b") Nothing,
     AST.MatchLogic (AST.MatchName "c") Nothing
   ]
-    |> AST.MatchCon (NameSymbol.fromSymbol "Hi")
+    |> AST.MatchCon (NameSym.fromSymbol "Hi")
     |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "simpleNamedCon"
@@ -623,8 +609,8 @@ matchMoreComplex :: T.TestTree
 matchMoreComplex =
   [ Nothing
       |> AST.MatchLogic (AST.MatchName "nah")
-      |> AST.NonPunned (NameSymbol.fromSymbol "a")
-      |> (:| [AST.Punned (NameSymbol.fromSymbol "f")])
+      |> AST.NonPunned (NameSym.fromSymbol "a")
+      |> (:| [AST.Punned (NameSym.fromSymbol "f")])
       |> AST.MatchRecord
       |> flip AST.MatchLogic (Just "nah"),
     --
@@ -632,7 +618,7 @@ matchMoreComplex =
     --
     AST.MatchLogic (AST.MatchConst (AST.Number (AST.Integer' 5))) Nothing
   ]
-    |> AST.MatchCon (NameSymbol.fromSymbol "Hi")
+    |> AST.MatchCon (NameSym.fromSymbol "Hi")
     |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "matchMoreComplex"
