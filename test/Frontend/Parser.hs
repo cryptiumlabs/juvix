@@ -614,106 +614,46 @@ sumTypeTest =
 
 superArrowCase :: T.TestTree
 superArrowCase =
-  shouldParseAs
-    "superArrowCase"
-    (parse Parser.expression)
-    "( b : Bah ->  c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
-    ( Infix'
-        ( Inf'
-            { infixLeft =
-                Parened'
-                  ( Infix'
-                      ( Inf'
-                          { infixLeft = Name' (Sym "b" :| []) (),
-                            infixOp = Sym ":" :| [],
-                            infixRight =
-                              Infix'
-                                ( Inf'
-                                    { infixLeft = Name' (Sym "Bah" :| []) (),
-                                      infixOp = Sym "->" :| [],
-                                      infixRight =
-                                        Infix'
-                                          ( Inf'
-                                              { infixLeft = Name' (Sym "c" :| []) (),
-                                                infixOp = Sym ":" :| [],
-                                                infixRight =
-                                                  Infix'
-                                                    ( Inf'
-                                                        { infixLeft = Name' (Sym "B" :| []) (),
-                                                          infixOp = Sym "-o" :| [],
-                                                          infixRight = Name' (Sym "Foo" :| []) (),
-                                                          annInf = ()
-                                                        }
-                                                    )
-                                                    (),
-                                                annInf = ()
-                                              }
-                                          )
-                                          (),
-                                      annInf = ()
-                                    }
-                                )
-                                (),
-                            annInf = ()
-                          }
-                      )
-                      ()
-                  )
-                  (),
-              infixOp = Sym "->" :| [],
-              infixRight =
-                Infix'
-                  ( Inf'
-                      { infixLeft =
-                          Application'
-                            ( App'
-                                { applicationName = Name' (Sym "Foo" :| []) (),
-                                  applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "b" :| []) ()],
-                                  annApp = ()
-                                }
-                            )
-                            (),
-                        infixOp = Sym "->" :| [],
-                        infixRight =
-                          Infix'
-                            ( Inf'
-                                { infixLeft = Name' (Sym "a" :| []) (),
-                                  infixOp = Sym ":" :| [],
-                                  infixRight =
-                                    Infix'
-                                      ( Inf'
-                                          { infixLeft = Application' (App' {applicationName = Name' (Sym "Bah" :| []) (), applicationArgs = Name' (Sym "a" :| []) () :| [Name' (Sym "c" :| []) ()], annApp = ()}) (),
-                                            infixOp = Sym "-o" :| [],
-                                            infixRight =
-                                              Parened'
-                                                ( Infix'
-                                                    ( Inf'
-                                                        { infixLeft = Name' (Sym "HAHAHHA" :| []) (),
-                                                          infixOp = Sym "->" :| [],
-                                                          infixRight = Name' (Sym "foo" :| []) (),
-                                                          annInf = ()
-                                                        }
-                                                    )
-                                                    ()
-                                                )
-                                                (),
-                                            annInf = ()
-                                          }
-                                      )
-                                      (),
-                                  annInf = ()
-                                }
-                            )
-                            (),
-                        annInf = ()
-                      }
-                  )
-                  (),
-              annInf = ()
-            }
-        )
-        ()
-    )
+  AST.Name (NameSymbol.fromSymbol "foo")
+    |> AST.Inf (AST.Name (NameSymbol.fromSymbol "HAHAHHA")) (NameSymbol.fromSymbol "->")
+    |> AST.Infix
+    |> AST.Parened
+    |> AST.Inf
+      ( AST.App
+          (AST.Name (NameSymbol.fromSymbol "Bah"))
+          (AST.Name (NameSymbol.fromSymbol "a") :| [(AST.Name (NameSymbol.fromSymbol "c"))])
+          |> AST.Application
+      )
+      (NameSymbol.fromSymbol "-o")
+    |> AST.Infix
+    |> AST.Inf (AST.Name (NameSymbol.fromSymbol "a")) (NameSymbol.fromSymbol ":")
+    |> AST.Infix
+    |> AST.Inf
+      ( AST.App
+          (AST.Name (NameSymbol.fromSymbol "Foo"))
+          (AST.Name (NameSymbol.fromSymbol "a") :| [(AST.Name (NameSymbol.fromSymbol "b"))])
+          |> AST.Application
+      )
+      (NameSymbol.fromSymbol "->")
+    |> AST.Infix
+    |> AST.Inf
+      ( AST.Name (NameSymbol.fromSymbol "Foo")
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "B")) (NameSymbol.fromSymbol "-o")
+          |> AST.Infix
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "c")) (NameSymbol.fromSymbol ":")
+          |> AST.Infix
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "Bah")) (NameSymbol.fromSymbol "->")
+          |> AST.Infix
+          |> AST.Inf (AST.Name (NameSymbol.fromSymbol "b")) (NameSymbol.fromSymbol ":")
+          |> AST.Infix
+          |> AST.Parened
+      )
+      (NameSymbol.fromSymbol "->")
+    |> AST.Infix
+    |> shouldParseAs
+      "superArrowCase"
+      (parse Parser.expression)
+      "( b : Bah ->  c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
 
 --------------------------------------------------
 -- alias tests
@@ -725,29 +665,18 @@ typeTest =
     "typeTest"
     Parser.parse
     "type Foo a b c d = | Foo nah bah sad"
-    [ Type'
-        ( Typ'
-            { typeUsage = Nothing,
-              typeName' = Sym "Foo",
-              typeArgs = [Sym "a", Sym "b", Sym "c", Sym "d"],
-              typeForm =
-                NonArrowed'
-                  { dataAdt =
-                      Sum'
-                        ( S'
-                            { sumConstructor = Sym "Foo",
-                              sumValue = Just (ADTLike' [Name' (Sym "nah" :| []) (), Name' (Sym "bah" :| []) (), Name' (Sym "sad" :| []) ()] ()),
-                              annS = ()
-                            }
-                            :| []
-                        )
-                        (),
-                    annNonArrowed = ()
-                  },
-              annTyp = ()
-            }
-        )
-        ()
+    [ [ AST.Name (NameSymbol.fromSymbol "nah"),
+        AST.Name (NameSymbol.fromSymbol "bah"),
+        AST.Name (NameSymbol.fromSymbol "sad")
+      ]
+        |> AST.ADTLike
+        |> Just
+        |> AST.S "Foo"
+        |> (:| [])
+        |> AST.Sum
+        |> AST.NonArrowed
+        |> AST.Typ Nothing "Foo" ["a", "b", "c", "d"]
+        |> AST.Type
     ]
 
 --------------------------------------------------------------------------------
