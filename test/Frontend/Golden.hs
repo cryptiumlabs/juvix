@@ -7,27 +7,8 @@ import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (TopLevel)
 import Juvix.Library
-  ( ($),
-    (.),
-    ByteString,
-    Eq ((==)),
-    FilePath,
-    IO,
-    Maybe (Just),
-    Monad (return),
-    Semigroup ((<>)),
-    Show,
-    Text,
-    const,
-    decodeUtf8,
-    encodeUtf8,
-    readFile,
-    readMaybe,
-    writeFile,
-  )
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
-import Prelude (show)
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
@@ -60,13 +41,15 @@ parsedContract file = do
           <> toByteString context
           <> "The error message is "
           <> toByteString error
-  let failIO i context error = do
+      failIO i context error = do
         _ <-
           Juvix.Library.writeFile
             (file <> ".parsed")
             (decodeUtf8 $ failOutput i context error)
         return []
+  --
   readString <- readFile file
+  --
   let rawContract = encodeUtf8 readString
   case Parser.parse rawContract of
     Fail i context err -> failIO i context err
@@ -80,28 +63,26 @@ parsedContract file = do
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do
   maybeBS <- T.readFileMaybe file
-  return
-    ( do
-        bs <- maybeBS
-        readMaybe $ Text.unpack $ decodeUtf8 bs
-    )
+  return $ do
+    bs <- maybeBS
+    readMaybe $ Text.unpack $ decodeUtf8 bs
 
 compareParsedGolden :: (Eq a, Show a) => a -> a -> T.GDiff
-compareParsedGolden golden parsed =
-  if parsed == golden
-    then T.Equal
-    else
-      T.DiffText
-        { T.gReason =
-            Just $
-              "Parsed output doesn't match golden file."
-                <> "The parsed result is \n"
-                <> show parsed
-                <> "\n but the expected result is \n"
-                <> show golden,
-          T.gActual = resultToText parsed,
-          T.gExpected = resultToText golden
-        }
+compareParsedGolden golden parsed
+  | parsed == golden =
+    T.Equal
+  | otherwise =
+    T.DiffText
+      { T.gReason =
+          Just $
+            "Parsed output doesn't match golden file."
+              <> "The parsed result is \n"
+              <> show parsed
+              <> "\n but the expected result is \n"
+              <> show golden,
+        T.gActual = resultToText parsed,
+        T.gExpected = resultToText golden
+      }
 
 goldenTest :: T.TestName -> FilePath -> T.TestTree
 goldenTest name file =
@@ -113,11 +94,11 @@ goldenTest name file =
         compareParsedGolden
         -- show the golden/actual value, not working atm
         ( T.ShowText . Text.pack
-            . (const "this isn't doing anything?") --(Prelude.unlines . map show))
+            . const "this isn't doing anything?" -- (Prelude.unlines . map show))
               -- update the golden file, not working atm
         )
         ( Data.ByteString.writeFile goldenFileName
-            . (const "this isn't either") --((encodeUtf8 . Text.pack) . ppShowList))
+            . const "this isn't either" -- ((encodeUtf8 . Text.pack) . ppShowList))
         )
 
 idString :: T.TestTree

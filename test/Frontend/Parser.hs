@@ -13,10 +13,10 @@ import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import qualified Juvix.Frontend.Types as AST
-import Juvix.Library hiding (show)
+import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (String, error, show)
+import Prelude (String, error)
 
 allParserTests :: T.TestTree
 allParserTests =
