@@ -101,3 +101,5 @@ extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE
+
+extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar

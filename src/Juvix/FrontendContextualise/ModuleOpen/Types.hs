@@ -101,3 +101,5 @@ extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
+
+extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar

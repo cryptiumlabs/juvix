@@ -37,6 +37,9 @@ transformTop body = foldr combine record body
           New.LetType (New.LetType'' (transformType typ) expression)
         Old.Function (Old.Func func) ->
           New.Let (New.Let'' (transformFunctionLike func) expression)
+        -- TODO ∷ update this later to handle infix declarations better
+        Old.InfixDeclar _ ->
+          undefined
         -- TODO ∷ update parser and add LetSig
         Old.Signature _sig ->
           undefined
@@ -59,6 +62,8 @@ transformTop body = foldr combine record body
     f (Old.Type (Old.Typ _ name _ _)) =
       return name
     f (Old.ModuleOpen _) =
+      empty
+    f (Old.InfixDeclar _) =
       empty
     f (Old.Signature (Old.Sig name _ _ _)) =
       return name
