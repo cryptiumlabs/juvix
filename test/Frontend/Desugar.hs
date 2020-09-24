@@ -5,7 +5,6 @@ import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.FrontendDesugar as Desugar
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as AST
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Desugared
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -16,7 +15,7 @@ allDesugar =
     "desugar Tests"
     [guardTest]
 
-shouldDesugar :: T.TestName -> ByteString -> [Desugared.TopLevel] -> T.TestTree
+shouldDesugar :: T.TestName -> ByteString -> [AST.TopLevel] -> T.TestTree
 shouldDesugar name x y =
   T.testGroup
     "Desugar tests"
