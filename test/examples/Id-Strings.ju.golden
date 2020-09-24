@@ -1,1 +1,140 @@
-[Function' (Func' (Like' {functionLikedName = "string", functionLikeArgs = [], functionLikeBody = Body' (Primitive' (Prim' ("Michelson" :| ["string"]) ()) ()) (), annLike = ()}) ()) (),Function' (Func' (Like' {functionLikedName = "pair", functionLikeArgs = [], functionLikeBody = Body' (Primitive' (Prim' ("Michelson" :| ["pair"]) ()) ()) (), annLike = ()}) ()) (),Function' (Func' (Like' {functionLikedName = "unit", functionLikeArgs = [], functionLikeBody = Body' (Primitive' (Prim' ("Param" :| ["unit"]) ()) ()) (), annLike = ()}) ()) (),Function' (Func' (Like' {functionLikedName = "storage", functionLikeArgs = [], functionLikeBody = Body' (Name' ("unit" :| []) ()) (), annLike = ()}) ()) (),Signature' (Sig' {signatureName = "default", signatureUsage = Nothing, signatureArrowType = Infix' (Inf' {infixLeft = Name' ("string" :| []) (), infixOp = "->" :| [], infixRight = Infix' (Inf' {infixLeft = Name' ("storage" :| []) (), infixOp = "->" :| [], infixRight = Name' ("storage" :| []) (), annInf = ()}) (), annInf = ()}) (), signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName = "default", functionLikeArgs = [ConcreteA' (MatchLogic' {matchLogicContents = MatchName' "para" (), matchLogicNamed = Nothing, annMatchLogic = ()}) (),ConcreteA' (MatchLogic' {matchLogicContents = MatchName' "storage" (), matchLogicNamed = Nothing, annMatchLogic = ()}) ()], functionLikeBody = Body' (Application' (App' {applicationName = Name' ("pair" :| []) (), applicationArgs = List' (ListLit' [] ()) () :| [Name' ("storage" :| []) ()], annApp = ()}) ()) (), annLike = ()}) ()) (),Signature' (Sig' {signatureName = "init-storage", signatureUsage = Nothing, signatureArrowType = Name' ("storage" :| []) (), signatureConstraints = [], annSig = ()}) (),Function' (Func' (Like' {functionLikedName = "init-storage", functionLikeArgs = [], functionLikeBody = Body' (Name' ("unit" :| []) ()) (), annLike = ()}) ()) ()]
+foo =
+  [ Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "string",
+                functionLikeArgs = [],
+                functionLikeBody = Body' (Primitive' (Prim' ("Michelson" :| ["string"]) ()) ()) (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      (),
+    Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "pair",
+                functionLikeArgs = [],
+                functionLikeBody = Body' (Primitive' (Prim' ("Michelson" :| ["pair"]) ()) ()) (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      (),
+    Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "unit",
+                functionLikeArgs = [],
+                functionLikeBody = Body' (Primitive' (Prim' ("Param" :| ["unit"]) ()) ()) (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      (),
+    Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "storage",
+                functionLikeArgs = [],
+                functionLikeBody = Body' (Name' ("unit" :| []) ()) (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      (),
+    Signature'
+      ( Sig'
+          { signatureName = "default",
+            signatureUsage = Nothing,
+            signatureArrowType =
+              Infix'
+                ( Inf'
+                    { infixLeft = Name' ("string" :| []) (),
+                      infixOp = "->" :| [],
+                      infixRight =
+                        Infix'
+                          ( Inf'
+                              { infixLeft = Name' ("storage" :| []) (),
+                                infixOp = "->" :| [],
+                                infixRight = Name' ("storage" :| []) (),
+                                annInf = ()
+                              }
+                          )
+                          (),
+                      annInf = ()
+                    }
+                )
+                (),
+            signatureConstraints = [],
+            annSig = ()
+          }
+      )
+      (),
+    Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "default",
+                functionLikeArgs =
+                  [ ConcreteA'
+                      ( MatchLogic'
+                          { matchLogicContents = MatchName' "para" (),
+                            matchLogicNamed = Nothing,
+                            annMatchLogic = ()
+                          }
+                      )
+                      (),
+                    ConcreteA'
+                      ( MatchLogic'
+                          { matchLogicContents = MatchName' "storage" (),
+                            matchLogicNamed = Nothing,
+                            annMatchLogic = ()
+                          }
+                      )
+                      ()
+                  ],
+                functionLikeBody =
+                  Body'
+                    ( Application'
+                        ( App'
+                            { applicationName = Name' ("pair" :| []) (),
+                              applicationArgs = List' (ListLit' [] ()) () :| [Name' ("storage" :| []) ()],
+                              annApp = ()
+                            }
+                        )
+                        ()
+                    )
+                    (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      (),
+    Signature'
+      ( Sig'
+          { signatureName = "init-storage",
+            signatureUsage = Nothing,
+            signatureArrowType = Name' ("storage" :| []) (),
+            signatureConstraints = [],
+            annSig = ()
+          }
+      )
+      (),
+    Function'
+      ( Func'
+          ( Like'
+              { functionLikedName = "init-storage",
+                functionLikeArgs = [],
+                functionLikeBody = Body' (Name' ("unit" :| []) ()) (),
+                annLike = ()
+              }
+          )
+          ()
+      )
+      ()
+  ]
