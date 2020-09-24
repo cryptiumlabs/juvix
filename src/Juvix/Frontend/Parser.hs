@@ -172,7 +172,8 @@ infixDeclar = do
     (Types.AssocL <$ string "l")
       <|> (Types.AssocR <$ string "r")
       <|> pure Types.NonAssoc
-  f . fromInteger <$> integer
+  name <- eatSpaces prefixSymbolSN
+  f name . fromInteger <$> spaceLiner integer
 
 --------------------------------------------------------------------------------
 -- Modules/ Function Gen

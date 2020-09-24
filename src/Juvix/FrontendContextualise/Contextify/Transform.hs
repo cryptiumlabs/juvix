@@ -55,18 +55,29 @@ updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
           modsDefined
         }
 updateTopLevel (Repr.InfixDeclar dec) ctx =
-  let name = undefined
+  let (name, prec) =
+        case dec of
+          Repr.AssocL n assoc ->
+            (n, Context.Pred Context.Left (fromIntegral assoc))
+          Repr.AssocR n assoc ->
+            (n, Context.Pred Context.Right (fromIntegral assoc))
+          Repr.NonAssoc n assoc ->
+            (n, Context.Pred Context.NonAssoc (fromIntegral assoc))
    in case Context.extractValue <$> Context.lookup (pure name) ctx of
         Just def@(Context.Def {}) ->
           Type.P
-            { ctx = (Context.add (NameSpace.Pub name) def {Context.precedence = undefined}) ctx,
+            { ctx = (Context.add (NameSpace.Pub name) def {Context.precedence = prec}) ctx,
               opens = [],
               modsDefined = []
             }
         _ ->
           let absurd = undefined
            in Type.P
-                { ctx = (Context.add (NameSpace.Pub name) absurd) ctx,
+                { ctx =
+                    Context.add
+                      (NameSpace.Pub name)
+                      (Context.Def Nothing Nothing absurd prec)
+                      ctx,
                   opens = [],
                   modsDefined = []
                 }

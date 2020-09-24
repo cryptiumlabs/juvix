@@ -41,9 +41,9 @@ extensible
     -- Infix
     --------------------------------------------------------------------------------
     data InfixDeclar
-      = NonAssoc Natural
-      | AssocL Natural
-      | AssocR Natural
+      = NonAssoc Symbol Natural
+      | AssocL Symbol Natural
+      | AssocR Symbol Natural
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     --------------------------------------------------------------------------------

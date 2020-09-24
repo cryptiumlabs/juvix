@@ -87,9 +87,9 @@ transformExpression (Old.Parened e) =
 -- Infix Declaration
 --------------------------------------------------------------------------------
 transformInfixDeclar :: Old.InfixDeclar -> New.InfixDeclar
-transformInfixDeclar (Old.AssocL i) = New.AssocL i
-transformInfixDeclar (Old.AssocR i) = New.AssocR i
-transformInfixDeclar (Old.NonAssoc i) = New.NonAssoc i
+transformInfixDeclar (Old.AssocL n i) = New.AssocL n i
+transformInfixDeclar (Old.AssocR n i) = New.AssocR n i
+transformInfixDeclar (Old.NonAssoc n i) = New.NonAssoc n i
 
 --------------------------------------------------------------------------------
 -- Types

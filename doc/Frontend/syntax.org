@@ -12,9 +12,9 @@
               | <signature>
               | <function>
 
-  infix-declare ::= infix <number>
-                  | infixl <number>
-                  | infixr <number>
+  infix-declare ::= infix <symbol> <number>
+                  | infixl <symbol> <number>
+                  | infixr <symbol> <number>
 
   ;;;; Functions ======================================================
 
