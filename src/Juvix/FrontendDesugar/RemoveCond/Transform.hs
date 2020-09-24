@@ -8,7 +8,7 @@ import Juvix.Library
 -- The actual transform we are doing
 transformCond :: Old.Cond Old.Expression -> New.Expression
 transformCond (Old.C xs) =
-  foldr f (fList last []) xs
+  foldr f (fList last []) (NonEmpty.init xs)
   where
     fList (Old.CondExpression pred body) falses =
       boolean "True" (transformExpression body)
