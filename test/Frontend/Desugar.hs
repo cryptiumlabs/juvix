@@ -1,10 +1,9 @@
 module Frontend.Desugar where
 
-import Data.Attoparsec.ByteString (parseOnly)
+import qualified Data.Attoparsec.ByteString as Parsec
 import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar (desugar)
+import qualified Juvix.FrontendDesugar as Desugar
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as AST
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Desugared
 import Juvix.Library
@@ -17,14 +16,15 @@ allDesugar =
     "desugar Tests"
     [guardTest]
 
-shouldDesugar ::
-  T.TestName -> ByteString -> [Desugared.TopLevel] -> T.TestTree
+shouldDesugar :: T.TestName -> ByteString -> [Desugared.TopLevel] -> T.TestTree
 shouldDesugar name x y =
   T.testGroup
     "Desugar tests"
     [ T.testCase
         ("desugar: " <> name <> " " <> show x <> " should desugar to " <> show y)
-        (fmap desugar (parseOnly (many Parser.topLevelSN) x) T.@=? Right y)
+        ( fmap Desugar.f (Parsec.parseOnly (many Parser.topLevelSN) x)
+            T.@=? Right y
+        )
     ]
 
 guardTest :: T.TestTree

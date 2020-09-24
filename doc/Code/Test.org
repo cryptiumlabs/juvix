@@ -153,7 +153,6 @@ Tests that weak works as expected
 - _Relies on_
   + [[NameSymbol]]
   + [[Parser]]
-  + [[Base]]
   + [[FrontendDesugar]]
   + [[Types]]
   + [[Types]]
