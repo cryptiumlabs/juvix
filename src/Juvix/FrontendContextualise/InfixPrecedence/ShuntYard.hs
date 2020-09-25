@@ -18,7 +18,7 @@ data Precedence sym = Pred sym Associativity Int
 data Error sym
   = Clash (Precedence sym) (Precedence sym)
   | MoreEles
-  deriving (Show)
+  deriving (Show, Eq)
 
 -- Not a real ordering, hence not an ord instance
 predOrd :: Precedence sym -> Precedence sym -> Either (Error sym) Bool
