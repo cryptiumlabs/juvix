@@ -48,7 +48,9 @@ allParserTests =
       infixFail,
       spacerSymb,
       vpsDashFrontFail,
-      vpsDashMiddle
+      vpsDashMiddle,
+      infxPlusTest,
+      infixPlusFail
     ]
 
 --------------------------------------------------------------------------------
@@ -730,6 +732,20 @@ infxlTest =
     Parser.parse
     "infixl foo 5"
     [AST.InfixDeclar (AST.AssocL "foo" 5)]
+
+infxPlusTest :: T.TestTree
+infxPlusTest =
+  shouldParseAs
+    "infixl (+) 5"
+    Parser.parse
+    "infixl (+) 5"
+    [AST.InfixDeclar (AST.AssocL "+" 5)]
+
+infixPlusFail :: T.TestTree
+infixPlusFail =
+  T.testCase
+    ("parse: infixl + 5 should fail")
+    (isLeft (Parser.parseOnly "infixl + 5") T.@=? True)
 
 infixFail :: T.TestTree
 infixFail =

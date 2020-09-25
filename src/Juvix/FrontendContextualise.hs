@@ -30,8 +30,8 @@ f = contextualize
 
 contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-contextualize t@((sym, _) :| _) =
-  case foldM resolveOpens (Context.empty sym, []) (addTop <$> t) of
+contextualize init =
+  case contextify init of
     Left err -> Left (PathErr err)
     Right (context, openList) ->
       case Module.transformContext context openList of
@@ -40,6 +40,12 @@ contextualize t@((sym, _) :| _) =
           case Infix.transformContext xs of
             Left err -> Left (InfixErr err)
             Right xs -> Right xs
+
+contextify
+  :: NonEmpty (NameSymbol.T, [Initial.TopLevel])
+  -> Either Context.PathError (Contextify.Context, [Module.PreQualified])
+contextify t@((sym, _) :| _) =
+  foldM resolveOpens (Context.empty sym, []) (addTop <$> t)
 
 addTop :: Bifunctor p => p NameSymbol.T c -> p NameSymbol.T c
 addTop = first (NameSymbol.cons Context.topLevelName)
