@@ -41,7 +41,14 @@ allParserTests =
       -- pre-processor tests
       removeNoComment,
       removeNewLineBefore,
-      removeSpaceBefore
+      removeSpaceBefore,
+      nonassocTest,
+      infxlTest,
+      infxrTest,
+      infixFail,
+      spacerSymb,
+      vpsDashFrontFail,
+      vpsDashMiddle
     ]
 
 --------------------------------------------------------------------------------
@@ -696,27 +703,67 @@ parens1 =
       (parse Parser.expression)
       "(       ( (({a, b = 3+5}))))"
 
+--------------------------------------------------
+-- Infix Tests
+--------------------------------------------------
+
+nonassocTest :: T.TestTree
+nonassocTest =
+  shouldParseAs
+    "infix foo 5"
+    Parser.parse
+    "infix foo 5"
+    [AST.InfixDeclar (AST.NonAssoc "foo" 5)]
+
+infxrTest :: T.TestTree
+infxrTest =
+  shouldParseAs
+    "infixr foo 5"
+    Parser.parse
+    "infixr foo 5"
+    [AST.InfixDeclar (AST.AssocR "foo" 5)]
+
+infxlTest :: T.TestTree
+infxlTest =
+  shouldParseAs
+    "infixl foo 5"
+    Parser.parse
+    "infixl foo 5"
+    [AST.InfixDeclar (AST.AssocL "foo" 5)]
+
+infixFail :: T.TestTree
+infixFail =
+  T.testCase
+    ("parse: infixl foo.o 5 should fail")
+    (isLeft (Parser.parseOnly "infixl foo.o 5") T.@=? True)
+
 --------------------------------------------------------------------------------
 -- Spacer tests
 --------------------------------------------------------------------------------
 
-spacerSymb :: Bool
+spacerSymb :: T.TestTree
 spacerSymb =
-  case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
-    Done f s -> f == "f" && s == "Foo"
-    _ -> False
+  let res =
+        case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
+          Done f s -> f == "f" && s == "Foo"
+          _ -> False
+   in T.testCase "symbol parser test: Foo f" (res T.@=? True)
 
 --------------------------------------------------------------------------------
 -- validPrefixSymbols
 --------------------------------------------------------------------------------
 
-vpsDashFrontFail :: Bool
+vpsDashFrontFail :: T.TestTree
 vpsDashFrontFail =
-  isLeft (parseOnly Parser.prefixSymbol "-Foo")
+  T.testCase
+    "-Foo is not a valid prefix symbol"
+    (isLeft (parseOnly Parser.prefixSymbol "-Foo") T.@=? True)
 
-vpsDashMiddle :: Bool
+vpsDashMiddle :: T.TestTree
 vpsDashMiddle =
-  isRight (parseOnly Parser.prefixSymbol "Foo-Foo")
+  T.testCase
+    "Foo-Foo is a valid prefix symbol"
+    (isRight (parseOnly Parser.prefixSymbol "Foo-Foo") T.@=? True)
 
 --------------------------------------------------------------------------------
 -- Examples for testing
