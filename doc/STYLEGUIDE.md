@@ -117,6 +117,18 @@ t = ...
 
 ```
 
+Idioms
+------
+
+The following idioms have become standard in the code base:
+
+The type `T` in some module `Foo` denotes the main type of the module.
+
+the function `op` denotes the main functionality of a module and is stateless.
+
+
+the function `exec` denotes the main functionality of a module and is stateful.
+
 Warnings
 --------
 
