@@ -2,17 +2,8 @@ module FrontendContextualise.Infix.ShuntYard where
 
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
-  ( ($),
-    Either (Right),
-    Integer,
-    NonEmpty ((:|)),
-    Symbol,
-    show,
-    (|>),
-  )
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (String)
 
 times, div, add, carrot, carrotL, equality :: Shunt.PredOrEle Symbol a
 div = Shunt.Precedence (Shunt.Pred "/" Shunt.Left' 7)
@@ -34,10 +25,12 @@ allInfixTests =
 
 infixlTest :: T.TestTree
 infixlTest =
-  ( "App \"+\" (Single 3) (App \"*\" (App \"*\" (Single 4) (Single 5)) (Single 6))"
-      T.@=? (show app :: String)
-  )
-    |> T.testCase ("test infixl: 3 + 4 * 5 * 6 ≡ 3 + ((4 * 5) * 6)")
+  Shunt.Single 5
+    |> Shunt.App "*" (Shunt.Single 4)
+    |> flip (Shunt.App "*") (Shunt.Single 6)
+    |> Shunt.App "+" (Shunt.Single 3)
+    |> (T.@=? app)
+    |> T.testCase "test infixl: 3 + 4 * 5 * 6 ≡ 3 + ((4 * 5) * 6)"
   where
     app :: Shunt.Application Symbol Integer
     Right app =
@@ -47,10 +40,12 @@ infixlTest =
 
 infixrTest :: T.TestTree
 infixrTest =
-  ( "App \"+\" (Single 3) (App \"^\" (Single 4) (App \"^\" (Single 5) (Single 6)))"
-      T.@=? (show app :: String)
-  )
-    |> T.testCase ("test infixr: 3 + 4 ^ 5 ^ 6 ≡ 3 + (4 ^ (5 ^ 6))")
+  Shunt.Single 6
+    |> Shunt.App "^" (Shunt.Single 5)
+    |> Shunt.App "^" (Shunt.Single 4)
+    |> Shunt.App "+" (Shunt.Single 3)
+    |> (T.@=? app)
+    |> T.testCase "test infixr: 3 + 4 ^ 5 ^ 6 ≡ 3 + (4 ^ (5 ^ 6))"
   where
     app :: Shunt.Application Symbol Integer
     Right app =
@@ -60,10 +55,11 @@ infixrTest =
 
 mixFailTest :: T.TestTree
 mixFailTest =
-  ( "Left (Clash (Pred \"^l\" Left' 8) (Pred \"^\" Right' 8))"
-      T.@=? (show app :: String)
-  )
-    |> T.testCase ("test infixFail: 3 + 4 ^ 5 ^l 6 ≡ Error l ^l: mixing precedents")
+  Shunt.Pred "^" Shunt.Right' 8
+    |> Shunt.Clash (Shunt.Pred "^l" Shunt.Left' 8)
+    |> Left
+    |> (T.@=? app)
+    |> T.testCase "test infixFail: 3 + 4 ^ 5 ^l 6 ≡ Error l ^l: mixing precedents"
   where
     app :: Either (Shunt.Error Symbol) (Shunt.Application Symbol Integer)
     app =
@@ -73,9 +69,10 @@ mixFailTest =
 
 nonAssocFailTest :: T.TestTree
 nonAssocFailTest =
-  ( "Left (Clash (Pred \"==\" NonAssoc 4) (Pred \"==\" NonAssoc 4))"
-      T.@=? (show app :: String)
-  )
+  Shunt.Pred "==" Shunt.NonAssoc 4
+    |> Shunt.Clash (Shunt.Pred "==" Shunt.NonAssoc 4)
+    |> Left
+    |> (T.@=? app)
     |> T.testCase ("test infixr: 3 + 4 == 5 == 6 ≡ Error: making non assocs assoc")
   where
     app :: Either (Shunt.Error Symbol) (Shunt.Application Symbol Integer)
