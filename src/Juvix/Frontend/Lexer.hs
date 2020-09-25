@@ -120,7 +120,6 @@ validMiddleSymbol w =
     || w == dash
     || w == bang
     || w == question
-    || w == dot
     || w == percent
 
 -- check for \r or \n
