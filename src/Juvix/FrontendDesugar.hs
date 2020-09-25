@@ -21,8 +21,8 @@ import qualified Juvix.FrontendDesugar.RemovePunned.Transform as Punned
 import qualified Juvix.FrontendDesugar.RemoveSignature.Transform as Signature
 import Juvix.Library
 
-f :: [Initial.TopLevel] -> [Target.TopLevel]
-f = desugar
+op :: [Initial.TopLevel] -> [Target.TopLevel]
+op = desugar
 
 desugar :: [Initial.TopLevel] -> [Target.TopLevel]
 desugar xs =

@@ -24,9 +24,9 @@ data Error
   | PathErr Context.PathError
   deriving (Show)
 
-f ::
+op ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-f = contextualize
+op = contextualize
 
 contextualize ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext

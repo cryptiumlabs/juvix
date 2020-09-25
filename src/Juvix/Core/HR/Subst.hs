@@ -2,7 +2,7 @@
 -- - Runs a substitution algorithm over core
 module Juvix.Core.HR.Subst where
 
-import Control.Lens hiding ((|>))
+import Control.Lens hiding (op, (|>))
 import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.HR.Types as Types
@@ -37,19 +37,19 @@ makeLenses ''T
 -- - Turn the Context, T, InScopeSet to being in the Env
 -- - when seeing a new binding determine if we should add that to the Τ type
 --   + For now we just ignore extra values to inline, and continue on our way
-f ::
+op ::
   T primTy primVal -> Types.Term primTy primVal -> Types.Term primTy primVal
-f _ (Types.PrimTy ty) =
+op _ (Types.PrimTy ty) =
   Types.PrimTy ty
-f _ (Types.Star uni) =
+op _ (Types.Star uni) =
   Types.Star uni
-f subst (Types.Pi usage name typ body) =
+op subst (Types.Pi usage name typ body) =
   let (newSubst, newName) = uniqueNameAndUpdateMap subst name
-   in Types.Pi usage newName typ (f newSubst body)
-f subst (Types.Lam name body) =
+   in Types.Pi usage newName typ (op newSubst body)
+op subst (Types.Lam name body) =
   let (newSubst, newName) = uniqueNameAndUpdateMap subst name
-   in Types.Lam newName (f newSubst body)
-f subst (Types.Let usage name bound body)
+   in Types.Lam newName (op newSubst body)
+op subst (Types.Let usage name bound body)
   -- lets are non recrusive!
   | inlineP usage bound =
     let newBound =
@@ -58,13 +58,13 @@ f subst (Types.Let usage name bound body)
           subst
             |> over sub (Map.insert name newBound)
             |> over seenSet (Set.insert name)
-     in f newSubst body
+     in op newSubst body
   | otherwise =
     let (newSubst, newName) = uniqueNameAndUpdateMap subst name
-     in Types.Let usage newName (substElim subst bound) (f newSubst body)
-f _ (Types.Prim prim) =
+     in Types.Let usage newName (substElim subst bound) (op newSubst body)
+op _ (Types.Prim prim) =
   Types.Prim prim
-f subst (Types.Elim elim) =
+op subst (Types.Elim elim) =
   Types.Elim (substElim subst elim)
 
 substElim ::
@@ -76,9 +76,9 @@ substElim subst (Types.Var v) =
     Just el -> el
     Nothing -> Types.Var v
 substElim subst (Types.App fun arg) =
-  Types.App (substElim subst fun) (f subst arg)
+  Types.App (substElim subst fun) (op subst arg)
 substElim subst (Types.Ann usage ann term uni) =
-  Types.Ann usage (f subst ann) (f subst term) uni
+  Types.Ann usage (op subst ann) (op subst term) uni
 
 -- TODO ∷
 -- - take an environment of some kind
