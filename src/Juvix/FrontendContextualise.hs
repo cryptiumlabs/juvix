@@ -41,9 +41,9 @@ contextualize init =
             Left err -> Left (InfixErr err)
             Right xs -> Right xs
 
-contextify
-  :: NonEmpty (NameSymbol.T, [Initial.TopLevel])
-  -> Either Context.PathError (Contextify.Context, [Module.PreQualified])
+contextify ::
+  NonEmpty (NameSymbol.T, [Initial.TopLevel]) ->
+  Either Context.PathError (Contextify.Context, [Module.PreQualified])
 contextify t@((sym, _) :| _) =
   foldM resolveOpens (Context.empty sym, []) (addTop <$> t)
 

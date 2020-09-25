@@ -3,16 +3,17 @@ module Main where
 import Backends.LLVM (backendLLVM)
 import Backends.Michelson (backendMichelson)
 import Core.Common.Context (contextTests)
-import Core.Common.NameSymb (top)
+import qualified Core.Common.NameSymb as NameSymb
 import Core.Conv (coreConversions)
 import Core.EAC2 (eac2Tests)
 import Core.Erasure (erasureTests)
-import qualified Core.IR.Weak as Weak (top)
+import qualified Core.IR.Weak as Weak
 import Core.Parser (coreParser)
 import Core.Typechecker (coreCheckerEval)
 import Frontend.Desugar (allDesugar)
 import Frontend.Golden (contractFiles)
 import Frontend.Parser (allParserTests)
+import qualified FrontendContextualise.Contextify as Contextify
 import FrontendContextualise.Infix.ShuntYard (allInfixTests)
 import FrontendContextualise.Module.Open (openTests)
 import Juvix.Library (IO)
@@ -70,7 +71,8 @@ allCheckedTests =
       contextTests,
       openTests,
       Weak.top,
-      top
+      NameSymb.top,
+      Contextify.top
     ]
 
 main :: IO ()

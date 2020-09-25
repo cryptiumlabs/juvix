@@ -169,6 +169,14 @@ Tests that weak works as expected
   + [[Types]]
   + [[Library]]
 * FrontendContextualise
+** Contextify
+- _Relies on_
+  + [[Context]]
+  + [[NameSymbol]]
+  + [[Parser]]
+  + [[FrontendContextualise]]
+  + [[FrontendDesugar]]
+  + [[Library]]
 ** Infix
 *** ShuntYard
 - _Relies on_
