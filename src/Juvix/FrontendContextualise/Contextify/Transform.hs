@@ -71,6 +71,10 @@ updateTopLevel (Repr.InfixDeclar dec) ctx =
               modsDefined = []
             }
         _ ->
+          -- TODO ∷
+          -- since we aren't doing any reordering, we may come across an
+          -- infix declaration first, and thus we should generate an absurd declaration
+          -- with reordering or an ordered language this would be obvious
           let absurd = undefined
            in Type.P
                 { ctx =
