@@ -124,7 +124,13 @@ transformTermHR (FE.Lambda l) = _
 transformTermHR (FE.Application (FE.App f xs)) = do
   f' <- toElim =<< transformTermHR f
   HR.Elim . foldl HR.App f' <$> traverse transformTermHR xs
-transformTermHR (FE.Primitive p) = _
+transformTermHR (FE.Primitive (FE.Prim p)) = do
+  param <- ask @"param"
+  maybe (throwFF $ UnknownPrimitive p) pure $
+    primTy param p <|> primVal param p
+ where
+  primTy  param p = HR.PrimTy <$> HM.lookup p (P.builtinTypes  param)
+  primVal param p = HR.Prim   <$> HM.lookup p (P.builtinValues param)
 transformTermHR (FE.List (FE.ListLit es)) =
   makeList <$> traverse transformTermHR es
 transformTermHR (FE.Tuple (FE.TupleLit es)) =
