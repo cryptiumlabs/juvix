@@ -216,6 +216,7 @@ arg :: Parser Types.Arg
 arg =
   Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
+
 --------------------------------------------------------------------------------
 -- Signature
 --------------------------------------------------------------------------------
@@ -679,19 +680,19 @@ prefixSymbolGen startParser = do
 symbolEnd :: Parser ()
 symbolEnd = do
   peek <- peekWord8'
-  if | not (Lexer.validMiddleSymbol peek) ->
-       takeWhile emptyCheck *> pure ()
-     | otherwise ->
-       fail "current symbol is not over"
+  if  | not (Lexer.validMiddleSymbol peek) ->
+        takeWhile emptyCheck *> pure ()
+      | otherwise ->
+        fail "current symbol is not over"
 
 reserved :: ByteString -> Parser ()
 reserved res = do
   string res
   peek <- peekWord8'
-  if | not (Lexer.validMiddleSymbol peek) ->
-       takeWhile emptyCheck *> pure ()
-     | otherwise ->
-       fail "symbol is not the reserved symbol"
+  if  | not (Lexer.validMiddleSymbol peek) ->
+        takeWhile emptyCheck *> pure ()
+      | otherwise ->
+        fail "symbol is not the reserved symbol"
 
 -- TODO ∷ this may be bad
 -- this allows "(*).Foo.(<*>)" to be accepted

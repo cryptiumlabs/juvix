@@ -41,8 +41,8 @@ extensible
     -- Declarations
     --------------------------------------------------------------------------------
     data Declaration
-         = Infixivity InfixDeclar
-         deriving (Show, Read, Generic, NFData, D.Data, Eq)
+      = Infixivity InfixDeclar
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     data InfixDeclar
       = NonAssoc Symbol Natural
