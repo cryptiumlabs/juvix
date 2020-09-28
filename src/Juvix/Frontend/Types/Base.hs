@@ -32,14 +32,18 @@ extensible
       | Signature Signature
       | Module Module
       | Function Function
-      | InfixDeclar InfixDeclar
+      | Declaration Declaration
       | TypeClass
       | TypeClassInstance
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     --------------------------------------------------------------------------------
-    -- Infix
+    -- Declarations
     --------------------------------------------------------------------------------
+    data Declaration
+         = Infixivity InfixDeclar
+         deriving (Show, Read, Generic, NFData, D.Data, Eq)
+
     data InfixDeclar
       = NonAssoc Symbol Natural
       | AssocL Symbol Natural
@@ -275,6 +279,11 @@ extensible
       | RefinedE TypeRefine
       | UniverseName UniverseExpression
       | Parened Expression
+      | DeclarationE DeclarationExpression
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
+
+    data DeclarationExpression
+      = DeclareExpession Declaration Expression
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     data Primitive
