@@ -9,7 +9,8 @@
 --   end of the parse
 module Juvix.Frontend.Parser where
 
-import Data.Attoparsec.ByteString hiding (match)
+import qualified Data.Attoparsec.ByteString as Atto
+import Data.Attoparsec.ByteString hiding (match, parse, parseOnly)
 import qualified Data.Attoparsec.Expr as Expr
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as Char8
@@ -38,15 +39,11 @@ import Prelude (String, fail)
 --------------------------------------------------------------------------------
 parseOnly :: ByteString -> Either String [Types.TopLevel]
 parseOnly =
-  Data.Attoparsec.ByteString.parseOnly
-    (eatSpaces (many1 topLevelSN <* endOfInput))
-    . removeComments
+  Atto.parseOnly (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
 
 parse :: ByteString -> Result [Types.TopLevel]
 parse =
-  Data.Attoparsec.ByteString.parse
-    (eatSpaces (many1 topLevelSN <* endOfInput))
-    . removeComments
+  Atto.parse (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -100,7 +97,7 @@ topLevel =
     <|> modT
     <|> Types.ModuleOpen <$> moduleOpen
     <|> Types.Signature <$> signature'
-    <|> Types.InfixDeclar <$> infixDeclar
+    <|> Types.Declaration <$> declaration
 
 expressionGen' ::
   Parser Types.Expression -> Parser Types.Expression
@@ -162,8 +159,13 @@ usage :: Parser Types.Expression
 usage = string "u#" *> expression
 
 --------------------------------------------------------------------------------
--- Infix Declar
+-- Declarations
 --------------------------------------------------------------------------------
+
+declaration :: Parser Types.Declaration
+declaration = do
+  reserved "declare"
+  Types.Infixivity <$> infixDeclar
 
 infixDeclar :: Parser Types.InfixDeclar
 infixDeclar = do
@@ -172,7 +174,8 @@ infixDeclar = do
     (Types.AssocL <$ string "l")
       <|> (Types.AssocR <$ string "r")
       <|> pure Types.NonAssoc
-  name <- eatSpaces prefixSymbolSN
+  symbolEnd
+  name <- prefixSymbolSN
   f name . fromInteger <$> spaceLiner integer
 
 --------------------------------------------------------------------------------
@@ -182,7 +185,7 @@ infixDeclar = do
 functionModStartReserved ::
   ByteString -> (Symbol -> [Types.Arg] -> Parser a) -> Parser a
 functionModStartReserved str f = do
-  _ <- spaceLiner (string str)
+  reserved str
   name <- prefixSymbolSN
   args <- many argSN
   f name args
@@ -213,14 +216,13 @@ arg :: Parser Types.Arg
 arg =
   Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
-
 --------------------------------------------------------------------------------
 -- Signature
 --------------------------------------------------------------------------------
 
 signature' :: Parser Types.Signature
 signature' = do
-  _ <- spaceLiner (string "sig")
+  reserved "sig"
   name <- prefixSymbolSN
   maybeUsage <-
     maybe (fmap Types.Constant constantSN <|> spaceLiner (parens expressionSN))
@@ -231,8 +233,8 @@ signature' = do
 
 signatureConstraint :: Parser [Types.Expression]
 signatureConstraint =
-  pure <$> expression <* string "=>"
-    <|> parens (sepBy expression (skipLiner Lexer.comma)) <* string "=>"
+  pure <$> expression <* reserved "=>"
+    <|> parens (sepBy expression (skipLiner Lexer.comma)) <* reserved "=>"
     <|> pure []
 
 --------------------------------------------------------------------------------
@@ -241,9 +243,9 @@ signatureConstraint =
 
 match :: Parser Types.Match
 match = do
-  _ <- spaceLiner (string "case")
+  reserved "case"
   matchOn <- expressionSN
-  _ <- spaceLiner (string "of")
+  reserved "of"
   matchs <- many1H matchLSN
   pure (Types.Match'' matchOn matchs)
 
@@ -344,11 +346,11 @@ modT = functionModStartReserved "mod" mod
       ( genGuard n a (many1H topLevelSN)
           >>| Types.Module . Types.Mod
       )
-        <* string "end"
+        <* reserved "end"
 
 moduleOpen :: Parser Types.ModuleOpen
 moduleOpen = do
-  _ <- spaceLiner (string "open")
+  reserved "open"
   Types.Open <$> moduleName
 
 moduleName :: Parser Types.ModuleName
@@ -367,9 +369,9 @@ moduleOpenExprParens = do
 
 moduleOpenExprNormal :: Parser Types.ModuleOpenExpr
 moduleOpenExprNormal = do
-  _ <- spaceLiner (string "open")
+  reserved "open"
   name <- moduleNameSN
-  _ <- spaceLiner (string "in")
+  reserved "in"
   expr <- expression
   pure (Types.OpenExpress name expr)
 
@@ -379,7 +381,7 @@ moduleOpenExprNormal = do
 
 typeP :: Parser Types.Type
 typeP = do
-  _ <- spaceLiner (string "type")
+  reserved "type"
   usag <- maybe usage
   name <- prefixSymbolSN
   args <- many prefixSymbolSN
@@ -473,9 +475,9 @@ universeExpression =
 
 block :: Parser Types.Block
 block = do
-  _ <- spaceLiner (string "begin")
+  reserved "begin"
   exp <- expressionSN
-  _ <- string "end"
+  reserved "end"
   pure (Types.Bloc exp)
 
 --------------------------------------------------
@@ -491,27 +493,27 @@ expRecord = Types.ExpressionRecord <$> nameSetMany' expression
 
 mod :: Parser Types.ModuleE
 mod = do
-  _ <- spaceLiner (string "mod")
+  reserved "mod"
   name <- prefixSymbolSN
   args <- many argSN
   guarded <- guard (many1H topLevelSN)
-  _ <- spaceLiner (string "end")
-  _ <- spaceLiner (string "in")
+  reserved "end"
+  reserved "in"
   body <- expression
   pure (Types.ModE (Types.Like name args guarded) body)
 
 let' :: Parser Types.Let
 let' = do
   binds <- functionModGen expression
-  spaceLiner (string "in")
+  reserved "in"
   body <- expression
   pure (Types.Let'' binds body)
 
 letType :: Parser Types.LetType
 letType = do
-  spaceLiner (string "let")
+  reserved "let"
   typ <- typePSN
-  spaceLiner (string "in")
+  reserved "in"
   body <- expression
   pure (Types.LetType'' typ body)
 
@@ -521,7 +523,7 @@ letType = do
 
 cond :: Parser (Types.Cond Types.Expression)
 cond = do
-  _ <- spaceLiner (string "if")
+  reserved "if"
   condB expression
 
 condB :: Parser a -> Parser (Types.Cond a)
@@ -543,7 +545,7 @@ lam :: Parser Types.Lambda
 lam = do
   skipLiner Lexer.backSlash
   args <- many1H matchLogicSN
-  _ <- spaceLiner (string "->")
+  reserved "->"
   body <- expression
   pure (Types.Lamb args body)
 
@@ -674,6 +676,23 @@ prefixSymbolGen startParser = do
   if  | Set.member new reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText (Encoding.decodeUtf8 new))
 
+symbolEnd :: Parser ()
+symbolEnd = do
+  peek <- peekWord8'
+  if | not (Lexer.validMiddleSymbol peek) ->
+       takeWhile emptyCheck *> pure ()
+     | otherwise ->
+       fail "current symbol is not over"
+
+reserved :: ByteString -> Parser ()
+reserved res = do
+  string res
+  peek <- peekWord8'
+  if | not (Lexer.validMiddleSymbol peek) ->
+       takeWhile emptyCheck *> pure ()
+     | otherwise ->
+       fail "symbol is not the reserved symbol"
+
 -- TODO ∷ this may be bad
 -- this allows "(*).Foo.(<*>)" to be accepted
 -- Though Should we allow this since, these are prefix if spelled this way
@@ -718,9 +737,7 @@ reservedWords =
       "begin",
       "sig",
       "mod",
-      "infixl",
-      "infix",
-      "infixr"
+      "declare"
     ]
 
 reservedSymbols :: (Ord a, IsString a) => Set a
@@ -734,11 +751,14 @@ maybe = optional
 spacer :: Parser p -> Parser p
 spacer p = p <* takeWhile (Lexer.space ==)
 
+emptyCheck :: Word8 -> Bool
+emptyCheck x = Lexer.space == x || Lexer.endOfLine x
+
 eatSpaces :: Parser p -> Parser p
-eatSpaces p = takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x) *> p
+eatSpaces p = takeWhile emptyCheck *> p
 
 spaceLiner :: Parser p -> Parser p
-spaceLiner p = p <* takeWhile (\x -> Lexer.space == x || Lexer.endOfLine x)
+spaceLiner p = p <* takeWhile emptyCheck
 
 between :: Word8 -> Parser p -> Word8 -> Parser p
 between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
@@ -796,7 +816,7 @@ arrowExp =
     ( do
         skipLiner Lexer.dash
         exp <- expressionSN
-        _ <- spaceLiner (string "->")
+        reserved "->"
         pure
           (\l r -> Types.ArrowE (Types.Arr' l exp r))
     )
