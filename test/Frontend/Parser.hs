@@ -718,7 +718,7 @@ nonassocTest =
     "infix foo 5"
     Parser.parse
     "infix foo 5"
-    [AST.InfixDeclar (AST.NonAssoc "foo" 5)]
+    [AST.Declaration (AST.Infixivity (AST.NonAssoc "foo" 5))]
 
 infxrTest :: T.TestTree
 infxrTest =
@@ -726,7 +726,7 @@ infxrTest =
     "infixr foo 5"
     Parser.parse
     "infixr foo 5"
-    [AST.InfixDeclar (AST.AssocR "foo" 5)]
+    [AST.Declaration (AST.Infixivity (AST.AssocR "foo" 5))]
 
 infxlTest :: T.TestTree
 infxlTest =
@@ -734,7 +734,7 @@ infxlTest =
     "infixl foo 5"
     Parser.parse
     "infixl foo 5"
-    [AST.InfixDeclar (AST.AssocL "foo" 5)]
+    [AST.Declaration (AST.Infixivity (AST.AssocL "foo" 5))]
 
 infxPlusTest :: T.TestTree
 infxPlusTest =
@@ -742,7 +742,7 @@ infxPlusTest =
     "infixl (+) 5"
     Parser.parse
     "infixl (+) 5"
-    [AST.InfixDeclar (AST.AssocL "+" 5)]
+    [AST.Declaration (AST.Infixivity (AST.AssocL "+" 5))]
 
 infixPlusFail :: T.TestTree
 infixPlusFail =
