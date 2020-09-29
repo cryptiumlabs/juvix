@@ -50,11 +50,12 @@ allParserTests =
       vpsDashFrontFail,
       vpsDashMiddle,
       infxPlusTest,
-      infixPlusFail
+      infixPlusFail,
+      reservedInfix,
+      letwordFail,
+      reservedInfix,
+      caseOfWords
     ]
-
--- add let(+) test
--- add letfad test
 
 --------------------------------------------------------------------------------
 -- Parser Checker
@@ -755,6 +756,56 @@ infixFail =
   T.testCase
     ("parse: declare infixl foo.o 5 should fail")
     (isLeft (Parser.parseOnly "declare infixl foo.o 5") T.@=? True)
+
+--------------------------------------------------
+-- reserved word tests
+--------------------------------------------------
+
+letwordFail :: T.TestTree
+letwordFail =
+  T.testCase
+    ("parse: letfad = 3 should fail")
+    (isLeft (Parser.parseOnly "letfad = 3") T.@=? True)
+
+reservedInfix :: T.TestTree
+reservedInfix =
+  shouldParseAs
+    "reserved then infex"
+    Parser.parse
+    "let(+) = %Michelson.plus"
+    [ NameSym.fromSymbol "Michelson.plus"
+        |> AST.Prim
+        |> AST.Primitive
+        |> AST.Body
+        |> AST.Like "+" []
+        |> AST.Func
+        |> AST.Function
+    ]
+
+caseOfWords :: T.TestTree
+caseOfWords =
+  shouldParseAs
+    "caseOfWords"
+    Parser.parse
+    "let foo = case x-of (of-x)of | x -> y"
+    [ NameSym.fromSymbol "y"
+        |> AST.Name
+        |> AST.MatchL (AST.MatchLogic (AST.MatchName "x") Nothing)
+        |> (:| [])
+        |> AST.Match''
+          ( NameSym.fromSymbol "of-x"
+              |> AST.Name
+              |> AST.Parened
+              |> (:| [])
+              |> AST.App (AST.Name (NameSym.fromSymbol "x-of"))
+              |> AST.Application
+          )
+        |> AST.Match
+        |> AST.Body
+        |> AST.Like "foo" []
+        |> AST.Func
+        |> AST.Function
+    ]
 
 --------------------------------------------------------------------------------
 -- Spacer tests
