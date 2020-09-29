@@ -54,7 +54,9 @@ allParserTests =
       reservedInfix,
       letwordFail,
       reservedInfix,
-      caseOfWords
+      caseOfWords,
+      questionMarktest,
+      bangtest
     ]
 
 --------------------------------------------------------------------------------
@@ -834,6 +836,18 @@ vpsDashMiddle =
   T.testCase
     "Foo-Foo is a valid prefix symbol"
     (isRight (parseOnly Parser.prefixSymbol "Foo-Foo") T.@=? True)
+
+questionMarktest :: T.TestTree
+questionMarktest =
+  T.testCase
+    "foo? is a valid prefix symbol"
+    (parseOnly Parser.prefixSymbol "foo?" T.@=? Right "foo?")
+
+bangtest :: T.TestTree
+bangtest =
+  T.testCase
+    "foo! is a valid prefix symbol"
+    (parseOnly Parser.prefixSymbol "foo!" T.@=? Right "foo!")
 
 --------------------------------------------------------------------------------
 -- Examples for testing
