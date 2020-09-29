@@ -37,4 +37,4 @@ infixPlaceTest =
     Right (ctx, _) =
       Contextualize.contextify ((NameSymbol.fromSymbol "Foo", deusgared) :| [])
     Right deusgared =
-      Desugar.op <$> (Parser.parseOnly "let (+) = 3 infixl (+) 5")
+      Desugar.op <$> (Parser.parseOnly "let (+) = 3 declare infixl (+) 5")
