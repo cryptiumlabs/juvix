@@ -78,6 +78,10 @@ extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
 
 extendInfix "Infix" [] [t|T|] Ext.extendInfix
 
+extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
+
+extendDeclarationExpression "DeclarationExpression" [] [t|T|] Ext.extendDeclarationExpression
+
 --------------------------------------------------------------------------------
 -- Instantiating for show derivation
 --------------------------------------------------------------------------------
@@ -102,4 +106,4 @@ extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 
 extendModuleOpenExpr "ModuleOpenExpr" [] [t|T|] Ext.extendModuleOpenExpr
 
-extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
+extendDeclaration "Declaration" [] [t|T|] Ext.extendDeclaration

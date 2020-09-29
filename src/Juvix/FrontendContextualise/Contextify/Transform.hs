@@ -54,7 +54,7 @@ updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
           opens = [],
           modsDefined
         }
-updateTopLevel (Repr.InfixDeclar dec) ctx =
+updateTopLevel (Repr.Declaration (Repr.Infixivity dec)) ctx =
   let (name, prec) =
         case dec of
           Repr.AssocL n assoc ->

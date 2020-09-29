@@ -80,6 +80,10 @@ extendMatchLogicStart "MatchLogicStart" [] [t|T|] Ext.extendMatchLogicStart
 
 extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
 
+extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
+
+extendDeclarationExpression "DeclarationExpression" [] [t|T|] Ext.extendDeclarationExpression
+
 --------------------------------------------------------------------------------
 -- Instantiating for show derivation
 --------------------------------------------------------------------------------
@@ -102,4 +106,4 @@ extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE
 
-extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
+extendDeclaration "Declaration" [] [t|T|] Ext.extendDeclaration
