@@ -27,8 +27,8 @@ transformTopLevel (Old.ModuleOpen t) =
   New.ModuleOpen (transformModuleOpen t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
-transformTopLevel (Old.InfixDeclar i) =
-  New.InfixDeclar (transformInfixDeclar i)
+transformTopLevel (Old.Declaration i) =
+  New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
   New.TypeClass
 transformTopLevel Old.TypeClassInstance =
@@ -75,10 +75,22 @@ transformExpression (Old.UniverseName i) =
   New.UniverseName (transformUniverseExpression i)
 transformExpression (Old.Parened e) =
   New.Parened (transformExpression e)
+transformExpression (Old.DeclarationE e) =
+  New.DeclarationE (transformDeclarationExpression e)
 
 --------------------------------------------------------------------------------
--- Infix Declaration
+-- Declaration
 --------------------------------------------------------------------------------
+
+transformDeclarationExpression ::
+  Old.DeclarationExpression -> New.DeclarationExpression
+transformDeclarationExpression (Old.DeclareExpession i e) =
+  New.DeclareExpession (transformDeclaration i) (transformExpression e)
+
+transformDeclaration :: Old.Declaration -> New.Declaration
+transformDeclaration (Old.Infixivity i) =
+  New.Infixivity (transformInfixDeclar i)
+
 transformInfixDeclar :: Old.InfixDeclar -> New.InfixDeclar
 transformInfixDeclar (Old.AssocL n i) = New.AssocL n i
 transformInfixDeclar (Old.AssocR n i) = New.AssocR n i

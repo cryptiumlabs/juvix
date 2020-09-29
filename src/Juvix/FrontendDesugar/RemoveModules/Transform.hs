@@ -37,9 +37,9 @@ transformTop body = foldr combine record body
           New.LetType (New.LetType'' (transformType typ) expression)
         Old.Function (Old.Func func) ->
           New.Let (New.Let'' (transformFunctionLike func) expression)
-        -- TODO ∷ update this later to handle infix declarations better
-        Old.InfixDeclar _ ->
-          undefined
+        Old.Declaration dec ->
+          New.DeclarationE
+            (New.DeclareExpession (transformDeclaration dec) expression)
         -- TODO ∷ update parser and add LetSig
         Old.Signature _sig ->
           undefined
@@ -63,7 +63,7 @@ transformTop body = foldr combine record body
       return name
     f (Old.ModuleOpen _) =
       empty
-    f (Old.InfixDeclar _) =
+    f (Old.Declaration _) =
       empty
     f (Old.Signature (Old.Sig name _ _ _)) =
       return name
@@ -100,8 +100,8 @@ transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
 transformTopLevel (Old.Module m) =
   transformModule m
-transformTopLevel (Old.InfixDeclar i) =
-  New.InfixDeclar (transformInfixDeclar i)
+transformTopLevel (Old.Declaration i) =
+  New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
   New.TypeClass
 transformTopLevel Old.TypeClassInstance =
@@ -152,10 +152,22 @@ transformExpression (Old.UniverseName i) =
   New.UniverseName (transformUniverseExpression i)
 transformExpression (Old.Parened e) =
   New.Parened (transformExpression e)
+transformExpression (Old.DeclarationE e) =
+  New.DeclarationE (transformDeclarationExpression e)
 
 --------------------------------------------------------------------------------
--- Infix Declaration
+-- Declaration
 --------------------------------------------------------------------------------
+
+transformDeclarationExpression ::
+  Old.DeclarationExpression -> New.DeclarationExpression
+transformDeclarationExpression (Old.DeclareExpession i e) =
+  New.DeclareExpession (transformDeclaration i) (transformExpression e)
+
+transformDeclaration :: Old.Declaration -> New.Declaration
+transformDeclaration (Old.Infixivity i) =
+  New.Infixivity (transformInfixDeclar i)
+
 transformInfixDeclar :: Old.InfixDeclar -> New.InfixDeclar
 transformInfixDeclar (Old.AssocL n i) = New.AssocL n i
 transformInfixDeclar (Old.AssocR n i) = New.AssocR n i

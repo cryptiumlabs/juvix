@@ -111,6 +111,7 @@ expressionGen' p =
     <|> Types.Block <$> block
     <|> Types.Lambda <$> lam
     <|> Types.Primitive <$> primitives
+    <|> Types.DeclarationE <$> declarationExpression
     <|> try p
     <|> expressionArguments
 
@@ -166,6 +167,10 @@ declaration :: Parser Types.Declaration
 declaration = do
   reserved "declare"
   Types.Infixivity <$> infixDeclar
+
+declarationExpression :: Parser Types.DeclarationExpression
+declarationExpression =
+  Types.DeclareExpession <$> declaration <*> (reserved "in" *> expression)
 
 infixDeclar :: Parser Types.InfixDeclar
 infixDeclar = do
