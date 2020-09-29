@@ -772,7 +772,7 @@ letwordFail =
 reservedInfix :: T.TestTree
 reservedInfix =
   shouldParseAs
-    "reserved then infex"
+    "reserved then infix"
     Parser.parse
     "let(+) = %Michelson.plus"
     [ NameSym.fromSymbol "Michelson.plus"
