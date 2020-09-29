@@ -715,46 +715,46 @@ parens1 =
 nonassocTest :: T.TestTree
 nonassocTest =
   shouldParseAs
-    "infix foo 5"
+    "declare infix foo 5"
     Parser.parse
-    "infix foo 5"
+    "declare infix foo 5"
     [AST.Declaration (AST.Infixivity (AST.NonAssoc "foo" 5))]
 
 infxrTest :: T.TestTree
 infxrTest =
   shouldParseAs
-    "infixr foo 5"
+    "declare infixr foo 5"
     Parser.parse
-    "infixr foo 5"
+    "declare infixr foo 5"
     [AST.Declaration (AST.Infixivity (AST.AssocR "foo" 5))]
 
 infxlTest :: T.TestTree
 infxlTest =
   shouldParseAs
-    "infixl foo 5"
+    "declare infixl foo 5"
     Parser.parse
-    "infixl foo 5"
+    "declare infixl foo 5"
     [AST.Declaration (AST.Infixivity (AST.AssocL "foo" 5))]
 
 infxPlusTest :: T.TestTree
 infxPlusTest =
   shouldParseAs
-    "infixl (+) 5"
+    "declare infixl (+) 5"
     Parser.parse
-    "infixl (+) 5"
+    "declare infixl (+) 5"
     [AST.Declaration (AST.Infixivity (AST.AssocL "+" 5))]
 
 infixPlusFail :: T.TestTree
 infixPlusFail =
   T.testCase
-    ("parse: infixl + 5 should fail")
-    (isLeft (Parser.parseOnly "infixl + 5") T.@=? True)
+    ("parse: declare infixl + 5 should fail")
+    (isLeft (Parser.parseOnly "declare infixl + 5") T.@=? True)
 
 infixFail :: T.TestTree
 infixFail =
   T.testCase
-    ("parse: infixl foo.o 5 should fail")
-    (isLeft (Parser.parseOnly "infixl foo.o 5") T.@=? True)
+    ("parse: declare infixl foo.o 5 should fail")
+    (isLeft (Parser.parseOnly "declare infixl foo.o 5") T.@=? True)
 
 --------------------------------------------------------------------------------
 -- Spacer tests

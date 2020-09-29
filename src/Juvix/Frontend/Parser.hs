@@ -682,22 +682,23 @@ prefixSymbolGen startParser = do
   if  | Set.member new reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText (Encoding.decodeUtf8 new))
 
-symbolEnd :: Parser ()
-symbolEnd = do
-  peek <- peekWord8'
-  if  | not (Lexer.validMiddleSymbol peek) ->
+symbolEndGen :: String -> Parser ()
+symbolEndGen string = do
+  peek <- peekWord8
+  case peek of
+    Just peek
+      | not (Lexer.validMiddleSymbol peek) ->
         takeWhile emptyCheck *> pure ()
       | otherwise ->
-        fail "current symbol is not over"
+        fail string
+    Nothing -> pure ()
+
+symbolEnd :: Parser ()
+symbolEnd = symbolEndGen "current symbol is not over"
 
 reserved :: ByteString -> Parser ()
-reserved res = do
-  string res
-  peek <- peekWord8'
-  if  | not (Lexer.validMiddleSymbol peek) ->
-        takeWhile emptyCheck *> pure ()
-      | otherwise ->
-        fail "symbol is not the reserved symbol"
+reserved res =
+  string res *> symbolEndGen "symbol is not the reserved symbol"
 
 -- TODO ∷ this may be bad
 -- this allows "(*).Foo.(<*>)" to be accepted
