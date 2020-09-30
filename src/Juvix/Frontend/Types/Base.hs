@@ -432,6 +432,10 @@ extensible
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
     |]
 
+
+data Header param
+  = Header NameSymb [TopLevel' param]
+
 --------------------------------------------------------------------------------
 -- Lens creation
 --------------------------------------------------------------------------------

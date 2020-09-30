@@ -1,5 +1,8 @@
 * Syntax
 #+BEGIN_SRC bnf
+  header ::= mod <symbol> where <top-level>*
+           | <top-level>*
+
   top-level ::= <type>
               | <module-open>
               | <type-class>
