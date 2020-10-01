@@ -1,0 +1,7 @@
+-- it seems custom arrow syntax is not operational
+
+let (->) = %Builtin.ArrowOmega
+
+declare infixr (->) 1
+
+declare infixr (:) 2
