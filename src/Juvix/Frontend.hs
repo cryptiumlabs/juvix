@@ -1,6 +1,5 @@
 module Juvix.Frontend where
 
-import qualified Control.Arrow as Arrow
 import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
@@ -10,22 +9,26 @@ import Juvix.Library
 import qualified System.FilePath as FilePath
 import Prelude (String)
 
+-- we abuse laziness here
 -- TODO ∷ add directory option
 -- this will add top level to the thing, and properly handle paths
 ofPath :: [FilePath] -> IO (Either String [(NameSymbol.T, [Types.TopLevel])])
-ofPath files = do
-  read <- ByteString.readFile `traverse` files
-  case traverse Parser.parseOnly read of
+ofPath =
+  -- fmap gets through the IO, so that sequenceA flips the either and list
+  fmap sequenceA . traverse ofSingleFile
+
+ofSingleFile :: FilePath -> IO (Either String (NameSymbol.T, [Types.TopLevel]))
+ofSingleFile file = do
+  read <- ByteString.readFile file
+  case Parser.parseOnly read of
     Left x ->
       pure (Left x)
-    Right xs ->
-      zip files xs
-        |> fmap
-          ( Arrow.first
-              (NameSymbol.fromSymbol . intern . toUpper . FilePath.takeBaseName)
-          )
-        |> Right
-        |> pure
+    Right (Types.Header name xs) ->
+      pure (Right (name, xs))
+    Right (Types.NoHeader xs) ->
+      let toName =
+            NameSymbol.fromSymbol . intern . toUpper . FilePath.takeBaseName
+       in pure (Right (toName file, xs))
 
 toUpper :: String -> String
 toUpper (x : xs) = Char.toUpper x : xs

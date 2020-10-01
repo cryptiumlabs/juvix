@@ -1,11 +1,11 @@
 module Frontend.Golden where
 
 import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
-import Data.ByteString (writeFile)
+import qualified Data.ByteString as ByteString (writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types (TopLevel)
+import Juvix.Frontend.Types (TopLevel, extractTopLevel)
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
@@ -41,24 +41,22 @@ parsedContract file = do
           <> toByteString context
           <> "The error message is "
           <> toByteString error
-      failIO i context error = do
-        _ <-
-          Juvix.Library.writeFile
-            (file <> ".parsed")
-            (decodeUtf8 $ failOutput i context error)
-        return []
+      failIO i context error =
+        writeFile (file <> ".parsed") (decodeUtf8 $ failOutput i context error)
   --
   readString <- readFile file
   --
   let rawContract = encodeUtf8 readString
-  case Parser.parse rawContract of
-    Fail i context err -> failIO i context err
-    Done _i r -> return r
-    Partial cont ->
-      case cont "" of
-        Done _i r -> return r
-        Fail i context err -> failIO i context err
-        Partial _cont' -> return []
+      --
+      handleParse (Partial cont) handlePartial =
+        handlePartial cont
+      handleParse (Fail i context err) _ =
+        failIO i context err *> pure []
+      handleParse (Done _ r) _ =
+        return (extractTopLevel r)
+  --
+  handleParse (Parser.parse rawContract) $
+    \cont -> handleParse (cont "") (const (return []))
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do
@@ -97,7 +95,7 @@ goldenTest name file =
             . const "this isn't doing anything?" -- (Prelude.unlines . map show))
               -- update the golden file, not working atm
         )
-        ( Data.ByteString.writeFile goldenFileName
+        ( ByteString.writeFile goldenFileName
             . const "this isn't either" -- ((encodeUtf8 . Text.pack) . ppShowList))
         )
 
