@@ -18,13 +18,31 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 
 
-data Error primTy primVal =
-    UnknownUnsupported (Maybe IR.GlobalName)
-  | ConstraintsUnsupported [FE.Expression]
+data Error =
+-- features not yet implemented
+    -- | constraints are not yet implemented
+    ConstraintsUnsupported [FE.Expression]
+    -- | refinements are not yet implemented
   | RefinementsUnsupported FE.TypeRefine
+    -- | universe polymorphism is not yet implemented
   | UniversesUnsupported FE.UniverseExpression
+    -- | implicit arguments are not yet implemented
+  | ImplicitsUnsupported FE.ArrowExp
+    -- | type inference for definitions is not yet implemented
+  | SigRequired (FE.Final Ctx.Definition)
+    -- | head of application not an Elim
+  | NotAnElim FE.Expression
+-- actual errors
+    -- | unknown found at declaration level
+  | UnknownUnsupported (Maybe IR.GlobalName)
+    -- | current backend doesn't support this type of constant
   | UnsupportedConstant FE.Constant
+    -- | current backend doesn't have this primitive
   | UnknownPrimitive NameSymbol.T
+    -- | expression is not a usage
+  | NotAUsage FE.Expression
+    -- | expression is not 0 or ω
+  | NotAGUsage FE.Expression
 
 data CoreSig' ext primTy primVal =
     DataSig (IR.Term' ext primTy primVal)
@@ -72,12 +90,12 @@ data FFState primTy primVal =
   deriving Generic
 
 type EnvAlias primTy primVal =
-  ExceptT (Error primTy primVal) (State (FFState primTy primVal))
+  ExceptT Error (State (FFState primTy primVal))
 
 newtype Env primTy primVal a =
     Env {unEnv :: EnvAlias primTy primVal a}
   deriving newtype (Functor, Applicative, Monad)
-  deriving (HasThrow "fromFrontendError" (Error primTy primVal))
+  deriving (HasThrow "fromFrontendError" Error)
     via MonadError (EnvAlias primTy primVal)
   deriving
     ( HasSource "frontend" FE.FinalContext,
@@ -96,7 +114,7 @@ newtype Env primTy primVal a =
     )
     via StateField "core" (EnvAlias primTy primVal)
 
-throwFF :: Error primTy primVal -> Env primTy primVal a
+throwFF :: Error -> Env primTy primVal a
 throwFF = throw @"fromFrontendError"
 
 
@@ -122,7 +140,7 @@ transformTermHR (FE.Match m) = _
 transformTermHR (FE.Name n) = pure $ HR.Elim $ HR.Var _n
 transformTermHR (FE.Lambda l) = _
 transformTermHR (FE.Application (FE.App f xs)) = do
-  f' <- toElim =<< transformTermHR f
+  f' <- toElim f =<< transformTermHR f
   HR.Elim . foldl HR.App f' <$> traverse transformTermHR xs
 transformTermHR (FE.Primitive (FE.Prim p)) = do
   param <- ask @"param"
@@ -154,83 +172,84 @@ transformTermHR (FE.UniverseName i) =
 transformTermHR (FE.Parened e) = transformTermHR e
 
 transformArrow :: FE.ArrowExp -> Env primTy primVal (HR.Term primTy primVal)
-transformArrow (FE.Arr' xa π b) =
+transformArrow f@(FE.Arr' xa π b) =
   case xa of
-    -- TODO implicit arrows
     FE.NamedTypeE (FE.NamedType' x a) -> go π (getName x) a b
     a                                 -> go π _unusedName a b
  where
-  getName (FE.Implicit x) = x
-  getName (FE.Concrete x) = x
+  getName (FE.Concrete x) = pure x
+  getName (FE.Implicit x) = throwFF $ ImplicitsUnsupported f
   go π x a b =
     HR.Pi <$> transformUsage π
-          <*> pure x
+          <*> x
           <*> transformTermHR a
           <*> transformTermHR b
 
 makeList :: [HR.Term primTy primVal] -> HR.Term primTy primVal
-makeList = _
+makeList =
+  -- TODO: make lists a builtin syntax form in core (translated to
+  -- e.g. michelson lists)
+  _
 
 makeTuple :: [HR.Term primTy primVal] -> HR.Term primTy primVal
 makeTuple [t] = t
-makeTuple _ts = _
+makeTuple _ts =
+  -- TODO: add Σ types to core and translate to nested pairs
+  _
 
 makeRecord :: [(NameSymbol.T, HR.Term primTy primVal)]
            -> HR.Term primTy primVal
-makeRecord = _
+makeRecord =
+  -- TODO:
+  -- 1) an extended version of core with record literals to begin with
+  -- 2) translation after typechecking of these to an application of the right
+  --    constructor to the fields in the originally declared order
+  _
 
-toElim :: HR.Term primTy primVal -> Env primTy primVal (HR.Elim primTy primVal)
-toElim (HR.Elim e) = pure e
-toElim t = do
-  π <- _
-  ty <- _
-  ℓ <- _
-  pure $ HR.Ann π t ty ℓ
+toElim :: FE.Expression -- ^ the original expression
+       -> HR.Term primTy primVal
+       -> Env primTy primVal (HR.Elim primTy primVal)
+toElim _ (HR.Elim e) = pure e
+toElim e _           = throwFF $ NotAnElim e
+  -- TODO put an annotation with metas for the usage/type
 
 transformUsage :: FE.Expression -> Env primTy primVal Usage.T
-transformUsage = _
-
+transformUsage (FE.Constant (FE.Number (FE.Integer' i))) | i >= 0 =
+  pure $ Usage.SNat $ fromInteger i
+transformUsage e = throwFF $ NotAUsage e
+-- FIXME ω
 
 transformGUsage :: FE.Expression -> Env primTy primVal IR.GlobalUsage
-transformGUsage = _
+transformGUsage (FE.Constant (FE.Number (FE.Integer' 0))) = pure IR.GZero
+transformGUsage e = throwFF $ NotAGUsage e
+-- FIXME ω
 
 
 transformSig :: FE.Final Ctx.Definition
              -> Env primTy primVal (CoreSigHR primTy primVal)
-transformSig (Ctx.Def π msig _ _) = transformValSig π msig -- why two usages?
-transformSig (Ctx.Record _ msig) = transformValSig Nothing msig
-transformSig (Ctx.TypeDeclar (FE.Typ π _ args dat)) =
-  -- args :: [Symbol], dat :: FE.Data
-  DataSig <$> _
+transformSig def@(Ctx.Def π msig _ _) =
+  -- why two usages?
+  transformValSig def π msig
+transformSig def@(Ctx.Record _ msig) = transformValSig def Nothing msig
+transformSig (Ctx.TypeDeclar typ) = DataSig <$> transformType typ
 transformSig (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
 transformSig Ctx.CurrentNameSpace = _ -- TODO ???
 
 transformType :: forall primTy primVal.
   FE.Type -> Env primTy primVal (HR.Term primTy primVal)
-transformType (FE.Typ π _ args dat) = do
-  ty' <- transformTermHR $ datType dat
-  foldrM makePi ty' args
- where
-  makePi :: Symbol -> HR.Term primTy primVal
-         -> Env primTy primVal (HR.Term primTy primVal)
-  makePi a b = HR.Pi _π a <$> freshMeta <*> pure b
+transformType (FE.Typ {typeForm = FE.Arrowed {dataArrow}}) =
+  transformTermHR dataArrow
+transformType typ@(FE.Typ {typeForm = FE.NonArrowed {}}) =
+  throwFF $ SigRequired $ Ctx.TypeDeclar typ
 
-  datType :: FE.Data -> FE.Expression
-  -- TODO should Arrowed be allowed to be repeated?
-  datType (FE.Arrowed a b) = FE.ArrowE (FE.Arr' a _ _star)
-  datType (FE.NonArrowed _) = _star
-
-transformValSig :: Maybe Usage.T -> Maybe FE.Signature
+transformValSig :: FE.Final Ctx.Definition
+                -> Maybe Usage.T -> Maybe FE.Signature
                 -> Env primTy primVal (CoreSigHR primTy primVal)
-transformValSig π (Just (FE.Sig _ π' ty cons))
+transformValSig _ π (Just (FE.Sig _ π' ty cons))
   | null cons = ValSig _π <$> transformTermHR ty
   | otherwise = throwFF $ ConstraintsUnsupported cons
-transformValSig π Nothing = ValSig _π <$> freshMeta
-
--- will have to be an HR+Unify term but TODO
-freshMeta :: Env primTy primVal (HR.Term primTy primVal)
-freshMeta = _
+transformValSig def π Nothing = throwFF $ SigRequired def
 
 transformDef :: FE.Final Ctx.Definition
              -> Env primTy primVal [IR.Global primTy primVal]
