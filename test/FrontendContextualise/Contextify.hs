@@ -6,6 +6,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Frontend.Parser as Parser
+import qualified Juvix.Frontend.Types as AST
 import qualified Juvix.FrontendContextualise as Contextualize
 import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
@@ -37,4 +38,5 @@ infixPlaceTest =
     Right (ctx, _) =
       Contextualize.contextify ((NameSymbol.fromSymbol "Foo", deusgared) :| [])
     Right deusgared =
-      Desugar.op <$> (Parser.parseOnly "let (+) = 3 declare infixl (+) 5")
+      Desugar.op . AST.extractTopLevel
+        <$> Parser.parseOnly "let (+) = 3 declare infixl (+) 5"
