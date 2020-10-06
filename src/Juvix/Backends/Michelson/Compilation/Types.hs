@@ -13,8 +13,16 @@ import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Instr as Instr
 
-newtype PrimTy
+data PrimTy
   = PrimTy M.Type
+  -- extra types that need arguments
+  | Pair
+  | Lambda
+  | Map
+  | BigMap
+  | Option
+  | List
+  | Set
   deriving (Show, Eq, Generic)
 
 data NewPrim
@@ -63,6 +71,19 @@ data NewPrim
   | UpdateBMap
   | GetMap
   | GetBMap
+  -- Extra values which need types
+  | Right'
+  | Left'
+  | Nil
+  | EmptyS
+  | EmptyM
+  | EmptyBM
+  | Cast
+  | Contract
+  | CreateContract
+  | Loop
+  | Iter
+  | MapOp
   deriving (Show, Eq, Generic)
 
 type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
