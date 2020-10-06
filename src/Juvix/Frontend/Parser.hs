@@ -37,13 +37,13 @@ import Prelude (String, fail)
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
-parseOnly :: ByteString -> Either String [Types.TopLevel]
+parseOnly :: ByteString -> Either String (Types.Header Types.TopLevel)
 parseOnly =
-  Atto.parseOnly (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
+  Atto.parseOnly (eatSpaces (header <* endOfInput)) . removeComments
 
-parse :: ByteString -> Result [Types.TopLevel]
+parse :: ByteString -> Result (Types.Header Types.TopLevel)
 parse =
-  Atto.parse (eatSpaces (many1 topLevelSN <* endOfInput)) . removeComments
+  Atto.parse (eatSpaces (header <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -85,6 +85,24 @@ breakComment = ByteString.breakSubstring " -- "
 
 breakCommentStart :: ByteString -> (ByteString, ByteString)
 breakCommentStart = ByteString.breakSubstring "-- "
+
+--------------------------------------------------------------------------------
+-- Header
+--------------------------------------------------------------------------------
+
+header :: Parser (Types.Header Types.TopLevel)
+header = try headerCase <|> noHeaderCase
+
+headerCase :: Parser (Types.Header Types.TopLevel)
+headerCase = do
+  reserved "mod"
+  name <- prefixSymbolDotSN
+  reserved "where"
+  Types.Header name <$> many1 topLevelSN
+
+noHeaderCase :: Parser (Types.Header Types.TopLevel)
+noHeaderCase = do
+  Types.NoHeader <$> many1 topLevelSN
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -744,7 +762,8 @@ reservedWords =
       "begin",
       "sig",
       "mod",
-      "declare"
+      "declare",
+      "where"
     ]
 
 reservedSymbols :: (Ord a, IsString a) => Set a
