@@ -23,6 +23,9 @@ setOccurrenceMap term = do
       modify' @"occurrenceMap" (Map.insertWith (+) sym 1)
     Erased.Lam _ b -> do
       setOccurrenceMap b
+    Erased.Pair a b -> do
+      setOccurrenceMap a
+      setOccurrenceMap b
     Erased.Let _ b t -> do
       setOccurrenceMap b
       setOccurrenceMap t
@@ -51,6 +54,7 @@ parameterizeType ty = do
       arg <- parameterizeType arg
       body <- parameterizeType body
       pure (EAC.PArrT param arg body)
+    Erased.Sig {} -> undefined
     Erased.Star _ -> undefined
 
 -- Parameterize type assignment.
@@ -207,6 +211,8 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
         (EAC.Constraint [EAC.ConstraintVar 1 (bangParam resTy)] (EAC.Gte 0))
       -- Return parameterized term.
       pure (EAC.RBang param (EAC.RLam sym body), resTy)
+    Erased.Pair _s _t -> do
+      error "TODO"
     Erased.Let _s _t _b -> do
       error "TODO"
     Erased.App a b -> do

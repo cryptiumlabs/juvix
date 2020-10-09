@@ -49,6 +49,11 @@ op subst (Types.Pi usage name typ body) =
 op subst (Types.Lam name body) =
   let (newSubst, newName) = uniqueNameAndUpdateMap subst name
    in Types.Lam newName (op newSubst body)
+op subst (Types.Sig usage name typ body) =
+  let (newSubst, newName) = uniqueNameAndUpdateMap subst name
+   in Types.Sig usage newName typ (op newSubst body)
+op subst (Types.Pair left right) =
+  Types.Pair (op subst left) (op subst right)
 op subst (Types.Let usage name bound body)
   -- lets are non recrusive!
   | inlineP usage bound =

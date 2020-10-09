@@ -9,6 +9,7 @@ import qualified Extensible as Ext
 import Juvix.Core.Erased.Types as Type
   ( Type,
     pattern Pi,
+    pattern Sig,
     pattern PrimTy,
     pattern Star,
     pattern SymT,
@@ -75,6 +76,7 @@ do
         { Erased.typeVar = typed,
           Erased.typePrim = typed,
           Erased.typeLam = typed,
+          Erased.typePair = typed,
           Erased.typeLet = typedTuple,
           Erased.typeApp = typed
         }
@@ -132,6 +134,7 @@ data FunClause primTy primVal
 
 data Pattern primTy primVal
   = PCon GlobalName [Pattern primTy primVal]
+  | PPair (Pattern primTy primVal) (Pattern primTy primVal)
   | PVar PatternVar
   | PDot (Term primTy primVal)
   | PPrim primVal
@@ -148,6 +151,7 @@ getType :: Term primTy primVal -> Type primTy
 getType (Var _ ty) = ty
 getType (Prim _ ty) = ty
 getType (Lam _ _ ty) = ty
+getType (Pair _ _ ty) = ty
 getType (Let _ _ _ (_, ty)) = ty
 getType (App _ _ ty) = ty
 
@@ -155,5 +159,6 @@ eraseAnn :: Term primTy primVal -> Erased.Term primVal
 eraseAnn (Var sym _) = Erased.Var sym
 eraseAnn (Prim p _) = Erased.Prim p
 eraseAnn (Lam s b _) = Erased.Lam s (eraseAnn b)
+eraseAnn (Pair a b _) = Erased.Pair (eraseAnn a) (eraseAnn b)
 eraseAnn (Let s a b _) = Erased.Let s (eraseAnn a) (eraseAnn b)
 eraseAnn (App a b _) = Erased.App (eraseAnn a) (eraseAnn b)

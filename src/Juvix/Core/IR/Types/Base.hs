@@ -46,6 +46,10 @@ extensible
       | -- | LAM Introduction rule of PI.
         -- The abstracted variables usage is tracked with the Usage(π).
         Lam (Term primTy primVal)
+      | -- | Dependent pair (Σ) type, with each half having its own usage
+        Sig Usage (Term primTy primVal) (Term primTy primVal)
+      | -- | Pair value
+        Pair (Term primTy primVal) (Term primTy primVal)
       | -- | Let binder.
         -- the local definition is bound to de Bruijn index 0.
         Let Usage (Elim primTy primVal) (Term primTy primVal)
@@ -72,6 +76,8 @@ extensible
       | VPrimTy primTy
       | VPi Usage (Value primTy primVal) (Value primTy primVal)
       | VLam (Value primTy primVal)
+      | VSig Usage (Value primTy primVal) (Value primTy primVal)
+      | VPair (Value primTy primVal) (Value primTy primVal)
       | VNeutral (Neutral primTy primVal)
       | VPrim primVal
       deriving (Eq, Show, Generic, Data, NFData)
@@ -87,6 +93,7 @@ extensible
     -- TODO absurd pattern
     data Pattern primTy primVal
       = PCon GlobalName [Pattern primTy primVal]
+      | PPair (Pattern primTy primVal) (Pattern primTy primVal)
       | PVar PatternVar
       | PDot (Term primTy primVal)
       | PPrim primVal

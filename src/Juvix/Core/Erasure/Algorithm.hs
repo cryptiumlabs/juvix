@@ -96,6 +96,8 @@ erasePattern patt =
     IR.PCon name patts -> do
       patts <- mapM erasePattern patts
       pure (Erasure.PCon name patts)
+    IR.PPair l r ->
+      Erasure.PPair <$> erasePattern l <*> erasePattern r
     IR.PVar v -> pure (Erasure.PVar v)
     IR.PDot t -> do
       -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
@@ -141,6 +143,13 @@ eraseTerm (Typed.Lam t anns) = do
   if π == mempty
     then pure t
     else Erasure.Lam x t <$> eraseType ty
+eraseTerm t@(Typed.Sig {}) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm (Typed.Pair s t ann) = do
+  let ty@(IR.VSig π _ _) = IR.annType ann
+  if π == mempty then
+    eraseTerm t
+  else
+    Erasure.Pair <$> eraseTerm s <*> eraseTerm t <*> eraseType ty
 eraseTerm (Typed.Let π b t anns) = do
   (x, t) <- withName \x -> (x,) <$> eraseTerm t
   if π == mempty
@@ -193,6 +202,14 @@ eraseType (IR.VPi π a b) = do
     Erasure.Pi π <$> eraseType a
       <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
+eraseType (IR.VSig π a b) = do
+  if π == mempty then
+    eraseType a
+  else
+    Erasure.Sig π <$> eraseType a
+                  <*> withName \_ -> eraseType b
+eraseType v@(IR.VPair _ _) = do
   throwEra $ Erasure.UnsupportedTypeV v
 eraseType (IR.VNeutral n) = do
   eraseTypeN n

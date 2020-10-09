@@ -24,6 +24,7 @@ evaluate term =
         Nothing -> pure (Erased.Var s)
     Erased.Prim p -> pure (Erased.Prim p)
     Erased.Lam s t -> Erased.Lam s |<< evaluate t
+    Erased.Pair s t -> Erased.Pair <$> evaluate s <*> evaluate t
     Erased.Let s b t -> do
       b <- evaluate b
       local @"env" (Map.insert s b) $ evaluate t

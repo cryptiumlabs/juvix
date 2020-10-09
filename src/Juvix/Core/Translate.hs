@@ -26,6 +26,12 @@ hrToIR' term =
     HR.Lam n b -> do
       b <- withName n $ hrToIR' b
       pure (IR.Lam b)
+    HR.Sig π n a b -> do
+      a <- hrToIR' a
+      b <- withName n $ hrToIR' b
+      pure (IR.Sig π a b)
+    HR.Pair s t -> do
+      HR.Pair <$> hrToIR' s <*> hrToIR' t
     HR.Let π n l b -> do
       l <- hrElimToIR' l
       b <- withName n $ hrToIR' b
@@ -75,6 +81,13 @@ irToHR' term =
       n <- newName
       t <- irToHR' t
       pure (HR.Lam n t)
+    IR.Sig π a b -> do
+      a <- irToHR' a
+      n <- newName
+      b <- irToHR' b
+      pure $ HR.Sig π n a b
+    IR.Pair s t -> do
+      HR.Pair <$> irToHR' s <*> irToHR' t
     IR.Let π l b -> do
       l <- irElimToHR' l
       n <- newName

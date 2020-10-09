@@ -191,11 +191,11 @@ makeList =
   -- e.g. michelson lists)
   _
 
+-- | translate (1,2,3,4) to (1,(2,(3,4)))
 makeTuple :: [HR.Term primTy primVal] -> HR.Term primTy primVal
+makeTuple [] = _ -- TODO: add unit to core, probably
 makeTuple [t] = t
-makeTuple _ts =
-  -- TODO: add Σ types to core and translate to nested pairs
-  _
+makeTuple (t:ts) = IR.Pair t (makeTuple ts)
 
 makeRecord :: [(NameSymbol.T, HR.Term primTy primVal)]
            -> HR.Term primTy primVal

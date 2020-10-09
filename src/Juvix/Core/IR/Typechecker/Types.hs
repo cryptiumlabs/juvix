@@ -43,6 +43,9 @@ data TypecheckError' extV extT primTy primVal
   | ShouldBeFunctionType
       { typeActual :: IR.Value' extV primTy primVal
       }
+  | ShouldBePairType
+      { typeActual :: IR.Value' extV primTy primVal
+      }
   | UnboundIndex
       { unboundIndex :: IR.BoundVar
       }
@@ -131,6 +134,8 @@ instance
     "* n is of type * but " <> show ty <> " is not *."
   show (ShouldBeFunctionType ty) =
     show ty <> " is not a function type but should be"
+  show (ShouldBePairType ty) =
+    show ty <> " is not a pair type but should be"
   show (UnboundIndex n) =
     "unbound index " <> show n
   show (UsageMustBeZero π) =
@@ -197,6 +202,8 @@ IR.extendTerm "Term" [] [t|T|] $
             IR.typePrimTy = typed,
             IR.typePrim = typed,
             IR.typePi = typed,
+            IR.typeSig = typed,
+            IR.typePair = typed,
             IR.typeLam = bindTyped,
             IR.typeLet = bindTyped,
             IR.typeElim = typed
@@ -217,6 +224,8 @@ getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Prim _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
+getTermAnn (Sig _ _ _ ann) = ann
+getTermAnn (Pair _ _ ann) = ann
 getTermAnn (Lam _ anns) = baResAnn anns
 getTermAnn (Let _ _ _ anns) = baResAnn anns
 getTermAnn (Elim _ ann) = ann

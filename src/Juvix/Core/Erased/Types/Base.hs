@@ -15,6 +15,7 @@ extensible
       | Prim primVal
       | -- TODO ∷ add proper lam with capture and arguments here!
         Lam Symbol (Term primVal)
+      | Pair (Term primVal) (Term primVal)
       | Let Symbol (Term primVal) (Term primVal)
       | App (Term primVal) (Term primVal)
       deriving (Show, Eq, Generic)
@@ -25,6 +26,7 @@ extensible
       | PrimTy primTy
       | -- TODO: How to deal with dependency?
         Pi Usage.T (Type primTy) (Type primTy)
+      | Sig Usage.T (Type primTy) (Type primTy)
       deriving (Show, Eq, Generic)
 
     type TypeAssignment primTy = Map.T Symbol (Type primTy)
