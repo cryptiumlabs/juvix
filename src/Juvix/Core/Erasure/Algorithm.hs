@@ -1,7 +1,8 @@
-module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, Erasure.exec) where
+module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, exec) where
 
 import Data.List (genericIndex)
 import qualified Juvix.Core.Erased.Types as Erased
+import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
@@ -14,20 +15,13 @@ type ErasureM primTy primVal m =
     HasThrow "erasureError" (Erasure.Error primTy primVal) m
   )
 
-eraseAnn :: Erasure.Term primTy primVal -> Erased.Term primVal
-eraseAnn (Erasure.Var x _) = Erased.Var x
-eraseAnn (Erasure.Prim p _) = Erased.Prim p
-eraseAnn (Erasure.Lam x t _) = Erased.Lam x (eraseAnn t)
-eraseAnn (Erasure.Let x b t _) = Erased.Let x (eraseAnn b) (eraseAnn t)
-eraseAnn (Erasure.App s t _) = Erased.App (eraseAnn s) (eraseAnn t)
-
 erase ::
   Typed.Term primTy primVal ->
   Usage.T ->
   Either (Erasure.Error primTy primVal) (Erasure.Term primTy primVal)
 erase t π
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
-  | otherwise = Erasure.exec $ eraseTerm t
+  | otherwise = exec $ eraseTerm t
 
 eraseGlobal ::
   ErasureM primTy primVal m =>
