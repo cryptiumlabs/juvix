@@ -227,6 +227,7 @@ primToFargs (Types.Inst inst) ty =
         Instr.EDIV _ -> ediv
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> pushConstant
+        Instr.IF {} -> evalIf
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
@@ -432,27 +433,25 @@ pushConstant :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expand
 pushConstant typ instrs = do
   v <- traverse (inst >=> promoteTopStack) instrs
   res <- case v of
-      Env.Constant _ : _ ->
-        pure Env.Nop
-      instr1 : _ ->
-        pure instr1
-      _ -> throw @"compilationError" Types.NotEnoughArguments
+    Env.Constant _ : _ ->
+      pure Env.Nop
+    instr1 : _ ->
+      pure instr1
+    _ -> throw @"compilationError" Types.NotEnoughArguments
   modify @"stack" (VStack.drop 1)
   consVal res typ
   pure res
 
--- TODO :: 
 evalIf :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
-  undefined
-  -- let eval = inst >=> promoteTopStack
-  -- eval bool
-  -- then' <- protect (eval thenI)
-  -- else' <- protect (eval elseI)
-  -- addInstr (Instructions.if' then' else')
-  -- let res = Env.Nop
-  -- consVal res typ
-  -- pure res
+  let eval = inst >=> promoteTopStack
+      res = Env.Nop
+  eval bool
+  then' <- protect (eval thenI)
+  else' <- protect (eval elseI)
+  addInstr (Instructions.if' (insts then') (insts else'))
+  consVal res typ
+  pure res
 evalIf _ _ = throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------

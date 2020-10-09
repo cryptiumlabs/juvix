@@ -15,8 +15,8 @@ import qualified Michelson.Untyped.Instr as Instr
 
 data PrimTy
   = PrimTy M.Type
-  -- extra types that need arguments
-  | Pair
+  | -- extra types that need arguments
+    Pair
   | Lambda
   | Map
   | BigMap
@@ -71,8 +71,8 @@ data NewPrim
   | UpdateBMap
   | GetMap
   | GetBMap
-  -- Extra values which need types
-  | Right'
+  | -- Extra values which need types
+    Right'
   | Left'
   | Nil
   | EmptyS

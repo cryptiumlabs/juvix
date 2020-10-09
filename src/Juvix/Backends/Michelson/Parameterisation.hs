@@ -224,6 +224,7 @@ builtinValues =
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.self", Inst (M.UNIT "" ""))
+    -- added symbols to not take  values
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
