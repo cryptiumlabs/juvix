@@ -226,7 +226,7 @@ primToFargs (Types.Inst inst) ty =
         Instr.PAIR {} -> pair
         Instr.EDIV _ -> ediv
         Instr.ISNAT _ -> isNat
-        Instr.PUSH {} -> const pushConstant
+        Instr.PUSH {} -> pushConstant
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
@@ -383,6 +383,7 @@ onPairGen1 op f =
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f typ instrs = do
+  -- last argument evaled first
   v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
   case v of
     instr2 : instr1 : _ -> do
@@ -426,14 +427,33 @@ onOneArgs op f typ instrs = do
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
 -- todo remove repeat pattern
-pushConstant :: Env.Reduction m => [Types.NewTerm] -> m Env.Expanded
-pushConstant instrs = do
+-- Cons val here?
+pushConstant :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
+pushConstant typ instrs = do
   v <- traverse (inst >=> promoteTopStack) instrs
-  case v of
-    Env.Constant _ : _ ->
-      pure Env.Nop
-    instr1 : _ -> pure instr1
-    _ -> throw @"compilationError" Types.NotEnoughArguments
+  res <- case v of
+      Env.Constant _ : _ ->
+        pure Env.Nop
+      instr1 : _ ->
+        pure instr1
+      _ -> throw @"compilationError" Types.NotEnoughArguments
+  modify @"stack" (VStack.drop 1)
+  consVal res typ
+  pure res
+
+-- TODO :: 
+evalIf :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
+evalIf typ (bool : thenI : elseI : _) = do
+  undefined
+  -- let eval = inst >=> promoteTopStack
+  -- eval bool
+  -- then' <- protect (eval thenI)
+  -- else' <- protect (eval elseI)
+  -- addInstr (Instructions.if' then' else')
+  -- let res = Env.Nop
+  -- consVal res typ
+  -- pure res
+evalIf _ _ = throw @"compilationError" Types.NotEnoughArguments
 
 -------------------------------------------------------------------------------
 -- Environment Protections, Promotions, and Movements
@@ -596,6 +616,7 @@ apply closure args remainingArgs = do
           recur expanded (moreReserved <> remainingArgs)
   where
     evalArgsAndName = do
+      -- with fully saturated args this should take it all
       let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
       traverseName (zip toEvalNames args)
       traverse_
