@@ -3,19 +3,18 @@
   + [[Compilation]]
   + [[Parameterisation]]
   + [[Core]]
-  + [[Erased]]
-  + [[HR]]
+  + [[Erasure]]
   + [[HR]]
   + [[Library]]
 * Config
+- _Relies on_
+  + [[Library]]
 * Interactive
 - _Relies on_
   + [[Core]]
   + [[Erased]]
   + [[HR]]
-  + [[HR]]
   + [[Naturals]]
-  + [[Types]]
   + [[InteractionNet]]
   + [[Env]]
   + [[Graph]]
@@ -26,6 +25,7 @@
 * Options
 * Types
 - _Relies on_
-  + [[Naturals]]
+  + [[Types]]
+  + [[IR]]
   + [[Types]]
   + [[Library]]

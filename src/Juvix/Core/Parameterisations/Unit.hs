@@ -1,50 +1,72 @@
+{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE OverloadedLists #-}
+
 module Juvix.Core.Parameterisations.Unit where
 
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    typeOf,
-  )
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
 
 -- k: primitive type: unit
-data UnitTy
-  = TUnit
+data Ty
+  = Ty
   deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
-data UnitVal
-  = Unit
+data Val
+  = Val
   deriving (Show, Eq)
 
-typeOf ∷ UnitVal → NonEmpty UnitTy
-typeOf Unit = TUnit :| []
+hasType :: Val -> P.PrimType Ty -> Bool
+hasType Val (Ty :| []) = True
+hasType _ _ = False
 
-apply ∷ UnitVal → UnitVal → Maybe UnitVal
+arity :: Val -> Int
+arity Val = 0
+
+apply :: Val -> Val -> Maybe Val
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser UnitTy
+parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Unit"
-  pure TUnit
+  pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser UnitVal
+parseVal :: Token.GenTokenParser String () Identity -> Parser Val
 parseVal lexer = do
-  Token.reserved lexer "()"
-  pure Unit
+  Token.reserved lexer "tt"
+  pure Val
 
-reservedNames ∷ [String]
-reservedNames = ["Unit", "()"]
+reservedNames :: [String]
+reservedNames = ["Unit", "tt"]
 
-reservedOpNames ∷ [String]
+reservedOpNames :: [String]
 reservedOpNames = []
 
-unit ∷ Parameterisation UnitTy UnitVal
-unit =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+builtinTypes :: P.Builtins Ty
+builtinTypes = [(["Unit"], Ty)]
+
+builtinValues :: P.Builtins Val
+builtinValues = [(["tt"], Val)]
+
+t :: P.Parameterisation Ty Val
+t =
+  P.Parameterisation
+    { hasType,
+      arity,
+      builtinTypes,
+      builtinValues,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> False,
+      intVal = const Nothing,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

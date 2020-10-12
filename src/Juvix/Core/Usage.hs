@@ -1,9 +1,22 @@
-module Juvix.Core.Usage (Usage, NatAndw (..), numToNat, allowsUsageOf) where
+{-# LANGUAGE DeriveAnyClass #-}
 
-import Juvix.Library hiding (show)
-import Prelude (Show (..))
+module Juvix.Core.Usage
+  ( Usage,
+    NatAndw (..),
+    T,
+    numToNat,
+    allowsUsageOf,
+    allows,
+    pred,
+    minus,
+  )
+where
+
+import Juvix.Library hiding (pred, show)
 
 -- | Usage is an alias for the semiring representation
+type T = NatAndw
+
 type Usage = NatAndw
 
 -- | NatAndw is the choice of the semiring for ({ℕ, ω}, (+), 0, (*), 1)
@@ -13,11 +26,7 @@ data NatAndw
     SNat Natural
   | -- | unspecified usage
     Omega
-  deriving (Eq)
-
-instance Show NatAndw where
-  show (SNat n) = show n
-  show Omega = "w"
+  deriving (Eq, Show, Read, Generic, Data, NFData)
 
 -- Addition is the semi-Ring/Monoid instance
 instance Semigroup NatAndw where
@@ -30,20 +39,38 @@ instance Monoid NatAndw where
 
 -- Semiring instance is thus multiplication
 instance Semiring NatAndw where
-
   one = SNat 1
 
   SNat x <.> SNat y = SNat (x * y)
   Omega <.> _ = Omega
   _ <.> Omega = Omega
 
+pred :: NatAndw -> NatAndw
+pred (SNat x) = SNat (x - 1)
+pred Omega = Omega
+
+minus :: Usage -> Usage -> Maybe Usage
+minus Omega _ = Just Omega
+minus (SNat i) (SNat j) | i >= j = Just $ SNat $ i - j
+minus _ _ = Nothing
+
+infixl 6 `minus` -- same as -
+
 -- | numToNat is a helper function that converts an integer to NatAndW
-numToNat ∷ Integer → NatAndw
+numToNat :: Integer -> NatAndw
 numToNat = SNat . fromInteger
 
+-- variables annotated with n can be used n times.
+-- variables annotated with Omega can be used any times.
+
 -- | allowsUsageOf is the function that checks usage compatibility
-allowsUsageOf ∷ Usage → Usage → Bool
-allowsUsageOf (SNat x) (SNat y) = x == y --variables annotated with n can be used n times.
-allowsUsageOf Omega (SNat _) = True -- variables annotated with Omega can be used any times.
+allowsUsageOf :: Usage -> Usage -> Bool
+allowsUsageOf (SNat x) (SNat y) = x == y
+allowsUsageOf Omega (SNat _) = True
 allowsUsageOf Omega Omega = True
 allowsUsageOf (SNat _) Omega = False
+
+allows :: Usage -> Usage -> Bool
+allows = allowsUsageOf
+
+infix 4 `allowsUsageOf`, `allows` -- same as <=

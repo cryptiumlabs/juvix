@@ -1,55 +1,114 @@
-module Juvix.Backends.Michelson.Compilation.Types where
+-- |
+-- - Types used internally by the Michelson backend.
+module Juvix.Backends.Michelson.Compilation.Types
+  ( module Juvix.Backends.Michelson.Compilation.Types,
+    CoreErased.AnnTerm (..),
+  )
+where
 
-import Juvix.Backends.Michelson.Parameterisation
+import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import Juvix.Library
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
+import qualified Michelson.Untyped.Instr as Instr
+
+newtype PrimTy
+  = PrimTy M.Type
+  deriving (Show, Eq, Generic)
+
+data NewPrim
+  = Constant (M.Value' Op)
+  | Inst (Instr.InstrAbstract Op)
+  | AddN
+  | AddI
+  | AddTimeStamp
+  | AddMutez
+  | NegN
+  | NegI
+  | SubN
+  | SubI
+  | SubMutez
+  | SubTimeStamp
+  | MulI
+  | MulN
+  | MulMutez
+  | EDivI
+  | EDivN
+  | EDivMutez
+  | OrB
+  | ORI
+  | AndI
+  | AndB
+  | XorI
+  | XorB
+  | NotI
+  | NotB
+  | CompareI
+  | CompareS
+  | CompareP
+  | CompareTimeStamp
+  | CompareMutez
+  | CompareBytes
+  | CompareHash
+  | SizeMap
+  | SizeSet
+  | SizeList
+  | SizeBytes
+  | SizeS
+  | MemSet
+  | MemMap
+  | UpdateSet
+  | UpdateMap
+  | UpdateBMap
+  | GetMap
+  | GetBMap
+  deriving (Show, Eq, Generic)
+
+type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
+
+type PrimVal = NewPrim
+
+type Term = CoreErased.AnnTerm PrimTy NewPrim
+
+type Type = CoreErased.Type PrimTy NewPrim
+
+type Value = M.Value' M.ExpandedOp
+
+type Op = M.ExpandedOp
 
 data CompilationError
   = NotYetImplemented Text
   | InvalidInputType
   | InternalFault Text
-  | DidNotTypecheck M.TCError
-  | DidNotTypecheckAfterOptimisation M.TCError
+  | DidNotTypecheck Instr.ExpandedOp M.TCError
+  | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError
+  | NotEnoughArguments
+  | NotInStack Symbol
+  | -- Should never happen!
+    NotEnoughStackSpace
+  | OpInMichelsonValue
+  | AppliedConstantToArgument
+  | TooManyArguments
   deriving (Show, Eq, Generic)
+
+-- compToPipeLineErr
 
 data CompilationLog
   = TermToInstr Term Op
-  | Optimised Op Op
-  deriving (Generic)
+  | OptimisedByJuvix Op Op
+  | OptimisedByMorley SomeInstr SomeInstr
+  deriving (Generic, Show)
 
-type Stack = [(StackElem, M.Type)]
-
-data StackElem
-  = ConstE Value
-  | VarE Symbol
-  | FuncResultE
-  deriving (Show, Eq, Generic)
+data EmptyInstr where
+  EmptyInstr :: forall b. MT.Instr '[] b -> EmptyInstr
 
 data SomeInstr where
-  SomeInstr ∷ ∀ a b. MT.Instr a b → SomeInstr
+  SomeInstr :: forall a b. MT.Instr a b -> SomeInstr
 
-execWithStack ∷ Stack → EnvCompilation a → (Either CompilationError a, Env)
-execWithStack stack (EnvCompilation env) = runState (runExceptT env) (Env stack [])
+deriving instance Show SomeInstr
 
-data Env
-  = Env
-      { stack ∷ Stack,
-        compilationLog ∷ [CompilationLog]
-      }
-  deriving (Generic)
+deriving instance Show EmptyInstr
 
-newtype EnvCompilation a = EnvCompilation (ExceptT CompilationError (State Env) a)
-  deriving (Functor, Applicative, Monad)
-  deriving
-    ( HasStream "compilationLog" [CompilationLog],
-      HasWriter "compilationLog" [CompilationLog]
-    )
-    via WriterLog (Field "compilationLog" () (MonadState (ExceptT CompilationError (State Env))))
-  deriving
-    (HasState "stack" Stack)
-    via Field "stack" () (MonadState (ExceptT CompilationError (State Env)))
-  deriving
-    (HasThrow "compilationError" CompilationError)
-    via MonadError (ExceptT CompilationError (State Env))
+instance Eq SomeInstr where
+  _ == _ = False

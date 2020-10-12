@@ -16,32 +16,44 @@ module Juvix.Library
     module Capability.Reader,
     module Capability.Error,
     module Capability.Writer,
-    module Capability.Stream,
+    module Capability.Sink,
+    module Capability.Source,
     module Numeric.Natural,
     module Juvix.Library.PrettyPrint,
+    Data,
     (∨),
     (∧),
     (|<<),
     (>>|),
     (|>),
+    (...),
     traverseM,
-    Symbol,
+    Symbol (..),
+    internText,
     intern,
     unintern,
+    textify,
     unixTime,
     Flip (..),
     untilNothingNTimesM,
     untilNothing,
     sortOnFlip,
+    uncurry3,
+    curry3,
+    dup,
+    StateField,
+    ReaderField,
+    WriterField,
   )
 where
 
 import Capability.Error
 import Capability.Reader
+import Capability.Sink
+import Capability.Source
 import Capability.State
-import Capability.Stream
 import Capability.Writer
-import Data.Hashable (Hashable)
+import Data.Data (Data)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
@@ -72,81 +84,113 @@ import Protolude hiding
   )
 import Prelude (Show (..), String)
 
-(∨) ∷ Bool → Bool → Bool
+(∨) :: Bool -> Bool -> Bool
 (∨) = (||)
 
 infixr 2 ∨
 
-(∧) ∷ Bool → Bool → Bool
+(∧) :: Bool -> Bool -> Bool
 (∧) = (&&)
 
 infixr 3 ∧
 
-(|<<) ∷ ∀ a b f. (Functor f) ⇒ (a → b) → f a → f b
+(|<<) :: forall a b f. (Functor f) => (a -> b) -> f a -> f b
 (|<<) = fmap
 
 infixr 1 |<<
 
-(>>|) ∷ ∀ a b f. (Functor f) ⇒ f a → (a → b) → f b
+(>>|) :: forall a b f. (Functor f) => f a -> (a -> b) -> f b
 (>>|) = flip fmap
 
 infixl 1 >>|
 
-(|>) ∷ a → (a → b) → b
+(|>) :: a -> (a -> b) -> b
 (|>) = (&)
 
 infixl 1 |>
 
-traverseM ∷
-  (Monad m, Traversable m, Applicative f) ⇒
-  (a1 → f (m a2)) →
-  m a1 →
+traverseM ::
+  (Monad m, Traversable m, Applicative f) =>
+  (a1 -> f (m a2)) ->
+  m a1 ->
   f (m a2)
 traverseM f = fmap join . traverse f
 
-instance Show (a → b) where
+instance Show (a -> b) where
   show _ = "fun"
 
-newtype Symbol = Sym Text deriving (Eq, Hashable, Semigroup, Ord)
-
-instance Show Symbol where
-  show (Sym t) = T.unpack t
+newtype Symbol = Sym Text
+  deriving newtype (Eq, Show, Read, Hashable, Semigroup, Ord, NFData)
+  deriving stock (Data, Generic)
 
 instance IsString Symbol where
   fromString = intern
 
-intern ∷ String → Symbol
+internText :: Text -> Symbol
+internText = Sym
+
+intern :: String -> Symbol
 intern = Sym . T.pack
 
-unintern ∷ Symbol → String
+unintern :: Symbol -> String
 unintern (Sym s) = T.unpack s
 
-unixTime ∷ IO Double
+textify :: Symbol -> Text
+textify (Sym s) = s
+
+unixTime :: IO Double
 unixTime = fromRational . realToFrac |<< getPOSIXTime
 
-newtype Flip p a b = Flip {runFlip ∷ p b a}
+newtype Flip p a b = Flip {runFlip :: p b a}
   deriving (Show, Generic, Eq, Ord, Typeable)
 
-untilNothingNTimesM ∷ (Num t, Ord t, Enum t, Monad f) ⇒ f Bool → t → f ()
+untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) => f Bool -> t -> f ()
 untilNothingNTimesM f n
   | n <= 0 = pure ()
-  | otherwise = do
+  | otherwise =
     f >>= \case
-      True → untilNothingNTimesM f (pred n)
-      False → pure ()
+      True -> untilNothingNTimesM f (pred n)
+      False -> pure ()
 
-untilNothing ∷ (t → Maybe t) → t → t
+untilNothing :: (t -> Maybe t) -> t -> t
 untilNothing f a = case f a of
-  Nothing → a
-  Just a → untilNothing f a
+  Nothing -> a
+  Just a -> untilNothing f a
 
 -- | like sortOn from the stdlib, is an optimized version of `sortBy (comparing f)`
 -- However instead of sorting from lowest to highest, this sorts from higher to lowest
-sortOnFlip ∷ Ord b ⇒ (a → b) → [a] → [a]
+sortOnFlip :: Ord b => (a -> b) -> [a] -> [a]
 sortOnFlip f =
   fmap snd . sortBy (flip (comparing fst))
     . fmap
-      ( \x →
+      ( \x ->
           let y = f x
            in y `seq` (y, x)
       )
+
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 fn (a, b, c) = fn a b c
+
+curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
+curry3 fn a b c = fn (a, b, c)
+
+(...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
+(...) = (.) . (.)
+
+dup :: a -> (a, a)
+dup x = (x, x)
+
+-- | Select a field in a state monad, for example:
+--
+-- @
+-- data Foo = Foo {x, y :: 'Int'}
+-- newtype M a = M ('State' 'Foo' a)
+--   deriving ('HasState' \"x\" 'Int') via StateField "x" ('State' 'Foo')
+-- @
+type StateField fld m = Field fld () (MonadState m)
+
+-- | Reader version of 'StateField'.
+type ReaderField fld m = ReadStatePure (StateField fld m)
+
+-- | Writer version of 'StateField'.
+type WriterField fld m = WriterLog (StateField fld m)

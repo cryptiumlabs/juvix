@@ -1,4 +1,10 @@
 * Juvix
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Frontend]]
+  + [[InfixPrecedence/Environment]]
+  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -12,18 +18,62 @@
   4. Various Arithmetic Circuits
      - For use in ZKP's
 *** ArithmeticCircuit
-**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+**** Groth
+- place holder module until we have our groth
+  setup done
 - _Relies on_
-  + [[Erased/Types]]
-  + [[Core/Types]]
+  + [[Library]]
+**** ZKP
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation]]
+  + [[Groth]]
   + [[Library]]
 **** Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
+  + [[Compilation/Environment]]
+  + [[Memory]]
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Usage]]
   + [[Library]]
-***** Types <<ArithmeticCircuit/Compilation/Types>>
+***** Environment <<Compilation/Environment>>
 - _Relies on_
+  + [[Memory]]
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[Library]]
+***** Memory
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+***** Types <<ArithmeticCircuit/Compilation/Types>>
+Provides the various types needed for the arithmetic circuit
+backend
+- Expression covers the gambit of arithmetic circuit expressions
+- _Relies on_
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Library]]
+**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Booleans]]
+  + [[FieldElements]]
+  + [[Integers]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+***** Booleans
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+***** FieldElements
+- _Relies on_
+  + [[Core/Parameterisation]]
+  + [[Library]]
+***** Integers
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -37,11 +87,15 @@ Serves as a mini DSL layer above LLVM
 1. _Relink_
    - gives a declarative way to do a bunch of links and relinks
 **** Translation <<LLVM/Translation>>
-Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM.
+Translates erased core terms (must be EAC-typable) to native interaction nets in LLVM, evaluates it, and reads-back the resulting term.
+TODO: Separate out the common logic from the interpreter & this file into a shared module.
 - _Relies on_
-  + [[Codegen]]
+  + [[JIT]]
+  + [[MonadEnvironment]]
+  + [[Net/Environment]]
   + [[Erased/Types]]
   + [[Core/Types]]
+  + [[INetIR/Types]]
   + [[InteractionNet]]
   + [[Backends/Graph]]
   + [[Interface]]
@@ -67,7 +121,40 @@ Module for predefined constants
   + [[Library]]
 ***** Default <<Codegen/Default>>
 This module provides the default environment to run LLVM code in
+***** Shared <<Codegen/Shared>>
+Shared between Types and Sum
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+***** Sum
+Provides a mechanism for defining Sum types
+- Has the code to encode a sum type via what is defined by the user or
+  what is defined to create the interaction net system.
+- _Relies on_
+  + [[Constants]]
+  + [[Codegen/Shared]]
+  + [[Library]]
+  + [[HashMap]]
+***** Types <<Codegen/Types>>
+- _Relies on_
+  + [[Codegen/Shared]]
+  + [[Sum]]
+  + [[Library]]
+  + [[HashMap]]
 ***** Graph <<Codegen/Graph>>
+Serves as a front end for the Graph folder
+- _Relies on_
+  + [[Graph/Debug]]
+  + [[Definitions]]
+  + [[Operations]]
+****** Debug <<Graph/Debug>>
+Serves as a module for various debugging functions
+- _Relies on_
+  + [[Block]]
+  + [[Operations]]
+  + [[Codegen/Types]]
+  + [[Library]]
+****** Definitions
 Operations necessary to update nodes
 - =mainPort=, =auxiliary1= \dots =auxiliary4= allocation
   | Part       | Alloca Or Malloc |
@@ -84,8 +171,8 @@ Operations necessary to update nodes
   |--------------+------------------------------------|
   | Node         | Malloc                             |
   | portSize     | Stored on Node malloc              |
-  | PortArray    | Stored on Node malloc              |
-  | DataArray    | Stored on Node malloc              |
+  | PortArray    | Malloc                             |
+  | DataArray    | Malloc Maybe                       |
   | PortLocation | (Null) Allocad from PortArray Call |
   | NodePtr      | (Null) Allocad from PortArray Call |
   | Data         | (Null) Allocad from DataArray Call |
@@ -94,10 +181,10 @@ Operations necessary to update nodes
       | node | Malloc |
     * =allocaNumPortNum=
       | portsSize | Alloca |
-    * =allocaPortsH=
-      | portArray | Alloca |
-    * =allocaDataH=
-      | dataArray | Alloca |
+    * =mallocPortsH=
+      | portArray | Malloc |
+    * =mallocDataH=
+      | dataArray | Malloc |
   + the values that are null will be set from outside when the node
     is instantiated.
     * Data will be **Allocad**
@@ -124,47 +211,44 @@ Operations necessary to update nodes
       thus should modify the default deallocate node functionality
 - _Relies on_
   + [[Block]]
+  + [[Graph/Debug]]
+  + [[Operations]]
   + [[Codegen/Types]]
   + [[Library]]
-***** Shared <<Codegen/Shared>>
-Shared between Types and Sum
+****** Operations
+Functions that help with more complex Graph operations
 - _Relies on_
+  + [[Block]]
+  + [[Codegen/Types]]
   + [[Library]]
-  + [[HashMap]]
-***** Sum
-Provides a mechanism for defining Sum types
-- Has the code to encode a sum type via what is defined by the user or
-  what is defined to create the interaction net system.
-- _Relies on_
-  + [[Constants]]
-  + [[Codegen/Shared]]
-  + [[Library]]
-  + [[HashMap]]
-***** Types <<Codegen/Types>>
-- _Relies on_
-  + [[Constants]]
-  + [[Codegen/Shared]]
-  + [[Sum]]
-  + [[Library]]
-  + [[HashMap]]
 **** JIT
 - _Relies on_
   + [[Execution]]
   + [[JIT/Types]]
+  + [[Library]]
 ***** Execution
 - _Relies on_
   + [[JIT/Types]]
   + [[Library]]
 ***** Types <<JIT/Types>>
 - _Relies on_
+  + [[INetIR/Types]]
   + [[Library]]
 **** Net
-***** Environment
-- Serves as the default environment for executing EAC code
+***** API
 - _Relies on_
   + [[Codegen]]
   + [[Net/EAC]]
+  + [[Net/EAC/Types]]
+  + [[Library]]
+***** Environment <<Net/Environment>>
+- Serves as the default environment for executing EAC code
+- _Relies on_
+  + [[Codegen]]
+  + [[API]]
+  + [[Net/EAC]]
   + [[Defs]]
+  + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
   + [[HashMap]]
@@ -175,7 +259,7 @@ Provides a mechanism for defining Sum types
   pre processed =EAC= graph that the initial graph will be made on
 - _Allocation_
   + layout :
-    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr] | DataArray[Data]]}
+    eac{tag | NodePtr*[portSize | PortArray[portLocation | NodePtr]* | DataArray[Data]*]}
     * Similar to the one in Graph, however it also has the eac tag
    | Part         | Alloca Or Malloc                   |
    |--------------+------------------------------------|
@@ -183,8 +267,8 @@ Provides a mechanism for defining Sum types
    | tag          | Stored on Eac Malloc               |
    | NodePtr*     | Malloc from =mallocNode=           |
    | portSize     | Stored on Node Malloc              |
-   | PortArray    | Stored on Node Malloc              |
-   | DataArray    | Stored on Node Malloc              |
+   | PortArray    | Malloc                             |
+   | DataArray    | Malloc Maybe                       |
    | PortLocation | (Null) Allocad from PortArray Call |
    | NodePtr      | (Null) Allocad from PortArray Call |
    | Data         | (Null) Allocad from DataArray Call |
@@ -194,24 +278,46 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]
+  + [[EAC/Debug]]
   + [[Defs]]
+  + [[MonadEnvironment]]
   + [[Net/EAC/Types]]
   + [[Library]]
+  + [[HashMap]]
+****** Debug <<EAC/Debug>>
+Serves as a module for various debugging functions
+- _Relies on_
+  + [[Codegen]]
 ****** Defs
 - Specializes the functions in Graph to fit [[Net/EAC/Types]]
   + Later in the DSL Layer!
 - Generates the =find_edge= and =isBothPrimary= function with the =eal= type.
 - Also generates the proper types associated with them
+- Also has some miscellaneous debug information
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]
   + [[Net/EAC/Types]]
   + [[Library]]
+****** MonadEnvironment
+- This serves as the monad in which all operations are run
+- This is an extension of EACState
+  + Sadly we can't extend types easily in Haskell, hence the
+    boilerplate in this file
+- _Relies on_
+  + [[Codegen]]
+  + [[Library]]
+  + [[HashMap]]
 ****** Types <<Net/EAC/Types>>
 - _Relies on_
   + [[Codegen]]
   + [[Library]]
 *** Michelson
+- _Relies on_
+  + [[Michelson/Compilation]]
+  + [[Michelson/Parameterisation]]
+**** Contract <<Michelson/Contract>>
+This module provides a default contract environment
 **** Optimisation
 - This is a simple optimization strategy which replaces sequences of
   Michelson instructions with equivalent sequences of fewer
@@ -229,55 +335,135 @@ Provides a mechanism for defining Sum types
     some other gas-estimation preference function).
 - _Relies on_
   + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[Library]]
 **** Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[ErasedAnn/Types]]
+  + [[Michelson/Compilation]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Contract]]
+  + [[DSL/Environment]]
+  + [[Instructions]]
+  + [[InstructionsEff]]
+  + [[Interpret]]
+  + [[NameSymbol]]
+  + [[Prim]]
+  + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
+  + [[HashMap]]
 **** Compilation <<Michelson/Compilation>>
+- Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Term]]
-  + [[Compilation/Type]]
   + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
+  + [[VirtualStack]]
+  + [[DSL/Environment]]
+  + [[Instructions]]
+  + [[InstructionsEff]]
   + [[Optimisation]]
-  + [[Michelson/Parameterisation]]
-  + [[Library]]
-***** Term
-- _Relies on_
-  + [[Compilation/Type]]
-  + [[Michelson/Compilation/Types]]
-  + [[Compilation/Util]]
-  + [[Michelson/Parameterisation]]
-  + [[Erased/Util]]
-  + [[ErasedAnn]]
-  + [[Library]]
-***** Type <<Compilation/Type>>
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Michelson/Parameterisation]]
   + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
+- Types used internally by the Michelson backend.
 - _Relies on_
-  + [[Michelson/Parameterisation]]
+  + [[ErasedAnn/Types]]
   + [[Library]]
-***** Util <<Compilation/Util>>
+***** VirtualStack
+- Serves as a virtual stack over Michelson
+- This stack has a few properties
+  + The values on this stack may or may not be on the real
+    stack. However for convention this should be largely ignored,
+    except when you wish to do an operation like pair
+    * This can be fixed in the future
+    * Until then, one should filter out the virtual stack items
+- We keep virtual items on the ="stack"= as that makes the details
+  on whether something is constant propagation or not act
+  consistently with each other.
+  + After all, what may not be a constant now, may be in the
+    future, or vice versa!
+- Import with qualified and the name of =VStack=
 - _Relies on_
   + [[Michelson/Compilation/Types]]
+  + [[Instructions]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
+**** DSL
+***** Contract <<DSL/Contract>>
+- _Relies on_
+  + [[Library]]
+***** Environment <<DSL/Environment>>
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Usage]]
+  + [[Library]]
+***** Instructions
+- This module serves as a lower layer DSL that is just a binding
+  over the untyped instruction bindings
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[Untyped]]
+  + [[Library]]
+***** InstructionsEff
+- This module includes a higher level DSL which each instruction
+  has a stack effect
+  + This is similar to the base LLVM bindings we have.
+  + So for example, emitting an =add=, eats two items from the
+    virtual stack, and adds an =Instr.Add= instruction to the
+    sequence of instructions to execute
+- For constant progoation, have a function say take-2 that looks at
+  the top two items in the stack and then returns back either if
+  they were constants or not and dispatches logic based on that
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[DSL/Environment]]
+  + [[Instructions]]
+  + [[Untyped]]
+  + [[Utils]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[Library]]
+***** Interpret
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[DSL/Contract]]
+  + [[Library]]
+***** Untyped
+- _Relies on_
+  + [[Library]]
+***** Utils
+- _Relies on_
+  + [[Instructions]]
+  + [[Untyped]]
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
   + [[Library]]
 ** Core
 - _Relies on_
+  + [[NameSymbol]]
   + [[Core/Erasure]]
-  + [[Pipeline]]
+  + [[Core/Pipeline]]
   + [[Translate]]
+  + [[Core/Types]]
   + [[Usage]]
-*** Pipeline
+  + [[Frontend/Types]]
+  + [[FrontendContextualise]]
+  + [[InfixPrecedence/Environment]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+*** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
-  + [[Core/EAC]]
-  + [[Erased]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+  + [[HashMap]]
+*** Pipeline <<Core/Pipeline>>
+- _Relies on_
+  + [[Michelson]]
+  + [[ErasedAnn]]
   + [[Core/Erasure]]
   + [[HR]]
   + [[IR]]
@@ -294,14 +480,41 @@ Provides a mechanism for defining Sum types
 *** Types <<Core/Types>>
 - _Relies on_
   + [[Core/EAC/Types]]
+  + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
+  + [[Typechecker]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 *** Usage
 - _Relies on_
   + [[Library]]
 *** Utility
+- _Relies on_
+  + [[Library]]
+*** Common
+**** NameSpace
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+**** NameSymbol
+- _Relies on_
+  + [[Library]]
+**** Context
+- Serves as the context for lower level programs of the =Juvix=
+  Programming Language
+- This is parameterized per phase which may store the type and
+  term in slightly different ways
+- _Relies on_
+  + [[Precedence]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[Usage]]
+  + [[Library]]
+  + [[Library]]
+  + [[HashMap]]
+***** Precedence
 - _Relies on_
   + [[Library]]
 *** EAC <<Core/EAC>>
@@ -320,7 +533,6 @@ Provides a mechanism for defining Sum types
   + [[ConstraintGen]]
   + [[Solve]]
   + [[Core/EAC/Types]]
-  + [[Erased/Types]]
   + [[Core/Types]]
   + [[Library]]
 **** ConstraintGen
@@ -357,66 +569,117 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[Erased/Evaluator]]
   + [[Erased/Types]]
-  + [[Erased/Util]]
+  + [[Util]]
 **** Evaluator <<Erased/Evaluator>>
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
-**** Types <<Erased/Types>>
+**** Extend <<Erased/Extend>>
 - _Relies on_
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-**** Util <<Erased/Util>>
+  + [[HRAnn/Extend]]
+  + [[IR/Types/Base]]
+**** Util
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+**** Types <<Erased/Types>>
+- _Relies on_
+  + [[Erased/Extend]]
+  + [[Erased/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[Usage]]
+  + [[Library]]
+***** Base <<Erased/Types/Base>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Usage]]
+  + [[Library]]
+  + [[HashMap]]
 *** ErasedAnn
 - _Relies on_
-  + [[ErasedAnn/Erasure]]
+  + [[Conversion]]
   + [[ErasedAnn/Types]]
+**** Conversion
+- _Relies on_
+  + [[Erased]]
+  + [[ErasedAnn/Types]]
+  + [[Erasure/Types]]
+  + [[Core/Types]]
+  + [[Usage]]
+  + [[Library]]
 **** Erasure <<ErasedAnn/Erasure>>
 - _Relies on_
   + [[Erased/Types]]
   + [[ErasedAnn/Types]]
+  + [[ErasedAnn/Types]]
+  + [[Library]]
+**** Prim
+- This module represents the type which will be sent to the
+  parameterisation
+- the =Take= type is what a parameterisation will take coming in
+- the =Return= type is what will be handed back to Core to evaluate
+  and decide on the next steps. If this is a =Left= type checking
+  has failed, if it's a =Right= then type checking will continue
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Usage]]
+  + [[Library]]
 **** Types <<ErasedAnn/Types>>
 - _Relies on_
+  + [[IR/Types]]
   + [[Usage]]
   + [[Library]]
 *** Erasure <<Core/Erasure>>
 - _Relies on_
   + [[Algorithm]]
+  + [[Erasure/Types]]
 **** Algorithm
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
   + [[Erasure/Types]]
-  + [[HR/Types]]
   + [[IR]]
-  + [[Translate]]
-  + [[Core/Types]]
+  + [[Typechecker/Types]]
   + [[Usage]]
   + [[Library]]
-  + [[HashMap]]
 **** Types <<Erasure/Types>>
 - _Relies on_
-  + [[Erased]]
+  + [[Erased/Types]]
+  + [[Erased/Types]]
+  + [[Erased/Types/Base]]
+  + [[Typechecker]]
+  + [[Typechecker/Types]]
   + [[IR/Types]]
+  + [[IR/Types]]
+  + [[Usage]]
   + [[Library]]
 *** HR
 - _Relies on_
   + [[HR/Parser]]
   + [[HR/Types]]
+**** Extend <<HR/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
 **** Parser <<HR/Parser>>
 - _Relies on_
   + [[HR/Types]]
   + [[Core/Types]]
   + [[Usage]]
   + [[Library]]
-**** Types <<HR/Types>>
+**** Subst
+- Runs a substitution algorithm over core
 - _Relies on_
+  + [[NameSymbol]]
+  + [[HR/Types]]
   + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
+**** Types <<HR/Types>>
+- _Relies on_
+  + [[HR/Extend]]
+  + [[IR/Types/Base]]
 *** HRAnn
 - _Relies on_
   + [[HRAnn/Erasure]]
@@ -425,63 +688,105 @@ Provides a mechanism for defining Sum types
 - _Relies on_
   + [[HR/Types]]
   + [[HRAnn/Types]]
-**** Types <<HRAnn/Types>>
+  + [[TransformExt]]
+  + [[Library]]
+**** Extend <<HRAnn/Extend>>
 - _Relies on_
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
+**** Types <<HRAnn/Types>>
+- _Relies on_
+  + [[HRAnn/Extend]]
+  + [[IR/Types/Base]]
 *** IR
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker]]
+  + [[Typechecker]]
   + [[IR/Types]]
+  + [[Library]]
 **** Evaluator <<IR/Evaluator>>
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Core/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+**** TransformExt
+Transformations between different extensions.
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Library]]
 **** Typechecker
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
+  + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[Core/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Usage]]
+  + [[Library]]
+***** Env <<Typechecker/Env>>
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Usage]]
+  + [[Library]]
+***** Types <<Typechecker/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
   + [[Usage]]
   + [[Library]]
 **** Types <<IR/Types>>
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
+***** Base <<IR/Types/Base>>
+- _Relies on_
   + [[Usage]]
   + [[Library]]
+  + [[HashMap]]
 *** IRAnn
 - _Relies on_
   + [[IRAnn/Erasure]]
   + [[IRAnn/Types]]
 **** Erasure <<IRAnn/Erasure>>
 - _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IRAnn/Types]]
 **** Types <<IRAnn/Types>>
 - _Relies on_
-  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Usage]]
   + [[Library]]
 *** Parameterisations
 **** All
 - _Relies on_
+  + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
-  + [[Core/Types]]
   + [[Library]]
 **** Naturals
 - _Relies on_
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 **** Unit
 - _Relies on_
-  + [[Core/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
 ** Encoding
 *** Encoding
@@ -516,6 +821,494 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** Frontend
+- _Relies on_
+  + [[NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
+*** Lexer
+- _Relies on_
+  + [[Library]]
+*** Parser <<Frontend/Parser>>
+- The front end parser for the Juvix Programming language
+- Parsers with S at the end, eat the spaces at the end of the parse
+- Parsers with SN at the end, eats the spaces and new lines at the
+  end of the parse
+- _Relies on_
+  + [[Lexer]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+*** Types <<Frontend/Types>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Library]]
+**** Base <<Frontend/Types/Base>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
+  + [[Usage]]
+  + [[Library]]
+**** Extend <<Types/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+** FrontendContextualise
+- order of Passes
+  1. =ModuleOpen=
+  2. =InfixPrecedence=
+- _Relies on_
+  + [[Context]]
+  + [[NameSymbol]]
+  + [[Contextify/Transform]]
+  + [[Contextify/Types]]
+  + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Transform]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Transform]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** Environment <<FrontendContextualise/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[Library]]
+*** Contextify
+**** Transform <<Contextify/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[Contextify/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<Contextify/Types>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSymbol]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** InfixPrecedence
+**** Environment <<InfixPrecedence/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+**** Extend <<InfixPrecedence/Extend>>
+- This pass removes the =Infix= form
+  + Belongs to Table
+    | Changed | Is a Sum Type of |
+    |---------+------------------|
+    | Infix   | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Infix
+      = Inf
+        { infixLeft  :: Expression
+        , infixOp    :: NameSymb
+        , infixRight :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[ModuleOpen/Extend]]
+  + [[ModuleOpen/Extend]]
+  + [[Library]]
+**** ShuntYard
+- This implements the Shunt Yard algorithm for determining the
+  precedence of operations
+- _Relies on_
+  + [[Library]]
+**** Transform <<InfixPrecedence/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[InfixPrecedence/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+**** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[InfixPrecedence/Extend]]
+  + [[Library]]
+*** ModuleOpen
+**** Environment <<ModuleOpen/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[NameSymbol]]
+  + [[FrontendContextualise/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[HashMap]]
+**** Extend <<ModuleOpen/Extend>>
+- This pass removes the =Infix= form
+  + Belongs to Table
+    | Changed        | Is a Sum Type of |
+    |----------------+------------------|
+    | ModuleOpen     | TopLevel         |
+    | ModuleOpenExpr | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data ModuleOpen
+      = Open ModuleName
+      deriving (Show, Generic, NFData)
+    data ModuleOpenExpr
+      = OpenExpress
+        { moduleOpenExprModuleN :: ModuleName
+        , moduleOpenExprExpr    :: Expression }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- This pass with thus try to qualify all names as we go, turning
+#+begin_src ocaml
+  let foo =
+    open Core in
+    List.map f xs
+  (* ====> *)
+  let foo =
+    Core.List.Map f xs
+#+end_src
+- for modules we can infer.
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+**** Transform <<ModuleOpen/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+**** Types <<ModuleOpen/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[ModuleOpen/Extend]]
+  + [[Library]]
+** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[CombineMultiple/Transform]]
+  + [[RemoveCond/Transform]]
+  + [[RemoveDo/Transform]]
+  + [[RemoveDo/Types]]
+  + [[RemoveGuard/Transform]]
+  + [[RemoveModules/Transform]]
+  + [[RemovePunned/Transform]]
+  + [[RemoveSignature/Transform]]
+  + [[Library]]
+*** Abstractions
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+*** CombineMultiple
+**** Extend <<CombineMultiple/Extend>>
+- This pass changes =FunctionLike=, =Function=, and =Let=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | Function     | TopLevel         |
+    | Let          | Expression       |
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =Name= from the previous transform
+- _Let changes_
+  + Let now looks like
+    #+begin_src haskell
+      data Let
+        = LetGroup
+          { letName :: Symbol
+          , letBindings :: NonEmpty (FunctionLike Expression)
+          , letBody :: Expression
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * In this pass we add =Name= from the previous Let type
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression))
+    #+end_src
+    * Namely this version adds symbol to the previous pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+**** Transform <<CombineMultiple/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveCond/Types]]
+  + [[Library]]
+**** Types <<CombineMultiple/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+*** RemoveCond
+**** Extend <<RemoveCond/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Cond    | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Cond a
+      = C (NonEmpty (CondLogic a))
+      deriving (Show, Generic, NFData)
+    data CondLogic a
+      = CondExpression
+          { condLogicPred :: Expression
+          , condLogicBody :: a
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+**** Transform <<RemoveCond/Transform>>
+- _Relies on_
+  + [[RemoveCond/Types]]
+  + [[RemoveGuard/Types]]
+  + [[Library]]
+**** Types <<RemoveCond/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+*** RemoveDo
+**** Extend <<RemoveDo/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Do      | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Do
+      = Do'' (NonEmpty DoBody)
+      deriving (Show, Generic, NFData)
+    data DoBody
+      = DoBody
+        { doBodyName :: Maybe NameSymb,
+          doBodyExpr :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+**** Transform <<RemoveDo/Transform>>
+- _Relies on_
+  + [[RemoveDo/Types]]
+  + [[RemovePunned/Types]]
+  + [[Library]]
+**** Types <<RemoveDo/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+*** RemoveGuard
+**** Extend <<RemoveGuard/Extend>>
+- This pass changes =FunctionLike=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeName :: Symbol
+          , functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =GuardBody= from the body.
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[RemoveModules/Extend]]
+**** Transform <<RemoveGuard/Transform>>
+- _Relies on_
+  + [[RemoveGuard/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+**** Types <<RemoveGuard/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+*** RemoveModules
+**** Extend <<RemoveModules/Extend>>
+- This pass removes the =Module= and =ModuleE= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Module  | TopLevel         |
+   | ModuleE | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Module
+      = Mod (FunctionLike (NonEmpty TopLevel))
+      deriving (Show, Generic, NFData)
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+          , moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Types/Extend]]
+  + [[Library]]
+**** Transform <<RemoveModules/Transform>>
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+**** Types <<RemoveModules/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveModules/Extend]]
+  + [[Library]]
+*** RemovePunned
+**** Extend <<RemovePunned/Extend>>
+- This pass removes the =Punned= form
+ + Belongs to Table
+   | Removed | Is a Sum Type of |
+   |---------+------------------|
+   | Punned  | NameSet          |
+- Thus one does not have to ever deal with the =Punned= variant in
+  #+begin_src haskell
+    data NameSet t
+      = Punned NameSymb
+      | NonPunned NameSymb t
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
+**** Transform <<RemovePunned/Transform>>
+- _Relies on_
+  + [[RemovePunned/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+**** Types <<RemovePunned/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+*** RemoveSignature
+**** Extend <<RemoveSignature/Extend>>
+- This pass changes =Signature=, and =Function=
+  + Belongs to Table
+    | Changed   | Is a Sum Type of      |
+    |-----------+-----------------------|
+    | Function  | TopLevel              |
+    | Signature | +TopLevel+ ∧ Function |
+- _Signature changes_
+  + We move Signature from TopLevel to Function
+    #+begin_src haskell
+      data Signature
+        = Sig
+            { signatureName :: Symbol
+              -- Was a usage but can't alias for now
+            , signatureUsage :: Maybe Expression
+            , signatureArrowType :: Expression
+            , signatureConstraints :: [Expression]
+            }
+        deriving (Show, Generic, NFData)
+    #+end_src
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+    #+end_src
+    * Namely this version adds a signature to upon the previous pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+**** Transform <<RemoveSignature/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+**** Types <<RemoveSignature/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
+** INetIR
+- _Relies on_
+  + [[JSON]]
+  + [[INetIR/Types]]
+*** JSON
+- _Relies on_
+  + [[Library]]
+*** Types <<INetIR/Types>>
+- _Relies on_
+  + [[Library]]
 ** Interpreter
 - Although slower than [[Backends]], the interpreter serves as a
   reference point to play, modify, and debug features that will go
@@ -526,13 +1319,13 @@ Quantitative type implementation inspired by
   + [[InteractionNet/Default]]
   + [[InteractionNet/Parser]]
   + [[InteractionNet/Translation]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
 **** Default <<InteractionNet/Default>>
 Gives the default execution environment for netToAst
 Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** NodeInterface
@@ -551,7 +1344,7 @@ Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Default]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
 **** Shared <<InteractionNet/Shared>>
@@ -566,10 +1359,10 @@ Can be added to via core translation
   + [[Nets/Default]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
-  + [[InteractionNet/Type]]
+  + [[Type]]
   + [[Library]]
   + [[HashMap]]
-**** Type <<InteractionNet/Type>>
+**** Type
 - Serves as the AST for all operations on [[Nets/Default]]
 - Resembles the =BOHM= syntax/operation set, however it alters the
   operation set quite a bit
@@ -587,7 +1380,7 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** Backends
-***** Env
+***** Env <<Backends/Env>>
 - Env serves as the environment for running the back-ends
   + This includes the diagnostic information about how the code is ran
   + Also includes the effect handler types and the runner functions
@@ -604,7 +1397,7 @@ Can be added to via core translation
   + This back-end is more useful than [[Maps]] as it can produce
     graphical outputs, see [[Visualize]]
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -621,7 +1414,7 @@ Can be added to via core translation
 - this is an implementation of said interface using the =EnumMap= data structure
 - This code will be imported in Tests as a possible back-end for testing
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -633,7 +1426,7 @@ Can be added to via core translation
   2. Dup
   3. Era
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -641,7 +1434,7 @@ Can be added to via core translation
 - An evaluator for the Default Language
 - Serves as a reference way of creating interaction nets
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
@@ -675,7 +1468,7 @@ Can be added to via core translation
   generate said gif), displaying every reduction step until the term
   is normalized
 - _Relies on_
-  + [[Env]]
+  + [[Backends/Env]]
   + [[Backends/Graph]]
   + [[Nets/Default]]
   + [[Library]]

@@ -12,61 +12,106 @@ import qualified LLVM.AST.Type as Type
 
 -- defines a tag over a node type, to denote the variant
 
-tag ∷ Type.Type
-tag = Codegen.i4
+tag :: Type.Type
+tag = Codegen.i8
 
-tagInt ∷ Num p ⇒ p
-tagInt = 4
+tagInt :: Num p => p
+tagInt = 8
 
-eacSize ∷ Num p ⇒ p
+eacSize :: Num p => p
 eacSize = tagInt + Codegen.nodePointerSize
 
-eac ∷ Type.Type
-eac = Type.StructureType
-  { Type.isPacked = True,
-    Type.elementTypes =
-      [ tag,
-        Codegen.nodePointer eacPointer
-      ]
-  }
+eacNameRef :: Type.Type
+eacNameRef = Type.NamedTypeReference eacName
 
-eacPointer ∷ Type.Type
-eacPointer = Type.PointerType eac (Addr.AddrSpace Codegen.nodePointerSize)
+eacName :: IsString p => p
+eacName = Codegen.nodeTypeName
 
-app, dup, lam, era ∷ C.Constant
+eac :: Type.Type
+eac = Codegen.nodeType tag []
+
+eacPointer :: Type.Type
+eacPointer = Type.PointerType eacNameRef (Addr.AddrSpace 0)
+
+top, app, dup, lam, era :: C.Constant
+top = C.Int {C.integerBits = tagInt, C.integerValue = 4}
 app = C.Int {C.integerBits = tagInt, C.integerValue = 0}
 lam = C.Int {C.integerBits = tagInt, C.integerValue = 1}
 era = C.Int {C.integerBits = tagInt, C.integerValue = 2}
 dup = C.Int {C.integerBits = tagInt, C.integerValue = 3}
 
-eacList ∷ Type.Type
-eacList = Type.StructureType
-  { -- change to true later?
-    Type.isPacked = False,
-    Type.elementTypes = [eacPointer, eacLPointer]
-  }
+eacListNameRef :: Type.Type
+eacListNameRef = Type.NamedTypeReference eacListName
 
-eacLPointer ∷ Type.Type
-eacLPointer = Type.PointerType eacList (Addr.AddrSpace 32)
+eacListName :: IsString p => p
+eacListName = "eac_list"
+
+eacList :: Type.Type
+eacList =
+  Type.StructureType
+    { -- change to true later?
+      Type.isPacked = False,
+      Type.elementTypes = [eacPointer, eacLPointer]
+    }
+
+eacLPointer :: Type.Type
+eacLPointer = Type.PointerType eacListNameRef (Addr.AddrSpace 0)
+
+testList :: Type.Type
+testList =
+  Type.StructureType
+    { -- change to true later?
+      Type.isPacked = False,
+      Type.elementTypes = [Type.i1, testListPointer]
+    }
+
+testListPointer :: Type.Type
+testListPointer = Type.PointerType (Type.NamedTypeReference "list") (Addr.AddrSpace 0)
+
+--------------------------------------------------------------------------------
+-- Node operations
+--------------------------------------------------------------------------------
+
+tagOf :: Codegen.RetInstruction m => Operand.Operand -> m Operand.Operand
+tagOf eac =
+  Codegen.getElementPtr $
+    Codegen.Minimal
+      { Codegen.type' = Codegen.pointerOf tag,
+        Codegen.address' = eac,
+        Codegen.indincies' = Codegen.constant32List [0, 0]
+      }
 
 --------------------------------------------------------------------------------
 -- EacList operations
 --------------------------------------------------------------------------------
 
-checkNull ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-checkNull = Codegen.icmp IntPred.EQ (Operand.ConstantOperand (C.Null eacPointer))
+-- TODO ∷ make sure this works, I doubt it checks null pointers properly
+-- probably need a tag to determine when a list is null?
+checkNull :: Codegen.RetInstruction m => Operand.Operand -> m Operand.Operand
+checkNull xs = do
+  xsI <- Codegen.ptrToInt xs (Type.IntegerType Codegen.addressSpace)
+  Codegen.icmp
+    IntPred.EQ
+    ( Operand.ConstantOperand
+        ( C.PtrToInt
+            (C.Null eacLPointer)
+            (Type.IntegerType Codegen.addressSpace)
+        )
+    )
+    xsI
 
-cons ∷ Codegen.MallocNode m ⇒ Operand.Operand → Operand.Operand → m Operand.Operand
+cons :: Codegen.MallocNode m => Operand.Operand -> Operand.Operand -> m Operand.Operand
 cons ele eacList = do
-  newList ← Codegen.malloc (Codegen.nodePointerSize + Codegen.nodePointerSize) eacLPointer
-  car ← Codegen.loadElementPtr $
-    Codegen.Minimal
-      { Codegen.type' = Codegen.pointerOf eacPointer,
-        Codegen.address' = newList,
-        Codegen.indincies' = Codegen.constant32List [0, 0]
-      }
-  cdr ←
-    Codegen.loadElementPtr $
+  newList <- Codegen.malloc (Codegen.nodePointerSize + Codegen.nodePointerSize) eacLPointer
+  car <-
+    Codegen.getElementPtr $
+      Codegen.Minimal
+        { Codegen.type' = Codegen.pointerOf eacPointer,
+          Codegen.address' = newList,
+          Codegen.indincies' = Codegen.constant32List [0, 0]
+        }
+  cdr <-
+    Codegen.getElementPtr $
       Codegen.Minimal
         { Codegen.type' = Codegen.pointerOf eacLPointer,
           Codegen.address' = newList,
@@ -76,8 +121,8 @@ cons ele eacList = do
   Codegen.store cdr eacList
   pure newList
 
-loadCar ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-loadCar eacList = do
+loadCar :: Codegen.RetInstruction m => Operand.Operand -> m Operand.Operand
+loadCar eacList =
   Codegen.loadElementPtr $
     Codegen.Minimal
       { Codegen.type' = eacPointer,
@@ -85,8 +130,8 @@ loadCar eacList = do
         Codegen.indincies' = Codegen.constant32List [0, 0]
       }
 
-loadCdr ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-loadCdr eacList = do
+loadCdr :: Codegen.RetInstruction m => Operand.Operand -> m Operand.Operand
+loadCdr eacList =
   Codegen.loadElementPtr $
     Codegen.Minimal
       { Codegen.type' = eacLPointer,
@@ -94,6 +139,5 @@ loadCdr eacList = do
         Codegen.indincies' = Codegen.constant32List [0, 1]
       }
 
-loadList ∷ Codegen.RetInstruction m ⇒ Operand.Operand → m Operand.Operand
-loadList eacPointer =
-  Codegen.load eacList eacPointer
+loadList :: Codegen.RetInstruction m => Operand.Operand -> m Operand.Operand
+loadList = Codegen.load eacListNameRef

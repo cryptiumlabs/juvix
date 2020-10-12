@@ -1,7 +1,7 @@
 module Juvix.Core.EAC.Types where
 
 import qualified Data.Text as T
-import Juvix.Core.Erased.Types
+import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
 
@@ -40,16 +40,16 @@ type ParamTypeAssignment primTy = Map.T Symbol (PType primTy)
 -- Linear (in)equality constraint on parameters.
 data Constraint
   = Constraint
-      { vars ∷ [ConstraintVar],
-        op ∷ Op
+      { vars :: [ConstraintVar],
+        op :: Op
       }
   deriving (Show, Eq)
 
 -- Variable in constraint.
 data ConstraintVar
   = ConstraintVar
-      { coefficient ∷ Int,
-        variable ∷ Param
+      { coefficient :: Int,
+        variable :: Param
       }
   deriving (Show, Eq)
 
@@ -78,8 +78,7 @@ data BracketErrors
   deriving (Show)
 
 -- | Runner Type for Bracket and TypeError
-newtype EitherTyp b a
-  = EitherBracket {runEither ∷ (Either b a)}
+newtype EitherTyp b a = EitherBracket {runEither :: (Either b a)}
   deriving
     (Functor, Applicative, Monad)
     via Except b
@@ -102,52 +101,77 @@ data Errors primTy primVal
   | Brack BracketErrors
   deriving (Show)
 
+type EnvErrorAlias primTy primVal =
+  ExceptT (TypeErrors primTy primVal) (State (Info primTy))
+
 -- Environment for errors.
-newtype EnvError primTy primVal a = EnvError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)) a)
+newtype EnvError primTy primVal a
+  = EnvError (EnvErrorAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "ctxt" (Map.T Symbol (Type primTy)))
-    via Field "ctxt" () (MonadState (ExceptT (TypeErrors primTy primVal) (State (Info primTy))))
+    ( HasState "ctxt" (Map.T Symbol (Erased.Type primTy)),
+      HasSink "ctxt" (Map.T Symbol (Erased.Type primTy)),
+      HasSource "ctxt" (Map.T Symbol (Erased.Type primTy))
+    )
+    via StateField "ctxt" (EnvErrorAlias primTy primVal)
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
-    via MonadError (ExceptT (TypeErrors primTy primVal) (State (Info primTy)))
+    via MonadError (EnvErrorAlias primTy primVal)
 
-data Info primTy = I {ctxt ∷ Map.T Symbol (Type primTy)} deriving (Show, Generic)
+data Info primTy = I {ctxt :: Map.T Symbol (Erased.Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env primTy
   = Env
-      { path ∷ Path,
-        varPaths ∷ VarPaths,
-        typeAssignment ∷ TypeAssignment primTy,
-        nextParam ∷ Param,
-        constraints ∷ [Constraint],
-        occurrenceMap ∷ OccurrenceMap
+      { path :: Path,
+        varPaths :: VarPaths,
+        typeAssignment :: Erased.TypeAssignment primTy,
+        nextParam :: Param,
+        constraints :: [Constraint],
+        occurrenceMap :: OccurrenceMap
       }
   deriving (Show, Eq, Generic)
 
 newtype EnvConstraint primTy a = EnvCon (State (Env primTy) a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "path" Path)
-    via Field "path" () (MonadState (State (Env primTy)))
+    ( HasState "path" Path,
+      HasSink "path" Path,
+      HasSource "path" Path
+    )
+    via StateField "path" (State (Env primTy))
   deriving
-    (HasState "varPaths" VarPaths)
-    via Field "varPaths" () (MonadState (State (Env primTy)))
+    ( HasState "varPaths" VarPaths,
+      HasSink "varPaths" VarPaths,
+      HasSource "varPaths" VarPaths
+    )
+    via StateField "varPaths" (State (Env primTy))
   deriving
-    (HasState "typeAssignment" (TypeAssignment primTy))
-    via Field "typeAssignment" () (MonadState (State (Env primTy)))
+    ( HasState "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSink "typeAssignment" (Erased.TypeAssignment primTy),
+      HasSource "typeAssignment" (Erased.TypeAssignment primTy)
+    )
+    via StateField "typeAssignment" (State (Env primTy))
   deriving
-    (HasState "nextParam" Param)
-    via Field "nextParam" () (MonadState (State (Env primTy)))
+    ( HasState "nextParam" Param,
+      HasSink "nextParam" Param,
+      HasSource "nextParam" Param
+    )
+    via StateField "nextParam" (State (Env primTy))
   deriving
-    (HasState "occurrenceMap" OccurrenceMap)
-    via Field "occurrenceMap" () (MonadState (State (Env primTy)))
+    ( HasState "occurrenceMap" OccurrenceMap,
+      HasSink "occurrenceMap" OccurrenceMap,
+      HasSource "occurrenceMap" OccurrenceMap
+    )
+    via StateField "occurrenceMap" (State (Env primTy))
   deriving
-    ( HasStream "constraints" [Constraint],
+    (HasReader "occurrenceMap" OccurrenceMap)
+    via ReaderField "occurrenceMap" (State (Env primTy))
+  deriving
+    ( HasSink "constraints" [Constraint],
       HasWriter "constraints" [Constraint]
     )
-    via WriterLog (Field "constraints" () (MonadState (State (Env primTy))))
+    via WriterField "constraints" (State (Env primTy))
 
 instance PrettyPrint ConstraintVar where
   prettyPrintValue (ConstraintVar coeff var) =

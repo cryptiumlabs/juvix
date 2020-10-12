@@ -1,23 +1,29 @@
-module Juvix.Core.HRAnn.Types where
+module Juvix.Core.HRAnn.Types
+  ( module Juvix.Core.HRAnn.Types,
+    module Juvix.Core.HRAnn.Extend,
+  )
+where
 
-import Juvix.Core.Usage
-import Juvix.Library
+import Juvix.Core.HRAnn.Extend
+import qualified Juvix.Core.IR.Types.Base as IR
 
-data Term primTy primVal
-  = Star Natural
-  | PrimTy primTy
-  | Pi Usage (Term primTy primVal) (Term primTy primVal)
-  | Lam Symbol (AnnTerm primTy primVal)
-  | Elim (AnnElim primTy primVal)
-  deriving (Show, Eq, Generic)
+-- TODO: add combinators to @extensible-data@ for pairing like this
+IR.extendTerm "Term" [] [t|T|] extTerm
 
-data Elim primTy primVal
-  = Var Symbol
-  | Prim primVal
-  | App (AnnElim primTy primVal) (AnnTerm primTy primVal)
-  | Ann Usage (Term primTy primVal) (Term primTy primVal)
-  deriving (Show, Eq, Generic)
+-- TODO allow extendTerm to reorder fields?
+pattern Lam π x s t = Lam0 t (BindAnnotation x (Annotation π s))
 
-type AnnTerm primTy primVal = (Term primTy primVal, Usage, Term primTy primVal)
+pattern Pi π x s t = Pi0 π s t x
 
-type AnnElim primTy primVal = (Elim primTy primVal, Usage, Term primTy primVal)
+pattern Let π x s l b = Let0 π l b (LetAnnotation x s)
+
+pattern Elim π s t = Elim0 s (Annotation π t)
+
+{-# COMPLETE Star, PrimTy, Prim, Pi, Lam, Let, Elim #-}
+
+IR.extendElim "Elim" [] [t|T|] extElim
+
+pattern App π s ts ρ t tt =
+  App0 s t (AppAnnotation (Annotation π ts) (Annotation ρ tt))
+
+{-# COMPLETE Var, App, Ann #-}

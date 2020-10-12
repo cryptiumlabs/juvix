@@ -1,4 +1,4 @@
-FROM fpco/stack-build:lts-14.12
+FROM fpco/stack-build:lts-15.16
 
 RUN git clone https://github.com/Z3Prover/z3.git && cd z3 && python scripts/mk_make.py && cd build && make && make install
 

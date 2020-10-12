@@ -7,7 +7,7 @@ module Juvix.Backends.LLVM.Codegen.Types
 where
 
 import Data.ByteString.Short hiding (empty)
-import qualified Juvix.Backends.LLVM.Codegen.Constants as Constants
+import qualified Distribution.System as System
 import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Backends.LLVM.Codegen.Sum
 import Juvix.Library hiding (Type)
@@ -16,6 +16,7 @@ import LLVM.AST as AST
 import LLVM.AST.AddrSpace
 import LLVM.AST.DataLayout (DataLayout (..))
 import qualified LLVM.AST.Type as Type
+import Prelude ((!!))
 
 --------------------------------------------------------------------------------
 -- Codegen State
@@ -24,32 +25,35 @@ import qualified LLVM.AST.Type as Type
 data CodegenState
   = CodegenState
       { -- | Name of the active block to append to
-        currentBlock ∷ Name,
+        currentBlock :: Name,
         -- | Blocks for function
-        blocks ∷ Map.T Name BlockState,
+        blocks :: Map.T Name BlockState,
         -- | Function scope symbol table
-        symTab ∷ SymbolTable,
+        symTab :: SymbolTable,
         -- | Mapping from symbol to Type
-        typTab ∷ TypeTable,
+        typTab :: TypeTable,
         -- | a mapping from the variants to the sum type
-        varTab ∷ VariantToType,
+        varTab :: VariantToType,
         -- | Count of basic blocks
-        blockCount ∷ Int,
+        blockCount :: Int,
         -- | Count of unnamed instructions
-        count ∷ Word,
+        count :: Word,
         -- | Name Supply
-        names ∷ Names
+        names :: Names,
+        moduleAST :: AST.Module,
+        -- | Debug level
+        debug :: Int
       }
   deriving (Show, Generic)
 
 data BlockState
   = BlockState
       { -- | Block index
-        idx ∷ Int,
+        idx :: Int,
         -- | Stack of instructions
-        stack ∷ [Named Instruction],
+        stack :: [Named Instruction],
         -- | Block terminator
-        term ∷ Maybe (Named Terminator)
+        term :: Maybe (Named Terminator)
       }
   deriving (Show, Generic)
 
@@ -64,56 +68,121 @@ data Errors
     VariableNotInScope Text
   | -- | Error that happens when a block lacks a terminator when it should have one
     BlockLackingTerminator Int
-  deriving (Show)
+  deriving (Show, Eq)
 
-newtype Codegen a = CodeGen {runCodegen ∷ ExceptT Errors (State CodegenState) a}
+type CodegenAlias = ExceptT Errors (State CodegenState)
+
+newtype Codegen a = CodeGen {runCodegen :: CodegenAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "currentBlock" Name)
-    via Field "currentBlock" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "currentBlock" Name,
+      HasSink "currentBlock" Name,
+      HasSource "currentBlock" Name
+    )
+    via StateField "currentBlock" CodegenAlias
   deriving
-    (HasState "blocks" (Map.T Name BlockState))
-    via Field "blocks" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "blocks" (Map.T Name BlockState),
+      HasSink "blocks" (Map.T Name BlockState),
+      HasSource "blocks" (Map.T Name BlockState)
+    )
+    via StateField "blocks" CodegenAlias
   deriving
-    (HasState "symTab" SymbolTable)
-    via Field "symTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "symTab" SymbolTable,
+      HasSink "symTab" SymbolTable,
+      HasSource "symTab" SymbolTable
+    )
+    via StateField "symTab" CodegenAlias
   deriving
-    (HasState "varTab" VariantToType)
-    via Field "varTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "varTab" VariantToType,
+      HasSink "varTab" VariantToType,
+      HasSource "varTab" VariantToType
+    )
+    via StateField "varTab" CodegenAlias
   deriving
-    (HasState "typTab" TypeTable)
-    via Field "typTab" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "typTab" TypeTable,
+      HasSink "typTab" TypeTable,
+      HasSource "typTab" TypeTable
+    )
+    via StateField "typTab" CodegenAlias
   deriving
-    (HasState "blockCount" Int)
-    via Field "blockCount" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "blockCount" Int,
+      HasSink "blockCount" Int,
+      HasSource "blockCount" Int
+    )
+    via StateField "blockCount" CodegenAlias
   deriving
-    (HasState "count" Word)
-    via Field "count" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "count" Word,
+      HasSink "count" Word,
+      HasSource "count" Word
+    )
+    via StateField "count" CodegenAlias
   deriving
-    (HasState "names" Names)
-    via Field "names" () (MonadState (ExceptT Errors (State CodegenState)))
+    ( HasState "names" Names,
+      HasSink "names" Names,
+      HasSource "names" Names
+    )
+    via StateField "names" CodegenAlias
   deriving
-    (HasThrow "err" Errors)
-    via MonadError (ExceptT Errors (State CodegenState))
+    ( HasState "moduleAST" AST.Module,
+      HasSink "moduleAST" AST.Module,
+      HasSource "moduleAST" AST.Module
+    )
+    via StateField "moduleAST" CodegenAlias
+  deriving
+    ( HasReader "debug" Int,
+      HasSource "debug" Int
+    )
+    via ReaderField "debug" CodegenAlias
+  deriving (HasThrow "err" Errors) via MonadError CodegenAlias
+
+instance HasState "moduleDefinitions" [Definition] Codegen where
+  state_ _ state = do
+    c <- get @"moduleDefinitions"
+    let (a, res) = state c
+    put @"moduleDefinitions" res
+    pure a
+
+instance HasSource "moduleDefinitions" [Definition] Codegen where
+  await_ _ = moduleDefinitions <$> (get @"moduleAST")
+
+instance HasSink "moduleDefinitions" [Definition] Codegen where
+  yield_ _ x = do
+    c <- get @"moduleAST"
+    put @"moduleAST" (c {moduleDefinitions = x})
 
 -- TODO ∷ see if this is still useful
-newtype LLVM a = LLVM {runLLVM ∷ State AST.Module a}
+newtype LLVM a = LLVM {runLLVM :: State AST.Module a}
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "moduleName" ShortByteString)
-    via Field "moduleName" () (MonadState (State AST.Module))
+    ( HasState "moduleName" ShortByteString,
+      HasSink "moduleName" ShortByteString,
+      HasSource "moduleName" ShortByteString
+    )
+    via StateField "moduleName" (State AST.Module)
   deriving
-    (HasState "moduleSourceFileName" ShortByteString)
-    via Field "moduleSourceFileName" () (MonadState (State AST.Module))
+    ( HasState "moduleSourceFileName" ShortByteString,
+      HasSink "moduleSourceFileName" ShortByteString,
+      HasSource "moduleSourceFileName" ShortByteString
+    )
+    via StateField "moduleSourceFileName" (State AST.Module)
   deriving
-    (HasState "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout))
-    via Field "moduleDataLayout" () (MonadState (State AST.Module))
+    ( HasState "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout),
+      HasSink "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout),
+      HasSource "moduleDataLayout" (Maybe LLVM.AST.DataLayout.DataLayout)
+    )
+    via StateField "moduleDataLayout" (State AST.Module)
   deriving
-    (HasState "moduleTargetTriple" (Maybe ShortByteString))
-    via Field "moduleTargetTriple" () (MonadState (State AST.Module))
+    ( HasState "moduleTargetTriple" (Maybe ShortByteString),
+      HasSink "moduleTargetTriple" (Maybe ShortByteString),
+      HasSource "moduleTargetTriple" (Maybe ShortByteString)
+    )
+    via StateField "moduleTargetTriple" (State AST.Module)
   deriving
-    (HasState "moduleDefinitions" [Definition])
-    via Field "moduleDefinitions" () (MonadState (State AST.Module))
+    ( HasState "moduleDefinitions" [Definition],
+      HasSink "moduleDefinitions" [Definition],
+      HasSource "moduleDefinitions" [Definition]
+    )
+    via StateField "moduleDefinitions" (State AST.Module)
 
 --------------------------------------------------------------------------------
 -- Effect Aliases
@@ -172,168 +241,265 @@ type Call m =
     HasState "symTab" SymbolTable m
   )
 
+type Debug m = HasReader "debug" Int m
+
 --------------------------------------------------------------------------------
 -- Haskell Types
 --------------------------------------------------------------------------------
 
 data MinimalPtr
   = Minimal
-      { address' ∷ Operand,
-        indincies' ∷ [Operand],
-        type' ∷ Type
+      { address' :: Operand,
+        indincies' :: [Operand],
+        type' :: Type
       }
   deriving (Show)
+
+--------------------------------------------------------------------------------
+-- LLVM Type Operations
+--------------------------------------------------------------------------------
+
+-- TODO :: Replace with safe lens call instead!
+intoStructTypeErr :: Integral a => Type -> a -> Type
+intoStructTypeErr typ' i = elementTypes typ' !! fromIntegral i
+
+--------------------------------------------------------------------------------
+-- System Architecture
+--------------------------------------------------------------------------------
+
+-- for all architectures we will want to know the addressing space
+-- for architectures that are sufficiently big, we will want to really cut corners
+-- with indirection.
+-- In reality, it seems most architectures we should care about are 32 bit or higher
+-- however, on the off chance, we are forced into an 8 bit architecture, we have variants
+-- for port numbers, so we can support large number of arguments (is this even useful on small archs?)
+
+addressSpace :: Num p => p
+addressSpace =
+  case System.buildArch of
+    System.X86_64 -> 64
+    System.I386 -> 32
+    System.Mips -> 32
+    System.PPC -> 32
+    System.PPC64 -> 64
+    System.Sparc -> 64
+    System.Arm -> 32
+    System.AArch64 -> 64
+    -- has 16 bit instructions
+    System.SH -> 32
+    System.IA64 -> 64
+    -- These have 24/31 bit addressing
+    -- may be more apt to return 24/31?
+    System.S390 -> 32
+    System.Alpha -> 64
+    -- seems to be 64?
+    System.Hppa -> 64
+    -- seems to be PowerPC architecture!?!??
+    System.Rs6000 -> 32
+    -- may have to lower to 24?
+    System.M68k -> 32
+    System.Vax -> 32
+    -- 32 I guess?
+    System.JavaScript -> 32
+    -- otherwise assume it's a 32 bit architecture
+    System.OtherArch _ -> 32
+
+-- | 'bitSizeEncodingPoint' is used to determine if we need a layer of indirection
+-- around all our number types to have a bigger argument list
+bitSizeEncodingPoint :: Bool
+bitSizeEncodingPoint = addressSpace >= (17 :: Int)
+
+debugLevelOne :: HasReader "debug" Int m => m () -> m ()
+debugLevelOne = whenM ((1 <=) <$> ask @"debug")
 
 --------------------------------------------------------------------------------
 -- LLVM Types
 --------------------------------------------------------------------------------
 
--- TODO ∷ change all Type → Type into a reader monad
--- instantiate similar to how Parsec does it
-
 -- | 'varientToType' takes the type out of the variant
-varientToType ∷ VariantInfo → Type
+varientToType :: VariantInfo -> Type
 varientToType = typ'
 
--- | 'numPortsSmall' is used for the number of ports that fit within 16 bits
-numPortsSmall ∷ VariantInfo
+-- | 'numPortsSmall' is used for the number of ports that fit within 8/16 bits
+-- Only gets used when architectures have less than 17 bits of addressing
+numPortsSmall :: VariantInfo
 numPortsSmall =
   updateVariant
     Type.i1
     Variant
-      { size = 32,
+      { size = addressSpace,
         name = "small",
         typ' = numPortsSmallValue
       }
 
-pointerOf ∷ Type → Type
-pointerOf typ = PointerType typ (AddrSpace 32)
+numPortsSmallType :: Type
+numPortsSmallType = typ' numPortsSmall
 
-pointerSizeInt ∷ Num p ⇒ p
-pointerSizeInt = 32
+pointerOf :: Type -> Type
+pointerOf typ = PointerType typ (AddrSpace 0)
 
-pointerSize ∷ Type
-pointerSize = Type.i32
+pointerSizeInt :: Num p => p
+pointerSizeInt = addressSpace
 
-numPortsSmallValue ∷ Type
-numPortsSmallValue = Type.i32
+pointerSize :: Type
+pointerSize = IntegerType addressSpace
 
--- | 'numPortsLarge' is used for the number of ports that don't fit within 16 bits
-numPortsLarge ∷ VariantInfo
+numPortsSmallValue :: Type
+numPortsSmallValue = IntegerType addressSpace
+
+-- | 'numPortsLarge' is used for the number of ports that don't fit within 8/16 bits
+-- Only gets used when architectures have less than 17 bits of addressing
+numPortsLarge :: VariantInfo
 numPortsLarge =
   updateVariant
     Type.i1
     Variant
-      { size = 32,
+      { size = addressSpace,
         name = "large",
         typ' = numPortsLargeValuePtr
       }
 
-numPortsLargeValue ∷ Type
+numPortsLargeType :: Type
+numPortsLargeType = typ' numPortsLarge
+
+numPortsLargeValue :: Type
 numPortsLargeValue = Type.i64
 
-numPortsLargeValueInt ∷ Num p ⇒ p
-numPortsLargeValueInt = 64
+numPortsLargeValueInt :: Num p => p
+numPortsLargeValueInt = addressSpace
 
-numPortsLargeValuePtr ∷ Type
+numPortsLargeValuePtr :: Type
 numPortsLargeValuePtr = pointerOf numPortsLargeValue
 
-numPortsPointer ∷ Type
-numPortsPointer = pointerOf numPorts
+numPortsPointer :: Type
+numPortsPointer = pointerOf numPortsNameRef
+
+numPortsNameRef :: Type
+numPortsNameRef
+  | bitSizeEncodingPoint = Type.IntegerType addressSpace
+  | otherwise = Type.NamedTypeReference numPortsName
+
+numPortsName :: IsString p => p
+numPortsName = "graph_num_ports"
 
 -- number of ports on a node or the port offset
-numPorts ∷ Type
-numPorts =
-  typ
-    { elementTypes =
-        let _ : rest = elementTypes typ
-         in Type.i1 : rest
-    }
+numPorts :: Type
+numPorts
+  | bitSizeEncodingPoint = IntegerType addressSpace
+  | otherwise =
+    typ
+      { elementTypes =
+          let _ : rest = elementTypes typ
+           in Type.i1 : rest
+      }
   where
     typ = createSum [numPortsLarge, numPortsSmall]
 
-numPortsSize ∷ Num p ⇒ p
-numPortsSize = 33
+numPortsSize :: Num p => p
+numPortsSize
+  | bitSizeEncodingPoint = addressSpace
+  | otherwise = 1 + addressSpace
 
-nodePointerSize ∷ Num p ⇒ p
-nodePointerSize = 32
+nodePointerSize :: Num p => p
+nodePointerSize = addressSpace
 
-portType ∷ Type → Type
-portType nodePtr = StructureType
-  { isPacked = True,
-    elementTypes =
-      [ nodePtr, -- the pointer to the other node
-        numPorts -- the offset from the base of the node where the port is
-      ]
-  }
+portTypeNameRef :: Type
+portTypeNameRef = Type.NamedTypeReference portTypeName
 
--- TODO ∷ getElementPtr returns int32*?
-portPointer ∷ Type → Type
-portPointer nodePtr = PointerType
-  { pointerReferent = portType nodePtr,
-    pointerAddrSpace = AddrSpace 32
-  }
+portTypeName :: IsString p => p
+portTypeName = "graph_port"
 
-portTypeSize ∷ Num p ⇒ p
-portTypeSize = 33
+portType :: Type -> Type
+portType nodePtr =
+  StructureType
+    { isPacked = True,
+      elementTypes =
+        [ nodePtr, -- the pointer to the other node
+          numPortsNameRef -- the offset from the base of the node where the port is
+        ]
+    }
+
+portPointer :: Type
+portPointer = pointerOf portTypeNameRef
+
+portTypeSize :: Num p => p
+portTypeSize = numPortsSize + pointerSizeInt
 
 -- TODO ∷ Figure out how to have an un-tagged union here for all baked in types
-dataType ∷ Type
-dataType = Constants.int
+dataType :: Type
+dataType = IntegerType addressSpace
 
-dataTypeSize ∷ Num p ⇒ p
-dataTypeSize = 64
+dataTypeSize :: Num p => p
+dataTypeSize = addressSpace
 
 -- | Construct a 32 bit port space so we can put many inside a node cheaply
 -- The pointer points to the beginning of a node and an offset
-nodePointer ∷ Type → Type
-nodePointer nodePtrType = pointerOf (nodeType nodePtrType)
+nodePointer :: Type
+nodePointer = pointerOf nodeTypeNameRef
 
--- TODO ∷ Figure out how to get varying data in here
-nodeType ∷ Type → Type
-nodeType nodePtrType = StructureType
-  { isPacked = True,
-    elementTypes =
-      [ numPorts, -- length of the portData
-        portData nodePtrType, -- variable size array of ports
-        dataArray -- variable size array of data the node stores
-      ]
-  }
+nodeTypeNameRef :: Type
+nodeTypeNameRef = Type.NamedTypeReference nodeTypeName
 
-dataArray ∷ Type
-dataArray = ArrayType 0 dataType
+nodeTypeName :: IsString p => p
+nodeTypeName = "graph_node"
 
-portData ∷ Type → Type
-portData nodePtrType = ArrayType 0 (portType nodePtrType)
+nodeType :: Type -> [Type] -> Type
+nodeType tag extraData
+  | bitSizeEncodingPoint =
+    abstracted
+      { elementTypes =
+          [ tag,
+            portData, -- variable size array of ports
+            dataArray -- variable size array of data the node stores
+          ]
+            <> extraData -- contains tag and other data a node may need
+      }
+  | otherwise =
+    abstracted
+      { elementTypes =
+          [ tag,
+            numPortsNameRef, -- length of the portData
+            portData, -- variable size array of ports
+            dataArray -- variable size array of data the node stores
+          ]
+            <> extraData -- contains tag and other data a node may need
+      }
+  where
+    abstracted =
+      StructureType
+        { isPacked = True,
+          elementTypes = []
+        }
 
--- Holds the port type and the size of it for easy transition into nodeType
-portArrayLen ∷ Type → Type
-portArrayLen nodePtrType = StructureType
-  { isPacked = False,
-    elementTypes =
-      [ numPorts,
-        portData nodePtrType
-      ]
-  }
+dataArray :: Type
+dataArray = pointerOf (ArrayType 0 dataType)
+
+portData :: Type
+portData = pointerOf (ArrayType 0 portTypeNameRef)
 
 -- TODO ∷ This changes per platform
-vaList ∷ Type
-vaList = StructureType
-  { isPacked = False,
-    elementTypes = [PointerType Type.i8 (AddrSpace 32)]
-  }
+vaList :: Type
+vaList =
+  StructureType
+    { isPacked = True,
+      elementTypes = [pointerOf Type.i8]
+    }
 
-bothPrimary ∷ Type → Type
-bothPrimary nodePtrType = StructureType
-  { isPacked = False,
-    elementTypes = [Type.i1, nodePtrType]
-  }
+bothPrimary :: Type
+bothPrimary =
+  StructureType
+    { isPacked = False,
+      elementTypes = [Type.i1, nodePointer]
+    }
 
-voidStarTy ∷ Type
-voidStarTy = PointerType VoidType (AddrSpace 32)
+voidStarTy :: Type
+voidStarTy = pointerOf VoidType
 
-voidTy ∷ Type
+voidTy :: Type
 voidTy = VoidType
 
-size_t ∷ Type
-size_t = IntegerType 64
+size_t :: Type
+size_t = IntegerType addressSpace
+
+size_t_int :: Num p => p
+size_t_int = addressSpace

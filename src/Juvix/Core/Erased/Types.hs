@@ -1,25 +1,39 @@
-module Juvix.Core.Erased.Types where
+module Juvix.Core.Erased.Types
+  ( module Juvix.Core.Erased.Types,
+    Term' (..),
+    Type' (..),
+    TypeAssignment',
+  )
+where
 
-import Juvix.Core.Usage
-import Juvix.Library hiding (Type)
-import qualified Juvix.Library.HashMap as Map
+import Juvix.Core.Erased.Extend
+import Juvix.Core.Erased.Types.Base
+import qualified Juvix.Core.IR.Types.Base as IR
+import Juvix.Core.IR.Types.Base hiding
+  ( Term' (..),
+    defaultExtTerm,
+    extendTerm,
+  )
+import Juvix.Core.Usage (Usage)
+import Juvix.Library hiding (Datatype, Type)
 
-data Term primVal
-  = Var Symbol
-  | Prim primVal
-  | Lam Symbol (Term primVal)
-  | App (Term primVal) (Term primVal)
-  deriving (Show, Eq, Generic)
+data T
 
-data Type primTy
-  = SymT Symbol
-  | Star Natural
-  | PrimTy primTy
-  | -- TODO: How to deal with dependency?
-    Pi Usage (Type primTy) (Type primTy)
-  deriving (Show, Eq, Generic)
+extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
 
-type TypeAssignment primTy = Map.T Symbol (Type primTy)
+extendType "Type" [] [t|T|] (\_ -> defaultExtType)
+
+type Datatype = Datatype' T
+
+type DataArg = DataArg' T
+
+type DataCon = DataCon' T
+
+type Function = Function' T
+
+type FunClause = FunClause' T
+
+type TypeAssignment primTy = TypeAssignment' T primTy
 
 data EvaluationError primVal
   = PrimitiveApplicationError primVal primVal

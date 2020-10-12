@@ -53,19 +53,19 @@ type Branches = [Symbol]
 
 data Bound
   = Bound
-      { lam ∷ Lambda,
+      { lam :: Lambda,
         -- This is to remember what ADΤ we belong to
-        adtName ∷ Symbol
+        adtName :: Symbol
       }
   deriving (Show, Generic)
 
 data Env
   = Env
-      { constructors ∷ Map.T Symbol Bound,
+      { constructors :: Map.T Symbol Bound,
         -- | adtMap is a mapping between the adt name and the ordered cases thereof
-        adtMap ∷ Map.T Symbol Branches,
+        adtMap :: Map.T Symbol Branches,
         -- | missingCases represent the missing cases of a match
-        missingCases ∷ [Symbol]
+        missingCases :: [Symbol]
       }
   deriving (Show, Generic)
 
@@ -78,22 +78,30 @@ data Errors
   | InvalidAdt
   deriving (Show)
 
-newtype EnvS a = EnvS (StateT Env (Except Errors) a)
+type EnvSAlias = StateT Env (Except Errors)
+
+newtype EnvS a = EnvS (EnvSAlias a)
   deriving (Functor, Applicative, Monad)
   deriving
-    (HasState "constructors" (Map.T Symbol Bound))
-    via Field "constructors" () (MonadState (StateT Env (Except Errors)))
+    ( HasState "constructors" (Map.T Symbol Bound),
+      HasSink "constructors" (Map.T Symbol Bound),
+      HasSource "constructors" (Map.T Symbol Bound)
+    )
+    via StateField "constructors" EnvSAlias
   deriving
-    (HasState "adtMap" (Map.T Symbol Branches))
-    via Field "adtMap" () (MonadState (StateT Env (Except Errors)))
+    ( HasState "adtMap" (Map.T Symbol Branches),
+      HasSink "adtMap" (Map.T Symbol Branches),
+      HasSource "adtMap" (Map.T Symbol Branches)
+    )
+    via StateField "adtMap" EnvSAlias
   deriving
     (HasThrow "err" Errors)
-    via MonadError (StateT Env (Except Errors))
+    via MonadError EnvSAlias
   deriving
-    ( HasStream "missingCases" [Symbol],
+    ( HasSink "missingCases" [Symbol],
       HasWriter "missingCases" [Symbol]
     )
-    via WriterLog (Field "missingCases" () (MonadState (StateT Env (Except Errors))))
+    via WriterField "missingCases" EnvSAlias
 
-runEnvsS ∷ EnvS a → Either Errors (a, Env)
+runEnvsS :: EnvS a -> Either Errors (a, Env)
 runEnvsS (EnvS a) = runExcept (runStateT a (Env Map.empty mempty mempty))

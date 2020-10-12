@@ -1,0 +1,22 @@
+* Trees that Grow
+
+In the Juvix codebase we have a variety of similar but different abstract
+syntaxes for Core—for example, adding type annotations or names (plain IR is
+locally nameless). Rather than duplicating code that needs to work on
+multiple kinds of syntax, or keep a single abstract syntax and write partial
+functions, we instead use the idiom described in the
+[[http://www.jucs.org/jucs_23_1/trees_that_grow/jucs_23_01_0042_0062_najd.pdf][Trees that Grow]]
+paper by Najd and Peyton Jones.
+
+The basic idea is to have a type family for each branch of the constructor
+and place anything not present in plain IR in there. In addition, there is
+also an extra "extension" type family for each datatype in the syntax to add
+extra constructors (for example, names). The first group all default to =()=,
+providing new information, and the second group to =Void=, ensuring they
+don't appear unexpectedly.
+
+Functions which don't care about the annotations can simply ignore them and
+thus be applied to any kind of syntax (as long as the extensions are still
+=Void=). Alternatively, if they need to work on the annotations as well, they
+can be encoded using type classes (see =Juvix.Core.IR.Evaluator.subst= for an
+example of this).

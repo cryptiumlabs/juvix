@@ -1,10 +1,38 @@
 module Juvix.Core.IR
-  ( module Juvix.Core.IR.Types,
-    module Juvix.Core.IR.Typechecker,
-    module Juvix.Core.IR.Evaluator,
+  ( module Juvix.Core.IR,
+    module IR,
   )
 where
 
-import Juvix.Core.IR.Evaluator
-import Juvix.Core.IR.Typechecker
-import Juvix.Core.IR.Types
+import Juvix.Core.IR.Evaluator as IR
+import Juvix.Core.IR.Typechecker as IR
+  ( Annotation,
+    Annotation' (..),
+    BindAnnotation,
+    BindAnnotation' (..),
+    Context,
+    EnvCtx,
+    EnvTypecheck (..),
+    Leftovers (..),
+    TypecheckError,
+    TypecheckError' (..),
+    UContext,
+    getElimAnn,
+    getTermAnn,
+    leftoverOk,
+    leftoversOk,
+    lookupCtx,
+    typeElim,
+    typeElimWith,
+    typeTerm,
+    typeTermWith,
+  )
+import qualified Juvix.Core.IR.Typechecker as TC
+import Juvix.Core.IR.Types as IR
+import Juvix.Library
+
+execTC ::
+  Globals primTy primVal ->
+  EnvTypecheck primTy primVal a ->
+  (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
+execTC = TC.exec

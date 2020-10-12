@@ -1,37 +1,43 @@
-module Juvix.Core.Types where
+module Juvix.Core.Types
+  ( module Juvix.Core.Types,
+    module Juvix.Core.Parameterisation,
+  )
+where
 
 import qualified Juvix.Core.EAC.Types as EAC
-import qualified Juvix.Core.Erasure.Types as ET
+import qualified Juvix.Core.Erased as EC
+import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Core.Parameterisation
 import Juvix.Library
-import Text.ParserCombinators.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
 
-data Parameterisation primTy primVal
-  = Parameterisation
-      { -- Returns an arrow.
-        typeOf ∷ primVal → NonEmpty primTy,
-        apply ∷ primVal → primVal → Maybe primVal,
-        parseTy ∷ Token.GenTokenParser String () Identity → Parser primTy,
-        parseVal ∷ Token.GenTokenParser String () Identity → Parser primVal,
-        reservedNames ∷ [String],
-        reservedOpNames ∷ [String]
-      }
-  deriving (Generic)
-
-arity ∷ ∀ primTy primVal. Parameterisation primTy primVal → primVal → Int
-arity param = length . typeOf param
-
-data PipelineError primTy primVal
+data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
-  | TypecheckerError Text
+  | TypecheckerError (TC.TypecheckError primTy primVal)
   | EACError (EAC.Errors primTy primVal)
-  | ErasureError ET.ErasureError
+  | ErasureError (Erasure.Error primTy primVal)
+  | PrimError compErr
   deriving (Show, Generic)
 
 data PipelineLog primTy primVal
   = LogHRtoIR (HR.Term primTy primVal) (IR.Term primTy primVal)
   | LogRanZ3 Double
+  deriving (Show, Generic)
+
+-- compErr serves to resolve the compilation error type
+-- needed to promote a backend specific compilation error
+data TermAssignment primTy primVal compErr
+  = Assignment
+      { term :: EC.Term primVal,
+        assignment :: EC.TypeAssignment primTy
+      }
+  deriving (Show, Generic)
+
+data AssignWithType primTy primVal compErr
+  = WithType
+      { termAssign :: TermAssignment primTy primVal compErr,
+        type' :: EC.Type primTy
+      }
   deriving (Show, Generic)

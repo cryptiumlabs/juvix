@@ -1,83 +1,112 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Juvix.Core.Parameterisations.Naturals where
 
-import Juvix.Core.Types hiding
-  ( apply,
-    parseTy,
-    parseVal,
-    reservedNames,
-    reservedOpNames,
-    typeOf,
-  )
-import Juvix.Library hiding ((<|>))
+import qualified Juvix.Core.Parameterisation as P
+import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
 import Prelude (String)
 
 -- k: primitive type: naturals
-data NatTy
-  = Nat
+data Ty
+  = Ty
   deriving (Show, Eq)
 
 -- c: primitive constant and f: functions
-data NatVal
-  = Natural Natural -- c
+data Val
+  = Val Natural -- c
   | Add -- f addition
   | Sub -- f subtraction
   | Mul -- f multiplication
-  | Curried NatVal Natural
+  | Curried Val Natural
   deriving (Eq)
 
-instance Show NatVal where
-  show (Natural x) = "Nat " <> Text.Show.show x
-  show Add = "+"
-  show Sub = "-"
-  show Mul = "*"
+instance Show Val where
+  show (Val x) = "Nat " <> Text.Show.show x
+  show Add = "add"
+  show Sub = "sub"
+  show Mul = "mul"
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
-typeOf ∷ NatVal → NonEmpty NatTy
-typeOf (Natural _) = Nat :| []
-typeOf (Curried _ _) = Nat :| [Nat]
-typeOf Add = Nat :| [Nat, Nat]
-typeOf Sub = Nat :| [Nat, Nat]
-typeOf Mul = Nat :| [Nat, Nat]
+typeOf :: Val -> P.PrimType Ty
+typeOf (Val _) = Ty :| []
+typeOf (Curried _ _) = Ty :| [Ty]
+typeOf Add = Ty :| [Ty, Ty]
+typeOf Sub = Ty :| [Ty, Ty]
+typeOf Mul = Ty :| [Ty, Ty]
 
-apply ∷ NatVal → NatVal → Maybe NatVal
-apply Add (Natural x) = pure (Curried Add x)
-apply Sub (Natural x) = pure (Curried Sub x)
-apply Mul (Natural x) = pure (Curried Mul x)
-apply (Curried Add x) (Natural y) = pure (Natural (x + y))
-apply (Curried Sub x) (Natural y) = pure (Natural (x - y))
-apply (Curried Mul x) (Natural y) = pure (Natural (x * y))
+hasType :: Val -> P.PrimType Ty -> Bool
+hasType x ty = ty == typeOf x
+
+arity :: Val -> Int
+arity = pred . length . typeOf
+
+apply :: Val -> Val -> Maybe Val
+apply Add (Val x) = pure (Curried Add x)
+apply Sub (Val x) = pure (Curried Sub x)
+apply Mul (Val x) = pure (Curried Mul x)
+apply (Curried Add x) (Val y) = pure (Val (x + y))
+apply (Curried Sub x) (Val y) = pure (Val (x - y))
+apply (Curried Mul x) (Val y) = pure (Val (x * y))
 apply _ _ = Nothing
 
-parseTy ∷ Token.GenTokenParser String () Identity → Parser NatTy
+parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Nat"
-  pure Nat
+  pure Ty
 
-parseVal ∷ Token.GenTokenParser String () Identity → Parser NatVal
+parseVal :: Token.GenTokenParser String () Identity -> Parser Val
 parseVal lexer =
   parseNat lexer <|> parseAdd lexer <|> parseSub lexer <|> parseMul lexer
 
-parseNat ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseNat lexer = Natural . fromIntegral |<< Token.natural lexer
+parseNat :: Token.GenTokenParser String () Identity -> Parser Val
+parseNat lexer = Val . fromIntegral |<< Token.natural lexer
 
-parseAdd ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseAdd lexer = Token.reserved lexer "+" >> pure Add
+parseAdd :: Token.GenTokenParser String () Identity -> Parser Val
+parseAdd lexer = Token.reserved lexer "add" >> pure Add
 
-parseSub ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseSub lexer = Token.reserved lexer "-" >> pure Sub
+parseSub :: Token.GenTokenParser String () Identity -> Parser Val
+parseSub lexer = Token.reserved lexer "sub" >> pure Sub
 
-parseMul ∷ Token.GenTokenParser String () Identity → Parser NatVal
-parseMul lexer = Token.reserved lexer "*" >> pure Mul
+parseMul :: Token.GenTokenParser String () Identity -> Parser Val
+parseMul lexer = Token.reserved lexer "mul" >> pure Mul
 
-reservedNames ∷ [String]
-reservedNames = ["Nat", "+", "-", "*"]
+reservedNames :: [String]
+reservedNames = ["Nat", "add", "sub", "mul"]
 
-reservedOpNames ∷ [String]
+reservedOpNames :: [String]
 reservedOpNames = []
 
-nat ∷ Parameterisation NatTy NatVal
-nat =
-  Parameterisation typeOf apply parseTy parseVal reservedNames reservedOpNames
+isNat :: Integer -> Bool
+isNat i = i >= 0
+
+natVal :: Integer -> Maybe Val
+natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
+
+builtinTypes :: P.Builtins Ty
+builtinTypes = [(["Nat"], Ty)]
+
+builtinValues :: P.Builtins Val
+builtinValues = [(["add"], Add), (["sub"], Sub), (["mul"], Mul)]
+
+t :: P.Parameterisation Ty Val
+t =
+  P.Parameterisation
+    { hasType,
+      builtinTypes,
+      builtinValues,
+      arity,
+      apply,
+      parseTy,
+      parseVal,
+      reservedNames,
+      reservedOpNames,
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \i _ -> isNat i,
+      intVal = natVal,
+      floatTy = \_ _ -> False,
+      floatVal = const Nothing
+    }

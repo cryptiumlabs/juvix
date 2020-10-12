@@ -1,18 +1,15 @@
-module Juvix.Core.EAC.Erasure
-  ( erase,
-  )
-where
+module Juvix.Core.EAC.Erasure (erase) where
 
-import Juvix.Core.EAC.Types
-import Juvix.Core.Erased.Types
+import qualified Juvix.Core.EAC.Types as EAC
+import qualified Juvix.Core.Erased.Types as Types
 
-erase ∷ ∀ primVal. RPTO primVal → Term primVal
-erase (RBang _ inner) = eraseInner inner
+erase :: forall primVal. EAC.RPTO primVal -> Types.Term primVal
+erase (EAC.RBang _ inner) = eraseInner inner
 
-eraseInner ∷ ∀ primVal. RPTI primVal → Term primVal
+eraseInner :: forall primVal. EAC.RPTI primVal -> Types.Term primVal
 eraseInner term =
   case term of
-    RVar s → Var s
-    RPrim p → Prim p
-    RLam v b → Lam v (erase b)
-    RApp f x → App (erase f) (erase x)
+    EAC.RVar s -> Types.Var s
+    EAC.RPrim p -> Types.Prim p
+    EAC.RLam v b -> Types.Lam v (erase b)
+    EAC.RApp f x -> Types.App (erase f) (erase x)
