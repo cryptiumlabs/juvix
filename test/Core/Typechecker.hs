@@ -134,6 +134,7 @@ coreCheckerEval =
     [ skiComp,
       natComp,
       dependentFunctionComp,
+      dependentPairComp,
       letComp,
       evaluations,
       skiCont,
@@ -165,8 +166,8 @@ natComp :: T.TestTree
 natComp =
   T.testGroup
     "Nat Computational typing"
-    [ shouldCheck Nat.t (IR.PrimTy Nat.Ty) (mempty `ann` IR.VStar 0),
-      shouldCheck Nat.t (IR.Prim (Nat.Val 1)) (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+    [ shouldCheck Nat.t natT' (mempty `ann` IR.VStar 0),
+      shouldCheck Nat.t (nat 1) (Usage.Omega `ann` natT),
       shouldCheck Nat.t (IR.Prim Nat.Add) (Usage.Omega `ann` addTy)
     ]
 
@@ -196,12 +197,12 @@ letComp =
       shouldCheck
         Nat.t
         (IR.Let mempty nzero (IR.Elim nzero))
-        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+        (Usage.Omega `ann` natT),
       -- let ω x = 0 in x
       shouldCheck
         Nat.t
         (IR.Let Usage.Omega nzero (IR.Elim (IR.Bound 0)))
-        (Usage.Omega `ann` IR.VPrimTy Nat.Ty),
+        (Usage.Omega `ann` natT),
       -- λx. let 0 y = 0 in x
       shouldCheck
         Nat.t
@@ -209,21 +210,24 @@ letComp =
         (natToNatTy' one)
     ]
   where
-    nzero = IR.Ann Usage.Omega (IR.Prim (Nat.Val 0)) (IR.PrimTy Nat.Ty) 0
+    nzero = IR.Ann Usage.Omega (nat 0) natT' 0
 
 evaluations :: T.TestTree
 evaluations =
   T.testGroup
     "Evaluations"
     [ shouldEval Nat.t add12 (natV 3),
-      shouldEval Nat.t sub52 (natV 3)
+      shouldEval Nat.t sub52 (natV 3),
+      shouldEval Nat.t identityApplication (natV 1),
+      shouldEval Nat.t (IR.Elim identityAppINat1) (natV 1),
+      shouldEval Nat.t (IR.Elim identityAppI) videntity,
+      shouldEval Nat.t (IR.Elim kApp1_2) (natV 1)
     ]
   where
-    nat = IR.Prim . Nat.Val
-    natV = IR.VPrim . Nat.Val
     add12 = IR.Elim $ add `IR.App` nat 1 `IR.App` nat 2
     sub52 = IR.Elim $ sub `IR.App` nat 5 `IR.App` nat 2
     sub = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
+    videntity = IR.VLam $ IR.VBound 0
 
 skiCont :: T.TestTree
 skiCont =
@@ -252,21 +256,15 @@ identity = IR.Lam (IR.Elim (IR.Bound 0))
 
 -- computation annotation of identity: (1, 1 Nat -> Nat)
 identityNatCompTy :: NatAnnotation
-identityNatCompTy =
-  one
-    `ann` IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty)
+identityNatCompTy = one `ann` IR.VPi one natT natT
 
 -- computation annotation of identity: (1, 1 Unit -> Unit)
 identityUnitCompTy :: UnitAnnotation
-identityUnitCompTy =
-  one
-    `ann` IR.VPi one (IR.VPrimTy Unit.Ty) (IR.VPrimTy Unit.Ty)
+identityUnitCompTy = one `ann` IR.VPi one unitT unitT
 
 -- contemplation annotation of identity: (0, 0 Nat -> Nat)
 identityNatContTy :: NatAnnotation
-identityNatContTy =
-  mempty
-    `ann` IR.VPi mempty (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty)
+identityNatContTy = mempty `ann` IR.VPi mempty natT natT
 
 -- dependent identity function, \t.\x.x 1: t
 depIdentity :: forall primTy primVal. IR.Term primTy primVal
@@ -311,7 +309,7 @@ identityApplication =
             one -- usage 1
             identity -- the identity function,
             -- which has annotation (1, 1 Nat -> Nat)
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
             -- type of 1 Nat -> Nat
             0
         )
@@ -320,7 +318,7 @@ identityApplication =
 
 -- computation annotation (1, Nat)
 natTy :: NatAnnotation
-natTy = one `ann` IR.VPrimTy Nat.Ty
+natTy = one `ann` natT
 
 -- (I:1 (1 Nat->Nat) -> (1 Nat->Nat) I:(1 Nat->Nat) ) 1 type checked to Nat.Ty
 identityAppINat1 :: NatElim
@@ -332,9 +330,9 @@ identityAppINat1 =
             identity -- has annotation (1, 1 ((1 Nat -> Nat)) -> (1 Nat -> Nat))
             ( IR.Pi
                 one -- the second 1 in the annotation
-                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+                (IR.Pi one natT' natT')
                 -- the third 1 in the annotation, (1 Nat -> Nat)
-                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+                (IR.Pi one natT' natT')
               -- the forth 1 in the annotation, (1 Nat -> Nat)
             )
             0
@@ -345,8 +343,8 @@ identityAppINat1 =
                 identity -- has annotation (1, 1 Nat -> Nat)
                 ( IR.Pi
                     one -- the second 1 in the annotation
-                    (IR.PrimTy Nat.Ty) -- 1 Nat ->
-                    (IR.PrimTy Nat.Ty) -- Nat
+                    natT' -- 1 Nat ->
+                    natT' -- Nat
                 )
                 0
             )
@@ -364,9 +362,9 @@ identityAppI =
         identity -- has annotation (1, (1, (1 Nat -> Nat) ) -> (1 Nat -> Nat) ) )
         ( IR.Pi
             one -- the second 1 in the annotation
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
             -- the third 1 in the annotation 1 Nat -> Nat
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
           -- the forth 1 in the annotation 1 Nat -> Nat
         )
         0
@@ -375,7 +373,7 @@ identityAppI =
         ( IR.Ann
             one -- sig usage, the first 1 of the annotation
             identity -- annotation (1, 1 Nat -> Nat)
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
             -- the second 1 of the annotation, 1 Nat -> Nat
             0
         )
@@ -391,11 +389,11 @@ kCompTy =
     `ann` IR.VPi -- the sig usage of k
     -- first input, 1 Nat
       one -- is used once in the output
-      (IR.VPrimTy Nat.Ty) -- of type Nat
+      natT -- of type Nat
       ( IR.VPi -- second input, 0 Nat
           mempty -- is not used in the output
-          (IR.VPrimTy Nat.Ty) -- of type Nat
-          (IR.VPrimTy Nat.Ty) -- the output is of type Nat
+          natT -- of type Nat
+          natT -- the output is of type Nat
       )
 
 -- K computation annotation (1, 1 Nat -> 0 () -> Nat)
@@ -426,14 +424,14 @@ identityAppK =
             one -- sig usage, the first 1 in the annotation
             ( IR.Pi
                 one -- the second 1 in the annotation
-                (IR.PrimTy Nat.Ty) -- (1 Nat ->
-                (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
+                natT' -- (1 Nat ->
+                (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
                     -- ->
             )
             ( IR.Pi
                 one
-                (IR.PrimTy Nat.Ty) -- (1 Nat ->
-                (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
+                natT' -- (1 Nat ->
+                (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
             )
         )
         0
@@ -444,8 +442,8 @@ identityAppK =
             kcombinator -- annotation (1, (1 Nat -> 0 Nat-> Nat))
             ( IR.Pi
                 one
-                (IR.PrimTy Nat.Ty) -- (1 Nat ->
-                (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
+                natT' -- (1 Nat ->
+                (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
             )
             0
         )
@@ -454,24 +452,23 @@ identityAppK =
 -- (K: Nat -> Nat -> Nat 1) should type check to Nat -> Nat
 kApp1 :: NatElim
 kApp1 =
-  IR.App -- applying K to 1
-    ( IR.Ann -- K
-        one -- sig usage
-        kcombinator -- annotation (1, (1 Nat -> 0 Nat -> Nat))
-        ( IR.Pi
-            one
-            (IR.PrimTy Nat.Ty) -- (1 Nat ->
-            (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
-        )
-        0
-    ) -- 1
-    (IR.Prim (Nat.Val 1))
+  IR.Ann -- K
+    one -- sig usage
+    kcombinator -- annotation (1, (1 Nat -> 0 Nat -> Nat))
+    ( IR.Pi
+        one
+        natT' -- (1 Nat ->
+        (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
+    )
+    0
+  `IR.App` nat 1
+
+kApp1_2 :: NatElim
+kApp1_2 = kApp1 `IR.App` nat 2
 
 -- computation annotation (π Nat -> Nat)
 natToNatTy' :: Usage.T -> NatAnnotation
-natToNatTy' π =
-  one
-    `ann` IR.VPi π (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty) -- sig usage
+natToNatTy' π = one `ann` IR.VPi π natT natT
 
 natToNatTy :: NatAnnotation
 natToNatTy = natToNatTy' mempty
@@ -488,26 +485,21 @@ kFunApp1 =
         kcombinator -- annotation (1, (1 Nat -> 0 (1 Nat -> Nat) -> Nat))
         ( IR.Pi
             one
-            (IR.PrimTy Nat.Ty) -- 1 Nat ->
+            natT' -- 1 Nat ->
             ( IR.Pi
                 mempty -- usage of (1 Nat -> Nat )
-                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+                (IR.Pi one natT' natT')
                 -- (1 Nat -> Nat ) ->
-                (IR.PrimTy Nat.Ty) -- Nat
+                natT' -- Nat
             )
         )
         0
     )
-    (IR.Prim (Nat.Val 1)) -- 1
+    (nat 1) -- 1
         -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
-kFunApp1CompTy =
-  one
-    `ann` IR.VPi
-      mempty
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
-      (IR.VPrimTy Nat.Ty)
+kFunApp1CompTy = one `ann` IR.VPi mempty (IR.VPi one natT natT) natT
 
 -- 1 K: 1 (1 Nat -> Nat) -> 0 Nat -> (1 Nat -> Nat) 1 I: 1 Nat -> Nat
 -- type checks to 0 Nat -> (1 Nat -> Nat)
@@ -519,12 +511,12 @@ kAppI =
         kcombinator
         ( IR.Pi
             one -- usage of (1 Nat -> Nat)
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
             -- (1 Nat -> Nat) ->
             ( IR.Pi
                 mempty
-                (IR.PrimTy Nat.Ty) -- 0 Nat ->
-                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+                natT' -- 0 Nat ->
+                (IR.Pi one natT' natT')
               -- (1 Nat -> Nat)
             )
         )
@@ -534,7 +526,7 @@ kAppI =
         ( IR.Ann -- I
             one -- usage of identity
             identity
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 1 Nat -> Nat
+            (IR.Pi one natT' natT') -- 1 Nat -> Nat
             0
         )
     )
@@ -549,12 +541,12 @@ kAppINotAnnotated =
         kcombinator
         ( IR.Pi
             one -- usage of (1 Nat -> Nat)
-            (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+            (IR.Pi one natT' natT')
             -- (1 Nat -> Nat) ->
             ( IR.Pi
                 mempty
-                (IR.PrimTy Nat.Ty) -- 0 Nat ->
-                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
+                natT' -- 0 Nat ->
+                (IR.Pi one natT' natT')
               -- (1 Nat -> Nat)
             )
         )
@@ -564,14 +556,7 @@ kAppINotAnnotated =
 
 -- computation annotation (1, 0 Nat -> (1 Nat -> Nat))
 kAppICompTy :: NatAnnotation
-kAppICompTy =
-  one
-    `ann` IR.VPi --sig usage
-      mempty
-      (IR.VPrimTy Nat.Ty) -- 0 Nat ->
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
-
--- (1 Nat -> Nat)
+kAppICompTy = one `ann` IR.VPi mempty natT (IR.VPi one natT natT)
 
 -- dependent k, \t1.\t2.\x:t1.\y:t2.x 1: t1
 depK :: forall primTy primVal. IR.Term primTy primVal
@@ -648,8 +633,8 @@ scombinator =
                                     (IR.Elim (IR.Bound 2)) -- x
                                     ( IR.Pi
                                         one
-                                        (IR.PrimTy Nat.Ty)
-                                        (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- Annotation of x: (1 Nat -> 0 Nat -> Nat)
+                                        natT'
+                                        (IR.Pi mempty natT' natT') -- Annotation of x: (1 Nat -> 0 Nat -> Nat)
                                     )
                                     0
                                 )
@@ -658,8 +643,8 @@ scombinator =
                         )
                         ( IR.Pi -- Annotation of xz: 0 Nat -> Nat
                             mempty
-                            (IR.PrimTy Nat.Ty)
-                            (IR.PrimTy Nat.Ty)
+                            natT'
+                            natT'
                         )
                         0
                     )
@@ -668,7 +653,7 @@ scombinator =
                             ( IR.Ann
                                 one -- usage of y
                                 (IR.Elim (IR.Bound 1)) -- y
-                                (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- Annotation of y, (1 Nat -> Nat)
+                                (IR.Pi one natT' natT') -- Annotation of y, (1 Nat -> Nat)
                                 0
                             )
                             (IR.Elim (IR.Bound 0)) -- z
@@ -689,58 +674,61 @@ scombinatorCompNatTy =
       one -- usage of 1 (1 Nat -> 0 Nat -> Nat)
       ( IR.VPi
           one
-          (IR.VPrimTy Nat.Ty) -- (1 Nat ->
+          natT -- (1 Nat ->
           ( IR.VPi
               mempty
-              (IR.VPrimTy Nat.Ty) -- 0 Nat ->
-              (IR.VPrimTy Nat.Ty) -- Nat) ->
+              natT -- 0 Nat ->
+              natT -- Nat) ->
           )
       )
       ( IR.VPi -- second input, (1 Nat -> Nat)
           one -- usage of (1 Nat -> Nat)
           ( IR.VPi
               one
-              (IR.VPrimTy Nat.Ty) --(1 Nat ->
-              (IR.VPrimTy Nat.Ty) -- Nat) ->
+              natT --(1 Nat ->
+              natT -- Nat) ->
           )
           ( IR.VPi
               Usage.Omega
-              (IR.VPrimTy Nat.Ty) -- w Nat ->
-              (IR.VPrimTy Nat.Ty) -- Nat
+              natT -- w Nat ->
+              natT -- Nat
           )
       )
 
 -- K 1 (I 1) = 1, so should type checked to (1, Nat)
 ski1CompNatTy :: NatAnnotation
-ski1CompNatTy =
-  one
-    `ann` IR.VPrimTy Nat.Ty
+ski1CompNatTy = one `ann` natT
+
+dependentPairComp :: T.TestTree
+dependentPairComp = T.testGroup "Dependent pair typing" $
+  [shouldCheck Nat.t boxNat boxNatAnn]
+
+twoNatsAnn :: NatAnnotation
+twoNatsAnn = one `ann` IR.VSig one natT natT
+
+twoNats :: NatTerm
+twoNats = IR.Pair (nat 0) (nat 1)
+
+boxNatAnn :: NatAnnotation
+boxNatAnn = one `ann` IR.VSig mempty (IR.VStar 0) (IR.VBound 0)
+
+boxNat :: NatTerm
+boxNat = IR.Pair natT' (nat 1)
 
 add :: NatElim
 add = IR.Ann Usage.Omega (IR.Prim Nat.Add) addTyT 0
 
 addTyT :: NatTerm
-addTyT =
-  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
-    $ IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
-    $ IR.PrimTy Nat.Ty
+addTyT = IR.Pi Usage.Omega natT' $ IR.Pi Usage.Omega natT' $ natT'
 
 addTy :: NatValue
-addTy =
-  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
-    $ IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
-    $ IR.VPrimTy Nat.Ty
+addTy = IR.VPi Usage.Omega natT $ IR.VPi Usage.Omega natT $ natT
 
 one' :: forall primTy primVal. IR.Term primTy primVal
 one' = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
 
 oneCompTy :: NatAnnotation
-oneCompTy =
-  one
-    `ann` IR.VPi
-      one
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
+oneCompTy = one `ann` IR.VPi one (IR.VPi one natT natT) (IR.VPi one natT natT)
 
 two :: IR.Term primTy primVal
 two =
@@ -750,12 +738,8 @@ two =
     $ IR.App (IR.Bound 1) (IR.Elim (IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))))
 
 twoCompTy :: NatAnnotation
-twoCompTy =
-  one
-    `ann` IR.VPi
-      (Usage.SNat 2)
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
-      (IR.VPi one (IR.VPrimTy Nat.Ty) (IR.VPrimTy Nat.Ty))
+twoCompTy = one `ann` IR.VPi two (IR.VPi one natT natT) (IR.VPi one natT natT)
+  where two = Usage.SNat 2
 
 typGlobals :: IR.Globals primTy primVal
 typGlobals =
@@ -781,3 +765,21 @@ faTerm = IR.Elim faElim
 
 faElim :: IR.Elim primTy primVal
 faElim = fElim `IR.App` aTerm
+
+nat :: Natural -> IR.Term primTy Nat.Val
+nat = IR.Prim . Nat.Val
+
+natV :: Natural -> IR.Value primTy Nat.Val
+natV = IR.VPrim . Nat.Val
+
+natT' :: IR.Term Nat.Ty primVal
+natT' = IR.PrimTy Nat.Ty
+
+natT :: IR.Value Nat.Ty primVal
+natT = IR.VPrimTy Nat.Ty
+
+unitT' :: IR.Term Unit.Ty primVal
+unitT' = IR.PrimTy Unit.Ty
+
+unitT :: IR.Value Unit.Ty primVal
+unitT = IR.VPrimTy Unit.Ty
