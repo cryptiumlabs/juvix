@@ -44,7 +44,7 @@ aboutDoc =
       line,
       text
         ( "(c) Christopher Goes 2018-2019, "
-            <> "(c) Cryptium Labs 2019 • https://juvix.org"
+            <> "(c) Cryptium Labs / Metastate 2019-2020 • https://juvix.org"
         ),
       line,
       disclaimerDoc

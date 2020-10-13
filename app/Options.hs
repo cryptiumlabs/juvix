@@ -19,6 +19,7 @@ data Backend
   = Unit
   | Naturals
   | Michelson
+  deriving (Eq, Show)
 
 data Command
   = Version
@@ -81,13 +82,16 @@ applyOptions :: Parser Command
 applyOptions = pure Apply
 
 typecheckOptions :: Parser Command
-typecheckOptions = Typecheck <$> fileOptions <*> backendOptions
+typecheckOptions = Typecheck <$> inputFileOptions <*> backendOptions
 
 compileOptions :: Parser Command
-compileOptions = Compile <$> fileOptions <*> fileOptions <*> backendOptions
+compileOptions = Compile <$> inputFileOptions <*> outputFileOptions <*> backendOptions
 
-fileOptions :: Parser FilePath
-fileOptions = argument str (metavar "FILE")
+inputFileOptions :: Parser FilePath
+inputFileOptions = argument str (metavar "INPUTFILE")
+
+outputFileOptions :: Parser FilePath
+outputFileOptions = argument str (metavar "OUTPUTFILE")
 
 backendOptions :: Parser Backend
 backendOptions =
@@ -100,4 +104,4 @@ backendOptions =
             _ -> Nothing
         )
     )
-    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend")
+    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> value Michelson <> showDefault)
