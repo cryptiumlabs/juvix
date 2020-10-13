@@ -4,10 +4,5 @@ TAG=cryptiumlabs/juvix-ci
 
 set -xe
 
-time docker build -t $TAG .
-docker save $TAG > /tmp/image.tar
-time docker-squash -i /tmp/image.tar -o /tmp/squashed.tar -t $TAG
-rm /tmp/image.tar
-cat /tmp/squashed.tar | docker load
-rm /tmp/squashed.tar
+time docker build --squash -t $TAG .
 docker push $TAG
