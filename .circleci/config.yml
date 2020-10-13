@@ -44,22 +44,22 @@ jobs:
   check_formatting:
     docker:
       - image: cryptiumlabs/juvix-ci
-     steps:
-      - attach_workspace:
-          at: /root
-      - run:
-          name: Check formatting
-          command: ./scripts/check-formatting.sh
+    steps:
+     - attach_workspace:
+         at: /root
+     - run:
+         name: Check formatting
+         command: ./scripts/check-formatting.sh
 
   check_org_gen:
     docker:
       - image: cryptiumlabs/juvix-ci
-     steps:
-      - attach_workspace:
-          at: /root
-      - run:
-          name: Check org gen
-          command: ./scripts/check-org-gen.sh
+    steps:
+     - attach_workspace:
+         at: /root
+     - run:
+         name: Check org gen
+         command: ./scripts/check-org-gen.sh
 
 workflows:
   version: 2.1
