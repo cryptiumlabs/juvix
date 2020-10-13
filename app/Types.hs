@@ -36,11 +36,12 @@ exec (EnvE env) param globals = do
   (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
-data Env primTy primVal = Env
-  { parameterisation :: Core.Parameterisation primTy primVal,
-    log :: [Core.PipelineLog primTy primVal],
-    globals :: IR.Globals primTy primVal
-  }
+data Env primTy primVal
+  = Env
+      { parameterisation :: Core.Parameterisation primTy primVal,
+        log :: [Core.PipelineLog primTy primVal],
+        globals :: IR.Globals primTy primVal
+      }
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =
