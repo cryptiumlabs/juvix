@@ -517,3 +517,27 @@ resolveName ctx (def, name) =
       pure topLevelName <> removeTopName name
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
+
+
+-- | Sorts a context by dependency order. Each element of the output is
+-- a mutually-recursive group, whose elements depend only on each other and
+-- elements of previous groups.
+recGroups :: T a b c -> [NonEmpty (Definition a b c)]
+recGroups = _ -- TODO
+
+-- | Traverses a whole context by performing an action on each recursive group.
+-- The groups are passed in dependency order but the order of elements within
+-- each group is arbitrary.
+traverseContext ::
+  (Monoid t, Applicative f) =>
+  (NonEmpty (Definition a b c) -> f t) -> -- ^ process one recursive group
+  T a b c -> f t
+traverseContext f = foldA f . recGroups
+
+-- | Same as 'traverseContext', but the groups are split up into single
+-- definitions.
+traverseContext1 ::
+  (Monoid t, Applicative f) =>
+  (Definition a b c -> f t) -> -- ^ process one recursive group
+  T a b c -> f t
+traverseContext1 = traverseContext . foldA
