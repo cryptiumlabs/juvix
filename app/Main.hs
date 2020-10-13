@@ -99,10 +99,16 @@ run ctx (Options cmd configPath) = do
   maybeConfig <- Config.loadT configPath
   let conf = fromMaybe Config.defaultT maybeConfig
   case cmd of
+    Parse fin -> do
+      Compile.parse fin >> pure ()
     Typecheck fin backend -> do
       Compile.typecheck fin backend >> pure ()
     Compile fin fout backend ->
       Compile.compile fin fout backend
+    Version -> do
+      putDoc versionDoc
+      exitSuccess
+    {-
     Interactive -> do
       putDoc interactiveDoc
       if isJust maybeConfig
@@ -110,9 +116,7 @@ run ctx (Options cmd configPath) = do
         else putStrLn ("Loaded default runtime configuration.\n" :: Text)
       Interactive.interactive ctx conf
       exitSuccess
-    Version -> do
-      putDoc versionDoc
-      exitSuccess
+    -}
     _ -> do
       putText "Not yet implemented!"
       exitFailure
