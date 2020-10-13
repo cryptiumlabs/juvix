@@ -6,11 +6,10 @@ import Juvix.Library
 
 data T
 
-data Annotation primTy primVal
-  = Annotation
-      { usageAnn :: Usage.T,
-        typeAnn :: IR.Term' T primTy primVal
-      }
+data Annotation primTy primVal = Annotation
+  { usageAnn :: Usage.T,
+    typeAnn :: IR.Term' T primTy primVal
+  }
 
 IR.extendTerm "Term" [] [t|T|] $
   \primTy primVal ->
@@ -28,11 +27,10 @@ pattern Elim π s t = Elim0 s (Annotation π t)
 
 {-# COMPLETE Star, PrimTy, Prim, Pi, Lam, Elim #-}
 
-data AppAnnotation primTy primVal
-  = AppAnnotation
-      { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
-        argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-      }
+data AppAnnotation primTy primVal = AppAnnotation
+  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
+    argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  }
 
 IR.extendElim "Elim" [] [t|T|] $
   \primTy primVal ->

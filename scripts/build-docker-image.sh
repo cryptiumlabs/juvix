@@ -1,6 +1,8 @@
 #!/bin/sh
 
+TAG=cryptiumlabs/juvix-ci-2
+
 set -xe
 
-time docker build -t cryptiumlabs/juvix-ci .
-docker push cryptiumlabs/juvix-ci
+time docker build --squash -t $TAG .
+docker push $TAG

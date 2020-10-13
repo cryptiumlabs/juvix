@@ -7,19 +7,19 @@ import Juvix.Library
 -- TODO ∷ best to turn this into an either function
 transformTopLevel :: [Old.TopLevel] -> [New.TopLevel]
 transformTopLevel
-  ( Old.Signature s@(Old.Sig name _ _ _) :
-      Old.Function (Old.Func name' likes) :
-      xs
+  ( Old.Signature s@(Old.Sig name _ _ _)
+      : Old.Function (Old.Func name' likes)
+      : xs
     )
     | name == name' =
       New.Function
-        (New.Func name (transformFunctionLike <$> likes) (Just (transformSignature s)))
-        : transformTopLevel xs
+        (New.Func name (transformFunctionLike <$> likes) (Just (transformSignature s))) :
+      transformTopLevel xs
     -- we should return an etiher... but for now we will just drop it
     | otherwise =
       New.Function
-        (New.Func name (transformFunctionLike <$> likes) Nothing)
-        : transformTopLevel xs
+        (New.Func name (transformFunctionLike <$> likes) Nothing) :
+      transformTopLevel xs
 -- we should return an either here as well!
 transformTopLevel (Old.Signature _t : xs) =
   transformTopLevel xs

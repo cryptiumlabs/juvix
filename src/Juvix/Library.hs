@@ -60,8 +60,7 @@ import Data.Time.Clock.POSIX
 import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
-  ( (:.:),
-    Constraint,
+  ( Constraint,
     Fixity (..),
     MonadError (..),
     MonadReader (..),
@@ -81,6 +80,7 @@ import Protolude hiding
     put,
     reader,
     state,
+    (:.:),
   )
 import Prelude (Show (..), String)
 

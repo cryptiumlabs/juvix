@@ -8,17 +8,15 @@ import Juvix.Library
 
 type Memory = Memory.T Types.Expression
 
-data Env
-  = Env
-      { memory :: Memory.T Types.Expression,
-        compilation :: Types.Expression
-      }
+data Env = Env
+  { memory :: Memory.T Types.Expression,
+    compilation :: Types.Expression
+  }
   deriving (Generic, Show)
 
 type CompilationAlias = ExceptT Types.CompilationError (State Env)
 
-newtype Compilation a
-  = Compilation {antiAlias :: (CompilationAlias a)}
+newtype Compilation a = Compilation {antiAlias :: (CompilationAlias a)}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "memory" Memory,

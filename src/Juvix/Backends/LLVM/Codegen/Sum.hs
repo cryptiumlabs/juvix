@@ -8,8 +8,8 @@ import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
-import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type
+import qualified LLVM.AST.Type as Type
 import qualified Prelude as Prelude (error)
 
 -----------------------------------------------------------------------------------------
@@ -19,12 +19,11 @@ import qualified Prelude as Prelude (error)
 type Size = Int
 
 -- | Data needed to make a Variant
-data VariantInfo
-  = Variant
-      { size :: Size,
-        name :: Symbol,
-        typ' :: Type
-      }
+data VariantInfo = Variant
+  { size :: Size,
+    name :: Symbol,
+    typ' :: Type
+  }
 
 -----------------------------------------------------------------------------------------
 -- Helper functions

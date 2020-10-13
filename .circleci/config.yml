@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   setup_dependencies:
     docker:
-      - image: cryptiumlabs/juvix-ci
+      - image: cryptiumlabs/juvix-ci-2
     resource_class: xlarge
     steps:
       - checkout
@@ -31,7 +31,7 @@ jobs:
 
   test_suite:
     docker:
-      - image: cryptiumlabs/juvix-ci
+      - image: cryptiumlabs/juvix-ci-2
     resource_class: xlarge
     steps:
       - attach_workspace:
@@ -41,6 +41,24 @@ jobs:
           command: stack test --fast --flag juvix:incomplete-error -j8 --test-arguments "--hide-successes --ansi-tricks false"
           no_output_timeout: 1200
 
+  check_formatting:
+    docker:
+      - image: cryptiumlabs/juvix-ci-2
+    steps:
+     - checkout
+     - run:
+         name: Check formatting
+         command: ./scripts/check-formatting.sh
+
+  check_org_gen:
+    docker:
+      - image: cryptiumlabs/juvix-ci-2
+    steps:
+     - checkout
+     - run:
+         name: Check org gen
+         command: ./scripts/check-org-gen.sh
+
 workflows:
   version: 2.1
   test-suite:
@@ -49,3 +67,5 @@ workflows:
       - test_suite:
           requires:
             - setup_dependencies
+      - check_formatting
+      - check_org_gen

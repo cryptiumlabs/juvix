@@ -104,7 +104,7 @@ nodeToIR (ind, (_, l, _edges)) =
         Auxiliary2 App -> 2
         Auxiliary2 (FanIn i) -> i
         _ -> undefined
-      --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
+        --INIR.nodePorts = map (\(_, toNode, toPort) → INIR.Port toNode (portTypeToIndex toPort)) edges
     }
 
 portTypeToIndex :: PortType -> INIR.Slot
