@@ -21,7 +21,8 @@ COPY ./build-roswell.sh .
 RUN ./build-roswell.sh
 
 # Install ormolu
-RUN stack install ormolu
+RUN stack install ormolu -j8
+RUN stack clean
 
 # Clean things up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
