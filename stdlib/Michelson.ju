@@ -27,45 +27,45 @@ let timestamp = %Michelson.timestamp
 let address   = %Michelson.address
 
 -- arithmetic functions
-sig add : (x : type) -> x -> x -> x
+sig add : (x : Prelude.set) -> x -> x -> x
 let add = %Michelson.add
 
-sig mul : (x : type) -> x -> x -> x
+sig mul : (x : Prelude.set) -> x -> x -> x
 let mul = %Michelson.mul
 
-sig sub : (x : type) -> x -> x -> x
+sig sub : (x : Prelude.set) -> x -> x -> x
 let sub = %Michelson.sub
 
-sig div : (x : type) -> x -> x -> x
+sig div : (x : Prelude.set) -> x -> x -> x
 let div = %Michelson.div
 
-sig abs : (x : type) -> x -> x -> x
+sig abs : (x : Prelude.set) -> x -> x -> x
 let abs = %Michelson.abs
 
 -- boolean functions
-sig and' : (x : type) -> x -> x -> x
-let and' = %Michelson.and
+sig and% : (x : Prelude.set) -> x -> x -> x
+let and% = %Michelson.and
 
-sig or : (x : type) -> x -> x -> x
+sig or : (x : Prelude.set) -> x -> x -> x
 let or = %Michelson.or
 
-sig xor : (x : type) -> x -> x -> x
+sig xor : (x : Prelude.set) -> x -> x -> x
 let xor = %Michelson.xor
 
-sig not : (x : type) -> x -> x -> x
+sig not : (x : Prelude.set) -> x -> x -> x
 let not = %Michelson.not
 
-sig compare : (x : type) -> x -> x -> int
+sig compare : (x : Prelude.set) -> x -> x -> int
 let compare = %Michelson.compare
 
 -- other functions
 sig now : timestamp
 let now = %Michelson.now
 
-sig amount : (x : type) -> x -> unit-t
+sig amount : (x : Prelude.set) -> x -> unit-t
 let amount = %Michelson.amount
 
-sig balance : (x : type) -> address -> x
+sig balance : (x : Prelude.set) -> address -> x
 let balance = %Michelson.balance
 
 sig sha256 : bytes -> bytes
@@ -89,7 +89,7 @@ let implicit-account = %Michelson.implicit-account
 sig create-contract : operation
 let create-contract = %Michelson.create-contract
 
-sig transfer-tokens : (x : let) -> address -> x -> hash-key
+sig transfer-tokens : (x : Prelude.set) -> address -> x -> hash-key
 let transfer-tokens = %Michelson.transfer-tokens
 
 sig set-delegate : address -> unit-t
@@ -131,25 +131,25 @@ let empty-map = %Michelson.empty-map
 sig empty-big-map : big-map a
 let empty-big-map = %Michelson.empty-big-map
 
-sig map : (x : type) -> (a -> b) -> x a -> x b
+sig map : (x : Prelude.set) -> (a -> b) -> x a -> x b
 let map = %Michelson.map
 
-sig update : (x : type) -> key -> a -> x a -> unit-t
+sig update : (x : Prelude.set) -> key -> a -> x a -> unit-t
 let update = %Michelson.update
 
-sig iter : (x : type) -> (a -> b) -> (b -> unit-t)
+sig iter : (x : Prelude.set) -> (a -> b) -> (b -> unit-t)
 let iter = %Michelson.iter
 
-sig get : (x: type) -> key -> x a -> a
+sig get : (x: Prelude.set) -> key -> x a -> a
 let get = %Michelson.get
 
 sig hash-key : key -> key-hash
 let hash-key = %Michelson.hash-key
 
-sig mem : (x : type) -> x -> bool
+sig mem : (x : Prelude.set) -> x -> bool
 let mem = %Michelson.mem
 
-sig concat (x : type) -> x -> x -> x
+sig concat : (x : Prelude.set) -> x -> x -> x
 let concat = %Michelson.concat
 
 sig slice : nat -> string -> option string
@@ -161,10 +161,10 @@ let lsl = %Michelson.lsl
 sig lsr : nat -> nat -> nat
 let lsr = %Michelson.lsl
 
-sig fail-with : (x : type) -> x -> x
+sig fail-with : (x : Prelude.set) -> x -> x
 let fail-with = %Michelson.fail-with
 
-sig self : (type : x) -> x
+sig self : (x : Prelude.set) -> x
 let self = %Michelson.self
 
 sig unit : unit-t
