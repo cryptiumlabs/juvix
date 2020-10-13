@@ -1,3 +1,5 @@
+open Prelude
+
 mod Prelude.Michelson where
 
 -- datatypes
