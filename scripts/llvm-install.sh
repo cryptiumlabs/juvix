@@ -21,11 +21,11 @@ cd build
 echo "Building: llvm-${LLVM_VERSION}.src.tar.xz"
 cmake -DLLVM_INCLUDE_TESTS=false -DLLVM_BUILD_LLVM_DYLIB=true -DLLVM_LINK_LLVM_DYLIB=true ../
 
-cmake --build .
+cmake --build . -j8
 
 # Building
 echo "Installing llvm-${LLVM_VERSION}.src.tar.xz"
-cmake --build . --target install
+cmake --build . -j8 --target install
 
 cd ../..
 
