@@ -538,6 +538,6 @@ traverseContext f = foldA f . recGroups
 -- definitions.
 traverseContext1 ::
   (Monoid t, Applicative f) =>
-  (Definition a b c -> f t) -> -- ^ process one recursive group
+  (Definition a b c -> f t) -> -- ^ process one definition
   T a b c -> f t
 traverseContext1 = traverseContext . foldA
