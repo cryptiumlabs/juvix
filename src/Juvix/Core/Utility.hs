@@ -1,6 +1,6 @@
 module Juvix.Core.Utility where
 
-import Data.List ((!!), findIndex, tail)
+import Data.List (findIndex, tail, (!!))
 import Juvix.Library
 
 pushName ::

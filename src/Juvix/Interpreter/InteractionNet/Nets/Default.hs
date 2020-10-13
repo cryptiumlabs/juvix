@@ -120,101 +120,102 @@ reduce = do
       both <- Interface.isBothPrimary n
       if not both
         then pure isChanged
-        else langToProperPort n >>= \case
-          Nothing -> pure isChanged
-          Just port -> do
-            case port of
-              IsAux3 tag (NInterface.Primary node) _ _ _ ->
-                case tag of
-                  IfElse ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Fals} -> True <$ ifElseRule node n False
-                      Just IsPrim {_tag0 = Tru} -> True <$ ifElseRule node n True
-                      _ -> pure isChanged
-                  Curried3 f -> do
-                    curryMatch curry3 (f, n) node isChanged
-              IsAux2 tag (NInterface.Primary node) _ _ ->
-                case tag of
-                  And ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Fals} -> True <$ propPrimary (n, port) node
-                      Just IsPrim {_tag0 = Tru} -> True <$ anihilateRewireAux node n
-                      _ -> pure isChanged
-                  Or ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Fals} -> True <$ anihilateRewireAux node n
-                      Just IsPrim {_tag0 = Tru} -> True <$ propPrimary (n, port) node
-                      _ -> pure isChanged
-                  Cons ->
-                    langToProperPort node >>= \case
-                      Just IsAux1 {_tag1 = Car} -> True <$ consCdr n node
-                      Just IsAux1 {_tag1 = Cdr} -> True <$ consCar n node
-                      _ -> pure isChanged
-                  App ->
-                    langToProperPort node >>= \case
-                      Just IsAux2 {_tag2 = Lambda} -> True <$ anihilateRewireAuxTogether node n
-                      _ -> pure isChanged
-                  FanIn level ->
-                    langToProperPort node >>= \case
-                      Just IsAux2 {_tag2 = FanIn lv2} -> True <$ fanIns (n, level) (node, lv2)
-                      Just IsPrim {_tag0 = Symbol _} -> pure isChanged
-                      Just IsPrim {_tag0} -> True <$ fanInAux0 n (node, _tag0)
-                      Just IsAux1 {_tag1} -> True <$ fanInAux1 n (node, _tag1) level
-                      Just IsAux2 {_tag2} -> True <$ fanInAux2 n (node, _tag2) level
-                      Just IsAux3 {_tag3} -> True <$ fanInAux3 n (node, _tag3) level
-                      Nothing -> pure isChanged
-                  Curried2 f -> curryMatch curry2 (f, n) node isChanged
-                  PrimCurried2 f -> curryMatchPrim curryPrim2 (f, n) node isChanged
-                  -- Cases in which we fall through, and have the other node handle it
-                  Mu -> pure isChanged
-                  Lambda -> pure isChanged
-              IsAux1 tag (NInterface.Primary node) _ ->
-                case tag of
-                  Not ->
-                    langToProperPort node >>= \case
-                      Nothing -> pure isChanged
-                      Just x -> notExpand (node, x) (n, port) isChanged
-                  Cdr ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Nil} -> True <$ propPrimary (n, port) node
-                      _ -> pure isChanged
-                  -- case is slightly different from other cases
-                  -- just return what the function gives us!
-                  -- TODO :: Unify logic with other cases
-                  Curried1 f ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = Fals} ->
-                        curry1 (f, n) (Shared.PBool False, node)
-                      Just IsPrim {_tag0 = Tru} ->
-                        curry1 (f, n) (Shared.PBool True, node)
-                      Just IsPrim {_tag0 = IntLit i} ->
-                        curry1 (f, n) (Shared.PInt i, node)
-                      _ -> pure isChanged
-                  PrimCurried1 f ->
-                    langToProperPort node >>= \case
-                      Just IsPrim {_tag0 = PrimVal p} -> curryPrim1 (f, n) (p, node)
-                      _ -> pure isChanged
-                  -- Fall through cases
-                  Car -> pure isChanged
-                  TestNil -> pure isChanged
-              IsPrim tag (NInterface.Primary node) ->
-                case tag of
-                  Erase ->
-                    langToProperPort node >>= \case
-                      Just x -> True <$ eraseAll (x, node) n
-                      Nothing -> pure isChanged
-                  -- Fall through cases
-                  Nil -> pure isChanged
-                  Tru -> pure isChanged
-                  Fals -> pure isChanged
-                  IntLit _ -> pure isChanged
-                  Symbol _ -> pure isChanged
-                  PrimVal _ -> pure isChanged
-              -- Fall through cases
-              IsAux3 _ NInterface.Free _ _ _ -> pure isChanged
-              IsAux2 _ NInterface.Free _ _ -> pure isChanged
-              IsAux1 _ NInterface.Free _ -> pure isChanged
-              IsPrim _ NInterface.Free -> pure isChanged
+        else
+          langToProperPort n >>= \case
+            Nothing -> pure isChanged
+            Just port -> do
+              case port of
+                IsAux3 tag (NInterface.Primary node) _ _ _ ->
+                  case tag of
+                    IfElse ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = Fals} -> True <$ ifElseRule node n False
+                        Just IsPrim {_tag0 = Tru} -> True <$ ifElseRule node n True
+                        _ -> pure isChanged
+                    Curried3 f -> do
+                      curryMatch curry3 (f, n) node isChanged
+                IsAux2 tag (NInterface.Primary node) _ _ ->
+                  case tag of
+                    And ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = Fals} -> True <$ propPrimary (n, port) node
+                        Just IsPrim {_tag0 = Tru} -> True <$ anihilateRewireAux node n
+                        _ -> pure isChanged
+                    Or ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = Fals} -> True <$ anihilateRewireAux node n
+                        Just IsPrim {_tag0 = Tru} -> True <$ propPrimary (n, port) node
+                        _ -> pure isChanged
+                    Cons ->
+                      langToProperPort node >>= \case
+                        Just IsAux1 {_tag1 = Car} -> True <$ consCdr n node
+                        Just IsAux1 {_tag1 = Cdr} -> True <$ consCar n node
+                        _ -> pure isChanged
+                    App ->
+                      langToProperPort node >>= \case
+                        Just IsAux2 {_tag2 = Lambda} -> True <$ anihilateRewireAuxTogether node n
+                        _ -> pure isChanged
+                    FanIn level ->
+                      langToProperPort node >>= \case
+                        Just IsAux2 {_tag2 = FanIn lv2} -> True <$ fanIns (n, level) (node, lv2)
+                        Just IsPrim {_tag0 = Symbol _} -> pure isChanged
+                        Just IsPrim {_tag0} -> True <$ fanInAux0 n (node, _tag0)
+                        Just IsAux1 {_tag1} -> True <$ fanInAux1 n (node, _tag1) level
+                        Just IsAux2 {_tag2} -> True <$ fanInAux2 n (node, _tag2) level
+                        Just IsAux3 {_tag3} -> True <$ fanInAux3 n (node, _tag3) level
+                        Nothing -> pure isChanged
+                    Curried2 f -> curryMatch curry2 (f, n) node isChanged
+                    PrimCurried2 f -> curryMatchPrim curryPrim2 (f, n) node isChanged
+                    -- Cases in which we fall through, and have the other node handle it
+                    Mu -> pure isChanged
+                    Lambda -> pure isChanged
+                IsAux1 tag (NInterface.Primary node) _ ->
+                  case tag of
+                    Not ->
+                      langToProperPort node >>= \case
+                        Nothing -> pure isChanged
+                        Just x -> notExpand (node, x) (n, port) isChanged
+                    Cdr ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = Nil} -> True <$ propPrimary (n, port) node
+                        _ -> pure isChanged
+                    -- case is slightly different from other cases
+                    -- just return what the function gives us!
+                    -- TODO :: Unify logic with other cases
+                    Curried1 f ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = Fals} ->
+                          curry1 (f, n) (Shared.PBool False, node)
+                        Just IsPrim {_tag0 = Tru} ->
+                          curry1 (f, n) (Shared.PBool True, node)
+                        Just IsPrim {_tag0 = IntLit i} ->
+                          curry1 (f, n) (Shared.PInt i, node)
+                        _ -> pure isChanged
+                    PrimCurried1 f ->
+                      langToProperPort node >>= \case
+                        Just IsPrim {_tag0 = PrimVal p} -> curryPrim1 (f, n) (p, node)
+                        _ -> pure isChanged
+                    -- Fall through cases
+                    Car -> pure isChanged
+                    TestNil -> pure isChanged
+                IsPrim tag (NInterface.Primary node) ->
+                  case tag of
+                    Erase ->
+                      langToProperPort node >>= \case
+                        Just x -> True <$ eraseAll (x, node) n
+                        Nothing -> pure isChanged
+                    -- Fall through cases
+                    Nil -> pure isChanged
+                    Tru -> pure isChanged
+                    Fals -> pure isChanged
+                    IntLit _ -> pure isChanged
+                    Symbol _ -> pure isChanged
+                    PrimVal _ -> pure isChanged
+                -- Fall through cases
+                IsAux3 _ NInterface.Free _ _ _ -> pure isChanged
+                IsAux2 _ NInterface.Free _ _ -> pure isChanged
+                IsAux1 _ NInterface.Free _ -> pure isChanged
+                IsPrim _ NInterface.Free -> pure isChanged
 
 curryMatch ::
   (Env.InfoNetworkDiff net (Lang primVal) m) =>

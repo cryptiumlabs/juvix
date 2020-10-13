@@ -12,10 +12,9 @@ import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
 
-data EnvCtx' ext primTy primVal
-  = EnvCtx
-      { globals :: IR.Globals primTy primVal
-      }
+data EnvCtx' ext primTy primVal = EnvCtx
+  { globals :: IR.Globals primTy primVal
+  }
   deriving (Generic)
 
 type EnvCtx = EnvCtx' IR.NoExt
@@ -93,12 +92,11 @@ type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
 
 type PatUsages = IntMap Usage.T
 
-data InnerState' (ext :: Type) primTy primVal
-  = InnerState
-      { param :: Param.Parameterisation primTy primVal,
-        patBinds :: PatBinds primTy primVal,
-        bound :: Context primTy primVal
-      }
+data InnerState' (ext :: Type) primTy primVal = InnerState
+  { param :: Param.Parameterisation primTy primVal,
+    patBinds :: PatBinds primTy primVal,
+    bound :: Context primTy primVal
+  }
   deriving (Generic)
 
 type InnerState = InnerState' IR.NoExt
@@ -131,21 +129,27 @@ deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal) m =>
-    HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
+    HasThrow
+      "typecheckError"
+      (TypecheckError' IR.NoExt ext primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasSource "globals" (IR.Globals primTy primVal) m =>
-    HasSource "globals" (IR.Globals primTy primVal)
+    HasSource
+      "globals"
+      (IR.Globals primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasReader "globals" (IR.Globals primTy primVal) m =>
-    HasReader "globals" (IR.Globals primTy primVal)
+    HasReader
+      "globals"
+      (IR.Globals primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 type InnerTC' ext primTy primVal =

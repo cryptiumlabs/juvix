@@ -253,6 +253,7 @@ churchExpAssignment =
       (intern "f'", sTy),
       (intern "f", nat)
     ]
+
 {- Examples from 3.0.1 of Asperti's book; they don't seem to typecheck though. -}
 
 -- test1 = \x → \y → (\f → (\h → (h (\p → (h (\q → p)))) (\l → (((f (\n → (l n))) x) y))) (\g → \u → \v → ((g u) (g v))))
