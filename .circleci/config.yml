@@ -45,8 +45,7 @@ jobs:
     docker:
       - image: cryptiumlabs/juvix-ci-2
     steps:
-     - attach_workspace:
-         at: /root
+     - checkout
      - run:
          name: Check formatting
          command: ./scripts/check-formatting.sh
@@ -55,8 +54,7 @@ jobs:
     docker:
       - image: cryptiumlabs/juvix-ci-2
     steps:
-     - attach_workspace:
-         at: /root
+     - checkout
      - run:
          name: Check org gen
          command: ./scripts/check-org-gen.sh
