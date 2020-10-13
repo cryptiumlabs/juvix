@@ -33,6 +33,9 @@ lint:
 format:
 	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --mode inplace {} --ghc-opt -XTypeApplications --ghc-opt -XUnicodeSyntax --ghc-opt -XPatternSynonyms --ghc-opt -XTemplateHaskell \;
 
+org-gen:
+	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org
+
 test:
 	stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false"
 
@@ -51,4 +54,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format test repl-lib repl-exe clean clean-full bench build-format
+.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format org-gen test repl-lib repl-exe clean clean-full bench build-format
