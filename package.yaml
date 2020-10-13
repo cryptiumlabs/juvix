@@ -145,6 +145,7 @@ library:
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
     - Juvix.Frontend.Types.Extend
+    - Juvix.Frontend.FreeVars
     - Juvix.FrontendDesugar
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
