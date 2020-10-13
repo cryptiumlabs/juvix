@@ -50,41 +50,22 @@ parse =
 --------------------------------------------------------------------------------
 
 removeComments :: ByteString -> ByteString
-removeComments = ByteString.concat . grabCommentsFirst . removeStart
+removeComments = ByteString.concat . grabComments
   where
     onBreakDo _break _con "" = []
     onBreakDo break cont str = break str |> cont
     -- TODO ∷ Make faster
-    removeStart str = f (breakCommentStart str)
-      where
-        f ("", comment) = dropNewLine comment
-        f _ = str
-    --
-    grabCommentsFirst = breakComment `onBreakDo` f
+    grabComments = breakComment `onBreakDo` f
       where
         f (notIn, in') =
-          grabCommentsSecond notIn <> grabCommentsFirst (dropNewLine in')
-    --
-    grabCommentsSecond = breakNewLineComment `onBreakDo` f
-      where
-        -- Preserve the Number of new lines
-        f (notIn, "") =
-          [notIn]
-        f (notIn, in') =
-          notIn : "\n" : grabCommentsSecond (dropNewLine (ByteString.drop 1 in'))
+          notIn : grabComments (dropNewLine in')
     dropNewLine =
       ByteString.dropWhile (not . (== Lexer.newLine))
 
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
-breakNewLineComment :: ByteString -> (ByteString, ByteString)
-breakNewLineComment = ByteString.breakSubstring "\n-- "
-
 breakComment :: ByteString -> (ByteString, ByteString)
-breakComment = ByteString.breakSubstring " -- "
-
-breakCommentStart :: ByteString -> (ByteString, ByteString)
-breakCommentStart = ByteString.breakSubstring "-- "
+breakComment = ByteString.breakSubstring "--"
 
 --------------------------------------------------------------------------------
 -- Header
