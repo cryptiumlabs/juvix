@@ -51,22 +51,20 @@ data Case = C Symbol [Argument] Body
 
 type Branches = [Symbol]
 
-data Bound
-  = Bound
-      { lam :: Lambda,
-        -- This is to remember what ADΤ we belong to
-        adtName :: Symbol
-      }
+data Bound = Bound
+  { lam :: Lambda,
+    -- This is to remember what ADΤ we belong to
+    adtName :: Symbol
+  }
   deriving (Show, Generic)
 
-data Env
-  = Env
-      { constructors :: Map.T Symbol Bound,
-        -- | adtMap is a mapping between the adt name and the ordered cases thereof
-        adtMap :: Map.T Symbol Branches,
-        -- | missingCases represent the missing cases of a match
-        missingCases :: [Symbol]
-      }
+data Env = Env
+  { constructors :: Map.T Symbol Bound,
+    -- | adtMap is a mapping between the adt name and the ordered cases thereof
+    adtMap :: Map.T Symbol Branches,
+    -- | missingCases represent the missing cases of a match
+    missingCases :: [Symbol]
+  }
   deriving (Show, Generic)
 
 data Errors

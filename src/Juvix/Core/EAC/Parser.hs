@@ -12,13 +12,13 @@ import Juvix.Core.EAC.Types hiding (PType, RPT, RPTI, RPTO)
 import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library hiding
-  ( (<|>),
-    Type,
+  ( Type,
     link,
     many,
     optional,
     reduce,
     try,
+    (<|>),
   )
 import Text.Parsec
 import Text.Parsec.Expr as E

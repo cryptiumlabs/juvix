@@ -98,15 +98,14 @@ type GlobalAll (c :: * -> Constraint) ext primTy primVal =
     PatternAll c ext primTy primVal
   )
 
-data Datatype' ext primTy primVal
-  = Datatype
-      { dataName :: GlobalName,
-        -- | the type constructor's arguments
-        dataArgs :: [DataArg' ext primTy primVal],
-        -- | the type constructor's target universe level
-        dataLevel :: Natural,
-        dataCons :: [DataCon' ext primTy primVal]
-      }
+data Datatype' ext primTy primVal = Datatype
+  { dataName :: GlobalName,
+    -- | the type constructor's arguments
+    dataArgs :: [DataArg' ext primTy primVal],
+    -- | the type constructor's target universe level
+    dataLevel :: Natural,
+    dataCons :: [DataCon' ext primTy primVal]
+  }
   deriving (Generic)
 
 deriving instance
@@ -125,13 +124,12 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (Datatype' ext primTy primVal)
 
-data DataArg' ext primTy primVal
-  = DataArg
-      { argName :: GlobalName,
-        argUsage :: Usage,
-        argType :: Value' ext primTy primVal,
-        argIsParam :: Bool
-      }
+data DataArg' ext primTy primVal = DataArg
+  { argName :: GlobalName,
+    argUsage :: Usage,
+    argType :: Value' ext primTy primVal,
+    argIsParam :: Bool
+  }
   deriving (Generic)
 
 deriving instance
@@ -150,11 +148,10 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (DataArg' ext primTy primVal)
 
-data DataCon' ext primTy primVal
-  = DataCon
-      { conName :: GlobalName,
-        conType :: Value' ext primTy primVal
-      }
+data DataCon' ext primTy primVal = DataCon
+  { conName :: GlobalName,
+    conType :: Value' ext primTy primVal
+  }
   deriving (Generic)
 
 deriving instance
@@ -173,13 +170,12 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (DataCon' ext primTy primVal)
 
-data Function' ext primTy primVal
-  = Function
-      { funName :: GlobalName,
-        funUsage :: GlobalUsage,
-        funType :: Value' ext primTy primVal,
-        funClauses :: NonEmpty (FunClause' ext primTy primVal)
-      }
+data Function' ext primTy primVal = Function
+  { funName :: GlobalName,
+    funUsage :: GlobalUsage,
+    funType :: Value' ext primTy primVal,
+    funClauses :: NonEmpty (FunClause' ext primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance
