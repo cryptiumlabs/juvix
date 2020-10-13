@@ -3,17 +3,15 @@ module Options where
 import Options.Applicative
 import Protolude hiding (option)
 
-data Context
-  = Context
-      { contextWorkingDirectory :: FilePath,
-        contextHomeDirectory :: FilePath
-      }
+data Context = Context
+  { contextWorkingDirectory :: FilePath,
+    contextHomeDirectory :: FilePath
+  }
 
-data Options
-  = Options
-      { optionsCommand :: Command,
-        optionsConfigPath :: FilePath
-      }
+data Options = Options
+  { optionsCommand :: Command,
+    optionsConfigPath :: FilePath
+  }
 
 data Backend
   = Unit
