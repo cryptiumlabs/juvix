@@ -3,7 +3,7 @@
 
 module Main where
 
-import Prelude ((+), IO, Int, map, print)
+import Prelude (IO, Int, map, print, (+))
 
 main :: IO ()
 main = do

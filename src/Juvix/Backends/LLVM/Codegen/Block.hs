@@ -101,21 +101,21 @@ defineGen ::
   [BasicBlock] ->
   m Operand
 defineGen isVarArgs retty label argtys body = do
-  addDefn
-    $ GlobalDefinition
-    $ functionDefaults
-      { Global.parameters = params,
-        -- Figure out which is best!
-        Global.callingConvention = CC.Fast,
-        Global.returnType = retty,
-        Global.basicBlocks = body,
-        Global.name = internName label
-      }
-  return
-    $ ConstantOperand
-    $ C.GlobalReference
-      (Types.pointerOf (FunctionType retty (fst <$> argtys) isVarArgs))
-      (internName label)
+  addDefn $
+    GlobalDefinition $
+      functionDefaults
+        { Global.parameters = params,
+          -- Figure out which is best!
+          Global.callingConvention = CC.Fast,
+          Global.returnType = retty,
+          Global.basicBlocks = body,
+          Global.name = internName label
+        }
+  return $
+    ConstantOperand $
+      C.GlobalReference
+        (Types.pointerOf (FunctionType retty (fst <$> argtys) isVarArgs))
+        (internName label)
   where
     params = ((\(ty, nm) -> Parameter ty nm []) <$> argtys, isVarArgs)
 
@@ -133,11 +133,11 @@ defineVarArgs = defineGen True
 -- | registerFunction is useful for making functions properly recursive
 registerFunction :: HasState "symTab" SymbolTable m => Type -> [(Type, b)] -> Name -> m ()
 registerFunction retty argtys label =
-  assign (nameToSymbol label)
-    $ ConstantOperand
-    $ C.GlobalReference
-      (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
-      label
+  assign (nameToSymbol label) $
+    ConstantOperand $
+      C.GlobalReference
+        (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
+        label
 
 makeFunction ::
   ( HasThrow "err" Errors m,
@@ -293,48 +293,48 @@ terminator trm = do
 
 external :: (HasState "moduleDefinitions" [Definition] m) => Type -> String -> [(Type, Name)] -> m Operand
 external retty label argtys = do
-  addDefn
-    $ GlobalDefinition
-    $ functionDefaults
-      { Global.parameters = ((\(ty, nm) -> Parameter ty nm []) <$> argtys, False),
-        Global.callingConvention = CC.Fast, -- TODO: Do we always want this?
-        Global.returnType = retty,
-        Global.basicBlocks = [],
-        Global.name = mkName label,
-        Global.linkage = L.External
-      }
-  return
-    $ ConstantOperand
-    $ C.GlobalReference
-      (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
-      (mkName label)
+  addDefn $
+    GlobalDefinition $
+      functionDefaults
+        { Global.parameters = ((\(ty, nm) -> Parameter ty nm []) <$> argtys, False),
+          Global.callingConvention = CC.Fast, -- TODO: Do we always want this?
+          Global.returnType = retty,
+          Global.basicBlocks = [],
+          Global.name = mkName label,
+          Global.linkage = L.External
+        }
+  return $
+    ConstantOperand $
+      C.GlobalReference
+        (Types.pointerOf (FunctionType retty (fst <$> argtys) False))
+        (mkName label)
 
 externalVar :: (HasState "moduleDefinitions" [Definition] m) => Type -> String -> [(Type, Name)] -> m Operand
 externalVar retty label argtys = do
-  addDefn
-    $ GlobalDefinition
-    $ functionDefaults
-      { Global.parameters =
-          ( ( \(ty, nm) ->
-                Parameter
-                  ty
-                  nm
-                  [ParameterAttribute.NoAlias, ParameterAttribute.NoCapture]
-            )
-              <$> argtys,
-            True
-          ),
-        Global.callingConvention = CC.C, -- TODO: Do we always want this?
-        Global.returnType = retty,
-        Global.basicBlocks = [],
-        Global.name = mkName label,
-        Global.linkage = L.External
-      }
-  return
-    $ ConstantOperand
-    $ C.GlobalReference
-      (Types.pointerOf (FunctionType retty (fst <$> argtys) True))
-      (mkName label)
+  addDefn $
+    GlobalDefinition $
+      functionDefaults
+        { Global.parameters =
+            ( ( \(ty, nm) ->
+                  Parameter
+                    ty
+                    nm
+                    [ParameterAttribute.NoAlias, ParameterAttribute.NoCapture]
+              )
+                <$> argtys,
+              True
+            ),
+          Global.callingConvention = CC.C, -- TODO: Do we always want this?
+          Global.returnType = retty,
+          Global.basicBlocks = [],
+          Global.name = mkName label,
+          Global.linkage = L.External
+        }
+  return $
+    ConstantOperand $
+      C.GlobalReference
+        (Types.pointerOf (FunctionType retty (fst <$> argtys) True))
+        (mkName label)
 
 --------------------------------------------------------------------------------
 -- Printing facility
