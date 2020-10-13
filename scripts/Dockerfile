@@ -9,13 +9,12 @@ ENV LLVM_VERSION 9.0.0
 # Install Clang and LLVM
 COPY llvm-install.sh .
 RUN ./llvm-install.sh
+RUN mv /usr/local/lib/libLLVM* /usr/lib
+RUN mv /usr/local/bin/llvm* /usr/bin
 
 # Install libff
 COPY ./build-libff.sh .
 RUN ./build-libff.sh
-
-RUN mv /usr/local/lib/libLLVM* /usr/lib
-RUN mv /usr/local/bin/llvm* /usr/bin
 
 # Install roswell & org-generation
 COPY ./build-roswell.sh .

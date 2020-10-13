@@ -69,3 +69,5 @@ workflows:
       - test_suite:
           requires:
             - setup_dependencies
+      - check_formatting
+      - check_org_gen
