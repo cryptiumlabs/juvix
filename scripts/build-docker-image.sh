@@ -2,5 +2,5 @@
 
 set -xe
 
-time docker build -t cryptiumlabs/juvix-ci .
+time docker build --squash -t cryptiumlabs/juvix-ci .
 docker push cryptiumlabs/juvix-ci
