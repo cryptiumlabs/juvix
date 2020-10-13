@@ -1,5 +1,8 @@
 * Syntax
 #+BEGIN_SRC bnf
+  header ::= mod <symbol> where <top-level>*
+           | <top-level>*
+
   top-level ::= <type>
               | <module-open>
               | <type-class>
@@ -12,9 +15,17 @@
               | <signature>
               | <function>
 
+  ;;;; Declarations ======================================================
+
+  declarations ::= declare <declare-adt>
+
+  declare-adt ::= <infix-declare>
+
   infix-declare ::= infix <symbol> <number>
                   | infixl <symbol> <number>
                   | infixr <symbol> <number>
+
+  declaration-expression ::= <declarations> in <expression>
 
   ;;;; Functions ======================================================
 
@@ -183,6 +194,7 @@
                  | <type-refine>
                  ; TODO
                  | <record-update>
+                 | <declaration-expression>
 
   expression ::= <application>
               | <expression''>

@@ -9,17 +9,30 @@
 --   infix functions can better transition across syntax
 -- - Note :: The names for the types in =ArrowData= are stored in the
 --           =ArrowGen= and not in =NamedType=
-module Juvix.Frontend.Types where
+module Juvix.Frontend.Types
+  ( module Juvix.Frontend.Types,
+    Header (..),
+  )
+where
 
 import Juvix.Frontend.Types.Base
 import qualified Juvix.Frontend.Types.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
+
+-- Unwrap the header from the rest of the definitions
+extractTopLevel :: Header topLevel -> [topLevel]
+extractTopLevel (Header _ tops) = tops
+extractTopLevel (NoHeader tops) = tops
 
 data T
 
 extendType "Type" [] [t|T|] Ext.extendType
 
 extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
+
+extendDeclaration "Declaration" [] [t|T|] Ext.extendDeclaration
+
+extendDeclarationExpression "DeclarationExpression" [] [t|T|] Ext.extendDeclarationExpression
 
 extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
 

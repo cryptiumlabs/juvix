@@ -226,7 +226,30 @@ transformExpression (Old.NamedTypeE i) =
 transformExpression (Old.RefinedE i) = New.RefinedE <$> transformTypeRefine i
 transformExpression (Old.UniverseName i) =
   New.UniverseName <$> transformUniverseExpression i
-transformExpression (Old.Parened e) = New.Parened <$> transformExpression e
+transformExpression (Old.Parened e) =
+  New.Parened <$> transformExpression e
+transformExpression (Old.DeclarationE e) =
+  New.DeclarationE <$> transformDeclarationExpression e
+
+--------------------------------------------------------------------------------
+-- Declaration
+--------------------------------------------------------------------------------
+
+transformDeclarationExpression ::
+  Env.WorkingMaps m => Old.DeclarationExpression -> m New.DeclarationExpression
+transformDeclarationExpression (Old.DeclareExpession i e) =
+  New.DeclareExpession <$> transformDeclaration i <*> transformExpression e
+
+transformDeclaration :: Env.WorkingMaps m => Old.Declaration -> m New.Declaration
+transformDeclaration (Old.Infixivity i) =
+  New.Infixivity <$> transformInfixDeclar i
+
+-- TODO ∷ update map to reflect the infixivity changes!!!!!!
+
+transformInfixDeclar :: Env.WorkingMaps m => Old.InfixDeclar -> m New.InfixDeclar
+transformInfixDeclar (Old.AssocL n i) = pure (New.AssocL n i)
+transformInfixDeclar (Old.AssocR n i) = pure (New.AssocR n i)
+transformInfixDeclar (Old.NonAssoc n i) = pure (New.NonAssoc n i)
 
 --------------------------------------------------------------------------------
 -- Types

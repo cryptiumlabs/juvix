@@ -45,7 +45,7 @@ let Transaction =
   type Transfer = {
     from-account : Token.Address,
     to-account   : Token.Address,
-    ammount      : Nat.T,
+    amount      : Nat.T,
   }
 
   type Mint = {
@@ -132,7 +132,7 @@ let Validation =
 
   let Burn token tx =
     case tx.data of
-    | Transaction.Burn {burn-from-account, burn-ammount} ->
+    | Transaction.Burn {burn-from-account, burn-amount} ->
       has-n token.storage.accounts burn-from-account burn-amount
       && tx.authroized-account == burn-from-account
     | Transaction.Mint _ | Transaction.Transfer _ ->
@@ -153,7 +153,7 @@ let Operation =
           transfer-stor token.storage
                         ~from:from_account
                         ~to:to_account
-                        transfer_ammount
+                        transfer_amount
       }
 
   sig mint : TokenTransaction Validation.mint

@@ -44,7 +44,11 @@ where
 
 import qualified Extensible as Extension
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemoveCond.Extend hiding (extendFunction, extendFunctionLike, extendLet)
+import Juvix.FrontendDesugar.RemoveCond.Extend hiding
+  ( extendFunction,
+    extendFunctionLike,
+    extendLet,
+  )
 import qualified Juvix.FrontendDesugar.RemoveCond.Extend as Ext
 import Juvix.Library
 
