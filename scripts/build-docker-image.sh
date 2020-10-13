@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TAG=cryptiumlabs/juvix-ci
+TAG=cryptiumlabs/juvix-ci-2
 
 set -xe
 
