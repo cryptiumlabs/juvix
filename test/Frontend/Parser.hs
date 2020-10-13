@@ -96,7 +96,7 @@ shouldParseAs name parses x y =
 removeSpaceBefore :: T.TestTree
 removeSpaceBefore =
   Parser.removeComments "let foo = 3 \n + \n -- foo foo foo \n 4"
-    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> (T.@=? "let foo = 3 \n + \n \n 4")
     |> T.testCase "test remove comments: let foo = 3 \n + \n -- foo foo foo \n 4"
 
 removeNewLineBefore :: T.TestTree
