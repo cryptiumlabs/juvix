@@ -2,17 +2,17 @@
 
 module Compile where
 
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import qualified Data.Text.IO as T
-import qualified Michelson.Untyped as Untyped
-import qualified Juvix.Core.Usage as Usage
-import qualified Juvix.Pipeline as Pipeline
-import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.Backends.Michelson.Compilation as M
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
+import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.Pipeline as CorePipeline
+import qualified Juvix.Core.Usage as Usage
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
+import qualified Juvix.Pipeline as Pipeline
+import qualified Michelson.Untyped as Untyped
 import Options
 import Types
 
