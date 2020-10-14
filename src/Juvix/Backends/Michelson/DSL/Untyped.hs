@@ -1,6 +1,6 @@
 module Juvix.Backends.Michelson.DSL.Untyped where
 
-import Juvix.Library (flip, (.), (...))
+import Juvix.Library ((.), (...), flip)
 import qualified Michelson.Untyped.Type as Untyped
 
 type T = Untyped.Type

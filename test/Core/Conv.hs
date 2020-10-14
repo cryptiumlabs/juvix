@@ -37,17 +37,17 @@ hrToirConversion =
         (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y"))))
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0)))),
       shouldConvertHR
-        ( HR.Lam "f" $
-            HR.Elim $
-              HR.Var "f"
-                `HR.App` HR.Lam "x" (HR.Elim $ HR.Var "x")
-                `HR.App` HR.Lam "y" (HR.Elim $ HR.Var "x")
+        ( HR.Lam "f"
+            $ HR.Elim
+            $ HR.Var "f"
+              `HR.App` HR.Lam "x" (HR.Elim $ HR.Var "x")
+              `HR.App` HR.Lam "y" (HR.Elim $ HR.Var "x")
         )
-        ( IR.Lam $
-            IR.Elim $
-              IR.Bound 0
-                `IR.App` IR.Lam (IR.Elim $ IR.Bound 0)
-                `IR.App` IR.Lam (IR.Elim $ IR.Free (IR.Global "x"))
+        ( IR.Lam
+            $ IR.Elim
+            $ IR.Bound 0
+              `IR.App` IR.Lam (IR.Elim $ IR.Bound 0)
+              `IR.App` IR.Lam (IR.Elim $ IR.Free (IR.Global "x"))
         )
     ]
 

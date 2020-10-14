@@ -7,20 +7,23 @@ import Juvix.Library
 
 data T
 
-data Annotation primTy primVal = Annotation
-  { usageAnn :: Usage.T,
-    typeAnn :: IR.Term' T primTy primVal
-  }
+data Annotation primTy primVal
+  = Annotation
+      { usageAnn :: Usage.T,
+        typeAnn :: IR.Term' T primTy primVal
+      }
 
-data BindAnnotation primTy primVal = BindAnnotation
-  { bindName :: Symbol,
-    bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-  }
+data BindAnnotation primTy primVal
+  = BindAnnotation
+      { bindName :: Symbol,
+        bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
 
-data LetAnnotation primTy primVal = LetAnnotation
-  { letName :: Symbol,
-    letType :: IR.Term' T primTy primVal
-  }
+data LetAnnotation primTy primVal
+  = LetAnnotation
+      { letName :: Symbol,
+        letType :: IR.Term' T primTy primVal
+      }
 
 -- TODO: add combinators to @extensible-data@ for pairing like this
 extTerm :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtTerm
@@ -37,10 +40,11 @@ extTerm =
         IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
       }
 
-data AppAnnotation primTy primVal = AppAnnotation
-  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
-    argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-  }
+data AppAnnotation primTy primVal
+  = AppAnnotation
+      { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
+        argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+      }
 
 extElim :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtElim
 extElim =

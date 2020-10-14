@@ -16,9 +16,10 @@ type Context =
 type Definition =
   Repr Context.Definition
 
-data Pass = P
-  { ctx :: Context,
-    opens :: [NameSymbol.T],
-    modsDefined :: [NameSymbol.T]
-  }
+data Pass
+  = P
+      { ctx :: Context,
+        opens :: [NameSymbol.T],
+        modsDefined :: [NameSymbol.T]
+      }
   deriving (Show)

@@ -4,17 +4,19 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 
-data Ele a = Ele
-  { externalNumber :: Maybe Int,
-    ele :: a
-  }
+data Ele a
+  = Ele
+      { externalNumber :: Maybe Int,
+        ele :: a
+      }
   deriving (Generic, Show)
 
-data T a = T
-  { bindings :: Map.Map Symbol (Ele a),
-    free' :: NonEmpty Int,
-    size :: Int
-  }
+data T a
+  = T
+      { bindings :: Map.Map Symbol (Ele a),
+        free' :: NonEmpty Int,
+        size :: Int
+      }
   deriving (Generic, Show)
 
 instance Semigroup (T a) where

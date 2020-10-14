@@ -54,5 +54,4 @@ extendFunction arg =
           )
         ]
     }
-
 -- TODO ∷ once we get a signature for let add that here too

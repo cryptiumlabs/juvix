@@ -147,7 +147,7 @@ defineAppendToNet' =
         )
     -- Create the in-memory node.
     kind <- EAC.mallocApp -- TODO: Switch on node kind.
-    -- Write the address to the list.
+      -- Write the address to the list.
     addr <-
       Codegen.getElementPtr
         ( Codegen.Minimal

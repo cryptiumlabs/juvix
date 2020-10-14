@@ -66,7 +66,7 @@ resolveOpens (ctx', openList) (sym, xs) =
             { opens,
               explicitModule = sym,
               implicitInner = modsDefined
-            } :
-          openList
+            }
+            : openList
         )
     Left err -> Left err

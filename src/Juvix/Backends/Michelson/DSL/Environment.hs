@@ -11,18 +11,19 @@ import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
 import Prelude (Show (..))
 
-data Env = Env
-  { -- | The Virtual stack that mimics the real Michelson stack.
-    stack :: VStack.T Curried,
-    -- | Information during Compilation.
-    compilationLog :: [Types.CompilationLog],
-    -- | The Operations for the Michelson Contract.
-    ops :: [Types.Op],
-    -- | count of unnamed arguments for primitives.
-    count :: Word,
-    -- | Debug level.
-    debug :: Int
-  }
+data Env
+  = Env
+      { -- | The Virtual stack that mimics the real Michelson stack.
+        stack :: VStack.T Curried,
+        -- | Information during Compilation.
+        compilationLog :: [Types.CompilationLog],
+        -- | The Operations for the Michelson Contract.
+        ops :: [Types.Op],
+        -- | count of unnamed arguments for primitives.
+        count :: Word,
+        -- | Debug level.
+        debug :: Int
+      }
   deriving (Show, Generic)
 
 type CompError = Types.CompilationError
@@ -50,28 +51,30 @@ newtype Fun = Fun (forall m. Reduction m => [Types.NewTerm] -> m Expanded)
 unFun :: Reduction m => Fun -> [Types.NewTerm] -> m Expanded
 unFun (Fun f) = f
 
-data ErasedTerm = Term
-  { name :: Symbol,
-    usage :: Usage.T
-  }
+data ErasedTerm
+  = Term
+      { name :: Symbol,
+        usage :: Usage.T
+      }
   deriving (Show)
 
-data Curried = C
-  { -- | The function itself that we will call when we have enough arguments
-    --   To expand
-    fun :: Fun,
-    -- | 'argsLeft' are the arguments that are left on the stack
-    -- This should also contain usage information!
-    argsLeft :: [ErasedTerm],
-    -- | 'left' are the number of arguments left.
-    --   This number should be (length 'argsLeft')
-    left :: Integer,
-    -- | 'captures' are the captured arguments in the environment of the function
-    -- This set should also contain usage information for each left
-    captures :: Set.Set Symbol,
-    -- | 'ty' is the type of the partial
-    ty :: Types.Type
-  }
+data Curried
+  = C
+      { -- | The function itself that we will call when we have enough arguments
+        --   To expand
+        fun :: Fun,
+        -- | 'argsLeft' are the arguments that are left on the stack
+        -- This should also contain usage information!
+        argsLeft :: [ErasedTerm],
+        -- | 'left' are the number of arguments left.
+        --   This number should be (length 'argsLeft')
+        left :: Integer,
+        -- | 'captures' are the captured arguments in the environment of the function
+        -- This set should also contain usage information for each left
+        captures :: Set.Set Symbol,
+        -- | 'ty' is the type of the partial
+        ty :: Types.Type
+      }
   deriving (Generic)
 
 instance Show Curried where

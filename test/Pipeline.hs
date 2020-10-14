@@ -15,11 +15,12 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
 
-data Env primTy primVal = Env
-  { parameterisation :: Core.Parameterisation primTy primVal,
-    log :: [Core.PipelineLog primTy primVal],
-    globals :: IR.Globals primTy primVal
-  }
+data Env primTy primVal
+  = Env
+      { parameterisation :: Core.Parameterisation primTy primVal,
+        log :: [Core.PipelineLog primTy primVal],
+        globals :: IR.Globals primTy primVal
+      }
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =
@@ -178,10 +179,10 @@ addElim = HR.Ann Usage.Omega (HR.Prim AddI) addTyT 0
 
 lamTerm :: HR.Term PrimTy PrimVal
 lamTerm =
-  HR.Lam "x" $
-    HR.Lam "y" $
-      HR.Elim $
-        addElim `HR.App` varT "x" `HR.App` varT "y"
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` varT "y"
 
 lamElim :: HR.Elim PrimTy PrimVal
 lamElim = HR.Ann one lamTerm lamTy 0
@@ -191,10 +192,10 @@ appLam2 = HR.Elim $ lamElim2 `HR.App` int 2 `HR.App` int 3
 
 lamTerm2 :: HR.Term PrimTy PrimVal
 lamTerm2 =
-  HR.Lam "x" $
-    HR.Lam "y" $
-      HR.Elim $
-        addElim `HR.App` varT "x" `HR.App` int 10
+  HR.Lam "x"
+    $ HR.Lam "y"
+    $ HR.Elim
+    $ addElim `HR.App` varT "x" `HR.App` int 10
 
 varT :: Symbol -> HR.Term PrimTy PrimVal
 varT = HR.Elim . HR.Var

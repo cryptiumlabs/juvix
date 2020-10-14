@@ -30,12 +30,13 @@ type WorkingMaps m =
     HasReader "openMap" OpenMap m
   )
 
-data Environment = Env
-  { old :: Old Context.T,
-    new :: New Context.T,
-    modMap :: ModuleMap,
-    openMap :: OpenMap
-  }
+data Environment
+  = Env
+      { old :: Old Context.T,
+        new :: New Context.T,
+        modMap :: ModuleMap,
+        openMap :: OpenMap
+      }
   deriving (Generic, Show)
 
 type FinalContext = New Context.T
@@ -103,19 +104,21 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
 -- - Any resolution will thus happen at the explicit module itself, as
 --   trying to do so in the inner modules would lead to a path error
 
-data PreQualified = Pre
-  { opens :: [NameSymbol.T],
-    implicitInner :: [NameSymbol.T],
-    explicitModule :: NameSymbol.T
-  }
+data PreQualified
+  = Pre
+      { opens :: [NameSymbol.T],
+        implicitInner :: [NameSymbol.T],
+        explicitModule :: NameSymbol.T
+      }
   deriving (Show, Eq)
 
 type OpenMap = Map.T Context.NameSymbol [Open NameSymbol.T]
 
-data Resolve a b c = Res
-  { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
-    notResolved :: [NameSymbol.T]
-  }
+data Resolve a b c
+  = Res
+      { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
+        notResolved :: [NameSymbol.T]
+      }
   deriving (Show)
 
 --------------------------------------------------------------------------------
@@ -279,8 +282,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
   --
   let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
   --
-  if
-      | null cantResolveNow ->
+  if  | null cantResolveNow ->
         Right qualifedAns
       | length (notResolved newResolve) == length cantResolveNow ->
         Left (CantResolveModules cantResolveNow)

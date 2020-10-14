@@ -3,7 +3,7 @@
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Library hiding (natVal, (<|>))
+import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
