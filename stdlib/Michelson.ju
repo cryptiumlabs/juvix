@@ -67,7 +67,7 @@ let now = %Michelson.now
 sig amount : (x : ty) -> x -> unit-t
 let amount = %Michelson.amount
 
-sig balance : (x : ty) -> address -> x
+sig balance : mutez
 let balance = %Michelson.balance
 
 sig sha256 : bytes -> bytes
@@ -91,7 +91,10 @@ let implicit-account = %Michelson.implicit-account
 sig create-contract : operation
 let create-contract = %Michelson.create-contract
 
-sig transfer-tokens : (x : ty) -> address -> x -> hash-key
+sig address-to-contract : (param : ty) -> address -> contract param
+let address-to-contract = %Michelson.address-to-contract
+
+sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 let transfer-tokens = %Michelson.transfer-tokens
 
 sig set-delegate : address -> unit-t

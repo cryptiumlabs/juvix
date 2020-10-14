@@ -1,0 +1,14 @@
+open Prelude
+open Michelson
+
+sig storage : ty
+let storage = unit-t
+
+sig param : ty
+let param = unit-t
+
+sig default : param -> storage -> (storage, list operation)
+let default _ storage =
+  let contract = address-to-contract unit-t sender in
+  let op = transfer-tokens unit balance contract in
+  (storage, cons op nil)
