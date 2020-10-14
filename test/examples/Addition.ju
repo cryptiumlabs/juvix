@@ -1,3 +1,5 @@
+open Prelude
+
 let nat = %Michelson.nat
 
 let add = %Michelson.add

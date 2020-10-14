@@ -1,3 +1,5 @@
+open Prelude
+
 mod Token =
   let Address = s : String.T {String.length s == 36}
 
