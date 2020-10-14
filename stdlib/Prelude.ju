@@ -6,4 +6,4 @@ let (->) = %Builtin.ArrowOmega
 
 declare infixr (->) 1
 
--- declare infixr (:) 2
+declare infixr (:) 2
