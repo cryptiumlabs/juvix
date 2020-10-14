@@ -60,8 +60,7 @@ type ContextAlias =
 
 type ModuleMap = Map.T Symbol NameSymbol.T
 
-newtype Context a
-  = Ctx {antiAlias :: ContextAlias a}
+newtype Context a = Ctx {antiAlias :: ContextAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "old" (Old Context.T),

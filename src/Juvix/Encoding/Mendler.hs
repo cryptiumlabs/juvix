@@ -91,8 +91,9 @@ mendlerCase c = do
   expandedCase <- caseGen c onNoArg onrec
   case expandedCase of
     Application on b ->
-      pure $ Application on $
-        Lambda (intern "rec") b
+      pure
+        $ Application on
+        $ Lambda (intern "rec") b
     Lambda {} -> error "doesn't happen"
     Value {} -> error "doesn't happen"
   where

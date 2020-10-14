@@ -131,21 +131,27 @@ deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal) m =>
-    HasThrow "typecheckError" (TypecheckError' IR.NoExt ext primTy primVal)
+    HasThrow
+      "typecheckError"
+      (TypecheckError' IR.NoExt ext primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasSource "globals" (IR.Globals primTy primVal) m =>
-    HasSource "globals" (IR.Globals primTy primVal)
+    HasSource
+      "globals"
+      (IR.Globals primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
     HasReader "globals" (IR.Globals primTy primVal) m =>
-    HasReader "globals" (IR.Globals primTy primVal)
+    HasReader
+      "globals"
+      (IR.Globals primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 type InnerTC' ext primTy primVal =

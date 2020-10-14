@@ -13,8 +13,8 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Infix
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Transform as Infix
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module

@@ -199,6 +199,7 @@ eraseType (IR.VPi π a b) = do
   if π == mempty
     then eraseType b
     else-- FIXME dependency
+
     Erasure.Pi π <$> eraseType a
       <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do

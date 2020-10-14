@@ -8,8 +8,8 @@ import Juvix.Backends.LLVM.Codegen.Shared
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
 import LLVM.AST
-import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type
+import qualified LLVM.AST.Type as Type
 import qualified Prelude as Prelude (error)
 
 -----------------------------------------------------------------------------------------
