@@ -4,7 +4,7 @@ PREFIX="$(PWD)/.stack-work/prefix"
 all: setup build
 
 setup:
-	stack build --only-dependencies
+	stack build --only-dependencies -j $(shell nproc)
 
 build-libff:
 	./scripts/build-libff.sh
@@ -16,13 +16,13 @@ build-z3:
 	cd z3/build && make install
 
 build:
-	stack build --copy-bins --fast
+	stack build --copy-bins --fast -j $(shell nproc)
 
 build-watch:
 	stack build --copy-bins --fast --file-watch
 
 build-opt: clean
-	stack build --copy-bins --ghc-options "-O3 -fllvm"
+	stack build --copy-bins -j $(shell nproc) --ghc-options "-O3 -fllvm"
 
 build-format:
 	stack install ormolu
@@ -37,7 +37,7 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org
 
 test:
-	stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
