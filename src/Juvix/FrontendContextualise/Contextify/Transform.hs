@@ -12,7 +12,7 @@ import Juvix.Library
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this
-f,
+f ,
   contextify ::
     Type.Context ->
     (Context.NameSymbol, [Repr.TopLevel]) ->

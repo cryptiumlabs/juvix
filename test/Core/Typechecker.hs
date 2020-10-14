@@ -335,7 +335,7 @@ identityAppINat1 =
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
                 -- the third 1 in the annotation, (1 Nat -> Nat)
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- the forth 1 in the annotation, (1 Nat -> Nat)
+              -- the forth 1 in the annotation, (1 Nat -> Nat)
             )
             0
         )
@@ -367,7 +367,7 @@ identityAppI =
             (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
             -- the third 1 in the annotation 1 Nat -> Nat
             (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-            -- the forth 1 in the annotation 1 Nat -> Nat
+          -- the forth 1 in the annotation 1 Nat -> Nat
         )
         0
     )
@@ -410,7 +410,7 @@ kCompTyWithUnit =
           mempty -- is not used in the output
           (IR.VPrimTy (All.UnitTy Unit.Ty)) -- of type Unit
           (IR.VPrimTy (All.NatTy Nat.Ty))
-          -- the output is of type Nat
+        -- the output is of type Nat
       )
 
 -- I K computation annotation
@@ -428,7 +428,7 @@ identityAppK =
                 one -- the second 1 in the annotation
                 (IR.PrimTy Nat.Ty) -- (1 Nat ->
                 (IR.Pi mempty (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty)) -- 0 Nat -> Nat)
-                -- ->
+                    -- ->
             )
             ( IR.Pi
                 one
@@ -499,7 +499,7 @@ kFunApp1 =
         0
     )
     (IR.Prim (Nat.Val 1)) -- 1
-    -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
+        -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
 kFunApp1CompTy =
@@ -525,7 +525,7 @@ kAppI =
                 mempty
                 (IR.PrimTy Nat.Ty) -- 0 Nat ->
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0
@@ -555,7 +555,7 @@ kAppINotAnnotated =
                 mempty
                 (IR.PrimTy Nat.Ty) -- 0 Nat ->
                 (IR.Pi one (IR.PrimTy Nat.Ty) (IR.PrimTy Nat.Ty))
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0
@@ -721,15 +721,15 @@ add = IR.Ann Usage.Omega (IR.Prim Nat.Add) addTyT 0
 
 addTyT :: NatTerm
 addTyT =
-  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty) $
-    IR.Pi Usage.Omega (IR.PrimTy Nat.Ty) $
-      IR.PrimTy Nat.Ty
+  IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
+    $ IR.Pi Usage.Omega (IR.PrimTy Nat.Ty)
+    $ IR.PrimTy Nat.Ty
 
 addTy :: NatValue
 addTy =
-  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty) $
-    IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty) $
-      IR.VPrimTy Nat.Ty
+  IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
+    $ IR.VPi Usage.Omega (IR.VPrimTy Nat.Ty)
+    $ IR.VPrimTy Nat.Ty
 
 one' :: forall primTy primVal. IR.Term primTy primVal
 one' = IR.Lam $ IR.Lam $ IR.Elim $ IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))
@@ -744,10 +744,10 @@ oneCompTy =
 
 two :: IR.Term primTy primVal
 two =
-  IR.Lam $
-    IR.Lam $
-      IR.Elim $
-        IR.App (IR.Bound 1) (IR.Elim (IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))))
+  IR.Lam
+    $ IR.Lam
+    $ IR.Elim
+    $ IR.App (IR.Bound 1) (IR.Elim (IR.App (IR.Bound 1) (IR.Elim (IR.Bound 0))))
 
 twoCompTy :: NatAnnotation
 twoCompTy =
