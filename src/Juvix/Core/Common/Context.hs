@@ -534,7 +534,7 @@ traverseContext ::
   (Monoid t, Applicative f) =>
   (NonEmpty (Definition a b c) -> f t) -> -- ^ process one recursive group
   T a b c -> f t
-traverseContext f = foldA f . recGroups
+traverseContext f = foldMapA f . recGroups
 
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
@@ -542,4 +542,4 @@ traverseContext1 ::
   (Monoid t, Applicative f) =>
   (Definition a b c -> f t) -> -- ^ process one definition
   T a b c -> f t
-traverseContext1 = traverseContext . foldA
+traverseContext1 = traverseContext . foldMapA
