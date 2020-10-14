@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-type-errors #-}
+
 {-# LANGUAGE EmptyCase, UndecidableInstances #-}
 
 module Juvix.Frontend.FreeVars
