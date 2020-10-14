@@ -46,6 +46,10 @@ updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
         case Context.extractValue <$> Context.lookup (pure name) ctx of
           Just (Context.Def {precedence}) ->
             precedence
+          Just (Context.Information info) ->
+            case Context.precedenceOf info of
+              Just pr -> pr
+              Nothing -> Context.default'
           _ -> Context.default'
       (def, modsDefined) =
         decideRecordOrDef name (Context.currentName ctx) f precendent sig
@@ -75,16 +79,15 @@ updateTopLevel (Repr.Declaration (Repr.Infixivity dec)) ctx =
           -- since we aren't doing any reordering, we may come across an
           -- infix declaration first, and thus we should generate an absurd declaration
           -- with reordering or an ordered language this would be obvious
-          let absurd = undefined
-           in Type.P
-                { ctx =
-                    Context.add
-                      (NameSpace.Pub name)
-                      (Context.Def Nothing Nothing absurd prec)
-                      ctx,
-                  opens = [],
-                  modsDefined = []
-                }
+          Type.P
+            { ctx =
+                Context.add
+                  (NameSpace.Pub name)
+                  (Context.Information [Context.Prec prec])
+                  ctx,
+              opens = [],
+              modsDefined = []
+            }
 updateTopLevel (Repr.ModuleOpen (Repr.Open mod)) ctx =
   -- Mod isn't good enough, have to resolve it to the full symbol
   Type.P

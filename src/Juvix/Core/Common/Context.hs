@@ -66,9 +66,16 @@ data Definition term ty sumRep
   | Unknown
       { definitionMTy :: Maybe ty
       }
+  | Information
+      { definitionInfo :: [Information]
+      }
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
+  deriving (Show, Generic, Eq)
+
+data Information
+  = Prec Precedence
   deriving (Show, Generic, Eq)
 
 -- not using lenses anymore but leaving this here anyway
@@ -313,15 +320,23 @@ removeTop sym t@T {topLevelMap} =
 
 -------------------------------------------------------------------------------
 -- Functions on From
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 extractValue :: From a -> a
 extractValue (Outside a) = a
 extractValue (Current c) = NameSpace.extractValue c
 
 -------------------------------------------------------------------------------
+-- Functions on Information
+-------------------------------------------------------------------------------
+precedenceOf :: Foldable t => t Information -> Maybe Precedence
+precedenceOf = fmap (\(Prec p) -> p) . find f
+  where
+    f (Prec _) = True
+
+-------------------------------------------------------------------------------
 -- Generalized Helpers
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 ----------------------------------------
 -- Types for Generalized Helpers
