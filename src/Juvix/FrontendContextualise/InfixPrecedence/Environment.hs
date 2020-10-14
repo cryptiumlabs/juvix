@@ -25,10 +25,11 @@ type WorkingMaps m =
     HasThrow "error" Error m
   )
 
-data Environment = Env
-  { old :: Old Context.T,
-    new :: New Context.T
-  }
+data Environment
+  = Env
+      { old :: Old Context.T,
+        new :: New Context.T
+      }
   deriving (Generic)
 
 type FinalContext = New Context.T

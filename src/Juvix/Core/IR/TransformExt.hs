@@ -8,21 +8,22 @@ import Juvix.Core.IR.Types (Elim, NoExt, Term)
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Coerce)
 
-data ExtTransformTEF f ext1 ext2 primTy primVal = ExtTransformTEF
-  { etfStar :: XStar ext1 primTy primVal -> f (XStar ext2 primTy primVal),
-    etfPrimTy :: XPrimTy ext1 primTy primVal -> f (XPrimTy ext2 primTy primVal),
-    etfPrim :: XPrim ext1 primTy primVal -> f (XPrim ext2 primTy primVal),
-    etfPi :: XPi ext1 primTy primVal -> f (XPi ext2 primTy primVal),
-    etfLam :: XLam ext1 primTy primVal -> f (XLam ext2 primTy primVal),
-    etfLet :: XLet ext1 primTy primVal -> f (XLet ext2 primTy primVal),
-    etfElim :: XElim ext1 primTy primVal -> f (XElim ext2 primTy primVal),
-    etfBound :: XBound ext1 primTy primVal -> f (XBound ext2 primTy primVal),
-    etfFree :: XFree ext1 primTy primVal -> f (XFree ext2 primTy primVal),
-    etfApp :: XApp ext1 primTy primVal -> f (XApp ext2 primTy primVal),
-    etfAnn :: XAnn ext1 primTy primVal -> f (XAnn ext2 primTy primVal),
-    etfTermX :: TermX ext1 primTy primVal -> f (TermX ext2 primTy primVal),
-    etfElimX :: ElimX ext1 primTy primVal -> f (ElimX ext2 primTy primVal)
-  }
+data ExtTransformTEF f ext1 ext2 primTy primVal
+  = ExtTransformTEF
+      { etfStar :: XStar ext1 primTy primVal -> f (XStar ext2 primTy primVal),
+        etfPrimTy :: XPrimTy ext1 primTy primVal -> f (XPrimTy ext2 primTy primVal),
+        etfPrim :: XPrim ext1 primTy primVal -> f (XPrim ext2 primTy primVal),
+        etfPi :: XPi ext1 primTy primVal -> f (XPi ext2 primTy primVal),
+        etfLam :: XLam ext1 primTy primVal -> f (XLam ext2 primTy primVal),
+        etfLet :: XLet ext1 primTy primVal -> f (XLet ext2 primTy primVal),
+        etfElim :: XElim ext1 primTy primVal -> f (XElim ext2 primTy primVal),
+        etfBound :: XBound ext1 primTy primVal -> f (XBound ext2 primTy primVal),
+        etfFree :: XFree ext1 primTy primVal -> f (XFree ext2 primTy primVal),
+        etfApp :: XApp ext1 primTy primVal -> f (XApp ext2 primTy primVal),
+        etfAnn :: XAnn ext1 primTy primVal -> f (XAnn ext2 primTy primVal),
+        etfTermX :: TermX ext1 primTy primVal -> f (TermX ext2 primTy primVal),
+        etfElimX :: ElimX ext1 primTy primVal -> f (ElimX ext2 primTy primVal)
+      }
 
 type ExtTransformTE = ExtTransformTEF Identity
 

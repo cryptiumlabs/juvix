@@ -16,11 +16,12 @@ import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
 
-data Leftovers a = Leftovers
-  { loValue :: a,
-    loLocals :: UContext,
-    loPatVars :: PatUsages
-  }
+data Leftovers a
+  = Leftovers
+      { loValue :: a,
+        loLocals :: UContext,
+        loPatVars :: PatUsages
+      }
   deriving (Eq, Show, Generic)
 
 leftoversOk :: Leftovers a -> Bool

@@ -12,9 +12,10 @@ import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
 
-data EnvCtx' ext primTy primVal = EnvCtx
-  { globals :: IR.Globals primTy primVal
-  }
+data EnvCtx' ext primTy primVal
+  = EnvCtx
+      { globals :: IR.Globals primTy primVal
+      }
   deriving (Generic)
 
 type EnvCtx = EnvCtx' IR.NoExt
@@ -92,11 +93,12 @@ type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
 
 type PatUsages = IntMap Usage.T
 
-data InnerState' (ext :: Type) primTy primVal = InnerState
-  { param :: Param.Parameterisation primTy primVal,
-    patBinds :: PatBinds primTy primVal,
-    bound :: Context primTy primVal
-  }
+data InnerState' (ext :: Type) primTy primVal
+  = InnerState
+      { param :: Param.Parameterisation primTy primVal,
+        patBinds :: PatBinds primTy primVal,
+        bound :: Context primTy primVal
+      }
   deriving (Generic)
 
 type InnerState = InnerState' IR.NoExt

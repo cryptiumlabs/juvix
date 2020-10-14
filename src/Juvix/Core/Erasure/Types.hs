@@ -82,40 +82,44 @@ do
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
 
-data Datatype primTy = Datatype
-  { dataName :: GlobalName,
-    dataArgs :: [DataArg primTy],
-    dataLevel :: Natural,
-    dataCons :: [DataCon primTy]
-  }
+data Datatype primTy
+  = Datatype
+      { dataName :: GlobalName,
+        dataArgs :: [DataArg primTy],
+        dataLevel :: Natural,
+        dataCons :: [DataCon primTy]
+      }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDataArg "DataArg" [] [t|T|] extDataArg
 
-data DataArg primTy = DataArg
-  { argName :: GlobalName,
-    argUsage :: Usage,
-    argType :: Type primTy,
-    argIsParam :: Bool
-  }
+data DataArg primTy
+  = DataArg
+      { argName :: GlobalName,
+        argUsage :: Usage,
+        argType :: Type primTy,
+        argIsParam :: Bool
+      }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDataCon "DataCon" [] [t|T|] extDataCon
 
-data DataCon primTy = DataCon
-  { conName :: GlobalName,
-    conType :: Type primTy
-  }
+data DataCon primTy
+  = DataCon
+      { conName :: GlobalName,
+        conType :: Type primTy
+      }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendFunction "Function" [] [t|T|] extFunction
 
-data Function primTy primVal = Function
-  { funName :: GlobalName,
-    funUsage :: GlobalUsage,
-    funType :: Type primTy,
-    funClauses :: NonEmpty (FunClause primTy primVal)
-  }
+data Function primTy primVal
+  = Function
+      { funName :: GlobalName,
+        funUsage :: GlobalUsage,
+        funType :: Type primTy,
+        funClauses :: NonEmpty (FunClause primTy primVal)
+      }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendFunClause "FunClause" [] [t|T|] extFunClause

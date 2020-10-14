@@ -389,8 +389,7 @@ onTwoArgs op f typ instrs = do
       -- May be the wrong order?
       let instrs = [instr2, instr1]
       res <-
-        if
-            | allConstants (val <$> instrs) ->
+        if  | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
                   Env.Constant i2 = val instr2
                in pure (f i1 i2)
@@ -412,8 +411,7 @@ onOneArgs op f typ instrs = do
   case v of
     instr1 : _ -> do
       res <-
-        if
-            | allConstants [val instr1] ->
+        if  | allConstants [val instr1] ->
               let Env.Constant i1 = val instr1
                in pure (f i1)
             | otherwise -> do
@@ -466,10 +464,11 @@ copyAndDrop :: Applicative f => p -> f ()
 copyAndDrop _i =
   pure ()
 
-data Protect = Protect
-  { val :: Env.Expanded,
-    insts :: [Types.Op]
-  }
+data Protect
+  = Protect
+      { val :: Env.Expanded,
+        insts :: [Types.Op]
+      }
   deriving (Show)
 
 protect :: Env.Ops m => m Env.Expanded -> m Protect
@@ -482,10 +481,11 @@ protect inst = do
   put @"ops" curr
   pure Protect {val = v, insts = after}
 
-data ProtectStack = ProtectStack
-  { prot :: Protect,
-    stack :: VStack.T Env.Curried
-  }
+data ProtectStack
+  = ProtectStack
+      { prot :: Protect,
+        stack :: VStack.T Env.Curried
+      }
   deriving (Show)
 
 protectStack :: Env.Instruction m => m Env.Expanded -> m ProtectStack
@@ -642,8 +642,7 @@ deleteVar (Env.Term name _usage) = do
         pure ()
       f (VStack.Position _ 0) = do
         stack <- get @"stack"
-        if
-            | VStack.constantOnTop stack ->
+        if  | VStack.constantOnTop stack ->
               op 0
             | otherwise ->
               pure ()

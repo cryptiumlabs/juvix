@@ -27,11 +27,12 @@ import Prelude (error)
 -- Types
 --------------------------------------------------------------------------------
 
-data Cont b = T
-  { currentNameSpace :: NameSpace.T b,
-    currentName :: NameSymbol.T,
-    topLevelMap :: HashMap.T Symbol b
-  }
+data Cont b
+  = T
+      { currentNameSpace :: NameSpace.T b,
+        currentName :: NameSymbol.T,
+        topLevelMap :: HashMap.T Symbol b
+      }
   deriving (Show, Eq)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
@@ -402,8 +403,7 @@ modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
             [] ->
               updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
             (newS : newYmbol) ->
-              if
-                  | s == topLevelName ->
+              if  | s == topLevelName ->
                     updateTopLevel t <$> recurse f (newS :| newYmbol) topLevelMap
                   | otherwise ->
                     updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap

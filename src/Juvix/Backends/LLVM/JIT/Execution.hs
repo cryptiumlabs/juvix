@@ -66,44 +66,44 @@ orcJitWith _config mod func = do
   paramChan <- newChan
   resultChan <- newChan
   endChan <- newChan
-  void $
-    forkIO $
-      withContext $
-        \context -> do
-          resolvers <- newIORef Map.empty
-          withModuleFromAST context mod $ \m -> do
-            putText "got module"
-            withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm -> do
-              putText "got target machine"
-              withExecutionSession $ \es -> do
-                putText "got execution session"
-                withModuleKey es $ \k -> do
-                  putText "got module key"
-                  withObjectLinkingLayer es (\k -> fmap (\rs -> rs Map.! k) (readIORef resolvers)) $ \objectLayer -> do
-                    putText "got linking layer"
-                    withIRCompileLayer objectLayer tm $ \compileLayer -> do
-                      putText "got compile layer"
-                      withSymbolResolver es (SymbolResolver (\sym -> findSymbol compileLayer sym True)) $ \resolver -> do
-                        modifyIORef' resolvers (Map.insert k resolver)
-                        putText "got symbol resolver"
-                        withModule compileLayer k m $ do
-                          putText "got module"
-                          (handler, terminate) <- func $ \(AST.Name name) -> do
-                            mainSymbol <- mangleSymbol compileLayer name
-                            sym <- findSymbol compileLayer mainSymbol True
-                            putText (show sym)
-                            pure $ case sym of
-                              Right (JITSymbol f _) -> pure (castPtrToFunPtr (wordPtrToPtr f))
-                              _ -> Nothing
-                          let loop = do
-                                param <- readChan paramChan
-                                case param of
-                                  Just p -> do
-                                    res <- handler p
-                                    writeChan resultChan res
-                                    loop
-                                  Nothing -> terminate >> writeChan endChan ()
-                          loop
+  void
+    $ forkIO
+    $ withContext
+    $ \context -> do
+      resolvers <- newIORef Map.empty
+      withModuleFromAST context mod $ \m -> do
+        putText "got module"
+        withHostTargetMachine Reloc.PIC CodeModel.Default CodeGenOpt.Default $ \tm -> do
+          putText "got target machine"
+          withExecutionSession $ \es -> do
+            putText "got execution session"
+            withModuleKey es $ \k -> do
+              putText "got module key"
+              withObjectLinkingLayer es (\k -> fmap (\rs -> rs Map.! k) (readIORef resolvers)) $ \objectLayer -> do
+                putText "got linking layer"
+                withIRCompileLayer objectLayer tm $ \compileLayer -> do
+                  putText "got compile layer"
+                  withSymbolResolver es (SymbolResolver (\sym -> findSymbol compileLayer sym True)) $ \resolver -> do
+                    modifyIORef' resolvers (Map.insert k resolver)
+                    putText "got symbol resolver"
+                    withModule compileLayer k m $ do
+                      putText "got module"
+                      (handler, terminate) <- func $ \(AST.Name name) -> do
+                        mainSymbol <- mangleSymbol compileLayer name
+                        sym <- findSymbol compileLayer mainSymbol True
+                        putText (show sym)
+                        pure $ case sym of
+                          Right (JITSymbol f _) -> pure (castPtrToFunPtr (wordPtrToPtr f))
+                          _ -> Nothing
+                      let loop = do
+                            param <- readChan paramChan
+                            case param of
+                              Just p -> do
+                                res <- handler p
+                                writeChan resultChan res
+                                loop
+                              Nothing -> terminate >> writeChan endChan ()
+                      loop
   let func param = writeChan paramChan (Just param) >> readChan resultChan
   return (func, writeChan paramChan Nothing >> readChan endChan)
 
@@ -114,32 +114,32 @@ mcJitWith config mod func = do
   paramChan <- newChan
   resultChan <- newChan
   endChan <- newChan
-  void $
-    forkIO $
-      withContext $
-        \context ->
-          runJIT config context $ \executionEngine -> do
-            putText "calling withModuleFromAST"
-            withModuleFromAST context mod $ \m -> do
-              putText "calling withPassManager"
-              withPassManager (passes config) $ \pm -> do
-                -- optimise module
-                _ <- runPassManager pm m
-                -- convert to llvm assembly
-                _s <- moduleLLVMAssembly m
-                B.putStrLn "getting execution engine"
-                EE.withModuleInEngine executionEngine m $ \ee -> do
-                  B.putStrLn "got execution engine"
-                  (handler, terminate) <- func (EE.getFunction ee)
-                  let loop = do
-                        param <- readChan paramChan
-                        case param of
-                          Just p -> do
-                            res <- handler p
-                            writeChan resultChan res
-                            loop
-                          Nothing -> terminate >> writeChan endChan ()
-                  loop
+  void
+    $ forkIO
+    $ withContext
+    $ \context ->
+      runJIT config context $ \executionEngine -> do
+        putText "calling withModuleFromAST"
+        withModuleFromAST context mod $ \m -> do
+          putText "calling withPassManager"
+          withPassManager (passes config) $ \pm -> do
+            -- optimise module
+            _ <- runPassManager pm m
+            -- convert to llvm assembly
+            _s <- moduleLLVMAssembly m
+            B.putStrLn "getting execution engine"
+            EE.withModuleInEngine executionEngine m $ \ee -> do
+              B.putStrLn "got execution engine"
+              (handler, terminate) <- func (EE.getFunction ee)
+              let loop = do
+                    param <- readChan paramChan
+                    case param of
+                      Just p -> do
+                        res <- handler p
+                        writeChan resultChan res
+                        loop
+                      Nothing -> terminate >> writeChan endChan ()
+              loop
   let func param = writeChan paramChan (Just param) >> readChan resultChan
   return (func, writeChan paramChan Nothing >> readChan endChan)
 
