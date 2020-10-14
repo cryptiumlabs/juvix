@@ -8,7 +8,6 @@ import Juvix.Library
 import Juvix.Frontend.Types.Base
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Data.HashSet (HashSet, difference)
-import GHC.Generics
 
 (\\) :: (Eq a, Hashable a) => HashSet a -> HashSet a -> HashSet a
 (\\) = difference
