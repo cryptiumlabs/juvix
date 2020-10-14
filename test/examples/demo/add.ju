@@ -2,10 +2,10 @@ open Prelude
 open Michelson
 
 sig storage : ty
-let storage = pair int int
+let storage = nat
 
 sig param : ty
-let param = unit-t
+let param = nat
 
 sig default : param -> storage -> pair storage (list operation)
-let default _ storage = cons-pair (cons-pair (snd storage) (fst storage)) nil
+let default param storage = cons-pair (add param storage) nil

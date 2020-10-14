@@ -118,6 +118,9 @@ let nil = %Michelson.nil
 sig cons : a -> list a
 let cons = %Michelson.cons
 
+sig cons-pair : a -> b -> pair a b
+let cons-pair = %Michelson.cons-pair
+
 sig car : list a -> a
 let car = %Michelson.car
 

@@ -39,6 +39,9 @@ org-gen:
 test:
 	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
+test-parser:
+	ls test/examples/demo | xargs -n 1 -I % juvix parse test/examples/demo/%
+
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
 
@@ -54,4 +57,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format org-gen test repl-lib repl-exe clean clean-full bench build-format
+.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format
