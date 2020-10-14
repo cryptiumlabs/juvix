@@ -1,0 +1,11 @@
+open Prelude
+open Michelson
+
+sig storage : ty
+let storage = unit-t
+
+sig param : ty
+let param = unit-t
+
+sig default : param -> storage -> (storage, list operation)
+let default _ storage = (storage, nil)
