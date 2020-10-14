@@ -57,6 +57,7 @@ instance FreeVars (Constant' ext) where freeVars _ = mempty
 instance ExpressionAll' FreeVars ext => FreeVars (ModuleE' ext) where
   freeVars (ModE' binds body ext) =
     freeVars (binds, body, ext) \\ boundVars binds
+  freeVars (ModuleEX ext) = freeVars ext
 
 instance (ExpressionAll' FreeVars ext, FreeVars a)
   => FreeVars (CondLogic' ext a)
@@ -64,10 +65,12 @@ instance (ExpressionAll' FreeVars ext, FreeVars a)
 instance ExpressionAll' FreeVars ext => FreeVars (Let' ext) where
   freeVars (Let''' binds body ext) =
     freeVars (binds, body, ext) \\ boundVars binds
+  freeVars (LetX ext) = freeVars ext
 
 instance ExpressionAll' FreeVars ext => FreeVars (LetType' ext) where
   freeVars (LetType''' binds body ext) =
     freeVars (binds, body, ext) \\ boundVars binds
+  freeVars (LetTypeX ext) = freeVars ext
 
 -- TODO: other syntax instances of FreeVars
 -- * they can be empty unless there is some binding structure
