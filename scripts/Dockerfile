@@ -21,7 +21,7 @@ COPY ./build-roswell.sh .
 RUN ./build-roswell.sh
 
 # Install ormolu
-RUN stack install ormolu -j8
+RUN stack install ormolu -j8 --resolver=lts-15.16
 RUN stack clean
 
 # Clean things up
