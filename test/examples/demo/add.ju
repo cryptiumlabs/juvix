@@ -1,5 +1,5 @@
 open Prelude
-open Michelson
+open Prelude.Michelson
 
 sig storage : ty
 let storage = nat

@@ -1,4 +1,4 @@
-mod Michelson where
+mod Prelude.Michelson where
 
 open Prelude
 
