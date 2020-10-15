@@ -28,10 +28,21 @@ parse fin = do
 typecheck ::
   FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimVal)
 typecheck fin Michelson = do
-  -- TODO: Test with `parse` first.
-  -- ctx <- parse fin
-  -- print ctx
-  -- Need to transform Context.T into core + globals.
+  ctx <- parse fin
+  let res = Pipeline.contextToCore ctx Param.michelson
+  case res of
+    Right globals -> do
+      print globals
+      -- TODO: Lookup the entrypoint then run `coreToAnn` as below.
+      exitSuccess
+    Left err -> do
+      print err
+      exitFailure
+typecheck _ _ = exitFailure
+
+typecheck' ::
+  FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimVal)
+typecheck' _ _ = do
   -- These terms are fake for now.
   let usage :: Usage.T
       usage = Usage.Omega
@@ -46,7 +57,6 @@ typecheck fin Michelson = do
     Left err -> do
       T.putStrLn (show err)
       exitFailure
-typecheck _ _ = exitFailure
 
 compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do

@@ -46,6 +46,8 @@ data Error
   | -- | expression is not 0 or ω
     NotAGUsage FE.Expression
 
+  deriving (Show, Eq, Generic)
+
 data CoreSig' ext primTy primVal
   = DataSig (IR.Term' ext primTy primVal)
   | ValSig IR.GlobalUsage (IR.Term' ext primTy primVal)
@@ -121,6 +123,10 @@ newtype Env primTy primVal a
       HasState "core" (IR.Globals primTy primVal)
     )
     via StateField "core" (EnvAlias primTy primVal)
+
+execEnv :: FE.FinalContext -> P.Parameterisation primTy primVal -> Env primTy primVal a -> Either Error a
+execEnv ctx param (Env env) =
+  fst $ runIdentity $ runStateT (runExceptT env) (FFState ctx param mempty mempty)
 
 throwFF :: Error -> Env primTy primVal a
 throwFF = throw @"fromFrontendError"
