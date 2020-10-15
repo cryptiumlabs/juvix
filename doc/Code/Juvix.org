@@ -457,17 +457,17 @@ This module provides a default contract environment
   + [[Library]]
 *** FromFrontend
 - _Relies on_
-  + [[Library]]
-  + [[InfixPrecedence/Types]]
-  + [[FrontendContextualise]]
-  + [[Usage]]
   + [[Context]]
   + [[NameSymbol]]
-  + [[IR/Types/Base]]
-  + [[IR]]
   + [[HR]]
-  + [[Translate]]
+  + [[IR]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
+  + [[Translate]]
+  + [[Usage]]
+  + [[FrontendContextualise]]
+  + [[InfixPrecedence/Types]]
+  + [[Library]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Frontend/Types/Base]]
@@ -843,9 +843,9 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** FreeVars
 - _Relies on_
-  + [[Library]]
-  + [[Frontend/Types/Base]]
   + [[NameSymbol]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]
