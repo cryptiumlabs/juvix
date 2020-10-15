@@ -455,6 +455,19 @@ This module provides a default contract environment
   + [[InfixPrecedence/Environment]]
   + [[FrontendDesugar]]
   + [[Library]]
+*** FromFrontend
+- _Relies on_
+  + [[Library]]
+  + [[InfixPrecedence/Types]]
+  + [[FrontendContextualise]]
+  + [[Usage]]
+  + [[Context]]
+  + [[NameSymbol]]
+  + [[IR/Types/Base]]
+  + [[IR]]
+  + [[HR]]
+  + [[Translate]]
+  + [[Core/Parameterisation]]
 *** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Frontend/Types/Base]]
@@ -638,6 +651,7 @@ This module provides a default contract environment
 **** Algorithm
 - _Relies on_
   + [[Erased/Types]]
+  + [[Erasure/Types]]
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
@@ -827,6 +841,11 @@ Quantitative type implementation inspired by
   + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Library]]
+*** FreeVars
+- _Relies on_
+  + [[Library]]
+  + [[Frontend/Types/Base]]
+  + [[NameSymbol]]
 *** Lexer
 - _Relies on_
   + [[Library]]

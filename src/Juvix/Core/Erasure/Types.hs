@@ -9,8 +9,8 @@ import qualified Extensible as Ext
 import Juvix.Core.Erased.Types as Type
   ( Type,
     pattern Pi,
-    pattern Sig,
     pattern PrimTy,
+    pattern Sig,
     pattern Star,
     pattern SymT,
   )

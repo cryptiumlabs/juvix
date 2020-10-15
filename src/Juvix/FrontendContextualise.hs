@@ -5,8 +5,9 @@
 --   1. =ModuleOpen=
 --   2. =InfixPrecedence=
 module Juvix.FrontendContextualise
-  (module Juvix.FrontendContextualise,
-   Target.FinalContext)
+  ( module Juvix.FrontendContextualise,
+    Target.FinalContext,
+  )
 where
 
 import qualified Juvix.Core.Common.Context as Context

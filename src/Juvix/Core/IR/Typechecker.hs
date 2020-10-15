@@ -359,8 +359,9 @@ IR.VPi' π1 s1 t1 _ <: IR.VPi' π2 s2 t2 _ =
   π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
 IR.VSig' π1 s1 t1 _ <: IR.VSig' π2 s2 t2 _ =
   -- TODO is this right???
-  π1 `Usage.allows` π2 &&
-  s1 <: s2 && t1 <: t2
+  π1 `Usage.allows` π2
+    && s1 <: s2
+    && t1 <: t2
 s1 <: s2 = s1 == s2
 
 infix 4 <: -- same as (<), etc

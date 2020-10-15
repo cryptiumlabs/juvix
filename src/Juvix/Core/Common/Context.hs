@@ -78,7 +78,7 @@ data Definition term ty sumRep
 
 data Information
   = Prec Precedence
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Data)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition

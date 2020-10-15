@@ -10,8 +10,8 @@ module Juvix.Core.Common.Context.Precedence
   )
 where
 
-import Juvix.Library (Eq, Int, Show, Symbol)
 import Data.Data
+import Juvix.Library (Eq, Int, Show, Symbol)
 
 data Associativity
   = Left

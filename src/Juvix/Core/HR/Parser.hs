@@ -100,21 +100,24 @@ generateParser parameterisation =
       primTerm = Prim |<< parseVal parameterisation lexer
       --
       sortTerm :: Parser (Term primTy primVal)
-      sortTerm = reserved "*" *>
-        (Star . fromInteger <$> natural)
+      sortTerm =
+        reserved "*"
+          *> (Star . fromInteger <$> natural)
       --
       piTerm :: Parser (Term primTy primVal)
-      piTerm = reserved "[Π]" *>
-        (Pi <$> usage <*> binder <*> term <*> term)
+      piTerm =
+        reserved "[Π]"
+          *> (Pi <$> usage <*> binder <*> term <*> term)
       --
       lamTerm :: Parser (Term primTy primVal)
       lamTerm =
         Lam <$> (reservedOp "\\" *> binder)
-            <*> (reservedOp "->" *> term)
+          <*> (reservedOp "->" *> term)
       --
       sigTerm :: Parser (Term primTy primVal)
-      sigTerm = reserved "[Σ]" *>
-        (Sig <$> usage <*> binder <*> term <*> term)
+      sigTerm =
+        reserved "[Σ]"
+          *> (Sig <$> usage <*> binder <*> term <*> term)
       --
       pairTerm :: Parser (Term primTy primVal)
       pairTerm = brackets $ Pair <$> term <*> (comma *> term)

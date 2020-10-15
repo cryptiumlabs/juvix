@@ -426,7 +426,7 @@ identityAppK =
                 one -- the second 1 in the annotation
                 natT' -- (1 Nat ->
                 (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
-                    -- ->
+                  -- ->
             )
             ( IR.Pi
                 one
@@ -461,7 +461,7 @@ kApp1 =
         (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
     )
     0
-  `IR.App` nat 1
+    `IR.App` nat 1
 
 kApp1_2 :: NatElim
 kApp1_2 = kApp1 `IR.App` nat 2
@@ -496,7 +496,7 @@ kFunApp1 =
         0
     )
     (nat 1) -- 1
-        -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
+      -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
 kFunApp1CompTy = one `ann` IR.VPi mempty (IR.VPi one natT natT) natT
@@ -700,8 +700,9 @@ ski1CompNatTy :: NatAnnotation
 ski1CompNatTy = one `ann` natT
 
 dependentPairComp :: T.TestTree
-dependentPairComp = T.testGroup "Dependent pair typing" $
-  [shouldCheck Nat.t boxNat boxNatAnn]
+dependentPairComp =
+  T.testGroup "Dependent pair typing" $
+    [shouldCheck Nat.t boxNat boxNatAnn]
 
 twoNatsAnn :: NatAnnotation
 twoNatsAnn = one `ann` IR.VSig one natT natT
@@ -739,7 +740,8 @@ two =
 
 twoCompTy :: NatAnnotation
 twoCompTy = one `ann` IR.VPi two (IR.VPi one natT natT) (IR.VPi one natT natT)
-  where two = Usage.SNat 2
+  where
+    two = Usage.SNat 2
 
 typGlobals :: IR.Globals primTy primVal
 typGlobals =

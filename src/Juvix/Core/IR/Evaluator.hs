@@ -7,15 +7,15 @@
 -- the substitution functions (substTerm and substElim).
 module Juvix.Core.IR.Evaluator where
 
+import qualified Data.IntMap as IntMap
 import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Data.IntMap as IntMap
 
 class HasWeak a where
-    --
+  --
   weakBy' :: Natural -> IR.BoundVar -> a -> a
   default weakBy' ::
     (Generic a, GHasWeak (Rep a)) =>
@@ -170,8 +170,10 @@ class HasWeak a => HasPatSubst extT primTy primVal a where
     a ->
     m a
   default patSubst' ::
-    (Generic a, GHasPatSubst extT primTy primVal (Rep a),
-     TC.HasThrowTC' extV extT primTy primVal m) =>
+    ( Generic a,
+      GHasPatSubst extT primTy primVal (Rep a),
+      TC.HasThrowTC' extV extT primTy primVal m
+    ) =>
     Natural ->
     IR.PatternMap (IR.Elim' extT primTy primVal) ->
     a ->
@@ -179,71 +181,77 @@ class HasWeak a => HasPatSubst extT primTy primVal a where
   patSubst' b m = fmap to . gpatSubst' b m . from
 
 patSubst ::
-  (HasPatSubst extT primTy primVal a,
-   TC.HasThrowTC' extV extT primTy primVal m) =>
-  IR.PatternMap (IR.Elim' extT primTy primVal) -> a -> m a
+  ( HasPatSubst extT primTy primVal a,
+    TC.HasThrowTC' extV extT primTy primVal m
+  ) =>
+  IR.PatternMap (IR.Elim' extT primTy primVal) ->
+  a ->
+  m a
 patSubst = patSubst' 0
 
 type AllPatSubst ext primTy primVal =
-  (IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
-   IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal)
+  ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal
+  )
 
-instance AllPatSubst ext primTy primVal =>
-    HasPatSubst ext primTy primVal (IR.Term' ext primTy primVal)
+instance
+  AllPatSubst ext primTy primVal =>
+  HasPatSubst ext primTy primVal (IR.Term' ext primTy primVal)
   where
-    patSubst' b m (IR.Star' u a) =
-      IR.Star' u <$> patSubst' b m a
-    patSubst' b m (IR.PrimTy' t a) =
-      IR.PrimTy' t <$> patSubst' b m a
-    patSubst' b m (IR.Prim' p a) =
-      IR.Prim' p <$> patSubst' b m a
-    patSubst' b m (IR.Pi' π s t a) =
-      IR.Pi' π <$> patSubst' b m s
-               <*> patSubst' (succ b) m t
-               <*> patSubst' b m a
-    patSubst' b m (IR.Lam' t a) =
-      IR.Lam' <$> patSubst' (succ b) m t
-              <*> patSubst' b m a
-    patSubst' b m (IR.Sig' π s t a) =
-      IR.Sig' π <$> patSubst' b m s
-                <*> patSubst' (succ b) m t
-                <*> patSubst' b m a
-    patSubst' b m (IR.Pair' s t a) =
-      IR.Pair' <$> patSubst' b m s
-               <*> patSubst' b m t
-               <*> patSubst' b m a
-    patSubst' b m (IR.Let' π l t a) =
-      IR.Let' π <$> patSubst' b m l
-                <*> patSubst' (succ b) m t
-                <*> patSubst' b m a
-    patSubst' b m (IR.Elim' e a) =
-      IR.Elim' <$> patSubst' b m e
-               <*> patSubst' b m a
-    patSubst' b m (IR.TermX a) =
-      IR.TermX <$> patSubst' b m a
+  patSubst' b m (IR.Star' u a) =
+    IR.Star' u <$> patSubst' b m a
+  patSubst' b m (IR.PrimTy' t a) =
+    IR.PrimTy' t <$> patSubst' b m a
+  patSubst' b m (IR.Prim' p a) =
+    IR.Prim' p <$> patSubst' b m a
+  patSubst' b m (IR.Pi' π s t a) =
+    IR.Pi' π <$> patSubst' b m s
+      <*> patSubst' (succ b) m t
+      <*> patSubst' b m a
+  patSubst' b m (IR.Lam' t a) =
+    IR.Lam' <$> patSubst' (succ b) m t
+      <*> patSubst' b m a
+  patSubst' b m (IR.Sig' π s t a) =
+    IR.Sig' π <$> patSubst' b m s
+      <*> patSubst' (succ b) m t
+      <*> patSubst' b m a
+  patSubst' b m (IR.Pair' s t a) =
+    IR.Pair' <$> patSubst' b m s
+      <*> patSubst' b m t
+      <*> patSubst' b m a
+  patSubst' b m (IR.Let' π l t a) =
+    IR.Let' π <$> patSubst' b m l
+      <*> patSubst' (succ b) m t
+      <*> patSubst' b m a
+  patSubst' b m (IR.Elim' e a) =
+    IR.Elim' <$> patSubst' b m e
+      <*> patSubst' b m a
+  patSubst' b m (IR.TermX a) =
+    IR.TermX <$> patSubst' b m a
 
-instance AllPatSubst ext primTy primVal =>
-    HasPatSubst ext primTy primVal (IR.Elim' ext primTy primVal)
+instance
+  AllPatSubst ext primTy primVal =>
+  HasPatSubst ext primTy primVal (IR.Elim' ext primTy primVal)
   where
-    patSubst' b m (IR.Bound' j a) =
-      IR.Bound' j <$> patSubst' b m a
-    patSubst' b m (IR.Free' (IR.Pattern x) _) =
-      case IntMap.lookup x m of
-        Nothing -> TC.throwTC $ TC.UnboundPatVar x
-        Just e  -> pure $ weakBy b e
-    patSubst' b m (IR.Free' x a) =
-      IR.Free' x <$> patSubst' b m a
-    patSubst' b m (IR.App' f e a) =
-      IR.App' <$> patSubst' b m f
-              <*> patSubst' b m e
-              <*> patSubst' b m a
-    patSubst' b m (IR.Ann' π s t ℓ a) =
-      IR.Ann' π <$> patSubst' b m s
-                <*> patSubst' b m t
-                <*> pure ℓ
-                <*> patSubst' b m a
-    patSubst' b m (IR.ElimX a) =
-      IR.ElimX <$> patSubst' b m a
+  patSubst' b m (IR.Bound' j a) =
+    IR.Bound' j <$> patSubst' b m a
+  patSubst' b m (IR.Free' (IR.Pattern x) _) =
+    case IntMap.lookup x m of
+      Nothing -> TC.throwTC $ TC.UnboundPatVar x
+      Just e -> pure $ weakBy b e
+  patSubst' b m (IR.Free' x a) =
+    IR.Free' x <$> patSubst' b m a
+  patSubst' b m (IR.App' f e a) =
+    IR.App' <$> patSubst' b m f
+      <*> patSubst' b m e
+      <*> patSubst' b m a
+  patSubst' b m (IR.Ann' π s t ℓ a) =
+    IR.Ann' π <$> patSubst' b m s
+      <*> patSubst' b m t
+      <*> pure ℓ
+      <*> patSubst' b m a
+  patSubst' b m (IR.ElimX a) =
+    IR.ElimX <$> patSubst' b m a
 
 type AllWeakV ext primTy primVal =
   ( IR.ValueAll HasWeak ext primTy primVal,

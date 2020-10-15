@@ -99,14 +99,20 @@ constUnit =
     (Erased.Lam "1" (Erased.Var "1"))
 
 unusedFst :: T.TestTree
-unusedFst = shouldEraseTo "unusedFst" Unit.t
-  (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy0), one)
-  unitTermE
+unusedFst =
+  shouldEraseTo
+    "unusedFst"
+    Unit.t
+    (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy0), one)
+    unitTermE
 
 usedFst :: T.TestTree
-usedFst = shouldEraseTo "usedFst" Unit.t
-  (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy1), one)
-  (unitTermE `Erased.Pair` unitTermE)
+usedFst =
+  shouldEraseTo
+    "usedFst"
+    Unit.t
+    (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy1), one)
+    (unitTermE `Erased.Pair` unitTermE)
 
 usedArg :: T.TestTree
 usedArg =

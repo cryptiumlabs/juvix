@@ -70,7 +70,8 @@ coreParser =
         (Elim (App (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0) (Elim (Var "y")))),
       shouldParse "[Σ] 1 A * 0 A" (Sig one "A" (Star 0) (Elim (Var "A"))),
       shouldParse "[add, add]" (Pair (Prim Nat.Add) (Prim Nat.Add)),
-      shouldParse "[add, [add, add]]"
+      shouldParse
+        "[add, [add, add]]"
         (Pair (Prim Nat.Add) (Pair (Prim Nat.Add) (Prim Nat.Add))),
       shouldParse "(2)" (Prim (Nat.Val 2)),
       shouldParse "add" (Prim Nat.Add)
