@@ -1,0 +1,16 @@
+-- open Prelude
+-- open Foo
+-- open Foo
+-- open Kazam.Blah
+open Foo.Kazam.Blah
+
+let big-foo = t
+
+-- sig storage : ty
+-- let storage = pair int int
+
+-- sig param : ty
+-- let param = unit-t
+
+-- sig default : param -> storage -> pair storage (list operation)
+-- let default _ storage = cons-pair (cons-pair (snd storage) (fst storage)) nil

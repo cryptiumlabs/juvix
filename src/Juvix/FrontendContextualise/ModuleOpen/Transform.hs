@@ -31,6 +31,7 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
     Just Context.CurrentNameSpace {} -> err
+    Just Context.Information {} -> err
     Nothing -> err
     Just (Context.Record innerC _mTy) ->
       -- Fine to just have the public names
@@ -188,6 +189,9 @@ transformDef (Context.Unknown mTy) _ =
 --
 transformDef Context.CurrentNameSpace _ =
   pure Context.CurrentNameSpace
+--
+transformDef (Context.Information is) _ =
+  pure (Context.Information is)
 --
 transformDef (Context.Record _contents mTy) name' = do
   sig <- traverse transformSignature mTy

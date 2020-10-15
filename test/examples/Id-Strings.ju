@@ -1,3 +1,5 @@
+open Prelude
+
 let string = %Michelson.string
 
 let pair = %Michelson.pair

@@ -1,5 +1,7 @@
 mod Prelude.Michelson where
 
+open Prelude
+
 -- datatypes
 let option    = %Michelson.option
 let list      = %Michelson.list
@@ -65,7 +67,7 @@ let now = %Michelson.now
 sig amount : (x : ty) -> x -> unit-t
 let amount = %Michelson.amount
 
-sig balance : (x : ty) -> address -> x
+sig balance : mutez
 let balance = %Michelson.balance
 
 sig sha256 : bytes -> bytes
@@ -89,7 +91,10 @@ let implicit-account = %Michelson.implicit-account
 sig create-contract : operation
 let create-contract = %Michelson.create-contract
 
-sig transfer-tokens : (x : ty) -> address -> x -> hash-key
+sig address-to-contract : (param : ty) -> address -> contract param
+let address-to-contract = %Michelson.address-to-contract
+
+sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 let transfer-tokens = %Michelson.transfer-tokens
 
 sig set-delegate : address -> unit-t
@@ -112,6 +117,9 @@ let nil = %Michelson.nil
 
 sig cons : a -> list a
 let cons = %Michelson.cons
+
+sig cons-pair : a -> b -> pair a b
+let cons-pair = %Michelson.cons-pair
 
 sig car : list a -> a
 let car = %Michelson.car

@@ -207,3 +207,4 @@ Tests that weak works as expected
   + [[Default]]
   + [[Library]]
 * examples
+** demo

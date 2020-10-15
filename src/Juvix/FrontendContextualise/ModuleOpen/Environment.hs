@@ -365,12 +365,13 @@ splitMaybes = foldr f ([], [])
     f (Just a, b) = first ((a, b) :)
     f (Nothing, b) = second (b :)
 
+-- TODO ∷ add test for firstName
 firstName :: NameSymbol.T -> NameSymbol.T
 firstName (x :| y : _)
   | Context.topLevelName == x =
     x :| [y]
   | otherwise =
-    NameSymbol.fromSymbol y
+    NameSymbol.fromSymbol x
 firstName xs =
   NameSymbol.hd xs
     |> NameSymbol.fromSymbol

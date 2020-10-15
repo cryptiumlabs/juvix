@@ -1,5 +1,7 @@
 
-  [ Function'
+  [ 
+    ModuleOpen' (Open' ("Prelude" :| []) ()) (),
+    Function'
       ( Func'
           ( Like'
               { functionLikedName = "nat",
