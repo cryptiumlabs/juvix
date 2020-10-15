@@ -959,6 +959,14 @@ Quantitative type implementation inspired by
     filtering out =our-point= isn't enough! we have to check if the
     first-part of the name has =our-point=, since everything shares
     the same namespace
+- TODO :: How do we handle this case?
+  #+BEGIN_SRC ocaml
+    mod Foo where
+    let foo (x :: xs) = x + TopLevel.Foo.foo xs
+    let foo []        = 0
+  #+END_SRC
+  + To Handle this, we need to unqualify the foo, and have the
+    module handle the symbol allocation
 - NOTE :: we assume lets are recursive, if this changes the code
   has to be updated to account for that'
 - NOTE :: we assume in =nameifyAdt= which takes effect in the =\\=

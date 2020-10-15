@@ -12,6 +12,15 @@
 --     filtering out =our-point= isn't enough! we have to check if the
 --     first-part of the name has =our-point=, since everything shares
 --     the same namespace
+-- - TODO :: How do we handle this case?
+--   #+BEGIN_SRC ocaml
+--     mod Foo where
+--
+--     let foo (x :: xs) = x + TopLevel.Foo.foo xs
+--     let foo []        = 0
+--   #+END_SRC
+--   + To Handle this, we need to unqualify the foo, and have the
+--     module handle the symbol allocation
 -- - NOTE :: we assume lets are recursive, if this changes the code
 --   has to be updated to account for that'
 -- - NOTE :: we assume in =nameifyAdt= which takes effect in the =\\=
@@ -39,22 +48,24 @@ type Set = Set.HashSet NameSymb.T
 op :: ExcludedSet -> Type.Expression -> Set
 op s (Type.Tuple tuple) = nameifyTuple s tuple
 op s (Type.List list'') = nameifyList s list''
-op s (Type.Primitive t) = nameifyPrim s t
+op s (Type.Primitive t) = Set.empty
 op s (Type.Constant _c) = Set.empty
 op s (Type.Let letbind) = nameifyLet s letbind
 op s (Type.LetType le') = nameifyLetType s le'
-op s (Type.Match match) = nameifyMatch s match
-op s (Type.Lambda lamb) = nameifyLambda s lamb
-op s (Type.Block block) = nameifyBlock s block
-op s (Type.ExpRecord i) = nameifyExpRecord s i
-op s (Type.ArrowE arro) = nameifyArrowExp s arro
-op s (Type.RefinedE re) = nameifyTypeRefine s re
+op s (Type.Match match) = _nameifyMatch s match
+op s (Type.Lambda lamb) = _nameifyLambda s lamb
+op s (Type.Block block) = _nameifyBlock s block
+op s (Type.ExpRecord i) = _nameifyExpRecord s i
+op s (Type.ArrowE arro) = _nameifyArrowExp s arro
+op s (Type.RefinedE re) = _nameifyTypeRefine s re
 op s (Type.Parened par) = op s par
-op s (Type.Name varNam) = undefined -- Set.singleton varNam
-op s (Type.DeclarationE e) = nameifyDeclarationExpression s e
-op s (Type.UniverseName i) = nameifyUniverseExpression s i
+op s (Type.DeclarationE e) = _nameifyDeclarationExpression s e
+op s (Type.UniverseName i) = _nameifyUniverseExpression s i
 op s (Type.NamedTypeE nem) = nameifyNamedType s nem
 op s (Type.Application ap) = nameifyApplication s ap
+op s (Type.Name varNam)
+  | Set.member (NameSymb.hd varNam) s = Set.singleton varNam
+  | otherwise = Set.empty
 
 ------------------------------------------------------------
 -- Boilerplate
@@ -105,6 +116,12 @@ nameifyRecord s (Type.Record'' fields sig) =
 -- thus we check the first part in the exclusion set
 nameifyNameType s (Type.NameType' sig _) =
   op s sig
+
+nameifyApplication s (Type.App fun args) =
+  op s fun <> foldMap (op s) args
+
+nameifyNamedType s (Type.NamedType' _name exp) =
+  op s exp
 
 -----------------------------------------------------------
 -- Functions for finding extra bindings
