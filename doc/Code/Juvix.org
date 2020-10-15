@@ -841,11 +841,6 @@ Quantitative type implementation inspired by
   + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Library]]
-*** FreeVars
-- _Relies on_
-  + [[NameSymbol]]
-  + [[Frontend/Types/Base]]
-  + [[Library]]
 *** Lexer
 - _Relies on_
   + [[Library]]
@@ -949,6 +944,32 @@ Quantitative type implementation inspired by
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
   + [[ModuleOpen/Extend]]
+  + [[Library]]
+**** FreeVars
+- FreeVars is an algorithm that checks for free symbols in the AST.
+- The =ExcludedSet= holds the symbols defined... These are needed
+  in case of a degenerate case like
+  #+BEGIN_SRC ocaml
+    let foo =
+      let type point = {x : int, y : int} in
+      let our-point  = {x = 3, y = 4} in
+      our-point.x + our-point.y
+  #+END_SRC
+  + here we need to dismiss =our-point.x= and =our-point.y=, just
+    filtering out =our-point= isn't enough! we have to check if the
+    first-part of the name has =our-point=, since everything shares
+    the same namespace
+- NOTE :: we assume lets are recursive, if this changes the code
+  has to be updated to account for that'
+- NOTE :: we assume in =nameifyAdt= which takes effect in the =\\=
+  call to =nameifyLetType=, that definitions of constructors before
+  this point can't be redefined
+  + This means that if we have ordered definitions, we'll silently
+    drop the calls to the old constructors.
+  + Thus, please redefine the logic there to support such modes
+- _Relies on_
+  + [[NameSymbol]]
+  + [[InfixPrecedence/Types]]
   + [[Library]]
 **** ShuntYard
 - This implements the Shunt Yard algorithm for determining the

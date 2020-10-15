@@ -145,7 +145,6 @@ library:
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
     - Juvix.Frontend.Types.Extend
-    - Juvix.Frontend.FreeVars
     - Juvix.FrontendDesugar
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
@@ -181,6 +180,7 @@ library:
     - Juvix.FrontendContextualise.InfixPrecedence.Extend
     - Juvix.FrontendContextualise.InfixPrecedence.Transform
     - Juvix.FrontendContextualise.InfixPrecedence.Environment
+    - Juvix.FrontendContextualise.InfixPrecedence.FreeVars
     - Juvix.FrontendContextualise.InfixPrecedence.Types
     - Juvix.Frontend
     - Juvix.Frontend.Lexer
