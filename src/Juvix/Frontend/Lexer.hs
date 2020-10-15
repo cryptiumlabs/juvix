@@ -112,6 +112,7 @@ validInfixSymbol w =
     || w == colon
     || w == div
     || w == percent
+    || w == dot
 
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =

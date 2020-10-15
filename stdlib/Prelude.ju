@@ -17,9 +17,7 @@ let const x = \_ -> x
 sig flip : (a : ty) -> (b : ty) -> (c : ty) -> b -> a -> c
 let flip f x y = f y x
 
--- This doesn't parse at the moment.
+declare infixl (.) 9
 
---declare infixl (.) 9
-
---sig (.) : (a : ty) -> (b : ty) -> (c : ty) -> (b -> c) -> (a -> b) -> (a -> c)
---let (.) f g = \x -> f (g x)
+sig (.) : (a : ty) -> (b : ty) -> (c : ty) -> (b -> c) -> (a -> b) -> (a -> c)
+let (.) f g = \x -> f (g x)
