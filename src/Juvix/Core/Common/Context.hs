@@ -1,7 +1,6 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
 
 -- |
 -- - Serves as the context for lower level programs of the =Juvix=
@@ -535,7 +534,6 @@ resolveName ctx (def, name) =
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
 
-
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and
 -- elements of previous groups.
@@ -546,15 +544,19 @@ recGroups = _ -- TODO
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
 traverseContext ::
-  (Monoid t, Applicative f) =>
-  (NonEmpty (Definition a b c) -> f t) -> -- ^ process one recursive group
-  T a b c -> f t
+  (Applicative f, Monoid t) =>
+  -- | process one recursive group
+  (NonEmpty (Definition a b c) -> f t) ->
+  T a b c ->
+  f t
 traverseContext f = foldMapA f . recGroups
 
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
   (Monoid t, Applicative f) =>
-  (Definition a b c -> f t) -> -- ^ process one definition
-  T a b c -> f t
+  -- | process one definition
+  (Definition a b c -> f t) ->
+  T a b c ->
+  f t
 traverseContext1 = traverseContext . foldMapA
