@@ -56,7 +56,8 @@ allParserTests =
       reservedInfix,
       caseOfWords,
       questionMarktest,
-      bangtest
+      bangtest,
+      removeNewLineNextToNewline
     ]
 
 --------------------------------------------------------------------------------
@@ -95,7 +96,7 @@ shouldParseAs name parses x y =
 removeSpaceBefore :: T.TestTree
 removeSpaceBefore =
   Parser.removeComments "let foo = 3 \n + \n -- foo foo foo \n 4"
-    |> (T.@=? "let foo = 3 \n + \n\n 4")
+    |> (T.@=? "let foo = 3 \n + \n \n 4")
     |> T.testCase "test remove comments: let foo = 3 \n + \n -- foo foo foo \n 4"
 
 removeNewLineBefore :: T.TestTree
@@ -103,6 +104,12 @@ removeNewLineBefore =
   Parser.removeComments "let foo = 3 \n + \n-- foo foo foo \n 4"
     |> (T.@=? "let foo = 3 \n + \n\n 4")
     |> T.testCase "test remove comments: let foo = 3 \n + \n-- foo foo foo \n 4"
+
+removeNewLineNextToNewline :: T.TestTree
+removeNewLineNextToNewline =
+  Parser.removeComments "\n -- -- ffooo \n--\n -- -- \n let foo xs = 3 -- bar"
+    |> (T.@=? "\n \n\n \n let foo xs = 3 ")
+    |> T.testCase "test remove comments: \n -- -- ffooo \n--\n -- -- \n ... -- bar"
 
 -- TODO :: use quick check!
 

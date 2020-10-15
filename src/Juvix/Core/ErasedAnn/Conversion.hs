@@ -38,6 +38,10 @@ convertTerm term usage = do
           pure (Ann usage ty' (LamM (cap' \\ [sym]) (sym : arg') body'))
         _ ->
           pure (Ann usage ty' (LamM (free term) [sym] body))
+    E.Pair left right _ -> do
+      left <- convertTerm left usage
+      right <- convertTerm right usage
+      pure (Ann usage ty' (PairM left right))
     E.App f a _ -> do
       f <- convertTerm f usage
       a <- convertTerm a usage
@@ -58,3 +62,4 @@ convertType ty =
       a <- convertType a
       r <- convertType r
       pure (Pi u a r)
+    E.Sig u a b -> Sig u <$> convertType a <*> convertType b

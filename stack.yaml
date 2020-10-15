@@ -1,5 +1,4 @@
-resolver:  lts-15.11
-# resolver: lts-14.19
+resolver:  lts-15.16
 
 packages:
 - .

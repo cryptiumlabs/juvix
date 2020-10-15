@@ -21,7 +21,7 @@ where
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
 
-data NoExt
+data NoExt deriving (Data)
 
 extendTerm "Term" [] [t|NoExt|] $ \_ _ -> defaultExtTerm
 
@@ -49,20 +49,23 @@ type Globals primTy primVal = Globals' NoExt primTy primVal
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal
-quote0 = quote 0
+quote0 = quote
+{-# DEPRECATED quote0 "use quote directly" #-}
 
-quote :: BoundVar -> Value primTy primVal -> Term primTy primVal
-quote _ (VStar nat) = Star nat
-quote _ (VPrimTy p) = PrimTy p
-quote ii (VPi π s t) = Pi π (quote ii s) (quote (ii + 1) t)
-quote ii (VLam s) = Lam (quote (ii + 1) s)
-quote _ (VPrim pri) = Prim pri
-quote ii (VNeutral n) = Elim $ neutralQuote ii n
+quote :: Value primTy primVal -> Term primTy primVal
+quote (VStar nat) = Star nat
+quote (VPrimTy p) = PrimTy p
+quote (VPi π s t) = Pi π (quote s) (quote t)
+quote (VLam s) = Lam (quote s)
+quote (VSig π s t) = Sig π (quote s) (quote t)
+quote (VPair s t) = Pair (quote s) (quote t)
+quote (VPrim pri) = Prim pri
+quote (VNeutral n) = Elim $ neutralQuote n
 
-neutralQuote :: BoundVar -> Neutral primTy primVal -> Elim primTy primVal
-neutralQuote _ (NBound x) = Bound x
-neutralQuote _ (NFree x) = Free x
-neutralQuote ii (NApp n v) = App (neutralQuote ii n) (quote ii v)
+neutralQuote :: Neutral primTy primVal -> Elim primTy primVal
+neutralQuote (NBound x) = Bound x
+neutralQuote (NFree x) = Free x
+neutralQuote (NApp n v) = App (neutralQuote n) (quote v)
 
 -- | 'VFree' creates the value corresponding to a free variable
 pattern VFree ::

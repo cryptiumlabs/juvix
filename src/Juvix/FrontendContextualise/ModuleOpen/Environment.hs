@@ -60,8 +60,7 @@ type ContextAlias =
 
 type ModuleMap = Map.T Symbol NameSymbol.T
 
-newtype Context a
-  = Ctx {antiAlias :: ContextAlias a}
+newtype Context a = Ctx {antiAlias :: ContextAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "old" (Old Context.T),
@@ -366,12 +365,13 @@ splitMaybes = foldr f ([], [])
     f (Just a, b) = first ((a, b) :)
     f (Nothing, b) = second (b :)
 
+-- TODO ∷ add test for firstName
 firstName :: NameSymbol.T -> NameSymbol.T
 firstName (x :| y : _)
   | Context.topLevelName == x =
     x :| [y]
   | otherwise =
-    NameSymbol.fromSymbol y
+    NameSymbol.fromSymbol x
 firstName xs =
   NameSymbol.hd xs
     |> NameSymbol.fromSymbol

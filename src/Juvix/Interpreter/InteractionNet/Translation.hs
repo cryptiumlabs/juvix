@@ -466,8 +466,9 @@ netToAst net = evalEnvState run (Env 0 net Map.empty)
                           AST.Curried1 f -> parentAux (Type.Curried1 f)
                           AST.PrimCurried1 f -> parentAux (Type.PrimCurried1 f)
                   AST.IsPrim {AST._tag0 = tag} ->
-                    pure $ Just $
-                      case tag of
+                    pure
+                      $ Just
+                      $ case tag of
                         AST.PrimVal p -> Type.Prim p
                         AST.Erase -> Type.Erase
                         AST.Nil -> Type.Nil

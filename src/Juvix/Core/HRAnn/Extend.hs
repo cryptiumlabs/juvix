@@ -25,7 +25,6 @@ data LetAnnotation primTy primVal
         letType :: IR.Term' T primTy primVal
       }
 
--- TODO: add combinators to @extensible-data@ for pairing like this
 extTerm :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtTerm
 extTerm =
   \primTy primVal ->
@@ -34,6 +33,8 @@ extTerm =
         IR.typeLam = Just [[t|BindAnnotation $primTy $primVal|]],
         IR.namePi = "Pi0",
         IR.typePi = Just [[t|Symbol|]],
+        IR.nameSig = "Sig0",
+        IR.typeSig = Just [[t|Symbol|]],
         IR.nameLet = "Let0",
         IR.typeLet = Just [[t|LetAnnotation $primTy $primVal|]],
         IR.nameElim = "Elim0",

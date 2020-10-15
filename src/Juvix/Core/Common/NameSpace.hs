@@ -12,14 +12,14 @@ data T b
       { public :: HashMap.T Symbol b,
         private :: HashMap.T Symbol b
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data)
 
 data List b
   = List
       { publicL :: [(Symbol, b)],
         privateL :: [(Symbol, b)]
       }
-  deriving (Show)
+  deriving (Show, Data)
 
 -- | From represents whether the variable came from
 -- the public names below us, or the private names below us
@@ -28,7 +28,7 @@ data List b
 data From b
   = Pub b
   | Priv b
-  deriving (Show, Functor, Traversable, Foldable, Eq)
+  deriving (Show, Functor, Traversable, Foldable, Eq, Data)
 
 empty :: T b
 empty = T {public = HashMap.empty, private = HashMap.empty}

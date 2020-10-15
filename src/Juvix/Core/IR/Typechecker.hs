@@ -115,6 +115,17 @@ typeTerm' term ann@(Annotation σ ty) =
       t' <- withLocal varAnn $ typeTerm' t tAnn
       let anns = BindAnnotation {baBindAnn = varAnn, baResAnn = ann}
       pure $ Typed.Lam t' anns
+    IR.Sig' π a b _ -> do
+      requireZero σ
+      void $ requireStar ty
+      a' <- typeTerm' a ann
+      b' <- typeTerm' b ann
+      pure $ Typed.Sig π a' b' ann
+    IR.Pair' s t _ -> do
+      (π, a, b) <- requireSig ty
+      let sAnn = Annotation (σ <.> π) a
+      tAnn <- Annotation σ <$> substApp b s
+      Typed.Pair <$> typeTerm' s sAnn <*> typeTerm' t tAnn <*> pure ann
     IR.Let' σb b t _ -> do
       b' <- typeElim' b σb
       let bAnn = getElimAnn b'
@@ -233,15 +244,22 @@ toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty
     go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t
     go _ = empty
 
-type PiParts primTy primVal =
+type TyParts primTy primVal =
   (Usage.T, IR.Value primTy primVal, IR.Value primTy primVal)
 
 requirePi ::
   HasThrowTC' IR.NoExt ext primTy primVal m =>
   IR.Value primTy primVal ->
-  m (PiParts primTy primVal)
+  m (TyParts primTy primVal)
 requirePi (IR.VPi π a b) = pure (π, a, b)
 requirePi ty = throwTC (ShouldBeFunctionType ty)
+
+requireSig ::
+  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  IR.Value primTy primVal ->
+  m (TyParts primTy primVal)
+requireSig (IR.VSig π a b) = pure (π, a, b)
+requireSig ty = throwTC (ShouldBePairType ty)
 
 requireSubtype ::
   (Eq primTy, Eq primVal, HasThrowTC' IR.NoExt ext primTy primVal m) =>
@@ -324,6 +342,7 @@ evalTC t = do
 -- * Contravariant domain & covariant codomain
 --   (@(π x: A₁) → B₁ <: (π x: A₂) → B₂@ if
 --    @A₂ <: A₁@ and @B₁ <: B₂@)
+-- * Covariance in both parts of Σ
 -- * It doesn't descend into any other structures
 --   (TODO: which ones are safe to do so?)
 (<:) ::
@@ -338,6 +357,11 @@ evalTC t = do
 IR.VStar' i _ <: IR.VStar' j _ = i <= j
 IR.VPi' π1 s1 t1 _ <: IR.VPi' π2 s2 t2 _ =
   π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
+IR.VSig' π1 s1 t1 _ <: IR.VSig' π2 s2 t2 _ =
+  -- TODO is this right???
+  π1 `Usage.allows` π2
+    && s1 <: s2
+    && t1 <: t2
 s1 <: s2 = s1 == s2
 
 infix 4 <: -- same as (<), etc

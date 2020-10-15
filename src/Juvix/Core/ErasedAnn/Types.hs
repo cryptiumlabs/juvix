@@ -13,6 +13,7 @@ data Term primTy primVal
           -- the Term in AnnTerm is not lam!
         body :: AnnTerm primTy primVal
       }
+  | PairM (AnnTerm primTy primVal) (AnnTerm primTy primVal)
   | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
   deriving (Show, Eq, Generic)
 
@@ -22,6 +23,7 @@ data Type primTy primVal
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
     Pi Usage.T (Type primTy primVal) (Type primTy primVal)
+  | Sig Usage.T (Type primTy primVal) (Type primTy primVal)
   deriving (Show, Eq, Generic)
 
 data AnnTerm primTy primVal

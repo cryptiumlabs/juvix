@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
 
 -- |
 -- - Serves as the context for lower level programs of the =Juvix=
@@ -33,7 +34,7 @@ data Cont b
         currentName :: NameSymbol.T,
         topLevelMap :: HashMap.T Symbol b
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, Data)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
@@ -66,10 +67,17 @@ data Definition term ty sumRep
   | Unknown
       { definitionMTy :: Maybe ty
       }
+  | Information
+      { definitionInfo :: [Information]
+      }
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Data)
+
+data Information
+  = Prec Precedence
+  deriving (Show, Generic, Eq, Data)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
@@ -313,15 +321,23 @@ removeTop sym t@T {topLevelMap} =
 
 -------------------------------------------------------------------------------
 -- Functions on From
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 extractValue :: From a -> a
 extractValue (Outside a) = a
 extractValue (Current c) = NameSpace.extractValue c
 
 -------------------------------------------------------------------------------
+-- Functions on Information
+-------------------------------------------------------------------------------
+precedenceOf :: Foldable t => t Information -> Maybe Precedence
+precedenceOf = fmap (\(Prec p) -> p) . find f
+  where
+    f (Prec _) = True
+
+-------------------------------------------------------------------------------
 -- Generalized Helpers
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 ----------------------------------------
 -- Types for Generalized Helpers
@@ -517,3 +533,30 @@ resolveName ctx (def, name) =
       pure topLevelName <> removeTopName name
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
+
+-- | Sorts a context by dependency order. Each element of the output is
+-- a mutually-recursive group, whose elements depend only on each other and
+-- elements of previous groups.
+recGroups :: T a b c -> [NonEmpty (Definition a b c)]
+recGroups = _ -- TODO
+
+-- | Traverses a whole context by performing an action on each recursive group.
+-- The groups are passed in dependency order but the order of elements within
+-- each group is arbitrary.
+traverseContext ::
+  (Applicative f, Monoid t) =>
+  -- | process one recursive group
+  (NonEmpty (Definition a b c) -> f t) ->
+  T a b c ->
+  f t
+traverseContext f = foldMapA f . recGroups
+
+-- | Same as 'traverseContext', but the groups are split up into single
+-- definitions.
+traverseContext1 ::
+  (Monoid t, Applicative f) =>
+  -- | process one definition
+  (Definition a b c -> f t) ->
+  T a b c ->
+  f t
+traverseContext1 = traverseContext . foldMapA

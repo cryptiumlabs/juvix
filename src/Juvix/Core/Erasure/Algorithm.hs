@@ -1,7 +1,8 @@
-module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, Erasure.exec) where
+module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, exec) where
 
 import Data.List (genericIndex)
 import qualified Juvix.Core.Erased.Types as Erased
+import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
@@ -14,20 +15,13 @@ type ErasureM primTy primVal m =
     HasThrow "erasureError" (Erasure.Error primTy primVal) m
   )
 
-eraseAnn :: Erasure.Term primTy primVal -> Erased.Term primVal
-eraseAnn (Erasure.Var x _) = Erased.Var x
-eraseAnn (Erasure.Prim p _) = Erased.Prim p
-eraseAnn (Erasure.Lam x t _) = Erased.Lam x (eraseAnn t)
-eraseAnn (Erasure.Let x b t _) = Erased.Let x (eraseAnn b) (eraseAnn t)
-eraseAnn (Erasure.App s t _) = Erased.App (eraseAnn s) (eraseAnn t)
-
 erase ::
   Typed.Term primTy primVal ->
   Usage.T ->
   Either (Erasure.Error primTy primVal) (Erasure.Term primTy primVal)
 erase t π
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
-  | otherwise = Erasure.exec $ eraseTerm t
+  | otherwise = exec $ eraseTerm t
 
 eraseGlobal ::
   ErasureM primTy primVal m =>
@@ -102,6 +96,8 @@ erasePattern patt =
     IR.PCon name patts -> do
       patts <- mapM erasePattern patts
       pure (Erasure.PCon name patts)
+    IR.PPair l r ->
+      Erasure.PPair <$> erasePattern l <*> erasePattern r
     IR.PVar v -> pure (Erasure.PVar v)
     IR.PDot t -> do
       -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
@@ -147,6 +143,12 @@ eraseTerm (Typed.Lam t anns) = do
   if π == mempty
     then pure t
     else Erasure.Lam x t <$> eraseType ty
+eraseTerm t@(Typed.Sig {}) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm (Typed.Pair s t ann) = do
+  let ty@(IR.VSig π _ _) = IR.annType ann
+  if π == mempty
+    then eraseTerm t
+    else Erasure.Pair <$> eraseTerm s <*> eraseTerm t <*> eraseType ty
 eraseTerm (Typed.Let π b t anns) = do
   (x, t) <- withName \x -> (x,) <$> eraseTerm t
   if π == mempty
@@ -196,9 +198,17 @@ eraseType (IR.VPi π a b) = do
   if π == mempty
     then eraseType b
     else-- FIXME dependency
+
     Erasure.Pi π <$> eraseType a
       <*> withName \_ -> eraseType b
 eraseType v@(IR.VLam _) = do
+  throwEra $ Erasure.UnsupportedTypeV v
+eraseType (IR.VSig π a b) = do
+  if π == mempty
+    then eraseType a
+    else Erasure.Sig π <$> eraseType a
+      <*> withName \_ -> eraseType b
+eraseType v@(IR.VPair _ _) = do
   throwEra $ Erasure.UnsupportedTypeV v
 eraseType (IR.VNeutral n) = do
   eraseTypeN n

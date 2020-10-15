@@ -23,9 +23,10 @@ private
   s s′ t t′ z z′ d d′ w w′ : Term n
   S S′ T T′ U U′ : Type n
   π π′ ρ ρ′ ρᵀ ρᵀ′ : Usage n
-  e e′ f f′ : Elim n
+  e e′ f f′ 𝜋 𝜋′ 𝜌 𝜌′ : Elim n
   B B′ C : Binder n
-  o : BinOp
+  o o′ : BinOp n
+  • : BinOpKind
 
 
 module Derived {𝒯 : ℕ → Set} (⟿-At : ∀ n → Rel (𝒯 n) lzero) where
@@ -69,7 +70,7 @@ module Derived {𝒯 : ℕ → Set} (⟿-At : ∀ n → Rel (𝒯 n) lzero) wher
       left     : S ⟿* reduct
       right    : T ⟿* reduct
   open ≋-At public
-  
+
   _≋_ : Rel (𝒯 n) _
   _≋_ = ≋-At _
   infix 4 _≋_
@@ -97,6 +98,9 @@ module Derived {𝒯 : ℕ → Set} (⟿-At : ∀ n → Rel (𝒯 n) lzero) wher
   star-≋ : _⟿*_ ⇒₂ ≋-At n
   star-≋ Rs = make-≋ Rs ε
 
+  step-≋ : _⟿_ ⇒₂ ≋-At n
+  step-≋ = star-≋ ∘ (_◅ ε)
+
   plus-≋ : _⟿+_ ⇒₂ ≋-At n
   plus-≋ = star-≋ ∘ plus-star
 
@@ -116,35 +120,35 @@ data ⟿ᵉ-At′ n : Rel (Elim n) lzero
 data ⟿ᵗ-At′ n where
   υ : [ t ⦂ T ] ⟨ ⟿ᵗ-At′ _ ⟩ t
 
-  +-0 : 0ᵘ     + ρ ⟨ ⟿ᵗ-At′ _ ⟩ ρ
-  +-s : sucᵘ π + ρ ⟨ ⟿ᵗ-At′ _ ⟩ sucᵘ (π + ρ)
-
-  *-0 : 0ᵘ     * ρ ⟨ ⟿ᵗ-At′ _ ⟩ 0ᵘ
-  *-s : sucᵘ π * ρ ⟨ ⟿ᵗ-At′ _ ⟩ π * ρ + ρ
-
-  +ʷ-↑  : ↑ π +ʷ ↑ ρ ⟨ ⟿ᵗ-At′ _ ⟩ ↑ (π + ρ)
-  +ʷ-ωˡ : ωᵘ  +ʷ ρ   ⟨ ⟿ᵗ-At′ _ ⟩ ωᵘ
-  +ʷ-ωʳ : π   +ʷ ωᵘ  ⟨ ⟿ᵗ-At′ _ ⟩ ωᵘ
-
-  *ʷ-↑  : ↑ π      *ʷ ↑ ρ      ⟨ ⟿ᵗ-At′ _ ⟩ ↑ (π * ρ)
-  *ʷ-0ω : ↑ 0ᵘ     *ʷ ωᵘ       ⟨ ⟿ᵗ-At′ _ ⟩ ↑ 0ᵘ
-  *ʷ-ω0 : ωᵘ       *ʷ ↑ 0ᵘ     ⟨ ⟿ᵗ-At′ _ ⟩ ↑ 0ᵘ
-  *ʷ-sω : ↑ sucᵘ π *ʷ ωᵘ       ⟨ ⟿ᵗ-At′ _ ⟩ ωᵘ
-  *ʷ-ωs : ωᵘ       *ʷ ↑ sucᵘ π ⟨ ⟿ᵗ-At′ _ ⟩ ωᵘ
-  *ʷ-ωω : ωᵘ       *ʷ ωᵘ       ⟨ ⟿ᵗ-At′ _ ⟩ ωᵘ
-
 data ⟿ᵉ-At′ n where
   β-∙ : (𝛌 t ⦂ 𝚷[ π / S ] T) ∙ s ⟨ ⟿ᵉ-At′ _ ⟩ substᵉ (t ⦂ T) (s ⦂ S)
 
-  β-𝓤-0 : 𝓤-elim T ρ ρᵀ z s 0ᵘ ⟨ ⟿ᵉ-At′ _ ⟩ z ⦂ substᵗ T (0ᵘ ⦂ 𝓤)
-  β-𝓤-s : 𝓤-elim T ρ ρᵀ z s (sucᵘ π) ⟨ ⟿ᵉ-At′ _ ⟩
-    let s′ = substᵗ (substᵗ s (weakᵗ π ⦂ 𝓤)) (𝓤-elim T ρ ρᵀ z s π)
+  +-0 : (0ᵘ     ⦂ 𝓤) + ρ ⟨ ⟿ᵉ-At′ _ ⟩ ρ ⦂ 𝓤
+  +-s : (sucᵘ π ⦂ 𝓤) + ρ ⟨ ⟿ᵉ-At′ _ ⟩ sucᵘ [ (π ⦂ 𝓤) + ρ ] ⦂ 𝓤
+
+  *-0 : (0ᵘ     ⦂ 𝓤) * ρ ⟨ ⟿ᵉ-At′ _ ⟩ 0ᵘ ⦂ 𝓤
+  *-s : (sucᵘ π ⦂ 𝓤) * ρ ⟨ ⟿ᵉ-At′ _ ⟩ (π ⦂ 𝓤) * ρ + ρ
+
+  +ʷ-↑  : (↑ π ⦂ 𝓤ω) +ʷ (↑ ρ ⦂ 𝓤ω) ⟨ ⟿ᵉ-At′ _ ⟩ ↑ [ (π ⦂ 𝓤) + ρ ] ⦂ 𝓤ω
+  +ʷ-ωˡ : (ωᵘ  ⦂ 𝓤ω) +ʷ 𝜌          ⟨ ⟿ᵉ-At′ _ ⟩ ωᵘ ⦂ 𝓤ω
+  +ʷ-ωʳ : 𝜋          +ʷ (ωᵘ ⦂ 𝓤ω)  ⟨ ⟿ᵉ-At′ _ ⟩ ωᵘ ⦂ 𝓤ω
+
+  *ʷ-↑  : (↑ π  ⦂ 𝓤ω)     *ʷ (↑ ρ  ⦂ 𝓤ω)     ⟨ ⟿ᵉ-At′ _ ⟩ ↑ [ (π ⦂ 𝓤) * ρ ] ⦂ 𝓤ω
+  *ʷ-0ω : (↑ 0ᵘ ⦂ 𝓤ω)     *ʷ (ωᵘ   ⦂ 𝓤ω)     ⟨ ⟿ᵉ-At′ _ ⟩ ↑ 0ᵘ ⦂ 𝓤ω
+  *ʷ-ω0 : (ωᵘ   ⦂ 𝓤ω)     *ʷ (↑ 0ᵘ ⦂ 𝓤ω)     ⟨ ⟿ᵉ-At′ _ ⟩ ↑ 0ᵘ ⦂ 𝓤ω
+  *ʷ-sω : (↑ sucᵘ π ⦂ 𝓤ω) *ʷ (ωᵘ ⦂ 𝓤ω)       ⟨ ⟿ᵉ-At′ _ ⟩ ωᵘ ⦂ 𝓤ω
+  *ʷ-ωs : (ωᵘ ⦂ 𝓤ω)       *ʷ (↑ sucᵘ π ⦂ 𝓤ω) ⟨ ⟿ᵉ-At′ _ ⟩ ωᵘ ⦂ 𝓤ω
+  *ʷ-ωω : (ωᵘ ⦂ 𝓤ω)       *ʷ (ωᵘ ⦂ 𝓤ω)       ⟨ ⟿ᵉ-At′ _ ⟩ ωᵘ ⦂ 𝓤ω
+
+  β-𝓤-0 : 𝓤-elim T ρ ρᵀ z s (0ᵘ ⦂ 𝓤) ⟨ ⟿ᵉ-At′ _ ⟩ z ⦂ substᵗ T (0ᵘ ⦂ 𝓤)
+  β-𝓤-s : 𝓤-elim T ρ ρᵀ z s (sucᵘ π ⦂ 𝓤) ⟨ ⟿ᵉ-At′ _ ⟩
+    let s′ = substᵗ (substᵗ s (weakᵗ π ⦂ 𝓤)) (𝓤-elim T ρ ρᵀ z s (π ⦂ 𝓤))
         T′ = substᵗ T (sucᵘ π ⦂ 𝓤) in
     s′ ⦂ T′
 
-  β-𝓤ω-↑ : 𝓤ω-elim T ρ d w (↑ π) ⟨ ⟿ᵉ-At′ _ ⟩
+  β-𝓤ω-↑ : 𝓤ω-elim T ρ d w (↑ π ⦂ 𝓤ω) ⟨ ⟿ᵉ-At′ _ ⟩
              substᵗ d (π ⦂ 𝓤) ⦂ substᵗ T (↑ π ⦂ 𝓤ω)
-  β-𝓤ω-ω : 𝓤ω-elim T ρ d w ωᵘ    ⟨ ⟿ᵉ-At′ _ ⟩
+  β-𝓤ω-ω : 𝓤ω-elim T ρ d w (ωᵘ ⦂ 𝓤ω) ⟨ ⟿ᵉ-At′ _ ⟩
              w ⦂ substᵗ T (ωᵘ ⦂ 𝓤ω)
 
 
@@ -152,6 +156,7 @@ StepOfKind : (𝒯 : SynKind) → Rel (⌈ 𝒯 ⌉ n) lzero
 StepOfKind `Term   = ⟿ᵗ-At′ _
 StepOfKind `Elim   = ⟿ᵉ-At′ _
 StepOfKind `Binder = λ _ _ → ⊥
+StepOfKind `BinOp  = λ _ _ → ⊥
 
 
 record CongStep (𝒯 : SynKind) (n : ℕ) (X Y : ⌈ 𝒯 ⌉ n) : Set where
@@ -175,6 +180,9 @@ open CongStep
 ⟿ᵇ-At : ∀ n → Rel (Binder n) _
 ⟿ᵇ-At = CongStep `Binder
 
+⟿ᵒ-At : ∀ n → Rel (BinOp n) _
+⟿ᵒ-At = CongStep `BinOp
+
 
 congWrapᵗ : {X Y : ⌈ ℋ ⌉ h} (T′ : ■Term n h ℋ) →
             CongStep ℋ h X Y →
@@ -193,6 +201,12 @@ congWrapᵇ : {X Y : ⌈ ℋ ⌉ h} (B′ : ■Binder n h ℋ) →
             CongStep `Binder n (B′ ⟦ X ⟧ᵇ′) (B′ ⟦ Y ⟧ᵇ′)
 congWrapᵇ {X = X} {Y = Y} B′ (make-cs cs ct s) =
   make-cs ((B′ ⟦ X ⟧ᵇ) .proj₂ ⊡ᵇ cs) ((B′ ⟦ Y ⟧ᵇ) .proj₂ ⊡ᵇ ct) s
+
+congWrapᵒ : {X Y : ⌈ ℋ ⌉ h} (o′ : ■BinOp n h ℋ) →
+            CongStep ℋ h X Y →
+            CongStep `BinOp n (o′ ⟦ X ⟧ᵒ′) (o′ ⟦ Y ⟧ᵒ′)
+congWrapᵒ {X = X} {Y = Y} B′ (make-cs cs ct s) =
+  make-cs ((B′ ⟦ X ⟧ᵒ) .proj₂ ⊡ᵒ cs) ((B′ ⟦ Y ⟧ᵒ) .proj₂ ⊡ᵒ ct) s
 
 stepHereᵗ : s ⟨ ⟿ᵗ-At′ _ ⟩ t → CongStep _ _ s t
 stepHereᵗ = make-cs ■ ■
@@ -220,6 +234,12 @@ open module Evalᵇ = Derived ⟿ᵇ-At public using ()
             ⟿+-At to ⟿ᵇ+-At ; ⟿*-At to ⟿ᵇ*-At ; ⟿!-At to ⟿ᵇ!-At ;
             _⇓ to _⇓ᵇ ; _≋_ to _≋ᵇ_ ; ≋-At to ≋ᵇ-At)
 
+open module Evalᵒ = Derived ⟿ᵒ-At public using ()
+  renaming (_⟿_ to _⟿ᵒ_ ;
+            _⟿+_ to _⟿ᵒ+_ ; _⟿*_ to _⟿ᵒ*_ ; _⟿!_ to _⟿ᵒ!_ ;
+            ⟿+-At to ⟿ᵒ+-At ; ⟿*-At to ⟿ᵒ*-At ; ⟿!-At to ⟿ᵒ!-At ;
+            _⇓ to _⇓ᵒ ; _≋_ to _≋ᵒ_ ; ≋-At to ≋ᵒ-At)
+
 
 congWrap*ᵗ : {X Y : ⌈ ℋ ⌉ h} (T′ : ■Term n h ℋ) →
             Star (CongStep ℋ h) X Y →
@@ -236,42 +256,45 @@ congWrap*ᵇ : {X Y : ⌈ ℋ ⌉ h} (B′ : ■Binder n h ℋ) →
             Star (CongStep `Binder n) (B′ ⟦ X ⟧ᵇ′) (B′ ⟦ Y ⟧ᵇ′)
 congWrap*ᵇ B′ = RT.gmap _ (congWrapᵇ B′)
 
+congWrap*ᵒ : {X Y : ⌈ ℋ ⌉ h} (B′ : ■BinOp n h ℋ) →
+            Star (CongStep ℋ h) X Y →
+            Star (CongStep `BinOp n) (B′ ⟦ X ⟧ᵒ′) (B′ ⟦ Y ⟧ᵒ′)
+congWrap*ᵒ B′ = RT.gmap _ (congWrapᵒ B′)
+
 
 -- the point of these is to factor out some complex pattern matches
 -- that stepˣ would otherwise have to repeat for yes and no cases
 private
-  data Is-0   : Term n → Set where is-0   : Is-0   $ 0ᵘ {n}
-  data Is-suc : Term n → Set where is-suc : Is-suc $ sucᵘ π
-  data Is-ω   : Term n → Set where is-ω   : Is-ω   $ ωᵘ {n}
-  data Is-↑   : Term n → Set where is-↑   : Is-↑   $ ↑ π
+  data Is-0   {n} : Term n → Set where is-0   : Is-0     0ᵘ
+  data Is-suc {n} : Term n → Set where is-suc : Is-suc $ sucᵘ π
+  data Is-ω   {n} : Term n → Set where is-ω   : Is-ω     ωᵘ
+  data Is-↑   {n} : Term n → Set where is-↑   : Is-↑   $ ↑ π
 
-  data IsUsage : Term n → Set where
-    is-0   : IsUsage $ 0ᵘ {n}
+  data IsUsage {n} : Term n → Set where
+    is-0   : IsUsage   0ᵘ
     is-suc : IsUsage $ sucᵘ π
 
-  data IsUsageω : Term n → Set where
+  data IsUsageω {n} : Term n → Set where
     is-↑ : IsUsageω $ ↑ π
-    is-ω : IsUsageω $ ωᵘ {n}
+    is-ω : IsUsageω   ωᵘ
 
   isUsage? : Decidable₁ $ IsUsage {n}
-  isUsage? (CORE _)    = no λ()
-  isUsage? (BIND _ _)  = no λ()
-  isUsage? (_ ⟪ _ ⟫ _) = no λ()
-  isUsage? 0ᵘ          = yes is-0
-  isUsage? (sucᵘ _)    = yes is-suc
-  isUsage? (↑ _)       = no λ()
-  isUsage? ωᵘ          = no λ()
-  isUsage? [ _ ]       = no λ()
+  isUsage? (CORE _)   = no λ()
+  isUsage? (BIND _ _) = no λ()
+  isUsage? 0ᵘ         = yes is-0
+  isUsage? (sucᵘ _)   = yes is-suc
+  isUsage? (↑ _)      = no λ()
+  isUsage? ωᵘ         = no λ()
+  isUsage? [ _ ]      = no λ()
 
   isUsageω? : Decidable₁ $ IsUsageω {n}
-  isUsageω? (CORE _)    = no λ()
-  isUsageω? (BIND _ _)  = no λ()
-  isUsageω? (_ ⟪ _ ⟫ _) = no λ()
-  isUsageω? 0ᵘ          = no λ()
-  isUsageω? (sucᵘ _)    = no λ()
-  isUsageω? (↑ _)       = yes is-↑
-  isUsageω? ωᵘ          = yes is-ω
-  isUsageω? [ _ ]       = no λ()
+  isUsageω? (CORE _)   = no λ()
+  isUsageω? (BIND _ _) = no λ()
+  isUsageω? 0ᵘ         = no λ()
+  isUsageω? (sucᵘ _)   = no λ()
+  isUsageω? (↑ _)      = yes is-↑
+  isUsageω? ωᵘ         = yes is-ω
+  isUsageω? [ _ ]      = no λ()
 
   is-0? : Decidable₁ $ Is-0 {n}
   is-0? s with isUsage? s
@@ -300,92 +323,163 @@ private
   isTypeAnn? : (e : Elim n) → Dec $ ∃[ s ] ∃[ S ] (e ≡ s ⦂ S)
   isTypeAnn? (` _)                = no λ()
   isTypeAnn? (_ ∙ _)              = no λ()
+  isTypeAnn? (bin _)              = no λ()
   isTypeAnn? (𝓤-elim _ _ _ _ _ _) = no λ()
   isTypeAnn? (𝓤ω-elim _ _ _ _ _)  = no λ()
   isTypeAnn? (s ⦂ S)              = yes (s , S , refl)
 
+  isCore? : (s : Term n) → Dec $ ∃[ K ] (s ≡ CORE K)
+  isCore? (CORE K)   = yes $ K , refl
+  isCore? (BIND _ _) = no λ()
+  isCore? 0ᵘ         = no λ()
+  isCore? (sucᵘ _)   = no λ()
+  isCore? (↑ _)      = no λ()
+  isCore? ωᵘ         = no λ()
+  isCore? [ _ ]      = no λ()
+
+  isAnnUsage? : (e : Elim n) → Dec $ ∃[ π ] (e ≡ π ⦂ 𝓤 × IsUsage π)
+  isAnnUsage? e with isTypeAnn? e
+  ... | no ¬p = no λ{(π , refl , U) → ¬p $ -, -, refl}
+  ... | yes (π , S , refl) with isUsage? π | isCore? S
+  ... | no ¬U | _ = no (λ{(_ , refl , U) → ¬U U})
+  ... | yes U | no ¬C = no λ{(π , refl , U) → ¬C (-, refl)}
+  ... | yes U | yes (`⋆ u , refl) = no λ()
+  ... | yes U | yes (`𝓤ω , refl) = no λ()
+  ... | yes U | yes (`𝓤 , refl) = yes (π , refl , U)
+
+  isAnnUsageω? : (e : Elim n) → Dec $ ∃[ π ] (e ≡ π ⦂ 𝓤ω × IsUsageω π)
+  isAnnUsageω? e with isTypeAnn? e
+  ... | no ¬p = no λ{(π , refl , U) → ¬p $ -, -, refl}
+  ... | yes (π , S , refl) with isUsageω? π | isCore? S
+  ... | no ¬U | _ = no (λ{(_ , refl , U) → ¬U U})
+  ... | yes U | no ¬C = no λ{(π , refl , U) → ¬C (-, refl)}
+  ... | yes U | yes (`⋆ u , refl) = no λ()
+  ... | yes U | yes (`𝓤 , refl) = no λ()
+  ... | yes U | yes (`𝓤ω , refl) = yes (π , refl , U)
+
+  isBind? : (s : Term n) → Dec (∃[ B ] ∃[ t ] (s ≡ BIND B t))
+  isBind? (CORE _)   = no λ()
+  isBind? (BIND B s) = yes $ B , s , refl
+  isBind? 0ᵘ         = no λ()
+  isBind? (sucᵘ _)   = no λ()
+  isBind? (↑ _)      = no λ()
+  isBind? ωᵘ         = no λ()
+  isBind? [ _ ]      = no λ()
+
   isTyLam? : (e : Elim n) →
              Dec (∃[ s ] ∃[ π ] ∃[ S ] ∃[ T ] (e ≡ 𝛌 s ⦂ 𝚷[ π / S ] T))
-  isTyLam? (` _)                = no λ()
-  isTyLam? (_ ∙ _)              = no λ()
-  isTyLam? (𝓤-elim _ _ _ _ _ _) = no λ()
-  isTyLam? (𝓤ω-elim _ _ _ _ _)  = no λ()
-  isTyLam? (CORE _ ⦂ _)         = no λ()
-  isTyLam? (𝚷[ _ / _ ] _ ⦂ _)   = no λ()
-  isTyLam? (𝛌 _ ⦂ CORE _)       = no λ()
-  isTyLam? (𝛌 _ ⦂ _ ⟪ _ ⟫ _)    = no λ()
-  isTyLam? (𝛌 s ⦂ 𝚷[ π / S ] T) = yes (s , π , S , T , refl)
-  isTyLam? (𝛌 _ ⦂ 𝛌 _)          = no λ()
-  isTyLam? (𝛌 _ ⦂ 0ᵘ)           = no λ()
-  isTyLam? (𝛌 _ ⦂ sucᵘ _)       = no λ()
-  isTyLam? (𝛌 _ ⦂ ↑ _)          = no λ()
-  isTyLam? (𝛌 _ ⦂ ωᵘ)           = no λ()
-  isTyLam? (𝛌 _ ⦂ [ _ ])        = no λ()
-  isTyLam? (_ ⟪ _ ⟫ _ ⦂ _)      = no λ()
-  isTyLam? (0ᵘ ⦂ _)             = no λ()
-  isTyLam? (sucᵘ _ ⦂ _)         = no λ()
-  isTyLam? (↑ _ ⦂ _)            = no λ()
-  isTyLam? (ωᵘ ⦂ _)             = no λ()
-  isTyLam? ([ _ ] ⦂ _)          = no λ()
+  isTyLam? e with isTypeAnn? e
+  isTyLam? e | no ¬p = no λ{(_ , _ , _ , _ , refl) → ¬p $ -, -, refl}
+  isTyLam? _ | yes (s₁ , s₂ , refl) with isBind? s₁ | isBind? s₂
+  ... | no ¬p | _     = no λ{(_ , _ , _ , _ , refl) → ¬p $ -, -, refl}
+  ... | yes p | no ¬q = no λ{(_ , _ , _ , _ , refl) → ¬q $ -, -, refl}
+  ... | yes (`𝚷[ _ / _ ] , _ , refl) | yes (_ , _ , refl) = no λ()
+  ... | yes (`𝛌 , t , refl) | yes (`𝚷[ π / S ] , T , refl) =
+    yes (t , π , S , T , refl)
+  ... | yes (`𝛌 , _ , refl) | yes (`𝛌 , _ , refl) = no λ()
 
-  data Are-+ʷ : Usage n → Usage n → Set where
-    ↑↑ : Are-+ʷ (↑ π) (↑ ρ)
-    ω- : Are-+ʷ ωᵘ    ρ
-    -ω : Are-+ʷ π     ωᵘ
+  data Are-+ʷ {n} : Rel (Usageᴱ n) lzero where
+    ↑↑ : Are-+ʷ (↑ π ⦂ 𝓤ω) (↑ ρ ⦂ 𝓤ω)
+    ω- : Are-+ʷ (ωᵘ  ⦂ 𝓤ω) 𝜌
+    -ω : Are-+ʷ 𝜋          (ωᵘ  ⦂ 𝓤ω)
 
   are-+ʷ? : Decidable₂ $ Are-+ʷ {n}
-  are-+ʷ? π ρ with isUsageω? π | isUsageω? ρ
-  ... | yes is-↑ | yes is-↑ = yes ↑↑
-  ... | yes is-↑ | yes is-ω = yes -ω
-  ... | yes is-↑ | no ¬uρ   = no λ{↑↑ → ¬uρ is-↑ ; -ω → ¬uρ is-ω}
-  ... | yes is-ω | _        = yes ω-
-  ... | no ¬uπ   | yes is-↑ = no λ{↑↑ → ¬uπ is-↑ ; ω- → ¬uπ is-ω}
-  ... | no _     | yes is-ω = yes -ω
-  ... | no ¬uπ   | no ¬uρ   =
-    no λ{↑↑ → ¬uρ is-↑ ; ω- → ¬uπ is-ω ; -ω → ¬uρ is-ω}
+  are-+ʷ? π ρ with isAnnUsageω? π | isAnnUsageω? ρ
+  ... | yes (_ , refl , is-↑) | yes (_ , refl , is-↑) = yes ↑↑
+  ... | yes (_ , refl , is-↑) | yes (_ , refl , is-ω) = yes -ω
+  ... | yes (_ , refl , is-↑) | no ¬uρ   = no λ where
+    ↑↑ → ¬uρ $ -, refl , is-↑
+    -ω → ¬uρ $ -, refl , is-ω
+  ... | yes (_ , refl , is-ω) | _        = yes ω-
+  ... | no ¬uπ   | yes (_ , refl , is-↑) = no λ where
+    ↑↑ → ¬uπ $ -, refl , is-↑
+    ω- → ¬uπ $ -, refl , is-ω
+  ... | no _     | yes (_ , refl , is-ω) = yes -ω
+  ... | no ¬uπ   | no ¬uρ   = no λ where
+    ↑↑ → ¬uρ $ -, refl , is-↑
+    ω- → ¬uπ $ -, refl , is-ω
+    -ω → ¬uρ $ -, refl , is-ω
 
-  data Are-*ʷ : Usage n → Usage n → Set where
-    ↑↑ : Are-*ʷ     (↑ π)      (↑ ρ)
-    0ω : Are-*ʷ {n} (↑ 0ᵘ)     ωᵘ
-    ω0 : Are-*ʷ {n} ωᵘ         (↑ 0ᵘ)
-    sω : Are-*ʷ     (↑ sucᵘ π) ωᵘ
-    ωs : Are-*ʷ     ωᵘ         (↑ sucᵘ ρ)
-    ωω : Are-*ʷ {n} ωᵘ         ωᵘ
+  data Are-*ʷ {n} : Rel (Usageᴱ n) lzero where
+    ↑↑ : Are-*ʷ (↑ π      ⦂ 𝓤ω) (↑ ρ      ⦂ 𝓤ω)
+    0ω : Are-*ʷ (↑ 0ᵘ     ⦂ 𝓤ω) (ωᵘ       ⦂ 𝓤ω)
+    ω0 : Are-*ʷ (ωᵘ       ⦂ 𝓤ω) (↑ 0ᵘ     ⦂ 𝓤ω)
+    sω : Are-*ʷ (↑ sucᵘ π ⦂ 𝓤ω) (ωᵘ       ⦂ 𝓤ω)
+    ωs : Are-*ʷ (ωᵘ       ⦂ 𝓤ω) (↑ sucᵘ ρ ⦂ 𝓤ω)
+    ωω : Are-*ʷ (ωᵘ       ⦂ 𝓤ω) (ωᵘ       ⦂ 𝓤ω)
 
   are-*ʷ? : Decidable₂ $ Are-*ʷ {n}
-  are-*ʷ? π ρ with isUsageω? π | isUsageω? ρ
-  are-*ʷ? _ _ | yes is-↑ | yes is-↑ = yes ↑↑
-  are-*ʷ? _ _ | yes (is-↑ {π = π}) | yes is-ω with isUsage? π
-  are-*ʷ? _ _ | yes is-↑ | yes is-ω | yes is-0 = yes 0ω
-  are-*ʷ? _ _ | yes is-↑ | yes is-ω | yes is-suc = yes sω
-  are-*ʷ? _ _ | yes is-↑ | yes is-ω | no ¬uπ = no λ where
+  are-*ʷ? π ρ with isAnnUsageω? π | isAnnUsageω? ρ
+  are-*ʷ? _ _ | yes (_ , refl , is-↑) | yes (_ , refl , is-↑) = yes ↑↑
+  are-*ʷ? _ _ | yes (_ , refl , is-↑ {π = π}) | yes (_ , refl , is-ω)
+    with isUsage? π
+  ... | yes is-0 = yes 0ω
+  ... | yes is-suc = yes sω
+  ... | no ¬uπ = no λ where
     0ω → ¬uπ is-0
     sω → ¬uπ is-suc
-  are-*ʷ? _ _ | yes is-ω | yes (is-↑ {π = ρ}) with isUsage? ρ
-  are-*ʷ? _ _ | yes is-ω | yes is-↑ | yes is-0 = yes ω0
-  are-*ʷ? _ _ | yes is-ω | yes is-↑ | yes is-suc = yes ωs
-  are-*ʷ? _ _ | yes is-ω | yes is-↑ | no ¬uρ = no λ where
-    ω0 → ¬uρ is-0
-    ωs → ¬uρ is-suc
-  are-*ʷ? _ _ | yes is-ω | yes is-ω = yes ωω
-  are-*ʷ? _ _ | yes is-↑ | no ¬uρ = no λ where
-    ↑↑ → ¬uρ is-↑
-    0ω → ¬uρ is-ω
-    sω → ¬uρ is-ω
-  are-*ʷ? _ _ | yes is-ω | no ¬p = no λ where
-    ω0 → ¬p is-↑
-    ωs → ¬p is-↑
-    ωω → ¬p is-ω
+  are-*ʷ? _ _ | yes (_ , refl , is-ω) | yes (_ , refl , is-↑ {π = ρ})
+    with isUsage? ρ
+  ... | yes is-0   = yes ω0
+  ... | yes is-suc = yes ωs
+  ... | no ¬uρ = no λ where
+    ω0 → ¬uρ $ is-0
+    ωs → ¬uρ $ is-suc
+  are-*ʷ? _ _ | yes (_ , refl , is-ω) | yes (_ , refl , is-ω) = yes ωω
+  are-*ʷ? _ _ | yes (_ , refl , is-↑) | no ¬uρ = no λ where
+    ↑↑ → ¬uρ $ -, refl , is-↑
+    0ω → ¬uρ $ -, refl , is-ω
+    sω → ¬uρ $ -, refl , is-ω
+  are-*ʷ? _ _ | yes (_ , refl , is-ω) | no ¬p = no λ where
+    ω0 → ¬p $ -, refl , is-↑
+    ωs → ¬p $ -, refl , is-↑
+    ωω → ¬p $ -, refl , is-ω
   are-*ʷ? _ _ | no ¬p | _ = no λ where
-    ↑↑ → ¬p is-↑
-    0ω → ¬p is-↑
-    ω0 → ¬p is-ω
-    sω → ¬p is-↑
-    ωs → ¬p is-ω
-    ωω → ¬p is-ω
+    ↑↑ → ¬p $ -, refl , is-↑
+    0ω → ¬p $ -, refl , is-↑
+    ω0 → ¬p $ -, refl , is-ω
+    sω → ¬p $ -, refl , is-↑
+    ωs → ¬p $ -, refl , is-ω
+    ωω → ¬p $ -, refl , is-ω
 
-stepᵗ : (t : Term n)   → Dec (∃[ t′ ] (t ⟿ᵗ t′))
-stepᵉ : (e : Elim n)   → Dec (∃[ e′ ] (e ⟿ᵉ e′))
+  stepᵒ′ : (o : BinOp n) → Dec (∃[ t′ ] (bin o ⟨ ⟿ᵉ-At′ _ ⟩ t′))
+  stepᵒ′ (fin `+ 𝜋 ρ) with isAnnUsage? 𝜋
+  ... | yes (_ , refl , is-0)   = yes $ -, +-0
+  ... | yes (_ , refl , is-suc) = yes $ -, +-s
+  ... | no  ¬u𝜋                 = no λ where
+    (_ , +-0) → ¬u𝜋 $ -, refl , is-0
+    (_ , +-s) → ¬u𝜋 $ -, refl , is-suc
+  stepᵒ′ (fin `* 𝜋 ρ) with isAnnUsage? 𝜋
+  ... | yes (_ , refl , is-0)   = yes $ -, *-0
+  ... | yes (_ , refl , is-suc) = yes $ -, *-s
+  ... | no  ¬u𝜋                 = no λ where
+    (_ , *-0) → ¬u𝜋 $ -, refl , is-0
+    (_ , *-s) → ¬u𝜋 $ -, refl , is-suc
+  stepᵒ′ (inf `+ 𝜋 𝜌) with are-+ʷ? 𝜋 𝜌
+  ... | yes ↑↑ = yes $ -, +ʷ-↑
+  ... | yes ω- = yes $ -, +ʷ-ωˡ
+  ... | yes -ω = yes $ -, +ʷ-ωʳ
+  ... | no  ¬+ = no λ where
+    (_ , +ʷ-↑)  → ¬+ ↑↑
+    (_ , +ʷ-ωˡ) → ¬+ ω-
+    (_ , +ʷ-ωʳ) → ¬+ -ω
+  stepᵒ′ (inf `* 𝜋 𝜌) with are-*ʷ? 𝜋 𝜌
+  ... | yes ↑↑ = yes $ -, *ʷ-↑
+  ... | yes 0ω = yes $ -, *ʷ-0ω
+  ... | yes ω0 = yes $ -, *ʷ-ω0
+  ... | yes sω = yes $ -, *ʷ-sω
+  ... | yes ωs = yes $ -, *ʷ-ωs
+  ... | yes ωω = yes $ -, *ʷ-ωω
+  ... | no  ¬* = no λ where
+    (_ , *ʷ-↑)  → ¬* ↑↑
+    (_ , *ʷ-0ω) → ¬* 0ω
+    (_ , *ʷ-ω0) → ¬* ω0
+    (_ , *ʷ-sω) → ¬* sω
+    (_ , *ʷ-ωs) → ¬* ωs
+    (_ , *ʷ-ωω) → ¬* ωω
+
+stepᵗ : (t : Term   n) → Dec (∃[ t′ ] (t ⟿ᵗ t′))
+stepᵉ : (e : Elim   n) → Dec (∃[ e′ ] (e ⟿ᵉ e′))
 stepᵇ : (B : Binder n) → Dec (∃[ B′ ] (B ⟿ᵇ B′))
 
 stepᵗ (CORE _) = no λ{(_ , make-cs ■ ■ ())}
@@ -398,73 +492,6 @@ stepᵗ (BIND B t) with stepᵇ B
   nope : ∄ (BIND B t ⟿ᵗ_)
   nope (_ , make-cs (BIND-B cs) (BIND-B ct) s) = ¬RB $ -, make-cs cs ct s
   nope (_ , make-cs (BIND-t cs) (BIND-t ct) s) = ¬Rt $ -, make-cs cs ct s
-
-stepᵗ (s + t) with isUsage? s
-... | yes is-0 = yes $ -, stepHereᵗ +-0
-... | yes is-suc = yes $ -, stepHereᵗ +-s
-... | no ¬us with stepᵗ s
-... | yes (_ , Rs) = yes $ -, congWrapᵗ (■ +ˡ t) Rs
-... | no ¬Rs with stepᵗ t
-... | yes (_ , Rt) = yes $ -, congWrapᵗ (s +ʳ ■) Rt
-... | no ¬Rt = no nope where
-  nope : ∄ (s + t ⟿ᵗ_)
-  nope (_ , make-cs ■ ■ +-0) = ¬us is-0
-  nope (_ , make-cs ■ ■ +-s) = ¬us is-suc
-  nope (_ , make-cs (binˡ cs) (binˡ ct) s) = ¬Rs $ -, make-cs cs ct s
-  nope (_ , make-cs (binʳ cs) (binʳ ct) s) = ¬Rt $ -, make-cs cs ct s
-
-stepᵗ (s * t) with isUsage? s
-... | yes is-0 = yes $ -, stepHereᵗ *-0
-... | yes is-suc = yes $ -, stepHereᵗ *-s
-... | no ¬us with stepᵗ s
-... | yes (_ , Rs) = yes $ -, congWrapᵗ (■ *ˡ t) Rs
-... | no ¬Rs with stepᵗ t
-... | yes (_ , Rt) = yes $ -, congWrapᵗ (s *ʳ ■) Rt
-... | no ¬Rt = no nope where
-  nope : ∄ (s * t ⟿ᵗ_)
-  nope (_ , make-cs ■ ■ *-0) = ¬us is-0
-  nope (_ , make-cs ■ ■ *-s) = ¬us is-suc
-  nope (_ , make-cs (binˡ cs) (binˡ ct) s) = ¬Rs $ -, make-cs cs ct s
-  nope (_ , make-cs (binʳ cs) (binʳ ct) s) = ¬Rt $ -, make-cs cs ct s
-
-stepᵗ (s +ʷ t) with are-+ʷ? s t
-... | yes ↑↑ = yes $ -, stepHereᵗ +ʷ-↑
-... | yes ω- = yes $ -, stepHereᵗ +ʷ-ωˡ
-... | yes -ω = yes $ -, stepHereᵗ +ʷ-ωʳ
-... | no ¬+ʷ with stepᵗ s
-... | yes (_ , Rs) = yes $ -, congWrapᵗ (■ +ʷˡ t) Rs
-... | no ¬Rs with stepᵗ t
-... | yes (_ , Rt) = yes $ -, congWrapᵗ (s +ʷʳ ■) Rt
-... | no ¬Rt = no nope where
-  nope : ∄ (s +ʷ t ⟿ᵗ_)
-  nope (_ , make-cs ■ ■ +ʷ-↑) = ¬+ʷ ↑↑
-  nope (_ , make-cs ■ ■ +ʷ-ωˡ) = ¬+ʷ ω-
-  nope (_ , make-cs ■ ■ +ʷ-ωʳ) = ¬+ʷ -ω
-  nope (_ , make-cs (binˡ cs) (binˡ ct) s) = ¬Rs $ -, make-cs cs ct s
-  nope (_ , make-cs (binʳ cs) (binʳ ct) s) = ¬Rt $ -, make-cs cs ct s
-
-stepᵗ (s *ʷ t) with are-*ʷ? s t
-... | yes ↑↑ = yes $ -, stepHereᵗ *ʷ-↑
-... | yes 0ω = yes $ -, stepHereᵗ *ʷ-0ω
-... | yes ω0 = yes $ -, stepHereᵗ *ʷ-ω0
-... | yes sω = yes $ -, stepHereᵗ *ʷ-sω
-... | yes ωs = yes $ -, stepHereᵗ *ʷ-ωs
-... | yes ωω = yes $ -, stepHereᵗ *ʷ-ωω
-... | no ¬*ʷ with stepᵗ s
-... | yes (_ , Rs) = yes $ -, congWrapᵗ (■ *ʷˡ t) Rs
-... | no ¬Rs with stepᵗ t
-... | yes (_ , Rt) = yes $ -, congWrapᵗ (s *ʷʳ ■) Rt
-... | no ¬Rt = no nope where
-  nope : ∄ (s *ʷ t ⟿ᵗ_)
-  nope (_ , make-cs ■ ■ *ʷ-↑)  = ¬*ʷ ↑↑
-  nope (_ , make-cs ■ ■ *ʷ-0ω) = ¬*ʷ 0ω
-  nope (_ , make-cs ■ ■ *ʷ-ω0) = ¬*ʷ ω0
-  nope (_ , make-cs ■ ■ *ʷ-sω) = ¬*ʷ sω
-  nope (_ , make-cs ■ ■ *ʷ-ωs) = ¬*ʷ ωs
-  nope (_ , make-cs ■ ■ *ʷ-ωω) = ¬*ʷ ωω
-  nope (_ , make-cs (binˡ cs) (binˡ ct) s) = ¬Rs $ -, make-cs cs ct s
-  nope (_ , make-cs (binʳ cs) (binʳ ct) s) = ¬Rt $ -, make-cs cs ct s
-
 
 stepᵗ 0ᵘ = no λ{(_ , make-cs ■ ■ ())}
 
@@ -505,54 +532,75 @@ stepᵉ (f ∙ s) with isTyLam? f
   nope (_ , make-cs ([∙ˡ] cs) ([∙ˡ] ct) s) = ¬Rf $ -, make-cs cs ct s
   nope (_ , make-cs ([∙ʳ] cs) ([∙ʳ] ct) s) = ¬Rs $ -, make-cs cs ct s
 
-stepᵉ (𝓤-elim T ρ ρᵀ z s π) with isUsage? π
-... | yes is-0 = yes $ -, stepHereᵉ β-𝓤-0
-... | yes is-suc = yes $ -, stepHereᵉ β-𝓤-s
-... | no ¬uπ with stepᵗ T
-... | yes (_ , RT) = yes $ -, congWrapᵉ (𝓤-elim-T ■ ρ ρᵀ z s π) RT
+-- FIXME factor out the cong bits for fin/inf better
+-- (fin has an elim and a term but inf has two elims)
+stepᵉ (bin o) with stepᵒ′ o
+stepᵉ (bin o) | yes (_ , Ro) = yes $ -, stepHereᵉ Ro
+stepᵉ (bin (fin • 𝜋 ρ)) | no ¬Ro with stepᵉ 𝜋
+... | yes (_ , R𝜋) = yes $ -, congWrapᵉ (bin (finˡ • ■ ρ)) R𝜋
+... | no ¬R𝜋 with stepᵗ ρ
+... | yes (_ , Rρ) = yes $ -, congWrapᵉ (bin (finʳ • 𝜋 ■)) Rρ
+... | no ¬Rρ = no λ where
+  (_ , make-cs ■ ■ s) → ¬Ro $ -, s
+  (_ , make-cs (bin (finˡ cs)) (bin (finˡ ct)) s) → ¬R𝜋 $ -, make-cs cs ct s
+  (_ , make-cs (bin (finʳ cs)) (bin (finʳ ct)) s) → ¬Rρ $ -, make-cs cs ct s
+stepᵉ (bin (inf • 𝜋 𝜌)) | no ¬Ro with stepᵉ 𝜋
+... | yes (_ , R𝜋) = yes $ -, congWrapᵉ (bin (infˡ • ■ 𝜌)) R𝜋
+... | no ¬R𝜋 with stepᵉ 𝜌
+... | yes (_ , R𝜌) = yes $ -, congWrapᵉ (bin (infʳ • 𝜋 ■)) R𝜌
+... | no ¬R𝜌 = no λ where
+  (_ , make-cs ■ ■ s) → ¬Ro $ -, s
+  (_ , make-cs (bin (infˡ cs)) (bin (infˡ ct)) s) → ¬R𝜋 $ -, make-cs cs ct s
+  (_ , make-cs (bin (infʳ cs)) (bin (infʳ ct)) s) → ¬R𝜌 $ -, make-cs cs ct s
+
+stepᵉ (𝓤-elim T ρ ρᵀ z s 𝜋) with isAnnUsage? 𝜋
+... | yes (_ , refl , is-0)   = yes $ -, stepHereᵉ β-𝓤-0
+... | yes (_ , refl , is-suc) = yes $ -, stepHereᵉ β-𝓤-s
+... | no ¬u𝜋 with stepᵗ T
+... | yes (_ , RT) = yes $ -, congWrapᵉ (𝓤-elim-T ■ ρ ρᵀ z s 𝜋) RT
 ... | no ¬RT with stepᵗ ρ
-... | yes (_ , Rρ) = yes $ -, congWrapᵉ (𝓤-elim-ρ T ■ ρᵀ z s π) Rρ
+... | yes (_ , Rρ) = yes $ -, congWrapᵉ (𝓤-elim-ρ T ■ ρᵀ z s 𝜋) Rρ
 ... | no ¬Rρ with stepᵗ ρᵀ
-... | yes (_ , Rρᵀ) = yes $ -, congWrapᵉ (𝓤-elim-ρᵀ T ρ ■ z s π) Rρᵀ
+... | yes (_ , Rρᵀ) = yes $ -, congWrapᵉ (𝓤-elim-ρᵀ T ρ ■ z s 𝜋) Rρᵀ
 ... | no ¬Rρᵀ with stepᵗ z
-... | yes (_ , Rz) = yes $ -, congWrapᵉ (𝓤-elim-z T ρ ρᵀ ■ s π) Rz
+... | yes (_ , Rz) = yes $ -, congWrapᵉ (𝓤-elim-z T ρ ρᵀ ■ s 𝜋) Rz
 ... | no ¬Rz with stepᵗ s
-... | yes (_ , Rs) = yes $ -, congWrapᵉ (𝓤-elim-s T ρ ρᵀ z ■ π) Rs
-... | no ¬Rs with stepᵗ π
-... | yes (_ , Rπ) = yes $ -, congWrapᵉ (𝓤-elim-π T ρ ρᵀ z s ■) Rπ
-... | no ¬Rπ = no nope where
-  nope : ∄ (𝓤-elim T ρ ρᵀ z s π ⟿ᵉ_)
-  nope (_ , make-cs ■ ■ β-𝓤-0) = ¬uπ is-0
-  nope (_ , make-cs ■ ■ β-𝓤-s) = ¬uπ is-suc
+... | yes (_ , Rs) = yes $ -, congWrapᵉ (𝓤-elim-s T ρ ρᵀ z ■ 𝜋) Rs
+... | no ¬Rs with stepᵉ 𝜋
+... | yes (_ , R𝜋) = yes $ -, congWrapᵉ (𝓤-elim-𝜋 T ρ ρᵀ z s ■) R𝜋
+... | no ¬R𝜋 = no nope where
+  nope : ∄ (𝓤-elim T ρ ρᵀ z s 𝜋 ⟿ᵉ_)
+  nope (_ , make-cs ■ ■ β-𝓤-0) = ¬u𝜋 $ -, refl , is-0
+  nope (_ , make-cs ■ ■ β-𝓤-s) = ¬u𝜋 $ -, refl , is-suc
   nope (_ , make-cs (𝓤-elim-T  cs) (𝓤-elim-T  ct) s) = ¬RT  $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤-elim-ρ  cs) (𝓤-elim-ρ  ct) s) = ¬Rρ  $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤-elim-ρᵀ cs) (𝓤-elim-ρᵀ ct) s) = ¬Rρᵀ $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤-elim-z  cs) (𝓤-elim-z  ct) s) = ¬Rz  $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤-elim-s  cs) (𝓤-elim-s  ct) s) = ¬Rs  $ -, make-cs cs ct s
-  nope (_ , make-cs (𝓤-elim-π  cs) (𝓤-elim-π  ct) s) = ¬Rπ  $ -, make-cs cs ct s
+  nope (_ , make-cs (𝓤-elim-𝜋  cs) (𝓤-elim-𝜋  ct) s) = ¬R𝜋  $ -, make-cs cs ct s
 
-stepᵉ (𝓤ω-elim T ρ d w π) with isUsageω? π
-... | yes is-↑ = yes $ -, stepHereᵉ β-𝓤ω-↑
-... | yes is-ω = yes $ -, stepHereᵉ β-𝓤ω-ω
-... | no ¬uπ with stepᵗ T
-... | yes (_ , RT) = yes $ -, congWrapᵉ (𝓤ω-elim-T ■ ρ d w π) RT
+stepᵉ (𝓤ω-elim T ρ d w 𝜋) with isAnnUsageω? 𝜋
+... | yes (_ , refl , is-↑) = yes $ -, stepHereᵉ β-𝓤ω-↑
+... | yes (_ , refl , is-ω) = yes $ -, stepHereᵉ β-𝓤ω-ω
+... | no ¬u𝜋 with stepᵗ T
+... | yes (_ , RT) = yes $ -, congWrapᵉ (𝓤ω-elim-T ■ ρ d w 𝜋) RT
 ... | no ¬RT with stepᵗ ρ
-... | yes (_ , Rρ) = yes $ -, congWrapᵉ (𝓤ω-elim-ρ T ■ d w π) Rρ
+... | yes (_ , Rρ) = yes $ -, congWrapᵉ (𝓤ω-elim-ρ T ■ d w 𝜋) Rρ
 ... | no ¬Rρ with stepᵗ d
-... | yes (_ , Rd) = yes $ -, congWrapᵉ (𝓤ω-elim-d T ρ ■ w π) Rd
+... | yes (_ , Rd) = yes $ -, congWrapᵉ (𝓤ω-elim-d T ρ ■ w 𝜋) Rd
 ... | no ¬Rd with stepᵗ w
-... | yes (_ , Rw) = yes $ -, congWrapᵉ (𝓤ω-elim-w T ρ d ■ π) Rw
-... | no ¬Rw with stepᵗ π
-... | yes (_ , Rπ) = yes $ -, congWrapᵉ (𝓤ω-elim-π T ρ d w ■) Rπ
-... | no ¬Rπ = no nope where
-  nope : ∄ (𝓤ω-elim T ρ d w π ⟿ᵉ_)
-  nope (_ , make-cs ■ ■ β-𝓤ω-↑) = ¬uπ is-↑
-  nope (_ , make-cs ■ ■ β-𝓤ω-ω) = ¬uπ is-ω
+... | yes (_ , Rw) = yes $ -, congWrapᵉ (𝓤ω-elim-w T ρ d ■ 𝜋) Rw
+... | no ¬Rw with stepᵉ 𝜋
+... | yes (_ , R𝜋) = yes $ -, congWrapᵉ (𝓤ω-elim-𝜋 T ρ d w ■) R𝜋
+... | no ¬R𝜋 = no nope where
+  nope : ∄ (𝓤ω-elim T ρ d w 𝜋 ⟿ᵉ_)
+  nope (_ , make-cs ■ ■ β-𝓤ω-↑) = ¬u𝜋 $ -, refl , is-↑
+  nope (_ , make-cs ■ ■ β-𝓤ω-ω) = ¬u𝜋 $ -, refl , is-ω
   nope (_ , make-cs (𝓤ω-elim-T cs) (𝓤ω-elim-T ct) s) = ¬RT $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤ω-elim-ρ cs) (𝓤ω-elim-ρ ct) s) = ¬Rρ $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤ω-elim-d cs) (𝓤ω-elim-d ct) s) = ¬Rd $ -, make-cs cs ct s
   nope (_ , make-cs (𝓤ω-elim-w cs) (𝓤ω-elim-w ct) s) = ¬Rw $ -, make-cs cs ct s
-  nope (_ , make-cs (𝓤ω-elim-π cs) (𝓤ω-elim-π ct) s) = ¬Rπ $ -, make-cs cs ct s
+  nope (_ , make-cs (𝓤ω-elim-𝜋 cs) (𝓤ω-elim-𝜋 ct) s) = ¬R𝜋 $ -, make-cs cs ct s
 
 stepᵉ (s ⦂ S) with stepᵗ s
 ... | yes (_ , Rs) = yes $ -, congWrapᵉ (■ ⦂ˡ S) Rs
@@ -573,6 +621,7 @@ stepᵇ `𝚷[ π / S ] with stepᵗ π
   nope (_ , make-cs (`𝚷-S cs) (`𝚷-S ct) s) = ¬RS $ -, make-cs cs ct s
 
 stepᵇ `𝛌 = no λ{(_ , make-cs ■ ■ ())}
+
 
 open Evalᵗ.Eval stepᵗ public renaming (eval to evalᵗ)
 open Evalᵉ.Eval stepᵉ public renaming (eval to evalᵉ)
@@ -609,23 +658,6 @@ module _ where
       (congWrap*ᵗ (↑ ■) Rπ₁)
       (congWrap*ᵗ (↑ ■) Rπ₂)
 
-    bin-cong : _⟪ o ⟫_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
-    bin-cong {o = o} (make-≋ Rπ₁ Rπ₂) (make-≋ Rρ₁ Rρ₂) = make-≋
-      (congWrap*ᵗ (■ ⟪ o ⟫ˡ _) Rπ₁ ◅◅ congWrap*ᵗ (_ ⟪ o ⟫ʳ ■) Rρ₁)
-      (congWrap*ᵗ (■ ⟪ o ⟫ˡ _) Rπ₂ ◅◅ congWrap*ᵗ (_ ⟪ o ⟫ʳ ■) Rρ₂)
-
-    +-cong : _+_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
-    +-cong = bin-cong
-
-    *-cong : _*_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
-    *-cong = bin-cong
-
-    +ʷ-cong : _+ʷ_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
-    +ʷ-cong = bin-cong
-
-    *ʷ-cong : _*ʷ_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵗ-At n
-    *ʷ-cong = bin-cong
-
     []-cong : [_] Preserves _≋ᵉ_ ⟶ ≋ᵗ-At n
     []-cong (make-≋ Re₁ Re₂) =
       make-≋ (congWrap*ᵗ [ ■ ] Re₁) (congWrap*ᵗ [ ■ ] Re₂)
@@ -635,8 +667,34 @@ module _ where
       (congWrap*ᵉ (■ ∙ˡ _) Rf₁ ◅◅ congWrap*ᵉ (_ ∙ʳ ■) Rs₁)
       (congWrap*ᵉ (■ ∙ˡ _) Rf₂ ◅◅ congWrap*ᵉ (_ ∙ʳ ■) Rs₂)
 
+    bin-cong : bin Preserves _≋ᵒ_ ⟶ ≋ᵉ-At n
+    bin-cong (make-≋ Ro₁ Ro₂) =
+      make-≋ (congWrap*ᵉ (bin ■) Ro₁) (congWrap*ᵉ (bin ■) Ro₂)
+
+    fin-cong : fin • Preserves₂ _≋ᵉ_ ⟶ _≋ᵗ_ ⟶ ≋ᵒ-At n
+    fin-cong (make-≋ R𝜋₁ R𝜋₂) (make-≋ Rρ₁ Rρ₂) = make-≋
+      (congWrap*ᵒ (finˡ _ ■ _) R𝜋₁ ◅◅ congWrap*ᵒ (finʳ _ _ ■) Rρ₁)
+      (congWrap*ᵒ (finˡ _ ■ _) R𝜋₂ ◅◅ congWrap*ᵒ (finʳ _ _ ■) Rρ₂)
+
+    inf-cong : inf • Preserves₂ _≋ᵉ_ ⟶ _≋ᵉ_ ⟶ ≋ᵒ-At n
+    inf-cong (make-≋ R𝜋₁ R𝜋₂) (make-≋ R𝜌₁ R𝜌₂) = make-≋
+      (congWrap*ᵒ (infˡ _ ■ _) R𝜋₁ ◅◅ congWrap*ᵒ (infʳ _ _ ■) R𝜌₁)
+      (congWrap*ᵒ (infˡ _ ■ _) R𝜋₂ ◅◅ congWrap*ᵒ (infʳ _ _ ■) R𝜌₂)
+
+    +-cong : _+_ Preserves₂ _≋ᵉ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+    +-cong E𝜋 Eρ = bin-cong (fin-cong E𝜋 Eρ)
+
+    *-cong : _*_ Preserves₂ _≋ᵉ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+    *-cong E𝜋 Eρ = bin-cong (fin-cong E𝜋 Eρ)
+
+    +ʷ-cong : _+ʷ_ Preserves₂ _≋ᵉ_ ⟶ _≋ᵉ_ ⟶ ≋ᵉ-At n
+    +ʷ-cong E𝜋 E𝜌 = bin-cong (inf-cong E𝜋 E𝜌)
+
+    *ʷ-cong : _*ʷ_ Preserves₂ _≋ᵉ_ ⟶ _≋ᵉ_ ⟶ ≋ᵉ-At n
+    *ʷ-cong E𝜋 E𝜌 = bin-cong (inf-cong E𝜋 E𝜌)
+
     𝓤-elim-cong : 𝓤-elim Preserves₆
-                  _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+                  _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵉ_ ⟶ ≋ᵉ-At n
     𝓤-elim-cong (make-≋ RT₁ RT₂) (make-≋ Rρ₁ Rρ₂) (make-≋ Rρᵀ₁ Rρᵀ₂)
                 (make-≋ Rz₁ Rz₂) (make-≋ Rs₁ Rs₂) (make-≋ Rπ₁  Rπ₂) =
       make-≋
@@ -645,16 +703,16 @@ module _ where
           ◅◅ congWrap*ᵉ (𝓤-elim-ρᵀ _ _ ■ _ _ _) Rρᵀ₁
           ◅◅ congWrap*ᵉ (𝓤-elim-z _ _ _ ■ _ _) Rz₁
           ◅◅ congWrap*ᵉ (𝓤-elim-s _ _ _ _ ■ _) Rs₁
-          ◅◅ congWrap*ᵉ (𝓤-elim-π _ _ _ _ _ ■) Rπ₁)
+          ◅◅ congWrap*ᵉ (𝓤-elim-𝜋 _ _ _ _ _ ■) Rπ₁)
         (congWrap*ᵉ (𝓤-elim-T ■ _ _ _ _ _) RT₂
           ◅◅ congWrap*ᵉ (𝓤-elim-ρ _ ■ _ _ _ _) Rρ₂
           ◅◅ congWrap*ᵉ (𝓤-elim-ρᵀ _ _ ■ _ _ _) Rρᵀ₂
           ◅◅ congWrap*ᵉ (𝓤-elim-z _ _ _ ■ _ _) Rz₂
           ◅◅ congWrap*ᵉ (𝓤-elim-s _ _ _ _ ■ _) Rs₂
-          ◅◅ congWrap*ᵉ (𝓤-elim-π _ _ _ _ _ ■) Rπ₂)
+          ◅◅ congWrap*ᵉ (𝓤-elim-𝜋 _ _ _ _ _ ■) Rπ₂)
 
     𝓤ω-elim-cong : 𝓤ω-elim Preserves₅
-                   _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
+                   _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ _≋ᵉ_ ⟶ ≋ᵉ-At n
     𝓤ω-elim-cong (make-≋ RT₁ RT₂) (make-≋ Rρ₁ Rρ₂)
                  (make-≋ Rd₁ Rd₂) (make-≋ Rw₁ Rw₂) (make-≋ Rπ₁ Rπ₂) =
       make-≋
@@ -662,12 +720,12 @@ module _ where
           ◅◅ congWrap*ᵉ (𝓤ω-elim-ρ _ ■ _ _ _) Rρ₁
           ◅◅ congWrap*ᵉ (𝓤ω-elim-d _ _ ■ _ _) Rd₁
           ◅◅ congWrap*ᵉ (𝓤ω-elim-w _ _ _ ■ _) Rw₁
-          ◅◅ congWrap*ᵉ (𝓤ω-elim-π _ _ _ _ ■) Rπ₁)
+          ◅◅ congWrap*ᵉ (𝓤ω-elim-𝜋 _ _ _ _ ■) Rπ₁)
         (congWrap*ᵉ (𝓤ω-elim-T ■ _ _ _ _) RT₂
           ◅◅ congWrap*ᵉ (𝓤ω-elim-ρ _ ■ _ _ _) Rρ₂
           ◅◅ congWrap*ᵉ (𝓤ω-elim-d _ _ ■ _ _) Rd₂
           ◅◅ congWrap*ᵉ (𝓤ω-elim-w _ _ _ ■ _) Rw₂
-          ◅◅ congWrap*ᵉ (𝓤ω-elim-π _ _ _ _ ■) Rπ₂)
+          ◅◅ congWrap*ᵉ (𝓤ω-elim-𝜋 _ _ _ _ ■) Rπ₂)
 
     ⦂-cong : _⦂_ Preserves₂ _≋ᵗ_ ⟶ _≋ᵗ_ ⟶ ≋ᵉ-At n
     ⦂-cong (make-≋ Rs₁ Rs₂) (make-≋ RS₁ RS₂) = make-≋
@@ -676,7 +734,6 @@ module _ where
 
 
   open ℕ using () renaming (_+_ to _+ᴺ_ ; _*_ to _*ᴺ_)
-  open Evalᵗ
 
   private
     variable a b c : ℕ
@@ -684,68 +741,93 @@ module _ where
     ⌜_⌝ : ℕ → Term n
     ⌜ a ⌝ = fromNat a
 
-  +-ℕ-⟿ : a +ᴺ b ≡ c → ⌜ a ⌝ + ⌜ b ⌝ ⟨ ⟿ᵗ*-At n ⟩ ⌜ c ⌝
-  +-ℕ-⟿ {zero}  refl = stepHereᵗ +-0 ◅ ε
-  +-ℕ-⟿ {suc a} refl = stepHereᵗ +-s ◅ congWrap*ᵗ (sucᵘ ■) (+-ℕ-⟿ refl)
+    ⌜_⌝′ : ℕ → Elim n
+    ⌜ a ⌝′ = ⌜ a ⌝ ⦂ 𝓤
 
-  +-ℕ : a +ᴺ b ≡ c → ⌜ a ⌝ + ⌜ b ⌝ ⟨ ≋ᵗ-At n ⟩ ⌜ c ⌝
-  +-ℕ = star-≋ ∘ +-ℕ-⟿
+  +-ℕ-⟿ : a +ᴺ b ≡ c → ⌜ a ⌝′ + ⌜ b ⌝ ⟨ ⟿ᵉ*-At n ⟩ ⌜ c ⌝′
+  +-ℕ-⟿ {zero}  refl = stepHereᵉ +-0 ◅ ε
+  +-ℕ-⟿ {suc a} refl =
+    stepHereᵉ +-s ◅
+    congWrap*ᵉ (sucᵘ ■ ⦂ˡ 𝓤)
+      (congWrap*ᵗ [ ■ ] (+-ℕ-⟿ refl) ◅◅
+       stepHereᵗ υ ◅ ε)
 
-  +-ℕ′ : c ≡ a +ᴺ b → ⌜ c ⌝ ⟨ ≋ᵗ-At n ⟩ ⌜ a ⌝ + ⌜ b ⌝
-  +-ℕ′ = ≋-sym ∘ +-ℕ ∘ ≡.sym
+  +-ℕ : a +ᴺ b ≡ c → ⌜ a ⌝′ + ⌜ b ⌝ ⟨ ≋ᵉ-At n ⟩ ⌜ c ⌝′
+  +-ℕ = Evalᵉ.star-≋ ∘ +-ℕ-⟿
 
-  *-ℕ-⟿ : a *ᴺ b ≡ c → ⌜ a ⌝ * ⌜ b ⌝ ⟨ ⟿ᵗ*-At n ⟩ ⌜ c ⌝
-  *-ℕ-⟿ {zero}      refl = stepHereᵗ *-0 ◅ ε
+  +-ℕ′ : c ≡ a +ᴺ b → ⌜ c ⌝′ ⟨ ≋ᵉ-At n ⟩ ⌜ a ⌝′ + ⌜ b ⌝
+  +-ℕ′ = Evalᵉ.≋-sym ∘ +-ℕ ∘ ≡.sym
+
+  *-ℕ-⟿ : a *ᴺ b ≡ c → ⌜ a ⌝′ * ⌜ b ⌝ ⟨ ⟿ᵉ*-At n ⟩ ⌜ c ⌝′
+  *-ℕ-⟿ {zero} refl = stepHereᵉ *-0 ◅ ε
   *-ℕ-⟿ {suc a} {b} refl rewrite ℕ.+-comm b (a *ᴺ b) =
-    stepHereᵗ *-s ◅ congWrap*ᵗ (■ +ˡ ⌜ b ⌝) (*-ℕ-⟿ refl) ◅◅ +-ℕ-⟿ refl
+    stepHereᵉ *-s ◅
+    congWrap*ᵉ (■ +ˡ ⌜ b ⌝) (*-ℕ-⟿ refl) ◅◅
+    +-ℕ-⟿ refl
 
-  *-ℕ : a *ᴺ b ≡ c → ⌜ a ⌝ * ⌜ b ⌝ ⟨ ≋ᵗ-At n ⟩ ⌜ c ⌝
-  *-ℕ = star-≋ ∘ *-ℕ-⟿
+  *-ℕ : a *ᴺ b ≡ c → ⌜ a ⌝′ * ⌜ b ⌝ ⟨ ≋ᵉ-At n ⟩ ⌜ c ⌝′
+  *-ℕ = Evalᵉ.star-≋ ∘ *-ℕ-⟿
 
-  *-ℕ′ : c ≡ a *ᴺ b → ⌜ c ⌝ ⟨ ≋ᵗ-At n ⟩ ⌜ a ⌝ * ⌜ b ⌝
-  *-ℕ′ = ≋-sym ∘ *-ℕ ∘ ≡.sym
+  *-ℕ′ : c ≡ a *ᴺ b → ⌜ c ⌝′ ⟨ ≋ᵉ-At n ⟩ ⌜ a ⌝′ * ⌜ b ⌝
+  *-ℕ′ = Evalᵉ.≋-sym ∘ *-ℕ ∘ ≡.sym
 
-  +ʷ-ℕ-⟿ : a +ᴺ b ≡ c → ↑ ⌜ a ⌝ +ʷ ↑ ⌜ b ⌝ ⟨ ⟿ᵗ*-At n ⟩ ↑ ⌜ c ⌝
-  +ʷ-ℕ-⟿ E = stepHereᵗ +ʷ-↑ ◅ congWrap*ᵗ (↑ ■) (+-ℕ-⟿ E)
+  private
+    ↑⌜_⌝′ : ℕ → Elim n
+    ↑⌜ a ⌝′ = ↑ ⌜ a ⌝ ⦂ 𝓤ω
 
-  +ʷ-ℕ : a +ᴺ b ≡ c → ↑ ⌜ a ⌝ +ʷ ↑ ⌜ b ⌝ ⟨ ≋ᵗ-At n ⟩ ↑ ⌜ c ⌝
-  +ʷ-ℕ = star-≋ ∘ +ʷ-ℕ-⟿
+  +ʷ-ℕ-⟿ : a +ᴺ b ≡ c → ↑⌜ a ⌝′ +ʷ ↑⌜ b ⌝′ ⟨ ⟿ᵉ*-At n ⟩ ↑⌜ c ⌝′
+  +ʷ-ℕ-⟿ E =
+    stepHereᵉ +ʷ-↑ ◅
+    congWrap*ᵉ (↑ ■ ⦂ˡ 𝓤ω)
+      (congWrap*ᵗ [ ■ ] (+-ℕ-⟿ E) ◅◅
+       stepHereᵗ υ ◅ ε)
 
-  +ʷ-ℕ′ : c ≡ a +ᴺ b → ↑ ⌜ c ⌝ ⟨ ≋ᵗ-At n ⟩ ↑ ⌜ a ⌝ +ʷ ↑ ⌜ b ⌝
-  +ʷ-ℕ′ = ≋-sym ∘ +ʷ-ℕ ∘ ≡.sym
+  +ʷ-ℕ : a +ᴺ b ≡ c → ↑⌜ a ⌝′ +ʷ ↑⌜ b ⌝′ ⟨ ≋ᵉ-At n ⟩ ↑⌜ c ⌝′
+  +ʷ-ℕ = Evalᵉ.star-≋ ∘ +ʷ-ℕ-⟿
 
-  *ʷ-ℕ-⟿ : a *ᴺ b ≡ c → ↑ ⌜ a ⌝ *ʷ ↑ ⌜ b ⌝ ⟨ ⟿ᵗ*-At n ⟩ ↑ ⌜ c ⌝
-  *ʷ-ℕ-⟿ E = stepHereᵗ *ʷ-↑ ◅ congWrap*ᵗ (↑ ■) (*-ℕ-⟿ E)
+  +ʷ-ℕ′ : c ≡ a +ᴺ b → ↑⌜ c ⌝′ ⟨ ≋ᵉ-At n ⟩ ↑⌜ a ⌝′ +ʷ ↑⌜ b ⌝′
+  +ʷ-ℕ′ = Evalᵉ.≋-sym ∘ +ʷ-ℕ ∘ ≡.sym
 
-  *ʷ-ℕ : a *ᴺ b ≡ c → ↑ ⌜ a ⌝ *ʷ ↑ ⌜ b ⌝ ⟨ ≋ᵗ-At n ⟩ ↑ ⌜ c ⌝
-  *ʷ-ℕ = star-≋ ∘ *ʷ-ℕ-⟿
+  *ʷ-ℕ-⟿ : a *ᴺ b ≡ c → ↑⌜ a ⌝′ *ʷ ↑⌜ b ⌝′ ⟨ ⟿ᵉ*-At n ⟩ ↑⌜ c ⌝′
+  *ʷ-ℕ-⟿ E =
+    stepHereᵉ *ʷ-↑ ◅
+    congWrap*ᵉ (↑ ■ ⦂ˡ 𝓤ω)
+      (congWrap*ᵗ [ ■ ] (*-ℕ-⟿ E) ◅◅
+       stepHereᵗ υ ◅ ε)
 
-  *ʷ-ℕ′ : c ≡ a *ᴺ b → ↑ ⌜ c ⌝ ⟨ ≋ᵗ-At n ⟩ ↑ ⌜ a ⌝ *ʷ ↑ ⌜ b ⌝
-  *ʷ-ℕ′ = ≋-sym ∘ *ʷ-ℕ ∘ ≡.sym
+  *ʷ-ℕ : a *ᴺ b ≡ c → ↑⌜ a ⌝′ *ʷ ↑⌜ b ⌝′ ⟨ ≋ᵉ-At n ⟩ ↑⌜ c ⌝′
+  *ʷ-ℕ = Evalᵉ.star-≋ ∘ *ʷ-ℕ-⟿
+
+  *ʷ-ℕ′ : c ≡ a *ᴺ b → ↑⌜ c ⌝′ ⟨ ≋ᵉ-At n ⟩ ↑⌜ a ⌝′ *ʷ ↑⌜ b ⌝′
+  *ʷ-ℕ′ = Evalᵉ.≋-sym ∘ *ʷ-ℕ ∘ ≡.sym
 
 
-  1-*-⟿ : 1 * π ⟿ᵗ* π
+  1-*-⟿ : (1 ⦂ 𝓤) * π ⟿ᵉ* π ⦂ 𝓤
   1-*-⟿ {π = π} =
-    stepHereᵗ *-s ◅ congWrapᵗ (■ +ˡ π) (stepHereᵗ *-0) ◅ stepHereᵗ +-0 ◅ ε
+    stepHereᵉ *-s ◅ congWrapᵉ (■ +ˡ π) (stepHereᵉ *-0) ◅ stepHereᵉ +-0 ◅ ε
 
-  1-* : 1 * π ≋ᵗ π
-  1-* = star-≋ 1-*-⟿
+  1-* : (1 ⦂ 𝓤) * π ≋ᵉ π ⦂ 𝓤
+  1-* = Evalᵉ.star-≋ 1-*-⟿
 
-  1-*ʷ-⟿ : ↑ 1 *ʷ ↑ π ⟿ᵗ* ↑ π
-  1-*ʷ-⟿ = stepHereᵗ *ʷ-↑ ◅ congWrap*ᵗ (↑ ■) 1-*-⟿
+  1-*ʷ-⟿ : (↑ 1 ⦂ 𝓤ω) *ʷ (↑ π ⦂ 𝓤ω) ⟿ᵉ* ↑ π ⦂ 𝓤ω
+  1-*ʷ-⟿ =
+    stepHereᵉ *ʷ-↑ ◅
+    congWrap*ᵉ (↑ ■ ⦂ˡ 𝓤ω) (congWrap*ᵗ [ ■ ] 1-*-⟿ ◅◅ stepHereᵗ υ ◅ ε)
 
-  1-*ʷ : ↑ 1 *ʷ ↑ π ≋ᵗ ↑ π
-  1-*ʷ = star-≋ 1-*ʷ-⟿
+  1-*ʷ : (↑ 1 ⦂ 𝓤ω) *ʷ (↑ π ⦂ 𝓤ω) ≋ᵉ (↑ π ⦂ 𝓤ω)
+  1-*ʷ = Evalᵉ.star-≋ 1-*ʷ-⟿
 
-  0-+-⟿ : 0 + π ⟿ᵗ* π
-  0-+-⟿ = stepHereᵗ +-0 ◅ ε
+  0-+-⟿ : (0 ⦂ 𝓤) + π ⟿ᵉ* π ⦂ 𝓤
+  0-+-⟿ = stepHereᵉ +-0 ◅ ε
 
-  0-+ : 0 + π ≋ᵗ π
-  0-+ = star-≋ 0-+-⟿
+  0-+ : (0 ⦂ 𝓤) + π ≋ᵉ π ⦂ 𝓤
+  0-+ = Evalᵉ.star-≋ 0-+-⟿
 
-  0-+ʷ-⟿ : ↑ 0 +ʷ ↑ π ⟿ᵗ* ↑ π
-  0-+ʷ-⟿ = stepHereᵗ +ʷ-↑ ◅ congWrap*ᵗ (↑ ■) 0-+-⟿
+  0-+ʷ-⟿ : (↑ 0 ⦂ 𝓤ω) +ʷ (↑ π ⦂ 𝓤ω) ⟿ᵉ* ↑ π ⦂ 𝓤ω
+  0-+ʷ-⟿ =
+    stepHereᵉ +ʷ-↑ ◅
+    congWrap*ᵉ (↑ ■ ⦂ˡ 𝓤ω)
+      (congWrap*ᵗ [ ■ ] 0-+-⟿ ◅◅ stepHereᵗ υ ◅ ε)
 
-  0-+ʷ : ↑ 0 +ʷ ↑ π ≋ᵗ ↑ π
-  0-+ʷ = star-≋ 0-+ʷ-⟿
-
+  0-+ʷ : (↑ 0 ⦂ 𝓤ω) +ʷ (↑ π ⦂ 𝓤ω) ≋ᵉ ↑ π ⦂ 𝓤ω
+  0-+ʷ = Evalᵉ.star-≋ 0-+ʷ-⟿

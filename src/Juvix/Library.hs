@@ -27,6 +27,7 @@ module Juvix.Library
     (>>|),
     (|>),
     (...),
+    foldMapA,
     traverseM,
     Symbol (..),
     internText,
@@ -115,6 +116,13 @@ traverseM ::
   m a1 ->
   f (m a2)
 traverseM f = fmap join . traverse f
+
+foldMapA ::
+  (Applicative f, Foldable t, Monoid a) =>
+  (b -> f a) ->
+  t b ->
+  f a
+foldMapA f = foldl' (\acc x -> liftA2 (<>) acc (f x)) (pure mempty)
 
 instance Show (a -> b) where
   show _ = "fun"

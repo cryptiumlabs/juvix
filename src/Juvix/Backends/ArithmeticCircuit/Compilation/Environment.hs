@@ -17,8 +17,7 @@ data Env
 
 type CompilationAlias = ExceptT Types.CompilationError (State Env)
 
-newtype Compilation a
-  = Compilation {antiAlias :: (CompilationAlias a)}
+newtype Compilation a = Compilation {antiAlias :: (CompilationAlias a)}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "memory" Memory,

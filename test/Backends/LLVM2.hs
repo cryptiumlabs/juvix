@@ -15,8 +15,8 @@ import qualified LLVM.AST.Global as G
 import qualified LLVM.AST.Instruction as I (function)
 import qualified LLVM.AST.Name as Name
 import qualified LLVM.AST.Operand as Operand
-import qualified LLVM.AST.Type as Type
 import LLVM.AST.Type
+import qualified LLVM.AST.Type as Type
 import LLVM.Pretty
 
 exampleModule2 :: AST.Module

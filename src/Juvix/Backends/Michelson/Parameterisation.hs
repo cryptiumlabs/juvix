@@ -10,8 +10,8 @@ import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
-import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import Juvix.Backends.Michelson.Compilation.Types
+import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions

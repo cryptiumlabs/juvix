@@ -19,6 +19,7 @@ baseReservedNames :: [String]
 baseReservedNames =
   [ "*", -- sort
     "[Π]", -- function type
+    "[Σ]", -- pair type
     "w" -- omega
   ]
 
@@ -83,6 +84,12 @@ generateParser parameterisation =
       whiteSpace :: Parser ()
       whiteSpace = Token.whiteSpace lexer
       --
+      brackets :: Parser a -> Parser a
+      brackets = Token.brackets lexer
+      --
+      comma :: Parser ()
+      comma = void $ Token.comma lexer
+      --
       usage :: Parser Usage
       usage = (reserved "w" >> return Omega) <|> SNat . fromInteger <$> natural
       --
@@ -93,27 +100,27 @@ generateParser parameterisation =
       primTerm = Prim |<< parseVal parameterisation lexer
       --
       sortTerm :: Parser (Term primTy primVal)
-      sortTerm = do
+      sortTerm =
         reserved "*"
-        n <- natural
-        return $ Star (fromInteger n)
+          *> (Star . fromInteger <$> natural)
       --
       piTerm :: Parser (Term primTy primVal)
-      piTerm = do
+      piTerm =
         reserved "[Π]"
-        pi <- usage
-        binder <- binder
-        input <- term
-        func <- term
-        return $ Pi pi binder input func
+          *> (Pi <$> usage <*> binder <*> term <*> term)
       --
       lamTerm :: Parser (Term primTy primVal)
-      lamTerm = do
-        reservedOp "\\"
-        binder <- binder
-        reservedOp "->"
-        func <- term
-        return $ Lam binder func
+      lamTerm =
+        Lam <$> (reservedOp "\\" *> binder)
+          <*> (reservedOp "->" *> term)
+      --
+      sigTerm :: Parser (Term primTy primVal)
+      sigTerm =
+        reserved "[Σ]"
+          *> (Sig <$> usage <*> binder <*> term <*> term)
+      --
+      pairTerm :: Parser (Term primTy primVal)
+      pairTerm = brackets $ Pair <$> term <*> (comma *> term)
       --
       binder :: Parser Symbol
       binder = intern |<< identifier
@@ -127,6 +134,8 @@ generateParser parameterisation =
           <|> sortTerm
           <|> piTerm
           <|> lamTerm
+          <|> sigTerm
+          <|> pairTerm
       --
       elimTerm :: Parser (Term primTy primVal)
       elimTerm = do

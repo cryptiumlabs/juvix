@@ -1,4 +1,6 @@
-  [ Module'
+  [ 
+    ModuleOpen' (Open' ("Prelude" :| []) ()) (),
+    Module'
       ( Mod'
           ( Like'
               { functionLikedName = "Token",

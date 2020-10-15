@@ -887,5 +887,6 @@ applyLambdaFromStorage sym ty arg = do
 
 applyLambdaFromStorageNArgs ::
   Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
-applyLambdaFromStorageNArgs _sym _ty _args = Env.Expanded . mconcat |<< do
-  undefined
+applyLambdaFromStorageNArgs _sym _ty _args =
+  Env.Expanded . mconcat |<< do
+    undefined

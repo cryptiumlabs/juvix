@@ -57,6 +57,10 @@ groupInfixs (Old.Infix (Old.Inf l s r)) = do
         m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
       continuePref (Just Context.Def {precedence}) _maybeF =
         fmap (f precedence) (groupInfixs r)
+      continuePref (Just (Context.Information is)) _maybeF =
+        case Context.precedenceOf is of
+          Nothing -> throw @"error" (Env.UnknownSymbol s)
+          Just pr -> fmap (f pr) (groupInfixs r)
       continuePref (Just _) _maybeF =
         throw @"error" (Env.UnknownSymbol s)
       continuePref Nothing maybeF =
@@ -142,6 +146,9 @@ transformDef (Context.Unknown mTy) _ =
 --
 transformDef Context.CurrentNameSpace _ =
   pure Context.CurrentNameSpace
+--
+transformDef (Context.Information is) _ =
+  pure (Context.Information is)
 --
 transformDef (Context.Record _contents mTy) name' = do
   sig <- traverse transformSignature mTy

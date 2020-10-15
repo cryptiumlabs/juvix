@@ -11,6 +11,8 @@ extTerm =
         IR.typeLam = Just [[t|Symbol|]],
         IR.namePi = "Pi0",
         IR.typePi = Just [[t|Symbol|]],
+        IR.nameSig = "Sig0",
+        IR.typeSig = Just [[t|Symbol|]],
         IR.nameLet = "Let0",
         IR.typeLet = Just [[t|Symbol|]]
       }

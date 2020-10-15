@@ -68,6 +68,8 @@ erasureTests =
     "Erasure"
     [ identityUnit,
       constUnit,
+      usedFst,
+      unusedFst,
       usedArg,
       appUnusedArg,
       unusedFunction
@@ -95,6 +97,22 @@ constUnit =
       one
     )
     (Erased.Lam "1" (Erased.Var "1"))
+
+unusedFst :: T.TestTree
+unusedFst =
+  shouldEraseTo
+    "unusedFst"
+    Unit.t
+    (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy0), one)
+    unitTermE
+
+usedFst :: T.TestTree
+usedFst =
+  shouldEraseTo
+    "usedFst"
+    Unit.t
+    (Typed.Pair unitTerm unitTerm (one `ann` unitPairTy1), one)
+    (unitTermE `Erased.Pair` unitTermE)
 
 usedArg :: T.TestTree
 usedArg =
@@ -223,3 +241,12 @@ unitTerm = Typed.Prim Unit.Val unitAnn
 
 unitElim :: Typed.Elim Unit.Ty Unit.Val
 unitElim = Typed.Ann Usage.Omega unitTerm unitTyT 0 unitAnn
+
+unitTermE :: Erased.Term Unit.Val
+unitTermE = Erased.Prim Unit.Val
+
+unitPairTy0 :: IR.Value Unit.Ty Unit.Val
+unitPairTy0 = IR.VSig mempty unitTy unitTy
+
+unitPairTy1 :: IR.Value Unit.Ty Unit.Val
+unitPairTy1 = IR.VSig one unitTy unitTy

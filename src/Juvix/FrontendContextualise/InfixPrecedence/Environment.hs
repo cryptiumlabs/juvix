@@ -46,8 +46,7 @@ data Error
 type ContextAlias =
   ExceptT Error (State Environment)
 
-newtype Context a
-  = Ctx {antiAlias :: ContextAlias a}
+newtype Context a = Ctx {antiAlias :: ContextAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "old" (Old Context.T),

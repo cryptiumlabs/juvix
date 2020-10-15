@@ -71,6 +71,8 @@ transTerm erased =
     CoreErased.LamM {body, arguments} -> do
       traverse_ Env.allocExternal arguments
       transTerm body
+    CoreErased.PairM {} -> do
+      undefined -- TODO
     CoreErased.AppM f params -> do
       case f of
         CoreErased.Ann {CoreErased.term = CoreErased.LamM {body, arguments}} -> do

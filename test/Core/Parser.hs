@@ -68,21 +68,11 @@ coreParser =
       shouldParse
         "(@ (\\x -> x) : w (* 0) | 0) y"
         (Elim (App (Ann Usage.Omega (Lam "x" (Elim (Var "x"))) (Star 0) 0) (Elim (Var "y")))),
+      shouldParse "[Σ] 1 A * 0 A" (Sig one "A" (Star 0) (Elim (Var "A"))),
+      shouldParse "[add, add]" (Pair (Prim Nat.Add) (Prim Nat.Add)),
+      shouldParse
+        "[add, [add, add]]"
+        (Pair (Prim Nat.Add) (Pair (Prim Nat.Add) (Prim Nat.Add))),
       shouldParse "(2)" (Prim (Nat.Val 2)),
-      shouldParse "add" (Prim (Nat.Add))
-      {-,
-      -- these tests no longer work now primitives are terms
-      -- they'd have to be something like ((@ + : w ([Π] ...)) 3 4)
-      shouldParse
-        "(+ 3 4)"
-        (Elim (App (App (Prim Nat.Add) (Elim (Prim (Nat.Val 3)))) (Elim (Prim (Nat.Val 4))))),
-      shouldParse
-        "(- 4 3)"
-        (Elim (App (App (Prim Nat.Sub) (Elim (Prim (Nat.Val 4)))) (Elim (Prim (Nat.Val 3))))),
-      shouldParse
-        "(* 4 3)"
-        (Elim (App (App (Prim Nat.Mul) (Elim (Prim (Nat.Val 4)))) (Elim (Prim (Nat.Val 3)))))
-      -}
+      shouldParse "add" (Prim Nat.Add)
     ]
--- TODO: Fix this; currently only applications of eliminations can be parsed.
--- shouldParse "(\\x -> x) y" (Elim (App (Lam "x" (Elim (Var "x"))) (Elim (Var "y"))))

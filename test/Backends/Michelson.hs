@@ -10,8 +10,8 @@ import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Core.Usage
 import Juvix.Library hiding (Type, show)
-import qualified Michelson.Untyped as M
 import Michelson.Untyped as M hiding (Type)
+import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (show)

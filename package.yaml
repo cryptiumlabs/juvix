@@ -145,6 +145,7 @@ library:
     - Juvix.Frontend.Types
     - Juvix.Frontend.Types.Base
     - Juvix.Frontend.Types.Extend
+    - Juvix.Frontend.FreeVars
     - Juvix.FrontendDesugar
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
@@ -218,6 +219,7 @@ library:
     - Juvix.Core.EAC.Types
     - Juvix.Core.EAC.Parser
     - Juvix.Core.EAC.Erasure
+    - Juvix.Core.FromFrontend
     - Juvix.Interpreter
     - Juvix.Interpreter.InteractionNet
     - Juvix.Interpreter.InteractionNet.Nets.Default
