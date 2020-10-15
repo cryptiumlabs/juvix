@@ -69,7 +69,7 @@ applyProper fun args =
           Right (Prim.Return (Prim.term fun))
         _x ->
           Left (Core.PrimError AppliedConstantToArgument)
-   Inst instruction ->
+    Inst instruction ->
       let inst = Instructions.toNumArgs instruction
        in case inst `compare` fromIntegral (length args) of
             -- we should never take more arguments than primitve could handle
@@ -224,8 +224,8 @@ builtinValues =
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.unit", Inst (M.UNIT "" ""))
-    -- added symbols to not take values
-    ("Michelson.if", Inst (M.IF [] []))
+      -- added symbols to not take values
+      ("Michelson.if", Inst (M.IF [] []))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
