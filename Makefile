@@ -21,8 +21,8 @@ build:
 build-watch:
 	stack build --copy-bins --fast --file-watch
 
-build-opt: clean
-	stack build --copy-bins -j $(shell nproc) --ghc-options "-O3 -fllvm"
+build-prod: clean
+	stack build --copy-bins -j $(shell nproc) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
 
 build-format:
 	stack install ormolu
@@ -57,4 +57,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format
+.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format
