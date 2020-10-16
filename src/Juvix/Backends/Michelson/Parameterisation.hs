@@ -57,12 +57,6 @@ checkFirst2AndLast (x :| [y, last]) check
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
--- TODO: Add rest of primitive values.
--- TODO: Add dependent functions for pair, fst, snd, etc.
-typeOf :: PrimVal -> NonEmpty PrimTy
-typeOf (Constant v) = PrimTy (M.Type (constType v) "") :| []
-typeOf AddI = PrimTy (M.Type M.TInt "") :| [PrimTy (M.Type M.TInt ""), PrimTy (M.Type M.TInt "")]
-
 hasType :: PrimVal -> P.PrimType PrimTy -> Bool
 hasType AddTimeStamp ty = check3Equal ty
 hasType AddI ty = check3Equal ty
@@ -90,7 +84,10 @@ hasType CompareHash ty = checkFirst2AndLast ty isBool
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
-hasType x ty = ty == typeOf x
+hasType (Constant v) ty
+  | PrimTy (M.Type (constType v) "") :| [] == ty = True
+  | otherwise = False
+hasType x ty = ty == undefined
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
@@ -103,8 +100,12 @@ constType v =
     M.ValueFalse -> Untyped.tbool
 
 -- the arity elsewhere lacks this 'pred'?
+-- Arity for constant is BAD, refactor to handle lambda
 arity :: PrimVal -> Int
-arity = pred . length . typeOf
+arity (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
+arity (Constant _) = 1
+arity prim =
+  Run.instructionOf prim |> Instructions.toNewPrimErr |> arity
 
 applyProper ::
   Prim.Take PrimTy PrimVal ->
@@ -158,7 +159,7 @@ applyProper fun args =
 apply :: PrimVal -> PrimVal -> Maybe PrimVal
 apply t1 _t2 = Nothing
   where
-    primTy :| _ = typeOf t1
+    primTy :| _ = undefined
     runPrim =
       DSL.execMichelson $
         --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
