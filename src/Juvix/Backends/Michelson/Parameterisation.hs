@@ -223,7 +223,9 @@ builtinValues =
     ("Michelson.lsr", Inst (M.LSR "")),
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
-    ("Michelson.self", Inst (M.UNIT "" ""))
+    ("Michelson.unit", Inst (M.UNIT "" "")),
+    -- added symbols to not take values
+    ("Michelson.if", Inst (M.IF [] []))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList

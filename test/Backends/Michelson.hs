@@ -94,7 +94,9 @@ backendMichelson =
       identityTermTest,
       xtwiceTest1,
       xtwiceTest2,
-      oddAppTest
+      oddAppTest,
+      ifIntTest,
+      ifIntConstTest
     ]
 
 --------------------------------------------------------------------------------
@@ -204,6 +206,12 @@ xtwiceTest1 = shouldCompileTo xtwice xtwiceAns
 
 oddAppTest :: T.TestTree
 oddAppTest = shouldCompileTo oddApp oddAppAns
+
+ifIntTest :: T.TestTree
+ifIntTest = shouldCompileTo ifInt ifIntAns
+
+ifIntConstTest :: T.TestTree
+ifIntConstTest = shouldCompileTo ifIntConst ifIntAns
 
 -- dummyTest =
 --   runContract identityAppTerm2 identityType
@@ -725,9 +733,37 @@ identityAppExpr2 =
       )
       [Ann one primPairTy (J.Prim (Instructions.toNewPrimErr Instructions.pair))]
 
+ifInt :: Term
+ifInt =
+  Ann
+    one
+    (primTy Untyped.int)
+    $ J.AppM
+      (if' Untyped.int)
+      [true', push1Int 3, push1Int 4]
+
+ifIntConst :: Term
+ifIntConst =
+  Ann
+    one
+    (primTy Untyped.int)
+    $ J.AppM
+      (if' Untyped.int)
+      [true', annIntOne 3, annIntOne 4]
+
 --------------------------------------------------------------------------------
 -- Answers to Tests
 --------------------------------------------------------------------------------
+
+ifIntAns :: [Op]
+ifIntAns =
+  [ PrimEx (PUSH "" (M.Type M.TBool "") ValueTrue),
+    PrimEx
+      ( M.IF
+          [PUSH "" (M.Type TInt "") (ValueInt 3) |> PrimEx]
+          [PUSH "" (M.Type TInt "") (ValueInt 4) |> PrimEx]
+      )
+  ]
 
 constUIntAns :: [Op]
 constUIntAns =
@@ -1007,3 +1043,16 @@ push1 const ty =
           $ Instructions.push ty (M.ValueNil) -- the undefined here is never used
       )
       [Ann one (primTy ty) (J.Prim (Constant const))]
+
+true' :: AnnTerm PrimTy NewPrim
+true' = Ann one (primTy (M.Type M.TBool "")) (J.Prim (Constant M.ValueTrue))
+
+false' :: AnnTerm PrimTy NewPrim
+false' = Ann one (primTy (M.Type M.TBool "")) (J.Prim (Constant M.ValueFalse))
+
+if' :: M.Type -> AnnTerm PrimTy NewPrim
+if' ty =
+  M.IF [] []
+    |> Inst
+    |> J.Prim
+    |> Ann one (J.Pi one (primTy (M.Type M.TBool "")) (J.Pi one (primTy ty) (J.Pi one (primTy ty) (primTy ty))))

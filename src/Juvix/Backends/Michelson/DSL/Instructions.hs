@@ -300,4 +300,5 @@ toNumArgs x =
     Instr.EDIV _ -> 2
     Instr.ISNAT _ -> 1
     Instr.PUSH {} -> 1
+    Instr.IF {} -> 3
 -- _ -> error "function not implemented yet"
