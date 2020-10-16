@@ -84,20 +84,13 @@ hasType CompareHash ty = checkFirst2AndLast ty isBool
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
-hasType (Constant v) ty
-  | PrimTy (M.Type (constType v) "") :| [] == ty = True
+hasType (Constant _v) ty
+  | length ty == 1 = True
   | otherwise = False
 hasType x ty = ty == undefined
 
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
-constType :: M.Value' Op -> M.T
-constType v =
-  case v of
-    M.ValueInt _ -> Untyped.tint
-    M.ValueUnit -> Untyped.TUnit
-    M.ValueTrue -> Untyped.tbool
-    M.ValueFalse -> Untyped.tbool
 
 -- the arity elsewhere lacks this 'pred'?
 -- Arity for constant is BAD, refactor to handle lambda
