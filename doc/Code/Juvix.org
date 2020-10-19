@@ -25,36 +25,36 @@
   + [[Library]]
 **** ZKP
 - _Relies on_
-  + [[ArithmeticCircuit/Compilation]]
+  + [[Compilation]]
   + [[Groth]]
   + [[Library]]
-**** Compilation <<ArithmeticCircuit/Compilation>>
+**** Compilation
 - _Relies on_
   + [[Compilation/Environment]]
   + [[Memory]]
-  + [[ArithmeticCircuit/Compilation/Types]]
-  + [[ArithmeticCircuit/Parameterisation]]
+  + [[Compilation/Types]]
+  + [[Parameterisation]]
   + [[ErasedAnn]]
   + [[Usage]]
   + [[Library]]
 ***** Environment <<Compilation/Environment>>
 - _Relies on_
   + [[Memory]]
-  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[Library]]
 ***** Memory
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-***** Types <<ArithmeticCircuit/Compilation/Types>>
+***** Types <<Compilation/Types>>
 Provides the various types needed for the arithmetic circuit
 backend
 - Expression covers the gambit of arithmetic circuit expressions
 - _Relies on_
-  + [[ArithmeticCircuit/Parameterisation]]
+  + [[Parameterisation]]
   + [[ErasedAnn]]
   + [[Library]]
-**** Parameterisation <<ArithmeticCircuit/Parameterisation>>
+**** Parameterisation
 - _Relies on_
   + [[Booleans]]
   + [[FieldElements]]
@@ -311,136 +311,6 @@ Serves as a module for various debugging functions
 ****** Types <<EAC/Types>>
 - _Relies on_
   + [[Codegen]]
-  + [[Library]]
-*** Michelson
-- _Relies on_
-  + [[Michelson/Compilation]]
-  + [[Michelson/Parameterisation]]
-**** Contract <<Michelson/Contract>>
-This module provides a default contract environment
-**** Optimisation
-- This is a simple optimization strategy which replaces sequences of
-  Michelson instructions with equivalent sequences of fewer
-  instructions.
-  + At the moment nontrivial programs are unlikely to compile to
-    the smallest equivalent Michelson instruction sequence,
-- but little time has been spent on optimization so far - a high
-  degree should be possible; the Haskell typesystem provides very
-  strong guarantees.
-  + A more interesting / potentially more effective strategy might
-    be to search the space of equivalent Michelson programs,
-    which at small program sizes using bounded heuristic search
-    should be computationally feasible -
-    then choose the one with the fewest instructions (or based on
-    some other gas-estimation preference function).
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Library]]
-**** Parameterisation <<Michelson/Parameterisation>>
-- _Relies on_
-  + [[Michelson/Compilation]]
-  + [[Michelson/Compilation/Types]]
-  + [[Michelson/Compilation/Types]]
-  + [[Michelson/Contract]]
-  + [[DSL/Environment]]
-  + [[Instructions]]
-  + [[InstructionsEff]]
-  + [[Interpret]]
-  + [[NameSymbol]]
-  + [[Prim]]
-  + [[Parameterisation]]
-  + [[Types]]
-  + [[Library]]
-  + [[HashMap]]
-**** Compilation <<Michelson/Compilation>>
-- Entrypoints into compilation from core terms to Michelson terms & contracts.
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[DSL/Environment]]
-  + [[Instructions]]
-  + [[InstructionsEff]]
-  + [[Optimisation]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-***** Types <<Michelson/Compilation/Types>>
-- Types used internally by the Michelson backend.
-- _Relies on_
-  + [[Types]]
-  + [[Library]]
-***** VirtualStack
-- Serves as a virtual stack over Michelson
-- This stack has a few properties
-  + The values on this stack may or may not be on the real
-    stack. However for convention this should be largely ignored,
-    except when you wish to do an operation like pair
-    * This can be fixed in the future
-    * Until then, one should filter out the virtual stack items
-- We keep virtual items on the ="stack"= as that makes the details
-  on whether something is constant propagation or not act
-  consistently with each other.
-  + After all, what may not be a constant now, may be in the
-    future, or vice versa!
-- Import with qualified and the name of =VStack=
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Instructions]]
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-**** DSL
-***** Contract <<DSL/Contract>>
-- _Relies on_
-  + [[Library]]
-***** Environment <<DSL/Environment>>
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[Usage]]
-  + [[Library]]
-***** Instructions
-- This module serves as a lower layer DSL that is just a binding
-  over the untyped instruction bindings
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[Untyped]]
-  + [[Library]]
-***** InstructionsEff
-- This module includes a higher level DSL which each instruction
-  has a stack effect
-  + This is similar to the base LLVM bindings we have.
-  + So for example, emitting an =add=, eats two items from the
-    virtual stack, and adds an =Instr.Add= instruction to the
-    sequence of instructions to execute
-- For constant progoation, have a function say take-2 that looks at
-  the top two items in the stack and then returns back either if
-  they were constants or not and dispatches logic based on that
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[VirtualStack]]
-  + [[DSL/Environment]]
-  + [[Instructions]]
-  + [[Untyped]]
-  + [[Utils]]
-  + [[Types]]
-  + [[Usage]]
-  + [[Library]]
-  + [[Library]]
-***** Interpret
-- _Relies on_
-  + [[Michelson/Compilation/Types]]
-  + [[DSL/Contract]]
-  + [[Library]]
-***** Untyped
-- _Relies on_
-  + [[Library]]
-***** Utils
-- _Relies on_
-  + [[Instructions]]
-  + [[Untyped]]
-  + [[Types]]
-  + [[Usage]]
   + [[Library]]
 ** Core
 - _Relies on_

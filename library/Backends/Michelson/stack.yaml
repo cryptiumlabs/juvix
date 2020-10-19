@@ -1,0 +1,52 @@
+resolver: lts-15.16
+
+packages:
+- .
+- ../../StandardLibrary
+- ../../Core
+
+extra-deps:
+- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- github: metastatedev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
+
+- base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
+- fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
+- named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
+- vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
+- base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
+- hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
+- tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
+- witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
+- show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
+- witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
+
+
+###############################
+# For eac solver in core
+###############################
+- github: cwgoes/haskell-z3
+  commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
+
+
+################################################################################
+# morley deps
+################################################################################
+
+- morley-1.2.0
+- morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+
+- git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+  commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+  subdirs:
+   -  tezos-bake-monitor-lib
+
+##################################################
+# sub deps of the git
+##################################################
+
+- constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+- dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
+- dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
+- hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
+- monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501

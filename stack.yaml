@@ -9,6 +9,7 @@ extra-deps:
 - ./library/Frontend
 - ./library/Core
 - ./library/Translate
+- ./library/Backends/Michelson
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - constraints-0.11

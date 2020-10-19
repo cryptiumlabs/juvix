@@ -22,9 +22,13 @@ dependencies:
   - extensible-data
   - capability >= 0.2.0.0
   - standard-library
+  ###########################
+  # Libraries
+  ###########################
   - frontend
   - core
   - translate
+  - michelson
   ###########################
   # Dependency for OS
   ###########################
@@ -172,20 +176,6 @@ library:
     - Juvix.INetIR.Types
     - Juvix.INetIR.JSON
     - Juvix.Backends
-    - Juvix.Backends.Michelson
-    - Juvix.Backends.Michelson.Parameterisation
-    - Juvix.Backends.Michelson.Compilation
-    - Juvix.Backends.Michelson.Compilation.Types
-    - Juvix.Backends.Michelson.Compilation.VirtualStack
-    - Juvix.Backends.Michelson.DSL.Instructions
-    - Juvix.Backends.Michelson.DSL.InstructionsEff
-    - Juvix.Backends.Michelson.DSL.Environment
-    - Juvix.Backends.Michelson.DSL.Untyped
-    - Juvix.Backends.Michelson.DSL.Contract
-    - Juvix.Backends.Michelson.DSL.Interpret
-    - Juvix.Backends.Michelson.DSL.Utils
-    - Juvix.Backends.Michelson.Optimisation
-    - Juvix.Backends.Michelson.Contract
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
     - Juvix.Backends.ArithmeticCircuit.Groth
