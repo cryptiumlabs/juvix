@@ -48,8 +48,7 @@ module Juvix.Library
     dup,
     StateField,
     ReaderField,
-    WriterField,
-    specialFun
+    WriterField
   )
 where
 
@@ -208,6 +207,3 @@ type ReaderField fld m = ReadStatePure (StateField fld m)
 
 -- | Writer version of 'StateField'.
 type WriterField fld m = WriterLog (StateField fld m)
-
-specialFun :: Num a => a -> a
-specialFun = (+ 2)

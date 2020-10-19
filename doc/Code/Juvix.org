@@ -59,21 +59,21 @@ backend
   + [[Booleans]]
   + [[FieldElements]]
   + [[Integers]]
-  + [[Core/Parameterisation]]
+  + [[Parameterisation]]
   + [[Library]]
 ***** Booleans
 - _Relies on_
   + [[FieldElements]]
-  + [[Core/Parameterisation]]
+  + [[Parameterisation]]
   + [[Library]]
 ***** FieldElements
 - _Relies on_
-  + [[Core/Parameterisation]]
+  + [[Parameterisation]]
   + [[Library]]
 ***** Integers
 - _Relies on_
   + [[FieldElements]]
-  + [[Core/Parameterisation]]
+  + [[Parameterisation]]
   + [[Library]]
 *** LLVM
 - Serves as the LLVM backend compiler to Juvix.
@@ -93,8 +93,8 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
   + [[JIT]]
   + [[MonadEnvironment]]
   + [[Net/Environment]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
+  + [[Types]]
+  + [[Types]]
   + [[INetIR/Types]]
   + [[InteractionNet]]
   + [[Backends/Graph]]
@@ -238,21 +238,21 @@ Functions that help with more complex Graph operations
 ***** API
 - _Relies on_
   + [[Codegen]]
-  + [[Net/EAC]]
-  + [[Net/EAC/Types]]
+  + [[EAC]]
+  + [[EAC/Types]]
   + [[Library]]
 ***** Environment <<Net/Environment>>
 - Serves as the default environment for executing EAC code
 - _Relies on_
   + [[Codegen]]
   + [[API]]
-  + [[Net/EAC]]
+  + [[EAC]]
   + [[Defs]]
   + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
+  + [[EAC/Types]]
   + [[Library]]
   + [[HashMap]]
-***** EAC <<Net/EAC>>
+***** EAC
 - =EAC= serves as the place where the interaction net rules for the
   EAC layer gets run
 - The form given to =EAC= is not the base EAC AST, but instead a
@@ -281,7 +281,7 @@ Functions that help with more complex Graph operations
   + [[EAC/Debug]]
   + [[Defs]]
   + [[MonadEnvironment]]
-  + [[Net/EAC/Types]]
+  + [[EAC/Types]]
   + [[Library]]
   + [[HashMap]]
 ****** Debug <<EAC/Debug>>
@@ -297,7 +297,7 @@ Serves as a module for various debugging functions
 - _Relies on_
   + [[Codegen]]
   + [[DSL]]
-  + [[Net/EAC/Types]]
+  + [[EAC/Types]]
   + [[Library]]
 ****** MonadEnvironment
 - This serves as the monad in which all operations are run
@@ -308,7 +308,7 @@ Serves as a module for various debugging functions
   + [[Codegen]]
   + [[Library]]
   + [[HashMap]]
-****** Types <<Net/EAC/Types>>
+****** Types <<EAC/Types>>
 - _Relies on_
   + [[Codegen]]
   + [[Library]]
@@ -348,8 +348,8 @@ This module provides a default contract environment
   + [[Interpret]]
   + [[NameSymbol]]
   + [[Prim]]
-  + [[Core/Parameterisation]]
-  + [[Core/Types]]
+  + [[Parameterisation]]
+  + [[Types]]
   + [[Library]]
   + [[HashMap]]
 **** Compilation <<Michelson/Compilation>>
@@ -361,13 +361,13 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
-  + [[ErasedAnn/Types]]
+  + [[Types]]
   + [[Usage]]
   + [[Library]]
 ***** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
-  + [[ErasedAnn/Types]]
+  + [[Types]]
   + [[Library]]
 ***** VirtualStack
 - Serves as a virtual stack over Michelson
@@ -423,7 +423,7 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[Untyped]]
   + [[Utils]]
-  + [[ErasedAnn/Types]]
+  + [[Types]]
   + [[Usage]]
   + [[Library]]
   + [[Library]]
@@ -439,18 +439,18 @@ This module provides a default contract environment
 - _Relies on_
   + [[Instructions]]
   + [[Untyped]]
-  + [[ErasedAnn/Types]]
+  + [[Types]]
   + [[Usage]]
   + [[Library]]
 ** Core
 - _Relies on_
   + [[NameSymbol]]
-  + [[Core/Erasure]]
+  + [[Erasure]]
   + [[Core/Pipeline]]
   + [[Translate]]
-  + [[Core/Types]]
+  + [[Types]]
   + [[Usage]]
-  + [[Frontend/Types]]
+  + [[Types]]
   + [[FrontendContextualise]]
   + [[InfixPrecedence/Environment]]
   + [[FrontendDesugar]]
@@ -461,346 +461,23 @@ This module provides a default contract environment
   + [[NameSymbol]]
   + [[HR]]
   + [[IR]]
-  + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
+  + [[Base]]
+  + [[Parameterisation]]
   + [[Translate]]
   + [[Usage]]
   + [[FrontendContextualise]]
   + [[InfixPrecedence/Types]]
   + [[Library]]
-*** Parameterisation <<Core/Parameterisation>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Library]]
-  + [[HashMap]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
   + [[ErasedAnn]]
-  + [[Core/Erasure]]
+  + [[Erasure]]
   + [[HR]]
   + [[IR]]
   + [[Translate]]
-  + [[Core/Types]]
+  + [[Types]]
   + [[Usage]]
-  + [[Library]]
-*** Translate
-- _Relies on_
-  + [[HR]]
-  + [[IR]]
-  + [[Utility]]
-  + [[Library]]
-*** Types <<Core/Types>>
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Erased]]
-  + [[Erasure/Types]]
-  + [[HR/Types]]
-  + [[Typechecker]]
-  + [[IR/Types]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-*** Usage
-- _Relies on_
-  + [[Library]]
-*** Utility
-- _Relies on_
-  + [[Library]]
-*** Common
-**** NameSpace
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
-**** NameSymbol
-- _Relies on_
-  + [[Library]]
-**** Context
-- Serves as the context for lower level programs of the =Juvix=
-  Programming Language
-- This is parameterized per phase which may store the type and
-  term in slightly different ways
-- _Relies on_
-  + [[Precedence]]
-  + [[NameSpace]]
-  + [[NameSymbol]]
-  + [[Usage]]
-  + [[Library]]
-  + [[Library]]
-  + [[HashMap]]
-***** Precedence
-- _Relies on_
-  + [[Library]]
-*** EAC <<Core/EAC>>
-- This directory contains the implementation of =Eal= and the inferred
-  bracket checker on =Eal=
-- _Relies on_
-  + [[Check]]
-  + [[ConstraintGen]]
-  + [[EAC/Erasure]]
-  + [[EAC/Parser]]
-  + [[Solve]]
-  + [[Core/EAC/Types]]
-**** Check
-- A constraint checker for EAC.
-- _Relies on_
-  + [[ConstraintGen]]
-  + [[Solve]]
-  + [[Core/EAC/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-**** ConstraintGen
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-**** Erasure <<EAC/Erasure>>
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Erased/Types]]
-**** Parser <<EAC/Parser>>
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Core/EAC/Types]]
-  + [[Unit]]
-  + [[Library]]
-**** Solve
-- A Z3 solver for the generated =Eal= Constraints
-- Can generate multiple constraints that will be used along side the
-  Bracket checker to confirm that the solved constraints Z3 gives us
-  is correct
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Library]]
-**** Types <<Core/EAC/Types>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-  + [[HashMap]]
-*** Erased
-- _Relies on_
-  + [[Erased/Evaluator]]
-  + [[Erased/Types]]
-  + [[Util]]
-**** Evaluator <<Erased/Evaluator>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-  + [[HashMap]]
-**** Extend <<Erased/Extend>>
-- _Relies on_
-  + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
-**** Util
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-**** Types <<Erased/Types>>
-- _Relies on_
-  + [[Erased/Extend]]
-  + [[Erased/Types/Base]]
-  + [[IR/Types/Base]]
-  + [[IR/Types/Base]]
-  + [[Usage]]
-  + [[Library]]
-***** Base <<Erased/Types/Base>>
-- _Relies on_
-  + [[IR/Types]]
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-*** ErasedAnn
-- _Relies on_
-  + [[Conversion]]
-  + [[ErasedAnn/Types]]
-**** Conversion
-- _Relies on_
-  + [[Erased]]
-  + [[ErasedAnn/Types]]
-  + [[Erasure/Types]]
-  + [[Core/Types]]
-  + [[Usage]]
-  + [[Library]]
-**** Erasure <<ErasedAnn/Erasure>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[ErasedAnn/Types]]
-  + [[ErasedAnn/Types]]
-  + [[Library]]
-**** Prim
-- This module represents the type which will be sent to the
-  parameterisation
-- the =Take= type is what a parameterisation will take coming in
-- the =Return= type is what will be handed back to Core to evaluate
-  and decide on the next steps. If this is a =Left= type checking
-  has failed, if it's a =Right= then type checking will continue
-- _Relies on_
-  + [[ErasedAnn/Types]]
-  + [[Usage]]
-  + [[Library]]
-**** Types <<ErasedAnn/Types>>
-- _Relies on_
-  + [[IR/Types]]
-  + [[Usage]]
-  + [[Library]]
-*** Erasure <<Core/Erasure>>
-- _Relies on_
-  + [[Algorithm]]
-  + [[Erasure/Types]]
-**** Algorithm
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Erasure/Types]]
-  + [[Erasure/Types]]
-  + [[IR]]
-  + [[Typechecker/Types]]
-  + [[Usage]]
-  + [[Library]]
-**** Types <<Erasure/Types>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Erased/Types]]
-  + [[Erased/Types/Base]]
-  + [[Typechecker]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
-  + [[IR/Types]]
-  + [[Usage]]
-  + [[Library]]
-*** HR
-- _Relies on_
-  + [[HR/Parser]]
-  + [[HR/Types]]
-**** Extend <<HR/Extend>>
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Library]]
-**** Parser <<HR/Parser>>
-- _Relies on_
-  + [[HR/Types]]
-  + [[Core/Types]]
-  + [[Usage]]
-  + [[Library]]
-**** Subst
-- Runs a substitution algorithm over core
-- _Relies on_
-  + [[NameSymbol]]
-  + [[HR/Types]]
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-**** Types <<HR/Types>>
-- _Relies on_
-  + [[HR/Extend]]
-  + [[IR/Types/Base]]
-*** HRAnn
-- _Relies on_
-  + [[HRAnn/Erasure]]
-  + [[HRAnn/Types]]
-**** Erasure <<HRAnn/Erasure>>
-- _Relies on_
-  + [[HR/Types]]
-  + [[HRAnn/Types]]
-  + [[TransformExt]]
-  + [[Library]]
-**** Extend <<HRAnn/Extend>>
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Usage]]
-  + [[Library]]
-**** Types <<HRAnn/Types>>
-- _Relies on_
-  + [[HRAnn/Extend]]
-  + [[IR/Types/Base]]
-*** IR
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[Typechecker]]
-  + [[Typechecker]]
-  + [[IR/Types]]
-  + [[Library]]
-**** Evaluator <<IR/Evaluator>>
-This includes the evaluators (evalTerm and evalElim),
-the value application function (vapp) and
-the substitution functions (substTerm and substElim).
-- _Relies on_
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
-  + [[Library]]
-**** TransformExt
-Transformations between different extensions.
-- _Relies on_
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Library]]
-**** Typechecker
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[Typechecker/Env]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
-  + [[Usage]]
-  + [[Library]]
-***** Env <<Typechecker/Env>>
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
-  + [[Usage]]
-  + [[Library]]
-***** Types <<Typechecker/Types>>
-- _Relies on_
-  + [[IR/Types]]
-  + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
-  + [[Usage]]
-  + [[Library]]
-**** Types <<IR/Types>>
-Quantitative type implementation inspired by
-  Atkey 2018 and McBride 2016.
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Library]]
-***** Base <<IR/Types/Base>>
-- _Relies on_
-  + [[Usage]]
-  + [[Library]]
-  + [[HashMap]]
-*** IRAnn
-- _Relies on_
-  + [[IRAnn/Erasure]]
-  + [[IRAnn/Types]]
-**** Erasure <<IRAnn/Erasure>>
-- _Relies on_
-  + [[TransformExt]]
-  + [[IR/Types]]
-  + [[IRAnn/Types]]
-**** Types <<IRAnn/Types>>
-- _Relies on_
-  + [[IR/Types/Base]]
-  + [[Usage]]
-  + [[Library]]
-*** Parameterisations
-**** All
-- _Relies on_
-  + [[Core/Parameterisation]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Library]]
-**** Naturals
-- _Relies on_
-  + [[Core/Parameterisation]]
-  + [[Library]]
-**** Unit
-- _Relies on_
-  + [[Core/Parameterisation]]
   + [[Library]]
 ** Encoding
 *** Encoding
@@ -835,49 +512,6 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-** Frontend
-- _Relies on_
-  + [[NameSymbol]]
-  + [[Frontend/Parser]]
-  + [[Frontend/Types]]
-  + [[Library]]
-*** Lexer
-- _Relies on_
-  + [[Library]]
-*** Parser <<Frontend/Parser>>
-- The front end parser for the Juvix Programming language
-- Parsers with S at the end, eat the spaces at the end of the parse
-- Parsers with SN at the end, eats the spaces and new lines at the
-  end of the parse
-- _Relies on_
-  + [[Lexer]]
-  + [[Frontend/Types]]
-  + [[Frontend/Types/Base]]
-  + [[Library]]
-*** Types <<Frontend/Types>>
-- This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
-- Later a trees that grow version of this will be implemented, so
-  infix functions can better transition across syntax
-- Note :: The names for the types in =ArrowData= are stored in the
-          =ArrowGen= and not in =NamedType=
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Library]]
-**** Base <<Frontend/Types/Base>>
-- This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
-- Later a trees that grow version of this will be implemented, so
-  infix functions can better transition across syntax
-- Note :: The names for the types in =ArrowData= are stored in the
-          =ArrowGen= and not in =NamedType=
-- _Relies on_
-  + [[Usage]]
-  + [[Library]]
-**** Extend <<Types/Extend>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
 ** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=
@@ -941,7 +575,7 @@ Quantitative type implementation inspired by
       deriving (Show, Generic, NFData)
   #+end_src
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[ModuleOpen/Extend]]
   + [[ModuleOpen/Extend]]
   + [[Library]]
@@ -1014,7 +648,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<InfixPrecedence/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[InfixPrecedence/Extend]]
   + [[Library]]
 *** ModuleOpen
@@ -1057,7 +691,7 @@ Quantitative type implementation inspired by
 #+end_src
 - for modules we can infer.
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveDo/Extend]]
   + [[RemoveDo/Extend]]
   + [[Library]]
@@ -1071,7 +705,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<ModuleOpen/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[ModuleOpen/Extend]]
   + [[Library]]
 ** FrontendDesugar
@@ -1084,8 +718,7 @@ Quantitative type implementation inspired by
   6. =RemovePunned=
   7. =RemoveDo=
 - _Relies on_
-  + [[Frontend/Parser]]
-  + [[Frontend/Types]]
+  + [[Types]]
   + [[CombineMultiple/Transform]]
   + [[RemoveCond/Transform]]
   + [[RemoveDo/Transform]]
@@ -1097,7 +730,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 *** Abstractions
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[Library]]
 *** CombineMultiple
 **** Extend <<CombineMultiple/Extend>>
@@ -1139,7 +772,7 @@ Quantitative type implementation inspired by
     #+end_src
     * Namely this version adds symbol to the previous pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveCond/Extend]]
   + [[RemoveCond/Extend]]
   + [[Library]]
@@ -1150,7 +783,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<CombineMultiple/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[CombineMultiple/Extend]]
   + [[Library]]
 *** RemoveCond
@@ -1174,7 +807,7 @@ Quantitative type implementation inspired by
   #+end_src
   after this pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveGuard/Extend]]
   + [[RemoveGuard/Extend]]
   + [[Library]]
@@ -1185,7 +818,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<RemoveCond/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveCond/Extend]]
   + [[Library]]
 *** RemoveDo
@@ -1209,7 +842,7 @@ Quantitative type implementation inspired by
   #+end_src
   after this pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemovePunned/Extend]]
   + [[RemovePunned/Extend]]
   + [[Library]]
@@ -1220,7 +853,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<RemoveDo/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveDo/Extend]]
   + [[Library]]
 *** RemoveGuard
@@ -1243,7 +876,7 @@ Quantitative type implementation inspired by
     #+end_src
     * This pass removes the =GuardBody= from the body.
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[Abstractions]]
   + [[RemoveModules/Extend]]
 **** Transform <<RemoveGuard/Transform>>
@@ -1253,7 +886,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<RemoveGuard/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveGuard/Extend]]
   + [[Library]]
 *** RemoveModules
@@ -1278,18 +911,18 @@ Quantitative type implementation inspired by
   #+end_src
   after this pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Types/Extend]]
+  + [[Base]]
+  + [[Extend]]
+  + [[Extend]]
   + [[Library]]
 **** Transform <<RemoveModules/Transform>>
 - _Relies on_
-  + [[Frontend/Types]]
+  + [[Types]]
   + [[RemoveModules/Types]]
   + [[Library]]
 **** Types <<RemoveModules/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveModules/Extend]]
   + [[Library]]
 *** RemovePunned
@@ -1308,7 +941,7 @@ Quantitative type implementation inspired by
   #+end_src
   after this pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveSignature/Extend]]
   + [[RemoveSignature/Extend]]
   + [[Library]]
@@ -1319,7 +952,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<RemovePunned/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemovePunned/Extend]]
   + [[Library]]
 *** RemoveSignature
@@ -1351,7 +984,7 @@ Quantitative type implementation inspired by
     #+end_src
     * Namely this version adds a signature to upon the previous pass
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[CombineMultiple/Extend]]
   + [[CombineMultiple/Extend]]
   + [[Library]]
@@ -1362,7 +995,7 @@ Quantitative type implementation inspired by
   + [[Library]]
 **** Types <<RemoveSignature/Types>>
 - _Relies on_
-  + [[Frontend/Types/Base]]
+  + [[Base]]
   + [[RemoveSignature/Extend]]
   + [[Library]]
 ** INetIR
@@ -1381,9 +1014,9 @@ Quantitative type implementation inspired by
   in the various compiler backends
 *** InteractionNet
 - _Relies on_
-  + [[Erased/Types]]
+  + [[Types]]
   + [[InteractionNet/Default]]
-  + [[InteractionNet/Parser]]
+  + [[Parser]]
   + [[InteractionNet/Translation]]
   + [[Type]]
 **** Default <<InteractionNet/Default>>
@@ -1405,7 +1038,7 @@ Can be added to via core translation
      primary, and so forth.
 - _Relies on_
   + [[Library]]
-**** Parser <<InteractionNet/Parser>>
+**** Parser
 - Parses the syntax according to the formal =BNF=
 - _Relies on_
   + [[InteractionNet/Default]]
@@ -1420,7 +1053,7 @@ Can be added to via core translation
 - Translates the default abstract syntax into Interaction nets
   + Also translates the net into the an ast
 - _Relies on_
-  + [[Core/Types]]
+  + [[Types]]
   + [[Interface]]
   + [[Nets/Default]]
   + [[NodeInterface]]
@@ -1446,7 +1079,7 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 **** Backends
-***** Env <<Backends/Env>>
+***** Env
 - Env serves as the environment for running the back-ends
   + This includes the diagnostic information about how the code is ran
   + Also includes the effect handler types and the runner functions
@@ -1463,7 +1096,7 @@ Can be added to via core translation
   + This back-end is more useful than [[Maps]] as it can produce
     graphical outputs, see [[Visualize]]
 - _Relies on_
-  + [[Backends/Env]]
+  + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -1480,7 +1113,7 @@ Can be added to via core translation
 - this is an implementation of said interface using the =EnumMap= data structure
 - This code will be imported in Tests as a possible back-end for testing
 - _Relies on_
-  + [[Backends/Env]]
+  + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -1492,7 +1125,7 @@ Can be added to via core translation
   2. Dup
   3. Era
 - _Relies on_
-  + [[Backends/Env]]
+  + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
@@ -1500,32 +1133,11 @@ Can be added to via core translation
 - An evaluator for the Default Language
 - Serves as a reference way of creating interaction nets
 - _Relies on_
-  + [[Backends/Env]]
+  + [[Env]]
   + [[Interface]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
   + [[Library]]
-** Library
-- The standard Library for the project
-  + Thus all code will depend on this module without stating otherwise
-- Is mostly =Protolude= except with a few changes
-  + _Additions_
-    * ∨   :: Serves as an or function
-    * ∧   :: Serves as an and function
-    * |<< :: Serves as a map function
-    * >>| :: Serves as the flip map function
-  + _Changes_
-    * The Capability library is imported and replaces the standard =MTL=
-      constructs in =Protolude=
-- _Relies on_
-  + [[PrettyPrint]]
-*** HashMap
-- The HashMap for the codebase.
-- Basically just imports Data.HashMap.Strict
-  + While giving the operation =!?=.
-- Every hash in the code base should use this, except when it needs
-  to compare keys by the =Ordering= metric instead.
-*** PrettyPrint
 ** Visualize
 *** Dot
 - Generates a dot file in order to produce a simple image of a
@@ -1534,7 +1146,7 @@ Can be added to via core translation
   generate said gif), displaying every reduction step until the term
   is normalized
 - _Relies on_
-  + [[Backends/Env]]
+  + [[Env]]
   + [[Backends/Graph]]
   + [[Nets/Default]]
   + [[Library]]

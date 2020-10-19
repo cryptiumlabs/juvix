@@ -1,0 +1,412 @@
+* Core
+** Setup <<Core/Setup>>
+** src
+*** Juvix
+**** Core
+***** Parameterisation
+- _Relies on_
+  + [[Library/NameSymbol]]
+  + [[Library]]
+  + [[HashMap]]
+***** Translate
+- _Relies on_
+  + [[HR]]
+  + [[IR]]
+  + [[Utility]]
+  + [[Library]]
+***** Types <<Core/Types>>
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Erased]]
+  + [[Erasure/Types]]
+  + [[HR/Types]]
+  + [[Typechecker]]
+  + [[IR/Types]]
+  + [[Parameterisation]]
+  + [[Library]]
+***** Usage <<Core/Usage>>
+- _Relies on_
+  + [[Library]]
+***** Utility
+- _Relies on_
+  + [[Library]]
+***** Common
+****** NameSpace
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+****** NameSymbol <<Common/NameSymbol>>
+- _Relies on_
+  + [[Library]]
+****** Context
+- Serves as the context for lower level programs of the =Juvix=
+  Programming Language
+- This is parameterized per phase which may store the type and
+  term in slightly different ways
+- _Relies on_
+  + [[Precedence]]
+  + [[NameSpace]]
+  + [[Common/NameSymbol]]
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[Library]]
+  + [[HashMap]]
+******* Precedence
+- _Relies on_
+  + [[Library]]
+***** EAC
+- This directory contains the implementation of =Eal= and the inferred
+  bracket checker on =Eal=
+- _Relies on_
+  + [[Check]]
+  + [[ConstraintGen]]
+  + [[EAC/Erasure]]
+  + [[EAC/Parser]]
+  + [[Solve]]
+  + [[EAC/Types]]
+****** Check
+- A constraint checker for EAC.
+- _Relies on_
+  + [[ConstraintGen]]
+  + [[Solve]]
+  + [[EAC/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+****** ConstraintGen
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+****** Erasure <<EAC/Erasure>>
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Erased/Types]]
+****** Parser <<EAC/Parser>>
+- _Relies on_
+  + [[EAC/Types]]
+  + [[EAC/Types]]
+  + [[Unit]]
+  + [[Library]]
+****** Solve
+- A Z3 solver for the generated =Eal= Constraints
+- Can generate multiple constraints that will be used along side the
+  Bracket checker to confirm that the solved constraints Z3 gives us
+  is correct
+- _Relies on_
+  + [[EAC/Types]]
+  + [[Library]]
+****** Types <<EAC/Types>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Erased
+- _Relies on_
+  + [[Erased/Evaluator]]
+  + [[Erased/Types]]
+  + [[Util]]
+****** Evaluator <<Erased/Evaluator>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+  + [[HashMap]]
+****** Extend <<Erased/Extend>>
+- _Relies on_
+  + [[HRAnn/Extend]]
+  + [[IR/Types/Base]]
+****** Util
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+****** Types <<Erased/Types>>
+- _Relies on_
+  + [[Erased/Extend]]
+  + [[Erased/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[IR/Types/Base]]
+  + [[Core/Usage]]
+  + [[Library]]
+******* Base <<Erased/Types/Base>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[HashMap]]
+***** ErasedAnn
+- _Relies on_
+  + [[Conversion]]
+  + [[ErasedAnn/Types]]
+****** Conversion
+- _Relies on_
+  + [[Erased]]
+  + [[ErasedAnn/Types]]
+  + [[Erasure/Types]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Erasure <<ErasedAnn/Erasure>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[ErasedAnn/Types]]
+  + [[ErasedAnn/Types]]
+  + [[Library]]
+****** Prim
+- This module represents the type which will be sent to the
+  parameterisation
+- the =Take= type is what a parameterisation will take coming in
+- the =Return= type is what will be handed back to Core to evaluate
+  and decide on the next steps. If this is a =Left= type checking
+  has failed, if it's a =Right= then type checking will continue
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Types <<ErasedAnn/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+***** Erasure <<Core/Erasure>>
+- _Relies on_
+  + [[Algorithm]]
+  + [[Erasure/Types]]
+****** Algorithm
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Erasure/Types]]
+  + [[Erasure/Types]]
+  + [[IR]]
+  + [[Typechecker/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Types <<Erasure/Types>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Erased/Types]]
+  + [[Erased/Types/Base]]
+  + [[Typechecker]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+***** HR
+- _Relies on_
+  + [[HR/Parser]]
+  + [[HR/Types]]
+****** Extend <<HR/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
+****** Parser <<HR/Parser>>
+- _Relies on_
+  + [[HR/Types]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Subst
+- Runs a substitution algorithm over core
+- _Relies on_
+  + [[Common/NameSymbol]]
+  + [[HR/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[HashMap]]
+****** Types <<HR/Types>>
+- _Relies on_
+  + [[HR/Extend]]
+  + [[IR/Types/Base]]
+***** HRAnn
+- _Relies on_
+  + [[HRAnn/Erasure]]
+  + [[HRAnn/Types]]
+****** Erasure <<HRAnn/Erasure>>
+- _Relies on_
+  + [[HR/Types]]
+  + [[HRAnn/Types]]
+  + [[TransformExt]]
+  + [[Library]]
+****** Extend <<HRAnn/Extend>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Types <<HRAnn/Types>>
+- _Relies on_
+  + [[HRAnn/Extend]]
+  + [[IR/Types/Base]]
+***** IR
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[Typechecker]]
+  + [[Typechecker]]
+  + [[IR/Types]]
+  + [[Library]]
+****** Evaluator <<IR/Evaluator>>
+This includes the evaluators (evalTerm and evalElim),
+the value application function (vapp) and
+the substitution functions (substTerm and substElim).
+- _Relies on_
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Parameterisation]]
+  + [[Library]]
+****** TransformExt
+Transformations between different extensions.
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+****** Typechecker
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[Env]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Parameterisation]]
+  + [[Core/Usage]]
+  + [[Library]]
+******* Env
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Parameterisation]]
+  + [[Core/Usage]]
+  + [[Library]]
+******* Types <<Typechecker/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Parameterisation]]
+  + [[Core/Usage]]
+  + [[Library]]
+****** Types <<IR/Types>>
+Quantitative type implementation inspired by
+  Atkey 2018 and McBride 2016.
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
+******* Base <<IR/Types/Base>>
+- _Relies on_
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[HashMap]]
+***** IRAnn
+- _Relies on_
+  + [[IRAnn/Erasure]]
+  + [[IRAnn/Types]]
+****** Erasure <<IRAnn/Erasure>>
+- _Relies on_
+  + [[TransformExt]]
+  + [[IR/Types]]
+  + [[IRAnn/Types]]
+****** Types <<IRAnn/Types>>
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Core/Usage]]
+  + [[Library]]
+***** Parameterisations
+****** All
+- _Relies on_
+  + [[Parameterisation]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Library]]
+****** Naturals
+- _Relies on_
+  + [[Parameterisation]]
+  + [[Library]]
+****** Unit
+- _Relies on_
+  + [[Parameterisation]]
+  + [[Library]]
+** test
+*** Spec <<Core/test/Spec>>
+* Frontend
+** Setup <<Frontend/Setup>>
+** src
+*** Juvix
+**** Frontend
+- _Relies on_
+  + [[Library/NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
+***** Lexer
+- _Relies on_
+  + [[Library]]
+***** Parser <<Frontend/Parser>>
+- The front end parser for the Juvix Programming language
+- Parsers with S at the end, eat the spaces at the end of the parse
+- Parsers with SN at the end, eats the spaces and new lines at the
+  end of the parse
+- _Relies on_
+  + [[Lexer]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+***** Types <<Frontend/Types>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Library]]
+****** Base <<Frontend/Types/Base>>
+- This file defines the main ADT for the Juvix front end language.
+- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- Later a trees that grow version of this will be implemented, so
+  infix functions can better transition across syntax
+- Note :: The names for the types in =ArrowData= are stored in the
+          =ArrowGen= and not in =NamedType=
+- _Relies on_
+  + [[Library/Usage]]
+  + [[Library]]
+****** Extend <<Types/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+** test
+*** Spec <<Frontend/test/Spec>>
+* StandardLibrary
+** Setup <<StandardLibrary/Setup>>
+** src
+*** Juvix
+**** Library
+- The standard Library for the project
+  + Thus all code will depend on this module without stating otherwise
+- Is mostly =Protolude= except with a few changes
+  + _Additions_
+    * ∨   :: Serves as an or function
+    * ∧   :: Serves as an and function
+    * |<< :: Serves as a map function
+    * >>| :: Serves as the flip map function
+  + _Changes_
+    * The Capability library is imported and replaces the standard =MTL=
+      constructs in =Protolude=
+- _Relies on_
+  + [[PrettyPrint]]
+***** HashMap
+- The HashMap for the codebase.
+- Basically just imports Data.HashMap.Strict
+  + While giving the operation =!?=.
+- Every hash in the code base should use this, except when it needs
+  to compare keys by the =Ordering= metric instead.
+***** NameSymbol <<Library/NameSymbol>>
+- _Relies on_
+  + [[Library]]
+***** PrettyPrint
+***** Usage <<Library/Usage>>
+- _Relies on_
+  + [[Library]]
+** test
+*** Spec <<StandardLibrary/test/Spec>>

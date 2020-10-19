@@ -1,4 +1,4 @@
-name:                Frontend
+name:                frontend
 version:             0.1.0.0
 github:              "githubuser/Frontend"
 license:             BSD3
@@ -27,7 +27,7 @@ default-extensions:
 
 dependencies:
 - base >= 4.7 && < 5
-- StandardLibrary
+- standard-library
 - capability >= 0.2.0.0
 - extensible-data
 - lens
@@ -55,4 +55,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - Frontend
+    - frontend

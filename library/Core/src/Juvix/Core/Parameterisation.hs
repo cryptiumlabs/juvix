@@ -1,6 +1,6 @@
 module Juvix.Core.Parameterisation where
 
-import Juvix.Frontend.Types.Base (NameSymb)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import Text.ParserCombinators.Parsec
@@ -11,7 +11,7 @@ import Prelude (String)
 -- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
 type PrimType primTy = NonEmpty primTy
 
-type Builtins p = HashMap NameSymb p
+type Builtins p = HashMap NameSymbol.T p
 
 data Parameterisation primTy primVal
   = Parameterisation

@@ -1,4 +1,4 @@
-name:                StandardLibrary
+name:                standard-library
 version:             0.1.0.0
 github:              "githubuser/StandardLibrary"
 license:             BSD3
@@ -44,4 +44,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - StandardLibrary
+    - standard-library
