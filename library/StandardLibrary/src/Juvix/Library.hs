@@ -1,7 +1,8 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 -- |
 -- - The standard Library for the project
 --   + Thus all code will depend on this module without stating otherwise
@@ -48,7 +49,7 @@ module Juvix.Library
     dup,
     StateField,
     ReaderField,
-    WriterField
+    WriterField,
   )
 where
 
@@ -85,8 +86,8 @@ import Protolude hiding
     pass,
     put,
     reader,
+    specialFun,
     state,
-    specialFun
   )
 import Prelude (Show (..), String)
 

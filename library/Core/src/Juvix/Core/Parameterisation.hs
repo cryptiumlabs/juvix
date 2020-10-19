@@ -1,8 +1,8 @@
 module Juvix.Core.Parameterisation where
 
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)

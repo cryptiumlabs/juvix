@@ -5,9 +5,9 @@
 **** Core
 ***** Parameterisation
 - _Relies on_
-  + [[Library/NameSymbol]]
   + [[Library]]
   + [[HashMap]]
+  + [[Library/NameSymbol]]
 ***** Translate
 - _Relies on_
   + [[HR]]
@@ -334,10 +334,10 @@ Quantitative type implementation inspired by
 *** Juvix
 **** Frontend
 - _Relies on_
-  + [[Library/NameSymbol]]
   + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Library]]
+  + [[Library/NameSymbol]]
 ***** Lexer
 - _Relies on_
   + [[Library]]
@@ -370,8 +370,8 @@ Quantitative type implementation inspired by
 - Note :: The names for the types in =ArrowData= are stored in the
           =ArrowGen= and not in =NamedType=
 - _Relies on_
-  + [[Library/Usage]]
   + [[Library]]
+  + [[Library/Usage]]
 ****** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]

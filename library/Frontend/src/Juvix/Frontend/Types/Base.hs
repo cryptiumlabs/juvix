@@ -1,6 +1,6 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
@@ -15,8 +15,8 @@ module Juvix.Frontend.Types.Base where
 import Control.Lens
 import qualified Data.Data as D
 import Extensible
-import qualified Juvix.Library.Usage as Usage
 import Juvix.Library hiding (Product, Sum, Type)
+import qualified Juvix.Library.Usage as Usage
 
 type ConstructorName = NameSymb
 
