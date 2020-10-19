@@ -410,3 +410,495 @@ Quantitative type implementation inspired by
   + [[Library]]
 ** test
 *** Spec <<StandardLibrary/test/Spec>>
+* Translate
+** Setup <<Translate/Setup>>
+** src
+*** Juvix
+**** FrontendContextualise
+- order of Passes
+  1. =ModuleOpen=
+  2. =InfixPrecedence=
+- _Relies on_
+  + [[Context]]
+  + [[Common/NameSymbol]]
+  + [[Contextify/Transform]]
+  + [[Contextify/Types]]
+  + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Environment]]
+  + [[InfixPrecedence/Transform]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Transform]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+***** Environment <<FrontendContextualise/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[Common/NameSymbol]]
+  + [[Library]]
+***** Contextify
+****** Transform <<Contextify/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[Common/NameSymbol]]
+  + [[Contextify/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+****** Types <<Contextify/Types>>
+- _Relies on_
+  + [[Context]]
+  + [[Common/NameSymbol]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+***** InfixPrecedence
+****** Environment <<InfixPrecedence/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[FrontendContextualise/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+****** Extend <<InfixPrecedence/Extend>>
+- This pass removes the =Infix= form
+  + Belongs to Table
+    | Changed | Is a Sum Type of |
+    |---------+------------------|
+    | Infix   | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Infix
+      = Inf
+        { infixLeft  :: Expression
+        , infixOp    :: NameSymb
+        , infixRight :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[ModuleOpen/Extend]]
+  + [[ModuleOpen/Extend]]
+  + [[Library]]
+****** FreeVars
+- FreeVars is an algorithm that checks for free symbols in the AST.
+- The =ExcludedSet= holds the symbols defined... These are needed
+  in case of a degenerate case like
+  #+BEGIN_SRC ocaml
+    let foo =
+      let type point = {x : int, y : int} in
+      let our-point  = {x = 3, y = 4} in
+      our-point.x + our-point.y
+  #+END_SRC
+  + here we need to dismiss =our-point.x= and =our-point.y=, just
+    filtering out =our-point= isn't enough! we have to check if the
+    first-part of the name has =our-point=, since everything shares
+    the same namespace
+- TODO :: How do we handle this case?
+  #+BEGIN_SRC ocaml
+    mod Foo where
+    let foo (x :: xs) = x + TopLevel.Foo.foo xs
+    let foo []        = 0
+  #+END_SRC
+  + To Handle this, we need to unqualify the foo, and have the
+    module handle the symbol allocation
+- NOTE :: we assume in =nameifyAdt= which takes effect in the =\\=
+  call to =nameifyLetType=, that definitions of constructors before
+  this point can't be redefined
+  + This means that if we have ordered definitions, we'll silently
+    drop the calls to the old constructors.
+  + Thus, please redefine the logic there to support such modes
+- _Reasons to update_
+  1. let's not being recursive
+     - we assume lets are recursive, if this changes the code
+       has to be updated to account for that'
+  2. Language becomes ordered
+     - see first note above
+  3. Universe or Declaration talk about free variables
+     - currently universe is unfinished, and are not
+       first class
+|
+- FreeVars is an algorithm that checks for free symbols in the AST.
+- The =ExcludedSet= holds the symbols defined... These are needed
+  in case of a degenerate case like
+  #+BEGIN_SRC ocaml
+    let foo =
+      let type point = {x : int, y : int} in
+      let our-point  = {x = 3, y = 4} in
+      our-point.x + our-point.y
+  #+END_SRC
+  + here we need to dismiss =our-point.x= and =our-point.y=, just
+- _Relies on_
+  + [[Common/NameSymbol]]
+  + [[InfixPrecedence/Types]]
+  + [[Library]]
+****** ShuntYard
+- This implements the Shunt Yard algorithm for determining the
+  precedence of operations
+- _Relies on_
+  + [[Library]]
+****** Transform <<InfixPrecedence/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[Common/NameSymbol]]
+  + [[InfixPrecedence/Environment]]
+  + [[ShuntYard]]
+  + [[InfixPrecedence/Types]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+****** Types <<InfixPrecedence/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[InfixPrecedence/Extend]]
+  + [[Library]]
+***** ModuleOpen
+****** Environment <<ModuleOpen/Environment>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[Common/NameSymbol]]
+  + [[FrontendContextualise/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[HashMap]]
+****** Extend <<ModuleOpen/Extend>>
+- This pass removes the =Infix= form
+  + Belongs to Table
+    | Changed        | Is a Sum Type of |
+    |----------------+------------------|
+    | ModuleOpen     | TopLevel         |
+    | ModuleOpenExpr | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data ModuleOpen
+      = Open ModuleName
+      deriving (Show, Generic, NFData)
+    data ModuleOpenExpr
+      = OpenExpress
+        { moduleOpenExprModuleN :: ModuleName
+        , moduleOpenExprExpr    :: Expression }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- This pass with thus try to qualify all names as we go, turning
+#+begin_src ocaml
+  let foo =
+    open Core in
+    List.map f xs
+  (* ====> *)
+  let foo =
+    Core.List.Map f xs
+#+end_src
+- for modules we can infer.
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+****** Transform <<ModuleOpen/Transform>>
+- _Relies on_
+  + [[Context]]
+  + [[NameSpace]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+****** Types <<ModuleOpen/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[ModuleOpen/Extend]]
+  + [[Library]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[CombineMultiple/Transform]]
+  + [[RemoveCond/Transform]]
+  + [[RemoveDo/Transform]]
+  + [[RemoveDo/Types]]
+  + [[RemoveGuard/Transform]]
+  + [[RemoveModules/Transform]]
+  + [[RemovePunned/Transform]]
+  + [[RemoveSignature/Transform]]
+  + [[Library]]
+***** Abstractions
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+***** CombineMultiple
+****** Extend <<CombineMultiple/Extend>>
+- This pass changes =FunctionLike=, =Function=, and =Let=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | Function     | TopLevel         |
+    | Let          | Expression       |
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =Name= from the previous transform
+- _Let changes_
+  + Let now looks like
+    #+begin_src haskell
+      data Let
+        = LetGroup
+          { letName :: Symbol
+          , letBindings :: NonEmpty (FunctionLike Expression)
+          , letBody :: Expression
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * In this pass we add =Name= from the previous Let type
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression))
+    #+end_src
+    * Namely this version adds symbol to the previous pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+****** Transform <<CombineMultiple/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveCond/Types]]
+  + [[Library]]
+****** Types <<CombineMultiple/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+***** RemoveCond
+****** Extend <<RemoveCond/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Cond    | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Cond a
+      = C (NonEmpty (CondLogic a))
+      deriving (Show, Generic, NFData)
+    data CondLogic a
+      = CondExpression
+          { condLogicPred :: Expression
+          , condLogicBody :: a
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+****** Transform <<RemoveCond/Transform>>
+- _Relies on_
+  + [[RemoveCond/Types]]
+  + [[RemoveGuard/Types]]
+  + [[Library]]
+****** Types <<RemoveCond/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveCond/Extend]]
+  + [[Library]]
+***** RemoveDo
+****** Extend <<RemoveDo/Extend>>
+- This pass removes the =Do= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Do      | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Do
+      = Do'' (NonEmpty DoBody)
+      deriving (Show, Generic, NFData)
+    data DoBody
+      = DoBody
+        { doBodyName :: Maybe NameSymb,
+          doBodyExpr :: Expression
+        }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+****** Transform <<RemoveDo/Transform>>
+- _Relies on_
+  + [[RemoveDo/Types]]
+  + [[RemovePunned/Types]]
+  + [[Library]]
+****** Types <<RemoveDo/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveDo/Extend]]
+  + [[Library]]
+***** RemoveGuard
+****** Extend <<RemoveGuard/Extend>>
+- This pass changes =FunctionLike=
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | FunctionLike | Function ∧ Let   |
+- _Function Like changes_
+  + Function Like now looks like
+    #+begin_src haskell
+      data FunctionLike a
+        = Like
+          { functionLikeName :: Symbol
+          , functionLikeArgs :: [Arg]
+          , functionLikeBody :: a
+          }
+        deriving (Show, Generic, NFData)
+    #+end_src
+    * This pass removes the =GuardBody= from the body.
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Abstractions]]
+  + [[RemoveModules/Extend]]
+****** Transform <<RemoveGuard/Transform>>
+- _Relies on_
+  + [[RemoveGuard/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+****** Types <<RemoveGuard/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+***** RemoveModules
+****** Extend <<RemoveModules/Extend>>
+- This pass removes the =Module= and =ModuleE= form
+ + Belongs to Table
+   | Changed | Is a Sum Type of |
+   |---------+------------------|
+   | Module  | TopLevel         |
+   | ModuleE | Expression       |
+- Thus one does not have to ever deal with
+  #+begin_src haskell
+    data Module
+      = Mod (FunctionLike (NonEmpty TopLevel))
+      deriving (Show, Generic, NFData)
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+          , moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Types/Extend]]
+  + [[Library]]
+****** Transform <<RemoveModules/Transform>>
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[RemoveModules/Types]]
+  + [[Library]]
+****** Types <<RemoveModules/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveModules/Extend]]
+  + [[Library]]
+***** RemovePunned
+****** Extend <<RemovePunned/Extend>>
+- This pass removes the =Punned= form
+ + Belongs to Table
+   | Removed | Is a Sum Type of |
+   |---------+------------------|
+   | Punned  | NameSet          |
+- Thus one does not have to ever deal with the =Punned= variant in
+  #+begin_src haskell
+    data NameSet t
+      = Punned NameSymb
+      | NonPunned NameSymb t
+      deriving (Show, Generic, NFData)
+  #+end_src
+  after this pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
+****** Transform <<RemovePunned/Transform>>
+- _Relies on_
+  + [[RemovePunned/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+****** Types <<RemovePunned/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemovePunned/Extend]]
+  + [[Library]]
+***** RemoveSignature
+****** Extend <<RemoveSignature/Extend>>
+- This pass changes =Signature=, and =Function=
+  + Belongs to Table
+    | Changed   | Is a Sum Type of      |
+    |-----------+-----------------------|
+    | Function  | TopLevel              |
+    | Signature | +TopLevel+ ∧ Function |
+- _Signature changes_
+  + We move Signature from TopLevel to Function
+    #+begin_src haskell
+      data Signature
+        = Sig
+            { signatureName :: Symbol
+              -- Was a usage but can't alias for now
+            , signatureUsage :: Maybe Expression
+            , signatureArrowType :: Expression
+            , signatureConstraints :: [Expression]
+            }
+        deriving (Show, Generic, NFData)
+    #+end_src
+- _Function changes_
+  + Function now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+    #+end_src
+    * Namely this version adds a signature to upon the previous pass
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[CombineMultiple/Extend]]
+  + [[CombineMultiple/Extend]]
+  + [[Library]]
+****** Transform <<RemoveSignature/Transform>>
+- _Relies on_
+  + [[CombineMultiple/Types]]
+  + [[RemoveSignature/Types]]
+  + [[Library]]
+****** Types <<RemoveSignature/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveSignature/Extend]]
+  + [[Library]]
+** test
+*** Spec <<Translate/test/Spec>>

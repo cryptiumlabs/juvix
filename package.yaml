@@ -24,6 +24,7 @@ dependencies:
   - standard-library
   - frontend
   - core
+  - translate
   ###########################
   # Dependency for OS
   ###########################
@@ -145,43 +146,6 @@ library:
   exposed-modules:
     - Juvix
     - Juvix.Pipeline
-    - Juvix.FrontendDesugar
-    - Juvix.FrontendDesugar.RemoveModules.Types
-    - Juvix.FrontendDesugar.RemoveModules.Extend
-    - Juvix.FrontendDesugar.RemoveModules.Transform
-    - Juvix.FrontendDesugar.RemoveGuard.Transform
-    - Juvix.FrontendDesugar.RemoveGuard.Extend
-    - Juvix.FrontendDesugar.RemoveGuard.Types
-    - Juvix.FrontendDesugar.Abstractions
-    - Juvix.FrontendDesugar.RemoveCond.Types
-    - Juvix.FrontendDesugar.RemoveCond.Transform
-    - Juvix.FrontendDesugar.RemoveCond.Extend
-    - Juvix.FrontendDesugar.CombineMultiple.Types
-    - Juvix.FrontendDesugar.CombineMultiple.Extend
-    - Juvix.FrontendDesugar.CombineMultiple.Transform
-    - Juvix.FrontendDesugar.RemoveSignature.Transform
-    - Juvix.FrontendDesugar.RemoveSignature.Types
-    - Juvix.FrontendDesugar.RemoveSignature.Extend
-    - Juvix.FrontendDesugar.RemovePunned.Types
-    - Juvix.FrontendDesugar.RemovePunned.Extend
-    - Juvix.FrontendDesugar.RemovePunned.Transform
-    - Juvix.FrontendDesugar.RemoveDo.Types
-    - Juvix.FrontendDesugar.RemoveDo.Transform
-    - Juvix.FrontendDesugar.RemoveDo.Extend
-    - Juvix.FrontendContextualise
-    - Juvix.FrontendContextualise.Contextify.Transform
-    - Juvix.FrontendContextualise.Contextify.Types
-    - Juvix.FrontendContextualise.Environment
-    - Juvix.FrontendContextualise.ModuleOpen.Environment
-    - Juvix.FrontendContextualise.ModuleOpen.Extend
-    - Juvix.FrontendContextualise.ModuleOpen.Types
-    - Juvix.FrontendContextualise.ModuleOpen.Transform
-    - Juvix.FrontendContextualise.InfixPrecedence.ShuntYard
-    - Juvix.FrontendContextualise.InfixPrecedence.Extend
-    - Juvix.FrontendContextualise.InfixPrecedence.Transform
-    - Juvix.FrontendContextualise.InfixPrecedence.Environment
-    - Juvix.FrontendContextualise.InfixPrecedence.FreeVars
-    - Juvix.FrontendContextualise.InfixPrecedence.Types
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.FromFrontend
