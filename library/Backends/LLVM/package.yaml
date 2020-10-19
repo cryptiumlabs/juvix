@@ -1,6 +1,6 @@
-name:                michelson
+name:                llvm
 version:             0.1.0.0
-github:              "githubuser/Michelson"
+github:              "githubuser/LLVM"
 license:             BSD3
 author:              "Author name here"
 maintainer:          "example@example.com"
@@ -9,32 +9,29 @@ copyright:           "2020 Author name here"
 extra-source-files:
 - README.org
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/Michelson#readme>
+description:         Please see the README on GitHub at <https://github.com/githubuser/LLVM#readme>
 
 dependencies:
 - base >= 4.7 && < 5
-- core
-- standard-library
+- bytestring
+- Cabal
 - containers
+- unordered-containers
 - text
 ###########################
-# Dependency for Param
+# Libraries
 ###########################
-- parsec
+- standard-library
+- core
+- interaction-net
 ###########################
-# Dependency for Morley
+# Dependency for LLVM
 ###########################
-- morley
-- vinyl
-- singletons
-- fmt
+- llvm-hs
+- llvm-hs-pure
+- llvm-hs-pretty
+- derive-storable
+- derive-storable-plugin
 
 default-extensions:
   - NoImplicitPrelude
@@ -44,28 +41,39 @@ default-extensions:
   - LambdaCase
   - UnicodeSyntax
   - GADTs
-  - DerivingVia
-  - MultiWayIf
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
   - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
   - TypeApplications
-  - ConstraintKinds
   - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
   - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
   - NamedFieldPuns
   - DisambiguateRecordFields
   - TupleSections
-  - DeriveGeneric
-  - DeriveDataTypeable
-  - GeneralizedNewtypeDeriving
-  - ScopedTypeVariables
-  - FlexibleContexts
-  - FlexibleInstances
+  - BlockArguments
 
 library:
   source-dirs: src
 
 tests:
-  Michelson-test:
+  LLVM-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -73,4 +81,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - michelson
+    - llvm

@@ -29,6 +29,8 @@ dependencies:
   - core
   - translate
   - michelson
+  - llvm
+  - interaction-net
   ###########################
   # Dependency for OS
   ###########################
@@ -153,28 +155,12 @@ library:
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.FromFrontend
-    - Juvix.Interpreter
-    - Juvix.Interpreter.InteractionNet
-    - Juvix.Interpreter.InteractionNet.Nets.Default
-    - Juvix.Interpreter.InteractionNet.Nets.Combinators
-    - Juvix.Interpreter.InteractionNet.Backends.Interface
-    - Juvix.Interpreter.InteractionNet.Backends.Env
-    - Juvix.Interpreter.InteractionNet.Backends.Graph
-    - Juvix.Interpreter.InteractionNet.Backends.Maps
-    - Juvix.Interpreter.InteractionNet.Parser
-    - Juvix.Interpreter.InteractionNet.Translation
-    - Juvix.Interpreter.InteractionNet.Type
-    - Juvix.Interpreter.InteractionNet.Shared
-    - Juvix.Interpreter.InteractionNet.Default
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph
     - Juvix.Encoding.Encoding
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
     - Juvix.Encoding.Types
-    - Juvix.INetIR
-    - Juvix.INetIR.Types
-    - Juvix.INetIR.JSON
     - Juvix.Backends
     - Juvix.Backends.ArithmeticCircuit
     - Juvix.Backends.ArithmeticCircuit.ZKP
@@ -187,31 +173,6 @@ library:
     - Juvix.Backends.ArithmeticCircuit.Compilation.Types
     - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
     - Juvix.Backends.ArithmeticCircuit.Compilation.Memory
-    - Juvix.Backends.LLVM
-    - Juvix.Backends.LLVM.JIT
-    - Juvix.Backends.LLVM.JIT.Types
-    - Juvix.Backends.LLVM.JIT.Execution
-    - Juvix.Backends.LLVM.Translation
-    - Juvix.Backends.LLVM.Codegen.Constants
-    - Juvix.Backends.LLVM.Codegen.Sum
-    - Juvix.Backends.LLVM.Codegen.Types
-    - Juvix.Backends.LLVM.Codegen.Shared
-    - Juvix.Backends.LLVM.Codegen.Block
-    - Juvix.Backends.LLVM.Codegen.Graph
-    - Juvix.Backends.LLVM.Codegen.Graph.Debug
-    - Juvix.Backends.LLVM.Codegen.Graph.Operations
-    - Juvix.Backends.LLVM.Codegen.Graph.Definitions
-    - Juvix.Backends.LLVM.Codegen
-    - Juvix.Backends.LLVM.Net.API
-    - Juvix.Backends.LLVM.Net.EAC
-    - Juvix.Backends.LLVM.Net.EAC.Types
-    - Juvix.Backends.LLVM.Net.EAC.Defs
-    - Juvix.Backends.LLVM.Net.EAC.Debug
-    - Juvix.Backends.LLVM.Net.Environment
-    - Juvix.Backends.LLVM.Net.EAC.MonadEnvironment
-    - Juvix.Backends.LLVM.DSL
-  other-modules:
-    - Juvix.Interpreter.InteractionNet.NodeInterface
 
 executables:
   juvix:

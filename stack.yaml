@@ -10,6 +10,8 @@ extra-deps:
 - ./library/Core
 - ./library/Translate
 - ./library/Backends/Michelson
+- ./library/Backends/LLVM
+- ./library/InteractionNet
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - constraints-0.11
