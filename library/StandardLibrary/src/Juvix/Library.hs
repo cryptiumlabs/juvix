@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- |
 -- - The standard Library for the project
 --   + Thus all code will depend on this module without stating otherwise
@@ -45,6 +49,7 @@ module Juvix.Library
     StateField,
     ReaderField,
     WriterField,
+    specialFun
   )
 where
 
@@ -82,6 +87,7 @@ import Protolude hiding
     put,
     reader,
     state,
+    specialFun
   )
 import Prelude (Show (..), String)
 
@@ -202,3 +208,6 @@ type ReaderField fld m = ReadStatePure (StateField fld m)
 
 -- | Writer version of 'StateField'.
 type WriterField fld m = WriterLog (StateField fld m)
+
+specialFun :: Num a => a -> a
+specialFun = (+ 2)

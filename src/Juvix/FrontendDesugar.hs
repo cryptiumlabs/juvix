@@ -9,7 +9,6 @@
 --   7. =RemoveDo=
 module Juvix.FrontendDesugar where
 
-import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Initial
 import qualified Juvix.FrontendDesugar.CombineMultiple.Transform as Multiple
 import qualified Juvix.FrontendDesugar.RemoveCond.Transform as Cond

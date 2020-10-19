@@ -2,7 +2,7 @@ module Juvix.Frontend where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library

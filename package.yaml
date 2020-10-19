@@ -21,6 +21,8 @@ dependencies:
   - Cabal
   - extensible-data
   - capability >= 0.2.0.0
+  - StandardLibrary
+  - Frontend
   ###########################
   # Dependency for OS
   ###########################
@@ -142,9 +144,6 @@ library:
   exposed-modules:
     - Juvix
     - Juvix.Pipeline
-    - Juvix.Frontend.Types
-    - Juvix.Frontend.Types.Base
-    - Juvix.Frontend.Types.Extend
     - Juvix.FrontendDesugar
     - Juvix.FrontendDesugar.RemoveModules.Types
     - Juvix.FrontendDesugar.RemoveModules.Extend
@@ -182,9 +181,6 @@ library:
     - Juvix.FrontendContextualise.InfixPrecedence.Environment
     - Juvix.FrontendContextualise.InfixPrecedence.FreeVars
     - Juvix.FrontendContextualise.InfixPrecedence.Types
-    - Juvix.Frontend
-    - Juvix.Frontend.Lexer
-    - Juvix.Frontend.Parser
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.Common.Context
@@ -233,9 +229,6 @@ library:
     - Juvix.Interpreter.InteractionNet.Type
     - Juvix.Interpreter.InteractionNet.Shared
     - Juvix.Interpreter.InteractionNet.Default
-    - Juvix.Library
-    - Juvix.Library.HashMap
-    - Juvix.Library.PrettyPrint
     - Juvix.Visualize.Dot
     - Juvix.Visualize.Graph
     - Juvix.Encoding.Encoding

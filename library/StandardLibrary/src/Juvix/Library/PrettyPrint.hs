@@ -1,3 +1,4 @@
+{-# LANGUAGE DefaultSignatures #-}
 module Juvix.Library.PrettyPrint where
 
 import qualified Data.Text as T

@@ -1,0 +1,58 @@
+name:                Frontend
+version:             0.1.0.0
+github:              "githubuser/Frontend"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2020 Author name here"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description:         Juvix Frontend Datastructure
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - RankNTypes
+  - LambdaCase
+  - StandaloneDeriving
+  - ConstraintKinds
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - PatternSynonyms
+  - TypeFamilies
+  - MultiWayIf
+
+dependencies:
+- base >= 4.7 && < 5
+- StandardLibrary
+- capability >= 0.2.0.0
+- extensible-data
+- lens
+- containers
+- text
+- bytestring
+###########################
+# Dependency for Parsers
+###########################
+- parsec
+- attoparsec
+- attoparsec-expr
+- aeson
+- filepath
+
+library:
+  source-dirs: src
+
+tests:
+  Frontend-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Frontend

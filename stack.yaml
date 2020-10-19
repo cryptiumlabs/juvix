@@ -3,7 +3,10 @@ resolver:  lts-15.16
 packages:
 - .
 
+
 extra-deps:
+- ./library/StandardLibrary
+- ./library/Frontend
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - constraints-0.11
