@@ -35,7 +35,6 @@ build-cache:
 	stack build
 	cd library/Backends/ArithmeticCircuit; \
 	stack build
-	stack build
 
 
 build-watch:
