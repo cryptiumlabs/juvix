@@ -1,15 +1,15 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module FrontendContextualise.Contextify where
+module Contextualise.Contextify where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as AST
 import qualified Juvix.FrontendContextualise as Contextualize
 import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

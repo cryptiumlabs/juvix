@@ -1,4 +1,4 @@
-module Frontend.Golden where
+module Golden where
 
 import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
 import qualified Data.ByteString as ByteString (writeFile)
@@ -100,10 +100,10 @@ goldenTest name file =
         )
 
 idString :: T.TestTree
-idString = goldenTest "Id-String" "test/examples/Id-Strings.ju"
+idString = goldenTest "Id-String" "../../test/examples/Id-Strings.ju"
 
 addition :: T.TestTree
-addition = goldenTest "Addition" "test/examples/Addition.ju"
+addition = goldenTest "Addition" "../../test/examples/Addition.ju"
 
 token :: T.TestTree
-token = goldenTest "Token" "test/examples/Token.ju"
+token = goldenTest "Token" "../../test/examples/Token.ju"

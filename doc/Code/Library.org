@@ -4,7 +4,7 @@
 *** src
 **** Juvix
 ***** Backends
-****** ArithmeticCircuit
+****** ArithmeticCircuit <<Backends/ArithmeticCircuit>>
 ******* Groth
 - place holder module until we have our groth
   setup done
@@ -63,13 +63,25 @@ backend
   + [[Core/Parameterisation]]
   + [[Library]]
 *** test
-**** Spec <<ArithmeticCircuit/test/Spec>>
+**** ArithmeticCircuit <<test/ArithmeticCircuit>>
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation]]
+  + [[Compilation/Environment]]
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ZKP]]
+  + [[ErasedAnn]]
+  + [[Core/Usage]]
+  + [[Library]]
+**** Main <<ArithmeticCircuit/test/Main>>
+- _Relies on_
+  + [[Library]]
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
 **** Juvix
 ***** Backends
-****** LLVM
+****** LLVM <<Backends/LLVM>>
 - Serves as the LLVM backend compiler to Juvix.
 - This is an alternative to the interpreter provided.
 ******* DSL
@@ -93,7 +105,7 @@ TODO: Separate out the common logic from the interpreter & this file into a shar
   + [[InteractionNet]]
   + [[Backends/Graph]]
   + [[Interface]]
-  + [[Nets/Default]]
+  + [[InteractionNet/Nets/Default]]
   + [[Library]]
 ******* Codegen
 - _Relies on_
@@ -307,7 +319,30 @@ Serves as a module for various debugging functions
   + [[Codegen]]
   + [[Library]]
 *** test
-**** Spec <<LLVM/test/Spec>>
+**** LLVM <<test/LLVM>>
+- _Relies on_
+  + [[Codegen/Types]]
+  + [[JIT]]
+  + [[MonadEnvironment]]
+  + [[Net/EAC/Types]]
+  + [[Net/Environment]]
+  + [[LLVM/Translation]]
+  + [[Erased]]
+  + [[Unit]]
+  + [[Library]]
+**** LLVM2
+- _Relies on_
+  + [[Codegen]]
+  + [[JIT]]
+  + [[Net/EAC]]
+  + [[MonadEnvironment]]
+  + [[Net/EAC/Types]]
+  + [[Net/Environment]]
+  + [[Library]]
+  + [[HashMap]]
+**** Main <<LLVM/test/Main>>
+- _Relies on_
+  + [[Library]]
 ** Michelson
 *** Setup <<Michelson/Setup>>
 *** app
@@ -315,7 +350,7 @@ Serves as a module for various debugging functions
 *** src
 **** Juvix
 ***** Backends
-****** Michelson
+****** Michelson <<Backends/Michelson>>
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
@@ -446,7 +481,21 @@ This module provides a default contract environment
   + [[Core/Usage]]
   + [[Library]]
 *** test
-**** Spec <<Michelson/test/Spec>>
+**** Main <<Michelson/test/Main>>
+- _Relies on_
+  + [[Library]]
+**** Michelson <<test/Michelson>>
+- _Relies on_
+  + [[Michelson/Compilation]]
+  + [[Michelson/Compilation/Types]]
+  + [[DSL/Environment]]
+  + [[Instructions]]
+  + [[Interpret]]
+  + [[Untyped]]
+  + [[Optimisation]]
+  + [[ErasedAnn]]
+  + [[Core/Usage]]
+  + [[Library]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
@@ -810,7 +859,7 @@ Quantitative type implementation inspired by
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
-*** Parser <<test/Parser>>
+*** Parser <<Core/test/Parser>>
 - _Relies on_
   + [[HR]]
   + [[Naturals]]
@@ -892,7 +941,16 @@ Tests that weak works as expected
 - _Relies on_
   + [[Frontend/Types/Base]]
 ** test
-*** Spec <<Frontend/test/Spec>>
+*** Main <<Frontend/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Parser <<Frontend/test/Parser>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/NameSymbol]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
 ** src
@@ -954,7 +1012,7 @@ Can be added to via core translation
 - _Relies on_
   + [[Core/Types]]
   + [[Interface]]
-  + [[Nets/Default]]
+  + [[InteractionNet/Nets/Default]]
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
   + [[Type]]
@@ -1017,7 +1075,7 @@ Can be added to via core translation
   + [[NodeInterface]]
   + [[Library]]
 ****** Nets
-******* Combinators
+******* Combinators <<InteractionNet/Nets/Combinators>>
 - An evaluation for a simple combination calculus language, only has
   three ports
   1. Con
@@ -1028,7 +1086,7 @@ Can be added to via core translation
   + [[Interface]]
   + [[NodeInterface]]
   + [[Library]]
-******* Default <<Nets/Default>>
+******* Default <<InteractionNet/Nets/Default>>
 - An evaluator for the Default Language
 - Serves as a reference way of creating interaction nets
 - _Relies on_
@@ -1038,7 +1096,22 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
 ** test
-*** Spec <<InteractionNet/test/Spec>>
+*** Spec
+*** Nets
+**** Combinators <<test/Nets/Combinators>>
+- _Relies on_
+  + [[Backends/Env]]
+  + [[Backends/Graph]]
+  + [[Interface]]
+  + [[InteractionNet/Nets/Combinators]]
+  + [[Library]]
+**** Default <<test/Nets/Default>>
+- _Relies on_
+  + [[Backends/Env]]
+  + [[Backends/Graph]]
+  + [[Interface]]
+  + [[InteractionNet/Nets/Default]]
+  + [[Library]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
 ** src
@@ -1076,8 +1149,8 @@ Can be added to via core translation
   + [[Library]]
 *** NameSymb
 - _Relies on_
-  + [[Common/NameSymbol]]
   + [[Library]]
+  + [[Library/NameSymbol]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
@@ -1124,7 +1197,7 @@ Can be added to via core translation
 - _Relies on_
   + [[Core/Common/Context]]
   + [[FrontendContextualise/Environment]]
-  + [[ShuntYard]]
+  + [[InfixPrecedence/ShuntYard]]
   + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
   + [[Library]]
@@ -1201,7 +1274,7 @@ Can be added to via core translation
   + [[Common/NameSymbol]]
   + [[InfixPrecedence/Types]]
   + [[Library]]
-****** ShuntYard
+****** ShuntYard <<InfixPrecedence/ShuntYard>>
 - This implements the Shunt Yard algorithm for determining the
   precedence of operations
 - _Relies on_
@@ -1212,7 +1285,7 @@ Can be added to via core translation
   + [[NameSpace]]
   + [[Common/NameSymbol]]
   + [[InfixPrecedence/Environment]]
-  + [[ShuntYard]]
+  + [[InfixPrecedence/ShuntYard]]
   + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
   + [[Library]]
@@ -1569,4 +1642,42 @@ Can be added to via core translation
   + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
-*** Spec <<Translate/test/Spec>>
+*** Desugar
+- _Relies on_
+  + [[Common/NameSymbol]]
+  + [[Frontend/Parser]]
+  + [[FrontendDesugar]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+*** Golden
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Library]]
+*** Main <<Translate/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Contextualise
+**** Contextify
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[FrontendContextualise]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[Library/NameSymbol]]
+**** Infix
+***** ShuntYard <<Infix/ShuntYard>>
+- _Relies on_
+  + [[InfixPrecedence/ShuntYard]]
+  + [[Library]]
+**** Module
+***** Open
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+  + [[HashMap]]

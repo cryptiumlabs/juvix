@@ -1,7 +1,7 @@
 module NameSymb where
 
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Test.Tasty as T
 import qualified Test.Tasty.QuickCheck as T
 

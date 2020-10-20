@@ -1,4 +1,4 @@
-module FrontendContextualise.Infix.ShuntYard where
+module Contextualise.Infix.ShuntYard where
 
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library

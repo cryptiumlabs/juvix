@@ -24,6 +24,9 @@ default-extensions:
   - PatternSynonyms
   - TypeFamilies
   - MultiWayIf
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - NoMonomorphismRestriction
 
 dependencies:
 - base >= 4.7 && < 5
@@ -46,9 +49,19 @@ dependencies:
 library:
   source-dirs: src
 
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
 tests:
   Frontend-test:
-    main:                Spec.hs
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -56,3 +69,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - frontend
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

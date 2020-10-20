@@ -1,4 +1,4 @@
-module Backends.LLVM where
+module LLVM where
 
 import Juvix.Backends.LLVM.Codegen.Types as Types
 import Juvix.Backends.LLVM.JIT as JIT

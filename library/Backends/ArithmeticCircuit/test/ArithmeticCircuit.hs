@@ -1,4 +1,4 @@
-module Backends.ArithmeticCircuit where
+module ArithmeticCircuit where
 
 import qualified Circuit as Circ
 import Juvix.Backends.ArithmeticCircuit.Compilation as Base

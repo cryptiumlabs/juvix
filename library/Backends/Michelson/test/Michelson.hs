@@ -1,4 +1,4 @@
-module Backends.Michelson where
+module Michelson where
 
 import Juvix.Backends.Michelson.Compilation
 import Juvix.Backends.Michelson.Compilation.Types
@@ -70,8 +70,8 @@ shouldCompileTo term instrs =
 -- Test Groups
 --------------------------------------------------------------------------------
 
-backendMichelson :: T.TestTree
-backendMichelson =
+top :: T.TestTree
+top =
   T.testGroup
     "Backend Michelson"
     [ constAppTest,

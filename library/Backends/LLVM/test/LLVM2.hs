@@ -1,4 +1,4 @@
-module Backends.LLVM2 where
+module LLVM2 where
 
 import Juvix.Backends.LLVM.Codegen as Codegen
 import Juvix.Backends.LLVM.JIT as JIT

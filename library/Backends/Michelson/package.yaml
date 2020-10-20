@@ -61,12 +61,22 @@ default-extensions:
   - FlexibleContexts
   - FlexibleInstances
 
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
 library:
   source-dirs: src
 
 tests:
   Michelson-test:
-    main:                Spec.hs
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -74,3 +84,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - michelson
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

@@ -1,4 +1,4 @@
-module Frontend.Desugar where
+module Desugar where
 
 import qualified Data.Attoparsec.ByteString as Parsec
 import qualified Juvix.Core.Common.NameSymbol as NameSym

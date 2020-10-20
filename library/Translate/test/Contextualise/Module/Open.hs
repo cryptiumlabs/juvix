@@ -1,6 +1,6 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module FrontendContextualise.Module.Open where
+module Contextualise.Module.Open where
 
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace

@@ -1,4 +1,4 @@
-module Frontend.Parser where
+module Parser where
 
 import Data.Attoparsec.ByteString
   ( IResult (Done, Fail, Partial),
@@ -9,11 +9,11 @@ import Data.Attoparsec.ByteString
     parseOnly,
   )
 import qualified Data.Attoparsec.ByteString.Char8 as Char8
-import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import qualified Juvix.Frontend.Types as AST
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String, error)

@@ -65,6 +65,16 @@ default-extensions:
   - TupleSections
   - BlockArguments
 
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
 library:
   source-dirs: src
 

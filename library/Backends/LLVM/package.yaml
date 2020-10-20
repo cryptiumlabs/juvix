@@ -69,12 +69,22 @@ default-extensions:
   - TupleSections
   - BlockArguments
 
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
 library:
   source-dirs: src
 
 tests:
   LLVM-test:
-    main:                Spec.hs
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
@@ -82,3 +92,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - llvm
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck
