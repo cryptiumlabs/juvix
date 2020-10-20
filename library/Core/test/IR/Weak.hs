@@ -1,5 +1,5 @@
 -- | Tests that weak works as expected
-module Core.IR.Weak where
+module IR.Weak where
 
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types as IR

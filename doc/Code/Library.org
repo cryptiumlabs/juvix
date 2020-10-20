@@ -1,4 +1,69 @@
 * Backends
+** ArithmeticCircuit
+*** Setup <<ArithmeticCircuit/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** ArithmeticCircuit
+******* Groth
+- place holder module until we have our groth
+  setup done
+- _Relies on_
+  + [[Library]]
+******* ZKP
+- _Relies on_
+  + [[ArithmeticCircuit/Compilation]]
+  + [[Groth]]
+  + [[Library]]
+******* Compilation <<ArithmeticCircuit/Compilation>>
+- _Relies on_
+  + [[Compilation/Environment]]
+  + [[Memory]]
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Core/Usage]]
+  + [[Library]]
+******** Environment <<Compilation/Environment>>
+- _Relies on_
+  + [[Memory]]
+  + [[ArithmeticCircuit/Compilation/Types]]
+  + [[Library]]
+******** Memory
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+******** Types <<ArithmeticCircuit/Compilation/Types>>
+Provides the various types needed for the arithmetic circuit
+backend
+- Expression covers the gambit of arithmetic circuit expressions
+- _Relies on_
+  + [[ArithmeticCircuit/Parameterisation]]
+  + [[ErasedAnn]]
+  + [[Library]]
+******* Parameterisation <<ArithmeticCircuit/Parameterisation>>
+- _Relies on_
+  + [[Booleans]]
+  + [[FieldElements]]
+  + [[Integers]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******** Booleans
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******** FieldElements
+- _Relies on_
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******** Integers
+- _Relies on_
+  + [[FieldElements]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+*** test
+**** Spec <<ArithmeticCircuit/test/Spec>>
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
@@ -246,13 +311,13 @@ Serves as a module for various debugging functions
 ** Michelson
 *** Setup <<Michelson/Setup>>
 *** app
-**** Main
+**** Main <<app/Main>>
 *** src
 **** Juvix
 ***** Backends
 ****** Michelson
 - _Relies on_
-  + [[Compilation]]
+  + [[Michelson/Compilation]]
   + [[Michelson/Parameterisation]]
 ******* Contract <<Michelson/Contract>>
 This module provides a default contract environment
@@ -272,13 +337,13 @@ This module provides a default contract environment
     then choose the one with the fewest instructions (or based on
     some other gas-estimation preference function).
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[Compilation]]
-  + [[Compilation/Types]]
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation]]
+  + [[Michelson/Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Michelson/Contract]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -290,10 +355,10 @@ This module provides a default contract environment
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
-******* Compilation
+******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -302,7 +367,7 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[Core/Usage]]
   + [[Library]]
-******** Types <<Compilation/Types>>
+******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[ErasedAnn/Types]]
@@ -322,7 +387,7 @@ This module provides a default contract environment
     future, or vice versa!
 - Import with qualified and the name of =VStack=
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Instructions]]
   + [[Core/Usage]]
   + [[Library]]
@@ -333,7 +398,7 @@ This module provides a default contract environment
   + [[Library]]
 ******** Environment <<DSL/Environment>>
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[Core/Usage]]
   + [[Library]]
@@ -341,7 +406,7 @@ This module provides a default contract environment
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[Untyped]]
   + [[Library]]
 ******** InstructionsEff
@@ -355,7 +420,7 @@ This module provides a default contract environment
   the top two items in the stack and then returns back either if
   they were constants or not and dispatches logic based on that
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -367,7 +432,7 @@ This module provides a default contract environment
   + [[Library]]
 ******** Interpret
 - _Relies on_
-  + [[Compilation/Types]]
+  + [[Michelson/Compilation/Types]]
   + [[DSL/Contract]]
   + [[Library]]
 ******** Untyped
@@ -404,7 +469,7 @@ This module provides a default contract environment
   + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
-  + [[Typechecker]]
+  + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -422,7 +487,7 @@ This module provides a default contract environment
 ****** NameSymbol <<Common/NameSymbol>>
 - _Relies on_
   + [[Library]]
-****** Context
+****** Context <<Core/Common/Context>>
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
 - This is parameterized per phase which may store the type and
@@ -570,7 +635,7 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[Typechecker]]
+  + [[IR/Typechecker]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types]]
@@ -624,8 +689,8 @@ This module provides a default contract environment
 ***** IR
 - _Relies on_
   + [[IR/Evaluator]]
-  + [[Typechecker]]
-  + [[Typechecker]]
+  + [[IR/Typechecker]]
+  + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
 ****** Evaluator <<IR/Evaluator>>
@@ -644,7 +709,7 @@ Transformations between different extensions.
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
-****** Typechecker
+****** Typechecker <<IR/Typechecker>>
 - _Relies on_
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
@@ -711,7 +776,74 @@ Quantitative type implementation inspired by
   + [[Core/Parameterisation]]
   + [[Library]]
 ** test
-*** Spec <<Core/test/Spec>>
+*** Conv
+- _Relies on_
+  + [[HR]]
+  + [[IR]]
+  + [[Translate]]
+  + [[Library]]
+*** EAC <<test/EAC>>
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Unit]]
+  + [[Library]]
+*** EAC2
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Check]]
+  + [[Erased/Types]]
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[HashMap]]
+*** Erasure <<test/Erasure>>
+- _Relies on_
+  + [[Erased]]
+  + [[Core/Erasure]]
+  + [[IR]]
+  + [[IR/Typechecker]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+*** Main <<Core/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Parser <<test/Parser>>
+- _Relies on_
+  + [[HR]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+*** Typechecker <<test/Typechecker>>
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[IR]]
+  + [[IR/Typechecker]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Core/Usage]]
+  + [[Library]]
+  + [[HashMap]]
+*** Common
+**** Context <<test/Common/Context>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+*** IR
+**** Weak
+Tests that weak works as expected
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types]]
+  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -939,7 +1071,13 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
 ** test
-*** Spec <<StandardLibrary/test/Spec>>
+*** Main <<StandardLibrary/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** NameSymb
+- _Relies on_
+  + [[Common/NameSymbol]]
+  + [[Library]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
@@ -949,7 +1087,7 @@ Can be added to via core translation
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[Common/NameSymbol]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
@@ -962,14 +1100,14 @@ Can be added to via core translation
   + [[Library]]
 ***** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/NameSymbol]]
   + [[Library]]
 ***** Contextify
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/NameSymbol]]
   + [[Contextify/Types]]
@@ -977,14 +1115,14 @@ Can be added to via core translation
   + [[Library]]
 ****** Types <<Contextify/Types>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[Common/NameSymbol]]
   + [[RemoveDo/Types]]
   + [[Library]]
 ***** InfixPrecedence
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[FrontendContextualise/Environment]]
   + [[ShuntYard]]
   + [[InfixPrecedence/Types]]
@@ -1070,7 +1208,7 @@ Can be added to via core translation
   + [[Library]]
 ****** Transform <<InfixPrecedence/Transform>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/NameSymbol]]
   + [[InfixPrecedence/Environment]]
@@ -1086,7 +1224,7 @@ Can be added to via core translation
 ***** ModuleOpen
 ****** Environment <<ModuleOpen/Environment>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/NameSymbol]]
   + [[FrontendContextualise/Environment]]
@@ -1129,7 +1267,7 @@ Can be added to via core translation
   + [[Library]]
 ****** Transform <<ModuleOpen/Transform>>
 - _Relies on_
-  + [[Context]]
+  + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]

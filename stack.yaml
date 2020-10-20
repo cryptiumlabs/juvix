@@ -10,6 +10,7 @@ extra-deps:
 - ./library/Core
 - ./library/Translate
 - ./library/Backends/Michelson
+- ./library/Backends/ArithmeticCircuit
 - ./library/Backends/LLVM
 - ./library/InteractionNet
 - llvm-hs-9.0.1
@@ -25,7 +26,7 @@ extra-deps:
 - llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
 - mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
 - restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
-- s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
+
 - semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
 - tree-view-0.5@sha256:85fbc67b53c1ef47f020a69051e6a29b27481698fe802cd2ed8ab0108aa69a38,1231
 - witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476

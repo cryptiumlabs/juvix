@@ -1,4 +1,4 @@
-module Core.Parser where
+module Parser where
 
 import Juvix.Core.HR
 import qualified Juvix.Core.Parameterisations.Naturals as Nat

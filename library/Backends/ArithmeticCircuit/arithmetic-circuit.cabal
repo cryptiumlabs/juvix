@@ -1,0 +1,85 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 6aa3fc427f26394b9539a29746a06458f82593984121a31be93e7b7f9178e093
+
+name:           arithmetic-circuit
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/ArithmeticCircuit#readme>
+homepage:       https://github.com/githubuser/ArithmeticCircuit#readme
+bug-reports:    https://github.com/githubuser/ArithmeticCircuit/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.org
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/ArithmeticCircuit
+
+library
+  exposed-modules:
+      Juvix.Backends.ArithmeticCircuit
+      Juvix.Backends.ArithmeticCircuit.Compilation
+      Juvix.Backends.ArithmeticCircuit.Compilation.Environment
+      Juvix.Backends.ArithmeticCircuit.Compilation.Memory
+      Juvix.Backends.ArithmeticCircuit.Compilation.Types
+      Juvix.Backends.ArithmeticCircuit.Groth
+      Juvix.Backends.ArithmeticCircuit.Parameterisation
+      Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
+      Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
+      Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers
+      Juvix.Backends.ArithmeticCircuit.ZKP
+  other-modules:
+      Paths_arithmetic_circuit
+  hs-source-dirs:
+      src
+  default-extensions: NoImplicitPrelude OverloadedStrings NoMonomorphismRestriction RankNTypes LambdaCase GADTs ScopedTypeVariables DeriveDataTypeable DeriveGeneric DerivingStrategies FlexibleContexts FlexibleInstances DataKinds GeneralizedNewtypeDeriving DefaultSignatures QuasiQuotes TypeOperators MultiParamTypeClasses MultiWayIf TypeInType DerivingVia TypeApplications StandaloneDeriving FunctionalDependencies PatternSynonyms TypeFamilies ConstraintKinds EmptyDataDeriving NamedFieldPuns DisambiguateRecordFields TupleSections
+  build-depends:
+      MonadRandom
+    , arithmetic-circuits
+    , base >=4.7 && <5
+    , bulletproofs
+    , containers
+    , core
+    , crypto-numbers
+    , elliptic-curve
+    , galois-field
+    , pairing
+    , parsec
+    , standard-library
+    , text
+  default-language: Haskell2010
+
+test-suite ArithmeticCircuit-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_arithmetic_circuit
+  hs-source-dirs:
+      test
+  default-extensions: NoImplicitPrelude OverloadedStrings NoMonomorphismRestriction RankNTypes LambdaCase GADTs ScopedTypeVariables DeriveDataTypeable DeriveGeneric DerivingStrategies FlexibleContexts FlexibleInstances DataKinds GeneralizedNewtypeDeriving DefaultSignatures QuasiQuotes TypeOperators MultiParamTypeClasses MultiWayIf TypeInType DerivingVia TypeApplications StandaloneDeriving FunctionalDependencies PatternSynonyms TypeFamilies ConstraintKinds EmptyDataDeriving NamedFieldPuns DisambiguateRecordFields TupleSections
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      MonadRandom
+    , arithmetic-circuit
+    , arithmetic-circuits
+    , base >=4.7 && <5
+    , bulletproofs
+    , containers
+    , core
+    , crypto-numbers
+    , elliptic-curve
+    , galois-field
+    , pairing
+    , parsec
+    , standard-library
+    , text
+  default-language: Haskell2010

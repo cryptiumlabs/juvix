@@ -1,4 +1,4 @@
-module Core.EAC where
+module EAC where
 
 import Juvix.Core.EAC
 import qualified Juvix.Core.Parameterisations.Unit as Unit

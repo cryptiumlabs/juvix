@@ -1,4 +1,4 @@
-module Core.Common.Context where
+module Common.Context where
 
 import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context

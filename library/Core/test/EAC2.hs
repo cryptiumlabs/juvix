@@ -1,4 +1,4 @@
-module Core.EAC2 where
+module EAC2 where
 
 import qualified Juvix.Core.EAC as EAC
 import Juvix.Core.EAC.Check

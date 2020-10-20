@@ -21,33 +21,23 @@ dependencies:
   - Cabal
   - extensible-data
   - capability >= 0.2.0.0
-  - standard-library
   ###########################
   # Libraries
   ###########################
+  - standard-library
   - frontend
   - core
   - translate
   - michelson
   - llvm
   - interaction-net
+  - arithmetic-circuit
   ###########################
   # Dependency for OS
   ###########################
   - turtle
   - time
   - filepath
-  ###########################
-  # Dependency for Arithmetic
-  ###########################
-  - bulletproofs
-  - elliptic-curve
-  - sonic
-  - arithmetic-circuits
-  - galois-field
-  - crypto-numbers
-  - pairing
-  - MonadRandom
   ###########################
   # Dependency for Structs
   ###########################
@@ -67,12 +57,6 @@ dependencies:
   - attoparsec
   - attoparsec-expr
   - aeson
-  ###########################
-  # Dependency for LLVM
-  ###########################
-  - llvm-hs
-  - llvm-hs-pure
-  - llvm-hs-pretty
   ###########################
   # Dependency for Morley
   ###########################
@@ -162,17 +146,6 @@ library:
     - Juvix.Encoding.Scott
     - Juvix.Encoding.Types
     - Juvix.Backends
-    - Juvix.Backends.ArithmeticCircuit
-    - Juvix.Backends.ArithmeticCircuit.ZKP
-    - Juvix.Backends.ArithmeticCircuit.Groth
-    - Juvix.Backends.ArithmeticCircuit.Parameterisation
-    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Booleans
-    - Juvix.Backends.ArithmeticCircuit.Parameterisation.FieldElements
-    - Juvix.Backends.ArithmeticCircuit.Parameterisation.Integers
-    - Juvix.Backends.ArithmeticCircuit.Compilation
-    - Juvix.Backends.ArithmeticCircuit.Compilation.Types
-    - Juvix.Backends.ArithmeticCircuit.Compilation.Environment
-    - Juvix.Backends.ArithmeticCircuit.Compilation.Memory
 
 executables:
   juvix:

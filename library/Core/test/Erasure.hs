@@ -1,4 +1,4 @@
-module Core.Erasure where
+module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure

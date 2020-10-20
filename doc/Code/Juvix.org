@@ -1,10 +1,4 @@
 * Juvix
-** Pipeline <<Juvix/Pipeline>>
-- _Relies on_
-  + [[Core]]
-  + [[Frontend]]
-  + [[Environment]]
-  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -17,63 +11,11 @@
      - Most likely through LLVM
   4. Various Arithmetic Circuits
      - For use in ZKP's
-*** ArithmeticCircuit
-**** Groth
-- place holder module until we have our groth
-  setup done
+** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
-  + [[Library]]
-**** ZKP
-- _Relies on_
-  + [[Compilation]]
-  + [[Groth]]
-  + [[Library]]
-**** Compilation
-- _Relies on_
+  + [[Core]]
+  + [[Frontend]]
   + [[Environment]]
-  + [[Memory]]
-  + [[Compilation/Types]]
-  + [[Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Usage]]
-  + [[Library]]
-***** Environment
-- _Relies on_
-  + [[Memory]]
-  + [[Compilation/Types]]
-  + [[Library]]
-***** Memory
-- _Relies on_
-  + [[Library]]
-  + [[HashMap]]
-***** Types <<Compilation/Types>>
-Provides the various types needed for the arithmetic circuit
-backend
-- Expression covers the gambit of arithmetic circuit expressions
-- _Relies on_
-  + [[Parameterisation]]
-  + [[ErasedAnn]]
-  + [[Library]]
-**** Parameterisation
-- _Relies on_
-  + [[Booleans]]
-  + [[FieldElements]]
-  + [[Integers]]
-  + [[Parameterisation]]
-  + [[Library]]
-***** Booleans
-- _Relies on_
-  + [[FieldElements]]
-  + [[Parameterisation]]
-  + [[Library]]
-***** FieldElements
-- _Relies on_
-  + [[Parameterisation]]
-  + [[Library]]
-***** Integers
-- _Relies on_
-  + [[FieldElements]]
-  + [[Parameterisation]]
   + [[Library]]
 ** Core
 - _Relies on_
@@ -117,7 +59,7 @@ backend
 - This provides generic functions used by the various encodings in
   this directory
 - _Relies on_
-  + [[Encoding/Types]]
+  + [[Types]]
   + [[Library]]
   + [[HashMap]]
 *** Mendler
@@ -129,7 +71,7 @@ backend
   =Mendler= form
 - _Relies on_
   + [[Encoding]]
-  + [[Encoding/Types]]
+  + [[Types]]
   + [[Library]]
   + [[HashMap]]
 *** Scott
@@ -138,10 +80,10 @@ backend
 - Overall this encoding just works™
 - _Relies on_
   + [[Encoding]]
-  + [[Encoding/Types]]
+  + [[Types]]
   + [[Library]]
   + [[HashMap]]
-*** Types <<Encoding/Types>>
+*** Types
 - _Relies on_
   + [[Library]]
   + [[HashMap]]

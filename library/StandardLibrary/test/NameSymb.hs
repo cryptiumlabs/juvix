@@ -1,4 +1,4 @@
-module Core.Common.NameSymb where
+module NameSymb where
 
 import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.Library
