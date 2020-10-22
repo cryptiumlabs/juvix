@@ -23,12 +23,12 @@ dependencies:
   ###########################
   # Libraries
   ###########################
+  # - llvm
   - standard-library
   - frontend
   - core
   - translate
   - michelson
-  - llvm
   - interaction-net
   - arithmetic-circuit
   ###########################
