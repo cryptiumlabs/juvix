@@ -11,8 +11,8 @@
 # Haskell temporary
 .ghci
 .stack-work/
-juvix.cabal
 *.hie
+*.cabal
 
 # Juvix temporary
 juvix.yaml

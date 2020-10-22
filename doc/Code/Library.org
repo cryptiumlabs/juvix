@@ -346,7 +346,7 @@ Serves as a module for various debugging functions
 ** Michelson
 *** Setup <<Michelson/Setup>>
 *** app
-**** Main <<app/Main>>
+**** Main <<Michelson/app/Main>>
 *** src
 **** Juvix
 ***** Backends
@@ -1114,6 +1114,8 @@ Can be added to via core translation
   + [[Library]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
+** app
+*** Main <<StandardLibrary/app/Main>>
 ** src
 *** Juvix
 **** Library

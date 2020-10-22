@@ -15,7 +15,6 @@ extra-source-files:
 
 dependencies:
   - base >= 4.11 && < 5
-  - protolude
   - directory
   - lens
   - Cabal
@@ -49,21 +48,12 @@ dependencies:
   - fgl
   - fgl-visualize
   - bytestring
-  - enummapset
-  ###########################
-  # Dependency for Parsers
-  ###########################
-  - parsec
-  - attoparsec
-  - attoparsec-expr
-  - aeson
+
   ###########################
   # Dependency for Morley
   ###########################
   - morley
-  - vinyl
-  - singletons
-  - fmt
+
 
 default-extensions:
   - NoImplicitPrelude

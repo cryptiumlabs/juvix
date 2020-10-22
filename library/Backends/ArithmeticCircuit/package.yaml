@@ -6,9 +6,6 @@ author:              "Author name here"
 maintainer:          "example@example.com"
 copyright:           "2020 Author name here"
 
-extra-source-files:
-- README.org
-
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Web

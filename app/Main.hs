@@ -6,7 +6,7 @@ import Development.GitRev
 import qualified Interactive as Interactive
 import Options
 import Options.Applicative
-import Protolude
+import Juvix.Library
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ

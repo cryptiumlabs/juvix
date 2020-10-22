@@ -6,10 +6,6 @@ author:              "Author name here"
 maintainer:          "example@example.com"
 copyright:           "2020 Author name here"
 
-extra-source-files:
-- README.md
-- ChangeLog.md
-
 description:         Juvix Frontend Datastructure
 
 default-extensions:
@@ -57,7 +53,21 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j
   - -static
-  - -fwrite-ide-info
+
+when:
+  condition: flag(incomplete-error)
+  ghc-options:
+    - -Werror=incomplete-patterns
+    - -Werror=missing-fields
+    - -Werror=missing-methods
+
+flags:
+  incomplete-error:
+    description: >
+      Incomplete patterns, missing record fields, and missing class methods are
+      an error
+    manual: true
+    default: false
 
 tests:
   Frontend-test:

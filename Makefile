@@ -18,25 +18,6 @@ build-z3:
 build:
 	stack build --copy-bins --fast -j $(shell nproc)
 
-build-cache:
-	cd library/StandardLibrary; \
-	stack build
-	cd library/Frontend; \
-	stack build
-	cd library/Core; \
-	stack build
-	cd library/InteractionNet; \
-	stack build
-	cd library/Translate; \
-	stack build
-	cd library/Backends/LLVM; \
-	stack build
-	cd library/Backends/Michelson; \
-	stack build
-	cd library/Backends/ArithmeticCircuit; \
-	stack build
-
-
 build-watch:
 	stack build --copy-bins --fast --file-watch
 
@@ -56,6 +37,9 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+
+test-all:
 	cd library/StandardLibrary; \
 	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 	cd library/Frontend; \
@@ -92,4 +76,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format build-cache
+.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format build-cache test-all

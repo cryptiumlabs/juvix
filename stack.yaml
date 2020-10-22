@@ -3,7 +3,6 @@ resolver:  lts-15.16
 packages:
 - .
 
-
 extra-deps:
 - ./library/StandardLibrary
 - ./library/Frontend
@@ -107,8 +106,8 @@ extra-deps:
 
 allow-newer: true
 
-extra-lib-dirs:
-  - .stack-work/prefix/lib
+# extra-lib-dirs:
+#   - .stack-work/prefix/lib
 
-extra-include-dirs:
-  - .stack-work/prefix/include
+# extra-include-dirs:
+#   - .stack-work/prefix/include
