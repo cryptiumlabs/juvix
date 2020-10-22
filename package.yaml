@@ -155,7 +155,6 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-      - -fwrite-ide-info
     dependencies:
       - juvix
       - optparse-applicative

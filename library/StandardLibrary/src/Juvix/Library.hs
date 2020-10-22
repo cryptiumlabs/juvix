@@ -86,7 +86,7 @@ import Protolude hiding
     pass,
     put,
     reader,
-    state
+    state,
   )
 import Prelude (Show (..), String)
 
