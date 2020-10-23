@@ -169,6 +169,7 @@ tests:
       - tasty-hunit
       - tasty-silver
       - tasty-quickcheck
+      - attoparsec
 
 benchmarks:
   juvix-bench:
