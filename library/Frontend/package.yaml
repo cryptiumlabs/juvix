@@ -53,6 +53,7 @@ ghc-options:
   - -fno-warn-missing-pattern-synonym-signatures
   - -j
   - -static
+  - -fwrite-ide-info
 
 when:
   condition: flag(incomplete-error)
