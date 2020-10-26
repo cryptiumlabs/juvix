@@ -615,11 +615,11 @@ primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
 identityAppTerm :: Term
 identityAppTerm =
-  Ann one identityType2
+  Ann one identityType
     $ J.LamM [] ["y"]
     $ Ann one (primTy (Untyped.pair opl Untyped.unit))
     $ J.AppM
-      ( Ann one identityType2
+      ( Ann one identityType
           $ J.LamM [] ["x"]
           $ Ann one (primTy (Untyped.pair opl Untyped.unit))
           $ J.AppM
@@ -636,11 +636,11 @@ identityAppTerm =
 
 identityAppExpr :: Term
 identityAppExpr =
-  Ann one identityType2
+  Ann one identityType
     $ J.LamM [] ["y"]
     $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
     $ J.AppM
-      ( Ann one identityType2
+      ( Ann one identityType
           $ J.LamM [] ["x"]
           $ Ann one (primTy (Untyped.pair unitl Untyped.unit))
           $ J.AppM
@@ -705,7 +705,7 @@ identityAppExpr2 :: Term
 identityAppExpr2 =
   Ann
     one
-    identityType2
+    identityType
     $ J.LamM [] ["x"]
     $ Ann one (primTy (Untyped.pair opl Untyped.unit))
     $ J.AppM
@@ -963,10 +963,6 @@ pairTy = primPairTy
 
 identityType :: Type
 identityType =
-  J.Pi Omega (primTy unitPair) (primTy (Untyped.pair opl unit))
-
-identityType2 :: Type
-identityType2 =
   J.Pi one (primTy unitPair) (primTy (Untyped.pair opl unit))
 
 unitl :: M.Type
