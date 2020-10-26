@@ -313,7 +313,6 @@ nameTop sym usage t =
     hd = car t
     rest = cdr t
 
-
 peek :: T lamType -> Maybe (Elem lamType, T.Type)
 peek (T (s : _xs) _) = Just s
 peek (T [] _) = Nothing

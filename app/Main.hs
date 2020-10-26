@@ -4,9 +4,9 @@ import qualified Compile as Compile
 import qualified Config as Config
 import Development.GitRev
 import qualified Interactive as Interactive
+import Juvix.Library
 import Options
 import Options.Applicative
-import Juvix.Library
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ

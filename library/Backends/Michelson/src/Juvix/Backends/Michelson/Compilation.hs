@@ -55,7 +55,7 @@ compileToMichelsonContract term = do
       modify @"stack"
         ( VStack.cons
             ( VStack.VarE
-               (Set.singleton name)
+                (Set.singleton name)
                 (VStack.Usage argUsage VStack.notSaved)
                 Nothing,
               argTy
