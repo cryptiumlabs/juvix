@@ -615,11 +615,11 @@ primLam (ty :| (t : ts)) = J.Pi one (J.PrimTy (PrimTy ty)) (primLam (t :| ts))
 
 identityAppTerm :: Term
 identityAppTerm =
-  Ann one identityType
+  Ann one identityType2
     $ J.LamM [] ["y"]
     $ Ann one (primTy (Untyped.pair opl Untyped.unit))
     $ J.AppM
-      ( Ann one identityType
+      ( Ann one identityType2
           $ J.LamM [] ["x"]
           $ Ann one (primTy (Untyped.pair opl Untyped.unit))
           $ J.AppM
