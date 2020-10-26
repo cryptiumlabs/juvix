@@ -150,7 +150,7 @@ identityApp2 =
   shouldCompile
     identityAppTerm2
     identityType
-    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;CAR;DIG 0;NIL operation;PAIR;DIP { DROP } } };"
+    "parameter unit;storage unit;code { { DIG 0;CAR;DIG 0;NIL operation;PAIR } };"
 
 unitTest :: T.TestTree
 unitTest =
@@ -161,14 +161,14 @@ identityFn =
   shouldCompile
     identityTerm
     identityType
-    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP { DROP } } };"
+    "parameter unit;storage unit;code { { DIG 0;CAR;NIL operation;PAIR } };"
 
 identityApp :: T.TestTree
 identityApp =
   shouldCompile
     identityAppTerm
     identityType
-    "parameter unit;storage unit;code { { DIG 0;DUP;DUG 1;DIG 0;DUP;DUG 1;CAR;NIL operation;PAIR;DIP 1 { DROP };DIP { DROP } } };"
+    "parameter unit;storage unit;code { { DIG 0;DIG 0;CAR;NIL operation;PAIR } };"
 
 underExactConstTest :: T.TestTree
 underExactConstTest = interpretExpression underExactConst M.ValueUnit
@@ -941,11 +941,10 @@ identityTermAns =
           )
           (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
           [ SeqEx [],
-            SeqEx [PrimEx (DIG 0), PrimEx (DUP ""), PrimEx (DUG 1)],
+            PrimEx (DIG 0),
             PrimEx (CAR "" ""),
             PrimEx (NIL "" "" (M.Type TOperation "")),
-            PrimEx (PAIR "" "" "" ""),
-            PrimEx (DIPN 1 [PrimEx DROP])
+            PrimEx (PAIR "" "" "" "")
           ]
       )
   ]
