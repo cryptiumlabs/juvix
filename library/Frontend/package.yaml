@@ -71,7 +71,7 @@ flags:
     default: false
 
 tests:
-  Frontend-test:
+  frontend-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:

@@ -57,7 +57,7 @@ library:
   source-dirs: src
 
 tests:
-  Translate-test:
+  translate-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:

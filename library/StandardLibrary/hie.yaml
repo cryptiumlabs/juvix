@@ -1,0 +1,6 @@
+cradle:
+  stack:
+    - path: ./src
+      component: "standard-library"
+    - path: ./test
+      component: "standard-library:test:standard-library-test"

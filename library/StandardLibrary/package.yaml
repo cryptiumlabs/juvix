@@ -61,7 +61,7 @@ library:
   source-dirs: src
 
 tests:
-  StandardLibrary-test:
+  standard-library-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:

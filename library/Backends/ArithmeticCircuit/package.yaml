@@ -87,7 +87,7 @@ library:
   source-dirs: src
 
 tests:
-  ArithmeticCircuit-test:
+  arithmetic-circuit-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:

@@ -76,7 +76,7 @@ library:
   source-dirs: src
 
 tests:
-  InteractionNet-test:
+  interaction-net-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:

@@ -72,7 +72,7 @@ library:
   source-dirs: src
 
 tests:
-  Michelson-test:
+  michelson-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:
