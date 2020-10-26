@@ -47,12 +47,10 @@ compileToMichelsonContract ::
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term = do
   let Ann.Ann _ ty _ = term
-      Ann.Pi argUsage _ _ = ty
   michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
-      -- TODO: Figure out what happened to argTy.
-      let Ann.Ann _ _ (Ann.LamM _ [name] body) = term
+      let Ann.Ann _ (Ann.Pi argUsage _ _) (Ann.LamM _ [name] body) = term
       let paramTy' = M.ParameterType paramTy (M.ann "")
       modify @"stack"
         ( VStack.cons
@@ -66,7 +64,7 @@ compileToMichelsonContract term = do
       _ <- DSL.instOuter body
       michelsonOp' <- mconcat |<< get @"ops"
       --
-      let michelsonOp = michelsonOp' <> DSL.dip [DSL.drop]
+      let michelsonOp = michelsonOp'
       --
       let contract = M.Contract paramTy' storageTy [michelsonOp]
       --
