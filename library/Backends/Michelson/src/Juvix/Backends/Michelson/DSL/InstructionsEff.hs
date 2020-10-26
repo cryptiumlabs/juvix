@@ -62,14 +62,14 @@ inst (Types.Ann _usage ty t) =
       consVal v ty
       pure v
     Ann.Prim prim' ->
+      -- Non Instrs will be converted to an Instr via primToFargs
+      -- Constants are not functions and thus need to be
       case prim' of
-        Types.Inst _ -> constructPrim prim' ty
         Types.Constant m -> do
           consVal (Env.Constant m) ty
           pure (Env.Constant m)
-        -- We lose exhasution but it's a big match :(
         x ->
-          constructPrim (newPrimToInstrErr x) ty
+          constructPrim x ty
 
 applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
 applyPrimOnArgs prim arguments =
@@ -307,6 +307,7 @@ applyExpanded ::
 applyExpanded expanded args =
   case expanded of
     Env.Curr c -> do
+      -- we drop the value we've consed onto the top
       modify @"stack" (VStack.drop 1)
       apply c args []
     -- We may get a Michelson lambda if we have one
@@ -620,6 +621,7 @@ apply closure args remainingArgs = do
       -- with fully saturated args this should take it all
       let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
       traverseName (zip toEvalNames args)
+      -- thus with fully saturated args this does nothing
       traverse_
         (modify @"stack" . uncurry VStack.addName)
         (zip remainingArgs (Env.name <$> alreadyEvaledNames))

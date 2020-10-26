@@ -291,20 +291,32 @@ unSave num (T stack i) = T (go num stack) i
     go _ [] = []
 
 addName :: Symbol -> Symbol -> T lamType -> T lamType
-addName toFind toAdd (T stack i) = T (f <$> stack) i
+addName = addNameSet . Set.singleton
+
+addNameSet :: Set Symbol -> Symbol -> T lamType -> T lamType
+addNameSet toFind toAdd (T stack i) = T (f <$> stack) i
   where
     f (VarE x i t, type')
-      | Set.member toFind x = (VarE (Set.insert toAdd x) i t, type')
+      | not $ null $ Set.intersection toFind x = (VarE (Set.insert toAdd x) i t, type')
     f t = t
 
 nameTop :: Symbol -> Usage.T -> T lamType -> T lamType
 nameTop sym usage t =
   case hd of
     (Val i, ty) -> cons (varEName sym (defUsage usage) (Just i), ty) rest
-    (VarE s u mb, ty) -> cons (VarE (Set.insert sym s) u mb, ty) rest
+    (VarE setOfNames _ _, _) ->
+      -- we must propagate the name to the other vars
+      -- there must be some intersection between the vars to be valid
+      -- so this should be enough to update all usages
+      addNameSet setOfNames sym t
   where
     hd = car t
     rest = cdr t
+
+
+peek :: T lamType -> Maybe (Elem lamType, T.Type)
+peek (T (s : _xs) _) = Just s
+peek (T [] _) = Nothing
 
 -- TODO ∷ properly progate changes with new model
 drop :: Int -> T lamType -> T lamType

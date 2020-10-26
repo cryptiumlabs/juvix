@@ -532,7 +532,7 @@ xtwice =
               Ann one (primTy int) (J.Var "x")
             ]
       )
-      [push1Int 2, push1Int 3, push1Int 4]
+      [push1Int 2, pushInt (SNat 2) 3, push1Int 4]
 
 oddApp :: Term
 oddApp =
@@ -1028,8 +1028,24 @@ annIntOne :: Integer -> Term
 annIntOne i =
   Ann one (primTy Untyped.int) (J.Prim (Constant (M.ValueInt i)))
 
+pushInt :: Usage -> Integer -> AnnTerm PrimTy NewPrim
+pushInt usage i = pushUsage usage (M.ValueInt i) Untyped.int
+
 push1Int :: Integer -> AnnTerm PrimTy NewPrim
 push1Int i = push1 (M.ValueInt i) Untyped.int
+
+pushUsage :: Usage -> M.Value' Op -> M.Type -> AnnTerm PrimTy NewPrim
+pushUsage usage const ty =
+  Ann
+    usage
+    (primTy Untyped.unit)
+    $ J.AppM
+      ( Ann one (J.Pi usage (primTy ty) (primTy ty))
+          $ J.Prim
+          $ Instructions.toNewPrimErr
+          $ Instructions.push ty (M.ValueNil) -- the undefined here is never used
+      )
+      [Ann one (primTy ty) (J.Prim (Constant const))]
 
 push1 :: M.Value' Op -> M.Type -> AnnTerm PrimTy NewPrim
 push1 const ty =
