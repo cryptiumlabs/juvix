@@ -47,6 +47,7 @@ compileToMichelsonContract ::
   m (M.Contract' M.ExpandedOp, M.SomeContract)
 compileToMichelsonContract term = do
   let Ann.Ann _ ty _ = term
+      Ann.Pi argUsage _ _ = ty
   michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
     M.Type (M.TLambda argTy@(M.Type (M.TPair _ _ paramTy storageTy) _) _) _ -> do
@@ -56,8 +57,8 @@ compileToMichelsonContract term = do
       modify @"stack"
         ( VStack.cons
             ( VStack.VarE
-                (Set.singleton name)
-                (VStack.Usage Omega VStack.notSaved)
+               (Set.singleton name)
+                (VStack.Usage argUsage VStack.notSaved)
                 Nothing,
               argTy
             )
