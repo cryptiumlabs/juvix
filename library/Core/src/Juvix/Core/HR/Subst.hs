@@ -4,11 +4,11 @@ module Juvix.Core.HR.Subst where
 
 import Control.Lens hiding (op, (|>))
 import qualified Data.HashSet as Set
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.HR.Types as Types
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 -- eventually a lot of this code will be replaced by a proper
 -- inliner strategy, but this code will serve as the basis for

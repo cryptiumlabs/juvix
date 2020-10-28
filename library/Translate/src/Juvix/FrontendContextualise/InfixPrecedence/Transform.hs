@@ -5,12 +5,12 @@ module Juvix.FrontendContextualise.InfixPrecedence.Transform where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Env
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Prelude (error)
 
 -- Pass we care about

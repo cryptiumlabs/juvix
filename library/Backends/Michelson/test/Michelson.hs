@@ -8,8 +8,8 @@ import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpret
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
-import Juvix.Core.Usage
 import Juvix.Library hiding (Type, show)
+import Juvix.Library.Usage
 import Michelson.Untyped as M hiding (Type)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T

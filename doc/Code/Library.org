@@ -22,8 +22,8 @@
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[ArithmeticCircuit/Parameterisation]]
   + [[ErasedAnn]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ******** Environment <<Compilation/Environment>>
 - _Relies on_
   + [[Memory]]
@@ -71,8 +71,8 @@ backend
   + [[ArithmeticCircuit/Parameterisation]]
   + [[ZKP]]
   + [[ErasedAnn]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 **** Main <<ArithmeticCircuit/test/Main>>
 - _Relies on_
   + [[Library]]
@@ -382,23 +382,21 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
-  + [[Common/NameSymbol]]
   + [[Prim]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
-  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
-  + [[Core/Usage]]
   + [[Library]]
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
@@ -422,9 +420,9 @@ This module provides a default contract environment
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[Instructions]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[Usage]]
 ******* DSL
 ******** Contract <<DSL/Contract>>
 - _Relies on_
@@ -433,8 +431,8 @@ This module provides a default contract environment
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ******** Instructions
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
@@ -460,9 +458,9 @@ This module provides a default contract environment
   + [[Untyped]]
   + [[Utils]]
   + [[ErasedAnn/Types]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[Library]]
+  + [[Usage]]
 ******** Interpret
 - _Relies on_
   + [[Michelson/Compilation/Types]]
@@ -476,8 +474,8 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[Untyped]]
   + [[ErasedAnn/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 *** test
 **** Main <<Michelson/test/Main>>
 - _Relies on_
@@ -492,8 +490,8 @@ This module provides a default contract environment
   + [[Untyped]]
   + [[Optimisation]]
   + [[ErasedAnn]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
@@ -503,7 +501,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-  + [[Library/NameSymbol]]
+  + [[NameSymbol]]
 ***** Translate
 - _Relies on_
   + [[HR]]
@@ -520,9 +518,6 @@ This module provides a default contract environment
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
-***** Usage <<Core/Usage>>
-- _Relies on_
-  + [[Library]]
 ***** Utility
 - _Relies on_
   + [[Library]]
@@ -531,9 +526,6 @@ This module provides a default contract environment
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-****** NameSymbol <<Common/NameSymbol>>
-- _Relies on_
-  + [[Library]]
 ****** Context <<Core/Common/Context>>
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -542,11 +534,11 @@ This module provides a default contract environment
 - _Relies on_
   + [[Precedence]]
   + [[NameSpace]]
-  + [[Common/NameSymbol]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Usage]]
 ******* Precedence
 - _Relies on_
   + [[Library]]
@@ -622,14 +614,14 @@ This module provides a default contract environment
   + [[Erased/Types/Base]]
   + [[IR/Types/Base]]
   + [[IR/Types/Base]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
   + [[IR/Types]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[Usage]]
 ***** ErasedAnn
 - _Relies on_
   + [[Conversion]]
@@ -640,8 +632,8 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[Erasure/Types]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Erasure <<ErasedAnn/Erasure>>
 - _Relies on_
   + [[Erased/Types]]
@@ -657,13 +649,13 @@ This module provides a default contract environment
   has failed, if it's a =Right= then type checking will continue
 - _Relies on_
   + [[ErasedAnn/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[IR/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ***** Erasure <<Core/Erasure>>
 - _Relies on_
   + [[Algorithm]]
@@ -675,8 +667,8 @@ This module provides a default contract environment
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Types <<Erasure/Types>>
 - _Relies on_
   + [[Erased/Types]]
@@ -686,8 +678,8 @@ This module provides a default contract environment
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ***** HR
 - _Relies on_
   + [[HR/Parser]]
@@ -700,16 +692,16 @@ This module provides a default contract environment
 - _Relies on_
   + [[HR/Types]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Subst
 - Runs a substitution algorithm over core
 - _Relies on_
-  + [[Common/NameSymbol]]
   + [[HR/Types]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Usage]]
 ****** Types <<HR/Types>>
 - _Relies on_
   + [[HR/Extend]]
@@ -727,8 +719,8 @@ This module provides a default contract environment
 ****** Extend <<HRAnn/Extend>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Types <<HRAnn/Types>>
 - _Relies on_
   + [[HRAnn/Extend]]
@@ -764,8 +756,8 @@ Transformations between different extensions.
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
@@ -773,15 +765,15 @@ Transformations between different extensions.
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ******* Types <<Typechecker/Types>>
 - _Relies on_
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ****** Types <<IR/Types>>
 Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
@@ -790,9 +782,9 @@ Quantitative type implementation inspired by
   + [[Library]]
 ******* Base <<IR/Types/Base>>
 - _Relies on_
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[Usage]]
 ***** IRAnn
 - _Relies on_
   + [[IRAnn/Erasure]]
@@ -805,8 +797,8 @@ Quantitative type implementation inspired by
 ****** Types <<IRAnn/Types>>
 - _Relies on_
   + [[IR/Types/Base]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 ***** Parameterisations
 ****** All
 - _Relies on_
@@ -841,9 +833,9 @@ Quantitative type implementation inspired by
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[Usage]]
 *** Erasure <<test/Erasure>>
 - _Relies on_
   + [[Erased]]
@@ -852,8 +844,8 @@ Quantitative type implementation inspired by
   + [[IR/Typechecker]]
   + [[Unit]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
@@ -863,8 +855,8 @@ Quantitative type implementation inspired by
   + [[Naturals]]
   + [[Unit]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
+  + [[Usage]]
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
@@ -874,9 +866,9 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Naturals]]
   + [[Unit]]
   + [[Core/Types]]
-  + [[Core/Usage]]
   + [[Library]]
   + [[HashMap]]
+  + [[Usage]]
 *** Common
 **** Context <<test/Common/Context>>
 - _Relies on_
@@ -900,7 +892,7 @@ Tests that weak works as expected
   + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Library/NameSymbol]]
+  + [[NameSymbol]]
 ***** Lexer
 - _Relies on_
   + [[Library]]
@@ -934,7 +926,7 @@ Tests that weak works as expected
           =ArrowGen= and not in =NamedType=
 - _Relies on_
   + [[Library]]
-  + [[Library/Usage]]
+  + [[Usage]]
 ****** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
@@ -948,7 +940,7 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Library/NameSymbol]]
+  + [[NameSymbol]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
 ** src
@@ -1134,11 +1126,11 @@ Can be added to via core translation
   + While giving the operation =!?=.
 - Every hash in the code base should use this, except when it needs
   to compare keys by the =Ordering= metric instead.
-***** NameSymbol <<Library/NameSymbol>>
+***** NameSymbol
 - _Relies on_
   + [[Library]]
 ***** PrettyPrint
-***** Usage <<Library/Usage>>
+***** Usage
 - _Relies on_
   + [[Library]]
 ** test
@@ -1148,7 +1140,7 @@ Can be added to via core translation
 *** NameSymb
 - _Relies on_
   + [[Library]]
-  + [[Library/NameSymbol]]
+  + [[NameSymbol]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
@@ -1159,7 +1151,6 @@ Can be added to via core translation
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[Common/NameSymbol]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1169,27 +1160,28 @@ Can be added to via core translation
   + [[ModuleOpen/Transform]]
   + [[RemoveDo/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ***** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Common/NameSymbol]]
   + [[Library]]
+  + [[NameSymbol]]
 ***** Contextify
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Common/NameSymbol]]
   + [[Contextify/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Types <<Contextify/Types>>
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[Common/NameSymbol]]
   + [[RemoveDo/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ***** InfixPrecedence
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -1269,9 +1261,9 @@ Can be added to via core translation
   #+END_SRC
   + here we need to dismiss =our-point.x= and =our-point.y=, just
 - _Relies on_
-  + [[Common/NameSymbol]]
   + [[InfixPrecedence/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** ShuntYard <<InfixPrecedence/ShuntYard>>
 - This implements the Shunt Yard algorithm for determining the
   precedence of operations
@@ -1281,12 +1273,12 @@ Can be added to via core translation
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Common/NameSymbol]]
   + [[InfixPrecedence/Environment]]
   + [[InfixPrecedence/ShuntYard]]
   + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Types <<InfixPrecedence/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
@@ -1297,12 +1289,12 @@ Can be added to via core translation
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Common/NameSymbol]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ****** Extend <<ModuleOpen/Extend>>
 - This pass removes the =Infix= form
   + Belongs to Table
@@ -1642,11 +1634,11 @@ Can be added to via core translation
 ** test
 *** Desugar
 - _Relies on_
-  + [[Common/NameSymbol]]
   + [[Frontend/Parser]]
   + [[FrontendDesugar]]
   + [[RemoveDo/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 *** Golden
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1664,7 +1656,7 @@ Can be added to via core translation
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
-  + [[Library/NameSymbol]]
+  + [[NameSymbol]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_

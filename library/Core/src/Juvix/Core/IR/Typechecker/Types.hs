@@ -5,8 +5,8 @@ module Juvix.Core.IR.Typechecker.Types where
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
 
 data Annotation' ext primTy primVal

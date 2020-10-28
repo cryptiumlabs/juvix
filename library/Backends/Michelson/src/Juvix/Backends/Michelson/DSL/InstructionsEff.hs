@@ -21,9 +21,9 @@ import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
 import qualified Juvix.Core.ErasedAnn.Types as Ann
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as MT
 import qualified Michelson.Untyped.Value as V

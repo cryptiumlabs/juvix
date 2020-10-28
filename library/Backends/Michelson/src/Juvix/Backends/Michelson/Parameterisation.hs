@@ -18,12 +18,12 @@ import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Text as M

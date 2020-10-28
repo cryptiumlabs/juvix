@@ -52,9 +52,9 @@
 module Juvix.FrontendContextualise.InfixPrecedence.FreeVars where
 
 import qualified Data.HashSet as Set
-import qualified Juvix.Core.Common.NameSymbol as NameSymb
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as Type
 import Juvix.Library hiding (Set)
+import qualified Juvix.Library.NameSymbol as NameSymb
 
 (\\) :: (Eq a, Hashable a) => Set.HashSet a -> Set.HashSet a -> Set.HashSet a
 (\\) = Set.difference

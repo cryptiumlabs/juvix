@@ -8,8 +8,8 @@
 module Juvix.Core.ErasedAnn.Prim where
 
 import qualified Juvix.Core.ErasedAnn.Types as Types
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.Usage as Usage
 
 data Return primTy primVal
   = -- arguments left

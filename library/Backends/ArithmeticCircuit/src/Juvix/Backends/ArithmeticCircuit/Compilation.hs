@@ -31,8 +31,8 @@ import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Memory as Memory
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, exp)
+import qualified Juvix.Library.Usage as Usage
 import Numeric.Natural ()
 
 compile ::

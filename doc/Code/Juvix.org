@@ -19,30 +19,29 @@
   + [[Library]]
 ** Core
 - _Relies on_
-  + [[NameSymbol]]
   + [[Erasure]]
   + [[Core/Pipeline]]
   + [[Translate]]
   + [[Types]]
-  + [[Usage]]
   + [[Types]]
   + [[FrontendContextualise]]
   + [[Environment]]
   + [[FrontendDesugar]]
   + [[Library]]
+  + [[NameSymbol]]
 *** FromFrontend
 - _Relies on_
   + [[Context]]
-  + [[NameSymbol]]
   + [[HR]]
   + [[IR]]
   + [[Base]]
   + [[Parameterisation]]
   + [[Translate]]
-  + [[Usage]]
   + [[FrontendContextualise]]
   + [[Types]]
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
@@ -52,8 +51,8 @@
   + [[IR]]
   + [[Translate]]
   + [[Types]]
-  + [[Usage]]
   + [[Library]]
+  + [[Usage]]
 ** Encoding
 *** Encoding
 - This provides generic functions used by the various encodings in

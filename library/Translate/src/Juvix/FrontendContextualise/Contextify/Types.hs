@@ -3,9 +3,9 @@
 module Juvix.FrontendContextualise.Contextify.Types where
 
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type Repr f =
   f (NonEmpty (Repr.FunctionLike Repr.Expression)) Repr.Signature Repr.Type

@@ -5,8 +5,8 @@ module Juvix.Backends.Michelson.DSL.Environment where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
 import Prelude (Show (..))

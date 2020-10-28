@@ -1,11 +1,11 @@
 module Desugar where
 
 import qualified Data.Attoparsec.ByteString as Parsec
-import qualified Juvix.Core.Common.NameSymbol as NameSym
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.FrontendDesugar as Desugar
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as AST
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

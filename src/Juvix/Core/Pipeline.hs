@@ -8,8 +8,8 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.TypeCheck as Michelson
 import qualified Michelson.Untyped as Michelson
 

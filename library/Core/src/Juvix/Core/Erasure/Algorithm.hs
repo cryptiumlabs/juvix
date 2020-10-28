@@ -6,8 +6,8 @@ import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (empty)
+import qualified Juvix.Library.Usage as Usage
 
 type ErasureM primTy primVal m =
   ( HasState "nextName" Int m,

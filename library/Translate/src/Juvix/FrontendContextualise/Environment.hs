@@ -2,8 +2,8 @@ module Juvix.FrontendContextualise.Environment where
 
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 

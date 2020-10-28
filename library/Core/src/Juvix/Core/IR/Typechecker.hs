@@ -13,8 +13,8 @@ import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Datatype)
+import qualified Juvix.Library.Usage as Usage
 
 data Leftovers a
   = Leftovers

@@ -5,8 +5,8 @@ import qualified Juvix.Core.Erased as Erased
 import Juvix.Core.ErasedAnn.Types
 import qualified Juvix.Core.Erasure.Types as E
 import qualified Juvix.Core.Types as Types
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.Usage as Usage
 
 free :: forall primTy primVal. E.Term primTy primVal -> [Symbol]
 free = Erased.free . E.eraseAnn

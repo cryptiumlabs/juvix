@@ -5,9 +5,9 @@
   + [[ErasedAnn]]
   + [[HR]]
   + [[Pipeline]]
-  + [[Usage]]
   + [[Environment]]
   + [[Library]]
+  + [[Usage]]
   + [[Pipeline]]
 * Config
 - _Relies on_

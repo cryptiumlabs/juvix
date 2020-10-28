@@ -17,11 +17,11 @@ where
 import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 import Prelude (error)
 
 --------------------------------------------------------------------------------

@@ -9,12 +9,12 @@ where
 import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type Old f =
   f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type

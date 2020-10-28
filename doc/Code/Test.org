@@ -31,7 +31,7 @@
   + [[IR]]
   + [[Pipeline]]
   + [[Types]]
-  + [[Usage]]
   + [[Library]]
+  + [[Usage]]
 * examples
 ** demo

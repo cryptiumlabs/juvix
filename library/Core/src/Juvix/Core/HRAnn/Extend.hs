@@ -2,8 +2,8 @@ module Juvix.Core.HRAnn.Extend where
 
 import qualified Extensible as Ext
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 
 data T
 

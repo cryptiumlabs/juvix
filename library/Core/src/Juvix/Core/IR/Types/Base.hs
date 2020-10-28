@@ -5,9 +5,9 @@ module Juvix.Core.IR.Types.Base where
 
 import Data.Kind (Constraint)
 import Extensible
-import Juvix.Core.Usage
 import Juvix.Library
 import Juvix.Library.HashMap
+import Juvix.Library.Usage
 
 type Universe = Natural
 

@@ -6,8 +6,8 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Types as Core
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (identity)
+import qualified Juvix.Library.Usage as Usage
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)

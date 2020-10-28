@@ -1,8 +1,8 @@
 module Juvix.Core.ErasedAnn.Types where
 
 import Juvix.Core.IR.Types (Universe)
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.Usage as Usage
 
 data Term primTy primVal
   = Var Symbol

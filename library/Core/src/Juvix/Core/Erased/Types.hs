@@ -14,8 +14,8 @@ import Juvix.Core.IR.Types.Base hiding
     extendTerm,
   )
 import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.Usage (Usage)
 import Juvix.Library hiding (Datatype, Type)
+import Juvix.Library.Usage (Usage)
 
 data T
 

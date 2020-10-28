@@ -7,9 +7,9 @@ import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Core.Types
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (identity)
 import Juvix.Library.HashMap as Map
+import qualified Juvix.Library.Usage as Usage
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 

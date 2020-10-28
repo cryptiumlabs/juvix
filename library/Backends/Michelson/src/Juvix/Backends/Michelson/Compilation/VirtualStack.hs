@@ -19,9 +19,9 @@ module Juvix.Backends.Michelson.Compilation.VirtualStack where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
-import qualified Juvix.Core.Usage as Usage
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped as Untyped
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as T

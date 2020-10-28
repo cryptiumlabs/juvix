@@ -11,7 +11,6 @@ module Juvix.FrontendContextualise
 where
 
 import qualified Juvix.Core.Common.Context as Context
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Infix
@@ -21,6 +20,7 @@ import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Initial
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 data Error
   = ModuleErr Module.Error

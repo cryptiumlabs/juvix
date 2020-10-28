@@ -5,10 +5,10 @@ module Juvix.FrontendContextualise.Contextify.Transform where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.FrontendContextualise.Contextify.Types as Type
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this

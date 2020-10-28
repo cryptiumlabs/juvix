@@ -7,8 +7,8 @@ import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import Juvix.Backends.ArithmeticCircuit.ZKP as Zkp
 import qualified Juvix.Core.ErasedAnn as J
-import Juvix.Core.Usage
 import Juvix.Library hiding (Type)
+import Juvix.Library.Usage
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
