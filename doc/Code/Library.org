@@ -492,6 +492,12 @@ This module provides a default contract environment
   + [[ErasedAnn]]
   + [[Library]]
   + [[Usage]]
+**** VStack
+- _Relies on_
+  + [[Michelson/Compilation/Types]]
+  + [[VirtualStack]]
+  + [[Library]]
+  + [[Usage]]
 * Core
 ** Setup <<Core/Setup>>
 ** src

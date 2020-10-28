@@ -278,6 +278,7 @@ promoteSave = promoteGen f
   where
     f (Usage i _) = Usage i saved
 
+-- | `Unsave n s` - saves the top n items on the stack s
 unSave :: Natural -> T lamType -> T lamType
 unSave num (T stack i) = T (go num stack) i
   where
@@ -364,7 +365,7 @@ updateUsageVar (Val _, _) t = t
 data Lookup lamType
   = Value (NotInStack lamType)
   | Position Usage Natural
-  deriving (Show)
+  deriving (Show, Eq)
 
 lookupGen ::
   (Maybe (Lookup lamType) -> Maybe a -> a) -> (Usage -> Bool) -> Symbol -> T lamType -> a
