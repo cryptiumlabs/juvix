@@ -47,14 +47,32 @@ hasType (NatVal x) (traverse unNatTy -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _ _ = False
 
-arity :: Val -> Int
-arity (NatVal x) = Naturals.arity x
-arity (UnitVal x) = Unit.arity x
+arityT :: Ty -> Natural
+arityT _ = 0
+
+applyT :: Ty -> NonEmpty Ty -> Maybe Ty
+applyT _ _ = Nothing
+
+arityV :: Val -> Natural
+arityV (NatVal x) = Naturals.arityV x
+arityV (UnitVal x) = Unit.arityV x
+
+arity :: Val -> Natural
+arity = arityV
+{-# DEPRECATED arity "use arityV" #-}
+
+unNatVal :: Val -> Maybe Naturals.Val
+unNatVal (NatVal n) = Just n
+unNatVal _ = Nothing
+
+applyV :: Val -> NonEmpty Val -> Maybe Val
+applyV (NatVal f) (traverse unNatVal -> Just xs) =
+  NatVal <$> Naturals.applyV f xs
+applyV _ _ = Nothing
 
 apply :: Val -> Val -> Maybe Val
-apply (NatVal nat1) (NatVal nat2) =
-  fmap natValToAll (Naturals.apply nat1 nat2)
-apply _ _ = Nothing
+apply f x = applyV f (x :| [])
+{-# DEPRECATED apply "use applyV" #-}
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer =
@@ -86,9 +104,11 @@ t =
   P.Parameterisation
     { hasType,
       builtinTypes,
+      arityT,
+      applyT,
       builtinValues,
-      arity,
-      apply,
+      arityV,
+      applyV,
       parseTy,
       parseVal,
       reservedNames,

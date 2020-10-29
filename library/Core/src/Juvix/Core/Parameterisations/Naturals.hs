@@ -40,17 +40,34 @@ typeOf Mul = Ty :| [Ty, Ty]
 hasType :: Val -> P.PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
-arity :: Val -> Int
-arity = pred . length . typeOf
+arityT :: Ty -> Natural
+arityT _ = 0
+
+applyT :: Ty -> NonEmpty Ty -> Maybe Ty
+applyT _ _ = Nothing
+
+arityV :: Val -> Natural
+arityV = pred . fromIntegral . length . typeOf
+
+arity :: Val -> Natural
+arity = arityV
+{-# DEPRECATED arity "use arityV" #-}
+
+applyV1 :: Val -> Val -> Maybe Val
+applyV1 Add (Val x) = pure (Curried Add x)
+applyV1 Sub (Val x) = pure (Curried Sub x)
+applyV1 Mul (Val x) = pure (Curried Mul x)
+applyV1 (Curried Add x) (Val y) = pure (Val (x + y))
+applyV1 (Curried Sub x) (Val y) = pure (Val (x - y))
+applyV1 (Curried Mul x) (Val y) = pure (Val (x * y))
+applyV1 _ _ = Nothing
+
+applyV :: Val -> NonEmpty Val -> Maybe Val
+applyV f xs = foldlM applyV1 f xs
 
 apply :: Val -> Val -> Maybe Val
-apply Add (Val x) = pure (Curried Add x)
-apply Sub (Val x) = pure (Curried Sub x)
-apply Mul (Val x) = pure (Curried Mul x)
-apply (Curried Add x) (Val y) = pure (Val (x + y))
-apply (Curried Sub x) (Val y) = pure (Val (x - y))
-apply (Curried Mul x) (Val y) = pure (Val (x * y))
-apply _ _ = Nothing
+apply = applyV1
+{-# DEPRECATED apply "use applyV or applyV1" #-}
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
@@ -96,9 +113,11 @@ t =
   P.Parameterisation
     { hasType,
       builtinTypes,
+      arityT = \_ -> 0,
+      applyT = \_ _ -> Nothing,
       builtinValues,
-      arity,
-      apply,
+      arityV,
+      applyV,
       parseTy,
       parseVal,
       reservedNames,

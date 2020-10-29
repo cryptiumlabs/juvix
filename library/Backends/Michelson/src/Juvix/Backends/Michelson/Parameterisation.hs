@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
@@ -57,7 +59,7 @@ checkFirst2AndLast (x :| [y, last]) check
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
-hasType :: PrimVal -> P.PrimType PrimTy -> Bool
+hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
 hasType AddTimeStamp ty = check3Equal ty
 hasType AddI ty = check3Equal ty
 hasType AddN ty = check3Equal ty
@@ -92,26 +94,40 @@ hasType x ty = ty == undefined
 -- constructTerm ∷ PrimVal → PrimTy
 -- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
 
--- the arity elsewhere lacks this 'pred'?
 -- Arity for constant is BAD, refactor to handle lambda
-arity :: PrimVal -> Int
-arity (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
-arity (Constant _) = 1
-arity prim =
+arityV :: PrimVal -> Int
+arityV (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
+arityV (Constant _) = 0
+arityV prim =
   Run.instructionOf prim |> Instructions.toNewPrimErr |> arity
+
+applyV :: PrimVal -> NonEmpty PrimVal -> Maybe PrimVal
+applyV fun' args
+  | (fun, args1, ar) <- toTakes fun',
+    ar == fromIntegral (length args),
+    Just args2 <- traverse toTake1 args
+  = either (const Nothing) (Just . fromReturn) $
+    applyProper fun (args1 <> toList args2)
+    -- FIXME keep errors
+applyV _ _ = Nothing
+
+arityT :: PrimTy -> Natural
+arityT (PrimTy {}) = 0
+
+applyT :: PrimTy -> NonEmpty PrimTy -> Maybe PrimTy
+applyT (PrimTy {}) _ = Nothing
+
+type ApplyError = Core.PipelineError PrimTy PrimVal CompilationError
 
 applyProper ::
   Prim.Take PrimTy PrimVal ->
   [Prim.Take PrimTy PrimVal] ->
-  Either
-    (Core.PipelineError PrimTy PrimVal CompilationError)
-    (Prim.Return PrimTy PrimVal)
-applyProper fun args =
+  Either ApplyError (Prim.Return PrimTy PrimVal)
+applyProper fun@(Prim.Take {type'=funTy, term=funTm}) args =
   case Prim.term fun of
     Constant _i ->
       case length args of
-        0 ->
-          Right (Prim.Return (Prim.term fun))
+        0 -> Right $ Prim.Return {retType = funTy, retTerm = funTm}
         _x ->
           Left (Core.PrimError AppliedConstantToArgument)
     Inst instruction ->
@@ -131,32 +147,14 @@ applyProper fun args =
                   -- TODO ∷ do something with the logs!?
                   (compd, _log) = Compilation.compileExpr newTerm
                in case compd >>= Interpreter.dummyInterpret of
-                    Right x ->
-                      Constant x
-                        |> Prim.Return
-                        |> Right
+                    Right x -> Right $ Prim.Return {
+                      retType = ErasedAnn.type' newTerm,
+                      retTerm = Constant x
+                    }
                     -- TODO :: promote this error
                     Left err -> Core.PrimError err |> Left
     x ->
       applyProper (fun {Prim.term = Run.newPrimToInstrErr x}) args
-
--- translate our code into a valid form
-
--- can't call it this way need to go through the top level :(
--- let (f, _) = Run.primToFargs fun undefined in
---   undefined (DSL.unFun f (undefined args))
-
--- TODO: Use interpreter for this, or just write it (simple enough).
--- Might need to add curried versions of built-in functions.
--- We should finish this, then we can use it in the tests.
-apply :: PrimVal -> PrimVal -> Maybe PrimVal
-apply t1 _t2 = Nothing
-  where
-    primTy :| _ = undefined
-    runPrim =
-      DSL.execMichelson $
-        --Prim.primToInstr t1 (CoreErased.PrimTy primTy)
-        do undefined
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
@@ -281,9 +279,11 @@ michelson =
   P.Parameterisation
     { hasType,
       builtinTypes,
+      arityT,
+      applyT,
       builtinValues,
-      arity,
-      apply,
+      arityV = arityRaw,
+      applyV = _,
       parseTy,
       parseVal,
       reservedNames,
