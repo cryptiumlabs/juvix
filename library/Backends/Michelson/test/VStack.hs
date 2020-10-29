@@ -1,6 +1,7 @@
 module VStack where
 
 import qualified Data.Set as Set
+import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
@@ -22,7 +23,11 @@ top =
       lookupX1Free,
       lookupX2Free,
       updateUsageHolds,
-      updateUsageOnlyUpdatesFirst
+      updateUsageOnlyUpdatesFirst,
+      dropPropogatesUsage,
+      dropDoesNotProp1Usage,
+      dropPosNPropagatesBackwords,
+      dropPosNPropagatesForwards
     ]
 
 --------------------------------------------------------------------------------
@@ -66,6 +71,46 @@ lookupX2Free =
     ( VStack.lookupFree "x" (xIsNowFree mempty)
         T.@=? Just (foundSave (Usage.SNat 2) 0)
     )
+
+dropPropogatesUsage :: T.TestTree
+dropPropogatesUsage =
+  xIsNotFree mempty
+    |> xIsNowFree
+    |> VStack.drop 1
+    |> VStack.lookup "x"
+    |> (T.@=? Just (foundSave (Usage.SNat 2) 0))
+    |> T.testCase
+      "dropping should update usage"
+
+dropDoesNotProp1Usage :: T.TestTree
+dropDoesNotProp1Usage =
+  xIsNotFree mempty
+    |> xIsNotFree
+    |> VStack.drop 1
+    |> VStack.lookup "x"
+    |> (T.@=? Just (foundSave (Usage.SNat 1) 0))
+    |> T.testCase
+      "dropping 0 or 1 shouldn't propagate usage"
+
+dropPosNPropagatesForwards :: T.TestTree
+dropPosNPropagatesForwards =
+  xIsNowFree mempty
+    |> xIsNowFree
+    |> VStack.dropPos 1
+    |> VStack.lookup "x"
+    |> (T.@=? Just (foundSave (Usage.SNat 4) 0))
+    |> T.testCase
+      "dropping pos of the first var, gives to the back usages"
+
+dropPosNPropagatesBackwords :: T.TestTree
+dropPosNPropagatesBackwords =
+  xIsNowFree mempty
+    |> xIsNowFree
+    |> VStack.dropPos 0
+    |> VStack.lookup "x"
+    |> (T.@=? Just (foundSave (Usage.SNat 4) 0))
+    |> T.testCase
+      "dropping pos of the last var, gives to the front usages"
 
 --------------------------------------------------------------------------------
 -- Creation Helpers

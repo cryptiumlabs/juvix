@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TupleSections #-}
 
 -- |
@@ -333,19 +334,24 @@ drop n xs
 
 -- This propagates usages. This is safe, as if a var has multiple names, it thus
 -- must be the same exact var
+-- also unlike drop we do not drop a usage
 dropPos :: Natural -> T lamType -> T lamType
-dropPos 0 xs
-  | not (isNil xs) && inT (fst (car xs)) =
-    updateUsageVar (car xs) (cdr xs)
-  | not (isNil xs) =
-    cons (car xs) (dropPos 0 (cdr xs))
-  | otherwise = xs
-dropPos n xs
-  | not (isNil xs) && inT (fst (car xs)) =
-    cons (car xs) (dropPos (pred n) (cdr xs))
-  | not (isNil xs) =
-    cons (car xs) (dropPos n (cdr xs))
-  | otherwise = xs
+dropPos n xs = dropPos' n xs mempty
+  where
+    dropPos' :: Natural -> T lamType -> T lamType -> T lamType
+    dropPos' 0 xs !acc
+      | not (isNil xs) && inT (fst (car xs)) =
+        updateUsageVar (car xs) (reverseI acc <> cdr xs)
+      | not (isNil xs) =
+        dropPos' 0 (cdr xs) (cons (car xs) acc)
+      | otherwise =
+        reverseI acc <> xs
+    dropPos' !n xs !acc
+      | not (isNil xs) && inT (fst (car xs)) =
+        dropPos' (pred n) (cdr xs) (cons (car xs) acc)
+      | not (isNil xs) =
+        dropPos' n (cdr xs) (cons (car xs) acc)
+      | otherwise = reverseI acc <> xs
 
 updateUsageList :: Set Symbol -> Usage.T -> [(Elem lamType, b)] -> [(Elem lamType, b)]
 updateUsageList symbs usage = f
@@ -513,6 +519,10 @@ splitAtReal i xs = splitAt (go xs 0 + i) xs
 constantOnTop :: T lamType -> Bool
 constantOnTop (T [] _) = False
 constantOnTop (T ((v, _) : _) _) = not (inT v)
+
+-- | reverseI or reverse Intenral reverses a vstack
+reverseI :: T lamType -> T lamType
+reverseI (T xs i) = T (reverse xs) i
 
 --------------------------------------------------------------------------------
 -- Usage Manipulation
