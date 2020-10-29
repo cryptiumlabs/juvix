@@ -17,7 +17,10 @@ data Return ty term
         args :: [Take ty term],
         numLeft :: Natural
       }
-  | Return term
+  | Return
+      { retType :: ty,
+        retTerm :: term
+      }
   deriving (Show, Eq, Generic)
 
 data Take ty term
