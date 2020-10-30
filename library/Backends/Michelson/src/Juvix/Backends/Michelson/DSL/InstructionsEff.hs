@@ -619,6 +619,8 @@ apply closure args remainingArgs = do
   where
     evalArgsAndName = do
       -- with fully saturated args this should take it all
+      -- if we are naming an already named var, then the usage does not
+      -- changes
       let (toEvalNames, alreadyEvaledNames) = splitAt (length args) (Env.argsLeft closure)
       traverseName (zip toEvalNames args)
       -- thus with fully saturated args this does nothing

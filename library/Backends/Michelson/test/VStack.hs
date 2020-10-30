@@ -27,7 +27,9 @@ top =
       dropPropogatesUsage,
       dropDoesNotProp1Usage,
       dropPosNPropagatesBackwords,
-      dropPosNPropagatesForwards
+      dropPosNPropagatesForwards,
+      namingNamesAllWithSame,
+      namingNamesDoesNotChangeUsage
     ]
 
 --------------------------------------------------------------------------------
@@ -112,6 +114,30 @@ dropPosNPropagatesBackwords =
     |> T.testCase
       "dropping pos of the last var, gives to the front usages"
 
+namingNamesAllWithSame :: T.TestTree
+namingNamesAllWithSame =
+  let stack =
+        xIsNotFree mempty
+          |> xIsNotFree
+          |> VStack.nameTop "y" one
+   in ( VStack.lookupAllPos "y" stack == [foundSave one 0, foundSave one 1]
+          && VStack.lookupAllPos "x" stack == [foundSave one 0, foundSave one 1]
+          T.@=? True
+      )
+        |> T.testCase "naming a named var, propagates a new name properly"
+
+namingNamesDoesNotChangeUsage :: T.TestTree
+namingNamesDoesNotChangeUsage =
+  xIsNotFree mempty
+    |> xIsNotFree
+    |> VStack.nameTop "y" one
+    |> VStack.lookup "y"
+    |> (T.@=? Just (foundSave one 0))
+    |> T.testCase "naming a named var, doesn't change usage"
+
+
+namingValAddsUsage :: T.TestTree
+namingValAddsUsage = undefined
 --------------------------------------------------------------------------------
 -- Creation Helpers
 --------------------------------------------------------------------------------
