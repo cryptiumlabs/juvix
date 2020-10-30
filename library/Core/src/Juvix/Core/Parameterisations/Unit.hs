@@ -23,25 +23,9 @@ hasType :: Val -> P.PrimType Ty -> Bool
 hasType Val (Ty :| []) = True
 hasType _ _ = False
 
-arityT :: Ty -> Natural
-arityT _ = 0
-
-applyT :: Ty -> NonEmpty Ty -> Maybe Ty
-applyT _ _ = Nothing
-
-arityV :: Val -> Natural
-arityV _ = 0
-
-arity :: Val -> Natural
-arity = arityV
-{-# DEPRECATED arity "use arityV" #-}
-
-applyV :: Val -> NonEmpty Val -> Maybe Val
-applyV _ _ = Nothing
-
-apply :: Val -> Val -> Maybe Val
-apply _ _ = Nothing
-{-# DEPRECATED apply "use applyV" #-}
+instance P.CanApply Val where
+  arity _ = 0
+  apply f xs = Left $ P.ExtraArguments f xs
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
@@ -70,11 +54,7 @@ t =
   P.Parameterisation
     { hasType,
       builtinTypes,
-      arityT,
-      applyT,
       builtinValues,
-      arityV,
-      applyV,
       parseTy,
       parseVal,
       reservedNames,

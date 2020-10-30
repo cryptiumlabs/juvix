@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Core.Erasure.Types
   ( module Juvix.Core.Erasure.Types,
     module Type,
@@ -20,6 +22,8 @@ import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Library.Usage (Usage)
+import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import Juvix.Library.Usage (Usage)
 
@@ -61,7 +65,14 @@ data Error primTy primVal
   | CannotEraseZeroUsageTerm (Typed.Term primTy primVal)
   | TypeError (TC.TypecheckError primTy primVal)
   | InternalError Text
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+
+deriving instance
+  (Show primTy, Show primVal, Show (Param.ApplyErrorExtra primVal))
+  => Show (Error primTy primVal)
+
+deriving instance (Eq primTy, Eq primVal, Eq (Param.ApplyErrorExtra primVal))
+  => Eq (Error primTy primVal)
 
 data T primTy
 

@@ -279,11 +279,7 @@ michelson =
   P.Parameterisation
     { hasType,
       builtinTypes,
-      arityT,
-      applyT,
       builtinValues,
-      arityV = arityRaw,
-      applyV = _,
       parseTy,
       parseVal,
       reservedNames,

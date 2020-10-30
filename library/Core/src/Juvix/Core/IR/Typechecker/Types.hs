@@ -35,7 +35,8 @@ data TypecheckError' extV extT primTy primVal
       { universeLower, universeHigher :: IR.Universe
       }
   | CannotApply
-      { applyFun, applyArg :: IR.Value' extV primTy primVal
+      { applyFun, applyArg :: IR.Value' extV primTy primVal,
+        applyErr :: Maybe (P.ApplyError primVal)
       }
   | ShouldBeStar
       { typeActual :: IR.Value' extV primTy primVal
@@ -89,6 +90,7 @@ type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 deriving instance
   ( Eq primTy,
     Eq primVal,
+    Eq (P.ApplyErrorExtra primVal),
     IR.TermAll Eq extV primTy primVal,
     IR.ElimAll Eq extV primTy primVal,
     IR.ValueAll Eq extV primTy primVal,
@@ -104,6 +106,7 @@ deriving instance
 instance
   ( Show primTy,
     Show primVal,
+    Show (P.ApplyErrorExtra primVal),
     IR.TermAll Show extV primTy primVal,
     IR.ElimAll Show extV primTy primVal,
     IR.ValueAll Show extV primTy primVal,
@@ -128,8 +131,9 @@ instance
       <> " should be strictly less than "
       <> show j
       <> "."
-  show (CannotApply f x) =
+  show (CannotApply f x err) =
     "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
+      <> (case err of Just err -> "\n" <> show err; Nothing -> "")
   show (ShouldBeStar ty) =
     "* n is of type * but " <> show ty <> " is not *."
   show (ShouldBeFunctionType ty) =

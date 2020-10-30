@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Juvix.Core.Parameterisation where
 
 import Juvix.Library
@@ -17,14 +19,7 @@ data Parameterisation primTy primVal
   = Parameterisation
       { hasType :: primVal -> PrimType primTy -> Bool,
         builtinTypes :: Builtins primTy,
-        arityT :: primTy -> Natural,
-        -- | 'Nothing' if wrong arity
-        applyT :: primTy -> NonEmpty primTy -> Maybe primTy,
-
         builtinValues :: Builtins primVal,
-        arityV :: primVal -> Natural,
-        -- | 'Nothing' if wrong arity or type
-        applyV :: primVal -> NonEmpty primVal -> Maybe primVal,
 
         parseTy :: Token.GenTokenParser String () Identity -> Parser primTy,
         parseVal :: Token.GenTokenParser String () Identity -> Parser primVal,
@@ -40,15 +35,37 @@ data Parameterisation primTy primVal
       }
   deriving (Generic)
 
-arity :: Parameterisation primTy primVal -> primVal -> Natural
-arity = arityV
-{-# DEPRECATED arity "use arityV" #-}
-
-apply :: Parameterisation primTy primVal -> primVal -> primVal -> Maybe primVal
-apply p x y = applyV p x (y :| [])
-{-# DEPRECATED apply "use applyV" #-}
-
 {-# DEPRECATED
     parseTy, parseVal, reservedNames, reservedOpNames
     "TODO: update parser to not use these"
   #-}
+
+data ApplyError' e a =
+    ExtraArguments a (NonEmpty a)
+  | InvalidArguments a (NonEmpty a)
+  | Extra e
+  deriving (Eq, Show, Functor)
+
+type ApplyError a = ApplyError' (ApplyErrorExtra a) a
+
+class CanApply a where
+  type ApplyErrorExtra a
+  type ApplyErrorExtra a = Void
+
+  arity :: a -> Natural
+  apply :: a -> NonEmpty a -> Either (ApplyError a) a
+
+mapApplyErr :: (ApplyErrorExtra a ~ ApplyErrorExtra b)
+            => (a -> b)
+            -> Either (ApplyError a) a
+            -> Either (ApplyError b) b
+mapApplyErr f = bimap (fmap f) f
+
+applyMaybe :: CanApply a => a -> NonEmpty a -> Maybe a
+applyMaybe f xs = either (const Nothing) Just $ apply f xs
+
+apply1 :: CanApply a => a -> a -> Either (ApplyError a) a
+apply1 f x = apply f (x :| [])
+
+apply1Maybe :: CanApply a => a -> a -> Maybe a
+apply1Maybe f x = applyMaybe f (x :| [])

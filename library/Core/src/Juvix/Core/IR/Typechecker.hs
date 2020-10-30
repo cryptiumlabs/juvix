@@ -34,7 +34,7 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 -- | Checks a 'Term' against an annotation and returns a decorated term if
 -- successful.
 typeTerm ::
-  (Eq primTy, Eq primVal) =>
+  (Eq primTy, Eq primVal, Param.CanApply primVal) =>
   Param.Parameterisation primTy primVal ->
   IR.Term primTy primVal ->
   Annotation primTy primVal ->
@@ -42,7 +42,9 @@ typeTerm ::
 typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 
 typeTermWith ::
-  (Eq primTy, Eq primVal, CanTC primTy primVal m) =>
+  (Eq primTy, Eq primVal,
+   CanTC primTy primVal m,
+   Param.CanApply primVal) =>
   Param.Parameterisation primTy primVal ->
   PatBinds primTy primVal ->
   Context primTy primVal ->
@@ -55,7 +57,9 @@ typeTermWith param pats ctx t ann =
 -- | Infers the type and usage for an 'Elim' and returns it decorated with this
 -- information.
 typeElim ::
-  (Eq primTy, Eq primVal, CanTC primTy primVal m) =>
+  (Eq primTy, Eq primVal,
+   CanTC primTy primVal m,
+   Param.CanApply primVal) =>
   Param.Parameterisation primTy primVal ->
   IR.Elim primTy primVal ->
   Usage.T ->
@@ -64,7 +68,9 @@ typeElim param e σ =
   loValue <$> typeElimWith param IntMap.empty [] e σ
 
 typeElimWith ::
-  (Eq primTy, Eq primVal, CanTC primTy primVal m) =>
+  (Eq primTy, Eq primVal,
+   CanTC primTy primVal m,
+   Param.CanApply primVal) =>
   Param.Parameterisation primTy primVal ->
   PatBinds primTy primVal ->
   Context primTy primVal ->
@@ -84,7 +90,9 @@ withLeftovers m =
     <*> fmap (fmap annUsage) (get @"patBinds")
 
 typeTerm' ::
-  (Eq primTy, Eq primVal, CanInnerTC' ext primTy primVal m) =>
+  (Eq primTy, Eq primVal,
+   CanInnerTC' ext primTy primVal m,
+   Param.CanApply primVal) =>
   IR.Term' ext primTy primVal ->
   Annotation primTy primVal ->
   m (Typed.Term primTy primVal)
@@ -142,7 +150,9 @@ typeTerm' term ann@(Annotation σ ty) =
       throwTC $ UnsupportedTermExt x
 
 typeElim' ::
-  (Eq primTy, Eq primVal, CanInnerTC' ext primTy primVal m) =>
+  (Eq primTy, Eq primVal,
+   CanInnerTC' ext primTy primVal m,
+   Param.CanApply primVal) =>
   IR.Elim' ext primTy primVal ->
   Usage.T ->
   m (Typed.Elim primTy primVal)
@@ -312,25 +322,25 @@ usePatVar π var = do
 
 substApp ::
   ( HasParam primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.NoExt ext primTy primVal m,
+    Param.CanApply primVal
   ) =>
   IR.Value primTy primVal ->
   IR.Term' ext primTy primVal ->
   m (IR.Value primTy primVal)
 substApp ty arg = do
   arg' <- evalTC arg
-  param <- ask @"param"
-  Eval.substV param arg' ty
+  Eval.substV arg' ty
 
 evalTC ::
   ( HasParam primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.NoExt ext primTy primVal m,
+    Param.CanApply primVal
   ) =>
   IR.Term' ext primTy primVal ->
   m (IR.Value primTy primVal)
-evalTC t = do
-  param <- ask @"param"
-  Eval.evalTerm param t
+evalTC = Eval.evalTerm
+{-# DEPRECATED evalTC "Use evalTerm" #-}
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.

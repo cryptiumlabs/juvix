@@ -58,7 +58,7 @@ evalEnvState (EnvS m) = evalState m
 
 astToNet ::
   forall primTy primVal net.
-  Network net =>
+  (Network net, Core.CanApply primVal) =>
   Core.Parameterisation primTy primVal ->
   Type.AST primVal ->
   Map.T Symbol (Type.Fn primVal) ->
@@ -67,13 +67,13 @@ astToNet parameterisation bohm customSymMap = net'
   where
     Env {net'} = execEnvState (recursive bohm Map.empty) (Env 0 empty mempty)
     -- we return the port which the node above it in the AST connects to!
-    recursive (Type.Prim p) _context = do
-      let arity = Core.arity parameterisation p
-      case arity of
+    recursive (Type.Prim p) _context =
+      case Core.arity p of
         0 -> (,) <$> newNode (AST.Primar $ AST.PrimVal p) <*> pure Prim
         1 -> do
           numLam <- newNode (AST.Auxiliary2 AST.Lambda)
-          numCurr <- newNode (AST.Auxiliary1 $ AST.PrimCurried1 (Core.apply parameterisation p))
+          numCurr <- newNode $
+            AST.Auxiliary1 $ AST.PrimCurried1 (Core.apply1Maybe p)
           link (numLam, Aux2) (numCurr, Prim)
           link (numLam, Aux1) (numCurr, Aux1)
           pure (numLam, Prim)
@@ -83,11 +83,8 @@ astToNet parameterisation bohm customSymMap = net'
           numCurr <-
             newNode
               ( AST.Auxiliary2 $
-                  AST.PrimCurried2
-                    ( \x y ->
-                        Core.apply parameterisation p x
-                          >>= (\f -> Core.apply parameterisation f y)
-                    )
+                  AST.PrimCurried2 $
+                    \x y -> Core.apply1Maybe p x >>= \f -> Core.apply1Maybe f y
               )
           -- Lambda chain
           link (numLam1, Aux1) (numLam2, Prim)

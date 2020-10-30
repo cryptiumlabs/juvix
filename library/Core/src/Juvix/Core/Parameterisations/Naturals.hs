@@ -40,34 +40,17 @@ typeOf Mul = Ty :| [Ty, Ty]
 hasType :: Val -> P.PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
-arityT :: Ty -> Natural
-arityT _ = 0
-
-applyT :: Ty -> NonEmpty Ty -> Maybe Ty
-applyT _ _ = Nothing
-
-arityV :: Val -> Natural
-arityV = pred . fromIntegral . length . typeOf
-
-arity :: Val -> Natural
-arity = arityV
-{-# DEPRECATED arity "use arityV" #-}
-
-applyV1 :: Val -> Val -> Maybe Val
-applyV1 Add (Val x) = pure (Curried Add x)
-applyV1 Sub (Val x) = pure (Curried Sub x)
-applyV1 Mul (Val x) = pure (Curried Mul x)
-applyV1 (Curried Add x) (Val y) = pure (Val (x + y))
-applyV1 (Curried Sub x) (Val y) = pure (Val (x - y))
-applyV1 (Curried Mul x) (Val y) = pure (Val (x * y))
-applyV1 _ _ = Nothing
-
-applyV :: Val -> NonEmpty Val -> Maybe Val
-applyV f xs = foldlM applyV1 f xs
-
-apply :: Val -> Val -> Maybe Val
-apply = applyV1
-{-# DEPRECATED apply "use applyV or applyV1" #-}
+instance P.CanApply Val where
+  arity = pred . fromIntegral . length . typeOf
+  apply f xs = app f $ toList xs where
+    app Add (Val x : xs) = app (Curried Add x) xs
+    app Sub (Val x : xs) = app (Curried Sub x) xs
+    app Mul (Val x : xs) = app (Curried Mul x) xs
+    app (Curried Add x) (Val y : ys) = app (Val (x + y)) ys
+    app (Curried Sub x) (Val y : ys) = app (Val (x - y)) ys
+    app (Curried Mul x) (Val y : ys) = app (Val (x * y)) ys
+    app n [] = Right n
+    app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
@@ -113,11 +96,7 @@ t =
   P.Parameterisation
     { hasType,
       builtinTypes,
-      arityT = \_ -> 0,
-      applyT = \_ _ -> Nothing,
       builtinValues,
-      arityV,
-      applyV,
       parseTy,
       parseVal,
       reservedNames,
