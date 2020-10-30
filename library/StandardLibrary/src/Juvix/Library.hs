@@ -47,6 +47,7 @@ module Juvix.Library
     uncurry3,
     curry3,
     dup,
+    lengthN,
     StateField,
     ReaderField,
     WriterField,
@@ -192,6 +193,10 @@ curry3 fn a b c = fn (a, b, c)
 
 dup :: a -> (a, a)
 dup x = (x, x)
+
+-- | Same as 'length' but returning a 'Natural'.
+lengthN :: Foldable f => f a -> Natural
+lengthN = foldl' (\n _ -> n + 1) 0
 
 -- | Select a field in a state monad, for example:
 --

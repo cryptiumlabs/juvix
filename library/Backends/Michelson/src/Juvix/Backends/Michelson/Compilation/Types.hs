@@ -7,7 +7,9 @@ module Juvix.Backends.Michelson.Compilation.Types
 where
 
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
-import Juvix.Library
+import Juvix.Library hiding (Type)
+import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Core.Application as App
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
@@ -25,7 +27,7 @@ data PrimTy
   | Set
   deriving (Show, Eq, Generic)
 
-data NewPrim
+data RawPrimVal
   = Constant (M.Value' Op)
   | Inst (Instr.InstrAbstract Op)
   | AddN
@@ -86,11 +88,33 @@ data NewPrim
   | MapOp
   deriving (Show, Eq, Generic)
 
-type NewTerm = CoreErased.AnnTerm PrimTy NewPrim
+type NewPrim = RawPrimVal
+{-# DEPRECATED NewPrim "use RawPrimVal" #-}
 
-type PrimVal = NewPrim
+type Return = App.Return Type RawPrimVal
+type Take = App.Take Type RawPrimVal
 
-type Term = CoreErased.AnnTerm PrimTy NewPrim
+type PrimVal = Return
+
+toTake1 :: PrimVal -> Maybe Take
+toTake1 (App.Cont {}) = Nothing
+toTake1 (App.Return {retType, retTerm}) = Just fun
+  where fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+toTakes :: PrimVal -> (Take, [Take], Natural)
+toTakes (App.Cont {fun, args, numLeft}) = (fun, args, numLeft)
+toTakes (App.Return {retType, retTerm}) = (fun, [], 0)
+  where fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+fromReturn :: Return -> PrimVal
+fromReturn = identity
+
+
+type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
+type Term = CoreErased.AnnTerm PrimTy PrimVal
+
+type NewTerm = RawTerm
+{-# DEPRECATED NewTerm "use RawTerm" #-}
 
 type Type = CoreErased.Type PrimTy NewPrim
 

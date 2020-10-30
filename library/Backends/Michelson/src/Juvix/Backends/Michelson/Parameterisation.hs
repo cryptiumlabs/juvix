@@ -16,10 +16,10 @@ import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
-import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
-import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Core.Common.NameSymbol as NameSymbol
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
@@ -91,70 +91,47 @@ hasType (Constant _v) ty
   | otherwise = False
 hasType x ty = ty == undefined
 
--- constructTerm ∷ PrimVal → PrimTy
--- constructTerm (PrimConst v) = (v, Usage.Omega, PrimTy (M.Type (constType v) ""))
-
--- Arity for constant is BAD, refactor to handle lambda
-arityV :: PrimVal -> Int
-arityV (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
-arityV (Constant _) = 0
-arityV prim =
-  Run.instructionOf prim |> Instructions.toNewPrimErr |> arity
-
-applyV :: PrimVal -> NonEmpty PrimVal -> Maybe PrimVal
-applyV fun' args
-  | (fun, args1, ar) <- toTakes fun',
-    ar == fromIntegral (length args),
-    Just args2 <- traverse toTake1 args
-  = either (const Nothing) (Just . fromReturn) $
-    applyProper fun (args1 <> toList args2)
-    -- FIXME keep errors
-applyV _ _ = Nothing
-
-arityT :: PrimTy -> Natural
-arityT (PrimTy {}) = 0
-
-applyT :: PrimTy -> NonEmpty PrimTy -> Maybe PrimTy
-applyT (PrimTy {}) _ = Nothing
+arityRaw :: PrimVal -> Int
+arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
+arityRaw (Constant _) = 0
+arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arity
 
 type ApplyError = Core.PipelineError PrimTy PrimVal CompilationError
 
-applyProper ::
-  Prim.Take PrimTy PrimVal ->
-  [Prim.Take PrimTy PrimVal] ->
-  Either ApplyError (Prim.Return PrimTy PrimVal)
-applyProper fun@(Prim.Take {type'=funTy, term=funTm}) args =
-  case Prim.term fun of
-    Constant _i ->
-      case length args of
-        0 -> Right $ Prim.Return {retType = funTy, retTerm = funTm}
-        _x ->
-          Left (Core.PrimError AppliedConstantToArgument)
-    Inst instruction ->
-      let inst = Instructions.toNumArgs instruction
-       in case inst `compare` fromIntegral (length args) of
-            -- we should never take more arguments than primitve could handle
-            GT ->
-              Left (Core.PrimError TooManyArguments)
-            LT ->
-              inst - fromIntegral (length args)
-                |> Prim.Cont fun args
-                |> Right
-            -- we have exactly the right number of arguments, call the interpreter!
-            EQ ->
-              let newTerm =
-                    Run.applyPrimOnArgs (Prim.toAnn fun) (Prim.toAnn <$> args)
-                  -- TODO ∷ do something with the logs!?
-                  (compd, _log) = Compilation.compileExpr newTerm
-               in case compd >>= Interpreter.dummyInterpret of
-                    Right x -> Right $ Prim.Return {
-                      retType = ErasedAnn.type' newTerm,
-                      retTerm = Constant x
-                    }
-                    -- TODO :: promote this error
-                    Left err -> Core.PrimError err |> Left
-    x ->
-      applyProper (fun {Prim.term = Run.newPrimToInstrErr x}) args
+instance Core.CanApply PrimVal where
+  type ApplyErrorExtra PrimVal = ApplyError
+
+  arity (Prim.Cont {numLeft}) = numLeft
+  arity (Prim.Return {}) = 0
+
+  apply fun' args2'
+    | (fun, args1, ar) <- toTakes fun',
+      Just args2 <- traverse toTake1 args2'
+    = do
+      let argLen = lengthN args2'
+          argsAll = foldr NonEmpty.cons args2 args1
+      case argLen `compare` ar of
+        LT -> Right $
+          Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
+        EQ -> applyProper fun argsAll
+        GT -> Left $ Core.ExtraArguments fun' args2'
+  apply fun args = Left $ Core.InvalidArguments fun args
+
+-- | NB. requires that the right number of args are passed
+applyProper :: Take -> NonEmpty Take -> Either (Core.ApplyError PrimVal) Return
+applyProper fun args =
+  case compd >>= Interpreter.dummyInterpret of
+    Right x -> Right $ Prim.Return {
+      retType = ErasedAnn.type' newTerm,
+      retTerm = Constant x
+    }
+    Left err -> Left $ Core.Extra $ Core.PrimError err
+ where
+  fun' = Prim.toAnn fun
+  args' = Prim.toAnn <$> toList args
+  newTerm = Run.applyPrimOnArgs fun' args'
+  -- TODO ∷ do something with the logs!?
+  (compd, _log) = Compilation.compileExpr newTerm
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
@@ -165,7 +142,7 @@ parseTy lexer =
     )
 
 -- TODO: parse all values.
-parseVal :: Token.GenTokenParser String () Identity -> Parser PrimVal
+parseVal :: Token.GenTokenParser String () Identity -> Parser RawPrimVal
 parseVal lexer =
   try
     ( do
@@ -187,7 +164,7 @@ reservedNames = []
 reservedOpNames :: [String]
 reservedOpNames = []
 
-integerToPrimVal :: Integer -> Maybe PrimVal
+integerToPrimVal :: Integer -> Maybe RawPrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
     x <= toInteger (maxBound @Int) =
@@ -228,7 +205,7 @@ builtinTypes =
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
     |> Map.fromList
 
-builtinValues :: P.Builtins PrimVal
+builtinValues :: P.Builtins RawPrimVal
 builtinValues =
   [ ("Michelson.add", AddI),
     ("Michelson.sub", SubI),
@@ -274,7 +251,7 @@ builtinValues =
     |> Map.fromList
 
 -- TODO: Figure out what the parser ought to do.
-michelson :: P.Parameterisation PrimTy PrimVal
+michelson :: P.Parameterisation PrimTy RawPrimVal
 michelson =
   P.Parameterisation
     { hasType,
