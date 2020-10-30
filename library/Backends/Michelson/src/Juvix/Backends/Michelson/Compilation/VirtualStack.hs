@@ -499,7 +499,8 @@ symbolsInT symbs (T stack' _) =
         Just _ -> True
         Nothing -> False
 
-insertAt :: Foldable t => Int -> t (Elem lamType, Untyped.Type) -> T lamType -> T lamType
+insertAt ::
+  Foldable t => Int -> t (Elem lamType, Untyped.Type) -> T lamType -> T lamType
 insertAt n xs stack =
   foldr cons (foldr cons postDrop xs) (stack' dropped)
   where

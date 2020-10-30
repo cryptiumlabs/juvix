@@ -30,7 +30,10 @@ top =
       dropPosNPropagatesForwards,
       namingNamesAllWithSame,
       namingNamesDoesNotChangeUsage,
-      namingValAddsUsage
+      namingValAddsUsage,
+      usageIsNotFree,
+      usage1NotSavedIsFree,
+      usage1NotSavedIsFreePred
     ]
 
 --------------------------------------------------------------------------------
@@ -146,11 +149,29 @@ namingValAddsUsage =
            ( VStack.VarE
                (Set.singleton "y")
                (VStack.Usage (Usage.SNat 5) False)
-               (Just (VStack.ConstE (Untyped.ValueInt 3))),
+               (Just (int 3)),
              unit
            )
        )
     |> T.testCase "naming a Val adds usage"
+
+usageIsNotFree :: T.TestTree
+usageIsNotFree =
+  T.testCase
+    "Usage one True isn't free"
+    (VStack.isUsageFree (VStack.Usage one True) T.@=? False)
+
+usage1NotSavedIsFree :: T.TestTree
+usage1NotSavedIsFree =
+  T.testCase
+    "Usage one False is free"
+    (VStack.isUsageFree (VStack.Usage one False) T.@=? True)
+
+usage1NotSavedIsFreePred :: T.TestTree
+usage1NotSavedIsFreePred =
+  T.testCase
+    "Usage two True is free"
+    (VStack.isUsageFree (VStack.Usage (Usage.SNat 2) False) T.@=? True)
 
 --------------------------------------------------------------------------------
 -- Creation Helpers
