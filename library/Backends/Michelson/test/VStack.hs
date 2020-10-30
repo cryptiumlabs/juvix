@@ -29,7 +29,8 @@ top =
       dropPosNPropagatesBackwords,
       dropPosNPropagatesForwards,
       namingNamesAllWithSame,
-      namingNamesDoesNotChangeUsage
+      namingNamesDoesNotChangeUsage,
+      namingValAddsUsage
     ]
 
 --------------------------------------------------------------------------------
@@ -135,12 +136,28 @@ namingNamesDoesNotChangeUsage =
     |> (T.@=? Just (foundSave one 0))
     |> T.testCase "naming a named var, doesn't change usage"
 
-
 namingValAddsUsage :: T.TestTree
-namingValAddsUsage = undefined
+namingValAddsUsage =
+  xIsNotFree mempty
+    |> threeOnStack
+    |> VStack.nameTop "y" (Usage.SNat 5)
+    |> VStack.car
+    |> ( T.@=?
+           ( VStack.VarE
+               (Set.singleton "y")
+               (VStack.Usage (Usage.SNat 5) False)
+               (Just (VStack.ConstE (Untyped.ValueInt 3))),
+             unit
+           )
+       )
+    |> T.testCase "naming a Val adds usage"
+
 --------------------------------------------------------------------------------
 -- Creation Helpers
 --------------------------------------------------------------------------------
+
+threeOnStack :: VStack.T lamType -> VStack.T lamType
+threeOnStack = VStack.cons (VStack.Val (int 3), unit)
 
 -- we update the previous xIsNotFree explicitly to test behavior
 xIsNowFree :: VStack.T Int -> VStack.T Int
