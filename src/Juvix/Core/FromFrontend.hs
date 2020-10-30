@@ -255,6 +255,7 @@ transformSig (Ctx.TypeDeclar typ) = DataSig <$> transformType typ
 transformSig (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
 transformSig Ctx.CurrentNameSpace = _ -- TODO ???
+transformSig (Ctx.Information {}) = _
 
 transformType ::
   forall primTy primVal.
@@ -283,3 +284,4 @@ transformDef (Ctx.Record rec _) = _
 transformDef (Ctx.TypeDeclar typ) = _
 transformDef (Ctx.Unknown _) = pure []
 transformDef Ctx.CurrentNameSpace = pure [] -- FIXME ???
+transformDef (Ctx.Information {}) = _
