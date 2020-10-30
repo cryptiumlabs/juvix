@@ -52,7 +52,7 @@ convertTerm term usage = do
         _ ->
           pure (Ann usage ty' (AppM f [a]))
 
-convertType :: forall primTy primVal compErr m. (HasThrow "error" (Types.PipelineError primTy primVal compErr) m) => E.Type primTy -> m (Type primTy primVal)
+convertType :: forall primTy primVal compErr m. (HasThrow "error" (Types.PipelineError primTy primVal compErr) m) => E.Type primTy -> m (Type primTy)
 convertType ty =
   case ty of
     E.Star u -> pure (Star u)

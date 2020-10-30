@@ -116,7 +116,7 @@ type Term = CoreErased.AnnTerm PrimTy PrimVal
 type NewTerm = RawTerm
 {-# DEPRECATED NewTerm "use RawTerm" #-}
 
-type Type = CoreErased.Type PrimTy NewPrim
+type Type = CoreErased.Type PrimTy
 
 type Value = M.Value' M.ExpandedOp
 

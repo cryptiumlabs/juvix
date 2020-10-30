@@ -17,19 +17,19 @@ data Term primTy primVal
   | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
   deriving (Show, Eq, Generic)
 
-data Type primTy primVal
+data Type primTy
   = SymT Symbol
   | Star Universe
   | PrimTy primTy
   | -- TODO: How to deal with dependency?
-    Pi Usage.T (Type primTy primVal) (Type primTy primVal)
-  | Sig Usage.T (Type primTy primVal) (Type primTy primVal)
+    Pi Usage.T (Type primTy) (Type primTy)
+  | Sig Usage.T (Type primTy) (Type primTy)
   deriving (Show, Eq, Generic)
 
 data AnnTerm primTy primVal
   = Ann
       { usage :: Usage.T,
-        type' :: Type primTy primVal,
+        type' :: Type primTy,
         term :: Term primTy primVal
       }
   deriving (Show, Eq, Generic)

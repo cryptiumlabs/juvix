@@ -12,9 +12,9 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as Types
 import Juvix.Library
 
-type Return primTy primVal = App.Return (Types.Type primTy primVal) primVal
+type Return primTy primVal = App.Return (Types.Type primTy) primVal
 
-type Take primTy primVal = App.Take (Types.Type primTy primVal) primVal
+type Take primTy primVal = App.Take (Types.Type primTy) primVal
 
 
 fromAnn :: Types.AnnTerm primTy primVal -> Maybe (Take primTy primVal)

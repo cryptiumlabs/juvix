@@ -9,25 +9,25 @@ import qualified Michelson.Untyped.Instr as Instr
 
 -- TODO ∷ make usageFromType Fold!
 
-usageFromType :: Ann.Type primTy primVal -> [Usage.T]
+usageFromType :: Ann.Type primTy -> [Usage.T]
 usageFromType (Ann.Pi usage _x xs) = usage : usageFromType xs
 usageFromType Ann.Sig {} = []
 usageFromType Ann.SymT {} = []
 usageFromType Ann.Star {} = []
 usageFromType Ann.PrimTy {} = []
 
-piToReturnType :: Ann.Type primTy primVal -> Ann.Type primTy primVal
+piToReturnType :: Ann.Type primTy -> Ann.Type primTy
 piToReturnType (Ann.Pi _ _ rest) = piToReturnType rest
 piToReturnType last = last
 
-piToList :: Ann.Type primTy primVal -> [(Usage.T, Ann.Type primTy primVal)]
+piToList :: Ann.Type primTy -> [(Usage.T, Ann.Type primTy)]
 piToList (Ann.Pi usage aType rest) = (usage, aType) : piToList rest
 piToList Ann.Sig {} = []
 piToList Ann.SymT {} = []
 piToList Ann.Star {} = []
 piToList Ann.PrimTy {} = []
 
-piToListTy :: Ann.Type primTy primVal -> [Ann.Type primTy primVal]
+piToListTy :: Ann.Type primTy -> [Ann.Type primTy]
 piToListTy (Ann.Pi _usage ty xs) = ty : piToListTy xs
 piToListTy Ann.Sig {} = []
 piToListTy Ann.SymT {} = []
