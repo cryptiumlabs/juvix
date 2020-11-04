@@ -48,6 +48,9 @@ groupInfixs (Old.Infix (Old.Inf l s r)) = do
         precedenceConversion s precedence
           |> Shunt.Precedence
           |> flip NonEmpty.cons xs
+          -- we cons l and not r, as "3 + 4 + 5 * 6"
+          -- parses as "3 + (4 + (5 * 6))"
+          -- thus the left is always an element
           |> NonEmpty.cons (Shunt.Ele l)
       --
       continuePref ::
@@ -61,6 +64,8 @@ groupInfixs (Old.Infix (Old.Inf l s r)) = do
         case Context.precedenceOf is of
           Nothing -> throw @"error" (Env.UnknownSymbol s)
           Just pr -> fmap (f pr) (groupInfixs r)
+      -- This seems incorrect, see the case were any shadowing may occur.
+      -- (Top level vs local or private vs public)
       continuePref (Just _) _maybeF =
         throw @"error" (Env.UnknownSymbol s)
       continuePref Nothing maybeF =
