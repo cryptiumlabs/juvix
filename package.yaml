@@ -127,7 +127,6 @@ library:
     - Juvix
     - Juvix.Pipeline
     - Juvix.Core
-    - Juvix.Core.Application
     - Juvix.Core.Pipeline
     - Juvix.Core.FromFrontend
     - Juvix.Visualize.Dot
