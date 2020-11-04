@@ -33,7 +33,7 @@ import Prelude (error)
 -- Main Functionality
 --------------------------------------------------------------------------------
 
-instOuter :: Env.Reduction m => Types.NewTerm -> m Instr.ExpandedOp
+instOuter :: Env.Reduction m => Types.RawTerm -> m Instr.ExpandedOp
 instOuter a@(Types.Ann _ ty _) = do
   inst <- inst a
   ty <- typeToPrimType ty
@@ -52,7 +52,7 @@ expandedToInst ty exp =
     Env.Curr c -> mconcat |<< promoteLambda c
     Env.Nop -> pure (Instr.SeqEx [])
 
-inst :: Env.Reduction m => Types.NewTerm -> m Env.Expanded
+inst :: Env.Reduction m => Types.RawTerm -> m Env.Expanded
 inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol -> var symbol
@@ -68,10 +68,10 @@ inst (Types.Ann _usage ty t) =
         Types.Constant m -> do
           consVal (Env.Constant m) ty
           pure (Env.Constant m)
-        x ->
-          constructPrim x ty
+        _ ->
+          constructPrim prim' ty
 
-applyPrimOnArgs :: Types.NewTerm -> [Types.NewTerm] -> Types.NewTerm
+applyPrimOnArgs :: Types.RawTerm -> [Types.RawTerm] -> Types.RawTerm
 applyPrimOnArgs prim arguments =
   let newTerm = Ann.AppM prim arguments
       retType = Utils.piToReturnType (Ann.type' prim)
@@ -96,7 +96,7 @@ add,
   car,
   cdr,
   pair ::
-    Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
+    Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
 mul = intGen Instructions.mul (*)
 sub = intGen Instructions.sub (-)
@@ -127,7 +127,7 @@ isNat =
     (\x -> if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
 lambda ::
-  Env.Error m => [Symbol] -> [Symbol] -> Types.Term -> Types.Type -> m Env.Expanded
+  Env.Error m => [Symbol] -> [Symbol] -> Types.RawTerm -> Types.Type -> m Env.Expanded
 lambda captures arguments body type'
   -- >= as we may return a lambda!
   | length usages >= length arguments =
@@ -184,18 +184,18 @@ var symb = do
 
 -- |
 -- Name calls inst, and then determines how best to name the form in the VStack
-name :: Env.Reduction m => Env.ErasedTerm -> Types.NewTerm -> m Env.Expanded
+name :: Env.Reduction m => Env.ErasedTerm -> Types.RawTerm -> m Env.Expanded
 name (Env.Term symb usage) f =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
-nameSymb :: Env.Reduction m => Symbol -> Types.NewTerm -> m Env.Expanded
+nameSymb :: Env.Reduction m => Symbol -> Types.RawTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
 type RunInstr =
-  (forall m. Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded)
+  (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
 
-primToFargs :: Num b => Types.NewPrim -> Types.Type -> (Env.Fun, b)
+primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> (Env.Fun, b)
 primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
   (undefined, 1)
 primToFargs (Types.Inst inst) ty =
@@ -285,7 +285,7 @@ instructionOf x =
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
-appM :: Env.Reduction m => Types.NewTerm -> [Types.NewTerm] -> m Env.Expanded
+appM :: Env.Reduction m => Types.RawTerm -> [Types.RawTerm] -> m Env.Expanded
 appM form@(Types.Ann _u ty t) args =
   let app = inst form >>= flip applyExpanded args
    in case t of
@@ -303,7 +303,7 @@ appM form@(Types.Ann _u ty t) args =
         _ -> app
 
 applyExpanded ::
-  Env.Reduction m => Env.Expanded -> [Types.NewTerm] -> m Env.Expanded
+  Env.Reduction m => Env.Expanded -> [Types.RawTerm] -> m Env.Expanded
 applyExpanded expanded args =
   case expanded of
     Env.Curr c -> do
@@ -331,7 +331,7 @@ type OnTerm m f =
   Instr.ExpandedOp ->
   f ->
   Types.Type ->
-  [Types.NewTerm] ->
+  [Types.RawTerm] ->
   m Env.Expanded
 
 type OnTerm2 m input result =
@@ -432,7 +432,7 @@ onOneArgs op f typ instrs = do
 
 -- todo remove repeat pattern
 -- Cons val here?
-pushConstant :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
+pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 pushConstant typ instrs = do
   v <- traverse (inst >=> promoteTopStack) instrs
   res <- case v of
@@ -445,7 +445,7 @@ pushConstant typ instrs = do
   consVal res typ
   pure res
 
-evalIf :: Env.Reduction m => Types.Type -> [Types.NewTerm] -> m Env.Expanded
+evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
   let eval = inst >=> promoteTopStack
       res = Env.Nop
@@ -544,7 +544,7 @@ reserveNames i = do
 -- Other things considered:
 -- We don't need to drop the arguments we eval and name, as they should be eaten
 -- by the functions they call with the appropriate usages
-apply :: Env.Reduction m => Env.Curried -> [Types.NewTerm] -> [Symbol] -> m Env.Expanded
+apply :: Env.Reduction m => Env.Curried -> [Types.RawTerm] -> [Symbol] -> m Env.Expanded
 apply closure args remainingArgs = do
   let totalLength = fromIntegral (length args + length remainingArgs)
   case totalLength `compare` Env.left closure of
@@ -882,7 +882,7 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
 -- Assume lambdas from storage are curried.
 applyLambdaFromStorage ::
-  Env.Reduction m => Symbol -> Types.Type -> Types.NewTerm -> m [Instr.ExpandedOp]
+  Env.Reduction m => Symbol -> Types.Type -> Types.RawTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
   ty' <- typeToPrimType ty
   lam <- expandedToInst ty' =<< var sym
@@ -892,7 +892,7 @@ applyLambdaFromStorage sym ty arg = do
   pure [lam, arg, Instructions.exec]
 
 applyLambdaFromStorageNArgs ::
-  Env.Reduction m => Symbol -> MT.Type -> [Types.NewTerm] -> m Env.Expanded
+  Env.Reduction m => Symbol -> MT.Type -> [Types.RawTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args =
   Env.Expanded . mconcat |<< do
     undefined

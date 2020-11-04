@@ -46,9 +46,9 @@ data Expanded
     Nop
   deriving (Show)
 
-newtype Fun = Fun (forall m. Reduction m => [Types.NewTerm] -> m Expanded)
+newtype Fun = Fun (forall m. Reduction m => [Types.RawTerm] -> m Expanded)
 
-unFun :: Reduction m => Fun -> [Types.NewTerm] -> m Expanded
+unFun :: Reduction m => Fun -> [Types.RawTerm] -> m Expanded
 unFun (Fun f) = f
 
 data ErasedTerm

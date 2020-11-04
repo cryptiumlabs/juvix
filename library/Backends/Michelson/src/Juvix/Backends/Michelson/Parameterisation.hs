@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
@@ -16,9 +14,9 @@ import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
+import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Parameterisation as P
@@ -91,10 +89,10 @@ hasType (Constant _v) ty
   | otherwise = False
 hasType x ty = ty == undefined
 
-arityRaw :: PrimVal -> Int
+arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
-arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arity
+arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
 type ApplyError = Core.PipelineError PrimTy PrimVal CompilationError
 
