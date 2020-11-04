@@ -136,8 +136,6 @@ t =
     { hasType,
       builtinTypes,
       builtinValues,
-      arity,
-      apply,
       parseTy,
       parseVal,
       reservedNames,

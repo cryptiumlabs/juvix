@@ -34,7 +34,7 @@ data UnaryOp = Neg
 
 type Term = CoreErased.AnnTerm () PrimVal
 
-type Type = CoreErased.Type () PrimVal
+type Type = CoreErased.Type ()
 
 data CompilationError
   = NotYetImplemented
