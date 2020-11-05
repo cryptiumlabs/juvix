@@ -1,0 +1,9 @@
+resolver: lts-15.16
+
+packages:
+- .
+
+extra-deps:
+- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+
+allow-newer: true

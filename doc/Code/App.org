@@ -5,9 +5,9 @@
   + [[ErasedAnn]]
   + [[HR]]
   + [[Pipeline]]
-  + [[Usage]]
   + [[Environment]]
   + [[Library]]
+  + [[Usage]]
   + [[Pipeline]]
 * Config
 - _Relies on_
@@ -25,7 +25,11 @@
   + [[Default]]
   + [[Library]]
 * Main
+- _Relies on_
+  + [[Library]]
 * Options
+- _Relies on_
+  + [[Library]]
 * Types
 - _Relies on_
   + [[Types]]

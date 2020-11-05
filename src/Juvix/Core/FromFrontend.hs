@@ -7,16 +7,16 @@ module Juvix.Core.FromFrontend where
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Common.Context as Ctx
-import qualified Juvix.Core.Common.NameSymbol as NameSymbol
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
-import qualified Juvix.Core.Usage as Usage
 import qualified Juvix.FrontendContextualise as FE
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 data Error
   = -- features not yet implemented

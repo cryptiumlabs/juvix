@@ -1,0 +1,87 @@
+name:                interaction-net
+version:             0.1.0.0
+github:              "githubuser/InteractionNet"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2020 Author name here"
+
+description:         Please see the README on GitHub at <https://github.com/githubuser/InteractionNet#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- jsonschema-gen
+- lens
+- fgl
+- containers
+- unordered-containers
+- enummapset
+- parsec
+###########################
+# Libraries
+###########################
+# we use core for 2 translation files
+- standard-library
+- core
+
+# TODO :: Thin this somehow
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  interaction-net-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - interaction-net

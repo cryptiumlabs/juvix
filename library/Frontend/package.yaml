@@ -1,0 +1,86 @@
+name:                frontend
+version:             0.1.0.0
+github:              "githubuser/Frontend"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2020 Author name here"
+
+description:         Juvix Frontend Datastructure
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - RankNTypes
+  - LambdaCase
+  - StandaloneDeriving
+  - ConstraintKinds
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - PatternSynonyms
+  - TypeFamilies
+  - MultiWayIf
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - NoMonomorphismRestriction
+
+dependencies:
+- base >= 4.7 && < 5
+- standard-library
+- capability >= 0.2.0.0
+- extensible-data
+- lens
+- containers
+- text
+- bytestring
+###########################
+# Dependency for Parsers
+###########################
+- parsec
+- attoparsec
+- attoparsec-expr
+- aeson
+- filepath
+
+library:
+  source-dirs: src
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+when:
+  condition: flag(incomplete-error)
+  ghc-options:
+    - -Werror=incomplete-patterns
+    - -Werror=missing-fields
+    - -Werror=missing-methods
+
+flags:
+  incomplete-error:
+    description: >
+      Incomplete patterns, missing record fields, and missing class methods are
+      an error
+    manual: true
+    default: false
+
+tests:
+  frontend-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - frontend
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

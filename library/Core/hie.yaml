@@ -1,0 +1,6 @@
+cradle:
+  stack:
+    - path: ./src
+      component: "core"
+    - path: ./test
+      component: "core:test:core-test"

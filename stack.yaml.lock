@@ -96,13 +96,6 @@ packages:
   original:
     hackage: restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
 - completed:
-    hackage: s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
-    pantry-tree:
-      size: 1467
-      sha256: 280c1899ea1a905f01785e175ff029748e9913388d25e02a8e4cdceb9a92b722
-  original:
-    hackage: s-cargot-0.1.4.0@sha256:61ea1833fbb4c80d93577144870e449d2007d311c34d74252850bb48aa8c31fb,3525
-- completed:
     hackage: semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
     pantry-tree:
       size: 401

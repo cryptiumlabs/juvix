@@ -1,0 +1,34 @@
+resolver: lts-15.16
+
+packages:
+- .
+
+extra-deps:
+- ../../StandardLibrary
+- ../../Core
+- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- github: metastatedev/extensible-data
+  commit: d11dee6006169cb537e95af28c3541a24194dea8
+
+###############################
+# For eac solver for core
+###############################
+- github: cwgoes/haskell-z3
+  commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
+
+################################################################################
+# arithmetic circuits deps
+################################################################################
+
+- arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
+- galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
+- bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
+
+- github: adjoint-io/pairing
+  commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
+- github: adjoint-io/elliptic-curve
+  commit: 52b7eba38db0b3aa3619f2916c518f8f3ee63aaf
+- github: adjoint-io/galois-field
+  commit: 95fc86b61c573518ff6a1ab1b9f23301482b2577
+
+allow-newer: true

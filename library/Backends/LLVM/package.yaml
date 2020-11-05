@@ -1,0 +1,95 @@
+name:                llvm
+version:             0.1.0.0
+github:              "githubuser/LLVM"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2020 Author name here"
+
+description:         Please see the README on GitHub at <https://github.com/githubuser/LLVM#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- bytestring
+- Cabal
+- containers
+- unordered-containers
+- text
+###########################
+# Libraries
+###########################
+- standard-library
+- core
+- interaction-net
+###########################
+# Dependency for LLVM
+###########################
+- llvm-hs
+- llvm-hs-pure
+- llvm-hs-pretty
+- derive-storable
+- derive-storable-plugin
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+ghc-options:
+  - -ferror-spans
+  - -Wall
+  - -fno-warn-orphans
+  - -fno-warn-name-shadowing
+  - -fno-warn-missing-pattern-synonym-signatures
+  - -j
+  - -static
+  - -fwrite-ide-info
+
+library:
+  source-dirs: src
+
+tests:
+  llvm-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - llvm
+    - tasty
+    - tasty-hunit
+    - tasty-silver
+    - tasty-quickcheck

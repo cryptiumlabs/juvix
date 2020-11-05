@@ -1,7 +1,7 @@
 module Options where
 
+import Juvix.Library hiding (option)
 import Options.Applicative
-import Protolude hiding (option)
 
 data Context
   = Context
