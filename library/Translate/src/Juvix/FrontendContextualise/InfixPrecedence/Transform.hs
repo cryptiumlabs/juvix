@@ -15,7 +15,7 @@ import Prelude (error)
 
 -- Pass we care about
 -- This uses the shunt algorithm
-transformInfix :: Env.WorkingMaps env m => Old.Infix -> m New.Expression
+transformInfix :: Env.Expression tag m => Old.Infix -> m New.Expression
 transformInfix inf = do
   grouped <- groupInfixs (Old.Infix inf)
   case Shunt.shunt grouped of
@@ -39,7 +39,7 @@ precedenceConversion s (Context.Pred Context.NonAssoc i) =
   Shunt.Pred s Shunt.NonAssoc i
 
 groupInfixs ::
-  Env.WorkingMaps env m =>
+  Env.Expression tag m =>
   Old.Expression ->
   m (NonEmpty (Shunt.PredOrEle NameSymbol.T Old.Expression))
 groupInfixs (Old.Infix (Old.Inf l opSym r)) = do
@@ -197,7 +197,7 @@ transformInner = do
       transformInner
 
 transformExpression ::
-  Env.WorkingMaps env m => Old.Expression -> m New.Expression
+  Env.Expression tag m => Old.Expression -> m New.Expression
 transformExpression (Old.Tuple t) = New.Tuple <$> transformTuple t
 transformExpression (Old.List t) = New.List <$> transformList t
 transformExpression (Old.Primitive t) = New.Primitive <$> transformPrim t
@@ -228,17 +228,17 @@ transformExpression (Old.DeclarationE e) =
 --------------------------------------------------------------------------------
 
 transformDeclarationExpression ::
-  Env.WorkingMaps env m => Old.DeclarationExpression -> m New.DeclarationExpression
+  Env.Expression tag m => Old.DeclarationExpression -> m New.DeclarationExpression
 transformDeclarationExpression (Old.DeclareExpession i e) =
   New.DeclareExpession <$> transformDeclaration i <*> transformExpression e
 
-transformDeclaration :: Env.WorkingMaps env m => Old.Declaration -> m New.Declaration
+transformDeclaration :: Env.Expression tag m => Old.Declaration -> m New.Declaration
 transformDeclaration (Old.Infixivity i) =
   New.Infixivity <$> transformInfixDeclar i
 
 -- TODO ∷ update map to reflect the infixivity changes!!!!!!
 
-transformInfixDeclar :: Env.WorkingMaps env m => Old.InfixDeclar -> m New.InfixDeclar
+transformInfixDeclar :: Env.Expression tag m => Old.InfixDeclar -> m New.InfixDeclar
 transformInfixDeclar (Old.AssocL n i) = pure (New.AssocL n i)
 transformInfixDeclar (Old.AssocR n i) = pure (New.AssocR n i)
 transformInfixDeclar (Old.NonAssoc n i) = pure (New.NonAssoc n i)
@@ -248,7 +248,7 @@ transformInfixDeclar (Old.NonAssoc n i) = pure (New.NonAssoc n i)
 --------------------------------------------------------------------------------
 
 transformType ::
-  Env.WorkingMaps env m => Old.Type -> m New.Type
+  Env.Expression tag m => Old.Type -> m New.Type
 transformType (Old.Typ usage name' args form) =
   New.Typ
     <$> traverse transformExpression usage
@@ -261,12 +261,12 @@ transformType (Old.Typ usage name' args form) =
 --------------------------------------------------
 
 transformNamedType ::
-  Env.WorkingMaps env m => Old.NamedType -> m New.NamedType
+  Env.Expression tag m => Old.NamedType -> m New.NamedType
 transformNamedType (Old.NamedType' name exp) =
   New.NamedType' <$> transformName name <*> transformExpression exp
 
 transformTypeRefine ::
-  Env.WorkingMaps env m => Old.TypeRefine -> m New.TypeRefine
+  Env.Expression tag m => Old.TypeRefine -> m New.TypeRefine
 transformTypeRefine (Old.TypeRefine name refine) =
   New.TypeRefine <$> transformExpression name <*> transformExpression refine
 
@@ -275,19 +275,19 @@ transformTypeRefine (Old.TypeRefine name refine) =
 --------------------------------------------------
 
 transformName ::
-  Env.WorkingMaps env m => Old.Name -> m New.Name
+  Env.Expression tag m => Old.Name -> m New.Name
 transformName (Old.Implicit s) = pure $ New.Implicit s
 transformName (Old.Concrete s) = pure $ New.Concrete s
 
 transformArrowSymbol ::
-  Env.WorkingMaps env m => Old.ArrowSymbol -> m New.ArrowSymbol
+  Env.Expression tag m => Old.ArrowSymbol -> m New.ArrowSymbol
 transformArrowSymbol (Old.ArrowUse usage) =
   pure $ New.ArrowUse usage
 transformArrowSymbol (Old.ArrowExp e) =
   New.ArrowExp <$> transformExpression e
 
 transformUniverseExpression ::
-  Env.WorkingMaps env m => Old.UniverseExpression -> m New.UniverseExpression
+  Env.Expression tag m => Old.UniverseExpression -> m New.UniverseExpression
 transformUniverseExpression (Old.UniverseExpression s) =
   pure $ New.UniverseExpression s
 
@@ -296,40 +296,40 @@ transformUniverseExpression (Old.UniverseExpression s) =
 --------------------------------------------------
 
 transformData ::
-  Env.WorkingMaps env m => Old.Data -> m New.Data
+  Env.Expression tag m => Old.Data -> m New.Data
 transformData (Old.Arrowed exp adt) =
   New.Arrowed <$> transformExpression exp <*> transformAdt adt
 transformData (Old.NonArrowed adt) =
   New.NonArrowed <$> transformAdt adt
 
 transformAdt ::
-  Env.WorkingMaps env m => Old.Adt -> m New.Adt
+  Env.Expression tag m => Old.Adt -> m New.Adt
 transformAdt (Old.Sum oldsu) = New.Sum <$> traverse transformSum oldsu
 transformAdt (Old.Product p) = New.Product <$> transformProduct p
 
 transformSum ::
-  Env.WorkingMaps env m => Old.Sum -> m New.Sum
+  Env.Expression tag m => Old.Sum -> m New.Sum
 transformSum (Old.S sym prod) =
   New.S sym <$> traverse transformProduct prod
 
 transformProduct ::
-  Env.WorkingMaps env m => Old.Product -> m New.Product
+  Env.Expression tag m => Old.Product -> m New.Product
 transformProduct (Old.Record rec') = New.Record <$> transformRecord rec'
 transformProduct (Old.Arrow arrow) = New.Arrow <$> transformExpression arrow
 transformProduct (Old.ADTLike adt) = New.ADTLike <$> traverse transformExpression adt
 
 transformRecord ::
-  Env.WorkingMaps env m => Old.Record -> m New.Record
+  Env.Expression tag m => Old.Record -> m New.Record
 transformRecord (Old.Record'' fields sig) =
   New.Record'' <$> traverse transformNameType fields <*> traverse transformExpression sig
 
 transformNameType ::
-  Env.WorkingMaps env m => Old.NameType -> m New.NameType
+  Env.Expression tag m => Old.NameType -> m New.NameType
 transformNameType (Old.NameType' sig name) =
   New.NameType' <$> transformExpression sig <*> transformName name
 
 transformFunction ::
-  Env.WorkingMaps env m => Old.Function -> m New.Function
+  Env.Expression tag m => Old.Function -> m New.Function
 transformFunction (Old.Func name f sig) =
   New.Func name <$> traverse transformFunctionLike f <*> traverse transformSignature sig
 
@@ -341,7 +341,7 @@ accBindings :: [Old.Arg] -> [Symbol]
 accBindings = concatMap (findBindings . argLogic)
 
 transformFunctionLike ::
-  Env.WorkingMaps env m =>
+  Env.Expression tag m =>
   Old.FunctionLike Old.Expression ->
   m (New.FunctionLike New.Expression)
 transformFunctionLike (Old.Like args body) =
@@ -349,7 +349,7 @@ transformFunctionLike (Old.Like args body) =
     New.Like <$> traverse transformArg args <*> transformExpression body
 
 transformArg ::
-  Env.WorkingMaps env m => Old.Arg -> m New.Arg
+  Env.Expression tag m => Old.Arg -> m New.Arg
 transformArg (Old.ConcreteA ml) = New.ConcreteA <$> transformMatchLogic ml
 transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
 
@@ -358,7 +358,7 @@ transformArg (Old.ImplicitA ml) = New.ImplicitA <$> transformMatchLogic ml
 --------------------------------------------------------------------------------
 
 transformSignature ::
-  Env.WorkingMaps env m => Old.Signature -> m New.Signature
+  Env.Expression tag m => Old.Signature -> m New.Signature
 transformSignature (Old.Sig name usage arrow constraints) =
   New.Sig name
     <$> traverse transformExpression usage
@@ -370,45 +370,45 @@ transformSignature (Old.Sig name usage arrow constraints) =
 --------------------------------------------------------------------------------
 
 transformArrowExp ::
-  Env.WorkingMaps env m => Old.ArrowExp -> m New.ArrowExp
+  Env.Expression tag m => Old.ArrowExp -> m New.ArrowExp
 transformArrowExp (Old.Arr' left usage right) =
   New.Arr'
     <$> transformExpression left
     <*> transformExpression usage
     <*> transformExpression right
 
-transformPrim :: Env.WorkingMaps env m => Old.Primitive -> m New.Primitive
+transformPrim :: Env.Expression tag m => Old.Primitive -> m New.Primitive
 transformPrim (Old.Prim p) =
   pure (New.Prim p)
 
-transformTuple :: Env.WorkingMaps env m => Old.Tuple -> m New.Tuple
+transformTuple :: Env.Expression tag m => Old.Tuple -> m New.Tuple
 transformTuple (Old.TupleLit t) =
   New.TupleLit <$> traverse transformExpression t
 
-transformList :: Env.WorkingMaps env m => Old.List -> m New.List
+transformList :: Env.Expression tag m => Old.List -> m New.List
 transformList (Old.ListLit t) =
   New.ListLit <$> traverse transformExpression t
 
 transformConst ::
-  Env.WorkingMaps env m => Old.Constant -> m New.Constant
+  Env.Expression tag m => Old.Constant -> m New.Constant
 transformConst (Old.Number numb) = New.Number <$> transformNumb numb
 transformConst (Old.String str) = New.String <$> transformString str
 
 transformNumb ::
-  Env.WorkingMaps env m => Old.Numb -> m New.Numb
+  Env.Expression tag m => Old.Numb -> m New.Numb
 transformNumb (Old.Integer' i) = pure $ New.Integer' i
 transformNumb (Old.Double' d) = pure $ New.Double' d
 
 transformString ::
-  Env.WorkingMaps env m => Old.String' -> m New.String'
+  Env.Expression tag m => Old.String' -> m New.String'
 transformString (Old.Sho t) = pure $ New.Sho t
 
 transformBlock ::
-  Env.WorkingMaps env m => Old.Block -> m New.Block
+  Env.Expression tag m => Old.Block -> m New.Block
 transformBlock (Old.Bloc expr) = New.Bloc <$> transformExpression expr
 
 transformLambda ::
-  Env.WorkingMaps env m => Old.Lambda -> m New.Lambda
+  Env.Expression tag m => Old.Lambda -> m New.Lambda
 transformLambda (Old.Lamb args body) =
   protectSymbols bindings $
     New.Lamb <$> traverse transformMatchLogic args <*> transformExpression body
@@ -416,12 +416,12 @@ transformLambda (Old.Lamb args body) =
     bindings = foldr (\x acc -> findBindings x <> acc) [] args
 
 transformApplication ::
-  Env.WorkingMaps env m => Old.Application -> m New.Application
+  Env.Expression tag m => Old.Application -> m New.Application
 transformApplication (Old.App fun args) =
   New.App <$> transformExpression fun <*> traverse transformExpression args
 
 transformExpRecord ::
-  Env.WorkingMaps env m => Old.ExpRecord -> m New.ExpRecord
+  Env.Expression tag m => Old.ExpRecord -> m New.ExpRecord
 transformExpRecord (Old.ExpressionRecord fields) =
   New.ExpressionRecord <$> traverse (transformNameSet transformExpression) fields
 
@@ -429,7 +429,7 @@ transformExpRecord (Old.ExpressionRecord fields) =
 -- Symbol Binding
 --------------------------------------------------
 
-transformLet :: Env.WorkingMaps env m => Old.Let -> m New.Let
+transformLet :: Env.Expression tag m => Old.Let -> m New.Let
 transformLet (Old.LetGroup name bindings body) = do
   protectSymbols [name] $ do
     transformedBindings <- traverse transformFunctionLike bindings
@@ -442,7 +442,7 @@ transformLet (Old.LetGroup name bindings body) = do
     pure res
 
 transformLetType ::
-  Env.WorkingMaps env m => Old.LetType -> m New.LetType
+  Env.Expression tag m => Old.LetType -> m New.LetType
 transformLetType (Old.LetType'' typ expr) = do
   let typeName = Old.typeName' typ
   protectSymbols [typeName] $ do
@@ -481,24 +481,24 @@ findBindingsAcc (Old.MatchLogic contents name) xs =
    in findMatchLogicSym contents startList
 
 transformMatch ::
-  Env.WorkingMaps env m => Old.Match -> m New.Match
+  Env.Expression tag m => Old.Match -> m New.Match
 transformMatch (Old.Match'' on bindings) =
   New.Match'' <$> transformExpression on <*> traverse transformMatchL bindings
 
 transformMatchL ::
-  Env.WorkingMaps env m => Old.MatchL -> m New.MatchL
+  Env.Expression tag m => Old.MatchL -> m New.MatchL
 transformMatchL (Old.MatchL pat body) =
   protectSymbols
     (findBindings pat)
     (New.MatchL <$> transformMatchLogic pat <*> transformExpression body)
 
 transformMatchLogic ::
-  Env.WorkingMaps env m => Old.MatchLogic -> m New.MatchLogic
+  Env.Expression tag m => Old.MatchLogic -> m New.MatchLogic
 transformMatchLogic (Old.MatchLogic start name) =
   New.MatchLogic <$> tranformMatchLogicStart start <*> pure name
 
 tranformMatchLogicStart ::
-  Env.WorkingMaps env m => Old.MatchLogicStart -> m New.MatchLogicStart
+  Env.Expression tag m => Old.MatchLogicStart -> m New.MatchLogicStart
 tranformMatchLogicStart (Old.MatchCon conName logic) =
   New.MatchCon conName <$> traverse transformMatchLogic logic
 tranformMatchLogicStart (Old.MatchName s) =
@@ -509,14 +509,14 @@ tranformMatchLogicStart (Old.MatchRecord r) =
   New.MatchRecord <$> traverse (transformNameSet transformMatchLogic) r
 
 transformNameSet ::
-  Env.WorkingMaps env m => (t -> m t1) -> Old.NameSet t -> m (New.NameSet t1)
+  Env.Expression tag m => (t -> m t1) -> Old.NameSet t -> m (New.NameSet t1)
 transformNameSet p (Old.NonPunned s e) =
   New.NonPunned s <$> p e
 
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
-protectSymbols :: Env.WorkingMaps env m => [Symbol] -> m a -> m a
+protectSymbols :: Env.Expression tag m => [Symbol] -> m a -> m a
 protectSymbols syms op = do
   originalBindings <- traverse saveOld syms
   traverse_ Env.addUnknownGlobal (fmap snd originalBindings)

@@ -1,7 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.FrontendContextualise.InfixPrecedence.Environment
@@ -26,19 +26,40 @@ type Old f =
 type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
 
+-- | the traditional transition between one context and another
 data EnvDispatch = EnvDispatch
+
+-- | Used when going trying to transition one definition to the next level
+data SingleDispatch a b c = SingleDispatch
 
 type TransitionMap m =
   (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
 
-type RunEnv m =
-  (TransitionMap m, HasReader "dispatch" EnvDispatch m)
-
 type Queryable tag m =
   (HasReader "dispatch" tag m, QueryConstraint tag m, Query tag)
 
+-- The effect of expression and below note that new is not the new map
+-- per se, but more instead of where local functions get added...  for
+-- a full pass this is indeed the new context, but for a single pass,
+-- just a local cache
+type Expression tag m =
+  ( HasReader "dispatch" tag m,
+    QueryConstraint tag m,
+    Query tag,
+    HasState "new" (New Context.T) m,
+    HasThrow "error" Error m
+  )
+
+type MinimalEnv a b c m =
+  (HasState "env" (Context.T a b c) m)
+
+-- the effect of the pass itself
 type WorkingMaps tag m =
-  (TransitionMap m, Queryable tag m, HasThrow "error" Error m)
+  (TransitionMap m, Expression tag m, HasThrow "error" Error m)
+
+-- the effect of the single function down
+type SingleMap a b c m =
+  (MinimalEnv a b c m, Expression (SingleDispatch a b c) m)
 
 data Environment
   = Env
@@ -55,8 +76,13 @@ class Query a where
   queryInfo' ::
     (SymbLookup sym, QueryConstraint a m) => sym -> a -> m (Maybe [Context.Information])
 
+instance Query (SingleDispatch a b c) where
+  type QueryConstraint _ m = MinimalEnv a b c m
+  queryInfo' sym SingleDispatch = do
+    undefined
+
 instance Query EnvDispatch where
-  type QueryConstraint _ m = RunEnv m
+  type QueryConstraint _ m = TransitionMap m
   queryInfo' sym EnvDispatch = do
     looked <- lookup sym
     lookedO <- ask sym
