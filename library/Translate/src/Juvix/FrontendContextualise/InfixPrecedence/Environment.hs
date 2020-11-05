@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -9,6 +10,7 @@ module Juvix.FrontendContextualise.InfixPrecedence.Environment
   )
 where
 
+import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as Local
 import Juvix.FrontendContextualise.Environment
@@ -26,13 +28,17 @@ type New f =
 
 data EnvDispatch = EnvDispatch
 
+type TransitionMap m =
+  (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
+
+type RunEnv m =
+  (TransitionMap m, HasReader "dispatch" EnvDispatch m)
+
+type Queryable tag m =
+  (HasReader "dispatch" tag m, QueryConstraint tag m, Query tag)
+
 type WorkingMaps tag m =
-  ( HasState "old" (Old Context.T) m,
-    HasState "new" (New Context.T) m,
-    Query tag m,
-    HasReader "dispatch" tag m,
-    HasThrow "error" Error m
-  )
+  (TransitionMap m, Queryable tag m, HasThrow "error" Error m)
 
 data Environment
   = Env
@@ -44,11 +50,13 @@ data Environment
 
 type FinalContext = New Context.T
 
-class Query a m where
+class Query a where
+  type QueryConstraint a (m :: * -> *) :: Constraint
   queryInfo' ::
-    SymbLookup sym => sym -> a -> m (Maybe [Context.Information])
+    (SymbLookup sym, QueryConstraint a m) => sym -> a -> m (Maybe [Context.Information])
 
-instance WorkingMaps t m => Query EnvDispatch m where
+instance Query EnvDispatch where
+  type QueryConstraint _ m = RunEnv m
   queryInfo' sym EnvDispatch = do
     looked <- lookup sym
     lookedO <- ask sym
@@ -78,7 +86,7 @@ instance WorkingMaps t m => Query EnvDispatch m where
     pure (chooseProperScope lookedO looked)
 
 queryInfo ::
-  (HasReader "dispatch" a m, Query a m, SymbLookup sym) =>
+  (QueryConstraint a m, HasReader "dispatch" a m, Query a, SymbLookup sym) =>
   sym ->
   m (Maybe [Context.Information])
 queryInfo s = Juvix.Library.ask @"dispatch" >>= queryInfo' s
