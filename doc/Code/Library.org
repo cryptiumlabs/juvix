@@ -1192,10 +1192,12 @@ Can be added to via core translation
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[NameSpace]]
   + [[FrontendContextualise/Environment]]
   + [[InfixPrecedence/ShuntYard]]
   + [[InfixPrecedence/Types]]
   + [[ModuleOpen/Types]]
+  + [[Library]]
   + [[Library]]
 ****** Extend <<InfixPrecedence/Extend>>
 - This pass removes the =Infix= form
