@@ -29,10 +29,18 @@ data Error
     UniversesUnsupported FE.UniverseExpression
   | -- | implicit arguments are not yet implemented
     ImplicitsUnsupported FE.ArrowExp
+  | -- | implicit arguments are not yet implemented
+    ImplicitsUnsupportedA FE.Arg
   | -- | type inference for definitions is not yet implemented
     SigRequired (FE.Final Ctx.Definition)
   | -- | head of application not an Elim
     NotAnElim FE.Expression
+  | -- | pattern matching etc not yet implemented
+    ExprUnsupported FE.Expression
+  | -- | local datatypes etc not yet implemented
+    DefUnsupported (FE.Final Ctx.Definition)
+  | -- | patterns other than single vars not yet implemented
+    PatternUnsupported FE.MatchLogic
   | -- actual errors
 
     -- | unknown found at declaration level
@@ -147,11 +155,11 @@ transformTermHR (FE.Constant k) = do
   case paramConstant p k of
     Just x -> pure $ HR.Prim x
     Nothing -> throwFF $ UnsupportedConstant k
-transformTermHR (FE.Let l) = _
-transformTermHR (FE.LetType l) = _
-transformTermHR (FE.Match m) = _
-transformTermHR (FE.Name n) = pure $ HR.Elim $ HR.Var _n
-transformTermHR (FE.Lambda l) = _
+transformTermHR (FE.Let l) = transformSimpleLet l
+transformTermHR e@(FE.LetType _) = throwFF $ ExprUnsupported e
+transformTermHR e@(FE.Match _) = throwFF $ ExprUnsupported e
+transformTermHR (FE.Name n) = pure $ HR.Elim $ HR.Var $ NameSymbol.toSymbol n
+transformTermHR (FE.Lambda l) = transformSimpleLambda l
 transformTermHR (FE.Application (FE.App f xs)) = do
   f' <- toElim f =<< transformTermHR f
   HR.Elim . foldl HR.App f' <$> traverse transformTermHR xs
@@ -184,14 +192,34 @@ transformTermHR (FE.UniverseName i) =
   throwFF $ UniversesUnsupported i
 transformTermHR (FE.Parened e) = transformTermHR e
 
+transformSimpleLet :: FE.Let -> Env primTy primVal (HR.Term primTy primVal)
+transformSimpleLet e@(FE.LetGroup name (clause :| []) body) = do
+  let FE.Like args cbody = clause
+  rhs <- toElim (FE.Let e) =<<
+          foldr HR.Lam <$> transformTermHR cbody <*> traverse isVarArg args
+  HR.Let _ name rhs <$> transformTermHR body
+transformSimpleLet e = throwFF $ ExprUnsupported (FE.Let e)
+
+transformSimpleLambda :: FE.Lambda -> Env primTy primVal (HR.Term primTy primVal)
+transformSimpleLambda (FE.Lamb pats body) = do
+  foldr HR.Lam <$> transformTermHR body <*> traverse isVarPat pats
+
+isVarArg :: FE.Arg -> Env primTy primVal Symbol
+isVarArg (FE.ConcreteA p) = isVarPat p
+isVarArg a = throwFF $ ImplicitsUnsupportedA a
+
+isVarPat :: FE.MatchLogic -> Env primTy primVal Symbol
+isVarPat (FE.MatchLogic (FE.MatchName x) Nothing) = pure x
+isVarPat p = throwFF $ PatternUnsupported p
+
 transformArrow :: FE.ArrowExp -> Env primTy primVal (HR.Term primTy primVal)
 transformArrow f@(FE.Arr' xa π b) =
   case xa of
     FE.NamedTypeE (FE.NamedType' x a) -> go π (getName x) a b
-    a -> go π _unusedName a b
+    a -> go π (pure "") a b
   where
     getName (FE.Concrete x) = pure x
-    getName (FE.Implicit x) = throwFF $ ImplicitsUnsupported f
+    getName (FE.Implicit _) = throwFF $ ImplicitsUnsupported f
     go π x a b =
       HR.Pi <$> transformUsage π
         <*> x
@@ -226,7 +254,7 @@ toElim ::
   HR.Term primTy primVal ->
   Env primTy primVal (HR.Elim primTy primVal)
 toElim _ (HR.Elim e) = pure e
-toElim e _ = throwFF $ NotAnElim e
+toElim e _ = throwFF $ NotAnElim e -- FIXME add metavar ann
 
 -- TODO put an annotation with metas for the usage/type
 
@@ -236,34 +264,29 @@ transformUsage (FE.Constant (FE.Number (FE.Integer' i)))
     pure $ Usage.SNat $ fromInteger i
 transformUsage e = throwFF $ NotAUsage e
 
--- FIXME ω
-
 transformGUsage :: FE.Expression -> Env primTy primVal IR.GlobalUsage
 transformGUsage (FE.Constant (FE.Number (FE.Integer' 0))) = pure IR.GZero
 transformGUsage e = throwFF $ NotAGUsage e
 
--- FIXME ω
-
 transformSig ::
   FE.Final Ctx.Definition ->
-  Env primTy primVal (CoreSigHR primTy primVal)
+  Env primTy primVal (Maybe (CoreSigHR primTy primVal))
 transformSig def@(Ctx.Def π msig _ _) =
-  -- why two usages?
-  transformValSig def π msig
-transformSig def@(Ctx.Record _ msig) = transformValSig def Nothing msig
-transformSig (Ctx.TypeDeclar typ) = DataSig <$> transformType typ
+  Just <$> transformValSig def π msig
+transformSig def@(Ctx.Record _ msig) = Just <$> transformValSig def Nothing msig
+transformSig (Ctx.TypeDeclar typ) = Just . DataSig <$> transformTypeSig typ
 transformSig (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
-transformSig Ctx.CurrentNameSpace = _ -- TODO ???
-transformSig (Ctx.Information {}) = _
+transformSig Ctx.CurrentNameSpace = pure Nothing
+transformSig (Ctx.Information {}) = pure Nothing
 
-transformType ::
+transformTypeSig ::
   forall primTy primVal.
   FE.Type ->
   Env primTy primVal (HR.Term primTy primVal)
-transformType (FE.Typ {typeForm = FE.Arrowed {dataArrow}}) =
+transformTypeSig (FE.Typ {typeForm = FE.Arrowed {dataArrow}}) =
   transformTermHR dataArrow
-transformType typ@(FE.Typ {typeForm = FE.NonArrowed {}}) =
+transformTypeSig typ@(FE.Typ {typeForm = FE.NonArrowed {}}) =
   throwFF $ SigRequired $ Ctx.TypeDeclar typ
 
 transformValSig ::
@@ -271,17 +294,25 @@ transformValSig ::
   Maybe Usage.T ->
   Maybe FE.Signature ->
   Env primTy primVal (CoreSigHR primTy primVal)
-transformValSig _ π (Just (FE.Sig _ π' ty cons))
-  | null cons = ValSig _π <$> transformTermHR ty
+transformValSig _ _ (Just (FE.Sig _ (Just π) ty cons))
+  | null cons = ValSig <$> transformGUsage π <*> transformTermHR ty
   | otherwise = throwFF $ ConstraintsUnsupported cons
-transformValSig def π Nothing = throwFF $ SigRequired def
+transformValSig def _ _ = throwFF $ SigRequired def
 
 transformDef ::
+  Symbol ->
   FE.Final Ctx.Definition ->
   Env primTy primVal [IR.Global primTy primVal]
-transformDef (Ctx.Def π _ def _) = _
-transformDef (Ctx.Record rec _) = _
-transformDef (Ctx.TypeDeclar typ) = _
-transformDef (Ctx.Unknown _) = pure []
-transformDef Ctx.CurrentNameSpace = pure [] -- FIXME ???
-transformDef (Ctx.Information {}) = _
+transformDef x (Ctx.Def π sig def _) = do
+  let f = IR.Function {
+            funName = x,
+            funUsage = fromMaybe Usage.Omega π,
+            funType = _, -- TODO pass in answer from transformTypeSig
+            funClauses = _
+          }
+  pure [IR.GFunction f]
+transformDef _ d@(Ctx.Record _ _) = throwFF $ DefUnsupported d
+transformDef _ (Ctx.TypeDeclar typ) = _
+transformDef _ (Ctx.Unknown _) = pure []
+transformDef _ Ctx.CurrentNameSpace = pure []
+transformDef _ (Ctx.Information {}) = pure []
