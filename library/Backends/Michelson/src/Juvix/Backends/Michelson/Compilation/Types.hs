@@ -7,6 +7,7 @@ module Juvix.Backends.Michelson.Compilation.Types
 where
 
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Core.Application as App
@@ -91,8 +92,8 @@ data RawPrimVal
 type NewPrim = RawPrimVal
 {-# DEPRECATED NewPrim "use RawPrimVal" #-}
 
-type Return = App.Return Type RawPrimVal
-type Take = App.Take Type RawPrimVal
+type Return = App.Return (P.PrimType PrimTy) RawPrimVal
+type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
 type PrimVal = Return
 

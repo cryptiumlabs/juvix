@@ -2,7 +2,6 @@
 
 module Juvix.Core.IR.Typechecker.Env where
 
-import Data.Foldable (foldr1) -- (on a NonEmpty)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Types
@@ -14,7 +13,7 @@ import qualified Juvix.Library.Usage as Usage
 
 data EnvCtx' ext primTy primVal
   = EnvCtx
-      { globals :: IR.Globals primTy primVal
+      { globals :: GlobalsT primTy primVal
       }
   deriving (Generic)
 
@@ -33,14 +32,14 @@ newtype EnvTypecheck' ext primTy primVal a
     )
     via MonadError (EnvAlias ext primTy primVal)
   deriving
-    ( HasSource "globals" (IR.Globals primTy primVal),
-      HasReader "globals" (IR.Globals primTy primVal)
+    ( HasSource "globals" (GlobalsT primTy primVal),
+      HasReader "globals" (GlobalsT primTy primVal)
     )
     via ReaderField "globals" (EnvAlias ext primTy primVal)
 
 type EnvTypecheck = EnvTypecheck' IR.NoExt
 
-type HasGlobals primTy primVal = HasReader "globals" (IR.Globals primTy primVal)
+type HasGlobals primTy primVal = HasReader "globals" (GlobalsT primTy primVal)
 
 type CanTC' ext primTy primVal m =
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
@@ -50,18 +49,18 @@ type CanTC' ext primTy primVal m =
 type CanTC primTy primVal m = CanTC' IR.NoExt primTy primVal m
 
 exec ::
-  IR.Globals primTy primVal ->
+  GlobalsT primTy primVal ->
   EnvTypecheck primTy primVal a ->
   (Either (TypecheckError primTy primVal) a, EnvCtx primTy primVal)
 exec globals (EnvTyp env) =
   runState (runExceptT env) $ EnvCtx globals
 
-type Context primTy primVal = [Annotation primTy primVal]
+type Context primTy primVal = [AnnotationT primTy primVal]
 
 lookupCtx ::
   Context primTy primVal ->
   IR.BoundVar ->
-  Maybe (Annotation primTy primVal)
+  Maybe (AnnotationT primTy primVal)
 lookupCtx gam x = do
   Annotation π ty <- atMay gam (fromIntegral x)
   pure $ Annotation π (Eval.weakBy (x + 1) ty)
@@ -69,7 +68,7 @@ lookupCtx gam x = do
 lookupGlobal ::
   (HasGlobals primTy primVal m, HasThrowTC' IR.NoExt ext primTy primVal m) =>
   IR.GlobalName ->
-  m (IR.Value primTy primVal, IR.GlobalUsage)
+  m (ValueT primTy primVal, IR.GlobalUsage)
 lookupGlobal x = do
   mdefn <- asks @"globals" $ HashMap.lookup x
   case mdefn of
@@ -89,7 +88,7 @@ lookupGlobal x = do
 
 type UContext = [Usage.T]
 
-type PatBinds primTy primVal = IntMap (Annotation primTy primVal)
+type PatBinds primTy primVal = IntMap (AnnotationT primTy primVal)
 
 type PatUsages = IntMap Usage.T
 
@@ -139,19 +138,19 @@ deriving via
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
-    HasSource "globals" (IR.Globals primTy primVal) m =>
+    HasSource "globals" (GlobalsT primTy primVal) m =>
     HasSource
       "globals"
-      (IR.Globals primTy primVal)
+      (GlobalsT primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 deriving via
   Lift (InnerTCAlias ext primTy primVal m)
   instance
-    HasReader "globals" (IR.Globals primTy primVal) m =>
+    HasReader "globals" (GlobalsT primTy primVal) m =>
     HasReader
       "globals"
-      (IR.Globals primTy primVal)
+      (GlobalsT primTy primVal)
       (InnerTCT ext primTy primVal m)
 
 type InnerTC' ext primTy primVal =

@@ -18,26 +18,27 @@ type ErasureM primTy primVal m =
 erase ::
   Typed.Term primTy primVal ->
   Usage.T ->
-  Either (Erasure.Error primTy primVal) (Erasure.Term primTy primVal)
+  Either (Erasure.Error primTy primVal) (Erasure.TermT primTy primVal)
 erase t π
   | π == mempty = Left $ Erasure.CannotEraseZeroUsageTerm t
   | otherwise = exec $ eraseTerm t
 
 eraseGlobal ::
   ErasureM primTy primVal m =>
-  IR.Global primTy primVal ->
-  m (Erasure.Global primTy primVal)
+  Typed.GlobalT primTy primVal ->
+  m (Erasure.GlobalT primTy primVal)
 eraseGlobal g =
   case g of
     IR.GDatatype g -> Erasure.GDatatype |<< eraseDatatype g
     IR.GDataCon c -> Erasure.GDataCon |<< eraseDataCon c
     IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
-    -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
-    IR.GAbstract u t -> Erasure.GAbstract u |<< eraseTerm undefined
+    -- TODO: Need the annotated term here. ref
+    -- https://github.com/metastatedev/juvix/issues/495
+    IR.GAbstract u t -> Erasure.GAbstract u |<< eraseType t
 
 eraseDatatype ::
   ErasureM primTy primVal m =>
-  IR.Datatype primTy primVal ->
+  Typed.DatatypeT primTy primVal ->
   m (Erasure.Datatype primTy)
 eraseDatatype (IR.Datatype name args level cons) = do
   args <- mapM eraseDataArg args
@@ -46,7 +47,7 @@ eraseDatatype (IR.Datatype name args level cons) = do
 
 eraseDataArg ::
   ErasureM primTy primVal m =>
-  IR.DataArg primTy primVal ->
+  Typed.DataArgT primTy primVal ->
   m (Erasure.DataArg primTy)
 eraseDataArg (IR.DataArg name usage ty isParam) = do
   ty <- eraseType ty
@@ -54,7 +55,7 @@ eraseDataArg (IR.DataArg name usage ty isParam) = do
 
 eraseDataCon ::
   ErasureM primTy primVal m =>
-  IR.DataCon primTy primVal ->
+  Typed.DataConT primTy primVal ->
   m (Erasure.DataCon primTy)
 eraseDataCon (IR.DataCon name ty) = do
   ty <- eraseType ty
@@ -62,8 +63,8 @@ eraseDataCon (IR.DataCon name ty) = do
 
 eraseFunction ::
   ErasureM primTy primVal m =>
-  IR.Function primTy primVal ->
-  m (Erasure.Function primTy primVal)
+  Typed.FunctionT primTy primVal ->
+  m (Erasure.FunctionT primTy primVal)
 eraseFunction (IR.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (IR.quote0 ty)
   clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
@@ -78,8 +79,8 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy primVal m =>
-  IR.FunClause primTy primVal ->
-  m (Erasure.FunClause primTy primVal)
+  Typed.FunClauseT primTy primVal ->
+  m (Erasure.FunClauseT primTy primVal)
 eraseFunClause (IR.FunClause patts term) = do
   patts <- mapM erasePattern patts
   -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
@@ -89,8 +90,8 @@ eraseFunClause (IR.FunClause patts term) = do
 
 erasePattern ::
   ErasureM primTy primVal m =>
-  IR.Pattern primTy primVal ->
-  m (Erasure.Pattern primTy primVal)
+  Typed.PatternT primTy primVal ->
+  m (Erasure.PatternT primTy primVal)
 erasePattern patt =
   case patt of
     IR.PCon name patts -> do
@@ -107,9 +108,9 @@ erasePattern patt =
     IR.PPrim p -> pure (Erasure.PPrim p)
 
 erasePatterns ::
-  ErasureM primTy primVal m =>
-  ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal)) ->
-  m ([IR.Pattern primTy primVal], ([(Usage.Usage, IR.Term primTy primVal)], IR.Term primTy primVal))
+  ErasureM primTy' primVal' m =>
+  ([pat], ([(Usage.Usage, arg)], ret)) ->
+  m ([pat], ([(Usage.Usage, arg)], ret))
 erasePatterns ([], ([], ret)) = pure ([], ([], ret))
 erasePatterns (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePatterns (ps, (args, ret))
 erasePatterns (p : ps, (arg : args, ret)) = do
@@ -131,7 +132,7 @@ listToPiType ((u, x) : xs, ret) = IR.Pi u x (listToPiType (xs, ret))
 eraseTerm ::
   ErasureM primTy primVal m =>
   Typed.Term primTy primVal ->
-  m (Erasure.Term primTy primVal)
+  m (Erasure.TermT primTy primVal)
 eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm t@(Typed.PrimTy _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm (Typed.Prim p ann) = do
@@ -165,7 +166,7 @@ eraseTerm (Typed.Elim e _) = eraseElim e
 eraseElim ::
   ErasureM primTy primVal m =>
   Typed.Elim primTy primVal ->
-  m (Erasure.Term primTy primVal)
+  m (Erasure.TermT primTy primVal)
 eraseElim (Typed.Bound x ann) = do
   Erasure.Var <$> lookupBound x
     <*> eraseType (IR.annType ann)
@@ -188,7 +189,7 @@ eraseElim (Typed.Ann _ s _ _ _) = do
 eraseType ::
   forall primTy primVal m.
   ErasureM primTy primVal m =>
-  IR.Value primTy primVal ->
+  Typed.ValueT primTy primVal ->
   m (Erasure.Type primTy)
 eraseType (IR.VStar i) = do
   pure $ Erasure.Star i
@@ -218,7 +219,7 @@ eraseType v@(IR.VPrim _) = do
 eraseTypeN ::
   forall primTy primVal m.
   ErasureM primTy primVal m =>
-  IR.Neutral primTy primVal ->
+  Typed.NeutralT primTy primVal ->
   m (Erasure.Type primTy)
 eraseTypeN (IR.NBound x) = do
   Erasure.SymT <$> lookupBound x

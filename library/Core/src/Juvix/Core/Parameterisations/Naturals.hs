@@ -3,6 +3,7 @@
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -51,6 +52,9 @@ instance P.CanApply Val where
     app (Curried Mul x) (Val y : ys) = app (Val (x * y)) ys
     app n [] = Right n
     app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
+
+instance P.CanApply (Typed.TypedPrim Ty Val) where
+
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

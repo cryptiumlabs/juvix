@@ -25,7 +25,6 @@ import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library.Usage (Usage)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
-import Juvix.Library.Usage (Usage)
 
 data Env primTy primVal = Env {nextName :: Int, nameStack :: [Symbol]}
   deriving (Generic)
@@ -60,19 +59,26 @@ exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
 data Error primTy primVal
   = UnsupportedTermT (Typed.Term primTy primVal)
   | UnsupportedTermE (Typed.Elim primTy primVal)
-  | UnsupportedTypeV (IR.Value primTy primVal)
-  | UnsupportedTypeN (IR.Neutral primTy primVal)
+  | UnsupportedTypeV (Typed.ValueT primTy primVal)
+  | UnsupportedTypeN (Typed.NeutralT primTy primVal)
   | CannotEraseZeroUsageTerm (Typed.Term primTy primVal)
   | TypeError (TC.TypecheckError primTy primVal)
   | InternalError Text
   deriving (Generic)
 
 deriving instance
-  (Show primTy, Show primVal, Show (Param.ApplyErrorExtra primVal))
-  => Show (Error primTy primVal)
+  ( Show primTy,
+    Show primVal,
+    Show (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+  ) =>
+  Show (Error primTy primVal)
 
-deriving instance (Eq primTy, Eq primVal, Eq (Param.ApplyErrorExtra primVal))
-  => Eq (Error primTy primVal)
+deriving instance
+  ( Eq primTy,
+    Eq primVal,
+    Eq (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+  ) =>
+  Eq (Error primTy primVal)
 
 data T primTy
 
@@ -91,6 +97,8 @@ do
           Erased.typeLet = typedTuple,
           Erased.typeApp = typed
         }
+
+type TermT primTy primVal = Term primTy (Typed.TypedPrim primTy primVal)
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
@@ -134,11 +142,17 @@ data Function primTy primVal
         funClauses :: NonEmpty (FunClause primTy primVal)
       }
 
+type FunctionT primTy primVal =
+  Function primTy (Typed.TypedPrim primTy primVal)
+
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendFunClause "FunClause" [] [t|T|] extFunClause
 
 data FunClause primTy primVal
   = FunClause [Pattern primTy primVal] (Term primTy primVal)
+
+type FunClauseT primTy primVal =
+  FunClause primTy (Typed.TypedPrim primTy primVal)
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendPattern "Pattern" [] [t|T|] extPattern
@@ -150,13 +164,20 @@ data Pattern primTy primVal
   | PDot (Term primTy primVal)
   | PPrim primVal
 
+type PatternT primTy primVal =
+  Pattern primTy (Typed.TypedPrim primTy primVal)
+
 data Global primTy primVal
   = GDatatype (Datatype primTy)
   | GDataCon (DataCon primTy)
   | GFunction (Function primTy primVal)
-  | GAbstract GlobalUsage (Term primTy primVal)
+  | GAbstract GlobalUsage (Type primTy)
 
 type Globals primTy primVal = HM.HashMap GlobalName (Global primTy primVal)
+
+type GlobalT primTy primVal = Global primTy (Typed.TypedPrim primTy primVal)
+
+type GlobalsT primTy primVal = Globals primTy (Typed.TypedPrim primTy primVal)
 
 getType :: Term primTy primVal -> Type primTy
 getType (Var _ ty) = ty

@@ -10,6 +10,8 @@ where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as Types
+import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Library.Usage as Usage
 import Juvix.Library
 
 type Return primTy primVal = App.Return (Types.Type primTy) primVal
@@ -23,3 +25,8 @@ fromAnn _ = Nothing
 
 toAnn :: Take primTy primVal -> Types.AnnTerm primTy primVal
 toAnn (App.Take usage type' term) = Types.Ann usage type' $ Types.Prim term
+
+fromPrimType :: P.PrimType primTy -> Types.Type primTy
+fromPrimType (t :| []) = Types.PrimTy t
+fromPrimType (t :| (u:us)) =
+  Types.Pi Usage.Omega (Types.PrimTy t) (fromPrimType (u :| us))

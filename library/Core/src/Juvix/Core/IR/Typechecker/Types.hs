@@ -5,6 +5,7 @@ module Juvix.Core.IR.Typechecker.Types where
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.Application as App
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
@@ -26,26 +27,141 @@ deriving instance
   (Show (IR.Value' ext primTy primVal)) =>
   Show (Annotation' ext primTy primVal)
 
+data T
+
+data BindAnnotation' ext primTy primVal
+  = BindAnnotation
+      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
+      }
+  deriving (Generic)
+
+deriving instance
+  (Eq (IR.Value' ext primTy primVal)) =>
+  Eq (BindAnnotation' ext primTy primVal)
+
+deriving instance
+  (Show (IR.Value' ext primTy primVal)) =>
+  Show (BindAnnotation' ext primTy primVal)
+
+type BindAnnotation = BindAnnotation' IR.NoExt
+
+IR.extendTerm "Term'" [] [t|T|] $
+  \primTy primVal ->
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+        bindTyped = Just [[t|BindAnnotation $primTy $primVal|]]
+     in IR.defaultExtTerm
+          { IR.typeStar = typed,
+            IR.typePrimTy = typed,
+            IR.typePrim = typed,
+            IR.typePi = typed,
+            IR.typeSig = typed,
+            IR.typePair = typed,
+            IR.typeLam = bindTyped,
+            IR.typeLet = bindTyped,
+            IR.typeElim = typed
+          }
+
+IR.extendElim "Elim'" [] [t|T|] $
+  \primTy primVal ->
+    let typed = Just [[t|Annotation $primTy $primVal|]]
+     in IR.defaultExtElim
+          { IR.typeBound = typed,
+            IR.typeFree = typed,
+            IR.typeApp = typed,
+            IR.typeAnn = typed
+          }
+
+type TypedPrim primTy primVal = App.Return (P.PrimType primTy) primVal
+
+type Term primTy primVal = Term' primTy (TypedPrim primTy primVal)
+type Elim primTy primVal = Elim' primTy (TypedPrim primTy primVal)
+
+type GlobalT' ext primTy primVal =
+    IR.Global' ext primTy (TypedPrim primTy primVal)
+type GlobalT primTy primVal = GlobalT' IR.NoExt primTy primVal
+
+type DatatypeT' ext primTy primVal =
+    IR.Datatype' ext primTy (TypedPrim primTy primVal)
+type DatatypeT primTy primVal = DatatypeT' IR.NoExt primTy primVal
+
+type DataArgT' ext primTy primVal =
+    IR.DataArg' ext primTy (TypedPrim primTy primVal)
+type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
+
+type DataConT' ext primTy primVal =
+    IR.DataCon' ext primTy (TypedPrim primTy primVal)
+type DataConT primTy primVal = DataConT' IR.NoExt primTy primVal
+
+type FunctionT' ext primTy primVal =
+    IR.Function' ext primTy (TypedPrim primTy primVal)
+type FunctionT primTy primVal = FunctionT' IR.NoExt primTy primVal
+
+type FunClauseT' ext primTy primVal =
+    IR.FunClause' ext primTy (TypedPrim primTy primVal)
+type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
+
+type PatternT' ext primTy primVal =
+    IR.Pattern' ext primTy (TypedPrim primTy primVal)
+type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
+
+type GlobalsT' ext primTy primVal =
+    IR.Globals' ext primTy (TypedPrim primTy primVal)
+type GlobalsT primTy primVal = GlobalsT' IR.NoExt primTy primVal
+
+type ValueT' ext primTy primVal =
+    IR.Value' ext primTy (TypedPrim primTy primVal)
+type ValueT primTy primVal = ValueT' IR.NoExt primTy primVal
+
+type NeutralT' ext primTy primVal =
+    IR.Neutral' ext primTy (TypedPrim primTy primVal)
+type NeutralT primTy primVal = NeutralT' IR.NoExt primTy primVal
+
+type AnnotationT' ext primTy primVal =
+    Annotation' ext primTy (TypedPrim primTy primVal)
+type AnnotationT primTy primVal = AnnotationT' IR.NoExt primTy primVal
+
+type BindAnnotationT' ext primTy primVal =
+    BindAnnotation' ext primTy (TypedPrim primTy primVal)
+type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
+
+
+getTermAnn :: Term primTy primVal -> AnnotationT' IR.NoExt primTy primVal
+getTermAnn (Star _ ann) = ann
+getTermAnn (PrimTy _ ann) = ann
+getTermAnn (Prim _ ann) = ann
+getTermAnn (Pi _ _ _ ann) = ann
+getTermAnn (Sig _ _ _ ann) = ann
+getTermAnn (Pair _ _ ann) = ann
+getTermAnn (Lam _ anns) = baResAnn anns
+getTermAnn (Let _ _ _ anns) = baResAnn anns
+getTermAnn (Elim _ ann) = ann
+
+getElimAnn :: Elim primTy primVal -> AnnotationT' IR.NoExt primTy primVal
+getElimAnn (Bound _ ann) = ann
+getElimAnn (Free _ ann) = ann
+getElimAnn (App _ _ ann) = ann
+getElimAnn (Ann _ _ _ _ ann) = ann
+
 data TypecheckError' extV extT primTy primVal
   = TypeMismatch
       { typeSubject :: IR.Elim' extT primTy primVal,
-        typeExpected, typeGot :: IR.Value' extV primTy primVal
+        typeExpected, typeGot :: ValueT' extV primTy primVal
       }
   | UniverseMismatch
       { universeLower, universeHigher :: IR.Universe
       }
   | CannotApply
-      { applyFun, applyArg :: IR.Value' extV primTy primVal,
-        applyErr :: Maybe (P.ApplyError primVal)
+      { applyFun, applyArg :: ValueT' extV primTy primVal,
+        applyErr :: Maybe (P.ApplyError (TypedPrim primTy primVal))
       }
   | ShouldBeStar
-      { typeActual :: IR.Value' extV primTy primVal
+      { typeActual :: ValueT' extV primTy primVal
       }
   | ShouldBeFunctionType
-      { typeActual :: IR.Value' extV primTy primVal
+      { typeActual :: ValueT' extV primTy primVal
       }
   | ShouldBePairType
-      { typeActual :: IR.Value' extV primTy primVal
+      { typeActual :: ValueT' extV primTy primVal
       }
   | UnboundIndex
       { unboundIndex :: IR.BoundVar
@@ -69,7 +185,7 @@ data TypecheckError' extV extT primTy primVal
       { unboundPatVar :: IR.PatternVar
       }
   | NotPrimTy
-      { typeActual :: IR.Value' extV primTy primVal
+      { typeActual :: ValueT' extV primTy primVal
       }
   | WrongPrimTy
       { primVal :: primVal,
@@ -90,15 +206,11 @@ type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    Eq (P.ApplyErrorExtra primVal),
-    IR.TermAll Eq extV primTy primVal,
-    IR.ElimAll Eq extV primTy primVal,
-    IR.ValueAll Eq extV primTy primVal,
-    IR.NeutralAll Eq extV primTy primVal,
+    Eq (P.ApplyErrorExtra (TypedPrim primTy primVal)),
+    IR.ValueAll Eq extV primTy (TypedPrim primTy primVal),
+    IR.NeutralAll Eq extV primTy (TypedPrim primTy primVal),
     IR.TermAll Eq extT primTy primVal,
     IR.ElimAll Eq extT primTy primVal,
-    IR.ValueAll Eq extT primTy primVal,
-    IR.NeutralAll Eq extT primTy primVal,
     IR.PatternAll Eq extT primTy primVal
   ) =>
   Eq (TypecheckError' extV extT primTy primVal)
@@ -106,15 +218,11 @@ deriving instance
 instance
   ( Show primTy,
     Show primVal,
-    Show (P.ApplyErrorExtra primVal),
-    IR.TermAll Show extV primTy primVal,
-    IR.ElimAll Show extV primTy primVal,
-    IR.ValueAll Show extV primTy primVal,
-    IR.NeutralAll Show extV primTy primVal,
+    Show (P.ApplyErrorExtra (TypedPrim primTy primVal)),
+    IR.ValueAll Show extV primTy (TypedPrim primTy primVal),
+    IR.NeutralAll Show extV primTy (TypedPrim primTy primVal),
     IR.TermAll Show extT primTy primVal,
     IR.ElimAll Show extT primTy primVal,
-    IR.ValueAll Show extT primTy primVal,
-    IR.NeutralAll Show extT primTy primVal,
     IR.PatternAll Show extT primTy primVal
   ) =>
   Show (TypecheckError' extV extT primTy primVal)
@@ -178,64 +286,3 @@ throwTC ::
   TypecheckError' extV extT primTy primVal ->
   m z
 throwTC = throw @"typecheckError"
-
-data T
-
-data BindAnnotation' ext primTy primVal
-  = BindAnnotation
-      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
-      }
-  deriving (Generic)
-
-deriving instance
-  (Eq (IR.Value' ext primTy primVal)) =>
-  Eq (BindAnnotation' ext primTy primVal)
-
-deriving instance
-  (Show (IR.Value' ext primTy primVal)) =>
-  Show (BindAnnotation' ext primTy primVal)
-
-type BindAnnotation = BindAnnotation' IR.NoExt
-
-IR.extendTerm "Term" [] [t|T|] $
-  \primTy primVal ->
-    let typed = Just [[t|Annotation $primTy $primVal|]]
-        bindTyped = Just [[t|BindAnnotation $primTy $primVal|]]
-     in IR.defaultExtTerm
-          { IR.typeStar = typed,
-            IR.typePrimTy = typed,
-            IR.typePrim = typed,
-            IR.typePi = typed,
-            IR.typeSig = typed,
-            IR.typePair = typed,
-            IR.typeLam = bindTyped,
-            IR.typeLet = bindTyped,
-            IR.typeElim = typed
-          }
-
-IR.extendElim "Elim" [] [t|T|] $
-  \primTy primVal ->
-    let typed = Just [[t|Annotation $primTy $primVal|]]
-     in IR.defaultExtElim
-          { IR.typeBound = typed,
-            IR.typeFree = typed,
-            IR.typeApp = typed,
-            IR.typeAnn = typed
-          }
-
-getTermAnn :: Term primTy primVal -> Annotation primTy primVal
-getTermAnn (Star _ ann) = ann
-getTermAnn (PrimTy _ ann) = ann
-getTermAnn (Prim _ ann) = ann
-getTermAnn (Pi _ _ _ ann) = ann
-getTermAnn (Sig _ _ _ ann) = ann
-getTermAnn (Pair _ _ ann) = ann
-getTermAnn (Lam _ anns) = baResAnn anns
-getTermAnn (Let _ _ _ anns) = baResAnn anns
-getTermAnn (Elim _ ann) = ann
-
-getElimAnn :: Elim primTy primVal -> Annotation primTy primVal
-getElimAnn (Bound _ ann) = ann
-getElimAnn (Free _ ann) = ann
-getElimAnn (App _ _ ann) = ann
-getElimAnn (Ann _ _ _ _ ann) = ann

@@ -6,6 +6,7 @@ import qualified Data.Text as T
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Interpreter.InteractionNet as INet
 import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
@@ -15,7 +16,7 @@ import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
 import Options
 import qualified System.Console.Haskeline as H
-import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
+import Text.PrettyPrint.ANSI.Leijen hiding ((<>), (<$>))
 import Types
 import Prelude (String)
 
@@ -47,7 +48,8 @@ mainLoop func = do
 parseString :: String -> Maybe (HR.Term Nat.Ty Nat.Val)
 parseString = HR.generateParser Nat.t
 
-handleSpecial :: String -> H.InputT IO () -> H.InputT IO ()
+handleSpecial ::
+  String -> H.InputT IO () -> H.InputT IO ()
 handleSpecial str cont =
   case str of
     "?" -> liftIO (putDoc specialsDoc) >> cont
@@ -64,11 +66,9 @@ handleSpecial str cont =
       H.outputStrLn (show parsed)
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty _)) -> do
-          erased <-
-            liftIO
-              ( exec (Core.typecheckErase term usage ty) Nat.t mempty ::
-                  Exec Nat.Ty Nat.Val ()
-              )
+          let makeErased = fst <$> Core.typecheckErase' term usage ty
+          erased <- liftIO $
+            (exec makeErased Nat.t mempty :: Exec Nat.Ty Nat.Val ())
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
       cont
@@ -94,7 +94,9 @@ handleSpecial str cont =
 
 transformAndEvaluateErasedCore ::
   forall primTy primVal.
-  (Show primVal) =>
+  ( Show primVal,
+    Core.CanApply primVal
+  ) =>
   Core.Parameterisation primTy primVal ->
   Bool ->
   Erased.Term primVal ->

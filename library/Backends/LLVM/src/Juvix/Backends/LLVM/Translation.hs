@@ -31,7 +31,9 @@ jitInitialModule = do
 
 evalErasedCoreInLLVM ::
   forall primTy primVal m.
-  (MonadIO m) =>
+  ( MonadIO m,
+    Core.CanApply primVal
+  ) =>
   Core.Parameterisation primTy primVal ->
   Erased.Term primVal ->
   m (Erased.Term primVal)

@@ -24,8 +24,12 @@ data PipelineError primTy primVal compErr
   deriving (Generic)
 
 deriving instance
-  (Show primTy, Show primVal, Show compErr, Show (ApplyErrorExtra primVal))
-  => Show (PipelineError primTy primVal compErr)
+  ( Show primTy,
+    Show primVal,
+    Show compErr,
+    Show (ApplyErrorExtra (TC.TypedPrim primTy primVal))
+  ) =>
+  Show (PipelineError primTy primVal compErr)
 
 data PipelineLog primTy primVal
   = LogHRtoIR (HR.Term primTy primVal) (IR.Term primTy primVal)

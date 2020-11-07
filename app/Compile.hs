@@ -46,9 +46,10 @@ typecheck' _ _ = do
   -- These terms are fake for now.
   let usage :: Usage.T
       usage = Usage.Omega
-      ann :: HR.Term Param.PrimTy Param.PrimVal
+      ann :: HR.Term Param.PrimTy Param.RawPrimVal
+      -- FIXME: replace prims with Returns
       ann = HR.Pi (Usage.SNat 1) "_" (HR.PrimTy (Param.PrimTy (Untyped.Type Untyped.TInt ""))) (HR.PrimTy (Param.PrimTy (Untyped.Type (Untyped.TPair "" "" (Untyped.Type Untyped.TInt "") (Untyped.Type (Untyped.TList (Untyped.Type Untyped.TOperation "")) "")) "")))
-      term :: HR.Term Param.PrimTy Param.PrimVal
+      term :: HR.Term Param.PrimTy Param.RawPrimVal
       term = HR.Lam "x" (HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) (HR.Prim (Param.Inst (Untyped.PAIR "" "" "" ""))) ann 1) (HR.Elim (HR.Var "x"))) (HR.Prim (Param.Constant Untyped.ValueNil))))
       globals = mempty
   (res, _) <- exec (CorePipeline.coreToAnn term usage ann) Param.michelson globals
@@ -60,8 +61,8 @@ typecheck' _ _ = do
 
 compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do
-  _term <- typecheck fin backend
-  let (res, _logs) = M.compileContract _term
+  term <- typecheck fin backend
+  let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
   case res of
     Right c -> do
       T.writeFile fout (M.untypedContractToSource (fst c))

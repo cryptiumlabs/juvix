@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -299,41 +301,35 @@ instance
 
 class HasWeak a => HasSubstV extV primTy primVal a where
   substVWith ::
-    TC.HasThrowTC' extV extT primTy primVal m =>
     Natural ->
     IR.BoundVar ->
     IR.Value' extV primTy primVal ->
     a ->
-    m a
+    Either (VAppError extV primTy primVal) a
   default substVWith ::
     ( Generic a,
-      GHasSubstV extV primTy primVal (Rep a),
-      TC.HasThrowTC' extV extT primTy primVal m
+      GHasSubstV extV primTy primVal (Rep a)
     ) =>
     Natural ->
     IR.BoundVar ->
     IR.Value' extV primTy primVal ->
     a ->
-    m a
+    Either (VAppError extV primTy primVal) a
   substVWith b i e = fmap to . gsubstVWith b i e . from
 
 substV' ::
-  ( HasSubstV extV primTy primVal a,
-    TC.HasThrowTC' extV extT primTy primVal m
-  ) =>
+  HasSubstV extV primTy primVal a =>
   IR.BoundVar ->
   IR.Value' extV primTy primVal ->
   a ->
-  m a
+  Either (VAppError extV primTy primVal) a
 substV' = substVWith 0
 
 substV ::
-  ( HasSubstV extV primTy primVal a,
-    TC.HasThrowTC' extV extT primTy primVal m
-  ) =>
+  HasSubstV extV primTy primVal a =>
   IR.Value' extV primTy primVal ->
   a ->
-  m a
+  Either (VAppError extV primTy primVal) a
 substV = substV' 0
 
 type AllSubstV extV primTy primVal =
@@ -378,7 +374,6 @@ instance
 
 substNeutralWith ::
   ( AllSubstV extV primTy primVal,
-    TC.HasThrowTC' extV extT primTy primVal m,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal),
@@ -389,7 +384,8 @@ substNeutralWith ::
   IR.Value' extV primTy primVal ->
   IR.Neutral' extV primTy primVal ->
   IR.XVNeutral extV primTy primVal ->
-  m (IR.Value' extV primTy primVal) -- not Neutral'!!!
+  Either (VAppError extV primTy primVal) (IR.Value' extV primTy primVal)
+    -- not Neutral'!!!
 substNeutralWith w i e (IR.NBound' j a) b = do
   a' <- substVWith w i e a
   b' <- substVWith w i e b
@@ -409,9 +405,14 @@ substNeutralWith w i e (IR.NeutralX a) b =
   IR.VNeutral' <$> (IR.NeutralX <$> substVWith w i e a)
     <*> substVWith w i e b
 
+data VAppError extV primTy primVal =
+  VAppError {
+    fun, arg :: IR.Value' extV primTy primVal,
+    paramErr :: Maybe (Param.ApplyError primVal)
+  }
+
 vapp ::
   ( AllSubstV extV primTy primVal,
-    TC.HasThrowTC' extV extT primTy primVal m,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal),
@@ -422,45 +423,38 @@ vapp ::
   -- | the annotation to use if the result is another application node
   -- (if it isn't, then this annotation is unused)
   IR.XNApp extV primTy primVal ->
-  m (IR.Value' extV primTy primVal)
+  Either (VAppError extV primTy primVal) (IR.Value' extV primTy primVal)
 vapp (IR.VLam' t _) s _ =
   substV s t
 vapp (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
 vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
-  case Param.apply1 p q of
-    Left err ->
-      TC.throwTC $ TC.CannotApply pp qq (Just err)
-    Right pq ->
-      pure $ IR.VPrim' pq mempty
+  bimap (VAppError pp qq . Just) (\pq -> IR.VPrim' pq mempty) $
+  Param.apply1 p q
 vapp f x _ =
-  TC.throwTC $ TC.CannotApply f x Nothing
+  Left $ VAppError f x Nothing
 
-type TermExtFun m ext primTy primVal =
-  IR.TermX ext primTy primVal -> m (IR.Value primTy primVal)
+type TermExtFun ext primTy primVal =
+  IR.TermX ext primTy primVal -> IR.Value primTy primVal
 
-type ElimExtFun m ext primTy primVal =
-  IR.ElimX ext primTy primVal -> m (IR.Value primTy primVal)
+type ElimExtFun ext primTy primVal =
+  IR.ElimX ext primTy primVal -> IR.Value primTy primVal
 
-type ExtFuns m ext primTy primVal =
-  (TermExtFun m ext primTy primVal, ElimExtFun m ext primTy primVal)
+data ExtFuns ext primTy primVal =
+  ExtFuns {
+    tExtFun :: TermExtFun ext primTy primVal,
+    eExtFun :: ElimExtFun ext primTy primVal
+  }
 
-rejectExts ::
-  TC.HasThrowTC' IR.NoExt ext primTy primVal m =>
-  ExtFuns m ext primTy primVal
-rejectExts =
-  ( TC.throwTC . TC.UnsupportedTermExt,
-    TC.throwTC . TC.UnsupportedElimExt
-  )
+rejectExts :: ExtFuns ext primTy primVal
+rejectExts = ExtFuns {tExtFun = _, eExtFun = _}
 
 -- annotations are discarded
 evalTermWith ::
-  ( TC.HasThrowTC' IR.NoExt extT primTy primVal m,
-    Param.CanApply primVal
-  ) =>
-  ExtFuns m extT primTy primVal ->
+  Param.CanApply primVal =>
+  ExtFuns extT primTy primVal ->
   IR.Term' extT primTy primVal ->
-  m (IR.Value primTy primVal)
+  Either (VAppError IR.NoExt primTy primVal) (IR.Value primTy primVal)
 evalTermWith _ (IR.Star' u _) =
   pure $ IR.VStar u
 evalTermWith _ (IR.PrimTy' p _) =
@@ -481,16 +475,14 @@ evalTermWith exts (IR.Let' _ l b _) = do
   substV l' b'
 evalTermWith exts (IR.Elim' e _) =
   evalElimWith exts e
-evalTermWith (tExt, _) (IR.TermX a) =
-  tExt a
+evalTermWith exts (IR.TermX a) =
+  Right $ tExtFun exts a
 
 evalElimWith ::
-  ( TC.HasThrowTC' IR.NoExt extT primTy primVal m,
-    Param.CanApply primVal
-  ) =>
-  ExtFuns m extT primTy primVal ->
+  Param.CanApply primVal =>
+  ExtFuns extT primTy primVal ->
   IR.Elim' extT primTy primVal ->
-  m (IR.Value primTy primVal)
+  Either (VAppError IR.NoExt primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith _ (IR.Free' x _) =
@@ -502,23 +494,19 @@ evalElimWith exts (IR.App' s t _) =
       <*> pure ()
 evalElimWith exts (IR.Ann' _ s _ _ _) =
   evalTermWith exts s
-evalElimWith (_, eExt) (IR.ElimX a) =
-  eExt a
+evalElimWith exts (IR.ElimX a) =
+  Right $ eExtFun exts a
 
 evalTerm ::
-  ( TC.HasThrowTC' IR.NoExt extT primTy primVal m,
-    Param.CanApply primVal
-  ) =>
+  Param.CanApply primVal =>
   IR.Term' extT primTy primVal ->
-  m (IR.Value primTy primVal)
+  Either (VAppError IR.NoExt primTy primVal) (IR.Value primTy primVal)
 evalTerm = evalTermWith rejectExts
 
 evalElim ::
-  ( TC.HasThrowTC' IR.NoExt extT primTy primVal m,
-    Param.CanApply primVal
-  ) =>
+  Param.CanApply primVal =>
   IR.Elim' extT primTy primVal ->
-  m (IR.Value primTy primVal)
+  Either (VAppError IR.NoExt primTy primVal) (IR.Value primTy primVal)
 evalElim = evalElimWith rejectExts
 
 class GHasWeak f where
@@ -639,12 +627,11 @@ instance HasSubst ext primTy primVal Symbol where
 
 class GHasWeak f => GHasSubstV extV primTy primVal f where
   gsubstVWith ::
-    TC.HasThrowTC' extV extT primTy primVal m =>
     Natural ->
     IR.BoundVar ->
     IR.Value' extV primTy primVal ->
     f t ->
-    m (f t)
+    Either (VAppError extV primTy primVal) (f t)
 
 instance GHasSubstV ext primTy primVal U1 where gsubstVWith _ _ _ U1 = pure U1
 

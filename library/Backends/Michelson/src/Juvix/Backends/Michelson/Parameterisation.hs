@@ -29,9 +29,9 @@ import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String)
+import Prelude (String, Show (..))
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -94,7 +94,14 @@ arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
 arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
-type ApplyError = Core.PipelineError PrimTy PrimVal CompilationError
+data ApplyError =
+    PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
+  | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
+
+instance Show ApplyError where
+  show (PipelineError perr) = Prelude.show perr
+  show (ReturnTypeNotPrimitive ty) =
+    "not a primitive type:\n\t" <> Prelude.show ty
 
 instance Core.CanApply PrimVal where
   type ApplyErrorExtra PrimVal = ApplyError
@@ -119,17 +126,33 @@ instance Core.CanApply PrimVal where
 applyProper :: Take -> NonEmpty Take -> Either (Core.ApplyError PrimVal) Return
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
-    Right x -> Right $ Prim.Return {
-      retType = ErasedAnn.type' newTerm,
-      retTerm = Constant x
-    }
-    Left err -> Left $ Core.Extra $ Core.PrimError err
+    Right x -> do
+      retType <- toPrimType $ ErasedAnn.type' newTerm
+      pure $ Prim.Return { retType, retTerm = Constant x }
+    Left err -> Left $ Core.Extra $ PipelineError $ Core.PrimError err
  where
-  fun' = Prim.toAnn fun
-  args' = Prim.toAnn <$> toList args
+  fun' = takeToTerm fun
+  args' = takeToTerm <$> toList args
   newTerm = Run.applyPrimOnArgs fun' args'
   -- TODO ∷ do something with the logs!?
   (compd, _log) = Compilation.compileExpr newTerm
+
+takeToTerm :: Take -> RawTerm
+takeToTerm (Prim.Take {usage, type', term}) =
+  Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
+
+toPrimType :: ErasedAnn.Type PrimTy
+           -> Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
+toPrimType ty = maybe err Right $ go ty where
+  err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
+
+  go ty = goPi ty <|> (pure <$> goPrim ty)
+
+  goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
+  goPi _ = Nothing
+
+  goPrim (ErasedAnn.PrimTy p) = Just p
+  goPrim _ = Nothing
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
@@ -173,13 +196,17 @@ integerToPrimVal x
 checkStringType :: Text -> PrimTy -> Bool
 checkStringType val (PrimTy (M.Type ty _)) = case ty of
   M.TString -> Text.all M.isMChar val
+  -- TODO other cases?
   _ -> False
+checkStringType _ _ = False
 
 checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
   M.TInt -> True -- TODO bounds?
+  -- TODO other cases?
   _ -> False
+checkIntType _ _ = False
 
 primify :: Untyped.T -> PrimTy
 primify t = PrimTy (Untyped.Type t "")
@@ -248,7 +275,6 @@ builtinValues =
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
 
--- TODO: Figure out what the parser ought to do.
 michelson :: P.Parameterisation PrimTy RawPrimVal
 michelson =
   P.Parameterisation
