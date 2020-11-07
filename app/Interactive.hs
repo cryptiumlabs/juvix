@@ -16,7 +16,7 @@ import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
 import Options
 import qualified System.Console.Haskeline as H
-import Text.PrettyPrint.ANSI.Leijen hiding ((<>), (<$>))
+import Text.PrettyPrint.ANSI.Leijen hiding ((<$>), (<>))
 import Types
 import Prelude (String)
 
@@ -67,8 +67,9 @@ handleSpecial str cont =
       case parsed of
         Just (HR.Elim (HR.Ann usage term ty _)) -> do
           let makeErased = fst <$> Core.typecheckErase' term usage ty
-          erased <- liftIO $
-            (exec makeErased Nat.t mempty :: Exec Nat.Ty Nat.Val ())
+          erased <-
+            liftIO $
+              (exec makeErased Nat.t mempty :: Exec Nat.Ty Nat.Val ())
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
       cont

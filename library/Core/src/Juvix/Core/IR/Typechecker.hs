@@ -7,13 +7,13 @@ where
 
 import qualified Data.IntMap.Strict as IntMap
 import Data.List.NonEmpty ((<|))
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
-import qualified Juvix.Core.Application as App
 import Juvix.Library hiding (Datatype)
 import qualified Juvix.Library.Usage as Usage
 
@@ -43,9 +43,11 @@ typeTerm ::
 typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 
 typeTermWith ::
-  (Eq primTy, Eq primVal,
-   CanTC' ext primTy primVal m,
-   Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   Param.Parameterisation primTy primVal ->
   PatBinds primTy primVal ->
   Context primTy primVal ->
@@ -58,9 +60,11 @@ typeTermWith param pats ctx t ann =
 -- | Infers the type and usage for an 'Elim' and returns it decorated with this
 -- information.
 typeElim ::
-  (Eq primTy, Eq primVal,
-   CanTC' ext primTy primVal m,
-   Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   Param.Parameterisation primTy primVal ->
   IR.Elim' ext primTy primVal ->
   Usage.T ->
@@ -69,9 +73,11 @@ typeElim param e σ =
   loValue <$> typeElimWith param IntMap.empty [] e σ
 
 typeElimWith ::
-  (Eq primTy, Eq primVal,
-   CanTC' ext primTy primVal m,
-   Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   Param.Parameterisation primTy primVal ->
   PatBinds primTy primVal ->
   Context primTy primVal ->
@@ -91,9 +97,11 @@ withLeftovers m =
     <*> fmap (fmap annUsage) (get @"patBinds")
 
 typeTerm' ::
-  (Eq primTy, Eq primVal,
-   CanInnerTC' ext primTy primVal m,
-   Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanInnerTC' ext primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   IR.Term' ext primTy primVal ->
   AnnotationT primTy primVal ->
   m (Typed.Term primTy primVal)
@@ -153,9 +161,11 @@ typeTerm' term ann@(Annotation σ ty) =
       throwTC $ UnsupportedTermExt x
 
 typeElim' ::
-  (Eq primTy, Eq primVal,
-   CanInnerTC' ext primTy primVal m,
-   Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanInnerTC' ext primTy primVal m,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   IR.Elim' ext primTy primVal ->
   Usage.T ->
   m (Typed.Elim primTy primVal)
@@ -244,10 +254,9 @@ typePrim ::
 typePrim p ty = do
   param <- ask @"param"
   ty' <- toPrimTy ty
-  if (Param.hasType param p ty') then
-    pure $ App.Return {retType = ty', retTerm = p}
-  else
-    throwTC $ WrongPrimTy p ty'
+  if (Param.hasType param p ty')
+    then pure $ App.Return {retType = ty', retTerm = p}
+    else throwTC $ WrongPrimTy p ty'
 
 toPrimTy ::
   CanInnerTC' ext primTy primVal m =>

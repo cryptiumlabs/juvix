@@ -14,14 +14,15 @@ import Juvix.Core.IR.Typechecker as IR
     BindAnnotationT,
     Context,
     EnvCtx,
-    EnvTypecheck' (..),
     EnvTypecheck,
+    EnvTypecheck' (..),
+    GlobalsT,
     Leftovers (..),
     TypecheckError,
     TypecheckError' (..),
-    ValueT,
-    GlobalsT,
     UContext,
+    ValueT,
+    evalTC,
     getElimAnn,
     getTermAnn,
     leftoverOk,
@@ -31,13 +32,13 @@ import Juvix.Core.IR.Typechecker as IR
     typeElimWith,
     typeTerm,
     typeTermWith,
-    evalTC,
   )
 import qualified Juvix.Core.IR.Typechecker as TC
 import Juvix.Core.IR.Types as IR
 import Juvix.Library
 
 type TermT primTy primVal = TC.Term primTy primVal
+
 type ElimT primTy primVal = TC.Elim primTy primVal
 
 execTC ::

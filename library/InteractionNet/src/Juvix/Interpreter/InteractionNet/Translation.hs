@@ -72,8 +72,10 @@ astToNet parameterisation bohm customSymMap = net'
         0 -> (,) <$> newNode (AST.Primar $ AST.PrimVal p) <*> pure Prim
         1 -> do
           numLam <- newNode (AST.Auxiliary2 AST.Lambda)
-          numCurr <- newNode $
-            AST.Auxiliary1 $ AST.PrimCurried1 (Core.apply1Maybe p)
+          numCurr <-
+            newNode
+              $ AST.Auxiliary1
+              $ AST.PrimCurried1 (Core.apply1Maybe p)
           link (numLam, Aux2) (numCurr, Prim)
           link (numLam, Aux1) (numCurr, Aux1)
           pure (numLam, Prim)
@@ -82,9 +84,9 @@ astToNet parameterisation bohm customSymMap = net'
           numLam2 <- newNode (AST.Auxiliary2 AST.Lambda) -- arg2
           numCurr <-
             newNode
-              ( AST.Auxiliary2 $
-                  AST.PrimCurried2 $
-                    \x y -> Core.apply1Maybe p x >>= \f -> Core.apply1Maybe f y
+              ( AST.Auxiliary2
+                  $ AST.PrimCurried2
+                  $ \x y -> Core.apply1Maybe p x >>= \f -> Core.apply1Maybe f y
               )
           -- Lambda chain
           link (numLam1, Aux1) (numLam2, Prim)

@@ -2,8 +2,8 @@
 
 module Juvix.Core.Parameterisations.Naturals where
 
-import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -43,18 +43,18 @@ hasType x ty = ty == typeOf x
 
 instance P.CanApply Val where
   arity = pred . fromIntegral . length . typeOf
-  apply f xs = app f $ toList xs where
-    app Add (Val x : xs) = app (Curried Add x) xs
-    app Sub (Val x : xs) = app (Curried Sub x) xs
-    app Mul (Val x : xs) = app (Curried Mul x) xs
-    app (Curried Add x) (Val y : ys) = app (Val (x + y)) ys
-    app (Curried Sub x) (Val y : ys) = app (Val (x - y)) ys
-    app (Curried Mul x) (Val y : ys) = app (Val (x * y)) ys
-    app n [] = Right n
-    app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
+  apply f xs = app f $ toList xs
+    where
+      app Add (Val x : xs) = app (Curried Add x) xs
+      app Sub (Val x : xs) = app (Curried Sub x) xs
+      app Mul (Val x : xs) = app (Curried Mul x) xs
+      app (Curried Add x) (Val y : ys) = app (Val (x + y)) ys
+      app (Curried Sub x) (Val y : ys) = app (Val (x - y)) ys
+      app (Curried Mul x) (Val y : ys) = app (Val (x * y)) ys
+      app n [] = Right n
+      app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
 
-instance P.CanApply (Typed.TypedPrim Ty Val) where
-
+instance P.CanApply (Typed.TypedPrim Ty Val)
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

@@ -22,9 +22,9 @@ import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
-import Juvix.Library.Usage (Usage)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
+import Juvix.Library.Usage (Usage)
 
 data Env primTy primVal = Env {nextName :: Int, nameStack :: [Symbol]}
   deriving (Generic)

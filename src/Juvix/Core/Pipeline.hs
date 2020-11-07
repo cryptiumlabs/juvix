@@ -9,9 +9,9 @@ import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.Erasure.Types as Erasure
-import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library
@@ -20,9 +20,11 @@ import qualified Michelson.TypeCheck as Michelson
 import qualified Michelson.Untyped as Michelson
 
 type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
+
 type RawMichelsonTerm = RawMichelson HR.Term
 
 type Michelson f = f Michelson.PrimTy Michelson.PrimVal
+
 type MichelsonTerm = Michelson HR.Term
 
 type MichelsonComp res =
@@ -69,24 +71,23 @@ coreToMichelsonContract term usage ty = do
 
 -- TODO: use typed terms in michelson backend
 toRaw :: Michelson.Term -> Michelson.RawTerm
-toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term} where
-  toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x
-  toRaw1 (ErasedAnn.Prim p) = primToRaw p
-  toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
-  toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
-  toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
-
-  primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
-  primToRaw (App.Cont {fun, args}) =
-    ErasedAnn.AppM (takeToRaw fun) (takeToRaw <$> args)
-
-  takeToRaw :: Michelson.Take -> Michelson.RawTerm
-  takeToRaw (App.Take {usage, type', term}) =
-    ErasedAnn.Ann {
-      usage,
-      type' = Prim.fromPrimType type',
-      term = ErasedAnn.Prim term
-    }
+toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
+  where
+    toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x
+    toRaw1 (ErasedAnn.Prim p) = primToRaw p
+    toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
+    toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
+    toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
+    primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
+    primToRaw (App.Cont {fun, args}) =
+      ErasedAnn.AppM (takeToRaw fun) (takeToRaw <$> args)
+    takeToRaw :: Michelson.Take -> Michelson.RawTerm
+    takeToRaw (App.Take {usage, type', term}) =
+      ErasedAnn.Ann
+        { usage,
+          type' = Prim.fromPrimType type',
+          term = ErasedAnn.Prim term
+        }
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.

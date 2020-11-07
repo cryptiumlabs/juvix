@@ -1,7 +1,6 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
 
 -- |
 -- This includes the evaluators (evalTerm and evalElim),
@@ -385,7 +384,7 @@ substNeutralWith ::
   IR.Neutral' extV primTy primVal ->
   IR.XVNeutral extV primTy primVal ->
   Either (VAppError extV primTy primVal) (IR.Value' extV primTy primVal)
-    -- not Neutral'!!!
+-- not Neutral'!!!
 substNeutralWith w i e (IR.NBound' j a) b = do
   a' <- substVWith w i e a
   b' <- substVWith w i e b
@@ -405,11 +404,11 @@ substNeutralWith w i e (IR.NeutralX a) b =
   IR.VNeutral' <$> (IR.NeutralX <$> substVWith w i e a)
     <*> substVWith w i e b
 
-data VAppError extV primTy primVal =
-  VAppError {
-    fun, arg :: IR.Value' extV primTy primVal,
-    paramErr :: Maybe (Param.ApplyError primVal)
-  }
+data VAppError extV primTy primVal
+  = VAppError
+      { fun, arg :: IR.Value' extV primTy primVal,
+        paramErr :: Maybe (Param.ApplyError primVal)
+      }
 
 vapp ::
   ( AllSubstV extV primTy primVal,
@@ -430,7 +429,7 @@ vapp (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
 vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
   bimap (VAppError pp qq . Just) (\pq -> IR.VPrim' pq mempty) $
-  Param.apply1 p q
+    Param.apply1 p q
 vapp f x _ =
   Left $ VAppError f x Nothing
 
@@ -440,11 +439,11 @@ type TermExtFun ext primTy primVal =
 type ElimExtFun ext primTy primVal =
   IR.ElimX ext primTy primVal -> IR.Value primTy primVal
 
-data ExtFuns ext primTy primVal =
-  ExtFuns {
-    tExtFun :: TermExtFun ext primTy primVal,
-    eExtFun :: ElimExtFun ext primTy primVal
-  }
+data ExtFuns ext primTy primVal
+  = ExtFuns
+      { tExtFun :: TermExtFun ext primTy primVal,
+        eExtFun :: ElimExtFun ext primTy primVal
+      }
 
 rejectExts :: ExtFuns ext primTy primVal
 rejectExts = ExtFuns {tExtFun = _, eExtFun = _}

@@ -2,10 +2,10 @@
 
 module Juvix.Core.IR.Typechecker.Types where
 
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.Core.Application as App
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
@@ -74,56 +74,68 @@ IR.extendElim "Elim'" [] [t|T|] $
 type TypedPrim primTy primVal = App.Return (P.PrimType primTy) primVal
 
 type Term primTy primVal = Term' primTy (TypedPrim primTy primVal)
+
 type Elim primTy primVal = Elim' primTy (TypedPrim primTy primVal)
 
 type GlobalT' ext primTy primVal =
-    IR.Global' ext primTy (TypedPrim primTy primVal)
+  IR.Global' ext primTy (TypedPrim primTy primVal)
+
 type GlobalT primTy primVal = GlobalT' IR.NoExt primTy primVal
 
 type DatatypeT' ext primTy primVal =
-    IR.Datatype' ext primTy (TypedPrim primTy primVal)
+  IR.Datatype' ext primTy (TypedPrim primTy primVal)
+
 type DatatypeT primTy primVal = DatatypeT' IR.NoExt primTy primVal
 
 type DataArgT' ext primTy primVal =
-    IR.DataArg' ext primTy (TypedPrim primTy primVal)
+  IR.DataArg' ext primTy (TypedPrim primTy primVal)
+
 type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
 
 type DataConT' ext primTy primVal =
-    IR.DataCon' ext primTy (TypedPrim primTy primVal)
+  IR.DataCon' ext primTy (TypedPrim primTy primVal)
+
 type DataConT primTy primVal = DataConT' IR.NoExt primTy primVal
 
 type FunctionT' ext primTy primVal =
-    IR.Function' ext primTy (TypedPrim primTy primVal)
+  IR.Function' ext primTy (TypedPrim primTy primVal)
+
 type FunctionT primTy primVal = FunctionT' IR.NoExt primTy primVal
 
 type FunClauseT' ext primTy primVal =
-    IR.FunClause' ext primTy (TypedPrim primTy primVal)
+  IR.FunClause' ext primTy (TypedPrim primTy primVal)
+
 type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
 
 type PatternT' ext primTy primVal =
-    IR.Pattern' ext primTy (TypedPrim primTy primVal)
+  IR.Pattern' ext primTy (TypedPrim primTy primVal)
+
 type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
 
 type GlobalsT' ext primTy primVal =
-    IR.Globals' ext primTy (TypedPrim primTy primVal)
+  IR.Globals' ext primTy (TypedPrim primTy primVal)
+
 type GlobalsT primTy primVal = GlobalsT' IR.NoExt primTy primVal
 
 type ValueT' ext primTy primVal =
-    IR.Value' ext primTy (TypedPrim primTy primVal)
+  IR.Value' ext primTy (TypedPrim primTy primVal)
+
 type ValueT primTy primVal = ValueT' IR.NoExt primTy primVal
 
 type NeutralT' ext primTy primVal =
-    IR.Neutral' ext primTy (TypedPrim primTy primVal)
+  IR.Neutral' ext primTy (TypedPrim primTy primVal)
+
 type NeutralT primTy primVal = NeutralT' IR.NoExt primTy primVal
 
 type AnnotationT' ext primTy primVal =
-    Annotation' ext primTy (TypedPrim primTy primVal)
+  Annotation' ext primTy (TypedPrim primTy primVal)
+
 type AnnotationT primTy primVal = AnnotationT' IR.NoExt primTy primVal
 
 type BindAnnotationT' ext primTy primVal =
-    BindAnnotation' ext primTy (TypedPrim primTy primVal)
-type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
+  BindAnnotation' ext primTy (TypedPrim primTy primVal)
 
+type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
 
 getTermAnn :: Term primTy primVal -> AnnotationT' IR.NoExt primTy primVal
 getTermAnn (Star _ ann) = ann

@@ -17,8 +17,8 @@ import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
@@ -31,7 +31,7 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (String, Show (..))
+import Prelude (Show (..), String)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -94,8 +94,8 @@ arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
 arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
-data ApplyError =
-    PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
+data ApplyError
+  = PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
 
 instance Show ApplyError where
@@ -111,15 +111,16 @@ instance Core.CanApply PrimVal where
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toTake1 args2'
-    = do
-      let argLen = lengthN args2'
-          argsAll = foldr NonEmpty.cons args2 args1
-      case argLen `compare` ar of
-        LT -> Right $
-          Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
-        EQ -> applyProper fun argsAll
-        GT -> Left $ Core.ExtraArguments fun' args2'
+      Just args2 <- traverse toTake1 args2' =
+      do
+        let argLen = lengthN args2'
+            argsAll = foldr NonEmpty.cons args2 args1
+        case argLen `compare` ar of
+          LT ->
+            Right $
+              Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
+          EQ -> applyProper fun argsAll
+          GT -> Left $ Core.ExtraArguments fun' args2'
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
@@ -128,31 +129,30 @@ applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
-      pure $ Prim.Return { retType, retTerm = Constant x }
+      pure $ Prim.Return {retType, retTerm = Constant x}
     Left err -> Left $ Core.Extra $ PipelineError $ Core.PrimError err
- where
-  fun' = takeToTerm fun
-  args' = takeToTerm <$> toList args
-  newTerm = Run.applyPrimOnArgs fun' args'
-  -- TODO ∷ do something with the logs!?
-  (compd, _log) = Compilation.compileExpr newTerm
+  where
+    fun' = takeToTerm fun
+    args' = takeToTerm <$> toList args
+    newTerm = Run.applyPrimOnArgs fun' args'
+    -- TODO ∷ do something with the logs!?
+    (compd, _log) = Compilation.compileExpr newTerm
 
 takeToTerm :: Take -> RawTerm
 takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
-toPrimType :: ErasedAnn.Type PrimTy
-           -> Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
-toPrimType ty = maybe err Right $ go ty where
-  err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
-
-  go ty = goPi ty <|> (pure <$> goPrim ty)
-
-  goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
-  goPi _ = Nothing
-
-  goPrim (ErasedAnn.PrimTy p) = Just p
-  goPrim _ = Nothing
+toPrimType ::
+  ErasedAnn.Type PrimTy ->
+  Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
+toPrimType ty = maybe err Right $ go ty
+  where
+    err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
+    go ty = goPi ty <|> (pure <$> goPrim ty)
+    goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
+    goPi _ = Nothing
+    goPrim (ErasedAnn.PrimTy p) = Just p
+    goPrim _ = Nothing
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
 parseTy lexer =
@@ -204,7 +204,7 @@ checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
   M.TInt -> True -- TODO bounds?
-  -- TODO other cases?
+    -- TODO other cases?
   _ -> False
 checkIntType _ _ = False
 

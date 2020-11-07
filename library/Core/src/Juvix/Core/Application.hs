@@ -7,8 +7,8 @@
 --   has failed, if it's a =Right= then type checking will continue
 module Juvix.Core.Application where
 
-import qualified Juvix.Library.Usage as Usage
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 
 data Return ty term
   = -- arguments left
