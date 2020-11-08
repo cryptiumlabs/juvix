@@ -22,9 +22,14 @@ type Old f =
 type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
 
+-- | the traditional transition between one context and another
+data EnvDispatch = EnvDispatch
+
+type TransitionMap m =
+  (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
+
 type WorkingMaps m =
-  ( HasState "old" (Old Context.T) m,
-    HasState "new" (New Context.T) m,
+  ( TransitionMap m,
     HasThrow "error" Error m,
     HasState "modMap" ModuleMap m,
     HasReader "openMap" OpenMap m
@@ -194,13 +199,15 @@ populateModMap = do
       -- TODO ∷
       -- explicts and implicits for now work the same
       -- later they should work as follows
-      -- Implicit opens should be superseded by explict
+      -- Implicit opens should be superseded by explicit
       -- thus our map should have implciit explicit on
       -- each symbol. Later when we are done, we remove
       -- these markings as they are no longer useful
-      put @"modMap" (foldr f modM opens)
+      -- TODO ∷
+      -- should we even append modM to this
+      put @"modMap" (modM <> Map.fromList (concatMap f opens))
       where
-        f y modMap = foldr addNewSymbol modMap openList
+        f y = catMaybes (fmap addNewSymbol openList)
           where
             nameSpace =
               case y of
@@ -210,16 +217,16 @@ populateModMap = do
             unpopulateLookup x =
               unpopulate . Context.lookup (NameSymbol.fromSymbol x)
             --
-            addNewSymbol x modMap =
+            addNewSymbol x =
               case unpopulateLookup x old <|> unpopulateLookup x new of
                 Just () ->
                   -- if the symbol is in the map, then
                   -- we don't shadow it....
                   -- TODO ∷ later throw an error for
                   --        explicit opens that do this
-                  modMap
+                  Nothing
                 Nothing ->
-                  Map.insert x nameSpace modMap
+                  Just (x, nameSpace)
             --
             openList =
               -- haskell gives type error if grabList is not typed
