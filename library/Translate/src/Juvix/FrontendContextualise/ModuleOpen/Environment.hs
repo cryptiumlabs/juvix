@@ -1,4 +1,7 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 
 module Juvix.FrontendContextualise.ModuleOpen.Environment
   ( module Juvix.FrontendContextualise.ModuleOpen.Environment,
@@ -7,6 +10,7 @@ module Juvix.FrontendContextualise.ModuleOpen.Environment
 where
 
 import qualified Data.HashSet as Set
+import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.FrontendContextualise.Environment
@@ -16,14 +20,17 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+--------------------------------------------------------------------------------
+-- Type Aliases and effect setup
+--------------------------------------------------------------------------------
+
+type ModuleMap = Map.T Symbol NameSymbol.T
+
 type Old f =
   f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
 type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
-
--- | the traditional transition between one context and another
-data EnvDispatch = EnvDispatch
 
 type TransitionMap m =
   (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
@@ -35,6 +42,23 @@ type WorkingMaps m =
     HasReader "openMap" OpenMap m
   )
 
+type ModuleNames tag m =
+  (NameConstraint tag m, HasReader "dispatch" tag m, Names tag)
+
+-- The effect of expression and below note that new is not the new map
+-- per se, but more instead of where local functions get added...  for
+-- a full pass this is indeed the new context, but for a single pass,
+-- just a local cache
+type Expression tag m =
+  (HasState "new" (New Context.T) m, ModuleNames tag m, HasThrow "error" Error m)
+
+--------------------------------------------------------------------------------
+-- Environment data declarations
+--------------------------------------------------------------------------------
+
+-- | the traditional transition between one context and another
+data EnvDispatch = EnvDispatch
+
 data Environment
   = Env
       { old :: Old Context.T,
@@ -43,8 +67,6 @@ data Environment
         openMap :: OpenMap
       }
   deriving (Generic, Show)
-
-type FinalContext = New Context.T
 
 data Error
   = UnknownModule NameSymbol.T
@@ -62,8 +84,6 @@ data Open a
 
 type ContextAlias =
   ExceptT Error (State Environment)
-
-type ModuleMap = Map.T Symbol NameSymbol.T
 
 newtype Context a = Ctx {antiAlias :: ContextAlias a}
   deriving (Functor, Applicative, Monad)
@@ -93,6 +113,46 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
       HasSource "openMap" OpenMap
     )
     via ReaderField "openMap" ContextAlias
+
+--------------------------------------------------------------------------------
+-- Generic Interface Definitions for Environment lookup
+--------------------------------------------------------------------------------
+
+-- | Names encapsulates the idea of looking up all current names in
+-- a context
+class Names a where
+  type NameConstraint a (m :: * -> *) :: Constraint
+  contextNames :: (NameConstraint a m) => NameSymbol.T -> a -> m [Symbol]
+
+instance Names EnvDispatch where
+  type NameConstraint _ m = TransitionMap m
+  contextNames name EnvDispatch = do
+    old <- get @"old"
+    new <- get @"new"
+    let grabList ::
+          Context.T a b c ->
+          NameSpace.List (Context.Definition a b c)
+        grabList ctx =
+          case Context.extractValue <$> Context.lookup name ctx of
+            Just (Context.Record nameSpace _) ->
+              NameSpace.toList nameSpace
+            Just _ ->
+              NameSpace.List [] []
+            Nothing ->
+              NameSpace.List [] []
+        NameSpace.List {publicL = pubN} =
+          grabList new
+        NameSpace.List {publicL = pubO} =
+          grabList old
+     in pure (fmap fst pubN <> fmap fst pubO)
+
+names ::
+  (NameConstraint a m, HasReader "dispatch" a m, Names a) =>
+  NameSymbol.T ->
+  m [Symbol]
+names name = Juvix.Library.ask @"dispatch" >>= contextNames name
+
+type FinalContext = New Context.T
 
 --------------------------------------------------------------------------------
 -- Types for resolving opens

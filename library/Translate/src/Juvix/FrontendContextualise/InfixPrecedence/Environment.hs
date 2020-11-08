@@ -2,7 +2,6 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.FrontendContextualise.InfixPrecedence.Environment
   ( module Juvix.FrontendContextualise.InfixPrecedence.Environment,
@@ -20,17 +19,15 @@ import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
 import qualified Juvix.Library
 import Juvix.Library hiding (ask)
 
+--------------------------------------------------------------------------------
+-- Type Aliases and effect setup
+--------------------------------------------------------------------------------
+
 type Old f =
   f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
 type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
-
--- | the traditional transition between one context and another
-data EnvDispatch = EnvDispatch
-
--- | Used when going trying to transition one definition to the next level
-data SingleDispatch a b c = SingleDispatch
 
 type TransitionMap m =
   (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
@@ -43,12 +40,7 @@ type Queryable tag m =
 -- a full pass this is indeed the new context, but for a single pass,
 -- just a local cache
 type Expression tag m =
-  ( HasReader "dispatch" tag m,
-    QueryConstraint tag m,
-    Query tag,
-    HasState "new" (New Context.T) m,
-    HasThrow "error" Error m
-  )
+  (Queryable tag m, HasState "new" (New Context.T) m, HasThrow "error" Error m)
 
 type MinimalEnv a b c m =
   (HasState "env" (Context.T a b c) m)
@@ -61,6 +53,18 @@ type WorkingMaps tag m =
 type SingleMap a b c m =
   (MinimalEnv a b c m, Expression (SingleDispatch a b c) m)
 
+type FinalContext = New Context.T
+
+--------------------------------------------------------------------------------
+-- Environment data declarations
+--------------------------------------------------------------------------------
+
+-- | the traditional transition between one context and another
+data EnvDispatch = EnvDispatch
+
+-- | Used when going trying to transition one definition to the next level
+data SingleDispatch a b c = SingleDispatch
+
 data Environment
   = Env
       { old :: Old Context.T,
@@ -69,7 +73,44 @@ data Environment
       }
   deriving (Generic)
 
-type FinalContext = New Context.T
+data Error
+  = UnknownSymbol Context.NameSymbol
+  | Clash
+      (Shunt.Precedence Context.NameSymbol)
+      (Shunt.Precedence Context.NameSymbol)
+  | ImpossibleMoreEles
+  | PathError Context.NameSymbol
+  deriving (Show)
+
+type ContextAlias =
+  ExceptT Error (State Environment)
+
+newtype Context a = Ctx {antiAlias :: ContextAlias a}
+  deriving (Functor, Applicative, Monad)
+  deriving
+    ( HasState "old" (Old Context.T),
+      HasSink "old" (Old Context.T),
+      HasSource "old" (Old Context.T)
+    )
+    via StateField "old" ContextAlias
+  deriving
+    ( HasState "new" (New Context.T),
+      HasSink "new" (New Context.T),
+      HasSource "new" (New Context.T)
+    )
+    via StateField "new" ContextAlias
+  deriving
+    ( HasReader "dispatch" EnvDispatch,
+      HasSource "dispatch" EnvDispatch
+    )
+    via ReaderField "dispatch" ContextAlias
+  deriving
+    (HasThrow "error" Error)
+    via MonadError ContextAlias
+
+--------------------------------------------------------------------------------
+-- Generic Interface Definitions for Environment lookup
+--------------------------------------------------------------------------------
 
 class Query a where
   type QueryConstraint a (m :: * -> *) :: Constraint
@@ -112,45 +153,8 @@ instance Query EnvDispatch where
     pure (chooseProperScope lookedO looked)
 
 queryInfo ::
-  (QueryConstraint a m, HasReader "dispatch" a m, Query a, SymbLookup sym) =>
-  sym ->
-  m (Maybe [Context.Information])
+  (Queryable a m, SymbLookup sym) => sym -> m (Maybe [Context.Information])
 queryInfo s = Juvix.Library.ask @"dispatch" >>= queryInfo' s
-
-data Error
-  = UnknownSymbol Context.NameSymbol
-  | Clash
-      (Shunt.Precedence Context.NameSymbol)
-      (Shunt.Precedence Context.NameSymbol)
-  | ImpossibleMoreEles
-  | PathError Context.NameSymbol
-  deriving (Show)
-
-type ContextAlias =
-  ExceptT Error (State Environment)
-
-newtype Context a = Ctx {antiAlias :: ContextAlias a}
-  deriving (Functor, Applicative, Monad)
-  deriving
-    ( HasState "old" (Old Context.T),
-      HasSink "old" (Old Context.T),
-      HasSource "old" (Old Context.T)
-    )
-    via StateField "old" ContextAlias
-  deriving
-    ( HasState "new" (New Context.T),
-      HasSink "new" (New Context.T),
-      HasSource "new" (New Context.T)
-    )
-    via StateField "new" ContextAlias
-  deriving
-    ( HasReader "dispatch" EnvDispatch,
-      HasSource "dispatch" EnvDispatch
-    )
-    via ReaderField "dispatch" ContextAlias
-  deriving
-    (HasThrow "error" Error)
-    via MonadError ContextAlias
 
 runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
 runEnv (Ctx c) old =
