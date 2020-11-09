@@ -53,6 +53,8 @@ data Error
     NotAUsage FE.Expression
   | -- | expression is not 0 or ω
     NotAGUsage FE.Expression
+  | -- | usage is not 0 or ω (TODO reject in parser?)
+    UsageNotGUsage Usage.T
   deriving (Show, Eq, Generic)
 
 data CoreSig' ext primTy primVal
@@ -304,9 +306,10 @@ transformDef ::
   FE.Final Ctx.Definition ->
   Env primTy primVal [IR.Global primTy primVal]
 transformDef x (Ctx.Def π sig def _) = do
+  π <- maybe (pure IR.GOmega) usageToGlobal π
   let f = IR.Function {
             funName = x,
-            funUsage = fromMaybe Usage.Omega π,
+            funUsage = π,
             funType = _, -- TODO pass in answer from transformTypeSig
             funClauses = _
           }
@@ -316,3 +319,8 @@ transformDef _ (Ctx.TypeDeclar typ) = _
 transformDef _ (Ctx.Unknown _) = pure []
 transformDef _ Ctx.CurrentNameSpace = pure []
 transformDef _ (Ctx.Information {}) = pure []
+
+usageToGlobal :: Usage.T -> Env primTy primVal IR.GlobalUsage
+usageToGlobal π =
+  maybe (throwFF $ UsageNotGUsage π) pure $
+  IR.usageToGlobal π

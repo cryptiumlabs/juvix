@@ -19,6 +19,7 @@ module Juvix.Core.IR.Types
 where
 
 import Juvix.Core.IR.Types.Base
+import qualified Juvix.Library.Usage as Usage
 import Juvix.Library hiding (show)
 
 data NoExt deriving (Data)
@@ -84,3 +85,8 @@ pattern VBound ::
   BoundVar ->
   Value' ext primTy primVal
 pattern VBound n = VNeutral' (NBound' n ()) ()
+
+usageToGlobal :: Usage.T -> Maybe GlobalUsage
+usageToGlobal Usage.Omega    = Just GOmega
+usageToGlobal (Usage.SNat 0) = Just GZero
+usageToGlobal _              = Nothing
