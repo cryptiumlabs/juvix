@@ -8,13 +8,13 @@ where
 
 import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Core.IR.Types.Base hiding
   ( Term' (..),
     defaultExtTerm,
     extendTerm,
   )
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Library hiding (Datatype, Type)
 import Juvix.Library.Usage (Usage)
 

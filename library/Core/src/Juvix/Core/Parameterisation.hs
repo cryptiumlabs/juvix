@@ -2,10 +2,10 @@
 
 module Juvix.Core.Parameterisation where
 
+import qualified Juvix.Core.Application as App
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Core.Application as App
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)

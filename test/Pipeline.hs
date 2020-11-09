@@ -69,9 +69,11 @@ exec (EnvE env) param globals = do
 type Globals = IR.Globals PrimTy PrimVal
 
 type RawHRElim = HR.Elim PrimTy RawPrimVal
+
 type HRElim = HR.Elim PrimTy PrimVal
 
 type RawHRTerm = HR.Term PrimTy RawPrimVal
+
 type HRTerm = HR.Term PrimTy PrimVal
 
 type AnnTuple = (RawHRTerm, Usage.T, RawHRTerm)

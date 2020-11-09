@@ -411,18 +411,22 @@ data VAppError extV primTy primVal
       }
 
 deriving instance
-  ( Eq primTy, Eq primVal,
+  ( Eq primTy,
+    Eq primVal,
     IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy primVal,
     Eq (Param.ApplyErrorExtra primVal)
-  ) => Eq (VAppError extV primTy primVal)
+  ) =>
+  Eq (VAppError extV primTy primVal)
 
 deriving instance
-  ( Show primTy, Show primVal,
+  ( Show primTy,
+    Show primVal,
     IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy primVal,
     Show (Param.ApplyErrorExtra primVal)
-  ) => Show (VAppError extV primTy primVal)
+  ) =>
+  Show (VAppError extV primTy primVal)
 
 vapp ::
   ( AllSubstV extV primTy primVal,

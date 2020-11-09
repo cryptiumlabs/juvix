@@ -2,7 +2,6 @@
 
 module Juvix.Core.IR.Typechecker.Types
   ( module Juvix.Core.IR.Typechecker.Types,
-
     P.TypedPrim,
 
     -- * Constructors & fields for 'Return'
@@ -19,7 +18,8 @@ module Juvix.Core.IR.Typechecker.Types
     App.usage,
     App.type',
     App.term,
-  ) where
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Types as IR

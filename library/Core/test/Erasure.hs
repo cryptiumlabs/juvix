@@ -1,8 +1,8 @@
 module Erasure where
 
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
-import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Parameterisations.Unit as Unit

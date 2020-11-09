@@ -18,6 +18,7 @@ type NatTerm = IR.Term Nat.Ty Nat.Val
 type NatElim = IR.Elim Nat.Ty Nat.Val
 
 type NatValue = IR.Value Nat.Ty Nat.Val
+
 type NatValueT = IR.ValueT Nat.Ty Nat.Val
 
 type NatAnnotation = IR.AnnotationT Nat.Ty Nat.Val
@@ -27,6 +28,7 @@ type UnitTerm = IR.Term Unit.Ty Unit.Val
 type UnitElim = IR.Elim Unit.Ty Unit.Val
 
 type UnitValue = IR.Value Unit.Ty Unit.Val
+
 type UnitValueT = IR.ValueT Unit.Ty Unit.Val
 
 type UnitAnnotation = IR.AnnotationT Unit.Ty Unit.Val
@@ -36,6 +38,7 @@ type AllTerm = IR.Term All.Ty All.Val
 type AllElim = IR.Elim All.Ty All.Val
 
 type AllValue = IR.Value All.Ty All.Val
+
 type AllValueT = IR.ValueT All.Ty All.Val
 
 type AllAnnotation = IR.AnnotationT All.Ty All.Val
@@ -52,8 +55,10 @@ assertIsRight (Left l) =
 -- unit test generator for typeTerm
 shouldCheckWith ::
   ( HasCallStack,
-    Show primTy, Show primVal,
-    Eq primTy, Eq primVal,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
     CanApply (TypedPrim primTy primVal),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
@@ -76,8 +81,10 @@ shouldCheckWith param globals ctx term ann =
 
 shouldCheck ::
   ( HasCallStack,
-    Show primTy, Show primVal,
-    Eq primTy, Eq primVal,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
     CanApply (TypedPrim primTy primVal),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
@@ -91,8 +98,10 @@ shouldCheck param = shouldCheckWith param mempty []
 -- unit test generator for typeElim
 shouldInferWith ::
   ( HasCallStack,
-    Show primTy, Show primVal,
-    Eq primTy, Eq primVal,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
     CanApply (TypedPrim primTy primVal),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
@@ -111,8 +120,10 @@ shouldInferWith param globals ctx elim ann@(IR.Annotation {annUsage = σ}) =
 
 shouldInfer ::
   ( HasCallStack,
-    Show primTy, Show primVal,
-    Eq primTy, Eq primVal,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
     CanApply (TypedPrim primTy primVal),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
@@ -126,8 +137,10 @@ shouldInfer param = shouldInferWith param mempty []
 -- unit test generator for evalTerm
 shouldEval ::
   ( HasCallStack,
-    Show primTy, Show primVal,
-    Eq primTy, Eq primVal,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
     CanApply primVal,
     Eq (IR.VAppError IR.NoExt primTy primVal),
     Show (IR.VAppError IR.NoExt primTy primVal)

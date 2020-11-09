@@ -62,10 +62,9 @@ instance P.CanApply (P.TypedPrim Ty Val) where
 
   apply f' xs'
     | Just f <- unNatValR f',
-      Just xs <- traverse unNatValR xs'
-    = P.mapApplyErr natValR $ P.apply f xs
+      Just xs <- traverse unNatValR xs' =
+      P.mapApplyErr natValR $ P.apply f xs
   apply f xs = Left $ P.InvalidArguments f xs
-
 
 natValR :: P.TypedPrim Naturals.Ty Naturals.Val -> P.TypedPrim Ty Val
 natValR (App.Cont {fun, args, numLeft}) =
@@ -73,8 +72,9 @@ natValR (App.Cont {fun, args, numLeft}) =
 natValR (App.Return {retType, retTerm}) =
   App.Return {retType = NatTy <$> retType, retTerm = NatVal retTerm}
 
-natValT :: App.Take (P.PrimType Naturals.Ty) Naturals.Val
-        -> App.Take (P.PrimType Ty) Val
+natValT ::
+  App.Take (P.PrimType Naturals.Ty) Naturals.Val ->
+  App.Take (P.PrimType Ty) Val
 natValT (App.Take {usage, type', term}) =
   App.Take {usage, type' = NatTy <$> type', term = NatVal term}
 
@@ -82,15 +82,16 @@ unNatValR :: P.TypedPrim Ty Val -> Maybe (P.TypedPrim Naturals.Ty Naturals.Val)
 unNatValR (App.Cont {fun, args, numLeft}) =
   App.Cont <$> unNatValT fun <*> traverse unNatValT args <*> pure numLeft
 unNatValR (App.Return {retType = t', retTerm = NatVal v})
-  | Just t <- traverse unNatTy t'
-  = Just $ App.Return t v
+  | Just t <- traverse unNatTy t' =
+    Just $ App.Return t v
 unNatValR (App.Return {}) = Nothing
 
-unNatValT :: App.Take (P.PrimType Ty) Val
-          -> Maybe (App.Take (P.PrimType Naturals.Ty) Naturals.Val)
+unNatValT ::
+  App.Take (P.PrimType Ty) Val ->
+  Maybe (App.Take (P.PrimType Naturals.Ty) Naturals.Val)
 unNatValT (App.Take {usage, type' = type'', term = NatVal term})
-  | Just type' <- traverse unNatTy type''
-  = Just $ App.Take {usage, type', term}
+  | Just type' <- traverse unNatTy type'' =
+    Just $ App.Take {usage, type', term}
 unNatValT (App.Take {}) = Nothing
 
 unNatVal :: Val -> Maybe Naturals.Val
