@@ -65,6 +65,18 @@ data EnvDispatch = EnvDispatch
 -- | Used when going trying to transition one definition to the next level
 data SingleDispatch a b c = SingleDispatch
 
+
+-- | @SingleEnv@ is used when we are trying to convert one function to the next step
+data SingleEnv term1 ty1 sumRep1
+  = Single
+      { env :: Context.T term1 ty1 sumRep1,
+        temp :: New Context.T,
+        disp :: SingleDispatch term1 ty1 sumRep1
+      }
+  deriving (Generic)
+
+-- | @Environment@ is the environment used when going from one entire
+-- phase to another
 data Environment
   = Env
       { old :: Old Context.T,
@@ -107,6 +119,33 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
   deriving
     (HasThrow "error" Error)
     via MonadError ContextAlias
+
+type SingleAlias term1 ty1 sumRep1 =
+  ExceptT Error (State (SingleEnv term1 ty1 sumRep1))
+
+newtype SingleCont term1 ty1 sumRep1 a
+  = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
+  deriving (Functor, Applicative, Monad)
+  deriving
+    ( HasState "new" (New Context.T),
+      HasSink "new" (New Context.T),
+      HasSource "new" (New Context.T)
+    )
+    via Rename "temp" (StateField "temp" (SingleAlias term1 ty1 sumRep1))
+  deriving
+    ( HasState "env" (Context.T term1 ty1 sumRep1),
+      HasSink "env" (Context.T term1 ty1 sumRep1),
+      HasSource "env" (Context.T term1 ty1 sumRep1)
+    )
+    via (StateField "env" (SingleAlias term1 ty1 sumRep1))
+  deriving
+    ( HasReader "dispatch" (SingleDispatch term1 ty1 sumRep1),
+      HasSource "dispatch" (SingleDispatch term1 ty1 sumRep1)
+    )
+    via Rename "disp" (ReaderField "disp" (SingleAlias term1 ty1 sumRep1))
+  deriving
+    (HasThrow "error" Error)
+    via MonadError (SingleAlias term1 ty1 sumRep1)
 
 --------------------------------------------------------------------------------
 -- Generic Interface Definitions for Environment lookup
