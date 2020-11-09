@@ -43,7 +43,7 @@ type Expression tag m =
   (Queryable tag m, HasState "new" (New Context.T) m, HasThrow "error" Error m)
 
 type MinimalEnv a b c m =
-  (HasState "env" (Context.T a b c) m)
+  (HasState "env" (Context.T a b c) m, HasState "new" (New Context.T) m)
 
 -- the effect of the pass itself
 type WorkingMaps tag m =
@@ -119,38 +119,44 @@ class Query a where
 
 instance Query (SingleDispatch a b c) where
   type QueryConstraint _ m = MinimalEnv a b c m
-  queryInfo' sym SingleDispatch = do
-    undefined
+  queryInfo' sym SingleDispatch =
+    chooseProperScope <$> lookup sym <*> (get @"env" >>| look sym)
 
 instance Query EnvDispatch where
   type QueryConstraint _ m = TransitionMap m
-  queryInfo' sym EnvDispatch = do
-    looked <- lookup sym
-    lookedO <- ask sym
-    let -- dealing with the second map winning lookup
-        -- Main rules:
-        -- Local Private > Any
-        -- Local         > Global
-        -- Global        > Nothing
-        chooseProperScope (Just (Context.Outside _)) (Just (Context.Current x)) =
-          extractInformation (Local.extractValue x)
-        chooseProperScope Nothing (Just (Context.Current x)) =
-          extractInformation (Local.extractValue x)
-        chooseProperScope _ (Just (Context.Current (Local.Priv x))) =
-          extractInformation x
-        chooseProperScope Nothing (Just (Context.Outside x)) =
-          extractInformation x
-        -- dealing with the first map winning lookup
-        chooseProperScope (Just x) _ =
-          extractInformation (Context.extractValue x)
-        chooseProperScope Nothing Nothing =
-          Nothing
-        extractInformation (Context.Def {precedence}) =
-          Just [Context.Prec precedence]
-        extractInformation (Context.Information is) =
-          Just is
-        extractInformation _ = Nothing
-    pure (chooseProperScope lookedO looked)
+  queryInfo' sym EnvDispatch =
+    chooseProperScope <$> lookup sym <*> ask sym
+
+-- dealing with the second map winning lookup
+-- Main rules:
+-- Local Private > Any
+-- Local         > Global
+-- Global        > Nothing
+chooseProperScope ::
+  Maybe (Context.From (Context.Definition term1 ty1 sumRep1)) ->
+  Maybe (Context.From (Context.Definition term2 ty2 sumRep2)) ->
+  Maybe [Context.Information]
+chooseProperScope (Just (Context.Outside _)) (Just (Context.Current x)) =
+  extractInformation (Local.extractValue x)
+chooseProperScope Nothing (Just (Context.Current x)) =
+  extractInformation (Local.extractValue x)
+chooseProperScope _ (Just (Context.Current (Local.Priv x))) =
+  extractInformation x
+chooseProperScope Nothing (Just (Context.Outside x)) =
+  extractInformation x
+-- dealing with the first map winning lookup
+chooseProperScope (Just x) _ =
+  extractInformation (Context.extractValue x)
+chooseProperScope Nothing Nothing =
+  Nothing
+
+extractInformation ::
+  Context.Definition term ty sumRep -> Maybe [Context.Information]
+extractInformation (Context.Def {precedence}) =
+  Just [Context.Prec precedence]
+extractInformation (Context.Information is) =
+  Just is
+extractInformation _ = Nothing
 
 queryInfo ::
   (Queryable a m, SymbLookup sym) => sym -> m (Maybe [Context.Information])

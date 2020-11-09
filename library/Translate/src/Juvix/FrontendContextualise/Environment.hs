@@ -38,24 +38,21 @@ lookup ::
   sym ->
   m (Maybe (Context.From (Context.Definition term ty sumRep)))
 lookup sy = do
-  ctx <- get @"new"
-  return $ look sy ctx
+  get @"new" >>| look sy
 
 lookupCurrent ::
   (HasNew term ty sumRep m, SymbLookup sym) =>
   sym ->
   m (Maybe (NameSpace.From (Context.Definition term ty sumRep)))
 lookupCurrent sy = do
-  ctx <- get @"new"
-  return $ lookCurr sy ctx
+  get @"new" >>| lookCurr sy
 
 ask ::
   (HasOld term ty sumRep m, SymbLookup sym) =>
   sym ->
   m (Maybe (Context.From (Context.Definition term ty sumRep)))
 ask sy = do
-  ctx <- get @"old"
-  return $ look sy ctx
+  get @"old" >>| look sy
 
 add ::
   HasNew term ty sumRep m =>
