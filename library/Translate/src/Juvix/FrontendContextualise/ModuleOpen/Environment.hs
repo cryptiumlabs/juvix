@@ -215,24 +215,38 @@ instance Switch EnvDispatch where
     switchContextErr sym old >>= put @"old"
     switchContextErr sym new >>= put @"new"
 
+instance Names (SingleDispatch a b c) where
+  type NameConstraint _ m = SingleMap a b c m
+
+  -- arbitrary choice between new and env
+  currentNameSpace' SingleDispatch =
+    get @"env" >>| Context.currentName
+
+  contextNames name SingleDispatch = do
+    env <- get @"env"
+    new <- get @"new"
+    pure $ combineLists (grabList name env) (grabList name new)
+
+  inCurrentModule' name SingleDispatch = do
+    env <- get @"env"
+    new <- get @"new"
+    pure (inMap name env || inMap name new)
+
 instance Names EnvDispatch where
   type NameConstraint _ m = TransitionMap m
   contextNames name EnvDispatch = do
     old <- get @"old"
     new <- get @"new"
-    let NameSpace.List {publicL = pubN} =
-          grabList name new
-        NameSpace.List {publicL = pubO} =
-          grabList name old
-    pure (fmap fst pubN <> fmap fst pubO)
+    pure $ combineLists (grabList name new) (grabList name old)
 
+  -- arbitrary choice between new and old
   currentNameSpace' EnvDispatch =
     get @"new" >>| Context.currentName
 
   inCurrentModule' name EnvDispatch = do
     old <- get @"old"
     new <- get @"new"
-    pure (isJust (Context.lookup name old) || isJust (Context.lookup name new))
+    pure (inMap name old || inMap name new)
 
 switchNameSpace :: ModuleSwitch tag m => NameSymbol.T -> m ()
 switchNameSpace name = Juvix.Library.ask @"dispatch" >>= switch name
@@ -263,7 +277,7 @@ switchContextErr sym ctx =
 
 grabList :: NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
 grabList name ctx =
-  case Context.extractValue <$> Context.lookup name ctx of
+  case Context.extractValue <$> Context.lookup n1ame ctx of
     Just (Context.Record nameSpace _) ->
       NameSpace.toList nameSpace
     Just _ ->
@@ -271,6 +285,12 @@ grabList name ctx =
     Nothing ->
       NameSpace.List [] []
 
+combineLists :: NameSpace.List b1 -> NameSpace.List b2 -> [Symbol]
+combineLists NameSpace.List {publicL = pub1} NameSpace.List {publicL = pub2} =
+  fmap fst pub1 <> fmap fst pub2
+
+inMap :: NameSymbol.T -> Context.T term ty sumRep -> Bool
+inMap name ctx = isJust (Context.lookup name ctx)
 
 type FinalContext = New Context.T
 
