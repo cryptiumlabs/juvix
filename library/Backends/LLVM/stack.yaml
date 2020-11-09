@@ -2,11 +2,11 @@ resolver: lts-15.16
 
 packages:
 - .
-
-extra-deps:
 - ../../StandardLibrary
 - ../../Core
 - ../../InteractionNet
+
+extra-deps:
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670

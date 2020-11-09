@@ -2,10 +2,10 @@ resolver: lts-15.16
 
 packages:
 - .
-
-extra-deps:
 - ../../StandardLibrary
 - ../../Core
+
+extra-deps:
 - capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
