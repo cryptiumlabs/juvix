@@ -1,0 +1,22 @@
+mod Prelude.Michelson.Alias where
+
+open Prelude
+open Prelude.Michelson
+
+declare infixl (+) 5
+let (+) = add
+
+declare infixl (-) 4
+let (-) = sub
+
+declare infixl (*) 3
+let (*) = mul
+
+declare infixl (/) 2
+let (/) = div
+
+declare infixl (||) 5
+let (||) = or
+
+declare infixl (&&) 5
+let (&&) = and

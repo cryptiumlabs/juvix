@@ -60,6 +60,9 @@ let not = %Michelson.not
 sig compare : (x : ty) -> x -> x -> int
 let compare = %Michelson.compare
 
+sig if2 : (x : ty) -> bool -> x -> x -> x
+let if2 = %Michelson.if_builtin
+
 -- other functions
 sig now : timestamp
 let now = %Michelson.now

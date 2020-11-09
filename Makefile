@@ -59,7 +59,13 @@ test-all:
 	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser:
-	ls test/examples/demo | xargs -n 1 -I % juvix parse test/examples/demo/%
+	ls test/examples/demo | xargs -t -n 1 -I % juvix parse test/examples/demo/%
+
+test-typecheck:
+	ls test/examples/demo | xargs -t -n 1 -I % juvix typecheck test/examples/demo/%
+
+test-compile:
+	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
@@ -76,4 +82,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser repl-lib repl-exe clean clean-full bench build-format build-cache test-all
+.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser test-typecheck test-compile repl-lib repl-exe clean clean-full bench build-format build-cache test-all

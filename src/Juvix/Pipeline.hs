@@ -3,6 +3,10 @@
 module Juvix.Pipeline where
 
 import qualified Juvix.Core as Core
+import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.FromFrontend as FromFrontend
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import Juvix.Library
@@ -23,3 +27,7 @@ toCore paths = do
         case Core.ofFrontend x of
           Left errr -> Left (PipeLine errr)
           Right con -> Right con
+
+contextToCore :: Target.FinalContext -> P.Parameterisation primTy primVal -> Either FromFrontend.Error [IR.Global primTy primVal]
+contextToCore ctx param =
+  FromFrontend.execEnv ctx param $ Context.traverseContext1 FromFrontend.transformDef ctx
