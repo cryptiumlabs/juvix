@@ -41,6 +41,9 @@ type WorkingMaps m =
 type ModuleNames tag m =
   (NameConstraint tag m, HasReader "dispatch" tag m, Names tag)
 
+type ModuleSwitch tag m =
+  (SwitchConstraint tag m, HasReader "dispatch" tag m, Switch tag)
+
 -- The effect of expression and below note that new is not the new map
 -- per se, but more instead of where local functions get added...  for
 -- a full pass this is indeed the new context, but for a single pass,
@@ -50,7 +53,8 @@ type Expression tag m =
     ModuleNames tag m,
     HasThrow "error" Error m,
     HasState "modMap" ModuleMap m,
-    HasReader "openMap" OpenMap m
+    HasReader "openMap" OpenMap m,
+    ModuleSwitch tag m
   )
 
 --------------------------------------------------------------------------------
@@ -125,13 +129,31 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
 -- Generic Interface Definitions for Environment lookup
 --------------------------------------------------------------------------------
 
+class Switch a where
+  type SwitchConstraint a (m :: * -> *) :: Constraint
+  switch :: SwitchConstraint a m => Context.NameSymbol -> a -> m ()
+
 -- | Names encapsulates the idea of looking up all current names in
 -- a context
 class Names a where
   type NameConstraint a (m :: * -> *) :: Constraint
-  contextNames :: (NameConstraint a m) => NameSymbol.T -> a -> m [Symbol]
-  currentNameSpace' :: NameConstraint a m => a -> m (NameSymbol.T)
+  contextNames :: NameConstraint a m => NameSymbol.T -> a -> m [Symbol]
+  currentNameSpace' :: NameConstraint a m => a -> m NameSymbol.T
   inCurrentModule' :: NameConstraint a m => NameSymbol.T -> a -> m Bool
+
+instance Switch EnvDispatch where
+  type SwitchConstraint _ m = (TransitionMap m, HasThrow "error" Error m)
+  switch sym EnvDispatch = do
+    old <- get @"old"
+    new <- get @"new"
+    case Context.switchNameSpace sym old of
+      -- bad Error for now
+      Left ____ -> throw @"error" (UnknownModule sym)
+      Right map -> put @"old" map
+    -- have to do this again sadly
+    case Context.switchNameSpace sym new of
+      Left ____ -> throw @"error" (UnknownModule sym)
+      Right map -> put @"new" map
 
 instance Names EnvDispatch where
   type NameConstraint _ m = TransitionMap m
@@ -164,14 +186,16 @@ instance Names EnvDispatch where
     new <- get @"new"
     pure (isJust (Context.lookup name old) || isJust (Context.lookup name new))
 
-inScopeNames ::
-  (NameConstraint a m, HasReader "dispatch" a m, Names a) =>
-  NameSymbol.T ->
-  m [Symbol]
+switchNameSpace :: ModuleSwitch tag m => NameSymbol.T -> m ()
+switchNameSpace name = Juvix.Library.ask @"dispatch" >>= switch name
+
+inScopeNames :: ModuleNames tag m => NameSymbol.T -> m [Symbol]
 inScopeNames name = Juvix.Library.ask @"dispatch" >>= contextNames name
 
+currentNameSpace :: ModuleNames tag m => m NameSymbol.T
 currentNameSpace = Juvix.Library.ask @"dispatch" >>= currentNameSpace'
 
+inCurrentModule :: ModuleNames tag m => NameSymbol.T -> m Bool
 inCurrentModule name = Juvix.Library.ask @"dispatch" >>= inCurrentModule' name
 
 type FinalContext = New Context.T
