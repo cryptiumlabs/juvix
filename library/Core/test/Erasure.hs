@@ -2,6 +2,7 @@ module Erasure where
 
 import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -17,11 +18,17 @@ type ErasureType primTy primVal =
 
 shouldEraseTo ::
   forall primTy primVal.
-  (Show primTy, Show primVal, Eq primTy, Eq primVal) =>
+  ( Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    Eq (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal)),
+    Show (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+  ) =>
   String ->
   Core.Parameterisation primTy primVal ->
   (Typed.Term primTy primVal, Usage.T) ->
-  Erased.Term primVal ->
+  Erased.TermT primTy primVal ->
   T.TestTree
 shouldEraseTo name _ (term, usage) erased =
   T.testCase
@@ -50,13 +57,13 @@ omegaAnn = Typed.Annotation omega
 zeroAnn :: IR.Value primTy primVal -> Typed.Annotation primTy primVal
 zeroAnn = Typed.Annotation mempty
 
-unitAnn :: Typed.Annotation Unit.Ty Unit.Val
+unitAnn :: Typed.AnnotationT Unit.Ty Unit.Val
 unitAnn = omegaAnn unitTy
 
-unitAnn0 :: Typed.Annotation Unit.Ty Unit.Val
+unitAnn0 :: Typed.AnnotationT Unit.Ty Unit.Val
 unitAnn0 = zeroAnn unitTy
 
-unitTy :: IR.Value Unit.Ty Unit.Val
+unitTy :: IR.ValueT Unit.Ty Unit.Val
 unitTy = IR.VPrimTy Unit.Ty
 
 unitTyT :: Typed.Term Unit.Ty Unit.Val
@@ -80,8 +87,8 @@ identityUnit =
   shouldEraseTo
     "identityUnit"
     Unit.t
-    (Typed.Prim Unit.Val unitAnn, one)
-    (Erased.Prim Unit.Val)
+    (Typed.Prim unitVal' unitAnn, one)
+    (Erased.Prim unitVal')
 
 constUnit :: T.TestTree
 constUnit =
@@ -172,19 +179,19 @@ identityTerm =
     (Typed.Elim (Typed.Bound 0 unitAnn) unitAnn)
     (bann unitAnn identityAnn)
 
-identityTy :: IR.Value Unit.Ty Unit.Val
+identityTy :: IR.ValueT Unit.Ty Unit.Val
 identityTy = IR.VPi one unitTy unitTy
 
 identityTyT :: Typed.Term Unit.Ty Unit.Val
 identityTyT = Typed.Pi one unitTyT unitTyT (zeroAnn $ IR.VStar 0)
 
-identityAnn :: Typed.Annotation Unit.Ty Unit.Val
+identityAnn :: Typed.AnnotationT Unit.Ty Unit.Val
 identityAnn = omegaAnn identityTy
 
-identityTy2 :: IR.Value Unit.Ty Unit.Val
+identityTy2 :: IR.ValueT Unit.Ty Unit.Val
 identityTy2 = IR.VPi one identityTy identityTy
 
-identityAnn2 :: Typed.Annotation Unit.Ty Unit.Val
+identityAnn2 :: Typed.AnnotationT Unit.Ty Unit.Val
 identityAnn2 = omegaAnn identityTy2
 
 appTerm :: Typed.Term Unit.Ty Unit.Val
@@ -212,7 +219,7 @@ appTerm =
         identityAnn2
     )
 
-appTy :: IR.Value Unit.Ty Unit.Val
+appTy :: IR.ValueT Unit.Ty Unit.Val
 appTy = IR.VPi one identityTy identityTy
 
 constTerm :: Typed.Term Unit.Ty Unit.Val
@@ -224,29 +231,32 @@ constTerm =
         (omegaAnn constTy)
     )
 
-constTy :: IR.Value Unit.Ty Unit.Val
+constTy :: IR.ValueT Unit.Ty Unit.Val
 constTy = IR.VPi mempty unitTy identityTy
 
 constTyT :: Typed.Term Unit.Ty Unit.Val
 constTyT = Typed.Pi mempty unitTyT identityTyT (zeroAnn $ IR.VStar 0)
 
-constTy2 :: IR.Value Unit.Ty Unit.Val
+constTy2 :: IR.ValueT Unit.Ty Unit.Val
 constTy2 = IR.VPi mempty identityTy identityTy
 
 constTy2T :: Typed.Term Unit.Ty Unit.Val
 constTy2T = Typed.Pi mempty identityTyT identityTyT (zeroAnn $ IR.VStar 0)
 
 unitTerm :: Typed.Term Unit.Ty Unit.Val
-unitTerm = Typed.Prim Unit.Val unitAnn
+unitTerm = Typed.Prim unitVal' unitAnn
 
 unitElim :: Typed.Elim Unit.Ty Unit.Val
 unitElim = Typed.Ann Usage.Omega unitTerm unitTyT 0 unitAnn
 
-unitTermE :: Erased.Term Unit.Val
-unitTermE = Erased.Prim Unit.Val
+unitTermE :: Erased.TermT Unit.Ty Unit.Val
+unitTermE = Erased.Prim unitVal'
 
-unitPairTy0 :: IR.Value Unit.Ty Unit.Val
+unitPairTy0 :: IR.ValueT Unit.Ty Unit.Val
 unitPairTy0 = IR.VSig mempty unitTy unitTy
 
-unitPairTy1 :: IR.Value Unit.Ty Unit.Val
+unitPairTy1 :: IR.ValueT Unit.Ty Unit.Val
 unitPairTy1 = IR.VSig one unitTy unitTy
+
+unitVal' :: Typed.TypedPrim Unit.Ty Unit.Val
+unitVal' = App.Return {retType = Unit.Ty :| [], retTerm = Unit.Val}

@@ -21,8 +21,6 @@ unitParam :: Types.Parameterisation () ()
 unitParam =
   Types.Parameterisation
     { hasType = \_ ty -> ty == () :| [],
-      arity = const 0,
-      apply = \_ _ -> Nothing,
       builtinTypes = mempty,
       builtinValues = mempty,
       parseTy = const empty,

@@ -27,6 +27,10 @@ instance P.CanApply Val where
   arity _ = 0
   apply f xs = Left $ P.ExtraArguments f xs
 
+instance P.CanApply (P.TypedPrim Ty Val) where
+  arity _ = 0
+  apply f xs = Left $ P.ExtraArguments f xs
+
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
   Token.reserved lexer "Unit"

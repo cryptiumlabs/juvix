@@ -107,7 +107,7 @@ instance Core.CanApply PrimVal where
   type ApplyErrorExtra PrimVal = ApplyError
 
   arity (Prim.Cont {numLeft}) = numLeft
-  arity (Prim.Return {}) = 0
+  arity (Prim.Return {retTerm}) = arityRaw retTerm
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',

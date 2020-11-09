@@ -9,6 +9,7 @@ import Juvix.Core.Erasure.Types
   ( Error (..),
     Globals,
     Term,
+    TermT,
     Type,
     pattern App,
     pattern Lam,

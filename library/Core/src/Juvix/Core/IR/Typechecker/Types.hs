@@ -1,6 +1,25 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Typechecker.Types where
+module Juvix.Core.IR.Typechecker.Types
+  ( module Juvix.Core.IR.Typechecker.Types,
+
+    P.TypedPrim,
+
+    -- * Constructors & fields for 'Return'
+    pattern App.Cont,
+    App.fun,
+    App.args,
+    App.numLeft,
+    pattern App.Return,
+    App.retType,
+    App.retTerm,
+
+    -- * Constructors & fields for 'Take'
+    pattern App.Take,
+    App.usage,
+    App.type',
+    App.term,
+  ) where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Types as IR
@@ -71,69 +90,67 @@ IR.extendElim "Elim'" [] [t|T|] $
             IR.typeAnn = typed
           }
 
-type TypedPrim primTy primVal = App.Return (P.PrimType primTy) primVal
+type Term primTy primVal = Term' primTy (P.TypedPrim primTy primVal)
 
-type Term primTy primVal = Term' primTy (TypedPrim primTy primVal)
-
-type Elim primTy primVal = Elim' primTy (TypedPrim primTy primVal)
+type Elim primTy primVal = Elim' primTy (P.TypedPrim primTy primVal)
 
 type GlobalT' ext primTy primVal =
-  IR.Global' ext primTy (TypedPrim primTy primVal)
+  IR.Global' ext primTy (P.TypedPrim primTy primVal)
 
 type GlobalT primTy primVal = GlobalT' IR.NoExt primTy primVal
 
 type DatatypeT' ext primTy primVal =
-  IR.Datatype' ext primTy (TypedPrim primTy primVal)
+  IR.Datatype' ext primTy (P.TypedPrim primTy primVal)
 
 type DatatypeT primTy primVal = DatatypeT' IR.NoExt primTy primVal
 
 type DataArgT' ext primTy primVal =
-  IR.DataArg' ext primTy (TypedPrim primTy primVal)
+  IR.DataArg' ext primTy (P.TypedPrim primTy primVal)
 
 type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
 
 type DataConT' ext primTy primVal =
-  IR.DataCon' ext primTy (TypedPrim primTy primVal)
+  IR.DataCon' ext primTy (P.TypedPrim primTy primVal)
 
 type DataConT primTy primVal = DataConT' IR.NoExt primTy primVal
 
 type FunctionT' ext primTy primVal =
-  IR.Function' ext primTy (TypedPrim primTy primVal)
+  IR.Function' ext primTy (P.TypedPrim primTy primVal)
 
 type FunctionT primTy primVal = FunctionT' IR.NoExt primTy primVal
 
 type FunClauseT' ext primTy primVal =
-  IR.FunClause' ext primTy (TypedPrim primTy primVal)
+  IR.FunClause' ext primTy (P.TypedPrim primTy primVal)
 
 type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
 
 type PatternT' ext primTy primVal =
-  IR.Pattern' ext primTy (TypedPrim primTy primVal)
+  IR.Pattern' ext primTy (P.TypedPrim primTy primVal)
 
 type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
 
 type GlobalsT' ext primTy primVal =
-  IR.Globals' ext primTy (TypedPrim primTy primVal)
+  IR.Globals' ext primTy (P.TypedPrim primTy primVal)
 
 type GlobalsT primTy primVal = GlobalsT' IR.NoExt primTy primVal
 
 type ValueT' ext primTy primVal =
-  IR.Value' ext primTy (TypedPrim primTy primVal)
+  IR.Value' ext primTy (P.TypedPrim primTy primVal)
 
 type ValueT primTy primVal = ValueT' IR.NoExt primTy primVal
 
 type NeutralT' ext primTy primVal =
-  IR.Neutral' ext primTy (TypedPrim primTy primVal)
+  IR.Neutral' ext primTy (P.TypedPrim primTy primVal)
 
 type NeutralT primTy primVal = NeutralT' IR.NoExt primTy primVal
 
 type AnnotationT' ext primTy primVal =
-  Annotation' ext primTy (TypedPrim primTy primVal)
+  Annotation' ext primTy (P.TypedPrim primTy primVal)
 
 type AnnotationT primTy primVal = AnnotationT' IR.NoExt primTy primVal
 
 type BindAnnotationT' ext primTy primVal =
-  BindAnnotation' ext primTy (TypedPrim primTy primVal)
+  BindAnnotation' ext primTy (P.TypedPrim primTy primVal)
 
 type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
 
@@ -164,7 +181,7 @@ data TypecheckError' extV extT primTy primVal
       }
   | CannotApply
       { applyFun, applyArg :: ValueT' extV primTy primVal,
-        applyErr :: Maybe (P.ApplyError (TypedPrim primTy primVal))
+        applyErr :: Maybe (P.ApplyError (P.TypedPrim primTy primVal))
       }
   | ShouldBeStar
       { typeActual :: ValueT' extV primTy primVal
@@ -218,9 +235,9 @@ type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    Eq (P.ApplyErrorExtra (TypedPrim primTy primVal)),
-    IR.ValueAll Eq extV primTy (TypedPrim primTy primVal),
-    IR.NeutralAll Eq extV primTy (TypedPrim primTy primVal),
+    Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
+    IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
     IR.TermAll Eq extT primTy primVal,
     IR.ElimAll Eq extT primTy primVal,
     IR.PatternAll Eq extT primTy primVal
@@ -230,9 +247,9 @@ deriving instance
 instance
   ( Show primTy,
     Show primVal,
-    Show (P.ApplyErrorExtra (TypedPrim primTy primVal)),
-    IR.ValueAll Show extV primTy (TypedPrim primTy primVal),
-    IR.NeutralAll Show extV primTy (TypedPrim primTy primVal),
+    Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
+    IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
+    IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
     IR.TermAll Show extT primTy primVal,
     IR.ElimAll Show extT primTy primVal,
     IR.PatternAll Show extT primTy primVal

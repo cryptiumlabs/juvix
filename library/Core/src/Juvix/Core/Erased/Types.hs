@@ -14,12 +14,15 @@ import Juvix.Core.IR.Types.Base hiding
     extendTerm,
   )
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Library hiding (Datatype, Type)
 import Juvix.Library.Usage (Usage)
 
 data T
 
 extendTerm "Term" [] [t|T|] (\_ -> defaultExtTerm)
+
+type TermT primTy primVal = Term (TC.TypedPrim primTy primVal)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 

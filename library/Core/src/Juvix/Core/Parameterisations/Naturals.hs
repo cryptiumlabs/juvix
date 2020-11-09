@@ -3,6 +3,7 @@
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
@@ -54,7 +55,19 @@ instance P.CanApply Val where
       app n [] = Right n
       app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
 
-instance P.CanApply (Typed.TypedPrim Ty Val)
+instance P.CanApply (Typed.TypedPrim Ty Val) where
+  arity (App.Cont {numLeft}) = numLeft
+  arity (App.Return {retTerm}) = P.arity retTerm
+
+  -- partial application handled by Val so Cont should never appear
+  apply (App.Return {retTerm = f}) xs'
+    | Just xs <- traverse unReturn xs'
+    = P.mapApplyErr wrap $ P.apply f xs
+    where
+      unReturn (App.Return {retTerm}) = Just retTerm
+      unReturn _ = Nothing
+      wrap x = App.Return {retTerm = x, retType = typeOf x}
+  apply f' xs' = Left $ P.InvalidArguments f' xs'
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
