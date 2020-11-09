@@ -197,8 +197,9 @@ transformTermHR (FE.Parened e) = transformTermHR e
 transformSimpleLet :: FE.Let -> Env primTy primVal (HR.Term primTy primVal)
 transformSimpleLet e@(FE.LetGroup name (clause :| []) body) = do
   let FE.Like args cbody = clause
-  rhs <- toElim (FE.Let e) =<<
-          foldr HR.Lam <$> transformTermHR cbody <*> traverse isVarArg args
+  rhs <-
+    toElim (FE.Let e)
+      =<< foldr HR.Lam <$> transformTermHR cbody <*> traverse isVarArg args
   HR.Let _ name rhs <$> transformTermHR body
 transformSimpleLet e = throwFF $ ExprUnsupported (FE.Let e)
 
@@ -307,8 +308,9 @@ transformDef ::
   Env primTy primVal [IR.Global primTy primVal]
 transformDef x (Ctx.Def π sig def _) = do
   π <- maybe (pure IR.GOmega) usageToGlobal π
-  let f = IR.Function {
-            funName = x,
+  let f =
+        IR.Function
+          { funName = x,
             funUsage = π,
             funType = _, -- TODO pass in answer from transformTypeSig
             funClauses = _
@@ -323,4 +325,4 @@ transformDef _ (Ctx.Information {}) = pure []
 usageToGlobal :: Usage.T -> Env primTy primVal IR.GlobalUsage
 usageToGlobal π =
   maybe (throwFF $ UsageNotGUsage π) pure $
-  IR.usageToGlobal π
+    IR.usageToGlobal π
