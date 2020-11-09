@@ -277,7 +277,7 @@ switchContextErr sym ctx =
 
 grabList :: NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
 grabList name ctx =
-  case Context.extractValue <$> Context.lookup n1ame ctx of
+  case Context.extractValue <$> Context.lookup name ctx of
     Just (Context.Record nameSpace _) ->
       NameSpace.toList nameSpace
     Just _ ->
