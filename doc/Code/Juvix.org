@@ -14,6 +14,10 @@
 ** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Core]]
+  + [[Context]]
+  + [[FromFrontend]]
+  + [[Types]]
+  + [[Parameterisation]]
   + [[Frontend]]
   + [[Environment]]
   + [[Library]]

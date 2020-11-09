@@ -45,7 +45,6 @@ data Error
     NotAUsage FE.Expression
   | -- | expression is not 0 or ω
     NotAGUsage FE.Expression
-
   deriving (Show, Eq, Generic)
 
 data CoreSig' ext primTy primVal

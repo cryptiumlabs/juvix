@@ -3,10 +3,10 @@
 module Juvix.Pipeline where
 
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.FromFrontend as FromFrontend
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import Juvix.Library
