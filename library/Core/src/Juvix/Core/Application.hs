@@ -1,28 +1,32 @@
 -- |
--- - This module represents the type which will be sent to the
---   parameterisation
--- - the =Take= type is what a parameterisation will take coming in
--- - the =Return= type is what will be handed back to Core to evaluate
---   and decide on the next steps. If this is a =Left= type checking
---   has failed, if it's a =Right= then type checking will continue
+-- Types to support partial application and polymorphic primitives.
 module Juvix.Core.Application where
 
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
+-- |
+-- A primitive along with its type, and possibly some arguments.
 data Return ty term
-  = -- arguments left
+  = -- | Partially applied primitive holding the arguments already given
     Cont
-      { fun :: Take ty term,
+      { -- | head of application
+        fun :: Take ty term,
+        -- | arguments
         args :: [Take ty term],
+        -- | number of arguments still expected
         numLeft :: Natural
       }
-  | Return
+  | -- | A primitive with no arguments
+    Return
       { retType :: ty,
         retTerm :: term
       }
   deriving (Show, Eq, Generic)
 
+-- |
+-- An argument to a partially applied primitive, which must be
+-- fully-applied itself.
 data Take ty term
   = Take
       { usage :: Usage.T,
