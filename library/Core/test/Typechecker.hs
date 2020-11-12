@@ -3,6 +3,7 @@ module Typechecker where
 
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as TC
+import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -142,8 +143,8 @@ shouldEval ::
     Eq primTy,
     Eq primVal,
     CanApply primVal,
-    Eq (IR.VAppError IR.NoExt primTy primVal),
-    Show (IR.VAppError IR.NoExt primTy primVal)
+    Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
   ) =>
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->

@@ -24,6 +24,7 @@ where
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
@@ -179,10 +180,6 @@ data TypecheckError' extV extT primTy primVal
   | UniverseMismatch
       { universeLower, universeHigher :: IR.Universe
       }
-  | CannotApply
-      { applyFun, applyArg :: ValueT' extV primTy primVal,
-        applyErr :: Maybe (P.ApplyError (P.TypedPrim primTy primVal))
-      }
   | ShouldBeStar
       { typeActual :: ValueT' extV primTy primVal
       }
@@ -229,6 +226,9 @@ data TypecheckError' extV extT primTy primVal
   | PartiallyAppliedConstructor
       { pattern_ :: IR.Pattern' extT primTy primVal
       }
+  | EvalError
+      { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
@@ -239,7 +239,9 @@ deriving instance
     IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
     IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
     IR.TermAll Eq extT primTy primVal,
+    Eq (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Eq extT primTy primVal,
+    Eq (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
     IR.PatternAll Eq extT primTy primVal
   ) =>
   Eq (TypecheckError' extV extT primTy primVal)
@@ -251,7 +253,9 @@ instance
     IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
     IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
     IR.TermAll Show extT primTy primVal,
+    Show (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
     IR.ElimAll Show extT primTy primVal,
+    Show (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
     IR.PatternAll Show extT primTy primVal
   ) =>
   Show (TypecheckError' extV extT primTy primVal)
@@ -268,9 +272,6 @@ instance
       <> " should be strictly less than "
       <> show j
       <> "."
-  show (CannotApply f x err) =
-    "Application (vapp) error. Cannot apply \n" <> show f <> "\n to \n" <> show x
-      <> (case err of Just err -> "\n" <> show err; Nothing -> "")
   show (ShouldBeStar ty) =
     "* n is of type * but " <> show ty <> " is not *."
   show (ShouldBeFunctionType ty) =
@@ -303,6 +304,7 @@ instance
     "Unsupported syntax form " <> show x
   show (PartiallyAppliedConstructor pat) =
     "Partially-applied constructor in pattern " <> show pat
+  show (EvalError err) = show err
 
 type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m

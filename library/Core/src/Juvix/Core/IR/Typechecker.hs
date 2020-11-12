@@ -334,24 +334,21 @@ usePatVar π var = do
     Nothing -> do
       throwTC (UnboundPatVar var)
 
-liftVAppError ::
-  HasThrowTC' extV ext primTy primVal m =>
-  Either (Eval.VAppError extV primTy (TypedPrim primTy primVal)) a ->
+liftEval ::
+  HasThrowTC' extV extT primTy primVal m =>
+  Either (Eval.Error IR.NoExt T primTy (TypedPrim primTy primVal)) a ->
   m a
-liftVAppError (Left (Eval.VAppError {fun, arg, paramErr})) =
-  throwTC $ CannotApply fun arg paramErr
-liftVAppError (Right x) =
-  pure x
+liftEval = either (throwTC . EvalError) pure
 
 substApp ::
   ( HasParam primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m,
+    HasThrowTC' extV extT primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.ValueT primTy primVal ->
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-substApp ty arg = liftVAppError $ do
+substApp ty arg = liftEval $ do
   arg' <- Eval.evalTerm arg
   Eval.substV arg' ty
 
@@ -359,9 +356,9 @@ evalTC ::
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
-  IR.Term' ext' primTy (TypedPrim primTy primVal) ->
+  Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-evalTC = liftVAppError . Eval.evalTerm
+evalTC = liftEval . Eval.evalTerm
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.
