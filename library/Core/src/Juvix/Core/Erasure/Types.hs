@@ -13,6 +13,7 @@ import Juvix.Core.Erased.Types as Type
     pattern Pi,
     pattern PrimTy,
     pattern Sig,
+    pattern UnitTy,
     pattern Star,
     pattern SymT,
   )
@@ -21,7 +22,6 @@ import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -95,6 +95,7 @@ do
           Erased.typePrim = typed,
           Erased.typeLam = typed,
           Erased.typePair = typed,
+          Erased.typeUnit = typed,
           Erased.typeLet = typedTuple,
           Erased.typeApp = typed
         }
@@ -161,6 +162,7 @@ type FunClauseT primTy primVal =
 data Pattern primTy primVal
   = PCon GlobalName [Pattern primTy primVal]
   | PPair (Pattern primTy primVal) (Pattern primTy primVal)
+  | PUnit
   | PVar PatternVar
   | PDot (Term primTy primVal)
   | PPrim primVal
@@ -185,6 +187,7 @@ getType (Var _ ty) = ty
 getType (Prim _ ty) = ty
 getType (Lam _ _ ty) = ty
 getType (Pair _ _ ty) = ty
+getType (Unit ty) = ty
 getType (Let _ _ _ (_, ty)) = ty
 getType (App _ _ ty) = ty
 
@@ -193,5 +196,6 @@ eraseAnn (Var sym _) = Erased.Var sym
 eraseAnn (Prim p _) = Erased.Prim p
 eraseAnn (Lam s b _) = Erased.Lam s (eraseAnn b)
 eraseAnn (Pair a b _) = Erased.Pair (eraseAnn a) (eraseAnn b)
+eraseAnn (Unit _) = Erased.Unit
 eraseAnn (Let s a b _) = Erased.Let s (eraseAnn a) (eraseAnn b)
 eraseAnn (App a b _) = Erased.App (eraseAnn a) (eraseAnn b)

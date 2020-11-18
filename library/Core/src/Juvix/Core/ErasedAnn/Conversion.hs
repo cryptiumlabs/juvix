@@ -41,6 +41,8 @@ convertTerm term usage =
           let left' = convertTerm left usage
               right' = convertTerm right usage
            in Ann usage ty' $ PairM left' right'
+        E.Unit _ ->
+          Ann usage ty' UnitM
         E.App f a _ ->
           case convertTerm f usage of
             -- Combine nested application into multi-argument application.
@@ -59,3 +61,4 @@ convertType ty =
     E.PrimTy p -> PrimTy p
     E.Pi u a r -> Pi u (convertType a) (convertType r)
     E.Sig u a b -> Sig u (convertType a) (convertType b)
+    E.UnitTy -> UnitTy

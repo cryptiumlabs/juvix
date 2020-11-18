@@ -77,6 +77,7 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     toRaw1 (ErasedAnn.Prim p) = primToRaw p
     toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
     toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
+    toRaw1 ErasedAnn.UnitM = ErasedAnn.UnitM
     toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =

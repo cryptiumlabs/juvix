@@ -79,6 +79,8 @@ quote (VPi π s t) = Pi π (quote s) (quote t)
 quote (VLam s) = Lam (quote s)
 quote (VSig π s t) = Sig π (quote s) (quote t)
 quote (VPair s t) = Pair (quote s) (quote t)
+quote VUnitTy = UnitTy
+quote VUnit = Unit
 quote (VPrim pri) = Prim pri
 quote (VNeutral n) = Elim $ neutralQuote n
 

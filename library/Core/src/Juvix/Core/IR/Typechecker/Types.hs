@@ -76,6 +76,8 @@ IR.extendTerm "Term'" [] [t|T|] $
             IR.typePi = typed,
             IR.typeSig = typed,
             IR.typePair = typed,
+            IR.typeUnitTy = typed,
+            IR.typeUnit = typed,
             IR.typeLam = bindTyped,
             IR.typeLet = bindTyped,
             IR.typeElim = typed
@@ -162,6 +164,8 @@ getTermAnn (Prim _ ann) = ann
 getTermAnn (Pi _ _ _ ann) = ann
 getTermAnn (Sig _ _ _ ann) = ann
 getTermAnn (Pair _ _ ann) = ann
+getTermAnn (UnitTy ann) = ann
+getTermAnn (Unit ann) = ann
 getTermAnn (Lam _ anns) = baResAnn anns
 getTermAnn (Let _ _ _ anns) = baResAnn anns
 getTermAnn (Elim _ ann) = ann
@@ -187,6 +191,9 @@ data TypecheckError' extV extT primTy primVal
       { typeActual :: ValueT' extV primTy primVal
       }
   | ShouldBePairType
+      { typeActual :: ValueT' extV primTy primVal
+      }
+  | ShouldBeUnitType
       { typeActual :: ValueT' extV primTy primVal
       }
   | UnboundIndex
@@ -278,6 +285,8 @@ instance
     show ty <> " is not a function type but should be"
   show (ShouldBePairType ty) =
     show ty <> " is not a pair type but should be"
+  show (ShouldBeUnitType ty) =
+    show ty <> " is not a unit type but should be"
   show (UnboundIndex n) =
     "unbound index " <> show n
   show (UsageMustBeZero π) =

@@ -15,6 +15,7 @@ data Term primTy primVal
         body :: AnnTerm primTy primVal
       }
   | PairM (AnnTerm primTy primVal) (AnnTerm primTy primVal)
+  | UnitM
   | AppM (AnnTerm primTy primVal) [AnnTerm primTy primVal]
   deriving (Show, Eq, Generic)
 
@@ -25,6 +26,7 @@ data Type primTy
   | -- TODO: How to deal with dependency?
     Pi Usage.T (Type primTy) (Type primTy)
   | Sig Usage.T (Type primTy) (Type primTy)
+  | UnitTy
   deriving (Show, Eq, Generic)
 
 data AnnTerm primTy primVal

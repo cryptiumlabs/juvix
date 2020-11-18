@@ -14,5 +14,7 @@ eraseTerm term =
       foldr E.Lam (eraseTerm bod) args
     Types.PairM (Ann _ _ left) (Ann _ _ right) ->
       E.Pair (eraseTerm left) (eraseTerm right)
+    Types.UnitM ->
+      E.Unit
     Types.AppM (Ann _ _ f) xs ->
       foldl (\apps (Ann _ _ x) -> E.App apps (eraseTerm x)) (eraseTerm f) xs

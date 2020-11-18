@@ -17,6 +17,8 @@ data ExtTransformTEF f ext1 ext2 primTy primVal
         etfLam :: XLam ext1 primTy primVal -> f (XLam ext2 primTy primVal),
         etfSig :: XSig ext1 primTy primVal -> f (XSig ext2 primTy primVal),
         etfPair :: XPair ext1 primTy primVal -> f (XPair ext2 primTy primVal),
+        etfUnitTy :: XUnitTy ext1 primTy primVal -> f (XUnitTy ext2 primTy primVal),
+        etfUnit :: XUnit ext1 primTy primVal -> f (XUnit ext2 primTy primVal),
         etfLet :: XLet ext1 primTy primVal -> f (XLet ext2 primTy primVal),
         etfElim :: XElim ext1 primTy primVal -> f (XElim ext2 primTy primVal),
         etfBound :: XBound ext1 primTy primVal -> f (XBound ext2 primTy primVal),
@@ -43,6 +45,8 @@ pattern ExtTransformTE ::
   (XLam ext1 primTy primVal -> XLam ext2 primTy primVal) ->
   (XSig ext1 primTy primVal -> XSig ext2 primTy primVal) ->
   (XPair ext1 primTy primVal -> XPair ext2 primTy primVal) ->
+  (XUnitTy ext1 primTy primVal -> XUnitTy ext2 primTy primVal) ->
+  (XUnit ext1 primTy primVal -> XUnit ext2 primTy primVal) ->
   (XLet ext1 primTy primVal -> XLet ext2 primTy primVal) ->
   (XElim ext1 primTy primVal -> XElim ext2 primTy primVal) ->
   (XBound ext1 primTy primVal -> XBound ext2 primTy primVal) ->
@@ -60,6 +64,8 @@ pattern ExtTransformTE
     etLam,
     etSig,
     etPair,
+    etUnitTy,
+    etUnit,
     etLet,
     etElim,
     etBound,
@@ -76,6 +82,8 @@ pattern ExtTransformTE
       etfPi = Coerce etPi,
       etfLam = Coerce etLam,
       etfSig = Coerce etSig,
+      etfUnitTy = Coerce etUnitTy,
+      etfUnit = Coerce etUnit,
       etfPair = Coerce etPair,
       etfLet = Coerce etLet,
       etfElim = Coerce etElim,
@@ -102,6 +110,10 @@ extTransformTF fs (Sig' π s t e) =
   Sig' π <$> extTransformTF fs s <*> extTransformTF fs t <*> etfSig fs e
 extTransformTF fs (Pair' s t e) =
   Pair' <$> extTransformTF fs s <*> extTransformTF fs t <*> etfPair fs e
+extTransformTF fs (UnitTy' e) =
+  UnitTy' <$> etfUnitTy fs e
+extTransformTF fs (Unit' e) =
+  Unit' <$> etfUnit fs e
 extTransformTF fs (Let' π l b e) =
   Let' π <$> extTransformEF fs l <*> extTransformTF fs b <*> etfLet fs e
 extTransformTF fs (Elim' f e) = Elim' <$> extTransformEF fs f <*> etfElim fs e
@@ -150,6 +162,8 @@ forgetter =
       etPi = const (),
       etSig = const (),
       etPair = const (),
+      etUnitTy = const (),
+      etUnit = const (),
       etLam = const (),
       etLet = const (),
       etElim = const (),

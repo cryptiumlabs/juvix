@@ -53,6 +53,10 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
     IR.Sig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Pair' s t a) =
     IR.Pair' (weakBy' b i s) (weakBy' b i t) (weakBy' b i a)
+  weakBy' b i (IR.UnitTy' a) =
+    IR.UnitTy' (weakBy' b i a)
+  weakBy' b i (IR.Unit' a) =
+    IR.Unit' (weakBy' b i a)
   weakBy' b i (IR.Let' π s t a) =
     IR.Let' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Elim' f a) =
@@ -132,6 +136,10 @@ instance
     IR.Sig' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
   substWith w i e (IR.Pair' s t a) =
     IR.Pair' (substWith w i e s) (substWith w i e t) (substWith w i e a)
+  substWith w i e (IR.UnitTy' a) =
+    IR.UnitTy' (substWith w i e a)
+  substWith w i e (IR.Unit' a) =
+    IR.Unit' (substWith w i e a)
   substWith w i e (IR.Let' π l b a) =
     IR.Let' π (substWith w i e l) (substWith (succ w) (succ i) e b) (substWith w i e a)
   substWith w i e (IR.Elim' t a) =
@@ -216,6 +224,10 @@ instance
     IR.Pair' <$> patSubst' b m s
       <*> patSubst' b m t
       <*> patSubst' b m a
+  patSubst' b m (IR.UnitTy' a) =
+    IR.UnitTy' <$> patSubst' b m a
+  patSubst' b m (IR.Unit' a) =
+    IR.Unit' <$> patSubst' b m a
   patSubst' b m (IR.Let' π l t a) =
     IR.Let' π <$> patSubst' b m l
       <*> patSubst' (succ b) m t
@@ -271,6 +283,10 @@ instance
     IR.VSig' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.VPair' s t a) =
     IR.VPair' (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
+  weakBy' b i (IR.VUnitTy' a) =
+    IR.VUnitTy' (weakBy' b i a)
+  weakBy' b i (IR.VUnit' a) =
+    IR.VUnit' (weakBy' b i a)
   weakBy' b i (IR.VNeutral' n a) =
     IR.VNeutral' (weakBy' b i n) (weakBy' b i a)
   weakBy' b i (IR.VPrim' p a) =
@@ -360,6 +376,10 @@ instance
     IR.VPair' <$> substVWith w i e s
       <*> substVWith w i e t
       <*> substVWith w i e a
+  substVWith w i e (IR.VUnitTy' a) =
+    IR.VUnitTy' <$> substVWith w i e a
+  substVWith w i e (IR.VUnit' a) =
+    IR.VUnit' <$> substVWith w i e a
   substVWith w i e (IR.VNeutral' n a) =
     substNeutralWith w i e n a
   substVWith w i e (IR.VPrim' p a) =
@@ -494,6 +514,10 @@ evalTermWith exts (IR.Sig' π s t _) =
   IR.VSig π <$> evalTermWith exts s <*> evalTermWith exts t
 evalTermWith exts (IR.Pair' s t _) =
   IR.VPair <$> evalTermWith exts s <*> evalTermWith exts t
+evalTermWith _ (IR.UnitTy' _) =
+  pure IR.VUnitTy
+evalTermWith _ (IR.Unit' _) =
+  pure IR.VUnit
 evalTermWith exts (IR.Let' _ l b _) = do
   l' <- evalElimWith exts l
   b' <- evalTermWith exts b

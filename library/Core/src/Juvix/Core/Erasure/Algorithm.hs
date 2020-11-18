@@ -1,7 +1,6 @@
 module Juvix.Core.Erasure.Algorithm (erase, eraseAnn, eraseGlobal, exec) where
 
 import Data.List (genericIndex)
-import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
@@ -100,8 +99,9 @@ erasePattern patt =
       pure (Erasure.PCon name patts)
     IR.PPair l r ->
       Erasure.PPair <$> erasePattern l <*> erasePattern r
+    IR.PUnit -> pure Erasure.PUnit
     IR.PVar v -> pure (Erasure.PVar v)
-    IR.PDot t -> do
+    IR.PDot _t -> do
       -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
       -- t <- eraseTerm t
       -- pure (Erasure.PDot t)
@@ -113,7 +113,7 @@ erasePatterns ::
   ([pat], ([(Usage.Usage, arg)], ret)) ->
   m ([pat], ([(Usage.Usage, arg)], ret))
 erasePatterns ([], ([], ret)) = pure ([], ([], ret))
-erasePatterns (p : ps, ((Usage.SNat 0, _) : args, ret)) = erasePatterns (ps, (args, ret))
+erasePatterns (_ : ps, ((Usage.SNat 0, _) : args, ret)) = erasePatterns (ps, (args, ret))
 erasePatterns (p : ps, (arg : args, ret)) = do
   (ps', (args', ret')) <- erasePatterns (ps, (args, ret))
   pure (p : ps', (arg : args', ret'))
@@ -151,6 +151,8 @@ eraseTerm (Typed.Pair s t ann) = do
   if π == mempty
     then eraseTerm t
     else Erasure.Pair <$> eraseTerm s <*> eraseTerm t <*> eraseType ty
+eraseTerm t@(Typed.UnitTy {}) = throwEra $ Erasure.UnsupportedTermT t
+eraseTerm (Typed.Unit ann) = Erasure.Unit <$> eraseType (IR.annType ann)
 eraseTerm (Typed.Let π b t anns) = do
   (x, t) <- withName \x -> (x,) <$> eraseTerm t
   if π == mempty
@@ -212,6 +214,10 @@ eraseType (IR.VSig π a b) = do
       <*> withName \_ -> eraseType b
 eraseType v@(IR.VPair _ _) = do
   throwEra $ Erasure.UnsupportedTypeV v
+eraseType IR.VUnitTy = do
+  pure Erasure.UnitTy
+eraseType IR.VUnit = do
+  throwEra $ Erasure.UnsupportedTypeV IR.VUnit
 eraseType (IR.VNeutral n) = do
   eraseTypeN n
 eraseType v@(IR.VPrim _) = do

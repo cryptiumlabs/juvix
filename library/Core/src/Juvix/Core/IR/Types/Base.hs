@@ -54,6 +54,10 @@ extensible
       | -- | Let binder.
         -- the local definition is bound to de Bruijn index 0.
         Let Usage (Elim primTy primVal) (Term primTy primVal)
+      | -- | Unit type.
+        UnitTy
+      | -- | Unit Value
+        Unit
       | -- | CONV conversion rule. TODO make sure 0Γ ⊢ S≡T
         -- Elim is the constructor that embeds Elim to Term
         Elim (Elim primTy primVal)
@@ -79,6 +83,8 @@ extensible
       | VLam (Value primTy primVal)
       | VSig Usage (Value primTy primVal) (Value primTy primVal)
       | VPair (Value primTy primVal) (Value primTy primVal)
+      | VUnitTy
+      | VUnit
       | VNeutral (Neutral primTy primVal)
       | VPrim primVal
       deriving (Eq, Show, Generic, Data, NFData)
@@ -95,6 +101,7 @@ extensible
     data Pattern primTy primVal
       = PCon GlobalName [Pattern primTy primVal]
       | PPair (Pattern primTy primVal) (Pattern primTy primVal)
+      | PUnit
       | PVar PatternVar
       | PDot (Term primTy primVal)
       | PPrim primVal

@@ -33,6 +33,8 @@ hrToIR' term =
       pure (IR.Sig π a b)
     HR.Pair s t -> do
       HR.Pair <$> hrToIR' s <*> hrToIR' t
+    HR.UnitTy -> pure IR.UnitTy
+    HR.Unit -> pure IR.Unit
     HR.Let π n l b -> do
       l <- hrElimToIR' l
       b <- withName n $ hrToIR' b
@@ -89,6 +91,8 @@ irToHR' term =
       pure $ HR.Sig π n a b
     IR.Pair s t -> do
       HR.Pair <$> irToHR' s <*> irToHR' t
+    IR.UnitTy -> pure HR.UnitTy
+    IR.Unit -> pure HR.Unit
     IR.Let π l b -> do
       l <- irElimToHR' l
       n <- newName

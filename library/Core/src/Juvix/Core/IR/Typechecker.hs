@@ -145,6 +145,13 @@ typeTerm' term ann@(Annotation σ ty) =
       tAnn <- Annotation σ <$> substApp b s'
       t' <- typeTerm' t tAnn
       pure $ Typed.Pair s' t' ann
+    IR.UnitTy' _ -> do
+      requireZero σ
+      void $ requireStar ty
+      pure $ Typed.UnitTy ann
+    IR.Unit' _ -> do
+      requireUnitTy ty
+      pure $ Typed.Unit ann
     IR.Let' σb b t _ -> do
       b' <- typeElim' b σb
       let bAnn = getElimAnn b'
@@ -284,6 +291,13 @@ requireSig ::
   m (TyParts primTy primVal)
 requireSig (IR.VSig π a b) = pure (π, a, b)
 requireSig ty = throwTC (ShouldBePairType ty)
+
+requireUnitTy ::
+  HasThrowTC' IR.NoExt ext primTy primVal m =>
+  Typed.ValueT primTy primVal ->
+  m ()
+requireUnitTy IR.VUnitTy = pure ()
+requireUnitTy ty = throwTC (ShouldBeUnitType ty)
 
 requireSubtype ::
   (Eq primTy, Eq primVal, HasThrowTC' IR.NoExt ext primTy primVal m) =>

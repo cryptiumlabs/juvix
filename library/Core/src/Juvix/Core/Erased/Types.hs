@@ -6,7 +6,8 @@ module Juvix.Core.Erased.Types
   )
 where
 
-import Juvix.Core.Erased.Extend
+-- TODO shouldn't this module be using these?
+-- import Juvix.Core.Erased.Extend
 import Juvix.Core.Erased.Types.Base
 import qualified Juvix.Core.IR.Typechecker.Types as TC
 import Juvix.Core.IR.Types.Base hiding
@@ -14,9 +15,7 @@ import Juvix.Core.IR.Types.Base hiding
     defaultExtTerm,
     extendTerm,
   )
-import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library hiding (Datatype, Type)
-import Juvix.Library.Usage (Usage)
 
 data T
 

@@ -26,6 +26,8 @@ setOccurrenceMap term = do
     Erased.Pair a b -> do
       setOccurrenceMap a
       setOccurrenceMap b
+    Erased.Unit ->
+      pure ()
     Erased.Let _ b t -> do
       setOccurrenceMap b
       setOccurrenceMap t
@@ -55,6 +57,7 @@ parameterizeType ty = do
       body <- parameterizeType body
       pure (EAC.PArrT param arg body)
     Erased.Sig {} -> undefined
+    Erased.UnitTy -> undefined
     Erased.Star _ -> undefined
 
 -- Parameterize type assignment.
@@ -212,9 +215,11 @@ boxAndTypeConstraint parameterisation parameterizedAssignment term = do
       -- Return parameterized term.
       pure (EAC.RBang param (EAC.RLam sym body), resTy)
     Erased.Pair _s _t -> do
-      error "TODO"
+      undefined
+    Erased.Unit -> do
+      undefined
     Erased.Let _s _t _b -> do
-      error "TODO"
+      undefined
     Erased.App a b -> do
       (a, aTy) <- rec a
       let EAC.PArrT bangA argTy resTy = aTy
