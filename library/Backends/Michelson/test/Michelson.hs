@@ -10,6 +10,7 @@ import Juvix.Backends.Michelson.Optimisation
 import qualified Juvix.Core.ErasedAnn as J
 import Juvix.Library hiding (Type, show)
 import Juvix.Library.Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Michelson.Untyped as M hiding (Type)
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
@@ -461,7 +462,7 @@ intPairs1 =
 -- ,PrimEx (CDR @ %)
 -- ,PrimEx (ADD @)]
 
-addPairs :: Symbol -> RawTerm
+addPairs :: NameSymbol.T -> RawTerm
 addPairs name =
   Ann one t'
     $ J.LamM [] [name]

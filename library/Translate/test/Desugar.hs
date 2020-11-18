@@ -33,31 +33,31 @@ guardTest =
     "let foo | x == 3 = 3 | else = 2"
     [ ( AST.MatchL
           { matchLPattern =
-              AST.MatchCon (NameSym.fromSymbol "True") []
+              AST.MatchCon "True" []
                 |> flip AST.MatchLogic Nothing,
             matchLBody =
               AST.Constant (AST.Number (AST.Integer' 3))
           }
           :| [ ( AST.MatchL
                    { matchLPattern =
-                       AST.MatchCon (NameSym.fromSymbol "True") []
+                       AST.MatchCon "True" []
                          |> flip AST.MatchLogic Nothing,
                      matchLBody =
                        AST.Constant (AST.Number (AST.Integer' 2))
                    }
                    :| []
                )
-                 |> AST.Match'' (AST.Name (NameSym.fromSymbol "else"))
+                 |> AST.Match'' (AST.Name "else")
                  |> AST.Match
                  |> AST.MatchL
-                   (AST.MatchLogic (AST.MatchCon (NameSym.fromSymbol "False") []) Nothing)
+                   (AST.MatchLogic (AST.MatchCon "False" []) Nothing)
              ]
       )
         |> AST.Match''
           ( AST.Integer' 3
               |> AST.Number
               |> AST.Constant
-              |> AST.Inf (AST.Name (NameSym.fromSymbol "x")) (NameSym.fromSymbol "==")
+              |> AST.Inf (AST.Name "x") "=="
               |> AST.Infix
           )
         |> AST.Match

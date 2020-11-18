@@ -9,6 +9,7 @@ import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (bool, identity, log)
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T
@@ -205,7 +206,7 @@ lamTerm2 =
     $ HR.Elim
     $ addElim `HR.App` varT "x" `HR.App` int 10
 
-varT :: Symbol -> RawHRTerm
+varT :: NameSymbol.T -> RawHRTerm
 varT = HR.Elim . HR.Var
 
 lamTy :: RawHRTerm

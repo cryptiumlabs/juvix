@@ -75,22 +75,22 @@ eac2Tests =
 --shouldBeTypeable churchExp churchExpAssignment
 
 idTerm :: Term
-idTerm = Lam (intern "x") (Var (intern "x"))
+idTerm = Lam "x" (Var "x")
 
 idAssignment :: TypeAssignment
-idAssignment = Map.fromList [(intern "x", SymT (intern "a"))]
+idAssignment = Map.fromList [("x", SymT "a")]
 
 churchTwo :: Term
 churchTwo =
   Lam
-    (intern "s")
+    "s"
     ( Lam
-        (intern "z")
+        "z"
         ( App
-            (Var (intern "s"))
+            (Var "s")
             ( App
-                (Var (intern "s"))
-                (Var (intern "z"))
+                (Var "s")
+                (Var "z")
             )
         )
     )
@@ -98,16 +98,16 @@ churchTwo =
 churchThree :: Term
 churchThree =
   Lam
-    (intern "s")
+    "s"
     ( Lam
-        (intern "z")
+        "z"
         ( App
-            (Var (intern "s"))
+            (Var "s")
             ( App
-                (Var (intern "s"))
+                (Var "s")
                 ( App
-                    (Var (intern "s"))
-                    (Var (intern "z"))
+                    (Var "s")
+                    (Var "z")
                 )
             )
         )
@@ -116,8 +116,8 @@ churchThree =
 churchAssignment :: TypeAssignment
 churchAssignment =
   Map.fromList
-    [ (intern "s", Pi Usage.Omega (SymT (intern "a")) (SymT (intern "a"))),
-      (intern "z", SymT (intern "a"))
+    [ ("s", Pi Usage.Omega (SymT "a") (SymT "a")),
+      ("z", SymT "a")
     ]
 
 -- \y → ( (\n → n (\y → n (\_ → y))) (\x → (x (x y))) ) ∷ a → a
@@ -125,80 +125,80 @@ counterexample :: Term
 counterexample =
   App
     ( Lam
-        (intern "n")
+        "n"
         ( App
-            (Var (intern "n"))
+            (Var "n")
             ( Lam
-                (intern "y")
+                "y"
                 ( App
-                    (Var (intern "n"))
+                    (Var "n")
                     ( Lam
-                        (intern "z")
-                        (Var (intern "y"))
+                        "z"
+                        (Var "y")
                     )
                 )
             )
         )
     )
     ( Lam
-        (intern "x")
+        "x"
         ( App
-            (Var (intern "x"))
+            (Var "x")
             ( App
-                (Var (intern "x"))
-                (Var (intern "y"))
+                (Var "x")
+                (Var "y")
             )
         )
     )
 
 arg0 :: Type
-arg0 = SymT (intern "a")
+arg0 = SymT "a"
 
 arg1 :: Type
 arg1 =
   Pi
     Usage.Omega
-    (SymT (intern "a"))
-    (SymT (intern "a"))
+    (SymT "a")
+    (SymT "a")
 
 counterexampleAssignment :: Map.Map Symbol Type
 counterexampleAssignment =
   Map.fromList
-    [ (intern "n", Pi Usage.Omega arg1 arg0),
-      (intern "y", arg0),
-      (intern "z", arg0),
-      (intern "x", arg1)
+    [ ("n", Pi Usage.Omega arg1 arg0),
+      ("y", arg0),
+      ("z", arg0),
+      ("x", arg1)
     ]
 
 exp :: Term
 exp =
   Lam
-    (intern "m")
+    "m"
     ( Lam
-        (intern "n")
+        "n"
         ( Lam
-            (intern "s")
+            "s"
             ( Lam
-                (intern "z")
+                "z"
                 ( App
                     ( App
                         ( App
-                            (Var (intern "m"))
-                            (Var (intern "n"))
+                            (Var "m")
+                            (Var "n")
                         )
-                        (Var (intern "s"))
+                        (Var "s")
                     )
-                    (Var (intern "z"))
+                    (Var "z")
                 )
             )
         )
     )
 
 threeLam :: Term
-threeLam = Lam (intern "f") (Lam (intern "x") (nTimesApp 10 (Var (intern "f")) (Var (intern "x"))))
+threeLam = Lam "f" (Lam "x" (nTimesApp 10 (Var "f") (Var "x")))
 
 threeLam2 :: Term
-threeLam2 = Lam (intern "f'") (Lam (intern "x'") (nTimesApp 20 (Var (intern "f'")) (Var (intern "x'"))))
+threeLam2 = Lam "f'" (Lam "x'" (nTimesApp 20 (Var "f'") (Var "x'")))
 
 nTimesApp :: Int -> Term -> Term -> Term
 nTimesApp 0 _ b = b
@@ -210,9 +210,9 @@ churchExp2 = exp
 churchExp :: Term
 churchExp =
   Lam
-    (intern "s'")
+    "s'"
     ( Lam
-        (intern "z'")
+        "z'"
         ( App
             ( App
                 ( App
@@ -222,14 +222,14 @@ churchExp =
                     )
                     threeLam2
                 )
-                (Var (intern "s'"))
+                (Var "s'")
             )
-            (Var (intern "z'"))
+            (Var "z'")
         )
     )
 
 zTy :: Type
-zTy = SymT (intern "a")
+zTy = SymT "a"
 
 sTy :: Type
 sTy = Pi Usage.Omega zTy zTy
@@ -240,16 +240,16 @@ nat = Pi Usage.Omega sTy sTy
 churchExpAssignment :: TypeAssignment
 churchExpAssignment =
   Map.fromList
-    [ (intern "n", nat),
-      (intern "m", Pi Usage.Omega nat nat),
-      (intern "s", sTy),
-      (intern "s'", sTy),
-      (intern "z", zTy),
-      (intern "z'", zTy),
-      (intern "x'", zTy),
-      (intern "x", sTy),
-      (intern "f'", sTy),
-      (intern "f", nat)
+    [ ("n", nat),
+      ("m", Pi Usage.Omega nat nat),
+      ("s", sTy),
+      ("s'", sTy),
+      ("z", zTy),
+      ("z'", zTy),
+      ("x'", zTy),
+      ("x", sTy),
+      ("f'", sTy),
+      ("f", nat)
     ]
 {- Examples from 3.0.1 of Asperti's book; they don't seem to typecheck though. -}
 
