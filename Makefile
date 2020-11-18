@@ -4,7 +4,7 @@ PREFIX="$(PWD)/.stack-work/prefix"
 all: setup build
 
 setup:
-	stack build --only-dependencies
+	stack build --only-dependencies -j $(shell nproc)
 
 build-libff:
 	./scripts/build-libff.sh
@@ -16,13 +16,13 @@ build-z3:
 	cd z3/build && make install
 
 build:
-	stack build --copy-bins --fast
+	stack build --copy-bins --fast -j $(shell nproc)
 
 build-watch:
 	stack build --copy-bins --fast --file-watch
 
-build-opt: clean
-	stack build --copy-bins --ghc-options "-O3 -fllvm"
+build-prod: clean
+	stack build --copy-bins -j $(shell nproc) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
 
 build-format:
 	stack install ormolu
@@ -34,10 +34,38 @@ format:
 	find . -path ./.stack-work -prune -o -path ./archived -prune -o -type f -name "*.hs" -exec ormolu --mode inplace {} --ghc-opt -XTypeApplications --ghc-opt -XUnicodeSyntax --ghc-opt -XPatternSynonyms --ghc-opt -XTemplateHaskell \;
 
 org-gen:
-	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org
+	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
-	stack test --fast --jobs=1 --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+
+test-all:
+	cd library/StandardLibrary; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Frontend; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Core; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/InteractionNet; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Translate; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Backends/LLVM; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Backends/Michelson; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	cd library/Backends/ArithmeticCircuit; \
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+
+test-parser:
+	ls test/examples/demo | xargs -t -n 1 -I % juvix parse test/examples/demo/%
+
+test-typecheck:
+	ls test/examples/demo | xargs -t -n 1 -I % juvix typecheck test/examples/demo/%
+
+test-compile:
+	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
@@ -54,4 +82,4 @@ clean:
 clean-full:
 	stack clean --full
 
-.PHONY: all setup build build-libff build-z3 build-watch build-opt lint format org-gen test repl-lib repl-exe clean clean-full bench build-format
+.PHONY: all setup build build-libff build-z3 build-watch build-prod lint format org-gen test test-parser test-typecheck test-compile repl-lib repl-exe clean clean-full bench build-format build-cache test-all

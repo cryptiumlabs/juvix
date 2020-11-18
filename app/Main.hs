@@ -4,9 +4,9 @@ import qualified Compile as Compile
 import qualified Config as Config
 import Development.GitRev
 import qualified Interactive as Interactive
+import Juvix.Library
 import Options
 import Options.Applicative
-import Protolude
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
@@ -44,7 +44,7 @@ aboutDoc =
       line,
       text
         ( "(c) Christopher Goes 2018-2019, "
-            <> "(c) Cryptium Labs 2019 • https://juvix.org"
+            <> "(c) Cryptium Labs / Metastate 2019-2020 • https://juvix.org"
         ),
       line,
       disclaimerDoc
@@ -99,10 +99,16 @@ run ctx (Options cmd configPath) = do
   maybeConfig <- Config.loadT configPath
   let conf = fromMaybe Config.defaultT maybeConfig
   case cmd of
+    Parse fin -> do
+      Compile.parse fin >> pure ()
     Typecheck fin backend -> do
       Compile.typecheck fin backend >> pure ()
     Compile fin fout backend ->
       Compile.compile fin fout backend
+    Version -> do
+      putDoc versionDoc
+      exitSuccess
+    {-
     Interactive -> do
       putDoc interactiveDoc
       if isJust maybeConfig
@@ -110,9 +116,7 @@ run ctx (Options cmd configPath) = do
         else putStrLn ("Loaded default runtime configuration.\n" :: Text)
       Interactive.interactive ctx conf
       exitSuccess
-    Version -> do
-      putDoc versionDoc
-      exitSuccess
+    -}
     _ -> do
       putText "Not yet implemented!"
       exitFailure

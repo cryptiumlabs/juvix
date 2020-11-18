@@ -2,10 +2,13 @@
 - _Relies on_
   + [[Compilation]]
   + [[Parameterisation]]
-  + [[Core]]
-  + [[Erasure]]
+  + [[ErasedAnn]]
   + [[HR]]
+  + [[Pipeline]]
+  + [[Environment]]
   + [[Library]]
+  + [[Usage]]
+  + [[Pipeline]]
 * Config
 - _Relies on_
   + [[Library]]
@@ -22,7 +25,11 @@
   + [[Default]]
   + [[Library]]
 * Main
+- _Relies on_
+  + [[Library]]
 * Options
+- _Relies on_
+  + [[Library]]
 * Types
 - _Relies on_
   + [[Types]]

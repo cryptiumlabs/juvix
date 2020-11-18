@@ -91,9 +91,9 @@ mendlerCase c = do
   expandedCase <- caseGen c onNoArg onrec
   case expandedCase of
     Application on b ->
-      pure $
-        Application on $
-          Lambda (intern "rec") b
+      pure
+        $ Application on
+        $ Lambda (intern "rec") b
     Lambda {} -> error "doesn't happen"
     Value {} -> error "doesn't happen"
   where
@@ -138,10 +138,10 @@ numToInOp n arg
 
 inl :: Lambda
 inl =
-  Lambda x $
-    Lambda k $
-      Lambda l $
-        Application (Value k) (Value x)
+  Lambda x
+    $ Lambda k
+    $ Lambda l
+    $ Application (Value k) (Value x)
   where
     x = intern "x"
     k = intern "k"
@@ -151,10 +151,10 @@ inl =
 -- useful for when constructing multiple argument passthrough
 inlOp :: Lambda
 inlOp =
-  Lambda x $
-    Lambda k $
-      Lambda l $
-        Application (Value x) (Value k)
+  Lambda x
+    $ Lambda k
+    $ Lambda l
+    $ Application (Value x) (Value k)
   where
     x = intern "x"
     k = intern "k"
@@ -162,10 +162,10 @@ inlOp =
 
 inr :: Lambda
 inr =
-  Lambda y $
-    Lambda k $
-      Lambda l $
-        Application (Value l) (Value y)
+  Lambda y
+    $ Lambda k
+    $ Lambda l
+    $ Application (Value l) (Value y)
   where
     y = intern "y"
     k = intern "k"
@@ -175,10 +175,10 @@ inr =
 -- useful for when constructing multiple argument passthrough
 inrOp :: Lambda
 inrOp =
-  Lambda y $
-    Lambda k $
-      Lambda l $
-        Application (Value y) (Value l)
+  Lambda y
+    $ Lambda k
+    $ Lambda l
+    $ Application (Value y) (Value l)
   where
     y = intern "y"
     k = intern "k"
@@ -192,14 +192,14 @@ foldM' = Lambda alg $ Lambda d $ Application (Value d) (Value alg)
 
 in' :: Lambda
 in' =
-  Lambda r $
-    Lambda f $
-      Application
-        ( Application
-            (Value f)
-            (app foldM' (Value f))
-        )
-        (Value r)
+  Lambda r
+    $ Lambda f
+    $ Application
+      ( Application
+          (Value f)
+          (app foldM' (Value f))
+      )
+      (Value r)
   where
     r = intern "r"
     f = intern "f"
