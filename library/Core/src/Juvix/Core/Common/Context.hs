@@ -536,8 +536,9 @@ resolveName ctx (def, name) =
 
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and
--- elements of previous groups.
-recGroups :: T a b c -> [NonEmpty (Definition a b c)]
+-- elements of previous groups. The first element of each pair is its
+-- fully-qualified name.
+recGroups :: T a b c -> [NonEmpty (NameSymbol.T, Definition a b c)]
 recGroups = _ -- TODO
 
 -- | Traverses a whole context by performing an action on each recursive group.
@@ -546,7 +547,7 @@ recGroups = _ -- TODO
 traverseContext ::
   (Applicative f, Monoid t) =>
   -- | process one recursive group
-  (NonEmpty (Definition a b c) -> f t) ->
+  (NonEmpty (NameSymbol.T, Definition a b c) -> f t) ->
   T a b c ->
   f t
 traverseContext f = foldMapA f . recGroups
@@ -556,7 +557,7 @@ traverseContext f = foldMapA f . recGroups
 traverseContext1 ::
   (Monoid t, Applicative f) =>
   -- | process one definition
-  (Definition a b c -> f t) ->
+  (NameSymbol.T -> Definition a b c -> f t) ->
   T a b c ->
   f t
-traverseContext1 = traverseContext . foldMapA
+traverseContext1 = traverseContext . foldMapA . uncurry

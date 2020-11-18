@@ -28,6 +28,11 @@ toCore paths = do
           Left errr -> Left (PipeLine errr)
           Right con -> Right con
 
-contextToCore :: Target.FinalContext -> P.Parameterisation primTy primVal -> Either FromFrontend.Error [IR.Global primTy primVal]
+contextToCore ::
+  (Data primTy, Data primVal) =>
+  Target.FinalContext ->
+  P.Parameterisation primTy primVal ->
+  Either (FromFrontend.Error primTy primVal) [IR.RawGlobal primTy primVal]
 contextToCore ctx param =
-  FromFrontend.execEnv ctx param $ Context.traverseContext1 FromFrontend.transformDef ctx
+  FromFrontend.execEnv ctx param $
+  Context.traverseContext1 FromFrontend.transformDef ctx
