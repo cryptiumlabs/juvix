@@ -8,12 +8,24 @@ module Juvix.Core.IR.Types
     PatternVar,
     BoundVar,
     Universe,
-    Datatype' (..),
-    DataArg' (..),
-    DataCon' (..),
-    Function' (..),
+    DatatypeWith (..),
+    RawDatatype',
+    Datatype',
+    DataArgWith (..),
+    RawDataArg',
+    DataArg',
+    DataConWith (..),
+    RawDataCon',
+    DataCon',
+    FunctionWith (..),
+    RawFunction',
+    Function',
     FunClause' (..),
-    Global' (..),
+    GlobalWith (..),
+    RawGlobal',
+    Global',
+    GlobalsWith,
+    RawGlobals',
     Globals',
   )
 where
@@ -35,18 +47,25 @@ extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 
 type Datatype = Datatype' NoExt
+type RawDatatype = RawDatatype' NoExt
 
 type DataArg = DataArg' NoExt
+type RawDataArg = RawDataArg' NoExt
 
 type DataCon = DataCon' NoExt
+type RawDataCon = RawDataCon' NoExt
 
 type Function = Function' NoExt
+type RawFunction = RawFunction' NoExt
 
 type FunClause = FunClause' NoExt
+-- (no RawFunClause since a clause contains no types anyway)
 
 type Global = Global' NoExt
+type RawGlobal = RawGlobal' NoExt
 
 type Globals primTy primVal = Globals' NoExt primTy primVal
+type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
 
 -- Quotation: takes a value back to a term
 quote0 :: Value primTy primVal -> Term primTy primVal
