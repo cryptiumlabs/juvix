@@ -27,7 +27,7 @@ data PrimTy
   | Option
   | List
   | Set
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data)
 
 data RawPrimVal
   = Constant (M.Value' Op)
@@ -88,7 +88,7 @@ data RawPrimVal
   | Loop
   | Iter
   | MapOp
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data)
 
 type NewPrim = RawPrimVal
 
