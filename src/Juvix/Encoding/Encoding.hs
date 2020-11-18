@@ -88,7 +88,7 @@ adtConstructor s prod name = do
 -- generic lambda helpers ------------------------------------------------------
 
 idL :: Lambda
-idL = Lambda (intern "x") (Value (intern "x"))
+idL = Lambda "x" (Value "x")
 
 app :: Lambda -> Lambda -> Lambda
 app (Lambda s t) replace = rec' t

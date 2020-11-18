@@ -42,24 +42,19 @@ adtToMendler (Adt name s) = sumRec s 0
     sumProd None posAdt =
       numToIn
         posAdt
-        ( Lambda
-            (intern "x")
-            (Value $ intern "x")
-        )
+        (Lambda "x" (Value "x"))
     sumProd Term posAdt =
-      Lambda
-        (intern "%gen1")
-        (numToIn posAdt (Value (intern "%gen1")))
+      Lambda "%gen1" (numToIn posAdt (Value "%gen1"))
     sumProd p@(Product _) posAdt = lambdas (numToInOp posAdt term)
       where
-        (lambdas, term) = rec' p 0 (identity, (Value (intern "%fun")))
+        (lambdas, term) = rec' p 0 (identity, (Value "%fun"))
         rec' x index (lambdasBeforeIn, termToBuild) =
           let genI = intern ("%gen" <> show index)
               app = Application termToBuild (Value genI)
            in case x of
                 Term ->
                   ( lambdasBeforeIn . Lambda genI,
-                    Lambda (intern "%fun") app
+                    Lambda "%fun" app
                   )
                 Product t ->
                   rec'
@@ -68,15 +63,8 @@ adtToMendler (Adt name s) = sumRec s 0
                     (lambdasBeforeIn . Lambda genI, app)
                 None ->
                   ( lambdasBeforeIn,
-                    Lambda
-                      (intern "%fun")
-                      ( Application
-                          termToBuild
-                          ( Lambda
-                              (intern "x")
-                              (Value $ intern "x")
-                          )
-                      )
+                    Lambda "%fun"
+                      (Application termToBuild (Lambda "x" (Value "x")))
                   )
 
 mendlerCase ::
@@ -93,16 +81,16 @@ mendlerCase c = do
     Application on b ->
       pure
         $ Application on
-        $ Lambda (intern "rec") b
+        $ Lambda "rec" b
     Lambda {} -> error "doesn't happen"
     Value {} -> error "doesn't happen"
   where
-    onNoArg body = Lambda (intern "()") body
+    onNoArg body = Lambda "()" body
     onrec c accLam =
       Lambda
-        (intern "c%gen")
+        "c%gen"
         ( Application
-            (Application (Value (intern "c%gen")) c)
+            (Application (Value "c%gen") c)
             accLam
         )
 
@@ -138,68 +126,30 @@ numToInOp n arg
 
 inl :: Lambda
 inl =
-  Lambda x
-    $ Lambda k
-    $ Lambda l
-    $ Application (Value k) (Value x)
-  where
-    x = intern "x"
-    k = intern "k"
-    l = intern "l"
+  Lambda "x" $ Lambda "k" $ Lambda "l" $ Application (Value "k") (Value "x")
 
 -- | Op of inl that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
 inlOp :: Lambda
 inlOp =
-  Lambda x
-    $ Lambda k
-    $ Lambda l
-    $ Application (Value x) (Value k)
-  where
-    x = intern "x"
-    k = intern "k"
-    l = intern "l"
+  Lambda "x" $ Lambda "k" $ Lambda "l" $ Application (Value "x") (Value "k")
 
 inr :: Lambda
 inr =
-  Lambda y
-    $ Lambda k
-    $ Lambda l
-    $ Application (Value l) (Value y)
-  where
-    y = intern "y"
-    k = intern "k"
-    l = intern "l"
+  Lambda "y" $ Lambda "k" $ Lambda "l" $ Application (Value "l") (Value "y")
 
 -- | Op of inr that has the first argument call the 2nd
 -- useful for when constructing multiple argument passthrough
 inrOp :: Lambda
 inrOp =
-  Lambda y
-    $ Lambda k
-    $ Lambda l
-    $ Application (Value y) (Value l)
-  where
-    y = intern "y"
-    k = intern "k"
-    l = intern "l"
+  Lambda "y" $ Lambda "k" $ Lambda "l" $ Application (Value "y") (Value "l")
 
 foldM' :: Lambda
-foldM' = Lambda alg $ Lambda d $ Application (Value d) (Value alg)
-  where
-    alg = intern "alg"
-    d = intern "d"
+foldM' = Lambda "alg" $ Lambda "d" $ Application (Value "d") (Value "alg")
 
 in' :: Lambda
 in' =
-  Lambda r
-    $ Lambda f
+  Lambda "r"
+    $ Lambda "f"
     $ Application
-      ( Application
-          (Value f)
-          (app foldM' (Value f))
-      )
-      (Value r)
-  where
-    r = intern "r"
-    f = intern "f"
+      (Application (Value "f") (app foldM' (Value "f"))) (Value "r")

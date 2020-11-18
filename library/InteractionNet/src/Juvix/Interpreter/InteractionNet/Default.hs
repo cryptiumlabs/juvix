@@ -58,17 +58,17 @@ neq = onIntB (/=)
 defaultEnv :: Map.T NameSymbol.T (Type.Fn primVal)
 defaultEnv =
   Map.fromList
-    [ (NameSymbol.fromText "plus", Type.Arg2 plus),
-      (NameSymbol.fromText "+", Type.Arg2 plus),
-      (NameSymbol.fromText "*", Type.Arg2 times),
-      (NameSymbol.fromText "-", Type.Arg2 minus),
-      (NameSymbol.fromText "<>", Type.Arg2 neq),
-      (NameSymbol.fromText "<", Type.Arg2 lt),
-      (NameSymbol.fromText ">", Type.Arg2 gt),
-      (NameSymbol.fromText "<=", Type.Arg2 le),
-      (NameSymbol.fromText ">=", Type.Arg2 ge),
-      (NameSymbol.fromText "==", Type.Arg2 eq),
-      (NameSymbol.fromText "mod", Type.Arg2 mod')
+    [ ("plus", Type.Arg2 plus),
+      ("+", Type.Arg2 plus),
+      ("*", Type.Arg2 times),
+      ("-", Type.Arg2 minus),
+      ("<>", Type.Arg2 neq),
+      ("<", Type.Arg2 lt),
+      (">", Type.Arg2 gt),
+      ("<=", Type.Arg2 le),
+      (">=", Type.Arg2 ge),
+      ("==", Type.Arg2 eq),
+      ("mod", Type.Arg2 mod')
     ]
 
 defaultSymbols :: [Precedence]
@@ -96,6 +96,6 @@ defaultSpecial ::
   Map.T NameSymbol.T (Type.AST primVal -> Type.AST primVal -> Type.AST primVal)
 defaultSpecial =
   Map.fromList
-    [ (NameSymbol.fromText "or", Type.Or),
-      (NameSymbol.fromText "and", Type.And)
+    [ ("or", Type.Or),
+      ("and", Type.And)
     ]

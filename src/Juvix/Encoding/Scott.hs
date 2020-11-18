@@ -31,11 +31,11 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
     sumProd None posAdt lengthAdt = generateLam posAdt lengthAdt identity
     sumProd Term posAdt lengthAdt =
       Lambda
-        (intern "%arg1")
+        "%arg1"
         ( generateLam
             posAdt
             lengthAdt
-            (\b -> Application b (Value $ intern "%arg1"))
+            (\b -> Application b (Value "%arg1"))
         )
     sumProd p@(Product _) posAdt lengthAdt = args (lengthProd p)
       where

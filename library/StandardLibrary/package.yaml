@@ -30,6 +30,8 @@ default-extensions:
   - OverloadedStrings
   - RankNTypes
   - LambdaCase
+  - TypeSynonymInstances
+  - FlexibleInstances
 
 ghc-options:
   - -ferror-spans
