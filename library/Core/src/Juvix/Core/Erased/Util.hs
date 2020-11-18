@@ -4,9 +4,10 @@ import qualified Data.Set as Set
 import Juvix.Core.Erased.Types
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
-free :: forall primVal. Term primVal -> [Symbol]
+free :: forall primVal. Term primVal -> [NameSymbol.T]
 free = Set.toList . go Set.empty
   where
     go used = \case

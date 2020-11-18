@@ -6,8 +6,9 @@ import Juvix.Core.ErasedAnn.Types
 import qualified Juvix.Core.Erasure.Types as E
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
-free :: forall primTy primVal. E.Term primTy primVal -> [Symbol]
+free :: forall primTy primVal. E.Term primTy primVal -> [NameSymbol.T]
 free = Erased.free . E.eraseAnn
 
 convertTerm :: E.Term primTy primVal -> Usage.T -> AnnTerm primTy primVal

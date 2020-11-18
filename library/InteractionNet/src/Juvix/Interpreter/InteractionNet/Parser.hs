@@ -9,12 +9,14 @@ import Juvix.Interpreter.InteractionNet.Shared hiding (symbol)
 import Juvix.Interpreter.InteractionNet.Type
 import Juvix.Library hiding ((<|>), many)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Text.Parsec
 import Text.Parsec.Expr as E
 import Text.Parsec.String
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
 import Prelude (String)
+import qualified Data.List.NonEmpty as NonEmpty
 
 -- Types------------------------------------------------------------------------
 
@@ -89,6 +91,11 @@ lexer = T.makeTokenParser langaugeDef
 identifier :: Stream s m Char => ParsecT s u m String
 identifier = T.identifier lexer
 
+qualIdentifier :: Stream s m Char => ParsecT s u m (NonEmpty String)
+qualIdentifier =
+  -- TODO maybe a different separator so that "λ x.x" looks less misleading?
+  NonEmpty.fromList <$> identifier `sepBy1` reservedOp "."
+
 reserved :: Stream s m Char => String -> ParsecT s u m ()
 reserved = T.reserved lexer
 
@@ -125,11 +132,14 @@ natural = T.natural lexer
 operator' :: Stream s m Char => ParsecT s u m String
 operator' = T.operator lexer
 
-operator :: Stream s m Char => ParsecT s u m Symbol
-operator = intern <$> operator'
+operator :: Stream s m Char => ParsecT s u m NameSymbol.T
+operator = pure . intern <$> operator'
 
-symbol :: Stream s m Char => ParsecT s u m Symbol
-symbol = intern <$> identifier
+symbol :: Stream s m Char => ParsecT s u m NameSymbol.T
+symbol = pure . intern <$> identifier
+
+qualSymbol :: Stream s m Char => ParsecT s u m NameSymbol.T
+qualSymbol = map intern <$> qualIdentifier
 
 -- Grammar ---------------------------------------------------------------------
 
@@ -167,15 +177,16 @@ expression' =
 
 -- Infix Parser ----------------------------------------------------------------
 
-createInfixUnkown :: Symbol -> AST primVal -> AST primVal -> AST primVal
-createInfixUnkown sym arg1 arg2 = Application (Application (Symbol' sym) arg1) arg2
+createInfixUnkown :: NameSymbol.T -> AST primVal -> AST primVal -> AST primVal
+createInfixUnkown sym arg1 arg2 =
+  Symbol' sym `Application` arg1 `Application` arg2
 
 -- So far only the defaultSpecial is sent in, but in the future, pass in extensions
 -- to both defaultSpecial and defaultSymbols.
 precedenceToOps :: Stream s m Char => OperatorTable s u m (AST primVal)
 precedenceToOps =
   ( \(Precedence _ s a) ->
-      let ins = intern s
+      let ins = NameSymbol.fromString s
        in E.Infix
             ( case defaultSpecial Map.!? ins of
                 Just f -> f <$ reservedOp s

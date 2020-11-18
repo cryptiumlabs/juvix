@@ -32,6 +32,7 @@ import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import qualified Juvix.Backends.ArithmeticCircuit.Parameterisation as Par
 import qualified Juvix.Core.ErasedAnn as CoreErased
 import Juvix.Library hiding (Type, exp)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import Numeric.Natural ()
 
@@ -218,7 +219,7 @@ wrap prim =
       CoreErased.type' = CoreErased.PrimTy ()
     }
 
-var :: Symbol -> Types.Term
+var :: NameSymbol.T -> Types.Term
 var x =
   CoreErased.Ann
     { CoreErased.term = CoreErased.Var x,
@@ -226,7 +227,7 @@ var x =
       CoreErased.type' = CoreErased.PrimTy ()
     }
 
-lambda :: [Symbol] -> Types.Term -> Types.Term
+lambda :: [NameSymbol.T] -> Types.Term -> Types.Term
 lambda args body =
   CoreErased.Ann
     { CoreErased.term =

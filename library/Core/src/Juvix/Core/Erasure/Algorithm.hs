@@ -7,11 +7,12 @@ import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Library hiding (empty)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
 type ErasureM primTy primVal m =
   ( HasState "nextName" Int m,
-    HasState "nameStack" [Symbol] m,
+    HasState "nameStack" [NameSymbol.T] m,
     HasThrow "erasureError" (Erasure.Error primTy primVal) m
   )
 
@@ -233,10 +234,10 @@ eraseTypeN n@(IR.NApp _ _) = do
   throwEra $ Erasure.UnsupportedTypeN n
 
 pushName ::
-  (HasState "nextName" Int m, HasState "nameStack" [Symbol] m) =>
-  m Symbol
+  (HasState "nextName" Int m, HasState "nameStack" [NameSymbol.T] m) =>
+  m NameSymbol.T
 pushName = do
-  x <- gets @"nextName" $ internText . show
+  x <- gets @"nextName" $ NameSymbol.fromText . show
   modify @"nextName" succ
   modify @"nameStack" (x :)
   pure $ x
@@ -254,17 +255,17 @@ popName = do
 
 withName ::
   ( HasState "nextName" Int m,
-    HasState "nameStack" [Symbol] m,
+    HasState "nameStack" [NameSymbol.T] m,
     HasThrow "erasureError" (Erasure.Error primTy primVal) m
   ) =>
-  (Symbol -> m a) ->
+  (NameSymbol.T -> m a) ->
   m a
 withName f = do x <- pushName; f x <* popName
 
 lookupBound ::
-  HasState "nameStack" [Symbol] m =>
+  HasState "nameStack" [NameSymbol.T] m =>
   IR.BoundVar ->
-  m Symbol
+  m NameSymbol.T
 lookupBound x = gets @"nameStack" (`genericIndex` x)
 
 throwEra ::

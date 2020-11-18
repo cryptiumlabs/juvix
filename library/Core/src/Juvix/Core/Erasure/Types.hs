@@ -24,9 +24,10 @@ import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
 
-data Env primTy primVal = Env {nextName :: Int, nameStack :: [Symbol]}
+data Env primTy primVal = Env {nextName :: Int, nameStack :: [NameSymbol.T]}
   deriving (Generic)
 
 type EnvEraAlias primTy primVal =
@@ -42,9 +43,9 @@ newtype EnvT primTy primVal a
     )
     via StateField "nextName" (EnvEraAlias primTy primVal)
   deriving
-    ( HasState "nameStack" [Symbol],
-      HasSink "nameStack" [Symbol],
-      HasSource "nameStack" [Symbol]
+    ( HasState "nameStack" [NameSymbol.T],
+      HasSink "nameStack" [NameSymbol.T],
+      HasSource "nameStack" [NameSymbol.T]
     )
     via StateField "nameStack" (EnvEraAlias primTy primVal)
   deriving

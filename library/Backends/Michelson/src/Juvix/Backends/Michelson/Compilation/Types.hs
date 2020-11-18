@@ -10,6 +10,7 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
@@ -135,7 +136,7 @@ data CompilationError
   | DidNotTypecheck Instr.ExpandedOp M.TCError
   | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError
   | NotEnoughArguments
-  | NotInStack Symbol
+  | NotInStack NameSymbol.T
   | -- Should never happen!
     NotEnoughStackSpace
   | OpInMichelsonValue

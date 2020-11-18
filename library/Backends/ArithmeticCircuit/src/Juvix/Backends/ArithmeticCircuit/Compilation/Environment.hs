@@ -5,6 +5,7 @@ module Juvix.Backends.ArithmeticCircuit.Compilation.Environment where
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Memory as Memory
 import qualified Juvix.Backends.ArithmeticCircuit.Compilation.Types as Types
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type Memory = Memory.T Types.Expression
 
@@ -45,23 +46,23 @@ type HasMemoryErr m =
 type HasCompErr m =
   (HasComp m, HasThrow "compilationError" Types.CompilationError m)
 
-insert, alloc :: HasMemory m => Symbol -> Types.Expression -> m Types.Expression
+insert, alloc :: HasMemory m => NameSymbol.T -> Types.Expression -> m Types.Expression
 insert sy exp =
   modify @"memory" (Memory.alloc sy exp) *> return exp
 alloc = insert
 
-insertExternal, allocExternal :: HasMemory m => Symbol -> m ()
+insertExternal, allocExternal :: HasMemory m => NameSymbol.T -> m ()
 insertExternal sy =
   modify @"memory" (Memory.allocExternal sy Types.NoExp)
 allocExternal = insertExternal
 
-remove, free :: HasMemory m => Symbol -> m ()
+remove, free :: HasMemory m => NameSymbol.T -> m ()
 remove sy =
   modify @"memory" (Memory.free sy)
 --
 free = remove
 
-lookupErr :: HasMemoryErr m => Symbol -> m (Memory.Ele Types.Expression)
+lookupErr :: HasMemoryErr m => NameSymbol.T -> m (Memory.Ele Types.Expression)
 lookupErr sy = do
   mem <- get @"memory"
   case Memory.lookup sy mem of

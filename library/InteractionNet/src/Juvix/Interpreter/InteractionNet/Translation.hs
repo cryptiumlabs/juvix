@@ -19,13 +19,14 @@ import Juvix.Interpreter.InteractionNet.Shared
 import qualified Juvix.Interpreter.InteractionNet.Type as Type
 import Juvix.Library hiding (empty, link)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Prelude (error)
 
 data Env net primVal
   = Env
       { level :: Int,
         net' :: net (AST.Lang primVal),
-        free :: Map.T Symbol (Node, PortType)
+        free :: Map.T NameSymbol.T (Node, PortType)
       }
   deriving (Generic)
 
@@ -38,9 +39,9 @@ newtype EnvState net primVal a = EnvS (State (Env net primVal) a)
     )
     via StateField "level" (State (Env net primVal))
   deriving
-    ( HasState "free" (Map.T Symbol (Node, PortType)),
-      HasSink "free" (Map.T Symbol (Node, PortType)),
-      HasSource "free" (Map.T Symbol (Node, PortType))
+    ( HasState "free" (Map.T NameSymbol.T (Node, PortType)),
+      HasSink "free" (Map.T NameSymbol.T (Node, PortType)),
+      HasSource "free" (Map.T NameSymbol.T (Node, PortType))
     )
     via StateField "free" (State (Env net primVal))
   deriving
@@ -61,7 +62,7 @@ astToNet ::
   (Network net, Core.CanApply primVal) =>
   Core.Parameterisation primTy primVal ->
   Type.AST primVal ->
-  Map.T Symbol (Type.Fn primVal) ->
+  Map.T NameSymbol.T (Type.Fn primVal) ->
   net (AST.Lang primVal)
 astToNet parameterisation bohm customSymMap = net'
   where
@@ -529,10 +530,10 @@ chaseAndCreateFan (num, port) = do
       pure (numFan, Aux2)
 
 -- | numToSymbol generates a symbol from a number
-numToSymbol :: Int -> Symbol
+numToSymbol :: Int -> NameSymbol.T
 numToSymbol x
-  | x < 26 = intern (return ((['x' .. 'z'] <> ['a' .. 'w']) !! x))
-  | otherwise = intern ("%gen" <> show x)
+  | x < 26 = NameSymbol.fromString (return ((['x' .. 'z'] <> ['a' .. 'w']) !! x))
+  | otherwise = NameSymbol.fromString ("%gen" <> show x)
 
 -- | generate a new number based on the map size
 -- Only gives an unique if the key has an isomorphism with the size

@@ -22,6 +22,7 @@ import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import Juvix.Library hiding (Type, drop, take)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped as Untyped
 import qualified Michelson.Untyped.Instr as Instr
@@ -75,27 +76,27 @@ defUsage usage = Usage usage False
 --------------------------------------------------------------------------------
 
 data Elem lamType
-  = VarE (Set.Set Symbol) Usage (Maybe (Val lamType))
+  = VarE (Set.Set NameSymbol.T) Usage (Maybe (Val lamType))
   | Val (Val lamType)
   deriving (Show, Eq, Generic)
 
-varEName :: Symbol -> Usage -> Maybe (Val lamType) -> Elem lamType
+varEName :: NameSymbol.T -> Usage -> Maybe (Val lamType) -> Elem lamType
 varEName x = VarE (Set.singleton x)
 
-varE :: Symbol -> Maybe (Val lamType) -> Elem lamType
+varE :: NameSymbol.T -> Maybe (Val lamType) -> Elem lamType
 varE x = VarE (Set.singleton x) (defUsage Usage.Omega)
 
-var1E :: Symbol -> Maybe (Val lamType) -> Elem lamType
+var1E :: NameSymbol.T -> Maybe (Val lamType) -> Elem lamType
 var1E x = VarE (Set.singleton x) (defUsage one)
 
-varNone :: Symbol -> Elem lamType
+varNone :: NameSymbol.T -> Elem lamType
 varNone x = VarE (Set.singleton x) (defUsage Usage.Omega) Nothing
 
 data LamPartial
   = LamPartial
       { ops :: [Types.Op],
-        captures :: [Symbol], -- note: semantically this should be a set :)
-        remArgs :: [Symbol],
+        captures :: [NameSymbol.T], -- note: semantically this should be a set :)
+        remArgs :: [NameSymbol.T],
         body :: Types.Term,
         ty :: Types.Type
       }
@@ -217,7 +218,7 @@ append = (<>)
 appendDrop :: T lamType -> T lamType -> T lamType
 appendDrop prefix = append prefix . cdr
 
-lookupType :: Symbol -> T lamType -> Maybe Untyped.Type
+lookupType :: NameSymbol.T -> T lamType -> Maybe Untyped.Type
 lookupType n (T stack' _) = go stack'
   where
     go ((VarE n' _ _, typ) : _)
@@ -292,17 +293,17 @@ unSave num (T stack i) = T (go num stack) i
           (VarE s (Usage usage notSaved) mb, ty) : go (pred i) xs
     go _ [] = []
 
-addName :: Symbol -> Symbol -> T lamType -> T lamType
+addName :: NameSymbol.T -> NameSymbol.T -> T lamType -> T lamType
 addName = addNameSet . Set.singleton
 
-addNameSet :: Set Symbol -> Symbol -> T lamType -> T lamType
+addNameSet :: Set NameSymbol.T -> NameSymbol.T -> T lamType -> T lamType
 addNameSet toFind toAdd (T stack i) = T (f <$> stack) i
   where
     f (VarE x i t, type')
       | not $ null $ Set.intersection toFind x = (VarE (Set.insert toAdd x) i t, type')
     f t = t
 
-nameTop :: Symbol -> Usage.T -> T lamType -> T lamType
+nameTop :: NameSymbol.T -> Usage.T -> T lamType -> T lamType
 nameTop sym usage t =
   case hd of
     (Val i, ty) -> cons (varEName sym (defUsage usage) (Just i), ty) rest
@@ -353,7 +354,7 @@ dropPos n xs = dropPos' n xs mempty
         dropPos' n (cdr xs) (cons (car xs) acc)
       | otherwise = reverseI acc <> xs
 
-updateUsageList :: Set Symbol -> Usage.T -> [(Elem lamType, b)] -> [(Elem lamType, b)]
+updateUsageList :: Set NameSymbol.T -> Usage.T -> [(Elem lamType, b)] -> [(Elem lamType, b)]
 updateUsageList symbs usage = f
   where
     f ((VarE s (Usage i saved) ele, ty) : xs)
@@ -361,7 +362,7 @@ updateUsageList symbs usage = f
     f (x : xs) = x : f xs
     f [] = []
 
-updateUsage :: Set.Set Symbol -> Usage.T -> T lamType -> T lamType
+updateUsage :: Set.Set NameSymbol.T -> Usage.T -> T lamType -> T lamType
 updateUsage symbs usage (T stack i) = T (updateUsageList symbs usage stack) i
 
 updateUsageVar :: (Elem lamType, b) -> T lamType -> T lamType
@@ -374,7 +375,7 @@ data Lookup lamType
   deriving (Show, Eq)
 
 lookupGen ::
-  (Maybe (Lookup lamType) -> Maybe a -> a) -> (Usage -> Bool) -> Symbol -> T lamType -> a
+  (Maybe (Lookup lamType) -> Maybe a -> a) -> (Usage -> Bool) -> NameSymbol.T -> T lamType -> a
 lookupGen gotoF extraPred n (T stack' _) = go stack' 0
   where
     go ((v@(VarE n' usage _), _) : vs) acc
@@ -396,7 +397,7 @@ lookupGen gotoF extraPred n (T stack' _) = go stack' 0
 -- Otherwise, the function returns Either
 -- a Value if the symbol is not stored on the stack
 -- or the position, if the value is stored on the stack
-lookup :: Symbol -> T lamType -> Maybe (Lookup lamType)
+lookup :: NameSymbol.T -> T lamType -> Maybe (Lookup lamType)
 lookup = lookupGen f (const True)
   where
     f (Just x) _ = Just x
@@ -408,7 +409,7 @@ lookup = lookupGen f (const True)
 -- a Value if the symbol is not stored on the stack
 -- or the position, if the value is stored on the stack and has enough
 -- usages to move forward
-lookupFree :: Symbol -> T lamType -> Maybe (Lookup lamType)
+lookupFree :: NameSymbol.T -> T lamType -> Maybe (Lookup lamType)
 lookupFree = lookupGen f isUsageFree
   where
     f (Just x) _ = Just x
@@ -422,7 +423,7 @@ isUsageFree (Usage x saved)
   | otherwise = True
 
 -- TODO ∷ Turn into a filter map!
-lookupAllPos :: Symbol -> T lamType -> [Lookup lamType]
+lookupAllPos :: NameSymbol.T -> T lamType -> [Lookup lamType]
 lookupAllPos = lookupGen f (const True)
   where
     f (Just x) (Just xs) = x : xs
@@ -432,7 +433,7 @@ lookupAllPos = lookupGen f (const True)
 
 -- | 'predValueUsage reduces usage of a constant by 1, and deletes said constant
 -- if it goes over its usage. This function does nothing to items in the stack
-predValueUsage :: Symbol -> T lamType -> T lamType
+predValueUsage :: NameSymbol.T -> T lamType -> T lamType
 predValueUsage n s@(T stack' i) = go stack' []
   where
     go ((v@(VarE n' (Usage usage saved) val), ty) : xs) acc
@@ -466,7 +467,7 @@ dupDig i (T stack' n) =
     (xs, (y, ty) : ys) ->
       cons (predUsage y, ty) (T (xs <> ((usageOneOmega y, ty) : ys)) n)
 
-dropFirst :: Symbol -> T lamType -> [(Elem lamType, Untyped.Type)] -> T lamType
+dropFirst :: NameSymbol.T -> T lamType -> [(Elem lamType, Untyped.Type)] -> T lamType
 dropFirst n (T stack' size) = go stack'
   where
     go ((v@(VarE n' (Usage usages _saved) _), _) : xs) acc
@@ -480,7 +481,7 @@ dropFirst n (T stack' size) = go stack'
       go vs (v : acc)
     go [] _ = T stack' size
 
-symbolsInT :: [Symbol] -> T lamType -> [Symbol]
+symbolsInT :: [NameSymbol.T] -> T lamType -> [NameSymbol.T]
 symbolsInT symbs (T stack' _) =
   filter f symbs
   where

@@ -24,11 +24,11 @@ instance Hashable Key
 data T primTy primVal
   = T
       { _seenSet :: InScopeSet,
-        _sub :: Map.T Symbol (Types.Elim primTy primVal)
+        _sub :: Map.T NameSymbol.T (Types.Elim primTy primVal)
       }
   deriving (Show)
 
-type InScopeSet = Set.HashSet Symbol
+type InScopeSet = Set.HashSet NameSymbol.T
 
 makeLenses ''T
 
@@ -106,7 +106,10 @@ empty = T mempty mempty
 
 -- | 'uniqueNameAndUpdateMap' takes a Subst data structure and a symbol
 -- and updates the map to redirect symbols labeled x if it already seen
-uniqueNameAndUpdateMap :: T primTy primVal -> Symbol -> (T primTy primVal, Symbol)
+uniqueNameAndUpdateMap ::
+  T primTy primVal ->
+  NameSymbol.T ->
+  (T primTy primVal, NameSymbol.T)
 uniqueNameAndUpdateMap subst sym
   | sym == newSym =
     (newSubst |> over sub (Map.delete sym), newSym)
@@ -124,11 +127,12 @@ uniqueNameAndUpdateMap subst sym
 
 -- | 'uniqueName' generates a unique name based off the symbol
 -- and the set
-uniqueName :: Symbol -> InScopeSet -> (InScopeSet, Symbol)
+uniqueName :: NameSymbol.T -> InScopeSet -> (InScopeSet, NameSymbol.T)
 uniqueName sym set
   | Set.member sym set =
     (Set.insert newSym set, newSym)
   | otherwise =
     (Set.insert sym set, sym)
   where
-    newSym = intern (show (hash set)) <> sym
+    newSym = NameSymbol.applyBase (<> fingerprint) sym
+    fingerprint = intern (show (hash set))

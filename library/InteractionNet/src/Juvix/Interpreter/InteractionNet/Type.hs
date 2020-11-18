@@ -16,16 +16,17 @@ module Juvix.Interpreter.InteractionNet.Type where
 
 import Juvix.Interpreter.InteractionNet.Shared
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 data AST primVal
   = IntLit Int
-  | Lambda Symbol (AST primVal)
+  | Lambda NameSymbol.T (AST primVal)
   | Application (AST primVal) (AST primVal)
   | Not (AST primVal)
   | True'
   | False'
-  | Letrec Symbol (AST primVal)
-  | Let Symbol (AST primVal) (AST primVal)
+  | Letrec NameSymbol.T (AST primVal)
+  | Let NameSymbol.T (AST primVal) (AST primVal)
   | If (AST primVal) (AST primVal) (AST primVal)
   | Cons (AST primVal) (AST primVal)
   | Or (AST primVal) (AST primVal)
@@ -34,7 +35,7 @@ data AST primVal
   | Car (AST primVal)
   | Cdr (AST primVal)
   | IsNil (AST primVal)
-  | Symbol' Symbol
+  | Symbol' NameSymbol.T
   | -- Not valid syntax but for read back of a graph
     Erase
   | -- Not valid syntax but for read back of a graph

@@ -4,6 +4,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Juvix.Library
 import qualified Prelude (foldr1)
+import Prelude (String)
 
 type T = NonEmpty Symbol
 
@@ -14,6 +15,12 @@ toSymbol =
 fromSymbol :: Symbol -> T
 fromSymbol =
   NonEmpty.fromList . fmap internText . Text.splitOn "." . textify
+
+fromText :: Text -> T
+fromText = fromSymbol . internText
+
+fromString :: String -> T
+fromString = fromSymbol . intern
 
 prefixOf :: T -> T -> Bool
 prefixOf smaller larger =
@@ -44,3 +51,21 @@ cons = NonEmpty.cons
 
 hd :: T -> Symbol
 hd = NonEmpty.head
+
+qualify :: [Symbol] -> T -> T
+qualify m n = foldr cons n m
+
+qualify1 :: [Symbol] -> Symbol -> T
+qualify1 m b = qualify m (b :| [])
+
+split :: T -> ([Symbol], Symbol)
+split n = (NonEmpty.init n, NonEmpty.last n)
+
+modName :: T -> [Symbol]
+modName = fst . split
+
+baseName :: T -> Symbol
+baseName = snd . split
+
+applyBase :: (Symbol -> Symbol) -> T -> T
+applyBase f n = let (m, b) = split n in qualify1 m (f b)

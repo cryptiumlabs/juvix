@@ -8,10 +8,11 @@ import Extensible
 import Juvix.Library
 import Juvix.Library.HashMap
 import Juvix.Library.Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type Universe = Natural
 
-type GlobalName = Symbol
+type GlobalName = NameSymbol.T
 
 type PatternVar = Int
 

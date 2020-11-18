@@ -12,6 +12,7 @@ import qualified Juvix.Interpreter.InteractionNet.Backends.Interface as Interfac
 import Juvix.Interpreter.InteractionNet.NodeInterface as NInterface
 import qualified Juvix.Interpreter.InteractionNet.Shared as Shared
 import Juvix.Library hiding (curry3, link, reduce)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 data Lang primVal
   = Auxiliary3 (Auxiliary3 primVal)
@@ -57,7 +58,7 @@ data Primar primVal
   | Tru
   | Fals
   | IntLit Int
-  | Symbol Symbol
+  | Symbol NameSymbol.T
   | PrimVal primVal
   deriving (Show)
 

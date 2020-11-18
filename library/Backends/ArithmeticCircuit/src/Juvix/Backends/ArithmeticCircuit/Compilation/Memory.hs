@@ -3,6 +3,7 @@ module Juvix.Backends.ArithmeticCircuit.Compilation.Memory where
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 data Ele a
   = Ele
@@ -13,7 +14,7 @@ data Ele a
 
 data T a
   = T
-      { bindings :: Map.Map Symbol (Ele a),
+      { bindings :: Map.Map NameSymbol.T (Ele a),
         free' :: NonEmpty Int,
         size :: Int
       }
@@ -40,7 +41,7 @@ initial :: T a
 initial = T mempty (0 :| []) 0
 
 -- alloc
-allocExternal :: Symbol -> a -> T a -> T a
+allocExternal :: NameSymbol.T -> a -> T a -> T a
 allocExternal symbol value (T bindings free size) =
   let (curr, next) =
         case free of
@@ -54,11 +55,11 @@ allocExternal symbol value (T bindings free size) =
         Nothing ->
           T (Map.insert symbol (Ele (Just curr) value) bindings) next (succ size)
 
-alloc :: Symbol -> a -> T a -> T a
+alloc :: NameSymbol.T -> a -> T a -> T a
 alloc symbol value (T bindings free size) =
   T (Map.insert symbol (Ele Nothing value) bindings) free size
 
-free :: Symbol -> T a -> T a
+free :: NameSymbol.T -> T a -> T a
 free symbol (T bindings freeNames size) =
   case bindings Map.!? symbol of
     Just (Ele Nothing _) ->
@@ -67,6 +68,6 @@ free symbol (T bindings freeNames size) =
       T (Map.delete symbol bindings) (NonEmpty.cons i freeNames) (pred size)
     Nothing -> T bindings freeNames size
 
-lookup :: Symbol -> T a -> Maybe (Ele a)
+lookup :: NameSymbol.T -> T a -> Maybe (Ele a)
 lookup symbol (T bindings _ _) =
   Map.lookup symbol bindings

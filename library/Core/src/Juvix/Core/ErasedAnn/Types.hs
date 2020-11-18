@@ -2,14 +2,15 @@ module Juvix.Core.ErasedAnn.Types where
 
 import Juvix.Core.IR.Types (Universe)
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
 data Term primTy primVal
-  = Var Symbol
+  = Var NameSymbol.T
   | Prim primVal
   | LamM
-      { capture :: [Symbol], -- Capture
-        arguments :: [Symbol], -- Arguments
+      { capture :: [NameSymbol.T], -- Capture
+        arguments :: [NameSymbol.T], -- Arguments
           -- the Term in AnnTerm is not lam!
         body :: AnnTerm primTy primVal
       }
@@ -18,7 +19,7 @@ data Term primTy primVal
   deriving (Show, Eq, Generic)
 
 data Type primTy
-  = SymT Symbol
+  = SymT NameSymbol.T
   | Star Universe
   | PrimTy primTy
   | -- TODO: How to deal with dependency?

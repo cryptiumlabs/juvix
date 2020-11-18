@@ -4,12 +4,13 @@ import qualified Data.Text as T
 import qualified Juvix.Core.Erased.Types as Erased
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- Restricted pseudoterm (inner).
 data RPTI primVal
-  = RVar Symbol
+  = RVar NameSymbol.T
   | RPrim primVal
-  | RLam Symbol (RPTO primVal)
+  | RLam NameSymbol.T (RPTO primVal)
   | RApp (RPTO primVal) (RPTO primVal)
   deriving (Show, Eq, Generic)
 
@@ -29,13 +30,13 @@ type Param = Int
 
 -- Parameterized type.
 data PType primTy
-  = PSymT Param Symbol
+  = PSymT Param NameSymbol.T
   | PPrimT primTy
   | PArrT Param (PType primTy) (PType primTy)
   deriving (Show, Eq)
 
 -- Parameterized type assignment (alias).
-type ParamTypeAssignment primTy = Map.T Symbol (PType primTy)
+type ParamTypeAssignment primTy = Map.T NameSymbol.T (PType primTy)
 
 -- Linear (in)equality constraint on parameters.
 data Constraint
@@ -63,10 +64,10 @@ data Op
 type Path = [Param]
 
 -- Variable paths.
-type VarPaths = Map.T Symbol Param
+type VarPaths = Map.T NameSymbol.T Param
 
 -- Occurrence map.
-type OccurrenceMap = Map.T Symbol Int
+type OccurrenceMap = Map.T NameSymbol.T Int
 
 -- | Bracket Error Types
 data BracketErrors
@@ -109,16 +110,16 @@ newtype EnvError primTy primVal a
   = EnvError (EnvErrorAlias primTy primVal a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasState "ctxt" (Map.T Symbol (Erased.Type primTy)),
-      HasSink "ctxt" (Map.T Symbol (Erased.Type primTy)),
-      HasSource "ctxt" (Map.T Symbol (Erased.Type primTy))
+    ( HasState "ctxt" (Map.T NameSymbol.T (Erased.Type primTy)),
+      HasSink "ctxt" (Map.T NameSymbol.T (Erased.Type primTy)),
+      HasSource "ctxt" (Map.T NameSymbol.T (Erased.Type primTy))
     )
     via StateField "ctxt" (EnvErrorAlias primTy primVal)
   deriving
     (HasThrow "typ" (TypeErrors primTy primVal))
     via MonadError (EnvErrorAlias primTy primVal)
 
-data Info primTy = I {ctxt :: Map.T Symbol (Erased.Type primTy)} deriving (Show, Generic)
+data Info primTy = I {ctxt :: Map.T NameSymbol.T (Erased.Type primTy)} deriving (Show, Generic)
 
 -- Environment for inference.
 data Env primTy

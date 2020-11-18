@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as V
@@ -53,7 +54,7 @@ unFun (Fun f) = f
 
 data ErasedTerm
   = Term
-      { name :: Symbol,
+      { name :: NameSymbol.T,
         usage :: Usage.T
       }
   deriving (Show)
@@ -71,7 +72,7 @@ data Curried
         left :: Integer,
         -- | 'captures' are the captured arguments in the environment of the function
         -- This set should also contain usage information for each left
-        captures :: Set.Set Symbol,
+        captures :: Set.Set NameSymbol.T,
         -- | 'ty' is the type of the partial
         ty :: Types.Type
       }

@@ -6,6 +6,7 @@ import Juvix.Interpreter.InteractionNet.Shared
 import qualified Juvix.Interpreter.InteractionNet.Type as Type
 import Juvix.Library hiding (empty, link)
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Text.Parsec.Expr
 
 onIntGen :: (Int -> Int -> a) -> Primitive -> Primitive -> Maybe a
@@ -54,20 +55,20 @@ eq = onIntB (==)
 neq :: Primitive -> Primitive -> Maybe Primitive
 neq = onIntB (/=)
 
-defaultEnv :: Map.T Symbol (Type.Fn primVal)
+defaultEnv :: Map.T NameSymbol.T (Type.Fn primVal)
 defaultEnv =
   Map.fromList
-    [ (intern "plus", Type.Arg2 plus),
-      (intern "+", Type.Arg2 plus),
-      (intern "*", Type.Arg2 times),
-      (intern "-", Type.Arg2 minus),
-      (intern "<>", Type.Arg2 neq),
-      (intern "<", Type.Arg2 lt),
-      (intern ">", Type.Arg2 gt),
-      (intern "<=", Type.Arg2 le),
-      (intern ">=", Type.Arg2 ge),
-      (intern "==", Type.Arg2 eq),
-      (intern "mod", Type.Arg2 mod')
+    [ (NameSymbol.fromText "plus", Type.Arg2 plus),
+      (NameSymbol.fromText "+", Type.Arg2 plus),
+      (NameSymbol.fromText "*", Type.Arg2 times),
+      (NameSymbol.fromText "-", Type.Arg2 minus),
+      (NameSymbol.fromText "<>", Type.Arg2 neq),
+      (NameSymbol.fromText "<", Type.Arg2 lt),
+      (NameSymbol.fromText ">", Type.Arg2 gt),
+      (NameSymbol.fromText "<=", Type.Arg2 le),
+      (NameSymbol.fromText ">=", Type.Arg2 ge),
+      (NameSymbol.fromText "==", Type.Arg2 eq),
+      (NameSymbol.fromText "mod", Type.Arg2 mod')
     ]
 
 defaultSymbols :: [Precedence]
@@ -92,10 +93,9 @@ defaultSymbols =
 -- waiting for all the arguments before short circuiting, by compiling
 -- directly to the AST instead
 defaultSpecial ::
-  (Eq k, Hashable k, IsString k) =>
-  Map.T k (Type.AST primVal -> Type.AST primVal -> Type.AST primVal)
+  Map.T NameSymbol.T (Type.AST primVal -> Type.AST primVal -> Type.AST primVal)
 defaultSpecial =
   Map.fromList
-    [ ("or", Type.Or),
-      ("and", Type.And)
+    [ (NameSymbol.fromText "or", Type.Or),
+      (NameSymbol.fromText "and", Type.And)
     ]

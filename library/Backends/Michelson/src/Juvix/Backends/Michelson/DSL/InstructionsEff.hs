@@ -23,6 +23,7 @@ import qualified Juvix.Backends.Michelson.DSL.Utils as Utils
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Library hiding (abs, and, or, xor)
 import qualified Juvix.Library (abs)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as MT
@@ -127,7 +128,7 @@ isNat =
     (\x -> if x >= 0 then V.ValueSome (V.ValueInt x) else V.ValueNone)
 
 lambda ::
-  Env.Error m => [Symbol] -> [Symbol] -> Types.RawTerm -> Types.Type -> m Env.Expanded
+  Env.Error m => [NameSymbol.T] -> [NameSymbol.T] -> Types.RawTerm -> Types.Type -> m Env.Expanded
 lambda captures arguments body type'
   -- >= as we may return a lambda!
   | length usages >= length arguments =
@@ -149,7 +150,7 @@ lambda captures arguments body type'
     annotatedArgs =
       zipWith Env.Term arguments usages
 
-var :: (Env.Instruction m, Env.Error m) => Symbol -> m Env.Expanded
+var :: (Env.Instruction m, Env.Error m) => NameSymbol.T -> m Env.Expanded
 var symb = do
   stack <- get @"stack"
   let pushValueStack value =
@@ -188,7 +189,7 @@ name :: Env.Reduction m => Env.ErasedTerm -> Types.RawTerm -> m Env.Expanded
 name (Env.Term symb usage) f =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
-nameSymb :: Env.Reduction m => Symbol -> Types.RawTerm -> m Env.Expanded
+nameSymb :: Env.Reduction m => NameSymbol.T -> Types.RawTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
@@ -531,11 +532,11 @@ promoteTopStack x = do
   addInstrs insts
   pure x
 
-reserveNames :: HasState "count" Word m => Word -> m [Symbol]
+reserveNames :: HasState "count" Word m => Word -> m [NameSymbol.T]
 reserveNames i = do
   c <- get @"count"
   put @"count" (i + c)
-  pure (intern . show <$> [c .. c + i - 1])
+  pure (NameSymbol.fromString . show <$> [c .. c + i - 1])
 
 -- TODO ∷ drop extra things from the vstack, mainly
 -- 1. the function we move to the front
@@ -544,7 +545,7 @@ reserveNames i = do
 -- Other things considered:
 -- We don't need to drop the arguments we eval and name, as they should be eaten
 -- by the functions they call with the appropriate usages
-apply :: Env.Reduction m => Env.Curried -> [Types.RawTerm] -> [Symbol] -> m Env.Expanded
+apply :: Env.Reduction m => Env.Curried -> [Types.RawTerm] -> [NameSymbol.T] -> m Env.Expanded
 apply closure args remainingArgs = do
   let totalLength = fromIntegral (length args + length remainingArgs)
   case totalLength `compare` Env.left closure of
@@ -755,7 +756,7 @@ consVarGen ::
   ( HasThrow "compilationError" Env.CompError m,
     HasState "stack" (VStack.T lamType) m
   ) =>
-  Symbol ->
+  NameSymbol.T ->
   Maybe (VStack.Val lamType) ->
   Usage.T ->
   Types.Type ->
@@ -772,7 +773,7 @@ consVarGen symb result usage ty = do
       )
 
 consVar ::
-  (Env.Stack m, Env.Error m) => Symbol -> Env.Expanded -> Usage.T -> Types.Type -> m ()
+  (Env.Stack m, Env.Error m) => NameSymbol.T -> Env.Expanded -> Usage.T -> Types.Type -> m ()
 consVar symb result = consVarGen symb (Just (expandedToStack result))
 
 consVarNone ::
@@ -804,7 +805,7 @@ mustLookupType ::
   ( HasState "stack" (VStack.T lamType) m,
     HasThrow "compilationError" Types.CompilationError m
   ) =>
-  Symbol ->
+  NameSymbol.T ->
   m Untyped.T
 mustLookupType sym = do
   stack <- get @"stack"
@@ -882,17 +883,18 @@ promoteLambda (Env.C fun argsLeft left captures ty) = do
 
 -- Assume lambdas from storage are curried.
 applyLambdaFromStorage ::
-  Env.Reduction m => Symbol -> Types.Type -> Types.RawTerm -> m [Instr.ExpandedOp]
+  Env.Reduction m => NameSymbol.T -> Types.Type -> Types.RawTerm -> m [Instr.ExpandedOp]
 applyLambdaFromStorage sym ty arg = do
   ty' <- typeToPrimType ty
   lam <- expandedToInst ty' =<< var sym
   arg <- instOuter arg
   ty <- typeToPrimType (eatType 1 ty)
-  modify @"stack" (VStack.cons (VStack.varNone "_", ty) . VStack.drop 2)
+  let vstackElem = (VStack.varNone $ NameSymbol.fromString "_", ty)
+  modify @"stack" (VStack.cons vstackElem . VStack.drop 2)
   pure [lam, arg, Instructions.exec]
 
 applyLambdaFromStorageNArgs ::
-  Env.Reduction m => Symbol -> MT.Type -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => NameSymbol.T -> MT.Type -> [Types.RawTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args =
   Env.Expanded . mconcat |<< do
     undefined
