@@ -8,6 +8,7 @@ module Juvix.Core.EAC.Parser
   )
 where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Core.EAC.Types hiding (PType, RPT, RPTI, RPTO)
 import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -26,7 +27,6 @@ import Text.Parsec.Expr as E
 import Text.Parsec.String
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
-import qualified Data.List.NonEmpty as NonEmpty
 import Prelude (String, error)
 
 type PType = EAC.PType Unit.Ty

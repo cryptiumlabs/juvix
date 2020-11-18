@@ -35,4 +35,4 @@ contextToCore ::
   Either (FromFrontend.Error primTy primVal) [IR.RawGlobal primTy primVal]
 contextToCore ctx param =
   FromFrontend.execEnv ctx param $
-  Context.traverseContext1 FromFrontend.transformDef ctx
+    Context.traverseContext1 FromFrontend.transformDef ctx

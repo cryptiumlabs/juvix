@@ -490,10 +490,10 @@ data ExtFuns ext primTy primVal
 
 rejectExts :: ExtFuns ext primTy primVal
 rejectExts =
-  ExtFuns {
-    tExtFun = Left . UnsupportedTermExt,
-    eExtFun = Left . UnsupportedElimExt
-  }
+  ExtFuns
+    { tExtFun = Left . UnsupportedTermExt,
+      eExtFun = Left . UnsupportedElimExt
+    }
 
 -- annotations are discarded
 evalTermWith ::

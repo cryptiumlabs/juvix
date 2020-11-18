@@ -2,9 +2,9 @@ module Juvix.Core.Translate where
 
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Core.Utility
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars

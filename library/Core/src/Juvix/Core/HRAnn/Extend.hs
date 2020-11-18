@@ -3,8 +3,8 @@ module Juvix.Core.HRAnn.Extend where
 import qualified Extensible as Ext
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 data T
 

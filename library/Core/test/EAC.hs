@@ -16,13 +16,19 @@ parseTest3 = parseEal "!!(λ x : Forall. !-!-x λx : a -o b -o c. !-!-(x y))"
 
 exampleBracket :: RPTO Unit.Val
 exampleBracket =
-  RBang 0
-    ( RLam "y"
-        ( RBang 0
-            ( RLam "z"
-                ( RBang 1
+  RBang
+    0
+    ( RLam
+        "y"
+        ( RBang
+            0
+            ( RLam
+                "z"
+                ( RBang
+                    1
                     ( RApp
-                        ( RBang 0
+                        ( RBang
+                            0
                             ( RApp
                                 (RBang (- 1) (RVar "y"))
                                 (RBang (- 1) (RVar "y"))

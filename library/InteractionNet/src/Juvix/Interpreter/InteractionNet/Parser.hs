@@ -4,6 +4,7 @@
 module Juvix.Interpreter.InteractionNet.Parser where
 
 import Control.Monad.Fail (fail)
+import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Interpreter.InteractionNet.Default
 import Juvix.Interpreter.InteractionNet.Shared hiding (symbol)
 import Juvix.Interpreter.InteractionNet.Type
@@ -16,7 +17,6 @@ import Text.Parsec.String
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
 import Prelude (String)
-import qualified Data.List.NonEmpty as NonEmpty
 
 -- Types------------------------------------------------------------------------
 

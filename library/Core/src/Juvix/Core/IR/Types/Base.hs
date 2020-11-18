@@ -7,8 +7,8 @@ import Data.Kind (Constraint)
 import Extensible
 import Juvix.Library
 import Juvix.Library.HashMap
-import Juvix.Library.Usage
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Juvix.Library.Usage
 
 type Universe = Natural
 
@@ -137,6 +137,7 @@ data DatatypeWith ty ext primTy primVal
   deriving (Generic)
 
 type RawDatatype' = DatatypeWith Term'
+
 type Datatype' = DatatypeWith Value'
 
 deriving instance
@@ -165,6 +166,7 @@ data DataArgWith ty ext primTy primVal
   deriving (Generic)
 
 type RawDataArg' = DataArgWith Term'
+
 type DataArg' = DataArgWith Value'
 
 deriving instance
@@ -191,6 +193,7 @@ data DataConWith ty ext primTy primVal
   deriving (Generic)
 
 type RawDataCon' = DataConWith Term'
+
 type DataCon' = DataConWith Value'
 
 deriving instance
@@ -219,6 +222,7 @@ data FunctionWith ty ext primTy primVal
   deriving (Generic)
 
 type RawFunction' = FunctionWith Term'
+
 type Function' = FunctionWith Value'
 
 deriving instance
@@ -267,6 +271,7 @@ data GlobalWith ty ext primTy primVal
   deriving (Generic)
 
 type RawGlobal' = GlobalWith Term'
+
 type Global' = GlobalWith Value'
 
 deriving instance
@@ -290,5 +295,6 @@ type GlobalsWith ty ext primTy primVal =
 
 type RawGlobals' ext primTy primVal =
   GlobalsWith Term' ext primTy primVal
+
 type Globals' ext primTy primVal =
   GlobalsWith Value' ext primTy primVal

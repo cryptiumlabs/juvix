@@ -63,7 +63,8 @@ adtToMendler (Adt name s) = sumRec s 0
                     (lambdasBeforeIn . Lambda genI, app)
                 None ->
                   ( lambdasBeforeIn,
-                    Lambda "%fun"
+                    Lambda
+                      "%fun"
                       (Application termToBuild (Lambda "x" (Value "x")))
                   )
 
@@ -152,4 +153,5 @@ in' =
   Lambda "r"
     $ Lambda "f"
     $ Application
-      (Application (Value "f") (app foldM' (Value "f"))) (Value "r")
+      (Application (Value "f") (app foldM' (Value "f")))
+      (Value "r")

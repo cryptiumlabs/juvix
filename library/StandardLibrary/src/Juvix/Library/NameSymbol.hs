@@ -1,13 +1,14 @@
 module Juvix.Library.NameSymbol
   ( module Juvix.Library.NameSymbol,
-    fromString
-  ) where
+    fromString,
+  )
+where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import Data.String (IsString (..))
 import qualified Data.Text as Text
 import Juvix.Library
 import qualified Prelude (foldr1)
-import Data.String (IsString (..))
 
 type T = NonEmpty Symbol
 

@@ -1,12 +1,12 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
 
 module Juvix.Core.FromFrontend where
 
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
+import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
@@ -18,8 +18,6 @@ import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
-import qualified Generics.SYB as SYB
-
 
 data Error primTy primVal
   = -- features not yet implemented
@@ -79,16 +77,16 @@ data Error primTy primVal
   deriving (Show, Eq, Generic)
 
 data CoreSig' ext primTy primVal
-  = DataSig {
-      dataType :: !(IR.Term' ext primTy primVal),
-      -- | if declared as @type T a b = ...@, then the @T a b@ part
-      -- (needed for ml-style constructors)
-      dataHead :: !(Maybe (IR.Term' ext primTy primVal))
-    }
-  | ValSig {
-      valUsage :: !IR.GlobalUsage,
-      valType  :: !(IR.Term' ext primTy primVal)
-    }
+  = DataSig
+      { dataType :: !(IR.Term' ext primTy primVal),
+        -- | if declared as @type T a b = ...@, then the @T a b@ part
+        -- (needed for ml-style constructors)
+        dataHead :: !(Maybe (IR.Term' ext primTy primVal))
+      }
+  | ValSig
+      { valUsage :: !IR.GlobalUsage,
+        valType :: !(IR.Term' ext primTy primVal)
+      }
   deriving (Generic)
 
 deriving instance
@@ -189,15 +187,16 @@ execEnv ::
   Either (Error primTy primVal) a
 execEnv ctx param (Env env) =
   fst $ runIdentity $ runStateT (runExceptT env) initState
- where
-  initState = FFState {
-    frontend = ctx,
-    param,
-    coreSigs = mempty,
-    core = mempty,
-    patVars = mempty,
-    nextPatVar = 0
-  }
+  where
+    initState =
+      FFState
+        { frontend = ctx,
+          param,
+          coreSigs = mempty,
+          core = mempty,
+          patVars = mempty,
+          nextPatVar = 0
+        }
 
 throwFF :: Error primTy primVal -> Env primTy primVal a
 throwFF = throw @"fromFrontendError"
@@ -227,8 +226,8 @@ transformTermIR fe = do
 transformPatVar :: IR.Name -> Env primTy primVal IR.Name
 transformPatVar (IR.Global name) =
   gets @"patVars" $
-    maybe (IR.Global name) IR.Pattern .
-    HM.lookup name
+    maybe (IR.Global name) IR.Pattern
+      . HM.lookup name
 transformPatVar p = pure p
 
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
@@ -277,7 +276,7 @@ transformSimpleLet e@(FE.LetGroup name (clause :| []) body) = do
     toElim (FE.Let e)
       =<< foldr HR.Lam <$> transformTermHR cbody <*> traverse isVarArg args
   HR.Let Usage.Omega (NameSymbol.fromSymbol name) rhs <$> transformTermHR body
-  -- FIXME: usage in frontend let
+-- FIXME: usage in frontend let
 transformSimpleLet e = throwFF $ ExprUnimplemented (FE.Let e)
 
 transformSimpleLambda :: FE.Lambda -> Env primTy primVal (HR.Term primTy primVal)
@@ -362,19 +361,20 @@ transformTypeSig name (FE.Typ {typeArgs, typeForm}) = do
   baseTy <- case typeForm of
     FE.Arrowed {dataArrow} -> transformTermHR dataArrow
     FE.NonArrowed {} -> pure $ HR.Star 0 -- TODO metavar (level might not be 0)
-  pure $ DataSig {
-    dataType = foldr makeTPi baseTy typeArgs,
-    dataHead = case typeForm of
-      FE.Arrowed {} -> Nothing
-      FE.NonArrowed {} -> Just $ HR.Elim $ foldl HR.App hd args
-       where
-        hd = HR.Var name
-        args = HR.Elim . HR.Var . NameSymbol.fromSymbol <$> typeArgs
-  }
- where
-  makeTPi name res =
-    -- TODO metavars for the named args instead of defaulting to types
-    HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
+  pure $
+    DataSig
+      { dataType = foldr makeTPi baseTy typeArgs,
+        dataHead = case typeForm of
+          FE.Arrowed {} -> Nothing
+          FE.NonArrowed {} -> Just $ HR.Elim $ foldl HR.App hd args
+            where
+              hd = HR.Var name
+              args = HR.Elim . HR.Var . NameSymbol.fromSymbol <$> typeArgs
+      }
+  where
+    makeTPi name res =
+      -- TODO metavars for the named args instead of defaulting to types
+      HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformValSig ::
   FE.Final Ctx.Definition ->
@@ -441,32 +441,35 @@ transformType name dat@(FE.Typ {typeForm}) = do
       let qual = NameSymbol.modName name
       (args, level) <- splitDataType ty
       cons <- traverse (transformCon qual hd) $ toList cons
-      let dat' = IR.Datatype {
-              dataName = name,
-              dataArgs = args,
-              dataLevel = level,
-              dataCons = cons
-            }
+      let dat' =
+            IR.Datatype
+              { dataName = name,
+                dataArgs = args,
+                dataLevel = level,
+                dataCons = cons
+              }
       pure $ IR.GDatatype dat' : fmap IR.GDataCon cons
- where
-  body = case typeForm of
-    FE.Arrowed {dataAdt' = b} -> b
-    FE.NonArrowed {dataAdt = b} -> b
+  where
+    body = case typeForm of
+      FE.Arrowed {dataAdt' = b} -> b
+      FE.NonArrowed {dataAdt = b} -> b
 
 splitDataType ::
   HR.Term primTy primVal ->
   Env primTy primVal ([IR.RawDataArg primTy primVal], IR.Universe)
-splitDataType ty0 = go ty0 where
-  go (HR.Pi π x s t) = first (arg :) <$> splitDataType t
-    where
-      arg = IR.DataArg {
-          argName = x,
-          argUsage = π,
-          argType = hrToIR s,
-          argIsParam = False -- TODO parameter detection
-        }
-  go (HR.Star ℓ) = pure ([], ℓ)
-  go _ = throwFF $ InvalidDatatypeType ty0
+splitDataType ty0 = go ty0
+  where
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataType t
+      where
+        arg =
+          IR.DataArg
+            { argName = x,
+              argUsage = π,
+              argType = hrToIR s,
+              argIsParam = False -- TODO parameter detection
+            }
+    go (HR.Star ℓ) = pure ([], ℓ)
+    go _ = throwFF $ InvalidDatatypeType ty0
 
 transformCon ::
   (Data primTy, Data primVal) =>
@@ -476,7 +479,7 @@ transformCon ::
   Env primTy primVal (IR.RawDataCon primTy primVal)
 transformCon qual hd (FE.S name prod) =
   transformCon' (NameSymbol.qualify1 qual name) hd $
-  fromMaybe (FE.ADTLike []) prod
+    fromMaybe (FE.ADTLike []) prod
 
 transformCon' ::
   (Data primTy, Data primVal) =>
@@ -487,9 +490,9 @@ transformCon' ::
 transformCon' _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
 transformCon' name _ (FE.Arrow ty) = IR.DataCon name <$> transformTermIR ty
 transformCon' name Nothing k@(FE.ADTLike {}) =
-    throwFF $ InvalidConstructor name k
+  throwFF $ InvalidConstructor name k
 transformCon' name (Just hd) (FE.ADTLike tys) =
-    IR.DataCon name <$> foldrM makeArr hd tys
+  IR.DataCon name <$> foldrM makeArr hd tys
   where
     makeArr arg res = IR.Pi (Usage.SNat 1) <$> transformTermIR arg <*> pure res
 

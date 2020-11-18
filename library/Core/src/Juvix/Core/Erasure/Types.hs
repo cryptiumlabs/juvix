@@ -13,9 +13,9 @@ import Juvix.Core.Erased.Types as Type
     pattern Pi,
     pattern PrimTy,
     pattern Sig,
-    pattern UnitTy,
     pattern Star,
     pattern SymT,
+    pattern UnitTy,
   )
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased

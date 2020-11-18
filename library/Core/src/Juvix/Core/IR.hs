@@ -4,8 +4,9 @@ module Juvix.Core.IR
   )
 where
 
-import Juvix.Core.IR.Evaluator as IR
-  hiding (Error (..))
+import Juvix.Core.IR.Evaluator as IR hiding
+  ( Error (..),
+  )
 import Juvix.Core.IR.Typechecker as IR
   ( Annotation,
     Annotation' (..),

@@ -8,8 +8,8 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (bool, identity, log)
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Test.Tasty as T

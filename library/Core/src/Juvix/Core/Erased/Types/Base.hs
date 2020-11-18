@@ -5,8 +5,8 @@ module Juvix.Core.Erased.Types.Base where
 import Extensible
 import Juvix.Core.IR.Types (Universe)
 import Juvix.Library hiding (Type)
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
 extensible
