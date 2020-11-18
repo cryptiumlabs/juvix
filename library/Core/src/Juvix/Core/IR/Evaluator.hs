@@ -12,6 +12,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 class HasWeak a where
   --
@@ -592,8 +593,9 @@ instance HasWeak a => HasWeak (Maybe a)
 
 instance HasWeak a => HasWeak [a]
 
-instance HasWeak Symbol where
-  weakBy' _ _ x = x
+instance HasWeak Symbol where weakBy' _ _ x = x
+
+instance HasWeak NameSymbol.T where weakBy' _ _ x = x
 
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
@@ -674,6 +676,9 @@ instance
 instance HasSubst ext primTy primVal Symbol where
   substWith _ _ _ x = x
 
+instance HasSubst ext primTy primVal NameSymbol.T where
+  substWith _ _ _ x = x
+
 class GHasWeak f => GHasSubstV extV primTy primVal f where
   gsubstVWith ::
     Natural ->
@@ -750,6 +755,9 @@ instance
   HasSubstV ext primTy primVal [a]
 
 instance HasSubstV ext primTy primVal Symbol where
+  substVWith _ _ _ x = pure x
+
+instance HasSubstV ext primTy primVal NameSymbol.T where
   substVWith _ _ _ x = pure x
 
 class GHasWeak f => GHasPatSubst extT primTy primVal f where

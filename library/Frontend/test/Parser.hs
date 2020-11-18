@@ -144,16 +144,12 @@ many1FunctionsParser =
         <> "          print failed; \n"
         <> "          fail"
     )
-    [ ( AST.Inf
-          (AST.Name (NameSym.fromSymbol "a"))
-          (NameSym.fromSymbol "+")
-          (AST.Name (NameSym.fromSymbol "b"))
+    [ ( AST.Inf (AST.Name "a") "+" (AST.Name "b")
           |> AST.Infix
           |> AST.Parened
       )
-        :| [AST.Name (NameSym.fromSymbol "c")]
-        |> AST.App
-          (AST.Name (NameSym.fromSymbol "+"))
+        :| [AST.Name "c"]
+        |> AST.App (AST.Name "+")
         |> AST.Application
         |> AST.Body
         |> AST.Like
@@ -170,8 +166,7 @@ many1FunctionsParser =
                AST.Constant (AST.Number (AST.Integer' 3))
              ]
       )
-        |> AST.App
-          (AST.Name (NameSym.fromSymbol "foo"))
+        |> AST.App (AST.Name "foo")
         |> AST.Application
         |> AST.Body
         |> AST.Like "bah" []
@@ -183,7 +178,7 @@ many1FunctionsParser =
               AST.Integer' 5
                 |> AST.Number
                 |> AST.Constant
-                |> AST.Inf (AST.Name (NameSym.fromSymbol "bah")) (NameSym.fromSymbol "==")
+                |> AST.Inf (AST.Name "bah") "=="
                 |> AST.Infix,
             condLogicBody =
               AST.Constant (AST.Number (AST.Integer' 7))
@@ -191,7 +186,7 @@ many1FunctionsParser =
           :| [ AST.Integer' 11
                  |> AST.Number
                  |> AST.Constant
-                 |> AST.CondExpression (AST.Name (NameSym.fromSymbol "else"))
+                 |> AST.CondExpression (AST.Name "else")
              ]
       )
         |> AST.C
@@ -203,9 +198,7 @@ many1FunctionsParser =
 
       AST.Let''
         { letBindings =
-            AST.Name (NameSym.fromSymbol "nah")
-              |> AST.Body
-              |> AST.Like "check" [],
+            AST.Name "nah" |> AST.Body |> AST.Like "check" [],
           letBody =
             ( AST.MatchL
                 { matchLPattern =
@@ -219,19 +212,19 @@ many1FunctionsParser =
                        |> AST.MatchL (AST.MatchLogic (AST.MatchName "eleven") Nothing),
                      --
 
-                     (AST.Name (NameSym.fromSymbol "failed") :| [])
-                       |> AST.App (AST.Name (NameSym.fromSymbol "print"))
+                     (AST.Name "failed" :| [])
+                       |> AST.App (AST.Name "print")
                        |> AST.Application
                        |> AST.DoBody Nothing
-                       |> (:| [AST.DoBody Nothing (AST.Name (NameSym.fromSymbol "fail"))])
+                       |> (:| [AST.DoBody Nothing (AST.Name "fail")])
                        |> AST.Do''
                        |> AST.Do
-                       |> AST.OpenExpress (NameSym.fromSymbol "Fails")
+                       |> AST.OpenExpress "Fails"
                        |> AST.OpenExpr
                        |> AST.MatchL (AST.MatchLogic (AST.MatchName "f") Nothing)
                    ]
             )
-              |> AST.Match'' (AST.Name (NameSym.fromSymbol "check"))
+              |> AST.Match'' (AST.Name "check")
               |> AST.Match
         }
         |> AST.Let

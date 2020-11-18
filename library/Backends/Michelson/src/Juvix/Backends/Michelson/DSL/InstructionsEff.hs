@@ -889,7 +889,7 @@ applyLambdaFromStorage sym ty arg = do
   lam <- expandedToInst ty' =<< var sym
   arg <- instOuter arg
   ty <- typeToPrimType (eatType 1 ty)
-  let vstackElem = (VStack.varNone $ NameSymbol.fromString "_", ty)
+  let vstackElem = (VStack.varNone "_", ty)
   modify @"stack" (VStack.cons vstackElem . VStack.drop 2)
   pure [lam, arg, Instructions.exec]
 
