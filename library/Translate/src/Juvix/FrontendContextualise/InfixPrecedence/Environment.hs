@@ -42,7 +42,7 @@ type Queryable tag m =
 type Expression tag m =
   (Queryable tag m, HasState "new" (New Context.T) m, HasThrow "error" Error m)
 
-type MinimalEnv a b c m =
+type MinimalEnv (a :: Type) (b :: Type) (c :: Type) (m :: Type -> Type) =
   (HasState "env" (Context.T a b c) m, HasState "new" (New Context.T) m)
 
 -- the effect of the pass itself
@@ -63,7 +63,7 @@ type FinalContext = New Context.T
 data EnvDispatch = EnvDispatch
 
 -- | Used when going trying to transition one definition to the next level
-data SingleDispatch a b c = SingleDispatch
+data SingleDispatch (a :: Type) (b :: Type) (c :: Type) = SingleDispatch
 
 -- | @SingleEnv@ is used when we are trying to convert one function to the next step
 data SingleEnv term1 ty1 sumRep1

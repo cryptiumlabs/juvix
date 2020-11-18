@@ -68,7 +68,7 @@ type Expression tag m =
 data EnvDispatch = EnvDispatch deriving (Show)
 
 -- | Used when going trying to transition one definition to the next level
-data SingleDispatch a b c = SingleDispatch
+data SingleDispatch (a :: Type) (b :: Type) (c :: Type) = SingleDispatch
 
 -- | @SingleEnv@ is used when we are trying to convert one function to the next step
 data SingleEnv term1 ty1 sumRep1
