@@ -1,90 +1,26 @@
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 -- |
 -- - Serves as the context for lower level programs of the =Juvix=
 --   Programming Language
 -- - This is parameterized per phase which may store the type and
 --   term in slightly different ways
 module Juvix.Core.Common.Context
-  ( module Juvix.Core.Common.Context.Precedence,
+  ( module Juvix.Core.Common.Context.Types,
+    module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
+    recGroups,
   )
 where
 
-import Control.Lens hiding ((|>))
+import Juvix.Core.Common.Context.Types
 import Juvix.Core.Common.Context.Precedence
+import Juvix.Core.Common.Context.RecGroups (recGroups)
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
 import Prelude (error)
-
---------------------------------------------------------------------------------
--- Types
---------------------------------------------------------------------------------
-
-data Cont b
-  = T
-      { currentNameSpace :: NameSpace.T b,
-        currentName :: NameSymbol.T,
-        topLevelMap :: HashMap.T Symbol b
-      }
-  deriving (Show, Eq, Generic, Data)
-
-type T term ty sumRep = Cont (Definition term ty sumRep)
-
--- | From constitutes where the value we are looking up comes from
--- Does it come from the Current name space, or does it come from some
--- name space from the global map
-data From b
-  = Current (NameSpace.From b)
-  | Outside b
-  deriving (Show, Functor, Traversable, Foldable, Eq)
-
--- TODO :: make known records that are already turned into core
--- this will just emit the proper names we need, not any terms to translate
--- once we hit core, we can then populate it with the actual forms
-data Definition term ty sumRep
-  = Def
-      { definitionUsage :: Maybe Usage.T,
-        definitionMTy :: Maybe ty,
-        definitionTerm :: term,
-        precedence :: Precedence
-      }
-  | Record
-      { definitionContents :: NameSpace.T (Definition term ty sumRep),
-        -- Maybe as I'm not sure what to put here for now
-        definitionMTy :: Maybe ty
-      }
-  | TypeDeclar
-      { definitionRepr :: sumRep
-      }
-  | Unknown
-      { definitionMTy :: Maybe ty
-      }
-  | Information
-      { definitionInfo :: [Information]
-      }
-  | -- Signifies that this path is the current module, and that
-    -- we should search the currentNameSpace from here
-    CurrentNameSpace
-  deriving (Show, Generic, Eq, Data)
-
-data Information
-  = Prec Precedence
-  deriving (Show, Generic, Eq, Data)
-
--- not using lenses anymore but leaving this here anyway
-makeLensesWith camelCaseFields ''Definition
-
-data PathError
-  = VariableShared NameSymbol.T
-  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 -- In lieu of not being able to export namespaces
@@ -533,13 +469,6 @@ resolveName ctx (def, name) =
       pure topLevelName <> removeTopName name
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
-
--- | Sorts a context by dependency order. Each element of the output is
--- a mutually-recursive group, whose elements depend only on each other and
--- elements of previous groups. The first element of each pair is its
--- fully-qualified name.
-recGroups :: T a b c -> [NonEmpty (NameSymbol.T, Definition a b c)]
-recGroups = _ -- TODO
 
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
