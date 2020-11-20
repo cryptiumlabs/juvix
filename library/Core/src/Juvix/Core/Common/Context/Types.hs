@@ -1,16 +1,15 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Juvix.Core.Common.Context.Types
-where
+module Juvix.Core.Common.Context.Types where
 
 import Control.Lens hiding ((|>))
-import Juvix.Library
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.HashMap as HashMap
-import qualified Juvix.Library.Usage as Usage
-import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Core.Common.Context.Precedence
+import qualified Juvix.Core.Common.NameSpace as NameSpace
+import Juvix.Library
+import qualified Juvix.Library.HashMap as HashMap
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 data Cont b
   = T
@@ -21,6 +20,8 @@ data Cont b
   deriving (Show, Eq, Generic, Data)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
+
+type NameSpace term ty sumRep = NameSpace.T (Definition term ty sumRep)
 
 -- | From constitutes where the value we are looking up comes from
 -- Does it come from the Current name space, or does it come from some
@@ -69,5 +70,3 @@ makeLensesWith camelCaseFields ''Definition
 data PathError
   = VariableShared NameSymbol.T
   deriving (Show, Eq)
-
-

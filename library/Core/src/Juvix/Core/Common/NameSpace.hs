@@ -3,7 +3,7 @@
 
 module Juvix.Core.Common.NameSpace where
 
-import Juvix.Library hiding (modify)
+import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library.HashMap as HashMap
 
 -- TODO :: Put protected here
@@ -78,6 +78,15 @@ remove (Priv sym) = removePrivate sym
 toList :: T v -> List v
 toList T {public, private} =
   List {publicL = HashMap.toList public, privateL = HashMap.toList private}
+
+toList1 :: T v -> [(Symbol, From v)]
+toList1 ns =
+  let List {publicL, privateL} = toList ns
+   in (second Pub <$> publicL) <> (second Priv <$> privateL)
+
+toList1' :: T v -> [(Symbol, v)]
+toList1' ns =
+  let List {publicL, privateL} = toList ns in publicL <> privateL
 
 fromList :: List v -> T v
 fromList List {publicL, privateL} =

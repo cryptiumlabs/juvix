@@ -8,13 +8,15 @@ module Juvix.Core.Common.Context
     module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
+    Group,
+    Entry (..),
     recGroups,
   )
 where
 
-import Juvix.Core.Common.Context.Types
 import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.RecGroups (recGroups)
+import Juvix.Core.Common.Context.RecGroups
+import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify)
 import qualified Juvix.Library as Lib
@@ -476,7 +478,7 @@ resolveName ctx (def, name) =
 traverseContext ::
   (Applicative f, Monoid t) =>
   -- | process one recursive group
-  (NonEmpty (NameSymbol.T, Definition a b c) -> f t) ->
+  (Group a b c -> f t) ->
   T a b c ->
   f t
 traverseContext f = foldMapA f . recGroups
@@ -489,4 +491,6 @@ traverseContext1 ::
   (NameSymbol.T -> Definition a b c -> f t) ->
   T a b c ->
   f t
-traverseContext1 = traverseContext . foldMapA . uncurry
+traverseContext1 = traverseContext . foldMapA . onEntry
+  where
+    onEntry f (Entry {name, def}) = f name def

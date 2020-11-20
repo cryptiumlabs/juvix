@@ -24,6 +24,7 @@ dependencies:
 - containers
 - unordered-containers
 - lens
+- dlist
 ###############################
 # For eac solver
 ###############################
