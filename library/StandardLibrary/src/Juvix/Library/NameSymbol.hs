@@ -56,10 +56,10 @@ cons = NonEmpty.cons
 hd :: T -> Symbol
 hd = NonEmpty.head
 
-qualify :: [Symbol] -> T -> T
+qualify :: Foldable t => t Symbol -> T -> T
 qualify m n = foldr cons n m
 
-qualify1 :: [Symbol] -> Symbol -> T
+qualify1 :: Foldable t => t Symbol -> Symbol -> T
 qualify1 m b = qualify m (b :| [])
 
 split :: T -> ([Symbol], Symbol)

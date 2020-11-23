@@ -28,7 +28,6 @@ module Juvix.Core.Common.Context.RecGroups.Types
 where
 
 import qualified Data.DList as D
-import qualified Data.List.NonEmpty as NE
 import Juvix.Core.Common.Context.Types
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -146,4 +145,4 @@ qualify n = asks @"prefix" \pfx -> applyPrefix pfx n
 
 -- | Apply a prefix to a name.
 applyPrefix :: Prefix -> Symbol -> NameSymbol.T
-applyPrefix (P pfx) n = foldr' NE.cons [n] pfx
+applyPrefix (P pfx) = NameSymbol.qualify1 pfx
