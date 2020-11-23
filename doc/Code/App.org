@@ -17,6 +17,7 @@
   + [[Core]]
   + [[Erased]]
   + [[HR]]
+  + [[Types]]
   + [[Naturals]]
   + [[InteractionNet]]
   + [[Env]]
@@ -34,5 +35,6 @@
 - _Relies on_
   + [[Types]]
   + [[IR]]
+  + [[Types]]
   + [[Types]]
   + [[Library]]

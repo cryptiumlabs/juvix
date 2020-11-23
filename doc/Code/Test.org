@@ -32,6 +32,7 @@
   + [[Pipeline]]
   + [[Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 * examples
 ** demo

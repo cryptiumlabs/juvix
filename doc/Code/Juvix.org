@@ -49,10 +49,14 @@
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
+  + [[Application]]
   + [[ErasedAnn]]
+  + [[Prim]]
   + [[Erasure]]
+  + [[Types]]
   + [[HR]]
   + [[IR]]
+  + [[Types]]
   + [[Translate]]
   + [[Types]]
   + [[Library]]
