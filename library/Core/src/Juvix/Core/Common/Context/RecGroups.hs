@@ -7,10 +7,10 @@ module Juvix.Core.Common.Context.RecGroups
   )
 where
 
+import Juvix.Core.Common.Context.RecGroups.Types
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NS
 import Juvix.Library
-import Juvix.Core.Common.Context.RecGroups.Types
 
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and

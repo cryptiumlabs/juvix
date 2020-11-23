@@ -8,6 +8,7 @@ module Juvix.Core.Common.Context.RecGroups.Types
     Groups,
     Groups',
     Prefix,
+
     -- * Capabilities
     Env,
     PrefixReader,
@@ -16,6 +17,7 @@ module Juvix.Core.Common.Context.RecGroups.Types
     CurGroupWriter,
     run,
     run_,
+
     -- * Operations
     addDef,
     newGroup,
@@ -25,11 +27,11 @@ module Juvix.Core.Common.Context.RecGroups.Types
   )
 where
 
-import Juvix.Library
-import Juvix.Core.Common.Context.Types
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Data.DList as D
 import qualified Data.List.NonEmpty as NE
+import Juvix.Core.Common.Context.Types
+import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- | A definition identified by its fully-qualified name.
 data Entry term ty sumRep
