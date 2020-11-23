@@ -345,8 +345,7 @@ transformSig ::
   Env primTy primVal (Maybe (CoreSigHR primTy primVal))
 transformSig _ def@(Ctx.Def π msig _ _) =
   Just <$> transformValSig def π msig
-transformSig _ def@(Ctx.Record _ msig) =
-  Just <$> transformValSig def Nothing msig
+transformSig _ def@(Ctx.Record _ msig) = pure Nothing -- TODO
 transformSig x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig x typ
 transformSig _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
@@ -402,7 +401,7 @@ transformDef x (Ctx.Def _ _ def _) = do
             funClauses = clauses
           }
   pure [IR.GFunction f]
-transformDef _ d@(Ctx.Record _ _) = throwFF $ DefUnimplemented d
+transformDef _ d@(Ctx.Record _ _) = pure [] -- TODO
 transformDef x (Ctx.TypeDeclar dec) = transformType x dec
 transformDef _ (Ctx.Unknown _) = pure []
 transformDef _ Ctx.CurrentNameSpace = pure []
