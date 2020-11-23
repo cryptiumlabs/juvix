@@ -107,6 +107,7 @@ run act =
   where
     initState = S {prefix = P [], output = [], curGroup = []}
 
+-- | Add a definition to the current recursive group.
 addDef ::
   (PrefixReader m, CurGroupWriter term ty sumRep m) =>
   Symbol ->
@@ -116,23 +117,33 @@ addDef name def = do
   qname <- qualify name
   tell @"curGroup" [Entry qname def]
 
+-- | Finalise the current group and begin a new empty one.
 newGroup ::
   (OutputWriter term ty sumRep m, CurGroupState term ty sumRep m) => m ()
 newGroup = do
   addGroup =<< get @"curGroup"
   put @"curGroup" mempty
 
+-- | Add a group to the final output.
 addGroup :: OutputWriter term ty sumRep m => Group' term ty sumRep -> m ()
 addGroup grp =
   case nonEmpty $ toList grp of
     Just grp -> tell @"output" [grp]
     Nothing -> pure ()
 
+-- | Extend the current module prefix.
+--
+-- >>> 'fst' $ 'run' $ 'withPrefix' \"A\" $ 'qualify' \"X\"
+-- A.X
+-- >>> 'fst' $ 'run' $ 'withPrefix' \"A\" $ 'withPrefix' \"B\" $ 'qualify' \"X\"
+-- A.B.X
 withPrefix :: PrefixReader m => Symbol -> m a -> m a
 withPrefix n = local @"prefix" \(P pfx) -> P $ D.snoc pfx n
 
+-- | Qualify a name by the current module prefix.
 qualify :: PrefixReader m => Symbol -> m NameSymbol.T
 qualify n = asks @"prefix" \pfx -> applyPrefix pfx n
 
+-- | Apply a prefix to a name.
 applyPrefix :: Prefix -> Symbol -> NameSymbol.T
 applyPrefix (P pfx) n = foldr' NE.cons [n] pfx
