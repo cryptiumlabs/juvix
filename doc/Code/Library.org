@@ -23,16 +23,19 @@
   + [[ArithmeticCircuit/Parameterisation]]
   + [[ErasedAnn]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ******** Environment <<Compilation/Environment>>
 - _Relies on_
   + [[Memory]]
   + [[ArithmeticCircuit/Compilation/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ******** Memory
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ******** Types <<ArithmeticCircuit/Compilation/Types>>
 Provides the various types needed for the arithmetic circuit
 backend
@@ -378,11 +381,11 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[Michelson/Compilation/Types]]
   + [[Michelson/Contract]]
-  + [[DSL/Environment]]
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
   + [[Prim]]
+  + [[ErasedAnn/Types]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
@@ -401,8 +404,12 @@ This module provides a default contract environment
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
+  + [[Application]]
   + [[ErasedAnn/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
 ******** VirtualStack
 - Serves as a virtual stack over Michelson
 - This stack has a few properties
@@ -422,6 +429,7 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
   + [[Usage]]
 ******* DSL
 ******** Contract <<DSL/Contract>>
@@ -432,6 +440,7 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ******** Instructions
 - This module serves as a lower layer DSL that is just a binding
@@ -460,6 +469,7 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[Library]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ******** Interpret
 - _Relies on_
@@ -475,6 +485,7 @@ This module provides a default contract environment
   + [[Untyped]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 *** test
 **** Main <<Michelson/test/Main>>
@@ -491,6 +502,7 @@ This module provides a default contract environment
   + [[Optimisation]]
   + [[ErasedAnn]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 **** VStack
 - _Relies on_
@@ -503,8 +515,14 @@ This module provides a default contract environment
 ** src
 *** Juvix
 **** Core
+***** Application
+Types to support partial application and polymorphic primitives.
+- _Relies on_
+  + [[Library]]
+  + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
+  + [[Application]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -514,6 +532,7 @@ This module provides a default contract environment
   + [[IR]]
   + [[Utility]]
   + [[Library]]
+  + [[NameSymbol]]
 ***** Types <<Core/Types>>
 - _Relies on_
   + [[Core/EAC/Types]]
@@ -527,6 +546,7 @@ This module provides a default contract environment
 ***** Utility
 - _Relies on_
   + [[Library]]
+  + [[NameSymbol]]
 ***** Common
 ****** NameSpace
 - _Relies on_
@@ -539,15 +559,36 @@ This module provides a default contract environment
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
+  + [[RecGroups]]
+  + [[Context/Types]]
   + [[NameSpace]]
   + [[Library]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-  + [[Usage]]
 ******* Precedence
 - _Relies on_
   + [[Library]]
+******* Types <<Context/Types>>
+- _Relies on_
+  + [[Precedence]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Usage]]
+******* RecGroups
+Calculate mutually-recursive groups of definitions.
+- _Relies on_
+  + [[RecGroups/Types]]
+  + [[Context/Types]]
+  + [[NameSpace]]
+  + [[Library]]
+******** Types <<RecGroups/Types>>
+- _Relies on_
+  + [[Context/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
 ***** EAC <<Core/EAC>>
 - This directory contains the implementation of =Eal= and the inferred
   bracket checker on =Eal=
@@ -583,6 +624,7 @@ This module provides a default contract environment
   + [[Core/EAC/Types]]
   + [[Unit]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Solve
 - A Z3 solver for the generated =Eal= Constraints
 - Can generate multiple constraints that will be used along side the
@@ -596,6 +638,7 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
@@ -606,6 +649,7 @@ This module provides a default contract environment
   + [[Erased/Types]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ****** Extend <<Erased/Extend>>
 - _Relies on_
   + [[HRAnn/Extend]]
@@ -614,19 +658,19 @@ This module provides a default contract environment
 - _Relies on_
   + [[Erased/Types]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Types <<Erased/Types>>
 - _Relies on_
-  + [[Erased/Extend]]
   + [[Erased/Types/Base]]
-  + [[IR/Types/Base]]
+  + [[Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
-  + [[Usage]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
   + [[IR/Types]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
   + [[Usage]]
 ***** ErasedAnn
 - _Relies on_
@@ -637,8 +681,8 @@ This module provides a default contract environment
   + [[Erased]]
   + [[ErasedAnn/Types]]
   + [[Erasure/Types]]
-  + [[Core/Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ****** Erasure <<ErasedAnn/Erasure>>
 - _Relies on_
@@ -647,20 +691,17 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[Library]]
 ****** Prim
-- This module represents the type which will be sent to the
-  parameterisation
-- the =Take= type is what a parameterisation will take coming in
-- the =Return= type is what will be handed back to Core to evaluate
-  and decide on the next steps. If this is a =Left= type checking
-  has failed, if it's a =Right= then type checking will continue
 - _Relies on_
+  + [[Application]]
   + [[ErasedAnn/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
 ****** Types <<ErasedAnn/Types>>
 - _Relies on_
   + [[IR/Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ***** Erasure <<Core/Erasure>>
 - _Relies on_
@@ -668,12 +709,12 @@ This module provides a default contract environment
   + [[Erasure/Types]]
 ****** Algorithm
 - _Relies on_
-  + [[Erased/Types]]
   + [[Erasure/Types]]
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ****** Types <<Erasure/Types>>
 - _Relies on_
@@ -683,8 +724,9 @@ This module provides a default contract environment
   + [[IR/Typechecker]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ***** HR
 - _Relies on_
@@ -694,11 +736,13 @@ This module provides a default contract environment
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Parser <<HR/Parser>>
 - _Relies on_
   + [[HR/Types]]
   + [[Core/Types]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ****** Subst
 - Runs a substitution algorithm over core
@@ -726,6 +770,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ****** Types <<HRAnn/Types>>
 - _Relies on_
@@ -738,16 +783,30 @@ This module provides a default contract environment
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
-****** Evaluator <<IR/Evaluator>>
-This includes the evaluators (evalTerm and evalElim),
-the value application function (vapp) and
-the substitution functions (substTerm and substElim).
+****** CheckTerm
+This file contains the functions and aux functions to typecheck terms.
+@typeTerm@ and @typeElim@ are called by functions for typechecking
+datatype and function declarations.
 - _Relies on_
+  + [[Application]]
+  + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Usage]]
+****** Evaluator <<IR/Evaluator>>
+This includes the evaluators (evalTerm and evalElim),
+the value application function (vapp) and
+the substitution functions (substTerm and substElim).
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[NameSymbol]]
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
@@ -755,7 +814,14 @@ Transformations between different extensions.
   + [[IR/Types/Base]]
   + [[Library]]
 ****** Typechecker <<IR/Typechecker>>
+This file contains the functions and aux functions to typecheck
+datatype and function declarations.
+Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
+Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
+Typechecked declarations are added to the signature.
 - _Relies on_
+  + [[Application]]
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
@@ -775,6 +841,8 @@ Transformations between different extensions.
   + [[Usage]]
 ******* Types <<Typechecker/Types>>
 - _Relies on_
+  + [[Application]]
+  + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -786,10 +854,12 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
+  + [[Usage]]
 ******* Base <<IR/Types/Base>>
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
   + [[Usage]]
 ***** IRAnn
 - _Relies on_
@@ -808,12 +878,15 @@ Quantitative type implementation inspired by
 ***** Parameterisations
 ****** All
 - _Relies on_
+  + [[Application]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
   + [[Library]]
 ****** Naturals
 - _Relies on_
+  + [[Application]]
+  + [[Typechecker/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ****** Unit
@@ -844,6 +917,7 @@ Quantitative type implementation inspired by
   + [[Usage]]
 *** Erasure <<test/Erasure>>
 - _Relies on_
+  + [[Application]]
   + [[Erased]]
   + [[Core/Erasure]]
   + [[IR]]
@@ -867,6 +941,7 @@ Quantitative type implementation inspired by
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[IR/Evaluator]]
   + [[IR/Typechecker]]
   + [[All]]
   + [[Naturals]]
@@ -980,6 +1055,7 @@ Can be added to via core translation
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ****** NodeInterface
 - Serves as a generic lens layer for various Node types in interaction nets
   1. Primary port details
@@ -999,6 +1075,7 @@ Can be added to via core translation
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ****** Shared <<InteractionNet/Shared>>
 - _Relies on_
   + [[Library]]
@@ -1014,6 +1091,7 @@ Can be added to via core translation
   + [[Type]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 ****** Type
 - Serves as the AST for all operations on [[Nets/Default]]
 - Resembles the =BOHM= syntax/operation set, however it alters the
@@ -1031,6 +1109,7 @@ Can be added to via core translation
 - _Relies on_
   + [[InteractionNet/Shared]]
   + [[Library]]
+  + [[NameSymbol]]
 ****** Backends
 ******* Env <<Backends/Env>>
 - Env serves as the environment for running the back-ends
@@ -1091,6 +1170,7 @@ Can be added to via core translation
   + [[NodeInterface]]
   + [[InteractionNet/Shared]]
   + [[Library]]
+  + [[NameSymbol]]
 ** test
 *** Spec
 *** Nets
