@@ -118,3 +118,47 @@ usageToGlobal :: Usage.T -> Maybe GlobalUsage
 usageToGlobal Usage.Omega = Just GOmega
 usageToGlobal (Usage.SNat 0) = Just GZero
 usageToGlobal _ = Nothing
+
+type Signature = Map.Map Name SigDef
+
+data SigDef -- A signature is a mapping of constants to its info
+  -- function constant to its type, clauses, whether it's type checked
+  = FunSig Value [Clause] Bool
+  | ConSig Value -- constructor constant to its type
+      -- data type constant to # parameters, positivity of parameters, sized, type
+  | DataSig Int [Pos] Sized Value
+  deriving (Show)
+
+data Pos -- positivity
+  = SPos
+  | NSPos
+  deriving (Eq, Show)
+
+data Sized -- distinguish between sized and not sized data type.
+  = Sized
+  | NotSized
+  deriving (Eq, Show)
+
+-- declarations are either (inductive) data types or functions
+data Declaration
+  = -- a data declaration has a name,
+    -- the positivity of its parameters,
+    -- the telescope for its parameters,
+    -- the expression,
+    -- the list of constructors.
+    DataDecl Name Sized [Pos] Telescope Expr [TypeSig]
+  | -- a function declaration has a name, and an expression,
+    -- and a list of clauses.
+    FunDecl [(TypeSig, [Clause])]
+  deriving (Eq, Show)
+
+data TypeSig
+  = TypeSig Name Expr
+  deriving (Eq, Show)
+
+-- A telescope is a sequence of types where
+-- later types may depend on elements of previous types.
+-- Used for parameters of data type declarations.
+type Telescope = [TBind]
+
+type TBind = (Name, Expr)

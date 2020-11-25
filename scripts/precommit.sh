@@ -7,6 +7,7 @@ make format
 # disabled for now
 # make lint
 
-make org-gen
+# disabled for now due to a bug
+# make org-gen
 
 exit 0
