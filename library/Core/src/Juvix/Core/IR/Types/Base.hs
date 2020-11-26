@@ -4,6 +4,7 @@
 module Juvix.Core.IR.Types.Base where
 
 import Data.Kind (Constraint)
+import qualified Data.Map as Map
 import Extensible
 import Juvix.Library
 import Juvix.Library.HashMap
@@ -257,7 +258,7 @@ data FunClause' ext primTy primVal
         --   absurd one.
         clauseBody :: Maybe (Term' ext primTy primVal),
         -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
-        clauseType :: Maybe (Value ext primTy primVal),
+        clauseType :: Maybe (Value' ext primTy primVal),
         -- | Clause has been labelled as CATCHALL.
         -- , clauseRecursive   :: Maybe Bool TODO add this when termination checking
         -- ^ @clauseBody@ contains recursive calls; computed by termination checker.
@@ -324,3 +325,47 @@ type RawGlobals' ext primTy primVal =
 
 type Globals' ext primTy primVal =
   GlobalsWith Value' ext primTy primVal
+
+type Signature = Map.Map Name SigDef
+
+data SigDef -- A signature is a mapping of constants to its info
+  -- function constant to its type, clauses, whether it's type checked
+  = FunSig Value [NonEmpty (FunClause' ext primTy primVal)] Bool
+  | ConSig Value -- constructor constant to its type
+      -- data type constant to # parameters, positivity of parameters, sized, type
+  | DataSig Int [Pos] Sized Value
+  deriving (Show)
+
+data Pos -- positivity
+  = SPos
+  | NSPos
+  deriving (Eq, Show)
+
+data Sized -- distinguish between sized and not sized data type.
+  = Sized
+  | NotSized
+  deriving (Eq, Show)
+
+-- declarations are either (inductive) data types or functions
+data Declaration
+  = -- a data declaration has a name,
+    -- the positivity of its parameters,
+    -- the telescope for its parameters,
+    -- the expression,
+    -- the list of constructors.
+    DataDecl Name Sized [Pos] Telescope (Term' ext primTy primVal) [TypeSig]
+  | -- a function declaration has a name, and an expression,
+    -- and a list of clauses.
+    FunDecl [(TypeSig, [FunClause' ext primTy primVal])]
+  deriving (Eq, Show)
+
+data TypeSig
+  = TypeSig Name (Term' ext primTy primVal)
+  deriving (Eq, Show)
+
+-- A telescope is a sequence of types where
+-- later types may depend on elements of previous types.
+-- Used for parameters of data type declarations.
+type Telescope = [TBind]
+
+type TBind = (Name, Term' ext primTy primVal)
