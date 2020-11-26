@@ -242,7 +242,31 @@ deriving instance
   NFData (FunctionWith ty ext primTy primVal)
 
 data FunClause' ext primTy primVal
-  = FunClause [Pattern' ext primTy primVal] (Term' ext primTy primVal)
+  = FunClause 
+      { clauseTel       :: Telescope
+      -- ^ @Δ@: The types of the pattern variables in dependency order.
+      -- , namedClausePats :: NAPs (Using Name instead atm)
+      -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
+      , namedClausePats :: [Pattern' ext primTy primVal] --TODO [SplitPattern]
+      , clauseBody      :: Maybe (Term' ext primTy primVal)
+      -- ^ @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
+      --   absurd one.
+      , clauseType      :: Maybe (Value ext primTy primVal)
+      -- ^ @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
+      , clauseCatchall  :: Bool
+      -- ^ Clause has been labelled as CATCHALL.
+      -- , clauseRecursive   :: Maybe Bool TODO add this when termination checking
+      -- ^ @clauseBody@ contains recursive calls; computed by termination checker.
+      --   @Nothing@ means that termination checker has not run yet,
+      --   or that @clauseBody@ contains meta-variables;
+      --   these could be filled with recursive calls later!
+      --   @Just False@ means definitely no recursive call.
+      --   @Just True@ means definitely a recursive call.
+      , clauseUnreachable :: Maybe Bool}
+      -- ^ Clause has been labelled as unreachable by the coverage checker.
+      --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
+      --   @Just False@ means clause is not unreachable.
+      --   @Just True@ means clause is unreachable.
   deriving (Generic)
 
 deriving instance
