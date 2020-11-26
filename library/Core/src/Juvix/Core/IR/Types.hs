@@ -30,10 +30,10 @@ module Juvix.Core.IR.Types
   )
 where
 
+import qualified Data.Map as Map
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage hiding (Pos)
-import qualified Data.Map            as Map
 
 data NoExt deriving (Data)
 
