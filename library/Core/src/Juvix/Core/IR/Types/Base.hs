@@ -6,7 +6,7 @@ module Juvix.Core.IR.Types.Base where
 import Data.Kind (Constraint)
 import qualified Data.Map as Map
 import Extensible
-import Juvix.Library
+import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage
@@ -64,7 +64,7 @@ extensible
         Elim (Elim primTy primVal)
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | inferable terms
+    -- inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
         Bound BoundVar
@@ -76,7 +76,7 @@ extensible
         Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | Values/types
+    -- Values/types
     data Value primTy primVal
       = VStar Universe
       | VPrimTy primTy
@@ -90,7 +90,7 @@ extensible
       | VPrim primVal
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | A neutral term is either a variable or an application of a neutral term
+    -- A neutral term is either a variable or an application of a neutral term
     -- to a value
     data Neutral primTy primVal
       = NBound BoundVar
@@ -251,7 +251,7 @@ data FunClause' ext primTy primVal
       { -- | @Δ@: The types of the pattern variables in dependency order.
         -- , namedClausePats :: NAPs (Using Name instead atm)
         -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-        clauseTel :: Telescope,
+        clauseTel :: Telescope ext primTy primVal,
         namedClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
 
         -- | @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
@@ -326,15 +326,17 @@ type RawGlobals' ext primTy primVal =
 type Globals' ext primTy primVal =
   GlobalsWith Value' ext primTy primVal
 
-type Signature = Map.Map Name SigDef
+type Signature ext primTy primVal = Map.Map Name (SigDef ext primTy primVal)
 
-data SigDef -- A signature is a mapping of constants to its info
-  -- function constant to its type, clauses, whether it's type checked
-  = FunSig Value [NonEmpty (FunClause' ext primTy primVal)] Bool
-  | ConSig Value -- constructor constant to its type
-      -- data type constant to # parameters, positivity of parameters, sized, type
-  | DataSig Int [Pos] Sized Value
-  deriving (Show)
+-- A signature is a mapping of constants to its info
+data SigDef ext primTy primVal
+  = -- function constant to its type, clauses, whether it's type checked
+    FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ext primTy primVal)] Bool
+  | ConSig (Value' ext primTy primVal) -- constructor constant to its type
+        -- data type constant to # parameters, positivity of parameters, sized, type
+  | DataSig Int [Pos] Sized (Value' ext primTy primVal)
+
+-- deriving (Show)
 
 data Pos -- positivity
   = SPos
@@ -347,25 +349,27 @@ data Sized -- distinguish between sized and not sized data type.
   deriving (Eq, Show)
 
 -- declarations are either (inductive) data types or functions
-data Declaration
+data Declaration ext primTy primVal
   = -- a data declaration has a name,
     -- the positivity of its parameters,
     -- the telescope for its parameters,
     -- the expression,
     -- the list of constructors.
-    DataDecl Name Sized [Pos] Telescope (Term' ext primTy primVal) [TypeSig]
+    DataDecl Name Sized [Pos] (Telescope ext primTy primVal) (Term' ext primTy primVal) [TypeSig ext primTy primVal]
   | -- a function declaration has a name, and an expression,
     -- and a list of clauses.
-    FunDecl [(TypeSig, [FunClause' ext primTy primVal])]
-  deriving (Eq, Show)
+    FunDecl [(TypeSig ext primTy primVal, [FunClause' ext primTy primVal])]
 
-data TypeSig
+-- deriving (Eq, Show)
+
+data TypeSig ext primTy primVal
   = TypeSig Name (Term' ext primTy primVal)
-  deriving (Eq, Show)
+
+-- deriving (Eq, Show)
 
 -- A telescope is a sequence of types where
 -- later types may depend on elements of previous types.
 -- Used for parameters of data type declarations.
-type Telescope = [TBind]
+type Telescope ext primTy primVal = [TBind ext primTy primVal]
 
-type TBind = (Name, Term' ext primTy primVal)
+type TBind ext primTy primVal = (Name, Term' ext primTy primVal)

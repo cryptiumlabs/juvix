@@ -32,7 +32,7 @@ where
 
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
-import qualified Juvix.Library.Usage as Usage hiding (Pos)
+import qualified Juvix.Library.Usage as Usage
 
 data NoExt deriving (Data)
 
