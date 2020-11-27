@@ -1,12 +1,9 @@
 -- | Shared between Types and Sum
 module Juvix.Backends.LLVM.Codegen.Shared where
 
-import Juvix.Library hiding (Type)
+import           Juvix.Library         hiding (Type)
 import qualified Juvix.Library.HashMap as Map
-import LLVM.AST
-import qualified LLVM.AST as AST ()
-import qualified LLVM.AST.Constant as C ()
-import LLVM.AST.Global as Global ()
+import           LLVM.AST
 
 type SymbolTable = Map.T Symbol Operand
 
@@ -14,8 +11,8 @@ type TypeTable = Map.T Symbol Type
 
 data SumInfo
   = S
-      { sum' :: Symbol,
-        offset :: Int,
+      { sum'     :: Symbol,
+        offset   :: Int,
         tagSize' :: Word32
       }
   deriving (Show, Eq)
