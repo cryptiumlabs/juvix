@@ -335,8 +335,7 @@ data SigDef ext primTy primVal
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type
         -- data type constant to # parameters, positivity of parameters, sized, type
   | DataSig Int [Pos] Sized (Value' ext primTy primVal)
-
--- deriving (Show)
+  deriving (Show)
 
 data Pos -- positivity
   = SPos
@@ -359,13 +358,11 @@ data Declaration ext primTy primVal
   | -- a function declaration has a name, and an expression,
     -- and a list of clauses.
     FunDecl [(TypeSig ext primTy primVal, [FunClause' ext primTy primVal])]
-
--- deriving (Eq, Show)
+  deriving (Eq, Show)
 
 data TypeSig ext primTy primVal
   = TypeSig Name (Term' ext primTy primVal)
-
--- deriving (Eq, Show)
+  deriving (Eq, Show)
 
 -- A telescope is a sequence of types where
 -- later types may depend on elements of previous types.
