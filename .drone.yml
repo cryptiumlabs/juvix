@@ -25,11 +25,6 @@ steps:
   commands:
   - make setup
 
-- name: build-binaries
-  image: cryptiumlabs/juvix-ci-2
-  commands:
-  - make build
-
 - name: test-suite
   image: cryptiumlabs/juvix-ci-2
   commands:

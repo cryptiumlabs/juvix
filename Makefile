@@ -37,7 +37,7 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
-	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --copy-bins --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser:
 	ls test/examples/demo | xargs -t -n 1 -I % juvix parse test/examples/demo/%
