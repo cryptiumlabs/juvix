@@ -20,11 +20,6 @@ steps:
       - ./.stack-work
       - ./.stack
 
-- name: setup-dependencies
-  image: cryptiumlabs/juvix-ci-2
-  commands:
-  - make setup
-
 - name: test-suite
   image: cryptiumlabs/juvix-ci-2
   commands:
