@@ -40,13 +40,13 @@ test:
 	stack test --copy-bins --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser: build
-	ls test/examples/demo | xargs -t -n 1 -I % juvix parse test/examples/demo/%
+	ls test/examples/demo | xargs -t -n 1 -I % stack exec juvix parse test/examples/demo/%
 
 test-typecheck: build
-	ls test/examples/demo | xargs -t -n 1 -I % juvix typecheck test/examples/demo/%
+	ls test/examples/demo | xargs -t -n 1 -I % stack exec juvix typecheck test/examples/demo/%
 
 test-compile: build
-	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
+	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % stack exec juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
