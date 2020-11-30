@@ -11,6 +11,7 @@
 # Haskell temporary
 .ghci
 .stack-work/
+.stack/
 */.stack-work/
 *.hie
 *.cabal

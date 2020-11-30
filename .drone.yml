@@ -56,21 +56,6 @@ steps:
   commands:
   - sh ./scripts/check-org-gen.sh
 
-- name: test-parser
-  image: cryptiumlabs/juvix-ci-2
-  commands:
-  - make test-parser
-
-- name: test-typecheck
-  image: cryptiumlabs/juvix-ci-2
-  commands:
-  - make test-typecheck
-
-- name: test-compile
-  image: cryptiumlabs/juvix-ci-2
-  commands:
-  - make test-compile
-
 volumes:
   - name: cache
     host: 
