@@ -30,8 +30,8 @@ dependencies:
   - core
   - translate
   - michelson
-  - interaction-net
-  - arithmetic-circuit
+  # - interaction-net
+  # - arithmetic-circuit
   ###########################
   # Dependency for OS
   ###########################
