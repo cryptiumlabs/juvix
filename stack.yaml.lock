@@ -5,20 +5,6 @@
 
 packages:
 - completed:
-    hackage: llvm-hs-9.0.1@sha256:ee6ec2eb8cba4daf2a43586388a87dbfd6a2ec6d81d1f9965896ac187acad286,8700
-    pantry-tree:
-      size: 13599
-      sha256: 537616dec1351bd9f7905182f82f132359cf3058ebbb059c03b4edcef04b2689
-  original:
-    hackage: llvm-hs-9.0.1
-- completed:
-    hackage: llvm-hs-pure-9.0.0@sha256:134779f40086a366279f678e670b610d7a7618b28dd43f65894078fd20e04629,2945
-    pantry-tree:
-      size: 2600
-      sha256: f1a83aa959b69b72342997fc4fdc352086bc3b9f306cfb6a4c8bbc850d36b4fb
-  original:
-    hackage: llvm-hs-pure-9.0.0
-- completed:
     hackage: constraints-0.11@sha256:44f80a313d5d4fcfb3c18eb6625dd3db4bb845d5ca8d3b1f62125a4b7241e590,2186
     pantry-tree:
       size: 867
@@ -74,13 +60,6 @@ packages:
       sha256: a4b88a62d7713697bf45af6997ab1f0383a9425eacf8611cb420c135c0b30baf
   original:
     hackage: ghci-pretty-0.0.2@sha256:5f6c2a9f1d391aa0ad3c3d0bfe1f39decfe94be50fbf5a5279e2dbc18f8b4c51,1409
-- completed:
-    hackage: llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
-    pantry-tree:
-      size: 4741
-      sha256: dbad27efec25efc9bb739682f0770953086119bdb85b84c09ce103ddde1b5343
-  original:
-    hackage: llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
 - completed:
     hackage: mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
     pantry-tree:
@@ -326,27 +305,6 @@ packages:
       sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
   original:
     url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-- completed:
-    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
-    pantry-tree:
-      size: 1229
-      sha256: 99ee4e8a10529dbd49ccb0f88a1b9b452c6b6a60971360983647ac1287d69ee9
-  original:
-    hackage: arithmetic-circuits-0.2.0@sha256:8c1d1b2aa22cb1df41c810d4303ef44db172de454cd9be0e2647c9345ddaa48a,5774
-- completed:
-    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
-    pantry-tree:
-      size: 472
-      sha256: 8bc255dfd2276220edb94f6c3139b204e66fe85d612e24f80ff63a757da64cc4
-  original:
-    hackage: galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
-- completed:
-    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
-    pantry-tree:
-      size: 2191
-      sha256: 4337652dac76bfaea64e7d5498293df616055c89f67c18cdd0f182be98c9a355
-  original:
-    hackage: bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 - completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
