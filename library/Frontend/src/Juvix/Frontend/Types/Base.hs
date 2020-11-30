@@ -65,7 +65,7 @@ extensible
           }
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
-    -- | 'Data' is the data declaration in the Juvix language
+    -- 'Data' is the data declaration in the Juvix language
     data Data
       = Arrowed
           { dataArrow :: Expression,
@@ -171,13 +171,13 @@ extensible
 
     -- was a newtype
 
-    -- | 'Function' is a normal signature with a name arguments and a body
+    -- 'Function' is a normal signature with a name arguments and a body
     -- that may or may not have a guard before it
     data Function
       = Func (FunctionLike Expression)
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
-    -- | 'Module' is like function, however it allows multiple top levels
+    -- 'Module' is like function, however it allows multiple top levels
     data Module
       = Mod (FunctionLike (NonEmpty TopLevel))
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
@@ -189,7 +189,7 @@ extensible
           }
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
-    -- | 'FunctionLike' is the generic version for both modules and functions
+    -- 'FunctionLike' is the generic version for both modules and functions
     data FunctionLike a
       = Like
           { functionLikedName :: Symbol,
@@ -198,7 +198,7 @@ extensible
           }
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
-    -- | 'GuardBody' determines if a form is a guard or a body
+    -- 'GuardBody' determines if a form is a guard or a body
     data GuardBody a
       = Body a
       | Guard (Cond a)
