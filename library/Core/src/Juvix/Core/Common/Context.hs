@@ -491,6 +491,15 @@ traverseContext ::
   f t
 traverseContext f = foldMapA f . recGroups
 
+-- | As 'traverseContext' but ignoring the return value.
+traverseContext_ ::
+  Applicative f =>
+  -- | process one recursive group
+  (Group a b c -> f z) ->
+  T a b c ->
+  f ()
+traverseContext_ f = traverse_ f . recGroups
+
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
@@ -500,8 +509,20 @@ traverseContext1 ::
   T a b c ->
   f t
 traverseContext1 = traverseContext . foldMapA . onEntry
-  where
-    onEntry f Entry {name, def} = f name def
+
+-- | Same as 'traverseContext1', but ignoring the return value.
+traverseContext1_ ::
+  Applicative f =>
+  -- | process one definition
+  (NameSymbol.T -> Definition a b c -> f z) ->
+  T a b c ->
+  f ()
+traverseContext1_ = traverseContext_ . traverse_ . onEntry
+
+onEntry ::
+  (NameSymbol.T -> Definition term ty sumRep -> t) ->
+  Entry term ty sumRep -> t
+onEntry f (Entry {name, def}) = f name def
 
 foldMapCtx ::
   (Applicative f, Monoid a) =>

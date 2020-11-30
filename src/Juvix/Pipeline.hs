@@ -37,8 +37,8 @@ contextToCore ::
   Either (FromFrontend.Error primTy primVal) (IR.RawGlobals primTy primVal)
 contextToCore ctx param =
   FromFrontend.execEnv ctx param do
-    void $ Context.traverseContext1 addSig ctx
-    void $ Context.traverseContext1 addDef ctx
+    Context.traverseContext1_ addSig ctx
+    Context.traverseContext1_ addDef ctx
     get @"core"
  where
   addSig x feDef = do
@@ -56,4 +56,4 @@ coreGlobalName = \case
   IR.GDatatype (IR.Datatype {dataName}) -> dataName
   IR.GDataCon  (IR.DataCon  {conName})  -> conName
   IR.GFunction (IR.Function {funName})  -> funName
-  IR.GAbstract x _ _                    -> x
+  IR.GAbstract (IR.Abstract {absName})  -> absName
