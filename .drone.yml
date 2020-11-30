@@ -1,0 +1,49 @@
+kind: pipeline
+type: docker
+name: greeting
+
+steps:
+- name: restore-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    restore: true
+    mount:
+      - ./.stack-work
+
+- name: setup-dependencies
+  image: cryptiumlabs/juvix-ci-2
+  commands:
+  - make setup
+
+- name: test-suite
+  image: cryptiumlabs/juvix-ci-2
+  commands:
+  - make test
+
+- name: check-formatting
+  image: cryptiumlabs/juvix-ci-2
+  commands:
+  - sh ./scripts/check-formatting.sh
+
+- name: check-org-gen
+  image: cryptiumlabs/juvix-ci-2
+  commands:
+  - sh ./scripts/check-org-gen.sh
+
+- name: rebuild-cache
+  image: drillster/drone-volume-cache
+  volumes:
+  - name: cache
+    path: /cache
+  settings:
+    rebuild: true
+    mount:
+      - ./.stack-work
+
+volumes:
+  - name: cache
+    host: 
+      path: /tmp/cache
