@@ -1,6 +1,6 @@
 kind: pipeline
 type: docker
-name: juvix-ci
+name: juvix-ci-full
 
 workspace:
   path: /drone/workspace
