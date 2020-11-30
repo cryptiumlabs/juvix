@@ -1,0 +1,11 @@
+open Prelude
+open Prelude.Michelson
+
+sig storage : ty
+let storage = nat
+
+sig param : ty
+let param = nat
+
+sig default : param -> storage -> pair storage (list operation)
+let default param storage = cons-pair (div param storage) nil
