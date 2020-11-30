@@ -2,6 +2,12 @@ kind: pipeline
 type: docker
 name: juvix-ci
 
+workspace:
+  path: /drone/workspace
+
+environment:
+  STACK_ROOT: /drone/workspace/.stack
+
 steps:
 - name: restore-cache
   image: drillster/drone-volume-cache
@@ -12,11 +18,17 @@ steps:
     restore: true
     mount:
       - ./.stack-work
+      - ./.stack
 
 - name: setup-dependencies
   image: cryptiumlabs/juvix-ci-2
   commands:
   - make setup
+
+- name: build-binaries
+  image: cryptiumlabs/juvix-ci-2
+  commands:
+  - make build
 
 - name: test-suite
   image: cryptiumlabs/juvix-ci-2
@@ -32,6 +44,7 @@ steps:
     rebuild: true
     mount:
       - ./.stack-work
+      - ./.stack
 
 - name: check-formatting
   image: cryptiumlabs/juvix-ci-2
