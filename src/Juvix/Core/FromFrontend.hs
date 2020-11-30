@@ -335,9 +335,10 @@ transformUsage (FE.Constant (FE.Number (FE.Integer' i)))
     pure $ Usage.SNat $ fromInteger i
 transformUsage e = throwFF $ NotAUsage e
 
-transformGUsage :: FE.Expression -> Env primTy primVal IR.GlobalUsage
-transformGUsage (FE.Constant (FE.Number (FE.Integer' 0))) = pure IR.GZero
-transformGUsage e = throwFF $ NotAGUsage e
+transformGUsage :: Maybe FE.Expression -> Env primTy primVal IR.GlobalUsage
+transformGUsage Nothing = pure IR.GOmega
+transformGUsage (Just (FE.Constant (FE.Number (FE.Integer' 0)))) = pure IR.GZero
+transformGUsage (Just e) = throwFF $ NotAGUsage e
 
 transformSig ::
   NameSymbol.T ->
