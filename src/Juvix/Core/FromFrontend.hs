@@ -130,7 +130,7 @@ data FFState primTy primVal
       { frontend :: FE.FinalContext,
         param :: P.Parameterisation primTy primVal,
         coreSigs :: CoreSigsHR primTy primVal,
-        core :: IR.Globals primTy primVal,
+        core :: IR.RawGlobals primTy primVal,
         patVars :: HashMap IR.GlobalName IR.PatternVar,
         nextPatVar :: IR.PatternVar
       }
@@ -162,9 +162,9 @@ newtype Env primTy primVal a
     )
     via StateField "coreSigs" (EnvAlias primTy primVal)
   deriving
-    ( HasSource "core" (IR.Globals primTy primVal),
-      HasSink "core" (IR.Globals primTy primVal),
-      HasState "core" (IR.Globals primTy primVal)
+    ( HasSource "core" (IR.RawGlobals primTy primVal),
+      HasSink "core" (IR.RawGlobals primTy primVal),
+      HasState "core" (IR.RawGlobals primTy primVal)
     )
     via StateField "core" (EnvAlias primTy primVal)
   deriving
