@@ -9,6 +9,8 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Data.HashMap.Strict as HM
 import Juvix.Library
 import Prelude (String)
 
@@ -32,7 +34,26 @@ contextToCore ::
   (Data primTy, Data primVal) =>
   Target.FinalContext ->
   P.Parameterisation primTy primVal ->
-  Either (FromFrontend.Error primTy primVal) [IR.RawGlobal primTy primVal]
+  Either (FromFrontend.Error primTy primVal) (IR.RawGlobals primTy primVal)
 contextToCore ctx param =
-  FromFrontend.execEnv ctx param $
-    Context.traverseContext1 FromFrontend.transformDef ctx
+  FromFrontend.execEnv ctx param do
+    void $ Context.traverseContext1 addSig ctx
+    void $ Context.traverseContext1 addDef ctx
+    get @"core"
+ where
+  addSig x feDef = do
+    msig <- FromFrontend.transformSig x feDef
+    case msig of
+      Just sig -> modify @"coreSigs" $ HM.insert x sig
+      Nothing  -> pure ()
+  addDef x feDef = do
+    defs <- FromFrontend.transformDef x feDef
+    for defs \def ->
+      modify @"core" $ HM.insert (coreGlobalName def) def
+
+coreGlobalName :: IR.GlobalWith ty ext primTy primVal -> NameSymbol.T
+coreGlobalName = \case
+  IR.GDatatype (IR.Datatype {dataName}) -> dataName
+  IR.GDataCon  (IR.DataCon  {conName})  -> conName
+  IR.GFunction (IR.Function {funName})  -> funName
+  IR.GAbstract x _ _                    -> x
