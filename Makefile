@@ -39,13 +39,13 @@ org-gen:
 test:
 	stack test --copy-bins --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
-test-parser:
+test-parser: build
 	ls test/examples/demo | xargs -t -n 1 -I % juvix parse test/examples/demo/%
 
-test-typecheck:
+test-typecheck: build
 	ls test/examples/demo | xargs -t -n 1 -I % juvix typecheck test/examples/demo/%
 
-test-compile:
+test-compile: build
 	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
 
 bench:
