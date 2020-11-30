@@ -33,7 +33,7 @@ data Error primTy primVal
   | -- | implicit arguments are not yet implemented
     ImplicitsUnimplementedA FE.Arg
   | -- | type inference for definitions is not yet implemented
-    SigRequired (FE.Final Ctx.Definition)
+    SigRequired NameSymbol.T (FE.Final Ctx.Definition)
   | -- | head of application not an Elim
     NotAnElim FE.Expression
   | -- | pattern matching etc not yet implemented
@@ -343,9 +343,9 @@ transformSig ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   Env primTy primVal (Maybe (CoreSigHR primTy primVal))
-transformSig _ def@(Ctx.Def π msig _ _) =
-  Just <$> transformValSig def π msig
-transformSig _ def@(Ctx.Record _ msig) = pure Nothing -- TODO
+transformSig x def@(Ctx.Def π msig _ _) =
+  Just <$> transformValSig x def π msig
+transformSig _ (Ctx.Record _ _) = pure Nothing -- TODO
 transformSig x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig x typ
 transformSig _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
@@ -376,14 +376,15 @@ transformTypeSig name (FE.Typ {typeArgs, typeForm}) = do
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformValSig ::
+  NameSymbol.T ->
   FE.Final Ctx.Definition ->
   Maybe Usage.T ->
   Maybe FE.Signature ->
   Env primTy primVal (CoreSigHR primTy primVal)
-transformValSig _ _ (Just (FE.Sig _ (Just π) ty cons))
+transformValSig _ _ _ (Just (FE.Sig _ π ty cons))
   | null cons = ValSig <$> transformGUsage π <*> transformTermHR ty
   | otherwise = throwFF $ ConstraintsUnimplemented cons
-transformValSig def _ _ = throwFF $ SigRequired def
+transformValSig x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
   (Data primTy, Data primVal) =>
@@ -401,7 +402,7 @@ transformDef x (Ctx.Def _ _ def _) = do
             funClauses = clauses
           }
   pure [IR.GFunction f]
-transformDef _ d@(Ctx.Record _ _) = pure [] -- TODO
+transformDef _ (Ctx.Record _ _) = pure [] -- TODO
 transformDef x (Ctx.TypeDeclar dec) = transformType x dec
 transformDef _ (Ctx.Unknown _) = pure []
 transformDef _ Ctx.CurrentNameSpace = pure []
