@@ -267,7 +267,7 @@ data GlobalWith ty ext primTy primVal
   = GDatatype (DatatypeWith ty ext primTy primVal)
   | GDataCon (DataConWith ty ext primTy primVal)
   | GFunction (FunctionWith ty ext primTy primVal)
-  | GAbstract GlobalUsage (ty ext primTy primVal)
+  | GAbstract NameSymbol.T GlobalUsage (ty ext primTy primVal)
   deriving (Generic)
 
 type RawGlobal' = GlobalWith Term'

@@ -174,7 +174,7 @@ data Global primTy primVal
   = GDatatype (Datatype primTy)
   | GDataCon (DataCon primTy)
   | GFunction (Function primTy primVal)
-  | GAbstract GlobalUsage (Type primTy)
+  | GAbstract NameSymbol.T GlobalUsage (Type primTy)
 
 type Globals primTy primVal = HM.HashMap GlobalName (Global primTy primVal)
 

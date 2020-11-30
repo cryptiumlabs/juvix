@@ -34,7 +34,7 @@ eraseGlobal g =
     IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
     -- TODO: Need the annotated term here. ref
     -- https://github.com/metastatedev/juvix/issues/495
-    IR.GAbstract u t -> Erasure.GAbstract u |<< eraseType t
+    IR.GAbstract x u t -> Erasure.GAbstract x u |<< eraseType t
 
 eraseDatatype ::
   ErasureM primTy primVal m =>
