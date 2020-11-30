@@ -63,7 +63,7 @@ extensible
         Elim (Elim primTy primVal)
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | inferable terms
+    -- inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
         Bound BoundVar
@@ -75,7 +75,7 @@ extensible
         Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | Values/types
+    -- Values/types
     data Value primTy primVal
       = VStar Universe
       | VPrimTy primTy
@@ -89,7 +89,7 @@ extensible
       | VPrim primVal
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | A neutral term is either a variable or an application of a neutral term
+    -- A neutral term is either a variable or an application of a neutral term
     -- to a value
     data Neutral primTy primVal
       = NBound BoundVar
