@@ -130,8 +130,8 @@ library:
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.FromFrontend
-    - Juvix.Visualize.Dot
-    - Juvix.Visualize.Graph
+    # - Juvix.Visualize.Dot
+    # - Juvix.Visualize.Graph
     - Juvix.Encoding.Encoding
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
