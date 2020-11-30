@@ -21,6 +21,14 @@ dependencies:
 - standard-library
 - core
 - interaction-net
+###########################
+# Dependency for LLVM
+###########################
+- llvm-hs
+- llvm-hs-pure
+- llvm-hs-pretty
+- derive-storable
+- derive-storable-plugin
 
 default-extensions:
   - NoImplicitPrelude
