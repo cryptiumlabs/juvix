@@ -150,6 +150,26 @@ deriving instance
   Eq (DatatypeWith ty ext primTy primVal)
 
 deriving instance
+  GlobalAll Show ext primTy primVal =>
+  Show (SigDef ext primTy primVal)
+
+deriving instance
+  GlobalAll Eq ext primTy primVal =>
+  Eq (Declaration ext primTy primVal)
+
+deriving instance
+  GlobalAll Show ext primTy primVal =>
+  Show (Declaration ext primTy primVal)
+
+deriving instance
+  GlobalAll Eq ext primTy primVal =>
+  Eq (TypeSig ext primTy primVal)
+
+deriving instance
+  GlobalAll Show ext primTy primVal =>
+  Show (TypeSig ext primTy primVal)
+
+deriving instance
   (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
   Data (DatatypeWith ty ext primTy primVal)
 
@@ -335,7 +355,6 @@ data SigDef ext primTy primVal
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type
         -- data type constant to # parameters, positivity of parameters, sized, type
   | DataSig Int [Pos] Sized (Value' ext primTy primVal)
-  deriving (Show)
 
 data Pos -- positivity
   = SPos
@@ -358,11 +377,9 @@ data Declaration ext primTy primVal
   | -- a function declaration has a name, and an expression,
     -- and a list of clauses.
     FunDecl [(TypeSig ext primTy primVal, [FunClause' ext primTy primVal])]
-  deriving (Eq, Show)
 
 data TypeSig ext primTy primVal
   = TypeSig Name (Term' ext primTy primVal)
-  deriving (Eq, Show)
 
 -- A telescope is a sequence of types where
 -- later types may depend on elements of previous types.
