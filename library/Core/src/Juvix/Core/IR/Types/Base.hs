@@ -353,17 +353,12 @@ data SigDef ext primTy primVal
   = -- function constant to its type, clauses, whether it's type checked
     FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ext primTy primVal)] Bool
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type
-        -- data type constant to # parameters, positivity of parameters, sized, type
-  | DataSig Int [Pos] Sized (Value' ext primTy primVal)
+        -- data type constant to # parameters, positivity of parameters, type
+  | DataSig Int [Pos] (Value' ext primTy primVal)
 
 data Pos -- positivity
   = SPos
   | NSPos
-  deriving (Eq, Show)
-
-data Sized -- distinguish between sized and not sized data type.
-  = Sized
-  | NotSized
   deriving (Eq, Show)
 
 -- declarations are either (inductive) data types or functions
@@ -373,7 +368,7 @@ data Declaration ext primTy primVal
     -- the telescope for its parameters,
     -- the expression,
     -- the list of constructors.
-    DataDecl Name Sized [Pos] (Telescope ext primTy primVal) (Term' ext primTy primVal) [TypeSig ext primTy primVal]
+    DataDecl Name [Pos] (Telescope ext primTy primVal) (Term' ext primTy primVal) [TypeSig ext primTy primVal]
   | -- a function declaration has a name, and an expression,
     -- and a list of clauses.
     FunDecl [(TypeSig ext primTy primVal, [FunClause' ext primTy primVal])]
