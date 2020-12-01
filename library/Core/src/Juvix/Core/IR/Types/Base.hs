@@ -114,6 +114,8 @@ type GlobalAll (c :: * -> Constraint) ext primTy primVal =
     c primVal,
     TermAll c ext primTy primVal,
     ElimAll c ext primTy primVal,
+    ValueAll c ext primTy primVal,
+    NeutralAll c ext primTy primVal,
     PatternAll c ext primTy primVal
   )
 
@@ -123,6 +125,8 @@ type GlobalAllWith (c :: * -> Constraint) ty ext primTy primVal =
     c primVal,
     TermAll c ext primTy primVal,
     ElimAll c ext primTy primVal,
+    ValueAll c ext primTy primVal,
+    NeutralAll c ext primTy primVal,
     PatternAll c ext primTy primVal
   )
 
@@ -347,6 +351,10 @@ type Globals' ext primTy primVal =
   GlobalsWith Value' ext primTy primVal
 
 type Signature ext primTy primVal = Map.Map Name (SigDef ext primTy primVal)
+
+-- Return type of all type-checking functions.
+-- state monad for global signature
+type TypeCheck ext primTy primVal a = StateT (Signature ext primTy primVal) IO a
 
 -- A signature is a mapping of constants to its info
 data SigDef ext primTy primVal

@@ -23,14 +23,19 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
 import qualified Juvix.Library.Usage as Usage
 
-typeCheckDeclaration :: Declaration -> TypeCheck ()
-typeCheckDeclaration (Datatype name args levels cons) = do
+typeCheckDeclaration ::
+  [IR.DatatypeWith ty0 ext0 primTy0 primVal0] ->
+  [IR.FunctionWith ty ext primTy primVal] ->
+  IR.TypeCheck ext primTy primVal ()
+typeCheckDeclaration [] [] =
+  return undefined
+typeCheckDeclaration ((IR.Datatype name args levels cons) : tld) _ =
   undefined
 -- TODO run checkDataType 0 [] [] p' dt
 -- v <- eval [] dt
 -- add to sig once typechecked
 -- put $ addSig sig n (DataSig params pos sz v)
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
-typeCheckDeclaration (Function name usage ty cls) =
+typeCheckDeclaration _ ((IR.Function name usage ty cls) : tlf) =
   undefined
 -- TODO run typeCheckFuns

@@ -778,6 +778,7 @@ Calculate mutually-recursive groups of definitions.
   + [[IR/Types/Base]]
 ***** IR
 - _Relies on_
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[IR/Typechecker]]
   + [[IR/Typechecker]]

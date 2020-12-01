@@ -4,6 +4,16 @@ module Juvix.Core.IR
   )
 where
 
+import Juvix.Core.IR.CheckTerm as IR
+  ( Leftovers (..),
+    evalTC,
+    leftoverOk,
+    leftoversOk,
+    typeElim,
+    typeElimWith,
+    typeTerm,
+    typeTermWith,
+  )
 import Juvix.Core.IR.Evaluator as IR hiding
   ( Error (..),
   )
@@ -19,21 +29,13 @@ import Juvix.Core.IR.Typechecker as IR
     EnvTypecheck,
     EnvTypecheck' (..),
     GlobalsT,
-    Leftovers (..),
     TypecheckError,
     TypecheckError' (..),
     UContext,
     ValueT,
-    evalTC,
     getElimAnn,
     getTermAnn,
-    leftoverOk,
-    leftoversOk,
     lookupCtx,
-    typeElim,
-    typeElimWith,
-    typeTerm,
-    typeTermWith,
   )
 import qualified Juvix.Core.IR.Typechecker as TC
 import Juvix.Core.IR.Types as IR
