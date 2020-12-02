@@ -29,7 +29,7 @@ typeCheckDeclaration ::
   IR.TypeCheck ext primTy primVal ()
 typeCheckDeclaration [] [] =
   return undefined
-typeCheckDeclaration ((IR.Datatype name args levels cons) : tld) _ =
+typeCheckDeclaration ((IR.Datatype name lpos args levels ty cons) : tld) _ =
   undefined
 -- TODO run checkDataType 0 [] [] p' dt
 -- v <- eval [] dt

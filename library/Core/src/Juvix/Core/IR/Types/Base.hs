@@ -133,10 +133,15 @@ type GlobalAllWith (c :: * -> Constraint) ty ext primTy primVal =
 data DatatypeWith ty ext primTy primVal
   = Datatype
       { dataName :: GlobalName,
-        -- | the type constructor's arguments
+        -- | the positivity of its parameters
+        dataPos :: [Pos],
+        -- | the type constructor's arguments/telescope
         dataArgs :: [DataArgWith ty ext primTy primVal],
         -- | the type constructor's target universe level
         dataLevel :: Natural,
+        -- | the expression
+        dataTy :: (Term' ext primTy primVal),
+        -- the list of constructors.
         dataCons :: [DataConWith ty ext primTy primVal]
       }
   deriving (Generic)
@@ -154,31 +159,15 @@ deriving instance
   Eq (DatatypeWith ty ext primTy primVal)
 
 deriving instance
-  GlobalAll Show ext primTy primVal =>
-  Show (SigDef ext primTy primVal)
+  GlobalAllWith Show ty ext primTy primVal =>
+  Show (SigDef ty ext primTy primVal)
 
 deriving instance
-  GlobalAll Eq ext primTy primVal =>
-  Eq (Declaration ext primTy primVal)
-
-deriving instance
-  GlobalAll Show ext primTy primVal =>
-  Show (Declaration ext primTy primVal)
-
-deriving instance
-  GlobalAll Eq ext primTy primVal =>
-  Eq (TypeSig ext primTy primVal)
-
-deriving instance
-  GlobalAll Show ext primTy primVal =>
-  Show (TypeSig ext primTy primVal)
-
-deriving instance
-  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
+  (Typeable ty, Data Pos, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
   Data (DatatypeWith ty ext primTy primVal)
 
 deriving instance
-  GlobalAllWith NFData ty ext primTy primVal =>
+  (NFData Pos, GlobalAllWith NFData ty ext primTy primVal) =>
   NFData (DatatypeWith ty ext primTy primVal)
 
 data DataArgWith ty ext primTy primVal
@@ -242,7 +231,7 @@ data FunctionWith ty ext primTy primVal
       { funName :: GlobalName,
         funUsage :: GlobalUsage,
         funType :: ty ext primTy primVal,
-        funClauses :: NonEmpty (FunClause' ext primTy primVal)
+        funClauses :: NonEmpty (FunClause' ty ext primTy primVal)
       }
   deriving (Generic)
 
@@ -266,7 +255,7 @@ deriving instance
   GlobalAllWith NFData ty ext primTy primVal =>
   NFData (FunctionWith ty ext primTy primVal)
 
-data FunClause' ext primTy primVal
+data FunClause' ty ext primTy primVal
   = -- | Clause has been labelled as unreachable by the coverage checker.
     --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
     --   @Just False@ means clause is not unreachable.
@@ -275,7 +264,7 @@ data FunClause' ext primTy primVal
       { -- | @Δ@: The types of the pattern variables in dependency order.
         -- , namedClausePats :: NAPs (Using Name instead atm)
         -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-        clauseTel :: Telescope ext primTy primVal,
+        clauseTel :: [DataArgWith ty ext primTy primVal],
         namedClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
 
         -- | @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
@@ -295,24 +284,6 @@ data FunClause' ext primTy primVal
         clauseUnreachable :: Maybe Bool
       }
   deriving (Generic)
-
-deriving instance
-  GlobalAll Show ext primTy primVal =>
-  Show (FunClause' ext primTy primVal)
-
-deriving instance
-  GlobalAll Eq ext primTy primVal =>
-  Eq (FunClause' ext primTy primVal)
-
-deriving instance
-  ( Data ext,
-    GlobalAll Data ext primTy primVal
-  ) =>
-  Data (FunClause' ext primTy primVal)
-
-deriving instance
-  GlobalAll NFData ext primTy primVal =>
-  NFData (FunClause' ext primTy primVal)
 
 data GlobalWith ty ext primTy primVal
   = GDatatype (DatatypeWith ty ext primTy primVal)
@@ -334,11 +305,30 @@ deriving instance
   Eq (GlobalWith ty ext primTy primVal)
 
 deriving instance
-  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
-  Data (GlobalWith ty ext primTy primVal)
+  GlobalAllWith Show ty ext primTy primVal =>
+  Show (FunClause' ty ext primTy primVal)
+
+deriving instance
+  GlobalAllWith Eq ty ext primTy primVal =>
+  Eq (FunClause' ty ext primTy primVal)
+
+deriving instance
+  ( Typeable ty,
+    Data ext,
+    GlobalAllWith Data ty ext primTy primVal
+  ) =>
+  Data (FunClause' ty ext primTy primVal)
 
 deriving instance
   GlobalAllWith NFData ty ext primTy primVal =>
+  NFData (FunClause' ty ext primTy primVal)
+
+deriving instance
+  (Typeable ty, Data ext, Data Pos, GlobalAllWith Data ty ext primTy primVal) =>
+  Data (GlobalWith ty ext primTy primVal)
+
+deriving instance
+  (NFData Pos, GlobalAllWith NFData ty ext primTy primVal) =>
   NFData (GlobalWith ty ext primTy primVal)
 
 type GlobalsWith ty ext primTy primVal =
@@ -350,16 +340,16 @@ type RawGlobals' ext primTy primVal =
 type Globals' ext primTy primVal =
   GlobalsWith Value' ext primTy primVal
 
-type Signature ext primTy primVal = Map.Map Name (SigDef ext primTy primVal)
+type Signature ty ext primTy primVal = Map.Map Name (SigDef ty ext primTy primVal)
 
 -- Return type of all type-checking functions.
 -- state monad for global signature
-type TypeCheck ext primTy primVal a = StateT (Signature ext primTy primVal) IO a
+type TypeCheck ty ext primTy primVal a = StateT (Signature ty ext primTy primVal) IO a
 
 -- A signature is a mapping of constants to its info
-data SigDef ext primTy primVal
+data SigDef ty ext primTy primVal
   = -- function constant to its type, clauses, whether it's type checked
-    FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ext primTy primVal)] Bool
+    FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ty ext primTy primVal)] Bool
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type
         -- data type constant to # parameters, positivity of parameters, type
   | DataSig Int [Pos] (Value' ext primTy primVal)
@@ -368,25 +358,3 @@ data Pos -- positivity
   = SPos
   | NSPos
   deriving (Eq, Show)
-
--- declarations are either (inductive) data types or functions
-data Declaration ext primTy primVal
-  = -- a data declaration has a name,
-    -- the positivity of its parameters,
-    -- the telescope for its parameters,
-    -- the expression,
-    -- the list of constructors.
-    DataDecl Name [Pos] (Telescope ext primTy primVal) (Term' ext primTy primVal) [TypeSig ext primTy primVal]
-  | -- a function declaration has a name, and an expression,
-    -- and a list of clauses.
-    FunDecl [(TypeSig ext primTy primVal, [FunClause' ext primTy primVal])]
-
-data TypeSig ext primTy primVal
-  = TypeSig Name (Term' ext primTy primVal)
-
--- A telescope is a sequence of types where
--- later types may depend on elements of previous types.
--- Used for parameters of data type declarations.
-type Telescope ext primTy primVal = [TBind ext primTy primVal]
-
-type TBind ext primTy primVal = (Name, Term' ext primTy primVal)
