@@ -16,13 +16,13 @@ build-z3:
 	cd z3/build && make install
 
 build:
-	stack build --copy-bins --fast --jobs $(shell nproc)
+	stack build --fast --jobs $(shell nproc)
 
 build-watch:
-	stack build --copy-bins --fast --file-watch
+	stack build --fast --file-watch
 
 build-prod: clean
-	stack build --copy-bins --jobs $(shell nproc) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
+	stack build --jobs $(shell nproc) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
 
 build-format:
 	stack install ormolu
@@ -37,15 +37,15 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
-	stack test --copy-bins --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
 
-test-parser:
+test-parser: build
 	ls test/examples/demo | xargs -t -n 1 -I % stack exec juvix parse test/examples/demo/%
 
-test-typecheck:
+test-typecheck: build
 	ls test/examples/demo | xargs -t -n 1 -I % stack exec juvix typecheck test/examples/demo/%
 
-test-compile:
+test-compile: build
 	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % stack exec juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
 
 bench:
