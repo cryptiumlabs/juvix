@@ -2,12 +2,15 @@
 
 module Compile where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.HR as HR
+import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as CorePipeline
+import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
@@ -32,9 +35,18 @@ typecheck fin Michelson = do
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
     Right globals -> do
-      print globals
-      -- TODO: Lookup the entrypoint then run `coreToAnn` as below.
-      exitSuccess
+      case filter (\x -> case x of (IR.GFunction (IR.Function "entry" _ _ _)) -> True; _ -> False) globals of
+        [] -> do
+          T.putStrLn "No entrypoint found"
+          exitFailure
+        (IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
+          (res, _) <- exec (CorePipeline.coreToAnn term usage ty) Param.michelson globals
+          case res of
+            Right r -> pure r
+            Left err -> do
+              T.putStrLn (show err)
+              exitFailure
+          exitSuccess
     Left err -> do
       print err
       exitFailure
@@ -52,7 +64,7 @@ typecheck' _ _ = do
       term :: HR.Term Param.PrimTy Param.RawPrimVal
       term = HR.Lam "x" (HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) (HR.Prim (Param.Inst (Untyped.PAIR "" "" "" ""))) ann 1) (HR.Elim (HR.Var "x"))) (HR.Prim (Param.Constant Untyped.ValueNil))))
       globals = mempty
-  (res, _) <- exec (CorePipeline.coreToAnn term usage ann) Param.michelson globals
+  (res, _) <- exec (CorePipeline.coreToAnn (Translate.hrToIR term) usage (Translate.hrToIR ann)) Param.michelson globals
   case res of
     Right r -> pure r
     Left err -> do

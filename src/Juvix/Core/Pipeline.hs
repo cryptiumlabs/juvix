@@ -21,11 +21,11 @@ import qualified Michelson.Untyped as Michelson
 
 type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 
-type RawMichelsonTerm = RawMichelson HR.Term
+type RawMichelsonTerm = RawMichelson IR.Term
 
 type Michelson f = f Michelson.PrimTy Michelson.PrimVal
 
-type MichelsonTerm = Michelson HR.Term
+type MichelsonTerm = Michelson IR.Term
 
 type MichelsonComp res =
   forall m.
@@ -179,12 +179,13 @@ typecheckErase' ::
     Show primVal,
     Show compErr
   ) =>
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   Usage.T ->
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   m (Erasure.TermT primTy primVal, Typed.ValueT primTy primVal)
 typecheckErase' term usage ty = do
-  ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
+  -- TODO can we avoid the irToHR conversion
+  ty <- typecheckEval (Translate.irToHR ty) (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty
   pure (term, ty)
 
@@ -201,7 +202,7 @@ typecheckErase ::
     Show primVal,
     Show compErr
   ) =>
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   Usage.T ->
   Typed.ValueT primTy primVal ->
   m (Erasure.TermT primTy primVal)
@@ -209,11 +210,8 @@ typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
   globals <- ask @"globals"
-  -- First convert HR to IR.
-  let irTerm = Translate.hrToIR term
-  tell @"log" [Types.LogHRtoIR term irTerm]
   -- Typecheck & return accordingly.
-  case IR.typeTerm param irTerm (IR.Annotation usage ty)
+  case IR.typeTerm param term (IR.Annotation usage ty)
     |> IR.execTC globals
     |> fst of
     Right tyTerm -> do
