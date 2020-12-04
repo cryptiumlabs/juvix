@@ -834,6 +834,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[IR/Types/Base]]
   + [[Library]]
+  + [[NameSymbol]]
   + [[Usage]]
 ******* Base <<IR/Types/Base>>
 - _Relies on_
