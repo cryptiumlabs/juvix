@@ -81,7 +81,7 @@ lookupGlobal x = do
       (conType, IR.GOmega)
     makeGAnn (IR.GFunction (IR.Function {funType, funUsage})) =
       (funType, funUsage)
-    makeGAnn (IR.GAbstract _ absUsage absType) =
+    makeGAnn (IR.GAbstract (IR.Abstract {absUsage, absType})) =
       (absType, absUsage)
     makePi (IR.DataArg {argUsage, argType}) res =
       IR.VPi' argUsage argType res mempty

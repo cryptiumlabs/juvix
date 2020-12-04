@@ -22,6 +22,9 @@ module Juvix.Core.IR.Types
     Function',
     FunClause' (..),
     GlobalWith (..),
+    AbstractWith (..),
+    RawAbstract',
+    Abstract',
     RawGlobal',
     Global',
     GlobalsWith,
@@ -33,6 +36,7 @@ where
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 data NoExt deriving (Data)
 
