@@ -778,8 +778,14 @@ typGlobals :: IR.Globals primTy primVal
 typGlobals =
   Map.fromList
     [ ("A", IR.GAbstract (IR.Abstract "A" IR.GZero (IR.VStar 0))),
-      ("F", IR.GAbstract (IR.Abstract "F" IR.GZero
-              (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))))
+      ( "F",
+        IR.GAbstract
+          ( IR.Abstract
+              "F"
+              IR.GZero
+              (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))
+          )
+      )
     ]
 
 aTerm :: IR.Term primTy primVal

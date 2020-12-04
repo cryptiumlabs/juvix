@@ -35,8 +35,8 @@ where
 
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
 data NoExt deriving (Data)
 
@@ -125,8 +125,7 @@ usageToGlobal _ = Nothing
 
 globalToUsage :: GlobalUsage -> Usage.T
 globalToUsage GOmega = Usage.Omega
-globalToUsage GZero  = Usage.SNat 0
-
+globalToUsage GZero = Usage.SNat 0
 
 globalName :: GlobalWith ty ext primTy primVal -> NameSymbol.T
 globalName (GDatatype (Datatype {dataName})) = dataName
