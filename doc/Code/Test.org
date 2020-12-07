@@ -34,14 +34,5 @@
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
-* Backends
-* Core
-** Common
-** IR
-* Frontend
-* FrontendContextualise
-** Infix
-** Module
-* Nets
 * examples
 ** demo
