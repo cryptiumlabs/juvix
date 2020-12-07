@@ -34,7 +34,14 @@ eraseGlobal g =
     IR.GFunction f -> Erasure.GFunction |<< eraseFunction f
     -- TODO: Need the annotated term here. ref
     -- https://github.com/metastatedev/juvix/issues/495
-    IR.GAbstract u t -> Erasure.GAbstract u |<< eraseType t
+    IR.GAbstract a -> Erasure.GAbstract |<< eraseAbstract a
+
+eraseAbstract ::
+  ErasureM primTy primVal m =>
+  Typed.AbstractT primTy primVal ->
+  m (Erasure.Abstract primTy)
+eraseAbstract (IR.Abstract name usage ty) =
+  Erasure.Abstract name usage <$> eraseType ty
 
 eraseDatatype ::
   ErasureM primTy primVal m =>

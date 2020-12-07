@@ -22,6 +22,9 @@ module Juvix.Core.IR.Types
     Function',
     FunClause' (..),
     GlobalWith (..),
+    AbstractWith (..),
+    RawAbstract',
+    Abstract',
     RawGlobal',
     Global',
     GlobalsWith,
@@ -32,6 +35,7 @@ where
 
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
 data NoExt deriving (Data)
@@ -118,3 +122,13 @@ usageToGlobal :: Usage.T -> Maybe GlobalUsage
 usageToGlobal Usage.Omega = Just GOmega
 usageToGlobal (Usage.SNat 0) = Just GZero
 usageToGlobal _ = Nothing
+
+globalToUsage :: GlobalUsage -> Usage.T
+globalToUsage GOmega = Usage.Omega
+globalToUsage GZero = Usage.SNat 0
+
+globalName :: GlobalWith ty ext primTy primVal -> NameSymbol.T
+globalName (GDatatype (Datatype {dataName})) = dataName
+globalName (GDataCon (DataCon {conName})) = conName
+globalName (GFunction (Function {funName})) = funName
+globalName (GAbstract (Abstract {absName})) = absName

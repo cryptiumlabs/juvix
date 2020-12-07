@@ -285,11 +285,39 @@ data FunClause' ty ext primTy primVal
       }
   deriving (Generic)
 
+data AbstractWith ty ext primTy primVal
+  = Abstract
+      { absName :: GlobalName,
+        absUsage :: GlobalUsage,
+        absType :: ty ext primTy primVal
+      }
+  deriving (Generic)
+
+type RawAbstract' = AbstractWith Term'
+
+type Abstract' = AbstractWith Value'
+
+deriving instance
+  GlobalAllWith Show ty ext primTy primVal =>
+  Show (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  GlobalAllWith Eq ty ext primTy primVal =>
+  Eq (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
+  Data (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  GlobalAllWith NFData ty ext primTy primVal =>
+  NFData (AbstractWith ty ext primTy primVal)
+
 data GlobalWith ty ext primTy primVal
   = GDatatype (DatatypeWith ty ext primTy primVal)
   | GDataCon (DataConWith ty ext primTy primVal)
   | GFunction (FunctionWith ty ext primTy primVal)
-  | GAbstract GlobalUsage (ty ext primTy primVal)
+  | GAbstract (AbstractWith ty ext primTy primVal)
   deriving (Generic)
 
 type RawGlobal' = GlobalWith Term'
