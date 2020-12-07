@@ -33,7 +33,7 @@ type DataCon = DataCon' T
 
 type Function = Function' T
 
-type FunClause = FunClause' T
+type FunClause primTy primVal = FunClause' primTy primVal T
 
 type TypeAssignment primTy = TypeAssignment' T primTy
 

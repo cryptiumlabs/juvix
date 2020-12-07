@@ -10,23 +10,24 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
-import qualified Data.IntMap.Strict as IntMap
-import Data.List.NonEmpty ((<|))
-import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.IR.CheckTerm as IR
-import qualified Juvix.Core.IR.Evaluator as Eval
+-- import qualified Data.IntMap.Strict as IntMap
+-- import Data.List.NonEmpty ((<|))
+-- import qualified Juvix.Core.Application as App
+-- import qualified Juvix.Core.IR.CheckTerm as IR
+-- import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.Parameterisation as Param
+-- import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype)
-import qualified Juvix.Library.Usage as Usage
+
+-- import qualified Juvix.Library.Usage as Usage
 
 typeCheckDeclaration ::
   [IR.DatatypeWith ty0 ext0 primTy0 primVal0] ->
   [IR.FunctionWith ty ext primTy primVal] ->
-  IR.TypeCheck ext primTy primVal ()
+  IR.TypeCheck ty ext primTy primVal ()
 typeCheckDeclaration [] [] =
   return undefined
 typeCheckDeclaration ((IR.Datatype name lpos args levels ty cons) : tld) _ =
