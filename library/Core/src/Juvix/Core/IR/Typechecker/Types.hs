@@ -125,7 +125,7 @@ type FunctionT primTy primVal = FunctionT' IR.NoExt primTy primVal
 type FunClauseT' ext primTy primVal =
   IR.FunClause' ext primTy (P.TypedPrim primTy primVal)
 
-type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
+type FunClauseT primTy primVal = FunClauseT' primTy primVal IR.NoExt
 
 type PatternT' ext primTy primVal =
   IR.Pattern' ext primTy (P.TypedPrim primTy primVal)

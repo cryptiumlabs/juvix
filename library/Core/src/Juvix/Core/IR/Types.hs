@@ -62,7 +62,7 @@ type Function = Function' NoExt
 
 type RawFunction = RawFunction' NoExt
 
-type FunClause = FunClause' NoExt
+type FunClause primTy primVal = FunClause' primTy primVal NoExt
 
 -- (no RawFunClause since a clause contains no types anyway)
 
