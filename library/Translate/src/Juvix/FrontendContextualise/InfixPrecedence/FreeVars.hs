@@ -160,7 +160,7 @@ nameifyNamedType s (Type.NamedType' _name exp) =
 
 -- we currently don't care about declares
 nameifyDeclarationExpression :: ExcludedSet -> Type.DeclarationExpression -> Set
-nameifyDeclarationExpression s (Type.DeclareExpession _i e) =
+nameifyDeclarationExpression s (Type.DeclareExpression _i e) =
   op s e
 
 nameifyTypeRefine :: ExcludedSet -> Type.TypeRefine -> Set

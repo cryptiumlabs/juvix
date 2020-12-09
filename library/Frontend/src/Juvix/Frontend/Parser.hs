@@ -169,7 +169,7 @@ declaration = do
 
 declarationExpression :: Parser Types.DeclarationExpression
 declarationExpression =
-  Types.DeclareExpession <$> declaration <*> (reserved "in" *> expression)
+  Types.DeclareExpression <$> declaration <*> (reserved "in" *> expression)
 
 infixDeclar :: Parser Types.InfixDeclar
 infixDeclar = do
