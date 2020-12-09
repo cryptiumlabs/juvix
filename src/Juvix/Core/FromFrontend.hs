@@ -62,18 +62,32 @@ data Error primTy primVal
     NotAUsage FE.Expression
   | -- | expression is not 0 or ω
     NotAGUsage FE.Expression
-  | -- | usage is not 0 or ω (TODO reject in parser?)
+  | -- | expression is not a natural number
+    NotAUniverse FE.Expression
+  | -- | usage is not 0 or ω
     UsageNotGUsage Usage.T
   | -- | invalid signature for declaration (bug in this module)
     -- @'Just' s@ if @s@ is a signature of the wrong shape,
     -- 'Nothing' if no signature found
-    WrongSigType (Maybe (CoreSigHR primTy primVal))
+    WrongSigType NameSymbol.T (Maybe (CoreSigHR primTy primVal))
   | -- | e.g. single anonymous constructor that is not a record
     IllFormedDatatype FE.Type
   | -- | e.g. ml-style constructor in a datatype with a GADT header
     InvalidConstructor NameSymbol.T FE.Product
   | -- | type is something other than a set of arrows ending in *
     InvalidDatatypeType (HR.Term primTy primVal)
+  | -- | Not a special builtin (see 'Special')
+    NotSpecial FE.Expression
+  | -- | Unknown %Builtin.X
+    UnknownBuiltin NameSymbol.T
+  | -- | Builtin with usage
+    BuiltinWithUsage (FE.Final Ctx.Definition)
+  | -- | Builtin with type signature
+    BuiltinWithTypeSig (FE.Final Ctx.Definition)
+  | -- | Wrong number of arguments for a builtin
+    WrongNumberBuiltinArgs Int [FE.Expression]
+  | -- | Using omega as an expression
+    UnexpectedOmega
   deriving (Show, Eq, Generic)
 
 data CoreSig' ext primTy primVal
@@ -87,7 +101,17 @@ data CoreSig' ext primTy primVal
       { valUsage :: !IR.GlobalUsage,
         valType :: !(IR.Term' ext primTy primVal)
       }
+  | SpecialSig !Special
   deriving (Generic)
+
+-- | Bindings that can't be given types, but can be given new names by the user.
+data Special
+  = ArrowS (Maybe Usage.T) -- ^ pi type, possibly with usage already supplied
+  | PairS (Maybe Usage.T)  -- ^ sigma type
+  | ColonS                 -- ^ type annotation
+  | TypeS                  -- ^ type of types
+  | OmegaS                 -- ^ omega usage
+  deriving (Eq, Show, Data, Generic)
 
 deriving instance
   ( Eq primTy,
@@ -125,12 +149,19 @@ type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
 
 type CoreSigsHR primTy primVal = CoreSigs' HR.T primTy primVal
 
+data CoreDef primTy primVal
+  = CoreDef !(IR.RawGlobal primTy primVal)
+  | SpecialDef !NameSymbol.T !Special
+  deriving (Eq, Show, Data, Generic)
+
+type CoreDefs primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
+
 data FFState primTy primVal
   = FFState
       { frontend :: FE.FinalContext,
         param :: P.Parameterisation primTy primVal,
         coreSigs :: CoreSigsHR primTy primVal,
-        core :: IR.RawGlobals primTy primVal,
+        core :: CoreDefs primTy primVal,
         patVars :: HashMap IR.GlobalName IR.PatternVar,
         nextPatVar :: IR.PatternVar
       }
@@ -162,9 +193,9 @@ newtype Env primTy primVal a
     )
     via StateField "coreSigs" (EnvAlias primTy primVal)
   deriving
-    ( HasSource "core" (IR.RawGlobals primTy primVal),
-      HasSink "core" (IR.RawGlobals primTy primVal),
-      HasState "core" (IR.RawGlobals primTy primVal)
+    ( HasSource "core" (CoreDefs primTy primVal),
+      HasSink "core" (CoreDefs primTy primVal),
+      HasState "core" (CoreDefs primTy primVal)
     )
     via StateField "core" (EnvAlias primTy primVal)
   deriving
@@ -239,9 +270,7 @@ transformTermHR e@(FE.LetType _) = throwFF $ ExprUnimplemented e
 transformTermHR e@(FE.Match _) = throwFF $ ExprUnimplemented e
 transformTermHR (FE.Name n) = pure $ HR.Elim $ HR.Var n
 transformTermHR (FE.Lambda l) = transformSimpleLambda l
-transformTermHR (FE.Application (FE.App f xs)) = do
-  f' <- toElim f =<< transformTermHR f
-  HR.Elim . foldl HR.App f' <$> traverse transformTermHR xs
+transformTermHR (FE.Application app) = transformApplication app
 transformTermHR (FE.Primitive (FE.Prim p)) = do
   param <- ask @"param"
   maybe (throwFF $ UnknownPrimitive p) pure $
@@ -268,6 +297,54 @@ transformTermHR (FE.UniverseName i) =
   -- TODO for universe polymorphism
   throwFF $ UniversesUnimplemented i
 transformTermHR (FE.Parened e) = transformTermHR e
+transformTermHR (FE.DeclarationE (FE.DeclareExpression _ e)) =
+  transformTermHR e
+
+transformApplication ::
+  FE.Application ->
+  Env primTy primVal (HR.Term primTy primVal)
+transformApplication (FE.App f xs) = getSpecial f >>= flip go (toList xs) where
+  go s xs = case s of
+    Just (ArrowS Nothing) -> do
+      ~[π, a, b] <- nargs 3 xs
+      π <- transformUsage π
+      go (Just (ArrowS (Just π))) [a, b]
+    Just (ArrowS (Just π)) -> do
+      ~[xa, b] <- nargs 2 xs
+      let (x, a) = namedArg xa
+      HR.Pi π x <$> transformTermHR a <*> transformTermHR b
+    Just (PairS Nothing) -> do
+      ~[π, a, b] <- nargs 3 xs
+      π <- transformUsage π
+      go (Just (PairS (Just π))) [a, b]
+    Just (PairS (Just π)) -> do
+      ~[xa, b] <- nargs 2 xs
+      let (x, a) = namedArg xa
+      HR.Sig π x <$> transformTermHR a <*> transformTermHR b
+    Just ColonS -> do
+      ~[a, b] <- nargs 2 xs
+      a <- transformTermHR a
+      b <- transformTermHR b
+      -- FIXME metavars for usage & universe
+      pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
+    Just TypeS -> do
+      ~[i] <- nargs 1 xs
+      HR.Star <$> transformUniverse i
+    Just OmegaS ->
+      throwFF UnexpectedOmega
+    Nothing -> do
+      f' <- toElim f =<< transformTermHR f
+      HR.Elim . foldl HR.App f' <$> traverse transformTermHR xs
+  nargs n xs
+    | (xs, []) <- splitAt n (toList xs),
+      length xs == n
+    = pure xs
+    | otherwise
+    = throwFF $ WrongNumberBuiltinArgs n xs
+  namedArg (FE.NamedTypeE (FE.NamedType' (FE.Concrete x) e)) =
+    (NameSymbol.fromSymbol x, e)
+  -- TODO implicit arguments???
+  namedArg e = ("" :| [], e)
 
 transformSimpleLet :: FE.Let -> Env primTy primVal (HR.Term primTy primVal)
 transformSimpleLet e@(FE.LetGroup name (clause :| []) body) = do
@@ -340,18 +417,76 @@ transformGUsage Nothing = pure IR.GOmega
 transformGUsage (Just (FE.Constant (FE.Number (FE.Integer' 0)))) = pure IR.GZero
 transformGUsage (Just e) = throwFF $ NotAGUsage e
 
+transformUniverse :: FE.Expression -> Env primTy primVal IR.Universe
+transformUniverse (FE.Constant (FE.Number (FE.Integer' i)))
+  | i >= 0 = pure $ fromIntegral i
+transformUniverse e = throwFF $ NotAUniverse e
+
+
+getSpecial ::
+  FE.Expression ->
+  Env primTy primVal (Maybe Special)
+getSpecial (FE.Name x) = do
+  sig <- getSig' Just x
+  pure case sig of
+    SpecialSig s -> Just s
+    _            -> Nothing
+getSpecial _ = pure Nothing
+
+transformSpecialRhs ::
+  FE.Expression ->
+  Env primTy primVal (Maybe Special)
+transformSpecialRhs (FE.Primitive (FE.Prim p)) =
+  case p of
+    "Builtin" :| ["Arrow"] -> pure $ Just $ ArrowS Nothing
+    "Builtin" :| ["Pair"]  -> pure $ Just $ PairS Nothing
+    "Builtin" :| ["Omega"] -> pure $ Just OmegaS
+    "Builtin" :| ["Colon"] -> pure $ Just ColonS
+    "Builtin" :| ["Type"]  -> pure $ Just TypeS
+    "Builtin" :| (s:ss)    -> throwFF $ UnknownBuiltin $ s :| ss
+    _                      -> pure Nothing
+transformSpecialRhs (FE.Application (FE.App f (arg :| []))) = do
+  head <- getSpecial f
+  case head of
+    Nothing               -> pure Nothing
+    Just (ArrowS Nothing) -> Just . ArrowS . Just <$> transformUsage arg
+    Just (PairS  Nothing) -> Just . PairS  . Just <$> transformUsage arg
+    Just _                ->
+      -- an error, but 'transformNormal' will catch it
+      pure Nothing
+transformSpecialRhs _ = pure Nothing
+
+transformSpecial ::
+  FE.Final Ctx.Definition ->
+  Env primTy primVal (Maybe Special)
+transformSpecial def@(Ctx.Def π ty (FE.Like [] rhs :| []) _) = do
+  rhs <- transformSpecialRhs rhs
+  when (isJust rhs) do
+    unless (isNothing π) $ throwFF $ BuiltinWithUsage def
+    unless (isNothing ty) $ throwFF $ BuiltinWithTypeSig def
+  pure rhs
+transformSpecial _ = pure Nothing
+
 transformSig ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   Env primTy primVal (Maybe (CoreSigHR primTy primVal))
-transformSig x def@(Ctx.Def π msig _ _) =
+transformSig x def = liftA2 (<|>) trySpecial tryNormal where
+  trySpecial = fmap SpecialSig <$> transformSpecial def
+  tryNormal  = transformNormalSig x def
+
+transformNormalSig ::
+  NameSymbol.T ->
+  FE.Final Ctx.Definition ->
+  Env primTy primVal (Maybe (CoreSigHR primTy primVal))
+transformNormalSig x def@(Ctx.Def π msig _ _) =
   Just <$> transformValSig x def π msig
-transformSig _ (Ctx.Record _ _) = pure Nothing -- TODO
-transformSig x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig x typ
-transformSig _ (Ctx.Unknown sig) =
+transformNormalSig _ (Ctx.Record _ _) = pure Nothing -- TODO
+transformNormalSig x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig x typ
+transformNormalSig _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
-transformSig _ Ctx.CurrentNameSpace = pure Nothing
-transformSig _ (Ctx.Information {}) = pure Nothing
+transformNormalSig _ Ctx.CurrentNameSpace = pure Nothing
+transformNormalSig _ (Ctx.Information {}) = pure Nothing
 
 transformTypeSig ::
   NameSymbol.T ->
@@ -391,8 +526,19 @@ transformDef ::
   (Data primTy, Data primVal) =>
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
+  Env primTy primVal [CoreDef primTy primVal]
+transformDef x def = do
+  sig <- getSig' Just x
+  case sig of
+    SpecialSig s -> pure [SpecialDef x s]
+    _ -> map CoreDef <$> transformNormalDef x def
+
+transformNormalDef ::
+  (Data primTy, Data primVal) =>
+  NameSymbol.T ->
+  FE.Final Ctx.Definition ->
   Env primTy primVal [IR.RawGlobal primTy primVal]
-transformDef x (Ctx.Def _ _ def _) = do
+transformNormalDef x (Ctx.Def _ _ def _) = do
   (π, typ) <- getValSig x
   clauses <- traverse transformClause def
   let f =
@@ -403,11 +549,11 @@ transformDef x (Ctx.Def _ _ def _) = do
             funClauses = clauses
           }
   pure [IR.GFunction f]
-transformDef _ (Ctx.Record _ _) = pure [] -- TODO
-transformDef x (Ctx.TypeDeclar dec) = transformType x dec
-transformDef _ (Ctx.Unknown _) = pure []
-transformDef _ Ctx.CurrentNameSpace = pure []
-transformDef _ (Ctx.Information {}) = pure []
+transformNormalDef _ (Ctx.Record _ _) = pure [] -- TODO
+transformNormalDef x (Ctx.TypeDeclar dec) = transformType x dec
+transformNormalDef _ (Ctx.Unknown _) = pure []
+transformNormalDef _ Ctx.CurrentNameSpace = pure []
+transformNormalDef _ (Ctx.Information {}) = pure []
 
 getValSig ::
   NameSymbol.T ->
@@ -425,7 +571,7 @@ getSig' f x = do
   msig <- gets @"coreSigs" $ HM.lookup x
   case msig of
     Just sig | Just ty <- f sig -> pure ty
-    _ -> throwFF $ WrongSigType msig
+    _ -> throwFF $ WrongSigType x msig
 
 transformType ::
   (Data primTy, Data primVal) =>
