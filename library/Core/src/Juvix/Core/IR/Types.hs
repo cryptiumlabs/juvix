@@ -11,9 +11,6 @@ module Juvix.Core.IR.Types
     DatatypeWith (..),
     RawDatatype',
     Datatype',
-    DataArgWith (..),
-    RawDataArg',
-    DataArg',
     DataConWith (..),
     RawDataCon',
     DataCon',
@@ -53,10 +50,6 @@ extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 type Datatype = Datatype' NoExt
 
 type RawDatatype = RawDatatype' NoExt
-
-type DataArg = DataArg' NoExt
-
-type RawDataArg = RawDataArg' NoExt
 
 type DataCon = DataCon' NoExt
 

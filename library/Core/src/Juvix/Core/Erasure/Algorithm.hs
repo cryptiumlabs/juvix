@@ -90,7 +90,7 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy primVal m =>
-  Typed.FunClauseT ty primTy primVal ->
+  Typed.FunClauseT primTy primVal ->
   m (Erasure.FunClauseT primTy primVal)
 eraseFunClause (IR.FunClause tel patts body term catchall unreachable) = do
   patts <- mapM erasePattern patts

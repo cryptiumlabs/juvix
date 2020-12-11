@@ -107,10 +107,10 @@ type DatatypeT' ext primTy primVal =
 
 type DatatypeT primTy primVal = DatatypeT' IR.NoExt primTy primVal
 
-type DataArgT' ext primTy primVal =
-  IR.DataArg' ext primTy (P.TypedPrim primTy primVal)
+-- type DataArgT' ext primTy primVal =
+--   IR.DataArg' ext primTy (P.TypedPrim primTy primVal)
 
-type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
+-- type DataArgT primTy primVal = DataArgT' IR.NoExt primTy primVal
 
 type DataConT' ext primTy primVal =
   IR.DataCon' ext primTy (P.TypedPrim primTy primVal)

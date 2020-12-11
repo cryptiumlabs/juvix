@@ -75,8 +75,8 @@ lookupGlobal x = do
     Just defn -> pure $ makeGAnn defn
     Nothing -> throwTC (UnboundGlobal x)
   where
-    makeGAnn (IR.GDatatype (IR.Datatype {dataArgs, dataLevel})) =
-      (foldr makePi (IR.VStar' dataLevel mempty) dataArgs, IR.GZero)
+    makeGAnn (IR.GDatatype (IR.Datatype {nhfDataArgs, dataLevel})) =
+      (foldr makePi (IR.VStar' dataLevel mempty) nhfDataArgs, IR.GZero)
     makeGAnn (IR.GDataCon (IR.DataCon {conType})) =
       (conType, IR.GOmega)
     makeGAnn (IR.GFunction (IR.Function {funType, funUsage})) =
