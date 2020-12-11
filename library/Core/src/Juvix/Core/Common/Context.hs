@@ -502,3 +502,27 @@ traverseContext1 ::
 traverseContext1 = traverseContext . foldMapA . onEntry
   where
     onEntry f (Entry {name, def}) = f name def
+
+foldMapCtx ::
+  (Applicative f, Monoid a) =>
+  (NonEmpty Symbol -> Definition term ty sumRep -> f a) ->
+  Cont (Definition term ty sumRep) ->
+  f a
+foldMapCtx f T {currentNameSpace, topLevelMap} =
+  go (HashMap.toList topLevelMap) startingName
+  where
+    startingName = NameSymbol.fromSymbol topLevelName
+    go xs prefix = do
+      foldMapA
+        ( \(name, contents) ->
+            let qualifiedName = prefix <> pure name
+             in case contents of
+                  Record {definitionContents} ->
+                    go (NameSpace.toList1' definitionContents) qualifiedName
+                  CurrentNameSpace ->
+                    -- currentName and our prefix should be the same here
+                    go (NameSpace.toList1' currentNameSpace) qualifiedName
+                  _ ->
+                    f qualifiedName contents
+        )
+        xs
