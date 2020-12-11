@@ -472,6 +472,14 @@ resolveName ctx (def, name) =
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
 
+-- | qualifyLookup fully qualiifes a name in the current context.
+qualifyLookup :: NameSymbol.T -> T a b c -> Maybe NameSymbol.T
+qualifyLookup name ctx =
+  case lookup name ctx of
+    Nothing -> Nothing
+    Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
+    Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
+
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
