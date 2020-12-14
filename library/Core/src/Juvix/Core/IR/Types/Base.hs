@@ -176,6 +176,10 @@ data Datatype' ext primTy primVal
       }
   deriving (Generic)
 
+type RawDataArg' = RawDatatype'
+
+type DataArg' = Datatype'
+
 deriving instance
   GlobalAll Show ext primTy primVal =>
   Show (RawDatatype' ext primTy primVal)
