@@ -5,11 +5,17 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
+import qualified System.IO.Unsafe as Unsafe
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
 foo :: Context.T Int Int Int
-foo = Context.empty ("Foo" :| ["Bar", "Baz"])
+foo = Unsafe.unsafePerformIO (Context.empty ("Foo" :| ["Bar", "Baz"]))
+
+unsafeEmpty :: NameSymbol.T -> Context.T term ty sumRep
+unsafeEmpty x = Unsafe.unsafePerformIO (Context.empty x)
 
 contextTests :: T.TestTree
 contextTests =
@@ -101,27 +107,29 @@ checkCorrectResolution =
 
 privateFromAbove :: T.TestTree
 privateFromAbove =
-  let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("Ambassador" :| ["Kosh", "Vorlons"])
+  T.testCase
+    "Can't access private var from above"
+    $ do
+      empt <-
+        Context.empty ("Ambassador" :| ["Kosh", "Vorlons"]) ::
+          IO (Context.T Text.Text Text.Text Text.Text)
       --
-      added =
-        Context.add
-          (NameSpace.Priv "too-late")
-          ( Context.TypeDeclar
-              "The avalanche has already started; It is too late for the pebbles to vote."
-          )
-          empt
-      Right switched =
-        Context.switchNameSpace ("Ambassador" :| ["Kosh"]) added
-      looked = switched Context.!? ("Vorlons" :| ["too-late"])
-   in T.testCase
-        "Can't access private var from above"
-        (looked T.@=? Nothing)
+      let added =
+            Context.add
+              (NameSpace.Priv "too-late")
+              ( Context.TypeDeclar
+                  "The avalanche has already started; It is too late for the pebbles to vote."
+              )
+              empt
+          Right switched =
+            Context.switchNameSpace ("Ambassador" :| ["Kosh"]) added
+          looked = switched Context.!? ("Vorlons" :| ["too-late"])
+      looked T.@=? Nothing
 
 privateBeatsPublic :: T.TestTree
 privateBeatsPublic =
   let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("Londo" :| ["Mollari", "Centauri"])
+      empt = unsafeEmpty ("Londo" :| ["Mollari", "Centauri"])
       --
       added =
         Context.add
@@ -150,7 +158,7 @@ privateBeatsPublic =
 localBeatsGlobal :: T.TestTree
 localBeatsGlobal =
   let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("GKar" :| ["Narn"])
+      empt = unsafeEmpty ("GKar" :| ["Narn"])
       --
       added =
         Context.add
@@ -169,7 +177,7 @@ localBeatsGlobal =
               \ your intent. Usually. It just doesn't always do it in the way you expect."
           )
           added
-      looked = added2 Context.!? (pure "cost")
+      looked = added2 Context.!? pure "cost"
    in "I have seen what power does, and I have seen what power costs. \
       \ The one is never equal to the other."
         |> Context.TypeDeclar
@@ -194,19 +202,24 @@ nonRelatedModuleStillPersists =
 
 emptyWorksAsExpectedSingle :: T.TestTree
 emptyWorksAsExpectedSingle =
-  let created :: Context.T Int Int Int
-      created = Context.empty (pure "Mr-Morden")
-      empt =
-        HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)]
-          |> Context.T NameSpace.empty (pure "Mr-Morden")
-   in T.testCase
-        "empty properly adds a top level module as expected:"
-        (created T.@=? empt)
+  T.testCase
+    "empty properly adds a top level module as expected:"
+    $ do
+      created <- Context.empty (pure "Mr-Morden") :: IO (Context.T Int Int Int)
+      empt <- do
+        map <- atomically STM.new
+        pure $
+          Context.T
+            NameSpace.empty
+            (pure "Mr-Morden")
+            (HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)])
+            map
+      created T.@=? empt
 
 topLevelDoesNotMessWithInnerRes :: T.TestTree
 topLevelDoesNotMessWithInnerRes =
   let created :: Context.T Int Int Int
-      created = Context.empty (pure "Shadows")
+      created = unsafeEmpty (pure "Shadows")
       inner =
         Context.switchNameSpace
           (Context.topLevelName :| ["Shadows", "Mr-Morden"])
@@ -215,12 +228,15 @@ topLevelDoesNotMessWithInnerRes =
         Context.switchNameSpace
           ("Shadows" :| ["Mr-Morden"])
           created
-      empt =
-        NameSpace.empty
-          |> NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace
-          |> flip Context.Record Nothing
-          |> (\record -> HashMap.fromList [("Shadows", record)])
-          |> Context.T NameSpace.empty ("Shadows" :| ["Mr-Morden"])
    in T.testCase
         "TopLevelname does not prohbit inner module change"
-        (inner == Right empt && inner == inner2 T.@=? True)
+        $ do
+          empt <- do
+            empty <- atomically STM.new
+            NameSpace.empty
+              |> NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace
+              |> flip Context.Record Nothing
+              |> (\record -> HashMap.fromList [("Shadows", record)])
+              |> (\x -> Context.T NameSpace.empty ("Shadows" :| ["Mr-Morden"]) x empty)
+              |> pure
+          inner == Right empt && inner == inner2 T.@=? True

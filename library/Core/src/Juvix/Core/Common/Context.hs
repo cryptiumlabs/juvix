@@ -22,6 +22,7 @@ import Juvix.Library hiding (modify)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -46,19 +47,22 @@ topLevelName = "TopLevel"
 -- Body
 --------------------------------------------------------------------------------
 
-empty :: NameSymbol.T -> T term ty sumRep
-empty sym =
-  case addPathWithValue (pure topLevelName <> sym') CurrentNameSpace fullyEmpty of
+empty :: NameSymbol.T -> IO (T term ty sumRep)
+empty sym = do
+  empty <- atomically fullyEmpty
+  case addPathWithValue (pure topLevelName <> sym') CurrentNameSpace empty of
     Lib.Left _ -> error "impossible"
-    Lib.Right x -> x
+    Lib.Right x -> pure x
   where
-    fullyEmpty =
-      ( T
+    fullyEmpty = do
+      emptyReverseLookup <- STM.new
+      pure $
+        T
           { currentNameSpace = NameSpace.empty,
             currentName = sym',
-            topLevelMap = HashMap.empty
+            topLevelMap = HashMap.empty,
+            reverseLookup = emptyReverseLookup
           }
-      )
     sym' = removeTopName sym
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T

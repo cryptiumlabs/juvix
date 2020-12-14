@@ -23,6 +23,7 @@ dependencies:
 - extensible-data
 - containers
 - unordered-containers
+- stm-containers
 - lens
 - dlist
 ###############################

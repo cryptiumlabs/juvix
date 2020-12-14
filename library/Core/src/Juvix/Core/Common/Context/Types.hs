@@ -4,20 +4,24 @@
 module Juvix.Core.Common.Context.Types where
 
 import Control.Lens hiding ((|>))
+import GHC.Show
 import Juvix.Core.Common.Context.Precedence
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Core.Common.Open as Open
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
+import qualified StmContainers.Map as STM
 
 data Cont b
   = T
       { currentNameSpace :: NameSpace.T b,
         currentName :: NameSymbol.T,
-        topLevelMap :: HashMap.T Symbol b
+        topLevelMap :: HashMap.T Symbol b,
+        reverseLookup :: SymbolMap
       }
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Eq, Generic)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 
@@ -64,9 +68,44 @@ data Information
   = Prec Precedence
   deriving (Show, Generic, Eq, Data)
 
--- not using lenses anymore but leaving this here anyway
-makeLensesWith camelCaseFields ''Definition
-
 data PathError
   = VariableShared NameSymbol.T
   deriving (Show, Eq)
+
+data WhoUses
+  = Who
+      { impExplict :: Open.T,
+        modName :: NameSymbol.T,
+        symbolMap :: SymbolMap
+      }
+  deriving (Show, Eq, Generic)
+
+type SymbolMap = STM.Map Symbol SymbolInfo
+
+type ReverseLookup = HashMap.T NameSymbol.T WhoUses
+
+data SymbolInfo
+  = SymInfo
+      { used :: UsedIn,
+        mod :: NameSymbol.T
+      }
+  deriving (Show, Eq, Generic)
+
+data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Eq, Generic)
+
+instance Show (STM.Map a b) where
+  show _ = "map"
+
+instance Show (STM (STM.Map a b)) where
+  show _ = "STM map"
+
+-- for the sake of our types, we are just going to ignore any value in
+-- the STM map
+instance Eq (STM a) where
+  _ == _ = True
+
+instance Eq (STM.Map a b) where
+  _ == _ = True
+
+-- not using lenses anymore but leaving this here anyway
+makeLensesWith camelCaseFields ''Definition
