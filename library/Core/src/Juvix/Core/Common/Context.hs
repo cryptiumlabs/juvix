@@ -501,7 +501,7 @@ traverseContext1 ::
   f t
 traverseContext1 = traverseContext . foldMapA . onEntry
   where
-    onEntry f (Entry {name, def}) = f name def
+    onEntry f Entry {name, def} = f name def
 
 foldMapCtx ::
   (Applicative f, Monoid a) =>
@@ -512,7 +512,7 @@ foldMapCtx f T {currentNameSpace, topLevelMap} =
   go (HashMap.toList topLevelMap) startingName
   where
     startingName = NameSymbol.fromSymbol topLevelName
-    go xs prefix = do
+    go xs prefix =
       foldMapA
         ( \(name, contents) ->
             let qualifiedName = prefix <> pure name
