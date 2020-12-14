@@ -62,7 +62,7 @@ data Definition term ty sumRep
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
-  deriving (Show, Generic, Eq, Data)
+  deriving (Show, Generic, Eq)
 
 data Information
   = Prec Precedence

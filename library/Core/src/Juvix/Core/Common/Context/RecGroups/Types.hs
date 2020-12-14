@@ -38,7 +38,7 @@ data Entry term ty sumRep
       { name :: NameSymbol.T,
         def :: Definition term ty sumRep
       }
-  deriving (Eq, Show, Generic, Data)
+  deriving (Eq, Show, Generic)
 
 -- | A recursive group of definitions.
 type Group term ty sumRep = NonEmpty (Entry term ty sumRep)
