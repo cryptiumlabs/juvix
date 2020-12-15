@@ -48,7 +48,9 @@ data Definition term ty sumRep
   | Record
       { definitionContents :: NameSpace.T (Definition term ty sumRep),
         -- Maybe as I'm not sure what to put here for now
-        definitionMTy :: Maybe ty
+        definitionMTy :: Maybe ty,
+        definitionOpenList :: [Open.TName NameSymbol.T],
+        definitionQualifiedMap :: SymbolMap
       }
   | TypeDeclar
       { definitionRepr :: sumRep
@@ -82,11 +84,13 @@ data WhoUses
 
 type SymbolMap = STM.Map Symbol SymbolInfo
 
-type ReverseLookup = HashMap.T NameSymbol.T WhoUses
+type ReverseLookup = HashMap.T NameSymbol.T [WhoUses]
 
 data SymbolInfo
   = SymInfo
-      { used :: UsedIn,
+      { -- | used notes if the symbol is used and if so in what
+        used :: UsedIn,
+        -- | mod is the module where the symbol is coming from
         mod :: NameSymbol.T
       }
   deriving (Show, Eq, Generic)

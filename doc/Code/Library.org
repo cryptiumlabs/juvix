@@ -565,6 +565,7 @@ Types to support partial application and polymorphic primitives.
   + [[RecGroups]]
   + [[Context/Types]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[Library]]
   + [[HashMap]]

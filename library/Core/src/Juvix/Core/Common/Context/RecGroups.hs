@@ -27,5 +27,5 @@ recGroups' ns = do
     newGroup
     addDef name def
     case def of
-      Record ns _ -> withPrefix name $ recGroups' ns
+      Record {definitionContents = ns} -> withPrefix name $ recGroups' ns
       _ -> pure ()
