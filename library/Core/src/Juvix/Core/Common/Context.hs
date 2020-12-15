@@ -127,6 +127,7 @@ switchNameSpace newNameSpace t@T {currentName}
             { currentName = removeTopName newCurrName,
               currentNameSpace = startingContents
             }
+        -- addGlobal' adds the current name space back to the environment map
         addGlobal' t@T {currentNameSpace} =
           -- we have to add top to it, or else if it's a single symbol, then
           -- it'll be added to itself, which is bad!
@@ -139,6 +140,7 @@ switchNameSpace newNameSpace t@T {currentName}
           currentName <> newNameSpace
     ret <- addPathWithValue newNameSpace CurrentNameSpace t
     pure $ case ret of
+      -- In this path the CurrentNameSpace is already added
       Lib.Right t ->
         -- check if we have to qualify Name
         case t !? newNameSpace of
@@ -147,6 +149,7 @@ switchNameSpace newNameSpace t@T {currentName}
           _ ->
             Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
       -- the namespace may already exist
+      -- in this path CurrentNameSpace has not been added, we MUST add it
       Lib.Left er ->
         -- TODO ∷ refactor with resolveName
         -- how do we add the namespace back to the private area!?
