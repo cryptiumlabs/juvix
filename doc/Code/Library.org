@@ -713,6 +713,7 @@ Calculate mutually-recursive groups of definitions.
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]

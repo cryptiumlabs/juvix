@@ -5,6 +5,7 @@ import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -47,8 +48,8 @@ eraseDatatype ::
   ErasureM primTy primVal m =>
   Typed.DatatypeT primTy primVal ->
   m (Erasure.Datatype primTy)
-eraseDatatype (IR.Datatype name pos args level term cons) = do
-  args <- mapM eraseDataArg args
+eraseDatatype (IR.Datatype name pos args nfArgs level cons) = do
+  args <- mapM eraseDataArg nfArgs
   cons <- mapM eraseDataCon cons
   pure (Erasure.Datatype name args level cons)
 
