@@ -2,6 +2,7 @@
 module Typechecker where
 
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All

@@ -939,6 +939,7 @@ Quantitative type implementation inspired by
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[IR/Typechecker]]
   + [[All]]
