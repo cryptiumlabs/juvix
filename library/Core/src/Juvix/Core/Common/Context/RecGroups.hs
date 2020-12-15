@@ -7,6 +7,7 @@ module Juvix.Core.Common.Context.RecGroups
   )
 where
 
+import Control.Lens
 import Juvix.Core.Common.Context.RecGroups.Types
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NS
@@ -27,5 +28,5 @@ recGroups' ns = do
     newGroup
     addDef name def
     case def of
-      Record {definitionContents = ns} -> withPrefix name $ recGroups' ns
+      Record rec' -> withPrefix name $ recGroups' (rec' ^. contents)
       _ -> pure ()

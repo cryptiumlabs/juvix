@@ -14,6 +14,7 @@ module Juvix.Core.Common.Context
   )
 where
 
+import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
@@ -133,7 +134,7 @@ switchNameSpace newNameSpace t@T {currentName}
           -- it'll be added to itself, which is bad!
           addGlobal
             (addTopNameToSngle currentName)
-            (Record currentNameSpace Nothing undefined undefined)
+            (Record $ Rec currentNameSpace Nothing undefined undefined)
             t
         addCurrent = addGlobal newNameSpace CurrentNameSpace
         qualifyName =
@@ -154,20 +155,24 @@ switchNameSpace newNameSpace t@T {currentName}
         -- TODO ∷ refactor with resolveName
         -- how do we add the namespace back to the private area!?
         case t !? newNameSpace of
-          Just (Current (NameSpace.Pub (Record def _ _ _))) ->
-            Lib.Right (addCurrent (addCurrentName t def qualifyName))
-          Just (Current (NameSpace.Priv (Record def _ _ _))) ->
-            Lib.Right (addCurrent (addCurrentName t def qualifyName))
-          Just (Outside (Record def _ _ _))
+          Just (Current (NameSpace.Pub (Record record))) ->
+            Lib.Right
+              (addCurrent (addCurrentName t (record ^. contents) qualifyName))
+          Just (Current (NameSpace.Priv (Record record))) ->
+            Lib.Right
+              (addCurrent (addCurrentName t (record ^. contents) qualifyName))
+          Just (Outside (Record record))
             -- figure out if we contain what we are looking for!
             | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
               -- if so update it!
               case addGlobal' t !? newNameSpace of
-                Just (Outside (Record def _ _ _)) ->
-                  Lib.Right (addCurrent (addCurrentName t def newNameSpace))
+                Just (Outside (Record record)) ->
+                  Lib.Right
+                    (addCurrent (addCurrentName t (record ^. contents) newNameSpace))
                 _ -> error "doesn't happen"
             | otherwise ->
-              Lib.Right (addCurrent (addCurrentName t def newNameSpace))
+              Lib.Right
+                (addCurrent (addCurrentName t (record ^. contents) newNameSpace))
           Nothing -> Lib.Left er
           Just __ -> Lib.Left er
 
@@ -205,8 +210,8 @@ modifyGlobal sym g t =
   where
     f (Final x) =
       UpdateNow (g x)
-    f (Continue (Just (Record def ty open map))) =
-      GoOn (OnRecord def ty open map)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue _) =
       Abort
 
@@ -222,8 +227,8 @@ addGlobal sym def t =
   where
     f (Final _) =
       UpdateNow def
-    f (Continue (Just (Record def ty opens qualified))) =
-      GoOn (OnRecord def ty opens qualified)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue _) =
       Abort
 
@@ -242,9 +247,9 @@ addPathWithValue sym def t = do
     f (Final (Just _)) = pure Abort
     f (Continue Nothing) =
       atomically STM.new
-        >>| GoOn . OnRecord NameSpace.empty Nothing []
-    f (Continue (Just (Record def ty opens map))) =
-      pure (GoOn (OnRecord def ty opens map))
+        >>| GoOn . Rec NameSpace.empty Nothing []
+    f (Continue (Just (Record record))) =
+      pure (GoOn record)
     f (Continue _) =
       pure Abort
 
@@ -258,8 +263,8 @@ removeNameSpace sym t =
       RemoveNow
     f (Final Nothing) =
       Abort
-    f (Continue (Just (Record def ty open map))) =
-      GoOn (OnRecord def ty open map)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue Nothing) =
       Abort
     f (Continue (Just _)) =
@@ -301,22 +306,19 @@ data Stage b
     -- the namespace that we can still continue down
     Continue b
 
-data Return b ty
+data Return term ty sumRep
   = -- | 'GoOn' signifies that we should continue
     -- going down records
-    GoOn (OnRecord b ty)
+    GoOn (Record term ty sumRep)
   | -- | 'Abort' signifies that we should cancel
     -- the changes on the map and
     Abort
   | -- | 'UpdateNow' signifies that we should
     -- update the context with the current value
-    UpdateNow b
+    UpdateNow (Definition term ty sumRep)
   | -- | 'RemoveNow' signifies that we show remove
     -- the definition at this level
     RemoveNow
-
-data OnRecord b ty
-  = OnRecord (NameSpace.T b) (Maybe ty) [Open.TName NameSymbol.T] SymbolMap
 
 ----------------------------------------
 -- Type Class for Genralized Helpers
@@ -346,9 +348,7 @@ instance MapSym PrivNameSpace where
   insert' sym def = Priv . NameSpace.insert (NameSpace.Priv sym) def . unPriv
 
 modifySpace ::
-  ( Stage (Maybe (Definition term ty sumRep)) ->
-    Return (Definition term ty sumRep) ty
-  ) ->
+  (Stage (Maybe (Definition term ty sumRep)) -> Return term ty sumRep) ->
   NameSymbol.T ->
   T term ty sumRep ->
   Maybe (T term ty sumRep)
@@ -357,7 +357,7 @@ modifySpace f symbol t = runIdentity (modifySpaceImp (Identity . f) symbol t)
 modifySpaceImp ::
   Monad m =>
   ( Stage (Maybe (Definition term ty sumRep)) ->
-    m (Return (Definition term ty sumRep) ty)
+    m (Return term ty sumRep)
   ) ->
   NameSymbol.T ->
   T term ty sumRep ->
@@ -402,7 +402,7 @@ modifySpaceImp f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
 recurseImp ::
   (MapSym map, Monad m) =>
   ( Stage (Maybe (Definition term ty sumRep)) ->
-    m (Return (Definition term ty sumRep) ty)
+    m (Return term ty sumRep)
   ) ->
   NameSymbol.T ->
   map (Definition term ty sumRep) ->
@@ -410,11 +410,11 @@ recurseImp ::
 recurseImp f (x :| y : xs) cont = do
   ret <- f (Continue (lookup' x cont))
   case ret of
-    GoOn (OnRecord nameSpace ty open qualif) -> do
-      recd <- recurseImp f (y :| xs) nameSpace
+    GoOn record -> do
+      recursed <- recurseImp f (y :| xs) (record ^. contents)
       let g newRecord =
-            insert' x (Record newRecord ty open qualif) cont
-       in pure (g <$> recd)
+            insert' x (record |> set contents newRecord |> Record) cont
+       in pure (g <$> recursed)
     Abort ->
       pure Nothing
     RemoveNow ->
@@ -458,8 +458,8 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
         Nothing
       recurse [] x =
         x
-      recurse (x : xs) (Just (Record namespace _ _ _)) =
-        recurse xs (NameSpace.lookup x namespace)
+      recurse (x : xs) (Just (Record record)) =
+        recurse xs (NameSpace.lookup x (record ^. contents))
       -- This can only happen when we hit from the global
       -- a precondition is that the current module
       -- will never have a currentNamespace inside

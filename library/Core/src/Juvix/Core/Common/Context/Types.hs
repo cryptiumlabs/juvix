@@ -45,13 +45,7 @@ data Definition term ty sumRep
         definitionTerm :: term,
         precedence :: Precedence
       }
-  | Record
-      { definitionContents :: NameSpace.T (Definition term ty sumRep),
-        -- Maybe as I'm not sure what to put here for now
-        definitionMTy :: Maybe ty,
-        definitionOpenList :: [Open.TName NameSymbol.T],
-        definitionQualifiedMap :: SymbolMap
-      }
+  | Record (Record term ty sumRep)
   | TypeDeclar
       { definitionRepr :: sumRep
       }
@@ -64,6 +58,16 @@ data Definition term ty sumRep
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
+  deriving (Show, Generic, Eq)
+
+data Record term ty sumRep
+  = Rec
+      { recordContents :: NameSpace.T (Definition term ty sumRep),
+        -- Maybe as I'm not sure what to put here for now
+        recordMTy :: Maybe ty,
+        recordOpenList :: [Open.TName NameSymbol.T],
+        recordQualifiedMap :: SymbolMap
+      }
   deriving (Show, Generic, Eq)
 
 data Information
@@ -113,3 +117,5 @@ instance Eq (STM.Map a b) where
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
+
+makeLensesWith camelCaseFields ''Record
