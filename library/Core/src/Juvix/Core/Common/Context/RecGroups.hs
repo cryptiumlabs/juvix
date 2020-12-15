@@ -22,11 +22,11 @@ recGroups = run_ . recGroups' . currentNameSpace
 
 -- TODO: do actual calculation
 -- (returns every definition in its own group for now)
-recGroups' :: NameSpace term ty sumRep -> Env term ty sumRep ()
+recGroups' :: Record term ty sumRep -> Env term ty sumRep ()
 recGroups' ns = do
-  for_ (NS.toList1' ns) \(name, def) -> do
+  for_ (NS.toList1' (ns ^. contents)) \(name, def) -> do
     newGroup
     addDef name def
     case def of
-      Record rec' -> withPrefix name $ recGroups' (rec' ^. contents)
+      Record rec' -> withPrefix name $ recGroups' rec'
       _ -> pure ()

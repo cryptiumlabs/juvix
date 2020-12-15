@@ -20,7 +20,7 @@ import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.Open as Open
-import Juvix.Library hiding (modify)
+import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -59,9 +59,10 @@ empty sym = do
   where
     fullyEmpty = do
       emptyReverseLookup <- STM.new
+      currentNameSpace <- emptyRecord
       pure $
         T
-          { currentNameSpace = NameSpace.empty,
+          { currentNameSpace = currentNameSpace,
             currentName = sym',
             topLevelMap = HashMap.empty,
             reverseLookup = emptyReverseLookup
@@ -70,6 +71,16 @@ empty sym = do
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
+
+emptyRecord = do
+  emptyQualificationMap <- STM.new
+  pure
+    Rec
+      { recordContents = NameSpace.empty,
+        recordOpenList = [],
+        recordQualifiedMap = emptyQualificationMap,
+        recordMTy = Nothing
+      }
 
 --------------------------------------------------------------------------------
 -- Functions on the Current NameSpace
@@ -87,20 +98,19 @@ add ::
   Definition term ty sumRep ->
   T term ty sumRep ->
   T term ty sumRep
-add sy term t =
-  t {currentNameSpace = NameSpace.insert sy term (currentNameSpace t)}
+add sy term = over (_currentNameSpace . contents) (NameSpace.insert sy term)
 
 remove ::
   NameSpace.From Symbol -> T term ty sumRep -> T term ty sumRep
-remove sy t = t {currentNameSpace = NameSpace.remove sy (currentNameSpace t)}
+remove sy = over (_currentNameSpace . contents) (NameSpace.remove sy)
 
 publicNames :: T term ty sumRep -> [Symbol]
-publicNames T {currentNameSpace} =
-  let NameSpace.List {publicL} = NameSpace.toList currentNameSpace
+publicNames t =
+  let NameSpace.List {publicL} = toList t
    in fst <$> publicL
 
 toList :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
-toList T {currentNameSpace} = NameSpace.toList currentNameSpace
+toList t = NameSpace.toList (t ^. _currentNameSpace . contents)
 
 topList :: T term ty sumRep -> [(Symbol, Definition term ty sumRep)]
 topList T {topLevelMap} = HashMap.toList topLevelMap
@@ -134,33 +144,34 @@ switchNameSpace newNameSpace t@T {currentName}
           -- it'll be added to itself, which is bad!
           addGlobal
             (addTopNameToSngle currentName)
-            (Record $ Rec currentNameSpace Nothing undefined undefined)
+            (Record currentNameSpace)
             t
         addCurrent = addGlobal newNameSpace CurrentNameSpace
         qualifyName =
           currentName <> newNameSpace
     ret <- addPathWithValue newNameSpace CurrentNameSpace t
-    pure $ case ret of
+    case ret of
       -- In this path the CurrentNameSpace is already added
-      Lib.Right t ->
+      Lib.Right t -> do
+        empty <- atomically emptyRecord
         -- check if we have to qualify Name
-        case t !? newNameSpace of
+        pure $ case t !? newNameSpace of
           Just (Current _) ->
-            Lib.Right (addCurrentName t NameSpace.empty qualifyName)
+            Lib.Right (addCurrentName t empty qualifyName)
           _ ->
-            Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
+            Lib.Right (addCurrentName t empty newNameSpace)
       -- the namespace may already exist
       -- in this path CurrentNameSpace has not been added, we MUST add it
       Lib.Left er ->
         -- TODO ∷ refactor with resolveName
         -- how do we add the namespace back to the private area!?
-        case t !? newNameSpace of
+        pure $ case t !? newNameSpace of
           Just (Current (NameSpace.Pub (Record record))) ->
             Lib.Right
-              (addCurrent (addCurrentName t (record ^. contents) qualifyName))
+              (addCurrent (addCurrentName t record qualifyName))
           Just (Current (NameSpace.Priv (Record record))) ->
             Lib.Right
-              (addCurrent (addCurrentName t (record ^. contents) qualifyName))
+              (addCurrent (addCurrentName t record qualifyName))
           Just (Outside (Record record))
             -- figure out if we contain what we are looking for!
             | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
@@ -168,11 +179,11 @@ switchNameSpace newNameSpace t@T {currentName}
               case addGlobal' t !? newNameSpace of
                 Just (Outside (Record record)) ->
                   Lib.Right
-                    (addCurrent (addCurrentName t (record ^. contents) newNameSpace))
+                    (addCurrent (addCurrentName t record newNameSpace))
                 _ -> error "doesn't happen"
             | otherwise ->
               Lib.Right
-                (addCurrent (addCurrentName t (record ^. contents) newNameSpace))
+                (addCurrent (addCurrentName t record newNameSpace))
           Nothing -> Lib.Left er
           Just __ -> Lib.Left er
 
@@ -354,6 +365,9 @@ modifySpace ::
   Maybe (T term ty sumRep)
 modifySpace f symbol t = runIdentity (modifySpaceImp (Identity . f) symbol t)
 
+-- This function dispatches to recurseImp, and serves to deal with
+-- giving recurseImp the proper map to run on. this is either the
+-- private local, public local, or global
 modifySpaceImp ::
   Monad m =>
   ( Stage (Maybe (Definition term ty sumRep)) ->
@@ -362,42 +376,50 @@ modifySpaceImp ::
   NameSymbol.T ->
   T term ty sumRep ->
   m (Maybe (T term ty sumRep))
-modifySpaceImp f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
-  -- check the top level first, as per the lookup rules
-  case NameSpace.lookupInternal s currentNameSpace of
-    Just (NameSpace.Pub _) -> do
-      ret <- recurseImp f (s :| ymbol) currentNameSpace
-      pure (updateCurr t <$> ret)
-    Just (NameSpace.Priv _) -> do
-      ret <- recurseImp f (s :| ymbol) (Priv currentNameSpace)
-      pure (updateCurr t . unPriv <$> ret)
-    -- Check the current namespace, since it's not at the top level
+modifySpaceImp f symbol@(s :| ymbol) t =
+  -- check the current Module first, to properly determine which one to go down
+  case NameSpace.lookupInternal s (t ^. _currentNameSpace . contents) of
+    Just (NameSpace.Pub _) ->
+      applyAndSetCurrent (recurseImp f (s :| ymbol))
+    Just (NameSpace.Priv _) ->
+      applyAndSetCurrent (fmap (fmap unPriv) . recurseImp f symbol . Priv)
+    -- The first part of the name is not in the map, maybe they fully qualified the name
     Nothing ->
-      case NameSymbol.takePrefixOf currentName (removeTopName (s :| ymbol)) of
+      case NameSymbol.takePrefixOf (t ^. _currentName) (removeTopName symbol) of
+        -- currentName : Foo.Bar, symbol: TopLevel.Foo.Bar.baz
+        -- currentName : Foo.Bar, symbol: Foo.Bar.baz
+        -- both of these will hit this path
         Just subPath -> do
-          ret <- recurseImp f subPath currentNameSpace
-          pure (updateCurr t <$> ret)
+          applyAndSetCurrent (recurseImp f subPath)
+        -- For this path, we have
+        -- currentName : Foo.Bar, symbol: Something.Else
         Nothing ->
           -- we do one more match as we have to make sure
           -- if we are adding foo we add it to the right place
           case ymbol of
-            [] -> do
-              ret <- recurseImp f (s :| ymbol) currentNameSpace
-              pure (updateCurr t <$> ret)
+            -- This case is
+            -- currentName: Foo.Bar, symbol: s
+            -- so just apply on the current, we'll stop right away
+            [] -> applyAndSetCurrent (recurseImp f symbol)
+            -- in this case, we have more than just a single symbol
             (newS : newYmbol) ->
-              -- if s is a top level then we should try on without it
-              if  | s == topLevelName -> do
-                    ret <- recurseImp f (newS :| newYmbol) topLevelMap
-                    pure (updateTopLevel t <$> ret)
-                  -- s is not a top level just keep continuing
-                  | otherwise -> do
-                    ret <- recurseImp f (s :| ymbol) topLevelMap
-                    pure (updateTopLevel t <$> ret)
+              -- currentName: Foo.Bar, symbol: TopLevel.First.Rest
+              -- update the TopLevel on First.Rest!
+              if  | s == topLevelName ->
+                    applyAndSetTop (recurseImp f (newS :| newYmbol))
+                  -- currentName: Foo.Bar, symbol: First.MoreStuff
+                  -- just recurse on the symbol entirely
+                  | otherwise -> applyAndSetTop (recurseImp f symbol)
   where
-    updateCurr t newCurrent =
-      t {currentNameSpace = newCurrent}
-    updateTopLevel t newTop =
-      t {topLevelMap = newTop}
+    -- dumb repeat code but idk how to handle to remove the tuple ☹
+    applyAndSetTop f =
+      t |> applyAndSet f (_topLevelMap, _topLevelMap)
+    applyAndSetCurrent f =
+      t |> applyAndSet f (_currentNameSpace . contents, _currentNameSpace . contents)
+
+applyAndSet f (l1, l2) t = do
+  ret <- f (t ^. l1)
+  pure ((\r -> set l2 r t) <$> ret)
 
 recurseImp ::
   (MapSym map, Monad m) =>
@@ -451,7 +473,7 @@ lookupGen ::
     Maybe (t (Definition term ty sumRep))
   ) ->
   NameSymbol.T ->
-  Cont (Definition term ty sumRep) ->
+  T term ty sumRep ->
   Maybe (t (Definition term ty sumRep))
 lookupGen extraLookup nameSymb T {currentNameSpace} =
   let recurse _ Nothing =

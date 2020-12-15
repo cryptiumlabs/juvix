@@ -14,16 +14,14 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified StmContainers.Map as STM
 
-data Cont b
+data T term ty sumRep
   = T
-      { currentNameSpace :: NameSpace.T b,
+      { currentNameSpace :: Record term ty sumRep,
         currentName :: NameSymbol.T,
-        topLevelMap :: HashMap.T Symbol b,
+        topLevelMap :: HashMap.T Symbol (Definition term ty sumRep),
         reverseLookup :: SymbolMap
       }
   deriving (Show, Eq, Generic)
-
-type T term ty sumRep = Cont (Definition term ty sumRep)
 
 type NameSpace term ty sumRep = NameSpace.T (Definition term ty sumRep)
 
@@ -119,3 +117,12 @@ instance Eq (STM.Map a b) where
 makeLensesWith camelCaseFields ''Definition
 
 makeLensesWith camelCaseFields ''Record
+
+-- to avoid refactor we just add _ infront
+makeLensesFor
+  [ ("currentNameSpace", "_currentNameSpace"),
+    ("currentName", "_currentName"),
+    ("topLevelMap", "_topLevelMap"),
+    ("reverseLookup", "_reverseLookup")
+  ]
+  ''T
