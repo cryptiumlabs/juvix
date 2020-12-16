@@ -15,6 +15,7 @@ dependencies:
 - frontend
 - extensible-data
 - unordered-containers
+- lens
 
 default-extensions:
   - NoImplicitPrelude
