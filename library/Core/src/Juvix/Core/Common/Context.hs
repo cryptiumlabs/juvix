@@ -19,7 +19,6 @@ import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Core.Common.Open as Open
 import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
@@ -72,6 +71,7 @@ empty sym = do
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
 
+emptyRecord :: STM (Record term ty sumRep)
 emptyRecord = do
   emptyQualificationMap <- STM.new
   pure
@@ -417,6 +417,12 @@ modifySpaceImp f symbol@(s :| ymbol) t =
     applyAndSetCurrent f =
       t |> applyAndSet f (_currentNameSpace . contents, _currentNameSpace . contents)
 
+applyAndSet ::
+  (Monad m, Functor f) =>
+  (t -> m (f b1)) ->
+  (Getting t s t, ASetter s b2 a b1) ->
+  s ->
+  m (f b2)
 applyAndSet f (l1, l2) t = do
   ret <- f (t ^. l1)
   pure ((\r -> set l2 r t) <$> ret)
@@ -475,7 +481,7 @@ lookupGen ::
   NameSymbol.T ->
   T term ty sumRep ->
   Maybe (t (Definition term ty sumRep))
-lookupGen extraLookup nameSymb T {currentNameSpace} =
+lookupGen extraLookup nameSymb t =
   let recurse _ Nothing =
         Nothing
       recurse [] x =
@@ -486,11 +492,11 @@ lookupGen extraLookup nameSymb T {currentNameSpace} =
       -- a precondition is that the current module
       -- will never have a currentNamespace inside
       recurse (x : xs) (Just CurrentNameSpace) =
-        recurse xs (NameSpace.lookup x currentNameSpace)
+        recurse xs (NameSpace.lookup x (t ^. _currentNameSpace . contents))
       recurse (_ : _) _ =
         Nothing
       first (x :| xs) =
-        NameSpace.lookupInternal x currentNameSpace
+        NameSpace.lookupInternal x (t ^. _currentNameSpace . contents)
           |> second (x :| xs)
       second (x :| xs) looked =
         extraLookup x looked
