@@ -31,9 +31,10 @@ openTests =
 -- Setup Modules
 --------------------------------------------------------------------------------
 
-prelude :: Env.New Context.T
-prelude =
-  Context.empty (pure "Prelude")
+prelude :: IO (Env.New Context.T)
+prelude = do
+  ctx <- Context.empty (pure "Prelude")
+  ctx
     |> Context.add
       (NameSpace.Pub "->")
       ( Context.Def
@@ -50,32 +51,39 @@ prelude =
           (Types.Like [] (Types.Primitive (Types.Prim (pure "Colon"))) :| [])
           (Context.Pred Context.Right 2)
       )
+    |> pure
 
-ourModule :: Env.New Context.T
-ourModule =
-  case Context.switchNameSpace (Context.topLevelName :| ["Londo"]) prelude of
-    Right ctx -> ctx
-    Left ____ -> prelude
+ourModule :: IO (Env.New Context.T)
+ourModule = do
+  prelude <- prelude
+  mod <- Context.switchNameSpace (Context.topLevelName :| ["Londo"]) prelude
+  case mod of
+    Right ctx -> pure ctx
+    Left ____ -> pure prelude
 
-resolveOurModule :: Either Env.Error Env.OpenMap
-resolveOurModule =
+resolveOurModule :: IO (Either Env.Error Env.OpenMap)
+resolveOurModule = do
+  mod <- ourModule
   Env.resolve
-    ourModule
+    mod
     [ Env.Pre
         [Context.topLevelName :| ["Prelude"]]
         []
         (Context.topLevelName :| ["Londo"])
     ]
 
-sameSymbolModule :: Env.New Context.T
-sameSymbolModule =
+sameSymbolModule :: IO (Env.New Context.T)
+sameSymbolModule = do
+  mod <- ourModule
   let added =
-        Context.add (NameSpace.Pub "phantasm") (defaultDef "phantasm") ourModule
-      Right switched =
-        Context.switchNameSpace (Context.topLevelName :| ["Stirner"]) added
-      added2 =
+        Context.add (NameSpace.Pub "phantasm") (defaultDef "phantasm") mod
+  --
+  Right switched <-
+    Context.switchNameSpace (Context.topLevelName :| ["Stirner"]) added
+  --
+  let added2 =
         Context.add (NameSpace.Pub "phantasm") (defaultDef "of-the-mind") switched
-   in added2
+   in pure added2
 
 defaultDef :: Symbol -> Env.New Context.Definition
 defaultDef symb =
@@ -85,24 +93,26 @@ defaultDef symb =
     (Types.Like [] (Types.Primitive (Types.Prim (pure symb))) :| [])
     (Context.Pred Context.Right 10)
 
-preludeAdded :: Env.New Context.T
-preludeAdded =
+preludeAdded :: IO (Env.New Context.T)
+preludeAdded = do
+  mod <- sameSymbolModule
   let added =
-        Context.add (NameSpace.Pub "Prelude") (defaultDef "") sameSymbolModule
-      Right switched =
-        Context.switchNameSpace (Context.topLevelName :| ["Londo"]) added
-      added' =
+        Context.add (NameSpace.Pub "Prelude") (defaultDef "") mod
+  Right switched <-
+    Context.switchNameSpace (Context.topLevelName :| ["Londo"]) added
+  let added' =
         Context.add (NameSpace.Pub "Prelude") (defaultDef "") switched
-      Right switched' =
-        Context.switchNameSpace (Context.topLevelName :| ["Max"]) added'
-      added'' =
+  Right switched' <-
+    Context.switchNameSpace (Context.topLevelName :| ["Max"]) added'
+  let added'' =
         Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched'
-   in added''
+  pure added''
 
-resolvePreludeAdded :: Either Env.Error Env.OpenMap
-resolvePreludeAdded =
+resolvePreludeAdded :: IO (Either Env.Error Env.OpenMap)
+resolvePreludeAdded = do
+  prelude <- preludeAdded
   [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
-    |> Env.resolve preludeAdded
+    |> Env.resolve prelude
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -110,61 +120,76 @@ resolvePreludeAdded =
 
 topLevelToImportDoesntMatter :: T.TestTree
 topLevelToImportDoesntMatter =
-  Env.resolve
-    ourModule
-    [ Env.Pre
-        [pure "Prelude"]
-        []
-        (Context.topLevelName :| ["Londo"])
-    ]
-    |> (resolveOurModule T.@=?)
+  ( do
+      mod <- ourModule
+      resolvedTopWithPrelude <- resolveOurModule
+      resolved <-
+        Env.resolve
+          mod
+          [ Env.Pre
+              [pure "Prelude"]
+              []
+              (Context.topLevelName :| ["Londo"])
+          ]
+      resolvedTopWithPrelude T.@=? resolved
+  )
     |> T.testCase
       "adding top level to module open does not matter if there is no lower module"
 
 openPreludeActsProperly :: T.TestTree
 openPreludeActsProperly =
-  let Right opens = resolveOurModule
-      (_, Env.Env {modMap}) =
-        Env.bareRun
-          Env.populateModMap
-          (Context.empty (pure "Londo"))
-          ourModule
-          opens
-      openMap =
-        Map.fromList
-          [ (":", Context.topLevelName :| ["Prelude"]),
-            ("->", Context.topLevelName :| ["Prelude"])
-          ]
-   in T.testCase "-> and : should fully qualify" (modMap T.@=? openMap)
+  T.testCase
+    "-> and : should fully qualify"
+    ( do
+        Right opens <- resolveOurModule
+        ourMod <- ourModule
+        emptyMod <- (Context.empty (pure "Londo"))
+        (_, Env.Env {modMap}) <-
+          Env.bareRun Env.populateModMap emptyMod ourMod opens
+        let openMap =
+              Map.fromList
+                [ (":", Context.topLevelName :| ["Prelude"]),
+                  ("->", Context.topLevelName :| ["Prelude"])
+                ]
+        modMap T.@=? openMap
+    )
 
 ambiSymbolInOpen :: T.TestTree
 ambiSymbolInOpen =
-  let Right switched =
+  ( do
+      sameSymbolModule <- sameSymbolModule
+      Right switched <-
         Context.switchNameSpace (Context.topLevelName :| ["Max"]) sameSymbolModule
-   in [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
-        |> Env.resolve switched
-        |> (T.@=? Left (Env.AmbiguousSymbol "phantasm"))
-        |> T.testCase
-          "opening same symbol with it not being in the module def should be ambi"
+      resovled <-
+        [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
+          |> Env.resolve switched
+      resovled T.@=? Left (Env.AmbiguousSymbol "phantasm")
+  )
+    |> T.testCase
+      "opening same symbol with it not being in the module def should be ambi"
 
 notAmbiIfLocalF :: T.TestTree
 notAmbiIfLocalF =
-  let Right switched =
+  ( do
+      sameSymbolModule <- sameSymbolModule
+      Right switched <-
         Context.switchNameSpace (Context.topLevelName :| ["Max"]) sameSymbolModule
-      added = Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched
-      opens =
-        Map.fromList
-          [ ( Context.topLevelName :| ["Max"],
-              [ Env.Explicit (Context.topLevelName :| ["Stirner"]),
-                Env.Explicit (Context.topLevelName :| ["Londo"])
+      let added = Context.add (NameSpace.Pub "phantasm") (defaultDef "") switched
+          opens =
+            Map.fromList
+              [ ( Context.topLevelName :| ["Max"],
+                  [ Env.Explicit (Context.topLevelName :| ["Stirner"]),
+                    Env.Explicit (Context.topLevelName :| ["Londo"])
+                  ]
+                )
               ]
-            )
-          ]
-   in [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
-        |> Env.resolve added
-        |> (T.@=? Right opens)
-        |> T.testCase
-          "opening same symbol with it being in the module is not ambi"
+      resovled <-
+        [Env.Pre [pure "Stirner", pure "Londo"] [] (Context.topLevelName :| ["Max"])]
+          |> Env.resolve added
+      resovled T.@=? Right opens
+  )
+    |> T.testCase
+      "opening same symbol with it being in the module is not ambi"
 
 notAmbiIfTopLevel :: T.TestTree
 notAmbiIfTopLevel =
@@ -176,20 +201,26 @@ notAmbiIfTopLevel =
               ]
             )
           ]
-   in resolvePreludeAdded
-        |> (T.@=? Right opens)
+   in ( do
+          res <- resolvePreludeAdded
+          res T.@=? Right opens
+      )
         |> T.testCase
           "opening same symbol with it being in the module is not ambi"
 
 onlyOpenProperSymbols :: T.TestTree
 onlyOpenProperSymbols =
-  let Right opens = resolvePreludeAdded
-      (_, Env.Env {modMap}) =
+  ( do
+      max <- Context.empty (pure "Max")
+      prelude <- preludeAdded
+      Right opens <- resolvePreludeAdded
+      (_, Env.Env {modMap}) <-
         Env.bareRun
           Env.populateModMap
-          (Context.empty (pure "Max"))
-          preludeAdded
+          max
+          prelude
           opens
-   in (modMap T.@=? mempty)
-        |> T.testCase
-          "explicit symbols don't get added to the symbol mapping"
+      modMap T.@=? mempty
+  )
+    |> T.testCase
+      "explicit symbols don't get added to the symbol mapping"
