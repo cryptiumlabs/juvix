@@ -19,11 +19,6 @@
   + [[HR]]
   + [[Types]]
   + [[Naturals]]
-  + [[InteractionNet]]
-  + [[Env]]
-  + [[Graph]]
-  + [[Maps]]
-  + [[Default]]
   + [[Library]]
 * Main
 - _Relies on_

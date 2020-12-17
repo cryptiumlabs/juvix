@@ -6,19 +6,6 @@
   + [[Types]]
   + [[Library]]
 * INet
-- _Relies on_
-  + [[EAC]]
-  + [[Unit]]
-  + [[InteractionNet]]
-  + [[Env]]
-  + [[Graph]]
-  + [[Interface]]
-  + [[Maps]]
-  + [[Default]]
-  + [[Type]]
-  + [[Library]]
-  + [[Dot]]
-  + [[Graph]]
 * Main
 - _Relies on_
   + [[Library]]
