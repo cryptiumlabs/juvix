@@ -13,7 +13,7 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this
-f ,
+run,
   contextify ::
     Type.Context ->
     (Context.NameSymbol, [Repr.TopLevel]) ->
@@ -35,7 +35,7 @@ contextify cont (nameSymb, xs) = do
             opens = opens <> opens',
             modsDefined = modsDefined <> modsDefined'
           }
-f = contextify
+run = contextify
 
 -- we can't just have a list, we need to have a map with implicit opens as
 -- well...

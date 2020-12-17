@@ -31,42 +31,47 @@ data Error
 type Final f = Target.New f
 
 op ::
-  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
+  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> IO (Either Error Target.FinalContext)
 op = contextualize
 
 contextualize ::
-  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> Either Error Target.FinalContext
-contextualize init =
-  case contextify init of
-    Left err -> Left (PathErr err)
-    Right (context, openList) ->
-      case Module.transformContext context openList of
-        Left err -> Left (ModuleErr err)
-        Right xs ->
-          case Infix.transformContext xs of
-            Left err -> Left (InfixErr err)
-            Right xs -> Right xs
+  NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> IO (Either Error Target.FinalContext)
+contextualize init = do
+  ctx <- contextify init
+  case ctx of
+    Left err -> pure $ Left (PathErr err)
+    Right (context, openList) -> do
+      trans1 <- Module.transformContext context openList
+      case trans1 of
+        Left err -> pure $ Left (ModuleErr err)
+        Right xs -> do
+          infixed <- Infix.transformContext xs
+          case infixed of
+            Left err -> pure $ Left (InfixErr err)
+            Right xs -> pure $ Right xs
 
 contextify ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) ->
-  Either Context.PathError (Contextify.Context, [Module.PreQualified])
-contextify t@((sym, _) :| _) =
-  foldM resolveOpens (Context.empty sym, []) (addTop <$> t)
+  IO (Either Context.PathError (Contextify.Context, [Module.PreQualified]))
+contextify t@((sym, _) :| _) = do
+  emptyCtx <- Context.empty sym
+  runM $
+    foldM resolveOpens (emptyCtx, []) (addTop <$> t)
 
 addTop :: Bifunctor p => p NameSymbol.T c -> p NameSymbol.T c
 addTop = first (NameSymbol.cons Context.topLevelName)
 
 -- we get the opens
 resolveOpens ::
+  (MonadIO m, HasThrow "left" Context.PathError m) =>
   (Contextify.Context, [Module.PreQualified]) ->
   (Context.NameSymbol, [Initial.TopLevel]) ->
-  Either
-    Context.PathError
-    (Contextify.Context, [Module.PreQualified])
-resolveOpens (ctx', openList) (sym, xs) =
-  case Contextify.f ctx' (sym, xs) of
+  m (Contextify.Context, [Module.PreQualified])
+resolveOpens (ctx', openList) (sym, xs) = do
+  ctx <- liftIO (Contextify.run ctx' (sym, xs))
+  case ctx of
     Right Contextify.P {ctx, opens, modsDefined} ->
-      Right
+      pure
         ( ctx,
           Module.Pre
             { opens,
@@ -75,4 +80,14 @@ resolveOpens (ctx', openList) (sym, xs) =
             }
             : openList
         )
-    Left err -> Left err
+    Left err -> throw @"left" err
+
+type RunM =
+  ExceptT Context.PathError IO
+
+newtype M a = M (RunM a)
+  deriving (Functor, Applicative, Monad, MonadIO)
+  deriving (HasThrow "left" Context.PathError) via MonadError RunM
+
+runM :: M a -> IO (Either Context.PathError a)
+runM (M a) = runExceptT a
