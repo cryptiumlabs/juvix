@@ -4,9 +4,7 @@ import qualified Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 -- import qualified Juvix.Interpreter.InteractionNet as INet
 -- import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env

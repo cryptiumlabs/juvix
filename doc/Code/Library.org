@@ -1170,6 +1170,20 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
 ** test
+*** INet
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Unit]]
+  + [[InteractionNet]]
+  + [[Backends/Env]]
+  + [[Backends/Graph]]
+  + [[Interface]]
+  + [[Maps]]
+  + [[InteractionNet/Nets/Default]]
+  + [[Type]]
+  + [[Library]]
+  + [[Dot]]
+  + [[Graph]]
 *** Spec
 *** Nets
 **** Combinators <<test/Nets/Combinators>>

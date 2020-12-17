@@ -5,7 +5,6 @@
   + [[Scott]]
   + [[Types]]
   + [[Library]]
-* INet
 * Main
 - _Relies on_
   + [[Library]]
