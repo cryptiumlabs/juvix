@@ -269,17 +269,18 @@ switchContextErr ::
   NameSymbol.T ->
   Context.T term ty sumRep ->
   m (Context.T term ty sumRep)
-switchContextErr sym ctx =
-  case Context.switchNameSpace sym ctx of
-    -- bad Error for now
-    Left ____ -> throw @"error" (UnknownModule sym)
-    Right map -> pure map
+switchContextErr sym ctx = undefined
+
+-- case Context.switchNameSpace sym ctx of
+--   -- bad Error for now
+--   Left ____ -> throw @"error" (UnknownModule sym)
+--   Right map -> pure map
 
 grabList :: NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
 grabList name ctx =
   case Context.extractValue <$> Context.lookup name ctx of
-    Just (Context.Record nameSpace _) ->
-      NameSpace.toList nameSpace
+    Just (Context.Record Context.Rec {recordContents}) ->
+      NameSpace.toList recordContents
     Just _ ->
       NameSpace.List [] []
     Nothing ->
@@ -342,12 +343,13 @@ bareRun (Ctx c) old new opens =
 
 runEnv ::
   Context a -> Old Context.T -> [PreQualified] -> (Either Error a, Environment)
-runEnv (Ctx c) old pres =
-  case resolve old pres of
-    Right opens ->
-      Env old (Context.empty (Context.currentName old)) mempty opens EnvDispatch
-        |> runState (runExceptT c)
-    Left err -> (Left err, undefined)
+runEnv (Ctx c) old pres = undefined
+
+-- case resolve old pres of
+--   Right opens ->
+--     Env old (Context.empty (Context.currentName old)) mempty opens EnvDispatch
+--       |> runState (runExceptT c)
+--   Left err -> (Left err, undefined)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
@@ -430,24 +432,39 @@ populateModMap = do
 -- qualification at this point... we add qualification later as we add
 -- things, as we have to figure out the full resolution of all opens
 
+type RunM =
+  ExceptT Error IO
+
+newtype M a = M (RunM a)
+  deriving (Functor, Applicative, Monad, MonadIO)
+  deriving (HasThrow "left" Error) via MonadError RunM
+
+runM :: M a -> IO (Either Error a)
+runM (M a) = runExceptT a
+
 -- | @resolve@ takes a context and a list of open modules and the modules
 -- they are open in (the module itself, and sub modules, which the opens are
 -- implicit), and fully resolves the opens to their full name.
 -- for example @open Prelude@ in the module Londo translates to
 -- @resolve ctx PreQualified {opens = [Prelude]}@
 -- == @Right (fromList [(TopLevel :| [Londo],[Explicit (TopLevel :| [Prelude])])])@
-resolve :: Context.T a b c -> [PreQualified] -> Either Error OpenMap
-resolve ctx = foldM (resolveSingle ctx) mempty
+resolve :: Context.T a b c -> [PreQualified] -> IO (Either Error OpenMap)
+resolve ctx = runM . foldM (resolveSingle ctx) mempty
 
 resolveSingle ::
-  Context.T a b c -> OpenMap -> PreQualified -> Either Error OpenMap
-resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} =
-  case Context.switchNameSpace explicitModule ctx of
+  (HasThrow "left" Error m, MonadIO m) =>
+  Context.T a b c ->
+  OpenMap ->
+  PreQualified ->
+  m OpenMap
+resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} = do
+  switched <- liftIO $ Context.switchNameSpace explicitModule ctx
+  case switched of
     Left (Context.VariableShared err) ->
-      Left (IllegalModuleSwitch err)
+      throw @"left" (IllegalModuleSwitch err)
     Right ctx -> do
-      resolved <- pathsCanBeResolved ctx opens
-      qualifiedNames <- resolveLoop ctx mempty resolved
+      resolved <- liftEither (pathsCanBeResolved ctx opens)
+      qualifiedNames <- liftEither (resolveLoop ctx mempty resolved)
       openMap
         |> Map.insert explicitModule (fmap Explicit qualifiedNames)
         |> ( \map ->
@@ -456,7 +473,7 @@ resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} =
                  map
                  implicitInner
            )
-        |> Right
+        |> pure
 
 -- this goes off after the checks have passed regarding if the paths
 -- are even possible to resolve
@@ -480,8 +497,8 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
       fmap snd fullyQualifyRes
     addToModMap map (def, sym) =
       case def of
-        Context.Record cont _ ->
-          let NameSpace.List {publicL} = NameSpace.toList cont
+        Context.Record Context.Rec {recordContents} ->
+          let NameSpace.List {publicL} = NameSpace.toList recordContents
            in foldlM
                 ( \map (x, _) ->
                     case map Map.!? x of
@@ -511,6 +528,10 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
 -- start that any module which tries to open a nested path fails,
 -- yet any previous part succeeds, that an illegal open is happening,
 -- and we can error out immediately
+
+liftEither :: HasThrow "left" e m => Either e a -> m a
+liftEither (Left le) = throw @"left" le
+liftEither (Right x) = pure x
 
 -- | @pathsCanBeResolved@ takes a context and a list of opens,
 -- we then try to resolve if the opens are legal, if so we return
