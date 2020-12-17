@@ -108,10 +108,10 @@ data Open a
   deriving (Show, Eq, Ord)
 
 type ContextAlias =
-  ExceptT Error (State Environment)
+  ExceptT Error (StateT Environment IO)
 
 newtype Context a = Ctx {antiAlias :: ContextAlias a}
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "old" (Old Context.T),
       HasSink "old" (Old Context.T),
@@ -145,11 +145,11 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     via ReaderField "openMap" ContextAlias
 
 type SingleAlias term1 ty1 sumRep1 =
-  ExceptT Error (State (SingleEnv term1 ty1 sumRep1))
+  ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
 
 newtype SingleCont term1 ty1 sumRep1 a
   = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "new" (New Context.T),
       HasSink "new" (New Context.T),
@@ -199,7 +199,9 @@ class Names a where
   inCurrentModule' :: NameConstraint a m => NameSymbol.T -> a -> m Bool
 
 instance Switch (SingleDispatch a b c) where
-  type SwitchConstraint _ m = (SingleMap a b c m, HasThrow "error" Error m)
+  type
+    SwitchConstraint _ m =
+      (SingleMap a b c m, HasThrow "error" Error m, MonadIO m)
   switch sym SingleDispatch = do
     tmp <- get @"new"
     env <- get @"env"
@@ -207,7 +209,9 @@ instance Switch (SingleDispatch a b c) where
     switchContextErr sym env >>= put @"env"
 
 instance Switch EnvDispatch where
-  type SwitchConstraint _ m = (TransitionMap m, HasThrow "error" Error m)
+  type
+    SwitchConstraint _ m =
+      (TransitionMap m, HasThrow "error" Error m, MonadIO m)
   switch sym EnvDispatch = do
     -- no modifyM to remove this pattern
     old <- get @"old"
@@ -265,16 +269,16 @@ inCurrentModule name = Juvix.Library.ask @"dispatch" >>= inCurrentModule' name
 ----------------------------------------
 
 switchContextErr ::
-  HasThrow "error" Error m =>
+  (HasThrow "error" Error m, MonadIO m) =>
   NameSymbol.T ->
   Context.T term ty sumRep ->
   m (Context.T term ty sumRep)
-switchContextErr sym ctx = undefined
-
--- case Context.switchNameSpace sym ctx of
---   -- bad Error for now
---   Left ____ -> throw @"error" (UnknownModule sym)
---   Right map -> pure map
+switchContextErr sym ctx = do
+  switched <- liftIO $ Context.switchNameSpace sym ctx
+  case switched of
+    -- bad Error for now
+    Left ____ -> throw @"error" (UnknownModule sym)
+    Right map -> pure map
 
 grabList :: NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
 grabList name ctx =
@@ -336,20 +340,21 @@ bareRun ::
   Old Context.T ->
   New Context.T ->
   OpenMap ->
-  (Either Error a, Environment)
+  IO (Either Error a, Environment)
 bareRun (Ctx c) old new opens =
   Env old new mempty opens EnvDispatch
-    |> runState (runExceptT c)
+    |> runStateT (runExceptT c)
 
 runEnv ::
-  Context a -> Old Context.T -> [PreQualified] -> (Either Error a, Environment)
-runEnv (Ctx c) old pres = undefined
-
--- case resolve old pres of
---   Right opens ->
---     Env old (Context.empty (Context.currentName old)) mempty opens EnvDispatch
---       |> runState (runExceptT c)
---   Left err -> (Left err, undefined)
+  Context a -> Old Context.T -> [PreQualified] -> IO (Either Error a, Environment)
+runEnv (Ctx c) old pres = do
+  resolved <- resolve old pres
+  empt <- Context.empty (Context.currentName old)
+  case resolved of
+    Right opens ->
+      Env old empt mempty opens EnvDispatch
+        |> runStateT (runExceptT c)
+    Left err -> pure (Left err, undefined)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
@@ -500,7 +505,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
         Context.Record Context.Rec {recordContents} ->
           let NameSpace.List {publicL} = NameSpace.toList recordContents
            in foldlM
-                ( \map (x, _) ->
+                ( \map x ->
                     case map Map.!? x of
                       -- this means we already have opened this in another
                       -- module
@@ -513,7 +518,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
                           Nothing -> Right (Map.insert x sym map)
                 )
                 map
-                publicL
+                (fmap fst publicL)
         -- should be updated when we can open expressions
         _ ->
           Left (UnknownModule sym)
