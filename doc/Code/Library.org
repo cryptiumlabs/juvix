@@ -1730,7 +1730,6 @@ Can be added to via core translation
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
-  + [[NameSymbol]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
