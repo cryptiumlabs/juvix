@@ -777,8 +777,15 @@ twoCompTy = one `ann` IR.VPi two (IR.VPi one natT natT) (IR.VPi one natT natT)
 typGlobals :: IR.Globals primTy primVal
 typGlobals =
   Map.fromList
-    [ ("A", IR.GAbstract IR.GZero (IR.VStar 0)),
-      ("F", IR.GAbstract IR.GZero (IR.VPi mempty (IR.VStar 1) (IR.VStar 1)))
+    [ ("A", IR.GAbstract (IR.Abstract "A" IR.GZero (IR.VStar 0))),
+      ( "F",
+        IR.GAbstract
+          ( IR.Abstract
+              "F"
+              IR.GZero
+              (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))
+          )
+      )
     ]
 
 aTerm :: IR.Term primTy primVal
