@@ -65,7 +65,6 @@
   + [[ErasedAnn]]
   + [[Prim]]
   + [[Erasure]]
-  + [[Types]]
   + [[HR]]
   + [[IR]]
   + [[Types]]

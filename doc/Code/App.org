@@ -15,9 +15,7 @@
 * Interactive
 - _Relies on_
   + [[Core]]
-  + [[Erased]]
   + [[HR]]
-  + [[Types]]
   + [[Naturals]]
   + [[Library]]
 * Main
@@ -29,7 +27,6 @@
 * Types
 - _Relies on_
   + [[Types]]
-  + [[IR]]
   + [[Types]]
   + [[Types]]
   + [[Library]]
