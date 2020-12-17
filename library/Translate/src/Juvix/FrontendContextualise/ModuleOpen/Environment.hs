@@ -57,7 +57,8 @@ type Expression tag m =
     HasThrow "error" Error m,
     HasState "modMap" ModuleMap m,
     HasReader "openMap" OpenMap m,
-    ModuleSwitch tag m
+    ModuleSwitch tag m,
+    MonadIO m
   )
 
 --------------------------------------------------------------------------------
