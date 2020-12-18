@@ -879,7 +879,9 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
+* EAC
 * Frontend
+** Setup <<Frontend/Setup>>
 ** src
 *** Juvix
 **** Frontend
@@ -1232,11 +1234,11 @@ Can be added to via core translation
   + While giving the operation =!?=.
 - Every hash in the code base should use this, except when it needs
   to compare keys by the =Ordering= metric instead.
-***** PrettyPrint
-***** Usage
+***** NameSymbol
 - _Relies on_
   + [[Library]]
-***** NameSymbol
+***** PrettyPrint
+***** Usage
 - _Relies on_
   + [[Library]]
 ** test
