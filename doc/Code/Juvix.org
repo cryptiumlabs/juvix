@@ -1,14 +1,4 @@
 * Juvix
-** Pipeline <<Juvix/Pipeline>>
-- _Relies on_
-  + [[Core]]
-  + [[Context]]
-  + [[FromFrontend]]
-  + [[Types]]
-  + [[Parameterisation]]
-  + [[Frontend]]
-  + [[Environment]]
-  + [[Library]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -21,18 +11,16 @@
      - Most likely through LLVM
   4. Various Arithmetic Circuits
      - For use in ZKP's
-*** ArithmeticCircuit
-**** Compilation
-**** Parameterisation
-*** LLVM
-**** Codegen
-***** Graph
-**** JIT
-**** Net
-***** EAC
-*** Michelson
-**** Compilation
-**** DSL
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Context]]
+  + [[FromFrontend]]
+  + [[Types]]
+  + [[Parameterisation]]
+  + [[Frontend]]
+  + [[Environment]]
+  + [[Library]]
 ** Core
 - _Relies on_
   + [[Erasure]]
@@ -72,20 +60,6 @@
   + [[Types]]
   + [[Library]]
   + [[Usage]]
-*** Common
-**** Context
-*** EAC
-*** Erased
-**** Types
-*** ErasedAnn
-*** Erasure
-*** HR
-*** HRAnn
-*** IR
-**** Typechecker
-**** Types
-*** IRAnn
-*** Parameterisations
 ** Encoding
 *** Encoding
 - This provides generic functions used by the various encodings in
@@ -119,23 +93,4 @@
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-** Frontend
-*** Types
-** FrontendContextualise
-*** Contextify
-*** InfixPrecedence
-*** ModuleOpen
-** FrontendDesugar
-*** CombineMultiple
-*** RemoveCond
-*** RemoveDo
-*** RemoveGuard
-*** RemoveModules
-*** RemovePunned
-*** RemoveSignature
-** INetIR
-** Interpreter
-*** InteractionNet
-**** Backends
-**** Nets
-** Library
+** Visualize
