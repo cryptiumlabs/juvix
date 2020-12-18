@@ -30,8 +30,6 @@ recGroups :: (Data term, Data ty, Data sumRep)
           => Context.T term ty sumRep -> Groups term ty sumRep
 recGroups (Context.T curns _ top) = run_ curns $ recGroups' $ toNameSpace top
 
--- TODO: do actual calculation
--- (returns every definition in its own group for now)
 recGroups' :: (Data term, Data ty, Data sumRep)
            => Context.NameSpace term ty sumRep -> Env term ty sumRep ()
 recGroups' ns = do
