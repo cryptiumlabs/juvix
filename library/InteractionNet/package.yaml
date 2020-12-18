@@ -19,6 +19,13 @@ dependencies:
 - enummapset
 - parsec
 ###########################
+# Visualize dependencies
+###########################
+- text
+- fgl-visualize
+- directory
+- turtle
+###########################
 # Libraries
 ###########################
 # we use core for 2 translation files

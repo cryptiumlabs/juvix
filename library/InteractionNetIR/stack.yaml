@@ -10,16 +10,8 @@ extra-deps:
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
 
-- github: cryptiumlabs/jsonschema-gen
-  commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
-
-- fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
-
 ###############################
-# For eac solver for core
+# For eac solver
 ###############################
 - github: cwgoes/haskell-z3
   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
-
-
-allow-newer: true

@@ -1,6 +1,6 @@
-name:                core
+name:                InteractionNetIR
 version:             0.1.0.0
-github:              "githubuser/Core"
+github:              "githubuser/InteractionNetIR"
 license:             BSD3
 author:              "Author name here"
 maintainer:          "example@example.com"
@@ -13,11 +13,12 @@ copyright:           "2020 Author name here"
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/Core#readme>
+description:         Please see the README on GitHub at <https://github.com/githubuser/InteractionNetIR#readme>
 
 dependencies:
 - base >= 4.11 && < 5
 - standard-library
+- core
 - text
 - parsec
 - extensible-data
@@ -25,6 +26,10 @@ dependencies:
 - unordered-containers
 - lens
 - dlist
+###############################
+# For eac solver
+###############################
+- z3
 
 default-extensions:
   - NoImplicitPrelude
@@ -76,7 +81,7 @@ library:
   source-dirs: src
 
 tests:
-  core-test:
+  InteractionNetIR-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:
@@ -84,6 +89,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - InteractionNetIR
     - core
     - tasty
     - tasty-hunit
