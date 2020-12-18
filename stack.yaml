@@ -10,6 +10,7 @@ packages:
 # - ./library/Backends/ArithmeticCircuit
 # - ./library/Backends/LLVM
 # - ./library/InteractionNet
+# - ./library/InteractionNetIR
 
 extra-deps:
 # - llvm-hs-9.0.1
