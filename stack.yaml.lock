@@ -251,17 +251,6 @@ packages:
   original:
     url: https://github.com/seereason/sr-extra/archive/d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f.tar.gz
 - completed:
-    size: 66205
-    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-    name: z3
-    version: '408.0'
-    sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
-    pantry-tree:
-      size: 1524
-      sha256: 9e2a7d6867321b1c7b714ea2c08bd1ceecfe570d19dfe6d91e28905f2a7db29e
-  original:
-    url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-- completed:
     size: 2258
     url: https://github.com/cwgoes/uuid-orphans/archive/e23b58b46affb978c17a0eb3e760d28b058658ce.tar.gz
     name: uuid-orphans

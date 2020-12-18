@@ -53,8 +53,8 @@ extra-deps:
   commit: 1be0894daeefff5126b25c9483ce2bf21845d05b
 - github: seereason/sr-extra
   commit: d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f
-- github: cwgoes/haskell-z3
-  commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
+# - github: cwgoes/haskell-z3
+#   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
 - github: cwgoes/uuid-orphans
   commit: e23b58b46affb978c17a0eb3e760d28b058658ce
 - github: cryptiumlabs/jsonschema-gen
