@@ -8,22 +8,24 @@ module Juvix.Core.Common.Context.RecGroups.Types
     Groups,
     Groups',
     Prefix,
+    ModName,
+    Deps,
 
     -- * Capabilities
     Env,
     PrefixReader,
-    OutputWriter,
-    CurGroupState,
-    CurGroupWriter,
+    OutputState,
+    DepsState,
     run,
     run_,
 
     -- * Operations
-    addDef,
-    newGroup,
+    addGroup,
     withPrefix,
     qualify,
+    prefixM,
     applyPrefix,
+    addDeps,
   )
 where
 
@@ -32,6 +34,10 @@ import Juvix.Core.Common.Context.Types
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Core.Common.Context.Types as Context
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
 
 -- | A definition identified by its fully-qualified name.
 data Entry term ty sumRep
@@ -47,25 +53,31 @@ type Group term ty sumRep = NonEmpty (Entry term ty sumRep)
 type Group' term ty sumRep = D.DList (Entry term ty sumRep)
 
 -- | All recursive groups in a context, in arbitrary order.
-type Groups term ty sumRep = [Group term ty sumRep]
+type Groups term ty sumRep =
+  HashMap ModName [Group term ty sumRep]
 
-type Groups' term ty sumRep = D.DList (Group term ty sumRep)
+type Groups' term ty sumRep =
+  HashMap ModName (D.DList (Group term ty sumRep))
 
 -- | Module name prefix
 newtype Prefix = P (D.DList Symbol)
+
+type ModName = [Symbol]
+
+type Deps = HashMap ModName (HashSet ModName)
 
 data S term ty sumRep
   = S
       { prefix :: Prefix,
         output :: Groups' term ty sumRep,
-        curGroup :: Group' term ty sumRep,
-        curNameSpace :: Context.NameSpace term ty sumRep
+        curNameSpace :: Context.NameSpace term ty sumRep,
+        deps :: Deps
       }
   deriving (Generic)
 
 type Alias term ty sumRep = State (S term ty sumRep)
 
-newtype Env term ty sumRep a = Env {unEnv :: Alias term ty sumRep a}
+newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
   deriving newtype (Functor, Applicative, Monad)
   deriving
     ( HasSource "prefix" Prefix,
@@ -73,72 +85,68 @@ newtype Env term ty sumRep a = Env {unEnv :: Alias term ty sumRep a}
     )
     via ReaderField "prefix" (Alias term ty sumRep)
   deriving
-    ( HasSink "output" (Groups' term ty sumRep),
-      HasWriter "output" (Groups' term ty sumRep)
+    ( HasSource "output" (Groups' term ty sumRep),
+      HasSink "output" (Groups' term ty sumRep),
+      HasState "output" (Groups' term ty sumRep)
     )
-    via WriterField "output" (Alias term ty sumRep)
-  deriving
-    ( HasSource "curGroup" (Group' term ty sumRep),
-      HasSink "curGroup" (Group' term ty sumRep),
-      HasState "curGroup" (Group' term ty sumRep)
-    )
-    via StateField "curGroup" (Alias term ty sumRep)
-  deriving
-    (HasWriter "curGroup" (Group' term ty sumRep))
-    via WriterField "curGroup" (Alias term ty sumRep)
+    via StateField "output" (Alias term ty sumRep)
   deriving
     ( HasSource "curNameSpace" (Context.NameSpace term ty sumRep),
       HasReader "curNameSpace" (Context.NameSpace term ty sumRep)
     )
     via ReaderField "curNameSpace" (Alias term ty sumRep)
+  deriving
+    ( HasSource "deps" Deps,
+      HasSink "deps" Deps,
+      HasState "deps" Deps
+    )
+    via StateField "deps" (Alias term ty sumRep)
 
 type PrefixReader = HasReader "prefix" Prefix
 
-type OutputWriter term ty sumRep =
-  HasWriter "output" (Groups' term ty sumRep)
+type OutputState term ty sumRep =
+  HasState "output" (Groups' term ty sumRep)
 
-type CurGroupState term ty sumRep =
-  HasState "curGroup" (Group' term ty sumRep)
-
-type CurGroupWriter term ty sumRep =
-  HasWriter "curGroup" (Group' term ty sumRep)
+type DepsState = HasState "deps" Deps
 
 run_ :: Context.NameSpace term ty sumRep ->
-        Env term ty sumRep a -> Groups term ty sumRep
-run_ curns = snd . run curns
+        Env term ty sumRep a -> (Groups term ty sumRep, Deps)
+run_ curns act =
+  let (_, grps, deps) = run curns act in (grps, deps)
 
 run :: Context.NameSpace term ty sumRep ->
-       Env term ty sumRep a -> (a, Groups term ty sumRep)
-run curns act =
-  runState (unEnv $ act <* newGroup) initState
-    |> second (toList . output)
+       Env term ty sumRep a -> (a, Groups term ty sumRep, Deps)
+run curNameSpace (Env act) =
+  let (res, S {output, deps}) = runState act initState in
+  (res, toList <$> output, deps)
   where
-    initState = S {prefix, output = [], curGroup = [], curNameSpace = curns}
+    initState = S {prefix, output = [], curNameSpace, deps = []}
     prefix = P [Context.topLevelName]
 
--- | Add a definition to the current recursive group.
-addDef ::
-  (PrefixReader m, CurGroupWriter term ty sumRep m) =>
-  Symbol ->
-  Definition term ty sumRep ->
-  m ()
-addDef name def = do
-  qname <- qualify name
-  tell @"curGroup" [Entry qname def]
-
--- | Finalise the current group and begin a new empty one.
-newGroup ::
-  (OutputWriter term ty sumRep m, CurGroupState term ty sumRep m) => m ()
-newGroup = do
-  addGroup =<< get @"curGroup"
-  put @"curGroup" mempty
-
 -- | Add a group to the final output.
-addGroup :: OutputWriter term ty sumRep m => Group' term ty sumRep -> m ()
-addGroup grp =
+addGroup :: (PrefixReader m, OutputState term ty sumRep m, Foldable t)
+         => t (Entry term ty sumRep) -> m ()
+addGroup grp = do
+  prefix <- prefixM
   case nonEmpty $ toList grp of
-    Just grp -> tell @"output" [grp]
+    Just grp -> modify @"output" $ HashMap.alter f prefix
+      where f = Just . maybe [grp] (<> [grp])
     Nothing -> pure ()
+
+-- | Add dependencies on the given names to the current namespace.
+addDeps :: (Foldable t, DepsState m, PrefixReader m) => t NameSymbol.T -> m ()
+addDeps deps = do
+  let mods = HashSet.fromList $ map NameSymbol.modName $ toList deps
+  let f = Just . maybe mods (HashSet.union mods)
+  prefix <- prefixM
+  modify @"deps" $ HashMap.alter f prefix
+
+toModName :: Prefix -> ModName
+toModName (P p) = toList p
+
+prefixM :: PrefixReader m => m ModName
+prefixM = asks @"prefix" toModName
+
 
 -- | Extend the current module prefix.
 --

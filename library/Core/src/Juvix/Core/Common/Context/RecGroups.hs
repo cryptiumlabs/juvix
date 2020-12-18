@@ -27,8 +27,14 @@ import qualified Generics.SYB as SYB
 -- elements of previous groups. The first element of each pair is its
 -- fully-qualified name.
 recGroups :: (Data term, Data ty, Data sumRep)
-          => Context.T term ty sumRep -> Groups term ty sumRep
-recGroups (Context.T curns _ top) = run_ curns $ recGroups' $ toNameSpace top
+          => Context.T term ty sumRep -> [Group term ty sumRep]
+recGroups (Context.T curns _ top) =
+  let (groups, deps) = run_ curns $ recGroups' $ toNameSpace top in
+  let get n = maybe [] toList $ HashMap.lookup n deps in
+  let edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups in
+  let (g, fromV', _) = Graph.graphFromEdges edges in
+  let fromV v = let (gs, _, _) = fromV' v in gs in
+  Graph.topSort g |> reverse |> concatMap fromV
 
 recGroups' :: (Data term, Data ty, Data sumRep)
            => Context.NameSpace term ty sumRep -> Env term ty sumRep ()
@@ -43,15 +49,17 @@ recGroups' ns = do
         pure []
       _ -> do
         qname <- qualify name
-        pure [((name, def), qname, fv def)]
+        pure [(def, qname, fv def)]
   let (g, fromV, _) = Graph.graphFromEdges defs
-  let unV v = let (nameDef, _, _) = fromV v in nameDef
-  let groups = Graph.scc g |> reverse |> map (toList . map unV)
-  for_ groups \ds -> do
-    newGroup
-    for_ ds \(name, def) -> addDef name def
-  -- TODO put namespaces in order
-
+  let accum1 xs v =
+        let (def, name, ys) = fromV v in
+        (xs <> HashSet.fromList ys, Entry {name, def})
+  let accum xs vs = let (ys, es) = mapAccumL accum1 [] vs in (xs <> ys, es)
+  let (fvs, groups) =
+        Graph.scc g
+        |> mapAccumL (\xs t -> accum xs (toList t)) HashSet.empty
+  addDeps fvs
+  for_ groups addGroup
 
 fv :: Data a => a -> [NameSymbol.T]
 fv = HashSet.toList . SYB.everything (<>) (SYB.mkQ mempty (FV.op []))
