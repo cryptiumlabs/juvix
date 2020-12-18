@@ -879,7 +879,6 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
-* EAC
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
