@@ -34,6 +34,13 @@ packages:
   original:
     url: https://github.com/cryptiumlabs/jsonschema-gen/archive/0639cd166ec59a04d07a3a7d49bdf343e567000e.tar.gz
 - completed:
+    hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
+    pantry-tree:
+      size: 224
+      sha256: 969d6b60ea298ffb81697dd350e76774a2f876103a147117f832400451ad2cc3
+  original:
+    hackage: fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
+- completed:
     size: 66205
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
     name: z3
