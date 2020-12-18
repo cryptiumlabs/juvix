@@ -36,13 +36,6 @@ nameSymbolFromSymbol :: Symbol -> NameSymbol.T
 nameSymbolFromSymbol = NameSymbol.fromSymbol
 
 --------------------------------------------------------------------------------
--- Special Names
---------------------------------------------------------------------------------
-
-topLevelName :: IsString p => p
-topLevelName = "TopLevel"
-
---------------------------------------------------------------------------------
 -- Body
 --------------------------------------------------------------------------------
 
@@ -484,7 +477,7 @@ qualifyLookup name ctx =
 -- The groups are passed in dependency order but the order of elements within
 -- each group is arbitrary.
 traverseContext ::
-  (Applicative f, Monoid t) =>
+  (Applicative f, Monoid t, Data a, Data b, Data c) =>
   -- | process one recursive group
   (Group a b c -> f t) ->
   T a b c ->
@@ -493,7 +486,7 @@ traverseContext f = foldMapA f . recGroups
 
 -- | As 'traverseContext' but ignoring the return value.
 traverseContext_ ::
-  Applicative f =>
+  (Applicative f, Data a, Data b, Data c) =>
   -- | process one recursive group
   (Group a b c -> f z) ->
   T a b c ->
@@ -503,7 +496,7 @@ traverseContext_ f = traverse_ f . recGroups
 -- | Same as 'traverseContext', but the groups are split up into single
 -- definitions.
 traverseContext1 ::
-  (Monoid t, Applicative f) =>
+  (Monoid t, Applicative f, Data a, Data b, Data c) =>
   -- | process one definition
   (NameSymbol.T -> Definition a b c -> f t) ->
   T a b c ->
@@ -512,7 +505,7 @@ traverseContext1 = traverseContext . foldMapA . onEntry
 
 -- | Same as 'traverseContext1', but ignoring the return value.
 traverseContext1_ ::
-  Applicative f =>
+  (Applicative f, Data a, Data b, Data c) =>
   -- | process one definition
   (NameSymbol.T -> Definition a b c -> f z) ->
   T a b c ->
@@ -523,27 +516,3 @@ onEntry ::
   (NameSymbol.T -> Definition term ty sumRep -> t) ->
   Entry term ty sumRep -> t
 onEntry f (Entry {name, def}) = f name def
-
-foldMapCtx ::
-  (Applicative f, Monoid a) =>
-  (NonEmpty Symbol -> Definition term ty sumRep -> f a) ->
-  Cont (Definition term ty sumRep) ->
-  f a
-foldMapCtx f T {currentNameSpace, topLevelMap} =
-  go (HashMap.toList topLevelMap) startingName
-  where
-    startingName = NameSymbol.fromSymbol topLevelName
-    go xs prefix =
-      foldMapA
-        ( \(name, contents) ->
-            let qualifiedName = prefix <> pure name
-             in case contents of
-                  Record {definitionContents} ->
-                    go (NameSpace.toList1' definitionContents) qualifiedName
-                  CurrentNameSpace ->
-                    -- currentName and our prefix should be the same here
-                    go (NameSpace.toList1' currentNameSpace) qualifiedName
-                  _ ->
-                    f qualifiedName contents
-        )
-        xs

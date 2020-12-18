@@ -25,6 +25,7 @@ dependencies:
 - unordered-containers
 - lens
 - dlist
+- syb
 
 default-extensions:
   - NoImplicitPrelude

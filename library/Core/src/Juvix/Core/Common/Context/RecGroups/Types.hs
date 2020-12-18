@@ -31,6 +31,7 @@ import qualified Data.DList as D
 import Juvix.Core.Common.Context.Types
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Core.Common.Context.Types as Context
 
 -- | A definition identified by its fully-qualified name.
 data Entry term ty sumRep
@@ -57,7 +58,8 @@ data S term ty sumRep
   = S
       { prefix :: Prefix,
         output :: Groups' term ty sumRep,
-        curGroup :: Group' term ty sumRep
+        curGroup :: Group' term ty sumRep,
+        curNameSpace :: Context.NameSpace term ty sumRep
       }
   deriving (Generic)
 
@@ -84,6 +86,11 @@ newtype Env term ty sumRep a = Env {unEnv :: Alias term ty sumRep a}
   deriving
     (HasWriter "curGroup" (Group' term ty sumRep))
     via WriterField "curGroup" (Alias term ty sumRep)
+  deriving
+    ( HasSource "curNameSpace" (Context.NameSpace term ty sumRep),
+      HasReader "curNameSpace" (Context.NameSpace term ty sumRep)
+    )
+    via ReaderField "curNameSpace" (Alias term ty sumRep)
 
 type PrefixReader = HasReader "prefix" Prefix
 
@@ -96,15 +103,18 @@ type CurGroupState term ty sumRep =
 type CurGroupWriter term ty sumRep =
   HasWriter "curGroup" (Group' term ty sumRep)
 
-run_ :: Env term ty sumRep a -> Groups term ty sumRep
-run_ = snd . run
+run_ :: Context.NameSpace term ty sumRep ->
+        Env term ty sumRep a -> Groups term ty sumRep
+run_ curns = snd . run curns
 
-run :: Env term ty sumRep a -> (a, Groups term ty sumRep)
-run act =
+run :: Context.NameSpace term ty sumRep ->
+       Env term ty sumRep a -> (a, Groups term ty sumRep)
+run curns act =
   runState (unEnv $ act <* newGroup) initState
     |> second (toList . output)
   where
-    initState = S {prefix = P [], output = [], curGroup = []}
+    initState = S {prefix, output = [], curGroup = [], curNameSpace = curns}
+    prefix = P [Context.topLevelName]
 
 -- | Add a definition to the current recursive group.
 addDef ::
