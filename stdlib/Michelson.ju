@@ -5,6 +5,7 @@ open Prelude
 -- datatypes
 sig option : ty -> ty
 let option = %Michelson.option
+
 sig list : ty -> ty
 let list = %Michelson.list
 
@@ -27,7 +28,7 @@ sig map : ty -> ty
 let map = %Michelson.map
 
 sig big-map : ty -> ty
-let big-map  = %Michelson.big-map
+let big-map = %Michelson.big-map
 
 
 -- primitive types
@@ -35,10 +36,10 @@ sig key : ty
 let key = %Michelson.key
 
 sig unit-t : ty
-let un-t    = %Michelson.unit-t
+let unit-t = %Michelson.unit-t
 
 sig signature : ty
-let signatur = %Michelson.signature
+let signature = %Michelson.signature
 
 sig chain-id : ty
 let chain-id = %Michelson.chain-id
@@ -62,10 +63,10 @@ sig bool : ty
 let bool = %Michelson.bool
 
 sig key-hash : ty
-let k-hash  = %Michelson.key-hash
+let key-hash = %Michelson.key-hash
 
 sig timestamp : ty
-let timestam = %Michelson.timestamp
+let timestamp = %Michelson.timestamp
 
 sig address : ty
 let address = %Michelson.address
