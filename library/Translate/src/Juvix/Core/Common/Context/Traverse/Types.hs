@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Juvix.Core.Common.Context.RecGroups.Types
+module Juvix.Core.Common.Context.Traverse.Types
   ( -- * Output types
     Entry (..),
     Group,

@@ -8,14 +8,10 @@ module Juvix.Core.Common.Context
     module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
-    Group,
-    Entry (..),
-    recGroups,
   )
 where
 
 import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify)
@@ -473,46 +469,3 @@ qualifyLookup name ctx =
     Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
     Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
 
--- | Traverses a whole context by performing an action on each recursive group.
--- The groups are passed in dependency order but the order of elements within
--- each group is arbitrary.
-traverseContext ::
-  (Applicative f, Monoid t, Data a, Data b, Data c) =>
-  -- | process one recursive group
-  (Group a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext f = foldMapA f . recGroups
-
--- | As 'traverseContext' but ignoring the return value.
-traverseContext_ ::
-  (Applicative f, Data a, Data b, Data c) =>
-  -- | process one recursive group
-  (Group a b c -> f z) ->
-  T a b c ->
-  f ()
-traverseContext_ f = traverse_ f . recGroups
-
--- | Same as 'traverseContext', but the groups are split up into single
--- definitions.
-traverseContext1 ::
-  (Monoid t, Applicative f, Data a, Data b, Data c) =>
-  -- | process one definition
-  (NameSymbol.T -> Definition a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext1 = traverseContext . foldMapA . onEntry
-
--- | Same as 'traverseContext1', but ignoring the return value.
-traverseContext1_ ::
-  (Applicative f, Data a, Data b, Data c) =>
-  -- | process one definition
-  (NameSymbol.T -> Definition a b c -> f z) ->
-  T a b c ->
-  f ()
-traverseContext1_ = traverseContext_ . traverse_ . onEntry
-
-onEntry ::
-  (NameSymbol.T -> Definition term ty sumRep -> t) ->
-  Entry term ty sumRep -> t
-onEntry f (Entry {name, def}) = f name def

@@ -1,26 +1,73 @@
 {-# LANGUAGE OverloadedLists #-}
 -- | Calculate mutually-recursive groups of definitions.
-module Juvix.Core.Common.Context.RecGroups
-  ( Entry (..),
+module Juvix.Core.Common.Context.Traverse
+  ( traverseContext,
+    traverseContext1,
+    traverseContext_,
+    traverseContext1_,
+    Entry (..),
     Group,
     Groups,
     recGroups,
   )
 where
 
-import Juvix.Core.Common.Context.RecGroups.Types
+import Juvix.Core.Common.Context.Traverse.Types
 import qualified Juvix.Core.Common.Context.Types as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
--- import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
 import Juvix.Library
--- import Generics.SYB
 import qualified Juvix.FrontendContextualise.InfixPrecedence.FreeVars as FV
 import qualified Data.Graph as Graph
 import qualified Generics.SYB as SYB
+
+
+-- | Traverses a whole context by performing an action on each recursive group.
+-- The groups are passed in dependency order but the order of elements within
+-- each group is arbitrary.
+traverseContext ::
+  (Applicative f, Monoid t, Data a, Data b, Data c) =>
+  -- | process one recursive group
+  (Group a b c -> f t) ->
+  Context.T a b c ->
+  f t
+traverseContext f = foldMapA f . recGroups
+
+-- | As 'traverseContext' but ignoring the return value.
+traverseContext_ ::
+  (Applicative f, Data a, Data b, Data c) =>
+  -- | process one recursive group
+  (Group a b c -> f z) ->
+  Context.T a b c ->
+  f ()
+traverseContext_ f = traverse_ f . recGroups
+
+-- | Same as 'traverseContext', but the groups are split up into single
+-- definitions.
+traverseContext1 ::
+  (Monoid t, Applicative f, Data a, Data b, Data c) =>
+  -- | process one definition
+  (NameSymbol.T -> Context.Definition a b c -> f t) ->
+  Context.T a b c ->
+  f t
+traverseContext1 = traverseContext . foldMapA . onEntry
+
+-- | Same as 'traverseContext1', but ignoring the return value.
+traverseContext1_ ::
+  (Applicative f, Data a, Data b, Data c) =>
+  -- | process one definition
+  (NameSymbol.T -> Context.Definition a b c -> f z) ->
+  Context.T a b c ->
+  f ()
+traverseContext1_ = traverseContext_ . traverse_ . onEntry
+
+onEntry ::
+  (NameSymbol.T -> Context.Definition term ty sumRep -> t) ->
+  Entry term ty sumRep -> t
+onEntry f (Entry {name, def}) = f name def
+
 
 -- | Sorts a context by dependency order. Each element of the output is
 -- a mutually-recursive group, whose elements depend only on each other and
