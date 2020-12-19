@@ -413,24 +413,24 @@ isOmega e = do
     Just OmegaS -> True
     _           -> False
 
+pattern FEIntLit :: Integer -> FE.Expression
+pattern FEIntLit i = FE.Constant (FE.Number (FE.Integer' i))
+
 transformUsage :: FE.Expression -> Env primTy primVal Usage.T
-transformUsage (FE.Constant (FE.Number (FE.Integer' i)))
-  | i >= 0 =
-    pure $ Usage.SNat $ fromInteger i
+transformUsage (FEIntLit i) | i >= 0 = pure $ Usage.SNat $ fromInteger i
 transformUsage e = do
   o <- isOmega e
   if o then pure Usage.Omega else throwFF $ NotAUsage e
 
 transformGUsage :: Maybe FE.Expression -> Env primTy primVal IR.GlobalUsage
 transformGUsage Nothing = pure IR.GOmega
-transformGUsage (Just (FE.Constant (FE.Number (FE.Integer' 0)))) = pure IR.GZero
+transformGUsage (Just (FEIntLit 0)) = pure IR.GZero
 transformGUsage (Just e) = do
   o <- isOmega e
   if o then pure IR.GOmega else throwFF $ NotAGUsage e
 
 transformUniverse :: FE.Expression -> Env primTy primVal IR.Universe
-transformUniverse (FE.Constant (FE.Number (FE.Integer' i)))
-  | i >= 0 = pure $ fromIntegral i
+transformUniverse (FEIntLit i) | i >= 0 = pure $ fromIntegral i
 transformUniverse e = throwFF $ NotAUniverse e
 
 
