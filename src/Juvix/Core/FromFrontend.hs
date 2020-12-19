@@ -471,9 +471,10 @@ transformSig ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   Env primTy primVal (Maybe (CoreSigHR primTy primVal))
-transformSig x def = liftA2 (<|>) trySpecial tryNormal where
+transformSig x def = trySpecial <||> tryNormal where
   trySpecial = fmap SpecialSig <$> transformSpecial def
   tryNormal  = transformNormalSig x def
+  x <||> y   = x >>= maybe y (pure . Just)
 
 transformNormalSig ::
   NameSymbol.T ->
