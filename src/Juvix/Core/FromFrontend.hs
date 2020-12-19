@@ -406,16 +406,27 @@ toElim e _ = throwFF $ NotAnElim e -- FIXME add metavar ann
 
 -- TODO put an annotation with metas for the usage/type
 
+isOmega :: FE.Expression -> Env primTy primVal Bool
+isOmega e = do
+  s <- getSpecial e
+  pure case s of
+    Just OmegaS -> True
+    _           -> False
+
 transformUsage :: FE.Expression -> Env primTy primVal Usage.T
 transformUsage (FE.Constant (FE.Number (FE.Integer' i)))
   | i >= 0 =
     pure $ Usage.SNat $ fromInteger i
-transformUsage e = throwFF $ NotAUsage e
+transformUsage e = do
+  o <- isOmega e
+  if o then pure Usage.Omega else throwFF $ NotAUsage e
 
 transformGUsage :: Maybe FE.Expression -> Env primTy primVal IR.GlobalUsage
 transformGUsage Nothing = pure IR.GOmega
 transformGUsage (Just (FE.Constant (FE.Number (FE.Integer' 0)))) = pure IR.GZero
-transformGUsage (Just e) = throwFF $ NotAGUsage e
+transformGUsage (Just e) = do
+  o <- isOmega e
+  if o then pure IR.GOmega else throwFF $ NotAGUsage e
 
 transformUniverse :: FE.Expression -> Env primTy primVal IR.Universe
 transformUniverse (FE.Constant (FE.Number (FE.Integer' i)))
