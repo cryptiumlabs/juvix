@@ -40,11 +40,11 @@ transformTopLevel = search
       New.Declaration (transformDeclaration d) : search xs
     search [] =
       []
-    grabSimilar sym (Old.Function (Old.Func f@(Old.Like name _ _)) : xs)
+    grabSimilar sym everything@(Old.Function (Old.Func f@(Old.Like name _ _)) : xs)
       | name == sym =
         let (sameName, rest) = grabSimilar sym xs
          in (f : sameName, rest)
-      | otherwise = ([], xs)
+      | otherwise = ([], everything)
     grabSimilar _sym xs = ([], xs)
 
 --------------------------------------------------------------------------------
