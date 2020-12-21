@@ -8,7 +8,6 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Erasure as Erasure
-import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed

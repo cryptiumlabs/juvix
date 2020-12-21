@@ -63,7 +63,7 @@ extensible
         Elim (Elim primTy primVal)
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | inferable terms
+    -- inferable terms
     data Elim primTy primVal
       = -- | Bound variables, in de Bruijn indices
         Bound BoundVar
@@ -75,7 +75,7 @@ extensible
         Ann Usage (Term primTy primVal) (Term primTy primVal) Universe
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | Values/types
+    -- Values/types
     data Value primTy primVal
       = VStar Universe
       | VPrimTy primTy
@@ -89,7 +89,7 @@ extensible
       | VPrim primVal
       deriving (Eq, Show, Generic, Data, NFData)
 
-    -- | A neutral term is either a variable or an application of a neutral term
+    -- A neutral term is either a variable or an application of a neutral term
     -- to a value
     data Neutral primTy primVal
       = NBound BoundVar
@@ -263,11 +263,39 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (FunClause' ext primTy primVal)
 
+data AbstractWith ty ext primTy primVal
+  = Abstract
+      { absName :: GlobalName,
+        absUsage :: GlobalUsage,
+        absType :: ty ext primTy primVal
+      }
+  deriving (Generic)
+
+type RawAbstract' = AbstractWith Term'
+
+type Abstract' = AbstractWith Value'
+
+deriving instance
+  GlobalAllWith Show ty ext primTy primVal =>
+  Show (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  GlobalAllWith Eq ty ext primTy primVal =>
+  Eq (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
+  Data (AbstractWith ty ext primTy primVal)
+
+deriving instance
+  GlobalAllWith NFData ty ext primTy primVal =>
+  NFData (AbstractWith ty ext primTy primVal)
+
 data GlobalWith ty ext primTy primVal
   = GDatatype (DatatypeWith ty ext primTy primVal)
   | GDataCon (DataConWith ty ext primTy primVal)
   | GFunction (FunctionWith ty ext primTy primVal)
-  | GAbstract GlobalUsage (ty ext primTy primVal)
+  | GAbstract (AbstractWith ty ext primTy primVal)
   deriving (Generic)
 
 type RawGlobal' = GlobalWith Term'

@@ -17,7 +17,7 @@ data Cont b
         currentName :: NameSymbol.T,
         topLevelMap :: HashMap.T Symbol b
       }
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Eq, Generic, Data, Functor, Foldable)
 
 type T term ty sumRep = Cont (Definition term ty sumRep)
 

@@ -15,15 +15,8 @@
 * Interactive
 - _Relies on_
   + [[Core]]
-  + [[Erased]]
   + [[HR]]
-  + [[Types]]
   + [[Naturals]]
-  + [[InteractionNet]]
-  + [[Env]]
-  + [[Graph]]
-  + [[Maps]]
-  + [[Default]]
   + [[Library]]
 * Main
 - _Relies on_
@@ -34,7 +27,6 @@
 * Types
 - _Relies on_
   + [[Types]]
-  + [[IR]]
   + [[Types]]
   + [[Types]]
   + [[Library]]

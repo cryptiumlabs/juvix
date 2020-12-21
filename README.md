@@ -46,11 +46,9 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 The following are required:
 
 - [Stack](https://haskellstack.org)
-- [z3](https://github.com/Z3Prover/z3)
 - [libff](https://github.com/scipr-lab/libff)
 - [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 - [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API)
-- [LLVM9](https://llvm.org/)
 
 #### Instructions for Linux
 
@@ -58,8 +56,6 @@ The following are required:
   - For Ubuntu/Debian : `apt install stack`
   - For Arch Linux    : `pacman -S stack`
   - For macOS : `brew install haskell-stack`
-- **Z3**
-  - `make build-z3` while in the `juvix` directory
 - **libsecp256k1**
   - For Ubuntu/Debian : `apt install libsecp256k1-dev`
   - For Arch Linux : `pacman -S libsecp256k1`
@@ -68,11 +64,6 @@ The following are required:
   - For Ubuntu/Debian : `apt install libssl-dev`
   - For Arch Linux : `pacman -S openssl`
   - For macOS : `brew install openssl`
-- **LLVM9**
-  - For Arch Linux : `pacman -S llvm`
-  - For macOS : it requires the latest xcode, then `brew install
-    llvm-hs/llvm/llvm-9`,  if it crashes due to “unknown xcode version”, run
-    `sudo xcode-select -r`. For newly installed xcode, you will need to accept Apple’s terms and conditions.
 
 ### Building
 

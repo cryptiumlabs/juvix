@@ -4,15 +4,12 @@ import qualified Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
 import qualified Juvix.Core as Core
-import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
-import qualified Juvix.Interpreter.InteractionNet as INet
-import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
-import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
-import qualified Juvix.Interpreter.InteractionNet.Backends.Maps as Maps ()
-import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
+-- import qualified Juvix.Interpreter.InteractionNet as INet
+-- import qualified Juvix.Interpreter.InteractionNet.Backends.Env as Env
+-- import qualified Juvix.Interpreter.InteractionNet.Backends.Graph as Graph
+-- import qualified Juvix.Interpreter.InteractionNet.Nets.Default as INet
 import Juvix.Library
 import Options
 import qualified System.Console.Haskeline as H
@@ -93,28 +90,28 @@ handleSpecial str cont =
       cont
     _ -> H.outputStrLn "Unknown special command" >> cont
 
-transformAndEvaluateErasedCore ::
-  forall primTy primVal.
-  ( Show primVal,
-    Core.CanApply primVal
-  ) =>
-  Core.Parameterisation primTy primVal ->
-  Bool ->
-  Erased.Term primVal ->
-  H.InputT IO ()
-transformAndEvaluateErasedCore parameterisation debug term = do
-  let ast = INet.erasedCoreToInteractionNetAST term
-  when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
-  let net :: Graph.FlipNet (INet.Lang primVal)
-      net = INet.astToNet parameterisation ast INet.defaultEnv
-  when debug $ H.outputStrLn ("Translated to net: " <> show net)
-  let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
-      info = Env.info reduced
-      res = Env.net reduced
-  when debug $ H.outputStrLn ("Reduced net: " <> show res)
-  let readback = INet.netToAst res
-  when debug $ H.outputStrLn ("Reduction info: " <> show info)
-  H.outputStrLn ("Read-back term: " <> show readback)
+-- transformAndEvaluateErasedCore ::
+--   forall primTy primVal.
+--   ( Show primVal,
+--     Core.CanApply primVal
+--   ) =>
+--   Core.Parameterisation primTy primVal ->
+--   Bool ->
+--   Erased.Term primVal ->
+--   H.InputT IO ()
+-- transformAndEvaluateErasedCore parameterisation debug term = do
+--   let ast = INet.erasedCoreToInteractionNetAST term
+--   when debug $ H.outputStrLn ("Converted to AST: " <> show ast)
+--   let net :: Graph.FlipNet (INet.Lang primVal)
+--       net = INet.astToNet parameterisation ast INet.defaultEnv
+--   when debug $ H.outputStrLn ("Translated to net: " <> show net)
+--   let reduced = Graph.runFlipNet (INet.reduceAll 1000000) net
+--       info = Env.info reduced
+--       res = Env.net reduced
+--   when debug $ H.outputStrLn ("Reduced net: " <> show res)
+--   let readback = INet.netToAst res
+--   when debug $ H.outputStrLn ("Reduction info: " <> show info)
+--   H.outputStrLn ("Read-back term: " <> show readback)
 
 specialsDoc :: Doc
 specialsDoc =
