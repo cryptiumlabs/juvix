@@ -38,14 +38,16 @@ contextToCore ::
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
 contextToCore ctx param = do
   FF.execEnv ctx param do
-    Context.traverseContext1_ addSig ctx
-    Context.traverseContext1_ addDef ctx
+    let ordered = Context.recGroups ctx
+    for_ ordered \grp -> do
+      traverse_ addSig grp
+      traverse_ addDef grp
     get @"core"
  where
-  addSig x feDef = do
+  addSig (Context.Entry x feDef) = do
     msig <- FF.transformSig x feDef
     for_ msig $ modify @"coreSigs" . HM.insert x
-  addDef x feDef = do
+  addDef (Context.Entry x feDef) = do
     defs <- FF.transformDef x feDef
     for_ defs \def ->
       modify @"core" $ HM.insert (defName def) def
