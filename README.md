@@ -46,7 +46,6 @@ See [CONTRIBUTING.md](./doc/CONTRIBUTING.md).
 The following are required:
 
 - [Stack](https://haskellstack.org)
-- [z3](https://github.com/Z3Prover/z3)
 - [libff](https://github.com/scipr-lab/libff)
 - [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 - [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API)
@@ -57,8 +56,6 @@ The following are required:
   - For Ubuntu/Debian : `apt install stack`
   - For Arch Linux    : `pacman -S stack`
   - For macOS : `brew install haskell-stack`
-- **Z3**
-  - `make build-z3` while in the `juvix` directory
 - **libsecp256k1**
   - For Ubuntu/Debian : `apt install libsecp256k1-dev`
   - For Arch Linux : `pacman -S libsecp256k1`
