@@ -59,6 +59,8 @@ handleSpecial str cont =
       H.outputStrLn (show parsed)
       cont
     'c' : 'e' : ' ' : rest -> do
+      H.outputStrLn "TODO fix this bit"
+{-
       let parsed = parseString rest
       H.outputStrLn (show parsed)
       case parsed of
@@ -70,6 +72,7 @@ handleSpecial str cont =
           H.outputStrLn (show erased)
         _ -> H.outputStrLn "must enter a valid annotated core term"
       cont
+-}
     'c' : 't' : ' ' : _rest -> do
       H.outputStrLn "TODO fix typecheckAffineErase"
       -- let parsed = parseString rest

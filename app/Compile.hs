@@ -28,6 +28,8 @@ parse fin = do
       T.putStrLn (show err)
       exitFailure
 
+globalsToMap = HM.fromList . map (\x -> (IR.globalName x, x))
+
 typecheck ::
   FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimVal)
 typecheck fin Michelson = do
@@ -40,7 +42,7 @@ typecheck fin Michelson = do
           T.putStrLn "No entrypoint found"
           exitFailure
         (IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
-          (res, _) <- exec (CorePipeline.coreToAnn term usage ty) Param.michelson globals
+          (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson (globalsToMap globals)
           case res of
             Right r -> pure r
             Left err -> do
@@ -51,25 +53,6 @@ typecheck fin Michelson = do
       print err
       exitFailure
 typecheck _ _ = exitFailure
-
-typecheck' ::
-  FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimVal)
-typecheck' _ _ = do
-  -- These terms are fake for now.
-  let usage :: Usage.T
-      usage = Usage.Omega
-      ann :: HR.Term Param.PrimTy Param.RawPrimVal
-      -- FIXME: replace prims with Returns
-      ann = HR.Pi (Usage.SNat 1) "_" (HR.PrimTy (Param.PrimTy (Untyped.Type Untyped.TInt ""))) (HR.PrimTy (Param.PrimTy (Untyped.Type (Untyped.TPair "" "" (Untyped.Type Untyped.TInt "") (Untyped.Type (Untyped.TList (Untyped.Type Untyped.TOperation "")) "")) "")))
-      term :: HR.Term Param.PrimTy Param.RawPrimVal
-      term = HR.Lam "x" (HR.Elim (HR.App (HR.App (HR.Ann (Usage.SNat 1) (HR.Prim (Param.Inst (Untyped.PAIR "" "" "" ""))) ann 1) (HR.Elim (HR.Var "x"))) (HR.Prim (Param.Constant Untyped.ValueNil))))
-      globals = mempty
-  (res, _) <- exec (CorePipeline.coreToAnn (Translate.hrToIR term) usage (Translate.hrToIR ann)) Param.michelson globals
-  case res of
-    Right r -> pure r
-    Left err -> do
-      T.putStrLn (show err)
-      exitFailure
 
 compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do
