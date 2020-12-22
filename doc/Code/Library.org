@@ -575,7 +575,6 @@ Types to support partial application and polymorphic primitives.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
-***** EAC
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
