@@ -79,11 +79,11 @@ recGroups ::
   [Group term ty sumRep]
 recGroups (Context.T curns _ top) =
   let (groups, deps) = run_ curns $ recGroups' $ toNameSpace top
-   in let get n = maybe [] toList $ HashMap.lookup n deps
-       in let edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
-           in let (g, fromV', _) = Graph.graphFromEdges edges
-               in let fromV v = let (gs, _, _) = fromV' v in gs
-                   in Graph.topSort g |> reverse |> concatMap fromV
+      get n = maybe [] toList $ HashMap.lookup n deps
+      edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
+      (g, fromV', _) = Graph.graphFromEdges edges
+      fromV v = let (gs, _, _) = fromV' v in gs
+   in Graph.topSort g |> reverse |> concatMap fromV
 
 recGroups' ::
   (Data term, Data ty, Data sumRep) =>
