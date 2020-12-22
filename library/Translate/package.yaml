@@ -15,6 +15,9 @@ dependencies:
 - frontend
 - extensible-data
 - unordered-containers
+- containers
+- dlist
+- syb
 
 default-extensions:
   - NoImplicitPrelude
@@ -42,6 +45,7 @@ default-extensions:
   - DeriveDataTypeable
   - GeneralizedNewtypeDeriving
   - StandaloneDeriving
+  - BlockArguments
 
 ghc-options:
   - -ferror-spans

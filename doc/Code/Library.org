@@ -558,7 +558,6 @@ Types to support partial application and polymorphic primitives.
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
-  + [[RecGroups]]
   + [[Context/Types]]
   + [[NameSpace]]
   + [[Library]]
@@ -576,18 +575,6 @@ Types to support partial application and polymorphic primitives.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
-******* RecGroups
-Calculate mutually-recursive groups of definitions.
-- _Relies on_
-  + [[RecGroups/Types]]
-  + [[Context/Types]]
-  + [[NameSpace]]
-  + [[Library]]
-******** Types <<RecGroups/Types>>
-- _Relies on_
-  + [[Context/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
@@ -1252,6 +1239,25 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** Core
+***** Common
+****** Context
+******* Traverse
+Calculate mutually-recursive groups of definitions.
+- _Relies on_
+  + [[Traverse/Types]]
+  + [[Context/Types]]
+  + [[NameSpace]]
+  + [[FreeVars]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+******** Types <<Traverse/Types>>
+- _Relies on_
+  + [[Context/Types]]
+  + [[Context/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=

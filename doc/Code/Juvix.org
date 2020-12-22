@@ -14,13 +14,14 @@
 ** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Core]]
-  + [[Context]]
+  + [[Traverse]]
   + [[FromFrontend]]
   + [[Types]]
   + [[Parameterisation]]
   + [[Frontend]]
   + [[Environment]]
   + [[Library]]
+  + [[NameSymbol]]
 ** Core
 - _Relies on_
   + [[Erasure]]

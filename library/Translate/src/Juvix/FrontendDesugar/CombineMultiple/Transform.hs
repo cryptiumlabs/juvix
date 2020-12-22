@@ -40,11 +40,11 @@ transformTopLevel = search
       New.Declaration (transformDeclaration d) : search xs
     search [] =
       []
-    grabSimilar sym (Old.Function (Old.Func f@(Old.Like name _ _)) : xs)
+    grabSimilar sym everything@(Old.Function (Old.Func f@(Old.Like name _ _)) : xs)
       | name == sym =
         let (sameName, rest) = grabSimilar sym xs
          in (f : sameName, rest)
-      | otherwise = ([], xs)
+      | otherwise = ([], everything)
     grabSimilar _sym xs = ([], xs)
 
 --------------------------------------------------------------------------------
@@ -100,8 +100,8 @@ transformExpression (Old.DeclarationE e) =
 
 transformDeclarationExpression ::
   Old.DeclarationExpression -> New.DeclarationExpression
-transformDeclarationExpression (Old.DeclareExpession i e) =
-  New.DeclareExpession (transformDeclaration i) (transformExpression e)
+transformDeclarationExpression (Old.DeclareExpression i e) =
+  New.DeclareExpression (transformDeclaration i) (transformExpression e)
 
 transformDeclaration :: Old.Declaration -> New.Declaration
 transformDeclaration (Old.Infixivity i) =

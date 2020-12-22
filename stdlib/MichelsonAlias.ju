@@ -4,19 +4,25 @@ open Prelude
 open Prelude.Michelson
 
 declare infixl (+) 5
-let (+) = add
+sig (+) : nat -> nat -> nat
+let (+) = add nat
 
 declare infixl (-) 4
-let (-) = sub
+sig (-) : nat -> nat -> nat
+let (-) = sub nat
 
 declare infixl (*) 3
-let (*) = mul
+sig (*) : nat -> nat -> nat
+let (*) = mul nat
 
 declare infixl (/) 2
-let (/) = div
+sig (/) : nat -> nat -> nat
+let (/) = div nat
 
 declare infixl (||) 5
-let (||) = or
+sig (||) : bool -> bool -> bool
+let (||) = or bool
 
 declare infixl (&&) 5
-let (&&) = and
+sig (&&) : bool -> bool -> bool
+let (&&) = and%

@@ -8,14 +8,10 @@ module Juvix.Core.Common.Context
     module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
-    Group,
-    Entry (..),
-    recGroups,
   )
 where
 
 import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify)
@@ -34,13 +30,6 @@ nameSymbolToSymbol = NameSymbol.toSymbol
 
 nameSymbolFromSymbol :: Symbol -> NameSymbol.T
 nameSymbolFromSymbol = NameSymbol.fromSymbol
-
---------------------------------------------------------------------------------
--- Special Names
---------------------------------------------------------------------------------
-
-topLevelName :: IsString p => p
-topLevelName = "TopLevel"
 
 --------------------------------------------------------------------------------
 -- Body
@@ -479,50 +468,3 @@ qualifyLookup name ctx =
     Nothing -> Nothing
     Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
     Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
-
--- | Traverses a whole context by performing an action on each recursive group.
--- The groups are passed in dependency order but the order of elements within
--- each group is arbitrary.
-traverseContext ::
-  (Applicative f, Monoid t) =>
-  -- | process one recursive group
-  (Group a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext f = foldMapA f . recGroups
-
--- | Same as 'traverseContext', but the groups are split up into single
--- definitions.
-traverseContext1 ::
-  (Monoid t, Applicative f) =>
-  -- | process one definition
-  (NameSymbol.T -> Definition a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext1 = traverseContext . foldMapA . onEntry
-  where
-    onEntry f Entry {name, def} = f name def
-
-foldMapCtx ::
-  (Applicative f, Monoid a) =>
-  (NonEmpty Symbol -> Definition term ty sumRep -> f a) ->
-  Cont (Definition term ty sumRep) ->
-  f a
-foldMapCtx f T {currentNameSpace, topLevelMap} =
-  go (HashMap.toList topLevelMap) startingName
-  where
-    startingName = NameSymbol.fromSymbol topLevelName
-    go xs prefix =
-      foldMapA
-        ( \(name, contents) ->
-            let qualifiedName = prefix <> pure name
-             in case contents of
-                  Record {definitionContents} ->
-                    go (NameSpace.toList1' definitionContents) qualifiedName
-                  CurrentNameSpace ->
-                    -- currentName and our prefix should be the same here
-                    go (NameSpace.toList1' currentNameSpace) qualifiedName
-                  _ ->
-                    f qualifiedName contents
-        )
-        xs

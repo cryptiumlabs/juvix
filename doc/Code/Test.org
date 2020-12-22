@@ -20,5 +20,3 @@
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
-* examples
-** demo

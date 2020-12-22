@@ -2,10 +2,19 @@ mod Prelude where
 
 -- it seems custom arrow syntax is not operational
 
-let (->) = %Builtin.ArrowOmega
+let ty_ = %Builtin.Type
 
+sig ty : ty_ 1
+let ty = ty_ 0
+
+let omega = %Builtin.Omega
+let arr = %Builtin.Arrow
+let dpair = %Builtin.Pair
+
+let (->) = arr omega
 declare infixr (->) 1
 
+let (:) = %Builtin.Colon
 declare infixr (:) 2
 
 sig id : (a : ty) -> a -> a
