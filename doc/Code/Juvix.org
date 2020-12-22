@@ -14,7 +14,6 @@
 ** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Core]]
-  + [[Context]]
   + [[Traverse]]
   + [[FromFrontend]]
   + [[Types]]

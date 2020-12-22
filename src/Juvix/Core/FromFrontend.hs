@@ -243,7 +243,6 @@ type HasPatVars =
 type HasNextPatVar =
   HasState "nextPatVar" IR.PatternVar
 
-
 execEnv ::
   FE.FinalContext ->
   P.Parameterisation primTy primVal ->
@@ -275,7 +274,8 @@ paramConstant' p (FE.String (FE.Sho s)) = P.stringVal p s
 
 paramConstant ::
   (HasParam primTy primVal m, HasThrowFF primTy primVal m) =>
-  FE.Constant -> m primVal
+  FE.Constant ->
+  m primVal
 paramConstant k = do
   p <- ask @"param"
   case paramConstant' p k of
@@ -283,7 +283,8 @@ paramConstant k = do
     Nothing -> throwFF $ UnsupportedConstant k
 
 transformTermIR ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -305,7 +306,8 @@ transformPatVar p = pure p
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.
 transformTermHR ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -350,7 +352,8 @@ transformTermHR q (FE.DeclarationE (FE.DeclareExpression _ e)) =
   transformTermHR q e
 
 transformApplication ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -400,7 +403,8 @@ transformApplication q (FE.App f xs) =
         throwFF $ WrongNumberBuiltinArgs n xs
 
 namedArg ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -420,7 +424,8 @@ pattern NamedArgTerm x ty <-
   HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 transformSimpleLet ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -438,7 +443,8 @@ transformSimpleLet q e@(FE.LetGroup name (clause :| []) body) = do
 transformSimpleLet _ e = throwFF $ ExprUnimplemented (FE.Let e)
 
 transformSimpleLambda ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -467,7 +473,8 @@ isVarPat (FE.MatchLogic (FE.MatchName x) Nothing) =
 isVarPat p = throwFF $ PatternUnimplemented p
 
 transformArrow ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -612,7 +619,8 @@ transformSpecial q def@(Ctx.Def π ty (FE.Like [] rhs :| []) _) = do
 transformSpecial _ _ = pure Nothing
 
 transformSig ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -628,7 +636,8 @@ transformSig x def = trySpecial <||> tryNormal
     x <||> y = x >>= maybe y (pure . Just)
 
 transformNormalSig ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -647,7 +656,8 @@ transformNormalSig _ _ Ctx.CurrentNameSpace = pure Nothing
 transformNormalSig _ _ (Ctx.Information {}) = pure Nothing
 
 transformTypeSig ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -676,7 +686,8 @@ transformTypeSig q name (FE.Typ {typeArgs, typeForm}) = do
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformValSig ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -693,7 +704,8 @@ transformValSig q _ _ _ (Just (FE.Sig _ π ty cons))
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -712,7 +724,8 @@ transformDef x def = do
         q = NameSymbol.mod x
 
 transformNormalDef ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -785,7 +798,8 @@ lookupSig q x = do
         qx = NameSymbol.qualify q x
 
 transformType ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -837,7 +851,8 @@ splitDataType ty0 = go ty0
     go _ = throwFF $ InvalidDatatypeType ty0
 
 transformCon ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -852,7 +867,8 @@ transformCon q hd (FE.S name prod) =
     fromMaybe (FE.ADTLike []) prod
 
 transformCon' ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -874,7 +890,8 @@ transformCon' q name (Just hd) (FE.ADTLike tys) =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
 
 transformClause ::
-  ( Data primTy, Data primVal,
+  ( Data primTy,
+    Data primVal,
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -895,7 +912,8 @@ transformArg ::
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m
   ) =>
-  FE.Arg -> m (IR.Pattern primTy primVal)
+  FE.Arg ->
+  m (IR.Pattern primTy primVal)
 transformArg a@(FE.ImplicitA _) = throwFF $ ImplicitsUnimplementedA a
 transformArg (FE.ConcreteA pat) = transformPat pat
 
@@ -905,7 +923,8 @@ transformPat ::
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m
   ) =>
-  FE.MatchLogic -> m (IR.Pattern primTy primVal)
+  FE.MatchLogic ->
+  m (IR.Pattern primTy primVal)
 transformPat (FE.MatchLogic pat _) = case pat of
   -- TODO translate as-patterns into @let@
   FE.MatchCon k pats -> IR.PCon k <$> traverse transformPat pats
