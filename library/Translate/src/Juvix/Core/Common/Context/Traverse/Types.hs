@@ -29,14 +29,14 @@ module Juvix.Core.Common.Context.Traverse.Types
 where
 
 import qualified Data.DList as D
-import Juvix.Core.Common.Context.Types
-import Juvix.Library
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Core.Common.Context.Types as Context
-import Data.HashSet (HashSet)
-import qualified Data.HashSet as HashSet
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
+import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Juvix.Core.Common.Context.Types
+import qualified Juvix.Core.Common.Context.Types as Context
+import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- | A definition identified by its fully-qualified name.
 data Entry term ty sumRep
@@ -106,28 +106,35 @@ type OutputState term ty sumRep =
 
 type DepsState = HasState "deps" Deps
 
-run_ :: Context.NameSpace term ty sumRep ->
-        Env term ty sumRep a -> (Groups term ty sumRep, Deps)
+run_ ::
+  Context.NameSpace term ty sumRep ->
+  Env term ty sumRep a ->
+  (Groups term ty sumRep, Deps)
 run_ curns act =
   let (_, grps, deps) = run curns act in (grps, deps)
 
-run :: Context.NameSpace term ty sumRep ->
-       Env term ty sumRep a -> (a, Groups term ty sumRep, Deps)
+run ::
+  Context.NameSpace term ty sumRep ->
+  Env term ty sumRep a ->
+  (a, Groups term ty sumRep, Deps)
 run curNameSpace (Env act) =
-  let (res, S {output, deps}) = runState act initState in
-  (res, toList <$> output, deps)
+  let (res, S {output, deps}) = runState act initState
+   in (res, toList <$> output, deps)
   where
     initState = S {prefix, output = [], curNameSpace, deps = []}
     prefix = P [Context.topLevelName]
 
 -- | Add a group to the final output.
-addGroup :: (PrefixReader m, OutputState term ty sumRep m, Foldable t)
-         => t (Entry term ty sumRep) -> m ()
+addGroup ::
+  (PrefixReader m, OutputState term ty sumRep m, Foldable t) =>
+  t (Entry term ty sumRep) ->
+  m ()
 addGroup grp = do
   prefix <- prefixM
   case nonEmpty $ toList grp of
     Just grp -> modify @"output" $ HashMap.alter f prefix
-      where f = Just . maybe [grp] (<> [grp])
+      where
+        f = Just . maybe [grp] (<> [grp])
     Nothing -> pure ()
 
 -- | Add dependencies on the given names to the current namespace.
@@ -143,7 +150,6 @@ toMod (P p) = toList p
 
 prefixM :: PrefixReader m => m NameSymbol.Mod
 prefixM = asks @"prefix" toMod
-
 
 -- | Extend the current module prefix.
 --

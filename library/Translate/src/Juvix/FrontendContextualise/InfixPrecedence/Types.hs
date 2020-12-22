@@ -4,7 +4,7 @@ import Juvix.Frontend.Types.Base
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
-data T deriving Data
+data T deriving (Data)
 
 extendType "Type" [] [t|T|] Ext.extendType
 

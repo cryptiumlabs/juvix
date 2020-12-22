@@ -13,6 +13,7 @@ import qualified Prelude (foldr1)
 type T = NonEmpty Symbol
 
 type Base = Symbol
+
 type Mod = [Symbol]
 
 toSymbol :: T -> Symbol

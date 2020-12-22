@@ -2,6 +2,7 @@
 
 module Juvix.Pipeline where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Context
@@ -10,9 +11,8 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Data.HashMap.Strict as HM
 import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Prelude (String)
 
 data Error
@@ -44,19 +44,19 @@ contextToCore ctx param = do
       traverse_ addDef grp
     defs <- get @"core"
     pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
- where
-  addSig (Context.Entry x feDef) = do
-    msig <- FF.transformSig x feDef
-    for_ msig $ modify @"coreSigs" . HM.insert x
-  addDef (Context.Entry x feDef) = do
-    defs <- FF.transformDef x feDef
-    for_ defs \def ->
-      modify @"core" $ HM.insert (defName def) def
+  where
+    addSig (Context.Entry x feDef) = do
+      msig <- FF.transformSig x feDef
+      for_ msig $ modify @"coreSigs" . HM.insert x
+    addDef (Context.Entry x feDef) = do
+      defs <- FF.transformDef x feDef
+      for_ defs \def ->
+        modify @"core" $ HM.insert (defName def) def
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
   FF.CoreDef (IR.GDatatype (IR.Datatype {dataName})) -> dataName
-  FF.CoreDef (IR.GDataCon  (IR.DataCon  {conName}))  -> conName
-  FF.CoreDef (IR.GFunction (IR.Function {funName}))  -> funName
-  FF.CoreDef (IR.GAbstract (IR.Abstract {absName}))  -> absName
-  FF.SpecialDef x _                                  -> x
+  FF.CoreDef (IR.GDataCon (IR.DataCon {conName})) -> conName
+  FF.CoreDef (IR.GFunction (IR.Function {funName})) -> funName
+  FF.CoreDef (IR.GAbstract (IR.Abstract {absName})) -> absName
+  FF.SpecialDef x _ -> x

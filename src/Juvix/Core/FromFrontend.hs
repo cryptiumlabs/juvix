@@ -106,11 +106,16 @@ data CoreSig' ext primTy primVal
 
 -- | Bindings that can't be given types, but can be given new names by the user.
 data Special
-  = ArrowS (Maybe Usage.T) -- ^ pi type, possibly with usage already supplied
-  | PairS (Maybe Usage.T)  -- ^ sigma type
-  | ColonS                 -- ^ type annotation
-  | TypeS                  -- ^ type of types
-  | OmegaS                 -- ^ omega usage
+  = -- | pi type, possibly with usage already supplied
+    ArrowS (Maybe Usage.T)
+  | -- | sigma type
+    PairS (Maybe Usage.T)
+  | -- | type annotation
+    ColonS
+  | -- | type of types
+    TypeS
+  | -- | omega usage
+    OmegaS
   deriving (Eq, Show, Data, Generic)
 
 deriving instance
@@ -154,11 +159,11 @@ data CoreDef primTy primVal
   | SpecialDef !NameSymbol.T !Special
   deriving (Eq, Show, Data, Generic)
 
-data CoreDefs primTy primVal =
-  CoreDefs {
-    order :: [NonEmpty NameSymbol.T],
-    defs  :: CoreMap primTy primVal
-  }
+data CoreDefs primTy primVal
+  = CoreDefs
+      { order :: [NonEmpty NameSymbol.T],
+        defs :: CoreMap primTy primVal
+      }
   deriving (Eq, Show, Data, Generic)
 
 type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
@@ -317,44 +322,44 @@ transformApplication ::
   Env primTy primVal (HR.Term primTy primVal)
 transformApplication q (FE.App f xs) =
   getSpecialE q f >>= flip go (toList xs)
- where
-  go s xs = case s of
-    Just (ArrowS Nothing) -> do
-      ~[π, a, b] <- nargs 3 xs
-      π <- transformUsage q π
-      go (Just (ArrowS (Just π))) [a, b]
-    Just (ArrowS (Just π)) -> do
-      ~[xa, b] <- nargs 2 xs
-      (x, a) <- namedArg q xa
-      HR.Pi π x a <$> transformTermHR q b
-    Just (PairS Nothing) -> do
-      ~[π, a, b] <- nargs 3 xs
-      π <- transformUsage q π
-      go (Just (PairS (Just π))) [a, b]
-    Just (PairS (Just π)) -> do
-      ~[xa, b] <- nargs 2 xs
-      (x, a) <- namedArg q xa
-      HR.Sig π x a <$> transformTermHR q b
-    Just ColonS -> do
-      ~[a, b] <- nargs 2 xs
-      a <- transformTermHR q a
-      b <- transformTermHR q b
-      -- FIXME metavars for usage & universe
-      pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
-    Just TypeS -> do
-      ~[i] <- nargs 1 xs
-      HR.Star <$> transformUniverse i
-    Just OmegaS ->
-      throwFF UnexpectedOmega
-    Nothing -> do
-      f' <- toElim f =<< transformTermHR q f
-      HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
-  nargs n xs
-    | (xs, []) <- splitAt n (toList xs),
-      length xs == n
-    = pure xs
-    | otherwise
-    = throwFF $ WrongNumberBuiltinArgs n xs
+  where
+    go s xs = case s of
+      Just (ArrowS Nothing) -> do
+        ~[π, a, b] <- nargs 3 xs
+        π <- transformUsage q π
+        go (Just (ArrowS (Just π))) [a, b]
+      Just (ArrowS (Just π)) -> do
+        ~[xa, b] <- nargs 2 xs
+        (x, a) <- namedArg q xa
+        HR.Pi π x a <$> transformTermHR q b
+      Just (PairS Nothing) -> do
+        ~[π, a, b] <- nargs 3 xs
+        π <- transformUsage q π
+        go (Just (PairS (Just π))) [a, b]
+      Just (PairS (Just π)) -> do
+        ~[xa, b] <- nargs 2 xs
+        (x, a) <- namedArg q xa
+        HR.Sig π x a <$> transformTermHR q b
+      Just ColonS -> do
+        ~[a, b] <- nargs 2 xs
+        a <- transformTermHR q a
+        b <- transformTermHR q b
+        -- FIXME metavars for usage & universe
+        pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
+      Just TypeS -> do
+        ~[i] <- nargs 1 xs
+        HR.Star <$> transformUniverse i
+      Just OmegaS ->
+        throwFF UnexpectedOmega
+      Nothing -> do
+        f' <- toElim f =<< transformTermHR q f
+        HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
+    nargs n xs
+      | (xs, []) <- splitAt n (toList xs),
+        length xs == n =
+        pure xs
+      | otherwise =
+        throwFF $ WrongNumberBuiltinArgs n xs
 
 namedArg ::
   NameSymbol.Mod ->
@@ -363,7 +368,8 @@ namedArg ::
 namedArg q e = transformTermHR q e >>= \case
   NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
   ty -> pure ("" :| [], ty)
-  -- TODO implicit arguments???
+
+-- TODO implicit arguments???
 
 pattern NamedArgTerm ::
   Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
@@ -468,7 +474,6 @@ transformUniverse :: FE.Expression -> Env primTy primVal IR.Universe
 transformUniverse (FEIntLit i) | i >= 0 = pure $ fromIntegral i
 transformUniverse e = throwFF $ NotAUniverse e
 
-
 getSpecial ::
   NameSymbol.Mod ->
   NameSymbol.T ->
@@ -477,7 +482,7 @@ getSpecial q x = do
   sig <- lookupSig (Just q) x
   pure case sig of
     Just (SpecialSig s) -> Just s
-    _                   -> Nothing
+    _ -> Nothing
 
 getSpecialE ::
   NameSymbol.Mod ->
@@ -493,19 +498,19 @@ transformSpecialRhs ::
 transformSpecialRhs _ (FE.Primitive (FE.Prim p)) =
   case p of
     "Builtin" :| ["Arrow"] -> pure $ Just $ ArrowS Nothing
-    "Builtin" :| ["Pair"]  -> pure $ Just $ PairS Nothing
+    "Builtin" :| ["Pair"] -> pure $ Just $ PairS Nothing
     "Builtin" :| ["Omega"] -> pure $ Just OmegaS
     "Builtin" :| ["Colon"] -> pure $ Just ColonS
-    "Builtin" :| ["Type"]  -> pure $ Just TypeS
-    "Builtin" :| (s:ss)    -> throwFF $ UnknownBuiltin $ s :| ss
-    _                      -> pure Nothing
+    "Builtin" :| ["Type"] -> pure $ Just TypeS
+    "Builtin" :| (s : ss) -> throwFF $ UnknownBuiltin $ s :| ss
+    _ -> pure Nothing
 transformSpecialRhs q (FE.Name x) = getSpecial q x
 transformSpecialRhs q (FE.Application (FE.App f (arg :| []))) = do
   head <- getSpecialE q f
   case head of
     Just (ArrowS Nothing) -> Just . ArrowS . Just <$> transformUsage q arg
-    Just (PairS  Nothing) -> Just . PairS  . Just <$> transformUsage q arg
-    _                     -> pure Nothing
+    Just (PairS Nothing) -> Just . PairS . Just <$> transformUsage q arg
+    _ -> pure Nothing
 transformSpecialRhs _ _ = pure Nothing
 
 transformSpecial ::
@@ -524,11 +529,12 @@ transformSig ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   Env primTy primVal (Maybe (CoreSigHR primTy primVal))
-transformSig x def = trySpecial <||> tryNormal where
-  q = NameSymbol.mod x
-  trySpecial = fmap SpecialSig <$> transformSpecial q def
-  tryNormal  = transformNormalSig q x def
-  x <||> y   = x >>= maybe y (pure . Just)
+transformSig x def = trySpecial <||> tryNormal
+  where
+    q = NameSymbol.mod x
+    trySpecial = fmap SpecialSig <$> transformSpecial q def
+    tryNormal = transformNormalSig q x def
+    x <||> y = x >>= maybe y (pure . Just)
 
 transformNormalSig ::
   NameSymbol.Mod ->
@@ -590,7 +596,8 @@ transformDef x def = do
   case sig of
     Just (SpecialSig s) -> pure [SpecialDef x s]
     _ -> map CoreDef <$> transformNormalDef q x def
-      where q = NameSymbol.mod x
+      where
+        q = NameSymbol.mod x
 
 transformNormalDef ::
   (Data primTy, Data primVal) =>
@@ -645,8 +652,9 @@ lookupSig ::
 lookupSig q x = do
   gets @"coreSigs" \sigs -> case q of
     Nothing -> HM.lookup x sigs
-    Just q  -> HM.lookup x sigs <|> HM.lookup qx sigs
-      where qx = NameSymbol.qualify q x
+    Just q -> HM.lookup x sigs <|> HM.lookup qx sigs
+      where
+        qx = NameSymbol.qualify q x
 
 transformType ::
   (Data primTy, Data primVal) =>

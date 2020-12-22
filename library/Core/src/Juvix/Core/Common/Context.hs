@@ -468,4 +468,3 @@ qualifyLookup name ctx =
     Nothing -> Nothing
     Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
     Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
-
