@@ -42,7 +42,8 @@ contextToCore ctx param = do
     for_ ordered \grp -> do
       traverse_ addSig grp
       traverse_ addDef grp
-    get @"core"
+    defs <- get @"core"
+    pure $ FF.CoreDefs {defs, order = fmap Context.name <$> ordered}
  where
   addSig (Context.Entry x feDef) = do
     msig <- FF.transformSig x feDef
