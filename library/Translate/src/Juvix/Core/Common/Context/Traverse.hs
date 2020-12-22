@@ -13,6 +13,7 @@ module Juvix.Core.Common.Context.Traverse
   )
 where
 
+import qualified Data.DList as D
 import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
 import qualified Generics.SYB as SYB
@@ -117,3 +118,47 @@ fv = HashSet.toList . SYB.everything (<>) (SYB.mkQ mempty (FV.op []))
 
 toNameSpace :: HashMap.T Symbol a -> NameSpace.T a
 toNameSpace public = NameSpace.T {public, private = mempty}
+
+-- | Add a group to the final output.
+addGroup ::
+  (PrefixReader m, OutputState term ty sumRep m, Foldable t) =>
+  t (Entry term ty sumRep) ->
+  m ()
+addGroup grp = do
+  prefix <- prefixM
+  case nonEmpty $ toList grp of
+    Just grp -> modify @"output" $ HashMap.alter f prefix
+      where
+        f = Just . maybe [grp] (<> [grp])
+    Nothing -> pure ()
+
+-- | Add dependencies on the given names to the current namespace.
+addDeps :: (Foldable t, DepsState m, PrefixReader m) => t NameSymbol.T -> m ()
+addDeps deps = do
+  let mods = HashSet.fromList $ map NameSymbol.mod $ toList deps
+  let f = Just . maybe mods (HashSet.union mods)
+  prefix <- prefixM
+  modify @"deps" $ HashMap.alter f prefix
+
+toMod :: Prefix -> NameSymbol.Mod
+toMod (P p) = toList p
+
+prefixM :: PrefixReader m => m NameSymbol.Mod
+prefixM = asks @"prefix" toMod
+
+-- | Extend the current module prefix.
+--
+-- >>> 'fst' $ 'run' $ 'withPrefix' \"A\" $ 'qualify' \"X\"
+-- A.X
+-- >>> 'fst' $ 'run' $ 'withPrefix' \"A\" $ 'withPrefix' \"B\" $ 'qualify' \"X\"
+-- A.B.X
+withPrefix :: PrefixReader m => Symbol -> m a -> m a
+withPrefix n = local @"prefix" \(P pfx) -> P $ D.snoc pfx n
+
+-- | Qualify a name by the current module prefix.
+qualify :: PrefixReader m => Symbol -> m NameSymbol.T
+qualify n = asks @"prefix" \pfx -> applyPrefix pfx n
+
+-- | Apply a prefix to a name.
+applyPrefix :: Prefix -> Symbol -> NameSymbol.T
+applyPrefix (P pfx) = NameSymbol.qualify1 pfx
