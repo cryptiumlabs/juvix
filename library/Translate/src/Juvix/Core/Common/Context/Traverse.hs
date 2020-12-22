@@ -86,9 +86,9 @@ recGroups (Context.T curns _ top) =
    in Graph.topSort g |> reverse |> concatMap fromV
 
 recGroups' ::
-  (Data term, Data ty, Data sumRep) =>
+  HasRecGroups term ty sumRep m =>
   Context.NameSpace term ty sumRep ->
-  Env term ty sumRep ()
+  m ()
 recGroups' ns = do
   defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
     case def of

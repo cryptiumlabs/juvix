@@ -13,8 +13,10 @@ module Juvix.Core.Common.Context.Traverse.Types
     -- * Capabilities
     Env,
     PrefixReader,
+    CurNameSpaceReader,
     OutputState,
     DepsState,
+    HasRecGroups,
     run,
     run_,
 
@@ -101,10 +103,23 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
 
 type PrefixReader = HasReader "prefix" Prefix
 
+type CurNameSpaceReader term ty sumRep =
+  HasReader "curNameSpace" (Context.NameSpace term ty sumRep)
+
 type OutputState term ty sumRep =
   HasState "output" (Groups' term ty sumRep)
 
 type DepsState = HasState "deps" Deps
+
+type HasRecGroups term ty sumRep m =
+  ( CurNameSpaceReader term ty sumRep m,
+    PrefixReader m,
+    DepsState m,
+    OutputState term ty sumRep m,
+    Data term,
+    Data ty,
+    Data sumRep
+  )
 
 run_ ::
   Context.NameSpace term ty sumRep ->
