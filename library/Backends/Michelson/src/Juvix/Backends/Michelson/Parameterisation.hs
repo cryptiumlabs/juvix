@@ -270,7 +270,7 @@ builtinValues =
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.unit", Inst (M.UNIT "" "")),
     -- added symbols to not take values
-    ("Michelson.if_builtin", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] []))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
