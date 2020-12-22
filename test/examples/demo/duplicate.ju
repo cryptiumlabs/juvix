@@ -7,5 +7,5 @@ let storage = pair int int
 sig param : ty
 let param = int-t
 
-sig default : param -> storage -> pair storage (list operation)
-let default param storage = cons-pair (cons-pair param param) nil
+sig main : param -> storage -> pair storage (list operation)
+let main = \param storage -> cons-pair (cons-pair param param) nil

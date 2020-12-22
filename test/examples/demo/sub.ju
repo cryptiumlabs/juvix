@@ -7,5 +7,5 @@ let storage = nat
 sig param : ty
 let param = nat
 
-sig default : param -> storage -> pair storage (list operation)
-let default param storage = cons-pair (sub param storage) nil
+sig main : param -> storage -> pair storage (list operation)
+let main = \param storage -> cons-pair (sub param storage) nil
