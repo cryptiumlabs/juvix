@@ -65,6 +65,9 @@ qualify m n = foldr cons n m
 qualify1 :: Foldable t => t Symbol -> Base -> T
 qualify1 m b = qualify m (b :| [])
 
+qualified :: T -> Bool
+qualified (_ :| xs) = not $ null xs
+
 split :: T -> (Mod, Base)
 split n = (NonEmpty.init n, NonEmpty.last n)
 

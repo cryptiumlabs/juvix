@@ -325,16 +325,16 @@ transformApplication q (FE.App f xs) =
       go (Just (ArrowS (Just π))) [a, b]
     Just (ArrowS (Just π)) -> do
       ~[xa, b] <- nargs 2 xs
-      let (x, a) = namedArg xa
-      HR.Pi π x <$> transformTermHR q a <*> transformTermHR q b
+      (x, a) <- namedArg q xa
+      HR.Pi π x a <$> transformTermHR q b
     Just (PairS Nothing) -> do
       ~[π, a, b] <- nargs 3 xs
       π <- transformUsage q π
       go (Just (PairS (Just π))) [a, b]
     Just (PairS (Just π)) -> do
       ~[xa, b] <- nargs 2 xs
-      let (x, a) = namedArg xa
-      HR.Sig π x <$> transformTermHR q a <*> transformTermHR q b
+      (x, a) <- namedArg q xa
+      HR.Sig π x a <$> transformTermHR q b
     Just ColonS -> do
       ~[a, b] <- nargs 2 xs
       a <- transformTermHR q a
@@ -355,10 +355,20 @@ transformApplication q (FE.App f xs) =
     = pure xs
     | otherwise
     = throwFF $ WrongNumberBuiltinArgs n xs
-  namedArg (FE.NamedTypeE (FE.NamedType' (FE.Concrete x) e)) =
-    (NameSymbol.fromSymbol x, e)
+
+namedArg ::
+  NameSymbol.Mod ->
+  FE.Expression ->
+  Env primTy primVal (NameSymbol.T, HR.Term primTy primVal)
+namedArg q e = transformTermHR q e >>= \case
+  NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
+  ty -> pure ("" :| [], ty)
   -- TODO implicit arguments???
-  namedArg e = ("" :| [], e)
+
+pattern NamedArgTerm ::
+  Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
+pattern NamedArgTerm x ty <-
+  HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 transformSimpleLet ::
   NameSymbol.Mod ->
@@ -480,7 +490,7 @@ transformSpecialRhs ::
   NameSymbol.Mod ->
   FE.Expression ->
   Env primTy primVal (Maybe Special)
-transformSpecialRhs q (FE.Primitive (FE.Prim p)) =
+transformSpecialRhs _ (FE.Primitive (FE.Prim p)) =
   case p of
     "Builtin" :| ["Arrow"] -> pure $ Just $ ArrowS Nothing
     "Builtin" :| ["Pair"]  -> pure $ Just $ PairS Nothing
@@ -633,12 +643,10 @@ lookupSig ::
   NameSymbol.T ->
   Env primTy primVal (Maybe (CoreSig' HR.T primTy primVal))
 lookupSig q x = do
-  ns <- asks @"frontend" Ctx.currentName
   gets @"coreSigs" \sigs -> case q of
     Nothing -> HM.lookup x sigs
-    Just q  ->
-      let qx = NameSymbol.qualify q x in
-      HM.lookup x sigs <|> HM.lookup qx sigs
+    Just q  -> HM.lookup x sigs <|> HM.lookup qx sigs
+      where qx = NameSymbol.qualify q x
 
 transformType ::
   (Data primTy, Data primVal) =>
