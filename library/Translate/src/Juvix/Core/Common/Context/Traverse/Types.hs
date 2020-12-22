@@ -8,7 +8,6 @@ module Juvix.Core.Common.Context.Traverse.Types
     Groups,
     Groups',
     Prefix,
-    ModName,
     Deps,
 
     -- * Capabilities
@@ -54,17 +53,15 @@ type Group' term ty sumRep = D.DList (Entry term ty sumRep)
 
 -- | All recursive groups in a context, in arbitrary order.
 type Groups term ty sumRep =
-  HashMap ModName [Group term ty sumRep]
+  HashMap NameSymbol.Mod [Group term ty sumRep]
 
 type Groups' term ty sumRep =
-  HashMap ModName (D.DList (Group term ty sumRep))
+  HashMap NameSymbol.Mod (D.DList (Group term ty sumRep))
 
 -- | Module name prefix
 newtype Prefix = P (D.DList Symbol)
 
-type ModName = [Symbol]
-
-type Deps = HashMap ModName (HashSet ModName)
+type Deps = HashMap NameSymbol.Mod (HashSet NameSymbol.Mod)
 
 data S term ty sumRep
   = S
@@ -136,16 +133,16 @@ addGroup grp = do
 -- | Add dependencies on the given names to the current namespace.
 addDeps :: (Foldable t, DepsState m, PrefixReader m) => t NameSymbol.T -> m ()
 addDeps deps = do
-  let mods = HashSet.fromList $ map NameSymbol.modName $ toList deps
+  let mods = HashSet.fromList $ map NameSymbol.mod $ toList deps
   let f = Just . maybe mods (HashSet.union mods)
   prefix <- prefixM
   modify @"deps" $ HashMap.alter f prefix
 
-toModName :: Prefix -> ModName
-toModName (P p) = toList p
+toMod :: Prefix -> NameSymbol.Mod
+toMod (P p) = toList p
 
-prefixM :: PrefixReader m => m ModName
-prefixM = asks @"prefix" toModName
+prefixM :: PrefixReader m => m NameSymbol.Mod
+prefixM = asks @"prefix" toMod
 
 
 -- | Extend the current module prefix.

@@ -597,7 +597,7 @@ transformType name dat@(FE.Typ {typeForm}) = do
     FE.Product (FE.Record r) -> throwFF $ RecordUnimplemented r
     FE.Product _ -> throwFF $ IllFormedDatatype dat
     FE.Sum cons -> do
-      let qual = NameSymbol.modName name
+      let qual = NameSymbol.mod name
       (args, level) <- splitDataType ty
       cons <- traverse (transformCon qual hd) $ toList cons
       let dat' =
@@ -632,7 +632,7 @@ splitDataType ty0 = go ty0
 
 transformCon ::
   (Data primTy, Data primVal) =>
-  [Symbol] ->
+  NameSymbol.Mod ->
   Maybe (IR.Term primTy primVal) ->
   FE.Sum ->
   Env primTy primVal (IR.RawDataCon primTy primVal)

@@ -12,6 +12,9 @@ import qualified Prelude (foldr1)
 
 type T = NonEmpty Symbol
 
+type Base = Symbol
+type Mod = [Symbol]
+
 toSymbol :: T -> Symbol
 toSymbol =
   Prelude.foldr1 (\x acc -> x <> "." <> acc)
@@ -59,17 +62,17 @@ hd = NonEmpty.head
 qualify :: Foldable t => t Symbol -> T -> T
 qualify m n = foldr cons n m
 
-qualify1 :: Foldable t => t Symbol -> Symbol -> T
+qualify1 :: Foldable t => t Symbol -> Base -> T
 qualify1 m b = qualify m (b :| [])
 
-split :: T -> ([Symbol], Symbol)
+split :: T -> (Mod, Base)
 split n = (NonEmpty.init n, NonEmpty.last n)
 
-modName :: T -> [Symbol]
-modName = fst . split
+mod :: T -> Mod
+mod = fst . split
 
-baseName :: T -> Symbol
-baseName = snd . split
+base :: T -> Base
+base = snd . split
 
-applyBase :: (Symbol -> Symbol) -> T -> T
+applyBase :: (Base -> Base) -> T -> T
 applyBase f n = let (m, b) = split n in qualify1 m (f b)
