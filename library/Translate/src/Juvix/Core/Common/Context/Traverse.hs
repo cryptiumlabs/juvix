@@ -90,7 +90,7 @@ recGroups' ::
   Context.NameSpace term ty sumRep ->
   Env term ty sumRep ()
 recGroups' ns = do
-  defs <- fmap concat $ for (NameSpace.toList1' ns) \(name, def) ->
+  defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
     case def of
       Context.Record ns _ -> do
         withPrefix name $ recGroups' ns
