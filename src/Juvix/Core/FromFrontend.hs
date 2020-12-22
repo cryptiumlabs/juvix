@@ -465,9 +465,9 @@ getSpecial ::
   Env primTy primVal (Maybe Special)
 getSpecial q x = do
   sig <- lookupSig (Just q) x
-  case sig of
+  pure case sig of
     Just (SpecialSig s) -> Just s
-    _                   -> pure Nothing
+    _                   -> Nothing
 
 getSpecialE ::
   NameSymbol.Mod ->
