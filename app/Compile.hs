@@ -3,15 +3,16 @@
 module Compile where
 
 import qualified Data.HashMap.Strict as HM
-import Juvix.Core.Parameterisation
-import Juvix.Core.IR.Types.Base
 import qualified Data.Text.IO as T
-import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
+import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
+import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import Juvix.Core.IR.Types.Base
+import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
@@ -45,11 +46,12 @@ typecheck fin Michelson = do
           T.putStrLn "No main function found"
           exitFailure
         (IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
-          exitSuccess
-          (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson (HM.map unsafeEvalGlobal globalDefs)
+          let newGlobals = HM.map unsafeEvalGlobal globalDefs
+          (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson newGlobals
           case res of
             Right r -> pure r
             Left err -> do
+              print term
               T.putStrLn (show err)
               exitFailure
           exitSuccess
@@ -75,9 +77,47 @@ compile fin fout backend = do
 unsafeEvalGlobal :: IR.RawGlobal Param.PrimTy Param.RawPrimVal -> GlobalWith Value' IR.NoExt Param.PrimTy (Juvix.Core.Parameterisation.TypedPrim Param.PrimTy Param.RawPrimVal)
 unsafeEvalGlobal g =
   case g of
-    _ -> undefined
-    -- GAbstract (Abstract n u t) -> GAbstract (Abstract n u (unsafeEval t))
+    -- TODO
+    -- GDatatype (Datatype n a l cons) -> GDatatype (Datatype n a l cons)
+    -- GDataCon (DataCon n t) -> GDataCon (DataCon n t)
+    GFunction (Function n u t cs) -> GFunction (Function n u (unsafeEval $ baseToReturn t) (map funClauseEval cs))
+    GAbstract (Abstract n u t) -> GAbstract (Abstract n u (unsafeEval $ baseToReturn t))
+
+funClauseEval :: IR.FunClause' IR.NoExt Param.PrimTy Param.RawPrimVal -> IR.FunClause' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
+funClauseEval (FunClause patts term) = FunClause (map pattEval patts) (baseToReturn term)
+
+pattEval :: IR.Pattern Param.PrimTy Param.RawPrimVal -> IR.Pattern Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
+pattEval patt =
+  case patt of
+    IR.PCon n ps -> IR.PCon n (map pattEval ps)
+    IR.PPair x y -> IR.PPair (pattEval x) (pattEval y)
+    IR.PUnit -> IR.PUnit
+    IR.PVar v -> IR.PVar v
+    IR.PDot t -> IR.PDot (baseToReturn t)
+    -- TODO
+    IR.PPrim p -> IR.PPrim (CoreApp.Return (Param.Set :| []) p)
+
+baseToReturn :: Term' IR.NoExt Param.PrimTy Param.RawPrimVal -> Term' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
+baseToReturn t =
+  case t of
+    IR.Star u -> IR.Star u
+    IR.PrimTy p -> IR.PrimTy p
+    IR.Prim p -> IR.Prim (CoreApp.Return (Param.Set :| []) p)
+    IR.Pi u x y -> IR.Pi u (baseToReturn x) (baseToReturn y)
+    IR.Lam t -> IR.Lam (baseToReturn t)
+    IR.Sig u x y -> IR.Sig u (baseToReturn x) (baseToReturn y)
+    IR.Pair x y -> IR.Pair (baseToReturn x) (baseToReturn y)
+    IR.Let u a b -> IR.Let u (elimToReturn a) (baseToReturn b)
+    IR.UnitTy -> IR.UnitTy
+    IR.Unit -> IR.Unit
+    IR.Elim e -> IR.Elim (elimToReturn e)
+
+elimToReturn :: Elim' IR.NoExt Param.PrimTy Param.RawPrimVal -> Elim' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
+elimToReturn e =
+  case e of
+    IR.Bound b -> IR.Bound b
+    IR.Free n -> IR.Free n
+    IR.App e t -> IR.App (elimToReturn e) (baseToReturn t)
+    IR.Ann u a b c -> IR.Ann u (baseToReturn a) (baseToReturn b) c
 
 unsafeEval = (\(Right x) -> x) . IR.evalTerm
-
-

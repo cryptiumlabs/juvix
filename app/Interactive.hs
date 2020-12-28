@@ -60,19 +60,19 @@ handleSpecial str cont =
       cont
     'c' : 'e' : ' ' : rest -> do
       H.outputStrLn "TODO fix this bit"
-{-
-      let parsed = parseString rest
-      H.outputStrLn (show parsed)
-      case parsed of
-        Just (HR.Elim (HR.Ann usage term ty _)) -> do
-          let makeErased = fst <$> Core.typecheckErase' term usage ty
-          erased <-
-            liftIO $
-              (exec makeErased Nat.t mempty :: Exec Nat.Ty Nat.Val ())
-          H.outputStrLn (show erased)
-        _ -> H.outputStrLn "must enter a valid annotated core term"
-      cont
--}
+    {-
+          let parsed = parseString rest
+          H.outputStrLn (show parsed)
+          case parsed of
+            Just (HR.Elim (HR.Ann usage term ty _)) -> do
+              let makeErased = fst <$> Core.typecheckErase' term usage ty
+              erased <-
+                liftIO $
+                  (exec makeErased Nat.t mempty :: Exec Nat.Ty Nat.Val ())
+              H.outputStrLn (show erased)
+            _ -> H.outputStrLn "must enter a valid annotated core term"
+          cont
+    -}
     'c' : 't' : ' ' : _rest -> do
       H.outputStrLn "TODO fix typecheckAffineErase"
       -- let parsed = parseString rest
