@@ -95,14 +95,6 @@ to get syntax highlighting support for Juvix in VSCode.
 
 Other IDE supports will be added over time.
 
-### Interactive mode
-
-You can play around with some functionality in an interactive REPL:
-
-```bash
-juvix interactive
-```
-
 ## Report a bug
 
 If you found a bug please open an issue with the `bug` tag.
