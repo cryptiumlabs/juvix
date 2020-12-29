@@ -1,0 +1,19 @@
+let ty_ = %Builtin.Type
+
+sig ty : ty_ 1
+let ty = ty_ 0
+
+let omega = %Builtin.Omega
+let arr = %Builtin.Arrow
+
+let (->) = arr omega
+declare infixr (->) 1
+
+let (:) = %Builtin.Colon
+declare infixr (:) 2
+
+sig int : ty
+let int = %Michelson.int
+
+sig main : int -> int -> int
+let main = \param _ -> param
