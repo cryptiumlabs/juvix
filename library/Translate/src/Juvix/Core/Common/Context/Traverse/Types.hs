@@ -13,7 +13,7 @@ module Juvix.Core.Common.Context.Traverse.Types
     -- * Capabilities
     Env,
     PrefixReader,
-    CurNameSpaceReader,
+    ContextReader,
     OutputState,
     DepsState,
     HasRecGroups,
@@ -59,7 +59,7 @@ data S term ty sumRep
   = S
       { prefix :: Prefix,
         output :: Groups' term ty sumRep,
-        curNameSpace :: Context.NameSpace term ty sumRep,
+        context :: Context.T term ty sumRep,
         deps :: Deps
       }
   deriving (Generic)
@@ -80,10 +80,10 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
     )
     via StateField "output" (Alias term ty sumRep)
   deriving
-    ( HasSource "curNameSpace" (Context.NameSpace term ty sumRep),
-      HasReader "curNameSpace" (Context.NameSpace term ty sumRep)
+    ( HasSource "context" (Context.T term ty sumRep),
+      HasReader "context" (Context.T term ty sumRep)
     )
-    via ReaderField "curNameSpace" (Alias term ty sumRep)
+    via ReaderField "context" (Alias term ty sumRep)
   deriving
     ( HasSource "deps" Deps,
       HasSink "deps" Deps,
@@ -93,8 +93,8 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
 
 type PrefixReader = HasReader "prefix" Prefix
 
-type CurNameSpaceReader term ty sumRep =
-  HasReader "curNameSpace" (Context.NameSpace term ty sumRep)
+type ContextReader term ty sumRep =
+  HasReader "context" (Context.T term ty sumRep)
 
 type OutputState term ty sumRep =
   HasState "output" (Groups' term ty sumRep)
@@ -102,7 +102,7 @@ type OutputState term ty sumRep =
 type DepsState = HasState "deps" Deps
 
 type HasRecGroups term ty sumRep m =
-  ( CurNameSpaceReader term ty sumRep m,
+  ( ContextReader term ty sumRep m,
     PrefixReader m,
     DepsState m,
     OutputState term ty sumRep m,
@@ -112,19 +112,19 @@ type HasRecGroups term ty sumRep m =
   )
 
 run_ ::
-  Context.NameSpace term ty sumRep ->
+  Context.T term ty sumRep ->
   Env term ty sumRep a ->
   (Groups term ty sumRep, Deps)
-run_ curns act =
-  let (_, grps, deps) = run curns act in (grps, deps)
+run_ context act =
+  let (_, grps, deps) = run context act in (grps, deps)
 
 run ::
-  Context.NameSpace term ty sumRep ->
+  Context.T term ty sumRep ->
   Env term ty sumRep a ->
   (a, Groups term ty sumRep, Deps)
-run curNameSpace (Env act) =
+run context (Env act) =
   let (res, S {output, deps}) = runState act initState
    in (res, toList <$> output, deps)
   where
-    initState = S {prefix, output = [], curNameSpace, deps = []}
+    initState = S {prefix, output = [], context, deps = []}
     prefix = P [Context.topLevelName]
