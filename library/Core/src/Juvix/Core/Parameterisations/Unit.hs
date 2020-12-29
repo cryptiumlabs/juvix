@@ -23,6 +23,10 @@ hasType :: Val -> P.PrimType Ty -> Bool
 hasType Val (Ty :| []) = True
 hasType _ _ = False
 
+instance P.CanApply Ty where
+  arity _ = 0
+  apply f xs = Left $ P.ExtraArguments f xs
+
 instance P.CanApply Val where
   arity _ = 0
   apply f xs = Left $ P.ExtraArguments f xs

@@ -35,7 +35,11 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 -- | Checks a 'Term' against an annotation and returns a decorated term if
 -- successful.
 typeTerm ::
-  (Eq primTy, Eq primVal, Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    Param.CanApply primTy,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   Param.Parameterisation primTy primVal ->
   IR.Term' ext primTy primVal ->
   AnnotationT primTy primVal ->
@@ -46,6 +50,7 @@ typeTermWith ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -63,6 +68,7 @@ typeElim ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -76,6 +82,7 @@ typeElimWith ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -100,6 +107,7 @@ typeTerm' ::
   ( Eq primTy,
     Eq primVal,
     CanInnerTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   IR.Term' ext primTy primVal ->
@@ -171,6 +179,7 @@ typeElim' ::
   ( Eq primTy,
     Eq primVal,
     CanInnerTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   IR.Elim' ext primTy primVal ->
@@ -357,6 +366,7 @@ liftEval = either (throwTC . EvalError) pure
 substApp ::
   ( HasParam primTy primVal m,
     HasThrowTC' extV extT primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.ValueT primTy primVal ->
@@ -368,6 +378,7 @@ substApp ty arg = liftEval $ do
 
 evalTC ::
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.Term primTy primVal ->

@@ -353,7 +353,9 @@ instance
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
+    Monoid (IR.XVPrimTy extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal),
+    Param.CanApply primTy,
     Param.CanApply primVal
   ) =>
   HasSubstV extV primTy primVal (IR.Value' extV primTy primVal)
@@ -392,7 +394,9 @@ substNeutralWith ::
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
+    Monoid (IR.XVPrimTy extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal),
+    Param.CanApply primTy,
     Param.CanApply primVal
   ) =>
   Natural ->
@@ -421,10 +425,31 @@ substNeutralWith w i e (IR.NeutralX a) b =
   IR.VNeutral' <$> (IR.NeutralX <$> substVWith w i e a)
     <*> substVWith w i e b
 
+data ApplyError primTy primVal
+  = NoApplyError
+  | ApplyErrorV (Param.ApplyError primVal)
+  | ApplyErrorT (Param.ApplyError primTy)
+
+deriving instance
+  ( Eq primTy,
+    Eq primVal,
+    Eq (Param.ApplyErrorExtra primTy),
+    Eq (Param.ApplyErrorExtra primVal)
+  ) =>
+  Eq (ApplyError primTy primVal)
+
+deriving instance
+  ( Show primTy,
+    Show primVal,
+    Show (Param.ApplyErrorExtra primTy),
+    Show (Param.ApplyErrorExtra primVal)
+  ) =>
+  Show (ApplyError primTy primVal)
+
 data Error extV extT primTy primVal
   = CannotApply
       { fun, arg :: IR.Value' extV primTy primVal,
-        paramErr :: Maybe (Param.ApplyError primVal)
+        paramErr :: ApplyError primTy primVal
       }
   | UnsupportedTermExt (IR.TermX extT primTy primVal)
   | UnsupportedElimExt (IR.ElimX extT primTy primVal)
@@ -434,6 +459,7 @@ deriving instance
     Eq primVal,
     IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy primVal,
+    Eq (Param.ApplyErrorExtra primTy),
     Eq (Param.ApplyErrorExtra primVal),
     Eq (IR.TermX extT primTy primVal),
     Eq (IR.ElimX extT primTy primVal)
@@ -445,6 +471,7 @@ deriving instance
     Show primVal,
     IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy primVal,
+    Show (Param.ApplyErrorExtra primTy),
     Show (Param.ApplyErrorExtra primVal),
     Show (IR.TermX extT primTy primVal),
     Show (IR.ElimX extT primTy primVal)
@@ -455,7 +482,9 @@ vapp ::
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
+    Monoid (IR.XVPrimTy extV primTy primVal),
     Monoid (IR.XVPrim extV primTy primVal),
+    Param.CanApply primTy,
     Param.CanApply primVal
   ) =>
   IR.Value' extV primTy primVal ->
@@ -468,11 +497,14 @@ vapp (IR.VLam' t _) s _ =
   substV s t
 vapp (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
+vapp pp@(IR.VPrimTy' p _) qq@(IR.VPrimTy' q _) _ =
+  bimap (CannotApply pp qq . ApplyErrorT) (\pq -> IR.VPrimTy' pq mempty) $
+    Param.apply1 p q
 vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
-  bimap (CannotApply pp qq . Just) (\pq -> IR.VPrim' pq mempty) $
+  bimap (CannotApply pp qq . ApplyErrorV) (\pq -> IR.VPrim' pq mempty) $
     Param.apply1 p q
 vapp f x _ =
-  Left $ CannotApply f x Nothing
+  Left $ CannotApply f x NoApplyError
 
 type TermExtFun ext primTy primVal =
   IR.TermX ext primTy primVal ->
@@ -497,7 +529,9 @@ rejectExts =
 
 -- annotations are discarded
 evalTermWith ::
-  Param.CanApply primVal =>
+  ( Param.CanApply primTy,
+    Param.CanApply primVal
+  ) =>
   ExtFuns extT primTy primVal ->
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
@@ -529,7 +563,9 @@ evalTermWith exts (IR.TermX a) =
   tExtFun exts a
 
 evalElimWith ::
-  Param.CanApply primVal =>
+  ( Param.CanApply primTy,
+    Param.CanApply primVal
+  ) =>
   ExtFuns extT primTy primVal ->
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
@@ -548,13 +584,17 @@ evalElimWith exts (IR.ElimX a) =
   eExtFun exts a
 
 evalTerm ::
-  Param.CanApply primVal =>
+  ( Param.CanApply primTy,
+    Param.CanApply primVal
+  ) =>
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm = evalTermWith rejectExts
 
 evalElim ::
-  Param.CanApply primVal =>
+  ( Param.CanApply primTy,
+    Param.CanApply primVal
+  ) =>
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElim = evalElimWith rejectExts

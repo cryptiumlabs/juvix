@@ -48,6 +48,10 @@ hasType (NatVal x) (traverse unNatTy -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _ _ = False
 
+instance P.CanApply Ty where
+  arity _ = 0
+  apply f xs = Left $ P.ExtraArguments f xs
+
 instance P.CanApply Val where
   arity (NatVal x) = P.arity x
   arity (UnitVal x) = P.arity x

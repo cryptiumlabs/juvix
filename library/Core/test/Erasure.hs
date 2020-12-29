@@ -22,6 +22,8 @@ shouldEraseTo ::
     Show primVal,
     Eq primTy,
     Eq primVal,
+    Eq (Core.ApplyErrorExtra primTy),
+    Show (Core.ApplyErrorExtra primTy),
     Eq (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal)),
     Show (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
   ) =>
