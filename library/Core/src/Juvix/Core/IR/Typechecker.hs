@@ -109,8 +109,8 @@ typeTerm' term ann@(Annotation σ ty) =
   case term of
     IR.Star' i _ -> do
       requireZero σ
-      j <- requireStar ty
-      requireUniverseLT i j
+      _j <- requireStar ty
+      -- requireUniverseLT i j
       pure $ Typed.Star i ann
     IR.PrimTy' t _ -> do
       requireZero σ
@@ -387,6 +387,8 @@ evalTC = liftEval . Eval.evalTerm
 -- * Covariance in both parts of Σ
 -- * It doesn't descend into any other structures
 --   (TODO: which ones are safe to do so?)
+--
+-- NB. Levels are currently not checked!
 (<:) ::
   ( Eq primTy,
     Eq primVal,
@@ -396,7 +398,7 @@ evalTC = liftEval . Eval.evalTerm
   IR.Value' ext primTy primVal ->
   IR.Value' ext primTy primVal ->
   Bool
-IR.VStar' i _ <: IR.VStar' j _ = i <= j
+IR.VStar' _i _ <: IR.VStar' _j _ = True -- i <= j
 IR.VPi' π1 s1 t1 _ <: IR.VPi' π2 s2 t2 _ =
   π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
 IR.VSig' π1 s1 t1 _ <: IR.VSig' π2 s2 t2 _ =
