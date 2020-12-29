@@ -1245,8 +1245,8 @@ Can be added to via core translation
 ******* Traverse
 Calculate mutually-recursive groups of definitions.
 - _Relies on_
+  + [[Core/Common/Context]]
   + [[Traverse/Types]]
-  + [[Context/Types]]
   + [[NameSpace]]
   + [[FreeVars]]
   + [[Library]]
