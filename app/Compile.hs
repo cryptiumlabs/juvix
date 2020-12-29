@@ -51,12 +51,12 @@ typecheck fin Michelson = do
           let newGlobals = HM.map unsafeEvalGlobal globalDefs
           (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson newGlobals
           case res of
-            Right r -> pure r
+            Right r -> do
+              pure r
             Left err -> do
               print term
               T.putStrLn (show err)
               exitFailure
-          exitSuccess
         somethingElse -> do
           print somethingElse
           exitFailure

@@ -101,7 +101,7 @@ run _ctx (Options cmd configPath) = do
       Compile.parse fin >> pure ()
     Typecheck fin backend -> do
       Compile.typecheck fin backend >> pure ()
-    Compile fin fout backend ->
+    Compile fin fout backend -> do
       Compile.compile fin fout backend
     Version -> do
       putDoc versionDoc
