@@ -90,8 +90,7 @@ See the [tutorials](TODOaddlink) and [documentations]() on the [Juvix website](h
 
 ### Visual Studio Code support
 
-Install the [Juvix
-package](https://marketplace.visualstudio.com/items?itemName=metastate.language-juvix)
+Install the [Juvix package](https://marketplace.visualstudio.com/items?itemName=metastate.language-juvix)
 to get syntax highlighting support for Juvix in VSCode.
 
 Other IDE supports will be added over time.
@@ -152,4 +151,4 @@ We would love to hear what you think of Juvix! Join our community:
 <!-- ## Credits Add this? -->
 <!-- Give proper credits. This could be a link to any repo which inspired you to build this project, any blogposts or links to people who contrbuted in this project.  -->
 
-## License: GLP 3.0
+## License: GPL 3.0
