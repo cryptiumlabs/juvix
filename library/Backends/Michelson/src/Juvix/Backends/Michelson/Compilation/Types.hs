@@ -27,6 +27,7 @@ data PrimTy
   | Option
   | List
   | Set
+  | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
 data RawPrimVal

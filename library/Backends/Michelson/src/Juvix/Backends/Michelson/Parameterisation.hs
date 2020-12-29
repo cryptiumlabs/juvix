@@ -2,7 +2,7 @@
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
-    module Juvix.Backends.Michelson.Compilation.Types,
+    module Types,
   )
 where
 
@@ -11,7 +11,7 @@ import Control.Monad.Fail (fail)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
@@ -103,11 +103,30 @@ instance Show ApplyError where
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
+instance Core.CanApply PrimTy where
+  arity Pair         = 2
+  arity Map          = 1
+  arity BigMap       = 1
+  arity Set          = 1
+  arity Lambda       = 1
+  arity Types.Option = 1
+  arity List         = 1
+  arity PrimTy {}    = 0
+  arity (Application hd rest) =
+    Core.arity hd - fromIntegral (length rest)
+
+  apply (Application fn args1) args2 =
+    Application fn (args1 <> args2)
+    |> Right
+  apply fun args =
+    Application fun args
+    |> Right
+
 instance Core.CanApply PrimVal where
   type ApplyErrorExtra PrimVal = ApplyError
 
-  arity (Prim.Cont {numLeft}) = numLeft
-  arity (Prim.Return {retTerm}) = arityRaw retTerm
+  arity Prim.Cont {numLeft} = numLeft
+  arity Prim.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',

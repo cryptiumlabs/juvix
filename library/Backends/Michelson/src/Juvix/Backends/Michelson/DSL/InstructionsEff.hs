@@ -786,6 +786,12 @@ typeToPrimType ty =
     Ann.SymT _ -> throw @"compilationError" Types.InvalidInputType
     Ann.Star _ -> throw @"compilationError" Types.InvalidInputType
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
+    Ann.PrimTy (Types.Application arg1 args) -> do
+      case arg1 of
+        Types.Pair
+          | length args == 2 ->
+            undefined
+      undefined
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
