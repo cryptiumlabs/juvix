@@ -143,4 +143,4 @@ We would love to hear what you think of Juvix! Join our community:
 <!-- ## Credits Add this? -->
 <!-- Give proper credits. This could be a link to any repo which inspired you to build this project, any blogposts or links to people who contrbuted in this project.  -->
 
-## License: GPL 3.0(https://www.gnu.org/licenses/gpl-3.0-standalone.html)
+## License: [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
