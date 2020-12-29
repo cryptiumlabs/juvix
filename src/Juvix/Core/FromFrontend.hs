@@ -518,7 +518,9 @@ toElim e _ = throwFF $ NotAnElim e -- FIXME add metavar ann
 -- TODO put an annotation with metas for the usage/type
 
 isOmega ::
-  HasCoreSigs primTy primVal m =>
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
   NameSymbol.Mod ->
   FE.Expression ->
   m Bool
@@ -560,18 +562,23 @@ transformUniverse (FEIntLit i) | i >= 0 = pure $ fromIntegral i
 transformUniverse e = throwFF $ NotAUniverse e
 
 getSpecial ::
-  HasCoreSigs primTy primVal m =>
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   m (Maybe Special)
 getSpecial q x = do
   sig <- lookupSig (Just q) x
-  pure case sig of
-    Just (SpecialSig s) -> Just s
-    _ -> Nothing
+  case sig of
+    Just (SpecialSig s) -> pure $ Just s
+    Just _ -> pure Nothing
+    Nothing -> throwFF $ WrongSigType x Nothing
 
 getSpecialE ::
-  HasCoreSigs primTy primVal m =>
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
   NameSymbol.Mod ->
   FE.Expression ->
   m (Maybe Special)
