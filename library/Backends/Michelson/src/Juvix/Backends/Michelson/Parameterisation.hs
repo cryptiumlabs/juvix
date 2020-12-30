@@ -241,6 +241,15 @@ builtinTypes =
     ("Michelson.address", Untyped.TAddress)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
+    |> ( <>
+           [ ("Michelson.list", Types.List),
+             ("Michelson.lambda", Types.Lambda),
+             ("Michelson.option", Types.Option),
+             ("Michelson.set", Types.Set),
+             ("Michelson.map", Types.Map),
+             ("Michelson.big-map", Types.BigMap)
+           ]
+       )
     |> Map.fromList
 
 builtinValues :: P.Builtins RawPrimVal
