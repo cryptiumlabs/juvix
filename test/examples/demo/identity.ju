@@ -20,8 +20,8 @@ let int = %Michelson.int
 sig pair : ty
 let pair = %Michelson.pair
 
---sig main : TopLevel.Identity.arrow TopLevel.Identity.int (TopLevel.Identity.arrow TopLevel.Identity.int (TopLevel.Identity.pair TopLevel.Identity.int TopLevel.Identity.int))
---let main = \param storage -> (%Michelson.cons : TopLevel.Identity.arrow TopLevel.Identity.int (TopLevel.Identity.arrow TopLevel.Identity.int (TopLevel.Identity.pair TopLevel.Identity.int TopLevel.Identity.int))) param storage
+sig cons : int -> int -> pair int int
+let cons = %Michelson.cons
 
-sig main : TopLevel.Identity.arrow (%Michelson.int) (TopLevel.Identity.arrow (%Michelson.int) ((%Michelson.pair : TopLevel.Identity.arrow TopLevel.Identity.ty (TopLevel.Identity.arrow TopLevel.Identity.ty TopLevel.Identity.ty)) (%Michelson.int) (%Michelson.int)))
-let main = \param -> \storage -> (%Michelson.cons : TopLevel.Identity.arrow (%Michelson.int) (TopLevel.Identity.arrow (%Michelson.int) (TopLevel.Identity.pair (%Michelson.int) (%Michelson.int)))) param storage
+sig main : int -> int -> pair int int
+let main = \param storage -> cons param storage
