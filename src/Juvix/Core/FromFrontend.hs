@@ -319,8 +319,9 @@ transformTermHR _ (FE.Constant k) = HR.Prim <$> paramConstant k
 transformTermHR q (FE.Let l) = transformSimpleLet q l
 transformTermHR _ e@(FE.LetType _) = throwFF $ ExprUnimplemented e
 transformTermHR _ e@(FE.Match _) = throwFF $ ExprUnimplemented e
-transformTermHR q (FE.Name n) = toName <$> lookupSig' (Just q) n where
-  toName = HR.Elim . HR.Var . maybe n fst
+transformTermHR q (FE.Name n) = toName <$> lookupSig' (Just q) n
+  where
+    toName = HR.Elim . HR.Var . maybe n fst
 transformTermHR q (FE.Lambda l) = transformSimpleLambda q l
 transformTermHR q (FE.Application app) = transformApplication q app
 transformTermHR _ (FE.Primitive (FE.Prim p)) = do
@@ -804,7 +805,8 @@ lookupSig' q x = do
     case q of
       Nothing -> look x
       Just q -> look x <|> look qx
-        where qx = NameSymbol.qualify q x
+        where
+          qx = NameSymbol.qualify q x
 
 transformType ::
   ( Data primTy,
