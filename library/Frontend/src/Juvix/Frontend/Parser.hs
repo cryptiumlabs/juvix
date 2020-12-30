@@ -20,7 +20,6 @@ import qualified Data.Text.Encoding as Encoding
 import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library hiding
   ( guard,
     list,
@@ -33,6 +32,7 @@ import Juvix.Library hiding
     takeWhile,
     try,
   )
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
@@ -712,9 +712,8 @@ prefixSepGen parser = do
   peek <- peekWord8
   case peek of
     Just x
-      | Lexer.dot  == x -> fail "symbol not prefix"
+      | Lexer.dot == x -> fail "symbol not prefix"
     _ -> pure ret
-
 
 -- the permissive functions allow the functions to not fully parse the word
 -- useful for infix application
@@ -723,7 +722,6 @@ prefixSymbolDotPermissive = sepBy1H prefixSymbol (word8 Lexer.dot)
 
 prefixCapitalDotPermissive :: Parser (NonEmpty Symbol)
 prefixCapitalDotPermissive = sepBy1H prefixCapital (word8 Lexer.dot)
-
 
 prefixSymbolDot :: Parser (NonEmpty Symbol)
 prefixSymbolDot = prefixSepGen prefixSymbol
