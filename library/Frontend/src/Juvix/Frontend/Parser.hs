@@ -368,7 +368,9 @@ moduleOpenExpr = moduleOpenExprNormal <|> moduleOpenExprParens
 
 moduleOpenExprParens :: Parser Types.ModuleOpenExpr
 moduleOpenExprParens = do
-  name <- moduleName
+  -- we want it to fail at the ., since it's a paren after it
+  -- Int.()
+  name <- prefixSymbolDotPermissive
   word8 Lexer.dot
   expr <- parens expression
   pure (Types.OpenExpress name expr)
