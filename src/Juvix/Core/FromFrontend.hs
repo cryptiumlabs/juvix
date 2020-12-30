@@ -319,7 +319,8 @@ transformTermHR _ (FE.Constant k) = HR.Prim <$> paramConstant k
 transformTermHR q (FE.Let l) = transformSimpleLet q l
 transformTermHR _ e@(FE.LetType _) = throwFF $ ExprUnimplemented e
 transformTermHR _ e@(FE.Match _) = throwFF $ ExprUnimplemented e
-transformTermHR _ (FE.Name n) = pure $ HR.Elim $ HR.Var n
+transformTermHR q (FE.Name n) = toName <$> lookupSig' (Just q) n where
+  toName = HR.Elim . HR.Var . maybe n fst
 transformTermHR q (FE.Lambda l) = transformSimpleLambda q l
 transformTermHR q (FE.Application app) = transformApplication q app
 transformTermHR _ (FE.Primitive (FE.Prim p)) = do
@@ -790,12 +791,20 @@ lookupSig ::
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (CoreSig' HR.T primTy primVal))
-lookupSig q x = do
-  gets @"coreSigs" \sigs -> case q of
-    Nothing -> HM.lookup x sigs
-    Just q -> HM.lookup x sigs <|> HM.lookup qx sigs
-      where
-        qx = NameSymbol.qualify q x
+lookupSig q x = fmap snd <$> lookupSig' q x
+
+lookupSig' ::
+  HasCoreSigs primTy primVal m =>
+  Maybe NameSymbol.Mod -> -- namespace of current declaration
+  NameSymbol.T ->
+  m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
+lookupSig' q x = do
+  gets @"coreSigs" \sigs -> do
+    let look x = (x,) <$> HM.lookup x sigs
+    case q of
+      Nothing -> look x
+      Just q -> look x <|> look qx
+        where qx = NameSymbol.qualify q x
 
 transformType ::
   ( Data primTy,
