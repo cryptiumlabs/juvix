@@ -38,12 +38,13 @@ data Entry term ty sumRep
       }
   deriving (Eq, Show, Generic, Data)
 
--- | A recursive group of definitions.
+-- | A recursive group of definitions, in an arbitrary order.
 type Group term ty sumRep = NonEmpty (Entry term ty sumRep)
 
 type Group' term ty sumRep = D.DList (Entry term ty sumRep)
 
--- | All recursive groups in a context, in arbitrary order.
+-- | All recursive groups in a context. Each namespace has its groups in
+-- dependency order.
 type Groups term ty sumRep =
   HashMap NameSymbol.Mod [Group term ty sumRep]
 
