@@ -27,6 +27,7 @@ deriving instance
   ( Show primTy,
     Show primVal,
     Show compErr,
+    Show (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra (TC.TypedPrim primTy primVal))
   ) =>
   Show (PipelineError primTy primVal compErr)

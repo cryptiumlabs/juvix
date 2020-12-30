@@ -17,8 +17,8 @@ import qualified Data.DList as D
 import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
 import qualified Generics.SYB as SYB
+import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Common.Context.Traverse.Types
-import qualified Juvix.Core.Common.Context.Types as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.InfixPrecedence.FreeVars as FV
 import Juvix.Library
@@ -78,8 +78,8 @@ recGroups ::
   (Data term, Data ty, Data sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
-recGroups (Context.T curns _ top) =
-  let (groups, deps) = run_ curns $ recGroups' $ toNameSpace top
+recGroups ctx@(Context.T _ _ top) =
+  let (groups, deps) = run_ ctx $ recGroups' $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
@@ -97,11 +97,13 @@ recGroups' ns = do
         withPrefix name $ recGroups' ns
         pure []
       Context.CurrentNameSpace -> withPrefix name do
-        ask @"curNameSpace" >>= recGroups'
+        curNS <- asks @"context" Context.currentNameSpace
+        recGroups' curNS
         pure []
       _ -> do
         qname <- qualify name
-        pure [(def, qname, fv def)]
+        fvs <- fv def
+        pure [(def, qname, fvs)]
   let (g, fromV, _) = Graph.graphFromEdges defs
   let accum1 xs v =
         let (def, name, ys) = fromV v
@@ -113,8 +115,11 @@ recGroups' ns = do
   addDeps fvs
   for_ groups addGroup
 
-fv :: Data a => a -> [NameSymbol.T]
-fv = HashSet.toList . SYB.everything (<>) (SYB.mkQ mempty (FV.op []))
+fv :: (ContextReader term ty sumRep m, Data a) => a -> m [NameSymbol.T]
+fv t = asks @"context" \ctx ->
+  SYB.everything (<>) (SYB.mkQ mempty (FV.op [])) t
+    |> HashSet.toList
+    |> mapMaybe (flip Context.qualifyLookup ctx)
 
 toNameSpace :: HashMap.T Symbol a -> NameSpace.T a
 toNameSpace public = NameSpace.T {public, private = mempty}

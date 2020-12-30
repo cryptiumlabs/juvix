@@ -3,32 +3,32 @@ mod Prelude.Michelson where
 open Prelude
 
 -- datatypes
--- sig option : ty -> ty
--- let option = %Michelson.option
---
--- sig list : ty -> ty
--- let list = %Michelson.list
---
--- sig set : ty -> ty
--- let set = %Michelson.set
---
+sig option : ty -> ty
+let option = %Michelson.option
+
+sig list : ty -> ty
+let list = %Michelson.list
+
+sig set : ty -> ty
+let set = %Michelson.set
+
 -- sig operation : ty -> ty
 -- let operation = %Michelson.operation
---
+
 -- sig contract : ty -> ty
 -- let contract = %Michelson.contract
---
--- sig pair : ty -> ty
--- let pair = %Michelson.pair
---
+
+sig pair : ty -> ty
+let pair = %Michelson.pair
+
 -- sig either : ty -> ty
 -- let either = %Michelson.either
---
--- sig map : ty -> ty
--- let map = %Michelson.map
---
--- sig big-map : ty -> ty
--- let big-map = %Michelson.big-map
+
+sig map : ty -> ty
+let map = %Michelson.map
+
+sig big-map : ty -> ty
+let big-map = %Michelson.big-map
 
 
 -- primitive types

@@ -61,6 +61,9 @@ shouldCheckWith ::
     Eq primTy,
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
   ) =>
@@ -87,6 +90,9 @@ shouldCheck ::
     Eq primTy,
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
   ) =>
@@ -104,6 +110,9 @@ shouldInferWith ::
     Eq primTy,
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
   ) =>
@@ -126,6 +135,9 @@ shouldInfer ::
     Eq primTy,
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
+    CanApply primTy,
+    Eq (ApplyErrorExtra primTy),
+    Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal))
   ) =>
@@ -143,6 +155,7 @@ shouldEval ::
     Eq primTy,
     Eq primVal,
     CanApply primVal,
+    CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
     Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
   ) =>
