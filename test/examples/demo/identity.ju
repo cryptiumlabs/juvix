@@ -15,5 +15,11 @@ declare infixr (:) 2
 sig int : ty
 let int = %Michelson.int
 
-sig main : %Michelson.int -> ((%Michelson.pair) (%Michelson.int) (%Michelson.int)) -> ((%Michelson.pair) (%Michelson.int) (%Michelson.int))
-let main = \_ storage -> storage
+sig pair : ty
+let pair = %Michelson.pair
+
+sig cons : TopLevel.Identity.int -> TopLevel.Identity.int -> TopLevel.Identity.pair TopLevel.Identity.int TopLevel.Identity.int
+let cons = %Michelson.cons
+
+sig main : TopLevel.Identity.int -> TopLevel.Identity.int -> TopLevel.Identity.pair TopLevel.Identity.int TopLevel.Identity.int
+let main = \param storage -> (%Michelson.cons : TopLevel.Identity.int -> TopLevel.Identity.int -> TopLevel.Identity.pair TopLevel.Identity.int TopLevel.Identity.int) param storage
