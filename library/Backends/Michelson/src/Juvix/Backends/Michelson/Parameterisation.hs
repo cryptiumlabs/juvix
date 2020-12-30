@@ -104,23 +104,17 @@ instance Show ApplyError where
     "not a primitive type:\n\t" <> Prelude.show ty
 
 instance Core.CanApply PrimTy where
-  arity Pair         = 2
-  arity Map          = 1
-  arity BigMap       = 1
-  arity Set          = 1
-  arity Lambda       = 1
-  arity Types.Option = 1
-  arity List         = 1
-  arity PrimTy {}    = 0
   arity (Application hd rest) =
     Core.arity hd - fromIntegral (length rest)
+  arity x =
+    Run.lengthType x
 
   apply (Application fn args1) args2 =
     Application fn (args1 <> args2)
-    |> Right
+      |> Right
   apply fun args =
     Application fun args
-    |> Right
+      |> Right
 
 instance Core.CanApply PrimVal where
   type ApplyErrorExtra PrimVal = ApplyError

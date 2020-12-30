@@ -788,15 +788,48 @@ typeToPrimType ty =
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
     Ann.PrimTy (Types.Application arg1 args) -> do
       case arg1 of
-        Types.Pair
-          | length args == 2 ->
-            undefined
-      undefined
+        Types.PrimTy {} -> throw @"compilationError" Types.InvalidInputType
+        Types.Application _ _ -> throw @"compilationError" Types.InvalidInputType
+        _ -> pure ()
+      if  | sameLength arg1 args ->
+            recurse args
+              >>| appPrimTyErr arg1
+          | otherwise ->
+            throw @"compilationError" Types.InvalidInputType
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
+    Ann.PrimTy _ ->
+      throw @"compilationError" Types.InvalidInputType
+    Ann.Sig {} -> throw @"compilationError" Types.InvalidInputType
+    Ann.UnitTy -> pure Untyped.unit
+  where
+    recurse = traverse (typeToPrimType . Ann.PrimTy)
+    sameLength arg xs =
+      lengthType arg == length xs
+
+appPrimTyErr :: Types.PrimTy -> NonEmpty Untyped.T -> Untyped.T
+appPrimTyErr Types.Pair (x :| (y : _)) = Untyped.pair x y
+appPrimTyErr Types.Lambda (x :| (y : _)) = Untyped.lambda x y
+appPrimTyErr Types.Map (x :| (y : _)) = Untyped.map x y
+appPrimTyErr Types.BigMap (x :| (y : _)) = Untyped.bigMap x y
+appPrimTyErr Types.Option (x :| _) = Untyped.option x
+appPrimTyErr Types.Set (x :| _) = Untyped.set x
+appPrimTyErr Types.List (x :| _) = Untyped.list x
+appPrimTyErr _ _ = error "fail"
+
+lengthType :: Num p => Types.PrimTy -> p
+lengthType Types.Pair = 2
+lengthType Types.Lambda = 2
+lengthType Types.Map = 2
+lengthType Types.BigMap = 2
+lengthType Types.Option = 1
+lengthType Types.List = 1
+lengthType Types.Set = 1
+lengthType Types.PrimTy {} = 0
+lengthType Types.Application {} = 0
 
 eatType :: Natural -> Types.Type -> Types.Type
 eatType 0 t = t
