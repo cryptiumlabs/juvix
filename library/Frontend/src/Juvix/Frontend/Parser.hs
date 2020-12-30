@@ -727,7 +727,7 @@ prefixSymbolDot :: Parser (NonEmpty Symbol)
 prefixSymbolDot = prefixSepGen prefixSymbol
 
 prefixCapitalDot :: Parser (NonEmpty Symbol)
-prefixCapitalDot = prefixSepGen prefixSymbol
+prefixCapitalDot = prefixSepGen prefixCapital
 
 prefixSymbol :: Parser Symbol
 prefixSymbol =
