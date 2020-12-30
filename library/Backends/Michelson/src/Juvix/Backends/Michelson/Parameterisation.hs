@@ -238,7 +238,8 @@ builtinTypes =
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
     ("Michelson.timestamp", Untyped.TTimestamp),
-    ("Michelson.address", Untyped.TAddress)
+    ("Michelson.address", Untyped.TAddress),
+    ("Michelson.operation", Untyped.TOperation)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
     |> ( <>

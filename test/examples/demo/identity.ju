@@ -23,5 +23,11 @@ let pair = %Michelson.pair
 sig cons : int -> int -> pair int int
 let cons = %Michelson.cons
 
+sig list : ty -> ty
+let list = %Michelson.list
+
+sig operation : ty
+let operation = %Michelson.operation
+
 sig main : int -> int -> pair int int
 let main = \param storage -> cons param storage
