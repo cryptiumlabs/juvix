@@ -247,7 +247,8 @@ builtinTypes =
              ("Michelson.option", Types.Option),
              ("Michelson.set", Types.Set),
              ("Michelson.map", Types.Map),
-             ("Michelson.big-map", Types.BigMap)
+             ("Michelson.big-map", Types.BigMap),
+             ("Michelson.pair", Types.Pair)
            ]
        )
     |> Map.fromList

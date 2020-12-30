@@ -15,5 +15,5 @@ declare infixr (:) 2
 sig int : ty
 let int = %Michelson.int
 
-sig main : int -> int -> int
-let main = \param _ -> param
+sig main : %Michelson.int -> ((%Michelson.pair) (%Michelson.int) (%Michelson.int)) -> ((%Michelson.pair) (%Michelson.int) (%Michelson.int))
+let main = \_ storage -> storage
