@@ -193,6 +193,42 @@ nameSymb :: Env.Reduction m => NameSymbol.T -> Types.RawTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
+unboxSingleTypeErr :: Untyped.T -> Untyped.T
+unboxSingleTypeErr (MT.Type (MT.TList t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TSet t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TOption t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TContract t) "") = t
+unboxSingleTypeErr _ = error "not a type which takes a single type"
+
+unboxDoubleTypeErr :: Untyped.T -> (Untyped.T, Untyped.T)
+unboxDoubleTypeErr (MT.Type (MT.TBigMap t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TLambda t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TMap t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TPair _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TOr _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr _ = error "not a type which takes two types"
+
+-- keep this next to primToArgs as they cover the same range!
+isNonFunctionPrim :: Types.RawPrimVal -> Bool
+isNonFunctionPrim Types.Nil = True
+isNonFunctionPrim Types.None = True
+isNonFunctionPrim Types.EmptyS = True
+isNonFunctionPrim Types.EmptyM = True
+isNonFunctionPrim Types.EmptyBM = True
+isNonFunctionPrim _ = False
+
+primToArgs :: Env.Error m => Types.RawPrimVal -> Types.Type -> m Instr.ExpandedOp
+primToArgs prim ty =
+  let on1 f = f . unboxSingleTypeErr <$> typeToPrimType ty
+      on2 f = uncurry f . unboxDoubleTypeErr <$> typeToPrimType ty
+   in case prim of
+        Types.Nil -> on1 Instructions.nil
+        Types.None -> on1 Instructions.none
+        Types.EmptyS -> on1 Instructions.emptySet
+        Types.EmptyM -> on2 Instructions.emptyMap
+        Types.EmptyBM -> on2 Instructions.emptyBigMap
+        _ -> error "not a primitive which is not a function"
+
 type RunInstr =
   (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
 
@@ -233,11 +269,11 @@ primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
 
-newPrimToInstrErr :: Types.NewPrim -> Types.NewPrim
+newPrimToInstrErr :: Types.RawPrimVal -> Types.RawPrimVal
 newPrimToInstrErr x =
   Instructions.toNewPrimErr (instructionOf x)
 
-instructionOf :: Types.NewPrim -> Instr.ExpandedOp
+instructionOf :: Types.RawPrimVal -> Instr.ExpandedOp
 instructionOf x =
   case x of
     Types.AddN -> Instructions.add
@@ -283,6 +319,7 @@ instructionOf x =
     Types.UpdateBMap -> Instructions.update
     Types.GetMap -> Instructions.get
     Types.GetBMap -> Instructions.get
+    Types.Cons -> Instructions.cons
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
@@ -707,24 +744,28 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 -- Misc
 --------------------------------------------------------------------------------
 
--- TODO ∷ determine if we'd ever call this on a constant like primitive
 constructPrim ::
-  (Env.Stack m, Env.Count m, Env.Error m) => Types.NewPrim -> Types.Type -> m Env.Expanded
-constructPrim prim ty = do
-  let (f, lPrim) = primToFargs prim ty
-  names <- reserveNames lPrim
-  -- TODO ∷ set the usage of the arguments to 1
-  let c =
-        Env.Curr $
-          Env.C
-            { Env.fun = f,
-              Env.argsLeft = zipWith Env.Term names (repeat one),
-              Env.left = fromIntegral lPrim,
-              Env.captures = Set.empty,
-              Env.ty = ty
-            }
-  consVal c ty
-  pure c
+  (Env.Stack m, Env.Count m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m Env.Expanded
+constructPrim prim ty
+  | isNonFunctionPrim prim = do
+    prim <- primToArgs prim ty
+    consVal prim ty
+    pure prim
+  | otherwise = do
+    let (f, lPrim) = primToFargs prim ty
+    names <- reserveNames lPrim
+    -- TODO ∷ set the usage of the arguments to 1
+    let c =
+          Env.Curr $
+            Env.C
+              { Env.fun = f,
+                Env.argsLeft = zipWith Env.Term names (repeat one),
+                Env.left = fromIntegral lPrim,
+                Env.captures = Set.empty,
+                Env.ty = ty
+              }
+    consVal c ty
+    pure c
 
 allConstants :: [Env.Expanded] -> Bool
 allConstants = all f
