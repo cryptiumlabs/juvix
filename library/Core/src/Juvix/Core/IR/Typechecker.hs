@@ -37,13 +37,14 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 typeTerm ::
   ( Eq primTy,
     Eq primVal,
+    CanTC' ext primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
   IR.Term' ext primTy primVal ->
   AnnotationT primTy primVal ->
-  EnvTypecheck' ext primTy primVal (Typed.Term primTy primVal)
+  m (Typed.Term primTy primVal)
 typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 
 typeTermWith ::
