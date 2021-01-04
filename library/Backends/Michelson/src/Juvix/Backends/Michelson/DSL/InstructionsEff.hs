@@ -748,7 +748,7 @@ constructPrim ::
   (Env.Stack m, Env.Count m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m Env.Expanded
 constructPrim prim ty
   | isNonFunctionPrim prim = do
-    prim <- primToArgs prim ty
+    prim <- Env.Expanded <$> primToArgs prim ty
     consVal prim ty
     pure prim
   | otherwise = do
