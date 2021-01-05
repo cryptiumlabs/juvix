@@ -98,6 +98,7 @@ add,
   or,
   car,
   cdr,
+  cons,
   pair ::
     Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
@@ -124,6 +125,7 @@ abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
 cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
+cons = onTwoArgsNoConst Instructions.cons
 isNat =
   onInt1
     Instructions.isNat
@@ -268,6 +270,7 @@ primToFargs (Types.Inst inst) ty =
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
+        Instr.CONS {} -> cons
 -- _ -> error "unspported function in primToFargs"
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
@@ -593,7 +596,7 @@ dupToFront num = do
   addInstr instrs
   pure instrs
 
--- Unsafe to implmeent until we normalize core
+-- Unsafe to implement until we normalize core
 copyAndDrop :: Applicative f => p -> f ()
 copyAndDrop _i =
   pure ()
