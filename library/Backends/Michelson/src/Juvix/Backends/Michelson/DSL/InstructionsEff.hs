@@ -444,7 +444,23 @@ onPairGen1 op f =
          in Env.Constant (f (car, cdr))
     )
 
--- Generator function
+pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+pushConstant =
+  onOneArgGen
+    ( \instr1 -> do
+        addExpanded instr1
+        case val instr1 of
+          Env.Constant _ -> pure Env.Nop
+          _ -> pure (val instr1)
+    )
+
+--------------------------------------------------------------------------------
+-- On Argument Functions
+--------------------------------------------------------------------------------
+
+------------------------------------------------------------
+-- Generator functions
+------------------------------------------------------------
 
 onTwoArgsGen :: OnTerm2Gen m Protect Env.Expanded
 onTwoArgsGen applyOperation typ arguments = do
@@ -462,22 +478,33 @@ onTwoArgsGen applyOperation typ arguments = do
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
+onOneArgGen :: OnTerm1Gen m Protect Env.Expanded
+onOneArgGen applyOperation typ arguments = do
+  -- length of arguments should be 1
+  -- so a reverse to mimic two should not do anything!
+  v <- traverse (protect . (inst >=> promoteTopStack)) arguments
+  -- see comments onTwoArgsGen
+  case v of
+    instr1 : _ -> do
+      res <- applyOperation instr1
+      modify @"stack" (VStack.drop 1)
+      consVal res typ
+      pure res
+    _ -> throw @"compilationError" Types.NotEnoughArguments
+
+------------------------------------------------------------
+-- Functions to call from appliers/reducers above
+------------------------------------------------------------
+
 onTwoArgsNoConst ::
   Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
 onTwoArgsNoConst op =
   onTwoArgsGen (noTwoConstantCase op)
 
-noTwoConstantCase ::
-  Env.Ops m => Instr.ExpandedOp -> Protect -> Protect -> m Env.Expanded
-noTwoConstantCase op instr2 instr1 = do
-  -- May be the wrong order?
-  let instrs = [instr2, instr1]
-  -- add the protected instructions
-  traverse_ addExpanded instrs
-  -- add the op
-  addInstr op
-  -- return a nop to signal an already added output
-  pure Env.Nop
+onOneArgsNoConst ::
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+onOneArgsNoConst op =
+  onOneArgGen (noOneConstantCase op)
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f =
@@ -495,39 +522,40 @@ onTwoArgs op f =
     )
 
 onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
-onOneArgs op f typ instrs = do
-  v <- traverse (protect . (inst >=> promoteTopStack)) instrs
-  case v of
-    instr1 : _ -> do
-      res <-
+onOneArgs op f =
+  onOneArgGen
+    ( \instr1 -> do
+        -- check if they are all constants
+        -- apply function if so
         if  | allConstants [val instr1] ->
               let Env.Constant i1 = val instr1
                in pure (f i1)
-            | otherwise -> do
-              addExpanded instr1
-              -- copyAndDrop 1
-              addInstr op
-              pure Env.Nop
-      -- remove when we normalize
-      modify @"stack" (VStack.drop 1)
-      consVal res typ
-      pure res
-    _ -> throw @"compilationError" Types.NotEnoughArguments
+            | otherwise -> noOneConstantCase op instr1
+    )
 
--- todo remove repeat pattern
--- Cons val here?
-pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
-pushConstant typ instrs = do
-  v <- traverse (inst >=> promoteTopStack) instrs
-  res <- case v of
-    Env.Constant _ : _ ->
-      pure Env.Nop
-    instr1 : _ ->
-      pure instr1
-    _ -> throw @"compilationError" Types.NotEnoughArguments
-  modify @"stack" (VStack.drop 1)
-  consVal res typ
-  pure res
+------------------------------------------------------------
+-- Helper predicate/abstractions for the on functions
+------------------------------------------------------------
+
+noTwoConstantCase ::
+  Env.Ops m => Instr.ExpandedOp -> Protect -> Protect -> m Env.Expanded
+noTwoConstantCase op instr2 instr1 = do
+  -- May be the wrong order?
+  let instrs = [instr2, instr1]
+  -- add the protected instructions
+  traverse_ addExpanded instrs
+  -- add the op
+  addInstr op
+  -- return a nop to signal an already added output
+  pure Env.Nop
+
+noOneConstantCase ::
+  Env.Ops m => Instr.ExpandedOp -> Protect -> m Env.Expanded
+noOneConstantCase op instr1 = do
+  addExpanded instr1
+  -- copyAndDrop 1
+  addInstr op
+  pure Env.Nop
 
 evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
