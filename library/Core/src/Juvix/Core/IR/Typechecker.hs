@@ -6,6 +6,7 @@ module Juvix.Core.IR.Typechecker
 where
 
 import qualified Data.IntMap.Strict as IntMap
+import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
@@ -366,25 +367,29 @@ liftEval = either (throwTC . EvalError) pure
 
 substApp ::
   ( HasParam primTy primVal m,
-    HasThrowTC' extV extT primTy primVal m,
+    HasThrowTC' IR.NoExt extT primTy primVal m,
+    HasGlobals primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.ValueT primTy primVal ->
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-substApp ty arg = liftEval $ do
-  arg' <- Eval.evalTerm arg
-  Eval.substV arg' ty
+substApp ty arg = do
+  arg' <- evalTC arg
+  liftEval $ Eval.substV arg' ty
 
 evalTC ::
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
+    HasGlobals primTy primVal m,
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-evalTC = liftEval . Eval.evalTerm
+evalTC t = do
+  g <- ask @"globals"
+  liftEval $ Eval.evalTerm (flip HashMap.lookup g) t
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.
