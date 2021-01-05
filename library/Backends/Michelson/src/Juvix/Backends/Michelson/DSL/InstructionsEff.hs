@@ -368,14 +368,31 @@ applyExpanded expanded args =
 -- Reduction Helpers for Main functionality
 --------------------------------------------------------------------------------
 
-type OnTerm m f =
+type OnTermGen m f =
   Env.Reduction m =>
-  Instr.ExpandedOp ->
+  -- function to determine the result
   f ->
+  -- Type of the instruction
   Types.Type ->
+  -- Arguments
   [Types.RawTerm] ->
+  -- Expanded argument
   m Env.Expanded
 
+type OnTerm2Gen m input result =
+  OnTermGen m (input -> input -> m result)
+
+type OnTerm1Gen m input result =
+  OnTermGen m (input -> m result)
+
+type OnTerm m f =
+  Env.Reduction m =>
+  -- Instruction to be the operatio
+  Instr.ExpandedOp ->
+  OnTermGen m f
+
+-- the function on these ones are not on the result
+-- but only the constant branch
 type OnTerm2 m input result =
   OnTerm m (input -> input -> result)
 
@@ -427,30 +444,55 @@ onPairGen1 op f =
          in Env.Constant (f (car, cdr))
     )
 
-onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
-onTwoArgs op f typ instrs = do
+-- Generator function
+
+onTwoArgsGen :: OnTerm2Gen m Protect Env.Expanded
+onTwoArgsGen applyOperation typ arguments = do
   -- last argument evaled first
-  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
+  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse arguments)
   case v of
     instr2 : instr1 : _ -> do
-      -- May be the wrong order?
-      let instrs = [instr2, instr1]
-      res <-
+      -- Get the result of the operation on the arguments
+      res <- applyOperation instr2 instr1
+      -- drop the two arguments on the stack
+      modify @"stack" (VStack.drop 2)
+      -- add the result to the stack
+      consVal res typ
+      -- return the operation
+      pure res
+    _ -> throw @"compilationError" Types.NotEnoughArguments
+
+onTwoArgsNoConst ::
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+onTwoArgsNoConst op =
+  onTwoArgsGen (noTwoConstantCase op)
+
+noTwoConstantCase ::
+  Env.Ops m => Instr.ExpandedOp -> Protect -> Protect -> m Env.Expanded
+noTwoConstantCase op instr2 instr1 = do
+  -- May be the wrong order?
+  let instrs = [instr2, instr1]
+  -- add the protected instructions
+  traverse_ addExpanded instrs
+  -- add the op
+  addInstr op
+  -- return a nop to signal an already added output
+  pure Env.Nop
+
+onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
+onTwoArgs op f =
+  onTwoArgsGen
+    ( \instr2 instr1 -> do
+        -- May be the wrong order?
+        let instrs = [instr2, instr1]
+        -- check if they are all constants
+        -- apply function if so
         if  | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
                   Env.Constant i2 = val instr2
                in pure (f i1 i2)
-            | otherwise -> do
-              traverse_ addExpanded instrs
-              -- add when we normalize
-              -- copyAndDrop 2
-              addInstr op
-              pure Env.Nop
-      -- remove when we normalize
-      modify @"stack" (VStack.drop 2)
-      consVal res typ
-      pure res
-    _ -> throw @"compilationError" Types.NotEnoughArguments
+            | otherwise -> noTwoConstantCase op instr2 instr1
+    )
 
 onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
 onOneArgs op f typ instrs = do
