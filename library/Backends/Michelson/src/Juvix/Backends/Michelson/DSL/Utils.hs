@@ -16,6 +16,7 @@ usageFromType Ann.Sig {} = []
 usageFromType Ann.SymT {} = []
 usageFromType Ann.Star {} = []
 usageFromType Ann.PrimTy {} = []
+usageFromType Ann.UnitTy {} = []
 
 piToReturnType :: Ann.Type primTy -> Ann.Type primTy
 piToReturnType (Ann.Pi _ _ rest) = piToReturnType rest
@@ -27,6 +28,7 @@ piToList Ann.Sig {} = []
 piToList Ann.SymT {} = []
 piToList Ann.Star {} = []
 piToList Ann.PrimTy {} = []
+piToList Ann.UnitTy {} = []
 
 piToListTy :: Ann.Type primTy -> [Ann.Type primTy]
 piToListTy (Ann.Pi _usage ty xs) = ty : piToListTy xs
@@ -34,6 +36,7 @@ piToListTy Ann.Sig {} = []
 piToListTy Ann.SymT {} = []
 piToListTy Ann.Star {} = []
 piToListTy Ann.PrimTy {} = []
+piToListTy Ann.UnitTy {} = []
 
 unpackTuple :: Instr.ExpandedOp
 unpackTuple =

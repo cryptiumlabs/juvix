@@ -97,7 +97,8 @@ top =
       xtwiceTest2,
       oddAppTest,
       ifIntTest,
-      ifIntConstTest
+      ifIntConstTest,
+      nilTest
     ]
 
 --------------------------------------------------------------------------------
@@ -213,6 +214,9 @@ ifIntTest = shouldCompileTo ifInt ifIntAns
 
 ifIntConstTest :: T.TestTree
 ifIntConstTest = shouldCompileTo ifIntConst ifIntAns
+
+nilTest :: T.TestTree
+nilTest = shouldCompileTo nil nilAns
 
 -- dummyTest =
 --   runContract identityAppTerm2 identityType
@@ -453,6 +457,12 @@ intPairs1 =
         $ J.Pi one (primTy pairInt)
         $ primTy
         $ Untyped.pair pairInt pairInt
+
+nil :: RawTerm
+nil =
+  Nil
+    |> J.Prim
+    |> Ann one (J.PrimTy (Application List (PrimTy int :| [])))
 
 -- addPairs "x"
 -- [SeqEx []
@@ -806,6 +816,9 @@ constUIntAns =
           ]
       )
   ]
+
+nilAns :: [Op]
+nilAns = [PrimEx (NIL "" "" int)]
 
 -- [SeqEx [PrimEx (DUP @)
 --        ,PrimEx (CAR @ %),PrimEx (DIP [PrimEx (CDR @ %)])

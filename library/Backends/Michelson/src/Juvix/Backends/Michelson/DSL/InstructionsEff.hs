@@ -58,6 +58,8 @@ inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol -> var symbol
     Ann.AppM fun a -> appM fun a
+    Ann.UnitM -> undefined
+    Ann.PairM _p1 _p2 -> undefined
     Ann.LamM c a b -> do
       v <- lambda c a b ty
       consVal v ty
@@ -173,9 +175,9 @@ var symb = do
       pure (Env.Curr lamPartial)
     Just (VStack.Position (VStack.Usage usage _saved) index)
       | usage == one ->
-        Env.Expanded <$> moveToFront index
+        Env.Nop <$ moveToFront index
       | otherwise ->
-        Env.Expanded <$> dupToFront index
+        Env.Nop <$ dupToFront index
 
 -- Replaced to always just replace the top element
 -- it seems all forms place a lambda at the top!
@@ -217,7 +219,7 @@ isNonFunctionPrim Types.EmptyM = True
 isNonFunctionPrim Types.EmptyBM = True
 isNonFunctionPrim _ = False
 
-primToArgs :: Env.Error m => Types.RawPrimVal -> Types.Type -> m Instr.ExpandedOp
+primToArgs :: (Env.Ops m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m ()
 primToArgs prim ty =
   let on1 f = f . unboxSingleTypeErr <$> typeToPrimType ty
       on2 f = uncurry f . unboxDoubleTypeErr <$> typeToPrimType ty
@@ -228,6 +230,7 @@ primToArgs prim ty =
         Types.EmptyM -> on2 Instructions.emptyMap
         Types.EmptyBM -> on2 Instructions.emptyBigMap
         _ -> error "not a primitive which is not a function"
+        >>= addInstr
 
 type RunInstr =
   (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
@@ -265,6 +268,7 @@ primToFargs (Types.Inst inst) ty =
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
+-- _ -> error "unspported function in primToFargs"
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
@@ -487,7 +491,7 @@ evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
   let eval = inst >=> promoteTopStack
       res = Env.Nop
-  eval bool
+  _ <- eval bool
   then' <- protect (eval thenI)
   else' <- protect (eval elseI)
   addInstr (Instructions.if' (insts then') (insts else'))
@@ -745,12 +749,18 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 --------------------------------------------------------------------------------
 
 constructPrim ::
-  (Env.Stack m, Env.Count m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m Env.Expanded
+  Env.Reduction m => Types.RawPrimVal -> Types.Type -> m Env.Expanded
 constructPrim prim ty
+  -- this one gets Promoted to be on the real stack
+  -- TODO ∷ determine if this should be a constant, they should all be in
+  -- vstack...
+  -- also once we do this, we can remove the StackOps effect of this function!
   | isNonFunctionPrim prim = do
-    prim <- Env.Expanded <$> primToArgs prim ty
-    consVal prim ty
-    pure prim
+    primToArgs prim ty
+    -- cons to show we have it on the stack
+    consVal Env.Nop ty
+    pure Env.Nop
+  -- The final result of this is not promoted
   | otherwise = do
     let (f, lPrim) = primToFargs prim ty
     names <- reserveNames lPrim
