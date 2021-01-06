@@ -149,7 +149,7 @@ data DataArgWith ty primTy primVal
       }
   deriving (Eq, Show, Data, NFData, Generic)
 
-type RawDataArg' ext = DataArgWith (Term' ext) ext
+type RawDataArg' ext = DataArgWith (Term' ext)
 
 type DataArg' extV = DataArgWith (Value' extV)
 
@@ -160,7 +160,7 @@ data DataConWith ty primTy primVal
       }
   deriving (Eq, Show, Data, NFData, Generic)
 
-type RawDataCon' ext = DataConWith (Term' ext) ext
+type RawDataCon' ext = DataConWith (Term' ext)
 
 type DataCon' extV = DataConWith (Value' extV)
 
