@@ -507,31 +507,31 @@ vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
 vapp f x _ =
   Left $ CannotApply f x NoApplyError
 
-type TermExtFun ty ext' ext primTy primVal =
-  LookupFun ty ext' primTy primVal ->
+type TermExtFun ext' ext primTy primVal =
+  LookupFun ext' primTy primVal ->
   IR.TermX ext primTy primVal ->
   Either (Error IR.NoExt ext primTy primVal) (IR.Value primTy primVal)
 
-type ElimExtFun ty ext' ext primTy primVal =
-  LookupFun ty ext' primTy primVal ->
+type ElimExtFun ext' ext primTy primVal =
+  LookupFun ext' primTy primVal ->
   IR.ElimX ext primTy primVal ->
   Either (Error IR.NoExt ext primTy primVal) (IR.Value primTy primVal)
 
-data ExtFuns ty ext' ext primTy primVal
+data ExtFuns ext' ext primTy primVal
   = ExtFuns
-      { tExtFun :: TermExtFun ty ext' ext primTy primVal,
-        eExtFun :: ElimExtFun ty ext' ext primTy primVal
+      { tExtFun :: TermExtFun ext' ext primTy primVal,
+        eExtFun :: ElimExtFun ext' ext primTy primVal
       }
 
-rejectExts :: ExtFuns ty ext ext' primTy primVal
+rejectExts :: ExtFuns ext ext' primTy primVal
 rejectExts =
   ExtFuns
     { tExtFun = \_ -> Left . UnsupportedTermExt,
       eExtFun = \_ -> Left . UnsupportedElimExt
     }
 
-type LookupFun ty ext primTy primVal =
-  IR.GlobalName -> Maybe (IR.GlobalWith ty ext primTy primVal)
+type LookupFun ext primTy primVal =
+  IR.GlobalName -> Maybe (IR.Global' IR.NoExt ext primTy primVal)
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
@@ -557,8 +557,8 @@ type CanEval extT extG primTy primVal =
 -- annotations are discarded
 evalTermWith ::
   CanEval extT extT' primTy primVal =>
-  LookupFun ty extT' primTy primVal ->
-  ExtFuns ty extT' extT primTy primVal ->
+  LookupFun extT' primTy primVal ->
+  ExtFuns extT' extT primTy primVal ->
   IR.Term' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTermWith _ _ (IR.Star' u _) =
@@ -590,16 +590,16 @@ evalTermWith g exts (IR.TermX a) =
 
 evalElimWith ::
   CanEval extT extT' primTy primVal =>
-  LookupFun ty extT' primTy primVal ->
-  ExtFuns ty extT' extT primTy primVal ->
+  LookupFun extT' primTy primVal ->
+  ExtFuns extT' extT primTy primVal ->
   IR.Elim' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith g exts (IR.Free' x _)
   | IR.Global x <- x,
-    Just t <- toLambda =<< g x =
-    evalTermWith g exts t
+    Just e <- toLambda =<< g x =
+    evalElimWith g exts e
   | otherwise = pure $ IR.VFree x
 evalElimWith g exts (IR.App' s t _) =
   join $
@@ -613,33 +613,35 @@ evalElimWith g exts (IR.ElimX a) =
 
 evalTerm ::
   CanEval extT extT' primTy primVal =>
-  LookupFun ty extT' primTy primVal ->
+  LookupFun extT' primTy primVal ->
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
 evalElim ::
   CanEval extT extT' primTy primVal =>
-  LookupFun ty extT' primTy primVal ->
+  LookupFun extT' primTy primVal ->
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
 toLambda ::
-  forall ty ext ext' primTy primVal.
+  forall ext ext' primTy primVal.
   (EvalPatSubst ext primTy primVal, NoExtensions ext' primTy primVal) =>
-  IR.GlobalWith ty ext' primTy primVal ->
-  Maybe (IR.Term' (OnlyExts.T ext) primTy primVal)
-toLambda (IR.GFunction (IR.Function {funClauses}))
+  IR.Global' IR.NoExt ext' primTy primVal ->
+  Maybe (IR.Elim' (OnlyExts.T ext) primTy primVal)
+toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
   | IR.FunClause pats rhs :| [] <- funClauses = do
     patVars <- traverse singleVar pats
     let len = fromIntegral $ length patVars
     let vars = map bound [len - 1, len - 2 .. 0]
     let patMap = IntMap.fromList $ zip patVars vars
     let transform = extTransformT $ OnlyExts.injector `compose` forgetter
+    let π = IR.globalToUsage funUsage
+    let ty = OnlyExts.injectT $ IR.quote funType
     case patSubst patMap $ weakBy len $ transform rhs of
       Left _ -> Nothing
-      Right x -> pure $ applyN len lam x
+      Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
   where
     singleVar (IR.PVar' p _) = Just p
     singleVar _ = Nothing
