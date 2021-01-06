@@ -48,7 +48,7 @@ typecheck fin Michelson = do
           T.putStrLn "No main function found"
           exitFailure
         (IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
-          let newGlobals = HM.map unsafeEvalGlobal globalDefs
+          let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
           (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson newGlobals
           case res of
             Right r -> do
@@ -76,14 +76,21 @@ compile fin fout backend = do
       T.putStrLn (show err)
       exitFailure
 
-unsafeEvalGlobal :: IR.RawGlobal Param.PrimTy Param.RawPrimVal -> GlobalWith Value' IR.NoExt Param.PrimTy (Juvix.Core.Parameterisation.TypedPrim Param.PrimTy Param.RawPrimVal)
-unsafeEvalGlobal g =
+--unsafeEvalGlobal :: IR.RawGlobal Param.PrimTy Param.RawPrimVal -> Global' (IR.Value Param.PrimTy Param.PrimVal) IR.NoExt Param.PrimTy (Juvix.Core.Parameterisation.TypedPrim Param.PrimTy Param.RawPrimVal)
+unsafeEvalGlobal globals g =
   case g of
     -- TODO
     -- GDatatype (Datatype n a l cons) -> GDatatype (Datatype n a l cons)
     -- GDataCon (DataCon n t) -> GDataCon (DataCon n t)
-    GFunction (Function n u t cs) -> GFunction (Function n u (unsafeEval $ baseToReturn t) (map funClauseEval cs))
-    GAbstract (Abstract n u t) -> GAbstract (Abstract n u (unsafeEval $ baseToReturn t))
+    GFunction (Function n u t cs) -> GFunction (Function n u (unsafeEval globals $ baseToReturn t) (map funClauseEval cs))
+    GAbstract (Abstract n u t) -> GAbstract (Abstract n u (unsafeEval globals $ baseToReturn t))
+
+convGlobal g =
+  case g of
+    GFunction (Function n u t cs) -> GFunction (Function n u (baseToReturn t) (map funClauseReturn cs))
+    GAbstract (Abstract n u t) -> GAbstract (Abstract n u (baseToReturn t))
+
+funClauseReturn (FunClause patts term) = FunClause (map pattEval patts) (baseToReturn term)
 
 funClauseEval :: IR.FunClause' IR.NoExt Param.PrimTy Param.RawPrimVal -> IR.FunClause' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
 funClauseEval (FunClause patts term) = FunClause (map pattEval patts) (baseToReturn term)
@@ -122,4 +129,6 @@ elimToReturn e =
     IR.App e t -> IR.App (elimToReturn e) (baseToReturn t)
     IR.Ann u a b c -> IR.Ann u (baseToReturn a) (baseToReturn b) c
 
-unsafeEval = (\(Right x) -> x) . IR.evalTerm
+--unsafeEval :: Term' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal) -> Value' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
+unsafeEval globals term = (\(Right x) -> x) $ IR.evalTerm (\name -> HM.lookup name globals) term
+--  -> (Nothing :: Maybe (Global' (IR.Term Param.PrimTy Param.PrimVal) IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal))))
