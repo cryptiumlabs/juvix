@@ -17,7 +17,7 @@ declare infixr (:) 2
 sig int : ty
 let int = %Michelson.int
 
-sig pair : ty
+sig pair : ty -> ty -> ty
 let pair = %Michelson.pair
 
 sig cons : int -> int -> pair int int
