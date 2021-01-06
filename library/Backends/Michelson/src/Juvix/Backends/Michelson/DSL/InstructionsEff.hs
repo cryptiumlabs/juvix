@@ -502,12 +502,12 @@ onOneArgGen applyOperation typ arguments = do
 onTwoArgsNoConst ::
   Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
 onTwoArgsNoConst op =
-  onTwoArgsGen (noTwoConstantCase op)
+  onTwoArgsGen (\x2 x1 -> noConstantCase op [x2, x1])
 
 onOneArgsNoConst ::
   Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
 onOneArgsNoConst op =
-  onOneArgGen (noOneConstantCase op)
+  onOneArgGen (\x1 -> noConstantCase op [x1])
 
 onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
 onTwoArgs op f =
@@ -521,7 +521,7 @@ onTwoArgs op f =
               let Env.Constant i1 = val instr1
                   Env.Constant i2 = val instr2
                in pure (f i1 i2)
-            | otherwise -> noTwoConstantCase op instr2 instr1
+            | otherwise -> noConstantCase op [instr2, instr1]
     )
 
 onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
@@ -533,31 +533,21 @@ onOneArgs op f =
         if  | allConstants [val instr1] ->
               let Env.Constant i1 = val instr1
                in pure (f i1)
-            | otherwise -> noOneConstantCase op instr1
+            | otherwise -> noConstantCase op [instr1]
     )
 
 ------------------------------------------------------------
 -- Helper predicate/abstractions for the on functions
 ------------------------------------------------------------
 
-noTwoConstantCase ::
-  Env.Ops m => Instr.ExpandedOp -> Protect -> Protect -> m Env.Expanded
-noTwoConstantCase op instr2 instr1 = do
-  -- May be the wrong order?
-  let instrs = [instr2, instr1]
+noConstantCase ::
+  Env.Ops m => Instr.ExpandedOp -> [Protect] -> m Env.Expanded
+noConstantCase op instrs = do
   -- add the protected instructions
   traverse_ addExpanded instrs
   -- add the op
   addInstr op
   -- return a nop to signal an already added output
-  pure Env.Nop
-
-noOneConstantCase ::
-  Env.Ops m => Instr.ExpandedOp -> Protect -> m Env.Expanded
-noOneConstantCase op instr1 = do
-  addExpanded instr1
-  -- copyAndDrop 1
-  addInstr op
   pure Env.Nop
 
 evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
