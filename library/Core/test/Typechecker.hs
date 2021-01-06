@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 -- | Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 module Typechecker where
 
@@ -159,13 +161,13 @@ shouldEval' ::
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
     Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
   ) =>
-  Eval.LookupFun ty IR.NoExt primTy primVal ->
+  IR.Globals primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
   T.TestTree
-shouldEval' f term res =
+shouldEval' g term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    (IR.evalTerm f term) T.@=? Right res
+    (IR.evalTerm (\x -> Map.lookup x g) term) T.@=? Right res
 
 shouldEval ::
   ( HasCallStack,
@@ -181,7 +183,7 @@ shouldEval ::
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
   T.TestTree
-shouldEval = shouldEval' (const Nothing)
+shouldEval = shouldEval' mempty
 
 infix 1 `ann`
 
@@ -282,13 +284,19 @@ evaluations =
       shouldEval identityApplication (natV 1),
       shouldEval (IR.Elim identityAppINat1) (natV 1),
       shouldEval (IR.Elim identityAppI) videntity,
-      shouldEval (IR.Elim kApp1_2) (natV 1)
+      shouldEval (IR.Elim kApp1_2) (natV 1),
+      shouldEval' typGlobals (IR.Elim (IR.Free (IR.Global "ty"))) (IR.VStar 0),
+      shouldEval' typGlobals (name "tz") (vname "tz"),
+      shouldEval' typGlobals (name "B") (vname "A"),
+      shouldEval' typGlobals (name "C") (vname "A")
     ]
   where
     add12 = IR.Elim $ add `IR.App` nat 1 `IR.App` nat 2
     sub52 = IR.Elim $ sub `IR.App` nat 5 `IR.App` nat 2
     sub = IR.Ann Usage.Omega (IR.Prim Nat.Sub) addTyT 0
     videntity = IR.VLam $ IR.VBound 0
+    name = IR.Elim . IR.Free . IR.Global
+    vname = IR.VFree . IR.Global
 
 skiCont :: T.TestTree
 skiCont =
@@ -804,7 +812,7 @@ twoCompTy = one `ann` IR.VPi two (IR.VPi one natT natT) (IR.VPi one natT natT)
   where
     two = Usage.SNat 2
 
-typGlobals :: IR.Globals primTy primVal
+typGlobals :: IR.Globals Unit.Ty (TypedPrim Unit.Ty Unit.Val)
 typGlobals =
   Map.fromList
     [ ("A", IR.GAbstract (IR.Abstract "A" IR.GZero (IR.VStar 0))),
@@ -815,8 +823,25 @@ typGlobals =
               IR.GZero
               (IR.VPi mempty (IR.VStar 1) (IR.VStar 1))
           )
-      )
+      ),
+      def "ty" IR.GZero (IR.VStar 1) (IR.Star 0),
+      def "B" IR.GZero
+        (IR.VStar 0)
+        (IR.Elim (IR.Free (IR.Global "A"))),
+      def "C" IR.GZero
+        (IR.VStar 0)
+        (IR.Elim (IR.Free (IR.Global "B")))
     ]
+  where
+    def name π ty rhs =
+      ( name,
+        IR.GFunction $ IR.Function {
+          funName = name,
+          funUsage = π,
+          funType = ty,
+          funClauses = [IR.FunClause [] rhs]
+        }
+      )
 
 aTerm :: IR.Term primTy primVal
 aTerm = IR.Elim aElim
@@ -853,3 +878,9 @@ unitT' = IR.PrimTy Unit.Ty
 
 unitT :: IR.Value Unit.Ty primVal
 unitT = IR.VPrimTy Unit.Ty
+
+unit :: IR.Term primTy Unit.Val
+unit = IR.Prim Unit.Val
+
+unit' :: IR.Term Unit.Ty (TypedPrim Unit.Ty Unit.Val)
+unit' = IR.Prim (TC.Return {retType = [Unit.Ty], retTerm = Unit.Val})
