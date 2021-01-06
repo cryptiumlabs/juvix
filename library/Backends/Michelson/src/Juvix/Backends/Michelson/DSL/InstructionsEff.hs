@@ -58,7 +58,9 @@ inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol -> var symbol
     Ann.AppM fun a -> appM fun a
-    Ann.UnitM -> undefined
+    Ann.UnitM ->
+      let unit = Env.Constant V.ValueUnit
+       in unit <$ consVal unit ty
     Ann.PairM _p1 _p2 -> undefined
     Ann.LamM c a b -> do
       v <- lambda c a b ty
