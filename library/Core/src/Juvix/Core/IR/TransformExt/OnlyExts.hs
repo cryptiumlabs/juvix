@@ -5,6 +5,7 @@ where
 
 import Juvix.Library
 import Extensible
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.TransformExt
 
@@ -49,4 +50,31 @@ transformer =
       etAnn = const (),
       etTermX = identity,
       etElimX = identity
+    }
+
+injectT :: IR.Term primTy primVal -> IR.Term' (T ext) primTy primVal
+injectT = extTransformT injector
+injectE :: IR.Elim primTy primVal -> IR.Elim' (T ext) primTy primVal
+injectE = extTransformE injector
+
+injector :: ExtTransformTE IR.NoExt (T ext) primTy primVal
+injector =
+  ExtTransformTE
+    { etStar = identity,
+      etPrimTy = identity,
+      etPrim = identity,
+      etPi = identity,
+      etSig = identity,
+      etPair = identity,
+      etUnitTy = identity,
+      etUnit = identity,
+      etLam = identity,
+      etLet = identity,
+      etElim = identity,
+      etBound = identity,
+      etFree = identity,
+      etApp = identity,
+      etAnn = identity,
+      etTermX = absurd,
+      etElimX = absurd
     }
