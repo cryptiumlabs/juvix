@@ -61,7 +61,15 @@ inst (Types.Ann _usage ty t) =
     Ann.UnitM ->
       let unit = Env.Constant V.ValueUnit
        in unit <$ consVal unit ty
-    Ann.PairM _p1 _p2 -> undefined
+    Ann.PairM p1 p2 ->
+      appM
+        ( Instructions.toNewPrimErr Instructions.pair
+            |> Ann.Prim
+            |> Ann.Ann
+              one
+              (Ann.Pi one (Ann.type' p1) (Ann.Pi one (Ann.type' p2) ty))
+        )
+        [p1, p2]
     Ann.LamM c a b -> do
       v <- lambda c a b ty
       consVal v ty
