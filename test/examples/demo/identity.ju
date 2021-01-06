@@ -17,8 +17,7 @@ declare infixr (:) 2
 sig int : ty
 let int = %Michelson.int
 
-sig pair : ty -> ty -> ty
-let pair = %Michelson.pair
+let pair = %Builtin.Pair
 
 sig list : ty -> ty
 let list = %Michelson.list
@@ -29,5 +28,5 @@ let operation = %Michelson.operation
 sig nil : ty
 let nil = %Michelson.nil
 
-sig main : int -> int -> (int, list operation)
-let main = \param storage -> (param, (nil : list operation))
+sig main : int -> int -> pair 1 int (list operation)
+let main = \param storage -> (param, ((%Michelson.nil) : list operation))
