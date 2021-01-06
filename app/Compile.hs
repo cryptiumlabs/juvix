@@ -68,6 +68,7 @@ typecheck _ _ = exitFailure
 compile :: FilePath -> FilePath -> Backend -> IO ()
 compile fin fout backend = do
   term <- typecheck fin backend
+  print term
   let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
   case res of
     Right c -> do
