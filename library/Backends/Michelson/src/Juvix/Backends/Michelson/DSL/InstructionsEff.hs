@@ -468,7 +468,7 @@ pushConstant =
 onTwoArgsGen :: OnTerm2Gen m Protect Env.Expanded
 onTwoArgsGen applyOperation typ arguments = do
   -- last argument evaled first
-  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse arguments)
+  v <- protectPromotion arguments
   case v of
     instr2 : instr1 : _ -> do
       -- Get the result of the operation on the arguments
@@ -483,9 +483,7 @@ onTwoArgsGen applyOperation typ arguments = do
 
 onOneArgGen :: OnTerm1Gen m Protect Env.Expanded
 onOneArgGen applyOperation typ arguments = do
-  -- length of arguments should be 1
-  -- so a reverse to mimic two should not do anything!
-  v <- traverse (protect . (inst >=> promoteTopStack)) arguments
+  v <- protectPromotion arguments
   -- see comments onTwoArgsGen
   case v of
     instr1 : _ -> do
@@ -494,6 +492,11 @@ onOneArgGen applyOperation typ arguments = do
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
+
+-- reverse as we wish to evaluate the last argument first!
+protectPromotion :: Env.Reduction m => [Types.RawTerm] -> m [Protect]
+protectPromotion =
+  traverse (protect . (inst >=> promoteTopStack)) . reverse
 
 ------------------------------------------------------------
 -- Functions to call from appliers/reducers above
