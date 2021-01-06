@@ -930,7 +930,8 @@ typeToPrimType ty =
       pure (Untyped.lambda argTy retTy)
     Ann.PrimTy _ ->
       throw @"compilationError" $ Types.InvalidInputType "cannot convert to primty"
-    Ann.Sig {} -> throw @"compilationError" $ Types.InvalidInputType "cannot convert sig to primty"
+    Ann.Sig _usage fst snd ->
+      Untyped.pair <$> typeToPrimType fst <*> typeToPrimType snd
     Ann.UnitTy -> pure Untyped.unit
   where
     recurse = traverse (typeToPrimType . Ann.PrimTy)
