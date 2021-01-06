@@ -87,6 +87,7 @@ hasType (Inst (M.IF _ _)) (bool :| rest)
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
+hasType x ((Application List _) :| []) = True
 hasType x ty = ty == undefined
 
 arityRaw :: RawPrimVal -> Natural

@@ -25,8 +25,8 @@ let list = %Michelson.list
 sig operation : ty
 let operation = %Michelson.operation
 
-sig nil : ty
+sig nil : list operation
 let nil = %Michelson.nil
 
-sig main : int -> int -> pair 1 int (list operation)
-let main = \param storage -> (param, ((%Michelson.nil) : list operation))
+sig main : pair 1 int int -> pair 1 int (list operation)
+let main = \params -> (1, nil)
