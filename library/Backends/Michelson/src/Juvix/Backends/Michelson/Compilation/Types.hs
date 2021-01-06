@@ -80,6 +80,8 @@ data RawPrimVal
     Right'
   | Left'
   | Nil
+  | Cons
+  | None
   | EmptyS
   | EmptyM
   | EmptyBM

@@ -38,19 +38,15 @@ allParserTests =
       condTest1,
       record1,
       parens1,
+      infixTests,
       -- pre-processor tests
       removeNoComment,
       removeNewLineBefore,
       removeSpaceBefore,
       nonassocTest,
-      infxlTest,
-      infxrTest,
-      infixFail,
       spacerSymb,
       vpsDashFrontFail,
       vpsDashMiddle,
-      infxPlusTest,
-      infixPlusFail,
       reservedInfix,
       letwordFail,
       reservedInfix,
@@ -58,6 +54,18 @@ allParserTests =
       questionMarktest,
       bangtest,
       removeNewLineNextToNewline
+    ]
+
+infixTests :: T.TestTree
+infixTests =
+  T.testGroup
+    "Infix Tests"
+    [ infxlTest,
+      infxrTest,
+      infixFail,
+      qualifiedInfixTest,
+      infxPlusTest,
+      infixPlusFail
     ]
 
 --------------------------------------------------------------------------------
@@ -760,14 +768,30 @@ infxPlusTest =
 infixPlusFail :: T.TestTree
 infixPlusFail =
   T.testCase
-    ("parse: declare infixl + 5 should fail")
+    "parse: declare infixl + 5 should fail"
     (isLeft (Parser.parseOnly "declare infixl + 5") T.@=? True)
 
 infixFail :: T.TestTree
 infixFail =
   T.testCase
-    ("parse: declare infixl foo.o 5 should fail")
+    "parse: declare infixl foo.o 5 should fail"
     (isLeft (Parser.parseOnly "declare infixl foo.o 5") T.@=? True)
+
+qualifiedInfixTest :: T.TestTree
+qualifiedInfixTest =
+  shouldParseAs
+    "infix qualified"
+    Parser.parse
+    "let fi = nat TopLevel.Prelude.-> TopLevel.int"
+    $ AST.NoHeader
+      [ AST.Function
+          $ AST.Func
+          $ AST.Like "fi" []
+          $ AST.Body
+          $ AST.Infix
+          $ AST.Inf (AST.Name ("nat" :| [])) ("TopLevel" :| ["Prelude", "->"])
+          $ AST.Name ("TopLevel" :| ["int"])
+      ]
 
 --------------------------------------------------
 -- reserved word tests
@@ -776,7 +800,7 @@ infixFail =
 letwordFail :: T.TestTree
 letwordFail =
   T.testCase
-    ("parse: letfad = 3 should fail")
+    "parse: letfad = 3 should fail"
     (isLeft (Parser.parseOnly "letfad = 3") T.@=? True)
 
 reservedInfix :: T.TestTree

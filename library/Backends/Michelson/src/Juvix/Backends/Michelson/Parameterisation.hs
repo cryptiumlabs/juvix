@@ -293,6 +293,15 @@ builtinValues =
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.unit", Inst (M.UNIT "" "")),
+    ("Michelson.nil", Nil),
+    ("Michelson.cons", Cons),
+    ("Michelson.none", None),
+    ("Michelson.left", Left'),
+    ("Michelson.right", Right'),
+    ("Michelson.map", MapOp),
+    ("Michelson.empty-set", EmptyS),
+    ("Michelson.empty-map", EmptyM),
+    ("Michelson.empty-big-map", EmptyBM),
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] []))
   ]

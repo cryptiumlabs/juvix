@@ -62,7 +62,7 @@ type DataCon = DataCon' NoExt
 
 type RawDataCon = RawDataCon' NoExt
 
-type Function = Function' NoExt
+type Function = Function' NoExt NoExt
 
 type RawFunction = RawFunction' NoExt
 
@@ -70,11 +70,11 @@ type FunClause = FunClause' NoExt
 
 -- (no RawFunClause since a clause contains no types anyway)
 
-type Global = Global' NoExt
+type Global = Global' NoExt NoExt
 
 type RawGlobal = RawGlobal' NoExt
 
-type Globals primTy primVal = Globals' NoExt primTy primVal
+type Globals primTy primVal = Globals' NoExt NoExt primTy primVal
 
 type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
 

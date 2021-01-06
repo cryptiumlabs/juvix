@@ -724,6 +724,8 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[TransformExt]]
+  + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -732,6 +734,14 @@ the substitution functions (substTerm and substElim).
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+******* OnlyExts
+A transformation that discards all annotations on term/elim nodes, but
+keeps the extensions.
+- _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
