@@ -148,6 +148,25 @@ shouldInfer ::
 shouldInfer param = shouldInferWith param mempty []
 
 -- unit test generator for evalTerm
+shouldEval' ::
+  ( HasCallStack,
+    Show primTy,
+    Show primVal,
+    Eq primTy,
+    Eq primVal,
+    CanApply primVal,
+    CanApply primTy,
+    Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
+  ) =>
+  Eval.LookupFun ty IR.NoExt primTy primVal ->
+  IR.Term primTy primVal ->
+  IR.Value primTy primVal ->
+  T.TestTree
+shouldEval' f term res =
+  T.testCase (show term <> " should evaluate to " <> show res) $
+    (IR.evalTerm f term) T.@=? Right res
+
 shouldEval ::
   ( HasCallStack,
     Show primTy,
@@ -162,9 +181,7 @@ shouldEval ::
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
   T.TestTree
-shouldEval term res =
-  T.testCase (show term <> " should evaluate to " <> show res) $
-    (IR.evalTerm term) T.@=? Right res
+shouldEval = shouldEval' (const Nothing)
 
 infix 1 `ann`
 
