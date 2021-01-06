@@ -825,22 +825,27 @@ typGlobals =
           )
       ),
       def "ty" IR.GZero (IR.VStar 1) (IR.Star 0),
-      def "B" IR.GZero
+      def
+        "B"
+        IR.GZero
         (IR.VStar 0)
         (IR.Elim (IR.Free (IR.Global "A"))),
-      def "C" IR.GZero
+      def
+        "C"
+        IR.GZero
         (IR.VStar 0)
         (IR.Elim (IR.Free (IR.Global "B")))
     ]
   where
     def name π ty rhs =
       ( name,
-        IR.GFunction $ IR.Function {
-          funName = name,
-          funUsage = π,
-          funType = ty,
-          funClauses = [IR.FunClause [] rhs]
-        }
+        IR.GFunction $
+          IR.Function
+            { funName = name,
+              funUsage = π,
+              funType = ty,
+              funClauses = [IR.FunClause [] rhs]
+            }
       )
 
 aTerm :: IR.Term primTy primVal

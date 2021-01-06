@@ -1,32 +1,39 @@
 -- | A transformation that discards all annotations on term/elim nodes, but
 -- keeps the extensions.
-module Juvix.Core.IR.TransformExt.OnlyExts
-where
+module Juvix.Core.IR.TransformExt.OnlyExts where
 
-import Juvix.Library
 import Extensible
+import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.IR.TransformExt
-
+import Juvix.Library
 
 data T ext
 
 do
   ext' <- newName "ext"
   let ext = varT ext'
-  decsT <- IR.extendTerm "Term" [ext'] [t|T $ext|]
-    \primTy primVal -> IR.defaultExtTerm {
-      IR.typeTermX = [("TermX", [[t|IR.TermX $ext $primTy $primVal|]])]
-    }
-  decsE <- IR.extendElim "Elim" [ext'] [t|T $ext|]
-    \primTy primVal -> IR.defaultExtElim {
-      IR.typeElimX = [("ElimX", [[t|IR.ElimX $ext $primTy $primVal|]])]
-    }
+  decsT <- IR.extendTerm
+    "Term"
+    [ext']
+    [t|T $ext|]
+    \primTy primVal ->
+      IR.defaultExtTerm
+        { IR.typeTermX = [("TermX", [[t|IR.TermX $ext $primTy $primVal|]])]
+        }
+  decsE <- IR.extendElim
+    "Elim"
+    [ext']
+    [t|T $ext|]
+    \primTy primVal ->
+      IR.defaultExtElim
+        { IR.typeElimX = [("ElimX", [[t|IR.ElimX $ext $primTy $primVal|]])]
+        }
   pure $ decsT <> decsE
 
 onlyExtsT :: IR.Term' ext primTy primVal -> IR.Term' (T ext) primTy primVal
 onlyExtsT = extTransformT transformer
+
 onlyExtsE :: IR.Elim' ext primTy primVal -> IR.Elim' (T ext) primTy primVal
 onlyExtsE = extTransformE transformer
 
@@ -54,6 +61,7 @@ transformer =
 
 injectT :: IR.Term primTy primVal -> IR.Term' (T ext) primTy primVal
 injectT = extTransformT injector
+
 injectE :: IR.Elim primTy primVal -> IR.Elim' (T ext) primTy primVal
 injectE = extTransformE injector
 

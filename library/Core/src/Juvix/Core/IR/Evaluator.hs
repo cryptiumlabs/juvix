@@ -8,10 +8,10 @@
 module Juvix.Core.IR.Evaluator where
 
 import qualified Data.IntMap as IntMap
-import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -533,7 +533,6 @@ rejectExts =
 type LookupFun ty ext primTy primVal =
   IR.GlobalName -> Maybe (IR.GlobalWith ty ext primTy primVal)
 
-
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
     IR.ElimX ext primTy primVal ~ Void
@@ -599,8 +598,8 @@ evalElimWith _ _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith g exts (IR.Free' x _)
   | IR.Global x <- x,
-    Just t <- toLambda =<< g x
-  = evalTermWith g exts t
+    Just t <- toLambda =<< g x =
+    evalTermWith g exts t
   | otherwise = pure $ IR.VFree x
 evalElimWith g exts (IR.App' s t _) =
   join $
@@ -633,26 +632,24 @@ toLambda ::
   Maybe (IR.Term' (OnlyExts.T ext) primTy primVal)
 toLambda (IR.GFunction (IR.Function {funClauses}))
   | IR.FunClause pats rhs :| [] <- funClauses = do
-      patVars <- traverse singleVar pats
-      let len = fromIntegral $ length patVars
-      let vars = map bound [len - 1, len - 2 .. 0]
-      let patMap = IntMap.fromList $ zip patVars vars
-      let transform = extTransformT $ OnlyExts.injector `compose` forgetter
-      case patSubst patMap $ weakBy len $ transform rhs of
-        Left _ -> Nothing
-        Right x -> pure $ applyN len lam x
+    patVars <- traverse singleVar pats
+    let len = fromIntegral $ length patVars
+    let vars = map bound [len - 1, len - 2 .. 0]
+    let patMap = IntMap.fromList $ zip patVars vars
+    let transform = extTransformT $ OnlyExts.injector `compose` forgetter
+    case patSubst patMap $ weakBy len $ transform rhs of
+      Left _ -> Nothing
+      Right x -> pure $ applyN len lam x
   where
     singleVar (IR.PVar' p _) = Just p
-    singleVar _              = Nothing
-
+    singleVar _ = Nothing
     applyN 0 _ x = x
     applyN n f x = applyN (n - 1) f (f $! x)
-
     bound :: IR.BoundVar -> IR.Elim' (OnlyExts.T ext) primTy primVal
     bound x = IR.Bound' x ()
-
-    lam :: IR.Term' (OnlyExts.T ext) primTy primVal ->
-           IR.Term' (OnlyExts.T ext) primTy primVal
+    lam ::
+      IR.Term' (OnlyExts.T ext) primTy primVal ->
+      IR.Term' (OnlyExts.T ext) primTy primVal
     lam x = IR.Lam' x ()
 toLambda _ = Nothing
 

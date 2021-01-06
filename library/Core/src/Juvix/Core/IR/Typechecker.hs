@@ -5,8 +5,8 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
-import qualified Data.IntMap.Strict as IntMap
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.IntMap.Strict as IntMap
 import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
