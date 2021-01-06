@@ -78,8 +78,8 @@ compileToMichelsonContract term = do
                 (DidNotTypecheckAfterOptimisation optimised err)
         Left err ->
           throw @"compilationError" (DidNotTypecheck michelsonOp err)
-    _ ->
-      throw @"compilationError" InvalidInputType
+    ty ->
+      throw @"compilationError" (InvalidInputType $ show ty)
 
 compileToMichelsonExpr ::
   DSL.Reduction m =>

@@ -157,7 +157,7 @@ lambda captures arguments body type'
               Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
           }
   | otherwise =
-    throw @"compilationError" Types.InvalidInputType
+    throw @"compilationError" $ Types.InvalidInputType "usages/arguments mismatch"
   where
     usages =
       Utils.usageFromType type'
@@ -910,27 +910,27 @@ consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 typeToPrimType :: forall m. Env.Error m => Types.Type -> m Untyped.T
 typeToPrimType ty =
   case ty of
-    Ann.SymT _ -> throw @"compilationError" Types.InvalidInputType
-    Ann.Star _ -> throw @"compilationError" Types.InvalidInputType
+    Ann.SymT _ -> throw @"compilationError" $ Types.InvalidInputType "symt cannot be converted to prim type"
+    Ann.Star _ -> throw @"compilationError" $ Types.InvalidInputType "star cannot be converted to prim type"
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
     Ann.PrimTy (Types.Application arg1 args) -> do
       case arg1 of
-        Types.PrimTy {} -> throw @"compilationError" Types.InvalidInputType
-        Types.Application _ _ -> throw @"compilationError" Types.InvalidInputType
+        Types.PrimTy {} -> throw @"compilationError" $ Types.InvalidInputType "cannot apply primty"
+        Types.Application _ _ -> throw @"compilationError" $ Types.InvalidInputType "cannot apply application"
         _ -> pure ()
       if  | sameLength arg1 args ->
             recurse args
               >>| appPrimTyErr arg1
           | otherwise ->
-            throw @"compilationError" Types.InvalidInputType
+            throw @"compilationError" $ Types.InvalidInputType "length mismatch"
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
     Ann.PrimTy _ ->
-      throw @"compilationError" Types.InvalidInputType
-    Ann.Sig {} -> throw @"compilationError" Types.InvalidInputType
+      throw @"compilationError" $ Types.InvalidInputType "cannot convert to primty"
+    Ann.Sig {} -> throw @"compilationError" $ Types.InvalidInputType "cannot convert sig to primty"
     Ann.UnitTy -> pure Untyped.unit
   where
     recurse = traverse (typeToPrimType . Ann.PrimTy)
