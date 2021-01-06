@@ -16,6 +16,40 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+inlineAllGlobals t map =
+  case t of
+    IR.Unit -> t
+    IR.UnitTy -> t
+    IR.Pair p1 p2 ->
+      IR.Pair (inlineAllGlobals p1 map) (inlineAllGlobals p2 map)
+    IR.Elim elim ->
+      IR.Elim (inlineAllGloblasElim elim map)
+    IR.Sig u t1 t2 ->
+      IR.Sig u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
+    IR.Let u e t ->
+      IR.Let u (inlineAllGloblasElim e map) (inlineAllGlobals t map)
+    IR.Lam t ->
+      IR.Lam (inlineAllGlobals t map)
+    IR.Pi u t1 t2 ->
+      IR.Pi u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
+    IR.Prim {} -> t
+    IR.PrimTy {} -> t
+    IR.Star {} -> t
+
+inlineAllGloblasElim t map =
+  case t of
+    IR.Bound {} -> t
+    IR.Free name ->
+      case map name of
+        Just elim ->
+          elim
+        Nothing ->
+          t
+    IR.App elim term ->
+      IR.App (inlineAllGloblasElim elim map) (inlineAllGlobals term map)
+    IR.Ann u t1 t2 uni ->
+      IR.Ann u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni
+
 class HasWeak a where
   weakBy' :: Natural -> IR.BoundVar -> a -> a
   default weakBy' ::
