@@ -24,8 +24,8 @@ let pair = %Michelson.pair
 -- sig either : ty -> ty
 -- let either = %Michelson.either
 
-sig map : ty -> ty
-let map = %Michelson.map
+sig map-ty : ty -> ty
+let map-ty = %Michelson.map
 
 sig big-map : ty -> ty
 let big-map = %Michelson.big-map
@@ -168,10 +168,10 @@ let cons = %Michelson.cons
 sig cons-pair : a -> b -> pair a b
 let cons-pair = %Michelson.cons-pair
 
-sig car : list a -> a
+sig car : pair a b -> a
 let car = %Michelson.car
 
-sig cdr : list a -> list a
+sig cdr : pair a b -> b
 let cdr = %Michelson.cdr
 
 sig size : list a -> int
