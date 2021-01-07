@@ -40,7 +40,7 @@ inlineAllGloblasElim t map =
   case t of
     IR.Bound {} -> t
     IR.Free name ->
-      case map name of
+      case map name >>= toLambda of
         Just elim ->
           elim
         Nothing ->
