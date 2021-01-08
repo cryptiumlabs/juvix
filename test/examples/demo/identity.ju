@@ -28,8 +28,14 @@ let operation = %Michelson.operation
 sig nil : list operation
 let nil = %Michelson.nil
 
-sig car : pair 1 int int -> int
+sig pairTy : ty -> ty -> ty
+let pairTy = %Michelson.pair-ty
+
+sig makePair : list operation -> int -> pairTy (list operation) int
+let makePair = %Michelson.pair
+
+sig car : pairTy int int -> int
 let car = %Michelson.car
 
-sig main : pair 1 int int -> pair 1 (list operation) int
-let main = \params -> (nil, car params)
+sig main : pairTy int int -> pairTy (list operation) int
+let main = \params -> makePair nil (car params)

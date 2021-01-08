@@ -250,7 +250,7 @@ builtinTypes =
              ("Michelson.set", Types.Set),
              ("Michelson.map", Types.Map),
              ("Michelson.big-map", Types.BigMap),
-             ("Michelson.pair", Types.Pair)
+             ("Michelson.pair-ty", Types.Pair)
            ]
        )
     |> Map.fromList
@@ -304,7 +304,8 @@ builtinValues =
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
     -- added symbols to not take values
-    ("Michelson.if-builtin", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] [])),
+    ("Michelson.pair", Inst (M.PAIR "" "" "" ""))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
