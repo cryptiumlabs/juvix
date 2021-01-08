@@ -32,4 +32,4 @@ sig car : pair 1 int int -> int
 let car = %Michelson.car
 
 sig main : pair 1 int int -> pair 1 (list operation) int
-let main = \params -> ((%Michelson.nil), ((%Michelson.car) : (pair 1 int int -> int)) params)
+let main = \params -> (nil, car params)

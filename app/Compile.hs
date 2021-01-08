@@ -11,6 +11,9 @@ import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as IR (injectT)
+import qualified Juvix.Core.IR.TransformExt.OnlyExts
+import qualified Juvix.Core.IR.TransformExt as IR (extForgetT)
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
@@ -47,9 +50,10 @@ typecheck fin Michelson = do
           print globalDefs
           T.putStrLn "No main function found"
           exitFailure
-        (IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
+        func@(IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
           let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
-          (res, _) <- exec (CorePipeline.coreToAnn term (IR.globalToUsage usage) ty) Param.michelson newGlobals
+              inlinedTerm = IR.inlineAllGlobals (IR.injectT term) (\(IR.Global n) -> HM.lookup n globalDefs)
+          (res, _) <- exec (CorePipeline.coreToAnn (IR.extForgetT @(Juvix.Core.IR.TransformExt.OnlyExts.T IR.NoExt) inlinedTerm) (IR.globalToUsage usage) ty) Param.michelson newGlobals
           case res of
             Right r -> do
               pure r
