@@ -31,7 +31,7 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (Show (..), String)
+import Prelude (Show (..), String, error)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -84,11 +84,16 @@ hasType CompareHash ty = checkFirst2AndLast ty isBool
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
+-- todo check this properly
+hasType (Inst (M.PAIR _ _ _ _)) (a :| (b : (c : []))) = True
+-- todo check this properly
+hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
 hasType x ((Application List _) :| []) = True
-hasType x ty = ty == undefined
+-- do something nicer here
+hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
