@@ -40,33 +40,33 @@ No warranty is provided or implied.
 
 ## Installation
 
-### Requirements
+<!-- ### Requirements
 
 The following are required to build Juvix:
 
-- [Stack](https://haskellstack.org)
 - [libff](https://github.com/scipr-lab/libff)
 - [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
-- [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API)
+- [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API) -->
 
-#### Instructions for Linux
 
-- **Stack**
+[Stack](https://haskellstack.org) required.
+
   - For Ubuntu/Debian : `apt install stack`
   - For Arch Linux    : `pacman -S stack`
   - For macOS : `brew install haskell-stack`
-- **libsecp256k1**
+  - For Windows, following the instructions [here](https://docs.haskellstack.org/en/stable/install_and_upgrade/#windows).
+<!-- - **libsecp256k1**
   - For Ubuntu/Debian : `apt install libsecp256k1-dev`
   - For Arch Linux : `pacman -S libsecp256k1`
   - For macOS : `brew tap cuber/homebrew-libsecp256k1 && brew install libsecp256k1`
 - **Openssl Libssl API**
   - For Ubuntu/Debian : `apt install libssl-dev`
   - For Arch Linux : `pacman -S openssl`
-  - For macOS : `brew install openssl`
+  - For macOS : `brew install openssl` -->
 
 ### Building
 
-Build Juvix and install the binary to the local path with:
+After cloning Juvix into a local directory, go into the local Juvix directory, and build and install the binary to the local path with:
 
 ```bash
 make
@@ -81,8 +81,6 @@ make build-opt
 ```
 
 ## Usage
-
-<!-- Outdated? Juvix is not yet production-ready.  -->
 
 ### Writing and compiling your first `.ju` contract
 
