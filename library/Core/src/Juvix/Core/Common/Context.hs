@@ -133,31 +133,49 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     pure (Lib.Right t)
   | otherwise = do
-    let addCurrentName t startingContents newCurrName =
+    -- abstraction pre-amble
+    let -- addCurrentName t, 
+        addCurrentName t startingContents newCurrName =
           (addGlobal' t)
             { currentName = removeTopName newCurrName,
               currentNameSpace = startingContents
             }
         -- addGlobal' adds the current name space back to the environment map
+        -- Note that we have to have the path to the module ready and open
+        -- as 'addGlobal' quits if it can't find the path
+        -- we HAVE to remove the current module after this
         addGlobal' t@T {currentNameSpace} =
           -- we have to add top to it, or else if it's a single symbol, then
           -- it'll be added to itself, which is bad!
           addGlobal
+            -- we note that the currentName is a topLevel name so it
+            -- gets added from the top and doesn't confuse itself with
+            -- a potnentially local insertion
             (addTopNameToSngle currentName)
+            -- Insert a record
             (Record currentNameSpace)
+            -- into the current module
             t
         addCurrent = addGlobal newNameSpace CurrentNameSpace
         qualifyName =
           currentName <> newNameSpace
+    -- addPathWithValue will create new name spaces if they don't
+    -- already exist all the way to where we need it to be
     ret <- addPathWithValue newNameSpace CurrentNameSpace t
     case ret of
-      -- In this path the CurrentNameSpace is already added
+      -- In this path the CurrentNameSpace is added properly!
       Lib.Right t -> do
+        -- allocate a new record
         empty <- atomically emptyRecord
-        -- check if we have to qualify Name
+        -- check if we can find our name properly as is
         pure $ case t !? newNameSpace of
+          -- In this case we did find the current name, great!
           Just (Current _) ->
             Lib.Right (addCurrentName t empty qualifyName)
+          -- In this case, we can't find our name, meaning that we
+          -- added a module inside the current module that we have yet
+          -- to switch out.... so prepend its name as that is the
+          -- proper module!
           _ ->
             Lib.Right (addCurrentName t empty newNameSpace)
       -- the namespace may already exist
@@ -165,7 +183,12 @@ switchNameSpace newNameSpace t@T {currentName}
       Lib.Left er ->
         -- TODO ∷ refactor with resolveName
         -- how do we add the namespace back to the private area!?
+        --
+        -- We do a lookup of the current name
         pure $ case t !? newNameSpace of
+          -- are we inside the current module?
+          -- great add the currentName <> newNameSpace to the module
+          -- and write
           Just (Current (NameSpace.Pub (Record record))) ->
             Lib.Right
               (addCurrent (addCurrentName t record qualifyName))
