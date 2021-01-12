@@ -50,7 +50,7 @@ handleInfix (x : xs) = rec' (x : xs) ""
         -- to the front even when it shouldn't!
         -- this is the correct behavior IFF we
         -- are in the middle of a infix symbol!
-        build : Text.tail x : xs
+        Text.tail build : x : xs
     rec' [] "" =
       []
     rec' [] acc =
