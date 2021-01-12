@@ -49,7 +49,7 @@ The following are required to build Juvix:
 - [Openssl Libssl API](https://wiki.openssl.org/index.php/Libssl_API) -->
 
 
-[Stack](https://haskellstack.org) required.
+[Stack](https://haskellstack.org) required. 8GB RAM required for `stack` installation.
 
   - For Ubuntu/Debian : `apt install stack`
   - For Arch Linux    : `pacman -S stack`
@@ -134,11 +134,8 @@ make repl-exe
 We would love to hear what you think of Juvix! Join our community:
 
 - Follow us on [Twitter](https://twitter.com/juvixlang)
-- Subscribe to our [newsletter](https://juvix.org/#TODO)
+- Subscribe to our [newsletter](https://juvix.org/)
 
 <!-- TODO add links to discord, reddit, etc. -->
-
-<!-- ## Credits Add this? -->
-<!-- Give proper credits. This could be a link to any repo which inspired you to build this project, any blogposts or links to people who contrbuted in this project.  -->
 
 ## License: [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
