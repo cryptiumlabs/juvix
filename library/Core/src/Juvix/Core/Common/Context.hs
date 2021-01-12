@@ -134,7 +134,8 @@ switchNameSpace newNameSpace t@T {currentName}
     pure (Lib.Right t)
   | otherwise = do
     -- abstraction pre-amble
-    let -- addCurrentName t, 
+    let -- addCurrentName moves the current name space
+        -- and inserts the new namespace as the top
         addCurrentName t startingContents newCurrName =
           (addGlobal' t)
             { currentName = removeTopName newCurrName,
@@ -192,11 +193,17 @@ switchNameSpace newNameSpace t@T {currentName}
           Just (Current (NameSpace.Pub (Record record))) ->
             Lib.Right
               (addCurrent (addCurrentName t record qualifyName))
+          -- ditto in this case
           Just (Current (NameSpace.Priv (Record record))) ->
             Lib.Right
               (addCurrent (addCurrentName t record qualifyName))
+          -- In this case, we aren't inside the current module
+          -- this could be for a few reasons
           Just (Outside (Record record))
-            -- figure out if we contain what we are looking for!
+            -- Namely we can be inside the current module, but be
+            -- prefixed by the top of it...
+            -- If that is the case, then just remove what is common,
+            -- and add on the inside
             | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
               -- if so update it!
               case addGlobal' t !? newNameSpace of
@@ -204,9 +211,12 @@ switchNameSpace newNameSpace t@T {currentName}
                   Lib.Right
                     (addCurrent (addCurrentName t record newNameSpace))
                 _ -> error "doesn't happen"
+            -- If not, then our new name exists on the outside
             | otherwise ->
               Lib.Right
                 (addCurrent (addCurrentName t record newNameSpace))
+          -- These cases should never happend, as they have to be there
+          -- as we are in the left branch
           Nothing -> Lib.Left er
           Just __ -> Lib.Left er
 
