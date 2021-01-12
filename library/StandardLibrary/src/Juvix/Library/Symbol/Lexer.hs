@@ -1,4 +1,4 @@
-module Juvix.Frontend.Lexer where
+module Juvix.Library.Symbol.Lexer where
 
 import qualified GHC.Unicode as Unicode
 import Juvix.Library hiding (div, maybe, option, takeWhile)

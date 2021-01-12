@@ -17,7 +17,6 @@ import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
-import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding
@@ -33,6 +32,7 @@ import Juvix.Library hiding
     try,
   )
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Symbol.Lexer as Lexer
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
