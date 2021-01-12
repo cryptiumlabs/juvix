@@ -62,6 +62,7 @@ data Record term ty sumRep
   = Rec
       { recordContents :: NameSpace.T (Definition term ty sumRep),
         -- Maybe as I'm not sure what to put here for now
+        -- TODO ∷ reconsider the type when we have proper module typing up.
         recordMTy :: Maybe ty,
         recordOpenList :: [Open.TName NameSymbol.T],
         recordQualifiedMap :: SymbolMap
