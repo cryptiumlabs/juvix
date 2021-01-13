@@ -17,6 +17,7 @@ import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Parameterisation as P
@@ -124,15 +125,19 @@ instance Core.CanApply PrimVal where
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toTake1 args2' =
+      Just args2 <- traverse toArg args2' =
       do
         let argLen = lengthN args2'
-            argsAll = foldr NonEmpty.cons args2 args1
+            args = foldr NonEmpty.cons args2 args1
         case argLen `compare` ar of
           LT ->
             Right $
-              Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
-          EQ -> applyProper fun argsAll
+              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          EQ
+            | Just takes <- traverse (traverse App.argToTerm) args ->
+              applyProper fun takes
+            | otherwise ->
+              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2'
   apply fun args = Left $ Core.InvalidArguments fun args
 

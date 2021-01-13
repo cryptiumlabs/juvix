@@ -101,15 +101,20 @@ type Return = App.Return (P.PrimType PrimTy) RawPrimVal
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
+type Arg = App.Arg (P.PrimType PrimTy) RawPrimVal
+
 type PrimVal = Return
 
-toTake1 :: PrimVal -> Maybe Take
-toTake1 App.Cont {} = Nothing
-toTake1 App.Return {retType, retTerm} = Just fun
-  where
-    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+toArg :: PrimVal -> Maybe Arg
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just $ App.Take {
+    usage = Usage.Omega,
+    type' = retType,
+    term = App.TermArg retTerm
+  }
 
-toTakes :: PrimVal -> (Take, [Take], Natural)
+toTakes :: PrimVal -> (Take, [Arg], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
 toTakes App.Return {retType, retTerm} = (fun, [], 0)
   where

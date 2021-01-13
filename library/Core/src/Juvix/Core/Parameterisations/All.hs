@@ -10,6 +10,7 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
+import Data.Coerce
 
 -- all primitive types
 data Ty
@@ -72,31 +73,44 @@ instance P.CanApply (P.TypedPrim Ty Val) where
 
 natValR :: P.TypedPrim Naturals.Ty Naturals.Val -> P.TypedPrim Ty Val
 natValR (App.Cont {fun, args, numLeft}) =
-  App.Cont {App.fun = natValT fun, App.args = natValT <$> args, numLeft}
+  App.Cont {App.fun = natValT fun, App.args = natValTF <$> args, numLeft}
 natValR (App.Return {retType, retTerm}) =
   App.Return {retType = NatTy <$> retType, retTerm = NatVal retTerm}
+
+natValTF ::
+  Functor f =>
+  App.Take (P.PrimType Naturals.Ty) (f Naturals.Val) ->
+  App.Take (P.PrimType Ty) (f Val)
+natValTF (App.Take {usage, type', term}) =
+  App.Take {usage, type' = NatTy <$> type', term = NatVal <$> term}
 
 natValT ::
   App.Take (P.PrimType Naturals.Ty) Naturals.Val ->
   App.Take (P.PrimType Ty) Val
-natValT (App.Take {usage, type', term}) =
-  App.Take {usage, type' = NatTy <$> type', term = NatVal term}
+natValT = coerce (natValTF @Identity)
 
 unNatValR :: P.TypedPrim Ty Val -> Maybe (P.TypedPrim Naturals.Ty Naturals.Val)
 unNatValR (App.Cont {fun, args, numLeft}) =
-  App.Cont <$> unNatValT fun <*> traverse unNatValT args <*> pure numLeft
+  App.Cont <$> unNatValT fun <*> traverse unNatValTF args <*> pure numLeft
 unNatValR (App.Return {retType = t', retTerm = NatVal v})
   | Just t <- traverse unNatTy t' =
     Just $ App.Return t v
 unNatValR (App.Return {}) = Nothing
 
+unNatValTF ::
+  Traversable f =>
+  App.Take (P.PrimType Ty) (f Val) ->
+  Maybe (App.Take (P.PrimType Naturals.Ty) (f Naturals.Val))
+unNatValTF (App.Take {usage, type' = type'', term = term'})
+  | Just type' <- traverse unNatTy type'',
+    Just term  <- traverse unNatVal term' =
+    Just $ App.Take {usage, type', term}
+unNatValTF (App.Take {}) = Nothing
+
 unNatValT ::
   App.Take (P.PrimType Ty) Val ->
   Maybe (App.Take (P.PrimType Naturals.Ty) Naturals.Val)
-unNatValT (App.Take {usage, type' = type'', term = NatVal term})
-  | Just type' <- traverse unNatTy type'' =
-    Just $ App.Take {usage, type', term}
-unNatValT (App.Take {}) = Nothing
+unNatValT = coerce (unNatValTF @Identity)
 
 unNatVal :: Val -> Maybe Naturals.Val
 unNatVal (NatVal n) = Just n

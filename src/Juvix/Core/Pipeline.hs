@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
 module Juvix.Core.Pipeline where
@@ -80,14 +82,14 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =
-      ErasedAnn.AppM (takeToRaw fun) (takeToRaw <$> args)
-    takeToRaw :: Michelson.Take -> Michelson.RawTerm
-    takeToRaw (App.Take {usage, type', term}) =
-      ErasedAnn.Ann
-        { usage,
-          type' = Prim.fromPrimType type',
-          term = ErasedAnn.Prim term
-        }
+      ErasedAnn.AppM (takeToTerm fun) (argToTerm <$> args)
+    fromTake f (App.Take {usage, type', term}) =
+      ErasedAnn.Ann {usage, type' = Prim.fromPrimType type', term = f term}
+    takeToTerm = fromTake ErasedAnn.Prim
+    argToTerm = fromTake \case
+      App.BoundArg i -> _
+      App.FreeArg  x -> ErasedAnn.Var x
+      App.TermArg  p -> ErasedAnn.Prim p
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
