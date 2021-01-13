@@ -23,7 +23,7 @@ syntactical familiarity, and backwards compatibility with existing blockchain vi
 For more design details, see [the language
 reference](./doc/reference/language-reference.pdf).
 
-## Screenshots
+<!--## Screenshots TODO--> 
 <!-- Include logo/demo screenshot with labels. 
 - vscode screenshot
 - eg contracts -->
@@ -84,7 +84,7 @@ make build-opt
 
 ### Writing and compiling your first `.ju` contract
 
-See the [tutorials](TODOaddlink) and [documentations]() on the [Juvix website](https://juvix.org/).
+See the tutorials and documentations on the [Juvix website](https://juvix.org/).
 
 ### Visual Studio Code support
 
