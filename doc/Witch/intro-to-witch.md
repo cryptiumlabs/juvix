@@ -32,7 +32,7 @@ prover](https://www.andromeda-prover.org).
 In Juvix, you program as you would normally and
 invoke the proof environment as an effect to prove certain properties as
 you go. Given that the proof environment is *just* an effect, different proof
-styles (e.g., Agda-style dependent types , 
+styles (e.g., Agda-style dependent types, 
 SMT solver, proof search) can be _composed_ under a shared interface, a
 proof object that can manipulate itself while querying different
 automated provers.
