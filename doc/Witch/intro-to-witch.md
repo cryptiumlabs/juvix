@@ -85,7 +85,7 @@ terms are used in different communities, and mean some variation of
 In Witch, however, we use the following definitions of previously known terms:
 
 -   The Solver effect is used for integration with external solvers via
-    IO; we believe should suffice for the user to write, e.g. `SMT`, and
+    IO; we believe it should suffice for the user to write, e.g. `SMT`, and
     handlers should implement internal strategies to choose between the
     different theories supported by solvers. If the black-box approach
     to solvers presents itself a challenge, a specialisation of the
