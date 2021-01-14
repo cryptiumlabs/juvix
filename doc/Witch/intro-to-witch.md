@@ -65,7 +65,7 @@ The reasons we employ algebraic effects and handlers are numerous:
 ## The Essence of Witch
 
 As for the syntax, we use `operation { params } via handler`, which is
-a syntactic improvement over `handler(operation, params)`, since effect handling
+semantically equivalent to but a syntactic improvement over `handler(operation, params)`, since effect handling
 is similar to function application, but also carries effect information.
 The user defines data types and functions as usual, and then uses
 Witch to prove properties about said definitions. The Examples below
