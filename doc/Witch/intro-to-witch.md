@@ -58,7 +58,7 @@ The reasons we employ algebraic effects and handlers are numerous:
     [Koka](https://koka-lang.github.io/koka/doc/index.html),
     [Eff](https://www.eff-lang.org), [Frank](https://github.com/frank-lang) and 
     [Effekt](https://effekt-lang.org), and have implementation in all major
-    functional programming languages, what guarantees that our approach is based
+    functional programming languages. This guarantees that our approach is based
     in research and real-world experiences, and not something we hacked together
     over the weekend. 
 
