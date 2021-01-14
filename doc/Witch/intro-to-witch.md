@@ -21,7 +21,7 @@ handlers as the means of congregation.
 
 Our approach is named Witch, a play on the
 assistant tools colloquially called "wizards". There is no consensus of what a
-wizard is or what exactly the tasks are it is supposed assist with. Wizards seem
+wizard is or what the exact tasks it is supposed to assist with. Wizards seem
 to be used mostly for multiple-step and/or configuration features, however. We
 went for the name "witch" to align it to the idea of assistant tools,
 while dodging the overloaded and confusing terminology.
