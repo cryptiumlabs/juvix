@@ -71,7 +71,7 @@ The user defines data types and functions as usual, and then uses
 Witch to prove properties about said definitions. The Examples below
 shows it in action.
 
-![](paper/image/witch.svg)
+![](resources/witch.svg)
 
 The proof of commutativity of addition under
 natural numbers and of associativity of list concatenation are shown,
