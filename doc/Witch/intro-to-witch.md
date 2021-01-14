@@ -13,7 +13,7 @@ formal proof.* We have evidence that students fail to produce well-made
 proofs due to the lack of mathematical maturity, even though they do
 understand the subject matter at hand.
 
-We believe that program verification don't have to be like this,
+We believe that program verification doesn't have to be like this,
 and we did something about it. We created an assistant tool for theorem provers
 that puts together many different strategies for proof automation. Our
 specification for such an assistant for Juvix uses algebraic effects and
