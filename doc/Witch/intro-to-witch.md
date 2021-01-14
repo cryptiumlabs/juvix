@@ -1,6 +1,4 @@
----
-title: Introduction to Witch
----
+# Introduction to Witch
 
 To popularise software verification, we must make proof writing less of
 a burden on you, the user. Currently, only specialists and a few others 
