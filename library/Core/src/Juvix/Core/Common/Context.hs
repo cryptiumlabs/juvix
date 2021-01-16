@@ -98,25 +98,14 @@ inNameSpace ::
 inNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     pure t
-  | otherwise =
-    case t !? newNameSpace of
-      Just (Outside Record {})
-        -- we are switching to a map above the current one in this case
-        | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-          -- if that is the case, then update our contents, and continue
-          case putCurrentModuleBackIn t !? newNameSpace of
-            Just (Outside (Record def _)) ->
-              Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
-            _ -> error "doesn't happen"
-      Just mdef ->
-        let (def, fullName) = resolveName t (mdef, newNameSpace)
-         in case def of
-              Record cont _ ->
-                Just (addCurrent (changeCurrentModuleWith t cont fullName))
-              _ -> Nothing
-      Nothing -> Nothing
-  where
-    addCurrent = addGlobal newNameSpace CurrentNameSpace
+  | otherwise = do
+    mdef <- t !? newNameSpace
+    let (def, fullName) = resolveName t (mdef, newNameSpace)
+    case def of
+      Record cont _ ->
+        Just (changeCurrentModuleWith t cont fullName)
+      _ ->
+        Nothing
 
 -- | switchNameSpace works like a mixture of defpackage and in-package from CL
 -- creating a namespace if not currently there, and switching to it
@@ -130,44 +119,13 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     Lib.Right t
   | otherwise =
-    let t =
+    let newT =
           case addPathWithValue newNameSpace (Record NameSpace.empty Nothing) t of
             Lib.Right t -> t
             Lib.Left {} -> t
-     in case inNameSpace newNameSpace t of
+     in case inNameSpace newNameSpace newT of
           Nothing -> Lib.Left (VariableShared newNameSpace)
           Just ct -> Lib.Right ct
-
-changeCurrentModuleWith ::
-  Cont (Definition term ty sumRep) ->
-  NameSpace.T (Definition term ty sumRep) ->
-  NonEmpty Symbol ->
-  Cont (Definition term ty sumRep)
-changeCurrentModuleWith t startingContents newCurrName =
-  (putCurrentModuleBackIn t)
-    { currentName = removeTopName newCurrName,
-      currentNameSpace = startingContents
-    }
-
-putCurrentModuleBackIn :: Cont (Definition term ty sumRep) -> T term ty sumRep
-putCurrentModuleBackIn t@T {currentNameSpace, currentName} =
-  -- we have to add top to it, or else if it's a single symbol, then
-  -- it'll be added to itself, which is bad!
-  addGlobal
-    (addTopNameToSngle currentName)
-    (Record currentNameSpace Nothing)
-    t
-
-addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
-addTopNameToSngle (x :| []) = topLevelName :| [x]
-addTopNameToSngle xs = xs
-
-removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
-removeTopName (top :| x : xs)
-  | topLevelName == top = x :| xs
-removeTopName (top :| [])
-  | top == topLevelName = "" :| []
-removeTopName xs = xs
 
 lookup ::
   NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
@@ -253,6 +211,47 @@ removeNameSpace sym t =
 removeTop :: Symbol -> T term ty sumRep -> T term ty sumRep
 removeTop sym t@T {topLevelMap} =
   t {topLevelMap = HashMap.delete sym topLevelMap}
+
+------------------------------------------------------------
+-- Helper for switch name space
+------------------------------------------------------------
+
+changeCurrentModuleWith ::
+  Cont (Definition term ty sumRep) ->
+  NameSpace.T (Definition term ty sumRep) ->
+  NonEmpty Symbol ->
+  Cont (Definition term ty sumRep)
+changeCurrentModuleWith t startingContents newCurrName =
+  let queued = queueCurrentModuleBackIn t
+   in t
+        { currentName = removeTopName newCurrName,
+          currentNameSpace = startingContents
+        }
+        |> queued
+        |> addGlobal newCurrName CurrentNameSpace
+
+queueCurrentModuleBackIn ::
+  T term ty sumRep -> T term ty sumRep -> T term ty sumRep
+queueCurrentModuleBackIn T {currentNameSpace, currentName} =
+  -- we have to add top to it, or else if it's a single symbol, then
+  -- it'll be added to itself, which is bad!
+  addGlobal
+    (addTopNameToSngle currentName)
+    (Record currentNameSpace Nothing)
+
+putCurrentModuleBackIn :: Cont (Definition term ty sumRep) -> T term ty sumRep
+putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
+
+addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
+addTopNameToSngle (x :| []) = topLevelName :| [x]
+addTopNameToSngle xs = xs
+
+removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
+removeTopName (top :| x : xs)
+  | topLevelName == top = x :| xs
+removeTopName (top :| [])
+  | top == topLevelName = "" :| []
+removeTopName xs = xs
 
 -------------------------------------------------------------------------------
 -- Functions on From
