@@ -93,6 +93,28 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 
 -- we lose some type information here... we should probably reserve it somehow
 
+inNameSpace ::
+  NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
+inNameSpace newNameSpace t@T {currentName} =
+  case t !? newNameSpace of
+    Just (Outside Record {})
+      -- we are switching to a map above the current one in this case
+      | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
+        -- if that is the case, then update our contents, and continue
+        case putCurrentModuleBackIn t !? newNameSpace of
+          Just (Outside (Record def _)) ->
+            Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
+          _ -> error "doesn't happen"
+    Just mdef ->
+      let (def, fullName) = resolveName t (mdef, newNameSpace)
+       in case def of
+            Record cont _ ->
+              Just (addCurrent (changeCurrentModuleWith t cont fullName))
+            _ -> Nothing
+    Nothing -> Nothing
+  where
+    addCurrent = addGlobal newNameSpace CurrentNameSpace
+
 -- | switchNameSpace works like a mixture of defpackage and in-package from CL
 -- creating a namespace if not currently there, and switching to it
 -- this function may fail if a path is given like `Foo.Bar.x.f` where x
@@ -105,50 +127,40 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     Lib.Right t
   | otherwise =
-    let addCurrentName t startingContents newCurrName =
-          (addGlobal' t)
-            { currentName = removeTopName newCurrName,
-              currentNameSpace = startingContents
-            }
-        addGlobal' t@T {currentNameSpace} =
-          -- we have to add top to it, or else if it's a single symbol, then
-          -- it'll be added to itself, which is bad!
-          addGlobal
-            (addTopNameToSngle currentName)
-            (Record currentNameSpace Nothing)
-            t
-        addCurrent = addGlobal newNameSpace CurrentNameSpace
-        qualifyName =
-          currentName <> newNameSpace
-     in case addPathWithValue newNameSpace CurrentNameSpace t of
-          Lib.Right t ->
-            -- check if we have to qualify Name
-            case t !? newNameSpace of
-              Just (Current _) ->
-                Lib.Right (addCurrentName t NameSpace.empty qualifyName)
-              _ ->
-                Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
-          -- the namespace may already exist
-          Lib.Left er ->
-            -- TODO ∷ refactor with resolveName
-            -- how do we add the namespace back to the private area!?
-            case t !? newNameSpace of
-              Just (Current (NameSpace.Pub (Record def _))) ->
-                Lib.Right (addCurrent (addCurrentName t def qualifyName))
-              Just (Current (NameSpace.Priv (Record def _))) ->
-                Lib.Right (addCurrent (addCurrentName t def qualifyName))
-              Just (Outside (Record def _))
-                -- figure out if we contain what we are looking for!
-                | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-                  -- if so update it!
-                  case addGlobal' t !? newNameSpace of
-                    Just (Outside (Record def _)) ->
-                      Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-                    _ -> error "doesn't happen"
-                | otherwise ->
-                  Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-              Nothing -> Lib.Left er
-              Just __ -> Lib.Left er
+    case addPathWithValue newNameSpace CurrentNameSpace t of
+      Lib.Right t ->
+        -- check if we have to qualify Name
+        case t !? newNameSpace of
+          Just def ->
+            let (_, fullName) = resolveName t (def, newNameSpace)
+             in Lib.Right (changeCurrentModuleWith t NameSpace.empty (removeTopName fullName))
+          Nothing ->
+            error "doesn't happen"
+      -- the namespace already exists!
+      Lib.Left er ->
+        case inNameSpace newNameSpace t of
+          Nothing -> Lib.Left er
+          Just ct -> Lib.Right ct
+
+changeCurrentModuleWith ::
+  Cont (Definition term ty sumRep) ->
+  NameSpace.T (Definition term ty sumRep) ->
+  NonEmpty Symbol ->
+  Cont (Definition term ty sumRep)
+changeCurrentModuleWith t startingContents newCurrName =
+  (putCurrentModuleBackIn t)
+    { currentName = removeTopName newCurrName,
+      currentNameSpace = startingContents
+    }
+
+putCurrentModuleBackIn :: Cont (Definition term ty sumRep) -> T term ty sumRep
+putCurrentModuleBackIn t@T {currentNameSpace, currentName} =
+  -- we have to add top to it, or else if it's a single symbol, then
+  -- it'll be added to itself, which is bad!
+  addGlobal
+    (addTopNameToSngle currentName)
+    (Record currentNameSpace Nothing)
+    t
 
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
