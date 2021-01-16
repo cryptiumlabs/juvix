@@ -124,27 +124,30 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 -- | inNameSpace works like in-package in CL
 -- we simply just change from our current namespace to another
 inNameSpace :: NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
-inNameSpace newNameSpace t@T {currentName} =
-  case t !? newNameSpace of
-    Just (Outside Record {})
-      -- we are switching to a map above the current one in this case
-      | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-        -- if that is the case, then update the map of the
-        -- newNameSpace to contain the current one, else data will go
-        -- missing
-        case putCurrentModuleBackIn t !? newNameSpace of
-          Just (Outside (Record def)) ->
-            Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
-          _ -> error "doesn't happen"
-    -- In this case we aren't indexed before the current module
-    -- so resort to just resolving the name for the proper insertion
-    Just mdef ->
-      let (def, fullName) = resolveName t (mdef, newNameSpace)
-       in case def of
-            Record cont ->
-              Just (addCurrent (changeCurrentModuleWith t cont fullName))
-            _ -> Nothing
-    Nothing -> Nothing
+inNameSpace newNameSpace t@T {currentName}
+  | removeTopName newNameSpace == removeTopName currentName =
+    pure t
+  | otherwise =
+    case t !? newNameSpace of
+      Just (Outside Record {})
+        -- we are switching to a map above the current one in this case
+        | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
+          -- if that is the case, then update the map of the
+          -- newNameSpace to contain the current one, else data will go
+          -- missing
+          case putCurrentModuleBackIn t !? newNameSpace of
+            Just (Outside (Record def)) ->
+              Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
+            _ -> error "doesn't happen"
+      -- In this case we aren't indexed before the current module
+      -- so resort to just resolving the name for the proper insertion
+      Just mdef ->
+        let (def, fullName) = resolveName t (mdef, newNameSpace)
+         in case def of
+              Record cont ->
+                Just (addCurrent (changeCurrentModuleWith t cont fullName))
+              _ -> Nothing
+      Nothing -> Nothing
   where
     addCurrent = addGlobal newNameSpace CurrentNameSpace
 
@@ -160,26 +163,22 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     pure (Lib.Right t)
   | otherwise = do
+    -- We do some repeat work here, namely we allocate an empty record
+    -- in case we need to place it in for the new namespace
+    empty <- atomically emptyRecord
     -- addPathWithValue will create new name spaces if they don't
     -- already exist all the way to where we need it to be
-    ret <- addPathWithValue newNameSpace CurrentNameSpace t
-    case ret of
-      -- In this path the CurrentNameSpace is added properly!
-      Lib.Right t -> do
-        -- allocate a new record
-        empty <- atomically emptyRecord
-        -- check if we can find our name properly as is
-        pure $ case t !? newNameSpace of
-          Just def ->
-            let (_, fullName) = resolveName t (def, newNameSpace)
-             in Lib.Right (changeCurrentModuleWith t empty fullName)
-          Nothing ->
-            error "doesn't happen"
-      -- the namespace already exists, so just switch to it!
-      Lib.Left er ->
-        pure $ case inNameSpace newNameSpace t of
-          Nothing -> Lib.Left er
-          Just ct -> Lib.Right ct
+    t <- do
+      addPathWithValue newNameSpace (Record empty) t
+      >>| \case
+        Lib.Right t -> t
+        Lib.Left {} -> t
+    -- here we repeat work,
+    -- if we successfully added the value, then we have to go down the
+    -- same path to retrieve the module, hence duplicating the work
+    pure $ case inNameSpace newNameSpace t of
+      Nothing -> Lib.Left (VariableShared newNameSpace)
+      Just ct -> Lib.Right ct
 
 lookup ::
   NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
