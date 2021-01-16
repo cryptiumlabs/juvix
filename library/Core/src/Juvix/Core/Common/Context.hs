@@ -127,29 +127,15 @@ inNameSpace :: NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
 inNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     pure t
-  | otherwise =
-    case t !? newNameSpace of
-      Just (Outside Record {})
-        -- we are switching to a map above the current one in this case
-        | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-          -- if that is the case, then update the map of the
-          -- newNameSpace to contain the current one, else data will go
-          -- missing
-          case putCurrentModuleBackIn t !? newNameSpace of
-            Just (Outside (Record def)) ->
-              Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
-            _ -> error "doesn't happen"
-      -- In this case we aren't indexed before the current module
-      -- so resort to just resolving the name for the proper insertion
-      Just mdef ->
-        let (def, fullName) = resolveName t (mdef, newNameSpace)
-         in case def of
-              Record cont ->
-                Just (addCurrent (changeCurrentModuleWith t cont fullName))
-              _ -> Nothing
-      Nothing -> Nothing
-  where
-    addCurrent = addGlobal newNameSpace CurrentNameSpace
+  | otherwise = do
+    mdef <- t !? newNameSpace
+    -- resolve the full name to be the new current module
+    let (def, fullName) = resolveName t (mdef, newNameSpace)
+    case def of
+      Record cont ->
+        Just (changeCurrentModuleWith t cont fullName)
+      _ ->
+        Nothing
 
 -- | switchNameSpace works like a mixture of defpackage and in-package from CL
 -- creating a namespace if not currently there, and switching to it
@@ -168,7 +154,7 @@ switchNameSpace newNameSpace t@T {currentName}
     empty <- atomically emptyRecord
     -- addPathWithValue will create new name spaces if they don't
     -- already exist all the way to where we need it to be
-    t <- do
+    newT <- do
       addPathWithValue newNameSpace (Record empty) t
       >>| \case
         Lib.Right t -> t
@@ -176,7 +162,7 @@ switchNameSpace newNameSpace t@T {currentName}
     -- here we repeat work,
     -- if we successfully added the value, then we have to go down the
     -- same path to retrieve the module, hence duplicating the work
-    pure $ case inNameSpace newNameSpace t of
+    pure $ case inNameSpace newNameSpace newT of
       Nothing -> Lib.Left (VariableShared newNameSpace)
       Just ct -> Lib.Right ct
 
@@ -276,10 +262,23 @@ removeTop sym t@T {topLevelMap} =
 changeCurrentModuleWith ::
   T term ty sumRep -> Record term ty sumRep -> NonEmpty Symbol -> T term ty sumRep
 changeCurrentModuleWith t startingContents newCurrName =
-  (putCurrentModuleBackIn t)
-    { currentName = removeTopName newCurrName,
-      currentNameSpace = startingContents
-    }
+  let queued = queueCurrentModuleBackIn t
+   in t
+        { currentName = removeTopName newCurrName,
+          currentNameSpace = startingContents
+        }
+        |> queued
+        |> addGlobal newCurrName CurrentNameSpace
+
+queueCurrentModuleBackIn ::
+  T term ty sumRep -> T term ty sumRep -> T term ty sumRep
+queueCurrentModuleBackIn T {currentNameSpace, currentName} =
+  -- we note that the currentName is a topLevel name so it
+  -- gets added from the top and doesn't confuse itself with
+  -- a potnentially local insertion
+  addGlobal
+    (addTopNameToSngle currentName)
+    (Record currentNameSpace)
 
 -- 'putCurrentModuleBackIn' adds the current name space back to the
 -- environment map
@@ -287,16 +286,7 @@ changeCurrentModuleWith t startingContents newCurrName =
 -- as 'addGlobal' quits if it can't find the path
 -- we HAVE to remove the current module after this
 putCurrentModuleBackIn :: T term ty sumRep -> T term ty sumRep
-putCurrentModuleBackIn t@T {currentNameSpace, currentName} =
-  -- we have to add top to it, or else if it's a single symbol, then
-  -- it'll be added to itself, which is bad!
-  addGlobal
-    -- we note that the currentName is a topLevel name so it
-    -- gets added from the top and doesn't confuse itself with
-    -- a potnentially local insertion
-    (addTopNameToSngle currentName)
-    (Record currentNameSpace)
-    t
+putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
 
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
