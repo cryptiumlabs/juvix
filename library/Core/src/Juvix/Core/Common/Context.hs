@@ -217,10 +217,7 @@ removeTop sym t@T {topLevelMap} =
 ------------------------------------------------------------
 
 changeCurrentModuleWith ::
-  Cont (Definition term ty sumRep) ->
-  NameSpace.T (Definition term ty sumRep) ->
-  NonEmpty Symbol ->
-  Cont (Definition term ty sumRep)
+  T ter ty sr -> NameSpace.T (Definition ter ty sr) -> NameSymbol.T -> T ter ty sr
 changeCurrentModuleWith t startingContents newCurrName =
   let queued = queueCurrentModuleBackIn t
    in t
@@ -239,7 +236,7 @@ queueCurrentModuleBackIn T {currentNameSpace, currentName} =
     (addTopNameToSngle currentName)
     (Record currentNameSpace Nothing)
 
-putCurrentModuleBackIn :: Cont (Definition term ty sumRep) -> T term ty sumRep
+putCurrentModuleBackIn :: T term ty sumRep -> T term ty sumRep
 putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
 
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
