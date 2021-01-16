@@ -95,23 +95,26 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 
 inNameSpace ::
   NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
-inNameSpace newNameSpace t@T {currentName} =
-  case t !? newNameSpace of
-    Just (Outside Record {})
-      -- we are switching to a map above the current one in this case
-      | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-        -- if that is the case, then update our contents, and continue
-        case putCurrentModuleBackIn t !? newNameSpace of
-          Just (Outside (Record def _)) ->
-            Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
-          _ -> error "doesn't happen"
-    Just mdef ->
-      let (def, fullName) = resolveName t (mdef, newNameSpace)
-       in case def of
-            Record cont _ ->
-              Just (addCurrent (changeCurrentModuleWith t cont fullName))
-            _ -> Nothing
-    Nothing -> Nothing
+inNameSpace newNameSpace t@T {currentName}
+  | removeTopName newNameSpace == removeTopName currentName =
+    pure t
+  | otherwise =
+    case t !? newNameSpace of
+      Just (Outside Record {})
+        -- we are switching to a map above the current one in this case
+        | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
+          -- if that is the case, then update our contents, and continue
+          case putCurrentModuleBackIn t !? newNameSpace of
+            Just (Outside (Record def _)) ->
+              Just (addCurrent (changeCurrentModuleWith t def newNameSpace))
+            _ -> error "doesn't happen"
+      Just mdef ->
+        let (def, fullName) = resolveName t (mdef, newNameSpace)
+         in case def of
+              Record cont _ ->
+                Just (addCurrent (changeCurrentModuleWith t cont fullName))
+              _ -> Nothing
+      Nothing -> Nothing
   where
     addCurrent = addGlobal newNameSpace CurrentNameSpace
 
@@ -127,19 +130,12 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     Lib.Right t
   | otherwise =
-    case addPathWithValue newNameSpace CurrentNameSpace t of
-      Lib.Right t ->
-        -- check if we have to qualify Name
-        case t !? newNameSpace of
-          Just def ->
-            let (_, fullName) = resolveName t (def, newNameSpace)
-             in Lib.Right (changeCurrentModuleWith t NameSpace.empty (removeTopName fullName))
-          Nothing ->
-            error "doesn't happen"
-      -- the namespace already exists!
-      Lib.Left er ->
-        case inNameSpace newNameSpace t of
-          Nothing -> Lib.Left er
+    let t =
+          case addPathWithValue newNameSpace (Record NameSpace.empty Nothing) t of
+            Lib.Right t -> t
+            Lib.Left {} -> t
+     in case inNameSpace newNameSpace t of
+          Nothing -> Lib.Left (VariableShared newNameSpace)
           Just ct -> Lib.Right ct
 
 changeCurrentModuleWith ::
