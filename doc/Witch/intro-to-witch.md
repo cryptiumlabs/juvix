@@ -1,4 +1,4 @@
-# Introduction to Witch
+# Writing proofs in Juvix
 
 To popularise software verification, we must make proof writing less of
 a burden on you, the user. Currently, only specialists and a few others 
@@ -6,7 +6,7 @@ can write proofs for their programs, even though you surely understand
 the domain and invariants of your projects -- otherwise you wouldn't
 be able to write any software at all.
 
-*Our hypothesis is that you, programmers, are
+*Our hypothesis is that programmers are
 well-equipped to derive and prove properties of the software they write,
 but they lack the mathematical maturity and vocabulary to carry out a
 formal proof.* We have evidence that students fail to produce well-made
@@ -19,10 +19,10 @@ that puts together many different strategies for proof automation. Our
 specification for such an assistant for Juvix uses algebraic effects and
 handlers as the means of congregation.
 
-Our approach is named Witch, a play on the
-assistant tools colloquially called "wizards". There is no consensus of what a
-wizard is or what the exact tasks it is supposed to assist with. Wizards seem
-to be used mostly for multiple-step and/or configuration features, however. We
+The approach to facilitate program verification in Juvix is named Witch, a play on
+the name of assistant tools colloquially called "wizards". There is no consensus of
+what a wizard is or what the exact tasks it is supposed to assist with. Wizards
+seem to be used mostly for multiple-step and/or configuration features, however. We
 went for the name "witch" to align it to the idea of assistant tools,
 while dodging the overloaded and confusing terminology.
 
@@ -65,7 +65,8 @@ The reasons we employ algebraic effects and handlers are numerous:
 ## The Essence of Witch
 
 As for the syntax, we use `operation { params } via handler`, which is
-semantically equivalent to but a syntactic improvement over `handler(operation, params)`, since effect handling
+semantically equivalent to but a syntactic improvement over `handler(operation,
+params)`, since effect handling
 is similar to function application, but also carries effect information.
 The user defines data types and functions as usual, and then uses
 Witch to prove properties about said definitions. The Examples below
