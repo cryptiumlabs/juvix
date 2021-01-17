@@ -82,9 +82,10 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
     via StateField "output" (Alias term ty sumRep)
   deriving
     ( HasSource "context" (Context.T term ty sumRep),
-      HasReader "context" (Context.T term ty sumRep)
+      HasSink "context" (Context.T term ty sumRep),
+      HasState "context" (Context.T term ty sumRep)
     )
-    via ReaderField "context" (Alias term ty sumRep)
+    via StateField "context" (Alias term ty sumRep)
   deriving
     ( HasSource "deps" Deps,
       HasSink "deps" Deps,
@@ -95,7 +96,7 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
 type PrefixReader = HasReader "prefix" Prefix
 
 type ContextReader term ty sumRep =
-  HasReader "context" (Context.T term ty sumRep)
+  HasState "context" (Context.T term ty sumRep)
 
 type OutputState term ty sumRep =
   HasState "output" (Groups' term ty sumRep)
