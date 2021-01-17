@@ -79,18 +79,22 @@ recGroups ::
   Context.T term ty sumRep ->
   [Group term ty sumRep]
 recGroups ctx@(Context.T _ _ top) =
-  let (groups, deps) = run_ ctx $ recGroups' $ toNameSpace top
+  let (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
       fromV v = let (gs, _, _) = fromV' v in gs
    in Graph.topSort g |> reverse |> concatMap fromV
 
+injectTopLevel :: (Semigroup a, IsString a) => a -> a
+injectTopLevel name = Context.topLevelName <> "." <> name
+
 recGroups' ::
   HasRecGroups term ty sumRep m =>
+  (Symbol -> Symbol) ->
   Context.NameSpace term ty sumRep ->
   m ()
-recGroups' ns = do
+recGroups' injection ns = do
   defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
     case def of
       Context.Record ns _ -> do
@@ -99,17 +103,19 @@ recGroups' ns = do
           ( \ctx ->
               fromMaybe
                 ctx
-                ( Context.qualifyLookup (pure name) ctx
+                ( Context.qualifyLookup
+                    (NameSymbol.fromSymbol (injection name))
+                    ctx
                     >>= (`Context.inNameSpace` ctx)
                 )
           )
-        withPrefix name $ recGroups' ns
+        withPrefix name $ recGroups' identity ns
         modify @"context"
           (\ctx -> fromMaybe ctx (Context.inNameSpace contextName ctx))
         pure []
       Context.CurrentNameSpace -> withPrefix name do
         curNS <- gets @"context" Context.currentNameSpace
-        recGroups' curNS
+        recGroups' identity curNS
         pure []
       _ -> do
         qname <- qualify name
