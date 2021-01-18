@@ -17,6 +17,7 @@ import qualified Juvix.Core.IR.TransformExt as IR (extForgetT)
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
+import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
@@ -29,10 +30,10 @@ import Types
 parse :: FilePath -> IO FE.FinalContext
 parse fin = do
   core <- Pipeline.toCore ["stdlib/Prelude.ju", "stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju", fin]
-  --core <- Pipeline.toCore [fin]
-  --core <- Pipeline.toCore ["test/examples/demo/helper.ju", fin]
   case core of
-    Right ctx -> pure ctx
+    Right ctx -> do
+      print (fmap (\(x :| []) -> Traverse.name x) $ Traverse.recGroups ctx)
+      pure ctx
     Left err -> do
       T.putStrLn (show err)
       exitFailure
@@ -66,6 +67,7 @@ typecheck fin Michelson = do
           print somethingElse
           exitFailure
     Left err -> do
+      print "failed at ctxToCore"
       print err
       exitFailure
 typecheck _ _ = exitFailure
