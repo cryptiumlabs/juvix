@@ -96,11 +96,11 @@ arityRaw (Constant _) = 0
 arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
 data ApplyError
-  = PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
+  = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
 
 instance Show ApplyError where
-  show (PipelineError perr) = Prelude.show perr
+  show (CompilationError perr) = Prelude.show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
@@ -148,7 +148,7 @@ applyProper fun args =
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
       pure $ Prim.Return {retType, retTerm = Constant x}
-    Left err -> Left $ Core.Extra $ PipelineError $ Core.PrimError err
+    Left err -> Left $ Core.Extra $ CompilationError err
   where
     fun' = takeToTerm fun
     args' = takeToTerm <$> toList args
