@@ -27,35 +27,54 @@ import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
 
-data Env primTy primVal = Env {nextName :: Int, nameStack :: [NameSymbol.T]}
+data Env primTy1 primTy2 primVal1 primVal2 =
+    Env {
+      nextName :: Int,
+      nameStack :: [NameSymbol.T],
+      mapPrimTy :: [NameSymbol.T] -> primTy1 -> primTy2,
+      mapPrimVal :: [NameSymbol.T] -> primVal1 -> primVal2
+    }
   deriving (Generic)
 
-type EnvEraAlias primTy primVal =
-  ExceptT (Error primTy primVal) (State (Env primTy primVal))
+type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
+  ExceptT (Error primTy1 primVal1)
+          (State (Env primTy1 primTy2 primVal1 primVal2))
 
-newtype EnvT primTy primVal a
-  = EnvEra (EnvEraAlias primTy primVal a)
+newtype EnvT primTy1 primTy2 primVal1 primVal2 a
+  = EnvEra (EnvEraAlias primTy1 primTy2 primVal1 primVal2 a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "nextName" Int,
       HasSink "nextName" Int,
       HasSource "nextName" Int
     )
-    via StateField "nextName" (EnvEraAlias primTy primVal)
+    via StateField "nextName" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
     ( HasState "nameStack" [NameSymbol.T],
       HasSink "nameStack" [NameSymbol.T],
       HasSource "nameStack" [NameSymbol.T]
     )
-    via StateField "nameStack" (EnvEraAlias primTy primVal)
+    via StateField "nameStack" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
-    (HasThrow "erasureError" (Error primTy primVal))
-    via MonadError (EnvEraAlias primTy primVal)
+    ( HasSource "mapPrimTy" ([NameSymbol.T] -> primTy1 -> primTy2),
+      HasReader "mapPrimTy" ([NameSymbol.T] -> primTy1 -> primTy2)
+    )
+    via ReaderField "mapPrimTy" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
+  deriving
+    ( HasSource "mapPrimVal" ([NameSymbol.T] -> primVal1 -> primVal2),
+      HasReader "mapPrimVal" ([NameSymbol.T] -> primVal1 -> primVal2)
+    )
+    via ReaderField "mapPrimVal" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
+  deriving
+    (HasThrow "erasureError" (Error primTy1 primVal1))
+    via MonadError (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
 
 exec ::
-  EnvT primTy primVal a ->
-  Either (Error primTy primVal) a
-exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
+  ([NameSymbol.T] -> primTy1 -> primTy2) ->
+  ([NameSymbol.T] -> primVal1 -> primVal2) ->
+  EnvT primTy1 primTy2 primVal1 primVal2 a ->
+  Either (Error primTy1 primVal1) a
+exec mt mv (EnvEra m) = evalState (runExceptT m) (Env 0 [] mt mv)
 
 data Error primTy primVal
   = UnsupportedTermT (Typed.Term primTy primVal)
