@@ -470,5 +470,5 @@ qualifyLookup :: NameSymbol.T -> T a b c -> Maybe NameSymbol.T
 qualifyLookup name ctx =
   case lookup name ctx of
     Nothing -> Nothing
-    Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
+    Just (Outside _) -> Just (NameSymbol.cons topLevelName (removeTopName name))
     Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
