@@ -28,9 +28,9 @@ import Types
 
 parse :: FilePath -> IO FE.FinalContext
 parse fin = do
-  --core <- Pipeline.toCore ["stdlib/Prelude.ju", "stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju", fin]
+  core <- Pipeline.toCore ["stdlib/Prelude.ju", "stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju", fin]
   --core <- Pipeline.toCore [fin]
-  core <- Pipeline.toCore ["test/examples/demo/helper.ju", fin]
+  --core <- Pipeline.toCore ["test/examples/demo/helper.ju", fin]
   case core of
     Right ctx -> pure ctx
     Left err -> do
