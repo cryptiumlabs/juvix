@@ -2,8 +2,13 @@ module Juvix.Core.ErasedAnn.Types where
 
 import Juvix.Core.IR.Types (Universe)
 import Juvix.Library hiding (Type)
+import Juvix.Core.Application (ParamVar)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
+
+data T
+
+type instance ParamVar T = NameSymbol.T
 
 data Term primTy primVal
   = Var NameSymbol.T

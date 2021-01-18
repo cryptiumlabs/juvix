@@ -97,11 +97,11 @@ type NewPrim = RawPrimVal
 
 {-# DEPRECATED NewPrim "use RawPrimVal" #-}
 
-type Return = App.Return (P.PrimType PrimTy) RawPrimVal
+type Return = App.Return' CoreErased.T (P.PrimType PrimTy) RawPrimVal
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
-type Arg = App.Arg (P.PrimType PrimTy) RawPrimVal
+type Arg = App.Arg' CoreErased.T (P.PrimType PrimTy) RawPrimVal
 
 type PrimVal = Return
 
