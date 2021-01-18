@@ -8,6 +8,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.String (IsString (..))
 import qualified Data.Text as Text
 import Juvix.Library
+import qualified Juvix.Library.Symbol.Lexer as Lexer
 import qualified Prelude (foldr1)
 
 type T = NonEmpty Symbol
@@ -22,10 +23,39 @@ toSymbol =
 
 fromSymbol :: Symbol -> T
 fromSymbol =
-  NonEmpty.fromList . fmap internText . Text.splitOn "." . textify
+  NonEmpty.fromList . fmap internText . handleInfix . Text.splitOn "." . textify
 
 fromText :: Text -> T
 fromText = fromSymbol . internText
+
+-- TODO ∷ make this a fold!?
+handleInfix :: [Text] -> [Text]
+handleInfix [] = []
+handleInfix (x : xs) = rec' (x : xs) ""
+  where
+    rec' ("" : xs) currentInfixSymbol =
+      rec' xs (Text.snoc currentInfixSymbol '.')
+    rec' (x : xs) build
+      -- case 1)
+      | Lexer.validInfixSymbol (Lexer.charToWord8 (Text.head x)) =
+        rec' xs (build <> Text.cons '.' x)
+      | Text.null build =
+        x : rec' xs build
+      | otherwise =
+        -- case 3)
+        -- we must tail x, as we add an extra .
+        -- at the start of every infix symbol.
+        -- we do this because even a symbol like
+        -- "-" triggers case 1) which adds a '.'
+        -- to the front even when it shouldn't!
+        -- this is the correct behavior IFF we
+        -- are in the middle of a infix symbol!
+        Text.tail build : x : xs
+    rec' [] "" =
+      []
+    rec' [] acc =
+      -- see case 3)
+      [Text.tail acc]
 
 instance IsString T where
   fromString = fromSymbol . intern

@@ -886,20 +886,17 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
-***** Lexer
-- _Relies on_
-  + [[Library]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
-  + [[Lexer]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Lexer]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1234,8 +1231,13 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
+  + [[Lexer]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Symbol
+****** Lexer
 - _Relies on_
   + [[Library]]
 ** test

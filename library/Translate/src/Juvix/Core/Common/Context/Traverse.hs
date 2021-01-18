@@ -79,26 +79,43 @@ recGroups ::
   Context.T term ty sumRep ->
   [Group term ty sumRep]
 recGroups ctx@(Context.T _ _ top) =
-  let (groups, deps) = run_ ctx $ recGroups' $ toNameSpace top
+  let (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
       fromV v = let (gs, _, _) = fromV' v in gs
    in Graph.topSort g |> reverse |> concatMap fromV
 
+injectTopLevel :: (Semigroup a, IsString a) => a -> a
+injectTopLevel name = Context.topLevelName <> "." <> name
+
 recGroups' ::
   HasRecGroups term ty sumRep m =>
+  (Symbol -> Symbol) ->
   Context.NameSpace term ty sumRep ->
   m ()
-recGroups' ns = do
+recGroups' injection ns = do
   defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
     case def of
       Context.Record ns _ -> do
-        withPrefix name $ recGroups' ns
+        contextName <- gets @"context" Context.currentName
+        modify @"context"
+          ( \ctx ->
+              fromMaybe
+                ctx
+                ( Context.qualifyLookup
+                    (NameSymbol.fromSymbol (injection name))
+                    ctx
+                    >>= (`Context.inNameSpace` ctx)
+                )
+          )
+        withPrefix name $ recGroups' identity ns
+        modify @"context"
+          (\ctx -> fromMaybe ctx (Context.inNameSpace contextName ctx))
         pure []
       Context.CurrentNameSpace -> withPrefix name do
-        curNS <- asks @"context" Context.currentNameSpace
-        recGroups' curNS
+        curNS <- gets @"context" Context.currentNameSpace
+        recGroups' identity curNS
         pure []
       _ -> do
         qname <- qualify name
@@ -116,10 +133,10 @@ recGroups' ns = do
   for_ groups addGroup
 
 fv :: (ContextReader term ty sumRep m, Data a) => a -> m [NameSymbol.T]
-fv t = asks @"context" \ctx ->
+fv t = gets @"context" \ctx ->
   SYB.everything (<>) (SYB.mkQ mempty (FV.op [])) t
     |> HashSet.toList
-    |> mapMaybe (flip Context.qualifyLookup ctx)
+    |> mapMaybe (`Context.qualifyLookup` ctx)
 
 toNameSpace :: HashMap.T Symbol a -> NameSpace.T a
 toNameSpace public = NameSpace.T {public, private = mempty}
@@ -162,7 +179,7 @@ withPrefix n = local @"prefix" \(P pfx) -> P $ D.snoc pfx n
 
 -- | Qualify a name by the current module prefix.
 qualify :: PrefixReader m => Symbol -> m NameSymbol.T
-qualify n = asks @"prefix" \pfx -> applyPrefix pfx n
+qualify n = asks @"prefix" (`applyPrefix` n)
 
 -- | Apply a prefix to a name.
 applyPrefix :: Prefix -> Symbol -> NameSymbol.T
