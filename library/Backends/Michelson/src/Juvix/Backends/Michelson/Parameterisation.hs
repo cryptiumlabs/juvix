@@ -117,8 +117,8 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
-instance Core.CanApply PrimVal where
-  type ApplyErrorExtra PrimVal = ApplyError
+instance Core.CanApply (PrimVal' ext) where
+  type ApplyErrorExtra (PrimVal' ext) = ApplyError
 
   arity Prim.Cont {numLeft} = numLeft
   arity Prim.Return {retTerm} = arityRaw retTerm
@@ -135,20 +135,20 @@ instance Core.CanApply PrimVal where
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
             | Just takes <- traverse (traverse App.argToTerm) args ->
-              applyProper fun takes
+              applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2'
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
-applyProper :: Take -> NonEmpty Take -> Either (Core.ApplyError PrimVal) Return
+applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
       pure $ Prim.Return {retType, retTerm = Constant x}
-    Left err -> Left $ Core.Extra $ CompilationError err
+    Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
     args' = takeToTerm <$> toList args
@@ -160,12 +160,10 @@ takeToTerm :: Take -> RawTerm
 takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
-toPrimType ::
-  ErasedAnn.Type PrimTy ->
-  Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
+toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
 toPrimType ty = maybe err Right $ go ty
   where
-    err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
+    err = Left $ ReturnTypeNotPrimitive ty
     go ty = goPi ty <|> (pure <$> goPrim ty)
     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
     goPi _ = Nothing
