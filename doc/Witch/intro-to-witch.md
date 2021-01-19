@@ -95,7 +95,7 @@ In Witch, however, we use the following definitions of previously known terms:
 
 -   The Proof Search effect is used for library-level algorithms; users
     may choose to implement their own algorithms using a limited set of
-    meta-programming[¹] constructs that are handled at top-level[^2].
+    meta-programming¹ constructs that are handled at top-level².
 
 -   The Tactics effect is used for strategies that simplify the goal at
     least one step, and may not complete all proof goals. This style is
@@ -107,20 +107,20 @@ In Witch, however, we use the following definitions of previously known terms:
 -   Lastly, the Error effect is used for feedback to the user, since any
     of the strategies may fail. Error has two operations, `throw` and
     `trace`: the former notifies the user that a strategy has failed,
-    while the latter registers[^3] completed sub-goals during the
+    while the latter registers³ completed sub-goals during the
     strategy's attempt to complete the proof.
 
 Witch for Juvix is currently under development, and we hope to release its first
 version soon. :)
 
-[¹]: By meta-programming, we mean "code that manipulates itself", and
+¹: By meta-programming, we mean "code that manipulates itself", and
     not "programming that happens in a higher level of abstraction". For
     dependently typed programming languages, the usual term is
     reflection. However, we prefer not use reflection since it has
     a different meaning in terms of effectful computations.
 
-[^2]: The meta-programming constructs are operations of the Typechecker
+²: The meta-programming constructs are operations of the Typechecker
     effect whose handlers are not available for the user.
 
-[^3]: Internally, the Typechecker effect should have a tree that stores
+³: Internally, the Typechecker effect should have a tree that stores
     all currently saved traces.
