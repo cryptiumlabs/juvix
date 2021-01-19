@@ -95,7 +95,7 @@ In Witch, however, we use the following definitions of previously known terms:
 
 -   The Proof Search effect is used for library-level algorithms; users
     may choose to implement their own algorithms using a limited set of
-    meta-programming[^1] constructs that are handled at top-level[^2].
+    meta-programming[¹] constructs that are handled at top-level[^2].
 
 -   The Tactics effect is used for strategies that simplify the goal at
     least one step, and may not complete all proof goals. This style is
@@ -113,7 +113,7 @@ In Witch, however, we use the following definitions of previously known terms:
 Witch for Juvix is currently under development, and we hope to release its first
 version soon. :)
 
-[^1]: By meta-programming, we mean "code that manipulates itself", and
+[¹]: By meta-programming, we mean "code that manipulates itself", and
     not "programming that happens in a higher level of abstraction". For
     dependently typed programming languages, the usual term is
     reflection. However, we prefer not use reflection since it has
