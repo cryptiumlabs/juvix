@@ -113,14 +113,14 @@ In Witch, however, we use the following definitions of previously known terms:
 Witch for Juvix is currently under development, and we hope to release its first
 version soon. :)
 
-¹: By meta-programming, we mean "code that manipulates itself", and
+¹ By meta-programming, we mean "code that manipulates itself", and
     not "programming that happens in a higher level of abstraction". For
     dependently typed programming languages, the usual term is
     reflection. However, we prefer not use reflection since it has
     a different meaning in terms of effectful computations.
 
-²: The meta-programming constructs are operations of the Typechecker
+² The meta-programming constructs are operations of the Typechecker
     effect whose handlers are not available for the user.
 
-³: Internally, the Typechecker effect should have a tree that stores
+³ Internally, the Typechecker effect should have a tree that stores
     all currently saved traces.
