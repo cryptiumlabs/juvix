@@ -1,13 +1,15 @@
-{-# LANGUAGE DeriveTraversable, UndecidableInstances #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Types to support partial application and polymorphic primitives.
 module Juvix.Core.Application where
 
-import Juvix.Library
-import qualified Juvix.Library.Usage as Usage
-import qualified Juvix.Core.IR.Types as IR
 import Data.Bifoldable
 import Data.Bitraversable
+import qualified Juvix.Core.IR.Types as IR
+import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 
 -- |
 -- A primitive along with its type, and possibly some arguments.
@@ -28,9 +30,12 @@ data Return' ext ty term
       }
   deriving (Generic, Functor, Foldable, Traversable)
 
-deriving instance (Show (ParamVar ext), Show ty, Show term) =>
+deriving instance
+  (Show (ParamVar ext), Show ty, Show term) =>
   Show (Return' ext ty term)
-deriving instance (Eq (ParamVar ext), Eq ty, Eq term) =>
+
+deriving instance
+  (Eq (ParamVar ext), Eq ty, Eq term) =>
   Eq (Return' ext ty term)
 
 instance Bifunctor (Return' ext) where
@@ -43,20 +48,19 @@ instance Bitraversable (Return' ext) where
   bitraverse f g = \case
     Cont s ts n ->
       Cont <$> bitraverse f g s
-           <*> traverse (bitraverse f (traverse g)) ts
-           <*> pure n
+        <*> traverse (bitraverse f (traverse g)) ts
+        <*> pure n
     Return a s ->
       Return <$> f a <*> g s
 
 type Return = Return' IR.NoExt
-
 
 -- | The representation of variables used in IR.Term' ext
 type family ParamVar ext :: Type
 
 data DeBruijn
   = BoundVar IR.BoundVar
-  | FreeVar  IR.GlobalName
+  | FreeVar IR.GlobalName
   deriving (Show, Eq, Generic)
 
 type instance ParamVar IR.NoExt = DeBruijn
@@ -75,6 +79,7 @@ pattern FreeArg ::
 pattern FreeArg x = VarArg (FreeVar x)
 
 deriving instance (Show (ParamVar ext), Show term) => Show (ArgBody' ext term)
+
 deriving instance (Eq (ParamVar ext), Eq term) => Eq (ArgBody' ext term)
 
 type ArgBody = ArgBody' IR.NoExt

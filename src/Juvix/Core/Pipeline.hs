@@ -23,6 +23,7 @@ type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 type RawMichelsonTerm = RawMichelson HR.Term
 
 type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
+
 type MichelsonHR f = f Michelson.PrimTy Michelson.PrimValHR
 
 type MichelsonTerm = MichelsonHR HR.Term
@@ -62,17 +63,18 @@ lookupMapPrim ::
     (ErasedAnn.TypedPrim ty val)
     ty
     (Types.TypedPrim ty val)
-lookupMapPrim _  (App.Return ty tm) = pure $ App.Return ty tm
+lookupMapPrim _ (App.Return ty tm) = pure $ App.Return ty tm
 lookupMapPrim ns (App.Cont f xs n) =
-    App.Cont f <$> traverse (traverse lookupArg) xs <*> pure n
+  App.Cont f <$> traverse (traverse lookupArg) xs <*> pure n
   where
     lookupArg (App.VarArg (App.BoundVar i)) =
       atMay ns (fromIntegral i)
         |> maybe (error i) (pure . App.VarArg)
     lookupArg (App.VarArg (App.FreeVar x)) = pure $ App.VarArg x
     lookupArg (App.TermArg t) = pure $ App.TermArg t
-    error i = Left $ Erasure.InternalError $
-      "unknown de Bruijn index " <> show i
+    error i =
+      Left $ Erasure.InternalError $
+        "unknown de Bruijn index " <> show i
 
 eraseGlobals ::
   MichelsonCompConstraints m =>
@@ -195,8 +197,10 @@ typecheckErase' ::
   HR.Term primTy primVal ->
   Usage.T ->
   HR.Term primTy primVal ->
-  m (Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal),
-     IR.Value primTy (Types.TypedPrim primTy primVal))
+  m
+    ( Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal),
+      IR.Value primTy (Types.TypedPrim primTy primVal)
+    )
 typecheckErase' term usage ty = do
   ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty

@@ -30,18 +30,18 @@ import Juvix.Library.Usage (Usage)
 type MapPrim p1 p2 ty val =
   [NameSymbol.T] -> p1 -> Either (Error ty val) p2
 
-data Env primTy1 primTy2 primVal1 primVal2 =
-    Env {
-      nextName :: Int,
-      nameStack :: [NameSymbol.T],
-      mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
-      mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
-    }
+data Env primTy1 primTy2 primVal1 primVal2
+  = Env
+      { nextName :: Int,
+        nameStack :: [NameSymbol.T],
+        mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
+        mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
+      }
   deriving (Generic)
 
 type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
   ExceptT (Error primTy1 primVal1)
-          (State (Env primTy1 primTy2 primVal1 primVal2))
+    (State (Env primTy1 primTy2 primVal1 primVal2))
 
 newtype EnvT primTy1 primTy2 primVal1 primVal2 a
   = EnvEra (EnvEraAlias primTy1 primTy2 primVal1 primVal2 a)

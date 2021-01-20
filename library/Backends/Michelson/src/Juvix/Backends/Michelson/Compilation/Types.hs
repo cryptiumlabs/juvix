@@ -99,27 +99,34 @@ type NewPrim = RawPrimVal
 {-# DEPRECATED NewPrim "use RawPrimVal" #-}
 
 type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
+
 type ReturnIR = Return' IR.NoExt
+
 type ReturnHR = Return' CoreErased.T
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
 type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
+
 type ArgIR = Arg' IR.NoExt
+
 type ArgHR = Arg' CoreErased.T
 
 type PrimVal' ext = Return' ext
+
 type PrimValIR = PrimVal' IR.NoExt
+
 type PrimValHR = PrimVal' CoreErased.T
 
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just $ App.Take {
-    usage = Usage.Omega,
-    type' = retType,
-    term = App.TermArg retTerm
-  }
+  Just $
+    App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = App.TermArg retTerm
+      }
 
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)

@@ -8,6 +8,7 @@ import Juvix.Core.Erasure.Algorithm
 import Juvix.Core.Erasure.Types
   ( Error (..),
     Globals,
+    MapPrim,
     Term,
     TermT,
     Type,
@@ -20,5 +21,4 @@ import Juvix.Core.Erasure.Types
     pattern Star,
     pattern SymT,
     pattern Var,
-    MapPrim,
   )

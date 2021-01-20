@@ -131,7 +131,6 @@ erasePrimVal p = do
   ask @"mapPrimVal" <*> get @"nameStack" <*> pure p
     >>= either (throw @"erasureError") pure
 
-
 erasePatterns ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   ([pat], ([(Usage.Usage, arg)], ret)) ->

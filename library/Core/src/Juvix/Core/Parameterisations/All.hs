@@ -2,6 +2,7 @@
 
 module Juvix.Core.Parameterisations.All where
 
+import Data.Coerce
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
@@ -10,7 +11,6 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import Data.Coerce
 
 -- all primitive types
 data Ty
@@ -103,7 +103,7 @@ unNatValTF ::
   Maybe (App.Take (P.PrimType Naturals.Ty) (f Naturals.Val))
 unNatValTF (App.Take {usage, type' = type'', term = term'})
   | Just type' <- traverse unNatTy type'',
-    Just term  <- traverse unNatVal term' =
+    Just term <- traverse unNatVal term' =
     Just $ App.Take {usage, type', term}
 unNatValTF (App.Take {}) = Nothing
 
