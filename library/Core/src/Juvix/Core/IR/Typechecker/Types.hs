@@ -132,10 +132,10 @@ type PatternT' ext primTy primVal =
 
 type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
 
-type AbstractT' extV extT primTy primVal =
-  IR.Abstract' extV extT primTy (P.TypedPrim primTy primVal)
+type AbstractT' extV primTy primVal =
+  IR.Abstract' extV primTy (P.TypedPrim primTy primVal)
 
-type AbstractT primTy primVal = AbstractT' IR.NoExt IR.NoExt primTy primVal
+type AbstractT primTy primVal = AbstractT' IR.NoExt primTy primVal
 
 type GlobalsT' extV extT primTy primVal =
   IR.Globals' extV extT primTy (P.TypedPrim primTy primVal)
