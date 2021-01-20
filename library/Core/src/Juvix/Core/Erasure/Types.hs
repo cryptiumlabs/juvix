@@ -21,6 +21,7 @@ import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
@@ -77,11 +78,11 @@ exec ::
 exec mt mv (EnvEra m) = evalState (runExceptT m) (Env 0 [] mt mv)
 
 data Error primTy primVal
-  = UnsupportedTermT (Typed.Term primTy primVal)
-  | UnsupportedTermE (Typed.Elim primTy primVal)
-  | UnsupportedTypeV (Typed.ValueT primTy primVal)
-  | UnsupportedTypeN (Typed.NeutralT primTy primVal)
-  | CannotEraseZeroUsageTerm (Typed.Term primTy primVal)
+  = UnsupportedTermT (Typed.Term' primTy primVal)
+  | UnsupportedTermE (Typed.Elim' primTy primVal)
+  | UnsupportedTypeV (IR.Value primTy primVal)
+  | UnsupportedTypeN (IR.Neutral primTy primVal)
+  | CannotEraseZeroUsageTerm (Typed.Term' primTy primVal)
   | TypeError (TC.TypecheckError primTy primVal)
   | InternalError Text
   deriving (Generic)

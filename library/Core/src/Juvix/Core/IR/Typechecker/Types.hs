@@ -162,7 +162,7 @@ type BindAnnotationT' ext primTy primVal =
 
 type BindAnnotationT primTy primVal = BindAnnotationT' IR.NoExt primTy primVal
 
-getTermAnn :: Term primTy primVal -> AnnotationT' IR.NoExt primTy primVal
+getTermAnn :: Term' primTy primVal -> Annotation primTy primVal
 getTermAnn (Star _ ann) = ann
 getTermAnn (PrimTy _ ann) = ann
 getTermAnn (Prim _ ann) = ann
@@ -175,7 +175,7 @@ getTermAnn (Lam _ anns) = baResAnn anns
 getTermAnn (Let _ _ _ anns) = baResAnn anns
 getTermAnn (Elim _ ann) = ann
 
-getElimAnn :: Elim primTy primVal -> AnnotationT' IR.NoExt primTy primVal
+getElimAnn :: Elim' primTy primVal -> Annotation primTy primVal
 getElimAnn (Bound _ ann) = ann
 getElimAnn (Free _ ann) = ann
 getElimAnn (App _ _ ann) = ann
