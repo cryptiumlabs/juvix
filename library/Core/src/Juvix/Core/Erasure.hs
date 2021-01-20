@@ -20,4 +20,5 @@ import Juvix.Core.Erasure.Types
     pattern Star,
     pattern SymT,
     pattern Var,
+    MapPrim,
   )

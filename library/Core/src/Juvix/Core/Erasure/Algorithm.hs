@@ -13,13 +13,13 @@ type ErasureM primTy1 primTy2 primVal1 primVal2 m =
   ( HasState "nextName" Int m,
     HasState "nameStack" [NameSymbol.T] m,
     HasThrow "erasureError" (Erasure.Error primTy1 primVal1) m,
-    HasReader "mapPrimTy" ([NameSymbol.T] -> primTy1 -> primTy2) m,
-    HasReader "mapPrimVal" ([NameSymbol.T] -> primVal1 -> primVal2) m
+    HasReader "mapPrimTy" (Erasure.MapPrim primTy1 primTy2 primTy1 primVal1) m,
+    HasReader "mapPrimVal" (Erasure.MapPrim primVal1 primVal2 primTy1 primVal1) m
   )
 
 erase ::
-  ([NameSymbol.T] -> primTy1 -> primTy2) ->
-  ([NameSymbol.T] -> primVal1 -> primVal2) ->
+  (Erasure.MapPrim primTy1 primTy2 primTy1 primVal1) ->
+  (Erasure.MapPrim primVal1 primVal2 primTy1 primVal1) ->
   Typed.Term' primTy1 primVal1 ->
   Usage.T ->
   Either (Erasure.Error primTy1 primVal1) (Erasure.Term primTy2 primVal2)
@@ -117,11 +117,19 @@ erasePattern patt =
       -- t <- eraseTerm t
       -- pure (Erasure.PDot t)
       pure (Erasure.PDot undefined)
-    IR.PPrim p -> Erasure.PPrim <$> erasePrim p
+    IR.PPrim p -> Erasure.PPrim <$> erasePrimVal p
 
-erasePrim ::
+erasePrimTy ::
+  ErasureM primTy1 primTy2 primVal1 primVal2 m => primTy1 -> m primTy2
+erasePrimTy p = do
+  ask @"mapPrimTy" <*> get @"nameStack" <*> pure p
+    >>= either (throw @"erasureError") pure
+
+erasePrimVal ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m => primVal1 -> m primVal2
-erasePrim p = ask @"mapPrimVal" <*> get @"nameStack" <*> pure p
+erasePrimVal p = do
+  ask @"mapPrimVal" <*> get @"nameStack" <*> pure p
+    >>= either (throw @"erasureError") pure
 
 
 erasePatterns ::
@@ -157,7 +165,7 @@ eraseTerm ::
 eraseTerm t@(Typed.Star _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm t@(Typed.PrimTy _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm (Typed.Prim p ann) = do
-  Erasure.Prim <$> erasePrim p <*> eraseType (IR.annType ann)
+  Erasure.Prim <$> erasePrimVal p <*> eraseType (IR.annType ann)
 eraseTerm t@(Typed.Pi _ _ _ _) = throwEra $ Erasure.UnsupportedTermT t
 eraseTerm (Typed.Lam t anns) = do
   let ty@(IR.VPi π _ _) = IR.annType $ IR.baResAnn anns
@@ -216,8 +224,7 @@ eraseType ::
 eraseType (IR.VStar i) = do
   pure $ Erasure.Star i
 eraseType (IR.VPrimTy t) = do
-  ns <- get @"nameStack"
-  Erasure.PrimTy <$> asks @"mapPrimTy" \mt -> mt ns t
+  Erasure.PrimTy <$> erasePrimTy t
 eraseType (IR.VPi π a b) = do
   if π == mempty
     then eraseType b

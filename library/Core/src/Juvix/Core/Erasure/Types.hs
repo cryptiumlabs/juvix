@@ -27,12 +27,15 @@ import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
 
+type MapPrim p1 p2 ty val =
+  [NameSymbol.T] -> p1 -> Either (Error ty val) p2
+
 data Env primTy1 primTy2 primVal1 primVal2 =
     Env {
       nextName :: Int,
       nameStack :: [NameSymbol.T],
-      mapPrimTy :: [NameSymbol.T] -> primTy1 -> primTy2,
-      mapPrimVal :: [NameSymbol.T] -> primVal1 -> primVal2
+      mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
+      mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
     }
   deriving (Generic)
 
@@ -56,13 +59,13 @@ newtype EnvT primTy1 primTy2 primVal1 primVal2 a
     )
     via StateField "nameStack" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
-    ( HasSource "mapPrimTy" ([NameSymbol.T] -> primTy1 -> primTy2),
-      HasReader "mapPrimTy" ([NameSymbol.T] -> primTy1 -> primTy2)
+    ( HasSource "mapPrimTy" (MapPrim primTy1 primTy2 primTy1 primVal1),
+      HasReader "mapPrimTy" (MapPrim primTy1 primTy2 primTy1 primVal1)
     )
     via ReaderField "mapPrimTy" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
-    ( HasSource "mapPrimVal" ([NameSymbol.T] -> primVal1 -> primVal2),
-      HasReader "mapPrimVal" ([NameSymbol.T] -> primVal1 -> primVal2)
+    ( HasSource "mapPrimVal" (MapPrim primVal1 primVal2 primTy1 primVal1),
+      HasReader "mapPrimVal" (MapPrim primVal1 primVal2 primTy1 primVal1)
     )
     via ReaderField "mapPrimVal" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
@@ -70,8 +73,8 @@ newtype EnvT primTy1 primTy2 primVal1 primVal2 a
     via MonadError (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
 
 exec ::
-  ([NameSymbol.T] -> primTy1 -> primTy2) ->
-  ([NameSymbol.T] -> primVal1 -> primVal2) ->
+  MapPrim primTy1 primTy2 primTy1 primVal1 ->
+  MapPrim primVal1 primVal2 primTy1 primVal1 ->
   EnvT primTy1 primTy2 primVal1 primVal2 a ->
   Either (Error primTy1 primVal1) a
 exec mt mv (EnvEra m) = evalState (runExceptT m) (Env 0 [] mt mv)
