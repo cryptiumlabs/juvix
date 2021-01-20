@@ -19,7 +19,6 @@ import Juvix.Core.Erased.Types as Type
   )
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
-import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
@@ -83,23 +82,20 @@ data Error primTy primVal
   | UnsupportedTypeV (IR.Value primTy primVal)
   | UnsupportedTypeN (IR.Neutral primTy primVal)
   | CannotEraseZeroUsageTerm (Typed.Term' primTy primVal)
-  | TypeError (TC.TypecheckError primTy primVal)
   | InternalError Text
   deriving (Generic)
 
 deriving instance
   ( Show primTy,
     Show primVal,
-    Show (Param.ApplyErrorExtra primTy),
-    Show (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+    Show (Param.ApplyErrorExtra primTy)
   ) =>
   Show (Error primTy primVal)
 
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    Eq (Param.ApplyErrorExtra primTy),
-    Eq (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+    Eq (Param.ApplyErrorExtra primTy)
   ) =>
   Eq (Error primTy primVal)
 
