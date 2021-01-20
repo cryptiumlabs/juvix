@@ -36,8 +36,10 @@ shouldEraseTo name _ (term, usage) erased =
   T.testCase
     (name <> ": " <> show (term, usage) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? (Erasure.eraseAnn |<< Erasure.erase term usage)
+        T.@=? (Erasure.eraseAnn |<< erase term usage)
     )
+  where
+    erase = Erasure.erase (const pure) (const pure)
 
 infix 0 `ann`
 
