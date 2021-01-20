@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
 module Juvix.Core.Pipeline where
@@ -24,9 +22,10 @@ type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 
 type RawMichelsonTerm = RawMichelson HR.Term
 
-type Michelson f = f Michelson.PrimTy Michelson.PrimVal
+type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
+type MichelsonHR f = f Michelson.PrimTy Michelson.PrimValHR
 
-type MichelsonTerm = Michelson HR.Term
+type MichelsonTerm = MichelsonHR HR.Term
 
 type MichelsonComp res =
   forall m.
@@ -36,25 +35,58 @@ type MichelsonComp res =
   RawMichelsonTerm ->
   m res
 
-type MichelsonCompConstraints m =
-  ( HasWriter "log" [Types.PipelineLog Michelson.PrimTy Michelson.RawPrimVal] m,
-    HasReader "parameterisation" (Types.Parameterisation Michelson.PrimTy Michelson.RawPrimVal) m,
-    HasThrow "error" (Types.PipelineError Michelson.PrimTy Michelson.RawPrimVal Michelson.CompErr) m,
-    HasReader "globals" (IR.Globals Michelson.PrimTy Michelson.PrimVal) m
+type CompConstraints' primTy primVal compErr m =
+  ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
+    HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
+    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
+    HasReader "globals" (IR.Globals primTy (Types.TypedPrim primTy primVal)) m
   )
+
+type CompConstraints primTy primVal compErr m =
+  ( CompConstraints' primTy primVal compErr m,
+    Eq primTy,
+    Eq primVal,
+    Types.CanApply primTy,
+    Types.CanApply (Types.TypedPrim primTy primVal)
+  )
+
+type MichelsonCompConstraints m =
+  CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompErr m
+
+constMapPrim :: Erasure.MapPrim a a ty val
+constMapPrim _ x = Right x
+
+lookupMapPrim ::
+  Erasure.MapPrim
+    (Types.TypedPrim ty val)
+    (ErasedAnn.TypedPrim ty val)
+    ty
+    (Types.TypedPrim ty val)
+lookupMapPrim _  (App.Return ty tm) = pure $ App.Return ty tm
+lookupMapPrim ns (App.Cont f xs n) =
+    App.Cont f <$> traverse (traverse lookupArg) xs <*> pure n
+  where
+    lookupArg (App.VarArg (App.BoundVar i)) =
+      atMay ns (fromIntegral i)
+        |> maybe (error i) (pure . App.VarArg)
+    lookupArg (App.VarArg (App.FreeVar x)) = pure $ App.VarArg x
+    lookupArg (App.TermArg t) = pure $ App.TermArg t
+    error i = Left $ Erasure.InternalError $
+      "unknown de Bruijn index " <> show i
 
 eraseGlobals ::
   MichelsonCompConstraints m =>
-  m (Erasure.Globals Michelson.PrimTy Michelson.PrimVal)
+  m (Erasure.Globals Michelson.PrimTy Michelson.PrimValHR)
 eraseGlobals = do
   globals <- ask @"globals"
   res <- for (HM.toList globals) \(key, value) ->
     Erasure.eraseGlobal value
-      |> Erasure.exec
+      |> Erasure.exec constMapPrim lookupMapPrim
       |> either (throw @"error" . Types.ErasureError) (pure . (key,))
   pure (HM.fromList res)
 
-coreToAnn :: MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimVal)
+coreToAnn ::
+  MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimValHR)
 coreToAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty
@@ -65,7 +97,8 @@ coreToMichelson term usage ty = do
   ann <- coreToAnn term usage ty
   pure $ fst $ Michelson.compileExpr $ toRaw ann
 
-coreToMichelsonContract :: MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
+coreToMichelsonContract ::
+  MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
 coreToMichelsonContract term usage ty = do
   ann <- coreToAnn term usage ty
   pure $ fst $ Michelson.compileContract $ toRaw ann
@@ -87,9 +120,8 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
       ErasedAnn.Ann {usage, type' = Prim.fromPrimType type', term = f term}
     takeToTerm = fromTake ErasedAnn.Prim
     argToTerm = fromTake \case
-      App.BoundArg i -> _
-      App.FreeArg  x -> ErasedAnn.Var x
-      App.TermArg  p -> ErasedAnn.Prim p
+      App.VarArg x -> ErasedAnn.Var x
+      App.TermArg p -> ErasedAnn.Prim p
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
@@ -137,22 +169,11 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckEval ::
-  ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
-    HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
-    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
-    HasReader "globals" (IR.GlobalsT primTy primVal) m,
-    Types.CanApply primTy,
-    Types.CanApply (Typed.TypedPrim primTy primVal),
-    Eq primTy,
-    Eq primVal,
-    Show primTy,
-    Show primVal,
-    Show compErr
-  ) =>
+  CompConstraints primTy primVal compErr m =>
   HR.Term primTy primVal ->
   Usage.T ->
-  Typed.ValueT primTy primVal ->
-  m (Typed.ValueT primTy primVal)
+  IR.Value primTy (Types.TypedPrim primTy primVal) ->
+  m (IR.Value primTy (Types.TypedPrim primTy primVal))
 typecheckEval term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
@@ -170,22 +191,12 @@ typecheckEval term usage ty = do
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase' ::
-  ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
-    HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
-    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
-    HasReader "globals" (IR.GlobalsT primTy primVal) m,
-    Types.CanApply primTy,
-    Types.CanApply (Typed.TypedPrim primTy primVal),
-    Eq primTy,
-    Eq primVal,
-    Show primTy,
-    Show primVal,
-    Show compErr
-  ) =>
+  CompConstraints primTy primVal compErr m =>
   HR.Term primTy primVal ->
   Usage.T ->
   HR.Term primTy primVal ->
-  m (Erasure.TermT primTy primVal, Typed.ValueT primTy primVal)
+  m (Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal),
+     IR.Value primTy (Types.TypedPrim primTy primVal))
 typecheckErase' term usage ty = do
   ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty
@@ -193,22 +204,11 @@ typecheckErase' term usage ty = do
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase ::
-  ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
-    HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
-    HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
-    HasReader "globals" (IR.GlobalsT primTy primVal) m,
-    Types.CanApply primTy,
-    Types.CanApply (Typed.TypedPrim primTy primVal),
-    Eq primTy,
-    Eq primVal,
-    Show primTy,
-    Show primVal,
-    Show compErr
-  ) =>
+  CompConstraints primTy primVal compErr m =>
   HR.Term primTy primVal ->
   Usage.T ->
-  Typed.ValueT primTy primVal ->
-  m (Erasure.TermT primTy primVal)
+  IR.Value primTy (Types.TypedPrim primTy primVal) ->
+  m (Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal))
 typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
@@ -221,7 +221,7 @@ typecheckErase term usage ty = do
     |> IR.execTC globals
     |> fst of
     Right tyTerm -> do
-      case Erasure.erase tyTerm usage of
+      case Erasure.erase constMapPrim lookupMapPrim tyTerm usage of
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)
     Left err -> throw @"error" (Types.TypecheckerError err)
