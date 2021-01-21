@@ -85,8 +85,8 @@ transformExpression (Old.DeclarationE e) =
 
 transformDeclarationExpression ::
   Old.DeclarationExpression -> New.DeclarationExpression
-transformDeclarationExpression (Old.DeclareExpession i e) =
-  New.DeclareExpession (transformDeclaration i) (transformExpression e)
+transformDeclarationExpression (Old.DeclareExpression i e) =
+  New.DeclareExpression (transformDeclaration i) (transformExpression e)
 
 transformDeclaration :: Old.Declaration -> New.Declaration
 transformDeclaration (Old.Infixivity i) =

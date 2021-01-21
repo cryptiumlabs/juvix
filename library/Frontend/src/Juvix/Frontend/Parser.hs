@@ -17,7 +17,6 @@ import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
-import qualified Juvix.Frontend.Lexer as Lexer
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding
@@ -32,6 +31,8 @@ import Juvix.Library hiding
     takeWhile,
     try,
   )
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Symbol.Lexer as Lexer
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
@@ -169,7 +170,7 @@ declaration = do
 
 declarationExpression :: Parser Types.DeclarationExpression
 declarationExpression =
-  Types.DeclareExpession <$> declaration <*> (reserved "in" *> expression)
+  Types.DeclareExpression <$> declaration <*> (reserved "in" *> expression)
 
 infixDeclar :: Parser Types.InfixDeclar
 infixDeclar = do
@@ -367,7 +368,9 @@ moduleOpenExpr = moduleOpenExprNormal <|> moduleOpenExprParens
 
 moduleOpenExprParens :: Parser Types.ModuleOpenExpr
 moduleOpenExprParens = do
-  name <- moduleName
+  -- we want it to fail at the ., since it's a paren after it
+  -- Int.()
+  name <- prefixSymbolDotPermissive
   word8 Lexer.dot
   expr <- parens expression
   pure (Types.OpenExpress name expr)
@@ -655,7 +658,7 @@ infixSymbolGen p = do
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
 infixSymbolDot = do
-  qualified <- option [] (NonEmpty.toList <$> prefixSymbolDot <* word8 Lexer.dot)
+  qualified <- option [] (NonEmpty.toList <$> prefixSymbolDotPermissive <* word8 Lexer.dot)
   -- -o is a bit special since it's a normal letter
   -- this is a bit of a hack
   infix' <- ("-o" <$ string "-o") <|> infixSymbol
@@ -704,11 +707,29 @@ reserved res =
 -- Though Should we allow this since, these are prefix if spelled this way
 -- we don't enforce capitalization, and thus it would be improper for to
 -- special case it out!
+
+prefixSepGen :: Parser Symbol -> Parser (NonEmpty Symbol)
+prefixSepGen parser = do
+  ret <- sepBy1H parser (word8 Lexer.dot)
+  peek <- peekWord8
+  case peek of
+    Just x
+      | Lexer.dot == x -> fail "symbol not prefix"
+    _ -> pure ret
+
+-- the permissive functions allow the functions to not fully parse the word
+-- useful for infix application
+prefixSymbolDotPermissive :: Parser (NonEmpty Symbol)
+prefixSymbolDotPermissive = sepBy1H prefixSymbol (word8 Lexer.dot)
+
+prefixCapitalDotPermissive :: Parser (NonEmpty Symbol)
+prefixCapitalDotPermissive = sepBy1H prefixCapital (word8 Lexer.dot)
+
 prefixSymbolDot :: Parser (NonEmpty Symbol)
-prefixSymbolDot = sepBy1H prefixSymbol (word8 Lexer.dot)
+prefixSymbolDot = prefixSepGen prefixSymbol
 
 prefixCapitalDot :: Parser (NonEmpty Symbol)
-prefixCapitalDot = sepBy1H prefixCapital (word8 Lexer.dot)
+prefixCapitalDot = prefixSepGen prefixCapital
 
 prefixSymbol :: Parser Symbol
 prefixSymbol =

@@ -97,10 +97,10 @@ type Term primTy primVal = Term' primTy (P.TypedPrim primTy primVal)
 
 type Elim primTy primVal = Elim' primTy (P.TypedPrim primTy primVal)
 
-type GlobalT' ext primTy primVal =
-  IR.Global' ext primTy (P.TypedPrim primTy primVal)
+type GlobalT' extV extT primTy primVal =
+  IR.Global' extV extT primTy (P.TypedPrim primTy primVal)
 
-type GlobalT primTy primVal = GlobalT' IR.NoExt primTy primVal
+type GlobalT primTy primVal = GlobalT' IR.NoExt IR.NoExt primTy primVal
 
 type DatatypeT' ext primTy primVal =
   IR.Datatype' ext primTy (P.TypedPrim primTy primVal)
@@ -117,13 +117,13 @@ type DataConT' ext primTy primVal =
 
 type DataConT primTy primVal = DataConT' IR.NoExt primTy primVal
 
-type FunctionT' ext primTy primVal =
-  IR.Function' ext primTy (P.TypedPrim primTy primVal)
+type FunctionT' extV extT primTy primVal =
+  IR.Function' extV extT primTy (P.TypedPrim primTy primVal)
 
-type FunctionT primTy primVal = FunctionT' IR.NoExt primTy primVal
+type FunctionT primTy primVal = FunctionT' IR.NoExt IR.NoExt primTy primVal
 
-type FunClauseT' ext primTy primVal =
-  IR.FunClause' ext primTy (P.TypedPrim primTy primVal)
+type FunClauseT' extT primTy primVal =
+  IR.FunClause' extT primTy (P.TypedPrim primTy primVal)
 
 type FunClauseT primTy primVal = FunClauseT' IR.NoExt primTy primVal
 
@@ -132,15 +132,15 @@ type PatternT' ext primTy primVal =
 
 type PatternT primTy primVal = PatternT' IR.NoExt primTy primVal
 
-type AbstractT' ext primTy primVal =
-  IR.Abstract' ext primTy (P.TypedPrim primTy primVal)
+type AbstractT' extV extT primTy primVal =
+  IR.Abstract' extV extT primTy (P.TypedPrim primTy primVal)
 
-type AbstractT primTy primVal = AbstractT' IR.NoExt primTy primVal
+type AbstractT primTy primVal = AbstractT' IR.NoExt IR.NoExt primTy primVal
 
-type GlobalsT' ext primTy primVal =
-  IR.Globals' ext primTy (P.TypedPrim primTy primVal)
+type GlobalsT' extV extT primTy primVal =
+  IR.Globals' extV extT primTy (P.TypedPrim primTy primVal)
 
-type GlobalsT primTy primVal = GlobalsT' IR.NoExt primTy primVal
+type GlobalsT primTy primVal = GlobalsT' IR.NoExt IR.NoExt primTy primVal
 
 type ValueT' ext primTy primVal =
   IR.Value' ext primTy (P.TypedPrim primTy primVal)
@@ -247,6 +247,7 @@ type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 deriving instance
   ( Eq primTy,
     Eq primVal,
+    Eq (P.ApplyErrorExtra primTy),
     Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
     IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
@@ -261,6 +262,7 @@ deriving instance
 instance
   ( Show primTy,
     Show primVal,
+    Show (P.ApplyErrorExtra primTy),
     Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
     IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),

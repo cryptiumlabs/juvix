@@ -42,6 +42,10 @@ typeOf Mul = Ty :| [Ty, Ty]
 hasType :: Val -> P.PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
 
+instance P.CanApply Ty where
+  arity Ty = 0
+  apply f xs = Left $ P.ExtraArguments f xs
+
 instance P.CanApply Val where
   arity = pred . fromIntegral . length . typeOf
   apply f xs = app f $ toList xs

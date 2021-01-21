@@ -24,14 +24,15 @@ dependencies:
   ###########################
   # Libraries
   ###########################
-  # - llvm
   - standard-library
   - frontend
   - core
   - translate
   - michelson
-  - interaction-net
-  - arithmetic-circuit
+  # - llvm
+  # - interaction-net
+  # - arithmetic-circuit
+  # - InteractionNetIR
   ###########################
   # Dependency for OS
   ###########################
@@ -120,7 +121,6 @@ flags:
 library:
   source-dirs: src
   dependencies:
-    - z3
     - derive-storable
     - derive-storable-plugin
     - jsonschema-gen
@@ -130,8 +130,6 @@ library:
     - Juvix.Core
     - Juvix.Core.Pipeline
     - Juvix.Core.FromFrontend
-    - Juvix.Visualize.Dot
-    - Juvix.Visualize.Graph
     - Juvix.Encoding.Encoding
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott

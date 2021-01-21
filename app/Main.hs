@@ -3,7 +3,6 @@ module Main where
 import qualified Compile as Compile
 import qualified Config as Config
 import Development.GitRev
-import qualified Interactive as Interactive
 import Juvix.Library
 import Options
 import Options.Applicative
@@ -95,9 +94,8 @@ interactiveDoc =
     ]
 
 run :: Context -> Options -> IO ()
-run ctx (Options cmd configPath) = do
+run _ctx (Options cmd configPath) = do
   maybeConfig <- Config.loadT configPath
-  let conf = fromMaybe Config.defaultT maybeConfig
   case cmd of
     Parse fin -> do
       Compile.parse fin >> pure ()

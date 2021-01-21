@@ -243,8 +243,8 @@ transformExpression (Old.DeclarationE e) =
 
 transformDeclarationExpression ::
   Env.Expression tag m => Old.DeclarationExpression -> m New.DeclarationExpression
-transformDeclarationExpression (Old.DeclareExpession i e) =
-  New.DeclareExpession <$> transformDeclaration i <*> transformExpression e
+transformDeclarationExpression (Old.DeclareExpression i e) =
+  New.DeclareExpression <$> transformDeclaration i <*> transformExpression e
 
 transformDeclaration :: Env.Expression tag m => Old.Declaration -> m New.Declaration
 transformDeclaration (Old.Infixivity i) =

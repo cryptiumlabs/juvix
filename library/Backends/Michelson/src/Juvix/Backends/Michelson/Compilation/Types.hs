@@ -27,6 +27,7 @@ data PrimTy
   | Option
   | List
   | Set
+  | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
 data RawPrimVal
@@ -79,6 +80,8 @@ data RawPrimVal
     Right'
   | Left'
   | Nil
+  | Cons
+  | None
   | EmptyS
   | EmptyM
   | EmptyBM
@@ -101,14 +104,14 @@ type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 type PrimVal = Return
 
 toTake1 :: PrimVal -> Maybe Take
-toTake1 (App.Cont {}) = Nothing
-toTake1 (App.Return {retType, retTerm}) = Just fun
+toTake1 App.Cont {} = Nothing
+toTake1 App.Return {retType, retTerm} = Just fun
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 
 toTakes :: PrimVal -> (Take, [Take], Natural)
-toTakes (App.Cont {fun, args, numLeft}) = (fun, args, numLeft)
-toTakes (App.Return {retType, retTerm}) = (fun, [], 0)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], 0)
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 

@@ -69,11 +69,11 @@ data Record term ty sumRep
       }
   deriving (Show, Generic, Eq)
 
-data Information
+newtype Information
   = Prec Precedence
   deriving (Show, Generic, Eq, Data)
 
-data PathError
+newtype PathError
   = VariableShared NameSymbol.T
   deriving (Show, Eq)
 
@@ -127,3 +127,9 @@ makeLensesFor
     ("reverseLookup", "_reverseLookup")
   ]
   ''T
+--------------------------------------------------------------------------------
+-- Special Names
+--------------------------------------------------------------------------------
+
+topLevelName :: IsString p => p
+topLevelName = "TopLevel"

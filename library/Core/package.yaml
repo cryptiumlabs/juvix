@@ -25,11 +25,6 @@ dependencies:
 - unordered-containers
 - stm-containers
 - lens
-- dlist
-###############################
-# For eac solver
-###############################
-- z3
 
 default-extensions:
   - NoImplicitPrelude

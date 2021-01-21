@@ -39,7 +39,7 @@ transformTop body = foldr combine record body
           New.Let (New.Let'' (transformFunctionLike func) expression)
         Old.Declaration dec ->
           New.DeclarationE
-            (New.DeclareExpession (transformDeclaration dec) expression)
+            (New.DeclareExpression (transformDeclaration dec) expression)
         -- TODO ∷ update parser and add LetSig
         Old.Signature _sig ->
           undefined
@@ -161,8 +161,8 @@ transformExpression (Old.DeclarationE e) =
 
 transformDeclarationExpression ::
   Old.DeclarationExpression -> New.DeclarationExpression
-transformDeclarationExpression (Old.DeclareExpession i e) =
-  New.DeclareExpession (transformDeclaration i) (transformExpression e)
+transformDeclarationExpression (Old.DeclareExpression i e) =
+  New.DeclareExpression (transformDeclaration i) (transformExpression e)
 
 transformDeclaration :: Old.Declaration -> New.Declaration
 transformDeclaration (Old.Infixivity i) =

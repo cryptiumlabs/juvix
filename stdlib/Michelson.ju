@@ -3,30 +3,74 @@ mod Prelude.Michelson where
 open Prelude
 
 -- datatypes
-let option    = %Michelson.option
-let list      = %Michelson.list
-let set       = %Michelson.set
-let operation = %Michelson.operation
-let contract  = %Michelson.contract
-let pair      = %Michelson.pair
-let either    = %Michelson.either
-let map       = %Michelson.map
-let big-map   = %Michelson.big-map
+sig option : ty -> ty
+let option = %Michelson.option
+
+sig list : ty -> ty
+let list = %Michelson.list
+
+sig set : ty -> ty
+let set = %Michelson.set
+
+-- sig operation : ty -> ty
+-- let operation = %Michelson.operation
+
+-- sig contract : ty -> ty
+-- let contract = %Michelson.contract
+
+sig pair : ty -> ty
+let pair = %Michelson.pair
+
+-- sig either : ty -> ty
+-- let either = %Michelson.either
+
+sig map-ty : ty -> ty
+let map-ty = %Michelson.map
+
+sig big-map : ty -> ty
+let big-map = %Michelson.big-map
+
 
 -- primitive types
-let key       = %Michelson.key
-let unit-t    = %Michelson.unit-t
+sig key : ty
+let key = %Michelson.key
+
+sig unit-t : ty
+let unit-t = %Michelson.unit-t
+
+sig signature : ty
 let signature = %Michelson.signature
-let chain-id  = %Michelson.chain-id
-let int       = %Michelson.int
-let nat       = %Michelson.nat
-let string    = %Michelson.string
-let bytes     = %Michelson.bytes
-let mutez     = %Michelson.mutez
-let bool      = %Michelson.bool
-let key-hash  = %Michelson.key-hash
+
+sig chain-id : ty
+let chain-id = %Michelson.chain-id
+
+sig int : ty
+let int = %Michelson.int
+
+sig nat : ty
+let nat = %Michelson.nat
+
+sig string : ty
+let string = %Michelson.string
+
+sig bytes : ty
+let bytes = %Michelson.bytes
+
+sig mutez : ty
+let mutez = %Michelson.mutez
+
+sig bool : ty
+let bool = %Michelson.bool
+
+sig key-hash : ty
+let key-hash = %Michelson.key-hash
+
+sig timestamp : ty
 let timestamp = %Michelson.timestamp
-let address   = %Michelson.address
+
+sig address : ty
+let address = %Michelson.address
+
 
 -- arithmetic functions
 sig add : (x : ty) -> x -> x -> x
@@ -54,14 +98,14 @@ let or = %Michelson.or
 sig xor : (x : ty) -> x -> x -> x
 let xor = %Michelson.xor
 
-sig not : (x : ty) -> x -> x -> x
-let not = %Michelson.not
+-- sig not : (x : ty) -> x -> x -> x
+-- let not = %Michelson.not
 
 sig compare : (x : ty) -> x -> x -> int
 let compare = %Michelson.compare
 
 sig if2 : (x : ty) -> bool -> x -> x -> x
-let if2 = %Michelson.if_builtin
+let if2 = %Michelson.if-builtin
 
 -- other functions
 sig now : timestamp
@@ -88,14 +132,14 @@ let source = %Michelson.source
 sig sender : address
 let sender = %Michelson.sender
 
-sig implicit-account : operation
-let implicit-account = %Michelson.implicit-account
+-- sig implicit-account : operation
+-- let implicit-account = %Michelson.implicit-account
 
-sig create-contract : operation
-let create-contract = %Michelson.create-contract
+-- sig create-contract : operation
+-- let create-contract = %Michelson.create-contract
 
-sig address-to-contract : (param : ty) -> address -> contract param
-let address-to-contract = %Michelson.address-to-contract
+-- sig address-to-contract : (param : ty) -> address -> contract param
+-- let address-to-contract = %Michelson.address-to-contract
 
 sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 let transfer-tokens = %Michelson.transfer-tokens
@@ -124,10 +168,10 @@ let cons = %Michelson.cons
 sig cons-pair : a -> b -> pair a b
 let cons-pair = %Michelson.cons-pair
 
-sig car : list a -> a
+sig car : pair a b -> a
 let car = %Michelson.car
 
-sig cdr : list a -> list a
+sig cdr : pair a b -> b
 let cdr = %Michelson.cdr
 
 sig size : list a -> int
@@ -148,8 +192,8 @@ let map = %Michelson.map
 sig update : (x : ty) -> key -> a -> x a -> unit-t
 let update = %Michelson.update
 
-sig iter : (x : ty) -> (a -> b) -> (b -> unit-t)
-let iter = %Michelson.iter
+-- sig iter : (x : ty) -> (a -> b) -> (b -> unit-t)
+-- let iter = %Michelson.iter
 
 sig get : (x: ty) -> key -> x a -> a
 let get = %Michelson.get

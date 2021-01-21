@@ -14,13 +14,14 @@
 ** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Core]]
-  + [[Context]]
+  + [[Traverse]]
   + [[FromFrontend]]
   + [[Types]]
   + [[Parameterisation]]
   + [[Frontend]]
   + [[Environment]]
   + [[Library]]
+  + [[NameSymbol]]
 ** Core
 - _Relies on_
   + [[Erasure]]
@@ -53,7 +54,6 @@
   + [[ErasedAnn]]
   + [[Prim]]
   + [[Erasure]]
-  + [[Types]]
   + [[HR]]
   + [[IR]]
   + [[Types]]
@@ -94,21 +94,3 @@
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-** Visualize
-*** Dot
-- Generates a dot file in order to produce a simple image of a
-  interaction net
-- Also provides a way of generating gifs (and the images used to
-  generate said gif), displaying every reduction step until the term
-  is normalized
-- _Relies on_
-  + [[Env]]
-  + [[Graph]]
-  + [[Default]]
-  + [[Library]]
-  + [[Graph]]
-*** Graph
-- A simple function for showing the graph as a proper net
-- Really should be improved upon or removed
-- _Relies on_
-  + [[Library]]

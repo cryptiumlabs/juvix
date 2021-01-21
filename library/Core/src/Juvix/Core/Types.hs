@@ -6,7 +6,7 @@ module Juvix.Core.Types
   )
 where
 
-import qualified Juvix.Core.EAC.Types as EAC
+-- import qualified Juvix.Core.EAC.Types as EAC
 import qualified Juvix.Core.Erased as EC
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.HR.Types as HR
@@ -18,8 +18,8 @@ import Juvix.Library
 data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
   | TypecheckerError (TC.TypecheckError primTy primVal)
-  | EACError (EAC.Errors primTy primVal)
-  | ErasureError (Erasure.Error primTy primVal)
+  | -- | EACError (EAC.Errors primTy primVal)
+    ErasureError (Erasure.Error primTy primVal)
   | PrimError compErr
   deriving (Generic)
 
@@ -27,6 +27,7 @@ deriving instance
   ( Show primTy,
     Show primVal,
     Show compErr,
+    Show (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra (TC.TypedPrim primTy primVal))
   ) =>
   Show (PipelineError primTy primVal compErr)

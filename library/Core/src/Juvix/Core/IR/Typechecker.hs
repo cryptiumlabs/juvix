@@ -5,6 +5,7 @@ module Juvix.Core.IR.Typechecker
   )
 where
 
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap.Strict as IntMap
 import Data.List.NonEmpty ((<|))
 import qualified Juvix.Core.Application as App
@@ -35,17 +36,23 @@ leftoverOk ρ = ρ == Usage.Omega || ρ == mempty
 -- | Checks a 'Term' against an annotation and returns a decorated term if
 -- successful.
 typeTerm ::
-  (Eq primTy, Eq primVal, Param.CanApply (TypedPrim primTy primVal)) =>
+  ( Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
   Param.Parameterisation primTy primVal ->
   IR.Term' ext primTy primVal ->
   AnnotationT primTy primVal ->
-  EnvTypecheck' ext primTy primVal (Typed.Term primTy primVal)
+  m (Typed.Term primTy primVal)
 typeTerm param t ann = loValue <$> typeTermWith param IntMap.empty [] t ann
 
 typeTermWith ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -63,6 +70,7 @@ typeElim ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -76,6 +84,7 @@ typeElimWith ::
   ( Eq primTy,
     Eq primVal,
     CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
@@ -100,6 +109,7 @@ typeTerm' ::
   ( Eq primTy,
     Eq primVal,
     CanInnerTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   IR.Term' ext primTy primVal ->
@@ -109,8 +119,8 @@ typeTerm' term ann@(Annotation σ ty) =
   case term of
     IR.Star' i _ -> do
       requireZero σ
-      j <- requireStar ty
-      requireUniverseLT i j
+      _j <- requireStar ty
+      -- requireUniverseLT i j
       pure $ Typed.Star i ann
     IR.PrimTy' t _ -> do
       requireZero σ
@@ -171,6 +181,7 @@ typeElim' ::
   ( Eq primTy,
     Eq primVal,
     CanInnerTC' ext primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   IR.Elim' ext primTy primVal ->
@@ -356,23 +367,29 @@ liftEval = either (throwTC . EvalError) pure
 
 substApp ::
   ( HasParam primTy primVal m,
-    HasThrowTC' extV extT primTy primVal m,
+    HasThrowTC' IR.NoExt extT primTy primVal m,
+    HasGlobals primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.ValueT primTy primVal ->
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-substApp ty arg = liftEval $ do
-  arg' <- Eval.evalTerm arg
-  Eval.substV arg' ty
+substApp ty arg = do
+  arg' <- evalTC arg
+  liftEval $ Eval.substV arg' ty
 
 evalTC ::
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
+    HasGlobals primTy primVal m,
+    Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)
-evalTC = liftEval . Eval.evalTerm
+evalTC t = do
+  g <- ask @"globals"
+  liftEval $ Eval.evalTerm (flip HashMap.lookup g) t
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.
@@ -387,6 +404,8 @@ evalTC = liftEval . Eval.evalTerm
 -- * Covariance in both parts of Σ
 -- * It doesn't descend into any other structures
 --   (TODO: which ones are safe to do so?)
+--
+-- NB. Levels are currently not checked!
 (<:) ::
   ( Eq primTy,
     Eq primVal,
@@ -396,7 +415,7 @@ evalTC = liftEval . Eval.evalTerm
   IR.Value' ext primTy primVal ->
   IR.Value' ext primTy primVal ->
   Bool
-IR.VStar' i _ <: IR.VStar' j _ = i <= j
+IR.VStar' _i _ <: IR.VStar' _j _ = True -- i <= j
 IR.VPi' π1 s1 t1 _ <: IR.VPi' π2 s2 t2 _ =
   π2 `Usage.allows` π1 && s2 <: s1 && t1 <: t2
 IR.VSig' π1 s1 t1 _ <: IR.VSig' π2 s2 t2 _ =

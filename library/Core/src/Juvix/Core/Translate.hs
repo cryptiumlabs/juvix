@@ -108,7 +108,9 @@ irElimToHR' ::
   m (HR.Elim primTy primVal)
 irElimToHR' elim =
   case elim of
-    IR.Free n -> pure $ HR.Var $ NameSymbol.fromString $ show n
+    IR.Free (IR.Global n) -> pure $ HR.Var n
+    IR.Free (IR.Pattern p) ->
+      pure $ HR.Var $ NameSymbol.fromSymbol $ intern $ "pat" <> show p
     IR.Bound i -> do
       v <- unDeBruijn (fromIntegral i)
       pure (HR.Var v)

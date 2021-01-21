@@ -535,7 +535,6 @@ Types to support partial application and polymorphic primitives.
   + [[NameSymbol]]
 ***** Types <<Core/Types>>
 - _Relies on_
-  + [[Core/EAC/Types]]
   + [[Erased]]
   + [[Erasure/Types]]
   + [[HR/Types]]
@@ -562,7 +561,6 @@ Types to support partial application and polymorphic primitives.
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
-  + [[RecGroups]]
   + [[Context/Types]]
   + [[NameSpace]]
   + [[Library]]
@@ -581,68 +579,6 @@ Types to support partial application and polymorphic primitives.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
-******* RecGroups
-Calculate mutually-recursive groups of definitions.
-- _Relies on_
-  + [[RecGroups/Types]]
-  + [[Context/Types]]
-  + [[NameSpace]]
-  + [[Library]]
-******** Types <<RecGroups/Types>>
-- _Relies on_
-  + [[Context/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-***** EAC <<Core/EAC>>
-- This directory contains the implementation of =Eal= and the inferred
-  bracket checker on =Eal=
-- _Relies on_
-  + [[Check]]
-  + [[ConstraintGen]]
-  + [[EAC/Erasure]]
-  + [[EAC/Parser]]
-  + [[Solve]]
-  + [[Core/EAC/Types]]
-****** Check
-- A constraint checker for EAC.
-- _Relies on_
-  + [[ConstraintGen]]
-  + [[Solve]]
-  + [[Core/EAC/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-****** ConstraintGen
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-****** Erasure <<EAC/Erasure>>
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Erased/Types]]
-****** Parser <<EAC/Parser>>
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Core/EAC/Types]]
-  + [[Unit]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** Solve
-- A Z3 solver for the generated =Eal= Constraints
-- Can generate multiple constraints that will be used along side the
-  Bracket checker to confirm that the solved constraints Z3 gives us
-  is correct
-- _Relies on_
-  + [[Core/EAC/Types]]
-  + [[Library]]
-****** Types <<Core/EAC/Types>>
-- _Relies on_
-  + [[Erased/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
@@ -792,6 +728,8 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[TransformExt]]
+  + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -800,6 +738,14 @@ the substitution functions (substTerm and substElim).
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+******* OnlyExts
+A transformation that discards all annotations on term/elim nodes, but
+keeps the extensions.
+- _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
@@ -885,21 +831,6 @@ Quantitative type implementation inspired by
   + [[IR]]
   + [[Translate]]
   + [[Library]]
-*** EAC <<test/EAC>>
-- _Relies on_
-  + [[Core/EAC]]
-  + [[Unit]]
-  + [[Library]]
-*** EAC2
-- _Relies on_
-  + [[Core/EAC]]
-  + [[Check]]
-  + [[Erased/Types]]
-  + [[Erased/Types]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[Usage]]
 *** Erasure <<test/Erasure>>
 - _Relies on_
   + [[Application]]
@@ -960,19 +891,17 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
-***** Lexer
-- _Relies on_
-  + [[Library]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
-  + [[Lexer]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Lexer]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1157,7 +1086,39 @@ Can be added to via core translation
   + [[InteractionNet/Shared]]
   + [[Library]]
   + [[NameSymbol]]
+**** Visualize
+***** Dot
+- Generates a dot file in order to produce a simple image of a
+  interaction net
+- Also provides a way of generating gifs (and the images used to
+  generate said gif), displaying every reduction step until the term
+  is normalized
+- _Relies on_
+  + [[Backends/Env]]
+  + [[Backends/Graph]]
+  + [[InteractionNet/Nets/Default]]
+  + [[Library]]
+  + [[Visualize/Graph]]
+***** Graph <<Visualize/Graph>>
+- A simple function for showing the graph as a proper net
+- Really should be improved upon or removed
+- _Relies on_
+  + [[Library]]
 ** test
+*** INet
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Unit]]
+  + [[InteractionNet]]
+  + [[Backends/Env]]
+  + [[Backends/Graph]]
+  + [[Interface]]
+  + [[Maps]]
+  + [[InteractionNet/Nets/Default]]
+  + [[Type]]
+  + [[Library]]
+  + [[Dot]]
+  + [[Visualize/Graph]]
 *** Spec
 *** Nets
 **** Combinators <<test/Nets/Combinators>>
@@ -1173,6 +1134,80 @@ Can be added to via core translation
   + [[Backends/Graph]]
   + [[Interface]]
   + [[InteractionNet/Nets/Default]]
+  + [[Library]]
+* InteractionNetIR
+** Setup <<InteractionNetIR/Setup>>
+** src
+*** Juvix
+**** Core
+***** EAC <<Core/EAC>>
+- This directory contains the implementation of =Eal= and the inferred
+  bracket checker on =Eal=
+- _Relies on_
+  + [[Check]]
+  + [[ConstraintGen]]
+  + [[EAC/Erasure]]
+  + [[EAC/Parser]]
+  + [[Solve]]
+  + [[Core/EAC/Types]]
+****** Check
+- A constraint checker for EAC.
+- _Relies on_
+  + [[ConstraintGen]]
+  + [[Solve]]
+  + [[Core/EAC/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+****** ConstraintGen
+- _Relies on_
+  + [[Core/EAC/Types]]
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+****** Erasure <<EAC/Erasure>>
+- _Relies on_
+  + [[Core/EAC/Types]]
+  + [[Erased/Types]]
+****** Parser <<EAC/Parser>>
+- _Relies on_
+  + [[Core/EAC/Types]]
+  + [[Core/EAC/Types]]
+  + [[Unit]]
+  + [[Library]]
+  + [[NameSymbol]]
+****** Solve
+- A Z3 solver for the generated =Eal= Constraints
+- Can generate multiple constraints that will be used along side the
+  Bracket checker to confirm that the solved constraints Z3 gives us
+  is correct
+- _Relies on_
+  + [[Core/EAC/Types]]
+  + [[Library]]
+****** Types <<Core/EAC/Types>>
+- _Relies on_
+  + [[Erased/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+** test
+*** EAC <<test/EAC>>
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Unit]]
+  + [[Library]]
+*** EAC2
+- _Relies on_
+  + [[Core/EAC]]
+  + [[Check]]
+  + [[Erased/Types]]
+  + [[Erased/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
+*** Main <<InteractionNetIR/test/Main>>
+- _Relies on_
   + [[Library]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
@@ -1201,8 +1236,13 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
+  + [[Lexer]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Symbol
+****** Lexer
 - _Relies on_
   + [[Library]]
 ** test
@@ -1217,6 +1257,25 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** Core
+***** Common
+****** Context
+******* Traverse
+Calculate mutually-recursive groups of definitions.
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Traverse/Types]]
+  + [[NameSpace]]
+  + [[FreeVars]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+******** Types <<Traverse/Types>>
+- _Relies on_
+  + [[Context/Types]]
+  + [[Context/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=

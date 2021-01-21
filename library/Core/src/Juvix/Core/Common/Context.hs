@@ -8,15 +8,11 @@ module Juvix.Core.Common.Context
     module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
-    Group,
-    Entry (..),
-    recGroups,
   )
 where
 
 import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify, toList)
@@ -36,13 +32,6 @@ nameSymbolToSymbol = NameSymbol.toSymbol
 
 nameSymbolFromSymbol :: Symbol -> NameSymbol.T
 nameSymbolFromSymbol = NameSymbol.fromSymbol
-
---------------------------------------------------------------------------------
--- Special Names
---------------------------------------------------------------------------------
-
-topLevelName :: IsString p => p
-topLevelName = "TopLevel"
 
 --------------------------------------------------------------------------------
 -- Body
@@ -285,6 +274,7 @@ queueCurrentModuleBackIn T {currentNameSpace, currentName} =
 -- Note that we have to have the path to the module ready and open
 -- as 'addGlobal' quits if it can't find the path
 -- we HAVE to remove the current module after this
+
 putCurrentModuleBackIn :: T term ty sumRep -> T term ty sumRep
 putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
 
@@ -549,25 +539,10 @@ resolveName ctx (def, name) =
     fullyQualified =
       pure topLevelName <> currentName ctx <> name
 
--- | Traverses a whole context by performing an action on each recursive group.
--- The groups are passed in dependency order but the order of elements within
--- each group is arbitrary.
-traverseContext ::
-  (Applicative f, Monoid t) =>
-  -- | process one recursive group
-  (Group a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext f = foldMapA f . recGroups
-
--- | Same as 'traverseContext', but the groups are split up into single
--- definitions.
-traverseContext1 ::
-  (Monoid t, Applicative f) =>
-  -- | process one definition
-  (NameSymbol.T -> Definition a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext1 = traverseContext . foldMapA . onEntry
-  where
-    onEntry f (Entry {name, def}) = f name def
+-- | qualifyLookup fully qualiifes a name in the current context.
+qualifyLookup :: NameSymbol.T -> T a b c -> Maybe NameSymbol.T
+qualifyLookup name ctx =
+  case lookup name ctx of
+    Nothing -> Nothing
+    Just (Outside _) -> Just (NameSymbol.cons topLevelName (removeTopName name))
+    Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)

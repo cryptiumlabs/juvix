@@ -190,3 +190,29 @@ extForgetE ::
   Elim' ext primTy primVal ->
   Elim primTy primVal
 extForgetE = extTransformE forgetter
+
+compose ::
+  Monad f =>
+  ExtTransformTEF f ext2 ext3 primTy primVal ->
+  ExtTransformTEF f ext1 ext2 primTy primVal ->
+  ExtTransformTEF f ext1 ext3 primTy primVal
+compose fs gs =
+  ExtTransformTEF
+    { etfStar = etfStar fs <=< etfStar gs,
+      etfPrimTy = etfPrimTy fs <=< etfPrimTy gs,
+      etfPrim = etfPrim fs <=< etfPrim gs,
+      etfPi = etfPi fs <=< etfPi gs,
+      etfSig = etfSig fs <=< etfSig gs,
+      etfPair = etfPair fs <=< etfPair gs,
+      etfUnitTy = etfUnitTy fs <=< etfUnitTy gs,
+      etfUnit = etfUnit fs <=< etfUnit gs,
+      etfLam = etfLam fs <=< etfLam gs,
+      etfLet = etfLet fs <=< etfLet gs,
+      etfElim = etfElim fs <=< etfElim gs,
+      etfBound = etfBound fs <=< etfBound gs,
+      etfFree = etfFree fs <=< etfFree gs,
+      etfApp = etfApp fs <=< etfApp gs,
+      etfAnn = etfAnn fs <=< etfAnn gs,
+      etfTermX = etfTermX fs <=< etfTermX gs,
+      etfElimX = etfElimX fs <=< etfElimX gs
+    }

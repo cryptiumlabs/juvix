@@ -2,7 +2,7 @@
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
-    module Juvix.Backends.Michelson.Compilation.Types,
+    module Types,
   )
 where
 
@@ -11,7 +11,7 @@ import Control.Monad.Fail (fail)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
@@ -103,11 +103,24 @@ instance Show ApplyError where
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
+instance Core.CanApply PrimTy where
+  arity (Application hd rest) =
+    Core.arity hd - fromIntegral (length rest)
+  arity x =
+    Run.lengthType x
+
+  apply (Application fn args1) args2 =
+    Application fn (args1 <> args2)
+      |> Right
+  apply fun args =
+    Application fun args
+      |> Right
+
 instance Core.CanApply PrimVal where
   type ApplyErrorExtra PrimVal = ApplyError
 
-  arity (Prim.Cont {numLeft}) = numLeft
-  arity (Prim.Return {retTerm}) = arityRaw retTerm
+  arity Prim.Cont {numLeft} = numLeft
+  arity Prim.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',
@@ -220,7 +233,7 @@ builtinTypes =
     ("Michelson.int", Untyped.TInt),
     ("Michelson.nat", Untyped.TNat),
     ("Michelson.string", Untyped.TString),
-    ("Michelson.string", Untyped.TBytes),
+    ("Michelson.bytes", Untyped.TBytes),
     ("Michelson.mutez", Untyped.TMutez),
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
@@ -228,6 +241,15 @@ builtinTypes =
     ("Michelson.address", Untyped.TAddress)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
+    |> ( <>
+           [ ("Michelson.list", Types.List),
+             ("Michelson.lambda", Types.Lambda),
+             ("Michelson.option", Types.Option),
+             ("Michelson.set", Types.Set),
+             ("Michelson.map", Types.Map),
+             ("Michelson.big-map", Types.BigMap)
+           ]
+       )
     |> Map.fromList
 
 builtinValues :: P.Builtins RawPrimVal
@@ -269,8 +291,17 @@ builtinValues =
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.unit", Inst (M.UNIT "" "")),
+    ("Michelson.nil", Nil),
+    ("Michelson.cons", Cons),
+    ("Michelson.none", None),
+    ("Michelson.left", Left'),
+    ("Michelson.right", Right'),
+    ("Michelson.map", MapOp),
+    ("Michelson.empty-set", EmptyS),
+    ("Michelson.empty-map", EmptyM),
+    ("Michelson.empty-big-map", EmptyBM),
     -- added symbols to not take values
-    ("Michelson.if", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] []))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
