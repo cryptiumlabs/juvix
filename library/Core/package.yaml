@@ -25,6 +25,7 @@ dependencies:
 - unordered-containers
 - stm-containers
 - lens
+- dlist
 
 default-extensions:
   - NoImplicitPrelude
