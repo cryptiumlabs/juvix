@@ -215,7 +215,7 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (FunClause' ext primTy primVal)
 
-data AbstractWith ty ext primTy primVal
+data AbstractWith ty (primTy :: *) (primVal :: *)
   = Abstract
       { absName :: GlobalName,
         absUsage :: GlobalUsage,
@@ -223,31 +223,31 @@ data AbstractWith ty ext primTy primVal
       }
   deriving (Generic)
 
-type RawAbstract' ext = AbstractWith (Term' ext) ext
+type RawAbstract' ext = AbstractWith (Term' ext)
 
 type Abstract' extV = AbstractWith (Value' extV)
 
 deriving instance
-  GlobalAllWith Show ty ext primTy primVal =>
-  Show (AbstractWith ty ext primTy primVal)
+  Show (ty primTy primVal) =>
+  Show (AbstractWith ty primTy primVal)
 
 deriving instance
-  GlobalAllWith Eq ty ext primTy primVal =>
-  Eq (AbstractWith ty ext primTy primVal)
+  Eq (ty primTy primVal) =>
+  Eq (AbstractWith ty primTy primVal)
 
 deriving instance
-  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
-  Data (AbstractWith ty ext primTy primVal)
+  (Typeable ty, Typeable primTy, Typeable primVal, Data (ty primTy primVal)) =>
+  Data (AbstractWith ty primTy primVal)
 
 deriving instance
-  GlobalAllWith NFData ty ext primTy primVal =>
-  NFData (AbstractWith ty ext primTy primVal)
+  NFData (ty primTy primVal) =>
+  NFData (AbstractWith ty primTy primVal)
 
 data GlobalWith ty ext primTy primVal
   = GDatatype (DatatypeWith ty primTy primVal)
   | GDataCon (DataConWith ty primTy primVal)
   | GFunction (FunctionWith ty ext primTy primVal)
-  | GAbstract (AbstractWith ty ext primTy primVal)
+  | GAbstract (AbstractWith ty primTy primVal)
   deriving (Generic)
 
 type RawGlobal' ext = GlobalWith (Term' ext) ext

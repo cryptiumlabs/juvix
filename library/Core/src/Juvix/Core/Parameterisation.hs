@@ -3,6 +3,7 @@
 module Juvix.Core.Parameterisation where
 
 import qualified Juvix.Core.Application as App
+import Juvix.Core.IR.Types (NoExt)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -73,4 +74,6 @@ apply1 f x = apply f (x :| [])
 apply1Maybe :: CanApply a => a -> a -> Maybe a
 apply1Maybe f x = applyMaybe f (x :| [])
 
-type TypedPrim ty val = App.Return (PrimType ty) val
+type TypedPrim' ext ty val = App.Return' ext (PrimType ty) val
+
+type TypedPrim ty val = TypedPrim' NoExt ty val
