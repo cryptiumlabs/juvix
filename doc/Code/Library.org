@@ -583,6 +583,18 @@ Types to support partial application and polymorphic primitives.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
+******* RecGroups
+Calculate mutually-recursive groups of definitions.
+- _Relies on_
+  + [[RecGroups/Types]]
+  + [[Context/Types]]
+  + [[NameSpace]]
+  + [[Library]]
+******** Types <<RecGroups/Types>>
+- _Relies on_
+  + [[Context/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
