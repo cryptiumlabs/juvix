@@ -1,6 +1,5 @@
 # Juvix
-
-![Mascot](https://juvix.org/img/mascot.jpg)
+<img src="Juvix_logo.png" width="250" height="250">
 
 ![GitHub](https://img.shields.io/github/license/metastatedev/juvix)
 ![Build status](https://img.shields.io/circleci/build/github/metastatedev/juvix?token=abc123def456)
@@ -138,4 +137,3 @@ We would love to hear what you think of Juvix! Join our community:
 
 <!-- TODO add links to discord, reddit, etc. -->
 
-## License: [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0-standalone.html)

@@ -39,7 +39,7 @@ parse fin = do
       exitFailure
 
 typecheck ::
-  FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimVal)
+  FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
 typecheck fin Michelson = do
   ctx <- parse fin
   let res = Pipeline.contextToCore ctx Param.michelson

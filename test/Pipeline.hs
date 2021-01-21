@@ -67,15 +67,15 @@ exec (EnvE env) param globals = do
   (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
-type Globals = IR.Globals PrimTy PrimVal
+type Globals = IR.Globals PrimTy PrimValIR
 
 type RawHRElim = HR.Elim PrimTy RawPrimVal
 
-type HRElim = HR.Elim PrimTy PrimVal
+type HRElim = HR.Elim PrimTy PrimValHR
 
 type RawHRTerm = HR.Term PrimTy RawPrimVal
 
-type HRTerm = HR.Term PrimTy PrimVal
+type HRTerm = HR.Term PrimTy PrimValHR
 
 type AnnTuple = (RawHRTerm, Usage.T, RawHRTerm)
 

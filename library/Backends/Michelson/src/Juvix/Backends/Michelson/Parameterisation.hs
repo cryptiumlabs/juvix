@@ -17,6 +17,7 @@ import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Parameterisation as P
@@ -101,11 +102,11 @@ arityRaw (Constant _) = 0
 arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
 data ApplyError
-  = PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
+  = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
 
 instance Show ApplyError where
-  show (PipelineError perr) = Prelude.show perr
+  show (CompilationError perr) = Prelude.show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
@@ -122,34 +123,38 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
-instance Core.CanApply PrimVal where
-  type ApplyErrorExtra PrimVal = ApplyError
+instance Core.CanApply (PrimVal' ext) where
+  type ApplyErrorExtra (PrimVal' ext) = ApplyError
 
   arity Prim.Cont {numLeft} = numLeft
   arity Prim.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toTake1 args2' =
+      Just args2 <- traverse toArg args2' =
       do
         let argLen = lengthN args2'
-            argsAll = foldr NonEmpty.cons args2 args1
+            args = foldr NonEmpty.cons args2 args1
         case argLen `compare` ar of
           LT ->
             Right $
-              Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
-          EQ -> applyProper fun argsAll
+              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          EQ
+            | Just takes <- traverse (traverse App.argToTerm) args ->
+              applyProper fun takes |> first Core.Extra
+            | otherwise ->
+              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2'
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
-applyProper :: Take -> NonEmpty Take -> Either (Core.ApplyError PrimVal) Return
+applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
       pure $ Prim.Return {retType, retTerm = Constant x}
-    Left err -> Left $ Core.Extra $ PipelineError $ Core.PrimError err
+    Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
     args' = takeToTerm <$> toList args
@@ -161,12 +166,10 @@ takeToTerm :: Take -> RawTerm
 takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
-toPrimType ::
-  ErasedAnn.Type PrimTy ->
-  Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
+toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
 toPrimType ty = maybe err Right $ go ty
   where
-    err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
+    err = Left $ ReturnTypeNotPrimitive ty
     go ty = goPi ty <|> (pure <$> goPrim ty)
     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
     goPi _ = Nothing

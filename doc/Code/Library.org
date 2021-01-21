@@ -384,6 +384,7 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[Core/Parameterisation]]
@@ -406,6 +407,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Application]]
   + [[ErasedAnn/Types]]
+  + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
@@ -518,11 +520,13 @@ This module provides a default contract environment
 ***** Application
 Types to support partial application and polymorphic primitives.
 - _Relies on_
+  + [[IR/Types]]
   + [[Library]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Application]]
+  + [[IR/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -635,7 +639,9 @@ Types to support partial application and polymorphic primitives.
   + [[Usage]]
 ****** Types <<ErasedAnn/Types>>
 - _Relies on_
+  + [[Application]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -657,8 +663,8 @@ Types to support partial application and polymorphic primitives.
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[IR/Typechecker]]
   + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]

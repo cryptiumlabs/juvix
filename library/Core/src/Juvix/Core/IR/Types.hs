@@ -70,6 +70,10 @@ type FunClause = FunClause' NoExt
 
 -- (no RawFunClause since a clause contains no types anyway)
 
+type Abstract = Abstract' NoExt
+
+type RawAbstract = RawAbstract' NoExt
+
 type Global = Global' NoExt NoExt
 
 type RawGlobal = RawGlobal' NoExt
