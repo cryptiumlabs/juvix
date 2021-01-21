@@ -78,8 +78,9 @@ recGroups ::
   (Data term, Data ty, Data sumRep) =>
   Context.T term ty sumRep ->
   [Group term ty sumRep]
-recGroups ctx@(Context.T _ _ top) =
-  let (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
+recGroups ctx@(Context.T {topLevelMap}) =
+  let top = topLevelMap
+      (groups, deps) = run_ ctx $ recGroups' injectTopLevel $ toNameSpace top
       get n = maybe [] toList $ HashMap.lookup n deps
       edges = map (\(n, gs) -> (gs, n, get n)) $ HashMap.toList groups
       (g, fromV', _) = Graph.graphFromEdges edges
@@ -97,7 +98,7 @@ recGroups' ::
 recGroups' injection ns = do
   defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
     case def of
-      Context.Record ns _ -> do
+      Context.Record ns -> do
         contextName <- gets @"context" Context.currentName
         modify @"context"
           ( \ctx ->
@@ -109,17 +110,27 @@ recGroups' injection ns = do
                     >>= (`Context.inNameSpace` ctx)
                 )
           )
-        withPrefix name $ recGroups' identity ns
+        withPrefix name $ recGroups' identity (Context.recordContents ns)
         modify @"context"
           (\ctx -> fromMaybe ctx (Context.inNameSpace contextName ctx))
         pure []
       Context.CurrentNameSpace -> withPrefix name do
         curNS <- gets @"context" Context.currentNameSpace
-        recGroups' identity curNS
+        recGroups' identity (Context.recordContents curNS)
         pure []
       _ -> do
         qname <- qualify name
-        fvs <- fv def
+        fvs <-
+          case def of
+            Context.Unknown mt ->
+              fv mt
+            Context.Information xs ->
+              fv xs
+            Context.TypeDeclar sum ->
+              fv sum
+            Context.Def usage mty term prec ->
+              (\a b c d -> a <> b <> c <> d) <$> fv usage <*> fv mty <*> fv term <*> fv prec
+            _ -> pure []
         pure [(def, qname, fvs)]
   let (g, fromV, _) = Graph.graphFromEdges defs
   let accum1 xs v =
