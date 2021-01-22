@@ -14,7 +14,8 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.FrontendContextualise as FE
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
-import Juvix.Library
+import Juvix.Library hiding (show)
+import Text.Show (Show (..))
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 
@@ -22,7 +23,7 @@ data Error primTy primVal
   = -- features not yet implemented
 
     -- | constraints are not yet implemented
-    ConstraintsUnimplemented [FE.Expression]
+    ConstraintsUnimplemented NameSymbol.T [FE.Expression]
   | -- | refinements are not yet implemented
     RefinementsUnimplemented FE.TypeRefine
   | -- | universe polymorphism is not yet implemented
@@ -70,13 +71,11 @@ data Error primTy primVal
     -- 'Nothing' if no signature found
     WrongSigType NameSymbol.T (Maybe (CoreSigHR primTy primVal))
   | -- | e.g. single anonymous constructor that is not a record
-    IllFormedDatatype FE.Type
+    InvalidDatatype FE.Type
   | -- | e.g. ml-style constructor in a datatype with a GADT header
     InvalidConstructor NameSymbol.T FE.Product
   | -- | type is something other than a set of arrows ending in *
-    InvalidDatatypeType (HR.Term primTy primVal)
-  | -- | Not a special builtin (see 'Special')
-    NotSpecial FE.Expression
+    InvalidDatatypeType NameSymbol.T (HR.Term primTy primVal)
   | -- | Unknown %Builtin.X
     UnknownBuiltin NameSymbol.T
   | -- | Builtin with usage
@@ -84,10 +83,100 @@ data Error primTy primVal
   | -- | Builtin with type signature
     BuiltinWithTypeSig (FE.Final Ctx.Definition)
   | -- | Wrong number of arguments for a builtin
-    WrongNumberBuiltinArgs Int [FE.Expression]
+    WrongNumberBuiltinArgs Special Int [FE.Expression]
   | -- | Using omega as an expression
     UnexpectedOmega
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Generic)
+
+instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
+  show = \case
+    ConstraintsUnimplemented x cons ->
+      "Definition " <> show x <> " has constraints\n" <>
+      show cons <> "\n" <>
+      "but constraints are not yet implemented"
+    RefinementsUnimplemented r ->
+      "Refinement\n" <> show r <> "\n" <>
+      "found but refinements are not yet implemented"
+    UniversesUnimplemented u ->
+      "Universe\n" <> show u <> "\n" <>
+      "found but universes in expressions are not yet implemented"
+    ImplicitsUnimplemented arr ->
+      "Implicit function type\n" <> show arr <> "\n" <>
+      "found but implicits are not yet implemented"
+    ImplicitsUnimplementedA arg ->
+      "Implicit argument\n" <> show arg <> "\n" <>
+      "found but implicits are not yet implemented"
+    SigRequired x _def ->
+      "Signature required for definition " <> show x <> "\n" <>
+      "because type inference is not yet implemented"
+    NotAnElim exp ->
+      "Annotation required on expression\n" <> show exp <> "\n" <>
+      "because type inference is not yet implemented"
+    ExprUnimplemented exp ->
+      "Elaboration of expression\n" <> show exp <> "\n" <>
+      "is not yet implemented"
+    DefUnimplemented def ->
+      "Elaboration of definition\n" <> show def <> "\n" <>
+      "is not yet implemented"
+    PatternUnimplemented pat ->
+      "Elaboration of pattern\n" <> show pat <> "\n" <>
+      "is not yet implemented"
+    RecordUnimplemented rec ->
+      "Elaboration of record\n" <> show rec <> "\n" <>
+      "is not yet implemented"
+    ExpRecordUnimplemented rec ->
+      "Elaboration of record expression\n" <> show rec <> "\n" <>
+      "is not yet implemented"
+    MatchRecordUnimplemented rec ->
+      "Elaboration of record pattern\n" <> show rec <> "\n" <>
+      "is not yet implemented"
+    ListUnimplemented lst ->
+      "Elaboration of list literal\n" <> show lst <> "\n" <>
+      "is not yet implemented"
+    UnknownUnsupported Nothing ->
+      "Nameless unknown found in context"
+    UnknownUnsupported (Just x) ->
+      "Unknown " <> show x <> " found in context"
+    UnsupportedConstant k ->
+      "Constant " <> show k <> " unsupported by current backend"
+    UnknownPrimitive p ->
+      "Primitive " <> show p <> " unsupported by current backend"
+    NotAUsage exp ->
+      "Expected a usage, but got\n" <> show exp
+    NotAGUsage exp ->
+      "Expected a global usage, but got\n" <> show exp
+    NotAUniverse exp ->
+      "Expected a universe, but got\n" <> show exp
+    UsageNotGUsage π ->
+      "Usage " <> show π <> " cannot be applied to a global"
+    WrongSigType x Nothing ->
+      "Name " <> show x <> " not in scope\n" <>
+      "(probably a bug in the elaborator from frontend)"
+    WrongSigType x (Just sig) ->
+      "Name " <> show x <> " has the wrong signature form\n" <>
+      show sig <> "\n" <>
+      "(probably a bug in the elaborator from frontend)"
+    InvalidDatatype dt ->
+      "Invalid datatype\n" <> show dt
+    InvalidConstructor x con ->
+      "Invalid constructor " <> show x <> " with form\n" <> show con
+    InvalidDatatypeType x ty ->
+      "Type of datatype " <> show x <> " is\n" <>
+      show ty <> "\n" <>
+      "which is not a valid sort"
+    UnknownBuiltin x ->
+      "Unknown builtin " <> show x
+    BuiltinWithUsage def ->
+      "Builtin binding\n" <> show def <> "\nshould not have a usage"
+    BuiltinWithTypeSig def ->
+      "Builtin binding\n" <> show def <> "\nshould not have a type signature"
+    WrongNumberBuiltinArgs s n args ->
+      "Builtin " <> show s <> " should have " <> show n <> " args\n" <>
+      "but has been applied to\n" <> show args
+    UnexpectedOmega ->
+      "%Builtin.Omega cannot be used as an arbitrary term, only as\n" <>
+      "the first argument of %Builtin.Arrow or %Builtin.Pair"
+
 
 data CoreSig' ext primTy primVal
   = DataSig
@@ -366,40 +455,40 @@ transformApplication ::
 transformApplication q (FE.App f xs) =
   getSpecialE q f >>= flip go (toList xs)
   where
-    go s xs = case s of
-      Just (ArrowS Nothing) -> do
-        ~[π, a, b] <- nargs 3 xs
+    go Nothing xs = do
+      f' <- toElim f =<< transformTermHR q f
+      HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
+    go (Just s) xs = case s of
+      ArrowS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
         π <- transformUsage q π
         go (Just (ArrowS (Just π))) [a, b]
-      Just (ArrowS (Just π)) -> do
-        ~[xa, b] <- nargs 2 xs
+      ArrowS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
         (x, a) <- namedArg q xa
         HR.Pi π x a <$> transformTermHR q b
-      Just (PairS Nothing) -> do
-        ~[π, a, b] <- nargs 3 xs
+      PairS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
         π <- transformUsage q π
         go (Just (PairS (Just π))) [a, b]
-      Just (PairS (Just π)) -> do
-        ~[xa, b] <- nargs 2 xs
+      PairS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
         (x, a) <- namedArg q xa
         HR.Sig π x a <$> transformTermHR q b
-      Just ColonS -> do
-        ~[a, b] <- nargs 2 xs
+      ColonS -> do
+        ~[a, b] <- nargs s 2 xs
         a <- transformTermHR q a
         b <- transformTermHR q b
         -- FIXME metavars for usage & universe
         pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
-      Just TypeS -> do
-        ~[i] <- nargs 1 xs
+      TypeS -> do
+        ~[i] <- nargs s 1 xs
         HR.Star <$> transformUniverse i
-      Just OmegaS ->
+      OmegaS ->
         throwFF UnexpectedOmega
-      Nothing -> do
-        f' <- toElim f =<< transformTermHR q f
-        HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
-    nargs n xs
+    nargs s n xs
       | length xs == n = pure xs
-      | otherwise      = throwFF $ WrongNumberBuiltinArgs n xs
+      | otherwise      = throwFF $ WrongNumberBuiltinArgs s n xs
 
 namedArg ::
   ( Data primTy,
@@ -704,9 +793,9 @@ transformValSig ::
   Maybe Usage.T ->
   Maybe FE.Signature ->
   m (CoreSigHR primTy primVal)
-transformValSig q _ _ _ (Just (FE.Sig _ π ty cons))
+transformValSig q x _ _ (Just (FE.Sig _ π ty cons))
   | null cons = ValSig <$> transformGUsage q π <*> transformTermHR q ty
-  | otherwise = throwFF $ ConstraintsUnimplemented cons
+  | otherwise = throwFF $ ConstraintsUnimplemented x cons
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
@@ -829,10 +918,10 @@ transformType q name dat@(FE.Typ {typeForm}) = do
   let hd = hrToIR <$> hdHR
   case body of
     FE.Product (FE.Record r) -> throwFF $ RecordUnimplemented r
-    FE.Product _ -> throwFF $ IllFormedDatatype dat
+    FE.Product _ -> throwFF $ InvalidDatatype dat
     FE.Sum cons -> do
       let qual = NameSymbol.mod name
-      (args, level) <- splitDataType ty
+      (args, level) <- splitDataType name ty
       cons <- traverse (transformCon qual hd) $ toList cons
       let dat' =
             IR.Datatype
@@ -849,11 +938,12 @@ transformType q name dat@(FE.Typ {typeForm}) = do
 
 splitDataType ::
   HasThrowFF primTy primVal m =>
+  NameSymbol.T ->
   HR.Term primTy primVal ->
   m ([IR.RawDataArg primTy primVal], IR.Universe)
-splitDataType ty0 = go ty0
+splitDataType x ty0 = go ty0
   where
-    go (HR.Pi π x s t) = first (arg :) <$> splitDataType t
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
           IR.DataArg
@@ -863,7 +953,7 @@ splitDataType ty0 = go ty0
               argIsParam = False -- TODO parameter detection
             }
     go (HR.Star ℓ) = pure ([], ℓ)
-    go _ = throwFF $ InvalidDatatypeType ty0
+    go _ = throwFF $ InvalidDatatypeType x ty0
 
 transformCon ::
   ( Data primTy,
