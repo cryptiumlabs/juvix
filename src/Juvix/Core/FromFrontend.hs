@@ -398,11 +398,8 @@ transformApplication q (FE.App f xs) =
         f' <- toElim f =<< transformTermHR q f
         HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
     nargs n xs
-      | (xs, []) <- splitAt n (toList xs),
-        length xs == n =
-        pure xs
-      | otherwise =
-        throwFF $ WrongNumberBuiltinArgs n xs
+      | length xs == n = pure xs
+      | otherwise      = throwFF $ WrongNumberBuiltinArgs n xs
 
 namedArg ::
   ( Data primTy,
