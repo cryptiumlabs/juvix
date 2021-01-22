@@ -70,6 +70,8 @@ After cloning Juvix into a local directory, go into the local Juvix directory, a
 ```bash
 make
 ```
+Expect the installation to take some time (~ 40 minutes).
+For Windows users: the be abble to use the command *make* please visit [this link](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows).
 
 ### Building with optimisations
 
