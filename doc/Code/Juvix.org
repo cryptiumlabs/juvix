@@ -34,19 +34,6 @@
   + [[FrontendDesugar]]
   + [[Library]]
   + [[NameSymbol]]
-*** FromFrontend
-- _Relies on_
-  + [[Context]]
-  + [[HR]]
-  + [[IR]]
-  + [[Base]]
-  + [[Parameterisation]]
-  + [[Translate]]
-  + [[FrontendContextualise]]
-  + [[Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Usage]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
@@ -61,12 +48,37 @@
   + [[Types]]
   + [[Library]]
   + [[Usage]]
+*** FromFrontend
+- _Relies on_
+  + [[Context]]
+  + [[FromFrontend/Types]]
+  + [[HR]]
+  + [[IR]]
+  + [[Parameterisation]]
+  + [[Translate]]
+  + [[FrontendContextualise]]
+  + [[Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
+**** Types <<FromFrontend/Types>>
+- _Relies on_
+  + [[Context]]
+  + [[HR]]
+  + [[IR]]
+  + [[Base]]
+  + [[Parameterisation]]
+  + [[FrontendContextualise]]
+  + [[Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
 ** Encoding
 *** Encoding
 - This provides generic functions used by the various encodings in
   this directory
 - _Relies on_
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
 *** Mendler
@@ -78,7 +90,7 @@
   =Mendler= form
 - _Relies on_
   + [[Encoding]]
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
 *** Scott
@@ -87,10 +99,10 @@
 - Overall this encoding just works™
 - _Relies on_
   + [[Encoding]]
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
-*** Types
+*** Types <<Encoding/Types>>
 - _Relies on_
   + [[Library]]
   + [[HashMap]]

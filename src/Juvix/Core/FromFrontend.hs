@@ -1,15 +1,18 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.FromFrontend where
+module Juvix.Core.FromFrontend
+  ( module Juvix.Core.FromFrontend,
+    module Juvix.Core.FromFrontend.Types,
+  )
+where
 
-import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Ctx
+import Juvix.Core.FromFrontend.Types
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.FrontendContextualise as FE
@@ -17,252 +20,6 @@ import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
-
-data Error primTy primVal
-  = -- features not yet implemented
-
-    -- | constraints are not yet implemented
-    ConstraintsUnimplemented [FE.Expression]
-  | -- | refinements are not yet implemented
-    RefinementsUnimplemented FE.TypeRefine
-  | -- | universe polymorphism is not yet implemented
-    UniversesUnimplemented FE.UniverseExpression
-  | -- | implicit arguments are not yet implemented
-    ImplicitsUnimplemented FE.ArrowExp
-  | -- | implicit arguments are not yet implemented
-    ImplicitsUnimplementedA FE.Arg
-  | -- | type inference for definitions is not yet implemented
-    SigRequired NameSymbol.T (FE.Final Ctx.Definition)
-  | -- | head of application not an Elim
-    NotAnElim FE.Expression
-  | -- | pattern matching etc not yet implemented
-    ExprUnimplemented FE.Expression
-  | -- | local datatypes etc not yet implemented
-    DefUnimplemented (FE.Final Ctx.Definition)
-  | -- | patterns other than single vars in @let@ not yet implemented
-    PatternUnimplemented FE.MatchLogic
-  | -- | records not yet implemented
-    RecordUnimplemented FE.Record
-  | -- | records not yet implemented
-    ExpRecordUnimplemented FE.ExpRecord
-  | -- | records not yet implemented
-    MatchRecordUnimplemented (NonEmpty (FE.NameSet FE.MatchLogic))
-  | -- | lists not yet implemented
-    ListUnimplemented FE.List
-  | -- actual errors
-
-    -- | unknown found at declaration level
-    UnknownUnsupported (Maybe Symbol)
-  | -- | current backend doesn't support this type of constant
-    UnsupportedConstant FE.Constant
-  | -- | current backend doesn't have this primitive
-    UnknownPrimitive NameSymbol.T
-  | -- | expression is not a usage
-    NotAUsage FE.Expression
-  | -- | expression is not 0 or ω
-    NotAGUsage FE.Expression
-  | -- | expression is not a natural number
-    NotAUniverse FE.Expression
-  | -- | usage is not 0 or ω
-    UsageNotGUsage Usage.T
-  | -- | invalid signature for declaration (bug in this module)
-    -- @'Just' s@ if @s@ is a signature of the wrong shape,
-    -- 'Nothing' if no signature found
-    WrongSigType NameSymbol.T (Maybe (CoreSigHR primTy primVal))
-  | -- | e.g. single anonymous constructor that is not a record
-    IllFormedDatatype FE.Type
-  | -- | e.g. ml-style constructor in a datatype with a GADT header
-    InvalidConstructor NameSymbol.T FE.Product
-  | -- | type is something other than a set of arrows ending in *
-    InvalidDatatypeType (HR.Term primTy primVal)
-  | -- | Not a special builtin (see 'Special')
-    NotSpecial FE.Expression
-  | -- | Unknown %Builtin.X
-    UnknownBuiltin NameSymbol.T
-  | -- | Builtin with usage
-    BuiltinWithUsage (FE.Final Ctx.Definition)
-  | -- | Builtin with type signature
-    BuiltinWithTypeSig (FE.Final Ctx.Definition)
-  | -- | Wrong number of arguments for a builtin
-    WrongNumberBuiltinArgs Int [FE.Expression]
-  | -- | Using omega as an expression
-    UnexpectedOmega
-  deriving (Show, Eq, Generic)
-
-data CoreSig' ext primTy primVal
-  = DataSig
-      { dataType :: !(IR.Term' ext primTy primVal),
-        -- | if declared as @type T a b = ...@, then the @T a b@ part
-        -- (needed for ml-style constructors)
-        dataHead :: !(Maybe (IR.Term' ext primTy primVal))
-      }
-  | ValSig
-      { valUsage :: !IR.GlobalUsage,
-        valType :: !(IR.Term' ext primTy primVal)
-      }
-  | SpecialSig !Special
-  deriving (Generic)
-
--- | Bindings that can't be given types, but can be given new names by the user.
-data Special
-  = -- | pi type, possibly with usage already supplied
-    ArrowS (Maybe Usage.T)
-  | -- | sigma type
-    PairS (Maybe Usage.T)
-  | -- | type annotation
-    ColonS
-  | -- | type of types
-    TypeS
-  | -- | omega usage
-    OmegaS
-  deriving (Eq, Show, Data, Generic)
-
-deriving instance
-  ( Eq primTy,
-    Eq primVal,
-    IR.TermAll Eq ext primTy primVal,
-    IR.ElimAll Eq ext primTy primVal
-  ) =>
-  Eq (CoreSig' ext primTy primVal)
-
-deriving instance
-  ( Show primTy,
-    Show primVal,
-    IR.TermAll Show ext primTy primVal,
-    IR.ElimAll Show ext primTy primVal
-  ) =>
-  Show (CoreSig' ext primTy primVal)
-
-deriving instance
-  ( Data ext,
-    Data primTy,
-    Data primVal,
-    IR.TermAll Data ext primTy primVal,
-    IR.ElimAll Data ext primTy primVal
-  ) =>
-  Data (CoreSig' ext primTy primVal)
-
-type CoreSigIR = CoreSig' IR.NoExt
-
-type CoreSigHR = CoreSig' HR.T
-
-type CoreSigs' ext primTy primVal =
-  HashMap IR.GlobalName (CoreSig' ext primTy primVal)
-
-type CoreSigsIR primTy primVal = CoreSigs' IR.NoExt primTy primVal
-
-type CoreSigsHR primTy primVal = CoreSigs' HR.T primTy primVal
-
-data CoreDef primTy primVal
-  = CoreDef !(IR.RawGlobal primTy primVal)
-  | SpecialDef !NameSymbol.T !Special
-  deriving (Eq, Show, Data, Generic)
-
-data CoreDefs primTy primVal
-  = CoreDefs
-      { order :: [NonEmpty NameSymbol.T],
-        defs :: CoreMap primTy primVal
-      }
-  deriving (Eq, Show, Data, Generic)
-
-type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
-
-data FFState primTy primVal
-  = FFState
-      { frontend :: FE.FinalContext,
-        param :: P.Parameterisation primTy primVal,
-        coreSigs :: CoreSigsHR primTy primVal,
-        core :: CoreMap primTy primVal,
-        patVars :: HashMap IR.GlobalName IR.PatternVar,
-        nextPatVar :: IR.PatternVar
-      }
-  deriving (Generic)
-
-type EnvAlias primTy primVal =
-  ExceptT (Error primTy primVal) (State (FFState primTy primVal))
-
-newtype Env primTy primVal a
-  = Env {unEnv :: EnvAlias primTy primVal a}
-  deriving newtype (Functor, Applicative, Monad)
-  deriving
-    (HasThrow "fromFrontendError" (Error primTy primVal))
-    via MonadError (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "frontend" FE.FinalContext,
-      HasReader "frontend" FE.FinalContext
-    )
-    via ReaderField "frontend" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "param" (P.Parameterisation primTy primVal),
-      HasReader "param" (P.Parameterisation primTy primVal)
-    )
-    via ReaderField "param" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "coreSigs" (CoreSigsHR primTy primVal),
-      HasSink "coreSigs" (CoreSigsHR primTy primVal),
-      HasState "coreSigs" (CoreSigsHR primTy primVal)
-    )
-    via StateField "coreSigs" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "core" (CoreMap primTy primVal),
-      HasSink "core" (CoreMap primTy primVal),
-      HasState "core" (CoreMap primTy primVal)
-    )
-    via StateField "core" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "patVars" (HashMap IR.GlobalName IR.PatternVar),
-      HasSink "patVars" (HashMap IR.GlobalName IR.PatternVar),
-      HasState "patVars" (HashMap IR.GlobalName IR.PatternVar)
-    )
-    via StateField "patVars" (EnvAlias primTy primVal)
-  deriving
-    ( HasSource "nextPatVar" IR.PatternVar,
-      HasSink "nextPatVar" IR.PatternVar,
-      HasState "nextPatVar" IR.PatternVar
-    )
-    via StateField "nextPatVar" (EnvAlias primTy primVal)
-
-type HasThrowFF primTy primVal =
-  HasThrow "fromFrontendError" (Error primTy primVal)
-
-type HasFrontend =
-  HasReader "frontend" FE.FinalContext
-
-type HasParam primTy primVal =
-  HasReader "param" (P.Parameterisation primTy primVal)
-
-type HasCoreSigs primTy primVal =
-  HasState "coreSigs" (CoreSigsHR primTy primVal)
-
-type HasCore primTy primVal =
-  HasState "core" (CoreMap primTy primVal)
-
-type HasPatVars =
-  HasState "patVars" (HashMap IR.GlobalName IR.PatternVar)
-
-type HasNextPatVar =
-  HasState "nextPatVar" IR.PatternVar
-
-execEnv ::
-  FE.FinalContext ->
-  P.Parameterisation primTy primVal ->
-  Env primTy primVal a ->
-  Either (Error primTy primVal) a
-execEnv ctx param (Env env) =
-  fst $ runIdentity $ runStateT (runExceptT env) initState
-  where
-    initState =
-      FFState
-        { frontend = ctx,
-          param,
-          coreSigs = mempty,
-          core = mempty,
-          patVars = mempty,
-          nextPatVar = 0
-        }
-
-throwFF :: HasThrowFF primTy primVal m => Error primTy primVal -> m a
-throwFF = throw @"fromFrontendError"
 
 paramConstant' ::
   P.Parameterisation primTy primVal ->
@@ -366,43 +123,40 @@ transformApplication ::
 transformApplication q (FE.App f xs) =
   getSpecialE q f >>= flip go (toList xs)
   where
-    go s xs = case s of
-      Just (ArrowS Nothing) -> do
-        ~[π, a, b] <- nargs 3 xs
+    go Nothing xs = do
+      f' <- toElim f =<< transformTermHR q f
+      HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
+    go (Just s) xs = case s of
+      ArrowS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
         π <- transformUsage q π
         go (Just (ArrowS (Just π))) [a, b]
-      Just (ArrowS (Just π)) -> do
-        ~[xa, b] <- nargs 2 xs
+      ArrowS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
         (x, a) <- namedArg q xa
         HR.Pi π x a <$> transformTermHR q b
-      Just (PairS Nothing) -> do
-        ~[π, a, b] <- nargs 3 xs
+      PairS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
         π <- transformUsage q π
         go (Just (PairS (Just π))) [a, b]
-      Just (PairS (Just π)) -> do
-        ~[xa, b] <- nargs 2 xs
+      PairS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
         (x, a) <- namedArg q xa
         HR.Sig π x a <$> transformTermHR q b
-      Just ColonS -> do
-        ~[a, b] <- nargs 2 xs
+      ColonS -> do
+        ~[a, b] <- nargs s 2 xs
         a <- transformTermHR q a
         b <- transformTermHR q b
         -- FIXME metavars for usage & universe
         pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
-      Just TypeS -> do
-        ~[i] <- nargs 1 xs
+      TypeS -> do
+        ~[i] <- nargs s 1 xs
         HR.Star <$> transformUniverse i
-      Just OmegaS ->
+      OmegaS ->
         throwFF UnexpectedOmega
-      Nothing -> do
-        f' <- toElim f =<< transformTermHR q f
-        HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
-    nargs n xs
-      | (xs, []) <- splitAt n (toList xs),
-        length xs == n =
-        pure xs
-      | otherwise =
-        throwFF $ WrongNumberBuiltinArgs n xs
+    nargs s n xs
+      | length xs == n = pure xs
+      | otherwise = throwFF $ WrongNumberBuiltinArgs s n xs
 
 namedArg ::
   ( Data primTy,
@@ -707,9 +461,9 @@ transformValSig ::
   Maybe Usage.T ->
   Maybe FE.Signature ->
   m (CoreSigHR primTy primVal)
-transformValSig q _ _ _ (Just (FE.Sig _ π ty cons))
+transformValSig q x _ _ (Just (FE.Sig _ π ty cons))
   | null cons = ValSig <$> transformGUsage q π <*> transformTermHR q ty
-  | otherwise = throwFF $ ConstraintsUnimplemented cons
+  | otherwise = throwFF $ ConstraintsUnimplemented x cons
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
@@ -832,10 +586,10 @@ transformType q name dat@(FE.Typ {typeForm}) = do
   let hd = hrToIR <$> hdHR
   case body of
     FE.Product (FE.Record r) -> throwFF $ RecordUnimplemented r
-    FE.Product _ -> throwFF $ IllFormedDatatype dat
+    FE.Product _ -> throwFF $ InvalidDatatype dat
     FE.Sum cons -> do
       let qual = NameSymbol.mod name
-      (args, level) <- splitDataType ty
+      (args, level) <- splitDataType name ty
       cons <- traverse (transformCon qual hd) $ toList cons
       let dat' =
             IR.Datatype
@@ -852,11 +606,12 @@ transformType q name dat@(FE.Typ {typeForm}) = do
 
 splitDataType ::
   HasThrowFF primTy primVal m =>
+  NameSymbol.T ->
   HR.Term primTy primVal ->
   m ([IR.RawDataArg primTy primVal], IR.Universe)
-splitDataType ty0 = go ty0
+splitDataType x ty0 = go ty0
   where
-    go (HR.Pi π x s t) = first (arg :) <$> splitDataType t
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
           IR.DataArg
@@ -866,7 +621,7 @@ splitDataType ty0 = go ty0
               argIsParam = False -- TODO parameter detection
             }
     go (HR.Star ℓ) = pure ([], ℓ)
-    go _ = throwFF $ InvalidDatatypeType ty0
+    go _ = throwFF $ InvalidDatatypeType x ty0
 
 transformCon ::
   ( Data primTy,
