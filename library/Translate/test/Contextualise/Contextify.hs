@@ -2,14 +2,12 @@
 
 module Contextualise.Contextify where
 
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as AST
 import qualified Juvix.FrontendContextualise as Contextualize
 import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
@@ -30,7 +28,7 @@ top =
 infixPlaceTest :: T.TestTree
 infixPlaceTest =
   ctx Context.!? "+"
-    |> fmap (Context.precedence . Context.extractValue)
+    |> fmap ((\(Context.Def d) -> Context.defPrecedence d) . Context.extractValue)
     |> (T.@=? Just (Context.Pred Context.Left 5))
     |> T.testCase
       "infix properly adds precedence"

@@ -1790,7 +1790,6 @@ Calculate mutually-recursive groups of definitions.
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
-  + [[NameSymbol]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
