@@ -36,12 +36,18 @@ f = contextify
 -- well...
 updateTopLevel :: Repr.TopLevel -> Type.Context -> Type.Pass
 -- TODO ∷ update this case to register the constructors!
-updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
-  Type.P
-    { ctx = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx,
-      opens = [],
-      modsDefined = []
-    }
+updateTopLevel (Repr.Type t@(Repr.Typ _ name _ dat)) ctx =
+  let constructors = collectConstructors dat
+      addSum con =
+        Context.Sum Nothing name
+          |> Context.SumCon
+          |> Context.add (NameSpace.Pub con)
+      newCtx = foldr addSum ctx constructors
+   in Type.P
+        { ctx = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
+          opens = [],
+          modsDefined = []
+        }
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
   let precendent =
         case Context.extractValue <$> Context.lookup (pure name) ctx of
@@ -157,6 +163,17 @@ decideRecordOrDef recordName currModName xs pres ty
     len = length xs
     Repr.Like args body = NonEmpty.head xs
     def = (Context.Def (Context.D Nothing ty xs pres), [])
+
+collectConstructors :: Repr.Data -> [Symbol]
+collectConstructors dat =
+  let adt' =
+        case dat of
+          Repr.Arrowed _ adt -> adt
+          Repr.NonArrowed adt -> adt
+      constructors (Repr.Sum sum) =
+        NonEmpty.toList (Repr.sumConstructor <$> sum)
+      constructors Repr.Product {} = empty
+   in constructors adt'
 
 ----------------------------------------
 -- Helpers
