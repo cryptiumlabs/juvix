@@ -28,6 +28,7 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
   looked <- Env.lookup fullQualified
   case Context.extractValue <$> looked of
     Just Context.Def {} -> err
+    Just Context.SumCon {} -> err
     Just Context.TypeDeclar {} -> err
     Just Context.Unknown {} -> err
     Just Context.CurrentNameSpace {} -> err
@@ -175,12 +176,14 @@ transformDef ::
   Env.Old Context.Definition ->
   NameSpace.From Symbol ->
   m (Env.New Context.Definition)
-transformDef (Context.Def (Context.D usage mTy term prec)) _ =
-  Context.D usage
-    <$> traverse transformSignature mTy
-    <*> traverse transformFunctionLike term
-    <*> pure prec
-    >>| Context.Def
+transformDef (Context.Def def) _ =
+  transformDefinition def >>| Context.Def
+--
+transformDef (Context.SumCon Context.Sum {sumTDef, sumTName}) _ =
+  Context.Sum
+    <$> traverse transformDefinition sumTDef
+    <*> pure sumTName
+    >>| Context.SumCon
 --
 transformDef (Context.TypeDeclar repr) _ =
   Context.TypeDeclar <$> transformType repr
@@ -213,6 +216,14 @@ transformDef (Context.Record _contents mTy) name' = do
       pure (Context.Record record sig)
     Nothing -> error "Does not happen: record lookup is nothing"
     Just __ -> error "Does not happen: record lookup is Just not a record!"
+
+transformDefinition ::
+  Env.Expression tag m => Env.Old' Context.Def -> m (Env.New' Context.Def)
+transformDefinition (Context.D usage mTy term prec) =
+  Context.D usage
+    <$> traverse transformSignature mTy
+    <*> traverse transformFunctionLike term
+    <*> pure prec
 
 -- we work on the topMap
 transformC :: Env.WorkingMaps m => m ()

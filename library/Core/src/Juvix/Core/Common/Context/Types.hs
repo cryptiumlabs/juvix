@@ -53,6 +53,7 @@ data Definition term ty sumRep
   | -- Signifies that this path is the current module, and that
     -- we should search the currentNameSpace from here
     CurrentNameSpace
+  | SumCon (SumT term ty)
   deriving (Show, Generic, Eq, Data)
 
 data Def term ty
@@ -61,6 +62,13 @@ data Def term ty
         defMTy :: Maybe ty,
         defTerm :: term,
         defPrecedence :: Precedence
+      }
+  deriving (Show, Generic, Eq, Data)
+
+data SumT term ty
+  = Sum
+      { sumTDef :: Maybe (Def term ty),
+        sumTName :: Symbol
       }
   deriving (Show, Generic, Eq, Data)
 

@@ -35,6 +35,7 @@ f = contextify
 -- we can't just have a list, we need to have a map with implicit opens as
 -- well...
 updateTopLevel :: Repr.TopLevel -> Type.Context -> Type.Pass
+-- TODO ∷ update this case to register the constructors!
 updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
   Type.P
     { ctx = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) ctx,

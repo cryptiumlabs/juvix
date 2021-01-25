@@ -398,6 +398,7 @@ transformSig x def = trySpecial <||> tryNormal
     tryNormal = transformNormalSig q x def
     x <||> y = x >>= maybe y (pure . Just)
 
+-- TODO ∷ update with SumCon
 transformNormalSig ::
   ( Data primTy,
     Data primVal,
@@ -485,6 +486,8 @@ transformDef x def = do
     _ -> map CoreDef <$> transformNormalDef q x def
       where
         q = NameSymbol.mod x
+
+-- TODO ∷ update with SumCon
 
 transformNormalDef ::
   ( Data primTy,
