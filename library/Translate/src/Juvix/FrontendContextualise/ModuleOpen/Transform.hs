@@ -153,7 +153,7 @@ decideRecordOrDef xs ty
   where
     len = length xs
     New.Like args body = NonEmpty.head xs
-    def = Context.Def Nothing ty xs Context.default'
+    def = Context.Def $ Context.D Nothing ty xs Context.default'
 
 emptyArgs :: [a] -> Bool
 emptyArgs [] = True
@@ -175,11 +175,12 @@ transformDef ::
   Env.Old Context.Definition ->
   NameSpace.From Symbol ->
   m (Env.New Context.Definition)
-transformDef (Context.Def usage mTy term prec) _ =
-  Context.Def usage
+transformDef (Context.Def (Context.D usage mTy term prec)) _ =
+  Context.D usage
     <$> traverse transformSignature mTy
     <*> traverse transformFunctionLike term
     <*> pure prec
+    >>| Context.Def
 --
 transformDef (Context.TypeDeclar repr) _ =
   Context.TypeDeclar <$> transformType repr

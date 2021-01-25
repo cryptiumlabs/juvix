@@ -190,8 +190,8 @@ chooseProperScope Nothing Nothing =
 
 extractInformation ::
   Context.Definition term ty sumRep -> Maybe [Context.Information]
-extractInformation (Context.Def {precedence}) =
-  Just [Context.Prec precedence]
+extractInformation (Context.Def Context.D {defPrecedence}) =
+  Just [Context.Prec defPrecedence]
 extractInformation (Context.Information is) =
   Just is
 extractInformation _ = Nothing

@@ -373,7 +373,7 @@ transformSpecial ::
   NameSymbol.Mod ->
   FE.Final Ctx.Definition ->
   m (Maybe Special)
-transformSpecial q def@(Ctx.Def π ty (FE.Like [] rhs :| []) _) = do
+transformSpecial q def@(Ctx.Def (Ctx.D π ty (FE.Like [] rhs :| []) _)) = do
   rhs <- transformSpecialRhs q rhs
   when (isJust rhs) do
     unless (isNothing π) $ throwFF $ BuiltinWithUsage def
@@ -409,7 +409,7 @@ transformNormalSig ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   m (Maybe (CoreSigHR primTy primVal))
-transformNormalSig q x def@(Ctx.Def π msig _ _) =
+transformNormalSig q x def@(Ctx.Def (Ctx.D π msig _ _)) =
   Just <$> transformValSig q x def π msig
 transformNormalSig _ _ (Ctx.Record _ _) = pure Nothing -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig q x typ
@@ -499,7 +499,7 @@ transformNormalDef ::
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
   m [IR.RawGlobal primTy primVal]
-transformNormalDef q x (Ctx.Def _ _ def _) = do
+transformNormalDef q x (Ctx.Def (Ctx.D _ _ def _)) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause q) def
   let f =

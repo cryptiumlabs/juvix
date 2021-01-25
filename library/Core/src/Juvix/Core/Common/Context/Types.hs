@@ -35,12 +35,7 @@ data From b
 -- this will just emit the proper names we need, not any terms to translate
 -- once we hit core, we can then populate it with the actual forms
 data Definition term ty sumRep
-  = Def
-      { definitionUsage :: Maybe Usage.T,
-        definitionMTy :: Maybe ty,
-        definitionTerm :: term,
-        precedence :: Precedence
-      }
+  = Def (Def term ty)
   | Record
       { definitionContents :: NameSpace.T (Definition term ty sumRep),
         -- Maybe as I'm not sure what to put here for now
@@ -60,12 +55,23 @@ data Definition term ty sumRep
     CurrentNameSpace
   deriving (Show, Generic, Eq, Data)
 
+data Def term ty
+  = D
+      { defUsage :: Maybe Usage.T,
+        defMTy :: Maybe ty,
+        defTerm :: term,
+        defPrecedence :: Precedence
+      }
+  deriving (Show, Generic, Eq, Data)
+
 data Information
   = Prec Precedence
   deriving (Show, Generic, Eq, Data)
 
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
+
+makeLensesWith camelCaseFields ''Def
 
 data PathError
   = VariableShared NameSymbol.T

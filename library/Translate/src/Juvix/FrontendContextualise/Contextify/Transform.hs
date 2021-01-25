@@ -44,8 +44,8 @@ updateTopLevel (Repr.Type t@(Repr.Typ _ name _ _)) ctx =
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx =
   let precendent =
         case Context.extractValue <$> Context.lookup (pure name) ctx of
-          Just (Context.Def {precedence}) ->
-            precedence
+          Just (Context.Def Context.D {defPrecedence}) ->
+            defPrecedence
           Just (Context.Information info) ->
             case Context.precedenceOf info of
               Just pr -> pr
@@ -68,9 +68,13 @@ updateTopLevel (Repr.Declaration (Repr.Infixivity dec)) ctx =
           Repr.NonAssoc n assoc ->
             (n, Context.Pred Context.NonAssoc (fromIntegral assoc))
    in case Context.extractValue <$> Context.lookup (pure name) ctx of
-        Just def@(Context.Def {}) ->
+        Just (Context.Def d) ->
           Type.P
-            { ctx = (Context.add (NameSpace.Pub name) def {Context.precedence = prec}) ctx,
+            { ctx =
+                ctx
+                  |> Context.add
+                    (NameSpace.Pub name)
+                    (Context.Def (d {Context.defPrecedence = prec})),
               opens = [],
               modsDefined = []
             }
@@ -151,7 +155,7 @@ decideRecordOrDef recordName currModName xs pres ty
   where
     len = length xs
     Repr.Like args body = NonEmpty.head xs
-    def = (Context.Def Nothing ty xs pres, [])
+    def = (Context.Def (Context.D Nothing ty xs pres), [])
 
 ----------------------------------------
 -- Helpers
