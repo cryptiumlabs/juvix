@@ -1,0 +1,6 @@
+mod Rec-Groups where
+
+open Rec-Groups-Helper
+
+sig main : foo
+let main = foo

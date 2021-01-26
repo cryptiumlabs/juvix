@@ -119,7 +119,9 @@ recGroups' injection ns = do
       _ -> do
         qname <- qualify name
         fvs <- fv def
-        pure [(def, qname, fvs)]
+        -- we remove the TopLevel. from fvs as it screws with the
+        -- algorithm resolution
+        pure [(def, qname, fmap Context.removeTopName fvs)]
   let (g, fromV, _) = Graph.graphFromEdges defs
   let accum1 xs v =
         let (def, name, ys) = fromV v
