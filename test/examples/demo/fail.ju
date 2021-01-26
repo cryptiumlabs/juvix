@@ -1,4 +1,4 @@
-mod If where
+mod Fail where
 
 open Prelude
 
@@ -9,5 +9,5 @@ let main = \pair ->
   cons-pair
     nil
     (if2 (compare 0 (car pair))
-         (cdr pair)
-         (add (car pair) (cdr pair)))
+         (fail-with 0)
+         (cdr pair))
