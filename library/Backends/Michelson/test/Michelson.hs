@@ -80,7 +80,7 @@ top =
       pairNotConstantTest,
       underExactConstTest,
       underExactNonConstTest,
-      identityFn,
+      -- identityFn,
       -- identityApp,
       -- identityApp2,
       --identityExpr,
