@@ -214,12 +214,12 @@ let lsl = %Michelson.lsl
 -- 
 sig lsr : nat -> nat -> nat
 let lsr = %Michelson.lsl
--- 
--- sig fail-with : (x : ty) -> x -> x
--- let fail-with = %Michelson.fail-with
--- 
--- sig self : (x : ty) -> x
--- let self = %Michelson.self
--- 
+
+sig fail-with : (x : ty) -> (y : ty) -> x -> y
+let fail-with = %Michelson.fail-with
+
+sig self : (x : ty) -> x
+let self = %Michelson.self
+
 sig unit : unit-t
 let unit = %Michelson.unit
