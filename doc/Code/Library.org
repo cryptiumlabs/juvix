@@ -398,10 +398,12 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
+  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+  + [[Usage]]
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_

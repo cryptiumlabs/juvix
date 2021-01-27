@@ -99,7 +99,10 @@ hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " 
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
-arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
+arityRaw prim =
+  Run.instructionOf prim (Untyped.Type Untyped.TUnit "")
+    |> Instructions.toNewPrimErr
+    |> arityRaw
 
 data ApplyError
   = CompilationError CompilationError
@@ -314,6 +317,7 @@ builtinValues =
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
     ("Michelson.cons-pair", Pair'),
+    ("Michelson.address-to-contract", Contract),
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] [])),
     ("Michelson.pair", Inst (M.PAIR "" "" "" ""))

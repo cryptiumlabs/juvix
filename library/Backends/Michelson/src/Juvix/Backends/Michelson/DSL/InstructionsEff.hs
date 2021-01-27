@@ -247,10 +247,10 @@ primToArgs prim ty =
 type RunInstr =
   (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
 
-primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> (Env.Fun, b)
-primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
+primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> Untyped.T -> (Env.Fun, b)
+primToFargs (Types.Constant (V.ValueLambda _lam)) _ty _ =
   (undefined, 1)
-primToFargs (Types.Inst inst) ty =
+primToFargs (Types.Inst inst) ty _ =
   (Env.Fun (f (newTy numArgs)), fromIntegral numArgs)
   where
     newTy i = eatType i ty
@@ -282,16 +282,16 @@ primToFargs (Types.Inst inst) ty =
         Instr.IF {} -> evalIf
         Instr.CONS {} -> cons
 -- _ -> error "unspported function in primToFargs"
-primToFargs (Types.Constant _) _ =
+primToFargs (Types.Constant _) _ _ =
   error "Tried to apply a Michelson Constant"
-primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
+primToFargs x ty primTy = primToFargs (newPrimToInstrErr x primTy) ty primTy
 
-newPrimToInstrErr :: Types.RawPrimVal -> Types.RawPrimVal
-newPrimToInstrErr x =
-  Instructions.toNewPrimErr (instructionOf x)
+newPrimToInstrErr :: Types.RawPrimVal -> Untyped.T -> Types.RawPrimVal
+newPrimToInstrErr x ty =
+  Instructions.toNewPrimErr (instructionOf x ty)
 
-instructionOf :: Types.RawPrimVal -> Instr.ExpandedOp
-instructionOf x =
+instructionOf :: Types.RawPrimVal -> Untyped.T -> Instr.ExpandedOp
+instructionOf x ty =
   case x of
     Types.AddN -> Instructions.add
     Types.AddI -> Instructions.add
@@ -338,6 +338,7 @@ instructionOf x =
     Types.GetBMap -> Instructions.get
     Types.Cons -> Instructions.cons
     Types.Pair' -> Instructions.pair
+    Types.Contract -> Instructions.contract ty
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
@@ -347,8 +348,9 @@ appM form@(Types.Ann _u ty t) args =
    in case t of
         -- We could remove this special logic, however it would
         -- result in inefficient Michelson!
-        Ann.Prim p ->
-          let (f, lPrim) = primToFargs p ty
+        Ann.Prim p -> do
+          primTy <- typeToPrimType ty
+          let (f, lPrim) = primToFargs p ty primTy
            in case length args `compare` lPrim of
                 EQ -> Env.unFun f args
                 LT -> app
@@ -839,7 +841,8 @@ constructPrim prim ty
     pure Env.Nop
   -- The final result of this is not promoted
   | otherwise = do
-    let (f, lPrim) = primToFargs prim ty
+    primTy <- typeToPrimType ty
+    let (f, lPrim) = primToFargs prim ty primTy
     names <- reserveNames lPrim
     -- TODO ∷ set the usage of the arguments to 1
     let c =

@@ -2,18 +2,18 @@
 -- - Entrypoints into compilation from core terms to Michelson terms & contracts.
 module Juvix.Backends.Michelson.Compilation where
 
-import qualified Juvix.Library.Usage as Usage
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text.Lazy as L
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
 import qualified Juvix.Backends.Michelson.DSL.Environment as DSL
-import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
+import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import qualified Juvix.Core.ErasedAnn.Types as Ann
 import Juvix.Library hiding (Type)
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
