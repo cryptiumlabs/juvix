@@ -32,7 +32,6 @@ parse fin = do
   core <- Pipeline.toCore ["stdlib/Prelude.ju", "stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju", fin]
   case core of
     Right ctx -> do
-      print (fmap (\(x :| []) -> Traverse.name x) $ Traverse.recGroups ctx)
       pure ctx
     Left err -> do
       T.putStrLn (show err)
@@ -45,11 +44,9 @@ typecheck fin Michelson = do
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
     Right (FF.CoreDefs order globals) -> do
-      print order
       let globalDefs = HM.mapMaybe (\case (CoreDef g) -> pure g; _ -> Nothing) globals
       case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function (_ :| ["main"]) _ _ _)) -> True; _ -> False) globalDefs of
         [] -> do
-          print globalDefs
           T.putStrLn "No main function found"
           exitFailure
         func@(IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
