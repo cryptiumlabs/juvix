@@ -384,6 +384,7 @@ This module provides a default contract environment
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[Core/Parameterisation]]
@@ -406,6 +407,7 @@ This module provides a default contract environment
 - _Relies on_
   + [[Application]]
   + [[ErasedAnn/Types]]
+  + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
@@ -518,11 +520,13 @@ This module provides a default contract environment
 ***** Application
 Types to support partial application and polymorphic primitives.
 - _Relies on_
+  + [[IR/Types]]
   + [[Library]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Application]]
+  + [[IR/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -558,7 +562,6 @@ Types to support partial application and polymorphic primitives.
   term in slightly different ways
 - _Relies on_
   + [[Precedence]]
-  + [[RecGroups]]
   + [[Context/Types]]
   + [[NameSpace]]
   + [[Library]]
@@ -576,18 +579,6 @@ Types to support partial application and polymorphic primitives.
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
-******* RecGroups
-Calculate mutually-recursive groups of definitions.
-- _Relies on_
-  + [[RecGroups/Types]]
-  + [[Context/Types]]
-  + [[NameSpace]]
-  + [[Library]]
-******** Types <<RecGroups/Types>>
-- _Relies on_
-  + [[Context/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
 ***** Erased
 - _Relies on_
   + [[Erased/Evaluator]]
@@ -648,7 +639,9 @@ Calculate mutually-recursive groups of definitions.
   + [[Usage]]
 ****** Types <<ErasedAnn/Types>>
 - _Relies on_
+  + [[Application]]
   + [[IR/Types]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -671,8 +664,8 @@ Calculate mutually-recursive groups of definitions.
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[IR/Typechecker]]
   + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -753,6 +746,8 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[TransformExt]]
+  + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -761,6 +756,14 @@ the substitution functions (substTerm and substElim).
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+******* OnlyExts
+A transformation that discards all annotations on term/elim nodes, but
+keeps the extensions.
+- _Relies on_
+  + [[TransformExt]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
@@ -907,19 +910,17 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
-***** Lexer
-- _Relies on_
-  + [[Library]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
 - Parsers with SN at the end, eats the spaces and new lines at the
   end of the parse
 - _Relies on_
-  + [[Lexer]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Lexer]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1255,8 +1256,13 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
+  + [[Lexer]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Symbol
+****** Lexer
 - _Relies on_
   + [[Library]]
 ** test
@@ -1271,6 +1277,25 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** Core
+***** Common
+****** Context
+******* Traverse
+Calculate mutually-recursive groups of definitions.
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Traverse/Types]]
+  + [[NameSpace]]
+  + [[FreeVars]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+******** Types <<Traverse/Types>>
+- _Relies on_
+  + [[Context/Types]]
+  + [[Context/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=

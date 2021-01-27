@@ -8,6 +8,7 @@ where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -27,6 +28,7 @@ data PrimTy
   | Option
   | List
   | Set
+  | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
 data RawPrimVal
@@ -79,6 +81,8 @@ data RawPrimVal
     Right'
   | Left'
   | Nil
+  | Cons
+  | None
   | EmptyS
   | EmptyM
   | EmptyBM
@@ -88,36 +92,55 @@ data RawPrimVal
   | Loop
   | Iter
   | MapOp
+  | Pair'
   deriving (Show, Eq, Generic, Data)
 
 type NewPrim = RawPrimVal
 
 {-# DEPRECATED NewPrim "use RawPrimVal" #-}
 
-type Return = App.Return (P.PrimType PrimTy) RawPrimVal
+type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
+
+type ReturnIR = Return' IR.NoExt
+
+type ReturnHR = Return' CoreErased.T
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
-type PrimVal = Return
+type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
 
-toTake1 :: PrimVal -> Maybe Take
-toTake1 (App.Cont {}) = Nothing
-toTake1 (App.Return {retType, retTerm}) = Just fun
+type ArgIR = Arg' IR.NoExt
+
+type ArgHR = Arg' CoreErased.T
+
+type PrimVal' ext = Return' ext
+
+type PrimValIR = PrimVal' IR.NoExt
+
+type PrimValHR = PrimVal' CoreErased.T
+
+toArg :: PrimVal' ext -> Maybe (Arg' ext)
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just $
+    App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = App.TermArg retTerm
+      }
+
+toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], 0)
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 
-toTakes :: PrimVal -> (Take, [Take], Natural)
-toTakes (App.Cont {fun, args, numLeft}) = (fun, args, numLeft)
-toTakes (App.Return {retType, retTerm}) = (fun, [], 0)
-  where
-    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
-
-fromReturn :: Return -> PrimVal
+fromReturn :: Return' ext -> PrimVal' ext
 fromReturn = identity
 
 type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
 
-type Term = CoreErased.AnnTerm PrimTy PrimVal
+type Term = CoreErased.AnnTerm PrimTy PrimValHR
 
 type NewTerm = RawTerm
 

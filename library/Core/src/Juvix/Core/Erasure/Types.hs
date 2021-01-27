@@ -19,65 +19,86 @@ import Juvix.Core.Erased.Types as Type
   )
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
-import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
 
-data Env primTy primVal = Env {nextName :: Int, nameStack :: [NameSymbol.T]}
+type MapPrim p1 p2 ty val =
+  [NameSymbol.T] -> p1 -> Either (Error ty val) p2
+
+data Env primTy1 primTy2 primVal1 primVal2
+  = Env
+      { nextName :: Int,
+        nameStack :: [NameSymbol.T],
+        mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
+        mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
+      }
   deriving (Generic)
 
-type EnvEraAlias primTy primVal =
-  ExceptT (Error primTy primVal) (State (Env primTy primVal))
+type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
+  ExceptT (Error primTy1 primVal1)
+    (State (Env primTy1 primTy2 primVal1 primVal2))
 
-newtype EnvT primTy primVal a
-  = EnvEra (EnvEraAlias primTy primVal a)
+newtype EnvT primTy1 primTy2 primVal1 primVal2 a
+  = EnvEra (EnvEraAlias primTy1 primTy2 primVal1 primVal2 a)
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "nextName" Int,
       HasSink "nextName" Int,
       HasSource "nextName" Int
     )
-    via StateField "nextName" (EnvEraAlias primTy primVal)
+    via StateField "nextName" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
     ( HasState "nameStack" [NameSymbol.T],
       HasSink "nameStack" [NameSymbol.T],
       HasSource "nameStack" [NameSymbol.T]
     )
-    via StateField "nameStack" (EnvEraAlias primTy primVal)
+    via StateField "nameStack" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
   deriving
-    (HasThrow "erasureError" (Error primTy primVal))
-    via MonadError (EnvEraAlias primTy primVal)
+    ( HasSource "mapPrimTy" (MapPrim primTy1 primTy2 primTy1 primVal1),
+      HasReader "mapPrimTy" (MapPrim primTy1 primTy2 primTy1 primVal1)
+    )
+    via ReaderField "mapPrimTy" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
+  deriving
+    ( HasSource "mapPrimVal" (MapPrim primVal1 primVal2 primTy1 primVal1),
+      HasReader "mapPrimVal" (MapPrim primVal1 primVal2 primTy1 primVal1)
+    )
+    via ReaderField "mapPrimVal" (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
+  deriving
+    (HasThrow "erasureError" (Error primTy1 primVal1))
+    via MonadError (EnvEraAlias primTy1 primTy2 primVal1 primVal2)
 
 exec ::
-  EnvT primTy primVal a ->
-  Either (Error primTy primVal) a
-exec (EnvEra m) = evalState (runExceptT m) (Env 0 [])
+  MapPrim primTy1 primTy2 primTy1 primVal1 ->
+  MapPrim primVal1 primVal2 primTy1 primVal1 ->
+  EnvT primTy1 primTy2 primVal1 primVal2 a ->
+  Either (Error primTy1 primVal1) a
+exec mt mv (EnvEra m) = evalState (runExceptT m) (Env 0 [] mt mv)
 
 data Error primTy primVal
-  = UnsupportedTermT (Typed.Term primTy primVal)
-  | UnsupportedTermE (Typed.Elim primTy primVal)
-  | UnsupportedTypeV (Typed.ValueT primTy primVal)
-  | UnsupportedTypeN (Typed.NeutralT primTy primVal)
-  | CannotEraseZeroUsageTerm (Typed.Term primTy primVal)
-  | TypeError (TC.TypecheckError primTy primVal)
+  = UnsupportedTermT (Typed.Term' primTy primVal)
+  | UnsupportedTermE (Typed.Elim' primTy primVal)
+  | UnsupportedTypeV (IR.Value primTy primVal)
+  | UnsupportedTypeN (IR.Neutral primTy primVal)
+  | CannotEraseZeroUsageTerm (Typed.Term' primTy primVal)
   | InternalError Text
   deriving (Generic)
 
 deriving instance
   ( Show primTy,
     Show primVal,
-    Show (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+    Show (Param.ApplyErrorExtra primTy)
   ) =>
   Show (Error primTy primVal)
 
 deriving instance
   ( Eq primTy,
     Eq primVal,
-    Eq (Param.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
+    Eq (Param.ApplyErrorExtra primTy)
   ) =>
   Eq (Error primTy primVal)
 

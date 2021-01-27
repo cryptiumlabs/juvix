@@ -58,6 +58,18 @@ inst (Types.Ann _usage ty t) =
   case t of
     Ann.Var symbol -> var symbol
     Ann.AppM fun a -> appM fun a
+    Ann.UnitM ->
+      let unit = Env.Constant V.ValueUnit
+       in unit <$ consVal unit ty
+    Ann.PairM p1 p2 ->
+      appM
+        ( Instructions.toNewPrimErr Instructions.pair
+            |> Ann.Prim
+            |> Ann.Ann
+              one
+              (Ann.Pi one (Ann.type' p1) (Ann.Pi one (Ann.type' p2) ty))
+        )
+        [p1, p2]
     Ann.LamM c a b -> do
       v <- lambda c a b ty
       consVal v ty
@@ -96,6 +108,7 @@ add,
   or,
   car,
   cdr,
+  cons,
   pair ::
     Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
@@ -122,6 +135,7 @@ abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
 cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
+cons = onTwoArgsNoConst Instructions.cons
 isNat =
   onInt1
     Instructions.isNat
@@ -173,9 +187,9 @@ var symb = do
       pure (Env.Curr lamPartial)
     Just (VStack.Position (VStack.Usage usage _saved) index)
       | usage == one ->
-        Env.Expanded <$> moveToFront index
+        Env.Nop <$ moveToFront index
       | otherwise ->
-        Env.Expanded <$> dupToFront index
+        Env.Nop <$ dupToFront index
 
 -- Replaced to always just replace the top element
 -- it seems all forms place a lambda at the top!
@@ -192,6 +206,43 @@ name (Env.Term symb usage) f =
 nameSymb :: Env.Reduction m => NameSymbol.T -> Types.RawTerm -> m Env.Expanded
 nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
+
+unboxSingleTypeErr :: Untyped.T -> Untyped.T
+unboxSingleTypeErr (MT.Type (MT.TList t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TSet t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TOption t) "") = t
+unboxSingleTypeErr (MT.Type (MT.TContract t) "") = t
+unboxSingleTypeErr _ = error "not a type which takes a single type"
+
+unboxDoubleTypeErr :: Untyped.T -> (Untyped.T, Untyped.T)
+unboxDoubleTypeErr (MT.Type (MT.TBigMap t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TLambda t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TMap t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TPair _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TOr _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr _ = error "not a type which takes two types"
+
+-- keep this next to primToArgs as they cover the same range!
+isNonFunctionPrim :: Types.RawPrimVal -> Bool
+isNonFunctionPrim Types.Nil = True
+isNonFunctionPrim Types.None = True
+isNonFunctionPrim Types.EmptyS = True
+isNonFunctionPrim Types.EmptyM = True
+isNonFunctionPrim Types.EmptyBM = True
+isNonFunctionPrim _ = False
+
+primToArgs :: (Env.Ops m, Env.Error m) => Types.RawPrimVal -> Types.Type -> m ()
+primToArgs prim ty =
+  let on1 f = f . unboxSingleTypeErr <$> typeToPrimType ty
+      on2 f = uncurry f . unboxDoubleTypeErr <$> typeToPrimType ty
+   in case prim of
+        Types.Nil -> on1 Instructions.nil
+        Types.None -> on1 Instructions.none
+        Types.EmptyS -> on1 Instructions.emptySet
+        Types.EmptyM -> on2 Instructions.emptyMap
+        Types.EmptyBM -> on2 Instructions.emptyBigMap
+        _ -> error "not a primitive which is not a function"
+        >>= addInstr
 
 type RunInstr =
   (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
@@ -229,15 +280,17 @@ primToFargs (Types.Inst inst) ty =
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
+        Instr.CONS {} -> cons
+-- _ -> error "unspported function in primToFargs"
 primToFargs (Types.Constant _) _ =
   error "Tried to apply a Michelson Constant"
 primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
 
-newPrimToInstrErr :: Types.NewPrim -> Types.NewPrim
+newPrimToInstrErr :: Types.RawPrimVal -> Types.RawPrimVal
 newPrimToInstrErr x =
   Instructions.toNewPrimErr (instructionOf x)
 
-instructionOf :: Types.NewPrim -> Instr.ExpandedOp
+instructionOf :: Types.RawPrimVal -> Instr.ExpandedOp
 instructionOf x =
   case x of
     Types.AddN -> Instructions.add
@@ -283,6 +336,8 @@ instructionOf x =
     Types.UpdateBMap -> Instructions.update
     Types.GetMap -> Instructions.get
     Types.GetBMap -> Instructions.get
+    Types.Cons -> Instructions.cons
+    Types.Pair' -> Instructions.pair
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
@@ -327,14 +382,31 @@ applyExpanded expanded args =
 -- Reduction Helpers for Main functionality
 --------------------------------------------------------------------------------
 
-type OnTerm m f =
+type OnTermGen m f =
   Env.Reduction m =>
-  Instr.ExpandedOp ->
+  -- function to determine the result
   f ->
+  -- Type of the instruction
   Types.Type ->
+  -- Arguments
   [Types.RawTerm] ->
+  -- Expanded argument
   m Env.Expanded
 
+type OnTerm2Gen m input result =
+  OnTermGen m (input -> input -> m result)
+
+type OnTerm1Gen m input result =
+  OnTermGen m (input -> m result)
+
+type OnTerm m f =
+  Env.Reduction m =>
+  -- Instruction to be the operatio
+  Instr.ExpandedOp ->
+  OnTermGen m f
+
+-- the function on these ones are not on the result
+-- but only the constant branch
 type OnTerm2 m input result =
   OnTerm m (input -> input -> result)
 
@@ -386,71 +458,117 @@ onPairGen1 op f =
          in Env.Constant (f (car, cdr))
     )
 
-onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
-onTwoArgs op f typ instrs = do
+pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+pushConstant =
+  onOneArgGen
+    ( \instr1 -> do
+        addExpanded instr1
+        case val instr1 of
+          Env.Constant _ -> pure Env.Nop
+          _ -> pure (val instr1)
+    )
+
+--------------------------------------------------------------------------------
+-- On Argument Functions
+--------------------------------------------------------------------------------
+
+------------------------------------------------------------
+-- Generator functions
+------------------------------------------------------------
+
+onTwoArgsGen :: OnTerm2Gen m Protect Env.Expanded
+onTwoArgsGen applyOperation typ arguments = do
   -- last argument evaled first
-  v <- traverse (protect . (inst >=> promoteTopStack)) (reverse instrs)
+  v <- protectPromotion arguments
   case v of
     instr2 : instr1 : _ -> do
-      -- May be the wrong order?
-      let instrs = [instr2, instr1]
-      res <-
-        if  | allConstants (val <$> instrs) ->
-              let Env.Constant i1 = val instr1
-                  Env.Constant i2 = val instr2
-               in pure (f i1 i2)
-            | otherwise -> do
-              traverse_ addExpanded instrs
-              -- add when we normalize
-              -- copyAndDrop 2
-              addInstr op
-              pure Env.Nop
-      -- remove when we normalize
+      -- Get the result of the operation on the arguments
+      res <- applyOperation instr2 instr1
+      -- drop the two arguments on the stack
       modify @"stack" (VStack.drop 2)
+      -- add the result to the stack
       consVal res typ
+      -- return the operation
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
-onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
-onOneArgs op f typ instrs = do
-  v <- traverse (protect . (inst >=> promoteTopStack)) instrs
+onOneArgGen :: OnTerm1Gen m Protect Env.Expanded
+onOneArgGen applyOperation typ arguments = do
+  v <- protectPromotion arguments
+  -- see comments onTwoArgsGen
   case v of
     instr1 : _ -> do
-      res <-
-        if  | allConstants [val instr1] ->
-              let Env.Constant i1 = val instr1
-               in pure (f i1)
-            | otherwise -> do
-              addExpanded instr1
-              -- copyAndDrop 1
-              addInstr op
-              pure Env.Nop
-      -- remove when we normalize
+      res <- applyOperation instr1
       modify @"stack" (VStack.drop 1)
       consVal res typ
       pure res
     _ -> throw @"compilationError" Types.NotEnoughArguments
 
--- todo remove repeat pattern
--- Cons val here?
-pushConstant :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
-pushConstant typ instrs = do
-  v <- traverse (inst >=> promoteTopStack) instrs
-  res <- case v of
-    Env.Constant _ : _ ->
-      pure Env.Nop
-    instr1 : _ ->
-      pure instr1
-    _ -> throw @"compilationError" Types.NotEnoughArguments
-  modify @"stack" (VStack.drop 1)
-  consVal res typ
-  pure res
+-- reverse as we wish to evaluate the last argument first!
+protectPromotion :: Env.Reduction m => [Types.RawTerm] -> m [Protect]
+protectPromotion =
+  traverse (protect . (inst >=> promoteTopStack)) . reverse
+
+------------------------------------------------------------
+-- Functions to call from appliers/reducers above
+------------------------------------------------------------
+
+onTwoArgsNoConst ::
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+onTwoArgsNoConst op =
+  onTwoArgsGen (\x2 x1 -> noConstantCase op [x2, x1])
+
+onOneArgsNoConst ::
+  Env.Reduction m => Instr.ExpandedOp -> Types.Type -> [Types.RawTerm] -> m Env.Expanded
+onOneArgsNoConst op =
+  onOneArgGen (\x1 -> noConstantCase op [x1])
+
+onTwoArgs :: OnTerm2 m (V.Value' Types.Op) Env.Expanded
+onTwoArgs op f =
+  onTwoArgsGen
+    ( \instr2 instr1 -> do
+        -- May be the wrong order?
+        let instrs = [instr2, instr1]
+        -- check if they are all constants
+        -- apply function if so
+        if  | allConstants (val <$> instrs) ->
+              let Env.Constant i1 = val instr1
+                  Env.Constant i2 = val instr2
+               in pure (f i1 i2)
+            | otherwise -> noConstantCase op [instr2, instr1]
+    )
+
+onOneArgs :: OnTerm1 m (V.Value' Types.Op) Env.Expanded
+onOneArgs op f =
+  onOneArgGen
+    ( \instr1 -> do
+        -- check if they are all constants
+        -- apply function if so
+        if  | allConstants [val instr1] ->
+              let Env.Constant i1 = val instr1
+               in pure (f i1)
+            | otherwise -> noConstantCase op [instr1]
+    )
+
+------------------------------------------------------------
+-- Helper predicate/abstractions for the on functions
+------------------------------------------------------------
+
+noConstantCase ::
+  Env.Ops m => Instr.ExpandedOp -> [Protect] -> m Env.Expanded
+noConstantCase op instrs = do
+  -- add the protected instructions
+  traverse_ addExpanded instrs
+  -- add the op
+  addInstr op
+  -- return a nop to signal an already added output
+  pure Env.Nop
 
 evalIf :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 evalIf typ (bool : thenI : elseI : _) = do
   let eval = inst >=> promoteTopStack
       res = Env.Nop
-  eval bool
+  _ <- eval bool
   then' <- protect (eval thenI)
   else' <- protect (eval elseI)
   addInstr (Instructions.if' (insts then') (insts else'))
@@ -482,7 +600,7 @@ dupToFront num = do
   addInstr instrs
   pure instrs
 
--- Unsafe to implmeent until we normalize core
+-- Unsafe to implement until we normalize core
 copyAndDrop :: Applicative f => p -> f ()
 copyAndDrop _i =
   pure ()
@@ -707,24 +825,34 @@ valToBool _ = error "called valToBool on a non Michelson Bool"
 -- Misc
 --------------------------------------------------------------------------------
 
--- TODO ∷ determine if we'd ever call this on a constant like primitive
 constructPrim ::
-  (Env.Stack m, Env.Count m, Env.Error m) => Types.NewPrim -> Types.Type -> m Env.Expanded
-constructPrim prim ty = do
-  let (f, lPrim) = primToFargs prim ty
-  names <- reserveNames lPrim
-  -- TODO ∷ set the usage of the arguments to 1
-  let c =
-        Env.Curr $
-          Env.C
-            { Env.fun = f,
-              Env.argsLeft = zipWith Env.Term names (repeat one),
-              Env.left = fromIntegral lPrim,
-              Env.captures = Set.empty,
-              Env.ty = ty
-            }
-  consVal c ty
-  pure c
+  Env.Reduction m => Types.RawPrimVal -> Types.Type -> m Env.Expanded
+constructPrim prim ty
+  -- this one gets Promoted to be on the real stack
+  -- TODO ∷ determine if this should be a constant, they should all be in
+  -- vstack...
+  -- also once we do this, we can remove the StackOps effect of this function!
+  | isNonFunctionPrim prim = do
+    primToArgs prim ty
+    -- cons to show we have it on the stack
+    consVal Env.Nop ty
+    pure Env.Nop
+  -- The final result of this is not promoted
+  | otherwise = do
+    let (f, lPrim) = primToFargs prim ty
+    names <- reserveNames lPrim
+    -- TODO ∷ set the usage of the arguments to 1
+    let c =
+          Env.Curr $
+            Env.C
+              { Env.fun = f,
+                Env.argsLeft = zipWith Env.Term names (repeat one),
+                Env.left = fromIntegral lPrim,
+                Env.captures = Set.empty,
+                Env.ty = ty
+              }
+    consVal c ty
+    pure c
 
 allConstants :: [Env.Expanded] -> Bool
 allConstants = all f
@@ -786,11 +914,50 @@ typeToPrimType ty =
     Ann.SymT _ -> throw @"compilationError" Types.InvalidInputType
     Ann.Star _ -> throw @"compilationError" Types.InvalidInputType
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
+    Ann.PrimTy (Types.Application arg1 args) -> do
+      case arg1 of
+        Types.PrimTy {} -> throw @"compilationError" Types.InvalidInputType
+        Types.Application _ _ -> throw @"compilationError" Types.InvalidInputType
+        _ -> pure ()
+      if  | sameLength arg1 args ->
+            recurse args
+              >>| appPrimTyErr arg1
+          | otherwise ->
+            throw @"compilationError" Types.InvalidInputType
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
+    Ann.PrimTy _ ->
+      throw @"compilationError" Types.InvalidInputType
+    Ann.Sig {} -> throw @"compilationError" Types.InvalidInputType
+    Ann.UnitTy -> pure Untyped.unit
+  where
+    recurse = traverse (typeToPrimType . Ann.PrimTy)
+    sameLength arg xs =
+      lengthType arg == length xs
+
+appPrimTyErr :: Types.PrimTy -> NonEmpty Untyped.T -> Untyped.T
+appPrimTyErr Types.Pair (x :| (y : _)) = Untyped.pair x y
+appPrimTyErr Types.Lambda (x :| (y : _)) = Untyped.lambda x y
+appPrimTyErr Types.Map (x :| (y : _)) = Untyped.map x y
+appPrimTyErr Types.BigMap (x :| (y : _)) = Untyped.bigMap x y
+appPrimTyErr Types.Option (x :| _) = Untyped.option x
+appPrimTyErr Types.Set (x :| _) = Untyped.set x
+appPrimTyErr Types.List (x :| _) = Untyped.list x
+appPrimTyErr _ _ = error "fail"
+
+lengthType :: Num p => Types.PrimTy -> p
+lengthType Types.Pair = 2
+lengthType Types.Lambda = 2
+lengthType Types.Map = 2
+lengthType Types.BigMap = 2
+lengthType Types.Option = 1
+lengthType Types.List = 1
+lengthType Types.Set = 1
+lengthType Types.PrimTy {} = 0
+lengthType Types.Application {} = 0
 
 eatType :: Natural -> Types.Type -> Types.Type
 eatType 0 t = t

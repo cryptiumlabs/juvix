@@ -19,7 +19,7 @@ data PipelineError primTy primVal compErr
   = InternalInconsistencyError Text
   | TypecheckerError (TC.TypecheckError primTy primVal)
   | -- | EACError (EAC.Errors primTy primVal)
-    ErasureError (Erasure.Error primTy primVal)
+    ErasureError (Erasure.Error primTy (TypedPrim primTy primVal))
   | PrimError compErr
   deriving (Generic)
 
@@ -27,6 +27,7 @@ deriving instance
   ( Show primTy,
     Show primVal,
     Show compErr,
+    Show (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra (TC.TypedPrim primTy primVal))
   ) =>
   Show (PipelineError primTy primVal compErr)

@@ -12,20 +12,20 @@ let list = %Michelson.list
 sig set : ty -> ty
 let set = %Michelson.set
 
-sig operation : ty -> ty
-let operation = %Michelson.operation
+-- sig operation : ty -> ty
+-- let operation = %Michelson.operation
 
-sig contract : ty -> ty
-let contract = %Michelson.contract
+-- sig contract : ty -> ty
+-- let contract = %Michelson.contract
 
 sig pair : ty -> ty
 let pair = %Michelson.pair
 
-sig either : ty -> ty
-let either = %Michelson.either
+-- sig either : ty -> ty
+-- let either = %Michelson.either
 
-sig map : ty -> ty
-let map = %Michelson.map
+sig map-ty : ty -> ty
+let map-ty = %Michelson.map
 
 sig big-map : ty -> ty
 let big-map = %Michelson.big-map
@@ -98,14 +98,14 @@ let or = %Michelson.or
 sig xor : (x : ty) -> x -> x -> x
 let xor = %Michelson.xor
 
-sig not : (x : ty) -> x -> x -> x
-let not = %Michelson.not
+-- sig not : (x : ty) -> x -> x -> x
+-- let not = %Michelson.not
 
 sig compare : (x : ty) -> x -> x -> int
 let compare = %Michelson.compare
 
 sig if2 : (x : ty) -> bool -> x -> x -> x
-let if2 = %Michelson.if_builtin
+let if2 = %Michelson.if-builtin
 
 -- other functions
 sig now : timestamp
@@ -132,14 +132,14 @@ let source = %Michelson.source
 sig sender : address
 let sender = %Michelson.sender
 
-sig implicit-account : operation
-let implicit-account = %Michelson.implicit-account
+-- sig implicit-account : operation
+-- let implicit-account = %Michelson.implicit-account
 
-sig create-contract : operation
-let create-contract = %Michelson.create-contract
+-- sig create-contract : operation
+-- let create-contract = %Michelson.create-contract
 
-sig address-to-contract : (param : ty) -> address -> contract param
-let address-to-contract = %Michelson.address-to-contract
+-- sig address-to-contract : (param : ty) -> address -> contract param
+-- let address-to-contract = %Michelson.address-to-contract
 
 sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 let transfer-tokens = %Michelson.transfer-tokens
@@ -168,10 +168,10 @@ let cons = %Michelson.cons
 sig cons-pair : a -> b -> pair a b
 let cons-pair = %Michelson.cons-pair
 
-sig car : list a -> a
+sig car : pair a b -> a
 let car = %Michelson.car
 
-sig cdr : list a -> list a
+sig cdr : pair a b -> b
 let cdr = %Michelson.cdr
 
 sig size : list a -> int
@@ -192,8 +192,8 @@ let map = %Michelson.map
 sig update : (x : ty) -> key -> a -> x a -> unit-t
 let update = %Michelson.update
 
-sig iter : (x : ty) -> (a -> b) -> (b -> unit-t)
-let iter = %Michelson.iter
+-- sig iter : (x : ty) -> (a -> b) -> (b -> unit-t)
+-- let iter = %Michelson.iter
 
 sig get : (x: ty) -> key -> x a -> a
 let get = %Michelson.get
@@ -216,7 +216,7 @@ let lsl = %Michelson.lsl
 sig lsr : nat -> nat -> nat
 let lsr = %Michelson.lsl
 
-sig fail-with : (x : ty) -> x -> x
+sig fail-with : (x : ty) -> (y : ty) -> x -> y
 let fail-with = %Michelson.fail-with
 
 sig self : (x : ty) -> x

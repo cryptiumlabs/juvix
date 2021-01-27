@@ -22,6 +22,8 @@ shouldEraseTo ::
     Show primVal,
     Eq primTy,
     Eq primVal,
+    Eq (Core.ApplyErrorExtra primTy),
+    Show (Core.ApplyErrorExtra primTy),
     Eq (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal)),
     Show (Core.ApplyErrorExtra (Typed.TypedPrim primTy primVal))
   ) =>
@@ -34,8 +36,10 @@ shouldEraseTo name _ (term, usage) erased =
   T.testCase
     (name <> ": " <> show (term, usage) <> " should erase to " <> show erased)
     ( Right erased
-        T.@=? (Erasure.eraseAnn |<< Erasure.erase term usage)
+        T.@=? (Erasure.eraseAnn |<< erase term usage)
     )
+  where
+    erase = Erasure.erase (const pure) (const pure)
 
 infix 0 `ann`
 

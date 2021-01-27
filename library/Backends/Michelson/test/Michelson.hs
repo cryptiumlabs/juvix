@@ -97,7 +97,9 @@ top =
       xtwiceTest2,
       oddAppTest,
       ifIntTest,
-      ifIntConstTest
+      ifIntConstTest,
+      nilTest,
+      intListTest
     ]
 
 --------------------------------------------------------------------------------
@@ -213,6 +215,12 @@ ifIntTest = shouldCompileTo ifInt ifIntAns
 
 ifIntConstTest :: T.TestTree
 ifIntConstTest = shouldCompileTo ifIntConst ifIntAns
+
+nilTest :: T.TestTree
+nilTest = shouldCompileTo nil nilAns
+
+intListTest :: T.TestTree
+intListTest = shouldCompileTo intList intListAns
 
 -- dummyTest =
 --   runContract identityAppTerm2 identityType
@@ -453,6 +461,27 @@ intPairs1 =
         $ J.Pi one (primTy pairInt)
         $ primTy
         $ Untyped.pair pairInt pairInt
+
+nil :: RawTerm
+nil =
+  Nil
+    |> J.Prim
+    |> Ann one (J.PrimTy (Application List (PrimTy int :| [])))
+
+intList :: RawTerm
+intList =
+  Ann one (J.PrimTy (Application List (PrimTy int :| []))) $
+    J.AppM
+      ( Ann one t
+          $ J.Prim
+          $ Instructions.toNewPrimErr Instructions.cons
+      )
+      [push1Int 3, nil]
+  where
+    t =
+      J.Pi one (primTy int)
+        $ J.Pi one (J.PrimTy (Application List (PrimTy int :| [])))
+        $ J.PrimTy (Application List (PrimTy int :| []))
 
 -- addPairs "x"
 -- [SeqEx []
@@ -806,6 +835,16 @@ constUIntAns =
           ]
       )
   ]
+
+nilAns :: [Op]
+nilAns = [PrimEx (NIL "" "" int)]
+
+intListAns :: [Op]
+intListAns =
+  nilAns
+    <> [ PrimEx (PUSH "" (M.Type TInt "") (ValueInt 3)),
+         PrimEx (CONS "")
+       ]
 
 -- [SeqEx [PrimEx (DUP @)
 --        ,PrimEx (CAR @ %),PrimEx (DIP [PrimEx (CDR @ %)])

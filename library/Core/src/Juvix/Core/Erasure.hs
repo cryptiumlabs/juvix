@@ -8,6 +8,7 @@ import Juvix.Core.Erasure.Algorithm
 import Juvix.Core.Erasure.Types
   ( Error (..),
     Globals,
+    MapPrim,
     Term,
     TermT,
     Type,

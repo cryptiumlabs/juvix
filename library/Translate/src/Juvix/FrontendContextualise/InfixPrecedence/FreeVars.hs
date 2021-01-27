@@ -85,8 +85,8 @@ op _ (Type.UniverseName _) = Set.empty
 op s (Type.NamedTypeE nem) = nameifyNamedType s nem
 op s (Type.Application ap) = nameifyApplication s ap
 op s (Type.Name varNam)
-  | Set.member (NameSymb.hd varNam) s = Set.singleton varNam
-  | otherwise = Set.empty
+  | Set.member (NameSymb.hd varNam) s = Set.empty
+  | otherwise = Set.singleton varNam
 
 ------------------------------------------------------------
 -- Boilerplate
@@ -160,7 +160,7 @@ nameifyNamedType s (Type.NamedType' _name exp) =
 
 -- we currently don't care about declares
 nameifyDeclarationExpression :: ExcludedSet -> Type.DeclarationExpression -> Set
-nameifyDeclarationExpression s (Type.DeclareExpession _i e) =
+nameifyDeclarationExpression s (Type.DeclareExpression _i e) =
   op s e
 
 nameifyTypeRefine :: ExcludedSet -> Type.TypeRefine -> Set

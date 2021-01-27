@@ -284,7 +284,7 @@ extensible
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     data DeclarationExpression
-      = DeclareExpession Declaration Expression
+      = DeclareExpression Declaration Expression
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     data Primitive

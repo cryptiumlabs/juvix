@@ -70,3 +70,10 @@ makeLensesWith camelCaseFields ''Definition
 data PathError
   = VariableShared NameSymbol.T
   deriving (Show, Eq)
+
+--------------------------------------------------------------------------------
+-- Special Names
+--------------------------------------------------------------------------------
+
+topLevelName :: IsString p => p
+topLevelName = "TopLevel"

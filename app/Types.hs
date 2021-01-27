@@ -1,5 +1,6 @@
 module Types where
 
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Types as Core
@@ -10,7 +11,7 @@ type Exec primTy primVal compErr =
   IO
     ( Either
         (Core.PipelineError primTy primVal compErr)
-        (Erasure.TermT primTy primVal),
+        (Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal)),
       [Core.PipelineLog primTy primVal]
     )
 

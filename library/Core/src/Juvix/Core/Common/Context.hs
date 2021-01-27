@@ -8,14 +8,10 @@ module Juvix.Core.Common.Context
     module Juvix.Core.Common.Context.Precedence,
     -- leave the entire module for now, so lenses can be exported
     module Juvix.Core.Common.Context,
-    Group,
-    Entry (..),
-    recGroups,
   )
 where
 
 import Juvix.Core.Common.Context.Precedence
-import Juvix.Core.Common.Context.RecGroups
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library hiding (modify)
@@ -34,13 +30,6 @@ nameSymbolToSymbol = NameSymbol.toSymbol
 
 nameSymbolFromSymbol :: Symbol -> NameSymbol.T
 nameSymbolFromSymbol = NameSymbol.fromSymbol
-
---------------------------------------------------------------------------------
--- Special Names
---------------------------------------------------------------------------------
-
-topLevelName :: IsString p => p
-topLevelName = "TopLevel"
 
 --------------------------------------------------------------------------------
 -- Body
@@ -104,6 +93,20 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 
 -- we lose some type information here... we should probably reserve it somehow
 
+inNameSpace ::
+  NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
+inNameSpace newNameSpace t@T {currentName}
+  | removeTopName newNameSpace == removeTopName currentName =
+    pure t
+  | otherwise = do
+    mdef <- t !? newNameSpace
+    let (def, fullName) = resolveName t (mdef, newNameSpace)
+    case def of
+      Record cont _ ->
+        Just (changeCurrentModuleWith t cont fullName)
+      _ ->
+        Nothing
+
 -- | switchNameSpace works like a mixture of defpackage and in-package from CL
 -- creating a namespace if not currently there, and switching to it
 -- this function may fail if a path is given like `Foo.Bar.x.f` where x
@@ -116,61 +119,13 @@ switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     Lib.Right t
   | otherwise =
-    let addCurrentName t startingContents newCurrName =
-          (addGlobal' t)
-            { currentName = removeTopName newCurrName,
-              currentNameSpace = startingContents
-            }
-        addGlobal' t@T {currentNameSpace} =
-          -- we have to add top to it, or else if it's a single symbol, then
-          -- it'll be added to itself, which is bad!
-          addGlobal
-            (addTopNameToSngle currentName)
-            (Record currentNameSpace Nothing)
-            t
-        addCurrent = addGlobal newNameSpace CurrentNameSpace
-        qualifyName =
-          currentName <> newNameSpace
-     in case addPathWithValue newNameSpace CurrentNameSpace t of
-          Lib.Right t ->
-            -- check if we have to qualify Name
-            case t !? newNameSpace of
-              Just (Current _) ->
-                Lib.Right (addCurrentName t NameSpace.empty qualifyName)
-              _ ->
-                Lib.Right (addCurrentName t NameSpace.empty newNameSpace)
-          -- the namespace may already exist
-          Lib.Left er ->
-            -- TODO ∷ refactor with resolveName
-            -- how do we add the namespace back to the private area!?
-            case t !? newNameSpace of
-              Just (Current (NameSpace.Pub (Record def _))) ->
-                Lib.Right (addCurrent (addCurrentName t def qualifyName))
-              Just (Current (NameSpace.Priv (Record def _))) ->
-                Lib.Right (addCurrent (addCurrentName t def qualifyName))
-              Just (Outside (Record def _))
-                -- figure out if we contain what we are looking for!
-                | NameSymbol.prefixOf (removeTopName newNameSpace) currentName ->
-                  -- if so update it!
-                  case addGlobal' t !? newNameSpace of
-                    Just (Outside (Record def _)) ->
-                      Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-                    _ -> error "doesn't happen"
-                | otherwise ->
-                  Lib.Right (addCurrent (addCurrentName t def newNameSpace))
-              Nothing -> Lib.Left er
-              Just __ -> Lib.Left er
-
-addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
-addTopNameToSngle (x :| []) = topLevelName :| [x]
-addTopNameToSngle xs = xs
-
-removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
-removeTopName (top :| x : xs)
-  | topLevelName == top = x :| xs
-removeTopName (top :| [])
-  | top == topLevelName = "" :| []
-removeTopName xs = xs
+    let newT =
+          case addPathWithValue newNameSpace (Record NameSpace.empty Nothing) t of
+            Lib.Right t -> t
+            Lib.Left {} -> t
+     in case inNameSpace newNameSpace newT of
+          Nothing -> Lib.Left (VariableShared newNameSpace)
+          Just ct -> Lib.Right ct
 
 lookup ::
   NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
@@ -256,6 +211,44 @@ removeNameSpace sym t =
 removeTop :: Symbol -> T term ty sumRep -> T term ty sumRep
 removeTop sym t@T {topLevelMap} =
   t {topLevelMap = HashMap.delete sym topLevelMap}
+
+------------------------------------------------------------
+-- Helper for switch name space
+------------------------------------------------------------
+
+changeCurrentModuleWith ::
+  T ter ty sr -> NameSpace.T (Definition ter ty sr) -> NameSymbol.T -> T ter ty sr
+changeCurrentModuleWith t startingContents newCurrName =
+  let queued = queueCurrentModuleBackIn t
+   in t
+        { currentName = removeTopName newCurrName,
+          currentNameSpace = startingContents
+        }
+        |> queued
+        |> addGlobal newCurrName CurrentNameSpace
+
+queueCurrentModuleBackIn ::
+  T term ty sumRep -> T term ty sumRep -> T term ty sumRep
+queueCurrentModuleBackIn T {currentNameSpace, currentName} =
+  -- we have to add top to it, or else if it's a single symbol, then
+  -- it'll be added to itself, which is bad!
+  addGlobal
+    (addTopNameToSngle currentName)
+    (Record currentNameSpace Nothing)
+
+putCurrentModuleBackIn :: T term ty sumRep -> T term ty sumRep
+putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
+
+addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
+addTopNameToSngle (x :| []) = topLevelName :| [x]
+addTopNameToSngle xs = xs
+
+removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
+removeTopName (top :| x : xs)
+  | topLevelName == top = x :| xs
+removeTopName (top :| [])
+  | top == topLevelName = "" :| []
+removeTopName xs = xs
 
 -------------------------------------------------------------------------------
 -- Functions on From
@@ -477,52 +470,5 @@ qualifyLookup :: NameSymbol.T -> T a b c -> Maybe NameSymbol.T
 qualifyLookup name ctx =
   case lookup name ctx of
     Nothing -> Nothing
-    Just (Outside _) -> Just (NameSymbol.cons topLevelName name)
+    Just (Outside _) -> Just (NameSymbol.cons topLevelName (removeTopName name))
     Just (Current _) -> Just (pure topLevelName <> currentName ctx <> name)
-
--- | Traverses a whole context by performing an action on each recursive group.
--- The groups are passed in dependency order but the order of elements within
--- each group is arbitrary.
-traverseContext ::
-  (Applicative f, Monoid t) =>
-  -- | process one recursive group
-  (Group a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext f = foldMapA f . recGroups
-
--- | Same as 'traverseContext', but the groups are split up into single
--- definitions.
-traverseContext1 ::
-  (Monoid t, Applicative f) =>
-  -- | process one definition
-  (NameSymbol.T -> Definition a b c -> f t) ->
-  T a b c ->
-  f t
-traverseContext1 = traverseContext . foldMapA . onEntry
-  where
-    onEntry f Entry {name, def} = f name def
-
-foldMapCtx ::
-  (Applicative f, Monoid a) =>
-  (NonEmpty Symbol -> Definition term ty sumRep -> f a) ->
-  Cont (Definition term ty sumRep) ->
-  f a
-foldMapCtx f T {currentNameSpace, topLevelMap} =
-  go (HashMap.toList topLevelMap) startingName
-  where
-    startingName = NameSymbol.fromSymbol topLevelName
-    go xs prefix =
-      foldMapA
-        ( \(name, contents) ->
-            let qualifiedName = prefix <> pure name
-             in case contents of
-                  Record {definitionContents} ->
-                    go (NameSpace.toList1' definitionContents) qualifiedName
-                  CurrentNameSpace ->
-                    -- currentName and our prefix should be the same here
-                    go (NameSpace.toList1' currentNameSpace) qualifiedName
-                  _ ->
-                    f qualifiedName contents
-        )
-        xs

@@ -2,7 +2,7 @@
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
-    module Juvix.Backends.Michelson.Compilation.Types,
+    module Types,
   )
 where
 
@@ -11,12 +11,13 @@ import Control.Monad.Fail (fail)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
-import Juvix.Backends.Michelson.Compilation.Types
+import Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as Run
 import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
+import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Parameterisation as P
@@ -95,42 +96,59 @@ arityRaw (Constant _) = 0
 arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
 
 data ApplyError
-  = PipelineError (Core.PipelineError PrimTy RawPrimVal CompilationError)
+  = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
 
 instance Show ApplyError where
-  show (PipelineError perr) = Prelude.show perr
+  show (CompilationError perr) = Prelude.show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
-instance Core.CanApply PrimVal where
-  type ApplyErrorExtra PrimVal = ApplyError
+instance Core.CanApply PrimTy where
+  arity (Application hd rest) =
+    Core.arity hd - fromIntegral (length rest)
+  arity x =
+    Run.lengthType x
 
-  arity (Prim.Cont {numLeft}) = numLeft
-  arity (Prim.Return {retTerm}) = arityRaw retTerm
+  apply (Application fn args1) args2 =
+    Application fn (args1 <> args2)
+      |> Right
+  apply fun args =
+    Application fun args
+      |> Right
+
+instance Core.CanApply (PrimVal' ext) where
+  type ApplyErrorExtra (PrimVal' ext) = ApplyError
+
+  arity Prim.Cont {numLeft} = numLeft
+  arity Prim.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2'
     | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toTake1 args2' =
+      Just args2 <- traverse toArg args2' =
       do
         let argLen = lengthN args2'
-            argsAll = foldr NonEmpty.cons args2 args1
+            args = foldr NonEmpty.cons args2 args1
         case argLen `compare` ar of
           LT ->
             Right $
-              Prim.Cont {fun, args = toList argsAll, numLeft = ar - argLen}
-          EQ -> applyProper fun argsAll
+              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          EQ
+            | Just takes <- traverse (traverse App.argToTerm) args ->
+              applyProper fun takes |> first Core.Extra
+            | otherwise ->
+              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2'
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
-applyProper :: Take -> NonEmpty Take -> Either (Core.ApplyError PrimVal) Return
+applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
       pure $ Prim.Return {retType, retTerm = Constant x}
-    Left err -> Left $ Core.Extra $ PipelineError $ Core.PrimError err
+    Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
     args' = takeToTerm <$> toList args
@@ -142,12 +160,10 @@ takeToTerm :: Take -> RawTerm
 takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
-toPrimType ::
-  ErasedAnn.Type PrimTy ->
-  Either (Core.ApplyError PrimVal) (P.PrimType PrimTy)
+toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
 toPrimType ty = maybe err Right $ go ty
   where
-    err = Left $ Core.Extra $ ReturnTypeNotPrimitive ty
+    err = Left $ ReturnTypeNotPrimitive ty
     go ty = goPi ty <|> (pure <$> goPrim ty)
     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
     goPi _ = Nothing
@@ -220,7 +236,7 @@ builtinTypes =
     ("Michelson.int", Untyped.TInt),
     ("Michelson.nat", Untyped.TNat),
     ("Michelson.string", Untyped.TString),
-    ("Michelson.string", Untyped.TBytes),
+    ("Michelson.bytes", Untyped.TBytes),
     ("Michelson.mutez", Untyped.TMutez),
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
@@ -228,6 +244,15 @@ builtinTypes =
     ("Michelson.address", Untyped.TAddress)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
+    |> ( <>
+           [ ("Michelson.list", Types.List),
+             ("Michelson.lambda", Types.Lambda),
+             ("Michelson.option", Types.Option),
+             ("Michelson.set", Types.Set),
+             ("Michelson.map", Types.Map),
+             ("Michelson.big-map", Types.BigMap)
+           ]
+       )
     |> Map.fromList
 
 builtinValues :: P.Builtins RawPrimVal
@@ -269,8 +294,18 @@ builtinValues =
     ("Michelson.fail-with", Inst M.FAILWITH),
     ("Michelson.self", Inst (M.SELF "" "")),
     ("Michelson.unit", Inst (M.UNIT "" "")),
+    ("Michelson.nil", Nil),
+    ("Michelson.cons", Cons),
+    ("Michelson.none", None),
+    ("Michelson.left", Left'),
+    ("Michelson.right", Right'),
+    ("Michelson.map", MapOp),
+    ("Michelson.empty-set", EmptyS),
+    ("Michelson.empty-map", EmptyM),
+    ("Michelson.empty-big-map", EmptyBM),
+    ("Michelson.cons-pair", Pair'),
     -- added symbols to not take values
-    ("Michelson.if", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] []))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
