@@ -109,6 +109,7 @@ add,
   car,
   cdr,
   cons,
+  contract,
   pair ::
     Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
@@ -135,6 +136,9 @@ abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
 cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
+contract ty args = do
+  primTy <- typeToPrimType ty
+  onOneArgsNoConst (Instructions.contract primTy) ty args
 cons = onTwoArgsNoConst Instructions.cons
 isNat =
   onInt1
@@ -281,6 +285,7 @@ primToFargs (Types.Inst inst) ty _ =
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
         Instr.CONS {} -> cons
+        Instr.CONTRACT {} -> contract
 -- _ -> error "unspported function in primToFargs"
 primToFargs (Types.Constant _) _ _ =
   error "Tried to apply a Michelson Constant"
