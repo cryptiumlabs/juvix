@@ -65,6 +65,7 @@ import Data.Data (Data)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
+import GHC.Stack
 import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
@@ -92,7 +93,6 @@ import Protolude hiding
     undefined,
   )
 import Prelude (Show (..), String, error)
-import GHC.Stack
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)

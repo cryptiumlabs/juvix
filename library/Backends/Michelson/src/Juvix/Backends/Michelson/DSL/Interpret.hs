@@ -37,7 +37,7 @@ dummyInterpret (Types.EmptyInstr inst) =
     Right ((x :: TAlias.Value t) Vinyl.:& _) ->
       untypeValue x
     Left _ -> Left $ Types.InvalidInputType "interpret returned left"
-    Right _ -> Left $Types.InvalidInputType "interpret returned right but mismatched"
+    Right _ -> Left $ Types.InvalidInputType "interpret returned right but mismatched"
 
 -- copied over from Convert!
 untypeValue ::

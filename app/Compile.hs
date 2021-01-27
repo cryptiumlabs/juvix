@@ -7,17 +7,17 @@ import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.TransformExt as IR (extForgetT)
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as IR (injectT)
 import qualified Juvix.Core.IR.TransformExt.OnlyExts
-import qualified Juvix.Core.IR.TransformExt as IR (extForgetT)
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
-import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
