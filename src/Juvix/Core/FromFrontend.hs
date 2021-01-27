@@ -560,14 +560,16 @@ lookupSig' ::
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
-lookupSig' q x = do
+lookupSig' q x' = do
   gets @"coreSigs" \sigs -> do
     let look x = (x,) <$> HM.lookup x sigs
     case q of
       Nothing -> look x
       Just q -> look x <|> look qx
         where
-          qx = NameSymbol.qualify q x
+          qx = Ctx.removeTopName $ NameSymbol.qualify q x'
+  where
+    x = Ctx.removeTopName x'
 
 transformType ::
   ( Data primTy,
