@@ -958,7 +958,6 @@ Tests that weak works as expected
   + [[NameSymbol]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
-** Visualize
 ** src
 *** Juvix
 **** INetIR

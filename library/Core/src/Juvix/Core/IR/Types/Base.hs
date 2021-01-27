@@ -130,38 +130,41 @@ type GlobalAllWith (c :: * -> Constraint) ty ext primTy primVal =
     PatternAll c ext primTy primVal
   )
 
-data DatatypeWith ty primTy primVal = Datatype
-  { dataName :: GlobalName,
-    -- | the positivity of its parameters
-    dataPos :: [Pos],
-    -- | the type constructor's arguments
-    dataArgs :: [RawArgType' ext primTy primVal],
-    -- | type checked arguments
-    nfDataArgs :: [ArgType' ext primTy primVal],
-    -- | the type constructor's target universe level
-    dataLevel :: Natural,
-    dataCons :: [DataConWith ty primTy primVal]
-  }
+data DatatypeWith ty primTy primVal
+  = Datatype
+      { dataName :: GlobalName,
+        -- | the positivity of its parameters
+        dataPos :: [Pos],
+        -- | the type constructor's arguments
+        dataArgs :: [RawArgType' ext primTy primVal],
+        -- | type checked arguments
+        nfDataArgs :: [ArgType' ext primTy primVal],
+        -- | the type constructor's target universe level
+        dataLevel :: Natural,
+        dataCons :: [DataConWith ty primTy primVal]
+      }
   deriving (Eq, Show, Data, NFData, Generic)
 
 type RawDatatype' ext = DatatypeWith (Term' ext)
 
 type Datatype' extV = DatatypeWith (Value' extV)
 
-data RawArgType' ext primTy primVal = DataArgRaw
-  { rawArgName :: GlobalName,
-    rawArgUsage :: Usage,
-    rawArgType :: Term' ext primTy primVal,
-    rawArgIsParam :: Bool
-  }
+data RawArgType' ext primTy primVal
+  = DataArgRaw
+      { rawArgName :: GlobalName,
+        rawArgUsage :: Usage,
+        rawArgType :: Term' ext primTy primVal,
+        rawArgIsParam :: Bool
+      }
   deriving (Generic)
 
-data ArgType' ext primTy primVal = DataArg
-  { argName :: GlobalName,
-    argUsage :: Usage,
-    argType :: Value' ext primTy primVal,
-    argIsParam :: Bool
-  }
+data ArgType' ext primTy primVal
+  = DataArg
+      { argName :: GlobalName,
+        argUsage :: Usage,
+        argType :: Value' ext primTy primVal,
+        argIsParam :: Bool
+      }
   deriving (Eq, Show, Data, NFData, Generic)
 
 type RawDataArg' = RawArgType'
@@ -200,22 +203,24 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (ArgType' ext primTy primVal)
 
-data DataConWith ty ext primTy primVal = DataCon
-  { conName :: GlobalName,
-    conType :: ty primTy primVal
-  }
+data DataConWith ty ext primTy primVal
+  = DataCon
+      { conName :: GlobalName,
+        conType :: ty primTy primVal
+      }
   deriving (Eq, Show, Data, NFData, Generic)
 
 type RawDataCon' ext = DataConWith (Term' ext)
 
 type DataCon' extV = DataConWith (Value' extV)
 
-data FunctionWith ty ext primTy primVal = Function
-  { funName :: GlobalName,
-    funUsage :: GlobalUsage,
-    funType :: ty primTy primVal,
-    funClauses :: NonEmpty (FunClause' ext primTy primVal)
-  }
+data FunctionWith ty ext primTy primVal
+  = Function
+      { funName :: GlobalName,
+        funUsage :: GlobalUsage,
+        funType :: ty primTy primVal,
+        funClauses :: NonEmpty (FunClause' ext primTy primVal)
+      }
   deriving (Generic)
 
 type RawFunction' ext = FunctionWith (Term' ext) ext
@@ -256,11 +261,12 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (FunClause' ext primTy primVal)
 
-data AbstractWith ty (primTy :: *) (primVal :: *) = Abstract
-  { absName :: GlobalName,
-    absUsage :: GlobalUsage,
-    absType :: ty primTy primVal
-  }
+data AbstractWith ty (primTy :: *) (primVal :: *)
+  = Abstract
+      { absName :: GlobalName,
+        absUsage :: GlobalUsage,
+        absType :: ty primTy primVal
+      }
   deriving (Generic)
 
 type RawAbstract' ext = AbstractWith (Term' ext)
@@ -322,33 +328,34 @@ type Globals' ext primTy primVal =
 type Telescope ext primTy primVal =
   [(Name, Term' ext primTy primVal)]
 
-data FunClause' ext primTy primVal = -- | Clause has been labelled as unreachable by the coverage checker.
-  --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
-  --   @Just False@ means clause is not unreachable.
-  --   @Just True@ means clause is unreachable.
-  FunClause
-  { -- | @Δ@: The types of the pattern variables in dependency order.
-    -- , namedClausePats :: NAPs (Using Name instead atm)
-    -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-    clauseTel :: Telescope ext primTy primVal,
-    namedClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
+data FunClause' ext primTy primVal
+  = -- | Clause has been labelled as unreachable by the coverage checker.
+    --   @Nothing@ means coverage checker has not run yet (clause may be unreachable).
+    --   @Just False@ means clause is not unreachable.
+    --   @Just True@ means clause is unreachable.
+    FunClause
+      { -- | @Δ@: The types of the pattern variables in dependency order.
+        -- , namedClausePats :: NAPs (Using Name instead atm)
+        -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
+        clauseTel :: Telescope ext primTy primVal,
+        namedClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
 
-    -- | @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
-    --   absurd one.
-    clauseBody :: Maybe (Term' ext primTy primVal),
-    -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
-    clauseType :: Maybe (Value' ext primTy primVal),
-    -- | Clause has been labelled as CATCHALL.
-    -- , clauseRecursive   :: Maybe Bool TODO add this when termination checking
-    -- ^ @clauseBody@ contains recursive calls; computed by termination checker.
-    --   @Nothing@ means that termination checker has not run yet,
-    --   or that @clauseBody@ contains meta-variables;
-    --   these could be filled with recursive calls later!
-    --   @Just False@ means definitely no recursive call.
-    --   @Just True@ means definitely a recursive call.
-    clauseCatchall :: Bool,
-    clauseUnreachable :: Maybe Bool
-  }
+        -- | @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
+        --   absurd one.
+        clauseBody :: Maybe (Term' ext primTy primVal),
+        -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
+        clauseType :: Maybe (Value' ext primTy primVal),
+        -- | Clause has been labelled as CATCHALL.
+        -- , clauseRecursive   :: Maybe Bool TODO add this when termination checking
+        -- ^ @clauseBody@ contains recursive calls; computed by termination checker.
+        --   @Nothing@ means that termination checker has not run yet,
+        --   or that @clauseBody@ contains meta-variables;
+        --   these could be filled with recursive calls later!
+        --   @Just False@ means definitely no recursive call.
+        --   @Just True@ means definitely a recursive call.
+        clauseCatchall :: Bool,
+        clauseUnreachable :: Maybe Bool
+      }
   deriving (Generic)
 
 type Signature ty ext primTy primVal = Map.Map Name (SigDef ty ext primTy primVal)
@@ -361,7 +368,7 @@ data SigDef ty ext primTy primVal
   = -- function constant to its type, clauses, whether it's type checked
     FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ext primTy primVal)] Bool
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type
-  -- data type constant to # parameters, positivity of parameters, type
+        -- data type constant to # parameters, positivity of parameters, type
   | DataSig Int [Pos] (Value' ext primTy primVal)
 
 data Pos -- positivity
