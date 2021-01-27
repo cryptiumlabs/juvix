@@ -303,6 +303,7 @@ builtinValues =
     ("Michelson.empty-set", EmptyS),
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
+    ("Michelson.cons-pair", Pair'),
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] []))
   ]
