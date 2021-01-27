@@ -258,7 +258,8 @@ builtinTypes =
              ("Michelson.set", Types.Set),
              ("Michelson.map", Types.Map),
              ("Michelson.big-map", Types.BigMap),
-             ("Michelson.pair-ty", Types.Pair)
+             ("Michelson.pair-ty", Types.Pair),
+             ("Michelson.contract", Types.ContractT)
            ]
        )
     |> Map.fromList
@@ -291,6 +292,7 @@ builtinValues =
     ("Michelson.amount", Inst (M.AMOUNT "")),
     ("Michelson.balance", Inst (M.BALANCE "")),
     ("Michelson.hash-key", Inst (M.HASH_KEY "")),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
     ("Michelson.and", AndI),
     ("Michelson.xor", XorI),
     ("Michelson.or", OrB),

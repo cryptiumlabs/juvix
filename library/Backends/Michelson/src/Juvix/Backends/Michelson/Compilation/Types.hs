@@ -28,6 +28,7 @@ data PrimTy
   | Option
   | List
   | Set
+  | ContractT
   | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
