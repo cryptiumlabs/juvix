@@ -47,7 +47,7 @@ typecheck fin Michelson = do
     Right (FF.CoreDefs order globals) -> do
       print order
       let globalDefs = HM.mapMaybe (\case (CoreDef g) -> pure g; _ -> Nothing) globals
-      case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function ("TopLevel" :| [_, "main"]) _ _ _)) -> True; _ -> False) globalDefs of
+      case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function (_ :| ["main"]) _ _ _)) -> True; _ -> False) globalDefs of
         [] -> do
           print globalDefs
           T.putStrLn "No main function found"
