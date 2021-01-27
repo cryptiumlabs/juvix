@@ -16,6 +16,14 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
+inlineAllGlobals ::
+  ( EvalPatSubst ext' primTy primVal,
+    IR.ToTerm ty IR.NoExt IR.NoExt,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Term' (OnlyExts.T ext') primTy primVal ->
+  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  IR.Term' (OnlyExts.T ext') primTy primVal
 inlineAllGlobals t map =
   case t of
     IR.Unit -> t
@@ -23,11 +31,11 @@ inlineAllGlobals t map =
     IR.Pair p1 p2 ->
       IR.Pair (inlineAllGlobals p1 map) (inlineAllGlobals p2 map)
     IR.Elim elim ->
-      IR.Elim (inlineAllGloblasElim elim map)
+      IR.Elim (inlineAllGlobalsElim elim map)
     IR.Sig u t1 t2 ->
       IR.Sig u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
     IR.Let u e t ->
-      IR.Let u (inlineAllGloblasElim e map) (inlineAllGlobals t map)
+      IR.Let u (inlineAllGlobalsElim e map) (inlineAllGlobals t map)
     IR.Lam t ->
       IR.Lam (inlineAllGlobals t map)
     IR.Pi u t1 t2 ->
@@ -36,17 +44,20 @@ inlineAllGlobals t map =
     IR.PrimTy {} -> t
     IR.Star {} -> t
 
-inlineAllGloblasElim t map =
+inlineAllGlobalsElim ::
+  ( EvalPatSubst ext' primTy primVal,
+    IR.ToTerm ty IR.NoExt IR.NoExt,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Elim' (OnlyExts.T ext') primTy primVal ->
+  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  IR.Elim' (OnlyExts.T ext') primTy primVal
+inlineAllGlobalsElim t map =
   case t of
     IR.Bound {} -> t
-    IR.Free name ->
-      case map name >>= toLambda of
-        Just elim ->
-          elim
-        Nothing ->
-          t
+    IR.Free name -> fromMaybe t $ map name >>= toLambda
     IR.App elim term ->
-      IR.App (inlineAllGloblasElim elim map) (inlineAllGlobals term map)
+      IR.App (inlineAllGlobalsElim elim map) (inlineAllGlobals term map)
     IR.Ann u t1 t2 uni ->
       IR.Ann u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni
 
