@@ -14,7 +14,8 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Core.Application as App
+import qualified Juvix.Library.Usage as Usage
 
 inlineAllGlobals ::
   ( EvalPatSubst ext' primTy primVal,
@@ -826,6 +827,10 @@ instance HasWeak ()
 
 instance HasWeak Void
 
+instance HasWeak Natural where weakBy' _ _ n = n
+
+instance HasWeak Usage.T where weakBy' _ _ π = π
+
 instance (HasWeak a, HasWeak b) => HasWeak (a, b)
 
 instance (HasWeak a, HasWeak b, HasWeak c) => HasWeak (a, b, c)
@@ -836,9 +841,9 @@ instance HasWeak a => HasWeak (Maybe a)
 
 instance HasWeak a => HasWeak [a]
 
-instance HasWeak Symbol where weakBy' _ _ x = x
+instance HasWeak a => HasWeak (NonEmpty a)
 
-instance HasWeak NameSymbol.T where weakBy' _ _ x = x
+instance HasWeak Symbol where weakBy' _ _ x = x
 
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
@@ -889,6 +894,10 @@ instance HasSubst ext primTy primVal ()
 
 instance HasSubst ext primTy primVal Void
 
+instance HasSubst ext primTy primVal Natural where substWith _ _ _ n = n
+
+instance HasSubst ext primTy primVal Usage.T where substWith _ _ _ π = π
+
 instance
   ( HasSubst ext primTy primVal a,
     HasSubst ext primTy primVal b
@@ -916,10 +925,11 @@ instance
   HasSubst ext primTy primVal a =>
   HasSubst ext primTy primVal [a]
 
-instance HasSubst ext primTy primVal Symbol where
-  substWith _ _ _ x = x
+instance
+  HasSubst ext primTy primVal a =>
+  HasSubst ext primTy primVal (NonEmpty a)
 
-instance HasSubst ext primTy primVal NameSymbol.T where
+instance HasSubst ext primTy primVal Symbol where
   substWith _ _ _ x = x
 
 class GHasWeak f => GHasSubstV extV primTy primVal f where
@@ -970,6 +980,12 @@ instance HasSubstV ext primTy primVal ()
 
 instance HasSubstV ext primTy primVal Void
 
+instance HasSubstV ext primTy primVal Natural where
+  substVWith _ _ _ n = pure n
+
+instance HasSubstV ext primTy primVal Usage.T where
+  substVWith _ _ _ π = pure π
+
 instance
   ( HasSubstV ext primTy primVal a,
     HasSubstV ext primTy primVal b
@@ -997,10 +1013,11 @@ instance
   HasSubstV ext primTy primVal a =>
   HasSubstV ext primTy primVal [a]
 
-instance HasSubstV ext primTy primVal Symbol where
-  substVWith _ _ _ x = pure x
+instance
+  HasSubstV ext primTy primVal a =>
+  HasSubstV ext primTy primVal (NonEmpty a)
 
-instance HasSubstV ext primTy primVal NameSymbol.T where
+instance HasSubstV ext primTy primVal Symbol where
   substVWith _ _ _ x = pure x
 
 class GHasWeak f => GHasPatSubst extT primTy primVal f where
@@ -1052,6 +1069,12 @@ instance HasPatSubst ext primTy primVal ()
 
 instance HasPatSubst ext primTy primVal Void
 
+instance HasPatSubst ext primTy primVal Natural where
+  patSubst' _ _ n = pure n
+
+instance HasPatSubst ext primTy primVal Usage.T where
+  patSubst' _ _ π = pure π
+
 instance
   ( HasPatSubst ext primTy primVal a,
     HasPatSubst ext primTy primVal b
@@ -1078,3 +1101,108 @@ instance
 instance
   HasPatSubst ext primTy primVal a =>
   HasPatSubst ext primTy primVal [a]
+
+instance
+  HasPatSubst ext primTy primVal a =>
+  HasPatSubst ext primTy primVal (NonEmpty a)
+
+
+instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
+
+instance (HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.ArgBody' ext term)
+
+instance (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.Return' ext ty term)
+
+instance HasWeak App.DeBruijn
+
+
+instance (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
+  HasSubst ext primTy primVal (App.Take ty term)
+
+instance
+  ( HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasSubst ext primTy primVal (App.ArgBody' ext term)
+
+instance
+  ( HasSubst ext primTy primVal ty,
+    HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasSubst ext primTy primVal (App.Return' ext ty term)
+
+
+instance
+  ( HasPatSubst ext primTy primVal ty,
+    HasPatSubst ext primTy primVal term
+  ) =>
+  HasPatSubst ext primTy primVal (App.Take ty term)
+
+instance
+  ( HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasPatSubst ext primTy primVal (App.ArgBody' ext term)
+
+instance
+  ( HasPatSubst ext primTy primVal ty,
+    HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasPatSubst ext primTy primVal (App.Return' ext ty term)
+
+
+instance
+  AllSubst ext primTy primVal =>
+  HasSubstElim ext primTy primVal (IR.Elim' ext primTy primVal)
+  where
+  substElimWith = substWith
+
+instance
+  ( AllSubst ext primTy primVal,
+    Monoid (IR.XBound ext primTy primVal),
+    Monoid (IR.XFree ext primTy primVal)
+  ) =>
+  HasSubstElim ext primTy primVal App.DeBruijn
+  where
+  substElimWith b i e (App.BoundVar j) =
+    substWith b i e $ IR.Bound' j mempty
+  substElimWith _ _ _ (App.FreeVar x) =
+    IR.Free' (IR.Global x) mempty
+
+instance
+  ( HasSubstElim ext primTy primVal (App.ParamVar ext),
+    HasSubstElim ext primTy primVal term
+  ) =>
+  HasSubstElim ext primTy primVal (App.ArgBody' ext term)
+  where
+  substElimWith b i e (App.VarArg x) = substElimWith b i e x
+  substElimWith b i e (App.TermArg t) = substElimWith b i e t
+
+instance
+  ( HasSubstElim ext primTy primVal ty,
+    HasSubstElim ext primTy primVal term,
+    HasSubstElim ext primTy primVal (App.ParamVar ext),
+    Monoid (IR.XApp ext primTy primVal),
+    Monoid (IR.XElim ext primTy primVal)
+  ) =>
+  HasSubstElim ext primTy primVal (App.Return' ext ty term)
+  where
+  substElimWith b i e (App.Cont {fun, args}) = foldl app fun' args'
+    where
+      app f x = IR.App' f (IR.Elim' x mempty) mempty
+      fun' = substTake b i e fun
+      args' = substTake b i e <$> args
+  substElimWith b i e (App.Return {retTerm}) = substElimWith b i e retTerm
+
+substTake ::
+  HasSubstElim ext primTy primVal term =>
+  IR.BoundVar ->
+  IR.BoundVar ->
+  IR.Elim' ext primTy primVal ->
+  App.Take ty term ->
+  IR.Elim' ext primTy primVal
+substTake b i e (App.Take {term}) = substElimWith b i e term
