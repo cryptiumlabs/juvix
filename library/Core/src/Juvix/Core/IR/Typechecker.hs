@@ -321,7 +321,9 @@ requireSubtype subj exp got =
 
 useLocal ::
   ( HasBound primTy primVal m,
-    HasThrowTC' IR.NoExt ext primTy primVal m
+    HasThrowTC' IR.NoExt ext primTy primVal m,
+    Eval.HasWeak primTy,
+    Eval.HasWeak primVal
   ) =>
   Usage.T ->
   IR.BoundVar ->
@@ -370,7 +372,9 @@ substApp ::
     HasThrowTC' IR.NoExt extT primTy primVal m,
     HasGlobals primTy primVal m,
     Param.CanApply primTy,
-    Param.CanApply (TypedPrim primTy primVal)
+    Param.CanApply (TypedPrim primTy primVal),
+    PrimSubstValue primTy primVal,
+    PrimPatSubstElim primTy primVal
   ) =>
   Typed.ValueT primTy primVal ->
   Typed.Term primTy primVal ->
@@ -383,7 +387,9 @@ evalTC ::
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
     HasGlobals primTy primVal m,
     Param.CanApply primTy,
-    Param.CanApply (TypedPrim primTy primVal)
+    Param.CanApply (TypedPrim primTy primVal),
+    PrimSubstValue primTy primVal,
+    PrimPatSubstElim primTy primVal
   ) =>
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)

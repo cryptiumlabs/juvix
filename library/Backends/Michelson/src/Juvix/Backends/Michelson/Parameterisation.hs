@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
@@ -8,6 +9,7 @@ where
 
 import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
+import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
@@ -20,11 +22,17 @@ import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.IR.Typechecker.Types as TC
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
@@ -143,7 +151,7 @@ instance Core.CanApply (PrimVal' ext) where
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse (traverse App.argToTerm) args ->
+            | Just takes <- traverse (traverse App.argToBase) args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
@@ -344,3 +352,23 @@ michelson =
     }
 
 type CompErr = CompTypes.CompilationError
+
+instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
+
+instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
+
+instance
+  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  Eval.HasSubstValue ext PrimTy primVal PrimTy
+  where
+  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+
+instance
+  ( Monoid (IR.XPrimTy ext PrimTy primVal),
+    Monoid (IR.XAnn ext PrimTy primVal),
+    Monoid (IR.XStar ext PrimTy primVal)
+  ) =>
+  Eval.HasPatSubstElim ext PrimTy primVal PrimTy
+  where
+  patSubstElim' _ _ t =
+    pure $ IR.Ann' mempty (IR.PrimTy' t mempty) (IR.Star' 0 mempty) 1 mempty

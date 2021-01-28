@@ -7,15 +7,25 @@
 -- the substitution functions (substTerm and substElim).
 module Juvix.Core.IR.Evaluator where
 
+import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
+import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 
+inlineAllGlobals ::
+  ( EvalPatSubst ext' primTy primVal,
+    IR.ToTerm ty IR.NoExt IR.NoExt,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Term' (OnlyExts.T ext') primTy primVal ->
+  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  IR.Term' (OnlyExts.T ext') primTy primVal
 inlineAllGlobals t map =
   case t of
     IR.Unit -> t
@@ -23,11 +33,11 @@ inlineAllGlobals t map =
     IR.Pair p1 p2 ->
       IR.Pair (inlineAllGlobals p1 map) (inlineAllGlobals p2 map)
     IR.Elim elim ->
-      IR.Elim (inlineAllGloblasElim elim map)
+      IR.Elim (inlineAllGlobalsElim elim map)
     IR.Sig u t1 t2 ->
       IR.Sig u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
     IR.Let u e t ->
-      IR.Let u (inlineAllGloblasElim e map) (inlineAllGlobals t map)
+      IR.Let u (inlineAllGlobalsElim e map) (inlineAllGlobals t map)
     IR.Lam t ->
       IR.Lam (inlineAllGlobals t map)
     IR.Pi u t1 t2 ->
@@ -36,17 +46,20 @@ inlineAllGlobals t map =
     IR.PrimTy {} -> t
     IR.Star {} -> t
 
-inlineAllGloblasElim t map =
+inlineAllGlobalsElim ::
+  ( EvalPatSubst ext' primTy primVal,
+    IR.ToTerm ty IR.NoExt IR.NoExt,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Elim' (OnlyExts.T ext') primTy primVal ->
+  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  IR.Elim' (OnlyExts.T ext') primTy primVal
+inlineAllGlobalsElim t map =
   case t of
     IR.Bound {} -> t
-    IR.Free name ->
-      case map name >>= toLambda of
-        Just elim ->
-          elim
-        Nothing ->
-          t
+    IR.Free name -> fromMaybe t $ map name >>= toLambda
     IR.App elim term ->
-      IR.App (inlineAllGloblasElim elim map) (inlineAllGlobals term map)
+      IR.App (inlineAllGlobalsElim elim map) (inlineAllGlobals term map)
     IR.Ann u t1 t2 uni ->
       IR.Ann u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni
 
@@ -70,7 +83,9 @@ weak :: HasWeak a => a -> a
 weak = weak' 0
 
 type AllWeak ext primTy primVal =
-  ( IR.TermAll HasWeak ext primTy primVal,
+  ( HasWeak primTy,
+    HasWeak primVal,
+    IR.TermAll HasWeak ext primTy primVal,
     IR.ElimAll HasWeak ext primTy primVal
   )
 
@@ -78,9 +93,9 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
   weakBy' b i (IR.Star' u a) =
     IR.Star' u (weakBy' b i a)
   weakBy' b i (IR.PrimTy' p a) =
-    IR.PrimTy' p (weakBy' b i a)
+    IR.PrimTy' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.Prim' p a) =
-    IR.Prim' p (weakBy' b i a)
+    IR.Prim' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.Pi' π s t a) =
     IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Lam' t a) =
@@ -149,9 +164,39 @@ subst ::
   a
 subst = subst' 0
 
+class HasWeak a => HasSubstElim ext primTy primVal a where
+  substElimWith ::
+    -- | How many bindings have been traversed so far
+    IR.BoundVar ->
+    -- | Variable to substitute
+    IR.BoundVar ->
+    -- | Expression to substitute with
+    IR.Elim' ext primTy primVal ->
+    a ->
+    IR.Elim' ext primTy primVal
+
+substElim' ::
+  HasSubstElim ext primTy primVal a =>
+  IR.BoundVar ->
+  IR.Elim' ext primTy primVal ->
+  a ->
+  IR.Elim' ext primTy primVal
+substElim' = substElimWith 0
+
+substElim ::
+  HasSubstElim ext primTy primVal a =>
+  IR.Elim' ext primTy primVal ->
+  a ->
+  IR.Elim' ext primTy primVal
+substElim = substElim' 0
+
 type AllSubst ext primTy primVal =
   ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal
+    IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
+    HasSubstElim ext primTy primVal primTy,
+    HasSubstElim ext primTy primVal primVal,
+    IR.XPrimTy ext primTy primVal ~ IR.XElim ext primTy primVal,
+    IR.XPrim ext primTy primVal ~ IR.XElim ext primTy primVal
   )
 
 instance
@@ -161,9 +206,9 @@ instance
   substWith w i e (IR.Star' u a) =
     IR.Star' u (substWith w i e a)
   substWith w i e (IR.PrimTy' t a) =
-    IR.PrimTy' t (substWith w i e a)
+    IR.Elim' (substElimWith w i e t) (substWith w i e a)
   substWith w i e (IR.Prim' p a) =
-    IR.Prim' p (substWith w i e a)
+    IR.Elim' (substElimWith w i e p) (substWith w i e a)
   substWith w i e (IR.Pi' π s t a) =
     IR.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
   substWith w i e (IR.Lam' t a) =
@@ -230,9 +275,31 @@ patSubst ::
   Either IR.PatternVar a
 patSubst = patSubst' 0
 
+class HasWeak a => HasPatSubstElim extT primTy primVal a where
+  -- returns either a substituted term or an unbound pattern var
+  -- TODO: use @validation@ to return all unbound vars
+  patSubstElim' ::
+    -- | How many bindings have been traversed so far
+    Natural ->
+    -- | Mapping of pattern variables to matched subterms
+    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    a ->
+    Either IR.PatternVar (IR.Elim' extT primTy primVal)
+
+patSubstElim ::
+  (HasPatSubstElim extT primTy primVal a) =>
+  IR.PatternMap (IR.Elim' extT primTy primVal) ->
+  a ->
+  Either IR.PatternVar (IR.Elim' extT primTy primVal)
+patSubstElim = patSubstElim' 0
+
 type AllPatSubst ext primTy primVal =
   ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal
+    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+    HasPatSubstElim ext primTy primVal primTy,
+    HasPatSubstElim ext primTy primVal primVal,
+    IR.XPrimTy ext primTy primVal ~ IR.XElim ext primTy primVal,
+    IR.XPrim ext primTy primVal ~ IR.XElim ext primTy primVal
   )
 
 instance
@@ -242,9 +309,9 @@ instance
   patSubst' b m (IR.Star' u a) =
     IR.Star' u <$> patSubst' b m a
   patSubst' b m (IR.PrimTy' t a) =
-    IR.PrimTy' t <$> patSubst' b m a
+    IR.Elim' <$> patSubstElim' b m t <*> patSubst' b m a
   patSubst' b m (IR.Prim' p a) =
-    IR.Prim' p <$> patSubst' b m a
+    IR.Elim' <$> patSubstElim' b m p <*> patSubst' b m a
   patSubst' b m (IR.Pi' π s t a) =
     IR.Pi' π <$> patSubst' b m s
       <*> patSubst' (succ b) m t
@@ -299,7 +366,9 @@ instance
     IR.ElimX <$> patSubst' b m a
 
 type AllWeakV ext primTy primVal =
-  ( IR.ValueAll HasWeak ext primTy primVal,
+  ( HasWeak primTy,
+    HasWeak primVal,
+    IR.ValueAll HasWeak ext primTy primVal,
     IR.NeutralAll HasWeak ext primTy primVal
   )
 
@@ -310,7 +379,7 @@ instance
   weakBy' b i (IR.VStar' n a) =
     IR.VStar' n (weakBy' b i a)
   weakBy' b i (IR.VPrimTy' p a) =
-    IR.VPrimTy' p (weakBy' b i a)
+    IR.VPrimTy' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.VPi' π s t a) =
     IR.VPi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.VLam' t a) =
@@ -326,7 +395,7 @@ instance
   weakBy' b i (IR.VNeutral' n a) =
     IR.VNeutral' (weakBy' b i n) (weakBy' b i a)
   weakBy' b i (IR.VPrim' p a) =
-    IR.VPrim' p (weakBy' b i a)
+    IR.VPrim' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.ValueX a) =
     IR.ValueX (weakBy' b i a)
 
@@ -379,9 +448,36 @@ substV ::
   Either (Error extV extT primTy primVal) a
 substV = substV' 0
 
+class HasWeak a => HasSubstValue extV primTy primVal a where
+  substValueWith ::
+    Natural ->
+    IR.BoundVar ->
+    IR.Value' extV primTy primVal ->
+    a ->
+    Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+
+substValue' ::
+  HasSubstValue extV primTy primVal a =>
+  IR.BoundVar ->
+  IR.Value' extV primTy primVal ->
+  a ->
+  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+substValue' = substValueWith 0
+
+substValue ::
+  HasSubstValue extV primTy primVal a =>
+  IR.Value' extV primTy primVal ->
+  a ->
+  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+substValue = substValue' 0
+
 type AllSubstV extV primTy primVal =
   ( IR.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,
-    IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal
+    IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal,
+    HasSubstValue extV primTy primVal primTy,
+    HasSubstValue extV primTy primVal primVal,
+    Param.CanApply primTy,
+    Param.CanApply primVal
   )
 
 instance
@@ -389,16 +485,15 @@ instance
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   HasSubstV extV primTy primVal (IR.Value' extV primTy primVal)
   where
   substVWith w i e (IR.VStar' n a) =
     IR.VStar' n <$> substVWith w i e a
-  substVWith w i e (IR.VPrimTy' p a) =
-    IR.VPrimTy' p <$> substVWith w i e a
+  substVWith w i e (IR.VPrimTy' p _) =
+    -- TODO what about the annotation?
+    substValueWith w i e p
   substVWith w i e (IR.VPi' π s t a) =
     IR.VPi' π <$> substVWith w i e s
       <*> substVWith (succ w) (succ i) e t
@@ -420,19 +515,19 @@ instance
     IR.VUnit' <$> substVWith w i e a
   substVWith w i e (IR.VNeutral' n a) =
     substNeutralWith w i e n a
-  substVWith w i e (IR.VPrim' p a) =
-    IR.VPrim' p <$> substVWith w i e a
+  substVWith w i e (IR.VPrim' p _) =
+    -- TODO what about the annotation?
+    substValueWith w i e p
   substVWith w i e (IR.ValueX a) =
     IR.ValueX <$> substVWith w i e a
 
+-- (not quite an instance of @HasSubstValue@ because of the @XVNeutral@ stuff)
 substNeutralWith ::
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   Natural ->
   IR.BoundVar ->
@@ -518,9 +613,7 @@ vapp ::
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   IR.Value' extV primTy primVal ->
   IR.Value' extV primTy primVal ->
@@ -574,7 +667,10 @@ type NoExtensions ext primTy primVal =
 
 type EvalPatSubst ext primTy primVal =
   ( HasPatSubst (OnlyExts.T ext) primTy primVal (IR.TermX ext primTy primVal),
-    HasPatSubst (OnlyExts.T ext) primTy primVal (IR.ElimX ext primTy primVal)
+    HasPatSubst (OnlyExts.T ext) primTy primVal (IR.ElimX ext primTy primVal),
+    -- FIXME?
+    HasPatSubstElim (OnlyExts.T ext) primTy primVal primTy,
+    HasPatSubstElim (OnlyExts.T ext) primTy primVal primVal
   )
 
 -- |
@@ -585,7 +681,9 @@ type CanEval extT extG primTy primVal =
     Param.CanApply primVal,
     EvalPatSubst extT primTy primVal,
     -- no extensions (only annotations) allowed in global context
-    NoExtensions extG primTy primVal
+    NoExtensions extG primTy primVal,
+    HasSubstValue IR.NoExt primTy primVal primTy,
+    HasSubstValue IR.NoExt primTy primVal primVal
   )
 
 -- annotations are discarded
@@ -725,6 +823,10 @@ instance HasWeak ()
 
 instance HasWeak Void
 
+instance HasWeak Natural where weakBy' _ _ n = n
+
+instance HasWeak Usage.T where weakBy' _ _ π = π
+
 instance (HasWeak a, HasWeak b) => HasWeak (a, b)
 
 instance (HasWeak a, HasWeak b, HasWeak c) => HasWeak (a, b, c)
@@ -735,9 +837,9 @@ instance HasWeak a => HasWeak (Maybe a)
 
 instance HasWeak a => HasWeak [a]
 
-instance HasWeak Symbol where weakBy' _ _ x = x
+instance HasWeak a => HasWeak (NonEmpty a)
 
-instance HasWeak NameSymbol.T where weakBy' _ _ x = x
+instance HasWeak Symbol where weakBy' _ _ x = x
 
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
@@ -788,6 +890,10 @@ instance HasSubst ext primTy primVal ()
 
 instance HasSubst ext primTy primVal Void
 
+instance HasSubst ext primTy primVal Natural where substWith _ _ _ n = n
+
+instance HasSubst ext primTy primVal Usage.T where substWith _ _ _ π = π
+
 instance
   ( HasSubst ext primTy primVal a,
     HasSubst ext primTy primVal b
@@ -815,10 +921,11 @@ instance
   HasSubst ext primTy primVal a =>
   HasSubst ext primTy primVal [a]
 
-instance HasSubst ext primTy primVal Symbol where
-  substWith _ _ _ x = x
+instance
+  HasSubst ext primTy primVal a =>
+  HasSubst ext primTy primVal (NonEmpty a)
 
-instance HasSubst ext primTy primVal NameSymbol.T where
+instance HasSubst ext primTy primVal Symbol where
   substWith _ _ _ x = x
 
 class GHasWeak f => GHasSubstV extV primTy primVal f where
@@ -869,6 +976,12 @@ instance HasSubstV ext primTy primVal ()
 
 instance HasSubstV ext primTy primVal Void
 
+instance HasSubstV ext primTy primVal Natural where
+  substVWith _ _ _ n = pure n
+
+instance HasSubstV ext primTy primVal Usage.T where
+  substVWith _ _ _ π = pure π
+
 instance
   ( HasSubstV ext primTy primVal a,
     HasSubstV ext primTy primVal b
@@ -896,10 +1009,11 @@ instance
   HasSubstV ext primTy primVal a =>
   HasSubstV ext primTy primVal [a]
 
-instance HasSubstV ext primTy primVal Symbol where
-  substVWith _ _ _ x = pure x
+instance
+  HasSubstV ext primTy primVal a =>
+  HasSubstV ext primTy primVal (NonEmpty a)
 
-instance HasSubstV ext primTy primVal NameSymbol.T where
+instance HasSubstV ext primTy primVal Symbol where
   substVWith _ _ _ x = pure x
 
 class GHasWeak f => GHasPatSubst extT primTy primVal f where
@@ -951,6 +1065,12 @@ instance HasPatSubst ext primTy primVal ()
 
 instance HasPatSubst ext primTy primVal Void
 
+instance HasPatSubst ext primTy primVal Natural where
+  patSubst' _ _ n = pure n
+
+instance HasPatSubst ext primTy primVal Usage.T where
+  patSubst' _ _ π = pure π
+
 instance
   ( HasPatSubst ext primTy primVal a,
     HasPatSubst ext primTy primVal b
@@ -977,3 +1097,213 @@ instance
 instance
   HasPatSubst ext primTy primVal a =>
   HasPatSubst ext primTy primVal [a]
+
+instance
+  HasPatSubst ext primTy primVal a =>
+  HasPatSubst ext primTy primVal (NonEmpty a)
+
+instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
+
+instance
+  (HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.ArgBody' ext term)
+
+instance
+  (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.Return' ext ty term)
+
+instance HasWeak App.DeBruijn
+
+instance
+  (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
+  HasSubst ext primTy primVal (App.Take ty term)
+
+instance
+  ( HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasSubst ext primTy primVal (App.ArgBody' ext term)
+
+instance
+  ( HasSubst ext primTy primVal ty,
+    HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasSubst ext primTy primVal (App.Return' ext ty term)
+
+instance
+  ( HasPatSubst ext primTy primVal ty,
+    HasPatSubst ext primTy primVal term
+  ) =>
+  HasPatSubst ext primTy primVal (App.Take ty term)
+
+instance
+  ( HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasPatSubst ext primTy primVal (App.ArgBody' ext term)
+
+instance
+  ( HasPatSubst ext primTy primVal ty,
+    HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal (App.ParamVar ext)
+  ) =>
+  HasPatSubst ext primTy primVal (App.Return' ext ty term)
+
+instance
+  AllSubst ext primTy primVal =>
+  HasSubstElim ext primTy primVal (IR.Elim' ext primTy primVal)
+  where
+  substElimWith = substWith
+
+instance
+  ( AllSubst ext primTy primVal,
+    Monoid (IR.XBound ext primTy primVal),
+    Monoid (IR.XFree ext primTy primVal)
+  ) =>
+  HasSubstElim ext primTy primVal App.DeBruijn
+  where
+  substElimWith b i e (App.BoundVar j) =
+    substWith b i e $ IR.Bound' j mempty
+  substElimWith _ _ _ (App.FreeVar x) =
+    IR.Free' (IR.Global x) mempty
+
+instance
+  ( HasSubstElim ext primTy primVal (App.ParamVar ext),
+    HasSubstElim ext primTy primVal term
+  ) =>
+  HasSubstElim ext primTy primVal (App.ArgBody' ext term)
+  where
+  substElimWith b i e (App.VarArg x) = substElimWith b i e x
+  substElimWith b i e (App.TermArg t) = substElimWith b i e t
+
+substTake ::
+  HasSubstElim ext primTy primVal term =>
+  IR.BoundVar ->
+  IR.BoundVar ->
+  IR.Elim' ext primTy primVal ->
+  App.Take ty term ->
+  IR.Elim' ext primTy primVal
+substTake b i e (App.Take {term}) = substElimWith b i e term
+
+instance
+  ( AllSubstV extV primTy primVal,
+    Monoid (IR.XVNeutral extV primTy primVal),
+    Monoid (IR.XVLam extV primTy primVal),
+    Monoid (IR.XVPrimTy extV primTy primVal),
+    Monoid (IR.XVPrim extV primTy primVal)
+  ) =>
+  HasSubstValue extV primTy primVal (IR.Value' extV primTy primVal)
+  where
+  substValueWith = substVWith
+
+instance
+  ( AllSubstV ext primTy primVal,
+    Monoid (IR.XNBound ext primTy primVal),
+    Monoid (IR.XNFree ext primTy primVal),
+    Monoid (IR.XVNeutral ext primTy primVal),
+    Monoid (IR.XVLam ext primTy primVal),
+    Monoid (IR.XVPrimTy ext primTy primVal),
+    Monoid (IR.XVPrim ext primTy primVal)
+  ) =>
+  HasSubstValue ext primTy primVal App.DeBruijn
+  where
+  substValueWith b i e (App.BoundVar j) =
+    substNeutralWith b i e (IR.NBound' j mempty) mempty
+  substValueWith _ _ _ (App.FreeVar x) =
+    pure $ IR.VNeutral' (IR.NFree' (IR.Global x) mempty) mempty
+
+instance
+  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+    HasSubstValue ext primTy primVal term
+  ) =>
+  HasSubstValue ext primTy primVal (App.ArgBody' ext term)
+  where
+  substValueWith b i e (App.VarArg x) = substValueWith b i e x
+  substValueWith b i e (App.TermArg t) = substValueWith b i e t
+
+instance
+  ( HasSubstValue ext primTy primVal a,
+    IR.ValueAll HasWeak ext primTy primVal,
+    IR.NeutralAll HasWeak ext primTy primVal,
+    HasWeak primTy,
+    HasWeak primVal,
+    Monoid (IR.XVPi ext primTy primVal)
+  ) =>
+  HasSubstValue ext primTy primVal (NonEmpty a)
+  where
+  substValueWith b i e tys =
+    foldr1 pi <$> traverse (substValueWith b i e) tys
+    where
+      pi s t = IR.VPi' Usage.Omega s (weak t) mempty
+
+-- TODO generalise @IR.NoExt@
+instance
+  ( HasWeak primTy,
+    HasWeak primVal,
+    HasSubstValue IR.NoExt primTy (Param.TypedPrim primTy primVal) primTy,
+    Param.CanApply primTy,
+    Param.CanApply (Param.TypedPrim primTy primVal)
+  ) =>
+  HasSubstValue IR.NoExt primTy
+    (Param.TypedPrim primTy primVal)
+    (Param.TypedPrim primTy primVal)
+  where
+  substValueWith b i e (App.Cont {fun, args}) = do
+    let app f x = vapp f x ()
+    let fun' = IR.VPrim (App.takeToReturn fun)
+    args' <- traverse (substVWith b i e . argToValue) args
+    foldlM app fun' args'
+  substValueWith b i e ret@(App.Return {}) =
+    pure $ IR.VPrim ret
+
+argToValue ::
+  App.Arg (Param.PrimType primTy) primVal ->
+  IR.Value primTy (Param.TypedPrim primTy primVal)
+argToValue (App.Take {type', term}) =
+  case term of
+    App.TermArg term -> IR.VPrim $ App.Return {retType = type', retTerm = term}
+    App.BoundArg i -> IR.VBound i
+    App.FreeArg x -> IR.VFree $ IR.Global x
+
+instance
+  ( HasWeak primTy,
+    HasWeak primVal
+  ) =>
+  HasPatSubstElim (OnlyExts.T ext) primTy
+    (Param.TypedPrim primTy primVal)
+    (Param.TypedPrim primTy primVal)
+  where
+  -- FIXME pat vars can't yet show up here
+  patSubstElim' _ _ (App.Cont {fun, args}) =
+    pure $ foldl IR.App (takeToElim fun) (map argToTerm args)
+  patSubstElim' _ _ (App.Return {retType, retTerm}) =
+    pure $ takeToElim $ App.Take {type' = retType, term = retTerm}
+
+takeToElim ::
+  App.Take (Param.PrimType primTy) primVal ->
+  IR.Elim' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
+takeToElim (App.Take {type', term}) =
+  let term' = IR.Prim (App.Return {retType = type', retTerm = term})
+      ty' = typeToTerm type'
+   in IR.Ann Usage.Omega term' ty' 0
+
+argToTerm ::
+  App.Arg (Param.PrimType primTy) primVal ->
+  IR.Term' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
+argToTerm (App.Take {type', term}) =
+  case term of
+    App.TermArg term -> IR.Prim $ App.Return {retType = type', retTerm = term}
+    App.BoundArg i -> IR.Elim $ IR.Bound i
+    App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
+
+typeToTerm ::
+  ( Monoid (IR.XPi ext primTy primVal),
+    Monoid (IR.XPrimTy ext primTy primVal)
+  ) =>
+  Param.PrimType primTy ->
+  IR.Term' ext primTy primVal
+typeToTerm tys = foldr1 arr $ map prim tys
+  where
+    prim ty = IR.PrimTy' ty mempty
+    arr s t = IR.Pi' Usage.Omega s t mempty

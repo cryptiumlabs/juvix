@@ -1,13 +1,17 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Core.Parameterisations.All where
 
 import Data.Coerce
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.IR.Evaluator as E
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library hiding ((<|>))
+import qualified Juvix.Library.Usage as Usage
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -49,6 +53,10 @@ hasType (NatVal x) (traverse unNatTy -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _ _ = False
 
+typeOf :: Val -> P.PrimType Ty
+typeOf (NatVal x) = NatTy <$> Naturals.typeOf x
+typeOf (UnitVal _) = UnitTy Unit.Ty :| []
+
 instance P.CanApply Ty where
   arity _ = 0
   apply f xs = Left $ P.ExtraArguments f xs
@@ -70,6 +78,39 @@ instance P.CanApply (P.TypedPrim Ty Val) where
       Just xs <- traverse unNatValR xs' =
       P.mapApplyErr natValR $ P.apply f xs
   apply f xs = Left $ P.InvalidArguments f xs
+
+instance E.HasWeak Ty where weakBy' _ _ ty = ty
+
+instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
+  substValueWith _ _ _ ty = pure $ IR.VPrimTy' ty mempty
+
+instance
+  ( E.HasWeak val,
+    Monoid (IR.XAnn ext Ty val),
+    Monoid (IR.XPrimTy ext Ty val),
+    Monoid (IR.XStar ext Ty val)
+  ) =>
+  E.HasPatSubstElim ext Ty val Ty
+  where
+  patSubstElim' _ _ ty =
+    pure $ IR.Ann' mempty (IR.PrimTy' ty mempty) (IR.Star' 0 mempty) 1 mempty
+
+instance E.HasWeak Val where weakBy' _ _ val = val
+
+instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
+  substValueWith _ _ _ val = pure $ IR.VPrim' val mempty
+
+instance
+  ( Monoid (IR.XAnn ext Ty Val),
+    Monoid (IR.XPrim ext Ty Val),
+    Monoid (IR.XPrimTy ext Ty Val),
+    Monoid (IR.XPi ext Ty Val)
+  ) =>
+  E.HasPatSubstElim ext Ty Val Val
+  where
+  patSubstElim' _ _ val =
+    let ty = E.typeToTerm $ typeOf val
+     in pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
 
 natValR :: P.TypedPrim Naturals.Ty Naturals.Val -> P.TypedPrim Ty Val
 natValR (App.Cont {fun, args, numLeft}) =

@@ -88,9 +88,9 @@ type Arg' ext ty term = Take ty (ArgBody' ext term)
 
 type Arg ty term = Arg' IR.NoExt ty term
 
-argToTerm :: Alternative f => ArgBody' ext term -> f term
-argToTerm (TermArg t) = pure t
-argToTerm _ = empty
+argToBase :: Alternative f => ArgBody' ext term -> f term
+argToBase (TermArg t) = pure t
+argToBase _ = empty
 
 -- |
 -- An argument to a partially applied primitive, which must be
@@ -111,3 +111,6 @@ instance Bifoldable Take where
 
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
+
+takeToReturn :: Take ty term -> Return' ext ty term
+takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}
