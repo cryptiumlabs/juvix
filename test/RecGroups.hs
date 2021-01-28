@@ -12,15 +12,45 @@ top :: T.TestTree
 top =
   T.testGroup
     "Rec Groups tests"
-    [pipeline]
+    [pipeline, pipelineOpen]
 
 pipeline :: T.TestTree
 pipeline =
   let correctOrder =
-        ["Rec-Groups-Helper" :| ["ty_"], "Rec-Groups-Helper" :| ["ty"], "Rec-Groups-Helper" :| ["foo"], "Rec-Groups" :| ["main"]]
+        [ "Rec-Groups-Helper" :| ["ty_"],
+          "Rec-Groups-Helper" :| ["ty"],
+          "Rec-Groups-Helper" :| ["foo"],
+          "Rec-Groups" :| ["main"]
+        ]
    in T.testCase
         "multiple modules have correct ordering"
         $ do
-          Right c <- Pipeline.toCore ["test/examples/demo/rec-groups.ju", "test/examples/demo/rec-groups-helper.ju"]
+          Right c <-
+            Pipeline.toCore
+              [ "test/examples/demo/rec-groups.ju",
+                "test/examples/demo/rec-groups-helper.ju"
+              ]
+          let recd = Traverse.recGroups c
+          fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
+
+pipelineOpen :: T.TestTree
+pipelineOpen =
+  let correctOrder =
+        [ "Foo-Helper" :| ["bar"],
+          "Foo-Helper" :| ["Bah", "fi"],
+          "Foo-Helper" :| ["Bah", "Baz", "si"],
+          "Identity" :| ["fi"],
+          "Identity" :| ["main"]
+        ]
+   in T.testCase
+        "multiple modules have correct ordering"
+        $ do
+          Right c <-
+            Pipeline.toCore
+              [ "test/examples/test/foo.ju",
+                "test/examples/test/foo-helper.ju",
+                "test/examples/test/foo-helpers.ju",
+                "test/examples/test/baz.ju"
+             ]
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder

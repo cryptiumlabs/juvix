@@ -1,0 +1,6 @@
+mod Foo-Helper.Bah.Baz where
+
+open Foo-Helper.Bah
+
+sig si : 3
+let si = 3
