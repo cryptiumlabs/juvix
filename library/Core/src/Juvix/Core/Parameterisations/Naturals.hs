@@ -1,11 +1,14 @@
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE OverloadedLists, UndecidableInstances #-}
 
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Parameterisation as P
+import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Evaluator as E
 import Juvix.Library hiding ((<|>), natVal)
+import qualified Juvix.Library.Usage as Usage
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
@@ -72,6 +75,38 @@ instance P.CanApply (Typed.TypedPrim Ty Val) where
       unReturn _ = Nothing
       wrap x = App.Return {retTerm = x, retType = typeOf x}
   apply f' xs' = Left $ P.InvalidArguments f' xs'
+
+instance E.HasWeak Ty where weakBy' _ _ ty = ty
+
+instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
+  substValueWith _ _ _ ty = pure $ IR.VPrimTy' ty mempty
+
+instance
+  ( E.HasWeak val,
+    Monoid (IR.XAnn ext Ty val),
+    Monoid (IR.XPrimTy ext Ty val),
+    Monoid (IR.XStar ext Ty val)
+  ) =>
+  E.HasPatSubstElim ext Ty val Ty
+  where
+  patSubstElim' _ _ ty =
+    pure $ IR.Ann' mempty (IR.PrimTy' ty mempty) (IR.Star' 0 mempty) 1 mempty
+
+instance E.HasWeak Val where weakBy' _ _ val = val
+
+instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
+  substValueWith _ _ _ val = pure $ IR.VPrim' val mempty
+
+instance
+  ( Monoid (IR.XAnn ext Ty Val),
+    Monoid (IR.XPrim ext Ty Val),
+    Monoid (IR.XPrimTy ext Ty Val)
+  ) =>
+  E.HasPatSubstElim ext Ty Val Val
+  where
+  patSubstElim' _ _ val =
+    pure $
+      IR.Ann' Usage.Omega (IR.Prim' val mempty) (IR.PrimTy' Ty mempty) 0 mempty
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do
