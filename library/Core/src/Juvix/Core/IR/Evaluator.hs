@@ -163,8 +163,8 @@ subst ::
 subst = subst' 0
 
 
-class HasWeak a => HasSubstTerm ext primTy primVal a where
-  substTermWith ::
+class HasWeak a => HasSubstElim ext primTy primVal a where
+  substElimWith ::
     -- | How many bindings have been traversed so far
     IR.BoundVar ->
     -- | Variable to substitute
@@ -172,28 +172,30 @@ class HasWeak a => HasSubstTerm ext primTy primVal a where
     -- | Expression to substitute with
     IR.Elim' ext primTy primVal ->
     a ->
-    IR.Term' ext primTy primVal
+    IR.Elim' ext primTy primVal
 
-substTerm' ::
-  HasSubstTerm ext primTy primVal a =>
+substElim' ::
+  HasSubstElim ext primTy primVal a =>
   IR.BoundVar ->
   IR.Elim' ext primTy primVal ->
   a ->
-  IR.Term' ext primTy primVal
-substTerm' = substTermWith 0
+  IR.Elim' ext primTy primVal
+substElim' = substElimWith 0
 
-substTerm ::
-  HasSubstTerm ext primTy primVal a =>
+substElim ::
+  HasSubstElim ext primTy primVal a =>
   IR.Elim' ext primTy primVal ->
   a ->
-  IR.Term' ext primTy primVal
-substTerm = substTerm' 0
+  IR.Elim' ext primTy primVal
+substElim = substElim' 0
 
 type AllSubst ext primTy primVal =
   ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
     IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
-    HasSubstTerm ext primTy primVal primTy,
-    HasSubstTerm ext primTy primVal primVal
+    HasSubstElim ext primTy primVal primTy,
+    HasSubstElim ext primTy primVal primVal,
+    IR.XPrimTy ext primTy primVal ~ IR.XElim ext primTy primVal,
+    IR.XPrim ext primTy primVal ~ IR.XElim ext primTy primVal
   )
 
 instance
@@ -202,12 +204,10 @@ instance
   where
   substWith w i e (IR.Star' u a) =
     IR.Star' u (substWith w i e a)
-  substWith w i e (IR.PrimTy' t _) =
-    -- TODO what about the annotation?
-    substTermWith w i e t
-  substWith w i e (IR.Prim' p _) =
-    -- TODO what about the annotation?
-    substTermWith w i e p
+  substWith w i e (IR.PrimTy' t a) =
+    IR.Elim' (substElimWith w i e t) (substWith w i e a)
+  substWith w i e (IR.Prim' p a) =
+    IR.Elim' (substElimWith w i e p) (substWith w i e a)
   substWith w i e (IR.Pi' π s t a) =
     IR.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
   substWith w i e (IR.Lam' t a) =
@@ -274,29 +274,31 @@ patSubst ::
   Either IR.PatternVar a
 patSubst = patSubst' 0
 
-class HasWeak a => HasPatSubstTerm extT primTy primVal a where
+class HasWeak a => HasPatSubstElim extT primTy primVal a where
   -- returns either a substituted term or an unbound pattern var
   -- TODO: use @validation@ to return all unbound vars
-  patSubstTerm' ::
+  patSubstElim' ::
     -- | How many bindings have been traversed so far
     Natural ->
     -- | Mapping of pattern variables to matched subterms
     IR.PatternMap (IR.Elim' extT primTy primVal) ->
     a ->
-    Either IR.PatternVar (IR.Term' extT primTy primVal)
+    Either IR.PatternVar (IR.Elim' extT primTy primVal)
 
-patSubstTerm ::
-  (HasPatSubstTerm extT primTy primVal a) =>
+patSubstElim ::
+  (HasPatSubstElim extT primTy primVal a) =>
   IR.PatternMap (IR.Elim' extT primTy primVal) ->
   a ->
-  Either IR.PatternVar (IR.Term' extT primTy primVal)
-patSubstTerm = patSubstTerm' 0
+  Either IR.PatternVar (IR.Elim' extT primTy primVal)
+patSubstElim = patSubstElim' 0
 
 type AllPatSubst ext primTy primVal =
   ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
     IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,
-    HasPatSubstTerm ext primTy primVal primTy,
-    HasPatSubstTerm ext primTy primVal primVal
+    HasPatSubstElim ext primTy primVal primTy,
+    HasPatSubstElim ext primTy primVal primVal,
+    IR.XPrimTy ext primTy primVal ~ IR.XElim ext primTy primVal,
+    IR.XPrim ext primTy primVal ~ IR.XElim ext primTy primVal
   )
 
 instance
@@ -305,12 +307,10 @@ instance
   where
   patSubst' b m (IR.Star' u a) =
     IR.Star' u <$> patSubst' b m a
-  patSubst' b m (IR.PrimTy' t _) =
-    -- TODO what about the annotation?
-    patSubstTerm' b m t
-  patSubst' b m (IR.Prim' p _) =
-    -- FIXME
-    patSubstTerm' b m p
+  patSubst' b m (IR.PrimTy' t a) =
+    IR.Elim' <$> patSubstElim' b m t <*> patSubst' b m a
+  patSubst' b m (IR.Prim' p a) =
+    IR.Elim' <$> patSubstElim' b m p <*> patSubst' b m a
   patSubst' b m (IR.Pi' π s t a) =
     IR.Pi' π <$> patSubst' b m s
       <*> patSubst' (succ b) m t
@@ -672,8 +672,8 @@ type EvalPatSubst ext primTy primVal =
   ( HasPatSubst (OnlyExts.T ext) primTy primVal (IR.TermX ext primTy primVal),
     HasPatSubst (OnlyExts.T ext) primTy primVal (IR.ElimX ext primTy primVal),
     -- FIXME?
-    HasPatSubstTerm (OnlyExts.T ext) primTy primVal primTy,
-    HasPatSubstTerm (OnlyExts.T ext) primTy primVal primVal
+    HasPatSubstElim (OnlyExts.T ext) primTy primVal primTy,
+    HasPatSubstElim (OnlyExts.T ext) primTy primVal primVal
   )
 
 -- |
