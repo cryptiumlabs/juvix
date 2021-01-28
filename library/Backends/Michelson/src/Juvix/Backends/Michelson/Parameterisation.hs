@@ -27,6 +27,7 @@ import qualified Juvix.Core.Types as Core
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.Usage as Usage
@@ -357,57 +358,3 @@ instance
   patSubstElim' _ _ t =
     pure $ IR.Ann' mempty (IR.PrimTy' t mempty) (IR.Star' 0 mempty) 1 mempty
 
--- TODO generalise @IR.NoExt@/@PrimValIR@
-instance
-  Eval.HasSubstValue IR.NoExt PrimTy PrimValIR PrimValIR
-  where
-  substValueWith b i e (App.Cont {fun, args}) = do
-    let app f x = Eval.vapp f x ()
-    let fun' = IR.VPrim (App.takeToReturn fun)
-    args' <- traverse (Eval.substVWith b i e . argToValue) args
-    foldlM app fun' args'
-  substValueWith b i e ret@(App.Return {}) =
-    pure $ IR.VPrim ret
-
-argToValue ::
-  App.Arg (Core.PrimType PrimTy) RawPrimVal -> IR.Value PrimTy PrimValIR
-argToValue (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.VPrim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.VBound i
-    App.FreeArg x -> IR.VFree $ IR.Global x
-
-instance Eval.HasPatSubstElim (OnlyExts.T ext) PrimTy PrimValIR PrimValIR where
-  -- FIXME pat vars can't yet show up here
-  patSubstElim' _ _ (App.Cont {fun, args}) =
-    pure $ foldl IR.App (takeToElim fun) (map argToTerm args)
-  patSubstElim' _ _ (App.Return {retType, retTerm}) =
-    pure $ takeToElim $ App.Take {type' = retType, term = retTerm}
-
-takeToElim ::
-  App.Take (Core.PrimType PrimTy) RawPrimVal ->
-  IR.Elim' (OnlyExts.T ext) PrimTy PrimValIR
-takeToElim (App.Take {type', term}) =
-  let term' = IR.Prim (App.Return {retType = type', retTerm = term})
-      ty'   = typeToTerm type'
-   in IR.Ann Usage.Omega term' ty' 0
-
-argToTerm ::
-  App.Arg (Core.PrimType PrimTy) RawPrimVal ->
-  IR.Term' (OnlyExts.T ext) PrimTy PrimValIR
-argToTerm (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.Prim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.Elim $ IR.Bound i
-    App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
-
-typeToTerm ::
-  ( Monoid (IR.XPi ext primTy primVal),
-    Monoid (IR.XPrimTy ext primTy primVal)
-  ) =>
-  Core.PrimType primTy ->
-  IR.Term' ext primTy primVal
-typeToTerm tys = foldr1 arr $ map prim tys
-  where
-    prim ty = IR.PrimTy' ty mempty
-    arr s t = IR.Pi' Usage.Omega s t mempty
