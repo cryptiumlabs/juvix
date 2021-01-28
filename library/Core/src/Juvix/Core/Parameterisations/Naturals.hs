@@ -100,13 +100,14 @@ instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
 instance
   ( Monoid (IR.XAnn ext Ty Val),
     Monoid (IR.XPrim ext Ty Val),
-    Monoid (IR.XPrimTy ext Ty Val)
+    Monoid (IR.XPrimTy ext Ty Val),
+    Monoid (IR.XPi ext Ty Val)
   ) =>
   E.HasPatSubstElim ext Ty Val Val
   where
   patSubstElim' _ _ val =
-    pure $
-      IR.Ann' Usage.Omega (IR.Prim' val mempty) (IR.PrimTy' Ty mempty) 0 mempty
+    let ty = E.typeToTerm $ typeOf val in
+    pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

@@ -22,6 +22,9 @@ top =
       piBindsItself
     ]
 
+data A = A deriving (Eq, Show)
+instance Eval.HasWeak A where weakBy' _ _ A = A
+
 --------------------------------------------------------------------------------
 -- Generic Terms
 --------------------------------------------------------------------------------
@@ -44,13 +47,13 @@ freeVal x =
 
 weakensFree :: T.TestTree
 weakensFree =
-  (\x -> ((Eval.weakBy x (freeVal 0) :: IR.Term Int Int) T.=== freeVal x))
+  (\x -> ((Eval.weakBy x (freeVal 0) :: IR.Term A A) T.=== freeVal x))
     |> forAllNats
     |> T.testProperty "Promoting a bound at 0 by x is the same as having bound x"
 
 weaken1DoesNotEffect0 :: T.TestTree
 weaken1DoesNotEffect0 =
-  let t :: IR.Term Int Int
+  let t :: IR.Term A A
       t = freeVal 0
       f x y =
         Eval.weakBy' x (succ y) t T.=== t
@@ -62,7 +65,7 @@ letsNonRecursive =
   let body = IR.Elim (IR.Bound 0)
       bound = IR.Bound 0
       --
-      t :: IR.Term Int Int
+      t :: IR.Term A A
       t = IR.Let one bound body
       --
       relation x =
@@ -73,7 +76,7 @@ letsNonRecursive =
 
 weakOnlyShiftsFree :: T.TestTree
 weakOnlyShiftsFree =
-  let t :: IR.Term Int Int
+  let t :: IR.Term A A
       t = dollarSign 1
    in (\x -> Eval.weakBy x t T.=== dollarSign (succ x))
         |> forAllNats
@@ -83,7 +86,7 @@ piBindsItself :: T.TestTree
 piBindsItself =
   let body = IR.Elim (IR.Bound 0)
       --
-      t :: IR.Term Int Int
+      t :: IR.Term A A
       t = IR.Pi one (freeVal 0) body
       --
       relation x =

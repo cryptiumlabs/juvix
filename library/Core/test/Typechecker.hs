@@ -9,6 +9,7 @@ import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.Types
 import Juvix.Library hiding (identity)
 import Juvix.Library.HashMap as Map
@@ -67,7 +68,10 @@ shouldCheckWith ::
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstElim primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.GlobalsT primTy primVal ->
@@ -96,7 +100,10 @@ shouldCheck ::
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstElim primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.Term primTy primVal ->
@@ -116,7 +123,10 @@ shouldInferWith ::
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstElim primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.GlobalsT primTy primVal ->
@@ -141,7 +151,10 @@ shouldInfer ::
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstElim primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.Elim primTy primVal ->
@@ -159,7 +172,12 @@ shouldEval' ::
     CanApply primVal,
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
+    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eval.HasWeak primVal
   ) =>
   IR.Globals primTy primVal ->
   IR.Term primTy primVal ->
@@ -178,7 +196,12 @@ shouldEval ::
     CanApply primVal,
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
+    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eval.HasWeak primVal
   ) =>
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->
