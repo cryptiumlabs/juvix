@@ -10,7 +10,7 @@ import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library
@@ -48,7 +48,10 @@ type CompConstraints primTy primVal compErr m =
     Eq primTy,
     Eq primVal,
     Types.CanApply primTy,
-    Types.CanApply (Types.TypedPrim primTy primVal)
+    Types.CanApply (Types.TypedPrim primTy primVal),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstElim primTy primVal,
+    IR.HasWeak primVal
   )
 
 type MichelsonCompConstraints m =
