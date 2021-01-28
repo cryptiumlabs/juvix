@@ -1179,22 +1179,6 @@ instance
   substElimWith b i e (App.VarArg x) = substElimWith b i e x
   substElimWith b i e (App.TermArg t) = substElimWith b i e t
 
-instance
-  ( HasSubstElim ext primTy primVal ty,
-    HasSubstElim ext primTy primVal term,
-    HasSubstElim ext primTy primVal (App.ParamVar ext),
-    Monoid (IR.XApp ext primTy primVal),
-    Monoid (IR.XElim ext primTy primVal)
-  ) =>
-  HasSubstElim ext primTy primVal (App.Return' ext ty term)
-  where
-  substElimWith b i e (App.Cont {fun, args}) = foldl app fun' args'
-    where
-      app f x = IR.App' f (IR.Elim' x mempty) mempty
-      fun' = substTake b i e fun
-      args' = substTake b i e <$> args
-  substElimWith b i e (App.Return {retTerm}) = substElimWith b i e retTerm
-
 substTake ::
   HasSubstElim ext primTy primVal term =>
   IR.BoundVar ->
@@ -1240,26 +1224,6 @@ instance
   where
   substValueWith b i e (App.VarArg x) = substValueWith b i e x
   substValueWith b i e (App.TermArg t) = substValueWith b i e t
-
-instance
-  ( AllSubstV ext primTy primVal,
-    HasSubstValue ext primTy primVal (App.ParamVar ext),
-    HasSubstValue ext primTy primVal ty,
-    HasSubstValue ext primTy primVal term,
-    Monoid (IR.XVNeutral ext primTy primVal),
-    Monoid (IR.XVLam ext primTy primVal),
-    Monoid (IR.XVPrimTy ext primTy primVal),
-    Monoid (IR.XVPrim ext primTy primVal),
-    Monoid (IR.XNApp ext primTy primVal)
-  ) =>
-  HasSubstValue ext primTy primVal (App.Return' ext ty term)
-  where
-  substValueWith b i e (App.Cont {fun, args}) = do
-    let app f x = vapp f x mempty
-    fun <- substValueTake b i e fun
-    args <- traverse (substValueTake b i e) args
-    foldlM app fun args
-  substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
 
 substValueTake ::
   HasSubstValue extV primTy primVal a =>

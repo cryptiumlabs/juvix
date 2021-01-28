@@ -1,5 +1,7 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
+{-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
     module Types,
@@ -22,7 +24,12 @@ import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Library hiding (many, try)
+import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Michelson.Macro as M
@@ -33,6 +40,7 @@ import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (Show (..), String)
+import Data.Foldable (foldr1) -- on NonEmpty
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -134,7 +142,7 @@ instance Core.CanApply (PrimVal' ext) where
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse (traverse App.argToTerm) args ->
+            | Just takes <- traverse (traverse App.argToBase) args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
@@ -329,3 +337,77 @@ michelson =
     }
 
 type CompErr = CompTypes.CompilationError
+
+instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
+instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
+
+instance
+  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  Eval.HasSubstValue ext PrimTy primVal PrimTy
+  where
+  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+
+instance
+  ( Monoid (IR.XPrimTy ext PrimTy primVal),
+    Monoid (IR.XAnn ext PrimTy primVal),
+    Monoid (IR.XStar ext PrimTy primVal)
+  ) =>
+  Eval.HasPatSubstElim ext PrimTy primVal PrimTy
+  where
+  patSubstElim' _ _ t =
+    pure $ IR.Ann' mempty (IR.PrimTy' t mempty) (IR.Star' 0 mempty) 1 mempty
+
+-- TODO generalise @IR.NoExt@/@PrimValIR@
+instance
+  Eval.HasSubstValue IR.NoExt PrimTy PrimValIR PrimValIR
+  where
+  substValueWith b i e (App.Cont {fun, args}) = do
+    let app f x = Eval.vapp f x ()
+    let fun' = IR.VPrim (App.takeToReturn fun)
+    args' <- traverse (Eval.substVWith b i e . argToValue) args
+    foldlM app fun' args'
+  substValueWith b i e ret@(App.Return {}) =
+    pure $ IR.VPrim ret
+
+argToValue ::
+  App.Arg (Core.PrimType PrimTy) RawPrimVal -> IR.Value PrimTy PrimValIR
+argToValue (App.Take {type', term}) =
+  case term of
+    App.TermArg term -> IR.VPrim $ App.Return {retType = type', retTerm = term}
+    App.BoundArg i -> IR.VBound i
+    App.FreeArg x -> IR.VFree $ IR.Global x
+
+instance Eval.HasPatSubstElim (OnlyExts.T ext) PrimTy PrimValIR PrimValIR where
+  -- FIXME pat vars can't yet show up here
+  patSubstElim' _ _ (App.Cont {fun, args}) =
+    pure $ foldl IR.App (takeToElim fun) (map argToTerm args)
+  patSubstElim' _ _ (App.Return {retType, retTerm}) =
+    pure $ takeToElim $ App.Take {type' = retType, term = retTerm}
+
+takeToElim ::
+  App.Take (Core.PrimType PrimTy) RawPrimVal ->
+  IR.Elim' (OnlyExts.T ext) PrimTy PrimValIR
+takeToElim (App.Take {type', term}) =
+  let term' = IR.Prim (App.Return {retType = type', retTerm = term})
+      ty'   = typeToTerm type'
+   in IR.Ann Usage.Omega term' ty' 0
+
+argToTerm ::
+  App.Arg (Core.PrimType PrimTy) RawPrimVal ->
+  IR.Term' (OnlyExts.T ext) PrimTy PrimValIR
+argToTerm (App.Take {type', term}) =
+  case term of
+    App.TermArg term -> IR.Prim $ App.Return {retType = type', retTerm = term}
+    App.BoundArg i -> IR.Elim $ IR.Bound i
+    App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
+
+typeToTerm ::
+  ( Monoid (IR.XPi ext primTy primVal),
+    Monoid (IR.XPrimTy ext primTy primVal)
+  ) =>
+  Core.PrimType primTy ->
+  IR.Term' ext primTy primVal
+typeToTerm tys = foldr1 arr $ map prim tys
+  where
+    prim ty = IR.PrimTy' ty mempty
+    arr s t = IR.Pi' Usage.Omega s t mempty
