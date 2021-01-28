@@ -15,8 +15,8 @@ let set = %Michelson.set
 sig operation : ty
 let operation = %Michelson.operation
 
--- sig contract : ty -> ty
--- let contract = %Michelson.contract
+sig contract : ty -> ty
+let contract = %Michelson.contract
 
 sig pair : ty -> ty -> ty
 let pair = %Michelson.pair-ty
@@ -139,8 +139,8 @@ let sender = %Michelson.sender
 sig address-to-contract : (param : ty) -> address -> contract param
 let address-to-contract = %Michelson.address-to-contract
 
--- sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
--- let transfer-tokens = %Michelson.transfer-tokens
+sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
+let transfer-tokens = %Michelson.transfer-tokens
 
 sig set-delegate : address -> unit-t
 let set-delegate = %Michelson.set-delegate
@@ -161,8 +161,8 @@ let set-delegate = %Michelson.set-delegate
 sig nil : list operation
 let nil = %Michelson.nil
 
--- sig cons : a -> list a
--- let cons = %Michelson.cons
+sig cons : a -> list a
+let cons = %Michelson.cons
 -- 
 sig cons-pair : a -> b -> pair a b
 let cons-pair = %Michelson.cons-pair
