@@ -136,8 +136,8 @@ let sender = %Michelson.sender
 -- sig create-contract : operation
 -- let create-contract = %Michelson.create-contract
 
--- sig address-to-contract : (param : ty) -> address -> contract param
--- let address-to-contract = %Michelson.address-to-contract
+sig address-to-contract : (param : ty) -> address -> contract param
+let address-to-contract = %Michelson.address-to-contract
 
 -- sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 -- let transfer-tokens = %Michelson.transfer-tokens
