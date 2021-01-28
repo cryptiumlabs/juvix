@@ -81,7 +81,9 @@ weak :: HasWeak a => a -> a
 weak = weak' 0
 
 type AllWeak ext primTy primVal =
-  ( IR.TermAll HasWeak ext primTy primVal,
+  ( HasWeak primTy,
+    HasWeak primVal,
+    IR.TermAll HasWeak ext primTy primVal,
     IR.ElimAll HasWeak ext primTy primVal
   )
 
@@ -89,9 +91,9 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Term' ext primTy primVal) whe
   weakBy' b i (IR.Star' u a) =
     IR.Star' u (weakBy' b i a)
   weakBy' b i (IR.PrimTy' p a) =
-    IR.PrimTy' p (weakBy' b i a)
+    IR.PrimTy' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.Prim' p a) =
-    IR.Prim' p (weakBy' b i a)
+    IR.Prim' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.Pi' π s t a) =
     IR.Pi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.Lam' t a) =
@@ -160,9 +162,38 @@ subst ::
   a
 subst = subst' 0
 
+
+class HasWeak a => HasSubstTerm ext primTy primVal a where
+  substTermWith ::
+    -- | How many bindings have been traversed so far
+    IR.BoundVar ->
+    -- | Variable to substitute
+    IR.BoundVar ->
+    -- | Expression to substitute with
+    IR.Elim' ext primTy primVal ->
+    a ->
+    IR.Term' ext primTy primVal
+
+substTerm' ::
+  HasSubstTerm ext primTy primVal a =>
+  IR.BoundVar ->
+  IR.Elim' ext primTy primVal ->
+  a ->
+  IR.Term' ext primTy primVal
+substTerm' = substTermWith 0
+
+substTerm ::
+  HasSubstTerm ext primTy primVal a =>
+  IR.Elim' ext primTy primVal ->
+  a ->
+  IR.Term' ext primTy primVal
+substTerm = substTerm' 0
+
 type AllSubst ext primTy primVal =
   ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal
+    IR.ElimAll (HasSubst ext primTy primVal) ext primTy primVal,
+    HasSubstTerm ext primTy primVal primTy,
+    HasSubstTerm ext primTy primVal primVal
   )
 
 instance
@@ -171,10 +202,12 @@ instance
   where
   substWith w i e (IR.Star' u a) =
     IR.Star' u (substWith w i e a)
-  substWith w i e (IR.PrimTy' t a) =
-    IR.PrimTy' t (substWith w i e a)
-  substWith w i e (IR.Prim' p a) =
-    IR.Prim' p (substWith w i e a)
+  substWith w i e (IR.PrimTy' t _) =
+    -- TODO what about the annotation?
+    substTermWith w i e t
+  substWith w i e (IR.Prim' p _) =
+    -- TODO what about the annotation?
+    substTermWith w i e p
   substWith w i e (IR.Pi' π s t a) =
     IR.Pi' π (substWith w i e s) (substWith (succ w) (succ i) e t) (substWith w i e a)
   substWith w i e (IR.Lam' t a) =
@@ -241,9 +274,29 @@ patSubst ::
   Either IR.PatternVar a
 patSubst = patSubst' 0
 
+class HasWeak a => HasPatSubstTerm extT primTy primVal a where
+  -- returns either a substituted term or an unbound pattern var
+  -- TODO: use @validation@ to return all unbound vars
+  patSubstTerm' ::
+    -- | How many bindings have been traversed so far
+    Natural ->
+    -- | Mapping of pattern variables to matched subterms
+    IR.PatternMap (IR.Elim' extT primTy primVal) ->
+    a ->
+    Either IR.PatternVar (IR.Term' extT primTy primVal)
+
+patSubstTerm ::
+  (HasPatSubstTerm extT primTy primVal a) =>
+  IR.PatternMap (IR.Elim' extT primTy primVal) ->
+  a ->
+  Either IR.PatternVar (IR.Term' extT primTy primVal)
+patSubstTerm = patSubstTerm' 0
+
 type AllPatSubst ext primTy primVal =
   ( IR.TermAll (HasPatSubst ext primTy primVal) ext primTy primVal,
-    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal
+    IR.ElimAll (HasPatSubst ext primTy primVal) ext primTy primVal,
+    HasPatSubstTerm ext primTy primVal primTy,
+    HasPatSubstTerm ext primTy primVal primVal
   )
 
 instance
@@ -252,10 +305,12 @@ instance
   where
   patSubst' b m (IR.Star' u a) =
     IR.Star' u <$> patSubst' b m a
-  patSubst' b m (IR.PrimTy' t a) =
-    IR.PrimTy' t <$> patSubst' b m a
-  patSubst' b m (IR.Prim' p a) =
-    IR.Prim' p <$> patSubst' b m a
+  patSubst' b m (IR.PrimTy' t _) =
+    -- TODO what about the annotation?
+    patSubstTerm' b m t
+  patSubst' b m (IR.Prim' p _) =
+    -- FIXME
+    patSubstTerm' b m p
   patSubst' b m (IR.Pi' π s t a) =
     IR.Pi' π <$> patSubst' b m s
       <*> patSubst' (succ b) m t
@@ -310,7 +365,9 @@ instance
     IR.ElimX <$> patSubst' b m a
 
 type AllWeakV ext primTy primVal =
-  ( IR.ValueAll HasWeak ext primTy primVal,
+  ( HasWeak primTy,
+    HasWeak primVal,
+    IR.ValueAll HasWeak ext primTy primVal,
     IR.NeutralAll HasWeak ext primTy primVal
   )
 
@@ -321,7 +378,7 @@ instance
   weakBy' b i (IR.VStar' n a) =
     IR.VStar' n (weakBy' b i a)
   weakBy' b i (IR.VPrimTy' p a) =
-    IR.VPrimTy' p (weakBy' b i a)
+    IR.VPrimTy' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.VPi' π s t a) =
     IR.VPi' π (weakBy' b i s) (weakBy' b (succ i) t) (weakBy' b i a)
   weakBy' b i (IR.VLam' t a) =
@@ -337,7 +394,7 @@ instance
   weakBy' b i (IR.VNeutral' n a) =
     IR.VNeutral' (weakBy' b i n) (weakBy' b i a)
   weakBy' b i (IR.VPrim' p a) =
-    IR.VPrim' p (weakBy' b i a)
+    IR.VPrim' (weakBy' b i p) (weakBy' b i a)
   weakBy' b i (IR.ValueX a) =
     IR.ValueX (weakBy' b i a)
 
@@ -390,9 +447,34 @@ substV ::
   Either (Error extV extT primTy primVal) a
 substV = substV' 0
 
+class HasWeak a => HasSubstValue extV primTy primVal a where
+  substValueWith ::
+    Natural ->
+    IR.BoundVar ->
+    IR.Value' extV primTy primVal ->
+    a ->
+    Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+
+substValue' ::
+  HasSubstValue extV primTy primVal a =>
+  IR.BoundVar ->
+  IR.Value' extV primTy primVal ->
+  a ->
+  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+substValue' = substValueWith 0
+
+substValue ::
+  HasSubstValue extV primTy primVal a =>
+  IR.Value' extV primTy primVal ->
+  a ->
+  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+substValue = substValue' 0
+
 type AllSubstV extV primTy primVal =
   ( IR.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,
-    IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal
+    IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal,
+    HasSubstValue extV primTy primVal primTy,
+    HasSubstValue extV primTy primVal primVal
   )
 
 instance
@@ -408,8 +490,9 @@ instance
   where
   substVWith w i e (IR.VStar' n a) =
     IR.VStar' n <$> substVWith w i e a
-  substVWith w i e (IR.VPrimTy' p a) =
-    IR.VPrimTy' p <$> substVWith w i e a
+  substVWith w i e (IR.VPrimTy' p _) =
+    -- TODO what about the annotation?
+    substValueWith w i e p
   substVWith w i e (IR.VPi' π s t a) =
     IR.VPi' π <$> substVWith w i e s
       <*> substVWith (succ w) (succ i) e t
@@ -431,11 +514,13 @@ instance
     IR.VUnit' <$> substVWith w i e a
   substVWith w i e (IR.VNeutral' n a) =
     substNeutralWith w i e n a
-  substVWith w i e (IR.VPrim' p a) =
-    IR.VPrim' p <$> substVWith w i e a
+  substVWith w i e (IR.VPrim' p _) =
+    -- TODO what about the annotation?
+    substValueWith w i e p
   substVWith w i e (IR.ValueX a) =
     IR.ValueX <$> substVWith w i e a
 
+-- (not quite an instance of @HasSubstValue@ because of the @XVNeutral@ stuff)
 substNeutralWith ::
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
@@ -585,7 +670,10 @@ type NoExtensions ext primTy primVal =
 
 type EvalPatSubst ext primTy primVal =
   ( HasPatSubst (OnlyExts.T ext) primTy primVal (IR.TermX ext primTy primVal),
-    HasPatSubst (OnlyExts.T ext) primTy primVal (IR.ElimX ext primTy primVal)
+    HasPatSubst (OnlyExts.T ext) primTy primVal (IR.ElimX ext primTy primVal),
+    -- FIXME?
+    HasPatSubstTerm (OnlyExts.T ext) primTy primVal primTy,
+    HasPatSubstTerm (OnlyExts.T ext) primTy primVal primVal
   )
 
 -- |
@@ -596,7 +684,9 @@ type CanEval extT extG primTy primVal =
     Param.CanApply primVal,
     EvalPatSubst extT primTy primVal,
     -- no extensions (only annotations) allowed in global context
-    NoExtensions extG primTy primVal
+    NoExtensions extG primTy primVal,
+    HasSubstValue IR.NoExt primTy primVal primTy,
+    HasSubstValue IR.NoExt primTy primVal primVal
   )
 
 -- annotations are discarded
