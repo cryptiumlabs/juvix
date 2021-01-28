@@ -16,6 +16,7 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Library.Usage as Usage
+import Data.Foldable (foldr1) -- on NonEmpty
 
 inlineAllGlobals ::
   ( EvalPatSubst ext' primTy primVal,
@@ -475,7 +476,9 @@ type AllSubstV extV primTy primVal =
   ( IR.ValueAll (HasSubstV extV primTy primVal) extV primTy primVal,
     IR.NeutralAll (HasSubstV extV primTy primVal) extV primTy primVal,
     HasSubstValue extV primTy primVal primTy,
-    HasSubstValue extV primTy primVal primVal
+    HasSubstValue extV primTy primVal primVal,
+    Param.CanApply primTy,
+    Param.CanApply primVal
   )
 
 instance
@@ -483,9 +486,7 @@ instance
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   HasSubstV extV primTy primVal (IR.Value' extV primTy primVal)
   where
@@ -527,9 +528,7 @@ substNeutralWith ::
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   Natural ->
   IR.BoundVar ->
@@ -615,9 +614,7 @@ vapp ::
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
     Monoid (IR.XVPrimTy extV primTy primVal),
-    Monoid (IR.XVPrim extV primTy primVal),
-    Param.CanApply primTy,
-    Param.CanApply primVal
+    Monoid (IR.XVPrim extV primTy primVal)
   ) =>
   IR.Value' extV primTy primVal ->
   IR.Value' extV primTy primVal ->
@@ -1206,3 +1203,84 @@ substTake ::
   App.Take ty term ->
   IR.Elim' ext primTy primVal
 substTake b i e (App.Take {term}) = substElimWith b i e term
+
+
+instance
+  ( AllSubstV extV primTy primVal,
+    Monoid (IR.XVNeutral extV primTy primVal),
+    Monoid (IR.XVLam extV primTy primVal),
+    Monoid (IR.XVPrimTy extV primTy primVal),
+    Monoid (IR.XVPrim extV primTy primVal)
+  ) =>
+  HasSubstValue extV primTy primVal (IR.Value' extV primTy primVal)
+  where
+  substValueWith = substVWith
+
+instance
+  ( AllSubstV ext primTy primVal,
+    Monoid (IR.XNBound ext primTy primVal),
+    Monoid (IR.XNFree ext primTy primVal),
+    Monoid (IR.XVNeutral ext primTy primVal),
+    Monoid (IR.XVLam ext primTy primVal),
+    Monoid (IR.XVPrimTy ext primTy primVal),
+    Monoid (IR.XVPrim ext primTy primVal)
+  ) =>
+  HasSubstValue ext primTy primVal App.DeBruijn
+  where
+  substValueWith b i e (App.BoundVar j) =
+    substNeutralWith b i e (IR.NBound' j mempty) mempty
+  substValueWith _ _ _ (App.FreeVar x) =
+    pure $ IR.VNeutral' (IR.NFree' (IR.Global x) mempty) mempty
+
+instance
+  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+    HasSubstValue ext primTy primVal term
+  ) =>
+  HasSubstValue ext primTy primVal (App.ArgBody' ext term)
+  where
+  substValueWith b i e (App.VarArg x) = substValueWith b i e x
+  substValueWith b i e (App.TermArg t) = substValueWith b i e t
+
+instance
+  ( AllSubstV ext primTy primVal,
+    HasSubstValue ext primTy primVal (App.ParamVar ext),
+    HasSubstValue ext primTy primVal ty,
+    HasSubstValue ext primTy primVal term,
+    Monoid (IR.XVNeutral ext primTy primVal),
+    Monoid (IR.XVLam ext primTy primVal),
+    Monoid (IR.XVPrimTy ext primTy primVal),
+    Monoid (IR.XVPrim ext primTy primVal),
+    Monoid (IR.XNApp ext primTy primVal)
+  ) =>
+  HasSubstValue ext primTy primVal (App.Return' ext ty term)
+  where
+  substValueWith b i e (App.Cont {fun, args}) = do
+    let app f x = vapp f x mempty
+    fun <- substValueTake b i e fun
+    args <- traverse (substValueTake b i e) args
+    foldlM app fun args
+  substValueWith b i e (App.Return {retTerm}) = substValueWith b i e retTerm
+
+substValueTake ::
+  HasSubstValue extV primTy primVal a =>
+  Natural ->
+  IR.BoundVar ->
+  IR.Value' extV primTy primVal ->
+  App.Take ty a ->
+  Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+substValueTake b i e (App.Take {term}) = substValueWith b i e term
+
+instance
+  ( HasSubstValue ext primTy primVal a,
+    IR.ValueAll HasWeak ext primTy primVal,
+    IR.NeutralAll HasWeak ext primTy primVal,
+    HasWeak primTy,
+    HasWeak primVal,
+    Monoid (IR.XVPi ext primTy primVal)
+  ) =>
+  HasSubstValue ext primTy primVal (NonEmpty a)
+  where
+  substValueWith b i e tys =
+      foldr1 pi <$> traverse (substValueWith b i e) tys
+    where
+      pi s t = IR.VPi' Usage.Omega s (weak t) mempty
