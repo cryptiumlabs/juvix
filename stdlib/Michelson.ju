@@ -18,8 +18,8 @@ let operation = %Michelson.operation
 -- sig contract : ty -> ty
 -- let contract = %Michelson.contract
 
-sig pair : ty -> ty
-let pair = %Michelson.pair
+sig pair : ty -> ty -> ty
+let pair = %Michelson.pair-ty
 
 -- sig either : ty -> ty
 -- let either = %Michelson.either
@@ -164,8 +164,8 @@ let nil = %Michelson.nil
 -- sig cons : a -> list a
 -- let cons = %Michelson.cons
 -- 
-sig cons-pair : a -> b -> pair a b
-let cons-pair = %Michelson.cons-pair
+-- sig cons-pair : a -> b -> pair a b
+-- let cons-pair = %Michelson.cons-pair
 -- 
 -- sig car : pair a b -> a
 -- let car = %Michelson.car
