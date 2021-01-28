@@ -388,7 +388,6 @@ populateModMap ::
   Expression tag m => m ()
 populateModMap = do
   open <- Juvix.Library.ask @"openMap"
-  modM <- get @"modMap"
   currentName <- currentNameSpace
   let curr = pure Context.topLevelName <> currentName
   case open Map.!? curr of
@@ -402,10 +401,16 @@ populateModMap = do
       -- thus our map should have implciit explicit on
       -- each symbol. Later when we are done, we remove
       -- these markings as they are no longer useful
-      -- TODO ∷
-      -- should we even append modM to this
+      -- TODO ∷ (modM <- get @"modMap")
+      --
+      -- should we even append modM in
+      -- put @"modMap" (Map.fromList assocNameWithAlias)
+      --
+      -- Answer ∷
+      -- No we should not, it collects opens from previous modules
+      -- which is incorrect
       assocNameWithAlias <- concatMapM f opens
-      put @"modMap" (modM <> Map.fromList assocNameWithAlias)
+      put @"modMap" (Map.fromList assocNameWithAlias)
       where
         f y = do
           openList <- inScopeNames nameSpace
