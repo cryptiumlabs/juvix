@@ -387,11 +387,17 @@ This module provides a default contract environment
   + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[Usage]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
@@ -730,13 +736,14 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[Application]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[NameSymbol]]
+  + [[Usage]]
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
@@ -765,6 +772,7 @@ keeps the extensions.
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -812,20 +820,29 @@ Quantitative type implementation inspired by
 ****** All
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
   + [[Library]]
+  + [[Usage]]
 ****** Naturals
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Usage]]
 ****** Unit
 - _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Usage]]
 ** test
 *** Conv
 - _Relies on_
@@ -860,6 +877,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[IR/Typechecker]]
   + [[All]]
   + [[Naturals]]

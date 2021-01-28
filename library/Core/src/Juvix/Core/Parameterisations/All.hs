@@ -1,17 +1,17 @@
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Core.Parameterisations.All where
 
-import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Library.Usage as Usage
-import qualified Juvix.Core.IR.Evaluator as E
 import Data.Coerce
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.IR.Evaluator as E
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import Juvix.Library hiding ((<|>))
+import qualified Juvix.Library.Usage as Usage
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -79,7 +79,6 @@ instance P.CanApply (P.TypedPrim Ty Val) where
       P.mapApplyErr natValR $ P.apply f xs
   apply f xs = Left $ P.InvalidArguments f xs
 
-
 instance E.HasWeak Ty where weakBy' _ _ ty = ty
 
 instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
@@ -110,9 +109,8 @@ instance
   E.HasPatSubstElim ext Ty Val Val
   where
   patSubstElim' _ _ val =
-    let ty = E.typeToTerm $ typeOf val in
-    pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
-
+    let ty = E.typeToTerm $ typeOf val
+     in pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
 
 natValR :: P.TypedPrim Naturals.Ty Naturals.Val -> P.TypedPrim Ty Val
 natValR (App.Cont {fun, args, numLeft}) =

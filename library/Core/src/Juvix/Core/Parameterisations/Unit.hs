@@ -4,11 +4,11 @@
 
 module Juvix.Core.Parameterisations.Unit where
 
-import qualified Juvix.Library.Usage as Usage
-import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Evaluator as E
+import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
+import qualified Juvix.Library.Usage as Usage
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -39,7 +39,6 @@ instance P.CanApply (P.TypedPrim Ty Val) where
   arity _ = 0
   apply f xs = Left $ P.ExtraArguments f xs
 
-
 instance E.HasWeak Ty where weakBy' _ _ ty = ty
 
 instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
@@ -69,8 +68,8 @@ instance
   E.HasPatSubstElim ext Ty Val Val
   where
   patSubstElim' _ _ val =
-    let ty = IR.PrimTy' Ty mempty in
-    pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
+    let ty = IR.PrimTy' Ty mempty
+     in pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

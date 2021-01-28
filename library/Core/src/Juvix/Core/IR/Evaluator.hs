@@ -7,16 +7,16 @@
 -- the substitution functions (substTerm and substElim).
 module Juvix.Core.IR.Evaluator where
 
+import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
+import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import qualified Juvix.Core.Application as App
 import qualified Juvix.Library.Usage as Usage
-import Data.Foldable (foldr1) -- on NonEmpty
 
 inlineAllGlobals ::
   ( EvalPatSubst ext' primTy primVal,
@@ -163,7 +163,6 @@ subst ::
   a ->
   a
 subst = subst' 0
-
 
 class HasWeak a => HasSubstElim ext primTy primVal a where
   substElimWith ::
@@ -1103,19 +1102,20 @@ instance
   HasPatSubst ext primTy primVal a =>
   HasPatSubst ext primTy primVal (NonEmpty a)
 
-
 instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
 
-instance (HasWeak term, HasWeak (App.ParamVar ext)) =>
+instance
+  (HasWeak term, HasWeak (App.ParamVar ext)) =>
   HasWeak (App.ArgBody' ext term)
 
-instance (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
+instance
+  (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
   HasWeak (App.Return' ext ty term)
 
 instance HasWeak App.DeBruijn
 
-
-instance (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
+instance
+  (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
   HasSubst ext primTy primVal (App.Take ty term)
 
 instance
@@ -1130,7 +1130,6 @@ instance
     HasSubst ext primTy primVal (App.ParamVar ext)
   ) =>
   HasSubst ext primTy primVal (App.Return' ext ty term)
-
 
 instance
   ( HasPatSubst ext primTy primVal ty,
@@ -1150,7 +1149,6 @@ instance
     HasPatSubst ext primTy primVal (App.ParamVar ext)
   ) =>
   HasPatSubst ext primTy primVal (App.Return' ext ty term)
-
 
 instance
   AllSubst ext primTy primVal =>
@@ -1187,7 +1185,6 @@ substTake ::
   App.Take ty term ->
   IR.Elim' ext primTy primVal
 substTake b i e (App.Take {term}) = substElimWith b i e term
-
 
 instance
   ( AllSubstV extV primTy primVal,
@@ -1236,7 +1233,7 @@ instance
   HasSubstValue ext primTy primVal (NonEmpty a)
   where
   substValueWith b i e tys =
-      foldr1 pi <$> traverse (substValueWith b i e) tys
+    foldr1 pi <$> traverse (substValueWith b i e) tys
     where
       pi s t = IR.VPi' Usage.Omega s (weak t) mempty
 
@@ -1269,8 +1266,6 @@ argToValue (App.Take {type', term}) =
     App.BoundArg i -> IR.VBound i
     App.FreeArg x -> IR.VFree $ IR.Global x
 
-
-
 instance
   ( HasWeak primTy,
     HasWeak primVal
@@ -1290,7 +1285,7 @@ takeToElim ::
   IR.Elim' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
 takeToElim (App.Take {type', term}) =
   let term' = IR.Prim (App.Return {retType = type', retTerm = term})
-      ty'   = typeToTerm type'
+      ty' = typeToTerm type'
    in IR.Ann Usage.Omega term' ty' 0
 
 argToTerm ::

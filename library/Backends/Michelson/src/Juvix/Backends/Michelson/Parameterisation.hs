@@ -1,6 +1,5 @@
-{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
-
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
@@ -10,6 +9,7 @@ where
 
 import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
+import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
@@ -22,17 +22,17 @@ import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.IR.Typechecker.Types as TC
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
-import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Library hiding (many, try)
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
@@ -41,7 +41,6 @@ import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (Show (..), String)
-import Data.Foldable (foldr1) -- on NonEmpty
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -340,6 +339,7 @@ michelson =
 type CompErr = CompTypes.CompilationError
 
 instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
+
 instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
 
 instance
@@ -357,4 +357,3 @@ instance
   where
   patSubstElim' _ _ t =
     pure $ IR.Ann' mempty (IR.PrimTy' t mempty) (IR.Star' 0 mempty) 1 mempty
-

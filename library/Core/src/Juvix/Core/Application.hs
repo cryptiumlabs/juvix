@@ -112,6 +112,5 @@ instance Bifoldable Take where
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
 
-
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}

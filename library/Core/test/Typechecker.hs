@@ -5,11 +5,11 @@ module Typechecker where
 
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import qualified Juvix.Core.Parameterisations.Unit as Unit
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.Types
 import Juvix.Library hiding (identity)
 import Juvix.Library.HashMap as Map

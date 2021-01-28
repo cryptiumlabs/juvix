@@ -23,6 +23,7 @@ top =
     ]
 
 data A = A deriving (Eq, Show)
+
 instance Eval.HasWeak A where weakBy' _ _ A = A
 
 --------------------------------------------------------------------------------
