@@ -7,4 +7,4 @@ let main = \ps ->
     (list operation)
     nat
     (nil operation)
-    (sub nat (car ps) (cdr ps))
+    (sub nat (car nat nat ps) (cdr nat nat ps))
