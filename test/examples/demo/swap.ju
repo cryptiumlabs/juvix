@@ -1,12 +1,25 @@
-open Prelude
-open Prelude.Michelson
+mod Swap where
 
-sig main : pair unit-t (pair int int) -> pair (list operation) (pair int int)
-let main = \ps ->
-  cons-pair
-     (list operation)
-     (pair int int)
-     (nil operation)
-     (cons-pair int int
-                (cdr int int (cdr unit-t (pair int int) ps))
-                (car int int (cdr unit-t (pair int int) ps)))
+open Prelude
+open Michelson
+
+sig cons-pair : list operation -> nat -> pair (list operation) nat
+let cons-pair = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig add : nat -> nat -> nat
+let add = %Michelson.add
+
+sig car : pair nat nat -> nat
+let car = %Michelson.car
+
+sig cdr : pair nat nat -> nat
+let cdr = %Michelson.cdr
+
+sig cdr2 : pair unit-t (pair nat nat) -> pair nat nat
+let cdr2 = %Michelson.cdr
+
+sig main : pair unit-t (pair nat nat) -> pair (list operation) (pair nat nat)
+let main = \ps -> cons-pair nil (cons-pair (cdr (cdr2 ps)) (car (cdr2 ps)))

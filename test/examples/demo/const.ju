@@ -1,4 +1,4 @@
-mod Add where
+mod Const where
 
 open Prelude
 open Prelude.Michelson
@@ -9,14 +9,5 @@ let cons-pair = %Michelson.pair
 sig nil : list operation
 let nil = %Michelson.nil
 
-sig add : nat -> nat -> nat
-let add = %Michelson.add
-
-sig car : pair nat nat -> nat
-let car = %Michelson.car
-
-sig cdr : pair nat nat -> nat
-let cdr = %Michelson.cdr
-
 sig main : pair nat nat -> pair (list operation) nat
-let main = \ps -> cons-pair nil (add (car ps) (cdr ps))
+let main = \ps -> cons-pair nil 10

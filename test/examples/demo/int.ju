@@ -1,2 +1,0 @@
-sig main : %Michelson.int
-let main = 2
