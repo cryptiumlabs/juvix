@@ -374,7 +374,7 @@ substApp ::
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal),
     PrimSubstValue primTy primVal,
-    PrimPatSubstElim primTy primVal
+    PrimPatSubstTerm primTy primVal
   ) =>
   Typed.ValueT primTy primVal ->
   Typed.Term primTy primVal ->
@@ -389,7 +389,7 @@ evalTC ::
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal),
     PrimSubstValue primTy primVal,
-    PrimPatSubstElim primTy primVal
+    PrimPatSubstTerm primTy primVal
   ) =>
   Typed.Term primTy primVal ->
   m (Typed.ValueT primTy primVal)

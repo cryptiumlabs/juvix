@@ -50,7 +50,7 @@ type CompConstraints primTy primVal compErr m =
     Types.CanApply primTy,
     Types.CanApply (Types.TypedPrim primTy primVal),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     IR.HasWeak primVal
   )
 
