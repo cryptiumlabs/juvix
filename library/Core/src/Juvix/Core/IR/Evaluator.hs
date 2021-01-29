@@ -1112,7 +1112,10 @@ instance
   (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
   HasWeak (App.Return' ext ty term)
 
-instance HasWeak App.DeBruijn
+instance HasWeak App.DeBruijn where
+  weakBy' b i (App.BoundVar j) =
+    App.BoundVar $ if j >= i then j + b else j
+  weakBy' _ _ (App.FreeVar x) = App.FreeVar x
 
 instance
   (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
