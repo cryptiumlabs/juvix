@@ -21,6 +21,7 @@ import qualified Michelson.Untyped as Michelson
 type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 
 type RawMichelsonTerm = RawMichelson IR.Term
+type RawMichelsonElim = RawMichelson IR.Elim
 
 type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
 
