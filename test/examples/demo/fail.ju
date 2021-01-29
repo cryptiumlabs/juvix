@@ -1,10 +1,9 @@
 mod Fail where
 
 open Prelude
-
 open Michelson
 
-sig main : pairTy int int -> pairTy (list operation) int
+sig main : pair int int -> pair (list operation) int
 let main = \pair ->
   cons-pair
     (list operation)

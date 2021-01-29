@@ -2,12 +2,10 @@ open Prelude
 open Prelude.Michelson
 
 sig storage : ty
-let storage = string
+let storage = nat
 
 sig param : ty
-let param = string
+let param = nat
 
 sig main : param -> storage -> pair storage (list operation)
-let main = \param _ -> 
-  cons-pair stroage (list operation) param (nil operation)
-
+let main = \param storage -> cons-pair (sub param storage) nil

@@ -307,4 +307,5 @@ toNumArgs x =
     Instr.EMPTY_BIG_MAP {} -> 0
     Instr.NIL {} -> 0
     Instr.CONS {} -> 2
+    Instr.CONTRACT {} -> 1
 -- _ -> error "function not implemented yet"

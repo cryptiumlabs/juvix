@@ -1,0 +1,5 @@
+open Prelude
+open Prelude.Michelson
+
+sig main : pair int (pair int int) -> pair (list operation) (pair int int)
+let main = \ps -> cons-pair nil (cons-pair (fst ps) (fst ps))

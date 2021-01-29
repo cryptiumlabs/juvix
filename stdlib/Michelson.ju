@@ -12,14 +12,14 @@ let list = %Michelson.list
 sig set : ty -> ty
 let set = %Michelson.set
 
--- sig operation : ty -> ty
--- let operation = %Michelson.operation
+sig operation : ty
+let operation = %Michelson.operation
 
--- sig contract : ty -> ty
--- let contract = %Michelson.contract
+sig contract : ty -> ty
+let contract = %Michelson.contract
 
-sig pair : ty -> ty
-let pair = %Michelson.pair
+sig pair : ty -> ty -> ty
+let pair = %Michelson.pair-ty
 
 -- sig either : ty -> ty
 -- let either = %Michelson.either
@@ -29,7 +29,6 @@ let map-ty = %Michelson.map
 
 sig big-map : ty -> ty
 let big-map = %Michelson.big-map
-
 
 -- primitive types
 sig key : ty
@@ -70,7 +69,6 @@ let timestamp = %Michelson.timestamp
 
 sig address : ty
 let address = %Michelson.address
-
 
 -- arithmetic functions
 sig add : (x : ty) -> x -> x -> x
@@ -138,8 +136,8 @@ let sender = %Michelson.sender
 -- sig create-contract : operation
 -- let create-contract = %Michelson.create-contract
 
--- sig address-to-contract : (param : ty) -> address -> option (contract param)
--- let address-to-contract = %Michelson.address-to-contract
+sig address-to-contract : (param : ty) -> address -> option (contract param)
+let address-to-contract _ = %Michelson.address-to-contract
 
 sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
 let transfer-tokens = %Michelson.transfer-tokens
@@ -209,10 +207,10 @@ let concat _ = %Michelson.concat
 
 sig slice : nat -> string -> option string
 let slice = %Michelson.slice
-
+-- 
 sig lsl : nat -> nat -> nat
 let lsl = %Michelson.lsl
-
+-- 
 sig lsr : nat -> nat -> nat
 let lsr = %Michelson.lsl
 

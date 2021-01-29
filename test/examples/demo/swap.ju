@@ -1,18 +1,12 @@
 open Prelude
 open Prelude.Michelson
 
-sig storage : ty
-let storage = pair int int
-
-sig param : ty
-let param = unit-t
-
-sig default : param -> storage -> pair storage (list operation)
-let default _ storage =
+sig main : pair unit-t (pair int int) -> pair (list operation) (pair int int)
+let main = \ps -> 
   cons-pair
-     storage
      (list operation)
-     (cons-pair int int
-                (cdr int int storage)
-                (car int int storage))
+     (pair int int)
      (nil operation)
+     (cons-pair int int
+                (cdr int int (cdr unit-t (pair int int) ps))
+                (car int int (cdr unit-t (pair int int) ps)))

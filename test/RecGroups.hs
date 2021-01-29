@@ -25,11 +25,7 @@ pipeline =
    in T.testCase
         "multiple modules have correct ordering"
         $ do
-          Right c <-
-            Pipeline.toCore
-              [ "test/examples/demo/rec-groups.ju",
-                "test/examples/demo/rec-groups-helper.ju"
-              ]
+          Right c <- Pipeline.toCore ["test/examples/rec-groups/rec-groups.ju", "test/examples/rec-groups/rec-groups-helper.ju"]
           let recd = Traverse.recGroups c
           fmap (\(x :| []) -> Traverse.name x) recd T.@=? correctOrder
 

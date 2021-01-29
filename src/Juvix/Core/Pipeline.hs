@@ -20,7 +20,9 @@ import qualified Michelson.Untyped as Michelson
 
 type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 
-type RawMichelsonTerm = RawMichelson HR.Term
+type RawMichelsonTerm = RawMichelson IR.Term
+
+type RawMichelsonElim = RawMichelson IR.Elim
 
 type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
 
@@ -50,7 +52,7 @@ type CompConstraints primTy primVal compErr m =
     Types.CanApply primTy,
     Types.CanApply (Types.TypedPrim primTy primVal),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     IR.HasWeak primVal
   )
 
@@ -197,22 +199,22 @@ typecheckEval term usage ty = do
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase' ::
   CompConstraints primTy primVal compErr m =>
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   Usage.T ->
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   m
     ( Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal),
       IR.Value primTy (Types.TypedPrim primTy primVal)
     )
 typecheckErase' term usage ty = do
-  ty <- typecheckEval ty (Usage.SNat 0) (IR.VStar 0)
+  ty <- typecheckEval (Translate.irToHR ty) (Usage.SNat 0) (IR.VStar 0)
   term <- typecheckErase term usage ty
   pure (term, ty)
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckErase ::
   CompConstraints primTy primVal compErr m =>
-  HR.Term primTy primVal ->
+  IR.Term primTy primVal ->
   Usage.T ->
   IR.Value primTy (Types.TypedPrim primTy primVal) ->
   m (Erasure.Term primTy (ErasedAnn.TypedPrim primTy primVal))
@@ -220,11 +222,8 @@ typecheckErase term usage ty = do
   -- Fetch the parameterisation, needed for typechecking.
   param <- ask @"parameterisation"
   globals <- ask @"globals"
-  -- First convert HR to IR.
-  let irTerm = Translate.hrToIR term
-  tell @"log" [Types.LogHRtoIR term irTerm]
   -- Typecheck & return accordingly.
-  case IR.typeTerm param irTerm (IR.Annotation usage ty)
+  case IR.typeTerm param term (IR.Annotation usage ty)
     |> IR.execTC globals
     |> fst of
     Right tyTerm -> do

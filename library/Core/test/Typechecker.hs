@@ -70,7 +70,7 @@ shouldCheckWith ::
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal)),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
@@ -102,7 +102,7 @@ shouldCheck ::
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal)),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
@@ -125,7 +125,7 @@ shouldInferWith ::
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal)),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
@@ -153,7 +153,7 @@ shouldInfer ::
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
     Show (ApplyErrorExtra (TypedPrim primTy primVal)),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
@@ -173,8 +173,8 @@ shouldEval' ::
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
     Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primTy,
-    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
     Eval.HasSubstValue IR.NoExt primTy primVal primTy,
     Eval.HasSubstValue IR.NoExt primTy primVal primVal,
     Eval.HasWeak primVal
@@ -197,8 +197,8 @@ shouldEval ::
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
     Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primTy,
-    Eval.HasPatSubstElim (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
     Eval.HasSubstValue IR.NoExt primTy primVal primTy,
     Eval.HasSubstValue IR.NoExt primTy primVal primVal,
     Eval.HasWeak primVal

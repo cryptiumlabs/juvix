@@ -1,0 +1,8 @@
+open Prelude
+open Prelude.Michelson
+
+-- sig cons-pair : list operation -> int -> pair (list operation) int
+-- let cons-pair = %Michelson.pair
+
+sig main : pair int int -> pair (list operation) int
+let main = \params -> cons-pair nil 0

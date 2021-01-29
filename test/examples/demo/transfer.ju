@@ -7,8 +7,8 @@ let storage = unit-t
 sig param : ty
 let param = unit-t
 
-sig default : param -> storage -> pair storage (list operation)
-let default _ storage =
+sig main : param -> storage -> pair (list operation) storage
+let main = \_ storage ->
   let contract = address-to-contract unit-t sender in
   let op = transfer-tokens unit balance contract in
-  cons-pair unit-t (list operation) storage (cons operatoin op nil)
+  cons-pair unit-t (list operation) storage (cons operatoin (nil operation) op)

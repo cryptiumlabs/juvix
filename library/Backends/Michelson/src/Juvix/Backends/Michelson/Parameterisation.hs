@@ -40,7 +40,7 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (Show (..), String)
+import Prelude (Show (..), String, error)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -93,15 +93,24 @@ hasType CompareHash ty = checkFirst2AndLast ty isBool
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
+-- todo check this properly
+hasType (Inst (M.PAIR _ _ _ _)) (a :| (b : (c : []))) = True
+-- todo check this properly
+hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType x ty = ty == undefined
+hasType x ((Application List _) :| []) = True
+-- do something nicer here
+hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
-arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
+arityRaw prim =
+  Run.instructionOf prim (Untyped.Type Untyped.TUnit "")
+    |> Instructions.toNewPrimErr
+    |> arityRaw
 
 data ApplyError
   = CompilationError CompilationError
@@ -249,7 +258,8 @@ builtinTypes =
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
     ("Michelson.timestamp", Untyped.TTimestamp),
-    ("Michelson.address", Untyped.TAddress)
+    ("Michelson.address", Untyped.TAddress),
+    ("Michelson.operation", Untyped.TOperation)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
     |> ( <>
@@ -258,7 +268,9 @@ builtinTypes =
              ("Michelson.option", Types.Option),
              ("Michelson.set", Types.Set),
              ("Michelson.map", Types.Map),
-             ("Michelson.big-map", Types.BigMap)
+             ("Michelson.big-map", Types.BigMap),
+             ("Michelson.pair-ty", Types.Pair),
+             ("Michelson.contract", Types.ContractT)
            ]
        )
     |> Map.fromList
@@ -291,6 +303,7 @@ builtinValues =
     ("Michelson.amount", Inst (M.AMOUNT "")),
     ("Michelson.balance", Inst (M.BALANCE "")),
     ("Michelson.hash-key", Inst (M.HASH_KEY "")),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
     ("Michelson.and", AndI),
     ("Michelson.xor", XorI),
     ("Michelson.or", OrB),
@@ -312,8 +325,10 @@ builtinValues =
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
     ("Michelson.cons-pair", Pair'),
+    ("Michelson.address-to-contract", Contract),
     -- added symbols to not take values
-    ("Michelson.if-builtin", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] [])),
+    ("Michelson.pair", Inst (M.PAIR "" "" "" ""))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
@@ -349,11 +364,13 @@ instance
   substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
 
 instance
-  ( Monoid (IR.XPrimTy ext PrimTy primVal),
-    Monoid (IR.XAnn ext PrimTy primVal),
-    Monoid (IR.XStar ext PrimTy primVal)
-  ) =>
-  Eval.HasPatSubstElim ext PrimTy primVal PrimTy
+  Monoid (IR.XPrimTy ext PrimTy primVal) =>
+  Eval.HasPatSubstTerm ext PrimTy primVal PrimTy
   where
-  patSubstElim' _ _ t =
-    pure $ IR.Ann' mempty (IR.PrimTy' t mempty) (IR.Star' 0 mempty) 1 mempty
+  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+
+instance
+  Monoid (IR.XPrim ext primTy RawPrimVal) =>
+  Eval.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
+  where
+  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty

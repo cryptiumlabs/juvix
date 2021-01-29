@@ -1,0 +1,5 @@
+open Prelude
+open Prelude.Michelson
+
+sig main : pair nat nat -> pair (list operation) nat
+let main = \ps -> cons-pair nil (mul (car ps) (cdr ps))

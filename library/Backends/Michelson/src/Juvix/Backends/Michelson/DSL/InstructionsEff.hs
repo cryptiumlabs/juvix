@@ -109,6 +109,7 @@ add,
   car,
   cdr,
   cons,
+  contract,
   pair ::
     Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
 add = intGen Instructions.add (+)
@@ -135,6 +136,9 @@ abs = intGen1 Instructions.abs Juvix.Library.abs
 car = onPairGen1 Instructions.car fst
 cdr = onPairGen1 Instructions.cdr snd
 pair = onTwoArgs Instructions.pair (Env.Constant ... V.ValuePair)
+contract ty args = do
+  primTy <- typeToPrimType ty
+  onOneArgsNoConst (Instructions.contract primTy) ty args
 cons = onTwoArgsNoConst Instructions.cons
 isNat =
   onInt1
@@ -157,7 +161,7 @@ lambda captures arguments body type'
               Env.Fun (const (inst body <* traverse_ deleteVar annotatedArgs))
           }
   | otherwise =
-    throw @"compilationError" Types.InvalidInputType
+    throw @"compilationError" $ Types.InvalidInputType "usages/arguments mismatch"
   where
     usages =
       Utils.usageFromType type'
@@ -247,10 +251,10 @@ primToArgs prim ty =
 type RunInstr =
   (forall m. Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded)
 
-primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> (Env.Fun, b)
-primToFargs (Types.Constant (V.ValueLambda _lam)) _ty =
+primToFargs :: Num b => Types.RawPrimVal -> Types.Type -> Untyped.T -> (Env.Fun, b)
+primToFargs (Types.Constant (V.ValueLambda _lam)) _ty _ =
   (undefined, 1)
-primToFargs (Types.Inst inst) ty =
+primToFargs (Types.Inst inst) ty _ =
   (Env.Fun (f (newTy numArgs)), fromIntegral numArgs)
   where
     newTy i = eatType i ty
@@ -281,17 +285,18 @@ primToFargs (Types.Inst inst) ty =
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
         Instr.CONS {} -> cons
+        Instr.CONTRACT {} -> contract
 -- _ -> error "unspported function in primToFargs"
-primToFargs (Types.Constant _) _ =
+primToFargs (Types.Constant _) _ _ =
   error "Tried to apply a Michelson Constant"
-primToFargs x ty = primToFargs (newPrimToInstrErr x) ty
+primToFargs x ty primTy = primToFargs (newPrimToInstrErr x primTy) ty primTy
 
-newPrimToInstrErr :: Types.RawPrimVal -> Types.RawPrimVal
-newPrimToInstrErr x =
-  Instructions.toNewPrimErr (instructionOf x)
+newPrimToInstrErr :: Types.RawPrimVal -> Untyped.T -> Types.RawPrimVal
+newPrimToInstrErr x ty =
+  Instructions.toNewPrimErr (instructionOf x ty)
 
-instructionOf :: Types.RawPrimVal -> Instr.ExpandedOp
-instructionOf x =
+instructionOf :: Types.RawPrimVal -> Untyped.T -> Instr.ExpandedOp
+instructionOf x ty =
   case x of
     Types.AddN -> Instructions.add
     Types.AddI -> Instructions.add
@@ -338,6 +343,7 @@ instructionOf x =
     Types.GetBMap -> Instructions.get
     Types.Cons -> Instructions.cons
     Types.Pair' -> Instructions.pair
+    Types.Contract -> Instructions.contract ty
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
 
@@ -347,8 +353,9 @@ appM form@(Types.Ann _u ty t) args =
    in case t of
         -- We could remove this special logic, however it would
         -- result in inefficient Michelson!
-        Ann.Prim p ->
-          let (f, lPrim) = primToFargs p ty
+        Ann.Prim p -> do
+          primTy <- typeToPrimType ty
+          let (f, lPrim) = primToFargs p ty primTy
            in case length args `compare` lPrim of
                 EQ -> Env.unFun f args
                 LT -> app
@@ -839,7 +846,8 @@ constructPrim prim ty
     pure Env.Nop
   -- The final result of this is not promoted
   | otherwise = do
-    let (f, lPrim) = primToFargs prim ty
+    primTy <- typeToPrimType ty
+    let (f, lPrim) = primToFargs prim ty primTy
     names <- reserveNames lPrim
     -- TODO ∷ set the usage of the arguments to 1
     let c =
@@ -911,27 +919,28 @@ consVarNone (Env.Term symb usage) = consVarGen symb Nothing usage
 typeToPrimType :: forall m. Env.Error m => Types.Type -> m Untyped.T
 typeToPrimType ty =
   case ty of
-    Ann.SymT _ -> throw @"compilationError" Types.InvalidInputType
-    Ann.Star _ -> throw @"compilationError" Types.InvalidInputType
+    Ann.SymT _ -> throw @"compilationError" $ Types.InvalidInputType "symt cannot be converted to prim type"
+    Ann.Star _ -> throw @"compilationError" $ Types.InvalidInputType "star cannot be converted to prim type"
     Ann.PrimTy (Types.PrimTy mTy) -> pure mTy
     Ann.PrimTy (Types.Application arg1 args) -> do
       case arg1 of
-        Types.PrimTy {} -> throw @"compilationError" Types.InvalidInputType
-        Types.Application _ _ -> throw @"compilationError" Types.InvalidInputType
+        Types.PrimTy {} -> throw @"compilationError" $ Types.InvalidInputType "cannot apply primty"
+        Types.Application _ _ -> throw @"compilationError" $ Types.InvalidInputType "cannot apply application"
         _ -> pure ()
       if  | sameLength arg1 args ->
             recurse args
               >>| appPrimTyErr arg1
           | otherwise ->
-            throw @"compilationError" Types.InvalidInputType
+            throw @"compilationError" $ Types.InvalidInputType "length mismatch"
     -- TODO ∷ Integrate usage information into this
     Ann.Pi _usages argTy retTy -> do
       argTy <- typeToPrimType argTy
       retTy <- typeToPrimType retTy
       pure (Untyped.lambda argTy retTy)
     Ann.PrimTy _ ->
-      throw @"compilationError" Types.InvalidInputType
-    Ann.Sig {} -> throw @"compilationError" Types.InvalidInputType
+      throw @"compilationError" $ Types.InvalidInputType "cannot convert to primty"
+    Ann.Sig _usage fst snd ->
+      Untyped.pair <$> typeToPrimType fst <*> typeToPrimType snd
     Ann.UnitTy -> pure Untyped.unit
   where
     recurse = traverse (typeToPrimType . Ann.PrimTy)
