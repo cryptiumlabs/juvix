@@ -21,7 +21,7 @@ let contract = %Michelson.contract
 sig pair : ty -> ty -> ty
 let pair = %Michelson.pair-ty
 
--- sig either : ty -> ty
+-- sig either : ty -> ty -> ty
 -- let either = %Michelson.either
 
 sig map-ty : ty -> ty
@@ -145,17 +145,17 @@ let transfer-tokens = %Michelson.transfer-tokens
 sig set-delegate : address -> unit-t
 let set-delegate = %Michelson.set-delegate
 
-sig none : (a : ty) -> either unit-t a
-let none _ = %Michelson.none
+-- sig none : (a : ty) -> either unit-t a
+-- let none _ = %Michelson.none
 
-sig some : (a : ty) -> (b : ty) -> b -> either a b
-let some _ _ = %Michelson.some
+-- sig some : (a : ty) -> (b : ty) -> b -> either a b
+-- let some _ _ = %Michelson.some
 
-sig left : (a : ty) -> (b : ty) -> a -> either a b
-let left _ _ = %Michelson.left
+-- sig left : (a : ty) -> (b : ty) -> a -> either a b
+-- let left _ _ = %Michelson.left
 
-sig right : a : ty -> b : ty -> b -> either a b
-let right _ _ = %Michelson.right
+-- sig right : a : ty -> b : ty -> b -> either a b
+-- let right _ _ = %Michelson.right
 
 sig nil : (a : ty) -> list a
 let nil _ = %Michelson.nil
@@ -175,42 +175,42 @@ let cdr _ _ = %Michelson.cdr
 sig size : (a : ty) -> list a -> int
 let size _ = %Michelson.size
 
-sig empty-set : (a : ty) -> set a
-let empty-set _ = %Michelson.empty-set
+-- sig empty-set : (a : ty) -> set a
+-- let empty-set _ = %Michelson.empty-set
 
-sig empty-map : (a : ty) -> map a
-let empty-map _ = %Michelson.empty-map
+-- sig empty-map : (a : ty) -> map a
+-- let empty-map _ = %Michelson.empty-map
 
-sig empty-big-map : (a : ty) -> big-map a
-let empty-big-map _ = %Michelson.empty-big-map
+-- sig empty-big-map : (a : ty) -> big-map a
+-- let empty-big-map _ = %Michelson.empty-big-map
 
-sig map : (x : ty) -> (a -> b) -> x a -> x b
-let map _ _ = %Michelson.map
+-- sig map : (x : ty) -> (a -> b) -> x a -> x b
+-- let map _ _ = %Michelson.map
 
-sig update : (x : ty) -> (a : ty) -> key -> a -> x a -> unit-t
-let update _ _ = %Michelson.update
+-- sig update : (x : ty) -> (a : ty) -> key -> a -> x a -> unit-t
+-- let update _ _ = %Michelson.update
 
 -- sig iter : (a : ty) -> (b : ty) -> (a -> b) -> (b -> unit-t)
 -- let iter _ _ = %Michelson.iter
 
-sig get : (x : ty) -> (a : ty) -> key -> x a -> a
-let get _ _ = %Michelson.get
+-- sig get : (x : ty) -> (a : ty) -> key -> x a -> a
+-- let get _ _ = %Michelson.get
 
 sig hash-key : key -> key-hash
 let hash-key = %Michelson.hash-key
 
-sig mem : (x : ty) -> x -> bool
-let mem _ = %Michelson.mem
+-- sig mem : (x : ty) -> x -> bool
+-- let mem _ = %Michelson.mem
 
 sig concat : (x : ty) -> x -> x -> x
 let concat _ = %Michelson.concat
 
 sig slice : nat -> string -> option string
 let slice = %Michelson.slice
--- 
+--
 sig lsl : nat -> nat -> nat
 let lsl = %Michelson.lsl
--- 
+--
 sig lsr : nat -> nat -> nat
 let lsr = %Michelson.lsl
 
