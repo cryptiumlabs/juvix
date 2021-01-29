@@ -125,6 +125,25 @@ arityRaw prim =
     |> Instructions.toNewPrimErr
     |> arityRaw
 
+toArg :: PrimVal' ext -> Maybe (Arg' ext)
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just $ App.TermArg $
+    App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = retTerm
+      }
+
+toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
+  where
+    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+fromReturn :: Return' ext -> PrimVal' ext
+fromReturn = identity
+
 data ApplyError
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
