@@ -58,6 +58,8 @@ check2Equal (_ :| _) = False
 
 isBool :: PrimTy -> Bool
 isBool (PrimTy (M.Type M.TBool _)) = True
+isBool (PrimTy (M.Type M.TInt  _)) = True
+isBool (PrimTy (M.Type M.TNat  _)) = True
 isBool _ = False
 
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
