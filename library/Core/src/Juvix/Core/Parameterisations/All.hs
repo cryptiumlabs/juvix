@@ -3,6 +3,7 @@
 
 module Juvix.Core.Parameterisations.All where
 
+import Data.Bitraversable
 import Data.Coerce
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
@@ -14,7 +15,6 @@ import Juvix.Library hiding ((<|>))
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
-import Data.Bitraversable
 
 -- all primitive types
 data Ty

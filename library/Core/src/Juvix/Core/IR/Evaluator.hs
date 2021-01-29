@@ -669,9 +669,8 @@ vapp s t ann =
     app' err con mkArg p y =
       case mkArg Proxy y of
         Nothing -> Left $ CannotApply s t NoApplyError
-        Just y  ->
+        Just y ->
           Param.apply1 p y |> bimap (CannotApply s t . err) (\r -> con r mempty)
-
 
 type TermExtFun ty ext' ext primTy primVal =
   LookupFun ty ext' primTy primVal ->

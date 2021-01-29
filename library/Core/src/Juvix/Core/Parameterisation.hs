@@ -4,7 +4,7 @@
 module Juvix.Core.Parameterisation where
 
 import qualified Juvix.Core.Application as App
-import Juvix.Core.IR.Types (GlobalName, BoundVar, NoExt)
+import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -50,7 +50,8 @@ data ApplyError' e a
   | Extra e
 
 deriving instance (Eq e, Eq a, Eq (Arg a)) => Eq (ApplyError' e a)
-deriving instance (Show e, Show a, Show (Arg a)) => Show   (ApplyError' e a)
+
+deriving instance (Show e, Show a, Show (Arg a)) => Show (ApplyError' e a)
 
 type ApplyError a = ApplyError' (ApplyErrorExtra a) a
 
@@ -75,17 +76,20 @@ class CanApply a where
   apply :: a -> NonEmpty (Arg a) -> Either (ApplyError a) a
 
 mapApplyErr ::
-  (ApplyErrorExtra a ~ ApplyErrorExtra b,
-   Arg a ~ a, Arg b ~ b) =>
+  ( ApplyErrorExtra a ~ ApplyErrorExtra b,
+    Arg a ~ a,
+    Arg b ~ b
+  ) =>
   (a -> b) ->
   Either (ApplyError a) a ->
   Either (ApplyError b) b
-mapApplyErr wrap = bimap wrap' wrap where
-  wrap' (ExtraArguments f xs) =
-    ExtraArguments (wrap f) (map wrap xs)
-  wrap' (InvalidArguments f xs) =
-    InvalidArguments (wrap f) (map wrap xs)
-  wrap' (Extra e) = Extra e
+mapApplyErr wrap = bimap wrap' wrap
+  where
+    wrap' (ExtraArguments f xs) =
+      ExtraArguments (wrap f) (map wrap xs)
+    wrap' (InvalidArguments f xs) =
+      InvalidArguments (wrap f) (map wrap xs)
+    wrap' (Extra e) = Extra e
 
 applyMaybe :: CanApply a => a -> NonEmpty (Arg a) -> Maybe a
 applyMaybe f xs = either (const Nothing) Just $ apply f xs

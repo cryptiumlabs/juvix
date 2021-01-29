@@ -87,14 +87,18 @@ pattern FreeArg x = VarArg (FreeVar x)
 
 {-# COMPLETE TermArg, BoundArg, FreeArg #-}
 
-deriving instance (Show (ParamVar ext), Show ty, Show term) =>
+deriving instance
+  (Show (ParamVar ext), Show ty, Show term) =>
   Show (Arg' ext ty term)
 
-deriving instance (Eq (ParamVar ext), Eq ty, Eq term) =>
+deriving instance
+  (Eq (ParamVar ext), Eq ty, Eq term) =>
   Eq (Arg' ext ty term)
 
 instance Bifunctor (Arg' ext) where bimap = bimapDefault
+
 instance Bifoldable (Arg' ext) where bifoldMap = bifoldMapDefault
+
 instance Bitraversable (Arg' ext) where
   bitraverse _ _ (VarArg x) = pure $ VarArg x
   bitraverse f g (TermArg t) = TermArg <$> bitraverse f g t

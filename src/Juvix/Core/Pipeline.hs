@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Werror=missing-fields #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
 module Juvix.Core.Pipeline where
@@ -121,43 +120,31 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
     toRaw1 ErasedAnn.UnitM = ErasedAnn.UnitM
     toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
-
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =
       ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
-
     takeToTerm (App.Take {usage, type', term}) =
-      ErasedAnn.Ann {
-        usage,
-        type' = Prim.fromPrimType type',
-        term = ErasedAnn.Prim term
-      }
-
-    argsToTerms ts xs = go (toList ts) xs where
-      go _ [] = []
-      go (_ : ts) (App.TermArg a : as) =
-        takeToTerm a : go ts as
-      go (t : ts) (App.VarArg x : as) =
-        varTerm t x : go ts as
-      go [] (_ : _) =
-        -- a well typed application can't have more arguments than arrows
-        undefined
-      varTerm t x =
-        ErasedAnn.Ann {
-          usage = Usage.Omega, -- FIXME should usages even exist after erasure?
-          type' = ErasedAnn.PrimTy t,
-          term = ErasedAnn.Var x
+      ErasedAnn.Ann
+        { usage,
+          type' = Prim.fromPrimType type',
+          term = ErasedAnn.Prim term
         }
-
-    -- primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
-    -- primToRaw (App.Cont {fun, args}) =
-    --   ErasedAnn.AppM (takeToTerm fun) (argToTerm <$> args)
-    -- fromTake f (App.Take {usage, type', term}) =
-    --   ErasedAnn.Ann {usage, type' = Prim.fromPrimType type', term = f term}
-    -- takeToTerm = fromTake ErasedAnn.Prim
-    -- argToTerm = fromTake \case
-    --   App.VarArg x -> ErasedAnn.Var x
-    --   App.TermArg p -> ErasedAnn.Prim p
+    argsToTerms ts xs = go (toList ts) xs
+      where
+        go _ [] = []
+        go (_ : ts) (App.TermArg a : as) =
+          takeToTerm a : go ts as
+        go (t : ts) (App.VarArg x : as) =
+          varTerm t x : go ts as
+        go [] (_ : _) =
+          -- a well typed application can't have more arguments than arrows
+          undefined
+        varTerm t x =
+          ErasedAnn.Ann
+            { usage = Usage.Omega, -- FIXME should usages even exist after erasure?
+              type' = ErasedAnn.PrimTy t,
+              term = ErasedAnn.Var x
+            }
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.
