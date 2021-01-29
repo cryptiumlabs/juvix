@@ -9,8 +9,14 @@ let cons-pair = %Michelson.pair
 sig nil : list operation
 let nil = %Michelson.nil
 
+sig address-to-contract : address -> option (contract unit-t)
+let address-to-contract = %Michelson.address-to-contract
+
+sig transfer-tokens : unit-t -> mutez -> contract unit-t -> operation
+let transfer-tokens = %Michelson.transfer-tokens
+
 sig main : pair unit-t unit-t -> pair (list operation) unit-t
 let main = \ps ->
-  let contract = address-to-contract unit-t sender in
+  let contract = address-to-contract sender in
   let op = transfer-tokens unit balance contract in
-  cons-pair (cons operation nil) (cdr ps)
+  cons-pair (cons op nil) unit
