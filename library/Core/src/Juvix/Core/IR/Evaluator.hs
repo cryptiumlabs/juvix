@@ -617,6 +617,7 @@ deriving instance
   Show (Error extV extT primTy primVal)
 
 vapp ::
+  forall extV extT primTy primVal.
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
@@ -629,18 +630,48 @@ vapp ::
   -- (if it isn't, then this annotation is unused)
   IR.XNApp extV primTy primVal ->
   Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
-vapp (IR.VLam' t _) s _ =
-  substV s t
-vapp (IR.VNeutral' f _) s b =
-  pure $ IR.VNeutral' (IR.NApp' f s b) mempty
-vapp pp@(IR.VPrimTy' p _) qq@(IR.VPrimTy' q _) _ =
-  bimap (CannotApply pp qq . ApplyErrorT) (\pq -> IR.VPrimTy' pq mempty) $
-    Param.apply1 p (Param.pureArg q)
-vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
-  bimap (CannotApply pp qq . ApplyErrorV) (\pq -> IR.VPrim' pq mempty) $
-    Param.apply1 p (Param.pureArg q)
-vapp f x _ =
-  Left $ CannotApply f x NoApplyError
+vapp s t ann =
+  case s of
+    IR.VLam' s _ -> substV t s
+    IR.VNeutral' f _ -> pure $ IR.VNeutral' (IR.NApp' f s ann) mempty
+    IR.VPrimTy' p _ -> case t of
+      IR.VPrimTy' q _ ->
+        app' ApplyErrorT IR.VPrimTy' (\_ -> Just . Param.pureArg) p q
+      IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
+        -- TODO pattern vars also
+        app' ApplyErrorT IR.VPrimTy' Param.freeArg p y
+      IR.VNeutral' (IR.NBound' i _) _ ->
+        app' ApplyErrorT IR.VPrimTy' Param.boundArg p i
+      _ ->
+        Left $ CannotApply s t NoApplyError
+    IR.VPrim' p _ -> case t of
+      IR.VPrim' q _ ->
+        app' ApplyErrorV IR.VPrim' (\_ -> Just . Param.pureArg) p q
+      IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
+        -- TODO pattern vars also
+        app' ApplyErrorV IR.VPrim' Param.freeArg p y
+      IR.VNeutral' (IR.NBound' i _) _ ->
+        app' ApplyErrorV IR.VPrim' Param.boundArg p i
+      _ ->
+        Left $ CannotApply s t NoApplyError
+    _ ->
+      Left $ CannotApply s t NoApplyError
+  where
+    app' ::
+      forall ann arg fun.
+      (Param.CanApply fun, Monoid ann) =>
+      (Param.ApplyError fun -> ApplyError primTy primVal) ->
+      (fun -> ann -> IR.Value' extV primTy primVal) ->
+      (Proxy fun -> arg -> Maybe (Param.Arg fun)) ->
+      fun ->
+      arg ->
+      Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+    app' err con mkArg p y =
+      case mkArg Proxy y of
+        Nothing -> Left $ CannotApply s t NoApplyError
+        Just y  ->
+          Param.apply1 p y |> bimap (CannotApply s t . err) (\r -> con r mempty)
+
 
 type TermExtFun ty ext' ext primTy primVal =
   LookupFun ty ext' primTy primVal ->
