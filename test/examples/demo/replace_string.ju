@@ -1,11 +1,6 @@
 open Prelude
 open Prelude.Michelson
 
-sig storage : ty
-let storage = string
-
-sig param : ty
-let param = string
-
-sig main : param -> storage -> pair storage (list operation)
-let main = \param _ -> cons-pair param nil
+sig main : pair string string -> pair (list operation) string
+let main = \ps ->
+  cons-pair (list operation) string (nil operation) (car string string ps)

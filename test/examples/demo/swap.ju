@@ -2,4 +2,11 @@ open Prelude
 open Prelude.Michelson
 
 sig main : pair unit-t (pair int int) -> pair (list operation) (pair int int)
-let main = \ps -> cons-pair nil (cons-pair (cdr (cdr ps)) (car (cdr ps)))
+let main = \ps ->
+  cons-pair
+     (list operation)
+     (pair int int)
+     (nil operation)
+     (cons-pair int int
+                (cdr int int (cdr unit-t (pair int int) ps))
+                (car int int (cdr unit-t (pair int int) ps)))

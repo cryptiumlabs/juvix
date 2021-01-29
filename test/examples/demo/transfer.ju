@@ -1,14 +1,8 @@
 open Prelude
 open Prelude.Michelson
 
-sig storage : ty
-let storage = unit-t
-
-sig param : ty
-let param = unit-t
-
-sig main : param -> storage -> pair (list operation) storage
-let main = \_ storage ->
+sig main : pair unit-t unit-t -> pair (list operation) unit-t
+let main = \ps ->
   let contract = address-to-contract unit-t sender in
   let op = transfer-tokens unit balance contract in
-  cons-pair storage (cons nil op)
+  cons-pair (list operation) unit-t (cdr unit-t unit-t ps) (cons operation (nil operation) op)
