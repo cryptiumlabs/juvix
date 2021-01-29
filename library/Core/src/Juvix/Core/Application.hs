@@ -48,7 +48,7 @@ instance Bitraversable (Return' ext) where
   bitraverse f g = \case
     Cont s ts n ->
       Cont <$> bitraverse f g s
-        <*> traverse (bitraverse f (traverse g)) ts
+        <*> traverse (bitraverse f g) ts
         <*> pure n
     Return a s ->
       Return <$> f a <*> g s
@@ -65,34 +65,41 @@ data DeBruijn
 
 type instance ParamVar IR.NoExt = DeBruijn
 
-data ArgBody' ext term
+data Arg' ext ty term
   = VarArg (ParamVar ext)
-  | TermArg term
+  | TermArg (Take ty term)
   deriving (Generic, Functor, Foldable, Traversable)
 
 pattern BoundArg ::
-  (ParamVar ext ~ DeBruijn) => IR.BoundVar -> ArgBody' ext term
+  (ParamVar ext ~ DeBruijn) => IR.BoundVar -> Arg' ext ty term
 pattern BoundArg i = VarArg (BoundVar i)
 
 pattern FreeArg ::
-  (ParamVar ext ~ DeBruijn) => IR.GlobalName -> ArgBody' ext term
+  (ParamVar ext ~ DeBruijn) => IR.GlobalName -> Arg' ext ty term
 pattern FreeArg x = VarArg (FreeVar x)
 
 {-# COMPLETE TermArg, BoundArg, FreeArg #-}
 
-deriving instance (Show (ParamVar ext), Show term) => Show (ArgBody' ext term)
+deriving instance (Show (ParamVar ext), Show ty, Show term) =>
+  Show (Arg' ext ty term)
 
-deriving instance (Eq (ParamVar ext), Eq term) => Eq (ArgBody' ext term)
+deriving instance (Eq (ParamVar ext), Eq ty, Eq term) =>
+  Eq (Arg' ext ty term)
 
-type ArgBody = ArgBody' IR.NoExt
+instance Bifunctor (Arg' ext) where bimap = bimapDefault
+instance Bifoldable (Arg' ext) where bifoldMap = bifoldMapDefault
+instance Bitraversable (Arg' ext) where
+  bitraverse _ _ (VarArg x) = pure $ VarArg x
+  bitraverse f g (TermArg t) = TermArg <$> bitraverse f g t
 
-type Arg' ext ty term = Take ty (ArgBody' ext term)
+type Arg = Arg' IR.NoExt
 
-type Arg ty term = Arg' IR.NoExt ty term
+argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
+argToTake (TermArg t) = pure t
+argToTake _ = empty
 
-argToBase :: Alternative f => ArgBody' ext term -> f term
-argToBase (TermArg t) = pure t
-argToBase _ = empty
+argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext' ty term)
+argToReturn = fmap takeToReturn . argToTake
 
 -- |
 -- An argument to a partially applied primitive, which must be

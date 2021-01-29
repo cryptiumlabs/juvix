@@ -1105,8 +1105,8 @@ instance
 instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
 
 instance
-  (HasWeak term, HasWeak (App.ParamVar ext)) =>
-  HasWeak (App.ArgBody' ext term)
+  (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.Arg' ext ty term)
 
 instance
   (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
@@ -1123,9 +1123,10 @@ instance
 
 instance
   ( HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal ty,
     HasSubst ext primTy primVal (App.ParamVar ext)
   ) =>
-  HasSubst ext primTy primVal (App.ArgBody' ext term)
+  HasSubst ext primTy primVal (App.Arg' ext ty term)
 
 instance
   ( HasSubst ext primTy primVal ty,
@@ -1142,9 +1143,10 @@ instance
 
 instance
   ( HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal ty,
     HasPatSubst ext primTy primVal (App.ParamVar ext)
   ) =>
-  HasPatSubst ext primTy primVal (App.ArgBody' ext term)
+  HasPatSubst ext primTy primVal (App.Arg' ext ty term)
 
 instance
   ( HasPatSubst ext primTy primVal ty,
@@ -1173,10 +1175,19 @@ instance
     IR.Elim' (IR.Free' (IR.Global x) mempty) mempty
 
 instance
-  ( HasSubstTerm ext primTy primVal (App.ParamVar ext),
+  ( HasWeak ty,
     HasSubstTerm ext primTy primVal term
   ) =>
-  HasSubstTerm ext primTy primVal (App.ArgBody' ext term)
+  HasSubstTerm ext primTy primVal (App.Take ty term)
+  where
+  substTermWith b i e (App.Take {term}) = substTermWith b i e term
+
+instance
+  ( HasSubstTerm ext primTy primVal (App.ParamVar ext),
+    HasWeak ty,
+    HasSubstTerm ext primTy primVal term
+  ) =>
+  HasSubstTerm ext primTy primVal (App.Arg' ext ty term)
   where
   substTermWith b i e (App.VarArg x) = substTermWith b i e x
   substTermWith b i e (App.TermArg t) = substTermWith b i e t
@@ -1218,10 +1229,19 @@ instance
     pure $ IR.VNeutral' (IR.NFree' (IR.Global x) mempty) mempty
 
 instance
-  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+  ( HasWeak ty,
     HasSubstValue ext primTy primVal term
   ) =>
-  HasSubstValue ext primTy primVal (App.ArgBody' ext term)
+  HasSubstValue ext primTy primVal (App.Take ty term)
+  where
+  substValueWith b i e (App.Take {term}) = substValueWith b i e term
+
+instance
+  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+    HasSubstValue ext primTy primVal ty,
+    HasSubstValue ext primTy primVal term
+  ) =>
+  HasSubstValue ext primTy primVal (App.Arg' ext ty term)
   where
   substValueWith b i e (App.VarArg x) = substValueWith b i e x
   substValueWith b i e (App.TermArg t) = substValueWith b i e t
@@ -1256,7 +1276,7 @@ instance
   substValueWith b i e (App.Cont {fun, args}) = do
     let app f x = vapp f x ()
     let fun' = IR.VPrim (App.takeToReturn fun)
-    args' <- traverse (substVWith b i e . argToValue) args
+    args' <- traverse (substValueWith b i e . argToValue) args
     foldlM app fun' args'
   substValueWith _ _ _ ret@(App.Return {}) =
     pure $ IR.VPrim ret
@@ -1264,11 +1284,11 @@ instance
 argToValue ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Value primTy (Param.TypedPrim primTy primVal)
-argToValue (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.VPrim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.VBound i
-    App.FreeArg x -> IR.VFree $ IR.Global x
+argToValue = \case
+  App.TermArg (App.Take {type', term}) ->
+    IR.VPrim $ App.Return {retType = type', retTerm = term}
+  App.BoundArg i -> IR.VBound i
+  App.FreeArg x -> IR.VFree $ IR.Global x
 
 instance
   ( HasWeak primTy,
@@ -1295,11 +1315,11 @@ takeToElim (App.Take {type', term}) =
 argToTerm ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Term' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
-argToTerm (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.Prim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.Elim $ IR.Bound i
-    App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
+argToTerm = \case
+  App.TermArg (App.Take {type', term}) ->
+    IR.Prim $ App.Return {retType = type', retTerm = term}
+  App.BoundArg i -> IR.Elim $ IR.Bound i
+  App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
 
 typeToTerm ::
   ( Monoid (IR.XPi ext primTy primVal),
