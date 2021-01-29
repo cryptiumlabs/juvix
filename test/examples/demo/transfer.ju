@@ -16,9 +16,9 @@ sig transfer-tokens : unit-t -> mutez -> contract unit-t -> operation
 let transfer-tokens = %Michelson.transfer-tokens
 
 sig if-none
-  :  option contract
+  :  option (contract unit-t)
   -> pair (list operation) unit-t
-  -> (contract -> pair (list operation) unit-t)
+  -> ((contract unit-t) -> pair (list operation) unit-t)
   -> pair (list operation) unit-t
 let if-none = %Michelson.if-none
 
