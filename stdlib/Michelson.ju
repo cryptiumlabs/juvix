@@ -103,10 +103,10 @@ sig compare : (x : ty) -> x -> x -> int
 let compare = %Michelson.compare
 
 sig if2 : (x : ty) -> bool -> x -> x -> x
-let if2 = %Michelson.if-builtin
+let if2 _ = %Michelson.if-builtin
 
 sig if-none : (a : ty) -> (x : ty) -> option a -> x -> (a -> x) -> x
-let if-none = %Michelson.if-none
+let if-none _ _ = %Michelson.if-none
 
 -- other functions
 sig now : timestamp

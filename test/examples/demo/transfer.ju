@@ -15,8 +15,18 @@ let address-to-contract = %Michelson.address-to-contract
 sig transfer-tokens : unit-t -> mutez -> contract unit-t -> operation
 let transfer-tokens = %Michelson.transfer-tokens
 
+sig if-none
+  :  option contract
+  -> pair (list operation) unit-t
+  -> (contract -> pair (list operation) unit-t)
+  -> pair (list operation) unit-t
+let if-none = %Michelson.if-none
+
 sig main : pair unit-t unit-t -> pair (list operation) unit-t
 let main = \ps ->
   let contract = address-to-contract sender in
-  let op = transfer-tokens unit balance contract in
-  make-pair (cons op nil) unit
+  if-none contract
+          (make-pair nil unit)
+          (\contract ->
+            let op = transfer-tokens unit balance contract in
+            make-pair (cons op nil) unit)

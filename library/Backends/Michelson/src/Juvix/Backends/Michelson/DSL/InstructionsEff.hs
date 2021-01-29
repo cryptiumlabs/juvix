@@ -590,7 +590,6 @@ evalIfNone typ (bool : thenI : elseI : _) = do
   _ <- eval bool
   then' <- protect (eval thenI)
   -- This becomes an application
-  -- _app <- constructApplication elseI
   else' <- protect (constructApplication elseI >>= eval)
   addInstr (Instructions.if' (insts then') (insts else'))
   consVal res typ
@@ -603,15 +602,17 @@ constructApplication ::
   Env.Reduction m =>
   Ann.AnnTerm Types.PrimTy primVal ->
   m (Ann.AnnTerm Types.PrimTy primVal)
-constructApplication Ann.Ann {type', term = Ann.LamM {body}}
+constructApplication Ann.Ann {type', term = Ann.LamM {body, arguments}}
   | length (Utils.piToListTy type') == 1 = do
     -- register the value on the stack
-    consVal Env.Nop bound
+    -- ASSUMES unqiue naming
+    consVar arg1 Env.Nop usage bound
     pure body
   | otherwise =
     error "unsupported: lambda going through multiple arguments"
   where
-    bound : _ = Utils.piToListTy type'
+    (usage, bound) : _ = Utils.piToList type'
+    arg1 : _ = arguments
 constructApplication _ = error "unsupported: consturctionApplication on non lambda"
 
 -------------------------------------------------------------------------------
