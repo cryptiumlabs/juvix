@@ -80,7 +80,7 @@ let mul = %Michelson.mul
 sig sub : (x : ty) -> x -> x -> x
 let sub = %Michelson.sub
 
-sig div : (x : ty) -> x -> x -> x
+sig div : (x : ty) -> x -> x -> option (pair x x)
 let div = %Michelson.div
 
 sig abs : (x : ty) -> x -> x -> x
