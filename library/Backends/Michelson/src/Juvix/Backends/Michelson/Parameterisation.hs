@@ -164,7 +164,7 @@ instance Core.CanApply (PrimVal' ext) where
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse (traverse App.argToBase) args ->
+            | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}

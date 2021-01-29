@@ -122,11 +122,11 @@ type PrimValHR = PrimVal' CoreErased.T
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just $
+  Just $ App.TermArg $
     App.Take
       { usage = Usage.Omega,
         type' = retType,
-        term = App.TermArg retTerm
+        term = retTerm
       }
 
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
