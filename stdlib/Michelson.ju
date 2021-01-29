@@ -147,55 +147,55 @@ let transfer-tokens = %Michelson.transfer-tokens
 sig set-delegate : address -> unit-t
 let set-delegate = %Michelson.set-delegate
 
-sig none : either unit-t a
+sig none : (a : ty) -> either unit-t a
 let none = %Michelson.none
 
-sig some : b -> either a b
+sig some : (a : ty) -> (b : ty) -> b -> either a b
 let some = %Michelson.some
 
-sig left : a -> either a b
+sig left : (a : ty) -> (b : ty) -> a -> either a b
 let left = %Michelson.left
 
-sig right : b -> either a b
+sig right : a : ty -> b : ty -> b -> either a b
 let right = %Michelson.right
 
-sig nil : list a
+sig nil : (a : ty) -> list a
 let nil = %Michelson.nil
 
-sig cons : a -> list a
+sig cons : (a : ty) -> a -> list a
 let cons = %Michelson.cons
 
-sig cons-pair : a -> b -> pair a b
+sig cons-pair : (a : ty) -> (b : ty) -> a -> b -> pair a b
 let cons-pair = %Michelson.cons-pair
 
-sig car : pair a b -> a
+sig car : (a : ty) -> (b : ty) -> pair a b -> a
 let car = %Michelson.car
 
-sig cdr : pair a b -> b
+sig cdr : (a : ty) -> (b : ty) -> pair a b -> b
 let cdr = %Michelson.cdr
 
-sig size : list a -> int
+sig size : (a : ty) -> list a -> int
 let size = %Michelson.size
 
-sig empty-set : set a
+sig empty-set : (a : ty) -> set a
 let empty-set = %Michelson.empty-set
 
-sig empty-map : map a
+sig empty-map : (a : ty) -> map a
 let empty-map = %Michelson.empty-map
 
-sig empty-big-map : big-map a
+sig empty-big-map : (a : ty) -> big-map a
 let empty-big-map = %Michelson.empty-big-map
 
 sig map : (x : ty) -> (a -> b) -> x a -> x b
 let map = %Michelson.map
 
-sig update : (x : ty) -> key -> a -> x a -> unit-t
+sig update : (x : ty) -> (a : ty) -> key -> a -> x a -> unit-t
 let update = %Michelson.update
 
 -- sig iter : (x : ty) -> (a -> b) -> (b -> unit-t)
 -- let iter = %Michelson.iter
 
-sig get : (x: ty) -> key -> x a -> a
+sig get : (x : ty) -> (a : ty) -> key -> x a -> a
 let get = %Michelson.get
 
 sig hash-key : key -> key-hash
