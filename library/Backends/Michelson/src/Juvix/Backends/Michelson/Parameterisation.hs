@@ -92,12 +92,16 @@ hasType CompareP ty = checkFirst2AndLast ty isBool
 hasType CompareTimeStamp ty = checkFirst2AndLast ty isBool
 hasType CompareMutez ty = checkFirst2AndLast ty isBool
 hasType CompareHash ty = checkFirst2AndLast ty isBool
+-- Hacks make more exact later
 hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
+hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a,b,c]) = True
+hasType (Inst M.UNIT {}) (x :| []) = True
+hasType (Inst M.BALANCE {}) (x :| []) = True
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
-hasType (Inst (M.PAIR _ _ _ _)) (a :| (b : (c : []))) = True
+hasType (Inst M.PAIR {}) (a :| (b : (c : []))) = True
 -- todo check this properly
 hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
 hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True

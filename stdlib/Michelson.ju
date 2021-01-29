@@ -140,7 +140,7 @@ sig address-to-contract : (param : ty) -> address -> option (contract param)
 let address-to-contract _ = %Michelson.address-to-contract
 
 sig transfer-tokens : (param : ty) -> param -> mutez -> contract param -> operation
-let transfer-tokens = %Michelson.transfer-tokens
+let transfer-tokens _ = %Michelson.transfer-tokens
 
 sig set-delegate : address -> unit-t
 let set-delegate = %Michelson.set-delegate
