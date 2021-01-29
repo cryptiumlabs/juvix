@@ -563,6 +563,8 @@ data ApplyError primTy primVal
 deriving instance
   ( Eq primTy,
     Eq primVal,
+    Eq (Param.Arg primTy),
+    Eq (Param.Arg primVal),
     Eq (Param.ApplyErrorExtra primTy),
     Eq (Param.ApplyErrorExtra primVal)
   ) =>
@@ -571,6 +573,8 @@ deriving instance
 deriving instance
   ( Show primTy,
     Show primVal,
+    Show (Param.Arg primTy),
+    Show (Param.Arg primVal),
     Show (Param.ApplyErrorExtra primTy),
     Show (Param.ApplyErrorExtra primVal)
   ) =>
@@ -589,6 +593,8 @@ deriving instance
     Eq primVal,
     IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy primVal,
+    Eq (Param.Arg primTy),
+    Eq (Param.Arg primVal),
     Eq (Param.ApplyErrorExtra primTy),
     Eq (Param.ApplyErrorExtra primVal),
     Eq (IR.TermX extT primTy primVal),
@@ -601,6 +607,8 @@ deriving instance
     Show primVal,
     IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy primVal,
+    Show (Param.Arg primTy),
+    Show (Param.Arg primVal),
     Show (Param.ApplyErrorExtra primTy),
     Show (Param.ApplyErrorExtra primVal),
     Show (IR.TermX extT primTy primVal),
@@ -627,10 +635,10 @@ vapp (IR.VNeutral' f _) s b =
   pure $ IR.VNeutral' (IR.NApp' f s b) mempty
 vapp pp@(IR.VPrimTy' p _) qq@(IR.VPrimTy' q _) _ =
   bimap (CannotApply pp qq . ApplyErrorT) (\pq -> IR.VPrimTy' pq mempty) $
-    Param.apply1 p q
+    Param.apply1 p (Param.pureArg q)
 vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
   bimap (CannotApply pp qq . ApplyErrorV) (\pq -> IR.VPrim' pq mempty) $
-    Param.apply1 p q
+    Param.apply1 p (Param.pureArg q)
 vapp f x _ =
   Left $ CannotApply f x NoApplyError
 
