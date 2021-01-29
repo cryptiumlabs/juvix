@@ -1,9 +1,17 @@
 open Prelude
 open Prelude.Michelson
 
-sig main : pair int (pair int int) -> pair (list operation) (pair int int)
-let main = \ps ->
-  cons-pair (list operation)
-            (pair int int)
-            (nil operation)
-            (cons-pair int int (car int int ps) (car int int ps))
+sig cons-pair : list operation -> pair nat nat -> pair (list operation) (pair nat nat)
+let cons-pair = %Michelson.pair
+
+sig cons-pair2 : nat -> nat -> pair nat nat
+let cons-pair2 = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig car : pair nat (pair nat nat) -> nat
+let car = %Michelson.car
+
+sig main : pair nat (pair nat nat) -> pair (list operation) (pair nat nat)
+let main = \ps -> cons-pair nil (cons-pair2 (car ps) (car ps))
