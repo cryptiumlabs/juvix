@@ -828,7 +828,6 @@ Quantitative type implementation inspired by
   + [[Naturals]]
   + [[Unit]]
   + [[Library]]
-  + [[Usage]]
 ****** Naturals
 - _Relies on_
   + [[Application]]
@@ -837,14 +836,12 @@ Quantitative type implementation inspired by
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ****** Unit
 - _Relies on_
   + [[IR/Evaluator]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ** test
 *** Conv
 - _Relies on_

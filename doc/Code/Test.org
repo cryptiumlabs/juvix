@@ -13,12 +13,10 @@
   + [[Compilation]]
   + [[Types]]
   + [[Parameterisation]]
-  + [[HR]]
   + [[IR]]
   + [[Pipeline]]
   + [[Types]]
   + [[Library]]
-  + [[NameSymbol]]
   + [[Usage]]
 * RecGroups
 - _Relies on_

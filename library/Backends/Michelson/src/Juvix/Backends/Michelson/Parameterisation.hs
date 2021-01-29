@@ -364,15 +364,13 @@ instance
   substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
 
 instance
-  Monoid (IR.XPrimTy ext PrimTy primVal)
-  =>
+  Monoid (IR.XPrimTy ext PrimTy primVal) =>
   Eval.HasPatSubstTerm ext PrimTy primVal PrimTy
   where
   patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
 
 instance
-  Monoid (IR.XPrim ext primTy RawPrimVal)
-  =>
+  Monoid (IR.XPrim ext primTy RawPrimVal) =>
   Eval.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
   where
   patSubstTerm' _ _ t = pure $ IR.Prim' t mempty
