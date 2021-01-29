@@ -97,6 +97,9 @@ hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
 hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a,b,c]) = True
 hasType (Inst M.UNIT {}) (x :| []) = True
 hasType (Inst M.BALANCE {}) (x :| []) = True
+hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
+  | empty == rest = False
+  | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
@@ -337,6 +340,7 @@ builtinValues =
     ("Michelson.address-to-contract", Contract),
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] [])),
+    ("Michelson.if-none", Inst (M.IF_NONE [] [])),
     ("Michelson.pair", Inst (M.PAIR "" "" "" ""))
   ]
     |> fmap (first NameSymbol.fromSymbol)

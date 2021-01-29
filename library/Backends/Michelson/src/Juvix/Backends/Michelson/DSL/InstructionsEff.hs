@@ -284,6 +284,7 @@ primToFargs (Types.Inst inst) ty _ =
         Instr.ISNAT _ -> isNat
         Instr.PUSH {} -> pushConstant
         Instr.IF {} -> evalIf
+        Instr.IF_NONE {} -> evalIfNone
         Instr.CONS {} -> cons
         Instr.CONTRACT {} -> contract
 -- _ -> error "unspported function in primToFargs"
@@ -597,7 +598,7 @@ evalIfNone typ (bool : thenI : elseI : _) = do
 evalIfNone _ _ = throw @"compilationError" Types.NotEnoughArguments
 
 -- 'constructApplication' takes its first argument and pushes it to the stack
--- used in if_none and if_some, if_cons etc  etc etc.
+-- used in if_none and if_some, if_cons etc etc etc.
 constructApplication ::
     Env.Reduction m =>
     Ann.AnnTerm Types.PrimTy primVal ->
