@@ -600,9 +600,9 @@ evalIfNone _ _ = throw @"compilationError" Types.NotEnoughArguments
 -- 'constructApplication' takes its first argument and pushes it to the stack
 -- used in if_none and if_some, if_cons etc etc etc.
 constructApplication ::
-    Env.Reduction m =>
-    Ann.AnnTerm Types.PrimTy primVal ->
-    m (Ann.AnnTerm Types.PrimTy primVal)
+  Env.Reduction m =>
+  Ann.AnnTerm Types.PrimTy primVal ->
+  m (Ann.AnnTerm Types.PrimTy primVal)
 constructApplication Ann.Ann {type', term = Ann.LamM {body}}
   | length (Utils.piToListTy type') == 1 = do
     -- register the value on the stack
@@ -613,6 +613,7 @@ constructApplication Ann.Ann {type', term = Ann.LamM {body}}
   where
     bound : _ = Utils.piToListTy type'
 constructApplication _ = error "unsupported: consturctionApplication on non lambda"
+
 -------------------------------------------------------------------------------
 -- Environment Protections, Promotions, and Movements
 --------------------------------------------------------------------------------

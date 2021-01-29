@@ -58,8 +58,8 @@ check2Equal (_ :| _) = False
 
 isBool :: PrimTy -> Bool
 isBool (PrimTy (M.Type M.TBool _)) = True
-isBool (PrimTy (M.Type M.TInt  _)) = True
-isBool (PrimTy (M.Type M.TNat  _)) = True
+isBool (PrimTy (M.Type M.TInt _)) = True
+isBool (PrimTy (M.Type M.TNat _)) = True
 isBool _ = False
 
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
@@ -94,7 +94,7 @@ hasType CompareMutez ty = checkFirst2AndLast ty isBool
 hasType CompareHash ty = checkFirst2AndLast ty isBool
 -- Hacks make more exact later
 hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
-hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a,b,c]) = True
+hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
 hasType (Inst M.UNIT {}) (x :| []) = True
 hasType (Inst M.BALANCE {}) (x :| []) = True
 hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
