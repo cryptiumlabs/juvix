@@ -90,6 +90,7 @@ hasType CompareP ty = checkFirst2AndLast ty isBool
 hasType CompareTimeStamp ty = checkFirst2AndLast ty isBool
 hasType CompareMutez ty = checkFirst2AndLast ty isBool
 hasType CompareHash ty = checkFirst2AndLast ty isBool
+hasType EDivI ty (x :| [y, z]) = check2Equal (x :| [y])
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
