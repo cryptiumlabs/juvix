@@ -69,10 +69,28 @@ semantically equivalent to but a syntactic improvement over `handler(operation,
 params)`, since effect handling
 is similar to function application, but also carries effect information.
 The user defines data types and functions as usual, and then uses
-Witch to prove properties about said definitions. The Examples below
-shows it in action.
+Witch to prove properties about said definitions. The examples below
+show it in action:
 
-![](resources/witch.svg)
+```agda
+data ℕ : Type where
+  0 : ℕ 
+  s : ℕ → ℕ
+  
+  _+_       : ℕ → ℕ → ℕ
+  0 + n     = n
+  (s m) + n = suc (m + n)
+
++comm          : ∀ (x y : ℕ) → Witch x + y ≡ y + x
++comm 0 y     = tactic { 0 + y ≡ y + 0 } via Ring
++comm (s x) y = search { x + (s y) ≡ suc (x + y) } via Backtracking
+
+
+++assoc         : ∀ {A : Set} (x y z: [A]) → Witch (x ++ y) ++ z ≡ x ++ (ys ++ zs)
+++assoc ∅ y z   = solve { (∅ ++ y) ++ z ≡ ∅ ++ (ys ++ zs) } via SMT 
+++assoc (x ∷ xs) y z rewrite ++assoc xs y z 
+                = pure ref
+```
 
 The proof of commutativity of addition under
 natural numbers and of associativity of list concatenation are shown,
