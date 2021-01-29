@@ -342,7 +342,6 @@ instructionOf x ty =
     Types.GetMap -> Instructions.get
     Types.GetBMap -> Instructions.get
     Types.Cons -> Instructions.cons
-    Types.Pair' -> Instructions.pair
     Types.Contract -> Instructions.contract ty
     Types.Constant _ -> error "tried to convert a to prim"
     Types.Inst _ -> error "tried to convert an inst to an inst!"
