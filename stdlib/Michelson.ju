@@ -72,35 +72,35 @@ let address = %Michelson.address
 
 -- arithmetic functions
 sig add : (x : ty) -> x -> x -> x
-let add = %Michelson.add
+let add _ = %Michelson.add
 
 sig mul : (x : ty) -> x -> x -> x
-let mul = %Michelson.mul
+let mul _ = %Michelson.mul
 
 sig sub : (x : ty) -> x -> x -> x
-let sub = %Michelson.sub
+let sub _ = %Michelson.sub
 
 sig div : (x : ty) -> x -> x -> option (pair x x)
-let div = %Michelson.div
+let div _ = %Michelson.div
 
 sig abs : (x : ty) -> x -> x -> x
-let abs = %Michelson.abs
+let abs _ = %Michelson.abs
 
 -- boolean functions
 sig and% : (x : ty) -> x -> x -> x
-let and% = %Michelson.and
+let and% _ = %Michelson.and
 
 sig or : (x : ty) -> x -> x -> x
-let or = %Michelson.or
+let or _ = %Michelson.or
 
 sig xor : (x : ty) -> x -> x -> x
-let xor = %Michelson.xor
+let xor _ = %Michelson.xor
 
 -- sig not : (x : ty) -> x -> x -> x
 -- let not = %Michelson.not
 
 sig compare : (x : ty) -> x -> x -> int
-let compare = %Michelson.compare
+let compare _ = %Michelson.compare
 
 sig if2 : (x : ty) -> bool -> x -> x -> x
 let if2 _ = %Michelson.if-builtin
@@ -113,7 +113,7 @@ sig now : timestamp
 let now = %Michelson.now
 
 sig amount : (x : ty) -> x -> unit-t
-let amount = %Michelson.amount
+let amount _ = %Michelson.amount
 
 sig balance : mutez
 let balance = %Michelson.balance
