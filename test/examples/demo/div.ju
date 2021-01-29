@@ -3,8 +3,8 @@ mod Div where
 open Prelude
 open Michelson
 
-sig cons-pair : list operation -> nat -> pair (list operation) nat
-let cons-pair = %Michelson.pair
+sig make-pair : list operation -> nat -> pair (list operation) nat
+let make-pair = %Michelson.pair
 
 sig nil : list operation
 let nil = %Michelson.nil
@@ -19,4 +19,4 @@ sig cdr : pair nat nat -> nat
 let cdr = %Michelson.cdr
 
 sig main : pair nat nat -> pair (list operation) (option (pair nat nat))
-let main = \ps -> cons-pair nil (div (car ps) (cdr ps))
+let main = \ps -> make-pair nil (div (car ps) (cdr ps))

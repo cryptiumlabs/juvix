@@ -3,8 +3,8 @@ mod ReplaceString where
 open Prelude
 open Michelson
 
-sig cons-pair : list operation -> string -> pair (list operation) string
-let cons-pair = %Michelson.pair
+sig make-pair : list operation -> string -> pair (list operation) string
+let make-pair = %Michelson.pair
 
 sig nil : list operation
 let nil = %Michelson.nil
@@ -16,4 +16,4 @@ sig cdr : pair string string -> string
 let cdr = %Michelson.cdr
 
 sig main : pair string string -> pair (list operation) string
-let main = \ps -> cons-pair nil (car ps)
+let main = \ps -> make-pair nil (car ps)

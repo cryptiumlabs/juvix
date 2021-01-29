@@ -6,8 +6,8 @@ open Michelson
 sig nil : list operation
 let nil = %Michelson.nil
 
-sig cons-pair : list operation -> int -> pair (list operation) int
-let cons-pair = %Michelson.pair
+sig make-pair : list operation -> int -> pair (list operation) int
+let make-pair = %Michelson.pair
 
 sig if2 : bool -> int -> int
 let if2 = %Michelson.if-builtin
@@ -29,7 +29,7 @@ let fail-with =  %Michelson.fail-with
 
 sig main : pair int int -> pair (list operation) int
 let main = \pair ->
-  cons-pair
+  make-pair
     nil
     (if2 (compare 0 (car pair))
          (fail-with 0)

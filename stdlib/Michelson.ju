@@ -163,8 +163,8 @@ let nil _ = %Michelson.nil
 sig cons : (a : ty) -> a -> list a
 let cons _ = %Michelson.cons
 
-sig cons-pair : (a : ty) -> (b : ty) -> a -> b -> pair a b
-let cons-pair _ _ = %Michelson.cons
+sig make-pair : (a : ty) -> (b : ty) -> a -> b -> pair a b
+let make-pair _ _ = %Michelson.pair
 
 sig car : (a : ty) -> (b : ty) -> pair a b -> a
 let car _ _ = %Michelson.car

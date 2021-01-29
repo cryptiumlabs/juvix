@@ -3,8 +3,8 @@ mod IdentityUnit where
 open Prelude
 open Michelson
 
-sig cons-pair : list operation -> unit-t -> pair (list operation) unit-t
-let cons-pair = %Michelson.pair
+sig make-pair : list operation -> unit-t -> pair (list operation) unit-t
+let make-pair = %Michelson.pair
 
 sig nil : list operation
 let nil = %Michelson.nil
@@ -13,4 +13,4 @@ sig car : pair unit-t unit-t -> unit-t
 let car = %Michelson.car
 
 sig main : pair unit-t unit-t -> pair (list operation) unit-t
-let main = \ps -> cons-pair nil (car ps)
+let main = \ps -> make-pair nil (car ps)

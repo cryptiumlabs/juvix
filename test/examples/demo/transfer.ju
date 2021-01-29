@@ -3,8 +3,8 @@ mod Transfer where
 open Prelude
 open Michelson
 
-sig cons-pair : list operation -> nat -> pair (list operation) nat
-let cons-pair = %Michelson.pair
+sig make-pair : list operation -> nat -> pair (list operation) nat
+let make-pair = %Michelson.pair
 
 sig nil : list operation
 let nil = %Michelson.nil
@@ -19,4 +19,4 @@ sig main : pair unit-t unit-t -> pair (list operation) unit-t
 let main = \ps ->
   let contract = address-to-contract sender in
   let op = transfer-tokens unit balance contract in
-  cons-pair (cons op nil) unit
+  make-pair (cons op nil) unit
