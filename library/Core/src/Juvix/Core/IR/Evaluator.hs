@@ -636,7 +636,7 @@ vapp s t ann =
     IR.VNeutral' f _ -> pure $ IR.VNeutral' (IR.NApp' f s ann) mempty
     IR.VPrimTy' p _ -> case t of
       IR.VPrimTy' q _ ->
-        app' ApplyErrorT IR.VPrimTy' (\_ -> Just . Param.pureArg) p q
+        app' ApplyErrorT IR.VPrimTy' (\_ -> Param.pureArg) p q
       IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
         -- TODO pattern vars also
         app' ApplyErrorT IR.VPrimTy' Param.freeArg p y
@@ -646,7 +646,7 @@ vapp s t ann =
         Left $ CannotApply s t NoApplyError
     IR.VPrim' p _ -> case t of
       IR.VPrim' q _ ->
-        app' ApplyErrorV IR.VPrim' (\_ -> Just . Param.pureArg) p q
+        app' ApplyErrorV IR.VPrim' (\_ -> Param.pureArg) p q
       IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
         -- TODO pattern vars also
         app' ApplyErrorV IR.VPrim' Param.freeArg p y

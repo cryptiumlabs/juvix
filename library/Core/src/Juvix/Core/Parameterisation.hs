@@ -62,9 +62,9 @@ class CanApply a where
   type Arg a
   type Arg a = a
 
-  pureArg :: a -> Arg a
-  default pureArg :: (Arg a ~ a) => a -> Arg a
-  pureArg x = x
+  pureArg :: a -> Maybe (Arg a)
+  default pureArg :: (Arg a ~ a) => a -> Maybe (Arg a)
+  pureArg = Just
 
   freeArg :: Proxy a -> GlobalName -> Maybe (Arg a)
   freeArg _ _ = Nothing
