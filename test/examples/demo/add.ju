@@ -1,12 +1,9 @@
 open Prelude
 open Prelude.Michelson
 
-sig cons-pair : list operation -> nat -> pair (list operation) nat
-let cons-pair = %Michelson.pair
-
 sig main : pair nat nat -> pair (list operation) nat
 let main = \ps ->
    cons-pair (list operation)
              nat
-             nil
+             (nil operation)
              (add nat (car nat nat ps) (cdr nat nat ps))
