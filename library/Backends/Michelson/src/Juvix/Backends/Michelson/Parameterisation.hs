@@ -97,6 +97,7 @@ hasType (Inst (M.IF _ _)) (bool :| rest)
 hasType (Inst (M.PAIR _ _ _ _)) (a :| (b : (c : []))) = True
 -- todo check this properly
 hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
+hasType (Inst (M.CDR _ _)) (a :| (b : [])) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
@@ -324,7 +325,6 @@ builtinValues =
     ("Michelson.empty-set", EmptyS),
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
-    ("Michelson.cons-pair", Pair'),
     ("Michelson.address-to-contract", Contract),
     -- added symbols to not take values
     ("Michelson.if-builtin", Inst (M.IF [] [])),

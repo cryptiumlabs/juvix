@@ -93,7 +93,6 @@ data RawPrimVal
   | Loop
   | Iter
   | MapOp
-  | Pair'
   deriving (Show, Eq, Generic, Data)
 
 type NewPrim = RawPrimVal
