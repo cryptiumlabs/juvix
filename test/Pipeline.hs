@@ -3,12 +3,10 @@ module Pipeline where
 import qualified Juvix.Backends.Michelson.Compilation as M
 import Juvix.Backends.Michelson.Compilation.Types
 import Juvix.Backends.Michelson.Parameterisation
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (bool, identity, log)
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
@@ -69,15 +67,7 @@ exec (EnvE env) param globals = do
 
 type Globals = IR.Globals PrimTy PrimValIR
 
-type RawHRElim = HR.Elim PrimTy RawPrimVal
-
-type HRElim = HR.Elim PrimTy PrimValHR
-
-type RawHRTerm = HR.Term PrimTy RawPrimVal
-
-type HRTerm = HR.Term PrimTy PrimValHR
-
-type AnnTuple = (RawHRTerm, Usage.T, RawHRTerm)
+type AnnTuple = (P.RawMichelsonTerm, Usage.T, P.RawMichelsonTerm)
 
 shouldCompileTo ::
   String ->
@@ -102,9 +92,9 @@ shouldCompileToContract name (term, usage, ty) globals contract =
     res T.@=? Right contract
 
 toMichelson ::
-  RawHRTerm ->
+  P.RawMichelsonTerm ->
   Usage.T ->
-  RawHRTerm ->
+  P.RawMichelsonTerm ->
   Globals ->
   IO (Either String EmptyInstr)
 toMichelson term usage ty globals = do
@@ -117,9 +107,9 @@ toMichelson term usage ty globals = do
     Left err -> Left (show err)
 
 toMichelsonContract ::
-  RawHRTerm ->
+  P.RawMichelsonTerm ->
   Usage.T ->
-  RawHRTerm ->
+  P.RawMichelsonTerm ->
   Globals ->
   IO (Either String Text)
 toMichelsonContract term usage ty globals = do
@@ -171,74 +161,65 @@ test_partial_erase =
     mempty
     (EmptyInstr (MT.Seq (MT.Nested (MT.PUSH (MT.VInt 12))) MT.Nop))
 
-erasedLamTerm :: RawHRTerm
-erasedLamTerm = HR.Lam "x" $ int 2
+erasedLamTerm :: P.RawMichelsonTerm
+erasedLamTerm = IR.Lam $ int 2
 
-erasedLamTy :: RawHRTerm
-erasedLamTy = HR.Pi zero "x" intTy intTy
+erasedLamTy :: P.RawMichelsonTerm
+erasedLamTy = IR.Pi zero intTy intTy
 
-appLam :: RawHRTerm
-appLam = HR.Elim $ lamElim `HR.App` int 2 `HR.App` int 3
+appLam :: P.RawMichelsonTerm
+appLam = IR.Elim $ lamElim `IR.App` int 2 `IR.App` int 3
 
-addTyT :: RawHRTerm
-addTyT = HR.Pi one "x" intTy $ HR.Pi one "y" intTy intTy
+addTyT :: P.RawMichelsonTerm
+addTyT = IR.Pi one intTy $ IR.Pi one intTy intTy
 
-addElim :: RawHRElim
-addElim = HR.Ann Usage.Omega (HR.Prim AddI) addTyT 0
+addElim :: P.RawMichelsonElim
+addElim = IR.Ann Usage.Omega (IR.Prim AddI) addTyT 0
 
-lamTerm :: RawHRTerm
+lamTerm :: P.RawMichelsonTerm
 lamTerm =
-  HR.Lam "x"
-    $ HR.Lam "y"
-    $ HR.Elim
-    $ addElim `HR.App` varT "x" `HR.App` varT "y"
+  IR.Lam $ IR.Lam $ IR.Elim $ addElim `IR.App` varT 1 `IR.App` varT 0
 
-lamElim :: RawHRElim
-lamElim = HR.Ann one lamTerm lamTy 0
+lamElim :: P.RawMichelsonElim
+lamElim = IR.Ann one lamTerm lamTy 0
 
-appLam2 :: RawHRTerm
-appLam2 = HR.Elim $ lamElim2 `HR.App` int 2 `HR.App` int 3
+appLam2 :: P.RawMichelsonTerm
+appLam2 = IR.Elim $ lamElim2 `IR.App` int 2 `IR.App` int 3
 
-lamTerm2 :: RawHRTerm
+lamTerm2 :: P.RawMichelsonTerm
 lamTerm2 =
-  HR.Lam "x"
-    $ HR.Lam "y"
-    $ HR.Elim
-    $ addElim `HR.App` varT "x" `HR.App` int 10
+  IR.Lam $ IR.Lam $ IR.Elim $ addElim `IR.App` varT 1 `IR.App` int 10
 
-varT :: NameSymbol.T -> RawHRTerm
-varT = HR.Elim . HR.Var
+varT :: Natural -> P.RawMichelsonTerm
+varT = IR.Elim . IR.Bound
 
-lamTy :: RawHRTerm
+lamTy :: P.RawMichelsonTerm
 lamTy = intTy ~~> intTy ~~> intTy
 
-lamTy2 :: RawHRTerm
+lamTy2 :: P.RawMichelsonTerm
 lamTy2 = intTy ~~> intTy ~@> intTy
 
-lamElim2 :: RawHRElim
-lamElim2 = HR.Ann one lamTerm2 lamTy2 0
+lamElim2 :: P.RawMichelsonElim
+lamElim2 = IR.Ann one lamTerm2 lamTy2 0
 
-michelsonTy :: M.T -> RawHRTerm
-michelsonTy t = HR.PrimTy $ PrimTy $ M.Type t M.noAnn
+michelsonTy :: M.T -> P.RawMichelsonTerm
+michelsonTy t = IR.PrimTy $ PrimTy $ M.Type t M.noAnn
 
-intTy :: RawHRTerm
+intTy :: P.RawMichelsonTerm
 intTy = michelsonTy M.TInt
 
-int :: Integer -> RawHRTerm
-int = HR.Prim . Constant . M.ValueInt
+int :: Integer -> P.RawMichelsonTerm
+int = IR.Prim . Constant . M.ValueInt
 
-intE :: Integer -> RawHRElim
-intE x = HR.Ann Usage.Omega (int x) intTy 0
-
-arr :: Usage.T -> RawHRTerm -> RawHRTerm -> RawHRTerm
-arr π s t = HR.Pi π "" s (IR.weak t)
+arr :: Usage.T -> P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
+arr π s t = IR.Pi π s (IR.weak t)
 
 infixr 0 ~~>
 
-(~~>) :: RawHRTerm -> RawHRTerm -> RawHRTerm
+(~~>) :: P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
 (~~>) = arr one
 
 infixr 0 ~@>
 
-(~@>) :: RawHRTerm -> RawHRTerm -> RawHRTerm
+(~@>) :: P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
 (~@>) = arr zero

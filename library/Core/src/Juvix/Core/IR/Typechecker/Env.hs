@@ -50,19 +50,19 @@ type PrimSubstValue primTy primVal =
     PrimSubstValue1 primTy primVal (TypedPrim primTy primVal)
   )
 
-type PrimPatSubstElim1 primTy primVal a =
-  Eval.HasPatSubstElim (OnlyExts.T T) primTy (TypedPrim primTy primVal) a
+type PrimPatSubstTerm1 primTy primVal a =
+  Eval.HasPatSubstTerm (OnlyExts.T T) primTy (TypedPrim primTy primVal) a
 
-type PrimPatSubstElim primTy primVal =
-  ( PrimPatSubstElim1 primTy primVal primTy,
-    PrimPatSubstElim1 primTy primVal (TypedPrim primTy primVal)
+type PrimPatSubstTerm primTy primVal =
+  ( PrimPatSubstTerm1 primTy primVal primTy,
+    PrimPatSubstTerm1 primTy primVal (TypedPrim primTy primVal)
   )
 
 type CanTC' ext primTy primVal m =
   ( HasThrowTC' IR.NoExt ext primTy primVal m,
     HasGlobals primTy primVal m,
     PrimSubstValue primTy primVal,
-    PrimPatSubstElim primTy primVal,
+    PrimPatSubstTerm primTy primVal,
     Eval.HasWeak primVal
   )
 

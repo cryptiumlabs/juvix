@@ -8,7 +8,6 @@ import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>))
-import qualified Juvix.Library.Usage as Usage
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -44,32 +43,16 @@ instance E.HasWeak Ty where weakBy' _ _ ty = ty
 instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
   substValueWith _ _ _ ty = pure $ IR.VPrimTy' ty mempty
 
-instance
-  ( E.HasWeak val,
-    Monoid (IR.XAnn ext Ty val),
-    Monoid (IR.XPrimTy ext Ty val),
-    Monoid (IR.XStar ext Ty val)
-  ) =>
-  E.HasPatSubstElim ext Ty val Ty
-  where
-  patSubstElim' _ _ ty =
-    pure $ IR.Ann' mempty (IR.PrimTy' ty mempty) (IR.Star' 0 mempty) 1 mempty
+instance Monoid (IR.XPrimTy ext Ty val) => E.HasPatSubstTerm ext Ty val Ty where
+  patSubstTerm' _ _ ty = pure $ IR.PrimTy' ty mempty
 
 instance E.HasWeak Val where weakBy' _ _ val = val
 
 instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
   substValueWith _ _ _ val = pure $ IR.VPrim' val mempty
 
-instance
-  ( Monoid (IR.XAnn ext Ty Val),
-    Monoid (IR.XPrim ext Ty Val),
-    Monoid (IR.XPrimTy ext Ty Val)
-  ) =>
-  E.HasPatSubstElim ext Ty Val Val
-  where
-  patSubstElim' _ _ val =
-    let ty = IR.PrimTy' Ty mempty
-     in pure $ IR.Ann' Usage.Omega (IR.Prim' val mempty) ty 0 mempty
+instance Monoid (IR.XPrim ext Ty Val) => E.HasPatSubstTerm ext Ty Val Val where
+  patSubstTerm' _ _ val = pure $ IR.Prim' val mempty
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

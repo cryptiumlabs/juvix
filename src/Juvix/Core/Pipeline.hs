@@ -22,6 +22,8 @@ type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
 
 type RawMichelsonTerm = RawMichelson IR.Term
 
+type RawMichelsonElim = RawMichelson IR.Elim
+
 type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
 
 type MichelsonHR f = f Michelson.PrimTy Michelson.PrimValHR
@@ -50,7 +52,7 @@ type CompConstraints primTy primVal compErr m =
     Types.CanApply primTy,
     Types.CanApply (Types.TypedPrim primTy primVal),
     TC.PrimSubstValue primTy primVal,
-    TC.PrimPatSubstElim primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
     IR.HasWeak primVal
   )
 
