@@ -582,6 +582,36 @@ evalIf typ (bool : thenI : elseI : _) = do
   pure res
 evalIf _ _ = throw @"compilationError" Types.NotEnoughArguments
 
+evalIfNone :: Env.Reduction m => Types.Type -> [Types.RawTerm] -> m Env.Expanded
+evalIfNone typ (bool : thenI : elseI : _) = do
+  let eval = inst >=> promoteTopStack
+      res = Env.Nop
+  _ <- eval bool
+  then' <- protect (eval thenI)
+  -- This becomes an application
+  -- _app <- constructApplication elseI
+  else' <- protect (constructApplication elseI >>= eval)
+  addInstr (Instructions.if' (insts then') (insts else'))
+  consVal res typ
+  pure res
+evalIfNone _ _ = throw @"compilationError" Types.NotEnoughArguments
+
+-- 'constructApplication' takes its first argument and pushes it to the stack
+-- used in if_none and if_some, if_cons etc  etc etc.
+constructApplication ::
+    Env.Reduction m =>
+    Ann.AnnTerm Types.PrimTy primVal ->
+    m (Ann.AnnTerm Types.PrimTy primVal)
+constructApplication Ann.Ann {type', term = Ann.LamM {body}}
+  | length (Utils.piToListTy type') == 1 = do
+    -- register the value on the stack
+    consVal Env.Nop bound
+    pure body
+  | otherwise =
+    error "unsupported: lambda going through multiple arguments"
+  where
+    bound : _ = Utils.piToListTy type'
+constructApplication _ = error "unsupported: consturctionApplication on non lambda"
 -------------------------------------------------------------------------------
 -- Environment Protections, Promotions, and Movements
 --------------------------------------------------------------------------------
