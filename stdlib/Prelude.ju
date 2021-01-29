@@ -23,8 +23,8 @@ let id _ x = x
 sig const : (a : ty) -> (b : ty) -> a -> b -> a
 let const _ _ x = \_ -> x
 
-sig flip : (a : ty) -> (b : ty) -> (c : ty) -> b -> a -> c
-let flip _ _ _ f x y = f y x
+-- sig flip : (a : ty) -> (b : ty) -> (c : ty) -> b -> a -> c
+-- let flip _ _ _ f x y = f y x
 
 -- TODO FIXME
 --declare infixl (.) 9
