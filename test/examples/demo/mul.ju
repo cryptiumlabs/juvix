@@ -1,11 +1,5 @@
 open Prelude
 open Prelude.Michelson
 
-sig storage : ty
-let storage = nat
-
-sig param : ty
-let param = nat
-
-sig main : param -> storage -> pair storage (list operation)
-let main = \param storage -> cons-pair (mul param storage) nil
+sig main : pair nat nat -> pair (list operation) nat
+let main = \ps -> cons-pair nil (mul (car ps) (cdr ps))
