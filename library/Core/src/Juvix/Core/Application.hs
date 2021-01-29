@@ -78,6 +78,8 @@ pattern FreeArg ::
   (ParamVar ext ~ DeBruijn) => IR.GlobalName -> ArgBody' ext term
 pattern FreeArg x = VarArg (FreeVar x)
 
+{-# COMPLETE TermArg, BoundArg, FreeArg #-}
+
 deriving instance (Show (ParamVar ext), Show term) => Show (ArgBody' ext term)
 
 deriving instance (Eq (ParamVar ext), Eq term) => Eq (ArgBody' ext term)
