@@ -1,5 +1,7 @@
+mod Duplicate where
+
 open Prelude
-open Prelude.Michelson
+open Michelson
 
 sig cons-pair : list operation -> pair nat nat -> pair (list operation) (pair nat nat)
 let cons-pair = %Michelson.pair

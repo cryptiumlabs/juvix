@@ -1,5 +1,7 @@
+mod Identity where
+
 open Prelude
-open Prelude.Michelson
+open Michelson
 
 sig cons-pair : list operation -> int -> pair (list operation) int
 let cons-pair = %Michelson.pair

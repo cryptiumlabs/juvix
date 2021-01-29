@@ -1,5 +1,7 @@
+mod Swap where
+
 open Prelude
-open Prelude.Michelson
+open Michelson
 
 sig cons-pair : list operation -> nat -> pair (list operation) nat
 let cons-pair = %Michelson.pair
@@ -16,5 +18,8 @@ let car = %Michelson.car
 sig cdr : pair nat nat -> nat
 let cdr = %Michelson.cdr
 
-sig main : pair unit-t (pair int int) -> pair (list operation) (pair int int)
-let main = \ps -> cons-pair nil (cons-pair (cdr (cdr ps)) (car (cdr ps)))
+sig cdr2 : pair unit-t (pair nat nat) -> pair nat nat
+let cdr2 = %Michelson.cdr
+
+sig main : pair unit-t (pair nat nat) -> pair (list operation) (pair nat nat)
+let main = \ps -> cons-pair nil (cons-pair (cdr (cdr2 ps)) (car (cdr2 ps)))
