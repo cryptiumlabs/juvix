@@ -8,4 +8,5 @@ sig param : ty
 let param = unit-t
 
 sig default : param -> storage -> pair storage (list operation)
-let default _ storage = cons-pair storage nil
+let default _ storage =
+  cons-pair storage (list operation) storage (nil operation)

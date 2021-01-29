@@ -18,13 +18,13 @@ let (:) = %Builtin.Colon
 declare infixr (:) 2
 
 sig id : (a : ty) -> a -> a
-let id x = x
+let id _ x = x
 
 sig const : (a : ty) -> (b : ty) -> a -> b -> a
-let const x = \_ -> x
+let const _ _ x = \_ -> x
 
 sig flip : (a : ty) -> (b : ty) -> (c : ty) -> b -> a -> c
-let flip f x y = f y x
+let flip _ _ _ f x y = f y x
 
 declare infixl (.) 9
 

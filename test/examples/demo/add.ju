@@ -8,4 +8,5 @@ sig param : ty
 let param = nat
 
 sig default : param -> storage -> pair storage (list operation)
-let default param storage = cons-pair (add param storage) nil
+let default param storage =
+  cons-pair storage (list operation) (add param storage) (nil operation)

@@ -7,7 +7,10 @@ open Michelson
 sig main : pairTy int int -> pairTy (list operation) int
 let main = \pair ->
   cons-pair
+    (list operation)
+    int
     nil
-    (if2 (compare 0 (car pair))
+    (if2 int
+         (compare 0 (car int int pair))
          (fail-with 0)
-         (cdr pair))
+         (cdr int int pair))
