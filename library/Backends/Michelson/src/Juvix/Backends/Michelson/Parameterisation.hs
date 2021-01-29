@@ -100,7 +100,8 @@ hasType (Inst (M.IF _ _)) (bool :| rest)
 hasType (Inst (M.PAIR _ _ _ _)) (a :| (b : (c : []))) = True
 -- todo check this properly
 hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
-hasType (Inst (M.CDR _ _)) (a :| (b : [])) = True
+hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
+hasType (Inst M.SENDER {}) (a :| []) = True
 hasType Contract (a :| [b]) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
