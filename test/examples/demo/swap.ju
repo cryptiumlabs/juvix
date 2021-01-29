@@ -2,7 +2,7 @@ open Prelude
 open Prelude.Michelson
 
 sig main : pair unit-t (pair int int) -> pair (list operation) (pair int int)
-let main = \ps -> 
+let main = \ps ->
   cons-pair
      (list operation)
      (pair int int)

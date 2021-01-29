@@ -8,4 +8,9 @@ sig param : ty
 let param = nat
 
 sig main : param -> storage -> pair storage (list operation)
-let main = \param storage -> cons-pair (sub param storage) nil
+let main = \param storage ->
+  cons-pair
+    storage
+    (list operation)
+    (sub nat param storage)
+    (nil operation)

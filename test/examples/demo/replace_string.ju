@@ -8,6 +8,6 @@ sig param : ty
 let param = string
 
 sig main : param -> storage -> pair storage (list operation)
-let main = \param _ -> 
+let main = \param _ ->
   cons-pair stroage (list operation) param (nil operation)
 
