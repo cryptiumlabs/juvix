@@ -56,14 +56,21 @@ instance Bitraversable (Return' ext) where
 type Return = Return' IR.NoExt
 
 -- | The representation of variables used in IR.Term' ext
-type family ParamVar ext :: Type
+class IsParamVar ext where
+  type ParamVar ext :: Type
+
+  freeVar :: Proxy ext -> IR.GlobalName -> Maybe (ParamVar ext)
+  boundVar :: Proxy ext -> IR.BoundVar -> Maybe (ParamVar ext)
 
 data DeBruijn
   = BoundVar IR.BoundVar
   | FreeVar IR.GlobalName
   deriving (Show, Eq, Generic)
 
-type instance ParamVar IR.NoExt = DeBruijn
+instance IsParamVar IR.NoExt where
+  type ParamVar IR.NoExt = DeBruijn
+  freeVar _ = Just . FreeVar
+  boundVar _ = Just . BoundVar
 
 data Arg' ext ty term
   = VarArg (ParamVar ext)

@@ -1,6 +1,6 @@
 module Juvix.Core.ErasedAnn.Types where
 
-import Juvix.Core.Application (ParamVar)
+import Juvix.Core.Application (IsParamVar (..))
 import Juvix.Core.IR.Types (Universe)
 import Juvix.Core.Parameterisation (TypedPrim')
 import Juvix.Library hiding (Type)
@@ -9,7 +9,10 @@ import qualified Juvix.Library.Usage as Usage
 
 data T
 
-type instance ParamVar T = NameSymbol.T
+instance IsParamVar T where
+  type ParamVar T = NameSymbol.T
+  freeVar _ = Just
+  boundVar _ _ = Nothing
 
 type TypedPrim ty val = TypedPrim' T ty val
 
