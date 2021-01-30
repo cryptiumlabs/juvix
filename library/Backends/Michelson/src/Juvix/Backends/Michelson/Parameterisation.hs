@@ -125,6 +125,25 @@ arityRaw prim =
     |> Instructions.toNewPrimErr
     |> arityRaw
 
+toArg :: PrimVal' ext -> Maybe (Arg' ext)
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just $ App.TermArg $
+    App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = retTerm
+      }
+
+toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
+  where
+    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+fromReturn :: Return' ext -> PrimVal' ext
+fromReturn = identity
+
 data ApplyError
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
@@ -147,28 +166,34 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
-instance Core.CanApply (PrimVal' ext) where
+instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   type ApplyErrorExtra (PrimVal' ext) = ApplyError
+
+  type Arg (PrimVal' ext) = Arg' ext
+
+  pureArg = toArg
+
+  freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
+  boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
   arity Prim.Cont {numLeft} = numLeft
   arity Prim.Return {retTerm} = arityRaw retTerm
 
-  apply fun' args2'
-    | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toArg args2' =
+  apply fun' args2
+    | (fun, args1, ar) <- toTakes fun' =
       do
-        let argLen = lengthN args2'
+        let argLen = lengthN args2
             args = foldr NonEmpty.cons args2 args1
         case argLen `compare` ar of
           LT ->
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse (traverse App.argToBase) args ->
+            | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
-          GT -> Left $ Core.ExtraArguments fun' args2'
+          GT -> Left $ Core.ExtraArguments fun' args2
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed

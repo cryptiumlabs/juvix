@@ -70,12 +70,12 @@ lookupMapPrim ::
     (Types.TypedPrim ty val)
 lookupMapPrim _ (App.Return ty tm) = pure $ App.Return ty tm
 lookupMapPrim ns (App.Cont f xs n) =
-  App.Cont f <$> traverse (traverse lookupArg) xs <*> pure n
+  App.Cont f <$> traverse lookupArg xs <*> pure n
   where
-    lookupArg (App.VarArg (App.BoundVar i)) =
+    lookupArg (App.BoundArg i) =
       atMay ns (fromIntegral i)
         |> maybe (error i) (pure . App.VarArg)
-    lookupArg (App.VarArg (App.FreeVar x)) = pure $ App.VarArg x
+    lookupArg (App.FreeArg x) = pure $ App.VarArg x
     lookupArg (App.TermArg t) = pure $ App.TermArg t
     error i =
       Left $ Erasure.InternalError $
@@ -110,7 +110,7 @@ coreToMichelsonContract term usage ty = do
   ann <- coreToAnn term usage ty
   pure $ fst $ Michelson.compileContract $ toRaw ann
 
--- TODO: use typed terms in michelson backend
+{-# DEPRECATED toRaw "TODO: use typed terms in michelson backend" #-}
 toRaw :: Michelson.Term -> Michelson.RawTerm
 toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
   where
@@ -122,13 +122,29 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
     toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
     primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
     primToRaw (App.Cont {fun, args}) =
-      ErasedAnn.AppM (takeToTerm fun) (argToTerm <$> args)
-    fromTake f (App.Take {usage, type', term}) =
-      ErasedAnn.Ann {usage, type' = Prim.fromPrimType type', term = f term}
-    takeToTerm = fromTake ErasedAnn.Prim
-    argToTerm = fromTake \case
-      App.VarArg x -> ErasedAnn.Var x
-      App.TermArg p -> ErasedAnn.Prim p
+      ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
+    takeToTerm (App.Take {usage, type', term}) =
+      ErasedAnn.Ann
+        { usage,
+          type' = Prim.fromPrimType type',
+          term = ErasedAnn.Prim term
+        }
+    argsToTerms ts xs = go (toList ts) xs
+      where
+        go _ [] = []
+        go (_ : ts) (App.TermArg a : as) =
+          takeToTerm a : go ts as
+        go (t : ts) (App.VarArg x : as) =
+          varTerm t x : go ts as
+        go [] (_ : _) =
+          -- a well typed application can't have more arguments than arrows
+          undefined
+        varTerm t x =
+          ErasedAnn.Ann
+            { usage = Usage.Omega, -- FIXME should usages even exist after erasure?
+              type' = ErasedAnn.PrimTy t,
+              term = ErasedAnn.Var x
+            }
 
 -- For interaction net evaluation, includes elementary affine check
 -- , requires MonadIO for Z3.

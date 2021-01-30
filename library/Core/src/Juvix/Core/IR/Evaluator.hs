@@ -563,6 +563,8 @@ data ApplyError primTy primVal
 deriving instance
   ( Eq primTy,
     Eq primVal,
+    Eq (Param.Arg primTy),
+    Eq (Param.Arg primVal),
     Eq (Param.ApplyErrorExtra primTy),
     Eq (Param.ApplyErrorExtra primVal)
   ) =>
@@ -571,6 +573,8 @@ deriving instance
 deriving instance
   ( Show primTy,
     Show primVal,
+    Show (Param.Arg primTy),
+    Show (Param.Arg primVal),
     Show (Param.ApplyErrorExtra primTy),
     Show (Param.ApplyErrorExtra primVal)
   ) =>
@@ -589,6 +593,8 @@ deriving instance
     Eq primVal,
     IR.ValueAll Eq extV primTy primVal,
     IR.NeutralAll Eq extV primTy primVal,
+    Eq (Param.Arg primTy),
+    Eq (Param.Arg primVal),
     Eq (Param.ApplyErrorExtra primTy),
     Eq (Param.ApplyErrorExtra primVal),
     Eq (IR.TermX extT primTy primVal),
@@ -601,6 +607,8 @@ deriving instance
     Show primVal,
     IR.ValueAll Show extV primTy primVal,
     IR.NeutralAll Show extV primTy primVal,
+    Show (Param.Arg primTy),
+    Show (Param.Arg primVal),
     Show (Param.ApplyErrorExtra primTy),
     Show (Param.ApplyErrorExtra primVal),
     Show (IR.TermX extT primTy primVal),
@@ -609,6 +617,7 @@ deriving instance
   Show (Error extV extT primTy primVal)
 
 vapp ::
+  forall extV extT primTy primVal.
   ( AllSubstV extV primTy primVal,
     Monoid (IR.XVNeutral extV primTy primVal),
     Monoid (IR.XVLam extV primTy primVal),
@@ -621,18 +630,47 @@ vapp ::
   -- (if it isn't, then this annotation is unused)
   IR.XNApp extV primTy primVal ->
   Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
-vapp (IR.VLam' t _) s _ =
-  substV s t
-vapp (IR.VNeutral' f _) s b =
-  pure $ IR.VNeutral' (IR.NApp' f s b) mempty
-vapp pp@(IR.VPrimTy' p _) qq@(IR.VPrimTy' q _) _ =
-  bimap (CannotApply pp qq . ApplyErrorT) (\pq -> IR.VPrimTy' pq mempty) $
-    Param.apply1 p q
-vapp pp@(IR.VPrim' p _) qq@(IR.VPrim' q _) _ =
-  bimap (CannotApply pp qq . ApplyErrorV) (\pq -> IR.VPrim' pq mempty) $
-    Param.apply1 p q
-vapp f x _ =
-  Left $ CannotApply f x NoApplyError
+vapp s t ann =
+  case s of
+    IR.VLam' s _ -> substV t s
+    IR.VNeutral' f _ -> pure $ IR.VNeutral' (IR.NApp' f s ann) mempty
+    IR.VPrimTy' p _ -> case t of
+      IR.VPrimTy' q _ ->
+        app' ApplyErrorT IR.VPrimTy' (\_ -> Param.pureArg) p q
+      IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
+        -- TODO pattern vars also
+        app' ApplyErrorT IR.VPrimTy' Param.freeArg p y
+      IR.VNeutral' (IR.NBound' i _) _ ->
+        app' ApplyErrorT IR.VPrimTy' Param.boundArg p i
+      _ ->
+        Left $ CannotApply s t NoApplyError
+    IR.VPrim' p _ -> case t of
+      IR.VPrim' q _ ->
+        app' ApplyErrorV IR.VPrim' (\_ -> Param.pureArg) p q
+      IR.VNeutral' (IR.NFree' (IR.Global y) _) _ ->
+        -- TODO pattern vars also
+        app' ApplyErrorV IR.VPrim' Param.freeArg p y
+      IR.VNeutral' (IR.NBound' i _) _ ->
+        app' ApplyErrorV IR.VPrim' Param.boundArg p i
+      _ ->
+        Left $ CannotApply s t NoApplyError
+    _ ->
+      Left $ CannotApply s t NoApplyError
+  where
+    app' ::
+      forall ann arg fun.
+      (Param.CanApply fun, Monoid ann) =>
+      (Param.ApplyError fun -> ApplyError primTy primVal) ->
+      (fun -> ann -> IR.Value' extV primTy primVal) ->
+      (Proxy fun -> arg -> Maybe (Param.Arg fun)) ->
+      fun ->
+      arg ->
+      Either (Error extV extT primTy primVal) (IR.Value' extV primTy primVal)
+    app' err con mkArg p y =
+      case mkArg Proxy y of
+        Nothing -> Left $ CannotApply s t NoApplyError
+        Just y ->
+          Param.apply1 p y |> bimap (CannotApply s t . err) (\r -> con r mempty)
 
 type TermExtFun ty ext' ext primTy primVal =
   LookupFun ty ext' primTy primVal ->
@@ -1105,8 +1143,8 @@ instance
 instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
 
 instance
-  (HasWeak term, HasWeak (App.ParamVar ext)) =>
-  HasWeak (App.ArgBody' ext term)
+  (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
+  HasWeak (App.Arg' ext ty term)
 
 instance
   (HasWeak ty, HasWeak term, HasWeak (App.ParamVar ext)) =>
@@ -1123,9 +1161,10 @@ instance
 
 instance
   ( HasSubst ext primTy primVal term,
+    HasSubst ext primTy primVal ty,
     HasSubst ext primTy primVal (App.ParamVar ext)
   ) =>
-  HasSubst ext primTy primVal (App.ArgBody' ext term)
+  HasSubst ext primTy primVal (App.Arg' ext ty term)
 
 instance
   ( HasSubst ext primTy primVal ty,
@@ -1142,9 +1181,10 @@ instance
 
 instance
   ( HasPatSubst ext primTy primVal term,
+    HasPatSubst ext primTy primVal ty,
     HasPatSubst ext primTy primVal (App.ParamVar ext)
   ) =>
-  HasPatSubst ext primTy primVal (App.ArgBody' ext term)
+  HasPatSubst ext primTy primVal (App.Arg' ext ty term)
 
 instance
   ( HasPatSubst ext primTy primVal ty,
@@ -1173,10 +1213,19 @@ instance
     IR.Elim' (IR.Free' (IR.Global x) mempty) mempty
 
 instance
-  ( HasSubstTerm ext primTy primVal (App.ParamVar ext),
+  ( HasWeak ty,
     HasSubstTerm ext primTy primVal term
   ) =>
-  HasSubstTerm ext primTy primVal (App.ArgBody' ext term)
+  HasSubstTerm ext primTy primVal (App.Take ty term)
+  where
+  substTermWith b i e (App.Take {term}) = substTermWith b i e term
+
+instance
+  ( HasSubstTerm ext primTy primVal (App.ParamVar ext),
+    HasWeak ty,
+    HasSubstTerm ext primTy primVal term
+  ) =>
+  HasSubstTerm ext primTy primVal (App.Arg' ext ty term)
   where
   substTermWith b i e (App.VarArg x) = substTermWith b i e x
   substTermWith b i e (App.TermArg t) = substTermWith b i e t
@@ -1218,10 +1267,19 @@ instance
     pure $ IR.VNeutral' (IR.NFree' (IR.Global x) mempty) mempty
 
 instance
-  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+  ( HasWeak ty,
     HasSubstValue ext primTy primVal term
   ) =>
-  HasSubstValue ext primTy primVal (App.ArgBody' ext term)
+  HasSubstValue ext primTy primVal (App.Take ty term)
+  where
+  substValueWith b i e (App.Take {term}) = substValueWith b i e term
+
+instance
+  ( HasSubstValue ext primTy primVal (App.ParamVar ext),
+    HasSubstValue ext primTy primVal ty,
+    HasSubstValue ext primTy primVal term
+  ) =>
+  HasSubstValue ext primTy primVal (App.Arg' ext ty term)
   where
   substValueWith b i e (App.VarArg x) = substValueWith b i e x
   substValueWith b i e (App.TermArg t) = substValueWith b i e t
@@ -1256,7 +1314,7 @@ instance
   substValueWith b i e (App.Cont {fun, args}) = do
     let app f x = vapp f x ()
     let fun' = IR.VPrim (App.takeToReturn fun)
-    args' <- traverse (substVWith b i e . argToValue) args
+    args' <- traverse (substValueWith b i e . argToValue) args
     foldlM app fun' args'
   substValueWith _ _ _ ret@(App.Return {}) =
     pure $ IR.VPrim ret
@@ -1264,11 +1322,11 @@ instance
 argToValue ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Value primTy (Param.TypedPrim primTy primVal)
-argToValue (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.VPrim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.VBound i
-    App.FreeArg x -> IR.VFree $ IR.Global x
+argToValue = \case
+  App.TermArg (App.Take {type', term}) ->
+    IR.VPrim $ App.Return {retType = type', retTerm = term}
+  App.BoundArg i -> IR.VBound i
+  App.FreeArg x -> IR.VFree $ IR.Global x
 
 instance
   ( HasWeak primTy,
@@ -1295,11 +1353,11 @@ takeToElim (App.Take {type', term}) =
 argToTerm ::
   App.Arg (Param.PrimType primTy) primVal ->
   IR.Term' (OnlyExts.T ext) primTy (Param.TypedPrim primTy primVal)
-argToTerm (App.Take {type', term}) =
-  case term of
-    App.TermArg term -> IR.Prim $ App.Return {retType = type', retTerm = term}
-    App.BoundArg i -> IR.Elim $ IR.Bound i
-    App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
+argToTerm = \case
+  App.TermArg (App.Take {type', term}) ->
+    IR.Prim $ App.Return {retType = type', retTerm = term}
+  App.BoundArg i -> IR.Elim $ IR.Bound i
+  App.FreeArg x -> IR.Elim $ IR.Free $ IR.Global x
 
 typeToTerm ::
   ( Monoid (IR.XPi ext primTy primVal),
