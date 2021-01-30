@@ -61,13 +61,13 @@ compileToMichelsonContract term = do
               argTy
             )
         )
-      -- HAXX
-      modify @"stack" (VStack.drop 1)
-      modify @"ops" ((:) Instructions.drop)
-      -- END HAXX
-      _ <- DSL.instOuter body
-      michelsonOp' <- mconcat |<< get @"ops"
       --
+      _ <- DSL.instOuter body
+      -- HAXX
+      -- modify @"stack" ((\(x : y : zs) -> x : zs))
+      modify @"ops" (\x -> x <> [Instructions.dip [Instructions.drop]])
+      -- END HAXX
+      michelsonOp' <- mconcat |<< get @"ops"
       let michelsonOp = michelsonOp'
       --
       let contract = M.Contract paramTy' storageTy [michelsonOp]

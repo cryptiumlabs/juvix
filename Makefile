@@ -47,6 +47,7 @@ test-typecheck: build
 
 test-compile: build
 	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % stack exec juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
+	rm test/examples/demo/*.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"
