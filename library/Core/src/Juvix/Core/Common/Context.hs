@@ -70,6 +70,43 @@ emptyRecord = do
         recordMTy = Nothing
       }
 
+data AmbigiousDef = AmbigiousDef NameSymbol.T
+
+-- | @persistDefinition@ states that the definition we are adding is
+-- staying in the context, so promote it.  In the future this will be
+-- called for all definitions added by default, with private
+-- definitions not added. However this infra is not up, so the pass
+-- adding functions must add it themselves
+persistDefinition ::
+  T term ty sumRep -> NameSymbol.T -> Symbol -> IO (Either AmbigiousDef ())
+persistDefinition T {reverseLookup} moduleName name =
+  case HashMap.lookup moduleName reverseLookup of
+    Just xs -> do
+      determined <- determineSafe xs
+      case determined of
+        Lib.Left err -> pure $ Lib.Left err
+        Lib.Right () -> Lib.Right <$> traverse_ f xs
+      where
+        -- TODO ∷ replace with a breaking foldM later
+        -- this isn't in as I have to do IO actions
+        determineSafe [] = pure (Lib.Right ())
+        determineSafe (Who {modName, symbolMap} : xs) = do
+          lookd <- atomically $ STM.lookup name symbolMap
+          case lookd of
+            Nothing -> determineSafe xs
+            Just SymInfo {mod}
+              | mod == moduleName -> determineSafe xs
+              | otherwise -> pure (Lib.Left (AmbigiousDef modName))
+        -- we do a check before this so the call is always safe
+        f Who {symbolMap} = atomically do
+          lookd <- STM.lookup name symbolMap
+          case lookd of
+            Nothing ->
+              STM.insert (SymInfo NotUsed moduleName) name symbolMap
+            -- TODO ∷ we may change behavior here based on implicit vs explicit
+            Just SymInfo {} -> pure ()
+    Nothing -> pure (Lib.Right ())
+
 --------------------------------------------------------------------------------
 -- Functions on the Current NameSpace
 --------------------------------------------------------------------------------
@@ -280,6 +317,9 @@ putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
 addTopNameToSngle xs = xs
+
+addTopName :: IsString a => NonEmpty a -> NonEmpty a
+addTopName (x :| xs) = topLevelName :| (x : xs)
 
 removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
 removeTopName (top :| x : xs)
