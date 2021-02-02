@@ -1,21 +1,17 @@
-{-# OPTIONS_GHC -Werror=unused-imports -Werror=orphans #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.IR.Evaluator.SubstV where
 
-import Juvix.Core.IR.Evaluator.Types
-import Juvix.Core.IR.Evaluator.Weak
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Juvix.Core.Application as App
+import Juvix.Core.IR.Evaluator.Types
+import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-
-
 
 class HasWeak a => HasSubstV extV primTy primVal a where
   substVWith ::
@@ -157,9 +153,6 @@ substNeutralWith w i e (IR.NeutralX a) b =
   IR.VNeutral' <$> (IR.NeutralX <$> substVWith w i e a)
     <*> substVWith w i e b
 
-
-
-
 vapp ::
   forall extV extT primTy primVal.
   ( AllSubstV extV primTy primVal,
@@ -215,7 +208,6 @@ vapp s t ann =
         Nothing -> Left $ CannotApply s t NoApplyError
         Just y ->
           Param.apply1 p y |> bimap (CannotApply s t . err) (\r -> con r mempty)
-
 
 class GHasWeak f => GHasSubstV extV primTy primVal f where
   gsubstVWith ::
@@ -304,8 +296,6 @@ instance
 
 instance HasSubstV ext primTy primVal Symbol where
   substVWith _ _ _ x = pure x
-
-
 
 instance
   ( AllSubstV extV primTy primVal,

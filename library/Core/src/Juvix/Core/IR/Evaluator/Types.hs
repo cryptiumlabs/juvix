@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Werror=unused-imports -Werror=orphans #-}
-
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.IR.Evaluator.Types where

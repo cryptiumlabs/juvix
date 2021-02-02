@@ -1,17 +1,14 @@
-{-# OPTIONS_GHC -Werror=unused-imports #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.IR.Evaluator.Subst where
 
-import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.Application as App
+import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-
 
 class HasWeak a => HasSubst ext primTy primVal a where
   substWith ::
@@ -47,7 +44,6 @@ subst ::
   a
 subst = subst' 0
 
-
 class HasWeak a => HasSubstTerm ext primTy primVal a where
   substTermWith ::
     -- | How many bindings have been traversed so far
@@ -73,7 +69,6 @@ substTerm ::
   a ->
   IR.Term' ext primTy primVal
 substTerm = substTerm' 0
-
 
 type AllSubst ext primTy primVal =
   ( IR.TermAll (HasSubst ext primTy primVal) ext primTy primVal,
@@ -132,7 +127,6 @@ instance
     IR.Ann' π (substWith w i e s) (substWith w i e t) l (substWith w i e a)
   substWith w i e (IR.ElimX a) =
     IR.ElimX (substWith w i e a)
-
 
 class GHasWeak f => GHasSubst ext primTy primVal f where
   gsubstWith ::
@@ -221,8 +215,6 @@ instance
 instance HasSubst ext primTy primVal Symbol where
   substWith _ _ _ x = x
 
-
-
 instance
   (HasSubst ext primTy primVal ty, HasSubst ext primTy primVal term) =>
   HasSubst ext primTy primVal (App.Take ty term)
@@ -240,7 +232,6 @@ instance
     HasSubst ext primTy primVal (App.ParamVar ext)
   ) =>
   HasSubst ext primTy primVal (App.Return' ext ty term)
-
 
 instance
   AllSubst ext primTy primVal =>

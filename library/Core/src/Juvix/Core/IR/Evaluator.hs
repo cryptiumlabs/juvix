@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Werror=unused-imports -Werror=orphans #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -17,19 +15,18 @@ module Juvix.Core.IR.Evaluator
   )
 where
 
-import Juvix.Core.IR.Evaluator.Types
-import Juvix.Core.IR.Evaluator.Weak
+import qualified Data.IntMap as IntMap
+import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
-import Juvix.Core.IR.Evaluator.PatSubst
-import qualified Data.IntMap as IntMap
+import Juvix.Core.IR.Evaluator.Types
+import Juvix.Core.IR.Evaluator.Weak
 import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
@@ -214,5 +211,3 @@ toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
       IR.Term' (OnlyExts.T z) primTy primVal
     lam x = IR.Lam' x ()
 toLambda _ = Nothing
-
-

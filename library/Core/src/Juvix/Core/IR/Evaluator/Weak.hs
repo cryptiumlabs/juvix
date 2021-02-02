@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Werror=unused-imports #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -10,7 +8,6 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-
 
 class HasWeak a where
   weakBy' :: Natural -> IR.BoundVar -> a -> a
@@ -79,7 +76,6 @@ instance AllWeak ext primTy primVal => HasWeak (IR.Elim' ext primTy primVal) whe
   weakBy' b i (IR.ElimX a) =
     IR.ElimX (weakBy' b i a)
 
-
 type AllWeakV ext primTy primVal =
   ( HasWeak primTy,
     HasWeak primVal,
@@ -130,7 +126,6 @@ instance
   weakBy' b i (IR.NeutralX a) =
     IR.NeutralX (weakBy' b i a)
 
-
 class GHasWeak f where
   gweakBy' :: Natural -> IR.BoundVar -> f t -> f t
 
@@ -172,7 +167,6 @@ instance HasWeak a => HasWeak [a]
 instance HasWeak a => HasWeak (NonEmpty a)
 
 instance HasWeak Symbol where weakBy' _ _ x = x
-
 
 instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)
 

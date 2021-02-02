@@ -1,24 +1,18 @@
-{-# OPTIONS_GHC -Werror=unused-imports -Werror=orphans #-}
-
 {-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.IR.Evaluator.PatSubst
-where
-import Juvix.Core.IR.Evaluator.Weak
+module Juvix.Core.IR.Evaluator.PatSubst where
+
 import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.IntMap as IntMap
 import qualified Juvix.Core.Application as App
+import Juvix.Core.IR.Evaluator.Weak
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-
-
-
-
 
 class HasWeak a => HasPatSubst extT primTy primVal a where
   -- returns either a substituted term or an unbound pattern var
@@ -136,8 +130,6 @@ instance
       <*> patSubst' b m a
   patSubst' b m (IR.ElimX a) =
     IR.ElimX <$> patSubst' b m a
-
-
 
 class GHasWeak f => GHasPatSubst extT primTy primVal f where
   gpatSubst' ::

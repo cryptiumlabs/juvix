@@ -694,7 +694,7 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
-****** Subst
+****** Subst <<HR/Subst>>
 - Runs a substitution algorithm over core
 - _Relies on_
   + [[HR/Types]]
@@ -738,12 +738,56 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
-  + [[Application]]
+  + [[PatSubst]]
+  + [[Evaluator/Subst]]
+  + [[SubstV]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
+  + [[Library]]
+******* PatSubst
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[OnlyExts]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Subst <<Evaluator/Subst>>
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[Usage]]
+******* SubstV
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Types <<Evaluator/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Weak <<Evaluator/Weak>>
+- _Relies on_
+  + [[Application]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Library]]
   + [[Usage]]
 ****** TransformExt
@@ -893,7 +937,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
 *** IR
-**** Weak
+**** Weak <<IR/Weak>>
 Tests that weak works as expected
 - _Relies on_
   + [[IR/Evaluator]]
