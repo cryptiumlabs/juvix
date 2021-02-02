@@ -46,14 +46,13 @@ empty sym = do
     Lib.Right x -> pure x
   where
     fullyEmpty = do
-      emptyReverseLookup <- STM.new
       currentNameSpace <- emptyRecord
       pure $
         T
           { currentNameSpace = currentNameSpace,
             currentName = sym',
             topLevelMap = HashMap.empty,
-            reverseLookup = emptyReverseLookup
+            reverseLookup = HashMap.empty
           }
     sym' = removeTopName sym
 

@@ -19,7 +19,7 @@ data T term ty sumRep
       { currentNameSpace :: Record term ty sumRep,
         currentName :: NameSymbol.T,
         topLevelMap :: HashMap.T Symbol (Definition term ty sumRep),
-        reverseLookup :: SymbolMap
+        reverseLookup :: ReverseLookup
       }
   deriving (Show, Eq, Generic)
 

@@ -228,14 +228,13 @@ emptyWorksAsExpectedSingle =
     $ do
       created <- Context.empty (pure "Mr-Morden") :: IO (Context.T Int Int Int)
       empt <- do
-        map <- atomically STM.new
         contents <- atomically Context.emptyRecord
         pure $
           Context.T
             contents
             (pure "Mr-Morden")
             (HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)])
-            map
+            HashMap.empty
       created T.@=? empt
 
 topLevelDoesNotMessWithInnerRes :: T.TestTree
@@ -254,7 +253,6 @@ topLevelDoesNotMessWithInnerRes =
           ("Shadows" :| ["Mr-Morden"])
           created
       empt <- do
-        empty <- atomically STM.new
         emptyRecord <- atomically Context.emptyRecord
         emptyNameSpace <- atomically Context.emptyRecord
         emptyRecord
@@ -263,6 +261,6 @@ topLevelDoesNotMessWithInnerRes =
             (NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace)
           |> Context.Record
           |> (\record -> HashMap.fromList [("Shadows", record)])
-          |> (\x -> Context.T emptyNameSpace ("Shadows" :| ["Mr-Morden"]) x empty)
+          |> (\x -> Context.T emptyNameSpace ("Shadows" :| ["Mr-Morden"]) x HashMap.empty)
           |> pure
       inner == Right empt && inner == inner2 T.@=? True
