@@ -27,6 +27,8 @@ deriving instance
   ( Show primTy,
     Show primVal,
     Show compErr,
+    Show (Arg primTy),
+    Show (Arg (TC.TypedPrim primTy primVal)),
     Show (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra (TC.TypedPrim primTy primVal))
   ) =>

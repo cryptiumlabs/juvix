@@ -1,0 +1,22 @@
+mod Sub where
+
+open Prelude
+open Michelson
+
+sig make-pair : list operation -> nat -> pair (list operation) nat
+let make-pair = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig sub : nat -> nat -> nat
+let sub = %Michelson.sub
+
+sig car : pair nat nat -> nat
+let car = %Michelson.car
+
+sig cdr : pair nat nat -> nat
+let cdr = %Michelson.cdr
+
+sig main : pair nat nat -> pair nat (list operation)
+let main = \ps -> make-pair nil (sub (car ps) (cdr ps))

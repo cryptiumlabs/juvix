@@ -5,6 +5,7 @@ module Typechecker where
 
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker as TC
 import qualified Juvix.Core.Parameterisations.All as All
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
@@ -64,10 +65,17 @@ shouldCheckWith ::
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
     CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.GlobalsT primTy primVal ->
@@ -93,10 +101,17 @@ shouldCheck ::
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
     CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.Term primTy primVal ->
@@ -113,10 +128,17 @@ shouldInferWith ::
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
     CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.GlobalsT primTy primVal ->
@@ -138,10 +160,17 @@ shouldInfer ::
     Eq primVal,
     CanApply (TypedPrim primTy primVal),
     CanApply primTy,
+    Eq (Arg primTy),
+    Show (Arg primTy),
+    Eq (Arg (TypedPrim primTy primVal)),
+    Show (Arg (TypedPrim primTy primVal)),
     Eq (ApplyErrorExtra primTy),
     Show (ApplyErrorExtra primTy),
     Eq (ApplyErrorExtra (TypedPrim primTy primVal)),
-    Show (ApplyErrorExtra (TypedPrim primTy primVal))
+    Show (ApplyErrorExtra (TypedPrim primTy primVal)),
+    TC.PrimSubstValue primTy primVal,
+    TC.PrimPatSubstTerm primTy primVal,
+    Eval.HasWeak primVal
   ) =>
   Parameterisation primTy primVal ->
   IR.Elim primTy primVal ->
@@ -159,7 +188,12 @@ shouldEval' ::
     CanApply primVal,
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
+    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eval.HasWeak primVal
   ) =>
   IR.Globals primTy primVal ->
   IR.Term primTy primVal ->
@@ -178,7 +212,12 @@ shouldEval ::
     CanApply primVal,
     CanApply primTy,
     Eq (Eval.Error IR.NoExt IR.NoExt primTy primVal),
-    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal)
+    Show (Eval.Error IR.NoExt IR.NoExt primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T IR.NoExt) primTy primVal primVal,
+    Eval.HasSubstValue IR.NoExt primTy primVal primTy,
+    Eval.HasSubstValue IR.NoExt primTy primVal primVal,
+    Eval.HasWeak primVal
   ) =>
   IR.Term primTy primVal ->
   IR.Value primTy primVal ->

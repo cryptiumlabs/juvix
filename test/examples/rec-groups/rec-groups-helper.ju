@@ -1,0 +1,9 @@
+mod Rec-Groups-Helper where
+
+let ty_ = %Builtin.Type
+
+sig ty : ty_ 1
+let ty = ty_ 0
+
+sig foo : ty
+let foo = ty

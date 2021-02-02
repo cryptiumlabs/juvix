@@ -12,7 +12,6 @@ module Juvix.Core.Common.Context.Traverse.Types
 
     -- * Capabilities
     Env,
-    PrefixReader,
     ContextReader,
     OutputState,
     DepsState,
@@ -58,8 +57,7 @@ type Deps = HashMap NameSymbol.Mod (HashSet NameSymbol.Mod)
 
 data S term ty sumRep
   = S
-      { prefix :: Prefix,
-        output :: Groups' term ty sumRep,
+      { output :: Groups' term ty sumRep,
         context :: Context.T term ty sumRep,
         deps :: Deps
       }
@@ -69,11 +67,6 @@ type Alias term ty sumRep = State (S term ty sumRep)
 
 newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
   deriving newtype (Functor, Applicative, Monad)
-  deriving
-    ( HasSource "prefix" Prefix,
-      HasReader "prefix" Prefix
-    )
-    via ReaderField "prefix" (Alias term ty sumRep)
   deriving
     ( HasSource "output" (Groups' term ty sumRep),
       HasSink "output" (Groups' term ty sumRep),
@@ -93,8 +86,6 @@ newtype Env term ty sumRep a = Env (Alias term ty sumRep a)
     )
     via StateField "deps" (Alias term ty sumRep)
 
-type PrefixReader = HasReader "prefix" Prefix
-
 type ContextReader term ty sumRep =
   HasState "context" (Context.T term ty sumRep)
 
@@ -105,7 +96,6 @@ type DepsState = HasState "deps" Deps
 
 type HasRecGroups term ty sumRep m =
   ( ContextReader term ty sumRep m,
-    PrefixReader m,
     DepsState m,
     OutputState term ty sumRep m,
     Data term,
@@ -128,5 +118,4 @@ run context (Env act) =
   let (res, S {output, deps}) = runState act initState
    in (res, toList <$> output, deps)
   where
-    initState = S {prefix, output = [], context, deps = []}
-    prefix = P [Context.topLevelName]
+    initState = S {output = [], context, deps = []}

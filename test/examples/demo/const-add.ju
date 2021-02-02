@@ -1,0 +1,16 @@
+mod ConstAdd where
+
+open Prelude
+open Michelson
+
+sig make-pair : list operation -> nat -> pair (list operation) nat
+let make-pair = %Michelson.pair
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig add : nat -> nat -> nat
+let add = %Michelson.add
+
+sig main : pair nat nat -> pair (list operation) nat
+let main = \ps -> make-pair nil (add 4 6)

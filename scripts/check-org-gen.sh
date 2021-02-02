@@ -2,7 +2,7 @@
 
 PATH=~/.roswell/bin:$PATH make org-gen
 
-if [ -z "$(git status --porcelain)" ]; then
+if [ -z "$(git status doc/Code --porcelain)" ]; then
   exit 0
 else
   git status

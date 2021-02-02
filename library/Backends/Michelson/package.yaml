@@ -57,6 +57,7 @@ default-extensions:
   - ScopedTypeVariables
   - FlexibleContexts
   - FlexibleInstances
+  - MultiParamTypeClasses
 
 ghc-options:
   - -ferror-spans

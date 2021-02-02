@@ -2,6 +2,7 @@ module Main where
 
 import Juvix.Library (IO)
 import Pipeline (tests)
+import qualified RecGroups
 import qualified Test.Tasty as T
 
 pipelineTests :: T.TestTree
@@ -14,7 +15,7 @@ allCheckedTests :: T.TestTree
 allCheckedTests =
   T.testGroup
     "All tests that are checked"
-    [pipelineTests]
+    [pipelineTests, RecGroups.top]
 
 main :: IO ()
 main = T.defaultMain allCheckedTests
