@@ -102,7 +102,7 @@ persistDefinition T {reverseLookup} moduleName name =
           lookd <- STM.lookup name symbolMap
           case lookd of
             Nothing ->
-              STM.insert (SymInfo NotUsed Explicit moduleName) name symbolMap
+              STM.insert (SymInfo NotUsed moduleName) name symbolMap
             -- TODO ∷ we may change behavior here based on implicit vs explicit
             Just SymInfo {} -> pure ()
     Nothing -> pure (Lib.Right ())

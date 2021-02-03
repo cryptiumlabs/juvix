@@ -1385,6 +1385,13 @@ Calculate mutually-recursive groups of definitions.
   + [[Library]]
   + [[NameSymbol]]
 ***** Contextify
+****** ResolveOpenInfo
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Common/Open]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
