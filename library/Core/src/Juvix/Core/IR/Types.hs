@@ -75,7 +75,7 @@ type Global = Global' NoExt NoExt
 
 type RawGlobal = RawGlobal' NoExt
 
-type Globals primTy primVal = Globals' NoExt NoExt primTy primVal
+type Globals primTy primVal = Globals' NoExt primTy primVal
 
 type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
 
