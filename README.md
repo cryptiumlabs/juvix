@@ -96,7 +96,7 @@ Other IDE supports will be added over time.
 
 ## Report a bug
 
-If you found a bug please open an issue with the `bug` tag.
+If you found a bug please open an issue and detail the bug. We will fix it as soon as we can.
 
 ## Contributing
 
