@@ -390,6 +390,7 @@ removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
 -- also terms must be in either the old map or the new map
 -- any place where this is inconsistent will break resolution
 
+-- TODO ∷ check if the module opens are populated
 -- | @populateModMap@ populates the modMap with all the global opens
 -- in the module
 populateModMap ::

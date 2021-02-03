@@ -93,10 +93,18 @@ data SymbolInfo
   = SymInfo
       { -- | used notes if the symbol is used and if so in what
         used :: UsedIn,
+        -- | Used to tell if the module was implicitly or explicitly opened
+        open :: Open,
         -- | mod is the module where the symbol is coming from
         mod :: NameSymbol.T
       }
   deriving (Show, Eq, Generic)
+
+data Open
+  = Implicit
+  | Explicit
+  deriving (Show, Eq, Ord)
+
 
 data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Eq, Generic)
 
