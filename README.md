@@ -137,5 +137,7 @@ We would love to hear what you think of Juvix! Join our community:
 - Follow us on [Twitter](https://twitter.com/juvixlang)
 - Subscribe to our [newsletter](https://juvix.org/)
 
+
+<!-- trigger -->
 <!-- TODO add links to discord, reddit, etc. -->
 
