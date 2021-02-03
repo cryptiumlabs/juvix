@@ -33,11 +33,8 @@ shouldEraseTo ::
   Erased.TermT primTy primVal ->
   T.TestTree
 shouldEraseTo name _ (term, usage) erased =
-  T.testCase
-    (name <> ": " <> show (term, usage) <> " should erase to " <> show erased)
-    ( Right erased
-        T.@=? (Erasure.eraseAnn |<< erase term usage)
-    )
+  T.testCase name $
+    Right erased T.@=? (Erasure.eraseAnn |<< erase term usage)
   where
     erase = Erasure.erase (const pure) (const pure)
 

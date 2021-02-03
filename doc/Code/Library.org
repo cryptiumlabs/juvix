@@ -389,7 +389,7 @@ This module provides a default contract environment
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -610,7 +610,7 @@ Types to support partial application and polymorphic primitives.
 ****** Types <<Erased/Types>>
 - _Relies on_
   + [[Erased/Types/Base]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
 ******* Base <<Erased/Types/Base>>
@@ -662,7 +662,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erasure/Types]]
   + [[Erasure/Types]]
   + [[IR]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -671,7 +671,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
@@ -809,7 +809,7 @@ keeps the extensions.
   + [[Application]]
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
@@ -819,13 +819,13 @@ keeps the extensions.
 - _Relies on_
   + [[IR/Evaluator]]
   + [[OnlyExts]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
-******* Types <<Typechecker/Types>>
+******* Types <<IR/Typechecker/Types>>
 - _Relies on_
   + [[Application]]
   + [[IR/Evaluator]]
@@ -876,7 +876,7 @@ Quantitative type implementation inspired by
 - _Relies on_
   + [[Application]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
+  + [[IR/Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -904,6 +904,18 @@ Quantitative type implementation inspired by
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
+*** Evaluator <<test/Evaluator>>
+Tests for the evaluator in Core/IR/Evaluator.hs
+- _Relies on_
+  + [[IR]]
+  + [[IR/Evaluator]]
+  + [[TransformExt]]
+  + [[OnlyExts]]
+  + [[Naturals]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
 *** Main <<Core/test/Main>>
 - _Relies on_
   + [[Library]]
@@ -914,20 +926,6 @@ Quantitative type implementation inspired by
   + [[Unit]]
   + [[Core/Types]]
   + [[Library]]
-  + [[Usage]]
-*** Typechecker <<test/Typechecker>>
-Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-- _Relies on_
-  + [[IR]]
-  + [[IR/Evaluator]]
-  + [[OnlyExts]]
-  + [[IR/Typechecker]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
   + [[Usage]]
 *** Common
 **** Context <<test/Common/Context>>
@@ -943,6 +941,36 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
+*** Typechecker <<test/Typechecker>>
+Tests for the type checker in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[IR]]
+  + [[IR/Evaluator]]
+  + [[IR/Typechecker]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Usage]]
+**** Terms
+- _Relies on_
+  + [[IR]]
+  + [[IR/Typechecker]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
+**** Types <<test/Typechecker/Types>>
+- _Relies on_
+  + [[IR]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Usage]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src

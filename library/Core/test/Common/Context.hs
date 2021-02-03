@@ -14,7 +14,7 @@ foo = Context.empty ("Foo" :| ["Bar", "Baz"])
 contextTests :: T.TestTree
 contextTests =
   T.testGroup
-    "Context tests:"
+    "Context tests"
     [ switchAboveLookupCheck,
       switchSelf,
       checkFullyResolvedName,
@@ -84,13 +84,13 @@ checkCorrectResolution =
    in T.testGroup
         "correct resolution test"
         [ T.testCase
-            "topLevel value same as local: "
+            "topLevel value same as local"
             (Context.extractValue outside T.@=? Context.extractValue current),
           T.testCase
-            "topLevel is outside: "
+            "topLevel is outside"
             (isOutside outside T.@=? True),
           T.testCase
-            "current is local: "
+            "current is local"
             (isCurrent current T.@=? True)
         ]
   where
@@ -200,7 +200,7 @@ emptyWorksAsExpectedSingle =
         HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)]
           |> Context.T NameSpace.empty (pure "Mr-Morden")
    in T.testCase
-        "empty properly adds a top level module as expected:"
+        "empty properly adds a top level module as expected"
         (created T.@=? empt)
 
 topLevelDoesNotMessWithInnerRes :: T.TestTree

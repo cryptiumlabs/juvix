@@ -13,8 +13,7 @@ import Prelude (String)
 -- | Term parser unit test generator. TODO: does it make sense for it to be Nat.Ty?
 shouldParse :: String -> Term Nat.Ty Nat.Val -> T.TestTree
 shouldParse str parsed =
-  T.testCase (show str <> " should parse as " <> show parsed) $
-    Just parsed T.@=? parseString str
+  T.testCase str $ Just parsed T.@=? parseString str
 
 parseString :: String -> Maybe (Term Nat.Ty Nat.Val)
 parseString = generateParser Nat.t
@@ -28,8 +27,7 @@ shouldParsePrim ::
   Term primTy primVal ->
   T.TestTree
 shouldParsePrim param str parsed =
-  T.testCase (show str <> " should parse as " <> show parsed) $
-    Just parsed T.@=? parseStringPrim param str
+  T.testCase str $ Just parsed T.@=? parseStringPrim param str
 
 parseStringPrim ::
   forall primTy primVal.

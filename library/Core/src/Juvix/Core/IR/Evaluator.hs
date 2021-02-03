@@ -180,7 +180,7 @@ evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
 -- TODO generalise the @IR.NoExt@s
 toLambda ::
-  forall ty ext ext' primTy primVal.
+  forall ext' ext ty primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
     NoExtensions ext primTy primVal,
     IR.ToTerm ty IR.NoExt IR.NoExt

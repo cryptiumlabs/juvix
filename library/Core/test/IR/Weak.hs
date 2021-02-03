@@ -14,7 +14,7 @@ import qualified Test.Tasty.QuickCheck as T
 top :: T.TestTree
 top =
   T.testGroup
-    "Weakening tests:"
+    "Weakening tests"
     [ weakensFree,
       weaken1DoesNotEffect0,
       letsNonRecursive,
@@ -26,19 +26,23 @@ data A = A deriving (Eq, Show)
 
 instance Eval.HasWeak A where weakBy' _ _ A = A
 
+type ATerm = IR.Term A A
+
+type AElim = IR.Elim A A
+
 --------------------------------------------------------------------------------
 -- Generic Terms
 --------------------------------------------------------------------------------
-ident :: IR.Term a b
+ident :: ATerm
 ident =
   IR.Lam (IR.Elim (IR.Bound 0))
 
-dollarSign :: Natural -> IR.Term a b
+dollarSign :: Natural -> ATerm
 dollarSign x =
   IR.Lam (IR.Elim (IR.App (IR.Bound 0) (IR.Elim (IR.Bound x))))
 
-freeVal :: Natural -> IR.Term a b
-freeVal x =
+boundVar :: Natural -> ATerm
+boundVar x =
   IR.Bound x
     |> IR.Elim
 
@@ -48,32 +52,28 @@ freeVal x =
 
 weakensFree :: T.TestTree
 weakensFree =
-  (\x -> ((Eval.weakBy x (freeVal 0) :: IR.Term A A) T.=== freeVal x))
-    |> forAllNats
-    |> T.testProperty "Promoting a bound at 0 by x is the same as having bound x"
+  T.testProperty "weakBy b 0 = b" $
+    forAllNats \b -> Eval.weakBy b (boundVar 0) T.=== boundVar b
 
 weaken1DoesNotEffect0 :: T.TestTree
 weaken1DoesNotEffect0 =
-  let t :: IR.Term A A
-      t = freeVal 0
-      f x y =
-        Eval.weakBy' x (succ y) t T.=== t
-   in forAllNats (forAllNats . f)
-        |> T.testProperty "promoting terms greater than 0 does not change the value"
+  T.testProperty "x < i ==> weak' i x = x" $
+    forAllNats \b -> forAllNats \i -> forAllNats \x -> test b i x
+  where
+    test b i x =
+      x < i
+        T.==> let t = boundVar x in Eval.weakBy' b i t T.=== t
 
 letsNonRecursive :: T.TestTree
 letsNonRecursive =
-  let body = IR.Elim (IR.Bound 0)
+  let body = IR.Elim (IR.Bound 0) :: ATerm
       bound = IR.Bound 0
       --
-      t :: IR.Term A A
-      t = IR.Let one bound body
-      --
       relation x =
-        Eval.weakBy x t
+        Eval.weakBy x (IR.Let one bound body)
           T.=== IR.Let one (Eval.weakBy x bound) (Eval.weakBy' x 1 body)
    in forAllNats relation
-        |> T.testProperty "lets are non recursive, and bind in the body"
+        |> T.testProperty "'let' binds in its body"
 
 weakOnlyShiftsFree :: T.TestTree
 weakOnlyShiftsFree =
@@ -81,20 +81,17 @@ weakOnlyShiftsFree =
       t = dollarSign 1
    in (\x -> Eval.weakBy x t T.=== dollarSign (succ x))
         |> forAllNats
-        |> T.testProperty "weakby only weakens the free variables"
+        |> T.testProperty "weakBy only weakens outer variables"
 
 piBindsItself :: T.TestTree
 piBindsItself =
-  let body = IR.Elim (IR.Bound 0)
-      --
-      t :: IR.Term A A
-      t = IR.Pi one (freeVal 0) body
+  let body = IR.Elim (IR.Bound 0) :: ATerm
       --
       relation x =
-        let IR.Pi _ _ newBody = Eval.weakBy x t
+        let IR.Pi _ _ newBody = Eval.weakBy x $ IR.Pi one (boundVar 0) body
          in newBody T.=== Eval.weakBy' x 1 body
    in forAllNats relation
-        |> T.testProperty "pi binds itself in the body"
+        |> T.testProperty "'Π' binds in its body"
 
 --------------------------------------------------------------------------------
 -- property Helpers

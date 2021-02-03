@@ -7,36 +7,40 @@ import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
-shouldConvertHR :: HR.Term () () -> IR.Term () () -> T.TestTree
-shouldConvertHR hr ir =
-  T.testCase (show hr <> " should convert to " <> show ir) (ir T.@=? Trans.hrToIR hr)
+shouldConvertHR :: T.TestName -> HR.Term () () -> IR.Term () () -> T.TestTree
+shouldConvertHR msg hr ir =
+  T.testCase msg (ir T.@=? Trans.hrToIR hr)
 
-shouldConvertIR :: IR.Term () () -> HR.Term () () -> T.TestTree
-shouldConvertIR ir hr =
-  T.testCase (show ir <> " should convert to " <> show hr) (hr T.@=? Trans.irToHR ir)
+shouldConvertIR :: T.TestName -> IR.Term () () -> HR.Term () () -> T.TestTree
+shouldConvertIR msg ir hr =
+  T.testCase msg (hr T.@=? Trans.irToHR ir)
 
 coreConversions :: T.TestTree
 coreConversions =
   T.testGroup
     "Core Conversions"
-    [ hrToirConversion,
-      irTohrConversion
+    [ hrToIrConversion,
+      irToHrConversion
     ]
 
-hrToirConversion :: T.TestTree
-hrToirConversion =
+hrToIrConversion :: T.TestTree
+hrToIrConversion =
   T.testGroup
-    "Converting Human Readable form to Intermediate Readable form"
+    "human readable to intermediate representation"
     [ shouldConvertHR
+        "λx. x"
         (HR.Lam "x" (HR.Elim (HR.Var "x")))
         (IR.Lam (IR.Elim (IR.Bound 0))),
       shouldConvertHR
+        "λx y. x"
         (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "x"))))
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1)))),
       shouldConvertHR
+        "λx y. y"
         (HR.Lam "x" (HR.Lam "y" (HR.Elim (HR.Var "y"))))
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0)))),
       shouldConvertHR
+        "λf. f (λx. x) (λy. y)"
         ( HR.Lam "f"
             $ HR.Elim
             $ HR.Var "f"
@@ -51,17 +55,20 @@ hrToirConversion =
         )
     ]
 
-irTohrConversion :: T.TestTree
-irTohrConversion =
+irToHrConversion :: T.TestTree
+irToHrConversion =
   T.testGroup
-    "Converting Intermediate Readable form to Human Readable form"
+    "intermediate representation to human readable"
     [ shouldConvertIR
+        "λ. 0"
         (IR.Lam (IR.Elim (IR.Bound 0)))
         (HR.Lam "0" (HR.Elim (HR.Var "0"))),
       shouldConvertIR
+        "λ. λ. 1"
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 1))))
         (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "0")))),
       shouldConvertIR
+        "λ. λ. 0"
         (IR.Lam (IR.Lam (IR.Elim (IR.Bound 0))))
         (HR.Lam "0" (HR.Lam "1" (HR.Elim (HR.Var "1"))))
     ]
