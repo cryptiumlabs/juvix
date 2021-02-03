@@ -25,6 +25,7 @@ module Juvix.Library
     module Capability.Source,
     module Numeric.Natural,
     module Juvix.Library.PrettyPrint,
+    undefined,
     Data,
     (∨),
     (∧),
@@ -64,6 +65,7 @@ import Data.Data (Data)
 import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
+import GHC.Stack
 import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
@@ -88,8 +90,9 @@ import Protolude hiding
     put,
     reader,
     state,
+    undefined,
   )
-import Prelude (Show (..), String)
+import Prelude (Show (..), String, error)
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)
@@ -115,6 +118,10 @@ infixl 1 >>|
 (|>) = (&)
 
 infixl 1 |>
+
+undefined :: HasCallStack => a
+undefined =
+  Prelude.error $ "undefined\n" ++ prettyCallStack callStack
 
 traverseM ::
   (Monad m, Traversable m, Applicative f) =>

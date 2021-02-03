@@ -247,6 +247,8 @@ type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 deriving instance
   ( Eq primTy,
     Eq primVal,
+    Eq (P.Arg primTy),
+    Eq (P.Arg (P.TypedPrim primTy primVal)),
     Eq (P.ApplyErrorExtra primTy),
     Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
@@ -262,6 +264,8 @@ deriving instance
 instance
   ( Show primTy,
     Show primVal,
+    Show (P.Arg primTy),
+    Show (P.Arg (P.TypedPrim primTy primVal)),
     Show (P.ApplyErrorExtra primTy),
     Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
     IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),

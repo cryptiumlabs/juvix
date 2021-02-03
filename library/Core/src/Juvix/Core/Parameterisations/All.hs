@@ -1,9 +1,13 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Core.Parameterisations.All where
 
+import Data.Bitraversable
 import Data.Coerce
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.IR.Evaluator as E
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Naturals as Naturals
 import qualified Juvix.Core.Parameterisations.Unit as Unit
@@ -49,6 +53,10 @@ hasType (NatVal x) (traverse unNatTy -> Just tys) = Naturals.hasType x tys
 hasType (UnitVal x) (traverse unUnitTy -> Just tys) = Unit.hasType x tys
 hasType _ _ = False
 
+typeOf :: Val -> P.PrimType Ty
+typeOf (NatVal x) = NatTy <$> Naturals.typeOf x
+typeOf (UnitVal _) = UnitTy Unit.Ty :| []
+
 instance P.CanApply Ty where
   arity _ = 0
   apply f xs = Left $ P.ExtraArguments f xs
@@ -71,46 +79,60 @@ instance P.CanApply (P.TypedPrim Ty Val) where
       P.mapApplyErr natValR $ P.apply f xs
   apply f xs = Left $ P.InvalidArguments f xs
 
+instance E.HasWeak Ty where weakBy' _ _ ty = ty
+
+instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
+  substValueWith _ _ _ ty = pure $ IR.VPrimTy' ty mempty
+
+instance Monoid (IR.XPrimTy ext Ty val) => E.HasPatSubstTerm ext Ty val Ty where
+  patSubstTerm' _ _ ty = pure $ IR.PrimTy' ty mempty
+
+instance E.HasWeak Val where weakBy' _ _ val = val
+
+instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
+  substValueWith _ _ _ val = pure $ IR.VPrim' val mempty
+
+instance Monoid (IR.XPrim ext Ty Val) => E.HasPatSubstTerm ext Ty Val Val where
+  patSubstTerm' _ _ val = pure $ IR.Prim' val mempty
+
 natValR :: P.TypedPrim Naturals.Ty Naturals.Val -> P.TypedPrim Ty Val
 natValR (App.Cont {fun, args, numLeft}) =
-  App.Cont {App.fun = natValT fun, App.args = natValTF <$> args, numLeft}
+  App.Cont {App.fun = natValT fun, App.args = natValA <$> args, numLeft}
 natValR (App.Return {retType, retTerm}) =
   App.Return {retType = NatTy <$> retType, retTerm = NatVal retTerm}
-
-natValTF ::
-  Functor f =>
-  App.Take (P.PrimType Naturals.Ty) (f Naturals.Val) ->
-  App.Take (P.PrimType Ty) (f Val)
-natValTF (App.Take {usage, type', term}) =
-  App.Take {usage, type' = NatTy <$> type', term = NatVal <$> term}
 
 natValT ::
   App.Take (P.PrimType Naturals.Ty) Naturals.Val ->
   App.Take (P.PrimType Ty) Val
-natValT = coerce (natValTF @Identity)
+natValT (App.Take {usage, type', term}) =
+  App.Take {usage, type' = NatTy <$> type', term = NatVal term}
+
+natValA ::
+  App.Arg (P.PrimType Naturals.Ty) Naturals.Val ->
+  App.Arg (P.PrimType Ty) Val
+natValA = bimap (fmap NatTy) NatVal
 
 unNatValR :: P.TypedPrim Ty Val -> Maybe (P.TypedPrim Naturals.Ty Naturals.Val)
 unNatValR (App.Cont {fun, args, numLeft}) =
-  App.Cont <$> unNatValT fun <*> traverse unNatValTF args <*> pure numLeft
+  App.Cont <$> unNatValT fun <*> traverse unNatValA args <*> pure numLeft
 unNatValR (App.Return {retType = t', retTerm = NatVal v})
   | Just t <- traverse unNatTy t' =
     Just $ App.Return t v
 unNatValR (App.Return {}) = Nothing
 
-unNatValTF ::
-  Traversable f =>
-  App.Take (P.PrimType Ty) (f Val) ->
-  Maybe (App.Take (P.PrimType Naturals.Ty) (f Naturals.Val))
-unNatValTF (App.Take {usage, type' = type'', term = term'})
-  | Just type' <- traverse unNatTy type'',
-    Just term <- traverse unNatVal term' =
-    Just $ App.Take {usage, type', term}
-unNatValTF (App.Take {}) = Nothing
-
 unNatValT ::
   App.Take (P.PrimType Ty) Val ->
   Maybe (App.Take (P.PrimType Naturals.Ty) Naturals.Val)
-unNatValT = coerce (unNatValTF @Identity)
+unNatValT (App.Take {usage, type' = type'', term = term'})
+  | Just type' <- traverse unNatTy type'',
+    Just term <- unNatVal term' =
+    Just $ App.Take {usage, type', term}
+unNatValT (App.Take {}) = Nothing
+
+unNatValA ::
+  App.Arg (P.PrimType Ty) Val ->
+  Maybe (App.Arg (P.PrimType Naturals.Ty) Naturals.Val)
+unNatValA = bitraverse (traverse unNatTy) unNatVal
 
 unNatVal :: Val -> Maybe Naturals.Val
 unNatVal (NatVal n) = Just n

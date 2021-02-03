@@ -1,10 +1,19 @@
 PWD=$(CURDIR)
 PREFIX="$(PWD)/.stack-work/prefix"
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+	THREADS := $(shell sysctl -n hw.logicalcpu)
+else ifeq ($(UNAME), Linux)
+	THREADS := $(shell nproc)
+else
+	THREADS := $(shell echo %NUMBER_OF_PROCESSORS%)
+endif
 
 all: setup build
 
 setup:
-	stack build --only-dependencies --jobs $(shell nproc)
+	stack build --only-dependencies --jobs $(THREADS)
 
 build-libff:
 	./scripts/build-libff.sh
@@ -12,17 +21,17 @@ build-libff:
 build-z3:
 	mkdir -p $(PREFIX)
 	cd z3 && test -f build/Makefile || python scripts/mk_make.py -p $(PREFIX)
-	cd z3/build && make -j $(shell nproc)
+	cd z3/build && make -j $(PREFIX)
 	cd z3/build && make install
 
 build:
-	stack build --fast --jobs $(shell nproc)
+	stack build --fast --jobs $(THREADS)
 
 build-watch:
 	stack build --fast --file-watch
 
 build-prod: clean
-	stack build --jobs $(shell nproc) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
+	stack build --jobs $(THREADS) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
 
 build-format:
 	stack install ormolu
@@ -37,7 +46,7 @@ org-gen:
 	org-generation app/ doc/Code/App.org test/ doc/Code/Test.org src/ doc/Code/Juvix.org bench/ doc/Code/Bench.org library/ doc/Code/Library.org
 
 test:
-	stack test --fast --jobs=$(shell nproc) --test-arguments "--hide-successes --ansi-tricks false"
+	stack test --fast --jobs=$(THREADS) --test-arguments "--hide-successes --ansi-tricks false"
 
 test-parser: build
 	ls test/examples/demo | xargs -t -n 1 -I % stack exec juvix parse test/examples/demo/%
@@ -47,6 +56,7 @@ test-typecheck: build
 
 test-compile: build
 	ls test/examples/demo | xargs -n 1 -I % basename % .ju | xargs -t -n 1 -I % stack exec juvix compile test/examples/demo/%.ju test/examples/demo/%.tz
+	rm test/examples/demo/*.tz
 
 bench:
 	stack bench --benchmark-arguments="--output ./doc/Code/bench.html"

@@ -1,0 +1,33 @@
+mod If where
+
+open Prelude
+open Michelson
+
+sig nil : list operation
+let nil = %Michelson.nil
+
+sig make-pair : list operation -> int -> pair (list operation) int
+let make-pair = %Michelson.pair
+
+sig if2 : bool -> int -> int
+let if2 = %Michelson.if-builtin
+
+sig car : pair int int -> int
+let car = %Michelson.car
+
+sig cdr : pair int int -> int
+let cdr = %Michelson.car
+
+sig compare : int -> int -> int
+let compare = %Michelson.compare
+
+sig add : int -> int -> int
+let add = %Michelson.add
+
+sig main : pair int int -> pair (list operation) int
+let main = \pair ->
+  make-pair
+    nil
+    (if2 (compare 0 (car pair))
+         (cdr pair)
+         (add (car pair) (cdr pair)))

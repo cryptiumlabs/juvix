@@ -387,21 +387,29 @@ This module provides a default contract environment
   + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[Usage]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
+  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+  + [[Usage]]
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
@@ -687,7 +695,7 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
-****** Subst
+****** Subst <<HR/Subst>>
 - Runs a substitution algorithm over core
 - _Relies on_
   + [[HR/Types]]
@@ -746,13 +754,58 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[PatSubst]]
+  + [[Evaluator/Subst]]
+  + [[SubstV]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[NameSymbol]]
+******* PatSubst
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[OnlyExts]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Subst <<Evaluator/Subst>>
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[Usage]]
+******* SubstV
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Types <<Evaluator/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Weak <<Evaluator/Weak>>
+- _Relies on_
+  + [[Application]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[Usage]]
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
@@ -782,6 +835,7 @@ Typechecked declarations are added to the signature.
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -829,6 +883,8 @@ Quantitative type implementation inspired by
 ****** All
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
@@ -836,11 +892,15 @@ Quantitative type implementation inspired by
 ****** Naturals
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ****** Unit
 - _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ** test
@@ -878,6 +938,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[IR]]
   + [[CheckTerm]]
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[IR/Typechecker]]
   + [[All]]
   + [[Naturals]]
@@ -894,7 +955,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
 *** IR
-**** Weak
+**** Weak <<IR/Weak>>
 Tests that weak works as expected
 - _Relies on_
   + [[IR/Evaluator]]

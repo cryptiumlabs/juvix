@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 module Juvix.Backends.Michelson.Parameterisation
@@ -8,6 +9,7 @@ where
 
 import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
+import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
@@ -20,11 +22,17 @@ import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.IR.Typechecker.Types as TC
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Macro as M
 import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
@@ -32,7 +40,7 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Text.ParserCombinators.Parsec hiding ((<|>))
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (Show (..), String)
+import Prelude (Show (..), String, error)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
@@ -50,6 +58,8 @@ check2Equal (_ :| _) = False
 
 isBool :: PrimTy -> Bool
 isBool (PrimTy (M.Type M.TBool _)) = True
+isBool (PrimTy (M.Type M.TInt _)) = True
+isBool (PrimTy (M.Type M.TNat _)) = True
 isBool _ = False
 
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
@@ -82,18 +92,57 @@ hasType CompareP ty = checkFirst2AndLast ty isBool
 hasType CompareTimeStamp ty = checkFirst2AndLast ty isBool
 hasType CompareMutez ty = checkFirst2AndLast ty isBool
 hasType CompareHash ty = checkFirst2AndLast ty isBool
+-- Hacks make more exact later
+hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
+hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
+hasType (Inst M.UNIT {}) (x :| []) = True
+hasType (Inst M.BALANCE {}) (x :| []) = True
+hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
+  | empty == rest = False
+  | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
+-- todo check this properly
+hasType (Inst M.PAIR {}) (a :| (b : (c : []))) = True
+-- todo check this properly
+hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
+hasType (Inst (M.CDR _ _)) (a :| (b : [])) = True
+hasType (Inst M.SENDER {}) (a :| []) = True
+hasType Contract (a :| [b]) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType x ty = ty == undefined
+hasType x ((Application List _) :| []) = True
+-- do something nicer here
+hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
-arityRaw prim = Run.instructionOf prim |> Instructions.toNewPrimErr |> arityRaw
+arityRaw prim =
+  Run.instructionOf prim (Untyped.Type Untyped.TUnit "")
+    |> Instructions.toNewPrimErr
+    |> arityRaw
+
+toArg :: PrimVal' ext -> Maybe (Arg' ext)
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just $ App.TermArg $
+    App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = retTerm
+      }
+
+toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
+  where
+    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+fromReturn :: Return' ext -> PrimVal' ext
+fromReturn = identity
 
 data ApplyError
   = CompilationError CompilationError
@@ -117,28 +166,34 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
-instance Core.CanApply (PrimVal' ext) where
+instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   type ApplyErrorExtra (PrimVal' ext) = ApplyError
+
+  type Arg (PrimVal' ext) = Arg' ext
+
+  pureArg = toArg
+
+  freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
+  boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
   arity Prim.Cont {numLeft} = numLeft
   arity Prim.Return {retTerm} = arityRaw retTerm
 
-  apply fun' args2'
-    | (fun, args1, ar) <- toTakes fun',
-      Just args2 <- traverse toArg args2' =
+  apply fun' args2
+    | (fun, args1, ar) <- toTakes fun' =
       do
-        let argLen = lengthN args2'
+        let argLen = lengthN args2
             args = foldr NonEmpty.cons args2 args1
         case argLen `compare` ar of
           LT ->
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
           EQ
-            | Just takes <- traverse (traverse App.argToTerm) args ->
+            | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
-          GT -> Left $ Core.ExtraArguments fun' args2'
+          GT -> Left $ Core.ExtraArguments fun' args2
   apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
@@ -241,7 +296,8 @@ builtinTypes =
     ("Michelson.bool", Untyped.TBool),
     ("Michelson.key-hash", Untyped.TKeyHash),
     ("Michelson.timestamp", Untyped.TTimestamp),
-    ("Michelson.address", Untyped.TAddress)
+    ("Michelson.address", Untyped.TAddress),
+    ("Michelson.operation", Untyped.TOperation)
   ]
     |> fmap (NameSymbol.fromSymbol Arr.*** primify)
     |> ( <>
@@ -250,7 +306,9 @@ builtinTypes =
              ("Michelson.option", Types.Option),
              ("Michelson.set", Types.Set),
              ("Michelson.map", Types.Map),
-             ("Michelson.big-map", Types.BigMap)
+             ("Michelson.big-map", Types.BigMap),
+             ("Michelson.pair-ty", Types.Pair),
+             ("Michelson.contract", Types.ContractT)
            ]
        )
     |> Map.fromList
@@ -283,6 +341,7 @@ builtinValues =
     ("Michelson.amount", Inst (M.AMOUNT "")),
     ("Michelson.balance", Inst (M.BALANCE "")),
     ("Michelson.hash-key", Inst (M.HASH_KEY "")),
+    ("Michelson.transfer-tokens", Inst (M.TRANSFER_TOKENS "")),
     ("Michelson.and", AndI),
     ("Michelson.xor", XorI),
     ("Michelson.or", OrB),
@@ -303,9 +362,11 @@ builtinValues =
     ("Michelson.empty-set", EmptyS),
     ("Michelson.empty-map", EmptyM),
     ("Michelson.empty-big-map", EmptyBM),
-    ("Michelson.cons-pair", Pair'),
+    ("Michelson.address-to-contract", Contract),
     -- added symbols to not take values
-    ("Michelson.if-builtin", Inst (M.IF [] []))
+    ("Michelson.if-builtin", Inst (M.IF [] [])),
+    ("Michelson.if-none", Inst (M.IF_NONE [] [])),
+    ("Michelson.pair", Inst (M.PAIR "" "" "" ""))
   ]
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
@@ -329,3 +390,25 @@ michelson =
     }
 
 type CompErr = CompTypes.CompilationError
+
+instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
+
+instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t
+
+instance
+  Monoid (IR.XVPrimTy ext PrimTy primVal) =>
+  Eval.HasSubstValue ext PrimTy primVal PrimTy
+  where
+  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+
+instance
+  Monoid (IR.XPrimTy ext PrimTy primVal) =>
+  Eval.HasPatSubstTerm ext PrimTy primVal PrimTy
+  where
+  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+
+instance
+  Monoid (IR.XPrim ext primTy RawPrimVal) =>
+  Eval.HasPatSubstTerm ext primTy RawPrimVal RawPrimVal
+  where
+  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty

@@ -1,0 +1,10 @@
+mod Identity where
+
+open Foo-Helper
+open Bah
+
+sig fi : 3
+let fi = 3
+
+sig main : 3
+let main = fi bar
