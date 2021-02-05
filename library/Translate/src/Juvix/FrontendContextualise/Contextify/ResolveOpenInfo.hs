@@ -23,7 +23,7 @@ data Error
   | CantResolveModules [NameSymbol.T]
   | OpenNonModule (Set.HashSet Context.NameSymbol)
   | AmbiguousSymbol Symbol
-  | ModuleConflict [NameSymbol.T]
+  | ModuleConflict Symbol [NameSymbol.T]
   | IllegalModuleSwitch Context.NameSymbol
   deriving (Show, Eq)
 
@@ -87,28 +87,36 @@ populateOpen ::
   (NameSymbol.T, [Open NameSymbol.T]) ->
   m ()
 populateOpen ctx (explicitModule, opens) = do
-  pureM <- pureHashMap
+  inScopeNames <- grabInScopeNames ctx explicitModule
   symbolMap <- grabQualifiedMap ctx explicitModule
+  pureM <- pureHashMap inScopeNames
   liftIO (hashMaptoSTMMap (convertValuesToSymbolInfo pureM) symbolMap)
   where
-    f map a =
+    f inScopeNames map a =
       let (sym, impExp) =
             case a of
               Implicit x -> (x, Open.Implicit)
               Explicit x -> (x, Open.Explicit)
           NameSpace.List {publicL} = grabList sym ctx
           --
-          updateSymbol Nothing =
+          updateSymbol _ Nothing =
             pure $ Just (impExp, sym)
-          updateSymbol (Just (Open.Implicit, _))
+          updateSymbol _ (Just (Open.Implicit, _))
             | Open.Implicit /= impExp =
               pure $ Just (impExp, sym)
-          updateSymbol (Just (_, sym')) =
-            throw @"left" (ModuleConflict [sym, sym'])
-       in foldM (flip (HashMap.alterF updateSymbol)) map (fmap fst publicL)
+          updateSymbol key (Just (_, sym')) =
+            throw @"left" (ModuleConflict key [sym, sym'])
+          checkInScopeUp sym val =
+            case NameSpace.lookupInternal sym inScopeNames of
+              Just __ -> pure Nothing
+              Nothing -> updateSymbol sym val
+       in foldM
+            (\map x -> HashMap.alterF (checkInScopeUp x) x map)
+            map
+            (fmap fst publicL)
     convertValuesToSymbolInfo =
       HashMap.map (\(_, mod) -> Context.SymInfo {used = Context.NotUsed, mod})
-    pureHashMap = foldM f mempty opens
+    pureHashMap inScopeNames = foldM (f inScopeNames) mempty opens
 
 resolveReverseOpen ::
   (HasThrow "left" Error m, MonadIO m) =>
@@ -134,6 +142,36 @@ hashMaptoSTMMap pureMap stmMap =
   traverse_
     (\(k, v) -> atomically $ STM.insert v k stmMap)
     (HashMap.toList pureMap)
+
+----------------------------------------
+-- New Helpers
+----------------------------------------
+
+grabInScopeNames ::
+  HasThrow "left" Error m =>
+  Context.T a b c ->
+  NameSymbol.T ->
+  m (NameSpace.T (Context.Definition a b c))
+grabInScopeNames ctx name =
+  case Context.extractValue <$> Context.lookup name ctx of
+    Just (Context.Record rec') ->
+      pure (rec' ^. Context.contents)
+    _ ->
+      throw @"left" (UnknownModule (Context.qualifyName name ctx))
+
+grabQualifiedMap ::
+  HasThrow "left" Error m => Context.T a b c -> NameSymbol.T -> m Context.SymbolMap
+grabQualifiedMap ctx name =
+  case Context.extractValue <$> Context.lookup name ctx of
+    Just (Context.Record rec') ->
+      pure (rec' ^. Context.qualifiedMap)
+    _ ->
+      throw @"left" (UnknownModule (Context.qualifyName name ctx))
+
+-- | @removeRedundantQualifieds@ takes a qualified and removes any
+-- redundant imports it may contain
+removeRedundantQualifieds Pre {opens, implicitInner, explicitModule} = undefined
+
 
 --------------------------------------------------------------------------------
 -- Code for generating the fully realized OpenMap
@@ -182,19 +220,6 @@ resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} = do
                  implicitInner
            )
         |> pure
-
-grabQualifiedMap ::
-  HasThrow "left" Error m => Context.T a b c -> NameSymbol.T -> m Context.SymbolMap
-grabQualifiedMap ctx name =
-  case Context.extractValue <$> Context.lookup name ctx of
-    Just (Context.Record rec') ->
-      pure (rec' ^. Context.qualifiedMap)
-    _ ->
-      throw @"left" (UnknownModule (Context.qualifyName name ctx))
-
--- | @removeRedundantQualifieds@ takes a qualified and removes any
--- redundant imports it may contain
-removeRedundantQualifieds Pre {opens, implicitInner, explicitModule} = undefined
 
 -- this goes off after the checks have passed regarding if the paths
 -- are even possible to resolve
