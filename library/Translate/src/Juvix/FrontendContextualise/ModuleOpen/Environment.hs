@@ -42,9 +42,6 @@ type SingleMap a b c m =
 type WorkingMaps m =
   (TransitionMap m, Expression EnvDispatch m)
 
-type ModuleNames tag m =
-  (NameConstraint tag m, HasReader "dispatch" tag m, Names tag)
-
 type ModuleSwitch tag m =
   (SwitchConstraint tag m, HasReader "dispatch" tag m, Switch tag)
 
@@ -54,10 +51,7 @@ type ModuleSwitch tag m =
 -- just a local cache
 type Expression tag m =
   ( HasState "new" (New Context.T) m,
-    ModuleNames tag m,
     HasThrow "error" Error m,
-    HasState "modMap" ModuleMap m,
-    HasReader "openMap" OpenMap m,
     ModuleSwitch tag m,
     MonadIO m
   )
@@ -65,6 +59,8 @@ type Expression tag m =
 --------------------------------------------------------------------------------
 -- Environment data declarations
 --------------------------------------------------------------------------------
+
+type ExclusionSet = Set.HashSet Symbol
 
 -- | the traditional transition between one context and another
 data EnvDispatch = EnvDispatch deriving (Show)
@@ -78,8 +74,7 @@ data SingleEnv term1 ty1 sumRep1
       { env :: Context.T term1 ty1 sumRep1,
         temp :: New Context.T,
         disp :: SingleDispatch term1 ty1 sumRep1,
-        modM :: ModuleMap,
-        openM :: OpenMap
+        exclusionSet :: ExclusionSet
       }
   deriving (Generic)
 
@@ -89,9 +84,8 @@ data Environment
   = Env
       { old :: Old Context.T,
         new :: New Context.T,
-        modMap :: ModuleMap,
-        openMap :: OpenMap,
-        dispatch :: EnvDispatch
+        dispatch :: EnvDispatch,
+        eclusion :: ExclusionSet
       }
   deriving (Generic, Show)
 
@@ -127,12 +121,6 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     )
     via StateField "new" ContextAlias
   deriving
-    ( HasState "modMap" ModuleMap,
-      HasSink "modMap" ModuleMap,
-      HasSource "modMap" ModuleMap
-    )
-    via StateField "modMap" ContextAlias
-  deriving
     (HasThrow "error" Error)
     via MonadError ContextAlias
   deriving
@@ -141,10 +129,11 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     )
     via ReaderField "dispatch" ContextAlias
   deriving
-    ( HasReader "openMap" OpenMap,
-      HasSource "openMap" OpenMap
+    ( HasState "exclusion" ExclusionSet,
+      HasSink "exclusion" ExclusionSet,
+      HasSource "exclusion" ExclusionSet
     )
-    via ReaderField "openMap" ContextAlias
+    via StateField "exclusion" ContextAlias
 
 type SingleAlias term1 ty1 sumRep1 =
   ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
@@ -173,16 +162,11 @@ newtype SingleCont term1 ty1 sumRep1 a
     (HasThrow "error" Error)
     via MonadError (SingleAlias term1 ty1 sumRep1)
   deriving
-    ( HasReader "openMap" OpenMap,
-      HasSource "openMap" OpenMap
+    ( HasState "exclusion" ExclusionSet,
+      HasSink "exclusion" ExclusionSet,
+      HasSource "exclusion" ExclusionSet
     )
-    via Rename "openM" (ReaderField "openM" (SingleAlias term1 ty1 sumRep1))
-  deriving
-    ( HasState "modMap" ModuleMap,
-      HasSink "modMap" ModuleMap,
-      HasSource "modMap" ModuleMap
-    )
-    via Rename "modM" (StateField "modM" (SingleAlias term1 ty1 sumRep1))
+    via Rename "exclusionSet" (StateField "exclusionSet" (SingleAlias term1 ty1 sumRep1))
 
 --------------------------------------------------------------------------------
 -- Generic Interface Definitions for Environment lookup
@@ -191,14 +175,6 @@ newtype SingleCont term1 ty1 sumRep1 a
 class Switch a where
   type SwitchConstraint a (m :: * -> *) :: Constraint
   switch :: SwitchConstraint a m => Context.NameSymbol -> a -> m ()
-
--- | Names encapsulates the idea of looking up all current names in
--- a context
-class Names a where
-  type NameConstraint a (m :: * -> *) :: Constraint
-  contextNames :: NameConstraint a m => NameSymbol.T -> a -> m [Symbol]
-  currentNameSpace' :: NameConstraint a m => a -> m NameSymbol.T
-  inCurrentModule' :: NameConstraint a m => NameSymbol.T -> a -> m Bool
 
 instance Switch (SingleDispatch a b c) where
   type
@@ -221,50 +197,8 @@ instance Switch EnvDispatch where
     switchContextErr sym old >>= put @"old"
     switchContextErr sym new >>= put @"new"
 
-instance Names (SingleDispatch a b c) where
-  type NameConstraint _ m = SingleMap a b c m
-
-  -- arbitrary choice between new and env
-  currentNameSpace' SingleDispatch =
-    get @"env" >>| Context.currentName
-
-  contextNames name SingleDispatch = do
-    env <- get @"env"
-    new <- get @"new"
-    pure $ combineLists (grabList name env) (grabList name new)
-
-  inCurrentModule' name SingleDispatch = do
-    env <- get @"env"
-    new <- get @"new"
-    pure (inMap name env || inMap name new)
-
-instance Names EnvDispatch where
-  type NameConstraint _ m = TransitionMap m
-  contextNames name EnvDispatch = do
-    old <- get @"old"
-    new <- get @"new"
-    pure $ combineLists (grabList name new) (grabList name old)
-
-  -- arbitrary choice between new and old
-  currentNameSpace' EnvDispatch =
-    get @"new" >>| Context.currentName
-
-  inCurrentModule' name EnvDispatch = do
-    old <- get @"old"
-    new <- get @"new"
-    pure (inMap name old || inMap name new)
-
 switchNameSpace :: ModuleSwitch tag m => NameSymbol.T -> m ()
 switchNameSpace name = Juvix.Library.ask @"dispatch" >>= switch name
-
-inScopeNames :: ModuleNames tag m => NameSymbol.T -> m [Symbol]
-inScopeNames name = Juvix.Library.ask @"dispatch" >>= contextNames name
-
-currentNameSpace :: ModuleNames tag m => m NameSymbol.T
-currentNameSpace = Juvix.Library.ask @"dispatch" >>= currentNameSpace'
-
-inCurrentModule :: ModuleNames tag m => NameSymbol.T -> m Bool
-inCurrentModule name = Juvix.Library.ask @"dispatch" >>= inCurrentModule' name
 
 ----------------------------------------
 -- Helper functions for the instances
@@ -302,38 +236,6 @@ inMap name ctx = isJust (Context.lookup name ctx)
 type FinalContext = New Context.T
 
 --------------------------------------------------------------------------------
--- Types for resolving opens
---------------------------------------------------------------------------------
--- - before we are able to qaulify all symbols, we need the context at
---   a fully realized state.
--- - This hosts
---   1. the module
---   2. the inner modules (which thus have implciit opens of all
---      opens)
---   3. All opens
--- - Since we desugar all modules to records, we can't have opens over
---   them, hence no need to store it separately
--- - Any resolution will thus happen at the explicit module itself, as
---   trying to do so in the inner modules would lead to a path error
-
-data PreQualified
-  = Pre
-      { opens :: [NameSymbol.T],
-        implicitInner :: [NameSymbol.T],
-        explicitModule :: NameSymbol.T
-      }
-  deriving (Show, Eq)
-
-type OpenMap = Map.T Context.NameSymbol [Open NameSymbol.T]
-
-data Resolve a b c
-  = Res
-      { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
-        notResolved :: [NameSymbol.T]
-      }
-  deriving (Show)
-
---------------------------------------------------------------------------------
 -- Running functions
 --------------------------------------------------------------------------------
 
@@ -341,10 +243,10 @@ bareRun ::
   Context a ->
   Old Context.T ->
   New Context.T ->
-  OpenMap ->
+  ResolveOpen.OpenMap ->
   IO (Either Error a, Environment)
 bareRun (Ctx c) old new opens =
-  Env old new mempty opens EnvDispatch
+  Env old new EnvDispatch mempty
     |> runStateT (runExceptT c)
 
 runEnv ::
@@ -356,7 +258,7 @@ runEnv (Ctx c) old pres = do
 
 -- case resolved of
 --   Right opens ->
---     Env old empt mempty opens EnvDispatch
+--     Env old empt EnvDispatch mempty
 --       |> runStateT (runExceptT c)
 --   Left err -> pure (Left err, undefined)
 

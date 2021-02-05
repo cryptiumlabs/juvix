@@ -10,6 +10,21 @@ import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified StmContainers.Map as STM
 
+--------------------------------------------------------------------------------
+-- Types for resolving opens
+--------------------------------------------------------------------------------
+-- - before we are able to qaulify all symbols, we need the context at
+--   a fully realized state.
+-- - This hosts
+--   1. the module
+--   2. the inner modules (which thus have implciit opens of all
+--      opens)
+--   3. All opens
+-- - Since we desugar all modules to records, we can't have opens over
+--   them, hence no need to store it separately
+-- - Any resolution will thus happen at the explicit module itself, as
+--   trying to do so in the inner modules would lead to a path error
+
 data PreQualified
   = Pre
       { opens :: [NameSymbol.T],
@@ -106,6 +121,7 @@ populateOpen ctx (explicitModule, opens) = do
               pure $ Just (impExp, sym)
           updateSymbol key (Just (_, sym')) =
             throw @"left" (ModuleConflict key [sym, sym'])
+          --
           checkInScopeUp sym val =
             case NameSpace.lookupInternal sym inScopeNames of
               Just __ -> pure Nothing
@@ -171,7 +187,6 @@ grabQualifiedMap ctx name =
 -- | @removeRedundantQualifieds@ takes a qualified and removes any
 -- redundant imports it may contain
 removeRedundantQualifieds Pre {opens, implicitInner, explicitModule} = undefined
-
 
 --------------------------------------------------------------------------------
 -- Code for generating the fully realized OpenMap
