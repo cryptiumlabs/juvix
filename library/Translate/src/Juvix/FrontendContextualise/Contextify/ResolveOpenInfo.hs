@@ -1,14 +1,14 @@
 module Juvix.FrontendContextualise.Contextify.ResolveOpenInfo where
 
 import Control.Lens hiding ((|>))
+import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.Open as Open
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
-import qualified Data.HashSet as Set
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified StmContainers.Map as STM
-import qualified Juvix.Core.Common.NameSpace as NameSpace
 
 data PreQualified
   = Pre
@@ -35,6 +35,7 @@ data Resolve a b c
   deriving (Show)
 
 type PureSymbolMap = HashMap.Map Symbol Context.SymbolInfo
+
 type OpenMap = HashMap.T NameSymbol.T [Open NameSymbol.T]
 
 data Open a
@@ -81,10 +82,10 @@ populateOpens opens ctx = do
   traverse_ (populateOpen ctx) (HashMap.toList opens)
 
 populateOpen ::
-   (HasThrow "left" Error m, MonadIO m) =>
-   Context.T a b c ->
-   (NameSymbol.T, [Open NameSymbol.T]) ->
-   m ()
+  (HasThrow "left" Error m, MonadIO m) =>
+  Context.T a b c ->
+  (NameSymbol.T, [Open NameSymbol.T]) ->
+  m ()
 populateOpen ctx (explicitModule, opens) = do
   pureM <- pureHashMap
   symbolMap <- grabQualifiedMap ctx explicitModule
@@ -99,42 +100,40 @@ populateOpen ctx (explicitModule, opens) = do
           --
           updateSymbol Nothing =
             pure $ Just (impExp, sym)
-          updateSymbol (Just (Open.Implicit,_))
+          updateSymbol (Just (Open.Implicit, _))
             | Open.Implicit /= impExp =
               pure $ Just (impExp, sym)
-          updateSymbol (Just (_,sym')) =
+          updateSymbol (Just (_, sym')) =
             throw @"left" (ModuleConflict [sym, sym'])
-      in foldM (flip (HashMap.alterF updateSymbol)) map (fmap fst publicL)
+       in foldM (flip (HashMap.alterF updateSymbol)) map (fmap fst publicL)
     convertValuesToSymbolInfo =
-      HashMap.map (\(_,mod) -> Context.SymInfo {used = Context.NotUsed, mod})
+      HashMap.map (\(_, mod) -> Context.SymInfo {used = Context.NotUsed, mod})
     pureHashMap = foldM f mempty opens
 
 resolveReverseOpen ::
-   (HasThrow "left" Error m, MonadIO m) =>
-   Context.T a b c ->
-   Context.ReverseLookup ->
-   (NameSymbol.T, [Open NameSymbol.T]) ->
-   m Context.ReverseLookup
+  (HasThrow "left" Error m, MonadIO m) =>
+  Context.T a b c ->
+  Context.ReverseLookup ->
+  (NameSymbol.T, [Open NameSymbol.T]) ->
+  m Context.ReverseLookup
 resolveReverseOpen ctx reverseLookup (explicitModule, opens) = do
-   symbolMap <- grabQualifiedMap ctx explicitModule
-   let updateRevLook impExplict existing =
-         let whousesInfo =
-               Context.Who {impExplict, modName = explicitModule, symbolMap}
+  symbolMap <- grabQualifiedMap ctx explicitModule
+  let updateRevLook impExplict existing =
+        let whousesInfo =
+              Context.Who {impExplict, modName = explicitModule, symbolMap}
          in case existing of
               Nothing -> Just [whousesInfo]
               Just es -> Just (whousesInfo : es)
-       alterUpdate (Implicit a) = HashMap.alter (updateRevLook Open.Implicit) a
-       alterUpdate (Explicit a) = HashMap.alter (updateRevLook Open.Explicit) a
-   pure (foldr alterUpdate reverseLookup opens)
-
+      alterUpdate (Implicit a) = HashMap.alter (updateRevLook Open.Implicit) a
+      alterUpdate (Explicit a) = HashMap.alter (updateRevLook Open.Explicit) a
+  pure (foldr alterUpdate reverseLookup opens)
 
 hashMaptoSTMMap ::
   (Eq k, Hashable k) => HashMap.HashMap k v -> STM.Map k v -> IO ()
 hashMaptoSTMMap pureMap stmMap =
   traverse_
-    (\(k,v) -> atomically $ STM.insert v k stmMap)
+    (\(k, v) -> atomically $ STM.insert v k stmMap)
     (HashMap.toList pureMap)
-
 
 --------------------------------------------------------------------------------
 -- Code for generating the fully realized OpenMap
@@ -183,7 +182,6 @@ resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} = do
                  implicitInner
            )
         |> pure
-
 
 grabQualifiedMap ::
   HasThrow "left" Error m => Context.T a b c -> NameSymbol.T -> m Context.SymbolMap

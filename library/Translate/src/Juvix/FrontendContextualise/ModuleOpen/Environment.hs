@@ -13,13 +13,13 @@ import qualified Data.HashSet as Set
 import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 
 --------------------------------------------------------------------------------
 -- Type Aliases and effect setup
@@ -353,11 +353,12 @@ runEnv (Ctx c) old pres = do
   resolved <- ResolveOpen.run old pres
   empt <- Context.empty (Context.currentName old)
   undefined
-  -- case resolved of
-  --   Right opens ->
-  --     Env old empt mempty opens EnvDispatch
-  --       |> runStateT (runExceptT c)
-  --   Left err -> pure (Left err, undefined)
+
+-- case resolved of
+--   Right opens ->
+--     Env old empt mempty opens EnvDispatch
+--       |> runStateT (runExceptT c)
+--   Left err -> pure (Left err, undefined)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
