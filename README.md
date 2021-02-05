@@ -138,6 +138,6 @@ We would love to hear what you think of Juvix! Join our community:
 - Subscribe to our [newsletter](https://juvix.org/)
 
 
-<!-- trigger 3 -->
+<!-- trigger 4 -->
 <!-- TODO add links to discord, reddit, etc. -->
 
