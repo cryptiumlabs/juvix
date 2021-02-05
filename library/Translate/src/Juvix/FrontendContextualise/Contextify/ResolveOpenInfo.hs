@@ -23,6 +23,7 @@ data Error
   | CantResolveModules [NameSymbol.T]
   | OpenNonModule (Set.HashSet Context.NameSymbol)
   | AmbiguousSymbol Symbol
+  | ModuleConflict [NameSymbol.T]
   | IllegalModuleSwitch Context.NameSymbol
   deriving (Show, Eq)
 
@@ -85,16 +86,28 @@ populateOpen ::
    (NameSymbol.T, [Open NameSymbol.T]) ->
    m ()
 populateOpen ctx (explicitModule, opens) = do
+  pureM <- pureHashMap
   symbolMap <- grabQualifiedMap ctx explicitModule
-  liftIO (hashMaptoSTMMap pureHashMap symbolMap)
+  liftIO (hashMaptoSTMMap (convertValuesToSymbolInfo pureM) symbolMap)
   where
-    f a map =
+    f map a =
       let (sym, impExp) =
             case a of
               Implicit x -> (x, Open.Implicit)
               Explicit x -> (x, Open.Explicit)
-      in undefined
-    pureHashMap = foldr f mempty opens
+          NameSpace.List {publicL} = grabList sym ctx
+          --
+          updateSymbol Nothing =
+            pure $ Just (impExp, sym)
+          updateSymbol (Just (Open.Implicit,_))
+            | Open.Implicit /= impExp =
+              pure $ Just (impExp, sym)
+          updateSymbol (Just (_,sym')) =
+            throw @"left" (ModuleConflict [sym, sym'])
+      in foldM (flip (HashMap.alterF updateSymbol)) map (fmap fst publicL)
+    convertValuesToSymbolInfo =
+      HashMap.map (\(_,mod) -> Context.SymInfo {used = Context.NotUsed, mod})
+    pureHashMap = foldM f mempty opens
 
 resolveReverseOpen ::
    (HasThrow "left" Error m, MonadIO m) =>
@@ -294,3 +307,18 @@ firstName (x :| y : _)
 firstName xs =
   NameSymbol.hd xs
     |> NameSymbol.fromSymbol
+
+----------------------------------------
+-- Helper functions for the instances
+----------------------------------------
+
+grabList ::
+  NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
+grabList name ctx =
+  case Context.extractValue <$> Context.lookup name ctx of
+    Just (Context.Record Context.Rec {recordContents}) ->
+      NameSpace.toList recordContents
+    Just _ ->
+      NameSpace.List [] []
+    Nothing ->
+      NameSpace.List [] []
