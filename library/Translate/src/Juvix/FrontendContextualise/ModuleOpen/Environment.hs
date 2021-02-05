@@ -19,6 +19,7 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 
 --------------------------------------------------------------------------------
 -- Type Aliases and effect setup
@@ -347,15 +348,16 @@ bareRun (Ctx c) old new opens =
     |> runStateT (runExceptT c)
 
 runEnv ::
-  Context a -> Old Context.T -> [PreQualified] -> IO (Either Error a, Environment)
+  Context a -> Old Context.T -> [ResolveOpen.PreQualified] -> IO (Either Error a, Environment)
 runEnv (Ctx c) old pres = do
-  resolved <- resolve old pres
+  resolved <- ResolveOpen.run old pres
   empt <- Context.empty (Context.currentName old)
-  case resolved of
-    Right opens ->
-      Env old empt mempty opens EnvDispatch
-        |> runStateT (runExceptT c)
-    Left err -> pure (Left err, undefined)
+  undefined
+  -- case resolved of
+  --   Right opens ->
+  --     Env old empt mempty opens EnvDispatch
+  --       |> runStateT (runExceptT c)
+  --   Left err -> pure (Left err, undefined)
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
@@ -381,216 +383,3 @@ lookupModMap s =
 removeModMap ::
   HasState "modMap" ModuleMap m => Symbol -> m ()
 removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
-
---------------------------------------------------------------------------------
--- fully resolve module opens
---------------------------------------------------------------------------------
-
--- Precondition ∷ old and new context must be in the same context
--- also terms must be in either the old map or the new map
--- any place where this is inconsistent will break resolution
-
--- TODO ∷ check if the module opens are populated
-
--- | @populateModMap@ populates the modMap with all the global opens
--- in the module
-populateModMap ::
-  Expression tag m => m ()
-populateModMap = do
-  open <- Juvix.Library.ask @"openMap"
-  currentName <- currentNameSpace
-  let curr = pure Context.topLevelName <> currentName
-  case open Map.!? curr of
-    Nothing ->
-      pure ()
-    Just opens -> do
-      -- TODO ∷
-      -- explicts and implicits for now work the same
-      -- later they should work as follows
-      -- Implicit opens should be superseded by explicit
-      -- thus our map should have implciit explicit on
-      -- each symbol. Later when we are done, we remove
-      -- these markings as they are no longer useful
-      -- TODO ∷ (modM <- get @"modMap")
-      --
-      -- should we even append modM in
-      -- put @"modMap" (Map.fromList assocNameWithAlias)
-      --
-      -- Answer ∷
-      -- No we should not, it collects opens from previous modules
-      -- which is incorrect
-      assocNameWithAlias <- concatMapM f opens
-      put @"modMap" (Map.fromList assocNameWithAlias)
-      where
-        f y = do
-          openList <- inScopeNames nameSpace
-          maybeAssocNameWithAlias <- traverse addNewSymbol openList
-          pure (catMaybes maybeAssocNameWithAlias)
-          where
-            nameSpace =
-              case y of
-                Implicit x -> x
-                Explicit x -> x
-            addNewSymbol x =
-              inCurrentModule (NameSymbol.fromSymbol x) >>= \case
-                True -> pure Nothing
-                -- if the symbol is in the map, then
-                -- we don't shadow it....
-                -- TODO ∷ later throw an error for
-                --        explicit opens that do this
-                False -> pure (Just (x, nameSpace))
-
--- we don't take a module mapping as all symbols at the point of
--- resolve can't be anything else, thus we don't have to pre-pend any
--- qualification at this point... we add qualification later as we add
--- things, as we have to figure out the full resolution of all opens
-
-type RunM =
-  ExceptT Error IO
-
-newtype M a = M (RunM a)
-  deriving (Functor, Applicative, Monad, MonadIO)
-  deriving (HasThrow "left" Error) via MonadError RunM
-
-runM :: M a -> IO (Either Error a)
-runM (M a) = runExceptT a
-
--- | @resolve@ takes a context and a list of open modules and the modules
--- they are open in (the module itself, and sub modules, which the opens are
--- implicit), and fully resolves the opens to their full name.
--- for example @open Prelude@ in the module Londo translates to
--- @resolve ctx PreQualified {opens = [Prelude]}@
--- == @Right (fromList [(TopLevel :| [Londo],[Explicit (TopLevel :| [Prelude])])])@
-resolve :: Context.T a b c -> [PreQualified] -> IO (Either Error OpenMap)
-resolve ctx = runM . foldM (resolveSingle ctx) mempty
-
-resolveSingle ::
-  (HasThrow "left" Error m, MonadIO m) =>
-  Context.T a b c ->
-  OpenMap ->
-  PreQualified ->
-  m OpenMap
-resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} = do
-  switched <- liftIO $ Context.switchNameSpace explicitModule ctx
-  case switched of
-    Left (Context.VariableShared err) ->
-      throw @"left" (IllegalModuleSwitch err)
-    Right ctx -> do
-      resolved <- liftEither (pathsCanBeResolved ctx opens)
-      qualifiedNames <- liftEither (resolveLoop ctx mempty resolved)
-      openMap
-        |> Map.insert explicitModule (fmap Explicit qualifiedNames)
-        |> ( \map ->
-               foldr
-                 (\mod -> Map.insert mod (fmap Implicit qualifiedNames))
-                 map
-                 implicitInner
-           )
-        |> pure
-
--- this goes off after the checks have passed regarding if the paths
--- are even possible to resolve
-resolveLoop ::
-  Context.T a b c -> ModuleMap -> Resolve a b c -> Either Error [NameSymbol.T]
-resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
-  map <- foldM addToModMap map fullyQualifyRes
-  --
-  let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
-  --
-  if  | null cantResolveNow ->
-        Right qualifedAns
-      | length (notResolved newResolve) == length cantResolveNow ->
-        Left (CantResolveModules cantResolveNow)
-      | otherwise ->
-        (qualifedAns <>) <$> resolveLoop ctx map newResolve
-  where
-    fullyQualifyRes =
-      Context.resolveName ctx <$> resolved
-    qualifedAns =
-      fmap snd fullyQualifyRes
-    addToModMap map (def, sym) =
-      case def of
-        Context.Record Context.Rec {recordContents} ->
-          let NameSpace.List {publicL} = NameSpace.toList recordContents
-           in foldlM
-                ( \map x ->
-                    case map Map.!? x of
-                      -- this means we already have opened this in another
-                      -- module
-                      Just _ -> Left (AmbiguousSymbol x)
-                      -- if it's already in scope from below or above us
-                      -- don't add to the remapping
-                      Nothing ->
-                        case Context.lookup (pure x) ctx of
-                          Just _ -> Right map
-                          Nothing -> Right (Map.insert x sym map)
-                )
-                map
-                (fmap fst publicL)
-        -- should be updated when we can open expressions
-        _ ->
-          Left (UnknownModule sym)
-    qualifyCant newMap term =
-      case newMap Map.!? NameSymbol.hd term of
-        Nothing ->
-          term
-        Just x ->
-          x <> term
-
--- Since Locals and top level beats opens, we can determine from the
--- start that any module which tries to open a nested path fails,
--- yet any previous part succeeds, that an illegal open is happening,
--- and we can error out immediately
-
-liftEither :: HasThrow "left" e m => Either e a -> m a
-liftEither (Left le) = throw @"left" le
-liftEither (Right x) = pure x
-
--- | @pathsCanBeResolved@ takes a context and a list of opens,
--- we then try to resolve if the opens are legal, if so we return
--- a list of ones that can be determined now, and a list to be resolved
-pathsCanBeResolved ::
-  Context.T a b c -> [NameSymbol.T] -> Either Error (Resolve a b c)
-pathsCanBeResolved ctx opens
-  | fmap firstName (notResolved resFull) == notResolved resFirst =
-    Right resFull
-  | otherwise =
-    Left (OpenNonModule diff)
-  where
-    resFull = resolveWhatWeCan ctx opens
-    resFirst = resolveWhatWeCan ctx (firstName <$> opens)
-    setRes l = Set.fromList (notResolved l)
-    -- O(n log₁₆(n))
-    diff =
-      mappend
-        (Set.difference (setRes resFull) (setRes resFirst))
-        (Set.difference (setRes resFirst) (setRes resFull))
-
-resolveWhatWeCan :: Context.T a b c -> [NameSymbol.T] -> Resolve a b c
-resolveWhatWeCan ctx opens = Res {resolved, notResolved}
-  where
-    dupLook =
-      fmap (\openMod -> (Context.lookup openMod ctx, openMod))
-    (resolved, notResolved) =
-      splitMaybes (dupLook opens)
-
-----------------------------------------
--- Helpers for resolve
-----------------------------------------
-
-splitMaybes :: [(Maybe a, b)] -> ([(a, b)], [b])
-splitMaybes = foldr f ([], [])
-  where
-    f (Just a, b) = first ((a, b) :)
-    f (Nothing, b) = second (b :)
-
--- TODO ∷ add test for firstName
-firstName :: NameSymbol.T -> NameSymbol.T
-firstName (x :| y : _)
-  | Context.topLevelName == x =
-    x :| [y]
-  | otherwise =
-    NameSymbol.fromSymbol x
-firstName xs =
-  NameSymbol.hd xs
-    |> NameSymbol.fromSymbol
