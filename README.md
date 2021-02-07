@@ -50,7 +50,8 @@ The following are required to build Juvix:
 
 [Stack](https://haskellstack.org) required. 8GB RAM required for `stack` installation.
 
-  - For Ubuntu/Debian : `apt install stack`
+  - For Ubuntu        : `apt install stack`
+  - For Debian        : `apt install haskell-stack`
   - For Arch Linux    : `pacman -S stack`
   - For macOS : `brew install haskell-stack`
   - For Windows, following the instructions [here](https://docs.haskellstack.org/en/stable/install_and_upgrade/#windows).
