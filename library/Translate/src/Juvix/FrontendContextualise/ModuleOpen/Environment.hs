@@ -9,6 +9,7 @@ module Juvix.FrontendContextualise.ModuleOpen.Environment
   )
 where
 
+import Control.Lens hiding (Context, (|>))
 import qualified Data.HashSet as Set
 import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
@@ -20,6 +21,7 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
 
 --------------------------------------------------------------------------------
 -- Type Aliases and effect setup
@@ -42,8 +44,14 @@ type SingleMap a b c m =
 type WorkingMaps m =
   (TransitionMap m, Expression EnvDispatch m)
 
+type Qualification tag m =
+  (CurrentModuleConstraint tag m, HasReader "dispatch" tag m, QualificationMap tag)
+
 type ModuleSwitch tag m =
   (SwitchConstraint tag m, HasReader "dispatch" tag m, Switch tag)
+
+type Exclusion m =
+  HasState "exclusion" ExclusionSet m
 
 -- The effect of expression and below note that new is not the new map
 -- per se, but more instead of where local functions get added...  for
@@ -53,7 +61,9 @@ type Expression tag m =
   ( HasState "new" (New Context.T) m,
     HasThrow "error" Error m,
     ModuleSwitch tag m,
-    MonadIO m
+    Exclusion m,
+    MonadIO m,
+    Qualification tag m
   )
 
 --------------------------------------------------------------------------------
@@ -85,7 +95,7 @@ data Environment
       { old :: Old Context.T,
         new :: New Context.T,
         dispatch :: EnvDispatch,
-        eclusion :: ExclusionSet
+        exclusion :: ExclusionSet
       }
   deriving (Generic, Show)
 
@@ -172,6 +182,10 @@ newtype SingleCont term1 ty1 sumRep1 a
 -- Generic Interface Definitions for Environment lookup
 --------------------------------------------------------------------------------
 
+class QualificationMap a where
+  type CurrentModuleConstraint a (m :: * -> *) :: Constraint
+  symbolMap :: CurrentModuleConstraint a m => a -> m Context.SymbolMap
+
 class Switch a where
   type SwitchConstraint a (m :: * -> *) :: Constraint
   switch :: SwitchConstraint a m => Context.NameSymbol -> a -> m ()
@@ -197,8 +211,25 @@ instance Switch EnvDispatch where
     switchContextErr sym old >>= put @"old"
     switchContextErr sym new >>= put @"new"
 
+instance QualificationMap EnvDispatch where
+  type
+    CurrentModuleConstraint _ m =
+      TransitionMap m
+  symbolMap EnvDispatch =
+    gets @"new" (\x -> x ^. Context._currentNameSpace . Context.qualifiedMap)
+
+instance QualificationMap (SingleDispatch a b c) where
+  type
+    CurrentModuleConstraint _ m =
+      SingleMap a b c m
+  symbolMap SingleDispatch =
+    gets @"env" (\x -> x ^. Context._currentNameSpace . Context.qualifiedMap)
+
 switchNameSpace :: ModuleSwitch tag m => NameSymbol.T -> m ()
 switchNameSpace name = Juvix.Library.ask @"dispatch" >>= switch name
+
+getSymbolMap :: Qualification tag m => m Context.SymbolMap
+getSymbolMap = Juvix.Library.ask @"dispatch" >>= symbolMap
 
 ----------------------------------------
 -- Helper functions for the instances
@@ -264,14 +295,56 @@ runEnv (Ctx c) old pres = do
 
 -- for this function just the first part of the symbol is enough
 qualifyName ::
-  HasState "modMap" ModuleMap m => NonEmpty Symbol -> m (NonEmpty Symbol)
+  (MonadIO m, Exclusion m, Qualification tag m) => NonEmpty Symbol -> m (NonEmpty Symbol)
 qualifyName sym@(s :| _) = do
-  qualifieds <- get @"modMap"
-  case qualifieds Map.!? s of
-    Just preQualified ->
-      pure $ preQualified <> sym
-    Nothing ->
-      pure sym
+  exclusion <- get @"exclusion"
+  case Set.member s exclusion of
+    True -> pure sym
+    False -> do
+      qualified <- getSymbolMap
+      looked <- liftIO $ atomically $ STM.lookup s qualified
+      case looked of
+        Just Context.SymInfo {mod} ->
+          pure $ mod <> sym
+        Nothing ->
+          pure sym
+
+-- currently unused as we don't save the function name
+markUsed ::
+  (MonadIO m, Exclusion m, Qualification tag m) => NonEmpty Symbol -> Symbol -> m ()
+markUsed (s :| _) fname = do
+  exclusion <- get @"exclusion"
+  case Set.member s exclusion of
+    True -> pure ()
+    False -> do
+      qualified <- getSymbolMap
+      liftIO $ atomically $ do
+        looked <- STM.lookup s qualified
+        case looked of
+          Just sym@Context.SymInfo {used} ->
+            STM.insert
+              ( sym
+                  { Context.used = case used of
+                      Context.Func xs ->
+                        Context.Func (fname : xs)
+                      Context.NotUsed ->
+                        Context.Func [fname]
+                      Context.Yes ->
+                        Context.Func [fname]
+                  }
+              )
+              fname
+              qualified
+          Nothing ->
+            pure ()
+
+addExcludedElement :: Exclusion m => Symbol -> m ()
+addExcludedElement sym =
+  Juvix.Library.modify @"exclusion" (Set.insert sym)
+
+removeExcludedElement :: Exclusion m => Symbol -> m ()
+removeExcludedElement sym =
+  Juvix.Library.modify @"exclusion" (Set.delete sym)
 
 addModMap ::
   HasState "modMap" ModuleMap m => Symbol -> NonEmpty Symbol -> m ()

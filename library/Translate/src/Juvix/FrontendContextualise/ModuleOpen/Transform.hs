@@ -6,6 +6,7 @@ import Control.Lens ((^.), set)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
@@ -18,7 +19,9 @@ import Prelude (error)
 -- this makes sures we correctly qualify a module
 
 transformSymbol ::
-  HasState "modMap" Env.ModuleMap m => NonEmpty Symbol -> m (NonEmpty Symbol)
+  (MonadIO m, Env.Exclusion m, Env.Qualification tag m) =>
+  NonEmpty Symbol ->
+  m (NonEmpty Symbol)
 transformSymbol = Env.qualifyName
 
 -- TODO ∷ update the STM map with this information!
@@ -47,25 +50,14 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) = do
             traverse_ (`Env.addModMap` fullQualified) newSymbs
             transformExpression expr
 
-saveOldOpen ::
-  HasState "modMap" Env.ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol), Symbol)
-saveOldOpen sym =
-  (,sym) <$> Env.lookupModMap sym
-
-restoreNameOpen ::
-  HasState "modMap" Env.ModuleMap m => (Maybe (NonEmpty Symbol), Symbol) -> m ()
-restoreNameOpen (Just def, sym) = Env.addModMap sym def
-restoreNameOpen (Nothing, sym) = Env.removeModMap sym
-
---------------------------------------------------
+-------------------------------------------------
 -- Protection extension
 --------------------------------------------------
 protectOpenPrim :: Env.Expression tag m => [Symbol] -> m a -> m a
 protectOpenPrim syms op = do
-  originalQualified <- traverse saveOldOpen syms
-  traverse_ Env.removeModMap syms
+  originalQualified <- traverse Env.addExcludedElement syms
   res <- op
-  traverse_ restoreNameOpen originalQualified
+  traverse_ Env.removeExcludedElement syms
   pure res
 
 protectOpen :: Env.Expression tag m => [Symbol] -> m a -> m a
@@ -177,7 +169,7 @@ emptyArgs (_ : _) = False
 --------------------------------------------------------------------------------
 
 transformContext ::
-  Env.Old Context.T -> [Env.PreQualified] -> IO (Either Env.Error (Env.New Context.T))
+  Env.Old Context.T -> [ResolveOpen.PreQualified] -> IO (Either Env.Error (Env.New Context.T))
 transformContext ctx pres =
   Env.runEnv transformC ctx pres
     >>| \case
@@ -596,5 +588,5 @@ restoreName (def, Context.Outside sym) =
 updateSym :: Env.Expression tag m => Context.NameSymbol -> m ()
 updateSym sym = do
   Env.switchNameSpace sym
-  -- we now also have to populate the modmap
-  Env.populateModMap
+-- we now also have to populate the modmap
+-- Env.populateModMap
