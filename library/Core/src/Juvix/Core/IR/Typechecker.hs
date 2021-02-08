@@ -25,12 +25,12 @@ import Juvix.Library hiding (Datatype)
 -- import qualified Juvix.Library.Usage as Usage
 
 typeCheckDeclaration ::
-  [IR.DatatypeWith ty0 ext0 primTy0 primVal0] ->
+  [IR.RawDatatype' ext0 primTy0 primVal0] ->
   [IR.FunctionWith ty ext primTy primVal] ->
   IR.TypeCheck ty ext primTy primVal ()
 typeCheckDeclaration [] [] =
   return undefined
-typeCheckDeclaration ((IR.Datatype name lpos args levels ty cons) : tld) _ =
+typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =
   undefined
 -- TODO run checkDataType 0 [] [] p' dt
 -- v <- eval [] dt
