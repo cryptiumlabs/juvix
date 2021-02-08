@@ -4,7 +4,7 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
 	THREADS := $(shell sysctl -n hw.logicalcpu)
-else ifeq($(UNAME), Linux)
+else ifeq ($(UNAME), Linux)
 	THREADS := $(shell nproc)
 else
 	THREADS := $(shell echo %NUMBER_OF_PROCESSORS%)
