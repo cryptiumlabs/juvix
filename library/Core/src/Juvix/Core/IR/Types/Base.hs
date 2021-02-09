@@ -286,10 +286,6 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (DataCon' ext primTy primVal)
 
--- type RawDataCon' ext = DataConWith (Term' ext)
-
--- type DataCon' extV = DataConWith (Value' extV)
-
 data FunctionWith ty ext primTy primVal
   = Function
       { funName :: GlobalName,

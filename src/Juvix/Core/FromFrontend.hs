@@ -13,6 +13,7 @@ import qualified Juvix.Core.Common.Context as Ctx
 import Juvix.Core.FromFrontend.Types
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.FrontendContextualise as FE
@@ -597,6 +598,7 @@ transformType q name dat@(FE.Typ {typeForm}) = do
             IR.Datatype
               { dataName = name,
                 dataArgs = args,
+                dataPos = pos,
                 dataLevel = level,
                 dataCons = cons
               }
@@ -619,8 +621,7 @@ splitDataType x ty0 = go ty0
           IR.DataArg
             { argName = x,
               argUsage = π,
-              argType = hrToIR s,
-              argIsParam = False -- TODO parameter detection
+              argType = hrToIR s
             }
     go (HR.Star ℓ) = pure ([], ℓ)
     go _ = throwFF $ InvalidDatatypeType x ty0
