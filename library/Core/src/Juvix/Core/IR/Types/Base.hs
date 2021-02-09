@@ -143,6 +143,22 @@ data RawDatatype' ext primTy primVal
       }
   deriving (Generic)
 
+deriving instance
+  GlobalAll Show ext primTy primVal =>
+  Show (RawDatatype' ext primTy primVal)
+
+deriving instance
+  GlobalAll Eq ext primTy primVal =>
+  Eq (RawDatatype' ext primTy primVal)
+
+deriving instance
+  (Data ext, GlobalAll Data ext primTy primVal) =>
+  Data (RawDatatype' ext primTy primVal)
+
+deriving instance
+  GlobalAll NFData ext primTy primVal =>
+  NFData (RawDatatype' ext primTy primVal)
+
 data Datatype' ext primTy primVal
   = Datatype
       { dataName :: GlobalName,
@@ -171,10 +187,6 @@ deriving instance
 deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (Datatype' ext primTy primVal)
-
--- type RawDatatype' ext = DatatypeWith (Term' ext)
-
--- type Datatype' extV = DatatypeWith (Value' extV)
 
 data RawArgType' ext primTy primVal
   = DataArgRaw
@@ -366,21 +378,21 @@ type RawGlobal' ext = GlobalWith (Term' ext) ext
 
 type Global' extV = GlobalWith (Value' extV)
 
--- deriving instance
---   GlobalAllWith Show ty ext primTy primVal =>
---   Show (GlobalWith ty ext primTy primVal)
+deriving instance
+  GlobalAllWith Show ty ext primTy primVal =>
+  Show (GlobalWith ty ext primTy primVal)
 
--- deriving instance
---   GlobalAllWith Eq ty ext primTy primVal =>
---   Eq (GlobalWith ty ext primTy primVal)
+deriving instance
+  GlobalAllWith Eq ty ext primTy primVal =>
+  Eq (GlobalWith ty ext primTy primVal)
 
--- deriving instance
---   (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
---   Data (GlobalWith ty ext primTy primVal)
+deriving instance
+  (Typeable ty, Data ext, GlobalAllWith Data ty ext primTy primVal) =>
+  Data (GlobalWith ty ext primTy primVal)
 
--- deriving instance
---   GlobalAllWith NFData ty ext primTy primVal =>
---   NFData (GlobalWith ty ext primTy primVal)
+deriving instance
+  GlobalAllWith NFData ty ext primTy primVal =>
+  NFData (GlobalWith ty ext primTy primVal)
 
 type GlobalsWith ty ext primTy primVal =
   HashMap GlobalName (GlobalWith ty ext primTy primVal)
