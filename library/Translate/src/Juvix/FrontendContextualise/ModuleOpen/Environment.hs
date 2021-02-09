@@ -29,6 +29,9 @@ import qualified StmContainers.Map as STM
 
 type ModuleMap = Map.T Symbol NameSymbol.T
 
+type OpenClosure =
+  Map.T Symbol NameSymbol.T
+
 type Old f =
   f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
@@ -52,6 +55,12 @@ type ModuleSwitch tag m =
 
 type Exclusion m =
   HasState "exclusion" ExclusionSet m
+
+type Closure m =
+  HasState "closure" OpenClosure m
+
+type SymbolQualification tag m =
+  (MonadIO m, Exclusion m, Qualification tag m, Closure m)
 
 -- The effect of expression and below note that new is not the new map
 -- per se, but more instead of where local functions get added...  for
@@ -84,7 +93,8 @@ data SingleEnv term1 ty1 sumRep1
       { env :: Context.T term1 ty1 sumRep1,
         temp :: New Context.T,
         disp :: SingleDispatch term1 ty1 sumRep1,
-        exclusionSet :: ExclusionSet
+        exclusionSet :: ExclusionSet,
+        openClosure :: OpenClosure
       }
   deriving (Generic)
 
@@ -95,7 +105,8 @@ data Environment
       { old :: Old Context.T,
         new :: New Context.T,
         dispatch :: EnvDispatch,
-        exclusion :: ExclusionSet
+        exclusion :: ExclusionSet,
+        closure :: OpenClosure
       }
   deriving (Generic, Show)
 
@@ -144,6 +155,12 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
       HasSource "exclusion" ExclusionSet
     )
     via StateField "exclusion" ContextAlias
+  deriving
+    ( HasState "closure" OpenClosure,
+      HasSink "closure" OpenClosure,
+      HasSource "closure" OpenClosure
+    )
+    via StateField "closure" ContextAlias
 
 type SingleAlias term1 ty1 sumRep1 =
   ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
@@ -177,6 +194,12 @@ newtype SingleCont term1 ty1 sumRep1 a
       HasSource "exclusion" ExclusionSet
     )
     via Rename "exclusionSet" (StateField "exclusionSet" (SingleAlias term1 ty1 sumRep1))
+  deriving
+    ( HasState "closure" OpenClosure,
+      HasSink "closure" OpenClosure,
+      HasSource "closure" OpenClosure
+    )
+    via Rename "openClosure" (StateField "openClosure" (SingleAlias term1 ty1 sumRep1))
 
 --------------------------------------------------------------------------------
 -- Generic Interface Definitions for Environment lookup
@@ -277,7 +300,7 @@ bareRun ::
   ResolveOpen.OpenMap ->
   IO (Either Error a, Environment)
 bareRun (Ctx c) old new opens =
-  Env old new EnvDispatch mempty
+  Env old new EnvDispatch mempty mempty
     |> runStateT (runExceptT c)
 
 runEnv ::
@@ -289,54 +312,74 @@ runEnv (Ctx c) old pres = do
 
 -- case resolved of
 --   Right opens ->
---     Env old empt EnvDispatch mempty
+--     Env old empt EnvDispatch mempty mempty
 --       |> runStateT (runExceptT c)
 --   Left err -> pure (Left err, undefined)
 
--- for this function just the first part of the symbol is enough
-qualifyName ::
-  (MonadIO m, Exclusion m, Qualification tag m) => NonEmpty Symbol -> m (NonEmpty Symbol)
-qualifyName sym@(s :| _) = do
+data QualifySymbolAns
+  = Local NameSymbol.T
+  | GlobalInfo Context.SymbolInfo
+  deriving (Show)
+
+qualifySymbolInfo ::
+  SymbolQualification tag m => NonEmpty Symbol -> m (Maybe QualifySymbolAns)
+qualifySymbolInfo (s :| _) = do
   exclusion <- get @"exclusion"
   case Set.member s exclusion of
-    True -> pure sym
+    True -> pure Nothing
     False -> do
-      qualified <- getSymbolMap
-      looked <- liftIO $ atomically $ STM.lookup s qualified
-      case looked of
-        Just Context.SymInfo {mod} ->
-          pure $ mod <> sym
-        Nothing ->
-          pure sym
+      openClosure <- get @"closure"
+      case openClosure Map.!? s of
+        Just nameSym ->
+          pure (Just (Local nameSym))
+        Nothing -> do
+          qualified <- getSymbolMap
+          looked <- liftIO $ atomically $ STM.lookup s qualified
+          case looked of
+            Just sym@Context.SymInfo {} ->
+              pure $ Just (GlobalInfo sym)
+            Nothing ->
+              pure Nothing
+
+-- for this function just the first part of the symbol is enough
+
+qualifyName ::
+  SymbolQualification tag m => NonEmpty Symbol -> m (NonEmpty Symbol)
+qualifyName sym@(s :| _) = do
+  mSym <- qualifySymbolInfo sym
+  case mSym of
+    Just (GlobalInfo Context.SymInfo {mod}) ->
+      pure $ mod <> sym
+    Just (Local nameSym) ->
+      pure $ nameSym <> sym
+    Nothing ->
+      pure sym
 
 -- currently unused as we don't save the function name
 markUsed ::
-  (MonadIO m, Exclusion m, Qualification tag m) => NonEmpty Symbol -> Symbol -> m ()
-markUsed (s :| _) fname = do
-  exclusion <- get @"exclusion"
-  case Set.member s exclusion of
-    True -> pure ()
-    False -> do
+  SymbolQualification tag m => NonEmpty Symbol -> Symbol -> m ()
+markUsed sym@(s :| _) fname = do
+  mSym <- qualifySymbolInfo sym
+  case mSym of
+    Just (GlobalInfo sym@Context.SymInfo {used}) -> do
       qualified <- getSymbolMap
-      liftIO $ atomically $ do
-        looked <- STM.lookup s qualified
-        case looked of
-          Just sym@Context.SymInfo {used} ->
-            STM.insert
-              ( sym
-                  { Context.used = case used of
-                      Context.Func xs ->
-                        Context.Func (fname : xs)
-                      Context.NotUsed ->
-                        Context.Func [fname]
-                      Context.Yes ->
-                        Context.Func [fname]
-                  }
-              )
-              fname
-              qualified
-          Nothing ->
-            pure ()
+      STM.insert
+        ( sym
+            { Context.used = case used of
+                Context.Func xs ->
+                  Context.Func (fname : xs)
+                Context.NotUsed ->
+                  Context.Func [fname]
+                Context.Yes ->
+                  Context.Func [fname]
+            }
+        )
+        fname
+        qualified
+        |> atomically
+        |> liftIO
+    Nothing -> pure ()
+    Just Local {} -> pure ()
 
 addExcludedElement :: Exclusion m => Symbol -> m ()
 addExcludedElement sym =
