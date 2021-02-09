@@ -70,9 +70,7 @@ type Expression tag m =
   ( HasState "new" (New Context.T) m,
     HasThrow "error" Error m,
     ModuleSwitch tag m,
-    Exclusion m,
-    MonadIO m,
-    Qualification tag m
+    SymbolQualification tag m
   )
 
 --------------------------------------------------------------------------------
@@ -325,10 +323,10 @@ qualifySymbolInfo ::
   SymbolQualification tag m => NonEmpty Symbol -> m (Maybe QualifySymbolAns)
 qualifySymbolInfo (s :| _) = do
   exclusion <- get @"exclusion"
+  openClosure <- get @"closure"
   case Set.member s exclusion of
     True -> pure Nothing
-    False -> do
-      openClosure <- get @"closure"
+    False ->
       case openClosure Map.!? s of
         Just nameSym ->
           pure (Just (Local nameSym))
@@ -336,10 +334,8 @@ qualifySymbolInfo (s :| _) = do
           qualified <- getSymbolMap
           looked <- liftIO $ atomically $ STM.lookup s qualified
           case looked of
-            Just sym@Context.SymInfo {} ->
-              pure $ Just (GlobalInfo sym)
-            Nothing ->
-              pure Nothing
+            Just sy -> pure $ Just (GlobalInfo sy)
+            Nothing -> pure Nothing
 
 -- for this function just the first part of the symbol is enough
 
@@ -349,9 +345,9 @@ qualifyName sym@(s :| _) = do
   mSym <- qualifySymbolInfo sym
   case mSym of
     Just (GlobalInfo Context.SymInfo {mod}) ->
-      pure $ mod <> sym
+      pure $ Context.addTopName (mod <> sym)
     Just (Local nameSym) ->
-      pure $ nameSym <> sym
+      pure $ Context.addTopName (nameSym <> sym)
     Nothing ->
       pure sym
 
@@ -402,3 +398,9 @@ lookupModMap s =
 removeModMap ::
   HasState "modMap" ModuleMap m => Symbol -> m ()
 removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
+
+addOpen :: Closure m => Symbol -> NameSymbol.T -> m ()
+addOpen sym mod = modify @"closure" (Map.insert sym mod)
+
+removeOpen :: Closure m => Symbol -> m ()
+removeOpen sym = modify @"closure" (Map.delete sym)

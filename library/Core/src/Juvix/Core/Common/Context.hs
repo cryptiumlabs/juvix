@@ -318,8 +318,10 @@ addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
 addTopNameToSngle xs = xs
 
-addTopName :: IsString a => NonEmpty a -> NonEmpty a
-addTopName (x :| xs) = topLevelName :| (x : xs)
+addTopName :: (IsString a, Eq a) => NonEmpty a -> NonEmpty a
+addTopName (x :| xs)
+  | topLevelName == x = x :| xs
+  | otherwise = topLevelName :| (x : xs)
 
 removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
 removeTopName (top :| x : xs)
