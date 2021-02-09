@@ -1368,6 +1368,7 @@ Calculate mutually-recursive groups of definitions.
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[ResolveOpenInfo]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1516,6 +1517,7 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ResolveOpenInfo]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
@@ -1895,6 +1897,7 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
   + [[Library]]

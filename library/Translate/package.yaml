@@ -15,6 +15,7 @@ dependencies:
 - frontend
 - extensible-data
 - unordered-containers
+- stm-containers
 - lens
 - containers
 - dlist

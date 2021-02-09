@@ -6,6 +6,7 @@
 module Juvix.FrontendContextualise.ModuleOpen.Environment
   ( module Juvix.FrontendContextualise.ModuleOpen.Environment,
     module Juvix.FrontendContextualise.Environment,
+    Open (..),
   )
 where
 
@@ -15,6 +16,7 @@ import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
+import Juvix.FrontendContextualise.Contextify.ResolveOpenInfo (Open (..))
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
@@ -116,11 +118,6 @@ data Error
   | ConflictingSymbols Context.NameSymbol
   | CantResolveModules [NameSymbol.T]
   deriving (Show, Eq)
-
-data Open a
-  = Implicit a
-  | Explicit a
-  deriving (Show, Eq, Ord)
 
 type ContextAlias =
   ExceptT Error (StateT Environment IO)

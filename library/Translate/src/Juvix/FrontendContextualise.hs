@@ -11,6 +11,7 @@ module Juvix.FrontendContextualise
 where
 
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Infix
@@ -52,7 +53,7 @@ contextualize init = do
 
 contextify ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) ->
-  IO (Either Context.PathError (Contextify.Context, [Module.PreQualified]))
+  IO (Either Context.PathError (Contextify.Context, [ResolveOpen.PreQualified]))
 contextify t@((sym, _) :| _) = do
   emptyCtx <- Context.empty sym
   runM $
@@ -64,16 +65,16 @@ addTop = first (NameSymbol.cons Context.topLevelName)
 -- we get the opens
 resolveOpens ::
   (MonadIO m, HasThrow "left" Context.PathError m) =>
-  (Contextify.Context, [Module.PreQualified]) ->
+  (Contextify.Context, [ResolveOpen.PreQualified]) ->
   (Context.NameSymbol, [Initial.TopLevel]) ->
-  m (Contextify.Context, [Module.PreQualified])
+  m (Contextify.Context, [ResolveOpen.PreQualified])
 resolveOpens (ctx', openList) (sym, xs) = do
   ctx <- liftIO (Contextify.run ctx' (sym, xs))
   case ctx of
     Right Contextify.P {ctx, opens, modsDefined} ->
       pure
         ( ctx,
-          Module.Pre
+          ResolveOpen.Pre
             { opens,
               explicitModule = sym,
               implicitInner = modsDefined
