@@ -91,8 +91,8 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.FunClause primTy1 primVal1 ->
-  m (Erasure.FunClause primTy2 primVal2)
+  IR.FunClause' IR.NoExt primTy1 primVal1 ->
+  m b
 eraseFunClause (IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) = do
   patts <- mapM erasePattern patts
   -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
