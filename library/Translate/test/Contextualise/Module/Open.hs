@@ -140,24 +140,6 @@ topLevelToImportDoesntMatter =
     |> T.testCase
       "adding top level to module open does not matter if there is no lower module"
 
--- openPreludeActsProperly :: T.TestTree
--- openPreludeActsProperly =
---   T.testCase
---     "-> and : should fully qualify"
---     ( do
---         Right opens <- resolveOurModule
---         ourMod <- ourModule
---         emptyMod <- (Context.empty (pure "Londo"))
---         (_, Env.Env {modMap}) <-
---           Env.bareRun Env.populateModMap emptyMod ourMod opens
---         let openMap =
---               Map.fromList
---                 [ (":", Context.topLevelName :| ["Prelude"]),
---                   ("->", Context.topLevelName :| ["Prelude"])
---                 ]
---         modMap T.@=? openMap
---     )
-
 ambiSymbolInOpen :: T.TestTree
 ambiSymbolInOpen =
   ( do

@@ -1902,3 +1902,13 @@ Calculate mutually-recursive groups of definitions.
   + [[ModuleOpen/Types]]
   + [[Library]]
   + [[HashMap]]
+***** Resolve
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[ResolveOpenInfo]]
+  + [[ModuleOpen/Environment]]
+  + [[ModuleOpen/Types]]
+  + [[Library]]
+  + [[HashMap]]
