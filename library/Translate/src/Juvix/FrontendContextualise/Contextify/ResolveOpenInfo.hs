@@ -119,6 +119,9 @@ populateOpen ctx (explicitModule, opens) = do
           updateSymbol _ (Just (Open.Implicit, _))
             | Open.Implicit /= impExp =
               pure $ Just (impExp, sym)
+          updateSymbol _ same@(Just (Open.Explicit, _))
+            | Open.Implicit == impExp =
+              pure same
           updateSymbol key (Just (_, sym')) =
             throw @"left" (ModuleConflict key [sym, sym'])
           --

@@ -1909,6 +1909,5 @@ Calculate mutually-recursive groups of definitions.
   + [[NameSpace]]
   + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
-  + [[ModuleOpen/Types]]
   + [[Library]]
   + [[HashMap]]

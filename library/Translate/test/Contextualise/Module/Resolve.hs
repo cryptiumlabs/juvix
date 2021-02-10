@@ -9,7 +9,6 @@ import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as Resolve
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
-import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified ListT
@@ -22,7 +21,9 @@ top =
   T.testGroup
     "context resolve tests:"
     [ preludeProperlyOpens,
-      ambigiousPrelude
+      ambigiousPrelude,
+      explicitOpenBeatsImplicit,
+      onlyOpenProperSymbols
     ]
 
 firstResolve :: IO (Either Resolve.Error (Env.New Context.T))
@@ -61,19 +62,46 @@ ambigiousPrelude =
         reality <-
           Resolve.run
             prelude
-            [Resolve.Pre
-               [pure "Stirner", pure "Londo"]
-               []
-               (Context.topLevelName :| ["Max"])]
+            [ Resolve.Pre
+                [pure "Stirner", pure "Londo"]
+                []
+                (Context.topLevelName :| ["Max"])
+            ]
         let expected =
-              Left (Resolve.ModuleConflict
-                      "Prelude"
-                      ["TopLevel" :| ["Londo"],"TopLevel" :| ["Stirner"]])
+              Left
+                ( Resolve.ModuleConflict
+                    "Prelude"
+                    ["TopLevel" :| ["Londo"], "TopLevel" :| ["Stirner"]]
+                )
         reality T.@=? expected
     )
 
-
-
+explicitOpenBeatsImplicit :: T.TestTree
+explicitOpenBeatsImplicit =
+  T.testCase
+    "the implicit definitions get overwritten by the Explicit ones"
+    ( do
+        prelude <- preludeAddedPlusExtra
+        let manualImplicit =
+              Map.fromList
+                [ ( Ctx.topLevelName :| ["Max"],
+                    [ Env.Explicit (Ctx.topLevelName :| ["Stirner"]),
+                      Env.Implicit (Ctx.topLevelName :| ["Londo"])
+                    ]
+                  )
+                ]
+        Right () <- manualPopulate prelude manualImplicit
+        Right stmMap <-
+          Resolve.runM $
+            Resolve.grabQualifiedMap prelude (Context.topLevelName :| ["Max"])
+        reality <- stmMapToList stmMap
+        reality T.@=? expected
+    )
+  where
+    expected =
+      [ ("mollari", Ctx.SymInfo {used = Ctx.NotUsed, mod = "TopLevel" :| ["Londo"]}),
+        ("Prelude", Ctx.SymInfo {used = Ctx.NotUsed, mod = "TopLevel" :| ["Stirner"]})
+      ]
 
 onlyOpenProperSymbols :: T.TestTree
 onlyOpenProperSymbols =
@@ -81,5 +109,36 @@ onlyOpenProperSymbols =
     "explicit symbols don't get added to the symbol mapping"
     ( do
         prelude <- Open.preludeAdded
-        undefined
+        Right ctx <-
+          Resolve.run
+            prelude
+            [Resolve.Pre [pure "Stirner"] [] (Context.topLevelName :| ["Max"])]
+        Right stmMap <-
+          Resolve.runM $ Resolve.grabQualifiedMap ctx (Context.topLevelName :| ["Max"])
+        reality <- stmMapToList stmMap
+        reality T.@=? expected
     )
+  where
+    expected =
+      [("Prelude", Ctx.SymInfo {used = Ctx.NotUsed, mod = "TopLevel" :| ["Stirner"]})]
+
+stmMapToList :: STM.Map key value -> IO [(key, value)]
+stmMapToList = atomically . ListT.toList . STM.listT
+
+-- TODO ∷ remove when proper implicit opens are done
+manualPopulate :: Ctx.T a b c -> Resolve.OpenMap -> IO (Either Resolve.Error ())
+manualPopulate ctx fullyQualifiedResolves = do
+  Resolve.runM $ do
+    Resolve.populateOpens fullyQualifiedResolves ctx
+
+preludeAddedPlusExtra :: IO (Env.New Context.T)
+preludeAddedPlusExtra = do
+  prelude <- Open.preludeAdded
+  let Just ctx =
+        Context.inNameSpace (Context.topLevelName :| ["Londo"]) prelude
+  pure $ Context.add (NameSpace.Pub "mollari") (Open.defaultDef quote) ctx
+  where
+    quote =
+      "Isn't it strange, G'Kar? When we first met I had no power and\
+      \ all the choices I could ever want. And now I have all the power \
+      \ I could ever want and no choices at all. No choice at all."

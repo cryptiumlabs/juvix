@@ -24,7 +24,6 @@ openTests =
       ambiSymbolInOpen,
       notAmbiIfLocalF,
       notAmbiIfTopLevel
-      -- onlyOpenProperSymbols
     ]
 
 --------------------------------------------------------------------------------
