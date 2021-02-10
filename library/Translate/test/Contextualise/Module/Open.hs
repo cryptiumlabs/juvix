@@ -20,8 +20,7 @@ openTests :: T.TestTree
 openTests =
   T.testGroup
     "Open Resolve Tests:"
-    [ -- openPreludeActsProperly,
-      topLevelToImportDoesntMatter,
+    [ topLevelToImportDoesntMatter,
       ambiSymbolInOpen,
       notAmbiIfLocalF,
       notAmbiIfTopLevel
@@ -195,19 +194,3 @@ notAmbiIfTopLevel =
       )
         |> T.testCase
           "opening same symbol with it being in the module is not ambi"
--- onlyOpenProperSymbols :: T.TestTree
--- onlyOpenProperSymbols =
---   ( do
---       max <- Context.empty (pure "Max")
---       prelude <- preludeAdded
---       Right opens <- resolvePreludeAdded
---       (_, Env.Env {modMap}) <-
---         Env.bareRun
---           Env.populateModMap
---           max
---           prelude
---           opens
---       modMap T.@=? mempty
---   )
---     |> T.testCase
---       "explicit symbols don't get added to the symbol mapping"

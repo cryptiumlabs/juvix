@@ -21,7 +21,8 @@ top :: T.TestTree
 top =
   T.testGroup
     "context resolve tests:"
-    [ preludeProperlyOpens
+    [ preludeProperlyOpens,
+      ambigiousPrelude
     ]
 
 firstResolve :: IO (Either Resolve.Error (Env.New Context.T))
@@ -48,4 +49,37 @@ preludeProperlyOpens =
               ]
         reality <- atomically (ListT.toList $ STM.listT stmMap)
         reality T.@=? answer
+    )
+
+ambigiousPrelude :: T.TestTree
+ambigiousPrelude =
+  T.testCase
+    "explicitly opening two modules with the same exports errors:"
+    ( do
+        -- this module has Stirner and Londo both have Prelude inside them!
+        prelude <- Open.preludeAdded
+        reality <-
+          Resolve.run
+            prelude
+            [Resolve.Pre
+               [pure "Stirner", pure "Londo"]
+               []
+               (Context.topLevelName :| ["Max"])]
+        let expected =
+              Left (Resolve.ModuleConflict
+                      "Prelude"
+                      ["TopLevel" :| ["Londo"],"TopLevel" :| ["Stirner"]])
+        reality T.@=? expected
+    )
+
+
+
+
+onlyOpenProperSymbols :: T.TestTree
+onlyOpenProperSymbols =
+  T.testCase
+    "explicit symbols don't get added to the symbol mapping"
+    ( do
+        prelude <- Open.preludeAdded
+        undefined
     )
