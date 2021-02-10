@@ -9,11 +9,6 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
-  - name: ecr-login
-    image: drone/registry-plugin
-
-
-
   - name: restore-cache
     image: drillster/drone-volume-cache
     volumes:
@@ -24,8 +19,6 @@ steps:
       mount:
         - ./.stack-work
         - ./.stack
-    depends_on:
-      - ecr-login
 
   - name: test-suite
     image: cryptiumlabs/juvix-ci-2
