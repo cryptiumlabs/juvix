@@ -27,6 +27,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import Data.Maybe (fromJust)
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
@@ -196,7 +197,7 @@ toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
     let transform = extTransformT $ OnlyExts.injector `compose` forgetter
     let π = IR.globalToUsage funUsage
     let ty = OnlyExts.injectT $ IR.toTerm funType
-    case patSubst patMap $ weakBy len $ transform rhs of
+    case patSubst patMap $ weakBy len $ transform (fromJust rhs) of -- TODO nothing case.
       Left _ -> Nothing
       Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
   where

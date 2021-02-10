@@ -467,18 +467,6 @@ transformValSig q x _ _ (Just (FE.Sig _ π ty cons))
   | otherwise = throwFF $ ConstraintsUnimplemented x cons
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
-transformDef ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.T ->
-  FE.Final Ctx.Definition ->
-  m [CoreDef primTy primVal]
 transformDef x def = do
   sig <- lookupSig Nothing x
   case sig of
@@ -487,19 +475,6 @@ transformDef x def = do
       where
         q = NameSymbol.mod x
 
-transformNormalDef ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  NameSymbol.T ->
-  FE.Final Ctx.Definition ->
-  m [IR.RawGlobal primTy primVal]
 transformNormalDef q x (Ctx.Def _ _ def _) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause q) def
@@ -508,7 +483,7 @@ transformNormalDef q x (Ctx.Def _ _ def _) = do
           { funName = x,
             funUsage = π,
             funType = hrToIR typ,
-            funClauses = clauses
+            funClauses = clauses Nothing Nothing Nothing False Nothing
           }
   pure [IR.GFunction f]
 transformNormalDef _ _ (Ctx.Record _ _) = pure [] -- TODO
@@ -572,18 +547,6 @@ lookupSig' q x' = do
   where
     x = Ctx.removeTopName x'
 
-transformType ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  NameSymbol.T ->
-  FE.Type ->
-  m [IR.RawGlobal primTy primVal]
 transformType q name dat@(FE.Typ {typeForm}) = do
   (ty, hdHR) <- getDataSig q name
   let hd = hrToIR <$> hdHR
@@ -598,7 +561,6 @@ transformType q name dat@(FE.Typ {typeForm}) = do
             IR.Datatype
               { dataName = name,
                 dataArgs = args,
-                dataPos = pos,
                 dataLevel = level,
                 dataCons = cons
               }
@@ -608,11 +570,6 @@ transformType q name dat@(FE.Typ {typeForm}) = do
       FE.Arrowed {dataAdt' = b} -> b
       FE.NonArrowed {dataAdt = b} -> b
 
-splitDataType ::
-  HasThrowFF primTy primVal m =>
-  NameSymbol.T ->
-  HR.Term primTy primVal ->
-  m ([IR.RawDataArg primTy primVal], IR.Universe)
 splitDataType x ty0 = go ty0
   where
     go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
@@ -642,19 +599,6 @@ transformCon q hd (FE.S name prod) =
   transformCon' q (NameSymbol.qualify1 q name) hd $
     fromMaybe (FE.ADTLike []) prod
 
-transformCon' ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  NameSymbol.T ->
-  Maybe (IR.Term primTy primVal) ->
-  FE.Product ->
-  m (IR.RawDataCon primTy primVal)
 transformCon' _ _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
 transformCon' q name _ (FE.Arrow ty) = IR.DataCon name <$> transformTermIR q ty
 transformCon' _ name Nothing k@(FE.ADTLike {}) =
@@ -665,18 +609,6 @@ transformCon' q name (Just hd) (FE.ADTLike tys) =
     makeArr arg res =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
 
-transformClause ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  FE.FunctionLike FE.Expression ->
-  m (IR.FunClause primTy primVal)
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
