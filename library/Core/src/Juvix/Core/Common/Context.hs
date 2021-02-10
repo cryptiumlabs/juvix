@@ -70,7 +70,7 @@ emptyRecord = do
         recordMTy = Nothing
       }
 
-data AmbigiousDef = AmbigiousDef NameSymbol.T
+data AmbiguousDef = AmbiguousDef NameSymbol.T
 
 -- | @persistDefinition@ states that the definition we are adding is
 -- staying in the context, so promote it.  In the future this will be
@@ -78,7 +78,7 @@ data AmbigiousDef = AmbigiousDef NameSymbol.T
 -- definitions not added. However this infra is not up, so the pass
 -- adding functions must add it themselves
 persistDefinition ::
-  T term ty sumRep -> NameSymbol.T -> Symbol -> IO (Either AmbigiousDef ())
+  T term ty sumRep -> NameSymbol.T -> Symbol -> IO (Either AmbiguousDef ())
 persistDefinition T {reverseLookup} moduleName name =
   case HashMap.lookup moduleName reverseLookup of
     Just xs -> do
@@ -96,7 +96,7 @@ persistDefinition T {reverseLookup} moduleName name =
             Nothing -> determineSafe xs
             Just SymInfo {mod}
               | mod == moduleName -> determineSafe xs
-              | otherwise -> pure (Lib.Left (AmbigiousDef modName))
+              | otherwise -> pure (Lib.Left (AmbiguousDef modName))
         -- we do a check before this so the call is always safe
         f Who {symbolMap} = atomically do
           lookd <- STM.lookup name symbolMap
