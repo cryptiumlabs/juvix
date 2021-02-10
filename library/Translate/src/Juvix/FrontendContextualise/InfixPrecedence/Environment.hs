@@ -202,6 +202,6 @@ queryInfo s = Juvix.Library.ask @"dispatch" >>= queryInfo' s
 
 runEnv :: Context a -> Old Context.T -> IO (Either Error a, Environment)
 runEnv (Ctx c) old = do
-  ctx <- Context.empty (Context.currentName old)
+  ctx <- setupNewModule old
   Env old ctx EnvDispatch
     |> runStateT (runExceptT c)

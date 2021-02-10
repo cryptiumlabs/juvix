@@ -189,7 +189,7 @@ grabQualifiedMap ctx name =
 
 -- | @removeRedundantQualifieds@ takes a qualified and removes any
 -- redundant imports it may contain
-removeRedundantQualifieds Pre {opens, implicitInner, explicitModule} = undefined
+-- removeRedundantQualifieds Pre {opens, implicitInner, explicitModule} = undefined
 
 --------------------------------------------------------------------------------
 -- Code for generating the fully realized OpenMap

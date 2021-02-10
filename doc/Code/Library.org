@@ -1383,6 +1383,7 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Contextify

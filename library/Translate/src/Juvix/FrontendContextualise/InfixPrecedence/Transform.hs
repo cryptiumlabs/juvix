@@ -580,13 +580,7 @@ updateSym :: Env.WorkingMaps env m => Context.NameSymbol -> m ()
 updateSym sym = do
   old <- get @"old"
   new <- get @"new"
-  switched <- liftIO $ Context.switchNameSpace sym old
+  switched <- liftIO $ Env.switchContext sym old new
   case switched of
-    -- bad Error for now
-    Left ____ -> throw @"error" (Env.PathError sym)
-    Right map -> put @"old" map
-  -- have to do this again sadly
-  switched2 <- liftIO $ Context.switchNameSpace sym new
-  case switched2 of
-    Left ____ -> throw @"error" (Env.PathError sym)
-    Right map -> put @"new" map
+    Right (o, n) -> put @"old" o >> put @"new" n
+    Left _ -> throw @"error" (Env.UnknownSymbol sym)

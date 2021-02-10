@@ -117,6 +117,7 @@ data Error
   | IllegalModuleSwitch Context.NameSymbol
   | ConflictingSymbols Context.NameSymbol
   | CantResolveModules [NameSymbol.T]
+  | ModuleConflict Symbol [NameSymbol.T]
   deriving (Show, Eq)
 
 type ContextAlias =
@@ -215,19 +216,22 @@ instance Switch (SingleDispatch a b c) where
   switch sym SingleDispatch = do
     tmp <- get @"new"
     env <- get @"env"
-    switchContextErr sym tmp >>= put @"new"
-    switchContextErr sym env >>= put @"env"
+    switched <- liftIO $ switchContext sym tmp env
+    case switched of
+      Right (t, e) -> put @"new" t >> put @"env" e
+      Left _ -> throw @"error" (UnknownModule sym)
 
 instance Switch EnvDispatch where
   type
     SwitchConstraint _ m =
       (TransitionMap m, HasThrow "error" Error m, MonadIO m)
   switch sym EnvDispatch = do
-    -- no modifyM to remove this pattern
     old <- get @"old"
     new <- get @"new"
-    switchContextErr sym old >>= put @"old"
-    switchContextErr sym new >>= put @"new"
+    switched <- liftIO $ switchContext sym old new
+    case switched of
+      Right (o, n) -> put @"old" o >> put @"new" n
+      Left _ -> throw @"error" (UnknownModule sym)
 
 instance QualificationMap EnvDispatch where
   type
@@ -294,7 +298,7 @@ bareRun ::
   New Context.T ->
   ResolveOpen.OpenMap ->
   IO (Either Error a, Environment)
-bareRun (Ctx c) old new opens =
+bareRun (Ctx c) old new _opens =
   Env old new EnvDispatch mempty mempty
     |> runStateT (runExceptT c)
 
@@ -302,14 +306,12 @@ runEnv ::
   Context a -> Old Context.T -> [ResolveOpen.PreQualified] -> IO (Either Error a, Environment)
 runEnv (Ctx c) old pres = do
   resolved <- ResolveOpen.run old pres
-  empt <- Context.empty (Context.currentName old)
-  undefined
-
--- case resolved of
---   Right opens ->
---     Env old empt EnvDispatch mempty mempty
---       |> runStateT (runExceptT c)
---   Left err -> pure (Left err, undefined)
+  empt <- setupNewModule old
+  case resolved of
+    Right res ->
+      Env res empt EnvDispatch mempty mempty
+        |> runStateT (runExceptT c)
+    Left err -> pure (Left (resolveErrToErr err), undefined)
 
 data QualifySymbolAns
   = Local NameSymbol.T
@@ -338,7 +340,7 @@ qualifySymbolInfo (s :| _) = do
 
 qualifyName ::
   SymbolQualification tag m => NonEmpty Symbol -> m (NonEmpty Symbol)
-qualifyName sym@(s :| _) = do
+qualifyName sym = do
   mSym <- qualifySymbolInfo sym
   case mSym of
     Just (GlobalInfo Context.SymInfo {mod}) ->
@@ -351,7 +353,7 @@ qualifyName sym@(s :| _) = do
 -- currently unused as we don't save the function name
 markUsed ::
   SymbolQualification tag m => NonEmpty Symbol -> Symbol -> m ()
-markUsed sym@(s :| _) fname = do
+markUsed sym fname = do
   mSym <- qualifySymbolInfo sym
   case mSym of
     Just (GlobalInfo sym@Context.SymInfo {used}) -> do
@@ -382,22 +384,18 @@ removeExcludedElement :: Exclusion m => Symbol -> m ()
 removeExcludedElement sym =
   Juvix.Library.modify @"exclusion" (Set.delete sym)
 
-addModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> NonEmpty Symbol -> m ()
-addModMap toAdd qualification =
-  Juvix.Library.modify @"modMap" (Map.insert toAdd qualification)
-
-lookupModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol))
-lookupModMap s =
-  (Map.!? s) <$> get @"modMap"
-
-removeModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> m ()
-removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
-
 addOpen :: Closure m => Symbol -> NameSymbol.T -> m ()
 addOpen sym mod = modify @"closure" (Map.insert sym mod)
 
 removeOpen :: Closure m => Symbol -> m ()
 removeOpen sym = modify @"closure" (Map.delete sym)
+
+resolveErrToErr :: ResolveOpen.Error -> Error
+resolveErrToErr rsv =
+  case rsv of
+    ResolveOpen.UnknownModule x -> UnknownModule x
+    ResolveOpen.CantResolveModules xs -> CantResolveModules xs
+    ResolveOpen.OpenNonModule hs -> OpenNonModule hs
+    ResolveOpen.AmbiguousSymbol s -> AmbiguousSymbol s
+    ResolveOpen.ModuleConflict s ns -> ModuleConflict s ns
+    ResolveOpen.IllegalModuleSwitch ns -> IllegalModuleSwitch ns

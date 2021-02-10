@@ -557,7 +557,4 @@ transformNameSet p (Old.NonPunned s e) =
 --------------------------------------------------------------------------------
 
 updateSym :: Env.Expression tag m => Context.NameSymbol -> m ()
-updateSym sym = do
-  Env.switchNameSpace sym
--- we now also have to populate the modmap
--- Env.populateModMap
+updateSym = Env.switchNameSpace
