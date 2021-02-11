@@ -116,9 +116,9 @@ trigger:
 ---
 kind: secret
 name: aws_access_key_id
-data: IU7m4OlzqDGZXm+b8B+abO1BuCc2D8Uk06Qc1/kY01kM59QN2JhO9V8teeTWOQkc
+data: gp/Ec+c/Cg6QdmRf0iXVNbkFnCNdYv87Kbfl7d0+341yXpAUGLs1EaMN52Zj2F0w
 
 ---
 kind: secret
 name: aws_secret_access_key
-data: UipX/UrwBx+FBfrcKmVc6bXxyisTdOrdm0yb439oK81tAWmc68elICZMHmr/Kq4WPbp5PkRLtUegRUx42LFWVxH/4iA=
+data: 55uoJjL5x3eYr54trF/HmAtVMuwRMJzHcuNBTQ//zgzD8iZEvZmf9tSilFb6Fb7vUcCMTvd5Pmb0G+6q/eDiAsCF9mY=
