@@ -112,13 +112,3 @@ volumes:
 trigger:
   event:
     - push
-
----
-kind: secret
-name: aws_access_key_id
-data: fJjstvZbBspxgr20thiX5Z5QvqfWw5fhDZ4GbjVLd7h1aq64ojge0MlGQul3Bqiv
-
----
-kind: secret
-name: aws_secret_access_key
-data: uRWA7Pteqn6/SrV4oRq1nKRcRDNhpGMHVScL0usd1a5G/yLM1zjr2ZgwoHjQY/RLNgIdvCKnYPiI5p3yQAB87XHb1vc=
