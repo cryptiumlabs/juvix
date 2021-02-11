@@ -10,15 +10,18 @@ environment:
 
 steps:
   - name: restore-cache
-    image: drillster/drone-volume-cache
+    image: meltwater/drone-cache:dev
+    settings:
+      backend: "filesystem"
+      restore: true
+      cache_key: "volume"
+      archive_format: "gzip"
+      mount:
+        - ./.stack-work
+        - ./.stack    
     volumes:
       - name: cache
         path: /cache
-    settings:
-      restore: true
-      mount:
-        - ./.stack-work
-        - ./.stack
 
   - name: test-suite
     image: cryptiumlabs/juvix-ci-2
@@ -29,11 +32,14 @@ steps:
       - restore-cache
 
   - name: rebuild-cache
-    image: drillster/drone-volume-cache
+    image: meltwater/drone-cache:dev
     volumes:
       - name: cache
         path: /cache
     settings:
+      backend: "filesystem"
+      archive_format: "gzip"
+      cache_key: "volume"
       rebuild: true
       mount:
         - ./.stack-work
