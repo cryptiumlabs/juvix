@@ -40,6 +40,15 @@ juvix compile identity.ju identity.tz
 Open `identity.tz` to inspect your compiled contract; it should look like:
 
 ```bash
+parameter int;
+storage int;
+code { { DIG 0;
+         DUP;
+         DUG 1;
+         CAR;
+         NIL operation;
+         PAIR;
+         DIP { DROP } } };
 ```
 
 ## Deploying the contract to Tezos

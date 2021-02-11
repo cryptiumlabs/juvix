@@ -63,7 +63,7 @@ steps:
 
 volumes:
   - name: cache
-    host: 
+    host:
       path: /tmp/cache
 
 trigger:
