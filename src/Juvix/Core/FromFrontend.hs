@@ -465,6 +465,19 @@ transformDef x def = do
       where
         q = NameSymbol.mod x
 
+transformNormalDef ::
+  ( Data primTy,
+    Data primVal,
+    HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  FE.Final Ctx.Definition ->
+  m [IR.RawGlobal primTy primVal]
 transformNormalDef q x (Ctx.Def _ _ def _) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause (Just q)) def
