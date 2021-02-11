@@ -1301,7 +1301,6 @@ Can be added to via core translation
 - Every hash in the code base should use this, except when it needs
   to compare keys by the =Ordering= metric instead.
 ***** NameSymbol
-<<<<<<< HEAD
 - _Relies on_
   + [[Library]]
   + [[Lexer]]
@@ -1311,12 +1310,6 @@ Can be added to via core translation
   + [[Library]]
 ***** Symbol
 ****** Lexer
-=======
-- _Relies on_
-  + [[Library]]
-***** PrettyPrint
-***** Usage
->>>>>>> a94cafd (updated to have inNameSpace and simplify the switchNameSPace function)
 - _Relies on_
   + [[Library]]
 ** test
