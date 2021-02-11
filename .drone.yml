@@ -19,7 +19,7 @@ steps:
       cache_key: "volume"
       mount:
         - ./.stack-work
-        - ./.stack    
+        - ./.stack
     environment:
       AWS_ACCESS_KEY_ID:
         from_secret: aws_access_key_id
@@ -66,7 +66,7 @@ steps:
     commands:
       - sh ./scripts/check-formatting.sh
     depends_on:
-      - rebuild-cache
+      - test-suite
 
   - name: check-org-gen
     image: cryptiumlabs/juvix-ci-2
@@ -75,7 +75,7 @@ steps:
     commands:
       - sh ./scripts/check-org-gen.sh
     depends_on:
-      - rebuild-cache
+      - test-suite
 
   - name: test-parser
     image: cryptiumlabs/juvix-ci-2
@@ -84,7 +84,7 @@ steps:
     commands:
       - make test-parser
     depends_on:
-      - rebuild-cache
+      - test-suite
 
   - name: test-typecheck
     image: cryptiumlabs/juvix-ci-2
@@ -93,7 +93,7 @@ steps:
     commands:
       - make test-typecheck
     depends_on:
-      - rebuild-cache
+      - test-suite
 
   - name: test-compile
     image: cryptiumlabs/juvix-ci-2
@@ -102,7 +102,7 @@ steps:
     commands:
       - make test-compile
     depends_on:
-      - rebuild-cache
+      - test-suite
 
 volumes:
   - name: cache
