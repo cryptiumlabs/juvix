@@ -1369,6 +1369,26 @@ Calculate mutually-recursive groups of definitions.
   + [[NameSymbol]]
 ***** Contextify
 ****** ResolveOpenInfo
+- This module is responsible for adding the reverse open
+  information to the context, along with the alias map of what
+  symbols get qualified to what module
+- This module accepts a list of =PreQualified= which talks
+  about
+  1. The explicit module itself
+  2. Any opens this module does
+  3. Any modules defined in this module as to have implicit imports
+- Currently the most complicated part of this module is the resolve
+  section that creates an =OpenMap=
+  + This code is responsible for taking in all the opens and
+    properly storing them fully qualified.
+  + This has to try to open as much as possible as we could have
+    =open Michelson= =open Prelude=, in which Michelson is inside
+    of prelude so it can't be resolved right away. This way can
+    lead to ambiguities if it does exist so one has to be a bit
+    careful opening in this way!
+- The other bits of code are stand alone algorithms for filling in
+  the reverse map and the qualification from that point
+  forward.... these are thankfully quite straight forward
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
