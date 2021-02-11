@@ -67,6 +67,7 @@ exec (EnvE env) param globals = do
 
 type Globals = IR.Globals PrimTy PrimValIR
 
+
 type AnnTuple = (P.RawMichelsonTerm, Usage.T, P.RawMichelsonTerm)
 
 shouldCompileTo ::
