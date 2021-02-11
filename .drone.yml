@@ -14,7 +14,6 @@ steps:
     settings:
       backend: "filesystem"
       restore: true
-      cache_key: "volume"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -39,7 +38,6 @@ steps:
     settings:
       backend: "filesystem"
       archive_format: "gzip"
-      cache_key: "volume"
       rebuild: true
       mount:
         - ./.stack-work
@@ -98,4 +96,4 @@ volumes:
 
 trigger:
   event:
-    - push 
+    - push
