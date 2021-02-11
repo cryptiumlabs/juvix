@@ -21,6 +21,7 @@ steps:
         - ./.stack    
     volumes:
       - name: cache
+        path: /tmp/cache
 
   - name: test-suite
     image: cryptiumlabs/juvix-ci-2
@@ -34,6 +35,7 @@ steps:
     image: meltwater/drone-cache:dev
     volumes:
       - name: cache
+        path: /tmp/cache
     settings:
       backend: "filesystem"
       archive_format: "gzip"
@@ -92,8 +94,7 @@ steps:
 
 volumes:
   - name: cache
-    host:
-      path: /tmp/cache
+    temp: {}
 
 trigger:
   event:
