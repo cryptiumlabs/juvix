@@ -79,7 +79,7 @@ For Windows users: to be able to use the command *make*, please visit [this link
 For full optimisations (but slower compile times):
 
 ```bash
-make build-opt
+make build-prod
 ```
 
 ## Usage
