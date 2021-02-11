@@ -436,6 +436,7 @@ transformTypeSig q name (FE.Typ {typeArgs, typeForm}) = do
   where
     makeTPi name res =
       -- TODO metavars for the named args instead of defaulting to types
+      -- thin metavars for the named args instead of defaulting to types
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformValSig ::
@@ -466,13 +467,13 @@ transformDef x def = do
 
 transformNormalDef q x (Ctx.Def _ _ def _) = do
   (π, typ) <- getValSig q x
-  clauses <- traverse (transformClause q) def
+  clauses <- traverse (transformClause (Just q)) def
   let f =
         IR.Function
           { funName = x,
             funUsage = π,
             funType = hrToIR typ,
-            funClauses = clauses Nothing Nothing Nothing False Nothing
+            funClauses = clauses
           }
   pure [IR.GFunction f]
 transformNormalDef _ _ (Ctx.Record _ _) = pure [] -- TODO
@@ -577,11 +578,11 @@ transformCon q hd (FE.S name prod) =
     fromMaybe (FE.ADTLike []) prod
 
 transformCon' _ _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
-transformCon' q name _ (FE.Arrow ty) = IR.DataCon name <$> transformTermIR q ty
+transformCon' q name _ (FE.Arrow ty) = IR.RawDataCon name <$> transformTermIR q ty
 transformCon' _ name Nothing k@(FE.ADTLike {}) =
   throwFF $ InvalidConstructor name k
 transformCon' q name (Just hd) (FE.ADTLike tys) =
-  IR.DataCon name <$> foldrM makeArr hd tys
+  IR.RawDataCon name <$> foldrM makeArr hd tys
   where
     makeArr arg res =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
@@ -589,7 +590,14 @@ transformCon' q name (Just hd) (FE.ADTLike tys) =
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
-  IR.FunClause <$> traverse transformArg args <*> transformTermIR q body
+  IR.FunClause 
+	<$> Nothing 
+	<*> traverse transformArg args 
+	<*> traverse transformTermIR q body 
+	<*> Nothing 
+	<*> Nothing 
+	<*> Nothing
+
 
 transformArg ::
   ( HasNextPatVar m,
