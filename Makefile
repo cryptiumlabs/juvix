@@ -31,7 +31,7 @@ build-watch:
 	stack build --fast --file-watch
 
 build-prod: clean
-	stack build --jobs $(THREADS) --ghc-options "-O3 -fllvm" --flag juvix:incomplete-error
+	stack build --jobs $(THREADS) --ghc-options="-O3" --ghc-options="-fllvm" --flag juvix:incomplete-error
 
 build-format:
 	stack install ormolu
