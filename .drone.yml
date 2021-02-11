@@ -15,6 +15,7 @@ steps:
       backend: "filesystem"
       restore: true
       archive_format: "gzip"
+      cache_key: "volume"
       mount:
         - ./.stack-work
         - ./.stack    
@@ -39,6 +40,7 @@ steps:
       backend: "filesystem"
       archive_format: "gzip"
       rebuild: true
+      cache_key: "volume"
       mount:
         - ./.stack-work
         - ./.stack
@@ -92,7 +94,8 @@ steps:
 
 volumes:
   - name: cache
-    temp: {}
+    host: 
+      path: /tmp/cache
 
 trigger:
   event:
