@@ -184,7 +184,7 @@ infixDeclar = do
   f name . fromInteger <$> spaceLiner integer
 
 --------------------------------------------------------------------------------
--- Modules/ Function Gen
+-- Modules/ Function/ Handler Gen
 --------------------------------------------------------------------------------
 
 functionModStartReserved ::
@@ -199,6 +199,15 @@ functionModGen :: Parser a -> Parser (Types.FunctionLike a)
 functionModGen p =
   functionModStartReserved
     "let"
+    ( \name args -> do
+        guard <- guard p
+        pure (Types.Like name args guard)
+    )
+
+handlerModGen :: Parser a -> Parser (Types.FunctionLike a)
+handlerModGen p =
+  functionModStartReserved
+    "handler"
     ( \name args -> do
         guard <- guard p
         pure (Types.Like name args guard)
@@ -525,6 +534,21 @@ letType = do
   body <- expression
   pure (Types.LetType'' typ body)
 
+handler :: Parser Types.HandlerLet
+handler = do
+  binds <- handlerModGen expression
+  reserved "in"
+  body <- expression
+  pure (Types.HandlerLet'' binds body)
+
+handlerType :: Parser Types.HandlerLetType
+handlerType = do
+  reserved "handler"
+  typ <- typePSN
+  reserved "in"
+  body <- expression
+  pure (Types.HandlerLetType'' typ body)
+
 --------------------------------------------------
 -- Cond
 --------------------------------------------------
@@ -564,6 +588,17 @@ lam = do
 application :: Parser Types.Application
 application = do
   name <- spaceLiner (expressionGen' (fail ""))
+  args <- many1H (spaceLiner expressionArguments)
+  pure (Types.App name args)
+
+--------------------------------------------------
+-- Handler Application
+--------------------------------------------------
+
+handApplication :: Parser Types.Application
+handApplication = do
+  name <- expressionGen' (fail "")
+  reserved "via"
   args <- many1H (spaceLiner expressionArguments)
   pure (Types.App name args)
 
@@ -765,7 +800,9 @@ reservedWords =
       "sig",
       "mod",
       "declare",
-      "where"
+      "where",
+      "handler",
+      "via"
     ]
 
 reservedSymbols :: (Ord a, IsString a) => Set a
