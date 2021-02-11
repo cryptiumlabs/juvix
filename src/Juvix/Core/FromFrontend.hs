@@ -40,17 +40,6 @@ paramConstant k = do
     Just x -> pure x
     Nothing -> throwFF $ UnsupportedConstant k
 
-transformTermIR ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  FE.Expression ->
-  m (IR.Term primTy primVal)
 transformTermIR q fe = do
   SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
@@ -558,13 +547,13 @@ transformType q name dat@(FE.Typ {typeForm}) = do
       (args, level) <- splitDataType name ty
       cons <- traverse (transformCon qual hd) $ toList cons
       let dat' =
-            IR.Datatype
-              { dataName = name,
-                dataArgs = args,
-                dataLevel = level,
-                dataCons = cons
+            IR.RawDatatype
+              { rawDataName = name,
+                rawDataArgs = args,
+                rawDataLevel = level,
+                rawDataCons = cons
               }
-      pure $ IR.GDatatype dat' : fmap IR.GDataCon cons
+      pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
   where
     body = case typeForm of
       FE.Arrowed {dataAdt' = b} -> b
@@ -575,26 +564,14 @@ splitDataType x ty0 = go ty0
     go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
-          IR.DataArg
-            { argName = x,
-              argUsage = π,
-              argType = hrToIR s
+          IR.RawDataArg
+            { rawArgName = x,
+              rawArgUsage = π,
+              rawArgType = hrToIR s
             }
     go (HR.Star ℓ) = pure ([], ℓ)
     go _ = throwFF $ InvalidDatatypeType x ty0
 
-transformCon ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  Maybe (IR.Term primTy primVal) ->
-  FE.Sum ->
-  m (IR.RawDataCon primTy primVal)
 transformCon q hd (FE.S name prod) =
   transformCon' q (NameSymbol.qualify1 q name) hd $
     fromMaybe (FE.ADTLike []) prod

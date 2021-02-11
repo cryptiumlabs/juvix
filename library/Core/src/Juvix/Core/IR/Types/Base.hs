@@ -189,7 +189,7 @@ deriving instance
   NFData (Datatype' ext primTy primVal)
 
 data RawArgType' ext primTy primVal
-  = DataArgRaw
+  = RawDataArg
       { rawArgName :: GlobalName,
         rawArgUsage :: Usage,
         rawArgType :: Term' ext primTy primVal
