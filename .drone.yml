@@ -16,7 +16,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "cache"
+      cache_key: "{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -37,6 +37,29 @@ steps:
       - make test
     depends_on:
       - restore-cache
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    settings:
+      backend: "s3"
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      rebuild: true
+      archive_format: "gzip"
+      cache_key: "{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    depends_on:
+      - test-suite
 
   - name: check-formatting
     image: cryptiumlabs/juvix-ci-2
@@ -112,7 +135,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "cache"
+      cache_key: "{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -145,7 +168,7 @@ steps:
       region: eu-west-1
       rebuild: true
       archive_format: "gzip"
-      cache_key: "cache"
+      cache_key: "{{ checksum "package.yaml" }}-{{ checksum "stack.yaml" }}"
       mount:
         - ./.stack-work
         - ./.stack
@@ -167,4 +190,4 @@ trigger:
     - cron
   target:
     include:
-    - rebuild-cache 
+    - rebuild-cache
