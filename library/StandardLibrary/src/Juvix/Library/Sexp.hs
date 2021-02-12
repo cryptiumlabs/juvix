@@ -44,6 +44,9 @@ foldr f acc ts =
 
 ofList :: Foldable t => t T -> T
 ofList = Std.foldr Cons Nil
+  -- case foldr1May Cons xs of
+  --   Nothing -> Nil
+  --   Just x -> x
 
 addMetaToCar :: Atom -> T -> T
 addMetaToCar (A _ lineInfo) (Cons (Atom (A term _)) xs) =
@@ -55,12 +58,21 @@ car (Cons x _) = x
 car Nil = Nil
 car (Atom a) = Atom a
 
+cdr :: T -> T
+cdr (Cons _ xs) = xs
+cdr Nil = Nil
+cdr (Atom a) = Atom a
+
+atom :: NameSymbol.T -> T
+atom x = Atom $ A x Nothing
+
 showNoParens :: T -> String
 showNoParens (Cons car cdr)
   | showNoParens cdr == ")" =
     show car <> showNoParens cdr
   | otherwise =
     show car <> " " <> showNoParens cdr
+showNoParens Nil = ")"
 showNoParens xs = show xs
 
 -- TODO ∷ make reader instance
@@ -73,4 +85,4 @@ instance Show T where
       "(" <> show car <> " " <> showNoParens cdr
   show (Atom (A x _)) =
     show (NameSymbol.toSymbol x)
-  show Nil = ")"
+  show Nil = "nil"
