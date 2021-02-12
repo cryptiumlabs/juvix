@@ -10,7 +10,7 @@ environment:
 
 steps:
   - name: restore-cache
-    image: meltwater/drone-cache:dev
+    image: meltwater/drone-cache
     settings:
       backend: "s3"
       restore: true
@@ -39,7 +39,7 @@ steps:
       - restore-cache
 
   - name: rebuild-cache
-    image: meltwater/drone-cache:dev
+    image: meltwater/drone-cache
     volumes:
       - name: cache
         path: /tmp/cache
@@ -129,7 +129,7 @@ environment:
 
 steps:
   - name: restore-cache
-    image: meltwater/drone-cache:dev
+    image: meltwater/drone-cache
     settings:
       backend: "s3"
       restore: true
@@ -158,7 +158,7 @@ steps:
       - restore-cache
 
   - name: rebuild-cache
-    image: meltwater/drone-cache:dev
+    image: meltwater/drone-cache
     volumes:
       - name: cache
         path: /tmp/cache
@@ -190,4 +190,4 @@ trigger:
     - cron
   target:
     include:
-    - rebuild-cache 
+    - rebuild-cache
