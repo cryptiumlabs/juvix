@@ -28,12 +28,13 @@ data Error
 -- TODO ∷ update the target when the last pass is finished,
 -- that way we can get the T out
 ofFrontend ::
-  [(NameSymbol.T, [Initial.TopLevel])] -> Either Error Target.FinalContext
+  [(NameSymbol.T, [Initial.TopLevel])] -> IO (Either Error Target.FinalContext)
 ofFrontend syn =
   case fmap (second Desugar.op) syn of
     [] ->
-      Left NoInput
-    x : xs ->
-      case Contextualise.op (x :| xs) of
+      pure $ Left NoInput
+    x : xs -> do
+      contextd <- Contextualise.op (x :| xs)
+      pure $ case contextd of
         Left errr -> Left (ContextErr errr)
         Right con -> Right con

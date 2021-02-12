@@ -1,24 +1,28 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 
 module Juvix.FrontendContextualise.ModuleOpen.Environment
   ( module Juvix.FrontendContextualise.ModuleOpen.Environment,
     module Juvix.FrontendContextualise.Environment,
+    Open (..),
   )
 where
 
+import Control.Lens hiding (Context, (|>))
 import qualified Data.HashSet as Set
 import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
+import Juvix.FrontendContextualise.Contextify.ResolveOpenInfo (Open (..))
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
 
 --------------------------------------------------------------------------------
 -- Type Aliases and effect setup
@@ -26,11 +30,20 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type ModuleMap = Map.T Symbol NameSymbol.T
 
+type OpenClosure =
+  Map.T Symbol NameSymbol.T
+
 type Old f =
   f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature Old.Type
 
 type New f =
   f (NonEmpty (New.FunctionLike New.Expression)) New.Signature New.Type
+
+type Old' f =
+  f (NonEmpty (Old.FunctionLike Old.Expression)) Old.Signature
+
+type New' f =
+  f (NonEmpty (New.FunctionLike New.Expression)) New.Signature
 
 type TransitionMap m =
   (HasState "old" (Old Context.T) m, HasState "new" (New Context.T) m)
@@ -41,11 +54,20 @@ type SingleMap a b c m =
 type WorkingMaps m =
   (TransitionMap m, Expression EnvDispatch m)
 
-type ModuleNames tag m =
-  (NameConstraint tag m, HasReader "dispatch" tag m, Names tag)
+type Qualification tag m =
+  (CurrentModuleConstraint tag m, HasReader "dispatch" tag m, QualificationMap tag)
 
 type ModuleSwitch tag m =
   (SwitchConstraint tag m, HasReader "dispatch" tag m, Switch tag)
+
+type Exclusion m =
+  HasState "exclusion" ExclusionSet m
+
+type Closure m =
+  HasState "closure" OpenClosure m
+
+type SymbolQualification tag m =
+  (MonadIO m, Exclusion m, Qualification tag m, Closure m)
 
 -- The effect of expression and below note that new is not the new map
 -- per se, but more instead of where local functions get added...  for
@@ -53,16 +75,16 @@ type ModuleSwitch tag m =
 -- just a local cache
 type Expression tag m =
   ( HasState "new" (New Context.T) m,
-    ModuleNames tag m,
     HasThrow "error" Error m,
-    HasState "modMap" ModuleMap m,
-    HasReader "openMap" OpenMap m,
-    ModuleSwitch tag m
+    ModuleSwitch tag m,
+    SymbolQualification tag m
   )
 
 --------------------------------------------------------------------------------
 -- Environment data declarations
 --------------------------------------------------------------------------------
+
+type ExclusionSet = Set.HashSet Symbol
 
 -- | the traditional transition between one context and another
 data EnvDispatch = EnvDispatch deriving (Show)
@@ -76,8 +98,8 @@ data SingleEnv term1 ty1 sumRep1
       { env :: Context.T term1 ty1 sumRep1,
         temp :: New Context.T,
         disp :: SingleDispatch term1 ty1 sumRep1,
-        modM :: ModuleMap,
-        openM :: OpenMap
+        exclusionSet :: ExclusionSet,
+        openClosure :: OpenClosure
       }
   deriving (Generic)
 
@@ -87,9 +109,9 @@ data Environment
   = Env
       { old :: Old Context.T,
         new :: New Context.T,
-        modMap :: ModuleMap,
-        openMap :: OpenMap,
-        dispatch :: EnvDispatch
+        dispatch :: EnvDispatch,
+        exclusion :: ExclusionSet,
+        closure :: OpenClosure
       }
   deriving (Generic, Show)
 
@@ -100,18 +122,14 @@ data Error
   | IllegalModuleSwitch Context.NameSymbol
   | ConflictingSymbols Context.NameSymbol
   | CantResolveModules [NameSymbol.T]
+  | ModuleConflict Symbol [NameSymbol.T]
   deriving (Show, Eq)
 
-data Open a
-  = Implicit a
-  | Explicit a
-  deriving (Show, Eq, Ord)
-
 type ContextAlias =
-  ExceptT Error (State Environment)
+  ExceptT Error (StateT Environment IO)
 
 newtype Context a = Ctx {antiAlias :: ContextAlias a}
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "old" (Old Context.T),
       HasSink "old" (Old Context.T),
@@ -125,12 +143,6 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     )
     via StateField "new" ContextAlias
   deriving
-    ( HasState "modMap" ModuleMap,
-      HasSink "modMap" ModuleMap,
-      HasSource "modMap" ModuleMap
-    )
-    via StateField "modMap" ContextAlias
-  deriving
     (HasThrow "error" Error)
     via MonadError ContextAlias
   deriving
@@ -139,17 +151,24 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     )
     via ReaderField "dispatch" ContextAlias
   deriving
-    ( HasReader "openMap" OpenMap,
-      HasSource "openMap" OpenMap
+    ( HasState "exclusion" ExclusionSet,
+      HasSink "exclusion" ExclusionSet,
+      HasSource "exclusion" ExclusionSet
     )
-    via ReaderField "openMap" ContextAlias
+    via StateField "exclusion" ContextAlias
+  deriving
+    ( HasState "closure" OpenClosure,
+      HasSink "closure" OpenClosure,
+      HasSource "closure" OpenClosure
+    )
+    via StateField "closure" ContextAlias
 
 type SingleAlias term1 ty1 sumRep1 =
-  ExceptT Error (State (SingleEnv term1 ty1 sumRep1))
+  ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
 
 newtype SingleCont term1 ty1 sumRep1 a
   = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "new" (New Context.T),
       HasSink "new" (New Context.T),
@@ -171,106 +190,86 @@ newtype SingleCont term1 ty1 sumRep1 a
     (HasThrow "error" Error)
     via MonadError (SingleAlias term1 ty1 sumRep1)
   deriving
-    ( HasReader "openMap" OpenMap,
-      HasSource "openMap" OpenMap
+    ( HasState "exclusion" ExclusionSet,
+      HasSink "exclusion" ExclusionSet,
+      HasSource "exclusion" ExclusionSet
     )
-    via Rename "openM" (ReaderField "openM" (SingleAlias term1 ty1 sumRep1))
+    via Rename "exclusionSet" (StateField "exclusionSet" (SingleAlias term1 ty1 sumRep1))
   deriving
-    ( HasState "modMap" ModuleMap,
-      HasSink "modMap" ModuleMap,
-      HasSource "modMap" ModuleMap
+    ( HasState "closure" OpenClosure,
+      HasSink "closure" OpenClosure,
+      HasSource "closure" OpenClosure
     )
-    via Rename "modM" (StateField "modM" (SingleAlias term1 ty1 sumRep1))
+    via Rename "openClosure" (StateField "openClosure" (SingleAlias term1 ty1 sumRep1))
 
 --------------------------------------------------------------------------------
 -- Generic Interface Definitions for Environment lookup
 --------------------------------------------------------------------------------
 
+class QualificationMap a where
+  type CurrentModuleConstraint a (m :: * -> *) :: Constraint
+  symbolMap :: CurrentModuleConstraint a m => a -> m Context.SymbolMap
+
 class Switch a where
   type SwitchConstraint a (m :: * -> *) :: Constraint
   switch :: SwitchConstraint a m => Context.NameSymbol -> a -> m ()
 
--- | Names encapsulates the idea of looking up all current names in
--- a context
-class Names a where
-  type NameConstraint a (m :: * -> *) :: Constraint
-  contextNames :: NameConstraint a m => NameSymbol.T -> a -> m [Symbol]
-  currentNameSpace' :: NameConstraint a m => a -> m NameSymbol.T
-  inCurrentModule' :: NameConstraint a m => NameSymbol.T -> a -> m Bool
-
 instance Switch (SingleDispatch a b c) where
-  type SwitchConstraint _ m = (SingleMap a b c m, HasThrow "error" Error m)
+  type
+    SwitchConstraint _ m =
+      (SingleMap a b c m, HasThrow "error" Error m, MonadIO m)
   switch sym SingleDispatch = do
     tmp <- get @"new"
     env <- get @"env"
-    switchContextErr sym tmp >>= put @"new"
-    switchContextErr sym env >>= put @"env"
+    switched <- liftIO $ switchContext sym tmp env
+    case switched of
+      Right (t, e) -> put @"new" t >> put @"env" e
+      Left _ -> throw @"error" (UnknownModule sym)
 
 instance Switch EnvDispatch where
-  type SwitchConstraint _ m = (TransitionMap m, HasThrow "error" Error m)
+  type
+    SwitchConstraint _ m =
+      (TransitionMap m, HasThrow "error" Error m, MonadIO m)
   switch sym EnvDispatch = do
-    -- no modifyM to remove this pattern
     old <- get @"old"
     new <- get @"new"
-    switchContextErr sym old >>= put @"old"
-    switchContextErr sym new >>= put @"new"
+    switched <- liftIO $ switchContext sym old new
+    case switched of
+      Right (o, n) -> put @"old" o >> put @"new" n
+      Left _ -> throw @"error" (UnknownModule sym)
 
-instance Names (SingleDispatch a b c) where
-  type NameConstraint _ m = SingleMap a b c m
+instance QualificationMap EnvDispatch where
+  type
+    CurrentModuleConstraint _ m =
+      TransitionMap m
+  symbolMap EnvDispatch =
+    gets @"new" (\x -> x ^. Context._currentNameSpace . Context.qualifiedMap)
 
-  -- arbitrary choice between new and env
-  currentNameSpace' SingleDispatch =
-    get @"env" >>| Context.currentName
-
-  contextNames name SingleDispatch = do
-    env <- get @"env"
-    new <- get @"new"
-    pure $ combineLists (grabList name env) (grabList name new)
-
-  inCurrentModule' name SingleDispatch = do
-    env <- get @"env"
-    new <- get @"new"
-    pure (inMap name env || inMap name new)
-
-instance Names EnvDispatch where
-  type NameConstraint _ m = TransitionMap m
-  contextNames name EnvDispatch = do
-    old <- get @"old"
-    new <- get @"new"
-    pure $ combineLists (grabList name new) (grabList name old)
-
-  -- arbitrary choice between new and old
-  currentNameSpace' EnvDispatch =
-    get @"new" >>| Context.currentName
-
-  inCurrentModule' name EnvDispatch = do
-    old <- get @"old"
-    new <- get @"new"
-    pure (inMap name old || inMap name new)
+instance QualificationMap (SingleDispatch a b c) where
+  type
+    CurrentModuleConstraint _ m =
+      SingleMap a b c m
+  symbolMap SingleDispatch =
+    gets @"env" (\x -> x ^. Context._currentNameSpace . Context.qualifiedMap)
 
 switchNameSpace :: ModuleSwitch tag m => NameSymbol.T -> m ()
 switchNameSpace name = Juvix.Library.ask @"dispatch" >>= switch name
 
-inScopeNames :: ModuleNames tag m => NameSymbol.T -> m [Symbol]
-inScopeNames name = Juvix.Library.ask @"dispatch" >>= contextNames name
-
-currentNameSpace :: ModuleNames tag m => m NameSymbol.T
-currentNameSpace = Juvix.Library.ask @"dispatch" >>= currentNameSpace'
-
-inCurrentModule :: ModuleNames tag m => NameSymbol.T -> m Bool
-inCurrentModule name = Juvix.Library.ask @"dispatch" >>= inCurrentModule' name
+getSymbolMap :: Qualification tag m => m Context.SymbolMap
+getSymbolMap = Juvix.Library.ask @"dispatch" >>= symbolMap
 
 ----------------------------------------
 -- Helper functions for the instances
 ----------------------------------------
 
 switchContextErr ::
-  HasThrow "error" Error m =>
+  (HasThrow "error" Error m, MonadIO m) =>
   NameSymbol.T ->
   Context.T term ty sumRep ->
   m (Context.T term ty sumRep)
-switchContextErr sym ctx =
-  case Context.switchNameSpace sym ctx of
+switchContextErr sym ctx = do
+  switched <- liftIO $ Context.switchNameSpace sym ctx
+  case switched of
     -- bad Error for now
     Left ____ -> throw @"error" (UnknownModule sym)
     Right map -> pure map
@@ -278,8 +277,8 @@ switchContextErr sym ctx =
 grabList :: NameSymbol.T -> Context.T a b c -> NameSpace.List (Context.Definition a b c)
 grabList name ctx =
   case Context.extractValue <$> Context.lookup name ctx of
-    Just (Context.Record nameSpace _) ->
-      NameSpace.toList nameSpace
+    Just (Context.Record Context.Rec {recordContents}) ->
+      NameSpace.toList recordContents
     Just _ ->
       NameSpace.List [] []
     Nothing ->
@@ -295,38 +294,6 @@ inMap name ctx = isJust (Context.lookup name ctx)
 type FinalContext = New Context.T
 
 --------------------------------------------------------------------------------
--- Types for resolving opens
---------------------------------------------------------------------------------
--- - before we are able to qaulify all symbols, we need the context at
---   a fully realized state.
--- - This hosts
---   1. the module
---   2. the inner modules (which thus have implciit opens of all
---      opens)
---   3. All opens
--- - Since we desugar all modules to records, we can't have opens over
---   them, hence no need to store it separately
--- - Any resolution will thus happen at the explicit module itself, as
---   trying to do so in the inner modules would lead to a path error
-
-data PreQualified
-  = Pre
-      { opens :: [NameSymbol.T],
-        implicitInner :: [NameSymbol.T],
-        explicitModule :: NameSymbol.T
-      }
-  deriving (Show, Eq)
-
-type OpenMap = Map.T Context.NameSymbol [Open NameSymbol.T]
-
-data Resolve a b c
-  = Res
-      { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
-        notResolved :: [NameSymbol.T]
-      }
-  deriving (Show)
-
---------------------------------------------------------------------------------
 -- Running functions
 --------------------------------------------------------------------------------
 
@@ -334,234 +301,106 @@ bareRun ::
   Context a ->
   Old Context.T ->
   New Context.T ->
-  OpenMap ->
-  (Either Error a, Environment)
-bareRun (Ctx c) old new opens =
-  Env old new mempty opens EnvDispatch
-    |> runState (runExceptT c)
+  ResolveOpen.OpenMap ->
+  IO (Either Error a, Environment)
+bareRun (Ctx c) old new _opens =
+  Env old new EnvDispatch mempty mempty
+    |> runStateT (runExceptT c)
 
 runEnv ::
-  Context a -> Old Context.T -> [PreQualified] -> (Either Error a, Environment)
-runEnv (Ctx c) old pres =
-  case resolve old pres of
-    Right opens ->
-      Env old (Context.empty (Context.currentName old)) mempty opens EnvDispatch
-        |> runState (runExceptT c)
-    Left err -> (Left err, undefined)
+  Context a -> Old Context.T -> [ResolveOpen.PreQualified] -> IO (Either Error a, Environment)
+runEnv (Ctx c) old pres = do
+  resolved <- ResolveOpen.run old pres
+  empt <- setupNewModule old
+  case resolved of
+    Right res ->
+      Env res empt EnvDispatch mempty mempty
+        |> runStateT (runExceptT c)
+    Left err -> pure (Left (resolveErrToErr err), undefined)
+
+data QualifySymbolAns
+  = Local NameSymbol.T
+  | GlobalInfo Context.SymbolInfo
+  deriving (Show)
+
+qualifySymbolInfo ::
+  SymbolQualification tag m => NonEmpty Symbol -> m (Maybe QualifySymbolAns)
+qualifySymbolInfo (s :| _) = do
+  exclusion <- get @"exclusion"
+  openClosure <- get @"closure"
+  case Set.member s exclusion of
+    True -> pure Nothing
+    False ->
+      case openClosure Map.!? s of
+        Just nameSym ->
+          pure (Just (Local nameSym))
+        Nothing -> do
+          qualified <- getSymbolMap
+          looked <- liftIO $ atomically $ STM.lookup s qualified
+          case looked of
+            Just sy -> pure $ Just (GlobalInfo sy)
+            Nothing -> pure Nothing
 
 -- for this function just the first part of the symbol is enough
+
 qualifyName ::
-  HasState "modMap" ModuleMap m => NonEmpty Symbol -> m (NonEmpty Symbol)
-qualifyName sym@(s :| _) = do
-  qualifieds <- get @"modMap"
-  case qualifieds Map.!? s of
-    Just preQualified ->
-      pure $ preQualified <> sym
+  SymbolQualification tag m => NonEmpty Symbol -> m (NonEmpty Symbol)
+qualifyName sym = do
+  mSym <- qualifySymbolInfo sym
+  case mSym of
+    Just (GlobalInfo Context.SymInfo {mod}) ->
+      pure $ Context.addTopName (mod <> sym)
+    Just (Local nameSym) ->
+      pure $ Context.addTopName (nameSym <> sym)
     Nothing ->
       pure sym
 
-addModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> NonEmpty Symbol -> m ()
-addModMap toAdd qualification =
-  Juvix.Library.modify @"modMap" (Map.insert toAdd qualification)
+-- currently unused as we don't save the function name
+markUsed ::
+  SymbolQualification tag m => NonEmpty Symbol -> Symbol -> m ()
+markUsed sym fname = do
+  mSym <- qualifySymbolInfo sym
+  case mSym of
+    Just (GlobalInfo sym@Context.SymInfo {used}) -> do
+      qualified <- getSymbolMap
+      STM.insert
+        ( sym
+            { Context.used = case used of
+                Context.Func xs ->
+                  Context.Func (fname : xs)
+                Context.NotUsed ->
+                  Context.Func [fname]
+                Context.Yes ->
+                  Context.Func [fname]
+            }
+        )
+        fname
+        qualified
+        |> atomically
+        |> liftIO
+    Nothing -> pure ()
+    Just Local {} -> pure ()
 
-lookupModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> m (Maybe (NonEmpty Symbol))
-lookupModMap s =
-  (Map.!? s) <$> get @"modMap"
+addExcludedElement :: Exclusion m => Symbol -> m ()
+addExcludedElement sym =
+  Juvix.Library.modify @"exclusion" (Set.insert sym)
 
-removeModMap ::
-  HasState "modMap" ModuleMap m => Symbol -> m ()
-removeModMap s = Juvix.Library.modify @"modMap" (Map.delete s)
+removeExcludedElement :: Exclusion m => Symbol -> m ()
+removeExcludedElement sym =
+  Juvix.Library.modify @"exclusion" (Set.delete sym)
 
---------------------------------------------------------------------------------
--- fully resolve module opens
---------------------------------------------------------------------------------
+addOpen :: Closure m => Symbol -> NameSymbol.T -> m ()
+addOpen sym mod = modify @"closure" (Map.insert sym mod)
 
--- Precondition ∷ old and new context must be in the same context
--- also terms must be in either the old map or the new map
--- any place where this is inconsistent will break resolution
+removeOpen :: Closure m => Symbol -> m ()
+removeOpen sym = modify @"closure" (Map.delete sym)
 
--- | @populateModMap@ populates the modMap with all the global opens
--- in the module
-populateModMap ::
-  Expression tag m => m ()
-populateModMap = do
-  open <- Juvix.Library.ask @"openMap"
-  currentName <- currentNameSpace
-  let curr = pure Context.topLevelName <> currentName
-  case open Map.!? curr of
-    Nothing ->
-      pure ()
-    Just opens -> do
-      -- TODO ∷
-      -- explicts and implicits for now work the same
-      -- later they should work as follows
-      -- Implicit opens should be superseded by explicit
-      -- thus our map should have implciit explicit on
-      -- each symbol. Later when we are done, we remove
-      -- these markings as they are no longer useful
-      -- TODO ∷ (modM <- get @"modMap")
-      --
-      -- should we even append modM in
-      -- put @"modMap" (Map.fromList assocNameWithAlias)
-      --
-      -- Answer ∷
-      -- No we should not, it collects opens from previous modules
-      -- which is incorrect
-      assocNameWithAlias <- concatMapM f opens
-      put @"modMap" (Map.fromList assocNameWithAlias)
-      where
-        f y = do
-          openList <- inScopeNames nameSpace
-          maybeAssocNameWithAlias <- traverse addNewSymbol openList
-          pure (catMaybes maybeAssocNameWithAlias)
-          where
-            nameSpace =
-              case y of
-                Implicit x -> x
-                Explicit x -> x
-            addNewSymbol x =
-              inCurrentModule (NameSymbol.fromSymbol x) >>= \case
-                True -> pure Nothing
-                -- if the symbol is in the map, then
-                -- we don't shadow it....
-                -- TODO ∷ later throw an error for
-                --        explicit opens that do this
-                False -> pure (Just (x, nameSpace))
-
--- we don't take a module mapping as all symbols at the point of
--- resolve can't be anything else, thus we don't have to pre-pend any
--- qualification at this point... we add qualification later as we add
--- things, as we have to figure out the full resolution of all opens
-
--- | @resolve@ takes a context and a list of open modules and the modules
--- they are open in (the module itself, and sub modules, which the opens are
--- implicit), and fully resolves the opens to their full name.
--- for example @open Prelude@ in the module Londo translates to
--- @resolve ctx PreQualified {opens = [Prelude]}@
--- == @Right (fromList [(TopLevel :| [Londo],[Explicit (TopLevel :| [Prelude])])])@
-resolve :: Context.T a b c -> [PreQualified] -> Either Error OpenMap
-resolve ctx = foldM (resolveSingle ctx) mempty
-
-resolveSingle ::
-  Context.T a b c -> OpenMap -> PreQualified -> Either Error OpenMap
-resolveSingle ctx openMap Pre {opens, implicitInner, explicitModule} =
-  case Context.switchNameSpace explicitModule ctx of
-    Left (Context.VariableShared err) ->
-      Left (IllegalModuleSwitch err)
-    Right ctx -> do
-      resolved <- pathsCanBeResolved ctx opens
-      qualifiedNames <- resolveLoop ctx mempty resolved
-      openMap
-        |> Map.insert explicitModule (fmap Explicit qualifiedNames)
-        |> ( \map ->
-               foldr
-                 (\mod -> Map.insert mod (fmap Implicit qualifiedNames))
-                 map
-                 implicitInner
-           )
-        |> Right
-
--- this goes off after the checks have passed regarding if the paths
--- are even possible to resolve
-resolveLoop ::
-  Context.T a b c -> ModuleMap -> Resolve a b c -> Either Error [NameSymbol.T]
-resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
-  map <- foldM addToModMap map fullyQualifyRes
-  --
-  let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
-  --
-  if  | null cantResolveNow ->
-        Right qualifedAns
-      | length (notResolved newResolve) == length cantResolveNow ->
-        Left (CantResolveModules cantResolveNow)
-      | otherwise ->
-        (qualifedAns <>) <$> resolveLoop ctx map newResolve
-  where
-    fullyQualifyRes =
-      Context.resolveName ctx <$> resolved
-    qualifedAns =
-      fmap snd fullyQualifyRes
-    addToModMap map (def, sym) =
-      case def of
-        Context.Record cont _ ->
-          let NameSpace.List {publicL} = NameSpace.toList cont
-           in foldlM
-                ( \map (x, _) ->
-                    case map Map.!? x of
-                      -- this means we already have opened this in another
-                      -- module
-                      Just _ -> Left (AmbiguousSymbol x)
-                      -- if it's already in scope from below or above us
-                      -- don't add to the remapping
-                      Nothing ->
-                        case Context.lookup (pure x) ctx of
-                          Just _ -> Right map
-                          Nothing -> Right (Map.insert x sym map)
-                )
-                map
-                publicL
-        -- should be updated when we can open expressions
-        _ ->
-          Left (UnknownModule sym)
-    qualifyCant newMap term =
-      case newMap Map.!? NameSymbol.hd term of
-        Nothing ->
-          term
-        Just x ->
-          x <> term
-
--- Since Locals and top level beats opens, we can determine from the
--- start that any module which tries to open a nested path fails,
--- yet any previous part succeeds, that an illegal open is happening,
--- and we can error out immediately
-
--- | @pathsCanBeResolved@ takes a context and a list of opens,
--- we then try to resolve if the opens are legal, if so we return
--- a list of ones that can be determined now, and a list to be resolved
-pathsCanBeResolved ::
-  Context.T a b c -> [NameSymbol.T] -> Either Error (Resolve a b c)
-pathsCanBeResolved ctx opens
-  | fmap firstName (notResolved resFull) == notResolved resFirst =
-    Right resFull
-  | otherwise =
-    Left (OpenNonModule diff)
-  where
-    resFull = resolveWhatWeCan ctx opens
-    resFirst = resolveWhatWeCan ctx (firstName <$> opens)
-    setRes l = Set.fromList (notResolved l)
-    -- O(n log₁₆(n))
-    diff =
-      mappend
-        (Set.difference (setRes resFull) (setRes resFirst))
-        (Set.difference (setRes resFirst) (setRes resFull))
-
-resolveWhatWeCan :: Context.T a b c -> [NameSymbol.T] -> Resolve a b c
-resolveWhatWeCan ctx opens = Res {resolved, notResolved}
-  where
-    dupLook =
-      fmap (\openMod -> (Context.lookup openMod ctx, openMod))
-    (resolved, notResolved) =
-      splitMaybes (dupLook opens)
-
-----------------------------------------
--- Helpers for resolve
-----------------------------------------
-
-splitMaybes :: [(Maybe a, b)] -> ([(a, b)], [b])
-splitMaybes = foldr f ([], [])
-  where
-    f (Just a, b) = first ((a, b) :)
-    f (Nothing, b) = second (b :)
-
--- TODO ∷ add test for firstName
-firstName :: NameSymbol.T -> NameSymbol.T
-firstName (x :| y : _)
-  | Context.topLevelName == x =
-    x :| [y]
-  | otherwise =
-    NameSymbol.fromSymbol x
-firstName xs =
-  NameSymbol.hd xs
-    |> NameSymbol.fromSymbol
+resolveErrToErr :: ResolveOpen.Error -> Error
+resolveErrToErr rsv =
+  case rsv of
+    ResolveOpen.UnknownModule x -> UnknownModule x
+    ResolveOpen.CantResolveModules xs -> CantResolveModules xs
+    ResolveOpen.OpenNonModule hs -> OpenNonModule hs
+    ResolveOpen.AmbiguousSymbol s -> AmbiguousSymbol s
+    ResolveOpen.ModuleConflict s ns -> ModuleConflict s ns
+    ResolveOpen.IllegalModuleSwitch ns -> IllegalModuleSwitch ns

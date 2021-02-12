@@ -102,6 +102,7 @@ ghc-options:
   - -j
   - -static
   - -fwrite-ide-info
+  - -optP-Wno-nonportable-include-path
 
 when:
   condition: flag(incomplete-error)

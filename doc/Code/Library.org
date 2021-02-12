@@ -563,6 +563,9 @@ Types to support partial application and polymorphic primitives.
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+****** Open <<Common/Open>>
+- _Relies on_
+  + [[Library]]
 ****** Context <<Core/Common/Context>>
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -583,6 +586,7 @@ Types to support partial application and polymorphic primitives.
 - _Relies on_
   + [[Precedence]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -954,6 +958,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[NameSpace]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 *** IR
 **** Weak <<IR/Weak>>
 Tests that weak works as expected
@@ -1362,6 +1367,7 @@ Calculate mutually-recursive groups of definitions.
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[ResolveOpenInfo]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1376,9 +1382,38 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Contextify
+****** ResolveOpenInfo
+- This module is responsible for adding the reverse open
+  information to the context, along with the alias map of what
+  symbols get qualified to what module
+- This module accepts a list of =PreQualified= which talks
+  about
+  1. The explicit module itself
+  2. Any opens this module does
+  3. Any modules defined in this module as to have implicit imports
+- Currently the most complicated part of this module is the resolve
+  section that creates an =OpenMap=
+  + This code is responsible for taking in all the opens and
+    properly storing them fully qualified.
+  + This has to try to open as much as possible as we could have
+    =open Michelson= =open Prelude=, in which Michelson is inside
+    of prelude so it can't be resolved right away. This way can
+    lead to ambiguities if it does exist so one has to be a bit
+    careful opening in this way!
+- The other bits of code are stand alone algorithms for filling in
+  the reverse map and the qualification from that point
+  forward.... these are thankfully quite straight forward
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Common/Open]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
@@ -1502,6 +1537,8 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
+  + [[ResolveOpenInfo]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]
@@ -1545,6 +1582,7 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]
@@ -1869,18 +1907,27 @@ Calculate mutually-recursive groups of definitions.
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
-  + [[NameSymbol]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
 **** Module
-***** Open
+***** Open <<Module/Open>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Resolve
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[ResolveOpenInfo]]
+  + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]

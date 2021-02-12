@@ -11,13 +11,15 @@ module Juvix.Core.Common.Context
   )
 where
 
+import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import Juvix.Library hiding (modify)
+import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -35,23 +37,75 @@ nameSymbolFromSymbol = NameSymbol.fromSymbol
 -- Body
 --------------------------------------------------------------------------------
 
-empty :: NameSymbol.T -> T term ty sumRep
-empty sym =
-  case addPathWithValue (pure topLevelName <> sym') CurrentNameSpace fullyEmpty of
+empty :: NameSymbol.T -> IO (T term ty sumRep)
+empty sym = do
+  empty <- atomically fullyEmpty
+  res <- addPathWithValue (pure topLevelName <> sym') CurrentNameSpace empty
+  case res of
     Lib.Left _ -> error "impossible"
-    Lib.Right x -> x
+    Lib.Right x -> pure x
   where
-    fullyEmpty =
-      ( T
-          { currentNameSpace = NameSpace.empty,
+    fullyEmpty = do
+      currentNameSpace <- emptyRecord
+      pure $
+        T
+          { currentNameSpace = currentNameSpace,
             currentName = sym',
-            topLevelMap = HashMap.empty
+            topLevelMap = HashMap.empty,
+            reverseLookup = HashMap.empty
           }
-      )
     sym' = removeTopName sym
 
 qualifyName :: NameSymbol.T -> T term ty sumRep -> NameSymbol.T
 qualifyName sym T {currentName} = currentName <> sym
+
+emptyRecord :: STM (Record term ty sumRep)
+emptyRecord = do
+  emptyQualificationMap <- STM.new
+  pure
+    Rec
+      { recordContents = NameSpace.empty,
+        recordOpenList = [],
+        recordQualifiedMap = emptyQualificationMap,
+        recordMTy = Nothing
+      }
+
+data AmbiguousDef = AmbiguousDef NameSymbol.T
+
+-- | @persistDefinition@ states that the definition we are adding is
+-- staying in the context, so promote it.  In the future this will be
+-- called for all definitions added by default, with private
+-- definitions not added. However this infra is not up, so the pass
+-- adding functions must add it themselves
+persistDefinition ::
+  T term ty sumRep -> NameSymbol.T -> Symbol -> IO (Either AmbiguousDef ())
+persistDefinition T {reverseLookup} moduleName name =
+  case HashMap.lookup moduleName reverseLookup of
+    Just xs -> do
+      determined <- determineSafe xs
+      case determined of
+        Lib.Left err -> pure $ Lib.Left err
+        Lib.Right () -> Lib.Right <$> traverse_ f xs
+      where
+        -- TODO ∷ replace with a breaking foldM later
+        -- this isn't in as I have to do IO actions
+        determineSafe [] = pure (Lib.Right ())
+        determineSafe (Who {modName, symbolMap} : xs) = do
+          lookd <- atomically $ STM.lookup name symbolMap
+          case lookd of
+            Nothing -> determineSafe xs
+            Just SymInfo {mod}
+              | mod == moduleName -> determineSafe xs
+              | otherwise -> pure (Lib.Left (AmbiguousDef modName))
+        -- we do a check before this so the call is always safe
+        f Who {symbolMap} = atomically do
+          lookd <- STM.lookup name symbolMap
+          case lookd of
+            Nothing ->
+              STM.insert (SymInfo NotUsed moduleName) name symbolMap
+            -- TODO ∷ we may change behavior here based on implicit vs explicit
+            Just SymInfo {} -> pure ()
+    Nothing -> pure (Lib.Right ())
 
 --------------------------------------------------------------------------------
 -- Functions on the Current NameSpace
@@ -69,20 +123,19 @@ add ::
   Definition term ty sumRep ->
   T term ty sumRep ->
   T term ty sumRep
-add sy term t =
-  t {currentNameSpace = NameSpace.insert sy term (currentNameSpace t)}
+add sy term = over (_currentNameSpace . contents) (NameSpace.insert sy term)
 
 remove ::
   NameSpace.From Symbol -> T term ty sumRep -> T term ty sumRep
-remove sy t = t {currentNameSpace = NameSpace.remove sy (currentNameSpace t)}
+remove sy = over (_currentNameSpace . contents) (NameSpace.remove sy)
 
 publicNames :: T term ty sumRep -> [Symbol]
-publicNames T {currentNameSpace} =
-  let NameSpace.List {publicL} = NameSpace.toList currentNameSpace
+publicNames t =
+  let NameSpace.List {publicL} = toList t
    in fst <$> publicL
 
 toList :: T term ty sumRep -> NameSpace.List (Definition term ty sumRep)
-toList T {currentNameSpace} = NameSpace.toList currentNameSpace
+toList t = NameSpace.toList (t ^. _currentNameSpace . contents)
 
 topList :: T term ty sumRep -> [(Symbol, Definition term ty sumRep)]
 topList T {topLevelMap} = HashMap.toList topLevelMap
@@ -93,16 +146,18 @@ topList T {topLevelMap} = HashMap.toList topLevelMap
 
 -- we lose some type information here... we should probably reserve it somehow
 
-inNameSpace ::
-  NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
+-- | inNameSpace works like in-package in CL
+-- we simply just change from our current namespace to another
+inNameSpace :: NameSymbol.T -> T term ty sumRep -> Maybe (T term ty sumRep)
 inNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
     pure t
   | otherwise = do
     mdef <- t !? newNameSpace
+    -- resolve the full name to be the new current module
     let (def, fullName) = resolveName t (mdef, newNameSpace)
     case def of
-      Record cont _ ->
+      Record cont ->
         Just (changeCurrentModuleWith t cont fullName)
       _ ->
         Nothing
@@ -114,18 +169,27 @@ inNameSpace newNameSpace t@T {currentName}
 -- This function also keeps the invariant that there is only one CurrentNameSpace
 -- tag
 switchNameSpace ::
-  NameSymbol.T -> T term ty sumRep -> Either PathError (T term ty sumRep)
+  NameSymbol.T -> T term ty sumRep -> IO (Either PathError (T term ty sumRep))
 switchNameSpace newNameSpace t@T {currentName}
   | removeTopName newNameSpace == removeTopName currentName =
-    Lib.Right t
-  | otherwise =
-    let newT =
-          case addPathWithValue newNameSpace (Record NameSpace.empty Nothing) t of
-            Lib.Right t -> t
-            Lib.Left {} -> t
-     in case inNameSpace newNameSpace newT of
-          Nothing -> Lib.Left (VariableShared newNameSpace)
-          Just ct -> Lib.Right ct
+    pure (Lib.Right t)
+  | otherwise = do
+    -- We do some repeat work here, namely we allocate an empty record
+    -- in case we need to place it in for the new namespace
+    empty <- atomically emptyRecord
+    -- addPathWithValue will create new name spaces if they don't
+    -- already exist all the way to where we need it to be
+    newT <- do
+      addPathWithValue newNameSpace (Record empty) t
+      >>| \case
+        Lib.Right t -> t
+        Lib.Left {} -> t
+    -- here we repeat work,
+    -- if we successfully added the value, then we have to go down the
+    -- same path to retrieve the module, hence duplicating the work
+    pure $ case inNameSpace newNameSpace newT of
+      Nothing -> Lib.Left (VariableShared newNameSpace)
+      Just ct -> Lib.Right ct
 
 lookup ::
   NameSymbol.T -> T term ty sumRep -> Maybe (From (Definition term ty sumRep))
@@ -150,8 +214,8 @@ modifyGlobal sym g t =
   where
     f (Final x) =
       UpdateNow (g x)
-    f (Continue (Just (Record def ty))) =
-      GoOn (OnRecord def ty)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue _) =
       Abort
 
@@ -167,8 +231,8 @@ addGlobal sym def t =
   where
     f (Final _) =
       UpdateNow def
-    f (Continue (Just (Record def ty))) =
-      GoOn (OnRecord def ty)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue _) =
       Abort
 
@@ -176,20 +240,22 @@ addPathWithValue ::
   NameSymbol.T ->
   Definition term ty sumRep ->
   T term ty sumRep ->
-  Either PathError (T term ty sumRep)
-addPathWithValue sym def t =
-  case modifySpace f sym t of
-    Just tt -> Lib.Right tt
-    Nothing -> Lib.Left (VariableShared sym)
+  IO (Either PathError (T term ty sumRep))
+addPathWithValue sym def t = do
+  ret <- modifySpaceImp f sym t
+  case ret of
+    Just tt -> pure (Lib.Right tt)
+    Nothing -> pure (Lib.Left (VariableShared sym))
   where
-    f (Final Nothing) = UpdateNow def
-    f (Final (Just _)) = Abort
+    f (Final Nothing) = pure (UpdateNow def)
+    f (Final (Just _)) = pure Abort
     f (Continue Nothing) =
-      GoOn (OnRecord NameSpace.empty Nothing)
-    f (Continue (Just (Record def ty))) =
-      GoOn (OnRecord def ty)
+      atomically STM.new
+        >>| GoOn . Rec NameSpace.empty Nothing []
+    f (Continue (Just (Record record))) =
+      pure (GoOn record)
     f (Continue _) =
-      Abort
+      pure Abort
 
 removeNameSpace :: NameSymbol -> T term ty sumRep -> T term ty sumRep
 removeNameSpace sym t =
@@ -201,8 +267,8 @@ removeNameSpace sym t =
       RemoveNow
     f (Final Nothing) =
       Abort
-    f (Continue (Just (Record def ty))) =
-      GoOn (OnRecord def ty)
+    f (Continue (Just (Record record))) =
+      GoOn record
     f (Continue Nothing) =
       Abort
     f (Continue (Just _)) =
@@ -213,11 +279,13 @@ removeTop sym t@T {topLevelMap} =
   t {topLevelMap = HashMap.delete sym topLevelMap}
 
 ------------------------------------------------------------
--- Helper for switch name space
+-- Helpers for switching the global NameSpace
 ------------------------------------------------------------
 
+-- | 'changeCurrentModuleWith' moves the current name space and inserts
+-- the new namespace as the top
 changeCurrentModuleWith ::
-  T ter ty sr -> NameSpace.T (Definition ter ty sr) -> NameSymbol.T -> T ter ty sr
+  T term ty sumRep -> Record term ty sumRep -> NonEmpty Symbol -> T term ty sumRep
 changeCurrentModuleWith t startingContents newCurrName =
   let queued = queueCurrentModuleBackIn t
    in t
@@ -230,11 +298,18 @@ changeCurrentModuleWith t startingContents newCurrName =
 queueCurrentModuleBackIn ::
   T term ty sumRep -> T term ty sumRep -> T term ty sumRep
 queueCurrentModuleBackIn T {currentNameSpace, currentName} =
-  -- we have to add top to it, or else if it's a single symbol, then
-  -- it'll be added to itself, which is bad!
+  -- we note that the currentName is a topLevel name so it
+  -- gets added from the top and doesn't confuse itself with
+  -- a potnentially local insertion
   addGlobal
     (addTopNameToSngle currentName)
-    (Record currentNameSpace Nothing)
+    (Record currentNameSpace)
+
+-- 'putCurrentModuleBackIn' adds the current name space back to the
+-- environment map
+-- Note that we have to have the path to the module ready and open
+-- as 'addGlobal' quits if it can't find the path
+-- we HAVE to remove the current module after this
 
 putCurrentModuleBackIn :: T term ty sumRep -> T term ty sumRep
 putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
@@ -242,6 +317,11 @@ putCurrentModuleBackIn t = queueCurrentModuleBackIn t t
 addTopNameToSngle :: IsString a => NonEmpty a -> NonEmpty a
 addTopNameToSngle (x :| []) = topLevelName :| [x]
 addTopNameToSngle xs = xs
+
+addTopName :: (IsString a, Eq a) => NonEmpty a -> NonEmpty a
+addTopName (x :| xs)
+  | topLevelName == x = x :| xs
+  | otherwise = topLevelName :| (x : xs)
 
 removeTopName :: (Eq a, IsString a) => NonEmpty a -> NonEmpty a
 removeTopName (top :| x : xs)
@@ -282,22 +362,19 @@ data Stage b
     -- the namespace that we can still continue down
     Continue b
 
-data Return b ty
+data Return term ty sumRep
   = -- | 'GoOn' signifies that we should continue
     -- going down records
-    GoOn (OnRecord b ty)
+    GoOn (Record term ty sumRep)
   | -- | 'Abort' signifies that we should cancel
     -- the changes on the map and
     Abort
   | -- | 'UpdateNow' signifies that we should
     -- update the context with the current value
-    UpdateNow b
+    UpdateNow (Definition term ty sumRep)
   | -- | 'RemoveNow' signifies that we show remove
     -- the definition at this level
     RemoveNow
-
-data OnRecord b ty
-  = OnRecord (NameSpace.T b) (Maybe ty)
 
 ----------------------------------------
 -- Type Class for Genralized Helpers
@@ -327,68 +404,106 @@ instance MapSym PrivNameSpace where
   insert' sym def = Priv . NameSpace.insert (NameSpace.Priv sym) def . unPriv
 
 modifySpace ::
-  ( Stage (Maybe (Definition term ty sumRep)) ->
-    Return (Definition term ty sumRep) ty
-  ) ->
+  (Stage (Maybe (Definition term ty sumRep)) -> Return term ty sumRep) ->
   NameSymbol.T ->
   T term ty sumRep ->
   Maybe (T term ty sumRep)
-modifySpace f (s :| ymbol) t@T {currentNameSpace, currentName, topLevelMap} =
-  case NameSpace.lookupInternal s currentNameSpace of
+modifySpace f symbol t = runIdentity (modifySpaceImp (Identity . f) symbol t)
+
+-- This function dispatches to recurseImp, and serves to deal with
+-- giving recurseImp the proper map to run on. this is either the
+-- private local, public local, or global
+modifySpaceImp ::
+  Monad m =>
+  ( Stage (Maybe (Definition term ty sumRep)) ->
+    m (Return term ty sumRep)
+  ) ->
+  NameSymbol.T ->
+  T term ty sumRep ->
+  m (Maybe (T term ty sumRep))
+modifySpaceImp f symbol@(s :| ymbol) t =
+  -- check the current Module first, to properly determine which one to go down
+  case NameSpace.lookupInternal s (t ^. _currentNameSpace . contents) of
     Just (NameSpace.Pub _) ->
-      updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
+      applyAndSetCurrent (recurseImp f (s :| ymbol))
     Just (NameSpace.Priv _) ->
-      updateCurr t . unPriv <$> recurse f (s :| ymbol) (Priv currentNameSpace)
+      applyAndSetCurrent (fmap (fmap unPriv) . recurseImp f symbol . Priv)
+    -- The first part of the name is not in the map, maybe they fully qualified the name
     Nothing ->
-      case NameSymbol.takePrefixOf currentName (removeTopName (s :| ymbol)) of
-        Just subPath ->
-          updateCurr t <$> recurse f subPath currentNameSpace
+      case NameSymbol.takePrefixOf (t ^. _currentName) (removeTopName symbol) of
+        -- currentName : Foo.Bar, symbol: TopLevel.Foo.Bar.baz
+        -- currentName : Foo.Bar, symbol: Foo.Bar.baz
+        -- both of these will hit this path
+        Just subPath -> do
+          applyAndSetCurrent (recurseImp f subPath)
+        -- For this path, we have
+        -- currentName : Foo.Bar, symbol: Something.Else
         Nothing ->
           -- we do one more match as we have to make sure
           -- if we are adding foo we add it to the right place
           case ymbol of
-            [] ->
-              updateCurr t <$> recurse f (s :| ymbol) currentNameSpace
+            -- This case is
+            -- currentName: Foo.Bar, symbol: s
+            -- so just apply on the current, we'll stop right away
+            [] -> applyAndSetCurrent (recurseImp f symbol)
+            -- in this case, we have more than just a single symbol
             (newS : newYmbol) ->
+              -- currentName: Foo.Bar, symbol: TopLevel.First.Rest
+              -- update the TopLevel on First.Rest!
               if  | s == topLevelName ->
-                    updateTopLevel t <$> recurse f (newS :| newYmbol) topLevelMap
-                  | otherwise ->
-                    updateTopLevel t <$> recurse f (s :| ymbol) topLevelMap
+                    applyAndSetTop (recurseImp f (newS :| newYmbol))
+                  -- currentName: Foo.Bar, symbol: First.MoreStuff
+                  -- just recurse on the symbol entirely
+                  | otherwise -> applyAndSetTop (recurseImp f symbol)
   where
-    updateCurr t newCurrent =
-      t {currentNameSpace = newCurrent}
-    updateTopLevel t newTop =
-      t {topLevelMap = newTop}
+    -- dumb repeat code but idk how to handle to remove the tuple ☹
+    applyAndSetTop f =
+      t |> applyAndSet f (_topLevelMap, _topLevelMap)
+    applyAndSetCurrent f =
+      t |> applyAndSet f (_currentNameSpace . contents, _currentNameSpace . contents)
 
-recurse ::
-  MapSym m =>
+applyAndSet ::
+  (Monad m, Functor f) =>
+  (t -> m (f b1)) ->
+  (Getting t s t, ASetter s b2 a b1) ->
+  s ->
+  m (f b2)
+applyAndSet f (l1, l2) t = do
+  ret <- f (t ^. l1)
+  pure ((\r -> set l2 r t) <$> ret)
+
+recurseImp ::
+  (MapSym map, Monad m) =>
   ( Stage (Maybe (Definition term ty sumRep)) ->
-    Return (Definition term ty sumRep) ty
+    m (Return term ty sumRep)
   ) ->
-  (NonEmpty Symbol) ->
-  m (Definition term ty sumRep) ->
-  Maybe (m (Definition term ty sumRep))
-recurse f (x :| y : xs) cont =
-  case f (Continue (lookup' x cont)) of
-    GoOn (OnRecord nameSpace ty) ->
+  NameSymbol.T ->
+  map (Definition term ty sumRep) ->
+  m (Maybe (map (Definition term ty sumRep)))
+recurseImp f (x :| y : xs) cont = do
+  ret <- f (Continue (lookup' x cont))
+  case ret of
+    GoOn record -> do
+      recursed <- recurseImp f (y :| xs) (record ^. contents)
       let g newRecord =
-            insert' x (Record newRecord ty) cont
-       in fmap g (recurse f (y :| xs) nameSpace)
+            insert' x (record |> set contents newRecord |> Record) cont
+       in pure (g <$> recursed)
     Abort ->
-      Nothing
+      pure Nothing
     RemoveNow ->
-      Just (remove' x cont)
+      pure (Just (remove' x cont))
     UpdateNow newRecord ->
-      Just (insert' x newRecord cont)
-recurse f (x :| []) cont =
-  case f (Final (lookup' x cont)) of
+      pure (Just (insert' x newRecord cont))
+recurseImp f (x :| []) cont = do
+  ret <- f (Final (lookup' x cont))
+  case ret of
     UpdateNow return ->
-      Just (insert' x return cont)
+      pure (Just (insert' x return cont))
     RemoveNow ->
-      Just (remove' x cont)
+      pure (Just (remove' x cont))
     -- GoOn makes no sense here, so act as an Abort
-    GoOn {} -> Nothing
-    Abort -> Nothing
+    GoOn {} -> pure Nothing
+    Abort -> pure Nothing
 
 -- couldn't figure out how to fold lenses
 -- once we figure out how to do a fold like
@@ -409,24 +524,26 @@ lookupGen ::
     Maybe (t (Definition term ty sumRep))
   ) ->
   NameSymbol.T ->
-  Cont (Definition term ty sumRep) ->
+  T term ty sumRep ->
   Maybe (t (Definition term ty sumRep))
-lookupGen extraLookup nameSymb T {currentNameSpace} =
+lookupGen extraLookup nameSymb t =
   let recurse _ Nothing =
         Nothing
+      recurse [] (Just CurrentNameSpace) =
+        Just (Record (t ^. _currentNameSpace))
       recurse [] x =
         x
-      recurse (x : xs) (Just (Record namespace _)) =
-        recurse xs (NameSpace.lookup x namespace)
+      recurse (x : xs) (Just (Record record)) =
+        recurse xs (NameSpace.lookup x (record ^. contents))
       -- This can only happen when we hit from the global
       -- a precondition is that the current module
       -- will never have a currentNamespace inside
       recurse (x : xs) (Just CurrentNameSpace) =
-        recurse xs (NameSpace.lookup x currentNameSpace)
+        recurse xs (NameSpace.lookup x (t ^. _currentNameSpace . contents))
       recurse (_ : _) _ =
         Nothing
       first (x :| xs) =
-        NameSpace.lookupInternal x currentNameSpace
+        NameSpace.lookupInternal x (t ^. _currentNameSpace . contents)
           |> second (x :| xs)
       second (x :| xs) looked =
         extraLookup x looked

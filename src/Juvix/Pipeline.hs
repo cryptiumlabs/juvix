@@ -22,13 +22,13 @@ data Error
 toCore :: [FilePath] -> IO (Either Error Target.FinalContext)
 toCore paths = do
   x <- Frontend.ofPath paths
-  pure $
-    case x of
-      Left er -> Left (ParseErr er)
-      Right x ->
-        case Core.ofFrontend x of
-          Left errr -> Left (PipeLine errr)
-          Right con -> Right con
+  case x of
+    Left er -> pure $ Left (ParseErr er)
+    Right x -> do
+      from <- Core.ofFrontend x
+      case from of
+        Left errr -> pure $ Left (PipeLine errr)
+        Right con -> pure $ Right con
 
 contextToCore ::
   (Data primTy, Data primVal) =>

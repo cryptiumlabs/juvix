@@ -2,6 +2,7 @@
 
 module Juvix.FrontendContextualise.InfixPrecedence.Transform where
 
+import Control.Lens (set)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
@@ -73,22 +74,31 @@ convertOldApplication (Shunt.App s app1 app2) =
 -- | decideRecordOrDef tries to figure out
 -- if a given defintiion is a record or a definition
 decideRecordOrDef ::
+  (MonadIO m) =>
   NonEmpty (New.FunctionLike New.Expression) ->
   Maybe New.Signature ->
-  Env.New Context.Definition
+  m (Env.New Context.Definition)
 decideRecordOrDef xs ty
   | len == 1 && emptyArgs args =
     -- For the two matched cases eventually
     -- turn these into record expressions
     case body of
-      New.ExpRecord (New.ExpressionRecord i) ->
+      New.ExpRecord (New.ExpressionRecord i) -> do
         -- the type here can eventually give us arguments though looking at the
         -- lambda for e, and our type can be found out similarly by looking at types
-        let f (New.NonPunned s e) =
-              NameSpace.insert
-                (NameSpace.Pub (NonEmpty.head s))
-                (decideRecordOrDef (New.Like [] e :| []) Nothing)
-         in Context.Record (foldr f NameSpace.empty i) ty
+        let f m (New.NonPunned s e) =
+              decideRecordOrDef (New.Like [] e :| []) Nothing
+                >>| \record ->
+                  NameSpace.insert
+                    (NameSpace.Pub (NonEmpty.head s))
+                    record
+                    m
+        emptyRecord <- liftIO (atomically Context.emptyRecord)
+        --
+        nameSpace <- foldlM f NameSpace.empty i
+        --
+        let updated = set Context.contents nameSpace . set Context.mTy ty
+        pure (Context.Record (updated emptyRecord))
       New.Let _l ->
         def
       _ -> def
@@ -96,7 +106,7 @@ decideRecordOrDef xs ty
   where
     len = length xs
     New.Like args body = NonEmpty.head xs
-    def = Context.Def Nothing ty xs Context.default'
+    def = pure $ Context.Def $ Context.D Nothing ty xs Context.default'
 
 emptyArgs :: [a] -> Bool
 emptyArgs [] = True
@@ -106,23 +116,26 @@ emptyArgs (_ : _) = False
 -- Boilerplate Transforms
 --------------------------------------------------------------------------------
 
-transformContext :: Env.Old Context.T -> Either Env.Error (Env.New Context.T)
+transformContext :: Env.Old Context.T -> IO (Either Env.Error (Env.New Context.T))
 transformContext ctx =
-  case Env.runEnv transformC ctx of
-    (Right _, env) -> Right (Env.new env)
-    (Left e, _) -> Left e
+  Env.runEnv transformC ctx
+    >>| \case
+      (Right _, env) -> Right (Env.new env)
+      (Left e, _) -> Left e
 
 transformDef ::
   Env.WorkingMaps env m =>
   Env.Old Context.Definition ->
   NameSpace.From Symbol ->
   m (Env.New Context.Definition)
-transformDef (Context.Def usage mTy term prec) _ =
-  Context.Def usage
-    <$> traverse transformSignature mTy
-    <*> traverse transformFunctionLike term
-    <*> pure prec
+transformDef (Context.Def def) _ =
+  transformDefinition def >>| Context.Def
 --
+transformDef (Context.SumCon Context.Sum {sumTDef, sumTName}) _ =
+  Context.Sum
+    <$> traverse transformDefinition sumTDef
+    <*> pure sumTName
+    >>| Context.SumCon
 transformDef (Context.TypeDeclar repr) _ =
   Context.TypeDeclar <$> transformType repr
 --
@@ -135,8 +148,8 @@ transformDef Context.CurrentNameSpace _ =
 transformDef (Context.Information is) _ =
   pure (Context.Information is)
 --
-transformDef (Context.Record _contents mTy) name' = do
-  sig <- traverse transformSignature mTy
+transformDef (Context.Record Context.Rec {recordMTy}) name' = do
+  sig <- traverse transformSignature recordMTy
   old <- get @"old"
   let name = NameSpace.extractValue name'
       newMod = pure Context.topLevelName <> Context.currentName old <> pure name
@@ -150,10 +163,21 @@ transformDef (Context.Record _contents mTy) name' = do
   looked <- fmap NameSpace.extractValue <$> Env.lookupCurrent name
   Env.remove name'
   case looked of
-    Just (Context.Record record _) ->
-      pure (Context.Record record sig)
+    Just (Context.Record record) ->
+      record
+        |> set Context.mTy sig
+        |> Context.Record
+        |> pure
     Nothing -> error "Does not happen: record lookup is nothing"
     Just __ -> error "Does not happen: record lookup is Just not a record!"
+
+transformDefinition ::
+  Env.Expression tag m => Env.Old' Context.Def -> m (Env.New' Context.Def)
+transformDefinition (Context.D usage mTy term prec) =
+  Context.D usage
+    <$> traverse transformSignature mTy
+    <*> traverse transformFunctionLike term
+    <*> pure prec
 
 -- we work on the topMap
 transformC :: Env.WorkingMaps env m => m ()
@@ -434,7 +458,9 @@ transformLet (Old.LetGroup name bindings body) = do
   protectSymbols [name] $ do
     transformedBindings <- traverse transformFunctionLike bindings
     --
-    Env.add (NameSpace.Priv name) (decideRecordOrDef transformedBindings Nothing)
+    recordDef <- decideRecordOrDef transformedBindings Nothing
+    --
+    Env.add (NameSpace.Priv name) recordDef
     --
     res <- New.LetGroup name transformedBindings <$> transformExpression body
     -- don't know where we came from!
@@ -564,11 +590,7 @@ updateSym :: Env.WorkingMaps env m => Context.NameSymbol -> m ()
 updateSym sym = do
   old <- get @"old"
   new <- get @"new"
-  case Context.switchNameSpace sym old of
-    -- bad Error for now
-    Left ____ -> throw @"error" (Env.PathError sym)
-    Right map -> put @"old" map
-  -- have to do this again sadly
-  case Context.switchNameSpace sym new of
-    Left ____ -> throw @"error" (Env.PathError sym)
-    Right map -> put @"new" map
+  switched <- liftIO $ Env.switchContext sym old new
+  case switched of
+    Right (o, n) -> put @"old" o >> put @"new" n
+    Left _ -> throw @"error" (Env.UnknownSymbol sym)
