@@ -17,19 +17,34 @@ condTransform :: Sexp.T -> Sexp.T
 condTransform xs = Sexp.foldPred xs (== "cond") condToIf
   where
     condToIf atom cdr =
-      Sexp.foldr
-        ( \name acc ->
-            case name of
-              Sexp.Cons condition body ->
-                generateIf condition (Sexp.car body) acc
-              _ ->
-                error "malformed cond"
-        )
-        Sexp.Nil
-        cdr
+      let acc = Sexp.butLast (generation (Sexp.last cdr) Sexp.Nil)
+      in Sexp.foldr generation acc (Sexp.butLast cdr)
         |> Sexp.addMetaToCar atom
+    generation name acc =
+      case name of
+        Sexp.Cons condition body ->
+          generateIf condition (Sexp.car body) acc
+        _ ->
+          error "malformed cond"
     generateIf p t e =
-      Sexp.ofList [Sexp.Atom (Sexp.A "if" Nothing), p, t, e]
+      Sexp.list [Sexp.atom "if", p, t, e]
+
+ifTransform :: Sexp.T -> Sexp.T
+ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
+  where
+    ifToCase atom cdr =
+      case cdr of
+        Sexp.Cons pred (Sexp.Cons then' (Sexp.Cons else' Sexp.Nil)) ->
+          Sexp.list (caseListElse pred then' else')
+        Sexp.Cons pred (Sexp.Cons then' Sexp.Nil) ->
+          Sexp.list (caseList pred then')
+        _ ->
+          error "malformed if"
+          |> Sexp.addMetaToCar atom
+    caseList pred then' =
+      [Sexp.atom "case", pred, Sexp.list [Sexp.atom "true", then']]
+    caseListElse pred then' else' =
+      caseList pred then' <> [Sexp.list [Sexp.atom "false", else']]
 
 condWorksAsExpected :: T.TestTree
 condWorksAsExpected =
@@ -43,29 +58,26 @@ condWorksAsExpected =
       \ \"true\"\
       \ (\"if\" (\"p\" \"x\")\
       \ \"true\"\
-      \ (\"if\" \"else\" \"false\" ))))"
+      \ (\"if\" \"else\" \"false\")))"
+
+
+ifWorksAsExpected = undefined
 
 -- TODO ∷ add a sexp parser, to make this less annoying
 testData :: Sexp.T
 testData =
-  Sexp.ofList
+  Sexp.list
     [ Sexp.Atom $ Sexp.A "cond" (Just (LineNum.T 2 3)),
-      Sexp.ofList
-        [ Sexp.ofList
-            [ Sexp.Atom $ Sexp.A "g" Nothing,
-              Sexp.Atom $ Sexp.A "x" Nothing
-            ],
-          Sexp.Atom $ Sexp.A "true" Nothing
+      Sexp.list
+        [ Sexp.list
+            [Sexp.atom "g", Sexp.atom "x"],
+          Sexp.atom "true"
         ],
-      Sexp.ofList
-        [ Sexp.ofList
-            [ Sexp.Atom $ Sexp.A "p" Nothing,
-              Sexp.Atom $ Sexp.A "x" Nothing
-            ],
-          Sexp.Atom $ Sexp.A "true" Nothing
+      Sexp.list
+        [ Sexp.list
+            [Sexp.atom "p", Sexp.atom "x"],
+          Sexp.atom "true"
         ],
-      Sexp.ofList
-        [ Sexp.Atom $ Sexp.A "else" Nothing,
-          Sexp.Atom $ Sexp.A "false" Nothing
-        ]
+      Sexp.list
+        [Sexp.atom "else", Sexp.atom "false"]
     ]

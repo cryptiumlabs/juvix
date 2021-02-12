@@ -3,6 +3,7 @@
 
 module Juvix.Library.Sexp where
 
+import Prelude (error)
 import Control.Lens hiding ((|>))
 import Juvix.Library hiding (foldr, show)
 import qualified Juvix.Library as Std
@@ -42,11 +43,33 @@ foldr f acc ts =
     Atom ____ -> f ts acc
     Nil -> acc
 
-ofList :: Foldable t => t T -> T
-ofList = Std.foldr Cons Nil
-  -- case foldr1May Cons xs of
-  --   Nothing -> Nil
-  --   Just x -> x
+foldr1 :: (T -> T -> T) -> T -> Maybe T
+foldr1 f (Cons x xs) = Just $ unsafe (Cons x xs)
+  where
+    unsafe ts =
+      case ts of
+        Cons a Nil -> a
+        Cons a cds -> f a (unsafe cds)
+        _ -> error "doesn't happen"
+foldr1 _ _empty = Nothing
+
+butLast :: T -> T
+butLast (Cons _ Nil) = Nil
+butLast (Cons x xs) = Cons x (butLast xs)
+butLast (Atom a) = Atom a
+butLast Nil = Nil
+
+last :: T -> T
+last (Cons x Nil) = x
+last (Cons _ xs) = last xs
+last (Atom a) = Atom a
+last Nil = Nil
+
+list :: Foldable t => t T -> T
+list = Std.foldr Cons Nil
+
+listStar :: [T] -> T
+listStar = fromMaybe Nil . foldr1May Cons
 
 addMetaToCar :: Atom -> T -> T
 addMetaToCar (A _ lineInfo) (Cons (Atom (A term _)) xs) =
