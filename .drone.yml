@@ -17,6 +17,7 @@ steps:
       bucket: juvix-drone-cache
       region: eu-west-1
       cache_key: "volume"
+      archive_format: "gzip"
       mount:
         - ./.stack-work
         - ./.stack
@@ -47,6 +48,7 @@ steps:
       bucket: juvix-drone-cache
       region: eu-west-1
       rebuild: true
+      archive_format: "gzip"
       cache_key: "volume"
       mount:
         - ./.stack-work
