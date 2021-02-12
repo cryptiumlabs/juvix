@@ -40,6 +40,17 @@ paramConstant k = do
     Just x -> pure x
     Nothing -> throwFF $ UnsupportedConstant k
 
+transformTermIR ::
+  ( Data primTy,
+    Data primVal,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  FE.Expression ->
+  m (IR.Term primTy primVal)
 transformTermIR q fe = do
   SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
@@ -388,7 +399,6 @@ transformSig x def = trySpecial <||> tryNormal
     tryNormal = transformNormalSig q x def
     x <||> y = x >>= maybe y (pure . Just)
 
--- TODO ∷ update with SumCon
 transformNormalSig ::
   ( Data primTy,
     Data primVal,
@@ -406,7 +416,6 @@ transformNormalSig _ _ (Ctx.Record _) = pure Nothing -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
-transformNormalSig _ _ Ctx.SumCon {} = pure Nothing
 transformNormalSig _ _ Ctx.CurrentNameSpace = pure Nothing
 transformNormalSig _ _ (Ctx.Information {}) = pure Nothing
 
@@ -467,8 +476,6 @@ transformDef x def = do
       where
         q = NameSymbol.mod x
 
--- TODO ∷ update with SumCon
-
 transformNormalDef ::
   ( Data primTy,
     Data primVal,
@@ -484,7 +491,7 @@ transformNormalDef ::
   m [IR.RawGlobal primTy primVal]
 transformNormalDef q x (Ctx.Def (Ctx.D _ _ def _)) = do
   (π, typ) <- getValSig q x
-  clauses <- traverse (transformClause (Just q)) def
+  clauses <- traverse (transformClause q) def
   let f =
         IR.Function
           { funName = x,
@@ -498,7 +505,6 @@ transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
 transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
 transformNormalDef _ _ (Ctx.Information {}) = pure []
-transformNormalDef _ _ Ctx.SumCon {} = pure []
 
 getValSig ::
   ( HasCoreSigs primTy primVal m,
@@ -605,13 +611,25 @@ transformCon' q name (Just hd) (FE.ADTLike tys) =
     makeArr arg res =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
 
+transformClause ::
+  ( Data primTy,
+    Data primVal,
+    HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  FE.FunctionLike FE.Expression ->
+  m (IR.FunClause primTy primVal)
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
   IR.FunClause 
 	<$> Nothing 
 	<*> traverse transformArg args 
-	<*> traverse transformTermIR q body 
+	<*> transformTermIR q body 
 	<*> Nothing 
 	<*> Nothing 
 	<*> Nothing
