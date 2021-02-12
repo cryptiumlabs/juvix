@@ -46,14 +46,14 @@ type Queryable tag m =
 -- a full pass this is indeed the new context, but for a single pass,
 -- just a local cache
 type Expression tag m =
-  (Queryable tag m, HasState "new" (New Context.T) m, HasThrow "error" Error m)
+  (Queryable tag m, HasState "new" (New Context.T) m, HasThrow "error" Error m, MonadIO m)
 
 type MinimalEnv (a :: Type) (b :: Type) (c :: Type) (m :: Type -> Type) =
   (HasState "env" (Context.T a b c) m, HasState "new" (New Context.T) m)
 
 -- the effect of the pass itself
 type WorkingMaps tag m =
-  (TransitionMap m, Expression tag m, HasThrow "error" Error m)
+  (TransitionMap m, Expression tag m, HasThrow "error" Error m, MonadIO m)
 
 -- the effect of the single function down
 type SingleMap a b c m =
@@ -100,10 +100,10 @@ data Error
   deriving (Show)
 
 type ContextAlias =
-  ExceptT Error (State Environment)
+  ExceptT Error (StateT Environment IO)
 
 newtype Context a = Ctx {antiAlias :: ContextAlias a}
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "old" (Old Context.T),
       HasSink "old" (Old Context.T),
@@ -126,7 +126,7 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
     via MonadError ContextAlias
 
 type SingleAlias term1 ty1 sumRep1 =
-  ExceptT Error (State (SingleEnv term1 ty1 sumRep1))
+  ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
 
 newtype SingleCont term1 ty1 sumRep1 a
   = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
@@ -206,7 +206,8 @@ queryInfo ::
   (Queryable a m, SymbLookup sym) => sym -> m (Maybe [Context.Information])
 queryInfo s = Juvix.Library.ask @"dispatch" >>= queryInfo' s
 
-runEnv :: Context a -> Old Context.T -> (Either Error a, Environment)
-runEnv (Ctx c) old =
-  Env old (Context.empty (Context.currentName old)) EnvDispatch
-    |> runState (runExceptT c)
+runEnv :: Context a -> Old Context.T -> IO (Either Error a, Environment)
+runEnv (Ctx c) old = do
+  ctx <- setupNewModule old
+  Env old ctx EnvDispatch
+    |> runStateT (runExceptT c)

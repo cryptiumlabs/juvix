@@ -387,21 +387,29 @@ This module provides a default contract environment
   + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Core/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[Usage]]
 ******* Compilation <<Michelson/Compilation>>
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
   + [[Michelson/Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
+  + [[Instructions]]
   + [[InstructionsEff]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+  + [[Usage]]
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
@@ -555,6 +563,9 @@ Types to support partial application and polymorphic primitives.
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+****** Open <<Common/Open>>
+- _Relies on_
+  + [[Library]]
 ****** Context <<Core/Common/Context>>
 - Serves as the context for lower level programs of the =Juvix=
   Programming Language
@@ -575,6 +586,7 @@ Types to support partial application and polymorphic primitives.
 - _Relies on_
   + [[Precedence]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -686,7 +698,7 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
-****** Subst
+****** Subst <<HR/Subst>>
 - Runs a substitution algorithm over core
 - _Relies on_
   + [[HR/Types]]
@@ -730,13 +742,58 @@ This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
 the substitution functions (substTerm and substElim).
 - _Relies on_
+  + [[PatSubst]]
+  + [[Evaluator/Subst]]
+  + [[SubstV]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
   + [[TransformExt]]
   + [[OnlyExts]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
-  + [[NameSymbol]]
+******* PatSubst
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[OnlyExts]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Subst <<Evaluator/Subst>>
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[Usage]]
+******* SubstV
+- _Relies on_
+  + [[Application]]
+  + [[Evaluator/Types]]
+  + [[Evaluator/Weak]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
+******* Types <<Evaluator/Types>>
+- _Relies on_
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Weak <<Evaluator/Weak>>
+- _Relies on_
+  + [[Application]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[Usage]]
 ****** TransformExt
 Transformations between different extensions.
 - _Relies on_
@@ -765,6 +822,7 @@ keeps the extensions.
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -812,6 +870,8 @@ Quantitative type implementation inspired by
 ****** All
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Naturals]]
   + [[Unit]]
@@ -819,11 +879,15 @@ Quantitative type implementation inspired by
 ****** Naturals
 - _Relies on_
   + [[Application]]
+  + [[IR/Evaluator]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ****** Unit
 - _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
 ** test
@@ -860,6 +924,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[IR/Typechecker]]
   + [[All]]
   + [[Naturals]]
@@ -875,8 +940,9 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[NameSpace]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
 *** IR
-**** Weak
+**** Weak <<IR/Weak>>
 Tests that weak works as expected
 - _Relies on_
   + [[IR/Evaluator]]
@@ -1283,6 +1349,7 @@ Calculate mutually-recursive groups of definitions.
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[ResolveOpenInfo]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1297,9 +1364,38 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Common/Open]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Contextify
+****** ResolveOpenInfo
+- This module is responsible for adding the reverse open
+  information to the context, along with the alias map of what
+  symbols get qualified to what module
+- This module accepts a list of =PreQualified= which talks
+  about
+  1. The explicit module itself
+  2. Any opens this module does
+  3. Any modules defined in this module as to have implicit imports
+- Currently the most complicated part of this module is the resolve
+  section that creates an =OpenMap=
+  + This code is responsible for taking in all the opens and
+    properly storing them fully qualified.
+  + This has to try to open as much as possible as we could have
+    =open Michelson= =open Prelude=, in which Michelson is inside
+    of prelude so it can't be resolved right away. This way can
+    lead to ambiguities if it does exist so one has to be a bit
+    careful opening in this way!
+- The other bits of code are stand alone algorithms for filling in
+  the reverse map and the qualification from that point
+  forward.... these are thankfully quite straight forward
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Common/Open]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
@@ -1423,6 +1519,8 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
+  + [[ResolveOpenInfo]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]
@@ -1466,6 +1564,7 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
   + [[RemoveDo/Types]]
@@ -1796,11 +1895,21 @@ Calculate mutually-recursive groups of definitions.
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
 **** Module
-***** Open
+***** Open <<Module/Open>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Resolve
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[ResolveOpenInfo]]
+  + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]

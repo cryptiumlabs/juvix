@@ -50,7 +50,8 @@ The following are required to build Juvix:
 
 [Stack](https://haskellstack.org) required. 8GB RAM required for `stack` installation.
 
-  - For Ubuntu/Debian : `apt install stack`
+  - For Ubuntu        : `apt install stack`
+  - For Debian        : `apt install haskell-stack`
   - For Arch Linux    : `pacman -S stack`
   - For macOS : `brew install haskell-stack`
   - For Windows, following the instructions [here](https://docs.haskellstack.org/en/stable/install_and_upgrade/#windows).
@@ -70,6 +71,8 @@ After cloning Juvix into a local directory, go into the local Juvix directory, a
 ```bash
 make
 ```
+Expect the installation to take some time.  
+For Windows users: to be able to use the command *make*, please visit [this link](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows).
 
 ### Building with optimisations
 
@@ -94,7 +97,7 @@ Other IDE supports will be added over time.
 
 ## Report a bug
 
-If you found a bug please open an issue with the `bug` tag.
+If you found a bug please open an issue and detail the bug. We will fix it as soon as we can.
 
 ## Contributing
 

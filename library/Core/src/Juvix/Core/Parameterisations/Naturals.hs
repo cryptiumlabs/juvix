@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.Parameterisations.Naturals where
 
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>), natVal)
 import Text.ParserCombinators.Parsec
@@ -72,6 +75,22 @@ instance P.CanApply (Typed.TypedPrim Ty Val) where
       unReturn _ = Nothing
       wrap x = App.Return {retTerm = x, retType = typeOf x}
   apply f' xs' = Left $ P.InvalidArguments f' xs'
+
+instance E.HasWeak Ty where weakBy' _ _ ty = ty
+
+instance Monoid (IR.XVPrimTy ext Ty val) => E.HasSubstValue ext Ty val Ty where
+  substValueWith _ _ _ ty = pure $ IR.VPrimTy' ty mempty
+
+instance Monoid (IR.XPrimTy ext Ty val) => E.HasPatSubstTerm ext Ty val Ty where
+  patSubstTerm' _ _ ty = pure $ IR.PrimTy' ty mempty
+
+instance E.HasWeak Val where weakBy' _ _ val = val
+
+instance Monoid (IR.XVPrim ext ty Val) => E.HasSubstValue ext ty Val Val where
+  substValueWith _ _ _ val = pure $ IR.VPrim' val mempty
+
+instance Monoid (IR.XPrim ext Ty Val) => E.HasPatSubstTerm ext Ty Val Val where
+  patSubstTerm' _ _ val = pure $ IR.Prim' val mempty
 
 parseTy :: Token.GenTokenParser String () Identity -> Parser Ty
 parseTy lexer = do

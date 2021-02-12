@@ -23,7 +23,9 @@ dependencies:
 - extensible-data
 - containers
 - unordered-containers
+- stm-containers
 - lens
+- dlist
 
 default-extensions:
   - NoImplicitPrelude

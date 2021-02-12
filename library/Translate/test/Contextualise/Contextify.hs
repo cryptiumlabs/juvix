@@ -27,14 +27,15 @@ top =
 
 infixPlaceTest :: T.TestTree
 infixPlaceTest =
-  ctx Context.!? "+"
-    |> fmap ((\(Context.Def d) -> Context.defPrecedence d) . Context.extractValue)
-    |> (T.@=? Just (Context.Pred Context.Left 5))
+  ( do
+      Right (ctx, _) <-
+        Contextualize.contextify (("Foo", desugared) :| [])
+      ctx Context.!? "+"
+        |> fmap ((\(Context.Def d) -> Context.defPrecedence d) . Context.extractValue)
+        |> (T.@=? Just (Context.Pred Context.Left 5))
     |> T.testCase
       "infix properly adds precedence"
   where
-    Right (ctx, _) =
-      Contextualize.contextify (("Foo", desugared) :| [])
     Right desugared =
       Desugar.op . AST.extractTopLevel
         <$> Parser.parseOnly "let (+) = 3 declare infixl (+) 5"

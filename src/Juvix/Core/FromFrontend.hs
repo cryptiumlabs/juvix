@@ -412,7 +412,7 @@ transformNormalSig ::
   m (Maybe (CoreSigHR primTy primVal))
 transformNormalSig q x def@(Ctx.Def (Ctx.D π msig _ _)) =
   Just <$> transformValSig q x def π msig
-transformNormalSig _ _ (Ctx.Record _ _) = pure Nothing -- TODO
+transformNormalSig _ _ (Ctx.Record _) = pure Nothing -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
@@ -514,7 +514,7 @@ transformNormalDef q x (Ctx.Def (Ctx.D _ _ def _)) = do
             funClauses = clauses
           }
   pure [IR.GFunction f]
-transformNormalDef _ _ (Ctx.Record _ _) = pure [] -- TODO
+transformNormalDef _ _ (Ctx.Record _) = pure [] -- TODO
 transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
 transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
@@ -565,14 +565,16 @@ lookupSig' ::
   Maybe NameSymbol.Mod -> -- namespace of current declaration
   NameSymbol.T ->
   m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
-lookupSig' q x = do
+lookupSig' q x' = do
   gets @"coreSigs" \sigs -> do
     let look x = (x,) <$> HM.lookup x sigs
     case q of
       Nothing -> look x
       Just q -> look x <|> look qx
         where
-          qx = NameSymbol.qualify q x
+          qx = Ctx.removeTopName $ NameSymbol.qualify q x'
+  where
+    x = Ctx.removeTopName x'
 
 transformType ::
   ( Data primTy,

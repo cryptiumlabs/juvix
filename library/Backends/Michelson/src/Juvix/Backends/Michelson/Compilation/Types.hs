@@ -28,6 +28,7 @@ data PrimTy
   | Option
   | List
   | Set
+  | ContractT
   | Application PrimTy (NonEmpty PrimTy)
   deriving (Show, Eq, Generic, Data)
 
@@ -118,25 +119,6 @@ type PrimValIR = PrimVal' IR.NoExt
 
 type PrimValHR = PrimVal' CoreErased.T
 
-toArg :: PrimVal' ext -> Maybe (Arg' ext)
-toArg App.Cont {} = Nothing
-toArg App.Return {retType, retTerm} =
-  Just $
-    App.Take
-      { usage = Usage.Omega,
-        type' = retType,
-        term = App.TermArg retTerm
-      }
-
-toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
-toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
-toTakes App.Return {retType, retTerm} = (fun, [], 0)
-  where
-    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
-
-fromReturn :: Return' ext -> PrimVal' ext
-fromReturn = identity
-
 type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
 
 type Term = CoreErased.AnnTerm PrimTy PrimValHR
@@ -153,7 +135,7 @@ type Op = M.ExpandedOp
 
 data CompilationError
   = NotYetImplemented Text
-  | InvalidInputType
+  | InvalidInputType Text
   | InternalFault Text
   | DidNotTypecheck Instr.ExpandedOp M.TCError
   | DidNotTypecheckAfterOptimisation Instr.ExpandedOp M.TCError

@@ -3,6 +3,7 @@ module Main where
 import qualified Contextualise.Contextify as Contextify
 import Contextualise.Infix.ShuntYard (allInfixTests)
 import Contextualise.Module.Open (openTests)
+import qualified Contextualise.Module.Resolve as Resolve
 import Desugar (allDesugar)
 import Golden (contractFiles)
 import Juvix.Library (IO)
@@ -27,7 +28,8 @@ allCheckedTests =
     [ frontEndTests,
       allInfixTests,
       openTests,
-      Contextify.top
+      Contextify.top,
+      Resolve.top
     ]
 
 main :: IO ()

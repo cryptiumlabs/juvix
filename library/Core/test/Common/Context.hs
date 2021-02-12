@@ -1,15 +1,22 @@
 module Common.Context where
 
+import Control.Lens (over)
 import qualified Data.Text as Text
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified StmContainers.Map as STM
+import qualified System.IO.Unsafe as Unsafe
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 
 foo :: Context.T Int Int Int
-foo = Context.empty ("Foo" :| ["Bar", "Baz"])
+foo = Unsafe.unsafePerformIO (Context.empty ("Foo" :| ["Bar", "Baz"]))
+
+unsafeEmpty :: NameSymbol.T -> Context.T term ty sumRep
+unsafeEmpty x = Unsafe.unsafePerformIO (Context.empty x)
 
 contextTests :: T.TestTree
 contextTests =
@@ -29,99 +36,118 @@ contextTests =
 
 switchAboveLookupCheck :: T.TestTree
 switchAboveLookupCheck =
-  let added = Context.add (NameSpace.Pub "a") (Context.TypeDeclar 3) foo
-      --
-      looked = Context.lookup (pure "a") added
-      --
-      Right switched = Context.switchNameSpace ("Foo" :| ["Bar"]) added
-      --
-      looked' = Context.lookup ("Baz" :| ["a"]) switched
-   in T.testCase
-        "switch to module above and lookup value from below"
-        (looked T.@=? looked')
+  T.testCase
+    "switch to module above and lookup value from below"
+    ( do
+        let added = Context.add (NameSpace.Pub "a") (Context.TypeDeclar 3) foo
+            --
+            looked = Context.lookup (pure "a") added
+        Right switched <- Context.switchNameSpace ("Foo" :| ["Bar"]) added
+        --
+        let looked' = Context.lookup ("Baz" :| ["a"]) switched
+        looked T.@=? looked'
+    )
 
 -- should we allow a switch to itself... should we just make it ID?
 switchSelf :: T.TestTree
 switchSelf =
   T.testCase
     "switching namespace to self is left"
-    ( Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
-        T.@=? Right foo
+    ( do
+        swtiched <- Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) foo
+        swtiched T.@=? Right foo
     )
 
 checkFullyResolvedName :: T.TestTree
 checkFullyResolvedName =
-  let Right relative =
-        Context.switchNameSpace (pure "Barry") foo
-      --
-      Right fullQual =
-        Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
-   in T.testCase
-        "relative lookup is the same as fully qualified"
-        (Context.currentName relative T.@=? Context.currentName fullQual)
+  T.testCase
+    "relative lookup is the same as fully qualified"
+    ( do
+        Right relative <-
+          Context.switchNameSpace (pure "Barry") foo
+        --
+        Right fullQual <-
+          Context.switchNameSpace ("Foo" :| ["Bar", "Baz", "Barry"]) foo
+        --
+        Context.currentName relative T.@=? Context.currentName fullQual
+    )
 
 -- this test checks that the local variable is added and the global
 checkCorrectResolution :: T.TestTree
 checkCorrectResolution =
-  let Right inner = Context.switchNameSpace (pure "Gkar") foo
-      --
-      added =
-        Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
-      --
-      Right topGkar =
-        Context.switchNameSpace (Context.topLevelName :| ["Gkar"]) added
-      --
-      addedTop =
-        Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) topGkar
-      --
-      Right switchBack =
-        Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
-      --
-      Just outside =
-        switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
-      --
-      Just current = switchBack Context.!? ("Gkar" :| ["londo"])
-   in T.testGroup
-        "correct resolution test"
-        [ T.testCase
-            "topLevel value same as local: "
-            (Context.extractValue outside T.@=? Context.extractValue current),
-          T.testCase
-            "topLevel is outside: "
-            (isOutside outside T.@=? True),
-          T.testCase
-            "current is local: "
-            (isCurrent current T.@=? True)
-        ]
+  T.testGroup
+    "correct resolution test"
+    [ T.testCase
+        "topLevel value same as local: "
+        ( do
+            (outside, current) <- run
+            Context.extractValue outside T.@=? Context.extractValue current
+        ),
+      T.testCase
+        "topLevel is outside: "
+        ( do
+            (outside, _current) <- run
+            isOutside outside T.@=? True
+        ),
+      T.testCase
+        "current is local: "
+        ( do
+            (_, current) <- run
+            isCurrent current T.@=? True
+        )
+    ]
   where
     isOutside (Context.Outside _) = True
     isOutside (Context.Current _) = False
     isCurrent (Context.Outside _) = False
     isCurrent (Context.Current _) = True
+    run = do
+      Right inner <- Context.switchNameSpace (pure "Gkar") foo
+      --
+      let added =
+            Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) inner
+      --
+      Right topGkar <-
+        Context.switchNameSpace (Context.topLevelName :| ["Gkar"]) added
+      --
+      let addedTop =
+            Context.add (NameSpace.Pub "londo") (Context.TypeDeclar 3) topGkar
+      --
+      Right switchBack <-
+        Context.switchNameSpace ("Foo" :| ["Bar", "Baz"]) addedTop
+      --
+      let Just outside =
+            switchBack Context.!? (Context.topLevelName :| ["Gkar", "londo"])
+          --
+          Just current = switchBack Context.!? ("Gkar" :| ["londo"])
+      pure (outside, current)
 
 privateFromAbove :: T.TestTree
 privateFromAbove =
-  let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("Ambassador" :| ["Kosh", "Vorlons"])
+  T.testCase
+    "Can't access private var from above"
+    $ do
+      empt <-
+        Context.empty ("Ambassador" :| ["Kosh", "Vorlons"]) ::
+          IO (Context.T Text.Text Text.Text Text.Text)
       --
-      added =
-        Context.add
-          (NameSpace.Priv "too-late")
-          ( Context.TypeDeclar
-              "The avalanche has already started; It is too late for the pebbles to vote."
-          )
-          empt
-      Right switched =
-        Context.switchNameSpace ("Ambassador" :| ["Kosh"]) added
-      looked = switched Context.!? ("Vorlons" :| ["too-late"])
-   in T.testCase
-        "Can't access private var from above"
-        (looked T.@=? Nothing)
+      let added =
+            Context.add
+              (NameSpace.Priv "too-late")
+              ( Context.TypeDeclar
+                  "The avalanche has already started; It is too late for the pebbles to vote."
+              )
+              empt
+      --
+      Right switched <- Context.switchNameSpace ("Ambassador" :| ["Kosh"]) added
+      --
+      let looked = switched Context.!? ("Vorlons" :| ["too-late"])
+      looked T.@=? Nothing
 
 privateBeatsPublic :: T.TestTree
 privateBeatsPublic =
   let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("Londo" :| ["Mollari", "Centauri"])
+      empt = unsafeEmpty ("Londo" :| ["Mollari", "Centauri"])
       --
       added =
         Context.add
@@ -150,7 +176,7 @@ privateBeatsPublic =
 localBeatsGlobal :: T.TestTree
 localBeatsGlobal =
   let empt :: Context.T Text.Text Text.Text Text.Text
-      empt = Context.empty ("GKar" :| ["Narn"])
+      empt = unsafeEmpty ("GKar" :| ["Narn"])
       --
       added =
         Context.add
@@ -169,7 +195,7 @@ localBeatsGlobal =
               \ your intent. Usually. It just doesn't always do it in the way you expect."
           )
           added
-      looked = added2 Context.!? (pure "cost")
+      looked = added2 Context.!? pure "cost"
    in "I have seen what power does, and I have seen what power costs. \
       \ The one is never equal to the other."
         |> Context.TypeDeclar
@@ -181,46 +207,60 @@ localBeatsGlobal =
 
 nonRelatedModuleStillPersists :: T.TestTree
 nonRelatedModuleStillPersists =
-  let Right topBar = Context.switchNameSpace ("TopLevel" :| ["Bar"]) foo
-      Right food = Context.switchNameSpace ("TopLevel" :| ["Foo"]) topBar
-      --
-      looked = food Context.!? (Context.topLevelName :| ["Bar"])
-      --
-      isOutSideRec (Just (Context.Outside (Context.Record _ _))) = True
-      isOutSideRec _ = False
-   in T.testCase
-        "differnet module persists through switch"
-        (isOutSideRec looked T.@=? True)
+  T.testCase
+    "differnet module persists through switch"
+    ( do
+        Right topBar <- Context.switchNameSpace ("TopLevel" :| ["Bar"]) foo
+        Right food <- Context.switchNameSpace ("TopLevel" :| ["Foo"]) topBar
+        --
+        let looked = food Context.!? (Context.topLevelName :| ["Bar"])
+            --
+            isOutSideRec (Just (Context.Outside (Context.Record {}))) = True
+            isOutSideRec _ = False
+        --
+        isOutSideRec looked T.@=? True
+    )
 
 emptyWorksAsExpectedSingle :: T.TestTree
 emptyWorksAsExpectedSingle =
-  let created :: Context.T Int Int Int
-      created = Context.empty (pure "Mr-Morden")
-      empt =
-        HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)]
-          |> Context.T NameSpace.empty (pure "Mr-Morden")
-   in T.testCase
-        "empty properly adds a top level module as expected:"
-        (created T.@=? empt)
+  T.testCase
+    "empty properly adds a top level module as expected:"
+    $ do
+      created <- Context.empty (pure "Mr-Morden") :: IO (Context.T Int Int Int)
+      empt <- do
+        contents <- atomically Context.emptyRecord
+        pure $
+          Context.T
+            contents
+            (pure "Mr-Morden")
+            (HashMap.fromList [("Mr-Morden", Context.CurrentNameSpace)])
+            HashMap.empty
+      created T.@=? empt
 
 topLevelDoesNotMessWithInnerRes :: T.TestTree
 topLevelDoesNotMessWithInnerRes =
-  let created :: Context.T Int Int Int
-      created = Context.empty (pure "Shadows")
-      inner =
+  T.testCase
+    "TopLevelname does not prohbit inner module change"
+    $ do
+      let created :: Context.T Int Int Int
+          created = unsafeEmpty (pure "Shadows")
+      inner <-
         Context.switchNameSpace
           (Context.topLevelName :| ["Shadows", "Mr-Morden"])
           created
-      inner2 =
+      inner2 <-
         Context.switchNameSpace
           ("Shadows" :| ["Mr-Morden"])
           created
-      empt =
-        NameSpace.empty
-          |> NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace
-          |> flip Context.Record Nothing
+      empt <- do
+        emptyRecord <- atomically Context.emptyRecord
+        emptyNameSpace <- atomically Context.emptyRecord
+        emptyRecord
+          |> over
+            Context.contents
+            (NameSpace.insert (NameSpace.Pub "Mr-Morden") Context.CurrentNameSpace)
+          |> Context.Record
           |> (\record -> HashMap.fromList [("Shadows", record)])
-          |> Context.T NameSpace.empty ("Shadows" :| ["Mr-Morden"])
-   in T.testCase
-        "TopLevelname does not prohbit inner module change"
-        (inner == Right empt && inner == inner2 T.@=? True)
+          |> (\x -> Context.T emptyNameSpace ("Shadows" :| ["Mr-Morden"]) x HashMap.empty)
+          |> pure
+      inner == Right empt && inner == inner2 T.@=? True
