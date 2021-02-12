@@ -49,12 +49,12 @@ sumConTest =
       T.testCase "Bool properly adds False" (test "False")
     ]
   where
-    test str =
+    test str = do
+      Right (ctx, _) <-
+        Contextualize.contextify (("Foo", desugared) :| [])
       ctx Context.!? str
         |> fmap Context.extractValue
         |> (T.@=? Just (Context.SumCon (Context.Sum Nothing "bool")))
-    Right (ctx, _) =
-      Contextualize.contextify (("Foo", desugared) :| [])
     Right desugared =
       Desugar.op . AST.extractTopLevel
         <$> Parser.parseOnly "type bool = True | False"
