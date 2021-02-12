@@ -35,6 +35,7 @@ infixPlaceTest =
         |> (T.@=? Just (Context.Pred Context.Left 5))
     |> T.testCase
       "infix properly adds precedence"
+   )
   where
     Right desugared =
       Desugar.op . AST.extractTopLevel
