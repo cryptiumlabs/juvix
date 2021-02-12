@@ -1,6 +1,6 @@
 kind: pipeline
 type: docker
-name: juvix-ci
+name: juvix-ci-build
 
 workspace:
   path: /drone/workspace
@@ -16,7 +16,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "volume"
+      cache_key: "cache"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -37,29 +37,6 @@ steps:
       - make test
     depends_on:
       - restore-cache
-
-  - name: rebuild-cache
-    image: meltwater/drone-cache:dev
-    volumes:
-      - name: cache
-        path: /tmp/cache
-    settings:
-      backend: "s3"
-      bucket: juvix-drone-cache
-      region: eu-west-1
-      rebuild: true
-      archive_format: "gzip"
-      cache_key: "volume"
-      mount:
-        - ./.stack-work
-        - ./.stack
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: aws_access_key_id
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: aws_secret_access_key
-    depends_on:
-      - test-suite
 
   - name: check-formatting
     image: cryptiumlabs/juvix-ci-2
@@ -114,3 +91,80 @@ volumes:
 trigger:
   event:
     - push
+
+---
+
+kind: pipeline
+type: docker
+name: juvix-ci-cache
+
+workspace:
+  path: /drone/workspace
+
+environment:
+  STACK_ROOT: /drone/workspace/.stack
+
+steps:
+  - name: restore-cache
+    image: meltwater/drone-cache:dev
+    settings:
+      backend: "s3"
+      restore: true
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      cache_key: "cache"
+      archive_format: "gzip"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    volumes:
+      - name: cache
+        path: /tmp/cache
+
+  - name: test-suite
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    commands:
+      - make test
+    depends_on:
+      - restore-cache
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    settings:
+      backend: "s3"
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      rebuild: true
+      archive_format: "gzip"
+      cache_key: "cache"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    depends_on:
+      - test-suite
+
+volumes:
+  - name: cache
+    host: 
+      path: /tmp/cache
+
+trigger:
+  event:
+    - cron
+  target:
+    include:
+    - rebuild-cache
