@@ -476,19 +476,6 @@ transformDef x def = do
       where
         q = NameSymbol.mod x
 
-transformNormalDef ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  NameSymbol.T ->
-  FE.Final Ctx.Definition ->
-  m [IR.RawGlobal primTy primVal]
 transformNormalDef q x (Ctx.Def (Ctx.D _ _ def _)) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause q) def
@@ -611,28 +598,12 @@ transformCon' q name (Just hd) (FE.ADTLike tys) =
     makeArr arg res =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
 
-transformClause ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  FE.FunctionLike FE.Expression ->
-  m (IR.FunClause primTy primVal)
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
-  IR.FunClause 
-	<$> Nothing 
-	<*> traverse transformArg args 
-	<*> transformTermIR q body 
-	<*> Nothing 
-	<*> Nothing 
-	<*> Nothing
+  patts <- traverse transformArg args
+  clauseBody <- transformTermIR q body
+  pure $ IR.FunClause [] patts (Just clauseBody) Nothing False Nothing
 
 
 transformArg ::
