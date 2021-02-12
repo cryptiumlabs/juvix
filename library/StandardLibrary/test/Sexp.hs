@@ -11,23 +11,22 @@ top :: T.TestTree
 top =
   T.testGroup
     "sexp tests:"
-    [condWorksAsExpected]
+    [condWorksAsExpected, ifWorksAsExpected]
 
 condTransform :: Sexp.T -> Sexp.T
 condTransform xs = Sexp.foldPred xs (== "cond") condToIf
   where
     condToIf atom cdr =
-      let acc = Sexp.butLast (generation (Sexp.last cdr) Sexp.Nil)
-      in Sexp.foldr generation acc (Sexp.butLast cdr)
-        |> Sexp.addMetaToCar atom
-    generation name acc =
-      case name of
-        Sexp.Cons condition body ->
-          generateIf condition (Sexp.car body) acc
-        _ ->
-          error "malformed cond"
-    generateIf p t e =
-      Sexp.list [Sexp.atom "if", p, t, e]
+      let acc =
+            generation (Sexp.last cdr) Sexp.Nil
+              |> Sexp.butLast
+       in Sexp.foldr generation acc (Sexp.butLast cdr)
+            |> Sexp.addMetaToCar atom
+    --
+    generation (Sexp.Cons condition body) acc =
+      Sexp.list [Sexp.atom "if", condition, (Sexp.car body), acc]
+    generation _ _ =
+      error "malformed cond"
 
 ifTransform :: Sexp.T -> Sexp.T
 ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
@@ -40,7 +39,7 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
           Sexp.list (caseList pred then')
         _ ->
           error "malformed if"
-          |> Sexp.addMetaToCar atom
+            |> Sexp.addMetaToCar atom
     caseList pred then' =
       [Sexp.atom "case", pred, Sexp.list [Sexp.atom "true", then']]
     caseListElse pred then' else' =
@@ -60,8 +59,20 @@ condWorksAsExpected =
       \ \"true\"\
       \ (\"if\" \"else\" \"false\")))"
 
-
-ifWorksAsExpected = undefined
+ifWorksAsExpected :: T.TestTree
+ifWorksAsExpected =
+  T.testCase
+    "if expansion to match works properly"
+    (expected T.@=? show (ifTransform (condTransform testData)))
+  where
+    expected :: String
+    expected =
+      "(\"case\" (\"g\" \"x\")\
+      \ (\"true\" \"true\")\
+      \ (\"false\"\
+      \ (\"case\" (\"p\" \"x\")\
+      \ (\"true\" \"true\")\
+      \ (\"false\" (\"case\" \"else\" (\"true\" \"false\"))))))"
 
 -- TODO ∷ add a sexp parser, to make this less annoying
 testData :: Sexp.T

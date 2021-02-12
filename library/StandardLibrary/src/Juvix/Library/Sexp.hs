@@ -3,12 +3,12 @@
 
 module Juvix.Library.Sexp where
 
-import Prelude (error)
 import Control.Lens hiding ((|>))
 import Juvix.Library hiding (foldr, show)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Prelude (error)
 import Prelude (Show (..), String)
 
 -- TODO ∷ make Atom generic, and have it conform to an interface?
