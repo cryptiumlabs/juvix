@@ -603,7 +603,7 @@ transformClause q (FE.Like args body) = do
   put @"nextPatVar" 0
   patts <- traverse transformArg args
   clauseBody <- transformTermIR q body
-  pure $ IR.FunClause [] patts (Just clauseBody) Nothing False Nothing
+  pure $ IR.FunClause [] patts clauseBody Nothing False Nothing
 
 
 transformArg ::

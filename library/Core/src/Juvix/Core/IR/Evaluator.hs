@@ -197,7 +197,7 @@ toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
     let transform = extTransformT $ OnlyExts.injector `compose` forgetter
     let π = IR.globalToUsage funUsage
     let ty = OnlyExts.injectT $ IR.toTerm funType
-    case patSubst patMap $ weakBy len $ transform (fromJust rhs) of -- TODO nothing case.
+    case patSubst patMap $ weakBy len $ transform rhs of
       Left _ -> Nothing
       Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
   where

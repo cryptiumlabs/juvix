@@ -416,7 +416,7 @@ data FunClause' ext primTy primVal
 
         -- | @Just v@ with @Δ ⊢ v@ for a regular clause, or @Nothing@ for an
         --   absurd one.
-        clauseBody :: Maybe(Term' ext primTy primVal),
+        clauseBody :: Term' ext primTy primVal,
         -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
         clauseType :: Maybe (Value' ext primTy primVal),
         -- | Clause has been labelled as CATCHALL.
