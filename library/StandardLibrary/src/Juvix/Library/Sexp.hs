@@ -5,13 +5,12 @@
 
 module Juvix.Library.Sexp where
 
-import Control.Lens hiding (List, (|>))
+import Control.Lens hiding ((:>), List, (|>))
 import Juvix.Library hiding (foldr, show, toList)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Prelude (error)
-import Prelude (Show (..), String)
+import Prelude (Show (..), String, error)
 
 -- TODO ∷ make Atom generic, and have it conform to an interface?
 -- This way we can erase information later!
@@ -115,7 +114,7 @@ nameFromT _ = Nothing
 
 instance Show T where
   show (Cons car cdr)
-    | show cdr == ")" =
+    | take 1 (showNoParens cdr) == ")" =
       "(" <> show car <> showNoParens cdr
     | otherwise =
       "(" <> show car <> " " <> showNoParens cdr
@@ -127,6 +126,13 @@ toList :: T -> Maybe [T]
 toList (Cons x xs) = (x :) <$> toList xs
 toList Nil = pure []
 toList (Atom _a) = Nothing
+
+infixr 5 :>
+
+pattern (:>) :: T -> T -> T
+pattern x :> xs = Cons x xs
+
+{-# COMPLETE (:>), Atom, Nil #-}
 
 pattern List :: [T] -> T
 pattern List xs <- (toList -> Just xs)
