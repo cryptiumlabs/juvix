@@ -15,7 +15,8 @@ top =
       ifWorksAsExpected,
       letWorksAsExpected,
       doWorksAsExpected,
-      recordWorksAsExpected
+      recordWorksAsExpected,
+      sigandDefunWorksAsExpetcted
     ]
 
 condTransform :: Sexp.T -> Sexp.T
@@ -52,6 +53,7 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 
 -- This one and sig combining are odd mans out, as they happen on a
 -- list of transforms
+-- We will get rid of this as this should be the job of Code -> Context!
 multipleTransDefun :: [Sexp.T] -> [Sexp.T]
 multipleTransDefun = search
   where
@@ -78,6 +80,23 @@ multipleTransDefun = search
               |> (: search toSearch)
     search (x : xs) = x : search xs
     search [] = []
+
+-- This pass will also be removed, but is here for comparability
+-- reasons we just drop sigs with no defuns for now ☹. Fix this up when
+-- we remove this pass
+combineSig :: [Sexp.T] -> [Sexp.T]
+combineSig
+  ( Sexp.List [Sexp.Atom (Sexp.A "defsig" _), name, sig] :
+      (Sexp.Atom a@(Sexp.A "defun-match" _) Sexp.:> defName Sexp.:> body) :
+      xs
+    )
+    | defName == name =
+      Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom "defsig-match", name, sig, body])
+        : combineSig xs
+combineSig (Sexp.List [Sexp.Atom (Sexp.A "defsig" _), _, _] : xs) =
+  combineSig xs
+combineSig (x : xs) = x : combineSig xs
+combineSig [] = []
 
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
@@ -215,6 +234,19 @@ recordWorksAsExpected =
       \ \"field-pun\" \"field-pun\"\
       \ \"name2\" \"value2\")"
 
+sigandDefunWorksAsExpetcted :: T.TestTree
+sigandDefunWorksAsExpetcted =
+  T.testCase
+    "desugaring defuns and sigs work as epected"
+    (expected T.@=? (multipleTransDefun testDefun |> combineSig |> show))
+  where
+    expected :: String
+    expected =
+      "[(\"defsig-match\" \"f\" (\"->\" \"a\" \"b\")\
+      \ (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
+      \ ((\"Nil\" \"b\") \"b2\"))\
+      \,(\"defun-match\" \"g\" ((\"a\" \"b\") \"new-b\"))]"
+
 -- TODO ∷ add a sexp parser, to make this less annoying
 testData :: Sexp.T
 testData =
@@ -237,6 +269,11 @@ testData =
 testDefun :: [Sexp.T]
 testDefun =
   [ Sexp.list
+      [ Sexp.atom "defsig",
+        Sexp.atom "f",
+        Sexp.list [Sexp.atom "->", Sexp.atom "a", Sexp.atom "b"]
+      ],
+    Sexp.list
       [ Sexp.atom "defun",
         Sexp.atom "f",
         Sexp.list
@@ -254,10 +291,6 @@ testDefun =
         Sexp.atom "g",
         Sexp.list [Sexp.atom "a", Sexp.atom "b"],
         Sexp.atom "new-b"
-      ],
-    Sexp.list
-      [ Sexp.atom "sig",
-        Sexp.atom "g"
       ]
   ]
 
