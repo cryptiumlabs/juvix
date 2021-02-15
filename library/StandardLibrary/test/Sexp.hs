@@ -77,7 +77,16 @@ multipleTransDefun = search
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
   where
-    letToLetMatch atom cdr = undefined
+    letToLetMatch atom (Sexp.Cons a@(Sexp.Atom (Sexp.A name meta)) (Sexp.Cons bindingsBody rest)) =
+      let (grabbed, rest) = grabSimilar name rest
+       in Sexp.list [Sexp.atom "let-match", a, Sexp.list (bindingsBody : grabbed), rest]
+    letToLetMatch atom _ =
+      error "malformed let"
+    grabSimilar name (Sexp.Cons let1 (Sexp.Cons name1 (Sexp.Cons bindingsBody rest)))
+      | Sexp.isAtomNamed let1 "let" && Sexp.isAtomNamed name1 name =
+        let (sameName, rest) = grabSimilar name rest
+         in (bindingsBody : sameName, rest)
+    grabSimilar _name xs = ([], xs)
 
 condWorksAsExpected :: T.TestTree
 condWorksAsExpected =
