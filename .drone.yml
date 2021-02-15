@@ -114,4 +114,4 @@ volumes:
 
 trigger:
   event:
-    - push
+    - push 
