@@ -21,7 +21,10 @@ data T
 
 data Atom
   = A {atomName :: NameSymbol.T, atomLineNum :: Maybe LineNum.T}
-  deriving (Show, Eq)
+  deriving (Show)
+
+instance Eq Atom where
+  A n1 _ == A n2 _ = n1 == n2
 
 makeLensesWith camelCaseFields ''Atom
 
@@ -97,6 +100,14 @@ showNoParens (Cons car cdr)
     show car <> " " <> showNoParens cdr
 showNoParens Nil = ")"
 showNoParens xs = show xs
+
+isAtomNamed :: T -> NameSymbol.T -> Bool
+isAtomNamed (Atom (A name _)) name2 = name == name2
+isAtomNamed _ _ = False
+
+nameFromT :: T -> Maybe NameSymbol.T
+nameFromT (Atom (A name _)) = Just name
+nameFromT _ = Nothing
 
 -- TODO ∷ make reader instance
 
