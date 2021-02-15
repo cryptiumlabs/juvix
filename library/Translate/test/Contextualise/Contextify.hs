@@ -33,9 +33,9 @@ infixPlaceTest =
       ctx Context.!? "+"
         |> fmap ((\(Context.Def d) -> Context.defPrecedence d) . Context.extractValue)
         |> (T.@=? Just (Context.Pred Context.Left 5))
-    |> T.testCase
-      "infix properly adds precedence"
-   )
+      |> T.testCase
+        "infix properly adds precedence"
+  )
   where
     Right desugared =
       Desugar.op . AST.extractTopLevel

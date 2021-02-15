@@ -48,13 +48,12 @@ updateTopLevel (Repr.Type t@(Repr.Typ _ name _ dat)) ctx =
           |> Context.SumCon
           |> Context.add (NameSpace.Pub con)
       newCtx = foldr addSum ctx constructors
-   in
-    pure $
-      Type.P
-        { ctx = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
-          opens = [],
-          modsDefined = []
-        }
+   in pure $
+        Type.P
+          { ctx = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
+            opens = [],
+            modsDefined = []
+          }
 updateTopLevel (Repr.Function (Repr.Func name f sig)) ctx = do
   let precendent =
         case Context.extractValue <$> Context.lookup (pure name) ctx of
