@@ -1,10 +1,12 @@
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Library.Sexp where
 
-import Control.Lens hiding ((|>))
-import Juvix.Library hiding (foldr, show)
+import Control.Lens hiding (List, (|>))
+import Juvix.Library hiding (foldr, show, toList)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -120,3 +122,13 @@ instance Show T where
   show (Atom (A x _)) =
     show (NameSymbol.toSymbol x)
   show Nil = "nil"
+
+toList :: T -> Maybe [T]
+toList (Cons x xs) = (x :) <$> toList xs
+toList Nil = pure []
+toList (Atom _a) = Nothing
+
+pattern List :: [T] -> T
+pattern List xs <- (toList -> Just xs)
+
+{-# COMPLETE List, Atom #-}
