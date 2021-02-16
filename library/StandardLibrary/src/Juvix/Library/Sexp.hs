@@ -22,21 +22,27 @@ data T
 
 data Atom
   = A {atomName :: NameSymbol.T, atomLineNum :: Maybe LineNum.T}
+  | N {atomNum :: Integer, atomLineNum :: Maybe LineNum.T}
   deriving (Show)
 
 instance Eq Atom where
   A n1 _ == A n2 _ = n1 == n2
+  N i1 _ == N i2 _ = i1 == i2
+  _ == _ = False
 
 instance Ord Atom where
   compare (A n1 _) (A n2 _) = compare n1 n2
+  compare (N i1 _) (N i2 _) = compare i1 i2
+  compare (N _ _) (A _ _) = GT
+  compare (A _ _) (N _ _) = LT
 
 makeLensesWith camelCaseFields ''Atom
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
   case t of
-    Cons (Atom atom) xs
-      | pred (atom ^. name) ->
+    Cons (Atom atom@(A name _)) xs
+      | pred name ->
         foldPred (f atom xs) pred f
     Cons cs xs ->
       Cons (foldPred cs pred f) (foldPred xs pred f)
@@ -96,6 +102,9 @@ cdr (Atom a) = Atom a
 atom :: NameSymbol.T -> T
 atom x = Atom $ A x Nothing
 
+number :: Integer -> T
+number n = Atom $ N n Nothing
+
 showNoParens :: T -> String
 showNoParens (Cons car cdr)
   | showNoParens cdr == ")" =
@@ -127,6 +136,8 @@ instance Show T where
       "(" <> show car <> " " <> showNoParens cdr
   show (Atom (A x _)) =
     show (NameSymbol.toSymbol x)
+  show (Atom (N x _)) =
+    show x
   show Nil = "nil"
 
 toList :: T -> Maybe [T]
