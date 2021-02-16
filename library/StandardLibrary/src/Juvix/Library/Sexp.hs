@@ -27,6 +27,9 @@ data Atom
 instance Eq Atom where
   A n1 _ == A n2 _ = n1 == n2
 
+instance Ord Atom where
+  compare (A n1 _) (A n2 _) = compare n1 n2
+
 makeLensesWith camelCaseFields ''Atom
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
@@ -105,6 +108,10 @@ showNoParens xs = show xs
 isAtomNamed :: T -> NameSymbol.T -> Bool
 isAtomNamed (Atom (A name _)) name2 = name == name2
 isAtomNamed _ _ = False
+
+atomFromT :: T -> Maybe Atom
+atomFromT (Atom a) = Just a
+atomFromT _ = Nothing
 
 nameFromT :: T -> Maybe NameSymbol.T
 nameFromT (Atom (A name _)) = Just name

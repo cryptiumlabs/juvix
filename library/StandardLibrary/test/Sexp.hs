@@ -1,5 +1,6 @@
 module Sexp where
 
+import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.Sexp as Sexp
@@ -16,8 +17,54 @@ top =
       letWorksAsExpected,
       doWorksAsExpected,
       recordWorksAsExpected,
-      sigandDefunWorksAsExpetcted
+      sigandDefunWorksAsExpetcted,
+      moduleExpandsAsExpected
     ]
+
+moduleTransform :: Sexp.T -> Sexp.T
+moduleTransform xs = Sexp.foldPred xs (== "defmodule") moduleToRecord
+  where
+    moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
+      Sexp.list [Sexp.atom "defun", name, args, Sexp.foldr combine generatedRecord body]
+        |> Sexp.addMetaToCar atom
+      where
+        generatedRecord =
+          Sexp.list (Sexp.atom "record" : fmap (\x -> Sexp.list [Sexp.Atom x]) names)
+        combine (form Sexp.:> name Sexp.:> xs) expression
+          | Sexp.isAtomNamed form "defun" =
+            -- we crunch the xs in a list
+            Sexp.list [Sexp.atom "let", name, xs, expression]
+          | Sexp.isAtomNamed form "type" =
+            Sexp.list [Sexp.atom "let-type", name, xs, expression]
+        combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
+          | Sexp.isAtomNamed form "defsig" =
+            Sexp.list [Sexp.atom "let-sig", name, xs, expression]
+        combine (form Sexp.:> declaration) expression
+          | Sexp.isAtomNamed form "declare" =
+            Sexp.list [Sexp.atom "declaim", declaration, expression]
+        combine (Sexp.List [form, open]) expression
+          | Sexp.isAtomNamed form "open" =
+            Sexp.list [Sexp.atom "open-in", open, expression]
+        combine (form Sexp.:> xs) expression
+          | Sexp.isAtomNamed form "defmodule",
+            Just atom <- Sexp.atomFromT form =
+            -- have to recurse by hand here ☹
+            let (_ Sexp.:> name Sexp.:> rest) = moduleToRecord atom xs
+             in Sexp.list [Sexp.atom "let", name, rest, expression]
+        -- ignore other forms
+        combine _ expression = expression
+        --
+        names = Sexp.foldr f [] body |> Set.fromList |> Set.toList
+        --
+        f (form Sexp.:> name Sexp.:> _) acc
+          | Sexp.isAtomNamed form "defun"
+              || Sexp.isAtomNamed form "type"
+              || Sexp.isAtomNamed form "defmodule"
+              || Sexp.isAtomNamed form "defsig",
+            Just name <- Sexp.atomFromT name =
+            name : acc
+        f _ acc = acc
+    moduleToRecord _ _ = error "malformed record"
 
 condTransform :: Sexp.T -> Sexp.T
 condTransform xs = Sexp.foldPred xs (== "cond") condToIf
@@ -246,6 +293,25 @@ sigandDefunWorksAsExpetcted =
       \ (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
       \ ((\"Nil\" \"b\") \"b2\"))\
       \,(\"defun-match\" \"g\" ((\"a\" \"b\") \"new-b\"))]"
+
+moduleExpandsAsExpected :: T.TestTree
+moduleExpandsAsExpected =
+  T.testCase
+    "module properly goes to record"
+    (expected T.@=? (moduleTransform moduleTest |> show))
+  where
+    expected :: String
+    expected =
+      "(\"defun\" \"fun-name\" nil\
+      \ (\"let-sig\" \"f\" (\"->\" \"a\" \"b\")\
+      \ (\"let\" \"f\" (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
+      \ (\"let\" \"f\" ((\"Nil\" \"b\") \"b2\")\
+      \ (\"record\" (\"f\"))))))"
+
+moduleTest :: Sexp.T
+moduleTest =
+  Sexp.listStar
+    ([Sexp.atom "defmodule", Sexp.atom "fun-name", Sexp.list []] <> testDefun)
 
 -- TODO ∷ add a sexp parser, to make this less annoying
 testData :: Sexp.T
