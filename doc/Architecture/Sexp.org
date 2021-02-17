@@ -41,7 +41,7 @@
      + However for now I think it's fine... Though this is a place for
        improvement for the future
 ** Top Level Types
-1. basic
+1. record
    - input
      #+begin_src haskell
        type foo x y z =
@@ -57,7 +57,32 @@
             x-axis x
             z-axis z))
      #+end_src
+2. first sum
+   - input
+     #+begin_src haskell
+       type foo x y z =
+         | Foo {y-axis : y, x-axis : x, z-axis : z}
+         | Bar (var1 : x) (var2 : y)
+         | Car : hd : x -> cdr : foo y -> foo x y z
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type foo (x y z)
+         (Foo (:record y-axis y x-axis x z-axis z))
+         (Bar (:paren (:infix : var1 x))
+              (:paren (:infix : var2 y)))
+         (Car (:arrow
+               (:infix : hd
+                       (:infix -> x
+                               (:infix : cdr
+                                       (:infix -> (foo y) (foo x y z))))))))
+     #+end_src
+* Notes
 
+** Design Principles
+** On Verbosity
+** On Forms
+** Inconsistencies
 * Template
 1. basic
    - input
