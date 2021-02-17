@@ -1,6 +1,7 @@
 module Juvix.Frontend.Sexp where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library
@@ -77,7 +78,7 @@ transTypeGen (Types.Typ usage name args form) =
 
 transAdt :: Types.Adt -> Sexp.T
 transAdt (Types.Sum sums) = Sexp.list (fmap transSum (NonEmpty.toList sums))
-transAdt (Types.Product prod) = transProduct prod
+transAdt (Types.Product prod) = Sexp.list [transProduct prod]
 
 transSum :: Types.Sum -> Sexp.T
 transSum (Types.S cons Nothing) =

@@ -1,0 +1,61 @@
+* Generation
+** Let Top Level
+1. basic
+   - input
+     #+begin_src haskell
+       let foo x
+         | x == 2 = 3 + 4 + x
+         | else   = x + 2
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun :foo (x)
+         (:cond
+           ((:infix == x 2) (:infix + 3 (:infix + 4 x)))
+           (else            (:infix + x 2))))
+     #+end_src
+** Top Level Sig
+1. basic
+   - input
+     #+begin_src haskell
+       sig foo : int -> int -> int
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defsig foo (:infix -> int (:infix -> int int)))
+     #+end_src
+2. usage
+   - input
+     #+begin_src haskell
+       sig foo 0 : int -> int -> int
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
+     #+end_src
+** Top Level Types
+1. basic
+   - input
+     #+begin_src haskell
+       type foo x y z =
+         { y-axis : y
+         , x-axis : x
+         , z-axis : z }
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type foo (x y z)
+          (:record
+            y-axis y
+            x-axis x
+            z-axis z))
+     #+end_src
+
+* Template
+1. basic
+   - input
+     #+begin_src haskell
+     #+end_src
+   - output
+     #+begin_src lisp
+     #+end_src
