@@ -31,7 +31,6 @@ import Juvix.Library hiding
     takeWhile,
     try,
   )
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Symbol.Lexer as Lexer
 import Prelude (String, fail)
 
