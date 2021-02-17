@@ -33,6 +33,13 @@
      #+begin_src lisp
        (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
      #+end_src
+   - This form is a bit odd, ideally it'd mimic the [[Top Level Types]]
+     version like
+     #+begin_src lisp
+       (:defsig (foo :usage 0) (:infix -> int (:infix -> int int)))
+     #+end_src
+     + However for now I think it's fine... Though this is a place for
+       improvement for the future
 ** Top Level Types
 1. basic
    - input
