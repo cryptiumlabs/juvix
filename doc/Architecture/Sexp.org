@@ -9,7 +9,7 @@
      #+end_src
    - output
      #+begin_src lisp
-       (:defun :foo (x)
+       (:defun foo (x)
          (:cond
            ((:infix == x 2) (:infix + 3 (:infix + 4 x)))
            (else            (:infix + x 2))))
