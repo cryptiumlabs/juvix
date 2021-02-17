@@ -9,17 +9,15 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 
 transTopLevel :: Types.TopLevel -> Sexp.T
-transTopLevel (Types.Type t) = undefined
 transTopLevel (Types.ModuleOpen (Types.Open m)) =
   Sexp.list [Sexp.atom "open", Sexp.atom m]
-transTopLevel (Types.Declaration i) =
-  Sexp.listStar [Sexp.atom "declare", transDeclaration i]
-transTopLevel (Types.Signature sig) =
-  Sexp.listStar [Sexp.atom "defsig", transSig sig]
+transTopLevel Types.TypeClassInstance = Sexp.atom "%instance"
+transTopLevel (Types.Declaration i) = Sexp.atom "declare" Sexp.:> transDeclaration i
+transTopLevel (Types.Signature sig) = Sexp.atom "%defsig" Sexp.:> transSig sig
 transTopLevel (Types.Function f) = transDefun f
 transTopLevel (Types.Module m) = transModule m
-transTopLevel Types.TypeClassInstance = Sexp.atom "instance"
-transTopLevel Types.TypeClass = Sexp.atom "type-class"
+transTopLevel Types.TypeClass = Sexp.atom "%type-class"
+transTopLevel (Types.Type t) = transType t
 
 transDeclaration :: Types.Declaration -> Sexp.T
 transDeclaration decl =
@@ -57,17 +55,29 @@ transSig (Types.Sig name usage arrow constraints) =
           Sexp.list [Sexp.atom "%=>", Sexp.list (fmap transExpr constraints), expr]
 
 transExpr :: Types.Expression -> Sexp.T
-transExpr (Types.Tuple t) = transTuple t
-transExpr (Types.List t) = transList t
+transExpr (Types.UniverseName n) = transUniverseExpression n
+transExpr (Types.DeclarationE d) = transDeclarationExpression d
+transExpr (Types.Application p) = transApplication p
+transExpr (Types.NamedTypeE t) = transNamedType t
 transExpr (Types.Primitive p) = transPrimitive p
-transExpr (Types.Cond c) = transCond transExpr c
-transExpr (Types.ModuleE m) = transModuleE m
+transExpr (Types.ExpRecord r) = transExpRecord r
+transExpr (Types.RefinedE i) = transTypeRefine i
 transExpr (Types.Constant c) = transConstant c
-transExpr (Types.Let l) = transLet l
-transExpr (Types.Match m) = transMatch m
-transExpr (Types.Name n) = Sexp.atom n
 transExpr (Types.OpenExpr o) = transOpen o
-transExpr (Types.Lambda l) = undefined
+transExpr (Types.Parened e) = Sexp.list [Sexp.atom "%paren", transExpr e]
+transExpr (Types.LetType l) = transLetType l
+transExpr (Types.ModuleE m) = transModuleE m
+transExpr (Types.ArrowE a) = transArrowE a
+transExpr (Types.Lambda l) = transLambda l
+transExpr (Types.Tuple t) = transTuple t
+transExpr (Types.Match m) = transMatch m
+transExpr (Types.Block b) = transBlock b
+transExpr (Types.Infix i) = transInfix i
+transExpr (Types.List t) = transList t
+transExpr (Types.Cond c) = transCond transExpr c
+transExpr (Types.Name n) = Sexp.atom n
+transExpr (Types.Let l) = transLet l
+transExpr (Types.Do d) = transDo d
 
 transTuple :: Types.Tuple -> Sexp.T
 transTuple (Types.TupleLit t) =
@@ -93,6 +103,74 @@ transOpen :: Types.ModuleOpenExpr -> Sexp.T
 transOpen (Types.OpenExpress mod expr) =
   Sexp.list [Sexp.atom "%open-in", Sexp.atom mod, transExpr expr]
 
+transLambda :: Types.Lambda -> Sexp.T
+transLambda (Types.Lamb args expr) =
+  Sexp.list
+    [ Sexp.atom "%lambda",
+      Sexp.list (NonEmpty.toList (fmap transMatchLogic args)),
+      transExpr expr
+    ]
+
+transApplication :: Types.Application -> Sexp.T
+transApplication (Types.App expr args) =
+  Sexp.listStar [transExpr expr, Sexp.list (NonEmpty.toList (fmap transExpr args))]
+
+transBlock :: Types.Block -> Sexp.T
+transBlock (Types.Bloc b) = Sexp.list [Sexp.atom "%progn", transExpr b]
+
+transInfix :: Types.Infix -> Sexp.T
+transInfix (Types.Inf l op r) =
+  Sexp.list [Sexp.atom "%infix", Sexp.atom op, transExpr l, transExpr r]
+
+transExpRecord :: Types.ExpRecord -> Sexp.T
+transExpRecord (Types.ExpressionRecord fields) =
+  Sexp.listStar [Sexp.atom "%record", recContents fields]
+  where
+    recContents =
+      Sexp.list . NonEmpty.toList . fmap (transNameSet transExpr)
+
+transDo :: Types.Do -> Sexp.T
+transDo (Types.Do'' bs) =
+  Sexp.listStar [Sexp.atom "%do", Sexp.list (NonEmpty.toList (fmap transDoBody bs))]
+
+transDoBody :: Types.DoBody -> Sexp.T
+transDoBody (Types.DoBody Nothing expr) =
+  transExpr expr
+transDoBody (Types.DoBody (Just n) expr) =
+  Sexp.list [Sexp.atom (NameSymbol.fromSymbol n), transExpr expr]
+
+transArrowE :: Types.ArrowExp -> Sexp.T
+transArrowE (Types.Arr' l u r) =
+  Sexp.list [Sexp.atom "%custom-arrow", transExpr u, transExpr l, transExpr r]
+
+transUniverseExpression :: Types.UniverseExpression -> Sexp.T
+transUniverseExpression (Types.UniverseExpression s) =
+  Sexp.list [Sexp.atom "%u", Sexp.atom (NameSymbol.fromSymbol s)]
+
+transDeclarationExpression :: Types.DeclarationExpression -> Sexp.T
+transDeclarationExpression (Types.DeclareExpression d e) =
+  Sexp.list [Sexp.atom "%declaim", transDeclaration d, transExpr e]
+
+--------------------------------------------------------------------------------
+-- Types
+--------------------------------------------------------------------------------
+
+transType :: Types.Type -> Sexp.T
+transType = undefined
+
+--------------------------------------------------
+-- Arrows
+--------------------------------------------------
+
+-- TODO ∷ remove form once we can get rid of all the pass cruft
+-- this never happens!?
+transNamedType :: Types.NamedType -> Sexp.T
+transNamedType (Types.NamedType' _name exp) = transExpr exp
+
+transTypeRefine :: Types.TypeRefine -> Sexp.T
+transTypeRefine (Types.TypeRefine name refine) =
+  Sexp.list [Sexp.atom "%refinement", transExpr name, transExpr refine]
+
 --------------------------------------------------------------------------------
 -- Function definition expansions
 --------------------------------------------------------------------------------
@@ -107,6 +185,9 @@ transDefun :: Types.Function -> Sexp.T
 transDefun (Types.Func like) = Sexp.list [Sexp.atom "%defun", name, args, body]
   where
     (name, args, body) = transLike transExpr like
+
+transLetType :: Types.LetType -> Sexp.T
+transLetType = undefined
 
 transLet :: Types.Let -> Sexp.T
 transLet (Types.Let'' like rest) =
@@ -138,7 +219,7 @@ transGuardBody trans (Types.Guard c) = transCond trans c
 --------------------------------------------------------------------------------
 
 transArg :: Types.Arg -> Sexp.T
-transArg (Types.ImplicitA i) = Sexp.list [Sexp.atom "%implicit", transMatchLogic i]
+transArg (Types.ImplicitA i) = Sexp.list [Sexp.atom "%implicit-a", transMatchLogic i]
 transArg (Types.ConcreteA c) = transMatchLogic c
 
 transMatch :: Types.Match -> Sexp.T
