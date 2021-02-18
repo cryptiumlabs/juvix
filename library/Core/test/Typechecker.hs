@@ -884,7 +884,7 @@ typGlobals =
             { funName = name,
               funUsage = π,
               funType = ty,
-              funClauses = [IR.FunClause [] rhs]
+              funClauses = [IR.FunClause [] [] rhs Nothing False Nothing]
             }
       )
 
