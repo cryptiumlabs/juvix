@@ -149,13 +149,13 @@ transLetType = undefined
 transLet :: Types.Let -> Sexp.T
 transLet (Types.Let'' like rest) =
   Sexp.list
-    [Sexp.atom "let", name, Sexp.listStar [args, body], transExpr rest]
+    [Sexp.atom "let", name, args, body, transExpr rest]
   where
     (name, args, body) = transLike transExpr like
 
 transModuleE :: Types.ModuleE -> Sexp.T
 transModuleE (Types.ModE like rest) =
-  Sexp.list [Sexp.atom ":let-mod", name, Sexp.listStar [args, body], transExpr rest]
+  Sexp.list [Sexp.atom ":let-mod", name, args, body, transExpr rest]
   where
     (name, args, body) =
       transLike (Sexp.list . NonEmpty.toList . fmap transTopLevel) like
@@ -316,7 +316,7 @@ transDoBody :: Types.DoBody -> Sexp.T
 transDoBody (Types.DoBody Nothing expr) =
   transExpr expr
 transDoBody (Types.DoBody (Just n) expr) =
-  Sexp.list [Sexp.atom (NameSymbol.fromSymbol n), transExpr expr]
+  Sexp.list [Sexp.atom "%<-", Sexp.atom (NameSymbol.fromSymbol n), transExpr expr]
 
 transArrowE :: Types.ArrowExp -> Sexp.T
 transArrowE (Types.Arr' l u r) =

@@ -15,7 +15,7 @@
            ((:infix == x 2) (:infix + 3 (:infix + 4 x)))
            (else            (:infix + x 2))))
      #+end_src
-*** Sig 
+*** Sig
 1. basic
    - input
      #+begin_src haskell
@@ -114,10 +114,155 @@
          (type zar () (Boo)))
      #+end_src
 ** Expression
-
-
+*** Let
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         let fi = 3 in
+         fi
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (let fi () 3
+           fi))
+     #+end_src
+2. arguments
+   - input
+     #+begin_src haskell
+       let foo y =
+         let fi x = 3 + x in
+         fi y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (let fi (x) (:infix + 3 x)
+           (fi y)))
+     #+end_src
+*** Tuples
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = (1,2,3)
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:tuple 1 2 3))
+     #+end_src
+*** Lists
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = [1,2,3,4]
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:list 1 2 3 4))
+     #+end_src
+*** Records
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = {a, b = 2}
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:record (a) (b 2)))
+     #+end_src
+*** Do
+1. basic
+   - input
+     #+begin_src haskell
+       let foo xs =
+         a <- xs;
+         more-comp;
+         pure a
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (xs)
+         (:do (%<- a xs)
+              more-comp
+              (pure a)))
+     #+end_src
+*** Lambda
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         \x -> x + y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:lambda (x) (:infix + x y)))
+     #+end_src
+*** Open
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         open Prelude in
+         x + y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:open-in Prelude
+            (:infix + x y)))
+     #+end_src
+*** Parens
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y = (y + 3) * 9
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:infix * (:paren (:infix + y 3)) 9))
+     #+end_src
+*** Block
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y = 3 * begin y + y end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:infix * 3 (:progn (:infix + y y))))
+     #+end_src
+*** Primitive
+1. basic
+   - input
+     #+begin_src haskell
+       let add = %Michelson.add
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun add ()
+         (:primitive Michelson.add))
+     #+end_src
+*** Cond
+1. basic
+   - input
+     #+begin_src haskell
+       let add x =
+         if | x == 3 = 1
+            | x == 4 = 5
+            | else   = 0
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun add (x)
+         (:cond ((:infix == x 3) 1)
+                ((:infix == x 4) 5)
+                (else            0)))
+     #+end_src
 * Notes
-
 ** Design Principles
 ** On Verbosity
 ** On Forms
