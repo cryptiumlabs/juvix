@@ -302,7 +302,7 @@ moduleExpandsAsExpected =
   where
     expected :: String
     expected =
-      "(\"defun\" \"fun-name\" nil\
+      "(\"defun\" \"fun-name\" ()\
       \ (\"let-sig\" \"f\" (\"->\" \"a\" \"b\")\
       \ (\"let\" \"f\" (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
       \ (\"let\" \"f\" ((\"Nil\" \"b\") \"b2\")\
