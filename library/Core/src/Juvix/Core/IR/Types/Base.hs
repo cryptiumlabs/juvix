@@ -413,8 +413,8 @@ data FunClause' ext primTy primVal
         -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
         clauseTel :: Telescope ext primTy primVal,
         namedClausePats :: [Pattern' ext primTy primVal], --TODO [SplitPattern]
-        -- TODO make it a Maybe
-        -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
+            -- TODO make it a Maybe
+            -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
         clauseBody :: Term' ext primTy primVal,
         -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
         clauseType :: Maybe (Value' ext primTy primVal),

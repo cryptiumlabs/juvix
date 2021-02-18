@@ -605,7 +605,6 @@ transformClause q (FE.Like args body) = do
   clauseBody <- transformTermIR q body
   pure $ IR.FunClause [] patts clauseBody Nothing False Nothing
 
-
 transformArg ::
   ( HasNextPatVar m,
     HasPatVars m,

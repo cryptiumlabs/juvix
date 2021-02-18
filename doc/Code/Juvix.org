@@ -1,15 +1,4 @@
 * Juvix
-** Pipeline <<Juvix/Pipeline>>
-- _Relies on_
-  + [[Core]]
-  + [[Traverse]]
-  + [[FromFrontend]]
-  + [[Types]]
-  + [[Parameterisation]]
-  + [[Frontend]]
-  + [[Environment]]
-  + [[Library]]
-  + [[NameSymbol]]
 ** Backends
 - [[Backends]] are the targets for optimized code output specific to a
   platform
@@ -22,6 +11,18 @@
      - Most likely through LLVM
   4. Various Arithmetic Circuits
      - For use in ZKP's
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Core]]
+  + [[Traverse]]
+  + [[FromFrontend]]
+  + [[Types]]
+  + [[Base]]
+  + [[Parameterisation]]
+  + [[Frontend]]
+  + [[Environment]]
+  + [[Library]]
+  + [[NameSymbol]]
 ** Core
 - _Relies on_
   + [[Erasure]]

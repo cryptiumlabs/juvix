@@ -16,6 +16,7 @@ module Juvix.Core.IR.Evaluator
 where
 
 import qualified Data.IntMap as IntMap
+import Data.Maybe (fromJust)
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
@@ -27,7 +28,6 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
-import Data.Maybe (fromJust)
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,

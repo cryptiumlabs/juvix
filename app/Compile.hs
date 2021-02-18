@@ -95,7 +95,7 @@ convGlobal g =
     GFunction (Function n u t cs) -> GFunction (Function n u (baseToReturn t) (map funClauseReturn cs))
     GAbstract (Abstract n u t) -> GAbstract (Abstract n u (baseToReturn t))
 
-funClauseReturn (FunClause tel patts term rhs catchall unreachable) = FunClause undefined  (map pattEval patts) (baseToReturn term) undefined undefined undefined -- TODO
+funClauseReturn (FunClause tel patts term rhs catchall unreachable) = FunClause undefined (map pattEval patts) (baseToReturn term) undefined undefined undefined -- TODO
 
 funClauseEval :: IR.FunClause' IR.NoExt Param.PrimTy Param.RawPrimVal -> IR.FunClause' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
 funClauseEval (FunClause tel patts term rhs catchall unreachable) = FunClause undefined (map pattEval patts) (baseToReturn term) undefined undefined undefined --TODO
