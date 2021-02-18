@@ -34,3 +34,6 @@ tmp/
 
 # Testing temporary
 *.parsed
+
+# OSX
+.DS_Store

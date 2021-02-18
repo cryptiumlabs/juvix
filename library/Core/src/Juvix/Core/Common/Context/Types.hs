@@ -132,7 +132,6 @@ instance Eq (STM.Map a b) where
 -- not using lenses anymore but leaving this here anyway
 makeLensesWith camelCaseFields ''Definition
 
-
 makeLensesWith camelCaseFields ''Def
 
 makeLensesWith camelCaseFields ''Record

@@ -1318,11 +1318,20 @@ Can be added to via core translation
   + While giving the operation =!?=.
 - Every hash in the code base should use this, except when it needs
   to compare keys by the =Ordering= metric instead.
+***** LineNum
+- _Relies on_
+  + [[Library]]
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
   + [[Lexer]]
 ***** PrettyPrint
+***** Sexp <<Library/Sexp>>
+- _Relies on_
+  + [[Library]]
+  + [[Library]]
+  + [[LineNum]]
+  + [[NameSymbol]]
 ***** Usage
 - _Relies on_
   + [[Library]]
@@ -1338,6 +1347,11 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
+*** Sexp <<test/Sexp>>
+- _Relies on_
+  + [[Library]]
+  + [[LineNum]]
+  + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
