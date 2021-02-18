@@ -113,6 +113,28 @@
          (:defun bar () 3)
          (type zar () (Boo)))
      #+end_src
+2. guards
+   Not what I wanted... this has an extra set of ()'s
+   - input
+     #+begin_src haskell
+       mod foo x
+         | x == 3 =
+           let foo = 3
+           let bar = 5
+         | else =
+           let foo = 5
+       end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defmodule foo (x)
+         (:cond ((:infix == x 3)
+                 (:defun foo () 3)
+                 (:defun bar () 5))
+                (else
+                 (:defun foo () 5))))
+     #+end_src
+
 ** Expression
 *** Let
 1. basic
@@ -140,6 +162,25 @@
        (:defun foo (y)
          (let fi (x) (:infix + 3 x)
            (fi y)))
+     #+end_src
+*** Module
+1. basic
+   - input
+     #+begin_src haskell
+       let foo =
+         mod Bar =
+           let bar = 3
+           type zar = Boo
+         end in
+         Bar.bar
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo ()
+         (:let-mod Bar ()
+            ((:defun bar () 3)
+             (type zar () (Boo)))
+           Bar.bar))
      #+end_src
 *** Tuples
 1. basic

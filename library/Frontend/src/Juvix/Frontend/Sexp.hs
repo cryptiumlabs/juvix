@@ -133,32 +133,39 @@ transTypeRefine (Types.TypeRefine name refine) =
 --------------------------------------------------------------------------------
 
 transModule :: Types.Module -> Sexp.T
-transModule (Types.Mod like) = Sexp.listStar [Sexp.atom ":defmodule", name, args, body]
+transModule (Types.Mod like) = listF body [Sexp.atom ":defmodule", name, args, body]
   where
     (name, args, body) =
-      transLike (Sexp.list . NonEmpty.toList . fmap transTopLevel) like
+      transLike True (Sexp.list . NonEmpty.toList . fmap transTopLevel) like
+    listF (cond Sexp.:> _xs)
+      | Sexp.atom ":cond" == cond =
+        Sexp.list
+    listF _ = Sexp.listStar
 
 transDefun :: Types.Function -> Sexp.T
 transDefun (Types.Func like) = Sexp.list [Sexp.atom ":defun", name, args, body]
   where
-    (name, args, body) = transLike transExpr like
+    (name, args, body) = transLike False transExpr like
 
 transLetType :: Types.LetType -> Sexp.T
-transLetType = undefined
+transLetType (Types.LetType'' bindings body) =
+  Sexp.list [Sexp.atom ":let-type", name, args, dat, transExpr body]
+  where
+    (name, args, dat) = transTypeGen bindings
 
 transLet :: Types.Let -> Sexp.T
 transLet (Types.Let'' like rest) =
   Sexp.list
     [Sexp.atom "let", name, args, body, transExpr rest]
   where
-    (name, args, body) = transLike transExpr like
+    (name, args, body) = transLike False transExpr like
 
 transModuleE :: Types.ModuleE -> Sexp.T
 transModuleE (Types.ModE like rest) =
   Sexp.list [Sexp.atom ":let-mod", name, args, body, transExpr rest]
   where
     (name, args, body) =
-      transLike (Sexp.list . NonEmpty.toList . fmap transTopLevel) like
+      transLike True (Sexp.list . NonEmpty.toList . fmap transTopLevel) like
 
 transLambda :: Types.Lambda -> Sexp.T
 transLambda (Types.Lamb args expr) =
@@ -169,15 +176,16 @@ transLambda (Types.Lamb args expr) =
     ]
 
 transLike ::
-  (a -> Sexp.T) -> Types.FunctionLike' Types.T a -> (Sexp.T, Sexp.T, Sexp.T)
-transLike trans (Types.Like name args body) =
+  Bool -> (a -> Sexp.T) -> Types.FunctionLike' Types.T a -> (Sexp.T, Sexp.T, Sexp.T)
+transLike many trans (Types.Like name args body) =
   (Sexp.atom (NameSymbol.fromSymbol name), Sexp.list (fmap transArg args), bTrans body)
   where
-    bTrans = transGuardBody trans
+    bTrans = transGuardBody many trans
 
-transGuardBody :: (a -> Sexp.T) -> Types.GuardBody' Types.T a -> Sexp.T
-transGuardBody trans (Types.Body b) = trans b
-transGuardBody trans (Types.Guard c) = transCond trans c
+transGuardBody :: Bool -> (a -> Sexp.T) -> Types.GuardBody' Types.T a -> Sexp.T
+transGuardBody _alsee trans (Types.Body b) = trans b
+transGuardBody False trans (Types.Guard c) = transCond trans c
+transGuardBody True transs (Types.Guard c) = transCondMultiple transs c
 
 --------------------------------------------------------------------------------
 -- Match Expansion
@@ -277,6 +285,15 @@ transList (Types.ListLit t) =
 transPrimitive :: Types.Primitive -> Sexp.T
 transPrimitive (Types.Prim p) =
   Sexp.list [Sexp.atom ":primitive", Sexp.atom p]
+
+-- TODO ∷ remove this repeat code
+transCondMultiple :: (t -> Sexp.T) -> Types.Cond t -> Sexp.T
+transCondMultiple trans (Types.C t) =
+  Sexp.list (Sexp.atom ":cond" : NonEmpty.toList (fmap (transCondLogicMultiple trans) t))
+
+transCondLogicMultiple :: (t -> Sexp.T) -> Types.CondLogic' Types.T t -> Sexp.T
+transCondLogicMultiple trans (Types.CondExpression p b) =
+  Sexp.listStar [transExpr p, trans b]
 
 transCond :: (t -> Sexp.T) -> Types.Cond t -> Sexp.T
 transCond trans (Types.C t) =
