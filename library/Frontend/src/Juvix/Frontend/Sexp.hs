@@ -133,7 +133,7 @@ transTypeRefine (Types.TypeRefine name refine) =
 --------------------------------------------------------------------------------
 
 transModule :: Types.Module -> Sexp.T
-transModule (Types.Mod like) = Sexp.list [Sexp.atom ":defmodule", name, args, body]
+transModule (Types.Mod like) = Sexp.listStar [Sexp.atom ":defmodule", name, args, body]
   where
     (name, args, body) =
       transLike (Sexp.list . NonEmpty.toList . fmap transTopLevel) like

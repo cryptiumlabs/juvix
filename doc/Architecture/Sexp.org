@@ -1,5 +1,6 @@
 * Generation
-** Let Top Level
+** Top Level
+*** Let
 1. basic
    - input
      #+begin_src haskell
@@ -14,7 +15,7 @@
            ((:infix == x 2) (:infix + 3 (:infix + 4 x)))
            (else            (:infix + x 2))))
      #+end_src
-** Top Level Sig
+*** Sig 
 1. basic
    - input
      #+begin_src haskell
@@ -40,7 +41,7 @@
      #+end_src
      + However for now I think it's fine... Though this is a place for
        improvement for the future
-** Top Level Types
+*** Types
 1. record
    - input
      #+begin_src haskell
@@ -77,6 +78,44 @@
                                (:infix : cdr
                                        (:infix -> (foo y) (foo x y z))))))))
      #+end_src
+3. Signature
+   - input
+     #+begin_src haskell
+       type foo x y z : typ -> typ -> typ = Foo a b c
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+          (Foo a b c))
+     #+end_src
+*** Decalration
+1. basic
+   - input
+     #+begin_src haskell
+       declare infixl foo 3
+     #+end_src
+   - output
+     #+begin_src lisp
+       (declare infixl foo 3)
+     #+end_src
+*** Module
+1. basic
+   - input
+     #+begin_src haskell
+       mod foo =
+         let bar = 3
+         type zar = Boo
+       end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defmodule foo ()
+         (:defun bar () 3)
+         (type zar () (Boo)))
+     #+end_src
+** Expression
+
+
 * Notes
 
 ** Design Principles

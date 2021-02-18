@@ -138,7 +138,7 @@ instance Show T where
     show (NameSymbol.toSymbol x)
   show (Atom (N x _)) =
     show x
-  show Nil = "nil"
+  show Nil = "()"
 
 toList :: T -> Maybe [T]
 toList (Cons x xs) = (x :) <$> toList xs
