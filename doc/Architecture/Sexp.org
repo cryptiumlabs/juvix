@@ -344,8 +344,25 @@ Overall the goal of the S-expression incantation is twofold.
   will offer another level of inspection that can do away with the
   infix view!)
 ** On Forms
-Overall the many forms (namely the lets) in comparison to say Common
-lisp or the Schemer language both lack an extra set of parenthesis.
+The syntax is heavily inspired from Common Lisp (CL). There are of course a
+plethora of changes, however some key concepts have survived through
+this transition.
+
+Namely for adding extra property based information in declarations we
+got for an alist concept
+
+#+begin_src lisp
+  (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+     (Foo a b c))
+#+end_src
+
+which is taken directly from CL's =defstruct= construct.
+
+Even naming conventions like =defun= are lifted directly from Common
+Lisp.
+
+With that said, many forms (namely the lets) lack an extra set of
+parenthesis when in comparison to CL and the Schemer language.
 #+begin_src lisp
   (let fi (x) (:infix + 3 x)
       (fi y))
