@@ -1,28 +1,29 @@
 module Juvix.Library.Sexp
-  ( module Juvix.Library.Sexp.Types
-  , module Juvix.Library.Sexp.Parser
-  , foldPred
-  , foldr
-  , foldr1
-  , butLast
-  , last
-  , list
-  , listStar
-  , addMetaToCar
-  , car
-  , cdr
-  , atom
-  , number
-  , isAtomNamed
-  , nameFromT
-  , atomFromT
-  ) where
+  ( module Juvix.Library.Sexp.Types,
+    module Juvix.Library.Sexp.Parser,
+    foldPred,
+    foldr,
+    foldr1,
+    butLast,
+    last,
+    list,
+    listStar,
+    addMetaToCar,
+    car,
+    cdr,
+    atom,
+    number,
+    isAtomNamed,
+    nameFromT,
+    atomFromT,
+  )
+where
 
-import Juvix.Library.Sexp.Types
-import Juvix.Library.Sexp.Parser
-import Juvix.Library hiding (foldr, show, toList, list)
+import Juvix.Library hiding (foldr, list, show, toList)
 import qualified Juvix.Library as Std
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Juvix.Library.Sexp.Parser
+import Juvix.Library.Sexp.Types
 import Prelude (error)
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T

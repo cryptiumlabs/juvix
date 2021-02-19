@@ -2,6 +2,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
+
 module Juvix.Library.Sexp.Types where
 
 import Control.Lens hiding ((:>), List, (|>))
@@ -73,6 +74,5 @@ showNoParens (Cons car cdr)
     show car <> showNoParens cdr
   | otherwise =
     show car <> " " <> showNoParens cdr
-
 showNoParens Nil = ")"
 showNoParens xs = show xs
