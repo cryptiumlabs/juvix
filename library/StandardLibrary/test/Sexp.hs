@@ -1,4 +1,4 @@
-module Sexp where
+module Sexp (top) where
 
 import qualified Data.Set as Set
 import Juvix.Library
@@ -11,7 +11,7 @@ import Prelude (String, error)
 top :: T.TestTree
 top =
   T.testGroup
-    "sexp tests:"
+    "sexp pass tests:"
     [ condWorksAsExpected,
       ifWorksAsExpected,
       letWorksAsExpected,
@@ -20,6 +20,15 @@ top =
       sigandDefunWorksAsExpetcted,
       moduleExpandsAsExpected
     ]
+
+
+--------------------------------------------------------------------------------
+-- Tests that will stay in this dir
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Passes
+--------------------------------------------------------------------------------
 
 moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== "defmodule") moduleToRecord
@@ -213,6 +222,10 @@ removePunnedRecords xs = Sexp.foldPred xs (== "record") removePunned
           pun Sexp.:> pun Sexp.:> acc
         f _ _ = error "malformed record"
 
+--------------------------------------------------------------------------------
+-- Pass Tests
+--------------------------------------------------------------------------------
+
 condWorksAsExpected :: T.TestTree
 condWorksAsExpected =
   T.testCase
@@ -302,11 +315,15 @@ moduleExpandsAsExpected =
   where
     expected :: String
     expected =
-      "(\"defun\" \"fun-name\" nil\
+      "(\"defun\" \"fun-name\" ()\
       \ (\"let-sig\" \"f\" (\"->\" \"a\" \"b\")\
       \ (\"let\" \"f\" (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
       \ (\"let\" \"f\" ((\"Nil\" \"b\") \"b2\")\
       \ (\"record\" (\"f\"))))))"
+
+--------------------------------------------------------------------------------
+-- Pass Test Data
+--------------------------------------------------------------------------------
 
 moduleTest :: Sexp.T
 moduleTest =
