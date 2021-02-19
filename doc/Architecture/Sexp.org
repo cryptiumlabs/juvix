@@ -305,14 +305,59 @@
      #+end_src
 * Notes
 ** Design Principles
+Overall the goal of the S-expression incantation is twofold.
+
+1) An unambiguous syntax that is faithful to the original ML syntax
+   - This is a necessity to have limited strife between the ML syntax.
+     and the work we need to do on the generic IR-syntax layer.
+2) A fully realized syntax that is readable and looks as if it were a
+   standalone language.
+   - This is needed so inspection of the output is obvious. Further
+     this will empower ease of reasoning over the syntax without too
+     many surprises.
 ** On Verbosity
+- Overall a few forms in this representation are quite verbose and
+  thus harder to read than they should be, see
+  #+begin_src lisp
+
+    (:arrow
+     (:infix : hd
+             (:infix -> x
+                     (:infix : cdr
+                             (:infix -> (foo y) (foo x y z))))))
+
+    ;; should be
+    [ hd : x -> cdr : (foo y) -> (foo x y z) ]
+
+    (:record
+     y-axis y
+     x-axis x
+     z-axis z)
+
+    ;; should be
+    {y-axis y
+     x-axis x
+     z-axis z}
+  #+end_src
+
+- This is due to lacking reader macros at this level. Overall this can
+  be largely improved in the future for better inspection (we thus
+  will offer another level of inspection that can do away with the
+  infix view!)
 ** On Forms
+Overall the many forms (namely the lets) in comparison to say Common
+lisp or the Schemer language both lack an extra set of parenthesis.
+#+begin_src lisp
+  (let fi (x) (:infix + 3 x)
+      (fi y))
+
+  (let fi () 3
+      fi)
+#+end_src
+This is due to us fully abusing the fact that we must represent non
+let blocks currently along with having a single expression each
+name is bound to.
 ** Inconsistencies
-* Template
-1. basic
-   - input
-     #+begin_src haskell
-     #+end_src
-   - output
-     #+begin_src lisp
-     #+end_src
+There are likely inconsistencies between some of the forms. These
+should be removed as soon as possible. I have tried my best on this
+front, but likely some forms are inconsistent.
