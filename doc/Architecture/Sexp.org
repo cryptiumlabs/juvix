@@ -34,7 +34,7 @@
      #+begin_src lisp
        (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
      #+end_src
-   - This form is a bit odd, ideally it'd mimic the [[Top Level Types]]
+   - This form is a bit odd, ideally it'd mimic the [[Types]]
      version like
      #+begin_src lisp
        (:defsig (foo :usage 0) (:infix -> int (:infix -> int int)))
@@ -114,7 +114,6 @@
          (type zar () (Boo)))
      #+end_src
 2. guards
-   Not what I wanted... this has an extra set of ()'s
    - input
      #+begin_src haskell
        mod foo x
@@ -361,3 +360,23 @@ name is bound to.
 There are likely inconsistencies between some of the forms. These
 should be removed as soon as possible. I have tried my best on this
 front, but likely some forms are inconsistent.
+*** Known
+**** Signatures
+Currently we have a minor point of alists on the name itself to
+describe extra properties
+
+#+begin_src lisp
+  (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+     (Foo a b c))
+#+end_src
+
+This is great and we'll be adding it to Modules, however we currently
+do an odd transformation in regards to signatures
+
+#+begin_src lisp
+  (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
+  ;; should be
+  (:defsig (foo :usage 0) (:infix -> int (:infix -> int int)))
+#+end_src
+
+This likely should be changed
