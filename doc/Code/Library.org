@@ -1352,7 +1352,6 @@ Can be added to via core translation
 *** Sexp <<test/Sexp>>
 - _Relies on_
   + [[Library]]
-  + [[LineNum]]
   + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
