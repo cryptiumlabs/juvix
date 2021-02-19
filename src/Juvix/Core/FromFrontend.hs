@@ -468,15 +468,14 @@ transformValSig q x _ _ (Just (FE.Sig _ π ty cons))
   | otherwise = throwFF $ ConstraintsUnimplemented x cons
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
-
 transformDef ::
   ( Data primTy,
-  Data primVal,
-  HasNextPatVar m,
-  HasPatVars m,
-  HasThrowFF primTy primVal m,
-  HasParam primTy primVal m,
-  HasCoreSigs primTy primVal m
+    Data primVal,
+    HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.T ->
   FE.Final Ctx.Definition ->
