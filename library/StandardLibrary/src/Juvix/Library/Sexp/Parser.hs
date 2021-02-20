@@ -50,7 +50,7 @@ symbol = do
       )
   Encoding.decodeUtf8 s |> internText |> NameSymbol.fromSymbol |> pure
 
--- Code stolen from the other paser ☹
+-- Code stolen from the other parser ☹
 
 integer :: Atto.Parser Integer
 integer = do
@@ -63,7 +63,7 @@ integer = do
 -- Helpers taken from the other parser
 --------------------------------------------------------------------------------
 
--- eddited a bit from the other parser
+-- edited a bit from the other parser
 between :: Word8 -> Atto.Parser p -> Word8 -> Atto.Parser p
 between fst p end = skipLiner fst *> spaceLiner p <* skipLiner end
 
