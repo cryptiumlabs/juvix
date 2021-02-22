@@ -4,8 +4,8 @@ import Juvix.Library
 import qualified NameSymb
 import qualified Sexp
 import qualified Sexp.Parser
-import qualified Test.Tasty as T
 import qualified Sexp.SimplifiedPasses
+import qualified Test.Tasty as T
 
 allCheckedTests :: T.TestTree
 allCheckedTests =

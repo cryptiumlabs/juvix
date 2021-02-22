@@ -1356,6 +1356,10 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+**** SimplifiedPasses
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
 ** src
@@ -1379,6 +1383,11 @@ Calculate mutually-recursive groups of definitions.
   + [[Context/Types]]
   + [[Library]]
   + [[NameSymbol]]
+**** Desugar
+***** Passes
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=

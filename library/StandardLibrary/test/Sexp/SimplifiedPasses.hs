@@ -1,13 +1,11 @@
 module Sexp.SimplifiedPasses where
 
-
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (error)
-
 
 --------------------------------------------------------------------------------
 -- Exported Tests
