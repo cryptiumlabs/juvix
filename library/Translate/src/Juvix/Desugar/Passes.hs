@@ -1,9 +1,22 @@
-module Juvix.Desugar.Passes where
+-- | Desugar Passes takes the frontend syntax and through the =desugar=
+-- function, removes all extra parts of syntax that can be boiled down
+-- to simple macro expansion (simplification of the frontend syntax
+-- from the syntax alone with no extra information needed!)
+module Juvix.Desugar.Passes
+  ( desugar,
+  )
+where
 
 import qualified Data.Set as Set
 import Juvix.Library
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
+
+-- | @desugar@ fully desugares the frontend syntax from the original
+-- frontend sexp representation to a form without modules, conditions,
+-- guards, etc. This pass thus does all transformations that do not
+-- requires a context
+desugar = undefined
 
 --------------------------------------------------------------------------------
 -- Fully Translated
