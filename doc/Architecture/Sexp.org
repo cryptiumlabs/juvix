@@ -304,11 +304,13 @@
      #+end_src
 * Notes
 ** Design Principles
-Overall the goal of the S-expression incantation is twofold.
+Overall the goal of the S-expression incantation is twofold [fn:1].
 
 1) An unambiguous syntax that is faithful to the original ML syntax
    - This is a necessity to have limited strife between the ML syntax.
      and the work we need to do on the generic IR-syntax layer.
+   - Unambiguous in this case implies bijection, as we have to convert
+     between the two forms.
 2) A fully realized syntax that is readable and looks as if it were a
    standalone language.
    - This is needed so inspection of the output is obvious. Further
@@ -397,3 +399,10 @@ do an odd transformation in regards to signatures
 #+end_src
 
 This likely should be changed
+
+* Footnotes
+
+[fn:1] The Whimsical spell like nature of sexpressions are heavily
+derived from [[https://mitpress.mit.edu/sites/default/files/sicp/index.html][SICP]] and the general imagery of other literature such as
+the [[https://suif.stanford.edu/dragonbook/][dragon book]].
+
