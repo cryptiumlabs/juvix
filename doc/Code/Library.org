@@ -1323,9 +1323,9 @@ Can be added to via core translation
   + [[Library]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Sexp/Parser]]
+  + [[Library/Sexp/Parser]]
   + [[Sexp/Types]]
-****** Parser <<Sexp/Parser>>
+****** Parser <<Library/Sexp/Parser>>
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
@@ -1349,6 +1349,10 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
 *** Sexp <<test/Sexp>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** Parser <<test/Sexp/Parser>>
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
