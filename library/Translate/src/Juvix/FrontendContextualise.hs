@@ -30,6 +30,7 @@ data Error
   deriving (Show)
 
 type Final f = Target.New f
+type Final' f = Target.New' f
 
 op ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> IO (Either Error Target.FinalContext)

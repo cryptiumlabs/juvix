@@ -47,7 +47,7 @@ contextToCore ctx param = do
   where
     addSig (Context.Entry x feDef) = do
       msig <- FF.transformSig x feDef
-      for_ msig $ modify @"coreSigs" . HM.insert x
+      for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
     addDef (Context.Entry x feDef) = do
       defs <- FF.transformDef x feDef
       for_ defs \def ->
