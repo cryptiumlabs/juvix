@@ -25,6 +25,9 @@ dependencies:
 - capability >= 0.2.0.0
 - time
 - lens
+# parser
+- attoparsec
+- bytestring
 
 default-extensions:
   - NoImplicitPrelude

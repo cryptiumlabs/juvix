@@ -1,17 +1,16 @@
-module Sexp where
+module Sexp (top) where
 
 import qualified Data.Set as Set
 import Juvix.Library
-import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (String, error)
+import Prelude (error)
 
 top :: T.TestTree
 top =
   T.testGroup
-    "sexp tests:"
+    "sexp pass tests:"
     [ condWorksAsExpected,
       ifWorksAsExpected,
       letWorksAsExpected,
@@ -20,6 +19,14 @@ top =
       sigandDefunWorksAsExpetcted,
       moduleExpandsAsExpected
     ]
+
+--------------------------------------------------------------------------------
+-- Tests that will stay in this dir
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- Translation Desugar Passes
+--------------------------------------------------------------------------------
 
 moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== "defmodule") moduleToRecord
@@ -213,200 +220,134 @@ removePunnedRecords xs = Sexp.foldPred xs (== "record") removePunned
           pun Sexp.:> pun Sexp.:> acc
         f _ _ = error "malformed record"
 
+--------------------------------------------------------------------------------
+-- Pass Tests
+--------------------------------------------------------------------------------
+
 condWorksAsExpected :: T.TestTree
 condWorksAsExpected =
   T.testCase
     "cond properly desguars cond"
-    (expected T.@=? show (condTransform testData))
+    (Sexp.parse expected T.@=? Right (condTransform testData))
   where
-    expected :: String
     expected =
-      "(\"if\" (\"g\" \"x\")\
-      \ \"true\"\
-      \ (\"if\" (\"p\" \"x\")\
-      \ \"true\"\
-      \ (\"if\" \"else\" \"false\")))"
+      "(if (g x) true (if (p x) true (if else false)))"
 
 ifWorksAsExpected :: T.TestTree
 ifWorksAsExpected =
   T.testCase
     "if expansion to match works properly"
-    (expected T.@=? show (ifTransform (condTransform testData)))
+    (Sexp.parse expected T.@=? Right (ifTransform (condTransform testData)))
   where
-    expected :: String
     expected =
-      "(\"case\" (\"g\" \"x\")\
-      \ (\"true\" \"true\")\
-      \ (\"false\"\
-      \ (\"case\" (\"p\" \"x\")\
-      \ (\"true\" \"true\")\
-      \ (\"false\" (\"case\" \"else\" (\"true\" \"false\"))))))"
+      "(case (g x) \
+      \  (true true) \
+      \  (false (case (p x) \
+      \            (true true) \
+      \            (false (case else (true false))))))"
 
 letWorksAsExpected :: T.TestTree
 letWorksAsExpected =
   T.testCase
     "let expansion to match works properly"
-    (expected T.@=? show (multipleTransLet testLet))
+    (Sexp.parse expected T.@=? Right (multipleTransLet testLet))
   where
-    expected :: String
     expected =
-      "(\"let-match\" \"foo\" ((\"Nil\" \"b\") \"body-1\"\
-      \ ((\"Cons\" \"a\" \"xs\") \"b\") \"body-2\")\
-      \ (\"let-match\" \"bar\" (((\"Cons\" \"a\" \"xs\") \"b\") \"body-2\")\
-      \ \"&rest\"))"
+      "(let-match foo ((Nil b) body-1 ((Cons a xs) b) body-2) \
+      \   (let-match bar (((Cons a xs) b) body-2) \
+      \     &rest))"
 
 doWorksAsExpected :: T.TestTree
 doWorksAsExpected =
   T.testCase
     "do expansion works propelry"
-    (expected T.@=? show (translateDo testDo))
+    (Sexp.parse expected T.@=? Right (translateDo testDo))
   where
-    expected :: String
     expected =
-      "(\"Prelude.>>=\" \"computation\"\
-      \ (\"lambda\" (\"x\") (\"Prelude.>>\" \"computation\"\
-      \ (\"Prelude.>>=\" \"more-comp\"\
-      \ (\"lambda\" (\"y\") (\"Prelude.return\" (\"+\" \"x\" \"y\")))))))"
+      "(Prelude.>>= computation \
+      \    (lambda (x) \
+      \       (Prelude.>> computation \
+      \                   (Prelude.>>= more-comp \
+      \                                (lambda (y) \
+      \                                   (Prelude.return (+ x y)))))))"
 
 recordWorksAsExpected :: T.TestTree
 recordWorksAsExpected =
   T.testCase
     "removing punned names works as expected"
-    (expected T.@=? show (removePunnedRecords testRecord))
+    (Sexp.parse expected T.@=? Right (removePunnedRecords testRecord))
   where
-    expected :: String
     expected =
-      "(\"record-no-pun\"\
-      \ \"name\" \"value\"\
-      \ \"field-pun\" \"field-pun\"\
-      \ \"name2\" \"value2\")"
+      "(record-no-pun name value field-pun field-pun name2 value2)"
 
 sigandDefunWorksAsExpetcted :: T.TestTree
 sigandDefunWorksAsExpetcted =
   T.testCase
     "desugaring defuns and sigs work as epected"
-    (expected T.@=? (multipleTransDefun testDefun |> combineSig |> show))
+    (expected T.@=? (multipleTransDefun testDefun |> combineSig))
   where
-    expected :: String
     expected =
-      "[(\"defsig-match\" \"f\" (\"->\" \"a\" \"b\")\
-      \ (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
-      \ ((\"Nil\" \"b\") \"b2\"))\
-      \,(\"defun-match\" \"g\" ((\"a\" \"b\") \"new-b\"))]"
+      [ "(defsig-match f (-> a b) (((Cons a as) b) b1) ((Nil b) b2))",
+        "(defun-match g ((a b) new-b))"
+      ]
+        >>| Sexp.parse
+        >>| rightErr
 
 moduleExpandsAsExpected :: T.TestTree
 moduleExpandsAsExpected =
   T.testCase
     "module properly goes to record"
-    (expected T.@=? (moduleTransform moduleTest |> show))
+    (Sexp.parse expected T.@=? Right (moduleTransform moduleTest))
   where
-    expected :: String
     expected =
-      "(\"defun\" \"fun-name\" nil\
-      \ (\"let-sig\" \"f\" (\"->\" \"a\" \"b\")\
-      \ (\"let\" \"f\" (((\"Cons\" \"a\" \"as\") \"b\") \"b1\")\
-      \ (\"let\" \"f\" ((\"Nil\" \"b\") \"b2\")\
-      \ (\"record\" (\"f\"))))))"
+      "(defun fun-name () \
+      \   (let-sig f (-> a b) \
+      \       (let f (((Cons a as) b) b1) \
+      \          (let f ((Nil b) b2) \
+      \             (record (f))))))"
+
+--------------------------------------------------------------------------------
+-- Pass Test Data
+--------------------------------------------------------------------------------
 
 moduleTest :: Sexp.T
 moduleTest =
   Sexp.listStar
     ([Sexp.atom "defmodule", Sexp.atom "fun-name", Sexp.list []] <> testDefun)
 
--- TODO ∷ add a sexp parser, to make this less annoying
 testData :: Sexp.T
 testData =
-  Sexp.list
-    [ Sexp.Atom $ Sexp.A "cond" (Just (LineNum.T 2 3)),
-      Sexp.list
-        [ Sexp.list
-            [Sexp.atom "g", Sexp.atom "x"],
-          Sexp.atom "true"
-        ],
-      Sexp.list
-        [ Sexp.list
-            [Sexp.atom "p", Sexp.atom "x"],
-          Sexp.atom "true"
-        ],
-      Sexp.list
-        [Sexp.atom "else", Sexp.atom "false"]
-    ]
+  rightErr $ Sexp.parse "(cond ((g x) true) ((p x) true) (else false))"
 
 testDefun :: [Sexp.T]
 testDefun =
-  [ Sexp.list
-      [ Sexp.atom "defsig",
-        Sexp.atom "f",
-        Sexp.list [Sexp.atom "->", Sexp.atom "a", Sexp.atom "b"]
-      ],
-    Sexp.list
-      [ Sexp.atom "defun",
-        Sexp.atom "f",
-        Sexp.list
-          [Sexp.list [Sexp.atom "Cons", Sexp.atom "a", Sexp.atom "as"], Sexp.atom "b"],
-        Sexp.atom "b1"
-      ],
-    Sexp.list
-      [ Sexp.atom "defun",
-        Sexp.atom "f",
-        Sexp.list [Sexp.atom "Nil", Sexp.atom "b"],
-        Sexp.atom "b2"
-      ],
-    Sexp.list
-      [ Sexp.atom "defun",
-        Sexp.atom "g",
-        Sexp.list [Sexp.atom "a", Sexp.atom "b"],
-        Sexp.atom "new-b"
-      ]
+  [ Sexp.parse "(defsig f (-> a b))",
+    Sexp.parse "(defun f ((Cons a as) b) b1)",
+    Sexp.parse "(defun f (Nil b) b2)",
+    Sexp.parse "(defun g (a b) new-b)"
   ]
+    >>| rightErr
 
 testLet :: Sexp.T
 testLet =
-  Sexp.list
-    [ Sexp.atom "let",
-      Sexp.atom "foo",
-      Sexp.list
-        [Sexp.list [Sexp.atom "Nil", Sexp.atom "b"], Sexp.atom "body-1"],
-      Sexp.list
-        [ Sexp.atom "let",
-          Sexp.atom "foo",
-          Sexp.list
-            [ Sexp.list
-                [ Sexp.list [Sexp.atom "Cons", Sexp.atom "a", Sexp.atom "xs"],
-                  Sexp.atom "b"
-                ],
-              Sexp.atom "body-2"
-            ],
-          Sexp.list
-            [ Sexp.atom "let",
-              Sexp.atom "bar",
-              Sexp.list
-                [ Sexp.list
-                    [ Sexp.list [Sexp.atom "Cons", Sexp.atom "a", Sexp.atom "xs"],
-                      Sexp.atom "b"
-                    ],
-                  Sexp.atom "body-2"
-                ],
-              Sexp.atom "&rest"
-            ]
-        ]
-    ]
+  "(let foo ((Nil b) body-1)\
+  \   (let foo (((Cons a xs) b) body-2) \
+  \      (let bar (((Cons a xs) b) body-2) &rest)))"
+    |> Sexp.parse
+    |> rightErr
 
 testDo :: Sexp.T
 testDo =
-  Sexp.list
-    [ Sexp.atom "do",
-      Sexp.list [Sexp.atom "%<-", Sexp.atom "x", Sexp.atom "computation"],
-      Sexp.atom "computation",
-      Sexp.list [Sexp.atom "%<-", Sexp.atom "y", Sexp.atom "more-comp"],
-      Sexp.list [Sexp.atom "Prelude.return", Sexp.list [Sexp.atom "+", Sexp.atom "x", Sexp.atom "y"]]
-    ]
+  "(do (%<- x computation) computation (%<- y more-comp) (Prelude.return (+ x y)))"
+    |> Sexp.parse
+    |> rightErr
 
 testRecord :: Sexp.T
 testRecord =
-  Sexp.list
-    [ Sexp.atom "record",
-      Sexp.list [Sexp.atom "name", Sexp.atom "value"],
-      Sexp.list [Sexp.atom "field-pun"],
-      Sexp.list [Sexp.atom "name2", Sexp.atom "value2"]
-    ]
+  "(record (name value) (field-pun) (name2 value2))"
+    |> Sexp.parse
+    |> rightErr
+
+rightErr :: Either a p -> p
+rightErr (Right r) = r
+rightErr (Left _) = error "improper right"

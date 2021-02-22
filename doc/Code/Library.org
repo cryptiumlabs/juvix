@@ -985,8 +985,15 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[NameSymbol]]
   + [[Lexer]]
+***** Sexp <<Frontend/Sexp>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1326,15 +1333,27 @@ Can be added to via core translation
   + [[Library]]
   + [[Lexer]]
 ***** PrettyPrint
+***** Usage
+- _Relies on_
+  + [[Library]]
 ***** Sexp <<Library/Sexp>>
 - _Relies on_
   + [[Library]]
   + [[Library]]
-  + [[LineNum]]
   + [[NameSymbol]]
-***** Usage
+  + [[Library/Sexp/Parser]]
+  + [[Sexp/Types]]
+****** Parser <<Library/Sexp/Parser>>
 - _Relies on_
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Sexp/Types]]
+  + [[Lexer]]
+****** Types <<Sexp/Types>>
+- _Relies on_
+  + [[Library]]
+  + [[LineNum]]
+  + [[NameSymbol]]
 ***** Symbol
 ****** Lexer
 - _Relies on_
@@ -1350,7 +1369,10 @@ Can be added to via core translation
 *** Sexp <<test/Sexp>>
 - _Relies on_
   + [[Library]]
-  + [[LineNum]]
+  + [[Library/Sexp]]
+**** Parser <<test/Sexp/Parser>>
+- _Relies on_
+  + [[Library]]
   + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
