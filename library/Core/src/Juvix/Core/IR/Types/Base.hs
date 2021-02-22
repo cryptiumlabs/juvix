@@ -119,17 +119,6 @@ type GlobalAll (c :: * -> Constraint) ext primTy primVal =
     PatternAll c ext primTy primVal
   )
 
-type GlobalAllWith (c :: * -> Constraint) ty ext primTy primVal =
-  ( c (ty primTy primVal),
-    c primTy,
-    c primVal,
-    TermAll c ext primTy primVal,
-    ElimAll c ext primTy primVal,
-    ValueAll c ext primTy primVal,
-    NeutralAll c ext primTy primVal,
-    PatternAll c ext primTy primVal
-  )
-
 data RawDatatype' ext primTy primVal
   = RawDatatype
       { rawDataName :: GlobalName,
@@ -336,11 +325,6 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (RawFunction' ext primTy primVal)
 
-
---type RawFunction' ext = FunctionWith (Term' ext) ext
-
---type Function' extV = FunctionWith (Value' extV)
-
 deriving instance
   GlobalAll Show ext primTy primVal =>
   Show (FunClause' ext primTy primVal)
@@ -383,24 +367,6 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (Abstract' ext primTy primVal)
 
-
---deriving instance
---  Show (primTy primVal) =>
---  Show (Abstract' primTy primVal)
---
---deriving instance
---  Eq (primTy primVal) =>
---  Eq (Abstract' primTy primVal)
---
---deriving instance
---  (Typeable primTy, Typeable primVal, Data (primTy primVal)) =>
---  Data (Abstract' primTy primVal)
---
---deriving instance
---  NFData (primTy primVal) =>
---  NFData (Abstract' primTy primVal)
---
-
 data RawAbstract' ext (primTy :: *) (primVal :: *)
   = RawAbstract
       { rawAbsName :: GlobalName,
@@ -409,10 +375,6 @@ data RawAbstract' ext (primTy :: *) (primVal :: *)
       }
   deriving (Generic)
 
-
--- type RawAbstract' ext = AbstractWith (Term' ext)
-
--- type Abstract' extV = AbstractWith (Value' extV)
 deriving instance
   GlobalAll Show ext primTy primVal =>
   Show (RawAbstract' ext primTy primVal)
@@ -429,23 +391,6 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (RawAbstract' ext primTy primVal)
 
-
---deriving instance
---  Show (primTy primVal) =>
---  Show (RawAbstract' primTy primVal)
---
---deriving instance
---  Eq (primTy primVal) =>
---  Eq (RawAbstract' primTy primVal)
---
---deriving instance
---  (Typeable primTy, Typeable primVal, Data (primTy primVal)) =>
---  Data (RawAbstract' primTy primVal)
---
---deriving instance
---  NFData (primTy primVal) =>
---  NFData (RawAbstract' ext primTy primVal)
---
 data Global' ext primTy primVal
   = GDatatype (Datatype' ext primTy primVal)
   | GDataCon (DataCon' ext primTy primVal)
@@ -469,12 +414,12 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (Global' ext primTy primVal)
 
-
 data RawGlobal' ext primTy primVal
   = RawGDatatype (RawDatatype' ext primTy primVal)
   | RawGDataCon (RawDataCon' ext primTy primVal)
   | RawGFunction (RawFunction' ext primTy primVal)
   | RawGAbstract (RawAbstract' ext primTy primVal)
+  deriving (Generic)
 
 deriving instance
   GlobalAll Show ext primTy primVal =>
@@ -492,22 +437,11 @@ deriving instance
   GlobalAll NFData ext primTy primVal =>
   NFData (RawGlobal' ext primTy primVal)
 
-
---type RawGlobal' ext = GlobalWith (Term' ext) ext
-
---type Global' extV = GlobalWith (Value' extV)
-
 type Globals' ext primTy primVal =
   HashMap GlobalName (Global' ext primTy primVal)
 
 type RawGlobals' ext primTy primVal =
   HashMap GlobalName (RawGlobal' ext primTy primVal)
-
---type RawGlobals' ext primTy primVal =
---  GlobalsWith (Term' ext) ext primTy primVal
-
---type Globals' ext primTy primVal =
---  GlobalsWith (Value' ext) ext primTy primVal
 
 type Telescope ext primTy primVal =
   [(Name, Term' ext primTy primVal)]
@@ -541,13 +475,13 @@ data FunClause' ext primTy primVal
       }
   deriving (Generic)
 
-type Signature ty ext primTy primVal = Map.Map GlobalName (SigDef ty ext primTy primVal)
+type Signature ext primTy primVal = Map.Map GlobalName (SigDef ext primTy primVal)
 
 -- Return type of all type-checking functions.
 -- state monad for global signature
-type TypeCheck ty ext primTy primVal a = StateT (Signature ty ext primTy primVal) IO a
+type TypeCheck ext primTy primVal a = StateT (Signature ext primTy primVal) IO a
 
-data SigDef ty ext primTy primVal
+data SigDef ext primTy primVal
   = -- function constant to its type, clauses, whether it's type checked
     FunSig (Value' ext primTy primVal) [NonEmpty (FunClause' ext primTy primVal)] Bool
   | ConSig (Value' ext primTy primVal) -- constructor constant to its type

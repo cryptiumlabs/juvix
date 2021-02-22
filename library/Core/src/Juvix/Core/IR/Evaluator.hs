@@ -61,7 +61,7 @@ inlineAllGlobals ::
     NoExtensions ext primTy primVal
   ) =>
   IR.Term' (OnlyExts.T ext') primTy primVal ->
-  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  (IR.Name -> Maybe (IR.Global' ext primTy primVal)) ->
   IR.Term' (OnlyExts.T ext') primTy primVal
 inlineAllGlobals t map =
   case t of
@@ -89,7 +89,7 @@ inlineAllGlobalsElim ::
     NoExtensions ext primTy primVal
   ) =>
   IR.Elim' (OnlyExts.T ext') primTy primVal ->
-  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
+  (IR.Name -> Maybe (IR.Global' ext primTy primVal)) ->
   IR.Elim' (OnlyExts.T ext') primTy primVal
 inlineAllGlobalsElim t map =
   case t of
@@ -186,7 +186,7 @@ toLambda ::
     NoExtensions ext primTy primVal,
     IR.ToTerm ty IR.NoExt IR.NoExt
   ) =>
-  IR.GlobalWith (ty IR.NoExt) ext primTy primVal ->
+  IR.Global' ext primTy primVal ->
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
   | IR.FunClause _clauseTel pats rhs _rhsTy _catchall _unreachable :| [] <- funClauses = do

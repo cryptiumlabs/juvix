@@ -12,19 +12,15 @@ module Juvix.Core.IR.Types
     Datatype',
     RawDataCon',
     DataCon',
-    FunctionWith (..),
-    RawFunction',
     Function',
+    RawFunction',
     FunClause' (..),
-    GlobalWith (..),
-    AbstractWith (..),
     RawAbstract',
     Abstract',
     RawGlobal',
     Global',
-    GlobalsWith,
-    RawGlobals',
     Globals',
+    RawGlobals',
   )
 where
 
@@ -126,7 +122,7 @@ globalToUsage :: GlobalUsage -> Usage.T
 globalToUsage GOmega = Usage.Omega
 globalToUsage GZero = Usage.SNat 0
 
-globalName :: GlobalWith ty ext primTy primVal -> NameSymbol.T
+globalName :: Global' ext primTy primVal -> NameSymbol.T
 globalName (GDatatype (Datatype {dataName})) = dataName
 globalName (GDataCon (DataCon {conName})) = conName
 globalName (GFunction (Function {funName})) = funName
