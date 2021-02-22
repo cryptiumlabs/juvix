@@ -1383,12 +1383,20 @@ Calculate mutually-recursive groups of definitions.
   + [[Context/Types]]
   + [[Library]]
   + [[NameSymbol]]
-**** Desugar
-***** Passes
-Desugar Passes takes the frontend syntax and through the =desugar=
+**** Desugar <<Juvix/Desugar>>
+Desugar takes the frontend syntax and through the =desugar=
 function, removes all extra parts of syntax that can be boiled down
 to simple macro expansion (simplification of the frontend syntax
 from the syntax alone with no extra information needed!)
+***** Passes
+Passes contains a list of passes on the frontend syntax that can be
+done with no extra information needed. Thus we export the following passes
+- Removing Explicit Module declarations
+- Removing Guards
+- Conds ⟶ If ⟶ Match
+- Combining signatures to functions
+- Removing punned record arguments
+- Remvoing Do syntax
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
@@ -1914,7 +1922,7 @@ from the syntax alone with no extra information needed!)
   + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
-*** Desugar
+*** Desugar <<test/Desugar>>
 - _Relies on_
   + [[Frontend/Parser]]
   + [[FrontendDesugar]]
