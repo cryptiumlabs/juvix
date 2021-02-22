@@ -7,11 +7,14 @@
 --
 -- - Parsers with SN at the end, eats the spaces and new lines at the
 --   end of the parse
-module Juvix.Frontend.Parser where
+module Juvix.Frontend.Parser
+  ( parse,
+  )
+where
 
-import Data.Attoparsec.ByteString hiding (match, parse, parseOnly)
-import qualified Data.Attoparsec.ByteString as Atto
-import qualified Data.Attoparsec.Expr as Expr
+-- import Data.Attoparsec.ByteString hiding (match, parse, parseOnly)
+-- import qualified Data.Attoparsec.ByteString as Atto
+-- import qualified Data.Attoparsec.Expr as Expr
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
@@ -22,6 +25,7 @@ import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding
   ( guard,
     list,
+    many,
     maybe,
     mod,
     option,
@@ -32,19 +36,26 @@ import Juvix.Library hiding
     try,
   )
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Symbol.Lexer as Lexer
+-- import Text.Megaparsec hiding (match)
+
+import Juvix.Library.Parser (Parser, ParserError)
+import qualified Juvix.Library.Parser as JP
+-- import qualified Juvix.Library.Symbol.Lexer as Lexer
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Char as P
 import Prelude (String, fail)
 
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
-parseOnly :: ByteString -> Either String (Types.Header Types.TopLevel)
-parseOnly =
-  Atto.parseOnly (eatSpaces (header <* endOfInput)) . removeComments
 
-parse :: ByteString -> Result (Types.Header Types.TopLevel)
+parse :: ByteString -> Either ParserError (Types.Header Types.TopLevel)
 parse =
-  Atto.parse (eatSpaces (header <* endOfInput)) . removeComments
+  P.parse (eatSpaces (header <* endOfInput)) "" . removeComments
+
+-- parse :: ByteString -> Result (Types.Header Types.TopLevel)
+-- parse =
+--   Atto.parse (eatSpaces (header <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -73,18 +84,18 @@ breakComment = ByteString.breakSubstring "--"
 --------------------------------------------------------------------------------
 
 header :: Parser (Types.Header Types.TopLevel)
-header = try headerCase <|> noHeaderCase
+header = P.try headerCase <|> noHeaderCase
 
 headerCase :: Parser (Types.Header Types.TopLevel)
 headerCase = do
   reserved "mod"
   name <- prefixSymbolDotSN
   reserved "where"
-  Types.Header name <$> many1 topLevelSN
+  Types.Header name <$> P.some topLevelSN
 
 noHeaderCase :: Parser (Types.Header Types.TopLevel)
 noHeaderCase = do
-  Types.NoHeader <$> many1 topLevelSN
+  Types.NoHeader <$> P.some topLevelSN
 
 --------------------------------------------------------------------------------
 -- Top Level
@@ -112,7 +123,7 @@ expressionGen' p =
     <|> Types.Lambda <$> lam
     <|> Types.Primitive <$> primitives
     <|> Types.DeclarationE <$> declarationExpression
-    <|> try p
+    <|> P.try p
     <|> expressionArguments
 
 expressionArguments :: Parser Types.Expression
@@ -132,29 +143,29 @@ do''' :: Parser Types.Expression
 do''' = Types.Do <$> do'
 
 app'' :: Parser Types.Expression
-app'' = Types.Application <$> try application
+app'' = Types.Application <$> P.try application
 
-all'' :: Parser Types.Expression
-all'' = do''' <|> app''
+-- all'' :: Parser Types.Expression
+-- all'' = do''' <|> app''
 
-expressionGen :: Parser Types.Expression -> Parser Types.Expression
-expressionGen p =
-  Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
+-- expressionGen :: Parser Types.Expression -> Parser Types.Expression
+-- expressionGen p =
+--   Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
 
--- used to remove do from parsing
-expression' :: Parser Types.Expression
-expression' = expressionGen app''
+-- -- used to remove do from parsing
+-- expression' :: Parser Types.Expression
+-- expression' = expressionGen app''
 
--- used to remove app from parsing
-expression'' :: Parser Types.Expression
-expression'' = expressionGen do'''
+-- -- used to remove app from parsing
+-- expression'' :: Parser Types.Expression
+-- expression'' = expressionGen do'''
 
--- used to remove both from parsing
-expression''' :: Parser Types.Expression
-expression''' = expressionGen (fail "")
+-- -- used to remove both from parsing
+-- expression''' :: Parser Types.Expression
+-- expression''' = expressionGen (fail "")
 
-expression :: Parser Types.Expression
-expression = expressionGen all''
+-- expression :: Parser Types.Expression
+-- expression = expressionGen all''
 
 usage :: Parser Types.Expression
 usage = string "u#" *> expression
@@ -192,7 +203,7 @@ functionModStartReserved ::
 functionModStartReserved str f = do
   reserved str
   name <- prefixSymbolSN
-  args <- many argSN
+  args <- P.many argSN
   f name args
 
 functionModGen :: Parser a -> Parser (Types.FunctionLike a)
@@ -219,7 +230,7 @@ guard p =
 
 arg :: Parser Types.Arg
 arg =
-  Types.ImplicitA <$> (skip (== Lexer.hash) *> matchLogic)
+  Types.ImplicitA <$> (P.char Lexer.hash *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
 
 --------------------------------------------------------------------------------
@@ -304,7 +315,8 @@ nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany' parser =
   curly $ do
     x <- sepBy1H (nameSetSN parser) (skipLiner Lexer.comma)
-    if  | length x == 1 && isPunned x ->
+    if
+        | length x == 1 && isPunned x ->
           x <$ skipLiner Lexer.comma
         | otherwise ->
           x <$ maybe (skipLiner Lexer.comma)
@@ -432,9 +444,9 @@ product =
 record :: Parser Types.Record
 record = do
   names <-
-    spaceLiner
-      $ curly
-      $ sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
+    spaceLiner $
+      curly $
+        sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
   familySignature <- maybe (skipLiner Lexer.colon *> expression)
   pure (Types.Record'' names familySignature)
 
@@ -597,16 +609,16 @@ number =
 
 integer :: Parser Integer
 integer = do
-  digits <- takeWhile Lexer.digit
+  digits <- P.takeWhileP (Just "digits") Lexer.digit
   case Char8.readInteger digits of
     Just (x, _) -> pure x
     Nothing -> fail "didn't parse an int"
 
 float :: Parser Double
 float = do
-  _s1 <- takeWhile Lexer.digit
-  skip (== Lexer.dot)
-  _s2 <- takeWhile Lexer.digit
+  _s1 <- P.takeWhileP (Just "digits") Lexer.digit
+  void (P.char Lexer.dot)
+  _s2 <- P.takeWhileP (Just "digits") Lexer.digit
   fail "float not implemented"
 
 --   pure (read (s1 <> "." <> s2))
@@ -643,8 +655,8 @@ doNotBind = do
   body <- expression'SN
   pure [Types.DoBody Nothing body]
 
-do'' :: Parser [Types.DoBody]
-do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
+-- do'' :: Parser [Types.DoBody]
+-- do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 
 --------------------------------------------------------------------------------
 -- Symbol Handlers
@@ -653,7 +665,8 @@ do'' = Expr.buildExpressionParser table (doBind <|> doNotBind) <?> "bind expr"
 infixSymbolGen :: Parser Symbol -> Parser Symbol
 infixSymbolGen p = do
   symb <- p
-  if  | Set.member symb reservedSymbols -> fail "symbol is reserved word"
+  if
+      | Set.member symb reservedSymbols -> fail "symbol is reserved word"
       | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
@@ -681,7 +694,8 @@ prefixSymbolGen startParser = do
   rest <- takeWhile Lexer.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
-  if  | Set.member new reservedWords -> fail "symbol is reserved operator"
+  if
+      | Set.member new reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText (Encoding.decodeUtf8 new))
 
 symbolEndGen :: String -> Parser ()
@@ -747,122 +761,53 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 --------------------------------------------------------------------------------
 -- Misc helpers
 --------------------------------------------------------------------------------
-
-reservedWords :: (Ord a, IsString a) => Set a
-reservedWords =
-  Set.fromList
-    [ "let",
-      "val",
-      "type",
-      "case",
-      "in",
-      "open",
-      "if",
-      "cond",
-      "end",
-      "of",
-      "begin",
-      "sig",
-      "mod",
-      "declare",
-      "where"
-    ]
-
-reservedSymbols :: (Ord a, IsString a) => Set a
-reservedSymbols =
-  Set.fromList
-    ["=", "|", "", "--"]
-
-maybe :: Alternative f => f a -> f (Maybe a)
-maybe = optional
-
-spacer :: Parser p -> Parser p
-spacer p = p <* takeWhile (Lexer.space ==)
-
-emptyCheck :: Word8 -> Bool
-emptyCheck x = Lexer.space == x || Lexer.endOfLine x
-
-eatSpaces :: Parser p -> Parser p
-eatSpaces p = takeWhile emptyCheck *> p
-
-spaceLiner :: Parser p -> Parser p
-spaceLiner p = p <* takeWhile emptyCheck
-
-between :: Word8 -> Parser p -> Word8 -> Parser p
-between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
-
-parens :: Parser p -> Parser p
-parens p = between Lexer.openParen p Lexer.closeParen
-
-brackets :: Parser p -> Parser p
-brackets p = between Lexer.openBracket p Lexer.closeBracket
-
-curly :: Parser p -> Parser p
-curly p = between Lexer.openCurly p Lexer.closeCurly
-
-many1H :: Alternative f => f a -> f (NonEmpty a)
-many1H = fmap NonEmpty.fromList . many1
-
--- | 'sepBy1HFinal' is like 'sepBy1H' but also tries to parse a last separator
-sepBy1HFinal :: Alternative f => f a -> f s -> f (NonEmpty a)
-sepBy1HFinal parse sep = sepBy1H parse sep <* maybe sep
-
-sepBy1H :: Alternative f => f a -> f s -> f (NonEmpty a)
-sepBy1H parse sep = NonEmpty.fromList <$> sepBy1 parse sep
-
-skipLiner :: Word8 -> Parser ()
-skipLiner p = spaceLiner (skip (== p))
-
-maybeParend :: Parser a -> Parser a
-maybeParend p = p <|> parens p
-
 --------------------------------------------------------------------------------
 -- Expr Parser
 --------------------------------------------------------------------------------
 
--- For Expressions
-tableExp :: [[Expr.Operator ByteString Types.Expression]]
-tableExp =
-  [ [refine],
-    [infixOp],
-    [arrowExp]
-  ]
+-- -- For Expressions
+-- tableExp :: [[Expr.Operator ByteString Types.Expression]]
+-- tableExp =
+--   [ [refine],
+--     [infixOp],
+--     [arrowExp]
+--   ]
 
-infixOp :: Expr.Operator ByteString Types.Expression
-infixOp =
-  Expr.Infix
-    ( do
-        inf <- spaceLiner infixSymbolDot
-        pure
-          (\l r -> Types.Infix (Types.Inf l inf r))
-    )
-    Expr.AssocRight
+-- infixOp :: Expr.Operator ByteString Types.Expression
+-- infixOp =
+--   Expr.Infix
+--     ( do
+--         inf <- spaceLiner infixSymbolDot
+--         pure
+--           (\l r -> Types.Infix (Types.Inf l inf r))
+--     )
+--     Expr.AssocRight
 
-arrowExp :: Expr.Operator ByteString Types.Expression
-arrowExp =
-  Expr.Infix
-    ( do
-        skipLiner Lexer.dash
-        exp <- expressionSN
-        reserved "->"
-        pure
-          (\l r -> Types.ArrowE (Types.Arr' l exp r))
-    )
-    Expr.AssocRight
+-- arrowExp :: Expr.Operator ByteString Types.Expression
+-- arrowExp =
+--   Expr.Infix
+--     ( do
+--         skipLiner Lexer.dash
+--         exp <- expressionSN
+--         reserved "->"
+--         pure
+--           (\l r -> Types.ArrowE (Types.Arr' l exp r))
+--     )
+--     Expr.AssocRight
 
-refine :: Expr.Operator ByteString Types.Expression
-refine =
-  Expr.Postfix $
-    do
-      refine <- spaceLiner (curly expressionSN)
-      pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
+-- refine :: Expr.Operator ByteString Types.Expression
+-- refine =
+--   Expr.Postfix $
+--     do
+--       refine <- spaceLiner (curly expressionSN)
+--       pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
 
--- For Do!
-table :: Semigroup a => [[Expr.Operator ByteString a]]
-table = [[binary ";" (<>)]]
+-- -- For Do!
+-- table :: Semigroup a => [[Expr.Operator ByteString a]]
+-- table = [[binary ";" (<>)]]
 
-binary :: ByteString -> (a -> a -> a) -> Expr.Operator ByteString a
-binary name fun = Expr.Infix (fun <$ spaceLiner (string name)) Expr.AssocLeft
+-- binary :: ByteString -> (a -> a -> a) -> Expr.Operator ByteString a
+-- binary name fun = Expr.Infix (fun <$ spaceLiner (string name)) Expr.AssocLeft
 
 --------------------------------------------------------------------------------
 -- SN Derivatives

@@ -1,3 +1,4 @@
+-- TODO: Merge this file with Juvix.Library.Parser.Token
 module Juvix.Library.Symbol.Lexer where
 
 import qualified GHC.Unicode as Unicode
