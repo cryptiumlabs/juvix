@@ -1011,6 +1011,13 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+*** Sexp <<Frontend/test/Sexp>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
 ** src
@@ -1348,7 +1355,7 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
-*** Sexp <<test/Sexp>>
+*** Sexp <<StandardLibrary/test/Sexp>>
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
