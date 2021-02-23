@@ -21,7 +21,8 @@ top =
       topLevelSig,
       topLevelType,
       topLevelDeclaration,
-      topLevelModule
+      topLevelModule,
+      letTest
     ]
 
 --------------------------------------------------------------------------------
@@ -166,6 +167,37 @@ topLevelModule =
 --------------------------------------------------------------------------------
 -- Expression Tests
 --------------------------------------------------------------------------------
+
+letTest :: T.TestTree
+letTest =
+  T.testGroup
+    "let parser"
+    [ T.testCase "basic" (basic T.@=? basicExpected),
+      T.testCase "argument" (arguments T.@=? argumentsExpected)
+    ]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo y = \
+        \  let fi = 3 in \
+        \  fi"
+        |> singleEleErr
+    basicExpected =
+      Sexp.parse
+        "(:defun foo (y) \
+        \  (let fi () 3 \
+        \    fi))"
+    arguments =
+      Parser.parseOnly
+        "let foo y = \
+        \  let fi x = 3 + x in \
+        \  fi y"
+        |> singleEleErr
+    argumentsExpected =
+      Sexp.parse
+        "(:defun foo (y) \
+        \   (let fi (x) (:infix + 3 x) \
+        \      (fi y)))"
 
 --------------------------------------------------------------------------------
 -- Helpers
