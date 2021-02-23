@@ -22,7 +22,12 @@ top =
       topLevelType,
       topLevelDeclaration,
       topLevelModule,
-      letTest
+      letTest,
+      moduleTest,
+      tupleTest,
+      listTest,
+      recordTest,
+      doTest
     ]
 
 --------------------------------------------------------------------------------
@@ -198,6 +203,76 @@ letTest =
         "(:defun foo (y) \
         \   (let fi (x) (:infix + 3 x) \
         \      (fi y)))"
+
+moduleTest :: T.TestTree
+moduleTest =
+  T.testGroup
+    "let parser"
+    [T.testCase "basic" (basic T.@=? basicExpected)]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo = \
+        \  mod Bar = \
+        \    let bar = 3 \
+        \     type zar = Boo \
+        \  end in \
+        \  Bar.bar"
+        |> singleEleErr
+    basicExpected =
+      Sexp.parse
+        "(:defun foo () \
+        \   (:let-mod Bar () \
+        \       ((:defun bar () 3) \
+        \        (type zar () (Boo))) \
+        \     Bar.bar))"
+
+tupleTest :: T.TestTree
+tupleTest =
+  T.testGroup
+    "tuple parser"
+    [T.testCase "baisc" (basic T.@=? basicE)]
+  where
+    basic = Parser.parseOnly "let foo = (1,2,3)" |> singleEleErr
+    basicE = Sexp.parse "(:defun foo () (:tuple 1 2 3))"
+
+listTest :: T.TestTree
+listTest =
+  T.testGroup
+    "list parser"
+    [T.testCase "baisc" (basic T.@=? basicE)]
+  where
+    basic = Parser.parseOnly "let foo = [1,2,3,4]" |> singleEleErr
+    basicE = Sexp.parse "(:defun foo () (:list 1 2 3 4))"
+
+recordTest :: T.TestTree
+recordTest =
+  T.testGroup
+    "record parser"
+    [T.testCase "baisc" (basic T.@=? basicE)]
+  where
+    basic = Parser.parseOnly "let foo = {a, b = 2}" |> singleEleErr
+    basicE = Sexp.parse "(:defun foo () (:record (a) (b 2)))"
+
+doTest :: T.TestTree
+doTest =
+  T.testGroup
+    "do parser"
+    [T.testCase "baisc" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo xs = \
+        \  a <- xs; \
+        \  more-comp; \
+        \  pure a"
+        |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo (xs) \
+        \    (:do (%<- a xs) \
+        \         more-comp \
+        \         (pure a)))"
 
 --------------------------------------------------------------------------------
 -- Helpers
