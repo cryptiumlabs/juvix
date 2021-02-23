@@ -26,11 +26,11 @@ type TermT primTy primVal = Term (TC.TypedPrim primTy primVal)
 
 extendType "Type" [] [t|T|] (\_ -> defaultExtType)
 
-type Datatype = Datatype' T
+type Datatype = Datatype' T T
 
 type DataArg = DataArg' T
 
-type DataCon = DataCon' T
+type DataCon = DataCon' T T
 
 type Function = Function' T
 

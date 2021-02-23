@@ -64,34 +64,34 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDatatype' ext primTy primVal)
 
-data Datatype' ext primTy primVal
+data Datatype' extV extT primTy primVal
   = Datatype
       { dataName :: GlobalName,
         -- | the positivity of its parameters
         dataPos :: [Pos],
         -- | type checked arguments
-        dataArgs :: [DataArg' ext primTy primVal],
+        dataArgs :: [DataArg' extV primTy primVal],
         -- | the type constructor's target universe level
         dataLevel :: Natural,
-        dataCons :: [DataCon' ext primTy primVal]
+        dataCons :: [DataCon' extV extT primTy primVal]
       }
   deriving (Generic)
 
 deriving instance
-  GlobalAllV Show ext primTy primVal =>
-  Show (Datatype' ext primTy primVal)
+  GlobalAll Show extV extT primTy primVal =>
+  Show (Datatype' extV extT primTy primVal)
 
 deriving instance
-  GlobalAllV Eq ext primTy primVal =>
-  Eq (Datatype' ext primTy primVal)
+  GlobalAll Eq extV extT primTy primVal =>
+  Eq (Datatype' extV extT primTy primVal)
 
 deriving instance
-  (Data ext, GlobalAllV Data ext primTy primVal) =>
-  Data (Datatype' ext primTy primVal)
+  (Data extV, Data extT, GlobalAll Data extV extT primTy primVal) =>
+  Data (Datatype' extV extT primTy primVal)
 
 deriving instance
-  GlobalAllV NFData ext primTy primVal =>
-  NFData (Datatype' ext primTy primVal)
+  GlobalAll NFData extV extT primTy primVal =>
+  NFData (Datatype' extV extT primTy primVal)
 
 data RawDataArg' ext primTy primVal
   = RawDataArg
@@ -144,7 +144,8 @@ deriving instance
 data RawDataCon' ext primTy primVal
   = RawDataCon
       { rawConName :: GlobalName,
-        rawConType :: Term' ext primTy primVal
+        rawConType :: Term' ext primTy primVal,
+        rawConDef  :: Maybe (RawFunction' ext primTy primVal)
       }
   deriving (Generic)
 
@@ -164,28 +165,29 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDataCon' ext primTy primVal)
 
-data DataCon' ext primTy primVal
+data DataCon' extV extT primTy primVal
   = DataCon
       { conName :: GlobalName,
-        conType :: Value' ext primTy primVal
+        conType :: Value' extV primTy primVal,
+        conDef  :: Maybe (Function' extV extT primTy primVal)
       }
   deriving (Generic)
 
 deriving instance
-  GlobalAllV Show ext primTy primVal =>
-  Show (DataCon' ext primTy primVal)
+  GlobalAll Show extV extT primTy primVal =>
+  Show (DataCon' extV extT primTy primVal)
 
 deriving instance
-  GlobalAllV Eq ext primTy primVal =>
-  Eq (DataCon' ext primTy primVal)
+  GlobalAll Eq extV extT primTy primVal =>
+  Eq (DataCon' extV extT primTy primVal)
 
 deriving instance
-  (Data ext, GlobalAllV Data ext primTy primVal) =>
-  Data (DataCon' ext primTy primVal)
+  (Data extV, Data extT, GlobalAll Data extV extT primTy primVal) =>
+  Data (DataCon' extV extT primTy primVal)
 
 deriving instance
-  GlobalAllV NFData ext primTy primVal =>
-  NFData (DataCon' ext primTy primVal)
+  GlobalAll NFData extV extT primTy primVal =>
+  NFData (DataCon' extV extT primTy primVal)
 
 data RawFunction' ext primTy primVal
   = RawFunction
@@ -328,8 +330,8 @@ deriving instance
   NFData (RawGlobal' ext primTy primVal)
 
 data Global' extV extT primTy primVal
-  = GDatatype (Datatype' extV primTy primVal)
-  | GDataCon (DataCon' extV primTy primVal)
+  = GDatatype (Datatype' extV extT primTy primVal)
+  | GDataCon (DataCon' extV extT primTy primVal)
   | GFunction (Function' extV extT primTy primVal)
   | GAbstract (Abstract' extV primTy primVal)
   deriving (Generic)

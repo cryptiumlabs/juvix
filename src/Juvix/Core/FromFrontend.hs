@@ -700,11 +700,11 @@ transformCon ::
   Maybe (FE.Final' Ctx.Def) ->
   m (IR.RawDataCon primTy primVal)
 transformCon q x ty def = do
-  -- TODO def
   def <- traverse (transformFunction q (conDefName x)) def
   pure $ IR.RawDataCon {
     rawConName = x,
-    rawConType = hrToIR ty
+    rawConType = hrToIR ty,
+    rawConDef = def
   }
 
 

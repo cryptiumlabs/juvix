@@ -97,7 +97,7 @@ unsafeEvalGlobal ::
 unsafeEvalGlobal globals g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t) -> undefined
+    RawGDataCon (RawDataCon n t d) -> undefined
     RawGFunction (RawFunction n u t cs) ->
       GFunction $
         Function n u (unsafeEval globals t) (map (funClauseEval globals) cs)
@@ -110,7 +110,7 @@ convGlobal ::
 convGlobal g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) -> undefined
-    RawGDataCon (RawDataCon n t) -> undefined
+    RawGDataCon (RawDataCon n t d) -> undefined
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn t) (map funClauseReturn cs))
     RawGAbstract (RawAbstract n u t) ->
