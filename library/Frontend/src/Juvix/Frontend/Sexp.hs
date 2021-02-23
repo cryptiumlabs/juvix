@@ -1,7 +1,6 @@
 module Juvix.Frontend.Sexp where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library

@@ -970,7 +970,6 @@ Tests that weak works as expected
   + [[Lexer]]
 ***** Sexp <<Frontend/Sexp>>
 - _Relies on_
-  + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]

@@ -126,7 +126,7 @@ removeNoComment =
   let str = "let foo = 3 \n + \n \n 4"
    in Parser.removeComments str
         |> (T.@=? str)
-        |> T.testCase ("test remove comments where there are none")
+        |> T.testCase "test remove comments where there are none"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once

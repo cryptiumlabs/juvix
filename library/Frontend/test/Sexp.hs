@@ -19,7 +19,9 @@ top =
     "top level tests"
     [ topLevelLet,
       topLevelSig,
-      topLevelType
+      topLevelType,
+      topLevelDeclaration,
+      topLevelModule
     ]
 
 --------------------------------------------------------------------------------
@@ -29,7 +31,7 @@ top =
 topLevelLet :: T.TestTree
 topLevelLet =
   T.testGroup
-    "topLevel Let Tests"
+    "defun/ top level let tests"
     [T.testCase "guard test" (guard T.@=? guardExpected)]
   where
     guard =
@@ -48,7 +50,7 @@ topLevelLet =
 topLevelSig :: T.TestTree
 topLevelSig =
   T.testGroup
-    "topLevel Sig tests"
+    "Sig tests"
     [ T.testCase "basic" (basic T.@=? basicExpected),
       T.testCase "usage" (usage T.@=? usageExpected)
     ]
@@ -111,6 +113,55 @@ topLevelType =
       Sexp.parse
         "(type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z) \
         \   (Foo a b c))"
+
+topLevelDeclaration :: T.TestTree
+topLevelDeclaration =
+  T.testGroup
+    "declaration parser"
+    [ T.testCase "infix" (basic T.@=? basicE)
+    ]
+  where
+    basic = Parser.parseOnly "declare infixl foo 3" |> singleEleErr
+    basicE = Sexp.parse "(declare infixl foo 3)"
+
+topLevelModule :: T.TestTree
+topLevelModule =
+  T.testGroup
+    "module parser"
+    [ T.testCase "basic" (basic T.@=? basicExpected),
+      T.testCase "guard" (guard T.@=? guardExpected)
+    ]
+  where
+    basic =
+      Parser.parseOnly
+        "mod foo = \
+        \   let bar = 3 \
+        \   type zar = Boo \
+        \ end"
+        |> singleEleErr
+    basicExpected =
+      Sexp.parse
+        "(:defmodule foo () \
+        \  (:defun bar () 3) \
+        \  (type zar () (Boo)))"
+    guard =
+      Parser.parseOnly
+        "mod foo x \
+        \  | x == 3 = \
+        \    let foo = 3 \
+        \    let bar = 5 \
+        \  | else = \
+        \    let foo = 5 \
+        \ end"
+        |> singleEleErr
+    guardExpected =
+      Sexp.parse
+        "(:defmodule foo (x) \
+        \   (:cond ((:infix == x 3) \
+        \           (:defun foo () 3) \
+        \           (:defun bar () 5)) \
+        \          (else \
+        \           (:defun foo () 5))))"
 
 --------------------------------------------------------------------------------
 -- Expression Tests
