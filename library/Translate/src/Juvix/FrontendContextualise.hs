@@ -30,6 +30,7 @@ data Error
   deriving (Show)
 
 type Final f = Target.New f
+
 type Final' f = Target.New' f
 
 op ::

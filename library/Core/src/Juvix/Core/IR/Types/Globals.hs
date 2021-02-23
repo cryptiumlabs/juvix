@@ -145,7 +145,7 @@ data RawDataCon' ext primTy primVal
   = RawDataCon
       { rawConName :: GlobalName,
         rawConType :: Term' ext primTy primVal,
-        rawConDef  :: Maybe (RawFunction' ext primTy primVal)
+        rawConDef :: Maybe (RawFunction' ext primTy primVal)
       }
   deriving (Generic)
 
@@ -169,7 +169,7 @@ data DataCon' extV extT primTy primVal
   = DataCon
       { conName :: GlobalName,
         conType :: Value' extV primTy primVal,
-        conDef  :: Maybe (Function' extV extT primTy primVal)
+        conDef :: Maybe (Function' extV extT primTy primVal)
       }
   deriving (Generic)
 

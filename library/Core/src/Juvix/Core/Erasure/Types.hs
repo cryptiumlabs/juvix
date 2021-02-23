@@ -151,7 +151,7 @@ data DataCon primTy primVal
   = DataCon
       { conName :: GlobalName,
         conType :: Type primTy,
-        conDef  :: Maybe (Function primTy primVal)
+        conDef :: Maybe (Function primTy primVal)
       }
 
 -- TODO: Figure out how to do this with extensible.
