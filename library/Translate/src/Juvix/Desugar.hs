@@ -7,6 +7,8 @@ module Juvix.Desugar
   )
 where
 
+import Juvix.Library
+
 -- | @op@ fully desugares the frontend syntax from the original
 -- frontend sexp representation to a form without modules, conditions,
 -- guards, etc. This pass thus does all transformations that do not
