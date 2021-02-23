@@ -92,4 +92,4 @@ rejectExts =
     }
 
 type LookupFun ty ext primTy primVal =
-  IR.GlobalName -> Maybe (IR.Global' ext primTy primVal)
+  IR.GlobalName -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)
