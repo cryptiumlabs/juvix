@@ -416,6 +416,7 @@ transformNormalSig _ _ (Ctx.Record _) = pure Nothing -- TODO
 transformNormalSig q x (Ctx.TypeDeclar typ) = Just <$> transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported $ FE.signatureName <$> sig
+transformNormalSig _ _ Ctx.SumCon {} = pure Nothing
 transformNormalSig _ _ Ctx.CurrentNameSpace = pure Nothing
 transformNormalSig _ _ (Ctx.Information {}) = pure Nothing
 
@@ -517,6 +518,7 @@ transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
 transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
 transformNormalDef _ _ (Ctx.Information {}) = pure []
+transformNormalDef _ _ Ctx.SumCon {} = pure []
 
 getValSig ::
   ( HasCoreSigs primTy primVal m,
