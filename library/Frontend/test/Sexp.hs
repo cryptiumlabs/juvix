@@ -13,6 +13,8 @@ import Prelude (error, head)
 -- Exported top level test
 --------------------------------------------------------------------------------
 
+-- | @top@ checks that every form has proper converted from the ML
+-- syntax to the lisp syntax
 top :: T.TestTree
 top =
   T.testGroup
@@ -27,7 +29,13 @@ top =
       tupleTest,
       listTest,
       recordTest,
-      doTest
+      doTest,
+      lambdaTest,
+      openTest,
+      parenTest,
+      blockTest,
+      primitiveTest,
+      condTest
     ]
 
 --------------------------------------------------------------------------------
@@ -231,7 +239,7 @@ tupleTest :: T.TestTree
 tupleTest =
   T.testGroup
     "tuple parser"
-    [T.testCase "baisc" (basic T.@=? basicE)]
+    [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic = Parser.parseOnly "let foo = (1,2,3)" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:tuple 1 2 3))"
@@ -240,7 +248,7 @@ listTest :: T.TestTree
 listTest =
   T.testGroup
     "list parser"
-    [T.testCase "baisc" (basic T.@=? basicE)]
+    [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic = Parser.parseOnly "let foo = [1,2,3,4]" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:list 1 2 3 4))"
@@ -249,7 +257,7 @@ recordTest :: T.TestTree
 recordTest =
   T.testGroup
     "record parser"
-    [T.testCase "baisc" (basic T.@=? basicE)]
+    [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic = Parser.parseOnly "let foo = {a, b = 2}" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:record (a) (b 2)))"
@@ -258,7 +266,7 @@ doTest :: T.TestTree
 doTest =
   T.testGroup
     "do parser"
-    [T.testCase "baisc" (basic T.@=? basicE)]
+    [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
       Parser.parseOnly
@@ -273,6 +281,97 @@ doTest =
         \    (:do (%<- a xs) \
         \         more-comp \
         \         (pure a)))"
+
+lambdaTest :: T.TestTree
+lambdaTest =
+  T.testGroup
+    "lambda parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo y = \
+        \  \\x -> x + y"
+        |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo (y) \
+        \   (:lambda (x) (:infix + x y)))"
+
+openTest :: T.TestTree
+openTest =
+  T.testGroup
+    "open parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo y = \
+        \  open Prelude in x + y"
+        |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo (y) \
+        \   (:open-in Prelude (:infix + x y)))"
+
+parenTest :: T.TestTree
+parenTest =
+  T.testGroup
+    "paren parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly "let foo y = (y + 3) * 9" |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo (y) \
+        \   (:infix * (:paren (:infix + y 3)) 9))"
+
+blockTest :: T.TestTree
+blockTest =
+  T.testGroup
+    "block parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly "let foo y = 3 * begin y + y end" |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo (y) \
+        \   (:infix * 3 (:progn (:infix + y y))))"
+
+primitiveTest :: T.TestTree
+primitiveTest =
+  T.testGroup
+    "block parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly "let add = %Michelson.add" |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun add () \
+        \   (:primitive Michelson.add))"
+
+condTest :: T.TestTree
+condTest =
+  T.testGroup
+    "cond parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly
+        "let add x = \
+        \ if | x == 3 = 1 \
+        \    | x == 4 = 5 \
+        \    | else   = 0"
+        |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun add (x) \
+        \   (:cond ((:infix == x 3) 1) \
+        \          ((:infix == x 4) 5) \
+        \          (else            0)))"
 
 --------------------------------------------------------------------------------
 -- Helpers
