@@ -8,13 +8,8 @@ module Juvix.Core.IR.Types
     PatternVar,
     BoundVar,
     Universe,
-    DatatypeWith (..),
     RawDatatype',
     Datatype',
-    DataArgWith (..),
-    RawDataArg',
-    DataArg',
-    DataConWith (..),
     RawDataCon',
     DataCon',
     FunctionWith (..),
@@ -66,7 +61,7 @@ type Function = Function' NoExt NoExt
 
 type RawFunction = RawFunction' NoExt
 
-type FunClause = FunClause' NoExt
+type FunClause primTy primVal = FunClause' NoExt primTy primVal
 
 -- (no RawFunClause since a clause contains no types anyway)
 
@@ -78,7 +73,7 @@ type Global = Global' NoExt NoExt
 
 type RawGlobal = RawGlobal' NoExt
 
-type Globals primTy primVal = Globals' NoExt NoExt primTy primVal
+type Globals primTy primVal = Globals' NoExt primTy primVal
 
 type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
 

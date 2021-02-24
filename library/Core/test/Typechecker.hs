@@ -4,6 +4,7 @@
 module Typechecker where
 
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.CheckTerm as TC
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker as TC
@@ -883,7 +884,7 @@ typGlobals =
             { funName = name,
               funUsage = π,
               funType = ty,
-              funClauses = [IR.FunClause [] rhs]
+              funClauses = [IR.FunClause [] [] rhs Nothing False Nothing]
             }
       )
 

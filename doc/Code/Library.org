@@ -667,6 +667,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -732,11 +733,26 @@ Types to support partial application and polymorphic primitives.
   + [[IR/Types/Base]]
 ***** IR
 - _Relies on_
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[IR/Typechecker]]
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
+****** CheckTerm
+This file contains the functions and aux functions to typecheck terms.
+@typeTerm@ and @typeElim@ are called by functions for typechecking
+datatype and function declarations.
+- _Relies on_
+  + [[Application]]
+  + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
 ****** Evaluator <<IR/Evaluator>>
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
@@ -809,16 +825,17 @@ keeps the extensions.
   + [[IR/Types/Base]]
   + [[Library]]
 ****** Typechecker <<IR/Typechecker>>
+This file contains the functions and aux functions to typecheck
+datatype and function declarations.
+Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
+Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
+Typechecked declarations are added to the signature.
 - _Relies on_
-  + [[Application]]
-  + [[IR/Evaluator]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
@@ -923,6 +940,7 @@ Quantitative type implementation inspired by
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
   + [[IR/Typechecker]]
