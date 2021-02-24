@@ -193,6 +193,10 @@ removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
 -- Taken from the simplified passes
 --------------------------------------------------------------------------------
 
+------------------------------------------------------------
+-- Module Pass
+------------------------------------------------------------
+
 -- Update this two fold.
 -- 1. remove the inner combine and make it global
 -- 2. Find a way to handle the cond case
@@ -204,30 +208,7 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
         |> Sexp.addMetaToCar atom
       where
         generatedRecord =
-          Sexp.list (Sexp.atom "record" : fmap (\x -> Sexp.list [Sexp.Atom x]) names)
-        combine (form Sexp.:> name Sexp.:> xs) expression
-          | Sexp.isAtomNamed form "defun" =
-            -- we crunch the xs in a list
-            Sexp.list [Sexp.atom "let", name, xs, expression]
-          | Sexp.isAtomNamed form "type" =
-            Sexp.list [Sexp.atom "let-type", name, xs, expression]
-        combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
-          | Sexp.isAtomNamed form "defsig" =
-            Sexp.list [Sexp.atom "let-sig", name, xs, expression]
-        combine (form Sexp.:> declaration) expression
-          | Sexp.isAtomNamed form "declare" =
-            Sexp.list [Sexp.atom "declaim", declaration, expression]
-        combine (Sexp.List [form, open]) expression
-          | Sexp.isAtomNamed form "open" =
-            Sexp.list [Sexp.atom "open-in", open, expression]
-        combine (form Sexp.:> xs) expression
-          | Sexp.isAtomNamed form "defmodule",
-            Just atom <- Sexp.atomFromT form =
-            -- have to recurse by hand here ☹
-            let (_ Sexp.:> name Sexp.:> rest) = moduleToRecord atom xs
-             in Sexp.list [Sexp.atom "let", name, rest, expression]
-        -- ignore other forms
-        combine _ expression = expression
+          Sexp.list (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) names)
         --
         names = Sexp.foldr f [] body |> Set.fromList |> Set.toList
         --
@@ -240,3 +221,35 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
             name : acc
         f _ acc = acc
     moduleToRecord _ _ = error "malformed record"
+
+----------------------------------------
+-- Module Helpers
+----------------------------------------
+
+combine :: Sexp.T -> Sexp.T -> Sexp.T
+combine (form Sexp.:> name Sexp.:> xs) expression
+  | Sexp.isAtomNamed form "defun" =
+    -- we crunch the xs in a list
+    Sexp.list [Sexp.atom "let", name, xs, expression]
+  | Sexp.isAtomNamed form "type" =
+    Sexp.list [Sexp.atom "let-type", name, xs, expression]
+combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
+  | Sexp.isAtomNamed form "defsig" =
+    Sexp.list [Sexp.atom "let-sig", name, xs, expression]
+combine (form Sexp.:> declaration) expression
+  | Sexp.isAtomNamed form "declare" =
+    Sexp.list [Sexp.atom "declaim", declaration, expression]
+combine (Sexp.List [form, open]) expression
+  | Sexp.isAtomNamed form "open" =
+    Sexp.list [Sexp.atom "open-in", open, expression]
+combine (form Sexp.:> xs) expression
+  | Sexp.isAtomNamed form "defmodule",
+    Just atom <- Sexp.atomFromT form =
+    -- have to recurse by hand here ☹
+    let (_ Sexp.:> name Sexp.:> rest) = undefined atom xs -- moduleToRecord atom xs
+     in Sexp.list [Sexp.atom "let", name, rest, expression]
+-- ignore other forms
+combine _ expression = expression
+
+ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
+ignoreCond = undefined
