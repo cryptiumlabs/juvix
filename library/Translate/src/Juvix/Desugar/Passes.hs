@@ -16,6 +16,7 @@ module Juvix.Desugar.Passes
     multipleTransLet,
     translateDo,
     removePunnedRecords,
+    moduleLetTransform,
   )
 where
 
@@ -201,10 +202,24 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
   where
     moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
       Sexp.list
-        [ Sexp.atom "defun",
+        [ Sexp.atom ":defun",
           name,
           args,
           ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
+        ]
+        |> Sexp.addMetaToCar atom
+    moduleToRecord _ _ = error "malformed record"
+
+moduleLetTransform :: Sexp.T -> Sexp.T
+moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
+  where
+    moduleToRecord atom (name Sexp.:> args Sexp.:> body Sexp.:> rest) =
+      Sexp.list
+        [ Sexp.atom "let",
+          name,
+          args,
+          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b),
+          rest
         ]
         |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed record"
@@ -242,7 +257,7 @@ combine _ expression = expression
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
 ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
   | Sexp.isAtomNamed form ":cond" =
-    Sexp.foldr comb Sexp.Nil xs
+    Sexp.listStar [form, Sexp.foldr comb Sexp.Nil xs]
   where
     comb (pred Sexp.:> body) acc =
       Sexp.listStar [Sexp.list [pred, trans body], acc]

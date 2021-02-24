@@ -1948,13 +1948,6 @@ done with no extra information needed. Thus we export the following passes
   + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
-*** Desugar <<test/Desugar>>
-- _Relies on_
-  + [[Frontend/Parser]]
-  + [[FrontendDesugar]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
 *** Golden
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1996,3 +1989,18 @@ done with no extra information needed. Thus we export the following passes
   + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]
+*** Desugar <<test/Desugar>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[FrontendDesugar]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+**** Sexp <<Desugar/Sexp>>
+- _Relies on_
+  + [[Passes]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
