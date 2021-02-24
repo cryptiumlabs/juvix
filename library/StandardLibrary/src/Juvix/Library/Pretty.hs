@@ -146,10 +146,10 @@ d1 <$$$> d2 = d1 <> linebreak <> linebreak <> d2
 d1 <$$$+> d2 = d1 <> linebreak <> linebreak <> indent 3 d2
 
 listOf :: Pretty a => [a] -> Doc
-listOf xs = token Token.openCurly <> commafy (fmap ppr xs) <> token Token.closeCurly
+listOf xs = char Token.openCurly <> commafy (fmap ppr xs) <> char Token.closeCurly
 
 tupleOf :: Pretty a => [a] -> Doc
-tupleOf xs = token Token.openParen <> commafy (fmap ppr xs) <> token Token.closeParen
+tupleOf xs = char Token.openParen <> commafy (fmap ppr xs) <> char Token.closeParen
 
 setOf :: (Foldable f, Pretty a) => f a -> Doc
 setOf = encloseSep "{" "}" "," . map ppr . toList
@@ -180,7 +180,7 @@ ppshow :: Show a => a -> Doc
 ppshow x = ppr (show x :: Text)
 
 assign :: Doc -> Doc -> Doc
-assign doc1 doc2 = doc1 <+> token Token.assign <+> doc2 <> semi
+assign doc1 doc2 = doc1 <+> char Token.assign <+> doc2 <> semi
 
 -- | Put soft line breaks between elements.
 spaced :: [Doc] -> [Doc]

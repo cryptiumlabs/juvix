@@ -15,11 +15,6 @@ module Juvix.Library.Parser.Token
     div,
     pow,
     and,
-    or,
-    equal,
-    nequal,
-    gequal,
-    lequal,
     lesser,
     not,
     dot,
@@ -55,124 +50,124 @@ import Protolude hiding (and, div, hash, not, or)
 
 default (Text)
 
-assign :: Text
-assign = "="
+assign :: Char
+assign = '='
 
 under :: Char
 under = '_'
 
-space :: Text
-space = " "
+space :: Char
+space = ' '
 
-colon :: Text
-colon = ":"
+colon :: Char
+colon = ':'
 
-semi :: Text
-semi = ";"
+semi :: Char
+semi = ';'
 
-comma :: Text
-comma = ","
+comma :: Char
+comma = ','
 
-hash :: Text
-hash = "#"
+hash :: Char
+hash = '#'
 
-backSlash :: Text
-backSlash = "\\"
+backSlash :: Char
+backSlash = '\\'
 
-quote :: Text
-quote = "\'"
+quote :: Char
+quote = '\''
 
-pipe :: Text
-pipe = "|"
+pipe :: Char
+pipe = '|'
 
-at :: Text
-at = "@"
+at :: Char
+at = '@'
 
-backtick :: Text
-backtick = "`"
+backtick :: Char
+backtick = '`'
 
-newLine :: Text
-newLine = "\n"
+newLine :: Char
+newLine = '\n'
 
-openParen :: Text
-openParen = "("
+openParen :: Char
+openParen = '('
 
-closeParen :: Text
-closeParen = ")"
+closeParen :: Char
+closeParen = ')'
 
-openCurly :: Text
-openCurly = "{"
+openCurly :: Char
+openCurly = '{'
 
-closeCurly :: Text
-closeCurly = "}"
+closeCurly :: Char
+closeCurly = '}'
 
-openBracket :: Text
-openBracket = "["
+openBracket :: Char
+openBracket = '['
 
-closeBracket :: Text
-closeBracket = "]"
+closeBracket :: Char
+closeBracket = ']'
 
 ---------------------
 -- Infix Operators --
 ---------------------
 
-mult :: Text
-mult = "*"
+mult :: Char
+mult = '*'
 
-add :: Text
-add = "+"
+add :: Char
+add = '+'
 
-sub :: Text
-sub = "-"
+sub :: Char
+sub = '-'
 
-div :: Text
-div = "/"
+div :: Char
+div = '/'
 
-pow :: Text
-pow = "^"
+pow :: Char
+pow = '^'
 
-and :: Text
-and = "&"
+and :: Char
+and = '&'
 
-or :: Text
-or = "||"
+-- or :: Text
+-- or = "||"
 
-equal :: Text
-equal = "=="
+-- equal :: Text
+-- equal = "=="
 
-nequal :: Text
-nequal = "!="
+-- nequal :: Text
+-- nequal = "!="
 
-gequal :: Text
-gequal = ">="
+-- gequal :: Text
+-- gequal = ">="
 
-lequal :: Text
-lequal = "<="
+-- lequal :: Text
+-- lequal = "<="
 
-greater :: Text
-greater = ">"
+greater :: Char
+greater = '>'
 
-lesser :: Text
-lesser = "<"
+lesser :: Char
+lesser = '<'
 
 ---------------------
 -- Start Operators --
 ---------------------
 
-question :: Text
-question = "?"
+question :: Char
+question = '?'
 
-not :: Text
-not = "!"
+not :: Char
+not = '!'
 
-percent :: Text
-percent = "%"
+percent :: Char
+percent = '%'
 
-dot :: Text
-dot = "."
+dot :: Char
+dot = '.'
 
-dash :: Text
-dash = "-"
+dash :: Char
+dash = '-'
 
 reservedWords :: (Ord a, IsString a) => Set a
 reservedWords =
@@ -199,7 +194,7 @@ reservedSymbols =
   Set.fromList
     ["=", "|", "", "--"]
 
-infixOperators :: [Text]
+infixOperators :: [Char]
 infixOperators =
   [ mult,
     add,
@@ -207,16 +202,11 @@ infixOperators =
     div,
     pow,
     and,
-    or,
-    equal,
-    nequal,
-    gequal,
-    lequal,
     greater,
     lesser
   ]
 
-middleOperators :: [Text]
+middleOperators :: [Char]
 middleOperators =
   [ not,
     dot,
@@ -225,14 +215,14 @@ middleOperators =
     dash
   ]
 
-operators :: [Text]
+operators :: [Char]
 operators = infixOperators ++ middleOperators
 
 validStartSymbol :: Char -> Bool
 validStartSymbol w =
   Unicode.isAlpha w || w == under
 
-validInfixSymbol :: Text -> Bool
+validInfixSymbol :: Char -> Bool
 validInfixSymbol = flip elem infixOperators
 
 -- I don't think allowing any symbol is a good idea
@@ -245,7 +235,7 @@ validInfixSymbol = flip elem infixOperators
 --   || w == percent
 --   || w == dot
 
-validMiddleSymbol :: Text -> Bool
+validMiddleSymbol :: Char -> Bool
 validMiddleSymbol = flip elem middleOperators
 
 validUpperSymbol :: Char -> Bool

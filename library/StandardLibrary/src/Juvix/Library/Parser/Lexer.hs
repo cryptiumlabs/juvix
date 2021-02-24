@@ -11,6 +11,7 @@ module Juvix.Library.Parser.Lexer
     sepBy1HFinal,
     maybeParend,
     digit,
+    isHSpace,
   )
 where
 
@@ -39,13 +40,13 @@ spaceLiner p = P.takeWhileP (Just "space liner") isHSpace *> p
 -- between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
 
 parens :: Parser p -> Parser p
-parens = P.between (P.string T.openParen) (P.string T.closeParen)
+parens = P.between (P.char T.openParen) (P.char T.closeParen)
 
 brackets :: Parser p -> Parser p
-brackets = P.between (P.string T.openBracket) (P.string T.closeBracket)
+brackets = P.between (P.char T.openBracket) (P.char T.closeBracket)
 
 curly :: Parser p -> Parser p
-curly = P.between (P.string T.openCurly) (P.string T.closeCurly)
+curly = P.between (P.char T.openCurly) (P.char T.closeCurly)
 
 many1H :: Parser a -> Parser (NonEmpty a)
 many1H = fmap NonEmpty.fromList . P.some
