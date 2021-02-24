@@ -46,6 +46,7 @@ ghc-options:
   - -static
   - -fwrite-ide-info
 
+# TODO: Specify which packages are exported
 
 when:
   condition: flag(incomplete-error)

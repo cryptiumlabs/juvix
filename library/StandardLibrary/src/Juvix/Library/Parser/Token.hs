@@ -1,8 +1,14 @@
 module Juvix.Library.Parser.Token
-  ( operators,
-    reservedSymbols,
+  ( infixOperators,
+    middleOperators,
+    operators,
     reservedWords,
-    assign,
+    reservedSymbols,
+    validStartSymbol,
+    validInfixSymbol,
+    validMiddleSymbol,
+    validUpperSymbol,
+    -- Operators
     mult,
     add,
     sub,
@@ -17,28 +23,98 @@ module Juvix.Library.Parser.Token
     lesser,
     not,
     dot,
+    percent,
+    -- Other symbols
     semi,
     colon,
     at,
-    percent,
-    lparen,
-    rparen,
-    lbrace,
-    rbrace,
-    lbracket,
-    rbracket,
-    rarrow,
+    openParen,
+    closeParen,
+    openCurly,
+    closeCurly,
+    openBracket,
+    closeBracket,
+    assign,
+    dash,
+    under,
+    space,
+    comma,
+    hash,
+    backSlash,
+    quote,
+    pipe,
+    question,
+    backtick,
+    newLine,
   )
 where
 
 import qualified Data.Set as Set
-import Data.Text (Text)
-import Protolude (IsString, Ord, Set)
+import qualified GHC.Unicode as Unicode
+import Protolude hiding (and, div, hash, not, or)
 
 default (Text)
 
 assign :: Text
 assign = "="
+
+under :: Char
+under = '_'
+
+space :: Text
+space = " "
+
+colon :: Text
+colon = ":"
+
+semi :: Text
+semi = ";"
+
+comma :: Text
+comma = ","
+
+hash :: Text
+hash = "#"
+
+backSlash :: Text
+backSlash = "\\"
+
+quote :: Text
+quote = "\'"
+
+pipe :: Text
+pipe = "|"
+
+at :: Text
+at = "@"
+
+backtick :: Text
+backtick = "`"
+
+newLine :: Text
+newLine = "\n"
+
+openParen :: Text
+openParen = "("
+
+closeParen :: Text
+closeParen = ")"
+
+openCurly :: Text
+openCurly = "{"
+
+closeCurly :: Text
+closeCurly = "}"
+
+openBracket :: Text
+openBracket = "["
+
+closeBracket :: Text
+closeBracket = "]"
+
+---------------------
+-- Infix Operators --
+---------------------
 
 mult :: Text
 mult = "*"
@@ -56,7 +132,7 @@ pow :: Text
 pow = "^"
 
 and :: Text
-and = "&&"
+and = "&"
 
 or :: Text
 or = "||"
@@ -79,44 +155,24 @@ greater = ">"
 lesser :: Text
 lesser = "<"
 
+---------------------
+-- Start Operators --
+---------------------
+
+question :: Text
+question = "?"
+
 not :: Text
 not = "!"
-
-dot :: Text
-dot = "."
-
-semi :: Text
-semi = ";"
-
-colon :: Text
-colon = ":"
-
-at :: Text
-at = "@"
 
 percent :: Text
 percent = "%"
 
-lparen :: Text
-lparen = "("
+dot :: Text
+dot = "."
 
-rparen :: Text
-rparen = ")"
-
-lbrace :: Text
-lbrace = "{"
-
-rbrace :: Text
-rbrace = "}"
-
-lbracket :: Text
-lbracket = "["
-
-rbracket :: Text
-rbracket = "]"
-
-rarrow :: Text
-rarrow = "->"
+dash :: Text
+dash = "-"
 
 reservedWords :: (Ord a, IsString a) => Set a
 reservedWords =
@@ -143,8 +199,8 @@ reservedSymbols =
   Set.fromList
     ["=", "|", "", "--"]
 
-operators :: [Text]
-operators =
+infixOperators :: [Text]
+infixOperators =
   [ mult,
     add,
     sub,
@@ -157,8 +213,48 @@ operators =
     gequal,
     lequal,
     greater,
-    lesser,
-    not,
-    dot,
-    percent
+    lesser
   ]
+
+middleOperators :: [Text]
+middleOperators =
+  [ not,
+    dot,
+    percent,
+    question,
+    dash
+  ]
+
+operators :: [Text]
+operators = infixOperators ++ middleOperators
+
+validStartSymbol :: Char -> Bool
+validStartSymbol w =
+  Unicode.isAlpha w || w == under
+
+validInfixSymbol :: Text -> Bool
+validInfixSymbol = flip elem infixOperators
+
+-- I don't think allowing any symbol is a good idea
+-- Unicode.isSymbol w
+--   || w == mult
+--   || w == dash
+--   || w == amper
+--   || w == colon
+--   || w == div
+--   || w == percent
+--   || w == dot
+
+validMiddleSymbol :: Text -> Bool
+validMiddleSymbol = flip elem middleOperators
+
+validUpperSymbol :: Char -> Bool
+validUpperSymbol = Unicode.isUpper
+
+-- TODO: How to deal with digit?
+-- validStartSymbol w
+--   || digit w
+--   || w == dash
+--   || w == not
+--   || w == question
+--   || w == percent

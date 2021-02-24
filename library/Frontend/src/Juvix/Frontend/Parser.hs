@@ -38,9 +38,10 @@ import Juvix.Library hiding
 import qualified Juvix.Library.NameSymbol as NameSymbol
 -- import Text.Megaparsec hiding (match)
 
-import Juvix.Library.Parser (Parser, ParserError)
-import qualified Juvix.Library.Parser as JP
--- import qualified Juvix.Library.Symbol.Lexer as Lexer
+-- import qualified Juvix.Library.Symbol.J as J
+
+import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
+import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Char as P
 import Prelude (String, fail)
@@ -72,7 +73,7 @@ removeComments = ByteString.concat . grabComments
         f (notIn, in') =
           notIn : grabComments (dropNewLine in')
     dropNewLine =
-      ByteString.dropWhile (not . (== Lexer.newLine))
+      ByteString.dropWhile (not . (== J.newLine))
 
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
@@ -145,27 +146,28 @@ do''' = Types.Do <$> do'
 app'' :: Parser Types.Expression
 app'' = Types.Application <$> P.try application
 
--- all'' :: Parser Types.Expression
--- all'' = do''' <|> app''
+all'' :: Parser Types.Expression
+all'' = do''' <|> app''
 
--- expressionGen :: Parser Types.Expression -> Parser Types.Expression
--- expressionGen p =
---   Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
+expressionGen :: Parser Types.Expression -> Parser Types.Expression
+expressionGen p = notImplemented
 
--- -- used to remove do from parsing
--- expression' :: Parser Types.Expression
--- expression' = expressionGen app''
+-- Expr.buildExpressionParser tableExp (spaceLiner (expressionGen' p))
 
--- -- used to remove app from parsing
--- expression'' :: Parser Types.Expression
--- expression'' = expressionGen do'''
+-- used to remove do from parsing
+expression' :: Parser Types.Expression
+expression' = expressionGen app''
 
--- -- used to remove both from parsing
--- expression''' :: Parser Types.Expression
--- expression''' = expressionGen (fail "")
+-- used to remove app from parsing
+expression'' :: Parser Types.Expression
+expression'' = expressionGen do'''
 
--- expression :: Parser Types.Expression
--- expression = expressionGen all''
+-- used to remove both from parsing
+expression''' :: Parser Types.Expression
+expression''' = expressionGen (fail "")
+
+expression :: Parser Types.Expression
+expression = expressionGen all''
 
 usage :: Parser Types.Expression
 usage = string "u#" *> expression
@@ -222,7 +224,7 @@ functionModGen p =
 guard :: Parser a -> Parser (Types.GuardBody a)
 guard p =
   Types.Guard <$> condB p
-    <|> Types.Body <$> (skipLiner Lexer.equals *> p)
+    <|> Types.Body <$> (skipLiner J.assign *> p)
 
 --------------------------------------------------
 -- Args
@@ -230,7 +232,7 @@ guard p =
 
 arg :: Parser Types.Arg
 arg =
-  Types.ImplicitA <$> (P.char Lexer.hash *> matchLogic)
+  Types.ImplicitA <$> (P.char J.hash *> matchLogic)
     <|> Types.ConcreteA <$> matchLogic
 
 --------------------------------------------------------------------------------
@@ -242,8 +244,8 @@ signature' = do
   reserved "sig"
   name <- prefixSymbolSN
   maybeUsage <-
-    maybe (fmap Types.Constant constantSN <|> spaceLiner (parens expressionSN))
-  skipLiner Lexer.colon
+    maybe (fmap Types.Constant constantSN <|> spaceLiner (J.parens expressionSN))
+  skipLiner J.colon
   typeclasses <- signatureConstraintSN
   exp <- expression
   pure (Types.Sig name maybeUsage exp typeclasses)
@@ -251,7 +253,7 @@ signature' = do
 signatureConstraint :: Parser [Types.Expression]
 signatureConstraint =
   pure <$> expression <* reserved "=>"
-    <|> parens (sepBy expression (skipLiner Lexer.comma)) <* reserved "=>"
+    <|> J.parens (P.sepBy expression (skipLinerS J.comma)) <* reserved "=>"
     <|> pure []
 
 --------------------------------------------------------------------------------
@@ -268,7 +270,7 @@ match = do
 
 matchL :: Parser Types.MatchL
 matchL = do
-  skipLiner Lexer.pipe
+  skipLiner J.pipe
   match <- matchLogicSN
   spaceLiner (string "->")
   exp <- expression
@@ -280,7 +282,7 @@ matchLogic = maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
 matchLogicNamed :: Parser Types.MatchLogic
 matchLogicNamed = do
   name <- prefixSymbol
-  skipLiner Lexer.at
+  skipLiner J.at
   start <- maybeParend matchLogicStartSN
   pure (Types.MatchLogic start (Just name))
 
@@ -298,7 +300,7 @@ matchConstant = Types.MatchConst <$> constant
 matchCon :: Parser Types.MatchLogicStart
 matchCon = do
   con <- prefixCapitalDotSN
-  matchd <- many matchLogicSN
+  matchd <- P.many matchLogicSN
   pure (Types.MatchCon con matchd)
 
 matchName :: Parser Types.MatchLogicStart
@@ -313,13 +315,13 @@ matchRecord =
 --------------------------------------------------------------------------------
 nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany' parser =
-  curly $ do
-    x <- sepBy1H (nameSetSN parser) (skipLiner Lexer.comma)
+  J.curly $ do
+    x <- J.sepBy1H (nameSetSN parser) (skipLiner J.comma)
     if
         | length x == 1 && isPunned x ->
-          x <$ skipLiner Lexer.comma
+          x <$ skipLiner J.comma
         | otherwise ->
-          x <$ maybe (skipLiner Lexer.comma)
+          x <$ P.option (skipLiner J.comma)
 
 isPunned :: NonEmpty (Types.NameSet t) -> Bool
 isPunned (Types.Punned {} :| _) = True
@@ -327,7 +329,7 @@ isPunned (Types.NonPunned {} :| _) = False
 
 nameSetMany :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany parser =
-  curly (sepBy1HFinal (nameSetSN parser) (skipLiner Lexer.comma))
+  J.curly (J.sepBy1HFinal (nameSetSN parser) (skipLiner J.comma))
 
 nameSet :: Parser a -> Parser (Types.NameSet a)
 nameSet parser = nameMatch parser <|> namePunned
@@ -338,7 +340,7 @@ namePunned = Types.Punned <$> prefixSymbolDot
 nameMatch :: Parser a -> Parser (Types.NameSet a)
 nameMatch parser = do
   name <- prefixSymbolDotSN
-  skipLiner Lexer.equals
+  skipLiner J.assign
   bound <- parser
   pure (Types.NonPunned name bound)
 
@@ -383,8 +385,8 @@ moduleOpenExprParens = do
   -- we want it to fail at the ., since it's a paren after it
   -- Int.()
   name <- prefixSymbolDotPermissive
-  word8 Lexer.dot
-  expr <- parens expression
+  P.single J.dot
+  expr <- J.parens expression
   pure (Types.OpenExpress name expr)
 
 moduleOpenExprNormal :: Parser Types.ModuleOpenExpr
@@ -410,8 +412,8 @@ typeP = do
 
 dataParser :: Parser Types.Data
 dataParser = do
-  arrow <- maybe (skipLiner Lexer.colon *> expression)
-  skipLiner Lexer.equals
+  arrow <- maybe (skipLiner J.colon *> expression)
+  skipLiner J.assign
   adt <- adt
   case arrow of
     Just arr -> pure (Types.Arrowed arr adt)
@@ -424,7 +426,7 @@ dataParser = do
 adt :: Parser Types.Adt
 adt =
   Types.Sum
-    <$> (maybe (skipLiner Lexer.pipe) *> sepBy1H sumSN (skipLiner Lexer.pipe))
+    <$> (maybe (skipLiner J.pipe) *> sepBy1H sumSN (skipLiner J.pipe))
     <|> Types.Product
     <$> standAloneProduct
 
@@ -438,32 +440,32 @@ standAloneProduct =
 product :: Parser Types.Product
 product =
   Types.Record <$> record
-    <|> skipLiner Lexer.colon *> fmap Types.Arrow expression
+    <|> skipLiner J.colon *> fmap Types.Arrow expression
     <|> fmap Types.ADTLike (many expression'''SN)
 
 record :: Parser Types.Record
 record = do
   names <-
     spaceLiner $
-      curly $
-        sepBy1HFinal nameTypeSN (skipLiner Lexer.comma)
-  familySignature <- maybe (skipLiner Lexer.colon *> expression)
+      J.curly $
+        sepBy1HFinal nameTypeSN (skipLiner J.comma)
+  familySignature <- maybe (skipLiner J.colon *> expression)
   pure (Types.Record'' names familySignature)
 
 nameType :: Parser Types.NameType
 nameType = do
   name <- nameParserSN
-  skipLiner Lexer.colon
+  skipLiner J.colon
   sig <- expression
   pure (Types.NameType' sig name)
 
 -- nameParserColon :: Parser Types.Name
 -- nameParserColon =
---   nameParserSN <* skip (== Lexer.colon)
+--   nameParserSN <* skip (== J.colon)
 
 nameParser :: Parser Types.Name
 nameParser =
-  (skip (== Lexer.hash) *> fmap Types.Implicit prefixSymbol)
+  (skip (== J.hash) *> fmap Types.Implicit prefixSymbol)
     <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
@@ -480,14 +482,14 @@ nameParser =
 
 universeSymbol :: Parser Types.Expression
 universeSymbol = do
-  _ <- string "u#"
+  _ <- P.string "u#"
   Types.UniverseName <$> universeExpression
 
 universeExpression :: Parser Types.UniverseExpression
 universeExpression =
   Types.UniverseExpression <$> prefixSymbolSN
     -- TODO ∷ make this proper do + and max!
-    <|> Types.UniverseExpression <$> parens prefixSymbolSN
+    <|> Types.UniverseExpression <$> J.parens prefixSymbolSN
 
 --------------------------------------------------------------------------------
 -- Expressions
@@ -551,9 +553,9 @@ condB p = Types.C <$> many1H (condLogicSN p)
 
 condLogic :: Parser a -> Parser (Types.CondLogic a)
 condLogic p = do
-  skipLiner Lexer.pipe
+  skipLiner J.pipe
   pred <- expressionSN
-  skipLiner Lexer.equals
+  skipLiner J.assign
   body <- p
   pure (Types.CondExpression pred body)
 
@@ -563,7 +565,7 @@ condLogic p = do
 
 lam :: Parser Types.Lambda
 lam = do
-  skipLiner Lexer.backSlash
+  skipLiner J.backSlash
   args <- many1H matchLogicSN
   reserved "->"
   body <- expression
@@ -585,15 +587,15 @@ application = do
 
 primitives :: Parser Types.Primitive
 primitives = do
-  _ <- word8 Lexer.percent
+  _ <- P.single J.percent
   Types.Prim <$> prefixSymbolDot
 
 list :: Parser Types.List
-list = Types.ListLit <$> brackets (sepBy expression (skipLiner Lexer.comma))
+list = Types.ListLit <$> brackets (sepBy expression (skipLiner J.comma))
 
 tupleParen :: Parser Types.Expression
 tupleParen = do
-  p <- parens (sepBy1 (expressionGen all'') (skipLiner Lexer.comma))
+  p <- J.parens (P.sepBy1 (expressionGen all'') (skipLiner J.comma))
   case p of
     [] -> fail "doesn't happen"
     [x] -> pure (Types.Parened x)
@@ -609,16 +611,16 @@ number =
 
 integer :: Parser Integer
 integer = do
-  digits <- P.takeWhileP (Just "digits") Lexer.digit
+  digits <- P.takeWhileP (Just "digits") J.digit
   case Char8.readInteger digits of
     Just (x, _) -> pure x
     Nothing -> fail "didn't parse an int"
 
 float :: Parser Double
 float = do
-  _s1 <- P.takeWhileP (Just "digits") Lexer.digit
-  void (P.char Lexer.dot)
-  _s2 <- P.takeWhileP (Just "digits") Lexer.digit
+  _s1 <- P.takeWhileP (Just "digits") J.digit
+  void (P.char J.dot)
+  _s2 <- P.takeWhileP (Just "digits") J.digit
   fail "float not implemented"
 
 --   pure (read (s1 <> "." <> s2))
@@ -626,9 +628,9 @@ float = do
 -- TODO ∷ no escape for strings yet
 string' :: Parser Types.String'
 string' = do
-  word8 Lexer.quote
-  words <- takeWhile (/= Lexer.quote)
-  word8 Lexer.quote
+  P.single J.quote
+  words <- P.takeWhileP (Just "Not quote") (/= J.quote)
+  P.single J.quote
   pure (Types.Sho (Encoding.decodeUtf8 words))
 
 --------------------------------------------------
@@ -646,7 +648,7 @@ do' = do
 doBind :: Parser [Types.DoBody]
 doBind = do
   name <- prefixSymbolSN
-  spaceLiner (string "<-")
+  spaceLiner (P.string "<-")
   body <- expression'SN
   pure [Types.DoBody (Just name) body]
 
@@ -666,15 +668,15 @@ infixSymbolGen :: Parser Symbol -> Parser Symbol
 infixSymbolGen p = do
   symb <- p
   if
-      | Set.member symb reservedSymbols -> fail "symbol is reserved word"
+      | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
       | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
 infixSymbolDot = do
-  qualified <- option [] (NonEmpty.toList <$> prefixSymbolDotPermissive <* word8 Lexer.dot)
+  qualified <- option [] (NonEmpty.toList <$> prefixSymbolDotPermissive <* P.single J.dot)
   -- -o is a bit special since it's a normal letter
   -- this is a bit of a hack
-  infix' <- ("-o" <$ string "-o") <|> infixSymbol
+  infix' <- ("-o" <$ P.string "-o") <|> infixSymbol
   pure (NonEmpty.fromList (qualified <> [infix']))
 
 infixSymbol :: Parser Symbol
@@ -682,31 +684,31 @@ infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
 
 infixSymbol' :: Parser Symbol
 infixSymbol' =
-  internText . Encoding.decodeUtf8 <$> takeWhile Lexer.validInfixSymbol
+  internText . Encoding.decodeUtf8 <$> P.takeWhileP (Just "Valid Infix Symbol") J.validInfixSymbol
 
 infixPrefix :: Parser Symbol
 infixPrefix =
-  word8 Lexer.backtick *> prefixSymbol <* word8 Lexer.backtick
+  P.single J.backtick *> prefixSymbol <* P.single J.backtick
 
 prefixSymbolGen :: Parser Word8 -> Parser Symbol
 prefixSymbolGen startParser = do
   start <- startParser
-  rest <- takeWhile Lexer.validMiddleSymbol
+  rest <- P.takeWhileP (Just "Valid Middle Symbol") J.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
   if
-      | Set.member new reservedWords -> fail "symbol is reserved operator"
+      | Set.member new J.reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText (Encoding.decodeUtf8 new))
 
 symbolEndGen :: String -> Parser ()
-symbolEndGen string = do
+symbolEndGen s = do
   peek <- peekWord8
   case peek of
     Just peek
-      | not (Lexer.validMiddleSymbol peek) ->
-        takeWhile emptyCheck *> pure ()
+      | not (J.validMiddleSymbol peek) ->
+        P.takeWhileP (Just "Empty Check") J.spaceLiner *> pure ()
       | otherwise ->
-        fail string
+        fail s
     Nothing -> pure ()
 
 symbolEnd :: Parser ()
@@ -714,7 +716,7 @@ symbolEnd = symbolEndGen "current symbol is not over"
 
 reserved :: ByteString -> Parser ()
 reserved res =
-  string res *> symbolEndGen "symbol is not the reserved symbol"
+  P.string res *> symbolEndGen "symbol is not the reserved symbol"
 
 -- TODO ∷ this may be bad
 -- this allows "(*).Foo.(<*>)" to be accepted
@@ -724,20 +726,20 @@ reserved res =
 
 prefixSepGen :: Parser Symbol -> Parser (NonEmpty Symbol)
 prefixSepGen parser = do
-  ret <- sepBy1H parser (word8 Lexer.dot)
+  ret <- J.sepBy1H parser (P.single J.dot)
   peek <- peekWord8
   case peek of
     Just x
-      | Lexer.dot == x -> fail "symbol not prefix"
+      | J.dot == x -> fail "symbol not prefix"
     _ -> pure ret
 
 -- the permissive functions allow the functions to not fully parse the word
 -- useful for infix application
 prefixSymbolDotPermissive :: Parser (NonEmpty Symbol)
-prefixSymbolDotPermissive = sepBy1H prefixSymbol (word8 Lexer.dot)
+prefixSymbolDotPermissive = J.sepBy1H prefixSymbol (P.single J.dot)
 
 prefixCapitalDotPermissive :: Parser (NonEmpty Symbol)
-prefixCapitalDotPermissive = sepBy1H prefixCapital (word8 Lexer.dot)
+prefixCapitalDotPermissive = J.sepBy1H prefixCapital (P.single J.dot)
 
 prefixSymbolDot :: Parser (NonEmpty Symbol)
 prefixSymbolDot = prefixSepGen prefixSymbol
@@ -747,16 +749,16 @@ prefixCapitalDot = prefixSepGen prefixCapital
 
 prefixSymbol :: Parser Symbol
 prefixSymbol =
-  prefixSymbolGen (satisfy Lexer.validStartSymbol)
+  prefixSymbolGen (P.satisfy J.validStartSymbol)
     <|> parend
 
 parend :: Parser Symbol
 parend =
-  skipLiner Lexer.openParen
-    *> spaceLiner (infixSymbolGen infixSymbol') <* word8 Lexer.closeParen
+  skipLiner J.openParen
+    *> spaceLiner (infixSymbolGen infixSymbol') <* P.single J.closeParen
 
 prefixCapital :: Parser Symbol
-prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
+prefixCapital = prefixSymbolGen (P.satisfy J.validUpperSymbol)
 
 --------------------------------------------------------------------------------
 -- Misc helpers
@@ -787,7 +789,7 @@ prefixCapital = prefixSymbolGen (satisfy Lexer.validUpperSymbol)
 -- arrowExp =
 --   Expr.Infix
 --     ( do
---         skipLiner Lexer.dash
+--         skipLiner J.dash
 --         exp <- expressionSN
 --         reserved "->"
 --         pure

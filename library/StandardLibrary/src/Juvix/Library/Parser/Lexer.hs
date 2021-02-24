@@ -2,6 +2,7 @@ module Juvix.Library.Parser.Lexer
   ( spacer,
     spaceLiner,
     skipLiner,
+    skipLinerS,
     parens,
     brackets,
     curly,
@@ -9,6 +10,7 @@ module Juvix.Library.Parser.Lexer
     sepBy1H,
     sepBy1HFinal,
     maybeParend,
+    digit,
   )
 where
 
@@ -24,10 +26,6 @@ import qualified Text.Megaparsec.Char as P
 isHSpace :: Char -> Bool
 isHSpace x = isSpace x && x /= '\n' && x /= '\r'
 
--- check for \r or \n
-endOfLine :: (Eq a, Num a) => a -> Bool
-endOfLine w = w == 13 || w == 10
-
 digit :: (Ord a, Num a) => a -> Bool
 digit w = w <= 57 && w >= 48
 
@@ -41,13 +39,13 @@ spaceLiner p = P.takeWhileP (Just "space liner") isHSpace *> p
 -- between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
 
 parens :: Parser p -> Parser p
-parens = P.between (P.string T.lparen) (P.string T.rparen)
+parens = P.between (P.string T.openParen) (P.string T.closeParen)
 
 brackets :: Parser p -> Parser p
-brackets = P.between (P.string T.lbracket) (P.string T.rbracket)
+brackets = P.between (P.string T.openBracket) (P.string T.closeBracket)
 
 curly :: Parser p -> Parser p
-curly = P.between (P.string T.lbrace) (P.string T.rbrace)
+curly = P.between (P.string T.openCurly) (P.string T.closeCurly)
 
 many1H :: Parser a -> Parser (NonEmpty a)
 many1H = fmap NonEmpty.fromList . P.some
@@ -61,6 +59,9 @@ sepBy1H parse sep = NonEmpty.fromList <$> P.sepBy1 parse sep
 
 skipLiner :: Char -> Parser ()
 skipLiner p = spaceLiner (P.skipMany (P.char p))
+
+skipLinerS :: Text -> Parser ()
+skipLinerS p = spaceLiner (P.skipMany (P.string p))
 
 maybeParend :: Parser a -> Parser a
 maybeParend p = p <|> parens p

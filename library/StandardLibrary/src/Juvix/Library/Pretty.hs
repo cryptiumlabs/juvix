@@ -9,6 +9,8 @@ module Juvix.Library.Pretty
     pprRender,
     prettyPrint,
     printList,
+    print,
+    putppr,
 
     -- ** Leijen.Text exports
     (<>),
@@ -69,7 +71,7 @@ where
 import qualified Data.Map as Map
 import Data.Monoid ((<>))
 import qualified Juvix.Library.Parser.Token as Token
-import Protolude hiding (toS, (<$>), (<>))
+import Protolude hiding (print, toS, (<$>), (<>))
 import Protolude.Conv (toS)
 import Text.PrettyPrint.Leijen.Text as PP hiding (Pretty, equals)
 
@@ -144,10 +146,10 @@ d1 <$$$> d2 = d1 <> linebreak <> linebreak <> d2
 d1 <$$$+> d2 = d1 <> linebreak <> linebreak <> indent 3 d2
 
 listOf :: Pretty a => [a] -> Doc
-listOf xs = token Token.lbrace <> commafy (fmap ppr xs) <> token Token.rbrace
+listOf xs = token Token.openCurly <> commafy (fmap ppr xs) <> token Token.closeCurly
 
 tupleOf :: Pretty a => [a] -> Doc
-tupleOf xs = token Token.lparen <> commafy (fmap ppr xs) <> token Token.rparen
+tupleOf xs = token Token.openParen <> commafy (fmap ppr xs) <> token Token.closeParen
 
 setOf :: (Foldable f, Pretty a) => f a -> Doc
 setOf = encloseSep "{" "}" "," . map ppr . toList
