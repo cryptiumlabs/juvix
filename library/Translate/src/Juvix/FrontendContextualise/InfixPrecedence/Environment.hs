@@ -13,6 +13,23 @@ import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as Local
 import Juvix.FrontendContextualise.Environment
+    ( SymbLookup(..),
+      HasOld,
+      HasNew,
+      lookup,
+      lookupCurrent,
+      ask,
+      add,
+      addGlobal,
+      remove,
+      removeGlobal,
+      removeOld,
+      addUnknown,
+      addUnknownGlobal,
+      setupNewModule,
+      switchContext,
+      oneFilled,
+      setupFill )
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
