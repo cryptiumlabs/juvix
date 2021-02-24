@@ -1,4 +1,4 @@
-module Desugar.Sexp where
+module Desugar.Sexp (top) where
 
 import qualified Juvix.Desugar.Passes as Desugar
 import qualified Juvix.Frontend.Parser as Parser
@@ -9,6 +9,14 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (error, head)
+
+top :: T.TestTree
+top =
+  T.testGroup
+    "sexp desugar passes tests:"
+    [ condWorksAsExpected,
+      ifWorksAsExpected
+    ]
 
 condWorksAsExpected :: T.TestTree
 condWorksAsExpected =
@@ -33,6 +41,35 @@ condWorksAsExpected =
         \   (if (bar true)\
         \       (:paren (if (bar false) 3 (if else 5))) \
         \       (if else 3))))"
+
+ifWorksAsExpected :: T.TestTree
+ifWorksAsExpected =
+  T.testGroup
+    "if desugar tests"
+    [ T.testCase
+        "recursive ifs work"
+        (expected T.@=? fmap Desugar.ifTransform form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defun foo (x) \
+        \   (if (:infix + x 3)\
+        \   2\
+        \   (if (bar true)\
+        \       (:paren (if (bar false) 3 (if else 5)))\
+        \       (if else 3))))"
+    expected =
+      Sexp.parse
+        "(:defun foo (x) \
+        \  (case (:infix + x 3)\
+        \     (true 2)\
+        \     (false (case (bar true)\
+        \               (true (:paren\
+        \                       (case (bar false)\
+        \                         (true 3)\
+        \                         (false (case else (true 5))))))\
+        \               (false (case else (true 3)))))))"
 
 --------------------------------------------------------------------------------
 -- Helpers
