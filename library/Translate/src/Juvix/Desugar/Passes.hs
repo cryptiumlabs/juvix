@@ -189,10 +189,6 @@ removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
           pun Sexp.:> pun Sexp.:> acc
         f _ _ = error "malformed record"
 
---------------------------------------------------------------------------------
--- Taken from the simplified passes
---------------------------------------------------------------------------------
-
 ------------------------------------------------------------
 -- Module Pass
 ------------------------------------------------------------
@@ -204,22 +200,13 @@ moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
   where
     moduleToRecord atom (name Sexp.:> args Sexp.:> body) =
-      Sexp.list [Sexp.atom "defun", name, args, Sexp.foldr combine generatedRecord body]
+      Sexp.list
+        [ Sexp.atom "defun",
+          name,
+          args,
+          ignoreCond body (\b -> Sexp.foldr combine (generatedRecord b) b)
+        ]
         |> Sexp.addMetaToCar atom
-      where
-        generatedRecord =
-          Sexp.list (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) names)
-        --
-        names = Sexp.foldr f [] body |> Set.fromList |> Set.toList
-        --
-        f (form Sexp.:> name Sexp.:> _) acc
-          | Sexp.isAtomNamed form "defun"
-              || Sexp.isAtomNamed form "type"
-              || Sexp.isAtomNamed form "defmodule"
-              || Sexp.isAtomNamed form "defsig",
-            Just name <- Sexp.atomFromT name =
-            name : acc
-        f _ acc = acc
     moduleToRecord _ _ = error "malformed record"
 
 ----------------------------------------
@@ -228,28 +215,57 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
 
 combine :: Sexp.T -> Sexp.T -> Sexp.T
 combine (form Sexp.:> name Sexp.:> xs) expression
-  | Sexp.isAtomNamed form "defun" =
+  | Sexp.isAtomNamed form ":defun" =
     -- we crunch the xs in a list
     Sexp.list [Sexp.atom "let", name, xs, expression]
   | Sexp.isAtomNamed form "type" =
-    Sexp.list [Sexp.atom "let-type", name, xs, expression]
+    Sexp.list [Sexp.atom ":let-type", name, xs, expression]
 combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression
-  | Sexp.isAtomNamed form "defsig" =
-    Sexp.list [Sexp.atom "let-sig", name, xs, expression]
+  | Sexp.isAtomNamed form ":defsig" =
+    Sexp.list [Sexp.atom ":let-sig", name, xs, expression]
 combine (form Sexp.:> declaration) expression
   | Sexp.isAtomNamed form "declare" =
-    Sexp.list [Sexp.atom "declaim", declaration, expression]
+    Sexp.list [Sexp.atom ":declaim", declaration, expression]
 combine (Sexp.List [form, open]) expression
   | Sexp.isAtomNamed form "open" =
-    Sexp.list [Sexp.atom "open-in", open, expression]
-combine (form Sexp.:> xs) expression
-  | Sexp.isAtomNamed form "defmodule",
-    Just atom <- Sexp.atomFromT form =
-    -- have to recurse by hand here ☹
-    let (_ Sexp.:> name Sexp.:> rest) = undefined atom xs -- moduleToRecord atom xs
-     in Sexp.list [Sexp.atom "let", name, rest, expression]
+    Sexp.list [Sexp.atom ":open-in", open, expression]
+combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
+  | Sexp.isAtomNamed form ":defmodule" =
+    -- Turn this into a let-module
+    if  | Sexp.isAtomNamed (Sexp.car xs) ":cond" ->
+          Sexp.list [Sexp.atom ":let-mod", name, args, Sexp.car xs, expression]
+        | otherwise ->
+          Sexp.list [Sexp.atom ":let-mod", name, args, xs, expression]
 -- ignore other forms
 combine _ expression = expression
 
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
-ignoreCond = undefined
+ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
+  | Sexp.isAtomNamed form ":cond" =
+    Sexp.foldr comb Sexp.Nil xs
+  where
+    comb (pred Sexp.:> body) acc =
+      Sexp.listStar [Sexp.list [pred, trans body], acc]
+    comb _ acc = acc
+ignoreCond xs trans = trans xs
+
+generatedRecord :: Sexp.T -> Sexp.T
+generatedRecord b =
+  Sexp.list
+    (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) (names b))
+
+names :: Sexp.T -> [Sexp.Atom]
+names body = Sexp.foldr grabNames [] body |> Set.fromList |> Set.toList
+
+grabNames :: Sexp.T -> [Sexp.Atom] -> [Sexp.Atom]
+grabNames (form Sexp.:> name Sexp.:> _) acc
+  | Sexp.isAtomNamed form ":defun"
+      || Sexp.isAtomNamed form "type"
+      || Sexp.isAtomNamed form ":defmodule"
+      || Sexp.isAtomNamed form ":defsig",
+    Just name <- Sexp.atomFromT name =
+    name : acc
+  | Sexp.isAtomNamed (Sexp.car name) "type",
+    Just name <- Sexp.atomFromT (Sexp.car name) =
+    name : acc
+grabNames _ acc = acc
