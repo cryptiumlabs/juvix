@@ -35,7 +35,8 @@ top =
       parenTest,
       blockTest,
       primitiveTest,
-      condTest
+      condTest,
+      caseTest
     ]
 
 --------------------------------------------------------------------------------
@@ -372,6 +373,26 @@ condTest =
         \   (:cond ((:infix == x 3) 1) \
         \          ((:infix == x 4) 5) \
         \          (else            0)))"
+
+caseTest :: T.TestTree
+caseTest =
+  T.testGroup
+    "cond parser"
+    [T.testCase "basic" (basic T.@=? basicE)]
+  where
+    basic =
+      Parser.parseOnly
+        "let foo = \
+        \  case x of \
+        \   | (A (B {a, b})) -> a + b \
+        \   | A (B c) (C d)  -> c + d"
+        |> singleEleErr
+    basicE =
+      Sexp.parse
+        "(:defun foo () \
+        \  (case x \
+        \    ((A (B (:record (a) (b)))) (:infix + a b)) \
+        \    ((A (B c) (C d))           (:infix + c d))))"
 
 --------------------------------------------------------------------------------
 -- Helpers

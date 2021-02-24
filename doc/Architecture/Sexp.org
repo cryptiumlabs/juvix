@@ -302,6 +302,22 @@
                 ((:infix == x 4) 5)
                 (else            0)))
      #+end_src
+*** Case
+1. basic
+   - input
+     #+begin_src haskell
+       let foo =
+          case x of
+          | (A (B {a, b})) -> a + b
+          | A (B c) (C d)  -> c + d
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo ()
+          (case x
+             ((A (B (:record (a) (b)))) (:infix + a b))
+             ((A (B c) (C d))           (:infix + c d))))
+     #+end_src
 * Notes
 ** Design Principles
 Overall the goal of the S-expression incantation is twofold [fn:1].
