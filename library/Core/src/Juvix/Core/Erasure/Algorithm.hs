@@ -5,6 +5,7 @@ import Juvix.Core.Erasure.Types (eraseAnn, exec)
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
+import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library hiding (empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -51,7 +52,7 @@ eraseDatatype ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Datatype primTy1 primVal1 ->
   m (Erasure.Datatype primTy2)
-eraseDatatype (IR.Datatype name args level cons) = do
+eraseDatatype (IR.Datatype name _pos args level cons) = do
   args <- mapM eraseDataArg args
   cons <- mapM eraseDataCon cons
   pure (Erasure.Datatype name args level cons)
@@ -60,9 +61,9 @@ eraseDataArg ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataArg primTy1 primVal1 ->
   m (Erasure.DataArg primTy2)
-eraseDataArg (IR.DataArg name usage ty isParam) = do
+eraseDataArg (IR.DataArg name usage ty) = do
   ty <- eraseType ty
-  pure (Erasure.DataArg name usage ty isParam)
+  pure (Erasure.DataArg name usage ty)
 
 eraseDataCon ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
@@ -78,7 +79,7 @@ eraseFunction ::
   m (Erasure.Function primTy2 primVal2)
 eraseFunction (IR.Function name usage ty clauses) = do
   let (tys, ret) = piTypeToList (IR.quote0 ty)
-  clauses <- flip mapM clauses $ \(IR.FunClause patts term) -> do
+  clauses <- flip mapM clauses $ \(IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) -> do
     let ty_ret = listToPiType (drop (length patts) tys, ret)
     (patts, ty) <- erasePatterns (patts, (tys, ret))
     patts <- mapM erasePattern patts
@@ -90,9 +91,9 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.FunClause primTy1 primVal1 ->
-  m (Erasure.FunClause primTy2 primVal2)
-eraseFunClause (IR.FunClause patts term) = do
+  IR.FunClause' IR.NoExt primTy1 primVal1 ->
+  m b
+eraseFunClause (IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) = do
   patts <- mapM erasePattern patts
   -- TODO: Need the annotated term here. ref https://github.com/metastatedev/juvix/issues/495
   -- term <- eraseTerm term

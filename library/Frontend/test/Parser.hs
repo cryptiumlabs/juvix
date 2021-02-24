@@ -94,7 +94,7 @@ shouldParseAs name parses x y =
   T.testGroup
     "Parse tests"
     [ T.testCase
-        ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
+        name
         (takeResult (parses x) T.@=? y)
     ]
 
@@ -105,19 +105,19 @@ removeSpaceBefore :: T.TestTree
 removeSpaceBefore =
   Parser.removeComments "let foo = 3 \n + \n -- foo foo foo \n 4"
     |> (T.@=? "let foo = 3 \n + \n \n 4")
-    |> T.testCase "test remove comments: let foo = 3 \n + \n -- foo foo foo \n 4"
+    |> T.testCase "test remove comments: space before"
 
 removeNewLineBefore :: T.TestTree
 removeNewLineBefore =
   Parser.removeComments "let foo = 3 \n + \n-- foo foo foo \n 4"
     |> (T.@=? "let foo = 3 \n + \n\n 4")
-    |> T.testCase "test remove comments: let foo = 3 \n + \n-- foo foo foo \n 4"
+    |> T.testCase "test remove comments: new line before"
 
 removeNewLineNextToNewline :: T.TestTree
 removeNewLineNextToNewline =
   Parser.removeComments "\n -- -- ffooo \n--\n -- -- \n let foo xs = 3 -- bar"
     |> (T.@=? "\n \n\n \n let foo xs = 3 ")
-    |> T.testCase "test remove comments: \n -- -- ffooo \n--\n -- -- \n ... -- bar"
+    |> T.testCase "test remove comments: remove new line next to newline"
 
 -- TODO :: use quick check!
 
@@ -126,7 +126,7 @@ removeNoComment =
   let str = "let foo = 3 \n + \n \n 4"
    in Parser.removeComments str
         |> (T.@=? str)
-        |> T.testCase ("test remove comments: " <> str)
+        |> T.testCase "test remove comments where there are none"
 
 --------------------------------------------------------------------------------
 -- Parse Many at once
