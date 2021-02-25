@@ -142,6 +142,9 @@ combineSig
     | defName == name =
       Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", name, sig, body])
         : combineSig xs
+combineSig (Sexp.List [Sexp.Atom a@(Sexp.A ":defun-match" _), defName, body] : xs) =
+  Sexp.addMetaToCar a (Sexp.list [Sexp.atom ":defsig-match", defName, Sexp.Nil, body])
+    : combineSig xs
 combineSig (Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), _, _] : xs) =
   combineSig xs
 combineSig (x : xs) = x : combineSig xs

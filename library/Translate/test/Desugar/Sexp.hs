@@ -133,7 +133,10 @@ sigWorksAsExpcted =
     "sig desugar tests"
     [ T.testCase
         "combining a sig and function work"
-        (expected T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) form)
+        (expected T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) form),
+      T.testCase
+        "comigning differ drops"
+        (expectedNon T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) formNon)
     ]
   where
     form =
@@ -144,6 +147,15 @@ sigWorksAsExpcted =
       traverse
         Sexp.parse
         ["(:defsig-match foo (:infix -> int int) ((i) (:infix + i 1)))"]
+    formNon =
+      traverse
+        Sexp.parse
+        ["(:defsig bar (:infix -> int int))", "(:defun foo (i) (:infix + i 1))"]
+    -- should we have the arguments be a bit variable if none is given!?
+    expectedNon =
+      traverse
+        Sexp.parse
+        ["(:defsig-match foo () ((i) (:infix + i 1)))"]
 
 --------------------------------------------------------------------------------
 -- Helpers
