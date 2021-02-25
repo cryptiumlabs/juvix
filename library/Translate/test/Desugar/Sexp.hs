@@ -18,7 +18,9 @@ top =
       ifWorksAsExpected,
       letWorksAsExpected,
       defunWorksAsExpcted,
-      sigWorksAsExpcted
+      sigWorksAsExpcted,
+      doWorksAsExpected,
+      recordsWorkAsExpected
     ]
 
 condWorksAsExpected :: T.TestTree
@@ -135,7 +137,7 @@ sigWorksAsExpcted =
         "combining a sig and function work"
         (expected T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) form),
       T.testCase
-        "comigning differ drops"
+        "combining differ drops"
         (expectedNon T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) formNon)
     ]
   where
@@ -156,6 +158,38 @@ sigWorksAsExpcted =
       traverse
         Sexp.parse
         ["(:defsig-match foo () ((i) (:infix + i 1)))"]
+
+doWorksAsExpected :: T.TestTree
+doWorksAsExpected =
+  T.testGroup
+    "do desugar tests"
+    [ T.testCase
+        "do expansion work"
+        (expected T.@=? fmap Desugar.translateDo form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defun foo (a b) (:do a (%<- c b) (pure c)))"
+    expected =
+      Sexp.parse
+        "(:defun foo (a b) (Prelude.>> a (Prelude.>>= b (lambda (c) (pure c)))))"
+
+recordsWorkAsExpected :: T.TestTree
+recordsWorkAsExpected =
+  T.testGroup
+    "record desugar tests"
+    [ T.testCase
+        "record expnasion expansion work"
+        (expected T.@=? fmap Desugar.removePunnedRecords form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defun foo (a b) (:record (a) (b 2)))"
+    expected =
+      Sexp.parse
+        "(:defun foo (a b) (:record-no-pun a a b 2))"
 
 --------------------------------------------------------------------------------
 -- Helpers
