@@ -16,7 +16,9 @@ top =
     "sexp desugar passes tests:"
     [ condWorksAsExpected,
       ifWorksAsExpected,
-      letWorksAsExpected
+      letWorksAsExpected,
+      defunWorksAsExpcted,
+      sigWorksAsExpcted
     ]
 
 condWorksAsExpected :: T.TestTree
@@ -72,12 +74,13 @@ ifWorksAsExpected =
         \                         (false (case else (true 5))))))\
         \               (false (case else (true 3)))))))"
 
+-- TODO ∷ Add another let form which aren't combined
 letWorksAsExpected :: T.TestTree
 letWorksAsExpected =
   T.testGroup
     "let desugar tests"
     [ T.testCase
-        "recursive ifs work"
+        "multiple lets work"
         (expected T.@=? fmap Desugar.multipleTransLet form)
     ]
   where
@@ -93,6 +96,54 @@ letWorksAsExpected =
         \    (let-match f (((Cons x y) b) (:infix + x (:infix + y b))\
         \                  (Nil b)        b)\
         \       (foo (:paren (Cons 1 2)) 3)))"
+
+-- TODO ∷ Add another let form which aren't combined
+defunWorksAsExpcted :: T.TestTree
+defunWorksAsExpcted =
+  T.testGroup
+    "defun desugar tests"
+    [ T.testCase
+        "combining two functions work"
+        (expected T.@=? fmap Desugar.multipleTransDefun form),
+      T.testCase
+        "combining two seperate functions is id"
+        (expectedNon T.@=? fmap Desugar.multipleTransDefun formNon)
+    ]
+  where
+    form =
+      traverse
+        Sexp.parse
+        ["(:defun foo ((Cons a b) b) 3)", "(:defun foo ((Nil) b) 1)"]
+    expected =
+      traverse
+        Sexp.parse
+        ["(:defun-match foo (((Cons a b) b) 3) (((Nil) b) 1))"]
+    formNon =
+      traverse
+        Sexp.parse
+        ["(:defun foo ((Cons a b) b) 3)", "(:defun bar ((Nil) b) 1)"]
+    expectedNon =
+      traverse
+        Sexp.parse
+        ["(:defun-match foo (((Cons a b) b) 3))", "(:defun-match bar (((Nil) b) 1))"]
+
+sigWorksAsExpcted :: T.TestTree
+sigWorksAsExpcted =
+  T.testGroup
+    "sig desugar tests"
+    [ T.testCase
+        "combining a sig and function work"
+        (expected T.@=? fmap (Desugar.combineSig . Desugar.multipleTransDefun) form)
+    ]
+  where
+    form =
+      traverse
+        Sexp.parse
+        ["(:defsig foo (:infix -> int int))", "(:defun foo (i) (:infix + i 1))"]
+    expected =
+      traverse
+        Sexp.parse
+        ["(:defsig-match foo (:infix -> int int) ((i) (:infix + i 1)))"]
 
 --------------------------------------------------------------------------------
 -- Helpers
