@@ -15,7 +15,8 @@ top =
   T.testGroup
     "sexp desugar passes tests:"
     [ condWorksAsExpected,
-      ifWorksAsExpected
+      ifWorksAsExpected,
+      letWorksAsExpected
     ]
 
 condWorksAsExpected :: T.TestTree
@@ -70,6 +71,28 @@ ifWorksAsExpected =
         \                         (true 3)\
         \                         (false (case else (true 5))))))\
         \               (false (case else (true 3)))))))"
+
+letWorksAsExpected :: T.TestTree
+letWorksAsExpected =
+  T.testGroup
+    "let desugar tests"
+    [ T.testCase
+        "recursive ifs work"
+        (expected T.@=? fmap Desugar.multipleTransLet form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defun foo () \
+        \    (let f ((Cons x y) b) (:infix + x (:infix + y b))\
+        \       (let f (Nil b) b\
+        \          (foo (:paren (Cons 1 2)) 3))))"
+    expected =
+      Sexp.parse
+        "(:defun foo ()\
+        \    (let-match f (((Cons x y) b) (:infix + x (:infix + y b))\
+        \                  (Nil b)        b)\
+        \       (foo (:paren (Cons 1 2)) 3)))"
 
 --------------------------------------------------------------------------------
 -- Helpers

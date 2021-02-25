@@ -74,22 +74,22 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
   where
-    letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindingsBody, rest]) =
+    letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindings, body, rest]) =
       let (grabbed, notMatched) = grabSimilar name rest
        in Sexp.list
             [ Sexp.atom "let-match",
               a,
-              putTogetherSplices (bindingsBody : grabbed),
+              putTogetherSplices (Sexp.list [bindings, body] : grabbed),
               notMatched
             ]
             |> Sexp.addMetaToCar atom
     letToLetMatch _atom _ =
       error "malformed let"
     --
-    grabSimilar name (Sexp.List [let1, name1, bindingsBody, rest])
+    grabSimilar name (Sexp.List [let1, name1, bindings, body, rest])
       | Sexp.isAtomNamed let1 "let" && Sexp.isAtomNamed name1 name =
         grabSimilar name rest
-          |> first (bindingsBody :)
+          |> first (Sexp.list [bindings, body] :)
     grabSimilar _name xs = ([], xs)
     --
     putTogetherSplices =
