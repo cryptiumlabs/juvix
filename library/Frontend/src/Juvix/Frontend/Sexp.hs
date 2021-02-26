@@ -95,7 +95,7 @@ transProduct (Types.Record d) = transRecord d
 
 transRecord :: Types.Record -> Sexp.T
 transRecord (Types.Record'' fields sig) =
-  sigFun (Sexp.listStar [Sexp.atom ":record", Sexp.list newName])
+  sigFun (Sexp.listStar [Sexp.atom ":record-d", Sexp.list newName])
   where
     newName = NonEmpty.toList fields >>= f
       where

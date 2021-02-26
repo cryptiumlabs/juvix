@@ -232,10 +232,11 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
 ----------------------------------------
 
 combine :: Sexp.T -> Sexp.T -> Sexp.T
-combine (form Sexp.:> name Sexp.:> xs) expression
+combine (form Sexp.:> name Sexp.:> args Sexp.:> body Sexp.:> Sexp.Nil) expression
   | Sexp.isAtomNamed form ":defun" =
     -- we crunch the xs in a list
-    Sexp.list [Sexp.atom "let", name, xs, expression]
+    Sexp.list [Sexp.atom "let", name, args, body, expression]
+combine (form Sexp.:> name Sexp.:> xs) expression
   | Sexp.isAtomNamed form "type" =
     Sexp.list [Sexp.atom ":let-type", name, xs, expression]
 combine (form Sexp.:> name Sexp.:> xs Sexp.:> Sexp.Nil) expression

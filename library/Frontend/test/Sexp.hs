@@ -99,7 +99,7 @@ topLevelType =
     recordExpected =
       Sexp.parse
         "(type foo (x y z) \
-        \ (:record \
+        \ (:record-d \
         \  y-axis y \
         \  x-axis x \
         \  z-axis z))"
@@ -113,7 +113,7 @@ topLevelType =
     sumCExpected =
       Sexp.parse
         "(type foo (x y z) \
-        \  (Foo (:record y-axis y x-axis x z-axis z)) \
+        \  (Foo (:record-d y-axis y x-axis x z-axis z)) \
         \  (Bar (:paren (:infix : var1 x)) \
         \       (:paren (:infix : var2 y))) \
         \  (Car (:arrow \

@@ -20,7 +20,9 @@ top =
       defunWorksAsExpcted,
       sigWorksAsExpcted,
       doWorksAsExpected,
-      recordsWorkAsExpected
+      recordsWorkAsExpected,
+      modulesWorkAsExpected,
+      modLetWorkAsExpected
     ]
 
 condWorksAsExpected :: T.TestTree
@@ -190,6 +192,55 @@ recordsWorkAsExpected =
     expected =
       Sexp.parse
         "(:defun foo (a b) (:record-no-pun a a b 2))"
+
+modulesWorkAsExpected :: T.TestTree
+modulesWorkAsExpected =
+  T.testGroup
+    "module desugar tests"
+    [ T.testCase
+        "basic expnasion expansion work"
+        (expected T.@=? fmap Desugar.moduleTransform form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defmodule f ()\
+        \    (:defmodule b ()\
+        \       (:defun a () 2))\
+        \    (type bazzz () (Foo (:record-d a int b int)) (Snash))\
+        \    (:defun fi () 3))"
+    expected =
+      Sexp.parse
+        "(:defun f ()\
+        \   (:let-mod b () ((:defun a () 2))\
+        \      (:let-type bazzz (() (Foo (:record-d a int b int))\
+        \                           (Snash))\
+        \         (let fi () 3\
+        \            (:record (b) (bazzz) (fi))))))"
+
+modLetWorkAsExpected :: T.TestTree
+modLetWorkAsExpected =
+  T.testGroup
+    "module let desugar tests"
+    [ T.testCase
+        "basic expnasion expansion work"
+        (expected T.@=? fmap Desugar.moduleLetTransform form)
+    ]
+  where
+    form =
+      Sexp.parse
+        "(:defun foo ()\
+        \   (:let-mod foo () ((:defun bar () 3)\
+        \                     (type foo () (XTZ)))\
+        \     foo))"
+    expected =
+      Sexp.parse
+        "(:defun foo ()\
+        \   (let foo ()\
+        \         (let bar () 3 \
+        \            (:let-type foo (() (XTZ))\
+        \               (:record (bar) (foo))))\
+        \     (foo)))"
 
 --------------------------------------------------------------------------------
 -- Helpers
