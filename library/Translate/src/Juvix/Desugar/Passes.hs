@@ -33,6 +33,12 @@ import Prelude (error)
 -- Cond Desugar Passes
 ------------------------------------------------------------
 
+-- | @condTransform@ - CondTransform turns the cond form of the fronted
+-- language into a series of ifs
+-- - BNF input form:
+--   + (Cond (pred-1 result-1) … (pred-n result-n))
+-- - BNF output form:
+--   + (if pred-1 result-1 (if pred-2 result-2 (… (if pred-n result-n))))
 condTransform :: Sexp.T -> Sexp.T
 condTransform xs = Sexp.foldPred xs (== ":cond") condToIf
   where
@@ -48,6 +54,14 @@ condTransform xs = Sexp.foldPred xs (== ":cond") condToIf
     generation _ _ =
       error "malformed cond"
 
+-- | @ifTransform@ - transforms a generated if form into a case
+-- - BNF input form:
+--   1. (if pred then else)
+--   2. (if pred then)
+-- - BNF output form:
+--   1. (case pred (true then) (false else))
+--   2. (case pred (true then))
+-- - Note =case=, =then=, and =else= are literals
 ifTransform :: Sexp.T -> Sexp.T
 ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
   where
@@ -71,6 +85,21 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 -- These transform function like things,
 -- TODO ∷ re-use code more between the first 2 passes here
 
+-- | @multipleTransLet@ - transforms multiple let forms into a single
+-- let-match
+--
+-- - BNF input form:
+--   - (let f (arg-match-11 … arg-match-1n)     body-1
+--       (let f (arg-match-21 … arg-match-2n)   body-2
+--         …
+--         (let f (arg-match-n1 … arg-match-nn) body-n
+--            rest)))
+-- - BNF output form
+--   - (let f ((args-match-11 … args-match-1n) body-1
+--             (args-match-21 … args-match-2n) body-2
+--             …
+--             (args-match-n1 … args-match-nn) body-n)
+--        rest)
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
   where

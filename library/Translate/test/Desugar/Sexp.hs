@@ -38,7 +38,7 @@ condWorksAsExpected =
       Sexp.parse
         "(:defun foo (x)\
         \   (:cond ((:infix + x 3) 2) \
-        \          ((bar true)     (:paren (:cond ((bar false) 3) (else 5)))) \
+        \          ((bar true)     (:paren (:cond ((bar false) 3) (else 5))))\
         \          (else           3)))"
     expected =
       Sexp.parse
