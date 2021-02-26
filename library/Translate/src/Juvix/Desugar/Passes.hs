@@ -223,6 +223,21 @@ combineSig [] = []
 -- Misc transformations
 ------------------------------------------------------------
 
+-- | @translateDo@ - removes the do syntax from the frontend syntax
+-- - Input BNF:
+--   + (:do
+--       (%<- name-1 body-1)
+--       body-2
+--       body-3
+--       …
+--       (%<- name-n body-n)
+--       return)
+-- - Output BNF:
+--   + (Prelude.>>= body-1
+--        (lambda (name-1)
+--          (Prelude.>> body-2
+--             (Prelude.>> body-n
+--                (… (Prelude.>>= body-n (lambda (name-n) return)))))))
 translateDo :: Sexp.T -> Sexp.T
 translateDo xs = Sexp.foldPred xs (== ":do") doToBind
   where
@@ -246,6 +261,12 @@ translateDo xs = Sexp.foldPred xs (== ":do") doToBind
             notBinding ->
               Sexp.list [Sexp.atom "Prelude.>>", notBinding, acc]
 
+-- | @removePunnedRecords@ - removes the record puns from the syntax to
+-- have an uniform a-list
+-- - BNF input:
+--   + (:record (punned-1) (name-2 body-2) … (punned-n))
+-- - BNF output:
+--   + (:record punned-1 punned-1 name-2 body-2 … punned-n punned-n)
 removePunnedRecords :: Sexp.T -> Sexp.T
 removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
   where
@@ -269,6 +290,8 @@ removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
 -- Update this two fold.
 -- 1. remove the inner combine and make it global
 -- 2. Find a way to handle the cond case
+
+-- | @moduleTransform@ - TODO
 moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
   where
