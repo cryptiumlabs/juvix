@@ -192,7 +192,7 @@ toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
   | IR.FunClause _clauseTel pats rhs _rhsTy _catchall _unreachable :| [] <- funClauses = do
     patVars <- traverse singleVar pats
     let len = fromIntegral $ length patVars
-    let vars = map bound [len - 1, len - 2 .. 0]
+    let vars = map bound $ genericTake len (iterate (subtract 1) (len - 1))
     let patMap = IntMap.fromList $ zip patVars vars
     let transform = extTransformT $ OnlyExts.injector `compose` forgetter
     let π = IR.globalToUsage funUsage
