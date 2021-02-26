@@ -36,7 +36,7 @@ import Prelude (error)
 -- | @condTransform@ - CondTransform turns the cond form of the fronted
 -- language into a series of ifs
 -- - BNF input form:
---   + (Cond (pred-1 result-1) … (pred-n result-n))
+--   + (:Cond (pred-1 result-1) … (pred-n result-n))
 -- - BNF output form:
 --   + (if pred-1 result-1 (if pred-2 result-2 (… (if pred-n result-n))))
 condTransform :: Sexp.T -> Sexp.T
@@ -82,31 +82,34 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 ------------------------------------------------------------
 -- Defun Transformation
 ------------------------------------------------------------
+
 -- These transform function like things,
 -- TODO ∷ re-use code more between the first 2 passes here
+--
 
--- | @multipleTransLet@ - transforms multiple let forms into a single
--- let-match
+-- | @multipleTransLet@ - transforms multiple let forms
+-- into a single let-match
 --
 -- - BNF input form:
---   - (let f (arg-match-11 … arg-match-1n)     body-1
+--   + (let f (arg-match-11 … arg-match-1n)     body-1
 --       (let f (arg-match-21 … arg-match-2n)   body-2
 --         …
 --         (let f (arg-match-n1 … arg-match-nn) body-n
 --            rest)))
 -- - BNF output form
---   - (let f ((args-match-11 … args-match-1n) body-1
---             (args-match-21 … args-match-2n) body-2
---             …
---             (args-match-n1 … args-match-nn) body-n)
+--   + (:let f ((args-match-11 … args-match-1n) body-1
+--              (args-match-21 … args-match-2n) body-2
+--              …
+--              (args-match-n1 … args-match-nn) body-n)
 --        rest)
+-- - Note the f's are exactly the same name
 multipleTransLet :: Sexp.T -> Sexp.T
 multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
   where
     letToLetMatch atom (Sexp.List [a@(Sexp.Atom (Sexp.A name _)), bindings, body, rest]) =
       let (grabbed, notMatched) = grabSimilar name rest
        in Sexp.list
-            [ Sexp.atom "let-match",
+            [ Sexp.atom ":let-match",
               a,
               putTogetherSplices (Sexp.list [bindings, body] : grabbed),
               notMatched
@@ -132,6 +135,22 @@ multipleTransLet xs = Sexp.foldPred xs (== "let") letToLetMatch
 -- This one and sig combining are odd mans out, as they happen on a
 -- list of transforms
 -- We will get rid of this as this should be the job of Code -> Context!
+
+-- | @multipleTransDefun@ - trasnforms multiple defun forms into a
+-- single defun match form
+-- - Input BNF:
+--   + (:defun f (arg-11 … arg-1n) body-1)
+--     (:defun f (arg-21 … arg-2n) body-2)
+--     …
+--     (:defun f (arg-n1 … arg-nn) body-n)
+-- - Output BNF:
+--   + (:defun-match f
+--       ((arg-11 … arg-1n) body-1)
+--       ((arg-21 … arg-2n) body-2)
+--       …
+--       ((arg-n1 … arg-nn) body-n))
+-- - Notes :: We could replace the out layer of ()'s with nothing to
+--   reduce the numbers of ()'s
 multipleTransDefun :: [Sexp.T] -> [Sexp.T]
 multipleTransDefun = search
   where
@@ -162,6 +181,27 @@ multipleTransDefun = search
 -- This pass will also be removed, but is here for comparability
 -- reasons we just drop sigs with no defuns for now ☹. Fix this up when
 -- we remove this pass
+
+-- | @combineSig@ - combines a sig and a defun-match to form a sig-match
+-- - Input BNF:
+--   1. (:defsig f signature)
+--      (:defun-match f
+--        ((arg-n1 … arg-nn) body-1)
+--        …
+--        ((arg-n1 … arg-nn) body-n))
+--   2. (:defun-match f
+--        ((arg-n1 … arg-nn) body-1)
+--        …
+--        ((arg-n1 … arg-nn) body-n))
+-- - Output BNF:
+--   1. (:defsig-match f signature
+--        ((arg-11 … arg-1n) body-1)
+--         …
+--        ((arg-n1 … arg-nn) body-n))
+--   2. (:defsig-match f ()
+--         ((arg-n1 … arg-nn) body-1)
+--         …
+--         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
 combineSig
   ( Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), name, sig] :

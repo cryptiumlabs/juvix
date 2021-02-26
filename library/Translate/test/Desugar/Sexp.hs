@@ -97,8 +97,8 @@ letWorksAsExpected =
     expected =
       Sexp.parse
         "(:defun foo ()\
-        \    (let-match f (((Cons x y) b) (:infix + x (:infix + y b))\
-        \                  (Nil b)        b)\
+        \    (:let-match f (((Cons x y) b) (:infix + x (:infix + y b))\
+        \                   (Nil b)        b)\
         \       (foo (:paren (Cons 1 2)) 3)))"
 
 -- TODO ∷ Add another let form which aren't combined
