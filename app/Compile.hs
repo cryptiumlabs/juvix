@@ -7,23 +7,19 @@ import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.Common.Context.Traverse as Traverse
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Core.FromFrontend as FF
-import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt as IR (extForgetT)
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as IR (injectT)
 import qualified Juvix.Core.IR.TransformExt.OnlyExts
 import Juvix.Core.IR.Types.Base
+import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
-import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Pipeline as Pipeline
-import qualified Michelson.Untyped as Untyped
 import Options
 import Types
 
@@ -43,13 +39,13 @@ typecheck fin Michelson = do
   ctx <- parse fin
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
-    Right (FF.CoreDefs order globals) -> do
+    Right (FF.CoreDefs _order globals) -> do
       let globalDefs = HM.mapMaybe (\case (CoreDef g) -> pure g; _ -> Nothing) globals
       case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function (_ :| ["main"]) _ _ _)) -> True; _ -> False) globalDefs of
         [] -> do
           T.putStrLn "No main function found"
           exitFailure
-        func@(IR.GFunction (IR.Function name usage ty (IR.FunClause _ [] term _ _ _ :| []))) : [] -> do
+        IR.GFunction (IR.Function _name usage ty (IR.FunClause _ [] term _ _ _ :| [])) : [] -> do
           let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
               inlinedTerm = IR.inlineAllGlobals (IR.injectT term) (\(IR.Global n) -> HM.lookup n globalDefs)
           (res, _) <- exec (CorePipeline.coreToAnn (IR.extForgetT @(Juvix.Core.IR.TransformExt.OnlyExts.T IR.NoExt) inlinedTerm) (IR.globalToUsage usage) ty) Param.michelson newGlobals

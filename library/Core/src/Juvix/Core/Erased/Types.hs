@@ -15,6 +15,7 @@ import Juvix.Core.IR.Types.Base hiding
     defaultExtTerm,
     extendTerm,
   )
+import Juvix.Core.IR.Types.Globals
 import Juvix.Library hiding (Datatype, Type)
 
 data T

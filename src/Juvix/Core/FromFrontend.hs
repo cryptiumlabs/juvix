@@ -13,7 +13,7 @@ import qualified Juvix.Core.Common.Context as Ctx
 import Juvix.Core.FromFrontend.Types
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.FrontendContextualise as FE
