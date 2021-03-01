@@ -1413,7 +1413,9 @@ function, removes all extra parts of syntax that can be boiled down
 to simple macro expansion (simplification of the frontend syntax
 from the syntax alone with no extra information needed!)
 - _Relies on_
+  + [[Passes]]
   + [[Library]]
+  + [[Library/Sexp]]
 ***** Passes
 Passes contains a list of passes on the frontend syntax that can be
 done with no extra information needed. Thus we export the following passes
