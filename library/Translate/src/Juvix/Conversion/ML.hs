@@ -61,10 +61,19 @@ infix' _ = error "malformed declaration"
 -- Types
 ----------------------------------------
 type' :: Sexp.T -> Target.Type
-type' (name Sexp.:> args Sexp.:> dat) = undefined
+type' (assocName Sexp.:> args Sexp.:> dat) =
+  Target.Typ usage name (toSymbolList args) (adtF sig (adt dat))
   where
-    assoc = handleAssocTypeName name
+    Assoc {name, usage, sig} = handleAssocTypeName assocName
+    adtF = maybe Target.NonArrowed Target.Arrowed
+type' _ = error "malformed type declaration"
 
+adt :: Sexp.T -> Target.Adt
+adt = undefined
+
+------------------------------
+-- Type' Helper
+------------------------------
 data AssocTypeName
   = Assoc
       { name :: Symbol,
@@ -73,6 +82,9 @@ data AssocTypeName
       }
   deriving (Show, Eq)
 
+-- | @handleAssocTypeName@ takes a type declaration name and gives us
+-- back a direct record of it's contents transformed into the target
+-- syntax
 handleAssocTypeName :: Sexp.T -> AssocTypeName
 handleAssocTypeName (name Sexp.:> properties)
   | Just Sexp.A {atomName} <- Sexp.atomFromT name =
@@ -91,6 +103,12 @@ handleAssocTypeName name
 ----------------------------------------------------------------------
 -- Expression Transformation
 ----------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+-- General Helpers
+--------------------------------------------------------------------------------
+toSymbolList :: Sexp.T -> [Symbol]
+toSymbolList = undefined
 
 --------------------------------------------------------------------------------
 -- Move to Sexp library
