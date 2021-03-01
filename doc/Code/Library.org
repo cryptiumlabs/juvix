@@ -1388,6 +1388,14 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** Conversion
+***** ML
+- _Relies on_
+  + [[Juvix/Desugar]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 **** Core
 ***** Common
 ****** Context
