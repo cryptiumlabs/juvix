@@ -291,7 +291,37 @@ removePunnedRecords xs = Sexp.foldPred xs (== ":record") removePunned
 -- 1. remove the inner combine and make it global
 -- 2. Find a way to handle the cond case
 
--- | @moduleTransform@ - TODO
+-- | @moduleTransform@ - transforms a module and top level statements
+-- into expressions
+-- - _Top Level Transformation_
+--   + defun     ⟶ let
+--   + type      ⟶ let-type
+--   + defsig    ⟶ let-sig
+--   + declare   ⟶ declaim
+--   + open      ⟶ open-in
+--   + defmodule ⟶ let-mod
+-- - BNF Input Form
+--   1. (:defmodule name (arg1 … argn) toplevel-1 … toplevel-n)
+--   2. (:defmodule name (arg1 … argn)
+--         (cond
+--           (pred-1 toplevel-11 … toplevel-1n)
+--           …
+--           (pred-n toplevel-n1 … toplevel-nn)))
+-- - BNF output form
+--   1. (defun name (arg1 … argn)
+--        (expression-1 (… expression-n …
+--                        (record (toplevel-1-name) … (toplevel-n-name)))))
+--   2. (defun name (arg1 … argn)
+--        (cond
+--           (pred-1 (expression-11
+--                      (… expression-1n …
+--                         (record (toplevel-11-name) … (toplevel-1n-name)))))
+--           …
+--           (pred-n (expression-n1
+--                      (… expression-nn …
+--                         (record (toplevel-n1-name) … (toplevel-nn-name)))))))
+-- - Where Expression follows the Top level Transformation, and
+--   <foo-name> is the name of foo
 moduleTransform :: Sexp.T -> Sexp.T
 moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
   where
@@ -305,6 +335,7 @@ moduleTransform xs = Sexp.foldPred xs (== ":defmodule") moduleToRecord
         |> Sexp.addMetaToCar atom
     moduleToRecord _ _ = error "malformed record"
 
+-- | @moduleLetTransform@ - See @moduleTransform@'s comment
 moduleLetTransform :: Sexp.T -> Sexp.T
 moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
   where
@@ -323,6 +354,8 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
 -- Module Helpers
 ----------------------------------------
 
+-- | @combine@ - is the helper for transforming top level statements
+-- into expression
 combine :: Sexp.T -> Sexp.T -> Sexp.T
 combine (form Sexp.:> name Sexp.:> args Sexp.:> body Sexp.:> Sexp.Nil) expression
   | Sexp.isAtomNamed form ":defun" =
@@ -350,6 +383,7 @@ combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
 -- ignore other forms
 combine _ expression = expression
 
+-- | @ignoreCond@ gets past the annoying cond cells for modules
 ignoreCond :: Sexp.T -> (Sexp.T -> Sexp.T) -> Sexp.T
 ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
   | Sexp.isAtomNamed form ":cond" =
@@ -360,14 +394,18 @@ ignoreCond ((form Sexp.:> xs) Sexp.:> Sexp.Nil) trans
     comb _ acc = acc
 ignoreCond xs trans = trans xs
 
+-- | @generatedRecord@ - record generation
 generatedRecord :: Sexp.T -> Sexp.T
 generatedRecord b =
   Sexp.list
     (Sexp.atom ":record" : fmap (\x -> Sexp.list [Sexp.Atom x]) (names b))
 
+-- | @names@ - folding @grabNames@ that uniquifyies the result to
+-- achieve an unique list
 names :: Sexp.T -> [Sexp.Atom]
 names body = Sexp.foldr grabNames [] body |> Set.fromList |> Set.toList
 
+-- | @grabNames@ - responsible for grabbing the names out of top levels
 grabNames :: Sexp.T -> [Sexp.Atom] -> [Sexp.Atom]
 grabNames (form Sexp.:> name Sexp.:> _) acc
   | Sexp.isAtomNamed form ":defun"
