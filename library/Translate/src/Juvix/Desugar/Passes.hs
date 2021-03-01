@@ -355,7 +355,7 @@ moduleLetTransform xs = Sexp.foldPred xs (== ":let-mod") moduleToRecord
 ----------------------------------------
 
 -- | @combine@ - is the helper for transforming top level statements
--- into expression
+-- into expressions
 combine :: Sexp.T -> Sexp.T -> Sexp.T
 combine (form Sexp.:> name Sexp.:> args Sexp.:> body Sexp.:> Sexp.Nil) expression
   | Sexp.isAtomNamed form ":defun" =
