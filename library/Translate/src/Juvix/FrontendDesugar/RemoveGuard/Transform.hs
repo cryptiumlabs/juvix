@@ -26,6 +26,8 @@ transformTopLevel (Old.Signature t) =
   New.Signature (transformSignature t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
+transformTopLevel (Old.Handler t) =
+  New.Handler (transformHandler t)
 transformTopLevel (Old.Declaration i) =
   New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
@@ -168,11 +170,14 @@ transformNameType (Old.NameType' sig name) =
   New.NameType' (transformExpression sig) (transformName name)
 
 --------------------------------------------------------------------------------
--- Functions And Modules
+-- Functions, Handlers And Modules
 --------------------------------------------------------------------------------
 
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func f) = New.Func (transformFunctionLike f)
+
+transformHandler :: Old.Handler -> New.Handler
+transformHandler (Old.Hand f) = New.Hand (transformFunctionLike f)
 
 transformModuleOpen :: Old.ModuleOpen -> New.ModuleOpen
 transformModuleOpen (Old.Open mod) = New.Open mod
