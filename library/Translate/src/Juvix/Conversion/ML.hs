@@ -5,10 +5,12 @@ module Juvix.Conversion.ML
   )
 where
 
-import qualified Juvix.Desugar as Desugar
 -- Target ML Syntax
+
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Desugar as Desugar
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
-import Juvix.Library
+import Juvix.Library hiding (product, sum)
 import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
@@ -47,13 +49,13 @@ declaration = Target.Infixivity . infix'
 infix' :: Sexp.T -> Target.InfixDeclar
 infix' (Sexp.List [inf, n, i])
   | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
-    Just Sexp.A {atomName} <- Sexp.atomFromT n =
+    Just atomName <- eleToSymbol n =
     if  | Sexp.isAtomNamed inf "infix" ->
-          Target.NonAssoc (NameSym.toSymbol atomName) (fromInteger atomNum)
+          Target.NonAssoc atomName (fromInteger atomNum)
         | Sexp.isAtomNamed inf "infixl" ->
-          Target.AssocL (NameSym.toSymbol atomName) (fromInteger atomNum)
+          Target.AssocL atomName (fromInteger atomNum)
         | Sexp.isAtomNamed inf "infixr" ->
-          Target.AssocR (NameSym.toSymbol atomName) (fromInteger atomNum)
+          Target.AssocR atomName (fromInteger atomNum)
         | otherwise -> error "malformed declaration"
 infix' _ = error "malformed declaration"
 
@@ -61,15 +63,47 @@ infix' _ = error "malformed declaration"
 -- Types
 ----------------------------------------
 type' :: Sexp.T -> Target.Type
-type' (assocName Sexp.:> args Sexp.:> dat) =
-  Target.Typ usage name (toSymbolList args) (adtF sig (adt dat))
+type' (assocName Sexp.:> args Sexp.:> dat)
+  | Just symbolList <- toSymbolList args =
+    Target.Typ usage name symbolList (adtF sig (adt dat))
   where
     Assoc {name, usage, sig} = handleAssocTypeName assocName
     adtF = maybe Target.NonArrowed Target.Arrowed
 type' _ = error "malformed type declaration"
 
 adt :: Sexp.T -> Target.Adt
-adt = undefined
+adt (Sexp.List [rec']) =
+  Target.Product (product rec')
+adt sums =
+  Target.Sum (sum sums)
+
+sum :: Sexp.T -> NonEmpty Target.Sum
+sum xs = Sexp.foldr f (pure (trans (Sexp.last xs))) (Sexp.butLast xs)
+  where
+    trans (name Sexp.:> contents)
+      | Just n <- eleToSymbol name =
+        case contents of
+          Sexp.Nil ->
+            Target.S n Nothing
+          i ->
+            Target.S n (Just (product i))
+    trans _ = error "malformed sum"
+    f ele =
+      NonEmpty.cons (trans ele)
+
+product :: Sexp.T -> Target.Product
+product (Sexp.List [name Sexp.:> form])
+  | Sexp.isAtomNamed name ":record-d" =
+    Target.Record (recordD form)
+  | Sexp.isAtomNamed name ":arrow" =
+    Target.Arrow (expression form)
+product normal
+  | Just list <- Sexp.toList normal =
+    Target.ADTLike (expression <$> list)
+product _ = error "malformed product"
+
+recordD :: Sexp.T -> Target.Record
+recordD = undefined
 
 ------------------------------
 -- Type' Helper
@@ -87,9 +121,9 @@ data AssocTypeName
 -- syntax
 handleAssocTypeName :: Sexp.T -> AssocTypeName
 handleAssocTypeName (name Sexp.:> properties)
-  | Just Sexp.A {atomName} <- Sexp.atomFromT name =
+  | Just atomName <- eleToSymbol name =
     Assoc
-      { name = NameSym.toSymbol atomName,
+      { name = atomName,
         usage = fmap expression (assoc ":usage" group),
         sig = fmap expression (assoc ":type" group)
       }
@@ -107,8 +141,14 @@ handleAssocTypeName name
 --------------------------------------------------------------------------------
 -- General Helpers
 --------------------------------------------------------------------------------
-toSymbolList :: Sexp.T -> [Symbol]
-toSymbolList = undefined
+eleToSymbol :: Sexp.T -> Maybe Symbol
+eleToSymbol x
+  | Just Sexp.A {atomName} <- Sexp.atomFromT x =
+    Just (NameSym.toSymbol atomName)
+  | otherwise = Nothing
+
+toSymbolList :: Sexp.T -> Maybe [Symbol]
+toSymbolList x = Sexp.toList x >>= traverse eleToSymbol
 
 --------------------------------------------------------------------------------
 -- Move to Sexp library
