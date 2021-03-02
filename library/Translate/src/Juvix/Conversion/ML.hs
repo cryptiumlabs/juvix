@@ -65,9 +65,9 @@ infix' _ = error "malformed declaration"
 type' :: Sexp.T -> Target.Type
 type' (assocName Sexp.:> args Sexp.:> dat)
   | Just symbolList <- toSymbolList args =
-    Target.Typ usage name symbolList (adtF sig (adt dat))
+    Target.Typ usage symName symbolList (adtF sig (adt dat))
   where
-    Assoc {name, usage, sig} = handleAssocTypeName assocName
+    Assoc {symName, usage, sig} = handleAssocTypeName assocName
     adtF = maybe Target.NonArrowed Target.Arrowed
 type' _ = error "malformed type declaration"
 
@@ -92,9 +92,10 @@ sum xs = Sexp.foldr f (pure (trans (Sexp.last xs))) (Sexp.butLast xs)
       NonEmpty.cons (trans ele)
 
 product :: Sexp.T -> Target.Product
-product (Sexp.List [name Sexp.:> form])
-  | Sexp.isAtomNamed name ":record-d" =
-    Target.Record (recordD form)
+product (Sexp.List [f@(name Sexp.:> form)])
+  | Sexp.isAtomNamed name ":record-d"
+      || Sexp.isAtomNamed name ":" =
+    Target.Record (record f)
   | Sexp.isAtomNamed name ":arrow" =
     Target.Arrow (expression form)
 product normal
@@ -102,15 +103,36 @@ product normal
     Target.ADTLike (expression <$> list)
 product _ = error "malformed product"
 
-recordD :: Sexp.T -> Target.Record
-recordD = undefined
+record :: Sexp.T -> Target.Record
+record (Sexp.List [name, form, sig])
+  | Sexp.isAtomNamed name ":" =
+    Target.Record'' (NonEmpty.fromList (recorDHelp form)) (Just (expression sig))
+record form' =
+  Target.Record'' (NonEmpty.fromList (recorDHelp form)) Nothing
+  where
+    form = Sexp.cdr form'
+
+recorDHelp :: Sexp.T -> [Target.NameType]
+recorDHelp =
+  fmap f . groupBy2
+  where
+    f (n, sig) = Target.NameType' (expression sig) (name n)
+
+name :: Sexp.T -> Target.Name
+name (Sexp.List [n, a])
+  | Sexp.isAtomNamed n ":implicit",
+    Just atom <- eleToSymbol a =
+    Target.Implicit atom
+name a
+  | Just atom <- eleToSymbol a = Target.Concrete atom
+name _ = error "malformed record-name-field"
 
 ------------------------------
 -- Type' Helper
 ------------------------------
 data AssocTypeName
   = Assoc
-      { name :: Symbol,
+      { symName :: Symbol,
         usage :: Maybe Target.Expression,
         sig :: Maybe Target.Expression
       }
@@ -123,7 +145,7 @@ handleAssocTypeName :: Sexp.T -> AssocTypeName
 handleAssocTypeName (name Sexp.:> properties)
   | Just atomName <- eleToSymbol name =
     Assoc
-      { name = atomName,
+      { symName = atomName,
         usage = fmap expression (assoc ":usage" group),
         sig = fmap expression (assoc ":type" group)
       }
@@ -131,12 +153,22 @@ handleAssocTypeName (name Sexp.:> properties)
     group = groupBy2 properties
 handleAssocTypeName name
   | Just Sexp.A {atomName} <- Sexp.atomFromT name =
-    Assoc {name = NameSym.toSymbol atomName, usage = Nothing, sig = Nothing}
+    Assoc {symName = NameSym.toSymbol atomName, usage = Nothing, sig = Nothing}
   | otherwise = error "malformed type name"
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Misc Transformations
+--------------------------------------------------------------------------------
+----------------------------------------
+-- Matching
+----------------------------------------
+
+arg :: Sexp.T -> Target.Arg
+arg = undefined
+
+--------------------------------------------------------------------------------
 -- Expression Transformation
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- General Helpers
