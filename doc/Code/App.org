@@ -6,8 +6,6 @@
   + [[ErasedAnn]]
   + [[FromFrontend]]
   + [[IR]]
-  + [[TransformExt]]
-  + [[OnlyExts]]
   + [[Base]]
   + [[Globals]]
   + [[Parameterisation]]

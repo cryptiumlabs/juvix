@@ -10,8 +10,6 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
@@ -68,9 +66,14 @@ typecheck fin Michelson = do
       exitFailure
 typecheck _ _ = exitFailure
 
+toCoreDef ::
+  Alternative f =>
+  CoreDef primTy primVal ->
+  f (IR.RawGlobal primTy primVal)
 toCoreDef (CoreDef g) = pure g
 toCoreDef _ = empty
 
+isMain :: RawGlobal' ext primTy primVal -> Bool
 isMain (IR.RawGFunction (IR.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
@@ -106,6 +109,8 @@ convGlobal ::
   IR.RawGlobal Param.PrimTy Param.PrimValIR
 convGlobal g =
   case g of
+    RawGDatatype (RawDatatype n pos a l cons) -> undefined
+    RawGDataCon (RawDataCon n t) -> undefined
     RawGFunction (RawFunction n u t cs) ->
       RawGFunction (RawFunction n u (baseToReturn t) (map funClauseReturn cs))
     RawGAbstract (RawAbstract n u t) ->
