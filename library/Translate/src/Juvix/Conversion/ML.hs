@@ -71,6 +71,7 @@ type' (assocName Sexp.:> args Sexp.:> dat)
     adtF = maybe Target.NonArrowed Target.Arrowed
 type' _ = error "malformed type declaration"
 
+-- TODO ∷ fix!, should check for record
 adt :: Sexp.T -> Target.Adt
 adt (Sexp.List [rec']) =
   Target.Product (product rec')
@@ -93,8 +94,7 @@ sum xs = Sexp.foldr f (pure (trans (Sexp.last xs))) (Sexp.butLast xs)
 
 product :: Sexp.T -> Target.Product
 product (Sexp.List [f@(name Sexp.:> form)])
-  | Sexp.isAtomNamed name ":record-d"
-      || Sexp.isAtomNamed name ":" =
+  | Sexp.isAtomNamed name ":record-d" || Sexp.isAtomNamed name ":" =
     Target.Record (record f)
   | Sexp.isAtomNamed name ":arrow" =
     Target.Arrow (expression form)
@@ -163,8 +163,56 @@ handleAssocTypeName name
 -- Matching
 ----------------------------------------
 
+-----------------------------------
+-- argument specific bits
+-----------------------------------
+
 arg :: Sexp.T -> Target.Arg
-arg = undefined
+arg (Sexp.List [i, t])
+  | Sexp.isAtomNamed i ":implicit-a" =
+    Target.ImplicitA (matchLogic t)
+arg t =
+  Target.ConcreteA (matchLogic t)
+
+-----------------------------------
+-- specific to match expressions
+-----------------------------------
+match :: Sexp.T -> Target.Match
+match (case' Sexp.:> t Sexp.:> binds)
+  | Sexp.isAtomNamed case' "case",
+    Just xs <- Sexp.toList binds =
+    Target.Match'' (expression t) (NonEmpty.fromList (fmap matchL xs))
+
+matchL :: Sexp.T -> Target.MatchL
+matchL (Sexp.List [pat, body]) =
+  Target.MatchL (matchLogic pat) (expression body)
+matchL _ = error "malformed matchL"
+
+---------------------------------------
+-- General to all matches
+---------------------------------------
+matchLogic :: Sexp.T -> Target.MatchLogic
+matchLogic (Sexp.List [i, n, start])
+  | Sexp.isAtomNamed i ":as",
+    Just s <- eleToSymbol n =
+    Target.MatchLogic (matchLogicStart start) (Just s)
+matchLogic t =
+  Target.MatchLogic (matchLogicStart t) Nothing
+
+matchLogicStart :: Sexp.T -> Target.MatchLogicStart
+matchLogicStart x
+  | Just ele <- eleToSymbol x =
+    Target.MatchName ele
+  | Just Sexp.N {atomNum} <- Sexp.atomFromT x =
+    Target.MatchConst (Target.Number (Target.Integer' atomNum))
+matchLogicStart (recordOrCon Sexp.:> rest)
+  -- gotta group by 2 in this case
+  | Sexp.isAtomNamed recordOrCon ":record-no-pun" =
+    undefined
+  -- we should have a constructor name in this instance
+  | otherwise =
+    undefined
+matchLogicStart _ = error "malformed matchLogicStart"
 
 --------------------------------------------------------------------------------
 -- Expression Transformation
