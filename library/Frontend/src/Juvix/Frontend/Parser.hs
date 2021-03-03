@@ -7,25 +7,17 @@
 --
 -- - Parsers with SN at the end, eats the spaces and new lines at the
 --   end of the parse
-module Juvix.Frontend.Parser
-  ( parse,
-    expressionSN,
-    removeComments,
-    topLevelSN,
-    expression,
-    matchLogic,
-    cond,
-    prefixSymbol,
-  )
-where
+module Juvix.Frontend.Parser where
 
--- import Data.Attoparsec.ByteString hiding (match, parse, parseOnly)
--- import qualified Data.Attoparsec.ByteString as Atto
--- import qualified Data.Attoparsec.Expr as Expr
-
--- import Text.Megaparsec hiding (match)
-
--- import qualified Juvix.Library.Symbol.J as J
+-- ( parse,
+--   expressionSN,
+--   removeComments,
+--   topLevelSN,
+--   expression,
+--   matchLogic,
+--   cond,
+--   prefixSymbol,
+-- )
 
 import qualified Control.Monad.Combinators.Expr as Expr
 import Data.Char (isDigit)
@@ -48,10 +40,6 @@ import Prelude (fail, read)
 parse :: Text -> Either ParserError (Types.Header Types.TopLevel)
 parse =
   P.parse (J.spaceLiner (header <* P.eof)) "" . removeComments
-
--- parse :: ByteString -> Result (Types.Header Types.TopLevel)
--- parse =
---   Atto.parse (eatSpaces (header <* endOfInput)) . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -102,38 +90,38 @@ noHeaderCase = do
 
 topLevel :: Parser Types.TopLevel
 topLevel =
-  Types.Type <$> typeP
-    <|> fun
-    <|> modT
-    <|> Types.ModuleOpen <$> moduleOpen
-    <|> Types.Signature <$> signature'
-    <|> Types.Declaration <$> declaration
+  P.try (Types.Type <$> typeP)
+    <|> P.try fun
+    <|> P.try modT
+    <|> P.try (Types.ModuleOpen <$> moduleOpen)
+    <|> P.try (Types.Signature <$> signature')
+    <|> P.try (Types.Declaration <$> declaration)
 
 expressionGen' ::
   Parser Types.Expression -> Parser Types.Expression
 expressionGen' p =
-  Types.Cond <$> cond
-    <|> Types.Let <$> let'
-    <|> Types.LetType <$> letType
-    <|> Types.ModuleE <$> mod
-    <|> Types.Match <$> match
-    <|> Types.OpenExpr <$> moduleOpenExpr
-    <|> Types.Block <$> block
-    <|> Types.Lambda <$> lam
-    <|> Types.Primitive <$> primitives
-    <|> Types.DeclarationE <$> declarationExpression
+  P.try (Types.Cond <$> cond)
+    <|> P.try (Types.Let <$> let')
+    <|> P.try (Types.LetType <$> letType)
+    <|> P.try (Types.ModuleE <$> mod)
+    <|> P.try (Types.Match <$> match)
+    <|> P.try (Types.OpenExpr <$> moduleOpenExpr)
+    <|> P.try (Types.Block <$> block)
+    <|> P.try (Types.Lambda <$> lam)
+    <|> P.try (Types.Primitive <$> primitives)
+    <|> P.try (Types.DeclarationE <$> declarationExpression)
     <|> P.try p
     <|> expressionArguments
 
 expressionArguments :: Parser Types.Expression
 expressionArguments =
-  Types.Block <$> block
-    <|> Types.ExpRecord <$> expRecord
-    <|> Types.Constant <$> constant
+  P.try (Types.Block <$> block)
+    <|> P.try (Types.ExpRecord <$> expRecord)
+    <|> P.try (Types.Constant <$> constant)
     -- <|> try (Types.NamedTypeE <$> namedRefine)
-    <|> Types.Name <$> prefixSymbolDot
-    <|> universeSymbol
-    <|> Types.List <$> list
+    <|> P.try (Types.Name <$> prefixSymbolDot)
+    <|> P.try universeSymbol
+    <|> P.try (Types.List <$> list)
     -- We wrap this in a paren to avoid conflict
     -- with infixity that we don't know about at this phase!
     <|> tupleParen
@@ -145,7 +133,7 @@ app'' :: Parser Types.Expression
 app'' = Types.Application <$> P.try application
 
 all'' :: Parser Types.Expression
-all'' = do''' <|> app''
+all'' = P.try do''' <|> app''
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
 expressionGen p = Expr.makeExprParser (spaceLiner (expressionGen' p)) tableExp
@@ -185,8 +173,8 @@ infixDeclar :: Parser Types.InfixDeclar
 infixDeclar = do
   _ <- P.string "infix"
   f <-
-    (Types.AssocL <$ P.string "l")
-      <|> (Types.AssocR <$ P.string "r")
+    P.try (Types.AssocL <$ P.string "l")
+      <|> P.try (Types.AssocR <$ P.string "r")
       <|> pure Types.NonAssoc
   symbolEnd
   name <- prefixSymbolSN
@@ -219,7 +207,7 @@ functionModGen p =
 
 guard :: Parser a -> Parser (Types.GuardBody a)
 guard p =
-  Types.Guard <$> condB p
+  P.try (Types.Guard <$> condB p)
     <|> Types.Body <$> (J.skipLiner J.assign *> p)
 
 --------------------------------------------------
@@ -228,7 +216,7 @@ guard p =
 
 arg :: Parser Types.Arg
 arg =
-  Types.ImplicitA <$> (P.char J.hash *> matchLogic)
+  P.try (Types.ImplicitA <$> (P.char J.hash *> matchLogic))
     <|> Types.ConcreteA <$> matchLogic
 
 --------------------------------------------------------------------------------
@@ -248,8 +236,8 @@ signature' = do
 
 signatureConstraint :: Parser [Types.Expression]
 signatureConstraint =
-  pure <$> expression <* reserved "=>"
-    <|> J.parens (P.sepBy expression (skipLiner J.comma)) <* reserved "=>"
+  P.try (pure <$> expression <* reserved "=>")
+    <|> P.try (J.parens (P.sepBy expression (skipLiner J.comma)) <* reserved "=>")
     <|> pure []
 
 --------------------------------------------------------------------------------
@@ -272,7 +260,7 @@ matchL = do
   Types.MatchL match <$> expression
 
 matchLogic :: Parser Types.MatchLogic
-matchLogic = J.maybeParend (matchLogicNamedSN <|> matchLogicNotNamedSN)
+matchLogic = J.maybeParend (P.try matchLogicNamedSN <|> matchLogicNotNamedSN)
 
 matchLogicNamed :: Parser Types.MatchLogic
 matchLogicNamed = do
@@ -287,7 +275,7 @@ matchLogicNotNamed = do
   pure (Types.MatchLogic start Nothing)
 
 matchLogicStart :: Parser Types.MatchLogicStart
-matchLogicStart = matchRecord <|> matchCon <|> matchName <|> matchConstant
+matchLogicStart = P.try matchRecord <|> P.try matchCon <|> P.try matchName <|> matchConstant
 
 matchConstant :: Parser Types.MatchLogicStart
 matchConstant = Types.MatchConst <$> constant
@@ -327,7 +315,7 @@ nameSetMany parser =
   J.curly (J.sepBy1HFinal (nameSetSN parser) (skipLiner J.comma))
 
 nameSet :: Parser a -> Parser (Types.NameSet a)
-nameSet parser = nameMatch parser <|> namePunned
+nameSet parser = P.try (nameMatch parser) <|> namePunned
 
 namePunned :: Parser (Types.NameSet a)
 namePunned = Types.Punned <$> prefixSymbolDot
@@ -350,9 +338,10 @@ genGuard n a p =
 fun :: Parser Types.TopLevel
 fun = functionModStartReserved "let" func
   where
-    func n a =
-      genGuard n a expression
-        >>| Types.Function . Types.Func
+    func n a = notImplemented
+
+-- genGuard n a expression
+--   >>| Types.Function . Types.Func
 
 modT :: Parser Types.TopLevel
 modT = functionModStartReserved "mod" mod
@@ -373,7 +362,7 @@ moduleName =
   prefixSymbolDot
 
 moduleOpenExpr :: Parser Types.ModuleOpenExpr
-moduleOpenExpr = moduleOpenExprNormal <|> moduleOpenExprParens
+moduleOpenExpr = P.try moduleOpenExprNormal <|> moduleOpenExprParens
 
 moduleOpenExprParens :: Parser Types.ModuleOpenExpr
 moduleOpenExprParens = do
@@ -418,10 +407,8 @@ dataParser = do
 
 adt :: Parser Types.Adt
 adt =
-  Types.Sum
-    <$> (P.optional (skipLiner J.pipe) *> J.sepBy1H sumSN (skipLiner J.pipe))
-    <|> Types.Product
-    <$> standAloneProduct
+  P.try (Types.Sum <$> (P.optional (skipLiner J.pipe) *> J.sepBy1H sumSN (skipLiner J.pipe)))
+    <|> (Types.Product <$> standAloneProduct)
 
 sum :: Parser Types.Sum
 sum = Types.S <$> prefixSymbolSN <*> P.optional product
@@ -432,8 +419,8 @@ standAloneProduct =
 
 product :: Parser Types.Product
 product =
-  Types.Record <$> record
-    <|> skipLiner J.colon *> fmap Types.Arrow expression
+  P.try (Types.Record <$> record)
+    <|> P.try (skipLiner J.colon *> fmap Types.Arrow expression)
     <|> fmap Types.ADTLike (P.many expression'''SN)
 
 record :: Parser Types.Record
@@ -458,7 +445,7 @@ nameType = do
 
 nameParser :: Parser Types.Name
 nameParser =
-  (P.skipMany (P.char J.hash) *> fmap Types.Implicit prefixSymbol)
+  P.try (P.skipMany (P.char J.hash) *> fmap Types.Implicit prefixSymbol)
     <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
@@ -480,7 +467,7 @@ universeSymbol = do
 
 universeExpression :: Parser Types.UniverseExpression
 universeExpression =
-  Types.UniverseExpression <$> prefixSymbolSN
+  P.try (Types.UniverseExpression <$> prefixSymbolSN)
     -- TODO ∷ make this proper do + and max!
     <|> Types.UniverseExpression <$> J.parens prefixSymbolSN
 
@@ -591,11 +578,13 @@ tupleParen = do
     _ : _ -> pure (Types.Tuple (Types.TupleLit p))
 
 constant :: Parser Types.Constant
-constant = Types.Number <$> number <|> Types.String <$> string'
+constant =
+  P.try (Types.Number <$> number)
+    <|> Types.String <$> string'
 
 number :: Parser Types.Numb
 number =
-  Types.Integer' <$> integer
+  P.try (Types.Integer' <$> integer)
     <|> Types.Double' <$> float
 
 digits :: Parser Text
@@ -650,29 +639,29 @@ doNotBind = do
   pure [Types.DoBody Nothing body]
 
 do'' :: Parser [Types.DoBody]
-do'' = Expr.makeExprParser (doBind <|> doNotBind) table P.<?> "bind expr"
+do'' = Expr.makeExprParser (P.try doBind <|> doNotBind) table P.<?> "bind expr"
 
 --------------------------------------------------------------------------------
 -- Symbol Handlers
 --------------------------------------------------------------------------------
 
 infixSymbolGen :: Parser Symbol -> Parser Symbol
-infixSymbolGen p = do
-  symb <- p
-  if
-      | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
-      | otherwise -> pure symb
+infixSymbolGen p = p --do
+-- symb <- p
+-- if
+--     | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
+--     | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
 infixSymbolDot = do
   qualified <- P.option [] (NonEmpty.toList <$> prefixSymbolDotPermissive <* P.char J.dot)
   -- -o is a bit special since it's a normal letter
   -- this is a bit of a hack
-  infix' <- ("-o" <$ P.string "-o") <|> infixSymbol
+  infix' <- P.try ("-o" <$ P.string "-o") <|> infixSymbol
   pure (NonEmpty.fromList (qualified <> [infix']))
 
 infixSymbol :: Parser Symbol
-infixSymbol = infixSymbolGen (infixSymbol' <|> infixPrefix)
+infixSymbol = infixSymbolGen (P.try infixSymbol' <|> infixPrefix)
 
 infixSymbol' :: Parser Symbol
 infixSymbol' =
@@ -758,7 +747,7 @@ prefixCapitalDot = prefixSepGen prefixCapital
 
 prefixSymbol :: Parser Symbol
 prefixSymbol =
-  prefixSymbolGen (P.satisfy J.validStartSymbol)
+  P.try (prefixSymbolGen (P.satisfy J.validStartSymbol))
     <|> parend
 
 parend :: Parser Symbol

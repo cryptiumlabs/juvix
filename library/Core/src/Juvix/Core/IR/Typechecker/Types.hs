@@ -138,7 +138,7 @@ type AbstractT' extV primTy primVal =
 type AbstractT primTy primVal = AbstractT' IR.NoExt primTy primVal
 
 type GlobalsT' extV extT primTy primVal =
-  IR.Globals' extV extT primTy (P.TypedPrim primTy primVal)
+  IR.Globals' extV primTy (P.TypedPrim primTy primVal)
 
 type GlobalsT primTy primVal = GlobalsT' IR.NoExt IR.NoExt primTy primVal
 

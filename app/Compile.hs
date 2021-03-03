@@ -49,7 +49,7 @@ typecheck fin Michelson = do
         [] -> do
           T.putStrLn "No main function found"
           exitFailure
-        func@(IR.GFunction (IR.Function name usage ty (IR.FunClause [] term :| []))) : [] -> do
+        func@(IR.GFunction (IR.Function name usage ty (IR.FunClause _ [] term _ _ _ :| []))) : [] -> do
           let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
               inlinedTerm = IR.inlineAllGlobals (IR.injectT term) (\(IR.Global n) -> HM.lookup n globalDefs)
           (res, _) <- exec (CorePipeline.coreToAnn (IR.extForgetT @(Juvix.Core.IR.TransformExt.OnlyExts.T IR.NoExt) inlinedTerm) (IR.globalToUsage usage) ty) Param.michelson newGlobals
@@ -95,10 +95,10 @@ convGlobal g =
     GFunction (Function n u t cs) -> GFunction (Function n u (baseToReturn t) (map funClauseReturn cs))
     GAbstract (Abstract n u t) -> GAbstract (Abstract n u (baseToReturn t))
 
-funClauseReturn (FunClause patts term) = FunClause (map pattEval patts) (baseToReturn term)
+funClauseReturn (FunClause tel patts term rhs catchall unreachable) = FunClause undefined (map pattEval patts) (baseToReturn term) undefined undefined undefined -- TODO
 
 funClauseEval :: IR.FunClause' IR.NoExt Param.PrimTy Param.RawPrimVal -> IR.FunClause' IR.NoExt Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
-funClauseEval (FunClause patts term) = FunClause (map pattEval patts) (baseToReturn term)
+funClauseEval (FunClause tel patts term rhs catchall unreachable) = FunClause undefined (map pattEval patts) (baseToReturn term) undefined undefined undefined --TODO
 
 pattEval :: IR.Pattern Param.PrimTy Param.RawPrimVal -> IR.Pattern Param.PrimTy (TypedPrim Param.PrimTy Param.RawPrimVal)
 pattEval patt =

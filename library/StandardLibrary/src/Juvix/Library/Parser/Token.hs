@@ -223,7 +223,7 @@ validStartSymbol w =
   Unicode.isAlpha w || w == under
 
 validInfixSymbol :: Char -> Bool
-validInfixSymbol = flip elem infixOperators
+validInfixSymbol c = elem c infixOperators || Unicode.isSymbol c
 
 -- I don't think allowing any symbol is a good idea
 -- Unicode.isSymbol w

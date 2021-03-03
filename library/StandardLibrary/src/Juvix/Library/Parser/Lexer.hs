@@ -36,17 +36,17 @@ spacer p = P.takeWhileP (Just "spacer") isSpace *> p
 spaceLiner :: Parser p -> Parser p
 spaceLiner p = P.takeWhileP (Just "space liner") isHSpace *> p
 
--- between :: Word8 -> Parser p -> Word8 -> Parser p
--- between fst p end = skipLiner fst *> spaceLiner p <* satisfy (== end)
+between :: Char -> Parser p -> Char -> Parser p
+between fst p end = skipLiner fst *> spaceLiner p <* P.satisfy (== end)
 
 parens :: Parser p -> Parser p
-parens = P.between (P.char T.openParen) (P.char T.closeParen)
+parens p = between T.openParen p T.closeParen
 
 brackets :: Parser p -> Parser p
-brackets = P.between (P.char T.openBracket) (P.char T.closeBracket)
+brackets p = between T.openBracket p T.closeBracket
 
 curly :: Parser p -> Parser p
-curly = P.between (P.char T.openCurly) (P.char T.closeCurly)
+curly p = between T.openCurly p T.closeCurly
 
 many1H :: Parser a -> Parser (NonEmpty a)
 many1H = fmap NonEmpty.fromList . P.some

@@ -13,6 +13,7 @@ import qualified Juvix.Core.Common.Context as Ctx
 import Juvix.Core.FromFrontend.Types
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import qualified Juvix.FrontendContextualise as FE
@@ -398,7 +399,6 @@ transformSig x def = trySpecial <||> tryNormal
     tryNormal = transformNormalSig q x def
     x <||> y = x >>= maybe y (pure . Just)
 
--- TODO ∷ update with SumCon
 transformNormalSig ::
   ( Data primTy,
     Data primVal,
@@ -448,6 +448,7 @@ transformTypeSig q name (FE.Typ {typeArgs, typeForm}) = do
   where
     makeTPi name res =
       -- TODO metavars for the named args instead of defaulting to types
+      -- thin metavars for the named args instead of defaulting to types
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformValSig ::
@@ -487,8 +488,6 @@ transformDef x def = do
     _ -> map CoreDef <$> transformNormalDef q x def
       where
         q = NameSymbol.mod x
-
--- TODO ∷ update with SumCon
 
 transformNormalDef ::
   ( Data primTy,
@@ -599,13 +598,13 @@ transformType q name dat@(FE.Typ {typeForm}) = do
       (args, level) <- splitDataType name ty
       cons <- traverse (transformCon qual hd) $ toList cons
       let dat' =
-            IR.Datatype
-              { dataName = name,
-                dataArgs = args,
-                dataLevel = level,
-                dataCons = cons
+            IR.RawDatatype
+              { rawDataName = name,
+                rawDataArgs = args,
+                rawDataLevel = level,
+                rawDataCons = cons
               }
-      pure $ IR.GDatatype dat' : fmap IR.GDataCon cons
+      pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
   where
     body = case typeForm of
       FE.Arrowed {dataAdt' = b} -> b
@@ -621,11 +620,10 @@ splitDataType x ty0 = go ty0
     go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
       where
         arg =
-          IR.DataArg
-            { argName = x,
-              argUsage = π,
-              argType = hrToIR s,
-              argIsParam = False -- TODO parameter detection
+          IR.RawDataArg
+            { rawArgName = x,
+              rawArgUsage = π,
+              rawArgType = hrToIR s
             }
     go (HR.Star ℓ) = pure ([], ℓ)
     go _ = throwFF $ InvalidDatatypeType x ty0
@@ -660,11 +658,11 @@ transformCon' ::
   FE.Product ->
   m (IR.RawDataCon primTy primVal)
 transformCon' _ _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
-transformCon' q name _ (FE.Arrow ty) = IR.DataCon name <$> transformTermIR q ty
+transformCon' q name _ (FE.Arrow ty) = IR.RawDataCon name <$> transformTermIR q ty
 transformCon' _ name Nothing k@(FE.ADTLike {}) =
   throwFF $ InvalidConstructor name k
 transformCon' q name (Just hd) (FE.ADTLike tys) =
-  IR.DataCon name <$> foldrM makeArr hd tys
+  IR.RawDataCon name <$> foldrM makeArr hd tys
   where
     makeArr arg res =
       IR.Pi (Usage.SNat 1) <$> transformTermIR q arg <*> pure res
@@ -680,11 +678,13 @@ transformClause ::
   ) =>
   NameSymbol.Mod ->
   FE.FunctionLike FE.Expression ->
-  m (IR.FunClause primTy primVal)
+  m (IR.FunClause' IR.NoExt primTy primVal)
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
-  IR.FunClause <$> traverse transformArg args <*> transformTermIR q body
+  patts <- traverse transformArg args
+  clauseBody <- transformTermIR q body
+  pure $ IR.FunClause [] patts clauseBody Nothing False Nothing
 
 transformArg ::
   ( HasNextPatVar m,

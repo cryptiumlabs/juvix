@@ -16,6 +16,7 @@ module Juvix.Core.IR.Evaluator
 where
 
 import qualified Data.IntMap as IntMap
+import Data.Maybe (fromJust)
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
@@ -188,7 +189,7 @@ toLambda ::
   IR.GlobalWith (ty IR.NoExt) ext primTy primVal ->
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
-  | IR.FunClause pats rhs :| [] <- funClauses = do
+  | IR.FunClause _clauseTel pats rhs _rhsTy _catchall _unreachable :| [] <- funClauses = do
     patVars <- traverse singleVar pats
     let len = fromIntegral $ length patVars
     let vars = map bound [len - 1, len - 2 .. 0]

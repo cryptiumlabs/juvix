@@ -39,6 +39,7 @@ dependencies:
 ###########################
 - megaparsec
 - aeson
+- parser-combinators
 - filepath
 
 library:

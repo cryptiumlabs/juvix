@@ -1,0 +1,424 @@
+* Generation
+** Top Level
+*** Let
+1. basic
+   - input
+     #+begin_src haskell
+       let foo x
+         | x == 2 = 3 + 4 + x
+         | else   = x + 2
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (x)
+         (:cond
+           ((:infix == x 2) (:infix + 3 (:infix + 4 x)))
+           (else            (:infix + x 2))))
+     #+end_src
+*** Sig
+1. basic
+   - input
+     #+begin_src haskell
+       sig foo : int -> int -> int
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defsig foo (:infix -> int (:infix -> int int)))
+     #+end_src
+2. usage
+   - input
+     #+begin_src haskell
+       sig foo 0 : int -> int -> int
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
+     #+end_src
+   - This form is a bit odd, ideally it'd mimic the [[Types]]
+     version like
+     #+begin_src lisp
+       (:defsig (foo :usage 0) (:infix -> int (:infix -> int int)))
+     #+end_src
+     + However for now I think it's fine... Though this is a place for
+       improvement for the future
+*** Types
+1. record
+   - input
+     #+begin_src haskell
+       type foo x y z =
+         { y-axis : y
+         , x-axis : x
+         , z-axis : z }
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type foo (x y z)
+          (:record-d
+            y-axis y
+            x-axis x
+            z-axis z))
+     #+end_src
+2. first sum
+   - input
+     #+begin_src haskell
+       type foo x y z =
+         | Foo {y-axis : y, x-axis : x, z-axis : z}
+         | Bar (var1 : x) (var2 : y)
+         | Car : hd : x -> cdr : foo y -> foo x y z
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type foo (x y z)
+         (Foo (:record-d y-axis y x-axis x z-axis z))
+         (Bar (:paren (:infix : var1 x))
+              (:paren (:infix : var2 y)))
+         (Car (:arrow
+               (:infix : hd
+                       (:infix -> x
+                               (:infix : cdr
+                                       (:infix -> (foo y) (foo x y z))))))))
+     #+end_src
+3. Signature
+   - input
+     #+begin_src haskell
+       type foo x y z : typ -> typ -> typ = Foo a b c
+     #+end_src
+   - output
+     #+begin_src lisp
+       (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+          (Foo a b c))
+     #+end_src
+*** Decalration
+1. basic
+   - input
+     #+begin_src haskell
+       declare infixl foo 3
+     #+end_src
+   - output
+     #+begin_src lisp
+       (declare infixl foo 3)
+     #+end_src
+*** Module
+1. basic
+   - input
+     #+begin_src haskell
+       mod foo =
+         let bar = 3
+         type zar = Boo
+       end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defmodule foo ()
+         (:defun bar () 3)
+         (type zar () (Boo)))
+     #+end_src
+2. guards
+   - input
+     #+begin_src haskell
+       mod foo x
+         | x == 3 =
+           let foo = 3
+           let bar = 5
+         | else =
+           let foo = 5
+       end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defmodule foo (x)
+         (:cond ((:infix == x 3)
+                 (:defun foo () 3)
+                 (:defun bar () 5))
+                (else
+                 (:defun foo () 5))))
+     #+end_src
+
+** Expression
+*** Let
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         let fi = 3 in
+         fi
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (let fi () 3
+           fi))
+     #+end_src
+2. arguments
+   - input
+     #+begin_src haskell
+       let foo y =
+         let fi x = 3 + x in
+         fi y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (let fi (x) (:infix + 3 x)
+           (fi y)))
+     #+end_src
+*** Module
+1. basic
+   - input
+     #+begin_src haskell
+       let foo =
+         mod Bar =
+           let bar = 3
+           type zar = Boo
+         end in
+         Bar.bar
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo ()
+         (:let-mod Bar ()
+            ((:defun bar () 3)
+             (type zar () (Boo)))
+           Bar.bar))
+     #+end_src
+*** Tuples
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = (1,2,3)
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:tuple 1 2 3))
+     #+end_src
+*** Lists
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = [1,2,3,4]
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:list 1 2 3 4))
+     #+end_src
+*** Records
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = {a, b = 2}
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo () (:record (a) (b 2)))
+     #+end_src
+*** Do
+1. basic
+   - input
+     #+begin_src haskell
+       let foo xs =
+         a <- xs;
+         more-comp;
+         pure a
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (xs)
+         (:do (%<- a xs)
+              more-comp
+              (pure a)))
+     #+end_src
+*** Lambda
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         \x -> x + y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:lambda (x) (:infix + x y)))
+     #+end_src
+*** Open
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y =
+         open Prelude in
+         x + y
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:open-in Prelude
+            (:infix + x y)))
+     #+end_src
+*** Parens
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y = (y + 3) * 9
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:infix * (:paren (:infix + y 3)) 9))
+     #+end_src
+*** Block
+1. basic
+   - input
+     #+begin_src haskell
+       let foo y = 3 * begin y + y end
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo (y)
+         (:infix * 3 (:progn (:infix + y y))))
+     #+end_src
+*** Primitive
+1. basic
+   - input
+     #+begin_src haskell
+       let add = %Michelson.add
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun add ()
+         (:primitive Michelson.add))
+     #+end_src
+*** Cond
+1. basic
+   - input
+     #+begin_src haskell
+       let add x =
+         if | x == 3 = 1
+            | x == 4 = 5
+            | else   = 0
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun add (x)
+         (:cond ((:infix == x 3) 1)
+                ((:infix == x 4) 5)
+                (else            0)))
+     #+end_src
+*** Case
+1. basic
+   - input
+     #+begin_src haskell
+       let foo =
+          case x of
+          | (A (B {a, b})) -> a + b
+          | A (B c) (C d)  -> c + d
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo ()
+          (case x
+             ((A (B (:record (a) (b)))) (:infix + a b))
+             ((A (B c) (C d))           (:infix + c d))))
+     #+end_src
+* Notes
+** Design Principles
+Overall the goal of the S-expression incantation is twofold [fn:1].
+
+1) An unambiguous syntax that is faithful to the original ML syntax
+   - This is a necessity to have limited strife between the ML syntax.
+     and the work we need to do on the generic IR-syntax layer.
+   - Unambiguous in this case implies bijection, as we have to convert
+     between the two forms.
+2) A fully realized syntax that is readable and looks as if it were a
+   standalone language.
+   - This is needed so inspection of the output is obvious. Further
+     this will empower ease of reasoning over the syntax without too
+     many surprises.
+** On Verbosity
+- Overall a few forms in this representation are quite verbose and
+  thus harder to read than they should be, see
+  #+begin_src lisp
+
+    (:arrow
+     (:infix : hd
+             (:infix -> x
+                     (:infix : cdr
+                             (:infix -> (foo y) (foo x y z))))))
+
+    ;; should be
+    [ hd : x -> cdr : (foo y) -> (foo x y z) ]
+
+    (:record
+     y-axis y
+     x-axis x
+     z-axis z)
+
+    ;; should be
+    {y-axis y
+     x-axis x
+     z-axis z}
+  #+end_src
+
+- This is due to lacking reader macros at this level. Overall this can
+  be largely improved in the future for better inspection (we thus
+  will offer another level of inspection that can do away with the
+  infix view!)
+** On Forms
+The syntax is heavily inspired from Common Lisp (CL). There are of course a
+plethora of changes, however some key concepts have survived through
+this transition.
+
+Namely for adding extra property based information in declarations we
+got for an alist concept
+
+#+begin_src lisp
+  (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+     (Foo a b c))
+#+end_src
+
+which is taken directly from CL's =defstruct= construct.
+
+Even naming conventions like =defun= are lifted directly from Common
+Lisp.
+
+With that said, many forms (namely the lets) lack an extra set of
+parenthesis when in comparison to CL and the Schemer language.
+#+begin_src lisp
+  (let fi (x) (:infix + 3 x)
+      (fi y))
+
+  (let fi () 3
+      fi)
+#+end_src
+This is due to us fully abusing the fact that we must represent non
+let blocks currently along with having a single expression each
+name is bound to.
+** Inconsistencies
+There are likely inconsistencies between some of the forms. These
+should be removed as soon as possible. I have tried my best on this
+front, but likely some forms are inconsistent.
+*** Known
+**** Signatures
+Currently we have a minor point of alists on the name itself to
+describe extra properties
+
+#+begin_src lisp
+  (type (foo :type (:infix -> typ (:infix -> typ typ))) (x y z)
+     (Foo a b c))
+#+end_src
+
+This is great and we'll be adding it to Modules, however we currently
+do an odd transformation in regards to signatures
+
+#+begin_src lisp
+  (:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))
+  ;; should be
+  (:defsig (foo :usage 0) (:infix -> int (:infix -> int int)))
+#+end_src
+
+This likely should be changed
+
+* Footnotes
+
+[fn:1] The Whimsical spell like nature of sexpressions are heavily
+derived from [[https://mitpress.mit.edu/sites/default/files/sicp/index.html][SICP]] and the general imagery of other literature such as
+the [[https://suif.stanford.edu/dragonbook/][dragon book]].
+

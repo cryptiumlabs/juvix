@@ -667,6 +667,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erasure/Types]]
   + [[IR]]
   + [[Typechecker/Types]]
+  + [[IR/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -732,11 +733,26 @@ Types to support partial application and polymorphic primitives.
   + [[IR/Types/Base]]
 ***** IR
 - _Relies on_
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[IR/Typechecker]]
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
+****** CheckTerm
+This file contains the functions and aux functions to typecheck terms.
+@typeTerm@ and @typeElim@ are called by functions for typechecking
+datatype and function declarations.
+- _Relies on_
+  + [[Application]]
+  + [[IR/Evaluator]]
+  + [[Typechecker/Env]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[Usage]]
 ****** Evaluator <<IR/Evaluator>>
 This includes the evaluators (evalTerm and evalElim),
 the value application function (vapp) and
@@ -809,16 +825,17 @@ keeps the extensions.
   + [[IR/Types/Base]]
   + [[Library]]
 ****** Typechecker <<IR/Typechecker>>
+This file contains the functions and aux functions to typecheck
+datatype and function declarations.
+Datatype declarations are typechecked by @checkDataType@ in CheckDataType.hs.
+Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
+Typechecked declarations are added to the signature.
 - _Relies on_
-  + [[Application]]
-  + [[IR/Evaluator]]
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Core/Parameterisation]]
   + [[Library]]
-  + [[Usage]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
   + [[IR/Evaluator]]
@@ -923,6 +940,7 @@ Quantitative type implementation inspired by
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
   + [[IR]]
+  + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
   + [[IR/Typechecker]]
@@ -967,8 +985,14 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[NameSymbol]]
   + [[Lexer]]
+***** Sexp <<Frontend/Sexp>>
+- _Relies on_
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Types <<Frontend/Types>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1004,6 +1028,13 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+*** Sexp <<Frontend/test/Sexp>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 * InteractionNet
 ** Setup <<InteractionNet/Setup>>
 ** src
@@ -1308,15 +1339,27 @@ Can be added to via core translation
   + [[Library]]
   + [[Lexer]]
 ***** PrettyPrint
+***** Usage
+- _Relies on_
+  + [[Library]]
 ***** Sexp <<Library/Sexp>>
 - _Relies on_
   + [[Library]]
   + [[Library]]
-  + [[LineNum]]
   + [[NameSymbol]]
-***** Usage
+  + [[Library/Sexp/Parser]]
+  + [[Sexp/Types]]
+****** Parser <<Library/Sexp/Parser>>
 - _Relies on_
   + [[Library]]
+  + [[NameSymbol]]
+  + [[Sexp/Types]]
+  + [[Lexer]]
+****** Types <<Sexp/Types>>
+- _Relies on_
+  + [[Library]]
+  + [[LineNum]]
+  + [[NameSymbol]]
 ***** Symbol
 ****** Lexer
 - _Relies on_
@@ -1329,10 +1372,17 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
-*** Sexp <<test/Sexp>>
+*** Sexp <<StandardLibrary/test/Sexp>>
 - _Relies on_
   + [[Library]]
-  + [[LineNum]]
+  + [[Library/Sexp]]
+**** Parser <<test/Sexp/Parser>>
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** SimplifiedPasses
+- _Relies on_
+  + [[Library]]
   + [[Library/Sexp]]
 * Translate
 ** Setup <<Translate/Setup>>
@@ -1357,6 +1407,27 @@ Calculate mutually-recursive groups of definitions.
   + [[Context/Types]]
   + [[Library]]
   + [[NameSymbol]]
+**** Desugar <<Juvix/Desugar>>
+Desugar takes the frontend syntax and through the =desugar=
+function, removes all extra parts of syntax that can be boiled down
+to simple macro expansion (simplification of the frontend syntax
+from the syntax alone with no extra information needed!)
+- _Relies on_
+  + [[Passes]]
+  + [[Library]]
+  + [[Library/Sexp]]
+***** Passes
+Passes contains a list of passes on the frontend syntax that can be
+done with no extra information needed. Thus we export the following passes
+- Removing Explicit Module declarations
+- Removing Guards
+- Conds ⟶ If ⟶ Match
+- Combining signatures to functions
+- Removing punned record arguments
+- Remvoing Do syntax
+- _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=
@@ -1879,13 +1950,6 @@ Calculate mutually-recursive groups of definitions.
   + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
-*** Desugar
-- _Relies on_
-  + [[Frontend/Parser]]
-  + [[FrontendDesugar]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
 *** Golden
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1927,3 +1991,18 @@ Calculate mutually-recursive groups of definitions.
   + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]
+*** Desugar <<test/Desugar>>
+- _Relies on_
+  + [[Frontend/Parser]]
+  + [[FrontendDesugar]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+**** Sexp <<Desugar/Sexp>>
+- _Relies on_
+  + [[Passes]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
