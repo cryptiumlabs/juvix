@@ -16,7 +16,7 @@ module Juvix.Library.Parser.Token
     pow,
     and,
     lesser,
-    not,
+    bang,
     dot,
     percent,
     -- Other symbols
@@ -44,6 +44,7 @@ module Juvix.Library.Parser.Token
   )
 where
 
+import qualified Data.Char as Char
 import qualified Data.Set as Set
 import qualified GHC.Unicode as Unicode
 import Protolude hiding (and, div, hash, not, or)
@@ -157,8 +158,8 @@ lesser = '<'
 question :: Char
 question = '?'
 
-not :: Char
-not = '!'
+bang :: Char
+bang = '!'
 
 percent :: Char
 percent = '%'
@@ -208,8 +209,8 @@ infixOperators =
 
 middleOperators :: [Char]
 middleOperators =
-  [ not,
-    dot,
+  [ bang,
+    -- dot,
     percent,
     question,
     dash
@@ -220,23 +221,29 @@ operators = infixOperators ++ middleOperators
 
 validStartSymbol :: Char -> Bool
 validStartSymbol w =
-  Unicode.isAlpha w || w == under
+  Unicode.isAlpha w
+    || w == under
 
 validInfixSymbol :: Char -> Bool
-validInfixSymbol c = elem c infixOperators || Unicode.isSymbol c
-
--- I don't think allowing any symbol is a good idea
--- Unicode.isSymbol w
---   || w == mult
---   || w == dash
---   || w == amper
---   || w == colon
---   || w == div
---   || w == percent
---   || w == dot
+validInfixSymbol w =
+  -- elem c infixOperators || Unicode.isSymbol c
+  Unicode.isSymbol w
+    || w == mult
+    || w == dash
+    || w == and
+    || w == colon
+    || w == div
+    || w == percent
+    || w == dot
 
 validMiddleSymbol :: Char -> Bool
-validMiddleSymbol = flip elem middleOperators
+validMiddleSymbol w =
+  validStartSymbol w
+    || Char.isDigit w
+    || w == dash
+    || w == bang
+    || w == question
+    || w == percent
 
 validUpperSymbol :: Char -> Bool
 validUpperSymbol = Unicode.isUpper
@@ -245,6 +252,6 @@ validUpperSymbol = Unicode.isUpper
 -- validStartSymbol w
 --   || digit w
 --   || w == dash
---   || w == not
+--   || w == bang
 --   || w == question
 --   || w == percent

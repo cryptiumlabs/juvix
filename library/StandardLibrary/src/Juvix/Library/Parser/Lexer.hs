@@ -11,7 +11,8 @@ module Juvix.Library.Parser.Lexer
     sepBy1HFinal,
     maybeParend,
     digit,
-    isHSpace,
+    emptyCheck,
+    eatSpaces,
   )
 where
 
@@ -23,9 +24,8 @@ import Protolude
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Char as P
 
--- | Is it a horizontal space character?
-isHSpace :: Char -> Bool
-isHSpace x = isSpace x && x /= '\n' && x /= '\r'
+emptyCheck :: Char -> Bool
+emptyCheck x = isSpace x || x == '\n'
 
 digit :: (Ord a, Num a) => a -> Bool
 digit w = w <= 57 && w >= 48
@@ -34,7 +34,11 @@ spacer :: Parser p -> Parser p
 spacer p = P.takeWhileP (Just "spacer") isSpace *> p
 
 spaceLiner :: Parser p -> Parser p
-spaceLiner p = P.takeWhileP (Just "space liner") isHSpace *> p
+spaceLiner p = do
+  p <* P.takeWhileP (Just "space liner") emptyCheck
+
+eatSpaces :: Parser p -> Parser p
+eatSpaces p = P.takeWhileP (Just "eat spaces") emptyCheck *> p
 
 between :: Char -> Parser p -> Char -> Parser p
 between fst p end = skipLiner fst *> spaceLiner p <* P.satisfy (== end)
@@ -59,10 +63,10 @@ sepBy1H :: Parser a -> Parser s -> Parser (NonEmpty a)
 sepBy1H parse sep = NonEmpty.fromList <$> P.sepBy1 parse sep
 
 skipLiner :: Char -> Parser ()
-skipLiner p = spaceLiner (P.skipMany (P.char p))
+skipLiner p = spaceLiner (P.skipCount 1 (P.char p))
 
 skipLinerS :: Text -> Parser ()
-skipLinerS p = spaceLiner (P.skipMany (P.string p))
+skipLinerS p = spaceLiner (P.skipCount 1 (P.string p))
 
 maybeParend :: Parser a -> Parser a
 maybeParend p = p <|> parens p

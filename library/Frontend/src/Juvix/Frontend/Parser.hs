@@ -19,6 +19,7 @@ module Juvix.Frontend.Parser where
 --   prefixSymbol,
 -- )
 
+import Control.Arrow (left)
 import qualified Control.Monad.Combinators.Expr as Expr
 import Data.Char (isDigit)
 import qualified Data.List.NonEmpty as NonEmpty
@@ -37,9 +38,11 @@ import Prelude (fail, read)
 -- Top Level Runner
 --------------------------------------------------------------------------------
 
+prettyParse :: Text -> Either [Char] (Types.Header Types.TopLevel)
+prettyParse = left P.errorBundlePretty . parse
+
 parse :: Text -> Either ParserError (Types.Header Types.TopLevel)
-parse =
-  P.parse (J.spaceLiner (header <* P.eof)) "" . removeComments
+parse = P.parse (J.eatSpaces (header <* P.eof)) "" . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
@@ -208,7 +211,7 @@ functionModGen p =
 guard :: Parser a -> Parser (Types.GuardBody a)
 guard p =
   P.try (Types.Guard <$> condB p)
-    <|> Types.Body <$> (J.skipLiner J.assign *> p)
+    <|> (Types.Body <$> (J.skipLiner J.assign *> p))
 
 --------------------------------------------------
 -- Args
@@ -217,7 +220,7 @@ guard p =
 arg :: Parser Types.Arg
 arg =
   P.try (Types.ImplicitA <$> (P.char J.hash *> matchLogic))
-    <|> Types.ConcreteA <$> matchLogic
+    <|> (Types.ConcreteA <$> matchLogic)
 
 --------------------------------------------------------------------------------
 -- Signature
@@ -275,7 +278,11 @@ matchLogicNotNamed = do
   pure (Types.MatchLogic start Nothing)
 
 matchLogicStart :: Parser Types.MatchLogicStart
-matchLogicStart = P.try matchRecord <|> P.try matchCon <|> P.try matchName <|> matchConstant
+matchLogicStart =
+  P.try matchRecord
+    <|> P.try matchCon
+    <|> P.try matchName
+    <|> matchConstant
 
 matchConstant :: Parser Types.MatchLogicStart
 matchConstant = Types.MatchConst <$> constant
@@ -338,10 +345,9 @@ genGuard n a p =
 fun :: Parser Types.TopLevel
 fun = functionModStartReserved "let" func
   where
-    func n a = notImplemented
-
--- genGuard n a expression
---   >>| Types.Function . Types.Func
+    func n a =
+      genGuard n a expression
+        >>| Types.Function . Types.Func
 
 modT :: Parser Types.TopLevel
 modT = functionModStartReserved "mod" mod
@@ -445,7 +451,7 @@ nameType = do
 
 nameParser :: Parser Types.Name
 nameParser =
-  P.try (P.skipMany (P.char J.hash) *> fmap Types.Implicit prefixSymbol)
+  P.try (P.skipSome (P.char J.hash) *> fmap Types.Implicit prefixSymbol)
     <|> Types.Concrete <$> prefixSymbol
 
 --------------------------------------------------
@@ -579,7 +585,7 @@ tupleParen = do
 
 constant :: Parser Types.Constant
 constant =
-  P.try (Types.Number <$> number)
+  (Types.Number <$> number)
     <|> Types.String <$> string'
 
 number :: Parser Types.Numb
@@ -588,7 +594,7 @@ number =
     <|> Types.Double' <$> float
 
 digits :: Parser Text
-digits = P.takeWhileP (Just "digits") isDigit
+digits = P.takeWhile1P (Just "digits") isDigit
 
 integer :: Parser Integer
 integer = read . Text.unpack <$> digits
@@ -610,7 +616,7 @@ float = do
 string' :: Parser Types.String'
 string' = do
   P.single J.quote
-  words <- P.takeWhileP (Just "Not quote") (/= J.quote)
+  words <- P.takeWhile1P (Just "Not quote") (/= J.quote)
   P.single J.quote
   pure (Types.Sho words)
 
@@ -646,18 +652,18 @@ do'' = Expr.makeExprParser (P.try doBind <|> doNotBind) table P.<?> "bind expr"
 --------------------------------------------------------------------------------
 
 infixSymbolGen :: Parser Symbol -> Parser Symbol
-infixSymbolGen p = p --do
--- symb <- p
--- if
---     | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
---     | otherwise -> pure symb
+infixSymbolGen p = do
+  symb <- p
+  if
+      | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
+      | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
 infixSymbolDot = do
   qualified <- P.option [] (NonEmpty.toList <$> prefixSymbolDotPermissive <* P.char J.dot)
   -- -o is a bit special since it's a normal letter
   -- this is a bit of a hack
-  infix' <- P.try ("-o" <$ P.string "-o") <|> infixSymbol
+  infix' <- P.try ("-o" <$ P.string "-o") <|> P.try infixSymbol
   pure (NonEmpty.fromList (qualified <> [infix']))
 
 infixSymbol :: Parser Symbol
@@ -665,7 +671,7 @@ infixSymbol = infixSymbolGen (P.try infixSymbol' <|> infixPrefix)
 
 infixSymbol' :: Parser Symbol
 infixSymbol' =
-  internText <$> P.takeWhileP (Just "Valid Infix Symbol") J.validInfixSymbol
+  internText <$> P.takeWhile1P (Just "Valid Infix Symbol") J.validInfixSymbol
 
 infixPrefix :: Parser Symbol
 infixPrefix =
@@ -683,22 +689,8 @@ prefixSymbolGen startParser = do
 
 symbolEndGen :: Text -> Parser ()
 symbolEndGen s = do
-  v <- P.optional $ P.try P.eof
-  case v of
-    Nothing -> do
-      void $ P.satisfy (not . J.validMiddleSymbol)
-      P.takeWhileP (Just "Empty Check") J.isHSpace *> pure ()
-    Just _ -> pure ()
-
--- do
--- peek <- peekWord8
--- case peek of
---   Just peek
---     | not (J.validMiddleSymbol peek) ->
---       P.takeWhileP (Just "Empty Check") J.spaceLiner *> pure ()
---     | otherwise ->
---       fail s
---   Nothing -> pure ()
+  P.notFollowedBy (P.satisfy (J.validMiddleSymbol))
+  P.takeWhileP (Just "Empty Check") J.emptyCheck *> pure ()
 
 symbolEnd :: Parser ()
 symbolEnd = symbolEndGen "current symbol is not over"

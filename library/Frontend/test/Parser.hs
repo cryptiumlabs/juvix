@@ -87,7 +87,7 @@ shouldParseAs name parses x y =
     "Parse tests"
     [ T.testCase
         ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
-        (parses x T.@=? Right y)
+        (Right y T.@=? parses x)
     ]
 
 --------------------------------------------------------------------------------
@@ -123,6 +123,21 @@ removeNoComment =
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
+x =
+  ""
+    <> "let foo a b c = (+) (a + b) c\n"
+    <> "let bah = foo 1 2 3\n"
+    <> "let nah \n"
+    <> "  | bah == 5 = 7 \n"
+    <> "  | else     = 11"
+    <> "let test = \n"
+    <> "  let check = nah in \n"
+    <> "  case check of \n"
+    <> "  | seven -> 11 \n"
+    <> "  | eleven -> 7 \n"
+    <> "  | f  -> open Fails in \n"
+    <> "          print failed; \n"
+    <> "          fail"
 
 many1FunctionsParser :: T.TestTree
 many1FunctionsParser =
@@ -845,7 +860,7 @@ spacerSymb :: T.TestTree
 spacerSymb =
   let res =
         case P.parse (J.spacer Parser.prefixSymbol) "" "Foo   f" of
-          Right f -> f == "f" -- && s == "Foo"
+          Right f -> f == "Foo" -- && s == "Foo"
           _ -> False
    in T.testCase "symbol parser test: Foo f" (res T.@=? True)
 
