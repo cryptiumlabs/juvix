@@ -18,8 +18,8 @@ import qualified Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library hiding (Datatype)
 
 typeCheckDeclaration ::
-  [IR.RawDatatype' ext0 primTy0 primVal0] ->
-  [IR.FunctionWith ty ext primTy primVal] ->
+  [IR.RawDatatype' ext primTy primVal] ->
+  [IR.RawFunction' ext primTy primVal] ->
   IR.TypeCheck ty ext primTy primVal ()
 typeCheckDeclaration [] [] =
   return undefined
@@ -30,6 +30,6 @@ typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =
 -- add to sig once typechecked
 -- put $ addSig sig n (DataSig params pos sz v)
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
-typeCheckDeclaration _ ((IR.Function name usage ty cls) : tlf) =
+typeCheckDeclaration _ ((IR.RawFunction name usage ty cls) : tlf) =
   undefined
 -- TODO run typeCheckFuns

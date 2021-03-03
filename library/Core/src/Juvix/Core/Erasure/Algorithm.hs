@@ -91,7 +91,7 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.FunClause' IR.NoExt primTy1 primVal1 ->
+  IR.FunClause primTy1 primVal1 ->
   m b
 eraseFunClause (IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) = do
   patts <- mapM erasePattern patts

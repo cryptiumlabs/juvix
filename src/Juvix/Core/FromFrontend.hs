@@ -506,13 +506,13 @@ transformNormalDef q x (Ctx.Def (Ctx.D _ _ def _)) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause q) def
   let f =
-        IR.Function
-          { funName = x,
-            funUsage = π,
-            funType = hrToIR typ,
-            funClauses = clauses
+        IR.RawFunction
+          { rawFunName = x,
+            rawFunUsage = π,
+            rawFunType = hrToIR typ,
+            rawFunClauses = clauses
           }
-  pure [IR.GFunction f]
+  pure [IR.RawGFunction f]
 transformNormalDef _ _ (Ctx.Record _) = pure [] -- TODO
 transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
 transformNormalDef _ _ (Ctx.Unknown _) = pure []
@@ -678,13 +678,13 @@ transformClause ::
   ) =>
   NameSymbol.Mod ->
   FE.FunctionLike FE.Expression ->
-  m (IR.FunClause' IR.NoExt primTy primVal)
+  m (IR.RawFunClause primTy primVal)
 transformClause q (FE.Like args body) = do
   put @"patVars" mempty
   put @"nextPatVar" 0
   patts <- traverse transformArg args
   clauseBody <- transformTermIR q body
-  pure $ IR.FunClause [] patts clauseBody Nothing False Nothing
+  pure $ IR.RawFunClause [] patts clauseBody False
 
 transformArg ::
   ( HasNextPatVar m,

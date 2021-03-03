@@ -616,6 +616,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
@@ -769,6 +770,7 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Usage]]
 ******* PatSubst
 - _Relies on_
   + [[Application]]
@@ -835,6 +837,7 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
@@ -843,6 +846,7 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -852,6 +856,7 @@ Typechecked declarations are added to the signature.
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -860,6 +865,7 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -868,6 +874,12 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[Usage]]
+******* Globals
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[HashMap]]
   + [[Usage]]
 ***** IRAnn
 - _Relies on_
@@ -936,21 +948,6 @@ Quantitative type implementation inspired by
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
-*** Typechecker <<test/Typechecker>>
-Tests for the type checker and evaluator in Core/IR/Typechecker.hs
-- _Relies on_
-  + [[IR]]
-  + [[CheckTerm]]
-  + [[IR/Evaluator]]
-  + [[OnlyExts]]
-  + [[IR/Typechecker]]
-  + [[All]]
-  + [[Naturals]]
-  + [[Unit]]
-  + [[Core/Types]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[Usage]]
 *** Common
 **** Context <<test/Common/Context>>
 - _Relies on_
@@ -966,6 +963,21 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
+*** Typechecker <<test/Typechecker>>
+Tests for the type checker and evaluator in Core/IR/Typechecker.hs
+- _Relies on_
+  + [[IR]]
+  + [[CheckTerm]]
+  + [[IR/Evaluator]]
+  + [[OnlyExts]]
+  + [[IR/Typechecker]]
+  + [[All]]
+  + [[Naturals]]
+  + [[Unit]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Usage]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
