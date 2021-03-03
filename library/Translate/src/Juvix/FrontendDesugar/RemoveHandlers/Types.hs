@@ -68,8 +68,6 @@ extendConstant "Constant" [] [t|T|] Ext.extendConstant
 
 extendNumb "Numb" [] [t|T|] Ext.extendNumb
 
-extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
-
 extendString' "String'" [] [t|T|] Ext.extendString'
 
 extendBlock "Block" [] [t|T|] Ext.extendBlock
@@ -105,3 +103,9 @@ extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
 --------------------------------------------------------------------------------
 
 extendHandler "Handler" [] [t|T|] Ext.extendHandler
+
+extendModule "Module" [] [t|T|] Ext.extendModule
+
+extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
+
+extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE

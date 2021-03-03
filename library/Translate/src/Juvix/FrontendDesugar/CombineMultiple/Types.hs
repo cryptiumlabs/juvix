@@ -46,8 +46,6 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
-extendHandler "Handler" [] [t|T|] Ext.extendHandler
-
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
 extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
@@ -109,3 +107,5 @@ extendModule "Module" [] [t|T|] Ext.extendModule
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE
+
+extendHandler "Handler" [] [t|T|] Ext.extendHandler

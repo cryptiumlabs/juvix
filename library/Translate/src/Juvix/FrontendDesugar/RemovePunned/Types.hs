@@ -105,3 +105,5 @@ extendModule "Module" [] [t|T|] Ext.extendModule
 extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
+
+extendHandler "Handler" [] [t|T|] Ext.extendHandler

@@ -2,7 +2,7 @@ module Juvix.FrontendDesugar.RemoveCond.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.FrontendDesugar.RemoveCond.Types as New
-import qualified Juvix.FrontendDesugar.RemoveGuard.Types as Old
+import qualified Juvix.FrontendDesugar.RemoveHandlers.Types as Old
 import Juvix.Library
 
 -- The actual transform we are doing

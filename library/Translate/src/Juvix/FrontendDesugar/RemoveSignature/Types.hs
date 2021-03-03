@@ -102,6 +102,8 @@ extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendModule "Module" [] [t|T|] Ext.extendModule
 
+extendHandler "Handler" [] [t|T|] Ext.extendHandler
+
 extendSignature "Signature" [] [t|T|] Ext.extendSignature
 
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody

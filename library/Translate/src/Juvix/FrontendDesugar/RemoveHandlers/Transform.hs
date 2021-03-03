@@ -23,6 +23,8 @@ transformTopLevel (Old.Signature t) =
   New.Signature (transformSignature t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
+transformTopLevel (Old.Handler t) =
+  transformHandler t
 transformTopLevel (Old.Declaration i) =
   New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
