@@ -3,13 +3,12 @@
 
 module Juvix.Core.IR.Types.Globals where
 
-import Juvix.Core.IR.Types.Base
 import Data.Kind (Constraint)
 import qualified Data.Map as Map
+import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
 import Juvix.Library.Usage (Usage)
-
 
 type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
   ( c primTy,
@@ -65,7 +64,6 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDatatype' ext primTy primVal)
 
-
 data Datatype' ext primTy primVal
   = Datatype
       { dataName :: GlobalName,
@@ -95,7 +93,6 @@ deriving instance
   GlobalAllV NFData ext primTy primVal =>
   NFData (Datatype' ext primTy primVal)
 
-
 data RawDataArg' ext primTy primVal
   = RawDataArg
       { rawArgName :: GlobalName,
@@ -119,7 +116,6 @@ deriving instance
 deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDataArg' ext primTy primVal)
-
 
 data DataArg' ext primTy primVal
   = DataArg
@@ -145,7 +141,6 @@ deriving instance
   GlobalAllV NFData ext primTy primVal =>
   NFData (DataArg' ext primTy primVal)
 
-
 data RawDataCon' ext primTy primVal
   = RawDataCon
       { rawConName :: GlobalName,
@@ -169,7 +164,6 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawDataCon' ext primTy primVal)
 
-
 data DataCon' ext primTy primVal
   = DataCon
       { conName :: GlobalName,
@@ -192,7 +186,6 @@ deriving instance
 deriving instance
   GlobalAllV NFData ext primTy primVal =>
   NFData (DataCon' ext primTy primVal)
-
 
 data RawFunction' ext primTy primVal
   = RawFunction
@@ -219,7 +212,6 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunction' ext primTy primVal)
 
-
 data Function' extV extT primTy primVal
   = Function
       { funName :: GlobalName,
@@ -245,7 +237,6 @@ deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (Function' extV extT primTy primVal)
 
-
 deriving instance
   GlobalAll Show extV extT primTy primVal =>
   Show (FunClause' extV extT primTy primVal)
@@ -255,7 +246,8 @@ deriving instance
   Eq (FunClause' extV extT primTy primVal)
 
 deriving instance
-  ( Data extV, Data extT,
+  ( Data extV,
+    Data extT,
     GlobalAll Data extV extT primTy primVal
   ) =>
   Data (FunClause' extV extT primTy primVal)
@@ -263,7 +255,6 @@ deriving instance
 deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (FunClause' extV extT primTy primVal)
-
 
 data RawAbstract' ext primTy primVal
   = RawAbstract
@@ -289,7 +280,6 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawAbstract' ext primTy primVal)
 
-
 data Abstract' ext primTy primVal
   = Abstract
       { absName :: GlobalName,
@@ -313,8 +303,6 @@ deriving instance
 deriving instance
   GlobalAllV NFData ext primTy primVal =>
   NFData (Abstract' ext primTy primVal)
-
-
 
 data RawGlobal' ext primTy primVal
   = RawGDatatype (RawDatatype' ext primTy primVal)
@@ -362,7 +350,6 @@ deriving instance
   GlobalAll NFData extV extT primTy primVal =>
   NFData (Global' extV extT primTy primVal)
 
-
 type RawGlobals' ext primTy primVal =
   HashMap GlobalName (RawGlobal' ext primTy primVal)
 
@@ -387,7 +374,8 @@ data FunClause' extV extT primTy primVal
         clauseBody :: Term' extT primTy primVal,
         -- | @Δ ⊢ t@.  The type of the rhs under @clauseTel@.
         clauseType :: Maybe (Value' extV primTy primVal),
-        -- | @clauseBody@ contains recursive calls; computed by termination checker.
+        -- \| @clauseBody@ contains recursive calls; computed by termination
+        -- checker.
         --   @Nothing@ means that termination checker has not run yet,
         --   or that @clauseBody@ contains meta-variables;
         --   these could be filled with recursive calls later!
@@ -432,29 +420,31 @@ deriving instance
   RawGlobalAll NFData ext primTy primVal =>
   NFData (RawFunClause' ext primTy primVal)
 
-
 type Signature ty ext primTy primVal = Map.Map GlobalName (SigDef ty ext primTy primVal)
 
 -- Return type of all type-checking functions.
 -- state monad for global signature
 -- TODO move this somewhere
 type TypeCheck ty ext primTy primVal a =
-    StateT (Signature ty ext primTy primVal) IO a
+  StateT (Signature ty ext primTy primVal) IO a
 
 data SigDef extV extT primTy primVal
   = -- | function constant to its type, clauses
     FunSig
       (Value' extV primTy primVal)
-      (Either
-        (NonEmpty (RawFunClause' extT primTy primVal))
-        (NonEmpty (FunClause' extV extT primTy primVal)))
-    -- | constructor constant to its type
-  | ConSig (Value' extV primTy primVal)
-    -- | data type constant to # parameters, positivity of parameters, type
-  | DataSig Int [Pos] (Value' extV primTy primVal)
+      ( Either
+          (NonEmpty (RawFunClause' extT primTy primVal))
+          (NonEmpty (FunClause' extV extT primTy primVal))
+      )
+  | -- | constructor constant to its type
+    ConSig (Value' extV primTy primVal)
+  | -- | data type constant to # parameters, positivity of parameters, type
+    DataSig Int [Pos] (Value' extV primTy primVal)
 
 -- | Positivity
 data Pos
-  = SPos -- ^ strictly positive
-  | NSPos -- ^ other
+  = -- | strictly positive
+    SPos
+  | -- | other
+    NSPos
   deriving (Generic, Eq, Show, Data, NFData)

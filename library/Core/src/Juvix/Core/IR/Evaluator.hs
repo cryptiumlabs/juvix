@@ -15,8 +15,8 @@ module Juvix.Core.IR.Evaluator
   )
 where
 
-import qualified Data.IntMap as IntMap
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.IntMap as IntMap
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
@@ -178,20 +178,20 @@ toLambda' ::
     NoExtensions ext primTy primVal
   ) =>
   IR.GlobalUsage ->
-  IR.Term primTy primVal -> -- ^ type
+  IR.Term primTy primVal ->
   [IR.Pattern' ext primTy primVal] ->
   IR.Term' ext primTy primVal ->
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda' π' ty' pats rhs = do
-    patVars <- traverse singleVar pats
-    let len = fromIntegral $ length patVars
-    let vars = map bound $ genericTake len (iterate (subtract 1) (len - 1))
-    let patMap = IntMap.fromList $ zip patVars vars
-    let π = IR.globalToUsage π'
-    let ty = OnlyExts.injectT ty'
-    case patSubst patMap $ weakBy len $ toOnlyExtsT rhs of
-      Left _ -> Nothing
-      Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
+  patVars <- traverse singleVar pats
+  let len = fromIntegral $ length patVars
+  let vars = map bound $ genericTake len (iterate (subtract 1) (len - 1))
+  let patMap = IntMap.fromList $ zip patVars vars
+  let π = IR.globalToUsage π'
+  let ty = OnlyExts.injectT ty'
+  case patSubst patMap $ weakBy len $ toOnlyExtsT rhs of
+    Left _ -> Nothing
+    Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
   where
     applyN 0 _ x = x
     applyN n f x = applyN (n - 1) f (f $! x)
@@ -227,7 +227,7 @@ toLambda ::
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
 toLambda (IR.GFunction (IR.Function {funUsage = π, funType = ty, funClauses}))
   | IR.FunClause _ pats rhs _ _ _ :| [] <- funClauses =
-      toLambda' π (IR.quote ty) pats rhs
+    toLambda' π (IR.quote ty) pats rhs
 toLambda _ = Nothing
 
 toLambdaR ::
@@ -240,7 +240,7 @@ toLambdaR ::
 toLambdaR (IR.RawGFunction f)
   | IR.RawFunction {rawFunUsage = π, rawFunType = ty, rawFunClauses} <- f,
     IR.RawFunClause _ pats rhs _ :| [] <- rawFunClauses =
-      toLambda' π (extForgetT ty) pats rhs
+    toLambda' π (extForgetT ty) pats rhs
 toLambdaR _ = Nothing
 
 lookupFun ::
