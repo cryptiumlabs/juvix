@@ -24,6 +24,7 @@ import qualified Control.Monad.Combinators.Expr as Expr
 import Data.Char (isDigit)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
@@ -60,9 +61,11 @@ removeComments = Text.concat . grabComments
       where
         f [] = []
         f (notIn : in') =
-          notIn : grabComments (dropNewLine $ Text.concat in')
+          notIn : grabComments (dropNewLine $ Text.intercalate "--" in')
     dropNewLine :: Text -> Text
     dropNewLine = Text.dropWhile (not . (== J.newLine))
+
+--Parser.removeComments "\n -- -- ffooo \n--\n -- -- \n let foo xs = 3 -- bar"
 
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
