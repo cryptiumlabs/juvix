@@ -237,6 +237,3 @@ volumes:
 trigger:
   event:
     - pull_request
-  repo:
-    exclude:
-      - heliaxdev/juvix
