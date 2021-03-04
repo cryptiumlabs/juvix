@@ -32,10 +32,10 @@ toByteString = Data.ByteString.Char8.pack . show
 
 parsedContract :: FilePath -> IO [TopLevel]
 parsedContract file = do
-  readString <- ByteString.readFile file
+  rawContract <- ByteString.readFile file
   case Parser.prettyParse rawContract of
-    Left err -> writeFile (file <> ".parsed") err *> pure []
-    Right x -> pure x
+    Left err -> writeFile (file <> ".parsed") (toS err) *> pure []
+    Right x -> pure $ extractTopLevel x
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do
