@@ -30,6 +30,7 @@ dependencies:
 - word8
 - bytestring
 - mtl
+- pretty-compact
 
 default-extensions:
   - NoImplicitPrelude
@@ -39,6 +40,7 @@ default-extensions:
   - TypeSynonymInstances
   - FlexibleInstances
   - KindSignatures
+  - DefaultSignatures
 
 ghc-options:
   - -ferror-spans

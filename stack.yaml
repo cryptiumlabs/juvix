@@ -35,6 +35,7 @@ extra-deps:
   commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
 - github: heliaxdev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
+- pretty-compact-3.0@sha256:42ffe1c68be087f4e40be8772eb8a4611d4e1017af4ef0120cdb1fa831ab9523,1539
 
 - tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
 
