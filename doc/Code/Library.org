@@ -977,7 +977,7 @@ Tests that weak works as expected
   + [[Library]]
 ****** Base <<Frontend/Types/Base>>
 - This file defines the main ADT for the Juvix front end language.
-- This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+- This ADT corresponds to the bnf laid out [[https://github.com/heliax/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 - Later a trees that grow version of this will be implemented, so
   infix functions can better transition across syntax
 - Note :: The names for the types in =ArrowData= are stored in the
@@ -1539,12 +1539,13 @@ Calculate mutually-recursive groups of definitions.
 **** FrontendDesugar
 - Order of Passes
   1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
+  2. =RemoveHandler=
+  3. =RemoveGuard=
+  4. =RemoveCond=
+  5. =CombineMultiple=
+  6. =RemoveSignature=
+  7. =RemovePunned=
+  8. =RemoveDo=
 - _Relies on_
   + [[Frontend/Types]]
   + [[CombineMultiple/Transform]]
@@ -1552,6 +1553,7 @@ Calculate mutually-recursive groups of definitions.
   + [[RemoveDo/Transform]]
   + [[RemoveDo/Types]]
   + [[RemoveGuard/Transform]]
+  + [[RemoveHandlers/Transform]]
   + [[RemoveModules/Transform]]
   + [[RemovePunned/Transform]]
   + [[RemoveSignature/Transform]]
@@ -1636,13 +1638,13 @@ Calculate mutually-recursive groups of definitions.
   after this pass
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[RemoveGuard/Extend]]
-  + [[RemoveGuard/Extend]]
+  + [[RemoveHandlers/Extend]]
+  + [[RemoveHandlers/Extend]]
   + [[Library]]
 ****** Transform <<RemoveCond/Transform>>
 - _Relies on_
   + [[RemoveCond/Types]]
-  + [[RemoveGuard/Types]]
+  + [[RemoveHandlers/Types]]
   + [[Library]]
 ****** Types <<RemoveCond/Types>>
 - _Relies on_
@@ -1716,6 +1718,23 @@ Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[RemoveGuard/Extend]]
+  + [[Library]]
+***** RemoveHandlers
+****** Extend <<RemoveHandlers/Extend>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveGuard/Extend]]
+  + [[RemoveGuard/Extend]]
+  + [[Library]]
+****** Transform <<RemoveHandlers/Transform>>
+- _Relies on_
+  + [[RemoveGuard/Types]]
+  + [[RemoveHandlers/Types]]
+  + [[Library]]
+****** Types <<RemoveHandlers/Types>>
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[RemoveHandlers/Extend]]
   + [[Library]]
 ***** RemoveModules
 ****** Extend <<RemoveModules/Extend>>
