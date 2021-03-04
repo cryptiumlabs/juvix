@@ -76,6 +76,3 @@ integer = do
   case Char8.readInteger digits of
     Just (x, _) -> pure x
     Nothing -> fail $ "didn't parse an int: " <> toS digits
-
--- space :: Parser Word8
--- space = P.char $ Tok.space

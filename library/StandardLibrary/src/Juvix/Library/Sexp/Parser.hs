@@ -12,7 +12,7 @@ import qualified Text.Megaparsec as P
 
 -- | @parse@ parses any sexp expression into the Sexp type
 parse :: ByteString -> Either ParserError Sexp.T
-parse = P.parse (J.spaceLiner sexp) ""
+parse = P.parse (J.eatSpaces sexp) ""
 
 --------------------------------------------------------------------------------
 -- Sexp Main Parsers
