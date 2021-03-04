@@ -59,8 +59,11 @@ many1H = fmap NonEmpty.fromList . P.some
 sepBy1HFinal :: Parser a -> Parser s -> Parser (NonEmpty a)
 sepBy1HFinal parse sep = sepBy1H parse sep <* P.optional sep
 
+sepBy1 :: Parser a -> Parser s -> Parser [a]
+sepBy1 p sep = liftA2 (:) p (many (P.try $ sep *> p))
+
 sepBy1H :: Parser a -> Parser s -> Parser (NonEmpty a)
-sepBy1H parse sep = NonEmpty.fromList <$> P.sepBy1 parse sep
+sepBy1H parse sep = NonEmpty.fromList <$> sepBy1 parse sep
 
 skipLiner :: Char -> Parser ()
 skipLiner p = spaceLiner (P.skipCount 1 (P.char p))

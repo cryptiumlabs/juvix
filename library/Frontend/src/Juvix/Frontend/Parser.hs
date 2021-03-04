@@ -688,8 +688,8 @@ prefixSymbolGen startParser = do
       | otherwise -> pure (internText new) -- (Encoding.decodeUtf8 new))
 
 symbolEndGen :: Text -> Parser ()
-symbolEndGen s = do
-  P.notFollowedBy (P.satisfy (J.validMiddleSymbol))
+symbolEndGen _s = do
+  P.notFollowedBy (P.satisfy J.validMiddleSymbol)
   P.takeWhileP (Just "Empty Check") J.emptyCheck *> pure ()
 
 symbolEnd :: Parser ()
@@ -716,12 +716,6 @@ prefixSepGen parser = do
         Nothing -> pure ret
         Just _ -> fail "symbol not prefix"
     Just _ -> pure ret
-
--- peek <- peekWord8
--- case peek of
---   Just x
---     | J.dot == x -> fail "symbol not prefix"
---   _ -> pure ret
 
 -- the permissive functions allow the functions to not fully parse the word
 -- useful for infix application
