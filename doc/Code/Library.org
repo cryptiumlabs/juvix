@@ -948,21 +948,6 @@ Quantitative type implementation inspired by
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
-*** Common
-**** Context <<test/Common/Context>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-*** IR
-**** Weak <<IR/Weak>>
-Tests that weak works as expected
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[IR/Types]]
-  + [[Library]]
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
@@ -978,6 +963,21 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Usage]]
+*** Common
+**** Context <<test/Common/Context>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+*** IR
+**** Weak <<IR/Weak>>
+Tests that weak works as expected
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types]]
+  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
