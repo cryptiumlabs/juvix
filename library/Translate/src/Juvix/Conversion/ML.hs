@@ -30,14 +30,41 @@ op (name Sexp.:> form)
 op _ = undefined
 
 expression :: Sexp.T -> Target.Expression
-expression = undefined
+expression (name Sexp.:> body)
+  | Sexp.isAtomNamed name "case" = Target.Match (match body)
 
 ----------------------------------------------------------------------
 -- Top Level Transformations
 ----------------------------------------------------------------------
 
 defunSig :: Sexp.T -> Target.Function
-defunSig = undefined
+defunSig (f Sexp.:> sig Sexp.:> forms)
+  | Just fName <- eleToSymbol f,
+    Just xs <- Sexp.toList forms >>= NonEmpty.nonEmpty =
+    let actualSig
+          | sig == Sexp.Nil = Nothing
+          | otherwise =
+            let (usage, sigWithoutUsage) =
+                  case sig of
+                    Sexp.List [useName, usage, body]
+                      | Sexp.isAtomNamed useName ":usage" ->
+                        (Just usage, body)
+                    _ -> (Nothing, sig)
+                (constraints, sigWithoutConstraints) =
+                  case sigWithoutUsage of
+                    Sexp.List [constArrow, constraints, body]
+                      | Sexp.isAtomNamed constArrow ":=>",
+                        Just xs <- Sexp.toList constraints ->
+                        (xs, body)
+                    _ -> ([], sigWithoutUsage)
+             in Just $
+                  Target.Sig
+                    fName
+                    (fmap expression usage)
+                    (expression sigWithoutConstraints)
+                    (fmap expression constraints)
+     in Target.Func fName (fmap functionLike xs) actualSig
+defunSig _ = error "malfromed defunSig"
 
 ----------------------------------------
 -- Declarations
@@ -179,9 +206,9 @@ arg t =
 -----------------------------------
 match :: Sexp.T -> Target.Match
 match (case' Sexp.:> t Sexp.:> binds)
-  | Sexp.isAtomNamed case' "case",
-    Just xs <- Sexp.toList binds =
+  | Just xs <- Sexp.toList binds =
     Target.Match'' (expression t) (NonEmpty.fromList (fmap matchL xs))
+match _ = error "malfromed match expression"
 
 matchL :: Sexp.T -> Target.MatchL
 matchL (Sexp.List [pat, body]) =
@@ -208,15 +235,29 @@ matchLogicStart x
 matchLogicStart (recordOrCon Sexp.:> rest)
   -- gotta group by 2 in this case
   | Sexp.isAtomNamed recordOrCon ":record-no-pun" =
-    undefined
+    Target.MatchRecord (NonEmpty.fromList (fmap (nameSet matchLogic) grouped))
   -- we should have a constructor name in this instance
-  | otherwise =
-    undefined
+  | Just Sexp.A {atomName} <- Sexp.atomFromT recordOrCon,
+    Just xs <- Sexp.toList rest =
+    Target.MatchCon atomName (fmap matchLogic xs)
+  where
+    grouped = groupBy2 rest
 matchLogicStart _ = error "malformed matchLogicStart"
+
+nameSet :: (Sexp.T -> t) -> (Sexp.T, Sexp.T) -> Target.NameSet t
+nameSet trans (field, assignedName)
+  | Just Sexp.A {atomName} <- Sexp.atomFromT field =
+    Target.NonPunned atomName (trans assignedName)
+nameSet _ _ = error "bad nameSet"
 
 --------------------------------------------------------------------------------
 -- Expression Transformation
 --------------------------------------------------------------------------------
+
+------------------------------------------------------------
+-- Function Like
+------------------------------------------------------------
+functionLike = undefined
 
 --------------------------------------------------------------------------------
 -- General Helpers
