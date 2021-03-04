@@ -182,4 +182,3 @@ benchmarks:
     dependencies:
       - juvix
       - criterion
-      - attoparsec
