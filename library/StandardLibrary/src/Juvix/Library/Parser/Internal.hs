@@ -7,10 +7,10 @@ where
 import Protolude
 import qualified Text.Megaparsec as P
 
-type Parser = P.Parsec Void Text
+type Parser = P.Parsec Void ByteString
 
 --                   ^    ^
 --                   |    |
 -- Custom error component Type of input stream
 
-type ParserError = P.ParseErrorBundle Text Void
+type ParserError = P.ParseErrorBundle ByteString Void

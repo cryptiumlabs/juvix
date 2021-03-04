@@ -1,5 +1,6 @@
 module Juvix.Frontend where
 
+import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
@@ -11,7 +12,6 @@ import Juvix.Library
     IO,
     Traversable (sequenceA, traverse),
     intern,
-    readFile,
     (.),
   )
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -29,7 +29,7 @@ ofPath =
 
 ofSingleFile :: FilePath -> IO (Either ParserError (NameSymbol.T, [Types.TopLevel]))
 ofSingleFile file = do
-  read <- readFile file
+  read <- ByteString.readFile file
   case Parser.parse read of
     Left x ->
       pure (Left x)

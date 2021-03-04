@@ -27,6 +27,8 @@ dependencies:
 - time
 - lens
 - megaparsec
+- word8
+- bytestring
 
 default-extensions:
   - NoImplicitPrelude

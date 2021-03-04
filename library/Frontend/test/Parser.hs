@@ -11,7 +11,7 @@ import qualified Juvix.Library.Parser as J
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Text.Megaparsec as P
-import qualified Text.Megaparsec.Char as P
+import qualified Text.Megaparsec.Byte as P
 import Prelude (String, error)
 
 allParserTests :: T.TestTree
@@ -68,9 +68,6 @@ infixTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
-space :: Parser Char
-space = P.char ' '
-
 test :: Either ParserError [Expression]
 test =
   P.parse
@@ -81,7 +78,7 @@ test =
     \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
 
 shouldParseAs ::
-  (Show a, Eq a) => T.TestName -> (Text -> Either ParserError a) -> Text -> a -> T.TestTree
+  (Show a, Eq a) => T.TestName -> (ByteString -> Either ParserError a) -> ByteString -> a -> T.TestTree
 shouldParseAs name parses x y =
   T.testGroup
     "Parse tests"

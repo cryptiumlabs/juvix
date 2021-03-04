@@ -1,174 +1,170 @@
 module Juvix.Library.Parser.Token
-  ( infixOperators,
-    middleOperators,
-    operators,
-    reservedWords,
-    reservedSymbols,
-    validStartSymbol,
-    validInfixSymbol,
-    validMiddleSymbol,
-    validUpperSymbol,
-    -- Operators
-    mult,
-    add,
-    sub,
-    div,
-    pow,
-    and,
-    lesser,
-    bang,
-    dot,
-    percent,
-    -- Other symbols
-    semi,
-    colon,
-    at,
-    openParen,
-    closeParen,
-    openCurly,
-    closeCurly,
-    openBracket,
-    closeBracket,
-    assign,
+  ( charToWord8,
+    wordToChr,
     dash,
     under,
     space,
+    colon,
+    semi,
     comma,
     hash,
     backSlash,
     quote,
     pipe,
+    equals,
+    at,
     question,
+    dot,
+    bang,
+    amper,
+    times,
     backtick,
+    div,
+    percent,
     newLine,
+    openBracket,
+    closeBracket,
+    openParen,
+    closeParen,
+    openCurly,
+    closeCurly,
+    validStartSymbol,
+    validMiddleSymbol,
+    validInfixSymbol,
+    validUpperSymbol,
+    reservedSymbols,
+    reservedWords,
   )
 where
 
-import qualified Data.Char as Char
 import qualified Data.Set as Set
+import Data.Word8 (isDigit)
 import qualified GHC.Unicode as Unicode
-import Protolude hiding (and, div, hash, not, or)
+import Juvix.Library hiding (div, hash, maybe, option, takeWhile)
 
-default (Text)
+charToWord8 :: Char -> Word8
+charToWord8 = fromIntegral . ord
+{-# INLINE charToWord8 #-}
 
-assign :: Char
-assign = '='
+wordToChr :: Integral a => a -> Char
+wordToChr = chr . fromIntegral
 
-under :: Char
-under = '_'
+-- Hopefully this is fast!
+validStartSymbol' :: Integral a => a -> Bool
+validStartSymbol' = Unicode.isAlpha . wordToChr
 
-space :: Char
-space = ' '
+-- Unicode.isUpper 'İ' = True!
+validUpperSymbol :: Integral a => a -> Bool
+validUpperSymbol = Unicode.isUpper . wordToChr
 
-colon :: Char
-colon = ':'
+dash :: Word8
+dash = charToWord8 '-'
 
-semi :: Char
-semi = ';'
+under :: Word8
+under = charToWord8 '_'
 
-comma :: Char
-comma = ','
+space :: Word8
+space = charToWord8 ' '
 
-hash :: Char
-hash = '#'
+colon :: Word8
+colon = charToWord8 ':'
 
-backSlash :: Char
-backSlash = '\\'
+semi :: Word8
+semi = charToWord8 ';'
 
-quote :: Char
-quote = '\''
+comma :: Word8
+comma = charToWord8 ','
 
-pipe :: Char
-pipe = '|'
+hash :: Word8
+hash = charToWord8 '#'
 
-at :: Char
-at = '@'
+openParen :: Word8
+openParen = charToWord8 '('
 
-backtick :: Char
-backtick = '`'
+closeParen :: Word8
+closeParen = charToWord8 ')'
 
-newLine :: Char
-newLine = '\n'
+openCurly :: Word8
+openCurly = charToWord8 '{'
 
-openParen :: Char
-openParen = '('
+closeCurly :: Word8
+closeCurly = charToWord8 '}'
 
-closeParen :: Char
-closeParen = ')'
+openBracket :: Word8
+openBracket = charToWord8 '['
 
-openCurly :: Char
-openCurly = '{'
+closeBracket :: Word8
+closeBracket = charToWord8 ']'
 
-closeCurly :: Char
-closeCurly = '}'
+backSlash :: Word8
+backSlash = charToWord8 '\\'
 
-openBracket :: Char
-openBracket = '['
+quote :: Word8
+quote = charToWord8 '\''
 
-closeBracket :: Char
-closeBracket = ']'
+pipe :: Word8
+pipe = charToWord8 '|'
 
----------------------
--- Infix Operators --
----------------------
+equals :: Word8
+equals = charToWord8 '='
 
-mult :: Char
-mult = '*'
+at :: Word8
+at = charToWord8 '@'
 
-add :: Char
-add = '+'
+dot :: Word8
+dot = charToWord8 '.'
 
-sub :: Char
-sub = '-'
+question :: Word8
+question = charToWord8 '?'
 
-div :: Char
-div = '/'
+bang :: Word8
+bang = charToWord8 '!'
 
-pow :: Char
-pow = '^'
+amper :: Word8
+amper = charToWord8 '&'
 
-and :: Char
-and = '&'
+times :: Word8
+times = charToWord8 '*'
 
--- or :: Text
--- or = "||"
+backtick :: Word8
+backtick = charToWord8 '`'
 
--- equal :: Text
--- equal = "=="
+newLine :: Word8
+newLine = charToWord8 '\n'
 
--- nequal :: Text
--- nequal = "!="
+div :: Word8
+div = charToWord8 '/'
 
--- gequal :: Text
--- gequal = ">="
+percent :: Word8
+percent = charToWord8 '%'
 
--- lequal :: Text
--- lequal = "<="
+validStartSymbol :: Word8 -> Bool
+validStartSymbol w =
+  validStartSymbol' w || w == under
 
-greater :: Char
-greater = '>'
+validInfixSymbol :: Word8 -> Bool
+validInfixSymbol w =
+  Unicode.isSymbol (wordToChr w)
+    || w == times
+    || w == dash
+    || w == amper
+    || w == colon
+    || w == div
+    || w == percent
+    || w == dot
 
-lesser :: Char
-lesser = '<'
+validMiddleSymbol :: Word8 -> Bool
+validMiddleSymbol w =
+  validStartSymbol w
+    || isDigit w
+    || w == dash
+    || w == bang
+    || w == question
+    || w == percent
 
----------------------
--- Start Operators --
----------------------
-
-question :: Char
-question = '?'
-
-bang :: Char
-bang = '!'
-
-percent :: Char
-percent = '%'
-
-dot :: Char
-dot = '.'
-
-dash :: Char
-dash = '-'
+-- check for \r or \n
+endOfLine :: (Eq a, Num a) => a -> Bool
+endOfLine w = w == 13 || w == 10
 
 reservedWords :: (Ord a, IsString a) => Set a
 reservedWords =
@@ -194,64 +190,3 @@ reservedSymbols :: (Ord a, IsString a) => Set a
 reservedSymbols =
   Set.fromList
     ["=", "|", "", "--"]
-
-infixOperators :: [Char]
-infixOperators =
-  [ mult,
-    add,
-    sub,
-    div,
-    pow,
-    and,
-    greater,
-    lesser
-  ]
-
-middleOperators :: [Char]
-middleOperators =
-  [ bang,
-    -- dot,
-    percent,
-    question,
-    dash
-  ]
-
-operators :: [Char]
-operators = infixOperators ++ middleOperators
-
-validStartSymbol :: Char -> Bool
-validStartSymbol w =
-  Unicode.isAlpha w
-    || w == under
-
-validInfixSymbol :: Char -> Bool
-validInfixSymbol w =
-  -- elem c infixOperators || Unicode.isSymbol c
-  Unicode.isSymbol w
-    || w == mult
-    || w == dash
-    || w == and
-    || w == colon
-    || w == div
-    || w == percent
-    || w == dot
-
-validMiddleSymbol :: Char -> Bool
-validMiddleSymbol w =
-  validStartSymbol w
-    || Char.isDigit w
-    || w == dash
-    || w == bang
-    || w == question
-    || w == percent
-
-validUpperSymbol :: Char -> Bool
-validUpperSymbol = Unicode.isUpper
-
--- TODO: How to deal with digit?
--- validStartSymbol w
---   || digit w
---   || w == dash
---   || w == bang
---   || w == question
---   || w == percent

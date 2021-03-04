@@ -21,54 +21,51 @@ module Juvix.Frontend.Parser where
 
 import Control.Arrow (left)
 import qualified Control.Monad.Combinators.Expr as Expr
-import Data.Char (isDigit)
+import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
-import qualified Data.Text as T
-import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Encoding
+import Data.Word8 (isDigit)
 import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, list, mod, product, sum)
 import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
-import qualified Text.Megaparsec.Char as P
+import qualified Text.Megaparsec.Byte as P
 import Prelude (fail, read)
 
 --------------------------------------------------------------------------------
 -- Top Level Runner
 --------------------------------------------------------------------------------
 
-prettyParse :: Text -> Either [Char] (Types.Header Types.TopLevel)
+prettyParse :: ByteString -> Either [Char] (Types.Header Types.TopLevel)
 prettyParse = left P.errorBundlePretty . parse
 
-parse :: Text -> Either ParserError (Types.Header Types.TopLevel)
+parse :: ByteString -> Either ParserError (Types.Header Types.TopLevel)
 parse = P.parse (J.eatSpaces (header <* P.eof)) "" . removeComments
 
 --------------------------------------------------------------------------------
 -- Pre-Process
 --------------------------------------------------------------------------------
 
-removeComments :: Text -> Text
-removeComments = Text.concat . grabComments
+removeComments :: ByteString -> ByteString
+removeComments = ByteString.concat . grabComments
   where
-    onBreakDo :: (Text -> [Text]) -> ([Text] -> [Text]) -> Text -> [Text]
     onBreakDo _break _con "" = []
     onBreakDo break cont str = break str |> cont
     -- TODO ∷ Make faster
-    grabComments :: Text -> [Text]
     grabComments = breakComment `onBreakDo` f
       where
-        f [] = []
-        f (notIn : in') =
-          notIn : grabComments (dropNewLine $ Text.intercalate "--" in')
-    dropNewLine :: Text -> Text
-    dropNewLine = Text.dropWhile (not . (== J.newLine))
+        f (notIn, in') =
+          notIn : grabComments (dropNewLine in')
+    dropNewLine =
+      ByteString.dropWhile (not . (== J.newLine))
 
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
-breakComment :: Text -> [Text]
-breakComment = Text.splitOn "--"
+breakComment :: ByteString -> (ByteString, ByteString)
+breakComment = ByteString.breakSubstring "--"
 
 --------------------------------------------------------------------------------
 -- Header
@@ -183,14 +180,14 @@ infixDeclar = do
       <|> pure Types.NonAssoc
   symbolEnd
   name <- prefixSymbolSN
-  f name . fromInteger <$> spaceLiner integer
+  f name . fromInteger <$> spaceLiner J.integer
 
 --------------------------------------------------------------------------------
 -- Modules/ Function Gen
 --------------------------------------------------------------------------------
 
 functionModStartReserved ::
-  Text -> (Symbol -> [Types.Arg] -> Parser a) -> Parser a
+  ByteString -> (Symbol -> [Types.Arg] -> Parser a) -> Parser a
 functionModStartReserved str f = do
   reserved str
   name <- prefixSymbolSN
@@ -213,7 +210,7 @@ functionModGen p =
 guard :: Parser a -> Parser (Types.GuardBody a)
 guard p =
   P.try (Types.Guard <$> condB p)
-    <|> (Types.Body <$> (J.skipLiner J.assign *> p))
+    <|> (Types.Body <$> (J.skipLiner J.equals *> p))
 
 --------------------------------------------------
 -- Args
@@ -332,7 +329,7 @@ namePunned = Types.Punned <$> prefixSymbolDot
 nameMatch :: Parser a -> Parser (Types.NameSet a)
 nameMatch parser = do
   name <- prefixSymbolDotSN
-  J.skipLiner J.assign
+  J.skipLiner J.equals
   bound <- parser
   pure (Types.NonPunned name bound)
 
@@ -403,7 +400,7 @@ typeP = do
 dataParser :: Parser Types.Data
 dataParser = do
   arrow <- P.optional (skipLiner J.colon *> expression)
-  J.skipLiner J.assign
+  J.skipLiner J.equals
   adt <- adt
   case arrow of
     Just arr -> pure (Types.Arrowed arr adt)
@@ -540,7 +537,7 @@ condLogic :: Parser a -> Parser (Types.CondLogic a)
 condLogic p = do
   J.skipLiner J.pipe
   pred <- expressionSN
-  J.skipLiner J.assign
+  J.skipLiner J.equals
   Types.CondExpression pred <$> p
 
 --------------------------------------------------
@@ -592,18 +589,11 @@ constant =
 
 number :: Parser Types.Numb
 number =
-  P.try (Types.Integer' <$> integer)
+  P.try (Types.Integer' <$> J.integer)
     <|> Types.Double' <$> float
 
-digits :: Parser Text
+digits :: Parser ByteString
 digits = P.takeWhile1P (Just "digits") isDigit
-
-integer :: Parser Integer
-integer = read . Text.unpack <$> digits
-
--- case Char8.readInteger digits of
---   Just (x, _) -> pure x
---   Nothing -> fail "didn't parse an int"
 
 float :: Parser Double
 float = do
@@ -620,7 +610,7 @@ string' = do
   P.single J.quote
   words <- P.takeWhile1P (Just "Not quote") (/= J.quote)
   P.single J.quote
-  pure (Types.Sho words)
+  pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------
 -- Do
@@ -673,23 +663,23 @@ infixSymbol = infixSymbolGen (P.try infixSymbol' <|> infixPrefix)
 
 infixSymbol' :: Parser Symbol
 infixSymbol' =
-  internText <$> P.takeWhile1P (Just "Valid Infix Symbol") J.validInfixSymbol
+  internText . Encoding.decodeUtf8 <$> P.takeWhile1P (Just "Valid Infix Symbol") J.validInfixSymbol
 
 infixPrefix :: Parser Symbol
 infixPrefix =
   P.single J.backtick *> prefixSymbol <* P.single J.backtick
 
-prefixSymbolGen :: Parser Char -> Parser Symbol
+prefixSymbolGen :: Parser Word8 -> Parser Symbol
 prefixSymbolGen startParser = do
   start <- startParser
   rest <- P.takeWhileP (Just "Valid Middle Symbol") J.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
-  let new = Text.cons start rest
+  let new = ByteString.cons start rest
   if
       | Set.member new J.reservedWords -> fail "symbol is reserved operator"
-      | otherwise -> pure (internText new) -- (Encoding.decodeUtf8 new))
+      | otherwise -> pure (internText $ Encoding.decodeUtf8 new)
 
-symbolEndGen :: Text -> Parser ()
+symbolEndGen :: ByteString -> Parser ()
 symbolEndGen _s = do
   P.notFollowedBy (P.satisfy J.validMiddleSymbol)
   P.takeWhileP (Just "Empty Check") J.emptyCheck *> pure ()
@@ -697,7 +687,7 @@ symbolEndGen _s = do
 symbolEnd :: Parser ()
 symbolEnd = symbolEndGen "current symbol is not over"
 
-reserved :: Text -> Parser ()
+reserved :: ByteString -> Parser ()
 reserved res =
   P.string res *> symbolEndGen "symbol is not the reserved symbol"
 
@@ -790,7 +780,7 @@ refine =
 table :: Semigroup a => [[Expr.Operator Parser a]]
 table = [[binary ";" (<>)]]
 
-binary :: Text -> (a -> a -> a) -> Expr.Operator Parser a
+binary :: ByteString -> (a -> a -> a) -> Expr.Operator Parser a
 binary name fun = Expr.InfixL (fun <$ spaceLiner (P.string name))
 
 --------------------------------------------------------------------------------

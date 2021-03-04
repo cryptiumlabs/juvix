@@ -41,6 +41,7 @@ dependencies:
 - aeson
 - parser-combinators
 - filepath
+- word8
 
 library:
   source-dirs: src
