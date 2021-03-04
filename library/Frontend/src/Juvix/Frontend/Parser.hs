@@ -65,8 +65,6 @@ removeComments = Text.concat . grabComments
     dropNewLine :: Text -> Text
     dropNewLine = Text.dropWhile (not . (== J.newLine))
 
---Parser.removeComments "\n -- -- ffooo \n--\n -- -- \n let foo xs = 3 -- bar"
-
 -- These two functions have size 4 * 8 = 32 < Bits.finiteBitSize (0 :: Word) = 64
 -- thus this compiles to a shift
 breakComment :: Text -> [Text]
@@ -142,7 +140,8 @@ all'' :: Parser Types.Expression
 all'' = P.try do''' <|> app''
 
 expressionGen :: Parser Types.Expression -> Parser Types.Expression
-expressionGen p = Expr.makeExprParser (spaceLiner (expressionGen' p)) tableExp
+expressionGen p =
+  Expr.makeExprParser (spaceLiner (expressionGen' p)) tableExp
 
 -- used to remove do from parsing
 expression' :: Parser Types.Expression
@@ -430,7 +429,7 @@ product :: Parser Types.Product
 product =
   P.try (Types.Record <$> record)
     <|> P.try (skipLiner J.colon *> fmap Types.Arrow expression)
-    <|> fmap Types.ADTLike (P.many expression'''SN)
+    <|> fmap Types.ADTLike (P.many (P.try expression'''SN))
 
 record :: Parser Types.Record
 record = do
@@ -762,7 +761,7 @@ tableExp =
 infixOp :: Expr.Operator Parser Types.Expression
 infixOp =
   Expr.InfixR
-    ( do
+    ( P.try $ do
         inf <- spaceLiner infixSymbolDot
         pure
           (\l r -> Types.Infix (Types.Inf l inf r))
@@ -771,7 +770,7 @@ infixOp =
 arrowExp :: Expr.Operator Parser Types.Expression
 arrowExp =
   Expr.InfixR
-    ( do
+    ( P.try $ do
         skipLiner J.dash
         exp <- expressionSN
         reserved "->"
@@ -782,9 +781,10 @@ arrowExp =
 refine :: Expr.Operator Parser Types.Expression
 refine =
   Expr.Postfix $
-    do
-      refine <- spaceLiner (J.curly expressionSN)
-      pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
+    P.try $
+      do
+        refine <- spaceLiner (J.curly expressionSN)
+        pure (\p -> Types.RefinedE (Types.TypeRefine p refine))
 
 -- For Do!
 table :: Semigroup a => [[Expr.Operator Parser a]]
