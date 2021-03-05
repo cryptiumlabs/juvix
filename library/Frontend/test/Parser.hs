@@ -84,7 +84,7 @@ shouldParseAs name parses x y =
     "Parse tests"
     [ T.testCase
         ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
-        (Right y T.@=? parses x)
+        (y T.@=? either (panic . toS . P.errorBundlePretty) identity (parses x))
     ]
 
 --------------------------------------------------------------------------------
@@ -120,27 +120,11 @@ removeNoComment =
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
-x =
-  ""
-    <> "let foo a b c = (+) (a + b) c\n"
-    <> "let bah = foo 1 2 3\n"
-    <> "let nah \n"
-    <> "  | bah == 5 = 7 \n"
-    <> "  | else     = 11"
-    <> "let test = \n"
-    <> "  let check = nah in \n"
-    <> "  case check of \n"
-    <> "  | seven -> 11 \n"
-    <> "  | eleven -> 7 \n"
-    <> "  | f  -> open Fails in \n"
-    <> "          print failed; \n"
-    <> "          fail"
-
 many1FunctionsParser :: T.TestTree
 many1FunctionsParser =
   shouldParseAs
     "many1FunctionsParser"
-    (P.parse (P.many Parser.topLevelSN) "")
+    (P.parse (P.some Parser.topLevelSN) "")
     ( ""
         <> "let foo a b c = (+) (a + b) c\n"
         <> "let bah = foo 1 2 3\n"
