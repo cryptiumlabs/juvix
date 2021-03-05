@@ -616,6 +616,7 @@ Types to support partial application and polymorphic primitives.
   + [[Erased/Types/Base]]
   + [[Typechecker/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
 ******* Base <<Erased/Types/Base>>
 - _Relies on_
@@ -769,6 +770,7 @@ the substitution functions (substTerm and substElim).
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[Usage]]
 ******* PatSubst
 - _Relies on_
   + [[Application]]
@@ -835,6 +837,7 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
 - _Relies on_
@@ -843,6 +846,7 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -852,6 +856,7 @@ Typechecked declarations are added to the signature.
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -860,6 +865,7 @@ Quantitative type implementation inspired by
   Atkey 2018 and McBride 2016.
 - _Relies on_
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Usage]]
@@ -868,6 +874,12 @@ Quantitative type implementation inspired by
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[Usage]]
+******* Globals
+- _Relies on_
+  + [[IR/Types/Base]]
+  + [[Library]]
+  + [[HashMap]]
   + [[Usage]]
 ***** IRAnn
 - _Relies on_
@@ -976,6 +988,7 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
@@ -985,7 +998,8 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[Lexer]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 ***** Sexp <<Frontend/Sexp>>
 - _Relies on_
   + [[Frontend/Types]]
@@ -1017,6 +1031,10 @@ Tests that weak works as expected
 ****** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+****** Located
+- _Relies on_
+  + [[Library]]
+  + [[Library/Parser]]
 ** test
 *** Main <<Frontend/test/Main>>
 - _Relies on_
@@ -1024,10 +1042,13 @@ Tests that weak works as expected
 *** Parser <<Frontend/test/Parser>>
 - _Relies on_
   + [[Frontend/Parser]]
+  + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 *** Sexp <<Frontend/test/Sexp>>
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1337,9 +1358,22 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
-  + [[Lexer]]
+  + [[Token]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Parser <<Library/Parser>>
+- _Relies on_
+  + [[Internal]]
+  + [[Lexer]]
+  + [[Token]]
+****** Internal
+****** Lexer
+- _Relies on_
+  + [[Internal]]
+  + [[Token]]
+****** Token
 - _Relies on_
   + [[Library]]
 ***** Sexp <<Library/Sexp>>
@@ -1353,17 +1387,14 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Internal]]
   + [[Sexp/Types]]
-  + [[Lexer]]
 ****** Types <<Sexp/Types>>
 - _Relies on_
   + [[Library]]
   + [[LineNum]]
   + [[NameSymbol]]
-***** Symbol
-****** Lexer
-- _Relies on_
-  + [[Library]]
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
