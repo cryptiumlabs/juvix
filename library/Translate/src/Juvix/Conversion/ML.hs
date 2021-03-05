@@ -41,6 +41,11 @@ expression (name Sexp.:> body)
   | Sexp.isAtomNamed name ":infix" = Target.Infix (infix' body)
   | Sexp.isAtomNamed name "case" = Target.Match (match body)
   | Sexp.isAtomNamed name ":u" = Target.UniverseName (universeExpression body)
+  | Sexp.isAtomNamed name ":primitive" = Target.Primitive (primitive body)
+  | Sexp.isAtomNamed name ":record-no-pun" = Target.ExpRecord (expRecord body)
+  | Sexp.isAtomNamed name ":refinement" = Target.RefinedE (typeRefine body)
+  | Sexp.isAtomNamed name ":open-in" = Target.OpenExpr (openExpr body)
+  | Sexp.isAtomNamed name ":paren" = Target.Parened (parened body)
 expression x
   | Just a <- Sexp.atomFromT x =
     atom a
@@ -300,6 +305,32 @@ infix' (Sexp.List [op, left, right])
   | Just Sexp.A {atomName} <- Sexp.atomFromT op =
     Target.Inf (expression left) atomName (expression right)
 infix' _ = error "malformed infix"
+
+primitive :: Sexp.T -> Target.Primitive
+primitive (Sexp.List [p])
+  | Just Sexp.A {atomName} <- Sexp.atomFromT p = Target.Prim atomName
+primitive _ = error "improper primitive"
+
+expRecord :: Sexp.T -> Target.ExpRecord
+expRecord rest =
+  Target.ExpressionRecord (NonEmpty.fromList (fmap (nameSet expression) grouped))
+  where
+    grouped = groupBy2 rest
+
+typeRefine :: Sexp.T -> Target.TypeRefine
+typeRefine (Sexp.List [name, refine]) =
+  Target.TypeRefine (expression name) (expression refine)
+typeRefine _ = error "malformed type refinement"
+
+openExpr :: Sexp.T -> Target.ModuleOpenExpr
+openExpr (Sexp.List [mod, expr])
+  | Just Sexp.A {atomName} <- Sexp.atomFromT mod =
+    Target.OpenExpress atomName (expression expr)
+openExpr _ = error "malformed open"
+
+parened :: Sexp.T -> Target.Expression
+parened (Sexp.List [body]) = expression body
+parened _ = error "malformed parened"
 
 --------------------------------------------------------------------------------
 -- General Helpers
