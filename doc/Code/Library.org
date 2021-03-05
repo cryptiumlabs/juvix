@@ -988,6 +988,7 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
@@ -997,7 +998,8 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[Lexer]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 ***** Sexp <<Frontend/Sexp>>
 - _Relies on_
   + [[Frontend/Types]]
@@ -1029,6 +1031,9 @@ Tests that weak works as expected
 ****** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+****** Located
+- _Relies on_
+  + [[Library/Parser]]
 ** test
 *** Main <<Frontend/test/Main>>
 - _Relies on_
@@ -1036,10 +1041,13 @@ Tests that weak works as expected
 *** Parser <<Frontend/test/Parser>>
 - _Relies on_
   + [[Frontend/Parser]]
+  + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 *** Sexp <<Frontend/test/Sexp>>
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1349,9 +1357,22 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
-  + [[Lexer]]
+  + [[Token]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Parser <<Library/Parser>>
+- _Relies on_
+  + [[Internal]]
+  + [[Lexer]]
+  + [[Token]]
+****** Internal
+****** Lexer
+- _Relies on_
+  + [[Internal]]
+  + [[Token]]
+****** Token
 - _Relies on_
   + [[Library]]
 ***** Sexp <<Library/Sexp>>
@@ -1365,17 +1386,14 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Internal]]
   + [[Sexp/Types]]
-  + [[Lexer]]
 ****** Types <<Sexp/Types>>
 - _Relies on_
   + [[Library]]
   + [[LineNum]]
   + [[NameSymbol]]
-***** Symbol
-****** Lexer
-- _Relies on_
-  + [[Library]]
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
