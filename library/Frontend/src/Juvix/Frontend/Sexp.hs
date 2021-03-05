@@ -344,4 +344,4 @@ transUniverseExpression (Types.UniverseExpression s) =
 
 transDeclarationExpression :: Types.DeclarationExpression -> Sexp.T
 transDeclarationExpression (Types.DeclareExpression d e) =
-  Sexp.list [Sexp.atom ":declaim", transDeclaration d, transExpr e]
+  Sexplist [Sexp.atom ":declaim", transDeclaration d, transExpr e]

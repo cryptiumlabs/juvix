@@ -9,6 +9,12 @@ where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Desugar as Desugar
+-- for local testing as development only
+
+import qualified Juvix.Desugar
+import qualified Juvix.Frontend.Parser as Parser
+import qualified Juvix.Frontend.Sexp as SexpTrans
+import qualified Juvix.Frontend.Types.Base as Frontend
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
 import Juvix.Library hiding (product, sum)
 import qualified Juvix.Library.NameSymbol as NameSym
@@ -24,14 +30,26 @@ op x
   | Sexp.isAtomNamed x ":type-class" = Target.TypeClass
   | Sexp.isAtomNamed x ":instance" = Target.TypeClassInstance
 op (name Sexp.:> form)
-  | Sexp.isAtomNamed name ":defsig-match" = Target.Function (defunSig form)
   | Sexp.isAtomNamed name "declare" = Target.Declaration (declaration form)
+  | Sexp.isAtomNamed name ":defsig-match" = Target.Function (defunSig form)
   | Sexp.isAtomNamed name "type" = Target.Type (type' form)
 op _ = undefined
 
 expression :: Sexp.T -> Target.Expression
 expression (name Sexp.:> body)
+  | Sexp.isAtomNamed name ":declaim" = Target.DeclarationE (declarationExpression body)
+  | Sexp.isAtomNamed name ":infix" = Target.Infix (infix' body)
   | Sexp.isAtomNamed name "case" = Target.Match (match body)
+  | Sexp.isAtomNamed name ":u" = Target.UniverseName (universeExpression body)
+expression x
+  | Just a <- Sexp.atomFromT x =
+    atom a
+
+atom :: Sexp.Atom -> Target.Expression
+atom Sexp.A {atomName} =
+  Target.Name atomName
+atom Sexp.N {atomNum} =
+  Target.Constant (Target.Number (Target.Integer' atomNum))
 
 ----------------------------------------------------------------------
 -- Top Level Transformations
@@ -71,10 +89,10 @@ defunSig _ = error "malfromed defunSig"
 ----------------------------------------
 
 declaration :: Sexp.T -> Target.Declaration
-declaration = Target.Infixivity . infix'
+declaration = Target.Infixivity . infixDeclar
 
-infix' :: Sexp.T -> Target.InfixDeclar
-infix' (Sexp.List [inf, n, i])
+infixDeclar :: Sexp.T -> Target.InfixDeclar
+infixDeclar (Sexp.List [inf, n, i])
   | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
     Just atomName <- eleToSymbol n =
     if  | Sexp.isAtomNamed inf "infix" ->
@@ -84,7 +102,7 @@ infix' (Sexp.List [inf, n, i])
         | Sexp.isAtomNamed inf "infixr" ->
           Target.AssocR atomName (fromInteger atomNum)
         | otherwise -> error "malformed declaration"
-infix' _ = error "malformed declaration"
+infixDeclar _ = error "malformed declaration"
 
 ----------------------------------------
 -- Types
@@ -257,7 +275,31 @@ nameSet _ _ = error "bad nameSet"
 ------------------------------------------------------------
 -- Function Like
 ------------------------------------------------------------
-functionLike = undefined
+functionLike :: Sexp.T -> Target.FunctionLike Target.Expression
+functionLike (Sexp.List [args, body])
+  | Just xs <- Sexp.toList args =
+    Target.Like (fmap arg xs) (expression body)
+functionLike _ = error "malformed like"
+
+------------------------------------------------------------
+-- Others
+------------------------------------------------------------
+
+universeExpression :: Sexp.T -> Target.UniverseExpression
+universeExpression (Sexp.List [a])
+  | Just name <- eleToSymbol a = Target.UniverseExpression name
+universeExpression _ = error "malformed universe expression"
+
+declarationExpression :: Sexp.T -> Target.DeclarationExpression
+declarationExpression (Sexp.List [d, e]) =
+  Target.DeclareExpression (declaration d) (expression e)
+declarationExpression _ = error "malformed declaration"
+
+infix' :: Sexp.T -> Target.Infix
+infix' (Sexp.List [op, left, right])
+  | Just Sexp.A {atomName} <- Sexp.atomFromT op =
+    Target.Inf (expression left) atomName (expression right)
+infix' _ = error "malformed infix"
 
 --------------------------------------------------------------------------------
 -- General Helpers
@@ -283,3 +325,27 @@ groupBy2 :: Sexp.T -> [(Sexp.T, Sexp.T)]
 groupBy2 (a1 Sexp.:> a2 Sexp.:> rest) =
   (a1, a2) : groupBy2 rest
 groupBy2 _ = []
+
+--------------------------------------------------------------------------------
+-- Helper dev functions
+--------------------------------------------------------------------------------
+
+firstDesugar :: ByteString -> Sexp.T
+firstDesugar xs =
+  case desugarSexp xs of
+    x : _ -> x
+    _ -> error ""
+
+desugarSexp :: ByteString -> [Sexp.T]
+desugarSexp = Desugar.op . parsedSexp
+
+parsedSexp :: ByteString -> [Sexp.T]
+parsedSexp xs = ignoreHeader (Parser.parseOnly xs) >>| SexpTrans.transTopLevel
+
+ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
+ignoreHeader (Right (Frontend.NoHeader xs)) = xs
+ignoreHeader _ = error "not no header"
+
+ignoreRight :: Either a p -> p
+ignoreRight (Right x) = x
+ignoreRight (Left _) = error "not right"

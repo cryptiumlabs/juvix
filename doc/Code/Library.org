@@ -1392,6 +1392,10 @@ Can be added to via core translation
 ***** ML
 - _Relies on_
   + [[Juvix/Desugar]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
   + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
