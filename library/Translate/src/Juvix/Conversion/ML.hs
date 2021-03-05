@@ -371,7 +371,7 @@ desugarSexp :: ByteString -> [Sexp.T]
 desugarSexp = Desugar.op . parsedSexp
 
 parsedSexp :: ByteString -> [Sexp.T]
-parsedSexp xs = ignoreHeader (Parser.parseOnly xs) >>| SexpTrans.transTopLevel
+parsedSexp xs = ignoreHeader (Parser.parse xs) >>| SexpTrans.transTopLevel
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs
