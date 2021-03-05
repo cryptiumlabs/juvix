@@ -26,7 +26,6 @@ default-extensions:
 
 dependencies:
 - base >= 4.7 && < 5
-- protolude
 - standard-library
 - capability >= 0.2.0.0
 - extensible-data

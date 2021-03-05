@@ -1,7 +1,7 @@
 module Juvix.Frontend.Types.Located where
 
 import Juvix.Library.Parser (Parser)
-import Protolude
+import Juvix.Library
 import qualified Text.Megaparsec as P
 
 data Loc
