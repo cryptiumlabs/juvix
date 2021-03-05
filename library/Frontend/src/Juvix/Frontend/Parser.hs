@@ -210,7 +210,7 @@ functionModGen p =
 guard :: Parser a -> Parser (Types.GuardBody a)
 guard p =
   P.try (Types.Guard <$> condB p)
-    <|> (Types.Body <$> (J.skipLiner J.equals *> p))
+    <|> P.try (Types.Body <$> (J.skipLiner J.equals *> p))
 
 --------------------------------------------------
 -- Args
@@ -251,15 +251,15 @@ match = do
   reserved "case"
   matchOn <- expressionSN
   reserved "of"
-  matchs <- J.many1H matchLSN
+  matchs <- J.many1H (P.try matchLSN)
   pure (Types.Match'' matchOn matchs)
 
 matchL :: Parser Types.MatchL
 matchL = do
   skipLiner J.pipe
-  match <- matchLogicSN
+  match <- P.try matchLogicSN
   spaceLiner (P.string "->")
-  Types.MatchL match <$> expression
+  Types.MatchL match <$> P.try expression
 
 matchLogic :: Parser Types.MatchLogic
 matchLogic = J.maybeParend (P.try matchLogicNamedSN <|> matchLogicNotNamedSN)
@@ -531,7 +531,7 @@ cond = do
   condB expression
 
 condB :: Parser a -> Parser (Types.Cond a)
-condB p = Types.C <$> J.many1H (condLogicSN p)
+condB p = Types.C <$> J.many1H (P.try $ condLogicSN p)
 
 condLogic :: Parser a -> Parser (Types.CondLogic a)
 condLogic p = do
