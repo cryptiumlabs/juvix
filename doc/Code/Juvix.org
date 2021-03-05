@@ -23,6 +23,7 @@
   + [[Environment]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Parser]]
 ** Core
 - _Relies on_
   + [[Erasure]]
@@ -108,4 +109,3 @@
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-** Visualize
