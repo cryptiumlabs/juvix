@@ -228,7 +228,7 @@ arg t =
 -- specific to match expressions
 -----------------------------------
 match :: Sexp.T -> Target.Match
-match (case' Sexp.:> t Sexp.:> binds)
+match (t Sexp.:> binds)
   | Just xs <- Sexp.toList binds =
     Target.Match'' (expression t) (NonEmpty.fromList (fmap matchL xs))
 match _ = error "malfromed match expression"
