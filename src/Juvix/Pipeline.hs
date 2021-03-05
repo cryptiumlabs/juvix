@@ -48,7 +48,7 @@ contextToCore ctx param = do
   where
     addSig (Context.Entry x feDef) = do
       msig <- FF.transformSig x feDef
-      for_ msig $ modify @"coreSigs" . HM.insert x
+      for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
     addDef (Context.Entry x feDef) = do
       defs <- FF.transformDef x feDef
       for_ defs \def ->
@@ -56,8 +56,8 @@ contextToCore ctx param = do
 
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
-  FF.CoreDef (IR.GDatatype (IR.Datatype {dataName})) -> dataName
-  FF.CoreDef (IR.GDataCon (IR.DataCon {conName})) -> conName
-  FF.CoreDef (IR.GFunction (IR.Function {funName})) -> funName
-  FF.CoreDef (IR.GAbstract (IR.Abstract {absName})) -> absName
+  FF.CoreDef (IR.RawGDatatype (IR.RawDatatype {rawDataName = x})) -> x
+  FF.CoreDef (IR.RawGDataCon (IR.RawDataCon {rawConName = x})) -> x
+  FF.CoreDef (IR.RawGFunction (IR.RawFunction {rawFunName = x})) -> x
+  FF.CoreDef (IR.RawGAbstract (IR.RawAbstract {rawAbsName = x})) -> x
   FF.SpecialDef x _ -> x
