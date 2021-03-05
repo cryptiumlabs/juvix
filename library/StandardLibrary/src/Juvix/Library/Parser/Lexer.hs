@@ -12,9 +12,10 @@ module Juvix.Library.Parser.Lexer
     emptyCheck,
     eatSpaces,
     integer,
-    -- space,
   )
 where
+
+-- space,
 
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty

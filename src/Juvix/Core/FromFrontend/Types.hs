@@ -283,8 +283,7 @@ data FFState primTy primVal
 type EnvAlias primTy primVal =
   ExceptT (Error primTy primVal) (State (FFState primTy primVal))
 
-newtype Env primTy primVal a
-  = Env {unEnv :: EnvAlias primTy primVal a}
+newtype Env primTy primVal a = Env {unEnv :: EnvAlias primTy primVal a}
   deriving newtype (Functor, Applicative, Monad)
   deriving
     (HasThrow "fromFrontendError" (Error primTy primVal))

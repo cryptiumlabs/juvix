@@ -1,6 +1,9 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Juvix.Library.Sexp.Parser (parse) where
+module Juvix.Library.Sexp.Parser
+  ( parse,
+  )
+where
 
 import qualified Data.Text.Encoding as Encoding
 import Juvix.Library hiding (list)

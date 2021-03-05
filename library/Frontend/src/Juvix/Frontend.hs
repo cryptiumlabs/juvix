@@ -5,14 +5,14 @@ import qualified Data.Char as Char
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Types as Types
 import Juvix.Library
-  ( Applicative (pure),
+  ( (.),
+    Applicative (pure),
     Either (..),
     FilePath,
     Functor (fmap),
     IO,
     Traversable (sequenceA, traverse),
     intern,
-    (.),
   )
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)

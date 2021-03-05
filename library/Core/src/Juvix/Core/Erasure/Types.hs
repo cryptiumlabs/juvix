@@ -20,8 +20,8 @@ import Juvix.Core.Erased.Types as Type
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -40,7 +40,8 @@ data Env primTy1 primTy2 primVal1 primVal2
   deriving (Generic)
 
 type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
-  ExceptT (Error primTy1 primVal1)
+  ExceptT
+    (Error primTy1 primVal1)
     (State (Env primTy1 primTy2 primVal1 primVal2))
 
 newtype EnvT primTy1 primTy2 primVal1 primVal2 a

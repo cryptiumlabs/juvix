@@ -12,8 +12,8 @@ import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Frontend as Frontend
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import Juvix.Library
-import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Juvix.Library.Parser (ParserError)
 import Prelude (String)
 
 data Error
