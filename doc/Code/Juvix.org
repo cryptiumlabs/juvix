@@ -55,7 +55,7 @@
   + [[FromFrontend/Types]]
   + [[HR]]
   + [[IR]]
-  + [[Base]]
+  + [[Types]]
   + [[Parameterisation]]
   + [[Translate]]
   + [[FrontendContextualise]]
@@ -108,3 +108,4 @@
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** Visualize
