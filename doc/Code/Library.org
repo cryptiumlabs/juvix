@@ -1034,6 +1034,7 @@ Tests that weak works as expected
 ****** Located
 - _Relies on_
   + [[Library/Parser]]
+  + [[Library]]
 ** test
 *** Main <<Frontend/test/Main>>
 - _Relies on_
