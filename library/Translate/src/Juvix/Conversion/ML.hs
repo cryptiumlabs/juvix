@@ -46,6 +46,9 @@ expression (name Sexp.:> body)
   | Sexp.isAtomNamed name ":refinement" = Target.RefinedE (typeRefine body)
   | Sexp.isAtomNamed name ":open-in" = Target.OpenExpr (openExpr body)
   | Sexp.isAtomNamed name ":paren" = Target.Parened (parened body)
+  | Sexp.isAtomNamed name ":let-match" = Target.Let (let' body)
+  | Sexp.isAtomNamed name ":let-type" = Target.LetType (letType body)
+  | Sexp.isAtomNamed name ":custom-arrow" = Target.ArrowE (arrowExp body)
 expression x
   | Just a <- Sexp.atomFromT x =
     atom a
@@ -287,6 +290,27 @@ functionLike (Sexp.List [args, body])
 functionLike _ = error "malformed like"
 
 ------------------------------------------------------------
+-- Binders
+------------------------------------------------------------
+
+let' :: Sexp.T -> Target.Let
+let' (Sexp.List [name, fun, body])
+  | Just name <- eleToSymbol name,
+    Just xs <- NonEmpty.nonEmpty grouped =
+    Target.LetGroup
+      name
+      (fmap (functionLike . \(x, y) -> Sexp.list [x, y]) xs)
+      (expression body)
+  where
+    grouped = groupBy2 fun
+let' _ = error "malformed let"
+
+letType :: Sexp.T -> Target.LetType
+letType (Sexp.List [name, args, dat, body]) =
+  Target.LetType'' (type' (Sexp.listStar [name, args, dat])) (expression body)
+letType _ = error "malformed let-type"
+
+------------------------------------------------------------
 -- Others
 ------------------------------------------------------------
 
@@ -331,6 +355,10 @@ openExpr _ = error "malformed open"
 parened :: Sexp.T -> Target.Expression
 parened (Sexp.List [body]) = expression body
 parened _ = error "malformed parened"
+
+arrowExp :: Sexp.T -> Target.ArrowExp
+arrowExp (Sexp.List [u, l, r]) = Target.Arr' (expression l) (expression u) (expression r)
+arrowExp _ = error "malformed arrow expression"
 
 --------------------------------------------------------------------------------
 -- General Helpers

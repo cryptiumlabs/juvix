@@ -97,10 +97,10 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 --         (let f (arg-match-n1 … arg-match-nn) body-n
 --            rest)))
 -- - BNF output form
---   + (:let f ((args-match-11 … args-match-1n) body-1
---              (args-match-21 … args-match-2n) body-2
---              …
---              (args-match-n1 … args-match-nn) body-n)
+--   + (:let-match f ((args-match-11 … args-match-1n) body-1
+--                    (args-match-21 … args-match-2n) body-2
+--                    …
+--                    (args-match-n1 … args-match-nn) body-n)
 --        rest)
 -- - Note the f's are exactly the same name
 multipleTransLet :: Sexp.T -> Sexp.T
