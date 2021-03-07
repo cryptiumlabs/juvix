@@ -49,6 +49,10 @@ expression (name Sexp.:> body)
   | Sexp.isAtomNamed name ":let-match" = Target.Let (let' body)
   | Sexp.isAtomNamed name ":let-type" = Target.LetType (letType body)
   | Sexp.isAtomNamed name ":custom-arrow" = Target.ArrowE (arrowExp body)
+  | Sexp.isAtomNamed name ":tuple" = Target.Tuple (tuple body)
+  | Sexp.isAtomNamed name ":list" = Target.List (list' body)
+  | Sexp.isAtomNamed name ":progn" = Target.Block (block body)
+  | otherwise = Target.Application (application body)
 expression x
   | Just a <- Sexp.atomFromT x =
     atom a
@@ -359,6 +363,26 @@ parened _ = error "malformed parened"
 arrowExp :: Sexp.T -> Target.ArrowExp
 arrowExp (Sexp.List [u, l, r]) = Target.Arr' (expression l) (expression u) (expression r)
 arrowExp _ = error "malformed arrow expression"
+
+tuple :: Sexp.T -> Target.Tuple
+tuple (Sexp.List [t])
+  | Just xs <- Sexp.toList t = Target.TupleLit (fmap expression xs)
+tuple _ = error "malformed tuple"
+
+list' :: Sexp.T -> Target.List
+list' (Sexp.List [t])
+  | Just xs <- Sexp.toList t = Target.ListLit (fmap expression xs)
+list' _ = error "malformed list"
+
+block :: Sexp.T -> Target.Block
+block (Sexp.List [b]) = Target.Bloc (expression b)
+block _ = error "malformed block"
+
+application :: Sexp.T -> Target.Application
+application (name Sexp.:> args)
+  | Just xs <- Sexp.toList args >>= NonEmpty.nonEmpty =
+    Target.App (expression name) (fmap expression xs)
+application _ = error "malformed application"
 
 --------------------------------------------------------------------------------
 -- General Helpers
