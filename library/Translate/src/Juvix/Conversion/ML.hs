@@ -26,21 +26,22 @@ op _ = error "malformed top level expression"
 
 expression :: Sexp.T -> Target.Expression
 expression (name Sexp.:> body)
-  | Sexp.isAtomNamed name ":declaim" = Target.DeclarationE (declarationExpression body)
-  | Sexp.isAtomNamed name ":infix" = Target.Infix (infix' body)
-  | Sexp.isAtomNamed name "case" = Target.Match (match body)
-  | Sexp.isAtomNamed name ":u" = Target.UniverseName (universeExpression body)
-  | Sexp.isAtomNamed name ":primitive" = Target.Primitive (primitive body)
   | Sexp.isAtomNamed name ":record-no-pun" = Target.ExpRecord (expRecord body)
+  | Sexp.isAtomNamed name ":custom-arrow" = Target.ArrowE (arrowExp body)
   | Sexp.isAtomNamed name ":refinement" = Target.RefinedE (typeRefine body)
-  | Sexp.isAtomNamed name ":open-in" = Target.OpenExpr (openExpr body)
-  | Sexp.isAtomNamed name ":paren" = Target.Parened (parened body)
+  | Sexp.isAtomNamed name ":primitive" = Target.Primitive (primitive body)
   | Sexp.isAtomNamed name ":let-match" = Target.Let (let' body)
   | Sexp.isAtomNamed name ":let-type" = Target.LetType (letType body)
-  | Sexp.isAtomNamed name ":custom-arrow" = Target.ArrowE (arrowExp body)
+  | Sexp.isAtomNamed name ":open-in" = Target.OpenExpr (openExpr body)
+  | Sexp.isAtomNamed name ":declaim" = Target.DeclarationE (declarationExpression body)
+  | Sexp.isAtomNamed name ":lambda" = Target.Lambda (lambda body)
+  | Sexp.isAtomNamed name ":paren" = Target.Parened (parened body)
+  | Sexp.isAtomNamed name ":infix" = Target.Infix (infix' body)
   | Sexp.isAtomNamed name ":tuple" = Target.Tuple (tuple body)
-  | Sexp.isAtomNamed name ":list" = Target.List (list' body)
   | Sexp.isAtomNamed name ":progn" = Target.Block (block body)
+  | Sexp.isAtomNamed name ":list" = Target.List (list' body)
+  | Sexp.isAtomNamed name "case" = Target.Match (match body)
+  | Sexp.isAtomNamed name ":u" = Target.UniverseName (universeExpression body)
   | otherwise = Target.Application (application (name Sexp.:> body))
 expression x
   | Just a <- Sexp.atomFromT x =
@@ -298,6 +299,12 @@ functionLike _ = error "malformed like"
 ------------------------------------------------------------
 -- Binders
 ------------------------------------------------------------
+
+lambda :: Sexp.T -> Target.Lambda
+lambda (Sexp.List [args, body])
+  | Just xs <- Sexp.toList args >>= NonEmpty.nonEmpty =
+    Target.Lamb (fmap matchLogic xs) (expression body)
+lambda _ = error "malformed lambda"
 
 let' :: Sexp.T -> Target.Let
 let' (Sexp.List [name, fun, body])

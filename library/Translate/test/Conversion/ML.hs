@@ -21,7 +21,7 @@ top :: T.TestTree
 top =
   T.testGroup
     "passes agree upon results:"
-    [functionTests, expressionTests, typeTests]
+    [functionTests, expressionTests, typeTests, openTests]
 
 shouldBeTheSame :: T.TestName -> ByteString -> T.TestTree
 shouldBeTheSame name str =
@@ -44,11 +44,18 @@ functionTests =
       shouldBeTheSame "sig" "sig foo : int -> int let foo x = 3 let foo y = 5"
     ]
 
+openTests :: T.TestTree
+openTests =
+  T.testGroup
+    "function tests"
+    [shouldBeTheSame "basic" "open Michelosn.Alias"]
+
 typeTests :: T.TestTree
 typeTests =
   T.testGroup
     "type tests"
-    [ shouldBeTheSame "records" "type foo = {a : int, b : string}",
+    [ shouldBeTheSame "lambda" "let f = \\x y -> x y z",
+      shouldBeTheSame "records" "type foo = {a : int, b : string}",
       shouldBeTheSame "singleSum" "type foo = | Foo {a : int, b : string}",
       shouldBeTheSame "singleSum" "type foo = | Foo Int String",
       shouldBeTheSame "extra-info" "type foo : Type.t = Foo Int String | Bar Int",
