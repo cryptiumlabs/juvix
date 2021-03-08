@@ -4,7 +4,7 @@ module Conversion.ML where
 
 -- for local testing as development only
 
-import Juvix.Conversion.ML as ML
+import qualified Juvix.Conversion.ML as ML
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans

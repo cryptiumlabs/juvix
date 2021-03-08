@@ -34,6 +34,7 @@ module Juvix.Library.Parser.Token
     validUpperSymbol,
     reservedSymbols,
     reservedWords,
+    endOfLine,
   )
 where
 

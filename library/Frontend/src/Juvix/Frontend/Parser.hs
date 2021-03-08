@@ -33,7 +33,7 @@ import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import Prelude (fail, read)
+import Prelude (fail)
 
 --------------------------------------------------------------------------------
 -- Top Level Runner

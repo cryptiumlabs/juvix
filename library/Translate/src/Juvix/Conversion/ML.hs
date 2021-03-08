@@ -21,6 +21,7 @@ op (name Sexp.:> form)
   | Sexp.isAtomNamed name "declare" = Target.Declaration (declaration form)
   | Sexp.isAtomNamed name ":defsig-match" = Target.Function (defunSig form)
   | Sexp.isAtomNamed name "type" = Target.Type (type' form)
+  | Sexp.isAtomNamed name "open" = Target.ModuleOpen (moduleOpen form)
 op _ = error "malformed top level expression"
 
 expression :: Sexp.T -> Target.Expression
@@ -55,6 +56,12 @@ atom Sexp.N {atomNum} =
 ----------------------------------------------------------------------
 -- Top Level Transformations
 ----------------------------------------------------------------------
+
+moduleOpen :: Sexp.T -> Target.ModuleOpen
+moduleOpen (Sexp.List [name])
+  | Just Sexp.A {atomName} <- Sexp.atomFromT name =
+    Target.Open atomName
+moduleOpen _ = error "malformed open"
 
 defunSig :: Sexp.T -> Target.Function
 defunSig (f Sexp.:> sig Sexp.:> forms)
