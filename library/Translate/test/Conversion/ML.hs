@@ -21,12 +21,12 @@ top :: T.TestTree
 top =
   T.testGroup
     "passes agree upon results:"
-    []
+    [functionTests, expressionTests]
 
 shouldBeTheSame :: T.TestName -> ByteString -> T.TestTree
 shouldBeTheSame name str =
   T.testCase
-    ("passes agree upon:" <> name)
+    ("passes agree upon: " <> name)
     (parseDesugarML str T.@=? fmap ML.op (parseDesugarSexp str))
 
 ------------------------------------------------------------
@@ -38,8 +38,58 @@ functionTests =
   T.testGroup
     "function tests"
     [ shouldBeTheSame "basic" "let foo = 3",
-      shouldBeTheSame "guards" "let foo x | x == 3 = 5"
+      shouldBeTheSame "guards" "let foo x | x == 3 = 2 | else = 5",
+      shouldBeTheSame "multiple" "let foo x = 3 let foo y = 5 let bar = 2",
+      shouldBeTheSame "sig" "sig foo : int -> int let foo x = 3 let foo y = 5"
     ]
+
+typeTests :: T.TestTree
+typeTests =
+  T.testGroup
+    "type tests"
+    [ shouldBeTheSame "records" "type foo = {a : int, b : string}",
+      shouldBeTheSame "singleSum" "type foo = | Foo {a : int, b : string}",
+      shouldBeTheSame "singleSum" "type foo = | Foo Int String",
+      shouldBeTheSame "extra-info" "type foo : Type.t = Foo Int String | Bar Int",
+      shouldBeTheSame "multipleSums" "type foo = Foo Int String | Bar Int",
+      shouldBeTheSame "record-extra-info" "type foo : Type.t = {a : int, b : string} : int -> string -> foo"
+    ]
+
+expressionTests :: T.TestTree
+expressionTests =
+  T.testGroup
+    "expression tests"
+    [ letTests,
+      constantTests,
+      shouldBeTheSame "case" "let f = case x of | Cons a b -> True | Nil -> False",
+      shouldBeTheSame "refinement" "let f = n {n == 3}",
+      shouldBeTheSame "primitive" "let f = %Michelson.bar let g = %Michelson.Back.bar",
+      shouldBeTheSame "delcaim" "let f = declare infixl (+) 5 in 2 + 4",
+      shouldBeTheSame "open-in" "let f = open Foo in bar",
+      shouldBeTheSame "open.in" "let f = Foo.(bar)",
+      shouldBeTheSame "records" "let f = {a,b = 3}",
+      shouldBeTheSame "parens" "let f = (((3)))",
+      shouldBeTheSame "tuples" "let f = (1,2,3,4,5,1,1,az)",
+      shouldBeTheSame "infix" "let f = 3 + 4 * 3 / 12",
+      shouldBeTheSame "progn" "let f = begin f begin 3 end 4 end",
+      shouldBeTheSame "list" "let f = [1,2,3,4,5,1,1,az]"
+    ]
+
+letTests :: T.TestTree
+letTests =
+  T.testGroup
+    "let tests"
+    [ shouldBeTheSame "basic" "let f = let foo = 3 in foo",
+      shouldBeTheSame "multiple" "let f = let foo x = 3 in let foo y = 4 in foo",
+      shouldBeTheSame "guards" "let f = let foo x | x == 2 = 3 | else = 5 in let foo y = 4 in foo"
+    ]
+
+-- TODO ∷ need strings
+constantTests :: T.TestTree
+constantTests =
+  T.testGroup
+    "constant tests"
+    [shouldBeTheSame "integers" "let f = 3"]
 
 ------------------------------------------------------------
 -- Test Helper functions

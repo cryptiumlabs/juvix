@@ -2052,7 +2052,5 @@ Temporary conversion from the Sexpression syntax to the ML syntax
 **** Sexp <<Desugar/Sexp>>
 - _Relies on_
   + [[Passes]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]

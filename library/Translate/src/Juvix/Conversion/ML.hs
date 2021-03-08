@@ -116,8 +116,9 @@ type' _ = error "malformed type declaration"
 
 -- TODO ∷ fix!, should check for record
 adt :: Sexp.T -> Target.Adt
-adt (Sexp.List [rec']) =
-  Target.Product (product rec')
+adt rec'@(Sexp.List [name Sexp.:> _])
+  | recordDetector name =
+    Target.Product (product rec')
 adt sums =
   Target.Sum (sum sums)
 
@@ -137,7 +138,7 @@ sum xs = Sexp.foldr f (pure (trans (Sexp.last xs))) (Sexp.butLast xs)
 
 product :: Sexp.T -> Target.Product
 product (Sexp.List [f@(name Sexp.:> form)])
-  | Sexp.isAtomNamed name ":record-d" || Sexp.isAtomNamed name ":" =
+  | recordDetector name =
     Target.Record (record f)
   | Sexp.isAtomNamed name ":arrow" =
     Target.Arrow (expression form)
@@ -149,7 +150,8 @@ product _ = error "malformed product"
 record :: Sexp.T -> Target.Record
 record (Sexp.List [name, form, sig])
   | Sexp.isAtomNamed name ":" =
-    Target.Record'' (NonEmpty.fromList (recorDHelp form)) (Just (expression sig))
+    let Target.Record'' rec' _ = record form
+     in Target.Record'' rec' (Just (expression sig))
 record form' =
   Target.Record'' (NonEmpty.fromList (recorDHelp form)) Nothing
   where
@@ -173,6 +175,10 @@ name _ = error "malformed record-name-field"
 ------------------------------
 -- Type' Helper
 ------------------------------
+recordDetector :: Sexp.T -> Bool
+recordDetector name =
+  Sexp.isAtomNamed name ":record-d" || Sexp.isAtomNamed name ":"
+
 data AssocTypeName
   = Assoc
       { symName :: Symbol,
@@ -351,12 +357,12 @@ arrowExp (Sexp.List [u, l, r]) = Target.Arr' (expression l) (expression u) (expr
 arrowExp _ = error "malformed arrow expression"
 
 tuple :: Sexp.T -> Target.Tuple
-tuple (Sexp.List [t])
+tuple t
   | Just xs <- Sexp.toList t = Target.TupleLit (fmap expression xs)
 tuple _ = error "malformed tuple"
 
 list' :: Sexp.T -> Target.List
-list' (Sexp.List [t])
+list' t
   | Just xs <- Sexp.toList t = Target.ListLit (fmap expression xs)
 list' _ = error "malformed list"
 
@@ -394,4 +400,3 @@ groupBy2 :: Sexp.T -> [(Sexp.T, Sexp.T)]
 groupBy2 (a1 Sexp.:> a2 Sexp.:> rest) =
   (a1, a2) : groupBy2 rest
 groupBy2 _ = []
--- op (firstDesugar "let foo = f a b c")

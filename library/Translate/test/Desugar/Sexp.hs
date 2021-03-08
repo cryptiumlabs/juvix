@@ -1,13 +1,10 @@
 module Desugar.Sexp (top) where
 
 import qualified Juvix.Desugar.Passes as Desugar
-import qualified Juvix.Frontend.Sexp as Trans
-import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (head)
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (error, head)
 
 top :: T.TestTree
 top =
