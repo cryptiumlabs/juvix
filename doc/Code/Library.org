@@ -1420,13 +1420,8 @@ Can be added to via core translation
 ** src
 *** Juvix
 **** Conversion
-***** ML
+***** ML <<Juvix/Conversion/ML>>
 - _Relies on_
-  + [[Juvix/Desugar]]
-  + [[Juvix/Desugar]]
-  + [[Frontend/Parser]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types/Base]]
   + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
@@ -2034,6 +2029,19 @@ done with no extra information needed. Thus we export the following passes
   + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]
+*** Conversion
+**** ML <<test/Conversion/ML>>
+Temporary conversion from the Sexpression syntax to the ML syntax
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendDesugar]]
+  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[Library/Sexp]]
 *** Desugar <<test/Desugar>>
 - _Relies on_
   + [[Frontend/Parser]]
@@ -2044,7 +2052,6 @@ done with no extra information needed. Thus we export the following passes
 **** Sexp <<Desugar/Sexp>>
 - _Relies on_
   + [[Passes]]
-  + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]

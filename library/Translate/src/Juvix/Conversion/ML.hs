@@ -1,30 +1,15 @@
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-
 module Juvix.Conversion.ML
   ( op,
   )
 where
 
--- Target ML Syntax
-
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Desugar as Desugar
--- for local testing as development only
-
-import qualified Juvix.Desugar
-import qualified Juvix.Frontend.Parser as Parser
-import qualified Juvix.Frontend.Sexp as SexpTrans
-import qualified Juvix.Frontend.Types.Base as Frontend
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
+import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target -- Target ML Syntax
 import Juvix.Library hiding (product, sum)
 import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
 
--- :defsig-match
--- type
--- declaration
--- open
 op :: Sexp.T -> Target.TopLevel
 op x
   | Sexp.isAtomNamed x ":type-class" = Target.TypeClass
@@ -33,7 +18,7 @@ op (name Sexp.:> form)
   | Sexp.isAtomNamed name "declare" = Target.Declaration (declaration form)
   | Sexp.isAtomNamed name ":defsig-match" = Target.Function (defunSig form)
   | Sexp.isAtomNamed name "type" = Target.Type (type' form)
-op _ = undefined
+op _ = error "malformed top level expression"
 
 expression :: Sexp.T -> Target.Expression
 expression (name Sexp.:> body)
@@ -52,10 +37,11 @@ expression (name Sexp.:> body)
   | Sexp.isAtomNamed name ":tuple" = Target.Tuple (tuple body)
   | Sexp.isAtomNamed name ":list" = Target.List (list' body)
   | Sexp.isAtomNamed name ":progn" = Target.Block (block body)
-  | otherwise = Target.Application (application body)
+  | otherwise = Target.Application (application (name Sexp.:> body))
 expression x
   | Just a <- Sexp.atomFromT x =
     atom a
+expression _ = error "malfromed expression"
 
 atom :: Sexp.Atom -> Target.Expression
 atom Sexp.A {atomName} =
@@ -408,27 +394,4 @@ groupBy2 :: Sexp.T -> [(Sexp.T, Sexp.T)]
 groupBy2 (a1 Sexp.:> a2 Sexp.:> rest) =
   (a1, a2) : groupBy2 rest
 groupBy2 _ = []
-
---------------------------------------------------------------------------------
--- Helper dev functions
---------------------------------------------------------------------------------
-
-firstDesugar :: ByteString -> Sexp.T
-firstDesugar xs =
-  case desugarSexp xs of
-    x : _ -> x
-    _ -> error ""
-
-desugarSexp :: ByteString -> [Sexp.T]
-desugarSexp = Desugar.op . parsedSexp
-
-parsedSexp :: ByteString -> [Sexp.T]
-parsedSexp xs = ignoreHeader (Parser.parse xs) >>| SexpTrans.transTopLevel
-
-ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
-ignoreHeader (Right (Frontend.NoHeader xs)) = xs
-ignoreHeader _ = error "not no header"
-
-ignoreRight :: Either a p -> p
-ignoreRight (Right x) = x
-ignoreRight (Left _) = error "not right"
+-- op (firstDesugar "let foo = f a b c")

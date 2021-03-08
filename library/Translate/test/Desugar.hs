@@ -20,7 +20,7 @@ shouldDesugar name x y =
   T.testGroup
     "Desugar tests"
     [ T.testCase
-        ("desugar: " <> name <> " " <> show x <> " should desugar to " <> show y)
+        ("desugar: " <> name)
         ( fmap Desugar.op (P.parse (many Parser.topLevelSN) "" x)
             T.@=? Right y
         )

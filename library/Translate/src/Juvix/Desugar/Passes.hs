@@ -75,9 +75,9 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
           error "malformed if"
             |> Sexp.addMetaToCar atom
     caseList pred then' =
-      [Sexp.atom "case", pred, Sexp.list [Sexp.atom "true", then']]
+      [Sexp.atom "case", pred, Sexp.list [Sexp.list [Sexp.atom "True"], then']]
     caseListElse pred then' else' =
-      caseList pred then' <> [Sexp.list [Sexp.atom "false", else']]
+      caseList pred then' <> [Sexp.list [Sexp.list [Sexp.atom "False"], else']]
 
 ------------------------------------------------------------
 -- Defun Transformation
