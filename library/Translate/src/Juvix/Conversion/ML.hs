@@ -170,9 +170,10 @@ record form' =
 
 recorDHelp :: Sexp.T -> [Target.NameType]
 recorDHelp =
-  fmap f . groupBy2
+  maybe [] (fmap f) . Sexp.toList . Sexp.groupBy2
   where
-    f (n, sig) = Target.NameType' (expression sig) (name n)
+    f (Sexp.List [n, sig]) = Target.NameType' (expression sig) (name n)
+    f _ = error "malformed list"
 
 name :: Sexp.T -> Target.Name
 name (Sexp.List [n, a])
@@ -206,11 +207,11 @@ handleAssocTypeName (name Sexp.:> properties)
   | Just atomName <- eleToSymbol name =
     Assoc
       { symName = atomName,
-        usage = fmap expression (assoc ":usage" group),
-        sig = fmap expression (assoc ":type" group)
+        usage = fmap expression (Sexp.assoc (Sexp.atom ":usage") group),
+        sig = fmap expression (Sexp.assoc (Sexp.atom ":type") group)
       }
   where
-    group = groupBy2 properties
+    group = Sexp.groupBy2 properties
 handleAssocTypeName name
   | Just Sexp.A {atomName} <- Sexp.atomFromT name =
     Assoc {symName = NameSym.toSymbol atomName, usage = Nothing, sig = Nothing}
@@ -274,11 +275,11 @@ matchLogicStart (recordOrCon Sexp.:> rest)
     Just xs <- Sexp.toList rest =
     Target.MatchCon atomName (fmap matchLogic xs)
   where
-    grouped = groupBy2 rest
+    Just grouped = Sexp.toList (Sexp.groupBy2 rest)
 matchLogicStart _ = error "malformed matchLogicStart"
 
-nameSet :: (Sexp.T -> t) -> (Sexp.T, Sexp.T) -> Target.NameSet t
-nameSet trans (field, assignedName)
+nameSet :: (Sexp.T -> t) -> Sexp.T -> Target.NameSet t
+nameSet trans (Sexp.List [field, assignedName])
   | Just Sexp.A {atomName} <- Sexp.atomFromT field =
     Target.NonPunned atomName (trans assignedName)
 nameSet _ _ = error "bad nameSet"
@@ -309,13 +310,13 @@ lambda _ = error "malformed lambda"
 let' :: Sexp.T -> Target.Let
 let' (Sexp.List [name, fun, body])
   | Just name <- eleToSymbol name,
-    Just xs <- NonEmpty.nonEmpty grouped =
+    Just xs <- Sexp.toList grouped >>= NonEmpty.nonEmpty =
     Target.LetGroup
       name
-      (fmap (functionLike . \(x, y) -> Sexp.list [x, y]) xs)
+      (fmap functionLike xs)
       (expression body)
   where
-    grouped = groupBy2 fun
+    grouped = Sexp.groupBy2 fun
 let' _ = error "malformed let"
 
 letType :: Sexp.T -> Target.LetType
@@ -352,7 +353,7 @@ expRecord :: Sexp.T -> Target.ExpRecord
 expRecord rest =
   Target.ExpressionRecord (NonEmpty.fromList (fmap (nameSet expression) grouped))
   where
-    grouped = groupBy2 rest
+    Just grouped = Sexp.toList (Sexp.groupBy2 rest)
 
 typeRefine :: Sexp.T -> Target.TypeRefine
 typeRefine (Sexp.List [name, refine]) =
@@ -404,16 +405,3 @@ eleToSymbol x
 
 toSymbolList :: Sexp.T -> Maybe [Symbol]
 toSymbolList x = Sexp.toList x >>= traverse eleToSymbol
-
---------------------------------------------------------------------------------
--- Move to Sexp library
---------------------------------------------------------------------------------
-
-assoc :: Foldable t => NameSym.T -> t (Sexp.T, b) -> Maybe b
-assoc tag =
-  fmap snd . find (flip Sexp.isAtomNamed tag . fst)
-
-groupBy2 :: Sexp.T -> [(Sexp.T, Sexp.T)]
-groupBy2 (a1 Sexp.:> a2 Sexp.:> rest) =
-  (a1, a2) : groupBy2 rest
-groupBy2 _ = []
