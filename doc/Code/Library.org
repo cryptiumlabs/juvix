@@ -1421,6 +1421,8 @@ Can be added to via core translation
 *** Juvix
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
+This module is responsible for converting back S-expressions back
+into the ML form. Currently this goes until the end of desugared
 - _Relies on_
   + [[RemoveDo/Types]]
   + [[Library]]

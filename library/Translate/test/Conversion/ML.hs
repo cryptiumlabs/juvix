@@ -21,7 +21,7 @@ top :: T.TestTree
 top =
   T.testGroup
     "passes agree upon results:"
-    [functionTests, expressionTests]
+    [functionTests, expressionTests, typeTests]
 
 shouldBeTheSame :: T.TestName -> ByteString -> T.TestTree
 shouldBeTheSame name str =
@@ -40,6 +40,7 @@ functionTests =
     [ shouldBeTheSame "basic" "let foo = 3",
       shouldBeTheSame "guards" "let foo x | x == 3 = 2 | else = 5",
       shouldBeTheSame "multiple" "let foo x = 3 let foo y = 5 let bar = 2",
+      shouldBeTheSame "implicit" "let f #foo = fooo",
       shouldBeTheSame "sig" "sig foo : int -> int let foo x = 3 let foo y = 5"
     ]
 
@@ -52,7 +53,9 @@ typeTests =
       shouldBeTheSame "singleSum" "type foo = | Foo Int String",
       shouldBeTheSame "extra-info" "type foo : Type.t = Foo Int String | Bar Int",
       shouldBeTheSame "multipleSums" "type foo = Foo Int String | Bar Int",
-      shouldBeTheSame "record-extra-info" "type foo : Type.t = {a : int, b : string} : int -> string -> foo"
+      shouldBeTheSame
+        "record-extra-info"
+        "type foo : Type.t = {a : int, b : string} : int -> string -> foo"
     ]
 
 expressionTests :: T.TestTree
@@ -81,7 +84,9 @@ letTests =
     "let tests"
     [ shouldBeTheSame "basic" "let f = let foo = 3 in foo",
       shouldBeTheSame "multiple" "let f = let foo x = 3 in let foo y = 4 in foo",
-      shouldBeTheSame "guards" "let f = let foo x | x == 2 = 3 | else = 5 in let foo y = 4 in foo"
+      shouldBeTheSame
+        "guards"
+        "let f = let foo x | x == 2 = 3 | else = 5 in let foo y = 4 in foo"
     ]
 
 -- TODO ∷ need strings

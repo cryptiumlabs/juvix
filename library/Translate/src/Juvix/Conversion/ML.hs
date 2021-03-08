@@ -1,3 +1,5 @@
+-- | This module is responsible for converting back S-expressions back
+-- into the ML form. Currently this goes until the end of desugared
 module Juvix.Conversion.ML
   ( op,
   )
@@ -10,6 +12,7 @@ import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
 
+-- | @op@ converts an s-expression at the desugar level back into ML syntax
 op :: Sexp.T -> Target.TopLevel
 op x
   | Sexp.isAtomNamed x ":type-class" = Target.TypeClass
