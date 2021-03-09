@@ -8,6 +8,7 @@ import qualified Test.Tasty.HUnit as T
 import qualified Juvix.Library.PrettyPrint as PP
 import Juvix.Core.HR as HR
 import Juvix.Library.Usage
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import Data.String (String, IsString (..))
 import qualified Text.Show
@@ -22,7 +23,8 @@ top =
     lamTests,
     pairTests,
     letTests,
-    appTests
+    appTests,
+    annTests
   ]
 
 atomTests :: T.TestTree
@@ -35,8 +37,17 @@ atomTests =
     T.testCase "UnitTy" $
       prettyAt 10 UnitTy @?= "Unit",
     T.testCase "Unit" $
-      prettyAt 10 Unit @?= "⌷"
+      prettyAt 10 Unit @?= "⌷",
+    T.testCase "foo" $
+      "foo" :| [] @@?=
+      "foo",
+    T.testCase "foo.bar.baz.quox" $
+      "foo" :| ["bar", "baz", "quox"] @@?=
+      "foo.bar.baz.quox"
   ]
+  where
+    infix 1 @@?=
+    ns @@?= str = PP.render (PP.prettyPrec0 (ns :: NameSymbol.T)) @?= str
 
 bindTests :: T.TestTree
 bindTests =
@@ -76,7 +87,9 @@ xAyBC =
 xAyBC' =
   Pi Omega "x" "A" $
   Sig Omega "y" "B" $
-  Elim $ "C" `AppE` "x" `AppE` "y"
+  cxy
+cxy = Elim cxy'
+cxy' = "C" `AppE` "x" `AppE` "y"
 
 lamTests :: T.TestTree
 lamTests =
@@ -210,8 +223,20 @@ app1 =
     `App` ("x" `Pair` ("y" `Pair` "z"))
 app2 = "merge" `AppE` app1 `AppE` app1
 
+annTests :: T.TestTree
+annTests =
+  T.testGroup "Annotations" [
+    T.testCase "ann wide" $
+      prettyAt 1000 ann @?=
+      "(ω | f x y : C x y : * 0)",
+    T.testCase "ann narrow" $
+      prettyAt 10 ann @?=
+      "(ω | f x y\n\
+      \   : C x y\n\
+      \   : * 0)"
+  ]
 
-
+ann = Ann Omega fxy cxy 0
 
 pattern AppE f e = App f (Elim e)
 instance IsString (Elim primTy primVal) where fromString x = Var $ fromString x
