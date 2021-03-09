@@ -1,5 +1,11 @@
 -- | This module is responsible for converting back S-expressions back
--- into the ML form. Currently this goes until the end of desugared
+-- - into the ML form. Currently this goes until the end of desugared
+-- - This module is best read along side the sexpression document in
+--   doc/Aricheture/Sexp.org, looking at the forms to see they are the
+--   same.
+--   + Note they aren't all the same, as many forms like the top level
+--     let/=defun= are desugared and thus need to look at the current
+--     forms of that
 module Juvix.Conversion.ML
   ( op,
   )
@@ -18,31 +24,35 @@ op x
   | Sexp.isAtomNamed x ":type-class" = Target.TypeClass
   | Sexp.isAtomNamed x ":instance" = Target.TypeClassInstance
 op (name Sexp.:> form)
-  | Sexp.isAtomNamed name "declare" = Target.Declaration (declaration form)
-  | Sexp.isAtomNamed name ":defsig-match" = Target.Function (defunSig form)
-  | Sexp.isAtomNamed name "type" = Target.Type (type' form)
-  | Sexp.isAtomNamed name "open" = Target.ModuleOpen (moduleOpen form)
+  | named "declare" = Target.Declaration (declaration form)
+  | named ":defsig-match" = Target.Function (defunSig form)
+  | named "type" = Target.Type (type' form)
+  | named "open" = Target.ModuleOpen (moduleOpen form)
+  where
+    named = Sexp.isAtomNamed name
 op _ = error "malformed top level expression"
 
 expression :: Sexp.T -> Target.Expression
 expression (name Sexp.:> body)
-  | Sexp.isAtomNamed name ":record-no-pun" = Target.ExpRecord (expRecord body)
-  | Sexp.isAtomNamed name ":custom-arrow" = Target.ArrowE (arrowExp body)
-  | Sexp.isAtomNamed name ":refinement" = Target.RefinedE (typeRefine body)
-  | Sexp.isAtomNamed name ":primitive" = Target.Primitive (primitive body)
-  | Sexp.isAtomNamed name ":let-match" = Target.Let (let' body)
-  | Sexp.isAtomNamed name ":let-type" = Target.LetType (letType body)
-  | Sexp.isAtomNamed name ":open-in" = Target.OpenExpr (openExpr body)
-  | Sexp.isAtomNamed name ":declaim" = Target.DeclarationE (declarationExpression body)
-  | Sexp.isAtomNamed name ":lambda" = Target.Lambda (lambda body)
-  | Sexp.isAtomNamed name ":paren" = Target.Parened (parened body)
-  | Sexp.isAtomNamed name ":infix" = Target.Infix (infix' body)
-  | Sexp.isAtomNamed name ":tuple" = Target.Tuple (tuple body)
-  | Sexp.isAtomNamed name ":progn" = Target.Block (block body)
-  | Sexp.isAtomNamed name ":list" = Target.List (list' body)
-  | Sexp.isAtomNamed name "case" = Target.Match (match body)
-  | Sexp.isAtomNamed name ":u" = Target.UniverseName (universeExpression body)
+  | named ":record-no-pun" = Target.ExpRecord (expRecord body)
+  | named ":custom-arrow" = Target.ArrowE (arrowExp body)
+  | named ":refinement" = Target.RefinedE (typeRefine body)
+  | named ":primitive" = Target.Primitive (primitive body)
+  | named ":let-match" = Target.Let (let' body)
+  | named ":let-type" = Target.LetType (letType body)
+  | named ":open-in" = Target.OpenExpr (openExpr body)
+  | named ":declaim" = Target.DeclarationE (declarationExpression body)
+  | named ":lambda" = Target.Lambda (lambda body)
+  | named ":paren" = Target.Parened (parened body)
+  | named ":infix" = Target.Infix (infix' body)
+  | named ":tuple" = Target.Tuple (tuple body)
+  | named ":progn" = Target.Block (block body)
+  | named ":list" = Target.List (list' body)
+  | named "case" = Target.Match (match body)
+  | named ":u" = Target.UniverseName (universeExpression body)
   | otherwise = Target.Application (application (name Sexp.:> body))
+  where
+    named = Sexp.isAtomNamed name
 expression x
   | Just a <- Sexp.atomFromT x =
     atom a
@@ -64,6 +74,8 @@ moduleOpen (Sexp.List [name])
     Target.Open atomName
 moduleOpen _ = error "malformed open"
 
+-- Takes a top level let after being transformed a few times back to
+-- the ML syntax
 defunSig :: Sexp.T -> Target.Function
 defunSig (f Sexp.:> sig Sexp.:> forms)
   | Just fName <- eleToSymbol f,
@@ -71,12 +83,14 @@ defunSig (f Sexp.:> sig Sexp.:> forms)
     let actualSig
           | sig == Sexp.Nil = Nothing
           | otherwise =
+            -- Grab usage if we appended that information
             let (usage, sigWithoutUsage) =
                   case sig of
                     Sexp.List [useName, usage, body]
                       | Sexp.isAtomNamed useName ":usage" ->
                         (Just usage, body)
                     _ -> (Nothing, sig)
+                -- Grab the constraints if there is any
                 (constraints, sigWithoutConstraints) =
                   case sigWithoutUsage of
                     Sexp.List [constArrow, constraints, body]
@@ -84,7 +98,9 @@ defunSig (f Sexp.:> sig Sexp.:> forms)
                         Just xs <- Sexp.toList constraints ->
                         (xs, body)
                     _ -> ([], sigWithoutUsage)
-             in Just $
+             in -- now our signature is without the extra information that
+                -- belongs with other parameters in the ML signature
+                Just $
                   Target.Sig
                     fName
                     (fmap expression usage)
@@ -116,6 +132,8 @@ infixDeclar _ = error "malformed declaration"
 ----------------------------------------
 -- Types
 ----------------------------------------
+
+-- Top Level type transformations
 type' :: Sexp.T -> Target.Type
 type' (assocName Sexp.:> args Sexp.:> dat)
   | Just symbolList <- toSymbolList args =
@@ -125,7 +143,6 @@ type' (assocName Sexp.:> args Sexp.:> dat)
     adtF = maybe Target.NonArrowed Target.Arrowed
 type' _ = error "malformed type declaration"
 
--- TODO ∷ fix!, should check for record
 adt :: Sexp.T -> Target.Adt
 adt rec'@(Sexp.List [name Sexp.:> _])
   | recordDetector name =

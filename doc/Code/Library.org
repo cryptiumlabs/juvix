@@ -1422,7 +1422,13 @@ Can be added to via core translation
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
 This module is responsible for converting back S-expressions back
-into the ML form. Currently this goes until the end of desugared
+- into the ML form. Currently this goes until the end of desugared
+- This module is best read along side the sexpression document in
+  doc/Aricheture/Sexp.org, looking at the forms to see they are the
+  same.
+  + Note they aren't all the same, as many forms like the top level
+    let/=defun= are desugared and thus need to look at the current
+    forms of that
 - _Relies on_
   + [[RemoveDo/Types]]
   + [[Library]]
