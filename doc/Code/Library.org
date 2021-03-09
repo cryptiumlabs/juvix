@@ -1622,6 +1622,15 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+****** Sexp <<Contextify/Sexp>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Desugar/Types]]
+  + [[Contextify/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
@@ -1636,6 +1645,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** InfixPrecedence
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
