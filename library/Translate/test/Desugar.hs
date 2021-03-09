@@ -1,8 +1,8 @@
 module Desugar where
 
+import qualified Juvix.Desugar.Types as AST
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.FrontendDesugar as Desugar
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as AST
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Test.Tasty as T

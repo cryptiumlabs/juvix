@@ -1847,9 +1847,9 @@ done with no extra information needed. Thus we export the following passes
 Temporary conversion from the Sexpression syntax to the ML syntax
 *** Desugar <<test/Desugar>>
 - _Relies on_
+  + [[Desugar/Types]]
   + [[Frontend/Parser]]
   + [[FrontendDesugar]]
-  + [[Types]]
   + [[Library]]
   + [[NameSymbol]]
 **** Sexp <<Desugar/Sexp>>
