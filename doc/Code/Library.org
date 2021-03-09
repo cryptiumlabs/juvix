@@ -1769,16 +1769,6 @@ done with no extra information needed. Thus we export the following passes
   + [[RemoveCond/Extend]]
   + [[RemoveCond/Extend]]
   + [[Library]]
-****** Transform <<CombineMultiple/Transform>>
-- _Relies on_
-  + [[CombineMultiple/Types]]
-  + [[RemoveCond/Types]]
-  + [[Library]]
-****** Types <<CombineMultiple/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[CombineMultiple/Extend]]
-  + [[Library]]
 ***** RemoveCond
 ****** Extend <<RemoveCond/Extend>>
 - This pass removes the =Do= form
@@ -1804,16 +1794,6 @@ done with no extra information needed. Thus we export the following passes
   + [[RemoveGuard/Extend]]
   + [[RemoveGuard/Extend]]
   + [[Library]]
-****** Transform <<RemoveCond/Transform>>
-- _Relies on_
-  + [[RemoveCond/Types]]
-  + [[RemoveGuard/Types]]
-  + [[Library]]
-****** Types <<RemoveCond/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveCond/Extend]]
-  + [[Library]]
 ***** RemoveDo
 ****** Extend <<RemoveDo/Extend>>
 - This pass removes the =Do= form
@@ -1838,11 +1818,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[RemovePunned/Extend]]
   + [[RemovePunned/Extend]]
-  + [[Library]]
-****** Transform <<RemoveDo/Transform>>
-- _Relies on_
-  + [[RemoveDo/Types]]
-  + [[RemovePunned/Types]]
   + [[Library]]
 ****** Types <<RemoveDo/Types>>
 - _Relies on_
@@ -1872,16 +1847,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[Abstractions]]
   + [[RemoveModules/Extend]]
-****** Transform <<RemoveGuard/Transform>>
-- _Relies on_
-  + [[RemoveGuard/Types]]
-  + [[RemoveModules/Types]]
-  + [[Library]]
-****** Types <<RemoveGuard/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveGuard/Extend]]
-  + [[Library]]
 ***** RemoveModules
 ****** Extend <<RemoveModules/Extend>>
 - This pass removes the =Module= and =ModuleE= form
@@ -1908,16 +1873,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Types/Extend]]
   + [[Types/Extend]]
   + [[Library]]
-****** Transform <<RemoveModules/Transform>>
-- _Relies on_
-  + [[Frontend/Types]]
-  + [[RemoveModules/Types]]
-  + [[Library]]
-****** Types <<RemoveModules/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveModules/Extend]]
-  + [[Library]]
 ***** RemovePunned
 ****** Extend <<RemovePunned/Extend>>
 - This pass removes the =Punned= form
@@ -1937,16 +1892,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[RemoveSignature/Extend]]
   + [[RemoveSignature/Extend]]
-  + [[Library]]
-****** Transform <<RemovePunned/Transform>>
-- _Relies on_
-  + [[RemovePunned/Types]]
-  + [[RemoveSignature/Types]]
-  + [[Library]]
-****** Types <<RemovePunned/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemovePunned/Extend]]
   + [[Library]]
 ***** RemoveSignature
 ****** Extend <<RemoveSignature/Extend>>
@@ -1980,16 +1925,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[CombineMultiple/Extend]]
   + [[CombineMultiple/Extend]]
-  + [[Library]]
-****** Transform <<RemoveSignature/Transform>>
-- _Relies on_
-  + [[CombineMultiple/Types]]
-  + [[RemoveSignature/Types]]
-  + [[Library]]
-****** Types <<RemoveSignature/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
 *** Golden
@@ -2036,16 +1971,6 @@ done with no extra information needed. Thus we export the following passes
 *** Conversion
 **** ML <<test/Conversion/ML>>
 Temporary conversion from the Sexpression syntax to the ML syntax
-- _Relies on_
-  + [[Juvix/Conversion/ML]]
-  + [[Juvix/Desugar]]
-  + [[Frontend/Parser]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types/Base]]
-  + [[FrontendDesugar]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 *** Desugar <<test/Desugar>>
 - _Relies on_
   + [[Frontend/Parser]]
