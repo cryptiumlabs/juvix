@@ -12,7 +12,7 @@ module Juvix.Conversion.ML
 where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target -- Target ML Syntax
+import qualified Juvix.Desugar.Types as Target
 import Juvix.Library hiding (product, sum)
 import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Juvix.Library.Sexp as Sexp

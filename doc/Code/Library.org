@@ -1419,6 +1419,22 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
 This module is responsible for converting back S-expressions back
@@ -1430,7 +1446,7 @@ This module is responsible for converting back S-expressions back
     let/=defun= are desugared and thus need to look at the current
     forms of that
 - _Relies on_
-  + [[RemoveDo/Types]]
+  + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1462,6 +1478,80 @@ from the syntax alone with no extra information needed!)
   + [[Passes]]
   + [[Library]]
   + [[Library/Sexp]]
+***** Extend <<Desugar/Extend>>
+- This Desugars the frontend syntax
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | Do           | Expression       |
+    | ModuleE      | Expression       |
+    | Module       | TopLevel         |
+    | Function     | TopLevel         |
+    | Signature    | TopLevel         |
+    | Let          | Let              |
+    | FunctionLike | Function ∧ Let   |
+- Thus one does not have to ever deal with
+- _Expression_
+  + one does not have to deal with the following Sum Constructors
+  #+begin_src haskell
+    data Do
+      = Do'' (NonEmpty DoBody)
+      deriving (Show, Generic, NFData)
+    data DoBody
+      = DoBody
+        { doBodyName :: Maybe NameSymb,
+          doBodyExpr :: Expression
+        }
+      deriving (Show, Generic, NFData)
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+          , moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+    data Cond a
+      = C (NonEmpty (CondLogic a))
+      deriving (Show, Generic, NFData)
+    data CondLogic a
+      = CondExpression
+          { condLogicPred :: Expression
+          , condLogicBody :: a
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- _Top Level_
+  + one does not have to deal with the following Sum Constructors
+   #+begin_src haskell
+    data Module
+      = Mod (FunctionLike (NonEmpty TopLevel))
+      deriving (Show, Generic, NFData)
+      data Signature
+        = Sig
+            { signatureName :: Symbol
+              -- Was a usage but can't alias for now
+            , signatureUsage :: Maybe Expression
+            , signatureArrowType :: Expression
+            , signatureConstraints :: [Expression]
+            }
+        deriving (Show, Generic, NFData)
+  #+end_src
+- _Function_
+  + This form now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+    #+end_src
+- _NameSet_
+  + This form now looks like
+    #+begin_src haskell
+    data NameSet t
+      = NonPunned NameSymb t
+      deriving (Show, Generic, NFData)
+    #+end_src
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Library]]
 ***** Passes
 Passes contains a list of passes on the frontend syntax that can be
 done with no extra information needed. Thus we export the following passes
@@ -1474,12 +1564,18 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+***** Types <<Desugar/Types>>
+- _Relies on_
+  + [[Desugar/Extend]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
@@ -1488,7 +1584,6 @@ done with no extra information needed. Thus we export the following passes
   + [[InfixPrecedence/Transform]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Transform]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Environment <<FrontendContextualise/Environment>>
@@ -1531,14 +1626,14 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Desugar/Types]]
   + [[Contextify/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ****** Types <<Contextify/Types>>
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[RemoveDo/Types]]
+  + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ***** InfixPrecedence
@@ -1650,11 +1745,11 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
   + [[ResolveOpenInfo]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -1687,50 +1782,23 @@ done with no extra information needed. Thus we export the following passes
 #+end_src
 - for modules we can infer.
 - _Relies on_
+  + [[Desugar/Extend]]
+  + [[Desugar/Extend]]
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
   + [[Library]]
 ****** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
 ****** Types <<ModuleOpen/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
-  + [[Library]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Juvix/Conversion/ML]]
-  + [[Juvix/Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[RemoveDo/Types]]
-  + [[Library]]
-***** RemoveDo
-****** Extend <<RemoveDo/Extend>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Library]]
-****** Types <<RemoveDo/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
   + [[Library]]
 ** test
 *** Golden
@@ -1781,7 +1849,7 @@ Temporary conversion from the Sexpression syntax to the ML syntax
 - _Relies on_
   + [[Frontend/Parser]]
   + [[FrontendDesugar]]
-  + [[RemoveDo/Types]]
+  + [[Types]]
   + [[Library]]
   + [[NameSymbol]]
 **** Sexp <<Desugar/Sexp>>

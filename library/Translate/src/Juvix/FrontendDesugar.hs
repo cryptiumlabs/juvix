@@ -11,9 +11,9 @@ module Juvix.FrontendDesugar where
 
 import Juvix.Conversion.ML as ML
 import qualified Juvix.Desugar as Desugar
+import qualified Juvix.Desugar.Types as Target
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types as Initial
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
 import Juvix.Library
 
 op :: [Initial.TopLevel] -> [Target.TopLevel]

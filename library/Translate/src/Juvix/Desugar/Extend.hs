@@ -1,15 +1,3 @@
---         = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
---     #+end_src
---
--- - _NameSet_
---   + This form now looks like
---     #+begin_src haskell
---     data NameSet t
---       = NonPunned NameSymb t
---       deriving (Show, Generic, NFData)
---     #+end_src
---
-
 -- |
 -- - This Desugars the frontend syntax
 --   + Belongs to Table
@@ -76,8 +64,18 @@
 --   + This form now looks like
 --     #+begin_src haskell
 --       data Function
-module Juvix.FrontendDesugar.RemoveDo.Extend
-  ( module Juvix.FrontendDesugar.RemoveDo.Extend,
+--         = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+--     #+end_src
+--
+-- - _NameSet_
+--   + This form now looks like
+--     #+begin_src haskell
+--     data NameSet t
+--       = NonPunned NameSymb t
+--       deriving (Show, Generic, NFData)
+--     #+end_src
+module Juvix.Desugar.Extend
+  ( module Juvix.Desugar.Extend,
     module Juvix.Frontend.Types.Extend,
   )
 where
