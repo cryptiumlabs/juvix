@@ -1,16 +1,20 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.FrontendContextualise.Contextify.Sexp where
+module Juvix.FrontendContextualise.Contextify.Sexp
+  ( run,
+    contextify,
+  )
+where
 
 import Control.Lens (set)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.Desugar.Types as Repr
 import qualified Juvix.FrontendContextualise.Contextify.Types as Type
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
+import Prelude (error)
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this
@@ -44,12 +48,14 @@ updateTopLevel x ctx
   | Sexp.isAtomNamed x ":instance" = pure $ Type.PS ctx [] []
 updateTopLevel (name Sexp.:> body) ctx
   | named ":defsig-match" = defun body ctx
-  | named "declare" = undefined
-  | named "type" = undefined
-  | named "open" = undefined
+  | named "declare" = declare body ctx
+  | named "type" = type' body ctx
+  | named "open" = open body ctx
   where
     named = Sexp.isAtomNamed name
+updateTopLevel _ ctx = pure $ Type.PS ctx [] []
 
+defun :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
 defun (f Sexp.:> sig Sexp.:> forms) ctx
   | Just name <- eleToSymbol f = do
     let precendent =
@@ -59,7 +65,85 @@ defun (f Sexp.:> sig Sexp.:> forms) ctx
             Just (Context.Information info) ->
               fromMaybe Context.default' (Context.precedenceOf info)
             _ -> Context.default'
-    undefined
+        actualSig =
+          case sig of
+            Sexp.Nil -> Nothing
+            ________ -> Just sig
+    (def, modsDefinedS) <-
+      decideRecordOrDef forms name (Context.currentName ctx) precendent actualSig
+    pure $
+      Type.PS
+        { ctxS = Context.add (NameSpace.Pub name) def ctx,
+          opensS = [],
+          modsDefinedS
+        }
+defun _ _ctx = error "malformed defun"
+
+declare :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
+declare (Sexp.List [inf, n, i]) ctx
+  | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
+    Just atomName <- eleToSymbol n =
+    let prec =
+          Context.Pred
+            if  | Sexp.isAtomNamed inf "infix" ->
+                  Context.NonAssoc
+                | Sexp.isAtomNamed inf "infixl" ->
+                  Context.Left
+                | Sexp.isAtomNamed inf "infixr" ->
+                  Context.Right
+                | otherwise -> error "malformed declaration"
+            (fromIntegral atomNum)
+     in pure $ case Context.extractValue <$> Context.lookup (pure atomName) ctx of
+          Just (Context.Def d) ->
+            Type.PS
+              { ctxS =
+                  ctx
+                    |> Context.add
+                      (NameSpace.Pub atomName)
+                      (Context.Def (d {Context.defPrecedence = prec})),
+                opensS = [],
+                modsDefinedS = []
+              }
+          _ ->
+            Type.PS
+              { ctxS =
+                  Context.add
+                    (NameSpace.Pub atomName)
+                    (Context.Information [Context.Prec prec])
+                    ctx,
+                opensS = [],
+                modsDefinedS = []
+              }
+declare _ _ = error "malformed declare"
+
+-- TODO ∷ don't ignore the assoc information given with type'
+type' :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
+type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
+  | Just name <- eleToSymbol (Sexp.car assocName) =
+    let constructors = collectConstructors dat
+        addSum con =
+          Context.Sum Nothing name
+            |> Context.SumCon
+            |> Context.add (NameSpace.Pub con)
+        newCtx = foldr addSum ctx constructors
+     in pure $
+          Type.PS
+            { ctxS = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
+              opensS = [],
+              modsDefinedS = []
+            }
+type' _ _ = error "malformed type"
+
+open :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
+open (Sexp.List [mod]) ctx
+  | Just Sexp.A {atomName} <- Sexp.atomFromT mod =
+    pure $
+      Type.PS
+        { ctxS = ctx,
+          opensS = [atomName],
+          modsDefinedS = []
+        }
+open _ _ = error "malformed open"
 
 -- TODO ∷ why is the context empty?
 -- we should somehow note what lists are in scope
@@ -111,30 +195,23 @@ decideRecordOrDef xs@(Sexp.List [Sexp.List [Sexp.Nil, body]]) recordName currMod
                   >>| bimap
                     (\d -> NameSpace.insert (NameSpace.Pub fieldN) d nameSpace)
                     (<> prevModNames)
+        f x _ = pure x
     _ -> def
   where
     def = pure (Context.Def (Context.D Nothing ty xs pres), [])
 decideRecordOrDef xs _ _ pres ty =
   pure (Context.Def (Context.D Nothing ty xs pres), [])
 
-collectConstructors :: Repr.Data -> [Symbol]
-collectConstructors dat =
-  let adt' =
-        case dat of
-          Repr.Arrowed _ adt -> adt
-          Repr.NonArrowed adt -> adt
-      constructors (Repr.Sum sum) =
-        NonEmpty.toList (Repr.sumConstructor <$> sum)
-      constructors Repr.Product {} = empty
-   in constructors adt'
-
-----------------------------------------
--- Helpers
-----------------------------------------
-
-emptyArgs :: [a] -> Bool
-emptyArgs [] = True
-emptyArgs (_ : _) = False
+collectConstructors :: Sexp.T -> [Symbol]
+collectConstructors dat
+  | Just s <- Sexp.toList dat =
+    let foo = traverse (eleToSymbol . Sexp.car) s
+     in case foo of
+          Nothing -> []
+          Just xs ->
+            -- filter out the record constructors, which really aren't constructors
+            filter (\x -> x /= ":record-d" && x /= ":") xs
+  | otherwise = []
 
 --------------------------------------------------------------------------------
 -- General Helpers
@@ -144,6 +221,3 @@ eleToSymbol x
   | Just Sexp.A {atomName} <- Sexp.atomFromT x =
     Just (NameSymbol.toSymbol atomName)
   | otherwise = Nothing
-
-toSymbolList :: Sexp.T -> Maybe [Symbol]
-toSymbolList x = Sexp.toList x >>= traverse eleToSymbol

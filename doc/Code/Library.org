@@ -1626,7 +1626,6 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Desugar/Types]]
   + [[Contextify/Types]]
   + [[Library]]
   + [[NameSymbol]]
