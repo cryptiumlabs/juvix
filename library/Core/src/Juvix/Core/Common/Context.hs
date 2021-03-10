@@ -280,6 +280,48 @@ removeTop sym t@T {topLevelMap} =
   t {topLevelMap = HashMap.delete sym topLevelMap}
 
 ------------------------------------------------------------
+-- Global Traversals
+------------------------------------------------------------
+
+data ContextForms m term ty sumRep
+  = CtxForm
+      { sumF :: sumRep -> T term ty sumRep -> m sumRep,
+        termF :: term -> T term ty sumRep -> m term,
+        tyF :: ty -> T term ty sumRep -> m ty
+      }
+  deriving (Show)
+
+-- | @mapWithContext@ starts at the top of the context and applies F
+mapWithContext t@T {topLevelMap} f =
+  undefined
+  where
+    tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
+
+-- were the recursion hapepns, should be it's own function... tbh
+
+mapCurrentContext ::
+  Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
+mapCurrentContext f ctx@T {currentNameSpace, currentName} =
+  foldM dispatch ctx names
+  where
+    names =
+      NameSpace.toList1 (currentNameSpace ^. contents)
+    dispatch ctx (symbol, from) = do
+      let (symbolToInsert, actualForm) =
+            case from of
+              NameSpace.Pub d -> (NameSpace.Pub symbol, d)
+              NameSpace.Priv d -> (NameSpace.Priv symbol, d)
+      case actualForm of
+        Def d@D {defTerm, defMTy} -> do
+          newTerm <- termF f defTerm ctx
+          newTy <- traverse (\x -> tyF f x ctx) defMTy
+          ctx
+            |> add symbolToInsert (Def d {defTerm = newTerm, defMTy = newTy})
+            |> pure
+        Record r -> undefined
+      undefined
+
+------------------------------------------------------------
 -- Helpers for switching the global NameSpace
 ------------------------------------------------------------
 

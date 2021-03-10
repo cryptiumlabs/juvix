@@ -12,7 +12,7 @@ data T b
       { public :: HashMap.T Symbol b,
         private :: HashMap.T Symbol b
       }
-  deriving (Show, Eq, Data, Functor, Foldable)
+  deriving (Show, Eq, Data, Functor, Foldable, Traversable)
 
 data List b
   = List
