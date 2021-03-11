@@ -39,8 +39,33 @@ import Prelude (error)
 -- 2. We have a @predBind@ predicate which allows us to tell it what
 --    forms can cause binders. This is useful when we care about what
 --    is in scope for doing certain changes.
-foldSearchPred t predChange predBind f =
-  undefined
+--
+-- For arguments, this function takes a Sexp, along with 2 sets of
+-- pred function pairs. The function for the binding gives back a
+-- unit, as we aren't actually changing the form in that case, just
+-- checking
+foldSearchPred
+  :: Monad f => T ->
+  (NameSymbol.T -> Bool, Atom -> T -> f T) ->
+  (NameSymbol.T -> Bool, Atom -> T -> f ()) ->
+  f T
+foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
+  case t of
+    Cons a@(Atom atom@(A name _)) xs
+      | predChange name -> do
+          newCons <- f atom xs
+          case newCons of
+            Cons _ _ ->
+              Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
+            _ ->
+              pure newCons
+      | predBind name -> do
+          g atom xs
+          Cons a <$> foldSearchPred xs p1 p2
+    Cons cs xs ->
+      Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
+    Nil -> pure Nil
+    Atom a -> pure $ Atom a
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
