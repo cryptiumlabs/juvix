@@ -55,6 +55,10 @@ updateTopLevel (name Sexp.:> body) ctx
     named = Sexp.isAtomNamed name
 updateTopLevel _ ctx = pure $ Type.PS ctx [] []
 
+-- | @defun@ takes a defun form and shoves it in a Definition in the
+-- top levevl context. Since modules aren't identified yet, we first
+-- check to see if they are a module, and if they are a very simple
+-- module, then we insert a Record into the Context, and not a definition
 defun :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
 defun (f Sexp.:> sig Sexp.:> forms) ctx
   | Just name <- eleToSymbol f = do
@@ -79,6 +83,12 @@ defun (f Sexp.:> sig Sexp.:> forms) ctx
         }
 defun _ _ctx = error "malformed defun"
 
+-- | @declare@ takes a declaration and tries to add it to the
+-- context. This is a bit tricky, as we could have seen the definition
+-- before hand... that part isn't guaranteed, so if we find it then
+-- great! Add it to a definition, however if we can't find it, then
+-- make a note about the information we have on this symbol, the
+-- definition will handle incorporating it
 declare :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
 declare (Sexp.List [inf, n, i]) ctx
   | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
@@ -116,7 +126,9 @@ declare (Sexp.List [inf, n, i]) ctx
               }
 declare _ _ = error "malformed declare"
 
--- TODO ∷ don't ignore the assoc information given with type'
+-- | @type'@ will take its type and add it into the context. Note that
+-- since we store information with the type, we will keep the name in
+-- the top level form.
 type' :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
 type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
   | Just name <- eleToSymbol (Sexp.car assocName) =
@@ -134,6 +146,10 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
             }
 type' _ _ = error "malformed type"
 
+-- | @open@ like type will simply take the open and register that the
+-- current module is opening it. Since the context does not have such a
+-- notion, we have to store this information for the resolve module to
+-- properly handle
 open :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
 open (Sexp.List [mod]) ctx
   | Just Sexp.A {atomName} <- Sexp.atomFromT mod =
@@ -158,7 +174,7 @@ open _ _ = error "malformed open"
 -- we don't return a map, as we can't do opens in a record
 
 -- | decideRecordOrDef tries to figure out
--- if a given defintiion is a record or a definition
+-- if a given definition is a record or a definition
 decideRecordOrDef ::
   Sexp.T ->
   Symbol ->
