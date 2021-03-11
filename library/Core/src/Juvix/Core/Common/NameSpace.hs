@@ -84,6 +84,11 @@ toList1 ns =
   let List {publicL, privateL} = toList ns
    in (second Pub <$> publicL) <> (second Priv <$> privateL)
 
+toList1FSymb :: T v -> [(From Symbol, v)]
+toList1FSymb ns =
+  let List {publicL, privateL} = toList ns
+   in (first Pub <$> publicL) <> (first Priv <$> privateL)
+
 toList1' :: T v -> [(Symbol, v)]
 toList1' ns =
   let List {publicL, privateL} = toList ns in publicL <> privateL

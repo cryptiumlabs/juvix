@@ -15,7 +15,7 @@ import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import Juvix.Library hiding (modify, toList)
+import Juvix.Library hiding (Sum, modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -292,10 +292,17 @@ data ContextForms m term ty sumRep
   deriving (Show)
 
 -- | @mapWithContext@ starts at the top of the context and applies F
-mapWithContext t@T {topLevelMap} f =
-  undefined
+mapWithContext ::
+  Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)
+mapWithContext t@T {topLevelMap, currentName} f = do
+  ctx <- foldM switchAndUpdate t tops
+  let Just finalCtx = inNameSpace (addTopName currentName) ctx
+  pure finalCtx
   where
     tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
+    switchAndUpdate ctx name =
+      let Just t = inNameSpace name ctx
+       in mapCurrentContext f t
 
 -- were the recursion hapepns, should be it's own function... tbh
 
@@ -305,21 +312,43 @@ mapCurrentContext f ctx@T {currentNameSpace, currentName} =
   foldM dispatch ctx names
   where
     names =
-      NameSpace.toList1 (currentNameSpace ^. contents)
-    dispatch ctx (symbol, from) = do
-      let (symbolToInsert, actualForm) =
-            case from of
-              NameSpace.Pub d -> (NameSpace.Pub symbol, d)
-              NameSpace.Priv d -> (NameSpace.Priv symbol, d)
-      case actualForm of
-        Def d@D {defTerm, defMTy} -> do
-          newTerm <- termF f defTerm ctx
-          newTy <- traverse (\x -> tyF f x ctx) defMTy
+      NameSpace.toList1FSymb (currentNameSpace ^. contents)
+    dispatch ctx (name, form) = do
+      -- Used for the def and sumcon case
+      -- Just run over the two parts that change
+      let defCase d@D {defTerm, defMTy} = do
+            newTerm <- termF f defTerm ctx
+            newTy <- traverse (\x -> tyF f x ctx) defMTy
+            pure $ d {defTerm = newTerm, defMTy = newTy}
+      case form of
+        Def d -> do
+          newDef <- defCase d
           ctx
-            |> add symbolToInsert (Def d {defTerm = newTerm, defMTy = newTy})
+            |> add name (Def newDef)
             |> pure
-        Record r -> undefined
-      undefined
+        Record r -> do
+          -- Do the signature call in the module above and re-insert it
+          -- into the current module
+          newTy <- traverse (\x -> tyF f x ctx) (recordMTy r)
+          -- now we should siwtch modules, note we are going to do a
+          -- direct insertion, so no need to reconstruct
+          let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
+          ctx' <- mapCurrentContext f newCtx
+          let ctx'' = set (_currentNameSpace . mTy) newTy ctx'
+          -- just switch back to where we need to be
+          let Just finalCtx = inNameSpace (addTopName currentName) ctx''
+          pure finalCtx
+        Unknown u -> do
+          t <- traverse (\x -> tyF f x ctx) u
+          pure $ add name (Unknown t) ctx
+        SumCon (Sum def name') -> do
+          newDef <- traverse defCase def
+          pure $ add name (SumCon (Sum newDef name')) ctx
+        TypeDeclar t -> do
+          newT <- sumF f t ctx
+          pure $ add name (TypeDeclar newT) ctx
+        CurrentNameSpace -> pure ctx
+        Information _ -> pure ctx
 
 ------------------------------------------------------------
 -- Helpers for switching the global NameSpace
