@@ -44,8 +44,9 @@ import Prelude (error)
 -- pred function pairs. The function for the binding gives back a
 -- unit, as we aren't actually changing the form in that case, just
 -- checking
-foldSearchPred
-  :: Monad f => T ->
+foldSearchPred ::
+  Monad f =>
+  T ->
   (NameSymbol.T -> Bool, Atom -> T -> f T) ->
   (NameSymbol.T -> Bool, Atom -> T -> f ()) ->
   f T
@@ -53,15 +54,15 @@ foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
   case t of
     Cons a@(Atom atom@(A name _)) xs
       | predChange name -> do
-          newCons <- f atom xs
-          case newCons of
-            Cons _ _ ->
-              Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
-            _ ->
-              pure newCons
+        newCons <- f atom xs
+        case newCons of
+          Cons _ _ ->
+            Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
+          _ ->
+            pure newCons
       | predBind name -> do
-          g atom xs
-          Cons a <$> foldSearchPred xs p1 p2
+        g atom xs
+        Cons a <$> foldSearchPred xs p1 p2
     Cons cs xs ->
       Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
     Nil -> pure Nil

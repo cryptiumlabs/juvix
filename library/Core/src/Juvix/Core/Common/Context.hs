@@ -291,12 +291,21 @@ data ContextForms m term ty sumRep
       }
   deriving (Show)
 
--- Sadly we have to wrap the call in an identity to satisfy ctxform
+-- | @mapWithContextPure@ is just @mapWithContext@ but is pure. Since
+-- the function we take in is of type @ContextForms@ we must wrap our
+-- functions in the identity monad. See @mapWithContext@ for more
+-- information. We don't have to mutate, but often it's more useful
+-- that way for various reasons. This pure version is very useful in a
+-- simple pass through of the forms.
 mapWithContextPure ::
   T term ty sumRep -> ContextForms Identity term ty sumRep -> T term ty sumRep
 mapWithContextPure t f = runIdentity (mapWithContext t f)
 
--- | @mapWithContext@ starts at the top of the context and applies F
+-- | @mapWithContext@ starts at the top of the context and applies the
+-- given function f to all part of the data type it can. Note that
+-- records are treated as if they are part of the module above it if
+-- there is a signature!  See @mapCurrentContext@ for more information
+-- about specifics, as we just dispatch to that for the real changes
 mapWithContext ::
   Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)
 mapWithContext t@T {topLevelMap, currentName} f = do
@@ -309,8 +318,10 @@ mapWithContext t@T {topLevelMap, currentName} f = do
       let Just t = inNameSpace name ctx
        in mapCurrentContext f t
 
--- were the recursion hapepns, should be it's own function... tbh
-
+-- | @mapCurrentContext@ maps f over the entire context, this function
+-- calls the function handed to it over the context. The function runs
+-- over the current form and the context, so any dependencies may be
+-- resolved and proper stored away.
 mapCurrentContext ::
   Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
 mapCurrentContext f ctx@T {currentNameSpace, currentName} =
