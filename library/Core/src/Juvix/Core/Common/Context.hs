@@ -291,6 +291,11 @@ data ContextForms m term ty sumRep
       }
   deriving (Show)
 
+-- Sadly we have to wrap the call in an identity to satisfy ctxform
+mapWithContextPure ::
+  T term ty sumRep -> ContextForms Identity term ty sumRep -> T term ty sumRep
+mapWithContextPure t f = runIdentity (mapWithContext t f)
+
 -- | @mapWithContext@ starts at the top of the context and applies F
 mapWithContext ::
   Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)

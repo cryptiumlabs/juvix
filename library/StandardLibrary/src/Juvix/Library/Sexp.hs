@@ -18,6 +18,8 @@ module Juvix.Library.Sexp
     atomFromT,
     groupBy2,
     assoc,
+    cadr,
+    foldSearchPred,
   )
 where
 
@@ -27,6 +29,18 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Sexp.Parser
 import Juvix.Library.Sexp.Types
 import Prelude (error)
+
+-- | @foldSearchPred@ is like foldPred with some notable exceptions.
+-- 1. Instead of recusing on the @predChange@ form, it will just leave
+--    the main form in tact.
+--    - This is because in this sort of task we
+--      will wish to maybe just change an aspect of it but maybe not
+--      the actual form!
+-- 2. We have a @predBind@ predicate which allows us to tell it what
+--    forms can cause binders. This is useful when we care about what
+--    is in scope for doing certain changes.
+foldSearchPred t predChange predBind f =
+  undefined
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
@@ -111,9 +125,9 @@ nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
 assoc :: T -> T -> Maybe T
-assoc t (car :> cdr)
-  | t == car = Just (cadr car)
-  | otherwise = assoc t cdr
+assoc t (car' :> cdr')
+  | t == car car' = Just (cadr car')
+  | otherwise = assoc t cdr'
 assoc _ Nil = Nothing
 assoc _ Atom {} = Nothing
 
