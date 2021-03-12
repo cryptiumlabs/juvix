@@ -48,7 +48,7 @@ foldSearchPred ::
   Monad f =>
   T ->
   (NameSymbol.T -> Bool, Atom -> T -> f T) ->
-  (NameSymbol.T -> Bool, Atom -> T -> f ()) ->
+  (NameSymbol.T -> Bool, Atom -> T -> f T -> f T) ->
   f T
 foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
   case t of
@@ -61,8 +61,10 @@ foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
           _ ->
             pure newCons
       | predBind name -> do
-        g atom xs
-        Cons a <$> foldSearchPred xs p1 p2
+        -- G takes the computation, as its changes are scoped over the
+        -- calls.
+        g atom xs $ do
+          Cons a <$> foldSearchPred xs p1 p2
     Cons cs xs ->
       Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
     Nil -> pure Nil
