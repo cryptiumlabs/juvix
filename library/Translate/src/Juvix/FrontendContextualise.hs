@@ -123,7 +123,7 @@ resolveOpensS ::
   (Context.NameSymbol, [Sexp.T]) ->
   m (Contextify.ContextSexp, [ResolveOpen.PreQualified])
 resolveOpensS (ctx', openList) (sym, xs) = do
-  ctx <- liftIO (ContextSexp.run ctx' (sym, xs))
+  ctx <- ContextSexp.run ctx' (sym, xs)
   case ctx of
     Right Contextify.PS {ctxS, opensS, modsDefinedS} ->
       pure

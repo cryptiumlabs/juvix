@@ -20,15 +20,17 @@ import Prelude (error)
 -- TODO ∷ parallelize this
 run,
   contextify ::
+    MonadIO m =>
     Type.ContextSexp ->
     (Context.NameSymbol, [Sexp.T]) ->
-    IO (Either Context.PathError Type.PassSexp)
+    m (Either Context.PathError Type.PassSexp)
 contextify cont (nameSymb, xs) = do
-  newNamespace <- Context.switchNameSpace nameSymb cont
+  newNamespace <- liftIO $ Context.switchNameSpace nameSymb cont
   case newNamespace of
     Left errr -> pure (Left errr)
     Right ctxS ->
       foldM f Type.PS {ctxS, opensS = [], modsDefinedS = []} xs
+        |> liftIO
         >>| Right
   where
     f Type.PS {ctxS, opensS, modsDefinedS} top = do
