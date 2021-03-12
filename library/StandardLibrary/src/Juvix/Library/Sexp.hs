@@ -41,9 +41,9 @@ import Prelude (error)
 --    is in scope for doing certain changes.
 --
 -- For arguments, this function takes a Sexp, along with 2 sets of
--- pred function pairs. The function for the binding gives back a
--- unit, as we aren't actually changing the form in that case, just
--- checking
+-- pred function pairs. The function for the binding we take the rest
+-- of the computation, as we wish to only make the changes locally,
+-- much like a lexical binding/closure.
 foldSearchPred ::
   Monad f =>
   T ->
