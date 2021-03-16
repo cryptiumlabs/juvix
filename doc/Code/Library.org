@@ -1822,6 +1822,19 @@ done with no extra information needed. Thus we export the following passes
 *** Main <<Translate/test/Main>>
 - _Relies on_
   + [[Library]]
+*** Context
+**** Environment <<Context/Environment>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendContextualise]]
+  + [[FrontendContextualise/Environment]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[Library/Sexp]]
 *** Contextualise
 **** Contextify
 - _Relies on_

@@ -197,7 +197,7 @@ newtype Closure'
   = Closure (Map.T Symbol Information)
   deriving (Show, Eq)
 
-data ErrorS = CantResolve [Sexp.T]
+newtype ErrorS = CantResolve [Sexp.T] deriving (Show, Eq)
 
 type SexpContext = Context.T Sexp.T Sexp.T Sexp.T
 
