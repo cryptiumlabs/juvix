@@ -126,6 +126,14 @@ letTest =
     trigger =
       (== "print-closure")
 
+typeTest =
+  T.testGroup
+    "Types properly add all to to the closure"
+    []
+  where
+    trigger =
+      (== "print-closure")
+
 -- Right (ctx,_) <- contextualizeFoo "let f = 3"
 -- (_, capture) = runCtx (Env.passContextSingle ctx (== "print-closure") recordClosure) emptyClosure
 ----------------------------------------------------------------------

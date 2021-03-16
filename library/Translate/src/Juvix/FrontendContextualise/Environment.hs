@@ -251,7 +251,10 @@ passContext ctx trigger Pass {sumF, termF, tyF} =
   Context.mapWithContext
     ctx
     Context.CtxForm
-      { sumF = pass sumF,
+      { -- Need to do this consing of type to figure out we are in a type
+        -- we then need to remove it, as it shouldn't be there
+        sumF = \form ->
+          fmap Sexp.cdr . pass sumF (Sexp.Cons (Sexp.atom "type") form),
         termF = pass termF,
         tyF = pass tyF
       }
