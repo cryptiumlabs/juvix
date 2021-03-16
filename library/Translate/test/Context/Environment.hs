@@ -79,7 +79,7 @@ passContext :: T.TestTree
 passContext =
   T.testGroup
     "testing passContext closures"
-    [letTest, typeTest, caseTest, lambdaTest, declaimTest]
+    [letTest, typeTest, caseTest, lambdaTest, declaimTest, openTest]
 
 ----------------------------------------
 -- Let Test
@@ -192,6 +192,24 @@ declaimTest =
         -- we could check for info, but this is sufficient for it
         -- properly working
         Env.keys lamb T.@=? Set.fromList ["+"]
+    ]
+  where
+    trigger =
+      (== "print-closure")
+
+openTest :: T.TestTree
+openTest =
+  T.testGroup
+    "open Tests"
+    [ T.testCase "open properly adds symbols" $ do
+        Right (ctx, _) <-
+          Contextualize.contextifyS
+            ( ("Foo", parseDesugarSexp "let f = open A in print-closure 2")
+                :| [("A", parseDesugarSexp "let bar = 3")]
+            )
+        let (_, Cap _ [Env.Closure capture]) =
+              runCtx (Env.passContextSingle ctx trigger recordClosure) emptyClosure
+        Map.toList capture T.@=? [("bar", Env.Info Nothing [] (Just "A"))]
     ]
   where
     trigger =
