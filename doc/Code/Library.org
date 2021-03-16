@@ -1346,6 +1346,9 @@ Can be added to via core translation
       constructs in =Protolude=
 - _Relies on_
   + [[PrettyPrint]]
+***** Feedback
+- _Relies on_
+  + [[Library]]
 ***** HashMap
 - The HashMap for the codebase.
 - Basically just imports Data.HashMap.Strict
@@ -1419,22 +1422,6 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Juvix/Conversion/ML]]
-  + [[Juvix/Desugar]]
-  + [[Desugar/Types]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
 This module is responsible for converting back S-expressions back
@@ -1812,6 +1799,22 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
+  + [[Library]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
   + [[Library]]
 ** test
 *** Golden

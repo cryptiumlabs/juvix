@@ -29,6 +29,7 @@ dependencies:
 - megaparsec
 - word8
 - bytestring
+- mtl
 
 default-extensions:
   - NoImplicitPrelude
@@ -37,6 +38,7 @@ default-extensions:
   - LambdaCase
   - TypeSynonymInstances
   - FlexibleInstances
+  - KindSignatures
 
 ghc-options:
   - -ferror-spans
