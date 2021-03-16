@@ -176,6 +176,8 @@ setupFill sym cWorks cDoesntWork = do
 -- Sexp Helpers Code Above this Will likely be deleted
 ----------------------------------------------------------------------
 
+-- Will make things more export friendly when the above code is gone
+
 -- TODO ∷ make this a standard data structure
 
 -- Currently we don't really use the signature however in the future
@@ -222,15 +224,23 @@ data Pass m
         tyF :: Sexp.Atom -> Sexp.T -> m Sexp.T
       }
 
+-- | @passContextSingle@ Traverses the context firing off sexp
+-- traversals based on the given trigger.
 passContextSingle ::
   (HasClosure m, ErrS m) =>
+  -- | the context in which our code resides in
   SexpContext ->
+  -- | the trigger function that states what forms to fire off
+  -- on. :atom for firing on every atom
   (NameSymbol.T -> Bool) ->
+  -- | Our transformation function that is responsible for handling the triggers
   (Sexp.Atom -> Sexp.T -> m Sexp.T) ->
   m SexpContext
 passContextSingle ctx trigger f =
   passContext ctx trigger (Pass f f f)
 
+-- | @passContext@ like @passContextSingle@ but we supply a different
+-- function for each type term and sum representation form.
 passContext ::
   (HasClosure m, ErrS m) => SexpContext -> (NameSymbol.T -> Bool) -> Pass m -> m SexpContext
 passContext ctx trigger Pass {sumF, termF, tyF} =
@@ -248,12 +258,29 @@ passContext ctx trigger Pass {sumF, termF, tyF} =
         (trigger, func)
         (bindingForms, searchAndClosure ctx)
 
+-- | @bindingForms@ is a predicate that answers true for every form
+-- that instantiates a new variable
 bindingForms :: (Eq a, IsString a) => a -> Bool
 bindingForms x =
   x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", ":declaim"]
 
+-- | @searchAndClosure@ is responsible for properly updating the
+-- closure based on any binders we may encounter. The signature is made
+-- to fit into the @Sexp.foldSearchPred@'s binder dispatch clause, the
+-- only difference is that we take an extra context before that
+-- signature.
 searchAndClosure ::
-  (HasClosure f, ErrS f) => SexpContext -> Sexp.Atom -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+  (HasClosure f, ErrS f) =>
+  -- | The Context, an extra function that is required the by the
+  -- :open-in case.
+  SexpContext ->
+  -- | the atom to dispatch on
+  Sexp.Atom ->
+  -- | The sexp form in which the atom is called on
+  Sexp.T ->
+  -- | the continuation of continuing the changes
+  (Sexp.T -> f Sexp.T) ->
+  f Sexp.T
 searchAndClosure ctx a as cont
   | named "case" = case' as cont
   -- this case happens at the start of every defun
@@ -275,14 +302,14 @@ searchAndClosure _ _ _ _ = error "imporper closure call"
 
 letType :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 letType (Sexp.List [assocName, args, dat, body]) cont = do
-  local @"closure" (\cnt -> foldr genericBind cnt (grabBindings <> grabConsturctors)) $ do
+  local @"closure" (\cnt -> foldr genericBind cnt (bindings <> consturctors)) $ do
     d <- cont dat
     assoc <- cont assocName
     bod <- cont body
     pure $ Sexp.list [assoc, args, d, bod]
   where
-    grabBindings = nameStar args
-    grabConsturctors = nameGather dat
+    bindings = nameStar args
+    consturctors = nameGather dat
 
 type' :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 type' (assocName Sexp.:> args Sexp.:> dat) cont =
@@ -394,7 +421,7 @@ matchGen ::
 matchGen nameStarFunc (Sexp.List [path, body]) cont =
   -- Important we must do this first!
   local @"closure" (\cnt -> foldr genericBind cnt grabBindings) $ do
-    -- THIS MUST happen in the local, as we don't want to have a pas
+    -- THIS MUST happen in the local, as we don't want to have a pass
     -- confuse the variables here as something else... imagine if we
     -- are doing a pass which resolves symbols, then we'd try to
     -- resolve the variables we bind. However for constructors and what
