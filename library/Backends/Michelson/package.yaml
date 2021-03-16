@@ -32,6 +32,7 @@ dependencies:
 - vinyl
 - singletons
 - fmt
+- bytestring
 
 default-extensions:
   - NoImplicitPrelude
@@ -58,6 +59,7 @@ default-extensions:
   - FlexibleContexts
   - FlexibleInstances
   - MultiParamTypeClasses
+  - BlockArguments
 
 ghc-options:
   - -ferror-spans

@@ -22,7 +22,8 @@ data Prec
   -- | Argument of infix function, with the same meaning as the argument of
   -- 'Text.Show.showsPrec'
   | Infix Natural
-  -- | Argument of nonfix function; all non-atomic expressions need parens
+  -- | Argument (or head) of nonfix function; all non-atomic expressions need
+  -- parens
   | FunArg
   deriving (Eq, Ord, Show, Generic)
 
@@ -33,20 +34,24 @@ type PrecReader = HasReader "prec" Prec
 class Monoid (Ann a) => PrettySyntax a where
   -- | Pretty-prints a syntax value, given the current precedence value in
   -- a reader environment.
-  prettyPrec' :: PrecReader m => a -> m (Doc (Ann a))
-  default prettyPrec' ::
+  pretty' :: PrecReader m => a -> m (Doc (Ann a))
+  default pretty' ::
     (PrettyText a, PrecReader m) => a -> m (Doc (Ann a))
-  prettyPrec' = pure . prettyText
+  pretty' = pure . prettyText
+
+runPretty :: Prec -> (forall m. PrecReader m => m a) -> a
+runPretty prec m = let MonadReader x = m in runReader x prec
+
+runPretty0 :: (forall m. PrecReader m => m a) -> a
+runPretty0 = runPretty Outer
 
 -- | Pretty-print at the given precedence level.
-prettyPrec :: PrettySyntax a => Prec -> a -> Doc (Ann a)
-prettyPrec prec x =
-  let MonadReader act = prettyPrec' x in
-  runReader act prec
+pretty :: PrettySyntax a => Prec -> a -> Doc (Ann a)
+pretty prec x = runPretty prec (pretty' x)
 
 -- | Pretty-print at the initial precedence level.
-prettyPrec0 :: PrettySyntax a => a -> Doc (Ann a)
-prettyPrec0 = prettyPrec Outer
+pretty0 :: PrettySyntax a => a -> Doc (Ann a)
+pretty0 = pretty Outer
 
 withPrec :: PrecReader m => Prec -> m a -> m a
 withPrec p = local @"prec" \_ -> p
@@ -64,29 +69,33 @@ show :: (Monoid ann, Show a) => a -> Doc ann
 show = text . Show.show
 
 hsepA ::
-  (Applicative f, Traversable t, Monoid ann) =>
+  (Applicative f, Foldable t, Monoid ann) =>
   t (f (Doc ann)) -> f (Doc ann)
 hsepA = fmap hsep . sequenceA . toList
 
 sepA ::
-  (Applicative f, Traversable t, Monoid ann) =>
+  (Applicative f, Foldable t, Monoid ann) =>
   t (f (Doc ann)) -> f (Doc ann)
 sepA = fmap sep . sequenceA . toList
 
 hcatA ::
-  (Applicative f, Traversable t, Monoid ann) =>
+  (Applicative f, Foldable t, Monoid ann) =>
   t (f (Doc ann)) -> f (Doc ann)
 hcatA = fmap hcat . sequenceA . toList
 
 vcatA ::
-  (Applicative f, Traversable t, Monoid ann) =>
+  (Applicative f, Foldable t, Monoid ann) =>
   t (f (Doc ann)) -> f (Doc ann)
 vcatA = fmap vcat . sequenceA . toList
 
 punctuateA ::
-  (Applicative f, Traversable t, Monoid ann) =>
-  f (Doc ann) -> t (f (Doc ann)) -> f [Doc ann]
-punctuateA sep docs = punctuate <$> sep <*> sequenceA (toList docs)
+  (Applicative f, Foldable t, Monoid ann) =>
+  f (Doc ann) -> t (f (Doc ann)) -> [f (Doc ann)]
+punctuateA s = go . toList
+  where
+    go [] = []
+    go [d] = [d]
+    go (d:ds) = hcatA [d, s] : go ds
 
 hangA ::
   (Applicative f, Monoid ann) =>
@@ -113,9 +122,9 @@ hangs :: (Foldable t, Monoid ann) => Int -> Doc ann -> t (Doc ann) -> Doc ann
 hangs = hangsWith " "
 
 hangsA ::
-  (Applicative f, Traversable t, Monoid ann) =>
+  (Applicative f, Foldable t, Monoid ann) =>
   Int -> f (Doc ann) -> t (f (Doc ann)) -> f (Doc ann)
-hangsA i a bs = hangs i <$> a <*> sequenceA bs
+hangsA i a bs = hangs i <$> a <*> sequenceA (toList bs)
 
 
 parensA :: Monoid ann => ann -> Doc ann -> Doc ann
@@ -136,3 +145,21 @@ parensP' = parensP . Last . Just
 
 annotate' :: ann -> Doc (Last ann) -> Doc (Last ann)
 annotate' = annotate . Last . Just
+
+app ::
+  ( PrecReader m,
+    Foldable t,
+    Monoid ann
+  ) =>
+  ann -> m (Doc ann) -> t (m (Doc ann)) -> m (Doc ann)
+app ann f xs = parensP ann FunArg $ withPrec FunArg $ hangsA indentWidth f xs
+
+app' ::
+  ( PrecReader m,
+    Foldable t
+  ) =>
+  ann -> m (Doc (Last ann)) -> t (m (Doc (Last ann))) -> m (Doc (Last ann))
+app' = app . Last . Just
+
+indentWidth :: Int
+indentWidth = 2

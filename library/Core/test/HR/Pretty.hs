@@ -47,7 +47,7 @@ atomTests =
   ]
   where
     infix 1 @@?=
-    ns @@?= str = PP.render (PP.prettyPrec0 (ns :: NameSymbol.T)) @?= str
+    ns @@?= str = PP.render (PP.pretty0 (ns :: NameSymbol.T)) @?= str
 
 bindTests :: T.TestTree
 bindTests =
@@ -257,4 +257,4 @@ a @?= b = S a T.@?= S b
 prettyAt :: (a ~ tm HR.T Nat.Ty Nat.Val, PP.PrettySyntax a) => Int -> a -> String
 prettyAt n x =
   PP.renderWith (PP.defaultOptions {PP.optsPageWidth = n}) $
-  PP.prettyPrec0 x
+  PP.pretty0 x

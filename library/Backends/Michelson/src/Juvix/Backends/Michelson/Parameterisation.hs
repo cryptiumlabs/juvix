@@ -4,6 +4,7 @@
 module Juvix.Backends.Michelson.Parameterisation
   ( module Juvix.Backends.Michelson.Parameterisation,
     module Types,
+    module Pretty,
   )
 where
 
@@ -13,6 +14,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types as Types
+import Juvix.Backends.Michelson.Compilation.Pretty as Pretty
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
 import qualified Juvix.Backends.Michelson.Contract as Contract ()
 import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions

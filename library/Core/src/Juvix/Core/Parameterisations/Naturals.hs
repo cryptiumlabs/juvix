@@ -157,7 +157,7 @@ t =
 
 type instance PP.Ann Ty = ()
 
-instance PP.PrettySyntax Ty where prettyPrec' Ty = pure "Nat"
+instance PP.PrettySyntax Ty where pretty' Ty = pure "Nat"
 
 
 data PPAnn' = Lit | Fun | Paren deriving (Eq, Ord, Show)
@@ -170,14 +170,13 @@ type instance PP.Ann Val = PPAnn
 nat :: Natural -> Doc
 nat = PP.annotate' Lit . PP.show
 
+pnat :: Applicative f => Natural -> f Doc
+pnat = pure . nat
+
 instance PP.PrettySyntax Val where
-  prettyPrec' = \case
-    Val k -> pure $ nat k
+  pretty' = \case
+    Val k -> pnat k
     Add -> pure $ PP.annotate' Fun "add"
     Sub -> pure $ PP.annotate' Fun "sub"
     Mul -> pure $ PP.annotate' Fun "mul"
-    Curried f k -> PP.parensP' Paren PP.FunArg $
-      PP.hsepA [
-        PP.withPrec PP.FunArg $ PP.prettyPrec' f,
-        pure $ nat k
-      ]
+    Curried f k -> PP.app' Paren (PP.pretty' f) [pnat k]
