@@ -6,5 +6,5 @@ module Juvix.Core.HR
 where
 
 import Juvix.Core.HR.Parser
-import Juvix.Core.HR.Types
 import Juvix.Core.HR.Pretty hiding (Doc)
+import Juvix.Core.HR.Types

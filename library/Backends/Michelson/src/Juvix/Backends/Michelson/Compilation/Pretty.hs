@@ -1,31 +1,35 @@
 module Juvix.Backends.Michelson.Compilation.Pretty
-  ( TyAnn' (..), TyAnn, TDoc,
-    ValAnn' (..), ValAnn, VDoc,
-  ) where
+  ( TyAnn' (..),
+    TyAnn,
+    TDoc,
+    ValAnn' (..),
+    ValAnn,
+    VDoc,
+  )
+where
 
+import Data.ByteString (unpack)
+import Data.String (String)
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Library hiding (Type, Option, const)
+import Juvix.Library hiding (Option, Type, const)
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Text as M
 import qualified Michelson.TypeCheck as M
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
-import qualified Michelson.Untyped.Type as M
 import qualified Michelson.Untyped.Instr as Instr
-import qualified Juvix.Library.PrettyPrint as PP
-import Data.String (String)
+import qualified Michelson.Untyped.Type as M
 import Numeric (showHex)
 import Text.Show (showString)
-import Data.ByteString (unpack)
 
-
-data TyAnn' =
-    TAPunct
+data TyAnn'
+  = TAPunct
   | TATyCon
   deriving (Eq, Ord, Show, Generic)
 
@@ -86,11 +90,11 @@ instance PP.PrettySyntax M.Type where
     -- M.TBls12381G2 -> ptycon "bls12_381_g2"
     M.TTimestamp -> ptycon "timestamp"
     M.TAddress -> ptycon "address"
-    -- M.TNever -> ptycon "never"
 
+-- M.TNever -> ptycon "never"
 
-data ValAnn' =
-    VAPunct
+data ValAnn'
+  = VAPunct
   | VAInst
   | VAConst
   | VATyCon
@@ -106,7 +110,9 @@ tyToValAnn = fmap \case
 type VDoc = PP.Doc ValAnn
 
 type instance PP.Ann RawPrimVal = ValAnn
+
 type instance PP.Ann (M.Value' _) = ValAnn
+
 type instance PP.Ann (Instr.InstrAbstract _) = ValAnn
 
 punct :: VDoc -> VDoc
@@ -204,33 +210,33 @@ instance PP.PrettySyntax RawPrimVal where
     MapOp -> pinst "MAP"
 
 instance
-    (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
-    PP.PrettySyntax (M.Value' op)
+  (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
+  PP.PrettySyntax (M.Value' op)
   where
-    pretty' = \case
-      M.ValueInt i -> pconsts i
-      M.ValueString str -> pconsts $ M.unMText str
-      M.ValueBytes (M.InternalByteString bs) -> pconst $ showBytes $ unpack bs
-      M.ValueUnit -> pconst "Unit"
-      M.ValueTrue -> pconst "True"
-      M.ValueFalse -> pconst "False"
-      M.ValuePair x y -> appV (pconst "Pair") [PP.pretty' x, PP.pretty' y]
-      M.ValueLeft x -> appV (pconst "Left") [PP.pretty' x]
-      M.ValueRight y -> appV (pconst "Right") [PP.pretty' y]
-      M.ValueSome x -> appV (pconst "Some") [PP.pretty' x]
-      M.ValueNone -> pconst "None"
-      M.ValueNil -> pconst "Nil"
-      M.ValueSeq vs -> prettyBlock vs
-      M.ValueMap kvs -> prettyBlock kvs
-      M.ValueLambda ops -> prettyBlock ops
+  pretty' = \case
+    M.ValueInt i -> pconsts i
+    M.ValueString str -> pconsts $ M.unMText str
+    M.ValueBytes (M.InternalByteString bs) -> pconst $ showBytes $ unpack bs
+    M.ValueUnit -> pconst "Unit"
+    M.ValueTrue -> pconst "True"
+    M.ValueFalse -> pconst "False"
+    M.ValuePair x y -> appV (pconst "Pair") [PP.pretty' x, PP.pretty' y]
+    M.ValueLeft x -> appV (pconst "Left") [PP.pretty' x]
+    M.ValueRight y -> appV (pconst "Right") [PP.pretty' y]
+    M.ValueSome x -> appV (pconst "Some") [PP.pretty' x]
+    M.ValueNone -> pconst "None"
+    M.ValueNil -> pconst "Nil"
+    M.ValueSeq vs -> prettyBlock vs
+    M.ValueMap kvs -> prettyBlock kvs
+    M.ValueLambda ops -> prettyBlock ops
 
 type instance PP.Ann (M.Elt _) = ValAnn
 
 instance
-    (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
-    PP.PrettySyntax (M.Elt op)
+  (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
+  PP.PrettySyntax (M.Elt op)
   where
-    pretty' (M.Elt k v) = appV (pconst "Elt") [PP.pretty' k, PP.pretty' v]
+  pretty' (M.Elt k v) = appV (pconst "Elt") [PP.pretty' k, PP.pretty' v]
 
 showBytes :: [Word8] -> VDoc
 showBytes str =
@@ -241,106 +247,106 @@ prettyTV ::
 prettyTV = fmap (fmap tyToValAnn) . PP.pretty'
 
 instance
-    (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
-    PP.PrettySyntax (Instr.InstrAbstract op)
+  (PP.PrettySyntax op, PP.Ann op ~ ValAnn) =>
+  PP.PrettySyntax (Instr.InstrAbstract op)
   where
-    pretty' = \case
-      Instr.EXT _ext -> ppunct "{}" -- FIXME
-      Instr.DROPN n -> appV (pinst "DROP") [pconsts n]
-      Instr.DROP -> pinst "DROP"
-      Instr.DUP _ -> pinst "DUP"
-      Instr.SWAP -> pinst "SWAP"
-      Instr.DIG n -> appV (pinst "DIG") [pconsts n]
-      Instr.DUG n -> appV (pinst "DUG") [pconsts n]
-      Instr.PUSH _ ty x -> appV (pinst "DUG") [prettyTV ty, PP.pretty' x]
-      Instr.SOME _ _ -> pinst "SOME"
-      Instr.NONE _ _ ty -> appV (pinst "NONE") [prettyTV ty]
-      Instr.UNIT _ _ -> pinst "UNIT"
-      Instr.IF_NONE none some ->
-        appV (pinst "IF_NONE") [prettyBlock none, prettyBlock some]
-      Instr.PAIR _ _ _ _ -> pinst "PAIR"
-      -- Instr.PAIRN _ n -> appV (pinst "PAIR") [pconsts n]
-      -- Instr.UNPAIRN _ 2 -> pinst "UNPAIR"
-      -- Instr.UNPAIRN _ n -> appV (pinst "UNPAIR") [pconsts n]
-      Instr.CAR _ _ -> pinst "CAR"
-      Instr.CDR _ _ -> pinst "CDR"
-      Instr.LEFT _ _ _ _ ty -> appV (pinst "LEFT") [prettyTV ty]
-      Instr.RIGHT _ _ _ _ ty -> appV (pinst "RIGHT") [prettyTV ty]
-      Instr.IF_LEFT left right ->
-        appV (pinst "IF_LEFT") [prettyBlock left, prettyBlock right]
-      Instr.NIL _ _ ty -> appV (pinst "NIL") [prettyTV ty]
-      Instr.CONS _ -> pinst "CONS"
-      Instr.IF_CONS cons nil ->
-        appV (pinst "IF_CONS") [prettyBlock cons, prettyBlock nil]
-      Instr.SIZE _ -> pinst "SIZE"
-      Instr.EMPTY_SET _ _ ty -> appV (pinst "EMPTY_SET") [prettyTV ty]
-      Instr.EMPTY_MAP _ _ kty vty ->
-        appV (pinst "EMPTY_MAP") [prettyTV kty, prettyTV vty]
-      Instr.EMPTY_BIG_MAP _ _ kty vty ->
-        appV (pinst "EMPTY_BIG_MAP") [prettyTV kty, prettyTV vty]
-      Instr.MAP _ ops -> appV (pinst "MAP") [prettyBlock ops]
-      Instr.ITER ops -> appV (pinst "ITER") [prettyBlock ops]
-      Instr.MEM _ -> pinst "MEM"
-      Instr.GET _ -> pinst "GET"
-      -- Instr.GETN _ n -> appV (pinst "GET") [pconsts n]
-      Instr.UPDATE _ -> pinst "UPDATE"
-      Instr.IF tru fls ->
-        appV (pinst "IF") [prettyBlock tru, prettyBlock fls]
-      Instr.LOOP ops -> appV (pinst "LOOP") [prettyBlock ops]
-      Instr.LOOP_LEFT ops -> appV (pinst "LOOP_LEFT") [prettyBlock ops]
-      Instr.LAMBDA _ a b ops ->
-        appV (pinst "LAMBDA") [prettyTV a, prettyTV b, prettyBlock ops]
-      Instr.EXEC _ -> pinst "EXEC"
-      Instr.APPLY _ -> pinst "APPLY"
-      Instr.DIP ops -> appV (pinst "DIP") [prettyBlock ops]
-      Instr.DIPN n ops -> appV (pinst "DIP") [pconsts n, prettyBlock ops]
-      Instr.FAILWITH -> pinst "FAILWITH"
-      Instr.CAST _ ty -> appV (pinst "FAILWITH") [prettyTV ty]
-      Instr.RENAME _ -> pinst "RENAME"
-      Instr.PACK _ -> pinst "PACK"
-      Instr.UNPACK _ _ ty -> appV (pinst "UNPACK") [prettyTV ty]
-      Instr.CONCAT _ -> pinst "CONCAT"
-      Instr.SLICE _ -> pinst "SLICE"
-      Instr.ISNAT _ -> pinst "ISNAT"
-      Instr.ADD _ -> pinst "ADD"
-      Instr.SUB _ -> pinst "SUB"
-      Instr.MUL _ -> pinst "MUL"
-      Instr.EDIV _ -> pinst "EDIV"
-      Instr.ABS _ -> pinst "ABS"
-      Instr.NEG _ -> pinst "NEG"
-      Instr.LSL _ -> pinst "LSL"
-      Instr.LSR _ -> pinst "LSR"
-      Instr.OR _ -> pinst "OR"
-      Instr.AND _ -> pinst "AND"
-      Instr.XOR _ -> pinst "XOR"
-      Instr.NOT _ -> pinst "NOT"
-      Instr.COMPARE _ -> pinst "COMPARE"
-      Instr.EQ _ -> pinst "EQ"
-      Instr.NEQ _ -> pinst "NEQ"
-      Instr.LT _ -> pinst "LT"
-      Instr.GT _ -> pinst "GT"
-      Instr.LE _ -> pinst "LE"
-      Instr.GE _ -> pinst "GE"
-      Instr.INT _ -> pinst "INT"
-      Instr.SELF _ _ -> pinst "SELF"
-      Instr.CONTRACT _ _ ty -> appV (pinst "SELF") [prettyTV ty]
-      Instr.TRANSFER_TOKENS _ -> pinst "TRANSFER_TOKENS"
-      Instr.SET_DELEGATE _ -> pinst "SET_DELEGATE"
-      Instr.CREATE_CONTRACT _ _ k ->
-        appV (pinst "CREATE_CONTRACT") [prettyContract k]
-      Instr.IMPLICIT_ACCOUNT _ -> pinst "IMPLICIT_ACCOUNT"
-      Instr.NOW _ -> pinst "NOW"
-      Instr.AMOUNT _ -> pinst "AMOUNT"
-      Instr.BALANCE _ -> pinst "BALANCE"
-      Instr.CHECK_SIGNATURE _ -> pinst "CHECK_SIGNATURE"
-      Instr.SHA256 _ -> pinst "SHA256"
-      Instr.SHA512 _ -> pinst "SHA512"
-      Instr.BLAKE2B _ -> pinst "BLAKE2B"
-      Instr.HASH_KEY _ -> pinst "HASH_KEY"
-      Instr.SOURCE _ -> pinst "SOURCE"
-      Instr.SENDER _ -> pinst "SENDER"
-      Instr.ADDRESS _ -> pinst "ADDRESS"
-      Instr.CHAIN_ID _ -> pinst "CHAIN_ID"
+  pretty' = \case
+    Instr.EXT _ext -> ppunct "{}" -- FIXME
+    Instr.DROPN n -> appV (pinst "DROP") [pconsts n]
+    Instr.DROP -> pinst "DROP"
+    Instr.DUP _ -> pinst "DUP"
+    Instr.SWAP -> pinst "SWAP"
+    Instr.DIG n -> appV (pinst "DIG") [pconsts n]
+    Instr.DUG n -> appV (pinst "DUG") [pconsts n]
+    Instr.PUSH _ ty x -> appV (pinst "DUG") [prettyTV ty, PP.pretty' x]
+    Instr.SOME _ _ -> pinst "SOME"
+    Instr.NONE _ _ ty -> appV (pinst "NONE") [prettyTV ty]
+    Instr.UNIT _ _ -> pinst "UNIT"
+    Instr.IF_NONE none some ->
+      appV (pinst "IF_NONE") [prettyBlock none, prettyBlock some]
+    Instr.PAIR _ _ _ _ -> pinst "PAIR"
+    -- Instr.PAIRN _ n -> appV (pinst "PAIR") [pconsts n]
+    -- Instr.UNPAIRN _ 2 -> pinst "UNPAIR"
+    -- Instr.UNPAIRN _ n -> appV (pinst "UNPAIR") [pconsts n]
+    Instr.CAR _ _ -> pinst "CAR"
+    Instr.CDR _ _ -> pinst "CDR"
+    Instr.LEFT _ _ _ _ ty -> appV (pinst "LEFT") [prettyTV ty]
+    Instr.RIGHT _ _ _ _ ty -> appV (pinst "RIGHT") [prettyTV ty]
+    Instr.IF_LEFT left right ->
+      appV (pinst "IF_LEFT") [prettyBlock left, prettyBlock right]
+    Instr.NIL _ _ ty -> appV (pinst "NIL") [prettyTV ty]
+    Instr.CONS _ -> pinst "CONS"
+    Instr.IF_CONS cons nil ->
+      appV (pinst "IF_CONS") [prettyBlock cons, prettyBlock nil]
+    Instr.SIZE _ -> pinst "SIZE"
+    Instr.EMPTY_SET _ _ ty -> appV (pinst "EMPTY_SET") [prettyTV ty]
+    Instr.EMPTY_MAP _ _ kty vty ->
+      appV (pinst "EMPTY_MAP") [prettyTV kty, prettyTV vty]
+    Instr.EMPTY_BIG_MAP _ _ kty vty ->
+      appV (pinst "EMPTY_BIG_MAP") [prettyTV kty, prettyTV vty]
+    Instr.MAP _ ops -> appV (pinst "MAP") [prettyBlock ops]
+    Instr.ITER ops -> appV (pinst "ITER") [prettyBlock ops]
+    Instr.MEM _ -> pinst "MEM"
+    Instr.GET _ -> pinst "GET"
+    -- Instr.GETN _ n -> appV (pinst "GET") [pconsts n]
+    Instr.UPDATE _ -> pinst "UPDATE"
+    Instr.IF tru fls ->
+      appV (pinst "IF") [prettyBlock tru, prettyBlock fls]
+    Instr.LOOP ops -> appV (pinst "LOOP") [prettyBlock ops]
+    Instr.LOOP_LEFT ops -> appV (pinst "LOOP_LEFT") [prettyBlock ops]
+    Instr.LAMBDA _ a b ops ->
+      appV (pinst "LAMBDA") [prettyTV a, prettyTV b, prettyBlock ops]
+    Instr.EXEC _ -> pinst "EXEC"
+    Instr.APPLY _ -> pinst "APPLY"
+    Instr.DIP ops -> appV (pinst "DIP") [prettyBlock ops]
+    Instr.DIPN n ops -> appV (pinst "DIP") [pconsts n, prettyBlock ops]
+    Instr.FAILWITH -> pinst "FAILWITH"
+    Instr.CAST _ ty -> appV (pinst "FAILWITH") [prettyTV ty]
+    Instr.RENAME _ -> pinst "RENAME"
+    Instr.PACK _ -> pinst "PACK"
+    Instr.UNPACK _ _ ty -> appV (pinst "UNPACK") [prettyTV ty]
+    Instr.CONCAT _ -> pinst "CONCAT"
+    Instr.SLICE _ -> pinst "SLICE"
+    Instr.ISNAT _ -> pinst "ISNAT"
+    Instr.ADD _ -> pinst "ADD"
+    Instr.SUB _ -> pinst "SUB"
+    Instr.MUL _ -> pinst "MUL"
+    Instr.EDIV _ -> pinst "EDIV"
+    Instr.ABS _ -> pinst "ABS"
+    Instr.NEG _ -> pinst "NEG"
+    Instr.LSL _ -> pinst "LSL"
+    Instr.LSR _ -> pinst "LSR"
+    Instr.OR _ -> pinst "OR"
+    Instr.AND _ -> pinst "AND"
+    Instr.XOR _ -> pinst "XOR"
+    Instr.NOT _ -> pinst "NOT"
+    Instr.COMPARE _ -> pinst "COMPARE"
+    Instr.EQ _ -> pinst "EQ"
+    Instr.NEQ _ -> pinst "NEQ"
+    Instr.LT _ -> pinst "LT"
+    Instr.GT _ -> pinst "GT"
+    Instr.LE _ -> pinst "LE"
+    Instr.GE _ -> pinst "GE"
+    Instr.INT _ -> pinst "INT"
+    Instr.SELF _ _ -> pinst "SELF"
+    Instr.CONTRACT _ _ ty -> appV (pinst "SELF") [prettyTV ty]
+    Instr.TRANSFER_TOKENS _ -> pinst "TRANSFER_TOKENS"
+    Instr.SET_DELEGATE _ -> pinst "SET_DELEGATE"
+    Instr.CREATE_CONTRACT _ _ k ->
+      appV (pinst "CREATE_CONTRACT") [prettyContract k]
+    Instr.IMPLICIT_ACCOUNT _ -> pinst "IMPLICIT_ACCOUNT"
+    Instr.NOW _ -> pinst "NOW"
+    Instr.AMOUNT _ -> pinst "AMOUNT"
+    Instr.BALANCE _ -> pinst "BALANCE"
+    Instr.CHECK_SIGNATURE _ -> pinst "CHECK_SIGNATURE"
+    Instr.SHA256 _ -> pinst "SHA256"
+    Instr.SHA512 _ -> pinst "SHA512"
+    Instr.BLAKE2B _ -> pinst "BLAKE2B"
+    Instr.HASH_KEY _ -> pinst "HASH_KEY"
+    Instr.SOURCE _ -> pinst "SOURCE"
+    Instr.SENDER _ -> pinst "SENDER"
+    Instr.ADDRESS _ -> pinst "ADDRESS"
+    Instr.CHAIN_ID _ -> pinst "CHAIN_ID"
 
 -- |
 -- As one of:
@@ -358,25 +364,27 @@ prettyBlock ::
     PP.PrecReader m,
     Foldable t
   ) =>
-  t a -> m VDoc
+  t a ->
+  m VDoc
 prettyBlock ops =
-  PP.sepA [
-    PP.hsepA [
-      ppunct "{",
-      PP.sepA $ PP.punctuateA (ppunct ";") $ map PP.pretty' $ toList ops
-    ],
-    ppunct "}"
-  ]
+  PP.sepA
+    [ PP.hsepA
+        [ ppunct "{",
+          PP.sepA $ PP.punctuateA (ppunct ";") $ map PP.pretty' $ toList ops
+        ],
+      ppunct "}"
+    ]
 
 prettyContract ::
   (PP.PrettySyntax op, PP.Ann op ~ ValAnn, PP.PrecReader m) =>
-  M.Contract' op -> m VDoc
+  M.Contract' op ->
+  m VDoc
 prettyContract (M.Contract (M.ParameterType param _) storage code) =
-  PP.vcatA [
-    PP.sepA [pkeyword "parameter", PP.hcatA [prettyTV param, ppunct ";"]],
-    PP.sepA [pkeyword "storage", PP.hcatA [prettyTV storage, ppunct ";"]],
-    prettyBlock code
-  ]
+  PP.vcatA
+    [ PP.sepA [pkeyword "parameter", PP.hcatA [prettyTV param, ppunct ";"]],
+      PP.sepA [pkeyword "storage", PP.hcatA [prettyTV storage, ppunct ";"]],
+      prettyBlock code
+    ]
 
 type instance PP.Ann Instr.ExpandedOp = ValAnn
 

@@ -18,7 +18,6 @@ type Base = Symbol
 
 type Mod = [Symbol]
 
-
 toSymbol :: T -> Symbol
 toSymbol =
   Prelude.foldr1 (\x acc -> x <> "." <> acc)
@@ -116,5 +115,6 @@ applyBase f n = let (m, b) = split n in qualify1 m (f b)
 type instance PP.Ann T = ()
 
 instance PP.PrettySyntax T
+
 instance PP.PrettyText T where
   prettyText = PP.text . unintern . toSymbol

@@ -1,6 +1,5 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Juvix.Core.HR.Pretty
   ( PPAnn' (..),
@@ -9,32 +8,41 @@ module Juvix.Core.HR.Pretty
     Doc,
     PrimPretty1,
     PrimPretty,
-  ) where
+  )
+where
 
-import Juvix.Library
 import Juvix.Core.HR.Types
-import qualified Juvix.Library.PrettyPrint as PP
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
-
+import Juvix.Library
+import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.PrettyPrint as PP
+import qualified Juvix.Library.Usage as Usage
 
 -- | Annotations for syntax highlighting
 data PPAnn'
-  = ATyCon   -- ^ builtin type constructors: Π, *, etc
-  | AValCon  -- ^ builtin data: λ, (), usages, etc
-  | APrimTy  -- ^ backend primitive type
-  | APrimVal -- ^ backend primitive value
-  | APrimFun -- ^ backend primitive function
-  | APunct   -- ^ brackets, dots, etc
-  | AName    -- ^ names (TODO: distinguish bound & free?)
+  = -- | builtin type constructors: Π, *, etc
+    ATyCon
+  | -- | builtin data: λ, (), usages, etc
+    AValCon
+  | -- | backend primitive type
+    APrimTy
+  | -- | backend primitive value
+    APrimVal
+  | -- | backend primitive function
+    APrimFun
+  | -- | brackets, dots, etc
+    APunct
+  | -- | names (TODO: distinguish bound & free?)
+    AName
 
 type PPAnn = Last PPAnn'
 
 type instance PP.Ann (Term _ _) = PPAnn
+
 type instance PP.Ann (Elim _ _) = PPAnn
 
 type PrimPretty1 p = (PP.PrettySyntax p, ToPPAnn (PP.Ann p))
+
 type PrimPretty ty val = (PrimPretty1 ty, PrimPretty1 val)
 
 type Doc = PP.Doc PPAnn
@@ -73,45 +81,54 @@ liftPP :: PP.Doc () -> Doc
 liftPP = fmap $ const $ Last Nothing
 
 data Bind = PI | SIG
+
 type Binder primTy primVal = (Bind, Usage.T, NameSymbol.T, Term primTy primVal)
 
 getBinds ::
   Term primTy primVal -> ([Binder primTy primVal], Term primTy primVal)
-getBinds = go [] where
-  go acc (Pi π x s t) = go ((PI, π, x, s) : acc) t
-  go acc (Sig π x s t) = go ((SIG, π, x, s) : acc) t
-  go acc t = (reverse acc, t)
+getBinds = go []
+  where
+    go acc (Pi π x s t) = go ((PI, π, x, s) : acc) t
+    go acc (Sig π x s t) = go ((SIG, π, x, s) : acc) t
+    go acc t = (reverse acc, t)
 
 ppBinders ::
   (PrimPretty primTy primVal, PP.PrecReader m) =>
-  [Binder primTy primVal] -> Term primTy primVal -> m Doc
+  [Binder primTy primVal] ->
+  Term primTy primVal ->
+  m Doc
 ppBinders bs t =
-    PP.hangA PP.indentWidth (PP.sepA $ map ppBinder1 bs) (ppOuter t)
+  PP.hangA PP.indentWidth (PP.sepA $ map ppBinder1 bs) (ppOuter t)
   where
-    ppBinder1 (b, π, x, s) = PP.hsepA $
-      [ ppBind b,
-        parens <$> PP.sepA [
-          PP.hsepA [ppUsage π, pure pipe],
-          pure $ PP.hsep [name x, colon],
-          ppOuter s
-        ],
-        pure arrow
-      ]
+    ppBinder1 (b, π, x, s) =
+      PP.hsepA $
+        [ ppBind b,
+          parens
+            <$> PP.sepA
+              [ PP.hsepA [ppUsage π, pure pipe],
+                pure $ PP.hsep [name x, colon],
+                ppOuter s
+              ],
+          pure arrow
+        ]
     ppBind = pure . annotate ATyCon . \case PI -> "Π"; SIG -> "Σ"
 
 ppUsage :: PP.PrecReader m => Usage.T -> m Doc
 ppUsage = fmap (annotate AValCon . liftPP) . PP.pretty'
 
 getLams :: Term primTy primVal -> ([NameSymbol.T], Term primTy primVal)
-getLams = go [] where
-  go acc (Lam x t) = go (x : acc) t
-  go acc t = (reverse acc, t)
+getLams = go []
+  where
+    go acc (Lam x t) = go (x : acc) t
+    go acc t = (reverse acc, t)
 
 ppLams ::
   (PrimPretty primTy primVal, PP.PrecReader m) =>
-  [NameSymbol.T] -> Term primTy primVal -> m Doc
+  [NameSymbol.T] ->
+  Term primTy primVal ->
+  m Doc
 ppLams names body =
-    PP.hangA PP.indentWidth (pure header) (ppOuter body)
+  PP.hangA PP.indentWidth (pure header) (ppOuter body)
   where
     header = PP.sep [annotate AValCon "λ", ppNames names, arrow]
     ppNames = PP.hsep . map (liftPP . PP.prettyText)
@@ -119,15 +136,16 @@ ppLams names body =
 ppOuter :: (PP.PrecReader m, PP.PrettySyntax a) => a -> m (PP.Doc (PP.Ann a))
 ppOuter = PP.withPrec PP.Outer . PP.pretty'
 
-
 getApps :: Elim primTy primVal -> (Elim primTy primVal, [Term primTy primVal])
-getApps = go [] where
-  go acc (App f s) = go (s : acc) f
-  go acc e = (e, reverse acc)
+getApps = go []
+  where
+    go acc (App f s) = go (s : acc) f
+    go acc e = (e, reverse acc)
 
 ppPairs ::
   (PrimPretty primTy primVal, PP.PrecReader m) =>
-  [Term primTy primVal] -> m Doc
+  [Term primTy primVal] ->
+  m Doc
 ppPairs =
   fmap (angles . PP.sep . PP.punctuate comma) . traverse ppOuter
 
@@ -135,34 +153,41 @@ getPairs :: Term primTy primVal -> [Term primTy primVal]
 getPairs (Pair s t) = s : getPairs t
 getPairs t = [t]
 
-
 instance PrimPretty primTy primVal => PP.PrettySyntax (Term primTy primVal) where
   pretty' = \case
-    Star i -> parensP PP.FunArg $
-      pure $ annotate ATyCon $ PP.sep ["*", PP.show i]
+    Star i ->
+      parensP PP.FunArg
+        $ pure
+        $ annotate ATyCon
+        $ PP.sep ["*", PP.show i]
     PrimTy ty ->
       annotate APrimTy . fmap toPPAnn <$> PP.pretty' ty
     Prim val ->
       annotate APrimVal . fmap toPPAnn <$> PP.pretty' val
     Pi π x s t -> ppBinders ((PI, π, x, s) : bs) body
-      where (bs, body) = getBinds t
+      where
+        (bs, body) = getBinds t
     Lam x t -> ppLams (x : xs) body
-      where (xs, body) = getLams t
+      where
+        (xs, body) = getLams t
     Sig π x s t -> ppBinders ((SIG, π, x, s) : bs) body
-      where (bs, body) = getBinds t
+      where
+        (bs, body) = getBinds t
     Pair s t ->
       ppPairs (s : ts)
-      where ts = getPairs t
+      where
+        ts = getPairs t
     Let π x b t ->
-      PP.sepA [
-        PP.hsepA [
-          PP.hangA PP.indentWidth
-            (PP.hsepA [let_, ppUsage π, pure pipe, pure $ name x, pure equals])
-            (ppOuter b),
-          in_
-        ],
-        ppOuter t
-      ]
+      PP.sepA
+        [ PP.hsepA
+            [ PP.hangA
+                PP.indentWidth
+                (PP.hsepA [let_, ppUsage π, pure pipe, pure $ name x, pure equals])
+                (ppOuter b),
+              in_
+            ],
+          ppOuter t
+        ]
       where
         let_ = pure $ annotate AValCon "let"
         in_ = pure $ annotate AValCon "in"
@@ -174,14 +199,16 @@ instance PrimPretty primTy primVal => PP.PrettySyntax (Elim primTy primVal) wher
   pretty' = \case
     Var x -> pure $ annotate AName $ name x
     App f s -> PP.app' APunct (PP.pretty' f') $ map PP.pretty' $ ss ++ [s]
-      where (f', ss) = getApps f
-    Ann π s a ℓ -> fmap parens $
-      PP.hangsA PP.indentWidth
-        (PP.hsepA [ppUsage π, pure pipe, ppOuter s])
-        [ PP.hsepA [pure colon, ppOuter a],
-          PP.hsepA [pure colon, ppOuter (Star ℓ :: Term primTy primVal)]
-        ]
-
+      where
+        (f', ss) = getApps f
+    Ann π s a ℓ ->
+      fmap parens $
+        PP.hangsA
+          PP.indentWidth
+          (PP.hsepA [ppUsage π, pure pipe, ppOuter s])
+          [ PP.hsepA [pure colon, ppOuter a],
+            PP.hsepA [pure colon, ppOuter (Star ℓ :: Term primTy primVal)]
+          ]
 
 class ToPPAnn ann where
   toPPAnn :: ann -> PPAnn

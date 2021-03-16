@@ -131,11 +131,11 @@ builtinTypes = HM.fromList [("Nat" :| [], Ty)]
 
 builtinValues :: P.Builtins Val
 builtinValues =
-  HM.fromList [
-    ("add" :| [], Add),
-    ("sub" :| [], Sub),
-    ("mul" :| [], Mul)
-  ]
+  HM.fromList
+    [ ("add" :| [], Add),
+      ("sub" :| [], Sub),
+      ("mul" :| [], Mul)
+    ]
 
 t :: P.Parameterisation Ty Val
 t =
@@ -159,8 +159,8 @@ type instance PP.Ann Ty = ()
 
 instance PP.PrettySyntax Ty where pretty' Ty = pure "Nat"
 
-
 data PPAnn' = Lit | Fun | Paren deriving (Eq, Ord, Show)
+
 type PPAnn = Last PPAnn'
 
 type Doc = PP.Doc PPAnn

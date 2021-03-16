@@ -52,7 +52,7 @@ type instance PP.Ann NatAndw = ()
 
 instance PP.PrettySyntax NatAndw where
   pretty' (SNat π) = pure $ PP.show π
-  pretty' Omega    = pure "ω"
+  pretty' Omega = pure "ω"
 
 pred :: NatAndw -> NatAndw
 pred (SNat x) = SNat (x - 1)

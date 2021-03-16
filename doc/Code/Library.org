@@ -298,6 +298,7 @@ This module provides a default contract environment
 ******* Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
   + [[Compilation]]
+  + [[Compilation/Pretty]]
   + [[Compilation/Types]]
   + [[Compilation/Types]]
   + [[Michelson/Contract]]
@@ -330,6 +331,17 @@ This module provides a default contract environment
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+******** Pretty <<Compilation/Pretty>>
+- _Relies on_
+  + [[Compilation/Types]]
+  + [[Application]]
+  + [[ErasedAnn/Types]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[PrettyPrint]]
+  + [[Usage]]
 ******** Types <<Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
@@ -617,6 +629,7 @@ temporary lexical bindings as our code encounters binders.
 ***** HR
 - _Relies on_
   + [[HR/Parser]]
+  + [[Core/HR/Pretty]]
   + [[HR/Types]]
 ****** Extend <<HR/Extend>>
 - _Relies on_
@@ -629,6 +642,14 @@ temporary lexical bindings as our code encounters binders.
   + [[Core/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Usage]]
+****** Pretty <<Core/HR/Pretty>>
+- _Relies on_
+  + [[HR/Types]]
+  + [[Naturals]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[PrettyPrint]]
   + [[Usage]]
 ****** Subst <<HR/Subst>>
 - Runs a substitution algorithm over core
@@ -842,6 +863,7 @@ Quantitative type implementation inspired by
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[PrettyPrint]]
 ****** Unit
 - _Relies on_
   + [[IR/Evaluator]]
@@ -877,6 +899,30 @@ Quantitative type implementation inspired by
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
+*** Common
+**** Context <<test/Common/Context>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+*** HR
+**** Pretty <<test/HR/Pretty>>
+- _Relies on_
+  + [[HR]]
+  + [[Naturals]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[PrettyPrint]]
+  + [[Usage]]
+*** IR
+**** Weak <<IR/Weak>>
+Tests that weak works as expected
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types]]
+  + [[Library]]
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
@@ -892,21 +938,6 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Usage]]
-*** Common
-**** Context <<test/Common/Context>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-*** IR
-**** Weak <<IR/Weak>>
-Tests that weak works as expected
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[IR/Types]]
-  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1267,8 +1298,6 @@ Can be added to via core translation
   + _Changes_
     * The Capability library is imported and replaces the standard =MTL=
       constructs in =Protolude=
-- _Relies on_
-  + [[PrettyPrint]]
 ***** Feedback
 - _Relies on_
   + [[Library]]
@@ -1285,10 +1314,14 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[Token]]
+  + [[PrettyPrint]]
 ***** PrettyPrint
+- _Relies on_
+  + [[Library]]
 ***** Usage
 - _Relies on_
   + [[Library]]
+  + [[PrettyPrint]]
 ***** Parser <<Library/Parser>>
 - _Relies on_
   + [[Internal]]
@@ -1332,6 +1365,10 @@ sexp type and all the various helper functionality one can need
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
+*** Pretty <<test/Pretty>>
+- _Relies on_
+  + [[Library]]
+  + [[PrettyPrint]]
 *** Sexp <<StandardLibrary/test/Sexp>>
 - _Relies on_
   + [[Library]]
@@ -1402,21 +1439,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Closure]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
   + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
@@ -1534,6 +1556,21 @@ done with no extra information needed. Thus we export the following passes
 - Removing punned record arguments
 - Remvoing Do syntax
 - _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]
 **** ToCore

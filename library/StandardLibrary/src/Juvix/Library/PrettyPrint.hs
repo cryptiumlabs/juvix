@@ -1,30 +1,45 @@
 module Juvix.Library.PrettyPrint
   ( module Juvix.Library.PrettyPrint,
-    module Text.PrettyPrint.Compact
-  ) where
+    module Text.PrettyPrint.Compact,
+  )
+where
 
-import Text.PrettyPrint.Compact.Core
-import Text.PrettyPrint.Compact
-  hiding (lparen, rparen, langle, rangle, lbrace, rbrace,
-          lbracket, rbracket, squote, dquote, semi, colon,
-          comma, space, dot, backslash, equals)
 import Juvix.Library hiding (show)
+import Text.PrettyPrint.Compact hiding
+  ( backslash,
+    colon,
+    comma,
+    dot,
+    dquote,
+    equals,
+    langle,
+    lbrace,
+    lbracket,
+    lparen,
+    rangle,
+    rbrace,
+    rbracket,
+    rparen,
+    semi,
+    space,
+    squote,
+  )
+import Text.PrettyPrint.Compact.Core
 import qualified Text.Show as Show
 import Prelude (String)
-
 
 -- | Annotations, which can be used for e.g. syntax highlighting
 type family Ann a :: *
 
 data Prec
-  -- | Outermost expression; no parens needed
-  = Outer
-  -- | Argument of infix function, with the same meaning as the argument of
-  -- 'Text.Show.showsPrec'
-  | Infix Natural
-  -- | Argument (or head) of nonfix function; all non-atomic expressions need
-  -- parens
-  | FunArg
+  = -- | Outermost expression; no parens needed
+    Outer
+  | -- | Argument of infix function, with the same meaning as the argument of
+    -- 'Text.Show.showsPrec'
+    Infix Natural
+  | -- | Argument (or head) of nonfix function; all non-atomic expressions need
+    -- parens
+    FunArg
   deriving (Eq, Ord, Show, Generic)
 
 type PrecReader = HasReader "prec" Prec
@@ -64,42 +79,50 @@ class Monoid (Ann a) => PrettyText a where
   default prettyText :: Show a => a -> Doc (Ann a)
   prettyText = text . Show.show
 
-
 show :: (Monoid ann, Show a) => a -> Doc ann
 show = text . Show.show
 
 hsepA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  t (f (Doc ann)) -> f (Doc ann)
+  t (f (Doc ann)) ->
+  f (Doc ann)
 hsepA = fmap hsep . sequenceA . toList
 
 sepA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  t (f (Doc ann)) -> f (Doc ann)
+  t (f (Doc ann)) ->
+  f (Doc ann)
 sepA = fmap sep . sequenceA . toList
 
 hcatA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  t (f (Doc ann)) -> f (Doc ann)
+  t (f (Doc ann)) ->
+  f (Doc ann)
 hcatA = fmap hcat . sequenceA . toList
 
 vcatA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  t (f (Doc ann)) -> f (Doc ann)
+  t (f (Doc ann)) ->
+  f (Doc ann)
 vcatA = fmap vcat . sequenceA . toList
 
 punctuateA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  f (Doc ann) -> t (f (Doc ann)) -> [f (Doc ann)]
+  f (Doc ann) ->
+  t (f (Doc ann)) ->
+  [f (Doc ann)]
 punctuateA s = go . toList
   where
     go [] = []
     go [d] = [d]
-    go (d:ds) = hcatA [d, s] : go ds
+    go (d : ds) = hcatA [d, s] : go ds
 
 hangA ::
   (Applicative f, Monoid ann) =>
-  Int -> f (Doc ann) -> f (Doc ann) -> f (Doc ann)
+  Int ->
+  f (Doc ann) ->
+  f (Doc ann) ->
+  f (Doc ann)
 hangA i = liftA2 $ hang i
 
 -- | Same as 'hangWith', but with multiple hanging elements.
@@ -114,7 +137,11 @@ hangA i = liftA2 $ hang i
 -- @
 hangsWith ::
   (Foldable t, Monoid ann) =>
-  String -> Int -> Doc ann -> t (Doc ann) -> Doc ann
+  String ->
+  Int ->
+  Doc ann ->
+  t (Doc ann) ->
+  Doc ann
 hangsWith sep n a bs =
   groupingBy sep $ (0, a) : map (n,) (toList bs)
 
@@ -123,9 +150,11 @@ hangs = hangsWith " "
 
 hangsA ::
   (Applicative f, Foldable t, Monoid ann) =>
-  Int -> f (Doc ann) -> t (f (Doc ann)) -> f (Doc ann)
+  Int ->
+  f (Doc ann) ->
+  t (f (Doc ann)) ->
+  f (Doc ann)
 hangsA i a bs = hangs i <$> a <*> sequenceA (toList bs)
-
 
 parensA :: Monoid ann => ann -> Doc ann -> Doc ann
 parensA ann = annotate ann "(" `enclose` annotate ann ")"
@@ -151,14 +180,20 @@ app ::
     Foldable t,
     Monoid ann
   ) =>
-  ann -> m (Doc ann) -> t (m (Doc ann)) -> m (Doc ann)
+  ann ->
+  m (Doc ann) ->
+  t (m (Doc ann)) ->
+  m (Doc ann)
 app ann f xs = parensP ann FunArg $ withPrec FunArg $ hangsA indentWidth f xs
 
 app' ::
   ( PrecReader m,
     Foldable t
   ) =>
-  ann -> m (Doc (Last ann)) -> t (m (Doc (Last ann))) -> m (Doc (Last ann))
+  ann ->
+  m (Doc (Last ann)) ->
+  t (m (Doc (Last ann))) ->
+  m (Doc (Last ann))
 app' = app . Last . Just
 
 indentWidth :: Int

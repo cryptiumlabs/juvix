@@ -7,7 +7,8 @@ module Juvix.Core.HR.Types
     BoundVar,
     Name (..),
     GlobalUsage (..),
-  ) where
+  )
+where
 
 import Juvix.Core.HR.Extend
 import Juvix.Core.IR.Types.Base
