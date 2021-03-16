@@ -16,7 +16,7 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (error, fail)
+import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- Top Level Test
@@ -79,7 +79,7 @@ passContext :: T.TestTree
 passContext =
   T.testGroup
     "testing passContext closures"
-    [letTest, typeTest, caseTest, lambdaTest]
+    [letTest, typeTest, caseTest, lambdaTest, declaimTest]
 
 ----------------------------------------
 -- Let Test
@@ -168,13 +168,30 @@ caseTest =
 lambdaTest :: T.TestTree
 lambdaTest =
   T.testGroup
-    "lambda binder"
-    [ T.testCase "lambda properly adds binders" $ do
+    "λ binder"
+    [ T.testCase "λ properly adds binders" $ do
         [lamb] <-
           capture
             "let f = \\(Cons a b) -> (print-closure 3)"
             trigger
         Env.keys lamb T.@=? Set.fromList ["a", "b"]
+    ]
+  where
+    trigger =
+      (== "print-closure")
+
+declaimTest :: T.TestTree
+declaimTest =
+  T.testGroup
+    "declaim binder"
+    [ T.testCase "declaim properly adds info" $ do
+        [lamb] <-
+          capture
+            "let f = declare infixl (+) 7 in print-closure 2"
+            trigger
+        -- we could check for info, but this is sufficient for it
+        -- properly working
+        Env.keys lamb T.@=? Set.fromList ["+"]
     ]
   where
     trigger =
