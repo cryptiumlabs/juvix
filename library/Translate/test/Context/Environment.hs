@@ -7,6 +7,8 @@ import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
 import qualified Juvix.FrontendContextualise as Contextualize
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as Contextify
+import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.Environment as Env
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
@@ -38,7 +40,7 @@ data Capture
 type CaptureAlias =
   ExceptT Env.ErrorS (State Capture)
 
-newtype Context a = Ctx {run :: CaptureAlias a}
+newtype Context a = Ctx {_run :: CaptureAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasReader "closure" Env.Closure',
@@ -56,9 +58,6 @@ newtype Context a = Ctx {run :: CaptureAlias a}
 
 runCtx :: Context a -> Capture -> (Either Env.ErrorS a, Capture)
 runCtx (Ctx c) = runState (runExceptT c)
-
-emptyCtx :: IO (Context.T Sexp.T Sexp.T Sexp.T)
-emptyCtx = Context.empty "Foo"
 
 emptyClosure :: Capture
 emptyClosure = Cap (Env.Closure Map.empty) []
@@ -119,6 +118,13 @@ letTest =
 -- Give me sexp terms helpers
 ----------------------------------------------------------------------
 
+contextualizeFoo ::
+  ByteString ->
+  IO
+    ( Either
+        Context.PathError
+        (Contextify.ContextSexp, [Contextify.PreQualified])
+    )
 contextualizeFoo byte =
   Contextualize.contextifyS (("Foo", parseDesugarSexp byte) :| [])
 
@@ -131,7 +137,3 @@ parsedSexp xs = ignoreHeader (Parser.parse xs) >>| SexpTrans.transTopLevel
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs
 ignoreHeader _ = error "not no header"
-
-ignoreRight :: Either a p -> p
-ignoreRight (Right x) = x
-ignoreRight (Left _) = error "not right"

@@ -1831,6 +1831,8 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
   + [[FrontendContextualise]]
+  + [[ResolveOpenInfo]]
+  + [[Contextify/Types]]
   + [[FrontendContextualise/Environment]]
   + [[Library]]
   + [[HashMap]]
