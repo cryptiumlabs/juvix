@@ -1839,6 +1839,7 @@ done with no extra information needed. Thus we export the following passes
   + [[FrontendContextualise/Environment]]
   + [[Library]]
   + [[HashMap]]
+  + [[NameSymbol]]
   + [[Library/Sexp]]
 *** Contextualise
 **** Contextify

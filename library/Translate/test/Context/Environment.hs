@@ -12,6 +12,7 @@ import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.Environment as Env
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
@@ -78,7 +79,7 @@ passContext :: T.TestTree
 passContext =
   T.testGroup
     "testing passContext closures"
-    [letTest]
+    [letTest, typeTest]
 
 ----------------------------------------
 -- Let Test
@@ -89,32 +90,23 @@ letTest =
   T.testGroup
     "Let's properly add to the closure"
     [ T.testCase "let-match" $ do
-        Right (ctx, _) <-
-          contextualizeFoo
+        [x, y] <-
+          capture
             "let f = let g = 3 in \
             \ let foo (Nil x)      = print-closure 0 in \
             \ let foo (Cons a y) z = print-closure 0 in \
             \ 3"
-        let (_, Cap _ capture) =
-              runCtx (Env.passContextSingle ctx trigger recordClosure) emptyClosure
-        case capture of
-          [Env.Closure x, Env.Closure y] -> do
-            Map.keysSet x T.@=? firstClosure
-            Map.keysSet y T.@=? secondClosure
-          _ ->
-            fail "not enough captured closures",
+            trigger
+        Env.keys x T.@=? firstClosure
+        Env.keys y T.@=? secondClosure,
       T.testCase "let binds for its own arguments" $ do
-        Right (ctx, _) <- contextualizeFoo "let f a = let foo x y = 3 in foo"
-        let (_, Cap _ capture) =
-              emptyClosure
-                |> runCtx (Env.passContextSingle ctx (== ":atom") recordClosure)
-        case capture of
-          [a, x, y, three, foo] -> do
-            Env.keys a T.@=? Set.fromList ["a"]
-            Env.keys x T.@=? argumentBinding
-            Env.keys y T.@=? argumentBinding
-            Env.keys three T.@=? argumentBinding
-            Env.keys foo T.@=? Set.fromList ["a", "foo"]
+        [a, x, y, three, foo] <-
+          capture "let f a = let foo x y = 3 in foo" (== ":atom")
+        Env.keys a T.@=? Set.fromList ["a"]
+        Env.keys x T.@=? argumentBinding
+        Env.keys y T.@=? argumentBinding
+        Env.keys three T.@=? argumentBinding
+        Env.keys foo T.@=? Set.fromList ["a", "foo"]
     ]
   where
     firstClosure =
@@ -126,13 +118,40 @@ letTest =
     trigger =
       (== "print-closure")
 
+typeTest :: T.TestTree
 typeTest =
   T.testGroup
     "Types properly add all to to the closure"
-    []
+    [ T.testCase "top level type" $ do
+        [print] <-
+          capture "type foo a b c = Cons (print-closure 3)" trigger
+        Env.keys print T.@=? Set.fromList ["a", "b", "c"],
+      --
+      T.testCase "let-type properly adds constructors" $ do
+        [inside, body] <-
+          capture
+            "let f = \
+            \ let type foo a b c = \
+            \  | Cons (print-closure 3) \
+            \  | Nil \
+            \ in print-closure 4"
+            trigger
+        Env.keys inside T.@=? constructors
+        Env.keys body T.@=? constructors
+    ]
   where
+    constructors =
+      Set.fromList ["a", "b", "c", "Nil", "Cons"]
     trigger =
       (== "print-closure")
+
+capture :: ByteString -> (NameSymbol.T -> Bool) -> IO [Env.Closure']
+capture str trigger = do
+  Right (ctx, _) <-
+    contextualizeFoo str
+  let (_, Cap _ capture) =
+        runCtx (Env.passContextSingle ctx trigger recordClosure) emptyClosure
+  pure capture
 
 -- Right (ctx,_) <- contextualizeFoo "let f = 3"
 -- (_, capture) = runCtx (Env.passContextSingle ctx (== "print-closure") recordClosure) emptyClosure
