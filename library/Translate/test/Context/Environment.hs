@@ -79,7 +79,7 @@ passContext :: T.TestTree
 passContext =
   T.testGroup
     "testing passContext closures"
-    [letTest, typeTest]
+    [letTest, typeTest, caseTest, lambdaTest]
 
 ----------------------------------------
 -- Let Test
@@ -99,6 +99,7 @@ letTest =
             trigger
         Env.keys x T.@=? firstClosure
         Env.keys y T.@=? secondClosure,
+      --
       T.testCase "let binds for its own arguments" $ do
         [a, x, y, three, foo] <-
           capture "let f a = let foo x y = 3 in foo" (== ":atom")
@@ -142,6 +143,40 @@ typeTest =
   where
     constructors =
       Set.fromList ["a", "b", "c", "Nil", "Cons"]
+    trigger =
+      (== "print-closure")
+
+caseTest :: T.TestTree
+caseTest =
+  T.testGroup
+    "Case binder"
+    [ T.testCase "case properly adds bound arguments" $ do
+        [cons, nil] <-
+          capture
+            "let f = \
+            \ case foo of \
+            \  | Cons a b -> (print-closure 3) \
+            \  | Nil -> (print-closure 3)"
+            trigger
+        Env.keys cons T.@=? Set.fromList ["a", "b"]
+        Env.keys nil T.@=? Set.fromList []
+    ]
+  where
+    trigger =
+      (== "print-closure")
+
+lambdaTest :: T.TestTree
+lambdaTest =
+  T.testGroup
+    "lambda binder"
+    [ T.testCase "lambda properly adds binders" $ do
+        [lamb] <-
+          capture
+            "let f = \\(Cons a b) -> (print-closure 3)"
+            trigger
+        Env.keys lamb T.@=? Set.fromList ["a", "b"]
+    ]
+  where
     trigger =
       (== "print-closure")
 

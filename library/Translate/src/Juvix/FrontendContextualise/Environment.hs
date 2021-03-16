@@ -269,7 +269,16 @@ passContext ctx trigger Pass {sumF, termF, tyF} =
 -- that instantiates a new variable
 bindingForms :: (Eq a, IsString a) => a -> Bool
 bindingForms x =
-  x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", ":declaim"]
+  x
+    `elem` [ "type",
+             ":open-in",
+             ":let-type",
+             ":let-match",
+             "case",
+             ":lambda-case",
+             ":declaim",
+             ":lambda"
+           ]
 
 -- | @searchAndClosure@ is responsible for properly updating the
 -- closure based on any binders we may encounter. The signature is made
@@ -299,6 +308,7 @@ searchAndClosure ctx a as cont
   | named ":let-match" = letMatch as cont
   | named ":let-type" = letType as cont
   | named "type" = type' as cont
+  | named ":lambda" = lambda as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
 searchAndClosure _ _ _ _ = error "imporper closure call"
@@ -306,6 +316,14 @@ searchAndClosure _ _ _ _ = error "imporper closure call"
 ------------------------------------------------------------
 -- searchAndClosure function dispatch table
 ------------------------------------------------------------
+
+lambda :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+lambda (Sexp.List [arguments, body]) cont =
+  local @"closure" (\cnt -> foldr genericBind cnt (nameStar arguments)) $ do
+    args <- cont arguments
+    bod <- cont body
+    pure $ Sexp.list [args, bod]
+lambda _ _ = error "malformed lambda"
 
 letType :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 letType (Sexp.List [assocName, args, dat, body]) cont = do
@@ -317,6 +335,7 @@ letType (Sexp.List [assocName, args, dat, body]) cont = do
   where
     bindings = nameStar args
     consturctors = nameGather dat
+letType _ _ = error "malformed let-type"
 
 type' :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 type' (assocName Sexp.:> args Sexp.:> dat) cont =
@@ -326,6 +345,7 @@ type' (assocName Sexp.:> args Sexp.:> dat) cont =
     pure $ assoc Sexp.:> args Sexp.:> d
   where
     grabBindings = nameStar args
+type' _ _ = error "malformed type"
 
 -- | @openIn@ opens @mod@, adding the contents to the closure of
 -- @body@. Note that we first =resolve= what mod is by calling the
@@ -373,6 +393,7 @@ letMatch (Sexp.List [name, bindings, body]) cont
       form <- mapF (`matchMany` cont) grouped
       bod <- cont body
       pure $ Sexp.list [name, Sexp.unGroupBy2 form, bod]
+letMatch _ _ = error "malformed let-match"
 
 -- | @case'@ is similar to @lambdaCase@ except that it has a term it's
 -- matching on that it must first change without having an extra
