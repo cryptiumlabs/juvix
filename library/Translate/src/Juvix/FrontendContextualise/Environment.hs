@@ -1,6 +1,7 @@
 module Juvix.FrontendContextualise.Environment where
 
 import Control.Lens hiding ((|>))
+import qualified Data.HashSet as Set
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.Open as Open
@@ -216,6 +217,9 @@ addToClosure k info (Closure m) =
 genericBind :: Symbol -> Closure' -> Closure'
 genericBind name (Closure m) =
   Closure $ Map.insert name (Info Nothing [] Nothing) m
+
+keys :: Closure' -> Set.HashSet Symbol
+keys (Closure m) = Map.keysSet m
 
 data Pass m
   = Pass

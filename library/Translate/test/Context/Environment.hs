@@ -102,13 +102,27 @@ letTest =
             Map.keysSet x T.@=? firstClosure
             Map.keysSet y T.@=? secondClosure
           _ ->
-            fail "not enough captured closures"
+            fail "not enough captured closures",
+      T.testCase "let binds for its own arguments" $ do
+        Right (ctx, _) <- contextualizeFoo "let f a = let foo x y = 3 in foo"
+        let (_, Cap _ capture) =
+              emptyClosure
+                |> runCtx (Env.passContextSingle ctx (== ":atom") recordClosure)
+        case capture of
+          [a, x, y, three, foo] -> do
+            Env.keys a T.@=? Set.fromList ["a"]
+            Env.keys x T.@=? argumentBinding
+            Env.keys y T.@=? argumentBinding
+            Env.keys three T.@=? argumentBinding
+            Env.keys foo T.@=? Set.fromList ["a", "foo"]
     ]
   where
     firstClosure =
       Set.fromList ["g", "foo", "x"]
     secondClosure =
       Set.fromList ["g", "foo", "a", "y", "z"]
+    argumentBinding =
+      Set.fromList ["a", "foo", "x", "y"]
     trigger =
       (== "print-closure")
 
