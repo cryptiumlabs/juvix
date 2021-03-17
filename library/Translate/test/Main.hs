@@ -1,7 +1,8 @@
 module Main where
 
 import qualified Context.Environment
-import qualified Contextualise.Contextify as Contextify
+import qualified Contextify
+import qualified Contextualise.Contextify
 import Contextualise.Infix.ShuntYard (allInfixTests)
 import Contextualise.Module.Open (openTests)
 import qualified Contextualise.Module.Resolve as Resolve
@@ -22,7 +23,7 @@ translationPasses :: T.TestTree
 translationPasses =
   T.testGroup
     "translation passes from Frontend to Core"
-    [allDesugar, Sexp.top, ML.top, Context.Environment.top]
+    [allDesugar, Sexp.top, ML.top, Context.Environment.top, Contextify.top]
 
 allCheckedTests :: T.TestTree
 allCheckedTests =
@@ -31,7 +32,7 @@ allCheckedTests =
     [ frontEndTests,
       allInfixTests,
       openTests,
-      Contextify.top,
+      Contextualise.Contextify.top,
       Resolve.top,
       translationPasses
     ]
