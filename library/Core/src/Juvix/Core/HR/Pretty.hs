@@ -51,7 +51,7 @@ annotate :: PPAnn' -> Doc -> Doc
 annotate = PP.annotate'
 
 parens :: Doc -> Doc
-parens = PP.parensA' APunct
+parens = PP.parens' APunct
 
 parensP :: PP.PrecReader m => PP.Prec -> m Doc -> m Doc
 parensP = PP.parensP' APunct
@@ -131,7 +131,7 @@ ppLams names body =
   PP.hangA PP.indentWidth (pure header) (ppOuter body)
   where
     header = PP.sep [annotate AValCon "λ", ppNames names, arrow]
-    ppNames = PP.hsep . map (liftPP . PP.prettyText)
+    ppNames = PP.hsep . map (liftPP . PP.prettyT)
 
 ppOuter :: (PP.PrecReader m, PP.PrettySyntax a) => a -> m (PP.Doc (PP.Ann a))
 ppOuter = PP.withPrec PP.Outer . PP.pretty'

@@ -1,6 +1,42 @@
 module Juvix.Library.PrettyPrint
-  ( module Juvix.Library.PrettyPrint,
-    module Text.PrettyPrint.Compact,
+  ( module Text.PrettyPrint.Compact,
+    -- * Precedence
+    Prec (..),
+    PrecReader,
+    -- * Classes
+    Ann,
+    PrettySyntax (..),
+    PrettyText (..),
+    runPretty,
+    runPretty0,
+    pretty,
+    pretty0,
+    withPrec,
+    show,
+    -- * Combinators lifted over an 'Applicative'
+    hsepA,
+    sepA,
+    hcatA,
+    vcatA,
+    punctuateA,
+    hangA,
+
+    -- * Extensions
+    annotate',
+    hangs,
+    hangsA,
+    hangsWith,
+    parens,
+    parens',
+    parensP,
+    parensP',
+    app,
+    app',
+    indentWidth,
+    sepIndent,
+    sepIndent',
+    sepIndentA,
+    sepIndentA',
   )
 where
 
@@ -23,6 +59,10 @@ import Text.PrettyPrint.Compact hiding
     semi,
     space,
     squote,
+    parens,
+    braces,
+    brackets,
+    angles
   )
 import Text.PrettyPrint.Compact.Core
 import qualified Text.Show as Show
@@ -52,7 +92,15 @@ class Monoid (Ann a) => PrettySyntax a where
   pretty' :: PrecReader m => a -> m (Doc (Ann a))
   default pretty' ::
     (PrettyText a, PrecReader m) => a -> m (Doc (Ann a))
-  pretty' = pure . prettyText
+  pretty' = pure . prettyT
+
+-- | Class for text-like types (e.g. messages), which don't have a concept of
+-- precedence.
+class Monoid (Ann a) => PrettyText a where
+  -- | Pretty-print a value as human-readable text.
+  prettyT :: a -> Doc (Ann a)
+  default prettyT :: Show a => a -> Doc (Ann a)
+  prettyT = text . Show.show
 
 runPretty :: Prec -> (forall m. PrecReader m => m a) -> a
 runPretty prec m = let MonadReader x = m in runReader x prec
@@ -70,14 +118,6 @@ pretty0 = pretty Outer
 
 withPrec :: PrecReader m => Prec -> m a -> m a
 withPrec p = local @"prec" \_ -> p
-
--- | Class for text-like types (e.g. messages), which don't have a concept of
--- precedence.
-class Monoid (Ann a) => PrettyText a where
-  -- | Pretty-print a value as human-readable text.
-  prettyText :: a -> Doc (Ann a)
-  default prettyText :: Show a => a -> Doc (Ann a)
-  prettyText = text . Show.show
 
 show :: (Monoid ann, Show a) => a -> Doc ann
 show = text . Show.show
@@ -156,25 +196,32 @@ hangsA ::
   f (Doc ann)
 hangsA i a bs = hangs i <$> a <*> sequenceA (toList bs)
 
-parensA :: Monoid ann => ann -> Doc ann -> Doc ann
-parensA ann = annotate ann "(" `enclose` annotate ann ")"
+-- | Surrounds a doc with parens with the given annotation
+parens :: Monoid ann => ann -> Doc ann -> Doc ann
+parens ann = annotate ann "(" `enclose` annotate ann ")"
 
-parensA' :: ann -> Doc (Last ann) -> Doc (Last ann)
-parensA' = parensA . Last . Just
+parens' :: ann -> Doc (Last ann) -> Doc (Last ann)
+parens' = parens . Last . Just
 
+-- | Surrounds with parens if the current precedence level is less than the
+-- given one (the same behaviour as 'Text.Show.showsPrec').
 parensP ::
   (Monoid ann, PrecReader m) => ann -> Prec -> m (Doc ann) -> m (Doc ann)
 parensP ann p d = do
   p' <- ask @"prec"
-  if p > p' then d else parensA ann <$> d
+  if p > p' then d else parens ann <$> d
 
 parensP' ::
   PrecReader m => ann -> Prec -> m (Doc (Last ann)) -> m (Doc (Last ann))
 parensP' = parensP . Last . Just
 
+-- | Usually our annotations are 'Last' of some syntax highlighting
+-- representation.
 annotate' :: ann -> Doc (Last ann) -> Doc (Last ann)
 annotate' = annotate . Last . Just
 
+-- | Formats an application, by aligning the arguments and adjusting the
+-- precedence level of the subterms.
 app ::
   ( PrecReader m,
     Foldable t,
@@ -196,5 +243,29 @@ app' ::
   m (Doc (Last ann))
 app' = app . Last . Just
 
+-- | Default indent width.
 indentWidth :: Int
 indentWidth = 2
+
+-- | Like 'sep', but indenting each item the given amount if they are laid out
+-- vertically.
+sepIndent :: (Monoid ann, Foldable t) => t (Int, Doc ann) -> Doc ann
+sepIndent = groupingBy " " . toList
+
+-- | Like 'sepIndent', indenting by 'indentWidth' if the first part is
+-- 'True'
+sepIndent' :: (Monoid ann, Foldable t) => t (Bool, Doc ann) -> Doc ann
+sepIndent' = sepIndent . map (first toIndent) . toList
+
+toIndent :: Bool -> Int
+toIndent b = if b then indentWidth else 0
+
+sepIndentA ::
+  (Monoid ann, Foldable t, Applicative f) =>
+  t (Int, f (Doc ann)) -> f (Doc ann)
+sepIndentA = fmap (groupingBy " ") . sequenceA . map sequenceA . toList
+
+sepIndentA' ::
+  (Monoid ann, Foldable t, Functor t, Applicative f) =>
+  t (Bool, f (Doc ann)) -> f (Doc ann)
+sepIndentA' = sepIndentA . fmap (first toIndent)
