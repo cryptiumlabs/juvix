@@ -18,7 +18,8 @@ steps:
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
-    image: meltwater/drone-cache
+    image: meltwater/drone-cache\
+    pull: if-not-exists
     settings:
       backend: "s3"
       restore: true
@@ -41,7 +42,7 @@ steps:
       - script-integrity-check
 
   - name: test-suite
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -50,6 +51,7 @@ steps:
 
   - name: rebuild-cache
     image: meltwater/drone-cache
+    pull: if-not-exists
     volumes:
       - name: cache
         path: /tmp/cache
@@ -73,7 +75,7 @@ steps:
       - test-suite
 
   - name: check-formatting
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -82,7 +84,7 @@ steps:
       - test-suite
 
   - name: check-org-gen
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -91,7 +93,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -100,7 +102,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -109,7 +111,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -127,6 +129,6 @@ trigger:
     - pull_request
 ---
 kind: signature
-hmac: 71374f7af34894d11a456d81e106d4fecd14ab159b0b8980f908b6652fcc7762
+hmac: 5860424d86e6c74c0a7f0f726c50e96a8e7e6c4c632c6298937c76c4c086fe89
 
 ...
