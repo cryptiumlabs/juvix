@@ -18,7 +18,7 @@ steps:
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
-    image: meltwater/drone-cache\
+    image: meltwater/drone-cache
     pull: if-not-exists
     settings:
       backend: "s3"
@@ -129,6 +129,6 @@ trigger:
     - pull_request
 ---
 kind: signature
-hmac: 5860424d86e6c74c0a7f0f726c50e96a8e7e6c4c632c6298937c76c4c086fe89
+hmac: 20c58eafaa0711e7c3fccbb72f089b5c96fdb8375b20cf9b817b0c64fb10932d
 
 ...
