@@ -118,10 +118,7 @@ t =
     { hasType,
       builtinTypes,
       builtinValues,
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \i _ -> isNat i,
       intVal = natVal,
-      floatTy = \_ _ -> False,
       floatVal = const Nothing
     }
