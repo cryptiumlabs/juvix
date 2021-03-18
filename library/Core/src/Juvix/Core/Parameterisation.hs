@@ -32,11 +32,8 @@ data Parameterisation primTy primVal
       { hasType :: primVal -> PrimType primTy -> Bool,
         builtinTypes :: Builtins primTy,
         builtinValues :: Builtins primVal,
-        stringTy :: Text -> primTy -> Bool,
         stringVal :: Text -> Maybe primVal,
-        intTy :: Integer -> primTy -> Bool,
         intVal :: Integer -> Maybe primVal,
-        floatTy :: Double -> primTy -> Bool,
         floatVal :: Double -> Maybe primVal
       }
   deriving (Generic)
