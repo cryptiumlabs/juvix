@@ -55,7 +55,7 @@ hasType _ _ = False
 
 typeOf :: Val -> P.PrimType Ty
 typeOf (NatVal x) = NatTy <$> Naturals.typeOf x
-typeOf (UnitVal _) = UnitTy Unit.Ty :| []
+typeOf (UnitVal _) = P.PrimType $ UnitTy Unit.Ty :| []
 
 instance P.CanApply Ty where
   arity _ = 0

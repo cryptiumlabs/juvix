@@ -23,7 +23,7 @@ data Val
   deriving (Show, Eq)
 
 hasType :: Val -> P.PrimType Ty -> Bool
-hasType Val (Ty :| []) = True
+hasType Val (P.PrimType (Ty :| [])) = True
 hasType _ _ = False
 
 instance P.CanApply Ty where

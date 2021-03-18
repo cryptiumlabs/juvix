@@ -5,7 +5,6 @@ module Juvix.Core.Parameterisations.Naturals where
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
-import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>), natVal)
@@ -14,6 +13,7 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
 import Prelude (String)
+import qualified Juvix.Core.HR.Pretty as HR
 
 -- k: primitive type: naturals
 data Ty
@@ -37,11 +37,11 @@ instance Show Val where
   show (Curried x y) = Juvix.Library.show x <> " " <> Text.Show.show y
 
 typeOf :: Val -> P.PrimType Ty
-typeOf (Val _) = Ty :| []
-typeOf (Curried _ _) = Ty :| [Ty]
-typeOf Add = Ty :| [Ty, Ty]
-typeOf Sub = Ty :| [Ty, Ty]
-typeOf Mul = Ty :| [Ty, Ty]
+typeOf (Val _) = P.PrimType $ Ty :| []
+typeOf (Curried _ _) = P.PrimType $ Ty :| [Ty]
+typeOf Add = P.PrimType $ Ty :| [Ty, Ty]
+typeOf Sub = P.PrimType $ Ty :| [Ty, Ty]
+typeOf Mul = P.PrimType $ Ty :| [Ty, Ty]
 
 hasType :: Val -> P.PrimType Ty -> Bool
 hasType x ty = ty == typeOf x
@@ -63,7 +63,7 @@ instance P.CanApply Val where
       app n [] = Right n
       app f (x : xs) = Left $ P.ExtraArguments f (x :| xs)
 
-instance P.CanApply (Typed.TypedPrim Ty Val) where
+instance P.CanApply (P.TypedPrim Ty Val) where
   arity (App.Cont {numLeft}) = numLeft
   arity (App.Return {retTerm}) = P.arity retTerm
 
@@ -180,3 +180,9 @@ instance PP.PrettySyntax Val where
     Sub -> pure $ PP.annotate' Fun "sub"
     Mul -> pure $ PP.annotate' Fun "mul"
     Curried f k -> PP.app' Paren (PP.pretty' f) [pnat k]
+
+instance HR.ToPPAnn PPAnn where
+  toPPAnn = fmap \case
+    Lit -> HR.APrimVal
+    Fun -> HR.APrimFun
+    Paren -> HR.APunct

@@ -1,12 +1,14 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.Parameterisation where
 
 import qualified Juvix.Core.Application as App
 import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
+import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -14,7 +16,8 @@ import Prelude (String)
 
 -- | @[A, B, ..., Z]@ represents the type
 -- @π A -> ρ B -> ... -> Z@ for any usages @π@, @ρ@
-type PrimType primTy = NonEmpty primTy
+newtype PrimType primTy = PrimType {getPrimType :: NonEmpty primTy}
+  deriving (Eq, Ord, Show, Generic, Functor, Foldable, Traversable)
 
 type Builtins p = HashMap NameSymbol.T p
 
@@ -102,3 +105,29 @@ apply1Maybe f x = applyMaybe f (x :| [])
 type TypedPrim' ext ty val = App.Return' ext (PrimType ty) val
 
 type TypedPrim ty val = TypedPrim' NoExt ty val
+
+
+data PPAnn' primTy
+  = PAArrow
+  | PAPunct
+  | PATy (PP.Ann primTy)
+
+type PPAnn primTy = Last (PPAnn' primTy)
+
+type instance PP.Ann (PrimType primTy) = PPAnn primTy
+
+instance PP.PrettySyntax primTy => PP.PrettySyntax (PrimType primTy) where
+  pretty' tys =
+    PP.parensP' PAPunct PP.Outer $
+      PP.sepA (PP.punctuateA arr (map pretty1 tys))
+    where
+      arr = pure $ PP.annotate' PAArrow "→"
+      pretty1 =
+        fmap (fmap $ Last . Just . PATy) .
+        PP.withPrec (PP.Infix 0) . PP.pretty'
+
+instance HR.ToPPAnn (PP.Ann ty) => HR.ToPPAnn (PPAnn ty) where
+  toPPAnn a = a >>= \case
+    PAArrow -> pure HR.ATyCon
+    PAPunct -> pure HR.APunct
+    PATy a' -> HR.toPPAnn a'

@@ -16,5 +16,11 @@ class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
 
-  typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
-  compile :: ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline Text
+  -- typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
+  -- compile :: ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline Text
+  typecheck ::
+    Context.T Sexp.T Sexp.T Sexp.T ->
+    Pipeline (ErasedAnn.AnnTerm (Ty b) (ErasedAnn.TypedPrim (Ty b) (Val b)))
+  compile ::
+    ErasedAnn.AnnTerm (Ty b) (ErasedAnn.TypedPrim (Ty b) (Val b)) ->
+    Pipeline Text

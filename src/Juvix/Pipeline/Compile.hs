@@ -14,6 +14,7 @@ import qualified Data.Text.IO as T
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Library
@@ -82,7 +83,7 @@ unsafeEvalGlobal globals g =
 convGlobal ::
   ty ->
   IR.RawGlobal ty val ->
-  IR.RawGlobal ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+  IR.RawGlobal ty (Param.TypedPrim ty val)
 convGlobal ty g =
   case g of
     RawGDatatype (RawDatatype n pos a l cons) -> undefined
@@ -95,7 +96,7 @@ convGlobal ty g =
 funClauseReturn ::
   ty ->
   IR.RawFunClause ty val ->
-  IR.RawFunClause ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val)
+  IR.RawFunClause ty (Param.TypedPrim ty val)
 funClauseReturn ty (RawFunClause _tel patts term _catchall) =
   RawFunClause undefined (map (pattEval ty) patts) (baseToReturn ty term) undefined
 
@@ -111,7 +112,7 @@ funClauseEval globals (RawFunClause _tel patts rhs _catchall) =
 pattEval ::
   ty ->
   IR.Pattern ty val ->
-  IR.Pattern ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) -- ty' -- Param.PrimValIR
+  IR.Pattern ty (Param.TypedPrim ty val) -- ty' -- Param.PrimValIR
 pattEval ty patt =
   case patt of
     IR.PCon n ps -> IR.PCon n (map (pattEval ty) ps)
@@ -120,17 +121,17 @@ pattEval ty patt =
     IR.PVar v -> IR.PVar v
     IR.PDot t -> IR.PDot (baseToReturn ty t)
     -- TODO
-    IR.PPrim p -> IR.PPrim (CoreApp.Return (ty :| []) p)
+    IR.PPrim p -> IR.PPrim (CoreApp.Return (Param.PrimType $ ty :| []) p)
 
 baseToReturn ::
   ty ->
   Term' IR.NoExt ty val ->
-  Term' IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) -- ty' -- Param.PrimValIR
+  Term' IR.NoExt ty (Param.TypedPrim ty val) -- ty' -- Param.PrimValIR
 baseToReturn ty t =
   case t of
     IR.Star u -> IR.Star u
     IR.PrimTy p -> IR.PrimTy p
-    IR.Prim p -> IR.Prim (CoreApp.Return (ty :| []) p)
+    IR.Prim p -> IR.Prim (CoreApp.Return (Param.PrimType $ ty :| []) p)
     IR.Pi u x y -> IR.Pi u (baseToReturn ty x) (baseToReturn ty y)
     IR.Lam t -> IR.Lam (baseToReturn ty t)
     IR.Sig u x y -> IR.Sig u (baseToReturn ty x) (baseToReturn ty y)
@@ -143,7 +144,7 @@ baseToReturn ty t =
 elimToReturn ::
   ty ->
   Elim' IR.NoExt ty val ->
-  Elim' IR.NoExt ty (CoreApp.Return' IR.NoExt (NonEmpty ty) val) -- ty' --(TypedPrim ty val)
+  Elim' IR.NoExt ty (Param.TypedPrim ty val) -- ty' --(TypedPrim ty val)
 elimToReturn ty e =
   case e of
     IR.Bound b -> IR.Bound b

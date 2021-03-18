@@ -70,53 +70,56 @@ checkFirst2AndLast (x :| [y, last]) check
 checkFirst2AndLast (_ :| _) _ = False
 
 hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
-hasType AddTimeStamp ty = check3Equal ty
-hasType AddI ty = check3Equal ty
-hasType AddN ty = check3Equal ty
-hasType SubI ty = check3Equal ty
-hasType SubN ty = check3Equal ty
-hasType SubTimeStamp ty = check3Equal ty
-hasType MulI ty = check3Equal ty
-hasType MulN ty = check3Equal ty
-hasType MulMutez ty = check3Equal ty
-hasType ORI ty = check3Equal ty
-hasType OrB ty = check3Equal ty
-hasType AndI ty = check3Equal ty
-hasType AndB ty = check3Equal ty
-hasType XorI ty = check3Equal ty
-hasType XorB ty = check3Equal ty
-hasType NotI ty = check2Equal ty
-hasType NotB ty = check2Equal ty
-hasType CompareI ty = checkFirst2AndLast ty isBool
-hasType CompareS ty = checkFirst2AndLast ty isBool
-hasType CompareP ty = checkFirst2AndLast ty isBool
-hasType CompareTimeStamp ty = checkFirst2AndLast ty isBool
-hasType CompareMutez ty = checkFirst2AndLast ty isBool
-hasType CompareHash ty = checkFirst2AndLast ty isBool
+hasType tm (P.PrimType ty) = hasType' tm ty
+
+hasType' :: RawPrimVal -> NonEmpty PrimTy -> Bool
+hasType' AddTimeStamp ty = check3Equal ty
+hasType' AddI ty = check3Equal ty
+hasType' AddN ty = check3Equal ty
+hasType' SubI ty = check3Equal ty
+hasType' SubN ty = check3Equal ty
+hasType' SubTimeStamp ty = check3Equal ty
+hasType' MulI ty = check3Equal ty
+hasType' MulN ty = check3Equal ty
+hasType' MulMutez ty = check3Equal ty
+hasType' ORI ty = check3Equal ty
+hasType' OrB ty = check3Equal ty
+hasType' AndI ty = check3Equal ty
+hasType' AndB ty = check3Equal ty
+hasType' XorI ty = check3Equal ty
+hasType' XorB ty = check3Equal ty
+hasType' NotI ty = check2Equal ty
+hasType' NotB ty = check2Equal ty
+hasType' CompareI ty = checkFirst2AndLast ty isBool
+hasType' CompareS ty = checkFirst2AndLast ty isBool
+hasType' CompareP ty = checkFirst2AndLast ty isBool
+hasType' CompareTimeStamp ty = checkFirst2AndLast ty isBool
+hasType' CompareMutez ty = checkFirst2AndLast ty isBool
+hasType' CompareHash ty = checkFirst2AndLast ty isBool
 -- Hacks make more exact later
-hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
-hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
-hasType (Inst M.UNIT {}) (x :| []) = True
-hasType (Inst M.BALANCE {}) (x :| []) = True
-hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
+hasType' EDivI (x :| [y, z]) = check2Equal (x :| [y])
+hasType' (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
+hasType' (Inst M.UNIT {}) (x :| []) = True
+hasType' (Inst M.BALANCE {}) (x :| []) = True
+hasType' (Inst (M.IF_CONS _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
-hasType (Inst (M.IF _ _)) (bool :| rest)
+hasType' (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
-hasType (Inst M.PAIR {}) (a :| (b : (c : []))) = True
+hasType' (Inst M.PAIR {}) (a :| (b : (c : []))) = True
 -- todo check this properly
-hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
-hasType (Inst (M.CDR _ _)) (a :| (b : [])) = True
-hasType (Inst M.SENDER {}) (a :| []) = True
-hasType Contract (a :| [b]) = True
-hasType (Constant _v) ty
+hasType' (Inst (M.CAR _ _)) (a :| (b : [])) = True
+hasType' (Inst (M.CDR _ _)) (a :| (b : [])) = True
+hasType' (Inst M.SENDER {}) (a :| []) = True
+hasType' Contract (a :| [b]) = True
+hasType' (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType x ((Application List _) :| []) = True
+hasType' x ((Application List _) :| []) = True
 -- do something nicer here
-hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
+hasType' x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
@@ -218,7 +221,7 @@ takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
 toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
-toPrimType ty = maybe err Right $ go ty
+toPrimType ty = maybe err (Right . P.PrimType) $ go ty
   where
     err = Left $ ReturnTypeNotPrimitive ty
     go ty = goPi ty <|> (pure <$> goPrim ty)

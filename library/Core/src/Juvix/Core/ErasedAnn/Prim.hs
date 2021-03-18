@@ -36,6 +36,6 @@ toAnn :: Take primTy primVal -> Types.AnnTerm primTy primVal
 toAnn (App.Take usage type' term) = Types.Ann usage type' $ Types.Prim term
 
 fromPrimType :: P.PrimType primTy -> Types.Type primTy
-fromPrimType (t :| []) = Types.PrimTy t
-fromPrimType (t :| (u : us)) =
-  Types.Pi Usage.Omega (Types.PrimTy t) (fromPrimType (u :| us))
+fromPrimType (P.PrimType tys) = go tys where
+  go (t :| []) = Types.PrimTy t
+  go (t :| (u : us)) = Types.Pi Usage.Omega (Types.PrimTy t) $ go $ u :| us

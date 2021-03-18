@@ -281,8 +281,8 @@ typePrim p ty = do
 toPrimTy ::
   CanInnerTC' ext primTy primVal m =>
   Typed.ValueT primTy primVal ->
-  m (NonEmpty primTy)
-toPrimTy ty = maybe (throwTC $ NotPrimTy ty) pure $ go ty
+  m (Param.PrimType primTy)
+toPrimTy ty = maybe (throwTC $ NotPrimTy ty) (pure . Param.PrimType) $ go ty
   where
     go (IR.VPrimTy t) = pure $ t :| []
     go (IR.VPi _ (IR.VPrimTy s) t) = (s <|) <$> go t

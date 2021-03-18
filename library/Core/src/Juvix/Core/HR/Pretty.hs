@@ -12,7 +12,6 @@ module Juvix.Core.HR.Pretty
 where
 
 import Juvix.Core.HR.Types
-import qualified Juvix.Core.Parameterisations.Naturals as Nat
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
@@ -218,9 +217,3 @@ instance ToPPAnn () where
 
 instance ToPPAnn PPAnn where
   toPPAnn = identity
-
-instance ToPPAnn Nat.PPAnn where
-  toPPAnn = fmap \case
-    Nat.Lit -> APrimVal
-    Nat.Fun -> APrimFun
-    Nat.Paren -> APunct

@@ -294,6 +294,10 @@ instance
   HasSubstV ext primTy primVal a =>
   HasSubstV ext primTy primVal (NonEmpty a)
 
+instance
+  HasSubstV ext primTy primVal a =>
+  HasSubstV ext primTy primVal (Param.PrimType a)
+
 instance HasSubstV ext primTy primVal Symbol where
   substVWith _ _ _ x = pure x
 

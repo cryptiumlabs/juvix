@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 module Erasure where
 
 import qualified Juvix.Core.Application as App
@@ -5,6 +6,7 @@ import qualified Juvix.Core.Erased as Erased
 import qualified Juvix.Core.Erasure as Erasure
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Typechecker as Typed
+import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Parameterisations.Unit as Unit
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (identity)
@@ -263,4 +265,4 @@ unitPairTy1 :: IR.ValueT Unit.Ty Unit.Val
 unitPairTy1 = IR.VSig one unitTy unitTy
 
 unitVal' :: Typed.TypedPrim Unit.Ty Unit.Val
-unitVal' = App.Return {retType = Unit.Ty :| [], retTerm = Unit.Val}
+unitVal' = App.Return {retType = P.PrimType [Unit.Ty], retTerm = Unit.Val}

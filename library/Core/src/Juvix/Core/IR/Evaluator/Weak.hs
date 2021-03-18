@@ -6,6 +6,7 @@ module Juvix.Core.IR.Evaluator.Weak where
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
@@ -165,6 +166,9 @@ instance HasWeak a => HasWeak (Maybe a)
 instance HasWeak a => HasWeak [a]
 
 instance HasWeak a => HasWeak (NonEmpty a)
+
+instance HasWeak a => HasWeak (Param.PrimType a)
+
 
 instance HasWeak Symbol where weakBy' _ _ x = x
 
