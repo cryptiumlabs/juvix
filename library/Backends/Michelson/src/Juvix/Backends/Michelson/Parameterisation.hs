@@ -235,13 +235,6 @@ integerToPrimVal x
   | otherwise =
     Nothing
 
-checkStringType :: Text -> PrimTy -> Bool
-checkStringType val (PrimTy (M.Type ty _)) = case ty of
-  M.TString -> Text.all M.isMChar val
-  -- TODO other cases?
-  _ -> False
-checkStringType _ _ = False
-
 checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
