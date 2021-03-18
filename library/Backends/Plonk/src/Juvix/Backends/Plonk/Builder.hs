@@ -120,7 +120,19 @@ compile ir = case ir of
         emit $ MulGate e1Out e2Out tmp1
         pure . Right $ Add (Add e1Out e2Out) (ScalarMul (-2) (Var tmp1))
 
-      -- IF(cond, true, false) = (cond*true) + ((!cond) * false)
+  ICompOp op lhs rhs -> do
+    case op of
+      -- EQ(lhs, rhs) = (lhs - rhs == 1)
+      CEq -> do
+        lhsSubRhs <- compile (IBinOp BSub lhs rhs)
+        eqInWire <- addWire lhsSubRhs
+        eqFreeWire <- imm
+        eqOutWire <- imm
+        emit $ EqualGate eqInWire eqFreeWire eqOutWire
+        -- eqOutWire == 0 if lhs == rhs, so we need to return 1 -
+        -- neqOuti instead.
+        pure . Right $ Add (ConstGate 1) (ScalarMul (-1) (Var eqOutWire))
+  -- IF(cond, true, false) = (cond*true) + ((!cond) * false)
   IIf cond true false -> do
     condOut <- addVar <$> compile cond
     trueOut <- addVar <$> compile true
@@ -130,16 +142,7 @@ compile ir = case ir of
     emit $ MulGate condOut trueOut tmp1
     emit $ MulGate (Add (ConstGate 1) (ScalarMul (-1) condOut)) falseOut tmp2
     pure . Right $ Add (Var tmp1) (Var tmp2)
--- EQ(lhs, rhs) = (lhs - rhs == 1)
--- EEq lhs rhs -> do
---   lhsSubRhs <- compile (EBinOp BSub lhs rhs)
---   eqIni <- addi lhsSubRhs
---   eqFreei <- imm
---   eqOuti <- imm
---   emit $ Equal eqIni eqFreei eqOuti
---   -- eqOuti == 0 if lhs == rhs, so we need to return 1 -
---   -- neqOuti instead.
---   pure . Right $ Add (ConstGate 1) (ScalarMul (-1) (Var eqOuti))
+
 
 -- | Translate an arithmetic expression to an arithmetic circuit
 irToArithCircuit ::

@@ -52,17 +52,25 @@ erasedExample =
             ]
         ]
 
-plonkExample' :: P.IR NameSymbol.T Fr Bool
+plonkExample' :: P.IR P.Wire Fr Bool
 plonkExample' =
-  let xcube = P.exp_ (P.var "x") (P.c 3)
-      xsq = P.mul (P.c 2) (P.exp_ (P.c 2) (P.var "x"))
-      lhs = P.add (P.sub xcube xsq) (P.c 4)
-      rhs = P.var "x"
+  let xcube = P.exp_ (P.var x) (P.c 3)
+      xsq = P.mul (P.c 2) (P.exp_ (P.c 2) (P.var x))
+      lhs = P.var x -- P.add (P.sub xcube xsq) (P.c 4)
+      rhs = P.var y
    in P.eq lhs rhs
--- plonkExample :: P.IRM Fr P.Wire
--- plonkExample = do
+  where
+    x = P.InputWire 1
+    y = P.InputWire 2
+
+plonkExample :: P.ArithCircuit Fr
+plonkExample =
+  P.execCircuitBuilder $
+    P.compile plonkExample'
+-- do
 --   x <- P.deref <$> P.freshInput
 --   y <- P.deref <$> P.freshInput
---   let xcube = P.exp_ x (P.c 3)
---       xsq = P.mul (P.c 2) (P.exp_ (P.c 2) x)
---   P.ret $ P.add (P.sub xcube xsq) (P.c 4)
+--   P.ret $ P.mul x y
+-- let xcube = P.exp_ x (P.c 3)
+--     xsq = P.mul (P.c 2) (P.exp_ (P.c 2) x)
+-- P.ret $ P.add (P.sub xcube xsq) (P.c 4)
