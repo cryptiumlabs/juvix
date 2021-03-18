@@ -45,7 +45,7 @@ extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 
-type Datatype = Datatype' NoExt
+type Datatype = Datatype' NoExt NoExt
 
 type RawDatatype = RawDatatype' NoExt
 
@@ -53,7 +53,7 @@ type DataArg = DataArg' NoExt
 
 type RawDataArg = RawDataArg' NoExt
 
-type DataCon = DataCon' NoExt
+type DataCon = DataCon' NoExt NoExt
 
 type RawDataCon = RawDataCon' NoExt
 

@@ -12,6 +12,8 @@
   + [[Pipeline]]
   + [[Environment]]
   + [[Library]]
+  + [[Feedback]]
+  + [[Usage]]
   + [[Pipeline]]
 * Config
 - _Relies on_
@@ -25,6 +27,7 @@
 * Main
 - _Relies on_
   + [[Library]]
+  + [[Feedback]]
 * Options
 - _Relies on_
   + [[Library]]

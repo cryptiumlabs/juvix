@@ -988,6 +988,7 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
 ***** Parser <<Frontend/Parser>>
 - The front end parser for the Juvix Programming language
 - Parsers with S at the end, eat the spaces at the end of the parse
@@ -997,7 +998,8 @@ Tests that weak works as expected
   + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
-  + [[Lexer]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 ***** Sexp <<Frontend/Sexp>>
 - _Relies on_
   + [[Frontend/Types]]
@@ -1029,6 +1031,10 @@ Tests that weak works as expected
 ****** Extend <<Types/Extend>>
 - _Relies on_
   + [[Frontend/Types/Base]]
+****** Located
+- _Relies on_
+  + [[Library]]
+  + [[Library/Parser]]
 ** test
 *** Main <<Frontend/test/Main>>
 - _Relies on_
@@ -1036,10 +1042,13 @@ Tests that weak works as expected
 *** Parser <<Frontend/test/Parser>>
 - _Relies on_
   + [[Frontend/Parser]]
+  + [[Frontend/Parser]]
   + [[Frontend/Types]]
   + [[Frontend/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Parser]]
 *** Sexp <<Frontend/test/Sexp>>
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1337,6 +1346,9 @@ Can be added to via core translation
       constructs in =Protolude=
 - _Relies on_
   + [[PrettyPrint]]
+***** Feedback
+- _Relies on_
+  + [[Library]]
 ***** HashMap
 - The HashMap for the codebase.
 - Basically just imports Data.HashMap.Strict
@@ -1349,9 +1361,22 @@ Can be added to via core translation
 ***** NameSymbol
 - _Relies on_
   + [[Library]]
-  + [[Lexer]]
+  + [[Token]]
 ***** PrettyPrint
 ***** Usage
+- _Relies on_
+  + [[Library]]
+***** Parser <<Library/Parser>>
+- _Relies on_
+  + [[Internal]]
+  + [[Lexer]]
+  + [[Token]]
+****** Internal
+****** Lexer
+- _Relies on_
+  + [[Internal]]
+  + [[Token]]
+****** Token
 - _Relies on_
   + [[Library]]
 ***** Sexp <<Library/Sexp>>
@@ -1365,17 +1390,14 @@ Can be added to via core translation
 - _Relies on_
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Internal]]
   + [[Sexp/Types]]
-  + [[Lexer]]
 ****** Types <<Sexp/Types>>
 - _Relies on_
   + [[Library]]
   + [[LineNum]]
   + [[NameSymbol]]
-***** Symbol
-****** Lexer
-- _Relies on_
-  + [[Library]]
 ** test
 *** Main <<StandardLibrary/test/Main>>
 - _Relies on_
@@ -1400,6 +1422,37 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+**** Conversion
+***** ML <<Juvix/Conversion/ML>>
+This module is responsible for converting back S-expressions back
+- into the ML form. Currently this goes until the end of desugared
+- This module is best read along side the sexpression document in
+  doc/Aricheture/Sexp.org, looking at the forms to see they are the
+  same.
+  + Note they aren't all the same, as many forms like the top level
+    let/=defun= are desugared and thus need to look at the current
+    forms of that
+- _Relies on_
+  + [[Desugar/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 **** Core
 ***** Common
 ****** Context
@@ -1428,6 +1481,80 @@ from the syntax alone with no extra information needed!)
   + [[Passes]]
   + [[Library]]
   + [[Library/Sexp]]
+***** Extend <<Desugar/Extend>>
+- This Desugars the frontend syntax
+  + Belongs to Table
+    | Changed      | Is a Sum Type of |
+    |--------------+------------------|
+    | Do           | Expression       |
+    | ModuleE      | Expression       |
+    | Module       | TopLevel         |
+    | Function     | TopLevel         |
+    | Signature    | TopLevel         |
+    | Let          | Let              |
+    | FunctionLike | Function ∧ Let   |
+- Thus one does not have to ever deal with
+- _Expression_
+  + one does not have to deal with the following Sum Constructors
+  #+begin_src haskell
+    data Do
+      = Do'' (NonEmpty DoBody)
+      deriving (Show, Generic, NFData)
+    data DoBody
+      = DoBody
+        { doBodyName :: Maybe NameSymb,
+          doBodyExpr :: Expression
+        }
+      deriving (Show, Generic, NFData)
+    data ModuleE
+      = ModE
+          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
+          , moduleEBody :: Expression
+          }
+      deriving (Show, Generic, NFData)
+    data Cond a
+      = C (NonEmpty (CondLogic a))
+      deriving (Show, Generic, NFData)
+    data CondLogic a
+      = CondExpression
+          { condLogicPred :: Expression
+          , condLogicBody :: a
+          }
+      deriving (Show, Generic, NFData)
+  #+end_src
+- _Top Level_
+  + one does not have to deal with the following Sum Constructors
+   #+begin_src haskell
+    data Module
+      = Mod (FunctionLike (NonEmpty TopLevel))
+      deriving (Show, Generic, NFData)
+      data Signature
+        = Sig
+            { signatureName :: Symbol
+              -- Was a usage but can't alias for now
+            , signatureUsage :: Maybe Expression
+            , signatureArrowType :: Expression
+            , signatureConstraints :: [Expression]
+            }
+        deriving (Show, Generic, NFData)
+  #+end_src
+- _Function_
+  + This form now looks like
+    #+begin_src haskell
+      data Function
+        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
+    #+end_src
+- _NameSet_
+  + This form now looks like
+    #+begin_src haskell
+    data NameSet t
+      = NonPunned NameSymb t
+      deriving (Show, Generic, NFData)
+    #+end_src
+- _Relies on_
+  + [[Frontend/Types/Base]]
+  + [[Types/Extend]]
+  + [[Library]]
 ***** Passes
 Passes contains a list of passes on the frontend syntax that can be
 done with no extra information needed. Thus we export the following passes
@@ -1440,13 +1567,20 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Library]]
   + [[Library/Sexp]]
+***** Types <<Desugar/Types>>
+- _Relies on_
+  + [[Desugar/Extend]]
+  + [[Frontend/Types/Base]]
+  + [[Library]]
 **** FrontendContextualise
 - order of Passes
   1. =ModuleOpen=
   2. =InfixPrecedence=
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
+  + [[Contextify/Sexp]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1454,16 +1588,18 @@ done with no extra information needed. Thus we export the following passes
   + [[InfixPrecedence/Transform]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Transform]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/Open]]
   + [[Library]]
+  + [[HashMap]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Contextify
 ****** ResolveOpenInfo
 - This module is responsible for adding the reverse open
@@ -1493,20 +1629,29 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-****** Transform <<Contextify/Transform>>
+****** Sexp <<Contextify/Sexp>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Contextify/Types]]
-  + [[RemoveDo/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+****** Transform <<Contextify/Transform>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Desugar/Types]]
+  + [[Contextify/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ****** Types <<Contextify/Types>>
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[RemoveDo/Types]]
+  + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** InfixPrecedence
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -1616,11 +1761,11 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
   + [[ResolveOpenInfo]]
   + [[FrontendContextualise/Environment]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -1653,313 +1798,23 @@ done with no extra information needed. Thus we export the following passes
 #+end_src
 - for modules we can infer.
 - _Relies on_
+  + [[Desugar/Extend]]
+  + [[Desugar/Extend]]
   + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[RemoveDo/Extend]]
   + [[Library]]
 ****** Transform <<ModuleOpen/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
+  + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
   + [[ModuleOpen/Environment]]
   + [[ModuleOpen/Types]]
-  + [[RemoveDo/Types]]
   + [[Library]]
 ****** Types <<ModuleOpen/Types>>
 - _Relies on_
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
-  + [[Library]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Frontend/Types]]
-  + [[CombineMultiple/Transform]]
-  + [[RemoveCond/Transform]]
-  + [[RemoveDo/Transform]]
-  + [[RemoveDo/Types]]
-  + [[RemoveGuard/Transform]]
-  + [[RemoveModules/Transform]]
-  + [[RemovePunned/Transform]]
-  + [[RemoveSignature/Transform]]
-  + [[Library]]
-***** Abstractions
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Library]]
-***** CombineMultiple
-****** Extend <<CombineMultiple/Extend>>
-- This pass changes =FunctionLike=, =Function=, and =Let=
-  + Belongs to Table
-    | Changed      | Is a Sum Type of |
-    |--------------+------------------|
-    | Function     | TopLevel         |
-    | Let          | Expression       |
-    | FunctionLike | Function ∧ Let   |
-- _Function Like changes_
-  + Function Like now looks like
-    #+begin_src haskell
-      data FunctionLike a
-        = Like
-          { functionLikeArgs :: [Arg]
-          , functionLikeBody :: a
-          }
-        deriving (Show, Generic, NFData)
-    #+end_src
-    * This pass removes the =Name= from the previous transform
-- _Let changes_
-  + Let now looks like
-    #+begin_src haskell
-      data Let
-        = LetGroup
-          { letName :: Symbol
-          , letBindings :: NonEmpty (FunctionLike Expression)
-          , letBody :: Expression
-          }
-        deriving (Show, Generic, NFData)
-    #+end_src
-    * In this pass we add =Name= from the previous Let type
-- _Function changes_
-  + Function now looks like
-    #+begin_src haskell
-      data Function
-        = Func Symbol (NonEmpty (FunctionLike Expression))
-    #+end_src
-    * Namely this version adds symbol to the previous pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveCond/Extend]]
-  + [[RemoveCond/Extend]]
-  + [[Library]]
-****** Transform <<CombineMultiple/Transform>>
-- _Relies on_
-  + [[CombineMultiple/Types]]
-  + [[RemoveCond/Types]]
-  + [[Library]]
-****** Types <<CombineMultiple/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[CombineMultiple/Extend]]
-  + [[Library]]
-***** RemoveCond
-****** Extend <<RemoveCond/Extend>>
-- This pass removes the =Do= form
- + Belongs to Table
-   | Changed | Is a Sum Type of |
-   |---------+------------------|
-   | Cond    | Expression       |
-- Thus one does not have to ever deal with
-  #+begin_src haskell
-    data Cond a
-      = C (NonEmpty (CondLogic a))
-      deriving (Show, Generic, NFData)
-    data CondLogic a
-      = CondExpression
-          { condLogicPred :: Expression
-          , condLogicBody :: a
-          }
-      deriving (Show, Generic, NFData)
-  #+end_src
-  after this pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveGuard/Extend]]
-  + [[RemoveGuard/Extend]]
-  + [[Library]]
-****** Transform <<RemoveCond/Transform>>
-- _Relies on_
-  + [[RemoveCond/Types]]
-  + [[RemoveGuard/Types]]
-  + [[Library]]
-****** Types <<RemoveCond/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveCond/Extend]]
-  + [[Library]]
-***** RemoveDo
-****** Extend <<RemoveDo/Extend>>
-- This pass removes the =Do= form
- + Belongs to Table
-   | Changed | Is a Sum Type of |
-   |---------+------------------|
-   | Do      | Expression       |
-- Thus one does not have to ever deal with
-  #+begin_src haskell
-    data Do
-      = Do'' (NonEmpty DoBody)
-      deriving (Show, Generic, NFData)
-    data DoBody
-      = DoBody
-        { doBodyName :: Maybe NameSymb,
-          doBodyExpr :: Expression
-        }
-      deriving (Show, Generic, NFData)
-  #+end_src
-  after this pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemovePunned/Extend]]
-  + [[RemovePunned/Extend]]
-  + [[Library]]
-****** Transform <<RemoveDo/Transform>>
-- _Relies on_
-  + [[RemoveDo/Types]]
-  + [[RemovePunned/Types]]
-  + [[Library]]
-****** Types <<RemoveDo/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveDo/Extend]]
-  + [[Library]]
-***** RemoveGuard
-****** Extend <<RemoveGuard/Extend>>
-- This pass changes =FunctionLike=
-  + Belongs to Table
-    | Changed      | Is a Sum Type of |
-    |--------------+------------------|
-    | FunctionLike | Function ∧ Let   |
-- _Function Like changes_
-  + Function Like now looks like
-    #+begin_src haskell
-      data FunctionLike a
-        = Like
-          { functionLikeName :: Symbol
-          , functionLikeArgs :: [Arg]
-          , functionLikeBody :: a
-          }
-        deriving (Show, Generic, NFData)
-    #+end_src
-    * This pass removes the =GuardBody= from the body.
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Abstractions]]
-  + [[RemoveModules/Extend]]
-****** Transform <<RemoveGuard/Transform>>
-- _Relies on_
-  + [[RemoveGuard/Types]]
-  + [[RemoveModules/Types]]
-  + [[Library]]
-****** Types <<RemoveGuard/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveGuard/Extend]]
-  + [[Library]]
-***** RemoveModules
-****** Extend <<RemoveModules/Extend>>
-- This pass removes the =Module= and =ModuleE= form
- + Belongs to Table
-   | Changed | Is a Sum Type of |
-   |---------+------------------|
-   | Module  | TopLevel         |
-   | ModuleE | Expression       |
-- Thus one does not have to ever deal with
-  #+begin_src haskell
-    data Module
-      = Mod (FunctionLike (NonEmpty TopLevel))
-      deriving (Show, Generic, NFData)
-    data ModuleE
-      = ModE
-          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
-          , moduleEBody :: Expression
-          }
-      deriving (Show, Generic, NFData)
-  #+end_src
-  after this pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Types/Extend]]
-  + [[Library]]
-****** Transform <<RemoveModules/Transform>>
-- _Relies on_
-  + [[Frontend/Types]]
-  + [[RemoveModules/Types]]
-  + [[Library]]
-****** Types <<RemoveModules/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveModules/Extend]]
-  + [[Library]]
-***** RemovePunned
-****** Extend <<RemovePunned/Extend>>
-- This pass removes the =Punned= form
- + Belongs to Table
-   | Removed | Is a Sum Type of |
-   |---------+------------------|
-   | Punned  | NameSet          |
-- Thus one does not have to ever deal with the =Punned= variant in
-  #+begin_src haskell
-    data NameSet t
-      = Punned NameSymb
-      | NonPunned NameSymb t
-      deriving (Show, Generic, NFData)
-  #+end_src
-  after this pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveSignature/Extend]]
-  + [[RemoveSignature/Extend]]
-  + [[Library]]
-****** Transform <<RemovePunned/Transform>>
-- _Relies on_
-  + [[RemovePunned/Types]]
-  + [[RemoveSignature/Types]]
-  + [[Library]]
-****** Types <<RemovePunned/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemovePunned/Extend]]
-  + [[Library]]
-***** RemoveSignature
-****** Extend <<RemoveSignature/Extend>>
-- This pass changes =Signature=, and =Function=
-  + Belongs to Table
-    | Changed   | Is a Sum Type of      |
-    |-----------+-----------------------|
-    | Function  | TopLevel              |
-    | Signature | +TopLevel+ ∧ Function |
-- _Signature changes_
-  + We move Signature from TopLevel to Function
-    #+begin_src haskell
-      data Signature
-        = Sig
-            { signatureName :: Symbol
-              -- Was a usage but can't alias for now
-            , signatureUsage :: Maybe Expression
-            , signatureArrowType :: Expression
-            , signatureConstraints :: [Expression]
-            }
-        deriving (Show, Generic, NFData)
-    #+end_src
-- _Function changes_
-  + Function now looks like
-    #+begin_src haskell
-      data Function
-        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
-    #+end_src
-    * Namely this version adds a signature to upon the previous pass
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[CombineMultiple/Extend]]
-  + [[CombineMultiple/Extend]]
-  + [[Library]]
-****** Transform <<RemoveSignature/Transform>>
-- _Relies on_
-  + [[CombineMultiple/Types]]
-  + [[RemoveSignature/Types]]
-  + [[Library]]
-****** Types <<RemoveSignature/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[RemoveSignature/Extend]]
   + [[Library]]
 ** test
 *** Golden
@@ -1970,15 +1825,35 @@ done with no extra information needed. Thus we export the following passes
 *** Main <<Translate/test/Main>>
 - _Relies on_
   + [[Library]]
+*** Context
+**** Environment <<Context/Environment>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendContextualise]]
+  + [[ResolveOpenInfo]]
+  + [[Contextify/Types]]
+  + [[FrontendContextualise/Environment]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 *** Contextualise
 **** Contextify
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
   + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
+  + [[Internal]]
+  + [[Library/Sexp]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_
@@ -2003,18 +1878,18 @@ done with no extra information needed. Thus we export the following passes
   + [[ModuleOpen/Environment]]
   + [[Library]]
   + [[HashMap]]
+*** Conversion
+**** ML <<test/Conversion/ML>>
+Temporary conversion from the Sexpression syntax to the ML syntax
 *** Desugar <<test/Desugar>>
 - _Relies on_
+  + [[Desugar/Types]]
   + [[Frontend/Parser]]
   + [[FrontendDesugar]]
-  + [[RemoveDo/Types]]
   + [[Library]]
   + [[NameSymbol]]
 **** Sexp <<Desugar/Sexp>>
 - _Relies on_
   + [[Passes]]
-  + [[Frontend/Parser]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]

@@ -16,6 +16,11 @@ module Juvix.Library.Sexp
     isAtomNamed,
     nameFromT,
     atomFromT,
+    groupBy2,
+    assoc,
+    cadr,
+    foldSearchPred,
+    unGroupBy2,
   )
 where
 
@@ -25,6 +30,64 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Sexp.Parser
 import Juvix.Library.Sexp.Types
 import Prelude (error)
+
+-- | @foldSearchPred@ is like foldPred with some notable exceptions.
+-- 1. Instead of recusing on the @predChange@ form, it will just leave
+--    the main form in tact.
+--    - This is because in this sort of task we
+--      will wish to maybe just change an aspect of it but maybe not
+--      the actual form!
+-- 2. We have a @predBind@ predicate which allows us to tell it what
+--    forms can cause binders. This is useful when we care about what
+--    is in scope for doing certain changes.
+--
+-- 3. In the case where both predicates match, then we will run the
+--    binder and then the actual transformation, this is to ensure the
+--    lexical semantics are respected, and then we can cleanup after
+--    this.
+--
+-- 4. If the @predChange@ function accepts ":atom", then the function
+--    will also be ran on the atom
+--
+-- For arguments, this function takes a Sexp, along with 2 sets of
+-- pred function pairs. The function for the binding we take a
+-- continuation, as it's not easy to automate the recursive calls in
+-- instances such as case, so we have to do it by hand for those
+-- binder cases
+foldSearchPred ::
+  Monad f =>
+  T ->
+  (NameSymbol.T -> Bool, Atom -> T -> f T) ->
+  (NameSymbol.T -> Bool, Atom -> T -> (T -> f T) -> f T) ->
+  f T
+foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
+  case t of
+    Cons a@(Atom atom@(A name _)) xs
+      -- this case is a bit special as we wish to remove the form but
+      -- it's a binder! So we must run it then run the transform on it!
+      | predBind name && predChange name -> do
+        bindedTerm <- bindCase
+        changeCase (cdr bindedTerm)
+      | predChange name -> changeCase xs
+      | predBind name -> bindCase
+      where
+        changeCase xs = do
+          newCons <- f atom xs
+          case newCons of
+            Cons _ _ ->
+              Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
+            _ ->
+              pure newCons
+        -- G takes the computation, as its changes are scoped over the
+        -- calls.
+        bindCase =
+          Cons a <$> g atom xs (\xs -> foldSearchPred xs p1 p2)
+    Cons cs xs ->
+      Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
+    Nil -> pure Nil
+    Atom a
+      | predChange ":atom" -> f a t
+      | otherwise -> pure $ Atom a
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
@@ -87,6 +150,9 @@ cdr (Cons _ xs) = xs
 cdr Nil = Nil
 cdr (Atom a) = Atom a
 
+cadr :: T -> T
+cadr = car . cdr
+
 atom :: NameSymbol.T -> T
 atom x = Atom $ A x Nothing
 
@@ -104,3 +170,22 @@ atomFromT _ = Nothing
 nameFromT :: T -> Maybe NameSymbol.T
 nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
+
+assoc :: T -> T -> Maybe T
+assoc t (car' :> cdr')
+  | t == car car' = Just (cadr car')
+  | otherwise = assoc t cdr'
+assoc _ Nil = Nothing
+assoc _ Atom {} = Nothing
+
+groupBy2 :: T -> T
+groupBy2 (a1 :> a2 :> rest) =
+  list [a1, a2] :> groupBy2 rest
+groupBy2 _ = Nil
+
+unGroupBy2 :: T -> T
+unGroupBy2 (List [a1, a2] :> rest) =
+  a1 :> a2 :> unGroupBy2 rest
+unGroupBy2 (a :> rest) =
+  a :> unGroupBy2 rest
+unGroupBy2 a = a
