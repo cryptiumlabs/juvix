@@ -1420,6 +1420,22 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
 This module is responsible for converting back S-expressions back
@@ -1579,7 +1595,9 @@ done with no extra information needed. Thus we export the following passes
   + [[NameSpace]]
   + [[Common/Open]]
   + [[Library]]
+  + [[HashMap]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Contextify
 ****** ResolveOpenInfo
 - This module is responsible for adding the reverse open
@@ -1796,22 +1814,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
   + [[Library]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Juvix/Conversion/ML]]
-  + [[Juvix/Desugar]]
-  + [[Desugar/Types]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
 ** test
 *** Golden
 - _Relies on_
@@ -1821,6 +1823,22 @@ done with no extra information needed. Thus we export the following passes
 *** Main <<Translate/test/Main>>
 - _Relies on_
   + [[Library]]
+*** Context
+**** Environment <<Context/Environment>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendContextualise]]
+  + [[ResolveOpenInfo]]
+  + [[Contextify/Types]]
+  + [[FrontendContextualise/Environment]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 *** Contextualise
 **** Contextify
 - _Relies on_

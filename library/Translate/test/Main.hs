@@ -1,5 +1,6 @@
 module Main where
 
+import qualified Context.Environment
 import qualified Contextualise.Contextify as Contextify
 import Contextualise.Infix.ShuntYard (allInfixTests)
 import Contextualise.Module.Open (openTests)
@@ -21,7 +22,7 @@ translationPasses :: T.TestTree
 translationPasses =
   T.testGroup
     "translation passes from Frontend to Core"
-    [allDesugar, Sexp.top, ML.top]
+    [allDesugar, Sexp.top, ML.top, Context.Environment.top]
 
 allCheckedTests :: T.TestTree
 allCheckedTests =

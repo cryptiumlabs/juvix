@@ -101,6 +101,28 @@ runM (M a) = runExceptT a
 -- S-expression Version
 ------------------------------------------------------------
 
+data ResolveErr
+  = Path Context.PathError
+  | Resolve ResolveOpen.Error
+  deriving (Show, Eq)
+
+-- | @fullyContextify@ runs @contextifyS@ along while running the
+-- algorithm that resolves the opens to the modules in which they
+-- should come from
+fullyContextify ::
+  NonEmpty (NameSymbol.T, [Sexp.T]) ->
+  IO (Either ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
+fullyContextify ts = do
+  cont <- contextifyS ts
+  case cont of
+    Left e -> pure $ Left $ Path e
+    Right x -> do
+      addedOpens <- uncurry ResolveOpen.run x
+      case addedOpens of
+        Left e -> pure $ Left $ Resolve e
+        Right x ->
+          pure $ Right x
+
 contextifyS ::
   NonEmpty (NameSymbol.T, [Sexp.T]) ->
   IO
