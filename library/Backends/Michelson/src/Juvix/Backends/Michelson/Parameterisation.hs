@@ -348,11 +348,8 @@ michelson =
     { hasType,
       builtinTypes,
       builtinValues,
-      stringTy = checkStringType,
       stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-      intTy = checkIntType,
       intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Michelson does not support floats
       floatVal = const Nothing
     }
 
