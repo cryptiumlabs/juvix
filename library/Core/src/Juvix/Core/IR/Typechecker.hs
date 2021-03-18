@@ -19,7 +19,7 @@ import Juvix.Library hiding (Datatype)
 typeCheckDeclaration ::
   [IR.RawDatatype' ext primTy primVal] ->
   [IR.RawFunction' ext primTy primVal] ->
-  IR.TypeCheck ext primTy primVal IO ()
+  IR.TypeCheck ext primTy primVal IO [Global' extV extT primTy primVal]
 typeCheckDeclaration [] [] =
   return undefined
 typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =

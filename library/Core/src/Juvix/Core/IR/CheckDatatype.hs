@@ -10,6 +10,7 @@ import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 import Prelude (error)
 
 typeCheckConstructor ::
@@ -36,9 +37,8 @@ teleToType ::
   IR.Term' ext primTy primVal ->
   (Maybe Name, IR.Term' ext primTy primVal)
 teleToType [] t = (Nothing, t)
-teleToType ((n, t) : tel) t2 = undefined
-
--- TODO(Just n, Pi Omega t (snd (teleToType tel t2)) ext?)
+teleToType ((n, t) : tel) t2 = 
+  (Just n, Pi Omega t (snd (teleToType tel t2))) 
 
 typeToTele ::
   (Maybe Name, IR.Term' ext primTy primVal) ->
@@ -55,7 +55,8 @@ typeToTele (n, t) = ttt (n, t) []
 
 -- | checkDataType takes 5 arguments.
 checkDataType ::
-  Int -> -- the next fresh generic value.
+  -- | the next fresh generic value.  
+  Int -> 
   -- an env that binds fresh generic values to variables.
   Telescope ext primTy primVal ->
   -- an env that binds the type value corresponding to these generic values.
@@ -64,7 +65,7 @@ checkDataType ::
   Int ->
   -- the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal IO ()
+  TypeCheck ext primTy primVal IO (IR.Datatype' extV extT primTy primVal)
 checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 -- _ <-
 --   if k < p -- if k < p then we're checking the parameters
@@ -75,7 +76,7 @@ checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 -- check that the data type is of type Star
 checkDataType _k _rho _gamma _p (Star _ _) = return ()
 checkDataType _k _rho _gamma _p e =
-  error $ "checkDataType: " -- <> show e <> "doesn't target Star."
+  error $ "checkDataType: " <> show e <> "doesn't target Star."
   --TODO show instance? more proper error throwing?
 
 -- | checkConType check constructor type
