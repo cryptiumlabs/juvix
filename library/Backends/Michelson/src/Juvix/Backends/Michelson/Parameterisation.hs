@@ -235,14 +235,6 @@ integerToPrimVal x
   | otherwise =
     Nothing
 
-checkIntType :: Integer -> PrimTy -> Bool
-checkIntType val (PrimTy (M.Type ty _)) = case ty of
-  M.TNat -> val >= 0 -- TODO max bound
-  M.TInt -> True -- TODO bounds?
-    -- TODO other cases?
-  _ -> False
-checkIntType _ _ = False
-
 primify :: Untyped.T -> PrimTy
 primify t = PrimTy (Untyped.Type t "")
 
