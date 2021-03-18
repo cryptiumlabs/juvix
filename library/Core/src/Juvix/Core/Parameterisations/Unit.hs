@@ -71,10 +71,7 @@ t =
     { hasType,
       builtinTypes,
       builtinValues,
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \_ _ -> False,
       intVal = const Nothing,
-      floatTy = \_ _ -> False,
       floatVal = const Nothing
     }
