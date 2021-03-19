@@ -2,6 +2,7 @@
 
 module Contextualise.Contextify where
 
+import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar as DesugarS
 import qualified Juvix.Frontend.Parser as Parser
@@ -82,7 +83,7 @@ sumConTestS =
   where
     test str = do
       Right (ctx, _) <-
-        Contextualize.contextifyS (("Foo", desugared) :| [])
+        Contextify.contextify (("Foo", desugared) :| [])
       ctx Context.!? str
         |> fmap Context.extractValue
         |> (T.@=? Just (Context.SumCon (Context.Sum Nothing "bool")))
@@ -95,7 +96,7 @@ defunTransfomrationWorks =
   where
     test = do
       Right (ctx, _) <-
-        Contextualize.contextifyS (("Foo", desugared) :| [])
+        Contextify.contextify (("Foo", desugared) :| [])
       let Just (Context.Def x) = ctx Context.!? "foo" >>| Context.extractValue
       [Context.defMTy x, Just (Context.defTerm x)] T.@=? [Just sig, Just function]
     Right desugared =
