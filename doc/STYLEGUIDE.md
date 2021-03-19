@@ -13,6 +13,12 @@ Set up [HLint](https://github.com/ndmitchell/hlint)
 in your code environment and follow its code suggestions
 as much as you can.
 
+General naming convention
+-------------------------
+
+For anything code related: modules, functions and variables, filenames etc. we
+will use the American English spelling.
+
 Formatting
 ----------
 
