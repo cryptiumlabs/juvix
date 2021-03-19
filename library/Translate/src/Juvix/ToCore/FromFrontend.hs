@@ -53,12 +53,30 @@ transformTermHR ::
   m (HR.Term primTy primVal)
 transformTermHR _ (Sexp.Atom a) = HR.Prim <$> paramConstant a
 transformTermHR q p@(name Sexp.:> form)
-  | named ":let-match" = transformSimpleLet q form
+  -- Unimplemented cases
+  | named ":record-no-pun" = throwFF $ RecordUnimplemented p
+  | named ":refinement" = throwFF $ RefinementsUnimplemented p
   | named ":let-type" = throwFF $ ExprUnimplemented p
+  | named ":list" = throwFF $ ListUnimplemented p
   | named "case" = throwFF $ ExprUnimplemented p
+  -- Rest
+  | named ":custom-arrow" = undefined
+  | named ":let-match" = transformSimpleLet q form
+  | named ":primitive" = transPrim form
   | named ":lambda" = transformSimpleLambda q form
+  | named ":progn" = transformTermHR q (Sexp.car form)
   where
     named = Sexp.isAtomNamed name
+
+transPrim (Sexp.List [parm])
+  | Just Sexp.A {atomName = p} <- Sexp.atomFromT parm = do
+    param <- ask @"param"
+    maybe (throwFF $ UnknownPrimitive p) pure $
+      primTy param p <|> primVal param p
+  where
+    primTy param p = HR.PrimTy <$> HM.lookup p (P.builtinTypes param)
+    primVal param p = HR.Prim <$> HM.lookup p (P.builtinValues param)
+transPrim _ = error "malfromed prim"
 
 transformSimpleLambda ::
   ( Data primTy,
@@ -73,6 +91,7 @@ transformSimpleLambda ::
 transformSimpleLambda q (Sexp.List [args, body])
   | Just pats <- Sexp.toList args >>= NonEmpty.nonEmpty =
     foldr HR.Lam <$> transformTermHR q body <*> traverse isVarPat pats
+transformSimpleLambda _ _ = error "malformed lambda"
 
 transformSimpleLet ::
   ( Data primTy,
@@ -123,6 +142,12 @@ transformPat p@(asCon Sexp.:> con)
   | otherwise =
     undefined
 
+toElim ::
+  HasThrowFF primTy primVal m =>
+  -- | the original expression
+  Sexp.T ->
+  HR.Term primTy primVal ->
+  m (HR.Elim primTy primVal)
 toElim _ (HR.Elim e) = pure e
 toElim e _ = throwFF $ NotAnElim e
 
