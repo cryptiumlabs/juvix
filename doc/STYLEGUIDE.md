@@ -41,6 +41,20 @@ library/frontend           <-- frontend is not part of the module structure.
 library/frontend/src/Juvix <-- Juvix is a module.
 ```
 
+
+### Pattern matches
+
+When pattern matching a data constructor, using variables even for unused
+fields does improve the readability of the code. To avoid numerous
+`-Wunused-matches` warnings, we prefix unused variables with `_`:
+
+```haskell
+func (RawDatatype _ _ _ lvl _) = ...
+
+func_better (RawDatatype _n _pos _a lvl _cons) = ...
+```
+
+
 Formatting
 ----------
 
