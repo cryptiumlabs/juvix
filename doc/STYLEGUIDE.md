@@ -19,6 +19,28 @@ General naming convention
 For anything code related: modules, functions and variables, filenames etc. we
 will use the American English spelling.
 
+### Modules and directories
+
+Module and directory names should be written as nouns:
+
+```
+Translation
+Contextualization
+Desugaring
+```
+
+We should avoid prefixes in module names as much as possible, this is what sub
+directories are for, i.e. `Frontend.Contextualize` instead of
+`FrontendContextualize`.
+
+Directory names should start with a small letter, unless they match with a
+module in the Haskell code:
+
+```
+library/frontend           <-- frontend is not part of the module structure.
+library/frontend/src/Juvix <-- Juvix is a module.
+```
+
 Formatting
 ----------
 
