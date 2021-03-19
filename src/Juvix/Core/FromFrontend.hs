@@ -476,10 +476,14 @@ transformConSigs ::
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
-  FE.Type -> -- ^ whole type declaration (for error messages)
-  NameSymbol.Mod -> -- ^ namespace containing declaration
-  Maybe (HR.Term primTy primVal) -> -- ^ datatype head
-  FE.Adt -> -- ^ rhs
+  -- | whole type declaration (for error messages)
+  FE.Type ->
+  -- | namespace containing declaration
+  NameSymbol.Mod ->
+  -- | datatype head
+  Maybe (HR.Term primTy primVal) ->
+  -- | rhs
+  FE.Adt ->
   m [(NameSymbol.T, CoreSigHR primTy primVal)]
 transformConSigs dat pfx hd =
     traverse (transformProduct pfx hd) <=< toProducts
@@ -500,7 +504,8 @@ transformProduct ::
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
-  Maybe (HR.Term primTy primVal) -> -- ^ datatype head
+  -- | datatype head
+  Maybe (HR.Term primTy primVal) -> 
   (Symbol, FE.Product) ->
   m (NameSymbol.T, CoreSigHR primTy primVal)
 transformProduct q hd (x, prod) =
