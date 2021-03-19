@@ -117,6 +117,25 @@ t = ...
 
 ```
 
+Exports
+-------
+
+Modules should export their datatypes and functions explicitly. The order of
+the exports should preferably follow the same order as they are defined in the
+file. Re-exported modules should always follow at the end, for example:
+
+```haskell
+module Mod
+  ( Mod (..),
+    modFunc,
+    module SubMod,
+  )
+where
+```
+
+Typically the exports should be kept to a minimum. When exporting datatypes it
+is OK to export all constructors using `(..)`.
+
 Idioms
 ------
 
