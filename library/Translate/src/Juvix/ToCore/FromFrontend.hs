@@ -19,6 +19,14 @@ import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.Types
 import Prelude (error)
 
+type ReduceEff primTy primVal m =
+  ( Data primTy,
+    Data primVal,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  )
+
 -- P.stringVal p s
 -- P.floatVal p d
 
@@ -28,6 +36,27 @@ paramConstant' ::
   Maybe primVal
 paramConstant' p Sexp.N {atomNum} = P.intVal p atomNum
 paramConstant' _p Sexp.A {} = Nothing
+
+transformTermIR ::
+  ( Data primTy,
+    Data primVal,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (IR.Term primTy primVal)
+transformTermIR q fe = do
+  SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
+
+transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
+transformPatVar (IR.Global name) =
+  gets @"patVars" $
+    maybe (IR.Global name) IR.Pattern
+      . HM.lookup name
+transformPatVar p = pure p
 
 paramConstant ::
   (HasParam primTy primVal m, HasThrowFF primTy primVal m) =>
@@ -42,19 +71,13 @@ paramConstant k = do
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.
 transformTermHR ::
-  ( Data primTy,
-    Data primVal,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
-  NameSymbol.Mod ->
-  Sexp.T ->
-  m (HR.Term primTy primVal)
+  ReduceEff primTy primVal m => NameSymbol.Mod -> Sexp.T -> m (HR.Term primTy primVal)
 transformTermHR _ (Sexp.Atom a@Sexp.N {}) =
   HR.Prim <$> paramConstant a
-transformTermHR _ (Sexp.Atom n@Sexp.N {}) =
-  undefined
+transformTermHR q (Sexp.Atom Sexp.A {atomName}) =
+  toName <$> lookupSig' (Just q) atomName
+  where
+    toName = HR.Elim . HR.Var . maybe atomName fst
 transformTermHR q p@(name Sexp.:> form)
   -- Unimplemented cases
   -- 1. _refinement_
@@ -78,6 +101,8 @@ transformTermHR q p@(name Sexp.:> form)
   where
     named = Sexp.isAtomNamed name
 
+transPrim ::
+  ReduceEff primTy primVal m => Sexp.T -> m (HR.Term primTy primVal)
 transPrim (Sexp.List [parm])
   | Just Sexp.A {atomName = p} <- Sexp.atomFromT parm = do
     param <- ask @"param"
@@ -160,6 +185,215 @@ toElim ::
   m (HR.Elim primTy primVal)
 toElim _ (HR.Elim e) = pure e
 toElim e _ = throwFF $ NotAnElim e
+
+getValSig ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  m (IR.GlobalUsage, HR.Term primTy primVal)
+getValSig q = getSig' q \case ValSig π ty -> Just (π, ty); _ -> Nothing
+
+getConSig ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  m (HR.Term primTy primVal, Maybe (Ctx.Def Sexp.T Sexp.T))
+getConSig q = getSig' q \case
+  ConSig (Just ty) def -> Just (ty, def)
+  _ -> Nothing
+
+getDataSig ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  m (HR.Term primTy primVal, [NameSymbol.T])
+getDataSig q = getSig' q \case DataSig ty cons -> Just (ty, cons); _ -> Nothing
+
+getSig' ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  (CoreSigHR primTy primVal -> Maybe a) ->
+  NameSymbol.T ->
+  m a
+getSig' q f x = do
+  msig <- lookupSig (Just q) x
+  case msig of
+    Just sig | Just ty <- f sig -> pure ty
+    _ -> throwFF $ WrongSigType x msig
+
+lookupSig ::
+  HasCoreSigs primTy primVal m =>
+  Maybe NameSymbol.Mod -> -- namespace of current declaration
+  NameSymbol.T ->
+  m (Maybe (CoreSig' HR.T primTy primVal))
+lookupSig q x = fmap snd <$> lookupSig' q x
+
+conDefName :: NameSymbol.T -> NameSymbol.T
+conDefName = NameSymbol.applyBase (<> "$def")
+
+transformType ::
+  ( HasPatVars m,
+    HasNextPatVar m,
+    ReduceEff primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  a ->
+  m [IR.RawGlobal primTy primVal]
+transformType q name _ = do
+  (ty, conNames) <- getDataSig q name
+  let getConSig' x = do (ty, def) <- getConSig q x; pure (x, ty, def)
+  conSigs <- traverse getConSig' conNames
+  cons <- traverse (uncurry3 $ transformCon q) conSigs
+  (args, ℓ) <- splitDataType name ty
+  let dat' =
+        IR.RawDatatype
+          { rawDataName = name,
+            rawDataArgs = args,
+            rawDataLevel = ℓ,
+            rawDataCons = cons
+          }
+  pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
+
+lookupSig' ::
+  HasCoreSigs primTy primVal m =>
+  Maybe NameSymbol.Mod -> -- namespace of current declaration
+  NameSymbol.T ->
+  m (Maybe (NameSymbol.T, CoreSig' HR.T primTy primVal))
+lookupSig' q x' = do
+  gets @"coreSigs" \sigs -> do
+    let look x = (x,) <$> HM.lookup x sigs
+    case q of
+      Nothing -> look x
+      Just q -> look x <|> look qx
+        where
+          qx = Ctx.removeTopName $ NameSymbol.qualify q x'
+  where
+    x = Ctx.removeTopName x'
+
+splitDataType ::
+  HasThrowFF primTy primVal m =>
+  NameSymbol.T ->
+  HR.Term primTy primVal ->
+  m ([IR.RawDataArg primTy primVal], IR.Universe)
+splitDataType x ty0 = go ty0
+  where
+    go (HR.Pi π x s t) = first (arg :) <$> splitDataType x t
+      where
+        arg =
+          IR.RawDataArg
+            { rawArgName = x,
+              rawArgUsage = π,
+              rawArgType = hrToIR s
+            }
+    go (HR.Star ℓ) = pure ([], ℓ)
+    go _ = throwFF $ InvalidDatatypeType x ty0
+
+transformFunction ::
+  ( ReduceEff primTy primVal m,
+    HasNextPatVar m,
+    HasPatVars m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  Ctx.Def Sexp.T Sexp.T ->
+  m (IR.RawFunction primTy primVal)
+transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
+  | Just xs <- Sexp.toList defs >>= NonEmpty.nonEmpty = do
+    (π, typ) <- getValSig q x
+    clauses <- traverse (transformClause q) xs
+    pure $
+      IR.RawFunction
+        { rawFunName = x,
+          rawFunUsage = π,
+          rawFunType = hrToIR typ,
+          rawFunClauses = clauses
+        }
+transformFunction _ _ _ = error "malformed defun"
+
+transformCon ::
+  ( ReduceEff primTy primVal m,
+    HasPatVars m,
+    HasNextPatVar m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  HR.Term primTy primVal ->
+  Maybe (Ctx.Def Sexp.T Sexp.T) ->
+  m (IR.RawDataCon primTy primVal)
+transformCon q x ty def = do
+  def <- traverse (transformFunction q (conDefName x)) def
+  pure $
+    IR.RawDataCon
+      { rawConName = x,
+        rawConType = hrToIR ty,
+        rawConDef = def
+      }
+
+transformArg ::
+  ( HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m
+  ) =>
+  Sexp.T ->
+  m (IR.Pattern primTy primVal)
+transformArg p@(name Sexp.:> _rest)
+  | Sexp.isAtomNamed name ":implicit-a" =
+    throwFF $ PatternUnimplemented p
+transformArg pat = transformPat pat
+
+transformClause ::
+  ( Data primTy,
+    Data primVal,
+    HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (IR.RawFunClause primTy primVal)
+transformClause q (Sexp.List [args', body])
+  | Just args <- Sexp.toList args' = do
+    put @"patVars" mempty
+    put @"nextPatVar" 0
+    patts <- traverse transformArg args
+    clauseBody <- transformTermIR q body
+    pure $ IR.RawFunClause [] patts clauseBody False
+
+transformConSig ::
+  ( ReduceEff primTy primVal m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  Maybe (HR.Term primTy primVal) ->
+  Sexp.T ->
+  m (HR.Term primTy primVal)
+transformConSig _ _ _ _ = undefined
+
+-- transformConSig _ _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
+-- transformConSig q _ _ (FE.Arrow ty) = transformTermHR q ty
+-- transformConSig _ name Nothing k@(FE.ADTLike {}) =
+--   throwFF $ InvalidConstructor name k
+-- transformConSig q _ (Just hd) (FE.ADTLike tys) =
+--     foldrM makeArr hd $ zip names tys
+--   where
+--     makeArr (x, arg) res =
+--       HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
+--     names = makeFieldName <$> [0..]
+--     makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
 
 --------------------------------------------------------------------------------
 -- General Helpers
