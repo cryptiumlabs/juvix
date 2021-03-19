@@ -59,6 +59,7 @@ transformTermHR q p@(name Sexp.:> form)
   | named ":let-type" = throwFF $ ExprUnimplemented p
   | named ":list" = throwFF $ ListUnimplemented p
   | named "case" = throwFF $ ExprUnimplemented p
+  | named ":u" = throwFF $ UniversesUnimplemented p
   -- Rest
   | named ":custom-arrow" = undefined
   | named ":let-match" = transformSimpleLet q form
