@@ -51,9 +51,17 @@ transformTermHR ::
   NameSymbol.Mod ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformTermHR _ (Sexp.Atom a) = HR.Prim <$> paramConstant a
+transformTermHR _ (Sexp.Atom a@Sexp.N {}) =
+  HR.Prim <$> paramConstant a
+transformTermHR _ (Sexp.Atom n@Sexp.N {}) =
+  undefined
 transformTermHR q p@(name Sexp.:> form)
   -- Unimplemented cases
+  -- 1. _refinement_
+  --    - TODO :: the name will only become relevant (outside of arrows)
+  --              when refinements are supported
+  -- 2. _universe names_
+  --    - TODO :: for universe polymorphism
   | named ":record-no-pun" = throwFF $ RecordUnimplemented p
   | named ":refinement" = throwFF $ RefinementsUnimplemented p
   | named ":let-type" = throwFF $ ExprUnimplemented p
@@ -66,6 +74,7 @@ transformTermHR q p@(name Sexp.:> form)
   | named ":primitive" = transPrim form
   | named ":lambda" = transformSimpleLambda q form
   | named ":progn" = transformTermHR q (Sexp.car form)
+  | named ":paren" = transformTermHR q (Sexp.car form)
   where
     named = Sexp.isAtomNamed name
 
