@@ -1,15 +1,16 @@
 module Context.Environment (top) where
 
 import qualified Data.HashSet as Set
+import qualified Juvix.Contextify as Contextify
+import qualified Juvix.Contextify.Environment as Env
+import qualified Juvix.Core.Common.Closure as Closure
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
-import qualified Juvix.FrontendContextualise as Contextualize
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
-import qualified Juvix.FrontendContextualise.Environment as Env
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -31,10 +32,11 @@ top =
 --------------------------------------------------------------------------------
 -- Environment Runner Types
 --------------------------------------------------------------------------------
-data Capture = Cap
-  { closure :: Env.Closure',
-    report :: [Env.Closure']
-  }
+data Capture
+  = Cap
+      { closure :: Closure.T,
+        report :: [Closure.T]
+      }
   deriving (Generic, Show)
 
 type CaptureAlias =
@@ -43,13 +45,13 @@ type CaptureAlias =
 newtype Context a = Ctx {_run :: CaptureAlias a}
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasReader "closure" Env.Closure',
-      HasSource "closure" Env.Closure'
+    ( HasReader "closure" Closure.T,
+      HasSource "closure" Closure.T
     )
     via ReaderField "closure" CaptureAlias
   deriving
-    ( HasWriter "report" [Env.Closure'],
-      HasSink "report" [Env.Closure']
+    ( HasWriter "report" [Closure.T],
+      HasSink "report" [Closure.T]
     )
     via WriterField "report" CaptureAlias
   deriving
@@ -60,11 +62,11 @@ runCtx :: Context a -> Capture -> (Either Env.ErrorS a, Capture)
 runCtx (Ctx c) = runState (runExceptT c)
 
 emptyClosure :: Capture
-emptyClosure = Cap (Env.Closure Map.empty) []
+emptyClosure = Cap (Closure.T Map.empty) []
 
 recordClosure ::
-  (HasReader "closure" a m, HasWriter "report" [a] m) => p -> b -> m b
-recordClosure _atom t = do
+  (HasReader "closure" a m, HasWriter "report" [a] m) => c -> p -> b -> m b
+recordClosure _ _atom t = do
   c <- ask @"closure"
   tell @"report" [c]
   -- Just drop the given atom
@@ -96,17 +98,17 @@ letTest =
             \ let foo (Cons a y) z = print-closure 0 in \
             \ 3"
             trigger
-        Env.keys x T.@=? firstClosure
-        Env.keys y T.@=? secondClosure,
+        Closure.keys x T.@=? firstClosure
+        Closure.keys y T.@=? secondClosure,
       --
       T.testCase "let binds for its own arguments" $ do
         [a, x, y, three, foo] <-
           capture "let f a = let foo x y = 3 in foo" (== ":atom")
-        Env.keys a T.@=? Set.fromList ["a"]
-        Env.keys x T.@=? argumentBinding
-        Env.keys y T.@=? argumentBinding
-        Env.keys three T.@=? argumentBinding
-        Env.keys foo T.@=? Set.fromList ["a", "foo"]
+        Closure.keys a T.@=? Set.fromList ["a"]
+        Closure.keys x T.@=? argumentBinding
+        Closure.keys y T.@=? argumentBinding
+        Closure.keys three T.@=? argumentBinding
+        Closure.keys foo T.@=? Set.fromList ["a", "foo"]
     ]
   where
     firstClosure =
@@ -125,7 +127,7 @@ typeTest =
     [ T.testCase "top level type" $ do
         [print] <-
           capture "type foo a b c = Cons (print-closure 3)" trigger
-        Env.keys print T.@=? Set.fromList ["a", "b", "c"],
+        Closure.keys print T.@=? Set.fromList ["a", "b", "c"],
       --
       T.testCase "let-type properly adds constructors" $ do
         [inside, body] <-
@@ -136,8 +138,8 @@ typeTest =
             \  | Nil \
             \ in print-closure 4"
             trigger
-        Env.keys inside T.@=? constructors
-        Env.keys body T.@=? constructors
+        Closure.keys inside T.@=? constructors
+        Closure.keys body T.@=? constructors
     ]
   where
     constructors =
@@ -157,8 +159,8 @@ caseTest =
             \  | Cons a b -> (print-closure 3) \
             \  | Nil -> (print-closure 3)"
             trigger
-        Env.keys cons T.@=? Set.fromList ["a", "b"]
-        Env.keys nil T.@=? Set.fromList []
+        Closure.keys cons T.@=? Set.fromList ["a", "b"]
+        Closure.keys nil T.@=? Set.fromList []
     ]
   where
     trigger =
@@ -173,7 +175,7 @@ lambdaTest =
           capture
             "let f = \\(Cons a b) -> (print-closure 3)"
             trigger
-        Env.keys lamb T.@=? Set.fromList ["a", "b"]
+        Closure.keys lamb T.@=? Set.fromList ["a", "b"]
     ]
   where
     trigger =
@@ -190,7 +192,7 @@ declaimTest =
             trigger
         -- we could check for info, but this is sufficient for it
         -- properly working
-        Env.keys lamb T.@=? Set.fromList ["+"]
+        Closure.keys lamb T.@=? Set.fromList ["+"]
     ]
   where
     trigger =
@@ -202,19 +204,19 @@ openTest =
     "open Tests"
     [ T.testCase "open properly adds symbols" $ do
         Right (ctx, _) <-
-          Contextualize.contextifyS
+          Contextify.contextify
             ( ("Foo", parseDesugarSexp "let f = open A in print-closure 2")
                 :| [("A", parseDesugarSexp "let bar = 3")]
             )
-        let (_, Cap _ [Env.Closure capture]) =
+        let (_, Cap _ [Closure.T capture]) =
               runCtx (Env.passContextSingle ctx trigger recordClosure) emptyClosure
-        Map.toList capture T.@=? [("bar", Env.Info Nothing [] (Just "A"))]
+        Map.toList capture T.@=? [("bar", Closure.Info Nothing [] (Just "A"))]
     ]
   where
     trigger =
       (== "print-closure")
 
-capture :: ByteString -> (NameSymbol.T -> Bool) -> IO [Env.Closure']
+capture :: ByteString -> (NameSymbol.T -> Bool) -> IO [Closure.T]
 capture str trigger = do
   Right (ctx, _) <-
     contextualizeFoo str
@@ -236,7 +238,7 @@ contextualizeFoo ::
         (Contextify.ContextSexp, [Contextify.PreQualified])
     )
 contextualizeFoo byte =
-  Contextualize.contextifyS (("Foo", parseDesugarSexp byte) :| [])
+  Contextify.contextify (("Foo", parseDesugarSexp byte) :| [])
 
 parseDesugarSexp :: ByteString -> [Sexp.T]
 parseDesugarSexp = Desugar.op . parsedSexp

@@ -559,6 +559,15 @@ Types to support partial application and polymorphic primitives.
   + [[Library]]
   + [[NameSymbol]]
 ***** Common
+****** Closure
+Closure.T serves as the data structure in which we will store
+temporary lexical bindings as our code encounters binders.
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 ****** NameSpace
 - _Relies on_
   + [[Library]]
@@ -1426,6 +1435,54 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
+<<<<<<< HEAD
+=======
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Juvix/Conversion/ML]]
+  + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Library]]
+**** Contextify <<Juvix/Contextify>>
+- _Relies on_
+  + [[Contextify/Environment]]
+  + [[Contextify/Passes]]
+  + [[Core/Common/Context]]
+  + [[ResolveOpenInfo]]
+  + [[Contextify/Sexp]]
+  + [[Contextify/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+***** Environment <<Contextify/Environment>>
+- _Relies on_
+  + [[Closure]]
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[InfixPrecedence/ShuntYard]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+***** Passes <<Contextify/Passes>>
+- _Relies on_
+  + [[Contextify/Environment]]
+  + [[Closure]]
+  + [[Core/Common/Context]]
+  + [[InfixPrecedence/ShuntYard]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+>>>>>>> develop
 **** Conversion
 ***** ML <<Juvix/Conversion/ML>>
 This module is responsible for converting back S-expressions back
@@ -1466,7 +1523,7 @@ function, removes all extra parts of syntax that can be boiled down
 to simple macro expansion (simplification of the frontend syntax
 from the syntax alone with no extra information needed!)
 - _Relies on_
-  + [[Passes]]
+  + [[Desugar/Passes]]
   + [[Library]]
   + [[Library/Sexp]]
 ***** Extend <<Desugar/Extend>>
@@ -1543,7 +1600,7 @@ from the syntax alone with no extra information needed!)
   + [[Frontend/Types/Base]]
   + [[Types/Extend]]
   + [[Library]]
-***** Passes
+***** Passes <<Desugar/Passes>>
 Passes contains a list of passes on the frontend syntax that can be
 done with no extra information needed. Thus we export the following passes
 - Removing Explicit Module declarations
@@ -1568,7 +1625,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Core/Common/Context]]
   + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
-  + [[Contextify/Sexp]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1578,16 +1634,13 @@ done with no extra information needed. Thus we export the following passes
   + [[ModuleOpen/Transform]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
 ***** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
   + [[Common/Open]]
   + [[Library]]
-  + [[HashMap]]
   + [[NameSymbol]]
-  + [[Library/Sexp]]
 ***** Contextify
 ****** ResolveOpenInfo
 - This module is responsible for adding the reverse open
@@ -1821,6 +1874,19 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types]]
   + [[Library]]
 ** test
+*** Contextify <<test/Contextify>>
+- _Relies on_
+  + [[Juvix/Contextify]]
+  + [[Contextify/Environment]]
+  + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types/Base]]
+  + [[ResolveOpenInfo]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 *** Golden
 - _Relies on_
   + [[Frontend/Parser]]
@@ -1832,22 +1898,24 @@ done with no extra information needed. Thus we export the following passes
 *** Context
 **** Environment <<Context/Environment>>
 - _Relies on_
+  + [[Juvix/Contextify]]
+  + [[Contextify/Environment]]
+  + [[Closure]]
   + [[Core/Common/Context]]
   + [[Juvix/Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
-  + [[FrontendContextualise]]
   + [[ResolveOpenInfo]]
   + [[Contextify/Types]]
-  + [[FrontendContextualise/Environment]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
 *** Contextualise
-**** Contextify
+**** Contextify <<Contextualise/Contextify>>
 - _Relies on_
+  + [[Juvix/Contextify]]
   + [[Core/Common/Context]]
   + [[Juvix/Desugar]]
   + [[Frontend/Parser]]
@@ -1894,6 +1962,6 @@ Temporary conversion from the Sexpression syntax to the ML syntax
   + [[NameSymbol]]
 **** Sexp <<Desugar/Sexp>>
 - _Relies on_
-  + [[Passes]]
+  + [[Desugar/Passes]]
   + [[Library]]
   + [[Library/Sexp]]
