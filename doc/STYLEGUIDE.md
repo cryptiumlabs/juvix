@@ -102,6 +102,37 @@ plus4 n = n + 4  -- whitespace on either side of `+`
 (\x -> x + 4)  -- no space after the lambda
 ```
 
+### Declaration comments
+
+When adding comments as part of a declaration, we will be using the layout as
+enforced by our formatter, ormolu:
+
+```haskell
+data Parameterisation primTy primVal
+  = Parameterisation
+      { -- | Check if a value is of a given type.
+        hasType :: primVal -> PrimType primTy -> Bool,
+        -- | Set of builtin types.
+        builtinTypes :: Builtins primTy,
+      }
+```
+
+Ormolu prefers to have `,` and `->` at the end of a line, and will rewrite any
+usage of `-- ^` into `-- |`. Special care has to be taken that, if used `-- ^`,
+will be at the place at the correct place. The following is incorrect, and will
+not be successfully parsed by the code formatter:
+
+```haskell
+op ::
+  Int -> -- ^ left hand side of operator.
+  Int -> -- ^ right hand side of operator.
+  Int
+```
+
+Note that the comments are not pointing to any argument, as there are placed
+after the `->`. To fix this, the `->` should be placed at the beginning of the
+lines, and the code formatter will correctly work.
+
 Imports
 -------
 
