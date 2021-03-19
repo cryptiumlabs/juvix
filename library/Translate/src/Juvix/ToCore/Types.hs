@@ -9,12 +9,12 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Text.Show (Show (..))
-import qualified Juvix.Library.LineNum as LineNum
 
 data Error primTy primVal
   = -- features not yet implemented
@@ -84,7 +84,6 @@ data Error primTy primVal
   | -- | Using omega as an expression
     UnexpectedOmega
   deriving (Eq, Generic)
-
 
 instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
   show = \case
@@ -237,7 +236,9 @@ deriving instance
   Show (CoreSig' ext primTy primVal)
 
 deriving instance Data LineNum.T
+
 deriving instance Data Sexp.Atom
+
 deriving instance Data Sexp.T
 
 deriving instance

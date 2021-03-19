@@ -3,11 +3,10 @@
 
 module Juvix.ToCore.FromFrontend where
 
-
 import qualified Data.HashMap.Strict as HM
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Ctx
-import Juvix.ToCore.Types
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Types as IR
@@ -15,9 +14,9 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.Sexp as Sexp
-import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.Library.Usage as Usage
+import Juvix.ToCore.Types
 import Prelude (error)
 
 -- P.stringVal p s
@@ -32,7 +31,7 @@ paramConstant' _p Sexp.A {} = Nothing
 
 paramConstant ::
   (HasParam primTy primVal m, HasThrowFF primTy primVal m) =>
-  Sexp.Atom  ->
+  Sexp.Atom ->
   m primVal
 paramConstant k = do
   p <- ask @"param"
@@ -61,7 +60,6 @@ transformTermHR q p@(name Sexp.:> form)
   where
     named = Sexp.isAtomNamed name
 
-
 transformSimpleLambda ::
   ( Data primTy,
     Data primVal,
@@ -74,7 +72,7 @@ transformSimpleLambda ::
   m (HR.Term primTy primVal)
 transformSimpleLambda q (Sexp.List [args, body])
   | Just pats <- Sexp.toList args >>= NonEmpty.nonEmpty =
-      foldr HR.Lam <$> transformTermHR q body <*> traverse isVarPat pats
+    foldr HR.Lam <$> transformTermHR q body <*> traverse isVarPat pats
 
 transformSimpleLet ::
   ( Data primTy,
@@ -89,10 +87,10 @@ transformSimpleLet ::
 transformSimpleLet p e@(Sexp.List [name, Sexp.List [arg, cbody], body])
   | Just Sexp.A {atomName} <- Sexp.atomFromT name,
     Just xs <- Sexp.toList arg = do
-      args <- traverse isVarArg xs
-      cbody <- transformTermHR p cbody
-      rhs <- toElim (Sexp.Cons (Sexp.atom ":let-match=") e) $ foldr HR.Lam cbody args
-      HR.Let Usage.Omega atomName rhs <$> transformTermHR p body
+    args <- traverse isVarArg xs
+    cbody <- transformTermHR p cbody
+    rhs <- toElim (Sexp.Cons (Sexp.atom ":let-match=") e) $ foldr HR.Lam cbody args
+    HR.Let Usage.Omega atomName rhs <$> transformTermHR p body
 transformSimpleLet _p (Sexp.List [_name, fun, _body]) =
   throwFF $ ExprUnimplemented fun
 transformSimpleLet _ _ = error "malformed let"
@@ -114,9 +112,9 @@ isVarPat ::
   m NameSymbol.T
 isVarPat (Sexp.List [x])
   | Just Sexp.A {atomName} <- Sexp.atomFromT x =
-      pure atomName
+    pure atomName
 isVarPat p =
-    throwFF $ PatternUnimplemented p
+  throwFF $ PatternUnimplemented p
 
 transformPat p@(asCon Sexp.:> con)
   -- implicit arguments are not supported

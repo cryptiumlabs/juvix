@@ -1850,6 +1850,32 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Types/Base]]
   + [[ModuleOpen/Extend]]
   + [[Library]]
+**** ToCore
+***** FromFrontend
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[HR]]
+  + [[IR]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Translate]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Usage]]
+  + [[ToCore/Types]]
+***** Types <<ToCore/Types>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[HR]]
+  + [[IR]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+  + [[LineNum]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Usage]]
 ** test
 *** Contextify <<test/Contextify>>
 - _Relies on_
