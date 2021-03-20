@@ -32,7 +32,7 @@ groth :: T.TestTree
 groth =
   T.testGroup
     "Polynomials"
-    [T.testProperty "Polynomial 1" polynomial1]
+    [T.testProperty "\\x y -> x^3 - 2x^2 + 4 = y" polynomial1]
 
 polynomial1 ::
   RandomSetup Fr ->
