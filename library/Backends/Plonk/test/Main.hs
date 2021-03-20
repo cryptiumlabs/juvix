@@ -5,13 +5,13 @@ module Main where
 import Data.Curve.Weierstrass.BLS12381 (Fr)
 -- import Juvix.Core.IR
 
-import FFExample
-import Groth
 import Juvix.Core.ErasedAnn
 import Juvix.Library hiding (exp, minus)
 import Juvix.Library.Usage as Usage hiding (minus)
+import qualified Test.Compiler as Compiler
+import qualified Test.Groth as Groth
 import qualified Test.Tasty as T
 import Test.Tasty.QuickCheck (testProperty)
 
 main :: IO ()
-main = T.defaultMain $ testProperty "Groth" prop_example_1_rnd_inputs
+main = T.defaultMain $ T.testGroup "Plonk tests" [Compiler.top, Groth.top]

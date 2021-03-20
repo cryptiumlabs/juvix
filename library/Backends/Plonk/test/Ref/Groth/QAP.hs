@@ -119,14 +119,39 @@ constantQapSet g =
       qapSetOutput = Map.empty
     }
 
-cnstInpQapSet :: g -> Map Int g -> QapSet g
-cnstInpQapSet g inp =
+cnstInpQapSet :: g -> Map Wire g -> QapSet g
+cnstInpQapSet g assignment =
   QapSet
     { qapSetConstant = g,
-      qapSetInput = inp,
-      qapSetIntermediate = Map.empty,
-      qapSetOutput = Map.empty
+      qapSetInput = inputs,
+      qapSetIntermediate = intermediates,
+      qapSetOutput = outputs
     }
+  where
+    inputs =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            InputWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
+    intermediates =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            IntermediateWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
+    outputs =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            OutputWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
 
 -- | Sum all the values contained in a QapSet.
 sumQapSet :: Monoid g => QapSet g -> g
@@ -591,23 +616,48 @@ generateAssignmentGate ::
   (Bits f, Fractional f) =>
   -- | program
   Gate Wire f ->
-  -- | inputs
-  Map Int f ->
+  -- | assignment
+  Map Wire f ->
   QapSet f
-generateAssignmentGate program inps =
+generateAssignmentGate program assignment =
   evalGate
     lookupAtWire
     updateAtWire
-    (initialQapSet inps)
+    (initialQapSet assignment)
     program
 
 -- TODO: Allow outputs
 initialQapSet ::
   Num f =>
   -- | inputs
-  Map Int f ->
+  Map Wire f ->
   QapSet f
-initialQapSet inputs = QapSet 1 inputs Map.empty Map.empty
+initialQapSet assignment = QapSet 1 inputs intermediates outputs
+  where
+    inputs =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            InputWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
+    intermediates =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            IntermediateWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
+    outputs =
+      Map.foldlWithKey'
+        ( \acc k v -> case k of
+            OutputWire i -> Map.insert i v acc
+            _ -> acc
+        )
+        Map.empty
+        assignment
 
 generateAssignment ::
   forall f.
@@ -615,7 +665,7 @@ generateAssignment ::
   -- | program
   ArithCircuit f ->
   -- | inputs
-  Map Int f ->
+  Map Wire f ->
   QapSet f
 generateAssignment circuit inputs =
   evalArithCircuit lookupAtWire updateAtWire circuit $ initialQapSet inputs

@@ -62,7 +62,6 @@ compileCompOp m op args = do
       eqInWire <- addWire lhsSubRhs
       eqFreeWire <- imm
       eqOutWire <- imm
-      traceShowM eqOutWire
       emit $ EqualGate eqInWire eqFreeWire eqOutWire
       -- eqOutWire == 0 if lhs == rhs, so we need to return 1 -
       -- neqOutWire instead.
@@ -76,8 +75,6 @@ compilePrim p m args = case p of
   P.PMul -> compileBinOp m BMul args
   P.PExp -> compileBinOp m BExp args
   P.PAssertEq -> compileCompOp m CEq args
-
--- IBinOp BAdd (termToIR (args !! 1)) (termToIR (args !! 2))
 
 compileTerm :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> IRM f (Either Wire (AffineCircuit Wire f))
 compileTerm term@(Ann.Ann _ ty t) m =
@@ -99,6 +96,16 @@ compileTerm term@(Ann.Ann _ ty t) m =
             args
         pure $ foldl' (\acc (k, v) -> Map.insert k v acc) m pairs
       compileTerm b m'
+
+compileTermWithWire :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> IRM f Wire
+compileTermWithWire term m = do
+  compileOut <- compileTerm term m
+  case compileOut of
+    Left wire -> pure wire
+    Right circ -> do
+      wire <- freshOutput
+      emit $ MulGate (ConstGate 1) circ wire
+      pure wire
 -- do
 -- traverse (P.deref <$> P.freshInput) args
 -- v <- lambda c a b ty

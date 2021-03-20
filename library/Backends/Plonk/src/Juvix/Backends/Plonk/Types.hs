@@ -33,8 +33,7 @@ data PrimVal f
   | PEq
   deriving (Show, Eq, Generic, Data)
 
-data PrimTy f
-  = PrimTy f
+newtype PrimTy f = PrimTy f
 
 -- FF: Finite field
 -- Finite field is the only possible type in Plonk

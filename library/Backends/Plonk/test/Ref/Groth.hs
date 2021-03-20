@@ -33,7 +33,7 @@ import Data.Field.Galois (pow)
 import qualified Data.Map as Map
 import Data.Pairing.BLS12381 (BLS12381, Fr, Pairing (..))
 import Data.Poly (VPoly, eval, monomial)
-import Juvix.Backends.Plonk.Circuit (ArithCircuit (..))
+import Juvix.Backends.Plonk.Circuit (ArithCircuit (..), Wire)
 import Juvix.Library hiding (quotRem)
 import Ref.Groth.Poly (secretEvalInExponent)
 import Ref.Groth.QAP
@@ -309,7 +309,7 @@ prove ::
   ArithCircuit Fr ->
   QAP Fr ->
   RefP (G1 BLS12381) (G2 BLS12381) ->
-  Map Int Fr -> -- Inputs
+  Map Wire Fr -> -- Inputs
   Proof (G1 BLS12381) (G2 BLS12381)
 prove RandomProver {..} circuit QAP {..} RefP {..} inps = Proof a b c
   where
@@ -354,7 +354,7 @@ prove RandomProver {..} circuit QAP {..} RefP {..} inps = Proof a b c
 -- string, a list of a_i, and a proof, and returns a rejection or an acceptance.
 verify ::
   RefV (G1 BLS12381) (G2 BLS12381) ->
-  Map Int Fr ->
+  Map Wire Fr ->
   Proof (G1 BLS12381) (G2 BLS12381) ->
   Bool
 verify RefV {..} inps Proof {..} = ab == alphabeta <> aygamma <> cdelta
@@ -378,7 +378,7 @@ simulate ::
   RandomSimulator Fr ->
   QAP Fr ->
   Trapdoor Fr ->
-  Map Int Fr ->
+  Map Wire Fr ->
   Proof (G1 BLS12381) (G2 BLS12381)
 simulate RandomSimulator {..} QAP {..} Trapdoor {..} inps = Proof a b c
   where
