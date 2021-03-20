@@ -3,6 +3,7 @@
 module Compile where
 
 import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
@@ -16,32 +17,50 @@ import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Pipeline as Pipeline
 import Options
+import qualified System.IO.Temp as Temp
 import Types
+import qualified Prelude as P
 
-parse :: FilePath -> IO FE.FinalContext
-parse fin = do
-  core <- Pipeline.toCore ["stdlib/Prelude.ju", "stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju", fin]
+type Code = Text
+
+type OutputCode = Text
+
+type Message = P.String
+
+type Pipeline = Feedback.FeedbackT [] Message IO
+
+-- | Function that parses code gives as input.
+parse :: Code -> Pipeline FE.FinalContext
+parse code = do
+  core <- liftIO $ toCore_wrap code
   case core of
-    Right ctx -> do
-      pure ctx
-    Left err -> do
-      T.putStrLn (show err)
-      exitFailure
+    Right ctx -> return ctx
+    Left err -> Feedback.fail $ show err
+  where
+    toCore_wrap :: Code -> IO (Either Pipeline.Error FE.FinalContext)
+    toCore_wrap code = do
+      fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
+      Pipeline.toCore
+        [ "stdlib/Prelude.ju",
+          "stdlib/Michelson.ju",
+          "stdlib/MichelsonAlias.ju",
+          fp
+        ]
 
-typecheck ::
-  FilePath -> Backend -> IO (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
-typecheck fin Michelson = do
-  ctx <- parse fin
+-- | Perform a type-checking on the given final context, given a specific
+-- backend.
+typecheck :: Backend -> FE.FinalContext -> Pipeline (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
+typecheck Michelson ctx = do
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
     Right (FF.CoreDefs _order globals) -> do
       let globalDefs = HM.mapMaybe toCoreDef globals
       case HM.elems $ HM.filter isMain globalDefs of
-        [] -> do
-          T.putStrLn "No main function found"
-          exitFailure
+        [] -> Feedback.fail "No main function found"
         [IR.RawGFunction f]
           | IR.RawFunction _name usage ty (clause :| []) <- f,
             IR.RawFunClause _ [] term _ <- clause -> do
@@ -49,22 +68,19 @@ typecheck fin Michelson = do
                 newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
                 lookupGlobal = IR.rawLookupFun' globalDefs
                 inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-            (res, _) <- exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+            (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
             case res of
               Right r -> do
                 pure r
               Left err -> do
                 print term
-                T.putStrLn (show err)
-                exitFailure
+                Feedback.fail $ show err
         somethingElse -> do
-          print somethingElse
-          exitFailure
+          Feedback.fail $ show somethingElse
     Left err -> do
-      T.putStrLn "failed at ctxToCore"
-      print err
-      exitFailure
-typecheck _ _ = exitFailure
+      Feedback.fail $ "failed at ctxToCore\n" ++ show err
+typecheck backend _ =
+  Feedback.fail $ "Typecheck not implemented for " ++ show backend ++ " backend."
 
 toCoreDef ::
   Alternative f =>
@@ -77,17 +93,19 @@ isMain :: RawGlobal' ext primTy primVal -> Bool
 isMain (IR.RawGFunction (IR.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
 
-compile :: FilePath -> FilePath -> Backend -> IO ()
-compile fin fout backend = do
-  term <- typecheck fin backend
+-- | Compile the given a backend and annotated terms.
+compile :: Backend -> ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR -> Pipeline OutputCode
+compile backend term = do
   print term
   let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
   case res of
     Right c -> do
-      T.writeFile fout (M.untypedContractToSource (fst c))
-    Left err -> do
-      T.putStrLn (show err)
-      exitFailure
+      return $ M.untypedContractToSource (fst c)
+    Left err -> Feedback.fail $ show err
+
+-- | Write the output code to a given file.
+writeout :: FilePath -> OutputCode -> Pipeline ()
+writeout fout code = liftIO $ T.writeFile fout code
 
 unsafeEvalGlobal ::
   IR.CanEval IR.NoExt IR.NoExt primTy primVal =>

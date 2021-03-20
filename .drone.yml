@@ -1,6 +1,7 @@
+---
 kind: pipeline
 type: docker
-name: juvix-ci-build
+name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
@@ -9,8 +10,16 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
+  - name: script-integrity-check
+    image: alpine:3.7
+    pull: if-not-exists
+    commands:
+      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
+      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+
   - name: restore-cache
     image: meltwater/drone-cache
+    pull: if-not-exists
     settings:
       backend: "s3"
       restore: true
@@ -29,9 +38,11 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
+    depends_on:
+      - script-integrity-check
 
   - name: test-suite
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
@@ -40,6 +51,7 @@ steps:
 
   - name: rebuild-cache
     image: meltwater/drone-cache
+    pull: if-not-exists
     volumes:
       - name: cache
         path: /tmp/cache
@@ -63,7 +75,7 @@ steps:
       - test-suite
 
   - name: check-formatting
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -72,7 +84,7 @@ steps:
       - test-suite
 
   - name: check-org-gen
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -81,7 +93,7 @@ steps:
       - test-suite
 
   - name: test-parser
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -90,7 +102,7 @@ steps:
       - test-suite
 
   - name: test-typecheck
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -99,7 +111,7 @@ steps:
       - test-suite
 
   - name: test-compile
-    image: cryptiumlabs/juvix-ci-2
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
@@ -114,4 +126,140 @@ volumes:
 
 trigger:
   event:
-    - push 
+    - pull_request
+---
+kind: pipeline
+type: docker
+name: juvix-ci-build-push-develop
+
+workspace:
+  path: /drone/workspace
+
+environment:
+  STACK_ROOT: /drone/workspace/.stack
+
+steps:
+  - name: script-integrity-check
+    image: alpine:3.7
+    pull: if-not-exists
+    commands:
+      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
+      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+
+  - name: restore-cache
+    image: meltwater/drone-cache
+    pull: if-not-exists
+    settings:
+      backend: "s3"
+      restore: true
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      archive_format: "gzip"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    depends_on:
+      - script-integrity-check
+
+  - name: test-suite
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    commands:
+      - make test
+    depends_on:
+      - restore-cache
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache
+    pull: if-not-exists
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    settings:
+      backend: "s3"
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      rebuild: true
+      archive_format: "gzip"
+      override: false
+      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    depends_on:
+      - test-suite
+
+  - name: check-formatting
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/check-formatting.sh
+    depends_on:
+      - test-suite
+
+  - name: check-org-gen
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/check-org-gen.sh
+    depends_on:
+      - test-suite
+
+  - name: test-parser
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-parser
+    depends_on:
+      - test-suite
+
+  - name: test-typecheck
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-typecheck
+    depends_on:
+      - test-suite
+
+  - name: test-compile
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-compile
+    depends_on:
+      - test-suite
+
+volumes:
+  - name: cache
+    host: 
+      path: /tmp/cache
+
+trigger:
+  event:
+    - push
+  branch:
+    - develop
+---
+kind: signature
+hmac: 2905a09c39924d644c61ebe24b02fa70328b47a953fd85674dbfed73b5d9afa2
+
+...
