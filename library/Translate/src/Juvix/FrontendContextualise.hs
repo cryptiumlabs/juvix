@@ -13,7 +13,6 @@ where
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar.Types as Initial
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
-import qualified Juvix.FrontendContextualise.Contextify.Sexp as ContextSexp
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Infix
@@ -23,7 +22,6 @@ import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
 
 data Error
   = ModuleErr Module.Error
@@ -96,65 +94,3 @@ newtype M a = M (RunM a)
 
 runM :: M a -> IO (Either Context.PathError a)
 runM (M a) = runExceptT a
-
-------------------------------------------------------------
--- S-expression Version
-------------------------------------------------------------
-
-data ResolveErr
-  = Path Context.PathError
-  | Resolve ResolveOpen.Error
-  deriving (Show, Eq)
-
--- | @fullyContextify@ runs @contextifyS@ along while running the
--- algorithm that resolves the opens to the modules in which they
--- should come from
-fullyContextify ::
-  NonEmpty (NameSymbol.T, [Sexp.T]) ->
-  IO (Either ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
-fullyContextify ts = do
-  cont <- contextifyS ts
-  case cont of
-    Left e -> pure $ Left $ Path e
-    Right x -> do
-      addedOpens <- uncurry ResolveOpen.run x
-      case addedOpens of
-        Left e -> pure $ Left $ Resolve e
-        Right x ->
-          pure $ Right x
-
-contextifyS ::
-  NonEmpty (NameSymbol.T, [Sexp.T]) ->
-  IO
-    ( Either
-        Context.PathError
-        (Contextify.ContextSexp, [ResolveOpen.PreQualified])
-    )
-contextifyS t@((sym, _) :| _) = do
-  emptyCtx <- Context.empty sym
-  runM $
-    foldM resolveOpensS (emptyCtx, []) (addTop <$> t)
-
-addTopS :: Bifunctor p => p NameSymbol.T c -> p NameSymbol.T c
-addTopS = first (NameSymbol.cons Context.topLevelName)
-
--- we get the opens
-resolveOpensS ::
-  (MonadIO m, HasThrow "left" Context.PathError m) =>
-  (Contextify.ContextSexp, [ResolveOpen.PreQualified]) ->
-  (Context.NameSymbol, [Sexp.T]) ->
-  m (Contextify.ContextSexp, [ResolveOpen.PreQualified])
-resolveOpensS (ctx', openList) (sym, xs) = do
-  ctx <- ContextSexp.run ctx' (sym, xs)
-  case ctx of
-    Right Contextify.PS {ctxS, opensS, modsDefinedS} ->
-      pure
-        ( ctxS,
-          ResolveOpen.Pre
-            { opens = opensS,
-              explicitModule = sym,
-              implicitInner = modsDefinedS
-            }
-            : openList
-        )
-    Left err -> throw @"left" err

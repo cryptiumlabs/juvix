@@ -82,6 +82,7 @@ inlineAllGlobals t map =
     IR.Prim' {} -> t
     IR.PrimTy' {} -> t
     IR.Star' {} -> t
+    IR.TermX {} -> t
 
 inlineAllGlobalsElim ::
   ( EvalPatSubst ext primTy primVal,
@@ -99,6 +100,7 @@ inlineAllGlobalsElim t map =
       IR.App' (inlineAllGlobalsElim elim map) (inlineAllGlobals term map) ann
     IR.Ann' u t1 t2 uni ann ->
       IR.Ann' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni ann
+    IR.ElimX {} -> t
 
 -- annotations are discarded
 evalTermWith ::
