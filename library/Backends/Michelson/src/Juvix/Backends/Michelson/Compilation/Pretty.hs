@@ -258,7 +258,7 @@ instance
     Instr.SWAP -> pinst "SWAP"
     Instr.DIG n -> appV (pinst "DIG") [pconsts n]
     Instr.DUG n -> appV (pinst "DUG") [pconsts n]
-    Instr.PUSH _ ty x -> appV (pinst "DUG") [prettyTV ty, PP.pretty' x]
+    Instr.PUSH _ ty x -> appV (pinst "PUSH") [prettyTV ty, PP.pretty' x]
     Instr.SOME _ _ -> pinst "SOME"
     Instr.NONE _ _ ty -> appV (pinst "NONE") [prettyTV ty]
     Instr.UNIT _ _ -> pinst "UNIT"
