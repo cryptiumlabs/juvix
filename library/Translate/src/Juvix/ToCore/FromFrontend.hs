@@ -319,6 +319,101 @@ transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
         }
 transformFunction _ _ _ = error "malformed defun"
 
+--------------------------------------------------------------------------------
+-- Transform Signature
+--------------------------------------------------------------------------------
+
+transformNormalSig ::
+  (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  m [CoreSigHR primTy primVal]
+transformNormalSig q x def@(Ctx.Def (Ctx.D π msig _ _)) =
+  pure <$> transformValSig q x def π msig
+transformNormalSig _ _ (Ctx.Record _) =
+  pure [] -- TODO
+transformNormalSig q x (Ctx.TypeDeclar typ) =
+  transformTypeSig q x typ
+transformNormalSig _ _ (Ctx.Unknown sig) =
+  throwFF $ UnknownUnsupported (sig >>= eleToSymbol)
+transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
+  let conSig = ConSig {conType = Nothing, conDef = sumTDef}
+  let x' = conDefName x
+  defSigs <- traverse (transformNormalSig q x' . Ctx.Def) sumTDef
+  pure $ conSig : fromMaybe [] defSigs
+transformNormalSig _ _ Ctx.CurrentNameSpace =
+  pure []
+transformNormalSig _ _ Ctx.Information {} =
+  pure []
+
+transformValSig ::
+  ( Data primTy,
+    Data primVal,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  Maybe Usage.T ->
+  Maybe Sexp.T ->
+  m (CoreSigHR primTy primVal)
+transformValSig q _ _ _ (Just (Sexp.List [usage, usageExpr, arrow]))
+  | Sexp.isAtomNamed usage ":usage" =
+    ValSig <$> transformGUsage q (Just usageExpr) <*> transformTermHR q arrow
+transformValSig q _ _ _ (Just ty) =
+  ValSig <$> transformGUsage q Nothing <*> transformTermHR q ty
+transformValSig _ x def _ _ = throwFF $ SigRequired x def
+
+transformGUsage ::
+  ( HasThrowFF primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Maybe Sexp.T ->
+  m IR.GlobalUsage
+transformGUsage _ Nothing = pure IR.GOmega
+transformGUsage _ (Just (Sexp.Atom Sexp.N {atomNum = 0})) = pure IR.GZero
+transformGUsage q (Just e) = do
+  o <- isOmega q e
+  if o then pure IR.GOmega else throwFF $ NotAGUsage e
+
+isOmega ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m Bool
+isOmega q e = (== Just OmegaS) <$> getSpecialE q e
+
+getSpecialE ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (Maybe Special)
+getSpecialE q x
+  | Just Sexp.A {atomName} <- Sexp.atomFromT x = getSpecial q atomName
+getSpecialE _ _ = pure Nothing
+
+getSpecial ::
+  ( HasCoreSigs primTy primVal m,
+    HasThrowFF primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  m (Maybe Special)
+getSpecial q x = do
+  sig <- lookupSig (Just q) x
+  case sig of
+    Just (SpecialSig s) -> pure $ Just s
+    Just _ -> pure Nothing
+    Nothing -> throwFF $ WrongSigType x Nothing
+
 ------------------------------------------------------------
 -- Transform Type signatures
 ------------------------------------------------------------
