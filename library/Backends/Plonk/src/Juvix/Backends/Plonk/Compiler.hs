@@ -23,8 +23,8 @@ compileBinOp :: (Show f, Num f, Integral f) => Map NameSymbol.T Wire -> BinOp f 
 compileBinOp m op args = do
   let e1 = args !! 0
   let e2 = args !! 1
-  e1Out <- addVar <$> compileTerm e1 m
-  e2Out <- addVar <$> compileTerm e2 m
+  e1Out <- addVar <$> compileTerm e1 m mempty
+  e2Out <- addVar <$> compileTerm e2 m mempty
   case op of
     BAdd -> pure . Right $ Add e1Out e2Out
     BMul -> do
@@ -76,16 +76,17 @@ compilePrim p m args = case p of
   P.PExp -> compileBinOp m BExp args
   P.PAssertEq -> compileCompOp m CEq args
 
-compileTerm :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> IRM f (Either Wire (AffineCircuit Wire f))
-compileTerm term@(Ann.Ann _ ty t) m =
+compileTerm :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
+compileTerm _term@(Ann.Ann _ _ t) m a =
   case t of
-    Ann.Prim p -> compilePrim p m []
+    Ann.Prim p -> compilePrim p m a
     Ann.Var symbol -> case Map.lookup symbol m of
       Just v -> pure . Left $ v
       Nothing -> panic $ "Unable to find variable " <> show symbol
-    Ann.AppM fun@(Ann.Ann _ _ v) args -> case v of
-      Ann.Prim p -> compilePrim p m args
-    Ann.LamM c args b -> do
+    Ann.AppM fun@(Ann.Ann _ _ v) args -> compileTerm fun m args
+    -- case v of
+    -- Ann.Prim p -> compilePrim p m args
+    Ann.LamM _ args b -> do
       m' <- do
         pairs <-
           traverse
@@ -95,11 +96,13 @@ compileTerm term@(Ann.Ann _ ty t) m =
             )
             args
         pure $ foldl' (\acc (k, v) -> Map.insert k v acc) m pairs
-      compileTerm b m'
+      compileTerm b m' mempty
+    Ann.PairM a1 a2 -> notImplemented
+    Ann.UnitM -> notImplemented
 
-compileTermWithWire :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> IRM f Wire
-compileTermWithWire term m = do
-  compileOut <- compileTerm term m
+compileTermWithWire :: (Num f, Integral f, Show f) => FFAnnTerm f -> IRM f Wire
+compileTermWithWire term = do
+  compileOut <- compileTerm term mempty mempty
   case compileOut of
     Left wire -> pure wire
     Right circ -> do

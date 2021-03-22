@@ -1,20 +1,15 @@
 module Test.Ref.Polynomial where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
-import Data.Field.Galois (GaloisField)
-import qualified Data.Map as Map
-import Juvix.Backends.Plonk (FF (..), FFAnnTerm, FFType, PrimVal (..))
+import Juvix.Backends.Plonk (FF (..), FFAnnTerm)
 import qualified Juvix.Backends.Plonk as P
 import qualified Juvix.Core.ErasedAnn as Core
-import Juvix.Library (($), (.), Natural, undefined)
 import Juvix.Library hiding (Type, exp)
 import qualified Juvix.Library.Usage as Usage
 import Test.AnnTerm
 
 circuitPolynomial1 :: P.ArithCircuit Fr
-circuitPolynomial1 =
-  P.execCircuitBuilder $
-    P.compileTermWithWire corePolynomial1 mempty
+circuitPolynomial1 = P.execCircuitBuilder $ P.compileTermWithWire corePolynomial1
   where
     -- \x y -> x^3 - 2x^2 + 4 = y
     corePolynomial1 :: FFAnnTerm Fr
