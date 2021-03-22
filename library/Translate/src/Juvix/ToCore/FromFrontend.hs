@@ -319,6 +319,10 @@ transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
         }
 transformFunction _ _ _ = error "malformed defun"
 
+------------------------------------------------------------
+-- Transform Type signatures
+------------------------------------------------------------
+
 transformCon ::
   ( ReduceEff primTy primVal m,
     HasPatVars m,
@@ -338,6 +342,25 @@ transformCon q x ty def = do
         rawConDef = def
       }
 
+transformProduct ::
+  ( Data primTy,
+    Data primVal,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Maybe (HR.Term primTy primVal) -> -- ^ datatype head
+  (Symbol, Sexp.T) ->
+  m (NameSymbol.T, CoreSigHR primTy primVal)
+transformProduct q hd (x, prod) =
+    (NameSymbol.qualify1 q x,) . makeSig <$>
+    transformConSig q (NameSymbol.fromSymbol x) hd prod
+  where
+    makeSig ty = ConSig {conType = Just ty, conDef = Nothing}
+
+
 transformArg ::
   ( HasNextPatVar m,
     HasPatVars m,
@@ -352,14 +375,7 @@ transformArg p@(name Sexp.:> _rest)
 transformArg pat = transformPat pat
 
 transformClause ::
-  ( Data primTy,
-    Data primVal,
-    HasNextPatVar m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m,
-    HasParam primTy primVal m,
-    HasCoreSigs primTy primVal m
-  ) =>
+  (ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m) =>
   NameSymbol.Mod ->
   Sexp.T ->
   m (IR.RawFunClause primTy primVal)
@@ -370,31 +386,30 @@ transformClause q (Sexp.List [args', body])
     patts <- traverse transformArg args
     clauseBody <- transformTermIR q body
     pure $ IR.RawFunClause [] patts clauseBody False
+transformClause _ _ = error "malformed tansformClause"
 
 transformConSig ::
-  ( ReduceEff primTy primVal m,
-    HasPatVars m,
-    HasThrowFF primTy primVal m
-  ) =>
+  (ReduceEff primTy primVal m, HasPatVars m) =>
   NameSymbol.Mod ->
   NameSymbol.T ->
   Maybe (HR.Term primTy primVal) ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformConSig _ _ _ _ = undefined
-
--- transformConSig _ _ _ (FE.Record r) = throwFF $ RecordUnimplemented r
--- transformConSig q _ _ (FE.Arrow ty) = transformTermHR q ty
--- transformConSig _ name Nothing k@(FE.ADTLike {}) =
---   throwFF $ InvalidConstructor name k
--- transformConSig q _ (Just hd) (FE.ADTLike tys) =
---     foldrM makeArr hd $ zip names tys
---   where
---     makeArr (x, arg) res =
---       HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
---     names = makeFieldName <$> [0..]
---     makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
-
+transformConSig q name mHd r@(t Sexp.:> ts)
+  | named ":record-d" = throwFF $ RecordUnimplemented r
+  | named ":arrow" = transformTermHR q ts
+  | isNothing mHd = throwFF $ InvalidConstructor name r
+  | Just hd <- mHd,
+    Just xs <- Sexp.toList r =
+      let makeArr (x, arg) res =
+                  HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
+          names = makeFieldName <$> [0..]
+          makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
+      in
+          foldrM makeArr hd $ zip names xs
+  where
+    named = Sexp.isAtomNamed t
+transformConSig _ _ _ _ = error "malformed transformConSig"
 --------------------------------------------------------------------------------
 -- General Helpers
 --------------------------------------------------------------------------------
