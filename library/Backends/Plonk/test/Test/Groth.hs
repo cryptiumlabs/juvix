@@ -3,19 +3,13 @@ module Test.Groth where
 import Data.Curve.Weierstrass.BLS12381 (BLS12381, Fr)
 import qualified Data.Map as Map
 import Data.Pairing (Pairing (..))
-import Juvix.Backends.Plonk (FF (..), FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
-import qualified Juvix.Core.ErasedAnn as Core
 import Juvix.Library hiding (exp)
-import qualified Juvix.Library.Usage as Usage
 import Ref.Groth
 import Ref.Groth.Fresh
 import Ref.Groth.QAP
-import Test.AnnTerm
-import qualified Test.QuickCheck.Monadic as QCM
 import Test.Ref.Polynomial (circuitPolynomial1)
 import qualified Test.Tasty as T
-import qualified Test.Tasty.HUnit as T
 import qualified Test.Tasty.QuickCheck as T
 
 -------------------------------------------------------------------------------

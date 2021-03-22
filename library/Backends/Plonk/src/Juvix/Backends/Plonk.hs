@@ -6,6 +6,7 @@ module Juvix.Backends.Plonk
     module Juvix.Backends.Plonk.IR,
     module Juvix.Backends.Plonk.Lang,
     module Juvix.Backends.Plonk.Types,
+    module Juvix.Backends.Plonk.Parameterisation,
   )
 where
 
@@ -22,4 +23,5 @@ import Juvix.Backends.Plonk.IR
     opPrecedence,
   )
 import Juvix.Backends.Plonk.Lang
+import Juvix.Backends.Plonk.Parameterisation
 import Juvix.Backends.Plonk.Types

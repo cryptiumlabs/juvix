@@ -7,6 +7,7 @@ packages:
 - ./library/Core
 - ./library/Translate
 - ./library/Backends/Michelson
+- ./library/Backends/Plonk
 # - ./library/Backends/ArithmeticCircuit
 # - ./library/Backends/LLVM
 # - ./library/InteractionNet

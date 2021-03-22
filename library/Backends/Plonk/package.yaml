@@ -14,18 +14,19 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - core
-- standard-library
 - containers
-- text
-- wl-pprint-text
 - elliptic-curve
-- galois-field
 - filepath
+- galois-field
+- pairing
+- parsec
 - process-extras
 - poly
 - semirings
-- pairing
+- standard-library
+- text
 - vector
+- wl-pprint-text
 
 
 default-extensions:
