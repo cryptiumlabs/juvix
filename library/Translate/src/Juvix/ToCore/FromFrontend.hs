@@ -1,7 +1,11 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.ToCore.FromFrontend where
+module Juvix.ToCore.FromFrontend
+  ( module Juvix.ToCore.FromFrontend,
+    module Juvix.ToCore.Types,
+  )
+where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as NonEmpty
@@ -548,15 +552,15 @@ transformNormalDef ::
   NameSymbol.T ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   m [IR.RawGlobal primTy primVal]
+transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
+transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
+transformNormalDef _ _ Ctx.Information {} = pure []
+transformNormalDef _ _ (Ctx.Unknown _) = pure []
+transformNormalDef _ _ (Ctx.Record _) = pure [] -- TODO
+transformNormalDef _ _ Ctx.SumCon {} = pure []
 transformNormalDef q x (Ctx.Def def) = do
   f <- transformFunction q x def
   pure [IR.RawGFunction f]
-transformNormalDef _ _ (Ctx.Record _) = pure [] -- TODO
-transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
-transformNormalDef _ _ (Ctx.Unknown _) = pure []
-transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
-transformNormalDef _ _ (Ctx.Information {}) = pure []
-transformNormalDef _ _ (Ctx.SumCon {}) = pure []
 
 transformUniverse ::
   HasThrowFF primTy primVal m =>
