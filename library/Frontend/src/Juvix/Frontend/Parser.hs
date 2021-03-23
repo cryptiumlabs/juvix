@@ -122,8 +122,8 @@ expressionArguments =
     <|> P.try (Types.ExpRecord <$> expRecord)
     <|> P.try (Types.Constant <$> constant)
     -- <|> try (Types.NamedTypeE <$> namedRefine)
-    <|> P.try (Types.Name <$> prefixSymbolDot)
     <|> P.try universeSymbol
+    <|> P.try (Types.Name <$> prefixSymbolDot)
     <|> P.try (Types.List <$> list)
     -- We wrap this in a paren to avoid conflict
     -- with infixity that we don't know about at this phase!
