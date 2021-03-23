@@ -105,7 +105,7 @@ freeVarPass ::
   Sexp.T ->
   f Sexp.T
 freeVarPass form =
-  Env.onExpression form (== ":primitive") freeVarRes
+  Env.onExpression form (\x -> x == ":atom" || x == ":primitive") freeVarRes
 
 freeVarRes ::
   ( HasReader "closure" Closure.T m,
