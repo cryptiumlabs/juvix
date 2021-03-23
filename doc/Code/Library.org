@@ -1856,7 +1856,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Core/Common/Context]]
   + [[HR]]
   + [[IR]]
-  + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]

@@ -9,7 +9,6 @@ import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Ctx
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Core.Translate (hrToIR)
 import Juvix.Library
@@ -92,14 +91,99 @@ transformTermHR q p@(name Sexp.:> form)
   | named "case" = throwFF $ ExprUnimplemented p
   | named ":u" = throwFF $ UniversesUnimplemented p
   -- Rest
-  | named ":custom-arrow" = undefined
+  | named ":custom-arrow" = transformArrow q form
   | named ":let-match" = transformSimpleLet q form
   | named ":primitive" = transPrim form
   | named ":lambda" = transformSimpleLambda q form
   | named ":progn" = transformTermHR q (Sexp.car form)
   | named ":paren" = transformTermHR q (Sexp.car form)
+  | named ":tuple",
+    Just xs <- Sexp.toList form =
+    makeTuple <$> traverse (transformTermHR q) xs
+  | otherwise =
+    transformApplication q p
   where
     named = Sexp.isAtomNamed name
+
+transformApplication ::
+  ReduceEff primTy primVal m => NameSymbol.Mod -> Sexp.T -> m (HR.Term primTy primVal)
+transformApplication q (f Sexp.:> args)
+  | Just xs <- Sexp.toList args =
+    getSpecialE q f >>= flip go xs
+  where
+    go Nothing xs = do
+      f' <- toElim f =<< transformTermHR q f
+      HR.Elim . foldl HR.App f' <$> traverse (transformTermHR q) xs
+    go (Just s) xs = case s of
+      ArrowS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
+        π <- transformUsage q π
+        go (Just (ArrowS (Just π))) [a, b]
+      ArrowS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
+        (x, a) <- namedArg q xa
+        HR.Pi π x a <$> transformTermHR q b
+      PairS Nothing -> do
+        ~[π, a, b] <- nargs s 3 xs
+        π <- transformUsage q π
+        go (Just (PairS (Just π))) [a, b]
+      PairS (Just π) -> do
+        ~[xa, b] <- nargs s 2 xs
+        (x, a) <- namedArg q xa
+        HR.Sig π x a <$> transformTermHR q b
+      ColonS -> do
+        ~[a, b] <- nargs s 2 xs
+        a <- transformTermHR q a
+        b <- transformTermHR q b
+        -- FIXME metavars for usage & universe
+        pure $ HR.Elim $ HR.Ann (Usage.SNat 1) a b 0
+      TypeS -> do
+        ~[i] <- nargs s 1 xs
+        HR.Star <$> transformUniverse i
+      OmegaS ->
+        throwFF UnexpectedOmega
+    nargs s n xs
+      | length xs == n = pure xs
+      | otherwise = throwFF $ WrongNumberBuiltinArgs s n args
+transformApplication _ _ = error "malformed application"
+
+namedArg ::
+  ReduceEff primTy primVal m =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (NameSymbol.T, HR.Term primTy primVal)
+namedArg q e = transformTermHR q e >>= \case
+  NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
+  ty -> pure ("" :| [], ty)
+
+makeTuple :: [HR.Term primTy primVal] -> HR.Term primTy primVal
+makeTuple [] = HR.Unit
+makeTuple [t] = t
+makeTuple (t : ts) = HR.Pair t (makeTuple ts)
+
+transformArrow ::
+  ReduceEff primTy primVal m =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (HR.Term primTy primVal)
+transformArrow q _f@(Sexp.List [π, xa, b]) =
+  case xa of
+    -- we never generate this form, so we should be able to erase this!?
+    -- FE.NamedTypeE (FE.NamedType' x a) -> go π (getName x) a b
+    a -> go π (pure "") a b
+  where
+    -- getName (Sexp.Atom Sexp.A {atomName}) =
+    --   pure atomName
+    -- -- don't these all get erased!?
+    -- getName (name Sexp.:> _)
+    --   | Sexp.isAtomNamed name ":implicit" = throwFF $ ImplicitsUnimplemented f
+    -- getName _ = error "malformed transformArrow"
+    go π x a b =
+      HR.Pi <$> transformUsage q π
+        <*> x
+        <*> transformTermHR q a
+        <*> transformTermHR q b
+transformArrow _q _ = error "malfromed custom arrow"
 
 transPrim ::
   ReduceEff primTy primVal m => Sexp.T -> m (HR.Term primTy primVal)
@@ -112,6 +196,11 @@ transPrim (Sexp.List [parm])
     primTy param p = HR.PrimTy <$> HM.lookup p (P.builtinTypes param)
     primVal param p = HR.Prim <$> HM.lookup p (P.builtinValues param)
 transPrim _ = error "malfromed prim"
+
+pattern NamedArgTerm ::
+  Symbol -> HR.Term primTy primVal -> HR.Term primTy primVal
+pattern NamedArgTerm x ty <-
+  HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 transformSimpleLambda ::
   ( Data primTy,
@@ -169,13 +258,6 @@ isVarPat (Sexp.List [x])
     pure atomName
 isVarPat p =
   throwFF $ PatternUnimplemented p
-
-transformPat p@(asCon Sexp.:> con)
-  -- implicit arguments are not supported
-  | Sexp.isAtomNamed asCon ":as" =
-    throwFF $ PatternUnimplemented p
-  | otherwise =
-    undefined
 
 toElim ::
   HasThrowFF primTy primVal m =>
@@ -319,9 +401,86 @@ transformFunction q x (Ctx.D _ _ (_lambdaCase Sexp.:> defs) _)
         }
 transformFunction _ _ _ = error "malformed defun"
 
+transformUsage ::
+  ( HasThrowFF primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m Usage.T
+transformUsage _ (Sexp.Atom Sexp.N {atomNum = i}) | i >= 0 = pure $ Usage.SNat $ fromInteger i
+transformUsage q e = do
+  o <- isOmega q e
+  if o then pure Usage.Omega else throwFF $ NotAUsage e
+
+transformSpecialRhs ::
+  ( HasThrowFF primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Sexp.T ->
+  m (Maybe Special)
+transformSpecialRhs _ (name Sexp.:> prim)
+  | Sexp.isAtomNamed name ":primitive",
+    Just Sexp.A {atomName} <- Sexp.atomFromT prim =
+    case atomName of
+      "Builtin" :| ["Arrow"] -> pure $ Just $ ArrowS Nothing
+      "Builtin" :| ["Pair"] -> pure $ Just $ PairS Nothing
+      "Builtin" :| ["Omega"] -> pure $ Just OmegaS
+      "Builtin" :| ["Colon"] -> pure $ Just ColonS
+      "Builtin" :| ["Type"] -> pure $ Just TypeS
+      "Builtin" :| (s : ss) -> throwFF $ UnknownBuiltin $ s :| ss
+      _ -> pure Nothing
+transformSpecialRhs q prim
+  | Just Sexp.A {atomName} <- Sexp.atomFromT prim = getSpecial q atomName
+transformSpecialRhs q (f Sexp.:> arg)
+  | Just Sexp.A {atomName} <- Sexp.atomFromT f =
+    case show atomName of
+      ':' : _ -> pure Nothing
+      _ -> do
+        head <- getSpecialE q f
+        case head of
+          Just (ArrowS Nothing) -> Just . ArrowS . Just <$> transformUsage q arg
+          Just (PairS Nothing) -> Just . PairS . Just <$> transformUsage q arg
+          _ -> pure Nothing
+transformSpecialRhs _ _ = pure Nothing
+
+transformSpecial ::
+  ( HasThrowFF primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.Mod ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  m (Maybe Special)
+transformSpecial q def@(Ctx.Def (Ctx.D π ty (Sexp.List [Sexp.Nil, rhs]) _)) = do
+  rhs <- transformSpecialRhs q rhs
+  when (isJust rhs) do
+    unless (isNothing π) $ throwFF $ BuiltinWithUsage def
+    unless (isNothing ty) $ throwFF $ BuiltinWithTypeSig def
+  pure rhs
+transformSpecial _ _ = pure Nothing
+
 --------------------------------------------------------------------------------
 -- Transform Signature
 --------------------------------------------------------------------------------
+
+transformSig ::
+  ( Data primTy,
+    Data primVal,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m,
+    HasCoreSigs primTy primVal m
+  ) =>
+  NameSymbol.T ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  m [CoreSigHR primTy primVal]
+transformSig x def = trySpecial <||> tryNormal
+  where
+    q = NameSymbol.mod x
+    trySpecial = fmap SpecialSig <$> transformSpecial q def
+    tryNormal = transformNormalSig q x def
+    x <||> y = x >>= maybe y (pure . pure)
 
 transformNormalSig ::
   (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m) =>
@@ -366,6 +525,13 @@ transformValSig q _ _ _ (Just (Sexp.List [usage, usageExpr, arrow]))
 transformValSig q _ _ _ (Just ty) =
   ValSig <$> transformGUsage q Nothing <*> transformTermHR q ty
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
+
+transformUniverse ::
+  HasThrowFF primTy primVal m =>
+  Sexp.T ->
+  m IR.Universe
+transformUniverse (Sexp.Atom Sexp.N {atomNum = i}) | i >= 0 = pure $ fromIntegral i
+transformUniverse e = throwFF $ NotAUniverse e
 
 transformGUsage ::
   ( HasThrowFF primTy primVal m,
@@ -558,6 +724,34 @@ transformConSig q name mHd r@(t Sexp.:> ts)
   where
     named = Sexp.isAtomNamed t
 transformConSig _ _ _ _ = error "malformed transformConSig"
+
+transformPat ::
+  ( HasNextPatVar m,
+    HasPatVars m,
+    HasThrowFF primTy primVal m,
+    HasParam primTy primVal m
+  ) =>
+  Sexp.T ->
+  m (IR.Pattern primTy primVal)
+transformPat p@(asCon Sexp.:> con)
+  -- implicit arguments are not supported
+  -- TODO ∷ translate as patterns into @let@
+  | Sexp.isAtomNamed asCon ":as" =
+    throwFF $ PatternUnimplemented p
+  | Just args <- Sexp.toList con,
+    Just Sexp.A {atomName} <- Sexp.atomFromT asCon =
+    IR.PCon atomName <$> traverse transformPat args
+transformPat n
+  | Just x <- eleToSymbol n = do
+    var <- getNextPatVar
+    modify @"patVars" $ HM.insert (NameSymbol.fromSymbol x) var
+    pure $ IR.PVar var
+  | Just n@Sexp.N {} <- Sexp.atomFromT n =
+    IR.PPrim <$> paramConstant n
+  | otherwise = error "malformed match pattern"
+
+getNextPatVar :: HasNextPatVar m => m IR.PatternVar
+getNextPatVar = state @"nextPatVar" \v -> (v, succ v)
 
 --------------------------------------------------------------------------------
 -- General Helpers
