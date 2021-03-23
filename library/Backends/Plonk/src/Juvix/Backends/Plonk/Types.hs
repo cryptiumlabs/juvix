@@ -38,6 +38,7 @@ data PrimVal f
   deriving (Show, Eq, Generic, Data)
 
 data PrimTy f = PrimTy
+  deriving (Show, Eq, Generic, Data)
 
 type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
 

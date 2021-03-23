@@ -1,8 +1,8 @@
 module Juvix.Backends.Plonk.Builder where
 
-import Juvix.Library
 import Juvix.Backends.Plonk.Circuit
 import Juvix.Backends.Plonk.IR
+import Juvix.Library
 
 -------------------------------------------------------------------------------
 -- Circuit Builder
@@ -41,10 +41,12 @@ runCircuitBuilder m = second (reverseCircuit . sCircuit) $ runState (runIRM m) (
 
 fresh :: IRM f Int
 fresh = do
-  v <- get
-    @"sVarNum"
+  v <-
+    get
+      @"sVarNum"
   modify
-    @"sVarNum" (+ 1)
+    @"sVarNum"
+    (+ 1)
   pure v
 
 -- | Fresh intermediate variables
@@ -68,8 +70,10 @@ mulToImm l r = do
 
 -- | Add a Mul and its output to the ArithCircuit
 emit :: Gate Wire f -> IRM f ()
-emit c = modify 
-    @"sCircuit" (\(ArithCircuit cs) -> ArithCircuit (c : cs))
+emit c =
+  modify
+    @"sCircuit"
+    (\(ArithCircuit cs) -> ArithCircuit (c : cs))
 
 -- | Rotate a list to the right
 rotateList :: Int -> [a] -> [a]
@@ -119,7 +123,6 @@ compile ir = case ir of
         tmp1 <- imm
         emit $ MulGate e1Out e2Out tmp1
         pure . Right $ Add (Add e1Out e2Out) (ScalarMul (-2) (Var tmp1))
-
   ICompOp op lhs rhs -> do
     case op of
       -- EQ(lhs, rhs) = (lhs - rhs == 1)
@@ -142,7 +145,6 @@ compile ir = case ir of
     emit $ MulGate condOut trueOut tmp1
     emit $ MulGate (Add (ConstGate 1) (ScalarMul (-1) condOut)) falseOut tmp2
     pure . Right $ Add (Var tmp1) (Var tmp2)
-
 
 -- | Translate an arithmetic expression to an arithmetic circuit
 irToArithCircuit ::

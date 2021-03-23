@@ -23,6 +23,7 @@ dependencies:
   - galois-field
   - syb
   - temporary
+  - wl-pprint-text
   ###########################
   # Libraries
   ###########################
