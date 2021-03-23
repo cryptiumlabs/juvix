@@ -165,7 +165,8 @@ bindingForms x =
              "case",
              ":lambda-case",
              ":declaim",
-             ":lambda"
+             ":lambda",
+             ":primitive"
            ]
 
 -- should really be moved out of here
@@ -212,6 +213,7 @@ searchAndClosureNoCtx a as cont
   -- various names this may introduce to the
   | named ":declaim" = declaim as cont
   | named ":let-match" = letMatch as cont
+  | named ":primitive" = primitive as cont
   | named ":let-type" = letType as cont
   | named "type" = type' as cont
   | named ":lambda" = lambda as cont
@@ -245,6 +247,7 @@ searchAndClosure ctx a as cont
   | named ":open-in" = openIn ctx as cont
   | named ":declaim" = declaim as cont
   | named ":let-match" = letMatch as cont
+  | named ":primitive" = primitive as cont
   | named ":let-type" = letType as cont
   | named "type" = type' as cont
   | named ":lambda" = lambda as cont
@@ -287,6 +290,16 @@ lookupPrecedence name ctx = do
 ------------------------------------------------------------
 -- searchAndClosure function dispatch table
 ------------------------------------------------------------
+
+primitive :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+primitive (Sexp.List [name]) cont
+  | Just Sexp.A {atomName} <- Sexp.atomFromT name = do
+    -- this is bad, however it's FINE, as we only have the primitive
+    -- which no operation should disrupt
+    local @"closure" (Closure.insertGeneric (NameSymbol.hd atomName)) $ do
+      prim <- cont name
+      pure $ Sexp.list [prim]
+primitive _ _ = error "malformed primitive"
 
 lambda :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 lambda (Sexp.List [arguments, body]) cont =

@@ -65,7 +65,6 @@ op = free . snd . runM . freeVarPass
 data Env
   = Env
       { closure :: Closure.T,
-        ignoreSet :: Set.HashSet NameSymbol.T,
         free :: Set.HashSet NameSymbol.T
       }
   deriving (Generic, Show)
@@ -81,12 +80,6 @@ newtype EnvM a = Ctx {_run :: EnvAlias a}
     )
     via ReaderField "closure" EnvAlias
   deriving
-    ( HasState "ignoreSet" (Set.HashSet NameSymbol.T),
-      HasSource "ignoreSet" (Set.HashSet NameSymbol.T),
-      HasSink "ignoreSet" (Set.HashSet NameSymbol.T)
-    )
-    via StateField "ignoreSet" EnvAlias
-  deriving
     ( HasState "free" (Set.HashSet NameSymbol.T),
       HasSource "free" (Set.HashSet NameSymbol.T),
       HasSink "free" (Set.HashSet NameSymbol.T)
@@ -95,40 +88,30 @@ newtype EnvM a = Ctx {_run :: EnvAlias a}
 
 runM :: EnvM a -> (a, Env)
 runM (Ctx c) =
-  runState c (Env Closure.empty (Set.fromList Env.namedForms) Set.empty)
+  runState c (Env Closure.empty (Set.fromList Env.namedForms))
 
 freeVarPass ::
   ( HasReader "closure" Closure.T f,
-    HasState "free" (Set.HashSet NameSymbol.T) f,
-    HasState "ignoreSet" (Set.HashSet NameSymbol.T) f
+    HasState "free" (Set.HashSet NameSymbol.T) f
   ) =>
   Sexp.T ->
   f Sexp.T
 freeVarPass form =
-  Env.onExpression form (\x -> x == ":atom" || x == ":primitive") freeVarRes
+  Env.onExpression form (== ":atom") freeVarRes
 
 freeVarRes ::
   ( HasReader "closure" Closure.T m,
-    HasState "ignoreSet" (Set.HashSet NameSymbol.T) m,
     HasState "free" (Set.HashSet NameSymbol.T) m
   ) =>
   Sexp.Atom ->
   Sexp.T ->
   m Sexp.T
-freeVarRes _a form@(Sexp.List [name])
-  | Just Sexp.A {atomName} <- Sexp.atomFromT name = do
-    modify @"ignoreSet" (Set.insert atomName)
-    pure form
 freeVarRes Sexp.A {atomName = name} sexpAtom = do
   closure <- ask @"closure"
   let symbolName = NameSymbol.hd name
   case Closure.lookup symbolName closure of
     Just _ -> pure sexpAtom
     Nothing -> do
-      set <- get @"ignoreSet"
-      case name `Set.member` set of
-        True -> pure sexpAtom
-        False -> do
-          modify @"free" (Set.insert name)
-          pure sexpAtom
+      modify @"free" (Set.insert name)
+      pure sexpAtom
 freeVarRes _ s = pure s

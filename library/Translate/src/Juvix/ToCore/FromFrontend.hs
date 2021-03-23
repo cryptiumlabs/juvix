@@ -260,8 +260,8 @@ isVarPat ::
   HasThrowFF primTy primVal m =>
   Sexp.T ->
   m NameSymbol.T
-isVarPat (Sexp.List [x])
-  | Just Sexp.A {atomName} <- Sexp.atomFromT x =
+isVarPat p
+  | Just Sexp.A {atomName} <- Sexp.atomFromT p =
     pure atomName
 isVarPat p =
   throwFF $ PatternUnimplemented p
@@ -440,7 +440,7 @@ transformSpecialRhs _ (Sexp.List [name, prim])
       _ -> pure Nothing
 transformSpecialRhs q prim
   | Just Sexp.A {atomName} <- Sexp.atomFromT prim = getSpecial q atomName
-transformSpecialRhs q (f Sexp.:> arg)
+transformSpecialRhs q (Sexp.List [f, arg])
   | Just Sexp.A {atomName} <- Sexp.atomFromT f =
     case show atomName of
       ':' : _ -> pure Nothing
