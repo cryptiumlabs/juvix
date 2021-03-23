@@ -427,7 +427,7 @@ transformSpecialRhs ::
   NameSymbol.Mod ->
   Sexp.T ->
   m (Maybe Special)
-transformSpecialRhs _ (name Sexp.:> prim)
+transformSpecialRhs _ (Sexp.List [name, prim])
   | Sexp.isAtomNamed name ":primitive",
     Just Sexp.A {atomName} <- Sexp.atomFromT prim =
     case atomName of
@@ -459,7 +459,7 @@ transformSpecial ::
   NameSymbol.Mod ->
   Ctx.Definition Sexp.T Sexp.T Sexp.T ->
   m (Maybe Special)
-transformSpecial q def@(Ctx.Def (Ctx.D π ty (Sexp.List [Sexp.Nil, rhs]) _)) = do
+transformSpecial q def@(Ctx.Def (Ctx.D π ty (Sexp.List [_, Sexp.List [Sexp.Nil, rhs]]) _)) = do
   rhs <- transformSpecialRhs q rhs
   when (isJust rhs) do
     unless (isNothing π) $ throwFF $ BuiltinWithUsage def
