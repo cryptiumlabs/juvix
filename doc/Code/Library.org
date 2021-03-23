@@ -1924,8 +1924,6 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
-  + [[FrontendContextualise]]
-  + [[FrontendDesugar]]
   + [[Library]]
   + [[Internal]]
   + [[Library/Sexp]]
