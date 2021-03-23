@@ -21,7 +21,7 @@ shouldDesugar name x y =
     "Desugar tests"
     [ T.testCase
         ("desugar: " <> name)
-        ( fmap Desugar.op (P.parse (many Parser.topLevelSN) "" x)
+        ( fmap Desugar.opML (P.parse (many Parser.topLevelSN) "" x)
             T.@=? Right y
         )
     ]

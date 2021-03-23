@@ -1441,7 +1441,9 @@ Can be added to via core translation
   6. =RemovePunned=
   7. =RemoveDo=
 - _Relies on_
+  + [[Juvix/Conversion/ML]]
   + [[Juvix/Desugar]]
+  + [[Desugar/Types]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]

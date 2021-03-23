@@ -9,7 +9,9 @@
 --   7. =RemoveDo=
 module Juvix.FrontendDesugar where
 
+import Juvix.Conversion.ML as ML
 import qualified Juvix.Desugar as Desugar
+import qualified Juvix.Desugar.Types as Target
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types as Initial
 import Juvix.Library
@@ -17,3 +19,6 @@ import qualified Juvix.Library.Sexp as Sexp
 
 op :: [Initial.TopLevel] -> [Sexp.T]
 op = Desugar.op . fmap SexpTrans.transTopLevel
+
+opML :: [Initial.TopLevel] -> [Target.TopLevel]
+opML = fmap ML.op . Desugar.op . fmap SexpTrans.transTopLevel
