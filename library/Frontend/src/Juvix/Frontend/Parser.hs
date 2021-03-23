@@ -33,6 +33,7 @@ import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
+import qualified Text.Megaparsec.Char.Lexer as PC
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -583,7 +584,7 @@ tupleParen = do
 
 constant :: Parser Types.Constant
 constant =
-  (Types.Number <$> number)
+  P.try (Types.Number <$> number)
     <|> Types.String <$> string'
 
 number :: Parser Types.Numb
@@ -603,12 +604,23 @@ float = do
 
 --   pure (read (s1 <> "." <> s2))
 
--- TODO ∷ no escape for strings yet
+stringEscape :: Parser ByteString
+stringEscape =
+  P.between (P.string "\\'") (P.string "\\'") (P.takeWhile1P (Just "Not quote") (/= J.quote))
+
+doubleStringEscape :: Parser ByteString
+doubleStringEscape =
+  P.between (P.string "\\\"") (P.string "\\\"") (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote))
+
+stringWithoutEscape :: Parser ByteString
+stringWithoutEscape = J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
+
+doubleStringWithoutEscape :: Parser ByteString
+doubleStringWithoutEscape = J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
+
 string' :: Parser Types.String'
 string' = do
-  P.single J.quote
-  words <- P.takeWhile1P (Just "Not quote") (/= J.quote)
-  P.single J.quote
+  words <- P.try stringEscape <|> P.try doubleStringEscape <|> P.try stringWithoutEscape <|> doubleStringWithoutEscape
   pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------
