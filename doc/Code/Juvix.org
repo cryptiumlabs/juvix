@@ -14,8 +14,8 @@
 ** Pipeline <<Juvix/Pipeline>>
 - _Relies on_
   + [[Core]]
+  + [[Context]]
   + [[Traverse]]
-  + [[FromFrontend]]
   + [[Types]]
   + [[Base]]
   + [[Parameterisation]]
@@ -24,18 +24,21 @@
   + [[Library]]
   + [[NameSymbol]]
   + [[Parser]]
+  + [[Sexp]]
+  + [[FromFrontend]]
 ** Core
 - _Relies on_
+  + [[Contextify]]
+  + [[Context]]
   + [[Erasure]]
   + [[Core/Pipeline]]
   + [[Translate]]
   + [[Types]]
   + [[Types]]
-  + [[FrontendContextualise]]
-  + [[Environment]]
   + [[FrontendDesugar]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Sexp]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
   + [[Michelson]]
