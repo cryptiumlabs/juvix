@@ -84,6 +84,8 @@ transformTermHR q p@(name Sexp.:> form)
   --              when refinements are supported
   -- 2. _universe names_
   --    - TODO :: for universe polymorphism
+  -- 3. _declaim_
+  --    - TODO :: We ignore the declration currently
   | named ":record-no-pun" = throwFF $ RecordUnimplemented p
   | named ":refinement" = throwFF $ RefinementsUnimplemented p
   | named ":let-type" = throwFF $ ExprUnimplemented p
@@ -94,6 +96,7 @@ transformTermHR q p@(name Sexp.:> form)
   | named ":custom-arrow" = transformArrow q form
   | named ":let-match" = transformSimpleLet q form
   | named ":primitive" = transPrim form
+  | named ":declaim" = transformTermHR q (Sexp.cadr form) -- skip declar
   | named ":lambda" = transformSimpleLambda q form
   | named ":progn" = transformTermHR q (Sexp.car form)
   | named ":paren" = transformTermHR q (Sexp.car form)
