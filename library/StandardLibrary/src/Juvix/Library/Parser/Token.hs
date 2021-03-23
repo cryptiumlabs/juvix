@@ -10,6 +10,7 @@ module Juvix.Library.Parser.Token
     hash,
     backSlash,
     quote,
+    doubleQuote,
     pipe,
     equals,
     at,
@@ -102,6 +103,9 @@ backSlash = charToWord8 '\\'
 
 quote :: Word8
 quote = charToWord8 '\''
+
+doubleQuote :: Word8
+doubleQuote = charToWord8 '\"'
 
 pipe :: Word8
 pipe = charToWord8 '|'

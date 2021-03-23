@@ -7,17 +7,18 @@
 --
 -- - Parsers with SN at the end, eats the spaces and new lines at the
 --   end of the parse
-module Juvix.Frontend.Parser where
-
--- ( parse,
---   expressionSN,
---   removeComments,
---   topLevelSN,
---   expression,
---   matchLogic,
---   cond,
---   prefixSymbol,
--- )
+module Juvix.Frontend.Parser
+  ( parse,
+    prettyParse,
+    expressionSN,
+    removeComments,
+    topLevelSN,
+    expression,
+    matchLogic,
+    cond,
+    prefixSymbol,
+  )
+where
 
 import Control.Arrow (left)
 import qualified Control.Monad.Combinators.Expr as Expr
@@ -33,6 +34,7 @@ import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
+import qualified Text.Megaparsec.Char.Lexer as PC
 import Prelude (fail)
 
 --------------------------------------------------------------------------------
@@ -120,8 +122,8 @@ expressionArguments =
     <|> P.try (Types.ExpRecord <$> expRecord)
     <|> P.try (Types.Constant <$> constant)
     -- <|> try (Types.NamedTypeE <$> namedRefine)
-    <|> P.try (Types.Name <$> prefixSymbolDot)
     <|> P.try universeSymbol
+    <|> P.try (Types.Name <$> prefixSymbolDot)
     <|> P.try (Types.List <$> list)
     -- We wrap this in a paren to avoid conflict
     -- with infixity that we don't know about at this phase!
@@ -584,7 +586,7 @@ tupleParen = do
 
 constant :: Parser Types.Constant
 constant =
-  (Types.Number <$> number)
+  P.try (Types.Number <$> number)
     <|> Types.String <$> string'
 
 number :: Parser Types.Numb
@@ -602,14 +604,23 @@ float = do
   _s2 <- digits
   fail "float not implemented"
 
---   pure (read (s1 <> "." <> s2))
+stringEscape :: Parser ByteString
+stringEscape =
+  P.between (P.string "\\'") (P.string "\\'") (P.takeWhile1P (Just "Not quote") (/= J.quote))
 
--- TODO ∷ no escape for strings yet
+doubleStringEscape :: Parser ByteString
+doubleStringEscape =
+  P.between (P.string "\\\"") (P.string "\\\"") (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote))
+
+stringWithoutEscape :: Parser ByteString
+stringWithoutEscape = J.between J.quote (P.takeWhile1P (Just "Not quote") (/= J.quote)) J.quote
+
+doubleStringWithoutEscape :: Parser ByteString
+doubleStringWithoutEscape = J.between J.doubleQuote (P.takeWhile1P (Just "Not quote") (/= J.doubleQuote)) J.doubleQuote
+
 string' :: Parser Types.String'
 string' = do
-  P.single J.quote
-  words <- P.takeWhile1P (Just "Not quote") (/= J.quote)
-  P.single J.quote
+  words <- P.try stringEscape <|> P.try doubleStringEscape <|> P.try stringWithoutEscape <|> doubleStringWithoutEscape
   pure (Types.Sho $ Encoding.decodeUtf8 words)
 
 --------------------------------------------------
