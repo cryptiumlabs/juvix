@@ -459,10 +459,8 @@ transformTypeSig q name dat@(FE.Typ {typeArgs, typeForm}) = do
       pure (typ, Just $ HR.Elim $ foldl HR.App hd0 args)
     transformIndices (FE.NonArrowed {}) =
       pure (HR.Star 0, Nothing) -- TODO metavar for universe
-
     dataBody (FE.Arrowed {dataAdt'}) = dataAdt'
     dataBody (FE.NonArrowed {dataAdt}) = dataAdt
-
     makeTPi name res =
       -- TODO metavars for the named args instead of defaulting to types
       -- thin metavars for the named args instead of defaulting to types
@@ -476,18 +474,21 @@ transformConSigs ::
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
-  FE.Type -> -- ^ whole type declaration (for error messages)
-  NameSymbol.Mod -> -- ^ namespace containing declaration
-  Maybe (HR.Term primTy primVal) -> -- ^ datatype head
-  FE.Adt -> -- ^ rhs
+  -- | whole type declaration (for error messages)
+  FE.Type ->
+  -- | namespace containing declaration
+  NameSymbol.Mod ->
+  -- | datatype head
+  Maybe (HR.Term primTy primVal) ->
+  -- | rhs
+  FE.Adt ->
   m [(NameSymbol.T, CoreSigHR primTy primVal)]
 transformConSigs dat pfx hd =
-    traverse (transformProduct pfx hd) <=< toProducts
+  traverse (transformProduct pfx hd) <=< toProducts
   where
     toProducts (FE.Product (FE.Record r)) = throwFF $ RecordUnimplemented r
     toProducts (FE.Product _) = throwFF $ InvalidDatatype dat
     toProducts (FE.Sum cons) = pure $ map toProduct1 $ toList cons
-
     toProduct1 (FE.S {sumConstructor, sumValue}) =
       (sumConstructor, fromMaybe (FE.ADTLike []) sumValue)
 
@@ -500,12 +501,13 @@ transformProduct ::
     HasCoreSigs primTy primVal m
   ) =>
   NameSymbol.Mod ->
-  Maybe (HR.Term primTy primVal) -> -- ^ datatype head
+  -- | datatype head
+  Maybe (HR.Term primTy primVal) ->
   (Symbol, FE.Product) ->
   m (NameSymbol.T, CoreSigHR primTy primVal)
 transformProduct q hd (x, prod) =
-    (NameSymbol.qualify1 q x,) . makeSig <$>
-    transformConSig q (NameSymbol.fromSymbol x) hd prod
+  (NameSymbol.qualify1 q x,) . makeSig
+    <$> transformConSig q (NameSymbol.fromSymbol x) hd prod
   where
     makeSig ty = ConSig {conType = Just ty, conDef = Nothing}
 
@@ -586,12 +588,13 @@ transformFunction ::
 transformFunction q x (Ctx.D _ _ def _) = do
   (π, typ) <- getValSig q x
   clauses <- traverse (transformClause q) def
-  pure $ IR.RawFunction
-    { rawFunName = x,
-      rawFunUsage = π,
-      rawFunType = hrToIR typ,
-      rawFunClauses = clauses
-    }
+  pure $
+    IR.RawFunction
+      { rawFunName = x,
+        rawFunUsage = π,
+        rawFunType = hrToIR typ,
+        rawFunClauses = clauses
+      }
 
 getValSig ::
   ( HasCoreSigs primTy primVal m,
@@ -610,7 +613,8 @@ getConSig ::
   NameSymbol.T ->
   m (HR.Term primTy primVal, Maybe (FE.Final' Ctx.Def))
 getConSig q = getSig' q \case
-  ConSig (Just ty) def -> Just (ty, def); _ -> Nothing
+  ConSig (Just ty) def -> Just (ty, def)
+  _ -> Nothing
 
 getDataSig ::
   ( HasCoreSigs primTy primVal m,
@@ -677,12 +681,13 @@ transformType q name _ = do
   conSigs <- traverse getConSig' conNames
   cons <- traverse (uncurry3 $ transformCon q) conSigs
   (args, ℓ) <- splitDataType name ty
-  let dat' = IR.RawDatatype {
-        rawDataName = name,
-        rawDataArgs = args,
-        rawDataLevel = ℓ,
-        rawDataCons = cons
-      }
+  let dat' =
+        IR.RawDatatype
+          { rawDataName = name,
+            rawDataArgs = args,
+            rawDataLevel = ℓ,
+            rawDataCons = cons
+          }
   pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
 
 transformCon ::
@@ -701,12 +706,12 @@ transformCon ::
   m (IR.RawDataCon primTy primVal)
 transformCon q x ty def = do
   def <- traverse (transformFunction q (conDefName x)) def
-  pure $ IR.RawDataCon {
-    rawConName = x,
-    rawConType = hrToIR ty,
-    rawConDef = def
-  }
-
+  pure $
+    IR.RawDataCon
+      { rawConName = x,
+        rawConType = hrToIR ty,
+        rawConDef = def
+      }
 
 splitDataType ::
   HasThrowFF primTy primVal m =>
@@ -744,11 +749,11 @@ transformConSig q _ _ (FE.Arrow ty) = transformTermHR q ty
 transformConSig _ name Nothing k@(FE.ADTLike {}) =
   throwFF $ InvalidConstructor name k
 transformConSig q _ (Just hd) (FE.ADTLike tys) =
-    foldrM makeArr hd $ zip names tys
+  foldrM makeArr hd $ zip names tys
   where
     makeArr (x, arg) res =
       HR.Pi (Usage.SNat 1) x <$> transformTermHR q arg <*> pure res
-    names = makeFieldName <$> [0..]
+    names = makeFieldName <$> [0 ..]
     makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
 
 transformClause ::
