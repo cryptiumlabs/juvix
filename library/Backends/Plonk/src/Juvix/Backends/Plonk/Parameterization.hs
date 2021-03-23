@@ -11,6 +11,8 @@ import Data.Field.Galois (GaloisField)
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (many, try)
+import qualified Juvix.Library.HashMap as Map
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 check3Equal :: Eq a => NonEmpty a -> Bool
 check3Equal (x :| [y, z])
@@ -64,20 +66,29 @@ hasType PLt ty = checkFirst2AndLast ty isBool
 hasType PLte ty = checkFirst2AndLast ty isBool
 hasType PEq ty = checkFirst2AndLast ty isBool
 
+builtinTypes :: Param.Builtins (PrimTy f) -- TODO: Revisit this
+builtinTypes = Map.fromList [(NameSymbol.fromSymbol "Plonk.f", PrimTy)]
+
+builtinValues :: Param.Builtins (PrimVal f)
+builtinValues =
+  Map.fromList $
+    first NameSymbol.fromSymbol
+      <$> [("Plonk.add", PAdd)] -- TODO: Do the rest
+
 plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)
 plonk =
   Param.Parameterisation
     { hasType,
-      builtinTypes = notImplemented,
-      builtinValues = notImplemented,
-      parseTy = notImplemented,
+      builtinTypes,
+      builtinValues,
+      parseTy = \_ -> pure PrimTy,
       parseVal = notImplemented,
-      reservedNames = notImplemented,
-      reservedOpNames = notImplemented,
-      stringTy = notImplemented,
-      stringVal = notImplemented,
-      intTy = notImplemented,
-      intVal = notImplemented,
+      reservedNames = [],
+      reservedOpNames = [],
+      stringTy = \_ _ -> False,
+      stringVal = const Nothing,
+      intTy = \_ _ -> True,
+      intVal = const Nothing,
       floatTy = \_ _ -> False, -- Circuits does not support floats
       floatVal = const Nothing
     }
