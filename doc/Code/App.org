@@ -3,8 +3,8 @@
   + [[Compilation]]
   + [[Parameterisation]]
   + [[Application]]
+  + [[Context]]
   + [[ErasedAnn]]
-  + [[FromFrontend]]
   + [[IR]]
   + [[Base]]
   + [[Globals]]
@@ -13,8 +13,10 @@
   + [[Environment]]
   + [[Library]]
   + [[Feedback]]
+  + [[Sexp]]
   + [[Usage]]
   + [[Pipeline]]
+  + [[FromFrontend]]
 * Config
 - _Relies on_
   + [[Library]]

@@ -8,8 +8,8 @@ import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
@@ -18,8 +18,10 @@ import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Pipeline as Pipeline
+import Juvix.ToCore.FromFrontend as FF
 import Options
 import qualified System.IO.Temp as Temp
 import Types
@@ -34,14 +36,14 @@ type Message = P.String
 type Pipeline = Feedback.FeedbackT [] Message IO
 
 -- | Function that parses code gives as input.
-parse :: Code -> Pipeline FE.FinalContext
+parse :: Code -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
 parse code = do
   core <- liftIO $ toCore_wrap code
   case core of
     Right ctx -> return ctx
     Left err -> Feedback.fail $ show err
   where
-    toCore_wrap :: Code -> IO (Either Pipeline.Error FE.FinalContext)
+    toCore_wrap :: Code -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
     toCore_wrap code = do
       fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
       Pipeline.toCore
@@ -53,7 +55,10 @@ parse code = do
 
 -- | Perform a type-checking on the given final context, given a specific
 -- backend.
-typecheck :: Backend -> FE.FinalContext -> Pipeline (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
+typecheck ::
+  Backend ->
+  Context.T Sexp.T Sexp.T Sexp.T ->
+  Pipeline (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
 typecheck Michelson ctx = do
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
@@ -68,7 +73,12 @@ typecheck Michelson ctx = do
                 newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
                 lookupGlobal = IR.rawLookupFun' globalDefs
                 inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-            (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+            (res, _) <-
+              liftIO $
+                exec
+                  (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty)
+                  Param.michelson
+                  newGlobals
             case res of
               Right r -> do
                 pure r
