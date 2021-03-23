@@ -15,6 +15,8 @@ module Juvix.Contextify.Environment
     MinimalMIO (..),
     runMIO,
     runM,
+    namedForms,
+    onExpression,
   )
 where
 
@@ -135,6 +137,22 @@ passContext ctx trigger Pass {sumF, termF, tyF} =
         (trigger, func ctx)
         (bindingForms, searchAndClosure ctx)
 
+-- | @onExpression@ runs an algorithm similar to @passContext@ however
+-- only on a single expression instead of an entire context. For this
+-- to have the closure work properly, please run this after :open-in is
+-- gone
+onExpression ::
+  HasClosure f =>
+  Sexp.T ->
+  (NameSymbol.T -> Bool) ->
+  (Sexp.Atom -> Sexp.T -> f Sexp.T) ->
+  f Sexp.T
+onExpression form trigger func =
+  Sexp.foldSearchPred
+    form
+    (trigger, func)
+    (bindingForms, searchAndClosureNoCtx)
+
 -- | @bindingForms@ is a predicate that answers true for every form
 -- that instantiates a new variable
 bindingForms :: (Eq a, IsString a) => a -> Bool
@@ -149,6 +167,57 @@ bindingForms x =
              ":declaim",
              ":lambda"
            ]
+
+-- should really be moved out of here
+
+-- | @namedForms@ a list of all named special forms
+namedForms :: [NameSymbol.T]
+namedForms =
+  [ "type",
+    ":open-in",
+    ":let-type",
+    ":let-match",
+    "case",
+    ":lambda-case",
+    ":declaim",
+    ":lambda",
+    ":tuple",
+    ":primitive",
+    ":progn",
+    "declare",
+    ":infix",
+    ":list",
+    ":record-no-pun",
+    ":paren",
+    ":block",
+    ":primitive"
+  ]
+
+-- | @searchAndClosureNoCtx@ like searchAndClosure but does not rely on
+-- a context, thus the open pass can't be done.
+searchAndClosureNoCtx ::
+  (HasClosure f) =>
+  -- | the atom to dispatch on
+  Sexp.Atom ->
+  -- | The sexp form in which the atom is called on
+  Sexp.T ->
+  -- | the continuation of continuing the changes
+  (Sexp.T -> f Sexp.T) ->
+  f Sexp.T
+searchAndClosureNoCtx a as cont
+  | named "case" = case' as cont
+  -- this case happens at the start of every defun
+  | named ":lambda-case" = lambdaCase as cont
+  -- This case is a bit special, as we must check the context for
+  -- various names this may introduce to the
+  | named ":declaim" = declaim as cont
+  | named ":let-match" = letMatch as cont
+  | named ":let-type" = letType as cont
+  | named "type" = type' as cont
+  | named ":lambda" = lambda as cont
+  where
+    named = Sexp.isAtomNamed (Sexp.Atom a)
+searchAndClosureNoCtx _ _ _ = error "imporper closure call"
 
 -- | @searchAndClosure@ is responsible for properly updating the
 -- closure based on any binders we may encounter. The signature is made

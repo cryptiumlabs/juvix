@@ -19,7 +19,7 @@ import qualified Generics.SYB as SYB
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Common.Context.Traverse.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.FrontendContextualise.InfixPrecedence.FreeVars as FV
+import qualified Juvix.FreeVars as FV
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -147,7 +147,7 @@ recGroups' injection ns = do
 
 fv :: (ContextReader term ty sumRep m, Data a) => a -> m [NameSymbol.T]
 fv t = gets @"context" \ctx ->
-  SYB.everything (<>) (SYB.mkQ mempty (FV.op [])) t
+  SYB.everything (<>) (SYB.mkQ mempty FV.op) t
     |> HashSet.toList
     |> mapMaybe (`Context.qualifyLookup` ctx)
 
