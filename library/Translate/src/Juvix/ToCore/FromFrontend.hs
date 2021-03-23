@@ -529,6 +529,35 @@ transformValSig q _ _ _ (Just ty) =
   ValSig <$> transformGUsage q Nothing <*> transformTermHR q ty
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
+transformDef ::
+  (ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m) =>
+  NameSymbol.T ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  m [CoreDef primTy primVal]
+transformDef x def = do
+  sig <- lookupSig Nothing x
+  case sig of
+    Just (SpecialSig s) -> pure [SpecialDef x s]
+    _ -> map CoreDef <$> transformNormalDef q x def
+      where
+        q = NameSymbol.mod x
+
+transformNormalDef ::
+  (ReduceEff primTy primVal m, HasNextPatVar m, HasPatVars m) =>
+  NameSymbol.Mod ->
+  NameSymbol.T ->
+  Ctx.Definition Sexp.T Sexp.T Sexp.T ->
+  m [IR.RawGlobal primTy primVal]
+transformNormalDef q x (Ctx.Def def) = do
+  f <- transformFunction q x def
+  pure [IR.RawGFunction f]
+transformNormalDef _ _ (Ctx.Record _) = pure [] -- TODO
+transformNormalDef q x (Ctx.TypeDeclar dec) = transformType q x dec
+transformNormalDef _ _ (Ctx.Unknown _) = pure []
+transformNormalDef _ _ Ctx.CurrentNameSpace = pure []
+transformNormalDef _ _ (Ctx.Information {}) = pure []
+transformNormalDef _ _ (Ctx.SumCon {}) = pure []
+
 transformUniverse ::
   HasThrowFF primTy primVal m =>
   Sexp.T ->
