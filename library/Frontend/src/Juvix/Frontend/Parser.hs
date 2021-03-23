@@ -7,17 +7,18 @@
 --
 -- - Parsers with SN at the end, eats the spaces and new lines at the
 --   end of the parse
-module Juvix.Frontend.Parser where
-
--- ( parse,
---   expressionSN,
---   removeComments,
---   topLevelSN,
---   expression,
---   matchLogic,
---   cond,
---   prefixSymbol,
--- )
+module Juvix.Frontend.Parser
+  ( parse,
+    prettyParse,
+    expressionSN,
+    removeComments,
+    topLevelSN,
+    expression,
+    matchLogic,
+    cond,
+    prefixSymbol,
+  )
+where
 
 import Control.Arrow (left)
 import qualified Control.Monad.Combinators.Expr as Expr
@@ -601,8 +602,6 @@ float = do
   void (P.char J.dot)
   _s2 <- digits
   fail "float not implemented"
-
---   pure (read (s1 <> "." <> s2))
 
 stringEscape :: Parser ByteString
 stringEscape =
