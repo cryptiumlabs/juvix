@@ -14,6 +14,7 @@ import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Types as CoreErased
 import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (Option, Type, const)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -393,3 +394,17 @@ instance PP.PrettySyntax Instr.ExpandedOp where
     Instr.PrimEx i -> PP.pretty' i
     Instr.SeqEx is -> prettyBlock is
     Instr.WithSrcEx _ i -> PP.pretty' i
+
+
+instance HR.ToPPAnn TyAnn where
+  toPPAnn = fmap \case
+    TAPunct -> HR.APunct
+    TAPrimTy -> HR.APrimTy
+
+instance HR.ToPPAnn ValAnn where
+  toPPAnn = fmap \case
+    VAPunct -> HR.APunct
+    VAInst -> HR.APrimFun
+    VAConst -> HR.APrimVal
+    VAPrimTy -> HR.APrimTy
+    VAKeyword -> HR.AValCon
