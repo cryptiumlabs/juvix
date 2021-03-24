@@ -183,7 +183,6 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
-  apply fun args = Left $ Core.InvalidArguments fun args
 
 -- | NB. requires that the right number of args are passed
 applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
