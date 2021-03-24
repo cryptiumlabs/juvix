@@ -111,6 +111,7 @@ transformTermHR q p@(name Sexp.:> form)
     transformApplication q p
   where
     named = Sexp.isAtomNamed name
+transformTermHR _ Sexp.Nil = error "malfromed"
 
 transformApplication ::
   ReduceEff primTy primVal m => NameSymbol.Mod -> Sexp.T -> m (HR.Term primTy primVal)
@@ -348,7 +349,9 @@ transformType q name _ = do
           { rawDataName = name,
             rawDataArgs = args,
             rawDataLevel = ℓ,
-            rawDataCons = cons
+            rawDataCons = cons,
+            -- TODO ∷ replace
+            rawDataPos = []
           }
   pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
 
