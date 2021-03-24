@@ -84,10 +84,10 @@ hasType CompareTimeStamp ty = checkFirst2AndLast ty isBool
 hasType CompareMutez ty = checkFirst2AndLast ty isBool
 hasType CompareHash ty = checkFirst2AndLast ty isBool
 -- Hacks make more exact later
-hasType EDivI (x :| [y, z]) = check2Equal (x :| [y])
-hasType (Inst M.TRANSFER_TOKENS {}) (x :| [a, b, c]) = True
-hasType (Inst M.UNIT {}) (x :| []) = True
-hasType (Inst M.BALANCE {}) (x :| []) = True
+hasType EDivI (x :| [y, _]) = check2Equal (x :| [y])
+hasType (Inst M.TRANSFER_TOKENS {}) (_ :| [_, _, _]) = True
+hasType (Inst M.UNIT {}) (_ :| []) = True
+hasType (Inst M.BALANCE {}) (_ :| []) = True
 hasType (Inst (M.IF_CONS _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
@@ -95,16 +95,16 @@ hasType (Inst (M.IF _ _)) (bool :| rest)
   | empty == rest = False
   | otherwise = isBool bool && check2Equal (NonEmpty.fromList rest)
 -- todo check this properly
-hasType (Inst M.PAIR {}) (a :| (b : (c : []))) = True
+hasType (Inst M.PAIR {}) (_ :| (_ : (_ : []))) = True
 -- todo check this properly
-hasType (Inst (M.CAR _ _)) (a :| (b : [])) = True
-hasType (Inst (M.CDR _ _)) (a :| (b : [])) = True
-hasType (Inst M.SENDER {}) (a :| []) = True
-hasType Contract (a :| [b]) = True
+hasType (Inst (M.CAR _ _)) (_ :| (_ : [])) = True
+hasType (Inst (M.CDR _ _)) (_ :| (_ : [])) = True
+hasType (Inst M.SENDER {}) (_ :| []) = True
+hasType Contract (_ :| [_]) = True
 hasType (Constant _v) ty
   | length ty == 1 = True
   | otherwise = False
-hasType x ((Application List _) :| []) = True
+hasType _ ((Application List _) :| []) = True
 -- do something nicer here
 hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
