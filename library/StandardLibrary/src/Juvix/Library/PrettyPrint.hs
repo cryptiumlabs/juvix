@@ -13,15 +13,8 @@ module Juvix.Library.PrettyPrint
     pretty0,
     withPrec,
     show,
-    -- * Combinators lifted over an 'Applicative'
-    hsepA,
-    sepA,
-    hcatA,
-    vcatA,
-    punctuateA,
-    hangA,
-
     -- * Extensions
+    noAnn,
     annotate',
     hangs,
     hangsA,
@@ -37,10 +30,19 @@ module Juvix.Library.PrettyPrint
     sepIndent',
     sepIndentA,
     sepIndentA',
+    punctuate,
+    -- ** Combinators lifted over an 'Applicative'
+    hsepA,
+    sepA,
+    hcatA,
+    vcatA,
+    punctuateA,
+    hangA,
   )
 where
 
 import Juvix.Library hiding (show)
+import qualified Text.PrettyPrint.Compact as Base
 import Text.PrettyPrint.Compact hiding
   ( backslash,
     colon,
@@ -62,7 +64,8 @@ import Text.PrettyPrint.Compact hiding
     parens,
     braces,
     brackets,
-    angles
+    angles,
+    punctuate
   )
 import Text.PrettyPrint.Compact.Core
 import qualified Text.Show as Show
@@ -122,6 +125,9 @@ withPrec p = local @"prec" \_ -> p
 show :: (Monoid ann, Show a) => a -> Doc ann
 show = text . Show.show
 
+noAnn :: Monoid ann2 => Doc ann1 -> Doc ann2
+noAnn d = mempty <$ d
+
 hsepA ::
   (Applicative f, Foldable t, Monoid ann) =>
   t (f (Doc ann)) ->
@@ -145,6 +151,10 @@ vcatA ::
   t (f (Doc ann)) ->
   f (Doc ann)
 vcatA = fmap vcat . sequenceA . toList
+
+-- Same as 'Base.punctuate' but accepts any 'Foldable' type.
+punctuate :: (Foldable t, Monoid ann) => Doc ann -> t (Doc ann) -> [Doc ann]
+punctuate s = Base.punctuate s . toList
 
 punctuateA ::
   (Applicative f, Foldable t, Monoid ann) =>
@@ -222,6 +232,15 @@ annotate' = annotate . Last . Just
 
 -- | Formats an application, by aligning the arguments and adjusting the
 -- precedence level of the subterms.
+--
+-- @
+-- fun arg1 arg2 arg3
+-- -- or --
+-- fun
+--   arg1
+--   arg2
+--   arg3
+-- @
 app ::
   ( PrecReader m,
     Foldable t,
@@ -233,6 +252,7 @@ app ::
   m (Doc ann)
 app ann f xs = parensP ann FunArg $ withPrec FunArg $ hangsA indentWidth f xs
 
+-- | Same as 'app' but with a 'Last' for an annotation.
 app' ::
   ( PrecReader m,
     Foldable t

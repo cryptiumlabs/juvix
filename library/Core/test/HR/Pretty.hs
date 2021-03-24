@@ -35,10 +35,8 @@ atomTests :: T.TestTree
 atomTests =
   T.testGroup
     "Atomic terms"
-    [ T.testCase "* wide" $
+    [ T.testCase "*" $
         prettyAt 1000 (Star 0) @?= "* 0",
-      T.testCase "* tiny" $
-        prettyAt 1 (Star 0) @?= "*\n0",
       T.testCase "UnitTy" $
         prettyAt 10 UnitTy @?= "Unit",
       T.testCase "Unit" $
@@ -113,19 +111,31 @@ lamTests =
       T.testCase "lam1 narrow" $
         prettyAt 5 lam1
           @?= "λ z →\n\
-              \  z",
+              \    z",
       T.testCase "lam2 wide" $
         prettyAt 1000 lam2
           @?= "λ y z → ‹y, z›",
       T.testCase "lam2 narrow" $
-        prettyAt 8 lam2
+        prettyAt 10 lam2
           @?= "λ y z →\n\
-              \  ‹y, z›"
+              \    ‹y, z›",
+      T.testCase "lam3" $
+        prettyAt 18 lam3
+          @?= "λ verylongname1\n\
+              \  verylongname2\n\
+              \  verylongname3 →\n\
+              \    ‹y, z›"
     ]
 
 lam1 = Lam "z" $ Elim "z"
 
 lam2 = Lam "y" $ Lam "z" $ "y" `Pair` "z"
+
+lam3 =
+  Lam "verylongname1" $
+  Lam "verylongname2" $
+  Lam "verylongname3" $
+    "y" `Pair` "z"
 
 pairTests :: T.TestTree
 pairTests =
