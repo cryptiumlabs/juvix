@@ -21,10 +21,10 @@ module Juvix.Contextify.Environment
 where
 
 import Control.Lens hiding ((|>))
+import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.Core.Common.Closure as Closure
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp

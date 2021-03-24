@@ -10,7 +10,6 @@
   + [[Globals]]
   + [[Parameterisation]]
   + [[Pipeline]]
-  + [[Environment]]
   + [[Library]]
   + [[Feedback]]
   + [[Sexp]]

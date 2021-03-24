@@ -15,7 +15,6 @@ import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.Sexp as Sexp

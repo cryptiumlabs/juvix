@@ -572,7 +572,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
-****** Open <<Common/Open>>
+****** Open
 - _Relies on_
   + [[Library]]
 ****** Context <<Core/Common/Context>>
@@ -595,7 +595,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Precedence]]
   + [[NameSpace]]
-  + [[Common/Open]]
+  + [[Open]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -1011,7 +1011,6 @@ Tests that weak works as expected
   + [[Library/Parser]]
 ***** Sexp <<Frontend/Sexp>>
 - _Relies on_
-  + [[Frontend/Types]]
   + [[Frontend/Types/Base]]
   + [[Library]]
   + [[NameSymbol]]
@@ -1025,8 +1024,6 @@ Tests that weak works as expected
           =ArrowGen= and not in =NamedType=
 - _Relies on_
   + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Library]]
 ****** Base <<Frontend/Types/Base>>
 - This file defines the main ADT for the Juvix front end language.
 - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
@@ -1037,9 +1034,6 @@ Tests that weak works as expected
 - _Relies on_
   + [[Library]]
   + [[Usage]]
-****** Extend <<Types/Extend>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
 ****** Located
 - _Relies on_
   + [[Library]]
@@ -1431,7 +1425,7 @@ Can be added to via core translation
 ** Setup <<Translate/Setup>>
 ** src
 *** Juvix
-**** FreeVars <<Juvix/FreeVars>>
+**** FreeVars
 TODO ∷ determine what has changed in the rebasing of this algo
 - FreeVars is an algorithm that checks for free symbols in the AST.
 - The =ExcludedSet= holds the symbols defined... These are needed
@@ -1496,9 +1490,7 @@ TODO ∷ determine what has changed in the rebasing of this algo
   6. =RemovePunned=
   7. =RemoveDo=
 - _Relies on_
-  + [[Juvix/Conversion/ML]]
-  + [[Juvix/Desugar]]
-  + [[Desugar/Types]]
+  + [[Desugar]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
@@ -1507,190 +1499,38 @@ TODO ∷ determine what has changed in the rebasing of this algo
 - _Relies on_
   + [[Contextify/Environment]]
   + [[Contextify/Passes]]
-  + [[Core/Common/Context]]
   + [[ResolveOpenInfo]]
-  + [[Contextify/Sexp]]
-  + [[Contextify/Types]]
+  + [[ToContext/Sexp]]
+  + [[ToContext/Types]]
+  + [[Core/Common/Context]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
 ***** Environment <<Contextify/Environment>>
 - _Relies on_
+  + [[InfixPrecedence/ShuntYard]]
   + [[Closure]]
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
 ***** Passes <<Contextify/Passes>>
 - _Relies on_
   + [[Contextify/Environment]]
+  + [[InfixPrecedence/ShuntYard]]
   + [[Closure]]
   + [[Core/Common/Context]]
-  + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** Conversion
-***** ML <<Juvix/Conversion/ML>>
-This module is responsible for converting back S-expressions back
-- into the ML form. Currently this goes until the end of desugared
-- This module is best read along side the sexpression document in
-  doc/Aricheture/Sexp.org, looking at the forms to see they are the
-  same.
-  + Note they aren't all the same, as many forms like the top level
-    let/=defun= are desugared and thus need to look at the current
-    forms of that
-- _Relies on_
-  + [[Desugar/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Library/Sexp]]
-**** Core
-***** Common
-****** Context
-******* Traverse
-Calculate mutually-recursive groups of definitions.
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[Traverse/Types]]
-  + [[NameSpace]]
-  + [[Juvix/FreeVars]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-******** Types <<Traverse/Types>>
-- _Relies on_
-  + [[Context/Types]]
-  + [[Context/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-**** Desugar <<Juvix/Desugar>>
-Desugar takes the frontend syntax and through the =desugar=
-function, removes all extra parts of syntax that can be boiled down
-to simple macro expansion (simplification of the frontend syntax
-from the syntax alone with no extra information needed!)
-- _Relies on_
-  + [[Desugar/Passes]]
-  + [[Library]]
-  + [[Library/Sexp]]
-***** Extend <<Desugar/Extend>>
-- This Desugars the frontend syntax
-  + Belongs to Table
-    | Changed      | Is a Sum Type of |
-    |--------------+------------------|
-    | Do           | Expression       |
-    | ModuleE      | Expression       |
-    | Module       | TopLevel         |
-    | Function     | TopLevel         |
-    | Signature    | TopLevel         |
-    | Let          | Let              |
-    | FunctionLike | Function ∧ Let   |
-- Thus one does not have to ever deal with
-- _Expression_
-  + one does not have to deal with the following Sum Constructors
-  #+begin_src haskell
-    data Do
-      = Do'' (NonEmpty DoBody)
-      deriving (Show, Generic, NFData)
-    data DoBody
-      = DoBody
-        { doBodyName :: Maybe NameSymb,
-          doBodyExpr :: Expression
-        }
-      deriving (Show, Generic, NFData)
-    data ModuleE
-      = ModE
-          { moduleEBindings :: FunctionLike (NonEmpty TopLevel)
-          , moduleEBody :: Expression
-          }
-      deriving (Show, Generic, NFData)
-    data Cond a
-      = C (NonEmpty (CondLogic a))
-      deriving (Show, Generic, NFData)
-    data CondLogic a
-      = CondExpression
-          { condLogicPred :: Expression
-          , condLogicBody :: a
-          }
-      deriving (Show, Generic, NFData)
-  #+end_src
-- _Top Level_
-  + one does not have to deal with the following Sum Constructors
-   #+begin_src haskell
-    data Module
-      = Mod (FunctionLike (NonEmpty TopLevel))
-      deriving (Show, Generic, NFData)
-      data Signature
-        = Sig
-            { signatureName :: Symbol
-              -- Was a usage but can't alias for now
-            , signatureUsage :: Maybe Expression
-            , signatureArrowType :: Expression
-            , signatureConstraints :: [Expression]
-            }
-        deriving (Show, Generic, NFData)
-  #+end_src
-- _Function_
-  + This form now looks like
-    #+begin_src haskell
-      data Function
-        = Func Symbol (NonEmpty (FunctionLike Expression)) (Maybe Signature)
-    #+end_src
-- _NameSet_
-  + This form now looks like
-    #+begin_src haskell
-    data NameSet t
-      = NonPunned NameSymb t
-      deriving (Show, Generic, NFData)
-    #+end_src
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[Types/Extend]]
-  + [[Library]]
-***** Passes <<Desugar/Passes>>
-Passes contains a list of passes on the frontend syntax that can be
-done with no extra information needed. Thus we export the following passes
-- Removing Explicit Module declarations
-- Removing Guards
-- Conds ⟶ If ⟶ Match
-- Combining signatures to functions
-- Removing punned record arguments
-- Remvoing Do syntax
+***** InfixPrecedence
+****** ShuntYard <<InfixPrecedence/ShuntYard>>
+- This implements the Shunt Yard algorithm for determining the
+  precedence of operations
 - _Relies on_
   + [[Library]]
-  + [[Library/Sexp]]
-***** Types <<Desugar/Types>>
-- _Relies on_
-  + [[Desugar/Extend]]
-  + [[Frontend/Types/Base]]
-  + [[Library]]
-**** FrontendContextualise
-- order of Passes
-  1. =ModuleOpen=
-  2. =InfixPrecedence=
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[Desugar/Types]]
-  + [[ResolveOpenInfo]]
-  + [[Contextify/Transform]]
-  + [[Contextify/Types]]
-  + [[InfixPrecedence/Environment]]
-  + [[InfixPrecedence/Environment]]
-  + [[InfixPrecedence/Transform]]
-  + [[ModuleOpen/Environment]]
-  + [[ModuleOpen/Transform]]
-  + [[Library]]
-  + [[NameSymbol]]
-***** Environment <<FrontendContextualise/Environment>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Common/Open]]
-  + [[Library]]
-  + [[NameSymbol]]
-***** Contextify
+***** ToContext
 ****** ResolveOpenInfo
 - This module is responsible for adding the reverse open
   information to the context, along with the alias map of what
@@ -1715,197 +1555,64 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Common/Open]]
+  + [[Open]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-****** Sexp <<Contextify/Sexp>>
+****** Sexp <<ToContext/Sexp>>
 - _Relies on_
+  + [[ToContext/Types]]
   + [[Core/Common/Context]]
   + [[NameSpace]]
-  + [[Contextify/Types]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-****** Transform <<Contextify/Transform>>
+****** Types <<ToContext/Types>>
 - _Relies on_
   + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Desugar/Types]]
-  + [[Contextify/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** Types <<Contextify/Types>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-***** InfixPrecedence
-****** Environment <<InfixPrecedence/Environment>>
+**** Core
+***** Common
+****** Context
+******* Traverse
+Calculate mutually-recursive groups of definitions.
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[Traverse/Types]]
   + [[NameSpace]]
-  + [[FrontendContextualise/Environment]]
-  + [[InfixPrecedence/ShuntYard]]
-  + [[InfixPrecedence/Types]]
-  + [[ModuleOpen/Types]]
-  + [[Library]]
-  + [[Library]]
-****** Extend <<InfixPrecedence/Extend>>
-- This pass removes the =Infix= form
-  + Belongs to Table
-    | Changed | Is a Sum Type of |
-    |---------+------------------|
-    | Infix   | Expression       |
-- Thus one does not have to ever deal with
-  #+begin_src haskell
-    data Infix
-      = Inf
-        { infixLeft  :: Expression
-        , infixOp    :: NameSymb
-        , infixRight :: Expression
-        }
-      deriving (Show, Generic, NFData)
-  #+end_src
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[ModuleOpen/Extend]]
-  + [[ModuleOpen/Extend]]
-  + [[Library]]
-****** FreeVars <<InfixPrecedence/FreeVars>>
-- FreeVars is an algorithm that checks for free symbols in the AST.
-- The =ExcludedSet= holds the symbols defined... These are needed
-  in case of a degenerate case like
-  #+BEGIN_SRC ocaml
-    let foo =
-      let type point = {x : int, y : int} in
-      let our-point  = {x = 3, y = 4} in
-      our-point.x + our-point.y
-  #+END_SRC
-  + here we need to dismiss =our-point.x= and =our-point.y=, just
-    filtering out =our-point= isn't enough! we have to check if the
-    first-part of the name has =our-point=, since everything shares
-    the same namespace
-- TODO :: How do we handle this case?
-  #+BEGIN_SRC ocaml
-    mod Foo where
-    let foo (x :: xs) = x + TopLevel.Foo.foo xs
-    let foo []        = 0
-  #+END_SRC
-  + To Handle this, we need to unqualify the foo, and have the
-    module handle the symbol allocation
-- NOTE :: we assume in =nameifyAdt= which takes effect in the =\\=
-  call to =nameifyLetType=, that definitions of constructors before
-  this point can't be redefined
-  + This means that if we have ordered definitions, we'll silently
-    drop the calls to the old constructors.
-  + Thus, please redefine the logic there to support such modes
-- _Reasons to update_
-  1. let's not being recursive
-     - we assume lets are recursive, if this changes the code
-       has to be updated to account for that'
-  2. Language becomes ordered
-     - see first note above
-  3. Universe or Declaration talk about free variables
-     - currently universe is unfinished, and are not
-       first class
-|
-- FreeVars is an algorithm that checks for free symbols in the AST.
-- The =ExcludedSet= holds the symbols defined... These are needed
-  in case of a degenerate case like
-  #+BEGIN_SRC ocaml
-    let foo =
-      let type point = {x : int, y : int} in
-      let our-point  = {x = 3, y = 4} in
-      our-point.x + our-point.y
-  #+END_SRC
-  + here we need to dismiss =our-point.x= and =our-point.y=, just
-- _Relies on_
-  + [[InfixPrecedence/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** ShuntYard <<InfixPrecedence/ShuntYard>>
-- This implements the Shunt Yard algorithm for determining the
-  precedence of operations
-- _Relies on_
-  + [[Library]]
-****** Transform <<InfixPrecedence/Transform>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[InfixPrecedence/Environment]]
-  + [[InfixPrecedence/ShuntYard]]
-  + [[InfixPrecedence/Types]]
-  + [[ModuleOpen/Types]]
-  + [[Library]]
-  + [[NameSymbol]]
-****** Types <<InfixPrecedence/Types>>
-- _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[InfixPrecedence/Extend]]
-  + [[Library]]
-***** ModuleOpen
-****** Environment <<ModuleOpen/Environment>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Desugar/Types]]
-  + [[ResolveOpenInfo]]
-  + [[ResolveOpenInfo]]
-  + [[FrontendContextualise/Environment]]
-  + [[ModuleOpen/Types]]
+  + [[FreeVars]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
-****** Extend <<ModuleOpen/Extend>>
-- This pass removes the =Infix= form
-  + Belongs to Table
-    | Changed        | Is a Sum Type of |
-    |----------------+------------------|
-    | ModuleOpen     | TopLevel         |
-    | ModuleOpenExpr | Expression       |
-- Thus one does not have to ever deal with
-  #+begin_src haskell
-    data ModuleOpen
-      = Open ModuleName
-      deriving (Show, Generic, NFData)
-    data ModuleOpenExpr
-      = OpenExpress
-        { moduleOpenExprModuleN :: ModuleName
-        , moduleOpenExprExpr    :: Expression }
-      deriving (Show, Generic, NFData)
-  #+end_src
-- This pass with thus try to qualify all names as we go, turning
-#+begin_src ocaml
-  let foo =
-    open Core in
-    List.map f xs
-  (* ====> *)
-  let foo =
-    Core.List.Map f xs
-#+end_src
-- for modules we can infer.
+******** Types <<Traverse/Types>>
 - _Relies on_
-  + [[Desugar/Extend]]
-  + [[Desugar/Extend]]
-  + [[Frontend/Types/Base]]
+  + [[Context/Types]]
+  + [[Context/Types]]
   + [[Library]]
-****** Transform <<ModuleOpen/Transform>>
+  + [[NameSymbol]]
+**** Desugar
+Desugar takes the frontend syntax and through the =desugar=
+function, removes all extra parts of syntax that can be boiled down
+to simple macro expansion (simplification of the frontend syntax
+from the syntax alone with no extra information needed!)
 - _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Desugar/Types]]
-  + [[ResolveOpenInfo]]
-  + [[ModuleOpen/Environment]]
-  + [[ModuleOpen/Types]]
+  + [[Desugar/Passes]]
   + [[Library]]
-****** Types <<ModuleOpen/Types>>
+  + [[Library/Sexp]]
+***** Passes <<Desugar/Passes>>
+Passes contains a list of passes on the frontend syntax that can be
+done with no extra information needed. Thus we export the following passes
+- Removing Explicit Module declarations
+- Removing Guards
+- Conds ⟶ If ⟶ Match
+- Combining signatures to functions
+- Removing punned record arguments
+- Remvoing Do syntax
 - _Relies on_
-  + [[Frontend/Types/Base]]
-  + [[ModuleOpen/Extend]]
   + [[Library]]
+  + [[Library/Sexp]]
 **** ToCore
 ***** FromFrontend
 - _Relies on_
@@ -1936,12 +1643,12 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
+  + [[ResolveOpenInfo]]
   + [[Core/Common/Context]]
-  + [[Juvix/Desugar]]
+  + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
-  + [[ResolveOpenInfo]]
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
@@ -1958,14 +1665,14 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Contextify/Environment]]
+  + [[ResolveOpenInfo]]
+  + [[ToContext/Types]]
   + [[Closure]]
   + [[Core/Common/Context]]
-  + [[Juvix/Desugar]]
+  + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types/Base]]
-  + [[ResolveOpenInfo]]
-  + [[Contextify/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
@@ -1975,7 +1682,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Juvix/Contextify]]
   + [[Core/Common/Context]]
-  + [[Juvix/Desugar]]
+  + [[Desugar]]
   + [[Frontend/Parser]]
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
@@ -1987,35 +1694,10 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[InfixPrecedence/ShuntYard]]
   + [[Library]]
-**** Module
-***** Open <<Module/Open>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[ResolveOpenInfo]]
-  + [[ModuleOpen/Environment]]
-  + [[ModuleOpen/Types]]
-  + [[Library]]
-  + [[HashMap]]
-***** Resolve
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[ResolveOpenInfo]]
-  + [[ModuleOpen/Environment]]
-  + [[Library]]
-  + [[HashMap]]
 *** Conversion
-**** ML <<test/Conversion/ML>>
+**** ML
 Temporary conversion from the Sexpression syntax to the ML syntax
-*** Desugar <<test/Desugar>>
-- _Relies on_
-  + [[Desugar/Types]]
-  + [[Frontend/Parser]]
-  + [[FrontendDesugar]]
-  + [[Library]]
-  + [[NameSymbol]]
+*** Desugar
 **** Sexp <<Desugar/Sexp>>
 - _Relies on_
   + [[Desugar/Passes]]
