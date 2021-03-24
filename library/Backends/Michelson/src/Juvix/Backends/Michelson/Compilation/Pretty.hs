@@ -30,7 +30,7 @@ import Text.Show (showString)
 
 data TyAnn'
   = TAPunct
-  | TATyCon
+  | TAPrimTy
   deriving (Eq, Ord, Show, Generic)
 
 type TyAnn = Last TyAnn'
@@ -40,7 +40,7 @@ type TDoc = PP.Doc TyAnn
 type instance PP.Ann PrimTy = TyAnn
 
 tycon :: TDoc -> TDoc
-tycon = PP.annotate' TATyCon
+tycon = PP.annotate' TAPrimTy
 
 ptycon :: Applicative f => TDoc -> f TDoc
 ptycon = pure . tycon
@@ -97,7 +97,7 @@ data ValAnn'
   = VAPunct
   | VAInst
   | VAConst
-  | VATyCon
+  | VAPrimTy
   | VAKeyword
 
 type ValAnn = Last ValAnn'
@@ -105,7 +105,7 @@ type ValAnn = Last ValAnn'
 tyToValAnn :: TyAnn -> ValAnn
 tyToValAnn = fmap \case
   TAPunct -> VAPunct
-  TATyCon -> VATyCon
+  TAPrimTy -> VAPrimTy
 
 type VDoc = PP.Doc ValAnn
 
