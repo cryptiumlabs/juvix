@@ -133,9 +133,6 @@ toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 
-fromReturn :: Return' ext -> PrimVal' ext
-fromReturn = identity
-
 data ApplyError
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
