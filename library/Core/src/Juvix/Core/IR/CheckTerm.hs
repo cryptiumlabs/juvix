@@ -4,6 +4,7 @@
 module Juvix.Core.IR.CheckTerm
   ( module Juvix.Core.IR.CheckTerm,
     module Typed,
+    module Error,
     module Env,
   )
 where
@@ -15,6 +16,7 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
+import Juvix.Core.IR.Typechecker.Error as Error
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
@@ -235,7 +237,7 @@ popLocal = do
       unless (leftoverOk ρ) $ throwTC (LeftoverUsage ρ)
       put @"bound" ctx
     [] -> do
-      throwTC (UnboundIndex 0)
+      throwTC (UnboundLocal 0)
 
 withLocal ::
   ( HasBound primTy primVal m,
@@ -250,7 +252,9 @@ requireZero ::
   HasThrowTC' IR.NoExt ext primTy primVal m =>
   Usage.T ->
   m ()
-requireZero π = unless (π == mempty) $ throwTC (UsageMustBeZero π)
+requireZero π =
+  unless (π == mempty) $
+    throwTC (InsufficientUsage π (Usage.SNat 0))
 
 requireStar ::
   HasThrowTC' IR.NoExt ext primTy primVal m =>
@@ -336,7 +340,7 @@ useLocal π var = do
   put @"bound" ctx
   pure ty
   where
-    go _ _ [] = throwTC (UnboundIndex var)
+    go _ _ [] = throwTC (UnboundLocal var)
     go w 0 (Annotation ρ ty : ctx) = do
       case ρ `Usage.minus` π of
         Just ρ' -> pure (Eval.weakBy w ty, Annotation ρ' ty : ctx)

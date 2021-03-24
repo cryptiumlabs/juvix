@@ -22,14 +22,14 @@ module Juvix.Core.IR.Typechecker.Types
 where
 
 import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import qualified Juvix.Core.IR.Types.Globals as IR
+import Juvix.Core.Translate
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.Parameterisation as P
-import Juvix.Library hiding (show)
+import Juvix.Library
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
-import Prelude (Show (..))
 
 data Annotation' ext primTy primVal = Annotation
   { annUsage :: Usage.T,
@@ -179,160 +179,3 @@ getElimAnn (Bound _ ann) = ann
 getElimAnn (Free _ ann) = ann
 getElimAnn (App _ _ ann) = ann
 getElimAnn (Ann _ _ _ _ ann) = ann
-
-data TypecheckError' extV extT primTy primVal
-  = TypeMismatch
-      { typeSubject :: IR.Elim' extT primTy primVal,
-        typeExpected, typeGot :: ValueT' extV primTy primVal
-      }
-  | UniverseMismatch
-      { universeLower, universeHigher :: IR.Universe
-      }
-  | ShouldBeStar
-      { typeActual :: ValueT' extV primTy primVal
-      }
-  | ShouldBeFunctionType
-      { typeActual :: ValueT' extV primTy primVal
-      }
-  | ShouldBePairType
-      { typeActual :: ValueT' extV primTy primVal
-      }
-  | ShouldBeUnitType
-      { typeActual :: ValueT' extV primTy primVal
-      }
-  | UnboundIndex
-      { unboundIndex :: IR.BoundVar
-      }
-  | UsageMustBeZero
-      { usageActual :: Usage.T
-      }
-  | LeftoverUsage
-      { usageLeftover :: Usage.T
-      }
-  | InsufficientUsage
-      { usageNeeded, usageActual :: Usage.T
-      }
-  | UnboundLocal
-      { unboundIndex :: IR.BoundVar
-      }
-  | UnboundGlobal
-      { unboundGlobal :: IR.GlobalName
-      }
-  | UnboundPatVar
-      { unboundPatVar :: IR.PatternVar
-      }
-  | NotPrimTy
-      { typeActual :: ValueT' extV primTy primVal
-      }
-  | WrongPrimTy
-      { primVal :: primVal,
-        primTy :: P.PrimType primTy
-      }
-  | UnsupportedTermExt
-      { termExt :: IR.TermX extT primTy primVal
-      }
-  | UnsupportedElimExt
-      { elimExt :: IR.ElimX extT primTy primVal
-      }
-  | PartiallyAppliedConstructor
-      { pattern_ :: IR.Pattern' extT primTy primVal
-      }
-  | EvalError
-      { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
-      }
-
-type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
-
-deriving instance
-  ( Eq primTy,
-    Eq primVal,
-    Eq (P.Arg primTy),
-    Eq (P.Arg (P.TypedPrim primTy primVal)),
-    Eq (P.ApplyErrorExtra primTy),
-    Eq (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
-    IR.ValueAll Eq extV primTy (P.TypedPrim primTy primVal),
-    IR.NeutralAll Eq extV primTy (P.TypedPrim primTy primVal),
-    IR.TermAll Eq extT primTy primVal,
-    Eq (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
-    IR.ElimAll Eq extT primTy primVal,
-    Eq (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
-    IR.PatternAll Eq extT primTy primVal
-  ) =>
-  Eq (TypecheckError' extV extT primTy primVal)
-
-instance
-  ( Show primTy,
-    Show primVal,
-    Show (P.Arg primTy),
-    Show (P.Arg (P.TypedPrim primTy primVal)),
-    Show (P.ApplyErrorExtra primTy),
-    Show (P.ApplyErrorExtra (P.TypedPrim primTy primVal)),
-    IR.ValueAll Show extV primTy (P.TypedPrim primTy primVal),
-    IR.NeutralAll Show extV primTy (P.TypedPrim primTy primVal),
-    IR.TermAll Show extT primTy primVal,
-    Show (IR.TermX extT primTy (P.TypedPrim primTy primVal)),
-    IR.ElimAll Show extT primTy primVal,
-    Show (IR.ElimX extT primTy (P.TypedPrim primTy primVal)),
-    IR.PatternAll Show extT primTy primVal
-  ) =>
-  Show (TypecheckError' extV extT primTy primVal)
-  where
-  show (TypeMismatch term expectedT gotT) =
-    "Type mismatched.\n" <> show term <> "\n"
-      <> "is of type\n"
-      <> show gotT
-      <> ".\nBut the expected type is\n"
-      <> show expectedT
-      <> "."
-  show (UniverseMismatch i j) =
-    "The universe " <> show i
-      <> " should be strictly less than "
-      <> show j
-      <> "."
-  show (ShouldBeStar ty) =
-    "* n is of type * but " <> show ty <> " is not *."
-  show (ShouldBeFunctionType ty) =
-    show ty <> " is not a function type but should be"
-  show (ShouldBePairType ty) =
-    show ty <> " is not a pair type but should be"
-  show (ShouldBeUnitType ty) =
-    show ty <> " is not a unit type but should be"
-  show (UnboundIndex n) =
-    "unbound index " <> show n
-  show (UsageMustBeZero π) =
-    "The usage " <> show π <> " has to be 0."
-  show (LeftoverUsage π) =
-    "Leftover usage of " <> show π
-  show (InsufficientUsage needed left) =
-    "Needed " <> show needed <> " usages but only " <> show left <> " remain"
-  show (UnboundLocal ii) =
-    "Cannot find the type of binder number "
-      <> show ii
-      <> " in the context."
-  show (UnboundGlobal x) =
-    "Global name " <> show x <> " not in scope"
-  show (UnboundPatVar x) =
-    "Pattern variable " <> show x <> " not in scope"
-  show (NotPrimTy x) =
-    "Not a valid primitive type: " <> show x
-  show (WrongPrimTy x ty) =
-    "Primitive value " <> show x <> " cannot have type " <> show ty
-  show (UnsupportedTermExt x) =
-    "Unsupported syntax form " <> show x
-  show (UnsupportedElimExt x) =
-    "Unsupported syntax form " <> show x
-  show (PartiallyAppliedConstructor pat) =
-    "Partially-applied constructor in pattern " <> show pat
-  show (EvalError err) = show err
-
-type HasThrowTC' extV extT primTy primVal m =
-  HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
-
-type HasThrowTC primTy primVal m =
-  HasThrowTC' IR.NoExt IR.NoExt primTy primVal m
-
-throwTC ::
-  HasThrowTC' extV extT primTy primVal m =>
-  TypecheckError' extV extT primTy primVal ->
-  m z
-throwTC = throw @"typecheckError"
