@@ -35,13 +35,10 @@ import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Macro as M
-import qualified Michelson.Parser as M
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
-import Text.ParserCombinators.Parsec hiding ((<|>))
-import qualified Text.ParserCombinators.Parsec.Token as Token
-import Prelude (Show (..), String, error)
+import Prelude (Show (..), error)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
