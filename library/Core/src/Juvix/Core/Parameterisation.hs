@@ -57,6 +57,38 @@ deriving instance (Show e, Show a, Show (Arg a)) => Show (ApplyError' e a)
 
 type ApplyError a = ApplyError' (ApplyErrorExtra a) a
 
+type instance PP.Ann (ApplyError' _ _) = HR.PPAnn
+
+instance
+  ( PP.PrettyText e,
+    HR.ToPPAnn (PP.Ann e),
+    PP.PrettySyntax (Arg a),
+    HR.ToPPAnn (PP.Ann (Arg a)),
+    PP.PrettySyntax a,
+    HR.ToPPAnn (PP.Ann a)
+  ) =>
+  PP.PrettyText (ApplyError' e a)
+  where
+  prettyT = \case
+    ExtraArguments f xs ->
+      PP.sepIndent' [
+        (False, "Function"),
+        (True, pretty0 f),
+        (False, "applied to extra arguments"),
+        (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
+      ]
+    InvalidArguments f xs ->
+      PP.sepIndent' [
+        (False, "Function"),
+        (True, pretty0 f),
+        (False, "applied to invalid arguments"),
+        (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
+      ]
+    Extra e -> HR.toPPAnn <$> PP.prettyT e
+    where
+      pretty0 = fmap HR.toPPAnn . PP.pretty0
+
+
 class CanApply a where
   type ApplyErrorExtra a
   type ApplyErrorExtra a = Void
