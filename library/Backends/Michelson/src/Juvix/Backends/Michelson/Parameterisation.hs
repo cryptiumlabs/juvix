@@ -9,10 +9,7 @@ module Juvix.Backends.Michelson.Parameterisation
 where
 
 import qualified Control.Arrow as Arr
-import Control.Monad.Fail (fail)
-import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
 import Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.Types as CompTypes
@@ -24,9 +21,6 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
@@ -34,7 +28,6 @@ import Juvix.Library hiding (many, try)
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
-import qualified Michelson.Macro as M
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
