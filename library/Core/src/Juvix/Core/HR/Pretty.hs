@@ -306,6 +306,21 @@ instance PrimPretty primTy primVal => PP.PrettySyntax (Elim primTy primVal) wher
             PP.hsepA [pure colon, ppStar ℓ]
           ]
 
+
+type instance PP.Ann (Pattern _ _) = PPAnn
+
+instance
+  PrimPretty primTy primVal =>
+  PP.PrettySyntax (Pattern primTy primVal)
+  where
+  pretty' = \case
+    PCon k ps -> PP.app' APunct (pname k) (map PP.pretty' ps)
+    PPair a b -> ppPairs [a, b]
+    PUnit -> pure box
+    PVar x -> pname x
+    PDot s -> PP.hsepA [pure dot, PP.withPrec PP.FunArg $ PP.pretty' s]
+    PPrim p -> fmap toPPAnn <$> PP.pretty' p
+
 class ToPPAnn ann where
   toPPAnn :: ann -> PPAnn
 

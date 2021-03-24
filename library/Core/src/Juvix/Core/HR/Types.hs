@@ -29,3 +29,6 @@ pattern Let π x l b = Let0 π l b x
 {-# COMPLETE Star, PrimTy, Prim, Pi, Lam, Sig, Pair, Let, UnitTy, Unit, Elim #-}
 
 extendElim "Elim" [] [t|T|] extElim
+
+
+extendPattern "Pattern" [] [t|T|] extPattern

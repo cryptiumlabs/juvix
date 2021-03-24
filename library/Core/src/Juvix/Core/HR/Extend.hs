@@ -26,3 +26,11 @@ extElim =
         IR.typeFree = Nothing,
         IR.typeElimX = [("Var", [[t|NameSymbol.T|]])]
       }
+
+extPattern :: p1 -> p2 -> IR.ExtPattern
+extPattern =
+  \_primTy _primVal ->
+    IR.defaultExtPattern
+      { IR.typePVar = Nothing,
+        IR.typePatternX = [("PVar", [[t|NameSymbol.T|]])]
+      }
