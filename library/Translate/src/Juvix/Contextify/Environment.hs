@@ -295,7 +295,12 @@ primitive :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 primitive (Sexp.List [name]) cont
   | Just Sexp.A {atomName} <- Sexp.atomFromT name = do
     -- this is bad, however it's FINE, as we only have the primitive
-    -- which no operation should disrupt
+    -- which no operation should disrupt.
+    -- Namely if it's (:primitive Michelson.Foo)
+    -- we add Michelson to the closure, which is wrong.
+    -- However, since we just have the primitive at this point, we
+    -- can't have any other symbol named Michelson in this scope, so
+    -- it's not an actual issue.
     local @"closure" (Closure.insertGeneric (NameSymbol.hd atomName)) $ do
       prim <- cont name
       pure $ Sexp.list [prim]
