@@ -1,7 +1,7 @@
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
-import qualified Compile as Compile
-import qualified Config as Config
+import qualified Juvix.Pipeline as Compile
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -109,16 +109,16 @@ run ctx opt = do
           do (liftIO $ readFile fin)
             >>= Compile.parse
             >>= liftIO . print
-        Typecheck fin backend ->
+        Typecheck fin (Michelson _backend) ->
           do (liftIO $ readFile fin)
             >>= Compile.parse
-            >>= Compile.typecheck backend
+            >>= Compile.typecheck @Compile.BMichelson
             >>= liftIO . print
-        Compile fin fout backend ->
+        Compile fin fout (Michelson _backend) ->
           do (liftIO $ readFile fin)
             >>= Compile.parse
-            >>= Compile.typecheck backend
-            >>= Compile.compile backend
+            >>= Compile.typecheck @Compile.BMichelson
+            >>= Compile.compile @Compile.BMichelson
             >>= Compile.writeout fout
             >>= liftIO . print
         Version -> liftIO $ putDoc versionDoc

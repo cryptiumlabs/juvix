@@ -2,6 +2,8 @@ module Options where
 
 import Juvix.Library hiding (option)
 import Options.Applicative
+import Data.Curve.Weierstrass.BLS12381 (Fr)
+import Juvix.Pipeline
 
 data Context
   = Context
@@ -16,9 +18,8 @@ data Options
       }
 
 data Backend
-  = Unit
-  | Naturals
-  | Michelson
+  = Plonk (BPlonk Fr)
+  | Michelson BMichelson
   deriving (Eq, Show)
 
 data Command
@@ -103,10 +104,9 @@ backendOptions =
   option
     ( maybeReader
         ( \case
-            "unit" -> pure Unit
-            "naturals" -> pure Naturals
-            "michelson" -> pure Michelson
+            "plonk" -> pure $ Plonk (BPlonk)
+            "michelson" -> pure $ Michelson (BMichelson)
             _ -> Nothing
         )
     )
-    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> value Michelson <> showDefault)
+    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> showDefault)

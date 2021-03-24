@@ -28,7 +28,7 @@ import qualified Juvix.Core.Pipeline as CorePipeline
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Pipeline as Pipeline
+import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
 import qualified System.IO.Temp as Temp
 import qualified Prelude as P
@@ -46,8 +46,8 @@ class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
 
-  typecheck :: (MonadIO m, P.MonadFail m) => FE.FinalContext -> m (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
-  compile :: (MonadIO m, P.MonadFail m) => ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> m Text
+  typecheck :: FE.FinalContext -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
+  compile :: ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline Text
 
 data BMichelson = BMichelson
   deriving (Eq, Show)

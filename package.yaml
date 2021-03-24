@@ -153,6 +153,7 @@ executables:
       - juvix
       - optparse-applicative
       - ansi-wl-pprint
+      - elliptic-curve
       - raw-strings-qq
       - yaml
       - aeson
