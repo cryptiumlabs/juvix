@@ -3,14 +3,41 @@
 module Juvix.Core.IR.Evaluator.Types where
 
 import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.HR.Pretty as HR
+import Juvix.Core.Translate
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Juvix.Library.PrettyPrint as PP
 
 data ApplyError primTy primVal
   = NoApplyError
   | ApplyErrorV (Param.ApplyError primVal)
   | ApplyErrorT (Param.ApplyError primTy)
+
+
+type ApplyErrorPretty primTy primVal =
+  ( PP.PrettyText (Param.ApplyError primTy),
+    HR.ToPPAnn (PP.Ann (Param.ApplyError primTy)),
+    PP.PrettySyntax primTy,
+    HR.ToPPAnn (PP.Ann primTy),
+    PP.PrettyText (Param.ApplyError primVal),
+    HR.ToPPAnn (PP.Ann (Param.ApplyError primVal)),
+    PP.PrettySyntax primVal,
+    HR.ToPPAnn (PP.Ann primVal)
+  )
+
+type instance PP.Ann (ApplyError _ _) = HR.PPAnn
+
+instance
+  ApplyErrorPretty primTy primVal =>
+  PP.PrettyText (ApplyError primTy primVal)
+  where
+  prettyT = \case
+    NoApplyError -> mempty
+    ApplyErrorV e -> HR.toPPAnn <$> PP.prettyT e
+    ApplyErrorT e -> HR.toPPAnn <$> PP.prettyT e
 
 deriving instance
   ( Eq primTy,
@@ -39,6 +66,27 @@ data Error extV extT primTy primVal
       }
   | UnsupportedTermExt (IR.TermX extT primTy primVal)
   | UnsupportedElimExt (IR.ElimX extT primTy primVal)
+
+type instance PP.Ann (Error IR.NoExt TC.T _ _) = HR.PPAnn
+
+-- TODO generalise
+instance
+  ApplyErrorPretty primTy primVal =>
+  PP.PrettyText (Error IR.NoExt TC.T primTy primVal)
+  where
+  prettyT = \case
+    CannotApply {fun, arg, paramErr} ->
+      PP.vcat [
+        PP.sepIndent' [
+          (False, "Cannot apply"),
+          (True, PP.pretty0 $ irToHR $ IR.quote fun),
+          (False, "to argument"),
+          (True, PP.pretty0 $ irToHR $ IR.quote arg)
+        ],
+        PP.prettyT paramErr
+      ]
+    UnsupportedTermExt x -> absurd x
+    UnsupportedElimExt x -> absurd x
 
 deriving instance
   ( Eq primTy,
