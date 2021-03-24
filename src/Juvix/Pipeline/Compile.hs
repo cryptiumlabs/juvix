@@ -17,6 +17,7 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
+import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
@@ -45,15 +46,15 @@ class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
 
-  typecheck :: (MonadIO m, P.MonadFail m) => FE.FinalContext -> m (ErasedAnn.AnnTerm (Ty b) (Val b))
-  compile :: (MonadIO m, P.MonadFail m) => ErasedAnn.AnnTerm (Ty b) (Val b) -> m Text
+  typecheck :: (MonadIO m, P.MonadFail m) => FE.FinalContext -> m (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
+  compile :: (MonadIO m, P.MonadFail m) => ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> m Text
 
 data BMichelson = BMichelson
   deriving (Eq, Show)
 
 instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
-  type Val BMichelson = Param.PrimValHR
+  type Val BMichelson = Param.RawPrimVal
   typecheck ctx = do
     let res = Pipeline.contextToCore ctx Param.michelson
     case res of
@@ -135,7 +136,18 @@ instance
       (OnlyExts.T IR.NoExt)
       (Plonk.PrimTy f)
       (Plonk.PrimVal f)
-      (Plonk.PrimVal f)
+      (Plonk.PrimVal f),
+    IR.HasPatSubstTerm
+                          (OnlyExts.T TypeChecker.T)
+                          (Plonk.PrimTy f)
+                          (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))
+                          (Plonk.PrimTy f),
+    Show (Arg (Plonk.PrimTy f)),
+    Show
+                          (Arg (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))),
+    Show (ApplyErrorExtra (Plonk.PrimTy f)),
+    Show
+                          (ApplyErrorExtra (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f)))
   ) =>
   HasBackend (BPlonk f)
   where
@@ -155,15 +167,24 @@ instance
                   newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              notImplemented -- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
+              (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
+              -- notImplemented 
+              -- (res, _) <- notImplemented -- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
+              case res of
+                Right r -> do
+                  pure r
+                Left err -> do
+                  print term
+                  Feedback.fail $ show err
           somethingElse ->  Feedback.fail $ show somethingElse
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
   typecheck _ =
     Feedback.fail $ "Typecheck not implemented for Plonk backend."
 
   -- TODO: Serialize circuit
-  -- TODO: Homogenize pretty printers
-  compile term = pure . toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty . Plonk.execCircuitBuilder $ Plonk.compileTermWithWire term
+  -- TODO: Homogenize pretty printers!
+  compile term = 
+    pure . toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty . Plonk.execCircuitBuilder  . Plonk.compileTermWithWire $  CorePipeline.toRaw term
 
 parse :: (MonadIO m, P.MonadFail m) => Code -> m FE.FinalContext
 parse code = do
