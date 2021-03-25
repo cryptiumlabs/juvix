@@ -749,10 +749,16 @@ transformConSig ::
   Maybe (HR.Term primTy primVal) ->
   Sexp.T ->
   m (HR.Term primTy primVal)
-transformConSig q name mHd r@(t Sexp.:> ts)
+transformConSig q name mHd r@((t Sexp.:> ts) Sexp.:> _)
   | named ":record-d" = throwFF $ RecordUnimplemented r
   | named ":arrow" = transformTermHR q ts
-  | isNothing mHd = throwFF $ InvalidConstructor name r
+  | isNothing mHd =
+    throwFF $ InvalidConstructor name r
+  where
+    named = Sexp.isAtomNamed t
+transformConSig q name mHd r@(t Sexp.:> _ts)
+  | isNothing mHd =
+    throwFF $ InvalidConstructor name r
   | Just hd <- mHd,
     Just xs <- Sexp.toList r =
     let makeArr (x, arg) res =
@@ -762,7 +768,7 @@ transformConSig q name mHd r@(t Sexp.:> ts)
      in foldrM makeArr hd $ zip names xs
   where
     named = Sexp.isAtomNamed t
-transformConSig _ _ _ _ = error "malformed transformConSig"
+transformConSig _ _ _ _r = error "malformed transformConSig"
 
 transformPat ::
   ( HasNextPatVar m,
