@@ -15,13 +15,14 @@ import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library hiding (Datatype)
+import Juvix.Core.IR.Types (Global')
 
 typeCheckDeclaration ::
   [IR.RawDatatype' ext primTy primVal] ->
   [IR.RawFunction' ext primTy primVal] ->
-  IR.TypeCheck ext primTy primVal IO [Global' extV extT primTy primVal]
+  IR.TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
 typeCheckDeclaration [] [] =
-  return undefined
+  undefined
 typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =
   undefined
 -- TODO run checkDataType 0 [] [] p' dt

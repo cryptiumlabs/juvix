@@ -21,8 +21,6 @@ type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
 type GlobalAllV (c :: * -> Constraint) ext primTy primVal =
   ( c primTy,
     c primVal,
-    TermAll c ext primTy primVal,
-    ElimAll c ext primTy primVal,
     ValueAll c ext primTy primVal,
     NeutralAll c ext primTy primVal
   )
@@ -30,8 +28,8 @@ type GlobalAllV (c :: * -> Constraint) ext primTy primVal =
 type GlobalAll (c :: * -> Constraint) extV extT primTy primVal =
   ( c primTy,
     c primVal,
-    TermAll c extV primTy primVal,
-    ElimAll c extV primTy primVal,
+    TermAll c extT primTy primVal,
+    ElimAll c extT primTy primVal,
     ValueAll c extV primTy primVal,
     NeutralAll c extV primTy primVal,
     PatternAll c extT primTy primVal
@@ -378,39 +376,36 @@ deriving instance
 type RawTelescope ext primTy primVal =
   [RawTeleEle' ext primTy primVal]
   
-data TeleEle' ext primTy primVal = TeleEle
+data TeleEle' extV extT primTy primVal = TeleEle
   {
     name :: Name,
     usage :: Usage,
-    ty :: Value' ext primTy primVal,
-    extension :: XPi ext primTy primVal
+    ty :: Value' extV primTy primVal,
+    extension :: XPi extT primTy primVal
   }
   deriving (Generic)
   
 deriving instance
-  GlobalAllV Show ext primTy primVal =>
-  Show (TeleEle' ext primTy primVal)
-
+  GlobalAll Show extV extT primTy primVal =>
+  Show (TeleEle' extV extT primTy primVal)
 deriving instance
-  GlobalAllV Eq ext primTy primVal =>
-  Eq (TeleEle' ext primTy primVal)
-
+  GlobalAll Eq extV extT primTy primVal =>
+  Eq (TeleEle' extV extT primTy primVal)
 deriving instance
-  (Data ext, GlobalAllV Data ext primTy primVal) =>
-  Data (TeleEle' ext primTy primVal)
-
+  (Data extV, Data extT, GlobalAll Data extV extT primTy primVal) =>
+  Data (TeleEle' extV extT primTy primVal)
 deriving instance
-  GlobalAllV NFData ext primTy primVal =>
-  NFData (TeleEle' ext primTy primVal)
+  GlobalAll NFData extV extT primTy primVal =>
+  NFData (TeleEle' extV extT primTy primVal)
 
-type Telescope ext primTy primVal =
-  [TeleEle' ext primTy primVal]
+type Telescope extV extT primTy primVal =
+  [TeleEle' extV extT primTy primVal]
 
 data FunClause' extV extT primTy primVal = FunClause
   { -- | @Δ@: The types of the pattern variables in dependency order.
     -- , namedClausePats :: NAPs (Using Name instead atm)
     -- ^ @Δ ⊢ ps@.  The de Bruijn indices refer to @Δ@.
-    clauseTel :: Telescope extV primTy primVal,
+    clauseTel :: Telescope extV extT primTy primVal,
     clausePats :: [Pattern' extT primTy primVal], --TODO [SplitPattern]
     -- TODO make it a Maybe
     -- @Just v@ for a regular clause, @Nothing@ for an absurd one.
