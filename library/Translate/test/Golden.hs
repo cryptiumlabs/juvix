@@ -4,6 +4,7 @@ import qualified Data.ByteString as ByteString (readFile, writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
+import Juvix.Frontend.Types.Base ( TopLevel, Header (NoHeader) )
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
 import Juvix.Library
 import qualified Test.Tasty as T
@@ -30,19 +31,19 @@ resultToText = Text.pack . show
 toByteString :: Show a => a -> ByteString
 toByteString = Data.ByteString.Char8.pack . show
 
-parsedContract :: FilePath -> IO [TopLevel]
+parsedContract :: FilePath -> IO (Header TopLevel)
 parsedContract file = do
   rawContract <- ByteString.readFile file
   case Parser.prettyParse rawContract of
-    Left err -> writeFile (file <> ".parsed") (toS err) *> pure []
+    Left err -> writeFile (file <> ".parsed") (toS err) *> pure (NoHeader [])
     Right x -> do
       -- generate/update the golden file as the parsed file 
       writeFile (file <> ".golden") (show x)
       -- TODO human readable version of the golden file for debugging
       -- writeFile (file <> ".HRGolden") (prettyPrintType x)
-      pure $ extractTopLevel x
+      pure x
 
-getGolden :: FilePath -> IO (Maybe [TopLevel])
+getGolden :: FilePath -> IO (Maybe (Header TopLevel))
 getGolden file = do
   maybeBS <- T.readFileMaybe file
   return $ do
