@@ -34,6 +34,8 @@ pipelineOpen =
   let correctOrder =
         [ "Foo-Helper" :| ["bar"],
           "Foo-Helper" :| ["Bah", "fi"],
+          -- DUPLICATE!?
+          "Foo-Helper" :| ["Bah", "fi"],
           "Foo-Helper" :| ["Bah", "Baz", "si"],
           "Identity" :| ["fi"],
           "Identity" :| ["main"]

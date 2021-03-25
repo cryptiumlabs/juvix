@@ -19,7 +19,7 @@
 -- - The other bits of code are stand alone algorithms for filling in
 --   the reverse map and the qualification from that point
 --   forward.... these are thankfully quite straight forward
-module Juvix.FrontendContextualise.Contextify.ResolveOpenInfo where
+module Juvix.Contextify.ToContext.ResolveOpenInfo where
 
 import Control.Lens hiding ((|>))
 import qualified Data.HashSet as Set

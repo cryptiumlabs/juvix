@@ -1,7 +1,7 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Core.FromFrontend.Types where
+module Juvix.ToCore.Types where
 
 import Data.HashMap.Strict (HashMap)
 import qualified Juvix.Core.Common.Context as Ctx
@@ -9,10 +9,10 @@ import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
-import qualified Juvix.FrontendContextualise as FE
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as FE
 import Juvix.Library hiding (show)
+import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Text.Show (Show (..))
 
@@ -20,47 +20,47 @@ data Error primTy primVal
   = -- features not yet implemented
 
     -- | constraints are not yet implemented
-    ConstraintsUnimplemented NameSymbol.T [FE.Expression]
+    ConstraintsUnimplemented NameSymbol.T Sexp.T
   | -- | refinements are not yet implemented
-    RefinementsUnimplemented FE.TypeRefine
+    RefinementsUnimplemented Sexp.T
   | -- | universe polymorphism is not yet implemented
-    UniversesUnimplemented FE.UniverseExpression
+    UniversesUnimplemented Sexp.T
   | -- | implicit arguments are not yet implemented
-    ImplicitsUnimplemented FE.ArrowExp
+    ImplicitsUnimplemented Sexp.T
   | -- | implicit arguments are not yet implemented
-    ImplicitsUnimplementedA FE.Arg
+    ImplicitsUnimplementedA Sexp.T
   | -- | type inference for definitions is not yet implemented
-    SigRequired NameSymbol.T (FE.Final Ctx.Definition)
+    SigRequired NameSymbol.T (Ctx.Definition Sexp.T Sexp.T Sexp.T)
   | -- | head of application not an Elim
-    NotAnElim FE.Expression
+    NotAnElim Sexp.T
   | -- | pattern matching etc not yet implemented
-    ExprUnimplemented FE.Expression
+    ExprUnimplemented Sexp.T
   | -- | local datatypes etc not yet implemented
-    DefUnimplemented (FE.Final Ctx.Definition)
+    DefUnimplemented (Ctx.Definition Sexp.T Sexp.T Sexp.T)
   | -- | patterns other than single vars in @let@ not yet implemented
-    PatternUnimplemented FE.MatchLogic
+    PatternUnimplemented Sexp.T
   | -- | records not yet implemented
-    RecordUnimplemented FE.Record
+    RecordUnimplemented Sexp.T
   | -- | records not yet implemented
-    ExpRecordUnimplemented FE.ExpRecord
+    ExpRecordUnimplemented Sexp.T
   | -- | records not yet implemented
-    MatchRecordUnimplemented (NonEmpty (FE.NameSet FE.MatchLogic))
+    MatchRecordUnimplemented Sexp.T
   | -- | lists not yet implemented
-    ListUnimplemented FE.List
+    ListUnimplemented Sexp.T
   | -- actual errors
 
     -- | unknown found at declaration level
     UnknownUnsupported (Maybe Symbol)
   | -- | current backend doesn't support this type of constant
-    UnsupportedConstant FE.Constant
+    UnsupportedConstant Sexp.T
   | -- | current backend doesn't have this primitive
     UnknownPrimitive NameSymbol.T
   | -- | expression is not a usage
-    NotAUsage FE.Expression
+    NotAUsage Sexp.T
   | -- | expression is not 0 or ω
-    NotAGUsage FE.Expression
+    NotAGUsage Sexp.T
   | -- | expression is not a natural number
-    NotAUniverse FE.Expression
+    NotAUniverse Sexp.T
   | -- | usage is not 0 or ω
     UsageNotGUsage Usage.T
   | -- | invalid signature for declaration (bug in this module)
@@ -68,19 +68,19 @@ data Error primTy primVal
     -- 'Nothing' if no signature found
     WrongSigType NameSymbol.T (Maybe (CoreSigHR primTy primVal))
   | -- | e.g. single anonymous constructor that is not a record
-    InvalidDatatype FE.Type
+    InvalidDatatype Sexp.T
   | -- | e.g. ml-style constructor in a datatype with a GADT header
-    InvalidConstructor NameSymbol.T FE.Product
+    InvalidConstructor NameSymbol.T Sexp.T
   | -- | type is something other than a set of arrows ending in *
     InvalidDatatypeType NameSymbol.T (HR.Term primTy primVal)
   | -- | Unknown %Builtin.X
     UnknownBuiltin NameSymbol.T
   | -- | Builtin with usage
-    BuiltinWithUsage (FE.Final Ctx.Definition)
+    BuiltinWithUsage (Ctx.Definition Sexp.T Sexp.T Sexp.T)
   | -- | Builtin with type signature
-    BuiltinWithTypeSig (FE.Final Ctx.Definition)
+    BuiltinWithTypeSig (Ctx.Definition Sexp.T Sexp.T Sexp.T)
   | -- | Wrong number of arguments for a builtin
-    WrongNumberBuiltinArgs Special Int [FE.Expression]
+    WrongNumberBuiltinArgs Special Int Sexp.T
   | -- | Using omega as an expression
     UnexpectedOmega
   deriving (Eq, Generic)
@@ -185,7 +185,7 @@ data CoreSig' ext primTy primVal
       }
   | ConSig
       { conType :: !(Maybe (IR.Term' ext primTy primVal)),
-        conDef :: !(Maybe (FE.Final' Ctx.Def))
+        conDef :: !(Maybe (Ctx.Def Sexp.T Sexp.T))
       }
   | ValSig
       { valUsage :: !IR.GlobalUsage,
@@ -235,6 +235,12 @@ deriving instance
   ) =>
   Show (CoreSig' ext primTy primVal)
 
+deriving instance Data LineNum.T
+
+deriving instance Data Sexp.Atom
+
+deriving instance Data Sexp.T
+
 deriving instance
   ( Data ext,
     Data primTy,
@@ -260,22 +266,24 @@ data CoreDef primTy primVal
   | SpecialDef !NameSymbol.T !Special
   deriving (Eq, Show, Data, Generic)
 
-data CoreDefs primTy primVal = CoreDefs
-  { order :: [NonEmpty NameSymbol.T],
-    defs :: CoreMap primTy primVal
-  }
+data CoreDefs primTy primVal
+  = CoreDefs
+      { order :: [NonEmpty NameSymbol.T],
+        defs :: CoreMap primTy primVal
+      }
   deriving (Eq, Show, Data, Generic)
 
 type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
 
-data FFState primTy primVal = FFState
-  { frontend :: FE.FinalContext,
-    param :: P.Parameterisation primTy primVal,
-    coreSigs :: CoreSigsHR primTy primVal,
-    core :: CoreMap primTy primVal,
-    patVars :: HashMap IR.GlobalName IR.PatternVar,
-    nextPatVar :: IR.PatternVar
-  }
+data FFState primTy primVal
+  = FFState
+      { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
+        param :: P.Parameterisation primTy primVal,
+        coreSigs :: CoreSigsHR primTy primVal,
+        core :: CoreMap primTy primVal,
+        patVars :: HashMap IR.GlobalName IR.PatternVar,
+        nextPatVar :: IR.PatternVar
+      }
   deriving (Generic)
 
 type EnvAlias primTy primVal =
@@ -287,8 +295,8 @@ newtype Env primTy primVal a = Env {unEnv :: EnvAlias primTy primVal a}
     (HasThrow "fromFrontendError" (Error primTy primVal))
     via MonadError (EnvAlias primTy primVal)
   deriving
-    ( HasSource "frontend" FE.FinalContext,
-      HasReader "frontend" FE.FinalContext
+    ( HasSource "frontend" (Ctx.T Sexp.T Sexp.T Sexp.T),
+      HasReader "frontend" (Ctx.T Sexp.T Sexp.T Sexp.T)
     )
     via ReaderField "frontend" (EnvAlias primTy primVal)
   deriving
@@ -325,7 +333,7 @@ type HasThrowFF primTy primVal =
   HasThrow "fromFrontendError" (Error primTy primVal)
 
 type HasFrontend =
-  HasReader "frontend" FE.FinalContext
+  HasReader "frontend" (Ctx.T Sexp.T Sexp.T Sexp.T)
 
 type HasParam primTy primVal =
   HasReader "param" (P.Parameterisation primTy primVal)
@@ -343,7 +351,7 @@ type HasNextPatVar =
   HasState "nextPatVar" IR.PatternVar
 
 execEnv ::
-  FE.FinalContext ->
+  Ctx.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Env primTy primVal a ->
   Either (Error primTy primVal) a

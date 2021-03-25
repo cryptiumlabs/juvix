@@ -2,9 +2,9 @@
 
 module Contextualise.Module.Open where
 
+import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as Resolve
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as Resolve
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Types
 import Juvix.Library

@@ -1,6 +1,6 @@
 module Contextualise.Infix.ShuntYard where
 
-import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
+import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T

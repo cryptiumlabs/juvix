@@ -131,7 +131,6 @@ library:
     - Juvix.Pipeline
     - Juvix.Core
     - Juvix.Core.Pipeline
-    - Juvix.Core.FromFrontend
     - Juvix.Encoding.Encoding
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
