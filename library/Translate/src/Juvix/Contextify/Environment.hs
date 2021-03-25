@@ -239,18 +239,8 @@ searchAndClosure ::
   (Sexp.T -> f Sexp.T) ->
   f Sexp.T
 searchAndClosure ctx a as cont
-  | named "case" = case' as cont
-  -- this case happens at the start of every defun
-  | named ":lambda-case" = lambdaCase as cont
-  -- This case is a bit special, as we must check the context for
-  -- various names this may introduce to the
   | named ":open-in" = openIn ctx as cont
-  | named ":declaim" = declaim as cont
-  | named ":let-match" = letMatch as cont
-  | named ":primitive" = primitive as cont
-  | named ":let-type" = letType as cont
-  | named "type" = type' as cont
-  | named ":lambda" = lambda as cont
+  | otherwise = searchAndClosureNoCtx a as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
 searchAndClosure _ _ _ _ = error "imporper closure call"
