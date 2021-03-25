@@ -4,8 +4,8 @@ import qualified Data.ByteString as ByteString (readFile, writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
-import Juvix.Frontend.Types.Base ( TopLevel, Header (NoHeader) )
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
+import Juvix.Frontend.Types.Base (Header (NoHeader), TopLevel)
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
@@ -37,7 +37,7 @@ parsedContract file = do
   case Parser.prettyParse rawContract of
     Left err -> writeFile (file <> ".parsed") (toS err) *> pure (NoHeader [])
     Right x -> do
-      -- generate/update the golden file as the parsed file 
+      -- generate/update the golden file as the parsed file
       writeFile (file <> ".golden") (show x)
       -- TODO human readable version of the golden file for debugging
       -- writeFile (file <> ".HRGolden") (prettyPrintType x)
