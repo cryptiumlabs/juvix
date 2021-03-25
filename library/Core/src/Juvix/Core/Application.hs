@@ -77,6 +77,8 @@ data Arg' ext ty term
   | TermArg (Take ty term)
   deriving (Generic, Functor, Foldable, Traversable)
 
+type Arg = Arg' IR.NoExt
+
 pattern BoundArg ::
   (ParamVar ext ~ DeBruijn) => IR.BoundVar -> Arg' ext ty term
 pattern BoundArg i = VarArg (BoundVar i)
@@ -103,15 +105,6 @@ instance Bitraversable (Arg' ext) where
   bitraverse _ _ (VarArg x) = pure $ VarArg x
   bitraverse f g (TermArg t) = TermArg <$> bitraverse f g t
 
-type Arg = Arg' IR.NoExt
-
-argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
-argToTake (TermArg t) = pure t
-argToTake _ = empty
-
-argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext' ty term)
-argToReturn = fmap takeToReturn . argToTake
-
 -- |
 -- An argument to a partially applied primitive, which must be
 -- fully-applied itself.
@@ -131,6 +124,13 @@ instance Bifoldable Take where
 
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
+
+argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
+argToTake (TermArg t) = pure t
+argToTake _ = empty
+
+argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext' ty term)
+argToReturn = fmap takeToReturn . argToTake
 
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}
