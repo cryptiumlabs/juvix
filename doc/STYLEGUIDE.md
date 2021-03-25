@@ -13,6 +13,48 @@ Set up [HLint](https://github.com/ndmitchell/hlint)
 in your code environment and follow its code suggestions
 as much as you can.
 
+General naming convention
+-------------------------
+
+For anything code related: modules, functions and variables, filenames etc. we
+will use the American English spelling.
+
+### Modules and directories
+
+Module and directory names should be written as nouns:
+
+```
+Translation
+Contextualization
+Desugaring
+```
+
+We should avoid prefixes in module names as much as possible, this is what
+sub-directories are for, i.e. `Frontend.Contextualize` instead of
+`FrontendContextualize`.
+
+Directory names should start with a small letter, unless they match with a
+module in the Haskell code:
+
+```
+library/frontend           <-- frontend is not part of the module structure.
+library/frontend/src/Juvix <-- Juvix is a module.
+```
+
+
+### Pattern matches
+
+When pattern matching a data constructor, using variables even for unused
+fields does improve the readability of the code. To avoid numerous
+`-Wunused-matches` warnings, we prefix unused variables with `_`:
+
+```haskell
+func (RawDatatype _ _ _ lvl _) = ...
+
+func_better (RawDatatype _n _pos _a lvl _cons) = ...
+```
+
+
 Formatting
 ----------
 
@@ -59,6 +101,37 @@ plus4 n = n + 4  -- whitespace on either side of `+`
 
 (\x -> x + 4)  -- no space after the lambda
 ```
+
+### Declaration comments
+
+When adding comments as part of a declaration, we will be using the layout as
+enforced by our formatter, ormolu:
+
+```haskell
+data Parameterisation primTy primVal
+  = Parameterisation
+      { -- | Check if a value is of a given type.
+        hasType :: primVal -> PrimType primTy -> Bool,
+        -- | Set of builtin types.
+        builtinTypes :: Builtins primTy,
+      }
+```
+
+Ormolu prefers to have `,` and `->` at the end of a line, and will rewrite any
+usage of `-- ^` into `-- |`. Special care has to be taken that, if used `-- ^`,
+will be at the place at the correct place. The following is incorrect, and will
+not be successfully parsed by the code formatter:
+
+```haskell
+op ::
+  Int -> -- ^ left hand side of operator.
+  Int -> -- ^ right hand side of operator.
+  Int
+```
+
+Note that the comments are not pointing to any argument, as there are placed
+after the `->`. To fix this, the `->` should be placed at the beginning of the
+lines, and the code formatter will work correctly.
 
 Imports
 -------
@@ -116,6 +189,25 @@ data Type = ...
 t = ...
 
 ```
+
+Exports
+-------
+
+Modules should export their datatypes and functions explicitly. The order of
+the exports should preferably follow the same order as they are defined in the
+file. Re-exported modules should always follow at the end, for example:
+
+```haskell
+module Mod
+  ( Mod (..),
+    modFunc,
+    module SubMod,
+  )
+where
+```
+
+Typically the exports should be kept to a minimum. When exporting datatypes it
+is OK to export all constructors using `(..)`.
 
 Idioms
 ------
