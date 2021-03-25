@@ -3,7 +3,19 @@
 
 -- |
 -- Types to support partial application and polymorphic primitives.
-module Juvix.Core.Application where
+module Juvix.Core.Application
+  ( Return' (..),
+    DeBruijn (..),
+    IsParamVar (..),
+    Arg' (..),
+    Arg,
+    pattern BoundArg,
+    pattern FreeArg,
+    Take (..),
+    argToTake,
+    takeToReturn,
+  )
+where
 
 import Data.Bifoldable
 import Data.Bitraversable
