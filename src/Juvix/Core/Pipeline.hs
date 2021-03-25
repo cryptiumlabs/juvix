@@ -28,9 +28,9 @@ type Comp ty val res =
   forall m.
   CompConstraints ty val res m =>
   RawTerm ty val ->
-    Usage.T ->
-      RawTerm ty val ->
-        m res
+  Usage.T ->
+  RawTerm ty val ->
+  m res
 
 type CompConstraints' primTy primVal compErr m =
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
@@ -174,4 +174,3 @@ toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
               type' = ErasedAnn.PrimTy t,
               term = ErasedAnn.Var x
             }
-

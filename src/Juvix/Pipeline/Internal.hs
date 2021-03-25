@@ -29,7 +29,7 @@ toCore paths = do
         Right con -> pure $ Right con
 
 contextToCore ::
-  (Data primTy, Data primVal) =>
+  --   (Data primTy, Data primVal) =>
   Target.FinalContext ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)

@@ -1,9 +1,15 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Options where
 
+import Data.Curve.Weierstrass.BLS12381 -- (BLS12381(..), R(..), Fr(..))
+-- (Prime(..))
+
+import Data.Data
+import Data.Field.Galois
 import Juvix.Library hiding (option)
-import Options.Applicative
-import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Juvix.Pipeline
+import Options.Applicative
 
 data Context
   = Context
@@ -21,6 +27,8 @@ data Backend
   = Plonk (BPlonk Fr)
   | Michelson BMichelson
   deriving (Eq, Show)
+
+-- deriving instance Data Fr
 
 data Command
   = Version

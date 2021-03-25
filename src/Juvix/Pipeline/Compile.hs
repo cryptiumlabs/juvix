@@ -17,10 +17,10 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Backends.Plonk as Plonk
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
+import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
@@ -31,8 +31,8 @@ import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
 import qualified System.IO.Temp as Temp
-import qualified Prelude as P
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
+import qualified Prelude as P
 
 type Code = Text
 
@@ -95,10 +95,10 @@ data BPlonk f = BPlonk
 
 instance
   ( GaloisField f,
-    Data f,
+    -- Data f,
     Eq f,
     Integral f,
-    Data (Plonk.PrimTy f),
+    -- Data (Plonk.PrimTy f),
     Eq (Plonk.PrimTy f),
     Show (Plonk.PrimTy f),
     CanApply
@@ -138,16 +138,16 @@ instance
       (Plonk.PrimVal f)
       (Plonk.PrimVal f),
     IR.HasPatSubstTerm
-                          (OnlyExts.T TypeChecker.T)
-                          (Plonk.PrimTy f)
-                          (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))
-                          (Plonk.PrimTy f),
+      (OnlyExts.T TypeChecker.T)
+      (Plonk.PrimTy f)
+      (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))
+      (Plonk.PrimTy f),
     Show (Arg (Plonk.PrimTy f)),
     Show
-                          (Arg (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))),
+      (Arg (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))),
     Show (ApplyErrorExtra (Plonk.PrimTy f)),
     Show
-                          (ApplyErrorExtra (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f)))
+      (ApplyErrorExtra (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f)))
   ) =>
   HasBackend (BPlonk f)
   where
@@ -168,7 +168,7 @@ instance
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
               (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
-              -- notImplemented 
+              -- notImplemented
               -- (res, _) <- notImplemented -- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
               case res of
                 Right r -> do
@@ -176,15 +176,15 @@ instance
                 Left err -> do
                   print term
                   Feedback.fail $ show err
-          somethingElse ->  Feedback.fail $ show somethingElse
+          somethingElse -> Feedback.fail $ show somethingElse
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
   typecheck _ =
     Feedback.fail $ "Typecheck not implemented for Plonk backend."
 
   -- TODO: Serialize circuit
   -- TODO: Homogenize pretty printers!
-  compile term = 
-    pure . toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty . Plonk.execCircuitBuilder  . Plonk.compileTermWithWire $  CorePipeline.toRaw term
+  compile term =
+    pure . toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty . Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
 
 parse :: (MonadIO m, P.MonadFail m) => Code -> m FE.FinalContext
 parse code = do

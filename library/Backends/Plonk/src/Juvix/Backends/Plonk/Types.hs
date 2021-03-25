@@ -37,7 +37,9 @@ data PrimVal f
   | PEq
   deriving (Show, Eq, Generic, Data)
 
-data PrimTy f = PrimTy
+data PrimTy f
+  = PrimTy
+  | Application (PrimTy f) (NonEmpty (PrimTy f))
   deriving (Show, Eq, Generic, Data)
 
 type Return' ext f = App.Return' ext (P.PrimType (PrimTy f)) (PrimVal f)
@@ -70,3 +72,7 @@ type FFType f = Type (PrimTy f)
 type FFTerm f = Term (PrimTy f) (PrimVal f)
 
 type FFAnnTerm f = AnnTerm (PrimTy f) (PrimVal f)
+
+data CompilationError
+  = NotYetImplemented Text
+  deriving (Show, Eq, Generic)

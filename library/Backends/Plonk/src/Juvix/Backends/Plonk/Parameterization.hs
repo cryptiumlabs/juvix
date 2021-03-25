@@ -8,11 +8,21 @@ module Juvix.Backends.Plonk.Parameterization
 where
 
 import Data.Field.Galois (GaloisField)
+import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
+import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.ErasedAnn.Prim as Prim
+import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.IR.Evaluator as Eval
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
-import Juvix.Library hiding (many, try)
+import qualified Juvix.Core.Types as Core
+import Juvix.Library hiding (many, show, try)
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Usage as Usage
+import Prelude (Show (..))
 
 check3Equal :: Eq a => NonEmpty a -> Bool
 check3Equal (x :| [y, z])
@@ -92,3 +102,128 @@ plonk =
       floatTy = \_ _ -> False, -- Circuits does not support floats
       floatVal = const Nothing
     }
+
+instance Core.CanApply (PrimTy f) where
+  arity (Application hd rest) =
+    Core.arity hd - fromIntegral (length rest)
+  arity x = 0 -- TODO: Refine if/when extending PrimTy
+
+  apply (Application fn args1) args2 =
+    Application fn (args1 <> args2)
+      |> Right
+  apply fun args =
+    Application fun args
+      |> Right
+
+data ApplyError f
+  = CompilationError CompilationError
+  | ReturnTypeNotPrimitive (ErasedAnn.Type (PrimTy f))
+
+instance Show (ApplyError f) where
+  show (CompilationError perr) = show perr
+  show (ReturnTypeNotPrimitive ty) =
+    "not a primitive type:\n\t" <> show ty
+
+arityRaw :: PrimVal f -> Natural
+arityRaw (PConst _) = 0
+arityRaw prim = notImplemented
+
+toArg App.Cont {} = Nothing
+toArg App.Return {retType, retTerm} =
+  Just
+    $ App.TermArg
+    $ App.Take
+      { usage = Usage.Omega,
+        type' = retType,
+        term = retTerm
+      }
+
+toTakes :: PrimVal' ext f -> (Take f, [Arg' ext f], Natural)
+toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
+toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
+  where
+    fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
+
+fromReturn :: Return' ext f -> PrimVal' ext f
+fromReturn = identity
+
+instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
+  type ApplyErrorExtra (PrimVal' ext f) = ApplyError f
+
+  type Arg (PrimVal' ext f) = Arg' ext f
+
+  pureArg = toArg
+
+  freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
+  boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
+
+  arity Prim.Cont {numLeft} = numLeft
+  arity Prim.Return {retTerm} = arityRaw retTerm
+
+  apply fun' args2
+    | (fun, args1, ar) <- toTakes fun' =
+      do
+        let argLen = lengthN args2
+            args = foldr NonEmpty.cons args2 args1
+        case argLen `compare` ar of
+          LT ->
+            Right $
+              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          EQ
+            | Just takes <- traverse App.argToTake args ->
+              applyProper fun takes |> first Core.Extra
+            | otherwise ->
+              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+          GT -> Left $ Core.ExtraArguments fun' args2
+  apply fun args = Left $ Core.InvalidArguments fun args
+
+applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
+applyProper fun args = notImplemented
+
+--   case compd >>= Interpreter.dummyInterpret of
+--     Right x -> do
+--       retType <- toPrimType $ ErasedAnn.type' newTerm
+--       pure $ Prim.Return {retType, retTerm = Constant x}
+--     Left err -> Left $ CompilationError err
+--   where
+--     fun' = takeToTerm fun
+--     args' = takeToTerm <$> toList args
+--     newTerm = Run.applyPrimOnArgs fun' args'
+--     -- TODO ∷ do something with the logs!?
+--     (compd, _log) = Compilation.compileExpr newTerm
+
+-- takeToTerm :: Take f -> RawTerm f
+-- takeToTerm (Prim.Take {usage, type', term}) =
+--   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
+
+-- toPrimType :: ErasedAnn.Type (PrimTy f) -> Either ApplyError (P.PrimType (PrimTy f))
+-- toPrimType ty = maybe err Right $ go ty
+--   where
+--     err = Left $ ReturnTypeNotPrimitive ty
+--     go ty = goPi ty <|> (pure <$> goPrim ty)
+--     goPi (ErasedAnn.Pi _ s t) = NonEmpty.cons <$> goPrim s <*> go t
+--     goPi _ = Nothing
+--     goPrim (ErasedAnn.PrimTy p) = Just p
+--     goPrim _ = Nothing
+
+instance Eval.HasWeak (PrimTy f) where weakBy' _ _ t = t
+
+instance Eval.HasWeak (PrimVal f) where weakBy' _ _ t = t
+
+instance
+  Monoid (IR.XVPrimTy ext (PrimTy f) primVal) =>
+  Eval.HasSubstValue ext (PrimTy f) primVal (PrimTy f)
+  where
+  substValueWith _ _ _ t = pure $ IR.VPrimTy' t mempty
+
+instance
+  Monoid (IR.XPrimTy ext (PrimTy f) primVal) =>
+  Eval.HasPatSubstTerm ext (PrimTy f) primVal (PrimTy f)
+  where
+  patSubstTerm' _ _ t = pure $ IR.PrimTy' t mempty
+
+instance
+  Monoid (IR.XPrim ext primTy (PrimVal f)) =>
+  Eval.HasPatSubstTerm ext primTy (PrimVal f) (PrimVal f)
+  where
+  patSubstTerm' _ _ t = pure $ IR.Prim' t mempty

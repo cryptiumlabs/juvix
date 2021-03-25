@@ -1,10 +1,11 @@
 {-# LANGUAGE TypeApplications #-}
+
 module Main where
 
-import qualified Juvix.Pipeline as Compile
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Pipeline as Compile
 import Options
 import Options.Applicative
 import System.Directory
@@ -109,17 +110,46 @@ run ctx opt = do
           do (liftIO $ readFile fin)
             >>= Compile.parse
             >>= liftIO . print
-        Typecheck fin (Michelson _backend) ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
-            >>= Compile.typecheck @Compile.BMichelson
-            >>= liftIO . print
-        Compile fin fout (Michelson _backend) ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
-            >>= Compile.typecheck @Compile.BMichelson
-            >>= Compile.compile @Compile.BMichelson
-            >>= Compile.writeout fout
-            >>= liftIO . print
+        Typecheck fin (Michelson backend) ->
+          typecheck fin backend
+        Typecheck fin (Plonk backend) ->
+          typecheck fin backend
+        Compile fin fout (Michelson backend) ->
+          compile fin fout backend
+        Compile fin fout (Plonk backend) ->
+          compile fin fout backend
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
+
+compile ::
+  forall b.
+  ( Compile.HasBackend b,
+    Show (Compile.Ty b),
+    Show (Compile.Val b)
+  ) =>
+  FilePath ->
+  FilePath ->
+  b ->
+  Compile.Pipeline ()
+compile fin fout _b = do
+  (liftIO $ readFile fin)
+    >>= Compile.parse
+    >>= Compile.typecheck @b
+    >>= Compile.compile @b
+    >>= Compile.writeout fout
+    >>= liftIO . print
+
+typecheck ::
+  forall b.
+  ( Compile.HasBackend b,
+    Show (Compile.Ty b),
+    Show (Compile.Val b)
+  ) =>
+  FilePath ->
+  b ->
+  Compile.Pipeline ()
+typecheck fin _b = do
+  (liftIO $ readFile fin)
+    >>= Compile.parse
+    >>= Compile.typecheck @b
+    >>= liftIO . print
