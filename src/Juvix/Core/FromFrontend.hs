@@ -52,8 +52,9 @@ transformTermIR ::
   FE.Expression ->
   m (IR.Term primTy primVal)
 transformTermIR q fe = do
-  notImplemented
+  hrToIR <$> transformTermHR q fe
 
+-- TODO: Handle this nuance
 -- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
 transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
