@@ -35,7 +35,12 @@ parsedContract file = do
   rawContract <- ByteString.readFile file
   case Parser.prettyParse rawContract of
     Left err -> writeFile (file <> ".parsed") (toS err) *> pure []
-    Right x -> pure $ extractTopLevel x
+    Right x -> do
+      -- generate/update the golden file as the parsed file 
+      writeFile (file <> ".golden") (show x)
+      -- TODO human readable version of the golden file for debugging
+      -- writeFile (file <> ".HRGolden") (prettyPrintType x)
+      pure $ extractTopLevel x
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do
