@@ -30,8 +30,8 @@ type GlobalAllV (c :: * -> Constraint) ext primTy primVal =
 type GlobalAll (c :: * -> Constraint) extV extT primTy primVal =
   ( c primTy,
     c primVal,
-    TermAll c extT primTy primVal,
-    ElimAll c extT primTy primVal,
+    TermAll c extV primTy primVal,
+    ElimAll c extV primTy primVal,
     ValueAll c extV primTy primVal,
     NeutralAll c extV primTy primVal,
     PatternAll c extT primTy primVal
