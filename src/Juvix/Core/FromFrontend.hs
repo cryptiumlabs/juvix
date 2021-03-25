@@ -41,8 +41,7 @@ paramConstant k = do
     Nothing -> throwFF $ UnsupportedConstant k
 
 transformTermIR ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -52,7 +51,8 @@ transformTermIR ::
   FE.Expression ->
   m (IR.Term primTy primVal)
 transformTermIR q fe = do
-  SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
+  hrToIR <$> transformTermHR q fe
+  -- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
 transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
 transformPatVar (IR.Global name) =
@@ -64,8 +64,7 @@ transformPatVar p = pure p
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.
 transformTermHR ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -112,8 +111,7 @@ transformTermHR q (FE.DeclarationE (FE.DeclareExpression _ e)) =
   transformTermHR q e
 
 transformApplication ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -160,8 +158,7 @@ transformApplication q (FE.App f xs) =
       | otherwise = throwFF $ WrongNumberBuiltinArgs s n xs
 
 namedArg ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -181,8 +178,7 @@ pattern NamedArgTerm x ty <-
   HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 transformSimpleLet ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -200,8 +196,7 @@ transformSimpleLet q e@(FE.LetGroup name (clause :| []) body) = do
 transformSimpleLet _ e = throwFF $ ExprUnimplemented (FE.Let e)
 
 transformSimpleLambda ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -230,8 +225,7 @@ isVarPat (FE.MatchLogic (FE.MatchName x) Nothing) =
 isVarPat p = throwFF $ PatternUnimplemented p
 
 transformArrow ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -383,8 +377,7 @@ transformSpecial q def@(Ctx.Def (Ctx.D π ty (FE.Like [] rhs :| []) _)) = do
 transformSpecial _ _ = pure Nothing
 
 transformSig ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -401,8 +394,7 @@ transformSig x def = trySpecial <||> tryNormal
     x <||> y = x >>= maybe y (pure . pure)
 
 transformNormalSig ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -434,8 +426,7 @@ conDefName :: NameSymbol.T -> NameSymbol.T
 conDefName = NameSymbol.applyBase (<> "$def")
 
 transformTypeSig ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -467,8 +458,7 @@ transformTypeSig q name dat@(FE.Typ {typeArgs, typeForm}) = do
       HR.Pi mempty (NameSymbol.fromSymbol name) (HR.Star 0) res
 
 transformConSigs ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -493,8 +483,7 @@ transformConSigs dat pfx hd =
       (sumConstructor, fromMaybe (FE.ADTLike []) sumValue)
 
 transformProduct ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -512,8 +501,7 @@ transformProduct q hd (x, prod) =
     makeSig ty = ConSig {conType = Just ty, conDef = Nothing}
 
 transformValSig ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -530,8 +518,7 @@ transformValSig q x _ _ (Just (FE.Sig _ π ty cons))
 transformValSig _ x def _ _ = throwFF $ SigRequired x def
 
 transformDef ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -550,8 +537,7 @@ transformDef x def = do
         q = NameSymbol.mod x
 
 transformNormalDef ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -573,8 +559,7 @@ transformNormalDef _ _ (Ctx.Information {}) = pure []
 transformNormalDef _ _ (Ctx.SumCon {}) = pure []
 
 transformFunction ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,
@@ -663,8 +648,7 @@ lookupSig' q x' = do
     x = Ctx.removeTopName x'
 
 transformType ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasNextPatVar m,
     HasThrowFF primTy primVal m,
@@ -691,8 +675,7 @@ transformType q name _ = do
   pure $ IR.RawGDatatype dat' : fmap IR.RawGDataCon cons
 
 transformCon ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasNextPatVar m,
     HasThrowFF primTy primVal m,
@@ -732,8 +715,7 @@ splitDataType x ty0 = go ty0
     go _ = throwFF $ InvalidDatatypeType x ty0
 
 transformConSig ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
@@ -757,8 +739,7 @@ transformConSig q _ (Just hd) (FE.ADTLike tys) =
     makeFieldName i = NameSymbol.fromText $ "$field" <> show (i :: Int)
 
 transformClause ::
-  ( Data primTy,
-    Data primVal,
+  ( 
     HasNextPatVar m,
     HasPatVars m,
     HasThrowFF primTy primVal m,

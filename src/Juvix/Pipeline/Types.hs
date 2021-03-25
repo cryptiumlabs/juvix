@@ -1,9 +1,10 @@
-module Types where
+module Juvix.Pipeline.Types where
 
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Types as Core
+import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library hiding (log)
 
 -- type of the exec result
@@ -75,6 +76,3 @@ newtype EnvExec primTy primVal compErr a
   deriving
     (HasThrow "error" (Core.PipelineError primTy primVal compErr))
     via MonadError (EnvExecAlias primTy primVal compErr)
-
-data SomeBackend where
-  SomeBackend :: forall primTy primVal. Core.Parameterisation primTy primVal -> SomeBackend

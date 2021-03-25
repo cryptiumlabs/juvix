@@ -3,7 +3,6 @@
 module Juvix.Core.Pipeline where
 
 import qualified Data.HashMap.Strict as HM
-import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
@@ -15,27 +14,19 @@ import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-import qualified Michelson.TypeCheck as Michelson
-import qualified Michelson.Untyped as Michelson
 
-type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
+type RawTerm ty val = IR.Term ty val 
 
-type RawMichelsonTerm = RawMichelson IR.Term
+type RawElim ty val = IR.Elim ty val 
 
-type RawMichelsonElim = RawMichelson IR.Elim
+type Term ty val = HR.Term ty val
 
-type MichelsonIR f = f Michelson.PrimTy Michelson.PrimValIR
-
-type MichelsonHR f = f Michelson.PrimTy Michelson.PrimValHR
-
-type MichelsonTerm = MichelsonHR HR.Term
-
-type MichelsonComp res =
+type Comp ty val res =
   forall m.
-  MichelsonCompConstraints m =>
-  RawMichelsonTerm ->
+  CompConstraints ty val res m =>
+  RawTerm ty val ->
   Usage.T ->
-  RawMichelsonTerm ->
+  RawTerm ty val ->
   m res
 
 type CompConstraints' primTy primVal compErr m =
@@ -55,9 +46,6 @@ type CompConstraints primTy primVal compErr m =
     TC.PrimPatSubstTerm primTy primVal,
     IR.HasWeak primVal
   )
-
-type MichelsonCompConstraints m =
-  CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompErr m
 
 constMapPrim :: Erasure.MapPrim a a ty val
 constMapPrim _ x = Right x
@@ -82,114 +70,11 @@ lookupMapPrim ns (App.Cont f xs n) =
         $ Erasure.InternalError
         $ "unknown de Bruijn index " <> show i
 
-eraseGlobals ::
-  MichelsonCompConstraints m =>
-  m (Erasure.Globals Michelson.PrimTy Michelson.PrimValHR)
-eraseGlobals = do
-  globals <- ask @"globals"
-  res <- for (HM.toList globals) \(key, value) ->
-    Erasure.eraseGlobal value
-      |> Erasure.exec constMapPrim lookupMapPrim
-      |> either (throw @"error" . Types.ErasureError) (pure . (key,))
-  pure (HM.fromList res)
-
-coreToAnn ::
-  MichelsonComp (ErasedAnn.AnnTerm Michelson.PrimTy Michelson.PrimValHR)
+coreToAnn :: Comp ty val (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
 coreToAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty
   pure $ ErasedAnn.convertTerm term usage
-
-coreToMichelson :: MichelsonComp (Either Michelson.CompErr Michelson.EmptyInstr)
-coreToMichelson term usage ty = do
-  ann <- coreToAnn term usage ty
-  pure $ fst $ Michelson.compileExpr $ toRaw ann
-
-coreToMichelsonContract ::
-  MichelsonComp (Either Michelson.CompErr (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
-coreToMichelsonContract term usage ty = do
-  ann <- coreToAnn term usage ty
-  pure $ fst $ Michelson.compileContract $ toRaw ann
-
-{-# DEPRECATED toRaw "TODO: use typed terms in michelson backend" #-}
-toRaw :: Michelson.Term -> Michelson.RawTerm
-toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
-  where
-    toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x
-    toRaw1 (ErasedAnn.Prim p) = primToRaw p
-    toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
-    toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
-    toRaw1 ErasedAnn.UnitM = ErasedAnn.UnitM
-    toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
-    primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
-    primToRaw (App.Cont {fun, args}) =
-      ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
-    takeToTerm (App.Take {usage, type', term}) =
-      ErasedAnn.Ann
-        { usage,
-          type' = Prim.fromPrimType type',
-          term = ErasedAnn.Prim term
-        }
-    argsToTerms ts xs = go (toList ts) xs
-      where
-        go _ [] = []
-        go (_ : ts) (App.TermArg a : as) =
-          takeToTerm a : go ts as
-        go (t : ts) (App.VarArg x : as) =
-          varTerm t x : go ts as
-        go [] (_ : _) =
-          -- a well typed application can't have more arguments than arrows
-          undefined
-        varTerm t x =
-          ErasedAnn.Ann
-            { usage = Usage.Omega, -- FIXME should usages even exist after erasure?
-              type' = ErasedAnn.PrimTy t,
-              term = ErasedAnn.Var x
-            }
-
--- For interaction net evaluation, includes elementary affine check
--- , requires MonadIO for Z3.
--- FIXME
--- typecheckAffineErase ::
---   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
---     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
---     HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
---     HasReader "globals" (IR.Globals primTy primVal) m,
---     MonadIO m,
---     Eq primTy,
---     Eq primVal,
---     Show primTy,
---     Show primVal,
---     Show compErr
---   ) =>
---   HR.Term primTy primVal ->
---   Usage.T ->
---   HR.Term primTy primVal ->
---   m (Types.TermAssignment primTy primVal compErr)
--- typecheckAffineErase term usage ty = do
---   -- First typecheck & generate erased core.
---   (Types.WithType termAssign _type') <- typecheckErase term usage ty
---   -- Fetch the parameterisation, needed for EAC inference
---   -- TODO ∷ get rid of this dependency.
---   parameterisation <- ask @"parameterisation"
---   -- Then invoke Z3 to check elementary-affine-ness.
---   start <- liftIO unixTime
---   result <- liftIO (EAC.validEal parameterisation termAssign)
---   end <- liftIO unixTime
---   tell @"log" [Types.LogRanZ3 (end - start)]
---   -- Return accordingly.
---   case result of
---     Right (eac, _) -> do
---       let erasedEac = EAC.erase eac
---       unless
---         (erasedEac == Types.term termAssign)
---         ( throw @"error"
---             ( Types.InternalInconsistencyError
---                 "erased affine core should always match erased core"
---             )
---         )
---       pure termAssign
---     Left err -> throw @"error" (Types.EACError err)
 
 -- For standard evaluation, no elementary affine check, no MonadIO required.
 typecheckEval ::
@@ -248,3 +133,38 @@ typecheckErase term usage ty = do
         Right res -> pure res
         Left err -> throw @"error" (Types.ErasureError err)
     Left err -> throw @"error" (Types.TypecheckerError err)
+
+toRaw :: ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val) -> ErasedAnn.AnnTerm ty val
+toRaw t@(ErasedAnn.Ann {term}) = t {ErasedAnn.term = toRaw1 term}
+  where
+    toRaw1 (ErasedAnn.Var x) = ErasedAnn.Var x
+    toRaw1 (ErasedAnn.Prim p) = primToRaw p
+    toRaw1 t@(ErasedAnn.LamM {body}) = t {ErasedAnn.body = toRaw body}
+    toRaw1 (ErasedAnn.PairM l r) = ErasedAnn.PairM (toRaw l) (toRaw r)
+    toRaw1 ErasedAnn.UnitM = ErasedAnn.UnitM
+    toRaw1 (ErasedAnn.AppM f xs) = ErasedAnn.AppM (toRaw f) (toRaw <$> xs)
+    primToRaw (App.Return {retTerm}) = ErasedAnn.Prim retTerm
+    primToRaw (App.Cont {fun, args}) =
+      ErasedAnn.AppM (takeToTerm fun) (argsToTerms (App.type' fun) args)
+    takeToTerm (App.Take {usage, type', term}) =
+      ErasedAnn.Ann
+        { usage,
+          type' = Prim.fromPrimType type',
+          term = ErasedAnn.Prim term
+        }
+    argsToTerms ts xs = go (toList ts) xs
+      where
+        go _ [] = []
+        go (_ : ts) (App.TermArg a : as) =
+          takeToTerm a : go ts as
+        go (t : ts) (App.VarArg x : as) =
+          varTerm t x : go ts as
+        go [] (_ : _) =
+          -- a well typed application can't have more arguments than arrows
+          undefined
+        varTerm t x =
+          ErasedAnn.Ann
+            { usage = Usage.Omega, -- FIXME should usages even exist after erasure?
+              type' = ErasedAnn.PrimTy t,
+              term = ErasedAnn.Var x
+            }

@@ -147,14 +147,16 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - aeson
+      - ansi-wl-pprint
+      - elliptic-curve
+      - galois-field
+      - gitrev
+      - haskeline
       - juvix
       - optparse-applicative
-      - ansi-wl-pprint
       - raw-strings-qq
       - yaml
-      - aeson
-      - haskeline
-      - gitrev
 
 tests:
   juvix-test:

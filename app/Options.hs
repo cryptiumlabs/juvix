@@ -1,6 +1,12 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Options where
 
+import Data.Curve.Weierstrass.BLS12381 
+import Data.Data
+import Data.Field.Galois
 import Juvix.Library hiding (option)
+import Juvix.Pipeline
 import Options.Applicative
 
 data Context
@@ -16,10 +22,11 @@ data Options
       }
 
 data Backend
-  = Unit
-  | Naturals
-  | Michelson
+  = Michelson BMichelson
+  -- | Plonk (BPlonk Fr)
   deriving (Eq, Show)
+
+-- deriving instance Data Fr
 
 data Command
   = Version
@@ -103,10 +110,9 @@ backendOptions =
   option
     ( maybeReader
         ( \case
-            "unit" -> pure Unit
-            "naturals" -> pure Naturals
-            "michelson" -> pure Michelson
+            -- "plonk" -> pure $ Plonk (BPlonk)
+            "michelson" -> pure $ Michelson (BMichelson)
             _ -> Nothing
         )
     )
-    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> value Michelson <> showDefault)
+    (long "backend" <> short 'b' <> metavar "BACKEND" <> help "Target backend" <> showDefault)
