@@ -117,4 +117,4 @@ type instance PP.Ann T = ()
 instance PP.PrettySyntax T
 
 instance PP.PrettyText T where
-  prettyT = PP.text . unintern . toSymbol
+  prettyT = PP.text . textify . toSymbol

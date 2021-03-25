@@ -13,6 +13,8 @@ module Juvix.Library.PrettyPrint
     pretty0,
     withPrec,
     show,
+    string,
+    text,
     -- * Extensions
     noAnn,
     annotate',
@@ -42,6 +44,7 @@ module Juvix.Library.PrettyPrint
 where
 
 import Juvix.Library hiding (show)
+import Data.Text (unpack)
 import qualified Text.PrettyPrint.Compact as Base
 import Text.PrettyPrint.Compact hiding
   ( backslash,
@@ -65,9 +68,11 @@ import Text.PrettyPrint.Compact hiding
     braces,
     brackets,
     angles,
-    punctuate
+    punctuate,
+    text,
+    string
   )
-import Text.PrettyPrint.Compact.Core
+import Text.PrettyPrint.Compact.Core (groupingBy)
 import qualified Text.Show as Show
 import Prelude (String)
 
@@ -103,7 +108,7 @@ class Monoid (Ann a) => PrettyText a where
   -- | Pretty-print a value as human-readable text.
   prettyT :: a -> Doc (Ann a)
   default prettyT :: Show a => a -> Doc (Ann a)
-  prettyT = text . Show.show
+  prettyT = string . Show.show
 
 runPretty :: Prec -> (forall m. PrecReader m => m a) -> a
 runPretty prec m = let MonadReader x = m in runReader x prec
@@ -123,7 +128,13 @@ withPrec :: PrecReader m => Prec -> m a -> m a
 withPrec p = local @"prec" \_ -> p
 
 show :: (Monoid ann, Show a) => a -> Doc ann
-show = text . Show.show
+show = string . Show.show
+
+string :: Monoid ann => String -> Doc ann
+string = Base.text
+
+text :: Monoid ann => Text -> Doc ann
+text = string . unpack
 
 noAnn :: Monoid ann2 => Doc ann1 -> Doc ann2
 noAnn d = mempty <$ d

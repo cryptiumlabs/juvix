@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Juvix.Backends.Michelson.Compilation.Pretty
   ( TyAnn' (..),
     TyAnn,
@@ -9,25 +11,15 @@ module Juvix.Backends.Michelson.Compilation.Pretty
 where
 
 import Data.ByteString (unpack)
-import Data.String (String)
 import Juvix.Backends.Michelson.Compilation.Types
-import qualified Juvix.Core.Application as App
-import qualified Juvix.Core.ErasedAnn.Types as CoreErased
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.HR.Pretty as HR
-import qualified Juvix.Core.Parameterisation as P
-import Juvix.Library hiding (Option, Type, const)
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import Juvix.Library hiding (Option, Type, const)
 import qualified Juvix.Library.PrettyPrint as PP
-import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Text as M
-import qualified Michelson.TypeCheck as M
-import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Instr as Instr
-import qualified Michelson.Untyped.Type as M
 import Numeric (showHex)
-import Text.Show (showString)
 
 data TyAnn'
   = TAPunct
@@ -46,6 +38,7 @@ tycon = PP.annotate' TAPrimTy
 ptycon :: Applicative f => TDoc -> f TDoc
 ptycon = pure . tycon
 
+appT :: (PP.PrecReader m, Foldable t) => m TDoc -> t (m TDoc) -> m TDoc
 appT = PP.app' TAPunct
 
 instance PP.PrettySyntax PrimTy where
@@ -74,7 +67,7 @@ instance PP.PrettySyntax M.Type where
     M.TSet ty -> appT (ptycon "set") [PP.pretty' ty]
     M.TOperation -> ptycon "operation"
     M.TContract ty -> appT (ptycon "contract") [PP.pretty' ty]
-    M.TPair _ _ a b -> appT (ptycon "pair") [PP.pretty' a, PP.pretty' b]
+    M.TPair _ _ _ _ a b -> appT (ptycon "pair") [PP.pretty' a, PP.pretty' b]
     M.TOr _ _ a b -> appT (ptycon "or") [PP.pretty' a, PP.pretty' b]
     M.TLambda a b -> appT (ptycon "lambda") [PP.pretty' a, PP.pretty' b]
     M.TMap a b -> appT (ptycon "map") [PP.pretty' a, PP.pretty' b]
@@ -100,6 +93,7 @@ data ValAnn'
   | VAConst
   | VAPrimTy
   | VAKeyword
+  | VAName
 
 type ValAnn = Last ValAnn'
 
@@ -143,6 +137,7 @@ pconst = pure . const
 pconsts :: (Applicative f, Show a) => a -> f VDoc
 pconsts = pconst . PP.show
 
+appV :: (PP.PrecReader m, Foldable t) => m VDoc -> t (m VDoc) -> m VDoc
 appV = PP.app' VAPunct
 
 unders :: PP.PrecReader m => Int -> m VDoc -> m VDoc
@@ -380,7 +375,7 @@ prettyContract ::
   (PP.PrettySyntax op, PP.Ann op ~ ValAnn, PP.PrecReader m) =>
   M.Contract' op ->
   m VDoc
-prettyContract (M.Contract (M.ParameterType param _) storage code) =
+prettyContract (M.Contract (M.ParameterType param _) storage code _) =
   PP.vcatA
     [ PP.sepA [pkeyword "parameter", PP.hcatA [prettyTV param, ppunct ";"]],
       PP.sepA [pkeyword "storage", PP.hcatA [prettyTV storage, ppunct ";"]],
@@ -408,3 +403,55 @@ instance HR.ToPPAnn ValAnn where
     VAConst -> HR.APrimVal
     VAPrimTy -> HR.APrimTy
     VAKeyword -> HR.AValCon
+    VAName -> HR.AName
+
+
+type instance PP.Ann CompilationError = ValAnn
+
+instance PP.PrettyText CompilationError where
+  prettyT = \case
+    NotYetImplemented msg ->
+      PP.sep ["Not yet implemented:", PP.text msg]
+    InvalidInputType msg ->
+      PP.sep ["Invalid input type:", PP.text msg]
+    InternalFault msg ->
+      PP.sep ["Internal fault:", PP.text msg]
+    DidNotTypecheck i err ->
+      -- FIXME no highlighting in type error unless i reimplement its printer
+      -- from scratch :/
+      PP.sepIndent'
+        [ (False, "Michelson type error:"),
+          (True, ppMorleyErr err),
+          (False, "When checking the instruction"),
+          (True, PP.pretty0 i)
+        ]
+    DidNotTypecheckAfterOptimisation i err ->
+      -- FIXME no highlighting in type error unless i reimplement its printer
+      -- from scratch :/
+      PP.sepIndent'
+        [ (False, "Michelson type error after optimisation:"),
+          (True, ppMorleyErr err),
+          (False, "When checking the instruction"),
+          (True, PP.pretty0 i)
+        ]
+    NotEnoughArguments ->
+      -- FIXME more descriptive?
+      "Not enough arguments"
+    NotInStack x -> PP.sep ["Symbol", ppName x, "not found on the stack"]
+    NotEnoughStackSpace ->
+      "Not enough stack space"
+    OpInMichelsonValue ->
+      -- FIXME what does this mean?
+      "Op in michelson value"
+    AppliedConstantToArgument ->
+      -- FIXME which constant & argument?
+      "Applied a constant to an argument"
+    TooManyArguments ->
+      -- FIXME include expression
+      "Too many arguments"
+
+ppMorleyErr :: (Monoid ann, Show a) => a -> PP.Doc ann
+ppMorleyErr = PP.vcat . map PP.text . lines . show
+
+ppName :: NameSymbol.T -> VDoc
+ppName = PP.annotate' VAName . PP.noAnn . PP.pretty0

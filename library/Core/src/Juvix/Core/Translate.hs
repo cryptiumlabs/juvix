@@ -1,7 +1,7 @@
 module Juvix.Core.Translate where
 
-import qualified Juvix.Core.HR as HR
-import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.HR.Types as HR
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Utility
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol

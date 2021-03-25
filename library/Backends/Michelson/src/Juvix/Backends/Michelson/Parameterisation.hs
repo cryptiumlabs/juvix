@@ -23,14 +23,16 @@ import qualified Juvix.Backends.Michelson.DSL.Interpret as Interpreter
 import qualified Juvix.Backends.Michelson.DSL.Untyped as DSLU
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
-import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
+import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (many, try)
+import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -157,6 +159,17 @@ instance Show ApplyError where
   show (CompilationError perr) = Prelude.show perr
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
+
+type instance PP.Ann ApplyError = HR.PPAnn
+
+instance PP.PrettyText ApplyError where
+  prettyT = \case
+    CompilationError e -> HR.toPPAnn <$> PP.prettyT e
+    ReturnTypeNotPrimitive ty ->
+      PP.sepIndent'
+        [ (False, "Not a primitive type:"),
+          (True, PP.pretty0 ty)
+        ]
 
 instance Core.CanApply PrimTy where
   arity (Application hd rest) =
