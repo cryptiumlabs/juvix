@@ -5,12 +5,11 @@ import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
-import Juvix.Frontend.Types.Base (Header (NoHeader), TopLevel)
+import Juvix.Frontend.Types.Base (Header (NoHeader))
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
-import Data.Text.Lazy (toStrict)
 import Juvix.Frontend.Sexp (transTopLevel)
 
 
