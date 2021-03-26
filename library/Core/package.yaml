@@ -64,7 +64,6 @@ default-extensions:
   - BlockArguments
 
 ghc-options:
-  - -Werror
   - -ferror-spans
   - -Wall
   - -fno-warn-orphans
