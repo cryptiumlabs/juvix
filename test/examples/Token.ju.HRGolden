@@ -1,0 +1,1223 @@
+NoHeader
+    [1m[96m[[0m ModuleOpen
+        [1m[93m([0m Open [35m([0m [1m[97m"[0m[1m[94mPrelude[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m [1m[93m)[0m
+    [1m[96m,[0m Module
+        [1m[93m([0m Mod
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs = [33m[[0m[33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Function
+                        [1m[35m([0m Func
+                            [1m[36m([0m Like
+                                [1m[33m{[0m functionLikedName = [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m
+                                [1m[33m,[0m functionLikeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m functionLikeBody = Body
+                                    [95m([0m Infix
+                                        [96m([0m Inf
+                                            [93m{[0m infixLeft = Name [1m[95m([0m [1m[97m"[0m[1m[94ms[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m
+                                            [93m,[0m infixRight = RefinedE
+                                                [1m[95m([0m TypeRefine
+                                                    [1m[96m{[0m typeRefineName = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mString[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m typeRefineRefinement = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Application
+                                                                [36m([0m App
+                                                                    [33m{[0m applicationName = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mString[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mlength[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m applicationArgs = Name [1m[35m([0m [1m[97m"[0m[1m[94ms[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m :| [1m[35m[[0m[1m[35m][0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m==[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Constant
+                                                                [36m([0m Number [33m([0m Integer' [1m[92m36[0m [33m)[0m [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m)[0m :|
+                        [1m[35m[[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mStorage[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Product
+                                        [96m([0m Record
+                                            [93m([0m Record''
+                                                [1m[95m{[0m recordFields = NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mtotal-supply[0m[1m[97m"[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = RefinedE
+                                                            [35m([0m TypeRefine
+                                                                [36m{[0m typeRefineName = Name
+                                                                    [33m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [1m[35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[35m][0m [33m)[0m
+                                                                [36m,[0m typeRefineRefinement = Infix
+                                                                    [33m([0m Inf
+                                                                        [1m[35m{[0m infixLeft = Name
+                                                                            [1m[36m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [1m[33m[[0m [1m[97m"[0m[1m[94mmeasure-value[0m[1m[97m"[0m [1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m,[0m infixOp = [1m[97m"[0m[1m[94m==[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m
+                                                                        [1m[35m,[0m infixRight = Name [1m[36m([0m [1m[97m"[0m[1m[94mtotal-supply[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m}[0m
+                                                                    [33m)[0m
+                                                                [36m}[0m
+                                                            [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m,[0m recordFamilySignature = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Signature
+                            [1m[36m([0m Sig
+                                [1m[33m{[0m signatureName = [1m[97m"[0m[1m[94mempty-storage[0m[1m[97m"[0m
+                                [1m[33m,[0m signatureUsage = Nothing
+                                [1m[33m,[0m signatureArrowType = Name [95m([0m [1m[97m"[0m[1m[94mStorage[0m[1m[97m"[0m :| [96m[[0m[96m][0m [95m)[0m
+                                [1m[33m,[0m signatureConstraints = [95m[[0m[95m][0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Function
+                            [1m[36m([0m Func
+                                [1m[33m([0m Like
+                                    [95m{[0m functionLikedName = [1m[97m"[0m[1m[94mempty-storage[0m[1m[97m"[0m
+                                    [95m,[0m functionLikeArgs = [96m[[0m[96m][0m
+                                    [95m,[0m functionLikeBody = Body
+                                        [96m([0m ExpRecord
+                                            [93m([0m ExpressionRecord
+                                                [1m[95m{[0m expRecordFields = NonPunned [1m[96m([0m [1m[97m"[0m[1m[94mtotal-supply[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                    [1m[96m([0m Constant
+                                                        [1m[93m([0m Number [35m([0m Integer' [1m[92m0[0m [35m)[0m [1m[93m)[0m
+                                                    [1m[96m)[0m :|
+                                                    [1m[96m[[0m NonPunned [1m[93m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                        [1m[93m([0m Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mempty[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m][0m
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Product
+                                        [96m([0m Record
+                                            [93m([0m Record''
+                                                [1m[95m{[0m recordFields = NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name [1m[93m([0m [1m[97m"[0m[1m[94mStorage[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mstorage[0m[1m[97m"[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mversion[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mString[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mname[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mChar[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94msymbol[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name [35m([0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mowner[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m,[0m recordFamilySignature = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m][0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Module
+        [1m[93m([0m Mod
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs = [33m[[0m[33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Type
+                        [1m[35m([0m Typ
+                            [1m[36m{[0m typeUsage = Nothing
+                            [1m[36m,[0m typeName' = [1m[97m"[0m[1m[94mTransfer[0m[1m[97m"[0m
+                            [1m[36m,[0m typeArgs = [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m typeForm = NonArrowed
+                                [1m[33m{[0m dataAdt = Product
+                                    [95m([0m Record
+                                        [96m([0m Record''
+                                            [93m{[0m recordFields = NameType'
+                                                [1m[95m{[0m nameTypeSignature = Name
+                                                    [1m[96m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[93m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mfrom-account[0m[1m[97m"[0m
+                                                [1m[95m}[0m :|
+                                                [1m[95m[[0m NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mto-account[0m[1m[97m"[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m,[0m NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mammount[0m[1m[97m"[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m][0m
+                                            [93m,[0m recordFamilySignature = Nothing
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m}[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m :|
+                        [1m[35m[[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mMint[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Product
+                                        [96m([0m Record
+                                            [93m([0m Record''
+                                                [1m[95m{[0m recordFields = NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mmint-amount[0m[1m[97m"[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mmint-to-account[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m,[0m recordFamilySignature = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mBurn[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Product
+                                        [96m([0m Record
+                                            [93m([0m Record''
+                                                [1m[95m{[0m recordFields = NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mburn-amount[0m[1m[97m"[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mburn-from-account[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m,[0m recordFamilySignature = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mData[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Sum
+                                        [96m([0m S
+                                            [93m{[0m sumConstructor = [1m[97m"[0m[1m[94mTransfer[0m[1m[97m"[0m
+                                            [93m,[0m sumValue = Just
+                                                [1m[95m([0m Arrow
+                                                    [1m[96m([0m Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Name [36m([0m [1m[97m"[0m[1m[94mTransfer[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Name [36m([0m [1m[97m"[0m[1m[94mData[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m :|
+                                            [93m[[0m S
+                                                [1m[95m{[0m sumConstructor = [1m[97m"[0m[1m[94mMint[0m[1m[97m"[0m
+                                                [1m[95m,[0m sumValue = Just
+                                                    [1m[96m([0m Arrow
+                                                        [1m[93m([0m Infix
+                                                            [35m([0m Inf
+                                                                [36m{[0m infixLeft = Name [33m([0m [1m[97m"[0m[1m[94mMint[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m
+                                                                [36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [33m[[0m[33m][0m
+                                                                [36m,[0m infixRight = Name [33m([0m [1m[97m"[0m[1m[94mData[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m
+                                                                [36m}[0m
+                                                            [35m)[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m}[0m
+                                            [93m,[0m S
+                                                [1m[95m{[0m sumConstructor = [1m[97m"[0m[1m[94mBurn[0m[1m[97m"[0m
+                                                [1m[95m,[0m sumValue = Just
+                                                    [1m[96m([0m Arrow
+                                                        [1m[93m([0m Infix
+                                                            [35m([0m Inf
+                                                                [36m{[0m infixLeft = Name [33m([0m [1m[97m"[0m[1m[94mBurn[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m
+                                                                [36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [33m[[0m[33m][0m
+                                                                [36m,[0m infixRight = Name [33m([0m [1m[97m"[0m[1m[94mData[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m
+                                                                [36m}[0m
+                                                            [35m)[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m}[0m
+                                            [93m][0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Type
+                            [1m[36m([0m Typ
+                                [1m[33m{[0m typeUsage = Nothing
+                                [1m[33m,[0m typeName' = [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m
+                                [1m[33m,[0m typeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m typeForm = NonArrowed
+                                    [95m{[0m dataAdt = Product
+                                        [96m([0m Record
+                                            [93m([0m Record''
+                                                [1m[95m{[0m recordFields = NameType'
+                                                    [1m[96m{[0m nameTypeSignature = Name [1m[93m([0m [1m[97m"[0m[1m[94mData[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mdata[0m[1m[97m"[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m NameType'
+                                                        [1m[93m{[0m nameTypeSignature = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m nameTypeName = Concrete [1m[97m"[0m[1m[94mauthorized-account[0m[1m[97m"[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m,[0m recordFamilySignature = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m][0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Signature
+        [1m[93m([0m Sig
+            [35m{[0m signatureName = [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m
+            [35m,[0m signatureUsage = Nothing
+            [35m,[0m signatureArrowType = Infix
+                [36m([0m Inf
+                    [33m{[0m infixLeft = Name
+                        [1m[35m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                    [33m,[0m infixRight = Infix
+                        [1m[35m([0m Inf
+                            [1m[36m{[0m infixLeft = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m infixRight = Infix
+                                [1m[33m([0m Inf
+                                    [95m{[0m infixLeft = Name [96m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                    [95m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [96m[[0m[96m][0m
+                                    [95m,[0m infixRight = Name [96m([0m [1m[97m"[0m[1m[94mBool[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m}[0m
+                [36m)[0m
+            [35m,[0m signatureConstraints = [36m[[0m[36m][0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Function
+        [1m[93m([0m Func
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs =
+                    [33m[[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mto-transfer[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Match
+                        [1m[35m([0m Match''
+                            [1m[36m{[0m matchOn = Application
+                                [1m[33m([0m App
+                                    [95m{[0m applicationName = Name
+                                        [96m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mselect[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                    [95m,[0m applicationArgs = Name [96m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m :|
+                                        [96m[[0m Name [93m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m [96m][0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m,[0m matchBindigns = MatchL
+                                [1m[33m{[0m matchLPattern = MatchLogic
+                                    [95m{[0m matchLogicContents = MatchCon [96m([0m [1m[97m"[0m[1m[94mJust[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                        [96m[[0m MatchLogic
+                                            [93m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mn[0m[1m[97m"[0m
+                                            [93m,[0m matchLogicNamed = Nothing
+                                            [93m}[0m
+                                        [96m][0m
+                                    [95m,[0m matchLogicNamed = Nothing
+                                    [95m}[0m
+                                [1m[33m,[0m matchLBody = Infix
+                                    [95m([0m Inf
+                                        [96m{[0m infixLeft = Name [93m([0m [1m[97m"[0m[1m[94mto-transfer[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m
+                                        [96m,[0m infixOp = [1m[97m"[0m[1m[94m<=[0m[1m[97m"[0m :| [93m[[0m[93m][0m
+                                        [96m,[0m infixRight = Name [93m([0m [1m[97m"[0m[1m[94mn[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m
+                                        [96m}[0m
+                                    [95m)[0m
+                                [1m[33m}[0m :|
+                                [1m[33m[[0m MatchL
+                                    [95m{[0m matchLPattern = MatchLogic
+                                        [96m{[0m matchLogicContents = MatchCon [93m([0m [1m[97m"[0m[1m[94mNothing[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m [93m[[0m[93m][0m
+                                        [96m,[0m matchLogicNamed = Nothing
+                                        [96m}[0m
+                                    [95m,[0m matchLBody = Name [96m([0m [1m[97m"[0m[1m[94mFalse[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                    [95m}[0m
+                                [1m[33m][0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Signature
+        [1m[93m([0m Sig
+            [35m{[0m signatureName = [1m[97m"[0m[1m[94maccount-sub[0m[1m[97m"[0m
+            [35m,[0m signatureUsage = Nothing
+            [35m,[0m signatureArrowType = Infix
+                [36m([0m Inf
+                    [33m{[0m infixLeft = Name [1m[35m([0m [1m[97m"[0m[1m[94macc[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                    [33m,[0m infixRight = Infix
+                        [1m[35m([0m Inf
+                            [1m[36m{[0m infixLeft = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m infixRight = Infix
+                                [1m[33m([0m Inf
+                                    [95m{[0m infixLeft = Name [96m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                    [95m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [96m[[0m[96m][0m
+                                    [95m,[0m infixRight = Infix
+                                        [96m([0m Inf
+                                            [93m{[0m infixLeft = Name
+                                                [1m[95m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[96m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m
+                                            [93m,[0m infixRight = Infix
+                                                [1m[95m([0m Inf
+                                                    [1m[96m{[0m infixLeft = Name [1m[93m([0m [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m
+                                                    [1m[96m,[0m infixRight = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = RefinedE
+                                                                [36m([0m TypeRefine
+                                                                    [33m{[0m typeRefineName = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m typeRefineRefinement = Application
+                                                                        [1m[35m([0m App
+                                                                            [1m[36m{[0m applicationName = Name [1m[33m([0m [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m :| [95m[[0m[95m][0m [1m[33m)[0m
+                                                                            [1m[36m,[0m applicationArgs = Name [1m[33m([0m [1m[97m"[0m[1m[94macc[0m[1m[97m"[0m :| [95m[[0m[95m][0m [1m[33m)[0m :|
+                                                                                [1m[33m[[0m Name [95m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [96m[[0m[96m][0m [95m)[0m
+                                                                                [1m[33m,[0m Name [95m([0m [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m :| [96m[[0m[96m][0m [95m)[0m
+                                                                                [1m[33m][0m
+                                                                            [1m[36m}[0m
+                                                                        [1m[35m)[0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Name
+                                                                [36m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [33m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [33m][0m [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m}[0m
+                [36m)[0m
+            [35m,[0m signatureConstraints = [36m[[0m[36m][0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Function
+        [1m[93m([0m Func
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94maccount-sub[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs =
+                    [33m[[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mnumber[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Match
+                        [1m[35m([0m Match''
+                            [1m[36m{[0m matchOn = Application
+                                [1m[33m([0m App
+                                    [95m{[0m applicationName = Name
+                                        [96m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mselect[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                    [95m,[0m applicationArgs = Name [96m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m :|
+                                        [96m[[0m Name [93m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m [96m][0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m,[0m matchBindigns = MatchL
+                                [1m[33m{[0m matchLPattern = MatchLogic
+                                    [95m{[0m matchLogicContents = MatchCon [96m([0m [1m[97m"[0m[1m[94mJust[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                        [96m[[0m MatchLogic
+                                            [93m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mbalance[0m[1m[97m"[0m
+                                            [93m,[0m matchLogicNamed = Nothing
+                                            [93m}[0m
+                                        [96m][0m
+                                    [95m,[0m matchLogicNamed = Nothing
+                                    [95m}[0m
+                                [1m[33m,[0m matchLBody = Application
+                                    [95m([0m App
+                                        [96m{[0m applicationName = Name
+                                            [93m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [1m[95m[[0m [1m[97m"[0m[1m[94mput[0m[1m[97m"[0m [1m[95m][0m [93m)[0m
+                                        [96m,[0m applicationArgs = Name [93m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m :|
+                                            [93m[[0m Name [1m[95m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m Parened
+                                                [1m[95m([0m Infix
+                                                    [1m[96m([0m Inf
+                                                        [1m[93m{[0m infixLeft = Name [35m([0m [1m[97m"[0m[1m[94mbalance[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m,[0m infixOp = [1m[97m"[0m[1m[94m-[0m[1m[97m"[0m :| [35m[[0m[35m][0m
+                                                        [1m[93m,[0m infixRight = Name [35m([0m [1m[97m"[0m[1m[94mnumber[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m)[0m
+                                            [93m][0m
+                                        [96m}[0m
+                                    [95m)[0m
+                                [1m[33m}[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Signature
+        [1m[93m([0m Sig
+            [35m{[0m signatureName = [1m[97m"[0m[1m[94maccount-add[0m[1m[97m"[0m
+            [35m,[0m signatureUsage = Nothing
+            [35m,[0m signatureArrowType = Infix
+                [36m([0m Inf
+                    [33m{[0m infixLeft = Name
+                        [1m[35m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                    [33m,[0m infixRight = Infix
+                        [1m[35m([0m Inf
+                            [1m[36m{[0m infixLeft = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m infixRight = Infix
+                                [1m[33m([0m Inf
+                                    [95m{[0m infixLeft = Name
+                                        [96m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                    [95m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [96m[[0m[96m][0m
+                                    [95m,[0m infixRight = Name
+                                        [96m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m}[0m
+                [36m)[0m
+            [35m,[0m signatureConstraints = [36m[[0m[36m][0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Function
+        [1m[93m([0m Func
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94maccount-add[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs =
+                    [33m[[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mnumber[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Application
+                        [1m[35m([0m App
+                            [1m[36m{[0m applicationName = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mAccounts[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mupdate[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m applicationArgs = Name [1m[33m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [95m[[0m[95m][0m [1m[33m)[0m :|
+                                [1m[33m[[0m Parened
+                                    [95m([0m Application
+                                        [96m([0m App
+                                            [93m{[0m applicationName = Name [1m[95m([0m [1m[97m"[0m[1m[94m+[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m applicationArgs = Name [1m[95m([0m [1m[97m"[0m[1m[94mnumber[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m :| [1m[95m[[0m[1m[95m][0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m,[0m Name [95m([0m [1m[97m"[0m[1m[94madd[0m[1m[97m"[0m :| [96m[[0m[96m][0m [95m)[0m
+                                [1m[33m][0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Signature
+        [1m[93m([0m Sig
+            [35m{[0m signatureName = [1m[97m"[0m[1m[94mtransfer-stor[0m[1m[97m"[0m
+            [35m,[0m signatureUsage = Nothing
+            [35m,[0m signatureArrowType = Infix
+                [36m([0m Inf
+                    [33m{[0m infixLeft = Name [1m[35m([0m [1m[97m"[0m[1m[94mstor[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                    [33m,[0m infixRight = Infix
+                        [1m[35m([0m Inf
+                            [1m[36m{[0m infixLeft = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mStorage[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m infixRight = Infix
+                                [1m[33m([0m Inf
+                                    [95m{[0m infixLeft = Name [96m([0m [1m[97m"[0m[1m[94mfrom[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                    [95m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [96m[[0m[96m][0m
+                                    [95m,[0m infixRight = Infix
+                                        [96m([0m Inf
+                                            [93m{[0m infixLeft = Name
+                                                [1m[95m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[96m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m
+                                            [93m,[0m infixRight = Infix
+                                                [1m[95m([0m Inf
+                                                    [1m[96m{[0m infixLeft = Name [1m[93m([0m [1m[97m"[0m[1m[94mto[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m
+                                                    [1m[96m,[0m infixRight = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Name
+                                                                [36m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [33m[[0m [1m[97m"[0m[1m[94mAddress[0m[1m[97m"[0m [33m][0m [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Infix
+                                                                [36m([0m Inf
+                                                                    [33m{[0m infixLeft = Name [1m[35m([0m [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m:[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                                                                    [33m,[0m infixRight = Infix
+                                                                        [1m[35m([0m Inf
+                                                                            [1m[36m{[0m infixLeft = RefinedE
+                                                                                [1m[33m([0m TypeRefine
+                                                                                    [95m{[0m typeRefineName = Name
+                                                                                        [96m([0m [1m[97m"[0m[1m[94mNat[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                                                                    [95m,[0m typeRefineRefinement = Application
+                                                                                        [96m([0m App
+                                                                                            [93m{[0m applicationName = Name [1m[95m([0m [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m
+                                                                                            [93m,[0m applicationArgs = Name
+                                                                                                [1m[95m([0m [1m[97m"[0m[1m[94mstor[0m[1m[97m"[0m :| [1m[96m[[0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m [1m[96m][0m [1m[95m)[0m :|
+                                                                                                [1m[95m[[0m Name [1m[96m([0m [1m[97m"[0m[1m[94mfrom[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                                                                [1m[95m,[0m Name [1m[96m([0m [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                                                                [1m[95m][0m
+                                                                                            [93m}[0m
+                                                                                        [96m)[0m
+                                                                                    [95m}[0m
+                                                                                [1m[33m)[0m
+                                                                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                                                                            [1m[36m,[0m infixRight = Name
+                                                                                [1m[33m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mStorage[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                                                                            [1m[36m}[0m
+                                                                        [1m[35m)[0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m}[0m
+                [36m)[0m
+            [35m,[0m signatureConstraints = [36m[[0m[36m][0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Function
+        [1m[93m([0m Func
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mtransfer-stor[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs =
+                    [33m[[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mstor[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94madd-from[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94madd-to[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Let
+                        [1m[35m([0m Let''
+                            [1m[36m{[0m letBindings = Like
+                                [1m[33m{[0m functionLikedName = [1m[97m"[0m[1m[94mnew-acc[0m[1m[97m"[0m
+                                [1m[33m,[0m functionLikeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m functionLikeBody = Body
+                                    [95m([0m Application
+                                        [96m([0m App
+                                            [93m{[0m applicationName = Name [1m[95m([0m [1m[97m"[0m[1m[94maccount-add[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m applicationArgs = Parened
+                                                [1m[95m([0m Application
+                                                    [1m[96m([0m App
+                                                        [1m[93m{[0m applicationName = Name [35m([0m [1m[97m"[0m[1m[94maccount-sub[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m,[0m applicationArgs = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mstor[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m [36m][0m [35m)[0m :|
+                                                            [35m[[0m Name [36m([0m [1m[97m"[0m[1m[94madd-from[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m [35m][0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m)[0m :|
+                                                [1m[95m[[0m Name [1m[96m([0m [1m[97m"[0m[1m[94madd-to[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m Name [1m[96m([0m [1m[97m"[0m[1m[94mnum[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                [1m[95m][0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m}[0m
+                            [1m[36m,[0m letBody = ExpRecord
+                                [1m[33m([0m ExpressionRecord
+                                    [95m{[0m expRecordFields = NonPunned [96m([0m [1m[97m"[0m[1m[94mtotal-supply[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                        [96m([0m Name
+                                            [93m([0m [1m[97m"[0m[1m[94mstor[0m[1m[97m"[0m :| [1m[95m[[0m [1m[97m"[0m[1m[94mtotal-supply[0m[1m[97m"[0m [1m[95m][0m [93m)[0m
+                                        [96m)[0m :|
+                                        [96m[[0m NonPunned [93m([0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m
+                                            [93m([0m Name [1m[95m([0m [1m[97m"[0m[1m[94mnew-acc[0m[1m[97m"[0m :| [1m[96m[[0m[1m[96m][0m [1m[95m)[0m [93m)[0m
+                                        [96m][0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Module
+        [1m[93m([0m Mod
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mValidation[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs = [33m[[0m[33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Function
+                        [1m[35m([0m Func
+                            [1m[36m([0m Like
+                                [1m[33m{[0m functionLikedName = [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m
+                                [1m[33m,[0m functionLikeArgs = [95m[[0m[95m][0m
+                                [1m[33m,[0m functionLikeBody = Body
+                                    [95m([0m Infix
+                                        [96m([0m Inf
+                                            [93m{[0m infixLeft = Name
+                                                [1m[95m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[96m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[96m][0m [1m[95m)[0m
+                                            [93m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m
+                                            [93m,[0m infixRight = Infix
+                                                [1m[95m([0m Inf
+                                                    [1m[96m{[0m infixLeft = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m
+                                                    [1m[96m,[0m infixRight = Name [1m[93m([0m [1m[97m"[0m[1m[94mBool[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m}[0m
+                            [1m[36m)[0m
+                        [1m[35m)[0m :|
+                        [1m[35m[[0m Function
+                            [1m[36m([0m Func
+                                [1m[33m([0m Like
+                                    [95m{[0m functionLikedName = [1m[97m"[0m[1m[94mmint[0m[1m[97m"[0m
+                                    [95m,[0m functionLikeArgs =
+                                        [96m[[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m,[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m][0m
+                                    [95m,[0m functionLikeBody = Body
+                                        [96m([0m Match
+                                            [93m([0m Match''
+                                                [1m[95m{[0m matchOn = Name
+                                                    [1m[96m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[93m[[0m [1m[97m"[0m[1m[94mdata[0m[1m[97m"[0m [1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m matchBindigns = MatchL
+                                                    [1m[96m{[0m matchLPattern = MatchLogic
+                                                        [1m[93m{[0m matchLogicContents = MatchCon
+                                                            [35m([0m [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mMint[0m[1m[97m"[0m [36m][0m [35m)[0m [35m[[0m[35m][0m
+                                                        [1m[93m,[0m matchLogicNamed = Nothing
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m matchLBody = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Name
+                                                                [36m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :| [33m[[0m [1m[97m"[0m[1m[94mowner[0m[1m[97m"[0m [33m][0m [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m==[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Name
+                                                                [36m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [33m[[0m [1m[97m"[0m[1m[94mauthorized-account[0m[1m[97m"[0m [33m][0m [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m MatchL
+                                                        [1m[93m{[0m matchLPattern = MatchLogic
+                                                            [35m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94m_[0m[1m[97m"[0m
+                                                            [35m,[0m matchLogicNamed = Nothing
+                                                            [35m}[0m
+                                                        [1m[93m,[0m matchLBody = Name [35m([0m [1m[97m"[0m[1m[94mfalse[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Function
+                            [1m[36m([0m Func
+                                [1m[33m([0m Like
+                                    [95m{[0m functionLikedName = [1m[97m"[0m[1m[94mtransfer[0m[1m[97m"[0m
+                                    [95m,[0m functionLikeArgs =
+                                        [96m[[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m,[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m][0m
+                                    [95m,[0m functionLikeBody = Body
+                                        [96m([0m Match
+                                            [93m([0m Match''
+                                                [1m[95m{[0m matchOn = Name
+                                                    [1m[96m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[93m[[0m [1m[97m"[0m[1m[94mdata[0m[1m[97m"[0m [1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m matchBindigns = MatchL
+                                                    [1m[96m{[0m matchLPattern = MatchLogic
+                                                        [1m[93m{[0m matchLogicContents = MatchCon
+                                                            [35m([0m [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mTransfer[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                            [35m[[0m MatchLogic
+                                                                [36m{[0m matchLogicContents = MatchRecord
+                                                                    [33m([0m Punned [1m[35m([0m [1m[97m"[0m[1m[94mfrom-account[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m :|
+                                                                        [1m[35m[[0m Punned [1m[36m([0m [1m[97m"[0m[1m[94mamount[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m [1m[35m][0m
+                                                                    [33m)[0m
+                                                                [36m,[0m matchLogicNamed = Nothing
+                                                                [36m}[0m
+                                                            [35m][0m
+                                                        [1m[93m,[0m matchLogicNamed = Nothing
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m matchLBody = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Application
+                                                                [36m([0m App
+                                                                    [33m{[0m applicationName = Name [1m[35m([0m [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m applicationArgs = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :|
+                                                                            [1m[36m[[0m [1m[97m"[0m[1m[94mstorage[0m[1m[97m"[0m
+                                                                            [1m[36m,[0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                                                                            [1m[36m][0m
+                                                                        [1m[35m)[0m :|
+                                                                        [1m[35m[[0m Name [1m[36m([0m [1m[97m"[0m[1m[94mfrom-account[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m,[0m Name [1m[36m([0m [1m[97m"[0m[1m[94mamount[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m][0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m&&[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Infix
+                                                                [36m([0m Inf
+                                                                    [33m{[0m infixLeft = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mauthorized-account[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m==[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                                                                    [33m,[0m infixRight = Name [1m[35m([0m [1m[97m"[0m[1m[94mfrom-account[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m MatchL
+                                                        [1m[93m{[0m matchLPattern = MatchLogic
+                                                            [35m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94m_[0m[1m[97m"[0m
+                                                            [35m,[0m matchLogicNamed = Nothing
+                                                            [35m}[0m
+                                                        [1m[93m,[0m matchLBody = Name [35m([0m [1m[97m"[0m[1m[94mfalse[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m)[0m
+                        [1m[35m,[0m Function
+                            [1m[36m([0m Func
+                                [1m[33m([0m Like
+                                    [95m{[0m functionLikedName = [1m[97m"[0m[1m[94mBurn[0m[1m[97m"[0m
+                                    [95m,[0m functionLikeArgs =
+                                        [96m[[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m,[0m ConcreteA
+                                            [93m([0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m][0m
+                                    [95m,[0m functionLikeBody = Body
+                                        [96m([0m Match
+                                            [93m([0m Match''
+                                                [1m[95m{[0m matchOn = Name
+                                                    [1m[96m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[93m[[0m [1m[97m"[0m[1m[94mdata[0m[1m[97m"[0m [1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m matchBindigns = MatchL
+                                                    [1m[96m{[0m matchLPattern = MatchLogic
+                                                        [1m[93m{[0m matchLogicContents = MatchCon
+                                                            [35m([0m [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mBurn[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                            [35m[[0m MatchLogic
+                                                                [36m{[0m matchLogicContents = MatchRecord
+                                                                    [33m([0m Punned [1m[35m([0m [1m[97m"[0m[1m[94mburn-from-account[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m :|
+                                                                        [1m[35m[[0m Punned [1m[36m([0m [1m[97m"[0m[1m[94mburn-amount[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m [1m[35m][0m
+                                                                    [33m)[0m
+                                                                [36m,[0m matchLogicNamed = Nothing
+                                                                [36m}[0m
+                                                            [35m][0m
+                                                        [1m[93m,[0m matchLogicNamed = Nothing
+                                                        [1m[93m}[0m
+                                                    [1m[96m,[0m matchLBody = Infix
+                                                        [1m[93m([0m Inf
+                                                            [35m{[0m infixLeft = Application
+                                                                [36m([0m App
+                                                                    [33m{[0m applicationName = Name [1m[35m([0m [1m[97m"[0m[1m[94mhas-n[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m applicationArgs = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :|
+                                                                            [1m[36m[[0m [1m[97m"[0m[1m[94mstorage[0m[1m[97m"[0m
+                                                                            [1m[36m,[0m [1m[97m"[0m[1m[94maccounts[0m[1m[97m"[0m
+                                                                            [1m[36m][0m
+                                                                        [1m[35m)[0m :|
+                                                                        [1m[35m[[0m Name [1m[36m([0m [1m[97m"[0m[1m[94mburn-from-account[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m,[0m Name [1m[36m([0m [1m[97m"[0m[1m[94mburn-amount[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                                                                        [1m[35m][0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m,[0m infixOp = [1m[97m"[0m[1m[94m&&[0m[1m[97m"[0m :| [36m[[0m[36m][0m
+                                                            [35m,[0m infixRight = Infix
+                                                                [36m([0m Inf
+                                                                    [33m{[0m infixLeft = Name
+                                                                        [1m[35m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mauthorized-account[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m==[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                                                                    [33m,[0m infixRight = Name [1m[35m([0m [1m[97m"[0m[1m[94mburn-from-account[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m :|
+                                                    [1m[96m[[0m MatchL
+                                                        [1m[93m{[0m matchLPattern = MatchLogic
+                                                            [35m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94m_[0m[1m[97m"[0m
+                                                            [35m,[0m matchLogicNamed = Nothing
+                                                            [35m}[0m
+                                                        [1m[93m,[0m matchLBody = Name [35m([0m [1m[97m"[0m[1m[94mfalse[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m][0m
+                                                [1m[95m}[0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m)[0m
+                        [1m[35m][0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Type
+        [1m[93m([0m Typ
+            [35m{[0m typeUsage = Nothing
+            [35m,[0m typeName' = [1m[97m"[0m[1m[94mError[0m[1m[97m"[0m
+            [35m,[0m typeArgs = [36m[[0m[36m][0m
+            [35m,[0m typeForm = NonArrowed
+                [36m{[0m dataAdt = Sum
+                    [33m([0m S
+                        [1m[35m{[0m sumConstructor = [1m[97m"[0m[1m[94mNotEnoughFunds[0m[1m[97m"[0m
+                        [1m[35m,[0m sumValue = Just [1m[36m([0m ADTLike [1m[33m[[0m[1m[33m][0m [1m[36m)[0m
+                        [1m[35m}[0m :|
+                        [1m[35m[[0m S
+                            [1m[36m{[0m sumConstructor = [1m[97m"[0m[1m[94mNotSameAccount[0m[1m[97m"[0m
+                            [1m[36m,[0m sumValue = Just [1m[33m([0m ADTLike [95m[[0m[95m][0m [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m,[0m S
+                            [1m[36m{[0m sumConstructor = [1m[97m"[0m[1m[94mNotOwnerToken[0m[1m[97m"[0m
+                            [1m[36m,[0m sumValue = Just [1m[33m([0m ADTLike [95m[[0m[95m][0m [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m,[0m S
+                            [1m[36m{[0m sumConstructor = [1m[97m"[0m[1m[94mNotEnoughTokens[0m[1m[97m"[0m
+                            [1m[36m,[0m sumValue = Just [1m[33m([0m ADTLike [95m[[0m[95m][0m [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m][0m
+                    [33m)[0m
+                [36m}[0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Signature
+        [1m[93m([0m Sig
+            [35m{[0m signatureName = [1m[97m"[0m[1m[94mexec[0m[1m[97m"[0m
+            [35m,[0m signatureUsage = Nothing
+            [35m,[0m signatureArrowType = Infix
+                [36m([0m Inf
+                    [33m{[0m infixLeft = Name
+                        [1m[35m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[36m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[36m][0m [1m[35m)[0m
+                    [33m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m
+                    [33m,[0m infixRight = Infix
+                        [1m[35m([0m Inf
+                            [1m[36m{[0m infixLeft = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mTransaction[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m infixOp = [1m[97m"[0m[1m[94m->[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m
+                            [1m[36m,[0m infixRight = Application
+                                [1m[33m([0m App
+                                    [95m{[0m applicationName = Name
+                                        [96m([0m [1m[97m"[0m[1m[94mEither[0m[1m[97m"[0m :| [93m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [93m][0m [96m)[0m
+                                    [95m,[0m applicationArgs = Name [96m([0m [1m[97m"[0m[1m[94mError[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m :|
+                                        [96m[[0m Name
+                                            [93m([0m [1m[97m"[0m[1m[94mToken[0m[1m[97m"[0m :| [1m[95m[[0m [1m[97m"[0m[1m[94mT[0m[1m[97m"[0m [1m[95m][0m [93m)[0m
+                                        [96m][0m
+                                    [95m}[0m
+                                [1m[33m)[0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m}[0m
+                [36m)[0m
+            [35m,[0m signatureConstraints = [36m[[0m[36m][0m
+            [35m}[0m
+        [1m[93m)[0m
+    [1m[96m,[0m Function
+        [1m[93m([0m Func
+            [35m([0m Like
+                [36m{[0m functionLikedName = [1m[97m"[0m[1m[94mexec[0m[1m[97m"[0m
+                [36m,[0m functionLikeArgs =
+                    [33m[[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m,[0m ConcreteA
+                        [1m[35m([0m MatchLogic
+                            [1m[36m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m
+                            [1m[36m,[0m matchLogicNamed = Nothing
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m][0m
+                [36m,[0m functionLikeBody = Body
+                    [33m([0m Match
+                        [1m[35m([0m Match''
+                            [1m[36m{[0m matchOn = Name
+                                [1m[33m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [95m[[0m [1m[97m"[0m[1m[94mdata[0m[1m[97m"[0m [95m][0m [1m[33m)[0m
+                            [1m[36m,[0m matchBindigns = MatchL
+                                [1m[33m{[0m matchLPattern = MatchLogic
+                                    [95m{[0m matchLogicContents = MatchCon [96m([0m [1m[97m"[0m[1m[94mTransfer[0m[1m[97m"[0m :| [93m[[0m[93m][0m [96m)[0m
+                                        [96m[[0m MatchLogic
+                                            [93m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94m_[0m[1m[97m"[0m
+                                            [93m,[0m matchLogicNamed = Nothing
+                                            [93m}[0m
+                                        [96m][0m
+                                    [95m,[0m matchLogicNamed = Nothing
+                                    [95m}[0m
+                                [1m[33m,[0m matchLBody = Cond
+                                    [95m([0m C
+                                        [96m([0m CondExpression
+                                            [93m{[0m condLogicPred = Application
+                                                [1m[95m([0m App
+                                                    [1m[96m{[0m applicationName = Name
+                                                        [1m[93m([0m [1m[97m"[0m[1m[94mValidation[0m[1m[97m"[0m :| [35m[[0m [1m[97m"[0m[1m[94mtransfer[0m[1m[97m"[0m [35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m applicationArgs = Name [1m[93m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m :|
+                                                        [1m[93m[[0m Name [35m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m [1m[93m][0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m,[0m condLogicBody = Application
+                                                [1m[95m([0m App
+                                                    [1m[96m{[0m applicationName = Name [1m[93m([0m [1m[97m"[0m[1m[94mRight[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m applicationArgs = Parened
+                                                        [1m[93m([0m Application
+                                                            [35m([0m App
+                                                                [36m{[0m applicationName = Name [33m([0m [1m[97m"[0m[1m[94mtransfer[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m
+                                                                [36m,[0m applicationArgs = Name [33m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :| [1m[35m[[0m[1m[35m][0m [33m)[0m :|
+                                                                    [33m[[0m Name [1m[35m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m [33m][0m
+                                                                [36m}[0m
+                                                            [35m)[0m
+                                                        [1m[93m)[0m :| [1m[93m[[0m[1m[93m][0m
+                                                    [1m[96m}[0m
+                                                [1m[95m)[0m
+                                            [93m}[0m :|
+                                            [93m[[0m CondExpression
+                                                [1m[95m{[0m condLogicPred = Name [1m[96m([0m [1m[97m"[0m[1m[94melse[0m[1m[97m"[0m :| [1m[93m[[0m[1m[93m][0m [1m[96m)[0m
+                                                [1m[95m,[0m condLogicBody = Application
+                                                    [1m[96m([0m App
+                                                        [1m[93m{[0m applicationName = Name [35m([0m [1m[97m"[0m[1m[94mLeft[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m,[0m applicationArgs = Name [35m([0m [1m[97m"[0m[1m[94mNotEnoughFunds[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m :| [35m[[0m[35m][0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m}[0m
+                                            [93m][0m
+                                        [96m)[0m
+                                    [95m)[0m
+                                [1m[33m}[0m :|
+                                [1m[33m[[0m MatchL
+                                    [95m{[0m matchLPattern = MatchLogic
+                                        [96m{[0m matchLogicContents = MatchCon [93m([0m [1m[97m"[0m[1m[94mMint[0m[1m[97m"[0m :| [1m[95m[[0m[1m[95m][0m [93m)[0m
+                                            [93m[[0m MatchLogic
+                                                [1m[95m{[0m matchLogicContents = MatchName [1m[97m"[0m[1m[94m_[0m[1m[97m"[0m
+                                                [1m[95m,[0m matchLogicNamed = Nothing
+                                                [1m[95m}[0m
+                                            [93m][0m
+                                        [96m,[0m matchLogicNamed = Nothing
+                                        [96m}[0m
+                                    [95m,[0m matchLBody = Cond
+                                        [96m([0m C
+                                            [93m([0m CondExpression
+                                                [1m[95m{[0m condLogicPred = Application
+                                                    [1m[96m([0m App
+                                                        [1m[93m{[0m applicationName = Name
+                                                            [35m([0m [1m[97m"[0m[1m[94mValidation[0m[1m[97m"[0m :| [36m[[0m [1m[97m"[0m[1m[94mmint[0m[1m[97m"[0m [36m][0m [35m)[0m
+                                                        [1m[93m,[0m applicationArgs = Name [35m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m :|
+                                                            [35m[[0m Name [36m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m [35m][0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m,[0m condLogicBody = Application
+                                                    [1m[96m([0m App
+                                                        [1m[93m{[0m applicationName = Name [35m([0m [1m[97m"[0m[1m[94mRight[0m[1m[97m"[0m :| [36m[[0m[36m][0m [35m)[0m
+                                                        [1m[93m,[0m applicationArgs = Parened
+                                                            [35m([0m Application
+                                                                [36m([0m App
+                                                                    [33m{[0m applicationName = Name [1m[35m([0m [1m[97m"[0m[1m[94mmint[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m
+                                                                    [33m,[0m applicationArgs = Name [1m[35m([0m [1m[97m"[0m[1m[94mtoken[0m[1m[97m"[0m :| [1m[36m[[0m[1m[36m][0m [1m[35m)[0m :|
+                                                                        [1m[35m[[0m Name [1m[36m([0m [1m[97m"[0m[1m[94mtx[0m[1m[97m"[0m :| [1m[33m[[0m[1m[33m][0m [1m[36m)[0m [1m[35m][0m
+                                                                    [33m}[0m
+                                                                [36m)[0m
+                                                            [35m)[0m :| [35m[[0m[35m][0m
+                                                        [1m[93m}[0m
+                                                    [1m[96m)[0m
+                                                [1m[95m}[0m :|
+                                                [1m[95m[[0m CondExpression
+                                                    [1m[96m{[0m condLogicPred = Name [1m[93m([0m [1m[97m"[0m[1m[94melse[0m[1m[97m"[0m :| [35m[[0m[35m][0m [1m[93m)[0m
+                                                    [1m[96m,[0m condLogicBody = Application
+                                                        [1m[93m([0m App
+                                                            [35m{[0m applicationName = Name [36m([0m [1m[97m"[0m[1m[94mLeft[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m
+                                                            [35m,[0m applicationArgs = Name [36m([0m [1m[97m"[0m[1m[94mNotEnoughFunds[0m[1m[97m"[0m :| [33m[[0m[33m][0m [36m)[0m :| [36m[[0m[36m][0m
+                                                            [35m}[0m
+                                                        [1m[93m)[0m
+                                                    [1m[96m}[0m
+                                                [1m[95m][0m
+                                            [93m)[0m
+                                        [96m)[0m
+                                    [95m}[0m
+                                [1m[33m][0m
+                            [1m[36m}[0m
+                        [1m[35m)[0m
+                    [33m)[0m
+                [36m}[0m
+            [35m)[0m
+        [1m[93m)[0m
+    [1m[96m][0m

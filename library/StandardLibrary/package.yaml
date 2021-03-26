@@ -84,3 +84,4 @@ tests:
     - tasty-hunit
     - tasty-silver
     - tasty-quickcheck
+    - pretty-simple

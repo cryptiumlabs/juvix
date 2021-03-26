@@ -9,6 +9,9 @@ import Juvix.Frontend.Types.Base (Header (NoHeader), TopLevel)
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
+import Text.Pretty.Simple (pShow)
+import Data.Text.Lazy (toStrict)
+
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
@@ -39,8 +42,8 @@ parsedContract file = do
     Right x -> do
       -- generate/update the golden file as the parsed file
       writeFile (file <> ".golden") (show x)
-      -- TODO human readable version of the golden file for debugging
-      -- writeFile (file <> ".HRGolden") (prettyPrintType x)
+      -- human readable version of the golden file for debugging
+      writeFile (file <> ".HRGolden") (toStrict (pShow x))
       pure x
 
 getGolden :: FilePath -> IO (Maybe (Header TopLevel))

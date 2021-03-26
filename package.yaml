@@ -170,6 +170,7 @@ tests:
       - tasty-silver
       - tasty-quickcheck
       - parsec
+      - pretty-simple
 
 benchmarks:
   juvix-bench:
