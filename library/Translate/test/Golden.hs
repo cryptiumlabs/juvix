@@ -11,6 +11,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
 import Data.Text.Lazy (toStrict)
+import Juvix.Frontend.Sexp (transTopLevel)
 
 
 --------------------------------------------------------------------------------
@@ -43,7 +44,12 @@ parsedContract file = do
       -- generate/update the golden file as the parsed file
       writeFile (file <> ".golden") (show x)
       -- human readable version of the golden file for debugging
-      writeFile (file <> ".HRGolden") (toStrict (pShowNoColor x))
+      writeFile 
+        (file <> ".HRGolden")
+        (toStrict 
+          (pShowNoColor $
+            map transTopLevel (extractTopLevel x)
+          ))
       pure x
 
 getGolden :: FilePath -> IO (Maybe (Header TopLevel))
