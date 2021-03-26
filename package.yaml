@@ -126,7 +126,6 @@ library:
     - Juvix.Encoding.Types
     - Juvix.Backends
   ghc-options:
-    - -Werror
     - -Wmissing-export-lists
     - -j
     - -static
