@@ -1,7 +1,7 @@
 -- |
 -- - This implements the Shunt Yard algorithm for determining the
 --   precedence of operations
-module Juvix.FrontendContextualise.InfixPrecedence.ShuntYard where
+module Juvix.Contextify.InfixPrecedence.ShuntYard where
 
 import Juvix.Library hiding (Associativity, div)
 import Prelude (error)

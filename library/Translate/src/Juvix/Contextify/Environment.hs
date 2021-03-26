@@ -15,14 +15,16 @@ module Juvix.Contextify.Environment
     MinimalMIO (..),
     runMIO,
     runM,
+    namedForms,
+    onExpression,
   )
 where
 
 import Control.Lens hiding ((|>))
+import qualified Juvix.Contextify.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.Core.Common.Closure as Closure
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
@@ -135,6 +137,22 @@ passContext ctx trigger Pass {sumF, termF, tyF} =
         (trigger, func ctx)
         (bindingForms, searchAndClosure ctx)
 
+-- | @onExpression@ runs an algorithm similar to @passContext@ however
+-- only on a single expression instead of an entire context. For this
+-- to have the closure work properly, please run this after :open-in is
+-- gone
+onExpression ::
+  HasClosure f =>
+  Sexp.T ->
+  (NameSymbol.T -> Bool) ->
+  (Sexp.Atom -> Sexp.T -> f Sexp.T) ->
+  f Sexp.T
+onExpression form trigger func =
+  Sexp.foldSearchPred
+    form
+    (trigger, func)
+    (bindingForms, searchAndClosureNoCtx)
+
 -- | @bindingForms@ is a predicate that answers true for every form
 -- that instantiates a new variable
 bindingForms :: (Eq a, IsString a) => a -> Bool
@@ -147,8 +165,61 @@ bindingForms x =
              "case",
              ":lambda-case",
              ":declaim",
-             ":lambda"
+             ":lambda",
+             ":primitive"
            ]
+
+-- should really be moved out of here
+
+-- | @namedForms@ a list of all named special forms
+namedForms :: [NameSymbol.T]
+namedForms =
+  [ "type",
+    ":open-in",
+    ":let-type",
+    ":let-match",
+    "case",
+    ":lambda-case",
+    ":declaim",
+    ":lambda",
+    ":tuple",
+    ":primitive",
+    ":progn",
+    "declare",
+    ":infix",
+    ":list",
+    ":record-no-pun",
+    ":paren",
+    ":block",
+    ":primitive"
+  ]
+
+-- | @searchAndClosureNoCtx@ like searchAndClosure but does not rely on
+-- a context, thus the open pass can't be done.
+searchAndClosureNoCtx ::
+  (HasClosure f) =>
+  -- | the atom to dispatch on
+  Sexp.Atom ->
+  -- | The sexp form in which the atom is called on
+  Sexp.T ->
+  -- | the continuation of continuing the changes
+  (Sexp.T -> f Sexp.T) ->
+  f Sexp.T
+searchAndClosureNoCtx a as cont
+  | named "case" = case' as cont
+  -- this case happens at the start of every defun
+  | named ":lambda-case" = lambdaCase as cont
+  -- This case is a bit special, as we must check the context for
+  -- various names this may introduce to the
+  | named ":declaim" = declaim as cont
+  | named ":let-match" = letMatch as cont
+  | named ":primitive" = primitive as cont
+  | named ":let-type" = letType as cont
+  | named "type" = type' as cont
+  | named ":lambda" = lambda as cont
+  where
+    named = Sexp.isAtomNamed (Sexp.Atom a)
+searchAndClosureNoCtx _ _ _ = error "imporper closure call"
 
 -- | @searchAndClosure@ is responsible for properly updating the
 -- closure based on any binders we may encounter. The signature is made
@@ -168,17 +239,8 @@ searchAndClosure ::
   (Sexp.T -> f Sexp.T) ->
   f Sexp.T
 searchAndClosure ctx a as cont
-  | named "case" = case' as cont
-  -- this case happens at the start of every defun
-  | named ":lambda-case" = lambdaCase as cont
-  -- This case is a bit special, as we must check the context for
-  -- various names this may introduce to the
   | named ":open-in" = openIn ctx as cont
-  | named ":declaim" = declaim as cont
-  | named ":let-match" = letMatch as cont
-  | named ":let-type" = letType as cont
-  | named "type" = type' as cont
-  | named ":lambda" = lambda as cont
+  | otherwise = searchAndClosureNoCtx a as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
 searchAndClosure _ _ _ _ = error "imporper closure call"
@@ -218,6 +280,21 @@ lookupPrecedence name ctx = do
 ------------------------------------------------------------
 -- searchAndClosure function dispatch table
 ------------------------------------------------------------
+
+primitive :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+primitive (Sexp.List [name]) cont
+  | Just Sexp.A {atomName} <- Sexp.atomFromT name = do
+    -- this is bad, however it's FINE, as we only have the primitive
+    -- which no operation should disrupt.
+    -- Namely if it's (:primitive Michelson.Foo)
+    -- we add Michelson to the closure, which is wrong.
+    -- However, since we just have the primitive at this point, we
+    -- can't have any other symbol named Michelson in this scope, so
+    -- it's not an actual issue.
+    local @"closure" (Closure.insertGeneric (NameSymbol.hd atomName)) $ do
+      prim <- cont name
+      pure $ Sexp.list [prim]
+primitive _ _ = error "malformed primitive"
 
 lambda :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 lambda (Sexp.List [arguments, body]) cont =

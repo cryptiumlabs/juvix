@@ -2,12 +2,12 @@ module Contextify (top) where
 
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Contextify.Environment as Env
+import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as Contextify
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Desugar as Desugar
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.Frontend.Sexp as SexpTrans
 import qualified Juvix.Frontend.Types.Base as Frontend
-import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as Contextify
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp

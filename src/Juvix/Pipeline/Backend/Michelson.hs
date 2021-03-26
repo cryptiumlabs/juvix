@@ -14,7 +14,7 @@ import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import Juvix.Core.FromFrontend as FF
+import Juvix.ToCore.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -22,7 +22,6 @@ import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline.Internal as Pipeline

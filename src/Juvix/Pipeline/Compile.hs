@@ -15,7 +15,6 @@ import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
@@ -23,13 +22,15 @@ import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
 import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
+import Juvix.ToCore.Types (CoreDef(..))
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
 import qualified System.IO.Temp as Temp
 import qualified Prelude as P
+import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Core.Common.Context as Context
 
 type Code = Text
 
@@ -39,14 +40,14 @@ type Message = P.String
 
 type Pipeline = Feedback.FeedbackT [] Message IO
 
-parse :: (MonadIO m, P.MonadFail m) => Code -> m FE.FinalContext
+parse :: Code -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
 parse code = do
   core <- liftIO $ toCore_wrap code
   case core of
     Right ctx -> return ctx
     Left err -> Feedback.fail $ show err
   where
-    toCore_wrap :: Code -> IO (Either Pipeline.Error FE.FinalContext)
+    toCore_wrap :: Code -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
     toCore_wrap code = do
       fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
       Pipeline.toCore

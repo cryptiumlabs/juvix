@@ -20,7 +20,6 @@ data Options
 
 data Backend
   = Michelson BMichelson
-  -- | Plonk (BPlonk Fr)
   deriving (Eq, Show)
 
 data Command
@@ -105,7 +104,6 @@ backendOptions =
   option
     ( maybeReader
         ( \case
-            -- "plonk" -> pure $ Plonk (BPlonk)
             "michelson" -> pure $ Michelson (BMichelson)
             _ -> Nothing
         )
