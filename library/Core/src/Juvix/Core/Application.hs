@@ -65,8 +65,6 @@ instance Bitraversable (Return' ext) where
     Return a s ->
       Return <$> f a <*> g s
 
-type Return = Return' IR.NoExt
-
 -- | The representation of variables used in IR.Term' ext
 class IsParamVar ext where
   type ParamVar ext :: Type
