@@ -6,7 +6,7 @@ module Main (main) where
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Pipeline as Compile
+import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
 import System.Directory
@@ -104,47 +104,24 @@ run ctx opt = do
     Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
     Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
   where
-    run' :: Context -> Options -> Compile.Pipeline ()
+    run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do
       case cmd of
         Parse fin ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
+          do liftIO $ readFile fin
+            >>= Pipeline.parse
             >>= liftIO . print
-        Typecheck fin (Michelson backend) ->
-          typecheck fin backend
-        Compile fin fout (Michelson backend) ->
-          compile fin fout backend
+        Typecheck fin (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
+            >>= liftIO . print
+        Compile fin fout (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
+            >>= Pipeline.compile @Pipeline.BMichelson
+            >>= Pipeline.writeout fout
+            >>= liftIO . print
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
-
-compile ::
-  forall b.
-  ( Compile.HasBackend b
-  ) =>
-  FilePath ->
-  FilePath ->
-  b ->
-  Compile.Pipeline ()
-compile fin fout _b = do
-  (liftIO $ readFile fin)
-    >>= Compile.parse
-    >>= Compile.typecheck @b
-    >>= Compile.compile @b
-    >>= Compile.writeout fout
-    >>= liftIO . print
-
-typecheck ::
-  forall b.
-  ( Compile.HasBackend b,
-    Show (Compile.Ty b),
-    Show (Compile.Val b)
-  ) =>
-  FilePath ->
-  b ->
-  Compile.Pipeline ()
-typecheck fin _b = do
-  (liftIO $ readFile fin)
-    >>= Compile.parse
-    >>= Compile.typecheck @b
-    >>= liftIO . print

@@ -1,10 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LiberalTypeSynonyms #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
 module Juvix.Pipeline.Backend.Michelson (BMichelson(..)) where
 
 import qualified Data.HashMap.Strict as HM
@@ -16,9 +9,9 @@ import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline.Internal as Pipeline
-import Juvix.Pipeline.Types
+import qualified Juvix.Pipeline.Types as Types
 import Juvix.Pipeline.Backend.Internal
-import Juvix.Pipeline.Compile
+import qualified Juvix.Pipeline.Compile as Compile
 
 data BMichelson = BMichelson
   deriving (Eq, Show)
@@ -30,17 +23,17 @@ instance HasBackend BMichelson where
     let res = Pipeline.contextToCore ctx Param.michelson
     case res of
       Right (FF.CoreDefs _order globals) -> do
-        let globalDefs = HM.mapMaybe toCoreDef globals
-        case HM.elems $ HM.filter isMain globalDefs of
+        let globalDefs = HM.mapMaybe Compile.toCoreDef globals
+        case HM.elems $ HM.filter Compile.isMain globalDefs of
           [] -> Feedback.fail "No main function found"
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
-              let convGlobals = map (convGlobal Param.Set) globalDefs
-                  newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
+              let convGlobals = map (Compile.convGlobal Param.Set) globalDefs
+                  newGlobals = HM.map (Compile.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+              (res, _) <- liftIO $ Types.exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
               case res of
                 Right r -> do
                   pure r

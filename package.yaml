@@ -96,13 +96,11 @@ default-extensions:
 
 ghc-options:
   - -Werror
-  - -Wall
   - -Wmissing-export-lists
   - -j
   - -static
   - -ferror-spans
   - -fno-warn-name-shadowing
-  - -fno-warn-unused-binds
   - -fno-warn-unused-matches
   - -fno-warn-unused-do-bind
   - -fwarn-tabs
