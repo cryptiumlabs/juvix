@@ -11,7 +11,7 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
 import Juvix.Frontend.Sexp (transTopLevel)
-
+import Data.Text.Lazy (toStrict)
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
