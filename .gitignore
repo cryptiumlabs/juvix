@@ -34,7 +34,6 @@ tmp/
 
 # Testing temporary
 *.parsed
-*.golden
 *.HRGolden
 
 # OSX
