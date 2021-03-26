@@ -1,4 +1,4 @@
-module Config (T(..)) where
+module Config (T (..)) where
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
@@ -33,10 +33,12 @@ instance Y.FromJSON T where
 jsonOptions :: A.Options
 jsonOptions =
   A.defaultOptions
-    { A.fieldLabelModifier = (\l -> case head l of
-        Just h -> toLower h : drop 1 l
-        Nothing -> []
-        ) . dropWhile isLower,
+    { A.fieldLabelModifier =
+        ( \l -> case head l of
+            Just h -> toLower h : drop 1 l
+            Nothing -> []
+        )
+          . dropWhile isLower,
       A.omitNothingFields = True,
       A.sumEncoding = A.ObjectWithSingleField
     }

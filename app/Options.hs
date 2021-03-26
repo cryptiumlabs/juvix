@@ -1,12 +1,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Options (
-  Context(..),
-  Options(..),
-  Backend(..),
-  Command(..),
-  options,
-) where
+module Options
+  ( Context (..),
+    Options (..),
+    Backend (..),
+    Command (..),
+    options,
+  )
+where
 
 import Juvix.Library hiding (option)
 import Juvix.Pipeline

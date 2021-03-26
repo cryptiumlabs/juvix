@@ -8,15 +8,16 @@
 -- - This however will do the boilerplate of changing an =ADT= to
 --   =Mendler= and the structure of a case expression into proper
 --   =Mendler= form
-module Juvix.Encoding.Mendler (
-  adtToMendler,
-  mendlerCase,
-  inl,
-  inr,
-  inlOp,
-  inrOp,
-  in'
-) where
+module Juvix.Encoding.Mendler
+  ( adtToMendler,
+    mendlerCase,
+    inl,
+    inr,
+    inlOp,
+    inrOp,
+    in',
+  )
+where
 
 import Juvix.Encoding.Encoding
 import Juvix.Encoding.Types

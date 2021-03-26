@@ -1,9 +1,10 @@
-module Juvix.Pipeline.Internal (
-    Error(..),
-    toCore, 
+module Juvix.Pipeline.Internal
+  ( Error (..),
+    toCore,
     contextToCore,
-    defName
-    ) where
+    defName,
+  )
+where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core as Core

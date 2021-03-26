@@ -1,27 +1,28 @@
-module Juvix.Pipeline.Compile (
-  Pipeline,
-  parse,
-  toCoreDef,
-  isMain,
-  convGlobal,
-  unsafeEvalGlobal,
-  writeout
-) where
+module Juvix.Pipeline.Compile
+  ( Pipeline,
+    parse,
+    toCoreDef,
+    isMain,
+    convGlobal,
+    unsafeEvalGlobal,
+    writeout,
+  )
+where
 
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
 import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
-import Juvix.ToCore.Types (CoreDef(..))
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline.Internal as Pipeline
+import Juvix.ToCore.Types (CoreDef (..))
 import qualified System.IO.Temp as Temp
 import qualified Prelude as P
-import qualified Juvix.Library.Sexp as Sexp
-import qualified Juvix.Core.Common.Context as Context
 
 type Code = Text
 

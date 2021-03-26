@@ -1,10 +1,11 @@
-module Juvix.Pipeline.Types (
-  Exec,
-  ExecTerm,
-  Env(..),
-  EnvExec(..),
-  exec
-) where
+module Juvix.Pipeline.Types
+  ( Exec,
+    ExecTerm,
+    Env (..),
+    EnvExec (..),
+    exec,
+  )
+where
 
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Erasure.Types as Erasure

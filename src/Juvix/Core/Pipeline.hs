@@ -1,10 +1,10 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.Core.Pipeline (
-  coreToAnn,
-  toRaw
-
-) where
+module Juvix.Core.Pipeline
+  ( coreToAnn,
+    toRaw,
+  )
+where
 
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
@@ -18,9 +18,9 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
-type RawTerm ty val = IR.Term ty val 
+type RawTerm ty val = IR.Term ty val
 
-type RawElim ty val = IR.Elim ty val 
+type RawElim ty val = IR.Elim ty val
 
 type Term ty val = HR.Term ty val
 

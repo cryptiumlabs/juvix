@@ -1,17 +1,17 @@
-module Juvix.Pipeline.Backend.Michelson (BMichelson(..)) where
+module Juvix.Pipeline.Backend.Michelson (BMichelson (..)) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
-import Juvix.ToCore.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Pipeline.Internal as Pipeline
-import qualified Juvix.Pipeline.Types as Types
 import Juvix.Pipeline.Backend.Internal
 import qualified Juvix.Pipeline.Compile as Compile
+import qualified Juvix.Pipeline.Internal as Pipeline
+import qualified Juvix.Pipeline.Types as Types
+import Juvix.ToCore.FromFrontend as FF
 
 data BMichelson = BMichelson
   deriving (Eq, Show)
@@ -51,4 +51,3 @@ instance HasBackend BMichelson where
       Right c -> do
         return $ M.untypedContractToSource (fst c)
       Left err -> Feedback.fail $ show err
-

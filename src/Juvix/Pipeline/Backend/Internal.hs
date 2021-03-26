@@ -1,11 +1,16 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
-module Juvix.Pipeline.Backend.Internal (HasBackend(..)) where
+
+module Juvix.Pipeline.Backend.Internal
+  ( HasBackend (..),
+  )
+where
+
 import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.Library
-import Juvix.Pipeline.Compile
 import qualified Juvix.Library.Sexp as Sexp
-import qualified Juvix.Core.Common.Context as Context
+import Juvix.Pipeline.Compile
 
 class HasBackend b where
   type Ty b = ty | ty -> b
@@ -13,5 +18,3 @@ class HasBackend b where
 
   typecheck :: Context.T Sexp.T Sexp.T Sexp.T -> Pipeline (ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)))
   compile :: ErasedAnn.AnnTerm (Ty b) (CoreApp.Return' ErasedAnn.T (NonEmpty (Ty b)) (Val b)) -> Pipeline Text
-
-

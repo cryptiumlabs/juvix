@@ -1,7 +1,9 @@
-
 {-# LANGUAGE TypeApplications #-}
 
-module Main (main) where
+module Main
+  ( main,
+  )
+where
 
 import Development.GitRev
 import Juvix.Library

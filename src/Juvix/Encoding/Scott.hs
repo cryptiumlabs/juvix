@@ -4,10 +4,11 @@
 -- - Gives a =Scott= encoding from an =ADT= and works properly for case
 --   expressions
 -- - Overall this encoding just works™
-module Juvix.Encoding.Scott (
-  adtToScott,
-  scottCase
-) where
+module Juvix.Encoding.Scott
+  ( adtToScott,
+    scottCase,
+  )
+where
 
 import Juvix.Encoding.Encoding
 import Juvix.Encoding.Types

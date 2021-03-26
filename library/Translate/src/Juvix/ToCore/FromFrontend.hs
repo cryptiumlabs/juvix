@@ -36,8 +36,7 @@ paramConstant' p Sexp.N {atomNum} = P.intVal p atomNum
 paramConstant' _p Sexp.A {} = Nothing
 
 transformTermIR ::
-  ( 
-    HasPatVars m,
+  ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -47,8 +46,9 @@ transformTermIR ::
   m (IR.Term primTy primVal)
 transformTermIR q fe = do
   hrToIR <$> transformTermHR q fe
-  -- TODO: Bring what everywhereM does back without Data.Data
-  -- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
+
+-- TODO: Bring what everywhereM does back without Data.Data
+-- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
 transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
 transformPatVar (IR.Global name) =
@@ -467,8 +467,7 @@ transformSpecial _ _ = pure Nothing
 --------------------------------------------------------------------------------
 
 transformSig ::
-  ( 
-    HasPatVars m,
+  ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -508,8 +507,7 @@ transformNormalSig _ _ Ctx.Information {} =
   pure []
 
 transformValSig ::
-  ( 
-    HasThrowFF primTy primVal m,
+  ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
