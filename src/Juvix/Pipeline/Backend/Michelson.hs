@@ -5,22 +5,13 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Juvix.Pipeline.Backend.Michelson where
+module Juvix.Pipeline.Backend.Michelson (BMichelson(..)) where
 
 import qualified Data.HashMap.Strict as HM
-import qualified Data.Text as Text
-import qualified Data.Text.IO as T
 import qualified Juvix.Backends.Michelson.Compilation as M
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
-import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import Juvix.ToCore.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import Juvix.Core.IR.Types.Base
-import Juvix.Core.IR.Types.Globals
-import Juvix.Core.Parameterisation
 import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
@@ -28,8 +19,6 @@ import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types
 import Juvix.Pipeline.Backend.Internal
 import Juvix.Pipeline.Compile
-import qualified System.IO.Temp as Temp
-import qualified Prelude as P
 
 data BMichelson = BMichelson
   deriving (Eq, Show)
@@ -62,8 +51,6 @@ instance HasBackend BMichelson where
             Feedback.fail $ show somethingElse
       Left err -> do
         Feedback.fail $ "failed at ctxToCore\n" ++ show err
-  typecheck _ =
-    Feedback.fail $ "Typecheck not implemented for Michelson backend."
 
   compile term = do
     let (res, _logs) = M.compileContract $ CorePipeline.toRaw term

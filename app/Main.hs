@@ -1,7 +1,7 @@
 
 {-# LANGUAGE TypeApplications #-}
 
-module Main where
+module Main (main) where
 
 import Development.GitRev
 import Juvix.Library
@@ -120,9 +120,7 @@ run ctx opt = do
 
 compile ::
   forall b.
-  ( Compile.HasBackend b,
-    Show (Compile.Ty b),
-    Show (Compile.Val b)
+  ( Compile.HasBackend b
   ) =>
   FilePath ->
   FilePath ->

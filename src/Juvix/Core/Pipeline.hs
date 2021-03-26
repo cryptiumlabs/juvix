@@ -1,8 +1,11 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.Core.Pipeline where
+module Juvix.Core.Pipeline (
+  coreToAnn,
+  toRaw
 
-import qualified Data.HashMap.Strict as HM
+) where
+
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim

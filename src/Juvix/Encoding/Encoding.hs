@@ -3,7 +3,12 @@
 -- |
 -- - This provides generic functions used by the various encodings in
 --   this directory
-module Juvix.Encoding.Encoding where
+module Juvix.Encoding.Encoding (
+  caseGen,
+  adtConstructor,
+  idL,
+  app
+) where
 
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)

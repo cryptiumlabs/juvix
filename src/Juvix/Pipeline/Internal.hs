@@ -1,4 +1,9 @@
-module Juvix.Pipeline.Internal where
+module Juvix.Pipeline.Internal (
+    Error(..),
+    toCore, 
+    contextToCore,
+    defName
+    ) where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core as Core
@@ -12,7 +17,6 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
-import Prelude (String)
 
 data Error
   = PipeLine Core.Error
@@ -31,7 +35,6 @@ toCore paths = do
         Right con -> pure $ Right con
 
 contextToCore ::
-  (Data primTy, Data primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)

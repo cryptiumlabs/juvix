@@ -5,17 +5,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Juvix.Pipeline.Backend.Internal where
+module Juvix.Pipeline.Backend.Internal (HasBackend(..)) where
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
-import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
-import Juvix.Core.IR.Types.Base
-import Juvix.Core.IR.Types.Globals
-import Juvix.Core.Parameterisation
 import Juvix.Library
-import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Compile
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Core.Common.Context as Context

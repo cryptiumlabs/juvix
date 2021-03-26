@@ -6,27 +6,26 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Juvix.Pipeline.Compile where
+module Juvix.Pipeline.Compile (
+  Pipeline,
+  parse,
+  toCoreDef,
+  isMain,
+  convGlobal,
+  unsafeEvalGlobal,
+  writeout
+) where
 
-import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as Text
 import qualified Data.Text.IO as T
-import qualified Juvix.Backends.Michelson.Compilation as M
-import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
-import Juvix.Core.Parameterisation
-import qualified Juvix.Core.Pipeline as CorePipeline
 import Juvix.ToCore.Types (CoreDef(..))
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline.Internal as Pipeline
-import Juvix.Pipeline.Types
 import qualified System.IO.Temp as Temp
 import qualified Prelude as P
 import qualified Juvix.Library.Sexp as Sexp
@@ -164,6 +163,4 @@ unsafeEval ::
   IR.RawGlobals primTy primVal ->
   IR.Term primTy primVal ->
   IR.Value primTy primVal
-unsafeEval globals = fromRight . IR.evalTerm (IR.rawLookupFun' globals)
-  where
-    fromRight ~(Right x) = x
+unsafeEval globals = either (panic "Failed to eval term") identity . IR.evalTerm (IR.rawLookupFun' globals)

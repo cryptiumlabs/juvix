@@ -1,6 +1,12 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Options where
+module Options (
+  Context(..),
+  Options(..),
+  Backend(..),
+  Command(..),
+  options,
+) where
 
 import Juvix.Library hiding (option)
 import Juvix.Pipeline
@@ -57,10 +63,6 @@ commandOptions =
               configurationOptions
               (progDesc "Adjust runtime configuration or generate an example config file")
           )
-        --        <> command "interactive" (info interactiveOptions (progDesc "Launch interactive mode"))
-        --        <> command "init" (info initOptions (progDesc "Initialise deployment configuration"))
-        --        <> command "plan" (info planOptions (progDesc "Plan deployment"))
-        --        <> command "apply" (info applyOptions (progDesc "Execute deployment"))
         <> command "parse" (info parseOptions (progDesc "Parse a Juvix source file"))
         <> command "typecheck" (info typecheckOptions (progDesc "Typecheck a Juvix source file"))
         <> command "compile" (info compileOptions (progDesc "Compile a Juvix source file"))
@@ -71,18 +73,6 @@ versionOptions = pure Version
 
 configurationOptions :: Parser Command
 configurationOptions = pure Config
-
-interactiveOptions :: Parser Command
-interactiveOptions = pure Interactive
-
-initOptions :: Parser Command
-initOptions = pure Init
-
-planOptions :: Parser Command
-planOptions = pure Plan
-
-applyOptions :: Parser Command
-applyOptions = pure Apply
 
 parseOptions :: Parser Command
 parseOptions = Parse <$> inputFileOptions

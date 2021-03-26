@@ -95,13 +95,39 @@ default-extensions:
   - BlockArguments
 
 ghc-options:
-  - -ferror-spans
+  - -Werror
   - -Wall
-  - -fno-warn-orphans
-  - -fno-warn-name-shadowing
-  - -fno-warn-missing-pattern-synonym-signatures
+  - -Wmissing-export-lists
   - -j
   - -static
+  - -ferror-spans
+  - -fno-warn-name-shadowing
+  - -fno-warn-unused-binds
+  - -fno-warn-unused-matches
+  - -fno-warn-unused-do-bind
+  - -fwarn-tabs
+  - -fwarn-incomplete-patterns
+  - -fwarn-incomplete-uni-patterns
+  - -fwarn-redundant-constraints
+  - -fwarn-implicit-prelude
+  - -fwarn-overflowed-literals
+  - -fwarn-orphans
+  - -fwarn-identities
+  - -fwarn-dodgy-exports
+  - -fwarn-dodgy-imports
+  - -fwarn-duplicate-exports
+  - -fwarn-overlapping-patterns
+  - -fwarn-missing-fields
+  - -fwarn-missing-methods
+  - -fwarn-missing-signatures
+  - -fwarn-missing-pattern-synonym-signatures
+  - -fwarn-noncanonical-monad-instances
+  - -fwarn-unused-imports
+  - -fwarn-unused-pattern-binds
+  - -fwarn-unused-type-patterns
+  - -fwarn-unrecognised-pragmas
+  - -fwarn-wrong-do-bind
+  - -fwarn-hi-shadowing
   - -fwrite-ide-info
   - -optP-Wno-nonportable-include-path
 
