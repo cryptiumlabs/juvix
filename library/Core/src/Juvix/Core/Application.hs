@@ -75,7 +75,7 @@ class IsParamVar ext where
   -- Create a reference to a bound variable.
   boundVar :: Proxy ext -> IR.BoundVar -> Maybe (ParamVar ext)
 
--- | Representation of De Bruijn indicing.
+-- | Representation of De Bruijn indexing.
 data DeBruijn
   = -- | Reference to a bound variable.
     BoundVar IR.BoundVar
