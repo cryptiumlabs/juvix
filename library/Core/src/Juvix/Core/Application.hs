@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- |
--- Types to support partial application and polymorphic primitives.
+-- | Types to support partial application and polymorphic primitives.
 module Juvix.Core.Application
   ( Return' (..),
     DeBruijn (..),
@@ -23,21 +22,22 @@ import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
--- |
--- A primitive along with its type, and possibly some arguments.
+-- | A primitive along with its type, and possibly some arguments.
 data Return' ext ty term
-  = -- | Partially applied primitive holding the arguments already given
+  = -- | Partially applied primitive holding the arguments already given.
     Cont
-      { -- | head of application
+      { -- | Head of application, a fully evaluated term.
         fun :: Take ty term,
-        -- | arguments
+        -- | Arguments to the function.
         args :: [Arg' ext ty term],
-        -- | number of arguments still expected
+        -- | Number of arguments still expected.
         numLeft :: Natural
       }
-  | -- | A primitive with no arguments
+  | -- | A primitive with no arguments.
     Return
-      { retType :: ty,
+      { -- | Type of the return term.
+        retType :: ty,
+        -- | The term itself.
         retTerm :: term
       }
   deriving (Generic, Functor, Foldable, Traversable)
@@ -69,12 +69,18 @@ instance Bitraversable (Return' ext) where
 class IsParamVar ext where
   type ParamVar ext :: Type
 
+  -- Create a reference to a free variable.
   freeVar :: Proxy ext -> IR.GlobalName -> Maybe (ParamVar ext)
+
+  -- Create a reference to a bound variable.
   boundVar :: Proxy ext -> IR.BoundVar -> Maybe (ParamVar ext)
 
+-- | Representation of De Bruijn indicing.
 data DeBruijn
-  = BoundVar IR.BoundVar
-  | FreeVar IR.GlobalName
+  = -- | Reference to a bound variable.
+    BoundVar IR.BoundVar
+  | -- | Reference to a free variable.
+    FreeVar IR.GlobalName
   deriving (Show, Eq, Generic)
 
 instance IsParamVar IR.NoExt where
@@ -82,17 +88,23 @@ instance IsParamVar IR.NoExt where
   freeVar _ = Just . FreeVar
   boundVar _ = Just . BoundVar
 
+-- | Arguments to a function.
 data Arg' ext ty term
-  = VarArg (ParamVar ext)
-  | TermArg (Take ty term)
+  = -- | A variable to a term.
+    VarArg (ParamVar ext)
+  | -- | A fully evaluated term.
+    TermArg (Take ty term)
   deriving (Generic, Functor, Foldable, Traversable)
 
+-- | Simplification for 'Arg'' without any extensions.
 type Arg = Arg' IR.NoExt
 
+-- | Pattery synonym for bound arguments in DeBruijn terms.
 pattern BoundArg ::
   (ParamVar ext ~ DeBruijn) => IR.BoundVar -> Arg' ext ty term
 pattern BoundArg i = VarArg (BoundVar i)
 
+-- | Pattery synonym for free arguments in DeBruijn terms.
 pattern FreeArg ::
   (ParamVar ext ~ DeBruijn) => IR.GlobalName -> Arg' ext ty term
 pattern FreeArg x = VarArg (FreeVar x)
@@ -115,14 +127,13 @@ instance Bitraversable (Arg' ext) where
   bitraverse _ _ (VarArg x) = pure $ VarArg x
   bitraverse f g (TermArg t) = TermArg <$> bitraverse f g t
 
--- |
--- An argument to a partially applied primitive, which must be
--- fully-applied itself.
+-- | An argument to a partially applied primitive, which must be fully-applied
+-- itself.
 data Take ty term
   = Take
-      { usage :: Usage.T,
-        type' :: ty,
-        term :: term
+      { usage :: Usage.T, -- < Usage annotation for quantified types.
+        type' :: ty, -- < The type of the term.
+        term :: term -- < The term itself.
       }
   deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
 
@@ -135,12 +146,15 @@ instance Bifoldable Take where
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
 
+-- | Translate an 'Arg'' to a 'Take'.
 argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
 argToTake (TermArg t) = pure t
 argToTake _ = empty
 
+-- | Translate an 'Arg'' to a 'Return''.
 argToReturn :: Alternative f => Arg' ext ty term -> f (Return' ext' ty term)
 argToReturn = fmap takeToReturn . argToTake
 
+-- | Translate a 'Take' into a 'Return''.
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}
