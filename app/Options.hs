@@ -2,9 +2,6 @@
 
 module Options where
 
-import Data.Curve.Weierstrass.BLS12381 
-import Data.Data
-import Data.Field.Galois
 import Juvix.Library hiding (option)
 import Juvix.Pipeline
 import Options.Applicative
@@ -25,8 +22,6 @@ data Backend
   = Michelson BMichelson
   -- | Plonk (BPlonk Fr)
   deriving (Eq, Show)
-
--- deriving instance Data Fr
 
 data Command
   = Version

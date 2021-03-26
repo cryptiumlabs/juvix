@@ -52,6 +52,7 @@ transformTermIR ::
   m (IR.Term primTy primVal)
 transformTermIR q fe = do
   hrToIR <$> transformTermHR q fe
+  -- TODO: Bring what everywhereM does back without Data.Data
   -- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
 transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
