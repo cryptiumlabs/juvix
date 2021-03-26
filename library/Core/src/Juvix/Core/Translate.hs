@@ -12,7 +12,7 @@ hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
 hrToIR = fst . exec . hrToIR'
 
 hrToIR' ::
-  (HasState "symbolStack" [NameSymbol.T] m) =>
+  (HasReader "symbolStack" [NameSymbol.T] m) =>
   HR.Term primTy primVal ->
   m (IR.Term primTy primVal)
 hrToIR' term =
@@ -22,14 +22,14 @@ hrToIR' term =
     HR.Prim p -> pure (IR.Prim p)
     HR.Pi u n a b -> do
       a <- hrToIR' a
-      b <- withName n $ hrToIR' b
+      b <- withSym n $ hrToIR' b
       pure (IR.Pi u a b)
     HR.Lam n b -> do
-      b <- withName n $ hrToIR' b
+      b <- withSym n $ hrToIR' b
       pure (IR.Lam b)
     HR.Sig π n a b -> do
       a <- hrToIR' a
-      b <- withName n $ hrToIR' b
+      b <- withSym n $ hrToIR' b
       pure (IR.Sig π a b)
     HR.Pair s t -> do
       HR.Pair <$> hrToIR' s <*> hrToIR' t
@@ -37,12 +37,12 @@ hrToIR' term =
     HR.Unit -> pure IR.Unit
     HR.Let π n l b -> do
       l <- hrElimToIR' l
-      b <- withName n $ hrToIR' b
+      b <- withSym n $ hrToIR' b
       pure (IR.Let π l b)
     HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
 hrElimToIR' ::
-  (HasState "symbolStack" [NameSymbol.T] m) =>
+  (HasReader "symbolStack" [NameSymbol.T] m) =>
   HR.Elim primTy primVal ->
   m (IR.Elim primTy primVal)
 hrElimToIR' elim =
@@ -66,7 +66,7 @@ irToHR = fst . exec . irToHR'
 
 irToHR' ::
   ( HasState "nextName" Int m,
-    HasState "nameStack" [Int] m
+    HasReader "nameStack" [Int] m
   ) =>
   IR.Term primTy primVal ->
   m (HR.Term primTy primVal)
@@ -77,32 +77,30 @@ irToHR' term =
     IR.Prim p -> pure (HR.Prim p)
     IR.Pi u a b -> do
       a <- irToHR' a
-      n <- newName
-      b <- irToHR' b
-      pure (HR.Pi u n a b)
-    IR.Lam t -> do
-      n <- newName
-      t <- irToHR' t
-      pure (HR.Lam n t)
+      withName \n -> do
+        b <- irToHR' b
+        pure (HR.Pi u n a b)
+    IR.Lam t ->
+      withName \n -> HR.Lam n <$> irToHR' t
     IR.Sig π a b -> do
       a <- irToHR' a
-      n <- newName
-      b <- irToHR' b
-      pure $ HR.Sig π n a b
+      withName \n -> do
+        b <- irToHR' b
+        pure $ HR.Sig π n a b
     IR.Pair s t -> do
       HR.Pair <$> irToHR' s <*> irToHR' t
     IR.UnitTy -> pure HR.UnitTy
     IR.Unit -> pure HR.Unit
     IR.Let π l b -> do
       l <- irElimToHR' l
-      n <- newName
-      b <- irToHR' b
-      pure (HR.Let π n l b)
+      withName \n -> do
+        b <- irToHR' b
+        pure (HR.Let π n l b)
     IR.Elim e -> HR.Elim |<< irElimToHR' e
 
 irElimToHR' ::
   ( HasState "nextName" Int m,
-    HasState "nameStack" [Int] m
+    HasReader "nameStack" [Int] m
   ) =>
   IR.Elim primTy primVal ->
   m (HR.Elim primTy primVal)
@@ -143,13 +141,21 @@ newtype EnvElim a = EnvCon (State Env a)
     via StateField "nextName" (State Env)
   deriving
     ( HasState "nameStack" [Int],
-      HasSink "nameStack" [Int],
-      HasSource "nameStack" [Int]
+      HasSink "nameStack" [Int]
     )
     via StateField "nameStack" (State Env)
   deriving
+    ( HasReader "nameStack" [Int],
+      HasSource "nameStack" [Int]
+    )
+    via ReaderField "nameStack" (State Env)
+  deriving
     ( HasState "symbolStack" [NameSymbol.T],
-      HasSink "symbolStack" [NameSymbol.T],
-      HasSource "symbolStack" [NameSymbol.T]
+      HasSink "symbolStack" [NameSymbol.T]
     )
     via StateField "symbolStack" (State Env)
+  deriving
+    ( HasReader "symbolStack" [NameSymbol.T],
+      HasSource "symbolStack" [NameSymbol.T]
+    )
+    via ReaderField "symbolStack" (State Env)

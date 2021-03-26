@@ -1,44 +1,27 @@
 module Juvix.Core.Utility where
 
-import Data.List (findIndex, tail, (!!))
+import Data.List ((!!), findIndex)
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
-pushName ::
-  HasState "symbolStack" [sym] m => sym -> m ()
-pushName name = modify @"symbolStack" (name :)
+withSym :: HasReader "symbolStack" [sym] m => sym -> m a -> m a
+withSym name = local @"symbolStack" (name :)
 
-popName :: HasState "symbolStack" [sym] m => m ()
-popName = modify @"symbolStack" tail
+lookupName :: (Eq sym, HasReader "symbolStack" [sym] m) => sym -> m (Maybe Int)
+lookupName name = findIndex (== name) <$> ask @"symbolStack"
 
--- FIXME some error message if the stack is empty?
+unDeBruijn :: HasReader "nameStack" [Int] m => Int -> m NameSymbol.T
+unDeBruijn ind = do
+  stack <- ask @"nameStack"
+  pure $ NameSymbol.fromString $ show $ stack !! ind
 
 withName ::
-  HasState "symbolStack" [sym] m => sym -> m a -> m a
-withName n act = pushName n *> act <* popName
-
-lookupName ::
-  (Eq sym, HasState "symbolStack" [sym] m) => sym -> m (Maybe Int)
-lookupName name = do
-  stack <- get @"symbolStack"
-  let ind = findIndex (== name) stack
-  pure ind
-
-unDeBruijn ::
-  HasState "nameStack" [Int] m => Int -> m NameSymbol.T
-unDeBruijn ind = do
-  stack <- get @"nameStack"
-  pure (NameSymbol.fromString $ show $ stack !! ind)
-
-newName ::
-  ( HasState "nextName" Int m,
-    HasState "nameStack" [Int] m
-  ) =>
-  m NameSymbol.T
-newName = do
+  (HasState "nextName" Int m, HasReader "nameStack" [Int] m) =>
+  (NameSymbol.T -> m a) -> m a
+withName act = do
   name <- nextName
-  modify @"nameStack" (name :)
-  return (NameSymbol.fromString $ show name)
+  let sym = NameSymbol.fromString $ show name
+  local @"nameStack" (name :) $ act sym
 
 nextName :: (HasState "nextName" s f, Enum s) => f s
 nextName = get @"nextName" <* modify @"nextName" succ
