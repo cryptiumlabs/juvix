@@ -1,23 +1,31 @@
-module Juvix.Pipeline.Internal where
+
+module Juvix.Pipeline.Internal
+  ( Error (..),
+    toCore,
+    contextToCore,
+    defName,
+  )
+where
 
 import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core as Core
+import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Context
-import qualified Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as P
 import qualified Juvix.Frontend as Frontend
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Target
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Parser (ParserError)
+import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error
   = PipeLine Core.Error
   | ParseErr ParserError
   deriving (Show)
 
-toCore :: [FilePath] -> IO (Either Error Target.FinalContext)
+toCore :: [FilePath] -> IO (Either Error (Context.T Sexp.T Sexp.T Sexp.T))
 toCore paths = do
   x <- Frontend.ofPath paths
   case x of
@@ -29,8 +37,7 @@ toCore paths = do
         Right con -> pure $ Right con
 
 contextToCore ::
-  --   (Data primTy, Data primVal) =>
-  Target.FinalContext ->
+  Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)
 contextToCore ctx param = do
@@ -44,9 +51,7 @@ contextToCore ctx param = do
   where
     addSig (Context.Entry x feDef) = do
       msig <- FF.transformSig x feDef
-      for_ msig $
-        modify @"coreSigs"
-          . HM.insertWith FF.mergeSigs x
+      for_ msig $ modify @"coreSigs" . HM.insertWith FF.mergeSigs x
     addDef (Context.Entry x feDef) = do
       defs <- FF.transformDef x feDef
       for_ defs \def ->

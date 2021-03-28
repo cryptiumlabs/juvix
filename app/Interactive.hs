@@ -1,4 +1,4 @@
-module Interactive where
+module Interactive (interactive) where
 
 import qualified Config
 import Control.Monad.IO.Class

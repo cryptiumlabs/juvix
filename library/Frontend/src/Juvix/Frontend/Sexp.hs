@@ -1,7 +1,6 @@
 module Juvix.Frontend.Sexp where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Frontend.Types as Types
 import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -175,13 +174,13 @@ transLambda (Types.Lamb args expr) =
     ]
 
 transLike ::
-  Bool -> (a -> Sexp.T) -> Types.FunctionLike' Types.T a -> (Sexp.T, Sexp.T, Sexp.T)
+  Bool -> (a -> Sexp.T) -> Types.FunctionLike a -> (Sexp.T, Sexp.T, Sexp.T)
 transLike many trans (Types.Like name args body) =
   (Sexp.atom (NameSymbol.fromSymbol name), Sexp.list (fmap transArg args), bTrans body)
   where
     bTrans = transGuardBody many trans
 
-transGuardBody :: Bool -> (a -> Sexp.T) -> Types.GuardBody' Types.T a -> Sexp.T
+transGuardBody :: Bool -> (a -> Sexp.T) -> Types.GuardBody a -> Sexp.T
 transGuardBody _alsee trans (Types.Body b) = trans b
 transGuardBody False trans (Types.Guard c) = transCond trans c
 transGuardBody True transs (Types.Guard c) = transCondMultiple transs c
@@ -290,7 +289,7 @@ transCondMultiple :: (t -> Sexp.T) -> Types.Cond t -> Sexp.T
 transCondMultiple trans (Types.C t) =
   Sexp.list (Sexp.atom ":cond" : NonEmpty.toList (fmap (transCondLogicMultiple trans) t))
 
-transCondLogicMultiple :: (t -> Sexp.T) -> Types.CondLogic' Types.T t -> Sexp.T
+transCondLogicMultiple :: (t -> Sexp.T) -> Types.CondLogic t -> Sexp.T
 transCondLogicMultiple trans (Types.CondExpression p b) =
   Sexp.listStar [transExpr p, trans b]
 
@@ -298,7 +297,7 @@ transCond :: (t -> Sexp.T) -> Types.Cond t -> Sexp.T
 transCond trans (Types.C t) =
   Sexp.list (Sexp.atom ":cond" : NonEmpty.toList (fmap (transCondLogic trans) t))
 
-transCondLogic :: (t -> Sexp.T) -> Types.CondLogic' Types.T t -> Sexp.T
+transCondLogic :: (t -> Sexp.T) -> Types.CondLogic t -> Sexp.T
 transCondLogic trans (Types.CondExpression p b) =
   Sexp.list [transExpr p, trans b]
 

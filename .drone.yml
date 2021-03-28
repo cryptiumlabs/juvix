@@ -25,7 +25,7 @@ steps:
       restore: true
       bucket: juvix-drone-cache
       region: eu-west-1
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       archive_format: "gzip"
       mount:
         - ./.stack-work
@@ -62,7 +62,7 @@ steps:
       rebuild: true
       archive_format: "gzip"
       override: false
-      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      cache_key: "{{ checksum \"stack.yaml\" }}"
       mount:
         - ./.stack-work
         - ./.stack
@@ -260,6 +260,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 2905a09c39924d644c61ebe24b02fa70328b47a953fd85674dbfed73b5d9afa2
+hmac: 2ecb2eabc15dcd814bf9028c63f9eacdbe5c4694f3b5390951b4306fa2bfeca5
 
 ...

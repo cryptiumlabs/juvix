@@ -97,17 +97,6 @@ default-extensions:
   - TupleSections
   - BlockArguments
 
-ghc-options:
-  - -ferror-spans
-  - -Wall
-  - -fno-warn-orphans
-  - -fno-warn-name-shadowing
-  - -fno-warn-missing-pattern-synonym-signatures
-  - -j
-  - -static
-  - -fwrite-ide-info
-  - -optP-Wno-nonportable-include-path
-
 when:
   condition: flag(incomplete-error)
   ghc-options:
@@ -134,12 +123,45 @@ library:
     - Juvix.Pipeline
     - Juvix.Core
     - Juvix.Core.Pipeline
-    - Juvix.Core.FromFrontend
     - Juvix.Encoding.Encoding
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
     - Juvix.Encoding.Types
     - Juvix.Backends
+  ghc-options:
+    - -Wmissing-export-lists
+    - -j
+    - -static
+    - -ferror-spans
+    - -fno-warn-name-shadowing
+    - -fno-warn-unused-matches
+    - -fno-warn-unused-do-bind
+    - -fwarn-tabs
+    - -fwarn-incomplete-patterns
+    - -fwarn-incomplete-uni-patterns
+    - -fwarn-redundant-constraints
+    - -fwarn-implicit-prelude
+    - -fwarn-overflowed-literals
+    - -fwarn-orphans
+    - -fwarn-identities
+    - -fwarn-dodgy-exports
+    - -fwarn-dodgy-imports
+    - -fwarn-duplicate-exports
+    - -fwarn-overlapping-patterns
+    - -fwarn-missing-fields
+    - -fwarn-missing-methods
+    - -fwarn-missing-signatures
+    - -fwarn-missing-pattern-synonym-signatures
+    - -fwarn-noncanonical-monad-instances
+    - -fwarn-unused-imports
+    - -fwarn-unused-pattern-binds
+    - -fwarn-unused-type-patterns
+    - -fwarn-unrecognised-pragmas
+    - -fwarn-wrong-do-bind
+    - -fwarn-hi-shadowing
+    - -fwrite-ide-info
+    - -optP-Wno-nonportable-include-path
+
 
 executables:
   juvix:
@@ -150,15 +172,15 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - aeson
+      - ansi-wl-pprint
+      - gitrev
+      - haskeline
       - juvix
       - optparse-applicative
-      - ansi-wl-pprint
       - elliptic-curve
       - raw-strings-qq
       - yaml
-      - aeson
-      - haskeline
-      - gitrev
 
 tests:
   juvix-test:

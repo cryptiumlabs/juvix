@@ -1,10 +1,17 @@
-module Juvix.Pipeline.Types where
+module Juvix.Pipeline.Types
+  ( Exec,
+    ExecTerm,
+    Env (..),
+    EnvExec (..),
+    exec,
+  )
+where
 
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.Erasure.Types as Erasure
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.Types as Core
-import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as FE
+
 import Juvix.Library hiding (log)
 
 -- type of the exec result
@@ -26,7 +33,6 @@ type ExecTerm primTy primVal compErr =
     )
 
 exec ::
-  Show compErr =>
   EnvExec primTy primVal compErr a ->
   Core.Parameterisation primTy primVal ->
   Typed.GlobalsT primTy primVal ->

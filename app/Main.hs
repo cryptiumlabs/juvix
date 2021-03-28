@@ -1,11 +1,14 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Main where
+module Main
+  ( main,
+  )
+where
 
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Pipeline as Compile
+import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
 import System.Directory
@@ -103,12 +106,12 @@ run ctx opt = do
     Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
     Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
   where
-    run' :: Context -> Options -> Compile.Pipeline ()
+    run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do
       case cmd of
         Parse fin ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
+          do liftIO $ readFile fin
+            >>= Pipeline.parse
             >>= liftIO . print
         Typecheck fin (Michelson backend) ->
           typecheck fin backend
@@ -123,33 +126,33 @@ run ctx opt = do
 
 compile ::
   forall b.
-  ( Compile.HasBackend b,
-    Show (Compile.Ty b),
-    Show (Compile.Val b)
+  ( Pipeline.HasBackend b,
+    Show (Pipeline.Ty b),
+    Show (Pipeline.Val b)
   ) =>
   FilePath ->
   FilePath ->
   b ->
-  Compile.Pipeline ()
+  Pipeline.Pipeline ()
 compile fin fout _b = do
   (liftIO $ readFile fin)
-    >>= Compile.parse
-    >>= Compile.typecheck @b
-    >>= Compile.compile @b
-    >>= Compile.writeout fout
+    >>= Pipeline.parse
+    >>= Pipeline.typecheck @b
+    >>= Pipeline.compile @b
+    >>= Pipeline.writeout fout
     >>= liftIO . print
 
 typecheck ::
   forall b.
-  ( Compile.HasBackend b,
-    Show (Compile.Ty b),
-    Show (Compile.Val b)
+  ( Pipeline.HasBackend b,
+    Show (Pipeline.Ty b),
+    Show (Pipeline.Val b)
   ) =>
   FilePath ->
   b ->
-  Compile.Pipeline ()
+  Pipeline.Pipeline ()
 typecheck fin _b = do
   (liftIO $ readFile fin)
-    >>= Compile.parse
-    >>= Compile.typecheck @b
+    >>= Pipeline.parse
+    >>= Pipeline.typecheck @b
     >>= liftIO . print

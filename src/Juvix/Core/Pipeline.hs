@@ -1,9 +1,11 @@
 {-# LANGUAGE LiberalTypeSynonyms #-}
 
-module Juvix.Core.Pipeline where
+module Juvix.Core.Pipeline
+  ( coreToAnn,
+    toRaw,
+  )
+where
 
-import qualified Data.HashMap.Strict as HM
-import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
@@ -15,12 +17,11 @@ import qualified Juvix.Core.Translate as Translate
 import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-import qualified Michelson.TypeCheck as Michelson
-import qualified Michelson.Untyped as Michelson
 
-type RawTerm ty val = IR.Term ty val -- Former RawMichelsonTerm
 
-type RawElim ty val = IR.Elim ty val -- Former RawMichelsonElim
+type RawTerm ty val = IR.Term ty val
+
+type RawElim ty val = IR.Elim ty val
 
 type Term ty val = HR.Term ty val
 
@@ -49,9 +50,6 @@ type CompConstraints primTy primVal compErr m =
     TC.PrimPatSubstTerm primTy primVal,
     IR.HasWeak primVal
   )
-
--- type MichelsonCompConstraints m =
---   CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompErr m
 
 constMapPrim :: Erasure.MapPrim a a ty val
 constMapPrim _ x = Right x
