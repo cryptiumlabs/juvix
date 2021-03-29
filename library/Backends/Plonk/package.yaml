@@ -12,6 +12,7 @@ license:             BSD3
 description:         Please see the README on GitHub at <https://github.com/githubuser/Michelson#readme>
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
 - core
 - containers
@@ -67,6 +68,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - Juvix.Backends.Plonk
 
 tests:
   plonk-test:

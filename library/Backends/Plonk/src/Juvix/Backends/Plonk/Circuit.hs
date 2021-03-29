@@ -1,8 +1,10 @@
+{-# LANGUAGE DeriveAnyClass #-}
 module Juvix.Backends.Plonk.Circuit where
 
 import qualified Data.Map as Map
 import Juvix.Library
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
+import Data.Aeson                   (FromJSON, ToJSON)
 
 -- | Arithmetic circuits without multiplication, i.e. circuits
 -- describe affine transformations.
@@ -11,7 +13,7 @@ data AffineCircuit i f
   | ScalarMul f (AffineCircuit i f)
   | ConstGate f
   | Var i
-  deriving (Read, Eq, Show, Generic)
+  deriving (Read, Eq, Show, Generic, FromJSON, ToJSON)
 
 fetchVars :: AffineCircuit Wire f -> [Wire]
 fetchVars (Var i) = [i]
@@ -80,7 +82,7 @@ data Wire
   = InputWire Int
   | IntermediateWire Int
   | OutputWire Int
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Ord, Generic, FromJSON, ToJSON)
 
 instance Pretty Wire where
   pretty (InputWire v) = text "input_" <> pretty v
@@ -126,7 +128,7 @@ data Gate i f
         eqM :: i,
         eqO :: i
       }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
 instance (Pretty i, Show f) => Pretty (Gate i f) where
   pretty (MulGate l r o) =

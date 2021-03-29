@@ -146,6 +146,7 @@ opPrecedence BAdd = 6
 opPrecedence BDiv = 7
 opPrecedence BMod = 7
 opPrecedence BMul = 8
+opPrecedence BExp = 8
 
 instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
   pretty = prettyPrec 0
@@ -155,13 +156,15 @@ instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
         case e of
           IVar v -> pretty v
           IConst l -> pretty l
-          -- TODO correct precedence
           IUnOp op e1 -> parens (pretty op <+> pretty e1)
           IBinOp op e1 e2 ->
             parensPrec (opPrecedence op) p $
               prettyPrec (opPrecedence op) e1
                 <+> pretty op
                 <+> prettyPrec (opPrecedence op) e2
+          ICompOp op e1 e2 -> notImplemented
+          IAcc _ _ -> notImplemented
+          IECAdd _ _ -> notImplemented
           IIf b true false ->
             parensPrec 4 p (text "if" <+> pretty b <+> text "then" <+> pretty true <+> text "else" <+> pretty false)
 
@@ -171,7 +174,7 @@ instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
 
 -- | Evaluate arithmetic expressions directly, given an environment
 evalIR ::
-  (Bits f, Num f) =>
+  (Bits f, Num f, Integral f) =>
   -- | variable lookup
   (i -> vars -> Maybe f) ->
   -- | expression to evaluate
@@ -185,20 +188,27 @@ evalIR lookupVar expr vars = case expr of
   IVar i -> case lookupVar i vars of
     Just v -> v
     Nothing -> panic "TODO: incorrect var lookup"
-  IUnOp UNot e1 ->
-    not $ evalIR lookupVar e1 vars
-  IUnOp (URotL rotBits) e1 -> notImplemented
-  IUnOp (URotR rotBits) e1 -> notImplemented
+  IUnOp op e1 -> case op of
+    UNot ->    not $ evalIR lookupVar e1 vars
+    (URotL rotBits) -> notImplemented
+    (URotR rotBits) -> notImplemented
+    _ -> notImplemented
   IBinOp op e1 e2 ->
-    (evalIR lookupVar e1 vars) `apply` (evalIR lookupVar e2 vars)
+    evalIR lookupVar e1 vars `apply` evalIR lookupVar e2 vars
     where
       apply = case op of
         BAdd -> (+)
         BSub -> (-)
         BMul -> (*)
+        BDiv -> div
+        BMod -> mod
+        BExp -> (^)
         BAnd -> (&&)
         BOr -> (||)
         BXor -> \x y -> (x || y) && not (x && y)
+  ICompOp _ _ _ -> notImplemented
+  IAcc _ _ -> notImplemented
+  IECAdd _ _ -> notImplemented
   IIf b true false ->
     if evalIR lookupVar b vars
       then evalIR lookupVar true vars

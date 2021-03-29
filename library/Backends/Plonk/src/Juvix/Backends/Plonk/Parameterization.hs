@@ -14,7 +14,6 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import qualified Juvix.Core.Types as Core
@@ -37,7 +36,8 @@ check2Equal (x :| [y])
 check2Equal (_ :| _) = False
 
 isBool :: PrimTy f -> Bool
-isBool PrimTy = True --  TODO: May change
+isBool PBool = True
+isBool _ = False
 
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
 checkFirst2AndLast (x :| [y, last]) check
@@ -77,13 +77,25 @@ hasType PLte ty = checkFirst2AndLast ty isBool
 hasType PEq ty = checkFirst2AndLast ty isBool
 
 builtinTypes :: Param.Builtins (PrimTy f) -- TODO: Revisit this
-builtinTypes = Map.fromList [(NameSymbol.fromSymbol "Plonk.f", PrimTy)]
+builtinTypes = Map.fromList [
+  (NameSymbol.fromSymbol "Circuit.field", PField),
+  (NameSymbol.fromSymbol "Circuit.int", PInt),
+  (NameSymbol.fromSymbol "Circuit.bool", PBool)
+  ]
 
 builtinValues :: Param.Builtins (PrimVal f)
 builtinValues =
   Map.fromList $
     first NameSymbol.fromSymbol
-      <$> [("Plonk.add", PAdd)] -- TODO: Do the rest
+      <$> [("Circuit.add", PAdd),
+           ("Circuit.sub", PSub),
+           ("Circuit.mul", PMul),
+           ("Circuit.div", PDiv),
+           ("Circuit.exp", PExp),
+           ("Circuit.and", PAnd),
+           ("Circuit.or", POr),
+           ("Circuit.xor", PXor)
+          ] -- TODO: Do the rest
 
 plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)
 plonk =
@@ -91,7 +103,7 @@ plonk =
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy = \_ -> pure PrimTy,
+      parseTy = \_ -> pure PField,
       parseVal = notImplemented,
       reservedNames = [],
       reservedOpNames = [],
@@ -104,15 +116,15 @@ plonk =
     }
 
 instance Core.CanApply (PrimTy f) where
-  arity (Application hd rest) =
+  arity (PApplication hd rest) =
     Core.arity hd - fromIntegral (length rest)
   arity x = 0 -- TODO: Refine if/when extending PrimTy
 
-  apply (Application fn args1) args2 =
-    Application fn (args1 <> args2)
+  apply (PApplication fn args1) args2 =
+    PApplication fn (args1 <> args2)
       |> Right
   apply fun args =
-    Application fun args
+    PApplication fun args
       |> Right
 
 data ApplyError f

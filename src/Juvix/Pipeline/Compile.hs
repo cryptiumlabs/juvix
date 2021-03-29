@@ -44,8 +44,9 @@ parse code = do
       fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
       Pipeline.toCore
         [ "stdlib/Prelude.ju",
-          "stdlib/Michelson.ju",
-          "stdlib/MichelsonAlias.ju",
+          -- "stdlib/Michelson.ju",
+          -- "stdlib/MichelsonAlias.ju",
+          "stdlib/Circuit.ju",
           fp
         ]
 

@@ -127,7 +127,7 @@ library:
     - Juvix.Encoding.Mendler
     - Juvix.Encoding.Scott
     - Juvix.Encoding.Types
-    - Juvix.Backends
+    - Juvix.Pipeline.Backend
   ghc-options:
     - -Wmissing-export-lists
     - -j

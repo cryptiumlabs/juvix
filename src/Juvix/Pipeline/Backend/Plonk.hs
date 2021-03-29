@@ -93,7 +93,7 @@ instance
           [IR.RawGFunction f]
             | IR.RawFunction _name usage ty (clause :| []) <- f,
               IR.RawFunClause _ [] term _ <- clause -> do
-              let convGlobals = map (convGlobal Plonk.PrimTy) globalDefs
+              let convGlobals = map (convGlobal Plonk.PField) globalDefs
                   newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
