@@ -1,4 +1,4 @@
 open Prelude
 
 sig fn : Nat -> Nat -> Bool
-let fn x y = x^3 + 2x^2 + 1 == y 
+let fn x y = x -- x^3 + 2x^2 + 1 == y 
