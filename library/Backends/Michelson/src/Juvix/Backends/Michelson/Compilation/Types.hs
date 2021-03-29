@@ -1,7 +1,23 @@
 -- |
 -- - Types used internally by the Michelson backend.
 module Juvix.Backends.Michelson.Compilation.Types
-  ( module Juvix.Backends.Michelson.Compilation.Types,
+  ( PrimTy (..),
+    RawPrimVal (..),
+    Return',
+    Take,
+    Arg',
+    PrimVal',
+    PrimValIR,
+    PrimValHR,
+    RawTerm,
+    Term,
+    Value,
+    Type,
+    Op,
+    CompilationLog (..),
+    CompilationError (..),
+    SomeInstr (..),
+    EmptyInstr (..),
     CoreErased.AnnTerm (..),
   )
 where
