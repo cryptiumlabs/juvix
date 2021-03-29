@@ -110,23 +110,11 @@ data RawPrimVal
   | MapOp
   deriving (Show, Eq, Generic, Data)
 
-type NewPrim = RawPrimVal
-
-{-# DEPRECATED NewPrim "use RawPrimVal" #-}
-
 type Return' ext = App.Return' ext (P.PrimType PrimTy) RawPrimVal
-
-type ReturnIR = Return' IR.NoExt
-
-type ReturnHR = Return' CoreErased.T
 
 type Take = App.Take (P.PrimType PrimTy) RawPrimVal
 
 type Arg' ext = App.Arg' ext (P.PrimType PrimTy) RawPrimVal
-
-type ArgIR = Arg' IR.NoExt
-
-type ArgHR = Arg' CoreErased.T
 
 type PrimVal' ext = Return' ext
 
@@ -137,10 +125,6 @@ type PrimValHR = PrimVal' CoreErased.T
 type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
 
 type Term = CoreErased.AnnTerm PrimTy PrimValHR
-
-type NewTerm = RawTerm
-
-{-# DEPRECATED NewTerm "use RawTerm" #-}
 
 type Type = CoreErased.Type PrimTy
 
