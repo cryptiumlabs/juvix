@@ -147,8 +147,6 @@ data CompilationError
   | TooManyArguments
   deriving (Show, Eq, Generic)
 
--- compToPipeLineErr
-
 data CompilationLog
   = TermToInstr Term Op
   | OptimisedByJuvix Op Op
