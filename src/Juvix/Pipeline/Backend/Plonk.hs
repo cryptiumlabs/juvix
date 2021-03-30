@@ -108,8 +108,6 @@ instance
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
               (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
-              -- notImplemented
-              -- (res, _) <- notImplemented -- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
               case res of
                 Right r -> do
                   pure r

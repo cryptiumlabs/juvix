@@ -74,7 +74,8 @@ compilePrim p m args = case p of
   P.PSub -> compileBinOp m BSub args
   P.PMul -> compileBinOp m BMul args
   P.PExp -> compileBinOp m BExp args
-  P.PAssertEq -> compileCompOp m CEq args
+  -- P.PEq -> compileBinOp m CEq args
+  P.PEq -> compileCompOp m CEq args
 
 compileTerm :: (Num f, Integral f, Show f) => FFAnnTerm f -> Map NameSymbol.T Wire -> [FFAnnTerm f] -> IRM f (Either Wire (AffineCircuit Wire f))
 compileTerm _term@(Ann.Ann _ _ t) m a =

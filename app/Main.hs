@@ -17,6 +17,7 @@ import Text.RawString.QQ
 import qualified Data.Aeson as A
 import Data.Field.Galois (Prime, toP, fromP)
 import qualified Data.Scientific as S
+import Text.Pretty.Simple (pPrint)
 instance A.FromJSON Fr where
   parseJSON (A.Number n) = case S.floatingOrInteger n of
     Left floating -> panic $ "Can't parse floating :" <> show n
@@ -150,6 +151,6 @@ readAndPrint ::
   (Text -> Pipeline.Pipeline b) ->
   Pipeline.Pipeline ()
 readAndPrint fin f = do
-  (liftIO $ readFile fin)
+  liftIO (readFile fin)
     >>= f
-    >>= liftIO . print
+    >>= liftIO . pPrint

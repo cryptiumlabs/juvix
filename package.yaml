@@ -176,11 +176,12 @@ executables:
     dependencies:
       - aeson
       - ansi-wl-pprint
+      - elliptic-curve
       - gitrev
       - haskeline
       - juvix
       - optparse-applicative
-      - elliptic-curve
+      - pretty-simple
       - raw-strings-qq
       - yaml
 

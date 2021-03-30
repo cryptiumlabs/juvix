@@ -131,7 +131,7 @@ data Gate i f
       }
   deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
-instance (Pretty i, Show f) => Pretty (Gate i f) where
+instance (Pretty i, Show i, Show f) => Pretty (Gate i f) where
   pretty (MulGate l r o) =
     hsep
       [ pretty o,
@@ -140,6 +140,16 @@ instance (Pretty i, Show f) => Pretty (Gate i f) where
         text "*",
         parens (pretty r)
       ]
+
+  pretty (EqualGate i _ o) =
+    hsep
+      [ pretty o,
+        text ":=",
+        pretty i,
+        text "== 0 ? 0 : 1"
+      ]
+
+  pretty g = panic $ show g
 
 instance (Pretty i, Show f) => Pretty (AffineCircuit i f) where
   pretty = prettyPrec 0

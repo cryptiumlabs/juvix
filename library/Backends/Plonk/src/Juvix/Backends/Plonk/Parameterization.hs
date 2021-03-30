@@ -7,7 +7,7 @@ module Juvix.Backends.Plonk.Parameterization
   )
 where
 
-import Data.Field.Galois (GaloisField)
+import Data.Field.Galois (GaloisField(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Backends.Plonk.Types as Types
 import qualified Juvix.Core.Application as App
@@ -106,16 +106,20 @@ plonk =
       builtinTypes,
       builtinValues,
       parseTy = \_ -> pure PField,
-      parseVal = notImplemented,
+      parseVal = panic "Parse value not implemented",
       reservedNames = [],
       reservedOpNames = [],
       stringTy = \_ _ -> False,
       stringVal = const Nothing,
       intTy = \_ _ -> True,
-      intVal = const Nothing,
+      intVal = integerToPrimVal,
       floatTy = \_ _ -> False, -- Circuits does not support floats
       floatVal = const Nothing
     }
+
+integerToPrimVal :: forall f. GaloisField f => Integer -> Maybe (PrimVal f)
+integerToPrimVal x = Just . PConst $ fromInteger x
+
 
 instance Core.CanApply (PrimTy f) where
   arity (PApplication hd rest) =
@@ -139,8 +143,33 @@ instance Show (ApplyError f) where
     "not a primitive type:\n\t" <> show ty
 
 arityRaw :: PrimVal f -> Natural
-arityRaw (PConst _) = 0
-arityRaw prim = notImplemented
+arityRaw = \case
+   PConst _ -> 0
+   PDup -> 1
+   PIsZero -> 1
+   PNot -> 1
+   PShL -> 1
+   PShR-> 1
+   PRotL-> 1
+   PRotR-> 1
+   PAssertEq-> 1
+   PAssertIt-> 1
+   -- BinOps
+   PAdd-> 2
+   PSub-> 2
+   PMul-> 2
+   PDiv-> 2
+   PExp-> 2
+   PMod-> 2
+   PAnd-> 2
+   POr-> 2
+   PXor-> 2
+   -- CompOps
+   PGt-> 2
+   PGte-> 2
+   PLt-> 2
+   PLte-> 2
+   PEq-> 2
 
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
@@ -192,7 +221,7 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
   apply fun args = Left $ Core.InvalidArguments fun args
 
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
-applyProper fun args = notImplemented
+applyProper fun args = panic "Apply proper not implemented"
 
 --   case compd >>= Interpreter.dummyInterpret of
 --     Right x -> do
