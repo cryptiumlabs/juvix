@@ -3,15 +3,15 @@ module Golden where
 import qualified Data.ByteString as ByteString (readFile, writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
+import Data.Text.Lazy (toStrict)
 import qualified Juvix.Frontend.Parser as Parser
+import Juvix.Frontend.Sexp (transTopLevel)
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
 import Juvix.Frontend.Types.Base (Header (NoHeader))
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)
-import Juvix.Frontend.Sexp (transTopLevel)
-import Data.Text.Lazy (toStrict)
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
@@ -43,12 +43,13 @@ parsedContract file = do
       -- generate/update the golden file as the parsed file
       writeFile (file <> ".golden") (show x)
       -- human readable version of the golden file for debugging
-      writeFile 
+      writeFile
         (file <> ".HRGolden")
-        (toStrict 
-          (pShowNoColor $
-            map transTopLevel (extractTopLevel x)
-          ))
+        ( toStrict
+            ( pShowNoColor $
+                map transTopLevel (extractTopLevel x)
+            )
+        )
       pure x
 
 getGolden :: FilePath -> IO (Maybe (Header TopLevel))
