@@ -1,28 +1,35 @@
 {-# LANGUAGE UndecidableInstances #-}
-module Juvix.Pipeline.Backend.Plonk (
-    BPlonk(..)
-) where
 
-import Juvix.Library
+module Juvix.Pipeline.Backend.Plonk
+  ( BPlonk (..),
+  )
+where
+
 import Data.Field.Galois (GaloisField)
-import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import qualified Juvix.Backends.Plonk as Plonk
-import Juvix.Pipeline.Internal as Pipeline
-import Juvix.Pipeline.Compile
-    ( toCoreDef, isMain, unsafeEvalGlobal, convGlobal )
-import qualified Juvix.Library.Feedback as Feedback
-import Juvix.Pipeline.Backend.Internal (HasBackend(..), writeout)
 import qualified Data.HashMap.Strict as HM
-import Juvix.ToCore.FromFrontend as FF ( CoreDefs(..) )
-import qualified Text.PrettyPrint.Leijen.Text as Pretty
-import qualified Juvix.Core.Pipeline as CorePipeline
-import Juvix.Core.Parameterisation
-    ( CanApply(ApplyErrorExtra, Arg), TypedPrim )
+import qualified Juvix.Backends.Plonk as Plonk
+import qualified Juvix.Core.Application as CoreApp
+import qualified Juvix.Core.IR as IR
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
+import Juvix.Core.Parameterisation
+  ( CanApply (ApplyErrorExtra, Arg),
+    TypedPrim,
+  )
+import qualified Juvix.Core.Pipeline as CorePipeline
+import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
+import Juvix.Pipeline.Backend.Internal (HasBackend (..), writeout)
+import Juvix.Pipeline.Compile
+  ( convGlobal,
+    isMain,
+    toCoreDef,
+    unsafeEvalGlobal,
+  )
+import Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Types (exec)
-
+import Juvix.ToCore.FromFrontend as FF (CoreDefs (..))
+import qualified Text.PrettyPrint.Leijen.Text as Pretty
 
 data BPlonk f = BPlonk
   deriving (Eq, Show)
@@ -111,7 +118,7 @@ instance
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
   compile out term = do
-    let circuit =  Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
+    let circuit = Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
     let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
     liftIO $ Plonk.dotWriteSVG out (Plonk.arithCircuitToDot circuit)
     writeout out $ pretty circuit

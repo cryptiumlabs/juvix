@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
+
 module Juvix.Backends.Plonk.Circuit where
 
+import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Map as Map
 import Juvix.Library
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
-import Data.Aeson                   (FromJSON, ToJSON)
 
 -- | Arithmetic circuits without multiplication, i.e. circuits
 -- describe affine transformations.

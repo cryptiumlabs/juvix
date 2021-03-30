@@ -1,11 +1,12 @@
 * Backends
+** Parameterization <<Backends/Parameterization>>
 ** ArithmeticCircuit
 *** Setup <<ArithmeticCircuit/Setup>>
 *** src
 **** Juvix
 ***** Backends
 ****** ArithmeticCircuit <<Backends/ArithmeticCircuit>>
-******* Groth
+******* Groth <<ArithmeticCircuit/Groth>>
 - place holder module until we have our groth
   setup done
 - _Relies on_
@@ -13,7 +14,7 @@
 ******* ZKP
 - _Relies on_
   + [[ArithmeticCircuit/Compilation]]
-  + [[Groth]]
+  + [[ArithmeticCircuit/Groth]]
   + [[Library]]
 ******* Compilation <<ArithmeticCircuit/Compilation>>
 - _Relies on_
@@ -419,7 +420,6 @@ This module provides a default contract environment
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[NameSymbol]]
-  + [[Usage]]
 ******** VirtualStack
 - Serves as a virtual stack over Michelson
 - This stack has a few properties
@@ -520,6 +520,134 @@ This module provides a default contract environment
   + [[VirtualStack]]
   + [[Library]]
   + [[Usage]]
+** Plonk
+*** Setup <<Plonk/Setup>>
+*** src
+**** Juvix
+***** Backends
+****** Plonk
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Assignment]]
+  + [[Plonk/Compiler]]
+  + [[Plonk/Dot]]
+  + [[Plonk/IR]]
+  + [[Lang]]
+  + [[Plonk/Parameterization]]
+  + [[Plonk/Types]]
+******* Builder
+- _Relies on_
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Library]]
+******* Compiler <<Plonk/Compiler>>
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Lang]]
+  + [[Plonk/Types]]
+  + [[ErasedAnn/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+******* Dot <<Plonk/Dot>>
+Visualise circuits using Graphviz
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+******* IR <<Plonk/IR>>
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+******* Lang
+Surface language
+- _Relies on_
+  + [[Builder]]
+  + [[Circuit]]
+  + [[Plonk/IR]]
+  + [[Library]]
+******* Parameterization <<Plonk/Parameterization>>
+- _Relies on_
+  + [[Plonk/Types]]
+  + [[Application]]
+  + [[Prim]]
+  + [[ErasedAnn/Types]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+  + [[Usage]]
+******* Types <<Plonk/Types>>
+- _Relies on_
+  + [[Application]]
+  + [[ErasedAnn]]
+  + [[ErasedAnn/Types]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Library]]
+******* Circuit
+- _Relies on_
+  + [[Library]]
+******** Assignment
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+*** test
+**** Main <<Plonk/test/Main>>
+- _Relies on_
+  + [[Library]]
+**** Ref
+***** Groth <<Ref/Groth>>
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+****** FFT
+Discrete Fourier transforms for polynomial interpolation
+- _Relies on_
+  + [[Library]]
+****** Fresh
+****** Poly
+- _Relies on_
+  + [[Library]]
+****** QAP
+Definitions of quadratic arithmetic programs, along with their
+assignment verification functions and the translations from single
+multiplication- or equality-gates into QAPs and arithmetic circuits
+into QAPs.
+- _Relies on_
+  + [[Circuit]]
+  + [[Library]]
+**** Test
+***** AnnTerm
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Usage]]
+***** Compiler <<Test/Compiler>>
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[Library]]
+  + [[Library]]
+***** Groth <<Test/Groth>>
+- _Relies on_
+  + [[Plonk]]
+  + [[Library]]
+***** Ref
+****** Polynomial
+- _Relies on_
+  + [[Plonk]]
+  + [[Plonk]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Usage]]
 * Core
 ** Setup <<Core/Setup>>
 ** src
@@ -541,7 +669,7 @@ Types to support partial application and polymorphic primitives.
 ***** Translate
 - _Relies on_
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Utility]]
   + [[Library]]
   + [[NameSymbol]]
@@ -675,7 +803,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[Erasure/Types]]
   + [[Erasure/Types]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Library]]
@@ -741,7 +869,7 @@ temporary lexical bindings as our code encounters binders.
 - _Relies on_
   + [[HRAnn/Extend]]
   + [[IR/Types/Base]]
-***** IR
+***** IR <<Core/IR>>
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
@@ -932,7 +1060,7 @@ Quantitative type implementation inspired by
 *** Conv
 - _Relies on_
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Translate]]
   + [[Library]]
 *** Erasure <<test/Erasure>>
@@ -940,7 +1068,7 @@ Quantitative type implementation inspired by
   + [[Application]]
   + [[Erased]]
   + [[Core/Erasure]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Typechecker]]
   + [[Unit]]
   + [[Core/Types]]
@@ -960,7 +1088,7 @@ Quantitative type implementation inspired by
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
-  + [[IR]]
+  + [[Core/IR]]
   + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
@@ -1209,7 +1337,7 @@ Can be added to via core translation
   + [[Library]]
   + [[NameSymbol]]
 **** Visualize
-***** Dot
+***** Dot <<Visualize/Dot>>
 - Generates a dot file in order to produce a simple image of a
   interaction net
 - Also provides a way of generating gifs (and the images used to
@@ -1239,7 +1367,7 @@ Can be added to via core translation
   + [[InteractionNet/Nets/Default]]
   + [[Type]]
   + [[Library]]
-  + [[Dot]]
+  + [[Visualize/Dot]]
   + [[Visualize/Graph]]
 *** Spec
 *** Nets
@@ -1618,7 +1746,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[Core/Parameterisation]]
   + [[Translate]]
   + [[Library]]
@@ -1630,7 +1758,7 @@ done with no extra information needed. Thus we export the following passes
 - _Relies on_
   + [[Core/Common/Context]]
   + [[HR]]
-  + [[IR]]
+  + [[Core/IR]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]

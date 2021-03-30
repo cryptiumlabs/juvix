@@ -3,17 +3,17 @@ module Main
   )
 where
 
+import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
-import  Juvix.Pipeline (BMichelson, BPlonk)
+import Juvix.Pipeline (BMichelson, BPlonk)
 import Options
 import Options.Applicative
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
-import Data.Curve.Weierstrass.BLS12381 (Fr)
 
 context :: IO Context
 context = do
@@ -116,22 +116,29 @@ run ctx opt = do
           (Michelson b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @BMichelson)
           (Plonk b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @(BPlonk Fr))
         Compile fin fout backend -> case backend of
-          (Michelson b) -> readAndPrint fin (Pipeline.parse b 
-                                            >=> Pipeline.typecheck @BMichelson
-                                            >=> Pipeline.compile @BMichelson fout)
-          (Plonk b) -> readAndPrint fin (Pipeline.parse b
-                                            >=> Pipeline.typecheck @(BPlonk Fr)
-                                            >=> Pipeline.compile @(BPlonk Fr) fout)
+          (Michelson b) ->
+            readAndPrint
+              fin
+              ( Pipeline.parse b
+                  >=> Pipeline.typecheck @BMichelson
+                  >=> Pipeline.compile @BMichelson fout
+              )
+          (Plonk b) ->
+            readAndPrint
+              fin
+              ( Pipeline.parse b
+                  >=> Pipeline.typecheck @(BPlonk Fr)
+                  >=> Pipeline.compile @(BPlonk Fr) fout
+              )
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
 
 readAndPrint ::
-  ( Show b)
-  =>
+  (Show b) =>
   FilePath ->
   (Text -> Pipeline.Pipeline b) ->
   Pipeline.Pipeline ()
 readAndPrint fin f = do
   (liftIO $ readFile fin)
-    >>= f 
+    >>= f
     >>= liftIO . print

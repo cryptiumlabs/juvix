@@ -18,7 +18,6 @@ import qualified Juvix.Core.Types as Types
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
-
 type RawTerm ty val = IR.Term ty val
 
 type RawElim ty val = IR.Elim ty val

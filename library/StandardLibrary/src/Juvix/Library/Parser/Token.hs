@@ -43,7 +43,7 @@ where
 import qualified Data.Set as Set
 import Data.Word8 (isDigit)
 import qualified GHC.Unicode as Unicode
-import Juvix.Library hiding (div, hash, maybe, option, takeWhile, exp)
+import Juvix.Library hiding (div, exp, hash, maybe, option, takeWhile)
 
 charToWord8 :: Char -> Word8
 charToWord8 = fromIntegral . ord

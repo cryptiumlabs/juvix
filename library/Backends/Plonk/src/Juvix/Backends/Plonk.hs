@@ -15,6 +15,7 @@ import Juvix.Backends.Plonk.Builder
 import Juvix.Backends.Plonk.Circuit
 import Juvix.Backends.Plonk.Circuit.Assignment
 import Juvix.Backends.Plonk.Compiler
+import Juvix.Backends.Plonk.Dot
 import Juvix.Backends.Plonk.IR
   ( BinOp (..),
     CompOp (..),
@@ -26,4 +27,3 @@ import Juvix.Backends.Plonk.IR
 import Juvix.Backends.Plonk.Lang
 import Juvix.Backends.Plonk.Parameterization
 import Juvix.Backends.Plonk.Types
-import Juvix.Backends.Plonk.Dot

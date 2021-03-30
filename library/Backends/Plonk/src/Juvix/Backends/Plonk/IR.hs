@@ -189,7 +189,7 @@ evalIR lookupVar expr vars = case expr of
     Just v -> v
     Nothing -> panic "TODO: incorrect var lookup"
   IUnOp op e1 -> case op of
-    UNot ->    not $ evalIR lookupVar e1 vars
+    UNot -> not $ evalIR lookupVar e1 vars
     (URotL rotBits) -> notImplemented
     (URotR rotBits) -> notImplemented
     _ -> notImplemented

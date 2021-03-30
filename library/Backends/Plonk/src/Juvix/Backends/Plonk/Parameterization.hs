@@ -77,25 +77,26 @@ hasType PLte ty = checkFirst2AndLast ty isBool
 hasType PEq ty = checkFirst2AndLast ty isBool
 
 builtinTypes :: Param.Builtins (PrimTy f) -- TODO: Revisit this
-builtinTypes = Map.fromList [
-  (NameSymbol.fromSymbol "Circuit.field", PField),
-  (NameSymbol.fromSymbol "Circuit.int", PInt),
-  (NameSymbol.fromSymbol "Circuit.bool", PBool)
-  ]
+builtinTypes =
+  Map.fromList
+    [ (NameSymbol.fromSymbol "Circuit.field", PField),
+      (NameSymbol.fromSymbol "Circuit.int", PInt),
+      (NameSymbol.fromSymbol "Circuit.bool", PBool)
+    ]
 
 builtinValues :: Param.Builtins (PrimVal f)
 builtinValues =
   Map.fromList $
     first NameSymbol.fromSymbol
-      <$> [("Circuit.add", PAdd),
-           ("Circuit.sub", PSub),
-           ("Circuit.mul", PMul),
-           ("Circuit.div", PDiv),
-           ("Circuit.exp", PExp),
-           ("Circuit.and", PAnd),
-           ("Circuit.or", POr),
-           ("Circuit.xor", PXor),
-           ("Circuit.eq", PEq)
+      <$> [ ("Circuit.add", PAdd),
+            ("Circuit.sub", PSub),
+            ("Circuit.mul", PMul),
+            ("Circuit.div", PDiv),
+            ("Circuit.exp", PExp),
+            ("Circuit.and", PAnd),
+            ("Circuit.or", POr),
+            ("Circuit.xor", PXor),
+            ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
 plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)

@@ -10,8 +10,7 @@ module Options
 where
 
 import Data.Curve.Weierstrass.BLS12381 -- (BLS12381(..), R(..), Fr(..))
--- (Prime(..))
-
+  -- (Prime(..))
 import Data.Data
 import Data.Field.Galois
 import Juvix.Library hiding (option)

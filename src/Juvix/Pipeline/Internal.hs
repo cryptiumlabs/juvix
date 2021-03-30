@@ -1,4 +1,3 @@
-
 module Juvix.Pipeline.Internal
   ( Error (..),
     toCore,
