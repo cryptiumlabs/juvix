@@ -283,11 +283,12 @@ removeTop sym t@T {topLevelMap} =
 -- Global Traversals
 ------------------------------------------------------------
 
-data ContextForms m term ty sumRep = CtxForm
-  { sumF :: sumRep -> T term ty sumRep -> m sumRep,
-    termF :: term -> T term ty sumRep -> m term,
-    tyF :: ty -> T term ty sumRep -> m ty
-  }
+data ContextForms m term ty sumRep
+  = CtxForm
+      { sumF :: sumRep -> T term ty sumRep -> m sumRep,
+        termF :: term -> T term ty sumRep -> m term,
+        tyF :: ty -> T term ty sumRep -> m ty
+      }
   deriving (Show)
 
 -- | @mapWithContextPure@ is just @mapWithContext@ but is pure. Since
@@ -537,8 +538,7 @@ modifySpaceImp f symbol@(s :| ymbol) t =
             (newS : newYmbol) ->
               -- currentName: Foo.Bar, symbol: TopLevel.First.Rest
               -- update the TopLevel on First.Rest!
-              if
-                  | s == topLevelName ->
+              if  | s == topLevelName ->
                     applyAndSetTop (recurseImp f (newS :| newYmbol))
                   -- currentName: Foo.Bar, symbol: First.MoreStuff
                   -- just recurse on the symbol entirely

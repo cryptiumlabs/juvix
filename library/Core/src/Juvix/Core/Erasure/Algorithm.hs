@@ -229,7 +229,7 @@ eraseType (IR.VPrimTy t) = do
 eraseType (IR.VPi π a b) = do
   if π == mempty
     then eraseType b
-    else -- FIXME dependency
+    else-- FIXME dependency
 
     Erasure.Pi π <$> eraseType a
       <*> withName \_ -> eraseType b

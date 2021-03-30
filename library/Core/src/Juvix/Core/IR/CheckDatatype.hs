@@ -38,12 +38,13 @@ teleToType ::
   (Maybe Name, IR.Term' ext primTy primVal)
 teleToType [] t = (Nothing, t)
 teleToType (hd : tel) t2 =
-  ( Just (rawName hd), 
-    Pi 
-      (rawUsage hd) 
+  ( Just (rawName hd),
+    Pi
+      (rawUsage hd)
       (rawTy hd)
       (snd (teleToType tel t2))
-      (rawExtension hd))
+      (rawExtension hd)
+  )
 
 typeToTele ::
   (Maybe Name, IR.Term' ext primTy primVal) ->
@@ -55,21 +56,23 @@ typeToTele (n, t) = ttt (n, t) []
       RawTelescope ext primTy primVal ->
       (RawTelescope ext primTy primVal, IR.Term' ext primTy primVal)
     ttt (Just n, Pi usage t' t2 ext) tel =
-      ttt 
-        (Nothing, t2) 
-        (tel <> 
-         [RawTeleEle 
-          {rawName = n, 
-           rawUsage = usage, 
-           rawTy = t', 
-           rawExtension = ext
-          }]) 
+      ttt
+        (Nothing, t2)
+        ( tel
+            <> [ RawTeleEle
+                   { rawName = n,
+                     rawUsage = usage,
+                     rawTy = t',
+                     rawExtension = ext
+                   }
+               ]
+        )
     ttt x tel = (tel, snd x)
 
 -- | checkDataType takes 5 arguments.
 checkDataType ::
-  -- | the next fresh generic value.  
-  Int -> 
+  -- | the next fresh generic value.
+  Int ->
   -- an env that binds fresh generic values to variables.
   Telescope extV extT primTy primVal ->
   -- an env that binds the type value corresponding to these generic values.
@@ -90,7 +93,7 @@ checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 checkDataType _k _rho _gamma _p (Star _ _) = undefined
 checkDataType _k _rho _gamma _p e =
   error $ "checkDataType: " -- <> show e <> "doesn't target Star."
-  --TODO show instance? more proper error throwing?
+    --TODO show instance? more proper error throwing?
 
 -- | checkConType check constructor type
 checkConType ::

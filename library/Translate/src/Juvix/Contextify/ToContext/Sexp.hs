@@ -97,8 +97,7 @@ declare (Sexp.List [inf, n, i]) ctx
     Just atomName <- eleToSymbol n =
     let prec =
           Context.Pred
-            if
-                | Sexp.isAtomNamed inf "infix" ->
+            if  | Sexp.isAtomNamed inf "infix" ->
                   Context.NonAssoc
                 | Sexp.isAtomNamed inf "infixl" ->
                   Context.Left

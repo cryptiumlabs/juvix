@@ -276,7 +276,7 @@ checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Type ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
   M.TInt -> True -- TODO bounds?
-  -- TODO other cases?
+    -- TODO other cases?
   _ -> False
 checkIntType _ _ = False
 

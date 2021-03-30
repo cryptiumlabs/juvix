@@ -30,10 +30,11 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
 -- | A definition identified by its fully-qualified name.
-data Entry term ty sumRep = Entry
-  { name :: NameSymbol.T,
-    def :: Definition term ty sumRep
-  }
+data Entry term ty sumRep
+  = Entry
+      { name :: NameSymbol.T,
+        def :: Definition term ty sumRep
+      }
   deriving (Eq, Show, Generic)
 
 -- | A recursive group of definitions, in an arbitrary order.
@@ -54,11 +55,12 @@ newtype Prefix = P (D.DList Symbol)
 
 type Deps = HashMap NameSymbol.Mod (HashSet NameSymbol.Mod)
 
-data S term ty sumRep = S
-  { output :: Groups' term ty sumRep,
-    context :: Context.T term ty sumRep,
-    deps :: Deps
-  }
+data S term ty sumRep
+  = S
+      { output :: Groups' term ty sumRep,
+        context :: Context.T term ty sumRep,
+        deps :: Deps
+      }
   deriving (Generic)
 
 type Alias term ty sumRep = State (S term ty sumRep)

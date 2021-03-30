@@ -308,8 +308,7 @@ nameSetMany' :: Parser a -> Parser (NonEmpty (Types.NameSet a))
 nameSetMany' parser =
   J.curly $ do
     x <- J.sepBy1H (nameSetSN parser) (skipLiner J.comma)
-    if
-        | length x == 1 && isPunned x ->
+    if  | length x == 1 && isPunned x ->
           x <$ skipLiner J.comma
         | otherwise ->
           x <$ P.optional (skipLiner J.comma)
@@ -657,8 +656,7 @@ do'' = Expr.makeExprParser (P.try doBind <|> doNotBind) table P.<?> "bind expr"
 infixSymbolGen :: Parser Symbol -> Parser Symbol
 infixSymbolGen p = do
   symb <- p
-  if
-      | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
+  if  | Set.member symb J.reservedSymbols -> fail "symbol is reserved word"
       | otherwise -> pure symb
 
 infixSymbolDot :: Parser (NonEmpty Symbol)
@@ -686,8 +684,7 @@ prefixSymbolGen startParser = do
   rest <- P.takeWhileP (Just "Valid Middle Symbol") J.validMiddleSymbol
   -- Slow O(n) call, could maybe peek ahead instead, then parse it all at once?
   let new = ByteString.cons start rest
-  if
-      | Set.member new J.reservedWords -> fail "symbol is reserved operator"
+  if  | Set.member new J.reservedWords -> fail "symbol is reserved operator"
       | otherwise -> pure (internText $ Encoding.decodeUtf8 new)
 
 symbolEndGen :: ByteString -> Parser ()

@@ -13,12 +13,13 @@ import qualified Juvix.Backends.ArithmeticCircuit.Groth as Groth
 import Juvix.Library
 import qualified QAP
 
-data SetupOutput = Setup
-  { randsetup :: Groth.RandomSetup BN254.Fr,
-    qap :: QAP.QAP BN254.Fr,
-    ref :: Groth.Reference (BN254.G1 BN254.BN254) (BN254.G2 BN254.BN254),
-    roots :: [[BN254.Fr]]
-  }
+data SetupOutput
+  = Setup
+      { randsetup :: Groth.RandomSetup BN254.Fr,
+        qap :: QAP.QAP BN254.Fr,
+        ref :: Groth.Reference (BN254.G1 BN254.BN254) (BN254.G2 BN254.BN254),
+        roots :: [[BN254.Fr]]
+      }
 
 runSetup :: Circuit.ArithCircuit BN254.Fr -> IO SetupOutput
 runSetup program = do

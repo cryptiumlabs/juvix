@@ -7,16 +7,18 @@ import Juvix.Library hiding (modify, toList)
 import qualified Juvix.Library.HashMap as HashMap
 
 -- TODO :: Put protected here
-data T b = T
-  { public :: HashMap.T Symbol b,
-    private :: HashMap.T Symbol b
-  }
+data T b
+  = T
+      { public :: HashMap.T Symbol b,
+        private :: HashMap.T Symbol b
+      }
   deriving (Show, Eq, Data, Functor, Foldable, Traversable)
 
-data List b = List
-  { publicL :: [(Symbol, b)],
-    privateL :: [(Symbol, b)]
-  }
+data List b
+  = List
+      { publicL :: [(Symbol, b)],
+        privateL :: [(Symbol, b)]
+      }
   deriving (Show, Data)
 
 -- | From represents whether the variable came from

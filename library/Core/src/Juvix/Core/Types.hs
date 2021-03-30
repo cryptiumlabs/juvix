@@ -41,14 +41,16 @@ data PipelineLog primTy primVal
 
 -- compErr serves to resolve the compilation error type
 -- needed to promote a backend specific compilation error
-data TermAssignment primTy primVal compErr = Assignment
-  { term :: EC.Term primVal,
-    assignment :: EC.TypeAssignment primTy
-  }
+data TermAssignment primTy primVal compErr
+  = Assignment
+      { term :: EC.Term primVal,
+        assignment :: EC.TypeAssignment primTy
+      }
   deriving (Show, Generic)
 
-data AssignWithType primTy primVal compErr = WithType
-  { termAssign :: TermAssignment primTy primVal compErr,
-    type' :: EC.Type primTy
-  }
+data AssignWithType primTy primVal compErr
+  = WithType
+      { termAssign :: TermAssignment primTy primVal compErr,
+        type' :: EC.Type primTy
+      }
   deriving (Show, Generic)

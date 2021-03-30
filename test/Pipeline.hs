@@ -14,11 +14,12 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
 
-data Env primTy primVal = Env
-  { parameterisation :: Core.Parameterisation primTy primVal,
-    log :: [Core.PipelineLog primTy primVal],
-    globals :: IR.GlobalsT primTy primVal
-  }
+data Env primTy primVal
+  = Env
+      { parameterisation :: Core.Parameterisation primTy primVal,
+        log :: [Core.PipelineLog primTy primVal],
+        globals :: IR.GlobalsT primTy primVal
+      }
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =

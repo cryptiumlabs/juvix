@@ -36,10 +36,11 @@ import Prelude (error)
 -- T operation Type
 --------------------------------------------------------------------------------
 
-data T lamType = T
-  { stack' :: [(Elem lamType, Untyped.Type)],
-    size :: Int
-  }
+data T lamType
+  = T
+      { stack' :: [(Elem lamType, Untyped.Type)],
+        size :: Int
+      }
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
@@ -91,13 +92,14 @@ var1E x = VarE (Set.singleton x) (defUsage one)
 varNone :: NameSymbol.T -> Elem lamType
 varNone x = VarE (Set.singleton x) (defUsage Usage.Omega) Nothing
 
-data LamPartial = LamPartial
-  { ops :: [Types.Op],
-    captures :: [NameSymbol.T], -- note: semantically this should be a set :)
-    remArgs :: [NameSymbol.T],
-    body :: Types.Term,
-    ty :: Types.Type
-  }
+data LamPartial
+  = LamPartial
+      { ops :: [Types.Op],
+        captures :: [NameSymbol.T], -- note: semantically this should be a set :)
+        remArgs :: [NameSymbol.T],
+        body :: Types.Term,
+        ty :: Types.Type
+      }
   deriving (Show, Eq, Generic)
 
 data Val lamType

@@ -13,9 +13,9 @@ where
 import Juvix.Core.IR.Typechecker.Env as Env
 import Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types as IR
+import Juvix.Core.IR.Types (Global')
 import qualified Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library hiding (Datatype)
-import Juvix.Core.IR.Types (Global')
 
 typeCheckDeclaration ::
   [IR.RawDatatype' ext primTy primVal] ->
@@ -32,5 +32,4 @@ typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
 typeCheckDeclaration _ ((IR.RawFunction name usage ty cls) : tlf) =
   undefined
-
 -- TODO run typeCheckFuns

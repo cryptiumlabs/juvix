@@ -115,11 +115,12 @@ argToReturn = fmap takeToReturn . argToTake
 -- |
 -- An argument to a partially applied primitive, which must be
 -- fully-applied itself.
-data Take ty term = Take
-  { usage :: Usage.T,
-    type' :: ty,
-    term :: term
-  }
+data Take ty term
+  = Take
+      { usage :: Usage.T,
+        type' :: ty,
+        term :: term
+      }
   deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
 
 instance Bifunctor Take where

@@ -120,8 +120,7 @@ infixDeclar :: Sexp.T -> Target.InfixDeclar
 infixDeclar (Sexp.List [inf, n, i])
   | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
     Just atomName <- eleToSymbol n =
-    if
-        | Sexp.isAtomNamed inf "infix" ->
+    if  | Sexp.isAtomNamed inf "infix" ->
           Target.NonAssoc atomName (fromInteger atomNum)
         | Sexp.isAtomNamed inf "infixl" ->
           Target.AssocL atomName (fromInteger atomNum)
@@ -209,11 +208,12 @@ recordDetector :: Sexp.T -> Bool
 recordDetector name =
   Sexp.isAtomNamed name ":record-d" || Sexp.isAtomNamed name ":"
 
-data AssocTypeName = Assoc
-  { symName :: Symbol,
-    usage :: Maybe Target.Expression,
-    sig :: Maybe Target.Expression
-  }
+data AssocTypeName
+  = Assoc
+      { symName :: Symbol,
+        usage :: Maybe Target.Expression,
+        sig :: Maybe Target.Expression
+      }
   deriving (Show, Eq)
 
 -- | @handleAssocTypeName@ takes a type declaration name and gives us

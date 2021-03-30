@@ -22,7 +22,7 @@ data Term primTy primVal
   | LamM
       { capture :: [NameSymbol.T], -- Capture
         arguments :: [NameSymbol.T], -- Arguments
-        -- the Term in AnnTerm is not lam!
+          -- the Term in AnnTerm is not lam!
         body :: AnnTerm primTy primVal
       }
   | PairM (AnnTerm primTy primVal) (AnnTerm primTy primVal)
@@ -40,9 +40,10 @@ data Type primTy
   | UnitTy
   deriving (Show, Eq, Generic)
 
-data AnnTerm primTy primVal = Ann
-  { usage :: Usage.T,
-    type' :: Type primTy,
-    term :: Term primTy primVal
-  }
+data AnnTerm primTy primVal
+  = Ann
+      { usage :: Usage.T,
+        type' :: Type primTy,
+        term :: Term primTy primVal
+      }
   deriving (Show, Eq, Generic)

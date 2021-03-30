@@ -46,11 +46,12 @@ import qualified StmContainers.Map as STM
 -- - Any resolution will thus happen at the explicit module itself, as
 --   trying to do so in the inner modules would lead to a path error
 
-data PreQualified = Pre
-  { opens :: [NameSymbol.T],
-    implicitInner :: [NameSymbol.T],
-    explicitModule :: NameSymbol.T
-  }
+data PreQualified
+  = Pre
+      { opens :: [NameSymbol.T],
+        implicitInner :: [NameSymbol.T],
+        explicitModule :: NameSymbol.T
+      }
   deriving (Show, Eq)
 
 data Error
@@ -62,10 +63,11 @@ data Error
   | IllegalModuleSwitch Context.NameSymbol
   deriving (Show, Eq)
 
-data Resolve a b c = Res
-  { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
-    notResolved :: [NameSymbol.T]
-  }
+data Resolve a b c
+  = Res
+      { resolved :: [(Context.From (Context.Definition a b c), NameSymbol.T)],
+        notResolved :: [NameSymbol.T]
+      }
   deriving (Show)
 
 type PureSymbolMap = HashMap.Map Symbol Context.SymbolInfo
@@ -270,8 +272,7 @@ resolveLoop ctx map Res {resolved, notResolved = cantResolveNow} = do
   --
   let newResolve = resolveWhatWeCan ctx (qualifyCant map <$> cantResolveNow)
   --
-  if
-      | null cantResolveNow ->
+  if  | null cantResolveNow ->
         Right qualifedAns
       | length (notResolved newResolve) == length cantResolveNow ->
         Left (CantResolveModules cantResolveNow)

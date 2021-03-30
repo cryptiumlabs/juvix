@@ -21,10 +21,11 @@ data Key
 
 instance Hashable Key
 
-data T primTy primVal = T
-  { _seenSet :: InScopeSet,
-    _sub :: Map.T NameSymbol.T (Types.Elim primTy primVal)
-  }
+data T primTy primVal
+  = T
+      { _seenSet :: InScopeSet,
+        _sub :: Map.T NameSymbol.T (Types.Elim primTy primVal)
+      }
   deriving (Show)
 
 type InScopeSet = Set.HashSet NameSymbol.T

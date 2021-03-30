@@ -126,11 +126,12 @@ irElimToHR' elim =
 exec :: EnvElim a -> (a, Env)
 exec (EnvCon env) = runState env (Env 0 [] [])
 
-data Env = Env
-  { nextName :: Int,
-    nameStack :: [Int],
-    symbolStack :: [NameSymbol.T]
-  }
+data Env
+  = Env
+      { nextName :: Int,
+        nameStack :: [Int],
+        symbolStack :: [NameSymbol.T]
+      }
   deriving (Show, Eq, Generic)
 
 newtype EnvElim a = EnvCon (State Env a)

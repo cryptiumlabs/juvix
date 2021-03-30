@@ -5,17 +5,19 @@ import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
-data Ele a = Ele
-  { externalNumber :: Maybe Int,
-    ele :: a
-  }
+data Ele a
+  = Ele
+      { externalNumber :: Maybe Int,
+        ele :: a
+      }
   deriving (Generic, Show)
 
-data T a = T
-  { bindings :: Map.Map NameSymbol.T (Ele a),
-    free' :: NonEmpty Int,
-    size :: Int
-  }
+data T a
+  = T
+      { bindings :: Map.Map NameSymbol.T (Ele a),
+        free' :: NonEmpty Int,
+        size :: Int
+      }
   deriving (Generic, Show)
 
 instance Semigroup (T a) where

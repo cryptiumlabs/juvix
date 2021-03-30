@@ -72,7 +72,7 @@ goldenTest name file =
         -- show the golden/actual value, not working atm
         ( T.ShowText . Text.pack
             . const "this isn't doing anything?" -- (Prelude.unlines . map show))
-            -- update the golden file, not working atm
+              -- update the golden file, not working atm
         )
         ( ByteString.writeFile goldenFileName
             . const "this isn't either" -- ((encodeUtf8 . Text.pack) . ppShowList))

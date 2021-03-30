@@ -442,7 +442,7 @@ identityAppINat1 =
                 (IR.Pi one natT' natT')
                 -- the third 1 in the annotation, (1 Nat -> Nat)
                 (IR.Pi one natT' natT')
-                -- the forth 1 in the annotation, (1 Nat -> Nat)
+              -- the forth 1 in the annotation, (1 Nat -> Nat)
             )
             0
         )
@@ -474,7 +474,7 @@ identityAppI =
             (IR.Pi one natT' natT')
             -- the third 1 in the annotation 1 Nat -> Nat
             (IR.Pi one natT' natT')
-            -- the forth 1 in the annotation 1 Nat -> Nat
+          -- the forth 1 in the annotation 1 Nat -> Nat
         )
         0
     )
@@ -517,7 +517,7 @@ kCompTyWithUnit =
           mempty -- is not used in the output
           (IR.VPrimTy (All.UnitTy Unit.Ty)) -- of type Unit
           (IR.VPrimTy (All.NatTy Nat.Ty))
-          -- the output is of type Nat
+        -- the output is of type Nat
       )
 
 -- I K computation annotation
@@ -535,7 +535,7 @@ identityAppK =
                 one -- the second 1 in the annotation
                 natT' -- (1 Nat ->
                 (IR.Pi mempty natT' natT') -- 0 Nat -> Nat)
-                -- ->
+                  -- ->
             )
             ( IR.Pi
                 one
@@ -605,7 +605,7 @@ kFunApp1 =
         0
     )
     (nat 1) -- 1
-    -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
+      -- computation annotation (1, 0 (1 Nat -> Nat) -> Nat)
 
 kFunApp1CompTy :: NatAnnotation
 kFunApp1CompTy = one `ann` IR.VPi mempty (IR.VPi one natT natT) natT
@@ -626,7 +626,7 @@ kAppI =
                 mempty
                 natT' -- 0 Nat ->
                 (IR.Pi one natT' natT')
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0
@@ -656,7 +656,7 @@ kAppINotAnnotated =
                 mempty
                 natT' -- 0 Nat ->
                 (IR.Pi one natT' natT')
-                -- (1 Nat -> Nat)
+              -- (1 Nat -> Nat)
             )
         )
         0

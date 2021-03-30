@@ -538,8 +538,7 @@ onTwoArgs op f =
         let instrs = [instr2, instr1]
         -- check if they are all constants
         -- apply function if so
-        if
-            | allConstants (val <$> instrs) ->
+        if  | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
                   Env.Constant i2 = val instr2
                in pure (f i1 i2)
@@ -552,8 +551,7 @@ onOneArgs op f =
     ( \instr1 -> do
         -- check if they are all constants
         -- apply function if so
-        if
-            | allConstants [val instr1] ->
+        if  | allConstants [val instr1] ->
               let Env.Constant i1 = val instr1
                in pure (f i1)
             | otherwise -> noConstantCase op [instr1]
@@ -646,10 +644,11 @@ copyAndDrop :: Applicative f => p -> f ()
 copyAndDrop _i =
   pure ()
 
-data Protect = Protect
-  { val :: Env.Expanded,
-    insts :: [Types.Op]
-  }
+data Protect
+  = Protect
+      { val :: Env.Expanded,
+        insts :: [Types.Op]
+      }
   deriving (Show)
 
 protect :: Env.Ops m => m Env.Expanded -> m Protect
@@ -662,10 +661,11 @@ protect inst = do
   put @"ops" curr
   pure Protect {val = v, insts = after}
 
-data ProtectStack = ProtectStack
-  { prot :: Protect,
-    stack :: VStack.T Env.Curried
-  }
+data ProtectStack
+  = ProtectStack
+      { prot :: Protect,
+        stack :: VStack.T Env.Curried
+      }
   deriving (Show)
 
 protectStack :: Env.Instruction m => m Env.Expanded -> m ProtectStack
@@ -826,8 +826,7 @@ deleteVar (Env.Term name _usage) = do
         pure ()
       f (VStack.Position _ 0) = do
         stack <- get @"stack"
-        if
-            | VStack.constantOnTop stack ->
+        if  | VStack.constantOnTop stack ->
               op 0
             | otherwise ->
               pure ()
@@ -960,8 +959,7 @@ typeToPrimType ty =
         Types.PrimTy {} -> throw @"compilationError" $ Types.InvalidInputType "cannot apply primty"
         Types.Application _ _ -> throw @"compilationError" $ Types.InvalidInputType "cannot apply application"
         _ -> pure ()
-      if
-          | sameLength arg1 args ->
+      if  | sameLength arg1 args ->
             recurse args
               >>| appPrimTyErr arg1
           | otherwise ->

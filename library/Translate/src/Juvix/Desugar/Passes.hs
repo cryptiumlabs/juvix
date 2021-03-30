@@ -204,9 +204,9 @@ multipleTransDefun = search
 --         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
 combineSig
-  ( (Sexp.Atom (Sexp.A ":defsig" _) Sexp.:> name Sexp.:> sig Sexp.:> Sexp.Nil)
-      : (Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body)
-      : xs
+  ( (Sexp.Atom (Sexp.A ":defsig" _) Sexp.:> name Sexp.:> sig Sexp.:> Sexp.Nil) :
+      (Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body) :
+      xs
     )
     | defName == name =
       Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", name, sig, body])
@@ -376,8 +376,7 @@ combine (Sexp.List [form, open]) expression
 combine (form Sexp.:> name Sexp.:> args Sexp.:> xs) expression
   | Sexp.isAtomNamed form ":defmodule" =
     -- Turn this into a let-module
-    if
-        | Sexp.isAtomNamed (Sexp.car xs) ":cond" ->
+    if  | Sexp.isAtomNamed (Sexp.car xs) ":cond" ->
           Sexp.list [Sexp.atom ":let-mod", name, args, Sexp.car xs, expression]
         | otherwise ->
           Sexp.list [Sexp.atom ":let-mod", name, args, xs, expression]
