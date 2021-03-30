@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
-
 module Main
   ( main,
   )
@@ -9,11 +7,13 @@ import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Pipeline as Pipeline
+import  Juvix.Pipeline (BMichelson, BPlonk)
 import Options
 import Options.Applicative
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
+import Data.Curve.Weierstrass.BLS12381 (Fr)
 
 context :: IO Context
 context = do
@@ -109,50 +109,47 @@ run ctx opt = do
     run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do
       case cmd of
-        Parse fin ->
-          do liftIO $ readFile fin
-            >>= Pipeline.parse
-            >>= liftIO . print
-        Typecheck fin (Michelson backend) ->
-          typecheck fin backend
-        Typecheck fin (Plonk backend) ->
-          typecheck fin backend
-        Compile fin fout (Michelson backend) ->
-          compile fin fout backend
-        Compile fin fout (Plonk backend) ->
-          compile fin fout backend
+        Parse fin backend -> case backend of
+          (Michelson b) -> readAndPrint fin (Pipeline.parse b)
+          (Plonk b) -> readAndPrint fin (Pipeline.parse b)
+        Typecheck fin backend -> case backend of
+          (Michelson b) -> readAndPrint fin (\t -> Pipeline.parse b t >>= Pipeline.typecheck @BMichelson)
+          (Plonk b) -> readAndPrint fin (\t -> Pipeline.parse b t >>= Pipeline.typecheck @(BPlonk Fr))
+        Compile fin fout backend -> case backend of
+          (Michelson b) -> readAndPrint fin (\t -> Pipeline.parse b t 
+                                            >>= Pipeline.typecheck @BMichelson
+                                            >>= Pipeline.compile @BMichelson fout)
+          (Plonk b) -> readAndPrint fin (\t -> Pipeline.parse b t
+                                            >>= Pipeline.typecheck @(BPlonk Fr)
+                                            >>= Pipeline.compile @(BPlonk Fr) fout)
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
 
-compile ::
-  forall b.
-  ( Pipeline.HasBackend b,
-    Show (Pipeline.Ty b),
-    Show (Pipeline.Val b)
-  ) =>
-  FilePath ->
-  FilePath ->
-  b ->
-  Pipeline.Pipeline ()
-compile fin fout _b = do
-  (liftIO $ readFile fin)
-    >>= Pipeline.parse
-    >>= Pipeline.typecheck @b
-    >>= Pipeline.compile @b
-    >>= Pipeline.writeout fout
-    >>= liftIO . print
+-- runPipeline ::
+--   forall b.
+--   ( Pipeline.HasBackend b,
+--     Show (Pipeline.Ty b),
+--     Show (Pipeline.Val b)
+--   ) =>
+--   FilePath ->
+--   FilePath ->
+--   b ->
+--   Pipeline.Pipeline ()
+-- runPipeline fin fout b = do
+--   (liftIO $ readFile fin)
+--     >>= Pipeline.parse b
+--     >>= Pipeline.typecheck @b
+--     >>= Pipeline.compile @b
+--     >>= Pipeline.writeout fout
+--     >>= liftIO . print
 
-typecheck ::
-  forall b.
-  ( Pipeline.HasBackend b,
-    Show (Pipeline.Ty b),
-    Show (Pipeline.Val b)
-  ) =>
+readAndPrint ::
+  ( Show b)
+  =>
   FilePath ->
-  b ->
+  (Text -> Pipeline.Pipeline b) ->
   Pipeline.Pipeline ()
-typecheck fin _b = do
+readAndPrint fin f = do
   (liftIO $ readFile fin)
-    >>= Pipeline.parse
-    >>= Pipeline.typecheck @b
+    >>= f 
     >>= liftIO . print

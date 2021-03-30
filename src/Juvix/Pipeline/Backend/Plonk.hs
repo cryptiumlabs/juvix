@@ -9,11 +9,11 @@ import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Backends.Plonk as Plonk
-import qualified Juvix.Pipeline.Internal as Pipeline
+import Juvix.Pipeline.Internal as Pipeline
 import Juvix.Pipeline.Compile
     ( toCoreDef, isMain, unsafeEvalGlobal, convGlobal )
 import qualified Juvix.Library.Feedback as Feedback
-import Juvix.Pipeline.Backend.Internal (HasBackend(..))
+import Juvix.Pipeline.Backend.Internal (HasBackend(..), writeout)
 import qualified Data.HashMap.Strict as HM
 import Juvix.ToCore.FromFrontend as FF ( CoreDefs(..) )
 import qualified Text.PrettyPrint.Leijen.Text as Pretty
@@ -83,6 +83,7 @@ instance
   where
   type Ty (BPlonk f) = Plonk.PrimTy f
   type Val (BPlonk f) = Plonk.PrimVal f
+  stdlibs _ = ["stdlib/Circuit.ju"]
   typecheck ctx = do
     let res = Pipeline.contextToCore ctx (Plonk.plonk @f)
     case res of
@@ -109,7 +110,8 @@ instance
           somethingElse -> Feedback.fail $ show somethingElse
       Left err -> Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
-  -- TODO: Serialize circuit
-  -- TODO: Homogenize pretty printers!
-  compile term =
-    pure . toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty . Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
+  compile out term = do
+    let circuit =  Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
+    let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
+    liftIO $ Plonk.dotWriteSVG out (Plonk.arithCircuitToDot circuit)
+    writeout out $ pretty circuit

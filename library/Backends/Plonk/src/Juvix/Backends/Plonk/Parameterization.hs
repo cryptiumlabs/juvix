@@ -94,7 +94,8 @@ builtinValues =
            ("Circuit.exp", PExp),
            ("Circuit.and", PAnd),
            ("Circuit.or", POr),
-           ("Circuit.xor", PXor)
+           ("Circuit.xor", PXor),
+           ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
 plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)

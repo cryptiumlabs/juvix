@@ -1,54 +1,22 @@
 module Juvix.Pipeline.Compile
   ( Pipeline,
-    parse,
     toCoreDef,
     isMain,
     convGlobal,
     unsafeEvalGlobal,
-    writeout,
   )
 where
 
-import qualified Data.Text as Text
-import qualified Data.Text.IO as T
 import qualified Juvix.Core.Application as CoreApp
-import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.IR as IR
-import Juvix.Core.IR.Types.Base
+import Juvix.Core.IR.Types.Base ( Elim', Term' )
 import Juvix.Core.IR.Types.Globals
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
-import qualified Juvix.Library.Sexp as Sexp
-import qualified Juvix.Pipeline.Internal as Pipeline
 import Juvix.ToCore.Types (CoreDef (..))
-import qualified System.IO.Temp as Temp
 import qualified Prelude as P
 
-type Code = Text
-
-type OutputCode = Text
-
-type Message = P.String
-
-type Pipeline = Feedback.FeedbackT [] Message IO
-
-parse :: Code -> Pipeline (Context.T Sexp.T Sexp.T Sexp.T)
-parse code = do
-  core <- liftIO $ toCore_wrap code
-  case core of
-    Right ctx -> return ctx
-    Left err -> Feedback.fail $ show err
-  where
-    toCore_wrap :: Code -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))
-    toCore_wrap code = do
-      fp <- Temp.writeSystemTempFile "juvix-toCore.ju" (Text.unpack code)
-      Pipeline.toCore
-        [ "stdlib/Prelude.ju",
-          -- "stdlib/Michelson.ju",
-          -- "stdlib/MichelsonAlias.ju",
-          "stdlib/Circuit.ju",
-          fp
-        ]
+type Pipeline = Feedback.FeedbackT [] P.String IO
 
 toCoreDef ::
   Alternative f =>
@@ -60,10 +28,6 @@ toCoreDef _ = empty
 isMain :: RawGlobal' ext primTy primVal -> Bool
 isMain (IR.RawGFunction (IR.RawFunction (_ :| ["main"]) _ _ _)) = True
 isMain _ = False
-
--- | Write the output code to a given file.
-writeout :: FilePath -> OutputCode -> Pipeline ()
-writeout fout code = liftIO $ T.writeFile fout code
 
 unsafeEvalGlobal ::
   IR.CanEval IR.NoExt IR.NoExt primTy primVal =>

@@ -37,3 +37,6 @@ let or _ = %Circuit.or
 sig xor : (x : ty) -> x -> x -> x
 let xor _ = %Circuit.xor
 
+-- comparison functions
+sig eq : (x : ty) -> x -> x -> bool
+let eq _ = %Circuit.eq

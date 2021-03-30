@@ -35,13 +35,11 @@ data Backend
   | Michelson BMichelson
   deriving (Eq, Show)
 
--- deriving instance Data Fr
-
 data Command
   = Version
   | Config
   | Interactive
-  | Parse FilePath
+  | Parse FilePath Backend
   | Typecheck FilePath Backend
   | Compile FilePath FilePath Backend
   | Init
@@ -84,7 +82,7 @@ configurationOptions :: Parser Command
 configurationOptions = pure Config
 
 parseOptions :: Parser Command
-parseOptions = Parse <$> inputFileOptions
+parseOptions = Parse <$> inputFileOptions <*> backendOptions
 
 typecheckOptions :: Parser Command
 typecheckOptions = Typecheck <$> inputFileOptions <*> backendOptions

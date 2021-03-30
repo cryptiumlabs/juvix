@@ -5,9 +5,15 @@ open Circuit
 
 sig (+) : field -> field -> field
 let (+) = %Circuit.add
+declare infixl (+) 5
 
--- sig fn : field -> field -> field
--- let fn x y = (+) x x -- x^3 + 2x^2 + 1 == y 
+sig (^) : field -> field -> field
+let (^) = %Circuit.exp
+declare infixl (^) 8
+
+sig (*) : field -> field -> field
+let (*) = %Circuit.mul
+declare infixl (*) 7
 
 sig main : field -> field -> field
-let main = \x y -> (+) x y
+let main = \x y -> x + y -- x^3 + 2*x^2 + 1 

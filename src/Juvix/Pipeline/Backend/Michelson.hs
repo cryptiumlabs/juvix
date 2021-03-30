@@ -9,7 +9,7 @@ import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Pipeline.Backend.Internal
 import qualified Juvix.Pipeline.Compile as Compile
-import qualified Juvix.Pipeline.Internal as Pipeline
+import Juvix.Pipeline.Internal as Pipeline
 import qualified Juvix.Pipeline.Types as Types
 import Juvix.ToCore.FromFrontend as FF
 
@@ -19,6 +19,7 @@ data BMichelson = BMichelson
 instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
   type Val BMichelson = Param.RawPrimVal
+  stdlibs _ = ["stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju"]
   typecheck ctx = do
     let res = Pipeline.contextToCore ctx Param.michelson
     case res of
@@ -45,9 +46,9 @@ instance HasBackend BMichelson where
       Left err -> do
         Feedback.fail $ "failed at ctxToCore\n" ++ show err
 
-  compile term = do
+  compile out term = do
     let (res, _logs) = M.compileContract $ CorePipeline.toRaw term
     case res of
       Right c -> do
-        return $ M.untypedContractToSource (fst c)
+        writeout out $ M.untypedContractToSource (fst c)
       Left err -> Feedback.fail $ show err
