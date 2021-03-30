@@ -113,35 +113,17 @@ run ctx opt = do
           (Michelson b) -> readAndPrint fin (Pipeline.parse b)
           (Plonk b) -> readAndPrint fin (Pipeline.parse b)
         Typecheck fin backend -> case backend of
-          (Michelson b) -> readAndPrint fin (\t -> Pipeline.parse b t >>= Pipeline.typecheck @BMichelson)
-          (Plonk b) -> readAndPrint fin (\t -> Pipeline.parse b t >>= Pipeline.typecheck @(BPlonk Fr))
+          (Michelson b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @BMichelson)
+          (Plonk b) -> readAndPrint fin (Pipeline.parse b >=> Pipeline.typecheck @(BPlonk Fr))
         Compile fin fout backend -> case backend of
-          (Michelson b) -> readAndPrint fin (\t -> Pipeline.parse b t 
-                                            >>= Pipeline.typecheck @BMichelson
-                                            >>= Pipeline.compile @BMichelson fout)
-          (Plonk b) -> readAndPrint fin (\t -> Pipeline.parse b t
-                                            >>= Pipeline.typecheck @(BPlonk Fr)
-                                            >>= Pipeline.compile @(BPlonk Fr) fout)
+          (Michelson b) -> readAndPrint fin (Pipeline.parse b 
+                                            >=> Pipeline.typecheck @BMichelson
+                                            >=> Pipeline.compile @BMichelson fout)
+          (Plonk b) -> readAndPrint fin (Pipeline.parse b
+                                            >=> Pipeline.typecheck @(BPlonk Fr)
+                                            >=> Pipeline.compile @(BPlonk Fr) fout)
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."
-
--- runPipeline ::
---   forall b.
---   ( Pipeline.HasBackend b,
---     Show (Pipeline.Ty b),
---     Show (Pipeline.Val b)
---   ) =>
---   FilePath ->
---   FilePath ->
---   b ->
---   Pipeline.Pipeline ()
--- runPipeline fin fout b = do
---   (liftIO $ readFile fin)
---     >>= Pipeline.parse b
---     >>= Pipeline.typecheck @b
---     >>= Pipeline.compile @b
---     >>= Pipeline.writeout fout
---     >>= liftIO . print
 
 readAndPrint ::
   ( Show b)
