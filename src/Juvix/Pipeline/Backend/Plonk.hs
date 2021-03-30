@@ -12,6 +12,7 @@ import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TypeChecker
+import qualified Data.Aeson as A
 import Juvix.Core.Parameterisation
   ( CanApply (ApplyErrorExtra, Arg),
     TypedPrim,
@@ -84,7 +85,8 @@ instance
       (Arg (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))),
     Show (ApplyErrorExtra (Plonk.PrimTy f)),
     Show
-      (ApplyErrorExtra (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f)))
+      (ApplyErrorExtra (TypedPrim (Plonk.PrimTy f) (Plonk.PrimVal f))),
+    A.ToJSON (Plonk.ArithCircuit f)
   ) =>
   HasBackend (BPlonk f)
   where
@@ -120,5 +122,7 @@ instance
   compile out term = do
     let circuit = Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
     let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
+    let json = toS $ A.encode circuit
     liftIO $ Plonk.dotWriteSVG out (Plonk.arithCircuitToDot circuit)
-    writeout out $ pretty circuit
+    writeout (out <> ".pretty") $ pretty circuit
+    writeout (out <> ".json") json

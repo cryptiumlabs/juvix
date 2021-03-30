@@ -9,10 +9,9 @@ module Options
   )
 where
 
-import Data.Curve.Weierstrass.BLS12381 -- (BLS12381(..), R(..), Fr(..))
-  -- (Prime(..))
+import Data.Curve.Weierstrass.BLS12381 (Fr)
 import Data.Data
-import Data.Field.Galois
+import Data.Field.Galois (Prime)
 import Juvix.Library hiding (option)
 import Juvix.Pipeline
 import Options.Applicative

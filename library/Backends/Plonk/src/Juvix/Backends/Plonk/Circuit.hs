@@ -91,7 +91,7 @@ instance Pretty Wire where
   pretty (OutputWire v) = text "output_" <> pretty v
 
 newtype ArithCircuit f = ArithCircuit [Gate Wire f]
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show, Generic, FromJSON, ToJSON)
 
 instance Show f => Pretty (ArithCircuit f) where
   pretty (ArithCircuit gs) = vcat . map pretty $ gs

@@ -14,13 +14,15 @@ extra-source-files:
 - README.md
 
 dependencies:
+  - aeson
   - base >= 4.11 && < 5
-  - directory
-  - lens
   - Cabal
-  - extensible-data
   - capability >= 0.2.0.0
+  - directory
+  - extensible-data
   - galois-field
+  - lens
+  - scientific
   - syb
   - temporary
   - wl-pprint-text

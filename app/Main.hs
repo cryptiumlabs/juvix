@@ -14,6 +14,17 @@ import Options.Applicative
 import System.Directory
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
+import qualified Data.Aeson as A
+import Data.Field.Galois (Prime, toP, fromP)
+import qualified Data.Scientific as S
+instance A.FromJSON Fr where
+  parseJSON (A.Number n) = case S.floatingOrInteger n of
+    Left floating -> panic $ "Can't parse floating :" <> show n
+    Right f -> pure . toP $ toInteger f
+
+instance A.ToJSON Fr where
+  toJSON f = A.Number $ S.scientific (fromP f) 0
+
 
 context :: IO Context
 context = do
