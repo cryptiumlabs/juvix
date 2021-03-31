@@ -17,6 +17,7 @@ import qualified Juvix.Library.Sexp as Sexp
 import Juvix.Pipeline.Compile
 import qualified Juvix.Pipeline.Internal as Pipeline
 import qualified System.IO.Temp as Temp
+import qualified Text.Megaparsec as P
 
 class HasBackend b where
   type Ty b = ty | ty -> b
@@ -32,6 +33,7 @@ class HasBackend b where
     core <- liftIO $ toCore_wrap code
     case core of
       Right ctx -> return ctx
+      Left (Pipeline.ParseErr err) -> Feedback.fail $ P.errorBundlePretty err
       Left err -> Feedback.fail $ show err
     where
       toCore_wrap :: Text -> IO (Either Pipeline.Error (Context.T Sexp.T Sexp.T Sexp.T))

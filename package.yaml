@@ -22,6 +22,7 @@ dependencies:
   - extensible-data
   - galois-field
   - lens
+  - megaparsec
   - scientific
   - syb
   - temporary

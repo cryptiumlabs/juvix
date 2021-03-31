@@ -115,8 +115,8 @@ run :: Context -> Options -> IO ()
 run ctx opt = do
   feedback <- Feedback.runFeedbackT $ run' ctx opt
   case feedback of
-    Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
-    Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
+    Feedback.Success msgs _ -> mapM_ pPrint msgs >> exitSuccess
+    Feedback.Fail msgs -> mapM_ pPrint msgs >> exitFailure
   where
     run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do

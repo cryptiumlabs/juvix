@@ -20,7 +20,7 @@ import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.ToCore.FromFrontend as FF
 
 data Error
-  = PipeLine Core.Error
+  = PipelineErr Core.Error
   | ParseErr ParserError
   deriving (Show)
 
@@ -32,7 +32,7 @@ toCore paths = do
     Right x -> do
       from <- Core.ofFrontend x
       case from of
-        Left errr -> pure $ Left (PipeLine errr)
+        Left errr -> pure $ Left (PipelineErr errr)
         Right con -> pure $ Right con
 
 contextToCore ::
