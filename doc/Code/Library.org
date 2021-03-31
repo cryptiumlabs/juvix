@@ -1661,7 +1661,9 @@ done with no extra information needed. Thus we export the following passes
 *** Golden
 - _Relies on_
   + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
   + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
   + [[Library]]
 *** Main <<Translate/test/Main>>
 - _Relies on_
