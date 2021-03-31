@@ -1,10 +1,6 @@
 open Prelude
 
-let nat = %Michelson.nat
-
-let add = %Michelson.add
-
-let pair = %Michelson.pair
+open Michelson
 
 type Storage  = {
   value  : nat,

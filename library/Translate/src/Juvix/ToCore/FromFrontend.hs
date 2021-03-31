@@ -65,9 +65,7 @@ paramConstant k = do
   p <- ask @"param"
   case paramConstant' p k of
     Just x -> pure x
-    Nothing -> do
-      traceShowM $ k
-      throwFF $ UnsupportedConstant (Sexp.Atom k)
+    Nothing -> throwFF $ UnsupportedConstant (Sexp.Atom k)
 
 -- | N.B. doesn't deal with pattern variables since HR doesn't have them.
 -- 'transformTermIR' does that.

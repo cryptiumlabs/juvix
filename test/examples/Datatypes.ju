@@ -1,0 +1,36 @@
+mod Datatypes where
+
+open Prelude
+open Circuit
+
+
+sig (+) : field -> field -> field
+let (+) = %Circuit.add
+declare infixl (+) 5
+
+sig (^) : field -> field -> field
+let (^) = %Circuit.exp
+declare infixl (^) 8
+
+sig (*) : field -> field -> field
+let (*) = %Circuit.mul
+declare infixl (*) 7
+
+
+sig (==) : field -> field -> bool
+let (==) = %Circuit.eq
+declare infixl (==) 2
+
+type Point3 = {x: field, y: field, z: field}
+type Point2 = {x: field, y: field}
+type SomePoint = 
+    | P3 Point3 
+    | P2 Point2
+
+sig norm : SomePoint -> field
+let norm sp = case sp of
+    | P3 (Point3 x y z) -> x^2 + y^2 --+ z^2 
+    | P2 (Point2 x y) -> x^2 + y^2
+
+sig main : field
+let main = norm (Point2 3 4)
