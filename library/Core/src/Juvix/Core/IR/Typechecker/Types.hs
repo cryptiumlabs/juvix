@@ -241,6 +241,9 @@ data TypecheckError' extV extT primTy primVal
   | EvalError
       { evalErr :: Eval.Error IR.NoExt T primTy (P.TypedPrim primTy primVal)
       }
+  | -- | datatype typechecking errors
+    DatatypeError
+      {invalidType :: IR.Term' extT primTy primVal}
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 

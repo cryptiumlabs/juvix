@@ -11,7 +11,6 @@ import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-import Prelude (error)
 
 typeCheckConstructor ::
   HasState "typeSigs" s IO =>
@@ -71,17 +70,21 @@ typeToTele (n, t) = ttt (n, t) []
 
 -- | checkDataType takes 5 arguments.
 checkDataType ::
+  ( HasThrow "typecheckError"
+      (TypecheckError' extV0 ext primTy primVal)
+      (TypeCheck ext primTy primVal m)
+  ) =>
   -- | the next fresh generic value.
   Int ->
-  -- an env that binds fresh generic values to variables.
+  -- | an env that binds fresh generic values to variables.
   Telescope extV extT primTy primVal ->
-  -- an env that binds the type value corresponding to these generic values.
+  -- | an env that binds the type value corresponding to these generic values.
   Telescope extV extT primTy primVal ->
-  -- the length of the telescope, or the no. of parameters.
+  -- | the length of the telescope, or the no. of parameters.
   Int ->
-  -- the expression that is left to be checked.
+  -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal IO (IR.Datatype' extV extT primTy primVal)
+  TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
 checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 -- _ <-
 --   if k < p -- if k < p then we're checking the parameters
@@ -92,19 +95,19 @@ checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 -- check that the data type is of type Star
 checkDataType _k _rho _gamma _p (Star _ _) = undefined
 checkDataType _k _rho _gamma _p e =
-  error $ "checkDataType: " -- <> show e <> "doesn't target Star."
-    --TODO show instance? more proper error throwing?
+  throwTC $ DatatypeError e
 
 -- | checkConType check constructor type
 checkConType ::
   Int -> -- the next fresh generic value.
-  -- an env that binds fresh generic values to variables.
+
+  -- | an env that binds fresh generic values to variables.
   Telescope extV extT primTy primVal ->
-  -- an env that binds the type value corresponding to these generic values.
+  -- | an env that binds the type value corresponding to these generic values.
   Telescope extV extT primTy primVal ->
-  -- the length of the telescope, or the no. of parameters.
+  -- | the length of the telescope, or the no. of parameters.
   Int ->
-  -- the expression that is left to be checked.
+  -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
   TypeCheck ext primTy primVal IO ()
 checkConType k rho gamma p e = undefined
