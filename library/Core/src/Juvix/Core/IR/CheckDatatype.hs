@@ -7,19 +7,32 @@ where
 import Juvix.Core.IR.CheckTerm
 import qualified Juvix.Core.IR.Evaluator as Eval
 -- import SPos ( sposConstructor )
+
+import Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
+import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
 typeCheckConstructor ::
-  HasState "typeSigs" s IO =>
+  ( HasThrow "typecheckError"
+      (TypecheckError' extV0 ext primTy primVal)
+      (TypeCheck ext primTy primVal m),
+    HasState "typeSigs" s m,
+    Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m,
+    Param.CanApply primTy,
+    Param.CanApply (TypedPrim primTy primVal)
+  ) =>
+  Param.Parameterisation primTy primVal ->
   Name ->
   [IR.Pos] ->
   RawTelescope ext primTy primVal ->
   (IR.Name, IR.Term' ext primTy primVal) ->
-  TypeCheck ext primTy primVal IO ()
-typeCheckConstructor name pos tel (n, ty) = do
+  TypeCheck ext primTy primVal m ()
+typeCheckConstructor param name pos tel (n, ty) = do
   sig <- get @"typeSigs" -- get signatures
   let (n, t) = teleToType tel ty
       params = length tel
@@ -109,22 +122,29 @@ checkConType ::
   Int ->
   -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal IO ()
+  TypeCheck ext primTy primVal m (Typed.Term primTy primVal)
 checkConType k rho gamma p e = undefined
+-- TODO turn ‘XStar ext primTy primVal’ to
+-- XVStar Juvix.Core.IR.Types.NoExt primTy (TypedPrim primTy primVal)
+--   let starTy ext = Annotation mempty (IR.VStar' mempty ext) in
 --   case e of
---     Pi x t1 t2 -> do
+--     Pi x t1 t2 ext -> do
 --       if k < p
---         then return () -- params were already checked by checkDataType
---         else checkSType k rho gamma t1 -- check that arguments ∆ are stypes
---       v_t1 <- eval rho t1
---       checkConType
---         (k + 1)
---         (updateEnv rho x (VGen k))
---         (updateEnv gamma x v_t1)
---         p
---         t2
---     -- the constructor's type is of type Star(the same type as the data type).
---     _ -> checkExpr k rho gamma e VStar
+--         then typeTerm' e $ Annotation x (IR.VPi' x t1 t2 ext) -- params were already checked by checkDataType
+--         else case t1 of
+--           -- check that arguments ∆ are stypes
+--           Star' _ ext -> typeTerm' t1 (starTy ext)
+--           _ -> throwTC $ ConTypeError t1
+-- --       v_t1 <- eval rho t1
+-- --       checkConType
+-- --         (k + 1)
+-- --         (updateEnv rho x (VGen k))
+-- --         (updateEnv gamma x v_t1)
+-- --         p
+-- --         t2
+-- --     -- the constructor's type is of type Star(the same type as the data type).
+--     Star' _ ext -> typeTerm' e starTy
+--     _ -> throwTC $ ConTypeError e
 
 -- -- check that the data type and the parameter arguments
 -- -- are written down like declared in telescope

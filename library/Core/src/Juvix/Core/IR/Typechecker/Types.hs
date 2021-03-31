@@ -244,6 +244,8 @@ data TypecheckError' extV extT primTy primVal
   | -- | datatype typechecking errors
     DatatypeError
       {invalidType :: IR.Term' extT primTy primVal}
+  | ConTypeError
+      {invalidConTy :: IR.Term' extT primTy primVal}
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
@@ -328,6 +330,10 @@ instance
   show (PartiallyAppliedConstructor pat) =
     "Partially-applied constructor in pattern " <> show pat
   show (EvalError err) = show err
+  show (DatatypeError ty) =
+    "checkDataType: invalid datatype: " <> show ty
+  show (ConTypeError ty) =
+    "checkConType: invalid datatype: " <> show ty
 
 type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
