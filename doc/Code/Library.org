@@ -754,8 +754,10 @@ Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
+  + [[Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
 ****** CheckTerm
