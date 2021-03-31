@@ -749,6 +749,15 @@ temporary lexical bindings as our code encounters binders.
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Library]]
+****** CheckDatatype
+Datatype declarations are typechecked here. Usages are passed along.
+- _Relies on_
+  + [[CheckTerm]]
+  + [[IR/Evaluator]]
+  + [[IR/Types/Base]]
+  + [[Globals]]
+  + [[Library]]
+  + [[Usage]]
 ****** CheckTerm
 This file contains the functions and aux functions to typecheck terms.
 @typeTerm@ and @typeElim@ are called by functions for typechecking
@@ -845,7 +854,7 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Env]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
-  + [[IR/Types/Base]]
+  + [[IR/Types]]
   + [[Globals]]
   + [[Library]]
 ******* Env <<Typechecker/Env>>
@@ -855,7 +864,6 @@ Typechecked declarations are added to the signature.
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -865,7 +873,6 @@ Typechecked declarations are added to the signature.
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
@@ -881,7 +888,6 @@ Quantitative type implementation inspired by
 ******* Base <<IR/Types/Base>>
 - _Relies on_
   + [[Library]]
-  + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
 ******* Globals
@@ -1480,21 +1486,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Contextify/Environment]]
@@ -1611,6 +1602,21 @@ done with no extra information needed. Thus we export the following passes
 - Removing punned record arguments
 - Remvoing Do syntax
 - _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]
 **** ToCore
