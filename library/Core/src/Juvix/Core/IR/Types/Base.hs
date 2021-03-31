@@ -3,11 +3,8 @@
 
 module Juvix.Core.IR.Types.Base where
 
-import Data.Kind (Constraint)
-import qualified Data.Map as Map
 import Extensible (extensible)
 import Juvix.Library hiding (Pos)
-import Juvix.Library.HashMap (HashMap)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
 

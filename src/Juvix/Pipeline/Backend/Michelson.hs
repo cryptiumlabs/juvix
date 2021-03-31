@@ -33,7 +33,7 @@ instance HasBackend BMichelson where
                   newGlobals = HM.map (Compile.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Types.exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+              (res, _) <- liftIO $ Types.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.RawPrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
               case res of
                 Right r -> do
                   pure r
