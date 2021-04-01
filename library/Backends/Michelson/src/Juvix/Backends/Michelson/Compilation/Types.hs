@@ -122,10 +122,6 @@ type RawTerm = CoreErased.AnnTerm PrimTy RawPrimVal
 
 type Term = CoreErased.AnnTerm PrimTy PrimValHR
 
-type NewTerm = RawTerm
-
-{-# DEPRECATED NewTerm "use RawTerm" #-}
-
 type Type = CoreErased.Type PrimTy
 
 type Value = M.Value' M.ExpandedOp

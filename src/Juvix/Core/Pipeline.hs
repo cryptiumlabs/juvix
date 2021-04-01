@@ -3,6 +3,10 @@
 module Juvix.Core.Pipeline
   ( coreToAnn,
     toRaw,
+    Comp,
+    RawTerm,
+    CompConstraints,
+    CompConstraints',
   )
 where
 
@@ -24,9 +28,10 @@ type RawElim ty val = IR.Elim ty val
 
 type Term ty val = HR.Term ty val
 
-type Comp ty val res =
+
+type Comp ty val err res =
   forall m.
-  CompConstraints ty val res m =>
+  CompConstraints ty val err m =>
   RawTerm ty val ->
   Usage.T ->
   RawTerm ty val ->
@@ -73,7 +78,7 @@ lookupMapPrim ns (App.Cont f xs n) =
         $ Erasure.InternalError
         $ "unknown de Bruijn index " <> show i
 
-coreToAnn :: Comp ty val (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
+coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
 coreToAnn term usage ty = do
   -- FIXME: allow any universe!
   (term, _) <- typecheckErase' term usage ty

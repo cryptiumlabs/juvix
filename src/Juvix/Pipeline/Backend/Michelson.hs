@@ -10,6 +10,7 @@ import qualified Juvix.Library.Feedback as Feedback
 import Juvix.Pipeline.Backend.Internal
 import qualified Juvix.Pipeline.Compile as Compile
 import Juvix.Pipeline.Internal as Pipeline
+import qualified Juvix.Pipeline.Internal as Pipeline
 import qualified Juvix.Pipeline.Types as Types
 import Juvix.ToCore.FromFrontend as FF
 
@@ -20,6 +21,7 @@ instance HasBackend BMichelson where
   type Ty BMichelson = Param.PrimTy
   type Val BMichelson = Param.RawPrimVal
   stdlibs _ = ["stdlib/Michelson.ju", "stdlib/MichelsonAlias.ju"]
+
   typecheck ctx = do
     let res = Pipeline.contextToCore ctx Param.michelson
     case res of
@@ -34,7 +36,7 @@ instance HasBackend BMichelson where
                   newGlobals = HM.map (Compile.unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ Types.exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
+              (res, _) <- liftIO $ Types.exec (CorePipeline.coreToAnn @Param.PrimTy @Param.RawPrimVal @Param.CompilationError inlinedTerm (IR.globalToUsage usage) ty) Param.michelson newGlobals
               case res of
                 Right r -> do
                   pure r

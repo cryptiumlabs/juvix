@@ -11,7 +11,10 @@
   + [[Library]]
   + [[Feedback]]
   + [[Pipeline]]
+<<<<<<< HEAD
   + [[Pipeline]]
+=======
+>>>>>>> c35253f8139116fdad6f15440faafe4c79b7515e
 * Options
 - _Relies on_
   + [[Library]]

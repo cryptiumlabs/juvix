@@ -18,7 +18,6 @@ import Juvix.Pipeline.Compile
 import qualified Juvix.Pipeline.Internal as Pipeline
 import qualified System.IO.Temp as Temp
 import qualified Text.Megaparsec as P
-
 class HasBackend b where
   type Ty b = ty | ty -> b
   type Val b = val | val -> b
@@ -48,3 +47,4 @@ class HasBackend b where
 -- | Write the output code to a given file.
 writeout :: FilePath -> Text -> Pipeline ()
 writeout fout code = liftIO $ T.writeFile fout code
+

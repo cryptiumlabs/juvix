@@ -107,7 +107,7 @@ instance
                   newGlobals = HM.map (unsafeEvalGlobal convGlobals) convGlobals
                   lookupGlobal = IR.rawLookupFun' globalDefs
                   inlinedTerm = IR.inlineAllGlobals term lookupGlobal
-              (res, _) <- liftIO $ exec (CorePipeline.coreToAnn inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
+              (res, _) <- liftIO $ exec (CorePipeline.coreToAnn @(Plonk.PrimTy f) @(Plonk.PrimVal f) @Plonk.CompilationError inlinedTerm (IR.globalToUsage usage) ty) (Plonk.plonk @f) newGlobals
               case res of
                 Right r -> do
                   pure r
