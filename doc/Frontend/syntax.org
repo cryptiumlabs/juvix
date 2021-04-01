@@ -1,19 +1,48 @@
 * Syntax
 #+BEGIN_SRC bnf
-  header ::= mod <symbol> where <top-level>*
-           | <top-level>*
+  header ::= <expression>*
 
-  top-level ::= <type>
-              | <module-open>
-              | <type-class>
-              | <type-class-instance>
-              ; These four last, due to lack of words before
-              | <module-signature>
-              | <infix-declare>
-              | <module>
-              | <module-open>
-              | <signature>
-              | <function>
+  ;;;; Expressions ====================================================
+
+  expression ::= <application>
+               | <expression''>
+
+  ;; See comments about which to keep and which to maybe remove
+  expression'' ::=
+                 ;; global definers
+                   <function>
+                 | <type>
+                 | <signature>
+                 | <module>
+                 | <declarations>
+                 ;; localfier
+                 | <let>
+                 ;;
+                 | <end>
+                 | <match>
+                 | <if>
+                 | <record-access>
+                 | <module-lookup>
+                 | <module-open-expression>
+                 | <string>
+                 | <number>
+                 | <lambda>
+                 | <tuple>
+                 | <list>
+                 | <parens>
+                 | <symbol>
+                 | <argument-cases>
+                 ; This is useful for having nested do's or matchs
+                 | <block>
+                 | <do>
+                 | <comments>
+                 | <arrow>
+                 | <infix>
+                 | <record-creation>
+                 | <type-refine>
+                 ; TODO
+                 | <record-update>
+                 | <declaration-expression>
 
   ;;;; Declarations ======================================================
 
@@ -30,16 +59,32 @@
   ;;;; Functions ======================================================
 
   ;; let until indent sensitivity is gone
-  function ::= let  <function-body>
+  function ::= def <function-body>
 
-  function-body ::= <name> <args>+ = <expression>
-                  | <name> <args>+ <cond-logic>*
+  function-body-end ::= <name> <args>+ = <expression>
+                      | <name> <args>+ <guards-with>
+
+  function-body-start ::= <name> <args>+                   \| <function-body-start>
+                        | <name> <args>+ <guards-with> end \| <function-body-start>
+                        | <name> <args>+ = <expression>    \| <function-body-start>
+                        | <function-body-end>
+
+  function-body ::= <function-body-start>
 
   ;; Match-logic could just be a name, and so is thus fine
   ;; # is for implicit
+  ;;   - they can have default values, and thus can be assigned
+  ;; : is for named symbols... AKA Keywords
+  ;;   - we can assign different names to keywords if we want
+  ;; the symbol will be introduced without the : and #
   ;; Should we have implicit pattern matching like here?
-  args ::= <match-logic>
-         | #<match-logic>
+  args ::= <args-bare>
+         | #<symbol>
+         | #(<symbol> = <expression>)
+         | :<symbol>
+         | :(<symbol> = <args-bare>)
+
+  args-bare ::= <match-logic>
 
   ;; sig only here while indent sensitivity is not here
   ;; if we only have usage in arrows, we should allow a way to have
@@ -127,14 +172,18 @@
   ;; they can take any value, however for examples, we will encourage the use
   ;; of taking (and thus parameterizing) modules
 
+  module-end ::= mod <name> <args>+ = <top-level>* end
+               | mod <name> <args>+ <cond-top>* end
+
   ;; let and end are there until indent sensitivity is in
   module ::= mod <name> <args>+ = <top-level>* end
            | mod <name> <args>+ <cond-top>* end
+           ;; this scopes the files, basically like in-module
+           | mod <name> <args>+
 
 
   ;; we use mod here to disambiguate it for parsing speed
-  moduleE ::= mod <name> <args>+ = <top-level>* end in <expression>
-            | mod <name> <args>+ <cond-top>* end in <expression>
+  moduleE ::= <module> in <expression>
 
   ;; what should we allow in a module signature?
   ;; begin and end are only here while we aren't indent sensitive
@@ -164,40 +213,7 @@
   ;; Need end if we are indent sensitive!
   type-class-instance ::= instance <type-name> where
 
-  ;;;; Expressions ====================================================
-
-  ;; See comments about which to keep and which to maybe remove
-  expression'' ::= <match>
-                 | <if>
-                 | <cond>
-                 | <record-access>
-                 | <module-lookup>
-                 | <let>
-                 | <moduleE>
-                 | <let-type>
-                 | <module-open-expression>
-                 | <where>
-                 | <string>
-                 | <number>
-                 | <lambda>
-                 | <tuple>
-                 | <list>
-                 | <parens>
-                 | <symbol>
-                 ; This is useful for having nested do's or matchs
-                 | <block>
-                 | <do>
-                 | <comments>
-                 | <arrow>
-                 | <infix>
-                 | <record-creation>
-                 | <type-refine>
-                 ; TODO
-                 | <record-update>
-                 | <declaration-expression>
-
-  expression ::= <application>
-              | <expression''>
+  end ::= .
 
   usage ::= <expression>
 
@@ -212,6 +228,20 @@
   lambda ::= \\ <match-logic>* -\> <expression>
 
   symbol ::= <name>
+
+  ;; implicit and keyword need 1 more after it
+  ;; for applications to continue
+
+  argument-cases ::= <keyword>
+                   | <implicit>
+                   | <punned>
+
+  ;; punned
+  punned ::= !<symbol>
+
+  implicit ::= #<symbol>
+
+  keyword ::= :<symbol>
 
   ;; useful for match, and nested do's!
   block ::= begin <expression> end
@@ -251,12 +281,28 @@
   name-set-creation ::= <name> = <expression>
                       | <name>
 
-
   ;;; Matching ===================================
 
-  match ::= case <expression> of <match-l>*
+  match ::= case <expression> of <match-l>+ <match-l-end>*
 
-  match-l ::= \| <match-logic> -\> <expression>
+  match-l-end ::= <match-l-or>* <guards-with-end>+ = <expression>
+
+  ;; or pattenrs
+  match-l-or ::= \| <match-logic>
+  match-l    ::= <match-l-or>* <guards-with>+ = <expression>
+
+
+  guard-with-top ::= if <cond-logc>*
+                  | with <match-l-or>* <guards-with-end>+ = <top-level
+
+  ;; indent sensitivity makes the end here unneeded, fusing with the end version
+  guards-with ::= <if>
+                | <with>
+
+  with ::= with <match-l>+ <match-l-end>*
+
+  ;; indent sensitivity removes this
+  guards-with-end ::= <guards-with> end
 
   match-logic ::= <name>@<match-logic'>
                 | <match-logic'>
@@ -291,10 +337,14 @@
 
   ;;; Bindings ===================================
 
+  ;; this let simply replaces the default global handler for functions
+  ;; that have global allocating effects, into closure effects.
+  let ::= let <expression>+ in <expression>
+
   ;; Due to trying to be less indent sensitive,
   ;; we only look for the in alternative,
   ;; is that we only have a single binding per let.
-  let ::= let <function-body> in <expression>
+  let' ::= let <function-body> in <expression>
 
   type-let ::= let <type> in <expression>
 
@@ -311,6 +361,8 @@
   ;; and thus not some expression
 
   ;; note in stdlib else and otherwise will both be true
+
+  cond-logic-top ::= \| <expression> = <top-level>
 
   cond-logic ::= \| <expression> = <expression>
 
