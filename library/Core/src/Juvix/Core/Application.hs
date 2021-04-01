@@ -146,7 +146,8 @@ instance Bifoldable Take where
 instance Bitraversable Take where
   bitraverse f g (Take π a s) = Take π <$> f a <*> g s
 
--- | Translate an 'Arg'' to a 'Take'.
+-- | Translate an 'Arg'' to a 'Take'. Only fully evaluated arguments are
+-- returned, all others will result in an @empty@.
 argToTake :: Alternative f => Arg' ext ty term -> f (Take ty term)
 argToTake (TermArg t) = pure t
 argToTake _ = empty
