@@ -376,6 +376,7 @@ This module provides a default contract environment
   + [[Michelson/Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
+Module that implements the backend parameters for the Michelson backend.
 - _Relies on_
   + [[Michelson/Compilation]]
   + [[Michelson/Compilation/Types]]

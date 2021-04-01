@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
+-- | Module that implements the backend parameters for the Michelson backend.
+
 module Juvix.Backends.Michelson.Parameterisation
   ( CompErr,
     michelson,
@@ -35,30 +37,37 @@ import Prelude (Show (..), error)
 
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
+-- | Check if the next three types are equal.
 check3Equal :: Eq a => NonEmpty a -> Bool
 check3Equal (x :| [y, z])
   | x == y && x == z = True
   | otherwise = False
 check3Equal (_ :| _) = False
 
+-- | Check if the next two types are equal.
 check2Equal :: Eq a => NonEmpty a -> Bool
 check2Equal (x :| [y])
   | x == y = True
   | otherwise = False
 check2Equal (_ :| _) = False
 
+-- | Can the given type be used as a boolean? Note that in addition to
+-- booleans, integers and natural numbers re valid is well.
 isBool :: PrimTy -> Bool
 isBool (PrimTy (M.Type M.TBool _)) = True
 isBool (PrimTy (M.Type M.TInt _)) = True
 isBool (PrimTy (M.Type M.TNat _)) = True
 isBool _ = False
 
+-- | Check if the first two types are equal, and that the last type adhere to
+-- the @check@ function.
 checkFirst2AndLast :: Eq t => NonEmpty t -> (t -> Bool) -> Bool
 checkFirst2AndLast (x :| [y, last]) check
   | check2Equal (x :| [y]) && check last = True
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
+-- | Check if the value has the given type.
 hasType :: RawPrimVal -> P.PrimType PrimTy -> Bool
 hasType AddTimeStamp ty = check3Equal ty
 hasType AddI ty = check3Equal ty
@@ -108,6 +117,7 @@ hasType _ ((Application List _) :| []) = True
 -- do something nicer here
 hasType x ty = Prelude.error ("unsupported: " <> Juvix.Library.show x <> " :: " <> Juvix.Library.show ty)
 
+-- | Return the arity of a raw Michelson value.
 arityRaw :: RawPrimVal -> Natural
 arityRaw (Inst inst) = fromIntegral (Instructions.toNumArgs inst)
 arityRaw (Constant _) = 0
@@ -116,6 +126,8 @@ arityRaw prim =
     |> Instructions.toNewPrimErr
     |> arityRaw
 
+-- | Try to translate the value into a function argument.
+-- Continuations can't be translated, but returns do.
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
@@ -127,12 +139,14 @@ toArg App.Return {retType, retTerm} =
         term = retTerm
       }
 
+-- | Translate a value into a  'Take' and the arguments to pass.
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
 toTakes App.Return {retType, retTerm} = (fun, [], arityRaw retTerm)
   where
     fun = App.Take {usage = Usage.Omega, type' = retType, term = retTerm}
 
+-- | Datatype that is used for describing errors during the application process.
 data ApplyError
   = CompilationError CompilationError
   | ReturnTypeNotPrimitive (ErasedAnn.Type PrimTy)
@@ -142,6 +156,7 @@ instance Show ApplyError where
   show (ReturnTypeNotPrimitive ty) =
     "not a primitive type:\n\t" <> Prelude.show ty
 
+-- | Instance for types.
 instance Core.CanApply PrimTy where
   arity (Application hd rest) =
     Core.arity hd - fromIntegral (length rest)
@@ -155,6 +170,7 @@ instance Core.CanApply PrimTy where
     Application fun args
       |> Right
 
+-- | Instance for values.
 instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   type ApplyErrorExtra (PrimVal' ext) = ApplyError
 
@@ -171,20 +187,25 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   apply fun' args2
     | (fun, args1, ar) <- toTakes fun' =
       do
-        let argLen = lengthN args2
-            args = foldr NonEmpty.cons args2 args1
+        let argLen = lengthN args2 -- Nr. of free arguments.
+            args = foldr NonEmpty.cons args2 args1 -- List of all arguments.
         case argLen `compare` ar of
+          -- If there are not enough arguments to apply, return a continuation.
           LT ->
             Right $
               Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          -- If there are exactly enough arguments to apply, do so.
+          -- In case there aren't any arguments, return a continuation.
           EQ
             | Just takes <- traverse App.argToTake args ->
               applyProper fun takes |> first Core.Extra
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+          -- If there are too many arguments to apply, raise an error.
           GT -> Left $ Core.ExtraArguments fun' args2
 
--- | NB. requires that the right number of args are passed
+-- | Apply arguments to a function. Requires that the right number of arguments
+-- are passed.
 applyProper :: Take -> NonEmpty Take -> Either ApplyError (Return' ext)
 applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
@@ -199,10 +220,12 @@ applyProper fun args =
     -- TODO ∷ do something with the logs!?
     (compd, _log) = Compilation.compileExpr newTerm
 
+-- | Translate a 'Take' into a 'RawTerm'.
 takeToTerm :: Take -> RawTerm
 takeToTerm (Prim.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
+-- | Given a type, translate it to a type in the Michelson backend.
 toPrimType :: ErasedAnn.Type PrimTy -> Either ApplyError (P.PrimType PrimTy)
 toPrimType ty = maybe err Right $ go ty
   where
@@ -213,6 +236,7 @@ toPrimType ty = maybe err Right $ go ty
     goPrim (ErasedAnn.PrimTy p) = Just p
     goPrim _ = Nothing
 
+-- | Translate an 'Integer' to the Michelson backend.
 integerToPrimVal :: Integer -> Maybe RawPrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
@@ -221,9 +245,11 @@ integerToPrimVal x
   | otherwise =
     Nothing
 
+-- | Turn a Michelson type into a 'PrimTy'.
 primify :: Untyped.T -> PrimTy
 primify t = PrimTy (Untyped.Type t "")
 
+-- | Michelson-specific low-level types available in Juvix.
 builtinTypes :: P.Builtins PrimTy
 builtinTypes =
   [ ("Michelson.unit-t", Untyped.TUnit),
@@ -255,6 +281,7 @@ builtinTypes =
        )
     |> Map.fromList
 
+-- | Michelson-specific low-level values available in Juvix.
 builtinValues :: P.Builtins RawPrimVal
 builtinValues =
   [ ("Michelson.add", AddI),
@@ -313,6 +340,7 @@ builtinValues =
     |> fmap (first NameSymbol.fromSymbol)
     |> Map.fromList
 
+-- | Parameters for the Michelson backend.
 michelson :: P.Parameterisation PrimTy RawPrimVal
 michelson =
   P.Parameterisation
@@ -324,6 +352,7 @@ michelson =
       floatVal = const Nothing
     }
 
+-- | A compilation error type.
 type CompErr = CompTypes.CompilationError
 
 instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
