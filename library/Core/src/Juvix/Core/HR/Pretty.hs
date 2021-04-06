@@ -8,6 +8,7 @@ module Juvix.Core.HR.Pretty
     Doc,
     PrimPretty1,
     PrimPretty,
+    PrettyText,
 
     -- * extra combinators
     -- ** punctuation with highlighting
@@ -67,6 +68,8 @@ type PPAnn = Last PPAnn'
 type PrimPretty1 p = (PP.PrettySyntax p, ToPPAnn (PP.Ann p))
 
 type PrimPretty ty val = (PrimPretty1 ty, PrimPretty1 val)
+
+type PrettyText a = (PP.PrettyText a, ToPPAnn (PP.Ann a))
 
 -- | Document with syntax highlighting hints
 type Doc = PP.Doc PPAnn

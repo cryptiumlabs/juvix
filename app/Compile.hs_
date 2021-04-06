@@ -10,6 +10,7 @@ import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.ErasedAnn as ErasedAnn
+import qualified Juvix.Core.FromFrontend as FF
 import qualified Juvix.Core.IR as IR
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
@@ -20,11 +21,12 @@ import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Pipeline as Pipeline
-import Juvix.ToCore.FromFrontend as FF
 import Options
 import qualified System.IO.Temp as Temp
 import Types
 import qualified Prelude as P
+import qualified Juvix.Library.PrettyPrint as PP
+import Juvix.Core.Translate
 
 type Code = Text
 
@@ -82,20 +84,24 @@ typecheck Michelson ctx = do
               Right r -> do
                 pure r
               Left err -> do
-                print term
-                Feedback.fail $ show err
+                PP.prettyIO $ irToHR term
+                Feedback.fail $ PP.render $ PP.prettyT err
         somethingElse -> do
+          -- FIXME:
+          -- Feedback.fail $ PP.render $ PP.pretty0 somethingElse
           Feedback.fail $ show somethingElse
     Left err -> do
+      -- FIXME:
+      -- Feedback.fail $ "failed at ctxToCore\n" ++ PP.render (PP.prettyT err)
       Feedback.fail $ "failed at ctxToCore\n" ++ show err
 typecheck backend _ =
   Feedback.fail $ "Typecheck not implemented for " ++ show backend ++ " backend."
 
 toCoreDef ::
   Alternative f =>
-  CoreDef primTy primVal ->
+  FF.CoreDef primTy primVal ->
   f (IR.RawGlobal primTy primVal)
-toCoreDef (CoreDef g) = pure g
+toCoreDef (FF.CoreDef g) = pure g
 toCoreDef _ = empty
 
 isMain :: RawGlobal' ext primTy primVal -> Bool

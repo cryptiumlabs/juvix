@@ -174,6 +174,7 @@ forgetter =
       etElimX = absurd
     }
 
+
 extForgetT ::
   ( TermX ext primTy primVal ~ Void,
     ElimX ext primTy primVal ~ Void

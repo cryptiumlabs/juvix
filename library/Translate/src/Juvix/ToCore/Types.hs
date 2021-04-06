@@ -85,6 +85,7 @@ data Error primTy primVal
     UnexpectedOmega
   deriving (Eq, Generic)
 
+-- FIXME replace with PrettyText
 instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
   show = \case
     ConstraintsUnimplemented x cons ->

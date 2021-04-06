@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 module Pretty
   ( top,
   )

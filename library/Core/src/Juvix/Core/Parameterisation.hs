@@ -153,7 +153,7 @@ instance PP.PrettySyntax primTy => PP.PrettySyntax (PrimType primTy) where
     PP.parensP' PAPunct PP.Outer $
       PP.sepA (PP.punctuateA arr (map pretty1 tys))
     where
-      arr = pure $ PP.annotate' PAArrow "→"
+      arr = pure $ PP.annotate' PAArrow " →"
       pretty1 =
         fmap (fmap $ Last . Just . PATy) .
         PP.withPrec (PP.Infix 0) . PP.pretty'

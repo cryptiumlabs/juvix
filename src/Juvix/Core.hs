@@ -20,11 +20,20 @@ import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
+import qualified Juvix.Core.HR.Pretty as HR
+import qualified Juvix.Library.PrettyPrint as PP
 
 data Error
   = ContextErr Contextify.ResolveErr
   | NoInput
   deriving (Show)
+
+type instance PP.Ann Error = ()
+
+instance PP.PrettyText Error where
+  prettyT = \case
+    ContextErr err -> PP.show err -- FIXME
+    NoInput -> PP.text "no input"
 
 -- TODO ∷ update the target when the last pass is finished,
 -- that way we can get the T out

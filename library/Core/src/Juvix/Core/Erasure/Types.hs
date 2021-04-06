@@ -26,6 +26,10 @@ import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage (Usage)
+import qualified Juvix.Library.PrettyPrint as PP
+import qualified Juvix.Core.HR.Pretty as HR
+import Juvix.Core.IR.TransformExt
+import Juvix.Core.Translate
 
 type MapPrim p1 p2 ty val =
   [NameSymbol.T] -> p1 -> Either (Error ty val) p2
@@ -101,6 +105,45 @@ deriving instance
     Eq (Param.ApplyErrorExtra primTy)
   ) =>
   Eq (Error primTy primVal)
+
+type instance PP.Ann (Error _ _) = HR.PPAnn
+
+instance
+  ( PP.PrettySyntax primTy,
+    HR.ToPPAnn (PP.Ann primTy),
+    PP.PrettySyntax primVal,
+    HR.ToPPAnn (PP.Ann primVal)
+  ) =>
+  PP.PrettyText (Error primTy primVal)
+  where
+  prettyT = \case
+    UnsupportedTermT t ->
+     PP.sepIndent'
+        [ (False, "Unsupported term:"),
+          (True, PP.pretty0 $ irToHR $ extForgetT t)
+        ]
+    UnsupportedTermE e ->
+     PP.sepIndent'
+        [ (False, "Unsupported term:"),
+          (True, PP.pretty0 $ irToHR $ IR.Elim $ extForgetE e)
+        ]
+    UnsupportedTypeV v ->
+     PP.sepIndent'
+        [ (False, "Unsupported type:"),
+          (True, PP.pretty0 $ irToHR $ IR.quote v)
+        ]
+    UnsupportedTypeN n ->
+     PP.sepIndent'
+        [ (False, "Unsupported type:"),
+          (True, PP.pretty0 $ irToHR $ IR.quote $ IR.VNeutral n)
+        ]
+    CannotEraseZeroUsageTerm t ->
+     PP.sepIndent'
+        [ (False, "Entire term has zero usage:"),
+          (True, PP.pretty0 $ irToHR $ extForgetT t)
+        ]
+    InternalError txt ->
+      PP.text txt
 
 data T primTy
 

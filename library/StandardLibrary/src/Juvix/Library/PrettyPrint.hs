@@ -16,6 +16,9 @@ module Juvix.Library.PrettyPrint
     string,
     text,
     -- * Extensions
+    renderIO,
+    prettyIO,
+    prettyTIO,
     noAnn,
     annotate',
     hangs,
@@ -300,3 +303,21 @@ sepIndentA' ::
   (Monoid ann, Foldable t, Functor t, Applicative f) =>
   t (Bool, f (Doc ann)) -> f (Doc ann)
 sepIndentA' = sepIndentA . fmap (first toIndent)
+
+
+renderIO :: (MonadIO m, Monoid ann) => Doc ann -> m ()
+renderIO = putStrLn . render
+
+prettyIO :: (MonadIO m, PrettySyntax a) => a -> m ()
+prettyIO = renderIO . pretty0
+
+prettyTIO :: (MonadIO m, PrettyText a) => a -> m ()
+prettyTIO = renderIO . prettyT
+
+-- TODO: use syntax highlighting
+
+type instance Ann Void = ()
+
+instance PrettySyntax Void
+
+instance PrettyText Void where prettyT = absurd
