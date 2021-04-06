@@ -25,6 +25,7 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
+import qualified Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
@@ -246,6 +247,13 @@ data TypecheckError' extV extT primTy primVal
       {invalidType :: IR.Term' extT primTy primVal}
   | ConTypeError
       {invalidConTy :: IR.Term' extT primTy primVal}
+  | ParamVarNError
+      { tel :: IR.RawTelescope extT primTy primVal,
+        expectedN :: IR.Name,
+        inputN :: IR.Name
+      }
+  | ParamError
+      {exps :: [IR.Term' extT primTy primVal]}
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
@@ -334,6 +342,17 @@ instance
     "checkDataType: invalid datatype: " <> show ty
   show (ConTypeError ty) =
     "checkConType: invalid datatype: " <> show ty
+  show (ParamVarNError tel expectedN inputN) =
+    "checkParams: target parameter mismatch. The input telescope is "
+      <> show tel
+      <> ". One of the name in the telescope is "
+      <> show expectedN
+      <> ", which does not match the input expression's variable name: "
+      <> show inputN
+  show (ParamError exps) =
+    "checkParams: target parameter mismatch. The input expression"
+      <> show exps
+      <> "isn't a variable (Var)."
 
 type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m

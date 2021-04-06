@@ -84,7 +84,7 @@ typeToTele (n, t) = ttt (n, t) []
 -- | checkDataType takes 5 arguments.
 checkDataType ::
   ( HasThrow "typecheckError"
-      (TypecheckError' extV0 ext primTy primVal)
+      (TypecheckError' extV ext primTy primVal)
       (TypeCheck ext primTy primVal m)
   ) =>
   -- | the next fresh generic value.
@@ -124,6 +124,7 @@ checkConType ::
   IR.Term' ext primTy primVal ->
   TypeCheck ext primTy primVal m (Typed.Term primTy primVal)
 checkConType k rho gamma p e = undefined
+
 -- TODO turn ‘XStar ext primTy primVal’ to
 -- XVStar Juvix.Core.IR.Types.NoExt primTy (TypedPrim primTy primVal)
 --   let starTy ext = Annotation mempty (IR.VStar' mempty ext) in
@@ -174,21 +175,17 @@ checkConType k rho gamma p e = undefined
 --   ". Input telescope is " <>
 --   show tel
 
--- -- check parameters
--- checkParams :: RawTelescope ext primTy primVal -> [IR.Term' ext primTy primVal] -> TypeCheck ext primTy primVal IO ()
--- checkParams [] [] = return ()
--- checkParams tel@((n, _t):tl) (Var n':el) =
---   if n == n'
---     then checkParams tl el
---     else error $
---          "checkParams: target parameter mismatch. The input telescope is " <>
---          show tel <>
---          ". One of the name in the telescope is " <>
---          show n <> -- using show to wrap n with "
---          ", which does not match the input expression's variable name: " <>
---          show n'
--- checkParams _ exps =
---   error $
---     "checkParams: target parameter mismatch. The input expression"
---     <> show exps
---     <> "isn't a variable (Var)."
+-- check parameters
+checkParams ::
+  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+  RawTelescope ext primTy primVal ->
+  [IR.Term' ext primTy primVal] ->
+  m ()
+checkParams [] [] = return ()
+checkParams tel@(hd : tl) (Elim (Free n' _) _ : el) =
+  let n = rawName hd
+   in if n == n'
+        then checkParams tl el
+        else throwTC $ ParamVarNError tel n n'
+checkParams _ exps =
+  throwTC $ ParamError exps
