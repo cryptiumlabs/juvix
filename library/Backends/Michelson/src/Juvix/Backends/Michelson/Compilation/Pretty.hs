@@ -20,6 +20,7 @@ import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Instr as Instr
 import Numeric (showHex)
+import Text.Show (showChar, showString)
 
 data TyAnn'
   = TAPunct
@@ -235,8 +236,11 @@ instance
   pretty' (M.Elt k v) = appV (pconst "Elt") [PP.pretty' k, PP.pretty' v]
 
 showBytes :: [Word8] -> VDoc
-showBytes str =
-  PP.string $ "0x" <> foldr (\x s -> showHex x . s) identity str ""
+showBytes = PP.string . showString "0x" . foldr showByte ""
+  where
+    showByte b
+      | b < 0x10 = showChar '0' . showHex b
+      | otherwise = showHex b
 
 prettyTV ::
   (PP.PrettySyntax a, PP.Ann a ~ TyAnn, PP.PrecReader m) => a -> m VDoc
