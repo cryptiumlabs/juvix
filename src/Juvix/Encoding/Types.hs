@@ -1,4 +1,18 @@
-module Juvix.Encoding.Types where
+module Juvix.Encoding.Types
+  ( Product (..),
+    Sum (..),
+    Name (..),
+    Lambda (..),
+    Switch (..),
+    Bound (..),
+    Env (..),
+    Errors (..),
+    EnvS (..),
+    Case (..),
+    Branches,
+    runEnvsS,
+  )
+where
 
 import Juvix.Library hiding (Product, Sum)
 import qualified Juvix.Library.HashMap as Map

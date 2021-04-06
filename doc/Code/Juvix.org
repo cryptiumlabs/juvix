@@ -11,19 +11,6 @@
      - Most likely through LLVM
   4. Various Arithmetic Circuits
      - For use in ZKP's
-** Pipeline <<Juvix/Pipeline>>
-- _Relies on_
-  + [[Core]]
-  + [[Context]]
-  + [[Traverse]]
-  + [[Types]]
-  + [[Parameterisation]]
-  + [[Frontend]]
-  + [[Library]]
-  + [[NameSymbol]]
-  + [[Parser]]
-  + [[Sexp]]
-  + [[FromFrontend]]
 ** Core
 - _Relies on_
   + [[Contextify]]
@@ -39,7 +26,6 @@
   + [[Sexp]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
-  + [[Michelson]]
   + [[Application]]
   + [[ErasedAnn]]
   + [[Prim]]
@@ -56,7 +42,7 @@
 - This provides generic functions used by the various encodings in
   this directory
 - _Relies on_
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
 *** Mendler
@@ -68,7 +54,7 @@
   =Mendler= form
 - _Relies on_
   + [[Encoding]]
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
 *** Scott
@@ -77,10 +63,73 @@
 - Overall this encoding just works™
 - _Relies on_
   + [[Encoding]]
-  + [[Types]]
+  + [[Encoding/Types]]
   + [[Library]]
   + [[HashMap]]
-*** Types
+*** Types <<Encoding/Types>>
 - _Relies on_
   + [[Library]]
   + [[HashMap]]
+** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Backend]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+*** Compile
+- _Relies on_
+  + [[Application]]
+  + [[Context]]
+  + [[IR]]
+  + [[Base]]
+  + [[Globals]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Sexp]]
+  + [[Pipeline/Internal]]
+  + [[Types]]
+*** Internal <<Pipeline/Internal>>
+- _Relies on_
+  + [[Core]]
+  + [[Context]]
+  + [[Traverse]]
+  + [[Types]]
+  + [[Parameterisation]]
+  + [[Frontend]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Parser]]
+  + [[Sexp]]
+  + [[FromFrontend]]
+*** Types <<Pipeline/Types>>
+- _Relies on_
+  + [[Types]]
+  + [[Types]]
+  + [[Types]]
+  + [[Types]]
+  + [[Library]]
+*** Backend
+- _Relies on_
+  + [[Backend/Internal]]
+  + [[Michelson]]
+**** Internal <<Backend/Internal>>
+- _Relies on_
+  + [[Application]]
+  + [[Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Sexp]]
+  + [[Compile]]
+**** Michelson
+- _Relies on_
+  + [[Compilation]]
+  + [[Parameterisation]]
+  + [[IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Backend/Internal]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+  + [[FromFrontend]]

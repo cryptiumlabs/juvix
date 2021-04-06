@@ -390,8 +390,6 @@ michelson =
       floatVal = const Nothing
     }
 
-type CompErr = CompTypes.CompilationError
-
 instance Eval.HasWeak PrimTy where weakBy' _ _ t = t
 
 instance Eval.HasWeak RawPrimVal where weakBy' _ _ t = t

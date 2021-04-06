@@ -23,15 +23,10 @@ import Juvix.ToCore.Types
 import Prelude (error)
 
 type ReduceEff primTy primVal m =
-  ( Data primTy,
-    Data primVal,
-    HasThrowFF primTy primVal m,
+  ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   )
-
--- P.stringVal p s
--- P.floatVal p d
 
 paramConstant' ::
   P.Parameterisation primTy primVal ->
@@ -41,9 +36,7 @@ paramConstant' p Sexp.N {atomNum} = P.intVal p atomNum
 paramConstant' _p Sexp.A {} = Nothing
 
 transformTermIR ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
+  ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -52,7 +45,10 @@ transformTermIR ::
   Sexp.T ->
   m (IR.Term primTy primVal)
 transformTermIR q fe = do
-  SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
+  hrToIR <$> transformTermHR q fe
+
+-- TODO: Bring what everywhereM does back without Data.Data
+-- SYB.everywhereM (SYB.mkM transformPatVar) . hrToIR =<< transformTermHR q fe
 
 transformPatVar :: HasPatVars m => IR.Name -> m IR.Name
 transformPatVar (IR.Global name) =
@@ -211,9 +207,7 @@ pattern NamedArgTerm x ty <-
   HR.Elim (HR.Ann _ (HR.Elim (HR.Var (x :| []))) ty _)
 
 transformSimpleLambda ::
-  ( Data primTy,
-    Data primVal,
-    HasThrowFF primTy primVal m,
+  ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -226,9 +220,7 @@ transformSimpleLambda q (Sexp.List [args, body])
 transformSimpleLambda _ _ = error "malformed lambda"
 
 transformSimpleLet ::
-  ( Data primTy,
-    Data primVal,
-    HasThrowFF primTy primVal m,
+  ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -475,9 +467,7 @@ transformSpecial _ _ = pure Nothing
 --------------------------------------------------------------------------------
 
 transformSig ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
+  ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
@@ -517,9 +507,7 @@ transformNormalSig _ _ Ctx.Information {} =
   pure []
 
 transformValSig ::
-  ( Data primTy,
-    Data primVal,
-    HasThrowFF primTy primVal m,
+  ( HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m
   ) =>
@@ -697,9 +685,7 @@ transformCon q x ty def = do
       }
 
 transformProduct ::
-  ( Data primTy,
-    Data primVal,
-    HasPatVars m,
+  ( HasPatVars m,
     HasThrowFF primTy primVal m,
     HasParam primTy primVal m,
     HasCoreSigs primTy primVal m

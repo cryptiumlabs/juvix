@@ -1,1 +1,1 @@
-module Juvix where
+module Juvix () where

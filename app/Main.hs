@@ -1,10 +1,14 @@
-module Main where
+{-# LANGUAGE TypeApplications #-}
 
-import qualified Compile as Compile
-import qualified Config as Config
+module Main
+  ( main,
+  )
+where
+
 import Development.GitRev
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
+import qualified Juvix.Pipeline as Pipeline
 import Options
 import Options.Applicative
 import System.Directory
@@ -102,24 +106,24 @@ run ctx opt = do
     Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
     Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
   where
-    run' :: Context -> Options -> Compile.Pipeline ()
+    run' :: Context -> Options -> Pipeline.Pipeline ()
     run' _ (Options cmd _) = do
       case cmd of
         Parse fin ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
+          do liftIO $ readFile fin
+            >>= Pipeline.parse
             >>= liftIO . print
-        Typecheck fin backend ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
-            >>= Compile.typecheck backend
+        Typecheck fin (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
             >>= liftIO . print
-        Compile fin fout backend ->
-          do (liftIO $ readFile fin)
-            >>= Compile.parse
-            >>= Compile.typecheck backend
-            >>= Compile.compile backend
-            >>= Compile.writeout fout
+        Compile fin fout (Michelson backend) -> do
+          liftIO (readFile fin)
+            >>= Pipeline.parse
+            >>= Pipeline.typecheck @Pipeline.BMichelson
+            >>= Pipeline.compile @Pipeline.BMichelson
+            >>= Pipeline.writeout fout
             >>= liftIO . print
         Version -> liftIO $ putDoc versionDoc
         _ -> Feedback.fail "Not implemented yet."

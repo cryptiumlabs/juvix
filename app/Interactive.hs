@@ -1,9 +1,8 @@
-module Interactive where
+module Interactive (interactive) where
 
 import qualified Config
 import Control.Monad.IO.Class
 import qualified Data.Text as T
-import qualified Juvix.Core as Core
 import qualified Juvix.Core.HR as HR
 import qualified Juvix.Core.Parameterisations.Naturals as Nat
 -- import qualified Juvix.Interpreter.InteractionNet as INet
@@ -14,7 +13,6 @@ import Juvix.Library
 import Options
 import qualified System.Console.Haskeline as H
 import Text.PrettyPrint.ANSI.Leijen hiding ((<$>), (<>))
-import Types
 import Prelude (String)
 
 interactive :: Context -> Config.T -> IO ()

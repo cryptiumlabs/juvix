@@ -10,9 +10,8 @@
   + [[Library]]
 * Pipeline
 - _Relies on_
+  + [[Michelson]]
   + [[Compilation]]
-  + [[Types]]
-  + [[Parameterisation]]
   + [[IR]]
   + [[Pipeline]]
   + [[Types]]
