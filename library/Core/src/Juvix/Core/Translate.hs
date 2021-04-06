@@ -1,161 +1,286 @@
-module Juvix.Core.Translate where
+{-# LANGUAGE OverloadedLists #-}
+
+module Juvix.Core.Translate
+  ( hrToIR, hrToIRWith,
+    irToHR, irToHRWith,
+    hrPatternToIR, hrPatternToIRWith,
+    irPatternToHR, irPatternToHRWith,
+  ) where
 
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Utility
-import Juvix.Library
+import Juvix.Library hiding (filter)
+import Data.HashSet (HashSet)
+import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
+import qualified Data.IntMap.Strict as PM
 import qualified Juvix.Library.NameSymbol as NameSymbol
+
+hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
+hrToIR = hrToIRWith mempty
 
 -- contract: no shadowing
 -- TODO - handle this automatically by renaming shadowed vars
-hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
-hrToIR = fst . exec . hrToIR'
+hrToIRWith ::
+  -- | pattern var <-> name mapping from outer scopes
+  IR.PatternMap NameSymbol.T ->
+  HR.Term primTy primVal ->
+  IR.Term primTy primVal
+hrToIRWith pats = fst . exec pats mempty . hrToIR'
 
 hrToIR' ::
-  (HasReader "symbolStack" [NameSymbol.T] m) =>
+  HasNameStack m =>
   HR.Term primTy primVal ->
   m (IR.Term primTy primVal)
-hrToIR' term =
-  case term of
-    HR.Star n -> pure (IR.Star n)
-    HR.PrimTy p -> pure (IR.PrimTy p)
-    HR.Prim p -> pure (IR.Prim p)
-    HR.Pi u n a b -> do
-      a <- hrToIR' a
-      b <- withSym n $ hrToIR' b
-      pure (IR.Pi u a b)
-    HR.Lam n b -> do
-      b <- withSym n $ hrToIR' b
-      pure (IR.Lam b)
-    HR.Sig π n a b -> do
-      a <- hrToIR' a
-      b <- withSym n $ hrToIR' b
-      pure (IR.Sig π a b)
-    HR.Pair s t -> do
-      HR.Pair <$> hrToIR' s <*> hrToIR' t
-    HR.UnitTy -> pure IR.UnitTy
-    HR.Unit -> pure IR.Unit
-    HR.Let π n l b -> do
-      l <- hrElimToIR' l
-      b <- withSym n $ hrToIR' b
-      pure (IR.Let π l b)
-    HR.Elim e -> IR.Elim |<< hrElimToIR' e
+hrToIR' = \case
+  HR.Star n -> pure (IR.Star n)
+  HR.PrimTy p -> pure (IR.PrimTy p)
+  HR.Prim p -> pure (IR.Prim p)
+  HR.Pi u n a b -> do
+    a <- hrToIR' a
+    b <- withName n $ hrToIR' b
+    pure (IR.Pi u a b)
+  HR.Lam n b -> do
+    b <- withName n $ hrToIR' b
+    pure (IR.Lam b)
+  HR.Sig π n a b -> do
+    a <- hrToIR' a
+    b <- withName n $ hrToIR' b
+    pure (IR.Sig π a b)
+  HR.Pair s t -> do
+    HR.Pair <$> hrToIR' s <*> hrToIR' t
+  HR.UnitTy -> pure IR.UnitTy
+  HR.Unit -> pure IR.Unit
+  HR.Let π n l b -> do
+    l <- hrElimToIR' l
+    b <- withName n $ hrToIR' b
+    pure (IR.Let π l b)
+  HR.Elim e -> IR.Elim |<< hrElimToIR' e
 
 hrElimToIR' ::
-  (HasReader "symbolStack" [NameSymbol.T] m) =>
+  HasNameStack m =>
   HR.Elim primTy primVal ->
   m (IR.Elim primTy primVal)
-hrElimToIR' elim =
-  case elim of
-    HR.Var n -> do
-      maybeIndex <- lookupName n
-      pure $ case maybeIndex of
-        Just ind -> IR.Bound (fromIntegral ind)
-        Nothing -> IR.Free (IR.Global n)
-    HR.App f x -> do
-      f <- hrElimToIR' f
-      x <- hrToIR' x
-      pure (IR.App f x)
-    HR.Ann u t x l -> do
-      t <- hrToIR' t
-      x <- hrToIR' x
-      pure (IR.Ann u t x l)
+hrElimToIR' = \case
+  HR.Var n -> do
+    maybeIndex <- lookupName n
+    pure $ case maybeIndex of
+      Just ind -> IR.Bound (fromIntegral ind)
+      Nothing -> IR.Free (IR.Global n)
+  HR.App f x -> do
+    f <- hrElimToIR' f
+    x <- hrToIR' x
+    pure (IR.App f x)
+  HR.Ann u t x l -> do
+    t <- hrToIR' t
+    x <- hrToIR' x
+    pure (IR.Ann u t x l)
 
 irToHR :: IR.Term primTy primVal -> HR.Term primTy primVal
-irToHR = fst . exec . irToHR'
+irToHR = irToHRWith mempty
+
+irToHRWith ::
+  -- | pattern var <-> name mapping from outer scopes
+  IR.PatternMap NameSymbol.T ->
+  IR.Term primTy primVal ->
+  HR.Term primTy primVal
+irToHRWith pats t = fst $ exec pats (varsTerm t) $ irToHR' t
 
 irToHR' ::
-  ( HasState "nextName" Int m,
-    HasReader "nameStack" [Int] m
-  ) =>
+  (HasNames m, HasPatToSym m) =>
   IR.Term primTy primVal ->
   m (HR.Term primTy primVal)
-irToHR' term =
-  case term of
-    IR.Star n -> pure (HR.Star n)
-    IR.PrimTy p -> pure (HR.PrimTy p)
-    IR.Prim p -> pure (HR.Prim p)
-    IR.Pi u a b -> do
-      a <- irToHR' a
-      withName \n -> do
-        b <- irToHR' b
-        pure (HR.Pi u n a b)
-    IR.Lam t ->
-      withName \n -> HR.Lam n <$> irToHR' t
-    IR.Sig π a b -> do
-      a <- irToHR' a
-      withName \n -> do
-        b <- irToHR' b
-        pure $ HR.Sig π n a b
-    IR.Pair s t -> do
-      HR.Pair <$> irToHR' s <*> irToHR' t
-    IR.UnitTy -> pure HR.UnitTy
-    IR.Unit -> pure HR.Unit
-    IR.Let π l b -> do
-      l <- irElimToHR' l
-      withName \n -> do
-        b <- irToHR' b
-        pure (HR.Let π n l b)
-    IR.Elim e -> HR.Elim |<< irElimToHR' e
+irToHR' = \case
+  IR.Star n -> pure (HR.Star n)
+  IR.PrimTy p -> pure (HR.PrimTy p)
+  IR.Prim p -> pure (HR.Prim p)
+  IR.Pi u a b -> do
+    a <- irToHR' a
+    withFresh \n -> do
+      b <- irToHR' b
+      pure (HR.Pi u n a b)
+  IR.Lam t ->
+    withFresh \n -> HR.Lam n <$> irToHR' t
+  IR.Sig π a b -> do
+    a <- irToHR' a
+    withFresh \n -> do
+      b <- irToHR' b
+      pure $ HR.Sig π n a b
+  IR.Pair s t -> do
+    HR.Pair <$> irToHR' s <*> irToHR' t
+  IR.UnitTy -> pure HR.UnitTy
+  IR.Unit -> pure HR.Unit
+  IR.Let π l b -> do
+    l <- irElimToHR' l
+    withFresh \n -> do
+      b <- irToHR' b
+      pure (HR.Let π n l b)
+  IR.Elim e -> HR.Elim |<< irElimToHR' e
 
 irElimToHR' ::
-  ( HasState "nextName" Int m,
-    HasReader "nameStack" [Int] m
-  ) =>
+  (HasNames m, HasPatToSym m) =>
   IR.Elim primTy primVal ->
   m (HR.Elim primTy primVal)
-irElimToHR' elim =
-  case elim of
-    IR.Free (IR.Global n) -> pure $ HR.Var n
-    IR.Free (IR.Pattern p) ->
-      pure $ HR.Var $ NameSymbol.fromSymbol $ intern $ "pat" <> show p
-    IR.Bound i -> do
-      v <- unDeBruijn (fromIntegral i)
-      pure (HR.Var v)
-    IR.App f x -> do
-      f <- irElimToHR' f
-      x <- irToHR' x
-      pure (HR.App f x)
-    IR.Ann u t x l -> do
-      t <- irToHR' t
-      x <- irToHR' x
-      pure (HR.Ann u t x l)
+irElimToHR' = \case
+  IR.Free (IR.Global n) -> pure $ HR.Var n
+  IR.Free (IR.Pattern p) ->
+    -- FIXME maybe an error for a failed lookup?
+    -- but hrToIR is mostly for printing so maybe it's better to get /something/
+    HR.Var . fromMaybe def <$> getPatToSym p
+    where def = NameSymbol.fromText $ "pat" <> show p
+  IR.Bound i -> do
+    v <- lookupIndex (fromIntegral i)
+    pure (HR.Var v)
+  IR.App f x -> do
+    f <- irElimToHR' f
+    x <- irToHR' x
+    pure (HR.App f x)
+  IR.Ann u t x l -> do
+    t <- irToHR' t
+    x <- irToHR' x
+    pure (HR.Ann u t x l)
 
-exec :: EnvElim a -> (a, Env)
-exec (EnvCon env) = runState env (Env 0 [] [])
+hrPatternToIR ::
+  HR.Pattern primTy primVal ->
+  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
+hrPatternToIR = hrPatternToIRWith mempty
 
-data Env = Env
-  { nextName :: Int,
-    nameStack :: [Int],
-    symbolStack :: [NameSymbol.T]
+hrPatternToIRWith ::
+  IR.PatternMap NameSymbol.T ->
+  HR.Pattern primTy primVal ->
+  (IR.Pattern primTy primVal, HashMap NameSymbol.T IR.PatternVar)
+hrPatternToIRWith pats pat =
+  hrPatternToIR' pat
+    |> exec pats mempty
+    |> second symToPat
+
+hrPatternToIR' ::
+  (HasNameStack m, HasSymToPat m, HasNextPatVar m) =>
+  HR.Pattern primTy primVal ->
+  m (IR.Pattern primTy primVal)
+hrPatternToIR' = \case
+  HR.PCon k ps -> IR.PCon k <$> traverse hrPatternToIR' ps
+  HR.PPair p q -> IR.PPair <$> hrPatternToIR' p <*> hrPatternToIR' q
+  HR.PUnit -> pure IR.PUnit
+  HR.PVar x -> withNextPatVar \i -> IR.PVar i <$ setSymToPat x i
+  HR.PDot e -> IR.PDot <$> hrToIR' e
+  HR.PPrim p -> pure $ IR.PPrim p
+
+
+irPatternToHR ::
+  IR.Pattern primTy primVal ->
+  (HR.Pattern primTy primVal, IR.PatternMap NameSymbol.T)
+irPatternToHR = irPatternToHRWith mempty
+
+irPatternToHRWith ::
+  IR.PatternMap NameSymbol.T ->
+  IR.Pattern primTy primVal ->
+  (HR.Pattern primTy primVal, IR.PatternMap NameSymbol.T)
+irPatternToHRWith pats pat =
+  irPatternToHR' pat
+    |> exec pats (varsPattern pat)
+    |> second patToSym
+
+irPatternToHR' ::
+  (HasNames m, HasPatToSym m) =>
+  IR.Pattern primTy primVal ->
+  m (HR.Pattern primTy primVal)
+irPatternToHR' = \case
+  IR.PCon k ps -> HR.PCon k <$> traverse irPatternToHR' ps
+  IR.PPair p q -> HR.PPair <$> irPatternToHR' p <*> irPatternToHR' q
+  IR.PUnit -> pure HR.PUnit
+  IR.PVar i -> withFresh \x -> HR.PVar x <$ setPatToSym i x
+  IR.PDot e -> HR.PDot <$> irToHR' e
+  IR.PPrim p -> pure $ HR.PPrim p
+
+
+varsTerm :: IR.Term primTy primVal -> HashSet NameSymbol.T
+varsTerm = \case
+  IR.Star _ -> mempty
+  IR.PrimTy _ -> mempty
+  IR.Prim _ -> mempty
+  IR.Pi _ s t -> varsTerm s <> varsTerm t
+  IR.Lam t -> varsTerm t
+  IR.Sig _ s t -> varsTerm s <> varsTerm t
+  IR.Pair s t -> varsTerm s <> varsTerm t
+  IR.Let _ e t -> varsElim e <> varsTerm t
+  IR.UnitTy -> mempty
+  IR.Unit -> mempty
+  IR.Elim e -> varsElim e
+
+varsElim :: IR.Elim primTy primVal -> HashSet NameSymbol.T
+varsElim = \case
+  IR.Bound _ -> mempty
+  IR.Free (IR.Global x) -> [x]
+  IR.Free (IR.Pattern _) -> mempty
+  IR.App f s -> varsElim f <> varsTerm s
+  IR.Ann _ t a _ -> varsTerm t <> varsTerm a
+
+varsPattern :: IR.Pattern primTy primVal -> HashSet NameSymbol.T
+varsPattern = \case
+  IR.PCon k ps -> [k] <> foldMap varsPattern ps
+  IR.PPair s t -> varsPattern s <> varsPattern t
+  IR.PUnit -> mempty
+  IR.PVar _ -> mempty
+  IR.PDot t -> varsTerm t
+  IR.PPrim _ -> mempty
+
+
+exec ::
+  -- | Existing mapping of names to pattern variables, if any
+  IR.PatternMap NameSymbol.T ->
+  -- | Names/pattern vars to avoid.
+  HashSet NameSymbol.T ->
+  M a -> (a, Env)
+exec pats avoid (M env) =
+  runState env $ Env {
+    nameSupply = filter (`notElem` avoid) names,
+    nextPatVar = 0,
+    nameStack = [],
+    patToSym = pats,
+    symToPat = PM.toList pats |> map swap |> HM.fromList
   }
-  deriving (Show, Eq, Generic)
 
-newtype EnvElim a = EnvCon (State Env a)
+-- TODO separate states for h→i and i→h maybe??
+data Env
+  = Env
+      { nameSupply :: Stream NameSymbol.T,
+        nameStack :: [NameSymbol.T],
+        nextPatVar :: IR.PatternVar,
+        symToPat :: HashMap NameSymbol.T IR.PatternVar,
+        patToSym :: IR.PatternMap NameSymbol.T
+      }
+  deriving Generic
+
+newtype M a = M (State Env a)
   deriving (Functor, Applicative, Monad)
   deriving
-    ( HasState "nextName" Int,
-      HasSink "nextName" Int,
-      HasSource "nextName" Int
+    ( HasSource "nameSupply" (Stream NameSymbol.T),
+      HasSink "nameSupply" (Stream NameSymbol.T),
+      HasState "nameSupply" (Stream NameSymbol.T)
     )
-    via StateField "nextName" (State Env)
+    via StateField "nameSupply" (State Env)
   deriving
-    ( HasState "nameStack" [Int],
-      HasSink "nameStack" [Int]
-    )
-    via StateField "nameStack" (State Env)
-  deriving
-    ( HasReader "nameStack" [Int],
-      HasSource "nameStack" [Int]
+    ( HasSource "nameStack" [NameSymbol.T],
+      HasReader "nameStack" [NameSymbol.T]
     )
     via ReaderField "nameStack" (State Env)
   deriving
-    ( HasState "symbolStack" [NameSymbol.T],
-      HasSink "symbolStack" [NameSymbol.T]
+    ( HasSource "nextPatVar" IR.PatternVar,
+      HasSink "nextPatVar" IR.PatternVar,
+      HasState "nextPatVar" IR.PatternVar
     )
-    via StateField "symbolStack" (State Env)
+    via StateField "nextPatVar" (State Env)
   deriving
-    ( HasReader "symbolStack" [NameSymbol.T],
-      HasSource "symbolStack" [NameSymbol.T]
+    ( HasSource "symToPat" (HashMap NameSymbol.T IR.PatternVar),
+      HasSink "symToPat" (HashMap NameSymbol.T IR.PatternVar),
+      HasState "symToPat" (HashMap NameSymbol.T IR.PatternVar)
     )
-    via ReaderField "symbolStack" (State Env)
+    via StateField "symToPat" (State Env)
+  deriving
+    ( HasSource "patToSym" (IR.PatternMap NameSymbol.T),
+      HasSink "patToSym" (IR.PatternMap NameSymbol.T),
+      HasState "patToSym" (IR.PatternMap NameSymbol.T)
+    )
+    via StateField "patToSym" (State Env)

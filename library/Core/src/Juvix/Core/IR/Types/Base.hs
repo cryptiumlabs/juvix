@@ -14,6 +14,9 @@ type GlobalName = NameSymbol.T
 
 type PatternVar = Int
 
+-- | set of pattern variables
+type PatternSet = IntSet
+
 -- | map from pattern variables to e.g. their types
 type PatternMap = IntMap
 
