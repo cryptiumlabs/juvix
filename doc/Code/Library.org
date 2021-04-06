@@ -875,6 +875,7 @@ Typechecked declarations are added to the signature.
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Globals]]
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
