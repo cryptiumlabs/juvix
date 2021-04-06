@@ -8,7 +8,9 @@ module Juvix.Core.Utility
     HasNextPatVar,
     HasSymToPat,
     HasPatToSym,
+
     -- * Operations
+
     -- ** Symbols
     withName,
     lookupName,
@@ -17,11 +19,13 @@ module Juvix.Core.Utility
     nextFresh,
     withNextPatVar,
     nextPatVar,
+
     -- ** Pattern variables
     getSymToPat,
     setSymToPat,
     getPatToSym,
     setPatToSym,
+
     -- * Infinite streams
     Stream (..),
     app,
@@ -29,22 +33,28 @@ module Juvix.Core.Utility
     take,
     names,
     patVarsExcept,
-  ) where
+  )
+where
 
-import Data.List ((!!), findIndex)
-import Juvix.Library hiding (filter, take)
-import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Data.IntMap.Strict as PM
-import qualified Data.IntSet as PS
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
-import Juvix.Core.IR.Types (PatternVar, PatternSet, PatternMap)
+import qualified Data.IntMap.Strict as PM
+import qualified Data.IntSet as PS
+import Data.List ((!!), findIndex)
+import Juvix.Core.IR.Types (PatternMap, PatternSet, PatternVar)
+import Juvix.Library hiding (filter, take)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 
 type HasNameStack = HasReader "nameStack" [NameSymbol.T]
+
 type HasNameSupply = HasState "nameSupply" (Stream NameSymbol.T)
+
 type HasNames m = (HasNameStack m, HasNameSupply m)
+
 type HasNextPatVar = HasState "nextPatVar" PatternVar
+
 type HasSymToPat = HasState "symToPat" (HashMap NameSymbol.T PatternVar)
+
 type HasPatToSym = HasState "patToSym" (PatternMap NameSymbol.T)
 
 withName :: HasNameStack m => NameSymbol.T -> m a -> m a
@@ -82,11 +92,9 @@ withNextPatVar act = act =<< nextPatVar
 nextPatVar :: HasNextPatVar m => m PatternVar
 nextPatVar = state @"nextPatVar" \v -> (v, succ v)
 
-
-
 -- | necessarily-infinite stream
-data Stream a =
-  (:>) { head :: a, tail :: Stream a }
+data Stream a
+  = (:>) {head :: a, tail :: Stream a}
 
 -- | add a list to the front of a stream
 app :: [a] -> Stream a -> Stream a
@@ -103,15 +111,16 @@ take n (x :> xs) = x : take (n - 1) xs
 names :: Stream NameSymbol.T
 names = map (\c -> makeNS [c]) az `app` go (1 :: Natural)
   where
-    az = ['a'..'z']
+    az = ['a' .. 'z']
     go i = [makeNS $ a : show i | a <- az] `app` go (i + 1)
     makeNS x = NameSymbol.fromString x
 
 patVarsExcept :: PatternSet -> Stream PatternVar
-patVarsExcept vars = go (PS.minView vars) 0 where
-  go Nothing i = allFrom i
-  go (Just (v, vs)) i = case compare v i of
-    LT -> i :> go (PS.minView vs) (i + 1)
-    EQ -> go (PS.minView vs) (i + 1)
-    GT -> i :> go (Just (v, vs)) (i + 1)
-  allFrom !i = i :> allFrom (i + 1)
+patVarsExcept vars = go (PS.minView vars) 0
+  where
+    go Nothing i = allFrom i
+    go (Just (v, vs)) i = case compare v i of
+      LT -> i :> go (PS.minView vs) (i + 1)
+      EQ -> go (PS.minView vs) (i + 1)
+      GT -> i :> go (Just (v, vs)) (i + 1)
+    allFrom !i = i :> allFrom (i + 1)

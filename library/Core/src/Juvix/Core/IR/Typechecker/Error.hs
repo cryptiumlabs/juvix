@@ -1,24 +1,25 @@
 {-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Core.IR.Typechecker.Error
   ( TypecheckError' (..),
     TypecheckError,
     HasThrowTC',
     HasThrowTC,
     throwTC,
-  ) where
+  )
+where
 
-import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.Application as App
+import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.IR.Evaluator as Eval
+import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
-import Juvix.Core.Translate
-import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Core.Parameterisation as P
+import Juvix.Core.Translate
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.Usage as Usage
-
 
 data TypecheckError' extV extT primTy primVal
   = TypeMismatch
@@ -110,7 +111,6 @@ deriving instance
     IR.PatternAll Show extT primTy primVal
   ) =>
   Show (TypecheckError' extV extT primTy primVal)
-
 
 type instance PP.Ann (TypecheckError' IR.NoExt IR.NoExt _ _) = HR.PPAnn
 
@@ -210,4 +210,3 @@ throwTC ::
   TypecheckError' extV extT primTy primVal ->
   m z
 throwTC = throw @"typecheckError"
-

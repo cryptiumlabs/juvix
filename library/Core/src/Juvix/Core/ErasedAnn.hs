@@ -5,5 +5,5 @@ module Juvix.Core.ErasedAnn
 where
 
 import Juvix.Core.ErasedAnn.Conversion
-import Juvix.Core.ErasedAnn.Types
 import Juvix.Core.ErasedAnn.Pretty ()
+import Juvix.Core.ErasedAnn.Types

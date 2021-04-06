@@ -2,12 +2,12 @@
 
 module Juvix.Core.IR.Evaluator.Types where
 
-import qualified Juvix.Core.IR.Types as IR
-import qualified Juvix.Core.IR.Typechecker.Types as TC
-import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.Translate
+import qualified Juvix.Core.IR.Typechecker.Types as TC
+import qualified Juvix.Core.IR.Types as IR
+import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
+import Juvix.Core.Translate
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 
@@ -15,7 +15,6 @@ data ApplyError primTy primVal
   = NoApplyError
   | ApplyErrorV (Param.ApplyError primVal)
   | ApplyErrorT (Param.ApplyError primTy)
-
 
 type ApplyErrorPretty primTy primVal =
   ( PP.PrettyText (Param.ApplyError primTy),
@@ -76,15 +75,15 @@ instance
   where
   prettyT = \case
     CannotApply {fun, arg, paramErr} ->
-      PP.vcat [
-        PP.sepIndent' [
-          (False, "Cannot apply"),
-          (True, PP.pretty0 $ irToHR $ IR.quote fun),
-          (False, "to argument"),
-          (True, PP.pretty0 $ irToHR $ IR.quote arg)
-        ],
-        PP.prettyT paramErr
-      ]
+      PP.vcat
+        [ PP.sepIndent'
+            [ (False, "Cannot apply"),
+              (True, PP.pretty0 $ irToHR $ IR.quote fun),
+              (False, "to argument"),
+              (True, PP.pretty0 $ irToHR $ IR.quote arg)
+            ],
+          PP.prettyT paramErr
+        ]
     UnsupportedTermExt x -> absurd x
     UnsupportedElimExt x -> absurd x
 

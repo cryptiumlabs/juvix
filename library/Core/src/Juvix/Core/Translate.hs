@@ -1,20 +1,25 @@
 {-# LANGUAGE OverloadedLists #-}
 
 module Juvix.Core.Translate
-  ( hrToIR, hrToIRWith,
-    irToHR, irToHRWith,
-    hrPatternToIR, hrPatternToIRWith,
-    irPatternToHR, irPatternToHRWith,
-  ) where
+  ( hrToIR,
+    hrToIRWith,
+    irToHR,
+    irToHRWith,
+    hrPatternToIR,
+    hrPatternToIRWith,
+    irPatternToHR,
+    irPatternToHRWith,
+  )
+where
 
+import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
+import Data.HashSet (HashSet)
+import qualified Data.IntMap.Strict as PM
 import qualified Juvix.Core.HR.Types as HR
 import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.Utility
 import Juvix.Library hiding (filter)
-import Data.HashSet (HashSet)
-import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import qualified Data.IntMap.Strict as PM
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
 hrToIR :: HR.Term primTy primVal -> IR.Term primTy primVal
@@ -128,7 +133,8 @@ irElimToHR' = \case
     -- FIXME maybe an error for a failed lookup?
     -- but hrToIR is mostly for printing so maybe it's better to get /something/
     HR.Var . fromMaybe def <$> getPatToSym p
-    where def = NameSymbol.fromText $ "pat" <> show p
+    where
+      def = NameSymbol.fromText $ "pat" <> show p
   IR.Bound i -> do
     v <- lookupIndex (fromIntegral i)
     pure (HR.Var v)
@@ -167,7 +173,6 @@ hrPatternToIR' = \case
   HR.PDot e -> IR.PDot <$> hrToIR' e
   HR.PPrim p -> pure $ IR.PPrim p
 
-
 irPatternToHR ::
   IR.Pattern primTy primVal ->
   (HR.Pattern primTy primVal, IR.PatternMap NameSymbol.T)
@@ -193,7 +198,6 @@ irPatternToHR' = \case
   IR.PVar i -> withFresh \x -> HR.PVar x <$ setPatToSym i x
   IR.PDot e -> HR.PDot <$> irToHR' e
   IR.PPrim p -> pure $ HR.PPrim p
-
 
 varsTerm :: IR.Term primTy primVal -> HashSet NameSymbol.T
 varsTerm = \case
@@ -226,21 +230,22 @@ varsPattern = \case
   IR.PDot t -> varsTerm t
   IR.PPrim _ -> mempty
 
-
 exec ::
   -- | Existing mapping of names to pattern variables, if any
   IR.PatternMap NameSymbol.T ->
   -- | Names/pattern vars to avoid.
   HashSet NameSymbol.T ->
-  M a -> (a, Env)
+  M a ->
+  (a, Env)
 exec pats avoid (M env) =
-  runState env $ Env {
-    nameSupply = filter (`notElem` avoid) names,
-    nextPatVar = 0,
-    nameStack = [],
-    patToSym = pats,
-    symToPat = PM.toList pats |> map swap |> HM.fromList
-  }
+  runState env $
+    Env
+      { nameSupply = filter (`notElem` avoid) names,
+        nextPatVar = 0,
+        nameStack = [],
+        patToSym = pats,
+        symToPat = PM.toList pats |> map swap |> HM.fromList
+      }
 
 -- TODO separate states for h→i and i→h maybe??
 data Env
@@ -251,7 +256,7 @@ data Env
         symToPat :: HashMap NameSymbol.T IR.PatternVar,
         patToSym :: IR.PatternMap NameSymbol.T
       }
-  deriving Generic
+  deriving (Generic)
 
 newtype M a = M (State Env a)
   deriving (Functor, Applicative, Monad)

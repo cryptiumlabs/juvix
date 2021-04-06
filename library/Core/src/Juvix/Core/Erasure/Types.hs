@@ -19,17 +19,17 @@ import Juvix.Core.Erased.Types as Type
   )
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
+import qualified Juvix.Core.HR.Pretty as HR
+import Juvix.Core.IR.TransformExt
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
+import Juvix.Core.Translate
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import Juvix.Library.Usage (Usage)
 import qualified Juvix.Library.PrettyPrint as PP
-import qualified Juvix.Core.HR.Pretty as HR
-import Juvix.Core.IR.TransformExt
-import Juvix.Core.Translate
+import Juvix.Library.Usage (Usage)
 
 type MapPrim p1 p2 ty val =
   [NameSymbol.T] -> p1 -> Either (Error ty val) p2
@@ -118,27 +118,27 @@ instance
   where
   prettyT = \case
     UnsupportedTermT t ->
-     PP.sepIndent'
+      PP.sepIndent'
         [ (False, "Unsupported term:"),
           (True, PP.pretty0 $ irToHR $ extForgetT t)
         ]
     UnsupportedTermE e ->
-     PP.sepIndent'
+      PP.sepIndent'
         [ (False, "Unsupported term:"),
           (True, PP.pretty0 $ irToHR $ IR.Elim $ extForgetE e)
         ]
     UnsupportedTypeV v ->
-     PP.sepIndent'
+      PP.sepIndent'
         [ (False, "Unsupported type:"),
           (True, PP.pretty0 $ irToHR $ IR.quote v)
         ]
     UnsupportedTypeN n ->
-     PP.sepIndent'
+      PP.sepIndent'
         [ (False, "Unsupported type:"),
           (True, PP.pretty0 $ irToHR $ IR.quote $ IR.VNeutral n)
         ]
     CannotEraseZeroUsageTerm t ->
-     PP.sepIndent'
+      PP.sepIndent'
         [ (False, "Entire term has zero usage:"),
           (True, PP.pretty0 $ irToHR $ extForgetT t)
         ]

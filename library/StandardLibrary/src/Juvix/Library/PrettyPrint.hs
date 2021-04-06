@@ -1,8 +1,10 @@
 module Juvix.Library.PrettyPrint
   ( module Text.PrettyPrint.Compact,
+
     -- * Precedence
     Prec (..),
     PrecReader,
+
     -- * Classes
     Ann,
     PrettySyntax (..),
@@ -15,6 +17,7 @@ module Juvix.Library.PrettyPrint
     show,
     string,
     text,
+
     -- * Extensions
     renderIO,
     prettyIO,
@@ -36,6 +39,7 @@ module Juvix.Library.PrettyPrint
     sepIndentA,
     sepIndentA',
     punctuate,
+
     -- ** Combinators lifted over an 'Applicative'
     hsepA,
     sepA,
@@ -46,11 +50,14 @@ module Juvix.Library.PrettyPrint
   )
 where
 
-import Juvix.Library hiding (show)
 import Data.Text (unpack)
+import Juvix.Library hiding (show)
 import qualified Text.PrettyPrint.Compact as Base
 import Text.PrettyPrint.Compact hiding
-  ( backslash,
+  ( angles,
+    backslash,
+    braces,
+    brackets,
     colon,
     comma,
     dot,
@@ -60,6 +67,8 @@ import Text.PrettyPrint.Compact hiding
     lbrace,
     lbracket,
     lparen,
+    parens,
+    punctuate,
     rangle,
     rbrace,
     rbracket,
@@ -67,13 +76,8 @@ import Text.PrettyPrint.Compact hiding
     semi,
     space,
     squote,
-    parens,
-    braces,
-    brackets,
-    angles,
-    punctuate,
+    string,
     text,
-    string
   )
 import Text.PrettyPrint.Compact.Core (groupingBy)
 import qualified Text.Show as Show
@@ -296,14 +300,15 @@ toIndent b = if b then indentWidth else 0
 
 sepIndentA ::
   (Monoid ann, Foldable t, Applicative f) =>
-  t (Int, f (Doc ann)) -> f (Doc ann)
+  t (Int, f (Doc ann)) ->
+  f (Doc ann)
 sepIndentA = fmap (groupingBy " ") . sequenceA . map sequenceA . toList
 
 sepIndentA' ::
   (Monoid ann, Foldable t, Functor t, Applicative f) =>
-  t (Bool, f (Doc ann)) -> f (Doc ann)
+  t (Bool, f (Doc ann)) ->
+  f (Doc ann)
 sepIndentA' = sepIndentA . fmap (first toIndent)
-
 
 renderIO :: (MonadIO m, Monoid ann) => Doc ann -> m ()
 renderIO = putStrLn . render

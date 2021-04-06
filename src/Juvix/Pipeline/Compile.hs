@@ -14,9 +14,9 @@ import qualified Data.Text.IO as T
 import qualified Juvix.Core.Application as CoreApp
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.IR as IR
-import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Core.IR.Types.Base
 import Juvix.Core.IR.Types.Globals
+import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Feedback as Feedback
 import qualified Juvix.Library.Sexp as Sexp

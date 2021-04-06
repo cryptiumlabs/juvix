@@ -7,11 +7,11 @@ module Juvix.Core.Application where
 
 import Data.Bifoldable
 import Data.Bitraversable
-import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.HR.Pretty as HR
+import qualified Juvix.Core.IR.Types as IR
 import Juvix.Library
-import qualified Juvix.Library.Usage as Usage
 import qualified Juvix.Library.PrettyPrint as PP
+import qualified Juvix.Library.Usage as Usage
 
 -- |
 -- A primitive along with its type, and possibly some arguments.
@@ -136,7 +136,6 @@ instance Bitraversable Take where
 takeToReturn :: Take ty term -> Return' ext ty term
 takeToReturn (Take {type', term}) = Return {retType = type', retTerm = term}
 
-
 data PPAnn' ty term
   = APunct
   | ATyAnn (PP.Ann ty)
@@ -168,22 +167,27 @@ prettyTyped ::
     PP.PrettySyntax ty,
     PP.PrettySyntax term
   ) =>
-  Usage.T -> term -> ty -> m (PP.Doc (Last (PPAnn' ty term)))
+  Usage.T ->
+  term ->
+  ty ->
+  m (PP.Doc (Last (PPAnn' ty term)))
 prettyTyped π tm ty =
-  PP.parens' APunct <$>
-    PP.hangA PP.indentWidth
-      (PP.hsepA
-        [ PP.noAnn <$> PP.pretty' π,
-          ppunct "|",
-          fmap (Last . Just . ATmAnn) <$> PP.pretty' tm
-        ])
-      (PP.hsepA
-        [ ppunct ":",
-          fmap (Last . Just . ATyAnn) <$> PP.pretty' ty
-        ])
+  PP.parens' APunct
+    <$> PP.hangA
+      PP.indentWidth
+      ( PP.hsepA
+          [ PP.noAnn <$> PP.pretty' π,
+            ppunct "|",
+            fmap (Last . Just . ATmAnn) <$> PP.pretty' tm
+          ]
+      )
+      ( PP.hsepA
+          [ ppunct ":",
+            fmap (Last . Just . ATyAnn) <$> PP.pretty' ty
+          ]
+      )
   where
     ppunct = pure . PP.annotate' APunct
-
 
 type instance PP.Ann (Arg' _ ty term) = PPAnn ty term
 
@@ -195,12 +199,12 @@ instance
     VarArg x -> PP.annotate' AVar . PP.noAnn <$> PP.pretty' x
     TermArg t -> PP.pretty' t
 
-
 type instance PP.Ann (Return' _ ty term) = PPAnn ty term
 
 instance
   (PP.PrettySyntax ty, PP.PrettySyntax term, PP.PrettySyntax (ParamVar ext)) =>
-  PP.PrettySyntax (Return' ext ty term) where
+  PP.PrettySyntax (Return' ext ty term)
+  where
   pretty' = \case
     Cont {fun, args} -> PP.app' APunct (PP.pretty' fun) (map PP.pretty' args)
     Return {retTerm, retType} -> prettyTyped Usage.Omega retTerm retType

@@ -11,6 +11,7 @@ module Juvix.Core.HR.Pretty
     PrettyText,
 
     -- * extra combinators
+
     -- ** punctuation with highlighting
     parens,
     parensP,
@@ -22,6 +23,7 @@ module Juvix.Core.HR.Pretty
     equals,
     pipe,
     box,
+
     -- ** formatting constructs
     name,
     pname,
@@ -119,13 +121,13 @@ pname = pure . name
 
 data Bind = PI | SIG
 
-data Binder tm =
-  Binder {
-    bBinder :: Bind,
-    bUsage :: Usage.T,
-    bName :: NameSymbol.T,
-    bType :: tm
-  }
+data Binder tm
+  = Binder
+      { bBinder :: Bind,
+        bUsage :: Usage.T,
+        bName :: NameSymbol.T,
+        bType :: tm
+      }
 
 type WithBinders tm = ([Binder tm], tm)
 
@@ -148,7 +150,8 @@ getBinds = go []
 -- @
 ppBinders ::
   (PP.PrettySyntax tm, PP.Ann tm ~ PPAnn, PP.PrecReader m) =>
-  WithBinders tm -> m Doc
+  WithBinders tm ->
+  m Doc
 ppBinders (bs, t) =
   PP.hangA PP.indentWidth (PP.sepA $ map ppBinder1 bs) (ppOuter t)
   where
@@ -190,7 +193,8 @@ getLams = go []
 -- @
 ppLams ::
   (PP.PrettySyntax tm, PP.Ann tm ~ PPAnn, PP.PrecReader m) =>
-  ([NameSymbol.T], tm) -> m Doc
+  ([NameSymbol.T], tm) ->
+  m Doc
 ppLams (names, body) =
   PP.hangA (2 * PP.indentWidth) (pure header) (ppOuter body)
   where
@@ -210,7 +214,9 @@ ppApps ::
     PP.Ann b ~ PPAnn,
     PP.PrecReader m
   ) =>
-  a -> [b] -> m Doc
+  a ->
+  [b] ->
+  m Doc
 ppApps f xs = PP.app' APunct (PP.pretty' f) $ map PP.pretty' xs
 
 getApps :: Elim primTy primVal -> (Elim primTy primVal, [Term primTy primVal])
@@ -222,7 +228,8 @@ getApps = go []
 -- | Print a tuple with commas and angle brackets.
 ppPairs ::
   (PP.PrettySyntax a, PP.PrecReader m, PP.Ann a ~ PPAnn) =>
-  [a] -> m Doc
+  [a] ->
+  m Doc
 ppPairs =
   fmap (angles . PP.sep . PP.punctuate comma) . traverse ppOuter
 
@@ -250,7 +257,11 @@ ppLet ::
     PP.Ann b ~ PPAnn,
     PP.PrecReader m
   ) =>
-  Usage.T -> NameSymbol.T -> a -> b -> m Doc
+  Usage.T ->
+  NameSymbol.T ->
+  a ->
+  b ->
+  m Doc
 ppLet π x b t =
   PP.sepA
     [ PP.hsepA
@@ -308,7 +319,6 @@ instance PrimPretty primTy primVal => PP.PrettySyntax (Elim primTy primVal) wher
           [ PP.hsepA [pure colon, ppOuter a],
             PP.hsepA [pure colon, ppStar ℓ]
           ]
-
 
 type instance PP.Ann (Pattern _ _) = PPAnn
 

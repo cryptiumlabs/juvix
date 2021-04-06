@@ -132,10 +132,10 @@ lam1 = Lam "z" $ Elim "z"
 lam2 = Lam "y" $ Lam "z" $ "y" `Pair` "z"
 
 lam3 =
-  Lam "verylongname1" $
-  Lam "verylongname2" $
-  Lam "verylongname3" $
-    "y" `Pair` "z"
+  Lam "verylongname1"
+    $ Lam "verylongname2"
+    $ Lam "verylongname3"
+    $ "y" `Pair` "z"
 
 pairTests :: T.TestTree
 pairTests =

@@ -12,6 +12,7 @@ where
 import qualified Juvix.Contextify as Contextify
 import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Erasure (erase, eraseAnn)
+import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.Pipeline
 import Juvix.Core.Translate
 import Juvix.Core.Types
@@ -19,9 +20,8 @@ import qualified Juvix.Frontend.Types as Initial
 import qualified Juvix.FrontendDesugar as Desugar
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
-import qualified Juvix.Library.Sexp as Sexp
-import qualified Juvix.Core.HR.Pretty as HR
 import qualified Juvix.Library.PrettyPrint as PP
+import qualified Juvix.Library.Sexp as Sexp
 
 data Error
   = ContextErr Contextify.ResolveErr

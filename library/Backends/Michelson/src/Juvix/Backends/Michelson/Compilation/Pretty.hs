@@ -13,8 +13,8 @@ where
 import Data.ByteString (unpack)
 import Juvix.Backends.Michelson.Compilation.Types
 import qualified Juvix.Core.HR.Pretty as HR
-import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library hiding (Option, Type, const)
+import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Michelson.Text as M
 import qualified Michelson.Untyped as M
@@ -390,7 +390,6 @@ instance PP.PrettySyntax Instr.ExpandedOp where
     Instr.SeqEx is -> prettyBlock is
     Instr.WithSrcEx _ i -> PP.pretty' i
 
-
 instance HR.ToPPAnn TyAnn where
   toPPAnn = fmap \case
     TAPunct -> HR.APunct
@@ -404,7 +403,6 @@ instance HR.ToPPAnn ValAnn where
     VAPrimTy -> HR.APrimTy
     VAKeyword -> HR.AValCon
     VAName -> HR.AName
-
 
 type instance PP.Ann CompilationError = ValAnn
 

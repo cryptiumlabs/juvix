@@ -169,7 +169,6 @@ instance HasWeak a => HasWeak (NonEmpty a)
 
 instance HasWeak a => HasWeak (Param.PrimType a)
 
-
 instance HasWeak Symbol where weakBy' _ _ x = x
 
 instance (HasWeak ty, HasWeak term) => HasWeak (App.Take ty term)

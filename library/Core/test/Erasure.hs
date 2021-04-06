@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+
 module Erasure where
 
 import qualified Juvix.Core.Application as App

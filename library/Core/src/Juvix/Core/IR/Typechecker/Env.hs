@@ -5,8 +5,8 @@ module Juvix.Core.IR.Typechecker.Env where
 import qualified Data.HashMap.Strict as HashMap
 import qualified Juvix.Core.IR.Evaluator as Eval
 import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
-import Juvix.Core.IR.Typechecker.Types
 import Juvix.Core.IR.Typechecker.Error
+import Juvix.Core.IR.Typechecker.Types
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.IR.Types.Globals as IR

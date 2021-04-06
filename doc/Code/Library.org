@@ -307,8 +307,9 @@ This module provides a default contract environment
   + [[Interpret]]
   + [[Untyped]]
   + [[Application]]
+  + [[ErasedAnn]]
   + [[Prim]]
-  + [[ErasedAnn/Types]]
+  + [[Core/HR/Pretty]]
   + [[IR/Evaluator]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
@@ -318,6 +319,7 @@ This module provides a default contract environment
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[PrettyPrint]]
   + [[Usage]]
 ******* Compilation
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
@@ -334,14 +336,10 @@ This module provides a default contract environment
 ******** Pretty <<Compilation/Pretty>>
 - _Relies on_
   + [[Compilation/Types]]
-  + [[Application]]
-  + [[ErasedAnn/Types]]
-  + [[IR/Types]]
-  + [[Core/Parameterisation]]
+  + [[Core/HR/Pretty]]
   + [[Library]]
   + [[NameSymbol]]
   + [[PrettyPrint]]
-  + [[Usage]]
 ******** Types <<Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
@@ -461,20 +459,24 @@ This module provides a default contract environment
 ***** Application
 Types to support partial application and polymorphic primitives.
 - _Relies on_
+  + [[Core/HR/Pretty]]
   + [[IR/Types]]
   + [[Library]]
+  + [[PrettyPrint]]
   + [[Usage]]
 ***** Parameterisation <<Core/Parameterisation>>
 - _Relies on_
   + [[Application]]
+  + [[Core/HR/Pretty]]
   + [[IR/Types]]
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+  + [[PrettyPrint]]
 ***** Translate
 - _Relies on_
-  + [[HR]]
-  + [[IR]]
+  + [[HR/Types]]
+  + [[IR/Types]]
   + [[Utility]]
   + [[Library]]
   + [[NameSymbol]]
@@ -482,13 +484,16 @@ Types to support partial application and polymorphic primitives.
 - _Relies on_
   + [[Erased]]
   + [[Erasure/Types]]
+  + [[Core/HR/Pretty]]
   + [[HR/Types]]
   + [[IR/Typechecker]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
   + [[Library]]
+  + [[PrettyPrint]]
 ***** Utility
 - _Relies on_
+  + [[IR/Types]]
   + [[Library]]
   + [[NameSymbol]]
 ***** Common
@@ -570,6 +575,7 @@ temporary lexical bindings as our code encounters binders.
 ***** ErasedAnn
 - _Relies on_
   + [[Conversion]]
+  + [[ErasedAnn/Pretty]]
   + [[ErasedAnn/Types]]
 ****** Conversion
 - _Relies on_
@@ -585,6 +591,13 @@ temporary lexical bindings as our code encounters binders.
   + [[ErasedAnn/Types]]
   + [[ErasedAnn/Types]]
   + [[Library]]
+****** Pretty <<ErasedAnn/Pretty>>
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Core/HR/Pretty]]
+  + [[Core/HR/Pretty]]
+  + [[Library]]
+  + [[PrettyPrint]]
 ****** Prim
 - _Relies on_
   + [[Application]]
@@ -619,12 +632,16 @@ temporary lexical bindings as our code encounters binders.
   + [[Erased/Types]]
   + [[Erased/Types]]
   + [[Erased/Types/Base]]
+  + [[Core/HR/Pretty]]
+  + [[TransformExt]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types]]
   + [[Core/Parameterisation]]
+  + [[Translate]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[PrettyPrint]]
   + [[Usage]]
 ***** HR
 - _Relies on_
@@ -646,7 +663,6 @@ temporary lexical bindings as our code encounters binders.
 ****** Pretty <<Core/HR/Pretty>>
 - _Relies on_
   + [[HR/Types]]
-  + [[Naturals]]
   + [[Library]]
   + [[NameSymbol]]
   + [[PrettyPrint]]
@@ -699,6 +715,7 @@ datatype and function declarations.
   + [[Application]]
   + [[IR/Evaluator]]
   + [[Typechecker/Env]]
+  + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -752,15 +769,20 @@ the substitution functions (substTerm and substElim).
   + [[Usage]]
 ******* Types <<Evaluator/Types>>
 - _Relies on_
+  + [[Core/HR/Pretty]]
+  + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
+  + [[Translate]]
   + [[Library]]
+  + [[PrettyPrint]]
 ******* Weak <<Evaluator/Weak>>
 - _Relies on_
   + [[Application]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
 ****** TransformExt
@@ -785,6 +807,7 @@ Function declarations are typechecked by @typeCheckFuns@ in CheckFunction.hs.
 Typechecked declarations are added to the signature.
 - _Relies on_
   + [[Typechecker/Env]]
+  + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -794,6 +817,7 @@ Typechecked declarations are added to the signature.
 - _Relies on_
   + [[IR/Evaluator]]
   + [[OnlyExts]]
+  + [[Error]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -801,15 +825,29 @@ Typechecked declarations are added to the signature.
   + [[Core/Parameterisation]]
   + [[Library]]
   + [[Usage]]
+******* Error
+- _Relies on_
+  + [[Application]]
+  + [[Core/HR/Pretty]]
+  + [[IR/Evaluator]]
+  + [[Typechecker/Types]]
+  + [[IR/Types]]
+  + [[IR/Types/Base]]
+  + [[Core/Parameterisation]]
+  + [[Translate]]
+  + [[Library]]
+  + [[PrettyPrint]]
+  + [[Usage]]
 ******* Types <<Typechecker/Types>>
 - _Relies on_
   + [[Application]]
-  + [[IR/Evaluator]]
+  + [[Core/HR/Pretty]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
-  + [[Globals]]
   + [[Core/Parameterisation]]
+  + [[Translate]]
   + [[Library]]
+  + [[PrettyPrint]]
   + [[Usage]]
 ****** Types <<IR/Types>>
 Quantitative type implementation inspired by
@@ -858,8 +896,9 @@ Quantitative type implementation inspired by
 ****** Naturals
 - _Relies on_
   + [[Application]]
+  + [[Core/HR/Pretty]]
+  + [[Core/HR/Pretty]]
   + [[IR/Evaluator]]
-  + [[Typechecker/Types]]
   + [[IR/Types/Base]]
   + [[Core/Parameterisation]]
   + [[Library]]
@@ -884,6 +923,7 @@ Quantitative type implementation inspired by
   + [[Core/Erasure]]
   + [[IR]]
   + [[IR/Typechecker]]
+  + [[Core/Parameterisation]]
   + [[Unit]]
   + [[Core/Types]]
   + [[Library]]
@@ -930,7 +970,7 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[CheckTerm]]
   + [[IR/Evaluator]]
   + [[OnlyExts]]
-  + [[IR/Typechecker]]
+  + [[Core/Parameterisation]]
   + [[All]]
   + [[Naturals]]
   + [[Unit]]

@@ -4,12 +4,12 @@
 module Juvix.Core.Parameterisation where
 
 import qualified Juvix.Core.Application as App
-import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
 import qualified Juvix.Core.HR.Pretty as HR
+import Juvix.Core.IR.Types (BoundVar, GlobalName, NoExt)
 import Juvix.Library
 import Juvix.Library.HashMap (HashMap)
-import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.PrettyPrint as PP
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Prelude (String)
@@ -71,23 +71,22 @@ instance
   where
   prettyT = \case
     ExtraArguments f xs ->
-      PP.sepIndent' [
-        (False, "Function"),
-        (True, pretty0 f),
-        (False, "applied to extra arguments"),
-        (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
-      ]
+      PP.sepIndent'
+        [ (False, "Function"),
+          (True, pretty0 f),
+          (False, "applied to extra arguments"),
+          (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
+        ]
     InvalidArguments f xs ->
-      PP.sepIndent' [
-        (False, "Function"),
-        (True, pretty0 f),
-        (False, "applied to invalid arguments"),
-        (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
-      ]
+      PP.sepIndent'
+        [ (False, "Function"),
+          (True, pretty0 f),
+          (False, "applied to invalid arguments"),
+          (True, PP.sep $ PP.punctuate "," $ fmap pretty0 xs)
+        ]
     Extra e -> HR.toPPAnn <$> PP.prettyT e
     where
       pretty0 = fmap HR.toPPAnn . PP.pretty0
-
 
 class CanApply a where
   type ApplyErrorExtra a
@@ -138,7 +137,6 @@ type TypedPrim' ext ty val = App.Return' ext (PrimType ty) val
 
 type TypedPrim ty val = TypedPrim' NoExt ty val
 
-
 data PPAnn' primTy
   = PAArrow
   | PAPunct
@@ -155,8 +153,9 @@ instance PP.PrettySyntax primTy => PP.PrettySyntax (PrimType primTy) where
     where
       arr = pure $ PP.annotate' PAArrow " →"
       pretty1 =
-        fmap (fmap $ Last . Just . PATy) .
-        PP.withPrec (PP.Infix 0) . PP.pretty'
+        fmap (fmap $ Last . Just . PATy)
+          . PP.withPrec (PP.Infix 0)
+          . PP.pretty'
 
 instance HR.ToPPAnn (PP.Ann ty) => HR.ToPPAnn (PPAnn ty) where
   toPPAnn a = a >>= \case

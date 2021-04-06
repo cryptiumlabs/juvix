@@ -16,6 +16,7 @@
   + [[Contextify]]
   + [[Context]]
   + [[Erasure]]
+  + [[Pretty]]
   + [[Core/Pipeline]]
   + [[Translate]]
   + [[Types]]
@@ -23,6 +24,7 @@
   + [[FrontendDesugar]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[PrettyPrint]]
   + [[Sexp]]
 *** Pipeline <<Core/Pipeline>>
 - _Relies on_
@@ -83,6 +85,7 @@
   + [[IR]]
   + [[Base]]
   + [[Globals]]
+  + [[Parameterisation]]
   + [[Library]]
   + [[Feedback]]
   + [[Sexp]]
