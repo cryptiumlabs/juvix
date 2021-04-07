@@ -112,8 +112,9 @@ checkDataType _k _rho _gamma _p e =
 
 -- | checkConType check constructor type
 checkConType ::
-  Int -> -- the next fresh generic value.
-
+  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+  -- | the next fresh generic value.
+  Int ->
   -- | an env that binds fresh generic values to variables.
   Telescope extV extT primTy primVal ->
   -- | an env that binds the type value corresponding to these generic values.
@@ -121,59 +122,69 @@ checkConType ::
   -- | the length of the telescope, or the no. of parameters.
   Int ->
   -- | the expression that is left to be checked.
-  IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal m (Typed.Term primTy primVal)
-checkConType k rho gamma p e = undefined
+  IR.Term' ext primTy primVal -> m ()
+  -- TypeCheck ext primTy primVal m (Typed.Term primTy primVal)
+checkConType k rho gamma p e =
+  -- let starTy uni = Annotation mempty (VStar' uni ()) in
+  case e of
+    Pi x t1 t2 _ -> do
+      if k < p
+        then 
+          -- let v1 = Eval.evalTerm (Eval.lookupFun globals ) t1
+          --     v2 = Eval.evalTerm (Eval.lookupFun globals ) t2 
+          -- in
+          --   -- params were already checked by checkDataType
+          --   typeTerm' e $ Annotation x (IR.VPi' x v1 v2 ()) 
+          return ()
+        else case t1 of
+          -- check that arguments ∆ are stypes
+          Star' _uni _ -> return ()-- typeTerm' t1 (starTy uni)
+          _ -> throwTC $ ConTypeError t1
+--       v_t1 <- eval rho t1
+--       checkConType
+--         (k + 1)
+--         (updateEnv rho x (VGen k))
+--         (updateEnv gamma x v_t1)
+--         p
+--         t2
+--     -- the constructor's type is of type Star(the same type as the data type).
+    Star' _uni _ -> return ()--typeTerm' e (starTy uni)
+    _ -> throwTC $ ConTypeError e
 
--- TODO turn ‘XStar ext primTy primVal’ to
--- XVStar Juvix.Core.IR.Types.NoExt primTy (TypedPrim primTy primVal)
---   let starTy ext = Annotation mempty (IR.VStar' mempty ext) in
---   case e of
---     Pi x t1 t2 ext -> do
---       if k < p
---         then typeTerm' e $ Annotation x (IR.VPi' x t1 t2 ext) -- params were already checked by checkDataType
---         else case t1 of
---           -- check that arguments ∆ are stypes
---           Star' _ ext -> typeTerm' t1 (starTy ext)
---           _ -> throwTC $ ConTypeError t1
--- --       v_t1 <- eval rho t1
--- --       checkConType
--- --         (k + 1)
--- --         (updateEnv rho x (VGen k))
--- --         (updateEnv gamma x v_t1)
--- --         p
--- --         t2
--- --     -- the constructor's type is of type Star(the same type as the data type).
---     Star' _ ext -> typeTerm' e starTy
---     _ -> throwTC $ ConTypeError e
-
--- -- check that the data type and the parameter arguments
--- -- are written down like declared in telescope
--- checkTarget :: Name -> RawTelescope ext primTy primVal -> IR.Term' ext primTy primVal -> TypeCheck ext primTy primVal IO ()
+-- check that the data type and the parameter arguments
+-- are written down like declared in telescope
+-- checkTarget ::
+--   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+--   Name ->
+--   RawTelescope ext primTy primVal ->
+--   IR.Term' ext primTy primVal ->
+--   TypeCheck ext primTy primVal IO ()
 -- checkTarget name tel tg@(App (Def n) al) =
 --   if n == name
 --     then do
 --       let pn = length tel
 --           params = take pn al
 --       checkParams tel params -- check parameters
---     else error $
---          "checkTarget: target mismatch " <> show tg <> ". Input name is " <>
---          show name <>
---          ". Input telescope is " <>
---          show tel
+--     else
+--       error $
+--         "checkTarget: target mismatch " <> show tg <> ". Input name is "
+--           <> show name
+--           <> ". Input telescope is "
+--           <> show tel
 -- checkTarget name tel tg@(Def n) =
 --   if n == name && null tel
 --     then return ()
---     else error $
---          "checkTarget: target mismatch" <> show tg <> ". Input name is " <>
---          show name <>
---          ". Input telescope is " <>
---          show tel
+--     else
+--       error $
+--         "checkTarget: target mismatch" <> show tg <> ". Input name is "
+--           <> show name
+--           <> ". Input telescope is "
+--           <> show tel
 -- checkTarget name tel tg =
 --   error $
---   "checkTarget: target mismatch" <> show tg <> ". Input name is " <> show name <>
---   ". Input telescope is " <>
---   show tel
+--     "checkTarget: target mismatch" <> show tg <> ". Input name is " <> show name
+--       <> ". Input telescope is "
+--       <> show tel
 
 -- check parameters
 checkParams ::
