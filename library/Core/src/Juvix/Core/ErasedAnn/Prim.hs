@@ -24,8 +24,6 @@ import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 
-type Return primTy primVal = App.Return (Types.Type primTy) primVal
-
 type Take primTy primVal = App.Take (Types.Type primTy) primVal
 
 fromAnn :: Types.AnnTerm primTy primVal -> Maybe (Take primTy primVal)
