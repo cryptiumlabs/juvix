@@ -1,0 +1,45 @@
+* Translate
+This library core responsibility is from translating the [[../Frontend][Frontend]]
+S-expression format into a format that [[../Core][Core]] can understand
+
+This library undergoes regular refactors to be simpler
+
+** Current Order of Phases
+
+1. [[file:src/Juvix/Desugar.hs][Desugar.hs]] gets run, this runs all the current baked in.
+   simplification/macro expansion passes that does not rely on looking
+   up items in the context.
+
+2. [[file:src/Juvix/Contextify.hs][Contextify.hs]] then gets run, this moves the desugared standalone
+   definitions into the context.
+
+3. Inside the same file, the =op= function gets ran, which runes the
+   context aware passes.
+
+4. We then hand off the code to [[file:src/Juvix/ToCore/FromFrontend.hs][FromFrontend.hs]] which is responsible
+   for generating valid core.
+   - Currently this removes the context and a lot of forms become
+     unsupported at this stage of the compilation, see #754 for more
+     details.
+
+** Longer Terms Plans
+
+- We need to move the totality of transitioning entire files down into
+  taking standalone chunks which have a current Environment that is
+  already built up.
+
+- We need to move our fixed passes into generic Juvix functions that
+  only macro expand.
+
+  + Pretty much all of these forms are generic macros, with the
+    exception of infix which is a reader macro which relies on the
+    current context.
+
+- We need to move the Closure functions in [[file:src/Juvix/Contextify/Environment.hs][Environment]] into more
+  generic functionality for the Context closure structure.
+
+** Interesting Files
+- [[file:src/Juvix/Desugar/Passes.hs][The desugared passes themselves]]
+- [[file:src/Juvix/Contextify/Passes.hs][The Context Passes]]
+  + The [[file:src/Juvix/Contextify/Environment.hs][Environment]] file is also interesting as it setups the generic
+    traversal the passes use.
