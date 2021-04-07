@@ -184,25 +184,24 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   arity Prim.Cont {numLeft} = numLeft
   arity Prim.Return {retTerm} = arityRaw retTerm
 
-  apply fun' args2
-    | (fun, args1, ar) <- toTakes fun' =
-      do
-        let argLen = lengthN args2 -- Nr. of free arguments.
-            args = foldr NonEmpty.cons args2 args1 -- List of all arguments.
-        case argLen `compare` ar of
-          -- If there are not enough arguments to apply, return a continuation.
-          LT ->
-            Right $
-              Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
-          -- If there are exactly enough arguments to apply, do so.
-          -- In case there aren't any arguments, return a continuation.
-          EQ
-            | Just takes <- traverse App.argToTake args ->
-              applyProper fun takes |> first Core.Extra
-            | otherwise ->
-              Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
-          -- If there are too many arguments to apply, raise an error.
-          GT -> Left $ Core.ExtraArguments fun' args2
+  apply fun' args2 = do
+    let (fun, args1, ar) = toTakes fun'
+        argLen = lengthN args2 -- Nr. of free arguments.
+        args = foldr NonEmpty.cons args2 args1 -- List of all arguments.
+    case argLen `compare` ar of
+      -- If there are not enough arguments to apply, return a continuation.
+      LT ->
+        Right $
+          Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+      -- If there are exactly enough arguments to apply, do so.
+      -- In case there aren't any arguments, return a continuation.
+      EQ
+        | Just takes <- traverse App.argToTake args ->
+          applyProper fun takes |> first Core.Extra
+        | otherwise ->
+          Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+      -- If there are too many arguments to apply, raise an error.
+      GT -> Left $ Core.ExtraArguments fun' args2
 
 -- | Apply arguments to a function. Requires that the right number of arguments
 -- are passed.
