@@ -954,21 +954,6 @@ Quantitative type implementation inspired by
   + [[Core/Types]]
   + [[Library]]
   + [[Usage]]
-*** Common
-**** Context <<test/Common/Context>>
-- _Relies on_
-  + [[Core/Common/Context]]
-  + [[NameSpace]]
-  + [[Library]]
-  + [[HashMap]]
-  + [[NameSymbol]]
-*** IR
-**** Weak <<IR/Weak>>
-Tests that weak works as expected
-- _Relies on_
-  + [[IR/Evaluator]]
-  + [[IR/Types]]
-  + [[Library]]
 *** Typechecker <<test/Typechecker>>
 Tests for the type checker and evaluator in Core/IR/Typechecker.hs
 - _Relies on_
@@ -984,6 +969,21 @@ Tests for the type checker and evaluator in Core/IR/Typechecker.hs
   + [[Library]]
   + [[HashMap]]
   + [[Usage]]
+*** Common
+**** Context <<test/Common/Context>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Library]]
+  + [[HashMap]]
+  + [[NameSymbol]]
+*** IR
+**** Weak <<IR/Weak>>
+Tests that weak works as expected
+- _Relies on_
+  + [[IR/Evaluator]]
+  + [[IR/Types]]
+  + [[Library]]
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1477,21 +1477,6 @@ TODO ∷ determine what has changed in the rebasing of this algo
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Sexp]]
-**** FrontendDesugar
-- Order of Passes
-  1. =RemoveModule=
-  2. =RemoveGuard=
-  3. =RemoveCond=
-  4. =CombineMultiple=
-  5. =RemoveSignature=
-  6. =RemovePunned=
-  7. =RemoveDo=
-- _Relies on_
-  + [[Desugar]]
-  + [[Frontend/Sexp]]
-  + [[Frontend/Types]]
-  + [[Library]]
-  + [[Library/Sexp]]
 **** Contextify <<Juvix/Contextify>>
 - _Relies on_
   + [[Contextify/Environment]]
@@ -1608,6 +1593,21 @@ done with no extra information needed. Thus we export the following passes
 - Removing punned record arguments
 - Remvoing Do syntax
 - _Relies on_
+  + [[Library]]
+  + [[Library/Sexp]]
+**** FrontendDesugar
+- Order of Passes
+  1. =RemoveModule=
+  2. =RemoveGuard=
+  3. =RemoveCond=
+  4. =CombineMultiple=
+  5. =RemoveSignature=
+  6. =RemovePunned=
+  7. =RemoveDo=
+- _Relies on_
+  + [[Desugar]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
   + [[Library]]
   + [[Library/Sexp]]
 **** ToCore
