@@ -181,8 +181,8 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   freeArg _ = fmap App.VarArg . App.freeVar (Proxy @ext)
   boundArg _ = fmap App.VarArg . App.boundVar (Proxy @ext)
 
-  arity Prim.Cont {numLeft} = numLeft
-  arity Prim.Return {retTerm} = arityRaw retTerm
+  arity App.Cont {numLeft} = numLeft
+  arity App.Return {retTerm} = arityRaw retTerm
 
   apply fun' args2 = do
     let (fun, args1, ar) = toTakes fun'
@@ -192,14 +192,14 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
       -- If there are not enough arguments to apply, return a continuation.
       LT ->
         Right $
-          Prim.Cont {fun, args = toList args, numLeft = ar - argLen}
+          App.Cont {fun, args = toList args, numLeft = ar - argLen}
       -- If there are exactly enough arguments to apply, do so.
       -- In case there aren't any arguments, return a continuation.
       EQ
         | Just takes <- traverse App.argToTake args ->
           applyProper fun takes |> first Core.Extra
         | otherwise ->
-          Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
+          Right $ App.Cont {fun, args = toList args, numLeft = 0}
       -- If there are too many arguments to apply, raise an error.
       GT -> Left $ Core.ExtraArguments fun' args2
 
@@ -210,7 +210,7 @@ applyProper fun args =
   case compd >>= Interpreter.dummyInterpret of
     Right x -> do
       retType <- toPrimType $ ErasedAnn.type' newTerm
-      pure $ Prim.Return {retType, retTerm = Constant x}
+      pure $ App.Return {retType, retTerm = Constant x}
     Left err -> Left $ CompilationError err
   where
     fun' = takeToTerm fun
@@ -221,7 +221,7 @@ applyProper fun args =
 
 -- | Translate a 'Take' into a 'RawTerm'.
 takeToTerm :: Take -> RawTerm
-takeToTerm (Prim.Take {usage, type', term}) =
+takeToTerm (App.Take {usage, type', term}) =
   Ann {usage, type' = Prim.fromPrimType type', term = ErasedAnn.Prim term}
 
 -- | Given a type, translate it to a type in the Michelson backend.
