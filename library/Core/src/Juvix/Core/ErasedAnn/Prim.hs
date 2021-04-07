@@ -1,20 +1,7 @@
 module Juvix.Core.ErasedAnn.Prim
-  ( module Juvix.Core.ErasedAnn.Prim,
-
-    -- * Constructors & fields for 'Return'
-    pattern App.Cont,
-    App.fun,
-    App.args,
-    App.numLeft,
-    pattern App.Return,
-    App.retType,
-    App.retTerm,
-
-    -- * Constructors & fields for 'Take'
-    pattern App.Take,
-    App.usage,
-    App.type',
-    App.term,
+  ( fromAnn,
+    toAnn,
+    fromPrimType,
   )
 where
 
