@@ -388,7 +388,6 @@ This module provides a default contract environment
   + [[Prim]]
   + [[ErasedAnn/Types]]
   + [[IR/Evaluator]]
-  + [[OnlyExts]]
   + [[Typechecker/Types]]
   + [[IR/Types]]
   + [[IR/Types/Base]]
@@ -409,7 +408,6 @@ This module provides a default contract environment
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
-  + [[Usage]]
 ******** Types <<Michelson/Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
