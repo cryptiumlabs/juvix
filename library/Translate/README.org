@@ -40,6 +40,14 @@ This library undergoes regular refactors to be simpler
 
 ** Interesting Files
 - [[file:src/Juvix/Desugar/Passes.hs][The desugared passes themselves]]
+
 - [[file:src/Juvix/Contextify/Passes.hs][The Context Passes]]
   + The [[file:src/Juvix/Contextify/Environment.hs][Environment]] file is also interesting as it setups the generic
     traversal the passes use.
+
+- [[file:src/Juvix/FreeVars.hs][FreeVars]]
+
+  + This module calculates free variables that are in any s-expression.
+
+  + With closure functions being moved to the common closure library,
+    this could be moved out.
