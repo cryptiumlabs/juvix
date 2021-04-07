@@ -1,0 +1,15 @@
+* Frontend
+This library is responsible for a few things
+
+1. Parsing the Juvix [[file:../../doc/Frontend/syntax.org][BNF]]
+
+   - [[file:src/Juvix/Frontend/Parser.hs][The Parser can be found here]]
+
+2. Creating the Frontend Datatype that closely matches the [[file:../../doc/Frontend/syntax.org][BNF]]
+
+   - [[file:src/Juvix/Frontend/Types/Base.hs][The Base datatype can be found here]]
+
+3. Translating the Frontend Datatype into an S-expression to be
+   processed generically in the rest of the code-base (read Translate package)
+
+   - [[file:src/Juvix/Frontend/Sexp.hs][The Sexp Transformation can be found here]]
