@@ -81,6 +81,24 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
+-- | an env that binds fresh generic values (in Int) to variables.
+type GenEnv = [(Name, Int)]
+
+-- | update generic value env
+updateGenEnv ::
+  GenEnv ->
+  Name ->
+  Int ->
+  GenEnv
+updateGenEnv genEnv name k = (name, k) : genEnv
+
+updateTel ::
+  Telescope extV extT primTy primVal ->
+  Name ->
+  Value' ext primTy primVal ->
+  Telescope extV extT primTy primVal
+updateTel tel n v = undefined --(n, v) : tel
+
 -- | checkDataType takes 5 arguments.
 checkDataType ::
   ( HasThrow "typecheckError"
@@ -104,7 +122,7 @@ checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 --     then checkType k rho gamma t1 -- checks params are valid types
 --     else checkSType k rho gamma t1 -- checks arguments Θ are Star types
 --   v_t1 <- eval rho t1
---   checkDataType (k + 1) (updateEnv rho x (VGen k)) (updateEnv gamma x v_t1) p t2
+--   checkDataType (k + 1) (updateTel rho x (VGen k)) (updateTel gamma x v_t1) p t2
 -- check that the data type is of type Star
 checkDataType _k _rho _gamma _p (Star _ _) = undefined
 checkDataType _k _rho _gamma _p e =
@@ -116,39 +134,33 @@ checkConType ::
   -- | the next fresh generic value.
   Int ->
   -- | an env that binds fresh generic values to variables.
-  Telescope extV extT primTy primVal ->
+  GenEnv ->
   -- | an env that binds the type value corresponding to these generic values.
   Telescope extV extT primTy primVal ->
   -- | the length of the telescope, or the no. of parameters.
   Int ->
   -- | the expression that is left to be checked.
-  IR.Term' ext primTy primVal -> m ()
-  -- TypeCheck ext primTy primVal m (Typed.Term primTy primVal)
+  IR.Term' ext primTy primVal ->
+  m ()
 checkConType k rho gamma p e =
-  -- let starTy uni = Annotation mempty (VStar' uni ()) in
   case e of
     Pi x t1 t2 _ -> do
       if k < p
-        then 
-          -- let v1 = Eval.evalTerm (Eval.lookupFun globals ) t1
-          --     v2 = Eval.evalTerm (Eval.lookupFun globals ) t2 
-          -- in
-          --   -- params were already checked by checkDataType
-          --   typeTerm' e $ Annotation x (IR.VPi' x v1 v2 ()) 
+        then-- params were already checked by checkDataType
           return ()
         else case t1 of
           -- check that arguments ∆ are stypes
-          Star' _uni _ -> return ()-- typeTerm' t1 (starTy uni)
+          Star' _uni _ -> return ()
           _ -> throwTC $ ConTypeError t1
---       v_t1 <- eval rho t1
---       checkConType
---         (k + 1)
---         (updateEnv rho x (VGen k))
---         (updateEnv gamma x v_t1)
---         p
---         t2
---     -- the constructor's type is of type Star(the same type as the data type).
-    Star' _uni _ -> return ()--typeTerm' e (starTy uni)
+    --       v_t1 <- eval rho t1-- v2 = Eval.evalTerm (Eval.lookupFun globals ) t2
+    --       checkConType
+    --         (k + 1)
+    --         (updateGenEnv rho name k)
+    --         (updateTel gamma x v_t1)
+    --         p
+    --         t2
+    --     -- the constructor's type is of type Star(the same type as the data type).
+    Star' _uni _ -> return ()
     _ -> throwTC $ ConTypeError e
 
 -- check that the data type and the parameter arguments
@@ -158,7 +170,7 @@ checkConType k rho gamma p e =
 --   Name ->
 --   RawTelescope ext primTy primVal ->
 --   IR.Term' ext primTy primVal ->
---   TypeCheck ext primTy primVal IO ()
+--   m ()
 -- checkTarget name tel tg@(App (Def n) al) =
 --   if n == name
 --     then do
