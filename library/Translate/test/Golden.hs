@@ -3,11 +3,15 @@ module Golden where
 import qualified Data.ByteString as ByteString (readFile, writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
+import Data.Text.Lazy (toStrict)
 import qualified Juvix.Frontend.Parser as Parser
+import Juvix.Frontend.Sexp (transTopLevel)
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
+import Juvix.Frontend.Types.Base (Header (NoHeader))
 import Juvix.Library
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
+import Text.Pretty.Simple (pShowNoColor)
 
 --------------------------------------------------------------------------------
 -- Contracts as a file (Golden tests)
@@ -30,14 +34,25 @@ resultToText = Text.pack . show
 toByteString :: Show a => a -> ByteString
 toByteString = Data.ByteString.Char8.pack . show
 
-parsedContract :: FilePath -> IO [TopLevel]
+parsedContract :: FilePath -> IO (Header TopLevel)
 parsedContract file = do
   rawContract <- ByteString.readFile file
   case Parser.prettyParse rawContract of
-    Left err -> writeFile (file <> ".parsed") (toS err) *> pure []
-    Right x -> pure $ extractTopLevel x
+    Left err -> writeFile (file <> ".parsed") (toS err) *> pure (NoHeader [])
+    Right x -> do
+      -- generate/update the golden file as the parsed file
+      writeFile (file <> ".golden") (show x)
+      -- human readable version of the golden file for debugging
+      writeFile
+        (file <> ".HRGolden")
+        ( toStrict
+            ( pShowNoColor $
+                map transTopLevel (extractTopLevel x)
+            )
+        )
+      pure x
 
-getGolden :: FilePath -> IO (Maybe [TopLevel])
+getGolden :: FilePath -> IO (Maybe (Header TopLevel))
 getGolden file = do
   maybeBS <- T.readFileMaybe file
   return $ do

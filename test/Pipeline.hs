@@ -1,18 +1,38 @@
+{-# LANGUAGE LiberalTypeSynonyms #-}
+
 module Pipeline where
 
+import qualified Juvix.Backends.Michelson as Michelson
 import qualified Juvix.Backends.Michelson.Compilation as M
-import Juvix.Backends.Michelson.Compilation.Types
-import Juvix.Backends.Michelson.Parameterisation
 import qualified Juvix.Core.IR as IR
 import qualified Juvix.Core.Pipeline as P
 import qualified Juvix.Core.Types as Core
 import Juvix.Library hiding (bool, identity, log)
 import qualified Juvix.Library.Usage as Usage
+import qualified Michelson.TypeCheck as Michelson
 import qualified Michelson.Typed as MT
 import qualified Michelson.Untyped as M
+import qualified Michelson.Untyped as Michelson
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import Prelude (String)
+
+type RawMichelson f = f Michelson.PrimTy Michelson.RawPrimVal
+
+type RawMichelsonTerm = RawMichelson IR.Term
+
+type RawMichelsonElim = RawMichelson IR.Elim
+
+type MichelsonCompConstraints m =
+  P.CompConstraints' Michelson.PrimTy Michelson.RawPrimVal Michelson.CompilationError m
+
+type MichelsonComp res =
+  forall m.
+  MichelsonCompConstraints m =>
+  RawMichelsonTerm ->
+  Usage.T ->
+  RawMichelsonTerm ->
+  m res
 
 data Env primTy primVal
   = Env
@@ -53,32 +73,42 @@ newtype EnvExec primTy primVal compErr a
     (HasThrow "error" (Core.PipelineError primTy primVal compErr))
     via MonadError (EnvExecAlias primTy primVal compErr)
 
+coreToMichelson :: MichelsonComp (Either Michelson.CompilationError Michelson.EmptyInstr)
+coreToMichelson term usage ty = do
+  ann <- P.coreToAnn term usage ty
+  pure $ fst $ Michelson.compileExpr $ P.toRaw ann
+
+coreToMichelsonContract :: MichelsonComp (Either Michelson.CompilationError (Michelson.Contract' Michelson.ExpandedOp, Michelson.SomeContract))
+coreToMichelsonContract term usage ty = do
+  ann <- P.coreToAnn term usage ty
+  pure $ fst $ Michelson.compileContract $ P.toRaw ann
+
 exec ::
-  EnvExec primTy primVal CompErr a ->
+  EnvExec primTy primVal Michelson.CompilationError a ->
   Core.Parameterisation primTy primVal ->
   IR.GlobalsT primTy primVal ->
   IO
-    ( Either (Core.PipelineError primTy primVal CompErr) a,
+    ( Either (Core.PipelineError primTy primVal Michelson.CompilationError) a,
       [Core.PipelineLog primTy primVal]
     )
 exec (EnvE env) param globals = do
   (ret, env) <- runStateT (runExceptT env) (Env param [] globals)
   pure (ret, log env)
 
-type Globals = IR.Globals PrimTy PrimValIR
+type Globals = IR.Globals Michelson.PrimTy Michelson.PrimValIR
 
-type AnnTuple = (P.RawMichelsonTerm, Usage.T, P.RawMichelsonTerm)
+type AnnTuple = (RawMichelsonTerm, Usage.T, RawMichelsonTerm)
 
 shouldCompileTo ::
   String ->
   AnnTuple ->
   Globals ->
-  EmptyInstr ->
+  Michelson.EmptyInstr ->
   T.TestTree
 shouldCompileTo name (term, usage, ty) globals instr =
   T.testCase name $ do
     res <- toMichelson term usage ty globals
-    show res T.@=? (show (Right instr :: Either String EmptyInstr) :: String)
+    show res T.@=? (show (Right instr :: Either String Michelson.EmptyInstr) :: String)
 
 shouldCompileToContract ::
   String ->
@@ -92,13 +122,13 @@ shouldCompileToContract name (term, usage, ty) globals contract =
     res T.@=? Right contract
 
 toMichelson ::
-  P.RawMichelsonTerm ->
+  RawMichelsonTerm ->
   Usage.T ->
-  P.RawMichelsonTerm ->
+  RawMichelsonTerm ->
   Globals ->
-  IO (Either String EmptyInstr)
+  IO (Either String Michelson.EmptyInstr)
 toMichelson term usage ty globals = do
-  (res, _) <- exec (P.coreToMichelson term usage ty) michelson globals
+  (res, _) <- exec (coreToMichelson term usage ty) Michelson.michelson globals
   pure $ case res of
     Right r ->
       case r of
@@ -107,13 +137,13 @@ toMichelson term usage ty globals = do
     Left err -> Left (show err)
 
 toMichelsonContract ::
-  P.RawMichelsonTerm ->
+  RawMichelsonTerm ->
   Usage.T ->
-  P.RawMichelsonTerm ->
+  RawMichelsonTerm ->
   Globals ->
   IO (Either String Text)
 toMichelsonContract term usage ty globals = do
-  (res, _) <- exec (P.coreToMichelsonContract term usage ty) michelson globals
+  (res, _) <- exec (coreToMichelsonContract term usage ty) Michelson.michelson globals
   pure $ case res of
     Right r ->
       case r of
@@ -135,7 +165,7 @@ test_constant =
     "constant"
     (int 2, Usage.Omega, intTy)
     mempty
-    (EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 2))))
+    (Michelson.EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 2))))
 
 test_erased_function :: T.TestTree
 test_erased_function =
@@ -143,7 +173,7 @@ test_erased_function =
     "erased function"
     (erasedLamTerm, Usage.Omega, erasedLamTy)
     mempty
-    (EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 2))))
+    (Michelson.EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 2))))
 
 test_real_function_apply :: T.TestTree
 test_real_function_apply =
@@ -151,7 +181,7 @@ test_real_function_apply =
     "real function with application"
     (appLam, Usage.Omega, intTy)
     mempty
-    (EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 5))))
+    (Michelson.EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 5))))
 
 test_partial_erase :: T.TestTree
 test_partial_erase =
@@ -159,67 +189,67 @@ test_partial_erase =
     "real function with partial erase"
     (appLam2, Usage.Omega, intTy)
     mempty
-    (EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 12))))
+    (Michelson.EmptyInstr (MT.Nested (MT.PUSH (MT.VInt 12))))
 
-erasedLamTerm :: P.RawMichelsonTerm
+erasedLamTerm :: RawMichelsonTerm
 erasedLamTerm = IR.Lam $ int 2
 
-erasedLamTy :: P.RawMichelsonTerm
+erasedLamTy :: RawMichelsonTerm
 erasedLamTy = IR.Pi zero intTy intTy
 
-appLam :: P.RawMichelsonTerm
+appLam :: RawMichelsonTerm
 appLam = IR.Elim $ lamElim `IR.App` int 2 `IR.App` int 3
 
-addTyT :: P.RawMichelsonTerm
+addTyT :: RawMichelsonTerm
 addTyT = IR.Pi one intTy $ IR.Pi one intTy intTy
 
-addElim :: P.RawMichelsonElim
-addElim = IR.Ann Usage.Omega (IR.Prim AddI) addTyT 0
+addElim :: RawMichelsonElim
+addElim = IR.Ann Usage.Omega (IR.Prim Michelson.AddI) addTyT 0
 
-lamTerm :: P.RawMichelsonTerm
+lamTerm :: RawMichelsonTerm
 lamTerm =
   IR.Lam $ IR.Lam $ IR.Elim $ addElim `IR.App` varT 1 `IR.App` varT 0
 
-lamElim :: P.RawMichelsonElim
+lamElim :: RawMichelsonElim
 lamElim = IR.Ann one lamTerm lamTy 0
 
-appLam2 :: P.RawMichelsonTerm
+appLam2 :: RawMichelsonTerm
 appLam2 = IR.Elim $ lamElim2 `IR.App` int 2 `IR.App` int 3
 
-lamTerm2 :: P.RawMichelsonTerm
+lamTerm2 :: RawMichelsonTerm
 lamTerm2 =
   IR.Lam $ IR.Lam $ IR.Elim $ addElim `IR.App` varT 1 `IR.App` int 10
 
-varT :: Natural -> P.RawMichelsonTerm
+varT :: Natural -> RawMichelsonTerm
 varT = IR.Elim . IR.Bound
 
-lamTy :: P.RawMichelsonTerm
+lamTy :: RawMichelsonTerm
 lamTy = intTy ~~> intTy ~~> intTy
 
-lamTy2 :: P.RawMichelsonTerm
+lamTy2 :: RawMichelsonTerm
 lamTy2 = intTy ~~> intTy ~@> intTy
 
-lamElim2 :: P.RawMichelsonElim
+lamElim2 :: RawMichelsonElim
 lamElim2 = IR.Ann one lamTerm2 lamTy2 0
 
-michelsonTy :: M.T -> P.RawMichelsonTerm
-michelsonTy t = IR.PrimTy $ PrimTy $ M.Type t M.noAnn
+michelsonTy :: M.T -> RawMichelsonTerm
+michelsonTy t = IR.PrimTy $ Michelson.PrimTy $ M.Type t M.noAnn
 
-intTy :: P.RawMichelsonTerm
+intTy :: RawMichelsonTerm
 intTy = michelsonTy M.TInt
 
-int :: Integer -> P.RawMichelsonTerm
-int = IR.Prim . Constant . M.ValueInt
+int :: Integer -> RawMichelsonTerm
+int = IR.Prim . Michelson.Constant . M.ValueInt
 
-arr :: Usage.T -> P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
+arr :: Usage.T -> RawMichelsonTerm -> RawMichelsonTerm -> RawMichelsonTerm
 arr π s t = IR.Pi π s (IR.weak t)
 
 infixr 0 ~~>
 
-(~~>) :: P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
+(~~>) :: RawMichelsonTerm -> RawMichelsonTerm -> RawMichelsonTerm
 (~~>) = arr one
 
 infixr 0 ~@>
 
-(~@>) :: P.RawMichelsonTerm -> P.RawMichelsonTerm -> P.RawMichelsonTerm
+(~@>) :: RawMichelsonTerm -> RawMichelsonTerm -> RawMichelsonTerm
 (~@>) = arr zero
