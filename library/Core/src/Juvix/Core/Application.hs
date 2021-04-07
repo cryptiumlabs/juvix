@@ -99,12 +99,12 @@ data Arg' ext ty term
 -- | Simplification for 'Arg'' without any extensions.
 type Arg = Arg' IR.NoExt
 
--- | Pattery synonym for bound arguments in DeBruijn terms.
+-- | Pattern synonym for bound arguments in DeBruijn terms.
 pattern BoundArg ::
   (ParamVar ext ~ DeBruijn) => IR.BoundVar -> Arg' ext ty term
 pattern BoundArg i = VarArg (BoundVar i)
 
--- | Pattery synonym for free arguments in DeBruijn terms.
+-- | Pattern synonym for free arguments in DeBruijn terms.
 pattern FreeArg ::
   (ParamVar ext ~ DeBruijn) => IR.GlobalName -> Arg' ext ty term
 pattern FreeArg x = VarArg (FreeVar x)
