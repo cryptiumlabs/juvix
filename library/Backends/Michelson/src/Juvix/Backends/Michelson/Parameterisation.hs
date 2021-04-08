@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -Wwarn=incomplete-patterns #-}
 
 -- | Module that implements the backend parameters for the Michelson backend.
-
 module Juvix.Backends.Michelson.Parameterisation
   ( CompErr,
     michelson,
@@ -35,9 +34,9 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Type as Untyped
 import Prelude (Show (..), error)
 
+-- | Check if the next three types are equal.
 -- TODO ∷ refactor this all to not be so bad
 -- DO EXTRA CHECKS
--- | Check if the next three types are equal.
 check3Equal :: Eq a => NonEmpty a -> Bool
 check3Equal (x :| [y, z])
   | x == y && x == z = True
