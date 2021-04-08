@@ -38,7 +38,7 @@ typeCheckConstructor param name pos tel (n, ty) = do
       params = length tel
   -- _ <- checkConType 0 [] [] params t
   let (_, target) = typeToTele (n, t)
-  -- checkTarget name tel target
+  -- checkDeclared name tel target
   -- vt <- eval [] tt
   -- sposConstructor name 0 pos vt -- strict positivity check
   -- put (addSig sig n (ConSig vt))
@@ -165,50 +165,42 @@ checkConType k rho gamma p e =
 
 -- check that the data type and the parameter arguments
 -- are written down like declared in telescope
--- checkTarget ::
---   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
---   Name ->
---   RawTelescope ext primTy primVal ->
---   IR.Term' ext primTy primVal ->
---   m ()
--- checkTarget name tel tg@(App (Def n) al) =
---   if n == name
---     then do
---       let pn = length tel
---           params = take pn al
---       checkParams tel params -- check parameters
---     else
---       error $
---         "checkTarget: target mismatch " <> show tg <> ". Input name is "
---           <> show name
---           <> ". Input telescope is "
---           <> show tel
--- checkTarget name tel tg@(Def n) =
---   if n == name && null tel
---     then return ()
---     else
---       error $
---         "checkTarget: target mismatch" <> show tg <> ". Input name is "
---           <> show name
---           <> ". Input telescope is "
---           <> show tel
--- checkTarget name tel tg =
---   error $
---     "checkTarget: target mismatch" <> show tg <> ". Input name is " <> show name
---       <> ". Input telescope is "
---       <> show tel
+checkDeclared ::
+  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+  GlobalName ->
+  RawTelescope ext primTy primVal ->
+  IR.Term' ext primTy primVal ->
+  m ()
+checkDeclared name tel tg@(IR.Elim' (IR.App' (Free (Global n) _) term _) _) =
+  if n == name
+    then do
+      checkParams tel term -- check parameters
+    else throwTC $ DeclError tg name tel
+checkDeclared name tel tg@(IR.Elim' (IR.Free' (Global n) _) _) =
+  if n == name && null tel
+    then return ()
+    else throwTC $ DeclError tg name tel
+checkDeclared name tel tg =
+  throwTC $ DeclError tg name tel
 
 -- check parameters
 checkParams ::
   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
   RawTelescope ext primTy primVal ->
-  [IR.Term' ext primTy primVal] ->
+  IR.Term' ext primTy primVal ->
   m ()
-checkParams [] [] = return ()
-checkParams tel@(hd : tl) (Elim (Free n' _) _ : el) =
+checkParams tel@(hd : tl) para@(Elim elim _) =
   let n = rawName hd
-   in if n == n'
-        then checkParams tl el
-        else throwTC $ ParamVarNError tel n n'
+   in case elim of
+        Free n' _ ->
+          if n == n'
+            then return ()
+            else throwTC $ ParamVarNError tel n n'
+        App (Free n' _) term _ ->
+          if n == n'
+            then checkParams tl term
+            else throwTC $ ParamVarNError tel n n'
+        _ -> throwTC $ ParamError para
+checkParams [] _ = return ()
 checkParams _ exps =
   throwTC $ ParamError exps

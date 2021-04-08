@@ -253,7 +253,12 @@ data TypecheckError' extV extT primTy primVal
         inputN :: IR.Name
       }
   | ParamError
-      {exps :: [IR.Term' extT primTy primVal]}
+      {exp :: IR.Term' extT primTy primVal}
+  | DeclError
+      { tg :: IR.Term' extT primTy primVal,
+        name :: IR.GlobalName,
+        tel :: IR.RawTelescope extT primTy primVal
+      }
 
 type TypecheckError = TypecheckError' IR.NoExt IR.NoExt
 
@@ -349,10 +354,17 @@ instance
       <> show expectedN
       <> ", which does not match the input expression's variable name: "
       <> show inputN
-  show (ParamError exps) =
+  show (ParamError exp) =
     "checkParams: target parameter mismatch. The input expression"
-      <> show exps
+      <> show exp
       <> "isn't a variable (Var)."
+  show (DeclError tg name tel) =
+    "checkDeclared: target mismatch "
+      <> show tg
+      <> ". Input name is "
+      <> show name
+      <> ". Input telescope is "
+      <> show tel
 
 type HasThrowTC' extV extT primTy primVal m =
   HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m
