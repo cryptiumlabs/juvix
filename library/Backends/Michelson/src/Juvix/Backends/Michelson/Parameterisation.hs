@@ -184,8 +184,15 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext) where
   arity App.Cont {numLeft} = numLeft
   arity App.Return {retTerm} = arityRaw retTerm
 
+  -- The following implementation follows the eval/apply method for curried
+  -- function application. A description of this can be found in 'How to make a
+  -- fast curry: push/enter vs eval/apply' by Simon Marlow and Simon Peyton
+  -- Jones.
+  -- Given a function, and a non-empty list of arguments, we try to apply the
+  -- arguments to the function. The function is of type 'PrimVal''/'Return'',
+  -- so either a continuation or a fully evaluated term.
   apply fun' args2 = do
-    let (fun, args1, ar) = toTakes fun'
+    let (fun, args1, ar) = toTakes fun' -- 'args1' are part of continuation fun'
         argLen = lengthN args2 -- Nr. of free arguments.
         args = foldr NonEmpty.cons args2 args1 -- List of all arguments.
     case argLen `compare` ar of
