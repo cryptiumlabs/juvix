@@ -36,7 +36,7 @@ typeCheckConstructor param name pos tel (n, ty) = do
   sig <- get @"typeSigs" -- get signatures
   let (n, t) = teleToType tel ty
       params = length tel
-  _ <- checkConType 0 params t
+  _ <- checkConType 0 [] [] params t
   let (_, target) = typeToTele (n, t)
   checkDeclared name tel target
   -- vt <- eval [] tt
@@ -81,6 +81,24 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
+-- | an env that binds fresh generic values (in Int) to variables.
+type GenEnv = [(Name, Int)]
+
+-- | update generic value env
+updateGenEnv ::
+  GenEnv ->
+  Name ->
+  Int ->
+  GenEnv
+updateGenEnv genEnv name k = (name, k) : genEnv
+
+updateTel ::
+  Telescope extV extT primTy primVal ->
+  Name ->
+  Value' ext primTy primVal ->
+  Telescope extV extT primTy primVal
+updateTel tel n v = undefined --(n, v) : tel
+
 -- | checkDataType takes 5 arguments.
 checkDataType ::
   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
@@ -107,32 +125,43 @@ checkDataType _k _rho _gamma _p (Star _ _) = return ()
 checkDataType _k _rho _gamma _p e =
   throwTC $ DatatypeError e
 
--- TODO may need to keep track of rho and gamma here too
-
 -- | checkConType check constructor type
 checkConType ::
   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
   -- | the next fresh generic value.
   Int ->
+  -- | an env that binds fresh generic values to variables.
+  GenEnv ->
+  -- | an env that binds the type value corresponding to these generic values.
+  Telescope extV extT primTy primVal ->
   -- | the length of the telescope, or the no. of parameters.
   Int ->
   -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
   m ()
-checkConType k p e =
+checkConType k rho gamma p e =
   case e of
-    Pi _ t1 t2 _ -> do
+    Pi x t1 t2 _ -> do
+      --TODO record usage?
       if k < p
         then-- params were already checked by checkDataType
           return ()
-        else case t1 of
-          -- check that arguments ∆ are star types
-          Star' _uni _ -> return ()
-          _ -> throwTC $ ConTypeError t1
-      checkConType (k + 1) p t2
-    -- the constructor is of type Star(the same type as the data type).
-    Star' _uni _ -> return ()
-    _ -> throwTC $ ConTypeError e
+        else-- check that arguments ∆ are star types
+        case t1 of -- TODO maybe need (Eval.evalTerm t1)?
+          Star _ _ -> return ()
+          PrimTy _ _ -> return () -- TODO confirm primTy args are allowed
+          _ -> throwTC $ ConFnTypeError e t1
+      -- v1 <- Eval.evalTerm (Eval.lookupFun globals ) t2
+      checkConType
+        (k + 1)
+        rho --(updateGenEnv rho name k)
+        gamma --(updateTel gamma x v1)
+        p
+        t2
+    -- the constructor's type is of type Star(the same type as the data type).
+    _ -> case e of
+      Star' _ _ -> return ()
+      _ -> throwTC $ ConTypeError e
 
 -- check that the data type and the parameter arguments
 -- are written down like declared in telescope
