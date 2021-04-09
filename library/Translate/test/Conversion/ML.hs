@@ -23,6 +23,7 @@ top =
   T.testGroup
     "passes agree upon results:"
     []
+
 -- [functionTests, expressionTests, typeTests, openTests]
 
 -- shouldBeTheSame :: T.TestName -> ByteString -> T.TestTree

@@ -140,13 +140,13 @@ multipleTransDefun = search
 -- we remove this pass
 combineSig :: [Sexp.T] -> [Sexp.T]
 combineSig
-  ( Sexp.List [Sexp.Atom (Sexp.A "defsig" _), name, sig] :
-      (Sexp.Atom a@(Sexp.A "defun-match" _) Sexp.:> defName Sexp.:> body) :
-      xs
+  ( Sexp.List [Sexp.Atom (Sexp.A "defsig" _), name, sig]
+      : (Sexp.Atom a@(Sexp.A "defun-match" _) Sexp.:> defName Sexp.:> body)
+      : xs
     )
     | defName == name =
-      Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom "defsig-match", name, sig, body])
-        : combineSig xs
+      Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom "defsig-match", name, sig, body]) :
+      combineSig xs
 combineSig (Sexp.List [Sexp.Atom (Sexp.A "defsig" _), _, _] : xs) =
   combineSig xs
 combineSig (x : xs) = x : combineSig xs

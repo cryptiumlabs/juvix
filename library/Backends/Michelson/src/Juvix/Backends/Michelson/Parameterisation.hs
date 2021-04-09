@@ -127,13 +127,13 @@ arityRaw prim =
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just
-    $ App.TermArg
-    $ App.Take
-      { usage = Usage.Omega,
-        type' = retType,
-        term = retTerm
-      }
+  Just $
+    App.TermArg $
+      App.Take
+        { usage = Usage.Omega,
+          type' = retType,
+          term = retTerm
+        }
 
 toTakes :: PrimVal' ext -> (Take, [Arg' ext], Natural)
 toTakes App.Cont {fun, args, numLeft} = (fun, args, numLeft)
@@ -275,7 +275,7 @@ checkIntType :: Integer -> PrimTy -> Bool
 checkIntType val (PrimTy (M.Ty ty _)) = case ty of
   M.TNat -> val >= 0 -- TODO max bound
   M.TInt -> True -- TODO bounds?
-    -- TODO other cases?
+  -- TODO other cases?
   _ -> False
 checkIntType _ _ = False
 

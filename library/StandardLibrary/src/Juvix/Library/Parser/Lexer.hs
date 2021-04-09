@@ -19,9 +19,9 @@ where
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Word8 (isDigit, isSpace)
+import Juvix.Library
 import Juvix.Library.Parser.Internal (Parser)
 import qualified Juvix.Library.Parser.Token as Tok
-import Juvix.Library
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
 import Prelude (fail)

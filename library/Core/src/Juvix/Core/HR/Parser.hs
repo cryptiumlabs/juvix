@@ -3,7 +3,7 @@ module Juvix.Core.HR.Parser where
 import Data.Functor.Identity
 import Juvix.Core.HR.Types
 import Juvix.Core.Types
-import Juvix.Library hiding ((<|>), try)
+import Juvix.Library hiding (try, (<|>))
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Usage
 import Text.Parsec hiding (try)

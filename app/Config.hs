@@ -6,11 +6,10 @@ import Data.Char (isLower, toLower)
 import qualified Data.Yaml as Y
 import Juvix.Library
 
-data T
-  = T
-      { configTezosNodeHost :: Text,
-        configTezosNodePort :: Int
-      }
+data T = T
+  { configTezosNodeHost :: Text,
+    configTezosNodePort :: Int
+  }
   deriving (Generic)
 
 defaultT :: T

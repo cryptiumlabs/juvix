@@ -416,14 +416,14 @@ constantPort ::
   Integer ->
   m ()
 constantPort name v = do
-  Block.addDefn
-    $ GlobalDefinition
-    $ Global.globalVariableDefaults
-      { Global.name = name,
-        Global.isConstant = True,
-        Global.type' = Types.numPortsNameRef,
-        Global.initializer = Just nodeValue
-      }
+  Block.addDefn $
+    GlobalDefinition $
+      Global.globalVariableDefaults
+        { Global.name = name,
+          Global.isConstant = True,
+          Global.type' = Types.numPortsNameRef,
+          Global.initializer = Just nodeValue
+        }
   Block.assign
     (Block.nameToSymbol name)
     (ConstantOperand (C.GlobalReference (Types.pointerOf Types.numPortsNameRef) name))

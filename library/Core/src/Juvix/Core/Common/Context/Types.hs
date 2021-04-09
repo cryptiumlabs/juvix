@@ -14,13 +14,12 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
 import qualified StmContainers.Map as STM
 
-data T term ty sumRep
-  = T
-      { currentNameSpace :: Record term ty sumRep,
-        currentName :: NameSymbol.T,
-        topLevelMap :: HashMap.T Symbol (Definition term ty sumRep),
-        reverseLookup :: ReverseLookup
-      }
+data T term ty sumRep = T
+  { currentNameSpace :: Record term ty sumRep,
+    currentName :: NameSymbol.T,
+    topLevelMap :: HashMap.T Symbol (Definition term ty sumRep),
+    reverseLookup :: ReverseLookup
+  }
   deriving (Show, Eq, Generic)
 
 type NameSpace term ty sumRep = NameSpace.T (Definition term ty sumRep)
@@ -54,31 +53,28 @@ data Definition term ty sumRep
   | SumCon (SumT term ty)
   deriving (Show, Generic, Eq)
 
-data Def term ty
-  = D
-      { defUsage :: Maybe Usage.T,
-        defMTy :: Maybe ty,
-        defTerm :: term,
-        defPrecedence :: Precedence
-      }
+data Def term ty = D
+  { defUsage :: Maybe Usage.T,
+    defMTy :: Maybe ty,
+    defTerm :: term,
+    defPrecedence :: Precedence
+  }
   deriving (Show, Generic, Eq, Data)
 
-data SumT term ty
-  = Sum
-      { sumTDef :: Maybe (Def term ty),
-        sumTName :: Symbol
-      }
+data SumT term ty = Sum
+  { sumTDef :: Maybe (Def term ty),
+    sumTName :: Symbol
+  }
   deriving (Show, Generic, Eq, Data)
 
-data Record term ty sumRep
-  = Rec
-      { recordContents :: NameSpace.T (Definition term ty sumRep),
-        -- Maybe as I'm not sure what to put here for now
-        -- TODO ∷ reconsider the type when we have proper module typing up.
-        recordMTy :: Maybe ty,
-        recordOpenList :: [Open.TName NameSymbol.T],
-        recordQualifiedMap :: SymbolMap
-      }
+data Record term ty sumRep = Rec
+  { recordContents :: NameSpace.T (Definition term ty sumRep),
+    -- Maybe as I'm not sure what to put here for now
+    -- TODO ∷ reconsider the type when we have proper module typing up.
+    recordMTy :: Maybe ty,
+    recordOpenList :: [Open.TName NameSymbol.T],
+    recordQualifiedMap :: SymbolMap
+  }
   deriving (Show, Generic, Eq)
 
 newtype Information
@@ -89,12 +85,11 @@ newtype PathError
   = VariableShared NameSymbol.T
   deriving (Show, Eq)
 
-data WhoUses
-  = Who
-      { impExplict :: Open.T,
-        modName :: NameSymbol.T,
-        symbolMap :: SymbolMap
-      }
+data WhoUses = Who
+  { impExplict :: Open.T,
+    modName :: NameSymbol.T,
+    symbolMap :: SymbolMap
+  }
   deriving (Show, Eq, Generic)
 
 type SymbolMap = STM.Map Symbol SymbolInfo
@@ -104,13 +99,12 @@ type ReverseLookup = HashMap.T NameSymbol.T [WhoUses]
 -- Note ∷ we don't store the implicit explicit open nature of the symbol
 -- this can be found by querying the reverse map and seeing there
 -- this is sadly O(n) right now... but can be made faster in the future
-data SymbolInfo
-  = SymInfo
-      { -- | used notes if the symbol is used and if so in what
-        used :: UsedIn,
-        -- | mod is the module where the symbol is coming from
-        mod :: NameSymbol.T
-      }
+data SymbolInfo = SymInfo
+  { -- | used notes if the symbol is used and if so in what
+    used :: UsedIn,
+    -- | mod is the module where the symbol is coming from
+    mod :: NameSymbol.T
+  }
   deriving (Show, Eq, Generic)
 
 data UsedIn = Func [Symbol] | NotUsed | Yes deriving (Show, Eq, Generic)

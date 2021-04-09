@@ -78,11 +78,10 @@ type ElimExtFun extG extT primTy primVal =
   IR.ElimX extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 
-data ExtFuns extG extT primTy primVal
-  = ExtFuns
-      { tExtFun :: TermExtFun extG extT primTy primVal,
-        eExtFun :: ElimExtFun extG extT primTy primVal
-      }
+data ExtFuns extG extT primTy primVal = ExtFuns
+  { tExtFun :: TermExtFun extG extT primTy primVal,
+    eExtFun :: ElimExtFun extG extT primTy primVal
+  }
 
 rejectExts :: ExtFuns extG extT primTy primVal
 rejectExts =

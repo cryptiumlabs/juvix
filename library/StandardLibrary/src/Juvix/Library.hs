@@ -69,8 +69,7 @@ import GHC.Stack
 import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
-  ( (:.:),
-    Constraint,
+  ( Constraint,
     Fixity (..),
     MonadError (..),
     MonadReader (..),
@@ -83,6 +82,8 @@ import Protolude hiding
     catchJust,
     get,
     gets,
+    isDigit,
+    isSpace,
     local,
     modify,
     moduleName,
@@ -90,11 +91,10 @@ import Protolude hiding
     put,
     reader,
     state,
+    typeOf,
     undefined,
     yield,
-    isDigit,
-    isSpace,
-    typeOf
+    (:.:),
   )
 import Prelude (Show (..), String, error)
 

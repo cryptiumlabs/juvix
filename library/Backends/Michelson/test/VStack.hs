@@ -3,8 +3,8 @@ module VStack where
 import qualified Data.Set as Set
 import qualified Juvix.Backends.Michelson.Compilation.Types as Types
 import qualified Juvix.Backends.Michelson.Compilation.VirtualStack as VStack
-import Juvix.Library
 import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
+import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped as Untype
 import qualified Michelson.Untyped.Type as T

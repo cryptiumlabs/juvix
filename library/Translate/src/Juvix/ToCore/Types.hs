@@ -266,24 +266,22 @@ data CoreDef primTy primVal
   | SpecialDef !NameSymbol.T !Special
   deriving (Eq, Show, Data, Generic)
 
-data CoreDefs primTy primVal
-  = CoreDefs
-      { order :: [NonEmpty NameSymbol.T],
-        defs :: CoreMap primTy primVal
-      }
+data CoreDefs primTy primVal = CoreDefs
+  { order :: [NonEmpty NameSymbol.T],
+    defs :: CoreMap primTy primVal
+  }
   deriving (Eq, Show, Data, Generic)
 
 type CoreMap primTy primVal = HashMap IR.GlobalName (CoreDef primTy primVal)
 
-data FFState primTy primVal
-  = FFState
-      { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
-        param :: P.Parameterisation primTy primVal,
-        coreSigs :: CoreSigsHR primTy primVal,
-        core :: CoreMap primTy primVal,
-        patVars :: HashMap IR.GlobalName IR.PatternVar,
-        nextPatVar :: IR.PatternVar
-      }
+data FFState primTy primVal = FFState
+  { frontend :: Ctx.T Sexp.T Sexp.T Sexp.T,
+    param :: P.Parameterisation primTy primVal,
+    coreSigs :: CoreSigsHR primTy primVal,
+    core :: CoreMap primTy primVal,
+    patVars :: HashMap IR.GlobalName IR.PatternVar,
+    nextPatVar :: IR.PatternVar
+  }
   deriving (Generic)
 
 type EnvAlias primTy primVal =
