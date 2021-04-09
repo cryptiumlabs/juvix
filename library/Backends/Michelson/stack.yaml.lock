@@ -3,171 +3,210 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
+snapshots:
+- original: lts-17.3
+  completed:
+    sha256: 1e9f31ec160a144f796bc49b91dfc2bab5eca88b1dcc93da569108febaf5b382
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/3.yaml
+    size: 563099
 packages:
-- completed:
-    hackage: capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- original:
+    hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+  completed:
     pantry-tree:
-      size: 2449
-      sha256: cf5c08faf8fbfd281edb67381fb5a4ebc15c51a4b4785d6072327a67061b8eba
-  original:
-    hackage: capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
-- completed:
-    size: 15444
+      sha256: 21bf502c888f32bd6aabeeef05bc2a362cf72bf694b432a0eda9431ac4cfea9b
+      size: 2581
+    hackage: capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+- original:
     url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-    name: extensible-data
-    version: 0.1.0
-    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
+  completed:
     pantry-tree:
-      size: 1863
       sha256: ea0eaebc5512c5f88fc4085874f05ca7d9445750efb0729e6dc6fefe48378ab0
-  original:
+      size: 1863
+    version: 0.1.0
+    name: extensible-data
+    sha256: fae24b2dd3fd9c1fc1e3e13220d41ce415065876d10b5849e1a38effd5d66810
     url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
-- completed:
-    hackage: base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
-    pantry-tree:
-      size: 112
-      sha256: 90db92c8401880187ce642c5345407bcbd9546ea235524dd445cab2566ee3db1
-  original:
-    hackage: base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
-- completed:
+    size: 15444
+- original:
     hackage: fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
+  completed:
     pantry-tree:
-      size: 1004
       sha256: 45fad678e9b54ef4d7872ff052a4cfe6d49912b9c7fb9fc4af881587f0713f6b
-  original:
+      size: 1004
     hackage: fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
-- completed:
-    hackage: named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
-    pantry-tree:
-      size: 426
-      sha256: 4f9aaa00a4fac7404da5b5ea175cbb71142b5a47921ac0521f3836cc75681d9f
-  original:
-    hackage: named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
-- completed:
-    hackage: vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
-    pantry-tree:
-      size: 1857
-      sha256: 09713e6b691cb2a713104301079c692e72d8bdcbde23f90d510ba3f606263044
-  original:
-    hackage: vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
-- completed:
-    hackage: base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
-    pantry-tree:
-      size: 419
-      sha256: 053784f8edef6433518c873a7c502dc75348f812e2384e1306f90467ea54f40b
-  original:
-    hackage: base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
-- completed:
-    hackage: hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
-    pantry-tree:
-      size: 314
-      sha256: 84ce6d618602d39e89e28b1a9cc41f0def4786d7046ac0a742557b5ab5381466
-  original:
-    hackage: hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
-- completed:
-    hackage: tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
-    pantry-tree:
-      size: 229
-      sha256: ef4e8284433af224f89a1dfd2968ea79de3570cef6e81b10187aca5d1fae6f76
-  original:
-    hackage: tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
-- completed:
+- original:
     hackage: witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
+  completed:
     pantry-tree:
-      size: 271
       sha256: b99f21dbac28da031eb7c787fbffbe5e77e0aee42b64b5dda082470e907d5ab5
-  original:
+      size: 271
     hackage: witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
-- completed:
-    hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
-    pantry-tree:
-      size: 214
-      sha256: c07e39492e0b8da34f87b3f7516f7739d60543013e7f22bc7db0dbe99eb57540
-  original:
-    hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
-- completed:
+- original:
     hackage: witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
+  completed:
     pantry-tree:
-      size: 277
       sha256: e99696bf95da593a3892c7b9a28db09ffd139b4b1b313f32cec9d26979aa7ce2
-  original:
+      size: 277
     hackage: witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
-- completed:
-    size: 66205
+- original:
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-    name: z3
-    version: '408.0'
-    sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
+  completed:
     pantry-tree:
-      size: 1524
       sha256: 9e2a7d6867321b1c7b714ea2c08bd1ceecfe570d19dfe6d91e28905f2a7db29e
-  original:
+      size: 1524
+    version: '408.0'
+    name: z3
+    sha256: 57207ca741e267db4b10fad1dbcf7c26336ebec49ea47a6eecd80256e0ad6654
     url: https://github.com/cwgoes/haskell-z3/archive/889597234bcdf5620c5a69d3405ab4d607ba4d71.tar.gz
-- completed:
-    hackage: morley-1.2.0@sha256:d49219c792e303160e2af7d404d46ee88ef8a41332ce8696442b9acd3a8d61f9,11421
+    size: 66205
+- original:
+    subdir: code/morley
+    git: https://gitlab.com/morley-framework/morley.git
+    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  completed:
     pantry-tree:
-      size: 10983
-      sha256: 94aaca1080f3195d057274f65dbfdf0035468b459052d88f970ca1d462b44b07
-  original:
-    hackage: morley-1.2.0
-- completed:
-    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+      sha256: f91412e610cc712e0ad4588c26c02ee9ad82d0834e040c64a0510a673fc59c81
+      size: 9641
+    subdir: code/morley
+    version: 1.14.0
+    git: https://gitlab.com/morley-framework/morley.git
+    name: morley
+    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+- original:
+    subdir: code/morley-prelude
+    git: https://gitlab.com/morley-framework/morley.git
+    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  completed:
     pantry-tree:
-      size: 270
-      sha256: 402cd467a690373ca891fa31650376312be351244c6d7e187ca9961d3708de0a
-  original:
-    hackage: morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
-- completed:
+      sha256: 1b8b8bb3f2528f5f31cc4255227a0c55efc86163ca97f688f1fecd6d7f9f4318
+      size: 445
+    subdir: code/morley-prelude
+    version: 0.4.0
+    git: https://gitlab.com/morley-framework/morley.git
+    name: morley-prelude
+    commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+- original:
     subdir: tezos-bake-monitor-lib
-    name: tezos-bake-monitor-lib
+    git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
+    commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
+  completed:
+    pantry-tree:
+      sha256: 1ccdb32989e9a6eec693bcb3b4af2c5e29f4f5805e876545679a3612a3e578fb
+      size: 8709
+    subdir: tezos-bake-monitor-lib
     version: 0.1.0.0
     git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
-    pantry-tree:
-      size: 8709
-      sha256: 1ccdb32989e9a6eec693bcb3b4af2c5e29f4f5805e876545679a3612a3e578fb
+    name: tezos-bake-monitor-lib
     commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
-  original:
-    subdir: tezos-bake-monitor-lib
-    git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
-    commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
-- completed:
-    hackage: constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
+- original:
+    hackage: base58-bytestring-0.1.0
+  completed:
     pantry-tree:
-      size: 594
-      sha256: b0bcc96d375ee11b1972a2e9e8e42039b3f420b0e1c46e9c70652470445a6505
-  original:
-    hackage: constraints-extras-0.3.0.2@sha256:bf6884be65958e9188ae3c9e5547abfd6d201df021bff8a4704c2c4fe1e1ae5b,1784
-- completed:
-    hackage: dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
+      sha256: 053784f8edef6433518c873a7c502dc75348f812e2384e1306f90467ea54f40b
+      size: 419
+    hackage: base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
+- original:
+    git: https://github.com/serokell/base-noprelude.git
+    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+  completed:
     pantry-tree:
-      size: 290
-      sha256: 9cbfb32b5a8a782b7a1c941803fd517633cb699159b851c1d82267a9e9391b50
-  original:
-    hackage: dependent-sum-0.7.1.0@sha256:5599aa89637db434431b1dd3fa7c34bc3d565ee44f0519bfbc877be1927c2531,2068
-- completed:
-    hackage: dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
+      sha256: be322fd116817b527a3a391ba3c24d9252e4f03fd5b1b6abb815ccc78218e50f
+      size: 823
+    version: 4.14.1.0
+    git: https://github.com/serokell/base-noprelude.git
+    name: base-noprelude
+    commit: 87df0899801dcdffd08ef7c3efd3c63e67e623c2
+- original:
+    git: https://github.com/serokell/galois-field.git
+    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+  completed:
     pantry-tree:
-      size: 436
-      sha256: 32eeadeb991a290a1da41ce7e995dee7d38ebba3bd3e53ea8074c32c086701fd
-  original:
-    hackage: dependent-sum-template-0.1.0.3@sha256:0bbbacdfbd3abf2a15aaf0cf2c27e5bdd159b519441fec39e1e6f2f54424adde,1682
-- completed:
-    hackage: hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
+      sha256: 1c5f35fa2f128d1341fffb29300ebc09f2ac463220bf76425fe12ffc2d171d48
+      size: 4657
+    version: 1.0.4
+    git: https://github.com/serokell/galois-field.git
+    name: galois-field
+    commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+- original:
+    hackage: hex-text-0.1.0.0
+  completed:
     pantry-tree:
-      size: 704
-      sha256: a204259113ac5761ded1dac7e37a9d54245f84c8adaeec452346fe3256337d83
-  original:
-    hackage: hashing-0.1.0.1@sha256:98861f16791946cdf28e3c7a6ee9ac8b72d546d6e33c569c7087ef18253294e7,2816
-- completed:
-    hackage: monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
+      sha256: 3a5b60f43c0dc4c3d5db342e23fded691065abd316af6124c8c55973367a4ef4
+      size: 314
+    hackage: hex-text-0.1.0.0@sha256:abda1204c93d7d2c272088876eacd1de9bb9bf9adaaaa23ed32ac232a8436252,1139
+- original:
+    hackage: show-type-0.1.1
+  completed:
     pantry-tree:
-      size: 569
-      sha256: c354e916cb3aa9a0728a60f08440dc589a9e6d8275f047dbe9ab73f168247561
-  original:
-    hackage: monoidal-containers-0.6.0.1@sha256:7d776942659eb4d70d8b8da5d734396374a6eda8b4622df9e61e26b24e9c8e40,2501
-snapshots:
-- completed:
-    size: 496120
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/16.yaml
-    sha256: cf30623a2c147f51eecc8f9d6440f5d1b671af21380505e633faff32b565f3d5
-  original: lts-15.16
+      sha256: c07e39492e0b8da34f87b3f7516f7739d60543013e7f22bc7db0dbe99eb57540
+      size: 214
+    hackage: show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
+- original:
+    git: https://github.com/int-index/caps.git
+    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+  completed:
+    pantry-tree:
+      sha256: 3a80cb98282b5cc87b8c9907bfdf4d7185818e89901dc9b17d53caecbf21e607
+      size: 374
+    version: '0'
+    git: https://github.com/int-index/caps.git
+    name: caps
+    commit: c5d61837eb358989b581ed82b1e79158c4823b1b
+- original:
+    hackage: named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
+  completed:
+    pantry-tree:
+      sha256: e0df5f146ecd48ef129dd74f868e8d2d754f0a11b36c5d0e56bd4b1947433c9f
+      size: 426
+    hackage: named-0.3.0.1@sha256:2975d50c9c5d88095026ffc1303d2d9be52e5f588a8f8bcb7003a04b79f10a06,2312
+- original:
+    hackage: cryptonite-0.27
+  completed:
+    pantry-tree:
+      sha256: 1a63bb79748aeb2c0312d6a166fe8436a139929b017bf208f002e79073d21966
+      size: 22989
+    hackage: cryptonite-0.27@sha256:b75ec07ef0244574aa5374f0a1b349dff8c8f84583cb6c58fd95e565245716d4,18143
+- original:
+    hackage: uncaught-exception-0.1.0
+  completed:
+    pantry-tree:
+      sha256: 401f9ba4729db9533ecb554a698d8c87bec4ea5382e3de335acf4d1d67c4362d
+      size: 343
+    hackage: uncaught-exception-0.1.0@sha256:a03f8c2a1a8b2fc40ca9477599f2d8bcf46ce06465ab42c121b4d2481effc21e,2046
+- original:
+    hackage: tasty-hunit-compat-0.2.0.1
+  completed:
+    pantry-tree:
+      sha256: e4e91a08694f4851fb8f7f6b279a2cd26d5d7aaf2a69c6268892ffeba1abe0de
+      size: 281
+    hackage: tasty-hunit-compat-0.2.0.1@sha256:6ef80ddbe71aa24c7215ff4ca07f5b50a3665cdebe55fb93e95190032cd3a5a1,1233
+- original:
+    git: https://github.com/serokell/elliptic-curve.git
+    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
+  completed:
+    pantry-tree:
+      sha256: f4f032b7ef9a23afbd65a765e3a335ec8cdd219a5dfe6ee276f72e15d644a0fd
+      size: 12030
+    version: 0.3.1
+    git: https://github.com/serokell/elliptic-curve.git
+    name: elliptic-curve
+    commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
+- original:
+    git: https://github.com/serokell/pairing.git
+    commit: cf86cf1f6b03f478a439703b050c520a9d455353
+  completed:
+    pantry-tree:
+      sha256: cc187e182595c780607ec09e1f01e7d85fbb901c2e04d8c6331e65851aa878c7
+      size: 8733
+    version: 1.1.0
+    git: https://github.com/serokell/pairing.git
+    name: pairing
+    commit: cf86cf1f6b03f478a439703b050c520a9d455353
+- original:
+    hackage: with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
+  completed:
+    pantry-tree:
+      sha256: 4b06e9ee43909239a813ccd972eeb444e541efd72aeb0d343206449169227286
+      size: 1051
+    hackage: with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057

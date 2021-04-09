@@ -11,6 +11,7 @@ import qualified Juvix.Backends.Michelson.DSL.Instructions as Instructions
 import qualified Juvix.Backends.Michelson.DSL.InstructionsEff as DSL
 import qualified Juvix.Backends.Michelson.Optimisation as Optimisation
 import qualified Juvix.Core.ErasedAnn.Types as Ann
+import qualified Juvix.Backends.Michelson.DSL.Untyped as Untyped
 import Juvix.Library hiding (Type)
 import qualified Michelson.Printer as M
 import qualified Michelson.TypeCheck as M
@@ -47,10 +48,10 @@ compileToMichelsonContract term = do
   let Ann.Ann _ ty _ = term
   michelsonTy <- DSL.typeToPrimType ty
   case michelsonTy of
-    M.Type (M.TLambda argTy _) _
-      | (M.Type (M.TPair _ _ _ _ paramTy storageTy) _) <- argTy -> do
+    M.Ty (M.TLambda argTy _) _
+      | (M.Ty (M.TPair _ _ _ _ paramTy storageTy) _) <- argTy -> do
         let Ann.Ann _ (Ann.Pi argUsage _ _) (Ann.LamM _ [name] body) = term
-        let paramTy' = M.ParameterType paramTy (M.ann "")
+        let paramTy' = M.ParameterType paramTy Untyped.blank
         modify @"stack"
           ( VStack.cons
               ( VStack.VarE

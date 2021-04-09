@@ -233,7 +233,7 @@ lamElim2 :: RawMichelsonElim
 lamElim2 = IR.Ann one lamTerm2 lamTy2 0
 
 michelsonTy :: M.T -> RawMichelsonTerm
-michelsonTy t = IR.PrimTy $ Michelson.PrimTy $ M.Type t M.noAnn
+michelsonTy t = IR.PrimTy $ Michelson.PrimTy $ M.Ty t M.noAnn
 
 intTy :: RawMichelsonTerm
 intTy = michelsonTy M.TInt

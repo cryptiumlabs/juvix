@@ -91,6 +91,10 @@ import Protolude hiding
     reader,
     state,
     undefined,
+    yield,
+    isDigit,
+    isSpace,
+    typeOf
   )
 import Prelude (Show (..), String, error)
 
