@@ -27,22 +27,22 @@ typeCheckConstructor ::
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
   Param.Parameterisation primTy primVal ->
-  Name ->
+  GlobalName ->
   [IR.Pos] ->
   RawTelescope ext primTy primVal ->
   (IR.Name, IR.Term' ext primTy primVal) ->
-  TypeCheck ext primTy primVal m ()
+  TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
 typeCheckConstructor param name pos tel (n, ty) = do
   sig <- get @"typeSigs" -- get signatures
   let (n, t) = teleToType tel ty
       params = length tel
-  -- _ <- checkConType 0 [] [] params t
+  _ <- checkConType 0 params t
   let (_, target) = typeToTele (n, t)
-  -- checkDeclared name tel target
+  checkDeclared name tel target
   -- vt <- eval [] tt
   -- sposConstructor name 0 pos vt -- strict positivity check
   -- put (addSig sig n (ConSig vt))
-  return ()
+  return undefined --TODO return the list of globals
 
 teleToType ::
   RawTelescope ext primTy primVal ->
@@ -83,10 +83,7 @@ typeToTele (n, t) = ttt (n, t) []
 
 -- | checkDataType takes 5 arguments.
 checkDataType ::
-  ( HasThrow "typecheckError"
-      (TypecheckError' extV ext primTy primVal)
-      (TypeCheck ext primTy primVal m)
-  ) =>
+  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
   -- | the next fresh generic value.
   Int ->
   -- | an env that binds fresh generic values to variables.
@@ -97,7 +94,7 @@ checkDataType ::
   Int ->
   -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
-  TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
+  m ()
 checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 -- _ <-
 --   if k < p -- if k < p then we're checking the parameters
@@ -106,9 +103,11 @@ checkDataType k rho gamma p (Pi x t1 t2 _) = undefined
 --   v_t1 <- eval rho t1
 --   checkDataType (k + 1) (updateTel rho x (VGen k)) (updateTel gamma x v_t1) p t2
 -- check that the data type is of type Star
-checkDataType _k _rho _gamma _p (Star _ _) = undefined
+checkDataType _k _rho _gamma _p (Star _ _) = return ()
 checkDataType _k _rho _gamma _p e =
   throwTC $ DatatypeError e
+
+-- TODO may need to keep track of rho and gamma here too
 
 -- | checkConType check constructor type
 checkConType ::
@@ -130,12 +129,7 @@ checkConType k p e =
           -- check that arguments ∆ are star types
           Star' _uni _ -> return ()
           _ -> throwTC $ ConTypeError t1
-      -- TODO do I need gamma at all?
-      -- v_t1 <- eval rho t1 or v1 = Eval.evalTerm (Eval.lookupFun globals ) t1
-      checkConType
-        (k + 1)
-        p
-        t2
+      checkConType (k + 1) p t2
     -- the constructor is of type Star(the same type as the data type).
     Star' _uni _ -> return ()
     _ -> throwTC $ ConTypeError e
