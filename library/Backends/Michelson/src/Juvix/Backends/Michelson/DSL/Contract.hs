@@ -1,7 +1,15 @@
-module Juvix.Backends.Michelson.DSL.Contract where
+module Juvix.Backends.Michelson.DSL.Contract
+  ( module Juvix.Backends.Michelson.DSL.Contract,
+    dummyNow,
+    dummyLevel,
+    dummyMaxSteps,
+    dummyOrigination,
+  )
+where
 
 import Juvix.Library
 import qualified Michelson.Interpret as Interpret
+import Michelson.Runtime.Dummy as Dummy
 import qualified Michelson.TypeCheck.TypeCheck as Type
 import qualified Tezos.Address as Address
 import qualified Tezos.Core as Core
@@ -27,9 +35,15 @@ dummySend = Core.toMutez 10000
 dummyChainId :: Core.ChainId
 dummyChainId = Core.dummyChainId
 
+dummyOperationHash :: Maybe Address.OperationHash
+dummyOperationHash = Nothing
+
+dummyGlobalCounter :: Address.GlobalCounter
+dummyGlobalCounter = Address.GlobalCounter 12345678
+
 dummyContractEnv :: Interpret.ContractEnv
 dummyContractEnv =
-  Interpret.ContractEnv
+  Dummy.dummyContractEnv
     { Interpret.ceNow = dummyStamp,
       Interpret.ceMaxSteps = dummyStepsLeft,
       Interpret.ceBalance = dummyMutez,

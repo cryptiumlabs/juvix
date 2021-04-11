@@ -139,6 +139,7 @@ data CompilationError
   | -- Should never happen!
     NotEnoughStackSpace
   | OpInMichelsonValue
+  | FieldEltInMichelsonValue
   | AppliedConstantToArgument
   | TooManyArguments
   deriving (Show, Eq, Generic)
