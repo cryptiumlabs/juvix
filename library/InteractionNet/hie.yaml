@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "interaction-net"
-    - path: ./test
-      component: "llvm:test:interaction-net-test"

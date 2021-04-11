@@ -1,4 +1,4 @@
-resolver: lts-17.9
+resolver: lts-17.3
 
 packages:
 - .

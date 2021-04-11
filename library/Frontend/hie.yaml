@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "frontend"
-    - path: ./test
-      component: "frontend:test:frontend-test"

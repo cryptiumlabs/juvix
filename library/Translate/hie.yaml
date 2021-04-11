@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "translate"
-    - path: ./test
-      component: "translate:test:translate-test"
