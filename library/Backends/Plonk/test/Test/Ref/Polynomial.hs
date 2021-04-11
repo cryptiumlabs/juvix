@@ -14,7 +14,7 @@ circuitPolynomial1 = P.execCircuitBuilder $ P.compileTermWithWire corePolynomial
     -- \x y -> x^3 - 2x^2 + 4 = y
     corePolynomial1 :: FFAnnTerm Fr
     corePolynomial1 =
-      Core.Ann Usage.Omega (Core.PrimTy P.PrimTy) $ Core.LamM [] ["x", "y"] $
+      Core.Ann Usage.Omega (Core.PrimTy P.PField) $ Core.LamM [] ["x", "y"] $
         app eq [rhs, lhs]
       where
         rhs = var "y"

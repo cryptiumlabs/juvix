@@ -33,7 +33,7 @@ import Data.Field.Galois (pow)
 import qualified Data.Map as Map
 import Data.Pairing.BLS12381 (BLS12381, Fr, Pairing (..))
 import Data.Poly (VPoly, eval, monomial)
-import Juvix.Backends.Plonk.Circuit (ArithCircuit (..), Wire)
+import Juvix.Backends.Plonk (ArithCircuit (..), Wire)
 import Juvix.Library hiding (quotRem)
 import Ref.Groth.Poly (secretEvalInExponent)
 import Ref.Groth.QAP

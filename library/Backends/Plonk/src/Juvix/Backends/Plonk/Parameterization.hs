@@ -105,7 +105,7 @@ plonk =
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy = \_ -> pure PField,
+      parseTy = panic "Parse ty not implemented",
       parseVal = panic "Parse value not implemented",
       reservedNames = [],
       reservedOpNames = [],

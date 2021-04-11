@@ -44,14 +44,14 @@ where
 
 import Data.Euclidean (Euclidean (..))
 import Data.Field (Field)
-import Data.Field.Galois (GaloisField, pow)
+import Data.Field.Galois (GaloisField)
 import Data.Foldable (foldr1)
-import Data.Map (Map, fromList, mapKeys)
+import Data.Map (fromList, mapKeys)
 import qualified Data.Map as Map
 import qualified Data.Map.Merge.Lazy as Merge
 import Data.Pairing.BLS12381 (Fr, getRootOfUnity)
 import Data.Poly (VPoly, monomial)
-import Juvix.Backends.Plonk.Circuit (ArithCircuit (..), Gate (..), Wire (..), affineCircuitToAffineMap, evalArithCircuit, evalGate)
+import Juvix.Backends.Plonk (ArithCircuit (..), Gate (..), Wire (..), affineCircuitToAffineMap, evalArithCircuit, evalGate)
 import Juvix.Library hiding (Field, quotRem)
 import qualified Ref.Groth.FFT as FFT
 import Text.PrettyPrint.Leijen.Text
