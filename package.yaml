@@ -195,13 +195,15 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - elliptic-curve
+      - galois-field
       - juvix
+      - parsec
+      - pretty-simple
       - tasty
       - tasty-hunit
       - tasty-silver
       - tasty-quickcheck
-      - parsec
-      - pretty-simple
 
 benchmarks:
   juvix-bench:
