@@ -907,6 +907,46 @@ Tests that weak works as expected
   + [[IR/Evaluator]]
   + [[IR/Types]]
   + [[Library]]
+* EasyPipeline
+** Setup <<EasyPipeline/Setup>>
+** src
+*** Easy
+The easy module serves as the stop shop for getting anywhere in the
+code-base fast.
+_The file is laid out where_
+ 1. we lay out a phase
+    - We have 2 variants of each phase
+      1) <name>File
+      2) <name>Library
+    - This lasts up until context, as we can see if the prelude we
+      give it matches our expectations
+ 2. We then give examples
+We do 1. and 2. having each step rely on the last, and continue the
+process until the compiler is at the full backends.
+We can view this approach as giving us a quick way to play around
+with any stage of the compiler while modifying the source code.
+- _Relies on_
+  + [[Michelson/Parameterisation]]
+  + [[Juvix/Contextify]]
+  + [[Core]]
+  + [[Core/Common/Context]]
+  + [[Traverse]]
+  + [[Desugar]]
+  + [[Frontend]]
+  + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types]]
+  + [[Frontend/Types/Base]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+  + [[Juvix/Pipeline]]
+  + [[Compile]]
+** test
+*** Spec <<EasyPipeline/test/Spec>>
 * Frontend
 ** Setup <<Frontend/Setup>>
 ** src
@@ -1161,7 +1201,7 @@ Can be added to via core translation
   + [[Library]]
   + [[Dot]]
   + [[Visualize/Graph]]
-*** Spec
+*** Spec <<InteractionNet/test/Spec>>
 *** Nets
 **** Combinators <<test/Nets/Combinators>>
 - _Relies on_

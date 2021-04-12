@@ -6,8 +6,14 @@ any code that is being written will be updated in this package, and
 thus starting the =EasyPipeline= REPL should allow one to test out any
 modifications they need quickly.
 
-There will be a main file one can work off of that has every phase
-imported as a qualified module.
+The [[file:src/Easy.hs][Easy]] file imports every phase of the compiler and:
+
+1. Writes a pass down to the start of any given phase
+   - This includes files and inline code examples
+2. Gives examples for each phase
+
+The [[file:src/Easy.hs][Easy]] file is the main file for this.
 
 In the future there will be modules dedicated to various parts of any
 particular one pass to make life easier.
+
