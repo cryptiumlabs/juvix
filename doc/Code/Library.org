@@ -1251,6 +1251,169 @@ Can be added to via core translation
 *** Main <<InteractionNetIR/test/Main>>
 - _Relies on_
   + [[Library]]
+* Pipeline
+** Setup <<Pipeline/Setup>>
+** src
+*** Juvix
+**** Backends
+- [[Backends]] are the targets for optimized code output specific to a
+  platform
+- Currently the LLVM backend will serve as the reference
+  implementation
+- The following backends are planned
+  1. LLVM
+  2. Michelson
+  3. WASM
+     - Most likely through LLVM
+  4. Various Arithmetic Circuits
+     - For use in ZKP's
+**** Core
+- _Relies on_
+  + [[Juvix/Contextify]]
+  + [[Core/Common/Context]]
+  + [[Core/Erasure]]
+  + [[Core/Pipeline]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Frontend/Types]]
+  + [[FrontendDesugar]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
+***** Pipeline <<Core/Pipeline>>
+- _Relies on_
+  + [[Application]]
+  + [[ErasedAnn]]
+  + [[Prim]]
+  + [[Core/Erasure]]
+  + [[HR]]
+  + [[IR]]
+  + [[IR/Typechecker]]
+  + [[Translate]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Usage]]
+**** Encoding
+***** Encoding <<Encoding/Encoding>>
+- This provides generic functions used by the various encodings in
+  this directory
+- _Relies on_
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Mendler
+- Gives a =Mendler= encoding from an =ADT=.
+- This file is not done as Ι have yet to find a way to convert any
+  general recursive function into a proper =Mendler= form.
+- This however will do the boilerplate of changing an =ADT= to
+  =Mendler= and the structure of a case expression into proper
+  =Mendler= form
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Scott
+- Gives a =Scott= encoding from an =ADT= and works properly for case
+  expressions
+- Overall this encoding just works™
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Encoding/Types]]
+  + [[Library]]
+  + [[HashMap]]
+***** Types <<Encoding/Types>>
+- _Relies on_
+  + [[Library]]
+  + [[HashMap]]
+**** Pipeline <<Juvix/Pipeline>>
+- _Relies on_
+  + [[Backend]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+***** Compile
+- _Relies on_
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[IR]]
+  + [[IR/Types/Base]]
+  + [[Globals]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Library/Sexp]]
+  + [[Pipeline/Internal]]
+  + [[ToCore/Types]]
+***** Internal <<Pipeline/Internal>>
+- _Relies on_
+  + [[Core]]
+  + [[Core/Common/Context]]
+  + [[Traverse]]
+  + [[IR/Types]]
+  + [[Core/Parameterisation]]
+  + [[Frontend]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Parser]]
+  + [[Library/Sexp]]
+  + [[FromFrontend]]
+***** Types <<Pipeline/Types>>
+- _Relies on_
+  + [[ErasedAnn/Types]]
+  + [[Erasure/Types]]
+  + [[Typechecker/Types]]
+  + [[Core/Types]]
+  + [[Library]]
+***** Backend
+- _Relies on_
+  + [[Backend/Internal]]
+  + [[Backend/Michelson]]
+****** Internal <<Backend/Internal>>
+- _Relies on_
+  + [[Application]]
+  + [[Core/Common/Context]]
+  + [[ErasedAnn]]
+  + [[Library]]
+  + [[Library/Sexp]]
+  + [[Compile]]
+****** Michelson <<Backend/Michelson>>
+- _Relies on_
+  + [[Compilation]]
+  + [[Michelson/Parameterisation]]
+  + [[IR]]
+  + [[Core/Pipeline]]
+  + [[Library]]
+  + [[Feedback]]
+  + [[Backend/Internal]]
+  + [[Compile]]
+  + [[Pipeline/Internal]]
+  + [[Pipeline/Types]]
+  + [[FromFrontend]]
+** test
+*** Encoding <<test/Encoding>>
+- _Relies on_
+  + [[Encoding/Encoding]]
+  + [[Mendler]]
+  + [[Scott]]
+  + [[Encoding/Types]]
+  + [[Library]]
+*** Main <<Pipeline/test/Main>>
+- _Relies on_
+  + [[Library]]
+*** Pipeline <<test/Pipeline>>
+- _Relies on_
+  + [[Backends/Michelson]]
+  + [[Compilation]]
+  + [[IR]]
+  + [[Core/Pipeline]]
+  + [[Core/Types]]
+  + [[Library]]
+  + [[Usage]]
+*** RecGroups
+- _Relies on_
+  + [[Traverse]]
+  + [[Library]]
+  + [[Juvix/Pipeline]]
 * StandardLibrary
 ** Setup <<StandardLibrary/Setup>>
 ** src
@@ -1291,14 +1454,14 @@ Can be added to via core translation
   + [[Library]]
 ***** Parser <<Library/Parser>>
 - _Relies on_
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Lexer]]
   + [[Token]]
-****** Internal
+****** Internal <<Parser/Internal>>
 ****** Lexer
 - _Relies on_
   + [[Library]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Token]]
 ****** Token
 - _Relies on_
@@ -1317,7 +1480,7 @@ sexp type and all the various helper functionality one can need
   + [[Library]]
   + [[NameSymbol]]
   + [[Library/Parser]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Sexp/Types]]
 ****** Types <<Sexp/Types>>
 - _Relies on_
@@ -1612,7 +1775,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[Library]]
-  + [[Internal]]
+  + [[Parser/Internal]]
   + [[Library/Sexp]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
