@@ -80,13 +80,12 @@ instance PP.PrettySyntax M.Type where
     M.TMutez -> ptycon "mutez"
     M.TBool -> ptycon "bool"
     M.TKeyHash -> ptycon "key_hash"
-    -- M.TBls12381Fr -> ptycon "bls12_381_fr"
-    -- M.TBls12381G1 -> ptycon "bls12_381_g1"
-    -- M.TBls12381G2 -> ptycon "bls12_381_g2"
+    M.TBls12381Fr -> ptycon "bls12_381_fr"
+    M.TBls12381G1 -> ptycon "bls12_381_g1"
+    M.TBls12381G2 -> ptycon "bls12_381_g2"
     M.TTimestamp -> ptycon "timestamp"
     M.TAddress -> ptycon "address"
-
--- M.TNever -> ptycon "never"
+    M.TNever -> ptycon "never"
 
 data ValAnn'
   = VAPunct
@@ -265,9 +264,9 @@ instance
     Instr.IF_NONE none some ->
       appV (pinst "IF_NONE") [prettyBlock none, prettyBlock some]
     Instr.PAIR _ _ _ _ -> pinst "PAIR"
-    -- Instr.PAIRN _ n -> appV (pinst "PAIR") [pconsts n]
-    -- Instr.UNPAIRN _ 2 -> pinst "UNPAIR"
-    -- Instr.UNPAIRN _ n -> appV (pinst "UNPAIR") [pconsts n]
+    Instr.PAIRN _ n -> appV (pinst "PAIR") [pconsts n]
+    Instr.UNPAIRN 2 -> pinst "UNPAIR"
+    Instr.UNPAIRN n -> appV (pinst "UNPAIR") [pconsts n]
     Instr.CAR _ _ -> pinst "CAR"
     Instr.CDR _ _ -> pinst "CDR"
     Instr.LEFT _ _ _ _ ty -> appV (pinst "LEFT") [prettyTV ty]
@@ -288,7 +287,7 @@ instance
     Instr.ITER ops -> appV (pinst "ITER") [prettyBlock ops]
     Instr.MEM _ -> pinst "MEM"
     Instr.GET _ -> pinst "GET"
-    -- Instr.GETN _ n -> appV (pinst "GET") [pconsts n]
+    Instr.GETN _ n -> appV (pinst "GET") [pconsts n]
     Instr.UPDATE _ -> pinst "UPDATE"
     Instr.IF tru fls ->
       appV (pinst "IF") [prettyBlock tru, prettyBlock fls]
