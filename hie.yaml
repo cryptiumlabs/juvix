@@ -53,3 +53,8 @@ cradle:
       component: "Pipeline"
     - path: ./library/Pipeline/test
       component: "Pipeline:test:Pipeline-test"
+
+    - path: ./library/EasyPipeline/src
+      component: "EasyPipeline"
+    - path: ./library/EasyPipeline/test
+      component: "EasyPipeline:test:EasyPipeline-test"

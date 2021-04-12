@@ -20,7 +20,49 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/EasyPipeline#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base >= 4.7 && < 5
+  - directory
+  - lens
+  - Cabal
+  - extensible-data
+  - capability >= 0.2.0.0
+  - syb
+  - temporary
+  ###########################
+  # Libraries
+  ###########################
+  - standard-library
+  - frontend
+  - core
+  - translate
+  - michelson
+  - Pipeline
+  # - llvm
+  # - interaction-net
+  # - arithmetic-circuit
+  # - InteractionNetIR
+  ###########################
+  # Dependency for OS
+  ###########################
+  - turtle
+  - time
+  - filepath
+  ###########################
+  # Dependency for Structs
+  ###########################
+  - text
+  - mtl
+  - containers
+  - unordered-containers
+  - hashable
+  - fgl
+  - fgl-visualize
+  - bytestring
+
+  ###########################
+  # Dependency for Morley
+  ###########################
+  - morley
 
 library:
   source-dirs: src
