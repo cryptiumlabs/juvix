@@ -142,15 +142,22 @@ checkConType ::
 checkConType k rho gamma p e =
   case e of
     Pi x t1 t2 _ -> do
-      --TODO record usage?
+      --TODO type check e (so that usage is checked)?
       if k < p
         then-- params were already checked by checkDataType
           return ()
         else-- check that arguments ∆ are star types
-        case t1 of -- TODO maybe need (Eval.evalTerm t1)?
-          Star _ _ -> return ()
-          PrimTy _ _ -> return () -- TODO confirm primTy args are allowed
-          _ -> throwTC $ ConFnTypeError e t1
+        case Eval.evalTerm (lookupFun globals) t1 of --TODO name of e?
+          Right (VStar' _ _) -> return ()
+          -- arguments can be a primitive type
+          Right (VPrimTy' _ _) -> return ()
+          -- if it's not star or prim type, then this constructor is not valid
+          Right _ -> throwTC $ ConFnTypeError e t1
+          -- if it can't evaluate, it's not valid
+          Left err -> --TODO put evaluator errors in typechecking errors?
+            "checkConType: error evaluating " 
+            <> show e
+            <> show err
       -- v1 <- Eval.evalTerm (Eval.lookupFun globals ) t2
       checkConType
         (k + 1)
