@@ -14,8 +14,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "662139f28989582fedfcff6f15a12170e752a954e626d288701c448fa5c0ddd8  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "d29a788bd8052e7cf06ec5286b13fb6d466789801b93ff4a4bae57c924419528  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "6dd07ac7e04f1639a8ac5834b9ac07a1b72fe41cc8cce3e3c56d06d8b24a64e5  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "13d857173e8145a599b11212ebac0afd48d24c3e73aa8751d39ce32410bdeca7  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -155,8 +155,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "662139f28989582fedfcff6f15a12170e752a954e626d288701c448fa5c0ddd8  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "d29a788bd8052e7cf06ec5286b13fb6d466789801b93ff4a4bae57c924419528  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "6dd07ac7e04f1639a8ac5834b9ac07a1b72fe41cc8cce3e3c56d06d8b24a64e5  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "13d857173e8145a599b11212ebac0afd48d24c3e73aa8751d39ce32410bdeca7  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 59d50fb2638ebf8585aaf159bcb51c6972089d29cb43fe526b312d4710a203cf
+hmac: 64f4d22060ae37eac1de510c5445809e45f7ce5423c9b4b06041534fdac2515d
 
 ...
