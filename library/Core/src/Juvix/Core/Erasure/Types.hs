@@ -30,13 +30,12 @@ import Juvix.Library.Usage (Usage)
 type MapPrim p1 p2 ty val =
   [NameSymbol.T] -> p1 -> Either (Error ty val) p2
 
-data Env primTy1 primTy2 primVal1 primVal2
-  = Env
-      { nextName :: Int,
-        nameStack :: [NameSymbol.T],
-        mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
-        mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
-      }
+data Env primTy1 primTy2 primVal1 primVal2 = Env
+  { nextName :: Int,
+    nameStack :: [NameSymbol.T],
+    mapPrimTy :: MapPrim primTy1 primTy2 primTy1 primVal1,
+    mapPrimVal :: MapPrim primVal1 primVal2 primTy1 primVal1
+  }
   deriving (Generic)
 
 type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
@@ -127,44 +126,40 @@ type TermT primTy primVal = Term primTy (Typed.TypedPrim primTy primVal)
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
 
-data Datatype primTy primVal
-  = Datatype
-      { dataName :: GlobalName,
-        dataArgs :: [DataArg primTy],
-        dataLevel :: Natural,
-        dataCons :: [DataCon primTy primVal]
-      }
+data Datatype primTy primVal = Datatype
+  { dataName :: GlobalName,
+    dataArgs :: [DataArg primTy],
+    dataLevel :: Natural,
+    dataCons :: [DataCon primTy primVal]
+  }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDataArg "DataArg" [] [t|T|] extDataArg
 
-data DataArg primTy
-  = DataArg
-      { argName :: GlobalName,
-        argUsage :: Usage,
-        argType :: Type primTy
-      }
+data DataArg primTy = DataArg
+  { argName :: GlobalName,
+    argUsage :: Usage,
+    argType :: Type primTy
+  }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDataCon "DataCon" [] [t|T|] extDataCon
 
-data DataCon primTy primVal
-  = DataCon
-      { conName :: GlobalName,
-        conType :: Type primTy,
-        conDef :: Maybe (Function primTy primVal)
-      }
+data DataCon primTy primVal = DataCon
+  { conName :: GlobalName,
+    conType :: Type primTy,
+    conDef :: Maybe (Function primTy primVal)
+  }
 
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendFunction "Function" [] [t|T|] extFunction
 
-data Function primTy primVal
-  = Function
-      { funName :: GlobalName,
-        funUsage :: GlobalUsage,
-        funType :: Type primTy,
-        funClauses :: NonEmpty (FunClause primTy primVal)
-      }
+data Function primTy primVal = Function
+  { funName :: GlobalName,
+    funUsage :: GlobalUsage,
+    funType :: Type primTy,
+    funClauses :: NonEmpty (FunClause primTy primVal)
+  }
 
 type FunctionT primTy primVal =
   Function primTy (Typed.TypedPrim primTy primVal)
@@ -192,12 +187,11 @@ data Pattern primTy primVal
 type PatternT primTy primVal =
   Pattern primTy (Typed.TypedPrim primTy primVal)
 
-data Abstract primTy
-  = Abstract
-      { absName :: GlobalName,
-        absUsage :: GlobalUsage,
-        absType :: Type primTy
-      }
+data Abstract primTy = Abstract
+  { absName :: GlobalName,
+    absUsage :: GlobalUsage,
+    absType :: Type primTy
+  }
 
 data Global primTy primVal
   = GDatatype (Datatype primTy primVal)

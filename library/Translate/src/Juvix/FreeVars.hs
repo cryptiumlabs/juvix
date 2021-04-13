@@ -62,11 +62,10 @@ import qualified Juvix.Library.Sexp as Sexp
 op :: Sexp.T -> Set.HashSet NameSymbol.T
 op = free . snd . runM . freeVarPass
 
-data Env
-  = Env
-      { closure :: Closure.T,
-        free :: Set.HashSet NameSymbol.T
-      }
+data Env = Env
+  { closure :: Closure.T,
+    free :: Set.HashSet NameSymbol.T
+  }
   deriving (Generic, Show)
 
 type EnvAlias =

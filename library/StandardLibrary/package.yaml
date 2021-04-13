@@ -23,7 +23,7 @@ dependencies:
 - text
 - hashable
 - unordered-containers
-- capability >= 0.2.0.0
+- capability
 - time
 - lens
 - megaparsec

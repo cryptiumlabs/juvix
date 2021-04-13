@@ -8,3 +8,43 @@ cradle:
       component: "juvix:exe:juvix"
     - path: ./bench
       component: "juvix:bench:juvix-bench"
+
+    - path: ./library/Core/src
+      component: "core"
+    - path: ./library/Core/test
+      component: "core:test:core-test"
+
+    - path: ./library/Backends/Michelson/src
+      component: "michelson"
+    - path: ./library/Backends/Michelson/test
+      component: "michelson:test:michelson-test"
+
+    - path: ./library/Backends/LLVM/src
+      component: "llvm"
+    - path: ./library/Backends/LLVM/test
+      component: "llvm:test:llvm-test"
+
+    - path: ./library/Translate/src
+      component: "translate"
+    - path: ./library/Translate/test
+      component: "translate:test:translate-test"
+
+    - path: ./library/Frontend/src
+      component: "frontend"
+    - path: ./library/Frontend/test
+      component: "frontend:test:frontend-test"
+
+    - path: ./library/StandardLibrary/src
+      component: "standard-library"
+    - path: ./library/StandardLibrary/test
+      component: "standard-library:test:standard-library-test"
+
+    - path: ./library/InteractionNet/src
+      component: "interaction-net"
+    - path: ./library/InteractionNet/test
+      component: "llvm:test:interaction-net-test"
+
+    - path: ./library/InteractionNetIR/src
+      component: "InteractionNetIR"
+    - path: ./library/InteractionNetIR/test
+      component: "InteractionNetIR:test:InteractionNetIR-test"
