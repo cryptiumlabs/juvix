@@ -73,9 +73,9 @@ lookupMapPrim ns (App.Cont f xs n) =
     lookupArg (App.FreeArg x) = pure $ App.VarArg x
     lookupArg (App.TermArg t) = pure $ App.TermArg t
     error i =
-      Left
-        $ Erasure.InternalError
-        $ "unknown de Bruijn index " <> show i
+      Left $
+        Erasure.InternalError $
+          "unknown de Bruijn index " <> show i
 
 coreToAnn :: Comp ty val err (ErasedAnn.AnnTerm ty (App.Return' ErasedAnn.T (NonEmpty ty) val))
 coreToAnn term usage ty = do

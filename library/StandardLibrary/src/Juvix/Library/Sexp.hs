@@ -1,3 +1,5 @@
+-- | This module serves as the main sexpression import it contains the
+-- sexp type and all the various helper functionality one can need
 module Juvix.Library.Sexp
   ( module Juvix.Library.Sexp.Types,
     module Juvix.Library.Sexp.Parser,

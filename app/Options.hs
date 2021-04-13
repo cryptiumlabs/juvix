@@ -13,17 +13,15 @@ import Juvix.Library hiding (option)
 import Juvix.Pipeline
 import Options.Applicative
 
-data Context
-  = Context
-      { contextWorkingDirectory :: FilePath,
-        contextHomeDirectory :: FilePath
-      }
+data Context = Context
+  { contextWorkingDirectory :: FilePath,
+    contextHomeDirectory :: FilePath
+  }
 
-data Options
-  = Options
-      { optionsCommand :: Command,
-        optionsConfigPath :: FilePath
-      }
+data Options = Options
+  { optionsCommand :: Command,
+    optionsConfigPath :: FilePath
+  }
 
 data Backend
   = Michelson BMichelson

@@ -12,16 +12,15 @@ import qualified Juvix.Library.Sexp as Sexp
 -- Currently we don't really use the signature however in the future
 -- the mSig will be used to detect the types of modules we will have
 -- open and any other information we wish to track here!?
-data Information
-  = Info
-      { -- | @mSig@ represents the type of the term in the closure
-        mSig :: Maybe Sexp.T,
-        -- | @info@ represents all the information we have on the term
-        info :: [Context.Information],
-        -- | @mOpen@ represents a place where the term may have come
-        -- from
-        mOpen :: Maybe NameSymbol.T
-      }
+data Information = Info
+  { -- | @mSig@ represents the type of the term in the closure
+    mSig :: Maybe Sexp.T,
+    -- | @info@ represents all the information we have on the term
+    info :: [Context.Information],
+    -- | @mOpen@ represents a place where the term may have come
+    -- from
+    mOpen :: Maybe NameSymbol.T
+  }
   deriving (Show, Eq)
 
 newtype T

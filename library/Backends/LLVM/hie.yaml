@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "llvm"
-    - path: ./test
-      component: "llvm:test:llvm-test"

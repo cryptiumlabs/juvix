@@ -13,10 +13,9 @@ data Primitive
 
 deriving instance Show Assoc
 
-data Precedence
-  = Precedence
-      { level :: Int,
-        symbol :: String,
-        assoc :: Assoc
-      }
+data Precedence = Precedence
+  { level :: Int,
+    symbol :: String,
+    assoc :: Assoc
+  }
   deriving (Show)

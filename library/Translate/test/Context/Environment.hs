@@ -32,11 +32,10 @@ top =
 --------------------------------------------------------------------------------
 -- Environment Runner Types
 --------------------------------------------------------------------------------
-data Capture
-  = Cap
-      { closure :: Closure.T,
-        report :: [Closure.T]
-      }
+data Capture = Cap
+  { closure :: Closure.T,
+    report :: [Closure.T]
+  }
   deriving (Generic, Show)
 
 type CaptureAlias =

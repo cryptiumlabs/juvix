@@ -32,4 +32,5 @@ typeCheckDeclaration ((IR.RawDatatype name lpos args levels cons) : tld) _ =
 -- mapM_ (typeCheckConstructor n sz pos tel) cs
 typeCheckDeclaration _ ((IR.RawFunction name usage ty cls) : tlf) =
   undefined
+
 -- TODO run typeCheckFuns

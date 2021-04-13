@@ -8,7 +8,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Juvix.Interpreter.InteractionNet.Default
 import Juvix.Interpreter.InteractionNet.Shared hiding (symbol)
 import Juvix.Interpreter.InteractionNet.Type
-import Juvix.Library hiding ((<|>), many)
+import Juvix.Library hiding (many, (<|>))
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Text.Parsec

@@ -83,12 +83,12 @@ instance Network FlipNet where
 
   isBothPrimary node = do
     net <- runFlip <$> get @"net"
-    pure
-      $ not
-      $ null
-      $ filter (\(Edge (_, p) (_, p')) -> p == Prim && p' == Prim)
-      $ fmap fst
-      $ lneighbors net node
+    pure $
+      not $
+        null $
+          filter (\(Edge (_, p) (_, p')) -> p == Prim && p' == Prim) $
+            fmap fst $
+              lneighbors net node
 
   nodes = Graph.nodes . runFlip <$> get @"net"
 

@@ -19,7 +19,7 @@ import qualified Michelson.Untyped as M
 import qualified Michelson.Untyped.Instr as Instr
 
 data PrimTy
-  = PrimTy M.Type
+  = PrimTy M.Ty
   | -- extra types that need arguments
     Pair
   | Lambda

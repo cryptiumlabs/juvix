@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "arithmetic-circuit"
-    - path: ./test
-      component: "arithmetic-circuit:test:arithmetic-circuit-test"

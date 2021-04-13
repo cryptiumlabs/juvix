@@ -36,11 +36,10 @@ import Prelude (error)
 -- T operation Type
 --------------------------------------------------------------------------------
 
-data T lamType
-  = T
-      { stack' :: [(Elem lamType, Untyped.Type)],
-        size :: Int
-      }
+data T lamType = T
+  { stack' :: [(Elem lamType, Untyped.Ty)],
+    size :: Int
+  }
   deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
@@ -92,14 +91,13 @@ var1E x = VarE (Set.singleton x) (defUsage one)
 varNone :: NameSymbol.T -> Elem lamType
 varNone x = VarE (Set.singleton x) (defUsage Usage.Omega) Nothing
 
-data LamPartial
-  = LamPartial
-      { ops :: [Types.Op],
-        captures :: [NameSymbol.T], -- note: semantically this should be a set :)
-        remArgs :: [NameSymbol.T],
-        body :: Types.Term,
-        ty :: Types.Type
-      }
+data LamPartial = LamPartial
+  { ops :: [Types.Op],
+    captures :: [NameSymbol.T], -- note: semantically this should be a set :)
+    remArgs :: [NameSymbol.T],
+    body :: Types.Term,
+    ty :: Types.Type
+  }
   deriving (Show, Eq, Generic)
 
 data Val lamType
@@ -136,7 +134,7 @@ dropAllVirtual (T stack _) = T allReal (fromIntegral $ length allReal)
   where
     allReal = filter (inT . fst) stack
 
-ins :: (Elem lamType, Untyped.Type) -> (Int -> Int) -> T lamType -> T lamType
+ins :: (Elem lamType, Untyped.Ty) -> (Int -> Int) -> T lamType -> T lamType
 ins v f (T stack' size) = T (v : stack') (f size)
 
 -- | 'inT' determines if the given element is on the real stack or not
@@ -168,7 +166,7 @@ notInError = error "called valueOf with a stored value"
 
 -- | 'car' gets the first element off the stack
 -- may return an error
-car :: T lamType -> (Elem lamType, Untyped.Type)
+car :: T lamType -> (Elem lamType, Untyped.Ty)
 car (T (s : _) _) = s
 car (T [] _) = error "Called car on an empty list"
 
@@ -181,7 +179,7 @@ cdr (T [] size) = T [] size
 
 -- | 'cons' is like 'consT', however it works ont ehs tack directly,
 -- not from within a monad
-cons :: (Elem lamType, Untyped.Type) -> T lamType -> T lamType
+cons :: (Elem lamType, Untyped.Ty) -> T lamType -> T lamType
 cons v = ins v f
   where
     f
@@ -200,7 +198,7 @@ isNil (T [] _) = False
 -- This stack may have more values tha the real one, as we store
 -- constants on this stack for resolution, however these will not appear
 -- in the real michelson stack
-consT :: HasState "stack" (T lamType) m => (Elem lamType, Untyped.Type) -> m ()
+consT :: HasState "stack" (T lamType) m => (Elem lamType, Untyped.Ty) -> m ()
 consT = modify @"stack" . cons
 
 take :: Int -> T lamType -> T lamType
@@ -209,7 +207,7 @@ take n stack@(T (_ : _) _)
   | n <= 0 = nil
   | otherwise = cons (car stack) (take (pred n) (cdr stack))
 
-fromList :: Foldable t => t (Elem lamType, Untyped.Type) -> T lamType
+fromList :: Foldable t => t (Elem lamType, Untyped.Ty) -> T lamType
 fromList = foldr cons nil
 
 append :: T lamType -> T lamType -> T lamType
@@ -218,7 +216,7 @@ append = (<>)
 appendDrop :: T lamType -> T lamType -> T lamType
 appendDrop prefix = append prefix . cdr
 
-lookupType :: NameSymbol.T -> T lamType -> Maybe Untyped.Type
+lookupType :: NameSymbol.T -> T lamType -> Maybe Untyped.Ty
 lookupType n (T stack' _) = go stack'
   where
     go ((VarE n' _ _, typ) : _)
@@ -226,11 +224,11 @@ lookupType n (T stack' _) = go stack'
     go ((_, _) : xs) = go xs
     go [] = Nothing
 
-constToInstr :: T.Type -> V.Value' Instr.ExpandedOp -> Instr.ExpandedOp
+constToInstr :: T.Ty -> V.Value' Instr.ExpandedOp -> Instr.ExpandedOp
 constToInstr ty c =
   case c of
     V.ValueNil ->
-      let T.Type (T.TList t) _ = ty in Instructions.nil t
+      let T.Ty (T.TList t) _ = ty in Instructions.nil t
     _ -> Instructions.push ty c
 
 promoteGen ::
@@ -316,7 +314,7 @@ nameTop sym usage t =
     hd = car t
     rest = cdr t
 
-peek :: T lamType -> Maybe (Elem lamType, T.Type)
+peek :: T lamType -> Maybe (Elem lamType, T.Ty)
 peek (T (s : _xs) _) = Just s
 peek (T [] _) = Nothing
 
@@ -467,7 +465,7 @@ dupDig i (T stack' n) =
     (xs, (y, ty) : ys) ->
       cons (predUsage y, ty) (T (xs <> ((usageOneOmega y, ty) : ys)) n)
 
-dropFirst :: NameSymbol.T -> T lamType -> [(Elem lamType, Untyped.Type)] -> T lamType
+dropFirst :: NameSymbol.T -> T lamType -> [(Elem lamType, Untyped.Ty)] -> T lamType
 dropFirst n (T stack' size) = go stack'
   where
     go ((v@(VarE n' (Usage usages _saved) _), _) : xs) acc
@@ -501,7 +499,7 @@ symbolsInT symbs (T stack' _) =
         Nothing -> False
 
 insertAt ::
-  Foldable t => Int -> t (Elem lamType, Untyped.Type) -> T lamType -> T lamType
+  Foldable t => Int -> t (Elem lamType, Untyped.Ty) -> T lamType -> T lamType
 insertAt n xs stack =
   foldr cons (foldr cons postDrop xs) (stack' dropped)
   where

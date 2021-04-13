@@ -156,9 +156,10 @@ namedArg ::
   NameSymbol.Mod ->
   Sexp.T ->
   m (NameSymbol.T, HR.Term primTy primVal)
-namedArg q e = transformTermHR q e >>= \case
-  NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
-  ty -> pure ("" :| [], ty)
+namedArg q e =
+  transformTermHR q e >>= \case
+    NamedArgTerm x ty -> pure (NameSymbol.fromSymbol x, ty)
+    ty -> pure ("" :| [], ty)
 
 makeTuple :: [HR.Term primTy primVal] -> HR.Term primTy primVal
 makeTuple [] = HR.Unit
