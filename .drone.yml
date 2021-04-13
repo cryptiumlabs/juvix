@@ -16,6 +16,8 @@ steps:
     commands:
       - echo "a1538f7e875b167602d7207d4aa5a98a09a4f8df061b7aa0da6f6ee8cc0c5f4a  scripts/run-formatter.sh" | sha256sum -c -
       - echo "60b1f786e27beea663864f0b3995050c6fd039fc2469dbbaf5d3dafdc49f357f  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
+      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -147,7 +149,9 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
+      - echo "a1538f7e875b167602d7207d4aa5a98a09a4f8df061b7aa0da6f6ee8cc0c5f4a  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "60b1f786e27beea663864f0b3995050c6fd039fc2469dbbaf5d3dafdc49f357f  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
@@ -268,6 +272,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: bb54f5463b6bac73e59d501faf5bb48dd8f51aa22ba402237c8eccf637a995e2
+hmac: 7118441e9b2a635a87a460d7a35a89ac827b5e7af9649740c56ad75b65ba9cf4
 
 ...
