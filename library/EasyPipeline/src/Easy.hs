@@ -180,7 +180,7 @@ contextifyGen ::
 contextifyGen f text def = do
   lib <- desugarLibrary def
   let dusugared = desugar text
-  f (((currentContextName def), dusugared) :| lib)
+  f ((currentContextName def, dusugared) :| lib)
 
 -- | @contextifyFileGen@ is like @contextifyGen@ but for the file variants
 contextifyFileGen ::
@@ -188,7 +188,7 @@ contextifyFileGen ::
 contextifyFileGen f file def = do
   lib <- desugarLibrary def
   dusugared <- desugarFile file
-  f (((currentContextName def), dusugared) :| lib)
+  f ((currentContextName def, dusugared) :| lib)
 
 -- | Here is our third stop in the compiler, we are now upon the
 -- context. For this phase we'll want some version of the standard
