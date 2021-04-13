@@ -20,6 +20,8 @@ module Easy where
 
 import qualified Juvix.Backends.Michelson.Parameterisation as Param
 import qualified Juvix.Contextify as Contextify
+import qualified Juvix.Contextify.ToContext.ResolveOpenInfo as ResolveOpen
+import qualified Juvix.Contextify.ToContext.Types as ContextifyT
 import qualified Juvix.Core as Core
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.Context.Traverse as Traverse
@@ -37,6 +39,7 @@ import qualified Juvix.Library.NameSymbol as NameSymb
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
+import Text.Pretty.Simple (pPrint)
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -147,12 +150,8 @@ desugarFile = fmap desugarLisp . sexpFile
 -- Prelude ⟶ … ⟶ De-sugared LISP
 desugarLibrary :: Options -> IO [(NameSymb.T, [Sexp.T])]
 desugarLibrary def = do
-  files <- Frontend.ofPath (prelude def)
-  case files of
-    Right f ->
-      pure (second (desugarLisp . fmap SexpTrans.transTopLevel) <$> f)
-    Left err ->
-      error (show err)
+  lib <- sexpLibrary def
+  pure (second desugarLisp <$> lib)
 
 ----------------------------------------
 -- DESUGAR Examples
@@ -176,12 +175,65 @@ desugarMinimalPrelude = desugarLibrary def
 --------------------------------------------------------------------------------
 
 -- | Here is our third stop in the compiler, we are now upon the context.
+-- we need to also load up the AST
 -- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP
-contextify = undefined
+-- You may want to stop here if you want to see the context before
+-- resolving the opens
+contextifyNoResolve ::
+  ByteString ->
+  Options ->
+  IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
+contextifyNoResolve text def = do
+  lib <- desugarLibrary def
+  let dusugared = desugar text
+  Contextify.contextify (((currentContextName def), dusugared) :| lib)
+
+-- | We do @contextifyNoResolve@ but on a file instead
+-- File ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP
+contextifyNoResolveFile ::
+  FilePath ->
+  Options ->
+  IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
+contextifyNoResolveFile file def = do
+  lib <- desugarLibrary def
+  dusugared <- desugarFile file
+  Contextify.contextify (((currentContextName def), dusugared) :| lib)
+
+contextitfyNoResolve1 ::
+  IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
+contextitfyNoResolve1 =
+  contextifyNoResolve
+    "let fi = \
+    \ let foo (Cons x xs) True = foo xs False in \
+    \ let foo (Nil) t = t in \
+    \ foo [1,2,3,4]"
+    def
+
+-- At this point the context is a bit unreadable, so to make our lives
+-- easier we can write instead
+
+contextifyNoResolve1Pretty :: IO ()
+contextifyNoResolve1Pretty = do
+  Right (ctx, _resolve) <- contextitfyNoResolve1
+  printDefDefModule def ctx
 
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
+
+-- | @printModule@ prints the module given to it
+printModule ::
+  (MonadIO m, Show ty, Show term, Show sumRep) => NameSymb.T -> Context.T term ty sumRep -> m ()
+printModule name ctx =
+  case Context.inNameSpace name ctx of
+    Just ctx ->
+      pPrint (Context.currentNameSpace ctx)
+    Nothing ->
+      pure ()
+
+printDefDefModule ::
+  (MonadIO m, Show ty, Show term, Show sumRep) => Options -> Context.T term ty sumRep -> m ()
+printDefDefModule def = printModule (currentContextName def)
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs

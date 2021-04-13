@@ -31,6 +31,7 @@ dependencies:
   - core
   - translate
   - michelson
+  - EasyPipeline
   # - llvm
   # - interaction-net
   # - arithmetic-circuit

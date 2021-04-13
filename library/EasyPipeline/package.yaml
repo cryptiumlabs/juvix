@@ -64,6 +64,48 @@ dependencies:
   ###########################
   - morley
 
+  ###########################
+  # Pretty printer
+  ###########################
+  - pretty-simple
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - NoMonomorphismRestriction
+  - RankNTypes
+  - LambdaCase
+  - UnicodeSyntax
+  - GADTs
+  - ScopedTypeVariables
+  - DeriveDataTypeable
+  - DeriveGeneric
+  - DerivingStrategies
+  - FlexibleContexts
+  - FlexibleInstances
+  - DataKinds
+  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
+  - QuasiQuotes
+  - TypeOperators
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - TypeInType
+  - DerivingVia
+  - TypeApplications
+  - StandaloneDeriving
+  - FunctionalDependencies
+  - PatternSynonyms
+  - TypeFamilies
+  - ConstraintKinds
+  - EmptyDataDeriving
+  - TemplateHaskell
+  - NamedFieldPuns
+  - DisambiguateRecordFields
+  - TupleSections
+  - BlockArguments
+
+
 library:
   source-dirs: src
 

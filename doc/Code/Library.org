@@ -928,6 +928,8 @@ with any stage of the compiler while modifying the source code.
 - _Relies on_
   + [[Michelson/Parameterisation]]
   + [[Juvix/Contextify]]
+  + [[ResolveOpenInfo]]
+  + [[ToContext/Types]]
   + [[Core]]
   + [[Core/Common/Context]]
   + [[Traverse]]

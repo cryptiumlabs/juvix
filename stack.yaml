@@ -7,6 +7,7 @@ packages:
 - ./library/Core
 - ./library/Translate
 - ./library/Pipeline
+- ./library/EasyPipeline
 - ./library/Backends/Michelson
 # - ./library/Backends/ArithmeticCircuit
 # - ./library/Backends/LLVM
