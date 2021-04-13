@@ -14,8 +14,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo "a1538f7e875b167602d7207d4aa5a98a09a4f8df061b7aa0da6f6ee8cc0c5f4a  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "60b1f786e27beea663864f0b3995050c6fd039fc2469dbbaf5d3dafdc49f357f  scripts/run-org-generation.sh" | sha256sum -c -
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -78,21 +78,21 @@ steps:
     depends_on:
       - test-suite
 
-  - name: check-formatting
+  - name: code-formatting
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
-      - sh ./scripts/check-formatting.sh
+      - sh ./scripts/run-formatter.sh
     depends_on:
       - test-suite
 
-  - name: check-org-gen
+  - name: org-generation
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
     commands:
-      - sh ./scripts/check-org-gen.sh
+      - sh ./scripts/run-org-generation.sh
     depends_on:
       - test-suite
 
@@ -268,6 +268,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 2ecb2eabc15dcd814bf9028c63f9eacdbe5c4694f3b5390951b4306fa2bfeca5
+hmac: bb54f5463b6bac73e59d501faf5bb48dd8f51aa22ba402237c8eccf637a995e2
 
 ...
