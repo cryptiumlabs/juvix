@@ -232,7 +232,7 @@ contextifyNoResolve1 =
 contextifyNoResolve1Pretty :: IO ()
 contextifyNoResolve1Pretty = do
   Right (ctx, _resolve) <- contextifyNoResolve1
-  printDefDefModule def ctx
+  printDefModule def ctx
 
 --------------------------------------------------------------------------------
 -- Context Resolve Phase
@@ -302,9 +302,9 @@ printModule name ctx =
     Nothing ->
       pure ()
 
-printDefDefModule ::
+printDefModule ::
   (MonadIO m, Show ty, Show term, Show sum) => Options -> Context.T term ty sum -> m ()
-printDefDefModule = printModule . currentContextName
+printDefModule = printModule . currentContextName
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs
