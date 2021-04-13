@@ -55,10 +55,10 @@ instance PP.PrettySyntax PrimTy where
     ContractT -> ptycon "contract"
     Application t0 ts -> appT (PP.pretty' t0) (map PP.pretty' ts)
 
-type instance PP.Ann M.Type = TyAnn
+type instance PP.Ann M.Ty = TyAnn
 
-instance PP.PrettySyntax M.Type where
-  pretty' (M.Type ty _) = case ty of
+instance PP.PrettySyntax M.Ty where
+  pretty' (M.Ty ty _) = case ty of
     M.TKey -> ptycon "key"
     M.TUnit -> ptycon "unit"
     M.TSignature -> ptycon "signature"
