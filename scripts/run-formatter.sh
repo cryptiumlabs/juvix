@@ -12,8 +12,10 @@ if [ -z "$(git status src/ library/ test/ --untracked-files=no --porcelain)" ]; 
   exit 0
 else
   echo "Committing differences..."
+  git remote set-url origin $PUSH_URL
+  git remote -v
   git add -u
   git commit -m "[skip ci] run formatter"
-  git push $PUSH_URL --verbose
+  git push --verbose
   exit $?
 fi
