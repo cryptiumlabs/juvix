@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: ./src
-      component: "michelson"
-    - path: ./test
-      component: "michelson:test:michelson-test"

@@ -8,23 +8,20 @@ import qualified Juvix.Library.Usage as Usage
 
 data T
 
-data Annotation primTy primVal
-  = Annotation
-      { usageAnn :: Usage.T,
-        typeAnn :: IR.Term' T primTy primVal
-      }
+data Annotation primTy primVal = Annotation
+  { usageAnn :: Usage.T,
+    typeAnn :: IR.Term' T primTy primVal
+  }
 
-data BindAnnotation primTy primVal
-  = BindAnnotation
-      { bindName :: NameSymbol.T,
-        bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-      }
+data BindAnnotation primTy primVal = BindAnnotation
+  { bindName :: NameSymbol.T,
+    bindAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  }
 
-data LetAnnotation primTy primVal
-  = LetAnnotation
-      { letName :: NameSymbol.T,
-        letType :: IR.Term' T primTy primVal
-      }
+data LetAnnotation primTy primVal = LetAnnotation
+  { letName :: NameSymbol.T,
+    letType :: IR.Term' T primTy primVal
+  }
 
 extTerm :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtTerm
 extTerm =
@@ -42,11 +39,10 @@ extTerm =
         IR.typeElim = Just [[t|Annotation $primTy $primVal|]]
       }
 
-data AppAnnotation primTy primVal
-  = AppAnnotation
-      { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
-        argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
-      }
+data AppAnnotation primTy primVal = AppAnnotation
+  { funAnn :: {-# UNPACK #-} !(Annotation primTy primVal),
+    argAnn :: {-# UNPACK #-} !(Annotation primTy primVal)
+  }
 
 extElim :: Ext.TypeQ -> Ext.TypeQ -> IR.ExtElim
 extElim =

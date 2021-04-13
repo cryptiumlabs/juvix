@@ -89,9 +89,9 @@ mendlerCase c = do
   expandedCase <- caseGen c onNoArg onrec
   case expandedCase of
     Application on b ->
-      pure
-        $ Application on
-        $ Lambda "rec" b
+      pure $
+        Application on $
+          Lambda "rec" b
     Lambda {} -> error "doesn't happen"
     Value {} -> error "doesn't happen"
   where
@@ -159,8 +159,8 @@ foldM' = Lambda "alg" $ Lambda "d" $ Application (Value "d") (Value "alg")
 
 in' :: Lambda
 in' =
-  Lambda "r"
-    $ Lambda "f"
-    $ Application
-      (Application (Value "f") (app foldM' (Value "f")))
-      (Value "r")
+  Lambda "r" $
+    Lambda "f" $
+      Application
+        (Application (Value "f") (app foldM' (Value "f")))
+        (Value "r")

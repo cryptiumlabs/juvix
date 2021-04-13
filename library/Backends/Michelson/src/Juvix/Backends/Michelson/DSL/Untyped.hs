@@ -1,9 +1,10 @@
 module Juvix.Backends.Michelson.DSL.Untyped where
 
-import Juvix.Library ((.), (...), flip)
+import Juvix.Library (flip, (.), (...))
+import qualified Michelson.Untyped.Annotation as Annotate
 import qualified Michelson.Untyped.Type as Untyped
 
-type T = Untyped.Type
+type T = Untyped.Ty
 
 type UnAnn = Untyped.T
 
@@ -11,8 +12,11 @@ type UnAnn = Untyped.T
 -- Annotated promotion
 --------------------------------------------------------------------------------
 
+blank :: Annotate.Annotation a
+blank = Annotate.noAnn
+
 annotate :: UnAnn -> T
-annotate = flip Untyped.Type ""
+annotate = flip Untyped.Ty blank
 
 --------------------------------------------------------------------------------
 -- T abstractions
@@ -46,10 +50,10 @@ contract :: T -> T
 contract = annotate . Untyped.TContract
 
 pair :: T -> T -> T
-pair = annotate ... Untyped.TPair "" "" "" ""
+pair = annotate ... Untyped.TPair blank blank blank blank
 
 or :: T -> T -> T
-or = annotate ... Untyped.TOr "" ""
+or = annotate ... Untyped.TOr blank blank
 
 lambda :: T -> T -> T
 lambda = annotate ... Untyped.TLambda
