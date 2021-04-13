@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 72dc6f2cd1151da6ed161adfa8549432f2c6b9378f5db3529173494ca237c8f4
+hmac: 6a4185e92b83f1588221ebf79447900e8b655697cb2ea33b85e667c93e803235
 
 ...
