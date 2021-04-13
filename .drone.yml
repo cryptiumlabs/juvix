@@ -155,7 +155,7 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "6dd07ac7e04f1639a8ac5834b9ac07a1b72fe41cc8cce3e3c56d06d8b24a64e5  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "f1a4ce616d7ff35c9307f6188cac4290261bb7337e47ee58dd4a91078f4a6d20  scripts/run-formatter.sh" | sha256sum -c -
       - echo "13d857173e8145a599b11212ebac0afd48d24c3e73aa8751d39ce32410bdeca7  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 64f4d22060ae37eac1de510c5445809e45f7ce5423c9b4b06041534fdac2515d
+hmac: 9da2d71b64fb6028bb71de6c90a030a5b5790fac7de3166bc5ab64deeaa9ead9
 
 ...

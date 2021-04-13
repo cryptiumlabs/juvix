@@ -14,6 +14,6 @@ else
   echo "Committing differences..."
   git add -u
   git commit -m "[skip ci] run formatter"
-  git push $PUSH_URL
+  git push $PUSH_URL --verbose
   exit $?
 fi
