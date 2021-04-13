@@ -64,9 +64,9 @@ def =
       currentContextName = "Juvix-User"
     }
 
--- @defFull@ gives us the entire prelude
-defFull :: Options
-defFull =
+-- @defMichelson@ gives us the entire prelude
+defMichelson :: Options
+defMichelson =
   def
     { prelude =
         [ "../../stdlib/Prelude.ju",
