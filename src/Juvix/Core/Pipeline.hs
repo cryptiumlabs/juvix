@@ -38,7 +38,6 @@ type Comp ty val err res =
 
 type CompConstraints' primTy primVal compErr m =
   ( HasWriter "log" [Types.PipelineLog primTy primVal] m,
-
     HasReader "parameterisation" (Types.Parameterisation primTy primVal) m,
     HasThrow "error" (Types.PipelineError primTy primVal compErr) m,
     HasReader "globals" (IR.Globals primTy (Types.TypedPrim primTy primVal)) m
