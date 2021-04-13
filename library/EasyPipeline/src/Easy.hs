@@ -39,7 +39,7 @@ import qualified Juvix.Library.NameSymbol as NameSymb
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Pipeline as Pipeline
 import qualified Juvix.Pipeline.Compile as Compile
-import Text.Pretty.Simple (pPrint)
+import qualified Text.Pretty.Simple as Pretty
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ defFull =
 --------------------------------------------------------------------------------
 
 -- | here we stop at the first stage of the first step of the compiler
--- Text ⟶ ML AST ⟶ LISP AST
 -- You may want to stop here if you want to see what some base forms look like
+-- Text ⟶ ML AST ⟶ LISP AST
 sexp :: ByteString -> [Sexp.T]
 sexp xs = ignoreHeader (Parser.parse xs) >>| SexpTrans.transTopLevel
 
@@ -129,9 +129,9 @@ sexp2 =
 --------------------------------------------------------------------------------
 
 -- | Here is our second stop of the compiler, we now run the desugar passes
--- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP
 -- you may want to stop here if you want to see the syntax before we
--- get dirtier output from everything being in the contex
+-- get dirtier output from everything being in the context
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP
 desugar :: ByteString -> [Sexp.T]
 desugar = Desugar.op . sexp
 
@@ -174,34 +174,51 @@ desugarMinimalPrelude = desugarLibrary def
 -- Context Phase
 --------------------------------------------------------------------------------
 
--- | Here is our third stop in the compiler, we are now upon the context.
--- we need to also load up the AST
--- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP
+-- | @contextifyGen@ is the generator function for the various contexitfy passes
+contextifyGen ::
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> ByteString -> Options -> IO b
+contextifyGen f text def = do
+  lib <- desugarLibrary def
+  let dusugared = desugar text
+  f (((currentContextName def), dusugared) :| lib)
+
+-- | @contextifyFileGen@ is like @contextifyGen@ but for the file variants
+contextifyFileGen ::
+  (NonEmpty (NameSymb.T, [Sexp.T]) -> IO b) -> FilePath -> Options -> IO b
+contextifyFileGen f file def = do
+  lib <- desugarLibrary def
+  dusugared <- desugarFile file
+  f (((currentContextName def), dusugared) :| lib)
+
+-- | Here is our third stop in the compiler, we are now upon the
+-- context. For this phase we'll want some version of the standard
+-- library for the steps to come
+--
 -- You may want to stop here if you want to see the context before
--- resolving the opens
+-- resolving the opens and what that may entail
+--
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP, Resolves
 contextifyNoResolve ::
   ByteString ->
   Options ->
   IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
-contextifyNoResolve text def = do
-  lib <- desugarLibrary def
-  let dusugared = desugar text
-  Contextify.contextify (((currentContextName def), dusugared) :| lib)
+contextifyNoResolve = contextifyGen Contextify.contextify
 
 -- | We do @contextifyNoResolve@ but on a file instead
--- File ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP
+-- File ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP, Resolves
 contextifyNoResolveFile ::
   FilePath ->
   Options ->
   IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
-contextifyNoResolveFile file def = do
-  lib <- desugarLibrary def
-  dusugared <- desugarFile file
-  Contextify.contextify (((currentContextName def), dusugared) :| lib)
+contextifyNoResolveFile = contextifyFileGen Contextify.contextify
 
-contextitfyNoResolve1 ::
+----------------------------------------
+-- CONTEXTIFY Examples
+----------------------------------------
+
+contextifyNoResolve1 ::
   IO (Contextify.PathError (ContextifyT.ContextSexp, [ResolveOpen.PreQualified]))
-contextitfyNoResolve1 =
+contextifyNoResolve1 =
   contextifyNoResolve
     "let fi = \
     \ let foo (Cons x xs) True = foo xs False in \
@@ -214,26 +231,80 @@ contextitfyNoResolve1 =
 
 contextifyNoResolve1Pretty :: IO ()
 contextifyNoResolve1Pretty = do
-  Right (ctx, _resolve) <- contextitfyNoResolve1
+  Right (ctx, _resolve) <- contextifyNoResolve1
   printDefDefModule def ctx
+
+--------------------------------------------------------------------------------
+-- Context Resolve Phase
+--------------------------------------------------------------------------------
+
+-- | Here we stop at the phase right before the context passes are run.
+-- So you may want to stop here if you want to debug any of the context
+-- desugar passes
+--
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified
+contextify ::
+  ByteString ->
+  Options ->
+  IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
+contextify = contextifyGen Contextify.fullyContextify
+
+-- | we do @contextify@ but on a file instead
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified
+contextifyFile ::
+  FilePath ->
+  Options ->
+  IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
+contextifyFile = contextifyFileGen Contextify.fullyContextify
+
+--------------------------------------------------------------------------------
+-- Context Resolve Phase
+--------------------------------------------------------------------------------
+
+-- | Here is where we want to stop when we want to see what the context
+-- passes have done, and the final form before we run CotnexttoFrontend
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified ⟶ Context Desugar
+contextifyDesugar ::
+  ByteString ->
+  Options ->
+  IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
+contextifyDesugar = contextifyGen Contextify.op
+
+-- | we do @contextifyDesugar@ but on a file instead
+-- Text ⟶ ML AST ⟶ LISP AST ⟶ De-sugared LISP ⟶ Contextified LISP ⟶ Resolved Contextified ⟶ Context Desugar
+contextifyDesugarFile ::
+  FilePath ->
+  Options ->
+  IO (Either Contextify.ResolveErr (Context.T Sexp.T Sexp.T Sexp.T))
+contextifyDesugarFile = contextifyFileGen Contextify.op
 
 --------------------------------------------------------------------------------
 -- Helpers
 --------------------------------------------------------------------------------
 
+printCompactParens :: (MonadIO m, Show a) => a -> m ()
+printCompactParens =
+  Pretty.pPrintOpt
+    Pretty.CheckColorTty
+    ( Pretty.defaultOutputOptionsDarkBg
+        { Pretty.outputOptionsCompactParens = True,
+          Pretty.outputOptionsCompact = True
+        }
+    )
+
 -- | @printModule@ prints the module given to it
 printModule ::
-  (MonadIO m, Show ty, Show term, Show sumRep) => NameSymb.T -> Context.T term ty sumRep -> m ()
+  (MonadIO m, Show ty, Show term, Show sum) => NameSymb.T -> Context.T term ty sum -> m ()
 printModule name ctx =
   case Context.inNameSpace name ctx of
     Just ctx ->
-      pPrint (Context.currentNameSpace ctx)
+      printCompactParens (Context.currentNameSpace ctx)
     Nothing ->
       pure ()
 
 printDefDefModule ::
-  (MonadIO m, Show ty, Show term, Show sumRep) => Options -> Context.T term ty sumRep -> m ()
-printDefDefModule def = printModule (currentContextName def)
+  (MonadIO m, Show ty, Show term, Show sum) => Options -> Context.T term ty sum -> m ()
+printDefDefModule = printModule . currentContextName
 
 ignoreHeader :: Either a (Frontend.Header topLevel) -> [topLevel]
 ignoreHeader (Right (Frontend.NoHeader xs)) = xs
