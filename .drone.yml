@@ -18,6 +18,7 @@ steps:
       # - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - echo $${DRONE_COMMIT_MESSAGE}
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -118,17 +119,18 @@ steps:
       - test-compile
       - test-parser
 
-  - name: push commit
+  - name: Push changes
     image: appleboy/drone-git-push
     settings:
       branch: $${$DRONE_SOURCE_BRANCH}
-      remote: "https://github.com/heliaxdev/juvix.git"
+      remote: "git@github.com:heliaxdev/juvix.git"
       force: false
       commit: true
       commit_message: "[skip ci] format and org generation"
-      login: fraccaman
-      password:
-        from_secret: github_token  
+      ssh_key: 
+        from_secret: github_ssh   
+      author_name: Drone CI
+      author_email: gianmarco@heliax.dev
     depends_on:
       - org-generation-and-code-formatting
 
@@ -279,6 +281,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 2680a2e2bc625653ae1e056f0f57003286b558869436dd103ed67ec1699ca324
+hmac: f08d56f8c3c9eb19adbaf505a7ed2b6fe2333da4f32c136a44fde1bc5cb34567
 
 ...
