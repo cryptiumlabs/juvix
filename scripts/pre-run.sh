@@ -6,6 +6,9 @@
 # check commit comment. If contains $CHECK, than exit pipeline sucessfully
 COMMIT_MESSAGE=$(git show -s --format=%B ${DRONE_COMMIT_SHA})
 CHECK="[CI SKIP]"
-if [[ $CHECK == *"${COMMIT_MESSAGE}"* ]]; then
+
+echo $COMMIT_MESSAGE
+
+if [[ "$CHECK" == *"$COMMIT_MESSAGE"* ]]; then
     exit 78
 fi
