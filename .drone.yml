@@ -123,7 +123,8 @@ steps:
   - name: Push changes
     image: appleboy/drone-git-push
     settings:
-      branch: $${DRONE_SOURCE_BRANCH}
+      # branch: 
+      branch: fraccaman/fix-ci-improvements
       remote: "git@github.com:heliaxdev/juvix.git"
       force: false
       commit: true
@@ -285,6 +286,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: c043421db70f04176156b5bee3e14be317cb830bca93b65eba8ad0ee23afbd47
+hmac: 4b5460e3111ac4df5310bbcc3f6ee2661d5a9bb3bbc08321414f2770c47401fe
 
 ...
