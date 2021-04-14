@@ -107,7 +107,7 @@ steps:
     depends_on:
       - test-suite
   
-  - name: Org generation and formatting
+  - name: org-generation-and-code-formatting
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     failure: fast
@@ -122,12 +122,17 @@ steps:
     image: appleboy/drone-git-push
     settings:
       branch: $${$DRONE_SOURCE_BRANCH}
-      remote: "https://$${GITHUB_TOKEN}@github.com:heliaxdev/juvix.git"
+      remote: "https://github.com/heliaxdev/juvix.git"
       force: false
       commit: true
+      commit_message: "[skip ci] format and org generation"
+      login: fraccaman
+      password: ${{GITHUB_TOKEN}}
     environment:
       GITHUB_TOKEN:
         from_secret: github_token    
+    depends_on:
+      - org-generation-and-code-formatting
 
 volumes:
   - name: cache
@@ -276,6 +281,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 3f5fad43015c3517c62155c4727319ce99b6ef4508edd9405deef9958a58b5a5
+hmac: 75c4e38b0d7247a92c1dd892edc2c27255c7ee7c33be8bbf747d01016ef905c9
 
 ...
