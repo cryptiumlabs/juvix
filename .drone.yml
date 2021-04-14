@@ -22,8 +22,8 @@ steps:
       - COMMIT_MESSAGE=$(git show -s --format=%B $${DRONE_COMMIT_SHA})
       # check if CI SKIP is in commit message. If so, exit pipeline succesfully
       - |
-        string='[CI SKIP]'
-        if [[ $string == *"${COMMIT_MESSAGE}"* ]]; then
+        CHECK="[CI SKIP]"
+        if [[ $CHECK == *"${COMMIT_MESSAGE}"* ]]; then
           exit 78
         fi
 
@@ -132,6 +132,8 @@ steps:
     commands:
       - git status
       - git rev-parse --abbrev-ref HEAD
+    depends_on:
+      - org-generation-and-code-formatting
 
 volumes:
   - name: cache
@@ -280,6 +282,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 010e4c31faf1975cb61e5ea0a32584058f7bd1daf0361d02c919b6136e48ff4d
+hmac: d482d19b7bdbf8fc3f35f8fd21f7f23c5d6ae3fe9ee482033a0aac9a0f3950bb
 
 ...
