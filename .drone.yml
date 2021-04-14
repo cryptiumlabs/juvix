@@ -132,6 +132,9 @@ steps:
       commit_message: "[skip ci] format and org generation" 
       author_name: Drone CI
       author_email: gianmarco@heliax.dev
+    environment:
+      GIT_PUSH_SSH_KEY:
+        from_secret: wp_engine_key
     depends_on:
       - org-generation-and-code-formatting
 
@@ -282,6 +285,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: ce1299baf587d0b518a63ca9020e312bc5196731bee8af9f7a5b29fdd8924404
+hmac: a0bf4ea8e16c757344fa99515115640db840f8d882ad3441c3c9f6ace3835a41
 
 ...
