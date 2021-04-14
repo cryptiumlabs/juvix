@@ -134,7 +134,7 @@ steps:
       author_email: gianmarco@heliax.dev
     environment:
       GIT_PUSH_SSH_KEY:
-        from_secret: wp_engine_key
+        from_secret: GIT_PUSH_SSH_KEY
     depends_on:
       - org-generation-and-code-formatting
 
@@ -285,6 +285,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: a0bf4ea8e16c757344fa99515115640db840f8d882ad3441c3c9f6ace3835a41
+hmac: af1261cae6fd4c77fde8053f1367804ef2ab366100aa99c4ab8db3769da5100b
 
 ...
