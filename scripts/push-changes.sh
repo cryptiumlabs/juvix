@@ -6,12 +6,8 @@ if [ -z "$(git status --porcelain)" ]; then
     exit 78
 fi
 
-echo $GITHUB_TOKEN | base64
-
 REMOTE=$(git remote get-url origin | cut -c 9-)
-PUSH_URL="https://fraccaman:${GITHUB_TOKEN}@${REMOTE}"
-
-echo $PUSH_URL
+PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
 git fetch --all
 git checkout $DRONE_SOURCE_BRANCH
@@ -22,8 +18,6 @@ git remote set-url origin $PUSH_URL
 
 git add -A
 git commit -m "[SKIP CI] changes from CI"
-
-git remote -v
 
 git push
 
