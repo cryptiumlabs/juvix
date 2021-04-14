@@ -8,6 +8,11 @@ git config user.name "Drone CI"
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
+git branch --show-current
+git status
+git remote -v
+
+
 if [ -z "$(git status src/ library/ test/ --untracked-files=no --porcelain)" ]; then
   exit 0
 else

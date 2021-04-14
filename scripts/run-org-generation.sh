@@ -8,7 +8,9 @@ git config user.name "Drone CI"
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
-echo $PUSH_URL
+git branch --show-current
+git status
+git remote -v
 
 if [ -z "$(git status doc/Code --porcelain)" ]; then
   exit 0
