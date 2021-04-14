@@ -10,14 +10,14 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
-  - name: script-integrity-check
-    image: alpine:3.7
-    pull: if-not-exists
-    commands:
-      - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+  # - name: script-integrity-check
+  #   image: alpine:3.7 
+  #   pull: if-not-exists
+  #   commands:
+  #     - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
+  #     - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
+  #     - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
+  #     - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -48,8 +48,8 @@ steps:
     pull: if-not-exists
     commands:
       - make test
-    depends_on:
-      - restore-cache
+    # depends_on:
+    #   - restore-cache
 
   - name: rebuild-cache
     image: meltwater/drone-cache
@@ -151,14 +151,14 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
-  - name: script-integrity-check
-    image: alpine:3.7
-    pull: if-not-exists
-    commands:
-      - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+  # - name: script-integrity-check
+  #   image: alpine:3.7
+  #   pull: if-not-exists
+  #   commands:
+  #     - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
+  #     - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
+  #     - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
+  #     - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -181,8 +181,8 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
-    depends_on:
-      - script-integrity-check
+    # depends_on:
+    #   - script-integrity-check
 
   - name: test-suite
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 3bab2be925cfe9b24cd2fdf501790426eacc2ca104f2fbad5a51314b80fcd78b
+hmac: c27707657ffe0ce49baf31a689b67f64bfa2b4c4ee3e98b0513f94cfc591b7e9
 
 ...
