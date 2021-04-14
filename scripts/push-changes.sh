@@ -6,6 +6,8 @@ if [ -z "$(git status --porcelain)" ]; then
     exit 78
 fi
 
+echo $GITHUB_TOKEN | base64
+
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://fraccaman:${GITHUB_TOKEN}@${REMOTE}"
 
@@ -18,7 +20,7 @@ git status
 
 git remote set-url origin $PUSH_URL
 
-git add -u
+git add -A
 git commit -m "[SKIP CI] changes from CI"
 
 git remote -v
