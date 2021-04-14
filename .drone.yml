@@ -40,8 +40,8 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
-    depends_on:
-      - script-integrity-check
+    # depends_on:
+    #   - script-integrity-check
 
   - name: test-suite
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
@@ -181,8 +181,8 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
-    depends_on:
-      - script-integrity-check
+    # depends_on:
+    #   - script-integrity-check
 
   - name: test-suite
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 34d6b72977e146214dc98d66096998b1217b4bb40dc934ec760480b91d1555b5
+hmac: 016ebf724203441c71b53ca138494ffe990e5a5b467b2256ab6dba7d29317c43
 
 ...
