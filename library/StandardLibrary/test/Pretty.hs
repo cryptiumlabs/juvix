@@ -7,8 +7,8 @@ import Data.String (String)
 import Juvix.Library
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Test.Tasty as T
-import qualified Test.Tasty.HUnit as T
 import Test.Tasty.HUnit ((@?=))
+import qualified Test.Tasty.HUnit as T
 
 top :: T.TestTree
 top = T.testGroup "pretty printer tests" [testHangsWith, testHangs]

@@ -52,7 +52,6 @@ where
 
 import Data.Text (unpack)
 import Juvix.Library hiding (show)
-import qualified Text.PrettyPrint.Compact as Base
 import Text.PrettyPrint.Compact hiding
   ( angles,
     backslash,
@@ -79,6 +78,7 @@ import Text.PrettyPrint.Compact hiding
     string,
     text,
   )
+import qualified Text.PrettyPrint.Compact as Base
 import Text.PrettyPrint.Compact.Core (groupingBy)
 import qualified Text.Show as Show
 import Prelude (String)

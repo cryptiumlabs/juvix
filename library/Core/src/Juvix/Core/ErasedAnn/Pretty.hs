@@ -8,8 +8,8 @@ module Juvix.Core.ErasedAnn.Pretty
 where
 
 import Juvix.Core.ErasedAnn.Types
-import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Core.HR.Pretty (PPAnn, PPAnn' (..), PrimPretty1)
+import qualified Juvix.Core.HR.Pretty as HR
 import Juvix.Library hiding (Type)
 import qualified Juvix.Library.PrettyPrint as PP
 

@@ -82,20 +82,20 @@ bindTests =
     ]
 
 xAB =
-  Pi Omega "x" "A"
-    $ Elim
-    $ "B" `App` "x"
+  Pi Omega "x" "A" $
+    Elim $
+      "B" `App` "x"
 
 xAyBC =
-  Pi Omega "x" "A"
-    $ Pi Omega "y" "B"
-    $ Elim
-    $ "C" `App` "x" `App` "y"
+  Pi Omega "x" "A" $
+    Pi Omega "y" "B" $
+      Elim $
+        "C" `App` "x" `App` "y"
 
 xAyBC' =
-  Pi Omega "x" "A"
-    $ Sig Omega "y" "B"
-    $ cxy
+  Pi Omega "x" "A" $
+    Sig Omega "y" "B" $
+      cxy
 
 cxy = Elim cxy'
 
@@ -132,10 +132,10 @@ lam1 = Lam "z" $ Elim "z"
 lam2 = Lam "y" $ Lam "z" $ "y" `Pair` "z"
 
 lam3 =
-  Lam "verylongname1"
-    $ Lam "verylongname2"
-    $ Lam "verylongname3"
-    $ "y" `Pair` "z"
+  Lam "verylongname1" $
+    Lam "verylongname2" $
+      Lam "verylongname3" $
+        "y" `Pair` "z"
 
 pairTests :: T.TestTree
 pairTests =
@@ -216,9 +216,9 @@ letTests =
 let1 = Let (SNat 2) "a" fxy' $ "a" `Pair` "a"
 
 let2 =
-  Let (SNat 2) "a" fxy'
-    $ Let (SNat 1) "b" gxy'
-    $ "a" `Pair` ("a" `Pair` "b")
+  Let (SNat 2) "a" fxy' $
+    Let (SNat 1) "b" gxy' $
+      "a" `Pair` ("a" `Pair` "b")
 
 appTests :: T.TestTree
 appTests =

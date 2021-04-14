@@ -121,13 +121,12 @@ pname = pure . name
 
 data Bind = PI | SIG
 
-data Binder tm
-  = Binder
-      { bBinder :: Bind,
-        bUsage :: Usage.T,
-        bName :: NameSymbol.T,
-        bType :: tm
-      }
+data Binder tm = Binder
+  { bBinder :: Bind,
+    bUsage :: Usage.T,
+    bName :: NameSymbol.T,
+    bType :: tm
+  }
 
 type WithBinders tm = ([Binder tm], tm)
 

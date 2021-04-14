@@ -248,14 +248,13 @@ exec pats avoid (M env) =
       }
 
 -- TODO separate states for h→i and i→h maybe??
-data Env
-  = Env
-      { nameSupply :: Stream NameSymbol.T,
-        nameStack :: [NameSymbol.T],
-        nextPatVar :: IR.PatternVar,
-        symToPat :: HashMap NameSymbol.T IR.PatternVar,
-        patToSym :: IR.PatternMap NameSymbol.T
-      }
+data Env = Env
+  { nameSupply :: Stream NameSymbol.T,
+    nameStack :: [NameSymbol.T],
+    nextPatVar :: IR.PatternVar,
+    symToPat :: HashMap NameSymbol.T IR.PatternVar,
+    patToSym :: IR.PatternMap NameSymbol.T
+  }
   deriving (Generic)
 
 newtype M a = M (State Env a)

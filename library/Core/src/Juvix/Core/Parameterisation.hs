@@ -158,7 +158,8 @@ instance PP.PrettySyntax primTy => PP.PrettySyntax (PrimType primTy) where
           . PP.pretty'
 
 instance HR.ToPPAnn (PP.Ann ty) => HR.ToPPAnn (PPAnn ty) where
-  toPPAnn a = a >>= \case
-    PAArrow -> pure HR.ATyCon
-    PAPunct -> pure HR.APunct
-    PATy a' -> HR.toPPAnn a'
+  toPPAnn a =
+    a >>= \case
+      PAArrow -> pure HR.ATyCon
+      PAPunct -> pure HR.APunct
+      PATy a' -> HR.toPPAnn a'

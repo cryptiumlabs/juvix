@@ -40,7 +40,7 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as PM
 import qualified Data.IntSet as PS
-import Data.List ((!!), findIndex)
+import Data.List (findIndex, (!!))
 import Juvix.Core.IR.Types (PatternMap, PatternSet, PatternVar)
 import Juvix.Library hiding (filter, take)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -93,8 +93,7 @@ nextPatVar :: HasNextPatVar m => m PatternVar
 nextPatVar = state @"nextPatVar" \v -> (v, succ v)
 
 -- | necessarily-infinite stream
-data Stream a
-  = (:>) {head :: a, tail :: Stream a}
+data Stream a = (:>) {head :: a, tail :: Stream a}
 
 -- | add a list to the front of a stream
 app :: [a] -> Stream a -> Stream a

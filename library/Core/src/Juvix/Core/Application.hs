@@ -148,11 +148,12 @@ instance
   (HR.ToPPAnn (PP.Ann ty), HR.ToPPAnn (PP.Ann term)) =>
   HR.ToPPAnn (PPAnn ty term)
   where
-  toPPAnn a = a >>= \case
-    APunct -> pure HR.APunct
-    ATyAnn ann -> HR.toPPAnn ann
-    ATmAnn ann -> HR.toPPAnn ann
-    AVar -> pure HR.AName
+  toPPAnn a =
+    a >>= \case
+      APunct -> pure HR.APunct
+      ATyAnn ann -> HR.toPPAnn ann
+      ATmAnn ann -> HR.toPPAnn ann
+      AVar -> pure HR.AName
 
 type instance PP.Ann (Take ty term) = PPAnn ty term
 
