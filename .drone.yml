@@ -21,11 +21,11 @@ steps:
       - echo $${DRONE_COMMIT_SHA}
       - COMMIT_MESSAGE=$(git show -s --format=%B $${DRONE_COMMIT_SHA})
       # check if CI SKIP is in commit message. If so, exit pipeline succesfully
-      - |
-        CHECK="[CI SKIP]"
-        if [[ $CHECK == *"${COMMIT_MESSAGE}"* ]]; then
-          exit 78
-        fi
+      - |-
+          CHECK="[CI SKIP]"
+          if [[ $CHECK == *"${COMMIT_MESSAGE}"* ]]; then
+            exit 78
+          fi
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -282,6 +282,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: d482d19b7bdbf8fc3f35f8fd21f7f23c5d6ae3fe9ee482033a0aac9a0f3950bb
+hmac: 3fab3f418d04bcc336ae33bb0949526f1113ef698fd56b3d380e0e0d688c140f
 
 ...
