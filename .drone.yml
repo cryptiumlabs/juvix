@@ -14,8 +14,8 @@ steps:
     image: alpine:3.7 
     pull: if-not-exists
     commands:
-      - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
+      # - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
+      # - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -80,30 +80,6 @@ steps:
     depends_on:
       - test-suite
 
-  - name: code-formatting
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/run-formatter.sh
-    environment:
-      GITHUB_TOKEN:
-        from_secret: github_token        
-    depends_on:
-      - test-suite
-
-  - name: org-generation
-    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
-    pull: if-not-exists
-    failure: fast
-    commands:
-      - sh ./scripts/run-org-generation.sh
-    depends_on:
-      - test-suite
-    environment:
-      GITHUB_TOKEN:
-        from_secret: github_token
-
   - name: test-parser
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
@@ -130,6 +106,28 @@ steps:
       - make test-compile
     depends_on:
       - test-suite
+  
+  - name: Org generation and formatting
+    image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/format_and_org_gen.sh   
+    depends_on:
+      - test-typecheck
+      - test-compile
+      - test-parser
+
+  - name: push commit
+    image: appleboy/drone-git-push
+    settings:
+      branch: $${$DRONE_SOURCE_BRANCH}
+      remote: "https://$${GITHUB_TOKEN}@github.com:heliaxdev/juvix.git"
+      force: false
+      commit: true
+    environment:
+      GITHUB_TOKEN:
+        from_secret: github_token    
 
 volumes:
   - name: cache
@@ -155,8 +153,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
+      # - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
+      # - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -278,6 +276,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: c8397917680ccdcfcafcdb8f1f3cdb978d50908fb289b5f9bf29607a880cb8bf
+hmac: 3f5fad43015c3517c62155c4727319ce99b6ef4508edd9405deef9958a58b5a5
 
 ...
