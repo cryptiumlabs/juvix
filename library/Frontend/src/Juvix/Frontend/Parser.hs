@@ -28,13 +28,11 @@ import qualified Data.Set as Set
 import qualified Data.Text.Encoding as Encoding
 import Data.Word8 (isDigit)
 import qualified Juvix.Frontend.Types as Types
-import qualified Juvix.Frontend.Types.Base as Types
 import Juvix.Library hiding (guard, list, mod, product, sum)
 import Juvix.Library.Parser (Parser, ParserError, skipLiner, spaceLiner, spacer)
 import qualified Juvix.Library.Parser as J
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import qualified Text.Megaparsec.Char.Lexer as PC
 import Prelude (fail)
 
 --------------------------------------------------------------------------------

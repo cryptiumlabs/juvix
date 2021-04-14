@@ -36,6 +36,7 @@ toCore paths = do
         Right con -> pure $ Right con
 
 contextToCore ::
+  (Show primTy, Show primVal) =>
   Context.T Sexp.T Sexp.T Sexp.T ->
   P.Parameterisation primTy primVal ->
   Either (FF.Error primTy primVal) (FF.CoreDefs primTy primVal)

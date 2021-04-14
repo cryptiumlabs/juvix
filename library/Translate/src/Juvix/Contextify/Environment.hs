@@ -326,7 +326,7 @@ type' (assocName Sexp.:> args Sexp.:> dat) cont =
     pure $ assoc Sexp.:> args Sexp.:> d
   where
     grabBindings = nameStar args
-type' _ _ = error "malformed type"
+type' s _ = panic $ "malformed type: " <> show s
 
 -- | @openIn@ opens @mod@, adding the contents to the closure of
 -- @body@. Note that we first =resolve= what mod is by calling the

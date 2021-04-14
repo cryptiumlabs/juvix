@@ -15,6 +15,7 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
+import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this
@@ -128,6 +129,25 @@ declare (Sexp.List [inf, n, i]) ctx
               }
 declare _ _ = error "malformed declare"
 
+mkCtx :: Symbol -> [(Symbol, Sexp.T)] -> Context.T Sexp.T Sexp.T Sexp.T -> Context.Record Sexp.T Sexp.T Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T
+mkCtx name elmns ctx emptyRec = foldr addT ctx elmns
+  where
+    insertRecord (Sexp.Cons x xs) t 
+      | Just s <- eleToSymbol x = NameSpace.insertPublic s (Context.TypeDeclar xs) t 
+    insertRecord _ t = t
+    addT (constructor, element) accCtx
+      | Sexp.isAtomNamed (Sexp.car $ Sexp.car element) ":record-d",
+        Just els <- Sexp.toList (Sexp.groupBy2 (Sexp.cdr $ Sexp.car element))
+      -- For each of the record fields, insertPublic where key is the record field name and value is the record field type
+        = Context.add 
+            (NameSpace.Pub constructor) 
+            (Context.Record (emptyRec { 
+                Context.recordContents = foldr insertRecord NameSpace.empty els 
+            })) accCtx 
+      | otherwise = Context.add (NameSpace.Pub constructor) (Context.SumCon (Context.Sum Nothing name)) accCtx
+        
+
+
 -- | @type'@ will take its type and add it into the context. Note that
 -- since we store information with the type, we will keep the name in
 -- the top level form.
@@ -147,6 +167,24 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
               modsDefinedS = []
             }
 type' _ _ = error "malformed type"
+
+-- | @type'@ will take its type and add it into the context. Note that
+-- since we store information with the type, we will keep the name in
+-- the top level form.
+-- type' :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
+-- type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
+--   | Just name <- eleToSymbol (Sexp.car assocName) = do
+--     emptyRecord <- atomically Context.emptyRecord
+--     let elemns = splitByConstructor dat
+--         newCtx = mkCtx name elemns ctx emptyRecord
+--     pTraceShowM $ Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx
+--     pure $
+--           Type.PS
+--             { ctxS = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
+--               opensS = [],
+--               modsDefinedS = []
+--             }
+-- type' _ _ = error "malformed type"
 
 -- | @open@ like type will simply take the open and register that the
 -- current module is opening it. Since the context does not have such a
@@ -229,15 +267,24 @@ decideRecordOrDef xs _ _ pres ty =
       []
     )
 
+splitByConstructor :: Sexp.T -> [(Symbol, Sexp.T)]
+splitByConstructor dat
+  | Just s <- Sexp.toList dat =
+    case traverse (\c -> case eleToSymbol $ Sexp.car c of
+          Nothing -> Nothing 
+          Just constructor -> Just (constructor, Sexp.cdr c)) s of
+            Just xs -> xs
+            Nothing -> []
+  | otherwise = []
+
 collectConstructors :: Sexp.T -> [Symbol]
 collectConstructors dat
   | Just s <- Sexp.toList dat =
-    let foo = traverse (eleToSymbol . Sexp.car) s
-     in case foo of
+      case traverse (eleToSymbol . Sexp.car) s of
           Nothing -> []
-          Just xs ->
+          Just xs -> xs
             -- filter out the record constructors, which really aren't constructors
-            filter (\x -> x /= ":record-d" && x /= ":") xs
+            -- filter (\x -> x /= ":record-d" && x /= ":") xs
   | otherwise = []
 
 --------------------------------------------------------------------------------

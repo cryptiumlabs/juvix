@@ -3,6 +3,8 @@ mod Datatypes where
 open Prelude
 open Circuit
 
+sig field : ty
+let field = %Circuit.field
 
 sig (+) : field -> field -> field
 let (+) = %Circuit.add
@@ -21,12 +23,14 @@ sig (==) : field -> field -> bool
 let (==) = %Circuit.eq
 declare infixl (==) 2
 
--- type a = | Foo a |  Bar a
 
+type Bar : ty = | P field |  Q bool field
+-- type Point3 = field
+-- type Point2 = field
 
--- type Point3 = Po3 { x : field } --, y: field, z: field}
+-- type Point3 = Po3 { x : field, y : field } | Po4 { z : field } --, y: field, z: field}
 -- type Point2 = Po2 { x : field } --, y: field}
-type SomePoint = P3 Point3 | P2 Point2
+-- type SomePoint = P3 Point3 | P2 Point2
 
 -- sig norm : SomePoint -> field
 -- let norm sp = case sp of
