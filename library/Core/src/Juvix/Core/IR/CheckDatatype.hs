@@ -14,6 +14,8 @@ import Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
+import Juvix.Core.IR.Types (NoExt)
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 
 typeCheckConstructor ::
   ( HasThrow "typecheckError"
@@ -26,21 +28,24 @@ typeCheckConstructor ::
     Param.CanApply primTy,
     Param.CanApply (TypedPrim primTy primVal)
   ) =>
+  -- | The targeted parameterisation
   Param.Parameterisation primTy primVal ->
+  -- | The constructor name
   GlobalName ->
+  -- | Positivity of its parameters
   [IR.Pos] ->
   RawTelescope ext primTy primVal ->
+  -- | The term to be checked
   (IR.Name, IR.Term' ext primTy primVal) ->
   TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
 typeCheckConstructor param name pos tel (n, ty) = do
   sig <- get @"typeSigs" -- get signatures
   let (n, t) = teleToType tel ty
-      params = length tel
-  _ <- checkConType 0 [] [] params t
+      numberOfParams = length tel
+  -- _ <- checkConType 0 [] [] numberOfParams t
   let (_, target) = typeToTele (n, t)
   checkDeclared name tel target
   -- vt <- eval [] tt
-  -- sposConstructor name 0 pos vt -- strict positivity check
   -- put (addSig sig n (ConSig vt))
   return undefined --TODO return the list of globals
 
@@ -127,7 +132,14 @@ checkDataType _k _rho _gamma _p e =
 
 -- | checkConType check constructor type
 checkConType ::
-  (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
+  ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
+    Param.CanApply primTy,
+    Param.CanApply primVal,
+    Eval.CanEval extT extG primTy primVal,
+    Eq primTy,
+    Eq primVal,
+    CanTC' ext primTy primVal m
+   ) =>
   -- | the next fresh generic value.
   Int ->
   -- | an env that binds fresh generic values to variables.
@@ -136,10 +148,12 @@ checkConType ::
   Telescope extV extT primTy primVal ->
   -- | the length of the telescope, or the no. of parameters.
   Int ->
+  -- | a hashmap of global names and raw globals 
+  RawGlobals' NoExt primTy primVal ->
   -- | the expression that is left to be checked.
   IR.Term' ext primTy primVal ->
   m ()
-checkConType k rho gamma p e =
+checkConType k rho gamma p globals e =
   case e of
     Pi x t1 t2 _ -> do
       --TODO type check e (so that usage is checked)?
@@ -147,23 +161,21 @@ checkConType k rho gamma p e =
         then-- params were already checked by checkDataType
           return ()
         else-- check that arguments ∆ are star types
-        case Eval.evalTerm (lookupFun globals) t1 of --TODO name of e?
+        case Eval.evalTerm (Eval.rawLookupFun' globals) t1 of
           Right (VStar' _ _) -> return ()
           -- arguments can be a primitive type
           Right (VPrimTy' _ _) -> return ()
           -- if it's not star or prim type, then this constructor is not valid
           Right _ -> throwTC $ ConFnTypeError e t1
           -- if it can't evaluate, it's not valid
-          Left err -> --TODO put evaluator errors in typechecking errors?
-            "checkConType: error evaluating " 
-            <> show e
-            <> show err
+          Left err -> return ()-- TODO throwTC $ EvalError err
       -- v1 <- Eval.evalTerm (Eval.lookupFun globals ) t2
       checkConType
         (k + 1)
         rho --(updateGenEnv rho name k)
         gamma --(updateTel gamma x v1)
         p
+        globals
         t2
     -- the constructor's type is of type Star(the same type as the data type).
     _ -> case e of
