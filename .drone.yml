@@ -11,7 +11,7 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7 
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
       # - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
@@ -127,6 +127,8 @@ steps:
       remote: "git@github.com:heliaxdev/juvix.git"
       force: false
       commit: true
+      ssh_key:
+        from_secret: github_ssh
       commit_message: "[skip ci] format and org generation" 
       author_name: Drone CI
       author_email: gianmarco@heliax.dev
@@ -280,6 +282,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: b2d8deff23ebc035f60da4de49499a9f95efd8c907fbaddb5a85eb7b8f2fced2
+hmac: dadcc16238e023c7733f05e939429dc87616511c2b02a4879b4073baa5c958d7
 
 ...
