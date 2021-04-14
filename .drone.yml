@@ -19,7 +19,7 @@ steps:
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
       - echo $${DRONE_COMMIT_SHA}
-      - git show -s --format=%B $${DRONE_COMMIT_SHA}
+      # - git show -s --format=%B $${DRONE_COMMIT_SHA}
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -280,6 +280,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: dfbff981e18e8ccb343acc67562e0a6f7915030ac0f21a454cdabc86b3f47f0a
+hmac: b2d8deff23ebc035f60da4de49499a9f95efd8c907fbaddb5a85eb7b8f2fced2
 
 ...
