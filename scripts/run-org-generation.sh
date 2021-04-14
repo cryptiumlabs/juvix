@@ -8,6 +8,8 @@ git config user.name "Drone CI"
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
+git for-each-ref --format='%(refname:short)' refs/heads/
+
 if [ -z "$(git status doc/Code --porcelain)" ]; then
   exit 0
 else
