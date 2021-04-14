@@ -11,11 +11,11 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine:3.7 
     pull: if-not-exists
     commands:
-      - echo "99c681b1f91e5b67cfe4625977ace08e482f4277325e747cb4b71c65c7bddd52  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "7b334fbd4cacc5da82042dbc2ad3276b9ca2cf3c989e1be98e2657545ee495bf  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -88,7 +88,7 @@ steps:
       - sh ./scripts/run-formatter.sh
     environment:
       GITHUB_TOKEN:
-        from_secret: github_token
+        from_secret: github_token        
     depends_on:
       - test-suite
 
@@ -155,8 +155,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "99c681b1f91e5b67cfe4625977ace08e482f4277325e747cb4b71c65c7bddd52  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "7b334fbd4cacc5da82042dbc2ad3276b9ca2cf3c989e1be98e2657545ee495bf  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 407fa02990b577970c8c1cc84eb8b6388299699effa080f76a77b41264be306c
+hmac: c8397917680ccdcfcafcdb8f1f3cdb978d50908fb289b5f9bf29607a880cb8bf
 
 ...

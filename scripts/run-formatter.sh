@@ -13,6 +13,8 @@ if [ -z "$(git status src/ library/ test/ --untracked-files=no --porcelain)" ]; 
 else
   echo "Committing differences..."
   git remote set-url origin $PUSH_URL
+  git fetch --all
+  git checkout $DRONE_SOURCE_BRANCH
   git add -u
   git commit -m "run formatter [CI SKIP]"
   git push --verbose
