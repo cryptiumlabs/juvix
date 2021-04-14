@@ -7,8 +7,7 @@
 COMMIT_MESSAGE=$(git show -s --format=%B ${DRONE_COMMIT_SHA})
 CHECK="[CI SKIP]"
 
-echo $COMMIT_MESSAGE
-
 if [[ "$CHECK" == *"$COMMIT_MESSAGE"* ]]; then
+    echo "Skipping pipeline."
     exit 78
 fi
