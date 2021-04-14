@@ -88,7 +88,7 @@ steps:
       - sh ./scripts/run-formatter.sh
     environment:
       GITHUB_TOKEN:
-        from_secret: github_token
+        from_secret: github_token        
     depends_on:
       - test-suite
 
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 016ebf724203441c71b53ca138494ffe990e5a5b467b2256ab6dba7d29317c43
+hmac: 6d78b9799e7a4dcac73a7240dca53ffddde86130a3ebe96d0555a69e2453ce77
 
 ...
