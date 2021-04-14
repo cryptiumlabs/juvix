@@ -40,16 +40,16 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
-    depends_on:
-      - script-integrity-check
+    # depends_on:
+    #   - script-integrity-check
 
   - name: test-suite
     image: 922271945067.dkr.ecr.eu-west-1.amazonaws.com/juvix
     pull: if-not-exists
     commands:
       - make test
-    # depends_on:
-    #   - restore-cache
+    depends_on:
+      - restore-cache
 
   - name: rebuild-cache
     image: meltwater/drone-cache
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: c27707657ffe0ce49baf31a689b67f64bfa2b4c4ee3e98b0513f94cfc591b7e9
+hmac: 668ce9472c6427a3766b557619274256facb448db9173a893c2a6f619f4e9f54
 
 ...
