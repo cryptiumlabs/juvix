@@ -14,19 +14,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      # - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
-      # - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
-      - echo $${DRONE_COMMIT_SHA}
-      - COMMIT_MESSAGE=$(git show -s --format=%B $${DRONE_COMMIT_SHA})
-      - echo $COMMIT_MESSAGE
-      # check if CI SKIP is in commit message. If so, exit pipeline succesfully
-      - |-
-          CHECK="[CI SKIP]"
-          if [[ $CHECK == *"$${COMMIT_MESSAGE}"* ]]; then
-            exit 78
-          fi
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -157,13 +145,10 @@ environment:
 
 steps:
   - name: script-integrity-check
-    image: alpine:3.7
+    image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      # - echo "bbd7240242839ed5051ba48ebb3b2e66a4cdeb50945ff96e09c0869dc219ceef  scripts/run-formatter.sh" | sha256sum -c -
-      # - echo "a2cb891077e670ccf9546df3ad1e7629e9e8858680a281bc836abfcef414641a  scripts/run-org-generation.sh" | sha256sum -c -
-      - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
-      - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
+      - sh ./scripts/pre-run.sh
 
   - name: restore-cache
     image: meltwater/drone-cache
@@ -283,6 +268,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 5789f844b73d4d5a19092ffae25b35b0b2679232483709e3453601159e8a6403
+hmac: f6481f6c58398cfe022cd1e658c5d464c29243c6379c748d7ef458bdc75ce70c
 
 ...
