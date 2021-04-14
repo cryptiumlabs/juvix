@@ -1,5 +1,5 @@
 -- | Datatype declarations are typechecked here. Usages are passed along.
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes #-} -- TODO remove this
 module Juvix.Core.IR.CheckDatatype
   ( module Juvix.Core.IR.CheckDatatype,
   )
@@ -100,7 +100,7 @@ updateGenEnv genEnv name k = (name, k) : genEnv
 
 updateTel ::
   Telescope extV extT primTy primVal ->
-  Name ->
+  GlobalName ->
   Value' ext primTy primVal ->
   Telescope extV extT primTy primVal
 updateTel tel n v = undefined --(n, v) : tel
@@ -136,16 +136,10 @@ checkConType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
     Param.CanApply primVal,
-    Eval.CanEval extT extG primTy primVal,
+    Eval.CanEval extT NoExt primTy primVal,
     Eq primTy,
     Eq primVal,
-    CanTC' ext primTy primVal m,
-    Eval.HasPatSubst (OnlyExts.T ext) primTy primVal (TermX ext primTy primVal),
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
-    Eval.HasPatSubst (OnlyExts.T ext) primTy primVal (ElimX ext primTy primVal),
-    Eval.HasPatSubstTerm (OnlyExts.T ext) primTy primVal primTy,
-    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal, 
-    Eval.HasPatSubstTerm (OnlyExts.T ext) primTy primVal primVal
+    CanTC' extT primTy primVal m
   ) =>
   -- | the next fresh generic value.
   Int ->
@@ -156,27 +150,30 @@ checkConType ::
   -- | the length of the telescope, or the no. of parameters.
   Int ->
   -- | a hashmap of global names and raw globals 
-  RawGlobals' NoExt primTy primVal ->
+  Globals' NoExt extT primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Term' ext primTy primVal ->
+  IR.Term' extT primTy primVal ->
   m ()
 checkConType k rho gamma p globals e =
-  case e of
+  -- TODO type check e (so that usage is checked), 
+  -- the output of the typechecker will be annotated and
+  case e of -- do case of that here
     Pi x t1 t2 _ -> do
-      --TODO type check e (so that usage is checked)?
       if k < p
         then-- params were already checked by checkDataType
           return ()
         else-- check that arguments ∆ are star types
-        case Eval.evalTerm (Eval.rawLookupFun' globals) t1 of
-          Right (VStar' _ _) -> return ()
+        case Eval.evalTerm (Eval.lookupFun' globals) t1 of -- Look at annotations instead?
+          Right v1@(VStar' _ _) -> do
+            -- TODO give gen variables proper names
+            -- gamma' updateTel gamma "name" v1
+            return ()
           -- arguments can be a primitive type
           Right (VPrimTy' _ _) -> return ()
           -- if it's not star or prim type, then this constructor is not valid
           Right _ -> throwTC $ ConFnTypeError e t1
           -- if it can't evaluate, it's not valid
-          Left err -> return ()--throwTC $ EvalError err
-      -- v1 <- Eval.evalTerm (Eval.lookupFun globals ) t2
+          Left err -> throwTC $ EvalError err
       -- checkConType
       --   (k + 1)
       --   rho --(updateGenEnv rho name k)
@@ -185,7 +182,7 @@ checkConType k rho gamma p globals e =
       --   globals
       --   t2
     -- the constructor's type is of type Star(the same type as the data type).
-    _ -> case e of
+    _ -> case e of -- Look at annotations instead?
       Star' _ _ -> return ()
       _ -> throwTC $ ConTypeError e
 
