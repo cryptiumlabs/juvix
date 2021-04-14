@@ -20,10 +20,11 @@ steps:
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
       - echo $${DRONE_COMMIT_SHA}
       - COMMIT_MESSAGE=$(git show -s --format=%B $${DRONE_COMMIT_SHA})
+      - echo $COMMIT_MESSAGE
       # check if CI SKIP is in commit message. If so, exit pipeline succesfully
       - |-
           CHECK="[CI SKIP]"
-          if [[ $CHECK == *"${COMMIT_MESSAGE}"* ]]; then
+          if [[ $CHECK == *"$${COMMIT_MESSAGE}"* ]]; then
             exit 78
           fi
 
@@ -282,6 +283,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 3fab3f418d04bcc336ae33bb0949526f1113ef698fd56b3d380e0e0d688c140f
+hmac: 5789f844b73d4d5a19092ffae25b35b0b2679232483709e3453601159e8a6403
 
 ...
