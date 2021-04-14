@@ -127,10 +127,8 @@ steps:
       commit: true
       commit_message: "[skip ci] format and org generation"
       login: fraccaman
-      password: ${{GITHUB_TOKEN}}
-    environment:
-      GITHUB_TOKEN:
-        from_secret: github_token    
+      password:
+        from_secret: github_token  
     depends_on:
       - org-generation-and-code-formatting
 
@@ -281,6 +279,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 75c4e38b0d7247a92c1dd892edc2c27255c7ee7c33be8bbf747d01016ef905c9
+hmac: 2680a2e2bc625653ae1e056f0f57003286b558869436dd103ed67ec1699ca324
 
 ...
