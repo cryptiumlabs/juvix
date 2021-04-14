@@ -116,7 +116,7 @@ steps:
       - test-parser
 
   - name: push changes
-    image: alpine/git:v2.30.1
+    image: openanalytics/alpine-git-lfs-client
     pull: if-not-exists
     commands:
       - sh ./scripts/push-changes.sh
@@ -270,6 +270,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 5a35724f27bea2bda8bc66264c921fada50c31ad8ec21c6e021d81c1f086f1f2
+hmac: fac2caa0b0262a83c2d76f4d1c5350711c6c244287a7cac01ea08ef272d04482
 
 ...
