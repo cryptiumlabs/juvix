@@ -9,7 +9,7 @@ REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
 git --version
-# git branch --show-current
+echo $DRONE_SOURCE_BRANCH
 git symbolic-ref --short -q HEAD
 git status
 git remote -v
