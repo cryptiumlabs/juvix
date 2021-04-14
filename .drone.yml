@@ -109,7 +109,7 @@ steps:
     pull: if-not-exists
     failure: fast
     commands:
-      - sh ./scripts/format_and_org_gen.sh   
+      - sh ./scripts/format-and-org-gen.sh   
     depends_on:
       - test-typecheck
       - test-compile
@@ -270,6 +270,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: fac2caa0b0262a83c2d76f4d1c5350711c6c244287a7cac01ea08ef272d04482
+hmac: 443bc0b80f840f4a02ae3d260506a0baeb85b6a55e645448883632f1d4bbf1d6
 
 ...
