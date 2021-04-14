@@ -14,8 +14,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "99c681b1f91e5b67cfe4625977ace08e482f4277325e747cb4b71c65c7bddd52  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "7b334fbd4cacc5da82042dbc2ad3276b9ca2cf3c989e1be98e2657545ee495bf  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -88,7 +88,7 @@ steps:
       - sh ./scripts/run-formatter.sh
     environment:
       GITHUB_TOKEN:
-        from_secret: github_token
+        from_secret: github_token        
     depends_on:
       - test-suite
 
@@ -155,8 +155,8 @@ steps:
     image: alpine:3.7
     pull: if-not-exists
     commands:
-      - echo "99c681b1f91e5b67cfe4625977ace08e482f4277325e747cb4b71c65c7bddd52  scripts/run-formatter.sh" | sha256sum -c -
-      - echo "7b334fbd4cacc5da82042dbc2ad3276b9ca2cf3c989e1be98e2657545ee495bf  scripts/run-org-generation.sh" | sha256sum -c -
+      - echo "ce1abd0eadb263ccaaf8b1234b12f41fe2d744cd04c7ca53fc39aeb9ef2f5cdf  scripts/run-formatter.sh" | sha256sum -c -
+      - echo "9740e3e5e80dfe57a207ad84b8a83b5c92daeac3e47ca7bc15f2c50b23e5f895  scripts/run-org-generation.sh" | sha256sum -c -
       - echo "4438c2dfcd3aa0e4a3700fb5865c9b8e9bd208c38b1cb52b91b5393f56571a03  scripts/check-formatting.sh" | sha256sum -c -
       - echo "13f9fae7f558567336505324e4c54dabe978ba7441617854dd31d9f9e9c85c60  scripts/check-org-gen.sh" | sha256sum -c -
 
@@ -278,6 +278,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 407fa02990b577970c8c1cc84eb8b6388299699effa080f76a77b41264be306c
+hmac: 3bab2be925cfe9b24cd2fdf501790426eacc2ca104f2fbad5a51314b80fcd78b
 
 ...
