@@ -1,4 +1,5 @@
 -- | Datatype declarations are typechecked here. Usages are passed along.
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Juvix.Core.IR.CheckDatatype
   ( module Juvix.Core.IR.CheckDatatype,
   )
@@ -138,8 +139,14 @@ checkConType ::
     Eval.CanEval extT extG primTy primVal,
     Eq primTy,
     Eq primVal,
-    CanTC' ext primTy primVal m
-   ) =>
+    CanTC' ext primTy primVal m,
+    Eval.HasPatSubst (OnlyExts.T ext) primTy primVal (TermX ext primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primTy,
+    Eval.HasPatSubst (OnlyExts.T ext) primTy primVal (ElimX ext primTy primVal),
+    Eval.HasPatSubstTerm (OnlyExts.T ext) primTy primVal primTy,
+    Eval.HasPatSubstTerm (OnlyExts.T NoExt) primTy primVal primVal, 
+    Eval.HasPatSubstTerm (OnlyExts.T ext) primTy primVal primVal
+  ) =>
   -- | the next fresh generic value.
   Int ->
   -- | an env that binds fresh generic values to variables.
@@ -168,15 +175,15 @@ checkConType k rho gamma p globals e =
           -- if it's not star or prim type, then this constructor is not valid
           Right _ -> throwTC $ ConFnTypeError e t1
           -- if it can't evaluate, it's not valid
-          Left err -> return ()-- TODO throwTC $ EvalError err
+          Left err -> return ()--throwTC $ EvalError err
       -- v1 <- Eval.evalTerm (Eval.lookupFun globals ) t2
-      checkConType
-        (k + 1)
-        rho --(updateGenEnv rho name k)
-        gamma --(updateTel gamma x v1)
-        p
-        globals
-        t2
+      -- checkConType
+      --   (k + 1)
+      --   rho --(updateGenEnv rho name k)
+      --   gamma --(updateTel gamma x v1)
+      --   p
+      --   globals
+      --   t2
     -- the constructor's type is of type Star(the same type as the data type).
     _ -> case e of
       Star' _ _ -> return ()
