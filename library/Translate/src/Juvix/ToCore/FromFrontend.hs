@@ -20,7 +20,6 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Juvix.Library.Usage as Usage
 import Juvix.ToCore.Types
-import Prelude (error)
 
 type ReduceEff primTy primVal m =
   ( HasThrowFF primTy primVal m,

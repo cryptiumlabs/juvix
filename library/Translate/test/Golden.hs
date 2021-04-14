@@ -9,6 +9,7 @@ import Juvix.Frontend.Sexp (transTopLevel)
 import Juvix.Frontend.Types (TopLevel, extractTopLevel)
 import Juvix.Frontend.Types.Base (Header (NoHeader))
 import Juvix.Library
+import qualified Juvix.Library.Sexp as Sexp -- for making liquid happy
 import qualified Test.Tasty as T
 import qualified Test.Tasty.Silver.Advanced as T
 import Text.Pretty.Simple (pShowNoColor)

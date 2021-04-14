@@ -16,7 +16,7 @@ copyright:           "2020 Author name here"
 description:         Please see the README on GitHub at <https://github.com/githubuser/StandardLibrary#readme>
 
 dependencies:
-- base >= 4.11 && < 5
+# - base >= 4.11 && < 5
 - protolude
 - wl-pprint-text
 - containers
@@ -30,6 +30,8 @@ dependencies:
 - word8
 - bytestring
 - mtl
+- liquidhaskell
+- liquid-base
 
 default-extensions:
   - NoImplicitPrelude
@@ -49,6 +51,10 @@ ghc-options:
   - -j
   - -static
   - -fwrite-ide-info
+  - -fplugin=LiquidHaskell
+  - -fplugin-opt=LiquidHaskell:--prune-unsorted
+  - -fplugin-opt=LiquidHaskell:--no-termination
+  - -fplugin-opt=LiquidHaskell:--no-totality
 
 # TODO: Specify which packages are exported
 

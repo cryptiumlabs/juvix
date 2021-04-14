@@ -11,7 +11,17 @@ import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Prelude (Show (..), String)
 
--- TODO ∷ make Atom generic, and have it conform to an interface?
+-- Can't use length here for sad reasons
+{-@ measure lengthM @-}
+{-@ lengthM :: T -> Nat @-}
+lengthM :: T -> Int
+lengthM Atom {} = 0
+lengthM Nil = 0
+lengthM (Cons _ xs) = 1 + lengthM xs
+
+{-@ data T [lengthM] @-}
+
+-- TODO ∷ make Atom generic, and have it conform to an interfac?
 -- This way we can erase information later!
 data T
   = Atom Atom

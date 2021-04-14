@@ -12,7 +12,6 @@ import qualified Michelson.Untyped.Contract as Contract
 import qualified Michelson.Untyped.Ext as Ext
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Value as Value
-import Prelude (error)
 
 -- | 'toNewPrim' removes the implicit Instr.PrimEx from the instruction
 -- and adds Inst over it, making it a new primitive. useful for making tests

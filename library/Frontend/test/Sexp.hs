@@ -7,7 +7,7 @@ import Juvix.Library hiding (head)
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (error, head)
+import Prelude (head)
 
 --------------------------------------------------------------------------------
 -- Exported top level test
@@ -398,9 +398,14 @@ caseTest =
 -- Helpers
 --------------------------------------------------------------------------------
 
+{-@ ignore singleEleErr  @-}
 singleEleErr :: Functor f => f (Types.Header Types.TopLevel) -> f Sexp.T
 singleEleErr = fmap (Trans.transTopLevel . head . noHeaderErr)
 
+{-@ type NonEmpty a = { xs : [a] | length xs > 0 } @-}
+
+-- the signature here gives us a random error
+-- {-@ noHeaderErr :: Types.Header topLevel -> NonEmpty topLevel @-}
 noHeaderErr :: Types.Header topLevel -> [topLevel]
 noHeaderErr (Types.NoHeader xs) = xs
 noHeaderErr _ = error "imporper form"

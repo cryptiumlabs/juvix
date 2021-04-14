@@ -28,7 +28,6 @@ import qualified Juvix.Library.Usage as Usage
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as MT
 import qualified Michelson.Untyped.Value as V
-import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- Main Functionality

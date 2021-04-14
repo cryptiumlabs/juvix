@@ -13,7 +13,6 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (error)
 
 top :: T.TestTree
 top =

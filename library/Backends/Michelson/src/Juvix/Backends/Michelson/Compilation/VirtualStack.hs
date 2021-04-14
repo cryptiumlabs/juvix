@@ -28,7 +28,6 @@ import qualified Michelson.Untyped as Untyped
 import qualified Michelson.Untyped.Instr as Instr
 import qualified Michelson.Untyped.Type as T
 import qualified Michelson.Untyped.Value as V
-import Prelude (error)
 
 -- TODO ∷ consolidate the various recursions into a generic combinator
 

@@ -20,9 +20,11 @@ import qualified Juvix.Core.Common.Context as Context
 import Juvix.Core.Common.Context.Traverse.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.FreeVars as FV
+-- Liquid throws a fit if this isn't here
 import Juvix.Library
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Sexp as Sexp
 
 -- | Traverses a whole context by performing an action on each recursive group.
 -- The groups are passed in dependency order but the order of elements within

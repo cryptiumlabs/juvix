@@ -23,7 +23,6 @@ import Juvix.Encoding.Encoding
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)
 import qualified Juvix.Library.HashMap as Map
-import Prelude (error)
 
 -- TODO ∷ Properly setup a function transfrom to make it self terminate
 

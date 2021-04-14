@@ -86,6 +86,7 @@ data Error primTy primVal
   deriving (Eq, Generic)
 
 instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
+  {-@ ignore show @-}
   show = \case
     ConstraintsUnimplemented x cons ->
       "Definition " <> show x <> " has constraints\n"

@@ -23,15 +23,17 @@ module Juvix.Library.Sexp
     cadr,
     foldSearchPred,
     unGroupBy2,
+    listStarAcc,
+    append,
   )
 where
 
-import Juvix.Library hiding (foldr, list, show, toList)
-import qualified Juvix.Library as Std
+import Juvix.Library hiding (foldr, length, list, show, toList)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Sexp.Parser
 import Juvix.Library.Sexp.Types
-import Prelude (error)
+
+{-@ LIQUID "--full" @-}
 
 -- | @foldSearchPred@ is like foldPred with some notable exceptions.
 -- 1. Instead of recusing on the @predChange@ form, it will just leave
@@ -131,11 +133,35 @@ last (Cons _ xs) = last xs
 last (Atom a) = Atom a
 last Nil = Nil
 
-list :: Foldable t => t T -> T
-list = Std.foldr Cons Nil
+{-@ list :: xs : [T] -> {v : T | lengthM v == len xs } @-}
+list :: [T] -> T
+list (x : xs) = Cons x (list xs)
+list [] = Nil
+
+-- TODO ∷ get a good refinement measurement on this
+-- {-@ listStar ::
+--  xs : [T]
+--  -> { v : T |
+--       ((NonNull xs) => lengthM v == listStarAcc (butLastList xs) (lastList xs))
+--    }
+-- @-}
+-- listStar :: [T] -> T
+-- listStar xs =
+--   listStarAcc (butLastList xs) (lastList xs)
 
 listStar :: [T] -> T
 listStar = fromMaybe Nil . foldr1May Cons
+
+{-@ listStarAcc
+  :: xs : [T]
+  -> acc : T
+  -> { v : T |
+       lengthM v == lengthL xs + lengthM acc
+    }
+@-}
+listStarAcc :: [T] -> T -> T
+listStarAcc (x : xs) acc = Cons x (listStarAcc xs acc)
+listStarAcc [] acc = acc
 
 addMetaToCar :: Atom -> T -> T
 addMetaToCar (A _ lineInfo) (Cons (Atom (A term _)) xs) =
@@ -173,6 +199,14 @@ nameFromT :: T -> Maybe NameSymbol.T
 nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
+-- Ill terminated lists do not work
+-- TODO ∷ specify it out of this somehow
+{-@ append :: xs : T -> ys : T -> {zs : T | lengthM zs == lengthM ys + lengthM xs } @-}
+append :: T -> T -> T
+append Nil ys = ys
+append (Cons x xs) ys = Cons x (append xs ys)
+append (Atom {}) ys = ys
+
 assoc :: T -> T -> Maybe T
 assoc t (car' :> cdr')
   | t == car car' = Just (cadr car')
@@ -191,3 +225,11 @@ unGroupBy2 (List [a1, a2] :> rest) =
 unGroupBy2 (a :> rest) =
   a :> unGroupBy2 rest
 unGroupBy2 a = a
+
+{-@ alistTest :: {x : T | lengthM x == 2 } @-}
+alistTest :: T
+alistTest = listStarAcc [atom "fi", number 3] (list [])
+
+-- {-@ alistTest2 :: {x : T | lengthM x == 2 } @-}
+alistTest2 :: T
+alistTest2 = listStar [atom "fi", number 3, list []]

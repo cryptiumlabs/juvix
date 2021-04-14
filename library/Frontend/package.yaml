@@ -25,7 +25,7 @@ default-extensions:
   - NoMonomorphismRestriction
 
 dependencies:
-- base >= 4.7 && < 5
+# - base >= 4.7 && < 5
 - standard-library
 - capability >= 0.2.0.0
 - lens
@@ -40,6 +40,8 @@ dependencies:
 - parser-combinators
 - filepath
 - word8
+- liquidhaskell
+- liquid-base
 
 library:
   source-dirs: src
@@ -53,6 +55,11 @@ ghc-options:
   - -j
   - -static
   - -fwrite-ide-info
+  - -fplugin=LiquidHaskell
+  - -fplugin-opt=LiquidHaskell:--prune-unsorted
+  - -fplugin-opt=LiquidHaskell:--no-termination
+  - -fplugin-opt=LiquidHaskell:--no-totality
+  - -fplugin-opt=LiquidHaskell:--max-case-expand=0
 
 when:
   condition: flag(incomplete-error)

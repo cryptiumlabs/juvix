@@ -1,6 +1,7 @@
 module Main where
 
 import Juvix.Library
+import qualified Juvix.Library.Sexp.Types (Atom, lengthM) -- we may not use it, but it makes liquid happy
 import qualified NameSymb
 import qualified Sexp
 import qualified Sexp.Parser

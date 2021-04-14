@@ -238,6 +238,34 @@ packages:
     name: tezos-bake-monitor-lib
     commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
 - original:
+    hackage: liquid-base-4.14.1.0@sha256:5df5cf52b893238e243b48ee647389caa81fbb838c9de26691ded4a3f091c5a3,9066
+  completed:
+    pantry-tree:
+      sha256: f5d02ebd3d54536d8fe1074fc727bcd64de2b1666936a70e57c534576d9ff4f2
+      size: 14924
+    hackage: liquid-base-4.14.1.0@sha256:5df5cf52b893238e243b48ee647389caa81fbb838c9de26691ded4a3f091c5a3,9066
+- original:
+    hackage: liquidhaskell-0.8.10.2@sha256:fc79e92fc4de0aec47965e457915ef7a5be9fd1d3ec1d3a681a9909f5286bf8f,15777
+  completed:
+    pantry-tree:
+      sha256: c8bb733484e14ae2ca10a4cb726701f52258e170b246d5f378cbc642bc1d0082
+      size: 69560
+    hackage: liquidhaskell-0.8.10.2@sha256:fc79e92fc4de0aec47965e457915ef7a5be9fd1d3ec1d3a681a9909f5286bf8f,15777
+- original:
+    hackage: Diff-0.3.4@sha256:5ab20a407f9e65d13b642c3cd414906a40280343a31b388f6ed69b9228fe42c1,1127
+  completed:
+    pantry-tree:
+      sha256: 48d1b942ff99293d69a8ca4ea60f372093e5aeea73f63d11829ceca01d63c7fd
+      size: 416
+    hackage: Diff-0.3.4@sha256:5ab20a407f9e65d13b642c3cd414906a40280343a31b388f6ed69b9228fe42c1,1127
+- original:
+    hackage: liquid-ghc-prim-0.6.1@sha256:83ef2d8fb705f31f269ce2b3e05af4333fb77c7083d3a56c25032dffd6dfd7b7,1766
+  completed:
+    pantry-tree:
+      sha256: b8b0bde3cc45e2e7f3517f24aa8a96e224bfb5cab08df4259cf2a597d9748104
+      size: 858
+    hackage: liquid-ghc-prim-0.6.1@sha256:83ef2d8fb705f31f269ce2b3e05af4333fb77c7083d3a56c25032dffd6dfd7b7,1766
+- original:
     git: https://github.com/serokell/galois-field.git
     commit: 576ba98ec947370835a1f308895037c7aa7f8b71
   completed:

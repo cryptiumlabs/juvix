@@ -4,7 +4,6 @@
 module Juvix.Contextify.InfixPrecedence.ShuntYard where
 
 import Juvix.Library hiding (Associativity, div)
-import Prelude (error)
 
 data Associativity
   = Left'

@@ -20,7 +20,6 @@ import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified StmContainers.Map as STM
-import Prelude (error)
 
 --------------------------------------------------------------------------------
 -- In lieu of not being able to export namespaces

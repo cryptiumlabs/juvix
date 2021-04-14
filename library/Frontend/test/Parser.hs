@@ -12,7 +12,6 @@ import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
 import qualified Text.Megaparsec as P
 import qualified Text.Megaparsec.Byte as P
-import Prelude (String, error)
 
 allParserTests :: T.TestTree
 allParserTests =

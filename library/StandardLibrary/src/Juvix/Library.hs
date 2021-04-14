@@ -52,6 +52,11 @@ module Juvix.Library
     StateField,
     ReaderField,
     WriterField,
+    Juvix.Library.error,
+    -- should probably move this to refinement library
+    lengthL,
+    lastList,
+    butLastList,
   )
 where
 
@@ -97,6 +102,16 @@ import Protolude hiding
     (:.:),
   )
 import Prelude (Show (..), String, error)
+import qualified Prelude
+
+{-@ fromJusts :: {v:Maybe a | (isJust v)} -> a @-}
+fromJusts :: Maybe a -> a
+fromJusts (Just a) = a
+
+{-@ ignore error @-}
+{-@ error :: String -> a @-}
+error :: String -> a
+error = Prelude.error
 
 (∨) :: Bool -> Bool -> Bool
 (∨) = (||)
@@ -125,7 +140,7 @@ infixl 1 |>
 
 undefined :: HasCallStack => a
 undefined =
-  Prelude.error $ "undefined\n" ++ prettyCallStack callStack
+  Juvix.Library.error $ "undefined\n" ++ prettyCallStack callStack
 
 traverseM ::
   (Monad m, Traversable m, Applicative f) =>
@@ -169,6 +184,7 @@ unixTime = fromRational . realToFrac |<< getPOSIXTime
 newtype Flip p a b = Flip {runFlip :: p b a}
   deriving (Show, Generic, Eq, Ord, Typeable)
 
+{-@ ignore untilNothingNTimesM @-}
 untilNothingNTimesM :: (Num t, Ord t, Enum t, Monad f) => f Bool -> t -> f ()
 untilNothingNTimesM f n
   | n <= 0 = pure ()
@@ -177,6 +193,7 @@ untilNothingNTimesM f n
       True -> untilNothingNTimesM f (pred n)
       False -> pure ()
 
+{-@ ignore untilNothing @-}
 untilNothing :: (t -> Maybe t) -> t -> t
 untilNothing f a = case f a of
   Nothing -> a
@@ -209,6 +226,12 @@ dup x = (x, x)
 lengthN :: Foldable f => f a -> Natural
 lengthN = foldl' (\n _ -> n + 1) 0
 
+{-@ measure lengthL @-}
+{-@ lengthL :: [a] -> Nat @-}
+lengthL :: [a] -> Int
+lengthL (_x : xs) = 1 + lengthL xs
+lengthL [] = 0
+
 -- | Select a field in a state monad, for example:
 --
 -- @
@@ -223,3 +246,18 @@ type ReaderField fld m = ReadStatePure (StateField fld m)
 
 -- | Writer version of 'StateField'.
 type WriterField fld m = WriterLog (StateField fld m)
+
+{-@ predicate NonNull X = ((len X) > 0) @-}
+
+-- measure here is broken
+-- {-@ measure lastList @-}
+{-@ lastList :: {v : [a] | (NonNull v)} -> a @-}
+lastList :: [p] -> p
+lastList (x : []) = x
+lastList (_ : xs) = lastList xs
+
+-- {-@ measure butLastList @-}
+{-@ butLastList :: {x : [a] | (NonNull x)} -> [a] @-}
+butLastList :: [p] -> [p]
+butLastList (x : []) = []
+butLastList (x : xs) = x : butLastList xs

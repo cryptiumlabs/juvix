@@ -6,7 +6,8 @@ import qualified Contextualise.Contextify
 import Contextualise.Infix.ShuntYard (allInfixTests)
 import qualified Desugar.Sexp as Sexp
 import Golden (contractFiles)
-import Juvix.Library (IO)
+import Juvix.Library
+import qualified Juvix.Library.Sexp as Sexp -- for making liquid happy
 import qualified Test.Tasty as T
 
 frontEndTests :: T.TestTree

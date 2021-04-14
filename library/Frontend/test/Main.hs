@@ -1,6 +1,6 @@
 module Main where
 
-import Juvix.Library (IO)
+import Juvix.Library
 import Parser (allParserTests)
 import qualified Sexp
 import qualified Test.Tasty as T

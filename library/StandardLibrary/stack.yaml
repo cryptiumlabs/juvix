@@ -5,3 +5,18 @@ packages:
 
 extra-deps:
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
+
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
+
+- tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+
+
+################################################################################
+# Depenencies for Liquid Haskell
+################################################################################
+
+- liquid-base-4.14.1.0@sha256:5df5cf52b893238e243b48ee647389caa81fbb838c9de26691ded4a3f091c5a3,9066
+- liquidhaskell-0.8.10.2@sha256:fc79e92fc4de0aec47965e457915ef7a5be9fd1d3ec1d3a681a9909f5286bf8f,15777
+- Diff-0.3.4@sha256:5ab20a407f9e65d13b642c3cd414906a40280343a31b388f6ed69b9228fe42c1,1127
+- liquid-ghc-prim-0.6.1@sha256:83ef2d8fb705f31f269ce2b3e05af4333fb77c7083d3a56c25032dffd6dfd7b7,1766

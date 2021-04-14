@@ -14,7 +14,6 @@ import Juvix.Encoding.Encoding
 import Juvix.Encoding.Types
 import Juvix.Library hiding (Product, Sum)
 import qualified Juvix.Library.HashMap as Map
-import Prelude (error)
 
 adtToScott ::
   ( HasState "constructors" (Map.T Symbol Bound) m,

@@ -28,7 +28,6 @@ import qualified Juvix.Core.Common.NameSpace as NameSpace
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
-import Prelude (error)
 
 data ErrorS
   = CantResolve [Sexp.T]
