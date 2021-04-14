@@ -18,7 +18,7 @@ git status
 
 git remote set-url origin $PUSH_URL
 
-git add -u
+git add -A
 git commit -m "[SKIP CI] changes from CI"
 
 git remote -v
