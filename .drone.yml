@@ -119,7 +119,7 @@ steps:
     image: alpine/git:v2.30.1
     pull: if-not-exists
     commands:
-      - sh ./scripts/format_and_org_gen.sh
+      - sh ./scripts/push-changes.sh
     environment:
       GITHUB_TOKEN:
         from_secret: github_token
@@ -270,6 +270,6 @@ trigger:
     - develop
 ---
 kind: signature
-hmac: 5dd88c30fb8a0aaaeb8d5f7513530732f417ac7d571032c1278ac8e97c3ee1ab
+hmac: 5a35724f27bea2bda8bc66264c921fada50c31ad8ec21c6e021d81c1f086f1f2
 
 ...
