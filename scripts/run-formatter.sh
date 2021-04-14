@@ -8,7 +8,9 @@ git config user.name "Drone CI"
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
-git branch --show-current
+git --version
+# git branch --show-current
+git symbolic-ref --short -q HEAD
 git status
 git remote -v
 
