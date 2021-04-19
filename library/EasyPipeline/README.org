@@ -1,0 +1,19 @@
+* EasyPipeline
+
+This library serves as an easy way to get down to any phase of the
+compiler. Since this library relies on all other parts of the compiler
+any code that is being written will be updated in this package, and
+thus starting the =EasyPipeline= REPL should allow one to test out any
+modifications they need quickly.
+
+The [[file:src/Easy.hs][Easy]] file imports every phase of the compiler and:
+
+1. Writes a pass down to the start of any given phase
+   - This includes files and inline code examples
+2. Gives examples for each phase
+
+The [[file:src/Easy.hs][Easy]] file is the main file for this.
+
+In the future there will be modules dedicated to various parts of any
+particular one pass to make life easier.
+
