@@ -1,5 +1,7 @@
+-- TODO remove this
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 -- | Datatype declarations are typechecked here. Usages are passed along.
-{-# LANGUAGE AllowAmbiguousTypes #-} -- TODO remove this
 module Juvix.Core.IR.CheckDatatype
   ( module Juvix.Core.IR.CheckDatatype,
   )
@@ -9,17 +11,18 @@ import Juvix.Core.IR.CheckTerm
 import qualified Juvix.Core.IR.Evaluator as Eval
 -- import SPos ( sposConstructor )
 
+import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import Juvix.Core.IR.Typechecker.Types as Typed
+import Juvix.Core.IR.Types (NoExt, pattern VStar)
 import Juvix.Core.IR.Types.Base as IR
 import Juvix.Core.IR.Types.Globals as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
 import qualified Juvix.Library.Usage as Usage
-import Juvix.Core.IR.Types (NoExt, pattern VStar)
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 
 typeCheckConstructor ::
-  ( HasThrow "typecheckError"
+  ( HasThrow
+      "typecheckError"
       (TypecheckError' extV0 ext primTy primVal)
       (TypeCheck ext primTy primVal m),
     HasState "typeSigs" s m,
@@ -134,7 +137,7 @@ checkDataType _k _rho _gamma _p e =
 -- | checkConType check constructor type
 -- The constructor is either of type Star 0 or Pi. I.e.,
 -- the constructor may not have an argument so it's of type Star 0,
--- or it has one or more arguments, and it's of type Pi 
+-- or it has one or more arguments, and it's of type Pi
 checkConType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -145,7 +148,10 @@ checkConType ::
     Eq primTy,
     Eq primVal,
     CanTC' extT primTy primVal m,
-    Param.CanApply (TypedPrim primTy primVal), HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m, HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m) =>
+    Param.CanApply (TypedPrim primTy primVal),
+    HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m,
+    HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m
+  ) =>
   -- | the next fresh generic value.
   Int ->
   -- | an env that binds fresh generic values to variables.
@@ -164,25 +170,25 @@ checkConType k rho gamma p param globals e =
   case e of
     Pi _ t1 t2 _ -> do
       if k < p
-        then-- params were already checked by checkDataType
+        then -- params were already checked by checkDataType
           return ()
-        else-- check that arguments ∆ are star types
-          do
+        else -- check that arguments ∆ are star types
+        do
           _ <- typeTerm param t1 (Annotation mempty (VStar 0))
           return ()
-      -- TODO evaluate t1 (with globals) and add to gamma
-      -- case Eval.evalTerm (Eval.lookupFun' globals) t1 of
-      --  Right v1 ->
-      --     -- recurse with updated envs
-      --     checkConType
-      --     (k + 1)
-      --     rho --(updateGenEnv rho name k)
-      --     gamma --(updateTel gamma x v1)
-      --     p
-      --     param
-      --     globals -- TODO add VGen type and update globals
-      --     t2
-      --  Left err -> return () --TODO throwTC $ EvalError err
+    -- TODO evaluate t1 (with globals) and add to gamma
+    -- case Eval.evalTerm (Eval.lookupFun' globals) t1 of
+    --  Right v1 ->
+    --     -- recurse with updated envs
+    --     checkConType
+    --     (k + 1)
+    --     rho --(updateGenEnv rho name k)
+    --     gamma --(updateTel gamma x v1)
+    --     p
+    --     param
+    --     globals -- TODO add VGen type and update globals
+    --     t2
+    --  Left err -> return () --TODO throwTC $ EvalError err
     -- if the constructor is not of function type
     -- then it has to be of type Star(the same type as the data type).
     _ -> case e of
