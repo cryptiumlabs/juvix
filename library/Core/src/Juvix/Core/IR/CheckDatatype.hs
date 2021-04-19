@@ -170,23 +170,24 @@ checkConType k gamma p param globals e =
       if k < p
         then -- params were already checked by checkDataType
           return ()
-        else-- check that arguments ∆ are star types
-          do -- TODO arguments can be PrimTy, confirm/make sure PrimTys successfully
+        else -- check that arguments ∆ are star types
+        do
+          -- TODO arguments can be PrimTy, confirm/make sure PrimTys successfully
           -- typeTerm with (Annotation mempty (VStar 0))
           _ <- typeTerm param t1 (Annotation mempty (VStar 0))
           return ()
-      -- TODO evaluate t1 (with globals) and add to gamma
-      -- case Eval.evalTerm (Eval.lookupFun' globals) t1 of
-      --  Right v1 ->
-      --     -- recurse with updated envs
-      --     checkConType
-      --     (k + 1)
-      --     gamma --(updateTel gamma x v1)
-      --     p
-      --     param
-      --     globals -- TODO add update globals, absName = show k <> name of e, usage = usage
-      --     t2
-      --  Left err -> return () --TODO throwTC $ EvalError err
+    -- TODO evaluate t1 (with globals) and add to gamma
+    -- case Eval.evalTerm (Eval.lookupFun' globals) t1 of
+    --  Right v1 ->
+    --     -- recurse with updated envs
+    --     checkConType
+    --     (k + 1)
+    --     gamma --(updateTel gamma x v1)
+    --     p
+    --     param
+    --     globals -- TODO add update globals, absName = show k <> name of e, usage = usage
+    --     t2
+    --  Left err -> return () --TODO throwTC $ EvalError err
     -- if the constructor is not of function type
     -- then it has to be of type Star(the same type as the data type).
     _ -> case e of
