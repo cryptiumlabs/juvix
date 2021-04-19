@@ -148,8 +148,6 @@ checkConType ::
     Param.CanApply (TypedPrim primTy primVal), HasThrow "typecheckError" (TypecheckError' extV extT primTy primVal) m, HasThrow "typecheckError" (TypecheckError' extV NoExt primTy primVal) m) =>
   -- | the next fresh generic value.
   Int ->
-  -- | an env that binds fresh generic values to variables.
-  GenEnv ->
   -- | an env that binds the type value corresponding to these generic values.
   Telescope extV extT primTy primVal ->
   -- | the length of the telescope, or the no. of parameters.
@@ -160,14 +158,15 @@ checkConType ::
   -- | the expression that is left to be checked.
   IR.Term' extT primTy primVal ->
   m ()
-checkConType k rho gamma p param globals e =
+checkConType k gamma p param globals e =
   case e of
-    Pi _ t1 t2 _ -> do
+    Pi usage t1 t2 _ -> do
       if k < p
         then-- params were already checked by checkDataType
           return ()
         else-- check that arguments ∆ are star types
-          do
+          do -- TODO arguments can be PrimTy, confirm/make sure PrimTys successfully
+          -- typeTerm with (Annotation mempty (VStar 0))
           _ <- typeTerm param t1 (Annotation mempty (VStar 0))
           return ()
       -- TODO evaluate t1 (with globals) and add to gamma
@@ -176,11 +175,10 @@ checkConType k rho gamma p param globals e =
       --     -- recurse with updated envs
       --     checkConType
       --     (k + 1)
-      --     rho --(updateGenEnv rho name k)
       --     gamma --(updateTel gamma x v1)
       --     p
       --     param
-      --     globals -- TODO add VGen type and update globals
+      --     globals -- TODO add update globals, absName = show k <> name of e, usage = usage
       --     t2
       --  Left err -> return () --TODO throwTC $ EvalError err
     -- if the constructor is not of function type
