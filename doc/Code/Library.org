@@ -671,11 +671,12 @@ temporary lexical bindings as our code encounters binders.
   + [[IR/Types]]
   + [[Library]]
 ****** CheckDatatype
-Datatype declarations are typechecked here. Usages are passed along.
 - _Relies on_
   + [[CheckTerm]]
   + [[IR/Evaluator]]
+  + [[OnlyExts]]
   + [[Typechecker/Types]]
+  + [[IR/Types]]
   + [[IR/Types/Base]]
   + [[Globals]]
   + [[Core/Parameterisation]]
