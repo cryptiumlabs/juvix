@@ -76,36 +76,37 @@ reduce = do
       both <- isBothPrimary n
       if not both
         then pure isChanged
-        else langToProperPort n >>= \case
-          Nothing -> pure isChanged
-          Just port ->
-            -- The main port we are looking at
-            case port of
-              Construct Free _ _ -> pure isChanged
-              Duplicate Free _ _ -> pure isChanged
-              Erase Free -> pure isChanged
-              con@(Construct (Primary node) _ _) ->
-                True
-                  <$ ( langToProperPort node >>= \case
-                         Nothing ->
-                           error "nodes are undirected, precondition violated!"
-                         Just d@Duplicate {} -> conDup n node con d
-                         Just Erase {} -> erase n node con
-                         Just c@Construct {} -> annihilate n node con c
-                     )
-              dup@(Duplicate (Primary node) _ _) ->
-                True
-                  <$ ( langToProperPort node >>= \case
-                         Nothing ->
-                           error "nodes are undirected, precondition violated!"
-                         Just d@Duplicate {} -> annihilate n node dup d
-                         Just Erase {} -> erase n node dup
-                         Just c@Construct {} -> conDup node n c dup
-                     )
-              Erase (Primary node) ->
-                langToProperPort node >>= \case
-                  Nothing -> error "nodes are undirected, precondition violated!"
-                  Just x -> True <$ erase node n x
+        else
+          langToProperPort n >>= \case
+            Nothing -> pure isChanged
+            Just port ->
+              -- The main port we are looking at
+              case port of
+                Construct Free _ _ -> pure isChanged
+                Duplicate Free _ _ -> pure isChanged
+                Erase Free -> pure isChanged
+                con@(Construct (Primary node) _ _) ->
+                  True
+                    <$ ( langToProperPort node >>= \case
+                           Nothing ->
+                             error "nodes are undirected, precondition violated!"
+                           Just d@Duplicate {} -> conDup n node con d
+                           Just Erase {} -> erase n node con
+                           Just c@Construct {} -> annihilate n node con c
+                       )
+                dup@(Duplicate (Primary node) _ _) ->
+                  True
+                    <$ ( langToProperPort node >>= \case
+                           Nothing ->
+                             error "nodes are undirected, precondition violated!"
+                           Just d@Duplicate {} -> annihilate n node dup d
+                           Just Erase {} -> erase n node dup
+                           Just c@Construct {} -> conDup node n c dup
+                       )
+                Erase (Primary node) ->
+                  langToProperPort node >>= \case
+                    Nothing -> error "nodes are undirected, precondition violated!"
+                    Just x -> True <$ erase node n x
 
 -- | Deals with the case when two nodes annihilate each other
 annihilate ::

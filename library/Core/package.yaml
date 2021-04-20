@@ -26,6 +26,7 @@ dependencies:
 - stm-containers
 - lens
 - dlist
+- pretty-simple
 
 default-extensions:
   - NoImplicitPrelude

@@ -31,11 +31,10 @@ import Juvix.Library hiding (show)
 import qualified Juvix.Library.Usage as Usage
 import Prelude (Show (..))
 
-data Annotation' ext primTy primVal
-  = Annotation
-      { annUsage :: Usage.T,
-        annType :: IR.Value' ext primTy primVal
-      }
+data Annotation' ext primTy primVal = Annotation
+  { annUsage :: Usage.T,
+    annType :: IR.Value' ext primTy primVal
+  }
   deriving (Generic)
 
 type Annotation = Annotation' IR.NoExt
@@ -50,10 +49,9 @@ deriving instance
 
 data T
 
-data BindAnnotation' ext primTy primVal
-  = BindAnnotation
-      { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
-      }
+data BindAnnotation' ext primTy primVal = BindAnnotation
+  { baBindAnn, baResAnn :: {-# UNPACK #-} !(Annotation' ext primTy primVal)
+  }
   deriving (Generic)
 
 deriving instance

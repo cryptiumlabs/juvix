@@ -1,4 +1,4 @@
-resolver:  lts-15.16
+resolver:  lts-17.3
 
 packages:
 - .
@@ -16,7 +16,7 @@ packages:
 extra-deps:
 # - llvm-hs-9.0.1
 # - llvm-hs-pure-9.0.0
-- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
 - derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 - fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
@@ -29,7 +29,6 @@ extra-deps:
 - unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682
 - base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
 - named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
-- vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
 - tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
 - github: seereason/sr-extra
   commit: d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f
@@ -37,6 +36,11 @@ extra-deps:
   commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
 - github: heliaxdev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
+
+- tasty-1.4.1@sha256:69e90e965543faf0fc2c8e486d6c1d8cf81fd108e2c4541234c41490f392f94f,2638
+
+- github: phile314/tasty-silver
+  commit: f1f90ac3113cd445e2a7ade43ebb29f0db38ab9b
 
 ################################################################################
 # arithmetic circuits deps
@@ -46,12 +50,6 @@ extra-deps:
 # - galois-fft-0.1.0@sha256:6a1e1e255c236b521379435ba528bbb5bc2a159c3ebb7fb960090cd5cf950b20,2409
 # - bulletproofs-1.1.0@sha256:eebdf3963372e40675fd501f3f3cc6f553d3925965ce38a112998a321cc7f6f2,5395
 
-- github: adjoint-io/pairing
-  commit: 2ef8ba869608432f55e32afc385b7fa75d4d1742
-- github: adjoint-io/elliptic-curve
-  commit: 52b7eba38db0b3aa3619f2916c518f8f3ee63aaf
-- github: adjoint-io/galois-field
-  commit: 95fc86b61c573518ff6a1ab1b9f23301482b2577
 - github: adjoint-io/sonic
   commit: 77ea8e7cc5033e878cdb98faa25d9ba7d9fdcb3d
 
@@ -59,18 +57,33 @@ extra-deps:
 # morley deps
 ################################################################################
 
-- morley-1.13.0
-- morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+- git: https://gitlab.com/morley-framework/morley.git
+  commit: 53961f48d0d3fb61051fceaa6c9ed6becb7511e5
+  subdirs:
+  - code/morley
+  - code/morley-prelude
+
 - uncaught-exception-0.1.0@sha256:a03f8c2a1a8b2fc40ca9477599f2d8bcf46ce06465ab42c121b4d2481effc21e,2046
 - with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
 - th-env-0.1.0.2@sha256:d8f1f37f42a8f1a22404d7d0579528af18f5dac7232cca6bdbd5117c115a0ad5,1370
-- cryptonite-0.28
+- cryptonite-0.27
 
 
 - git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
   commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
   subdirs:
    -  tezos-bake-monitor-lib
+
+################################################################################
+# morley and Arithmetic Circuits deps
+################################################################################
+
+- git: https://github.com/serokell/galois-field.git
+  commit: 576ba98ec947370835a1f308895037c7aa7f8b71
+- git: https://github.com/serokell/elliptic-curve.git
+  commit: b8a3d0cf8f7bacfed77dc3b697f5d08bd33396a8
+- git: https://github.com/serokell/pairing.git
+  commit: cf86cf1f6b03f478a439703b050c520a9d455353
 
 ##################################################
 # sub deps of the git

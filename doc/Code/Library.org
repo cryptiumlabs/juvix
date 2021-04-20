@@ -1,4 +1,5 @@
 * Backends
+<<<<<<< HEAD
 ** Parameterization <<Backends/Parameterization>>
 ** ArithmeticCircuit
 *** Setup <<ArithmeticCircuit/Setup>>
@@ -80,6 +81,8 @@ backend
 **** Main <<ArithmeticCircuit/test/Main>>
 - _Relies on_
   + [[Library]]
+=======
+>>>>>>> a166fe4c89fda1c87e38057e8789524bea490dbd
 ** LLVM
 *** Setup <<LLVM/Setup>>
 *** src
@@ -354,7 +357,7 @@ Serves as a module for various debugging functions
 ***** Backends
 ****** Michelson <<Backends/Michelson>>
 - _Relies on_
-  + [[Michelson/Compilation]]
+  + [[Compilation]]
   + [[Michelson/Parameterisation]]
 ******* Contract <<Michelson/Contract>>
 This module provides a default contract environment
@@ -374,17 +377,18 @@ This module provides a default contract environment
     then choose the one with the fewest instructions (or based on
     some other gas-estimation preference function).
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[Library]]
 ******* Parameterisation <<Michelson/Parameterisation>>
 - _Relies on_
-  + [[Michelson/Compilation]]
-  + [[Michelson/Compilation/Types]]
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation]]
+  + [[Compilation/Types]]
+  + [[Compilation/Types]]
   + [[Michelson/Contract]]
   + [[Instructions]]
   + [[InstructionsEff]]
   + [[Interpret]]
+  + [[Untyped]]
   + [[Application]]
   + [[Prim]]
   + [[ErasedAnn/Types]]
@@ -398,18 +402,19 @@ This module provides a default contract environment
   + [[HashMap]]
   + [[NameSymbol]]
   + [[Usage]]
-******* Compilation <<Michelson/Compilation>>
+******* Compilation
 - Entrypoints into compilation from core terms to Michelson terms & contracts.
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[InstructionsEff]]
+  + [[Untyped]]
   + [[Optimisation]]
   + [[ErasedAnn/Types]]
   + [[Library]]
-******** Types <<Michelson/Compilation/Types>>
+******** Types <<Compilation/Types>>
 - Types used internally by the Michelson backend.
 - _Relies on_
   + [[Application]]
@@ -433,7 +438,7 @@ This module provides a default contract environment
     future, or vice versa!
 - Import with qualified and the name of =VStack=
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[Instructions]]
   + [[Library]]
   + [[HashMap]]
@@ -445,7 +450,7 @@ This module provides a default contract environment
   + [[Library]]
 ******** Environment <<DSL/Environment>>
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[VirtualStack]]
   + [[Library]]
   + [[NameSymbol]]
@@ -454,7 +459,7 @@ This module provides a default contract environment
 - This module serves as a lower layer DSL that is just a binding
   over the untyped instruction bindings
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[Untyped]]
   + [[Library]]
 ******** InstructionsEff
@@ -468,7 +473,7 @@ This module provides a default contract environment
   the top two items in the stack and then returns back either if
   they were constants or not and dispatches logic based on that
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[VirtualStack]]
   + [[DSL/Environment]]
   + [[Instructions]]
@@ -481,7 +486,7 @@ This module provides a default contract environment
   + [[Usage]]
 ******** Interpret
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[DSL/Contract]]
   + [[Library]]
 ******** Untyped
@@ -501,8 +506,8 @@ This module provides a default contract environment
   + [[Library]]
 **** Michelson <<test/Michelson>>
 - _Relies on_
-  + [[Michelson/Compilation]]
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation]]
+  + [[Compilation/Types]]
   + [[DSL/Environment]]
   + [[Instructions]]
   + [[Interpret]]
@@ -514,8 +519,9 @@ This module provides a default contract environment
   + [[Usage]]
 **** VStack
 - _Relies on_
-  + [[Michelson/Compilation/Types]]
+  + [[Compilation/Types]]
   + [[VirtualStack]]
+  + [[Untyped]]
   + [[Library]]
   + [[Usage]]
 ** Plonk
@@ -1502,12 +1508,15 @@ Can be added to via core translation
 ****** Internal
 ****** Lexer
 - _Relies on_
+  + [[Library]]
   + [[Internal]]
   + [[Token]]
 ****** Token
 - _Relies on_
   + [[Library]]
 ***** Sexp <<Library/Sexp>>
+This module serves as the main sexpression import it contains the
+sexp type and all the various helper functionality one can need
 - _Relies on_
   + [[Library]]
   + [[Library]]

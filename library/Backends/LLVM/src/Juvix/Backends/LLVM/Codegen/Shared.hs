@@ -9,12 +9,11 @@ type SymbolTable = Map.T Symbol Operand
 
 type TypeTable = Map.T Symbol Type
 
-data SumInfo
-  = S
-      { sum' :: Symbol,
-        offset :: Int,
-        tagSize' :: Word32
-      }
+data SumInfo = S
+  { sum' :: Symbol,
+    offset :: Int,
+    tagSize' :: Word32
+  }
   deriving (Show, Eq)
 
 -- | a mapping between the variant and the sum type along with

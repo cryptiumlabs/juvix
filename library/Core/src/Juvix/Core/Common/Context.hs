@@ -20,6 +20,7 @@ import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified StmContainers.Map as STM
+import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 import Prelude (error)
 
 --------------------------------------------------------------------------------
@@ -283,12 +284,11 @@ removeTop sym t@T {topLevelMap} =
 -- Global Traversals
 ------------------------------------------------------------
 
-data ContextForms m term ty sumRep
-  = CtxForm
-      { sumF :: sumRep -> T term ty sumRep -> m sumRep,
-        termF :: term -> T term ty sumRep -> m term,
-        tyF :: ty -> T term ty sumRep -> m ty
-      }
+data ContextForms m term ty sumRep = CtxForm
+  { sumF :: sumRep -> T term ty sumRep -> m sumRep,
+    termF :: term -> T term ty sumRep -> m term,
+    tyF :: ty -> T term ty sumRep -> m ty
+  }
   deriving (Show)
 
 -- | @mapWithContextPure@ is just @mapWithContext@ but is pure. Since
@@ -317,6 +317,67 @@ mapWithContext t@T {topLevelMap, currentName} f = do
     switchAndUpdate ctx name =
       let Just t = inNameSpace name ctx
        in mapCurrentContext f t
+
+mapWithContext' :: (Monad m, Show term, Show ty)
+  => T term ty sumRep 
+  -> (Maybe (Def term ty) -> Symbol -> SumT term ty -> T term ty sumRep -> m (Maybe (Def term ty))) 
+  -> m (T term ty sumRep)
+mapWithContext' t@T{topLevelMap, currentName} f = do
+  ctx <- foldM switchAndUpdate t tops
+  let Just finalCtx = inNameSpace (addTopName currentName) ctx
+  pure finalCtx
+  where
+    tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
+    switchAndUpdate ctx name =
+      let Just t = inNameSpace name ctx
+       in mapCurrentContext' f t
+
+-- | @mapCurrentContext@ maps f over the entire context, this function
+-- calls the function handed to it over the context. The function runs
+-- over the current form and the context, so any dependencies may be
+-- resolved and proper stored away.
+-- mapCurrentContext' ::
+  -- Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
+
+mapCurrentContext' :: (Monad m, Show term, Show ty)
+  => (Maybe (Def term ty) 
+        -> Symbol 
+        -> SumT term ty
+        -> T term ty sumRep 
+        -> m (Maybe (Def term ty)))
+  -> T term ty sumRep 
+  -> m (T term ty sumRep)
+mapCurrentContext' f ctx@T {currentNameSpace, currentName} =
+  foldM dispatch ctx names
+  where
+    names =
+      NameSpace.toList1FSymb (currentNameSpace ^. contents)
+    dispatch ctx (name, form) = do
+      case form of
+        Def d -> pure ctx
+        Record r -> do
+          -- Do the signature call in the module above and re-insert it
+          -- into the current module
+          let newTy = recordMTy r 
+          -- now we should siwtch modules, note we are going to do a
+          -- direct insertion, so no need to reconstruct
+          let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
+          ctx' <- mapCurrentContext' f newCtx
+          let ctx'' = set (_currentNameSpace . mTy) newTy ctx'
+          -- just switch back to where we need to be
+          let Just finalCtx = inNameSpace (addTopName currentName) ctx''
+          pure finalCtx
+        Unknown u -> pure ctx
+        SumCon s@(Sum def name') -> do
+          traceM "SumCon mapCurrentContext"
+          pTraceShowM (def, name, name')
+          newDef <- f def (NameSpace.extractValue name) s ctx
+          pTraceShowM (newDef)
+          pure $ add name (SumCon (Sum newDef name')) ctx
+        TypeDeclar t -> pure ctx
+        CurrentNameSpace -> pure ctx
+        Information _ -> pure ctx
+
 
 -- | @mapCurrentContext@ maps f over the entire context, this function
 -- calls the function handed to it over the context. The function runs
@@ -538,7 +599,8 @@ modifySpaceImp f symbol@(s :| ymbol) t =
             (newS : newYmbol) ->
               -- currentName: Foo.Bar, symbol: TopLevel.First.Rest
               -- update the TopLevel on First.Rest!
-              if  | s == topLevelName ->
+              if
+                  | s == topLevelName ->
                     applyAndSetTop (recurseImp f (newS :| newYmbol))
                   -- currentName: Foo.Bar, symbol: First.MoreStuff
                   -- just recurse on the symbol entirely

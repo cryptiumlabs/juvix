@@ -329,8 +329,6 @@ getDataSig q = traceShow "Get Val Sig"
       DataSig ty cons -> Just (ty, cons)
       _ -> Nothing
 
--- TODO: Module to backtrace the datatype to its constructors so that we can generate the signature (conType)
-
 getSig' ::
   ( Show primTy, Show primVal,
     HasCoreSigs primTy primVal m,
@@ -471,6 +469,7 @@ transformSpecialRhs _ (Sexp.List [name, prim])
       "Builtin" :| ["Omega"] -> pure $ Just OmegaS
       "Builtin" :| ["Colon"] -> pure $ Just ColonS
       "Builtin" :| ["Type"] -> pure $ Just TypeS
+      "Builtin" :| ["Constructor"] -> pure $ Just ConstructorS
       "Builtin" :| (s : ss) -> throwFF $ UnknownBuiltin $ s :| ss
       _ -> pure Nothing
 transformSpecialRhs q prim
@@ -527,8 +526,8 @@ transformSig x def = trySpecial <||> tryNormal
 extractDataConstructorSigs :: Sexp.T -> [Sexp.T]
 extractDataConstructorSigs (typeCons Sexp.:> _ Sexp.:> dataCons)
   | Just dataConsL <- Sexp.toList dataCons = fmap
-      (\n -> Sexp.cdr n Sexp.:> Sexp.car typeCons)  dataConsL
-extractDataConstructorSigs t = []
+      (\n -> Sexp.snoc (Sexp.car typeCons) (Sexp.cdr n)) dataConsL
+extractDataConstructorSigs _t = []
 
 transformNormalSig ::
   (ReduceEff primTy primVal m, HasPatVars m, HasParam primTy primVal m, Show primTy, Show primVal) =>
@@ -546,18 +545,17 @@ transformNormalSig q x (Ctx.TypeDeclar typ) = do
   pTraceShowM (x, typ)
   traceM "Extracted data constructor sig!"
   pTraceShowM $ extractDataConstructorSigs typ
-
   transformTypeSig q x typ
 transformNormalSig _ _ (Ctx.Unknown sig) =
   throwFF $ UnknownUnsupported (sig >>= eleToSymbol)
 transformNormalSig q x (Ctx.SumCon Ctx.Sum {sumTDef}) = do
   traceM "SumCon!"
   pTraceShowM (x, sumTDef)
-
-
   let conSig = ConSig {conType = Nothing, conDef = sumTDef}
   let x' = conDefName x
   defSigs <- traverse (transformNormalSig q x' . Ctx.Def) sumTDef
+  traceM "DefSigs!"
+  pTraceShowM (defSigs)
   pure $ conSig : fromMaybe [] defSigs
 transformNormalSig _ _ Ctx.CurrentNameSpace =
   pure []
@@ -780,7 +778,7 @@ transformProduct q hd (x, prod) =
   (NameSymbol.qualify1 q x,) . makeSig
     <$> transformConSig q (NameSymbol.fromSymbol x) hd prod
   where
-    makeSig ty = ConSig {conType = Just ty, conDef = Nothing}
+    makeSig ty = pTraceShow ("makeSig", ty) ConSig {conType = Just ty, conDef = Nothing}
 
 transformArg ::
   ( HasNextPatVar m,

@@ -34,12 +34,11 @@ type MichelsonComp res =
   RawMichelsonTerm ->
   m res
 
-data Env primTy primVal
-  = Env
-      { parameterisation :: Core.Parameterisation primTy primVal,
-        log :: [Core.PipelineLog primTy primVal],
-        globals :: IR.GlobalsT primTy primVal
-      }
+data Env primTy primVal = Env
+  { parameterisation :: Core.Parameterisation primTy primVal,
+    log :: [Core.PipelineLog primTy primVal],
+    globals :: IR.GlobalsT primTy primVal
+  }
   deriving (Generic)
 
 type EnvExecAlias primTy primVal compErr =
@@ -233,7 +232,7 @@ lamElim2 :: RawMichelsonElim
 lamElim2 = IR.Ann one lamTerm2 lamTy2 0
 
 michelsonTy :: M.T -> RawMichelsonTerm
-michelsonTy t = IR.PrimTy $ Michelson.PrimTy $ M.Type t M.noAnn
+michelsonTy t = IR.PrimTy $ Michelson.PrimTy $ M.Ty t M.noAnn
 
 intTy :: RawMichelsonTerm
 intTy = michelsonTy M.TInt

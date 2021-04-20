@@ -5,7 +5,7 @@
 
 module Juvix.Library.Sexp.Types where
 
-import Control.Lens hiding ((:>), List, (|>))
+import Control.Lens hiding (List, (:>), (|>))
 import Juvix.Library hiding (foldr, show, toList)
 import qualified Juvix.Library.LineNum as LineNum
 import qualified Juvix.Library.NameSymbol as NameSymbol

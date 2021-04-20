@@ -91,8 +91,8 @@ resolveOpens (ctx', openList) (sym, xs) = do
             { opens = opensS,
               explicitModule = sym,
               implicitInner = modsDefinedS
-            }
-            : openList
+            } :
+          openList
         )
     Left err -> throw @"left" err
 

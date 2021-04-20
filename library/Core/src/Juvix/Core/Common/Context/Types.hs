@@ -65,7 +65,7 @@ data Def term ty
 
 data SumT term ty
   = Sum
-      { sumTDef :: Maybe (Def term ty),
+      { sumTDef :: Maybe (Def term ty), 
         sumTName :: Symbol
       }
   deriving (Show, Generic, Eq, Data)

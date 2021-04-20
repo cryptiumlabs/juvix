@@ -62,7 +62,10 @@ dependencies:
   # Dependency for Morley
   ###########################
   - morley
-
+  ###########################
+  # Dependency for debugging 
+  ###########################
+  - pretty-simple
 
 default-extensions:
   - NoImplicitPrelude
