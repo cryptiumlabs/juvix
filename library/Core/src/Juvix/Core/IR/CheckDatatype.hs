@@ -1,6 +1,3 @@
--- TODO remove this
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 -- | Datatype declarations are typechecked here. Usages are passed along.
 module Juvix.Core.IR.CheckDatatype
   ( module Juvix.Core.IR.CheckDatatype,
@@ -39,15 +36,19 @@ typeCheckConstructor ::
   -- | Positivity of its parameters
   [IR.Pos] ->
   RawTelescope ext primTy primVal ->
+  -- | a hashmap of global names and their info (TODO do I need this?)
+  Globals' NoExt extT primTy primVal ->
   -- | The term to be checked
-  (IR.Name, IR.Term' ext primTy primVal) ->
+  IR.Term' ext primTy primVal ->
   TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
-typeCheckConstructor param name pos tel (n, ty) = do
+typeCheckConstructor param name pos tel globals ty = do
   sig <- get @"typeSigs" -- get signatures
-  let (n, t) = teleToType tel ty
+  let (name, t) = teleToType tel ty
       numberOfParams = length tel
-  -- _ <- checkConType 0 [] [] numberOfParams t
-  let (_, target) = typeToTele (n, t)
+  typechecked <- typeTerm param t (Annotation mempty (VStar 0))
+  evaled <- Eval.evalTerm (Eval.lookupFun' globals) typechecked
+  -- _ <- checkConType 0 [] [] numberOfParams evaled
+  let (_, target) = typeToTele (name, t)
   checkDeclared name tel target
   -- vt <- eval [] tt
   -- put (addSig sig n (ConSig vt))
@@ -90,24 +91,6 @@ typeToTele (n, t) = ttt (n, t) []
         )
     ttt x tel = (tel, snd x)
 
--- | an env that binds fresh generic values (in Int) to variables.
-type GenEnv = [(Name, Int)]
-
--- | update generic value env
-updateGenEnv ::
-  GenEnv ->
-  Name ->
-  Int ->
-  GenEnv
-updateGenEnv genEnv name k = (name, k) : genEnv
-
-updateTel ::
-  Telescope extV extT primTy primVal ->
-  GlobalName ->
-  Value' ext primTy primVal ->
-  Telescope extV extT primTy primVal
-updateTel tel n v = undefined --(n, v) : tel
-
 -- | checkDataType takes 5 arguments.
 checkDataType ::
   (HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m) =>
@@ -135,9 +118,6 @@ checkDataType _k _rho _gamma _p e =
   throwTC $ DatatypeError e
 
 -- | checkConType check constructor type
--- The constructor is either of type Star 0 or Pi. I.e.,
--- the constructor may not have an argument so it's of type Star 0,
--- or it has one or more arguments, and it's of type Pi
 checkConType ::
   ( HasThrow "typecheckError" (TypecheckError' extV ext primTy primVal) m,
     Param.CanApply primTy,
@@ -158,41 +138,38 @@ checkConType ::
   Telescope extV extT primTy primVal ->
   -- | the length of the telescope, or the no. of parameters.
   Int ->
+  -- | an env that contains the parameters of the datatype
+  Telescope extV extT primTy primVal ->
+  -- | name of the datatype
+  GlobalName ->
   Param.Parameterisation primTy primVal ->
-  -- | a hashmap of global names and their info (TODO do I need this?)
-  Globals' NoExt extT primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Term' extT primTy primVal ->
+  IR.Value primTy primVal ->
   m ()
-checkConType k gamma p param globals e =
+checkConType k gamma p tel datatypeName param globals e =
   case e of
-    Pi usage t1 t2 _ -> do
-      if k < p
-        then -- params were already checked by checkDataType
-          return ()
-        else -- check that arguments ∆ are star types
-        do
-          -- TODO arguments can be PrimTy, confirm/make sure PrimTys successfully
-          -- typeTerm with (Annotation mempty (VStar 0))
-          _ <- typeTerm param t1 (Annotation mempty (VStar 0))
-          return ()
-    -- TODO evaluate t1 (with globals) and add to gamma
-    -- case Eval.evalTerm (Eval.lookupFun' globals) t1 of
-    --  Right v1 ->
-    --     -- recurse with updated envs
-    --     checkConType
-    --     (k + 1)
-    --     gamma --(updateTel gamma x v1)
-    --     p
-    --     param
-    --     globals -- TODO add update globals, absName = show k <> name of e, usage = usage
-    --     t2
-    --  Left err -> return () --TODO throwTC $ EvalError err
-    -- if the constructor is not of function type
-    -- then it has to be of type Star(the same type as the data type).
-    _ -> case e of
-      Star' _ _ -> return ()
-      _ -> throwTC $ ConTypeError e
+    VPi usage t1 t2 ->
+      -- recurse with updated envs
+        checkConType
+          (k + 1)
+          gamma --(updateTel gamma x v1)
+          p
+          param
+          t2
+    IR.VNeutral app -> 
+      let (dtName, paraTel) = unapps app [] in
+        if
+          -- the datatype name matches 
+          dtName == datatypeName &&
+          -- the parameters match
+           foldr (&&) True $ map (==) (map IR.ty tel) paraTel 
+          then return ()
+          -- datatype name or para don't match
+          else throwTC $ ConAppTypeError e
+      where 
+        unapps (IR.NApp f x) acc = unapps f (x : acc)
+        unapps f acc = (f, acc)
+    _ -> throwTC $ ConTypeError e
 
 -- check that the data type and the parameter arguments
 -- are written down like declared in telescope

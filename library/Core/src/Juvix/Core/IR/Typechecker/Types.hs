@@ -243,12 +243,10 @@ data TypecheckError' extV extT primTy primVal
   | -- | datatype typechecking errors
     DatatypeError
       {invalidType :: IR.Term' extT primTy primVal}
-  | ConFnTypeError
-      { ty :: IR.Term' extT primTy primVal,
-        varTy :: IR.Term' extT primTy primVal
-      }
+  | ConAppTypeError
+      { ty :: IR.Value primTy primVal}
   | ConTypeError
-      {invalidConTy :: IR.Term' extT primTy primVal}
+      {invalidConTy :: IR.Value primTy primVal}
   | ParamVarNError
       { tel :: IR.RawTelescope extT primTy primVal,
         expectedN :: IR.Name,
@@ -347,10 +345,9 @@ instance
   show (EvalError err) = show err
   show (DatatypeError ty) =
     "checkDataType: invalid datatype: " <> show ty
-  show (ConFnTypeError ty varTy) =
-    "checkConType: invalid datatype: variable of"
+  show (ConAppTypeError ty) =
+    "checkConType: datatype name or parameters don't match: "
       <> show ty
-      <> "is not a type."
   show (ConTypeError ty) =
     "checkConType: invalid datatype: " <> show ty
   show (ParamVarNError tel expectedN inputN) =
