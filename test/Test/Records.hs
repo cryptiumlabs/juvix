@@ -84,15 +84,6 @@ sumTypeOne = do
     let Right sexp = Sexp.parse "(type Foo (a) (Bar a) (Baz a))"
     FromFrontend.transformTermHR testModule (Sexp.cdr sexp)
 
-
-
-
-    -- HR.Pi Usage.Omega (makeFieldName 1) <$> FromFrontend.transformTermHR testModule (Sexp.cadr x) <*> FromFrontend.transformTermHR testModule (Sexp.cadr y)
-
-    -- prim <- HR.Prim <$> FromFrontend.paramConstant a
-    -- traceShow named notImplemented 
-
-
 env :: Env (Plonk.PrimTy Fr) (Plonk.PrimVal Fr) (Juvix.Core.HR.Term (Plonk.PrimTy Fr) (Plonk.PrimVal Fr))
 env = do
     let Right x = Sexp.parse "(:record-d x TopLevel.Prelude.Circuit.field)"

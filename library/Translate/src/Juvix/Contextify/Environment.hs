@@ -49,10 +49,9 @@ type ErrS m = HasThrow "error" ErrorS m
 -- Runner environment
 ------------------------------------------------------------
 
-data Minimal
-  = Minimal
-      { closure :: Closure.T
-      }
+data Minimal = Minimal
+  { closure :: Closure.T
+  }
   deriving (Generic, Show)
 
 type MinimalAlias =
@@ -93,12 +92,11 @@ runM (Ctx c) = runState (runExceptT c) (Minimal Closure.empty)
 -- Main Functionality
 ------------------------------------------------------------
 
-data Pass m
-  = Pass
-      { sumF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T,
-        termF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T,
-        tyF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T
-      }
+data Pass m = Pass
+  { sumF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T,
+    termF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T,
+    tyF :: SexpContext -> Sexp.Atom -> Sexp.T -> m Sexp.T
+  }
 
 -- | @passContextSingle@ Traverses the context firing off sexp
 -- traversals based on the given trigger.
@@ -486,7 +484,8 @@ declaration (Sexp.List [inf, n, i])
   | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
     Just atomName <- eleToSymbol n =
     let func =
-          if  | Sexp.isAtomNamed inf "infix" ->
+          if
+              | Sexp.isAtomNamed inf "infix" ->
                 Context.NonAssoc
               | Sexp.isAtomNamed inf "infixl" ->
                 Context.Left

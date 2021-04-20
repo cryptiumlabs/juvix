@@ -54,9 +54,9 @@ adtToScott (Adt name s) = sumRec s 1 (adtLength s)
               ( \acc i ->
                   Application
                     acc
-                    ( Value
-                        $ intern
-                        $ "%arg" <> show i
+                    ( Value $
+                        intern $
+                          "%arg" <> show i
                     )
               )
               body

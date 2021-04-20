@@ -15,7 +15,6 @@ import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
 import Prelude (error)
-import Debug.Pretty.Simple (pTraceShowM, pTraceShow)
 
 -- the name symbols are the modules we are opening
 -- TODO ∷ parallelize this
@@ -167,25 +166,6 @@ type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
               modsDefinedS = []
             }
 type' _ _ = error "malformed type"
-
--- | @type'@ will take its type and add it into the context. Note that
--- since we store information with the type, we will keep the name in
--- the top level form.
--- type' :: Sexp.T -> Context.T Sexp.T Sexp.T Sexp.T -> IO Type.PassSexp
--- type' t@(assocName Sexp.:> _ Sexp.:> dat) ctx
---   | Just name <- eleToSymbol (Sexp.car assocName) = do
---     emptyRecord <- atomically Context.emptyRecord
---     let elemns = splitByConstructor dat
---         newCtx = mkCtx name elemns ctx emptyRecord
---     pTraceShowM $ Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx
---     pure $
---           Type.PS
---             { ctxS = Context.add (NameSpace.Pub name) (Context.TypeDeclar t) newCtx,
---               opensS = [],
---               modsDefinedS = []
---             }
--- type' _ _ = error "malformed type"
-
 -- | @open@ like type will simply take the open and register that the
 -- current module is opening it. Since the context does not have such a
 -- notion, we have to store this information for the resolve module to

@@ -1,4 +1,4 @@
-resolver: lts-15.16
+resolver: lts-17.9
 
 packages:
 - .
@@ -10,7 +10,7 @@ extra-deps:
 - llvm-hs-9.0.1
 - llvm-hs-pure-9.0.0
 - llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
-- capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
+- capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
 

@@ -212,18 +212,18 @@ nameSymb symb f@(Types.Ann usage _ _) =
   inst f <* modify @"stack" (VStack.nameTop symb usage)
 
 unboxSingleTypeErr :: Untyped.T -> Untyped.T
-unboxSingleTypeErr (MT.Type (MT.TList t) "") = t
-unboxSingleTypeErr (MT.Type (MT.TSet t) "") = t
-unboxSingleTypeErr (MT.Type (MT.TOption t) "") = t
-unboxSingleTypeErr (MT.Type (MT.TContract t) "") = t
+unboxSingleTypeErr (MT.Ty (MT.TList t) _) = t
+unboxSingleTypeErr (MT.Ty (MT.TSet t) _) = t
+unboxSingleTypeErr (MT.Ty (MT.TOption t) _) = t
+unboxSingleTypeErr (MT.Ty (MT.TContract t) _) = t
 unboxSingleTypeErr _ = error "not a type which takes a single type"
 
 unboxDoubleTypeErr :: Untyped.T -> (Untyped.T, Untyped.T)
-unboxDoubleTypeErr (MT.Type (MT.TBigMap t1 t2) "") = (t1, t2)
-unboxDoubleTypeErr (MT.Type (MT.TLambda t1 t2) "") = (t1, t2)
-unboxDoubleTypeErr (MT.Type (MT.TMap t1 t2) "") = (t1, t2)
-unboxDoubleTypeErr (MT.Type (MT.TPair _ _ _ _ t1 t2) "") = (t1, t2)
-unboxDoubleTypeErr (MT.Type (MT.TOr _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Ty (MT.TBigMap t1 t2) _) = (t1, t2)
+unboxDoubleTypeErr (MT.Ty (MT.TLambda t1 t2) _) = (t1, t2)
+unboxDoubleTypeErr (MT.Ty (MT.TMap t1 t2) _) = (t1, t2)
+unboxDoubleTypeErr (MT.Ty (MT.TPair _ _ _ _ t1 t2) _) = (t1, t2)
+unboxDoubleTypeErr (MT.Ty (MT.TOr _ _ t1 t2) _) = (t1, t2)
 unboxDoubleTypeErr _ = error "not a type which takes two types"
 
 -- keep this next to primToArgs as they cover the same range!
@@ -538,7 +538,8 @@ onTwoArgs op f =
         let instrs = [instr2, instr1]
         -- check if they are all constants
         -- apply function if so
-        if  | allConstants (val <$> instrs) ->
+        if
+            | allConstants (val <$> instrs) ->
               let Env.Constant i1 = val instr1
                   Env.Constant i2 = val instr2
                in pure (f i1 i2)
@@ -551,7 +552,8 @@ onOneArgs op f =
     ( \instr1 -> do
         -- check if they are all constants
         -- apply function if so
-        if  | allConstants [val instr1] ->
+        if
+            | allConstants [val instr1] ->
               let Env.Constant i1 = val instr1
                in pure (f i1)
             | otherwise -> noConstantCase op [instr1]
@@ -644,11 +646,10 @@ copyAndDrop :: Applicative f => p -> f ()
 copyAndDrop _i =
   pure ()
 
-data Protect
-  = Protect
-      { val :: Env.Expanded,
-        insts :: [Types.Op]
-      }
+data Protect = Protect
+  { val :: Env.Expanded,
+    insts :: [Types.Op]
+  }
   deriving (Show)
 
 protect :: Env.Ops m => m Env.Expanded -> m Protect
@@ -661,11 +662,10 @@ protect inst = do
   put @"ops" curr
   pure Protect {val = v, insts = after}
 
-data ProtectStack
-  = ProtectStack
-      { prot :: Protect,
-        stack :: VStack.T Env.Curried
-      }
+data ProtectStack = ProtectStack
+  { prot :: Protect,
+    stack :: VStack.T Env.Curried
+  }
   deriving (Show)
 
 protectStack :: Env.Instruction m => m Env.Expanded -> m ProtectStack
@@ -826,7 +826,8 @@ deleteVar (Env.Term name _usage) = do
         pure ()
       f (VStack.Position _ 0) = do
         stack <- get @"stack"
-        if  | VStack.constantOnTop stack ->
+        if
+            | VStack.constantOnTop stack ->
               op 0
             | otherwise ->
               pure ()
@@ -959,7 +960,8 @@ typeToPrimType ty =
         Types.PrimTy {} -> throw @"compilationError" $ Types.InvalidInputType "cannot apply primty"
         Types.Application _ _ -> throw @"compilationError" $ Types.InvalidInputType "cannot apply application"
         _ -> pure ()
-      if  | sameLength arg1 args ->
+      if
+          | sameLength arg1 args ->
             recurse args
               >>| appPrimTyErr arg1
           | otherwise ->
@@ -1102,7 +1104,7 @@ applyLambdaFromStorage sym ty arg = do
   pure [lam, arg, Instructions.exec]
 
 applyLambdaFromStorageNArgs ::
-  Env.Reduction m => NameSymbol.T -> MT.Type -> [Types.RawTerm] -> m Env.Expanded
+  Env.Reduction m => NameSymbol.T -> MT.Ty -> [Types.RawTerm] -> m Env.Expanded
 applyLambdaFromStorageNArgs _sym _ty _args =
   Env.Expanded . mconcat |<< do
     undefined

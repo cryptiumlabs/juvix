@@ -34,13 +34,13 @@ dropN :: Word -> Instr.ExpandedOp
 dropN = Instr.PrimEx . Instr.DROPN
 
 car :: Instr.ExpandedOp
-car = Instr.PrimEx (Instr.CAR "" "")
+car = Instr.PrimEx (Instr.CAR Untyped.blank Untyped.blank)
 
 cdr :: Instr.ExpandedOp
-cdr = Instr.PrimEx (Instr.CDR "" "")
+cdr = Instr.PrimEx (Instr.CDR Untyped.blank Untyped.blank)
 
 dup :: Instr.ExpandedOp
-dup = Instr.PrimEx (Instr.DUP "")
+dup = Instr.PrimEx (Instr.DUP Untyped.blank)
 
 swap :: Instr.ExpandedOp
 swap = Instr.PrimEx Instr.SWAP
@@ -52,190 +52,190 @@ dug :: Word -> Instr.ExpandedOp
 dug = Instr.PrimEx . Instr.DUG
 
 push :: Untyped.T -> Value.Value' Instr.ExpandedOp -> Instr.ExpandedOp
-push = Instr.PrimEx ... Instr.PUSH ""
+push = Instr.PrimEx ... Instr.PUSH Untyped.blank
 
 some :: Instr.ExpandedOp
-some = Instr.PrimEx (Instr.SOME "" "")
+some = Instr.PrimEx (Instr.SOME Untyped.blank Untyped.blank)
 
 none :: Untyped.T -> Instr.ExpandedOp
-none = Instr.PrimEx . Instr.NONE "" ""
+none = Instr.PrimEx . Instr.NONE Untyped.blank Untyped.blank
 
 unit :: Instr.ExpandedOp
-unit = Instr.PrimEx (Instr.UNIT "" "")
+unit = Instr.PrimEx (Instr.UNIT Untyped.blank Untyped.blank)
 
 pair :: Instr.ExpandedOp
-pair = Instr.PrimEx (Instr.PAIR "" "" "" "")
+pair = Instr.PrimEx (Instr.PAIR Untyped.blank Untyped.blank Untyped.blank Untyped.blank)
 
 left :: Untyped.T -> Instr.ExpandedOp
-left = Instr.PrimEx . Instr.LEFT "" "" "" ""
+left = Instr.PrimEx . Instr.LEFT Untyped.blank Untyped.blank Untyped.blank Untyped.blank
 
 right :: Untyped.T -> Instr.ExpandedOp
-right = Instr.PrimEx . Instr.RIGHT "" "" "" ""
+right = Instr.PrimEx . Instr.RIGHT Untyped.blank Untyped.blank Untyped.blank Untyped.blank
 
 nil :: Untyped.T -> Instr.ExpandedOp
-nil = Instr.PrimEx . Instr.NIL "" ""
+nil = Instr.PrimEx . Instr.NIL Untyped.blank Untyped.blank
 
 cons :: Instr.ExpandedOp
-cons = Instr.PrimEx (Instr.CONS "")
+cons = Instr.PrimEx (Instr.CONS Untyped.blank)
 
 size :: Instr.ExpandedOp
-size = Instr.PrimEx (Instr.SIZE "")
+size = Instr.PrimEx (Instr.SIZE Untyped.blank)
 
 emptySet :: Untyped.T -> Instr.ExpandedOp
-emptySet = Instr.PrimEx . Instr.EMPTY_SET "" ""
+emptySet = Instr.PrimEx . Instr.EMPTY_SET Untyped.blank Untyped.blank
 
 emptyMap :: Untyped.T -> Untyped.T -> Instr.ExpandedOp
-emptyMap = Instr.PrimEx ... Instr.EMPTY_MAP "" ""
+emptyMap = Instr.PrimEx ... Instr.EMPTY_MAP Untyped.blank Untyped.blank
 
 emptyBigMap :: Untyped.T -> Untyped.T -> Instr.ExpandedOp
-emptyBigMap = Instr.PrimEx ... Instr.EMPTY_BIG_MAP "" ""
+emptyBigMap = Instr.PrimEx ... Instr.EMPTY_BIG_MAP Untyped.blank Untyped.blank
 
 mem :: Instr.ExpandedOp
-mem = Instr.PrimEx (Instr.MEM "")
+mem = Instr.PrimEx (Instr.MEM Untyped.blank)
 
 get :: Instr.ExpandedOp
-get = Instr.PrimEx (Instr.GET "")
+get = Instr.PrimEx (Instr.GET Untyped.blank)
 
 update :: Instr.ExpandedOp
-update = Instr.PrimEx (Instr.UPDATE "")
+update = Instr.PrimEx (Instr.UPDATE Untyped.blank)
 
 exec :: Instr.ExpandedOp
-exec = Instr.PrimEx (Instr.EXEC "")
+exec = Instr.PrimEx (Instr.EXEC Untyped.blank)
 
 apply :: Instr.ExpandedOp
-apply = Instr.PrimEx (Instr.APPLY "")
+apply = Instr.PrimEx (Instr.APPLY Untyped.blank)
 
 cast :: Untyped.T -> Instr.ExpandedOp
-cast = Instr.PrimEx . Instr.CAST ""
+cast = Instr.PrimEx . Instr.CAST Untyped.blank
 
 rename :: Instr.ExpandedOp
-rename = Instr.PrimEx (Instr.RENAME "")
+rename = Instr.PrimEx (Instr.RENAME Untyped.blank)
 
 pack :: Instr.ExpandedOp
-pack = Instr.PrimEx (Instr.PACK "")
+pack = Instr.PrimEx (Instr.PACK Untyped.blank)
 
 unpack :: Untyped.T -> Instr.ExpandedOp
-unpack = Instr.PrimEx . Instr.UNPACK "" ""
+unpack = Instr.PrimEx . Instr.UNPACK Untyped.blank Untyped.blank
 
 concat :: Instr.ExpandedOp
-concat = Instr.PrimEx (Instr.CONCAT "")
+concat = Instr.PrimEx (Instr.CONCAT Untyped.blank)
 
 slice :: Instr.ExpandedOp
-slice = Instr.PrimEx (Instr.SLICE "")
+slice = Instr.PrimEx (Instr.SLICE Untyped.blank)
 
 isNat :: Instr.ExpandedOp
-isNat = Instr.PrimEx (Instr.ISNAT "")
+isNat = Instr.PrimEx (Instr.ISNAT Untyped.blank)
 
 add :: Instr.ExpandedOp
-add = Instr.PrimEx (Instr.ADD "")
+add = Instr.PrimEx (Instr.ADD Untyped.blank)
 
 sub :: Instr.ExpandedOp
-sub = Instr.PrimEx (Instr.SUB "")
+sub = Instr.PrimEx (Instr.SUB Untyped.blank)
 
 mul :: Instr.ExpandedOp
-mul = Instr.PrimEx (Instr.MUL "")
+mul = Instr.PrimEx (Instr.MUL Untyped.blank)
 
 ediv :: Instr.ExpandedOp
-ediv = Instr.PrimEx (Instr.EDIV "")
+ediv = Instr.PrimEx (Instr.EDIV Untyped.blank)
 
 abs :: Instr.ExpandedOp
-abs = Instr.PrimEx (Instr.ABS "")
+abs = Instr.PrimEx (Instr.ABS Untyped.blank)
 
 neg :: Instr.ExpandedOp
-neg = Instr.PrimEx (Instr.NEG "")
+neg = Instr.PrimEx (Instr.NEG Untyped.blank)
 
 lsl :: Instr.ExpandedOp
-lsl = Instr.PrimEx (Instr.LSL "")
+lsl = Instr.PrimEx (Instr.LSL Untyped.blank)
 
 lsr :: Instr.ExpandedOp
-lsr = Instr.PrimEx (Instr.LSR "")
+lsr = Instr.PrimEx (Instr.LSR Untyped.blank)
 
 or :: Instr.ExpandedOp
-or = Instr.PrimEx (Instr.OR "")
+or = Instr.PrimEx (Instr.OR Untyped.blank)
 
 and :: Instr.ExpandedOp
-and = Instr.PrimEx (Instr.AND "")
+and = Instr.PrimEx (Instr.AND Untyped.blank)
 
 xor :: Instr.ExpandedOp
-xor = Instr.PrimEx (Instr.XOR "")
+xor = Instr.PrimEx (Instr.XOR Untyped.blank)
 
 not :: Instr.ExpandedOp
-not = Instr.PrimEx (Instr.NOT "")
+not = Instr.PrimEx (Instr.NOT Untyped.blank)
 
 compare :: Instr.ExpandedOp
-compare = Instr.PrimEx (Instr.COMPARE "")
+compare = Instr.PrimEx (Instr.COMPARE Untyped.blank)
 
 eq :: Instr.ExpandedOp
-eq = Instr.PrimEx (Instr.EQ "")
+eq = Instr.PrimEx (Instr.EQ Untyped.blank)
 
 neq :: Instr.ExpandedOp
-neq = Instr.PrimEx (Instr.NEQ "")
+neq = Instr.PrimEx (Instr.NEQ Untyped.blank)
 
 lt :: Instr.ExpandedOp
-lt = Instr.PrimEx (Instr.LT "")
+lt = Instr.PrimEx (Instr.LT Untyped.blank)
 
 le :: Instr.ExpandedOp
-le = Instr.PrimEx (Instr.LE "")
+le = Instr.PrimEx (Instr.LE Untyped.blank)
 
 ge :: Instr.ExpandedOp
-ge = Instr.PrimEx (Instr.GE "")
+ge = Instr.PrimEx (Instr.GE Untyped.blank)
 
 gt :: Instr.ExpandedOp
-gt = Instr.PrimEx (Instr.GT "")
+gt = Instr.PrimEx (Instr.GT Untyped.blank)
 
 int :: Instr.ExpandedOp
-int = Instr.PrimEx (Instr.INT "")
+int = Instr.PrimEx (Instr.INT Untyped.blank)
 
 self :: Instr.ExpandedOp
-self = Instr.PrimEx (Instr.SELF "" "")
+self = Instr.PrimEx (Instr.SELF Untyped.blank Untyped.blank)
 
 contract :: Untyped.T -> Instr.ExpandedOp
-contract = Instr.PrimEx . Instr.CONTRACT "" ""
+contract = Instr.PrimEx . Instr.CONTRACT Untyped.blank Untyped.blank
 
 transferTokens :: Instr.ExpandedOp
-transferTokens = Instr.PrimEx (Instr.TRANSFER_TOKENS "")
+transferTokens = Instr.PrimEx (Instr.TRANSFER_TOKENS Untyped.blank)
 
 setDelegate :: Instr.ExpandedOp
-setDelegate = Instr.PrimEx (Instr.SET_DELEGATE "")
+setDelegate = Instr.PrimEx (Instr.SET_DELEGATE Untyped.blank)
 
 createContract :: Contract.Contract' Instr.ExpandedOp -> Instr.ExpandedOp
-createContract = Instr.PrimEx . Instr.CREATE_CONTRACT "" ""
+createContract = Instr.PrimEx . Instr.CREATE_CONTRACT Untyped.blank Untyped.blank
 
 implicitAccount :: Instr.ExpandedOp
-implicitAccount = Instr.PrimEx (Instr.IMPLICIT_ACCOUNT "")
+implicitAccount = Instr.PrimEx (Instr.IMPLICIT_ACCOUNT Untyped.blank)
 
 now :: Instr.ExpandedOp
-now = Instr.PrimEx (Instr.NOW "")
+now = Instr.PrimEx (Instr.NOW Untyped.blank)
 
 amount :: Instr.ExpandedOp
-amount = Instr.PrimEx (Instr.AMOUNT "")
+amount = Instr.PrimEx (Instr.AMOUNT Untyped.blank)
 
 balance :: Instr.ExpandedOp
-balance = Instr.PrimEx (Instr.BALANCE "")
+balance = Instr.PrimEx (Instr.BALANCE Untyped.blank)
 
 checkSignature :: Instr.ExpandedOp
-checkSignature = Instr.PrimEx (Instr.CHECK_SIGNATURE "")
+checkSignature = Instr.PrimEx (Instr.CHECK_SIGNATURE Untyped.blank)
 
 sha256 :: Instr.ExpandedOp
-sha256 = Instr.PrimEx (Instr.SHA256 "")
+sha256 = Instr.PrimEx (Instr.SHA256 Untyped.blank)
 
 sha512 :: Instr.ExpandedOp
-sha512 = Instr.PrimEx (Instr.SHA512 "")
+sha512 = Instr.PrimEx (Instr.SHA512 Untyped.blank)
 
 blake2b :: Instr.ExpandedOp
-blake2b = Instr.PrimEx (Instr.BLAKE2B "")
+blake2b = Instr.PrimEx (Instr.BLAKE2B Untyped.blank)
 
 hashKey :: Instr.ExpandedOp
-hashKey = Instr.PrimEx (Instr.HASH_KEY "")
+hashKey = Instr.PrimEx (Instr.HASH_KEY Untyped.blank)
 
 source :: Instr.ExpandedOp
-source = Instr.PrimEx (Instr.SOURCE "")
+source = Instr.PrimEx (Instr.SOURCE Untyped.blank)
 
 address :: Instr.ExpandedOp
-address = Instr.PrimEx (Instr.ADDRESS "")
+address = Instr.PrimEx (Instr.ADDRESS Untyped.blank)
 
 chainID :: Instr.ExpandedOp
-chainID = Instr.PrimEx (Instr.CHAIN_ID "")
+chainID = Instr.PrimEx (Instr.CHAIN_ID Untyped.blank)
 
 ifNone :: [Instr.ExpandedOp] -> [Instr.ExpandedOp] -> Instr.ExpandedOp
 ifNone = Instr.PrimEx ... Instr.IF_NONE
@@ -247,7 +247,7 @@ if' :: [Instr.ExpandedOp] -> [Instr.ExpandedOp] -> Instr.ExpandedOp
 if' = Instr.PrimEx ... Instr.IF
 
 map :: [Instr.ExpandedOp] -> Instr.ExpandedOp
-map = Instr.PrimEx . Instr.MAP ""
+map = Instr.PrimEx . Instr.MAP Untyped.blank
 
 iter :: [Instr.ExpandedOp] -> Instr.ExpandedOp
 iter = Instr.PrimEx . Instr.ITER
@@ -259,7 +259,7 @@ loopLeft :: [Instr.ExpandedOp] -> Instr.ExpandedOp
 loopLeft = Instr.PrimEx . Instr.LOOP_LEFT
 
 lambda :: Untyped.T -> Untyped.T -> [Instr.ExpandedOp] -> Instr.ExpandedOp
-lambda = (Instr.PrimEx .) ... Instr.LAMBDA ""
+lambda = (Instr.PrimEx .) ... Instr.LAMBDA Untyped.blank
 
 dip :: [Instr.ExpandedOp] -> Instr.ExpandedOp
 dip = Instr.PrimEx . Instr.DIP
@@ -308,4 +308,5 @@ toNumArgs x =
     Instr.NIL {} -> 0
     Instr.CONS {} -> 2
     Instr.CONTRACT {} -> 1
+
 -- _ -> error "function not implemented yet"

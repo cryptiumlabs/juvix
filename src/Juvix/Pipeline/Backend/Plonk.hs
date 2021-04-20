@@ -120,7 +120,7 @@ instance
   compile out term = do
     let circuit = Plonk.execCircuitBuilder . Plonk.compileTermWithWire $ CorePipeline.toRaw term
     let pretty = toS . Pretty.displayT . Pretty.renderPretty 1 120 . Pretty.pretty
-    let json = toS $ A.encode circuit
+    let json = show $ A.encode circuit
     liftIO $ Plonk.dotWriteSVG out (Plonk.arithCircuitToDot circuit)
     writeout (out <> ".pretty") $ pretty circuit
     writeout (out <> ".json") json

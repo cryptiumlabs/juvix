@@ -10,30 +10,29 @@ import Juvix.Library hiding (Type)
 import qualified Juvix.Library.HashMap as Map
 import LLVM.AST as AST
 
-data EACState
-  = EACState
-      { -- | Name of the active block to append to
-        currentBlock :: Name,
-        -- | Blocks for function
-        blocks :: Map.T Name BlockState,
-        -- | Function scope symbol table
-        symTab :: SymbolTable,
-        -- | Mapping from symbol to Type
-        typTab :: TypeTable,
-        -- | a mapping from the variants to the sum type
-        varTab :: VariantToType,
-        -- | Count of basic blocks
-        blockCount :: Int,
-        -- | Count of unnamed instructions
-        count :: Word,
-        -- | Name Supply
-        names :: Names,
-        moduleAST :: AST.Module,
-        -- | Debug level
-        debug :: Int
-        -- new data for EAC!
-        --
-      }
+data EACState = EACState
+  { -- | Name of the active block to append to
+    currentBlock :: Name,
+    -- | Blocks for function
+    blocks :: Map.T Name BlockState,
+    -- | Function scope symbol table
+    symTab :: SymbolTable,
+    -- | Mapping from symbol to Type
+    typTab :: TypeTable,
+    -- | a mapping from the variants to the sum type
+    varTab :: VariantToType,
+    -- | Count of basic blocks
+    blockCount :: Int,
+    -- | Count of unnamed instructions
+    count :: Word,
+    -- | Name Supply
+    names :: Names,
+    moduleAST :: AST.Module,
+    -- | Debug level
+    debug :: Int
+    -- new data for EAC!
+    --
+  }
   deriving (Show, Generic)
 
 type EACAlias = ExceptT Errors (State EACState)
