@@ -1,23 +1,15 @@
-resolver:  lts-17.3
+resolver: lts-17.3
 
 packages:
 - .
-- ./library/StandardLibrary
-- ./library/Frontend
-- ./library/Core
-- ./library/Translate
-- ./library/Pipeline
-- ./library/EasyPipeline
-- ./library/Backends/Michelson
-- ./library/Backends/Plonk
-# - ./library/Backends/ArithmeticCircuit
-# - ./library/Backends/LLVM
-# - ./library/InteractionNet
-# - ./library/InteractionNetIR
+- ../StandardLibrary
+- ../Frontend
+- ../Core
+- ../Translate
+- ../Backends/Michelson
+- ../Pipeline
 
 extra-deps:
-# - llvm-hs-9.0.1
-# - llvm-hs-pure-9.0.0
 - capability-0.4.0.0@sha256:d86d85a1691ef0165c77c47ea72eac75c99d21fb82947efe8b2f758991cf1837,3345
 - derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
 - derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817

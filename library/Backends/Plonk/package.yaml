@@ -9,26 +9,29 @@ license:             BSD3
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/Michelson#readme>
 
 dependencies:
-- aeson
-- base >= 4.7 && < 5
-- core
-- containers
-- elliptic-curve
-- filepath
-- galois-field
-- pairing
-- parsec
-- process-extras
-- poly
-- semirings
-- standard-library
-- text
-- vector
-- wl-pprint-text
-
+  - aeson
+  - base >= 4.7 && < 5
+  - core
+  - containers
+  - elliptic-curve
+  - filepath
+  - galois-field
+  - pairing
+  - parsec
+  - process-extras
+  - poly
+  - semirings
+  - standard-library
+  - text
+  - vector
+  - wl-pprint-text
+  
+  ###########################
+  # Pretty printer
+  ###########################
+  - pretty-simple
 
 default-extensions:
   - NoImplicitPrelude
@@ -56,15 +59,6 @@ default-extensions:
   - FlexibleInstances
   - MultiParamTypeClasses
 
-ghc-options:
-  - -ferror-spans
-  - -Wall
-  - -fno-warn-orphans
-  - -fno-warn-name-shadowing
-  - -fno-warn-missing-pattern-synonym-signatures
-  - -j
-  - -static
-  - -fwrite-ide-info
 
 library:
   source-dirs: src

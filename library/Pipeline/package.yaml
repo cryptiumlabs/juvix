@@ -1,33 +1,33 @@
-name:                juvix
-version:             0.0.0.0
-github:              "cryptiumlabs/juvix"
-license:             GPL-3
-homepage:            https://github.com/cryptiumlabs/juvix#readme
-synopsis:            Juvix smart contract language compiler, debugging toolkit, & stateful deployment system
-category:            Web3
-description:         Please see the README on GitHub at <https://github.com/cryptiumlabs/juvix#readme>
-author:              Cryptium Labs
-maintainer:          cwgoes@cryptium.ch, jeremy@cryptium.ch, marty@cryptium.ch, andy@cryptium.ch
-copyright:           2018 Christopher Goes, 2018-2019 Cryptium Labs
+name:                Pipeline
+version:             0.1.0.0
+github:              "healiaxdev/Pipeline"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2021 Author name here"
 
 extra-source-files:
-- README.md
+- README.org
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/Pipeline#readme>
 
 dependencies:
-  - aeson
   - base >= 4.11 && < 5
-  - Cabal
-  - capability >= 0.2.0.0
   - directory
-  - extensible-data
-  - galois-field
   - lens
-  - megaparsec
-  - scientific
+  - Cabal
+  - extensible-data
+  - capability >= 0.2.0.0
   - syb
   - temporary
-  - wl-pprint-text
-  - Pipeline
   ###########################
   # Libraries
   ###########################
@@ -37,7 +37,7 @@ dependencies:
   - translate
   - michelson
   - plonk
-  - EasyPipeline
+  - galois-field
   # - llvm
   # - interaction-net
   # - arithmetic-circuit
@@ -59,12 +59,14 @@ dependencies:
   - fgl
   - fgl-visualize
   - bytestring
+  - megaparsec
+  - aeson
+  - wl-pprint-text
 
   ###########################
   # Dependency for Morley
   ###########################
   - morley
-
 
 default-extensions:
   - NoImplicitPrelude
@@ -117,40 +119,19 @@ flags:
     manual: true
     default: false
 
-tests:
-  juvix-test:
-    main:         Main.hs
-    source-dirs:  test
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - elliptic-curve
-      - galois-field
-      - juvix
-      - parsec
-      - pretty-simple
-      - tasty
-      - tasty-hunit
-      - tasty-silver
-      - tasty-quickcheck
-
-benchmarks:
-  juvix-bench:
-    main:         Main.hs
-    source-dirs:  bench
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-    dependencies:
-      - juvix
-      - criterion
-
-
 
 library:
   source-dirs: src
-  exposed-modules:
-    - Juvix
+
+tests:
+  Pipeline-test:
+    main:                Main.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Pipeline
+    - tasty
+    - tasty-hunit
