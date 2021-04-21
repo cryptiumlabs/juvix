@@ -41,7 +41,7 @@ typeCheckConstructor ::
   -- | The term to be checked
   IR.Term' ext primTy primVal ->
   TypeCheck ext primTy primVal m [Global' extV extT primTy primVal]
-typeCheckConstructor param name pos tel globals ty = do
+typeCheckConstructor param cname pos tel globals ty = do
   sig <- get @"typeSigs" -- get signatures
   let (name, t) = teleToType tel ty
       numberOfParams = length tel
@@ -49,7 +49,7 @@ typeCheckConstructor param name pos tel globals ty = do
   evaled <- Eval.evalTerm (Eval.lookupFun' globals) typechecked
   -- _ <- checkConType 0 [] [] numberOfParams evaled
   let (_, target) = typeToTele (name, t)
-  checkDeclared name tel target
+  checkDeclared cname tel target
   -- vt <- eval [] tt
   -- put (addSig sig n (ConSig vt))
   return undefined --TODO return the list of globals
@@ -144,30 +144,36 @@ checkConType ::
   GlobalName ->
   Param.Parameterisation primTy primVal ->
   -- | the expression that is left to be checked.
-  IR.Value primTy primVal ->
+  IR.Value' extV primTy primVal ->
   m ()
-checkConType k gamma p tel datatypeName param globals e =
+checkConType k gamma p tel datatypeName param e =
   case e of
-    VPi usage t1 t2 ->
+    VPi' usage t1 t2 _ ->
       -- recurse with updated envs
         checkConType
           (k + 1)
           gamma --(updateTel gamma x v1)
           p
+          tel
+          datatypeName
           param
           t2
-    IR.VNeutral app -> 
-      let (dtName, paraTel) = unapps app [] in
-        if
-          -- the datatype name matches 
-          dtName == datatypeName &&
-          -- the parameters match
-           foldr (&&) True $ map (==) (map IR.ty tel) paraTel 
-          then return ()
-          -- datatype name or para don't match
-          else throwTC $ ConAppTypeError e
+    IR.VNeutral' app _ -> 
+      let (dtName, paraTel) = unapps app []
+      in
+        case dtName of
+          NFree' (Global name) _ -> 
+            if
+            -- the datatype name matches 
+            name == datatypeName &&
+            -- the parameters match
+            (==) (map IR.ty tel) paraTel
+              then return ()
+              -- datatype name or para don't match
+              else throwTC $ ConAppTypeError e
+          _ -> throwTC $ ConTypeError e
       where 
-        unapps (IR.NApp f x) acc = unapps f (x : acc)
+        unapps (IR.NApp' f x _) acc = unapps f (x : acc)
         unapps f acc = (f, acc)
     _ -> throwTC $ ConTypeError e
 
