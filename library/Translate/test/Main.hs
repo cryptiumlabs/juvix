@@ -8,7 +8,6 @@ import qualified Test.Desugar.Sexp as Sexp
 import Test.Golden (contractFiles)
 import Juvix.Library (IO)
 import qualified Test.Tasty as T
-import Test.Records
 
 frontEndTests :: T.TestTree
 frontEndTests =
