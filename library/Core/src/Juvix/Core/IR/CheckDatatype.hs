@@ -154,29 +154,28 @@ checkConType k gamma p tel datatypeName param e =
   case e of
     VPi' usage t1 t2 _ ->
       -- recurse with updated envs
-        checkConType
-          (k + 1)
-          gamma --(updateTel gamma x v1)
-          p
-          tel
-          datatypeName
-          param
-          t2
-    IR.VNeutral' app _ -> 
+      checkConType
+        (k + 1)
+        gamma --(updateTel gamma x v1)
+        p
+        tel
+        datatypeName
+        param
+        t2
+    IR.VNeutral' app _ ->
       let (dtName, paraTel) = unapps app []
-      in
-        case dtName of
-          NFree' (Global name) _ -> 
-            if
-            -- the datatype name matches 
-            name == datatypeName &&
-            -- the parameters match
-            and (zipWith (==) (map IR.ty tel) paraTel)
-              then return ()
-              -- datatype name or para don't match
-              else throwTC $ ConAppTypeError e
-          _ -> throwTC $ ConTypeError e
-      where 
+       in case dtName of
+            NFree' (Global name) _ ->
+              if -- the datatype name matches
+              name == datatypeName
+                &&
+                -- the parameters match
+                and (zipWith (==) (map IR.ty tel) paraTel)
+                then return ()
+                else -- datatype name or para don't match
+                  throwTC $ ConAppTypeError e
+            _ -> throwTC $ ConTypeError e
+      where
         unapps (IR.NApp' f x _) acc = unapps f (x : acc)
         unapps f acc = (f, acc)
     _ -> throwTC $ ConTypeError e

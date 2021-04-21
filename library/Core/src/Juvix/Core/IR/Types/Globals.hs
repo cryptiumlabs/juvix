@@ -3,13 +3,13 @@
 
 module Juvix.Core.IR.Types.Globals where
 
+import Control.Monad.Trans
 import Data.Kind (Constraint)
 import qualified Data.Map as Map
 import Juvix.Core.IR.Types.Base
 import Juvix.Library hiding (Pos)
 import Juvix.Library.HashMap (HashMap)
 import Juvix.Library.Usage (Usage)
-import Control.Monad.Trans
 
 type RawGlobalAll (c :: * -> Constraint) ext primTy primVal =
   ( c primTy,
@@ -477,7 +477,6 @@ newtype TypeCheck ext primTy primVal m a
       HasSource "typeSigs" (Signature ext primTy primVal)
     )
     via MonadState (InnerTCSig ext primTy primVal m)
-
 
 data SigDef ext primTy primVal
   = -- | function constant to its type, clauses

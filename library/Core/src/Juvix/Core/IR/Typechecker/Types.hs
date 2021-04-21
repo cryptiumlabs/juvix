@@ -244,7 +244,7 @@ data TypecheckError' extV extT primTy primVal
     DatatypeError
       {invalidType :: IR.Term' extT primTy primVal}
   | ConAppTypeError
-      { ty :: IR.Value' extV primTy primVal}
+      {ty :: IR.Value' extV primTy primVal}
   | ConTypeError
       {invalidConTy :: IR.Value' extV primTy primVal}
   | ParamVarNError
