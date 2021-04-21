@@ -41,6 +41,8 @@ import Test.QuickCheck (Arbitrary (..))
 import Test.QuickCheck.Arbitrary.Generic (genericArbitrary)
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
+deriving instance Bits Fr
+
 -- | Random values in Z_p^* picked in the setup.
 data RandomSetup f
   = RandomSetup -- alpha, beta, gamma, delta, x <- Z_p^*

@@ -49,9 +49,6 @@ cradle:
     - path: ./library/InteractionNetIR/src
       component: "InteractionNetIR"
     - path: ./library/InteractionNetIR/test
-<<<<<<< HEAD
-      component: "InteractionNetIR:test:InteractionNetIR-test"
-=======
       component: "InteractionNetIR:test:InteractionNetIR-test"
 
     - path: ./library/Pipeline/src
@@ -63,4 +60,3 @@ cradle:
       component: "EasyPipeline"
     - path: ./library/EasyPipeline/test
       component: "EasyPipeline:test:EasyPipeline-test"
->>>>>>> 8a0f827056b161eabf2993800aff4af323d6f537

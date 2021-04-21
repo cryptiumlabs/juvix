@@ -1,7 +1,5 @@
 module Main where
 
--- import qualified Juvix.Backends.Michelson as P
-
 import Juvix.Library
 import qualified Test.Compiler as Compiler
 import qualified Test.Groth as Groth

@@ -28,6 +28,25 @@ type Bar : ty = | P field |  Q bool field
 -- type Point3 = field
 -- type Point2 = field
 
+
+-- ConSig
+--         { conType = Just
+--             ( Pi'
+--                 ( SNat 1 )
+--                 ( Elim'
+--                     ( ElimX
+--                         ( "Datatypes" :| [ "field" ] )
+--                     ) ()
+--                 )
+--                 ( Elim'
+--                     ( ElimX
+--                         ( "Datatypes" :| [ "Bar" ] )
+--                     ) ()
+--                 )
+--                 ( "$field0" :| [] )
+--             )
+--         , conDef = Nothing
+--         }
 -- type Point3 = Po3 { x : field, y : field } | Po4 { z : field } --, y: field, z: field}
 -- type Point2 = Po2 { x : field } --, y: field}
 -- type SomePoint = P3 Point3 | P2 Point2

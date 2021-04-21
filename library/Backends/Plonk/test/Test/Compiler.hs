@@ -1,8 +1,9 @@
--- Finite fields example
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Test.Compiler where
 
 import Data.Curve.Weierstrass.BLS12381 (Fr)
-import Data.Field.Galois (GaloisField)
+import Data.Field.Galois (GaloisField, toP, PrimeField(..))
 import qualified Data.Map as Map
 import Juvix.Backends.Plonk (FFAnnTerm, FFType, PrimVal (..))
 import qualified Juvix.Backends.Plonk as P
@@ -11,6 +12,8 @@ import Juvix.Library hiding (Type, exp)
 import Test.Ref.Polynomial (circuitPolynomial1)
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+
+deriving instance Bits Fr
 
 top :: T.TestTree
 top =
