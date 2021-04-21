@@ -148,14 +148,14 @@ checkConType tel datatypeName param e =
   case e of
     VPi' _ _ t2 _ ->
       -- recurse with updated envs
-        checkConType
-          tel
-          datatypeName
-          param
-          t2
-    IR.VNeutral' app _ -> 
-      let (dtName, paraTel) = unapps app [] in 
-        case dtName of
+      checkConType
+        tel
+        datatypeName
+        param
+        t2
+    IR.VNeutral' app _ ->
+      let (dtName, paraTel) = unapps app []
+       in case dtName of
             NFree' (Global name) _ ->
               if -- the datatype name matches
               name == datatypeName

@@ -353,7 +353,7 @@ instance
     "checkDataType: invalid datatype: " <> show ty
   show (ConDatatypeName dtName) =
     "checkConType: datatype should be a free variable but it isn't: "
-    <> show dtName
+      <> show dtName
   show (ConAppTypeError ty) =
     "checkConType: datatype name or parameters don't match: "
       <> show ty
