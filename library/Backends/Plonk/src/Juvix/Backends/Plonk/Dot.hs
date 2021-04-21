@@ -25,7 +25,6 @@ arithCircuitToDot (ArithCircuit gates) =
     dotArrowLabel :: Text -> Text -> Text -> Text
     dotArrowLabel s t lbl = dotArrow s t <> " [label=\"" <> lbl <> "\"]"
     labelNode lblId lbl = lblId <> " [label=\"" <> lbl <> "\"]"
-    pointNode lblId = lblId <> " [shape=point]"
     graphGate :: Show f => Gate Wire f -> [Text]
     graphGate (MulGate lhs rhs output) =
       [ labelNode gateLabel "*",

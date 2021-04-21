@@ -6,50 +6,6 @@ import Juvix.Backends.Plonk.Circuit
 import Juvix.Library
 import Text.PrettyPrint.Leijen.Text hiding ((<$>))
 
--- pub fn add_witness_to_circuit_description(&mut self, value: BlsScalar) -> Variable {
-
--- pub fn with_expected_size(expected_size: usize) -> Self {
-
--- pub fn add_input(&mut self, s: BlsScalar) -> Variable {
-
--- pub fn lookup_gate(
---     &mut self,
---     a: Variable,
---     b: Variable,
---     c: Variable,
--- ) -> Result<(), PreProcessingError> {
-
--- pub fn poly_gate(
---     &mut self,
---     a: Variable,
---     b: Variable,
---     c: Variable,
---     q_m: BlsScalar,
---     q_l: BlsScalar,
---     q_r: BlsScalar,
---     q_o: BlsScalar,
---     q_c: BlsScalar,
---     pi: BlsScalar,
--- ) -> (Variable, Variable, Variable) {
-
---     pub fn constrain_to_constant(&mut self, a: Variable, constant: BlsScalar, pi: BlsScalar) {
-
---     pub fn assert_equal(&mut self, a: Variable, b: Variable) {
-
---     pub fn add_one_dummy_constraint(&mut self) {
-
---     pub fn add_dummy_constraints(&mut self) {
-
---     pub fn plookup_gate(
---         &mut self,
---         a: Variable,
---         b: Variable,
---         c: Variable,
---         d: Option<Variable>,
---         pi: BlsScalar,
---     )
-
--- pub fn range_gate(&mut self, witness: Variable, num_bits: usize) {
 data UnOp f a where
   UDup :: UnOp f f
   UIsZero :: UnOp f Bool
@@ -151,7 +107,7 @@ opPrecedence BExp = 8
 instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
   pretty = prettyPrec 0
     where
-      prettyPrec :: (Pretty f, Pretty i, Pretty ty) => Int -> IR i f ty -> Doc
+      prettyPrec :: Int -> IR i f ty -> Doc
       prettyPrec p e =
         case e of
           IVar v -> pretty v
@@ -162,9 +118,9 @@ instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
               prettyPrec (opPrecedence op) e1
                 <+> pretty op
                 <+> prettyPrec (opPrecedence op) e2
-          ICompOp op e1 e2 -> notImplemented
-          IAcc _ _ -> notImplemented
-          IECAdd _ _ -> notImplemented
+          -- ICompOp op e1 e2 -> notImplemented
+          -- IAcc _ _ -> notImplemented
+          -- IECAdd _ _ -> notImplemented
           IIf b true false ->
             parensPrec 4 p (text "if" <+> pretty b <+> text "then" <+> pretty true <+> text "else" <+> pretty false)
 
@@ -174,7 +130,7 @@ instance (Pretty f, Pretty i, Pretty ty) => Pretty (IR i f ty) where
 
 -- | Evaluate arithmetic expressions directly, given an environment
 evalIR ::
-  (Bits f, Num f, Integral f) =>
+  (Bits f, Integral f, Show f) =>
   -- | variable lookup
   (i -> vars -> Maybe f) ->
   -- | expression to evaluate
@@ -190,9 +146,7 @@ evalIR lookupVar expr vars = case expr of
     Nothing -> panic "TODO: incorrect var lookup"
   IUnOp op e1 -> case op of
     UNot -> not $ evalIR lookupVar e1 vars
-    (URotL rotBits) -> notImplemented
-    (URotR rotBits) -> notImplemented
-    _ -> notImplemented
+    x -> panic $ "Not implemented!" <> show x
   IBinOp op e1 e2 ->
     evalIR lookupVar e1 vars `apply` evalIR lookupVar e2 vars
     where
@@ -206,9 +160,9 @@ evalIR lookupVar expr vars = case expr of
         BAnd -> (&&)
         BOr -> (||)
         BXor -> \x y -> (x || y) && not (x && y)
-  ICompOp _ _ _ -> notImplemented
-  IAcc _ _ -> notImplemented
-  IECAdd _ _ -> notImplemented
+  -- ICompOp _ _ _ -> notImplemented
+  -- IAcc _ _ -> notImplemented
+  -- IECAdd _ _ -> notImplemented
   IIf b true false ->
     if evalIR lookupVar b vars
       then evalIR lookupVar true vars

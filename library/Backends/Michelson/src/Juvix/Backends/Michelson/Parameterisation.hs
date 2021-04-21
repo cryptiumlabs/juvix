@@ -225,37 +225,6 @@ toPrimType ty = maybe err Right $ go ty
     goPrim (ErasedAnn.PrimTy p) = Just p
     goPrim _ = Nothing
 
-parseTy :: Token.GenTokenParser String () Identity -> Parser PrimTy
-parseTy lexer =
-  try
-    ( do
-        ty <- wrapParser lexer M.type_
-        pure (PrimTy ty)
-    )
-
--- TODO: parse all values.
-parseVal :: Token.GenTokenParser String () Identity -> Parser RawPrimVal
-parseVal lexer =
-  try
-    ( do
-        val <- wrapParser lexer M.value
-        pure (Constant (M.expandValue val))
-    )
-
-wrapParser :: Token.GenTokenParser String () Identity -> M.Parser a -> Parser a
-wrapParser lexer p = do
-  str <- many anyChar
-  Token.whiteSpace lexer
-  case M.parseNoEnv p "" (Text.pack str) of
-    Right r -> pure r
-    Left _ -> fail ""
-
-reservedNames :: [String]
-reservedNames = []
-
-reservedOpNames :: [String]
-reservedOpNames = []
-
 integerToPrimVal :: Integer -> Maybe RawPrimVal
 integerToPrimVal x
   | x >= toInteger (minBound @Int),
@@ -263,21 +232,6 @@ integerToPrimVal x
     Just $ Constant $ M.ValueInt $ fromInteger x
   | otherwise =
     Nothing
-
-checkStringType :: Text -> PrimTy -> Bool
-checkStringType val (PrimTy (M.Ty ty _)) = case ty of
-  M.TString -> Text.all M.isMChar val
-  -- TODO other cases?
-  _ -> False
-checkStringType _ _ = False
-
-checkIntType :: Integer -> PrimTy -> Bool
-checkIntType val (PrimTy (M.Ty ty _)) = case ty of
-  M.TNat -> val >= 0 -- TODO max bound
-  M.TInt -> True -- TODO bounds?
-  -- TODO other cases?
-  _ -> False
-checkIntType _ _ = False
 
 primify :: Untyped.T -> PrimTy
 primify t = PrimTy (Untyped.Ty t DSLU.blank)
@@ -377,15 +331,8 @@ michelson =
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy,
-      parseVal,
-      reservedNames,
-      reservedOpNames,
-      stringTy = checkStringType,
       stringVal = Just . Constant . M.ValueString . M.mkMTextUnsafe, -- TODO ?
-      intTy = checkIntType,
       intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Michelson does not support floats
       floatVal = const Nothing
     }
 

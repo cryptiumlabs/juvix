@@ -64,7 +64,18 @@ library:
   source-dirs: src
   exposed-modules:
     - Juvix.Backends.Plonk
-
+  ghc-options:
+    -Werror
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wredundant-constraints
+    -Wno-unused-matches
+    -Wno-name-shadowing
+    -Wno-type-defaults
+    -Wno-orphans
+    -Wno-incomplete-uni-patterns
+    -Wno-incomplete-patterns
 tests:
   plonk-test:
     main:                Main.hs

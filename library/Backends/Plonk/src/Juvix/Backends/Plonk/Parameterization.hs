@@ -45,7 +45,7 @@ checkFirst2AndLast (x :| [y, last]) check
   | otherwise = False
 checkFirst2AndLast (_ :| _) _ = False
 
-hasType :: (GaloisField f, Eq (PrimTy f)) => PrimVal f -> Param.PrimType (PrimTy f) -> Bool
+hasType :: PrimVal f -> Param.PrimType (PrimTy f) -> Bool
 hasType (PConst _v) ty
   | length ty == 1 = True
   | otherwise = False
@@ -99,21 +99,14 @@ builtinValues =
             ("Circuit.eq", PEq)
           ] -- TODO: Do the rest
 
-plonk :: (GaloisField f, Eq (PrimTy f)) => Param.Parameterisation (PrimTy f) (PrimVal f)
+plonk :: (GaloisField f) => Param.Parameterisation (PrimTy f) (PrimVal f)
 plonk =
   Param.Parameterisation
     { hasType,
       builtinTypes,
       builtinValues,
-      parseTy = panic "Parse ty not implemented",
-      parseVal = panic "Parse value not implemented",
-      reservedNames = [],
-      reservedOpNames = [],
-      stringTy = \_ _ -> False,
       stringVal = const Nothing,
-      intTy = \_ _ -> True,
       intVal = integerToPrimVal,
-      floatTy = \_ _ -> False, -- Circuits does not support floats
       floatVal = const Nothing
     }
 
@@ -171,6 +164,7 @@ arityRaw = \case
    PLte-> 2
    PEq-> 2
 
+toArg :: App.Return' ext1 ty term -> Maybe (App.Arg' ext2 ty term)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
   Just
@@ -218,7 +212,6 @@ instance App.IsParamVar ext => Core.CanApply (PrimVal' ext f) where
             | otherwise ->
               Right $ Prim.Cont {fun, args = toList args, numLeft = 0}
           GT -> Left $ Core.ExtraArguments fun' args2
-  apply fun args = Left $ Core.InvalidArguments fun args
 
 applyProper :: Take f -> NonEmpty (Take f) -> Either (ApplyError f) (Return' ext f)
 applyProper fun args = panic "Apply proper not implemented"
